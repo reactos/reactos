@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.10 2004/02/24 13:27:03 weiden Exp $
+/* $Id: object.c,v 1.11 2004/02/26 22:23:54 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -31,7 +31,6 @@
 
 #include <ddk/ntddk.h>
 #include <include/object.h>
-#include <include/window.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -289,7 +288,6 @@ ObmDereferenceObject(PVOID ObjectBody)
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   
   ObjectHeader->RefCount--;
-  
   ObmpPerformRetentionChecks(ObjectHeader);
 }
 
@@ -312,7 +310,6 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
     {
       return STATUS_INVALID_PARAMETER;
     }
-  
   ObjectHeader->RefCount++;
   
   return STATUS_SUCCESS;

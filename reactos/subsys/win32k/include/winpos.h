@@ -20,7 +20,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 BOOLEAN FASTCALL
 WinPosShowWindow(HWND Wnd, INT Cmd);
 USHORT FASTCALL
-WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *WinPoint, 
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *WinPoint, 
 		      PWINDOW_OBJECT* Window);
 VOID FASTCALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.193 2004/02/24 15:56:52 weiden Exp $
+/* $Id: window.c,v 1.194 2004/02/26 22:23:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -289,11 +289,25 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   HWND *ChildHandle;
   PWINDOW_OBJECT Child;
   PMENU_OBJECT Menu;
+  BOOL BelongsToThreadData;
   
-  if (! IntWndBelongsToThread(Window, ThreadData))
-    {
-      return 0;
-    }
+  ASSERT(Window);
+  
+  IntLockThreadWindows(Window->OwnerThread->Win32Thread);
+  if(Window->Status & WINDOWSTATUS_DESTROYING)
+  {
+    IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+    DPRINT("Tried to call IntDestroyWindow() twice\n");
+    return 0;
+  }
+  Window->Status |= WINDOWSTATUS_DESTROYING;
+  /* remove the window already at this point from the thread window list so we
+     don't get into trouble when destroying the thread windows while we're still
+     in IntDestroyWindow() */
+  RemoveEntryList(&Window->ThreadListEntry);
+  IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+  
+  BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
   
   if(SendMessages)
   {
@@ -309,15 +323,13 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
         {
           if ((Child = IntGetWindowObject(*ChildHandle)))
             {
-              if(IntWndBelongsToThread(Child, ThreadData))
+              if(!IntWndBelongsToThread(Child, ThreadData))
               {
-                IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
+                /* send WM_DESTROY messages to windows not belonging to the same thread */
+                IntSendDestroyMsg(Child->Self);
               }
               else
-              {
-                IntSendDestroyMsg(Child->Self);
-                IntDestroyWindow(Child, ProcessData, Child->OwnerThread->Win32Thread, FALSE);
-              }
+                IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
               IntReleaseWindowObject(Child);
             }
         }
@@ -329,7 +341,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       /*
        * Clear the update region to make sure no WM_PAINT messages will be
        * generated for this window while processing the WM_NCDESTROY.
-       */
+       */ 
       IntRedrawWindow(Window, NULL, 0,
                       RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
                       RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
@@ -337,7 +349,8 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       /*
        * Send the WM_NCDESTROY to the window being destroyed.
        */
-      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+      if(BelongsToThreadData)
+        IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
     }
 
   /* reset shell window handles */
@@ -349,7 +362,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     if (Window->Self == ProcessData->WindowStation->ShellListView)
       ProcessData->WindowStation->ShellListView = NULL;
   }
-
+  
   /* Unregister hot keys */
   UnregisterWindowHotKeys (Window);
 
@@ -389,17 +402,22 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
 #endif
   
   IntUnlinkWindow(Window);
-
-  IntLockThreadWindows(ThreadData);
-  RemoveEntryList(&Window->ThreadListEntry);
-  IntUnLockThreadWindows(ThreadData);
+  
+  IntReferenceWindowObject(Window);
+  ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
   
   IntDestroyScrollBar(Window, SB_VERT);
   IntDestroyScrollBar(Window, SB_HORZ);
   
+  IntLockThreadWindows(Window->OwnerThread->Win32Thread);
+  Window->Status |= WINDOWSTATUS_DESTROYED;
+  /* don't remove the WINDOWSTATUS_DESTROYING bit */
+  IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
+  
   ObmDereferenceObject(Window->Class);
   Window->Class = NULL;
-  ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
+  
+  IntReleaseWindowObject(Window);
 
   return 0;
 }
@@ -475,30 +493,57 @@ IntSetMenu(
 VOID FASTCALL
 DestroyThreadWindows(struct _ETHREAD *Thread)
 {
-  PLIST_ENTRY LastHead;
+  PLIST_ENTRY Current;
   PW32PROCESS Win32Process;
   PW32THREAD Win32Thread;
   PWINDOW_OBJECT Window;
+  HWND *List, *phWnd;
+  ULONG Cnt = 0;
 
   Win32Thread = Thread->Win32Thread;
   Win32Process = Thread->ThreadsProcess->Win32Process;
+  
   IntLockThreadWindows(Win32Thread);
-  LastHead = NULL;
-  while (Win32Thread->WindowListHead.Flink != &(Win32Thread->WindowListHead) &&
-         Win32Thread->WindowListHead.Flink != LastHead)
+  Current = Win32Thread->WindowListHead.Flink;
+  while (Current != &(Win32Thread->WindowListHead))
+  {
+    Cnt++;
+    Current = Current->Flink;
+  }
+  
+  if(Cnt > 0)
+  {
+    List = ExAllocatePool(PagedPool, (Cnt + 1) * sizeof(HANDLE));
+    if(!List)
     {
-      LastHead = Win32Thread->WindowListHead.Flink;
-      Window = CONTAINING_RECORD(Win32Thread->WindowListHead.Flink, WINDOW_OBJECT, ThreadListEntry);
+      DPRINT("Not enough memory to allocate window handle list\n");
       IntUnLockThreadWindows(Win32Thread);
-      WinPosShowWindow(Window->Self, SW_HIDE);
-      IntDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
-      IntLockThreadWindows(Win32Thread);
+      return;
     }
-  if (Win32Thread->WindowListHead.Flink == LastHead)
+    phWnd = List;
+    Current = Win32Thread->WindowListHead.Flink;
+    while (Current != &(Win32Thread->WindowListHead))
     {
-      /* Window at head of list was not removed, should never happen, infinite loop */
-      KEBUGCHECK(0);
+      Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+      *phWnd = Window->Self;
+      phWnd++;
+      Current = Current->Flink;
     }
+    IntUnLockThreadWindows(Win32Thread);
+    *phWnd = NULL;
+    
+    for(phWnd = List; *phWnd; phWnd++)
+    {
+      if((Window = IntGetWindowObject(*phWnd)))
+      {
+        IntDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
+        IntReleaseWindowObject(Window);
+      }
+    }
+    ExFreePool(List);
+    return;
+  }
+  
   IntUnLockThreadWindows(Win32Thread);
 }
 
@@ -655,11 +700,23 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 BOOL FASTCALL
 IntIsChildWindow(HWND Parent, HWND Child)
 {
-  PWINDOW_OBJECT BaseWindow = IntGetWindowObject(Child);
-  PWINDOW_OBJECT Window = BaseWindow;
+  PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT BaseWindow;
   
-  while (Window != NULL && Window->Style & WS_CHILD)
+  if(!(BaseWindow = IntGetWindowObject(Child)))
   {
+    return FALSE;
+  }
+  
+  Window = BaseWindow;
+  while (Window)
+  {
+    if(!(Window->Style & WS_CHILD))
+    {
+      if(Window != BaseWindow)
+        IntReleaseWindowObject(Window);
+      break;
+    }
     if (Window->Self == Parent)
     {
       if(Window != BaseWindow)
@@ -1512,8 +1569,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       /* link the window into the parent's child list */
       if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
         {
+          PWINDOW_OBJECT PrevSibling;
+          IntLockRelatives(ParentWindow);
+          if((PrevSibling = ParentWindow->LastChild))
+            IntReferenceWindowObject(PrevSibling);
+          IntUnLockRelatives(ParentWindow);
           /* link window as bottom sibling */
-          IntLinkWindow(WindowObject, ParentWindow, ParentWindow->LastChild /*prev sibling*/);
+          IntLinkWindow(WindowObject, ParentWindow, PrevSibling /*prev sibling*/);
+          if(PrevSibling)
+            IntReleaseWindowObject(PrevSibling);
         }
       else
         {
@@ -1711,7 +1775,7 @@ NtUserDestroyWindow(HWND Wnd)
     {
     return TRUE;
     }
-
+  
   /* Recursively destroy owned windows */
   if (! isChild)
     {
@@ -1734,11 +1798,19 @@ NtUserDestroyWindow(HWND Wnd)
 		    {
 		      continue;
 		    }
+		  if(Child->Self == Wnd)
+		  {
+		    IntReleaseWindowObject(Child);
+		    continue;
+		  }
+		  IntLockRelatives(Child);
 		  if (Child->Parent != Window->Self)
 		    {
+		      IntUnLockRelatives(Child);
 		      IntReleaseWindowObject(Child);
 		      continue;
 		    }
+		  IntUnLockRelatives(Child);
 		  if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
 		    {
 		      IntReleaseWindowObject(Child);
@@ -1746,10 +1818,12 @@ NtUserDestroyWindow(HWND Wnd)
 		      GotOne = TRUE;		      
 		      continue;
 		    }
+		  IntLockRelatives(Child);
 		  if (Child->Owner != NULL)
 		    {
 		      Child->Owner = NULL;
 		    }
+		  IntUnLockRelatives(Child);
 		  IntReleaseWindowObject(Child);
 		}
 	      ExFreePool(Children);
@@ -1760,7 +1834,7 @@ NtUserDestroyWindow(HWND Wnd)
 	    }
 	}
     }
-
+  
   if (!IntIsWindow(Wnd))
     {
       return TRUE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.48 2004/02/24 13:27:03 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.49 2004/02/26 22:23:55 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -59,12 +59,6 @@ IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
   }
   
   return Object;
-}
-
-VOID FASTCALL
-IntReleaseCurIconObject(PCURICON_OBJECT Object)
-{
-  ObmDereferenceObject(Object);
 }
 
 HBITMAP FASTCALL

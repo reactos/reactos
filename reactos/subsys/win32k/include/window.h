@@ -72,9 +72,9 @@ typedef struct _WINDOW_OBJECT
   struct _WINDOW_OBJECT* PrevSibling;
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
-  /* Pointer to the parent window. */
+  /* Handle to the parent window. */
   HANDLE Parent;
-  /* Pointer to the owner window. */
+  /* Handle to the owner window. */
   HANDLE Owner;
   /* DC Entries (DCE) */
   PDCE Dce;
@@ -93,6 +93,7 @@ typedef struct _WINDOW_OBJECT
   PETHREAD OwnerThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   PINTERNALPOS InternalPos;
+  ULONG Status;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
@@ -101,6 +102,9 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_NCPAINT         (0x00000004)
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
+
+#define WINDOWSTATUS_DESTROYING         (0x1)
+#define WINDOWSTATUS_DESTROYED          (0x2)
 
 #define IntIsDesktopWindow(WndObj) \
   (WndObj->Parent == NULL)
@@ -166,12 +170,6 @@ IntIsWindowVisible (HWND hWnd);
 
 BOOL FASTCALL
 IntIsChildWindow (HWND Parent, HWND Child);
-
-BOOL FASTCALL
-IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
-
-PPROPERTY FASTCALL
-IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 VOID FASTCALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd);

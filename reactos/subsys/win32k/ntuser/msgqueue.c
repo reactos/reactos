@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.72 2004/02/24 15:56:52 weiden Exp $
+/* $Id: msgqueue.c,v 1.73 2004/02/26 22:23:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -255,7 +255,12 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Msg == WM_RBUTTONDOWN ||
       Msg == WM_XBUTTONDOWN)
   {
-    USHORT Hit = WinPosWindowFromPoint(ScopeWin, FALSE, &Message->Msg.pt, &Window);
+    *HitTest = WinPosWindowFromPoint(ScopeWin, !FromGlobalQueue, &Message->Msg.pt, &Window);
+    if(Window && FromGlobalQueue && (PsGetWin32Thread()->MessageQueue == Window->MessageQueue))
+    {
+      *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
+                                MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
+    }
     /*
     **Make sure that we have a window that is not already in focus
     */
@@ -263,9 +268,9 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       if(Window->Self != IntGetFocusWindow())
       {
-        SpareLParam = MAKELONG(Hit, Msg);
+        SpareLParam = MAKELONG(*HitTest, Msg);
         
-        if(Hit != (USHORT)HTTRANSPARENT)
+        if(*HitTest != (USHORT)HTTRANSPARENT)
         {
           Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
           
@@ -297,7 +302,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
           return(FALSE);
         }
       }
-      IntReleaseWindowObject(Window);
     }
 
   }
@@ -309,20 +313,32 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     if(Msg == WM_MOUSEWHEEL)
     {
       *HitTest = HTCLIENT;
+      if(Window)
+        IntReleaseWindowObject(Window);
       Window = IntGetWindowObject(IntGetFocusWindow());
     }
     else
     {
-      *HitTest = WinPosWindowFromPoint(ScopeWin, FALSE, &Message->Msg.pt, &Window);
       if(!Window)
       {
-        /* change the cursor on desktop background */
-        IntLoadDefaultCursors(TRUE);
+        *HitTest = WinPosWindowFromPoint(ScopeWin, !FromGlobalQueue, &Message->Msg.pt, &Window);
+        if(Window && FromGlobalQueue && (PsGetWin32Thread()->MessageQueue == Window->MessageQueue))
+        {
+          *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
+                                    MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
+        }
+        if(!Window)
+        {
+          /* change the cursor on desktop background */
+          IntLoadDefaultCursors(TRUE);
+        }
       }
     }
   }
   else
   {
+    if(Window)
+      IntReleaseWindowObject(Window);
     Window = IntGetWindowObject(CaptureWin);
     *HitTest = HTCLIENT;
   }

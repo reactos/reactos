@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.100 2004/02/24 15:56:53 weiden Exp $
+/* $Id: winpos.c,v 1.101 2004/02/26 22:23:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,7 +82,7 @@ IntGetClientOrigin(HWND hWnd, LPPOINT Point)
 {
   PWINDOW_OBJECT WindowObject;
   
-  WindowObject = IntGetWindowObject(hWnd);
+  WindowObject = IntGetWindowObject((hWnd ? hWnd : IntGetDesktopWindow()));
   if (WindowObject == NULL)
     {
       Point->x = Point->y = 0;
@@ -102,7 +102,19 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
   POINT pt;
   NTSTATUS Status;
   
+  if(!Point)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
   Ret = IntGetClientOrigin(hWnd, &pt);
+  
+  if(!Ret)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
   
   Status = MmCopyToCaller(Point, &pt, sizeof(POINT));
   if(!NT_SUCCESS(Status))
@@ -122,45 +134,48 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-  PWINDOW_OBJECT Child, Wnd = Window;
-  HWND *List, *phWnd;
-
+  PWINDOW_OBJECT Wnd, Old;
+  
   if (!Window || IntIsDesktopWindow(Window))
   {
     IntSetFocusMessageQueue(NULL);
     return;
   }
-
+  Wnd = Window;
   for(;;)
   {
+    HWND *List, *phWnd;
+    
+    Old = Wnd;
     Wnd = IntGetParentObject(Wnd);
+    if(Old != Window)
+    {
+      IntReleaseWindowObject(Old);
+    }
     if(!Wnd)
     {
       IntSetFocusMessageQueue(NULL);
       return;
     }
-    if(IntIsDesktopWindow(Wnd))
+    
+    if((List = IntWinListChildren(Wnd)))
     {
-      IntReleaseWindowObject(Wnd);
-      IntSetFocusMessageQueue(NULL);
-      return;
-    }
-    if((List = IntWinListChildren(Window)))
-    {
-      for(phWnd = List; *phWnd; ++phWnd)
+      for(phWnd = List; *phWnd; phWnd++)
       {
-        if(*phWnd == Window->Self)
+        PWINDOW_OBJECT Child;
+        
+        if((*phWnd) == Window->Self)
         {
           continue;
         }
         
-        Child = IntGetWindowObject(*phWnd);
-        if(Child)
+        if((Child = IntGetWindowObject(*phWnd)))
         {
           if(IntSetForegroundWindow(Child))
           {
-            IntReleaseWindowObject(Child);
             ExFreePool(List);
+            IntReleaseWindowObject(Wnd);
+            IntReleaseWindowObject(Child);
             return;
           }
           IntReleaseWindowObject(Child);
@@ -169,6 +184,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
       ExFreePool(List);
     }
   }
+  IntReleaseWindowObject(Wnd);
 }
 
 VOID STATIC FASTCALL
@@ -1276,8 +1292,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   return(WasVisible);
 }
 
-BOOL STATIC FASTCALL
-WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *Point,
+VOID STATIC FASTCALL
+WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Point,
 		     PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
   PWINDOW_OBJECT Current;
@@ -1293,29 +1309,27 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *Poin
       }
       
       if (Current->Style & WS_VISIBLE &&
-	      ((!(Current->Style & WS_DISABLED)) ||
-	       (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
-	      (Point->x >= Current->WindowRect.left &&
+	  (!(Current->Style & WS_DISABLED) || (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
+	  (Point->x >= Current->WindowRect.left &&
            Point->x < Current->WindowRect.right &&
            Point->y >= Current->WindowRect.top &&
            Point->y < Current->WindowRect.bottom))
            /* FIXME - check if Point is in window region */
 	  {
-	    if(*Window)
-	    {
-	      IntReleaseWindowObject(*Window);
-	    }
-	    *Window = Current;
+	if(*Window)
+	{
+	  IntReleaseWindowObject(*Window);
+	}
+	*Window = Current;
 	    
         if(Current->Style & WS_DISABLED)
         {
           *HitTest = HTERROR;
-	      ExFreePool(List);
-          return TRUE;
+	  ExFreePool(List);
+          return;
         }
         
-        if((SendProcHitTests && 
-            (Current->OwnerThread->ThreadsProcess == PsGetCurrentProcess())) ||
+        if(SendHitTestMessage &&
            (Current->MessageQueue == PsGetWin32Thread()->MessageQueue))
         {
           *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
@@ -1335,31 +1349,22 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *Poin
            Point->y >= Current->ClientRect.top &&
            Point->y < Current->ClientRect.bottom)
         {
-          USHORT ChildHitTest;
-          if(WinPosSearchChildren(Current, SendProcHitTests, Point, Window, &ChildHitTest))
-          {
-            *HitTest = ChildHitTest;
-            ExFreePool(List);
-            return TRUE;
-          }
+          WinPosSearchChildren(Current, SendHitTestMessage, Point, Window, HitTest);
+          ExFreePool(List);
+          return;
         }
         
         ExFreePool(List);
-        return TRUE;
+        return;
       }
       IntReleaseWindowObject(Current);
     }
     ExFreePool(List);
   }
-  
-  if((*Window) == NULL)
-    HitTest = HTNOWHERE;
-  
-  return FALSE;
 }
 
 USHORT FASTCALL
-WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *WinPoint, 
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
   HWND DesktopWindowHandle;
@@ -1382,19 +1387,19 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, BOOL SendProcHitTests, POINT *Win
 
   /* Translate the point to the space of the scope window. */
   DesktopWindowHandle = IntGetDesktopWindow();
-  if((DesktopWindow = IntGetWindowObject(DesktopWindowHandle)))
+  if((DesktopWindowHandle != ScopeWin->Self) &&
+     (DesktopWindow = IntGetWindowObject(DesktopWindowHandle)))
   {
     Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
     Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
     IntReleaseWindowObject(DesktopWindow);
   }
   
-  if(WinPosSearchChildren(ScopeWin, SendProcHitTests, &Point, Window, &HitTest))
-  {
-    return HitTest;
-  }
+  HitTest = HTNOWHERE;
+  
+  WinPosSearchChildren(ScopeWin, SendHitTestMessage, &Point, Window, &HitTest);
 
-  return HTNOWHERE;
+  return ((*Window) ? HitTest : HTNOWHERE);
 }
 
 BOOL

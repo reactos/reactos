@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.20 2004/02/24 01:30:57 weiden Exp $
+ * $Id: vis.c,v 1.21 2004/02/26 22:23:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -144,12 +144,11 @@ VIS_WindowLayoutChanged(
       NtGdiOffsetRgn(Temp,
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
-   }
-   IntRedrawWindow(Parent, NULL, Temp,
-                   RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
-                   RDW_ALLCHILDREN);
-   if(Parent)
+     IntRedrawWindow(Parent, NULL, Temp,
+                     RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
+                     RDW_ALLCHILDREN);
      IntReleaseWindowObject(Parent);
+   }
    NtGdiDeleteObject(Temp);
 }
 
