@@ -639,6 +639,113 @@ END
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// French (France) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "New &Window",                 ID_WINDOW_NEW
+        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
+        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
+        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "OK",1,158,6,47,14
+    PUSHBUTTON      "Cancel",2,158,23,47,14
+    PUSHBUTTON      "&Help",254,158,43,47,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos Explorer"
+    IDS_START               "Démarrer"
+    IDS_LOGOFF              "Log Off..."
+    IDS_SHUTDOWN            "Turn Off..."
+    IDS_LAUNCH              "Run..."
+    IDS_START_HELP          "Help"
+    IDS_SEARCH              "Search..."
+    IDS_DOCUMENTS           "Documents"
+    IDS_FAVORITES           "Favorites"
+    IDS_PROGRAMS            "Programs"
+    IDS_SETTINGS            "Settings"
+    IDS_EXPLORE             "Explore"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "Recent Documents"
+    IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Network"
+    IDS_CONNECTIONS         "Network Connections"
+    IDS_DRIVES              "Drives"
+    IDS_SEARCH_COMPUTER     "Search Computer..."
+    IDS_SETTINGS_MENU       "Settings Menu"
+    IDS_CONTROL_PANEL       "Control Panel"
+    IDS_PRINTERS            "Printers"
+    IDS_BROWSE              "Browse Files..."
+    IDS_SEARCH_PRG          "Search Programm..."
+    IDS_ALL_USERS           "All Users\\"
+END
+
+#endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

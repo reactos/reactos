@@ -241,7 +241,7 @@ BSC32=bscmake.exe
 LINK32=link.cmd
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib ole32.lib /nologo /subsystem:windows /incremental:no /machine:I386 /out:"WineRelease/wexplorer.exe" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none /debug
 
 !ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
