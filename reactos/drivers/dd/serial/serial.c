@@ -26,6 +26,7 @@ DriverEntry(
 	IN PUNICODE_STRING RegPath)
 {
 	ULONG i;
+	static BOOLEAN FirstTime = TRUE;
 	
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
@@ -44,7 +45,6 @@ DriverEntry(
 	
 	/* FIXME: It seems that DriverEntry function may be called more
 	 * than once. Do only legacy detection the first time. */
-	static BOOLEAN FirstTime = TRUE;
 	if (FirstTime)
 	{
 		FirstTime = FALSE;

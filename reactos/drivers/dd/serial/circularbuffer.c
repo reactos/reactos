@@ -47,9 +47,10 @@ PushCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	IN UCHAR Entry)
 {
+	ULONG NextPosition;
 	DPRINT("Serial: PushCircularBufferEntry(pBuffer %p, Entry 0x%x)\n", pBuffer, Entry);
 	ASSERT(pBuffer->Length);
-	ULONG NextPosition = (pBuffer->WritePosition + 1) % pBuffer->Length;
+	NextPosition = (pBuffer->WritePosition + 1) % pBuffer->Length;
 	if (NextPosition == pBuffer->ReadPosition)
 		return STATUS_BUFFER_TOO_SMALL;
 	pBuffer->Buffer[pBuffer->WritePosition] = Entry;
