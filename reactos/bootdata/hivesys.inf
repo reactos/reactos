@@ -64,6 +64,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Debug", \
  "Video Init", \
  "Video", \
+ "Video Save SVGA", \
  "Video Save", \
  "File System", \
  "Event log", \
@@ -546,6 +547,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
+; VBE SVGA driver
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save SVGA"
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ImagePath",0x00020000,"system32\drivers\vbemp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
