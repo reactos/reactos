@@ -1,5 +1,27 @@
 /*
- *  partlist.c
+ *  ReactOS kernel
+ *  Copyright (C) 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS text-mode setup
+ * FILE:            subsys/system/usetup/partlist.c
+ * PURPOSE:         Partition list functions
+ * PROGRAMMER:      Eric Kohl
  */
 
 #include <ddk/ntddk.h>
@@ -8,13 +30,13 @@
 #include <ntdll/rtl.h>
 
 #include <ntos/minmax.h>
-#include <ntos/keyboard.h>
 
 #include "usetup.h"
+#include "console.h"
 #include "partlist.h"
 
 
-
+/* FUNCTIONS ****************************************************************/
 
 PPARTLIST
 CreatePartitionList(SHORT Left,
@@ -45,6 +67,8 @@ CreatePartitionList(SHORT Left,
   List->Top = Top;
   List->Right = Right;
   List->Bottom = Bottom;
+
+  List->Line = 0;
 
   List->TopDisk = (ULONG)-1;
   List->TopPartition = (ULONG)-1;
@@ -248,7 +272,7 @@ DestroyPartitionList(PPARTLIST List)
 
 
 static VOID
-PrintEmptyLine(PPARTLIST List, USHORT Line)
+PrintEmptyLine(PPARTLIST List)
 {
   COORD coPos;
   ULONG Written;
@@ -258,12 +282,11 @@ PrintEmptyLine(PPARTLIST List, USHORT Line)
   Width = List->Right - List->Left - 1;
   Height = List->Bottom - List->Top - 1;
 
-  if (Line > Height)
+  if (List->Line < 0 || List->Line > Height)
     return;
 
   coPos.X = List->Left + 1;
-  coPos.Y = List->Top + 1 + Line;
-
+  coPos.Y = List->Top + 1 + List->Line;
 
   FillConsoleOutputAttribute(0x17,
 			     Width,
@@ -274,63 +297,89 @@ PrintEmptyLine(PPARTLIST List, USHORT Line)
 			     Width,
 			     coPos,
 			     &Written);
+
+  List->Line++;
 }
 
 
 static VOID
-PrintDiskLine(PPARTLIST List, USHORT Line, PCHAR Text)
+PrintPartitionData(PPARTLIST List,
+		   SHORT DiskIndex,
+		   SHORT PartIndex)
 {
+  PPARTENTRY PartEntry;
+  CHAR LineBuffer[128];
   COORD coPos;
   ULONG Written;
   USHORT Width;
   USHORT Height;
 
+  ULONGLONG PartSize;
+  PCHAR Unit;
+  PCHAR PartType;
+  UCHAR Attribute;
+
+
   Width = List->Right - List->Left - 1;
   Height = List->Bottom - List->Top - 1;
 
-  if (Line > Height)
+  if (List->Line < 0 || List->Line > Height)
     return;
 
   coPos.X = List->Left + 1;
-  coPos.Y = List->Top + 1 + Line;
+  coPos.Y = List->Top + 1 + List->Line;
 
+  PartEntry = &List->DiskArray[DiskIndex].PartArray[PartIndex];
 
-  FillConsoleOutputAttribute(0x17,
-			     Width,
-			     coPos,
-			     &Written);
-
-  FillConsoleOutputCharacter(' ',
-			     Width,
-			     coPos,
-			     &Written);
-
-  if (Text != NULL)
+  if ((PartEntry->PartType == PARTITION_FAT_12) ||
+      (PartEntry->PartType == PARTITION_FAT_16) ||
+      (PartEntry->PartType == PARTITION_HUGE) ||
+      (PartEntry->PartType == PARTITION_XINT13))
     {
-      coPos.X++;
-      WriteConsoleOutputCharacters(Text,
-				   min(strlen(Text), Width - 2),
-				   coPos);
+      PartType = "FAT";
     }
-}
+  else if ((PartEntry->PartType == PARTITION_FAT32) ||
+	   (PartEntry->PartType == PARTITION_FAT32_XINT13))
+    {
+      PartType = "FAT32";
+    }
+  else if (PartEntry->PartType == PARTITION_IFS)
+    {
+      PartType = "NTFS"; /* FIXME: Not quite correct! */
+    }
+  else
+    {
+      PartType = "Unknown";
+    }
+
+  if (PartEntry->PartSize >= 0x280000000ULL) /* 10 GB */
+    {
+      PartSize = (PartEntry->PartSize + (1 << 29)) >> 30;
+      Unit = "GB";
+    }
+  else if (PartEntry->PartSize >= 0xA00000ULL) /* 10 MB */
+    {
+      PartSize = (PartEntry->PartSize + (1 << 19)) >> 20;
+      Unit = "MB";
+    }
+  else
+    {
+      PartSize = (PartEntry->PartSize + (1 << 9)) >> 10;
+      Unit = "kB";
+    }
+
+  sprintf(LineBuffer,
+	  "%d: nr: %d type: %x (%s)  %I64u %s",
+	  PartIndex,
+	  PartEntry->PartNumber,
+	  PartEntry->PartType,
+	  PartType,
+	  PartSize,
+	  Unit);
 
 
-static VOID
-PrintPartitionLine(PPARTLIST List, USHORT Line, PCHAR Text, BOOL Selected)
-{
-  COORD coPos;
-  ULONG Written;
-  USHORT Width;
-  USHORT Height;
-
-  Width = List->Right - List->Left - 1;
-  Height = List->Bottom - List->Top - 1;
-
-  if (Line > Height)
-    return;
-
-  coPos.X = List->Left + 1;
-  coPos.Y = List->Top + 1 + Line;
+  Attribute = (List->CurrentDisk == DiskIndex &&
+	       List->CurrentPartition == PartIndex) ? 0x71 : 0x17;
 
   FillConsoleOutputCharacter(' ',
 			     Width,
@@ -339,18 +388,113 @@ PrintPartitionLine(PPARTLIST List, USHORT Line, PCHAR Text, BOOL Selected)
 
   coPos.X += 4;
   Width -= 8;
-  FillConsoleOutputAttribute((Selected == TRUE)? 0x71 : 0x17,
+  FillConsoleOutputAttribute(Attribute,
 			     Width,
 			     coPos,
 			     &Written);
 
   coPos.X++;
   Width -= 2;
-  WriteConsoleOutputCharacters(Text,
-			       min(strlen(Text), Width),
+  WriteConsoleOutputCharacters(LineBuffer,
+			       min(strlen(LineBuffer), Width),
 			       coPos);
+
+  List->Line++;
 }
 
+
+static VOID
+PrintDiskData(PPARTLIST List,
+	      SHORT DiskIndex)
+{
+  PDISKENTRY DiskEntry;
+  CHAR LineBuffer[128];
+  COORD coPos;
+  ULONG Written;
+  USHORT Width;
+  USHORT Height;
+  ULONGLONG DiskSize;
+  PCHAR Unit;
+  SHORT PartIndex;
+  BOOL PartPrinted;
+
+  DiskEntry = &List->DiskArray[DiskIndex];
+
+  Width = List->Right - List->Left - 1;
+  Height = List->Bottom - List->Top - 1;
+
+  if (List->Line < 0 || List->Line > Height)
+    return;
+
+  coPos.X = List->Left + 1;
+  coPos.Y = List->Top + 1 + List->Line;
+
+  if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
+      Unit = "GB";
+    }
+  else if (DiskEntry->DiskSize >= 0xA00000ULL) /* 10 MB */
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
+      Unit = "MB";
+    }
+  else
+    {
+      DiskSize = (DiskEntry->DiskSize + (1 << 9)) >> 10;
+      Unit = "kB";
+    }
+
+  sprintf(LineBuffer,
+	  "%I64u %s Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	  DiskSize,
+	  Unit,
+	  DiskEntry->DiskNumber,
+	  DiskEntry->Port,
+	  DiskEntry->Bus,
+	  DiskEntry->Id);
+
+  FillConsoleOutputAttribute(0x17,
+			     Width,
+			     coPos,
+			     &Written);
+
+  FillConsoleOutputCharacter(' ',
+			     Width,
+			     coPos,
+			     &Written);
+
+  coPos.X++;
+  WriteConsoleOutputCharacters(LineBuffer,
+			       min(strlen(LineBuffer), Width - 2),
+			       coPos);
+
+  List->Line++;
+
+  /* Print separator line */
+  PrintEmptyLine(List);
+
+
+  PartPrinted = FALSE;
+
+  /* Print partition lines*/
+  for (PartIndex = 0; PartIndex < List->DiskArray[DiskIndex].PartCount; PartIndex++)
+    {
+      if (List->DiskArray[DiskIndex].PartArray[PartIndex].Used == TRUE)
+	{
+	  PrintPartitionData(List,
+			     DiskIndex,
+			     PartIndex);
+	  PartPrinted = TRUE;
+	}
+    }
+
+  /* Print separator line */
+  if (PartPrinted == TRUE)
+    {
+      PrintEmptyLine(List);
+    }
+}
 
 
 VOID
@@ -360,11 +504,7 @@ DrawPartitionList(PPARTLIST List)
   COORD coPos;
   ULONG Written;
   SHORT i;
-  SHORT j;
-  ULONGLONG DiskSize;
-  PCHAR Unit;
-  USHORT Line;
-  PCHAR PartType;
+  SHORT DiskIndex;
 
   /* draw upper left corner */
   coPos.X = List->Left;
@@ -432,85 +572,16 @@ DrawPartitionList(PPARTLIST List)
 			     &Written);
 
   /* print list entries */
-  Line = 0;
-  for (i = 0; i < List->DiskCount; i++)
+  List->Line = 0;
+  for (DiskIndex = 0; DiskIndex < List->DiskCount; DiskIndex++)
     {
-      if (List->DiskArray[i].FixedDisk == TRUE)
+      if (List->DiskArray[DiskIndex].FixedDisk == TRUE)
 	{
-	  /* print disk entry */
-	  if (List->DiskArray[i].DiskSize >= 0x280000000ULL) /* 10 GB */
-	    {
-	      DiskSize = (List->DiskArray[i].DiskSize + (1 << 29)) >> 30;
-	      Unit = "GB";
-	    }
-	  else
-	    {
-	      DiskSize = (List->DiskArray[i].DiskSize + (1 << 19)) >> 20;
-	      Unit = "MB";
-	    }
-
-	  sprintf(LineBuffer,
-		  "%I64u %s Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-		  DiskSize,
-		  Unit,
-		  List->DiskArray[i].DiskNumber,
-		  List->DiskArray[i].Port,
-		  List->DiskArray[i].Bus,
-		  List->DiskArray[i].Id);
-	  PrintDiskLine(List, Line, LineBuffer);
-	  Line++;
-
-	  /* print separator line */
-	  PrintEmptyLine(List, Line);
-	  Line++;
-
-	  /* print partition lines*/
-	  for (j = 0; j < List->DiskArray[i].PartCount; j++)
-	    {
-	      if (List->DiskArray[i].PartArray[j].Used == TRUE)
-		{
-		  if ((List->DiskArray[i].PartArray[j].PartType == PARTITION_FAT_12) ||
-		      (List->DiskArray[i].PartArray[j].PartType == PARTITION_FAT_16) ||
-		      (List->DiskArray[i].PartArray[j].PartType == PARTITION_HUGE) ||
-		      (List->DiskArray[i].PartArray[j].PartType == PARTITION_XINT13))
-		    {
-		      PartType = "FAT";
-		    }
-		  else if ((List->DiskArray[i].PartArray[j].PartType == PARTITION_FAT32) ||
-			   (List->DiskArray[i].PartArray[j].PartType == PARTITION_FAT32_XINT13))
-		    {
-		      PartType = "FAT32";
-		    }
-		  else if (List->DiskArray[i].PartArray[j].PartType == PARTITION_IFS)
-		    {
-		      PartType = "NTFS"; /* FIXME: Not quite correct! */
-		    }
-		  else
-		    {
-		      PartType = "Unknown";
-		    }
-
-		  sprintf(LineBuffer,
-			  "%d: nr: %d type: %x (%s)  %I64u MB",
-			  j,
-			  List->DiskArray[i].PartArray[j].PartNumber,
-			  List->DiskArray[i].PartArray[j].PartType,
-			  PartType,
-			  (List->DiskArray[i].PartArray[j].PartSize + (1 << 19)) >> 20);
-		  PrintPartitionLine(List, Line, LineBuffer,
-				(List->CurrentDisk == i && List->CurrentPartition == j)); // FALSE);
-		  Line++;
-
-
-		}
-	    }
-
-	  /* print separator line */
-	  PrintEmptyLine(List, Line);
-	  Line++;
+	  /* Print disk entry */
+	  PrintDiskData(List,
+			DiskIndex);
 	}
     }
-
 }
 
 
@@ -591,7 +662,8 @@ ScrollUpPartitionList(PPARTLIST List)
 
 
 BOOL
-GetPartitionData(PPARTLIST List, PPARTDATA Data)
+GetPartitionData(PPARTLIST List,
+		 PPARTDATA Data)
 {
   if (List->CurrentDisk >= List->DiskCount)
     return(FALSE);

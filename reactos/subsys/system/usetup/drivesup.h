@@ -19,25 +19,19 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/usetup.h
- * PURPOSE:         Text-mode setup
+ * FILE:            subsys/system/usetup/drivesup.h
+ * PURPOSE:         Drive support functions
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __USETUP_H__
-#define __USETUP_H__
+#ifndef __DRIVESUP_H__
+#define __DRIVESUP_H__
+
+NTSTATUS
+GetSourcePaths(PUNICODE_STRING SourcePath,
+	       PUNICODE_STRING SourceRootPath);
 
 
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
-
-#define DPRINT(args...)
-#define CHECKPOINT
-
-
-extern HANDLE ProcessHeap;
-
-
-#endif /* __USETUP_H__*/
+#endif /* __DRIVESUP_H__ */
 
 /* EOF */

@@ -16,37 +16,36 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: usetup.c,v 1.5 2002/10/25 22:08:21 chorns Exp $
- *
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS user-mode setup application
- * FILE:        subsys/system/usetup/usetup.c
- * PURPOSE:     setup application
- * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS text-mode setup
+ * FILE:            subsys/system/usetup/usetup.c
+ * PURPOSE:         Text-mode setup
+ * PROGRAMMER:      Eric Kohl
  */
 
 #include <ddk/ntddk.h>
-#include <ddk/ntddblue.h>
-#include <ddk/ntddscsi.h>
-
 #include <ntdll/rtl.h>
 
-#include <ntos/keyboard.h>
-
 #include "usetup.h"
+#include "console.h"
 #include "partlist.h"
 
 
-#define INTRO_PAGE			0
-#define INSTALL_INTRO_PAGE		1
 
-#define SELECT_PARTITION_PAGE		3
-#define SELECT_FILE_SYSTEM_PAGE		4
-#define CHECK_FILE_SYSTEM_PAGE		5
-#define PREPARE_COPY_PAGE		6
-#define INSTALL_DIRECTORY_PAGE		7
-#define FILE_COPY_PAGE			8
-#define INIT_SYSTEM_PAGE		9
+#define START_PAGE			0
+#define INTRO_PAGE			1
+#define INSTALL_INTRO_PAGE		2
+
+#define SELECT_PARTITION_PAGE		4
+#define SELECT_FILE_SYSTEM_PAGE		5
+#define CHECK_FILE_SYSTEM_PAGE		6
+#define PREPARE_COPY_PAGE		7
+#define INSTALL_DIRECTORY_PAGE		8
+#define FILE_COPY_PAGE			9
+#define INIT_SYSTEM_PAGE		10
+
+#define REPAIR_INTRO_PAGE		20
 
 #define SUCCESS_PAGE			100
 #define QUIT_PAGE			101
@@ -62,20 +61,13 @@ PARTDATA PartData;
 
 CHAR InstallDir[51];
 
+UNICODE_STRING SourcePath;
+UNICODE_STRING SourceRootPath;
+
 
 /* FUNCTIONS ****************************************************************/
 
-void
-DisplayString(LPCWSTR lpwString)
-{
-  UNICODE_STRING us;
-
-  RtlInitUnicodeString(&us, lpwString);
-  NtDisplayString(&us);
-}
-
-
-void
+static VOID
 PrintString(char* fmt,...)
 {
   char buffer[512];
@@ -170,12 +162,12 @@ CHECKPOINT1;
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
 	{
 	  Result = TRUE;
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
 	  Result = FALSE;
 	  break;
@@ -210,16 +202,86 @@ CHECKPOINT1;
 
 
 
+/*
+ * First setup page
+ * RETURNS
+ *	TRUE: setup/repair completed successfully
+ *	FALSE: setup/repair terminated by user
+ */
+static ULONG
+StartPage(PINPUT_RECORD Ir)
+{
+  NTSTATUS Status;
+
+  SetStatusText("   Please wait...");
+
+  Status = GetSourcePaths(&SourcePath,
+			  &SourceRootPath);
+  if (!NT_SUCCESS(Status))
+    {
+      PrintTextXY(6, 15, "GetSourcePath() failed (Status 0x%08lx)", Status);
+    }
+  else
+    {
+      PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
+      PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
+    }
+
+  /*
+   * FIXME: Open and load txtsetup.sif here. A pointer (or handle) to the
+   * ini data should be stored in a global variable.
+   * The full path to txtsetup.sif is created by appending '\txtsetup.sif'
+   * to the unicode string SourceRootPath.
+   */
+
+  SetStatusText("   ENTER = Continue");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	{
+	  return(INTRO_PAGE);
+	}
+    }
+
+  return(START_PAGE);
+}
 
 
 
-#if 0
 static ULONG
 RepairIntroPage(PINPUT_RECORD Ir)
 {
+  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
+  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
+  SetTextXY(6, 12, "The repair functions are not implemented yet.");
+
+  SetTextXY(8, 15, "\xf9  Press ESC to return to the main page.");
+
+  SetTextXY(8, 17, "\xf9  Press ENTER to reboot your computer.");
+
+  SetStatusText("   ESC = Main page  ENTER = Reboot");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)		/* ENTER */
+	{
+	  return(REBOOT_PAGE);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))	/* ESC */
+	{
+	  return(INTRO_PAGE);
+	}
+    }
+
+  return(REPAIR_INTRO_PAGE);
 }
-#endif
 
 
 /*
@@ -231,19 +293,17 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static ULONG
 IntroPage(PINPUT_RECORD Ir)
 {
-  SetHighlightedTextXY(6, 8, "Welcome to the ReactOS Setup");
+  SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
 
   SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
   SetTextXY(8, 15, "\xf9  Press ENTER to install ReactOS.");
 
-#if 0
   SetTextXY(8, 17, "\xf9  Press R to repair ReactOS.");
-  SetTextXY(8, 19, "\xf9  Press F3 to quit without installing ReactOS.");
-#endif
 
-  SetTextXY(8, 17, "\xf9  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 19, "\xf9  Press F3 to quit without installing ReactOS.");
+
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -252,22 +312,20 @@ IntroPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
 	  return(INSTALL_INTRO_PAGE);
 	}
-#if 0
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')	/* R */
 	{
 	  return(REPAIR_INTRO_PAGE);
 	}
-#endif
     }
 
   return(INTRO_PAGE);
@@ -277,16 +335,22 @@ IntroPage(PINPUT_RECORD Ir)
 static ULONG
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Install intro page");
+  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
+  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
-#if 0
-  SetTextXY(6, 10, "This part of the setup copies the ReactOS Operating System to your");
-  SetTextXY(6, 11, "computer and prepairs the second part of the setup.");
+  SetTextXY(6, 12, "The following functions are missing:");
+  SetTextXY(8, 13, "- Creating and deleting harddisk partitions.");
+  SetTextXY(8, 14, "- Formatting partitions.");
+  SetTextXY(8, 15, "- Support for non-FAT file systems.");
+  SetTextXY(8, 16, "- Checking file systems.");
+  SetTextXY(8, 17, "- Installing the bootloader.");
 
-  SetTextXY(8, 14, "\xf9  Press ENTER to start the ReactOS setup.");
 
-  SetTextXY(8, 17, "\xf9  Press F3 to quit without installing ReactOS.");
-#endif
+
+  SetTextXY(8, 21, "\xf9  Press ENTER to install ReactOS.");
+
+  SetTextXY(8, 23, "\xf9  Press F3 to quit without installing ReactOS.");
+
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -480,11 +544,12 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x1B) /* ESC */
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))	/* ESC */
 	{
 	  return(SELECT_PARTITION_PAGE);
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
 	  return(CHECK_FILE_SYSTEM_PAGE);
 	}
@@ -497,10 +562,11 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
-
   SetTextXY(6, 8, "Check file system");
 
   SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
+
+  SetStatusText("   Please wait ...");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -516,7 +582,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(INSTALL_DIRECTORY_PAGE);
 	}
@@ -557,11 +623,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* Return */
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(PREPARE_COPY_PAGE);
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* Backspace */
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
 	{
 	  if (Length > 0)
 	    {
@@ -589,17 +655,154 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 static ULONG
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  CHAR PathBuffer[MAX_PATH];
+  UNICODE_STRING PathName;
+  HANDLE DirectoryHandle;
+  NTSTATUS Status;
+  PCHAR End;
+  ULONG Length;
+  ULONG i;
 
-  SetTextXY(6, 8, "Preparing to copy files");
+  PCHAR Dirs[]= {
+    "System32",
+    "System32\\Config",
+    "System32\\Drivers",
+    "Inf",
+    "Help",
+    "Fonts",
+    NULL};
+
+  SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
 
-  SetTextXY(6, 12, "Build file copy list");
+  SetTextXY(8, 12, "Build file copy list");
 
-  SetTextXY(6, 14, "Create directories");
+  SetTextXY(8, 14, "Create directories");
 
   SetStatusText("   Please wait...");
 
 
+  /* build the file copy list */
+
+  SetInvertedTextXY(8, 12, "Build file copy list");
+
+  /* FIXME: build that list */
+
+  SetTextXY(8, 12, "Build file copy list");
+  SetHighlightedTextXY(50, 12, "Done");
+
+
+  /* create directories */
+  SetInvertedTextXY(8, 14, "Create directories");
+
+
+  /*
+   * FIXME: Enumerate the ini section 'Directories' and create all "relative" directories
+   */
+
+
+  /* create the systemroot directory */
+  sprintf(PathBuffer,
+	  "\\Device\\Harddisk%lu\\Partition%lu",
+	  PartData.DiskNumber,
+	  PartData.PartNumber);
+  if (InstallDir[0] != '\\')
+    strcat(PathBuffer, "\\");
+  strcat(PathBuffer, InstallDir);
+
+  /* remove trailing backslash */
+  Length = strlen(PathBuffer);
+  if ((Length > 0) && (PathBuffer[Length - 1] == '\\'))
+    PathBuffer[Length - 1] = 0;
+
+  RtlCreateUnicodeStringFromAsciiz(&PathName,
+				   PathBuffer);
+
+  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+  ObjectAttributes.RootDirectory = NULL;
+  ObjectAttributes.ObjectName = &PathName;
+  ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
+  ObjectAttributes.SecurityDescriptor = NULL;
+  ObjectAttributes.SecurityQualityOfService = NULL;
+
+  Status = NtCreateFile(&DirectoryHandle,
+			DIRECTORY_ALL_ACCESS,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_DIRECTORY,
+			0,
+			FILE_CREATE,
+			FILE_DIRECTORY_FILE,
+			NULL,
+			0);
+  if (!NT_SUCCESS(Status))
+    {
+      PrintTextXY(6, 25, "Creating directory failed: Status = 0x%08lx", Status);
+
+    }
+  else
+    {
+      PrintTextXY(6, 25, "Created directory.");
+      NtClose (DirectoryHandle);
+    }
+
+
+  RtlFreeUnicodeString(&PathName);
+
+
+  /* create the subdirectories */
+
+  /* append backslash and init end pointer */
+  strcat(PathBuffer, "\\");
+  Length = strlen(PathBuffer);
+  End = &PathBuffer[Length];
+
+  for (i = 0; Dirs[i] != NULL; i++)
+    {
+      strcpy(End, Dirs[i]);
+
+
+      RtlCreateUnicodeStringFromAsciiz(&PathName,
+				       PathBuffer);
+
+
+      ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+      ObjectAttributes.RootDirectory = NULL;
+      ObjectAttributes.ObjectName = &PathName;
+      ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = NULL;
+      ObjectAttributes.SecurityQualityOfService = NULL;
+
+      Status = NtCreateFile(&DirectoryHandle,
+			    DIRECTORY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    &IoStatusBlock,
+			    NULL,
+			    FILE_ATTRIBUTE_DIRECTORY,
+			    0,
+			    FILE_CREATE,
+			    FILE_DIRECTORY_FILE,
+			    NULL,
+			    0);
+      if (!NT_SUCCESS(Status))
+	{
+	  PrintTextXY(6, 25, "Creating directory failed: Status = 0x%08lx", Status);
+	}
+      else
+	{
+	  PrintTextXY(6, 25, "Created directory.");
+	  NtClose (DirectoryHandle);
+	}
+
+      RtlFreeUnicodeString(&PathName);
+    }
+
+
+  SetTextXY(8, 14, "Create directories");
+  SetHighlightedTextXY(50, 14, "Done");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -609,7 +812,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
@@ -639,7 +842,7 @@ FileCopyPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
@@ -655,9 +858,71 @@ FileCopyPage(PINPUT_RECORD Ir)
 }
 
 
+#if 0
+static NTSTATUS
+UpdateSystemRootLink(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING LinkName;
+  UNICODE_STRING TargetName;
+  CHAR TargetBuffer[MAX_PATH];
+  HANDLE Handle;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&LinkName,
+		       L"\\SystemRoot");
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &LinkName,
+			     OBJ_OPENLINK,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenSymbolicLinkObject(&Handle,
+				    SYMBOLIC_LINK_ALL_ACCESS,
+				    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  Status = NtMakeTemporaryObject(Handle);
+  NtClose(Handle);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  sprintf(TargetBuffer,
+	  "\\Device\\Harddisk%lu\\Partition%lu",
+	  PartData.DiskNumber,
+	  PartData.PartNumber);
+  if (InstallDir[0] != '\\')
+    strcat(TargetBuffer, "\\");
+  strcat(TargetBuffer, InstallDir);
+
+  RtlCreateUnicodeStringFromAsciiz(&TargetName,
+				   TargetBuffer);
+
+  Status = NtCreateSymbolicLinkObject(&Handle,
+				      SYMBOLIC_LINK_ALL_ACCESS,
+				      &ObjectAttributes,
+				      &TargetName);
+
+  RtlFreeUnicodeString(&TargetName);
+
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  NtClose(Handle);
+
+  return(STATUS_SUCCESS);
+}
+#endif
+
+
 static ULONG
 InitSystemPage(PINPUT_RECORD Ir)
 {
+#if 0
+  NTSTATUS Status;
+#endif
 
   SetTextXY(6, 8, "Initializing system settings");
 
@@ -667,6 +932,39 @@ InitSystemPage(PINPUT_RECORD Ir)
   SetTextXY(6, 14, "Update registry hives");
 
   SetTextXY(6, 16, "Install/update boot manager");
+
+  SetStatusText("   Please wait...");
+
+#if 0
+  /*
+   * Initialize registry
+   */
+
+  /* Update 'SystemRoot' link */
+  Status = UpdateSystemRootLink();
+  if (!NT_SUCCESS(Status))
+    {
+
+      PrintTextXY(6, 25, "UpdateSystemRootLink() failed (Status = 0x%08lx)", Status);
+    }
+
+
+  Status = NtInitializeRegistry(TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+
+      PrintTextXY(6, 26, "NtInitializeRegistry() failed (Status = 0x%08lx)", Status);
+    }
+#endif
+
+  /*
+   * Update registry
+   */
+
+  /* FIXME: Create key '\Registry\Machine\System\Setup' */
+
+  /* FIXME: Create value 'SystemSetupInProgress' */
+
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -754,14 +1052,14 @@ NtProcessStartup(PPEB Peb)
   Status = AllocConsole();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("Console initialization failed! (Status %lx)\n", Status);
+      PrintString("AllocConsole() failed (Status = 0x%08lx)\n", Status);
 
       /* Raise a hard error (crash the system/BSOD) */
       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
 		       0,0,0,0,0);
     }
 
-  Page = INTRO_PAGE;
+  Page = START_PAGE;
   while (Page != REBOOT_PAGE)
     {
       ClearScreen();
@@ -770,10 +1068,17 @@ NtProcessStartup(PPEB Peb)
 
       switch (Page)
 	{
+	  /* Start page */
+	  case START_PAGE:
+	    Page = StartPage(&Ir);
+	    break;
+
+	  /* Intro page */
 	  case INTRO_PAGE:
 	    Page = IntroPage(&Ir);
 	    break;
 
+	  /* Install pages */
 	  case INSTALL_INTRO_PAGE:
 	    Page = InstallIntroPage(&Ir);
 	    break;
@@ -814,6 +1119,12 @@ NtProcessStartup(PPEB Peb)
 
 	  case INIT_SYSTEM_PAGE:
 	    Page = InitSystemPage(&Ir);
+	    break;
+
+
+	  /* Repair pages */
+	  case REPAIR_INTRO_PAGE:
+	    Page = RepairIntroPage(&Ir);
 	    break;
 
 
