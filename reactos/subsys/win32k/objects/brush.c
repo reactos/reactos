@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.7 1999/11/20 21:49:23 ekohl Exp $
+/* $Id: brush.c,v 1.8 2000/02/20 22:52:50 ea Exp $
  */
 
 
@@ -12,7 +12,7 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-HBRUSH  W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
+HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {
   PBRUSHOBJ  brushPtr;
   HBRUSH  hBrush;
@@ -33,7 +33,7 @@ HBRUSH  W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
   return  hBrush;
 }
 
-HBRUSH  W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
+HBRUSH STDCALL W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
                                   UINT  ColorSpec)
 {
   UNIMPLEMENTED;
@@ -76,7 +76,7 @@ HBRUSH  W32kCreateDIBPatternBrush(HGLOBAL  hDIBPacked,
 #endif
 }
 
-HBRUSH  W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
+HBRUSH STDCALL W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
                                     UINT  Usage)
 {
   INT  size;
@@ -128,7 +128,7 @@ HBRUSH  W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
   return  W32kCreateBrushIndirect (&logbrush);
 }
 
-HBRUSH  W32kCreateHatchBrush(INT  Style,
+HBRUSH STDCALL W32kCreateHatchBrush(INT  Style,
                              COLORREF  Color)
 {
   LOGBRUSH  logbrush;
@@ -146,7 +146,7 @@ HBRUSH  W32kCreateHatchBrush(INT  Style,
   return  W32kCreateBrushIndirect (&logbrush);
 }
 
-HBRUSH  W32kCreatePatternBrush(HBITMAP  hBitmap)
+HBRUSH STDCALL W32kCreatePatternBrush(HBITMAP  hBitmap)
 {
   LOGBRUSH  logbrush = { BS_PATTERN, 0, 0 };
 
@@ -162,17 +162,17 @@ HBRUSH  W32kCreatePatternBrush(HBITMAP  hBitmap)
     }
 }
 
-HBRUSH  W32kCreateSolidBrush(COLORREF  Color)
+HBRUSH STDCALL W32kCreateSolidBrush(COLORREF  Color)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFixBrushOrgEx(VOID)
+BOOL STDCALL W32kFixBrushOrgEx(VOID)
 {
   return FALSE;
 }
 
-BOOL  W32kPatBlt(HDC  hDC,
+BOOL STDCALL W32kPatBlt(HDC  hDC,
                  INT  XLeft,
                  INT  YLeft,
                  INT  Width,
@@ -182,7 +182,7 @@ BOOL  W32kPatBlt(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetBrushOrgEx(HDC  hDC,
+BOOL STDCALL W32kSetBrushOrgEx(HDC  hDC,
                         INT  XOrg,
                         INT  YOrg,
                         LPPOINT  Point)

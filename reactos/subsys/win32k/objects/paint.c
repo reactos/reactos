@@ -9,22 +9,30 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kGdiFlush(VOID)
+BOOL
+STDCALL
+W32kGdiFlush(VOID)
 {
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGdiGetBatchLimit(VOID)
+DWORD
+STDCALL
+W32kGdiGetBatchLimit(VOID)
 {
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGdiSetBatchLimit(DWORD  Limit)
+DWORD
+STDCALL
+W32kGdiSetBatchLimit(DWORD  Limit)
 {
   UNIMPLEMENTED;
 }
 
-UINT  W32kGetBoundsRect(HDC  hDC,
+UINT
+STDCALL
+W32kGetBoundsRect(HDC  hDC,
                         LPRECT  Bounds,
                         UINT  Flags)
 {
@@ -32,13 +40,9 @@ UINT  W32kGetBoundsRect(HDC  hDC,
   return  DCB_RESET;   /* bounding rectangle always empty */
 }
 
-COLORREF  W32kSetBkColor(HDC  hDC,
-                         COLORREF  Color)
-{
-  UNIMPLEMENTED;
-}
-
-UINT  W32kSetBoundsRect(HDC  hDC,
+UINT
+STDCALL
+W32kSetBoundsRect(HDC  hDC,
                         CONST PRECT  Bounds,
                         UINT  Flags)
 {

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 1999/12/26 16:36:44 ea Exp $
+# $Id: makefile,v 1.6 2000/02/20 22:52:49 ea Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -14,7 +14,7 @@ else
   DLLTARGET=$(TARGETNAME).dll
 endif
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS =-Iinclude -I../../include -D__PSXDLL__
 
 all: $(DLLTARGET)
 

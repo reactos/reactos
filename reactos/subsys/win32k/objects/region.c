@@ -8,7 +8,9 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-INT  W32kCombineRgn(HRGN  hDest,
+INT
+STDCALL
+W32kCombineRgn(HRGN  hDest,
                     HRGN  hSrc1,
                     HRGN  hSrc2,
                     INT  CombineMode)
@@ -16,7 +18,9 @@ INT  W32kCombineRgn(HRGN  hDest,
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreateEllipticRgn(INT  LeftRect,
+HRGN
+STDCALL
+W32kCreateEllipticRgn(INT  LeftRect,
                             INT  TopRect,
                             INT  RightRect,
                             INT  BottomRect)
@@ -24,19 +28,25 @@ HRGN  W32kCreateEllipticRgn(INT  LeftRect,
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreateEllipticRgnIndirect(CONST PRECT  rc)
+HRGN
+STDCALL
+W32kCreateEllipticRgnIndirect(CONST PRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreatePolygonRgn(CONST PPOINT  pt,
+HRGN
+STDCALL
+W32kCreatePolygonRgn(CONST PPOINT  pt,
                            INT  Count,
                            INT  PolyFillMode)
 {
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
+HRGN
+STDCALL
+W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
                                CONST PINT  PolyCounts,
                                INT  Count,
                                INT  PolyFillMode)
@@ -44,7 +54,9 @@ HRGN  W32kCreatePolyPolygonRgn(CONST PPOINT  pt,
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreateRectRgn(INT  LeftRect,
+HRGN
+STDCALL
+W32kCreateRectRgn(INT  LeftRect,
                         INT  TopRect,
                         INT  RightRect,
                         INT  BottomRect)
@@ -52,12 +64,16 @@ HRGN  W32kCreateRectRgn(INT  LeftRect,
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreateRectRgnIndirect(CONST PRECT  rc)
+HRGN
+STDCALL
+W32kCreateRectRgnIndirect(CONST PRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-HRGN  W32kCreateRoundRectRgn(INT  LeftRect,
+HRGN
+STDCALL
+W32kCreateRoundRectRgn(INT  LeftRect,
                              INT  TopRect,
                              INT  RightRect,
                              INT  BottomRect,
@@ -67,27 +83,35 @@ HRGN  W32kCreateRoundRectRgn(INT  LeftRect,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kEqualRgn(HRGN  hSrcRgn1,
+BOOL
+STDCALL
+W32kEqualRgn(HRGN  hSrcRgn1,
                    HRGN  hSrcRgn2)
 {
   UNIMPLEMENTED;
 }
 
-HRGN  W32kExtCreateRegion(CONST PXFORM  Xform,
+HRGN
+STDCALL
+W32kExtCreateRegion(CONST PXFORM  Xform,
                           DWORD  Count,
                           CONST PRGNDATA  RgnData)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFillRgn(HDC  hDC,
+BOOL
+STDCALL
+W32kFillRgn(HDC  hDC,
                   HRGN  hRgn,
                   HBRUSH  hBrush)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFrameRgn(HDC  hDC,
+BOOL
+STDCALL
+W32kFrameRgn(HDC  hDC,
                    HRGN  hRgn,
                    HBRUSH  hBrush,
                    INT  Width,
@@ -96,45 +120,59 @@ BOOL  W32kFrameRgn(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kGetRgnBox(HRGN  hRgn,
+INT
+STDCALL
+W32kGetRgnBox(HRGN  hRgn,
                    LPRECT  hRect)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kInvertRgn(HDC  hDC,
+BOOL
+STDCALL
+W32kInvertRgn(HDC  hDC,
                     HRGN  hRgn)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kOffsetRgn(HRGN  hRgn,
+INT
+STDCALL
+W32kOffsetRgn(HRGN  hRgn,
                    INT  XOffset,
                    INT  YOffset)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPaintRgn(HDC  hDC,
+BOOL
+STDCALL
+W32kPaintRgn(HDC  hDC,
                    HRGN  hRgn)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPtInRegion(HRGN  hRgn,
+BOOL
+STDCALL
+W32kPtInRegion(HRGN  hRgn,
                      INT  X,
                      INT  Y)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRectInRegion(HRGN  hRgn,
+BOOL
+STDCALL
+W32kRectInRegion(HRGN  hRgn,
                        CONST LPRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetRectRgn(HRGN  hRgn,
+BOOL
+STDCALL
+W32kSetRectRgn(HRGN  hRgn,
                      INT  LeftRect,
                      INT  TopRect,
                      INT  RightRect,

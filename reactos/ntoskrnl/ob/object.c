@@ -1,4 +1,5 @@
-/*
+/* $Id: object.c,v 1.21 2000/02/20 22:52:49 ea Exp $
+ * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/ob/object.c
@@ -23,6 +24,16 @@
 
 /* FUNCTIONS ************************************************************/
 
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	ObInitializeObject
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
 			PHANDLE Handle,
 			ACCESS_MASK DesiredAccess,
@@ -52,6 +63,17 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
      }
 }
 
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	ObFindObject@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PWSTR* RemainingPath)
@@ -130,6 +152,17 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
    return(STATUS_SUCCESS);
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	ObCreateObject@36
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 PVOID ObCreateObject(PHANDLE Handle,
 		     ACCESS_MASK DesiredAccess,
 		     POBJECT_ATTRIBUTES ObjectAttributes,
@@ -185,7 +218,7 @@ PVOID ObCreateObject(PHANDLE Handle,
    return(HEADER_TO_BODY(Header));
 }
 
-NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
+NTSTATUS STDCALL ObReferenceObjectByPointer(PVOID ObjectBody,
 				    ACCESS_MASK DesiredAccess,
 				    POBJECT_TYPE ObjectType,
 				    KPROCESSOR_MODE AccessMode)
@@ -285,7 +318,40 @@ ULONG ObGetHandleCount(PVOID ObjectBody)
    return(Header->HandleCount);
 }
 
-VOID ObDereferenceObject(PVOID ObjectBody)
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	@ObfReferenceObject@0
+ *
+ * DESCRIPTION
+ *	Increments a given object's reference count and performs
+ *	retention checks.
+ *
+ * ARGUMENTS
+ *        ObjectBody
+ *        	Body of the object.
+ *
+ * RETURN VALUE
+ * 	The current value of the reference counter.
+ */
+ULONG
+FASTCALL
+ObfReferenceObject (PVOID ObjectBody)
+{
+	POBJECT_HEADER	Header = BODY_TO_HEADER(ObjectBody);
+	ULONG		ReferenceCount;
+
+	ReferenceCount = ++ Header->RefCount;
+   
+	ObPerformRetentionChecks (Header);
+
+	return (ReferenceCount);
+}
+
+
+VOID
+FASTCALL
+ObfDereferenceObject (PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
  * retention checks
@@ -316,3 +382,14 @@ VOID ObDereferenceObject(PVOID ObjectBody)
    
    ObPerformRetentionChecks(Header);
 }
+
+
+VOID
+STDCALL
+ObDereferenceObject (PVOID ObjectBody)
+{
+	ObfDereferenceObject (ObjectBody);
+}
+
+
+/* EOF */

@@ -2,9 +2,13 @@
 #ifndef __WIN32K_TEXT_H
 #define __WIN32K_TEXT_H
 
-int  W32kAddFontResource(LPCWSTR  Filename);
+int
+STDCALL
+W32kAddFontResource(LPCWSTR  Filename);
 
-HFONT  W32kCreateFont(int  Height,
+HFONT
+STDCALL
+W32kCreateFont(int  Height,
                       int  Width,
                       int  Escapement,
                       int  Orientation,
@@ -19,30 +23,42 @@ HFONT  W32kCreateFont(int  Height,
                       DWORD  PitchAndFamily,
                       LPCWSTR  Face);
 
-HFONT  W32kCreateFontIndirect(CONST LPLOGFONT lf);
+HFONT
+STDCALL
+W32kCreateFontIndirect(CONST LPLOGFONT lf);
 
-BOOL  W32kCreateScalableFontResource(DWORD  Hidden,
+BOOL
+STDCALL
+W32kCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  FontRes,
                                      LPCWSTR  FontFile,
                                      LPCWSTR  CurrentPath);
 
-int  W32kEnumFontFamilies(HDC  hDC,
+int
+STDCALL
+W32kEnumFontFamilies(HDC  hDC,
                           LPCWSTR  Family,
                           FONTENUMPROC  EnumFontFamProc,
                           LPARAM  lParam);
 
-int  W32kEnumFontFamiliesEx(HDC  hDC,
+int
+STDCALL
+W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONT  Logfont,
                             FONTENUMPROC  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags);
 
-int  W32kEnumFonts(HDC  hDC,
+int
+STDCALL
+W32kEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
                    FONTENUMPROC  FontFunc,
                    LPARAM  lParam);
 
-BOOL  W32kExtTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kExtTextOut(HDC  hDC,
                      int  X,
                      int  Y,
                      UINT  Options,
@@ -51,44 +67,62 @@ BOOL  W32kExtTextOut(HDC  hDC,
                      UINT  Count,
                      CONST LPINT  Dx);
 
-BOOL  W32kGetAspectRatioFilterEx(HDC  hDC,
+BOOL
+STDCALL
+W32kGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio);
 
-BOOL  W32kGetCharABCWidths(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharABCWidths(HDC  hDC,
                            UINT  FirstChar,
                            UINT  LastChar,
                            LPABC  abc);
 
-BOOL  W32kGetCharABCWidthsFloat(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharABCWidthsFloat(HDC  hDC,
                                 UINT  FirstChar,
                                 UINT  LastChar,
                                 LPABCFLOAT  abcF);
 
-DWORD  W32kGetCharacterPlacement(HDC  hDC,
+DWORD
+STDCALL
+W32kGetCharacterPlacement(HDC  hDC,
                                  LPCWSTR  String,
                                  int  Count,
                                  int  MaxExtent,
                                  LPGCP_RESULTS  Results,
                                  DWORD  Flags);
 
-BOOL  W32kGetCharWidth(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidth(HDC  hDC,
                        UINT  FirstChar,
                        UINT  LastChar,
                        LPINT  Buffer);
 
-BOOL  W32kGetCharWidth32(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidth32(HDC  hDC,
                          UINT  FirstChar,
                          UINT  LastChar,
                          LPINT  Buffer);
 
-BOOL  W32kGetCharWidthFloat(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidthFloat(HDC  hDC,
                             UINT  FirstChar,
                             UINT  LastChar,
                             PFLOAT  Buffer);
 
-DWORD  W32kGetFontLanguageInfo(HDC  hDC);
+DWORD
+STDCALL
+W32kGetFontLanguageInfo(HDC  hDC);
 
-DWORD  W32kGetGlyphOutline(HDC  hDC,
+DWORD
+STDCALL
+W32kGetGlyphOutline(HDC  hDC,
                            UINT  Char,
                            UINT  Format,
                            LPGLYPHMETRICS  gm,
@@ -96,24 +130,36 @@ DWORD  W32kGetGlyphOutline(HDC  hDC,
                            LPVOID  Buffer,
                            CONST LPMAT2 mat2);
 
-DWORD  W32kGetKerningPairs(HDC  hDC,
+DWORD
+STDCALL
+W32kGetKerningPairs(HDC  hDC,
                            DWORD  NumPairs,
                            LPKERNINGPAIR  krnpair);
 
-UINT  W32kGetOutlineTextMetrics(HDC  hDC,
+UINT
+STDCALL
+W32kGetOutlineTextMetrics(HDC  hDC,
                                 UINT  Data,
                                 LPOUTLINETEXTMETRIC  otm);
 
-BOOL  W32kGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
+BOOL
+STDCALL
+W32kGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
                             UINT  Size);
 
-UINT  W32kGetTextCharset(HDC  hDC);
+UINT
+STDCALL
+W32kGetTextCharset(HDC  hDC);
 
-UINT  W32kGetTextCharsetInfo(HDC  hDC,
+UINT
+STDCALL
+W32kGetTextCharsetInfo(HDC  hDC,
                              LPFONTSIGNATURE  Sig,
                              DWORD  Flags);
 
-BOOL  W32kGetTextExtentExPoint(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentExPoint(HDC  hDC,
                                LPCWSTR String,
                                int  Count,
                                int  MaxExtent,
@@ -121,49 +167,73 @@ BOOL  W32kGetTextExtentExPoint(HDC  hDC,
                                LPINT  Dx,
                                LPSIZE  Size);
 
-BOOL  W32kGetTextExtentPoint(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentPoint(HDC  hDC,
                              LPCWSTR  String,
                              int  Count,
                              LPSIZE  Size);
 
-BOOL  W32kGetTextExtentPoint32(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentPoint32(HDC  hDC,
                                LPCWSTR  String,
                                int  Count,
                                LPSIZE  Size);
 
-int  W32kGetTextFace(HDC  hDC,
+int
+STDCALL
+W32kGetTextFace(HDC  hDC,
                      int  Count,
                      LPWSTR  FaceName);
 
-BOOL  W32kGetTextMetrics(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextMetrics(HDC  hDC,
                          LPTEXTMETRIC  tm);
 
-BOOL  W32kPolyTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyTextOut(HDC  hDC,
                       CONST LPPOLYTEXT  txt,
                       int  Count);
 
-BOOL  W32kRemoveFontResource(LPCWSTR  FileName);
+BOOL
+STDCALL
+W32kRemoveFontResource(LPCWSTR  FileName);
 
-DWORD  W32kSetMapperFlags(HDC  hDC,
+DWORD
+STDCALL
+W32kSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
 
-UINT  W32kSetTextAlign(HDC  hDC,
+UINT
+STDCALL
+W32kSetTextAlign(HDC  hDC,
                        UINT  Mode);
 
-COLORREF STDCALL W32kSetTextColor(HDC  hDC,
+COLORREF
+STDCALL
+W32kSetTextColor(HDC  hDC,
                            COLORREF  Color);
 
-BOOL  W32kSetTextJustification(HDC  hDC,
+BOOL
+STDCALL
+W32kSetTextJustification(HDC  hDC,
                                int  BreakExtra,
                                int  BreakCount);
 
-BOOL  W32kTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kTextOut(HDC  hDC,
                   int  XStart,
                   int  YStart,
                   LPCWSTR  String,
                   int  Count);
 
-UINT  W32kTranslateCharsetInfo(PDWORD  Src,
+UINT
+STDCALL
+W32kTranslateCharsetInfo(PDWORD  Src,
                                LPCHARSETINFO  CSI,   
                                DWORD  Flags);
 

@@ -9,12 +9,16 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-int  W32kAddFontResource(LPCWSTR  Filename)
+int
+STDCALL
+W32kAddFontResource(LPCWSTR  Filename)
 {
   UNIMPLEMENTED;
 }
 
-HFONT  W32kCreateFont(int  Height,
+HFONT
+STDCALL
+W32kCreateFont(int  Height,
                       int  Width,
                       int  Escapement,
                       int  Orientation,
@@ -32,12 +36,16 @@ HFONT  W32kCreateFont(int  Height,
   UNIMPLEMENTED;
 }
 
-HFONT  W32kCreateFontIndirect(CONST LPLOGFONT  lf)
+HFONT
+STDCALL
+W32kCreateFontIndirect(CONST LPLOGFONT  lf)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kCreateScalableFontResource(DWORD  Hidden,
+BOOL
+STDCALL
+W32kCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  FontRes,
                                      LPCWSTR  FontFile,
                                      LPCWSTR  CurrentPath)
@@ -45,7 +53,9 @@ BOOL  W32kCreateScalableFontResource(DWORD  Hidden,
   UNIMPLEMENTED;
 }
 
-int  W32kEnumFontFamilies(HDC  hDC,
+int
+STDCALL
+W32kEnumFontFamilies(HDC  hDC,
                           LPCWSTR  Family,
                           FONTENUMPROC  EnumFontFamProc,
                           LPARAM  lParam)
@@ -53,7 +63,9 @@ int  W32kEnumFontFamilies(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kEnumFontFamiliesEx(HDC  hDC,
+int
+STDCALL
+W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONT  Logfont,
                             FONTENUMPROC  EnumFontFamExProc,
                             LPARAM  lParam,
@@ -62,7 +74,9 @@ int  W32kEnumFontFamiliesEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kEnumFonts(HDC  hDC,
+int
+STDCALL
+W32kEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
                    FONTENUMPROC  FontFunc,
                    LPARAM  lParam)
@@ -70,7 +84,9 @@ int  W32kEnumFonts(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kExtTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kExtTextOut(HDC  hDC,
                      int  X,
                      int  Y,
                      UINT  Options,
@@ -82,13 +98,17 @@ BOOL  W32kExtTextOut(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetAspectRatioFilterEx(HDC  hDC,
+BOOL
+STDCALL
+W32kGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetCharABCWidths(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharABCWidths(HDC  hDC,
                            UINT  FirstChar,
                            UINT  LastChar,
                            LPABC  abc)
@@ -96,7 +116,9 @@ BOOL  W32kGetCharABCWidths(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetCharABCWidthsFloat(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharABCWidthsFloat(HDC  hDC,
                                 UINT  FirstChar,
                                 UINT  LastChar,
                                 LPABCFLOAT  abcF)
@@ -104,7 +126,9 @@ BOOL  W32kGetCharABCWidthsFloat(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGetCharacterPlacement(HDC  hDC,
+DWORD
+STDCALL
+W32kGetCharacterPlacement(HDC  hDC,
                                  LPCWSTR  String,
                                  int  Count,
                                  int  MaxExtent,
@@ -114,7 +138,9 @@ DWORD  W32kGetCharacterPlacement(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetCharWidth(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidth(HDC  hDC,
                        UINT  FirstChar,
                        UINT  LastChar,
                        LPINT  Buffer)
@@ -122,7 +148,9 @@ BOOL  W32kGetCharWidth(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetCharWidth32(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidth32(HDC  hDC,
                          UINT  FirstChar,
                          UINT  LastChar,
                          LPINT  Buffer)
@@ -130,7 +158,9 @@ BOOL  W32kGetCharWidth32(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetCharWidthFloat(HDC  hDC,
+BOOL
+STDCALL
+W32kGetCharWidthFloat(HDC  hDC,
                             UINT  FirstChar,
                             UINT  LastChar,
                             PFLOAT  Buffer)
@@ -138,12 +168,16 @@ BOOL  W32kGetCharWidthFloat(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGetFontLanguageInfo(HDC  hDC)
+DWORD
+STDCALL
+W32kGetFontLanguageInfo(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGetGlyphOutline(HDC  hDC,
+DWORD
+STDCALL
+W32kGetGlyphOutline(HDC  hDC,
                            UINT  Char,
                            UINT  Format,
                            LPGLYPHMETRICS  gm,
@@ -154,39 +188,51 @@ DWORD  W32kGetGlyphOutline(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-DWORD  W32kGetKerningPairs(HDC  hDC,
+DWORD
+STDCALL
+W32kGetKerningPairs(HDC  hDC,
                            DWORD  NumPairs,
                            LPKERNINGPAIR  krnpair)
 {
   UNIMPLEMENTED;
 }
 
-UINT  W32kGetOutlineTextMetrics(HDC  hDC,
+UINT
+STDCALL
+W32kGetOutlineTextMetrics(HDC  hDC,
                                 UINT  Data,
                                 LPOUTLINETEXTMETRIC  otm)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
+BOOL
+STDCALL
+W32kGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
                             UINT  Size)
 {
   UNIMPLEMENTED;
 }
 
-UINT  W32kGetTextCharset(HDC  hDC)
+UINT
+STDCALL
+W32kGetTextCharset(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-UINT  W32kGetTextCharsetInfo(HDC  hDC,
+UINT
+STDCALL
+W32kGetTextCharsetInfo(HDC  hDC,
                              LPFONTSIGNATURE  Sig,
                              DWORD  Flags)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetTextExtentExPoint(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentExPoint(HDC  hDC,
                                LPCWSTR String,
                                int  Count,
                                int  MaxExtent,
@@ -197,7 +243,9 @@ BOOL  W32kGetTextExtentExPoint(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetTextExtentPoint(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentPoint(HDC  hDC,
                              LPCWSTR  String,
                              int  Count,
                              LPSIZE  Size)
@@ -205,7 +253,9 @@ BOOL  W32kGetTextExtentPoint(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetTextExtentPoint32(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextExtentPoint32(HDC  hDC,
                                LPCWSTR  String,
                                int  Count,
                                LPSIZE  Size)
@@ -213,38 +263,50 @@ BOOL  W32kGetTextExtentPoint32(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kGetTextFace(HDC  hDC,
+int
+STDCALL
+W32kGetTextFace(HDC  hDC,
                      int  Count,
                      LPWSTR  FaceName)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kGetTextMetrics(HDC  hDC,
+BOOL
+STDCALL
+W32kGetTextMetrics(HDC  hDC,
                          LPTEXTMETRIC  tm)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyTextOut(HDC  hDC,
                       CONST LPPOLYTEXT  txt,
                       int  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRemoveFontResource(LPCWSTR  FileName)
+BOOL
+STDCALL
+W32kRemoveFontResource(LPCWSTR  FileName)
 {
   UNIMPLEMENTED;
 }
 
-DWORD  W32kSetMapperFlags(HDC  hDC,
+DWORD
+STDCALL
+W32kSetMapperFlags(HDC  hDC,
                           DWORD  Flag)
 {
   UNIMPLEMENTED;
 }
 
-UINT  W32kSetTextAlign(HDC  hDC,
+UINT
+STDCALL
+W32kSetTextAlign(HDC  hDC,
                        UINT  Mode)
 {
   UINT prevAlign;
@@ -262,7 +324,8 @@ UINT  W32kSetTextAlign(HDC  hDC,
   return  prevAlign;
 }
 
-COLORREF STDCALL  
+COLORREF
+STDCALL
 W32kSetTextColor(HDC hDC, 
                  COLORREF color)
 {
@@ -281,14 +344,18 @@ W32kSetTextColor(HDC hDC,
   return  oldColor;
 }
 
-BOOL  W32kSetTextJustification(HDC  hDC,
+BOOL
+STDCALL
+W32kSetTextJustification(HDC  hDC,
                                int  BreakExtra,
                                int  BreakCount)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kTextOut(HDC  hDC,
+BOOL
+STDCALL
+W32kTextOut(HDC  hDC,
                   int  XStart,
                   int  YStart,
                   LPCWSTR  String,
@@ -297,7 +364,9 @@ BOOL  W32kTextOut(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-UINT  W32kTranslateCharsetInfo(PDWORD  Src,
+UINT
+STDCALL
+W32kTranslateCharsetInfo(PDWORD  Src,
                                LPCHARSETINFO  CSI,   
                                DWORD  Flags)
 {

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.1 1999/05/24 20:04:44 ea Exp $
+/* $Id: stubsw.c,v 1.2 2000/02/20 22:52:48 ea Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -10,7 +10,7 @@
  */
 #define UNICODE
 #include <windows.h>
-
+#include <win32k/kapi.h>
 
 int
 STDCALL
@@ -38,15 +38,20 @@ CopyMetaFileW(
 
 HDC
 STDCALL
-CreateDCW(
-	LPCWSTR		a0,
-	LPCWSTR		a1,
-	LPCWSTR		a2,
-	CONST DEVMODE	*a3
+CreateDCW (
+	LPCWSTR		lpwszDriver,
+	LPCWSTR		lpwszDevice,
+	LPCWSTR		lpwszOutput,
+	CONST DEVMODE	* lpInitData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	/* FIXME: is this a forward-only call? */
+	return W32kCreateDC (
+			lpwszDriver,
+			lpwszDevice,
+			lpwszOutput,
+			lpInitData
+			);
 }
 
 

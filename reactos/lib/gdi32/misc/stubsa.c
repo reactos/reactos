@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.1 1999/05/24 20:04:44 ea Exp $
+/* $Id: stubsa.c,v 1.2 2000/02/20 22:52:48 ea Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -13,7 +13,52 @@
 #endif
 #include <windows.h>
 
+static
+LPWSTR
+STDCALL
+AnsiStringToUnicodeString (
+	LPCSTR	AnsiString,
+	LPWSTR	UnicodeString,
+	BOOLEAN	AllocateBuffer
+	)
+{
+	int	Length;
+	LPWSTR	_UnicodeString = UnicodeString;
 
+	if (	(NULL == UnicodeString)
+		&& (FALSE == AllocateBuffer)
+		)
+	{
+		return NULL;
+	}
+	Length = (lstrlenA (AnsiString) + 1);
+	if (TRUE == AllocateBuffer)
+	{
+		_UnicodeString = LocalAlloc (
+					LMEM_ZEROINIT,
+					Length
+					);
+		if (NULL == _UnicodeString)
+		{
+			return NULL;
+		}
+	}
+	Length = MultiByteToWideChar (
+			CP_ACP,
+			0,
+			AnsiString,
+			-1,
+			_UnicodeString,
+			Length
+			);
+	if (0 == Length)
+	{
+		return NULL;
+	}
+	return _UnicodeString;
+}
+
+	
 int
 STDCALL
 AddFontResourceA(
@@ -39,15 +84,78 @@ CopyMetaFileA(
 
 HDC
 STDCALL
-CreateDCA(
-	LPCSTR		a0,
-	LPCSTR		a1,
-	LPCSTR		a2,
-	CONST DEVMODE	*a3
+CreateDCA (
+	LPCSTR		lpszDriver,
+	LPCSTR		lpszDevice,
+	LPCSTR		lpszOutput,
+	CONST DEVMODE	* lpInitData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	LPCWSTR	lpwszDriver = NULL;
+	LPCWSTR	lpwszDevice = NULL;
+	LPCWSTR	lpwszOutput = NULL;
+	HDC	hDC;
+
+	/*
+	 * If needed, convert to Unicode
+	 * any string parameter.
+	 */
+	if (NULL != lpszDriver)
+	{
+		lpwszDriver = AnsiStringToUnicodeString (
+				lpszDriver,
+				NULL,
+				TRUE
+				);
+		if (NULL == lpwszDriver)
+		{
+			return 0;
+		}
+	}
+	if (NULL != lpszDevice)
+	{
+		lpwszDevice = AnsiStringToUnicodeString (
+				lpszDevice,
+				NULL,
+				TRUE
+				);
+		if (NULL == lpwszDevice)
+		{
+			return 0;
+		}
+	}
+	if (NULL != lpszOutput)
+	{
+		lpwszOutput = AnsiStringToUnicodeString (
+				lpszOutput,
+				NULL,
+				TRUE
+				);
+		if (NULL == lpwszOutput)
+		{
+			return 0;
+		}
+	}
+	/*
+	 * Call the Unicode version
+	 * of CreateDC.
+	 */
+	hDC = CreateDCW (
+		lpwszDriver,
+		lpwszDevice,
+		lpwszOutput,
+		lpInitData
+		);
+	/*
+	 * Free Unicode parameters.
+	 */
+	if (NULL != lpszDriver) LocalFree (lpwszDriver);
+	if (NULL != lpszDevice) LocalFree (lpwszDevice);
+	if (NULL != lpszOutput) LocalFree (lpwszOutput);
+	/*
+	 * Return the possible DC handle.
+	 */
+	return hDC;
 }
 
 

@@ -1,44 +1,44 @@
-# $Id: makefile,v 1.6 1999/12/04 20:58:39 ea Exp $
+# $Id: makefile,v 1.7 2000/02/20 22:52:49 ea Exp $
 #
 #
-TARGET=null
-OBJECTS= $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+TARGETNAME=null
+OBJECTS= $(TARGETNAME).o $(TARGETNAME).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 
-all: $(TARGET).sys
+all: $(TARGETNAME).sys
 
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
-	- $(RM) $(TARGET).coff
+	- $(RM) $(TARGETNAME).o
+	- $(RM) $(TARGETNAME).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
 else
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 endif
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
 else
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 endif
 
-$(TARGET).sys: $(OBJECTS)
+$(TARGETNAME).sys: $(OBJECTS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -50,7 +50,7 @@ $(TARGET).sys: $(OBJECTS)
 		$(OBJECTS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
-		--dllname $(TARGET).sys \
+		--dllname $(TARGETNAME).sys \
 		--base-file base.tmp \
 		--output-exp temp.exp \
 		--kill-at
@@ -62,7 +62,7 @@ $(TARGET).sys: $(OBJECTS)
 		-Wl,temp.exp \
 		-specs=../../svc_specs \
 		-mdll \
-		-o $(TARGET).sys \
+		-o $(TARGETNAME).sys \
 		$(OBJECTS)
 	- $(RM) temp.exp
 

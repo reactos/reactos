@@ -8,7 +8,7 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-int  W32kExcludeClipRect(HDC  hDC,
+int STDCALL W32kExcludeClipRect(HDC  hDC,
                          int  LeftRect,
                          int  TopRect,
                          int  RightRect,
@@ -17,26 +17,26 @@ int  W32kExcludeClipRect(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kExtSelectClipRgn(HDC  hDC,
+int STDCALL W32kExtSelectClipRgn(HDC  hDC,
                           HRGN  hrgn,
                           int  fnMode)
 {
   UNIMPLEMENTED;
 }
 
-int  W32kGetClipBox(HDC  hDC,
+int STDCALL W32kGetClipBox(HDC  hDC,
                     LPRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-int  W32kGetMetaRgn(HDC  hDC,
+int STDCALL W32kGetMetaRgn(HDC  hDC,
                     HRGN  hrgn)
 {
   UNIMPLEMENTED;
 }
 
-int  W32kIntersectClipRect(HDC  hDC,
+int STDCALL W32kIntersectClipRect(HDC  hDC,
                            int  LeftRect,
                            int  TopRect,
                            int  RightRect,
@@ -45,39 +45,39 @@ int  W32kIntersectClipRect(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kOffsetClipRgn(HDC  hDC,
+int STDCALL W32kOffsetClipRgn(HDC  hDC,
                        int  XOffset,
                        int  YOffset)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPtVisible(HDC  hDC,
+BOOL STDCALL W32kPtVisible(HDC  hDC,
                     int  X,
                     int  Y)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRectVisible(HDC  hDC,
+BOOL STDCALL W32kRectVisible(HDC  hDC,
                       CONST PRECT  rc)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSelectClipPath(HDC  hDC,
+BOOL STDCALL W32kSelectClipPath(HDC  hDC,
                          int  Mode)
 {
   UNIMPLEMENTED;
 }
 
-int  W32kSelectClipRgn(HDC  hDC,
+int STDCALL W32kSelectClipRgn(HDC  hDC,
                        HRGN  hrgn)
 {
   UNIMPLEMENTED;
 }
 
-int  W32kSetMetaRgn(HDC  hDC)
+int STDCALL W32kSetMetaRgn(HDC  hDC)
 {
   UNIMPLEMENTED;
 }

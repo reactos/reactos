@@ -8,19 +8,25 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-HPEN  W32kCreatePen(INT  PenStyle,
+HPEN
+STDCALL
+W32kCreatePen(INT  PenStyle,
                     INT  Width,
                     COLORREF  Color)
 {
   UNIMPLEMENTED;
 }
 
-HPEN  W32kCreatePenIndirect(CONST PLOGPEN  lgpn)
+HPEN
+STDCALL
+W32kCreatePenIndirect(CONST PLOGPEN  lgpn)
 {
   UNIMPLEMENTED;
 }
 
-HPEN  W32kExtCreatePen(DWORD  PenStyle,
+HPEN
+STDCALL
+W32kExtCreatePen(DWORD  PenStyle,
                        DWORD  Width,
                        CONST PLOGBRUSH  lb,
                        DWORD  StyleCount,

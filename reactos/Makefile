@@ -14,7 +14,7 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl
+COMPONENTS = iface_native iface_additional ntoskrnl
 DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 
 #DLLS = mingw32 user32
 SUBSYS = smss win32k
@@ -106,8 +106,20 @@ iface_native_floppy:
 
 iface_native_dist:
 
+iface_additional:
+	make -C iface/addsys
+
+iface_additional_clean:
+	make -C iface/addsys clean
+
+iface_additional_floppy:
+
+iface_additional_dist:
+
 .PHONY: iface_native iface_native_clean iface_native_floppy \
-        iface_native_dist
+        iface_native_dist \
+	iface_additional iface_additional_clean iface_additional_floppy \
+        iface_additional_dist \
 
 #
 # Device driver rules

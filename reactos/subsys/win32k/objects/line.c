@@ -9,7 +9,9 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kAngleArc(HDC  hDC,
+BOOL
+STDCALL
+W32kAngleArc(HDC  hDC,
                    int  X,
                    int  Y,
                    DWORD  Radius,
@@ -19,7 +21,9 @@ BOOL  W32kAngleArc(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kArc(HDC  hDC,
+BOOL
+STDCALL
+W32kArc(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect, 
@@ -32,7 +36,9 @@ BOOL  W32kArc(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kArcTo(HDC  hDC,
+BOOL
+STDCALL
+W32kArcTo(HDC  hDC,
                 int  LeftRect,
                 int  TopRect,
                 int  RightRect,
@@ -45,7 +51,9 @@ BOOL  W32kArcTo(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kGetArcDirection(HDC  hDC)
+int
+STDCALL
+W32kGetArcDirection(HDC  hDC)
 {
   PDC  dc;
   int  ret;
@@ -62,14 +70,18 @@ int  W32kGetArcDirection(HDC  hDC)
   return ret;
 }
 
-BOOL  W32kLineTo(HDC  hDC,
+BOOL
+STDCALL
+W32kLineTo(HDC  hDC,
                  int  XEnd,
                  int  YEnd)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kMoveToEx(HDC  hDC,
+BOOL
+STDCALL
+W32kMoveToEx(HDC  hDC,
                    int  X,
                    int  Y,
                    LPPOINT  Point)
@@ -77,21 +89,27 @@ BOOL  W32kMoveToEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyBezier(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyBezier(HDC  hDC,
                      CONST LPPOINT  pt,
                      DWORD  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyBezierTo(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyBezierTo(HDC  hDC,
                        CONST LPPOINT  pt,
                        DWORD  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyDraw(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyDraw(HDC  hDC,
                    CONST LPPOINT  pt,
                    CONST LPBYTE  Types,
                    int  Count)
@@ -99,21 +117,27 @@ BOOL  W32kPolyDraw(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyline(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyline(HDC  hDC,
                    CONST LPPOINT  pt,
                    int  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolylineTo(HDC  hDC,
+BOOL
+STDCALL
+W32kPolylineTo(HDC  hDC,
                      CONST LPPOINT  pt,
                      DWORD  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyPolyline(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyPolyline(HDC  hDC,
                        CONST LPPOINT  pt,
                        CONST LPDWORD  PolyPoints,
                        DWORD  Count)
@@ -121,7 +145,9 @@ BOOL  W32kPolyPolyline(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kSetArcDirection(HDC  hDC,
+int
+STDCALL
+W32kSetArcDirection(HDC  hDC,
                          int  ArcDirection)
 {
   PDC  dc;

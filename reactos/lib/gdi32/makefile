@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 1999/08/29 13:44:54 dwelch Exp $
+# $Id: makefile,v 1.9 2000/02/20 22:52:48 ea Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -20,7 +20,7 @@ all: $(DLLTARGET)
 
 MAIN_OBJECTS = main/dllmain.o
 
-MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o
+MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
 
 RESOURCE_OBJECTS = $(TARGET).coff
 
@@ -43,6 +43,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
+		-Wl,--entry,_DllMain@12 \
 		-Wl,--base-file,base.tmp 
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -56,6 +57,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o $(TARGET).dll \
+		-Wl,--entry,_DllMain@12 \
 		-Wl,--image-base,0x70000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

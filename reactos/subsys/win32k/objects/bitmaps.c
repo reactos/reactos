@@ -9,7 +9,7 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kBitBlt(HDC  hDCDest,
+BOOL STDCALL W32kBitBlt(HDC  hDCDest,
                  INT  XDest,
                  INT  YDest,
                  INT  Width,
@@ -22,7 +22,7 @@ BOOL  W32kBitBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-HBITMAP  W32kCreateBitmap(INT  Width,
+HBITMAP STDCALL W32kCreateBitmap(INT  Width,
                           INT  Height,
                           UINT  Planes,
                           UINT  BitsPerPel,
@@ -86,7 +86,7 @@ HBITMAP  W32kCreateBitmap(INT  Width,
   return  hBitmap;
 }
 
-HBITMAP  W32kCreateCompatibleBitmap(HDC hDC,
+HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
                                     INT  Width,
                                     INT  Height)
 {
@@ -127,7 +127,7 @@ HBITMAP  W32kCreateCompatibleBitmap(HDC hDC,
   return hbmpRet;
 }
 
-HBITMAP  W32kCreateBitmapIndirect(CONST BITMAP  *BM)
+HBITMAP STDCALL W32kCreateBitmapIndirect(CONST BITMAP  *BM)
 {
   return W32kCreateBitmap (BM->bmWidth, 
                            BM->bmHeight, 
@@ -136,7 +136,7 @@ HBITMAP  W32kCreateBitmapIndirect(CONST BITMAP  *BM)
                            BM->bmBits);
 }
 
-HBITMAP  W32kCreateDIBitmap(HDC  hDC,
+HBITMAP STDCALL W32kCreateDIBitmap(HDC  hDC,
                             CONST BITMAPINFOHEADER  *bmih,
                             DWORD  Init,
                             CONST VOID  *bInit,
@@ -146,7 +146,7 @@ HBITMAP  W32kCreateDIBitmap(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-HBITMAP  W32kCreateDIBSection(HDC hDC,
+HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
                               CONST BITMAPINFO  *bmi,
                               UINT  Usage,
                               VOID  *Bits,
@@ -156,7 +156,7 @@ HBITMAP  W32kCreateDIBSection(HDC hDC,
   UNIMPLEMENTED;
 }
 
-HBITMAP  W32kCreateDiscardableBitmap(HDC  hDC,
+HBITMAP STDCALL W32kCreateDiscardableBitmap(HDC  hDC,
                                      INT  Width,
                                      INT  Height)
 {
@@ -164,7 +164,7 @@ HBITMAP  W32kCreateDiscardableBitmap(HDC  hDC,
   return  W32kCreateCompatibleBitmap(hDC, Width, Height);
 }
 
-BOOL W32kExtFloodFill(HDC  hDC,
+BOOL STDCALL W32kExtFloodFill(HDC  hDC,
                       INT  XStart,
                       INT  YStart,
                       COLORREF  Color, 
@@ -173,7 +173,7 @@ BOOL W32kExtFloodFill(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFloodFill(HDC  hDC,
+BOOL STDCALL W32kFloodFill(HDC  hDC,
                     INT  XStart,
                     INT  YStart,
                     COLORREF  Fill)
@@ -181,7 +181,7 @@ BOOL  W32kFloodFill(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-LONG  W32kGetBitmapBits(HBITMAP  hBitmap,
+LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
                         LONG  Count,
                         LPVOID  Bits)
 {
@@ -258,7 +258,7 @@ LONG  W32kGetBitmapBits(HBITMAP  hBitmap,
   return  ret;
 }
 
-BOOL  W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
+BOOL STDCALL W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
                                LPSIZE  Dimension)
 {
   PBITMAPOBJ  bmp;
@@ -275,7 +275,7 @@ BOOL  W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
   return  TRUE;
 }
 
-UINT  W32kGetDIBColorTable(HDC  hDC,
+UINT STDCALL W32kGetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            RGBQUAD  *Colors)
@@ -283,7 +283,7 @@ UINT  W32kGetDIBColorTable(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kGetDIBits(HDC  hDC,
+INT STDCALL W32kGetDIBits(HDC  hDC,
                    HBITMAP hBitmap,
                    UINT  StartScan,
                    UINT  ScanLines,
@@ -294,14 +294,14 @@ INT  W32kGetDIBits(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-COLORREF  W32kGetPixel(HDC  hDC,
+COLORREF STDCALL W32kGetPixel(HDC  hDC,
                        INT  XPos,
                        INT  YPos)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kMaskBlt(HDC  hDCDest,
+BOOL STDCALL W32kMaskBlt(HDC  hDCDest,
                   INT  XDest,
                   INT  YDest,
                   INT  Width,
@@ -317,7 +317,7 @@ BOOL  W32kMaskBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-BOOL W32kPlgBlt(HDC  hDCDest,
+BOOL STDCALL W32kPlgBlt(HDC  hDCDest,
                 CONST POINT  *Point,
                 HDC  hDCSrc, 
                 INT  XSrc,  
@@ -331,7 +331,7 @@ BOOL W32kPlgBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-LONG  W32kSetBitmapBits(HBITMAP  hBitmap,
+LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
                         DWORD  Bytes,
                         CONST VOID *Bits)
 {
@@ -408,7 +408,7 @@ LONG  W32kSetBitmapBits(HBITMAP  hBitmap,
   return ret;
 }
 
-BOOL  W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
+BOOL STDCALL W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
                                INT  Width,
                                INT  Height,
                                LPSIZE  Size)
@@ -432,7 +432,7 @@ BOOL  W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
   return TRUE;
 }
 
-UINT  W32kSetDIBColorTable(HDC  hDC,
+UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            CONST RGBQUAD  *Colors)
@@ -440,7 +440,7 @@ UINT  W32kSetDIBColorTable(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kSetDIBits(HDC  hDC,
+INT STDCALL W32kSetDIBits(HDC  hDC,
                    HBITMAP  hBitmap,
                    UINT  StartScan,
                    UINT  ScanLines,
@@ -451,7 +451,7 @@ INT  W32kSetDIBits(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kSetDIBitsToDevice(HDC  hDC,
+INT STDCALL W32kSetDIBitsToDevice(HDC  hDC,
                            INT  XDest,
                            INT  YDest,
                            DWORD  Width,
@@ -467,7 +467,7 @@ INT  W32kSetDIBitsToDevice(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-COLORREF  W32kSetPixel(HDC  hDC,
+COLORREF STDCALL W32kSetPixel(HDC  hDC,
                        INT  X,
                        INT  Y,
                        COLORREF  Color)
@@ -475,7 +475,7 @@ COLORREF  W32kSetPixel(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetPixelV(HDC  hDC,
+BOOL STDCALL W32kSetPixelV(HDC  hDC,
                     INT  X,
                     INT  Y,
                     COLORREF  Color)
@@ -483,7 +483,7 @@ BOOL  W32kSetPixelV(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kStretchBlt(HDC  hDCDest,
+BOOL STDCALL W32kStretchBlt(HDC  hDCDest,
                      INT  XOriginDest,
                      INT  YOriginDest,
                      INT  WidthDest,
@@ -498,7 +498,7 @@ BOOL  W32kStretchBlt(HDC  hDCDest,
   UNIMPLEMENTED;
 }
 
-INT  W32kStretchDIBits(HDC  hDC,
+INT STDCALL W32kStretchDIBits(HDC  hDC,
                        INT  XDest,
                        INT  YDest,
                        INT  DestWidth,

@@ -9,7 +9,7 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kCombineTransform(LPXFORM  XFormResult,
+BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
                            CONST LPXFORM  xform1,
                            CONST LPXFORM  xform2)
 {
@@ -41,14 +41,15 @@ BOOL  W32kCombineTransform(LPXFORM  XFormResult,
   return  TRUE;
 }
 
-BOOL  W32kDPtoLP(HDC  hDC,
+BOOL STDCALL W32kDPtoLP(HDC  hDC,
                  LPPOINT  Points,
                  int  Count)
 {
   UNIMPLEMENTED;
 }
 
-int  
+int
+STDCALL
 W32kGetGraphicsMode(HDC  hDC)
 {
   PDC  dc;
@@ -66,7 +67,8 @@ W32kGetGraphicsMode(HDC  hDC)
   return  GraphicsMode;
 }
 
-BOOL  
+BOOL
+STDCALL
 W32kGetWorldTransform(HDC  hDC,
                       LPXFORM  XForm)
 {
@@ -87,14 +89,18 @@ W32kGetWorldTransform(HDC  hDC,
   return  TRUE;
 }
 
-BOOL  W32kLPtoDP(HDC  hDC,
+BOOL
+STDCALL
+W32kLPtoDP(HDC  hDC,
                  LPPOINT  Points,
                  int  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kModifyWorldTransform(HDC  hDC,
+BOOL
+STDCALL
+W32kModifyWorldTransform(HDC  hDC,
                                CONST LPXFORM  XForm,
                                DWORD  Mode)
 {
@@ -148,7 +154,9 @@ BOOL  W32kModifyWorldTransform(HDC  hDC,
   return  TRUE;
 }
 
-BOOL  W32kOffsetViewportOrgEx(HDC  hDC,
+BOOL
+STDCALL
+W32kOffsetViewportOrgEx(HDC  hDC,
                               int  XOffset,
                               int  YOffset,
                               LPPOINT  Point)
@@ -156,7 +164,9 @@ BOOL  W32kOffsetViewportOrgEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kOffsetWindowOrgEx(HDC  hDC,
+BOOL
+STDCALL
+W32kOffsetWindowOrgEx(HDC  hDC,
                             int  XOffset,
                             int  YOffset,
                             LPPOINT  Point)
@@ -164,7 +174,9 @@ BOOL  W32kOffsetWindowOrgEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kScaleViewportExtEx(HDC  hDC,
+BOOL
+STDCALL
+W32kScaleViewportExtEx(HDC  hDC,
                              int  Xnum,
                              int  Xdenom,
                              int  Ynum,
@@ -174,7 +186,9 @@ BOOL  W32kScaleViewportExtEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kScaleWindowExtEx(HDC  hDC,
+BOOL
+STDCALL
+W32kScaleWindowExtEx(HDC  hDC,
                            int  Xnum,
                            int  Xdenom,
                            int  Ynum,
@@ -184,7 +198,9 @@ BOOL  W32kScaleWindowExtEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int  W32kSetGraphicsMode(HDC  hDC,
+int
+STDCALL
+W32kSetGraphicsMode(HDC  hDC,
                          int  Mode)
 {
   INT ret;
@@ -213,13 +229,17 @@ int  W32kSetGraphicsMode(HDC  hDC,
   return  ret;
 }
 
-int  W32kSetMapMode(HDC  hDC,
+int
+STDCALL
+W32kSetMapMode(HDC  hDC,
                     int  MapMode)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetViewportExtEx(HDC  hDC,
+BOOL
+STDCALL
+W32kSetViewportExtEx(HDC  hDC,
                            int  XExtent,
                            int  YExtent,
                            LPSIZE  Size)
@@ -227,7 +247,9 @@ BOOL  W32kSetViewportExtEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetViewportOrgEx(HDC  hDC,
+BOOL
+STDCALL
+W32kSetViewportOrgEx(HDC  hDC,
                            int  X,
                            int  Y,
                            LPPOINT  Point)
@@ -235,7 +257,9 @@ BOOL  W32kSetViewportOrgEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetWindowExtEx(HDC  hDC,
+BOOL
+STDCALL
+W32kSetWindowExtEx(HDC  hDC,
                          int  XExtent,
                          int  YExtent,
                          LPSIZE  Size)
@@ -243,7 +267,9 @@ BOOL  W32kSetWindowExtEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetWindowOrgEx(HDC  hDC,
+BOOL
+STDCALL
+W32kSetWindowOrgEx(HDC  hDC,
                          int  X,
                          int  Y,
                          LPPOINT  Point)
@@ -251,7 +277,9 @@ BOOL  W32kSetWindowOrgEx(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetWorldTransform(HDC  hDC,
+BOOL
+STDCALL
+W32kSetWorldTransform(HDC  hDC,
                             CONST LPXFORM  XForm)
 {
   PDC  dc;

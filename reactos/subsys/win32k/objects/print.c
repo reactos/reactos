@@ -8,22 +8,30 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-INT  W32kAbortDoc(HDC  hDC)
+INT
+STDCALL
+W32kAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kEndDoc(HDC  hDC)
+INT
+STDCALL
+W32kEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kEndPage(HDC  hDC)
+INT
+STDCALL
+W32kEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kEscape(HDC  hDC,
+INT
+STDCALL
+W32kEscape(HDC  hDC,
                 INT  Escape,
                 INT  InSize,
                 LPCSTR  InData,
@@ -32,7 +40,9 @@ INT  W32kEscape(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kExtEscape(HDC  hDC,
+INT
+STDCALL
+W32kExtEscape(HDC  hDC,
                    INT  Escape,
                    INT  InSize,
                    LPCSTR  InData,
@@ -42,19 +52,25 @@ INT  W32kExtEscape(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kSetAbortProc(HDC  hDC,
+INT
+STDCALL
+W32kSetAbortProc(HDC  hDC,
                       ABORTPROC  AbortProc)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kStartDoc(HDC  hDC,
+INT
+STDCALL
+W32kStartDoc(HDC  hDC,
                   CONST PDOCINFO  di)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kStartPage(HDC  hDC)
+INT
+STDCALL
+W32kStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;
 }

@@ -7,7 +7,9 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kChord(HDC  hDC,
+BOOL
+STDCALL
+W32kChord(HDC  hDC,
                 int  LeftRect,
                 int  TopRect,
                 int  RightRect,
@@ -20,7 +22,9 @@ BOOL  W32kChord(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kEllipse(HDC  hDC,
+BOOL
+STDCALL
+W32kEllipse(HDC  hDC,
                   int  LeftRect,
                   int  TopRect,
                   int  RightRect,
@@ -29,7 +33,9 @@ BOOL  W32kEllipse(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPie(HDC  hDC,
+BOOL
+STDCALL
+W32kPie(HDC  hDC,
               int  LeftRect,
               int  TopRect,
               int  RightRect,
@@ -42,14 +48,18 @@ BOOL  W32kPie(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolygon(HDC  hDC,
+BOOL
+STDCALL
+W32kPolygon(HDC  hDC,
                   CONST PPOINT  Points,
                   int  Count)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kPolyPolygon(HDC  hDC,
+BOOL
+STDCALL
+W32kPolyPolygon(HDC  hDC,
                       CONST LPPOINT  Points,
                       CONST LPINT  PolyCounts,
                       int  Count)
@@ -57,7 +67,9 @@ BOOL  W32kPolyPolygon(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRectangle(HDC  hDC,
+BOOL
+STDCALL
+W32kRectangle(HDC  hDC,
                     int  LeftRect,
                     int  TopRect,
                     int  RightRect,
@@ -66,7 +78,9 @@ BOOL  W32kRectangle(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRoundRect(HDC  hDC,
+BOOL
+STDCALL
+W32kRoundRect(HDC  hDC,
                     int  LeftRect,
                     int  TopRect,  
                     int  RightRect, 

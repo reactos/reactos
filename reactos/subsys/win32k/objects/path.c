@@ -8,44 +8,60 @@
 // #define NDEBUG
 #include <internal/debug.h>
 
-BOOL  W32kAbortPath(HDC  hDC)
+BOOL
+STDCALL
+W32kAbortPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kBeginPath(HDC  hDC)
+BOOL
+STDCALL
+W32kBeginPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kCloseFigure(HDC  hDC)
+BOOL
+STDCALL
+W32kCloseFigure(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kEndPath(HDC  hDC)
+BOOL
+STDCALL
+W32kEndPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFillPath(HDC  hDC)
+BOOL
+STDCALL
+W32kFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kFlattenPath(HDC  hDC)
+BOOL
+STDCALL
+W32kFlattenPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
 
-BOOL  W32kGetMiterLimit(HDC  hDC,
+BOOL
+STDCALL
+W32kGetMiterLimit(HDC  hDC,
                         PFLOAT  Limit)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kGetPath(HDC  hDC,
+INT
+STDCALL
+W32kGetPath(HDC  hDC,
                  LPPOINT  Points,
                  LPBYTE  Types,
                  INT  nSize)
@@ -53,29 +69,39 @@ INT  W32kGetPath(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-HRGN  W32kPathToRegion(HDC  hDC)
+HRGN
+STDCALL
+W32kPathToRegion(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kSetMiterLimit(HDC  hDC,
+BOOL
+STDCALL
+W32kSetMiterLimit(HDC  hDC,
                         FLOAT  NewLimit,
                         PFLOAT  OldLimit)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kStrokeAndFillPath(HDC  hDC)
+BOOL
+STDCALL
+W32kStrokeAndFillPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kStrokePath(HDC  hDC)
+BOOL
+STDCALL
+W32kStrokePath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kWidenPath(HDC  hDC)
+BOOL
+STDCALL
+W32kWidenPath(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
