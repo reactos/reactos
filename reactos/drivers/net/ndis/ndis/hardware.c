@@ -74,7 +74,7 @@ NdisMPciAssignResources(
 				   Adapter->Miniport->DriverObject,
 				   0,
 				   PCIBus,
-				   Adapter->BusNumber,
+				   Adapter->NdisMiniportBlock.BusNumber,
 				   SlotNumber,
 				   &ResourceList);
   if (!NT_SUCCESS (Status))
@@ -109,16 +109,37 @@ NdisMQueryAdapterResources(
  * NOTES:
  *     - Caller must allocate Status and ResourceList
  *     - Must be called at IRQL = PASSIVE_LEVEL;
- * BUGS:
- *     - Needs an implementation; for now i think we are waiting on pnp
  */
 {
+  PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+  PNDIS_MINIPORT_BLOCK MiniportBlock = WrapperContext->PhysicalDeviceObject->DeviceExtension;
+  ULONG ResourceListSize;
+
   PAGED_CODE();
   ASSERT(Status && ResourceList);
 
-  NDIS_DbgPrint(MIN_TRACE, ("Unimplemented!\n"));
+  /* FIXME: We can't do anything in this case. It shouldn't really happen. */
+  if (MiniportBlock->AllocatedResources == NULL)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("Unimplemented!\n"));
+      *Status = STATUS_NOT_SUPPORTED;
+      return;
+    }
 
-  *Status = STATUS_NOT_SUPPORTED;
+  ResourceListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
+                     MiniportBlock->AllocatedResources->Count *
+                     sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+
+  if (*BufferSize >= ResourceListSize)
+    {
+      RtlCopyMemory(ResourceList, MiniportBlock->AllocatedResources, ResourceListSize);
+      *BufferSize = ResourceListSize;
+      *Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      *Status = NDIS_STATUS_RESOURCES;
+    }
 }
 
 
@@ -147,7 +168,7 @@ VOID
 EXPORT
 NdisReadEisaSlotInformation(
     OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE			            WrapperConfigurationContext,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
     OUT PUINT                           SlotNumber,
     OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
 {
@@ -183,10 +204,10 @@ NdisReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)NdisAdapterHandle;
   /* Slot number is ignored since W2K for all NDIS drivers. */
-  NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
-  return HalGetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
+  return HalGetBusDataByOffset (PCIConfiguration, 0,
+                                Adapter->NdisMiniportBlock.SlotNumber,
                                 Buffer, Offset, Length);
 }
 
@@ -203,10 +224,10 @@ NdisWritePciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)NdisAdapterHandle;
   /* Slot number is ignored since W2K for all NDIS drivers. */
-  NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
-  return HalSetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
+  return HalSetBusDataByOffset (PCIConfiguration, 0, 
+                                Adapter->NdisMiniportBlock.SlotNumber,
                                 Buffer, Offset, Length);
 }
 

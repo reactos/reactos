@@ -171,7 +171,8 @@ NdisOpenConfiguration(
 {
     HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
-    HANDLE RootKeyHandle = (HANDLE)WrapperConfigurationContext;
+    PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+    HANDLE RootKeyHandle = WrapperContext->RegistryHandle;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 

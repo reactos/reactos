@@ -62,13 +62,6 @@ DriverEntry(
 
   DriverObject->DriverUnload = MainUnload;
 
-  /* 
-   * until we have PNP support, query the enum key and NdisFindDevice() each one
-   * NOTE- this will load and start other services before this one returns STATUS_SUCCESS.
-   * I hope there aren't code reentrancy problems. :) 
-   */
-  //NdisStartDevices();
-
   return STATUS_SUCCESS;
 }
 
