@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: errlog.c,v 1.12 2003/11/18 20:08:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,7 @@ typedef struct _IO_ERROR_LOG_PACKET
 
 typedef struct _ERROR_LOG_ENTRY
 {
+  LIST_ENTRY Entry;
   ULONG EntrySize;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
 
@@ -49,6 +50,11 @@ typedef struct _ERROR_LOG_ENTRY
 
 static KSPIN_LOCK IopAllocationLock;
 static ULONG IopTotalLogSize;
+
+static KSPIN_LOCK IopLogListLock;
+static LIST_ENTRY IopLogListHead;
+
+static BOOLEAN IopLogWorkerRunning = FALSE;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -59,7 +65,73 @@ IopInitErrorLog (VOID)
   IopTotalLogSize = 0;
   KeInitializeSpinLock (&IopAllocationLock);
 
+  KeInitializeSpinLock (&IopLogListLock);
+  InitializeListHead (&IopLogListHead);
+
   return STATUS_SUCCESS;
+}
+
+
+static VOID STDCALL
+IopLogWorker (PVOID Parameter)
+{
+  PERROR_LOG_ENTRY LogEntry;
+  KIRQL Irql;
+
+  DPRINT1 ("IopLogWorker() called\n");
+
+  /* Release the work item */
+  ExFreePool (Parameter);
+
+
+  /* FIXME: Open the error log port */
+
+
+  while (TRUE)
+    {
+      /* Remove last entry from the list */
+      KeAcquireSpinLock (&IopLogListLock,
+			 &Irql);
+
+      if (!IsListEmpty(&IopLogListHead))
+	{
+	  LogEntry = CONTAINING_RECORD (IopLogListHead.Blink,
+					ERROR_LOG_ENTRY,
+					Entry);
+	  RemoveEntryList (&LogEntry->Entry);
+	}
+      else
+	{
+	  LogEntry = NULL;
+	}
+
+      KeReleaseSpinLock (&IopLogListLock,
+			 Irql);
+
+      if (LogEntry == NULL)
+	{
+	  DPRINT1 ("No message in log list\n");
+	  break;
+	}
+
+
+
+      /* FIXME: Send the error message to the log port */
+
+
+
+      /* Release error log entry */
+      KeAcquireSpinLock (&IopAllocationLock,
+			 &Irql);
+
+      IopTotalLogSize -= LogEntry->EntrySize;
+      ExFreePool (LogEntry);
+
+      KeReleaseSpinLock (&IopAllocationLock,
+			 Irql);
+    }
+
+  DPRINT1 ("IopLogWorker() done\n");
 }
 
 
@@ -111,11 +183,12 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 IoWriteErrorLogEntry (IN PVOID ElEntry)
 {
+  PWORK_QUEUE_ITEM LogWorkItem;
   PERROR_LOG_ENTRY LogEntry;
   KIRQL Irql;
 
@@ -124,18 +197,36 @@ IoWriteErrorLogEntry (IN PVOID ElEntry)
   LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry - sizeof(ERROR_LOG_ENTRY));
 
 
-  /* FIXME: Write log entry to the error log port or keep it in a list */
+  /* FIXME: Get logging time */
 
 
-  /* Release error log entry */
-  KeAcquireSpinLock (&IopAllocationLock,
+  KeAcquireSpinLock (&IopLogListLock,
 		     &Irql);
 
-  IopTotalLogSize -= LogEntry->EntrySize;
-  ExFreePool (LogEntry);
+  InsertHeadList (&IopLogListHead,
+		  &LogEntry->Entry);
 
-  KeReleaseSpinLock (&IopAllocationLock,
+  if (IopLogWorkerRunning == FALSE)
+    {
+      LogWorkItem = ExAllocatePool (NonPagedPool,
+				    sizeof(WORK_QUEUE_ITEM));
+      if (LogWorkItem != NULL)
+	{
+	  ExInitializeWorkItem (LogWorkItem,
+				IopLogWorker,
+				LogWorkItem);
+
+	  ExQueueWorkItem (LogWorkItem,
+			   DelayedWorkQueue);
+
+	  IopLogWorkerRunning = TRUE;
+	}
+    }
+
+  KeReleaseSpinLock (&IopLogListLock,
 		     Irql);
+
+  DPRINT1 ("IoWriteErrorLogEntry() done\n");
 }
 
 /* EOF */
