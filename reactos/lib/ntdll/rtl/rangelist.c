@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.1 2004/02/01 20:48:06 ekohl Exp $
+/* $Id: rangelist.c,v 1.2 2004/05/14 12:11:52 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -28,11 +28,24 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <ntdll/ntdll.h>
+
+
+typedef struct _RTL_RANGE_ENTRY
+{
+  LIST_ENTRY Entry;
+  RTL_RANGE Range;
+} RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
+
 
 /* FUNCTIONS ***************************************************************/
 
 /*
- * @unimplemented
+ * TODO:
+ *   - Check for overlapping ranges.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
@@ -43,7 +56,70 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 	     IN PVOID UserData OPTIONAL,
 	     IN PVOID Owner OPTIONAL)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_ENTRY RangeEntry;
+  PRTL_RANGE_ENTRY Previous;
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+
+  if (Start > End)
+    return STATUS_INVALID_PARAMETER;
+
+  /* Create new range entry */
+  RangeEntry = RtlAllocateHeap (RtlGetProcessHeap(),
+				0,
+				sizeof(RTL_RANGE_ENTRY));
+  if (RangeEntry == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  /* Initialize range entry */
+  RangeEntry->Range.Start = Start;
+  RangeEntry->Range.End = End;
+  RangeEntry->Range.Attributes = Attributes;
+  RangeEntry->Range.Flags = Flags;
+  RangeEntry->Range.UserData = UserData;
+  RangeEntry->Range.Owner = Owner;
+
+  /* Insert range entry */
+  if (RangeList->Count == 0)
+    {
+      InsertTailList (&RangeList->ListHead,
+		      &RangeEntry->Entry);
+      RangeList->Count++;
+      RangeList->Stamp++;
+      return STATUS_SUCCESS;
+    }
+  else
+    {
+      Previous = NULL;
+      Entry = RangeList->ListHead.Flink;
+      while (Entry != &RangeList->ListHead)
+	{
+	  Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+	  if (Current->Range.Start > RangeEntry->Range.End)
+	    {
+	      /* Insert before current */
+	      DPRINT ("Insert before current\n");
+	      InsertTailList (&Current->Entry,
+			      &RangeEntry->Entry);
+
+	      RangeList->Count++;
+	      RangeList->Stamp++;
+	      return STATUS_SUCCESS;
+	    }
+
+	  Previous = Current;
+	  Entry = Entry->Flink;
+	}
+
+      DPRINT ("Insert tail\n");
+      InsertTailList (&RangeList->ListHead,
+		      &RangeEntry->Entry);
+      RangeList->Count++;
+      RangeList->Stamp++;
+      return STATUS_SUCCESS;
+    }
+
+  return STATUS_UNSUCCESSFUL;
 }
 
 
@@ -102,35 +178,92 @@ RtlFindRange (IN PRTL_RANGE_LIST RangeList,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
 {
+  PLIST_ENTRY Entry;
+#ifndef NDEBUG
+  PRTL_RANGE_ENTRY Current;
+#endif
+
+  while (!IsListEmpty(&RangeList->ListHead))
+    {
+      Entry = RemoveHeadList (&RangeList->ListHead);
+
+#ifndef NDEBUG
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+      DPRINT ("Range start: %I64u\n", Current->Range.Start);
+      DPRINT ("Range end:   %I64u\n", Current->Range.End);
+#endif
+
+      RtlFreeHeap (RtlGetProcessHeap(),
+		   0,
+		   Entry);
+    }
+
+  RangeList->Count = 0;
+  RangeList->Stamp++;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
 		  OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 		  OUT PRTL_RANGE *Range)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  Iterator->RangeListHead = &RangeList->ListHead;
+  Iterator->MergedHead = NULL;
+  Iterator->Stamp = RangeList->Stamp;
+  if (IsListEmpty(&RangeList->ListHead))
+    {
+      Iterator->Current = NULL;
+      *Range = NULL;
+      return STATUS_NO_MORE_ENTRIES;
+    }
+
+  Iterator->Current = RangeList->ListHead.Flink;
+  *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+
+  return STATUS_SUCCESS;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 		 OUT PRTL_RANGE *Range,
 		 IN BOOLEAN MoveForwards)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_LIST RangeList;
+  PLIST_ENTRY Next;
+
+  RangeList = CONTAINING_RECORD(Iterator->RangeListHead, RTL_RANGE_LIST, ListHead);
+  if (Iterator->Stamp != RangeList->Stamp)
+    return STATUS_INVALID_PARAMETER;
+
+  if (MoveForwards)
+    {
+      Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
+    }
+  else
+    {
+      Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Blink;
+    }
+
+  if (Next == Iterator->RangeListHead)
+    return STATUS_NO_MORE_ENTRIES;
+
+  Iterator->Current = Next;
+  *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -140,6 +273,10 @@ RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 VOID STDCALL
 RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
 {
+  InitializeListHead (&RangeList->ListHead);
+  RangeList->Flags = 0;
+  RangeList->Count = 0;
+  RangeList->Stamp = 0;
 }
 
 
