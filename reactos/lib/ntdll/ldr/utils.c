@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.37 2001/02/06 02:03:35 dwelch Exp $
+/* $Id: utils.c,v 1.38 2001/02/06 05:50:50 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -638,8 +638,7 @@ LdrGetExportByOrdinal (
  *
  */
 static PVOID
-LdrGetExportByName (PVOID  BaseAddress,
-		    PUCHAR SymbolName)
+LdrGetExportByName (PVOID BaseAddress, PUCHAR SymbolName, WORD Hint)
 {
   PIMAGE_EXPORT_DIRECTORY	ExportDir;
   PDWORD			* ExFunctions;
@@ -665,6 +664,19 @@ LdrGetExportByName (PVOID  BaseAddress,
 			     ExportDir->AddressOfNameOrdinals);
   ExFunctions = (PDWORD *)RVA(BaseAddress,
 			      ExportDir->AddressOfFunctions);
+  
+  /*
+   * Check the hint first
+   */
+  if (Hint < ExportDir->NumberOfFunctions)
+    {
+      ExName = RVA(BaseAddress, ExNames[Hint]);
+      if (strcmp(ExName, SymbolName) == 0)
+	{
+	  Ordinal = ExOrdinals[Hint];
+	  return(RVA(BaseAddress, ExFunctions[Ordinal]));      
+	}
+    }
 
   /*
    * Try a binary search first
@@ -867,7 +879,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	PULONG	FunctionNameList;
 	UNICODE_STRING DllName;
 	DWORD	pName;
-	PWORD	pHint;
+	WORD	pHint;
 
 	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
@@ -911,10 +923,9 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	  }
 	else
 	  {
-	     FunctionNameList = (PULONG) (
-					  ImageBase
-					  + ImportModuleDirectory->dwRVAFunctionAddressList
-					  );
+	     FunctionNameList = 
+	       (PULONG)(ImageBase 
+			+ ImportModuleDirectory->dwRVAFunctionAddressList);
 	  }
 	/*
 	 * Walk through function list and fixup addresses.
@@ -930,17 +941,11 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	       }
 	     else
 	       {
-		  pName = (DWORD) (
-				   ImageBase
-				   + *FunctionNameList
-				   + 2);
-		  pHint = (PWORD) (
-				   ImageBase
-				   + *FunctionNameList);
+		  pName = (DWORD) (ImageBase + *FunctionNameList + 2);
+		  pHint = *(PWORD)(ImageBase + *FunctionNameList);
 
-		  *ImportAddressList =
-		    LdrGetExportByName(BaseAddress,
-				       (PUCHAR) pName);
+		  *ImportAddressList = 
+		    LdrGetExportByName(BaseAddress, (PUCHAR)pName, pHint);
 		  if ((*ImportAddressList) == NULL)
 		    {
 		       DbgPrint("Failed to import %s\n", pName);

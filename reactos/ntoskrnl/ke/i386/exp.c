@@ -216,13 +216,12 @@ exception_handler(struct trap_frame* tf)
        
        DbgPrint("stack<%p>: ", stack);
 	 
-       for (i = 0; i < 16; i = i + 4)
+       for (i = 0; i < 18; i = i + 6)
 	 {
 	    DbgPrint("%.8x %.8x %.8x %.8x\n", 
-		     stack[i], 
-		     stack[i+1], 
-		     stack[i+2], 
-		     stack[i+3]);
+		     stack[i], stack[i+1], 
+		     stack[i+2], stack[i+3], 
+		     stack[i+4], stack[i+5]);
 	 }
        DbgPrint("Frames:\n");
        for (i = 0; i < 32; i++)
@@ -249,7 +248,7 @@ exception_handler(struct trap_frame* tf)
 	   if (MmIsPagePresent(NULL,&stack[i]))
 	     {
 		DbgPrint("%.8x ",stack[i]);
-		if (((i+1)%4) == 0)
+		if (((i+1)%8) == 0)
 		  {
 		     DbgPrint("\n");
 		  }
@@ -258,7 +257,7 @@ exception_handler(struct trap_frame* tf)
 	
 	if (MmIsPagePresent(NULL, (PVOID)tf->eip))
 	  {
-	     char instrs[512];
+	     unsigned char instrs[512];
 	     
 	     memcpy(instrs, (PVOID)tf->eip, 512);
 	     
