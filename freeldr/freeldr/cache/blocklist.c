@@ -24,7 +24,7 @@
 #include <disk.h>
 #include <rtl.h>
 #include <debug.h>
-#include <asmcode.h>
+#include <arch.h>
 
 // Returns a pointer to a CACHE_BLOCK structure
 // Adds the block to the cache manager block list

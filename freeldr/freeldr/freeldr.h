@@ -72,10 +72,6 @@ extern ULONG		BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc
 extern ULONG		BootPartition;		// Boot Partition, 1-4
 extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
-extern PUCHAR		ScreenBuffer;		// Save buffer for screen contents
-extern ULONG		CursorXPos;			// Cursor's X Position
-extern ULONG		CursorYPos;			// Cursor's Y Position
-
 void	BootMain(void);
 
 #endif  // defined __FREELDR_H

@@ -43,10 +43,6 @@
 
 #define DISKREADBUFFER	0x90000	/* Buffer to store data read in from the disk via the BIOS */
 
-#define SCREENBUFFER	0x98000	/* The screen contents will be saved here */
-#define SCREENXCOORD	0x98FA0 /* Address of the byte that contains the current column of the cursor */
-#define SCREENYCOORD	0x98FA1 /* Address of the byte that contains the current row of the cursor */
-
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:
 

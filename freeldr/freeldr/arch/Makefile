@@ -17,16 +17,17 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 	
+include ../rules.mk
 
-CC		= gcc
-LD		= ld
-AR		= ar
-RM		= cmd /C del
-CP		= cmd /C copy
-MAKE	= make
+TARGET = i386
 
-# For a release build uncomment this line
-FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -O3
+.PHONY : clean
 
-# For a debug build uncomment this line
-#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -DDEBUG -O3
+all: arch.a
+
+arch.a:
+	$(MAKE) -C $(TARGET)
+
+clean:
+	- $(RM) *.a
+	$(MAKE) -C $(TARGET) clean

@@ -17,16 +17,34 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 	
+include ../../rules.mk
 
-CC		= gcc
-LD		= ld
-AR		= ar
-RM		= cmd /C del
-CP		= cmd /C copy
-MAKE	= make
+OBJS = arch.o boot.o mb.o mem.o disk.o
 
-# For a release build uncomment this line
-FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -O3
+.PHONY : clean
 
-# For a debug build uncomment this line
-#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -DDEBUG -O3
+all: arch.a
+
+arch.a:	$(OBJS)
+	$(LD) -r -o arch.a $(OBJS)
+	- $(RM) ..\arch.a
+	$(CP) arch.a ..\arch.a
+
+arch.o:	arch.S
+	$(CC) $(FLAGS) -o arch.o -c arch.S
+
+boot.o:	boot.S
+	$(CC) $(FLAGS) -o boot.o -c boot.S
+
+mb.o:	mb.S
+	$(CC) $(FLAGS) -o mb.o -c mb.S
+
+mem.o:	mem.S
+	$(CC) $(FLAGS) -o mem.o -c mem.S
+
+disk.o:	disk.S
+	$(CC) $(FLAGS) -o disk.o -c disk.S
+
+clean:
+	- $(RM) *.o
+	- $(RM) *.a

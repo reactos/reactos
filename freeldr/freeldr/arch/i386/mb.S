@@ -21,7 +21,7 @@
 	.code16
 
 #define ASM
-#include "asmcode.h"
+#include "arch.h"
 #include "multiboot.h"
 
 	/*

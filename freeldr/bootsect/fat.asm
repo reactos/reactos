@@ -276,24 +276,6 @@ LoadFile:
 		push ax							; First save AX - the start cluster of freeldr.sys
 
 
-		; Lets save the contents of the screen
-		; from B800:0000 to 9000:8000
-		push ds
-		mov  ax,0b800h
-		mov  ds,ax
-		xor  si,si
-		mov  ax,9800h
-		mov  es,ax
-		xor  di,di
-		mov  cx,2000					; Copy 2000 characters [words] (screen is 80x25)
-		rep  movsw						; 2 bytes a character (one is the attribute byte)
-		pop  ds
-
-		mov  ah,03h						; AH = 03h
-		xor  bx,bx						; BH = video page
-		int  10h						; BIOS Int 10h Func 3 - Read Cursor Position and Size
-		mov  [es:di],dx					; DH = row, DL = column
-
 		; Display "Loading FreeLoader..." message
         mov  si,msgLoading				; Loading message
         call PutChars					; Display it

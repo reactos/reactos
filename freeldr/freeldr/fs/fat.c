@@ -23,7 +23,7 @@
 #include <disk.h>
 #include <rtl.h>
 #include <ui.h>
-#include <asmcode.h>
+#include <arch.h>
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>

@@ -19,7 +19,7 @@
  */
 
 #include <freeldr.h>
-#include <asmcode.h>
+#include <arch.h>
 #include <reactos.h>
 #include <rtl.h>
 #include <fs.h>
@@ -645,8 +645,6 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	strcat(name, OperatingSystemName);
 	strcat(name, ".");
 	//MessageBox(name);
-
-	RestoreScreen(ScreenBuffer);
 
 	/*
 	 * Now boot the kernel

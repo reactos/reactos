@@ -19,7 +19,7 @@
 
 	
 #include "freeldr.h"
-#include "asmcode.h"
+#include "arch.h"
 #include "miscboot.h"
 #include "rtl.h"
 #include "fs.h"

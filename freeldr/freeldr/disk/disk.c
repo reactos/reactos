@@ -22,7 +22,7 @@
 #include <fs.h>
 #include <rtl.h>
 #include <ui.h>
-#include <asmcode.h>
+#include <arch.h>
 #include <debug.h>
 
 

@@ -23,47 +23,36 @@ include rules.mk
 #OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o rtl.o fs.a fs.o fat.o \
 #	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
 #	mem.o memory.o debug.o parseini.o registry.o import.o
-ASM_OBJS = asmcode.o mb.o boot.o mem.o
+#ASM_OBJS = asmcode.o mb.o boot.o mem.o
 OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o parseini.o oslist.o
-LIBS = rtl fs ui reactos comm disk mm cache
-LIB_FILES = rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a comm/comm.a disk/disk.a mm/mm.a cache/cache.a
+LIBS = arch rtl fs ui reactos comm disk mm cache
+LIB_FILES = arch/arch.a rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a
+LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a
 
 .PHONY : clean
 
 all:	freeldr.sys
 
-freeldr.sys:	asmcode.a c_code.a
-	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o f.sys asmcode.a c_code.a
+freeldr.sys:	c_code.a
+	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o f.sys c_code.a
 	../bootsect/stubit ../bootsect/fatstub.bin f.sys freeldr.sys 
 
 freeldr.exe:	asmcode.a c_code.a
 	$(LD) -o freeldr.exe asmcode.a c_code.a
 
-asmcode.a:	$(ASM_OBJS)
-	$(LD) -r -o asmcode.a $(ASM_OBJS)
+c_code.a:	$(LIBS) c_code1.a c_code2.a
+	$(LD) -r -o c_code.a $(LIB_FILES) c_code1.a c_code2.a
 
-c_code.a:	c_code1.a $(LIBS)
-	$(LD) -r -o c_code.a c_code1.a $(LIB_FILES)
+c_code1.a:	$(LIBS)
+	$(LD) -r -o c_code1.a $(LIB_FILES2)
 
-c_code1.a:	$(OBJS)
-	$(LD) -r -o c_code1.a $(OBJS)
+c_code2.a:	$(OBJS)
+	$(LD) -r -o c_code2.a $(OBJS)
 
-asmcode.o:	asmcode.S asmcode.h
-	$(CC) $(FLAGS) -o asmcode.o -c asmcode.S
-
-mb.o:	mb.S asmcode.h multiboot.h
-	$(CC) $(FLAGS) -o mb.o -c mb.S
-
-boot.o:	boot.S asmcode.h
-	$(CC) $(FLAGS) -o boot.o -c boot.S
-
-mem.o:	mem.S asmcode.h
-	$(CC) $(FLAGS) -o mem.o -c mem.S
-
-freeldr.o:	freeldr.c freeldr.h rtl.h fs.h reactos.h ui.h asmcode.h miscboot.h
+freeldr.o:	freeldr.c freeldr.h rtl.h fs.h reactos.h ui.h arch.h miscboot.h
 	$(CC) $(FLAGS) -o freeldr.o -c freeldr.c
 
-miscboot.o:	miscboot.c freeldr.h asmcode.h rtl.h fs.h ui.h miscboot.h
+miscboot.o:	miscboot.c freeldr.h arch.h rtl.h fs.h ui.h miscboot.h
 	$(CC) $(FLAGS) -o miscboot.o -c miscboot.c
 
 options.o:	options.c freeldr.h rtl.h ui.h options.h
@@ -75,14 +64,17 @@ linux.o:	linux.c freeldr.h rtl.h ui.h linux.h
 multiboot.o:	multiboot.c freeldr.h rtl.h fs.h multiboot.h ui.h
 	$(CC) $(FLAGS) -o multiboot.o -c multiboot.c
 
-debug.o:	debug.c debug.h Makefile
+debug.o:	debug.c debug.h
 	$(CC) $(FLAGS) -o debug.o -c debug.c
 
-parseini.o:	parseini.c parseini.h Makefile
+parseini.o:	parseini.c parseini.h
 	$(CC) $(FLAGS) -o parseini.o -c parseini.c
 
-oslist.o:	oslist.c oslist.h Makefile
+oslist.o:	oslist.c oslist.h
 	$(CC) $(FLAGS) -o oslist.o -c oslist.c
+
+arch:
+	$(MAKE) -C arch
 
 rtl:
 	$(MAKE) -C rtl
@@ -114,6 +106,7 @@ clean:
 	- $(RM) *.o
 	- $(RM) *.a
 	- $(RM) *.sys
+	$(MAKE) -C arch clean
 	$(MAKE) -C reactos clean
 	$(MAKE) -C comm clean
 	$(MAKE) -C disk clean

@@ -22,7 +22,7 @@
 #include "fs.h"
 #include "reactos.h"
 #include "ui.h"
-#include "asmcode.h"
+#include "arch.h"
 #include "miscboot.h"
 #include "linux.h"
 #include "mm.h"
@@ -34,10 +34,6 @@
 // Variable BootDrive moved to asmcode.S
 //ULONG			BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
 ULONG			BootPartition = 0;						// Boot Partition, 1-4
-
-PUCHAR			ScreenBuffer = (PUCHAR)(SCREENBUFFER);	// Save buffer for screen contents
-ULONG			CursorXPos = 0;							// Cursor's X Position
-ULONG			CursorYPos = 0;							// Cursor's Y Position
 
 ULONG	GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount);
 LONG	GetTimeOut(VOID);
@@ -56,9 +52,6 @@ VOID BootMain(VOID)
 	ULONG	SelectedOperatingSystem;
 
 	enable_a20();
-
-	CursorXPos = (ULONG) *((PUCHAR)(SCREENXCOORD));
-	CursorYPos = (ULONG) *((PUCHAR)(SCREENYCOORD));
 
 #ifdef DEBUG
 	DebugInit();
@@ -139,9 +132,8 @@ VOID BootMain(VOID)
 
 	
 reboot:
-	RestoreScreen(ScreenBuffer);
+	clrscr();
 	showcursor();
-	gotoxy(CursorXPos, CursorYPos);
 	return;
 }
 
