@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: nls.c,v 1.1.16.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,10 +13,11 @@
  */
 
 
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -240,10 +241,10 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
  */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeN(
-   IN PWCHAR UnicodeString,
+   IN PWSTR UnicodeString,
    IN ULONG UnicodeSize,
    IN PULONG ResultSize,
-   IN PCHAR MbString,
+   IN PCSTR MbString,
    IN ULONG MbSize)
 {
    ULONG Size = 0;
@@ -280,7 +281,7 @@ RtlMultiByteToUnicodeN(
  */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
-                          PCHAR MbString,
+                          PCSTR MbString,
                           ULONG MbSize)
 {
    ULONG Length;

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.2 2004/08/05 18:17:36 ion Exp $
+/* $Id: exception.c,v 1.2.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -15,13 +15,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
+#include <ddk/ntifs.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/rtlfuncs.h>
 #include <string.h>
-#include <napi/teb.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.1 2004/06/20 23:27:21 gdalsnes Exp $
+/* $Id: image.c,v 1.1.12.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,11 +10,10 @@
  */
 
 #include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <reactos/debug.h>
 /* FUNCTIONS ****************************************************************/
 
 /*

@@ -19,12 +19,16 @@
  */
 
 #include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/zwfuncs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
 
-#include <wine/config.h>
-#include <wine/port.h>
+#include <reactos/wine/config.h>
+#include <reactos/wine/port.h>
 
 /* ---------------------------------------------------------------------- */
 

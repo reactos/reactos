@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: luid.c,v 1.1.16.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,7 +14,7 @@
 #include <ddk/ntddk.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -50,7 +50,7 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
  * @implemented
  */
 BOOLEAN STDCALL
-RtlEqualLuid(PLUID Luid1,
+xRtlEqualLuid(PLUID Luid1,
              PLUID Luid2)
 {
    return (Luid1->LowPart == Luid2->LowPart &&

@@ -1,5 +1,6 @@
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/rtlfuncs.h>
 
 /* 
  * Utility to copy and append two unicode strings.

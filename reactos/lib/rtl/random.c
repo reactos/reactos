@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: random.c,v 1.3 2004/08/07 19:13:25 ion Exp $
+/* $Id: random.c,v 1.3.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,9 +29,7 @@
 #include <ddk/ntddk.h>
 
 #define NDEBUG
-#include <debug.h>
-
-#define MAXLONG (0x7fffffff)
+#include <reactos/debug.h>
 
 static ULONG SavedValue[128] =
    {

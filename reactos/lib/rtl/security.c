@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.2 2004/07/13 11:52:09 ekohl Exp $
+/* $Id: security.c,v 1.2.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,11 +9,11 @@
  *                  21/11/2001 Created
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+#include <ddk/ntifs.h>
+#include <ndk/zwfuncs.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 
 /* FUNCTIONS ****************************************************************/

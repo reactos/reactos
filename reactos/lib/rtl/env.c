@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.3 2004/09/18 09:31:53 greatlrd Exp $
+/* $Id: env.c,v 1.3.4.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,13 +11,15 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <napi/teb.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/pstypes.h>
 #include <string.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <reactos/debug.h>
+#include <reactos/helper.h>
 
 /* FUNCTIONS *****************************************************************/
 

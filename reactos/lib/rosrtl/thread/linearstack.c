@@ -1,12 +1,13 @@
-/* $Id: linearstack.c,v 1.1 2003/07/22 20:10:04 hyperion Exp $
+/* $Id: linearstack.c,v 1.1.32.1 2004/10/24 23:07:04 ion Exp $
 */
 /*
 */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/zwtypes.h>
+#include "thread.h"
 
-#include <rosrtl/thread.h>
 
 NTSTATUS NTAPI RtlpRosValidateLinearUserStack
 (

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.2 2004/08/05 18:17:36 ion Exp $
+/* $Id: dos8dot3.c,v 1.2.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,11 +27,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 
 /* CONSTANTS *****************************************************************/

@@ -21,17 +21,15 @@
  */
 
 
-#define __NTDRIVER__
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtlfuncs.h>
+#include "rtlp.h"
 
-#include <ntdll/rtl.h>
-
-#include <ntos/minmax.h>
 #define __NO_CTYPE_INLINES
 #include <ctype.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -1084,7 +1082,7 @@ NTSTATUS
 STDCALL
 RtlUnicodeStringToOemString(
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString)
 {
    return RtlpUnicodeStringToOemString(
@@ -1106,7 +1104,7 @@ NTSTATUS
 FASTCALL
 RtlpUnicodeStringToOemString(
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString,
    IN POOL_TYPE PoolType)
 {
@@ -1933,7 +1931,7 @@ NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToOemString (
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString
 )
 {
@@ -1956,7 +1954,7 @@ NTSTATUS
 FASTCALL
 RtlpUpcaseUnicodeStringToOemString (
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString,
    IN POOL_TYPE PoolType
 )
@@ -2084,7 +2082,7 @@ RtlStringFromGUID (IN REFGUID Guid,
 ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize(
-   IN PUNICODE_STRING UnicodeString)
+   IN PCUNICODE_STRING UnicodeString)
 {
    ULONG Size;
 
@@ -2211,7 +2209,7 @@ BOOLEAN
 STDCALL
 RtlCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PWSTR  Source)
+   IN PCWSTR  Source)
 {
 
    DPRINT("RtlCreateUnicodeString\n");
@@ -2226,7 +2224,7 @@ BOOLEAN
 FASTCALL
 RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PWSTR  Source,
+   IN PCWSTR  Source,
    IN POOL_TYPE PoolType)
 {
    ULONG Length;
@@ -2363,7 +2361,7 @@ RtlpDowncaseUnicodeString(
  */
 NTSTATUS STDCALL
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
-                         IN PWSTR Source)
+                         IN PCWSTR Source)
 {
    ULONG slen;
 

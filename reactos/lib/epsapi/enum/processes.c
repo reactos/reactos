@@ -1,4 +1,4 @@
-/* $Id: processes.c,v 1.1 2003/04/13 03:24:27 hyperion Exp $
+/* $Id: processes.c,v 1.1.32.1 2004/10/24 23:07:03 ion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -31,11 +31,14 @@
  *                          and improve reusability
  */
 
-#include <ddk/ntddk.h>
-#include <debug.h>
-#include <stddef.h>
+#include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/zwtypes.h>
 
-#include <epsapi.h>
+#define NDEBUG
+#include <reactos/debug.h>
+#include <reactos/epsapi.h>
+#include <stddef.h>
 
 NTSTATUS
 NTAPI
@@ -331,28 +334,7 @@ PsaWalkFirstThread
  /* get the offset of the Threads field (dependant on the kernel version) */
  if(!nOffsetOfThreads)
  {
-  /*
-   FIXME: we should probably use the build number, instead, but it isn't
-   available as reliably as the major and minor version numbers
-  */
-  switch(SharedUserData->NtMajorVersion)
-  {
-   /* NT 3 and 4 */
-   case 3:
-   case 4:
-   {
-    nOffsetOfThreads = offsetof(SYSTEM_PROCESSES_NT4, Threads);
-    break;
-   }
-
-   /* NT 5 and later */
-   default:
-   case 5:
-   {
-    nOffsetOfThreads = offsetof(SYSTEM_PROCESSES_NT5, Threads);
-    break;
-   }
-  }
+    nOffsetOfThreads = offsetof(SYSTEM_PROCESSES, Threads);
  }
 
  return (PSYSTEM_THREADS)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);

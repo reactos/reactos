@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.3 2004/08/07 19:13:25 ion Exp $
+/* $Id: version.c,v 1.3.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -26,13 +26,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#define __USE_W32API
-
 #include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* GLOBALS ******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.4 2004/07/09 20:06:40 navaraf Exp $
+/* $Id: exception.c,v 1.4.6.1 2004/10/24 23:07:05 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -9,12 +9,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtltypes.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/pstypes.h>
 #include <string.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -172,7 +175,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 #endif
     if (RegistrationFrame == NestedFrame)
     {
-      ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;  // Turn off flag
+      ExceptionRecord->ExceptionFlags &= ~EH_NESTED_CALL;  // Turn off flag
       NestedFrame = NULL;
     }
 
@@ -206,7 +209,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
     {
       DPRINT("ReturnValue == ExceptionNestedException\n");
 
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
+      ExceptionRecord->ExceptionFlags |= EH_NESTED_CALL;
       if (NestedFrame < DispatcherContext)
 	  {
           NestedFrame = DispatcherContext;
@@ -277,19 +280,19 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   }
 
   if (RegistrationFrame)
-    pExceptRec->ExceptionFlags |= EXCEPTION_UNWINDING;
+    pExceptRec->ExceptionFlags |= EH_UNWINDING;
   else
-    pExceptRec->ExceptionFlags |= (EXCEPTION_UNWINDING|EXCEPTION_EXIT_UNWIND);
+    pExceptRec->ExceptionFlags |= (EH_UNWINDING|EH_EXIT_UNWIND);
 
 #ifndef NDEBUG
   DPRINT("ExceptionFlags == 0x%x:\n", pExceptRec->ExceptionFlags);
-  if (pExceptRec->ExceptionFlags & EXCEPTION_UNWINDING)
+  if (pExceptRec->ExceptionFlags & EH_UNWINDING)
   {
-	  DPRINT("  * EXCEPTION_UNWINDING (0x%x)\n", EXCEPTION_UNWINDING);
+	  DPRINT("  * EXCEPTION_UNWINDING (0x%x)\n", EH_UNWINDING);
   }
   if (pExceptRec->ExceptionFlags & EXCEPTION_EXIT_UNWIND)
   {
-	  DPRINT("  * EXCEPTION_EXIT_UNWIND (0x%x)\n", EXCEPTION_EXIT_UNWIND);
+	  DPRINT("  * EXCEPTION_EXIT_UNWIND (0x%x)\n", EH_EXIT_UNWIND);
   }
 #endif /* NDEBUG */
 

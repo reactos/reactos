@@ -12,14 +12,15 @@
  * require it.
  */
 
+#include <ddk/ntifs.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/pstypes.h>
+#include <ndk/rtlfuncs.h>
+#include <reactos/heap.h>
 #include <string.h>
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/heap.h>
-#include <ntos/minmax.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 #define DPRINTF DPRINT
 #define ERR DPRINT
@@ -38,7 +39,7 @@
 #endif
 
 
-static CRITICAL_SECTION RtlpProcessHeapsListLock;
+static RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
 
 
 typedef struct tagARENA_INUSE
@@ -106,7 +107,7 @@ typedef struct tagHEAP
    SUBHEAP          subheap;       /* First sub-heap */
    struct tagHEAP  *next;          /* Next heap for this process */
    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
-   CRITICAL_SECTION critSection;   /* Critical section for serialization */
+   RTL_CRITICAL_SECTION critSection;   /* Critical section for serialization */
    DWORD            flags;         /* Heap flags */
    DWORD            magic;         /* Magic number */
    BYTE             filler[4];     /* Make multiple of 8 bytes */
@@ -1686,7 +1687,7 @@ RtlInitializeHeapManager(VOID)
  * @implemented
  */
 NTSTATUS STDCALL
-RtlEnumProcessHeaps(DWORD STDCALL_FUNC(*func)(void*,LONG),
+RtlEnumProcessHeaps(DWORD STDCALL(*func)(void*,LONG),
                     LONG lParam)
 {
    NTSTATUS Status = STATUS_SUCCESS;

@@ -1,17 +1,15 @@
-/* $Id: context.c,v 1.2 2003/08/07 03:35:06 royce Exp $
+/* $Id: context.c,v 1.2.32.1 2004/10/24 23:07:04 ion Exp $
 */
 /*
 */
 
+#include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/i386/segment.h>
+#include <ndk/i386/floatsave.h>
+#include "../thread.h"
 #include <string.h>
-
-#define NTOS_MODE_USER
-#include <ntos.h>
-
-#include <napi/i386/segment.h>
-#include <napi/i386/floatsave.h>
-
-#include <rosrtl/thread.h>
 
 NTSTATUS NTAPI
 RtlRosInitializeContext
@@ -19,7 +17,7 @@ RtlRosInitializeContext
  IN HANDLE ProcessHandle,
  OUT PCONTEXT Context,
  IN PVOID StartAddress,
- IN PUSER_STACK UserStack,
+ IN PINITIAL_TEB InitialTeb,
  IN ULONG ParameterCount,
  IN ULONG_PTR * Parameters
 )
@@ -34,7 +32,7 @@ RtlRosInitializeContext
 
  /* Intel x86: linear top-down stack, all parameters passed on the stack */
  /* get the stack base and limit */
- nErrCode = RtlpRosGetStackLimits(UserStack, &pStackBase, &pStackLimit);
+ nErrCode = RtlpRosGetStackLimits(InitialTeb, &pStackBase, &pStackLimit);
 
  /* failure */
  if(!NT_SUCCESS(nErrCode)) return nErrCode;

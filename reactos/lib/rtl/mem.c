@@ -1,5 +1,5 @@
 
-/* $Id: mem.c,v 1.2 2004/08/05 18:17:36 ion Exp $
+/* $Id: mem.c,v 1.2.6.1 2004/10/24 23:07:04 ion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,7 +16,7 @@
 #include <string.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 
 
@@ -41,9 +41,10 @@
  */
 ULONG
 STDCALL
-RtlCompareMemory(PVOID Source1,
-                 PVOID Source2,
-                 ULONG Length)
+RtlCompareMemory(
+  IN CONST VOID  *Source1,
+  IN CONST VOID  *Source2,
+  IN SIZE_T  Length)
 {
    SIZE_T i;
    for(i=0; (i<Length) && (((LPBYTE)Source1)[i]==((LPBYTE)Source2)[i]); i++)
@@ -91,7 +92,7 @@ RtlCompareMemoryUlong (
  */
 VOID
 STDCALL
-RtlFillMemory (
+xRtlFillMemory (
    PVOID Destination,
    ULONG Length,
    UCHAR Fill
@@ -131,7 +132,7 @@ RtlFillMemoryUlong (
  */
 VOID
 STDCALL
-RtlMoveMemory (
+xRtlMoveMemory (
    PVOID    Destination,
    CONST VOID  * Source,
    ULONG    Length
@@ -162,12 +163,12 @@ RtlPrefetchMemoryNonTemporal(
  */
 VOID
 STDCALL
-RtlZeroMemory (
+xRtlZeroMemory (
    PVOID Destination,
    ULONG Length
 )
 {
-   RtlFillMemory (
+   xRtlFillMemory (
       Destination,
       Length,
       0

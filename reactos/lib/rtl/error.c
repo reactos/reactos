@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.2 2004/08/05 18:17:36 ion Exp $
+/* $Id: error.c,v 1.2.6.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,11 +19,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <errors.h>
+#include <ddk/ntifs.h>
+#include <ndk/pstypes.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 #ifndef HIWORD
 #define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))

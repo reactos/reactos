@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2004/09/25 21:32:17 arty Exp $
+# $Id: makefile,v 1.17.4.1 2004/10/24 23:07:03 ion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -42,7 +42,7 @@ TARGET_TYPE = library
 
 TARGET_NAME = rosrtl
 
-TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS) $(STRING_OBJECTS) \
 		 $(REGISTRY_OBJECTS) $(FILE_OBJECTS) $(RECMUTEX_OBJECTS)

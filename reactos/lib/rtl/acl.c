@@ -12,10 +12,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntos/rtl.h>
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

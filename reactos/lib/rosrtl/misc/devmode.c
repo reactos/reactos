@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <string.h>
-#include <rosrtl/devmode.h>
+#include "devmode.h"
 
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148

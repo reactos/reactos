@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <string.h>
-#include <rosrtl/priv.h>
+#include "priv.h"
 
 /*
  * Utility to copy and enable thread privileges

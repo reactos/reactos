@@ -1,4 +1,4 @@
-/* $Id: modules.c,v 1.2 2003/06/01 14:59:01 chorns Exp $
+/* $Id: modules.c,v 1.2.32.1 2004/10/24 23:07:03 ion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -19,13 +19,16 @@
  *                          and improve reusability
  */
 
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
+#include <winnt.h>
+#include <ndk/umtypes.h>
+#include <ndk/ldrtypes.h>
+#include <ndk/zwfuncs.h>
+#include <ndk/pstypes.h>
 
 #define NDEBUG
-#include <debug.h>
-
-#include <epsapi.h>
+#include <reactos/debug.h>
+#include <reactos/epsapi.h>
 
 NTSTATUS
 NTAPI

@@ -1,7 +1,7 @@
 #include <windows.h>
-#include <ddk/ntifs.h>
 #include <string.h>
-#include <rosrtl/sparse.h>
+#include <ndk/umtypes.h>
+#include "sparse.h"
 
 /*
  * Utility to convert a file to a sparse file

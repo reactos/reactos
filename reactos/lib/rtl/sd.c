@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.7 2004/09/25 12:11:13 ekohl Exp $
+/* $Id: sd.c,v 1.7.4.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <ndk/rtlfuncs.h>
 
-#include <ntdll/ntdll.h>
+#define NDEBUG
+#include <reactos/debug.h>
+#include <reactos/helper.h>
 
 /* FUNCTIONS ***************************************************************/
 

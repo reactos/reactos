@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: network.c,v 1.2 2004/09/13 20:25:26 weiden Exp $
+/* $Id: network.c,v 1.2.4.1 2004/10/24 23:07:04 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 /* FUNCTIONS *****************************************************************/
 
 /* Borrow this from some headers... */

@@ -23,10 +23,10 @@
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ndk/rtltypes.h>
 
-#include <pseh/framebased/internal.h>
-#include <pseh/excpt.h>
-#include <excpt.h>
+#include "framebased/internal.h"
+#include "excpt.h"
 
 /* Assembly helpers, see i386/framebased.asm */
 extern void __cdecl _SEHCleanHandlerEnvironment(void);

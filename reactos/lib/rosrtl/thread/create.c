@@ -1,16 +1,15 @@
-/* $Id: create.c,v 1.6 2004/03/02 17:16:04 navaraf Exp $
+/* $Id: create.c,v 1.6.18.1 2004/10/24 23:07:04 ion Exp $
 */
 /*
 */
 
 #include <stdarg.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
+#include <ndk/umtypes.h>
+#include <ndk/zwfuncs.h>
+#include "thread.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
-#include <rosrtl/thread.h>
 
 NTSTATUS STDCALL
 RtlRosCreateUserThread
@@ -28,7 +27,7 @@ RtlRosCreateUserThread
  IN ULONG_PTR * Parameters
 )
 {
- USER_STACK usUserStack;
+ INITIAL_TEB usUserStack;
  CONTEXT ctxInitialContext;
  NTSTATUS nErrCode;
  HANDLE hThread;
