@@ -422,43 +422,43 @@ void test3(void)
 
 void test4(void)
 {
- HKEY hKey = NULL,hKey1;
- DWORD dwDisposition;
- DWORD dwError;
- DWORD  RegDataType, RegDataSize;
- BOOL GlobalFifoEnable;
- HKEY hPortKey;
- DWORD RegDisposition;
- WCHAR szClass[260];
- DWORD cchClass;	
- DWORD cSubKeys;	
- DWORD cchMaxSubkey;	
- DWORD cchMaxClass;	
- DWORD cValues;	
- DWORD cchMaxValueName;	
- DWORD cbMaxValueData;	
- DWORD cbSecurityDescriptor;	
- FILETIME ftLastWriteTime;	
- SYSTEMTIME LastWriteTime;
+  HKEY hKey = NULL,hKey1;
+  DWORD dwDisposition;
+  DWORD dwError;
+  DWORD  RegDataType, RegDataSize;
+  BOOL GlobalFifoEnable;
+  HKEY hPortKey;
+  DWORD RegDisposition;
+  WCHAR szClass[260];
+  DWORD cchClass;
+  DWORD cSubKeys;
+  DWORD cchMaxSubkey;
+  DWORD cchMaxClass;
+  DWORD cValues;
+  DWORD cchMaxValueName;
+  DWORD cbMaxValueData;
+  DWORD cbSecurityDescriptor;
+  FILETIME ftLastWriteTime;
+  SYSTEMTIME LastWriteTime;
 
-   dprintf ("RegOpenKeyExW HKLM\\System\\Setup: ");
-   dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+  dprintf ("RegOpenKeyExW HKLM\\System\\Setup: ");
+  dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"System\\Setup",
                            0,
                            KEY_ALL_ACCESS,
                            &hKey1); 
-    dprintf("\t\tdwError =%x\n",dwError);
-   if (dwError == ERROR_SUCCESS)
-   {
-     dprintf("RegQueryInfoKeyW: ");
-     cchClass=260;
-     dwError = RegQueryInfoKeyW(hKey1
+  dprintf("\t\tdwError =%x\n",dwError);
+  if (dwError == ERROR_SUCCESS)
+    {
+      dprintf("RegQueryInfoKeyW: ");
+      cchClass=260;
+      dwError = RegQueryInfoKeyW(hKey1
 	, szClass, &cchClass, NULL, &cSubKeys
 	, &cchMaxSubkey, &cchMaxClass, &cValues, &cchMaxValueName
 	, &cbMaxValueData, &cbSecurityDescriptor, &ftLastWriteTime);
-     dprintf ("\t\t\t\tdwError %x\n", dwError);
-     FileTimeToSystemTime(&ftLastWriteTime,&LastWriteTime);
-     dprintf ("\tnb of subkeys=%d,last write : %d/%d/%d %d:%02.2d'%02.2d''%03.3d\n",cSubKeys
+      dprintf ("\t\t\t\tdwError %x\n", dwError);
+      FileTimeToSystemTime(&ftLastWriteTime,&LastWriteTime);
+      dprintf ("\tnb of subkeys=%d,last write : %d/%d/%d %d:%02.2d'%02.2d''%03.3d\n",cSubKeys
 		,LastWriteTime.wMonth
 		,LastWriteTime.wDay
 		,LastWriteTime.wYear
@@ -467,7 +467,7 @@ void test4(void)
 		,LastWriteTime.wSecond
 		,LastWriteTime.wMilliseconds
 		);
-   }
+    }
 
 
    dprintf ("RegOpenKeyExW: ");
@@ -584,14 +584,15 @@ void test4(void)
 
 void test5(void)
 {
- HKEY hKey,hKey1;
- OBJECT_ATTRIBUTES ObjectAttributes; 
- UNICODE_STRING KeyName,ValueName;
- NTSTATUS Status; 
- KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
- ULONG Index,Length,i;
- char Buffer[10];
- DWORD Result;
+  HKEY hKey,hKey1;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName,ValueName;
+  NTSTATUS Status;
+  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
+  ULONG Index,Length,i;
+  char Buffer[10];
+  DWORD Result;
+
   dprintf("NtOpenKey : \n");
   dprintf("  \\Registry\\Machine\\Software\\reactos : ");
   RtlInitUnicodeString(&KeyName,L"\\Registry\\Machine\\Software\\reactos");
@@ -607,7 +608,163 @@ void test5(void)
   dprintf("\t\tStatus=%x\n",Status);
 }
 
+/* registry link create test */
 void test6(void)
+{
+  HKEY hKey;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName,ValueName;
+  NTSTATUS Status; 
+  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
+  ULONG Index,Length,i;
+  char Buffer[10];
+  DWORD Result;
+
+  dprintf("Create target key\n");
+  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Reactos\n");
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Reactos");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
+				, NULL, NULL);
+  Status = NtCreateKey(&hKey, KEY_ALL_ACCESS , &ObjectAttributes
+		,0,NULL, REG_OPTION_VOLATILE,NULL);
+  dprintf("  NtCreateKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Create target value\n");
+  dprintf("  Value: TestValue = 'Test String'\n");
+  RtlInitUnicodeString(&ValueName, L"TestValue");
+  Status=NtSetValueKey(hKey,&ValueName,0,REG_SZ,(PVOID)L"TestString",22);
+  dprintf("  NtSetValueKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Close target key\n");
+  NtClose(hKey);
+
+
+  dprintf("Create link key\n");
+  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENLINK,
+			     NULL,
+			     NULL);
+  Status = NtCreateKey(&hKey,
+		       KEY_ALL_ACCESS | KEY_CREATE_LINK,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+		       NULL);
+  dprintf("  NtCreateKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Create link value\n");
+  dprintf("  Value: SymbolicLinkValue = '\\Registry\\Machine\\SOFTWARE\\Reactos'\n");
+  RtlInitUnicodeString(&ValueName, L"SymbolicLinkValue");
+  Status=NtSetValueKey(hKey,&ValueName,0,REG_LINK,(PVOID)L"\\Registry\\Machine\\SOFTWARE\\Reactos",68);
+  dprintf("  NtSetValueKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    {
+      dprintf("Creating link value failed! Test failed!\n");
+      NtClose(hKey);
+      return;
+    }
+
+  dprintf("Close link key\n");
+  NtClose(hKey);
+
+  dprintf("Open link key\n");
+  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF
+				, NULL, NULL);
+  Status = NtCreateKey(&hKey, KEY_ALL_ACCESS , &ObjectAttributes
+		,0,NULL, REG_OPTION_VOLATILE, NULL);
+  dprintf("  NtCreateKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Query value\n");
+  dprintf("  Value: TestValue\n");
+  RtlInitUnicodeString(&ValueName, L"TestValue");
+  Status=NtQueryValueKey(hKey,
+			 &ValueName,
+			 KeyValueFullInformation,
+			 &KeyValueInformation[0],
+			 sizeof(KeyValueInformation),
+			 &Length);
+  dprintf("  NtQueryValueKey() called (Status %lx)\n",Status);
+  if (Status == STATUS_SUCCESS)
+    {
+      dprintf("  Value: Type %d  DataLength %d NameLength %d  Name '",
+	      KeyValueInformation[0].Type,
+	      KeyValueInformation[0].DataLength,
+	      KeyValueInformation[0].NameLength);
+      for (i=0; i < KeyValueInformation[0].NameLength / sizeof(WCHAR); i++)
+	dprintf("%C",KeyValueInformation[0].Name[i]);
+      dprintf("'\n");
+      if (KeyValueInformation[0].Type == REG_SZ)
+	dprintf("  Value '%S'\n",
+		KeyValueInformation[0].Name+1
+		+KeyValueInformation[0].NameLength/2);
+    }
+
+  dprintf("Close link key\n");
+  NtClose(hKey);
+
+  dprintf("Test successful!\n");
+}
+
+/* registry link delete test */
+void test7(void)
+{
+  HKEY hKey;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName,ValueName;
+  NTSTATUS Status; 
+
+  dprintf("Open link key\n");
+  dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\Test");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+			     NULL,
+			     NULL);
+  Status = NtCreateKey(&hKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE | REG_OPTION_OPEN_LINK,
+		       NULL);
+  dprintf("  NtCreateKey() called (Status %lx)\n",Status);
+  if (!NT_SUCCESS(Status))
+    {
+      dprintf("Could not open the link key. Please run the link create test first!\n");
+      return;
+    }
+
+  dprintf("Delete link value\n");
+  RtlInitUnicodeString(&ValueName, L"SymbolicLinkValue");
+  Status = NtDeleteValueKey(hKey,
+			    &ValueName);
+  dprintf("  NtDeleteValueKey() called (Status %lx)\n",Status);
+
+  dprintf("Delete link key\n");
+  Status=NtDeleteKey(hKey);
+  dprintf("  NtDeleteKey() called (Status %lx)\n",Status);
+
+  dprintf("Close link key\n");
+  NtClose(hKey);
+}
+
+
+void test8(void)
 {
  OBJECT_ATTRIBUTES ObjectAttributes;
  UNICODE_STRING KeyName;
@@ -686,6 +843,8 @@ int main(int argc, char* argv[])
     dprintf("  3=Ntxxx write functions : non volatile keys\n");
     dprintf("  4=Regxxx functions\n");
     dprintf("  5=FlushKey \n");
+    dprintf("  6=Registry link create test\n");
+    dprintf("  7=Registry link delete test\n");
     ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
     switch (Buffer[0])
     {
@@ -709,6 +868,14 @@ int main(int argc, char* argv[])
      case '6':
       test6();
       break;
+     case '7':
+      test7();
+      break;
+#if 0
+     case '8':
+      test8();
+      break;
+#endif
     }
   }
   return 0;
