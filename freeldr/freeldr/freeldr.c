@@ -40,7 +40,6 @@ LONG	GetTimeOut(VOID);
 
 VOID BootMain(VOID)
 {
-	ULONG	Idx;
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
 	ULONG	SectionId;
@@ -57,7 +56,7 @@ VOID BootMain(VOID)
 	DebugInit();
 #endif
 
-	InitMemoryManager( (PVOID) 0x20000 /* BaseAddress */, 0x58000 /* Length */);
+	InitMemoryManager();
 
 	if (!ParseIniFile())
 	{

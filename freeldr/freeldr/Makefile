@@ -33,8 +33,8 @@ LIB_FILES2 = comm/comm.a disk/disk.a mm/mm.a cache/cache.a
 
 all:	freeldr.sys
 
-freeldr.sys:	c_code.a
-	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o f.sys c_code.a
+freeldr.sys:	c_code.a end.o
+	$(LD) -N -Ttext=0x8000 --oformat=binary -s -o f.sys c_code.a end.o
 	../bootsect/stubit ../bootsect/fatstub.bin f.sys freeldr.sys 
 
 freeldr.exe:	asmcode.a c_code.a
@@ -72,6 +72,9 @@ parseini.o:	parseini.c parseini.h
 
 oslist.o:	oslist.c oslist.h
 	$(CC) $(FLAGS) -o oslist.o -c oslist.c
+
+end.o:	end.S
+	$(CC) $(FLAGS) -o end.o -c end.S
 
 arch:
 	$(MAKE) -C arch

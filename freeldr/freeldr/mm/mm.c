@@ -19,30 +19,11 @@
 
 #include <freeldr.h>
 #include <mm.h>
+#include "mem.h"
 #include <rtl.h>
 #include <debug.h>
 #include <ui.h>
 
-
-//
-// Define this to 1 if you want the entire contents
-// of the memory allocation bitmap displayed
-// when a chunk is allocated or freed
-//
-#define DUMP_MEM_MAP_ON_VERIFY	0
-
-#define MEM_BLOCK_SIZE	256
-
-typedef struct
-{
-	BOOL	MemBlockAllocated;		// Is this block allocated or free
-	ULONG	BlocksAllocated;		// Block length, in multiples of 256 bytes
-} MEMBLOCK, *PMEMBLOCK;
-
-PVOID		HeapBaseAddress = NULL;
-ULONG		HeapLengthInBytes = 0;
-ULONG		HeapMemBlockCount = 0;
-PMEMBLOCK	HeapMemBlockArray = NULL;
 
 #ifdef DEBUG
 ULONG		AllocationCount = 0;
@@ -53,33 +34,6 @@ VOID		IncrementAllocationCount(VOID);
 VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DEBUG
-
-VOID InitMemoryManager(PVOID BaseAddress, ULONG Length)
-{
-	ULONG	MemBlocks;
-
-	// Calculate how many memory blocks we have
-	MemBlocks = (Length / MEM_BLOCK_SIZE);
-
-	// Adjust the heap length so we can reserve
-	// enough storage space for the MEMBLOCK array
-	Length -= (MemBlocks * sizeof(MEMBLOCK));
-
-	// Initialize our tracking variables
-	HeapBaseAddress = BaseAddress;
-	HeapLengthInBytes = Length;
-	HeapMemBlockCount = (HeapLengthInBytes / MEM_BLOCK_SIZE);
-	HeapMemBlockArray = (PMEMBLOCK)(HeapBaseAddress + HeapLengthInBytes);
-
-	// Clear the memory
-	RtlZeroMemory(HeapBaseAddress, HeapLengthInBytes);
-	RtlZeroMemory(HeapMemBlockArray, (HeapMemBlockCount * sizeof(MEMBLOCK)));
-
-#ifdef DEBUG
-	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. BaseAddress = 0x%x Length = 0x%x. %d blocks in heap.\n", BaseAddress, Length, HeapMemBlockCount));
-	//MemAllocTest();
-#endif
-}
 
 PVOID AllocateMemory(ULONG NumberOfBytes)
 {

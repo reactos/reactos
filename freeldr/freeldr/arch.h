@@ -57,4 +57,6 @@
 void	enable_a20(void);
 void	stop_floppy(void);
 
+extern unsigned long FreeLoaderModuleEnd;
+
 #endif /* ! ASM */

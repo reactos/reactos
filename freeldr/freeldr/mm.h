@@ -24,7 +24,7 @@
 #include <multiboot.h>
 
 
-VOID	InitMemoryManager(PVOID BaseAddress, ULONG Length);
+VOID	InitMemoryManager(VOID);
 
 PVOID	AllocateMemory(ULONG NumberOfBytes);
 VOID	FreeMemory(PVOID MemBlock);

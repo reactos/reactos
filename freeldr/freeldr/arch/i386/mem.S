@@ -106,7 +106,7 @@ EXTERN(_GetExtendedMemorySize)
 EXTERN(_GetConventionalMemorySize)
 
 	//
-	// get conventional memory size in KB
+	// Get conventional memory size in KB
 	//
 	pushl	%edx
 
@@ -123,7 +123,7 @@ EXTERN(_GetConventionalMemorySize)
 	andl	$0xffff,%eax*/	// clear carry
 
 	/* Save return value */
-	movl	%eax,%edx
+	movzwl	%ax,%edx
 
 	call	switch_to_prot
 

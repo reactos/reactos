@@ -19,7 +19,7 @@
 	
 include ../rules.mk
 
-OBJS = mm.o
+OBJS = mm.o init.o
 
 .PHONY : clean
 
@@ -28,8 +28,11 @@ all: mm.a
 mm.a:	$(OBJS)
 	$(LD) -r -o mm.a $(OBJS)
 
-mm.o:	mm.c ../mm.h
+mm.o:	mm.c ../mm.h mem.h
 	$(CC) $(FLAGS) -o mm.o -c mm.c
+
+init.o:	init.c ../mm.h mem.h
+	$(CC) $(FLAGS) -o init.o -c init.c
 
 clean:
 	- $(RM) *.o
