@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.26 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: stubs.c,v 1.27 2001/04/05 01:54:42 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -16,18 +16,6 @@ BaseAttachCompleteThunk (VOID)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 BOOL
 STDCALL
 CmdBatNotification (
@@ -37,9 +25,6 @@ CmdBatNotification (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
 
 
 int
@@ -74,7 +59,6 @@ CompareStringW (
 }
 
 
-
 LCID
 STDCALL
 ConvertDefaultLocale (
@@ -84,11 +68,6 @@ ConvertDefaultLocale (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
-
 
 
 DWORD
@@ -102,13 +81,6 @@ CreateVirtualBuffer (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
-
-
-
 
 
 WINBOOL
@@ -519,8 +491,6 @@ GetDateFormatA (
 }
 
 
-
-
 int
 STDCALL
 GetLocaleInfoW (
@@ -547,10 +517,6 @@ GetLocaleInfoA (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
 
 
 DWORD
@@ -596,9 +562,6 @@ GetNumberFormatA (
 }
 
 
-
-
-
 UINT
 STDCALL
 GetOEMCP (VOID)
@@ -606,11 +569,6 @@ GetOEMCP (VOID)
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 437; /* FIXME: call csrss.exe */
 }
-
-
-
-
-
 
 
 WINBOOL
@@ -709,8 +667,6 @@ GetSystemPowerStatus (
 }
 
 
-
-
 LCID
 STDCALL
 GetThreadLocale (VOID)
@@ -806,160 +762,6 @@ GetVDMCurrentDirectories (
 	return 0;
 }
 
-/*
-HGLOBAL
-STDCALL
-GlobalAlloc (
-	UINT	uFlags,
-	DWORD	dwBytes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-*/
-
-UINT
-STDCALL
-GlobalCompact (
-	DWORD	dwMinFree
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-VOID
-STDCALL
-GlobalFix (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-
-UINT
-STDCALL
-GlobalFlags (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
-HGLOBAL
-STDCALL
-GlobalFree (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return hMem;
-}
-*/
-
-HGLOBAL
-STDCALL
-GlobalHandle (
-	LPCVOID	pMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-LPVOID
-STDCALL
-GlobalLock (
-	HGLOBAL hMem
-	)
-{
-	/* In Win32 GlobalAlloc returns LPVOID? */
-	return hMem;
-}
-
-
-VOID
-STDCALL
-GlobalMemoryStatus (
-	LPMEMORYSTATUS	lpBuffer
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-
-HGLOBAL
-STDCALL
-GlobalReAlloc (
-	HGLOBAL	hMem,
-	DWORD	dwBytes,
-	UINT	uFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
-DWORD
-STDCALL
-GlobalSize (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-*/
-
-WINBOOL
-STDCALL
-GlobalUnWire (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-VOID
-STDCALL
-GlobalUnfix (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-
-WINBOOL
-STDCALL
-GlobalUnlock (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-LPVOID
-STDCALL
-GlobalWire (
-	HGLOBAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL; /* ? */
-}
-
 
 DWORD
 STDCALL
@@ -1044,8 +846,6 @@ HeapWalk (
 }
 
 
-
-
 WINBOOL
 STDCALL
 IsDBCSLeadByte (
@@ -1066,6 +866,25 @@ IsDBCSLeadByteEx (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
+}
+
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	IsInstalledCP@4
+ *
+ * RETURN VALUE
+ * 	TRUE if CodePage is installed in the system.
+ */
+static
+BOOL
+STDCALL
+IsInstalledCP (
+	UINT	CodePage
+	)
+{
+	/* FIXME */
+	return TRUE;
 }
 
 
@@ -1136,123 +955,6 @@ LoadModule (
 }
 
 
-
-
-
-HLOCAL
-STDCALL
-LocalAlloc (
-	UINT	uFlags,
-	UINT	uBytes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-LocalCompact (
-	UINT	uMinFree
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-LocalFlags (
-	HLOCAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-HLOCAL
-STDCALL
-LocalFree (
-	HLOCAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return hMem;
-}
-
-
-HLOCAL
-STDCALL
-LocalHandle (
-	LPCVOID	pMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-LPVOID
-STDCALL
-LocalLock (
-	HLOCAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NULL;
-}
-
-
-HLOCAL
-STDCALL
-LocalReAlloc (
-	HLOCAL	hMem,
-	UINT	uBytes,
-	UINT	uFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-LocalShrink (
-	HLOCAL	hMem,
-	UINT	cbNewSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-LocalSize (
-	HLOCAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-LocalUnlock (
-	HLOCAL	hMem
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 int
 STDCALL
 MulDiv (
@@ -1263,25 +965,6 @@ MulDiv (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/**********************************************************************
- * NAME							PRIVATE
- * 	IsInstalledCP@4
- *
- * RETURN VALUE
- * 	TRUE if CodePage is installed in the system.
- */
-static
-BOOL
-STDCALL
-IsInstalledCP (
-	UINT	CodePage
-	)
-{
-	/* FIXME */
-	return TRUE;
 }
 
 
@@ -1430,13 +1113,6 @@ MultiByteToWideChar (
 }
 
 
-
-
-
-
-
-
-
 WINBOOL
 STDCALL
 QueryPerformanceCounter (
@@ -1457,11 +1133,6 @@ QueryPerformanceFrequency (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-
-
 
 
 WINBOOL
@@ -1507,8 +1178,6 @@ RegisterWowExec (
 }
 
 
-
-
 WINBOOL
 STDCALL
 SetComputerNameA (
@@ -1529,14 +1198,6 @@ SetComputerNameW (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-
-
-
-
-
 
 
 WINBOOL
@@ -1565,11 +1226,6 @@ SetLocaleInfoW (
 }
 
 
-
-
-
-
-
 WINBOOL
 STDCALL
 SetSystemPowerState (
@@ -1580,8 +1236,6 @@ SetSystemPowerState (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
 
 
 WINBOOL
@@ -1607,24 +1261,6 @@ SetVDMCurrentDirectories (
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 DWORD
 STDCALL
 TrimVirtualBuffer (
@@ -1634,8 +1270,6 @@ TrimVirtualBuffer (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
 
 
 DWORD
@@ -1687,9 +1321,6 @@ VerLanguageNameW (
 }
 
 
-
-
-
 DWORD
 STDCALL
 VirtualBufferExceptionHandler (
@@ -1701,9 +1332,6 @@ VirtualBufferExceptionHandler (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
 
 
 int
@@ -1722,13 +1350,6 @@ WideCharToMultiByte (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-
-
-
-
 
 
 /* EOF */

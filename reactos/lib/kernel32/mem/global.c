@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.5 2001/01/20 12:18:54 ekohl Exp $
+/* $Id: global.c,v 1.6 2001/04/05 01:54:16 ekohl Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -18,7 +18,7 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-
+#if 0
 #define MAGIC_GLOBAL_USED 0x5342BEEF
 #define GLOBAL_LOCK_MAX   0xFF
 
@@ -29,30 +29,33 @@ typedef struct __GLOBAL_LOCAL_HANDLE
    BYTE		Flags;
    BYTE		LockCount;
 } GLOBAL_HANDLE, LOCAL_HANDLE, *PGLOBAL_HANDLE, *PLOCAL_HANDLE;
+#endif
 
-/*********************************************************************
-*                    GlobalAlloc  --  KERNEL32                       *
-*********************************************************************/
-HGLOBAL WINAPI GlobalAlloc(UINT flags, DWORD size)
+/* FUNCTIONS ***************************************************************/
+
+HGLOBAL STDCALL
+GlobalAlloc(UINT uFlags,
+	    DWORD dwBytes)
 {
+#if 0
    PGLOBAL_HANDLE	phandle;
    PVOID		palloc;
+#endif
 
-   DPRINT("GlobalAlloc( 0x%X, 0x%lX )\n", flags, size );
+   DPRINT("GlobalAlloc( 0x%X, 0x%lX )\n", uFlags, dwBytes);
 
-   if((flags & GMEM_MOVEABLE)==0) /* POINTER */
-   {
-      palloc=RtlAllocateHeap(hProcessHeap, 0, size);
-      return (HGLOBAL) palloc;
-   }
+   if ((uFlags & GMEM_MOVEABLE)==0) /* POINTER */
+     {
+	return ((HGLOBAL)RtlAllocateHeap(hProcessHeap, 0, dwBytes));
+     }
    else  /* HANDLE */
-   {
+     {
 #if 0
       HeapLock(__ProcessHeap);
 
 
       phandle=__HeapAllocFragment(__ProcessHeap, 0,  sizeof(GLOBAL_HANDLE));
-      if(size)
+      if(dwBytes)
       {
          palloc=HeapAlloc(__ProcessHeap, 0, size+sizeof(HANDLE));
          *(PHANDLE)palloc=(HANDLE) &(phandle->Pointer);
@@ -61,27 +64,133 @@ HGLOBAL WINAPI GlobalAlloc(UINT flags, DWORD size)
       else
          phandle->Pointer=NULL;
       phandle->Magic=MAGIC_GLOBAL_USED;
-      phandle->Flags=flags>>8;
+      phandle->Flags=uFlags>>8;
       phandle->LockCount=0;
       HeapUnlock(__ProcessHeap);
 
       return (HGLOBAL) &(phandle->Pointer);
 #endif
-      return (HGLOBAL)NULL;
-   }
+	return (HGLOBAL)NULL;
+     }
 }
 
-/*********************************************************************
-*                    GlobalLock  --  KERNEL32                        *
-*********************************************************************/
-#if 0
-LPVOID WINAPI GlobalLock(HGLOBAL hmem)
+
+UINT STDCALL
+GlobalCompact(DWORD dwMinFree)
 {
+   return RtlCompactHeap(hProcessHeap, 0);
+}
+
+
+VOID STDCALL
+GlobalFix(HGLOBAL hMem)
+{
+   if (hMem != INVALID_HANDLE_VALUE)
+     GlobalLock(hMem);
+}
+
+
+UINT STDCALL
+GlobalFlags(HGLOBAL hMem)
+{
+#if 0
+   DWORD		retval;
+   PGLOBAL_HANDLE	phandle;
+#endif
+
+   DPRINT("GlobalFlags( 0x%lX )\n", (ULONG)hMem);
+
+#if 0
+   if(((ULONG)hmem%8)==0)
+   {
+      retval=0;
+   }
+   else
+   {
+      HeapLock(__ProcessHeap);
+      phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
+      if(phandle->Magic==MAGIC_GLOBAL_USED)
+      {               
+         retval=phandle->LockCount + (phandle->Flags<<8);
+         if(phandle->Pointer==0)
+            retval|= LMEM_DISCARDED;
+      }
+      else
+      {
+         DPRINT("GlobalSize: invalid handle\n");
+         retval=0;
+      }
+      HeapUnlock(__ProcessHeap);
+   }
+   return retval;
+#endif
+
+   return 0;
+}
+
+
+HGLOBAL STDCALL
+GlobalFree(HGLOBAL hMem)
+{
+#if 0
+   PGLOBAL_HANDLE phandle;
+#endif
+
+   DPRINT("GlobalFree( 0x%lX )\n", (ULONG)hMem);
+
+   if (((ULONG)hMem % 4) == 0) /* POINTER */
+     {
+	RtlFreeHeap(hProcessHeap, 0, (PVOID)hMem);
+     }
+   else /* HANDLE */
+     {
+#if 0
+      HeapLock(__ProcessHeap);
+      phandle=(PGLOBAL_HANDLE)(((LPVOID) hMem)-4);
+      if(phandle->Magic==MAGIC_GLOBAL_USED)
+      {
+         HeapLock(__ProcessHeap);
+         if(phandle->LockCount!=0)
+            SetLastError(ERROR_INVALID_HANDLE);
+         if(phandle->Pointer)
+            HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
+         __HeapFreeFragment(__ProcessHeap, 0, phandle);
+      }
+      HeapUnlock(__ProcessHeap);
+#endif
+	hMem = NULL;
+     }
+   return hMem;
+}
+
+
+HGLOBAL STDCALL
+GlobalHandle(LPCVOID pMem)
+{
+   DPRINT("GlobalHandle( 0x%lX )\n", (ULONG)pMem);
+
+#if 0
+   if(((ULONG)pmem%8)==0) /* FIXED */
+      return (HGLOBAL) pmem;
+   else  /* MOVEABLE */
+      return (HGLOBAL) *(LPVOID *)(pmem-sizeof(HANDLE));
+#endif
+
+   return (HGLOBAL)pMem;
+}
+
+
+LPVOID STDCALL
+GlobalLock(HGLOBAL hMem)
+{
+#if 0
    PGLOBAL_HANDLE phandle;
    LPVOID         palloc;
+#endif
 
-   DPRINT("GlobalLock( 0x%lX )\n", (ULONG) hmem );
+   DPRINT("GlobalLock( 0x%lX )\n", (ULONG)hMem);
 
+#if 0
    if(((ULONG)hmem%8)==0)
       return (LPVOID) hmem;
 
@@ -100,69 +209,33 @@ LPVOID WINAPI GlobalLock(HGLOBAL hmem)
    }
    HeapUnlock(__ProcessHeap);
    return palloc;
-}
+#else
+   return (LPVOID)hMem;
 #endif
-
-/*********************************************************************
-*                    GlobalUnlock  --  KERNEL32                      *
-*********************************************************************/
-#if 0
-BOOL WINAPI GlobalUnlock(HGLOBAL hmem)
-{
-   PGLOBAL_HANDLE	phandle;
-   BOOL			locked;
-
-   DPRINT("GlobalUnlock( 0x%lX )\n", (ULONG) hmem );
-
-   if(((ULONG)hmem%8)==0)
-      return FALSE;
-
-   HeapLock(__ProcessHeap);
-   phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
-   if(phandle->Magic==MAGIC_GLOBAL_USED)
-   {
-      if((phandle->LockCount<GLOBAL_LOCK_MAX)&&(phandle->LockCount>0))
-         phandle->LockCount--;
-
-      locked=(phandle->LockCount==0) ? TRUE : FALSE;
-   }
-   else
-   {
-      DPRINT("GlobalUnlock: invalid handle\n");
-      locked=FALSE;
-   }
-   HeapUnlock(__ProcessHeap);
-   return locked;
 }
-#endif
 
-/*********************************************************************
-*                    GlobalHandle  --  KERNEL32                      *
-*********************************************************************/
-#if 0
-HGLOBAL WINAPI GlobalHandle(LPCVOID pmem)
+
+VOID STDCALL
+GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
-   DPRINT("GlobalHandle( 0x%lX )\n", (ULONG) pmem );
-
-   if(((ULONG)pmem%8)==0) /* FIXED */
-      return (HGLOBAL) pmem;
-   else  /* MOVEABLE */
-      return (HGLOBAL) *(LPVOID *)(pmem-sizeof(HANDLE));
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
-#endif
 
-/*********************************************************************
-*                    GlobalReAlloc  --  KERNEL32                     *
-*********************************************************************/
-#if 0
-HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
+
+HGLOBAL STDCALL
+GlobalReAlloc(HGLOBAL hMem,
+	      DWORD dwBytes,
+	      UINT uFlags)
 {
+#if 0
    LPVOID		palloc;
    HGLOBAL		hnew;
    PGLOBAL_HANDLE	phandle;
+#endif
 
-   DPRINT("GlobalReAlloc( 0x%lX, 0x%lX, 0x%X )\n", (ULONG) hmem, size, flags );
+   DPRINT("GlobalReAlloc( 0x%lX, 0x%lX, 0x%X )\n", (ULONG)hMem, dwBytes, uFlags);
 
+#if 0
    hnew=NULL;
    HeapLock(__ProcessHeap);
    if(flags & GMEM_MODIFY) /* modify flags */
@@ -234,58 +307,25 @@ HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
    }
    HeapUnlock(__ProcessHeap);
    return hnew;
-}
+#else
+   return ((HGLOBAL)RtlReAllocateHeap(hProcessHeap, uFlags, (LPVOID)hMem, dwBytes));
 #endif
-
-/*********************************************************************
-*                    GlobalFree  --  KERNEL32                        *
-*********************************************************************/
-HGLOBAL WINAPI GlobalFree(HGLOBAL hmem)
-{
-#if 0
-   PGLOBAL_HANDLE phandle;
-#endif
-
-   DPRINT("GlobalFree( 0x%lX )\n", (ULONG) hmem );
-
-   if (((ULONG)hmem % 4) == 0) /* POINTER */
-     {
-	RtlFreeHeap(hProcessHeap, 0, (LPVOID)hmem);
-     }
-   else /* HANDLE */
-     {
-#if 0
-      HeapLock(__ProcessHeap);
-      phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
-      if(phandle->Magic==MAGIC_GLOBAL_USED)
-      {
-         HeapLock(__ProcessHeap);
-         if(phandle->LockCount!=0)
-            SetLastError(ERROR_INVALID_HANDLE);
-         if(phandle->Pointer)
-            HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
-         __HeapFreeFragment(__ProcessHeap, 0, phandle);
-      }
-      HeapUnlock(__ProcessHeap);
-#endif
-	hmem = NULL;
-     }
-   return hmem;
 }
 
-/*********************************************************************
-*                    GlobalSize  --  KERNEL32                        *
-*********************************************************************/
-DWORD WINAPI GlobalSize(HGLOBAL hmem)
+
+DWORD STDCALL
+GlobalSize(HGLOBAL hMem)
 {
    DWORD		retval;
+#if 0
    PGLOBAL_HANDLE	phandle;
+#endif
 
-   DPRINT("GlobalSize( 0x%lX )\n", (ULONG) hmem );
+   DPRINT("GlobalSize( 0x%lX )\n", (ULONG)hMem);
 
-   if(((ULONG)hmem % 4) == 0)
+   if(((ULONG)hMem % 4) == 0)
    {
-      retval = RtlSizeHeap(hProcessHeap, 0, hmem);
+      retval = RtlSizeHeap(hProcessHeap, 0, hMem);
    }
    else
    {
@@ -308,54 +348,62 @@ DWORD WINAPI GlobalSize(HGLOBAL hmem)
    return retval;
 }
 
-/*********************************************************************
-*                    GlobalWire  --  KERNEL32                        *
-*********************************************************************/
-#if 0
-LPVOID WINAPI GlobalWire(HGLOBAL hmem)
+
+VOID STDCALL
+GlobalUnfix(HGLOBAL hMem)
 {
-   return GlobalLock( hmem );
+   if (hMem != INVALID_HANDLE_VALUE)
+     GlobalUnlock(hMem);
 }
+
+
+BOOL STDCALL
+GlobalUnlock(HGLOBAL hMem)
+{
+#if 0
+   PGLOBAL_HANDLE	phandle;
+   BOOL			locked;
 #endif
 
-/*********************************************************************
-*                    GlobalUnWire  --  KERNEL32                      *
-*********************************************************************/
+   DPRINT("GlobalUnlock( 0x%lX )\n", (ULONG)hMem);
+
 #if 0
-BOOL WINAPI GlobalUnWire(HGLOBAL hmem)
-{
-   return GlobalUnlock( hmem);
-}
+   if(((ULONG)hmem%8)==0)
+      return FALSE;
+
+   HeapLock(__ProcessHeap);
+   phandle=(PGLOBAL_HANDLE)(((LPVOID) hmem)-4);
+   if(phandle->Magic==MAGIC_GLOBAL_USED)
+   {
+      if((phandle->LockCount<GLOBAL_LOCK_MAX)&&(phandle->LockCount>0))
+         phandle->LockCount--;
+
+      locked=(phandle->LockCount==0) ? TRUE : FALSE;
+   }
+   else
+   {
+      DPRINT("GlobalUnlock: invalid handle\n");
+      locked=FALSE;
+   }
+   HeapUnlock(__ProcessHeap);
+   return locked;
 #endif
 
-/*********************************************************************
-*                    GlobalFix  --  KERNEL32                         *
-*********************************************************************/
-#if 0
-VOID WINAPI GlobalFix(HGLOBAL hmem)
-{
-   GlobalLock( hmem );
+   return TRUE;
 }
-#endif
 
-/*********************************************************************
-*                    GlobalUnfix  --  KERNEL32                       *
-*********************************************************************/
-#if 0
-VOID WINAPI GlobalUnfix(HGLOBAL hmem)
-{
-   GlobalUnlock( hmem);
-}
-#endif
 
-/*********************************************************************
-*                    GlobalFlags  --  KERNEL32                       *
-*********************************************************************/
-#if 0
-UINT WINAPI GlobalFlags(HGLOBAL hmem)
+BOOL STDCALL
+GlobalUnWire(HGLOBAL hMem)
 {
-   return LocalFlags( (HLOCAL) hmem);
+   return GlobalUnlock(hMem);
 }
-#endif
+
+
+LPVOID STDCALL
+GlobalWire(HGLOBAL hMem)
+{
+   return GlobalLock(hMem);
+}
 
 /* EOF */

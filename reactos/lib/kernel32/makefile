@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.46 2001/03/31 01:17:29 dwelch Exp $
+# $Id: makefile,v 1.47 2001/04/05 01:53:57 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -29,8 +29,8 @@ FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
 	       file/npipe.o file/tape.o file/mailslot.o file/backup.o \
 	       file/cnotify.o
 
-MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/procmem.o \
-              mem/section.o mem/virtual.o
+MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
+              mem/procmem.o mem/section.o mem/virtual.o
 
 NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/cp37.o nls/cp437.o nls/cp500.o nls/cp737.o nls/cp775.o nls/cp850.o nls/cp852.o nls/cp855.o nls/cp857.o\
