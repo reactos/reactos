@@ -20,6 +20,9 @@ typedef LPDLGTEMPLATE LPDLGTEMPLATEA, LPDLGTEMPLATEW;
 #endif
 
 #define WS_EX_TRAYWINDOW 0x80000000L
+#ifndef MIM_MENUDATA
+#define MIM_MENUDATA     0x00000008
+#endif
 
 #define DCX_USESTYLE     0x00010000
 #define WS_EX_MANAGED    0x40000000L /* Window managed by the window system */
