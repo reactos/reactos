@@ -269,17 +269,18 @@ VIDEO_OBJS	=	video.o		\
 MATH_OBJS	=	libgcc2.o
 
 BASE_OBJS	=	freeldr.o \
-				debug.o \
-				multiboot.o	\
-				version.o
+			debug.o \
+			multiboot.o	\
+			version.o \
+			cmdline.o
 
 FREELDR_OBJS=	bootmgr.o \
-				drivemap.o \
-				miscboot.o \
-				options.o \
-				linuxboot.o	\
-				oslist.o \
-				custom.o
+		drivemap.o \
+		miscboot.o \
+		options.o \
+		linuxboot.o	\
+		oslist.o \
+		custom.o
 
 ROSLDR_OBJS =	reactos.o
 

@@ -1,6 +1,7 @@
-/*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+/* $Id: cmdline.h,v 1.1 2004/11/01 20:49:32 gvg Exp $
+ *
+ *  FreeLdr boot loader
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,34 +17,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
-#include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <mm.h>
-#include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
+#ifndef __CMDLINE_H__
+#define __CMDLINE_H__
+
+typedef struct tagCMDLINEINFO
 {
-	CmdLineParse(CmdLine);
+  char *DefaultOperatingSystem;
+  S32 TimeOut;
+} CMDLINEINFO, *PCMDLINEINFO;
 
-	EnableA20();
+extern void CmdLineParse(char *CmdLine);
 
-#ifdef DEBUG
-	DebugInit();
-#endif
+extern char *CmdLineGetDefaultOS(void);
+extern S32 CmdLineGetTimeOut(void);
 
-	DbgPrint((DPRINT_WARNING, "BootMain() called. BootDrive = 0x%x BootPartition = %d\n", BootDrive, BootPartition));
+#endif /* __CMDLINE_H__ */
 
-	if (!MmInitializeMemoryManager())
-	{
-		printf("Press any key to reboot.\n");
-		getch();
-		return;
-	}
-
-	RunLoader();
-}
+/* EOF */

@@ -22,6 +22,7 @@
 
 #define ASM
 #include <arch.h>
+#include <multiboot.h>
 
 
 EXTERN(RealEntryPoint)
@@ -52,16 +53,18 @@ EXTERN(RealEntryPoint)
 	movb	%dh,(_BootPartition)
 
 	/* GO! */
+	xorl	%eax,%eax
+	pushl	%eax
 	call	_BootMain
 
 	call	switch_to_real
 	.code16
 
-	int		$0x19
+	int	$0x19
 
 	/* We should never get here */
 stop:
-	jmp		stop
+	jmp	stop
 	nop
 	nop
 
@@ -100,9 +103,9 @@ EXTERN(switch_to_prot)
 	lidt	i386idtptr
 
 	/* Enable Protected Mode */
-	mov		%cr0,%eax
-	orl		$CR0_PE_SET,%eax
-	mov		%eax,%cr0
+	mov	%cr0,%eax
+	orl	$CR0_PE_SET,%eax
+	mov	%eax,%cr0
 
 	/* Clear prefetch queue & correct CS */
 	ljmp	$PMODE_CS, $inpmode
@@ -168,9 +171,9 @@ switch_to_real16:
 	movw	%ax,%ss
 
 	/* Disable Protected Mode */
-	mov		%cr0,%eax
+	mov	%cr0,%eax
 	andl	$CR0_PE_CLR,%eax
-	mov		%eax,%cr0
+	mov	%eax,%cr0
 
 	/* Clear prefetch queue & correct CS */
 	ljmp	$0, $inrmode
@@ -211,9 +214,9 @@ inrmode:
 	.code16
 empty_8042:
 	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
-	inb     $0x64,%al
-    testb   $0x02,%al
-    jnz     empty_8042
+	inb	$0x64,%al
+	testb	$0x02,%al
+	jnz	empty_8042
 	ret
 
 	/*
@@ -228,11 +231,11 @@ EXTERN(_EnableA20)
 	.code16
 
 	call	empty_8042
-    movb	$0xD1,%al                // command write
-    outb	%al,$0x64
+	movb	$0xD1,%al                // command write
+	outb	%al,$0x64
 	call	empty_8042
-    mov		$0xDF,%al                // A20 on
-    out		%al,$0x60
+	mov	$0xDF,%al                // A20 on
+	out	%al,$0x60
 	call	empty_8042
 	call	switch_to_prot
 	.code32
@@ -253,11 +256,11 @@ EXTERN(_DisableA20)
 	.code16
 
 	call	empty_8042
-    movb	$0xD1,%al                // command write
-    outb	%al,$0x64
+	movb	$0xD1,%al                // command write
+	outb	%al,$0x64
 	call	empty_8042
-    mov		$0xDD,%al                // A20 off
-    out		%al,$0x60
+	mov	$0xDD,%al                // A20 off
+	out	%al,$0x60
 	call	empty_8042
 	call	switch_to_prot
 	.code32
@@ -266,8 +269,134 @@ EXTERN(_DisableA20)
 
 	ret
 
+/* Multiboot support
+ *
+ * Allows freeldr to be loaded as a "multiboot kernel" by
+ * other boot loaders like Grub
+ */
 
+#define MB_INFO_FLAGS_OFFSET        0
+#define MB_INFO_BOOT_DEVICE_OFFSET  12
+#define MB_INFO_COMMAND_LINE_OFFSET 16
 
+/*
+ * We want to execute at 0x8000 (to be compatible with bootsector
+ * loading), but Grub only allows loading of multiboot kernels
+ * above 1MB. So we let Grub load us there and then relocate
+ * ourself to 0x8000
+ */
+#define CMDLINE_BASE 0x7000
+#define FREELDR_BASE 0x8000
+#define INITIAL_BASE 0x200000
+
+	/* Align 32 bits boundary */
+	.align 4
+	
+	/* Multiboot header */
+MultibootHeader:
+	/* magic */
+	.long MULTIBOOT_HEADER_MAGIC
+	/* flags */
+	.long MULTIBOOT_HEADER_FLAGS
+	/* checksum */
+	.long -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+	/* header_addr */
+	.long INITIAL_BASE + MultibootHeader - FREELDR_BASE
+	/* load_addr */
+	.long INITIAL_BASE
+	/* load_end_addr */
+	.long INITIAL_BASE + __bss_start__ - FREELDR_BASE
+	/* bss_end_addr */
+	.long INITIAL_BASE + __bss_end__ - FREELDR_BASE
+	/* entry_addr */
+	.long INITIAL_BASE + MultibootEntry - FREELDR_BASE
+
+MultibootEntry:
+	cli		/* Even after setting up the our IDT below we are
+			 * not ready to handle hardware interrupts (no entries
+			 * in IDT), so there's no sti here. Interrupts will be
+			 * enabled in due time */
+
+	/* Although the multiboot spec says we should be called with the
+	 * segment registers set to 4GB flat mode, let's be sure and set up
+	 * our own */
+	lgdt	gdtptrhigh + INITIAL_BASE - FREELDR_BASE
+	/* Reload segment selectors */
+	ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
+mb1:
+	movw	$PMODE_DS,%dx
+	movw	%dx,%ds
+	movw	%dx,%es
+
+	/* Copy to low mem */
+	movl	$INITIAL_BASE,%esi
+	movl	$FREELDR_BASE,%edi
+	movl	$(__bss_end__ - FREELDR_BASE),%ecx
+	addl	$3,%ecx
+	shrl	$2,%ecx
+	rep movsl
+
+	/* Load the GDT and IDT */
+	lgdt	gdtptr
+	lidt	i386idtptr
+
+	/* Clear prefetch queue & correct CS,
+	 * jump to low mem */
+	ljmp	$PMODE_CS, $mb2
+mb2:
+	/* Reload segment selectors */
+	movw	$PMODE_DS,%dx
+	movw	%dx,%ds
+	movw	%dx,%es
+	movw	%dx,%fs
+	movw	%dx,%gs
+	movw	%dx,%ss
+	movl	$STACK32ADDR,%esp
+
+	/* Check for valid multiboot signature */
+	cmpl	$MULTIBOOT_BOOTLOADER_MAGIC,%eax
+	jne	mbfail
+
+	/* See if the boot device was passed in */
+	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
+	testl	$MB_INFO_FLAG_BOOT_DEVICE,%edx
+	jz	mb3
+	/* Retrieve boot device info */
+	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
+	shrl	$16,%eax
+	incb	%al
+	movb	%al,_BootPartition
+	movb	%ah,_BootDrive
+	jmp	mb4
+mb3:	/* No boot device known, assume first partition of first harddisk */
+	movb	$0x80,_BootDrive
+	movb	$1,_BootPartition
+mb4:
+
+	/* Check for a command line */
+	xorl	%eax,%eax
+	testl	$MB_INFO_FLAG_COMMAND_LINE,%edx
+	jz	mb6
+	/* Copy command line to low mem*/
+	movl	MB_INFO_COMMAND_LINE_OFFSET(%ebx),%esi
+	movl	$CMDLINE_BASE,%edi
+mb5:	lodsb
+	stosb
+	testb	%al,%al
+	jnz	mb5
+	movl	$CMDLINE_BASE,%eax
+mb6:
+
+	/* GO! */
+	pushl	%eax	
+	call	_BootMain
+
+mbfail:	call	switch_to_real
+	.code16
+	int	$0x19
+mbstop:	jmp	mbstop	/* We should never get here */
+
+	.code32
 
 	/* 16-bit stack pointer */
 stack16:
@@ -322,6 +451,11 @@ gdt:
 gdtptr:
 	.word	0x27		/* Limit */
 	.long	gdt			/* Base Address */
+
+/* Initial GDT table pointer for multiboot */
+gdtptrhigh:
+	.word	0x27		/* Limit */
+	.long	gdt + INITIAL_BASE - FREELDR_BASE	/* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:

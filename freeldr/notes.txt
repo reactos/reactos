@@ -4,7 +4,7 @@ Memory layout:
 
 0000:0000 - 0000:0FFF: Interrupt vector table & BIOS data
 0000:1000 - 0000:6FFF: Real mode stack area
-0000:7000 - 0000:7FFF: Unused
+0000:7000 - 0000:7FFF: Cmdline (multiboot)
 0000:8000 - xxxx:xxxx: FreeLoader program & data area
 xxxx:xxxx - 7000:7FFF: Random memory allocation heap
 7000:8000 - 7000:FFFF: Protected mode stack area
@@ -34,9 +34,20 @@ ISO-9660 (CD-ROM) Boot Sector
 
 	The BIOS loads the boot sector (2048 bytes) at 0000:7C00. First, the
 boot sector relocates itself to 0000:7000 (up to 0000:7800). Then it looks
-for the I386 directory and makes it the current directory. Next it looks for
+for the LOADER directory and makes it the current directory. Next it looks for
 FREELDR.SYS and loads it at 0000:8000. Finally it restores the boot drive
 number in the DL register and jumps to FreeLoader's entry point at 0000:8000.
+
+
+Multiboot
+
+	Freeldr contains a multiboot signature and can itself be loaded by a
+multiboot-compliant loader (like Grub). The multiboot header instructs the
+primary loader to load freeldr.sys at 0x200000 (needs to be above 1MB). Control
+is then transferred to the multiboot entry point. Since freeldr.sys expects to
+be loaded at a base address 0000:8000 it will start by relocating itself there
+and then jumping to the relocated copy.
+
 
 
 FreeLoader Initialization

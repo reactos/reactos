@@ -34,6 +34,7 @@
 #include <bootmgr.h>
 #include <drivemap.h>
 #include <keycodes.h>
+#include <cmdline.h>
 
 
 VOID RunLoader(VOID)
@@ -153,20 +154,30 @@ reboot:
 U32	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32	 OperatingSystemCount)
 {
 	UCHAR	DefaultOSText[80];
-	U32		SectionId;
-	U32		DefaultOS = 0;
-	U32		Idx;
+	char*	DefaultOSName;
+	U32	SectionId;
+	U32	DefaultOS = 0;
+	U32	Idx;
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		return 0;
 	}
 
-	if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
+	DefaultOSName = CmdLineGetDefaultOS();
+	if (NULL == DefaultOSName)
+	{
+		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, 80))
+		{
+			DefaultOSName = DefaultOSText;
+		}
+	}
+
+	if (NULL != DefaultOSName)
 	{
 		for (Idx=0; Idx<OperatingSystemCount; Idx++)
 		{
-			if (stricmp(DefaultOSText, OperatingSystemList[Idx]) == 0)
+			if (stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
 			{
 				DefaultOS = Idx;
 				break;
@@ -182,6 +193,12 @@ S32 GetTimeOut(VOID)
 	UCHAR	TimeOutText[20];
 	U32		TimeOut;
 	U32		SectionId;
+
+	TimeOut = CmdLineGetTimeOut();
+	if (0 <= TimeOut)
+	{
+		return TimeOut;
+	}
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{

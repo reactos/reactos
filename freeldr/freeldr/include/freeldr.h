@@ -75,7 +75,7 @@ extern U32			BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
 extern U32			BootPartition;		// Boot Partition, 1-4
 extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
-void	BootMain(void);
+void	BootMain(char *CmdLine);
 VOID	RunLoader(VOID);
 
 #endif  // defined __FREELDR_H
