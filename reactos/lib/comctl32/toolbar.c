@@ -6081,23 +6081,25 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
     INT   nHit;
     TBUTTON_INFO *btnPtr;
 
-    /* fill in the TRACKMOUSEEVENT struct */
-    trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);
-    trackinfo.dwFlags = TME_QUERY;
-    trackinfo.hwndTrack = hwnd;
-    trackinfo.dwHoverTime = HOVER_DEFAULT;
+    if (infoPtr->dwStyle & TBSTYLE_FLAT) {
+        /* fill in the TRACKMOUSEEVENT struct */
+        trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);
+        trackinfo.dwFlags = TME_QUERY;
+        trackinfo.hwndTrack = hwnd;
+        trackinfo.dwHoverTime = HOVER_DEFAULT;
 
-    /* call _TrackMouseEvent to see if we are currently tracking for this hwnd */
-    _TrackMouseEvent(&trackinfo);
-
-    /* Make sure tracking is enabled so we receive a WM_MOUSELEAVE message */
-    if(!(trackinfo.dwFlags & TME_LEAVE)) {
-        trackinfo.dwFlags = TME_LEAVE; /* notify upon leaving */
-
-        /* call TRACKMOUSEEVENT so we receive a WM_MOUSELEAVE message */
-        /* and can properly deactivate the hot toolbar button */
+        /* call _TrackMouseEvent to see if we are currently tracking for this hwnd */
         _TrackMouseEvent(&trackinfo);
-   }
+
+        /* Make sure tracking is enabled so we receive a WM_MOUSELEAVE message */
+        if(!(trackinfo.dwFlags & TME_LEAVE)) {
+            trackinfo.dwFlags = TME_LEAVE; /* notify upon leaving */
+
+            /* call TRACKMOUSEEVENT so we receive a WM_MOUSELEAVE message */
+            /* and can properly deactivate the hot toolbar button */
+            _TrackMouseEvent(&trackinfo);
+       }
+    }
 
     if (infoPtr->hwndToolTip)
 	TOOLBAR_RelayEvent (infoPtr->hwndToolTip, hwnd,
@@ -6108,7 +6110,7 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     nHit = TOOLBAR_InternalHitTest (hwnd, &pt);
 
-    if (!infoPtr->bAnchor || (nHit >= 0))
+    if ((infoPtr->dwStyle & TBSTYLE_FLAT) && (!infoPtr->bAnchor || (nHit >= 0)))
         TOOLBAR_SetHotItemEx(infoPtr, nHit, HICF_MOUSE);
 
     if (infoPtr->nOldHit != nHit)
