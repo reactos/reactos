@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.70 2004/11/25 22:18:15 ion Exp $
+/* $Id: iotypes.h,v 1.71 2004/12/22 05:06:59 royce Exp $
  *
  */
 
@@ -1307,7 +1307,7 @@ typedef struct _SCATTER_GATHER_ELEMENT {
 typedef struct _SCATTER_GATHER_LIST {
   ULONG NumberOfElements;
   ULONG_PTR Reserved;
-  SCATTER_GATHER_ELEMENT Elements[];
+  SCATTER_GATHER_ELEMENT Elements[1];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 typedef VOID (*PPUT_DMA_ADAPTER)(

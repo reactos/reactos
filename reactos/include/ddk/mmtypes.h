@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.20 2004/11/20 16:46:04 weiden Exp $ */
+/* $Id: mmtypes.h,v 1.21 2004/12/22 05:06:59 royce Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -76,10 +76,10 @@ typedef union _FILE_SEGMENT_ELEMENT {
 }FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
 
 typedef struct _READ_LIST {
-	struct FILE_OBJECT* FileObject;
+	struct _FILE_OBJECT* FileObject;
     ULONG NumberOfEntries;
     ULONG IsImage;
-    FILE_SEGMENT_ELEMENT List[];
+    FILE_SEGMENT_ELEMENT List[1];
 } READ_LIST, *PREAD_LIST;
 
 #define MmSmallSystem (0)

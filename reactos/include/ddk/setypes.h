@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.16 2004/07/19 06:08:21 ion Exp $
+/* $Id: setypes.h,v 1.17 2004/12/22 05:06:59 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -96,7 +96,7 @@ typedef struct _ACCESS_TOKEN
   UCHAR				Unused[2];                 /* 0x66 */
   PVOID				ProxyData;                 /* 0x68 */
   PVOID				AuditData;                 /* 0x6c */
-  UCHAR				VariablePart[0];           /* 0x70 */
+  UCHAR				VariablePart[1];           /* 0x70 */
 } ACCESS_TOKEN, *PACCESS_TOKEN;
 
 
