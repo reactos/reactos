@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.64 2004/12/12 01:40:38 weiden Exp $ */
+/* $Id$ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -2224,12 +2224,57 @@ exit:
 
 HRGN
 STDCALL
-NtGdiExtCreateRegion(CONST PXFORM  Xform,
-                          DWORD  Count,
-                          CONST PROSRGNDATA  RgnData)
+NtGdiExtCreateRegion(CONST XFORM *Xform,
+                          DWORD Count,
+                          CONST RGNDATA *RgnData)
 {
-  UNIMPLEMENTED;
-  return 0;
+   HRGN hRgn;
+   RGNDATA SafeRgnData;
+   PROSRGNDATA Region;
+   NTSTATUS Status;
+
+   if (Count < FIELD_OFFSET(RGNDATA, Buffer))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+   }
+
+   Status = MmCopyFromCaller(&SafeRgnData, RgnData, min(Count, sizeof(RGNDATA)));
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+   }
+
+   hRgn = RGNDATA_AllocRgn(SafeRgnData.rdh.nCount);
+   if (hRgn == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return NULL;
+   }
+   
+   Region = RGNDATA_LockRgn(hRgn);
+   if (Region == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+
+   RtlCopyMemory(&Region->rdh, &SafeRgnData, FIELD_OFFSET(RGNDATA, Buffer));
+
+   Status = MmCopyFromCaller(Region->Buffer, RgnData->Buffer,
+                             Count - FIELD_OFFSET(RGNDATA, Buffer));
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      RGNDATA_UnlockRgn(hRgn);
+      NtGdiDeleteObject(hRgn);
+      return NULL;
+   }
+   
+   RGNDATA_UnlockRgn(hRgn);
+
+   return hRgn;
 }
 
 BOOL

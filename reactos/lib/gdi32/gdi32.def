@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.13 2004/12/30 02:32:23 navaraf Exp $
+; $Id$
 ;
 ; gdi32.def
 ;
@@ -168,7 +168,7 @@ EudcLoadLinkW@16
 EudcUnloadLinkW@8
 ExcludeClipRect@20=NtGdiExcludeClipRect@20
 ExtCreatePen@20=NtGdiExtCreatePen@20
-ExtCreateRegion@12
+ExtCreateRegion@12=NtGdiExtCreateRegion@12
 ExtEscape@24=NtGdiExtEscape@24
 ExtFloodFill@20=NtGdiExtFloodFill@20
 ExtSelectClipRgn@12=NtGdiExtSelectClipRgn@12
