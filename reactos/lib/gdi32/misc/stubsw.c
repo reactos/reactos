@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.12 2003/07/21 02:36:00 royce Exp $
+/* $Id: stubsw.c,v 1.13 2003/07/21 04:10:41 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -15,7 +15,7 @@
 #include <win32k/kapi.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -51,19 +51,21 @@ CopyMetaFileW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
 CreateICW(
-	LPCWSTR			a0,
-	LPCWSTR			a1,
-	LPCWSTR			a2,
-	CONST DEVMODEW *	a3
+	LPCWSTR			lpszDriver,
+	LPCWSTR			lpszDevice,
+	LPCWSTR			lpszOutput,
+	CONST DEVMODEW *	lpdvmInit
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCreateIC ( lpszDriver,
+		      lpszDevice,
+		      lpszOutput,
+		      (CONST PDEVMODEW)lpdvmInit );
 }
 
 
@@ -441,6 +443,22 @@ STDCALL
 StartDocW(
 	HDC		hdc, 
 	CONST DOCINFO	*a1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int   
+STDCALL 
+GetObjectW(
+	HGDIOBJ		a0, 
+	int		a1, 
+	LPVOID		a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
