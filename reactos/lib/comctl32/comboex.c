@@ -915,9 +915,9 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO *infoPtr, INT index, UINT height)
 
 static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 {
-    WCHAR COMBOBOX[] = { 'C', 'o', 'm', 'b', 'o', 'B', 'o', 'x', 0 };
-    WCHAR EDIT[] = { 'E', 'D', 'I', 'T', 0 };
-    WCHAR NIL[] = { 0 };
+    static const WCHAR COMBOBOX[] = { 'C', 'o', 'm', 'b', 'o', 'B', 'o', 'x', 0 };
+    static const WCHAR EDIT[] = { 'E', 'D', 'I', 'T', 0 };
+    static const WCHAR NIL[] = { 0 };
     COMBOEX_INFO *infoPtr;
     LOGFONTW mylogfont;
     RECT wnrc1, clrc1, cmbwrc;
@@ -1281,7 +1281,7 @@ static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT *dis)
 
 static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
 {
-    WCHAR nil[] = { 0 };
+    static const WCHAR nil[] = { 0 };
     CBE_ITEMDATA *item = 0;
     SIZE txtsize;
     RECT rect;

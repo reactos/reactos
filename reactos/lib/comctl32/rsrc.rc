@@ -1128,3 +1128,4 @@ IDI_DRAGARROW ICON LOADONCALL DISCARDABLE idi_dragarrow.ico
 #include "comctl_Ru.rc"
 #include "comctl_Si.rc"
 #include "comctl_Th.rc"
+#include "comctl_Uk.rc"

@@ -948,7 +948,7 @@ static LRESULT
 MONTHCAL_SetRange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
   MONTHCAL_INFO *infoPtr = MONTHCAL_GetInfoPtr(hwnd);
-  SYSTEMTIME lprgSysTimeArray[1];
+  SYSTEMTIME *lprgSysTimeArray=(SYSTEMTIME *)lParam;
   int prev;
 
   TRACE("%x %lx\n", wParam, lParam);
@@ -1033,6 +1033,7 @@ MONTHCAL_GetCurSel(HWND hwnd, WPARAM wParam, LPARAM lParam)
   if(GetWindowLongA(hwnd, GWL_STYLE) & MCS_MULTISELECT) return FALSE;
 
   MONTHCAL_CopyTime(&infoPtr->minSel, lpSel);
+  TRACE("%d/%d/%d\n", lpSel->wYear, lpSel->wMonth, lpSel->wDay);
   return TRUE;
 }
 
@@ -1048,7 +1049,8 @@ MONTHCAL_SetCurSel(HWND hwnd, WPARAM wParam, LPARAM lParam)
   if((infoPtr==NULL) ||(lpSel==NULL)) return FALSE;
   if(GetWindowLongA(hwnd, GWL_STYLE) & MCS_MULTISELECT) return FALSE;
 
-  TRACE("%d %d\n", lpSel->wMonth, lpSel->wDay);
+  infoPtr->currentMonth=lpSel->wMonth;
+  infoPtr->currentYear=lpSel->wYear;
 
   MONTHCAL_CopyTime(lpSel, &infoPtr->minSel);
   MONTHCAL_CopyTime(lpSel, &infoPtr->maxSel);
@@ -1479,23 +1481,24 @@ MONTHCAL_LButtonDown(HWND hwnd, WPARAM wParam, LPARAM lParam)
     InvalidateRect(hwnd, NULL, FALSE);
     return TRUE;
   }
-  if(hit && MCHT_CALENDARDATE) {
+  if(hit == MCHT_CALENDARDATE) {
     SYSTEMTIME selArray[2];
     NMSELCHANGE nmsc;
-
-    TRACE("MCHT_CALENDARDATE\n");
-    nmsc.nmhdr.hwndFrom = hwnd;
-    nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
-    nmsc.nmhdr.code     = MCN_SELCHANGE;
-    MONTHCAL_CopyTime(&nmsc.stSelStart, &infoPtr->minSel);
-    MONTHCAL_CopyTime(&nmsc.stSelEnd, &infoPtr->maxSel);
-
-    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
-           (WPARAM)nmsc.nmhdr.idFrom,(LPARAM)&nmsc);
 
     MONTHCAL_CopyTime(&ht.st, &selArray[0]);
     MONTHCAL_CopyTime(&ht.st, &selArray[1]);
     MONTHCAL_SetSelRange(hwnd,0,(LPARAM) &selArray);
+    MONTHCAL_SetCurSel(hwnd,0,(LPARAM) &selArray);
+    TRACE("MCHT_CALENDARDATE\n");
+    nmsc.nmhdr.hwndFrom = hwnd;
+    nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmsc.nmhdr.code     = MCN_SELCHANGE;
+    MONTHCAL_CopyTime(&infoPtr->minSel,&nmsc.stSelStart);
+    MONTHCAL_CopyTime(&infoPtr->maxSel,&nmsc.stSelEnd);
+
+    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
+           (WPARAM)nmsc.nmhdr.idFrom,(LPARAM)&nmsc);
+
 
     /* redraw both old and new days if the selected day changed */
     if(infoPtr->curSelDay != ht.st.wDay) {
@@ -1530,10 +1533,12 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   if(infoPtr->status & MC_NEXTPRESSED) {
     KillTimer(hwnd, MC_NEXTMONTHTIMER);
+    infoPtr->status &= ~MC_NEXTPRESSED;
     redraw = TRUE;
   }
   if(infoPtr->status & MC_PREVPRESSED) {
     KillTimer(hwnd, MC_PREVMONTHTIMER);
+    infoPtr->status &= ~MC_PREVPRESSED;
     redraw = TRUE;
   }
 
@@ -1560,20 +1565,21 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
                                 (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
-
-  nmsc.nmhdr.hwndFrom = hwnd;
-  nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
-  nmsc.nmhdr.code     = MCN_SELECT;
-  MONTHCAL_CopyTime(&nmsc.stSelStart, &infoPtr->minSel);
-  MONTHCAL_CopyTime(&nmsc.stSelEnd, &infoPtr->maxSel);
-
-  SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
-           (WPARAM)nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
-
   /* redraw if necessary */
   if(redraw)
     InvalidateRect(hwnd, NULL, FALSE);
+  /* only send MCN_SELECT if currently displayed month's day was selected */
+  if(hit == MCHT_CALENDARDATE) {
+    nmsc.nmhdr.hwndFrom = hwnd;
+    nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmsc.nmhdr.code     = MCN_SELECT;
+    MONTHCAL_CopyTime(&infoPtr->minSel, &nmsc.stSelStart);
+    MONTHCAL_CopyTime(&infoPtr->maxSel, &nmsc.stSelEnd);
 
+    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
+             (WPARAM)nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
+
+  }
   return 0;
 }
 
@@ -1898,6 +1904,8 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
   infoPtr->currentYear = infoPtr->todaysDate.wYear;
   MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->minDate);
   MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->maxDate);
+  infoPtr->maxDate.wYear=2050;
+  infoPtr->minDate.wYear=1950;
   infoPtr->maxSelCount  = 7;
   infoPtr->monthRange = 3;
   infoPtr->monthdayState = Alloc

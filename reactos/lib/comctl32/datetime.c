@@ -148,13 +148,14 @@ DATETIME_SetSystemTime (HWND hwnd, WPARAM wParam, LPARAM lParam )
   TRACE("%p %04x %08lx\n",hwnd, wParam, lParam);
   if (!lParam) return 0;
 
-  TRACE("%04d/%02d/%02d %02d:%02d:%02d)\n",
+  TRACE("%04d/%02d/%02d %02d:%02d:%02d\n",
         lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay,
         lprgSysTimeArray->wHour, lprgSysTimeArray->wMinute, lprgSysTimeArray->wSecond);
 
   if (wParam==GDT_VALID) {
       infoPtr->dateValid = TRUE;
       MONTHCAL_CopyTime (lprgSysTimeArray, &infoPtr->date);
+	SendMessageA(infoPtr->hMonthCal, MCM_SETCURSEL, 0, (LPARAM)(&infoPtr->date));
       SendMessageA (infoPtr->hwndCheckbut, BM_SETCHECK, BST_CHECKED, 0);
   } else if (wParam==GDT_NONE) {
       infoPtr->dateValid = FALSE;
@@ -784,8 +785,10 @@ static void DATETIME_Refresh (HWND hwnd, HDC hdc)
     GetTextExtentPoint32A (hdc, txt, strlen (txt), &size);
     rcDraw->bottom = size.cy+2;
 
-    if (dwStyle & DTS_SHOWNONE) checkbox->right = 18;
-
+    if (dwStyle & DTS_SHOWNONE)
+      checkbox->right = 18;
+    else
+      checkbox->right = 2;	 
     prevright = checkbox->right;
 
     for (i=0; i<infoPtr->nrFields; i++) {
@@ -882,19 +885,25 @@ DATETIME_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* recalculate the position of the monthcal popup */
     if(dwStyle & DTS_RIGHTALIGN)
       infoPtr->monthcal_pos.x = infoPtr->rcClient.right - ((infoPtr->calbutton.right -
-                                infoPtr->calbutton.left) + 145);
+                                infoPtr->calbutton.left) + 200);
     else
       infoPtr->monthcal_pos.x = 8;
 
     infoPtr->monthcal_pos.y = infoPtr->rcClient.bottom;
     ClientToScreen (hwnd, &(infoPtr->monthcal_pos));
+    /* FIXME My Windoze has cx=about 200, but it probably depends on font size etc */
     SetWindowPos(infoPtr->hMonthCal, 0, infoPtr->monthcal_pos.x,
-        infoPtr->monthcal_pos.y, 145, 150, 0);
+        infoPtr->monthcal_pos.y, 200, 150, 0);
 
     if(IsWindowVisible(infoPtr->hMonthCal))
         ShowWindow(infoPtr->hMonthCal, SW_HIDE);
-    else
-        ShowWindow(infoPtr->hMonthCal, SW_SHOW);
+    else {
+      SYSTEMTIME *lprgSysTimeArray = &infoPtr->date;
+      TRACE("update calendar %04d/%02d/%02d\n", 
+        lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay);
+      SendMessageA(infoPtr->hMonthCal, MCM_SETCURSEL, 0, (LPARAM)(&infoPtr->date));
+      ShowWindow(infoPtr->hMonthCal, SW_SHOW);
+    }
 
     TRACE ("dt:%p mc:%p mc parent:%p, desktop:%p\n",
            hwnd, infoPtr->hMonthCal, infoPtr->hwndNotify, GetDesktopWindow ());
@@ -995,6 +1004,17 @@ DATETIME_Notify (HWND hwnd, WPARAM wParam, LPARAM lParam)
  TRACE ("%x,%lx\n",wParam, lParam);
  TRACE ("Got notification %x from %p\n", lpnmh->code, lpnmh->hwndFrom);
  TRACE ("info: %p %p %p\n",hwnd,infoPtr->hMonthCal,infoPtr->hUpdown);
+
+ if (lpnmh->code==MCN_SELECT) {
+   ShowWindow(infoPtr->hMonthCal, SW_HIDE);
+   infoPtr->dateValid = TRUE;
+   SendMessageA (infoPtr->hMonthCal, MCM_GETCURSEL, 0, (LPARAM)&infoPtr->date);
+   TRACE("got from calendar %04d/%02d/%02d\n", 
+      infoPtr->date.wYear, infoPtr->date.wMonth, infoPtr->date.wDay);
+   SendMessageA (infoPtr->hwndCheckbut, BM_SETCHECK, BST_CHECKED, 0);
+   InvalidateRect(hwnd, NULL, TRUE);
+   DATETIME_SendDateTimeChangeNotify (hwnd);
+ }
  return 0;
 }
 
@@ -1232,7 +1252,7 @@ DATETIME_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->hMonthCal = CreateWindowExA (0,"SysMonthCal32", 0,
 	WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS,
 	0, 0, 0, 0,
-	infoPtr->hwndNotify,
+	hwnd,
 	0, 0, 0);
 
   /* initialize info structure */
@@ -1249,8 +1269,14 @@ DATETIME_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
     DATETIME_INFO *infoPtr = DATETIME_GetInfoPtr (hwnd);
 
     TRACE("\n");
+    if (infoPtr->hMonthCal) {
+	/* FIXME I don't completely understand why doesn't it
+	 *   happen automatically, WS_POPUP maybe? */
+        DestroyWindow(infoPtr->hMonthCal);
+	infoPtr->hMonthCal = NULL;
+    }
     Free (infoPtr);
-    SetWindowLongA( hwnd, 0, 0 );
+    SetWindowLongA( hwnd, 0, 0 ); /* clear infoPtr */
     return 0;
 }
 

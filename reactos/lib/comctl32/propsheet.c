@@ -524,7 +524,7 @@ BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
   {
     WCHAR szTitle[256];
     const WCHAR *pTitle;
-    static WCHAR pszNull[] = { '(','n','u','l','l',')',0 };
+    static const WCHAR pszNull[] = { '(','n','u','l','l',')',0 };
     int len;
 
     if ( !HIWORD( lppsp->pszTitle ) )

@@ -523,7 +523,7 @@ VOID MRU_SaveChanged( LPWINEMRULIST mp )
     HKEY newkey;
     WCHAR realname[2];
     LPWINEMRUITEM witem;
-    WCHAR emptyW[] = {'\0'};
+    static const WCHAR emptyW[] = {'\0'};
 
     /* or should we do the following instead of RegOpenKeyEx:
      */
@@ -859,7 +859,7 @@ HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     WCHAR realname[2];
     LPWINEMRUITEM witem;
     DWORD type;
-    WCHAR emptyW[] = {'\0'};
+    static const WCHAR emptyW[] = {'\0'};
 
     /* get space to save indices that will turn into names
      * but in order of most to least recently used

@@ -728,7 +728,8 @@ static void
 TRACKBAR_UpdateToolTip (TRACKBAR_INFO *infoPtr)
 {
     DWORD dwStyle = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE);
-    WCHAR buf[80], fmt[] = { '%', 'l', 'd', 0 };
+    WCHAR buf[80];
+    static const WCHAR fmt[] = { '%', 'l', 'd', 0 };
     TTTOOLINFOW ti;
     POINT pt;
     RECT rcClient;

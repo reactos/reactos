@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/comctl32/comctl32.spec,v
 retrieving revision 1.43
 diff -u -r1.43 comctl32.spec
 --- comctl32.spec	20 Feb 2004 05:16:37 -0000	1.43
-+++ comctl32.spec	15 Apr 2004 08:36:51 -0000
++++ comctl32.spec	8 May 2004 11:49:39 -0000
 @@ -106,13 +106,13 @@
  412 stdcall RemoveWindowSubclass(long ptr long)
  413 stdcall DefSubclassProc(long long long long)
@@ -26,13 +26,84 @@ diff -u -r1.43 comctl32.spec
  
  # Functions imported by name
  
+Index: commctrl.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/commctrl.c,v
+retrieving revision 1.76
+diff -u -r1.76 commctrl.c
+--- commctrl.c	11 Mar 2004 22:38:22 -0000	1.76
++++ commctrl.c	8 May 2004 11:49:41 -0000
+@@ -114,7 +114,6 @@
+ extern void UPDOWN_Register(void);
+ extern void UPDOWN_Unregister(void);
+ 
+-static LRESULT WINAPI SubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+ 
+ LPSTR    COMCTL32_aSubclass = NULL;
+ HMODULE COMCTL32_hModule = 0;
+@@ -1109,10 +1108,10 @@
+       /* set window procedure to our own and save the current one */
+       if (IsWindowUnicode (hWnd))
+          stack->origproc = (WNDPROC)SetWindowLongW (hWnd, GWL_WNDPROC,
+-                                                   (LONG)SubclassWndProc);
++                                                   (LONG)DefSubclassProc);
+       else
+          stack->origproc = (WNDPROC)SetWindowLongA (hWnd, GWL_WNDPROC,
+-                                                   (LONG)SubclassWndProc);
++                                                   (LONG)DefSubclassProc);
+    } else {
+       WNDPROC current;
+       if (IsWindowUnicode (hWnd))
+@@ -1120,7 +1119,7 @@
+       else
+          current = (WNDPROC)GetWindowLongA (hWnd, GWL_WNDPROC);
+ 
+-      if (current != SubclassWndProc) {
++      if (current != DefSubclassProc) {
+          ERR ("Application has subclassed with our procedure, then manually, then with us again.  The current implementation can't handle this.\n");
+          return FALSE;
+       }
+@@ -1260,33 +1259,6 @@
+       }
+ 
+    return FALSE;
+-}
+-
+-
+-/***********************************************************************
+- * SubclassWndProc (internal)
+- *
+- * Window procedure for all subclassed windows. 
+- * Saves the current subclassing stack position to support nested messages
+- */
+-
+-static LRESULT WINAPI SubclassWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+-{
+-   LPSUBCLASS_INFO stack;
+-   int stackpos;
+-   LRESULT ret;
+-
+-   /* retrieve our little stack from the Properties */
+-   stack = (LPSUBCLASS_INFO)GetPropA (hWnd, COMCTL32_aSubclass);
+-   if (!stack) {
+-      ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
+-      return 0;
+-   }
+-   stackpos = stack->stackpos;
+-   stack->stackpos = stack->stacknum;
+-   ret = DefSubclassProc(hWnd,uMsg,wParam,lParam);
+-   stack->stackpos = stackpos;
+-   return ret;
+ }
+ 
+ 
 Index: imagelist.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/imagelist.c,v
 retrieving revision 1.85
 diff -u -r1.85 imagelist.c
 --- imagelist.c	27 Feb 2004 04:40:08 -0000	1.85
-+++ imagelist.c	15 Apr 2004 08:36:52 -0000
++++ imagelist.c	8 May 2004 11:49:43 -0000
 @@ -1146,11 +1146,13 @@
      	PatBlt(hBlendMaskDC, 0, 0, cx, cy, PATCOPY);
      	SelectObject(hBlendMaskDC, hOldBrush);
@@ -50,10 +121,10 @@ diff -u -r1.85 imagelist.c
 Index: listview.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/listview.c,v
-retrieving revision 1.385
-diff -u -r1.385 listview.c
---- listview.c	11 Mar 2004 00:39:53 -0000	1.385
-+++ listview.c	15 Apr 2004 08:36:56 -0000
+retrieving revision 1.387
+diff -u -r1.387 listview.c
+--- listview.c	21 Apr 2004 22:25:04 -0000	1.387
++++ listview.c	8 May 2004 11:49:47 -0000
 @@ -147,6 +147,7 @@
  #include <assert.h>
  #include <ctype.h>
@@ -68,7 +139,7 @@ RCS file: /home/wine/wine/dlls/comctl32/string.c,v
 retrieving revision 1.3
 diff -u -r1.3 string.c
 --- string.c	20 Feb 2004 19:58:39 -0000	1.3
-+++ string.c	15 Apr 2004 08:36:56 -0000
++++ string.c	8 May 2004 11:49:52 -0000
 @@ -254,7 +254,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -87,19 +158,3 @@ diff -u -r1.3 string.c
  }
  
  /*************************************************************************
-Index: treeview.c
-===================================================================
-RCS file: /home/wine/wine/dlls/comctl32/treeview.c,v
-retrieving revision 1.145
-diff -u -r1.145 treeview.c
---- treeview.c	1 Mar 2004 23:10:52 -0000	1.145
-+++ treeview.c	15 Apr 2004 08:36:58 -0000
-@@ -3093,7 +3093,7 @@
-     TRACE("\n");
- 
-     if (wineItem->state & TVIS_EXPANDED)
--	return FALSE;
-+	return TRUE;
- 
-     TRACE("TVE_EXPAND %p %s\n", wineItem, TREEVIEW_ItemName(wineItem));
- 

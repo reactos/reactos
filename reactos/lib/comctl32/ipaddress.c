@@ -155,7 +155,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
     IPADDRESS_INFO *infoPtr;
     RECT rcClient, edit;
     int i, fieldsize;
-    WCHAR EDIT[] = { 'E', 'd', 'i', 't', 0 };
+    static const WCHAR EDIT[] = { 'E', 'd', 'i', 't', 0 };
 
     TRACE("\n");
 
@@ -291,7 +291,8 @@ static void IPADDRESS_ClearAddress (IPADDRESS_INFO *infoPtr)
 
 static LRESULT IPADDRESS_SetAddress (IPADDRESS_INFO *infoPtr, DWORD ip_address)
 {
-    WCHAR buf[20], fmt[] = { '%', 'd', 0 };
+    WCHAR buf[20];
+    static const WCHAR fmt[] = { '%', 'd', 0 };
     int i;
 
     TRACE("\n");
@@ -328,7 +329,8 @@ static void IPADDRESS_SetFocusToField (IPADDRESS_INFO *infoPtr, INT index)
 static BOOL IPADDRESS_ConstrainField (IPADDRESS_INFO *infoPtr, int currentfield)
 {
     IPPART_INFO *part = &infoPtr->Part[currentfield];
-    WCHAR field[10], fmt[] = { '%', 'd', 0 };
+    WCHAR field[10];
+    static const WCHAR fmt[] = { '%', 'd', 0 };
     int curValue, newValue;
 
     TRACE("(currentfield=%d)\n", currentfield);

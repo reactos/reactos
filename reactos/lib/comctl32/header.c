@@ -924,9 +924,8 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	lpItem->cxy = phdi->cxy;
 
     if (phdi->mask & HDI_TEXT) {
-	static char empty[] = "";
 	if (!phdi->pszText) /* null pointer check */
-	    phdi->pszText = empty;
+	    phdi->pszText = "";
 	if (phdi->pszText != LPSTR_TEXTCALLBACKA) {
 	    len = MultiByteToWideChar(CP_ACP, 0, phdi->pszText, -1, NULL, 0);
 	    lpItem->pszText = Alloc( len*sizeof(WCHAR) );
