@@ -187,12 +187,23 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
    
   while ((i = InterlockedExchangeUL(SpinLock, 1)) == 1)
   {
-#ifndef MP
+#ifdef CONFIG_SMP
+    /* Avoid reading the value again too fast */
+#if 1
+    __asm__ __volatile__ ("1:\n\t"
+	                  "cmpl	$0,(%0)\n\t"
+			  "jne	1b\n\t"
+			  :
+                          : "r" (SpinLock));
+#else	                  
+    while (0 != *(volatile PKSPIN_LOCK)SpinLock)
+    {
+    }
+#endif
+#else
     DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
     KEBUGCHECK(0);
-#else /* not MP */
-       /* Avoid reading the value again too fast */
-#endif /* MP */
+#endif /* CONFIG_SMP */
   }
 }
 

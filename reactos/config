@@ -35,7 +35,7 @@ OPTIMIZED := 0
 #
 # Whether to compile a multiprocessor or single processor version
 #
-MP := 0
+CONFIG_SMP := 0
 
 #
 # Whether to compile for ACPI compliant systems

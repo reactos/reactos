@@ -1,11 +1,11 @@
 /*
- * $Id: halirq.h,v 1.1 2004/11/01 14:37:18 hbirr Exp $
+ * $Id$
  */
 
 #ifndef __INCLUDE_HAL_HALIRQ
 #define __INCLUDE_HAL_HALIRQ
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 #define FIRST_DEVICE_VECTOR	(0x30)
 #define FIRST_SYSTEM_VECTOR	(0xef)

@@ -106,12 +106,6 @@ main(int argc, char* argv[])
         {
           include_tests = 1;
         }
-      if (strcmp(argv[i], "MP") == 0 || strcmp(argv[i], "UP") == 0)
-        {
-          s = s + sprintf(s, "#if ! defined(MP) && ! defined(UP)\n");
-          s = s + sprintf(s, "#define %s\n", argv[i]);
-          s = s + sprintf(s, "#endif /* ! defined(MP) && ! defined(UP) */\n");
-        }
       else
         {
           s = s + sprintf(s, "#define %s\n", argv[i]);

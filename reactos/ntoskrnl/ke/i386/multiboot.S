@@ -12,11 +12,11 @@
 
 #define V2P(x) (x - KERNEL_BASE + 0x200000)
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 #define AP_MAGIC (0x12481020)
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 .globl _NtProcessStartup
 .globl _start
@@ -79,7 +79,7 @@ _multiboot_entry:
 	 */
 	cld
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 	/*
 	 * Save the multiboot or application processor magic
@@ -89,7 +89,7 @@ _multiboot_entry:
 	cmpl	$AP_MAGIC, %edx
 	je	.m1
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 	/*
 	 * Zero the BSS
@@ -115,9 +115,9 @@ _multiboot_entry:
 
 	movl	$(V2P(startup_pagedirectory) + 0x3), 0xF00(%esi) 
 	movl	$(V2P(kernelmap_pagetable) + 0x3), 0xF0C(%esi)
-#ifdef MP
+#ifdef CONFIG_SMP
 	movl	$(V2P(apic_pagetable) + 0x3), 0xFEC(%esi)
-#endif /* MP */
+#endif /* CONFIG_SMP */
 	movl	$(V2P(kpcr_pagetable) + 0x3), 0xFF0(%esi)
 
 	/*
@@ -146,7 +146,7 @@ _multiboot_entry:
 	cmpl	$6144, %edi
 	jl	.l4
 
-#ifdef  MP
+#ifdef  CONFIG_SMP
 
 	/*
 	 * Initialize the page table that maps the APIC register address space
@@ -164,7 +164,7 @@ _multiboot_entry:
 	movl	$0xFEE0001B, %eax
 	movl	%eax, (%esi, %edi)
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 	/*
 	 * Initialize the page table that maps the initial KPCR (at FF000000)
@@ -175,7 +175,7 @@ _multiboot_entry:
 	movl	%eax, (%esi, %edi)
 
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 .m1:
     	/*
@@ -203,7 +203,7 @@ _multiboot_entry:
 
 .m3:
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 	/*
 	 * Set up the PDBR
@@ -211,7 +211,7 @@ _multiboot_entry:
 	movl	$(V2P(startup_pagedirectory)), %eax
 	movl	%eax, %cr3
 	
-#ifdef MP
+#ifdef CONFIG_SMP
 .m4:
 #endif
 
@@ -249,7 +249,7 @@ _multiboot_entry:
 	movl	$0, %eax
 	movl	%eax, %fs
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 	cmpl	$AP_MAGIC, %edx
 	jne	.m2
@@ -292,7 +292,7 @@ _multiboot_entry:
 
 .m2:
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 	/*
 	 * Load the PCR selector
@@ -355,10 +355,10 @@ kernelmap_pagetable:
 	.fill 4096, 1, 0
 _pae_pagedirtable:
 	.fill 4096, 1, 0
-#ifdef MP
+#ifdef CONFIG_SMP
 apic_pagetable:
 	.fill 4096, 1, 0
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 kpcr_pagetable:
 	.fill 4096, 1, 0

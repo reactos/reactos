@@ -289,7 +289,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 {
    ULONG i;
    ULONG kernel_len;
-#ifndef MP
+#ifndef CONFIG_SMP
 
    extern unsigned int unmap_me, unmap_me2, unmap_me3;
 #endif
@@ -394,7 +394,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    /*
     * Unmap low memory
     */
-#ifndef MP
+#ifndef CONFIG_SMP
    /* In SMP mode we unmap the low memory in MmInit3.
       The APIC needs the mapping of the first pages
       while the processors are starting up. */
@@ -417,7 +417,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    }
 
    DPRINT("Almost done MmInit()\n");
-#ifndef MP
+#ifndef CONFIG_SMP
    /* FIXME: This is broken in SMP mode */
    MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, TRUE, NULL, NULL);
    MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, TRUE, NULL, NULL);
@@ -446,7 +446,7 @@ MmInit3(VOID)
    /*
     * Unmap low memory
     */
-#ifdef MP
+#ifdef CONFIG_SMP
    /* In SMP mode we can unmap the low memory
       if all processors are started. */
    MmDeletePageTable(NULL, 0);

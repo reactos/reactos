@@ -11,7 +11,7 @@
 
 #if defined(__GNUC__)
 
-#ifdef MP
+#ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
 #define LOCK ""
@@ -19,7 +19,7 @@
 
 #elif defined(_MSC_VER)
 
-#ifdef MP
+#ifdef CONFIG_SMP
 #define LOCK lock
 #else
 #define LOCK 

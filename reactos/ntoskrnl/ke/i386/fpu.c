@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.19 2004/11/27 23:50:26 hbirr Exp $
+/* $Id$
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -69,7 +69,7 @@
 
 ULONG HardwareMathSupport = 0;
 static ULONG MxcsrFeatureMask = 0, XmmSupport = 0;
-ULONG FxsrSupport = 0; /* used by Ki386ContextSwitch for MP */
+ULONG FxsrSupport = 0; /* used by Ki386ContextSwitch for SMP */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -413,7 +413,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       PKTHREAD CurrentThread;
       PFX_SAVE_AREA FxSaveArea;
       KIRQL oldIrql;
-#ifndef MP
+#ifndef CONFIG_SMP
       PKTHREAD NpxThread;
 #endif
       
@@ -428,14 +428,14 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       asm volatile("clts");
 
       CurrentThread = KeGetCurrentThread();
-#ifndef MP
+#ifndef CONFIG_SMP
       NpxThread = KeGetCurrentKPCR()->PrcbData.NpxThread;
 #endif
 
       ASSERT(CurrentThread != NULL);
       DPRINT("Device not present exception happened! (Cr0 = 0x%x, NpxState = 0x%x)\n", cr0, CurrentThread->NpxState);
 
-#ifndef MP
+#ifndef CONFIG_SMP
       /* check if the current thread already owns the FPU */
       if (NpxThread != CurrentThread) /* FIXME: maybe this could be an assertation */
         {
@@ -456,7 +456,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 }
               NpxThread->NpxState = NPX_STATE_VALID;
             }
-#endif /* !MP */
+#endif /* !CONFIG_SMP */
 
           /* restore the state of the current thread */
           ASSERT((CurrentThread->NpxState & NPX_STATE_DIRTY) == 0);
@@ -492,7 +492,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 }
             }
           KeGetCurrentKPCR()->PrcbData.NpxThread = CurrentThread;
-#ifndef MP
+#ifndef CONFIG_SMP
         }
 #endif
 

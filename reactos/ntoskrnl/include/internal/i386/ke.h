@@ -192,7 +192,7 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
-#ifdef MP
+#ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
 #define LOCK ""

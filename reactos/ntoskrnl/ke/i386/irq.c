@@ -47,7 +47,7 @@
 
 /* GLOBALS *****************************************************************/
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 #define __STR(x) #x
 #define STR(x) __STR(x)
@@ -135,7 +135,7 @@ static ULONG irq_handler[ROUND_UP(NR_IRQS, 16)] = {
 #undef L
 #undef L16
 
-#else /* MP */
+#else /* CONFIG_SMP */
 
  void irq_handler_0(void);
  void irq_handler_1(void);
@@ -174,7 +174,7 @@ static unsigned int irq_handler[NR_IRQS]=
                 (int)&irq_handler_15,
         };
 
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 /*
  * PURPOSE: Object describing each isr 
@@ -190,7 +190,7 @@ typedef struct
 }
 ISR_TABLE, *PISR_TABLE;
 
-#ifdef MP
+#ifdef CONFIG_SMP
 static ISR_TABLE IsrTable[NR_IRQS][MAXIMUM_PROCESSORS];
 #else
 static ISR_TABLE IsrTable[NR_IRQS][1];
@@ -217,7 +217,7 @@ KeInitInterrupts (VOID)
 	KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
 	KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
 	                    I486_INTERRUPT_GATE;
-#ifdef MP
+#ifdef CONFIG_SMP
 	for (j = 0; j < MAXIMUM_PROCESSORS; j++)
 #else
 	j = 0;
@@ -352,7 +352,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386EnableInterrupts();
 
-#ifndef MP
+#ifndef CONFIG_SMP
    if (VECTOR2IRQ(vector) == 0)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);

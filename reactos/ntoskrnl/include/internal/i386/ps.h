@@ -248,7 +248,7 @@ typedef struct _KPCR {
 
 #ifndef __USE_W32API
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 static inline PKPCR KeGetCurrentKPCR(VOID)
 {

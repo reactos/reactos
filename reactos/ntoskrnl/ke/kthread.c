@@ -309,7 +309,7 @@ VOID
 STDCALL
 KeRevertToUserAffinityThread(VOID)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 
@@ -366,7 +366,7 @@ VOID
 STDCALL
 KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 

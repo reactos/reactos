@@ -15,10 +15,8 @@ ifeq ($(KDBG), 1)
 CONFIG += KDBG
 endif
 
-ifeq ($(MP), 1)
-CONFIG += MP
-else
-CONFIG += UP
+ifeq ($(CONFIG_SMP), 1)
+CONFIG += CONFIG_SMP
 endif
 
 ifeq ($(ACPI), 1)
