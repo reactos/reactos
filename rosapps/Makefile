@@ -13,6 +13,8 @@ include rules.mak
 #net$(SEP)niclist
 #net$(SEP)telnet
 #net$(SEP)whois
+#net$(SEP)finger 
+#net$(SEP)ping 
 APPS = 	calc \
 	cmdutils \
 	cmdutils$(SEP)mode \
@@ -21,10 +23,9 @@ APPS = 	calc \
 	mc \
 	notevil \
 	sysutils \
+	demos$(SEP)maze\
 	sysutils$(SEP)ctm \
-	#net$(SEP)finger \
 	net$(SEP)ncftp \
-	net$(SEP)ping \
 	regedt32 \
 	welcome \
 #	winfile
