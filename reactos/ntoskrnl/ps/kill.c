@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.57 2002/09/08 10:23:40 chorns Exp $
+/* $Id: kill.c,v 1.58 2002/11/27 20:54:37 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -96,17 +96,48 @@ PsReapThreads(VOID)
 	  {
 	     PEPROCESS Process = current->ThreadsProcess; 
 	     NTSTATUS Status = current->ExitStatus;
+	     BOOLEAN Last;
 	     
 	     PiNrThreadsAwaitingReaping--;
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
 	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
-	     if (IsListEmpty(&Process->ThreadListHead))
-	       {
-		  KeReleaseSpinLock( &PiThreadListLock, oldIrql );
-		  PiTerminateProcess(Process, Status);
-		  KeAcquireSpinLock( &PiThreadListLock, &oldIrql );
-	       }
+             Last = IsListEmpty(&Process->ThreadListHead);
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+	     if (Last)
+	     {
+		  PiTerminateProcess(Process, Status);
+	     }
+	     else
+	     {
+		if (current->Tcb.Teb)
+		{
+		  /* If this is not the last thread for the process than free the memory
+		     from user stack and teb. */
+		  NTSTATUS Status;
+		  ULONG Length;
+		  ULONG Offset;
+	          PVOID DeallocationStack;
+		  HANDLE ProcessHandle;
+                  Status = ObCreateHandle(PsGetCurrentProcess(), Process, PROCESS_ALL_ACCESS, FALSE, &ProcessHandle);
+		  if (!NT_SUCCESS(Status))
+		  {
+		     DPRINT1("ObCreateHandle failed, status = %x\n", Status);
+		     KeBugCheck(0);
+		  }
+		  Offset = FIELD_OFFSET(TEB, DeallocationStack);
+		  Length = 0;
+		  NtReadVirtualMemory(ProcessHandle, (PVOID)current->Tcb.Teb + Offset, 
+		                      (PVOID)&DeallocationStack, sizeof(PVOID), &Length);
+		  if (DeallocationStack && Length == sizeof(PVOID))
+		  {
+    		     NtFreeVirtualMemory(ProcessHandle, &DeallocationStack, &Length, MEM_RELEASE); 
+		  }
+		  Length = PAGE_SIZE;
+		  NtFreeVirtualMemory(ProcessHandle, (PVOID*)&current->Tcb.Teb, &Length, MEM_RELEASE); 
+		  NtClose(ProcessHandle);
+		}
+	     }
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 	     current_entry = PiThreadListHead.Flink;
