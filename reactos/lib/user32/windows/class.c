@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.22 2003/08/05 15:41:03 weiden Exp $
+/* $Id: class.c,v 1.23 2003/08/06 15:38:13 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -178,6 +178,14 @@ GetWindowLongW(HWND hWnd, int nIndex)
   return NtUserGetWindowLong(hWnd, nIndex, FALSE);
 }
 
+/*
+ * @implemented
+ */
+WORD STDCALL
+GetWindowWord(HWND hWnd, int nIndex)
+{
+  return (WORD)NtUserGetWindowLong(hWnd, nIndex);
+}
 
 /*
  * @unimplemented
