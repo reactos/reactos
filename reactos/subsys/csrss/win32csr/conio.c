@@ -1381,8 +1381,8 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     }
 }
 
-VOID
-Console_Api(DWORD RefreshEvent)
+DWORD STDCALL
+Console_Api (PVOID unused)
 {
   /* keep reading events from the keyboard and stuffing them into the current
      console's input queue */
@@ -1409,6 +1409,7 @@ Console_Api(DWORD RefreshEvent)
     }
 
   PrivateCsrssAcquireOrReleaseInputOwnership(TRUE);
+  return 0;
 }
 
 CSR_API(CsrGetScreenBufferInfo)

@@ -82,6 +82,9 @@ PCSRSS_PROCESS_DATA ProcessData,\
 PCSRSS_API_REQUEST Request,\
 PCSRSS_API_REPLY Reply)
 
+/* init.c */
+extern HANDLE hBootstrapOk;
+
 /* api/process.c */
 CSR_API(CsrConnectProcess);
 CSR_API(CsrCreateProcess);
@@ -96,9 +99,9 @@ NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSRSS_API_REQUEST Request,
                                 PCSRSS_API_REPLY Reply);
-VOID STDCALL ServerApiPortThread (PVOID PortHandle);
-VOID STDCALL ServerSbApiPortThread (PVOID PortHandle);
-VOID Console_Api( DWORD Ignored );
+DWORD STDCALL ServerApiPortThread (PVOID PortHandle);
+DWORD STDCALL ServerSbApiPortThread (PVOID PortHandle);
+DWORD STDCALL Console_Api( PVOID unused );
 
 extern HANDLE CsrssApiHeap;
 

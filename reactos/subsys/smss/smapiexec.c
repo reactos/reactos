@@ -83,16 +83,8 @@ SmCreateUserProcess (LPWSTR ImagePath,
 				       pProcessInfo);
 	if (!NT_SUCCESS(Status))
 	{
-		CHAR AnsiBuffer [MAX_PATH];
-		INT i = 0;
-		for(i=0;ImagePathString.Buffer[i];i++)
-		{
-			/* raw U -> A */
-			AnsiBuffer [i] = (CHAR) (ImagePathString.Buffer[i] & 0xff);
-		}
-
-		DPRINT1("SM: %s: Running \"%s\" failed (Status=0x%08lx)\n",
-			AnsiBuffer, __FUNCTION__, Status);
+		DPRINT1("SM: %s: Running \"%S\" failed (Status=0x%08lx)\n",
+			__FUNCTION__, ImagePathString.Buffer, Status);
 		return Status;
 	}
 
@@ -145,7 +137,7 @@ SmLookupSubsystem (IN     PWSTR   Name,
 	OBJECT_ATTRIBUTES  Oa = {0};
 	HANDLE             hKey = (HANDLE) 0;
 
-	DPRINT("SM: %s called\n", __FUNCTION__);
+	DPRINT("SM: %s(Name='%S') called\n", __FUNCTION__, Name);
 	/*
 	 * Prepare the key name to scan and
 	 * related object attributes.
@@ -268,7 +260,7 @@ SMAPI(SmExecPgm)
 		RtlCopyMemory (Name,
 			       ExecPgm->Name,
 			       (sizeof ExecPgm->Name[0] * ExecPgm->NameLength));
-		DPRINT("SM: %s: Name=[%wZ]\n", __FUNCTION__, Name);
+		DPRINT("SM: %s: Name='%S'\n", __FUNCTION__, Name);
 		/*
 		 * Check if program name is internal
 		 * (Is this correct? Debug is in the registry too)

@@ -41,15 +41,9 @@ HANDLE hSmApiPort = (HANDLE) 0;
  * a) look if a special option is set for smss.exe in
  *    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
  *
- * b) make smss register with itself for IMAGE_SUBSYSTEM_NATIVE
- *    (programmatically)
- *
  * d) make smss initialize Debug (DBGSS) and Windows (CSRSS) as described
  *    in the registry key Required="Debug Windows"
  *    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems
- *
- * e) make optional subsystems loadable (again: they must be described in the registry
- *    key Optional="Posix Os2" to be allowed to run)
  */
 
 /**********************************************************************
@@ -67,16 +61,17 @@ SmpRegisterSmss(VOID)
 	NTSTATUS Status = STATUS_SUCCESS;
 	UNICODE_STRING SbApiPortName = {0,0,NULL};
 
+	
 	DPRINT("SM: %s called\n",__FUNCTION__);
 
 	RtlInitUnicodeString (& SbApiPortName, L"");	
 	Status = SmConnectApiPort(& SbApiPortName,
-				  (HANDLE) 0,
+				  (HANDLE) -1, /* SM has no SB port */
 				  IMAGE_SUBSYSTEM_NATIVE,
 				  & hSmApiPort);
 	if(!NT_SUCCESS(Status))
 	{
-		DPRINT("SM: %s: SMDLL!SmConnectApiPort failed (Status=0x%08lx)\n",
+		DPRINT("SM: %s: SMLIB!SmConnectApiPort failed (Status=0x%08lx)\n",
 			__FUNCTION__,Status);
 		return Status;
 	}
@@ -91,27 +86,19 @@ SmpRegisterSmss(VOID)
 
 
 /**********************************************************************
+ * 	SmpLoadKernelModeSubsystem/0
  */
-NTSTATUS
-SmLoadSubsystems(VOID)
+static NTSTATUS
+SmpLoadKernelModeSubsystem (VOID)
 {
-	SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
-	NTSTATUS                   Status = STATUS_SUCCESS;
-	WCHAR                      Data [MAX_PATH + 1];
-	ULONG                      DataLength = sizeof Data;
-	ULONG                      DataType = 0;
+	NTSTATUS  Status = STATUS_SUCCESS;
+	WCHAR     Data [MAX_PATH + 1];
+	ULONG     DataLength = sizeof Data;
+	ULONG     DataType = 0;
 
 
-	DPRINT("SM: loading subsystems\n");
+	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	/* SM self registers */
-	Status = SmpRegisterSmss();
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT1("SM: SM failed to self register: system is not secure!\n");
-	}
-
-	/* Load Kmode subsystem (aka win32k.sys) */
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
 				    & DataLength,
@@ -119,128 +106,101 @@ SmLoadSubsystems(VOID)
 				    TRUE);
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
-		WCHAR ImagePath [MAX_PATH + 1] = {0};
+		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
+		SYSTEM_LOAD_AND_CALL_IMAGE ImageInfo;
 
 		wcscpy (ImagePath, L"\\??\\");
 		wcscat (ImagePath, Data);
 		RtlZeroMemory (& ImageInfo, sizeof ImageInfo);
 		RtlInitUnicodeString (& ImageInfo.ModuleName, ImagePath);
 		Status = NtSetSystemInformation(SystemLoadAndCallImage,
-					  & ImageInfo,
-					  sizeof ImageInfo);
+						& ImageInfo,
+						sizeof ImageInfo);
 		if(!NT_SUCCESS(Status))
 		{
-			DPRINT("SM: loading Kmode failed (Status=0x%08lx)\n",
-				Status);
-			return Status;
+			DPRINT("SM: %s: loading Kmode failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
 		}
 	}
-	/* TODO: load Required subsystems (Debug Windows) */
-#if 0
-	Status = SmExecuteProgram (hSmApiPort, L"DEBUG");
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT1("SM: DBSS failed to initialize!\n");
-	}
-#endif
 	return Status;
 }
 
-NTSTATUS
-SmRunCsrss(VOID)
+/**********************************************************************
+ * 	SmpLoadRequiredSubsystems/0
+ */
+static NTSTATUS
+SmpLoadRequiredSubsystems (VOID)
 {
-  NTSTATUS Status;
-  UNICODE_STRING UnicodeString;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  RTL_PROCESS_INFO ProcessInfo;
-  HANDLE CsrssInitEvent;
-  WCHAR ImagePath [MAX_PATH];
+	NTSTATUS  Status = STATUS_SUCCESS;
+	WCHAR     Data [MAX_PATH + 1];
+	ULONG     DataLength = sizeof Data;
+	ULONG     DataType = 0;
 
-  DPRINT("SM: initializing csrss\n");
+	
+	DPRINT("SM: %s called\n", __FUNCTION__);
 
-  /* Run csrss.exe */
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
-				  L"\\CsrssInitDone");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     EVENT_ALL_ACCESS,
-			     0,
-			     NULL);
-  Status = NtCreateEvent(&CsrssInitEvent,
-			 EVENT_ALL_ACCESS,
-			 &ObjectAttributes,
-			 NotificationEvent,
-			 FALSE);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Failed to create csrss notification event\n");
-    }
+	RtlZeroMemory (Data, DataLength);
+	Status = SmLookupSubsystem (L"Required",
+				    Data,
+				    & DataLength,
+				    & DataType,
+				    FALSE);
+	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
+	{
+		PWCHAR Name = NULL;
+		ULONG Offset = 0;
+		
+		for (Name = Data; (Offset < DataLength); )
+		{
+			if(L'\0' != *Name)
+			{
+				UNICODE_STRING Program;
 
-  /*
-   * Start the Win32 subsystem (csrss.exe)
-   */
+				/* Run the current program */
+				RtlInitUnicodeString (& Program, Name);
+				Status = SmExecuteProgram (hSmApiPort, & Program);
+				if(!NT_SUCCESS(Status))
+				{
+					DPRINT1("SM: %s failed to run '%S' program (Status=0x%08lx)\n",
+						__FUNCTION__, Name, Status);
+				}
+				/* Look for the next program */
+				while ((L'\0' != *Name) && (Offset < DataLength))
+				{
+					++ Name;
+					++ Offset;
+				}
+			}
+			++ Name;
+			++ Offset;
+		}
+	}
 
-  /* initialize executable path */
-  wcscpy(ImagePath, L"\\??\\");
-  wcscat(ImagePath, SharedUserData->NtSystemRoot);
-  wcscat(ImagePath, L"\\system32\\csrss.exe");
-
-  Status = SmCreateUserProcess(ImagePath,
-		  		L"",
-				FALSE, /* wait */
-				NULL,
-				FALSE, /* terminate */
-				& ProcessInfo);
-  
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("SM: %s: Loading csrss.exe failed!\n", __FUNCTION__);
-      return(Status);
-    }
-
-  Status = NtWaitForSingleObject(CsrssInitEvent,
-			FALSE,
-			NULL);
-
-  Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
-
-  return Status;
+	return Status;
 }
 
+/**********************************************************************
+ * 	SmLoadSubsystems/0
+ */
 NTSTATUS
-SmRunWinlogon(VOID)
+SmLoadSubsystems(VOID)
 {
-  NTSTATUS         Status = STATUS_SUCCESS;
-  RTL_PROCESS_INFO ProcessInfo;
-  WCHAR            ImagePath [MAX_PATH];
+	NTSTATUS  Status = STATUS_SUCCESS;
 
-  /*
-   * Start the logon process (winlogon.exe)
-   */
+	
+	DPRINT("SM: loading subsystems\n");
 
-  DPRINT("SM: starting winlogon\n");
-
-  /* initialize executable path */
-  wcscpy(ImagePath, L"\\??\\");
-  wcscat(ImagePath, SharedUserData->NtSystemRoot);
-  wcscat(ImagePath, L"\\system32\\winlogon.exe");
-
-  Status = SmCreateUserProcess(ImagePath,
-		  		L"",
-				FALSE, /* wait */
-				NULL,
-				FALSE, /* terminate */
-		  		& ProcessInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("SM: %s: Loading winlogon.exe failed!\n", __FUNCTION__);
-      NtTerminateProcess(Children[CHILD_CSRSS], 0);
-      return(Status);
-    }
-
-  Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
-
-  return Status;
+	/* SM self registers */
+	Status = SmpRegisterSmss();
+	if(!NT_SUCCESS(Status)) return Status;
+	/* Load Kmode subsystem (aka win32k.sys) */
+	Status = SmpLoadKernelModeSubsystem();
+	if(!NT_SUCCESS(Status)) return Status;
+	/* Load Required subsystems (Debug Windows) */
+	Status = SmpLoadRequiredSubsystems();
+	if(!NT_SUCCESS(Status)) return Status;
+	/* done */
+	return Status;
 }
 
 /* EOF */
