@@ -140,7 +140,7 @@ typedef struct tagMSFT_ImpFile {
     int guid;
     LCID lcid;
     int version;
-    char filename[0]; /* preceeded by two bytes of encoded (length << 2) + flags in the low two bits. */
+    char filename[0]; /* preceded by two bytes of encoded (length << 2) + flags in the low two bits. */
 } MSFT_ImpFile;
 
 typedef struct tagICreateTypeLib2Impl
@@ -2055,7 +2055,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncCustData(
 static HRESULT WINAPI ICreateTypeInfo2_fnSetParamCustData(
         ICreateTypeInfo2* iface, /* [I] The typeinfo in which to set the custom data. */
         UINT indexFunc,          /* [I] The index of the function on which the parameter resides. */
-        UINT indexParam,         /* [I] The index of the paramter on which to set the custom data. */
+        UINT indexParam,         /* [I] The index of the parameter on which to set the custom data. */
         REFGUID guid,            /* [I] The GUID used as a key to retrieve the custom data. */
         VARIANT* pVarVal)        /* [I] The custom data. */
 {

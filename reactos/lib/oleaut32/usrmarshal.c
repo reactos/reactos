@@ -190,7 +190,7 @@ static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
   ULONG size;
   HRESULT hr;
 
-  if (V_VT(pvar) & VT_ARRAY) {
+  if (V_ISARRAY(pvar)) {
     FIXME("wire-size safearray\n");
     return 0;
   }
@@ -527,7 +527,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
   /* count by-ref args */
   for (cVarRef=0,u=0; u<pDispParams->cArgs; u++) {
     VARIANTARG* arg = &pDispParams->rgvarg[u];
-    if (V_VT(arg) & VT_BYREF) {
+    if (V_ISBYREF(arg)) {
       cVarRef++;
     }
   }
@@ -537,7 +537,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
     /* make list of by-ref args */
     for (cVarRef=0,u=0; u<pDispParams->cArgs; u++) {
       VARIANTARG* arg = &pDispParams->rgvarg[u];
-      if (V_VT(arg) & VT_BYREF) {
+      if (V_ISBYREF(arg)) {
 	rgVarRefIdx[cVarRef] = u;
 	VariantInit(&rgVarRef[cVarRef]);
 	cVarRef++;
