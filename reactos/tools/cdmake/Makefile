@@ -1,40 +1,24 @@
-#
-#  CD-Maker
-#
-PATH_TO_TOP = ../..
+CDMAKE_BASE = tools$(SEP)cdmake
 
-TARGET=cdmake$(EXE_POSTFIX)
+CDMAKE_TARGET = \
+	$(ROS_INTERMEDIATE)$(CDMAKE_BASE)$(SEP)cdmake$(EXEPOSTFIX)
 
-all: $(TARGET)
+CDMAKE_SOURCES = \
+	$(CDMAKE_BASE)$(SEP)cdmake.c \
+	$(CDMAKE_BASE)$(SEP)llmosrt.c
 
-OBJECTS = cdmake.o llmosrt.o
+CDMAKE_OBJECTS = \
+	$(CDMAKE_SOURCES:.c=.o)
 
-CLEAN_FILES = *.o cdmake$(EXE_POSTFIX)
+CDMAKE_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 
-HOST_CFLAGS = -I. -Werror -Wall
+CDMAKE_HOST_LFLAGS = -g
 
-cdmake.o: cdmake.c
-	$(HOST_CC) $(HOST_CFLAGS) -c cdmake.c -o cdmake.o
+$(CDMAKE_TARGET): $(CDMAKE_OBJECTS)
+	${host_gcc} $(CDMAKE_OBJECTS) $(CDMAKE_HOST_CFLAGS) -o $(CDMAKE_TARGET)
 
-llmosrt.o: llmosrt.c
-	$(HOST_CC) $(HOST_CFLAGS) -c llmosrt.c -o llmosrt.o
+$(CDMAKE_OBJECTS): %.o : %.c
+	${host_gcc} $(CDMAKE_CFLAGS) -c $< -o $@
 
-cdmake$(EXE_POSTFIX): $(OBJECTS)
-	$(HOST_CC) $(OBJECTS) -o cdmake$(EXE_POSTFIX)
-
-ifeq ($(HOST),mingw32-linux)
-clean:
-	rm -f *.o
-	rm -f cdmake$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-clean:
-	-del *.o
-	-del cdmake$(EXE_POSTFIX)
-endif
-
-.phony: clean
-
-include $(PATH_TO_TOP)/rules.mak
-
-# EOF
+clean::
+	-@$(rm) $(CDMAKE_TARGET) $(CDMAKE_OBJECTS) 2>$(NUL)

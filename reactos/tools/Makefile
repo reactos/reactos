@@ -51,6 +51,7 @@ clean::
 include$(SEP)reactos$(SEP)buildno.h: $(BUILDNO_TARGET)
 	$(EXEPREFIX)$(BUILDNO_TARGET) include$(SEP)reactos$(SEP)buildno.h
 
+include tools/cdmake/makefile
 include tools/nci/makefile
 include tools/rbuild/makefile
 include tools/wmc/makefile
