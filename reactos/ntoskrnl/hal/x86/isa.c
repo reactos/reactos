@@ -1,4 +1,4 @@
-/* $Id: isa.c,v 1.5 2000/03/20 17:59:42 ekohl Exp $
+/* $Id: isa.c,v 1.6 2000/04/09 15:58:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,10 @@
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
+
+
+typedef struct _BUS_HANDLER *PBUS_HANDLER;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -31,7 +35,7 @@ BOOL HalIsaProbe(VOID)
    return(TRUE);
 }
 
-#if 0
+
 BOOLEAN
 STDCALL
 HalpTranslateIsaBusAddress (
@@ -44,19 +48,16 @@ HalpTranslateIsaBusAddress (
 {
 	BOOLEAN Result;
 
-	Result = HalpTranslateSystemBusAddress (BusHandler,
-	                                        BusNumber,
-	                                        BusAddress,
-	                                        AddressSpace,
-	                                        TranslatedAddress);
+	Result = HalTranslateBusAddress (PCIBus,
+	                                 BusNumber,
+	                                 BusAddress,
+	                                 AddressSpace,
+	                                 TranslatedAddress);
+
 	if (Result != FALSE)
 		return Result;
 
-	/* PCI does not provide memory address space */
-	if (*AddressSpace == 0)
-		return Result;
-
-	Result = HalTranslateBusAddress (PCIBus,
+	Result = HalTranslateBusAddress (Internal,
 	                                 BusNumber,
 	                                 BusAddress,
 	                                 AddressSpace,
@@ -64,6 +65,5 @@ HalpTranslateIsaBusAddress (
 
 	return Result;
 }
-#endif
 
 /* EOF */

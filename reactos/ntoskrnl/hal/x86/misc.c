@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.3 2000/04/08 19:08:50 ekohl Exp $
+/* $Id: misc.c,v 1.4 2000/04/09 15:58:13 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -71,8 +71,25 @@ HalReportResourceUsage (
 {
 	/*
 	 * FIXME: Report all resources used by hal.
-	          Calls IoReportHalResourceUsage()
+	 *        Calls IoReportHalResourceUsage()
 	 */
+
+	/*
+	 * Initialize PCI, IsaPnP and other busses.
+	 */
+
+#if 0
+      /*
+       * Probe for a BIOS32 extension
+       */
+      Hal_bios32_probe();
+   
+      /*
+       * Probe for buses attached to the computer
+       */
+
+      HalPciProbe();
+#endif
 
 	return;
 }

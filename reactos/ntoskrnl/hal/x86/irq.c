@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.10 2000/03/26 19:38:18 ea Exp $
+/* $Id: irq.c,v 1.11 2000/04/09 15:58:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -6,7 +6,7 @@
  * PURPOSE:         IRQ handling
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
- *             29/05/98: Created                  
+ *             29/05/98: Created
  */
 
 /*
@@ -187,11 +187,11 @@ asmlinkage VOID KiInterruptDispatch(ULONG irq)
 //   DbgPrint("}");
 }
 
-void KeInitIRQ(void)
+VOID HalpInitIRQs (VOID)
 {
    int i;
    
-   DPRINT("KeInitIrq()\n",0);
+   DPRINT("HalpInitIRQs ()\n",0);
    
    /*
     * First mask off all interrupts from pic
@@ -370,50 +370,27 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
    KeLowerIrql(oldlvl);
 }
 
+#if 0
 ULONG
 STDCALL
-HalpGetSystemInterruptVector(PVOID BusHandler,
-			    ULONG BusNumber,
-			    ULONG BusInterruptLevel,
-			    ULONG BusInterruptVector,
-			    PKIRQL Irql,
-			    PKAFFINITY Affinity)
-/*
- * FUNCTION: Returns a mapped system interrupt vector for passing to
- * IoConnectInterrupt
- * ARGUMENTS:
- *          InterfaceType = Type bus the device is on
- *          BusNumber = Zero based number of the bus
- *          BusInterruptLevel = Bus specific interrupt level
- *          BusInterruptVector = Bus specific interrupt vector
- *          Irql (IN/OUT) = On entry the bus relative IRQL
- *                          On exit the DIRQL
- *          Affinity (OUT) = Caller supplied storage for the interrupt 
- *                           affinity mask
- * RETURNS: The mapped vector
- */
+HalDisableSystemInterrupt (
+	ULONG	Unknown0,
+	ULONG	Unknown1
+	)
 {
-   ULONG ret;
-   
-//   ASSERT_IRQL(PASSIVE_LEVEL);
-   
-#if 0
-   switch (InterfaceType)
-     {
-      case Internal:
-#endif
-	*Irql = HIGH_LEVEL -  BusInterruptVector;
-	ret = BusInterruptVector;
-#if 0
-	break;
-	
-      default:
-	ret = -1;
-	DbgPrint("(%s:%d) Don't know that bus type\n",__FILE__,__LINE__);
-	break;
-     }
-#endif
-   return(ret);
+
 }
+
+ULONG
+STDCALL
+HalEnableSystemInterrupt (
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
+	)
+{
+
+}
+#endif
 
 /* EOF */

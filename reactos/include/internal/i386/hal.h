@@ -80,17 +80,11 @@ VOID HalResetDisplay (VOID);
 VOID
 HalpInitBusHandlers (VOID);
 
-ULONG
-STDCALL
-HalpGetSystemInterruptVector (
-	PVOID BusHandler,
-	ULONG BusNumber,
-	ULONG BusInterruptLevel,
-	ULONG BusInterruptVector,
-	PKIRQL Irql,
-	PKAFFINITY Affinity
-	);
-
+/* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
+
+/* irq.c */
+VOID HalpInitIRQs (VOID);
+
 
 #endif /* __INTERNAL_HAL_HAL_H */

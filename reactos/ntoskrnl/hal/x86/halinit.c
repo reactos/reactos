@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.10 2000/04/08 19:08:50 ekohl Exp $
+/* $Id: halinit.c,v 1.11 2000/04/09 15:58:13 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -32,30 +32,14 @@ HalInitSystem (
    {
       HalInitializeDisplay (bp);
       HalpCalibrateStallExecution ();
-      KeInitExceptions();
-      KeInitIRQ();
+      KeInitExceptions ();
+      HalpInitIRQs ();
       KeLowerIrql(DISPATCH_LEVEL);
    }
    else
    {
       HalpInitBusHandlers ();
 
-      /*
-       * Probe for a BIOS32 extension
-       */
-      Hal_bios32_probe();
-   
-      /*
-       * Probe for buses attached to the computer
-       * NOTE: Order is important here because ISA is the default
-       */
-#if 0
-      if (HalPciProbe())
-      {
-           return TRUE;
-      }
-      HalIsaProbe();
-#endif
    }
 
    return TRUE;

@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.4 2000/03/20 17:59:41 ekohl Exp $
+/* $Id: bus.c,v 1.5 2000/04/09 15:58:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,7 @@
 
 
 /* TYPE DEFINITIONS *********************************************************/
+
 
 struct _BUS_HANDLER;
 
@@ -85,6 +86,40 @@ typedef struct _BUS_HANDLER
 	pTranslateBusAddress	TranslateBusAddress;
 
 } BUS_HANDLER, *PBUS_HANDLER;
+
+
+/* sysbus.h */
+ULONG
+STDCALL
+HalpGetSystemInterruptVector (
+	PVOID BusHandler,
+	ULONG BusNumber,
+	ULONG BusInterruptLevel,
+	ULONG BusInterruptVector,
+	PKIRQL Irql,
+	PKAFFINITY Affinity
+	);
+
+BOOLEAN
+STDCALL
+HalpTranslateSystemBusAddress (
+	PBUS_HANDLER		BusHandler,
+	ULONG			BusNumber,
+	PHYSICAL_ADDRESS	BusAddress,
+	PULONG			AddressSpace,
+	PPHYSICAL_ADDRESS	TranslatedAddress
+	);
+
+/* isa.c */
+BOOLEAN
+STDCALL
+HalpTranslateIsaBusAddress (
+	PBUS_HANDLER		BusHandler,
+	ULONG			BusNumber,
+	PHYSICAL_ADDRESS	BusAddress,
+	PULONG			AddressSpace,
+	PPHYSICAL_ADDRESS	TranslatedAddress
+	);
 
 
 /* GLOBAL VARIABLES **********************************************************/
@@ -235,8 +270,8 @@ HalpInitBusHandlers (VOID)
 	                                     0);
 	BusHandler->GetInterruptVector =
 		(pGetInterruptVector)HalpGetSystemInterruptVector;
-//	BusHandler->TranslateBusAddress =
-//		(pTranslateBusAddress)HalpTranslateSystemBusAddress;
+	BusHandler->TranslateBusAddress =
+		(pTranslateBusAddress)HalpTranslateSystemBusAddress;
 
 	/* cmos bus handler */
 	BusHandler = HalpAllocateBusHandler (InterfaceTypeUndefined,
@@ -247,6 +282,14 @@ HalpInitBusHandlers (VOID)
 //	BusHandler->SetBusData =
 //		(pGetSetBusData)HalpSetCmosData;
 
+	/* isa bus handler */
+	BusHandler = HalpAllocateBusHandler (Isa,
+	                                     ConfigurationSpaceUndefined,
+	                                     0);
+	BusHandler->TranslateBusAddress =
+		(pTranslateBusAddress)HalpTranslateIsaBusAddress;
+
+#if 0
 	/* pci bus handler */
 	BusHandler = HalpAllocateBusHandler (PCIBus,
 	                                     PCIConfiguration,
@@ -261,13 +304,7 @@ HalpInitBusHandlers (VOID)
 //		(pGetSetBusData)HalpAdjustPciResourceList;
 //	BusHandler->AssignSlotResources =
 //		(pGetSetBusData)HalpAssignPciSlotResources;
-
-	/* isa bus handler */
-	BusHandler = HalpAllocateBusHandler (Isa,
-	                                     ConfigurationSpaceUndefined,
-	                                     0);
-//	BusHandler->TranslateBusAddress =
-//		(pTranslateBusAddress)HalpTranslateIsaBusAddress;
+#endif
 }
 
 

@@ -120,18 +120,20 @@ VOID Hal_bios32_probe()
  * RETURNS: True if detected
  */
 {
+   DbgPrint ("Hal_bios32_probe()\n");
+
    return;
 #if 0
    int i;
    
    for (i=0xe0000;i<=0xffff0;i++)
      {
-///	bios32* service_entry = (bios32 *)physical_to_linear(i);
+	bios32* service_entry = (bios32 *)physical_to_linear(i);
 	if ( service_entry->signature != BIOS32_SIGNATURE )
 	  {
 	     continue;
 	  }
-//        DbgPrint("Signature detected at %x\n",i);
+        DbgPrint("Signature detected at %x\n",i);
 	if (!checksum(service_entry))
 	  {
 	     continue;

@@ -38,11 +38,9 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus);
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID KeInitExceptions(VOID);
-VOID KeInitIRQ(VOID);
 VOID KeInitTimer(VOID);
 VOID KeInitDpc(VOID);
 VOID KeInitDispatcher(VOID);
-VOID KeCalibrateTimerLoop(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KeInitializeTimerImpl(VOID);
 VOID KeInitializeBugCheck(VOID);
