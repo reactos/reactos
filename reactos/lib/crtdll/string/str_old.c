@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:44:05 $
+ * $Date: 1999/04/03 10:42:18 $
  *
  */
 
@@ -37,7 +37,7 @@ strcasecmp (const char* sz1, const char* sz2)
 int
 strncasecmp	(const char* sz1, const char* sz2, size_t sizeMaxCompare)
 {
-	return strnicmp (sz1, sz2, sizeMaxCompare);
+	return _strnicmp (sz1, sz2, sizeMaxCompare);
 }
 
 int

@@ -10,12 +10,14 @@
 #include <windows.h>
 #include <crtdll/conio.h>
 #include <crtdll/string.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
 
 int     _cputs(const char *_str)
 {
 	int len = strlen(_str);
 	int written = 0;
-	if ( !WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),_str,len,&written,NULL)) 
+	if ( !WriteFile(filehnd(stdout->_file),_str,len,&written,NULL)) 
 		return -1;
 	return 0;
 }

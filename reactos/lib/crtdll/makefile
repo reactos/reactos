@@ -1,4 +1,4 @@
-
+HOST=mingw32-windows
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=crtdll.a

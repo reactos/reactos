@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:07 $
+ * $Date: 1999/04/03 10:41:29 $
  *
  */
 
@@ -90,17 +90,16 @@ struct stat
 };
 
 
-int	_fstat (int nHandle, struct stat* pstat);
+int	_fstat (int nFileNo, struct stat* pstat);
 int	_chmod (const char* szPath, int nMode);
 int	_stat (const char* szPath, struct stat* pstat);
 
 
 #ifndef	_NO_OLDNAMES
 
-/* These functions live in liboldnames.a. */
-int	fstat (int nHandle, struct stat* pstat);
-int	chmod (const char* szPath, int nMode);
-int	stat (const char* szPath, struct stat* pstat);
+#define	fstat(nFileNo, pstat)   _fstat(nFileNo, pstat)
+#define	chmod(szPath,nMode) 	_chmod(szPath,nMode)
+#define	stat(szPath,pstat) 	_stat(szPath,pstat)
 
 #endif	/* Not _NO_OLDNAMES */
 

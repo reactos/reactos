@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/03 10:41:29 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -66,6 +66,7 @@ size_t	strcspn (const char* szGetPrefix, const char* szNotIncluding);
 char*	strerror (int nError); /* NOTE: NOT an old name wrapper. */
 char *  _strerror(const char *s);
 size_t	strlen (const char* sz);
+size_t	strnlen (const char* sz, size_t count); // not exported
 char*	strncat (char* szAddTo, const char* szAdd, size_t sizeMaxAdd);
 int	strncmp (const char* sz1, const char* sz2, size_t sizeMaxCompare);
 char*	strncpy (char* szCopyTo, const char* szSource, size_t sizeMaxCopy);
@@ -189,7 +190,7 @@ wchar_t* wcsupr (wchar_t* wsToConvert);
 #endif	/* Not strict ANSI */
 
 
-
+#if 0
 /*
  * Include machine specific inline routines
  */
@@ -919,4 +920,5 @@ extern inline void * memscan(void * addr, int c, size_t size)
 #endif /* _STRING_H_ */
 #endif
 
+#endif
 #endif

@@ -20,7 +20,8 @@
 int
 _filbuf(FILE *f)
 {
-  int size, fillsize;
+  int size =0;
+  //int fillsize = 0;
   char c;
 
   if (f->_flag & _IORW)
@@ -33,8 +34,7 @@ _filbuf(FILE *f)
   f->_flag &= ~_IOUNGETC;
 
   if (f->_base==NULL && (f->_flag&_IONBF)==0) {
-//    size = _go32_info_block.size_of_transfer_buffer;
-	  size = 512;
+    size = 512;
     if ((f->_base = malloc(size)) == NULL)
     {
       f->_flag |= _IONBF;
@@ -44,7 +44,7 @@ _filbuf(FILE *f)
     {
       f->_flag |= _IOMYBUF;
       f->_bufsiz = size;
-//      f->_fillsize = 512;
+      //f->_fillsize = 512;
     }
   }
 
@@ -66,16 +66,15 @@ _filbuf(FILE *f)
      aligns with file cluster boundaries; i.e. 512, then 2048
      (512+1536), then 4096 (2048+2048) etc. */
   //fillsize = f->_fillsize;
-  fillsize = f->_bufsiz;
-  if (fillsize == 1024 && f->_bufsiz >= 1536)
-    fillsize = 1536;
+  //if (fillsize == 1024 && f->_bufsiz >= 1536)
+  //  fillsize = 1536;
 
   f->_cnt = _read(fileno(f), f->_base,
-		   f->_flag & _IONBF ? 1 : fillsize);
+		   f->_flag & _IONBF ? 1 : size);
 
   /* Read more next time, if we don't seek */
-//  if (f->_fillsize < f->_bufsiz)
-//    f->_fillsize *= 2;
+  //if (f->_fillsize < f->_bufsiz)
+  //  f->_fillsize *= 2;
 
   if(__is_text_file(f) && f->_cnt>0)
   {
@@ -103,5 +102,3 @@ _filbuf(FILE *f)
   }
   return *f->_ptr++ & 0377;
 }
-
-

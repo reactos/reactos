@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/03 10:41:29 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -65,10 +65,11 @@ extern "C" {
  * functions later on in the file which use va_list. That conflicts with
  * using stdio.h and varargs.h in the same file, so I do the typedef myself.
  */
-#ifndef _VA_LIST
-#define _VA_LIST
-typedef	char* va_list;
-#endif
+//#ifndef _VA_LIST
+//#define _VA_LIST
+//typedef	char* va_list;
+//#endif
+#include <stdarg.h>
 
 /*
  * FILE should be used as a pointer to an opaque data type. Do not rely on

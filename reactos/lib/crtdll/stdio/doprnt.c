@@ -273,7 +273,7 @@ int _doprnt(const char *fmt, va_list args, FILE *f)
 			base = 8;
 			break;
 		   
-		 case 'b':
+		case 'b':
 		        base = 2;
 		        break;
 		   
@@ -282,7 +282,7 @@ int _doprnt(const char *fmt, va_list args, FILE *f)
 		case 'x':
 			base = 16;
 			break;
-
+                case 'f':
 		case 'd':
 		case 'i':
 			flags |= SIGN;
