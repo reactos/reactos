@@ -1,4 +1,4 @@
-#include <msvcrt/tchar.h>
+#include <msvcrt/string.h>
 
 int _strnextc(const char *str) 
 { 

@@ -1,4 +1,3 @@
-#include <msvcrt/tchar.h>
 #include <msvcrt/sys/types.h>
 #include <msvcrt/string.h>
 

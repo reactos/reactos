@@ -1,4 +1,4 @@
-#include <msvcrt/tchar.h>
+#include <msvcrt/string.h>
 
 char * _strdec(const char *str1, const char *str2) 
 { 
