@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.89 2004/06/15 08:17:23 hbirr Exp $
+/* $Id: utils.c,v 1.90 2004/06/20 10:36:17 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -999,7 +999,6 @@ LdrGetExportByOrdinal (
         PIMAGE_EXPORT_DIRECTORY ExportDir;
         ULONG                   ExportDirSize;
         PDWORD                  * ExFunctions;
-        USHORT                  * ExOrdinals;
         PVOID                   Function;
 
         ExportDir = (PIMAGE_EXPORT_DIRECTORY)
@@ -1009,11 +1008,6 @@ LdrGetExportByOrdinal (
                                               &ExportDirSize);
 
 
-        ExOrdinals = (USHORT *)
-                RVA(
-                        BaseAddress,
-                        ExportDir->AddressOfNameOrdinals
-                        );
         ExFunctions = (PDWORD *)
                 RVA(
                         BaseAddress,
@@ -1025,7 +1019,9 @@ LdrGetExportByOrdinal (
                 RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
                 );
 
-        Function = RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] );
+        Function = (0 != ExFunctions[Ordinal - ExportDir->Base]
+                    ? RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
+                    : NULL);
 
         if (((ULONG)Function >= (ULONG)ExportDir) &&
             ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
