@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.62 2004/04/09 20:03:15 navaraf Exp $
+/* $Id: menu.c,v 1.63 2004/04/09 21:01:02 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -652,7 +652,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       dis.hDC        = Dc;
       dis.rcItem     = Item->Rect;
       DPRINT("Ownerdraw: owner=%p itemID=%d, itemState=%d, itemAction=%d, "
-	      "hwndItem=%p, hdc=%p, rcItem={%ld,%ld,%ld,%ld}\n", hwndOwner,
+	      "hwndItem=%p, hdc=%p, rcItem={%ld,%ld,%ld,%ld}\n", Wnd,
 	      dis.itemID, dis.itemState, dis.itemAction, dis.hwndItem,
 	      dis.hDC, dis.rcItem.left, dis.rcItem.top, dis.rcItem.right,
 	      dis.rcItem.bottom);
@@ -660,8 +660,8 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       /* Fall through to draw popup-menu arrow */
     }
 
-  DPRINT("rect={%ld,%ld,%ld,%ld}\n", Item->rect.left, Item->rect.top,
-                                     Item->rect.right, Item->rect.bottom);
+  DPRINT("rect={%ld,%ld,%ld,%ld}\n", Item->Rect.left, Item->Rect.top,
+                                     Item->Rect.right, Item->Rect.bottom);
 
   if (MenuBar && 0 != (Item->fType & MF_SEPARATOR))
     {
@@ -1402,7 +1402,7 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
     }
 
   DPRINT("left=%ld top=%ld right=%ld bottom=%ld\n",
-         Rrect->left, Rect->top, Rect->right, Rect->bottom);
+         Rect->left, Rect->top, Rect->right, Rect->bottom);
   MenuInfo->Width = Rect->right - Rect->left;
   MenuInfo->Height = 0;
   MaxY = Rect->top + 1;
@@ -1938,7 +1938,7 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
   INT i;
   ROSMENUITEMINFO ItemInfo;
 
-  DPRINT("hwnd=%x menu=%x off=0x%04x\n", WndOwner, MenuInfo, offset);
+  DPRINT("hwnd=%x menu=%x off=0x%04x\n", WndOwner, MenuInfo, Offset);
 
   MenuInitRosMenuItemInfo(&ItemInfo);
   if (NO_SELECTED_ITEM != MenuInfo->FocusedItem)
@@ -3426,7 +3426,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
 static BOOL FASTCALL
 MenuExitTracking(HWND Wnd)
 {
-  DPRINT("hwnd=%p\n", hWnd);
+  DPRINT("hwnd=%p\n", Wnd);
 
   SendMessageW(Wnd, WM_EXITMENULOOP, 0, 0);
   ShowCaret(0);
@@ -3440,7 +3440,7 @@ MenuTrackMouseMenuBar(HWND Wnd, ULONG Ht, POINT Pt)
   HMENU Menu = (HTSYSMENU == Ht) ? NtUserGetSystemMenu(Wnd, FALSE) : GetMenu(Wnd);
   UINT Flags = TPM_ENTERIDLEEX | TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
-  DPRINT("wnd=%p ht=0x%04x (%ld,%ld)\n", Wnd, Ht, pt.x, pt.y);
+  DPRINT("wnd=%p ht=0x%04x (%ld,%ld)\n", Wnd, Ht, Pt.x, Pt.y);
 
   if (IsMenu(Menu))
     {
