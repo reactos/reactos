@@ -102,6 +102,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
         CapturedObjectAttributes->RootDirectory = ObjectAttributes->RootDirectory;
         CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
         CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+        CapturedObjectAttributes->SecurityQualityOfService = ObjectAttributes->SecurityQualityOfService;
       }
 
       return STATUS_SUCCESS;
@@ -146,6 +147,53 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     else
     {
       CapturedObjectAttributes->SecurityDescriptor = NULL;
+    }
+
+    if(AttributesCopy.SecurityQualityOfService != NULL)
+    {
+      SECURITY_QUALITY_OF_SERVICE SafeQoS;
+
+      _SEH_TRY
+      {
+        ProbeForRead(AttributesCopy.SecurityQualityOfService,
+                     sizeof(SECURITY_QUALITY_OF_SERVICE),
+                     sizeof(ULONG));
+        SafeQoS = *(PSECURITY_QUALITY_OF_SERVICE)AttributesCopy.SecurityQualityOfService;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(!NT_SUCCESS(Status))
+      {
+        DPRINT1("Unable to capture QoS!!!\n");
+        goto failcleanupsdescriptor;
+      }
+
+      if(SafeQoS.Length != sizeof(SECURITY_QUALITY_OF_SERVICE))
+      {
+        DPRINT1("Unable to capture QoS, wrong size!!!\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto failcleanupsdescriptor;
+      }
+
+      CapturedObjectAttributes->SecurityQualityOfService = ExAllocatePool(PoolType,
+                                                                          sizeof(SECURITY_QUALITY_OF_SERVICE));
+      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
+      {
+        *CapturedObjectAttributes->SecurityQualityOfService = SafeQoS;
+      }
+      else
+      {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto failcleanupsdescriptor;
+      }
+    }
+    else
+    {
+      CapturedObjectAttributes->SecurityQualityOfService = NULL;
     }
   }
 
@@ -259,6 +307,8 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     {
       ExFreePool(ObjectName->Buffer);
     }
+
+failcleanupsdescriptor:
     if(CapturedObjectAttributes != NULL)
     {
       /* cleanup allocated resources */
@@ -293,11 +343,18 @@ ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttribut
                to ObpCaptureObjectAttributes() to avoid memory leaks */
   if(AccessMode != KernelMode || CaptureIfKernel)
   {
-    if(CapturedObjectAttributes != NULL &&
-       CapturedObjectAttributes->SecurityDescriptor != NULL)
+    if(CapturedObjectAttributes != NULL)
     {
-      ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
-      CapturedObjectAttributes->SecurityDescriptor = NULL;
+      if(CapturedObjectAttributes->SecurityDescriptor != NULL)
+      {
+        ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
+        CapturedObjectAttributes->SecurityDescriptor = NULL;
+      }
+      if(CapturedObjectAttributes->SecurityQualityOfService != NULL)
+      {
+        ExFreePool(CapturedObjectAttributes->SecurityQualityOfService);
+        CapturedObjectAttributes->SecurityQualityOfService = NULL;
+      }
     }
     if(ObjectName != NULL &&
        ObjectName->Length > 0)
