@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: font.c,v 1.4 2003/05/11 11:12:00 gvg Exp $
+/* $Id: font.c,v 1.5 2003/05/11 15:18:01 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -250,7 +250,7 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
                                 unsigned int *len_str, int width, SIZE *size,
                                 WCHAR *modstr, ellipsis_data *pellip)
 {
-    int len_ellipsis;
+    unsigned int len_ellipsis;
     int len_trailing;
     int len_under;
     WCHAR *lastBkSlash, *lastFwdSlash, *lastSlash;
@@ -400,7 +400,7 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
         /* break the line before/after that character */
         if (!(format & (DT_RIGHT | DT_CENTER)) || *p != SPACE)
             p++;
-        next_is_space = (p - str) < *len_str && *p == SPACE;
+        next_is_space = (unsigned int) (p - str) < *len_str && *p == SPACE;
         *len_str = p - str;
         /* and if the next character is a space then discard it. */
         *chars_used = *len_str;
@@ -531,10 +531,10 @@ static int TEXT_Reprefix (const WCHAR *str, unsigned int ns,
     assert (n <= ns);
     while (i < n)
     {
-        if (i == pe->before)
+        if (i == (unsigned int) pe->before)
         {
             /* Reached the path ellipsis; jump over it */
-            if (ns < pe->under) break;
+            if (ns < (unsigned int) pe->under) break;
             str += pe->under;
             ns -= pe->under;
             i += pe->under;
@@ -546,7 +546,7 @@ static int TEXT_Reprefix (const WCHAR *str, unsigned int ns,
         {
             if (!ns) break;
             if (*str != PREFIX)
-                result = (i < pe->before || pe->under == 0) ? i : i - pe->under + pe->len;
+                result = (i < (unsigned int) pe->before || pe->under == 0) ? i : i - pe->under + pe->len;
                 /* pe->len may be non-zero while pe_under is zero */
             str++;
             ns--;

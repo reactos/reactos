@@ -1,3 +1,10 @@
+2003-05-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/user32/windows/font.c (TEXT_PathEllipsify, TEXT_Reprefix): Fix
+	unsigned/signed warning.
+	* ntoskrnl/mm/pagefile.c (MmWriteToSwapPage, MmReadFromSwapPage,
+	NtCreatePagingFile): Ditto.
+
 2003-05-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/helper.mk: Kill implicit rule ".o".

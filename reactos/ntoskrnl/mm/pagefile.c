@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.29 2003/05/11 09:48:57 hbirr Exp $
+/* $Id: pagefile.c,v 1.30 2003/05/11 15:18:01 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -157,7 +157,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 
    for (j = 0; j < RetrievalPointers->NumberOfPairs; j++)
      {
-       if (file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
+       if ((ULONGLONG) file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
          {
            if (j == 0)
 	     {
@@ -227,7 +227,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 
    for (j = 0; j < RetrievalPointers->NumberOfPairs; j++)
      {
-       if (file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
+       if ((ULONGLONG) file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
          {
            if (j == 0)
 	     {
@@ -687,7 +687,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
            return(Status);
          }
        ExtentCount += RetrievalPointers->NumberOfPairs;
-       if (RetrievalPointers->Pair[0].Vcn < InitialSize->QuadPart / BytesPerAllocationUnit)
+       if (RetrievalPointers->Pair[0].Vcn < (ULONGLONG) InitialSize->QuadPart / BytesPerAllocationUnit)
          {
            Vcn.QuadPart = RetrievalPointers->Pair[0].Vcn;
          }
@@ -759,7 +759,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      }
 
    if (PagingFile->RetrievalPointers->NumberOfPairs != ExtentCount || 
-       PagingFile->RetrievalPointers->Pair[ExtentCount - 1].Vcn != InitialSize->QuadPart / BytesPerAllocationUnit)
+       PagingFile->RetrievalPointers->Pair[ExtentCount - 1].Vcn !=
+       (ULONGLONG) InitialSize->QuadPart / BytesPerAllocationUnit)
      {
        ExFreePool(PagingFile->RetrievalPointers);
        ExFreePool(PagingFile->AllocMap);
