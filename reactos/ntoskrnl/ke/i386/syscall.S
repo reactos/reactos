@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.12 2003/06/20 16:21:11 ekohl Exp $
+/* $Id: syscall.S,v 1.13 2004/03/29 22:29:34 gvg Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -28,6 +28,7 @@
 #include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
+#include <roscfg.h>
 
 #define KernelMode  (0)
 #define UserMode    (1)
@@ -92,9 +93,17 @@ L3:
 	   pushl $0     /* XXX: TempCS */
 	   pushl $0     /* XXX: DebugPointer */
 	   pushl $0     /* XXX: DebugArgMark */
+#ifdef DBG
+           /* Trick gdb 6 into backtracing over the system call */
+           movl  4(%ebp), %ebx
+	   pushl %ebx   /* DebugEIP */
+           movl  (%ebp), %ebx
+           pushl %ebx   /* DebugEBP */
+#else
 	   movl	 0x60(%esp), %ebx
 	   pushl %ebx   /* DebugEIP */
 	   pushl %ebp   /* DebugEBP */
+#endif
 
            /* Load the segment registers */
 	   movl  $KERNEL_DS, %ebx
@@ -133,6 +142,14 @@ L3:
            jmp   KeReturnFromSystemCall
 
 new_serviceInRange:
+
+#ifdef DBG
+           /* GDB thinks the function starts here and
+              wants a standard prolog, so let's give it */
+           pushl %ebp
+           movl  %esp,%ebp
+           popl  %ebp
+#endif
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTable + 12, %ecx
@@ -183,6 +200,14 @@ new_useShadowTable:
            jmp   KeReturnFromSystemCall
 
 new_shadowServiceInRange:
+
+#ifdef DBG
+           /* GDB thinks the function starts here and
+              wants a standard prolog, so let's give it */
+           pushl %ebp
+           movl  %esp,%ebp
+           popl  %ebp
+#endif
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
