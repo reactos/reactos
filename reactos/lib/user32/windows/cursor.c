@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.11 2003/08/29 00:24:42 weiden Exp $
+/* $Id: cursor.c,v 1.12 2003/08/29 08:46:20 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -36,11 +36,10 @@
 /* INTERNAL ******************************************************************/
 
 /* This callback routine is called directly after switching to gui mode */
-BOOL FASTCALL
-User32SetupDefaultCursors(void)
+NTSTATUS STDCALL
+User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 {
   LRESULT Result = TRUE;
-  
   /* FIXME load system cursor scheme */
   
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));

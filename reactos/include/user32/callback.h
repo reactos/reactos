@@ -123,5 +123,7 @@ NTSTATUS STDCALL
 User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS STDCALL
 User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS STDCALL
+User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.32 2003/08/28 16:33:22 weiden Exp $
+/* $Id: winsta.c,v 1.33 2003/08/29 08:46:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,7 @@
 #include <include/window.h>
 #include <include/error.h>
 #include <include/mouse.h>
+#include <include/callback.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -942,6 +943,8 @@ IntInitializeDesktopGraphics(VOID)
 {
   ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
+  /* not the best place to load the cursors but it's good for now */
+  IntLoadDefaultCursors();
   EnableMouse(ScreenDeviceContext);
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 }
