@@ -3572,6 +3572,7 @@ extern "C" {
 #define LVS_SMALLICON	(2)
 #define LVS_SORTASCENDING	(16)
 #define LVS_SORTDESCENDING	(32)
+#define LVS_OWNERDATA           0x1000
 #define LVS_TYPESTYLEMASK	(64512)
 #define LVSIL_NORMAL	(0)
 #define LVSIL_SMALL	(1)
@@ -4739,6 +4740,7 @@ DECLARE_HANDLE(HANDLE);
 
 #ifndef __USE_W32API
 
+
 typedef enum _SC_STATUS_TYPE {
   SC_STATUS_PROCESS_INFO = 0
 } SC_STATUS_TYPE;
@@ -4748,6 +4750,7 @@ typedef enum _SC_ENUM_TYPE {
 } SC_ENUM_TYPE;
 
 #endif /* !__USE_W32API */
+
 
 #ifdef __cplusplus
 }

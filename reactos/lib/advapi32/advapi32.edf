@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.17 2003/01/07 17:32:58 robd Exp $
+; $Id: advapi32.edf,v 1.18 2003/01/15 20:05:50 robd Exp $
 ;
 ; advapi32.edf
 ;
@@ -174,7 +174,7 @@ GetUserNameW=GetUserNameW@8
 ;I_ScGetCurrentGroupStateW=I_ScGetCurrentGroupStateW@12
 ;I_ScSetServiceBitsA=I_ScSetServiceBitsA@20
 ;I_ScSetServiceBitsW=I_ScSetServiceBitsW@20
-;ImpersonateLoggedOnUser=ImpersonateLoggedOnUser@4
+ImpersonateLoggedOnUser=ImpersonateLoggedOnUser@4
 ;ImpersonateNamedPipeClient=ImpersonateNamedPipeClient@4
 ImpersonateSelf=ImpersonateSelf@4
 InitializeAcl=InitializeAcl@12

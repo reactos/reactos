@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.23 2002/09/08 10:22:35 chorns Exp $
+# $Id: makefile,v 1.24 2003/01/15 20:05:50 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_SDKLIBS = ntdll.a kernel32.a
 
 # TARGET_CFLAGS = -DUNICODE
 
-TARGET_BASE = 0x77dc0000
+TARGET_BASE = 0x77DB0000
 
 MISC_OBJECTS=\
 	misc/dllmain.o	\

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.20 2003/01/07 17:29:09 robd Exp $
+; $Id: kernel32.edf,v 1.21 2003/01/15 20:05:51 robd Exp $
 ;
 ; kernel32.edf
 ;
@@ -591,6 +591,7 @@ SetLocaleInfoW=SetLocaleInfoW@12
 SetMailslotInfo=SetMailslotInfo@8
 SetNamedPipeHandleState=SetNamedPipeHandleState@16
 SetPriorityClass=SetPriorityClass@8
+SetProcessAffinityMask=SetProcessAffinityMask@8
 SetProcessShutdownParameters=SetProcessShutdownParameters@8
 SetProcessWorkingSetSize=SetProcessWorkingSetSize@12
 SetStdHandle=SetStdHandle@8

@@ -1,0 +1,5 @@
+*.o
+*.sym
+*.exe
+*.dsp
+*.dsw

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2002/09/24 15:08:14 robd Exp $
+# $Id: makefile,v 1.4 2003/01/15 20:05:52 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,8 +15,6 @@ TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 TARGET_OBJECTS = \
 	Packet32.o \
 	trace.o
-
-TARGET_CLEAN = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 

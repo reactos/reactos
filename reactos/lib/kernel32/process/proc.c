@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.48 2002/10/20 16:39:06 ekohl Exp $
+/* $Id: proc.c,v 1.49 2003/01/15 20:05:52 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -701,6 +701,12 @@ GetProcessVersion (DWORD	ProcessId)
   return (Version);
 }
 
+
+BOOL STDCALL
+SetProcessAffinityMask(HANDLE hProcess, DWORD dwProcessAffinityMask)
+{
+    return FALSE;
+}
 
 
 /* EOF */

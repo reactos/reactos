@@ -75,6 +75,13 @@ MapGenericMask(PDWORD AccessMask,
 }
 
 
+WINBOOL
+STDCALL
+ImpersonateLoggedOnUser(HANDLE hToken)
+{
+    return FALSE;
+}
+
 BOOL STDCALL
 ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {

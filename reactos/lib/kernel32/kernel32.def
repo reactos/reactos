@@ -586,6 +586,7 @@ SetLocaleInfoW@12
 SetMailslotInfo@8
 SetNamedPipeHandleState@16
 SetPriorityClass@8
+SetProcessAffinityMask@8
 SetProcessShutdownParameters@8
 SetProcessWorkingSetSize@12
 SetStdHandle@8

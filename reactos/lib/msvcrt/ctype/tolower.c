@@ -10,7 +10,8 @@ int tolower(int c)
 }
 
 #undef towlower
-wchar_t towlower(wchar_t c)
+int towlower(wint_t c)
+//wchar_t towlower(wchar_t c)
 {
    if (iswctype (c, _UPPER))
        return (c - (L'A' - L'a'));
@@ -25,6 +26,9 @@ int _tolower(int c)
 }
 
 /*
+int towlower(wint_t);
+int towupper(wint_t);
+
 wchar_t _towlower(wchar_t c)
 {
    if (iswctype (c, _UPPER))

@@ -3,3 +3,7 @@
 *.exe
 *.coff
 *.sym
+*.dsp
+*.dsw
+*.ncb
+*.opt
