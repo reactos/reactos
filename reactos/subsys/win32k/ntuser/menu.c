@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.25 2003/08/21 21:52:06 weiden Exp $
+/* $Id: menu.c,v 1.26 2003/08/22 13:27:09 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -345,11 +345,12 @@ PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source)
 {
   HANDLE Handle;
+  PMENU_OBJECT MenuObject;
   
   if(!Source)
     return NULL;
     
-  PMENU_OBJECT MenuObject = (PMENU_OBJECT)ObmCreateObject(
+  MenuObject = (PMENU_OBJECT)ObmCreateObject(
     PsGetWin32Process()->WindowStation->HandleTable, Handle, 
     otMenu, sizeof(MENU_OBJECT));  
   if(!MenuObject)
@@ -921,9 +922,9 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
         ExAcquireFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
         ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
         
-        *gismc++;
+        (*gismc)++;
         sres = IntGetMenuDefaultItem(SubMenuObject, fByPos, gmdiFlags, gismc);
-        *gismc--;
+        (*gismc)--;
         
         ExReleaseFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
         ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
