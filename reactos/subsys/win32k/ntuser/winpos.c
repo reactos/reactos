@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.16 2003/07/29 05:37:23 rcampbell Exp $
+/* $Id: winpos.c,v 1.17 2003/07/29 22:42:26 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -390,8 +390,6 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
     (WindowObject->Style & WS_MINIMIZE) ? WindowObject->WindowRect :
     WindowObject->ClientRect;
 
-	/* Temp fix for WineMine */
-
   if (!(WinPos->flags & SWP_NOSIZE))
     {
       WindowRect->right = WindowRect->left + WinPos->cx;
@@ -471,7 +469,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       flags |= SWP_NOMOVE;
     }
-  if (FALSE /* FIXME: Check if the window if already active. */)
+  if (Window->Style & WIN_NCACTIVATED)
     {
       flags |= SWP_NOACTIVATE;
     }
