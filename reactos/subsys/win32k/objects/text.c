@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.45 2003/08/28 12:35:59 gvg Exp $ */
+/* $Id: text.c,v 1.46 2003/08/28 13:50:49 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -813,13 +813,6 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   BOOLEAN Result;
   PTEXTOBJ TextObj;
 
-  dc = DC_LockDc(hDC);
-
-  if (NULL == dc)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
   if (Count < 0)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
