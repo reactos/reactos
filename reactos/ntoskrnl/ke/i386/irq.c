@@ -493,7 +493,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 
    synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
 
-   DPRINT("%x %x\n",CurrentIsr->ListHead.Flink, CurrentIsr->ListHeads.Blink);
+   DPRINT("%x %x\n",CurrentIsr->ListHead.Flink, CurrentIsr->ListHead.Blink);
 
    Result = HalEnableSystemInterrupt(Vector + IRQ_BASE, InterruptObject->Irql, InterruptObject->InterruptMode);
    if (Result)
