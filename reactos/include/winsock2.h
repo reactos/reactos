@@ -365,7 +365,7 @@ typedef struct _WSAOVERLAPPED {
 
 typedef struct __WSABUF {
     ULONG len;     // buffer length
-    CHAR FAR* buf; // poINTer to buffer
+    CHAR FAR* buf; // pointer to buffer
 } WSABUF, FAR* LPWSABUF;
 
 

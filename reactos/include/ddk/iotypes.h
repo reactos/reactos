@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.24 2001/03/31 16:01:03 phreak Exp $
+/* $Id: iotypes.h,v 1.25 2001/04/16 00:44:54 chorns Exp $
  * 
  */
 
@@ -472,6 +472,13 @@ typedef VOID STDCALL (*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject, IN PIRP 
  * Dispatch routine type declaration
  */
 typedef NTSTATUS (*PDRIVER_UNLOAD)(struct _DRIVER_OBJECT*);
+
+typedef
+NTSTATUS
+(*PDRIVER_ADD_DEVICE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
+
 
 typedef struct _DRIVER_EXTENSION
 {

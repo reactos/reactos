@@ -2768,7 +2768,9 @@ typedef struct _SERVICE_ADDRESSES {
   DWORD   dwAddressCount; 
   SERVICE_ADDRESS   Addresses[1]; 
 } SERVICE_ADDRESSES, *LPSERVICE_ADDRESSES; 
- 
+
+#ifndef GUID_DEFINED
+#define GUID_DEFINED
 typedef struct _GUID
 { 
     unsigned long  Data1; 
@@ -2776,6 +2778,7 @@ typedef struct _GUID
     unsigned short  Data3; 
     unsigned char Data4[8]; 
 } GUID, *LPGUID;
+#endif
 typedef GUID CLSID, *LPCLSID;
  
 typedef struct _SERVICE_INFO { 

@@ -198,18 +198,6 @@ enum
 #endif
 
 /*
- * PURPOSE: Power IRP minor function numbers
- */
-enum
-{
-   IRP_MN_QUERY_POWER,
-   IRP_MN_SET_POWER,
-   IRP_MN_WAIT_WAKE,
-   IRP_MN_QUERY_CAPABILITIES,
-   IRP_MN_POWER_SEQUENCE,
-};
-
-/*
  * PURPOSE: Arguments to MmProbeAndLockPages
  */
 enum
@@ -226,26 +214,25 @@ enum
 /*
  * IRQ levels
  */
+#if 0
 #define PASSIVE_LEVEL                (1)
 #define APC_LEVEL                    (2)
 #define DISPATCH_LEVEL               (3)
 #define FIRST_DEVICE_SPECIFIC_LEVEL  (4)
 #define HIGH_LEVEL (FIRST_DEVICE_SPECIFIC_LEVEL + NR_DEVICE_SPECIFIC_LEVELS)
-
+#else
 /* NT's IRQL */
-#if 0
-#define PASSIVE_LEVEL	0		// Passive release level
-#define LOW_LEVEL	0		// Lowest interrupt level
-#define APC_LEVEL	1		// APC interrupt level
-#define DISPATCH_LEVEL	2		// Dispatcher level
-
-#define PROFILE_LEVEL	27		// timer used for profiling. 
-#define CLOCK1_LEVEL	28		// Interval clock 1 level - Not used on x86
-#define CLOCK2_LEVEL	28		// Interval clock 2 level
-#define IPI_LEVEL	29		// Interprocessor interrupt level 
-#define POWER_LEVEL	30		// Power failure level
-#define HIGH_LEVEL	31		// Highest interrupt level
-#define SYNCH_LEVEL	(IPI_LEVEL-1)	// synchronization level
+#define PASSIVE_LEVEL	0		        // Passive release level
+#define LOW_LEVEL	0		            // Lowest interrupt level
+#define APC_LEVEL	1		            // APC interrupt level
+#define DISPATCH_LEVEL	2		      // Dispatcher level
+#define PROFILE_LEVEL	27		      // Timer used for profiling
+#define CLOCK1_LEVEL	28		      // Interval clock 1 level - Not used on x86
+#define CLOCK2_LEVEL	28		      // Interval clock 2 level
+#define IPI_LEVEL	29		          // Interprocessor interrupt level
+#define POWER_LEVEL	30		        // Power failure level
+#define HIGH_LEVEL	31		        // Highest interrupt level
+#define SYNCH_LEVEL	(IPI_LEVEL-1) // Synchronization level
 #endif
 
 #endif /* __ASM__ */

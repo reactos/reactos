@@ -17,6 +17,7 @@ typedef struct _AFD_SOCKET_INFORMATION {
     PVOID HelperContext;
     DWORD NotificationEvents;
     UNICODE_STRING TdiDeviceName;
+    SOCKADDR Name;
 } AFD_SOCKET_INFORMATION, *PAFD_SOCKET_INFORMATION;
 
 

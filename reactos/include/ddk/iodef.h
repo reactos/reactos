@@ -191,9 +191,6 @@ typedef enum _INTERFACE_TYPE
 } INTERFACE_TYPE, *PINTERFACE_TYPE;
 
 
-/*
- * FIXME: These are not in the correct order
- */
 enum
 {  
      IRP_MJ_CREATE,
@@ -218,12 +215,12 @@ enum
      IRP_MJ_CREATE_MAILSLOT,
      IRP_MJ_QUERY_SECURITY,
      IRP_MJ_SET_SECURITY,
-     IRP_MJ_QUERY_POWER,//IRP_MJ_POWER ?
-     IRP_MJ_SET_POWER,//IRP_MJ_SYSTEM_CONTROL ?
+     IRP_MJ_POWER,
+     IRP_MJ_SYSTEM_CONTROL,
      IRP_MJ_DEVICE_CHANGE,
      IRP_MJ_QUERY_QUOTA,
      IRP_MJ_SET_QUOTA,
-     IRP_MJ_PNP_POWER,//=IRP_MJ_PNP
+     IRP_MJ_PNP,
      IRP_MJ_MAXIMUM_FUNCTION,
 };
 
@@ -234,6 +231,43 @@ enum
 #define IRP_MN_MOUNT_VOLUME             0x01
 #define IRP_MN_VERIFY_VOLUME            0x02
 #define IRP_MN_LOAD_FILE_SYSTEM         0x03
+
+/*
+ * Minor function codes for IRP_MJ_POWER
+ */
+#define IRP_MN_WAIT_WAKE        0x00
+#define IRP_MN_POWER_SEQUENCE   0x01
+#define IRP_MN_SET_POWER        0x02
+#define IRP_MN_QUERY_POWER      0x03
+
+/*
+ * Minor function codes for IRP_MJ_PNP
+ */
+#define IRP_MN_START_DEVICE                 0x00
+#define IRP_MN_QUERY_REMOVE_DEVICE          0x01
+#define IRP_MN_REMOVE_DEVICE                0x02
+#define IRP_MN_CANCEL_REMOVE_DEVICE         0x03
+#define IRP_MN_STOP_DEVICE                  0x04
+#define IRP_MN_QUERY_STOP_DEVICE            0x05
+#define IRP_MN_CANCEL_STOP_DEVICE           0x06
+#define IRP_MN_QUERY_DEVICE_RELATIONS       0x07
+#define IRP_MN_QUERY_INTERFACE              0x08
+#define IRP_MN_QUERY_CAPABILITIES           0x09
+#define IRP_MN_QUERY_RESOURCES              0x0A
+#define IRP_MN_QUERY_RESOURCE_REQUIREMENTS  0x0B
+#define IRP_MN_QUERY_DEVICE_TEXT            0x0C
+#define IRP_MN_FILTER_RESOURCE_REQUIREMENTS 0x0D
+#define IRP_MN_READ_CONFIG                  0x0F
+#define IRP_MN_WRITE_CONFIG                 0x10
+#define IRP_MN_EJECT                        0x11
+#define IRP_MN_SET_LOCK                     0x12
+#define IRP_MN_QUERY_ID                     0x13
+#define IRP_MN_QUERY_PNP_DEVICE_STATE       0x14
+#define IRP_MN_QUERY_BUS_INFORMATION        0x15
+#define IRP_MN_DEVICE_USAGE_NOTIFICATION    0x16
+#define IRP_MN_SURPRISE_REMOVAL             0x17
+#define IRP_MN_QUERY_LEGACY_BUS_INFORMATION 0x18
+
 
 /*
  * Priority increments

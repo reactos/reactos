@@ -190,8 +190,6 @@ typedef struct _KEVENT_PAIR
 } KEVENT_PAIR, *PKEVENT_PAIR;
 
 
-typedef VOID (*PDRIVER_ADD_DEVICE)(VOID);
-
 struct _KDPC;
 
 /*

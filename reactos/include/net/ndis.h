@@ -216,12 +216,17 @@ typedef ULONG ULONG_PTR, *PULONG_PTR;
 
 #if defined(NDIS_MINIPORT_DRIVER) || !defined(_MSC_VER)
 
+#ifndef GUID_DEFINED
+#define GUID_DEFINED
+
 typedef struct _GUID {
     ULONG   Data1;
     USHORT  Data2;
     USHORT  Data3;
     UCHAR   Data4[8];
 } GUID;
+
+#endif /* GUID_DEFINED */
 
 #endif /* NDIS_MINIPORT_DRIVER || _MSC_VER */
 
