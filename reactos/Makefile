@@ -136,7 +136,7 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLL
          $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
-implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) \
+implib: hallib $(LIB_STATIC) $(LIB_FSLIB) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) \
         $(BUS:%=%_implib) $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) \
         msvcrt_implib $(DLLS:%=%_implib) $(KERNEL_DRIVERS:%=%_implib) \
         $(SUBSYS:%=%_implib) $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
