@@ -81,11 +81,11 @@ rtouch$(EXE_POSTFIX): rtouch.c
 endif
 
 ifeq ($(HOST),mingw32-linux)
-rtouch$(EXE_POSTFIX): mkflpimg.c
+mkflpimg$(EXE_POSTFIX): mkflpimg.c
 	$(HOST_CC) $(CFLAGS) -DUNIX_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
 endif
 ifeq ($(HOST),mingw32-windows)
-rtouch$(EXE_POSTFIX): mkflpimg.c
+mkflpimg$(EXE_POSTFIX): mkflpimg.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
 endif
 
