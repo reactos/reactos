@@ -262,7 +262,8 @@ void InstallPrintkHook(void)
 {
     ENTER_FUNC();
     DPRINT((0,"installing PrintString hook\n"));
-
+	DPRINT((0,"installing PrintString hook. DISABLED for now!!!!!!!!!!!\n"));
+/* ei fix later
     ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
 
 	ASSERT( ulPrintk );                 // temporary
@@ -271,6 +272,7 @@ void InstallPrintkHook(void)
     {
         InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);
     }
+*/
 
     LEAVE_FUNC();
 }

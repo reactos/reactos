@@ -798,7 +798,7 @@ void Print(USHORT Window,LPSTR p)
 {
 	ULONG i;
 
-	DPRINT((5,"%s",p));
+	DPRINT((11,"%s",p));
 
     //ENTER_FUNC();
     if(!bConsoleIsInitialized)

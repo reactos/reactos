@@ -216,7 +216,7 @@ ULONG HandlePageFault(FRAME* ptr)
 	}
 
     Print(OUTPUT_WINDOW,"pICE: no virtual memory arena at this address!\n");
-    return 1;
+    return 0;
 
     // let the system handle it
 //    return 0;

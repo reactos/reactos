@@ -638,7 +638,7 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 						   (pSym->SectionNumber > 0 ))
 						{
 							ULONG ulCurrAddr;
-							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
+							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pSym->SectionNumber-1);
 
 
 							DPRINT((0,"ScanExportsByAddress(): pShdr[%x] = %x\n",pSym->SectionNumber,(ULONG)pShdrThis));
@@ -665,11 +665,11 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 					}
 					*pFind = temp3;
 					{
-						PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pFoundSym->SectionNumber;
+						PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pFoundSym->SectionNumber-1);
 						//check that ulValue is below the limit for the section where best match is found
 						ASSERT(ulValue < ((ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
 					}
-					if( !(pFoundSym->N.Name.Short) ){
+					if( pFoundSym->N.Name.Short ){
 						pName = pFoundSym->N.ShortName;  //name is in the header
 						PICE_sprintf(temp3,"%S!%.8s",pdTemp->name,pName); //if name is in the header it may be nonzero terminated
 					}
@@ -715,14 +715,14 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
             }
             // increment pointer to next line
             p = pStartOfLine;
-            while(*p!=0 && *p!=0x0a)p++;
+            while(*p!=0 && *p!=0x0a && *p!=0x0d)p++;
                 p++;
         }
         if(bResult)
         {
 			int i;
             // copy symbol name to temp string
-            for(i=0;pSymbolName[i]!=0 && pSymbolName[i]!=0x0a;i++)
+            for(i=0;pSymbolName[i]!=0 && pSymbolName[i]!=0x0a && pSymbolName[i]!=0x0d;i++)
                 temp[i] = pSymbolName[i];
             temp[i] = 0;
             // decide if we need to append an offset
@@ -754,7 +754,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 	LPSTR pName;
 
     pSymbols = FindModuleSymbols(ulValue);
-    DPRINT((0,"FindFunctionByAddress(): symbols @ %x\n",(ULONG)pSymbols));
+    DPRINT((0,"FindFunctionByAddress(): symbols for %S @ %x \n",pSymbols->name,(ULONG)pSymbols));
 	if(pSymbols && pdebug_module_head)
 	{
 		DPRINT((0,"looking up symbol\n"));
@@ -768,7 +768,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
             start = (ULONG)pdTemp->BaseAddress;
             end = start+pdTemp->size;
 
-            DPRINT((0,"FindFunctionByAddress(): is it %S for %x\n",(ULONG)pdTemp->name,ulValue));
+            DPRINT((0,"FindFunctionByAddress(): ulValue %x\n",ulValue));
 
 			if(ulValue>=start && ulValue<end)
 			{
@@ -793,11 +793,11 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 					while( pSym < pSymEnd )
 					{
 						//symbol is a function is it's type is 0x20, storage class is external and section>0
-						if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC) &&
+						if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_EXTERNAL) &&
 						   (pSym->SectionNumber > 0 )))
 						{
 							ULONG ulCurrAddr;
-							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
+							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pSym->SectionNumber-1);
 
 							DPRINT((0,"FindFunctionByAddress(): pShdr[%x] = %x\n",pSym->SectionNumber,(ULONG)pShdrThis));
 
@@ -811,17 +811,19 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 							//the begining of the section
 							ulCurrAddr = ((ULONG)pdTemp->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
 							DPRINT((0,"FindFunctionByAddress(): CurrAddr [1] = %x\n",ulCurrAddr));
+							DPRINT((0,"%x  ", ulCurrAddr));
 
 							if(ulCurrAddr<=ulValue && ulCurrAddr>start)
 							{
 								start = ulCurrAddr;
 								pFoundSym = pSym;
+								//DPRINT((0,"FindFunctionByAddress(): CANDIDATE for start %x\n",start));
 							}
 							else if(ulCurrAddr>=ulValue && ulCurrAddr<end)
 								 {
 								   end = ulCurrAddr;
+								   //DPRINT((0,"FindFunctionByAddress(): CANDIDATE for end %x\n",end));
 								 }
-
 							}
 							//skip the auxiliary symbols and get the next symbol
 							pSym += pSym->NumberOfAuxSymbols + 1;
@@ -834,7 +836,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 
                         if(pulend){
 							//just in case there is more than  one code section
-							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pFoundSym->SectionNumber;
+							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pFoundSym->SectionNumber-1);
 							if( end > (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData ){
 								DPRINT((0,"Hmm: end=%d, end of section: %d\n", end, (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
 								end = (ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData;
@@ -842,7 +844,7 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 							*pulend = end;
 						}
 
-						if( !(pFoundSym->N.Name.Short) ){
+						if(pFoundSym->N.Name.Short){
 							//name is in the header. it's not zero terminated. have to copy.
 							PICE_sprintf(temp4,"%.8s", pFoundSym->N.ShortName);
 							pName = temp4;
@@ -954,17 +956,17 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
 		while( pSym < pSymEnd )
 		{
 			//symbol is a function is it's type is 0x20, storage class is external and section>0
-			if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC) &&
+			if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_EXTERNAL) &&
 			   (pSym->SectionNumber > 0 )))
 			{
                 ULONG start;
                 LPSTR pName;
-				PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
+				PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pSym->SectionNumber-1);
 
 				DPRINT((0,"FindFunctionInModuleByName(): %s @ %x\n",pName,start));
 				start = ((ULONG)pd->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
 
-				if( !(pSym->N.Name.Short) ){ //if name is stored in the structure
+				if(pSym->N.Name.Short){ //if name is stored in the structure
 					//name may be not zero terminated but 8 characters max
 			        if((PICE_strncmpi(pName,szFunctionname, 8) == 0) && start)
 			        {
@@ -1450,6 +1452,8 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
 
     // lookup the functions name and start-end (external symbols)
     pFunctionName = FindFunctionByAddress(addr,&start,&end);
+	DPRINT((2,"FindSourceLineForAddress: %x\n", pFunctionName));
+
     if(pFunctionName)
     {
         // lookup the modules symbol table (STABS)
@@ -1767,7 +1771,7 @@ ULONG ListSymbolStartingAt(PDEBUG_MODULE pMod,PICE_SYMBOLFILE_HEADER* pSymbols,U
 		   ((pSym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL) || (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC)) &&
 		   (pSym->SectionNumber > 0 ))
 		{
-			PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
+			PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pSym->SectionNumber-1);
             ULONG section_flags;
             ULONG start;
 
@@ -1784,7 +1788,7 @@ ULONG ListSymbolStartingAt(PDEBUG_MODULE pMod,PICE_SYMBOLFILE_HEADER* pSymbols,U
 			//the begining of the section
 
 			start = ((ULONG)pMod->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
-			if( !(pSym->N.Name.Short) ){
+			if(pSym->N.Name.Short){
 				//name is in the header. it's not zero terminated. have to copy.
 				PICE_sprintf(pOutput,"%.8X (%s) %.8s\n",start,(section_flags&IMAGE_SCN_CNT_CODE)?"TEXT":"DATA",pSym->N.ShortName);
 			}
@@ -1946,19 +1950,21 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 {
 	HANDLE hf;
     PICE_SYMBOLFILE_HEADER* pSymbols=NULL;
-	WCHAR tempstr[DEBUG_MODULE_NAME_LEN];
-
+	WCHAR tempstr[256];
+	int conv;
 	ENTER_FUNC();
 
-	if( !PICE_MultiByteToWideChar(CP_ACP, NULL, filename, -1, tempstr, DEBUG_MODULE_NAME_LEN ) )
+	if( !( conv = PICE_MultiByteToWideChar(CP_ACP, NULL, filename, -1, tempstr, 256 ) ) )
 	{
 		DPRINT((0,"Can't convert module name.\n"));
 		return NULL;
 	}
+	DPRINT((0,"LoadSymbols: test %S,  %s, tempstr %S, conv: %d\n",L"testing", filename, tempstr, conv));
 
     if(ulNumSymbolsLoaded<DIM(apSymbols))
     {
 	    hf = PICE_open(tempstr,OF_READ);
+		DPRINT((0,"LoadSymbols: hf: %x, file: %S\n",hf, tempstr));
 	    if(hf)
 	    {
 		    //mm_segment_t oldfs;
@@ -2172,6 +2178,7 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
                         {
 							DPRINT((0,"Load symbols from file %s\n", temp));
 							pSymbols = LoadSymbols(temp);
+							DbgPrint("Load symbols from file %s, pSymbols: %x\n", temp, pSymbols);
                             if(pSymbols)
                             {
                                 PICE_SYMBOLFILE_SOURCE* pSrc;

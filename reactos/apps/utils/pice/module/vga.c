@@ -52,12 +52,22 @@ Copyright notice:
 // GLOBALS
 ////
 // used for HERCUELS text and VGA text mode
+/*
 WINDOW wWindowVga[4]=
 {
 	{1,3,1,0,FALSE},
 	{5,4,1,0,FALSE},
 	{10,9,1,0,FALSE},
 	{20,4,1,0,FALSE}
+};
+*/
+
+WINDOW wWindowVga[4]=
+{
+	{1,3,1,0,FALSE},
+	{5,7,1,0,FALSE},
+	{14,15,1,0,FALSE},
+	{30,14,1,0,FALSE}
 };
 
 // 25 line text mode
@@ -389,7 +399,7 @@ BOOLEAN ConsoleInitVga(void)
     SetWindowGeometry(wWindowVga);
 
     GLOBAL_SCREEN_WIDTH = 80;
-    GLOBAL_SCREEN_HEIGHT = 25;
+    GLOBAL_SCREEN_HEIGHT = 45;
 
     attr.u.Asuchar = 0x07;
 

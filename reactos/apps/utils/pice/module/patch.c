@@ -88,12 +88,13 @@ BOOLEAN PiceKbdIsr (
 
 	if(isDown)
 	{
-        // CTRL pressed
+		DbgPrint("bControl: %x, ucKey: %x, breakkey: %x\n", bControl, ucKey, AsciiToScan(ucBreakKey));
+		// CTRL pressed
 		if(ucKey==0x1d)
 		{
 			bControl=TRUE;
 		}
-		else if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
+		if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
 		{
             // fake a CTRL-D release call
 			bForward=FALSE;

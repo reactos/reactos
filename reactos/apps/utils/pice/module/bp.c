@@ -239,14 +239,14 @@ BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpoi
     // TODO: must also check if it's a writable page
     if(IsAddressValid(ulAddress) )
     {
-        DPRINT((0,"InstallSWBreakpoint(): %.8X is valid\n",ulAddress));
+        DPRINT((0,"InstallSWBreakpoint(): %.8X is valid, writable? %d\n",ulAddress,IsAddressWriteable(ulAddress)));
         if((p = FindSwBp(ulAddress))==NULL)
         {
             DPRINT((0,"InstallSWBreakpoint(): %.8X is free\n",ulAddress));
             if( (p=FindEmptySwBpSlot()) )
             {
                 DPRINT((0,"InstallSWBreakpoint(): found empty slot\n"));
-
+				DPRINT((0,"InstallSWBreakpoint(): %x value: %x", ulAddress, *(PUCHAR)ulAddress));
                 p->ucOriginalOpcode = *(PUCHAR)ulAddress;
                 *(PUCHAR)ulAddress = 0xCC;
                 p->bUsed = TRUE;

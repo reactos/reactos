@@ -1686,6 +1686,7 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 	int i, base;
 	char * str;
 	const char *s;
+	const wchar_t *sw;
 
 	int flags;		/* flags to PICE_number() */
 
@@ -1775,6 +1776,44 @@ int PICE_vsprintf(char *buf, const char *fmt, va_list args)
 				*str++ = *s++;
 			while (len < field_width--)
 				*str++ = ' ';
+			continue;
+
+		case 'S':
+			if (qualifier == 'h') {
+				/* print ascii string */
+				s = va_arg(args, char *);
+				if (s == NULL)
+					s = "<NULL>";
+
+				len = PICE_strlen (s);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
+
+				if (!(flags & NUM_LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
+					*str++ = *s++;
+				while (len < field_width--)
+					*str++ = ' ';
+			} else {
+				/* print unicode string */
+				sw = va_arg(args, wchar_t *);
+				if (sw == NULL)
+					sw = L"<NULL>";
+
+				len = wcslen (sw);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
+
+				if (!(flags & NUM_LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
+					*str++ = (unsigned char)(*sw++);
+				while (len < field_width--)
+					*str++ = ' ';
+			}
 			continue;
 
 		case 'p':
@@ -2102,6 +2141,9 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
 	HANDLE hfile;
 	NTSTATUS status;
 
+
+	DPRINT((0,"PICE_open: %S\n", lpPathName));
+
 	if ( (iReadWrite & OF_READWRITE ) == OF_READWRITE )
 		dwAccessMask = GENERIC_READ | GENERIC_WRITE;
 	else if ( (iReadWrite & OF_READ ) == OF_READ )
@@ -2127,13 +2169,11 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
                              NULL,
                              NULL);
 
-
 	status = NtOpenFile( &hfile,
                       dwAccessMask,
                       &ObjectAttributes,
                       NULL, dwShareMode, 0);
 	//BUG BUG check status!!!
-	DbgPrint("PICE_open: handle: %x, status: %x", hfile, status);
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_open: NtOpenFile error: %x\n", status));
 	}
@@ -2157,6 +2197,9 @@ size_t PICE_len( HANDLE hFile )
 	NTSTATUS status;
 
   	status = ZwQueryInformationFile( hFile, &iosb, &fs, sizeof fs, FileStandardInformation );
+	if( !NT_SUCCESS( status ) ){
+		DPRINT((0,"PICE_len: ZwQueryInformationFile error: %x\n", status));
+	}
 	ASSERT(fs.EndOfFile.u.HighPart == 0);
 	return (size_t)fs.EndOfFile.u.LowPart;
 }
@@ -2194,12 +2237,12 @@ PICE_MultiByteToWideChar (
 			&& (CP_MACCP != CodePage)
 			&& (CP_OEMCP != CodePage))
 		/* --- FLAGS --- */
-		|| (dwFlags ^ (	MB_PRECOMPOSED
+		/*|| (dwFlags ^ (	MB_PRECOMPOSED
 				| MB_COMPOSITE
 				| MB_ERR_INVALID_CHARS
 				| MB_USEGLYPHCHARS
 				)
-			)
+			)*/
 		/* --- INPUT BUFFER --- */
 		|| (NULL == lpMultiByteStr)
 		)
@@ -2234,7 +2277,7 @@ PICE_MultiByteToWideChar (
 	 */
 	if (cchWideChar < InStringLength)
 	{
-		DPRINT((0,"ERROR_INSUFFICIENT_BUFFER\n"));
+		DPRINT((0,"ERROR_INSUFFICIENT_BUFFER: cchWideChar: %d, InStringLength: %d\n", cchWideChar, InStringLength));
 		return 0;
 	}
 	/*
@@ -2246,7 +2289,7 @@ PICE_MultiByteToWideChar (
 
 		((*r) && (cchConverted < cchWideChar));
 
-		r++,
+		r++, w++,
 		cchConverted++
 		)
 	{

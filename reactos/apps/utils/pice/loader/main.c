@@ -86,7 +86,7 @@ void process_stabs(
 	SymbolFileHeader.magic = PICE_MAGIC;
 	strcpy(temp,pExeName);
 	pSlash = strrchr(temp,'\\');
-	pDot = strrchr(temp,'.');
+	pDot = strchr(temp,'.');
 	if(pDot)
 	{
 		*pDot = 0;
@@ -371,7 +371,7 @@ int process_pe(char* filename,int file,void* p,int len)
 
 				strcpy(szSymName,filename);
 				//printf("LOADER: file name = %s\n",szSymName);
-				if((pDot = strrchr(szSymName,'.')))
+				if((pDot = strchr(szSymName,'.')))
 				{
 					*pDot = 0;
 					strcat(pDot,".dbg");
