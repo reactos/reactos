@@ -184,7 +184,7 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 			free(strTemp2);
 			continue;
 		}
-		int n = swprintf(strTemp2, L"SYSTEM\\CurrentControlSet\\Services\\%s", strTemp1);
+		swprintf(strTemp2, L"SYSTEM\\CurrentControlSet\\Services\\%s", strTemp1);
 
 		//	Open the IpConfig key.
 		lErr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, strTemp2, 0, KEY_READ, &hIpConfig);
@@ -222,7 +222,7 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 			//	IP_ADDR_STRING IpAddressList
 		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("IPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
 		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("SubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
-		if(strstr(pCurrentAdapter->IpAddressList.IpAddress.String, "0.0.0.0") != NULL)
+		if(strstr(pCurrentAdapter->IpAddressList.IpAddress.String, "0.0.0.0") != 0)
 		{	
 			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpIPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
 			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpSubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
