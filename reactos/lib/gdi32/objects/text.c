@@ -8,6 +8,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 #include <internal/font.h>
+#include <rosrtl/logfont.h>
 
 
 /*
@@ -260,21 +261,11 @@ CreateFontIndirectA(
 	CONST LOGFONTA		*lf
 	)
 {
-        ANSI_STRING StringA;
-        UNICODE_STRING StringU;
-	HFONT ret;
-        LOGFONTW tlf;
+  LOGFONTW tlf;
 
-	RtlInitAnsiString(&StringA, (LPSTR)lf->lfFaceName);
-	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
-        memcpy(&tlf, lf, sizeof(LOGFONTA));
-        memcpy(&tlf.lfFaceName, &StringU.Buffer, StringU.Length);
+  RosRtlLogFontA2W(&tlf, lf);
 
-        ret = CreateFontIndirectW(&tlf);
-
-	RtlFreeUnicodeString(&StringU);
-
-	return ret;
+  return NtGdiCreateFontIndirect(&tlf);
 }
 
 

@@ -7,10 +7,10 @@ extern "C"
 #endif
 
 void
-RosRtlLogFontA2W ( LPLOGFONTW pW, const LPLOGFONTA pA );
+RosRtlLogFontA2W ( LPLOGFONTW pW, const LOGFONTA *pA );
 
 void
-RosRtlLogFontW2A ( LPLOGFONTA pA, const LPLOGFONTW pW );
+RosRtlLogFontW2A ( LPLOGFONTA pA, const LOGFONTW *pW );
 
 #ifdef __cplusplus
 }
