@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.12 2002/09/08 10:23:29 chorns Exp $
+/* $Id: mutex.c,v 1.13 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -37,6 +37,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeMutex(IN PKMUTEX Mutex,
 		  IN ULONG Level)
@@ -52,12 +55,18 @@ KeInitializeMutex(IN PKMUTEX Mutex,
   Mutex->ApcDisable = 1;
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeReadStateMutex(IN PKMUTEX Mutex)
 {
   return(Mutex->Header.SignalState);
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeReleaseMutex(IN PKMUTEX Mutex,
 	       IN BOOLEAN Wait)
@@ -81,6 +90,9 @@ KeReleaseMutex(IN PKMUTEX Mutex,
   return(0);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 KeWaitForMutexObject(IN PKMUTEX Mutex,
 		     IN KWAIT_REASON WaitReason,
@@ -92,6 +104,9 @@ KeWaitForMutexObject(IN PKMUTEX Mutex,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeMutant(IN PKMUTANT Mutant,
 		   IN BOOLEAN InitialOwner)
@@ -120,12 +135,18 @@ KeInitializeMutant(IN PKMUTANT Mutant,
   Mutant->ApcDisable = 0;
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeReadStateMutant(IN PKMUTANT Mutant)
 {
   return(Mutant->Header.SignalState);
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeReleaseMutant(IN PKMUTANT Mutant,
 		IN KPRIORITY Increment,

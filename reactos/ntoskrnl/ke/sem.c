@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.12 2002/11/10 18:17:41 chorns Exp $
+/* $Id: sem.c,v 1.13 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -37,6 +37,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
 		       LONG		Count,
@@ -49,12 +52,18 @@ KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
    Semaphore->Limit=Limit;
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL 
 KeReadStateSemaphore (PKSEMAPHORE	Semaphore)
 {
    return(Semaphore->Header.SignalState);
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL 
 KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
 		    KPRIORITY	Increment,

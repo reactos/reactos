@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.31 2003/04/24 16:55:08 hbirr Exp $
+/* $Id: catch.c,v 1.32 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -157,18 +157,27 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExRaiseAccessViolation (VOID)
 {
   ExRaiseStatus (STATUS_ACCESS_VIOLATION);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExRaiseDatatypeMisalignment (VOID)
 {
   ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExRaiseStatus (IN NTSTATUS Status)
 {
@@ -185,6 +194,9 @@ ExRaiseStatus (IN NTSTATUS Status)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
 		  IN PCONTEXT Context,
@@ -199,6 +211,9 @@ NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {

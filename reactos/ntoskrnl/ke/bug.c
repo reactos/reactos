@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.30 2003/06/21 14:25:30 gvg Exp $
+/* $Id: bug.c,v 1.31 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -53,6 +53,9 @@ KeInitializeBugCheck(VOID)
   InBugCheck = 0;
 }
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
@@ -60,6 +63,9 @@ KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
   return FALSE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
 			   PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
@@ -75,6 +81,9 @@ KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
   return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeBugCheckWithTf(ULONG BugCheckCode, 	     
 		 ULONG BugCheckParameter1,
@@ -142,6 +151,9 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeBugCheckEx(ULONG BugCheckCode,
 	     ULONG BugCheckParameter1,
@@ -227,6 +239,9 @@ KeBugCheckEx(ULONG BugCheckCode,
     }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeBugCheck(ULONG BugCheckCode)
 /*

@@ -23,6 +23,9 @@ InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After, PLIST_ENTRY Entry)
    InsertHeadList(After, Entry);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
 			  PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
@@ -65,6 +68,9 @@ KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 PKDEVICE_QUEUE_ENTRY
 STDCALL
 KeRemoveByKeyDeviceQueue (
@@ -100,6 +106,9 @@ KeRemoveByKeyDeviceQueue (
    return(NULL);
 }
 
+/*
+ * @implemented
+ */
 PKDEVICE_QUEUE_ENTRY
 STDCALL
 KeRemoveDeviceQueue (
@@ -137,6 +146,9 @@ KeRemoveDeviceQueue (
    return(entry);
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 KeInitializeDeviceQueue (
@@ -154,6 +166,9 @@ KeInitializeDeviceQueue (
    KeInitializeSpinLock(&DeviceQueue->Lock);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 KeInsertDeviceQueue (
@@ -189,6 +204,9 @@ KeInsertDeviceQueue (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 KeRemoveEntryDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 			 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry)

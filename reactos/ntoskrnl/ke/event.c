@@ -19,12 +19,18 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL KeClearEvent (PKEVENT Event)
 {
    DPRINT("KeClearEvent(Event %x)\n", Event);
    Event->Header.SignalState = FALSE;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL KeInitializeEvent (PKEVENT		Event,
 				EVENT_TYPE	Type,
 				BOOLEAN		State)
@@ -51,16 +57,25 @@ VOID STDCALL KeInitializeEvent (PKEVENT		Event,
    InitializeListHead(&(Event->Header.WaitListHead));
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL KeReadStateEvent (PKEVENT Event)
 {
    return(Event->Header.SignalState);
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL KeResetEvent (PKEVENT Event)
 {
    return(InterlockedExchange(&(Event->Header.SignalState),0));
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL KeSetEvent (PKEVENT		Event,
 			 KPRIORITY	Increment,
 			 BOOLEAN		Wait)
@@ -75,6 +90,9 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
    return(ret);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
 			       KPRIORITY	Increment,
 			       BOOLEAN		Wait)

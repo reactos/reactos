@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.58 2003/07/09 20:17:47 hbirr Exp $
+/* $Id: timer.c,v 1.59 2003/07/10 17:44:06 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -75,6 +75,9 @@ static BOOLEAN TimerInitDone = FALSE;
 /* FUNCTIONS **************************************************************/
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtQueryTimerResolution(OUT PULONG MinimumResolution,
 		       OUT PULONG MaximumResolution,
@@ -84,6 +87,9 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtSetTimerResolution(IN ULONG RequestedResolution,
 		     IN BOOL SetOrUnset,
@@ -93,6 +99,9 @@ NtSetTimerResolution(IN ULONG RequestedResolution,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 			  IN PLARGE_INTEGER Frequency)
@@ -112,6 +121,9 @@ NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtDelayExecution(IN ULONG Alertable,
 		 IN TIME* Interval)
@@ -130,6 +142,9 @@ NtDelayExecution(IN ULONG Alertable,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 			BOOLEAN		Alertable,
@@ -156,6 +171,9 @@ KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 KeQueryTimeIncrement(VOID)
 /*
@@ -168,6 +186,9 @@ KeQueryTimeIncrement(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 /*
@@ -187,6 +208,9 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtGetTickCount (PULONG	UpTime)
 {
@@ -199,6 +223,9 @@ NtGetTickCount (PULONG	UpTime)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeSetTimer (PKTIMER		Timer,
 	    LARGE_INTEGER	DueTime,
@@ -219,6 +246,9 @@ KeSetTimer (PKTIMER		Timer,
    return(KeSetTimerEx(Timer, DueTime, 0, Dpc));
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeSetTimerEx (PKTIMER		Timer,
 	      LARGE_INTEGER	DueTime,
@@ -273,6 +303,9 @@ KeSetTimerEx (PKTIMER		Timer,
    return(FALSE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeCancelTimer (PKTIMER	Timer)
 /*
@@ -301,12 +334,18 @@ KeCancelTimer (PKTIMER	Timer)
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeReadStateTimer (PKTIMER	Timer)
 {
    return(Timer->Header.SignalState);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeTimer (PKTIMER	Timer)
 /*
@@ -319,6 +358,9 @@ KeInitializeTimer (PKTIMER	Timer)
    KeInitializeTimerEx(Timer, NotificationTimer);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeTimerEx (PKTIMER		Timer,
 		     TIMER_TYPE	Type)
@@ -356,6 +398,9 @@ KeInitializeTimerEx (PKTIMER		Timer,
    Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeQueryTickCount(PLARGE_INTEGER TickCount)
 /*
@@ -367,6 +412,9 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
   TickCount->QuadPart = KeTickCount;
 }
 
+/*
+ * @implemented
+ */
 STATIC VOID 
 HandleExpiredTimer(PKTIMER current)
 {
@@ -396,6 +444,9 @@ HandleExpiredTimer(PKTIMER current)
      }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeExpireTimers(PKDPC Dpc,
 	       PVOID Context1,

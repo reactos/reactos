@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.6 2003/06/07 11:34:36 chorns Exp $
+/* $Id: queue.c,v 1.7 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -38,6 +38,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeQueue(IN PKQUEUE Queue,
 		  IN ULONG Count OPTIONAL)
@@ -53,6 +56,9 @@ KeInitializeQueue(IN PKQUEUE Queue,
 }
 
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeReadStateQueue(IN PKQUEUE Queue)
 {
@@ -60,6 +66,9 @@ KeReadStateQueue(IN PKQUEUE Queue)
 }
 
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KiInsertQueue(
    IN PKQUEUE Queue,
@@ -96,6 +105,9 @@ KiInsertQueue(
 
 
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeInsertHeadQueue(IN PKQUEUE Queue,
 		  IN PLIST_ENTRY Entry)
@@ -104,6 +116,9 @@ KeInsertHeadQueue(IN PKQUEUE Queue,
 }
 
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeInsertQueue(IN PKQUEUE Queue,
 	      IN PLIST_ENTRY Entry)
@@ -112,6 +127,9 @@ KeInsertQueue(IN PKQUEUE Queue,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY STDCALL
 KeRemoveQueue(IN PKQUEUE Queue,
 	      IN KPROCESSOR_MODE WaitMode,
@@ -170,6 +188,9 @@ KeRemoveQueue(IN PKQUEUE Queue,
 }
 
 
+/*
+ * @implemented
+ */
 PLIST_ENTRY STDCALL
 KeRundownQueue(IN PKQUEUE Queue)
 {

@@ -236,6 +236,9 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 KiDeliverApc(ULONG Unknown1,
 	     ULONG Unknown2,
@@ -287,6 +290,9 @@ KiDeliverApc(ULONG Unknown1,
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeInsertQueueApc (PKAPC	Apc,
 		  PVOID	SystemArgument1,
@@ -401,6 +407,9 @@ KeInsertQueueApc (PKAPC	Apc,
    return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeRemoveQueueApc (PKAPC Apc)
 /*
@@ -440,6 +449,9 @@ KeRemoveQueueApc (PKAPC Apc)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeApc(
   IN PKAPC  Apc,
@@ -500,12 +512,18 @@ KeInitializeApc(
      }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 NtQueueApcRundownRoutine(PKAPC Apc)
 {
    ExFreePool(Apc);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 NtQueueApcKernelRoutine(PKAPC Apc,
 			PKNORMAL_ROUTINE* NormalRoutine,
@@ -516,6 +534,9 @@ NtQueueApcKernelRoutine(PKAPC Apc,
    ExFreePool(Apc);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueueApcThread(HANDLE			ThreadHandle,
 		 PKNORMAL_ROUTINE	ApcRoutine,
@@ -563,6 +584,9 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL NtTestAlert(VOID)
 {
    KiTestAlert();

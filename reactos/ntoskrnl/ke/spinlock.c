@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.16 2003/06/07 11:34:36 chorns Exp $
+/* $Id: spinlock.c,v 1.17 2003/07/10 17:44:06 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeSynchronizeExecution (PKINTERRUPT		Interrupt,
 			PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
@@ -52,6 +55,9 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
    return(ret);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
 /*
@@ -65,6 +71,9 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
 
 #undef KeAcquireSpinLockAtDpcLevel
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
@@ -99,6 +108,9 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 
 #undef KeReleaseSpinLockFromDpcLevel
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
 /*

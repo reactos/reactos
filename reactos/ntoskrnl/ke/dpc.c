@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.25 2003/06/16 19:18:14 hbirr Exp $
+/* $Id: dpc.c,v 1.26 2003/07/10 17:44:06 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,6 +57,9 @@ ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 KeInitializeDpc (PKDPC			Dpc,
 		 PKDEFERRED_ROUTINE	DeferredRoutine,
@@ -76,6 +79,9 @@ KeInitializeDpc (PKDPC			Dpc,
    Dpc->Lock = 0;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 KiDispatchInterrupt(VOID)
 /*
@@ -113,6 +119,9 @@ KiDispatchInterrupt(VOID)
    KeReleaseSpinLock(&DpcQueueLock, oldlvl);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL 
 KeRemoveQueueDpc (PKDPC	Dpc)
 /*
@@ -139,6 +148,9 @@ KeRemoveQueueDpc (PKDPC	Dpc)
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL 
 KeInsertQueueDpc (PKDPC	Dpc,
 		  PVOID	SystemArgument1,
@@ -185,6 +197,8 @@ KeInsertQueueDpc (PKDPC	Dpc,
  *          Dpc = Initalizes DPC
  *          Importance = DPC importance
  * RETURNS: None
+ *
+ * @implemented
  */
 VOID STDCALL
 KeSetImportanceDpc (IN	PKDPC		Dpc,
@@ -199,6 +213,8 @@ KeSetImportanceDpc (IN	PKDPC		Dpc,
  *          Dpc = Initalizes DPC
  *          Number = Processor number
  * RETURNS: None
+ *
+ * @unimplemented
  */
 VOID STDCALL
 KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
@@ -211,6 +227,8 @@ VOID
 KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling
+ *
+ * @implemented
  */
 {
    InitializeListHead(&DpcQueueHead);

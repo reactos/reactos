@@ -378,6 +378,9 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 KeWaitForSingleObject(PVOID Object,
                       KWAIT_REASON WaitReason,
@@ -423,6 +426,9 @@ KiGetWaitableObjectFromObject(PVOID Object)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 KeWaitForMultipleObjects(ULONG Count,
                          PVOID Object[],
@@ -668,6 +674,9 @@ VOID KeInitializeDispatcher(VOID)
    KeInitializeSpinLock(&DispatcherDatabaseLock);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtWaitForMultipleObjects(IN ULONG Count,
 			 IN HANDLE Object [],
@@ -729,6 +738,9 @@ NtWaitForMultipleObjects(IN ULONG Count,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtWaitForSingleObject(IN HANDLE Object,
 		      IN BOOLEAN Alertable,
@@ -766,6 +778,9 @@ NtWaitForSingleObject(IN HANDLE Object,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
 			       IN HANDLE WaitObject,

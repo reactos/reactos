@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.7 2002/09/08 10:23:28 chorns Exp $
+/* $Id: critical.c,v 1.8 2003/07/10 17:44:06 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,12 +19,18 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL KeEnterCriticalRegion (VOID)
 {
    DPRINT("KeEnterCriticalRegion()\n");
    KeGetCurrentThread()->KernelApcDisable -= 1;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL KeLeaveCriticalRegion (VOID)
 {
    DPRINT("KeLeaveCriticalRegion()\n");

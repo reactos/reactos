@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.14 2003/06/01 19:50:04 hbirr Exp $
+/* $Id: process.c,v 1.15 2003/07/10 17:44:06 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -39,6 +39,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeAttachProcess (PEPROCESS Process)
 {
@@ -84,6 +87,9 @@ KeAttachProcess (PEPROCESS Process)
    KeLowerIrql(oldlvl);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeDetachProcess (VOID)
 {

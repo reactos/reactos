@@ -17,6 +17,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL 
 NtRaiseHardError(IN NTSTATUS Status,
 		 ULONG Unknown2,
@@ -29,6 +32,9 @@ NtRaiseHardError(IN NTSTATUS Status,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL 
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
