@@ -8,6 +8,8 @@ HKLM,"SOFTWARE\Classes",,0x00000010
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
+; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
+HKCR,".lnk","",0x00000000,"lnkfile"
 ; install notepad as handler for .txt files
 HKCR,".txt","",0x00000000,"txtfile"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
