@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.27 2004/08/31 20:17:17 hbirr Exp $
+ * $Id: videoprt.c,v 1.28 2004/11/24 11:12:19 ekohl Exp $
  */
 
 #include "videoprt.h"
@@ -727,7 +727,7 @@ VideoPortSetRegistryParameters(
    IN ULONG ValueLength)
 {
    DPRINT("VideoPortSetRegistryParameters\n");
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
    return RtlWriteRegistryValue(
       RTL_REGISTRY_ABSOLUTE,
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath.Buffer,
