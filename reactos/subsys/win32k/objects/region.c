@@ -1992,7 +1992,7 @@ NtGdiCombineRgn(HRGN  hDest,
 		  RGNDATA_UnlockRgn(hSrc2);
 		  result = destRgn->rdh.iType;
 		}
-		else
+		else if(hSrc2 == NULL)
                 {
                   DPRINT1("NtGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
                 }
