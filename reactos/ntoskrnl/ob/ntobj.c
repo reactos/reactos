@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.16 2003/10/14 14:49:05 ekohl Exp $
+/* $Id: ntobj.c,v 1.17 2003/10/21 15:50:51 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -39,21 +39,19 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
 			IN PVOID ObjectInformation,
 			IN ULONG Length)
 {
-#if 0
-  POBJECT_HEADER ObjectHeader;
   PVOID Object;
   NTSTATUS Status;
 
   if (ObjectInformationClass != ObjectHandleInformation)
     return STATUS_INVALID_INFO_CLASS;
 
-  if (Length != sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+  if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
   Status = ObReferenceObjectByHandle (ObjectHandle,
 				      0,
 				      NULL,
-				      KeGetPreviousMode(),
+				      KeGetPreviousMode (),
 				      &Object,
 				      NULL);
   if (!NT_SUCCESS (Status))
@@ -61,28 +59,14 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
       return Status;
     }
 
-  ObjectHeader = BODY_TO_HEADER(Object);
+  Status = ObpSetHandleAttributes (ObjectHandle,
+				   (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation);
 
-  /* FIXME: Change handle attributes here... */
-
-  ObDereferenceObject(Object);
+  ObDereferenceObject (Object);
 
   return Status;
-#endif
-
-  UNIMPLEMENTED;
 }
 
-
-/*Very, very, very new implementation. Test it!
-
-  Probably we should add meaning to QueryName in POBJECT_TYPE, no matter if we know
-  the correct parameters or not. For FILE_OBJECTs, it would probably look like the code
-  for ObjectNameInformation below. You give it a POBJECT and a PUNICODE_STRING, and it
-  returns the full path in the PUNICODE_STRING
-
-  If we don't do it this way, we should anyway add switches and separate functions to handle
-  the different object types*/
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -164,6 +148,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	break;
 
       case ObjectTypeInformation:
+#if 0
 //	InfoLength =
 	if (Length != sizeof(OBJECT_TYPE_INFORMATION))
 	  {
@@ -171,9 +156,9 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	  }
 	else
 	  {
-	    POBJECT_TYPE_INFORMATION typeinfo;
+	    POBJECT_TYPE_INFORMATION TypeInfo;
 
-	typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
+	    TypeInfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
 	// FIXME: Is this supposed to only be the header's Name field?
 	// Can somebody check/verify this?
 	RtlCopyUnicodeString(&typeinfo->Name,&ObjectHeader->Name);
@@ -188,6 +173,8 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	typeinfo->TotalHandles = ObjectHeader-> HandleCount;
 	typeinfo->ReferenceCount = ObjectHeader -> RefCount;
 	  }
+#endif
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case ObjectAllTypesInformation:
@@ -195,7 +182,16 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	break;
 
       case ObjectHandleInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
+	InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
+	if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	else
+	  {
+	    Status = ObpQueryHandleAttributes (ObjectHandle,
+					       (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation);
+	  }
 	break;
 
       default:
@@ -203,7 +199,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	break;
     }
 
-  ObDereferenceObject(Object);
+  ObDereferenceObject (Object);
 
   if (ReturnLength != NULL)
     *ReturnLength = InfoLength;

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.6 2003/10/15 16:59:36 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.7 2003/10/21 15:49:19 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -41,9 +41,20 @@ typedef struct _OBJECT_NAME_INFORMATION
 typedef struct _OBJECT_TYPE_INFORMATION
 {
   UNICODE_STRING Name;
-  UNICODE_STRING Type;
-  ULONG TotalHandles;
+  ULONG ObjectCount;
   ULONG ReferenceCount;
+  ULONG Reserved1[4];
+  ULONG PeakObjectCount;
+  ULONG PeakHandleCount;
+  ULONG Reserved2[4];
+  ULONG InvalidAttributes;
+  GENERIC_MAPPING GenericMapping;
+  ULONG ValidAccess;
+  UCHAR Unknown;
+  BOOLEAN MainitainHandleDatabase;
+  POOL_TYPE PoolType;
+  ULONG PagedPoolUsage;
+  ULONG NonPagedPoolUsage;
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
 
 

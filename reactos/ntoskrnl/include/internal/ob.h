@@ -105,8 +105,19 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      POBJECT_TYPE ObjectType);
 VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
-PVOID ObDeleteHandle(struct _EPROCESS* Process,
-		     HANDLE Handle);
+
+NTSTATUS
+ObDeleteHandle(PEPROCESS Process,
+	       HANDLE Handle,
+	       PVOID *ObjectBody);
+
+NTSTATUS
+ObpQueryHandleAttributes(HANDLE Handle,
+			 POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo);
+
+NTSTATUS
+ObpSetHandleAttributes(HANDLE Handle,
+		       POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo);
 
 NTSTATUS
 ObpCreateTypeObject(POBJECT_TYPE ObjectType);
