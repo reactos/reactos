@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2002/09/23 20:09:10 guido Exp $
+# $Id: makefile,v 1.3 2003/01/16 11:58:15 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,7 +11,8 @@ TARGET_OBJECTS = \
   fs_rec.o \
   cdfs.o \
   fat.o \
-  ntfs.o
+  ntfs.o \
+  udfs.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

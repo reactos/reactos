@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002,2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.h,v 1.2 2002/05/15 18:02:59 ekohl Exp $
+/* $Id: fs_rec.h,v 1.3 2003/01/16 11:58:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/fs_rec/fs_rec.h
+ * FILE:             drivers/fs/fs_rec/fs_rec.h
  * PURPOSE:          Filesystem recognizer driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -32,6 +32,7 @@
 #define FS_TYPE_VFAT		1
 #define FS_TYPE_NTFS		2
 #define FS_TYPE_CDFS		3
+#define FS_TYPE_UDFS		4
 
 
 typedef struct _DEVICE_EXTENSION
@@ -76,6 +77,13 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
+		   IN PIRP Irp);
+
+
+/* udfs.c */
+
+NTSTATUS
+FsRecUdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
 
 /* EOF */

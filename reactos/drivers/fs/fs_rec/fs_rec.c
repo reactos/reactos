@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002,2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.c,v 1.4 2002/09/08 10:22:09 chorns Exp $
+/* $Id: fs_rec.c,v 1.5 2003/01/16 11:58:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/fs_rec/fs_rec.c
+ * FILE:             drivers/fs/fs_rec/fs_rec.c
  * PURPOSE:          Filesystem recognizer driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -81,12 +81,16 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
 	Status = FsRecVfatFsControl(DeviceObject, Irp);
 	break;
 
+      case FS_TYPE_NTFS:
+	Status = FsRecNtfsFsControl(DeviceObject, Irp);
+	break;
+
       case FS_TYPE_CDFS:
 	Status = FsRecCdfsFsControl(DeviceObject, Irp);
 	break;
 
-      case FS_TYPE_NTFS:
-	Status = FsRecNtfsFsControl(DeviceObject, Irp);
+      case FS_TYPE_UDFS:
+	Status = FsRecUdfsFsControl(DeviceObject, Irp);
 	break;
 
       default:
@@ -192,7 +196,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   ULONG DeviceCount;
   NTSTATUS Status;
 
-  DPRINT("FileSystem recognizer 0.0.1\n");
+  DPRINT("FileSystem recognizer 0.0.2\n");
 
   DeviceCount = 0;
 
@@ -211,6 +215,16 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 			       L"\\FileSystem\\CdfsRecognizer",
 			       FILE_DEVICE_CD_ROM_FILE_SYSTEM,
 			       FS_TYPE_CDFS);
+      if (NT_SUCCESS(Status))
+	{
+	  DeviceCount++;
+	}
+
+      Status = FsRecRegisterFs(DriverObject,
+			       L"\\Udfs",
+			       L"\\FileSystem\\UdfsRecognizer",
+			       FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+			       FS_TYPE_UDFS);
       if (NT_SUCCESS(Status))
 	{
 	  DeviceCount++;
