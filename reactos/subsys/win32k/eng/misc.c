@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.2 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: misc.c,v 1.3 2004/02/10 23:40:55 gvg Exp $ */
 #include <ddk/winddi.h>
 #include <include/dib.h>
 #include <include/object.h>
@@ -36,6 +36,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   SIZEL BitmapSize;
   POINTL SrcPoint;
   LONG Width;
+  RECTL ClippedDestRect;
 
   /* Normalize */
   if (DestRect->right < DestRect->left)
@@ -76,11 +77,36 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     EnterLeave->DestRect.bottom = BitmapSize.cy;
     SrcPoint.x = DestRect->left;
     SrcPoint.y = DestRect->top;
+    ClippedDestRect = EnterLeave->DestRect;
+    if (SrcPoint.x < 0)
+      {
+        ClippedDestRect.left -= SrcPoint.x;
+        SrcPoint.x = 0;
+      }
+    if (DestObj->sizlBitmap.cx < SrcPoint.x + ClippedDestRect.right - ClippedDestRect.left)
+      {
+        ClippedDestRect.right = ClippedDestRect.left + DestObj->sizlBitmap.cx - SrcPoint.x;
+      }
+    if (SrcPoint.y < 0)
+      {
+        ClippedDestRect.top -= SrcPoint.y;
+        SrcPoint.y = 0;
+      }
+    if (DestObj->sizlBitmap.cy < SrcPoint.y + ClippedDestRect.bottom - ClippedDestRect.top)
+      {
+        ClippedDestRect.bottom = ClippedDestRect.top + DestObj->sizlBitmap.cy - SrcPoint.y;
+      }
     EnterLeave->TrivialClipObj = EngCreateClip();
     EnterLeave->TrivialClipObj->iDComplexity = DC_TRIVIAL;
-    if (! EnterLeave->DestGDI->CopyBits(*OutputObj, DestObj,
+    if (ClippedDestRect.left < (*OutputObj)->sizlBitmap.cx &&
+        0 <= ClippedDestRect.right &&
+        SrcPoint.x < DestObj->sizlBitmap.cx &&
+        ClippedDestRect.top <= (*OutputObj)->sizlBitmap.cy &&
+        0 <= ClippedDestRect.bottom &&
+        SrcPoint.y < DestObj->sizlBitmap.cy &&
+        ! EnterLeave->DestGDI->CopyBits(*OutputObj, DestObj,
                                         EnterLeave->TrivialClipObj, NULL,
-                                        &EnterLeave->DestRect, &SrcPoint))
+                                        &ClippedDestRect, &SrcPoint))
       {
       EngDeleteClip(EnterLeave->TrivialClipObj);
       EngFreeMem((*OutputObj)->pvBits);
@@ -120,10 +146,40 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
       {
       SrcPoint.x = 0;
       SrcPoint.y = 0;
-      Result = EnterLeave->DestGDI->CopyBits(EnterLeave->DestObj,
-                                             EnterLeave->OutputObj,
-                                             EnterLeave->TrivialClipObj, NULL,
-                                             &EnterLeave->DestRect, &SrcPoint);
+      if (EnterLeave->DestRect.left < 0)
+        {
+          SrcPoint.x = - EnterLeave->DestRect.left;
+          EnterLeave->DestRect.left = 0;
+        }
+      if (EnterLeave->DestObj->sizlBitmap.cx < EnterLeave->DestRect.right)
+        {
+          EnterLeave->DestRect.right = EnterLeave->DestObj->sizlBitmap.cx;
+        }
+      if (EnterLeave->DestRect.top < 0)
+        {
+          SrcPoint.y = - EnterLeave->DestRect.top;
+          EnterLeave->DestRect.top = 0;
+        }
+      if (EnterLeave->DestObj->sizlBitmap.cy < EnterLeave->DestRect.bottom)
+        {
+          EnterLeave->DestRect.bottom = EnterLeave->DestObj->sizlBitmap.cy;
+        }
+      if (SrcPoint.x < EnterLeave->OutputObj->sizlBitmap.cx &&
+          EnterLeave->DestRect.left <= EnterLeave->DestRect.right &&
+          EnterLeave->DestRect.left < EnterLeave->DestObj->sizlBitmap.cx &&
+          SrcPoint.y < EnterLeave->OutputObj->sizlBitmap.cy &&
+          EnterLeave->DestRect.top <= EnterLeave->DestRect.bottom &&
+          EnterLeave->DestRect.top < EnterLeave->DestObj->sizlBitmap.cy)
+        {
+          Result = EnterLeave->DestGDI->CopyBits(EnterLeave->DestObj,
+                                                 EnterLeave->OutputObj,
+                                                 EnterLeave->TrivialClipObj, NULL,
+                                                 &EnterLeave->DestRect, &SrcPoint);
+        }
+      else
+        {
+          Result = TRUE;
+        }
       }
     EngFreeMem(EnterLeave->OutputObj->pvBits);
     EngDeleteSurface(EnterLeave->OutputBitmap);
