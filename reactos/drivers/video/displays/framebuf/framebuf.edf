@@ -1,0 +1,3 @@
+LIBRARY framebuf.dll
+EXPORTS
+DrvEnableDriver=DrvEnableDriver@12
