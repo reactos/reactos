@@ -479,18 +479,13 @@ IoMapTransfer (
 {
   PHYSICAL_ADDRESS Address;
   KIRQL OldIrql;
-  UCHAR Mode;
+  ULONG LengthShift = 0;
 
-#if defined(__GNUC__)
-  Address.QuadPart = 0ULL;
-#else
   Address.QuadPart = 0;
-#endif
 
   /* Isa System (slave) DMA? */
   if (MapRegisterBase && !AdapterObject->MasterDevice)
   {
-
     KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
 
     /*
@@ -510,11 +505,8 @@ IoMapTransfer (
      * -- Filip Navara, 19/07/2004     
      */
 
-     /* Get the mode for easier coding */
-     Mode = AdapterObject->AdapterMode;
-     
     /* if it is a write to the device, copy the caller buffer to the low buffer */
-    if ((WriteToDevice) && !((PDMA_MODE)&Mode)->AutoInitialize)
+    if (WriteToDevice && !AdapterObject->AdapterMode.AutoInitialize)
     {
       memcpy(MapRegisterBase,
              (char*)MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
@@ -522,59 +514,73 @@ IoMapTransfer (
     }
 
     /* Writer Adapter Mode, transfer type */
-    ((PDMA_MODE)&Mode)->TransferType = (WriteToDevice ? WRITE_TRANSFER : READ_TRANSFER);
+    AdapterObject->AdapterMode.TransferType = (WriteToDevice ? WRITE_TRANSFER : READ_TRANSFER);
 
-    // program up the dma controller, and return
-    if (!((PDMA_MODE)&Mode)->AutoInitialize) {
+    /* program up the dma controller, and return */
+    if (!AdapterObject->AdapterMode.AutoInitialize) {
       Address = MmGetPhysicalAddress( MapRegisterBase );
     } else {
       Address = MmGetPhysicalAddress( CurrentVa );
     }
     
     /* 16-bit DMA has a shifted length */
-    if (AdapterObject->Width16Bits) *Length = (*Length >> 1);
+    if (AdapterObject->Width16Bits) {
+      LengthShift = 1;
+    }
      
     /* Make the Transfer */
     if (AdapterObject->AdapterNumber == 1) {
     
     	PDMA1_CONTROL DmaControl1 = AdapterObject->AdapterBaseVa; /* For Writing Less Code */
     	
+	/* Mask the Channel */
+	WRITE_PORT_UCHAR(&DmaControl1->SingleMask, AdapterObject->ChannelNumber | DMA_SETMASK);
+
 	/* Reset Register */
 	WRITE_PORT_UCHAR(&DmaControl1->ClearBytePointer, 0);
 	
 	/* Set the Mode */
-	WRITE_PORT_UCHAR(&DmaControl1->Mode, (UCHAR)(Mode));
+	WRITE_PORT_UCHAR(&DmaControl1->Mode, AdapterObject->AdapterModeByte);
 	
-	/* Set the Page Register (apparently always 0 for us if I trust the previous comment) */
+	/* Set the Page Register */
+	WRITE_PORT_UCHAR(AdapterObject->PagePort, (UCHAR)(Address.u.LowPart >> 16));
+
+	/* Set the Offset Register (apparently always 0 for us if I trust the previous comment) */
 	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
 	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
 	
 	/* Set the Length */
  	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
-			(UCHAR)((*Length) - 1));
+			(UCHAR)((*Length >> LengthShift) - 1));
 	WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
-			(UCHAR)((*Length) - 1) >> 8);
+			(UCHAR)(((*Length >> LengthShift) - 1) >> 8));
 			
 	/* Unmask the Channel */
 	WRITE_PORT_UCHAR(&DmaControl1->SingleMask, AdapterObject->ChannelNumber | DMA_CLEARMASK);
     } else {
         PDMA2_CONTROL DmaControl2 = AdapterObject->AdapterBaseVa; /* For Writing Less Code */
     	
+	/* Mask the Channel */
+	WRITE_PORT_UCHAR(&DmaControl2->SingleMask, AdapterObject->ChannelNumber | DMA_SETMASK);
+
 	/* Reset Register */
 	WRITE_PORT_UCHAR(&DmaControl2->ClearBytePointer, 0);
 	
 	/* Set the Mode */
-	WRITE_PORT_UCHAR(&DmaControl2->Mode, (UCHAR)(Mode));
+	WRITE_PORT_UCHAR(&DmaControl2->Mode, AdapterObject->AdapterModeByte);
 	
-	/* Set the Page Register (apparently always 0 for us if I trust the previous comment) */
+	/* Set the Page Register */
+	WRITE_PORT_UCHAR(AdapterObject->PagePort, (UCHAR)(Address.u.LowPart >> 16));
+
+	/* Set the Offset Register (apparently always 0 for us if I trust the previous comment) */
 	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
 	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress, 0);
 	
 	/* Set the Length */
  	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
-			(UCHAR)((*Length) - 1));
+			(UCHAR)((*Length >> LengthShift) - 1));
 	WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
-			(UCHAR)((*Length) - 1) >> 8);
+			(UCHAR)(((*Length >> LengthShift) - 1) >> 8));
 			
 	/* Unmask the Channel */
 	WRITE_PORT_UCHAR(&DmaControl2->SingleMask, AdapterObject->ChannelNumber | DMA_CLEARMASK);

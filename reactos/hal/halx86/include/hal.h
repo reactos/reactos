@@ -354,8 +354,11 @@ struct _ADAPTER_OBJECT {
   UCHAR ChannelNumber;
   UCHAR AdapterNumber;
   USHORT DmaPortAddress;
-  UCHAR AdapterMode;
-  BOOLEAN  NeedsMapRegisters;
+  union {
+    DMA_MODE AdapterMode;
+    UCHAR AdapterModeByte;
+  };
+  BOOLEAN NeedsMapRegisters;
   BOOLEAN MasterDevice;
   UCHAR Width16Bits;
   UCHAR ScatterGather;
