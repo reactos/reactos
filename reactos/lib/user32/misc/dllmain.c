@@ -76,7 +76,6 @@ Init(VOID)
   InitializeCriticalSection(&gcsMPH);
 
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
-  InitStockObjects();
 }
 
 VOID
