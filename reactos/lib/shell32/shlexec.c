@@ -1035,7 +1035,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     /* resolve shell shortcuts */
     ext = PathFindExtensionW(sei_tmp.lpFile);
 
-    if (ext && !_wcsicmp(ext, wExtLnk))	/* or check for: shell_attribs & SFGAO_LINK */
+    if (ext && !strcmpiW(ext, wExtLnk))	/* or check for: shell_attribs & SFGAO_LINK */
     {
 	HRESULT hr = SHELL_ResolveShortCutW((LPWSTR)sei_tmp.lpFile, (LPWSTR)sei_tmp.lpParameters, (LPWSTR)sei_tmp.lpDirectory,
 					    sei_tmp.hwnd, sei_tmp.lpVerb?sei_tmp.lpVerb:wszEmpty, &sei_tmp.nShow, (LPITEMIDLIST*)&sei_tmp.lpIDList);
