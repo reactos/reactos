@@ -219,7 +219,7 @@ typedef struct SCARD_READERSTATEW SCARD_READERSTATE, *PSCARD_READERSTATE, *LPSCA
 #define SCardSetCardTypeProviderName SCardSetCardTypeProviderNameW
 #define SCardStatus SCardStatusW
 #else /* !UNICODE */
-typedef struct SCARD_READERSTATEW SCARD_READERSTATE, *PSCARD_READERSTATE, *LPSCARD_READERSTATE;
+typedef struct SCARD_READERSTATEA SCARD_READERSTATE, *PSCARD_READERSTATE, *LPSCARD_READERSTATE;
 #define SCardAddReaderToGroup SCardAddReaderToGroupA
 #define SCardConnect SCardConnectA
 #define SCardForgetCardType SCardForgetCardTypeA
