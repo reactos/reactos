@@ -19,7 +19,7 @@ HRESULT STDCALL DirectDrawCreate(
   DWORD FAR* lplpDD, 
   IUnknown FAR* pUnkOuter
 )
-{
+{	
     return DD_OK;
 }
 
