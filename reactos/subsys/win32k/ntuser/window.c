@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.31 2003/03/14 22:48:32 ei Exp $
+/* $Id: window.c,v 1.32 2003/03/16 23:01:08 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -529,8 +529,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    */
   InsertTailList(&PsGetWin32Thread()->Desktop->WindowListHead,
 		 &WindowObject->DesktopListEntry);
-
-  /* FIXME: Maybe allocate a DCE for this window. */
+  /* Allocate a DCE for this window. */
+  if (dwStyle & CS_OWNDC) WindowObject->Dce = DceAllocDCE(WindowObject->Self,DCE_WINDOW_DC);
+  /* FIXME:  Handle "CS_CLASSDC" */
 
   /* Initialize the window dimensions. */
   WindowObject->WindowRect.left = x;

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.38 2003/03/16 07:02:38 rcampbell Exp $
+/* $Id: defwnd.c,v 1.39 2003/03/16 23:01:07 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -118,7 +118,13 @@ DefFrameProcA(HWND hWnd,
 {
   return((LRESULT)0);
 }
-
+/*
+static LRESULT WINAPI DefButtonWndProc(HWND hWnd, UINT uMsg,
+                                           WPARAM wParam, LPARAM lParam)
+{
+    return ((LRESULT)0);
+}
+*/
 LRESULT STDCALL
 DefFrameProcW(HWND hWnd,
 	      HWND hWndMDIClient,
@@ -264,7 +270,7 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
   hDcMem = CreateCompatibleDC(hDC);
   hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
   BitBlt(hDC, Rect.left + 2, Rect.top + 
-         2, 14, 14, hDcMem,
+         2, 16, 16, hDcMem,
          (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
   SelectObject(hDcMem, hSavedBitmap);
@@ -592,7 +598,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MAXIMIZEBOX || Style & WS_MINIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) - 2;
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {
@@ -601,7 +607,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MINIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) - 2;
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {
@@ -930,8 +936,7 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
-  /* FIXME: Implement this. */
-  return(0);
+  return 0;
 }
 
 LRESULT STDCALL
@@ -947,7 +952,10 @@ User32DefWindowProc(HWND hWnd,
       {
 	return(DefWndPaintNC(hWnd, (HRGN)wParam));
       }
-
+    case WM_WINDOWPOSCHANGING:
+    {
+         DbgPrint("WM_WINDOWPOSCHANGING\n\n");
+    }
     case WM_NCHITTEST:
       {
 	POINT Point;
@@ -980,7 +988,10 @@ User32DefWindowProc(HWND hWnd,
 	  }
 	break;
       }
-
+    case WM_LBUTTONUP:
+    {
+        DbgPrint("test\n\n\n\n\n\n");
+    }
     case WM_RBUTTONUP:
       {
 	POINT Pt;
@@ -1329,7 +1340,6 @@ User32DefWindowProc(HWND hWnd,
     }
   return 0;
 }
-
 
 LRESULT STDCALL
 DefWindowProcA(HWND hWnd,
