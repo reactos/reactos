@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.43 2002/02/08 02:57:07 chorns Exp $
+/* $Id: create.c,v 1.44 2002/02/15 14:47:55 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -328,7 +328,7 @@ PiDeleteThread(PVOID ObjectBody)
   Thread->ThreadsProcess = NULL;
   PiNrThreads--;
   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
-  HalReleaseTask(Thread);
+  KeReleaseThread(Thread);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
   DPRINT("PiDeleteThread() finished\n");
 }

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.88 2002/02/08 02:57:07 chorns Exp $
+/* $Id: thread.c,v 1.89 2002/02/15 14:47:55 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -397,7 +397,6 @@ PsInitThreadManagment(VOID)
    
    PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
 		      THREAD_ALL_ACCESS,NULL, TRUE);
-   HalInitFirstTask(FirstThread);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
    KeGetCurrentKPCR()->CurrentThread = (PVOID)FirstThread;

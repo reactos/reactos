@@ -290,7 +290,7 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     }
 
   /*
-   * Kill the faulting task
+   * Kill the faulting process
    */
   __asm__("sti\n\t");
   ZwTerminateProcess(NtCurrentProcess(), STATUS_NONCONTINUABLE_EXCEPTION);

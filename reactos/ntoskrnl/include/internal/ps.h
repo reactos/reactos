@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.30 2002/01/27 01:11:23 dwelch Exp $
+/* $Id: ps.h,v 1.31 2002/02/15 14:44:13 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -537,14 +537,11 @@ NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
 VOID 
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
-
-VOID HalInitFirstTask(PETHREAD thread);
+NTSTATUS KeReleaseThread(PETHREAD Thread);
 NTSTATUS 
-Ke386InitThread(PKTHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
-VOID HalTaskSwitch(PKTHREAD thread);
+Ke386InitThread(PKTHREAD Thread, PKSTART_ROUTINE fn, PVOID StartContext);
 NTSTATUS 
 Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context);
-NTSTATUS HalReleaseTask(PETHREAD Thread);
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
 VOID PsUnfreezeOtherThread(PETHREAD Thread);

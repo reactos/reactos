@@ -144,16 +144,4 @@ Ke386InitThread(PKTHREAD Thread,
   return(STATUS_SUCCESS);
 }
 
-VOID 
-HalInitFirstTask(PETHREAD thread)
-/*
- * FUNCTION: Called to setup the HAL portion of a thread object for the 
- * initial thread
- */
-{
-}
-
-
-
-
-
+/* EOF */

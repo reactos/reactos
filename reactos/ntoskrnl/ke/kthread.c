@@ -54,10 +54,10 @@ KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG Phy
 }
 
 NTSTATUS 
-HalReleaseTask(PETHREAD Thread)
+KeReleaseThread(PETHREAD Thread)
 /*
  * FUNCTION: Releases the resource allocated for a thread by
- * HalInitTaskWithContext or HalInitTask
+ * KeInitializeThread
  * NOTE: The thread had better not be running when this is called
  */
 {

@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.16 2002/01/23 23:39:25 chorns Exp $
+/* $Id: irq.c,v 1.17 2002/02/15 14:47:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -478,7 +478,7 @@ KeDumpIrqList(VOID)
      {
 	DPRINT("For irq %x ",i);
 	current_entry = isr_table[i].Flink;
-	current = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
 	while (current_entry!=(&isr_table[i]))
 	  {
 	     DPRINT("Isr %x ",current);
@@ -488,7 +488,6 @@ KeDumpIrqList(VOID)
 	DPRINT("\n",0);
      }
 }
-
 
 NTSTATUS STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
@@ -591,19 +590,18 @@ KeInitializeInterrupt(PKINTERRUPT InterruptObject,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 IoConnectInterrupt(PKINTERRUPT* InterruptObject,
-			    PKSERVICE_ROUTINE ServiceRoutine,
-			    PVOID ServiceContext,
-			    PKSPIN_LOCK SpinLock,
-			    ULONG Vector,
-			    KIRQL Irql,
-			    KIRQL SynchronizeIrql,
-			    KINTERRUPT_MODE InterruptMode,
-			    BOOLEAN ShareVector,
-			    KAFFINITY ProcessorEnableMask,
-			    BOOLEAN FloatingSave)
+		   PKSERVICE_ROUTINE ServiceRoutine,
+		   PVOID ServiceContext,
+		   PKSPIN_LOCK SpinLock,
+		   ULONG Vector,
+		   KIRQL Irql,
+		   KIRQL SynchronizeIrql,
+		   KINTERRUPT_MODE InterruptMode,
+		   BOOLEAN ShareVector,
+		   KAFFINITY ProcessorEnableMask,
+		   BOOLEAN FloatingSave)
 /*
  * FUNCTION: Registers a driver's isr to be called when its device interrupts
  * ARGUMENTS:
@@ -699,8 +697,8 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
  *        InterruptObject = isr to release
  */
 {
-   KeDisconnectInterrupt(InterruptObject);
-   ExFreePool(InterruptObject);
+  KeDisconnectInterrupt(InterruptObject);
+  ExFreePool(InterruptObject);
 }
 
 /* EOF */
