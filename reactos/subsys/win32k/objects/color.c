@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.36 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: color.c,v 1.37 2004/04/28 18:38:07 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -167,7 +167,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (NULL != dc)
     {
-      HPALETTE hpal = (dc->w.hPalette) ? dc->w.hPalette : NtGdiGetStockObject(DEFAULT_PALETTE);
+      HPALETTE hpal = dc->w.hPalette;
       palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
       if (!palGDI)
 	{
@@ -538,6 +538,15 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
 
 COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
 {
+#if 1
+   INT index;
+
+   index = COLOR_PaletteLookupPixel(palPalEntry, size, NULL, color, FALSE);
+   return RGB(
+      palPalEntry[index].peRed,
+      palPalEntry[index].peGreen,
+      palPalEntry[index].peBlue);
+#else
   unsigned char spec_type = color >> 24;
   int i;
   PALETTEENTRY *COLOR_sysPal = (PALETTEENTRY*)ReturnSystemPalette();
@@ -559,6 +568,7 @@ COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, 
 
   color &= 0x00ffffff;
   return (0x00ffffff & *(COLORREF*)(COLOR_sysPal + COLOR_PaletteLookupPixel(COLOR_sysPal, 256, NULL, color, FALSE)));
+#endif
 }
 
 int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,

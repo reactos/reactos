@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.32 2004/04/09 20:39:10 navaraf Exp $
+/* $Id: xlate.c,v 1.33 2004/04/28 18:38:07 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -445,9 +445,9 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
             SourcePalGDI = PALETTE_LockPalette(PaletteSource);
             BitMasksFromPal(SourcePalType, SourcePalGDI, &XlateGDI->RedMask,
                &XlateGDI->BlueMask, &XlateGDI->GreenMask);
-            XlateGDI->RedShift = CalculateShift(0xFF0000) - CalculateShift(XlateGDI->RedMask);
+            XlateGDI->RedShift = CalculateShift(0xFF) - CalculateShift(XlateGDI->RedMask);
             XlateGDI->GreenShift = CalculateShift(0xFF00) - CalculateShift(XlateGDI->GreenMask);
-            XlateGDI->BlueShift = CalculateShift(0xFF) - CalculateShift(XlateGDI->BlueMask);
+            XlateGDI->BlueShift = CalculateShift(0xFF0000) - CalculateShift(XlateGDI->BlueMask);
             XlateGDI->BackgroundColor = ShiftAndMask(XlateGDI, BackgroundColor);
             PALETTE_UnlockPalette(PaletteSource);
          }

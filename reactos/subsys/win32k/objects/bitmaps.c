@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.70 2004/04/25 11:34:13 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.71 2004/04/28 18:38:07 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -153,22 +153,10 @@ NtGdiBitBlt(
 	}
 
 	if (DCDest->w.hPalette != 0)
-	{
 		DestPalette = DCDest->w.hPalette;
-	}
-	else
-	{
-		DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
 
 	if (UsesSource && DCSrc->w.hPalette != 0)
-	{
 		SourcePalette = DCSrc->w.hPalette;
-	}
-	else
-	{
-		SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
 
 	PalSourceGDI = PALETTE_LockPalette(SourcePalette);
 	if (NULL == PalSourceGDI)
@@ -319,13 +307,9 @@ NtGdiTransparentBlt(
   
   if(DCDest->w.hPalette)
     DestPalette = DCDest->w.hPalette;
-  else
-    DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
   
   if(DCSrc->w.hPalette)
     SourcePalette = DCSrc->w.hPalette;
-  else
-    SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
   
   if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
   {
@@ -652,8 +636,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		{
 			if ( dc->w.hPalette != 0 )
 				Pal = dc->w.hPalette;
-			else
-				Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
 			PalGDI = PALETTE_LockPalette(Pal);
 			if ( PalGDI )
 			{
@@ -1203,22 +1185,10 @@ NtGdiStretchBlt(
 	}
 
 	if (DCDest->w.hPalette != 0)
-	{
 		DestPalette = DCDest->w.hPalette;
-	}
-	else
-	{
-		DestPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
 
 	if (UsesSource && DCSrc->w.hPalette != 0)
-	{
 		SourcePalette = DCSrc->w.hPalette;
-	}
-	else
-	{
-		SourcePalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-	}
 
 	PalSourceGDI = PALETTE_LockPalette(SourcePalette);
 	if (NULL == PalSourceGDI)

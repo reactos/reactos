@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.132 2004/04/25 20:05:30 weiden Exp $
+/* $Id: dc.c,v 1.133 2004/04/28 18:38:07 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -37,6 +37,7 @@
 #include <win32k/region.h>
 #include <win32k/gdiobj.h>
 #include <win32k/paint.h>
+#include <win32k/color.h>
 #include <win32k/pen.h>
 #include <win32k/text.h>
 #include "../eng/clip.h"
@@ -1102,8 +1103,8 @@ NtGdiGetDCState(HDC  hDC)
   newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
 #if 0
   newdc->w.hDevice          = dc->w.hDevice;
-  newdc->w.hPalette         = dc->w.hPalette;
 #endif
+  newdc->w.hPalette         = dc->w.hPalette;
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
   newdc->w.ROPmode          = dc->w.ROPmode;
@@ -1270,6 +1271,8 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	NtGdiSelectObject( hDC, dcs->w.hPen );
 	NtGdiSetBkColor( hDC, dcs->w.backgroundColor);
 	NtGdiSetTextColor( hDC, dcs->w.textColor);
+
+	NtGdiSelectPalette( hDC, dcs->w.hPalette, FALSE );
 
 #if 0
 	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
@@ -2085,6 +2088,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->w.hFont);
 
+  NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
+
   DC_UnlockDc(hDC);
 
   return  hDC;
@@ -2294,8 +2299,6 @@ IntGetDCColor(HDC hDC, ULONG Object)
   
   if(dc->w.hPalette)
     Pal = dc->w.hPalette;
-  else
-    Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
   
   Result = CLR_INVALID;
   
@@ -2432,8 +2435,6 @@ IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
   
   if(dc->w.hPalette)
     Pal = dc->w.hPalette;
-  else
-    Pal = NtGdiGetStockObject(DEFAULT_PALETTE);
   
   Result = CLR_INVALID;
   
