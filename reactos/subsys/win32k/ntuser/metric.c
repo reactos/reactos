@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.12 2003/08/29 09:29:11 gvg Exp $
+/* $Id: metric.c,v 1.13 2003/09/08 15:08:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -113,6 +113,7 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CXHSCROLL:
     case SM_CYHSCROLL:
       return(16);
+    case SM_CYVTHUMB:
     case SM_CXHTHUMB:
       return(16);
     case SM_CXICON:
@@ -192,7 +193,6 @@ NtUserGetSystemMetrics(ULONG Index)
       return(19);
     case SM_CYSMCAPTION:
       return(16);
-    case SM_CYVTHUMB:
     case SM_DBCSENABLED:
     case SM_DEBUG:
     case SM_MENUDROPALIGNMENT: 

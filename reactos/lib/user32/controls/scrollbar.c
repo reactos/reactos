@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.13 2003/09/08 02:14:20 weiden Exp $
+/* $Id: scrollbar.c,v 1.14 2003/09/08 15:08:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -353,22 +353,6 @@ SCROLL_PtInRectEx( LPRECT lpRect, POINT pt, BOOL vertical )
   return PtInRect( &rect, pt );
 }
 
-/*
-DWORD FASTCALL
-SCROLL_HitTest(HWND hwnd, LONG idObject, POINT Point)
-{
-  RECT WindowRect;
-  
-  GetWindowRect(hwnd, &WindowRect);
-  if (!PtInRect(&WindowRect, Point))
-  {      
-    return(SCROLL_NOWHERE);
-  }
-  
-  return SCROLL_NOWHERE;
-}
-*/
-
 DWORD
 SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
 {
@@ -386,11 +370,13 @@ SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
 
   if ( (bDragging && !SCROLL_PtInRectEx( &sbi.rcScrollBar, pt, vertical )) ||
        (!PtInRect( &sbi.rcScrollBar, pt )) ) return SCROLL_NOWHERE;
-       
+
+  thumbPos = sbi.xyThumbTop;
+  thumbSize = sbi.xyThumbBottom - thumbPos;
+  arrowSize = sbi.dxyLineButton;
 
   if (vertical) 
   {
-    arrowSize = GetSystemMetrics(SM_CYVSCROLL);
     if (pt.y < sbi.rcScrollBar.top + arrowSize) return SCROLL_TOP_ARROW;
     if (pt.y >= sbi.rcScrollBar.bottom - arrowSize) return SCROLL_BOTTOM_ARROW;
     if (!thumbPos) return SCROLL_TOP_RECT;
@@ -400,7 +386,6 @@ SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
   }
   else  /* horizontal */
   {
-    arrowSize = GetSystemMetrics(SM_CXHSCROLL);
     if (pt.x < sbi.rcScrollBar.left + arrowSize) return SCROLL_TOP_ARROW;
     if (pt.x >= sbi.rcScrollBar.right - arrowSize) return SCROLL_BOTTOM_ARROW;
     if (!thumbPos) return SCROLL_TOP_RECT;
@@ -416,13 +401,12 @@ SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserEnableScrollBar(hWnd, wSBflags, wArrows);
 }
 
 
@@ -444,7 +428,9 @@ GetScrollBarInfo(HWND hwnd, LONG idObject, PSCROLLBARINFO psbi)
   RtlCopyMemory(&sbi, psbi, sizeof(SCROLLBARINFO));
   ret = NtUserGetScrollBarInfo (hwnd, idObject, psbi);
   if(ret)
+  {
     RtlCopyMemory(psbi, &sbi, sizeof(SCROLLBARINFO));
+  }
 
   return ret;
 }
@@ -484,13 +470,20 @@ GetScrollRange (HWND hWnd, int nBar, LPINT lpMinPos, LPINT lpMaxPos)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 {
-  UNIMPLEMENTED;
-  return 0;
+  SCROLLINFO si;
+  
+  if(!lpsi)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  RtlCopyMemory(&si, lpsi, lpsi->cbSize);
+  return (int)NtUserSetScrollInfo(hwnd, fnBar, &si, fRedraw);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.11 2003/09/08 02:14:20 weiden Exp $
+/* $Id: scrollbar.c,v 1.12 2003/09/08 15:08:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,6 +51,55 @@
 #define SBRG_SCROLLBOX     3 /* the scroll box */
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
+
+/***********************************************************************
+ *           MulDiv  (copied from kernel32)
+ */
+static INT IntMulDiv(
+  INT nMultiplicand,
+  INT nMultiplier,
+  INT nDivisor)
+{
+#if SIZEOF_LONG_LONG >= 8
+    long long ret;
+
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+         ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      ret = (((long long)nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+    else
+      ret = (((long long)nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+    if ((ret > 2147483647) || (ret < -2147483647)) return -1;
+    return ret;
+#else
+    if (!nDivisor) return -1;
+
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (nDivisor < 0)
+    {
+      nMultiplicand = - nMultiplicand;
+      nDivisor = -nDivisor;
+    }
+
+    /* If the result is positive, we "add" to round. else, we subtract to round. */
+    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
+         ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
+      return ((nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+
+    return ((nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+
+#endif
+}
 
 
 /* FUNCTIONS *****************************************************************/
@@ -113,16 +162,106 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   return vertical;
 }
 
+#define MINTRACKTHUMB (8)
+BOOL FASTCALL
+IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
+{
+  INT xThumb, yThumb, ThumbBox, cxy;
+  switch(idObject)
+  {
+    case SB_HORZ:
+      xThumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
+      cxy = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
+      if(cxy < (2 * xThumb))
+      {
+        xThumb = cxy / 2;
+        psbi->xyThumbTop = 0;
+        psbi->xyThumbBottom = 0;
+      }
+      else
+      {
+        ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CXHTHUMB);
+        cxy -= (2 * xThumb);
+        if(cxy > ThumbBox)
+        {
+          if(psi->nPage)
+          {
+            DbgPrint("cxy = %d, max = %d, min = %d, page = %d\n", cxy, (UINT)psi->nMax, (UINT)psi->nMin, psi->nPage);
+            //ThumbBox = ((UINT)cxy / ((UINT)psi->nMax - (UINT)psi->nMin)) * psi->nPage;
+            ThumbBox = IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1);
+            DbgPrint("ThumbBox = %d\n", ThumbBox);
+          }
+          psbi->xyThumbTop = xThumb;
+          psbi->xyThumbBottom = xThumb + ThumbBox;
+        }
+        else
+        {
+          psbi->xyThumbTop = 0;
+          psbi->xyThumbBottom = 0;
+        }
+      }
+      psbi->dxyLineButton = xThumb;
+      return TRUE;
+    case SB_VERT:
+      yThumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
+      cxy = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
+      if(cxy < (2 * yThumb))
+      {
+        yThumb = cxy / 2;
+        psbi->xyThumbTop = 0;
+        psbi->xyThumbBottom = 0;
+      }
+      else
+      {
+        ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CYVTHUMB);
+        cxy -= (2 * yThumb);
+        if(cxy > ThumbBox)
+        {
+          if(psi->nPage)
+          {
+            //ThumbBox = ((UINT)cxy / ((UINT)psi->nMax - (UINT)psi->nMin)) * psi->nPage;
+            ThumbBox = IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1);
+          }
+          psbi->xyThumbTop = yThumb;
+          psbi->xyThumbBottom = yThumb + ThumbBox;
+        }
+        else
+        {
+          psbi->xyThumbTop = 0;
+          psbi->xyThumbBottom = 0;
+        }
+      }
+      psbi->dxyLineButton = yThumb;
+      return TRUE;
+    case SB_CTL:
+      /* FIXME */
+      return FALSE;
+    default:
+      return FALSE;
+  }
+  return FALSE;
+}
+
 DWORD FASTCALL 
 IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
 {
   PSCROLLBARINFO psbi;
+  LPSCROLLINFO psi;
   LRESULT Result;
   INT i;
 
-  psbi = ExAllocatePool(PagedPool, sizeof(SCROLLBARINFO));
+  psbi = ExAllocatePool(PagedPool, sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO));
   if(!psbi)
     return FALSE;
+    
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(psbi + 1));
+  
+  psi->cbSize = sizeof(LPSCROLLINFO);
+  psi->nMin = 0;
+  psi->nMax = 100;
+  psi->nPage = 0;
+  psi->nPos = 0;
+  psi->nTrackPos = 0;
 
   Result = WinPosGetNonClientSize(Window->Self,
 				  &Window->WindowRect,
@@ -136,12 +275,15 @@ IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
   switch(idObject)
   {
     case SB_HORZ:
+      //psbi->dxyLineButton = NtUserGetSystemMetrics(SM_CXHSCROLL);
       Window->pHScroll = psbi;
       break;
     case SB_VERT:
+      //psbi->dxyLineButton = NtUserGetSystemMetrics(SM_CYVSCROLL);
       Window->pVScroll = psbi;
       break;
     case SB_CTL:
+      /* FIXME - set psbi->dxyLineButton */
       Window->wExtra = psbi;
       break;
     default:
@@ -149,7 +291,8 @@ IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
       return FALSE;
   }
 
-  IntGetScrollBarRect (Window, idObject, &(psbi->rcScrollBar));
+  IntGetScrollBarRect(Window, idObject, &(psbi->rcScrollBar));
+  IntCalculateThumb(Window, idObject, psbi, psi);
 
   return 0;
 }
@@ -237,6 +380,8 @@ STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
   PWINDOW_OBJECT Window;
+  PSCROLLBARINFO sbi;
+  LPSCROLLINFO psi;
   INT Bar;
   
   if(!psbi || (psbi->cbSize != sizeof(SCROLLBARINFO)))
@@ -259,7 +404,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       if(Window->pHScroll)
       {
         Bar = SB_HORZ;
-        memcpy(psbi, Window->pHScroll, sizeof(SCROLLBARINFO));
+        sbi = Window->pHScroll;
         break;
       }
       /* fall through */
@@ -267,7 +412,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       if(Window->pVScroll)
       {
         Bar = SB_VERT;
-        memcpy(psbi, Window->pVScroll, sizeof(SCROLLBARINFO));
+        sbi = Window->pVScroll;
         break;
       }
       /* fall through */
@@ -275,7 +420,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       if(Window->wExtra)
       {
         Bar = SB_CTL;
-        memcpy(psbi, Window->wExtra, sizeof(SCROLLBARINFO));
+        sbi = Window->wExtra;
         break;
       }
       /* fall through */
@@ -284,8 +429,13 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
+  
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(sbi + 1));
 
-  IntGetScrollBarRect (Window, Bar, &(psbi->rcScrollBar));
+  IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
+  IntCalculateThumb(Window, Bar, sbi, psi);
+  
+  memcpy(psbi, sbi, sizeof(SCROLLBARINFO));
 
   IntReleaseWindowObject(Window);
   return TRUE;
@@ -372,7 +522,7 @@ NtUserEnableScrollBar(
   if(InfoH)
     Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
 
-  if(Chg)
+  //if(Chg && (Window->Style & WS_VISIBLE))
     /* FIXME - repaint scrollbars */
 
   IntReleaseWindowObject(Window);
@@ -406,6 +556,17 @@ NtUserSetScrollInfo(
 {
   PWINDOW_OBJECT Window;
   PSCROLLBARINFO Info = NULL;
+  LPSCROLLINFO psi;
+  BOOL Chg = FALSE;
+  UINT Mask;
+  DWORD Ret;
+  
+  if(!lpsi || ((lpsi->cbSize != sizeof(SCROLLINFO)) && 
+               (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
   
   Window = IntGetWindowObject(hwnd);
 
@@ -419,20 +580,66 @@ NtUserSetScrollInfo(
   {
     case SB_HORZ:
       Info = Window->pHScroll;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     case SB_VERT:
       Info = Window->pVScroll;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     case SB_CTL:
       Info = Window->wExtra;
-      break;
+      if(Info)
+        break;
+      /* fall through */
     default:
       IntReleaseWindowObject(Window);
       return 0;
   }
   
+  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
+  
+  if(lpsi->fMask == SIF_ALL)
+    Mask = SIF_DISABLENOSCROLL | SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
+  else
+    Mask = lpsi->fMask;
+  
+  if(Mask & SIF_DISABLENOSCROLL)
+  {
+    /* FIXME */
+  }
+
+  if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
+  {
+    psi->nPage = lpsi->nPage;
+    Chg = TRUE;
+  }
+  
+  if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
+  {
+    psi->nPos = lpsi->nPos;
+    Chg = TRUE;
+  }
+  
+  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
+  {
+    psi->nMin = lpsi->nMin;
+    psi->nMax = lpsi->nMax;
+    Chg = TRUE;
+  }
+  
+  /* FIXME check assigned values */
+  
+  if(fRedraw && Chg && (Window->Style & WS_VISIBLE))
+  {
+    /* FIXME - Redraw */
+  }
+  
+  Ret = psi->nPos;
+  
   IntReleaseWindowObject(Window);
-  return 0;
+  return Ret;
 }
 
 /* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
