@@ -81,7 +81,7 @@ WINE_DLLS = rpcrt4 ole32 oleaut32 oledlg olepro32 olecli olesvr \
             psapi richedit serialui winspool
 
 WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
-             progman uninstaller view wcmd winemine \
+             progman uninstaller view wcmd winefile winemine \
              winver
 
 ifeq ($(ROS_BUILD_WINE),yes)
