@@ -119,7 +119,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 			       NULL,
 			       NULL,
 			       NULL);
-	DPRINT("RegEnumKeyExW() returns %ld\n", lError);
+	TRACE("RegEnumKeyExW() returns %ld\n", lError);
 	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
 	{
 	    TRACE("Key name: %S\n", szKeyName);
@@ -703,7 +703,7 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
     {
-	DPRINT1("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
+	ERR("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
 	return FALSE;
     }
 
