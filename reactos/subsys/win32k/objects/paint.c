@@ -12,7 +12,7 @@ BOOL  W32kGdiFlush(VOID)
   UNIMPLEMENTED;
 }
 
-DWORD GdiGetBatchLimit(VOID)
+DWORD  W32kGdiGetBatchLimit(VOID)
 {
   UNIMPLEMENTED;
 }
@@ -41,75 +41,4 @@ UINT  W32kSetBoundsRect(HDC  hDC,
 {
   UNIMPLEMENTED;
 }
-
-BOOL  W32kAbortPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kBeginPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kCloseFigure(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kEndPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kFillPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kFlattenPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kGetMiterLimit(HDC  hDC, PFLOAT  Limit)
-{
-  UNIMPLEMENTED;
-}
-
-INT  W32kGetPath(HDC  hDC,
-                 PPOINT  Points,
-                 PBYTE  Types,
-                 INT  Size)
-{
-  UNIMPLEMENTED;
-}
-
-HRGN  W32kPathToRegion(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-                  
-BOOL  W32kSetMiterLimit(HDC  hDC,
-                        FLOAT  NewLimit,
-                        PFLOAT  OldLimit)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kStrokeAndFillPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kStrokePath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL  W32kWidenPath(HDC  hDC)
-{
-  UNIMPLEMENTED;
-}
-
 

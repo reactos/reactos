@@ -10,6 +10,7 @@
 #include <win32k/line.h>
 #include <win32k/metafile.h>
 #include <win32k/paint.h>
+#include <win32k/path.h>
 #include <win32k/pen.h>
 #include <win32k/print.h>
 #include <win32k/region.h>
