@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.19 2004/03/11 00:05:00 jimtabor Exp $
+ * $Id: videoprt.c,v 1.20 2004/03/12 23:03:21 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -385,7 +385,7 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
   QUERY_REGISTRY_CALLBACK_CONTEXT Context;
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT("VideoPortGetRegistryParameters ParameterName %S\n", ParameterName);
+  /*DPRINT("VideoPortGetRegistryParameters ParameterName %S\n", ParameterName);*/
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      VIDEO_PORT_DEVICE_EXTENSION,
@@ -457,7 +457,7 @@ VideoPortGetVgaStatus(IN PVOID  HwDeviceExtension,
   return ERROR_INVALID_FUNCTION;    
 }
 
-static BOOLEAN
+static BOOLEAN STDCALL
 VPInterruptRoutine(IN struct _KINTERRUPT *Interrupt,
                    IN PVOID ServiceContext)
 {
@@ -1208,6 +1208,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IrpStack;
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
   PVIDEO_REQUEST_PACKET vrp;
+  BOOLEAN Ret;
 
   DPRINT("VidDispatchDeviceControl\n");
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1223,6 +1224,19 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   vrp->IoControlCode      = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
   DPRINT("- IoControlCode: %x\n", vrp->IoControlCode);
+  DPRINT("InputBuffer %X (InLength %d OutLength %d) Routine %X\n",
+	 Irp->AssociatedIrp.SystemBuffer,
+	 IrpStack->Parameters.DeviceIoControl.InputBufferLength,
+	 IrpStack->Parameters.DeviceIoControl.OutputBufferLength,
+	 DeviceObject->DriverObject->DriverStartIo);
+  {
+    ULONG i;
+    for (i = 0; i < IrpStack->Parameters.DeviceIoControl.InputBufferLength; i++)
+      {
+	DbgPrint("%X ", ((PUCHAR)Irp->AssociatedIrp.SystemBuffer)[i]);
+      }
+    DbgPrint("\n");
+  }
 
   /* We're assuming METHOD_BUFFERED */
   vrp->InputBuffer        = Irp->AssociatedIrp.SystemBuffer;
@@ -1231,7 +1245,8 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
 
   /* Call the Miniport Driver with the VRP */
-  ((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)((PVOID) &DeviceExtension->MiniPortDeviceExtension, (PIRP)vrp);
+  Ret = ((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)((PVOID) &DeviceExtension->MiniPortDeviceExtension, (PIRP)vrp);
+  assert(Ret);
 
   /* Free the VRP */
   ExFreePool(vrp);
