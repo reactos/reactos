@@ -187,21 +187,38 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
 	Size = Sections[i].Misc.VirtualSize;
 	KeDetachProcess();
 	
-	Status = ZwMapViewOfSection(SectionHandle,
-				    ProcessHandle,
-				    (PVOID *)&Base,
-				    0,
-				    Size,
-				    &Offset,
-				    (PULONG)&Size,
-				    0,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Image map view of secion failed (Status %x)\n", Status);
-	     return(Status);
+	if( Offset.u.LowPart )
+	  { // map the section if it is initialized
+	    Status = ZwMapViewOfSection(SectionHandle,
+					ProcessHandle,
+					(PVOID *)&Base,
+					0,
+					Size,
+					&Offset,
+					(PULONG)&Size,
+					0,
+					MEM_COMMIT,
+					PAGE_READWRITE);
+	    if (!NT_SUCCESS(Status))
+	      {
+		DbgPrint("Image map view of secion failed (Status %x)\n", Status);
+		return(Status);
+	      }
 	  }
+	else {
+	  // allocate the section if it is uninitialized
+	  Status = NtAllocateVirtualMemory( ProcessHandle,
+					    (PVOID *)&Base,
+					    0,
+					    &Size,
+					    MEM_COMMIT,
+					    PAGE_READWRITE );
+	  if( !NT_SUCCESS( Status ) )
+	    {
+	      DPRINT1( "Failed to allocate memory for uninitialized section\n" );
+	      return Status;
+	    }
+	}
      }
    
    DPRINT("Returning\n");
