@@ -536,18 +536,6 @@ NtUserEnableMenuItem(
 
 DWORD
 STDCALL
-NtUserEnableScrollBar(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserEndMenu(VOID)
 {
   UNIMPLEMENTED
@@ -1001,18 +989,6 @@ NtUserGetPriorityClipboardFormat(
 
 DWORD
 STDCALL
-NtUserGetScrollBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetSystemMenu(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -1373,23 +1349,6 @@ NtUserSBGetParms(
 
 DWORD
 STDCALL
-NtUserScrollDC(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6)
-
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSendInput(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1591,19 +1550,6 @@ NtUserSetRipFlags(
 
 DWORD
 STDCALL
-NtUserSetScrollInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetSysColors(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1678,18 +1624,6 @@ DWORD
 STDCALL
 NtUserShowCaret(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserShowScrollBar(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

@@ -70,7 +70,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
 	HDC hDC;
-	
+	RECT clr, wir;
+        char spr[100], sir[100];
+
 	switch(msg)
 	{
 	case WM_LBUTTONUP:
@@ -93,6 +95,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  hDC = BeginPaint(hWnd, &ps);
 	  SelectObject(hDC, tf);
 	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
+          GetClientRect(hWnd, &clr);
+          GetWindowRect(hWnd, &wir);
+          sprintf(spr, "%d,%d,%d,%d              ", clr.left, clr.top, clr.right, clr.bottom);
+          sprintf(sir, "%d,%d,%d,%d              ", wir.left, wir.top, wir.right, wir.bottom);
+          TextOut(hDC, 10, 30, spr, 20);
+          TextOut(hDC, 10, 50, sir, 20);
 	  EndPaint(hWnd, &ps);
 	  break;
 	  

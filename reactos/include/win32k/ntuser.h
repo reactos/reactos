@@ -772,10 +772,7 @@ NtUserGetProcessWindowStation(VOID);
 
 DWORD
 STDCALL
-NtUserGetScrollBarInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi);
 
 DWORD
 STDCALL
@@ -1515,10 +1512,7 @@ NtUserShowCaret(
 
 DWORD
 STDCALL
-NtUserShowScrollBar(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow);
 
 BOOL
 STDCALL

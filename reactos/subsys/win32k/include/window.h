@@ -77,6 +77,10 @@ typedef struct _WINDOW_OBJECT
   PDCE Dce;
   /* Property list head.*/
   LIST_ENTRY PropListHead;
+  /* Scrollbar info */
+  PSCROLLBARINFO pHScroll;
+  PSCROLLBARINFO pVScroll;
+  PSCROLLBARINFO wExtra;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */

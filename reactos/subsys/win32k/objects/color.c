@@ -50,6 +50,22 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
+ULONG W32kGetSysColor(int nIndex)
+{
+   PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
+   return RGB(p->peRed, p->peGreen, p->peBlue);
+}
+
+HPEN STDCALL W32kGetSysColorPen(int nIndex)
+{
+  return(W32kCreatePen(PS_SOLID, 1, COLOR_sysPalTemplate[nIndex]));
+}
+
+HBRUSH STDCALL W32kGetSysColorBrush(int nIndex)
+{
+  return(W32kCreateSolidBrush(COLOR_sysPalTemplate[nIndex]));
+}
+
 //forward declarations
 COLORREF COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color );
 

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.15 2002/11/10 18:17:40 chorns Exp $
+/* $Id: defwnd.c,v 1.16 2002/11/24 20:13:43 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -166,7 +166,7 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 	 (ExStyle & WS_EX_DLGMODALFRAME));
 }
 
-static void UserGetInsideRectNC( HWND hwnd, RECT *rect )
+void UserGetInsideRectNC( HWND hwnd, RECT *rect )
 {
   RECT WindowRect;
   ULONG Style;
@@ -411,6 +411,8 @@ UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
     }
 }
 
+void SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar, BOOL arrows, BOOL interior);
+
 VOID
 DefWndDoPaintNC(HWND hWnd, HRGN clip)
 {
@@ -466,7 +468,11 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
 
   /* FIXME: Draw menu bar. */
 
-  /* FIXME: Draw scroll bars. */
+  /* Draw scrollbars */
+  if (Style & WS_VSCROLL)
+      SCROLL_DrawScrollBar(hWnd, hDc, SB_VERT, TRUE, TRUE);
+  if (Style & WS_HSCROLL)
+      SCROLL_DrawScrollBar(hWnd, hDc, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box. */
   
