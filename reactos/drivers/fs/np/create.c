@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.22 2004/07/03 17:40:20 navaraf Exp $
+/* $Id: create.c,v 1.23 2004/10/11 12:37:04 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -18,13 +18,59 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static PNPFS_PIPE
+NpfsFindPipe(PNPFS_DEVICE_EXTENSION DeviceExt,
+	     PUNICODE_STRING PipeName)
+{
+  PLIST_ENTRY CurrentEntry;
+  PNPFS_PIPE Pipe;
+
+  CurrentEntry = DeviceExt->PipeListHead.Flink;
+  while (CurrentEntry != &DeviceExt->PipeListHead)
+    {
+      Pipe = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE, PipeListEntry);
+      if (RtlCompareUnicodeString(PipeName,
+				  &Pipe->PipeName,
+				  TRUE) == 0)
+	{
+	  DPRINT1("<%wZ> = <%wZ>\n", PipeName, &Pipe->PipeName);
+	  return Pipe;
+	}
+
+       CurrentEntry = CurrentEntry->Flink;
+     }
+
+  return NULL;
+}
+
+
+static PNPFS_FCB
+NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
+{
+  PLIST_ENTRY CurrentEntry;
+  PNPFS_FCB ServerFcb;
+
+  CurrentEntry = Pipe->ServerFcbListHead.Flink;
+  while (CurrentEntry != &Pipe->ServerFcbListHead)
+    {
+      ServerFcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
+      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	{
+	  DPRINT("Server found! Fcb %p\n", ServerFcb);
+	  return ServerFcb;
+	}
+      CurrentEntry = CurrentEntry->Flink;
+    }
+
+  return NULL;
+}
+
+
 NTSTATUS STDCALL
 NpfsCreate(
    PDEVICE_OBJECT DeviceObject,
    PIRP Irp)
 {
-   PLIST_ENTRY CurrentEntry;
-   PNPFS_PIPE Current;
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PNPFS_PIPE Pipe;
@@ -43,29 +89,17 @@ NpfsCreate(
    DPRINT("FileName %wZ\n", &FileObject->FileName);
 
    Irp->IoStatus.Information = 0;
-    
+
    /*
     * Step 1. Find the pipe we're trying to open.
     */
 
    KeLockMutex(&DeviceExt->PipeListLock);
-   CurrentEntry = DeviceExt->PipeListHead.Flink;
-   while (CurrentEntry != &DeviceExt->PipeListHead)
+   Pipe = NpfsFindPipe(DeviceExt,
+		       &FileObject->FileName);
+   if (Pipe == NULL)
    {
-      Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE, PipeListEntry);
-      if (RtlCompareUnicodeString(
-             &FileObject->FileName,
-             &Current->PipeName,
-             TRUE) == 0)
-      {
-         break;
-      }
-      CurrentEntry = CurrentEntry->Flink;
-   }
-
-   /* Not found, bail out with error. */
-   if (CurrentEntry == &DeviceExt->PipeListHead)
-   {
+      /* Not found, bail out with error. */
       DPRINT("No pipe found!\n");
       KeUnlockMutex(&DeviceExt->PipeListLock);
       Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -74,9 +108,6 @@ NpfsCreate(
    }
 
    KeUnlockMutex(&DeviceExt->PipeListLock);
-
-   /* Save the pipe we found for later use. */
-   Pipe = Current;
 
    /*
     * Step 2. Search for listening server FCB.
@@ -88,21 +119,10 @@ NpfsCreate(
     */
    KeLockMutex(&Pipe->FcbListLock);
 
-   CurrentEntry = Pipe->ServerFcbListHead.Flink;
-   while (CurrentEntry != &Pipe->ServerFcbListHead)
+   ServerFcb = NpfsFindListeningServerInstance(Pipe);
+   if (ServerFcb == NULL)
    {
-      ServerFcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
-      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
-      {
-         DPRINT("Server found! Fcb %p\n", ServerFcb);
-         break;
-      }
-      CurrentEntry = CurrentEntry->Flink;
-   }
-
-   /* Not found, bail out with error for FILE_OPEN requests. */
-   if (CurrentEntry == &Pipe->ServerFcbListHead)
-   {
+      /* Not found, bail out with error for FILE_OPEN requests. */
       DPRINT("No server fcb found!\n");
       if (Disposition == FILE_OPEN)
       {
@@ -111,7 +131,6 @@ NpfsCreate(
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          return STATUS_PIPE_BUSY;
       }
-      ServerFcb = NULL;
    }
 
    /*
@@ -188,7 +207,7 @@ NpfsCreate(
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
    DPRINT("Success!\n");
-   
+
    return STATUS_SUCCESS;
 }
 
@@ -463,11 +482,12 @@ NpfsClose(
       /* FIXME: Clean up existing connections here ?? */
       DPRINT("Server\n");
       Pipe->CurrentInstances--;
-   } else
+   }
+   else
    {
       DPRINT("Client\n");
    }
-  
+
    if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
    {
       if (Fcb->OtherSide)
@@ -482,6 +502,7 @@ NpfsClose(
           */
          KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
       }
+
 #ifndef FIN_WORKAROUND_READCLOSE
       Fcb->PipeState = 0;
 #endif
@@ -507,9 +528,11 @@ NpfsClose(
             ExFreePool(Fcb->OtherSide->Data);
 	 ExFreePool(Fcb->OtherSide);
       }
+
       RemoveEntryList(&Fcb->FcbListEntry);
       if (Fcb->Data)
          ExFreePool(Fcb->Data);
+
       ExFreePool(Fcb);
    }
 #endif
