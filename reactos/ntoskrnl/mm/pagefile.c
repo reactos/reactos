@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.33 2003/07/21 21:53:53 royce Exp $
+/* $Id: pagefile.c,v 1.34 2003/08/10 20:03:10 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -581,6 +581,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    ULONG BytesPerAllocationUnit;
    LARGE_INTEGER Vcn;
    ULONG ExtentCount;
+   ULONG MaxVcn;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
 	  FileName, InitialSize->QuadPart);
@@ -627,7 +628,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      }
    
    BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit * FsSizeInformation.BytesPerSector;
-   if (BytesPerAllocationUnit < PAGE_SIZE)
+   if (BytesPerAllocationUnit % PAGE_SIZE)
      {
        NtClose(FileHandle);
        return STATUS_UNSUCCESSFUL;
@@ -667,6 +668,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    Vcn.QuadPart = 0LL;
    ExtentCount = 0;
+   MaxVcn = (InitialSize->QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit;
    while(1)
      {
        Status = NtFsControlFile(FileHandle,
@@ -687,7 +689,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
            return(Status);
          }
        ExtentCount += RetrievalPointers->NumberOfPairs;
-       if (RetrievalPointers->Pair[0].Vcn < (ULONGLONG) InitialSize->QuadPart / BytesPerAllocationUnit)
+       if ((ULONG)RetrievalPointers->Pair[0].Vcn < MaxVcn)
          {
            Vcn.QuadPart = RetrievalPointers->Pair[0].Vcn;
          }
@@ -759,8 +761,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      }
 
    if (PagingFile->RetrievalPointers->NumberOfPairs != ExtentCount || 
-       PagingFile->RetrievalPointers->Pair[ExtentCount - 1].Vcn !=
-       (ULONGLONG) InitialSize->QuadPart / BytesPerAllocationUnit)
+       (ULONG)PagingFile->RetrievalPointers->Pair[ExtentCount - 1].Vcn != MaxVcn)
      {
        ExFreePool(PagingFile->RetrievalPointers);
        ExFreePool(PagingFile->AllocMap);
