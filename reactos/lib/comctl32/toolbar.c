@@ -3494,6 +3494,8 @@ TOOLBAR_GetStyle (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     INT nIndex;
 
+    if (wParam == 0) return GetWindowLongW(hwnd, GWL_STYLE);
+
     nIndex = TOOLBAR_GetButtonIndex (infoPtr, (INT)wParam, FALSE);
     if (nIndex == -1)
 	return -1;
