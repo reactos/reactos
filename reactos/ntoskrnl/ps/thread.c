@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.46 2000/05/13 13:51:08 dwelch Exp $
+/* $Id: thread.c,v 1.47 2000/06/03 21:36:32 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -36,7 +36,7 @@
 
 /* GLOBALS ******************************************************************/
 
-POBJECT_TYPE PsThreadType = NULL;
+POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
 #define NR_THREAD_PRIORITY_LEVELS (32)
 #define THREAD_PRIORITY_MAX (15)
@@ -116,7 +116,7 @@ PETHREAD PsGetCurrentThread(VOID)
    return(CurrentThread);
 }
 
-HANDLE PsGetCurrentThreadId(VOID)
+HANDLE STDCALL PsGetCurrentThreadId(VOID)
 {
    return(CurrentThread->Cid.UniqueThread);
 }

@@ -3,12 +3,9 @@
 
 #include <internal/hal.h>
 
-extern PEPROCESS SystemProcess;
 extern HANDLE SystemProcessHandle;
 
 /* ntoskrnl/ps/thread.c */
-extern POBJECT_TYPE	PsThreadType;
-extern POBJECT_TYPE	PsProcessType;
 extern PETHREAD		CurrentThread;
 
 VOID PiInitProcessManager(VOID);

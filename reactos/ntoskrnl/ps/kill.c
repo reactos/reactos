@@ -255,7 +255,7 @@ NTSTATUS STDCALL NtTerminateThread(IN	HANDLE		ThreadHandle,
 }
 
 
-NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
+NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminates the current thread
  * ARGUMENTS:

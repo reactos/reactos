@@ -68,7 +68,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
 typedef struct _PEB_LDR_DATA
 {
    ULONG Length;
-   UCHAR Initialized;
+   BOOLEAN Initialized;
    PVOID SsHandle;
    LIST_ENTRY InLoadOrderModuleList;
    LIST_ENTRY InMemoryOrderModuleList;

@@ -316,4 +316,14 @@ typedef struct _EPROCESS
 #define MAXIMUM_PRIORITY (32)
 
 
+#ifdef __NTOSKRNL__
+extern PEPROCESS EXPORTED PsInitialSystemProcess;
+extern POBJECT_TYPE EXPORTED PsProcessType;
+extern POBJECT_TYPE EXPORTED PsThreadType;
+#else
+extern PEPROCESS IMPORTED PsInitialSystemProcess;
+extern POBJECT_TYPE IMPORTED PsProcessType;
+extern POBJECT_TYPE IMPORTED PsThreadType;
+#endif
+
 #endif /* __INCLUDE_DDK_PSTYPES_H */

@@ -3,7 +3,6 @@
 
 #include <internal/hal.h>
 
-extern EPROCESS SystemProcess;
 extern HANDLE SystemProcessHandle;
 
 void PsInitThreadManagment(void);

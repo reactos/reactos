@@ -4,6 +4,11 @@
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
 
+#ifdef __NTOSKRNL__
+extern ULONG EXPORTED NtBuildNumber;
+#else
+extern ULONG IMPORTED NtBuildNumber;
+#endif
 
 
 // event access mask

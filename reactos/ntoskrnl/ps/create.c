@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 2000/05/13 13:51:07 dwelch Exp $
+/* $Id: create.c,v 1.16 2000/06/03 21:36:32 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -43,8 +43,10 @@ extern LIST_ENTRY PiThreadListHead;
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS PsAssignImpersonationToken(PETHREAD Thread,
-				    HANDLE TokenHandle)
+NTSTATUS
+STDCALL
+PsAssignImpersonationToken(PETHREAD Thread,
+			   HANDLE TokenHandle)
 {
    PACCESS_TOKEN Token;
    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
@@ -82,7 +84,7 @@ NTSTATUS PsAssignImpersonationToken(PETHREAD Thread,
    return(STATUS_SUCCESS);
 }
 
-VOID PsRevertToSelf(PETHREAD Thread)
+VOID STDCALL PsRevertToSelf(PETHREAD Thread)
 {
    if (Thread->ActiveImpersonationInfo != 0)
      {
@@ -91,11 +93,11 @@ VOID PsRevertToSelf(PETHREAD Thread)
      }
 }
 
-VOID PsImpersonateClient(PETHREAD Thread,
-			 PACCESS_TOKEN Token,
-			 UCHAR b,
-			 UCHAR c,
-			 SECURITY_IMPERSONATION_LEVEL Level)
+VOID STDCALL PsImpersonateClient(PETHREAD Thread,
+				 PACCESS_TOKEN Token,
+				 UCHAR b,
+				 UCHAR c,
+				 SECURITY_IMPERSONATION_LEVEL Level)
 {
    if (Token == 0)
      {
@@ -230,11 +232,11 @@ NTSTATUS STDCALL NtOpenThreadToken(IN	HANDLE		ThreadHandle,
    return(STATUS_UNSUCCESSFUL);
 }
 
-PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
-					    PULONG Unknown1,
-					    PULONG Unknown2,
-					    SECURITY_IMPERSONATION_LEVEL* 
-					    Level)
+PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(PETHREAD Thread,
+						    PULONG Unknown1,
+						    PULONG Unknown2,
+						    SECURITY_IMPERSONATION_LEVEL* 
+						    Level)
 {
    if (Thread->ActiveImpersonationInfo == 0)
      {
@@ -339,7 +341,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
      }
    else
      {
-	Process = SystemProcess;
+	Process = PsInitialSystemProcess;
 	ObReferenceObjectByPointer(Process,
 				   PROCESS_CREATE_THREAD,
 				   PsProcessType,
@@ -584,13 +586,13 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
 }
 
 
-NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
-			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      HANDLE ProcessHandle,
-			      PCLIENT_ID ClientId,
-			      PKSTART_ROUTINE StartRoutine,
-			      PVOID StartContext)
+NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
+				      ACCESS_MASK DesiredAccess,
+				      POBJECT_ATTRIBUTES ObjectAttributes,
+				      HANDLE ProcessHandle,
+				      PCLIENT_ID ClientId,
+				      PKSTART_ROUTINE StartRoutine,
+				      PVOID StartContext)
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
  * ARGUMENTS:

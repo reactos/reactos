@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.42 2000/05/14 09:34:14 ea Exp $
+/* $Id: process.c,v 1.43 2000/06/03 21:36:32 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,10 +30,10 @@
 
 /* GLOBALS ******************************************************************/
 
-PEPROCESS SystemProcess = NULL;
+PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 HANDLE SystemProcessHandle = NULL;
 
-POBJECT_TYPE PsProcessType = NULL;
+POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
 static LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
@@ -63,7 +63,7 @@ NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
    return(Status);
 }
 
-PACCESS_TOKEN PsReferencePrimaryToken(PEPROCESS Process)
+PACCESS_TOKEN STDCALL PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,
 			      GENERIC_ALL,
@@ -108,7 +108,7 @@ VOID PiKillMostProcesses(VOID)
 				    Pcb.ProcessListEntry);
 	current_entry = current_entry->Flink;
 	
-	if (current->UniqueProcessId != SystemProcess->UniqueProcessId &&
+	if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
 	    current->UniqueProcessId != (ULONG)PsGetCurrentProcessId())
 	  {
 	     PiTerminateProcess(current, STATUS_SUCCESS);
@@ -155,22 +155,22 @@ VOID PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   SystemProcess = ObCreateObject(NULL,
-				  PROCESS_ALL_ACCESS,
-				  NULL,
-				  PsProcessType);
-   SystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
-   KeInitializeDispatcherHeader(&SystemProcess->Pcb.DispatcherHeader,
+   PsInitialSystemProcess = ObCreateObject(NULL,
+					   PROCESS_ALL_ACCESS,
+					   NULL,
+					   PsProcessType);
+   PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
+   KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),
 				FALSE);
-   KProcess = &SystemProcess->Pcb;  
+   KProcess = &PsInitialSystemProcess->Pcb;
    
-   MmInitializeAddressSpace(SystemProcess, 
-			    &SystemProcess->Pcb.AddressSpace);
-   ObCreateHandleTable(NULL,FALSE,SystemProcess);
+   MmInitializeAddressSpace(PsInitialSystemProcess,
+			    &PsInitialSystemProcess->Pcb.AddressSpace);
+   ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
-   SystemProcess->UniqueProcessId = 
+   PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
@@ -178,10 +178,10 @@ VOID PsInitProcessManagment(VOID)
    InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
-   strcpy(SystemProcess->ImageFileName, "SYSTEM");
+   strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
    
-   ObCreateHandle(SystemProcess,
-		  SystemProcess,
+   ObCreateHandle(PsInitialSystemProcess,
+		  PsInitialSystemProcess,
 		  PROCESS_ALL_ACCESS,
 		  FALSE,
 		  &SystemProcessHandle);
@@ -249,7 +249,7 @@ PKPROCESS KeGetCurrentProcess(VOID)
    return(&(PsGetCurrentProcess()->Pcb));
 }
 
-HANDLE PsGetCurrentProcessId(VOID)
+HANDLE STDCALL PsGetCurrentProcessId(VOID)
 {
    return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
@@ -262,7 +262,7 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
    if (PsGetCurrentThread() == NULL || 
        PsGetCurrentThread()->ThreadsProcess == NULL)
      {
-	return(SystemProcess);
+	return(PsInitialSystemProcess);
      }
    else
      {
