@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.50 2004/02/22 23:40:58 gvg Exp $
+/* $Id: menu.c,v 1.51 2004/02/23 20:10:01 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -238,6 +238,7 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
           ItemInfo->cch = 0;
         }
       ItemInfo->fType = 0;
+      return FALSE;
     }
 
   if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType))
@@ -2241,7 +2242,7 @@ MenuButtonDown(MTRACKER* Mt, HMENU PtMenu, UINT Flags)
           Index = NtUserMenuItemFromPoint(Mt->OwnerWnd, PtMenu, Mt->Pt.x, Mt->Pt.y);
         }
       MenuInitRosMenuItemInfo(&Item);
-      if (Index < 0 || ! MenuGetRosMenuItemInfo(PtMenu, Index, &Item))
+      if (NO_SELECTED_ITEM == Index || ! MenuGetRosMenuItemInfo(PtMenu, Index, &Item))
         {
           MenuCleanupRosMenuItemInfo(&Item);
           return FALSE;
@@ -2809,7 +2810,8 @@ MenuKeyLeft(MTRACKER* Mt, UINT Flags)
           /* A sublevel menu was displayed - display the next one
            * unless there is another displacement coming up */
 
-          if (! MenuSuspendPopup(Mt, WM_KEYDOWN))
+          if (! MenuSuspendPopup(Mt, WM_KEYDOWN)
+              && MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu))
             {
               Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &TopMenuInfo,
                                                  TRUE, Flags);
@@ -2891,7 +2893,8 @@ MenuKeyRight(MTRACKER *Mt, UINT Flags)
 
       if (NULL != MenuTmp || 0 != (Mt->TrackFlags & TF_SUSPENDPOPUP))
         {
-          if (! MenuSuspendPopup(Mt, WM_KEYDOWN))
+          if (! MenuSuspendPopup(Mt, WM_KEYDOWN)
+              && MenuGetRosMenuInfo(&MenuInfo, Mt->TopMenu))
             {
               Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &MenuInfo,
                                                  TRUE, Flags);
