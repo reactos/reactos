@@ -2818,7 +2818,7 @@ VOID
 TOOLTIPS_Unregister (void)
 {
     int i;
-    for (i = 0; i < TTI_ERROR+1; i++)
-        DeleteObject(hTooltipIcons[i]);
+    for (i = TTI_INFO; i <= TTI_ERROR; i++)
+        DestroyIcon(hTooltipIcons[i]);
     UnregisterClassW (TOOLTIPS_CLASSW, NULL);
 }
