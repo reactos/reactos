@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.23 2001/06/22 12:39:48 ekohl Exp $
+/* $Id: ntddk.h,v 1.24 2001/07/06 21:31:30 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,12 +19,8 @@ extern "C"
 
 /* INCLUDES ***************************************************************/
 
-/* GCC can not handle __fastcall */
-//#ifdef USE_FASTCALL
-//#define FASTCALL __attribute__((fastcall))
-//#else
-#define FASTCALL STDCALL
-//#endif
+#define FASTCALL  __attribute__((fastcall))
+
 #define STATIC static
 
 #include <ntos/types.h>

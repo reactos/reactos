@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.109 2001/07/04 20:40:20 chorns Exp $
+; $Id: ntoskrnl.def,v 1.110 2001/07/06 21:30:59 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -15,7 +15,7 @@ DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols@12
 DbgPrint
 DbgPrompt@12
-ExAcquireFastMutexUnsafe@4
+@ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
@@ -47,11 +47,9 @@ ExInitializeResource@4
 ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
-;@ExInterlockedAddLargeStatistic@8
-ExInterlockedAddLargeStatistic@8
+@ExInterlockedAddLargeStatistic@8
 ExInterlockedAddUlong@12
-;@ExInterlockedCompareExchange64@16
-ExInterlockedCompareExchange64@16
+@ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
@@ -59,9 +57,9 @@ ExInterlockedIncrementLong@8
 ExInterlockedInsertHeadList@12
 ExInterlockedInsertTailList@12
 ExInterlockedPopEntryList@8
-ExInterlockedPopEntrySList@8
+@ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList@12
-ExInterlockedPushEntrySList@12
+@ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
@@ -78,25 +76,25 @@ ExRaiseDatatypeMisalignment@0
 ExRaiseStatus@4
 ExRegisterCallback@12
 ExReinitializeResourceLite@4
-ExReleaseFastMutexUnsafe@4
+@ExReleaseFastMutexUnsafe@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
-ExReleaseResourceLite@4
+@ExReleaseResourceLite@4
 ExSetResourceOwnerPointer@8
 ;ExSystemExceptionFilter
 ExSystemTimeToLocalTime@8
 ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback@4
 ExWindowStationObjectType DATA
-;ExfInterlockedAddUlong
-;ExfInterlockedInsertHeadList
-;ExfInterlockedInsertTailList
-;ExfInterlockedPopEntryList
-;ExfInterlockedPushEntryList
-;ExfInterlockedRemoveHeadList
-;Exfi386InterlockedDecrementLong
-;Exfi386InterlockedExchangeUlong
-;Exfi386InterlockedIncrementLong
+;@ExfInterlockedAddUlong
+;@ExfInterlockedInsertHeadList
+;@ExfInterlockedInsertTailList
+;@ExfInterlockedPopEntryList
+;@ExfInterlockedPushEntryList
+;@ExfInterlockedRemoveHeadList
+;@Exfi386InterlockedDecrementLong
+;@Exfi386InterlockedExchangeUlong
+;@Exfi386InterlockedIncrementLong
 ;Exi386InterlockedDecrementLong
 ;Exi386InterlockedExchangeUlong
 ;Exi386InterlockedIncrementLong
@@ -186,16 +184,11 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 HalDispatchTable DATA
 HalPrivateDispatchTable DATA
-;@InterlockedCompareExchange@12
-InterlockedCompareExchange@12
-;@InterlockedDecrement@4
-InterlockedDecrement@4
-;@InterlockedExchange@8
-InterlockedExchange@8
-;@InterlockedExchangeAdd@8
-InterlockedExchangeAdd@8
-;@InterlockedIncrement@4
-InterlockedIncrement@4
+@InterlockedCompareExchange@12
+@InterlockedDecrement@4
+@InterlockedExchange@8
+@InterlockedExchangeAdd@8
+@InterlockedIncrement@4
 IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -302,10 +295,8 @@ IoVerifyVolume@8
 IoWriteErrorLogEntry@4
 IoWriteOperationCount DATA
 IoWriteTransferCount DATA
-;@IofCallDriver@8
-IofCallDriver@8
-;@IofCompleteRequest@8
-IofCompleteRequest@8
+@IofCallDriver@8
+@IofCompleteRequest@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn@0
@@ -405,13 +396,13 @@ KeSetImportanceDpc@8
 ;KeSetKernelStackSwapEnable
 KeSetPriorityThread@8
 ;KeSetProfileIrql
-;KeSetSwapContextNotifyRoutine
+;@KeSetSwapContextNotifyRoutine
 KeSetTargetProcessorDpc@8
-;KeSetThreadSelectNotifyRoutine
+;@KeSetThreadSelectNotifyRoutine
 ;KeSetTimeIncrement
 KeSetTimer@16
 KeSetTimerEx@20
-;KeSetTimeUpdateNotifyRoutine
+;@KeSetTimeUpdateNotifyRoutine
 KeSynchronizeExecution@12
 ;KeTerminateThread
 ;KeTickCount DATA
@@ -420,16 +411,16 @@ KeSynchronizeExecution@12
 KeWaitForMultipleObjects@32
 KeWaitForMutexObject@20
 KeWaitForSingleObject@20
-;KefAcquireSpinLockAtDpcLevel
-;KefReleaseSpinLockFromDpcLevel
+;@KefAcquireSpinLockAtDpcLevel
+;@KefReleaseSpinLockFromDpcLevel
 ;Kei386EoiHelper
-;KiAcquireSpinLock@4
+;@KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 ;KiCoprocessorError@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
 ;KiIpiServiceRoutine@8
-;KiReleaseSpinLock@4
+;@KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
 LdrAccessResource@16
@@ -560,8 +551,8 @@ ObOpenObjectByName@28
 ObOpenObjectByPointer@28
 ;ObQueryNameString@16
 ;ObQueryObjectAuditingByHandle@8
-ObfDereferenceObject@4
-ObfReferenceObject@4
+@ObfDereferenceObject@4
+@ObfReferenceObject@4
 ObReferenceObjectByHandle@24
 ObReferenceObjectByName@32
 ObReferenceObjectByPointer@16
@@ -1012,9 +1003,9 @@ wctomb
 ; exports from hal.dll
 ;
 ;
-ExAcquireFastMutex@4
-ExReleaseFastMutex@4
-ExTryToAcquireFastMutex@4
+@ExAcquireFastMutex@4
+@ExReleaseFastMutex@4
+@ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
@@ -1025,7 +1016,6 @@ HalAssignSlotResources@32
 HalBeginSystemInterrupt@12
 HalCalibratePerformanceCounter@4
 ;@HalClearSoftwareInterrupt@4
-;HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12
@@ -1048,7 +1038,6 @@ HalReadDmaCounter@4
 HalReportResourceUsage@0
 HalRequestIpi@4
 ;@HalRequestSoftwareInterrupt@4
-;HalRequestSoftwareInterrupt@4
 HalReturnToFirmware@4
 HalSetBusData@20
 HalSetBusDataByOffset@24
@@ -1060,7 +1049,7 @@ HalSetRealTimeClock@4
 HalStartNextProcessor@8
 ;HalStartProfileInterrupt@4
 ;HalStopProfileInterrupt@4
-HalSystemVectorDispatchEntry@12
+@HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress@24
 IoAssignDriveLetters@16
 IoFlushAdapterBuffers@24
@@ -1099,8 +1088,7 @@ KdPortPutByte@4
 KdPortRestore@0
 KdPortSave@0
 KeAcquireSpinLock@8
-;@KeAcquireSpinLockRaiseToSynch@4
-KeAcquireSpinLockRaiseToSynch@4
+@KeAcquireSpinLockRaiseToSynch@4
 KeFlushWriteBuffer@0
 KeGetCurrentIrql@0
 KeLowerIrql@4
@@ -1110,14 +1098,10 @@ KeRaiseIrqlToDpcLevel@0
 KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock@8
 KeStallExecutionProcessor@4
-;@KfAcquireSpinLock@4
-KfAcquireSpinLock@4
-;@KfLowerIrql@4
-KfLowerIrql@4
-;@KfRaiseIrql@4
-KfRaiseIrql@4
-;@KfReleaseSpinLock@8
-KfReleaseSpinLock@8
+@KfAcquireSpinLock@4
+@KfLowerIrql@4
+@KfRaiseIrql@4
+@KfReleaseSpinLock@8
 READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT@12

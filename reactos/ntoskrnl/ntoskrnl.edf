@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.95 2001/06/16 14:05:29 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.96 2001/07/06 21:30:59 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -15,7 +15,7 @@ DbgBreakPointWithStatus=DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols=DbgLoadImageSymbols@12
 DbgPrint
 DbgPrompt=DbgPrompt@12
-ExAcquireFastMutexUnsafe=ExAcquireFastMutexUnsafe@4
+ExAcquireFastMutexUnsafe=@ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive=ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite=ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite=ExAcquireResourceSharedLite@8
@@ -47,11 +47,9 @@ ExInitializeResource=ExInitializeResource@4
 ExInitializeResourceLite=ExInitializeResourceLite@4
 ExInitializeZone=ExInitializeZone@16
 ExInterlockedAddLargeInteger=ExInterlockedAddLargeInteger@16
-;ExInterlockedAddLargeStatistic=@ExInterlockedAddLargeStatistic@8
-ExInterlockedAddLargeStatistic=ExInterlockedAddLargeStatistic@8
+ExInterlockedAddLargeStatistic=@ExInterlockedAddLargeStatistic@8
 ExInterlockedAddUlong=ExInterlockedAddUlong@12
-;ExInterlockedCompareExchange64=@ExInterlockedCompareExchange64@16
-ExInterlockedCompareExchange64=ExInterlockedCompareExchange64@16
+ExInterlockedCompareExchange64=@ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong=ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong=ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone=ExInterlockedExtendZone@16
@@ -59,9 +57,9 @@ ExInterlockedIncrementLong=ExInterlockedIncrementLong@8
 ExInterlockedInsertHeadList=ExInterlockedInsertHeadList@12
 ExInterlockedInsertTailList=ExInterlockedInsertTailList@12
 ExInterlockedPopEntryList=ExInterlockedPopEntryList@8
-ExInterlockedPopEntrySList=ExInterlockedPopEntrySList@8
+ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
 ExInterlockedPushEntryList=ExInterlockedPushEntryList@12
-ExInterlockedPushEntrySList=ExInterlockedPushEntrySList@12
+ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
 ExInterlockedRemoveHeadList=ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent=ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite=ExIsResourceAcquiredExclusiveLite@4
@@ -78,10 +76,10 @@ ExRaiseDatatypeMisalignment=ExRaiseDatatypeMisalignment@0
 ExRaiseStatus=ExRaiseStatus@4
 ExRegisterCallback=ExRegisterCallback@12
 ExReinitializeResourceLite=ExReinitializeResourceLite@4
-ExReleaseFastMutexUnsafe=ExReleaseFastMutexUnsafe@4
+ExReleaseFastMutexUnsafe=@ExReleaseFastMutexUnsafe@4
 ExReleaseResourceForThread=ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite=ExReleaseResourceForThreadLite@8
-ExReleaseResourceLite=ExReleaseResourceLite@4
+ExReleaseResourceLite=@ExReleaseResourceLite@4
 ExSetResourceOwnerPointer=ExSetResourceOwnerPointer@8
 ;ExSystemExceptionFilter
 ExSystemTimeToLocalTime=ExSystemTimeToLocalTime@8
@@ -186,16 +184,11 @@ FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
 HalDispatchTable DATA
 HalPrivateDispatchTable DATA
-;InterlockedCompareExchange=@InterlockedCompareExchange@12
-InterlockedCompareExchange=InterlockedCompareExchange@12
-;InterlockedDecrement=@InterlockedDecrement@4
-InterlockedDecrement=InterlockedDecrement@4
-;InterlockedExchange=@InterlockedExchange@8
-InterlockedExchange=InterlockedExchange@8
-;InterlockedExchangeAdd=@InterlockedExchangeAdd@8
-InterlockedExchangeAdd=InterlockedExchangeAdd@8
-;InterlockedIncrement=@InterlockedIncrement@4
-InterlockedIncrement=InterlockedIncrement@4
+InterlockedCompareExchange=@InterlockedCompareExchange@12
+InterlockedDecrement=@InterlockedDecrement@4
+InterlockedExchange=@InterlockedExchange@8
+InterlockedExchangeAdd=@InterlockedExchangeAdd@8
+InterlockedIncrement=@InterlockedIncrement@4
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
@@ -302,10 +295,8 @@ IoVerifyVolume=IoVerifyVolume@8
 IoWriteErrorLogEntry=IoWriteErrorLogEntry@4
 IoWriteOperationCount DATA
 IoWriteTransferCount DATA
-;IofCallDriver=@IofCallDriver@0
-IofCallDriver=IofCallDriver@8
-;IofCompleteRequest=@IofCompleteRequest@0
-IofCompleteRequest=IofCompleteRequest@8
+IofCallDriver=@IofCallDriver@8
+IofCompleteRequest=@IofCompleteRequest@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
@@ -560,8 +551,8 @@ ObOpenObjectByName=ObOpenObjectByName@28
 ObOpenObjectByPointer=ObOpenObjectByPointer@28
 ;ObQueryNameString=ObQueryNameString@16
 ;ObQueryObjectAuditingByHandle=ObQueryObjectAuditingByHandle@8
-ObfDereferenceObject=ObfDereferenceObject@4
-ObfReferenceObject=ObfReferenceObject@4
+ObfDereferenceObject=@ObfDereferenceObject@4
+ObfReferenceObject=@ObfReferenceObject@4
 ObReferenceObjectByHandle=ObReferenceObjectByHandle@24
 ObReferenceObjectByName=ObReferenceObjectByName@32
 ObReferenceObjectByPointer=ObReferenceObjectByPointer@16
@@ -1010,9 +1001,9 @@ wctomb
 ; exports from hal.dll
 ;
 ;
-ExAcquireFastMutex=ExAcquireFastMutex@4
-ExReleaseFastMutex=ExReleaseFastMutex@4
-ExTryToAcquireFastMutex=ExTryToAcquireFastMutex@4
+ExAcquireFastMutex=@ExAcquireFastMutex@4
+ExReleaseFastMutex=@ExReleaseFastMutex@4
+ExTryToAcquireFastMutex=@ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
 HalAdjustResourceList=HalAdjustResourceList@4
 HalAllProcessorsStarted=HalAllProcessorsStarted@0
@@ -1023,7 +1014,6 @@ HalAssignSlotResource=HalAssignSlotResources@32
 HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
 HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
 ;HalClearSoftwareInterrupt=@HalClearSoftwareInterrupt@4
-;HalClearSoftwareInterrupt=HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
 HalDisplayString=HalDisplayString@4
 HalEnableSystemInterrupt=HalEnableSystemInterrupt@12
@@ -1046,7 +1036,6 @@ HalReadDmaCounter=HalReadDmaCounter@4
 HalReportResourceUsage=HalReportResourceUsage@0
 HalRequestIpi=HalRequestIpi@4
 ;HalRequestSoftwareInterrupt=@HalRequestSoftwareInterrupt@4
-;HalRequestSoftwareInterrupt=HalRequestSoftwareInterrupt@4
 HalReturnToFirmware=HalReturnToFirmware@4
 HalSetBusData=HalSetBusData@20
 HalSetBusDataByOffset=HalSetBusDataByOffset@24
@@ -1058,8 +1047,7 @@ HalSetRealTimeClock=HalSetRealTimeClock@4
 HalStartNextProcessor=HalStartNextProcessor@8
 ;HalStartProfileInterrupt=HalStartProfileInterrupt@4
 ;HalStopProfileInterrupt=HalStopProfileInterrupt@4
-;HalSystemVectorDispatchEntry=@HalSystemVectorDispatchEntry@12
-HalSystemVectorDispatchEntry=HalSystemVectorDispatchEntry@12
+HalSystemVectorDispatchEntry=@HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress=HalTranslateBusAddress@24
 IoAssignDriveLetters=IoAssignDriveLetters@16
 IoFlushAdapterBuffers=IoFlushAdapterBuffers@24
@@ -1098,8 +1086,7 @@ KdPortPutByte=KdPortPutByte@4
 KdPortRestore=KdPortRestore@0
 KdPortSave=KdPortSave@0
 KeAcquireSpinLock=KeAcquireSpinLock@8
-;KeAcquireSpinLockRaiseToSynch=@KeAcquireSpinLockRaiseToSynch@4
-KeAcquireSpinLockRaiseToSynch=KeAcquireSpinLockRaiseToSynch@4
+KeAcquireSpinLockRaiseToSynch=@KeAcquireSpinLockRaiseToSynch@4
 KeFlushWriteBuffer=KeFlushWriteBuffer@0
 KeGetCurrentIrql=KeGetCurrentIrql@0
 KeLowerIrql=KeLowerIrql@4
@@ -1109,14 +1096,10 @@ KeRaiseIrqlToDpcLevel=KeRaiseIrqlToDpcLevel@0
 KeRaiseIrqlToSynchLevel=KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock=KeReleaseSpinLock@8
 KeStallExecutionProcessor=KeStallExecutionProcessor@4
-;KfAcquireSpinLock=@KfAcquireSpinLock@4
-KfAcquireSpinLock=KfAcquireSpinLock@4
-;KfLowerIrql=@KfLowerIrql@4
-KfLowerIrql=KfLowerIrql@4
-;KfRaiseIrql=@KfRaiseIrql@4
-KfRaiseIrql=KfRaiseIrql@4
-;KfReleaseSpinLock=@KfReleaseSpinLock@8
-KfReleaseSpinLock=KfReleaseSpinLock@8
+KfAcquireSpinLock=@KfAcquireSpinLock@4
+KfLowerIrql=@KfLowerIrql@4
+KfRaiseIrql=@KfRaiseIrql@4
+KfReleaseSpinLock=@KfReleaseSpinLock@8
 READ_PORT_BUFFER_UCHAR=READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG=READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT=READ_PORT_BUFFER_USHORT@12
