@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.13 2002/06/06 14:03:58 ekohl Exp $
+/* $Id: registry.c,v 1.14 2002/06/12 23:21:45 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -291,21 +291,28 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	    }
 	  else
 	    {
-	      if (ValueInfo->Type == REG_SZ)
+	      if (ValueInfo->Type == REG_SZ ||
+		  ValueInfo->Type == REG_EXPAND_SZ ||
+		  ValueInfo->Type == REG_MULTI_SZ)
+#if 0
+		  (ValueInfo->Type == REG_EXPAND_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
+		  (ValueInfo->Type == REG_MULTI_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
+#endif
 		{
 		  PUNICODE_STRING ValueString;
 
 		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == 0)
+		  if (ValueString->Buffer == NULL)
 		    {
-		      RtlInitUnicodeString(ValueString,
-					   NULL);
-		      ValueString->MaximumLength = 256 * sizeof(WCHAR);
+		      ValueString->MaximumLength = ValueInfo->DataLength + sizeof(WCHAR);
 		      ValueString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
 							    0,
 							    ValueString->MaximumLength);
-		      if (!ValueString->Buffer)
-			break;
+		      if (ValueString->Buffer == NULL)
+			{
+			  Status = STATUS_INSUFFICIENT_RESOURCES;
+			  break;
+			}
 		      ValueString->Buffer[0] = 0;
 		     }
 		  ValueString->Length = min(ValueInfo->DataLength,
@@ -881,7 +888,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   DPRINT("KeyName %wZ\n", &KeyName);
 
-  if (Path[0] == L'\\')
+  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
     {
       Path++;
     }

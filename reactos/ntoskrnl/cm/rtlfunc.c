@@ -305,7 +305,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	  if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 	    {
-	      DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
+	      DPRINT("FIXME: Delete value: %S\n", QueryEntry->Name);
 
 	    }
 
@@ -317,6 +317,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	  if (QueryEntry->Name != NULL)
 	    {
+	      DPRINT("Callback\n");
+
 	      RtlInitUnicodeString(&KeyName,
 				   QueryEntry->Name);
 
@@ -375,7 +377,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 		{
-		  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
+		  DPRINT("FIXME: Delete value: %S\n", QueryEntry->Name);
 
 		}
 
@@ -608,12 +610,14 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	break;
     }
 
-  if (Path[0] == L'\\')
+  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
     {
       Path++;
     }
   RtlAppendUnicodeToString(&KeyName,
 			   Path);
+
+  DPRINT("KeyName '%wZ'\n", &KeyName);
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
