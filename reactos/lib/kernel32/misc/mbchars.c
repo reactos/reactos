@@ -1,4 +1,4 @@
-/* $Id: mbchars.c,v 1.4 2003/08/07 04:03:23 royce Exp $
+/* $Id: mbchars.c,v 1.5 2004/04/04 17:59:23 gvg Exp $
  *
  */
 #include <windows.h>
@@ -141,7 +141,7 @@ MultiByteToWideChar(
         w++,
         cchConverted++)
     {
-        *w = (WCHAR)*r;
+        *w = (WCHAR)(unsigned char) *r;
     }
     /*
      * Return how many characters we
