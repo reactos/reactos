@@ -24,8 +24,6 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>

@@ -27,10 +27,6 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 
 HWND CreateListView(HWND hwndParent, int id);
 BOOL RefreshListView(HWND hwndTV, HKEY hKey, LPTSTR keyPath);

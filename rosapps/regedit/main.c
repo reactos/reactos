@@ -24,11 +24,10 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
+#include <fcntl.h>
     
 #include "main.h"
 #include "framewnd.h"
@@ -144,6 +143,20 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 {
     MSG msg;
     HACCEL hAccel;
+/*
+    int hCrt;
+    FILE *hf;
+    AllocConsole();
+    hCrt = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+    hf = _fdopen(hCrt, "w");
+    *stdout = *hf;
+    setvbuf(stdout, NULL, _IONBF, 0); 
+
+	wprintf(L"command line exit, hInstance = %d\n", hInstance);
+	getch();
+	FreeConsole();
+    return 0;
+ */
 
     if (ProcessCmdLine(lpCmdLine)) {
         return 0;

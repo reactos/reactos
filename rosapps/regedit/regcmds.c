@@ -24,17 +24,20 @@
 
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
+#ifndef WIN32_REGDBG
 #include <tchar.h>
-#include <process.h>
+#else
+#ifndef __GNUC__
+#include <tchar.h>
+#endif
+#define _tfopen     _wfopen
+#include <memory.h>
+#endif
 #include <stdio.h>
-    
 #include <ctype.h>
+
 #include "regproc.h"
-#include "main.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
@@ -86,12 +89,12 @@ typedef enum {
 void error_unknown_switch(char chu, char *s)
 {
     if (isalpha(chu)) {
-        printf("%s: Undefined switch /%c!\n", getAppName(), chu);
+        printf("Undefined switch /%c!\n", chu);
     } else {
-        printf("%s: Alphabetic character is expected after '%c' "
-               "in switch specification\n", getAppName(), *(s - 1));
+        printf("Alphabetic character is expected after '%c' "
+               "in switch specification\n", *(s - 1));
     }
-    exit(1);
+    //exit(1);
 }
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine)
@@ -100,7 +103,6 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
     LPSTR s = lpCmdLine;        /* command line pointer */
     CHAR ch = *s;               /* current character */
 
-    setAppName("regedit");
     while (ch && ((ch == '-') || (ch == '/'))) {
         char chu;
         char ch2;
@@ -122,10 +124,12 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
                     break;
                 case '?':
                     printf(usage);
-                    exit(0);
+                    return FALSE;
+                    //exit(0);
                     break;
                 default:
                     error_unknown_switch(chu, s);
+                    return FALSE;
                     break;
                 }
             }
@@ -143,6 +147,7 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
                     break;
                 default:
                     error_unknown_switch(chu, s);
+                    return FALSE;
                     break;
                 }
             } else {
@@ -158,56 +163,60 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
             ch = *s;
         }
     }
-//    if (action == ACTION_UNDEF) {
-//        action = ACTION_ADD;
-//    }
+    if (action == ACTION_UNDEF) {
+        action = ACTION_ADD;
+    }
 
     switch (action) {
     case ACTION_ADD:
     {
-        CHAR filename[MAX_PATH];
+        TCHAR filename[MAX_PATH];
         FILE *reg_file;
-        get_file_name(&s, filename);
+        get_file_name(&s, filename, MAX_PATH);
         if (!filename[0]) {
-            printf("%s: No file name is specified\n%s", getAppName(), usage);
-            exit(1);
+            printf("No file name is specified\n%s", usage);
+            return FALSE;
+            //exit(1);
         }
         while (filename[0]) {
-            reg_file = fopen(filename, "r");
+            reg_file = _tfopen(filename, _T("r"));
             if (reg_file) {
                 processRegLines(reg_file, doSetValue);
             } else {
                 perror("");
-                printf("%s: Can't open file \"%s\"\n", getAppName(), filename);
-                exit(1);
+                printf("Can't open file \"%s\"\n", filename);
+                return FALSE;
+                //exit(1);
             }
-            get_file_name(&s, filename);
+            get_file_name(&s, filename, MAX_PATH);
         }
         break;
     }
     case ACTION_DELETE:
     {
-        CHAR reg_key_name[KEY_MAX_LEN];
-        get_file_name(&s, reg_key_name);
+        TCHAR reg_key_name[KEY_MAX_LEN];
+        get_file_name(&s, reg_key_name, KEY_MAX_LEN);
         if (!reg_key_name[0]) {
-            printf("%s: No registry key is specified for removal\n%s", getAppName(), usage);
-            exit(1);
+            printf("No registry key is specified for removal\n%s", usage);
+            return FALSE;
+            //exit(1);
         }
         delete_registry_key(reg_key_name);
         break;
     }
     case ACTION_EXPORT:
     {
-        CHAR filename[MAX_PATH];
+        TCHAR filename[MAX_PATH];
         filename[0] = '\0';
-        get_file_name(&s, filename);
+        get_file_name(&s, filename, MAX_PATH);
         if (!filename[0]) {
-            printf("%s: No file name is specified\n%s", getAppName(), usage);
-            exit(1);
+            printf("No file name is specified\n%s", usage);
+            return FALSE;
+            //exit(1);
         }
         if (s[0]) {
-            CHAR reg_key_name[KEY_MAX_LEN];
-            get_file_name(&s, reg_key_name);
+            TCHAR reg_key_name[KEY_MAX_LEN];
+            get_file_name(&s, reg_key_name, KEY_MAX_LEN);
             export_registry_key(filename, reg_key_name);
         } else {
             export_registry_key(filename, NULL);
@@ -215,7 +224,7 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
         break;
     }
     default:
-        printf("%s: Unhandled action!\n", getAppName());
+        printf("Unhandled action!\n");
         return FALSE;
     }
     return TRUE;

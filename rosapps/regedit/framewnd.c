@@ -25,7 +25,6 @@
 #include <commctrl.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
@@ -189,7 +188,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_HELP_ABOUT:
 #ifdef WINSHELLAPI
-        ShellAbout(hWnd, szTitle, _T(""), LoadIcon(hInst, (LPCTSTR)IDI_REGEDIT));
+//        ShellAbout(hWnd, szTitle, _T(""), LoadIcon(hInst, (LPCTSTR)IDI_REGEDIT));
 #else
         ShowAboutBox(hWnd);
 #endif

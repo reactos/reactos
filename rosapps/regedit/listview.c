@@ -25,7 +25,6 @@
 #include <commctrl.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
@@ -350,10 +349,13 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
             /* get size information and resize the buffers if necessary */
             errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL,
                         &max_sub_key_len, NULL, &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
+
+#define BUF_HEAD_SPACE 2 // TODO: check why this is required with ROS ???
+
             if (errCode == ERROR_SUCCESS) {
-                TCHAR* ValName = malloc(++max_val_name_len * sizeof(TCHAR));
+                TCHAR* ValName = malloc(++max_val_name_len * sizeof(TCHAR) + BUF_HEAD_SPACE);
                 DWORD dwValNameLen = max_val_name_len;
-                BYTE* ValBuf = malloc(++max_val_size);
+                BYTE* ValBuf = malloc(++max_val_size/* + BUF_HEAD_SPACE*/);
                 DWORD dwValSize = max_val_size;
                 DWORD dwIndex = 0L;
                 DWORD dwValType;
@@ -369,8 +371,10 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
                     dwValType = 0L;
                     ++dwIndex;
                 }
+
                 free(ValBuf);
                 free(ValName);
+
             }
             //ListView_SortItemsEx(hwndLV, CompareFunc, hwndLV);
 //            SendMessage(hwndLV, LVM_SORTITEMSEX, (WPARAM)CompareFunc, (LPARAM)hwndLV);
