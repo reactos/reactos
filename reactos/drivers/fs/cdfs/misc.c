@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.6 2004/03/08 08:51:26 ekohl Exp $
+/* $Id: misc.c,v 1.7 2004/05/23 13:27:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -128,10 +128,10 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
   /* FIXME: Fix attributes */
 
   *FileAttributes = // FILE_ATTRIBUTE_READONLY |
-		    (Fcb->Entry.FileFlags & FILE_FLAG_HIDDEN) ? FILE_ATTRIBUTE_HIDDEN : 0 |
-		    (Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : 0 |
-		    (Fcb->Entry.FileFlags & FILE_FLAG_SYSTEM) ? FILE_ATTRIBUTE_SYSTEM : 0 |
-		    (Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0;
+		    ((Fcb->Entry.FileFlags & FILE_FLAG_HIDDEN) ? FILE_ATTRIBUTE_HIDDEN : 0) |
+		    ((Fcb->Entry.FileFlags & FILE_FLAG_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : 0) |
+		    ((Fcb->Entry.FileFlags & FILE_FLAG_SYSTEM) ? FILE_ATTRIBUTE_SYSTEM : 0) |
+		    ((Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0);
 }
 
 /* EOF */
