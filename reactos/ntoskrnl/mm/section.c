@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.132 2003/10/19 17:33:32 ekohl Exp $
+/* $Id: section.c,v 1.133 2003/10/22 18:20:38 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1536,7 +1536,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     {
       if (Context.Private)
 	{
-	  MmSetSavedSwapEntryPage(PhysicalAddress, 0);
 	  if (!(Context.Segment->Characteristics & IMAGE_SECTION_CHAR_BSS) &&
 	      SwapEntry == 0)
 	    {
@@ -1548,12 +1547,16 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	    }
 	  else
 	    {
-	      Status = MmCreatePageFileMapping(AddressSpace->Process,
-					       Address,
-					       SwapEntry);
-	      if (!NT_SUCCESS(Status))
-		{
-		  KEBUGCHECK(0);
+	      if (SwapEntry != 0)
+	        {
+	          MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+	          Status = MmCreatePageFileMapping(AddressSpace->Process,
+					           Address,
+					           SwapEntry);
+	          if (!NT_SUCCESS(Status))
+		    {
+		      KEBUGCHECK(0);
+		    }
 		}
 	    }
 	}
@@ -1845,6 +1848,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 	  MmReleasePageOp(PageOp);
 	  return(STATUS_PAGEFILE_QUOTA);
 	}
+      MmSetSavedSwapEntryPage(PhysicalAddress, SwapEntry);
     }
 
   /*
@@ -1868,7 +1872,6 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    * Otherwise we have succeeded.
    */
   DPRINT("MM: Wrote section page 0x%.8X to swap!\n", PhysicalAddress);
-  MmSetSavedSwapEntryPage(PhysicalAddress, SwapEntry);
   PageOp->Status = STATUS_SUCCESS;
   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
   MmReleasePageOp(PageOp);
