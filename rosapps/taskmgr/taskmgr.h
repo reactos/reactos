@@ -30,6 +30,7 @@ extern "C" {
 
 #ifdef _MSC_VER
 
+/*MF
 typedef struct _IO_COUNTERS {
 	ULONGLONG  ReadOperationCount;
 	ULONGLONG  WriteOperationCount;
@@ -38,6 +39,7 @@ typedef struct _IO_COUNTERS {
 	ULONGLONG WriteTransferCount;
 	ULONGLONG OtherTransferCount;
 } IO_COUNTERS, *PIO_COUNTERS;
+*/
 
 #else
 

@@ -276,6 +276,16 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     GetWindowText(hWnd, szText, 260); // Get the window text
 
+    // Check and see if this is a top-level app window
+    if ((_tcslen(szText) <= 0) ||
+        !IsWindowVisible(hWnd) ||
+        (GetParent(hWnd) != NULL) ||
+        (GetWindow(hWnd, GW_OWNER) != NULL) ||
+        (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+    {
+        return TRUE; // Skip this window
+    }
+
     // Get the icon for this window
     hIcon = NULL;
     SendMessageTimeout(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (unsigned long*)&hIcon);
@@ -290,16 +300,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     if (!hIcon)
         hIcon = LoadIcon(hInst, bLargeIcon ? MAKEINTRESOURCE(IDI_WINDOW) : MAKEINTRESOURCE(IDI_WINDOWSM));
-
-    // Check and see if this is a top-level app window
-    if ((_tcslen(szText) <= 0) ||
-        !IsWindowVisible(hWnd) ||
-        (GetParent(hWnd) != NULL) ||
-        (GetWindow(hWnd, GW_OWNER) != NULL) ||
-        (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
-    {
-        return TRUE; // Skip this window
-    }
 
     bHung = FALSE;
 
