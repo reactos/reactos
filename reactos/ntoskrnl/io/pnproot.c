@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.20 2004/01/05 14:28:20 weiden Exp $
+/* $Id: pnproot.c,v 1.21 2004/06/11 09:33:42 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -248,6 +248,26 @@ PdoQueryId(
 
 
 NTSTATUS
+PdoQueryResources(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PCM_RESOURCE_LIST ResourceList;
+
+  ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
+  if (ResourceList == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  ResourceList->Count = 0;
+
+  Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 PnpRootPdoPnpControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
@@ -308,10 +328,13 @@ PnpRootPdoPnpControl(
 
   case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
     break;
+#endif
 
   case IRP_MN_QUERY_RESOURCES:
+    Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
     break;
 
+#if 0
   case IRP_MN_QUERY_STOP_DEVICE:
     break;
 
@@ -368,6 +391,7 @@ PnpRootPdoPowerControl(
   switch (IrpSp->MinorFunction) {
   default:
     DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
+    Status = STATUS_NOT_IMPLEMENTED;
     break;
   }
 
