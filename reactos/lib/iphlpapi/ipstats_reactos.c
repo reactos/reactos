@@ -466,13 +466,13 @@ RouteTable *getRouteTable(void)
 
         DPRINT( "%d routes in instance %d\n", snmpInfo.ipsi_numroutes, i );
 
+        tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
+
         if( !route_set ) {
             closeTcpFile( tcpFile );
             HeapFree( GetProcessHeap(), 0, out_route_table );
             return 0;
         }
-
-        tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
 
         DPRINT("Route set returned\n");
 #if 0
