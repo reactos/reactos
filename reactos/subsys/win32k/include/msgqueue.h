@@ -65,8 +65,10 @@ typedef struct _USER_MESSAGE_QUEUE
   BOOLEAN QuitPosted;
   /* The quit exit code. */
   ULONG QuitExitCode;
-  /* Set if there are new messages in any of the queues. */
-  KEVENT NewMessages;  
+  /* Set if there are new messages specified by WakeMask in any of the queues. */
+  PKEVENT NewMessages;
+  /* Handle for the above event (in the context of the process owning the queue). */
+  HANDLE NewMessagesHandle;
   /* Last time PeekMessage() was called. */
   ULONG LastMsgRead;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
@@ -92,10 +94,9 @@ typedef struct _USER_MESSAGE_QUEUE
   PHOOKTABLE Hooks;
 
   /* queue state tracking */
-  WORD WakeBits;
   WORD WakeMask;
+  WORD QueueBits;
   WORD ChangedBits;
-  WORD ChangedMask;
   
   /* extra message information */
   LPARAM ExtraInfo;
@@ -121,7 +122,7 @@ VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       MSG* Msg, BOOLEAN FreeLParam);
+	       MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN STDCALL
@@ -132,7 +133,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
-VOID FASTCALL
+BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
 MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
@@ -225,13 +226,11 @@ VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, 
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
       DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
+      if ((MsgQueue)->NewMessagesHandle != NULL) \
+        ZwClose((MsgQueue)->NewMessagesHandle); \
       ExFreePool((MsgQueue)); \
     } \
   } while(0)
-
-/* check the queue status */
-#define MsqIsSignaled(MsgQueue) \
-  (((MsgQueue)->WakeBits & (MsgQueue)->WakeMask) || ((MsgQueue)->ChangedBits & (MsgQueue)->ChangedMask))
 
 #define IS_BTN_MESSAGE(message,code) \
   ((message) == WM_LBUTTON##code || \
@@ -242,6 +241,12 @@ VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, 
    (message) == WM_NCMBUTTON##code || \
    (message) == WM_NCRBUTTON##code || \
    (message) == WM_NCXBUTTON##code )
+
+HANDLE FASTCALL
+IntMsqSetWakeMask(DWORD WakeMask);
+
+BOOL FASTCALL
+IntMsqClearWakeMask(VOID);
 
 #endif /* _WIN32K_MSGQUEUE_H */
 

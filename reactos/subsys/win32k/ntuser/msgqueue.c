@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.110 2004/12/11 19:39:18 weiden Exp $
+/* $Id: msgqueue.c,v 1.111 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,19 +65,42 @@ static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
-/* set some queue bits */
-inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+HANDLE FASTCALL
+IntMsqSetWakeMask(DWORD WakeMask)
 {
-    Queue->WakeBits |= Bits;
-    Queue->ChangedBits |= Bits;
-    if (MsqIsSignaled( Queue )) KeSetEvent(&Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+  PW32THREAD Win32Thread;
+  PUSER_MESSAGE_QUEUE MessageQueue;
+  HANDLE MessageEventHandle;
+
+  Win32Thread = PsGetWin32Thread();
+  if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
+    return 0;
+
+  MessageQueue = Win32Thread->MessageQueue;
+  IntLockMessageQueue(MessageQueue);
+  MessageQueue->WakeMask = WakeMask;
+  MessageEventHandle = MessageQueue->NewMessagesHandle;
+  IntUnLockMessageQueue(MessageQueue);
+
+  return MessageEventHandle;
 }
 
-/* clear some queue bits */
-inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+BOOL FASTCALL
+IntMsqClearWakeMask(VOID)
 {
-    Queue->WakeBits &= ~Bits;
-    Queue->ChangedBits &= ~Bits;
+  PW32THREAD Win32Thread;
+  PUSER_MESSAGE_QUEUE MessageQueue;
+
+  Win32Thread = PsGetWin32Thread();
+  if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
+    return FALSE;
+
+  MessageQueue = Win32Thread->MessageQueue;
+  IntLockMessageQueue(MessageQueue);
+  MessageQueue->WakeMask = ~0;
+  IntUnLockMessageQueue(MessageQueue);
+
+  return TRUE;
 }
 
 VOID FASTCALL
@@ -86,7 +109,10 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
   IntLockMessageQueue(Queue);
   Queue->PaintCount++;
   Queue->PaintPosted = TRUE;
-  KeSetEvent(&Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+  Queue->QueueBits |= QS_PAINT;
+  Queue->ChangedBits |= QS_PAINT;
+  if (Queue->WakeMask & QS_PAINT)
+    KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
   IntUnLockMessageQueue(Queue);
 }
 
@@ -305,10 +331,21 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
       }
       /* save the pointer to the WM_MOUSEMOVE message in the new queue */
       Window->MessageQueue->MouseMoveMsg = Message;
+
+      Window->MessageQueue->QueueBits |= QS_MOUSEMOVE;
+      Window->MessageQueue->ChangedBits |= QS_MOUSEMOVE;
+      if (Window->MessageQueue->WakeMask & QS_MOUSEMOVE)
+        KeSetEvent(Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    }
+    else
+    {
+      Window->MessageQueue->QueueBits |= QS_MOUSEBUTTON;
+      Window->MessageQueue->ChangedBits |= QS_MOUSEBUTTON;
+      if (Window->MessageQueue->WakeMask & QS_MOUSEBUTTON)
+        KeSetEvent(Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     }
     IntUnLockHardwareMessageQueue(Window->MessageQueue);
     
-    KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     *Freed = FALSE;
     IntReleaseWindowObject(Window);
     return(FALSE);
@@ -416,7 +453,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     return FALSE;
   }
 
-  WaitObjects[1] = &MessageQueue->NewMessages;
+  WaitObjects[1] = MessageQueue->NewMessages;
   WaitObjects[0] = &HardwareMessageQueueLock;
   do
     {
@@ -585,7 +622,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
     if( W32kGetPrimitiveMessageQueue() ) {
-      MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE);
+      MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE, QS_KEY);
     }
   } else {
     if (FocusMessageQueue == NULL)
@@ -598,7 +635,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
-	MsqPostMessage(FocusMessageQueue, &Msg, FALSE);
+	MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
       }
     else
       {
@@ -647,14 +684,14 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 //      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
 //      KeQueryTickCount(&LargeTickCount);
 //      Mesg.time = LargeTickCount.u.LowPart;
-  MsqPostMessage(Window->MessageQueue, &Mesg, FALSE);
+  MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);
 
 //  IntLockMessageQueue(pThread->MessageQueue);
 //  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,
 //		 &Message->ListEntry);
-//  KeSetEvent(&pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+//  KeSetEvent(pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
 //  IntUnLockMessageQueue(pThread->MessageQueue);
 
 }
@@ -894,7 +931,10 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->NotifyMessagesListHead,
 		 &NotifyMessage->ListEntry);
-  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  MessageQueue->QueueBits |= QS_SENDMESSAGE;
+  MessageQueue->ChangedBits |= QS_SENDMESSAGE;
+  if (MessageQueue->WakeMask & QS_SENDMESSAGE)
+    KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   IntUnLockMessageQueue(MessageQueue);
 }
 
@@ -949,7 +989,10 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
   IntUnLockMessageQueue(MessageQueue);
   
-  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  MessageQueue->QueueBits |= QS_SENDMESSAGE;
+  MessageQueue->ChangedBits |= QS_SENDMESSAGE;
+  if (MessageQueue->WakeMask & QS_SENDMESSAGE)
+    KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   
   /* we can't access the Message anymore since it could have already been deleted! */
   
@@ -1010,7 +1053,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
     PVOID WaitObjects[2];
     
     WaitObjects[0] = &CompletionEvent;
-    WaitObjects[1] = &ThreadQueue->NewMessages;
+    WaitObjects[1] = ThreadQueue->NewMessages;
     do
       {
         WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -1073,7 +1116,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam)
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam,
+               DWORD MessageBits)
 {
   PUSER_MESSAGE Message;
   
@@ -1084,7 +1128,10 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam)
   IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->PostedMessagesListHead,
 		 &Message->ListEntry);
-  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  MessageQueue->QueueBits |= MessageBits;
+  MessageQueue->ChangedBits |= MessageBits;
+  if (MessageQueue->WakeMask & MessageBits)
+    KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   IntUnLockMessageQueue(MessageQueue);
 }
 
@@ -1094,7 +1141,10 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
   IntLockMessageQueue(MessageQueue);
   MessageQueue->QuitPosted = TRUE;
   MessageQueue->QuitExitCode = ExitCode;
-  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  MessageQueue->QueueBits |= QS_POSTMESSAGE;
+  MessageQueue->ChangedBits |= QS_POSTMESSAGE;
+  if (MessageQueue->WakeMask & QS_POSTMESSAGE)
+    KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   IntUnLockMessageQueue(MessageQueue);
 }
 
@@ -1147,7 +1197,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 NTSTATUS FASTCALL
 MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-  PVOID WaitObjects[2] = {&MessageQueue->NewMessages, &HardwareMessageEvent};
+  PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
   return(KeWaitForMultipleObjects(2,
 				  WaitObjects,
 				  WaitAny,
@@ -1167,10 +1217,11 @@ MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue)
   return ((LargeTickCount.u.LowPart - MessageQueue->LastMsgRead) > MSQ_HUNG);
 }
 
-VOID FASTCALL
+BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
 {
   LARGE_INTEGER LargeTickCount;
+  NTSTATUS Status;
   
   MessageQueue->Thread = Thread;
   MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
@@ -1183,12 +1234,32 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;
-  KeInitializeEvent(&MessageQueue->NewMessages, SynchronizationEvent, FALSE);
   KeQueryTickCount(&LargeTickCount);
   MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
   MessageQueue->FocusWindow = NULL;
   MessageQueue->PaintPosted = FALSE;
   MessageQueue->PaintCount = 0;
+  MessageQueue->WakeMask = ~0;
+  MessageQueue->NewMessagesHandle = NULL;
+
+  Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
+                         NULL, SynchronizationEvent, FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      return FALSE;
+    }
+
+  Status = ObReferenceObjectByHandle(MessageQueue->NewMessagesHandle, 0,
+                                     ExEventObjectType, KernelMode,
+                                     (PVOID*)&MessageQueue->NewMessages, NULL);                                      
+  if (!NT_SUCCESS(Status))
+    {
+      ZwClose(MessageQueue->NewMessagesHandle);
+      MessageQueue->NewMessagesHandle = NULL;
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 VOID FASTCALL
@@ -1298,7 +1369,11 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
   /* hold at least one reference until it'll be destroyed */
   IntReferenceMessageQueue(MessageQueue);
   /* initialize the queue */
-  MsqInitializeMessageQueue(Thread, MessageQueue);
+  if (!MsqInitializeMessageQueue(Thread, MessageQueue))
+    {
+      IntDereferenceMessageQueue(MessageQueue);
+      return NULL;
+    }
 
   return MessageQueue;
 }

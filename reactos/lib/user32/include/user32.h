@@ -35,6 +35,12 @@ VOID CreateFrameBrushes(VOID);
 VOID DeleteFrameBrushes(VOID);
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 
+#define NtUserMsqSetWakeMask(dwWaitMask) \
+  (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_MSQSETWAKEMASK)
+
+#define NtUserMsqClearWakeMask() \
+  NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK)
+
 LONG WINAPI RegCloseKey(HKEY);
 LONG WINAPI RegOpenKeyExW(HKEY,LPCWSTR,DWORD,REGSAM,PHKEY);
 LONG WINAPI RegQueryValueExW(HKEY,LPCWSTR,LPDWORD,LPDWORD,LPBYTE,LPDWORD);

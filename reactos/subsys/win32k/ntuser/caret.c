@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.15 2004/11/20 16:46:06 weiden Exp $
+/* $Id: caret.c,v 1.16 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -315,7 +315,7 @@ NtUserHideCaret(
   }
   
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-  
+
   if(ThreadQueue->CaretInfo->hWnd != hWnd)
   {
     IntReleaseWindowObject(WindowObject);

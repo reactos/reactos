@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.94 2004/12/24 17:45:58 weiden Exp $
+/* $Id: misc.c,v 1.95 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,6 +135,9 @@ NtUserCallNoParam(DWORD Routine)
       Result = (DWORD)GDI_MapHandleTable(NtCurrentProcess());
       break;
     
+    case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
+      return (DWORD)IntMsqClearWakeMask();
+
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -333,6 +336,9 @@ NtUserCallOneParam(
       
       return FALSE;
     }
+
+    case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
+      return (DWORD)IntMsqSetWakeMask(Param);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n", 
           Routine, Param);

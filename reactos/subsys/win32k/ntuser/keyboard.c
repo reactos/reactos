@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.33 2004/11/15 16:36:28 ekohl Exp $
+/* $Id: keyboard.c,v 1.34 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -660,14 +660,14 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 	  NewMsg.wParam = dead_char;
 	  NewMsg.lParam = lpMsg->lParam;
 	  dead_char = 0;
-	  MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE);
+	  MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
 	}
       
       NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
-      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE);
+      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
     }
   else if (UState == -1)
@@ -678,7 +678,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
-      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE);
+      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.57 2004/12/13 15:38:19 navaraf Exp $
+/* $Id: menu.c,v 1.58 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -717,6 +717,16 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
   }
   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
   {
+    /*
+     * Delete the menu item type when changing type from
+     * MF_STRING.
+     */
+    if (MenuItem->fType != lpmii->fType && 
+        MENU_ITEM_TYPE(MenuItem->fType) == MF_STRING)
+    {
+      FreeMenuText(MenuItem);
+      RtlInitUnicodeString(&MenuItem->Text, NULL);
+    }
     MenuItem->fType = lpmii->fType;
   }
   if(lpmii->fMask & MIIM_ID)
@@ -747,9 +757,11 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
     }
   }
-  if((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) && 
-           (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
+  if ((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) && 
+      (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
   {
+    FreeMenuText(MenuItem);
+
     if(lpmii->dwTypeData && lpmii->cch)
     {
       UNICODE_STRING Source;
@@ -758,7 +770,6 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       Source.MaximumLength = lpmii->cch * sizeof(WCHAR);
       Source.Buffer = lpmii->dwTypeData;
 
-      FreeMenuText(MenuItem);
       MenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(
         PagedPool, Source.Length + sizeof(WCHAR), TAG_STRING);
       if(MenuItem->Text.Buffer != NULL)
@@ -770,9 +781,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
       else
       {
-        MenuItem->Text.Length = 0;
-        MenuItem->Text.MaximumLength = 0;
-        MenuItem->Text.Buffer = NULL;
+        RtlInitUnicodeString(&MenuItem->Text, NULL);
       }
     }
     else
@@ -780,10 +789,6 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       MenuItem->fType |= MF_SEPARATOR;
       RtlInitUnicodeString(&MenuItem->Text, NULL);
     }
-  }
-  else
-  {
-    RtlInitUnicodeString(&MenuItem->Text, NULL);
   }
 
   if (sizeof(ROSMENUITEMINFO) == lpmii->cbSize)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.77 2004/12/25 20:30:50 navaraf Exp $
+/* $Id: message.c,v 1.78 2004/12/25 22:59:10 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -525,7 +525,9 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
             Msg->hwnd = Wnd->Self;
             if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
             {
-              MsqPostMessage(Wnd->MessageQueue, Msg, FALSE);
+              MsqPostMessage(Wnd->MessageQueue, Msg, FALSE,
+                             Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
+                             QS_MOUSEBUTTON);
             }
             
             /* eat the message */
@@ -1146,7 +1148,8 @@ NtUserPostMessage(HWND Wnd,
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
-                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
+                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
+                     QS_POSTMESSAGE);
       IntReleaseWindowObject(Window);
     }
 
@@ -1188,7 +1191,8 @@ NtUserPostThreadMessage(DWORD idThread,
         return FALSE;
       }
     MsqPostMessage(pThread->MessageQueue, &KernelModeMsg,
-                   NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
+                   NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
+                   QS_POSTMESSAGE);
     ObDereferenceObject( peThread );
     return TRUE;
   } else {
@@ -1614,7 +1618,7 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 
    IntLockMessageQueue(Queue);
 
-   Result = MAKELONG(Queue->ChangedBits, Queue->WakeBits);
+   Result = MAKELONG(Queue->QueueBits, Queue->ChangedBits);
    if (ClearChanges)
    {
       Queue->ChangedBits = 0;
