@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.119 2003/06/27 21:28:30 hbirr Exp $
+/* $Id: section.c,v 1.120 2003/07/10 21:05:04 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1917,6 +1917,9 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
   return(Status);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
 		   PVOID Address,
@@ -1951,6 +1954,9 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 MmpDeleteSection(PVOID ObjectBody)
 {
@@ -2836,6 +2842,9 @@ MmCreateImageSection(PHANDLE SectionHandle,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtCreateSection (OUT PHANDLE SectionHandle,
 		 IN ACCESS_MASK DesiredAccess,
@@ -2894,6 +2903,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtOpenSection(PHANDLE			SectionHandle,
@@ -3012,6 +3022,8 @@ MmMapViewOfSegment(PEPROCESS Process,
  *
  * RETURN VALUE
  * 	Status.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtMapViewOfSection(HANDLE SectionHandle,
@@ -3173,6 +3185,9 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     }
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 MmUnmapViewOfSection(PEPROCESS Process,
 		     PVOID BaseAddress)
@@ -3254,6 +3269,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
  *
  * REVISIONS
  *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtUnmapViewOfSection (HANDLE	ProcessHandle,
@@ -3288,6 +3304,9 @@ NtUnmapViewOfSection (HANDLE	ProcessHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQuerySection (IN	HANDLE	SectionHandle,
 		IN	CINT	SectionInformationClass,
@@ -3385,6 +3404,9 @@ NtQuerySection (IN	HANDLE	SectionHandle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL 
 NtExtendSection(IN	HANDLE	SectionHandle,
 		IN	ULONG	NewMaximumSize)
@@ -3410,6 +3432,7 @@ NtExtendSection(IN	HANDLE	SectionHandle,
  *
  * REVISIONS
  *
+ * @implemented
  */
 PVOID STDCALL 
 MmAllocateSection (IN ULONG Length)
@@ -3512,6 +3535,8 @@ MmAllocateSection (IN ULONG Length)
  *
  * RETURN VALUE
  *	Status.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 MmMapViewOfSection(IN PVOID SectionObject,
@@ -3666,6 +3691,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS	SectionObjectPointer,
 		      IN PLARGE_INTEGER			NewFileSize)
@@ -3675,6 +3703,9 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS	SectionObjectPointer,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 MmDisableModifiedWriteOfSection (DWORD	Unknown0)
 {
@@ -3682,6 +3713,9 @@ MmDisableModifiedWriteOfSection (DWORD	Unknown0)
   return (FALSE);
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 MmFlushImageSection (IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
 		     IN	MMFLUSH_TYPE			FlushType)
@@ -3702,6 +3736,9 @@ MmFlushImageSection (IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
    return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 MmForceSectionClosed (DWORD	Unknown0,
 		      DWORD	Unknown1)
@@ -3711,6 +3748,9 @@ MmForceSectionClosed (DWORD	Unknown0,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 			OUT	PVOID	* MappedBase,
@@ -3757,6 +3797,9 @@ MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 {
@@ -3824,6 +3867,9 @@ MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 MmSetBankedSection (DWORD	Unknown0,
 		    DWORD	Unknown1,
@@ -3889,6 +3935,8 @@ MmSetBankedSection (DWORD	Unknown0,
  *	
  * RETURN VALUE
  * 	Status.
+ *
+ * @unimplemented
  */
 NTSTATUS STDCALL
 MmCreateSection (OUT	PSECTION_OBJECT		* SectionObject,

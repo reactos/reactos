@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.62 2003/06/16 19:20:28 hbirr Exp $
+/* $Id: mm.c,v 1.63 2003/07/10 21:05:03 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -116,12 +116,18 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 {
    UNIMPLEMENTED;
    return FALSE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 /*
  * FUNCTION: Checks whether the given address is valid for a read or write
@@ -152,6 +158,9 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 		       ULONG Address,
 		       BOOLEAN FromMdl)
@@ -406,6 +415,9 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 
 /* Miscellanea functions: they may fit somewhere else */
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 MmAdjustWorkingSetSize (DWORD	Unknown0,
 			DWORD	Unknown1,
@@ -416,6 +428,9 @@ MmAdjustWorkingSetSize (DWORD	Unknown0,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 MmDbgTranslatePhysicalAddress (
@@ -428,6 +443,9 @@ MmDbgTranslatePhysicalAddress (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 MmGrowKernelStack (
@@ -439,6 +457,9 @@ MmGrowKernelStack (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 STDCALL
 MmSetAddressRangeModified (

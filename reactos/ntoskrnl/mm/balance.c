@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.16 2003/06/14 17:53:25 hbirr Exp $
+/* $Id: balance.c,v 1.17 2003/07/10 21:05:03 royce Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -292,3 +292,5 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
   return(STATUS_SUCCESS);
 }
+
+/* EOF */

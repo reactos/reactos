@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.51 2003/07/06 10:50:21 hbirr Exp $
+/* $Id: mdl.c,v 1.52 2003/07/10 21:05:03 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -78,6 +78,9 @@ MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
    return((PVOID)MdlPages[((ULONG)Offset) / PAGE_SIZE]);
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL 
 MmUnlockPages(PMDL Mdl)
 /*
@@ -118,6 +121,9 @@ MmUnlockPages(PMDL Mdl)
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 /*
@@ -196,6 +202,9 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    return(Base + Mdl->ByteOffset);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 /*
@@ -268,6 +277,9 @@ MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
      }
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 				  KPROCESSOR_MODE AccessMode,
 				  LOCK_OPERATION Operation)
@@ -369,6 +381,9 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL MmSizeOfMdl (PVOID	Base,
 			   ULONG	Length)
 /*
@@ -387,6 +402,9 @@ ULONG STDCALL MmSizeOfMdl (PVOID	Base,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 MmBuildMdlForNonPagedPool (PMDL	Mdl)
 /*
@@ -409,6 +427,9 @@ MmBuildMdlForNonPagedPool (PMDL	Mdl)
 }
 
 
+/*
+ * @implemented
+ */
 PMDL STDCALL 
 MmCreateMdl (PMDL	MemoryDescriptorList,
 	     PVOID	Base,
@@ -441,6 +462,9 @@ MmCreateMdl (PMDL	MemoryDescriptorList,
    return(MemoryDescriptorList);
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL 
 MmMapMemoryDumpMdl (PVOID	Unknown0)
 /*

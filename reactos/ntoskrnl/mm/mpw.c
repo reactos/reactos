@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.12 2003/01/11 15:47:14 hbirr Exp $
+/* $Id: mpw.c,v 1.13 2003/07/10 21:05:03 royce Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -46,6 +46,9 @@ static volatile BOOLEAN MpwThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 MmWriteDirtyPages(ULONG Target, PULONG Actual)
 {

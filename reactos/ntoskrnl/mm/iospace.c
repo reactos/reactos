@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.19 2003/06/21 14:30:42 gvg Exp $
+/* $Id: iospace.c,v 1.20 2003/07/10 21:05:03 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -63,6 +63,7 @@
  *
  * REVISIONS
  *
+ * @implemented
  */
 PVOID STDCALL 
 MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -139,6 +140,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
  *
  * REVISIONS
  *
+ * @implemented
  */
 VOID STDCALL 
 MmUnmapIoSpace (IN PVOID BaseAddress,
@@ -157,6 +159,8 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
 /**********************************************************************
  * NAME							EXPORTED
  *	MmMapVideoDisplay@16
+ *
+ * @implemented
  */
 PVOID STDCALL
 MmMapVideoDisplay (IN	PHYSICAL_ADDRESS	PhysicalAddress,
@@ -167,6 +171,9 @@ MmMapVideoDisplay (IN	PHYSICAL_ADDRESS	PhysicalAddress,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 MmUnmapVideoDisplay (IN	PVOID	BaseAddress,
 		     IN	ULONG	NumberOfBytes)

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.51 2003/07/06 10:34:32 hbirr Exp $
+/* $Id: mminit.c,v 1.52 2003/07/10 21:05:03 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -59,11 +59,17 @@ ULONG MiKernelMapLength;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
 {
    return(IsThisAnNtAsSystem);
 }
 
+/*
+ * @implemented
+ */
 MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
 {
    return(MmSystemSize);

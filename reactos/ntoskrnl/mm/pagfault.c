@@ -1,7 +1,10 @@
-/* $Id: pagfault.c,v 1.4 2002/09/08 10:23:36 chorns Exp $ */
+/* $Id: pagfault.c,v 1.5 2003/07/10 21:05:03 royce Exp $ */
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 MmIsRecursiveIoFault (

@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.24 2003/05/17 15:28:58 ekohl Exp $
+/* $Id: ncache.c,v 1.25 2003/07/10 21:05:03 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,6 +43,7 @@
  *
  * REVISIONS
  *
+ * @implemented
  */
 PVOID STDCALL 
 MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
@@ -122,6 +123,7 @@ MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
  *
  * REVISIONS
  *
+ * @implemented
  */
 VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
 				    IN ULONG NumberOfBytes)
@@ -134,6 +136,5 @@ VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
 		    NULL);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
-
 
 /* EOF */

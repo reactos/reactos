@@ -1,4 +1,4 @@
-/* $Id: drvlck.c,v 1.3 2002/09/08 10:23:32 chorns Exp $
+/* $Id: drvlck.c,v 1.4 2003/07/10 21:05:03 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,9 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 #endif
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
@@ -56,6 +59,9 @@ MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 #endif
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
@@ -66,18 +72,27 @@ MmLockPagableDataSection(IN PVOID AddressWithinSection)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 {
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 MmPageEntireDriver(IN PVOID AddressWithinSection)
 {
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 MmResetDriverPaging(IN PVOID AddressWithinSection)
 {

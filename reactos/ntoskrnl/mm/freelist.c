@@ -966,3 +966,4 @@ NTSTATUS MmInitZeroPageThread(VOID)
   return(STATUS_SUCCESS);
 }
  
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.13 2002/09/08 10:23:32 chorns Exp $
+/* $Id: aspace.c,v 1.14 2003/07/10 21:05:03 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -107,3 +107,5 @@ MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
     }
    return(STATUS_SUCCESS);
 }
+
+/* EOF */

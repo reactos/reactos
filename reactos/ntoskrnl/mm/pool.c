@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.16 2003/01/16 17:56:00 ekohl Exp $
+/* $Id: pool.c,v 1.17 2003/07/10 21:05:04 royce Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL STATIC
 EiAllocatePool(POOL_TYPE PoolType,
 	       ULONG NumberOfBytes,
@@ -67,6 +70,9 @@ EiAllocatePool(POOL_TYPE PoolType,
    return(Block);
 }
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
@@ -100,6 +106,9 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 }
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
@@ -112,6 +121,9 @@ ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 }
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
@@ -119,6 +131,9 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL
 ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
 			    IN	ULONG		NumberOfBytes,
@@ -135,6 +150,9 @@ ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
   UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {
