@@ -179,6 +179,8 @@ KeApplicationProcessorInit(VOID)
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
 
+  KiCheckFPU();
+
   /*
    * Initialize the GDT
    */
