@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.2 2004/02/01 17:07:16 royce Exp $
+/* $Id: opengl32.h,v 1.3 2004/02/01 17:18:48 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,6 +11,24 @@
 
 #ifndef OPENGL32_PRIVATE_H
 #define OPENGL32_PRIVATE_H
+
+#define GLFUNCS_MACRO \
+	X(glAccum) \
+	X(glAddSwapHintRectWIN) \
+	X(glArrayElement) \
+	X(glBegin) \
+	X(glBindTexture)
+
+enum glfunc_indices
+{
+	GLIDX_INVALID = -1,
+#define X(X) GLIDX_##X,
+	GLFUNCS_MACRO
+#undef X
+	GLIDX_COUNT
+};
+
+extern const char* OPENGL32_funcnames[GLIDX_COUNT];
 
 typedef
 void

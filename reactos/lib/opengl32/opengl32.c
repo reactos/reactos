@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.2 2004/02/01 17:07:16 royce Exp $
+/* $Id: opengl32.c,v 1.3 2004/02/01 17:18:47 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -15,6 +15,13 @@
 #include "opengl32.h"
 
 #define EXPORT __declspec(dllexport)
+
+const char* OPENGL32_funcnames[GLIDX_COUNT] =
+{
+#define X(X) #X,
+	GLFUNCS_MACRO
+#undef X
+};
 
 static void OPENGL32_ThreadDetach()
 {
