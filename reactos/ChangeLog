@@ -1,5 +1,9 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/fs/util.c (FsRtlGetFileSize): Implement.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/ntdll/rtl/nls.c (RtlCustomCPToUnicodeN, RtlMultiByteToUnicodeN,
 	RtlOemToUnicodeN, RtlUnicodeToCustomCPN, RtlUnicodeToMultiByteN,
 	RtlUnicodeToMultiByteSize, RtlUnicodeToOemN,

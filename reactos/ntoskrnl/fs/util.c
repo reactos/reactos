@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.12 2002/09/08 10:23:20 chorns Exp $
+/* $Id: util.c,v 1.13 2003/03/16 13:18:49 chorns Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -241,7 +241,21 @@ FsRtlGetFileSize (
     IN OUT PLARGE_INTEGER   FileSize
     )
 {
-	return STATUS_NOT_IMPLEMENTED;
+	FILE_STANDARD_INFORMATION Info;
+	NTSTATUS Status;
+	ULONG Length;
+
+	Status = IoQueryFileInformation(FileObject,
+		FileStandardInformation,
+		sizeof(Info),
+		&Info,
+		&Length);
+	if (NT_SUCCESS(Status))
+		{
+			FileSize->QuadPart = Info.EndOfFile.QuadPart;
+		}
+
+	return Status;
 }
 
 
