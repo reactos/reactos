@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.13 2003/07/21 02:36:00 royce Exp $
+/* $Id: stubsa.c,v 1.14 2003/07/21 04:56:31 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -145,16 +145,31 @@ CreateICA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
 CreateMetaFileA(
-	LPCSTR		a0
+	LPCSTR		lpszFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  HDC rc;
+  NTSTATUS Status;
+  UNICODE_STRING File;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &File,
+					      (PCSZ)lpszFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kCreateMetaFile ( File.Buffer );
+
+  RtlFreeUnicodeString ( &File );
+
+  return rc;
 }
 
 
@@ -164,14 +179,50 @@ CreateMetaFileA(
 BOOL
 STDCALL
 CreateScalableFontResourceA(
-	DWORD		a0,
-	LPCSTR		a1,
-	LPCSTR		a2,
-	LPCSTR		a3
+	DWORD		fdwHidden,
+	LPCSTR		lpszFontRes,
+	LPCSTR		lpszFontFile,
+	LPCSTR		lpszCurrentPath
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  NTSTATUS Status;
+  UNICODE_STRING FontRes, FontFile, CurrentPath;
+  BOOL rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FontRes,
+					      (PCSZ)lpszFontRes );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FontFile,
+					      (PCSZ)lpszFontFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &CurrentPath,
+					      (PCSZ)lpszCurrentPath );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  return W32kCreateScalableFontResource ( fdwHidden,
+					  FontRes.Buffer,
+					  FontFile.Buffer,
+					  CurrentPath.Buffer );
+
+  RtlFreeUnicodeString ( &FontRes );
+  RtlFreeUnicodeString ( &FontFile );
+  RtlFreeUnicodeString ( &CurrentPath );
+
+  return rc;
 }
 
 
@@ -181,15 +232,62 @@ CreateScalableFontResourceA(
 int
 STDCALL
 DeviceCapabilitiesExA(
-	LPCSTR		a0,
-	LPCSTR		a1,
-	WORD		a2,
-	LPSTR		a3,
-	CONST DEVMODEA	*a4
+	LPCSTR		pDevice,
+	LPCSTR		pPort,
+	WORD		fwCapability,
+	LPSTR		pOutput,
+	CONST DEVMODEA	*pDevMode
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+#if 0
+  NTSTATUS Status;
+  UNICODE_STRING Device, Port, Output;
+  DEVMODEW DevModeW;
+  int rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Device,
+					      (PCSZ)pDevice );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Port,
+					      (PCSZ)pPort );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Output,
+					      (PCSZ)pOutput );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  if ( pDevMode )
+    RosRtlDevModeA2W ( &DevModeW, (const LPDEVMODEA)pDevMode );
+
+  /* FIXME no W32kDeviceCapabilities???? */
+  rc = W32kDeviceCapabilities ( Device.Buffer,
+		      Port.Buffer,
+		      fwCapability
+		      Output.Buffer,
+		      pDevMode ? &DevModeW : NULL );
+
+  RtlFreeUnicodeString ( &Device );
+  RtlFreeUnicodeString ( &Port );
+  RtlFreeUnicodeString ( &Output );
+
+  return rc;
+#else
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
 }
 
 
@@ -199,11 +297,11 @@ DeviceCapabilitiesExA(
 int
 STDCALL
 EnumFontFamiliesExA(
-	HDC		a0,
-	LPLOGFONT	a1,
-	FONTENUMEXPROC	a2,
-	LPARAM		a3,
-	DWORD		a4
+	HDC		hdc,
+	LPLOGFONT	lpLogFont,
+	FONTENUMEXPROC	lpEnumFontFamProc,
+	LPARAM		lParam,
+	DWORD		dwFlags
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -217,10 +315,10 @@ EnumFontFamiliesExA(
 int
 STDCALL
 EnumFontFamiliesA(
-	HDC		a0,
-	LPCSTR		a1,
-	FONTENUMPROC	a2,
-	LPARAM		a3
+	HDC		hdc,
+	LPCSTR		lpszFamily,
+	FONTENUMPROC	lpEnumFontFamProc,
+	LPARAM		lParam
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

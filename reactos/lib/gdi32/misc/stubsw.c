@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.13 2003/07/21 04:10:41 royce Exp $
+/* $Id: stubsw.c,v 1.14 2003/07/21 04:56:32 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -70,33 +70,34 @@ CreateICW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 STDCALL
 CreateMetaFileW(
-	LPCWSTR		a0
+	LPCWSTR		lpszFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return W32kCreateMetaFile ( lpszFile );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 CreateScalableFontResourceW(
-	DWORD		a0,
-	LPCWSTR		a1,
-	LPCWSTR		a2,
-	LPCWSTR		a3
+	DWORD		fdwHidden,
+	LPCWSTR		lpszFontRes,
+	LPCWSTR		lpszFontFile,
+	LPCWSTR		lpszCurrentPath
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kCreateScalableFontResource ( fdwHidden,
+					  lpszFontRes,
+					  lpszFontFile,
+					  lpszCurrentPath );
 }
 
 
@@ -106,50 +107,57 @@ CreateScalableFontResourceW(
 int
 STDCALL
 DeviceCapabilitiesExW(
-	LPCWSTR		a0,
-	LPCWSTR		a1,
-	WORD		a2,
-	LPWSTR		a3,
-	CONST DEVMODEW	*a4
+	LPCWSTR		pDevice,
+	LPCWSTR		pPort,
+	WORD		fwCapability,
+	LPWSTR		pOutput,
+	CONST DEVMODEW	*pDevMode
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+#if 0
+  /* FIXME no W32kDeviceCapabilities???? */
+  return W32kDeviceCapabilities ( pDevice,
+				  pPort,
+				  fwCapability,
+				  pOutput,
+				  pDevMode );
+#else
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
 EnumFontFamiliesExW(
-	HDC		a0,
-	LPLOGFONT	a1,
-	FONTENUMEXPROC	a2,
-	LPARAM		a3,
-	DWORD		a4
+	HDC		hdc,
+	LPLOGFONT	lpLogFont,
+	FONTENUMEXPROC	lpEnumFontFamProc,
+	LPARAM		lParam,
+	DWORD		dwFlags
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kEnumFontFamiliesEx ( hdc, lpLogFont, lpEnumFontFamProc, lParam, dwFlags );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
 EnumFontFamiliesW(
-	HDC		a0,
-	LPCWSTR		a1,
-	FONTENUMPROC	a2,
-	LPARAM		a3
+	HDC		hdc,
+	LPCWSTR		lpszFamily,
+	FONTENUMPROC	lpEnumFontFamProc,
+	LPARAM		lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kEnumFontFamilies ( hdc, lpszFamily, lpEnumFontFamProc, lParam );
 }
 
 

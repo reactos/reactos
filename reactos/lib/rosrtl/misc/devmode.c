@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <string.h>
+#include <rosrtl/devmode.h>
 
 void
 RosRtlDevModeA2W ( LPDEVMODEW pW, const LPDEVMODEA pA )

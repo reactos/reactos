@@ -63,7 +63,7 @@ int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONTW  Logfont,
-                            FONTENUMPROC  EnumFontFamExProc,
+                            FONTENUMEXPROC  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags);
 
