@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.46 2004/07/15 08:15:49 ekohl Exp $
+/* $Id: rtl.h,v 1.47 2004/08/09 19:41:13 jimtabor Exp $
  *
  */
 
@@ -36,6 +36,61 @@ typedef struct _DEBUG_BUFFER
   PVOID LockInformation;
   PVOID Reserved[8];
 } DEBUG_BUFFER, *PDEBUG_BUFFER;
+
+/* DEBUG_MODULE_INFORMATION.Flags constants */
+#define LDRP_STATIC_LINK                  0x00000002
+#define LDRP_IMAGE_DLL                    0x00000004
+#define LDRP_LOAD_IN_PROGRESS             0x00001000
+#define LDRP_UNLOAD_IN_PROGRESS           0x00002000
+#define LDRP_ENTRY_PROCESSED              0x00004000
+#define LDRP_ENTRY_INSERTED               0x00008000
+#define LDRP_CURRENT_LOAD                 0x00010000
+#define LDRP_FAILED_BUILTIN_LOAD          0x00020000
+#define LDRP_DONT_CALL_FOR_THREADS        0x00040000
+#define LDRP_PROCESS_ATTACH_CALLED        0x00080000
+#define LDRP_DEBUG_SYMBOLS_LOADED         0x00100000
+#define LDRP_IMAGE_NOT_AT_BASE            0x00200000
+#define LDRP_WX86_IGNORE_MACHINETYPE      0x00400000
+
+typedef struct _DEBUG_MODULE_INFORMATION {
+	ULONG  Reserved[2];
+	ULONG  Base;
+	ULONG  Size;
+	ULONG  Flags;
+	USHORT  Index;
+	USHORT  Unknown;
+	USHORT  LoadCount;
+	USHORT  ModuleNameOffset;
+	CHAR  ImageName[256];
+} DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
+
+typedef struct _DEBUG_HEAP_INFORMATION {
+	ULONG  Base;
+	ULONG  Flags;
+	USHORT  Granularity;
+	USHORT  Unknown;
+	ULONG  Allocated;
+	ULONG  Committed;
+	ULONG  TagCount;
+	ULONG  BlockCount;
+	ULONG  Reserved[7];
+	PVOID  Tags;
+	PVOID  Blocks;
+} DEBUG_HEAP_INFORMATION, *PDEBUG_HEAP_INFORMATION;
+
+typedef struct _DEBUG_LOCK_INFORMATION {
+	PVOID  Address;
+	USHORT  Type;
+	USHORT  CreatorBackTraceIndex;
+	ULONG  OwnerThreadId;
+	ULONG  ActiveCount;
+	ULONG  ContentionCount;
+	ULONG  EntryCount;
+	ULONG  RecursionCount;
+	ULONG  NumberOfSharedWaiters;
+	ULONG  NumberOfExclusiveWaiters;
+} DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
+
 
 
 typedef struct _CRITICAL_SECTION_DEBUG
