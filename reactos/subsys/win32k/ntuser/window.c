@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.72 2003/08/01 11:56:43 weiden Exp $
+/* $Id: window.c,v 1.73 2003/08/01 14:44:03 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2172,6 +2172,12 @@ NtUserBuildHwndList(
   return dwCount;
 }
 
+VOID STDCALL
+NtUserValidateRect(HWND Wnd, const RECT* Rect)
+{
+  (VOID)PaintRedrawWindow(Wnd, Rect, 0, RDW_VALIDATE | RDW_NOCHILDREN, 0);
+}
+
 /*
  * @unimplemented
  */
@@ -2187,6 +2193,5 @@ NtUserDrawMenuBarTemp(
 
   return 0;
 }
-
 
 /* EOF */
