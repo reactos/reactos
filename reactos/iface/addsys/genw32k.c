@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.3 2002/08/26 13:06:02 dwelch Exp $
+/* $Id: genw32k.c,v 1.4 2003/07/09 20:41:35 hyperion Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -21,8 +21,6 @@
 #include <string.h>
 
 #define PARAMETERIZED_LIBS
-
-#define VERBOSE
 
 #define INPUT_BUFFER_SIZE 255
 
