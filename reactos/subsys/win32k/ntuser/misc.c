@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.84 2004/08/17 21:47:36 weiden Exp $
+/* $Id: misc.c,v 1.85 2004/09/13 21:37:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -129,6 +129,10 @@ NtUserCallNoParam(DWORD Routine)
 
     case NOPARAM_ROUTINE_CSRSS_INITIALIZED:
       Result = (DWORD)CsrInit();
+      break;
+
+    case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
+      /* not used yet */
       break;
     
     default:
