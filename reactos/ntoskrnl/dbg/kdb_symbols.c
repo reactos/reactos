@@ -639,7 +639,6 @@ KdbpSymRemoveCachedFile(IN PIMAGE_SYMBOL_INFO SymbolInfo)
   KeReleaseSpinLock(&SymbolFileListLock, Irql);
   DPRINT1("Warning: Removing unknown symbol file: FileBuffer = %p, ImageBase = %p\n",
           SymbolInfo->FileBuffer, SymbolInfo->ImageBase);
-  ASSERT(0);
 }
 
 /*! \brief Loads a symbol file.
@@ -796,7 +795,8 @@ KdbpSymUnloadModuleSymbols(IN PIMAGE_SYMBOL_INFO SymbolInfo)
 {
   DPRINT("Unloading symbols\n");
 
-  if (SymbolInfo != NULL && SymbolInfo->FileBuffer != NULL)
+  if (SymbolInfo != NULL && SymbolInfo->FileBuffer != NULL &&
+      (PVOID)SymbolInfo->ImageBase != NULL)
     {
       KdbpSymRemoveCachedFile(SymbolInfo);
       SymbolInfo->FileBuffer = NULL;

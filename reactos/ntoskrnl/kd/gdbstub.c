@@ -1411,7 +1411,7 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
         }
     }
 
-  return kdHandleException;
+  return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.51 2004/11/11 12:27:40 ekohl Exp $
+/* $Id: catch.c,v 1.52 2004/11/13 23:00:15 blight Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -80,13 +80,13 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
   else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
     {
       Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
-      if (Action == kdContinue)
-	{
-	  return;
-	}
     }
 #endif /* KDBG */
-  if (Action != kdDoNotHandleException)
+  if (Action == kdContinue)
+    {
+      return;
+    }
+  else if (Action != kdDoNotHandleException)
     {
       if (PreviousMode == UserMode)
 	{
@@ -94,7 +94,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      PULONG Stack;
 	      ULONG CDest;
-	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; // FIXME: HACKHACK
+	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; /* FIXME: HACKHACK */
 	      PULONG pNewUserStack = (PULONG)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
 	      NTSTATUS StatusOfCopy;
 
@@ -125,10 +125,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	        }
 	      else
 	        {
-	          // Now it really hit the ventilation device. Sorry,
-	          // can do nothing but kill the sucker.
+	          /* Now it really hit the ventilation device. Sorry,
+	           * can do nothing but kill the sucker.
+	           */
 	          ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-	          DPRINT1("User-mode stack was invalid. Terminating target thread\nn");
+	          DPRINT1("User-mode stack was invalid. Terminating target thread\n");
 	        }
 	      Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
 	      return;
