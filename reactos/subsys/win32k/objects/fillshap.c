@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.43 2004/03/03 06:33:58 royce Exp $ */
+/* $Id: fillshap.c,v 1.44 2004/03/04 01:50:26 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -830,7 +830,6 @@ extern BOOL FillPolygon(PDC dc,
 
 #endif
 
-//This implementation is blatantly ripped off from NtGdiRectangle
 BOOL
 STDCALL
 NtGdiPolygon(HDC          hDC,
@@ -840,45 +839,34 @@ NtGdiPolygon(HDC          hDC,
   DC *dc;
   LPPOINT Safept;
   NTSTATUS Status;
-  BOOL Ret;
+  BOOL Ret = FALSE;
   
-  dc = DC_LockDc(hDC);
-  if(!dc)
+  if ( Count < 2 )
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  
-  if(Count >= 2)
-  {
-    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
-    if(!Safept)
-    {
-      DC_UnlockDc(hDC);
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-    
-    Status = MmCopyFromCaller(Safept, UnsafePoints, sizeof(POINT) * Count);
-    if(!NT_SUCCESS(Status))
-    {
-      ExFreePool(Safept);
-      DC_UnlockDc(hDC);
-      SetLastNtError(Status);
-      return FALSE;
-    }
-  }
-  else
-  {
-    DC_UnlockDc(hDC);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
   
-  Ret = IntGdiPolygon(dc, Safept, Count);
-
-  ExFreePool(Safept);
-  DC_UnlockDc(hDC);
+  dc = DC_LockDc(hDC);
+  if(!dc)
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  else
+  {
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
+    if(!Safept)
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    else
+    {
+      Status = MmCopyFromCaller(Safept, UnsafePoints, sizeof(POINT) * Count);
+      if(!NT_SUCCESS(Status))
+        SetLastNtError(Status);
+      else
+        Ret = IntGdiPolygon(dc, Safept, Count);
+        
+      ExFreePool(Safept);
+    }
+    DC_UnlockDc(hDC);
+  }
   
   return Ret;
 }
