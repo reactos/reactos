@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2003, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.9 2004/01/08 14:57:17 ekohl Exp $
+/* $Id: binhive.c,v 1.10 2004/05/09 14:50:09 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -110,13 +110,13 @@ typedef struct _HIVE_HEADER
 typedef struct _HBIN
 {
   /* Bin identifier "hbin" (0x6E696268) */
-  ULONG  BlockId;
+  ULONG  HeaderId;
 
   /* Block offset of this bin */
-  BLOCK_OFFSET  BlockOffset;
+  BLOCK_OFFSET  BinOffset;
 
   /* Size in bytes, multiple of the block size (4KB) */
-  ULONG  BlockSize;
+  ULONG  BinSize;
 
   /* ? */
   ULONG  Unused1;
@@ -297,9 +297,9 @@ CmiCreateDefaultBinCell(PHBIN BinCell)
 {
   assert (BinCell);
   memset (BinCell, 0, REG_BLOCK_SIZE);
-  BinCell->BlockId = REG_BIN_ID;
+  BinCell->HeaderId = REG_BIN_ID;
   BinCell->DateModified = 0ULL;
-  BinCell->BlockSize = REG_BLOCK_SIZE;
+  BinCell->BinSize = REG_BLOCK_SIZE;
 }
 
 
@@ -409,7 +409,7 @@ CmiCreateRegistryHive (PCHAR KeyName)
   /* Init first bin */
   BinCell = (PHBIN)Hive->BlockList[0];
   CmiCreateDefaultBinCell (BinCell);
-  BinCell->BlockOffset = 0;
+  BinCell->BinOffset = 0;
 
   /* Init root key cell */
   RootKeyCell = (PKEY_CELL)((ULONG_PTR)BinCell + REG_HBIN_DATA_OFFSET);
@@ -498,7 +498,7 @@ CmiGetCell (PREGISTRY_HIVE Hive,
   if (ppBin)
     *ppBin = pBin;
 
-  return (PVOID)((ULONG_PTR)pBin + (BlockOffset - pBin->BlockOffset));
+  return (PVOID)((ULONG_PTR)pBin + (BlockOffset - pBin->BinOffset));
 }
 
 
@@ -524,8 +524,8 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
   if (Bin == NULL)
     return FALSE;
 
-  BinOffset = Bin->BlockOffset;
-  BinSize = Bin->BlockSize;
+  BinOffset = Bin->BinOffset;
+  BinSize = Bin->BinSize;
   DPRINT("Bin %p  Offset %lx  Size %lx\n", Bin, BinOffset, BinSize);
 
   for (i = 0; i < RegistryHive->FreeListSize; i++)
@@ -702,30 +702,34 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 
 static BOOL
 CmiAddBin(PREGISTRY_HIVE RegistryHive,
+	  ULONG BlockCount,
 	  PVOID *NewBlock,
 	  PBLOCK_OFFSET NewBlockOffset)
 {
   PCELL_HEADER tmpBlock;
   PHBIN * tmpBlockList;
   PHBIN tmpBin;
+  ULONG BinSize;
+  ULONG i;
 
-  tmpBin = malloc (REG_BLOCK_SIZE);
+  BinSize = BlockCount *REG_BLOCK_SIZE;
+  tmpBin = malloc (BinSize);
   if (tmpBin == NULL)
     {
       return FALSE;
     }
-  memset (tmpBin, 0, REG_BLOCK_SIZE);
+  memset (tmpBin, 0, BinSize);
 
-  tmpBin->BlockId = REG_BIN_ID;
-  tmpBin->BlockOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
-  RegistryHive->FileSize += REG_BLOCK_SIZE;
-  tmpBin->BlockSize = REG_BLOCK_SIZE;
+  tmpBin->HeaderId = REG_BIN_ID;
+  tmpBin->BinOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
+  RegistryHive->FileSize += BinSize;
+  tmpBin->BinSize = BinSize;
   tmpBin->Unused1 = 0;
   tmpBin->DateModified = 0ULL;
   tmpBin->Unused2 = 0;
 
   /* Increase size of list of blocks */
-  tmpBlockList = malloc (sizeof(PHBIN) * (RegistryHive->BlockListSize + 1));
+  tmpBlockList = malloc (sizeof(PHBIN) * (RegistryHive->BlockListSize + BlockCount));
   if (tmpBlockList == NULL)
     {
       free (tmpBin);
@@ -741,7 +745,9 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
     }
 
   RegistryHive->BlockList = tmpBlockList;
-  RegistryHive->BlockList[RegistryHive->BlockListSize++] = tmpBin;
+  for (i = 0; i < BlockCount; i++)
+    RegistryHive->BlockList[RegistryHive->BlockListSize + i] = tmpBin;
+  RegistryHive->BlockListSize += BlockCount;
 
   /* Initialize a free block in this heap : */
   tmpBlock = (PCELL_HEADER)((ULONG_PTR) tmpBin + REG_HBIN_DATA_OFFSET);
@@ -750,7 +756,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   *NewBlock = (PVOID) tmpBlock;
 
   if (NewBlockOffset)
-    *NewBlockOffset = tmpBin->BlockOffset + REG_HBIN_DATA_OFFSET;
+    *NewBlockOffset = tmpBin->BinOffset + REG_HBIN_DATA_OFFSET;
 
   return TRUE;
 }
@@ -758,7 +764,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 static BOOL
 CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
-		 LONG BlockSize,
+		 LONG CellSize,
 		 PVOID *Block,
 		 PBLOCK_OFFSET pBlockOffset)
 {
@@ -768,13 +774,13 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   *Block = NULL;
 
   /* Round to 16 bytes multiple */
-  BlockSize = ROUND_UP(BlockSize, 16);
+  CellSize = ROUND_UP(CellSize, 16);
 
   /* first search in free blocks */
   NewBlock = NULL;
   for (i = 0; i < RegistryHive->FreeListSize; i++)
     {
-      if (RegistryHive->FreeList[i]->CellSize >= BlockSize)
+      if (RegistryHive->FreeList[i]->CellSize >= CellSize)
 	{
 	  NewBlock = RegistryHive->FreeList[i];
 	  if (pBlockOffset)
@@ -800,29 +806,32 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   if (NewBlock == NULL)
     {
       /* Add a new block */
-      if (!CmiAddBin(RegistryHive, (PVOID *)&NewBlock , pBlockOffset))
+      if (!CmiAddBin(RegistryHive,
+		     ((sizeof(HBIN) + CellSize - 1) / REG_BLOCK_SIZE) + 1,
+		     (PVOID *)&NewBlock,
+		     pBlockOffset))
 	return FALSE;
     }
 
   *Block = NewBlock;
 
   /* Split the block in two parts */
-  if (NewBlock->CellSize > BlockSize)
+  if (NewBlock->CellSize > CellSize)
     {
-      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
-      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
+      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock + CellSize);
+      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - CellSize;
       CmiAddFree (RegistryHive,
 		  NewBlock,
-		  *pBlockOffset + BlockSize,
+		  *pBlockOffset + CellSize,
 		  TRUE);
     }
-  else if (NewBlock->CellSize < BlockSize)
+  else if (NewBlock->CellSize < CellSize)
     {
       return FALSE;
     }
 
-  memset(*Block, 0, BlockSize);
-  ((PCELL_HEADER)(*Block))->CellSize = -BlockSize;
+  memset(*Block, 0, CellSize);
+  ((PCELL_HEADER)(*Block))->CellSize = -CellSize;
 
   return TRUE;
 }
@@ -1369,7 +1378,7 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
 	  DPRINT ("Bin[%lu]: Offset 0x%lx  Size 0x%lx\n",
 		  i, Bin->BlockOffset, Bin->BlockSize);
 
-	  fwrite (Bin, Bin->BlockSize, 1, File);
+	  fwrite (Bin, Bin->BinSize, 1, File);
 	}
     }
 

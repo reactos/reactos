@@ -94,16 +94,17 @@ typedef struct _HIVE_HEADER
   U32  Checksum;
 } __attribute__((packed)) HIVE_HEADER, *PHIVE_HEADER;
 
-typedef struct _HBIN
+
+typedef struct _BIN_HEADER
 {
   /* Bin identifier "hbin" (0x6E696268) */
-  U32  BlockId;
+  U32  HeaderId;
 
-  /* Block offset of this bin */
-  BLOCK_OFFSET  BlockOffset;
+  /* Bin offset */
+  BLOCK_OFFSET  BinOffset;
 
   /* Size in bytes, multiple of the block size (4KB) */
-  U32  BlockSize;
+  U32  BinSize;
 
   /* ? */
   U32  Unused1;
@@ -318,9 +319,9 @@ CmiCreateDefaultBinCell (PHBIN BinCell)
 {
   assert(BinCell);
   memset (BinCell, 0, REG_BLOCK_SIZE);
-  BinCell->BlockId = REG_BIN_ID;
+  BinCell->HeaderId = REG_BIN_ID;
   BinCell->DateModified = 0ULL;
-  BinCell->BlockSize = REG_BLOCK_SIZE;
+  BinCell->BinSize = REG_BLOCK_SIZE;
 }
 
 
@@ -424,7 +425,7 @@ CmiCreateHive (PCHAR KeyName)
   /* Init first bin */
   BinCell = (PHBIN)Hive->BlockList[0];
   CmiCreateDefaultBinCell(BinCell);
-  BinCell->BlockOffset = 0;
+  BinCell->BinOffset = 0;
 
   /* Init root key cell */
   RootKeyCell = (PKEY_CELL)((U32)BinCell + REG_HBIN_DATA_OFFSET);
@@ -496,8 +497,8 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
 
   DbgPrint((DPRINT_REGISTRY, "Bin %p\n", Bin));
 
-  BinOffset = Bin->BlockOffset;
-  BinSize = Bin->BlockSize;
+  BinOffset = Bin->BinOffset;
+  BinSize = Bin->BinSize;
   DbgPrint((DPRINT_REGISTRY, "Bin %p  Offset %lx  Size %lx\n", Bin, BinOffset, BinSize));
 
   for (i = 0; i < RegistryHive->FreeListSize; i++)
@@ -674,45 +675,51 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 
 static BOOL
 CmiAddBin(PREGISTRY_HIVE RegistryHive,
+	  U32 BlockCount,
 	  PVOID *NewBlock,
 	  PBLOCK_OFFSET NewBlockOffset)
 {
   PCELL_HEADER tmpBlock;
-  PHBIN * tmpBlockList;
+  PHBIN *BlockList;
   PHBIN tmpBin;
+  U32 BinSize;
+  U32 i;
 
-  tmpBin = AllocateMbMemory (REG_BLOCK_SIZE);
+  BinSize = BlockCount * REG_BLOCK_SIZE;
+  tmpBin = AllocateMbMemory (BinSize);
   if (tmpBin == NULL)
     {
       return FALSE;
     }
-  memset (tmpBin, 0, REG_BLOCK_SIZE);
+  memset (tmpBin, 0, BinSize);
 
-  tmpBin->BlockId = REG_BIN_ID;
-  tmpBin->BlockOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
-  RegistryHive->FileSize += REG_BLOCK_SIZE;
-  tmpBin->BlockSize = REG_BLOCK_SIZE;
+  tmpBin->HeaderId = REG_BIN_ID;
+  tmpBin->BinOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
+  RegistryHive->FileSize += BinSize;
+  tmpBin->BinSize = BinSize;
   tmpBin->Unused1 = 0;
   tmpBin->DateModified = 0ULL;
   tmpBin->Unused2 = 0;
 
   /* Increase size of list of blocks */
-  tmpBlockList = MmAllocateMemory (sizeof(PHBIN) * (RegistryHive->BlockListSize + 1));
-  if (tmpBlockList == NULL)
+  BlockList = MmAllocateMemory (sizeof(PHBIN) * (RegistryHive->BlockListSize + BlockCount));
+  if (BlockList == NULL)
     {
       return FALSE;
     }
 
   if (RegistryHive->BlockListSize > 0)
     {
-      memcpy (tmpBlockList,
+      memcpy (BlockList,
 	      RegistryHive->BlockList,
 	      sizeof(PHBIN) * RegistryHive->BlockListSize);
       MmFreeMemory (RegistryHive->BlockList);
     }
 
-  RegistryHive->BlockList = tmpBlockList;
-  RegistryHive->BlockList[RegistryHive->BlockListSize++] = tmpBin;
+  RegistryHive->BlockList = BlockList;
+  for (i = 0; i < BlockCount; i++)
+    RegistryHive->BlockList[RegistryHive->BlockListSize + i] = tmpBin;
+  RegistryHive->BlockListSize += BlockCount;
 
   /* Initialize a free block in this heap : */
   tmpBlock = (PCELL_HEADER)((U32) tmpBin + REG_HBIN_DATA_OFFSET);
@@ -721,7 +728,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   *NewBlock = (PVOID) tmpBlock;
 
   if (NewBlockOffset)
-    *NewBlockOffset = tmpBin->BlockOffset + REG_HBIN_DATA_OFFSET;
+    *NewBlockOffset = tmpBin->BinOffset + REG_HBIN_DATA_OFFSET;
 
   return TRUE;
 }
@@ -729,7 +736,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 static BOOL
 CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
-		 S32 BlockSize,
+		 S32 CellSize,
 		 PVOID *Block,
 		 PBLOCK_OFFSET pBlockOffset)
 {
@@ -739,13 +746,13 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   *Block = NULL;
 
   /* Round to 16 bytes multiple */
-  BlockSize = ROUND_UP(BlockSize, 16);
+  CellSize = ROUND_UP(CellSize, 16);
 
   /* first search in free blocks */
   NewBlock = NULL;
   for (i = 0; i < RegistryHive->FreeListSize; i++)
     {
-      if (RegistryHive->FreeList[i]->CellSize >= BlockSize)
+      if (RegistryHive->FreeList[i]->CellSize >= CellSize)
 	{
 	  NewBlock = RegistryHive->FreeList[i];
 	  if (pBlockOffset)
@@ -767,33 +774,36 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 	}
     }
 
-  /* Need to extend hive file : */
+  /* Need to extend hive file */
   if (NewBlock == NULL)
     {
       /* Add a new block */
-      if (!CmiAddBin(RegistryHive, (PVOID *)&NewBlock , pBlockOffset))
+      if (!CmiAddBin(RegistryHive,
+		     ((sizeof(HBIN) + CellSize - 1) / REG_BLOCK_SIZE) + 1,
+		     (PVOID *)&NewBlock,
+		     pBlockOffset))
 	return FALSE;
     }
 
   *Block = NewBlock;
 
   /* Split the block in two parts */
-  if (NewBlock->CellSize > BlockSize)
+  if (NewBlock->CellSize > CellSize)
     {
-      NewBlock = (PCELL_HEADER) ((U32) NewBlock+BlockSize);
-      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
+      NewBlock = (PCELL_HEADER) ((U32)NewBlock + CellSize);
+      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - CellSize;
       CmiAddFree (RegistryHive,
 		  NewBlock,
-		  *pBlockOffset + BlockSize,
+		  *pBlockOffset + CellSize,
 		  TRUE);
     }
-  else if (NewBlock->CellSize < BlockSize)
+  else if (NewBlock->CellSize < CellSize)
     {
       return FALSE;
     }
 
-  memset(*Block, 0, BlockSize);
-  ((PCELL_HEADER)(*Block))->CellSize = -BlockSize;
+  memset(*Block, 0, CellSize);
+  ((PCELL_HEADER)(*Block))->CellSize = -CellSize;
 
   return TRUE;
 }
@@ -817,7 +827,7 @@ CmiGetCell (PREGISTRY_HIVE Hive,
   if (Bin == NULL)
     return NULL;
 
-  return (PVOID)((U32)Bin + (BlockOffset - Bin->BlockOffset));
+  return (PVOID)((U32)Bin + (BlockOffset - Bin->BinOffset));
 }
 
 
@@ -1561,7 +1571,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
   RootBin = (PHBIN)((U32)HiveHeader + REG_BLOCK_SIZE);
   DbgPrint((DPRINT_REGISTRY, "RootBin: %x\n", RootBin));
-  if (RootBin->BlockId != REG_BIN_ID || RootBin->BlockSize == 0)
+  if (RootBin->HeaderId != REG_BIN_ID || RootBin->BinSize == 0)
     {
       DbgPrint((DPRINT_REGISTRY, "Invalid bin id!\n"));
       return FALSE;
