@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.70 2000/07/07 00:39:24 phreak Exp $
+; $Id: ntoskrnl.edf,v 1.71 2000/07/10 21:47:36 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -320,12 +320,12 @@ KeBugCheck=KeBugCheck@4
 KeBugCheckEx=KeBugCheckEx@20
 KeCancelTimer=KeCancelTimer@4
 KeClearEvent=KeClearEvent@4
-;KeConnectInterrupt
+KeConnectInterrupt=KeConnectInterrupt@4
 ;KeDcacheFlushCount DATA
 KeDelayExecutionThread=KeDelayExecutionThread@12
 KeDeregisterBugCheckCallback=KeDeregisterBugCheckCallback@4
 KeDetachProcess=KeDetachProcess@0
-;KeDisconnectInterrupt
+KeDisconnectInterrupt=KeDisconnectInterrupt@4
 KeEnterCriticalRegion=KeEnterCriticalRegion@0
 KeEnterKernelDebugger=KeEnterKernelDebugger@0
 ;KeFindConfigurationEntry
@@ -348,7 +348,7 @@ KeInitializeApc=KeInitializeApc@32
 KeInitializeDeviceQueue=KeInitializeDeviceQueue@4
 KeInitializeDpc=KeInitializeDpc@12
 KeInitializeEvent=KeInitializeEvent@12
-;KeInitializeInterrupt
+KeInitializeInterrupt=KeInitializeInterrupt@44
 ;KeInitializeMutant
 KeInitializeMutex=KeInitializeMutex@8
 ;KeInitializeQueue
@@ -425,8 +425,8 @@ KeWaitForSingleObject=KeWaitForSingleObject@20
 ;KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 ;KiCoprocessorError@0
-;KiDeliverApc@12
-;KiDispatchInterrupt@0
+KiDeliverApc=KiDeliverApc@12
+KiDispatchInterrupt=KiDispatchInterrupt@0
 ;KiIpiServiceRoutine@8
 ;KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt

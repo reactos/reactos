@@ -27,14 +27,9 @@ BOOLEAN Hal_bios32_is_service_present(ULONG service);
 VOID HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalResetDisplay (VOID);
 
-VOID
-HalpInitBusHandlers (VOID);
+VOID HalpInitBusHandlers (VOID);
 
 /* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
-
-/* irq.c */
-VOID HalpDispatchInterrupt (ULONG irq);
-VOID HalpInitIRQs (VOID);
 
 #endif /* __INTERNAL_HAL_HAL_H */

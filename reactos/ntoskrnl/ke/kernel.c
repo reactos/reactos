@@ -18,15 +18,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeInit(VOID)
+VOID KeInit1(VOID)
+{
+   KeInitExceptions ();
+   KeInitInterrupts ();
+}
+
+VOID KeInit2(VOID)
 {
    KeInitDpc();
    KeInitializeBugCheck();
    KeInitializeDispatcher();
    KeInitializeTimerImpl();
-
-   /*
-    * Allow interrupts
-    */
-   KeLowerIrql(PASSIVE_LEVEL);
 }

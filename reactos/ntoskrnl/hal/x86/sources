@@ -8,8 +8,6 @@ OBJECTS_HAL = \
 	hal/x86/drive.o \
 	hal/x86/fmutex.o \
 	hal/x86/halinit.o \
-	hal/x86/irq.o \
-	hal/x86/irqhand.o \
 	hal/x86/isa.o \
 	hal/x86/irql.o \
 	hal/x86/kdbg.o \
@@ -26,4 +24,3 @@ OBJECTS_HAL = \
 	hal/x86/sysinfo.o \
 	hal/x86/time.o \
 	hal/x86/udelay.o
-	

@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.12 2000/07/01 18:23:06 ekohl Exp $
+/* $Id: halinit.c,v 1.13 2000/07/10 21:49:29 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
-#include <internal/ke.h>
 #include <internal/ntoskrnl.h>
 
 #define NDEBUG
@@ -32,9 +31,6 @@ HalInitSystem (
    {
       HalInitializeDisplay (LoaderBlock);
       HalpCalibrateStallExecution ();
-      KeInitExceptions ();
-      HalpInitIRQs ();
-      KeLowerIrql(DISPATCH_LEVEL);
    }
    else
    {

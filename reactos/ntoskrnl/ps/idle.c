@@ -37,7 +37,7 @@ static NTSTATUS PsIdleThreadMain(PVOID Context)
 	if (DpcQueueSize > 0)
 	  {
 	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-	     KeDrainDpcQueue();
+	     KiDispatchInterrupt();
 	     KeLowerIrql(oldlvl);
 	  }
 	NtYieldExecution();

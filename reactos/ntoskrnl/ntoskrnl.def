@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.83 2000/07/07 00:39:24 phreak Exp $
+; $Id: ntoskrnl.def,v 1.84 2000/07/10 21:47:36 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -320,12 +320,12 @@ KeBugCheck@4
 KeBugCheckEx@20
 KeCancelTimer@4
 KeClearEvent@4
-;KeConnectInterrupt
+KeConnectInterrupt@4
 ;KeDcacheFlushCount DATA
 KeDelayExecutionThread@12
 KeDeregisterBugCheckCallback@4
 KeDetachProcess@0
-;KeDisconnectInterrupt
+KeDisconnectInterrupt@4
 KeEnterCriticalRegion@0
 KeEnterKernelDebugger@0
 ;KeFindConfigurationEntry
@@ -348,7 +348,7 @@ KeInitializeApc@32
 KeInitializeDeviceQueue@4
 KeInitializeDpc@12
 KeInitializeEvent@12
-;KeInitializeInterrupt
+KeInitializeInterrupt@44
 ;KeInitializeMutant
 KeInitializeMutex@8
 ;KeInitializeQueue
@@ -425,8 +425,8 @@ KeWaitForSingleObject@20
 ;KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 ;KiCoprocessorError@0
-;KiDeliverApc@12
-;KiDispatchInterrupt@0
+KiDeliverApc@12
+KiDispatchInterrupt@0
 ;KiIpiServiceRoutine@8
 ;KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt

@@ -1,4 +1,4 @@
-/* $Id: dpc.c,v 1.17 2000/07/04 08:52:39 dwelch Exp $
+/* $Id: dpc.c,v 1.18 2000/07/10 21:54:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,7 +50,7 @@ VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
    Dpc->Lock=0;
 }
 
-VOID KeDrainDpcQueue(VOID)
+VOID STDCALL KiDispatchInterrupt(VOID)
 /*
  * FUNCTION: Called to execute queued dpcs
  */
@@ -65,7 +65,7 @@ VOID KeDrainDpcQueue(VOID)
      {
 	return;
      }
-   DPRINT("KeDrainDpcQueue()\n");
+   DPRINT("KiDispatchInterrupt()\n");
    
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);

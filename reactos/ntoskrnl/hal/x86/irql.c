@@ -92,7 +92,7 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 	  {
 	     KeSetCurrentIrql(DISPATCH_LEVEL);
 	     __asm__("sti\n\t");
-	     KeDrainDpcQueue();
+	     KiDispatchInterrupt();
 	     __asm__("cli\n\t");
 	     KeSetCurrentIrql(PASSIVE_LEVEL);
 	  }
@@ -106,7 +106,7 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
      {
 	KeSetCurrentIrql(APC_LEVEL);
 	__asm__("sti\n\t");
-	KeCallApcsThread();
+	KiDeliverApc(0, 0, 0);
 	__asm__("cli\n\t");
 	KeSetCurrentIrql(PASSIVE_LEVEL);
 	__asm__("sti\n\t");

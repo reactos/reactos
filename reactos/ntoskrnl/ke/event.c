@@ -75,9 +75,9 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
    return(ret);
 }
 
-LONG STDCALL KePulseEvent (PKEVENT		Event,
-			   KPRIORITY	Increment,
-			   BOOLEAN		Wait)
+NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
+			       KPRIORITY	Increment,
+			       BOOLEAN		Wait)
 {
    int ret;
 
@@ -87,7 +87,7 @@ LONG STDCALL KePulseEvent (PKEVENT		Event,
    KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
    InterlockedExchange(&(Event->Header.SignalState),0);
    KeReleaseDispatcherDatabaseLock(Wait);
-   return(ret);
+   return((NTSTATUS)ret);
 }
 
 /* EOF */

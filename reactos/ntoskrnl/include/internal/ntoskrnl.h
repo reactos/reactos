@@ -47,8 +47,6 @@ VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKe
 VOID IoInit(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);
-VOID TstBegin(VOID);
-VOID KeInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmImportHive(PCHAR);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);

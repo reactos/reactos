@@ -52,7 +52,7 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
  * and if so the APCs will be delivered on exit from kernel mode.
  * ARGUMENTS:
  *        Thread = Thread to test for alerts
- *        UserContext = The user context saved on entry to kernel mode                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+ *        UserContext = The user context saved on entry to kernel mode
  */
 {
    PLIST_ENTRY current_entry;
@@ -115,14 +115,16 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    return ret;
 }
 
-VOID KeCallApcsThread(VOID)
+VOID STDCALL KiDeliverApc(ULONG Unknown1,
+			  ULONG Unknown2,
+			  ULONG Unknown3)
 {
    PETHREAD Thread = PsGetCurrentThread();
    PLIST_ENTRY current;
    PKAPC Apc;
    KIRQL oldlvl;
 
-   DPRINT("KeCallApcsThread()\n");
+   DPRINT("KiDeliverApc()\n");
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
    while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
    {

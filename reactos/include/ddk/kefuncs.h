@@ -51,6 +51,8 @@ BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 
 VOID STDCALL KeClearEvent (PKEVENT	Event);
 
+NTSTATUS STDCALL KeConnectInterrupt(PKINTERRUPT InterruptObject);
+
 NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 					 BOOLEAN		Alertable,
 					 PLARGE_INTEGER	Internal);
@@ -59,6 +61,8 @@ BOOLEAN STDCALL KeDeregisterBugCheckCallback (
 		       PKBUGCHECK_CALLBACK_RECORD	CallbackRecord);
 
 VOID STDCALL KeDetachProcess (VOID);
+
+VOID STDCALL KeDisconnectInterrupt(PKINTERRUPT InterruptObject);
 
 VOID STDCALL KeEnterCriticalRegion (VOID);
 
@@ -100,6 +104,18 @@ VOID STDCALL KeInitializeEvent (PKEVENT		Event,
 				EVENT_TYPE	Type,
 				BOOLEAN		State);
 
+NTSTATUS STDCALL KeInitializeInterrupt(PKINTERRUPT InterruptObject,
+				       PKSERVICE_ROUTINE ServiceRoutine,
+				       PVOID ServiceContext,
+				       PKSPIN_LOCK SpinLock,
+				       ULONG Vector,
+				       KIRQL Irql,
+				       KIRQL SynchronizeIrql,
+				       KINTERRUPT_MODE InterruptMode,
+				       BOOLEAN ShareVector,
+				       KAFFINITY ProcessorEnableMask,
+				       BOOLEAN FloatingSave);
+
 VOID STDCALL KeInitializeMutex (PKMUTEX	Mutex,
 				ULONG	Level);
 
@@ -138,6 +154,10 @@ BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
 VOID STDCALL KeLeaveCriticalRegion (VOID);
 
 VOID STDCALL KeLowerIrql (KIRQL	NewIrql);
+
+NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
+			       KPRIORITY	Increment,
+			       BOOLEAN		Wait);
 
 LARGE_INTEGER
 STDCALL
@@ -447,5 +467,12 @@ KfReleaseSpinLock (
 	IN	PKSPIN_LOCK	SpinLock,
 	IN	KIRQL		NewIrql
 	);
+
+
+VOID STDCALL KiDeliverApc(ULONG Unknown1,
+			  ULONG Unknown2,
+			  ULONG Unknown3);
+
+VOID STDCALL KiDispatchInterrupt(VOID);
 
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

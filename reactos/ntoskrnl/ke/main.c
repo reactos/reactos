@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.54 2000/07/08 18:47:57 ekohl Exp $
+/* $Id: main.c,v 1.55 2000/07/10 21:54:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,6 +22,7 @@
 #include <internal/ex.h>
 #include <internal/ps.h>
 #include <internal/hal.h>
+#include <internal/ke.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
@@ -82,6 +83,8 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     * Initialization phase 0
     */
    HalInitSystem (0, &KeLoaderBlock);
+   KeInit1();
+   KeLowerIrql(DISPATCH_LEVEL);
 
    /*
     * Display version number and copyright/warranty message
@@ -117,7 +120,13 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     */
    HalInitSystem (1, &KeLoaderBlock);
    MmInit2();
-   KeInit();
+   KeInit2();
+
+   /*
+    * Allow interrupts
+    */
+   KeLowerIrql(PASSIVE_LEVEL);
+
    ExInit();
    ObInit();
    PiInitProcessManager();

@@ -3,10 +3,6 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
-#include <internal/mmhal.h>
-
-#define NDEBUG
-#include <internal/debug.h>
 
 
 #define _STR(x) #x
@@ -28,7 +24,7 @@
         "orb   $1<<"##x",%al\n\t"       \
         "outb     %al,$0x21\n\t"               \
         "pushl $"##x"\n\t"              \
-        "call  _HalpDispatchInterrupt\n\t"\
+        "call  _KiInterruptDispatch\n\t"\
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %es\n\t"                 \
@@ -51,7 +47,7 @@
         "orb   $1<<("##x"-8),%al\n\t"       \
         "outb     %al,$0xa1\n\t"               \
         "pushl $"##x"\n\t"              \
-        "call  _HalpDispatchInterrupt\n\t"\
+        "call  _KiInterruptDispatch\n\t"\
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
         "popl  %es\n\t"                 \

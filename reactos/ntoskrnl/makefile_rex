@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.81 2000/07/07 10:30:54 dwelch Exp $
+# $Id: makefile_rex,v 1.82 2000/07/10 21:47:36 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -66,7 +66,6 @@ OBJECTS_KE = \
 	ke/bug.o \
 	ke/catch.o \
 	ke/critical.o \
-	ke/dispatch.o \
 	ke/dpc.o \
 	ke/error.o \
 	ke/event.o \
@@ -82,10 +81,11 @@ OBJECTS_KE = \
 	ke/spinlock.o \
 	ke/timer.o \
 	ke/wait.o 
-	
 
 OBJECTS_KE_I386 = \
 	ke/i386/exp.o \
+	ke/i386/irq.o \
+	ke/i386/irqhand.o \
 	ke/i386/thread.o \
 	ke/i386/usercall.o \
 	ke/i386/trap.o

@@ -69,9 +69,6 @@ VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);
 BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 
 VOID KiInterruptDispatch(ULONG irq);
-VOID KiDispatchInterrupt(ULONG irq);
-VOID KeDrainApcQueue(VOID);
-VOID KeDrainDpcQueue(VOID);
 VOID KeExpireTimers(VOID);
 NTSTATUS KeAddThreadTimeout(struct _KTHREAD* Thread, 
 			    PLARGE_INTEGER Interval);
@@ -82,21 +79,21 @@ VOID KeDumpStackFrames(PVOID Stack, ULONG NrFrames);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 BOOLEAN KiTestAlert(struct _KTHREAD* Thread, PCONTEXT UserContext);
-VOID KeCallApcsThread(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
-LONG STDCALL KePulseEvent (PKEVENT		Event,
-			   KPRIORITY	Increment,
-			   BOOLEAN		Wait);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID KeInitExceptions(VOID);
+VOID KeInitInterrupts(VOID);
 VOID KeInitTimer(VOID);
 VOID KeInitDpc(VOID);
 VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KeInitializeTimerImpl(VOID);
 VOID KeInitializeBugCheck(VOID);
+
+VOID KeInit1(VOID);
+VOID KeInit2(VOID);
 
 #endif
