@@ -1,10 +1,11 @@
-; $Id: ntoskrnl.def,v 1.30 1999/12/01 15:10:42 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.31 1999/12/02 20:53:52 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
 ; ReactOS Operating System
 ;
 EXPORTS
+InitializeListHead
 CcInitializeFileCache
 CcRequestCachePage
 CcReleaseCachePage
@@ -69,6 +70,7 @@ ExRaiseStatus
 ExReinitializeResourceLite
 ExReleaseFastMutexUnsafe
 ExReleaseResource
+ExReleaseResourceLite
 ExReleaseResourceForThread
 ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime

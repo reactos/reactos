@@ -104,6 +104,7 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 		    PMDL Mdl,
 		    PLARGE_INTEGER Offset,
 		    PIO_STATUS_BLOCK StatusBlock);
+
 VOID MmBuildMdlFromPages(PMDL Mdl);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
 VOID MiShutdownMemoryManager(VOID);

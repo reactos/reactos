@@ -1,3 +1,8 @@
+/* $Id: shmsrv.c,v 1.2 1999/12/02 20:53:52 dwelch Exp $
+ *
+ * FILE  : reactos/apps/shm/shmsrv.c
+ * AUTHOR: David Welch
+ */
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>
@@ -21,26 +26,31 @@ VOID STDCALL ApcRoutine(PVOID Context,
 			PIO_STATUS_BLOCK IoStatus,
 			ULONG Reserved)
 {
-   printf("(apc.exe) ApcRoutine(Context %x)\n", Context);
+   printf("(apc.exe) ApcRoutine(Context %x)\n", (UINT) Context);
 }
 
-void main(int argc, char* argv[])
+
+int
+main(int argc, char* argv[])
 {
    HANDLE Section;
    PVOID BaseAddress;
    
    printf("Shm test server\n");
    
-   Section = CreateFileMappingW(NULL,
-				NULL,
-				PAGE_EXECUTE_READWRITE,
-				0,
-				8192,
-				L"\\TestSection");
+   Section = CreateFileMappingW (
+			(HANDLE) 0xFFFFFFFF,
+			NULL,
+//			PAGE_EXECUTE_READWRITE, invalid parameter
+			PAGE_READWRITE, 
+			0,
+			8192,
+			L"TestSection"
+			);
    if (Section == NULL)
      {
-	printf("Failed to create section");
-	return;
+	printf("Failed to create section (err=%d)", GetLastError());
+	return 1;
      }
    
    BaseAddress = MapViewOfFile(Section,
@@ -48,7 +58,7 @@ void main(int argc, char* argv[])
 			       0,
 			       0,
 			       8192);
-   printf("BaseAddress %x\n", BaseAddress);
+   printf("BaseAddress %x\n", (UINT) BaseAddress);
    if (BaseAddress == NULL)
      {
 	printf("Failed to map section\n");
@@ -59,5 +69,7 @@ void main(int argc, char* argv[])
    strcpy(BaseAddress, GetCommandLineA());
    
    for(;;);
+
+   return 0;
 }
 

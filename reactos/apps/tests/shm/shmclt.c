@@ -17,7 +17,9 @@ void debug_printf(char* fmt, ...)
    va_end(args);
 }
 
-void main(int argc, char* argv[])
+
+int
+main(int argc, char* argv[])
 {
    HANDLE Section;
    PVOID BaseAddress;
@@ -25,13 +27,16 @@ void main(int argc, char* argv[])
    
    printf("Shm test server\n");
    
-   Section = OpenFileMappingW(PAGE_EXECUTE_READWRITE,
-			      FALSE,
-			      L"\\TestSection");
+   Section = OpenFileMappingW (
+//		PAGE_EXECUTE_READWRITE, invalid parameter
+		FILE_MAP_WRITE,
+		FALSE,
+		L"TestSection"
+		);
    if (Section == NULL)
      {
-	printf("Failed to open section");
-	return;
+	printf("Failed to open section (err=%d)", GetLastError());
+	return 1;
      }
    
    BaseAddress = MapViewOfFile(Section,
@@ -39,15 +44,17 @@ void main(int argc, char* argv[])
 			       0,
 			       0,
 			       8192);
-   printf("BaseAddress %x\n", BaseAddress);
    if (BaseAddress == NULL)
      {
-	printf("Failed to map section\n");
+	printf("Failed to map section (err=%d)\n", GetLastError());
+	return 1;
      }
+   printf("BaseAddress %x\n", (UINT) BaseAddress);
    printf("Copying from section\n");
    strcpy(buffer, BaseAddress);
    printf("Copyed <%s>\n", buffer);
    
 //   for(;;);
+	return 0;
 }
 

@@ -69,7 +69,7 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
    DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
-//   PsDumpThreads();
+   PsDumpThreads();
    KeDumpStackFrames(0,64);
    __asm__("cli\n\t");
    for(;;);

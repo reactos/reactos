@@ -350,7 +350,9 @@ VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
 //	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
 	if (Stack[i] > KERNEL_BASE)
 	  {
-	     DbgPrint("%.8x  ",Stack[i]);
+//	     DbgPrint("%.8x  ",Stack[i]);
+	     print_address(Stack[i]);
+	     DbgPrint(" ");
 	  }
 	if (Stack[i] == 0xceafbeef)
 	  {

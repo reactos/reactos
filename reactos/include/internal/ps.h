@@ -25,12 +25,13 @@ VOID PsBeginThreadWithContextInternal(VOID);
 VOID PiKillMostProcesses(VOID);
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
 
-#define THREAD_STATE_INVALID    (0)
-#define THREAD_STATE_RUNNABLE   (1)
-#define THREAD_STATE_RUNNING    (2)
-#define THREAD_STATE_SUSPENDED  (3)
-#define THREAD_STATE_TERMINATED (4)
-#define THREAD_STATE_MAX        (5)
+#define THREAD_STATE_INVALID      (0)
+#define THREAD_STATE_RUNNABLE     (1)
+#define THREAD_STATE_RUNNING      (2)
+#define THREAD_STATE_SUSPENDED    (3)
+#define THREAD_STATE_TERMINATED_1 (4)
+#define THREAD_STATE_TERMINATED_2 (5)
+#define THREAD_STATE_MAX          (6)
      
 /*
  * Functions the HAL must provide
@@ -42,5 +43,6 @@ void HalTaskSwitch(PKTHREAD thread);
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
 VOID PiDeleteProcess(PVOID ObjectBody);
+VOID PsReapThreads(VOID);
 
 #endif

@@ -27,13 +27,14 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
 			POBJECT_TYPE Type,
 			POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   ObjectHeader->HandleCount = 1;
+   ObjectHeader->HandleCount = 0;
    ObjectHeader->RefCount = 1;
    ObjectHeader->ObjectType = Type;
    ObjectHeader->Permanent = FALSE;
    RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
    if (Handle != NULL)
      {
+	ObjectHeader->HandleCount = 1;
 	ObCreateHandle(PsGetCurrentProcess(),
 		       HEADER_TO_BODY(ObjectHeader),
 		       DesiredAccess,
@@ -101,6 +102,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 	if (CurrentHeader->ObjectType->Parse == NULL)
 	  {
+	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
 	NextObject = CurrentHeader->ObjectType->Parse(CurrentObject,
@@ -185,8 +187,8 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
 {
    POBJECT_HEADER ObjectHeader;
 
-   DPRINT("ObReferenceObjectByPointer(ObjectBody %x, ObjectType %x)\n",
-	  ObjectBody,ObjectType);
+//   DPRINT("ObReferenceObjectByPointer(ObjectBody %x, ObjectType %x)\n",
+//	  ObjectBody,ObjectType);
    
    ObjectHeader = BODY_TO_HEADER(ObjectBody);
    
@@ -204,8 +206,8 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
 
 NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 {
-   DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
-	   Header,Header->RefCount,Header->HandleCount);
+//   DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
+//	   Header,Header->RefCount,Header->HandleCount);
    
    if (Header->RefCount <  0 || Header->HandleCount < 0)
      {
@@ -239,6 +241,13 @@ ULONG ObGetReferenceCount(PVOID ObjectBody)
    return(Header->RefCount);
 }
 
+ULONG ObGetHandleCount(PVOID ObjectBody)
+{
+   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   
+   return(Header->HandleCount);
+}
+
 VOID ObDereferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
@@ -249,8 +258,8 @@ VOID ObDereferenceObject(PVOID ObjectBody)
 {
    POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
    
-   DPRINT("ObDeferenceObject(ObjectBody %x) RefCount %d\n",ObjectBody,
-	  Header->RefCount);
+//   DPRINT("ObDeferenceObject(ObjectBody %x) RefCount %d\n",ObjectBody,
+//	  Header->RefCount);
       
    Header->RefCount--;
    

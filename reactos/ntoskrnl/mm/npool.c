@@ -81,6 +81,8 @@ ULONG EiNrUsedBlocks = 0;
 static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
 static KSPIN_LOCK AllocMapLock;
 
+static KSPIN_LOCK MmNpoolLock;
+
 unsigned int EiFreeNonPagedPool = 0;
 unsigned int EiUsedNonPagedPool = 0;
 
@@ -135,6 +137,7 @@ VOID ExInitNonPagedPool(ULONG BaseAddress)
 {
    kernel_pool_base = BaseAddress;
    KeInitializeSpinLock(&AllocMapLock);
+   KeInitializeSpinLock(&MmNpoolLock);
 }
 
 #if 0
@@ -588,10 +591,16 @@ asmlinkage VOID ExFreePool(PVOID block)
  */
 {
    block_hdr* blk=address_to_block(block);
+   KIRQL oldIrql;
+   
    OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
    
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
             ((PULONG)&block)[-1]);
+   
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+   
+   memset(block, 0xcc, blk->size);
    
    VALIDATE_POOL;
    
@@ -612,6 +621,8 @@ asmlinkage VOID ExFreePool(PVOID block)
    EiFreeNonPagedPool = EiFreeNonPagedPool + blk->size;   
    
    VALIDATE_POOL;
+   
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
 
 PVOID ExAllocateNonPagedPoolWithTag(ULONG type, 
@@ -622,9 +633,12 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
    block_hdr* current = NULL;
    PVOID block;
    block_hdr* best = NULL;
+   KIRQL oldIrql;
    
    POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
 	      size,Caller);
+   
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
    
 //   DbgPrint("Blocks on free list %d\n",nr_free_blocks);
 //   DbgPrint("Blocks on used list %d\n",eiNrUsedblocks);
@@ -637,6 +651,7 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
    if (size==0)
      {
 	POOL_TRACE("= NULL\n");
+	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 	return(NULL);
      }
    
@@ -666,6 +681,7 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
 	VALIDATE_POOL;
 	memset(block,0,size);
 	POOL_TRACE("= %x\n",block);
+	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 	return(block);
      }
 	  
@@ -677,6 +693,7 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
    VALIDATE_POOL;
    memset(block,0,size);
    POOL_TRACE("= %x\n",block);
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
    return(block);
 }
 

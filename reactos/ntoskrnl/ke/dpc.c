@@ -23,8 +23,8 @@
 
 /* GLOBALS ******************************************************************/
 
-static LIST_ENTRY DpcQueueHead={NULL,NULL};
-static KSPIN_LOCK DpcQueueLock={0,};
+static LIST_ENTRY DpcQueueHead;
+static KSPIN_LOCK DpcQueueLock;
 ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
@@ -156,5 +156,6 @@ void KeInitDpc(void)
  */
 {
    InitializeListHead(&DpcQueueHead);
+   KeInitializeSpinLock(&DpcQueueLock);
 }
 

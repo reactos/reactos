@@ -39,7 +39,7 @@ static NTSTATUS PsIdleThreadMain(PVOID Context)
 	     KeDrainDpcQueue();
 	     KeLowerIrql(oldlvl);
 	  }
-	ZwYieldExecution();
+	NtYieldExecution();
      }
 }
 

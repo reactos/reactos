@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.31 1999/11/24 11:51:53 dwelch Exp $
+/* $Id: thread.c,v 1.32 1999/12/02 20:53:55 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -111,31 +111,58 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
    KeBugCheck(0);
 }
 
-#if 0
 VOID PsDumpThreads(VOID)
 {
-   KPRIORITY CurrentPriority;
    PLIST_ENTRY current_entry;
    PETHREAD current;
    
-   for (CurrentPriority = THREAD_PRIORITY_TIME_CRITICAL; 
-	(CurrentPriority >= THREAD_PRIORITY_IDLE);
-	CurrentPriority--)
-     {
-	current_entry = PriorityListHead[THREAD_PRIORITY_MAX + CurrentPriority].Flink;
+   current_entry = PiThreadListHead.Flink;
 	
-	while (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX+CurrentPriority])
-	  {
-	     current = CONTAINING_RECORD(current_entry, ETHREAD, Tcb.Entry);
-	     
-	     DPRINT("%d: current %x current->Tcb.State %d\n",
-		    CurrentPriority, current, current->Tcb.State);
-	     
-	     current_entry = current_entry->Flink;
-	  }
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.ThreadListEntry);
+	
+	DPRINT1("current %x current->Tcb.State %d eip %x ",
+		current, current->Tcb.State,
+		current->Tcb.Context.eip);
+//	KeDumpStackFrames(0, 16);
+	DPRINT1("PID %d ", current->ThreadsProcess->UniqueProcessId);
+	DPRINT1("\n");
+	
+	current_entry = current_entry->Flink;
      }
 }
-#endif
+
+VOID PsReapThreads(VOID)
+{
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   KIRQL oldIrql;
+   
+//   DPRINT1("PsReapThreads()\n");
+   
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   
+   current_entry = PiThreadListHead.Flink;
+   
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.ThreadListEntry);
+	
+	current_entry = current_entry->Flink;
+	
+	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
+	  {
+	     DPRINT("Reaping thread %x\n", current);
+	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
+	     ObDereferenceObject(current);
+	  }
+     }
+   
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority)
 {
@@ -197,6 +224,7 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	     
 	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     HalTaskSwitch(&CurrentThread->Tcb);
+	     PsReapThreads();
 	     return;
 	  }
      }
@@ -293,6 +321,7 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
    InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
    
    ObDereferenceObject(Thread->ThreadsProcess);
+   ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
 }
 
@@ -334,6 +363,8 @@ ULONG PsSuspendThread(PETHREAD Thread,
 {
    ULONG r;
    KIRQL oldIrql;
+   
+   assert_irql(PASSIVE_LEVEL);
    
    DPRINT("PsSuspendThread(Thread %x)\n",Thread);
    DPRINT("Thread->Tcb.BasePriority %d\n", Thread->Tcb.BasePriority);
@@ -382,11 +413,23 @@ ULONG PsSuspendThread(PETHREAD Thread,
 
 VOID PiDeleteThread(PVOID ObjectBody)
 {
-   DbgPrint("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
    
+   ObDereferenceObject(((PETHREAD)ObjectBody)->ThreadsProcess);
+   ((PETHREAD)ObjectBody)->ThreadsProcess = NULL;
+   PiNrThreads--;
+   RemoveEntryList(&((PETHREAD)ObjectBody)->Tcb.ThreadListEntry);
    HalReleaseTask((PETHREAD)ObjectBody);
 }
 
+VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount)
+{
+   DPRINT("PiCloseThread(ObjectBody %x)\n", ObjectBody);
+   DPRINT("ObGetReferenceCount(ObjectBody) %d "
+	   "ObGetHandleCount(ObjectBody) %d\n",
+	   ObGetReferenceCount(ObjectBody),
+	   ObGetHandleCount(ObjectBody));
+}
 
 VOID PsInitThreadManagment(VOID)
 /*
@@ -418,7 +461,7 @@ VOID PsInitThreadManagment(VOID)
    PsThreadType->NonpagedPoolCharge = sizeof(ETHREAD);
    PsThreadType->Dump = NULL;
    PsThreadType->Open = NULL;
-   PsThreadType->Close = NULL;
+   PsThreadType->Close = PiCloseThread;
    PsThreadType->Delete = PiDeleteThread;
    PsThreadType->Parse = NULL;
    PsThreadType->Security = NULL;
@@ -541,18 +584,14 @@ PsCreateTeb (HANDLE ProcessHandle,
 }
 
 
-NTSTATUS
-STDCALL
-NtCreateThread (
-	PHANDLE			ThreadHandle,
-	ACCESS_MASK		DesiredAccess,
-	POBJECT_ATTRIBUTES	ObjectAttributes,
-	HANDLE			ProcessHandle,
-	PCLIENT_ID		Client,
-	PCONTEXT		ThreadContext,
-	PINITIAL_TEB		InitialTeb,
-	BOOLEAN			CreateSuspended
-	)
+NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
+				 ACCESS_MASK		DesiredAccess,
+				 POBJECT_ATTRIBUTES	ObjectAttributes,
+				 HANDLE			ProcessHandle,
+				 PCLIENT_ID		Client,
+				 PCONTEXT		ThreadContext,
+				 PINITIAL_TEB		InitialTeb,
+				 BOOLEAN CreateSuspended)
 {
    PETHREAD Thread;
    PNT_TEB  TebBase;
@@ -598,6 +637,9 @@ NtCreateThread (
         DPRINT("Not creating suspended\n");
 	PsResumeThread(Thread, NULL);
      }
+   DPRINT("Thread %x\n", Thread);
+   DPRINT("ObGetReferenceCount(Thread) %d ObGetHandleCount(Thread) %x\n",
+	  ObGetReferenceCount(Thread), ObGetHandleCount(Thread));
    DPRINT("Finished PsCreateThread()\n");
    return(STATUS_SUCCESS);
 }

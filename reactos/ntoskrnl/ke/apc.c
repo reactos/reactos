@@ -83,11 +83,15 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
 
 VOID KeApcProlog2(PKAPC Apc)
 {
+   PKTHREAD Thread;
+   
+   Thread = Apc->Thread;
+   KeLowerIrql(PASSIVE_LEVEL);
    KeApcProlog3(Apc);
-   PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb),
+   PsSuspendThread(CONTAINING_RECORD(Thread,ETHREAD,Tcb),
 		   NULL,
-		   Apc->Thread->Alertable,
-		   Apc->Thread->WaitMode);
+		   Thread->Alertable,
+		   Thread->WaitMode);
 }
 
 VOID KeApcProlog3(PKAPC Apc)
@@ -96,19 +100,20 @@ VOID KeApcProlog3(PKAPC Apc)
  * a kernel APC
  */
 {
-   
+   PKTHREAD Thread;
    
    DPRINT("KeApcProlog2(Apc %x)\n",Apc);
    KeEnterCriticalRegion();
    Apc->Thread->ApcState.KernelApcInProgress++;
    Apc->Thread->ApcState.KernelApcPending--;
    RemoveEntryList(&Apc->ApcListEntry);
+   Thread = Apc->Thread;
    Apc->KernelRoutine(Apc,
 		      &Apc->NormalRoutine,
 		      &Apc->NormalContext,
 		      &Apc->SystemArgument1,
 		      &Apc->SystemArgument2);
-   Apc->Thread->ApcState.KernelApcInProgress--;
+   Thread->ApcState.KernelApcInProgress--;
    KeLeaveCriticalRegion();   
 }
 

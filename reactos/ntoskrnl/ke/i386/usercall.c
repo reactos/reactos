@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.2 1999/11/24 11:51:51 dwelch Exp $
+/* $Id: usercall.c,v 1.3 1999/12/02 20:53:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -101,7 +101,7 @@ void PsBeginThreadWithContextInternal(void);
 
 VOID KiSystemCallHook(ULONG Nr)
 {
-//   DbgPrint("KiSystemCallHook(Nr %d) %d\n", Nr, KeGetCurrentIrql());
+//   DbgPrint("KiSystemCallHook(Nr %d) %x ", Nr, PsGetCurrentProcess());
 //   DbgPrint("SystemCall %x\n", _SystemServiceTable[Nr].Function);
    assert_irql(PASSIVE_LEVEL);
 }

@@ -26,7 +26,7 @@ void main(int argc, char* argv[])
    HANDLE NamedPortHandle;
    HANDLE PortHandle;
    
-   printf("Lpc test server\n");
+   printf("(lpcsrv.exe) Lpc test server\n");
    
    RtlInitUnicodeString(&PortName, L"\\TestPort");
    InitializeObjectAttributes(&ObjectAttributes,
@@ -35,7 +35,7 @@ void main(int argc, char* argv[])
 			      NULL,
 			      NULL);
    
-   printf("Creating port\n");
+   printf("(lpcsrv.exe) Creating port\n");
    Status = NtCreatePort(&NamedPortHandle,
 			 0,
 			 &ObjectAttributes,
@@ -43,21 +43,21 @@ void main(int argc, char* argv[])
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to create port\n");
+	printf("(lpcsrv.exe) Failed to create port\n");
 	return;
      }
    
    
-   printf("Listening for connections\n");
+   printf("(lpcsrv.exe) Listening for connections\n");
    Status = NtListenPort(NamedPortHandle,
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to listen for connections\n");
+	printf("(lpcsrv.exe) Failed to listen for connections\n");
 	return;
      }
    
-   printf("Accepting connections\n");
+   printf("(lpcsrv.exe) Accepting connections\n");
    Status = NtAcceptConnectPort(NamedPortHandle,
 				&PortHandle,
 				0,
@@ -66,15 +66,15 @@ void main(int argc, char* argv[])
 				0);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to accept connection\n");
+	printf("(lpcsrv.exe) Failed to accept connection\n");
 	return;
      }   
    
-   printf("Completing connection\n");
+   printf("(lpcsrv.exe) Completing connection\n");
    Status = NtCompleteConnectPort(PortHandle);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to complete connection\n");
+	printf("(lpcsrv.exe) Failed to complete connection\n");
 	return;
      }
    
@@ -90,10 +90,10 @@ void main(int argc, char* argv[])
 					NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     printf("Failed to receive request\n");
+	     printf("(lpcsrv.exe) Failed to receive request\n");
 	     return;
 	  }
 	
-	printf("Message contents are <%s>\n", Request.Buffer);
+	printf("(lpcsrv.exe) Message contents are <%s>\n", Request.Buffer);
      }
 }

@@ -111,77 +111,66 @@ void ExecuteType(char* cmdline)
 
 int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 {
-	PROCESS_INFORMATION	ProcessInformation;
-	STARTUPINFO		StartupInfo;
-//	char			arguments;
-	BOOL			ret;
+   PROCESS_INFORMATION	ProcessInformation;
+   STARTUPINFO		StartupInfo;
+   //	char			arguments;
+   BOOL			ret;
+   
+   memset(&StartupInfo, 0, sizeof(StartupInfo));
+   StartupInfo.cb = sizeof (STARTUPINFO);
+   StartupInfo.lpTitle = name;
 
-	memset(
-		& StartupInfo,
-		0,
-		(sizeof StartupInfo)
-		);
-	StartupInfo.cb = sizeof (STARTUPINFO);
-	StartupInfo.lpTitle = name;
-
-	ret = CreateProcessA(
-		name,
-		cmdline,
-		NULL,
-		NULL,
-		TRUE,
-		(	(TRUE == detached)
-			? DETACHED_PROCESS
+   ret = CreateProcessA(name,
+			cmdline,
+			NULL,
+			NULL,
+			TRUE,
+			((TRUE == detached)
+			 ? DETACHED_PROCESS
 			: CREATE_NEW_CONSOLE
 			),
-		NULL,
-		NULL,
-		& StartupInfo,
-		& ProcessInformation
-		);
-	if (TRUE == detached)
-	{
-		if (ret)
-		{
-			debug_printf(
-"%s detached:\n\
-\thProcess = %08X\n\
-\thThread  = %08X\n\
-\tPID      = %d\n\
-\tTID      = %d\n\n",
-				name,
-				ProcessInformation.hProcess,
-				ProcessInformation.hThread,
-				ProcessInformation.dwProcessId,
-				ProcessInformation.dwThreadId
-				);
-		}
-		else
-		{
-			debug_printf(
-				"Could not detach %s\n",
-				name
-				);
-		}
-	}
+			NULL,
+			NULL,
+			& StartupInfo,
+			& ProcessInformation
+			);
+   if (TRUE == detached)
+     {
+	if (ret)
+	  {
+	     debug_printf("%s detached:\n"
+			  "\thProcess = %08X\n"
+			  "\thThread  = %08X\n"
+			  "\tPID      = %d\n"
+			  "\tTID      = %d\n\n",
+			  name,
+			  ProcessInformation.hProcess,
+			  ProcessInformation.hThread,
+			  ProcessInformation.dwProcessId,
+			  ProcessInformation.dwThreadId);
+	     CloseHandle(ProcessInformation.hProcess);
+	     CloseHandle(ProcessInformation.hThread);
+	  }
 	else
-	{
-		if (ret)
-		{
-			WaitForSingleObject(
-				ProcessInformation.hProcess,
-				INFINITE
-				);
-		}
-		CloseHandle(ProcessInformation.hProcess);
-	}
-	return(ret);
+	  {
+	     debug_printf("Could not detach %s\n", name);
+	  }
+     }
+   else
+     {
+	if (ret)
+	  {
+	     	debug_printf("ProcessInformation.hThread %x\n",
+			     ProcessInformation.hThread);
+	     CloseHandle(ProcessInformation.hThread);
+	     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+	     CloseHandle(ProcessInformation.hProcess);
+	  }
+     }
+   return(ret);
 }
 
-void
-ExecuteStart(
-	char	* CommandLine
-	)
+void ExecuteStart(char* CommandLine)
 {
 	   char *ImageName = CommandLine;
 

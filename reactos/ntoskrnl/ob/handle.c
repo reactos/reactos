@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.13 1999/11/02 08:55:42 dwelch Exp $
+/* $Id: handle.c,v 1.14 1999/12/02 20:53:54 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -442,50 +442,42 @@ ObReferenceObjectByHandle(HANDLE Handle,
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS
-STDCALL
-NtClose(HANDLE Handle)
+NTSTATUS STDCALL NtClose(HANDLE Handle)
 {
-	PVOID		ObjectBody;
-	POBJECT_HEADER	Header;
-	PHANDLE_REP	HandleRep;
+   PVOID		ObjectBody;
+   POBJECT_HEADER	Header;
+   PHANDLE_REP	HandleRep;
    
-	assert_irql(PASSIVE_LEVEL);
+   assert_irql(PASSIVE_LEVEL);
    
-	DPRINT("NtClose(Handle %x)\n",Handle);
+   DPRINT("NtClose(Handle %x)\n",Handle);
    
-	HandleRep = ObpGetObjectByHandle(
-			PsGetCurrentProcess(),
-			Handle
-			);
-	if (HandleRep == NULL)
-	{
-		return STATUS_INVALID_HANDLE;
-	}
-	ObjectBody = HandleRep->ObjectBody;
+   HandleRep = ObpGetObjectByHandle(PsGetCurrentProcess(),
+				    Handle);
+   if (HandleRep == NULL)
+     {
+	return STATUS_INVALID_HANDLE;
+     }
+   ObjectBody = HandleRep->ObjectBody;
    
-	HandleRep->ObjectBody = NULL;
+   HandleRep->ObjectBody = NULL;
    
-	Header = BODY_TO_HEADER(ObjectBody);
+   Header = BODY_TO_HEADER(ObjectBody);
    
-	Header->RefCount++;
-	Header->HandleCount--;
+   Header->RefCount++;
+   Header->HandleCount--;
    
-	if (	(Header->ObjectType != NULL)
-		&& (Header->ObjectType->Close != NULL)
-		)
-	{
-		Header->ObjectType->Close(
-				ObjectBody,
-				Header->HandleCount
-				);
-	}
+   if ((Header->ObjectType != NULL) &&
+       (Header->ObjectType->Close != NULL))
+     {
+	Header->ObjectType->Close(ObjectBody, Header->HandleCount);
+     }
    
-	Header->RefCount--;
+   Header->RefCount--;
    
-	ObPerformRetentionChecks(Header);
+   ObPerformRetentionChecks(Header);
    
-	return STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 

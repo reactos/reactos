@@ -16,7 +16,7 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -35,25 +35,24 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KIRQL oldlvl;
    PETHREAD CurrentThread;
    
-   PiNrThreads--;
+   PiNrRunnableThreads--;
    
    CurrentThread = PsGetCurrentThread();
    
    CurrentThread->ExitStatus = ExitStatus;
    
    DPRINT("terminating %x\n",CurrentThread);
-   ObDereferenceObject(CurrentThread->ThreadsProcess);
-   CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    
-   ObDereferenceObject(CurrentThread);
    DPRINT("ObGetReferenceCount(CurrentThread) %d\n",
 	  ObGetReferenceCount(CurrentThread));
+   DPRINT("ObGetHandleCount(CurrentThread) %x\n",
+	  ObGetHandleCount(CurrentThread));
    
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    
-   PsDispatchThread(THREAD_STATE_TERMINATED);
+   PsDispatchThread(THREAD_STATE_TERMINATED_1);
    KeBugCheck(0);
 }
 
@@ -65,18 +64,15 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   PiNrThreads--;
    if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
 	PiNrRunnableThreads--;
 	RemoveEntryList(&Thread->Tcb.QueueListEntry);
      }
-   Thread->Tcb.State = THREAD_STATE_TERMINATED;
+   Thread->Tcb.State = THREAD_STATE_TERMINATED_2;
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
-   ObDereferenceObject(Thread->ThreadsProcess);
    ObDereferenceObject(Thread);
-   Thread->ThreadsProcess = NULL;
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
@@ -144,7 +140,9 @@ NTSTATUS STDCALL NtTerminateThread(IN	HANDLE		ThreadHandle,
      {
 	return(Status);
      }
-
+   
+   ObDereferenceObject(Thread);
+   
    if (Thread == PsGetCurrentThread())
      {
 	PsTerminateCurrentThread(ExitStatus);

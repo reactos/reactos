@@ -112,5 +112,6 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PWSTR* RemainingPath);
 
 ULONG ObGetReferenceCount(PVOID Object);
+ULONG ObGetHandleCount(PVOID Object);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

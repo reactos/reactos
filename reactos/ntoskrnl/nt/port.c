@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.11 1999/12/01 15:08:31 ekohl Exp $
+/* $Id: port.c,v 1.12 1999/12/02 20:53:54 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@
 #include <string.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -53,6 +53,7 @@ typedef struct _EPORT
    ULONG State;
    KEVENT Event;
    struct _EPORT* OtherPort;
+   struct _EPORT* NamedPort;
    ULONG NumberOfQueuedMessages;
    QUEUED_MESSAGE Msg;
    PEPROCESS ConnectingProcess;
@@ -65,6 +66,41 @@ POBJECT_TYPE ExPortType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID NiDeletePort(PVOID ObjectBody)
+{
+}
+
+NTSTATUS NiCreatePort(PVOID ObjectBody,
+		      PVOID Parent,
+		      PWSTR RemainingPath,
+		      POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   NTSTATUS Status;
+   
+   if (RemainingPath == NULL)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
+   if (wcschr(RemainingPath+1, '\\') != NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   Status = ObReferenceObjectByPointer(Parent,
+				       STANDARD_RIGHTS_REQUIRED,
+				       ObDirectoryType,
+				       UserMode);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
+   ObDereferenceObject(Parent);
+   
+   return(STATUS_SUCCESS);
+}
 
 NTSTATUS NiInitPort(VOID)
 {
@@ -81,11 +117,12 @@ NTSTATUS NiInitPort(VOID)
    ExPortType->Dump = NULL;
    ExPortType->Open = NULL;
    ExPortType->Close = NULL;
-   ExPortType->Delete = NULL;
+   ExPortType->Delete = NiDeletePort;
    ExPortType->Parse = NULL;
    ExPortType->Security = NULL;
    ExPortType->QueryName = NULL;
    ExPortType->OkayToClose = NULL;
+   ExPortType->Create = NiCreatePort;
    
    return(STATUS_SUCCESS);
 }
@@ -94,7 +131,7 @@ static NTSTATUS NiInitializePort(PEPORT Port)
 {
    memset(Port, 0, sizeof(EPORT));
    KeInitializeSpinLock(&Port->Lock);
-   KeInitializeEvent(&Port->Event, NotificationEvent, FALSE);
+   KeInitializeEvent(&Port->Event, SynchronizationEvent, FALSE);
    Port->State = EPORT_INACTIVE;
    Port->OtherPort = NULL;
    Port->NumberOfQueuedMessages = 0;
@@ -110,6 +147,8 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 {
    PEPORT Port;
    NTSTATUS Status;
+   
+   DPRINT("NtCreaatePort() Name %x\n", ObjectAttributes->ObjectName->Buffer);
    
    Port = ObCreateObject(PortHandle,
 			 1,      // DesiredAccess
@@ -160,14 +199,16 @@ NTSTATUS STDCALL NtAcceptConnectPort (IN HANDLE	PortHandle,
 			    1,
 			    NULL,
 			    ExPortType);
+   NiInitializePort(OurPort);
    
    /*
     * Connect the two port
     */
-   OurPort->OtherPort = NamedPort->ConnectingPort;
+   OurPort->OtherPort = NamedPort->ConnectingPort;  
    OurPort->OtherPort->OtherPort = OurPort;
    OurPort->State = EPORT_WAIT_FOR_COMPLETE_SRV;
    OurPort->OtherPort->State = EPORT_WAIT_FOR_COMPLETE_CLT;
+   OurPort->NamedPort = NamedPort;
    
    NamedPort->State = EPORT_INACTIVE;
    NamedPort->ConnectingProcess = NULL;
@@ -204,7 +245,7 @@ NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle)
    OurPort->State = EPORT_CONNECTED;
    OurPort->OtherPort->State = EPORT_CONNECTED;
    
-   KeSetEvent(&OurPort->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+   KeSetEvent(&OurPort->NamedPort->Event, IO_NO_INCREMENT, FALSE);
    
    return(STATUS_SUCCESS);
 }
@@ -228,6 +269,8 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
    PEPORT OurPort;
    HANDLE OurPortHandle;
    
+   DPRINT("NtConnectPort(PortName %w)\n", PortName->Buffer);
+   
    Status = ObReferenceObjectByName(PortName,
 				    0,
 				    NULL,
@@ -238,11 +281,13 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
 				    (PVOID*)&NamedPort);
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("Failed to reference named port (status %x)\n", Status);
 	return(Status);
      }
    
    if (NamedPort->State != EPORT_WAIT_FOR_CONNECT)
      {
+	DPRINT("Named port is in the wrong state\n");
 	ObDereferenceObject(NamedPort);
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -255,6 +300,7 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
 			    PortAttributes,
 			    ExPortType);
    NiInitializePort(OurPort);
+   OurPort->NamedPort = NamedPort;
    
    /*
     * 
@@ -268,6 +314,8 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
     */
    KeSetEvent(&NamedPort->Event, IO_NO_INCREMENT, FALSE);
    
+   DPRINT("Waiting for connection completion\n");
+   
    /*
     * Wait for them to accept our connection
     */
@@ -278,6 +326,8 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
 			 NULL);
    
    *ConnectedPort = OurPortHandle;
+   
+   DPRINT("Exited successfully\n");
    
    return(STATUS_SUCCESS);
 }
@@ -378,6 +428,9 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
    NTSTATUS Status;
    PEPORT Port;
    
+   DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcReply %x, "
+	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+   
    Status = ObReferenceObjectByHandle(PortHandle,
 				      1,   /* AccessRequired */
 				      ExPortType,
@@ -389,19 +442,30 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
 	return(Status);
      }
    
+   DPRINT("Port %x Port->OtherPort %x Port->OtherPort->OtherPort %x\n",
+	  Port, Port->OtherPort, Port->OtherPort->OtherPort);
+   
    if (LpcMessage != NULL)
      {
+	DPRINT("Copying message onto other port's queue\n");
+	
+	DPRINT("LpcMessage->Length %d\n", LpcMessage->Length);
+	
 	/*
 	 * Put the message on the other port's queue
 	 */
-	Port->Msg.Type = LpcMessage->Type;
-	Port->Msg.Length = LpcMessage->Length;
-	Port->Msg.Buffer = ExAllocatePool(NonPagedPool, Port->Msg.Length);
-	memcpy(Port->Msg.Buffer, LpcMessage->Buffer, Port->Msg.Length);
-	Port->Msg.Flags = LpcMessage->Flags;
-	Port->Msg.Sender = PsGetCurrentProcess();
-	Port->NumberOfQueuedMessages++;
-   
+	Port->OtherPort->Msg.Type = LpcMessage->Type;
+	Port->OtherPort->Msg.Length = LpcMessage->Length;
+	Port->OtherPort->Msg.Buffer = ExAllocatePool(NonPagedPool, 
+						Port->OtherPort->Msg.Length);
+	memcpy(Port->OtherPort->Msg.Buffer, LpcMessage->Buffer, 
+	       Port->OtherPort->Msg.Length);
+	Port->OtherPort->Msg.Flags = LpcMessage->Flags;
+	Port->OtherPort->Msg.Sender = PsGetCurrentProcess();
+	Port->OtherPort->NumberOfQueuedMessages++;
+	
+	DPRINT("Waking other side\n");
+	
 	/*
 	 * Wake up the other side (if it's waiting)
 	 */
@@ -418,6 +482,8 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
 	return(STATUS_SUCCESS);
      }
    
+   DPRINT("Wait for other side to reply\n");
+   
    /*
     * Wait the other side to reply to you
     */
@@ -427,19 +493,27 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
 			 FALSE,
 			 NULL);
    
+   DPRINT("Copy reply from our port\n");
+   
    /*
     * Copy the received message into the process's address space
     */
-   LpcReply->Length = Port->OtherPort->Msg.Length;
-   LpcReply->Type = Port->OtherPort->Msg.Type;
-   memcpy(LpcReply->Buffer, Port->OtherPort->Msg.Buffer, LpcReply->Length);
-   LpcReply->Flags = Port->OtherPort->Msg.Flags;
+   DPRINT("LpcReply->Length %d\n", LpcReply->Length);
+   
+   LpcReply->Length = Port->Msg.Length;
+   LpcReply->Type = Port->Msg.Type;
+   memcpy(LpcReply->Buffer, Port->Msg.Buffer, LpcReply->Length);
+   LpcReply->Flags = Port->Msg.Flags;
+   
+   DPRINT("Freeing message\n");
    
    /*
     * Deallocate the message and remove it from the other side's queue
     */
-   ExFreePool(Port->OtherPort->Msg.Buffer);
-   Port->OtherPort->NumberOfQueuedMessages--;
+   ExFreePool(Port->Msg.Buffer);
+   Port->NumberOfQueuedMessages--;
+   
+   DPRINT("Finished with success\n");
    
    return(STATUS_SUCCESS);
 }

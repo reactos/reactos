@@ -15,9 +15,9 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) shmsrv.o
-	- $(RM) shmsrv.exe
-	- $(RM) shmsrv.sym
+	- $(RM) *.o
+	- $(RM) *.exe
+	- $(RM) *.sym
 
 .phony: clean
 

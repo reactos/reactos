@@ -26,11 +26,11 @@ void main(int argc, char* argv[])
    LPC_MESSAGE Request;
    char buffer[255];
    
-   printf("Lpc client\n");
+   printf("(lpcclt.exe) Lpc client\n");
    
    RtlInitUnicodeString(&PortName, L"\\TestPort");
    
-   printf("Connecting to port\n");
+   printf("(lpcclt.exe) Connecting to port\n");
    Status = NtConnectPort(&PortHandle,
 			  &PortName,
 			  NULL,
@@ -41,21 +41,23 @@ void main(int argc, char* argv[])
 			  0);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to connect\n");
+	printf("(lpcclt.exe) Failed to connect\n");
 	return;
      }
    
    strcpy(buffer, GetCommandLineA());
    Request.Buffer = buffer;
-	
+   Request.Length = strlen(buffer);
+   
+   printf("(lpcclt.exe) Sending message\n");
    Status = NtRequestWaitReplyPort(PortHandle,
 				   NULL,
 				   &Request);
    if (!NT_SUCCESS(Status))
      {
-	printf("Failed to send request\n");
+	printf("(lpcclt.exe) Failed to send request\n");
 	return;
      }
    
-   printf("Succeeded\n");
+   printf("(lpcclt.exe) Succeeded\n");
 }

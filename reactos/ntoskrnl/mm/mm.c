@@ -125,23 +125,47 @@ VOID MmInitVirtualMemory(boot_param* bp)
 
 NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 {
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
+   
+   if (MmIsPagePresent(NULL, Address))
+     {
+	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+	return(STATUS_SUCCESS);
+     }
+   
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
 	     MemoryArea->Attributes,
 	     (ULONG)MmAllocPage());
+   
+   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+   
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
+NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, 
+			      PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
    PMDL Mdl;
    PVOID Page;
+   NTSTATUS Status;
+   KIRQL oldIrql;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	  MemoryArea,Address);
-      
+   
+   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
+   
+   if (MmIsPagePresent(NULL, Address))
+     {
+	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+	return(STATUS_SUCCESS);
+     }
+   
    Offset.QuadPart = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
    
@@ -156,8 +180,9 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
      {
 	ULONG Page;
 	
-	Page = MiTryToSharePageInSection(MemoryArea->Data.SectionData.Section,
-					 (ULONG)Offset.QuadPart);
+	Page = (ULONG)MiTryToSharePageInSection(
+			       MemoryArea->Data.SectionData.Section,
+						(ULONG)Offset.QuadPart);
 	
 	if (Page == 0)
 	  {
@@ -176,15 +201,32 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
      
    Page = MmGetMdlPageAddress(Mdl, 0);
    
-   IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-	      Mdl,
-	      &Offset,
-	      &IoStatus);
+   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+   
+   Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
+		       Mdl,
+		       &Offset,
+		       &IoStatus);
+   
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
       
+   KeAcquireSpinLock(&MiPageFaultLock, &oldIrql);
+   
+   if (MmIsPagePresent(NULL, Address))
+     {
+	KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
+	return(STATUS_SUCCESS);
+     }
+   
    MmSetPage(NULL,
 	     Address,
 	     MemoryArea->Attributes,
 	     (ULONG)Page);
+   
+   KeReleaseSpinLock(&MiPageFaultLock, oldIrql);
    
    DPRINT("Returning from MmSectionHandleFault()\n");
    
@@ -199,7 +241,6 @@ asmlinkage int page_fault_handler(unsigned int cs,
 {
    KPROCESSOR_MODE FaultMode;
    MEMORY_AREA* MemoryArea;
-   KIRQL oldlvl;
    NTSTATUS Status;
    unsigned int cr2;
    
@@ -220,10 +261,6 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	return(0);
 //	KeBugCheck(0);
      }
-   
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   
-   KeAcquireSpinLockAtDpcLevel(&MiPageFaultLock);
    
    /*
     * Find the memory area for the faulting address
@@ -271,12 +308,6 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	break;
      }
    DPRINT("Completed page fault handling\n");
-   if (NT_SUCCESS(Status))
-     {
-	KeReleaseSpinLockFromDpcLevel(&MiPageFaultLock);
-	KeLowerIrql(oldlvl);
-     }
-//   DbgPrint("%%)");
    return(NT_SUCCESS(Status));
 }
 
