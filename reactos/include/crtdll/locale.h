@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/05/22 07:28:28 $
+ * $Revision: 1.2 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:56 $
  *
  */
 

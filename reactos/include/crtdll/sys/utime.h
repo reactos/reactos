@@ -15,12 +15,12 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ekohl $
- * $Date: 2001/07/03 13:14:18 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:57 $
  *
  */
 
@@ -34,9 +34,6 @@
 #include <crtdll/stddef.h>
 #include <crtdll/sys/types.h>
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 /*
  * Structure used by _utime function.
@@ -47,11 +44,6 @@ struct _utimbuf
 	time_t	modtime;	/* Modification time */
 };
 
-int	_utime (const char* szFileName, struct _utimbuf* pTimes);
-int     _futime (int nHandle, struct _utimbuf *pTimes);
-
-/* Wide character version */
-int     _wutime (const wchar_t *szFileName, struct _utimbuf *times);
 
 #ifndef	_NO_OLDNAMES
 
@@ -61,9 +53,22 @@ struct utimbuf
 	time_t	actime;
 	time_t	modtime;
 };
+#endif	/* Not _NO_OLDNAMES */
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+int	_utime (const char* szFileName, struct _utimbuf* pTimes);
+int _futime (int nHandle, struct _utimbuf *pTimes);
+
+/* The wide character version, only available for MSVCRT versions of the
+ * C runtime library. */
+int     _wutime (const wchar_t *szFileName, struct _utimbuf *times);
+
+
+#ifndef	_NO_OLDNAMES
 int	utime (const char* szFileName, struct utimbuf* pTimes);
-
 #endif	/* Not _NO_OLDNAMES */
 
 

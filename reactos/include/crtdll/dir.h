@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:56 $
  *
  */
 
@@ -72,9 +72,9 @@ struct _finddata_t
  * _findclose calls. _findnext also returns -1 if no match could be found,
  * and 0 if a match was found. Call _findclose when you are finished.
  */
+int	_findclose (int nHandle);
 int	_findfirst (const char* szFilespec, struct _finddata_t* find);
 int	_findnext (int nHandle, struct _finddata_t* find);
-int	_findclose (int nHandle);
 
 int	_chdir (const char* szPath);
 char*	_getcwd (char* caBuffer, int nBufferSize);

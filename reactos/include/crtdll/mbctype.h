@@ -37,6 +37,8 @@ extern "C" {
 
 extern char _jctype[257];
 
+
+int _ismbbkalnum( unsigned int c );
 int _ismbbkana( unsigned char c );
 
 

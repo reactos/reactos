@@ -15,18 +15,26 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Revision: 1.2 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:56 $
  *
  */
+
+#ifndef	_WCHAR_H_
+#define	_WCHAR_H_
+
 
 #include <crtdll/ctype.h>
 #include <crtdll/stdio.h>
 #include <crtdll/stdlib.h>
 #include <crtdll/string.h>
 #include <crtdll/time.h>
+
+#endif /* not _WCHAR_H_ */
+
+
 

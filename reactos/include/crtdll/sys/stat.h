@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: ekohl $
- * $Date: 2001/07/03 13:14:18 $
+ * $Revision: 1.7 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:56 $
  *
  */
 
@@ -32,9 +32,6 @@
 
 #include <crtdll/sys/types.h>
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 /*
  * Constants for the stat st_mode member.
@@ -88,6 +85,10 @@ struct stat
 	time_t	st_mtime;	/* Modified time */
 	time_t	st_ctime;	/* Creation time */
 };
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 
 int	_fstat (int nFileNo, struct stat* pstat);

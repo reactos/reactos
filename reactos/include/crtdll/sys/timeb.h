@@ -15,12 +15,12 @@
  *
  *  This code is distributed in the hope that it will be useful but
  *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warranties of
+ *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:07 $
+ * $Revision: 1.2 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:09:57 $
  *
  */
 
@@ -29,9 +29,6 @@
 #ifndef	_TIMEB_H_
 #define	_TIMEB_H_
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 /*
  * TODO: Structure not tested.
@@ -43,6 +40,10 @@ struct timeb
 	short	_timezone;
 	short	dstflag;
 };
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 /* TODO: Not tested. */
 void	_ftime (struct timeb* timebBuffer);
