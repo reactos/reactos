@@ -97,8 +97,6 @@
 @ stub CM_Get_Device_Interface_List_SizeW
 @ stub CM_Get_Device_Interface_List_Size_ExA
 @ stub CM_Get_Device_Interface_List_Size_ExW
-@ stub CM_Request_Device_EjectA
-@ stub CM_Request_Device_EjectW
 @ stub CM_Get_First_Log_Conf
 @ stub CM_Get_First_Log_Conf_Ex
 @ stub CM_Get_Global_State
@@ -164,6 +162,8 @@
 @ stub CM_Remove_SubTree_Ex
 @ stub CM_Remove_Unmarked_Children
 @ stub CM_Remove_Unmarked_Children_Ex
+@ stub CM_Request_Device_EjectA
+@ stub CM_Request_Device_EjectW
 @ stub CM_Request_Eject_PC
 @ stub CM_Reset_Children_Marks
 @ stub CM_Reset_Children_Marks_Ex
@@ -214,10 +214,10 @@
 @ stdcall InstallHinfSectionW(long long wstr long)
 @ stub InstallStop
 @ stub InstallStopEx
-@ stub IsUserAdmin
+@ stdcall IsUserAdmin()
 @ stub LookUpStringInTable
 @ stub MemoryInitialize
-@ stub MultiByteToUnicode
+@ stdcall MultiByteToUnicode(str long)
 @ stub MultiSzFromSearchControl
 @ stdcall MyFree(ptr)
 @ stub MyGetFileTitle
@@ -527,7 +527,7 @@
 @ stub StringTableStringFromId
 @ stub StringTableTrim
 @ stub TakeOwnershipOfFile
-@ stub UnicodeToMultiByte
+@ stdcall UnicodeToMultiByte(wstr long)
 @ stub UnmapAndCloseFile
 @ stub VerifyCatalogFile
 @ stub VerifyFile

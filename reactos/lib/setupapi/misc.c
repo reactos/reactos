@@ -28,6 +28,9 @@
 #include "setupapi.h"
 
 #include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 
 /**************************************************************************
@@ -41,9 +44,9 @@
  * RETURNS
  *     None
  */
-
 VOID WINAPI MyFree(LPVOID lpMem)
 {
+    TRACE("%p\n", lpMem);
     HeapFree(GetProcessHeap(), 0, lpMem);
 }
 
@@ -60,9 +63,9 @@ VOID WINAPI MyFree(LPVOID lpMem)
  *     Success: pointer to allocated memory block
  *     Failure: NULL
  */
-
 LPVOID WINAPI MyMalloc(DWORD dwSize)
 {
+    TRACE("%lu\n", dwSize);
     return HeapAlloc(GetProcessHeap(), 0, dwSize);
 }
 
@@ -85,9 +88,10 @@ LPVOID WINAPI MyMalloc(DWORD dwSize)
  *     If lpSrc is a NULL-pointer, then MyRealloc allocates a memory
  *     block like MyMalloc.
  */
-
 LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 {
+    TRACE("%p %lu\n", lpSrc, dwSize);
+
     if (lpSrc == NULL)
         return HeapAlloc(GetProcessHeap(), 0, dwSize);
 
@@ -110,10 +114,11 @@ LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
  * NOTES
  *     Call MyFree() to release the duplicated string.
  */
-
 LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc)
 {
     LPWSTR lpDst;
+
+    TRACE("%s\n", debugstr_w(lpSrc));
 
     lpDst = MyMalloc((lstrlenW(lpSrc) + 1) * sizeof(WCHAR));
     if (lpDst == NULL)
@@ -145,7 +150,6 @@ LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc)
  * NOTES
  *     Use MyFree to release the lpData buffer.
  */
-
 LONG WINAPI QueryRegistryValue(HKEY hKey,
                                LPCWSTR lpValueName,
                                LPBYTE  *lpData,
@@ -153,6 +157,9 @@ LONG WINAPI QueryRegistryValue(HKEY hKey,
                                LPDWORD lpcbData)
 {
     LONG lError;
+
+    TRACE("%lx %s %p %p %p\n",
+          hKey, debugstr_w(lpValueName), lpData, lpType, lpcbData);
 
     /* Get required buffer size */
     *lpcbData = 0;
@@ -171,4 +178,163 @@ LONG WINAPI QueryRegistryValue(HKEY hKey,
         MyFree(*lpData);
 
     return lError;
+}
+
+
+/**************************************************************************
+ * IsUserAdmin [SETUPAPI.@]
+ *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI IsUserAdmin(VOID)
+{
+    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
+    HANDLE hToken;
+    DWORD dwSize;
+    PTOKEN_GROUPS lpGroups;
+    PSID lpSid;
+    DWORD i;
+    BOOL bResult = FALSE;
+
+    TRACE("\n");
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    lpGroups = MyMalloc(dwSize);
+    if (lpGroups == NULL)
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    if (!GetTokenInformation(hToken, TokenGroups, lpGroups, dwSize, &dwSize))
+    {
+        MyFree(lpGroups);
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    CloseHandle(hToken);
+
+    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                  &lpSid))
+    {
+        MyFree(lpGroups);
+        return FALSE;
+    }
+
+    for (i = 0; i < lpGroups->GroupCount; i++)
+    {
+        if (EqualSid(lpSid, &lpGroups->Groups[i].Sid))
+        {
+            bResult = TRUE;
+            break;
+        }
+    }
+
+    FreeSid(lpSid);
+    MyFree(lpGroups);
+
+    return bResult;
+}
+
+
+/**************************************************************************
+ * MultiByteToUnicode [SETUPAPI.@]
+ *
+ * Converts a multi-byte string to a Unicode string.
+ *
+ * PARAMS
+ *     lpMultiByteStr  [I] Multi-byte string to be converted
+ *     uCodePage       [I] Code page
+ *
+ * RETURNS
+ *     Success: pointer to the converted Unicode string
+ *     Failure: NULL
+ *
+ * NOTE
+ *     Use MyFree to release the returned Unicode string.
+ */
+LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
+{
+    LPWSTR lpUnicodeStr;
+    int nLength;
+
+    TRACE("%s %lu\n", debugstr_a(lpMultiByteStr), uCodePage);
+
+    nLength = MultiByteToWideChar(uCodePage, 0, lpMultiByteStr,
+                                  -1, NULL, 0);
+    if (nLength == 0)
+        return NULL;
+
+    lpUnicodeStr = MyMalloc(nLength * sizeof(WCHAR));
+    if (lpUnicodeStr == NULL)
+        return NULL;
+
+    if (!MultiByteToWideChar(uCodePage, 0, lpMultiByteStr,
+                             nLength, lpUnicodeStr, nLength))
+    {
+        MyFree(lpUnicodeStr);
+        return NULL;
+    }
+
+    return lpUnicodeStr;
+}
+
+
+/**************************************************************************
+ * UnicodeToMultiByte [SETUPAPI.@]
+ *
+ * Converts a Unicode string to a multi-byte string.
+ *
+ * PARAMS
+ *     lpUnicodeStr  [I] Unicode string to be converted
+ *     uCodePage     [I] Code page
+ *
+ * RETURNS
+ *     Success: pointer to the converted multi-byte string
+ *     Failure: NULL
+ *
+ * NOTE
+ *     Use MyFree to release the returned multi-byte string.
+ */
+LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage)
+{
+    LPSTR lpMultiByteStr;
+    int nLength;
+
+    TRACE("%s %lu\n", debugstr_w(lpUnicodeStr), uCodePage);
+
+    nLength = WideCharToMultiByte(uCodePage, 0, lpUnicodeStr, -1,
+                                  NULL, 0, NULL, NULL);
+    if (nLength == 0)
+        return NULL;
+
+    lpMultiByteStr = MyMalloc(nLength);
+    if (lpMultiByteStr == NULL)
+        return NULL;
+
+    if (!WideCharToMultiByte(uCodePage, 0, lpUnicodeStr, -1,
+                             lpMultiByteStr, nLength, NULL, NULL))
+    {
+        MyFree(lpMultiByteStr);
+        return NULL;
+    }
+
+    return lpMultiByteStr;
 }

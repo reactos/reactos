@@ -664,90 +664,26 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_INSTALL_STATE               0x00000022
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
 
-void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show );
-void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show );
+
+LONG     WINAPI AddTagToGroupOrderList(PCWSTR lpGroupName, DWORD dwUnknown2, DWORD dwUnknown3);
+PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);
+void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, PCSTR cmdline, INT show );
+void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, PCWSTR cmdline, INT show );
 #define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
-HINF     WINAPI SetupOpenInfFileA( PCSTR name, PCSTR pszclass, DWORD style, UINT *error );
-HINF     WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR pszclass, DWORD style, UINT *error );
-#define         SetupOpenInfFile WINELIB_NAME_AW(SetupOpenInfFile)
-BOOL     WINAPI SetupOpenAppendInfFileA( PCSTR, HINF, UINT * );
-BOOL     WINAPI SetupOpenAppendInfFileW( PCWSTR, HINF, UINT * );
-#define         SetupOpenAppendInfFile WINELIB_NAME_AW(SetupOpenAppendInfFile)
-HINF     WINAPI SetupOpenMasterInf( VOID );
-void     WINAPI SetupCloseInfFile( HINF hinf );
-BOOL     WINAPI SetupGetLineByIndexA( HINF, PCSTR, DWORD, INFCONTEXT * );
-BOOL     WINAPI SetupGetLineByIndexW( HINF, PCWSTR, DWORD, INFCONTEXT * );
-#define         SetupGetLineByIndex WINELIB_NAME_AW(SetupGetLineByIndex)
-LONG     WINAPI SetupGetLineCountA( HINF hinf, PCSTR section );
-LONG     WINAPI SetupGetLineCountW( HINF hinf, PCWSTR section );
-#define         SetupGetLineCount WINELIB_NAME_AW(SetupGetLineCount)
-BOOL     WINAPI SetupFindFirstLineA( HINF hinf, PCSTR section, PCSTR key, INFCONTEXT *context );
-BOOL     WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTEXT *context );
-#define         SetupFindFirstLine WINELIB_NAME_AW(SetupFindFirstLine)
-BOOL     WINAPI SetupFindNextLine( PINFCONTEXT context_in, PINFCONTEXT context_out );
-BOOL     WINAPI SetupFindNextMatchLineA( PINFCONTEXT context_in, PCSTR key, PINFCONTEXT context_out );
-BOOL     WINAPI SetupFindNextMatchLineW( PINFCONTEXT context_in, PCWSTR key, PINFCONTEXT context_out );
-#define         SetupFindNextMatchLine WINELIB_NAME_AW(SetupFindNextMatchLine)
-BOOL     WINAPI SetupGetLineTextA( PINFCONTEXT context, HINF hinf, PCSTR section_name,PCSTR key_name, PSTR buffer, DWORD size, PDWORD required );
-BOOL     WINAPI SetupGetLineTextW( PINFCONTEXT context, HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR buffer, DWORD size, PDWORD required );
-#define         SetupGetLineText WINELIB_NAME_AW(SetupGetLineText)
-DWORD    WINAPI SetupGetFieldCount( PINFCONTEXT context );
-BOOL     WINAPI SetupGetIntField( PINFCONTEXT context, DWORD index, PINT result );
-BOOL     WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer, DWORD size, PDWORD required );
-BOOL     WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer, DWORD size, PDWORD required );
-#define         SetupGetStringField WINELIB_NAME_AW(SetupGetStringField)
-BOOL     WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer, DWORD size, LPDWORD required );
-BOOL     WINAPI SetupGetMultiSzFieldA( PINFCONTEXT context, DWORD index, PSTR buffer, DWORD size, LPDWORD required );
-BOOL     WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer, DWORD size, LPDWORD required );
-#define         SetupGetMultiSzField WINELIB_NAME_AW(SetupGetMultiSzField)
-BOOL     WINAPI SetupSetDirectoryIdA( HINF, DWORD, PCSTR );
-BOOL     WINAPI SetupSetDirectoryIdW( HINF, DWORD, PCWSTR );
-#define         SetupSetDirectoryId WINELIB_NAME_AW(SetupSetDirectoryId)
-HSPFILEQ WINAPI SetupOpenFileQueue(void);
+BOOL     WINAPI IsUserAdmin(VOID);
+PWSTR    WINAPI MultiByteToUnicode(PCSTR lpMultiByteStr, UINT uCodePage);
+VOID     WINAPI MyFree(PVOID lpMem);
+PVOID    WINAPI MyMalloc(DWORD dwSize);
+PVOID    WINAPI MyRealloc(PVOID lpSrc, DWORD dwSize);
+LONG     WINAPI QueryRegistryValue(HKEY, PCWSTR, PBYTE *, PDWORD, PDWORD);
 BOOL     WINAPI SetupCloseFileQueue( HSPFILEQ );
-BOOL     WINAPI SetupSetFileQueueAlternatePlatformA( HSPFILEQ, PSP_ALTPLATFORM_INFO, PCSTR );
-BOOL     WINAPI SetupSetFileQueueAlternatePlatformW( HSPFILEQ, PSP_ALTPLATFORM_INFO, PCWSTR );
-#define         SetupSetFileQueueAlternatePlatform WINELIB_NAME_AW(SetupSetFileQueueAlternatePlatform)
-BOOL     WINAPI SetupQueueCopyA(HSPFILEQ,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,DWORD);
-BOOL     WINAPI SetupQueueCopyW(HSPFILEQ,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,DWORD);
-#define         SetupQueueCopy WINELIB_NAME_AW(SetupQueueCopy)
-BOOL     WINAPI SetupQueueCopyIndirectA( PSP_FILE_COPY_PARAMS_A );
-BOOL     WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W );
-#define         SetupQueueCopyIndirect WINELIB_NAME_AW(SetupQueueCopyIndirect)
-BOOL     WINAPI SetupQueueDefaultCopyA( HSPFILEQ, HINF, PCSTR, PCSTR, PCSTR, DWORD );
-BOOL     WINAPI SetupQueueDefaultCopyW( HSPFILEQ, HINF, PCWSTR, PCWSTR, PCWSTR, DWORD );
-#define         SetupQueueDefaultCopy WINELIB_NAME_AW(SetupQueueDefaultCopy)
-BOOL     WINAPI SetupQueueDeleteA( HSPFILEQ, PCSTR, PCSTR );
-BOOL     WINAPI SetupQueueDeleteW( HSPFILEQ, PCWSTR, PCWSTR );
-#define         SetupQueueDelete WINELIB_NAME_AW(SetupQueueDelete)
-BOOL     WINAPI SetupQueueRenameA( HSPFILEQ, PCSTR, PCSTR, PCSTR, PCSTR );
-BOOL     WINAPI SetupQueueRenameW( HSPFILEQ, PCWSTR, PCWSTR, PCWSTR, PCWSTR );
-#define         SetupQueueRename WINELIB_NAME_AW(SetupQueueRename)
+void     WINAPI SetupCloseInfFile( HINF hinf );
 BOOL     WINAPI SetupCommitFileQueueA( HWND, HSPFILEQ, PSP_FILE_CALLBACK_A, PVOID );
 BOOL     WINAPI SetupCommitFileQueueW( HWND, HSPFILEQ, PSP_FILE_CALLBACK_W, PVOID );
 #define         SetupCommitFileQueue WINELIB_NAME_AW(SetupCommitFileQueue)
-BOOL     WINAPI SetupScanFileQueueA( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_A, PVOID, PDWORD );
-BOOL     WINAPI SetupScanFileQueueW( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_W, PVOID, PDWORD );
-#define         SetupScanFileQueue WINELIB_NAME_AW(SetupScanFileQueue)
-BOOL     WINAPI SetupGetFileQueueCount( HSPFILEQ, UINT, PUINT );
-BOOL     WINAPI SetupGetFileQueueFlags( HSPFILEQ, PDWORD );
-BOOL     WINAPI SetupSetFileQueueFlags( HSPFILEQ, DWORD, DWORD );
-BOOL     WINAPI SetupQueueCopySectionA( HSPFILEQ, PCSTR, HINF, HINF, PCSTR, DWORD );
-BOOL     WINAPI SetupQueueCopySectionW( HSPFILEQ, PCWSTR, HINF, HINF, PCWSTR, DWORD );
-#define         SetupQueueCopySection WINELIB_NAME_AW(SetupQueueCopySection)
-BOOL     WINAPI SetupQueueDeleteSectionA( HSPFILEQ, HINF, HINF, PCSTR );
-BOOL     WINAPI SetupQueueDeleteSectionW( HSPFILEQ, HINF, HINF, PCWSTR );
-#define         SetupQueueDeleteSection WINELIB_NAME_AW(SetupQueueDeleteSection)
-BOOL     WINAPI SetupQueueRenameSectionA( HSPFILEQ, HINF, HINF, PCSTR );
-BOOL     WINAPI SetupQueueRenameSectionW( HSPFILEQ, HINF, HINF, PCWSTR );
-#define         SetupQueueRenameSection WINELIB_NAME_AW(SetupQueueRenameSection)
-PVOID    WINAPI SetupInitDefaultQueueCallback( HWND );
-PVOID    WINAPI SetupInitDefaultQueueCallbackEx( HWND, HWND, UINT, DWORD, PVOID );
-void     WINAPI SetupTermDefaultQueueCallback( PVOID );
 UINT     WINAPI SetupDefaultQueueCallbackA( PVOID, UINT, UINT_PTR, UINT_PTR );
 UINT     WINAPI SetupDefaultQueueCallbackW( PVOID, UINT, UINT_PTR, UINT_PTR );
 #define         SetupDefaultQueueCallback WINELIB_NAME_AW(SetupDefaultQueueCallback)
-
 BOOL     WINAPI SetupDiBuildClassInfoList(DWORD, LPGUID, DWORD, PDWORD);
 BOOL     WINAPI SetupDiBuildClassInfoListExA(DWORD, LPGUID, DWORD, PDWORD, PCSTR, PVOID);
 BOOL     WINAPI SetupDiBuildClassInfoListExW(DWORD, LPGUID, DWORD, PDWORD, PCWSTR, PVOID);
@@ -795,6 +731,35 @@ HKEY     WINAPI SetupDiOpenClassRegKey(const GUID*, REGSAM);
 HKEY     WINAPI SetupDiOpenClassRegKeyExA(const GUID*, REGSAM, DWORD, PCSTR, PVOID);
 HKEY     WINAPI SetupDiOpenClassRegKeyExW(const GUID*, REGSAM, DWORD, PCWSTR, PVOID);
 #define         SetupDiOpenClassRegKeyEx WINELIB_NAME_AW(SetupDiOpenClassRegKeyEx)
+BOOL     WINAPI SetupFindFirstLineA( HINF hinf, PCSTR section, PCSTR key, INFCONTEXT *context );
+BOOL     WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTEXT *context );
+#define         SetupFindFirstLine WINELIB_NAME_AW(SetupFindFirstLine)
+BOOL     WINAPI SetupFindNextLine( PINFCONTEXT context_in, PINFCONTEXT context_out );
+BOOL     WINAPI SetupFindNextMatchLineA( PINFCONTEXT context_in, PCSTR key, PINFCONTEXT context_out );
+BOOL     WINAPI SetupFindNextMatchLineW( PINFCONTEXT context_in, PCWSTR key, PINFCONTEXT context_out );
+#define         SetupFindNextMatchLine WINELIB_NAME_AW(SetupFindNextMatchLine)
+BOOL     WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer, DWORD size, LPDWORD required );
+DWORD    WINAPI SetupGetFieldCount( PINFCONTEXT context );
+BOOL     WINAPI SetupGetFileQueueCount( HSPFILEQ, UINT, PUINT );
+BOOL     WINAPI SetupGetFileQueueFlags( HSPFILEQ, PDWORD );
+BOOL     WINAPI SetupGetIntField( PINFCONTEXT context, DWORD index, PINT result );
+BOOL     WINAPI SetupGetLineByIndexA( HINF, PCSTR, DWORD, INFCONTEXT * );
+BOOL     WINAPI SetupGetLineByIndexW( HINF, PCWSTR, DWORD, INFCONTEXT * );
+#define         SetupGetLineByIndex WINELIB_NAME_AW(SetupGetLineByIndex)
+LONG     WINAPI SetupGetLineCountA( HINF hinf, PCSTR section );
+LONG     WINAPI SetupGetLineCountW( HINF hinf, PCWSTR section );
+#define         SetupGetLineCount WINELIB_NAME_AW(SetupGetLineCount)
+BOOL     WINAPI SetupGetLineTextA( PINFCONTEXT context, HINF hinf, PCSTR section_name,PCSTR key_name, PSTR buffer, DWORD size, PDWORD required );
+BOOL     WINAPI SetupGetLineTextW( PINFCONTEXT context, HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR buffer, DWORD size, PDWORD required );
+#define         SetupGetLineText WINELIB_NAME_AW(SetupGetLineText)
+BOOL     WINAPI SetupGetMultiSzFieldA( PINFCONTEXT context, DWORD index, PSTR buffer, DWORD size, LPDWORD required );
+BOOL     WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer, DWORD size, LPDWORD required );
+#define         SetupGetMultiSzField WINELIB_NAME_AW(SetupGetMultiSzField)
+BOOL     WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer, DWORD size, PDWORD required );
+BOOL     WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer, DWORD size, PDWORD required );
+#define         SetupGetStringField WINELIB_NAME_AW(SetupGetStringField)
+PVOID    WINAPI SetupInitDefaultQueueCallback( HWND );
+PVOID    WINAPI SetupInitDefaultQueueCallbackEx( HWND, HWND, UINT, DWORD, PVOID );
 BOOL     WINAPI SetupInstallFilesFromInfSectionA( HINF, HINF, HSPFILEQ, PCSTR, PCSTR, UINT );
 BOOL     WINAPI SetupInstallFilesFromInfSectionW( HINF, HINF, HSPFILEQ, PCWSTR, PCWSTR, UINT );
 #define         SetupInstallFilesFromInfSection WINELIB_NAME_AW(SetupInstallFilesFromInfSection)
@@ -806,6 +771,50 @@ BOOL     WINAPI SetupInstallFromInfSectionW(HWND,HINF,PCWSTR,UINT,HKEY,PCWSTR,UI
 BOOL     WINAPI SetupIterateCabinetA(PCSTR, DWORD, PSP_FILE_CALLBACK_A, PVOID);
 BOOL     WINAPI SetupIterateCabinetW(PCWSTR, DWORD, PSP_FILE_CALLBACK_W, PVOID);
 #define         SetupIterateCabinet WINELIB_NAME_AW(SetupIterateCabinet)
+BOOL     WINAPI SetupOpenAppendInfFileA( PCSTR, HINF, UINT * );
+BOOL     WINAPI SetupOpenAppendInfFileW( PCWSTR, HINF, UINT * );
+#define         SetupOpenAppendInfFile WINELIB_NAME_AW(SetupOpenAppendInfFile)
+HSPFILEQ WINAPI SetupOpenFileQueue(void);
+HINF     WINAPI SetupOpenInfFileA( PCSTR name, PCSTR pszclass, DWORD style, UINT *error );
+HINF     WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR pszclass, DWORD style, UINT *error );
+#define         SetupOpenInfFile WINELIB_NAME_AW(SetupOpenInfFile)
+HINF     WINAPI SetupOpenMasterInf( VOID );
+BOOL     WINAPI SetupQueueCopyA(HSPFILEQ,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,DWORD);
+BOOL     WINAPI SetupQueueCopyW(HSPFILEQ,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,DWORD);
+#define         SetupQueueCopy WINELIB_NAME_AW(SetupQueueCopy)
+BOOL     WINAPI SetupQueueCopyIndirectA( PSP_FILE_COPY_PARAMS_A );
+BOOL     WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W );
+#define         SetupQueueCopyIndirect WINELIB_NAME_AW(SetupQueueCopyIndirect)
+BOOL     WINAPI SetupQueueCopySectionA( HSPFILEQ, PCSTR, HINF, HINF, PCSTR, DWORD );
+BOOL     WINAPI SetupQueueCopySectionW( HSPFILEQ, PCWSTR, HINF, HINF, PCWSTR, DWORD );
+#define         SetupQueueCopySection WINELIB_NAME_AW(SetupQueueCopySection)
+BOOL     WINAPI SetupQueueDefaultCopyA( HSPFILEQ, HINF, PCSTR, PCSTR, PCSTR, DWORD );
+BOOL     WINAPI SetupQueueDefaultCopyW( HSPFILEQ, HINF, PCWSTR, PCWSTR, PCWSTR, DWORD );
+#define         SetupQueueDefaultCopy WINELIB_NAME_AW(SetupQueueDefaultCopy)
+BOOL     WINAPI SetupQueueDeleteA( HSPFILEQ, PCSTR, PCSTR );
+BOOL     WINAPI SetupQueueDeleteW( HSPFILEQ, PCWSTR, PCWSTR );
+#define         SetupQueueDelete WINELIB_NAME_AW(SetupQueueDelete)
+BOOL     WINAPI SetupQueueDeleteSectionA( HSPFILEQ, HINF, HINF, PCSTR );
+BOOL     WINAPI SetupQueueDeleteSectionW( HSPFILEQ, HINF, HINF, PCWSTR );
+#define         SetupQueueDeleteSection WINELIB_NAME_AW(SetupQueueDeleteSection)
+BOOL     WINAPI SetupQueueRenameA( HSPFILEQ, PCSTR, PCSTR, PCSTR, PCSTR );
+BOOL     WINAPI SetupQueueRenameW( HSPFILEQ, PCWSTR, PCWSTR, PCWSTR, PCWSTR );
+#define         SetupQueueRename WINELIB_NAME_AW(SetupQueueRename)
+BOOL     WINAPI SetupQueueRenameSectionA( HSPFILEQ, HINF, HINF, PCSTR );
+BOOL     WINAPI SetupQueueRenameSectionW( HSPFILEQ, HINF, HINF, PCWSTR );
+#define         SetupQueueRenameSection WINELIB_NAME_AW(SetupQueueRenameSection)
+BOOL     WINAPI SetupScanFileQueueA( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_A, PVOID, PDWORD );
+BOOL     WINAPI SetupScanFileQueueW( HSPFILEQ, DWORD, HWND, PSP_FILE_CALLBACK_W, PVOID, PDWORD );
+#define         SetupScanFileQueue WINELIB_NAME_AW(SetupScanFileQueue)
+BOOL     WINAPI SetupSetDirectoryIdA( HINF, DWORD, PCSTR );
+BOOL     WINAPI SetupSetDirectoryIdW( HINF, DWORD, PCWSTR );
+#define         SetupSetDirectoryId WINELIB_NAME_AW(SetupSetDirectoryId)
+BOOL     WINAPI SetupSetFileQueueAlternatePlatformA( HSPFILEQ, PSP_ALTPLATFORM_INFO, PCSTR );
+BOOL     WINAPI SetupSetFileQueueAlternatePlatformW( HSPFILEQ, PSP_ALTPLATFORM_INFO, PCWSTR );
+#define         SetupSetFileQueueAlternatePlatform WINELIB_NAME_AW(SetupSetFileQueueAlternatePlatform)
+BOOL     WINAPI SetupSetFileQueueFlags( HSPFILEQ, DWORD, DWORD );
+void     WINAPI SetupTermDefaultQueueCallback( PVOID );
+PSTR     WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 
 #undef DECL_WINELIB_SETUPAPI_TYPE_AW
 
