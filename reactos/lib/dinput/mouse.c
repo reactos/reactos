@@ -895,9 +895,9 @@ GetCursorPos( &point );
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	SysMouseAImpl_Acquire(iface);
-
-
+	//SysMouseAImpl_Acquire(iface); < -- remove it geting UT2004 working
+    // less choopy but it need when user hook are implement in ros.
+    
     if (This->acquired == 0) {
 	WARN(" application tries to get data from an unacquired device !\n");
 	return DIERR_NOTACQUIRED;
@@ -923,58 +923,81 @@ GetCursorPos( &point );
   for (count=0;count<*entries;count++) {
 	  
 	 if (save_point.x != point.x) {
-         dod[count].dwOfs =   DIMOFS_X;         
+         dod[count_ent].dwOfs =   DIMOFS_X;         
 		 calc = point.x - save_point.x;	
-		 if (calc >2) dod[count].dwData = 2;
-		 else if (calc < -2) dod[count].dwData = -2;
-		 else dod[count].dwData =  calc;	
+		 if (calc >2) dod[count_ent].dwData = 2;
+		 else if (calc < -2) dod[count_ent].dwData = -2;
+		 else dod[count_ent].dwData =  calc;	
          		 
-         dod[count].dwTimeStamp =  time +1; 
-         dod[count].dwSequence = last_event++;  
+         dod[count_ent].dwTimeStamp =  time +1; 
+         dod[count_ent].dwSequence = last_event++;  
 		 count_ent++;
          save_point.x = point.x;
          }
 
-     if (save_point.y != point.y) {
-        dod[count].dwOfs =   DIMOFS_Y;
+     else if (save_point.y != point.y) {
+        dod[count_ent].dwOfs =   DIMOFS_Y;
         calc =    point.y - save_point.y;
-		if (calc >2) dod[count].dwData = 2;
-		 else if (calc < -2) dod[count].dwData = -2;
-		 else dod[count].dwData =  calc;	
+		if (calc >2) dod[count_ent].dwData = 2;
+		 else if (calc < -2) dod[count_ent].dwData = -2;
+		 else dod[count_ent].dwData =  calc;	
 
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
 		count_ent++;
 		save_point.y = point.y;
 	    }
-     
-     for (count_button=0;count_button<5;count_button++)
-	 {
-	 if (save_b[count_button] != b[count_button]) {
-		 if (count_button==0) {
-			dod[count].dwOfs =   DIMOFS_BUTTON0;
-			}
-
-		 if (count_button==1) {
-			 dod[count].dwOfs =   DIMOFS_BUTTON1;
-		     }
-		 if (count_button==2) {
-			 dod[count].dwOfs =   DIMOFS_BUTTON2;
-		     }
-		 if (count_button==3) {
-			 dod[count].dwOfs =   DIMOFS_BUTTON3;
-		     }
-		 if (count_button==4) {
-			 dod[count].dwOfs =  DIMOFS_BUTTON4;
-		     }
-
-        dod[count].dwData =   b[count_button];
-        dod[count].dwTimeStamp =  time +1;
-        dod[count].dwSequence = last_event++;
+          
+	 else if (save_b[0] != b[0]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON0;
+			
+        dod[count_ent].dwData =   b[0];
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
 		count_ent++;
-		save_b[count_button] = b[count_button];
+		save_b[0] = b[0];
 	    }
-	 }
+
+	 else if (save_b[1] != b[1]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON1;
+			
+        dod[count_ent].dwData =   b[1];
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
+		count_ent++;
+		save_b[1] = b[1];
+	    }
+
+ 	 else if (save_b[2] != b[2]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON2;
+			
+        dod[count_ent].dwData =   b[2];
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
+		count_ent++;
+		save_b[2] = b[2];
+	    }
+
+     else if (save_b[3] != b[3]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON3;
+			
+        dod[count_ent].dwData =   b[3];
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
+		count_ent++;
+		save_b[3] = b[3];
+	    }
+
+     else if (save_b[4] != b[4]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON4;
+			
+        dod[count_ent].dwData =   b[4];
+        dod[count_ent].dwTimeStamp =  time +1;
+        dod[count_ent].dwSequence = last_event++;
+		count_ent++;
+		save_b[4] = b[4];
+	    }
+	 
 
   }  // end for
 
