@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.31 2002/08/01 10:29:17 ekohl Exp $
+/* $Id: cmd.c,v 1.32 2002/11/11 21:53:25 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1154,7 +1154,11 @@ int main (int argc, char *argv[])
   if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info) == FALSE)
     {
       fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError());
+#ifndef __REACTOS__
+      /* On ReactOS GetConsoleScreenBufferInfo returns an error if the stdin 
+         handle is redirected to a pipe or file. This stops windres from working. */
       return(1);
+#endif
     }
   wColor = Info.wAttributes;
   wDefColor = wColor;
