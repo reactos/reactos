@@ -163,7 +163,8 @@ enum
 /*
  * IoCreateFile options
  */
-#define IO_NO_PARAMETER_CHECKING 0x100
+#define IO_NO_PARAMETER_CHECKING   0x0100
+#define IO_CHECK_CREATE_PARAMETERS 0x0200
 
 /*
  * Possible flags for the device object flags
