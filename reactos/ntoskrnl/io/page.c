@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.12 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: page.c,v 1.13 2001/10/10 21:56:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,8 @@
 NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 			    PMDL Mdl,
 			    PLARGE_INTEGER Offset,
-			    PIO_STATUS_BLOCK StatusBlock)
+			    PIO_STATUS_BLOCK StatusBlock,
+			    BOOLEAN PagingIo)
 {
    PIRP Irp;
    KEVENT Event;
@@ -44,7 +45,7 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 					     Offset,
 					     &Event,
 					     StatusBlock,
-					     FALSE);
+					     PagingIo);
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    DPRINT("Before IoCallDriver\n");

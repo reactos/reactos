@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.11 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: pagefile.c,v 1.12 2001/10/10 21:57:00 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -122,7 +122,8 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    Status = IoPageWrite(PagingFileList[i]->FileObject,
 			Mdl,
 			&file_offset,
-			&Iosb);
+			&Iosb,
+			FALSE);
    return(Status);
 }
 
