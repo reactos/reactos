@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.14 2001/07/18 09:23:02 ekohl Exp $
+; $Id: msvcrt.def,v 1.15 2001/10/03 02:15:55 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -96,7 +96,7 @@ __argv DATA
 ; __crtGetLocaleInfoW
 ; __crtLCMapStringA
 __dllonexit
-; __doserrno
+__doserrno
 __fpecode
 __getmainargs
 __initenv DATA

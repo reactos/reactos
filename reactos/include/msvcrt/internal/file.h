@@ -41,6 +41,8 @@ extern "C" {
 char __validfp (FILE *f);
 
 int __set_errno(int err);
+int __set_doserrno (int error);
+
 void *filehnd(int fn);
 
 char __is_text_file(FILE *p);

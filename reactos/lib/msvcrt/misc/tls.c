@@ -10,8 +10,8 @@ static unsigned long TlsIndex = (unsigned long)-1;
 
 static void InitThreadData(PTHREADDATA ThreadData)
 {
-//   ThreadData->terrno = 0;
-//   ThreadData->tdoserrno = 0;
+   ThreadData->terrno = 0;
+   ThreadData->tdoserrno = 0;
 
    ThreadData->fpecode = 0;
 
