@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.41 2001/08/15 20:35:38 ea Exp $
+/* $Id: proc.c,v 1.42 2001/09/02 17:59:44 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -593,7 +593,7 @@ GetPriorityClass (
 	)
 {
 	HANDLE		hProcessTmp;
-	DWORD		CsrPriorityClass;
+	DWORD		CsrPriorityClass = 0; // This tells CSRSS we want to GET it!
 	NTSTATUS	Status;
 	
 	Status = NtDuplicateObject (
