@@ -27,5 +27,6 @@ int _cwait(int* pnStatus, int hProc, int nAction)
     return -1;
   if (pnStatus != NULL)
     *pnStatus = (int)ExitCode;
+  CloseHandle((HANDLE)hProc);
   return hProc;
 }
