@@ -40,13 +40,7 @@ PsIdleThreadMain(PVOID Context)
 	 }
        NtYieldExecution();
 
-#if defined(__GNUC__)
-       __asm__( "hlt" );
-#elif defined(_MSC_VER)
-       __asm	hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
+       Ke386HaltProcessor();
      }
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.40 2004/01/18 22:58:10 gdalsnes Exp $
+/* $Id: irq.c,v 1.41 2004/03/09 21:49:53 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -391,7 +391,7 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
     */
-   __asm__("sti\n\t");
+   Ke386EnableInterrupts();
 
    /*
     * Actually call the ISR.
@@ -401,7 +401,7 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    /*
     * Disable interrupts
     */
-   __asm__("cli\n\t");
+   Ke386DisableInterrupts();
 
    /*
     * Unmask the related irq
@@ -491,13 +491,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
     */
-#if defined(__GNUC__)
-   __asm__("sti\n\t");
-#elif defined(_MSC_VER)
-   __asm	sti
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386EnableInterrupts();
 
    /*
     * Actually call the ISR.
@@ -523,13 +517,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    /*
     * End the system interrupt.
     */
-#if defined(__GNUC__)
-   __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-   __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386DisableInterrupts();
 
    HalEndSystemInterrupt (old_level, 0);
 

@@ -126,14 +126,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   Id = KeGetCurrentProcessorNumber();
   Gdt = KeGetCurrentKPCR()->GDT;
 
-#if defined(__GNUC__)
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
-#elif defined(_MSC_VER)
-  __asm mov eax, cr3;
-  __asm mov cr3_, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ke386GetPageTableDirectory(cr3_);
 
   Tss = ExAllocatePool(NonPagedPool, sizeof(KTSS));
   TrapTss = ExAllocatePool(NonPagedPool, sizeof(KTSSNOIOPM));
@@ -214,14 +207,7 @@ Ki386BootInitializeTSS(VOID)
   extern unsigned int trap_stack, trap_stack_top;
   unsigned int base, length;
 
-#if defined(__GNUC__)
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
-#elif defined(_MSC_VER)
-  __asm mov eax, cr3;
-  __asm mov cr3_, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ke386GetPageTableDirectory(cr3_);
 
   Ki386TssArray[0] = &KiBootTss;
   Ki386TrapTssArray[0] = &KiBootTrapTss;

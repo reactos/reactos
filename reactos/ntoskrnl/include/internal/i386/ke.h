@@ -135,6 +135,30 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
+#if defined(__GNUC__)
+#define Ke386DisableInterrupts() __asm__("cli\n\t");
+#define Ke386EnableInterrupts()  __asm__("sti\n\t");
+#define Ke386HaltProcessor()     __asm__("hlt\n\t");
+#define Ke386GetPageTableDirectory(X) \
+                                 __asm__("movl %%cr3,%0\n\t" : "=d" (X));
+#define Ke386SetPageTableDirectory(X) \
+                                 __asm__("movl %0,%%cr3\n\t" \
+	                                 : /* no outputs */ \
+	                                 : "r" (X));
+#elif defined(_MSC_VER)
+#define Ke386DisableInterrupts() __asm cli
+#define Ke386EnableInterrupts()  __asm sti
+#define Ke386HaltProcessor()     __asm hlt
+#define Ke386GetPageTableDirectory(X) \
+                                __asm mov eax, cr3; \
+                                __asm mov X, eax;
+#define Ke386GetPageTableDirectory(X) \
+                                __asm mov eax, X; \
+	                        __asm mov cr3, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 #endif /* __ASM__ */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

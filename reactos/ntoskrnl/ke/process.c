@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.18 2003/12/30 18:52:04 fireball Exp $
+/* $Id: process.c,v 1.19 2004/03/09 21:49:53 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -81,16 +81,7 @@ KeAttachProcess (PEPROCESS Process)
    CurrentThread->ThreadsProcess = Process;
    PageDir = Process->Pcb.DirectoryTableBase.u.LowPart;
    DPRINT("Switching process context to %x\n",PageDir);
-#if defined(__GNUC__)
-   __asm__("movl %0,%%cr3\n\t"
-	   : /* no outputs */
-	   : "r" (PageDir));
-#elif defined(_MSC_VER)
-	  __asm mov eax, PageDir;
-	  __asm mov cr3, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386SetPageTableDirectory(PageDir);
    KeLowerIrql(oldlvl);
 }
 
@@ -121,16 +112,7 @@ KeDetachProcess (VOID)
    CurrentThread->ThreadsProcess = CurrentThread->OldProcess;
    CurrentThread->OldProcess = NULL;
    PageDir = CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase.u.LowPart;
-#if defined(__GNUC__)
-   __asm__("movl %0,%%cr3\n\t"
-	   : /* no inputs */
-	   : "r" (PageDir));
-#elif defined(_MSC_VER)
-	  __asm mov eax, PageDir;
-	  __asm mov cr3, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386SetPageTableDirectory(PageDir);
 
    KeLowerIrql(oldlvl);
 }

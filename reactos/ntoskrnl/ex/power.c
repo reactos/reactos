@@ -53,13 +53,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 #else
         PopSetSystemPowerState(PowerSystemShutdown);
 
-#if defined(__GNUC__)
-        __asm__("cli\n");
-#elif defined(_MSC_VER)
-        __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+	Ke386DisableInterrupts();
 
 	while (TRUE)
 	  {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.62 2004/01/05 14:28:21 weiden Exp $
+/* $Id: page.c,v 1.63 2004/03/09 21:49:53 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -78,15 +78,7 @@ PULONG
 MmGetPageDirectory(VOID)
 {
    unsigned int page_dir=0;
-#if defined(__GNUC__)
-   __asm__("movl %%cr3,%0\n\t"
-                : "=r" (page_dir));
-#elif defined(_MSC_VER)
-   __asm mov eax, cr3;
-   __asm mov page_dir, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386GetPageTableDirectory(page_dir);
    return((PULONG)page_dir);
 }
 

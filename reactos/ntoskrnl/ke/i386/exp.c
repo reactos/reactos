@@ -318,6 +318,7 @@ KiDoubleFaultHandler(VOID)
 	  StackBase = (ULONG)&init_stack;
 	}
 
+      /* Change to an #if 0 if no frames are printed because of fpo. */
 #if 1
       DbgPrint("Frames: ");
       Frame = (PULONG)OldTss->Ebp;
@@ -442,14 +443,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 	    Tf->Cs&0xffff, Tf->Eip);
    print_address((PVOID)Tf->Eip);
    DbgPrint("\n");
-#if defined(__GNUC__)
-   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
-#elif defined(_MSC_VER)
-  __asm mov eax, cr3;
-  __asm mov cr3_, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ke386GetPageTableDirectory(cr3_);
    DbgPrint("cr2 %x cr3 %x ", cr2, cr3_);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
@@ -494,6 +488,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
     * Dump the stack frames
     */
    DbgPrint("Frames: ");
+#if 0
    i = 1;
    Frame = (PULONG)Tf->Ebp;
    while (Frame != NULL)
@@ -506,7 +501,11 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 	   DbgPrint("<INVALID>");
 	   break;
 	 }
-       print_address(Eip);
+       if (!print_address(Eip))
+	 {
+	   DbgPrint("<%X>", Eip);
+	   break;
+	 }
        Status = MmSafeCopyFromUser(&Frame, Frame, sizeof(Frame));
        if (!NT_SUCCESS(Status))
 	 {
@@ -515,6 +514,19 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
        i++;
        DbgPrint(" ");
      }
+#else
+   i = 1;
+   Frame = (PULONG)((ULONG_PTR)Esp0 + KTRAP_FRAME_EFLAGS);
+   while (Frame < (PULONG)PsGetCurrentThread()->Tcb.StackBase && i < 50)
+     {
+	 ULONG Address = *Frame;
+	 if (print_address((PVOID)Address))
+	   {
+	     i++;
+	   }
+	 Frame++;
+     }
+#endif
 }
 
 ULONG
@@ -573,13 +585,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      {
         if (Tf->Eflags & FLAG_IF)
 	{
-#if defined(__GNUC__)
-	   __asm__("sti\n\t");
-#elif defined(_MSC_VER)
-	   __asm	sti
-#else
-#error Unknown compiler for inline assembler
-#endif
+	  Ke386EnableInterrupts();
 	}
 	Status = MmPageFault(Tf->Cs&0xffff,
 			     &Tf->Eip,
@@ -626,10 +632,13 @@ KeDumpStackFrames(PULONG Frame)
   i = 1;
   while (Frame != NULL)
     {
-      print_address((PVOID)Frame[1]);
+      if (!print_address((PVOID)Frame[1]))
+	{
+	  DbgPrint("<%X>", (PVOID)Frame[1]);
+	}
       Frame = (PULONG)Frame[0];
       i++;
-      DbgPrint("\n");
+      DbgPrint(" ");
     }
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.42 2004/03/06 22:24:13 dwelch Exp $
+/* $Id: bug.c,v 1.43 2004/03/09 21:49:53 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -103,13 +103,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
       KdDebugState |= KD_DEBUG_SCREEN;
     }
 
-#if defined(__GNUC__)
-  __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-  __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ke386DisableInterrupts();
 
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -142,16 +136,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
   if (InBugCheck == 1)
     {
       DbgPrint("Recursive bug check halting now\n");
-      for (;;)
-	{
-#if defined(__GNUC__)
-	  __asm__("hlt\n\t");
-#elif defined(_MSC_VER)
-	  __asm hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
-	}
+      Ke386HaltProcessor();
     }
   InBugCheck = 1;
   KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
@@ -161,28 +146,14 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
   if (KdDebuggerEnabled)
     {
-#if defined(__GNUC__)
-      __asm__("sti\n\t");
+      Ke386EnableInterrupts();
       DbgBreakPointNoBugCheck();
-      __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-      __asm sti
-      DbgBreakPointNoBugCheck();
-      __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+      Ke386DisableInterrupts();
     }
 
   for (;;)
     {
-#if defined(__GNUC__)
-      __asm__("hlt\n\t");
-#elif defined(_MSC_VER)
-      __asm hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
+      Ke386HaltProcessor();
     }
 }
 
@@ -215,13 +186,8 @@ KeBugCheckEx(ULONG BugCheckCode,
       KdDebugState |= KD_DEBUG_SCREEN;
     }
 
-#if defined(__GNUC__)
-  __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-  __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ke386DisableInterrupts();
+
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -253,16 +219,7 @@ KeBugCheckEx(ULONG BugCheckCode,
   if (InBugCheck == 1)
     {
       DbgPrint("Recursive bug check halting now\n");
-      for (;;)
-	{
-#if defined(__GNUC__)
-	  __asm__("hlt\n\t");
-#elif defined(_MSC_VER)
-	  __asm hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
-	}
+      Ke386HaltProcessor();
     }
   InBugCheck = 1;
   if (PsGetCurrentProcess() != NULL)
@@ -291,28 +248,14 @@ KeBugCheckEx(ULONG BugCheckCode,
 
   if (KdDebuggerEnabled)
     {
-#if defined(__GNUC__)
-      __asm__("sti\n\t");
+      Ke386EnableInterrupts();
       DbgBreakPointNoBugCheck();
-      __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-      __asm sti
-      DbgBreakPointNoBugCheck();
-      __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+      Ke386DisableInterrupts();
     }
 
   for (;;)
     {
-#if defined(__GNUC__)
-      __asm__("hlt\n\t");
-#elif defined(_MSC_VER)
-      __asm hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
+      Ke386HaltProcessor();
     }
 }
 
