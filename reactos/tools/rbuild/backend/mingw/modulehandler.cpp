@@ -104,8 +104,13 @@ MingwModuleHandler::SetUsePch ( bool b )
 MingwModuleHandler::PassThruCacheDirectory (
 	const string &file, bool out )
 {
-	string dir ( GetDirectory ( file ) );
-	return backend->AddDirectoryTarget ( dir, out ) + SSEP + file;
+	string directory ( GetDirectory ( file ) );
+	string generatedFilesDirectory = backend->AddDirectoryTarget ( directory, out );
+	if ( directory.find ( generatedFilesDirectory ) != string::npos )
+		/* This path already includes the generated files directory variable */
+		return file;
+	else
+		return generatedFilesDirectory + SSEP + file;
 }
 
 /*static*/ string
@@ -222,10 +227,11 @@ MingwModuleHandler::GetActualSourceFilename (
 	const string& filename ) const
 {
 	string extension = GetExtension ( filename );
-	if ( extension == ".spec" || extension == "SPEC" )
+	if ( extension == ".spec" || extension == ".SPEC" )
 	{
 		string basename = GetBasename ( filename );
-		return basename + ".stubs.c";
+		return PassThruCacheDirectory ( FixupTargetFilename ( basename + ".stubs.c" ),
+		                                false );
 	}
 	else
 		return filename;
@@ -235,7 +241,7 @@ string
 MingwModuleHandler::GetModuleArchiveFilename () const
 {
 	if ( module.type == StaticLibrary )
-		return GetTargetFilename(module,NULL);
+		return GetTargetFilename ( module, NULL );
 	return PassThruCacheDirectory ( ReplaceExtension (
 		FixupTargetFilename ( module.GetPath () ),
 		".temp.a" ), false );
@@ -245,7 +251,7 @@ bool
 MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 {
 	string extension = GetExtension ( file.name );
-	return ( extension == ".spec" || extension == "SPEC" );
+	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
 string
@@ -343,7 +349,7 @@ MingwModuleHandler::GetObjectFilename (
 	string obj_file = PassThruCacheDirectory (
 		FixupTargetFilename (
 			ReplaceExtension (
-				sourceFilename, //PrefixFilename(sourceFilename,module.prefix),
+				sourceFilename,
 				newExtension ) ),
 			false );
 	if ( pclean_files )
