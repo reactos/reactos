@@ -2,7 +2,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
 
-static DWORD LastError;
+static DWORD LastError=0;
 
 DWORD RtlNtStatusToDosError(NTSTATUS Status)
 {
