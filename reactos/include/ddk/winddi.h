@@ -1712,6 +1712,10 @@ BOOL STDCALL
 EngCheckAbort(SURFOBJ *pso);
 FD_GLYPHSET* STDCALL
 EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars);
+HANDLE STDCALL
+EngGetCurrentProcessId(VOID);
+HANDLE STDCALL
+EngGetCurrentThreadId(VOID);
 VOID STDCALL
 EngDeletePath(PATHOBJ *ppo);
 BOOL STDCALL
@@ -1724,6 +1728,8 @@ LPWSTR STDCALL
 EngGetDriverName(HDEV hdev);
 LPWSTR STDCALL
 EngGetPrinterDataFileName(HDEV hdev);
+HANDLE STDCALL
+EngGetProcessHandle(VOID);
 BOOL STDCALL 
 EngGradientFill(SURFOBJ *psoDest,CLIPOBJ *pco,XLATEOBJ *pxlo,TRIVERTEX *pVertex,ULONG nVertex,PVOID pMesh,ULONG nMesh,RECTL *prclExtents,POINTL *pptlDitherOrg,ULONG ulMode);
 HANDLE STDCALL 
