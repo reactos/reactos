@@ -119,8 +119,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (End != NULL)
     {
       ObDereferenceObject(Object);
-      RtlFreeUnicodeString(&RemainingPath);
       DPRINT1("NtCreateKey() can't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+      RtlFreeUnicodeString(&RemainingPath);
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
