@@ -28,9 +28,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: dwelch $
- * $Date: 2001/02/19 15:04:50 $
+ * $Revision: 1.3 $
+ * $Author: ekohl $
+ * $Date: 2001/07/03 12:56:48 $
  *
  */
 
@@ -55,7 +55,7 @@
  * size_t is typedef'ed differently from what GCC expects it will give you
  * warnings when you prototype functions like memcmp and memcpy. The values
  * for __xxx_TYPE__ in this header file are the same as those given by GCC.
- * Those values appear to work with the CRTDLL functions.
+ * Those values appear to work with the MSVCRT functions.
  */
 
 /*

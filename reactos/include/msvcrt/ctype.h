@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2000/12/03 17:49:21 $
+ * $Date: 2001/07/03 12:56:48 $
  *
  */
 
@@ -74,7 +74,7 @@ int	toupper(int c);
 
 /*
  * NOTE: The above are not old name type wrappers, but functions exported
- * explicitly by CRTDLL. However, underscored versions are also exported.
+ * explicitly by MSVCRT. However, underscored versions are also exported.
  */
 #ifndef	__STRICT_ANSI__
 int	_tolower(int c);

@@ -5,5 +5,5 @@
  * TODO?
  */
 #ifndef __STRICT_ANSI__
-#include <fcntl.h>
+#include <msvcrt/fcntl.h>
 #endif

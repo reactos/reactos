@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: ariadne $
- * $Date: 1999/04/03 10:41:29 $
+ * $Revision: 1.5 $
+ * $Author: ekohl $
+ * $Date: 2001/07/03 12:56:12 $
  *
  */
 
@@ -30,7 +30,7 @@
 #ifndef _STAT_H_
 #define _STAT_H_
 
-#include <crtdll/sys/types.h>
+#include <msvcrt/sys/types.h>
 
 #ifdef	__cplusplus
 extern "C" {

@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:07 $
+ * $Revision: 1.2 $
+ * $Author: ekohl $
+ * $Date: 2001/07/03 12:56:12 $
  *
  */
 
@@ -31,8 +31,8 @@
 
 #define __need_wchar_t
 #define __need_size_t
-#include <stddef.h>
-#include <crtdll/sys/types.h>
+#include <msvcrt/stddef.h>
+#include <msvcrt/sys/types.h>
 
 #ifdef	__cplusplus
 extern "C" {
