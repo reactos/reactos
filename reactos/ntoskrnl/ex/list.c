@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: list.c,v 1.12 2004/06/23 21:01:27 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,21 @@
 static KSPIN_LOCK ExpGlobalListLock = { 0, };
 
 /* FUNCTIONS *************************************************************/
+
+/*
+ * @unimplemented
+ */
+PSLIST_ENTRY
+FASTCALL
+ExInterlockedFlushSList (
+    IN PSLIST_HEADER ListHead
+    )
+{
+	PSLIST_ENTRY Old = NULL;
+
+	UNIMPLEMENTED;
+	return Old;
+}
 
 /*
  * @implemented

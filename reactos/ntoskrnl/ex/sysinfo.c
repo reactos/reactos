@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.36 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: sysinfo.c,v 1.37 2004/06/23 21:01:27 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,46 @@ extern ULONG Ke386CpuidFlags;
 extern ULONG Ke386Cpuid;
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExEnumHandleTable (
+	PULONG	HandleTable,
+	PVOID	Callback,
+	PVOID	Param,
+	PHANDLE	Handle OPTIONAL
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExGetCurrentProcessorCounts (
+	PVOID	IdleThreadTime,
+	PVOID	SystemTime,
+	PVOID	Number
+	)
+{
+	UNIMPLEMENTED;
+}
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExGetCurrentProcessorCpuUsage (
+	PVOID	RetVal
+	)
+{
+	UNIMPLEMENTED;
+}
 
 NTSTATUS STDCALL
 NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,

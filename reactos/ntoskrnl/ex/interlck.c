@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.12 2004/06/01 01:00:25 sedwards Exp $
+/* $Id: interlck.c,v 1.13 2004/06/23 21:01:27 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -214,6 +214,23 @@ ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
 
 	KeReleaseSpinLock (Lock, oldlvl);
 
+	return oldval;
+}
+
+/*
+ * @unimplemented
+ */
+LONGLONG
+FASTCALL
+ExfInterlockedCompareExchange64(
+    IN OUT LONGLONG volatile *Destination,
+    IN PLONGLONG ExChange,
+    IN PLONGLONG Comperand
+    )
+{
+	LONGLONG oldval;
+
+	UNIMPLEMENTED;
 	return oldval;
 }
 
