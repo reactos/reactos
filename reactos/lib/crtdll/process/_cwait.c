@@ -12,15 +12,19 @@
 #include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
-int	_cwait (int* pnStatus, int hProc, int nAction)
+int _cwait (int* pnStatus, int hProc, int nAction)
 {
+  DWORD ExitCode;
+
 	nAction = 0;
 	if ( WaitForSingleObject((void *)hProc,INFINITE) != WAIT_OBJECT_0 ) {
 		__set_errno(ECHILD);
 		return -1;
 	}
 
-	if ( !GetExitCodeProcess((void *)hProc,pnStatus) )
+	if ( !GetExitCodeProcess((void *)hProc,&ExitCode) )
 		return -1;
+	if (pnStatus != NULL)
+	  *pnStatus = (int)ExitCode;
 	return hProc;
 }

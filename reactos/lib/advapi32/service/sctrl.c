@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.1 2000/03/26 22:00:07 dwelch Exp $
+/* $Id: sctrl.c,v 1.2 2001/06/25 14:19:56 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -191,7 +191,7 @@ BOOL STDCALL StartServiceCtrlDispatcherW(
      {
 	h = CreateThread(NULL,
 			 0,
-			 lpServiceStartTable[i].lpServiceProc,
+			 (LPTHREAD_START_ROUTINE)lpServiceStartTable[i].lpServiceProc,
 			 NULL,
 			 0,
 			 &Tid);

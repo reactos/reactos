@@ -32,7 +32,7 @@ void _splitpath( const char *path, char *drive, char *dir, char *fname, char *ex
 	else
 	{
 		*ext = 0; 
-		tmp_ext = path+strlen(path);
+		tmp_ext = (char*)path+strlen(path);
 	}
     if ( tmp_dir != NULL ) {
 		strncpy(fname,tmp_dir+1,tmp_ext - tmp_dir - 1);

@@ -11,7 +11,7 @@ int _stat( const char *path, struct stat *buffer )
  WIN32_FIND_DATA wfd;
  HANDLE fh;
   fh = FindFirstFile (path,&wfd);
-  if ( fh == -1 )
+  if ( fh == INVALID_HANDLE_VALUE )
   {
     __set_errno(ENOFILE);
     return -1;

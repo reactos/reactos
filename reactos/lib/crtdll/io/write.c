@@ -14,10 +14,11 @@
 
 size_t _write(int _fd, const void *_buf, size_t _nbyte)
 {
-   size_t _wbyte;
+   DWORD _wbyte;
    
-   if ( !WriteFile(_get_osfhandle(_fd),_buf,_nbyte,&_wbyte,NULL) ) {
+   if ( !WriteFile(_get_osfhandle(_fd),_buf,_nbyte,&_wbyte,NULL) )
+   {
       return -1;
    }
-   return _wbyte;
+   return (size_t)_wbyte;
 }

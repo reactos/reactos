@@ -1,4 +1,5 @@
 
+#include <windows.h>
 #include <crtdll/io.h>
 #include <crtdll/errno.h>
 #include <crtdll/stdio.h>
@@ -11,7 +12,6 @@ _popen (const char *cm, const char *md) /* program name, pipe mode */
 {
   FILE *pf;
   HANDLE hReadPipe, hWritePipe;
-  HANDLE SpawnedProcess;
   STARTUPINFO StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
 
@@ -28,7 +28,11 @@ _popen (const char *cm, const char *md) /* program name, pipe mode */
 	StartupInfo.hStdInput = hReadPipe;
   }
 	
-  SpawnedProcess = CreateProcessA("cmd.exe",(char *)cm,NULL,NULL,TRUE,CREATE_NEW_CONSOLE,NULL,NULL,&StartupInfo,&ProcessInformation );
+  if (CreateProcessA("cmd.exe",(char *)cm,NULL,NULL,TRUE,
+                     CREATE_NEW_CONSOLE,NULL,NULL,
+                     &StartupInfo,
+                     &ProcessInformation) == FALSE)
+    return NULL;
 
 
   if ( *md == 'r' ) {
@@ -38,7 +42,7 @@ _popen (const char *cm, const char *md) /* program name, pipe mode */
 	pf =  _fdopen( __fileno_alloc(hWritePipe, _fmode) , "w" );
   }
 
-  pf->_name_to_remove = SpawnedProcess; 
+  pf->_name_to_remove = ProcessInformation.hProcess;
 
   return pf;
 	

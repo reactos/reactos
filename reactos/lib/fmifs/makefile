@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/11/20 19:59:08 ekohl Exp $
+# $Id: makefile,v 1.12 2001/06/25 14:20:44 ekohl Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -34,11 +34,15 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
-		-specs=$(TARGET)_specs \
+		$(TARGET).o \
+		../ntdll/ntdll.a \
+		../kernel32/kernel32.a \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o junk.tmp \
-		-Wl,--base-file,base.tmp \
-		$(TARGET).o
+		-Wl,--entry=_DllMain@12\
+		-Wl,--base-file,base.tmp 
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
@@ -47,10 +51,14 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
-		-specs=$(TARGET)_specs \
+		$(TARGET).o \
+		../ntdll/ntdll.a \
+		../kernel32/kernel32.a \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o $(TARGET).dll \
-		$(TARGET).o \
+		-Wl,--entry=_DllMain@12\
 		-Wl,--image-base,0x76df0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

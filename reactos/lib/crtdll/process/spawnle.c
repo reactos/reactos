@@ -10,7 +10,7 @@ int _spawnle(int mode, const char *path, const char *szArgv0, ... /*, const char
   char *ptr;
   int i = 1;
   va_list l = 0;
-  szArg[0]=szArgv0;
+  szArg[0]=(char*)szArgv0;
   va_start(l,szArgv0);
   do {
   	a = (char *)va_arg(l,const char *);

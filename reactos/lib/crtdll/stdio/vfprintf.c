@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/stdio.h>
-#include <stdarg.h>
+#include <crtdll/stdarg.h>
 #include <crtdll/malloc.h>
 #include <crtdll/internal/file.h>
 

@@ -181,6 +181,7 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
   int e = errno;
   int is_dir = 0;
   int found = 0;
+  DWORD ExitCode;
 
   if (path == 0 || argv[0] == 0)
   {
@@ -257,7 +258,8 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
   if (mode == P_WAIT)
   {
     WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
-    GetExitCodeProcess(ProcessInformation.hProcess,&i);
+    GetExitCodeProcess(ProcessInformation.hProcess,&ExitCode);
+    i = (int)ExitCode;
   }
   return i;
 }
@@ -331,6 +333,6 @@ int _spawnvpe(int nMode, const char* szPath, char* const* szaArgv, char* const* 
 {
  char rpath[FILENAME_MAX];
 
-  return _spawnve(nMode, find_exec(szPath,rpath), szaArgv, szaEnv);
+  return _spawnve(nMode, find_exec((char*)szPath,rpath), szaArgv, szaEnv);
 
 }

@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.6 2001/06/17 20:36:35 ea Exp $
+/* $Id: scm.c,v 1.7 2001/06/25 14:19:56 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -379,11 +379,11 @@ SC_HANDLE STDCALL OpenSCManagerA(LPCSTR	lpMachineName,
    ANSI_STRING MachineNameA;
    ANSI_STRING DatabaseNameA;
    
-   RtlInitAnsiString(&MachineNameA, lpMachineName);
+   RtlInitAnsiString(&MachineNameA, (LPSTR)lpMachineName);
    RtlAnsiStringToUnicodeString(&MachineNameW,
 				&MachineNameA,
 				TRUE);
-   RtlInitAnsiString(&DatabaseNameA, lpDatabaseName);
+   RtlInitAnsiString(&DatabaseNameA, (LPSTR)lpDatabaseName);
    RtlAnsiStringToUnicodeString(&DatabaseNameW,
 				&DatabaseNameA,
 				TRUE);
@@ -410,7 +410,7 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
 				 LPCWSTR	lpDatabaseName,			
 				 DWORD	dwDesiredAccess)
 {
-   HANDLE h;   
+   HANDLE h;
    
    if (lpMachineName == NULL ||
        wcslen(lpMachineName) == 0)
@@ -421,7 +421,7 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
 	     return(NULL);
 	  }
 	
-	h = CreateFile(L"\\\\.\\pipe\\ntsrvctrl",
+	h = CreateFileW(L"\\\\.\\pipe\\ntsrvctrl",
 		       dwDesiredAccess,
 		       0,
 		       NULL,
