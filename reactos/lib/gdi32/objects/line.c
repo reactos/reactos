@@ -138,7 +138,7 @@ PolyBezierTo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
