@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2001/07/15 21:18:55 rex Exp $
+# $Id: makefile,v 1.4 2001/07/21 08:36:33 ea Exp $
 #
 # Makefile for ReactOS shell32.dll
 #
@@ -17,7 +17,8 @@ MISC_OBJECTS=\
 	misc/stubs.o 
 
 OBJECTS=\
-	$(MISC_OBJECTS)
+	$(MISC_OBJECTS) \
+	$(TARGETNAME).coff
 
 CLEAN_FILES = misc/*.o  \
               $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
@@ -25,7 +26,7 @@ CLEAN_FILES = misc/*.o  \
 
 all: $(DLLTARGET)
 
-$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
+$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 $(TARGETNAME).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
