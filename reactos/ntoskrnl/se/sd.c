@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.16 2004/07/26 12:44:40 ekohl Exp $
+/* $Id: sd.c,v 1.17 2004/07/31 12:21:19 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -34,7 +34,7 @@ SepInitSDs(VOID)
   SePublicDefaultSd = ExAllocatePool(NonPagedPool,
 				     sizeof(SECURITY_DESCRIPTOR));
   if (SePublicDefaultSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SePublicDefaultSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -47,7 +47,7 @@ SepInitSDs(VOID)
   SePublicDefaultUnrestrictedSd = ExAllocatePool(NonPagedPool,
 						 sizeof(SECURITY_DESCRIPTOR));
   if (SePublicDefaultUnrestrictedSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SePublicDefaultUnrestrictedSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -60,7 +60,7 @@ SepInitSDs(VOID)
   SePublicOpenSd = ExAllocatePool(NonPagedPool,
 				  sizeof(SECURITY_DESCRIPTOR));
   if (SePublicOpenSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SePublicOpenSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -73,7 +73,7 @@ SepInitSDs(VOID)
   SePublicOpenUnrestrictedSd = ExAllocatePool(NonPagedPool,
 					      sizeof(SECURITY_DESCRIPTOR));
   if (SePublicOpenUnrestrictedSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SePublicOpenUnrestrictedSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -86,7 +86,7 @@ SepInitSDs(VOID)
   SeSystemDefaultSd = ExAllocatePool(NonPagedPool,
 				     sizeof(SECURITY_DESCRIPTOR));
   if (SeSystemDefaultSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SeSystemDefaultSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -99,7 +99,7 @@ SepInitSDs(VOID)
   SeUnrestrictedSd = ExAllocatePool(NonPagedPool,
 				    sizeof(SECURITY_DESCRIPTOR));
   if (SeUnrestrictedSd == NULL)
-    return(FALSE);
+    return FALSE;
 
   RtlCreateSecurityDescriptor(SeUnrestrictedSd,
 			      SECURITY_DESCRIPTOR_REVISION);
@@ -108,21 +108,143 @@ SepInitSDs(VOID)
 			       SeUnrestrictedDacl,
 			       FALSE);
 
-  return(TRUE);
+  return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
-			      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      IN OUT PULONG Length,
-			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor)
+			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  PSECURITY_DESCRIPTOR ObjectSd;
+  PSID Owner;
+  PSID Group;
+  PACL Dacl;
+  PACL Sacl;
+  ULONG OwnerLength = 0;
+  ULONG GroupLength = 0;
+  ULONG DaclLength = 0;
+  ULONG SaclLength = 0;
+  ULONG Control = 0;
+  ULONG_PTR Current;
+  ULONG SdLength;
+
+  if (*ObjectsSecurityDescriptor == NULL)
+    {
+      if (*Length < sizeof(SECURITY_DESCRIPTOR))
+	{
+	  *Length = sizeof(SECURITY_DESCRIPTOR);
+	  return STATUS_BUFFER_TOO_SMALL;
+	}
+
+      *Length = sizeof(SECURITY_DESCRIPTOR);
+      RtlCreateSecurityDescriptor(SecurityDescriptor,
+				  SECURITY_DESCRIPTOR_REVISION);
+      SecurityDescriptor->Control |= SE_SELF_RELATIVE;
+      return STATUS_SUCCESS;
+    }
+
+  ObjectSd = *ObjectsSecurityDescriptor;
+
+  /* Calculate the required security descriptor length */
+  Control = SE_SELF_RELATIVE;
+  if ((*SecurityInformation & OWNER_SECURITY_INFORMATION) &&
+      (ObjectSd->Owner != NULL))
+    {
+      Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
+      OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+      Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
+    }
+
+  if ((*SecurityInformation & GROUP_SECURITY_INFORMATION) &&
+      (ObjectSd->Group != NULL))
+    {
+      Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
+      GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+      Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
+    }
+
+  if ((*SecurityInformation & DACL_SECURITY_INFORMATION) &&
+      (ObjectSd->Control & SE_DACL_PRESENT))
+    {
+      if (ObjectSd->Dacl != NULL)
+	{
+	  Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
+	  DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
+	}
+      Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
+    }
+
+  if ((*SecurityInformation & SACL_SECURITY_INFORMATION) &&
+      (ObjectSd->Control & SE_SACL_PRESENT))
+    {
+      if (ObjectSd->Sacl != NULL)
+	{
+	  Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
+	  SaclLength = ROUND_UP(Sacl->AclSize, 4);
+	}
+      Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
+    }
+
+  SdLength = OwnerLength + GroupLength + DaclLength +
+	     SaclLength + sizeof(SECURITY_DESCRIPTOR);
+  if (*Length < sizeof(SECURITY_DESCRIPTOR))
+    {
+      *Length = SdLength;
+      return STATUS_BUFFER_TOO_SMALL;
+    }
+
+  /* Build the new security descrtiptor */
+  RtlCreateSecurityDescriptor(SecurityDescriptor,
+			      SECURITY_DESCRIPTOR_REVISION);
+  SecurityDescriptor->Control = Control;
+
+  Current = (ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR);
+
+  if (OwnerLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Owner,
+		    OwnerLength);
+      SecurityDescriptor->Owner = (PSID)(Current - (ULONG_PTR)SecurityDescriptor);
+      Current += OwnerLength;
+    }
+
+  if (GroupLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Group,
+		    GroupLength);
+      SecurityDescriptor->Group = (PSID)(Current - (ULONG_PTR)SecurityDescriptor);
+      Current += GroupLength;
+    }
+
+  if (DaclLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Dacl,
+		    DaclLength);
+      SecurityDescriptor->Dacl = (PACL)(Current - (ULONG_PTR)SecurityDescriptor);
+      Current += DaclLength;
+    }
+
+  if (SaclLength != 0)
+    {
+      RtlCopyMemory((PVOID)Current,
+		    Sacl,
+		    SaclLength);
+      SecurityDescriptor->Sacl = (PACL)(Current - (ULONG_PTR)SecurityDescriptor);
+      Current += SaclLength;
+    }
+
+  *Length = SdLength;
+
+  return STATUS_SUCCESS;
 }
 
 
