@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.38 2001/02/06 05:50:50 dwelch Exp $
+/* $Id: utils.c,v 1.39 2001/02/10 10:04:39 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,9 +45,9 @@ STDCALL
 	LPVOID	lpReserved
 	);
 
-static
-NTSTATUS
-LdrFindDll (PLDR_MODULE *Dll,PUNICODE_STRING Name);
+static NTSTATUS LdrFindDll(PLDR_MODULE *Dll,PUNICODE_STRING Name);
+static PVOID LdrFixupForward(PCHAR ForwardName);
+static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hint);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -573,6 +573,66 @@ NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
 
 /**********************************************************************
  * NAME								LOCAL
+ *	LdrFixupForward
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *
+ */
+static PVOID
+LdrFixupForward(PCHAR ForwardName)
+{
+   CHAR NameBuffer[128];
+   UNICODE_STRING DllName;
+   UNICODE_STRING FunctionName;
+   NTSTATUS Status;
+   PCHAR p;
+   PVOID BaseAddress;
+
+   strcpy(NameBuffer, ForwardName);
+   p = strchr(NameBuffer, '.');
+   if (p != NULL)
+     {
+	*p = 0;
+
+	DPRINT("Dll: %s  Function: %s\n", NameBuffer, p+1);
+	RtlCreateUnicodeStringFromAsciiz (&DllName,
+					  NameBuffer);
+
+	Status = LdrGetDllHandle (0, 0, &DllName, &BaseAddress);
+	if (!NT_SUCCESS(Status))
+	  {
+	     Status = LdrLoadDll(NULL,
+				 0,
+				 &DllName,
+				 &BaseAddress);
+	     RtlFreeUnicodeString (&DllName);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("LdrFixupForward: failed to load %wZ\n", &DllName);
+		  return NULL;
+	       }
+	  }
+
+	  RtlFreeUnicodeString (&DllName);
+	  DPRINT("BaseAddress: %p\n", BaseAddress);
+
+	  return LdrGetExportByName(BaseAddress, p+1, -1);
+     }
+
+   return NULL;
+}
+
+
+/**********************************************************************
+ * NAME								LOCAL
  *	LdrGetExportByOrdinal
  *	
  * DESCRIPTION
@@ -638,89 +698,119 @@ LdrGetExportByOrdinal (
  *
  */
 static PVOID
-LdrGetExportByName (PVOID BaseAddress, PUCHAR SymbolName, WORD Hint)
+LdrGetExportByName(PVOID BaseAddress,
+		   PUCHAR SymbolName,
+		   WORD Hint)
 {
-  PIMAGE_EXPORT_DIRECTORY	ExportDir;
-  PDWORD			* ExFunctions;
-  PDWORD			* ExNames;
-  USHORT			* ExOrdinals;
-  ULONG			i;
-  PVOID			ExName;
-  ULONG			Ordinal;
-  ULONG minn, maxn;
+   PIMAGE_EXPORT_DIRECTORY	ExportDir;
+   PDWORD			* ExFunctions;
+   PDWORD			* ExNames;
+   USHORT			* ExOrdinals;
+   ULONG			i;
+   PVOID			ExName;
+   ULONG			Ordinal;
+   PVOID			Function;
+   ULONG minn, maxn;
+   ULONG ExportDirSize;
 
-  ExportDir = (PIMAGE_EXPORT_DIRECTORY)
-    RtlImageDirectoryEntryToData (BaseAddress,
+   DPRINT("LdrGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
+
+   ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+     RtlImageDirectoryEntryToData(BaseAddress,
 				  TRUE,
 				  IMAGE_DIRECTORY_ENTRY_EXPORT,
-				  NULL);
+				  &ExportDirSize);
 
-  /*
-   * Get header pointers
-   */
-  ExNames = (PDWORD *)RVA(BaseAddress,
-			  ExportDir->AddressOfNames);
-  ExOrdinals = (USHORT *)RVA(BaseAddress,
-			     ExportDir->AddressOfNameOrdinals);
-  ExFunctions = (PDWORD *)RVA(BaseAddress,
-			      ExportDir->AddressOfFunctions);
-  
-  /*
-   * Check the hint first
-   */
-  if (Hint < ExportDir->NumberOfFunctions)
-    {
-      ExName = RVA(BaseAddress, ExNames[Hint]);
-      if (strcmp(ExName, SymbolName) == 0)
-	{
-	  Ordinal = ExOrdinals[Hint];
-	  return(RVA(BaseAddress, ExFunctions[Ordinal]));      
-	}
-    }
+   /*
+    * Get header pointers
+    */
+   ExNames = (PDWORD *)RVA(BaseAddress,
+			   ExportDir->AddressOfNames);
+   ExOrdinals = (USHORT *)RVA(BaseAddress,
+			      ExportDir->AddressOfNameOrdinals);
+   ExFunctions = (PDWORD *)RVA(BaseAddress,
+			       ExportDir->AddressOfFunctions);
+   
+   /*
+    * Check the hint first
+    */
+   if (Hint < ExportDir->NumberOfFunctions)
+     {
+	ExName = RVA(BaseAddress, ExNames[Hint]);
+	if (strcmp(ExName, SymbolName) == 0)
+	  {
+	     Ordinal = ExOrdinals[Hint];
+	     Function = RVA(BaseAddress, ExFunctions[Ordinal]);
+	     if (((ULONG)Function >= (ULONG)ExportDir) &&
+		 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+	       {
+		  DPRINT("Forward: %s\n", (PCHAR)Function);
+		  Function = LdrFixupForward((PCHAR)Function);
+	       }
+	     if (Function != NULL)
+	       return Function;
+	  }
+     }
 
-  /*
-   * Try a binary search first
-   */
-  minn = 0, maxn = ExportDir->NumberOfFunctions;
-  while (minn <= maxn)
-    {
-      ULONG mid;
-      LONG res;
+   /*
+    * Try a binary search first
+    */
+   minn = 0, maxn = ExportDir->NumberOfFunctions;
+   while (minn <= maxn)
+     {
+	ULONG mid;
+	LONG res;
 
-      mid = (minn + maxn) / 2;
+	mid = (minn + maxn) / 2;
 
-      ExName = RVA(BaseAddress, ExNames[mid]);
-      res = strcmp(ExName, SymbolName);
-      if (res == 0)
-	{
-	  Ordinal = ExOrdinals[mid];
-	  return(RVA(BaseAddress, ExFunctions[Ordinal]));
-	}
-      else if (res > 0)
-	{
-	  maxn = mid - 1;
-	}
-      else
-	{
-	  minn = mid + 1;
-	}
-    }
-  /*
-   * Fall back on a linear search
-   */
+	ExName = RVA(BaseAddress, ExNames[mid]);
+	res = strcmp(ExName, SymbolName);
+	if (res == 0)
+	  {
+	     Ordinal = ExOrdinals[mid];
+	     Function = RVA(BaseAddress, ExFunctions[Ordinal]);
+	     if (((ULONG)Function >= (ULONG)ExportDir) &&
+		 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+	       {
+		  DPRINT("Forward: %s\n", (PCHAR)Function);
+		  Function = LdrFixupForward((PCHAR)Function);
+	       }
+	     if (Function != NULL)
+	       return Function;
+	  }
+	else if (res > 0)
+	  {
+	     maxn = mid - 1;
+	  }
+	else
+	  {
+	     minn = mid + 1;
+	  }
+     }
+   /*
+    * Fall back on a linear search
+    */
 
-  DbgPrint("LDR: Falling back on a linear search of export table\n");
-  for (i = 0; i < ExportDir->NumberOfFunctions; i++)
-    {
-      ExName = RVA(BaseAddress, ExNames[i]);
-      if (strcmp(ExName,SymbolName) == 0)
-	{
-	  Ordinal = ExOrdinals[i];
-	  return(RVA(BaseAddress, ExFunctions[Ordinal]));
-	}
-    }
-  DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
-  return NULL;
+   DbgPrint("LDR: Falling back on a linear search of export table\n");
+   for (i = 0; i < ExportDir->NumberOfFunctions; i++)
+     {
+	ExName = RVA(BaseAddress, ExNames[i]);
+	if (strcmp(ExName,SymbolName) == 0)
+	  {
+	     Ordinal = ExOrdinals[i];
+	     Function = RVA(BaseAddress, ExFunctions[Ordinal]);
+	     DPRINT("%x %x %x\n", Function, ExportDir, ExportDir + ExportDirSize);
+	     if (((ULONG)Function >= (ULONG)ExportDir) &&
+		 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+	       {
+		  DPRINT("Forward: %s\n", (PCHAR)Function);
+		  Function = LdrFixupForward((PCHAR)Function);
+	       }
+	     return Function;
+	  }
+     }
+   DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
+   return NULL;
 }
 
 
@@ -1474,9 +1564,8 @@ LdrGetDllHandle (IN ULONG Unknown1,
      {
 	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 
-	DPRINT("EntryPoint %lu\n", Module->EntryPoint);
-
-	DPRINT("Scanning %wZ %wZ\n",
+	DPRINT("EntryPoint %x\n", Module->EntryPoint);
+	DPRINT("Comparing %wZ and %wZ\n",
 	       &Module->BaseDllName,
 	       &FullDllName);
 
