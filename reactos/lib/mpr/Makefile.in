@@ -1,0 +1,18 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = mpr.dll
+IMPORTS   = advapi32 kernel32
+
+C_SRCS = \
+	auth.c \
+	mpr_main.c \
+	multinet.c \
+	nps.c \
+	pwcache.c \
+	wnet.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

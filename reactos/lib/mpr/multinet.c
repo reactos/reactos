@@ -18,7 +18,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnetwk.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 
 /*****************************************************************
@@ -35,6 +42,8 @@ DWORD WINAPI MultinetGetConnectionPerformanceA(
 	LPNETRESOURCEA lpNetResource,
 	LPNETCONNECTINFOSTRUCT lpNetConnectInfoStruct )
 {
+    FIXME( "(%p, %p): stub\n", lpNetResource, lpNetConnectInfoStruct );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -46,6 +55,8 @@ DWORD WINAPI MultinetGetConnectionPerformanceW(
 	LPNETRESOURCEW lpNetResource,
 	LPNETCONNECTINFOSTRUCT lpNetConnectInfoStruct )
 {
+    FIXME( "(%p, %p): stub\n", lpNetResource, lpNetConnectInfoStruct );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -55,7 +66,8 @@ DWORD WINAPI MultinetGetConnectionPerformanceW(
  */
 DWORD WINAPI MultinetGetErrorTextA( DWORD x, DWORD y, DWORD z )
 {
-      return 0;
+    FIXME( "(%lx, %lx, %lx): stub\n", x, y, z );
+    return 0;
 }
 
 /*****************************************************************
@@ -63,6 +75,7 @@ DWORD WINAPI MultinetGetErrorTextA( DWORD x, DWORD y, DWORD z )
  */
 DWORD WINAPI MultinetGetErrorTextW( DWORD x, DWORD y, DWORD z )
 {
+    FIXME( "(%lx, %lx, %lx ): stub\n", x, y, z );
     return 0;
 }
 

@@ -18,15 +18,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//#include <winbase.h>
-//#include <winnetwk.h>
-#include <windows.h>
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnetwk.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mpr);
+
 
 /*****************************************************************
  *  WNetLogoffA [MPR.@]
  */
 DWORD WINAPI WNetLogoffA( LPCSTR lpProvider, HWND hwndOwner )
 {
+    FIXME( "(%s, %p): stub\n", debugstr_a(lpProvider), hwndOwner );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -36,6 +44,8 @@ DWORD WINAPI WNetLogoffA( LPCSTR lpProvider, HWND hwndOwner )
  */
 DWORD WINAPI WNetLogoffW( LPCWSTR lpProvider, HWND hwndOwner )
 {
+    FIXME( "(%s, %p): stub\n", debugstr_w(lpProvider), hwndOwner );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -45,6 +55,8 @@ DWORD WINAPI WNetLogoffW( LPCWSTR lpProvider, HWND hwndOwner )
  */
 DWORD WINAPI WNetLogonA( LPCSTR lpProvider, HWND hwndOwner )
 {
+    FIXME( "(%s, %p): stub\n", debugstr_a(lpProvider), hwndOwner );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -54,6 +66,8 @@ DWORD WINAPI WNetLogonA( LPCSTR lpProvider, HWND hwndOwner )
  */
 DWORD WINAPI WNetLogonW( LPCWSTR lpProvider, HWND hwndOwner )
 {
+    FIXME( "(%s, %p): stub\n", debugstr_w(lpProvider), hwndOwner );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -63,6 +77,8 @@ DWORD WINAPI WNetLogonW( LPCWSTR lpProvider, HWND hwndOwner )
  */
 DWORD WINAPI WNetVerifyPasswordA( LPCSTR lpszPassword, BOOL *pfMatch )
 {
+    FIXME( "(%p, %p): stub\n", lpszPassword, pfMatch );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
@@ -72,6 +88,8 @@ DWORD WINAPI WNetVerifyPasswordA( LPCSTR lpszPassword, BOOL *pfMatch )
  */
 DWORD WINAPI WNetVerifyPasswordW( LPCWSTR lpszPassword, BOOL *pfMatch )
 {
+    FIXME( "(%p, %p): stub\n", lpszPassword, pfMatch );
+
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
 }
