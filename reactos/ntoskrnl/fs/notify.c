@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.7 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: notify.c,v 1.8 2003/10/11 20:40:21 navaraf Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -144,16 +144,17 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyInitializeSync (
-    IN  PNOTIFY_SYNC *   NotifySync
+    IN  PNOTIFY_SYNC NotifySync
 	)
 {
+#if 0
     *NotifySync = NULL;
     *NotifySync = ExAllocatePoolWithTag (
 			0x10,			// PoolType???
 			sizeof (NOTIFY_SYNC),	// NumberOfBytes = 0x28
 			FSRTL_TAG
 			);
-#if 0
+
     *NotifySync->Unknown0 = 1;
     *NotifySync->Unknown2 = 0;
     *NotifySync->Unknown3 = 1;
@@ -221,14 +222,16 @@ FsRtlNotifyReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-    IN OUT  PNOTIFY_SYNC *   NotifySync
+    IN OUT PNOTIFY_SYNC NotifySync
 	)
 {
+#if 0
     if (NULL != *NotifySync) 
 	{
         ExFreePool (*NotifySync);
         *NotifySync = NULL;
 	}
+#endif
 }
 
 /**********************************************************************

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.20 2003/08/14 18:30:27 silverblade Exp $ */
+/* $Id: fsfuncs.h,v 1.21 2003/10/11 20:40:21 navaraf Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -456,7 +456,7 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-	IN OUT	PNOTIFY_SYNC *	NotifySync
+	IN OUT	PNOTIFY_SYNC NotifySync
 	);
 VOID
 STDCALL
@@ -469,7 +469,7 @@ FsRtlNotifyReportChange (
 	);
 
 VOID STDCALL
-FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC * NotifySync);
+FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC NotifySync);
 
 NTSTATUS STDCALL
 FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
