@@ -1,5 +1,13 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/ntdll/rtl/nls.c (RtlCustomCPToUnicodeN, RtlMultiByteToUnicodeN,
+	RtlOemToUnicodeN, RtlUnicodeToCustomCPN, RtlUnicodeToMultiByteN,
+	RtlUnicodeToMultiByteSize, RtlUnicodeToOemN,
+	RtlUpcaseUnicodeToCustomCPN, RtlUpcaseUnicodeToMultiByteN,
+	RtlUpcaseUnicodeToOemN): Assert when unimplemented code is reached.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/ntos/zwtypes.h (FILE_BASIC_INFORMATION): Use LARGE_INTEGER,
 	not TIME type for time fields.
 	* lib/kernel32/file/copy.c (SetLastWriteTime): Adjust for new type.

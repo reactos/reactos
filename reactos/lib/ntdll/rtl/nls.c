@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.6 2002/09/08 10:23:06 chorns Exp $
+/* $Id: nls.c,v 1.7 2003/03/16 13:07:02 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,9 @@
  */
 
 #include <ddk/ntddk.h>
-//#include <internal/nls.h>
+
+#define NDEBUG
+#include <debug.h>
 
 
 BOOLEAN
@@ -103,7 +105,7 @@ RtlCustomCPToUnicodeN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -161,7 +163,7 @@ RtlMultiByteToUnicodeN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -231,7 +233,7 @@ RtlOemToUnicodeN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -274,7 +276,7 @@ RtlUnicodeToCustomCPN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -320,7 +322,7 @@ RtlUnicodeToMultiByteN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -344,7 +346,8 @@ RtlUnicodeToMultiByteSize (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    *MbSize = 0;
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -390,7 +393,7 @@ RtlUnicodeToOemN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -438,7 +441,7 @@ RtlUpcaseUnicodeToCustomCPN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -486,7 +489,7 @@ RtlUpcaseUnicodeToMultiByteN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
@@ -534,7 +537,7 @@ RtlUpcaseUnicodeToOemN (
 	{
 		/* multi-byte code page */
 		/* FIXME */
-
+    assert(FALSE);
 	}
 
 	return STATUS_SUCCESS;
