@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.11 2002/05/15 18:05:00 ekohl Exp $
+/* $Id: close.c,v 1.12 2002/06/10 21:15:58 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,9 +56,15 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
       if (pFcb->Flags & FCB_DELETE_PENDING)
       {
         delEntry (DeviceExt, FileObject);
+	pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
       }
       else
        Status = STATUS_DELETE_PENDING;
+    }
+    if (pFcb->Flags & FCB_UPDATE_DIRENTRY)
+    {
+       updEntry (DeviceExt, FileObject);
+       pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
     }
     FileObject->FsContext2 = NULL;
     vfatReleaseFCB (DeviceExt, pFcb);

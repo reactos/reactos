@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.4 2002/05/15 18:05:00 ekohl Exp $
+/* $Id: cleanup.c,v 1.5 2002/06/10 21:15:58 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,10 +25,27 @@ VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Cleans up after a file has been closed.
  */
 {
+   PVFATCCB pCcb;
+   PVFATFCB pFcb;
+
    DPRINT("VfatCleanupFile(DeviceExt %x, FileObject %x)\n",
 	 DeviceExt, FileObject);
 
    /* FIXME: handle file/directory deletion here */
+   pCcb = (PVFATCCB) (FileObject->FsContext2);
+   if (pCcb == NULL)
+   {
+      return  STATUS_SUCCESS;
+   }
+   pFcb = pCcb->pFcb;
+   if (FileObject->FileName.Buffer)
+   {
+      if (pFcb->Flags & FCB_UPDATE_DIRENTRY)
+      {
+         updEntry (DeviceExt, FileObject);
+         pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
+      }
+   }
 
   return STATUS_SUCCESS;
 }
