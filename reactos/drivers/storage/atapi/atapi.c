@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.25 2002/07/13 11:31:02 ekohl Exp $
+/* $Id: atapi.c,v 1.26 2002/07/18 00:30:22 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1058,6 +1058,8 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 		    IN BOOLEAN Atapi,
 		    OUT PIDE_DRIVE_IDENTIFY DrvParms)
 {
+  LONG i;
+
   /*  Get the Drive Identify block from drive or die  */
   if (AtapiPolledRead(CommandPort,
 		      ControlPort,
@@ -1113,7 +1115,21 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
   if (DrvParms->BytesPerSector == 0)
-    DrvParms->BytesPerSector = 512;
+    {
+      DrvParms->BytesPerSector = 512;
+    }
+  else
+    {
+      for (i = 15; i >= 0; i--)
+	{
+	  if (DrvParms->BytesPerSector & (1 << i))
+	    {
+	      DrvParms->BytesPerSector = 1 << i;
+	      break;
+	    }
+	}
+    }
+  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 
   return(TRUE);
 }
