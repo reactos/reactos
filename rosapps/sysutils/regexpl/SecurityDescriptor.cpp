@@ -27,42 +27,6 @@
 #include "ph.h"
 #include "SecurityDescriptor.h"
 
-// *** THIS SHOULD GO IN A MINGW/ROS HEADER - Begin
-#if 1
-
-//#define SID_REVISION (1) // Current revision level
-
-//typedef struct _ACE_HEADER {
-//    BYTE  AceType;
-//    BYTE  AceFlags;
-//    WORD   AceSize;
-//} ACE_HEADER;
-typedef ACE_HEADER * PACE_HEADER;
-
-//#define ACCESS_ALLOWED_ACE_TYPE          (0x0)
-//#define ACCESS_DENIED_ACE_TYPE           (0x1)
-//#define SYSTEM_AUDIT_ACE_TYPE            (0x2)
-//#define SYSTEM_ALARM_ACE_TYPE            (0x3)
-
-//#define OBJECT_INHERIT_ACE                (0x1)
-//#define CONTAINER_INHERIT_ACE             (0x2)
-//#define NO_PROPAGATE_INHERIT_ACE          (0x4)
-//#define INHERIT_ONLY_ACE                  (0x8)
-//#define VALID_INHERIT_FLAGS               (0xF)
-
-//#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
-//#define FAILED_ACCESS_ACE_FLAG           (0x80)
-
-//typedef struct _SYSTEM_AUDIT_ACE {
-//    ACE_HEADER Header;
-//    ACCESS_MASK Mask;
-//    DWORD SidStart;
-//} SYSTEM_AUDIT_ACE;
-
-#endif
-// *** THIS SHOULD GO IN A MINGW/ROS HEADER - End
-
-
 BOOL GetTextualSid(
     PSID pSid,            // binary Sid
     LPTSTR TextualSid,    // buffer for Textual representation of Sid
