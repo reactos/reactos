@@ -13,7 +13,7 @@
 
 /* GLOBALS ******************************************************************/
 
-#include <ntdll/service.h>
+#include <internal/service.h>
 #include <ntdll/napi.h>
 
 /* FUNCTIONS *****************************************************************/
