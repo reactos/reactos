@@ -5,23 +5,23 @@ VERSION 6.1
 EXPORTS
 ;
 ; ICD API
-	DrvCopyContext
-	DrvCreateContext
-	DrvCreateLayerContext
-	DrvDeleteContext
-	DrvDescribeLayerPlane
-	DrvDescribePixelFormat
-	DrvGetLayerPaletteEntries
-	DrvGetProcAddress
-	DrvReleaseContext
-	DrvRealizeLayerPalette
-	DrvSetContext
-	DrvSetLayerPaletteEntries
-	DrvSetPixelFormat
-	DrvShareLists
-	DrvSwapBuffers
-	DrvSwapLayerBuffers
-	DrvValidateVersion
+	DrvCopyContext@12
+	DrvCreateContext@4
+	DrvCreateLayerContext@8
+	DrvDeleteContext@4
+	DrvDescribeLayerPlane@20
+	DrvDescribePixelFormat@16
+	DrvGetLayerPaletteEntries@20
+	DrvGetProcAddress@4
+	DrvReleaseContext@4
+	DrvRealizeLayerPalette@12
+	DrvSetContext@12
+	DrvSetLayerPaletteEntries@20
+	DrvSetPixelFormat@8
+	DrvShareLists@8
+	DrvSwapBuffers@4
+	DrvSwapLayerBuffers@8
+	DrvValidateVersion@4
 
 ;
 ; Mesa internals - mostly for OSMESA
