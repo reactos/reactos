@@ -29,6 +29,8 @@
 #define	PM_OPEN_WINDOW			(WM_APP+0x07)
 enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
 
+#define	PM_SETSTATUSTEXT		(WM_APP+0x1D)
+
 
  /// Explorer frame window
 struct MainFrame : public PreTranslateWindow

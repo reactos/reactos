@@ -120,16 +120,16 @@ HWND Window::Create(CREATORFUNC_INFO creator, const void* info, DWORD dwExStyle,
 }
 
 
-Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator, const void* info)
+Window* Window::create_mdi_child(const ChildWndInfo& info, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 	s_window_creator = (CREATORFUNC) creator;
-	s_new_info = info;
+	s_new_info = &info;
 
 	s_hcbtHook = SetWindowsHookEx(WH_CBT, MDICBTHookProc, 0, GetCurrentThreadId());
 
-	HWND hwnd = (HWND) SendMessage(hmdiclient, WM_MDICREATE, 0, (LPARAM)&mcs);
+	HWND hwnd = (HWND) SendMessage(info._hmdiclient, WM_MDICREATE, 0, (LPARAM)&mcs);
 
 	UnhookWindowsHookEx(s_hcbtHook);
 
@@ -377,7 +377,8 @@ ChildWindow::ChildWindow(HWND hwnd)
 }
 
 
-ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC_INFO creator, LPCTSTR classname, LPCTSTR title, const void* info)
+ChildWindow* ChildWindow::create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
+									LPCTSTR classname, LPCTSTR title)
 {
 	MDICREATESTRUCT mcs;
 
@@ -391,7 +392,7 @@ ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC_
 	mcs.style	= 0;
 	mcs.lParam	= 0;
 
-	return static_cast<ChildWindow*>(create_mdi_child(hmdiclient, mcs, creator, info));
+	return static_cast<ChildWindow*>(create_mdi_child(info, mcs, creator));
 }
 
 

@@ -35,7 +35,7 @@
 /* We can't include webchild.h here - otherwise MinGW produces errors like: "multiple definition of `QACONTAINERFLAGS'"
 #include "webchild.h"
 */
-extern HWND create_webchildwindow(HWND hmdiclient, const WebChildWndInfo& info);
+extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
 #include "../explorer_intres.h"
 
@@ -399,7 +399,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
 			 // Shell Namespace as default view
-			ShellChildWndInfo create_info(path, shell_path);
+			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
 
 			create_info._pos.showCmd = SW_SHOWMAXIMIZED;
 			create_info._pos.rcNormalPosition.left = 0;
@@ -410,13 +410,17 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
 
 		//	FileChildWindow::create(_hmdiclient, create_info);
-			return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);
+			return (LRESULT)ShellBrowserChild::create(create_info);
 		}
 		break;}
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)
 			return (LRESULT)(HWND)_hstatusbar;
+		break;
+
+	  case PM_SETSTATUSTEXT:
+		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
 		break;
 
 	  default:
@@ -463,7 +467,7 @@ int MainFrame::Command(int id, int code)
 		GetCurrentDirectory(MAX_PATH, path); ///@todo store last directory per drive
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
+		FileChildWindow::create(FileChildWndInfo(_hmdiclient, path));
 #else
 		///@todo SDI implementation
 #endif
@@ -481,7 +485,7 @@ int MainFrame::Command(int id, int code)
 		GetCurrentDirectory(MAX_PATH, path);
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
+		FileChildWindow::create(FileChildWndInfo(_hmdiclient, path));
 #else
 		///@todo SDI implementation
 #endif
@@ -564,7 +568,7 @@ int MainFrame::Command(int id, int code)
 
 		GetCurrentDirectory(MAX_PATH, path);
 
-		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
+		ShellBrowserChild::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
 		break;}
 
 	  case ID_DRIVE_SHELL_NS: {
@@ -576,7 +580,7 @@ int MainFrame::Command(int id, int code)
 		GetCurrentDirectory(MAX_PATH, path);
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
+		FileChildWindow::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
 #else
 		///@todo SDI implementation
 #endif
@@ -587,7 +591,7 @@ int MainFrame::Command(int id, int code)
 			break;
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, NtObjChildWndInfo(TEXT("\\")));
+		FileChildWindow::create(NtObjChildWndInfo(_hmdiclient, TEXT("\\")));
 #else
 		///@todo SDI implementation
 #endif
@@ -598,7 +602,7 @@ int MainFrame::Command(int id, int code)
 			break;
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, RegistryChildWndInfo(TEXT("\\")));
+		FileChildWindow::create(RegistryChildWndInfo(_hmdiclient, TEXT("\\")));
 #else
 		///@todo SDI implementation
 #endif
@@ -612,14 +616,14 @@ int MainFrame::Command(int id, int code)
 			break;
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, FATChildWndInfo(TEXT("FAT Image")));	//@@
+		FileChildWindow::create(FATChildWndInfo(_hmdiclient, TEXT("FAT Image")));	//@@
 #else
 		///@todo SDI implementation
 #endif
 	  break;}
 
 	  case ID_WEB_WINDOW:
-		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.reactos.com")));
+		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://www.reactos.com")));
 		//create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://localhost")));
 		break;
 
@@ -634,7 +638,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_EXPLORER_FAQ:
-		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.sky.franken.de/explorer/")));
+		create_webchildwindow(WebChildWndInfo(_hmdiclient, TEXT("http://www.sky.franken.de/explorer/")));
 		break;
 
 	  case IDW_ADDRESSBAR:

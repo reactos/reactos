@@ -27,9 +27,11 @@
 
 
  /// information structure for creation of FileChildWindow
-struct FileChildWndInfo
+struct FileChildWndInfo : public ChildWndInfo
 {
-	FileChildWndInfo(LPCTSTR path, ENTRY_TYPE etype=ET_UNKNOWN);
+	typedef ChildWndInfo super;
+
+	FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE etype=ET_UNKNOWN);
 
 	ENTRY_TYPE	_etype;
 	LPCTSTR		_path;
@@ -41,7 +43,9 @@ struct FileChildWndInfo
  /// information structure for creation of ShellBrowserChild
 struct ShellChildWndInfo : public FileChildWndInfo
 {
-	ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path);
+	typedef FileChildWndInfo super;
+
+	ShellChildWndInfo(HWND hmdiclient, LPCTSTR path, const ShellPath& root_shell_path);
 
 	ShellPath	_shell_path;
 	ShellPath	_root_shell_path;
@@ -50,25 +54,33 @@ struct ShellChildWndInfo : public FileChildWndInfo
  /// information structure for creation of FileChildWindow for NT object namespace
 struct NtObjChildWndInfo : public FileChildWndInfo
 {
-	NtObjChildWndInfo(LPCTSTR path);
+	typedef FileChildWndInfo super;
+
+	NtObjChildWndInfo(HWND hmdiclient, LPCTSTR path);
 };
 
  /// information structure for creation of FileChildWindow for the Registry
 struct RegistryChildWndInfo : public FileChildWndInfo
 {
-	RegistryChildWndInfo(LPCTSTR path);
+	typedef FileChildWndInfo super;
+
+	RegistryChildWndInfo(HWND hmdiclient, LPCTSTR path);
 };
 
  /// information structure for creation of FileChildWindow
 struct FATChildWndInfo : public FileChildWndInfo
 {
-	FATChildWndInfo(LPCTSTR path);
+	typedef FileChildWndInfo super;
+
+	FATChildWndInfo(HWND hmdiclient, LPCTSTR path);
 };
 
  /// information structure for creation of WebChildWindow
 struct WebChildWndInfo : public FileChildWndInfo
 {
-	WebChildWndInfo(LPCTSTR url);
+	typedef FileChildWndInfo super;
+
+	WebChildWndInfo(HWND hmdiclient, LPCTSTR url);
 };
 
 
@@ -80,7 +92,7 @@ struct FileChildWindow : public ChildWindow
 	FileChildWindow(HWND hwnd, const FileChildWndInfo& info);
 	~FileChildWindow();
 
-	static FileChildWindow* create(HWND hmdiclient, const FileChildWndInfo& info);
+	static FileChildWindow* create(const FileChildWndInfo& info);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

@@ -40,6 +40,16 @@ typedef set<HWND> WindowSet;
  */
 
 
+ /// information structure for creation of a MDI child window
+struct ChildWndInfo
+{
+	ChildWndInfo(HWND hmdiclient)
+	 :	_hmdiclient(hmdiclient) {}
+
+	HWND	_hmdiclient;
+};
+
+
  /**
 	Class Window is the base class for several C++ window wrapper classes.
 	Window objects are allocated from the heap. They are automatically freed
@@ -66,7 +76,7 @@ struct Window : public WindowHandle
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
-	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator, const void* info=NULL);
+	static Window* create_mdi_child(const ChildWndInfo& info, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator);
 //	static Window* create_property_sheet(struct PropertySheetDialog* ppsd, CREATORFUNC creator, const void* info);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -277,8 +287,8 @@ struct ChildWindow : public Window
 
 	ChildWindow(HWND hwnd);
 
-	static ChildWindow* create(HWND hmdiclient, const RECT& rect,
-				CREATORFUNC_INFO creator, LPCTSTR classname, LPCTSTR title=NULL, const void* info=NULL);
+	static ChildWindow* create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
+								LPCTSTR classname, LPCTSTR title=NULL);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

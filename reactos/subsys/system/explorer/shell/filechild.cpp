@@ -37,8 +37,9 @@
 #include "../explorer_intres.h"
 
 
-FileChildWndInfo::FileChildWndInfo(LPCTSTR path, ENTRY_TYPE etype)
- :	_etype(etype)
+FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE etype)
+ :	super(hmdiclient),
+	_etype(etype)
 {
 	if (etype == ET_UNKNOWN)
 #ifdef __WINE__
@@ -62,34 +63,34 @@ FileChildWndInfo::FileChildWndInfo(LPCTSTR path, ENTRY_TYPE etype)
 }
 
 
-ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path)
- :	FileChildWndInfo(path, ET_SHELL),
+ShellChildWndInfo::ShellChildWndInfo(HWND hmdiclient, LPCTSTR path, const ShellPath& root_shell_path)
+ :	FileChildWndInfo(hmdiclient, path, ET_SHELL),
 	_shell_path(path&&*path? path: root_shell_path),
 	_root_shell_path(root_shell_path)
 {
 }
 
 
-NtObjChildWndInfo::NtObjChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path, ET_NTOBJS)
+NtObjChildWndInfo::NtObjChildWndInfo(HWND hmdiclient, LPCTSTR path)
+ :	FileChildWndInfo(hmdiclient, path, ET_NTOBJS)
 {
 }
 
 
-RegistryChildWndInfo::RegistryChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path, ET_REGISTRY)
+RegistryChildWndInfo::RegistryChildWndInfo(HWND hmdiclient, LPCTSTR path)
+ :	FileChildWndInfo(hmdiclient, path, ET_REGISTRY)
 {
 }
 
 
-FATChildWndInfo::FATChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path, ET_FAT)
+FATChildWndInfo::FATChildWndInfo(HWND hmdiclient, LPCTSTR path)
+ :	FileChildWndInfo(hmdiclient, path, ET_FAT)
 {
 }
 
 
-WebChildWndInfo::WebChildWndInfo(LPCTSTR url)
- :	FileChildWndInfo(url, ET_WEB)
+WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
+ :	FileChildWndInfo(hmdiclient, url, ET_WEB)
 {
 }
 
@@ -310,7 +311,7 @@ void FileChildWindow::collapse_entry(Pane* pane, Entry* dir)
 }
 
 
-FileChildWindow* FileChildWindow::create(HWND hmdiclient, const FileChildWndInfo& info)
+FileChildWindow* FileChildWindow::create(const FileChildWndInfo& info)
 {
 	CONTEXT("FileChildWindow::create()");
 
@@ -327,7 +328,7 @@ FileChildWindow* FileChildWindow::create(HWND hmdiclient, const FileChildWndInfo
 	mcs.lParam	= 0;
 
 	FileChildWindow* child = static_cast<FileChildWindow*>(
-		create_mdi_child(hmdiclient, mcs, WINDOW_CREATOR_INFO(FileChildWindow,FileChildWndInfo), &info));
+		create_mdi_child(info, mcs, WINDOW_CREATOR_INFO(FileChildWindow,FileChildWndInfo)));
 
 	return child;
 }
@@ -409,9 +410,9 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			switch(LOWORD(wparam)) {
 			  case ID_WINDOW_NEW: {CONTEXT("FileChildWindow PM_DISPATCH_COMMAND ID_WINDOW_NEW");
 				if (_root._entry->_etype == ET_SHELL)
-					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, ShellChildWndInfo(_path,DesktopFolderPath()));
+					FileChildWindow::create(ShellChildWndInfo(GetParent(_hwnd)/*_hmdiclient*/, _path, DesktopFolderPath()));
 				else
-					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, FileChildWndInfo(_path));
+					FileChildWindow::create(FileChildWndInfo(GetParent(_hwnd)/*_hmdiclient*/, _path));
 				break;}
 
 			  case ID_REFRESH: {CONTEXT("ID_REFRESH");

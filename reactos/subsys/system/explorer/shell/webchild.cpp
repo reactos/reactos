@@ -173,9 +173,9 @@ void BrowserNavigator::navigated(LPCTSTR url)
 }
 
 
-HWND create_webchildwindow(HWND hmdiclient, const WebChildWndInfo& info)
+HWND create_webchildwindow(const WebChildWndInfo& info)
 {
-	WebChildWindow* pWnd = WebChildWindow::create(hmdiclient, info);
+	WebChildWindow* pWnd = WebChildWindow::create(info);
 
 	if (!pWnd)
 		return 0;
@@ -200,11 +200,13 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 		hr = create_control(hwnd, CLSID_MozillaBrowser, IID_IWebBrowser2);
 
 	if (SUCCEEDED(hr)) {
+		HWND hwndFrame = GetParent(info._hmdiclient);
+
 		 // handling events using DWebBrowserEvents
-		_evt_handler1 = auto_ptr<DWebBrowserEventsHandler>(new DWebBrowserEventsHandler(_hwnd, _control));
+		_evt_handler1 = auto_ptr<DWebBrowserEventsHandler>(new DWebBrowserEventsHandler(_hwnd, hwndFrame, _control));
 
 		 // handling events using DWebBrowserEvents2
-		_evt_handler2 = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, _control));
+		_evt_handler2 = auto_ptr<DWebBrowserEvents2Handler>(new DWebBrowserEvents2Handler(_hwnd, hwndFrame, _control));
 
 		SIfacePtr<IWebBrowser2> browser(get_browser());
 

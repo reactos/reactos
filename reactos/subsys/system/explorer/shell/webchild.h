@@ -1068,8 +1068,9 @@ protected:
 
 struct DWebBrowserEventsHandler : public DWebBrowserEventsImpl
 {
-	DWebBrowserEventsHandler(HWND hwnd, IWebBrowser* browser)
+	DWebBrowserEventsHandler(HWND hwnd, HWND hwndFrame, IWebBrowser* browser)
 	 :	_hwnd(hwnd),
+		_hwndFrame(hwndFrame),
 		_browser(browser, IID_IWebBrowser2),
 		_connector(browser, DIID_DWebBrowserEvents, this)
 	{
@@ -1086,8 +1087,7 @@ protected:
 
     HRESULT StatusTextChange(const String& text)
 	{
-		_status = text;
-		SetWindowText(_hwnd, FmtString(_T("%#s  -  %#s"), _title.c_str(), _status.c_str()));
+		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)text.c_str());
 		return S_OK;
 	}
 
@@ -1108,8 +1108,7 @@ protected:
 
     HRESULT TitleChange(const String& text)
 	{
-		_title = text;
-		SetWindowText(_hwnd, FmtString(_T("%#s  -  %#s"), _title.c_str(), _status.c_str()));
+		SetWindowText(_hwnd, text);
 		return S_OK;
 	}
 
@@ -1146,7 +1145,7 @@ protected:
 
 protected:
 	HWND	_hwnd;
-	String	_title, _status;
+	HWND	_hwndFrame;
 	SIfacePtr<IWebBrowser2> _browser;
 	EventConnector _connector;
 };
@@ -1158,8 +1157,9 @@ struct DWebBrowserEvents2Handler : public DWebBrowserEvents2Impl
 {
 	typedef DWebBrowserEvents2Impl super;
 
-	DWebBrowserEvents2Handler(HWND hwnd, IWebBrowser* browser)
+	DWebBrowserEvents2Handler(HWND hwnd, HWND hwndFrame, IWebBrowser* browser)
 	 :	_hwnd(hwnd),
+		_hwndFrame(hwndFrame),
 		_navigator(browser),
 		DWebBrowserEvents2Impl(_navigator),
 		_browser(browser, IID_IWebBrowser2),
@@ -1183,8 +1183,7 @@ protected:
 
     void StatusTextChange(const BStr& text)
 	{
-		_status = text;
-		SetWindowText(_hwnd, FmtString(_T("%#s  -  %#s"), _title.c_str(), _status.c_str()));
+		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)String(text).c_str());
 	}
 
     void ProgressChange(long Progress, long ProgressMax)
@@ -1225,8 +1224,7 @@ protected:
 
     void TitleChange(const BStr& text)
 	{
-		_title = text;
-		SetWindowText(_hwnd, FmtString(_T("%#s  -  %#s"), _title.c_str(), _status.c_str()));
+		SetWindowText(_hwnd, String(text));
 	}
 
     void TitleIconChange(const BStr& text)
@@ -1327,11 +1325,10 @@ protected:
 
 protected:
 	HWND	_hwnd;
+	HWND	_hwndFrame;
 	BrowserNavigator _navigator;
 	SIfacePtr<IWebBrowser2> _browser;
 	EventConnector _connector;
-
-	String	_title, _status;
 };
 
 
@@ -1342,10 +1339,10 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 
 	WebChildWindow(HWND hwnd, const WebChildWndInfo& info);
 
-	static WebChildWindow* create(HWND hmdiclient, const FileChildWndInfo& info)
+	static WebChildWindow* create(const FileChildWndInfo& info)
 	{
-		ChildWindow* child = ChildWindow::create(hmdiclient, info._pos.rcNormalPosition,
-			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL, &info);
+		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
+			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL);
 
 		ShowWindow(*child, info._pos.showCmd);
 
