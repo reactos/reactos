@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include "stdafx.h"
 #include "TASKMGR.h"
 #include "ApplicationPage.h"
@@ -129,7 +129,7 @@ LRESULT CALLBACK ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 			ApplicationPage_OnSwitchTo();
 			break;
 		case IDC_NEWTASK:
-			SendMessage(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_FILE_NEW, 0), NULL);
+			SendMessage(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_FILE_NEW, 0), 0);
 			break;
 		}
 
@@ -246,7 +246,7 @@ void ApplicationPageRefreshThread(void *lpParameter)
 			 *
 			 * Should this be EnumDesktopWindows() instead?
 			 */
-			EnumWindows(EnumWindowsProc, NULL);
+			EnumWindows(EnumWindowsProc, 0);
 		}
 	}
 }
@@ -564,7 +564,7 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
 
 		case HDN_ITEMCLICK:
 
-			ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, NULL);
+			ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, 0);
 			bSortAscending = !bSortAscending;
 
 			break;
