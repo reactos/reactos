@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.4 2004/09/23 06:42:16 arty Exp $
+/* $Id: select.c,v 1.5 2004/11/15 18:24:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -56,14 +56,22 @@ ScanForImmediateTrigger( PAFD_HANDLE HandleArray,
 	if( NT_SUCCESS(Status) ) {
 	    FCB = FileObject->FsContext;
 	    /* Check select bits */
-	    if( !SocketAcquireStateLock( FCB ) ) 
+	    
+	    AFD_DbgPrint(MID_TRACE,("Locking socket state\n"));
+
+	    if( !SocketAcquireStateLock( FCB ) ) {
+		AFD_DbgPrint(MID_TRACE,("Failed to get a socket state\n"));
 		Status = STATUS_UNSUCCESSFUL;
-	    if( NT_SUCCESS(Status) ) {
+	    } else {
+		AFD_DbgPrint(MID_TRACE,("Got a socket state\n"));
+		Status = STATUS_SUCCESS;
 		HandleArray[i].Status = 
 		    FCB->PollState & HandleArray[i].Events;
 		if( HandleArray[i].Status ) ShouldReturnNow = TRUE;
 		ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+		AFD_DbgPrint(MID_TRACE,("Unlocking\n"));
 		SocketStateUnlock( FCB );
+		AFD_DbgPrint(MID_TRACE,("Unlocked\n"));
 	    }
 	}
     }
@@ -114,7 +122,9 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     KIRQL OldIrql;
     UINT HandlesSignalled; 
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    AFD_DbgPrint(MID_TRACE,("Called (HandleCount %d Timeout %d)\n", 
+			    PollReq->HandleCount,
+			    (INT)(PollReq->Timeout.QuadPart * -1)));
 
     Status = ScanForImmediateTrigger( PollReq->Handles,
 				      PollReq->HandleCount,
@@ -196,6 +206,8 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
 	} else {
 	    FCB = FileObject->FsContext;
 
+	    AFD_DbgPrint(MID_TRACE,("Locking socket state\n"));
+
 	    if( !SocketAcquireStateLock( FCB ) ) {
 		PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
 		SignalSocket( Poll, PollReq, i );
@@ -204,6 +216,7 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
 		    PollReq->Handles[i].Events & FCB->PollState;
 		if( PollReq->Handles[i].Status )
 		    SignalSocket( Poll, PollReq, i );
+		SocketStateUnlock( FCB );
 	    }
 	    return TRUE;
 	}

@@ -7,6 +7,7 @@
 #ifndef __MSAFD_H
 #define __MSAFD_H
 
+#include <roscfg.h>
 #include <stdlib.h>
 #include <windows.h>
 #include <ddk/ntddk.h>

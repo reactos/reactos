@@ -236,6 +236,15 @@ NTSTATUS UDPSendDatagram(
     return STATUS_SUCCESS;
 }
 
+VOID UDPReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest = 
+	(PDATAGRAM_RECEIVE_REQUEST)Context;
+    TI_DbgPrint(MAX_TRACE,("Called\n"));
+    ReceiveRequest->UserComplete( ReceiveRequest->UserContext, Status, Count );
+    exFreePool( ReceiveRequest );
+    TI_DbgPrint(MAX_TRACE,("Done\n"));
+}
+
 NTSTATUS UDPReceiveDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -278,7 +287,8 @@ NTSTATUS UDPReceiveDatagram(
 	    /* Initialize a receive request */
 	    
 	    /* Extract the remote address filter from the request (if any) */
-	    if (((ConnInfo->RemoteAddressLength != 0)) && (ConnInfo->RemoteAddress))
+	    if ((ConnInfo->RemoteAddressLength != 0) && 
+		(ConnInfo->RemoteAddress))
             {
 		Status = AddrGetAddress(ConnInfo->RemoteAddress,
 					&ReceiveRequest->RemoteAddress,
@@ -297,8 +307,11 @@ NTSTATUS UDPReceiveDatagram(
 	    ReceiveRequest->ReturnInfo = ReturnInfo;
 	    ReceiveRequest->Buffer = BufferData;
 	    ReceiveRequest->BufferSize = ReceiveLength;
-	    ReceiveRequest->Complete = Complete;
-	    ReceiveRequest->Context = Context;
+	    ReceiveRequest->UserComplete = Complete;
+	    ReceiveRequest->UserContext = Context;
+	    ReceiveRequest->Complete = 
+		(PDATAGRAM_COMPLETION_ROUTINE)UDPReceiveComplete;
+	    ReceiveRequest->Context = ReceiveRequest;
 	    
 	    /* Queue receive request */
 	    InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
@@ -343,7 +356,7 @@ VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
   PIPv4_HEADER IPv4Header;
   PADDRESS_FILE AddrFile;
   PUDP_HEADER UDPHeader;
-  PIP_ADDRESS DstAddress;
+  PIP_ADDRESS DstAddress, SrcAddress;
   UINT DataSize, i;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -353,6 +366,7 @@ VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
   case IP_ADDRESS_V4:
     IPv4Header = IPPacket->Header;
     DstAddress = &IPPacket->DstAddr;
+    SrcAddress = &IPPacket->SrcAddr;
     break;
 
   /* IPv6 packet */
@@ -395,7 +409,10 @@ VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
   if (AddrFile) {
     do {
       DGDeliverData(AddrFile,
+		    SrcAddress,
                     DstAddress,
+		    UDPHeader->SourcePort,
+		    UDPHeader->DestPort,
                     IPPacket,
                     DataSize);
     } while ((AddrFile = AddrSearchNext(&SearchContext)) != NULL);

@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.10 2004/11/12 07:34:56 arty Exp $
+/* $Id: write.c,v 1.11 2004/11/15 18:24:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -53,7 +53,8 @@ NTSTATUS DDKAPI SendComplete
 	    SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 
 	    UnlockBuffers( SendReq->BufferArray,
-			   SendReq->BufferCount );
+			   SendReq->BufferCount,
+			   FALSE );
 
 	    NextIrp->IoStatus.Status = Status;
 	    NextIrp->IoStatus.Information = 0;
@@ -128,7 +129,7 @@ NTSTATUS DDKAPI SendComplete
     }
 
     if( TotalBytesCopied > 0 ) {
-	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount );
+	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 
 	if( Status == STATUS_PENDING )
 	    Status = STATUS_SUCCESS;
@@ -169,8 +170,14 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
-	AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
-	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+	if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
+	    AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	    return UnlockAndMaybeComplete
+		( FCB, STATUS_CANT_WAIT, Irp, 0, NULL, TRUE );
+	} else {
+	    AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
+	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+	}
     }
 
     AFD_DbgPrint(MID_TRACE,("We already have %d bytes waiting.\n", 
@@ -178,7 +185,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
 					SendReq->BufferCount,
-					FALSE );
+					NULL, NULL,
+					FALSE, FALSE );
     
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", 
 			    FCB->Send.BytesUsed));
@@ -212,7 +220,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	}
 	
 	if( TotalBytesEncountered == 0 ) {
-	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount );
+	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 	    
 	    AFD_DbgPrint(MID_TRACE,("Empty send\n"));
 	    return UnlockAndMaybeComplete
@@ -222,7 +230,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	AFD_DbgPrint(MID_TRACE,("Completed %d bytes\n", TotalBytesCopied));
 	
 	if( TotalBytesCopied > 0 ) {
-	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount );
+	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 
 	    FCB->SendIrp.InFlightRequest = (PVOID)1; /* Placeholder */
 
@@ -250,8 +258,14 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	}
     }
 
-    AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
-    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+    if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
+	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	return UnlockAndMaybeComplete
+	    ( FCB, STATUS_CANT_WAIT, Irp, 0, NULL, TRUE );
+    } else {
+	AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
+	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+    }
 }
 
 NTSTATUS DDKAPI PacketSocketSendComplete

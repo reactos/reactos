@@ -92,6 +92,7 @@ SockGetTdiName(
     for (Transport = Transports; 
          *Transports != 0; 
          Transport += wcslen(Transport) + 1) {
+	AFD_DbgPrint(MID_TRACE, ("Transport: %S\n", Transports));
 
         /* See what mapping this Transport supports */
         Status = SockLoadTransportMapping(Transport, &Mapping);

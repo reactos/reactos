@@ -158,7 +158,6 @@ NTSTATUS AddrGetAddress(
     return STATUS_INVALID_ADDRESS;
 }
 
-
 /*
  * FUNCTION: Extract IP address from TDI address structure
  * ARGUMENTS:

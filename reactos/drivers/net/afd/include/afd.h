@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.22 2004/11/14 19:45:16 arty Exp $
+/* $Id: afd.h,v 1.23 2004/11/15 18:24:57 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,6 +56,10 @@
 
 #define IN_FLIGHT_REQUESTS              3
 
+#define EXTRA_LOCK_BUFFERS              2 /* Number of extra buffers needed
+					   * for ancillary data on packet
+					   * requests. */
+
 #define DEFAULT_SEND_WINDOW_SIZE        16384
 #define DEFAULT_RECEIVE_WINDOW_SIZE     16384
 
@@ -104,7 +108,7 @@ typedef struct _AFD_DATA_WINDOW {
 typedef struct _AFD_STORED_DATAGRAM {
     LIST_ENTRY ListEntry;
     UINT Len;
-    PTA_ADDRESS Address;
+    PTRANSPORT_ADDRESS Address;
     CHAR Buffer[1];
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
@@ -170,8 +174,10 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 /* lock.c */
 
-PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, BOOLEAN Write );
-VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count );
+PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, 
+			 PVOID AddressBuf, PINT AddressLen,
+			 BOOLEAN Write, BOOLEAN LockAddress );
+VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address );
 UINT SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS DDKAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,

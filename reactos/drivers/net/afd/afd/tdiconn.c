@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c,v 1.4 2004/10/03 21:44:42 arty Exp $
+/* $Id: tdiconn.c,v 1.5 2004/11/15 18:24:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c
@@ -37,6 +37,13 @@ VOID TaCopyAddressInPlace( PTA_ADDRESS Target,
 			   PTA_ADDRESS Source ) {
     UINT AddrLen = TaLengthOfAddress( Source );
     RtlCopyMemory( Target, Source, AddrLen );
+}
+
+PTA_ADDRESS TaCopyAddress( PTA_ADDRESS Source ) {
+    UINT AddrLen = TaLengthOfAddress( Source );
+    PVOID Buffer = ExAllocatePool( NonPagedPool, AddrLen );
+    RtlCopyMemory( Buffer, Source, AddrLen );
+    return Buffer;
 }
 
 VOID TaCopyTransportAddressInPlace( PTRANSPORT_ADDRESS Target, 

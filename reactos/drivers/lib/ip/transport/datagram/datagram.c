@@ -12,7 +12,10 @@
 
 VOID DGDeliverData(
   PADDRESS_FILE AddrFile,
-  PIP_ADDRESS Address,
+  PIP_ADDRESS SrcAddress,
+  PIP_ADDRESS DstAddress,
+  USHORT SrcPort,
+  USHORT DstPort,
   PIP_PACKET IPPacket,
   UINT DataSize)
 /*
@@ -58,29 +61,25 @@ VOID DGDeliverData(
       PLIST_ENTRY CurrentEntry;
       PDATAGRAM_RECEIVE_REQUEST Current;
       BOOLEAN Found;
+      PTA_IP_ADDRESS RTAIPAddress;
   
       TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
   
       /* Search receive request list to find a match */
       Found = FALSE;
       CurrentEntry = AddrFile->ReceiveQueue.Flink;
-      while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found))
-        {
+      while((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found)) {
           Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-
-	  if (!Current->RemotePort ||
-	      AddrIsEqual(Address, &Current->RemoteAddress)) {
-            Found = TRUE;
-	    /* FIXME: Maybe we should check if the buffer of this
-	       receive request is large enough and if not, search
-	       for another */
-	    
-	    /* Remove the request from the queue */
-	    RemoveEntryList(&Current->ListEntry);
-	    break;
+	  
+	  if( DstPort == AddrFile->Port ) {
+	      Found = TRUE;
+	      /* Remove the request from the queue */
+	      RemoveEntryList(&Current->ListEntry);
+	      break;
+	  } else {
+	      CurrentEntry = CurrentEntry->Flink;
 	  }
-          CurrentEntry = CurrentEntry->Flink;
-        }
+      }
 
       TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
   
@@ -92,10 +91,22 @@ VOID DGDeliverData(
 	  RtlCopyMemory( Current->Buffer,
 			 DataBuffer,
 			 DataSize );
-  
+
+	  RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo;
+	  RTAIPAddress->TAAddressCount = 1;
+	  RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
+	  RTAIPAddress->Address->Address->sin_port = SrcPort;
+	  
+	  TI_DbgPrint(MAX_TRACE, ("(A: %08x) Addr %08x Port %04x\n", 
+				  RTAIPAddress,
+				  SrcAddress->Address.IPv4Address, SrcPort));
+
+	  RtlCopyMemory( &RTAIPAddress->Address->Address->in_addr, 
+			 &SrcAddress->Address.IPv4Address,
+			 sizeof(SrcAddress->Address.IPv4Address) );
+
           /* Complete the receive request */
           Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
-	  exFreePool( Current );
         }
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
@@ -107,15 +118,15 @@ VOID DGDeliverData(
 
       TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
-      if (Address->Type == IP_ADDRESS_V4)
+      if (SrcAddress->Type == IP_ADDRESS_V4)
         {
           AddressLength = sizeof(IPv4_RAW_ADDRESS);
-          SourceAddress = &Address->Address.IPv4Address;
+          SourceAddress = &SrcAddress->Address.IPv4Address;
         }
       else /* (Address->Type == IP_ADDRESS_V6) */
         {
           AddressLength = sizeof(IPv6_RAW_ADDRESS);
-          SourceAddress = Address->Address.IPv6Address;
+          SourceAddress = SrcAddress->Address.IPv6Address;
         }
 
       Status = (*ReceiveHandler)(HandlerContext,

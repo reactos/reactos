@@ -113,14 +113,16 @@ typedef VOID (*DATAGRAM_COMPLETION_ROUTINE)(
 typedef DATAGRAM_COMPLETION_ROUTINE PDATAGRAM_COMPLETION_ROUTINE;
 
 typedef struct _DATAGRAM_RECEIVE_REQUEST {
-    LIST_ENTRY ListEntry;                   /* Entry on list */
+    LIST_ENTRY ListEntry;                  /* Entry on list */
     IP_ADDRESS RemoteAddress;              /* Remote address we receive from (NULL means any) */
-    USHORT RemotePort;                      /* Remote port we receive from (0 means any) */
-    PTDI_CONNECTION_INFORMATION ReturnInfo; /* Return information */
-    PCHAR Buffer;                           /* Pointer to receive buffer */
-    ULONG BufferSize;                       /* Size of Buffer */
-    DATAGRAM_COMPLETION_ROUTINE Complete;   /* Completion routine */
-    PVOID Context;                          /* Pointer to context information */
+    USHORT RemotePort;                     /* Remote port we receive from (0 means any) */
+    PTDI_CONNECTION_INFORMATION ReturnInfo;/* Return information */
+    PCHAR Buffer;                          /* Pointer to receive buffer */
+    ULONG BufferSize;                      /* Size of Buffer */
+    DATAGRAM_COMPLETION_ROUTINE Complete;  /* Completion routine */
+    PVOID Context;                         /* Pointer to context information */
+    DATAGRAM_COMPLETION_ROUTINE UserComplete;   /* Completion routine */
+    PVOID UserContext;                     /* Pointer to context information */
 } DATAGRAM_RECEIVE_REQUEST, *PDATAGRAM_RECEIVE_REQUEST;
 
 /* Datagram build routine prototype */

@@ -48,6 +48,11 @@ WSPRecv(
 	PVOID						APCFunction;
 	HANDLE						Event;
 	HANDLE                                  SockEvent;
+	PSOCKET_INFORMATION			Socket;
+	
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
 
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
@@ -58,7 +63,7 @@ WSPRecv(
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
 	RecvInfo.TdiFlags = 0;
-	RecvInfo.AfdFlags = 0;
+	RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
 
 	/* Set the TDI Flags */
 	if (*ReceiveFlags == 0) {
@@ -137,34 +142,36 @@ WSPRecv(
 	/* Return the Flags */
     	*ReceiveFlags = 0;
     switch (Status) {
+    case STATUS_CANT_WAIT:
+	return WSAEWOULDBLOCK;
         
-		case STATUS_SUCCESS:
-            	break;
-
-        case STATUS_PENDING :
-        	return WSA_IO_PENDING;
-
-	case STATUS_BUFFER_OVERFLOW:
-           	return WSAEMSGSIZE;
-
-        case STATUS_RECEIVE_EXPEDITED:
-            	*ReceiveFlags = MSG_OOB;
-           	 break;
-
-	case STATUS_RECEIVE_PARTIAL_EXPEDITED :
-            	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
-           	 break;
-
-        case STATUS_RECEIVE_PARTIAL :
-            	*ReceiveFlags = MSG_PARTIAL;
-            	break;
-	}
-
-	/* Return Number of bytes Read */
-    	*lpNumberOfBytesRead = (DWORD)IOSB->Information;
-
-	/* Success */
-	return STATUS_SUCCESS;
+    case STATUS_SUCCESS:
+	break;
+	
+    case STATUS_PENDING :
+	return WSA_IO_PENDING;
+	
+    case STATUS_BUFFER_OVERFLOW:
+	return WSAEMSGSIZE;
+	
+    case STATUS_RECEIVE_EXPEDITED:
+	*ReceiveFlags = MSG_OOB;
+	break;
+	
+    case STATUS_RECEIVE_PARTIAL_EXPEDITED :
+	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
+	break;
+	
+    case STATUS_RECEIVE_PARTIAL :
+	*ReceiveFlags = MSG_PARTIAL;
+	break;
+    }
+    
+    /* Return Number of bytes Read */
+    *lpNumberOfBytesRead = (DWORD)IOSB->Information;
+    
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 int 
@@ -190,6 +197,10 @@ WSPRecvFrom(
 	PVOID						APCFunction;
 	HANDLE						Event;
 	HANDLE                                  SockEvent;
+	PSOCKET_INFORMATION			Socket;
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
 
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
@@ -200,7 +211,7 @@ WSPRecvFrom(
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
 	RecvInfo.TdiFlags = 0;
-	RecvInfo.AfdFlags = 0;
+	RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
 	RecvInfo.AddressLength = SocketAddressLength;
 	RecvInfo.Address = SocketAddress;
 
@@ -281,27 +292,29 @@ WSPRecvFrom(
 	/* Return the Flags */
     	*ReceiveFlags = 0;
     switch (Status) {
-        
-		case STATUS_SUCCESS:
-            	break;
+    case STATUS_CANT_WAIT:
+	return WSAEWOULDBLOCK;
 
-        case STATUS_PENDING :
-        	return WSA_IO_PENDING;
-
-		case STATUS_BUFFER_OVERFLOW:
-           	return WSAEMSGSIZE;
-
-        case STATUS_RECEIVE_EXPEDITED:
-            	*ReceiveFlags = MSG_OOB;
-           	 break;
-
-		case STATUS_RECEIVE_PARTIAL_EXPEDITED :
-            	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
-           	 break;
-
-        case STATUS_RECEIVE_PARTIAL :
-            	*ReceiveFlags = MSG_PARTIAL;
-            	break;
+    case STATUS_SUCCESS:
+	break;
+	
+    case STATUS_PENDING :
+	return WSA_IO_PENDING;
+	
+    case STATUS_BUFFER_OVERFLOW:
+	return WSAEMSGSIZE;
+	
+    case STATUS_RECEIVE_EXPEDITED:
+	*ReceiveFlags = MSG_OOB;
+	break;
+	
+    case STATUS_RECEIVE_PARTIAL_EXPEDITED :
+	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
+	break;
+	
+    case STATUS_RECEIVE_PARTIAL :
+	*ReceiveFlags = MSG_PARTIAL;
+	break;
 	}
 
 	/* Return Number of bytes Read */
@@ -333,6 +346,10 @@ WSPSend(
 	PVOID						APCFunction;
 	HANDLE						Event;
 	HANDLE                                  SockEvent;
+	PSOCKET_INFORMATION			Socket;
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
 
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
@@ -345,7 +362,7 @@ WSPSend(
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.BufferCount = dwBufferCount;
 	SendInfo.TdiFlags = 0;
-	SendInfo.AfdFlags = 0;
+	SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
 
 	/* Set the TDI Flags */
 	if (iFlags) {
@@ -441,7 +458,6 @@ WSPSendTo(
 	PIO_STATUS_BLOCK			IOSB;
 	IO_STATUS_BLOCK				DummyIOSB;
 	AFD_SEND_INFO_UDP			SendInfo;
-	PSOCKET_INFORMATION			Socket;
 	NTSTATUS					Status;
 	PVOID						APCContext;
 	PVOID						APCFunction;
@@ -451,14 +467,16 @@ WSPSendTo(
 	PSOCKADDR					BindAddress;
 	INT							BindAddressLength;
 	HANDLE                                  SockEvent;
+	PSOCKET_INFORMATION			Socket;
+	
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
 
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
 
 	if( !NT_SUCCESS(Status) ) return -1;
-
-	/* Get the Socket Structure associate to this Socket*/
-	Socket = GetSocketStructure(Handle);
 
 	/* Bind us First */
 	if (Socket->SharedData.State == SocketOpen) {
@@ -482,7 +500,7 @@ WSPSendTo(
 
 	/* Set up Structure */
 	SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
-	SendInfo.AfdFlags = 0;
+	SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
 	SendInfo.BufferCount = dwBufferCount;
 	SendInfo.RemoteAddress = RemoteAddress;
 	SendInfo.SizeOfRemoteAddress = Socket->HelperData->MaxTDIAddressLength;

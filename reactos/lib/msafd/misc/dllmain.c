@@ -9,13 +9,15 @@
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
  */
+#include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
 #include <helpers.h>
 #include <rosrtl/string.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE							GlobalHeap;
@@ -83,6 +85,7 @@ WSPSocket(
 
 	/* Check for error */
 	if (Status != NO_ERROR) {
+	    AFD_DbgPrint(MID_TRACE,("SockGetTdiName: Status %x\n", Status));
 	    goto error;
 	}
 
@@ -974,6 +977,39 @@ WSPGetPeerName(
  
   return 0;
 }
+
+INT
+WSPAPI
+WSPIoctl(
+    IN  SOCKET Handle,
+    IN  DWORD dwIoControlCode,
+    IN  LPVOID lpvInBuffer,
+    IN  DWORD cbInBuffer,
+    OUT LPVOID lpvOutBuffer,
+    IN  DWORD cbOutBuffer,
+    OUT LPDWORD lpcbBytesReturned,
+    IN  LPWSAOVERLAPPED lpOverlapped,
+    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+    IN  LPWSATHREADID lpThreadId,
+    OUT LPINT lpErrno)
+{
+    PSOCKET_INFORMATION			Socket = NULL;
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+
+    switch( dwIoControlCode ) {
+    case FIONBIO:
+	if( cbInBuffer < sizeof(INT) ) return -1;
+	Socket->SharedData.NonBlocking = *((PINT)lpvInBuffer) ? 1 : 0;
+	AFD_DbgPrint(MID_TRACE,("[%x] Set nonblocking %d\n",
+				Handle, Socket->SharedData.NonBlocking));
+	return 0;
+    default:
+	return -1;
+    }
+}
+
 
 INT
 WSPAPI

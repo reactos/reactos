@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.5 2004/11/12 09:27:02 arty Exp $
+/* $Id: lock.c,v 1.6 2004/11/15 18:24:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -36,19 +36,36 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     Irp->MdlAddress = NULL;
 }
 
-PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, BOOLEAN Write ) {
+/* Note: We add an extra buffer if LockAddress is true.  This allows us to
+ * treat the address buffer as an ordinary client buffer.  It's only used
+ * for datagrams. */
+
+PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, 
+			 PVOID AddressBuf, PINT AddressLen,
+			 BOOLEAN Write, BOOLEAN LockAddress ) {
     UINT i;
     /* Copy the buffer array so we don't lose it */
-    UINT Size = sizeof(AFD_WSABUF) * Count;
+    UINT Lock = LockAddress ? 2 : 0;
+    UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( NewBuf ) {
-	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count);
-	RtlCopyMemory( NewBuf, Buf, Size );
-	
+	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
+
+	RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
+
+	if( LockAddress ) {
+	    NewBuf[Count].buf = AddressBuf;
+	    NewBuf[Count].len = *AddressLen;
+	    Count++;
+	    NewBuf[Count].buf = (PVOID)AddressLen;
+	    NewBuf[Count].len = sizeof(*AddressLen);
+	    Count++;
+	}
+
 	for( i = 0; i < Count; i++ ) {
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
 				    i, NewBuf[i].buf, NewBuf[i].len));
@@ -82,11 +99,12 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, BOOLEAN Write ) {
     return NewBuf;
 }
 
-VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count ) {
-    PAFD_MAPBUF Map = (PAFD_MAPBUF)(Buf + Count);
+VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
+    UINT Lock = Address ? 2 : 0;
+    PAFD_MAPBUF Map = (PAFD_MAPBUF)(Buf + Count + Lock);
     UINT i;
 
-    for( i = 0; i < Count; i++ ) {
+    for( i = 0; i < Count + Lock; i++ ) {
 	if( Map[i].Mdl ) {
 	    MmUnlockPages( Map[i].Mdl );
 	    IoFreeMdl( Map[i].Mdl );

@@ -97,27 +97,6 @@ WSPGetSockOpt(
 }
 
 
-INT
-WSPAPI
-WSPIoctl(
-    IN  SOCKET s,
-    IN  DWORD dwIoControlCode,
-    IN  LPVOID lpvInBuffer,
-    IN  DWORD cbInBuffer,
-    OUT LPVOID lpvOutBuffer,
-    IN  DWORD cbOutBuffer,
-    OUT LPDWORD lpcbBytesReturned,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
-    IN  LPWSATHREADID lpThreadId,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
 SOCKET
 WSPAPI
 WSPJoinLeaf(

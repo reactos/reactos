@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.9 2004/11/14 19:45:16 arty Exp $
+/* $Id: read.c,v 1.10 2004/11/15 18:24:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -128,7 +128,8 @@ NTSTATUS DDKAPI ReceiveComplete
 	    } else {
 		AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
 					TotalBytesCopied));
-		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+		UnlockBuffers( RecvReq->BufferArray, 
+			       RecvReq->BufferCount, FALSE );
 		NextIrp->IoStatus.Status = Status;
 		NextIrp->IoStatus.Information = TotalBytesCopied;
 		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
@@ -200,7 +201,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray, 
 					RecvReq->BufferCount,
-					TRUE );
+					NULL, NULL,
+					TRUE, FALSE );
 
     /* Launch a new recv request if we have no data */
 
@@ -228,8 +230,13 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = TryToSatisfyRecvRequestFromBuffer
 	    ( FCB, RecvReq, &TotalBytesCopied );
     
-    if( Status != STATUS_PENDING ) {
-	UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+    if( Status != STATUS_PENDING || RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+	if( Status == STATUS_PENDING ) {
+	    AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	    Status = STATUS_CANT_WAIT;
+	    TotalBytesCopied = 0;
+	}
+	UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, FALSE );
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 
 				       TotalBytesCopied, NULL, TRUE );
     } else {
@@ -246,10 +253,12 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
     PAFD_RECV_INFO RecvReq = 
 	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-    UINT BytesToCopy = 0, BytesAvailable = DatagramRecv->Len;
+    UINT BytesToCopy = 0, BytesAvailable = DatagramRecv->Len, AddrLen = 0;
     PAFD_MAPBUF Map;
 
-    Map = (PAFD_MAPBUF)(RecvReq->BufferArray + RecvReq->BufferCount);
+    Map = (PAFD_MAPBUF)(RecvReq->BufferArray + 
+			RecvReq->BufferCount + 
+			EXTRA_LOCK_BUFFERS);
 
     BytesToCopy = 
 	MIN( RecvReq->BufferArray[0].len, BytesAvailable );
@@ -258,6 +267,44 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 			    RecvReq->BufferArray[0].len));
 		 
     if( Map[0].Mdl ) {
+	/* Copy the address */
+	if( Map[1].Mdl && Map[2].Mdl ) {
+	    AFD_DbgPrint(MID_TRACE,("Checking TAAddressCount\n"));
+
+	    if( DatagramRecv->Address->TAAddressCount != 1 ) {
+		AFD_DbgPrint
+		    (MID_TRACE,
+		     ("Wierd address count %d\n",
+		      DatagramRecv->Address->TAAddressCount));
+	    }
+
+	    AFD_DbgPrint(MID_TRACE,("Computing addr len\n"));
+
+	    AddrLen = MIN(DatagramRecv->Address->Address->AddressLength +
+			  sizeof(USHORT),
+			  RecvReq->BufferArray[1].len);
+
+	    AFD_DbgPrint(MID_TRACE,("Copying %d bytes of address\n", AddrLen));
+
+	    Map[1].BufferAddress = MmMapLockedPages( Map[1].Mdl, KernelMode );
+
+	    AFD_DbgPrint(MID_TRACE,("Done mapping, copying address\n"));
+
+	    RtlCopyMemory( Map[1].BufferAddress,
+			   &DatagramRecv->Address->Address->AddressType,
+			   AddrLen );
+
+	    MmUnmapLockedPages( Map[1].BufferAddress, Map[1].Mdl );
+	    
+	    AFD_DbgPrint(MID_TRACE,("Copying address len\n"));
+
+	    Map[2].BufferAddress = MmMapLockedPages( Map[2].Mdl, KernelMode );
+	    *((PINT)Map[2].BufferAddress) = AddrLen;
+	    MmUnmapLockedPages( Map[2].BufferAddress, Map[2].Mdl );
+	}
+
+	AFD_DbgPrint(MID_TRACE,("Mapping data buffer pages\n"));
+
 	Map[0].BufferAddress = MmMapLockedPages( Map[0].Mdl, KernelMode );
 	
 	AFD_DbgPrint(MID_TRACE,("Buffer %d: %x:%d\n", 
@@ -273,15 +320,18 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 		       BytesToCopy );
 	
 	MmUnmapLockedPages( Map[0].BufferAddress, Map[0].Mdl );
-	
+
 	FCB->Recv.BytesUsed = 0;
 	*TotalBytesCopied = BytesToCopy;
     }
 
     Status = Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = BytesToCopy;
+    ExFreePool( DatagramRecv->Address );
     ExFreePool( DatagramRecv );
     
+    AFD_DbgPrint(MID_TRACE,("Done\n"));
+
     return Status;
 }
 
@@ -317,6 +367,11 @@ PacketSocketRecvComplete(
 	DatagramRecv->Len = Irp->IoStatus.Information;
 	RtlCopyMemory( DatagramRecv->Buffer, FCB->Recv.Window,
 		       DatagramRecv->Len );
+	AFD_DbgPrint(MID_TRACE,("Received (A %x)\n", 
+				FCB->AddressFrom->RemoteAddress));
+	DatagramRecv->Address = 
+	    TaCopyTransportAddress( FCB->AddressFrom->RemoteAddress );
+	
 	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
     } else Status = STATUS_NO_MEMORY;
 
@@ -325,19 +380,17 @@ PacketSocketRecvComplete(
     while( NT_SUCCESS(Status) && 
 	   !IsListEmpty( &FCB->DatagramList ) && 
 	   !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
+	AFD_DbgPrint(MID_TRACE,("Looping trying to satisfy request\n"));
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
 	DatagramRecv = CONTAINING_RECORD( ListEntry, AFD_STORED_DATAGRAM,
 					  ListEntry );
-	ListEntry = RemoveHeadList
-	    ( &FCB->PendingIrpList[FUNCTION_RECV] );
+	ListEntry = RemoveHeadList( &FCB->PendingIrpList[FUNCTION_RECV] );
 	NextIrp = CONTAINING_RECORD( ListEntry, IRP, Tail.Overlay.ListEntry );
 	NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
 	RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 
 	AFD_DbgPrint(MID_TRACE,("RecvReq: %x, DatagramRecv: %x\n",
 				RecvReq, DatagramRecv));
-	AFD_DbgPrint(MID_TRACE,("RecvReq->BufferArray %x\n",
-				RecvReq->BufferArray[0]));
 
 	if( DatagramRecv->Len > RecvReq->BufferArray[0].len && 
 	    !(RecvReq->TdiFlags & TDI_RECEIVE_PARTIAL) ) {
@@ -345,18 +398,22 @@ PacketSocketRecvComplete(
 			    &DatagramRecv->ListEntry );
 	    Status = NextIrp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
 	    NextIrp->IoStatus.Information = DatagramRecv->Len;
-	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 	    IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	} else {
+	    AFD_DbgPrint(MID_TRACE,("Satisfying\n"));
 	    Status = SatisfyPacketRecvRequest
 		( FCB, NextIrp, DatagramRecv, 
 		  (PUINT)&NextIrp->IoStatus.Information );
-	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
+	    AFD_DbgPrint(MID_TRACE,("Unlocking\n"));
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
+	    AFD_DbgPrint(MID_TRACE,("Completing\n"));
 	    IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	}
     }
 
     if( !IsListEmpty( &FCB->DatagramList ) ) { 
+	AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 	FCB->PollState |= AFD_EVENT_RECEIVE;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
@@ -390,7 +447,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_RECV_INFO RecvReq;
+    PAFD_RECV_INFO_UDP RecvReq;
     PLIST_ENTRY ListEntry;
     PAFD_STORED_DATAGRAM DatagramRecv;
 
@@ -405,9 +462,13 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
     
+    AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
+
     RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray, 
 					RecvReq->BufferCount,
-					TRUE );
+					RecvReq->Address,
+					RecvReq->AddressLength,
+					TRUE, TRUE );
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
@@ -431,6 +492,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL, TRUE );
 	}
+    } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	Status = STATUS_CANT_WAIT;
+	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
     } else {
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
