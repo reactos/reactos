@@ -159,6 +159,7 @@ NtSetEaFile			ZwSetEaFile			  16
 NtSetEvent			ZwSetEvent			  8           
 NtSetHighEventPair		ZwSetHighEventPair		  4           
 NtSetHighWaitLowEventPair	ZwSetHighWaitLowEventPair	  4           
+NtSetHighWaitLowThread		ZwSetHighWaitLowThread		  0		
 NtSetInformationFile		ZwSetInformationFile		  20          
 NtSetInformationKey		ZwSetInformationKey		  16          
 NtSetInformationObject		ZwSetInformationObject		  16          
@@ -169,6 +170,7 @@ NtSetIntervalProfile		ZwSetIntervalProfile		  8
 NtSetLdtEntries			ZwSetLdtEntries			  24          
 NtSetLowEventPair		ZwSetLowEventPair		  4           
 NtSetLowWaitHighEventPair	ZwSetLowWaitHighEventPair	  4           
+NtSetLowWaitHighThread		ZwSetLowWaitHighThread		  0
 NtSetSecurityObject		ZwSetSecurityObject		  12          
 NtSetSystemEnvironmentValue	ZwSetSystemEnvironmentValue	  8           
 NtSetSystemInformation		ZwSetSystemInformation		  12          

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.109 2003/09/08 09:56:56 weiden Exp $
+; $Id: ntdll.def,v 1.110 2003/09/10 06:12:21 vizzini Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -222,6 +222,7 @@ NtSetEaFile@16
 NtSetEvent@8
 NtSetHighEventPair@4
 NtSetHighWaitLowEventPair@4
+NtSetHighWaitLowThread@0
 NtSetInformationFile@20
 NtSetInformationKey@16
 NtSetInformationObject@16
@@ -233,6 +234,7 @@ NtSetIoCompletion@20
 NtSetLdtEntries@24
 NtSetLowEventPair@4
 NtSetLowWaitHighEventPair@4
+NtSetLowWaitHighThread@0
 NtSetSecurityObject@12
 NtSetSystemEnvironmentValue@8
 NtSetSystemInformation@12
@@ -776,6 +778,7 @@ ZwSetEaFile@16
 ZwSetEvent@8
 ZwSetHighEventPair@4
 ZwSetHighWaitLowEventPair@4
+ZwSetHighWaitLowThread@0
 ZwSetInformationFile@20
 ZwSetInformationKey@16
 ZwSetInformationObject@16
@@ -787,6 +790,7 @@ ZwSetIoCompletion@20
 ZwSetLdtEntries@24
 ZwSetLowEventPair@4
 ZwSetLowWaitHighEventPair@4
+ZwSetLowWaitHighThread@0
 ZwSetSecurityObject@12
 ZwSetSystemEnvironmentValue@8
 ZwSetSystemInformation@12

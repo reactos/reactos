@@ -90,6 +90,8 @@ typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
 /* GLOBAL VARIABLES *********************************************************/
 
 TIME_ZONE_INFORMATION SystemTimeZoneInfo;
+extern POBJECT_TYPE ExEventPairObjectType;
+
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
@@ -104,5 +106,14 @@ VOID
 ExInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
+
+/* OTHER FUNCTIONS **********************************************************/
+
+VOID
+ExpSwapThreadEventPair(
+	IN struct _ETHREAD* Thread,
+	IN struct _KEVENT_PAIR* EventPair
+	);
+
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

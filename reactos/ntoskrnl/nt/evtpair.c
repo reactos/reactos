@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.14 2003/06/07 12:23:14 chorns Exp $
+/* $Id: evtpair.c,v 1.15 2003/09/10 06:12:21 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,10 @@
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  Updated 09/08/2003 by Skywing (skywing@valhallalegends.com)
+ *                   to correctly maintain ownership of the dispatcher lock
+ *                   between KeSetEvent and KeWaitForSingleObject calls.
+ *                   Additionally, implemented the thread-eventpair routines.
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,10 +18,19 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <ntos/synch.h>
+#include <internal/ps.h>
 #include <limits.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#ifndef NTSYSAPI
+#define NTSYSAPI
+#endif
+
+#ifndef NTAPI
+#define NTAPI STDCALL
+#endif
 
 
 /* GLOBALS *******************************************************************/
@@ -29,6 +42,8 @@ static GENERIC_MAPPING ExEventPairMapping = {
 	STANDARD_RIGHTS_WRITE,
 	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
 	EVENT_PAIR_ALL_ACCESS};
+
+static KSPIN_LOCK ExThreadEventPairSpinLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -72,6 +87,8 @@ VOID NtInitializeEventPairImplementation(VOID)
    ExEventPairObjectType->OkayToClose = NULL;
    ExEventPairObjectType->Create = NtpCreateEventPair;
    ExEventPairObjectType->DuplicationNotify = NULL;
+
+   KeInitializeSpinLock(&ExThreadEventPairSpinLock);
 }
 
 
@@ -172,7 +189,7 @@ NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
 
    KeSetEvent(&EventPair->HighEvent,
 	      EVENT_INCREMENT,
-	      FALSE);
+	      TRUE);
 
    KeWaitForSingleObject(&EventPair->LowEvent,
 			 WrEventPair,
@@ -205,7 +222,7 @@ NtSetLowEventPair(IN HANDLE EventPairHandle)
 
    KeSetEvent(&EventPair->LowEvent,
 	      EVENT_INCREMENT,
-	      FALSE);
+	      TRUE);
 
    ObDereferenceObject(EventPair);
    return(STATUS_SUCCESS);
@@ -232,7 +249,7 @@ NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
 
    KeSetEvent(&EventPair->LowEvent,
 	      EVENT_INCREMENT,
-	      FALSE);
+	      TRUE);
 
    KeWaitForSingleObject(&EventPair->HighEvent,
 			 WrEventPair,
@@ -300,6 +317,141 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
 
    ObDereferenceObject(EventPair);
    return(STATUS_SUCCESS);
+}
+
+/*
+ * Author: Skywing (skywing@valhallalegends.com), 09/08/2003
+ * Note that the eventpair spinlock must be acquired when setting the thread
+ * eventpair via NtSetInformationThread.
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetLowWaitHighThread(
+	VOID
+	)
+{
+	PETHREAD Thread;
+	PKEVENT_PAIR EventPair;
+	NTSTATUS Status;
+	KIRQL Irql;
+
+	Thread = PsGetCurrentThread();
+
+	if(!Thread->EventPair)
+		return STATUS_NO_EVENT_PAIR;
+
+	KeAcquireSpinLock(&ExThreadEventPairSpinLock, &Irql);
+
+	EventPair = Thread->EventPair;
+
+	if(EventPair)
+		ObReferenceObjectByPointer(EventPair,
+					   EVENT_PAIR_ALL_ACCESS,
+					   ExEventPairObjectType,
+					   UserMode);
+	
+	KeReleaseSpinLock(&ExThreadEventPairSpinLock, Irql);
+
+	if(EventPair == NULL)
+		return STATUS_NO_EVENT_PAIR;
+
+	KeSetEvent(&EventPair->LowEvent,
+		EVENT_INCREMENT,
+		TRUE);
+
+	Status = KeWaitForSingleObject(&EventPair->HighEvent,
+				       WrEventPair,
+				       UserMode,
+				       FALSE,
+				       NULL);
+
+	ObDereferenceObject(EventPair);
+
+	return Status;
+}
+
+
+/*
+ * Author: Skywing (skywing@valhallalegends.com), 09/08/2003
+ * Note that the eventpair spinlock must be acquired when setting the thread
+ * eventpair via NtSetInformationThread.
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetHighWaitLowThread(
+	VOID
+	)
+{
+	PETHREAD Thread;
+	PKEVENT_PAIR EventPair;
+	NTSTATUS Status;
+	KIRQL Irql;
+
+	Thread = PsGetCurrentThread();
+
+	if(!Thread->EventPair)
+		return STATUS_NO_EVENT_PAIR;
+
+	KeAcquireSpinLock(&ExThreadEventPairSpinLock, &Irql);
+
+	EventPair = PsGetCurrentThread()->EventPair;
+
+	if(EventPair)
+		ObReferenceObjectByPointer(EventPair,
+					   EVENT_PAIR_ALL_ACCESS,
+					   ExEventPairObjectType,
+					   UserMode);
+	
+	KeReleaseSpinLock(&ExThreadEventPairSpinLock, Irql);
+
+	if(EventPair == NULL)
+		return STATUS_NO_EVENT_PAIR;
+
+	KeSetEvent(&EventPair->HighEvent,
+		EVENT_INCREMENT,
+		TRUE);
+
+	Status = KeWaitForSingleObject(&EventPair->LowEvent,
+				       WrEventPair,
+				       UserMode,
+				       FALSE,
+				       NULL);
+
+	ObDereferenceObject(EventPair);
+
+	return Status;
+}
+
+/*
+ * Author: Skywing (skywing@valhallalegends.com), 09/08/2003
+ * Note that the eventpair spinlock must be acquired when waiting on the
+ * eventpair via NtSetLow/HighWaitHigh/LowThread.  Additionally, when
+ * deleting a thread object, NtpSwapThreadEventPair(Thread, NULL) should
+ * be called to release any preexisting eventpair object associated with
+ * the thread.  The Microsoft name for this function is not known.
+ */
+VOID
+ExpSwapThreadEventPair(
+	IN PETHREAD Thread,
+	IN PKEVENT_PAIR EventPair
+	)
+{
+	PKEVENT_PAIR OriginalEventPair;
+	KIRQL Irql;
+
+	KeAcquireSpinLock(&ExThreadEventPairSpinLock, &Irql);
+
+	OriginalEventPair = Thread->EventPair;
+	Thread->EventPair = EventPair;
+
+	if(OriginalEventPair)
+		ObDereferenceObject(OriginalEventPair);
+
+	KeReleaseSpinLock(&ExThreadEventPairSpinLock, Irql);
 }
 
 /* EOF */

@@ -130,6 +130,8 @@ cp apps/tests/nptest/npclient.exe $ROS_INSTALL_TESTS
 cp apps/tests/atomtest/atomtest.exe $ROS_INSTALL_TESTS
 cp apps/tests/mutex/mutex.exe $ROS_INSTALL/bin
 cp apps/tests/winhello/winhello.exe $ROS_INSTALL/bin
+cp apps/tests/eventpair/eventpair.exe $ROS_INSTALL_TESTS
+cp apps/tests/threadwait/threadwait.exe $ROS_INSTALL_TESTS
 cp apps/tests/multiwin/multiwin.exe $ROS_INSTALL/bin
 cp apps/tests/wm_paint/wm_paint.exe $ROS_INSTALL_TESTS
 cp apps/tests/bitblt/lena.bmp $ROS_INSTALL_TESTS

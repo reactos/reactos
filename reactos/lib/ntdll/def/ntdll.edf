@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.99 2003/09/08 09:56:57 weiden Exp $
+; $Id: ntdll.edf,v 1.100 2003/09/10 06:12:21 vizzini Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -222,6 +222,7 @@ NtSetEaFile=NtSetEaFile@16
 NtSetEvent=NtSetEvent@8
 NtSetHighEventPair=NtSetHighEventPair@4
 NtSetHighWaitLowEventPair=NtSetHighWaitLowEventPair@4
+NtSetHighWaitLowThread=NtSetHighWaitLowThread@0
 NtSetInformationFile=NtSetInformationFile@20
 NtSetInformationKey=NtSetInformationKey@16
 NtSetInformationObject=NtSetInformationObject@16
@@ -233,6 +234,7 @@ NtSetIoCompletion=NtSetIoCompletion@20
 NtSetLdtEntries=NtSetLdtEntries@24
 NtSetLowEventPair=NtSetLowEventPair@4
 NtSetLowWaitHighEventPair=NtSetLowWaitHighEventPair@4
+NtSetLowWaitHighThread=NtSetLowWaitHighThread@0
 NtSetSecurityObject=NtSetSecurityObject@12
 NtSetSystemEnvironmentValue=NtSetSystemEnvironmentValue@8
 NtSetSystemInformation=NtSetSystemInformation@12
@@ -776,6 +778,7 @@ ZwSetEaFile=ZwSetEaFile@16
 ZwSetEvent=ZwSetEvent@8
 ZwSetHighEventPair=ZwSetHighEventPair@4
 ZwSetHighWaitLowEventPair=ZwSetHighWaitLowEventPair@4
+ZwSetHighWaitLowThread=ZwSetHighWaitLowThread@0
 ZwSetInformationFile=ZwSetInformationFile@20
 ZwSetInformationKey=ZwSetInformationKey@16
 ZwSetInformationObject=ZwSetInformationObject@16
@@ -787,6 +790,7 @@ ZwSetIoCompletion=ZwSetIoCompletion@20
 ZwSetLdtEntries=ZwSetLdtEntries@24
 ZwSetLowEventPair=ZwSetLowEventPair@4
 ZwSetLowWaitHighEventPair=ZwSetLowWaitHighEventPair@4
+ZwSetLowWaitHighThread=ZwSetLowWaitHighThread@0
 ZwSetSecurityObject=ZwSetSecurityObject@12
 ZwSetSystemEnvironmentValue=ZwSetSystemEnvironmentValue@8
 ZwSetSystemInformation=ZwSetSystemInformation@12

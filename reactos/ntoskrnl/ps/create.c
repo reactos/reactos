@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.64 2003/07/21 21:53:53 royce Exp $
+/* $Id: create.c,v 1.65 2003/09/10 06:12:22 vizzini Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -8,6 +8,7 @@
  * REVISION HISTORY: 
  *               23/06/98: Created
  *               12/10/99: Phillip Susi:  Thread priorities, and APC work
+ *               09/08/03: Skywing:       ThreadEventPair support (delete)
  */
 
 /*
@@ -25,6 +26,7 @@
 #include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
+#include <internal/ex.h>
 #include <internal/se.h>
 #include <internal/id.h>
 #include <internal/dbg.h>
@@ -310,6 +312,7 @@ PiDeleteThread(PVOID ObjectBody)
   PiNrThreads--;
   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+  ExpSwapThreadEventPair(Thread, NULL); /* Release the associated eventpair object, if there was one */
 
   for (i = 0; i < NotifyRoutineCount; i++)
   {

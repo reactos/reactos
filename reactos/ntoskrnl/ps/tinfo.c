@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.21 2003/07/11 01:23:15 royce Exp $
+/* $Id: tinfo.c,v 1.22 2003/09/10 06:12:22 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,12 +7,15 @@
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  Updated 09/08/2003 by Skywing (skywing@valhallalegends.com)
+ *                   to suppport thread-eventpairs.
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <internal/ex.h>
 #include <internal/safe.h>
 
 #include <internal/debug.h>
@@ -106,8 +109,38 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	break;
 	
       case ThreadEventPair:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
+	{
+	  PKEVENT_PAIR EventPair;
+
+	  if (ThreadInformationLength != sizeof(HANDLE))
+	    {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+	      break;
+	    }
+
+	  if (ExGetPreviousMode() == UserMode) /* FIXME: Validate this for all infoclasses and system services */
+	    {
+	      DPRINT("NtSetInformationThread:ThreadEventPair: Checking user pointer %08x...\n", ThreadInformation);
+	      ProbeForRead(ThreadInformation, sizeof(HANDLE), sizeof(HANDLE)); /* FIXME: This entire function should be
+	       * wrapped in an SEH frame... return (NTSTATUS)GetExceptionCode() on exception */
+	    }
+
+	  Status = ObReferenceObjectByHandle(*(PHANDLE)ThreadInformation,
+					     STANDARD_RIGHTS_ALL,
+					     ExEventPairObjectType,
+					     ExGetPreviousMode(),
+					     (PVOID*)&EventPair,
+					     NULL);
+
+	  if (!NT_SUCCESS(Status))
+	    {
+	      break;
+	    }
+
+	  ExpSwapThreadEventPair(Thread, EventPair); /* Note that the extra reference is kept intentionally */
+	  Status = STATUS_SUCCESS;
+	  break;
+	}
 	
       case ThreadQuerySetWin32StartAddress:
 	if (ThreadInformationLength != sizeof(ULONG))

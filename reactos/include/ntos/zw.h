@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.16 2003/09/03 20:14:22 ekohl Exp $
+/* $Id: zw.h,v 1.17 2003/09/10 06:12:21 vizzini Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,6 +12,7 @@
  *              04/08/98: Added some documentation (Ariadne)
  *		14/08/98: Added type TIME and change variable type from [1] to [0]
  *              14/09/98: Added for each Nt call a corresponding Zw Call
+ *              09/08/03: Added ThreadEventPair routines
  */
 
 #ifndef __DDK_ZW_H
@@ -3467,6 +3468,41 @@ NTSTATUS
 STDCALL
 ZwSetLowWaitHighEventPair(
 	HANDLE EventPair
+	);
+
+/* NtSetLowWaitHighThread effectively invokes NtSetLowWaitHighEventPair on the
+ * event pair of the thread.
+ */
+NTSTATUS
+STDCALL
+NtSetLowWaitHighThread(
+	VOID
+	);
+/* ZwSetLowWaitHighThread effectively invokes ZwSetLowWaitHighEventPair on the
+ * event pair of the thread.
+ */
+NTSTATUS
+STDCALL
+ZwSetLowWaitHighThread(
+	VOID
+	);
+
+/* NtSetHighWaitLowThread effectively invokes NtSetHighWaitLowEventPair on the
+ * event pair of the thread.
+ */
+NTSTATUS
+STDCALL
+NtSetHighWaitLowThread(
+	VOID
+	);
+
+/* ZwSetHighWaitLowThread effectively invokes ZwSetHighWaitLowEventPair on the
+ * event pair of the thread.
+ */
+NTSTATUS
+STDCALL
+ZwSetHighWaitLowThread(
+	VOID
 	);
 
 NTSTATUS
