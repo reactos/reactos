@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.16 2003/05/27 07:23:05 gvg Exp $
+/* $Id: painting.c,v 1.17 2003/05/31 08:51:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -414,6 +414,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		      Total.y += Offset.y;
 		    }
 		}
+	      ChildListEntry = ChildListEntry->Flink;
 	    }
 	  W32kOffsetRgn(hRgn, Total.x, Total.y);
 	  HasChildren = FALSE;
@@ -434,6 +435,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	    {
 	      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
 	    }
+	  ChildListEntry = ChildListEntry->Flink;
 	}
     }
 

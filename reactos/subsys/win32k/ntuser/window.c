@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.50 2003/05/26 10:52:15 rcampbell Exp $
+/* $Id: window.c,v 1.51 2003/05/31 08:51:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -669,6 +669,17 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  WindowObject->ClientRect.top);
       DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
       W32kCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
+    }
+
+  /* Move from parent-client to screen coordinates */
+  if (0 != (WindowObject->Style & WS_CHILD))
+    {
+    W32kOffsetRect(&WindowObject->WindowRect,
+		   ParentWindow->ClientRect.left,
+		   ParentWindow->ClientRect.top);
+    W32kOffsetRect(&WindowObject->ClientRect,
+		   ParentWindow->ClientRect.left,
+		   ParentWindow->ClientRect.top);
     }
 
   /* Show or maybe minimize or maximize the window. */
