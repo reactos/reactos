@@ -297,7 +297,10 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 		++entry._used;
 		btn.idCommand = entry._id;
 
-		if (hwnd == GetForegroundWindow()) {
+		HWND foreground = GetForegroundWindow();
+		HWND foreground_owner = GetWindow(foreground, GW_OWNER);
+
+		if (hwnd==foreground || hwnd==foreground_owner) {
 			btn.fsState |= TBSTATE_PRESSED|TBSTATE_CHECKED;
 			pThis->_last_foreground_wnd = hwnd;
 		}
@@ -311,6 +314,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			entry._btn_idx = SendMessage(pThis->_htoolbar, TB_BUTTONCOUNT, 0, 0);
 
 			SendMessage(pThis->_htoolbar, TB_INSERTBUTTON, entry._btn_idx, (LPARAM)&btn);
+			SendMessage(pThis->_htoolbar, TB_AUTOSIZE, 0, 0);	///@todo useless?
 		} else {
 			 // refresh attributes of existing buttons
 			if (btn.fsState != entry._fsState)
@@ -365,19 +369,23 @@ void TaskBar::Refresh()
 		}
 	}
 
-	 // remove buttons from right to left
-	for(set<int>::reverse_iterator it=btn_idx_to_delete.rbegin(); it!=btn_idx_to_delete.rend(); ++it) {
-		int idx = *it;
+	if (!btn_idx_to_delete.empty()) {
+		 // remove buttons from right to left
+		for(set<int>::reverse_iterator it=btn_idx_to_delete.rbegin(); it!=btn_idx_to_delete.rend(); ++it) {
+			int idx = *it;
 
-		SendMessage(_htoolbar, TB_DELETEBUTTON, idx, 0);
+			SendMessage(_htoolbar, TB_DELETEBUTTON, idx, 0);
 
-		for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it) {
-			TaskBarEntry& entry = it->second;
+			for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it) {
+				TaskBarEntry& entry = it->second;
 
-			 // adjust button indexes
-			if (entry._btn_idx > idx)
-				--entry._btn_idx;
+				 // adjust button indexes
+				if (entry._btn_idx > idx)
+					--entry._btn_idx;
+			}
 		}
+
+		SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);	///@todo useless?
 	}
 }
 
