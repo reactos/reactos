@@ -245,7 +245,7 @@ typedef UINT (*SHELL_ExecuteW32)(const WCHAR *lpCmd, void *env, BOOL shWait,
 BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfunc);
 
 UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
-                          LPWSTR lpResult, LPWSTR key, void **env, LPCWSTR args);
+                          LPWSTR lpResult, LPWSTR key, void **env, LPITEMIDLIST pidl, LPCWSTR args);
 
 extern WCHAR swShell32Name[MAX_PATH];
 extern char sShell32Name[MAX_PATH];
