@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/08/13 06:14:48 rcampbell Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/08/14 20:43:40 sedwards Exp $
 
 TARGET_NAME = urlmon
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ libwine.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ libwine.a wine_uuid.a ntdll.a wininet.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_RICHEDIT)
 
