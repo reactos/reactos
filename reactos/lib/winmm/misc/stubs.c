@@ -132,3 +132,27 @@ midiOutLongMsg(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
 	DbgPrint("midiOutLongMsg stub\n");
 	return 1;
 }
+
+UINT/*MMRESULT*/
+STDCALL
+timeBeginPeriod(UINT uPeriod)
+{
+	DbgPrint("timeBeginPeriod stub\n");
+	return 97/*TIMERR_NOCANDO*/;
+}
+
+DWORD
+STDCALL
+timeGetTime(VOID)
+{
+	DbgPrint("timeGetTime stub\n");
+	return 0;
+}
+
+UINT/*MMRESULT*/
+STDCALL
+timeEndPeriod(UINT uPeriod)
+{
+	DbgPrint("timeEndPeriod stub\n");
+	return 97/*TIMERR_NOCANDO*/;
+}

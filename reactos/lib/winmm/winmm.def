@@ -14,3 +14,6 @@ waveOutClose@4
 waveOutUnprepareHeader@12
 midiOutPrepareHeader@12
 midiOutLongMsg@12
+timeBeginPeriod@4
+timeEndPeriod@4
+timeGetTime@0
