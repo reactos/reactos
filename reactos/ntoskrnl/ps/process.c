@@ -383,7 +383,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
-   strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
+   strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
 }
