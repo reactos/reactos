@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.7 2004/03/19 20:58:32 navaraf Exp $
+ * $Id: videoprt.h,v 1.8 2004/03/19 21:34:49 dwelch Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -36,7 +36,6 @@ int vsprintf(char *buf, const char *fmt, va_list args);
 BOOLEAN STDCALL HalDisableSystemInterrupt(ULONG Vector, ULONG Unknown2);
 BOOLEAN STDCALL HalEnableSystemInterrupt(ULONG Vector, ULONG Unknown2, ULONG Unknown3);
 PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader(IN PVOID BaseAddress);
-#define NtCurrentProcess() ((HANDLE)0xFFFFFFFF)
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
 
