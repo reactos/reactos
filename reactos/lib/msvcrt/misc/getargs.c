@@ -45,7 +45,7 @@ int add(char* name)
     return 0;
 }
 
-int expand(char* name)
+int expand(char* name, int flag)
 {
     char* s;
     WIN32_FIND_DATA fd;
@@ -55,7 +55,7 @@ int expand(char* name)
     int pos;
 
     s = strpbrk(name, "*?");
-    if (s) {
+    if (s && flag) {
         hFile = FindFirstFile(name, &fd);
         if (hFile != INVALID_HANDLE_VALUE) {
             while(s != name && *s != '/' && *s != '\\')
@@ -98,7 +98,7 @@ int __getmainargs(int* argc, char*** argv, char*** env, int flag)
 
     while (_acmdln[i]) {
         if (_acmdln[i] == ' ') {
-            expand(strndup(_acmdln + afterlastspace, i - afterlastspace));
+            expand(strndup(_acmdln + afterlastspace, i - afterlastspace), flag);
             i++;
             while (_acmdln[i]==' ')
                 i++;
@@ -109,7 +109,7 @@ int __getmainargs(int* argc, char*** argv, char*** env, int flag)
     }
 
     if (_acmdln[afterlastspace] != 0) {
-        expand(strndup(_acmdln+afterlastspace, i - afterlastspace));
+        expand(strndup(_acmdln+afterlastspace, i - afterlastspace), flag);
     }
     HeapValidate(hHeap, 0, NULL);
     *argc = __argc;
