@@ -1,4 +1,5 @@
-#include <ntddk.h>
+#include <ddk/miniport.h>
+#include <ddk/video.h>
 #include "vgavideo.h"
 
 #define NDEBUG

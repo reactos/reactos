@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2004/03/04 18:49:58 navaraf Exp $
+# $Id: makefile,v 1.3 2004/03/22 16:00:38 navaraf Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = vgamp
 
 TARGET_DDKLIBS = videoprt.a
 
-TARGET_CFLAGS = -Werror -Wall
+TARGET_CFLAGS = -Werror -Wall -D__USE_W32API
 
 TARGET_OBJECTS = \
   initvga.o \

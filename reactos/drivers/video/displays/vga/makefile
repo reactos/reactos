@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2004/01/10 14:39:20 navaraf Exp $
+# $Id: makefile,v 1.2 2004/03/22 16:00:37 navaraf Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = gdi_driver
 
 TARGET_NAME = vgaddi
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
 MAIN_OBJECTS = \
   main/enable.o

@@ -3,8 +3,9 @@
  * 
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddvid.h>
+#include <ddk/miniport.h>
+#include <ddk/video.h>
+#include <ddk/ntddvdeo.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 

@@ -1,6 +1,6 @@
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <ddk/ntddvid.h>
+#include <ddk/ntddvdeo.h>
 
 #define DS_SOLIDBRUSH  0x00000001
 #define DS_GREYBRUSH   0x00000002
