@@ -162,14 +162,9 @@ static BOOL CALLBACK DesktopEnumFct(HWND hwnd, LPARAM lparam)
 {
 	WindowSet& windows = *(WindowSet*)lparam;
 
-	if (IsWindowVisible(hwnd)) {
-		DWORD pid;
-
-		GetWindowThreadProcessId(hwnd, &pid);
-
-		if (pid != GetCurrentProcessId())
+	if (IsWindowVisible(hwnd))
+		if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
 			windows.insert(hwnd);
-	}
 
 	return TRUE;
 }

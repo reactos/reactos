@@ -1057,7 +1057,7 @@ LRESULT	FlatButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		if (IsWindowEnabled(_hwnd)) {
 			DWORD pid_foreground;
-			HWND hwnd_foreground = GetForegroundWindow();	//@@ vielleicht besser über WM_ACTIVATEAPP-Abfrage
+			HWND hwnd_foreground = GetForegroundWindow();	//@@ may be better look for WM_ACTIVATEAPP ?
 			GetWindowThreadProcessId(hwnd_foreground, &pid_foreground);
 
 			if (GetCurrentProcessId() == pid_foreground) {
