@@ -30,15 +30,15 @@ protected:
 
 	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
 	std::string GetObjectFilenames ( const Module& module ) const;
-	void GenerateObjectFileTargetsHost ( const Module& module ) const;
-	void GenerateObjectFileTargetsTarget ( const Module& module ) const;
-	void GenerateArchiveTargetHost ( const Module& module ) const;
-	void GenerateArchiveTargetTarget ( const Module& module ) const;
+	void GenerateMacrosAndTargetsHost ( const Module& module ) const;
+	void GenerateMacrosAndTargetsTarget ( const Module& module ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
-	std::string GenerateObjectList ( const Module& module ) const;
+	std::string GenerateMacros ( const Module& module,
+	                             const std::string& cflags_macro,
+	                             const std::string& objs_macro ) const;
 	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -46,25 +46,53 @@ private:
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
+	void GenerateMacros ( const Module& module,
+	                      const char* op,
+	                      const std::vector<File*>& files,
+	                      const std::vector<Include*>* includes,
+	                      const std::vector<Define*>& defines,
+	                      const std::string& cflags_macro,
+	                      const std::string& nasmflags_macro,
+	                      const std::string& objs_macro) const;
+	void GenerateMacros ( const Module& module,
+	                      const std::string& cflags_macro,
+	                      const std::string& nasmflags_macro,
+	                      const std::string& objs_macro) const;
 	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
 	std::string GenerateNasmParameters ( const Module& module ) const;
 	std::string GenerateGccCommand ( const Module& module,
 	                                 const std::string& sourceFilename,
-	                                 const std::string& cc ) const;
+	                                 const std::string& cc,
+	                                 const std::string& cflagsMacro ) const;
 	std::string GenerateGccAssemblerCommand ( const Module& module,
 	                                          const std::string& sourceFilename,
-	                                          const std::string& cc ) const;
+	                                          const std::string& cc,
+	                                          const std::string& cflagsMacro ) const;
 	std::string GenerateNasmCommand ( const Module& module,
-	                                  const std::string& sourceFilename ) const;
+	                                  const std::string& sourceFilename,
+	                                  const std::string& nasmflagsMacro ) const;
 	std::string GenerateCommand ( const Module& module,
 	                              const std::string& sourceFilename,
-	                              const std::string& cc ) const;
+	                              const std::string& cc,
+	                              const std::string& cflagsMacro,
+	                              const std::string& nasmflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
-	                                 const std::string& cc ) const;
+	                                 const std::vector<File*>& files,
+	                                 const std::string& cc,
+	                                 const std::string& cflagsMacro,
+	                                 const std::string& nasmflagsMacro ) const;
+	void GenerateObjectFileTargets ( const Module& module,
+	                                 const std::string& cc,
+	                                 const std::string& cflagsMacro,
+	                                 const std::string& nasmflagsMacro ) const;
 	void GenerateArchiveTarget ( const Module& module,
-	                             const std::string& ar ) const;
+	                             const std::string& ar,
+	                             const std::string& objs_macro ) const;
+	void GenerateMacrosAndTargets ( const Module& module,
+	                                const std::string& cc,
+	                                const std::string& ar ) const;
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 };
 

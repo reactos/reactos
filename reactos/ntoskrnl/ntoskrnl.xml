@@ -41,10 +41,9 @@
 		<file>rtlfunc.c</file>
 	</directory>
 	<directory name="dbg">
-		<!--
 		<if property="arch" value="i386">
 			<directory name="i386">
-				<if property="kdbg" value="true">
+				<if property="kdbg" value="1">
 					<group>
 						<file>i386-dis.c</file>
 						<file>kdb_help.S</file>
@@ -52,36 +51,17 @@
 				</if>
 			</directory>
 		</if>
-		-->
-		<!--
-		<if property="kdbg" value="true">
-			<group>
-				<file>kdb.c</file>
-				<file>kdb_keyboard.c</file>
-				<file>kdb_serial.c</file>
-				<file>rdebug.c</file>
-				<file>profile.c</file>
-			</group>
+		<if property="kdbg" value="1">
+			<file>kdb.c</file>
+			<file>kdb_keyboard.c</file>
+			<file>kdb_serial.c</file>
+			<file>rdebug.c</file>
+			<file>profile.c</file>
 		</if>
-		-->
-		<or>
-			<!--
-			<if property="kdbg" value="true">
-				<group>
-					<file>kdb_stabs.c</file>
-					<file>kdb_symbols.c</file>
-				</group>
-			</if>
-			-->
-			<!--
-			<if property="dbg" value="true">
-				<group>
-					<file>kdb_stabs.c</file>
-					<file>kdb_symbols.c</file>
-				</group>
-			</if>
-			-->
-		</or>
+		<if property="dbg_or_kdbg" value="true">
+			<file>kdb_stabs.c</file>
+			<file>kdb_symbols.c</file>
+		</if>
 		<file>dbgctrl.c</file>
 		<file>errinfo.c</file>
 		<file>print.c</file>

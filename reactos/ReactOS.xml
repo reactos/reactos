@@ -6,9 +6,18 @@
 			<xi:include href="config.template.xml" />
 		</xi:fallback>
 	</xi:include>
+
 	<define name="_M_IX86" />
+	<if property="dbg" value="true">
+		<define name="dbg_or_kdbg" value="true" />
+	</if>
+	<if property="kdbg" value="true">
+		<define name="dbg_or_kdbg" value="true" />
+	</if>
+
 	<include>include</include>
 	<include>w32api/include</include>
+
 	<directory name="tools">
 		<xi:include href="tools/tools.xml" />
 	</directory>

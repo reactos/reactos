@@ -31,6 +31,7 @@ class Invoke;
 class InvokeFile;
 class Dependency;
 class ImportLibrary;
+class If;
 
 class Project
 {
@@ -86,6 +87,7 @@ public:
 	std::vector<Define*> defines;
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
+	std::vector<If*> ifs;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -104,7 +106,8 @@ public:
 private:
 	std::string GetDefaultModuleExtension () const;
 	void ProcessXMLSubElement ( const XMLElement& e,
-	                            const std::string& path );
+	                            const std::string& path,
+	                            If* pIf = NULL );
 };
 
 
@@ -237,6 +240,23 @@ public:
 	                const Module& module );
 
 	void ProcessXML ();
+};
+
+class If
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::string property, value;
+	std::vector<File*> files;
+	std::vector<Define*> defines;
+	std::vector<If*> ifs;
+
+	If ( const XMLElement& node_,
+	     const Module& module_ );
+	~If();
+
+	void ProcessXML();
 };
 
 extern std::string

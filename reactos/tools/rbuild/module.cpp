@@ -63,6 +63,8 @@ Module::~Module ()
 		delete invocations[i];
 	for ( i = 0; i < dependencies.size(); i++ )
 		delete dependencies[i];
+	for ( i = 0; i < ifs.size(); i++ )
+		delete ifs[i];
 }
 
 void
@@ -83,21 +85,32 @@ Module::ProcessXML()
 		invocations[i]->ProcessXML ();
 	for ( i = 0; i < dependencies.size(); i++ )
 		dependencies[i]->ProcessXML ();
+	for ( i = 0; i < ifs.size(); i++ )
+		ifs[i]->ProcessXML();
 }
 
 void
 Module::ProcessXMLSubElement ( const XMLElement& e,
-                               const string& path )
+                               const string& path,
+                               If* pIf /*= NULL*/ )
 {
 	bool subs_invalid = false;
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
 	{
-		files.push_back ( new File ( FixSeparator ( path + CSEP + e.value ) ) );
+		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ) );
+		if ( pIf )
+			pIf->files.push_back ( pFile );
+		else
+			files.push_back ( pFile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<library> is not a valid sub-element of <if>" );
 		libraries.push_back ( new Library ( e, *this, e.value ) );
 		subs_invalid = true;
 	}
@@ -109,28 +122,58 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<include> is not a valid sub-element of <if>" );
 		includes.push_back ( new Include ( project, this, e ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
-		defines.push_back ( new Define ( project, this, e ) );
+		Define* pDefine = new Define ( project, this, e );
+		if ( pIf )
+			pIf->defines.push_back ( pDefine );
+		else
+			defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
 	else if ( e.name == "invoke" )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<invoke> is not a valid sub-element of <if>" );
 		invocations.push_back ( new Invoke ( e, *this ) );
 		subs_invalid = false;
 	}
 	else if ( e.name == "dependency" )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<dependency> is not a valid sub-element of <if>" );
 		dependencies.push_back ( new Dependency ( e, *this ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "importlibrary" )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<importlibrary> is not a valid sub-element of <if>" );
+		if ( importLibrary )
+			throw InvalidBuildFileException (
+				e.location,
+				"Only one <importlibrary> is valid per module" );
 		importLibrary = new ImportLibrary ( e, *this );
 		subs_invalid = true;
+	}
+	else if ( e.name == "if" )
+	{
+		pIf = new If ( e, *this );
+		ifs.push_back ( pIf );
+		subs_invalid = false;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (
@@ -138,7 +181,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
 }
 
 ModuleType
@@ -188,14 +231,23 @@ Module::GetTargetName () const
 string
 Module::GetDependencyPath () const
 {
-	if ( type == KernelModeDLL )
+	switch ( type )
+	{
+	case KernelModeDLL:
 		return ssprintf ( "dk%snkm%slib%slib%s.a",
 		                  SSEP,
 		                  SSEP,
 		                  SSEP,
 		                  name.c_str () );
-	else
-		return GetPath ();
+	case NativeDLL:
+		return ssprintf ( "dk%sw32%slib%slib%s.a",
+		                  SSEP,
+		                  SSEP,
+		                  SSEP,
+		                  name.c_str () );
+	default:
+		return GetPath();
+	}
 }
 
 string
@@ -425,5 +477,36 @@ ImportLibrary::ImportLibrary ( const XMLElement& _node,
 
 	att = _node.GetAttribute ( "definition", true );
 	assert (att);
-	definition = att->value;
+	definition = FixSeparator(att->value);
+}
+
+
+If::If ( const XMLElement& node_, const Module& module_ )
+	: node(node_), module(module_)
+{
+	const XMLAttribute* att;
+
+	att = node.GetAttribute ( "property", true );
+	assert(att);
+	property = att->value;
+
+	att = node.GetAttribute ( "value", true );
+	assert(att);
+	value = att->value;
+}
+
+If::~If ()
+{
+	size_t i;
+	for ( i = 0; i < files.size(); i++ )
+		delete files[i];
+	for ( i = 0; i < defines.size(); i++ )
+		delete defines[i];
+	for ( i = 0; i < ifs.size(); i++ )
+		delete ifs[i];
+}
+
+void
+If::ProcessXML()
+{
 }
