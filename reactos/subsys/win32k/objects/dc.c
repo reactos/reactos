@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.119 2004/01/25 16:47:10 navaraf Exp $
+/* $Id: dc.c,v 1.120 2004/02/01 15:45:41 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1838,7 +1838,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       DC_UnlockDc ( hDC );
-      hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->size.cx, pb->size.cy );
+      hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->bitmap.bmWidth, pb->bitmap.bmHeight );
       NtGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
       BITMAPOBJ_UnlockBitmap(hGDIObj);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.45 2004/01/24 19:47:05 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.46 2004/02/01 15:45:41 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -452,8 +452,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
         if(CurIconObject->IconInfo.hbmColor && 
           (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor)))
         {
-          CurIconObject->Size.cx = bmp->size.cx;
-          CurIconObject->Size.cy = bmp->size.cy;
+          CurIconObject->Size.cx = bmp->bitmap.bmWidth;
+          CurIconObject->Size.cy = bmp->bitmap.bmHeight;
           BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
         }
         else
@@ -461,8 +461,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
           if(CurIconObject->IconInfo.hbmMask && 
             (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
           {
-            CurIconObject->Size.cx = bmp->size.cx;
-            CurIconObject->Size.cy = bmp->size.cy / 2;
+            CurIconObject->Size.cx = bmp->bitmap.bmWidth;
+            CurIconObject->Size.cy = bmp->bitmap.bmHeight / 2;
             BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
           }
         }
@@ -558,6 +558,7 @@ NtUserGetCursorIconSize(
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
   BOOL Ret = FALSE;
+  SIZE SafeSize;
   
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				                               KernelMode,
@@ -585,7 +586,9 @@ NtUserGetCursorIconSize(
     if(!bmp)
       goto done;
 
-    Status = MmCopyToCaller(Size, &bmp->size, sizeof(SIZE));
+    SafeSize.cx = bmp->bitmap.bmWidth;
+    SafeSize.cy = bmp->bitmap.bmHeight;
+    Status = MmCopyToCaller(Size, &SafeSize, sizeof(SIZE));
     if(NT_SUCCESS(Status))
       Ret = TRUE;
     else
@@ -953,8 +956,8 @@ NtUserSetCursorIconContents(
     bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
     if(bmp)
     {
-      CurIconObject->Size.cx = bmp->size.cx;
-      CurIconObject->Size.cy = bmp->size.cy;
+      CurIconObject->Size.cx = bmp->bitmap.bmWidth;
+      CurIconObject->Size.cy = bmp->bitmap.bmHeight;
       BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
     }
     else
@@ -963,8 +966,8 @@ NtUserSetCursorIconContents(
       if(!bmp)
         goto done;
       
-      CurIconObject->Size.cx = bmp->size.cx;
-      CurIconObject->Size.cy = bmp->size.cy / 2;
+      CurIconObject->Size.cx = bmp->bitmap.bmWidth;
+      CurIconObject->Size.cy = bmp->bitmap.bmHeight / 2;
       
       BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
     }

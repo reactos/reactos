@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.52 2004/01/10 01:50:49 rcampbell Exp $ */
+/* $Id: bitmaps.c,v 1.53 2004/02/01 15:45:41 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -277,8 +277,8 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
   DPRINT("NtGdiCreateBitmap:%dx%d, %d (%d BPP) colors returning %08x\n", Width, Height,
          1 << (Planes * BitsPerPel), BitsPerPel, bmp);
 
-  bmp->size.cx = Width;
-  bmp->size.cy = Height;
+  bmp->dimension.cx = 0;
+  bmp->dimension.cy = 0;
   bmp->bitmap.bmType = 0;
   bmp->bitmap.bmWidth = Width;
   bmp->bitmap.bmHeight = Height;
@@ -412,7 +412,7 @@ BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
     return FALSE;
   }
 
-  *Dimension = bmp->size;
+  *Dimension = bmp->dimension;
 
   BITMAPOBJ_UnlockBitmap(hBitmap);
 
@@ -763,10 +763,10 @@ BOOL STDCALL NtGdiSetBitmapDimensionEx(HBITMAP  hBitmap,
 
   if (Size)
   {
-    *Size = bmp->size;
+    *Size = bmp->dimension;
   }
-  bmp->size.cx = Width;
-  bmp->size.cy = Height;
+  bmp->dimension.cx = Width;
+  bmp->dimension.cy = Height;
 
   BITMAPOBJ_UnlockBitmap (hBitmap);
 

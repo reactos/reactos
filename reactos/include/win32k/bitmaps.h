@@ -16,7 +16,10 @@ typedef struct _DDBITMAP
 typedef struct _BITMAPOBJ
 {
   BITMAP      bitmap;
-  SIZE        size;   /* For SetBitmapDimension() */
+  SIZE        dimension;   /* For SetBitmapDimension(), do NOT use
+                              to get width/height of bitmap, use
+                              bitmap.bmWidth/bitmap.bmHeight for
+                              that */
 
   DDBITMAP   *DDBitmap;
 
