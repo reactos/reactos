@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.13 2000/03/09 15:59:50 ekohl Exp $
+/* $Id: rtl.h,v 1.14 2000/04/07 12:45:02 ekohl Exp $
  *
  */
 
@@ -263,6 +263,20 @@ PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlNormalizeProcessParams (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
+	);
+
+NTSTATUS
+STDCALL
+RtlLocalTimeToSystemTime (
+	PLARGE_INTEGER	LocalTime,
+	PLARGE_INTEGER	SystemTime
+	);
+
+NTSTATUS
+STDCALL
+RtlSystemTimeToLocalTime (
+	PLARGE_INTEGER	SystemTime,
+	PLARGE_INTEGER	LocalTime
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */

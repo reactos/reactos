@@ -1,7 +1,8 @@
-/*
+/* $Id: time.c,v 1.5 2000/04/07 12:45:22 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/rtl/time.c
+ * FILE:            lib/ntdll/rtl/time.c
  * PURPOSE:         Conversion between Time and TimeFields
  * PROGRAMMER:      Rex Jolliff (rex@lvcablemodem.com)
  * UPDATE HISTORY:
@@ -12,6 +13,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 #include <internal/debug.h>
 
@@ -264,6 +266,54 @@ RtlTimeToSecondsSince1980 (
    *SecondsSince1980 = liTime.u.LowPart;
 
    return TRUE;
+}
+
+
+NTSTATUS
+STDCALL
+RtlLocalTimeToSystemTime (
+	PLARGE_INTEGER	LocalTime,
+	PLARGE_INTEGER	SystemTime
+	)
+{
+   SYSTEM_TIME_INFORMATION TimeInformation;
+   NTSTATUS Status;
+
+   Status = NtQuerySystemInformation (SystemTimeInformation,
+                                      &TimeInformation,
+                                      sizeof(SYSTEM_TIME_INFORMATION),
+                                      NULL);
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   SystemTime->QuadPart = LocalTime->QuadPart +
+                          TimeInformation.TimeZoneBias.QuadPart;
+
+   return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlSystemTimeToLocalTime (
+	PLARGE_INTEGER	SystemTime,
+	PLARGE_INTEGER	LocalTime
+	)
+{
+   SYSTEM_TIME_INFORMATION TimeInformation;
+   NTSTATUS Status;
+
+   Status = NtQuerySystemInformation (SystemTimeInformation,
+                                      &TimeInformation,
+                                      sizeof(SYSTEM_TIME_INFORMATION),
+                                      NULL);
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   LocalTime->QuadPart = SystemTime->QuadPart -
+                         TimeInformation.TimeZoneBias.QuadPart;
+
+   return STATUS_SUCCESS;
 }
 
 /* EOF */
