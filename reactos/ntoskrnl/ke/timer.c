@@ -245,15 +245,14 @@ KiExpireTimers(PKDPC Dpc,
         Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
         DPRINT("Looping for Timer: %x. Duetime: %I64d. InterruptTime %I64d \n", Timer, Timer->DueTime.QuadPart, InterruptTime);
         
-        CurrentEntry = CurrentEntry->Flink;
-        
         /* Check if we have to Expire it */
-        if (InterruptTime >= Timer->DueTime.QuadPart) {
+        if (InterruptTime < Timer->DueTime.QuadPart) break;
+        
+        CurrentEntry = CurrentEntry->Flink;
        
-           /* Remove it from the Timer List, add it to the Expired List */
-           RemoveEntryList(&Timer->TimerListEntry);
-           InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
-        }
+        /* Remove it from the Timer List, add it to the Expired List */
+        RemoveEntryList(&Timer->TimerListEntry);
+        InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
     }
     
     /* Expire the Timers */
