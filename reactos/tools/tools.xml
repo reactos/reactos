@@ -4,21 +4,6 @@
 <directory name="cabman">
 	<xi:include href="cabman/cabman.xml" />
 </directory>
-<module name="buildno" type="buildtool">
-	<include base="buildno">.</include>
-	<file>buildno.c</file>
-	<invoke>
-		<output>
-			<outputfile>../include/reactos/buildno.h</outputfile>
-		</output>
-	</invoke>
-</module>
-<directory name="wmc">
-	<xi:include href="wmc/wmc.xml" />
-</directory>
 <directory name="winebuild">
 	<xi:include href="winebuild/winebuild.xml" />
 </directory>
-<module name="rmkdir" type="buildtool">
-	<file>rmkdir.c</file>
-</module>

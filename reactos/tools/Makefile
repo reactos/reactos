@@ -1,172 +1,57 @@
-PATH_TO_TOP = ..
+RMKDIR_BASE = tools
 
-include $(PATH_TO_TOP)/rules.mak
+RMKDIR_TARGET = \
+	$(ROS_INTERMEDIATE)$(RMKDIR_BASE)$(SEP)rmkdir$(EXEPOSTFIX)
 
-CFLAGS += -Wall -Werror
+RMKDIR_SOURCES = \
+	$(RMKDIR_BASE)$(SEP)rmkdir.c
 
-TOOLS = \
-	buildno$(EXE_POSTFIX) \
-	regtests$(EXE_POSTFIX) \
-	rcopy$(EXE_POSTFIX) \
-	rdel$(EXE_POSTFIX) \
-	rline$(EXE_POSTFIX) \
-	rmkdir$(EXE_POSTFIX) \
-	rrmdir$(EXE_POSTFIX) \
-	rsym$(EXE_POSTFIX) \
-	rtouch$(EXE_POSTFIX) \
-	mkflpimg$(EXE_POSTFIX) \
-	depends$(EXE_POSTFIX)
+RMKDIR_OBJECTS = \
+	$(RMKDIR_SOURCES:.c=.o)
 
-CLEAN_FILES = $(TOOLS)
+RMKDIR_HOST_CXXFLAGS = -g -Werror -Wall
 
-all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target rbuild_target winebuild_target bin2res_target
+RMKDIR_HOST_LFLAGS = -g
 
-buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
-	@$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
-	@$(EXE_PREFIX)buildno$(EXE_POSTFIX)
+$(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
+	${host_gcc} $(RMKDIR_OBJECTS) $(RMKDIR_HOST_LFLAGS) -o $(RMKDIR_TARGET)
 
-regtests$(EXE_POSTFIX): regtests.c
-	@$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
+$(RMKDIR_OBJECTS): %.o : %.c
+	${host_gcc} $(RMKDIR_HOST_CXXFLAGS) -c $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
-rcopy$(EXE_POSTFIX): rcopy.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rcopy$(EXE_POSTFIX): rcopy.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
+.PHONY: rmkdir
 
-rdel$(EXE_POSTFIX): rdel.c
-	@$(HOST_CC) $(CFLAGS) rdel.c -o rdel$(EXE_POSTFIX)
-
-ifeq ($(HOST),mingw32-linux)
-rline$(EXE_POSTFIX): rline.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rline.c -o rline$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rline$(EXE_POSTFIX): rmkdir.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rline.c -o rline$(EXE_POSTFIX)
-endif
-
-ifeq ($(HOST),mingw32-linux)
-rmkdir$(EXE_POSTFIX): rmkdir.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rmkdir$(EXE_POSTFIX): rmkdir.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
-
-ifeq ($(HOST),mingw32-linux)
-rrmdir$(EXE_POSTFIX): rrmdir.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rrmdir$(EXE_POSTFIX): rrmdir.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
-endif
-
-ifeq ($(HOST),mingw32-linux)
-rsym$(EXE_POSTFIX): rsym.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rsym.c -o rsym$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rsym$(EXE_POSTFIX): rsym.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rsym.c -o rsym$(EXE_POSTFIX)
-endif
-
-ifeq ($(HOST),mingw32-linux)
-rtouch$(EXE_POSTFIX): rtouch.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rtouch.c -o rtouch$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rtouch$(EXE_POSTFIX): rtouch.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rtouch.c -o rtouch$(EXE_POSTFIX)
-endif
-
-ifeq ($(HOST),mingw32-linux)
-mkflpimg$(EXE_POSTFIX): mkflpimg.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-mkflpimg$(EXE_POSTFIX): mkflpimg.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
-endif
-
-depends$(EXE_POSTFIX): depends.c
-	@$(HOST_CC) $(CFLAGS) depends.c -o depends$(EXE_POSTFIX)
-
-zlib_target:
-	$(MAKE) --silent -C ../lib/zlib -f Makefile.host
-
-wmc_target:
-	$(MAKE) --silent -C wmc wmc$(EXE_POSTFIX)
-
-cabman_target:
-	$(MAKE) --silent -C cabman cabman$(EXE_POSTFIX)
-
-cdmake_target:
-	$(MAKE) --silent -C cdmake cdmake$(EXE_POSTFIX)
-
-mkhive_target:
-	$(MAKE) --silent -C mkhive mkhive$(EXE_POSTFIX)
-
-rgenstat_target:
-	$(MAKE) --silent -C rgenstat rgenstat$(EXE_POSTFIX)
-
-wine2ros_target:
-	$(MAKE) --silent -C wine2ros wine2ros$(EXE_POSTFIX)
-
-pipetools_target:
-ifeq ($(HOST),mingw32-windows)
-	$(MAKE) --silent -C pipetools
-endif
-
-rbuild_target:
-	$(MAKE) --silent -C rbuild rbuild$(EXE_POSTFIX)
-
-winebuild_target:
-	$(MAKE) --silent -C winebuild winebuild$(EXE_POSTFIX)
-
-bin2res_target:
-	$(MAKE) --silent -C bin2res bin2res$(EXE_POSTFIX)
-
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target rbuild_target
+rmkdir: $(RMKDIR_TARGET)
+	-
 
 
-ifeq ($(HOST),mingw32-linux)
-clean:
-	$(MAKE) --silent -C cabman clean
-	$(MAKE) --silent -C cdmake clean
-	$(MAKE) --silent -C mkhive clean
-	$(MAKE) --silent -C wmc clean
-	$(MAKE) --silent -C rgenstat clean
-	$(MAKE) --silent -C wine2ros clean
-	$(MAKE) --silent -C rbuild clean
-	$(MAKE) --silent -C winebuild clean
-	$(MAKE) --silent -C bin2res clean
-	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
-	@rm ../include/reactos/buildno.h
-	@rm mkconfig
-	@rm $(TOOLS)
-endif
-ifeq ($(HOST),mingw32-windows)
-clean:
-	$(MAKE) --silent -C cabman clean
-	$(MAKE) --silent -C cdmake clean
-	$(MAKE) --silent -C mkhive clean
-	$(MAKE) --silent -C wmc clean
-	$(MAKE) --silent -C rgenstat clean
-	$(MAKE) --silent -C pipetools clean
-	$(MAKE) --silent -C rbuild clean
-	$(MAKE) --silent -C wine2ros clean
-	$(MAKE) --silent -C winebuild clean
-	$(MAKE) --silent -C bin2res clean
-	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
-	-@del ..\include\reactos\buildno.h
-	-@del *$(EXE_POSTFIX)
-endif
 
-.PHONY: all clean
+BUILDNO_BASE = tools
+
+BUILDNO_TARGET = \
+	$(ROS_INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
+
+BUILDNO_SOURCES = \
+	$(BUILDNO_BASE)$(SEP)buildno.c
+
+BUILDNO_OBJECTS = \
+	$(BUILDNO_SOURCES:.c=.o)
+
+BUILDNO_HOST_CXXFLAGS = -g -Werror -Wall
+
+BUILDNO_HOST_LFLAGS = -g
+
+$(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
+	${host_gcc} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $(BUILDNO_TARGET)
+
+$(BUILDNO_OBJECTS): %.o : %.c
+	${host_gcc} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
+
+include$(SEP)reactos$(SEP)buildno.h: $(BUILDNO_TARGET)
+	$(EXEPREFIX)$(BUILDNO_TARGET) include$(SEP)reactos$(SEP)buildno.h
+
+.PHONY: buildno
+
+buildno: $(BUILDNO_TARGET)
+
+include tools/wmc/makefile

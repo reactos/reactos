@@ -1,82 +1,107 @@
-PATH_TO_TOP = ../..
+RBUILD_BASE = tools$(SEP)rbuild
 
-TARGET = rbuild$(EXE_POSTFIX)
+RBUILD_TARGET = \
+	$(ROS_INTERMEDIATE)$(RBUILD_BASE)$(SEP)rbuild$(EXEPOSTFIX)
 
-all: $(TARGET)
+RBUILD_TEST_TARGET = \
+	$(ROS_INTERMEDIATE)$(RBUILD_BASE)$(SEP)rbuild_test$(EXEPOSTFIX)
 
-BACKEND_MINGW_BASE_OBJECTS = \
-	backend/mingw/mingw.o \
-	backend/mingw/modulehandler.o
+RBUILD_BACKEND_MINGW_BASE_SOURCES = \
+	backend$(SEP)mingw$(SEP)mingw.cpp \
+	backend$(SEP)mingw$(SEP)modulehandler.cpp
 
-BACKEND_DEVCPP_BASE_OBJECTS = backend/devcpp/devcpp.o
-							  
-BACKEND_BASE_OBJECTS = \
-	$(BACKEND_MINGW_BASE_OBJECTS) \
-	$(BACKEND_DEVCPP_BASE_OBJECTS) \
-	backend/backend.o
+RBUILD_BACKEND_DEVCPP_BASE_SOURCES = \
+	backend$(SEP)devcpp$(SEP)devcpp.cpp
 
-BASE_OBJECTS = \
-	$(BACKEND_BASE_OBJECTS) \
-	automaticdependency.o \
-	compilerflag.o \
-	define.o \
-	exception.o \
-	include.o \
-	linkerflag.o \
-	module.o \
-	project.o \
-	ssprintf.o \
-	XML.o
+RBUILD_BACKEND_BASE_SOURCES = \
+	$(RBUILD_BACKEND_MINGW_BASE_SOURCES) \
+	$(RBUILD_BACKEND_DEVCPP_BASE_SOURCES) \
+	backend$(SEP)backend.cpp
 
-OBJECTS = $(BASE_OBJECTS) rbuild.o
+RBUILD_BASE_SOURCES = \
+	$(RBUILD_BACKEND_BASE_SOURCES) \
+	automaticdependency.cpp \
+	compilerflag.cpp \
+	define.cpp \
+	exception.cpp \
+	include.cpp \
+	linkerflag.cpp \
+	module.cpp \
+	project.cpp \
+	ssprintf.cpp \
+	XML.cpp
 
-TESTS = \
-	tests/definetest.o \
-	tests/functiontest.o \
-	tests/iftest.o \
-	tests/includetest.o \
-	tests/invoketest.o \
-	tests/linkerflagtest.o \
-	tests/moduletest.o \
-	tests/projecttest.o \
-	tests/sourcefiletest.o
+RBUILD_COMMON_SOURCES = \
+	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_BASE_SOURCES)) \
 
-TEST_OBJECTS = $(BASE_OBJECTS) $(TESTS) tests/alltests.o
+RBUILD_SPECIAL_SOURCES = \
+	$(RBUILD_BASE)$(SEP)rbuild.cpp
 
-HOST_CXXFLAGS = -g -I. -Werror -Wall
+RBUILD_SOURCES = \
+	$(RBUILD_COMMON_SOURCES) \
+	$(RBUILD_SPECIAL_SOURCES)
 
-HOST_LFLAGS = -g
+RBUILD_COMMON_OBJECTS = \
+	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_COMMON_SOURCES:.cpp=.o))
 
-rbuild$(EXE_POSTFIX): $(OBJECTS)
-	$(HOST_CXX) $(OBJECTS) $(HOST_LFLAGS) -o rbuild$(EXE_POSTFIX)
+RBUILD_SPECIAL_OBJECTS = \
+	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_SPECIAL_SOURCES:.cpp=.o))
 
-ifeq ($(HOST),"")
-echo Please set HOST variable to mingw32-windows or mingw32-linux
-endif
-ifeq ($(HOST),mingw32-linux)
-clean:
-	-rm -f *.o
-	-rm -f rbuild$(EXE_POSTFIX)
-	-rm -f tests/*.o
-	-rm -f rbuild_tests$(EXE_POSTFIX)
-else
-clean:
-	-del *.o
-	-del rbuild$(EXE_POSTFIX)
-	-del tests\*.o
-	-del rbuild_tests$(EXE_POSTFIX)
-endif
+RBUILD_OBJECTS = \
+	$(RBUILD_COMMON_OBJECTS) \
+	$(RBUILD_SPECIAL_OBJECTS)
 
-.phony: clean
+RBUILD_TESTS = \
+	tests$(SEP)definetest.cpp \
+	tests$(SEP)functiontest.cpp \
+	tests$(SEP)iftest.cpp \
+	tests$(SEP)includetest.cpp \
+	tests$(SEP)invoketest.cpp \
+	tests$(SEP)linkerflagtest.cpp \
+	tests$(SEP)moduletest.cpp \
+	tests$(SEP)projecttest.cpp \
+	tests$(SEP)sourcefiletest.cpp
 
-%.o: %.cpp
-	$(HALFVERBOSEECHO) [CXX]     $<
-	$(HOST_CXX) $(HOST_CXXFLAGS) -c $< -o $@
+RBUILD_TEST_SPECIAL_SOURCES = \
+	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_TESTS)) \
+	$(RBUILD_BASE)$(SEP)tests$(SEP)alltests.cpp
 
-test: rbuild_tests$(EXE_POSTFIX)
-	./$(EXE_PREFIX)rbuild_tests$(EXE_POSTFIX)
+RBUILD_TEST_SOURCES = \
+	$(RBUILD_COMMON_SOURCES) \
+	$(RBUILD_TEST_SPECIAL_SOURCES)
 
-rbuild_tests$(EXE_POSTFIX): $(TEST_OBJECTS)
-	$(HOST_CXX) $(TEST_OBJECTS) $(HOST_LFLAGS) -o rbuild_tests$(EXE_POSTFIX)
+RBUILD_TEST_SPECIAL_OBJECTS = \
+	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_TEST_SPECIAL_SOURCES:.cpp=.o))
 
-include $(PATH_TO_TOP)/rules.mak
+RBUILD_TEST_OBJECTS = \
+	$(RBUILD_COMMON_OBJECTS) \
+	$(RBUILD_TEST_SPECIAL_OBJECTS)
+
+RBUILD_HOST_CXXFLAGS = -g -I$(RBUILD_BASE) -Werror -Wall
+
+RBUILD_HOST_LFLAGS = -g
+
+$(RBUILD_TARGET): $(RBUILD_OBJECTS)
+	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TARGET)
+
+$(RBUILD_COMMON_OBJECTS): %.o: %.cpp
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+.PHONY: rbuild
+
+rbuild: $(RBUILD_TARGET)
+	-
+
+$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS)
+	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TEST_TARGET)
+
+$(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+.PHONY: rbuild_test
+
+rbuild_test: $(RBUILD_TEST_TARGET)
+	$(RBUILD_TEST_TARGET)

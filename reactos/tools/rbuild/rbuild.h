@@ -21,12 +21,14 @@
 #include "XML.h"
 
 #ifdef WIN32
+#define EXEPREFIX ""
 #define EXEPOSTFIX ".exe"
 #define CSEP '\\'
 #define CBAD_SEP '/'
 #define SSEP "\\"
 #define SBAD_SEP "/"
 #else
+#define EXEPREFIX "./"
 #define EXEPOSTFIX ""
 #define CSEP '/'
 #define CBAD_SEP '\\'

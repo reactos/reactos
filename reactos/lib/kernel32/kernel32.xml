@@ -1,5 +1,4 @@
 <module name="kernel32" type="win32dll">
-	<dependency>wmc</dependency>
 	<importlibrary definition="kernel32.def" />
 	<include base="kernel32">.</include>
 	<include base="kernel32">include</include>
@@ -12,15 +11,6 @@
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
-	<invoke module="wmc">
-		<input>
-			<inputfile>kernel32.mc</inputfile>
-		</input>
-		<output>
-			<outputfile switches="-H">../../include/reactos/errcodes.h</outputfile>
-			<outputfile switches="-o">errcodes.rc</outputfile>
-		</output>
-	</invoke>
 	<directory name="debug">
 		<file>break.c</file>
 		<file>debugger.c</file>
@@ -119,4 +109,5 @@
 		<file>tls.c</file>
 	</directory>
 	<file>kernel32.rc</file>
+
 </module>

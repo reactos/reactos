@@ -162,6 +162,9 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
+	fprintf ( fMakefile, "EXEPREFIX = " EXEPREFIX "\n" );
+	fprintf ( fMakefile, "EXEPOSTFIX = " EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "SEP = " SSEP "$(EMPTY_VAR)\n" );
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
 	fprintf ( fMakefile, "host_gpp = g++\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );

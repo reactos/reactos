@@ -1,8 +1,6 @@
 <module name="ntoskrnl" type="kernel">
 	<importlibrary definition="ntoskrnl.def" />
-	<dependency>buildno</dependency>
 	<dependency>genntdll</dependency>
-	<dependency>wmc</dependency>
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
@@ -16,16 +14,6 @@
 	<library>rosrtl</library>
 	<library>rtl</library>
 	<library>string</library>
-	<invoke module="wmc">
-		<input>
-			<inputfile>ntoskrnl.mc</inputfile>
-		</input>
-		<output>
-			<outputfile switches="-H">../include/reactos/bugcodes.h</outputfile>
-			<outputfile switches="-o">bugcodes.rc</outputfile>
-		</output>
-	</invoke>
-
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
