@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2002/10/28 15:02:18 robd Exp $
+# $Id: makefile,v 1.19 2002/10/28 15:19:09 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,8 +9,6 @@ TARGET_APPTYPE = native
 TARGET_NAME = csrss
 
 TARGET_INSTALLDIR = system32
-
-TARGET_SDKLIBS = win32k.a
 
 TARGET_CFLAGS = -D__NTAPP__
 
