@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: finfo.c,v 1.2 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/cdfs/dirctl.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
  * UPDATE HISTORY: 
  */
 
@@ -30,7 +31,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -39,39 +40,140 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-CdfsQueryNameInformation(PFILE_OBJECT FileObject,
-			 PFCB Fcb,
-			 PDEVICE_OBJECT DeviceObject,
-			 PFILE_NAME_INFORMATION NameInfo,
-			 PULONG BufferLength)
+CdfsGetStandardInformation(PFCB Fcb,
+			   PDEVICE_OBJECT DeviceObject,
+			   PFILE_STANDARD_INFORMATION StandardInfo,
+			   PULONG BufferLength)
+/*
+ * FUNCTION: Retrieve the standard file information
+ */
+{
+  DPRINT("CdfsGetStandardInformation() called\n");
+
+  if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  /* PRECONDITION */
+  assert(StandardInfo != NULL);
+  assert(Fcb != NULL);
+
+  RtlZeroMemory(StandardInfo,
+		sizeof(FILE_STANDARD_INFORMATION));
+
+  StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+  StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
+  StandardInfo->NumberOfLinks = 0;
+  StandardInfo->DeletePending = FALSE;
+  StandardInfo->Directory = Fcb->Entry.FileFlags & 0x02 ? TRUE : FALSE;
+
+  *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetPositionInformation(PFILE_OBJECT FileObject,
+			   PFILE_POSITION_INFORMATION PositionInfo,
+			   PULONG BufferLength)
+{
+  DPRINT("CdfsGetPositionInformation() called\n");
+
+  if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  PositionInfo->CurrentByteOffset.QuadPart =
+    FileObject->CurrentByteOffset.QuadPart;
+
+  DPRINT("Getting position %I64x\n",
+	 PositionInfo->CurrentByteOffset.QuadPart);
+
+  *BufferLength -= sizeof(FILE_POSITION_INFORMATION);
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetBasicInformation(PFILE_OBJECT FileObject,
+			PFCB Fcb,
+			PDEVICE_OBJECT DeviceObject,
+			PFILE_BASIC_INFORMATION BasicInfo,
+			PULONG BufferLength)
+{
+  DPRINT("CdfsGetBasicInformation() called\n");
+
+  if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  CdfsDateTimeToFileTime(Fcb,
+			 &BasicInfo->CreationTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &BasicInfo->LastAccessTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &BasicInfo->LastWriteTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &BasicInfo->ChangeTime);
+
+  CdfsFileFlagsToAttributes(Fcb,
+			    &BasicInfo->FileAttributes);
+
+  *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
+
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetNameInformation(PFILE_OBJECT FileObject,
+		       PFCB Fcb,
+		       PDEVICE_OBJECT DeviceObject,
+		       PFILE_NAME_INFORMATION NameInfo,
+		       PULONG BufferLength)
 /*
  * FUNCTION: Retrieve the file name information
  */
 {
   ULONG NameLength;
 
-  assert (NameInfo != NULL);
-  assert (Fcb != NULL);
+  DPRINT("CdfsGetNameInformation() called\n");
 
-#if 0
-  NameLength = wcslen(FCB->PathName) * sizeof(WCHAR);
+  assert(NameInfo != NULL);
+  assert(Fcb != NULL);
+
+  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
   if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
     return STATUS_BUFFER_OVERFLOW;
 
   NameInfo->FileNameLength = NameLength;
   memcpy(NameInfo->FileName,
-	 FCB->PathName,
+	 Fcb->PathName,
 	 NameLength + sizeof(WCHAR));
-#endif
-
-  /* Fake name */
-  NameLength = 2;
-  wcscpy(NameInfo->FileName, L"\\");
 
   *BufferLength -=
     (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
 
   return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+CdfsGetInternalInformation(PFCB Fcb,
+			   PFILE_INTERNAL_INFORMATION InternalInfo,
+			   PULONG BufferLength)
+{
+  DPRINT("CdfsGetInternalInformation() called\n");
+
+  assert(InternalInfo);
+  assert(Fcb);
+
+  if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
+    return(STATUS_BUFFER_OVERFLOW);
+
+  /* FIXME: get a real index, that can be used in a create operation */
+  InternalInfo->IndexNumber.QuadPart = 0;
+
+  *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -91,7 +193,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
   NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT1("CdfsQueryInformation() called\n");
+  DPRINT("CdfsQueryInformation() called\n");
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
   FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
@@ -103,49 +205,46 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
   switch (FileInformationClass)
     {
-#if 0
       case FileStandardInformation:
 	Status = CdfsGetStandardInformation(Fcb,
-				      IrpContext->DeviceObject,
-				      SystemBuffer,
-				      &BufferLength);
-      break;
-    case FilePositionInformation:
-      RC = CdfsGetPositionInformation(IrpContext->FileObject,
-				      FCB,
-				      IrpContext->DeviceObject,
-				      SystemBuffer,
-				      &BufferLength);
-      break;
-    case FileBasicInformation:
-      RC = CdfsGetBasicInformation(FileObject,
-				   FCB,
-				   DeviceObject,
-				   SystemBuffer,
-				   &BufferLength);
-      break;
-#endif
+					    DeviceObject,
+					    SystemBuffer,
+					    &BufferLength);
+	break;
 
-      case FileNameInformation:
-	Status = CdfsQueryNameInformation(FileObject,
+      case FilePositionInformation:
+	Status = CdfsGetPositionInformation(FileObject,
+					    SystemBuffer,
+					    &BufferLength);
+	break;
+
+      case FileBasicInformation:
+	Status = CdfsGetBasicInformation(FileObject,
 					 Fcb,
 					 DeviceObject,
 					 SystemBuffer,
 					 &BufferLength);
 	break;
 
-#if 0
+      case FileNameInformation:
+	Status = CdfsGetNameInformation(FileObject,
+					Fcb,
+					DeviceObject,
+					SystemBuffer,
+					&BufferLength);
+	break;
+
       case FileInternalInformation:
 	Status = CdfsGetInternalInformation(Fcb,
-					   SystemBuffer,
-					   &BufferLength);
+					    SystemBuffer,
+					    &BufferLength);
 	break;
 
       case FileAlternateNameInformation:
       case FileAllInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
-#endif
+
       default:
 	DPRINT("Unimplemented information class %u\n", FileInformationClass);
 	Status = STATUS_NOT_SUPPORTED;

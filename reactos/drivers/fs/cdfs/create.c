@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: create.c,v 1.2 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -38,47 +38,46 @@
 
 /* FUNCTIONS ****************************************************************/
 
-#if 0
-NTSTATUS
-vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject,
-                          PWSTR pRelativeFileName,
-                          PWSTR *pAbsoluteFilename)
+static NTSTATUS
+CdfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
+			 PWSTR pRelativeFileName,
+			 PWSTR *pAbsoluteFilename)
 {
-  PWSTR  rcName;
-  PVFATFCB  fcb;
-  PVFATCCB  ccb;
+  PWSTR rcName;
+  PFCB Fcb;
+  PCCB Ccb;
 
-  DPRINT ("try related for %S\n", pRelativeFileName);
-  ccb = pFileObject->FsContext2;
-  assert (ccb);
-  fcb = ccb->pFcb;
-  assert (fcb);
+  DPRINT("try related for %S\n", pRelativeFileName);
+  Ccb = pFileObject->FsContext2;
+  assert(Ccb);
+  Fcb = Ccb->Fcb;
+  assert(Fcb);
 
   /* verify related object is a directory and target name
      don't start with \. */
-  if (!(fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-      || (pRelativeFileName[0] == L'\\'))
-  {
-    return  STATUS_INVALID_PARAMETER;
-  }
+  if (Fcb->Entry.FileFlags & 0x02 == 0 ||
+      pRelativeFileName[0] == L'\\')
+    {
+      return(STATUS_INVALID_PARAMETER);
+    }
 
   /* construct absolute path name */
-  assert (wcslen (fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
+  assert(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
           <= MAX_PATH);
-  rcName = ExAllocatePool (NonPagedPool, MAX_PATH * sizeof(WCHAR));
+  rcName = ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
   if (!rcName)
-  {
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-  wcscpy (rcName, fcb->PathName);
-  if (!vfatFCBIsRoot(fcb))
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  wcscpy(rcName, Fcb->PathName);
+  if (!CdfsFCBIsRoot(Fcb))
     wcscat (rcName, L"\\");
   wcscat (rcName, pRelativeFileName);
   *pAbsoluteFilename = rcName;
 
-  return  STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
-#endif
 
 
 static NTSTATUS
@@ -99,8 +98,8 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   if (FileObject->RelatedFileObject)
     {
       DPRINT("Converting relative filename to absolute filename\n");
-#if 0
-      Status = vfatMakeAbsoluteFilename(FileObject->RelatedFileObject,
+
+      Status = CdfsMakeAbsoluteFilename(FileObject->RelatedFileObject,
 					FileName,
 					&AbsFileName);
       FileName = AbsFileName;
@@ -108,7 +107,6 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 	{
 	  return(Status);
 	}
-#endif
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -122,7 +120,7 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 			     FileName);
   if (Fcb == NULL)
     {
-      DPRINT ("No existing FCB found, making a new one if file exists.\n");
+      DPRINT("No existing FCB found, making a new one if file exists.\n");
       Status = CdfsGetFCBForFile(DeviceExt,
 				 &ParentFcb,
 				 &Fcb,
@@ -174,7 +172,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 //  PWSTR FileName;
   NTSTATUS Status;
 
-  DPRINT1("CdfsCreateFile() called\n");
+  DPRINT("CdfsCreateFile() called\n");
 
   DeviceExt = DeviceObject->DeviceExtension;
   assert (DeviceExt);
@@ -199,37 +197,10 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
    * If the directory containing the file to open doesn't exist then
    * fail immediately
    */
-  Irp->IoStatus.Information = 0;
+  Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
   Irp->IoStatus.Status = Status;
+
   return(Status);
-
-#if 0
-  /* Just skip leading backslashes... */
-  while (*FileName == L'\\')
-    FileName++;
-CHECKPOINT1;
-
-  Fcb = FsdSearchDirectory(DeviceExt->fss,
-			   NULL,
-			   FileName);
-CHECKPOINT1;
-  if (Fcb == NULL)
-    {
-      DPRINT1("FsdSearchDirectory() failed\n");
-      return(STATUS_OBJECT_PATH_NOT_FOUND);
-    }
-CHECKPOINT1;
-
-  FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
-    FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
-  FileObject->FsContext = Fcb;
-  FileObject->FsContext2 = DeviceExt->fss;
-
-  DPRINT1("FsdOpenFile() done\n");
-
-  return(STATUS_SUCCESS);
-#endif
 }
 
 

@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.2 2002/04/26 23:21:28 ekohl Exp $
+/* $Id: dirctl.c,v 1.3 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/cdfs/dirctl.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
  * UPDATE HISTORY: 
  */
 
@@ -38,87 +39,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
-static BOOLEAN
-wstrcmpjoki(PWSTR s1, PWSTR s2)
-/*
- * FUNCTION: Compare two wide character strings, s2 with jokers (* or ?)
- * return TRUE if s1 like s2
- */
-{
-  while ((*s2=='*')||(*s2=='?')||(towlower(*s1)==towlower(*s2)))
-    {
-      if ((*s1)==0 && (*s2)==0)
-        return(TRUE);
-
-      if(*s2=='*')
-	{
-	  s2++;
-	  while (*s1)
-	    if (wstrcmpjoki(s1,s2))
-	      return TRUE;
-	    else
-	      s1++;
-	}
-      else
-	{
-	  s1++;
-	  s2++;
-	}
-    }
-
-  if ((*s2)=='.')
-    {
-      for (;((*s2)=='.')||((*s2)=='*')||((*s2)=='?');s2++)
-	;
-    }
-
-  if ((*s1)==0 && (*s2)==0)
-    return(TRUE);
-
-  return(FALSE);
-}
-
-
-static void
-CdfsSwapString(PWCHAR Out,
-	       PUCHAR In,
-	       ULONG Count)
-{
-  PUCHAR t = (PUCHAR)Out;
-  ULONG i;
-
-  for (i = 0; i < Count; i += 2)
-    {
-      t[i] = In[i+1];
-      t[i+1] = In[i];
-    }
-  t[i] = 0;
-  t[i+1] = 0;
-}
-
-
-static VOID
-CdfsDateTimeToFileTime(PFCB Fcb,
-		       TIME *FileTime)
-{
-  TIME_FIELDS TimeFields;
-
-  TimeFields.Milliseconds = 0;
-  TimeFields.Second = Fcb->Entry.Second;
-  TimeFields.Minute = Fcb->Entry.Minute;
-  TimeFields.Hour = Fcb->Entry.Hour;
-
-  TimeFields.Day = Fcb->Entry.Day;
-  TimeFields.Month = Fcb->Entry.Month;
-  TimeFields.Year = Fcb->Entry.Year + 1900;
-
-  RtlTimeFieldsToTime(&TimeFields,
-		      (PLARGE_INTEGER)FileTime);
-}
-
-
-NTSTATUS
+static NTSTATUS
 CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
 		 PVOID Block,
 		 ULONG BlockLength,
@@ -190,7 +111,7 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS
+static NTSTATUS
 CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	     PFCB Fcb,
 	     PFCB Parent,
@@ -220,8 +141,10 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   PUCHAR Ptr;
   PDIR_RECORD Record;
 
-  DPRINT("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n", Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
-  DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",Fcb->PathName, Fcb->ObjectName);
+  DPRINT("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n",
+	 Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
+  DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",
+	 Fcb->PathName, Fcb->ObjectName);
 
   IsRoot = FALSE;
   DirIndex = 0;
@@ -321,7 +244,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  break;
 	}
 
-//      DPRINT("Name '%S'\n", name);
+      DPRINT("Name '%S'\n", name);
 
       if (wstrcmpjoki(name, FileToFind)) /* || wstrcmpjoki (name2, FileToFind)) */
 	{
@@ -350,7 +273,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  if (pDirIndex)
 	    *pDirIndex = DirIndex;
 
-	  DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",Fcb->PathName, Fcb->ObjectName, DirIndex);
+	  DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
+		 Fcb->PathName, Fcb->ObjectName, DirIndex);
 
 	  ExFreePool(block);
 
@@ -378,16 +302,14 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
 
 static NTSTATUS
-CdfsGetBothInformation(PFCB Fcb,
+CdfsGetNameInformation(PFCB Fcb,
 		       PDEVICE_EXTENSION DeviceExt,
-		       PFILE_BOTH_DIRECTORY_INFORMATION Info,
+		       PFILE_NAMES_INFORMATION Info,
 		       ULONG BufferLength)
 {
-//  short i;
-//  ULONGLONG AllocSize;
   ULONG Length;
 
-  DPRINT("FileBothDirectoryInformation() called\n");
+  DPRINT("CdfsGetNameInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
   if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -398,7 +320,28 @@ CdfsGetBothInformation(PFCB Fcb,
     ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
-//  Info->FileIndex=;
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetDirectoryInformation(PFCB Fcb,
+			    PDEVICE_EXTENSION DeviceExt,
+			    PFILE_DIRECTORY_INFORMATION Info,
+			    ULONG BufferLength)
+{
+  ULONG Length;
+
+  DPRINT1("CdfsGetDirectoryInformation() called\n");
+
+  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+    return(STATUS_BUFFER_OVERFLOW);
+
+  Info->FileNameLength = Length;
+  Info->NextEntryOffset =
+    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+  memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
   CdfsDateTimeToFileTime(Fcb,
@@ -410,37 +353,125 @@ CdfsGetBothInformation(PFCB Fcb,
   CdfsDateTimeToFileTime(Fcb,
 			 &Info->ChangeTime);
 
+  /* Convert file flags */
+  CdfsFileFlagsToAttributes(Fcb,
+			    &Info->FileAttributes);
+
   Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
 
   /* Make AllocSize a rounded up multiple of the sector size */
-//  AllocSize = ((Fcb->Entry.DataLengthL + BLOCKSIZE - 1) /
-//	       BLOCKSIZE) * BLOCKSIZE;
-//  Info->AllocationSize.QuadPart = AllocSize;
   Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
 
-  /* FIXME: Convert file flags to file attributes */
-  Info->FileAttributes = (Fcb->Entry.FileFlags & 0x02) ? FILE_ATTRIBUTE_DIRECTORY : 0;
-  Info->EaSize = 0;
+//  Info->FileIndex=;
 
-  /* FIXME: Copy or create a short file name */
-#if 0
-  for (i = 0; i < 8 && (pFcb->entry.Filename[i] != ' '); i++)
-    pInfo->ShortName[i] = pFcb->entry.Filename[i];
-  pInfo->ShortNameLength = i;
-  pInfo->ShortName[i] = '.';
-  for (i = 0; i < 3 && (pFcb->entry.Ext[i] != ' '); i++)
-    pInfo->ShortName[i + 1 + pInfo->ShortNameLength] = pFcb->entry.Ext[i];
-  if (i)
-    pInfo->ShortNameLength += (i + 1);
-  pInfo->ShortNameLength *= sizeof(WCHAR);
-#endif
-
-  Info->ShortName[0] = 0;
-  Info->ShortNameLength = 0;
-
-  return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
+
+static NTSTATUS
+CdfsGetFullDirectoryInformation(PFCB Fcb,
+				PDEVICE_EXTENSION DeviceExt,
+				PFILE_FULL_DIRECTORY_INFORMATION Info,
+				ULONG BufferLength)
+{
+  ULONG Length;
+
+  DPRINT1("CdfsGetFullDirectoryInformation() called\n");
+
+  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+    return(STATUS_BUFFER_OVERFLOW);
+
+  Info->FileNameLength = Length;
+  Info->NextEntryOffset =
+    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+  memcpy(Info->FileName, Fcb->ObjectName, Length);
+
+  /* Convert file times */
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->CreationTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->LastAccessTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->LastWriteTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->ChangeTime);
+
+  /* Convert file flags */
+  CdfsFileFlagsToAttributes(Fcb,
+			    &Info->FileAttributes);
+
+  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
+
+  /* Make AllocSize a rounded up multiple of the sector size */
+  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+
+//  Info->FileIndex=;
+  Info->EaSize = 0;
+
+  return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetBothDirectoryInformation(PFCB Fcb,
+				PDEVICE_EXTENSION DeviceExt,
+				PFILE_BOTH_DIRECTORY_INFORMATION Info,
+				ULONG BufferLength)
+{
+  ULONG Length;
+
+  DPRINT("CdfsGetBothDirectoryInformation() called\n");
+
+  Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+    return(STATUS_BUFFER_OVERFLOW);
+
+  Info->FileNameLength = Length;
+  Info->NextEntryOffset =
+    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+  memcpy(Info->FileName, Fcb->ObjectName, Length);
+
+  /* Convert file times */
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->CreationTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->LastAccessTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->LastWriteTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->ChangeTime);
+
+  /* Convert file flags */
+  CdfsFileFlagsToAttributes(Fcb,
+			    &Info->FileAttributes);
+
+  Info->EndOfFile.QuadPart = Fcb->Entry.DataLengthL;
+
+  /* Make AllocSize a rounded up multiple of the sector size */
+  Info->AllocationSize.QuadPart = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE);
+
+//  Info->FileIndex=;
+  Info->EaSize = 0;
+
+  if (DeviceExt->CdInfo.JolietLevel == 0)
+    {
+      /* Standard ISO-9660 format */
+      Info->ShortNameLength = Length;
+      memcpy(Info->ShortName, Fcb->ObjectName, Length);
+    }
+  else
+    {
+      /* Joliet extension */
+
+      /* FIXME: Copy or create a short file name */
+
+      Info->ShortName[0] = 0;
+      Info->ShortNameLength = 0;
+    }
+
+  return(STATUS_SUCCESS);
+}
 
 
 static NTSTATUS
@@ -547,29 +578,31 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 	  switch (FileInformationClass)
 	    {
 	      case FileNameInformation:
-		DPRINT1("FileNameInformation\n");
-//		Status = VfatGetFileNameInformation(&TempFcb,
-//		            (PFILE_NAMES_INFORMATION) Buffer, BufferLength);
-//		break;
+		Status = CdfsGetNameInformation(&TempFcb,
+						DeviceExtension,
+						(PFILE_NAMES_INFORMATION)Buffer,
+						BufferLength);
+		break;
 
 	      case FileDirectoryInformation:
-		DPRINT1("FileDirectoryInformation\n");
-//		Status = VfatGetFileDirectoryInformation(&TempFcb, DeviceExtension,
-//		                 (PFILE_DIRECTORY_INFORMATION) Buffer, BufferLength);
+		Status = CdfsGetDirectoryInformation(&TempFcb,
+						     DeviceExtension,
+						     (PFILE_DIRECTORY_INFORMATION)Buffer,
+						     BufferLength);
 		break;
 
 	      case FileFullDirectoryInformation:
-		DPRINT1("FileFullDirecrotyInformation\n");
-//		Status = CdfsGetFullDirectoryInformation(&TempFcb,
-//							 DeviceExtension,
-//		                (PFILE_FULL_DIRECTORY_INFORMATION)Buffer, BufferLength);
+		Status = CdfsGetFullDirectoryInformation(&TempFcb,
+							 DeviceExtension,
+							 (PFILE_FULL_DIRECTORY_INFORMATION)Buffer,
+							 BufferLength);
 		break;
 
 	      case FileBothDirectoryInformation:
-		Status = CdfsGetBothInformation(&TempFcb,
-						DeviceExtension,
-						(PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,
-						BufferLength);
+		Status = CdfsGetBothDirectoryInformation(&TempFcb,
+							 DeviceExtension,
+							 (PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,
+							 BufferLength);
 		break;
 
 	      default:

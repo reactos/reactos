@@ -314,6 +314,23 @@ NTSTATUS STDCALL
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp);
 
+/* misc.c */
+
+BOOLEAN
+wstrcmpjoki(PWSTR s1, PWSTR s2);
+
+VOID
+CdfsSwapString(PWCHAR Out,
+	       PUCHAR In,
+	       ULONG Count);
+
+VOID
+CdfsDateTimeToFileTime(PFCB Fcb,
+		       TIME *FileTime);
+
+VOID
+CdfsFileFlagsToAttributes(PFCB Fcb,
+			  PULONG FileAttributes);
 
 /* rw.c */
 

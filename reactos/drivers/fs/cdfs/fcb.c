@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.3 2002/04/26 23:21:28 ekohl Exp $
+/* $Id: fcb.c,v 1.4 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -45,6 +45,31 @@
 
 
 /* FUNCTIONS ****************************************************************/
+
+static PWCHAR
+CdfsGetNextPathElement(PWCHAR FileName)
+{
+  if (*FileName == L'\0')
+    {
+      return(NULL);
+    }
+
+  while (*FileName != L'\0' && *FileName != L'\\')
+    {
+      FileName++;
+    }
+
+  return(FileName);
+}
+
+
+static VOID
+CdfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
+{
+  wcsncpy (pTarget, pSource, pLength);
+  pTarget [pLength] = L'\0';
+}
+
 
 PFCB
 CdfsCreateFCB(PWSTR FileName)
@@ -162,7 +187,7 @@ CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
 
   if (FileName == NULL || *FileName == 0)
     {
-      DPRINT1("Return FCB for strem file object\n");
+      DPRINT("Return FCB for stream file object\n");
       Fcb = ((PCCB)Vcb->StreamFileObject->FsContext2)->Fcb;
       Fcb->RefCount++;
       KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -174,8 +199,8 @@ CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
     {
       Fcb = CONTAINING_RECORD(current_entry, FCB, FcbListEntry);
 
-//      if (wstrcmpi(FileName, Fcb->PathName))
-      if (_wcsicmp(FileName, Fcb->PathName))
+      DPRINT("Comparing '%S' and '%S'\n", FileName, Fcb->PathName);
+      if (_wcsicmp(FileName, Fcb->PathName) == 0)
 	{
 	  Fcb->RefCount++;
 	  KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -277,79 +302,94 @@ CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
 }
 
 
-#if 0
-NTSTATUS
-vfatMakeFCBFromDirEntry(PVCB  vcb,
-			PVFATFCB  directoryFCB,
-			PWSTR  longName,
-			PFAT_DIR_ENTRY  dirEntry,
-			ULONG dirIndex,
-			PVFATFCB * fileFCB)
+static VOID
+CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
+		    PDIR_RECORD Record,
+		    PWSTR Name)
+/*
+ * FUNCTION: Retrieves the file name, be it in short or long file name format
+ */
 {
-  PVFATFCB  rcFCB;
-  WCHAR  pathName [MAX_PATH];
+  if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
+    {
+      wcscpy(Name, L".");
+    }
+  else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
+    {
+      wcscpy(Name, L"..");
+    }
+  else
+    {
+      if (DeviceExt->CdInfo.JolietLevel == 0)
+	{
+	  ULONG i;
+
+	  for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
+	    Name[i] = (WCHAR)Record->FileId[i];
+	  Name[i] = 0;
+	}
+      else
+	{
+	  CdfsSwapString(Name, Record->FileId, Record->FileIdLength);
+	}
+    }
+
+  DPRINT("Name '%S'\n", Name);
+}
+
+
+NTSTATUS
+CdfsMakeFCBFromDirEntry(PVCB Vcb,
+			PFCB DirectoryFCB,
+			PWSTR Name,
+			PDIR_RECORD Record,
+			PFCB * fileFCB)
+{
+  WCHAR pathName[MAX_PATH];
+  PFCB rcFCB;
   ULONG Size;
-  if (longName [0] != 0 && wcslen (directoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (longName) > MAX_PATH)
-  {
-    return  STATUS_OBJECT_NAME_INVALID;
-  }
-  wcscpy (pathName, directoryFCB->PathName);
-  if (!vfatFCBIsRoot (directoryFCB))
-  {
-    wcscat (pathName, L"\\");
-  }
-  if (longName [0] != 0)
-  {
-    wcscat (pathName, longName);
-  }
-  else
-  {
-    WCHAR  entryName [MAX_PATH];
 
-    vfatGetDirEntryName (dirEntry, entryName);
-    wcscat (pathName, entryName);
-  }
-  rcFCB = vfatNewFCB (pathName);
-  memcpy (&rcFCB->entry, dirEntry, sizeof (FAT_DIR_ENTRY));
+  if (Name [0] != 0 && wcslen (DirectoryFCB->PathName) +
+        sizeof(WCHAR) + wcslen (Name) > MAX_PATH)
+    {
+      return(STATUS_OBJECT_NAME_INVALID);
+    }
 
-  if (vfatFCBIsDirectory(vcb, rcFCB))
-  {
-    ULONG FirstCluster, CurrentCluster;
-    NTSTATUS Status;
-    Size = 0;
-    FirstCluster = vfatDirEntryGetFirstCluster (vcb, &rcFCB->entry);
-    if (FirstCluster == 1)
+  wcscpy(pathName, DirectoryFCB->PathName);
+  if (!CdfsFCBIsRoot(DirectoryFCB))
     {
-      Size = vcb->FatInfo.rootDirectorySectors * BLOCKSIZE;
+      wcscat(pathName, L"\\");
     }
-    else
+
+  if (Name[0] != 0)
     {
-      CurrentCluster = FirstCluster;
-      while (CurrentCluster != 0xffffffff)
-      {
-         Size += vcb->FatInfo.BytesPerCluster;
-         Status = NextCluster (vcb, NULL, FirstCluster, &CurrentCluster, FALSE);
-      }
+      wcscat(pathName, Name);
     }
-  }
   else
-  {
-    Size = rcFCB->entry.FileSize;
-  }
-  rcFCB->dirIndex = dirIndex;
+    {
+      WCHAR entryName[MAX_PATH];
+
+      CdfsGetDirEntryName(Vcb, Record, entryName);
+      wcscat(pathName, entryName);
+    }
+
+  rcFCB = CdfsCreateFCB(pathName);
+  memcpy(&rcFCB->Entry, Record, sizeof(DIR_RECORD));
+
+  Size = rcFCB->Entry.DataLengthL;
+
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
-  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
+  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, 2096);
 //  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
-  vfatFCBInitializeCache (vcb, rcFCB);
+  CdfsFCBInitializeCache(Vcb, rcFCB);
   rcFCB->RefCount++;
-  vfatAddFCBToTable (vcb, rcFCB);
+  CdfsAddFCBToTable(Vcb, rcFCB);
   *fileFCB = rcFCB;
 
-  return  STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
-#endif
+
 
 NTSTATUS
 CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
@@ -359,7 +399,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   NTSTATUS Status;
   PCCB  newCCB;
 
-  newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof(CCB), TAG_CCB);
+  newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
   if (newCCB == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
@@ -393,99 +433,111 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   return(STATUS_SUCCESS);
 }
 
-#if 0
+
 NTSTATUS
-vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
-                 PVFATFCB  pDirectoryFCB,
-                 PWSTR  pFileToFind,
-                 PVFATFCB * pFoundFCB)
+CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
+		PFCB DirectoryFcb,
+		PWSTR FileToFind,
+		PFCB *FoundFCB)
 {
-  BOOL  finishedScanningDirectory;
-  ULONG  directoryIndex;
-  NTSTATUS  status;
-  WCHAR  defaultFileName [2];
-  WCHAR  currentLongName [256];
-  FAT_DIR_ENTRY  currentDirEntry;
-  WCHAR  currentEntryName [256];
+  WCHAR TempName[2];
+  WCHAR Name[256];
+  PUCHAR Block;
+  ULONG FirstSector;
+  ULONG DirSize;
+  ULONG BufferSize;
+  ULONG SectorCount;
+  PDIR_RECORD Record;
+  ULONG Offset;
+  NTSTATUS Status;
 
-  assert (pDeviceExt);
-  assert (pDirectoryFCB);
-  assert (pFileToFind);
+  assert(DeviceExt);
+  assert(DirectoryFcb);
+  assert(FileToFind);
 
-  DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
-          pDeviceExt,
-          pDirectoryFCB,
-          pFileToFind);
-  DPRINT ("Dir Path:%S\n", pDirectoryFCB->PathName);
+  DPRINT("CdfsDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
+	 DeviceExt,
+	 DirectoryFcb,
+	 FileToFind);
+  DPRINT("Dir Path:%S\n", DirectoryFcb->PathName);
 
-  //  default to '.' if no filename specified
-  if (wcslen (pFileToFind) == 0)
-  {
-    defaultFileName [0] = L'.';
-    defaultFileName [1] = 0;
-    pFileToFind = defaultFileName;
-  }
-
-  directoryIndex = 0;
-  finishedScanningDirectory = FALSE;
-  while (!finishedScanningDirectory)
-  {
-    status = vfatGetNextDirEntry (pDeviceExt,
-                                  pDirectoryFCB,
-                                  &directoryIndex,
-                                  currentLongName,
-                                  &currentDirEntry);
-    if (status == STATUS_NO_MORE_ENTRIES)
+  /*  default to '.' if no filename specified */
+  if (wcslen(FileToFind) == 0)
     {
-      finishedScanningDirectory = TRUE;
-      continue;
-    }
-    else if (!NT_SUCCESS(status))
-    {
-      return  status;
+      TempName[0] = L'.';
+      TempName[1] = 0;
+      FileToFind = TempName;
     }
 
-    DPRINT ("  Index:%d  longName:%S\n",
-            directoryIndex,
-            currentLongName);
+  FirstSector = DirectoryFcb->Entry.ExtentLocationL;
+  DirSize = DirectoryFcb->Entry.DataLengthL;
 
-    if (!vfatIsDirEntryDeleted (&currentDirEntry)
-      && !vfatIsDirEntryVolume(&currentDirEntry))
+  BufferSize = ROUND_UP(DirSize, BLOCKSIZE);
+  SectorCount = BufferSize / BLOCKSIZE;
+
+  DPRINT("FirstSector %lu  DirSize %lu  BufferSize %lu  SectorCount %lu\n",
+	 FirstSector, DirSize, BufferSize, SectorCount);
+
+  Block = ExAllocatePool(NonPagedPool, BufferSize);
+
+  Status = CdfsReadSectors(DeviceExt->StorageDevice,
+			   FirstSector,
+			   SectorCount,
+			   Block);
+  if (!NT_SUCCESS(Status))
     {
-      if (currentLongName [0] != L'\0' && wstrcmpjoki (currentLongName, pFileToFind))
-      {
-        DPRINT ("Match found, %S\n", currentLongName);
-        status = vfatMakeFCBFromDirEntry (pDeviceExt,
-                                          pDirectoryFCB,
-                                          currentLongName,
-                                          &currentDirEntry,
-                                          directoryIndex - 1,
-                                          pFoundFCB);
-        return  status;
-      }
-      else
-      {
-        vfatGetDirEntryName (&currentDirEntry, currentEntryName);
-        DPRINT ("  entryName:%S\n", currentEntryName);
-
-        if (wstrcmpjoki (currentEntryName, pFileToFind))
-        {
-          DPRINT ("Match found, %S\n", currentEntryName);
-          status = vfatMakeFCBFromDirEntry (pDeviceExt,
-                                            pDirectoryFCB,
-                                            currentLongName,
-                                            &currentDirEntry,
-                                            directoryIndex - 1,
-                                            pFoundFCB);
-          return  status;
-        }
-      }
+      DPRINT("Reading directory extent failed (Status %lx)\n", Status);
+      ExFreePool(Block);
+      return(Status);
     }
-  }
 
-  return  STATUS_OBJECT_NAME_NOT_FOUND;
+  Offset = 0;
+  Record = (PDIR_RECORD)Block;
+  while(TRUE)
+    {
+      if (Record->RecordLength == 0)
+	{
+	  DPRINT1("RecordLength == 0  Stopped!\n");
+	  break;
+	}
+	
+      DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
+	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
+
+      CdfsGetDirEntryName(DeviceExt, Record, Name);
+      DPRINT("Name '%S'\n", Name);
+
+      if (wstrcmpjoki(Name, FileToFind))
+	{
+	  DPRINT("Match found, %S\n", Name);
+	  Status = CdfsMakeFCBFromDirEntry(DeviceExt,
+					   DirectoryFcb,
+					   Name,
+					   Record,
+					   FoundFCB);
+
+	  ExFreePool(Block);
+
+	  return(Status);
+	}
+
+      Offset = Offset + Record->RecordLength;
+      Record = (PDIR_RECORD)(Block + Offset);
+      if (Record->RecordLength == 0)
+	{
+	  Offset = ROUND_UP(Offset, 2048);
+	  Record = (PDIR_RECORD)(Block + Offset);
+	}
+
+//      if (Offset >= BufferSize)
+      if (Offset >= DirSize)
+	break;
+    }
+
+  ExFreePool(Block);
+
+  return(STATUS_OBJECT_NAME_NOT_FOUND);
 }
-#endif
 
 
 NTSTATUS
@@ -494,7 +546,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 		  PFCB *pFCB,
 		  const PWSTR pFileName)
 {
-  NTSTATUS  status;
+  NTSTATUS Status;
   WCHAR  pathName [MAX_PATH];
   WCHAR  elementName [MAX_PATH];
   PWCHAR  currentElement;
@@ -518,11 +570,6 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 
       return((FCB != NULL) ? STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND);
     }
-
-  DPRINT1("CdfsGetFCBForFile() is incomplete!\n");
-  return(STATUS_UNSUCCESSFUL);
-
-#if 0
   else
     {
       currentElement = pFileName + 1;
@@ -531,85 +578,85 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     }
   parentFCB = NULL;
 
-  //  Parse filename and check each path element for existance and access
-  while (vfatGetNextPathElement (currentElement) != 0)
-  {
-    //  Skip blank directory levels
-    if ((vfatGetNextPathElement (currentElement) - currentElement) == 0)
+  /* Parse filename and check each path element for existance and access */
+  while (CdfsGetNextPathElement(currentElement) != 0)
     {
-      currentElement++;
-      continue;
+      /*  Skip blank directory levels */
+      if ((CdfsGetNextPathElement(currentElement) - currentElement) == 0)
+	{
+	  currentElement++;
+	  continue;
+	}
+
+      DPRINT("Parsing, currentElement:%S\n", currentElement);
+      DPRINT("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
+
+      /* Descend to next directory level */
+      if (parentFCB)
+	{
+	  CdfsReleaseFCB(Vcb, parentFCB);
+	  parentFCB = NULL;
+	}
+
+      /* fail if element in FCB is not a directory */
+      if (!CdfsFCBIsDirectory(FCB))
+	{
+	  DPRINT("Element in requested path is not a directory\n");
+
+	  CdfsReleaseFCB(Vcb, FCB);
+	  FCB = 0;
+	  *pParentFCB = NULL;
+	  *pFCB = NULL;
+
+	  return(STATUS_OBJECT_PATH_NOT_FOUND);
+	}
+      parentFCB = FCB;
+
+      /* Extract next directory level into dirName */
+      CdfsWSubString(pathName,
+		     pFileName,
+		     CdfsGetNextPathElement(currentElement) - pFileName);
+      DPRINT("  pathName:%S\n", pathName);
+
+      FCB = CdfsGrabFCBFromTable(Vcb, pathName);
+      if (FCB == NULL)
+	{
+	  CdfsWSubString(elementName,
+			 currentElement,
+			 CdfsGetNextPathElement(currentElement) - currentElement);
+	  DPRINT("  elementName:%S\n", elementName);
+
+	  Status = CdfsDirFindFile(Vcb, parentFCB, elementName, &FCB);
+	  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+	    {
+	      *pParentFCB = parentFCB;
+	      *pFCB = NULL;
+	      currentElement = CdfsGetNextPathElement(currentElement);
+	      if (*currentElement == L'\0' || CdfsGetNextPathElement(currentElement + 1) == 0)
+		{
+		  return(STATUS_OBJECT_NAME_NOT_FOUND);
+		}
+	      else
+		{
+		  return(STATUS_OBJECT_PATH_NOT_FOUND);
+		}
+	    }
+	  else if (!NT_SUCCESS(Status))
+	    {
+	      CdfsReleaseFCB(Vcb, parentFCB);
+	      *pParentFCB = NULL;
+	      *pFCB = NULL;
+
+	      return(Status);
+	    }
+	}
+      currentElement = CdfsGetNextPathElement(currentElement);
     }
-
-    DPRINT ("Parsing, currentElement:%S\n", currentElement);
-    DPRINT ("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
-
-    //  descend to next directory level
-    if (parentFCB)
-    {
-      vfatReleaseFCB (pVCB, parentFCB);
-      parentFCB = 0;
-    }
-    //  fail if element in FCB is not a directory
-    if (!vfatFCBIsDirectory (pVCB, FCB))
-    {
-      DPRINT ("Element in requested path is not a directory\n");
-
-      vfatReleaseFCB (pVCB, FCB);
-      FCB = 0;
-      *pParentFCB = NULL;
-      *pFCB = NULL;
-
-      return  STATUS_OBJECT_PATH_NOT_FOUND;
-    }
-    parentFCB = FCB;
-
-    //  Extract next directory level into dirName
-    vfatWSubString (pathName,
-                    pFileName,
-                    vfatGetNextPathElement (currentElement) - pFileName);
-    DPRINT ("  pathName:%S\n", pathName);
-
-    FCB = vfatGrabFCBFromTable (pVCB, pathName);
-    if (FCB == NULL)
-    {
-      vfatWSubString (elementName,
-                      currentElement,
-                      vfatGetNextPathElement (currentElement) - currentElement);
-      DPRINT ("  elementName:%S\n", elementName);
-
-      status = vfatDirFindFile (pVCB, parentFCB, elementName, &FCB);
-      if (status == STATUS_OBJECT_NAME_NOT_FOUND)
-      {
-        *pParentFCB = parentFCB;
-        *pFCB = NULL;
-        currentElement = vfatGetNextPathElement(currentElement);
-        if (*currentElement == L'\0' || vfatGetNextPathElement(currentElement + 1) == 0)
-        {
-          return  STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        else
-        {
-          return  STATUS_OBJECT_PATH_NOT_FOUND;
-        }
-      }
-      else if (!NT_SUCCESS (status))
-      {
-        vfatReleaseFCB (pVCB, parentFCB);
-        *pParentFCB = NULL;
-        *pFCB = NULL;
-
-        return  status;
-      }
-    }
-    currentElement = vfatGetNextPathElement (currentElement);
-  }
 
   *pParentFCB = parentFCB;
   *pFCB = FCB;
 
-  return  STATUS_SUCCESS;
-#endif
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

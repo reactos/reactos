@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: close.c,v 1.1 2002/04/15 20:39:49 ekohl Exp $
+/* $Id: close.c,v 1.2 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -85,7 +85,7 @@ CdfsClose(PDEVICE_OBJECT DeviceObject,
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
 
-  DPRINT1("CdfsClose() called\n");
+  DPRINT("CdfsClose() called\n");
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = Stack->FileObject;

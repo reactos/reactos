@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.2 2002/04/26 23:21:28 ekohl Exp $
+/* $Id: fsctl.c,v 1.3 2002/05/01 13:15:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "cdfs.h"
@@ -82,12 +82,12 @@ CdfsGetPVDData(PUCHAR Buffer,
   Vcb->CdInfo.RootStart = Pvd->RootDirRecord.ExtentLocationL;
   Vcb->CdInfo.RootSize = Pvd->RootDirRecord.DataLengthL;
 
-  DPRINT1("VolumeSerial: %08lx\n", Vpb->SerialNumber);
-  DPRINT1("VolumeLabel: '%S'\n", Vpb->VolumeLabel);
-  DPRINT1("VolumeLabelLength: %lu\n", Vpb->VolumeLabelLength);
-  DPRINT1("VolumeSize: %lu\n", Pvd->VolumeSpaceSizeL);
-  DPRINT1("RootStart: %lu\n", Pvd->RootDirRecord.ExtentLocationL);
-  DPRINT1("RootSize: %lu\n", Pvd->RootDirRecord.DataLengthL);
+  DPRINT("VolumeSerial: %08lx\n", Vpb->SerialNumber);
+  DPRINT("VolumeLabel: '%S'\n", Vpb->VolumeLabel);
+  DPRINT("VolumeLabelLength: %lu\n", Vpb->VolumeLabelLength);
+  DPRINT("VolumeSize: %lu\n", Pvd->VolumeSpaceSizeL);
+  DPRINT("RootStart: %lu\n", Pvd->RootDirRecord.ExtentLocationL);
+  DPRINT("RootSize: %lu\n", Pvd->RootDirRecord.DataLengthL);
 }
 
 
@@ -104,17 +104,17 @@ CdfsGetSVDData(PUCHAR Buffer,
 
   if (strncmp(Svd->EscapeSequences, "%/@", 3) == 0)
     {
-      DPRINT1("Joliet extension found (UCS-2 Level 1)\n");
+      DPRINT("Joliet extension found (UCS-2 Level 1)\n");
       JolietLevel = 1;
     }
   else if (strncmp(Svd->EscapeSequences, "%/C", 3) == 0)
     {
-      DPRINT1("Joliet extension found (UCS-2 Level 2)\n");
+      DPRINT("Joliet extension found (UCS-2 Level 2)\n");
       JolietLevel = 2;
     }
   else if (strncmp(Svd->EscapeSequences, "%/E", 3) == 0)
     {
-      DPRINT1("Joliet extension found (UCS-2 Level 3)\n");
+      DPRINT("Joliet extension found (UCS-2 Level 3)\n");
       JolietLevel = 3;
     }
 
@@ -127,8 +127,8 @@ CdfsGetSVDData(PUCHAR Buffer,
       Vcb->CdInfo.RootStart = Svd->RootDirRecord.ExtentLocationL;
       Vcb->CdInfo.RootSize = Svd->RootDirRecord.DataLengthL;
 
-      DPRINT1("RootStart: %lu\n", Svd->RootDirRecord.ExtentLocationL);
-      DPRINT1("RootSize: %lu\n", Svd->RootDirRecord.DataLengthL);
+      DPRINT("RootStart: %lu\n", Svd->RootDirRecord.ExtentLocationL);
+      DPRINT("RootSize: %lu\n", Svd->RootDirRecord.DataLengthL);
     }
 //#endif
 }
@@ -142,7 +142,6 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   ULONG Sector;
   PVD_HEADER VdHeader;
-
 
   Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION;
 
@@ -166,29 +165,29 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
       switch (VdHeader->VdType)
 	{
 	  case 0:
-	    DPRINT1("BootVolumeDescriptor found!\n");
+	    DPRINT("BootVolumeDescriptor found!\n");
 	    break;
 
 	  case 1:
-	    DPRINT1("PrimaryVolumeDescriptor found!\n");
+	    DPRINT("PrimaryVolumeDescriptor found!\n");
 	    CdfsGetPVDData(Buffer, Vcb, DeviceObject->Vpb);
 	    break;
 
 	  case 2:
-	    DPRINT1("SupplementaryVolumeDescriptor found!\n");
+	    DPRINT("SupplementaryVolumeDescriptor found!\n");
 	    CdfsGetSVDData(Buffer, Vcb);
 	    break;
 
 	  case 3:
-	    DPRINT1("VolumePartitionDescriptor found!\n");
+	    DPRINT("VolumePartitionDescriptor found!\n");
 	    break;
 
 	  case 255:
-	    DPRINT1("VolumeDescriptorSetTerminator found!\n");
+	    DPRINT("VolumeDescriptorSetTerminator found!\n");
 	    break;
 
 	  default:
-	    DPRINT1("VolumeDescriptor type %u found!\n", VdHeader->VdType);
+	    DPRINT1("Unknown volume descriptor type %u found!\n", VdHeader->VdType);
 	    break;
 	}
 
@@ -219,7 +218,7 @@ CdfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  DPRINT1("CDFS: Checking on mount of device %08x\n", DeviceToMount);
+  DPRINT("CDFS: Checking on mount of device %08x\n", DeviceToMount);
 
   Status = CdfsReadSectors(DeviceToMount,
 			   CDFS_PRIMARY_DESCRIPTOR_LOCATION,
@@ -231,7 +230,7 @@ CdfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
     }
 
   Buffer[6] = 0;
-  DPRINT1("CD-identifier: [%.5s]\n", Buffer + 1);
+  DPRINT("CD-identifier: [%.5s]\n", Buffer + 1);
 
   Status = (Buffer[0] == 1 &&
 	    Buffer[1] == 'C' &&
@@ -258,7 +257,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   PCCB Ccb = NULL;
   NTSTATUS Status;
 
-  DPRINT1("CdfsMountVolume() called\n");
+  DPRINT("CdfsMountVolume() called\n");
 
   if (DeviceObject != CdfsGlobalData->DeviceObject)
     {
@@ -367,7 +366,7 @@ ByeBye:
 	IoDeleteDevice(NewDeviceObject);
     }
 
-  DPRINT1("CdfsMountVolume() done (Status: %lx)\n", Status);
+  DPRINT("CdfsMountVolume() done (Status: %lx)\n", Status);
 
   return(Status);
 }
@@ -390,7 +389,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
       UCHAR Part[4];
     } Serial;
 
-  DPRINT1("CdfsVerifyVolume() called\n");
+  DPRINT("CdfsVerifyVolume() called\n");
 
   if (DeviceObject != CdfsGlobalData->DeviceObject)
     {
@@ -452,7 +451,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
       Serial.Part[3] += Buffer[i+0];
     }
 
-  DPRINT1("Current serial number %08lx  Vpb serial number %08lx\n",
+  DPRINT("Current serial number %08lx  Vpb serial number %08lx\n",
 	  Serial.Value, DeviceToVerify->Vpb->SerialNumber);
 
   if (Serial.Value == DeviceToVerify->Vpb->SerialNumber)
@@ -465,7 +464,7 @@ ByeBye:
 
 //  Status = STATUS_INVALID_DEVICE_REQUEST;
 
-  DPRINT1("CdfsVerifyVolume() done (Status: %lx)\n", Status);
+  DPRINT("CdfsVerifyVolume() done (Status: %lx)\n", Status);
 
   return(Status);
 }
