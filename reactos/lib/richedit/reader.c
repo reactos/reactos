@@ -98,9 +98,9 @@ static void	ReadStyleSheet (RTF_Info *);
 static void	ReadInfoGroup (RTF_Info *);
 static void	ReadPictGroup (RTF_Info *);
 static void	ReadObjGroup (RTF_Info *);
-static void	LookupInit ();
+static void	LookupInit (void);
 static void	Lookup (RTF_Info *, char *);
-static int	Hash ();
+static int	Hash (char*);
 
 static void	CharSetInit (RTF_Info *);
 static void	ReadCharSetMaps (RTF_Info *);
@@ -2451,7 +2451,7 @@ static RTFKey	rtfKey[] =
  * Initialize lookup table hash values.  Only need to do this once.
  */
 
-static void LookupInit()
+static void LookupInit(void)
 {
 static int	inited = 0;
 RTFKey	*rp;
@@ -2546,8 +2546,7 @@ char	*p;
 
 void RTFFree(char *p)
 {
-	if (p != (char *) NULL)
-		HeapFree(RICHED32_hHeap, 0, p);
+        HeapFree(RICHED32_hHeap, 0, p);
 }
 
 
