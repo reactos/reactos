@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.49 2003/03/06 00:57:44 gvg Exp $
+/* $Id: dc.c,v 1.50 2003/03/08 13:16:51 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -19,6 +19,7 @@
 #include <win32k/pen.h>
 #include <win32k/text.h>
 #include "../eng/handle.h"
+#include <include/inteng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -100,7 +101,6 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
 {
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
-  SIZEL onebyone;
   HDC hNewDC;
 
   OrigDC = DC_HandleToPtr(hDC);
@@ -137,11 +137,6 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
     NewDC->DevInfo = OrigDC->DevInfo;
   }
 
-  // Create a 1x1 monochrome bitmap surface
-  onebyone.cx = 1;
-  onebyone.cy = 1;
-  NewDC->Surface = EngCreateBitmap(onebyone, 1, BMF_1BPP, 0, NULL);
-
   /* DriverName is copied in the AllocDC routine  */
   if(OrigDC == NULL) {
     NewDC->DeviceDriver = DRIVER_FindMPDriver(NewDC->DriverName);
@@ -160,7 +155,7 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   /* Create default bitmap */
   if (!(hBitmap = W32kCreateBitmap( 1, 1, 1, 1, NULL )))
   {
-	DC_ReleasePtr( hNewDC );
+    DC_ReleasePtr( hNewDC );
     DC_FreeDC( hNewDC );
     return NULL;
   }
@@ -168,6 +163,7 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   NewDC->w.bitsPerPixel = 1;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
+  NewDC->Surface = BitmapToSurf(BITMAPOBJ_HandleToPtr(hBitmap));
 
   if(OrigDC != NULL)
   {
@@ -355,8 +351,10 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   PrimarySurface.Handle =
     PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
 
-  SurfObj = (PSURFOBJ)AccessUserObject(PrimarySurface.Handle);
+  SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
   SurfObj->dhpdev = PrimarySurface.PDev;
+
+  return TRUE;
 }
 
 HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
@@ -367,7 +365,6 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   HDC      hNewDC;
   PDC      NewDC;
   HDC      hDC = NULL;
-  PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
 
   /*  Check for existing DC object  */
@@ -413,7 +410,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /* FIXME: get mode selection information from somewhere  */
 
   NewDC->DMW.dmLogPixels = 96;
-  SurfGDI = (PSURFGDI)AccessInternalObject(PrimarySurface.Handle);
+  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
   NewDC->DMW.dmBitsPerPel = SurfGDI->BitsPerPixel;
   NewDC->DMW.dmPelsWidth = SurfGDI->SurfObj.sizlBitmap.cx;
   NewDC->DMW.dmPelsHeight = SurfGDI->SurfObj.sizlBitmap.cy;
@@ -497,6 +494,7 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
     W32kSelectObject (DCHandle, STOCK_WHITE_BRUSH);
     W32kSelectObject (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); W32kSelectObject does not recognize stock objects yet  */
+    BITMAPOBJ_ReleasePtr(DCToDelete->w.hBitmap);
     if (DCToDelete->w.flags & DC_MEMORY)
     {
       W32kDeleteObject (DCToDelete->w.hFirstBitmap);
@@ -1021,8 +1019,6 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 {
   HGDIOBJ   objOrg;
   BITMAPOBJ *pb;
-  PSURFOBJ  surfobj;
-  PSURFGDI  surfgdi;
   PDC dc;
   PPENOBJ pen;
   PBRUSHOBJ brush;
@@ -1046,9 +1042,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       dc->w.hPen = hGDIObj;
 
       // Convert the color of the pen to the format of the DC
-      PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+      PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
 	  if( PalGDI ){
-      	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+      	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
 		if( pen ){
 	      	pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
@@ -1061,9 +1057,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       dc->w.hBrush = (HBRUSH) hGDIObj;
 
       // Convert the color of the brush to the format of the DC
-      PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+      PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
 	  if( PalGDI ){
-      	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+      	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
 		if( brush ){
       		brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
@@ -1080,10 +1076,11 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       if (!(dc->w.flags & DC_MEMORY)) return NULL;
       objOrg = (HGDIOBJ)dc->w.hBitmap;
 
-      // setup mem dc for drawing into bitmap
-      pb   = BITMAPOBJ_HandleToPtr (hGDIObj);
-      dc->w.hBitmap = BitmapToSurf(pb);
-      dc->Surface = dc->w.hBitmap;
+      /* Release the old bitmap, lock the new one and convert it to a SURF */
+      BITMAPOBJ_ReleasePtr(objOrg);
+      dc->w.hBitmap = hGDIObj;
+      pb = BITMAPOBJ_HandleToPtr(hGDIObj);
+      dc->Surface = BitmapToSurf(pb);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
       if(pb->dib)
@@ -1103,7 +1100,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
                                   pb->ColorMap[Index].rgbGreen,
                                   pb->ColorMap[Index].rgbBlue);
           }
-          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, ColorMap, 0, 0, 0);
+          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, (ULONG *) ColorMap, 0, 0, 0);
           ExFreePool(ColorMap);
         } else
         if(16 == pb->dib->dsBmih.biBitCount)

@@ -8,7 +8,7 @@
 #include <win32k/cliprgn.h>
 #include <win32k/coord.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 VOID
@@ -54,7 +54,7 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   return copy;
 }
 
-INT WINAPI
+INT STDCALL
 W32kSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;

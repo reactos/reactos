@@ -3,6 +3,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
@@ -12,7 +13,7 @@
 
 #include <include/inteng.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 FT_Library  library;
@@ -654,7 +655,7 @@ W32kTextOut(HDC  hDC,
 
   // Create the brush
   PalDestGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
-  XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = W32kCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
   Brush = BRUSHOBJ_LockBrush(hBrush);
   EngDeleteXlate(XlateObj);

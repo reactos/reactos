@@ -4,11 +4,14 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+#include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/color.h>
+#include <win32k/pen.h>
 #include "../eng/handle.h"
+#include <include/inteng.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 int COLOR_gapStart = 256;
@@ -58,12 +61,16 @@ ULONG W32kGetSysColor(int nIndex)
 
 HPEN STDCALL W32kGetSysColorPen(int nIndex)
 {
-  return(W32kCreatePen(PS_SOLID, 1, COLOR_sysPalTemplate[nIndex]));
+  COLORREF Col;
+  memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
+  return(W32kCreatePen(PS_SOLID, 1, Col));
 }
 
 HBRUSH STDCALL W32kGetSysColorBrush(int nIndex)
 {
-  return(W32kCreateSolidBrush(COLOR_sysPalTemplate[nIndex]));
+  COLORREF Col;
+  memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
+  return(W32kCreateSolidBrush(Col));
 }
 
 //forward declarations
@@ -331,7 +338,7 @@ UINT STDCALL W32kRealizePalette(HDC  hDC)
   if(dc->w.flags != DC_MEMORY)
   {
     // Device managed DC
-    palPtr->logicalToSystem = EngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
+    palPtr->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
   }
 
 //  GDI_ReleaseObj(dc->w.hPalette);

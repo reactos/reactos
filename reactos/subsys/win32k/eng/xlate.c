@@ -175,8 +175,8 @@ static INT CalculateShift(ULONG Mask)
    return Shift;
 }
 
-XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
-                         HPALETTE PaletteDest, HPALETTE PaletteSource)
+XLATEOBJ *IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
+                            HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
   // FIXME: Add support for BGR conversions
 

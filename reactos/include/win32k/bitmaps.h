@@ -48,6 +48,7 @@ int DIB_GetDIBImageBytes (int  width, int  height, int  depth);
 int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
 INT BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
 BOOL Bitmap_InternalDelete( PBITMAPOBJ pBmp );
+HBITMAP BitmapToSurf(PBITMAPOBJ BitmapObj);
 
 /*  User Entry Points  */
 BOOL

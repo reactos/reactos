@@ -5,6 +5,7 @@
 #include <win32k/debug.h>
 #include "../eng/handle.h"
 #include <ntos/minmax.h>
+#include <include/inteng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -132,7 +133,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   DIB_Palette = BuildDIBPalette(bmi, &DIB_Palette_Type);
 
   // Determine XLATEOBJ for color translation
-  XlateObj = EngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
+  XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
 
   // Zero point
   ZeroPoint.x = 0;

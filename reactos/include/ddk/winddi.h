@@ -1085,7 +1085,7 @@ EngCreateEvent
 HPALETTE STDCALL
 EngCreatePalette(IN ULONG Mode,
 		 IN ULONG NumColors,
-		 IN PULONG *Colors,
+		 IN ULONG *Colors,
 		 IN ULONG Red,
 		 IN ULONG Green,
 		 IN ULONG Blue);

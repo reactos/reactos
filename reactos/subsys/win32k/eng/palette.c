@@ -12,13 +12,13 @@
 #include <include/object.h>
 #include "handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 HPALETTE STDCALL
 EngCreatePalette(ULONG Mode,
 		 ULONG NumColors,
-		 PULONG *Colors, // FIXME: This was implemented with ULONG *Colors!!
+		 ULONG *Colors,
 		 ULONG Red,
 		 ULONG Green,
 		 ULONG Blue)

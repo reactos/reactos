@@ -82,7 +82,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
     PalDestGDI   = (PPALGDI)AccessInternalObject(DestPalette);
     PalSourceGDI = (PPALGDI)AccessInternalObject(SourcePalette);
 
-    XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
+    XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
   }
 
   // Perform the bitblt operation

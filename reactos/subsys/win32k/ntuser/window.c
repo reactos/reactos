@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.26 2003/03/07 05:38:02 rcampbell Exp $
+/* $Id: window.c,v 1.27 2003/03/08 13:16:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,7 @@
 #include <include/msgqueue.h>
 #include <include/rect.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

@@ -24,4 +24,9 @@ BOOL STDCALL IntEngBitBlt(SURFOBJ *DestObj,
 	                  POINTL *BrushOrigin,
 	                  ROP4 rop4);
 
+XLATEOBJ *IntEngCreateXlate(USHORT DestPalType,
+                            USHORT SourcePalType,
+                            HPALETTE PaletteDest,
+                            HPALETTE PaletteSource);
+
 #endif

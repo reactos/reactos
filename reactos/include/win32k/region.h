@@ -130,6 +130,11 @@ STDCALL
 W32kRectInRegion(HRGN  hRgn,
                        CONST LPRECT  rc);
 
+INT
+STDCALL
+W32kSelectVisRgn(HDC hdc,
+                     HRGN hrgn);
+
 BOOL
 STDCALL
 W32kSetRectRgn(HRGN  hRgn,

@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.7 2003/03/08 00:46:14 gvg Exp $
+/* $Id: windc.c,v 1.8 2003/03/08 13:16:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <win32k/region.h>
 #include <win32k/userobj.h>
 #include <include/class.h>
 #include <include/error.h>
