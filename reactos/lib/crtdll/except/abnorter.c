@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <msvcrt\stdio.h>
+#include <msvcrt/stdio.h>
 
 #ifdef __GNUC__
 
