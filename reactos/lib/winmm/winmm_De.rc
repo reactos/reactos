@@ -57,7 +57,7 @@ MCIERR_OUT_OF_MEMORY, 		"Nicht genügend Speicher für den angeforderten Vorgang. 
 MCIERR_DEVICE_OPEN, 		"Der Gerätename wird von dieser Anwendung bereits als Alias benutzt. Benutzen Sie einen eindeutigen Alias"
 MCIERR_CANNOT_LOAD_DRIVER, 	"Es gibt ein unbekanntes Problem beim Laden des angegebenen Gerätetreibers."
 MCIERR_MISSING_COMMAND_STRING, "Kein Befehl wurde angegeben."
-MCIERR_PARAM_OVERFLOW, 	"Die Ausgabezeichenkennte war zu lang für den Rückgabepuffer. Erhöhen Sie die Puffergröße."
+MCIERR_PARAM_OVERFLOW, 	"Die Ausgabezeichenkette war zu lang für den Rückgabepuffer. Erhöhen Sie die Puffergröße."
 MCIERR_MISSING_STRING_ARGUMENT, "Der Befehl erfordert einen Zeichenkettenparameter. Bitte stellen Sie einen bereit."
 MCIERR_BAD_INTEGER, 		"Die Angabe einer ganzen Zahl ist für diesen Befehl ungültig."
 MCIERR_PARSER_INTERNAL, 	"Der Gerätetreiber hat einen ungültigen Rückgabewert geliefert. Fragen Sie den Gerätehersteller nach einem neuen Treiber."
