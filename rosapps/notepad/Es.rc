@@ -5,7 +5,7 @@
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Proofread 1999 by Jose Marcos Lopez <jose.lopez@upcnet.upc.es>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Copyright 2003 José Manuel Ferrer Ortiz
+ *  Copyright 2003,2004 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,42 +27,44 @@ LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 MAIN_MENU MENU
 {
  POPUP "&Archivo" {
-  MENUITEM "&Nuevo",            CMD_NEW
-  MENUITEM "&Abrir",            CMD_OPEN
-  MENUITEM "&Guardar",          CMD_SAVE
-  MENUITEM "Guardar &como...",  CMD_SAVE_AS
-  MENUITEM "&Imprimir",         CMD_PRINT
-  MENUITEM "Configurar &página...",     CMD_PAGE_SETUP
-  MENUITEM "Configuración &impresora...",       CMD_PRINTER_SETUP
+  MENUITEM "&Nuevo...",                   CMD_NEW
+  MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
+  MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
+  MENUITEM "Guardar &como...",            CMD_SAVE_AS
   MENUITEM SEPARATOR
-  MENUITEM "&Salir",            CMD_EXIT
+  MENUITEM "&Imprimir",                   CMD_PRINT
+  MENUITEM "Configurar &página...",       CMD_PAGE_SETUP
+  MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "&Salir",                      CMD_EXIT
  }
 POPUP "&Editar" {
-  MENUITEM "&Deshacer\tCtrl+Z", CMD_UNDO
+  MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
   MENUITEM SEPARATOR
-  MENUITEM "Cor&tar\tCtrl+X",   CMD_CUT
-  MENUITEM "&Copiar\tCtrl+C",   CMD_COPY
-  MENUITEM "&Pegar\tCtrl+V",    CMD_PASTE
-  MENUITEM "&Borrar\tDel",      CMD_DELETE
+  MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
+  MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
+  MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
+  MENUITEM "&Borrar\tDel",              CMD_DELETE
   MENUITEM SEPARATOR
-  MENUITEM "Seleccionar t&odo", CMD_SELECT_ALL
-  MENUITEM "&Hora y Fecha\tF5", CMD_TIME_DATE
+  MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
+  MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
   MENUITEM SEPARATOR
-  MENUITEM "&Ajuste de línea automático",       CMD_WRAP
+  MENUITEM "&Ajuste de línea",          CMD_WRAP
+  MENUITEM "Tipo de &letra...",         CMD_FONT
  }
 POPUP "&Buscar" {
-  MENUITEM "&Buscar...",        CMD_SEARCH
-  MENUITEM "Buscar &siguiente\tF3",     CMD_SEARCH_NEXT
+  MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
+  MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
  }
-POPUP "&Ayuda" {
-  MENUITEM "Í&ndice",           CMD_HELP_CONTENTS
-  MENUITEM "&Buscar...",        CMD_HELP_SEARCH
-  MENUITEM "A&yuda sobre la ayuda",      CMD_HELP_ON_HELP
+POPUP "A&yuda" {
+  MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
+  MENUITEM "&Buscar...",            CMD_HELP_SEARCH
+  MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
   POPUP "&Información..." {
-   MENUITEM "&Licencia",        CMD_LICENSE
-   MENUITEM "SIN &GARANTÍA",    CMD_NO_WARRANTY
-   MENUITEM "&Acerca de Wine",  CMD_ABOUT_WINE
+   MENUITEM "&Licencia",            CMD_LICENSE
+   MENUITEM "SIN &GARANTÍA",        CMD_NO_WARRANTY
+   MENUITEM "&Acerca de Wine",      CMD_ABOUT_WINE
   }
  }
 }
@@ -71,8 +73,8 @@ POPUP "&Ayuda" {
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "Helv"
-CAPTION "&Ajuste de página"
+FONT 8, "MS Shell Dlg"
+CAPTION "Ajuste de página"
 {
 LTEXT    "&Cabecera:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
@@ -96,35 +98,34 @@ PUSHBUTTON    "&Ayuda",       0x153,                180, 39, 40, 15, WS_TABSTOP
 
 STRINGTABLE DISCARDABLE
 {
-STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Página &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
+STRING_PAGESETUP_HEADERVALUE,   "&n"         /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Página &s"  /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,     "20 mm"      /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"      /* FIXME */
+STRING_PAGESETUP_TOPVALUE,      "25 mm"      /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"      /* FIXME */
 
-STRING_NOTEPAD,                                 "Bloc de Notas"
-STRING_ERROR,                                   "ERROR"
-STRING_WARNING,                                 "ADVERTENCIA"
-STRING_INFO,                                    "Información"
+STRING_NOTEPAD,                 "Bloc de notas"
+STRING_ERROR,                   "ERROR"
+STRING_WARNING,                 "ADVERTENCIA"
+STRING_INFO,                    "Información"
 
-STRING_UNTITLED,                                "(sin título)"
+STRING_UNTITLED,                "(sin título)"
 
-STRING_ALL_FILES,                               "Todos los archivos (*.*)"
-STRING_TEXT_FILES_TXT,                  "Documentos de texto (*.txt)"
+STRING_ALL_FILES,               "Todos los archivos (*.*)"
+STRING_TEXT_FILES_TXT,          "Documentos de texto (*.txt)"
 
-STRING_TOOLARGE,                                "El archivo '%s' es demasiado grande para el bloc de notas.\n \
-Use otro editor."
-STRING_NOTEXT,                                  "No escribió nada. \
-\nPor favor escriba algo y pruebe de nuevo"
-STRING_DOESNOTEXIST,                            "El archivo '%s'\nno existe\n\n \
-¿Desea crear un nuevo archivo?"
-STRING_NOTSAVED,                                "El texto en el archivo '%s' ha cambiado\n\n \
-¿Desea guardar los cambios?"
-STRING_NOTFOUND,                                        "no se encontró '%s'."
-STRING_OUT_OF_MEMORY,                   "No hay suficiente memoria para terminar \
-esta tarea. \nCierre una o más aplicaciones para aumentar la cantidad \nde \
-memoria libre."
-
+STRING_TOOLARGE,                "El archivo '%s' es demasiado grande para el \
+                                 bloc de notas.\n Use otro editor."
+STRING_NOTEXT,                  "No escribió nada. \nPor favor escriba algo e \
+                                 inténtelo de nuevo"
+STRING_DOESNOTEXIST,            "El archivo '%s'\nno existe\n\n ¿Desea crear \
+                                 un nuevo archivo?"
+STRING_NOTSAVED,                "El texto en el archivo '%s' ha cambiado\n\n \
+                                 ¿Desea guardar los cambios?"
+STRING_NOTFOUND,                "No se encontró '%s'."
+STRING_OUT_OF_MEMORY,           "No hay suficiente memoria para terminar esta \
+                                 tarea. \nCierre una o más aplicaciones para \
+                                 aumentar la cantidad \nde memoria libre."
 
 }

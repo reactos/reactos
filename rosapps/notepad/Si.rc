@@ -68,7 +68,7 @@ POPUP "&Pomoè" {
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "Priprava strani"
+FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 {
 LTEXT    "&Glava:",  0x140,   10, 07, 40, 15

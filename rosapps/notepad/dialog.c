@@ -360,7 +360,8 @@ VOID DIALOG_FilePrint(VOID)
     PRINTDLG printer;
     SIZE szMetric;
     int cWidthPels, cHeightPels, border;
-    int xLeft, yTop, i, pagecount, dopage, copycount;
+    int xLeft, yTop, pagecount, dopage, copycount;
+    unsigned int i;
     LOGFONT hdrFont;
     HFONT font, old_font=0;
     DWORD size;

@@ -5,7 +5,7 @@
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2003 Marcelo Duarte
- *  Copyright 2003 Ivan Leo Murray-Smith <puoti@inwind.it>
+ *  Copyright 2003-2004 Ivan Leo Puoti
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@ MAIN_MENU MENU
   MENUITEM SEPARATOR
   MENUITEM "&Stampa",            CMD_PRINT
   MENUITEM "&Imposta pagina...",    CMD_PAGE_SETUP
-  MENUITEM "&Configurazione di stampa...", CMD_PRINTER_SETUP
+  MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
   MENUITEM SEPARATOR
   MENUITEM "E&sci",             CMD_EXIT
  }
@@ -73,7 +73,7 @@ POPUP "&Aiuto" {
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "Helv"
+FONT 8, "MS Shell Dlg"
 CAPTION "Setup di pagina"
 {
 LTEXT    "&Note a inizio pagina:",  0x140,   10, 07, 40, 15

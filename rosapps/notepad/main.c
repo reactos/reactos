@@ -127,8 +127,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         static const WCHAR editW[] = { 'e','d','i','t',0 };
         RECT rc;
         GetClientRect(hWnd, &rc);
-        Globals.hEdit = CreateWindow(editW, NULL,
-                             WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
+        Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL,
+                             WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL |
                              ES_AUTOVSCROLL | ES_MULTILINE,
                              0, 0, rc.right, rc.bottom, hWnd,
                              NULL, Globals.hInstance, NULL);
@@ -199,14 +199,13 @@ static int AlertFileDoesNotExist(LPCWSTR szFileName)
 static void HandleCommandLine(LPWSTR cmdline)
 {
     WCHAR delimiter;
+    int opt_print=0;
     
     /* skip white space */
-    while (*cmdline && *cmdline == ' ') cmdline++;
+    while (*cmdline == ' ') cmdline++;
 
     /* skip executable name */
-    delimiter = ' ';
-    if (*cmdline == '"')
-	delimiter = '"';
+    delimiter = (*cmdline == '"' ? '"' : ' ');
 
     do
     {
@@ -215,7 +214,7 @@ static void HandleCommandLine(LPWSTR cmdline)
     while (*cmdline && *cmdline != delimiter);
     if (*cmdline == delimiter) cmdline++;
 
-    while (*cmdline && (*cmdline == ' ' || *cmdline == '-'))
+    while (*cmdline == ' ' || *cmdline == '-' || *cmdline == '/')
     {
         WCHAR option;
 
@@ -223,14 +222,14 @@ static void HandleCommandLine(LPWSTR cmdline)
 
         option = *cmdline;
         if (option) cmdline++;
-        while (*cmdline && *cmdline == ' ') cmdline++;
+        while (*cmdline == ' ') cmdline++;
 
         switch(option)
         {
             case 'p':
-            case 'P': printf("Print file: ");
-                      /* TODO - not yet able to print a file */
-                      break;
+            case 'P':
+                opt_print=1;
+                break;
         }
     }
 
@@ -275,6 +274,8 @@ static void HandleCommandLine(LPWSTR cmdline)
         {
             DoOpenFile(file_name);
             InvalidateRect(Globals.hMainWnd, NULL, FALSE);
+            if (opt_print)
+                DIALOG_FilePrint();
         }
         else
         {

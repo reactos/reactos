@@ -71,7 +71,7 @@ POPUP "&Aide" {
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "Helv"
+FONT 8, "MS Shell Dlg"
 CAPTION "Arindjmint del Pådje"
 {
 LTEXT    "&Tite:",  0x140,   10, 07, 40, 15
