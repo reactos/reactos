@@ -212,6 +212,7 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
    MEMORY_AREA* current;
    MEMORY_AREA* next;
    ULONG Gap;
+   PVOID Address;
    
    DPRINT("MmFindGap(Length %x)\n",Length);
    
@@ -232,11 +233,29 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
    
    if (current_entry == ListHead)
      {
-	return((PVOID)AddressSpace->LowestAddress);
+	Address = (PVOID)AddressSpace->LowestAddress;
      }
-   
-   current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-   return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
+   else
+     {
+        current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+        Address = current->BaseAddress + PAGE_ROUND_UP(current->Length);
+     }
+   /* Check if enough space for the block */
+   if (AddressSpace->LowestAddress < KERNEL_BASE)
+     {
+        if ((ULONG)Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG)Address)
+	  {
+	     return NULL;
+	  }
+     }
+   else
+     {
+        if (Length >= 0xFFFFFFFF - (ULONG)Address)
+          {
+	     return NULL;
+	  }
+     }
+   return Address;
 }
 
 NTSTATUS MmInitMemoryAreas(VOID)
