@@ -589,6 +589,16 @@ typedef struct _GDIINFO
   ULONG  ulBltAlignment;
   ULONG  ulPanningHorzRes;
   ULONG  ulPanningVertRes;
+  ULONG  xPanningAlignment;
+  ULONG  yPanningAlignment;
+  ULONG  cxHTPat;
+  ULONG  cyHTPat;
+  LPBYTE  pHTPatA;
+  LPBYTE  pHTPatB;
+  LPBYTE  pHTPatC;
+  ULONG  flShadeBlend;
+  ULONG  ulPhysicalPixelCharacteristics;
+  ULONG  ulPhysicalPixelGamma;
 } GDIINFO, *PGDIINFO;
 
 typedef struct _BRUSHOBJ
