@@ -70,7 +70,7 @@ struct StartMenuDirectory
 };
 
 typedef list<StartMenuDirectory> StartMenuShellDirs;
-typedef set<const Entry*> ShellEntrySet;
+typedef set<Entry*> ShellEntrySet;
 
  /// structure holding information about one start menu entry
 struct StartMenuEntry
@@ -84,9 +84,6 @@ struct StartMenuEntry
 
 
 extern int GetStartMenuBtnTextWidth(HDC hdc, LPCTSTR title, HWND hwnd);
-
-extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
-								bool hasSubmenu, bool enabled, bool has_focus, bool pushed);
 
 
 #ifndef _LIGHT_STARTMENU
@@ -187,6 +184,13 @@ struct SMBtnInfo
 
 typedef vector<SMBtnInfo> SMBtnVector;
 
+extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed);
+
+#else
+
+extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed);
+
 #endif
 
 
@@ -254,10 +258,10 @@ protected:
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(const String& title, HICON hIcon, const Entry* entry);
+	StartMenuEntry& AddEntry(const String& title, HICON hIcon, Entry* entry);
 	StartMenuEntry& AddEntry(const String& title, HICON hIcon=0, int id=-1);
-	StartMenuEntry& AddEntry(const ShellFolder folder, const ShellEntry* entry);
-	StartMenuEntry& AddEntry(const ShellFolder folder, const Entry* entry);
+	StartMenuEntry& AddEntry(const ShellFolder folder, ShellEntry* entry);
+	StartMenuEntry& AddEntry(const ShellFolder folder, Entry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
@@ -279,7 +283,7 @@ protected:
 	void	GetFloatingButtonRect(LPRECT prect);
 
 	void	Paint(PaintCanvas& canvas);
-	void	UpdateIcons(int idx);
+	void	UpdateIcons(/*int idx*/);
 };
 
 

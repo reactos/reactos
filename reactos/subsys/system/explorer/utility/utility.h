@@ -165,6 +165,11 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 #include <iostream>
 using namespace std;
 
+ // containers
+#include <map>
+#include <set>
+#include <list>
+
 #if _MSC_VER>=1300	// VS.Net
 #define _NO_COMUTIL	//@@
 #endif

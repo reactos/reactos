@@ -203,7 +203,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 {
 	int cnt = 0;
 
-	for(const Entry*entry=dir._down; entry; entry=entry->_next) {
+	for(Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
 		//not appropriate for drive roots: if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -219,7 +219,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 			break;
 
 		if (entry->_etype == ET_SHELL)
-			AddEntry(dir._folder, static_cast<const ShellEntry*>(entry));
+			AddEntry(dir._folder, static_cast<ShellEntry*>(entry));
 		else
 			AddEntry(dir._folder, entry);
 	}
@@ -335,7 +335,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 #ifdef _LAZY_ICONEXTRACT
 	  case PM_UPDATE_ICONS:
-		UpdateIcons(wparam);
+		UpdateIcons(/*wparam*/);
 		break;
 #endif
 
@@ -527,8 +527,7 @@ void StartMenu::Paint(PaintCanvas& canvas)
 			rect.bottom = rect.top + STARTMENU_LINE_HEIGHT;
 
 			if (rect.top >= canvas.rcPaint.top)
-				DrawStartMenuButton(canvas, rect, btn._title, btn._hIcon,
-									btn._hasSubmenu, btn._enabled, btn._id==_selected_id, false);
+				DrawStartMenuButton(canvas, rect, btn._title, btn, btn._id==_selected_id, false);
 		}
 
 		rect.top = rect.bottom;
@@ -537,50 +536,53 @@ void StartMenu::Paint(PaintCanvas& canvas)
 }
 
 #ifdef _LAZY_ICONEXTRACT
-void StartMenu::UpdateIcons(int idx)
+void StartMenu::UpdateIcons(/*int idx*/)
 {
 	UpdateWindow(_hwnd);
 
 #ifdef _SINGLE_ICONEXTRACT
-	 // extract only one icon per call to allow leaving the folder while the lazy extraction is running
-	if (idx >= 0) {
-		for(; idx<(int)_buttons.size(); ++idx) {
-			SMBtnInfo& btn = _buttons[idx];
 
-			if (!btn._hIcon && btn._id>0) {
-				StartMenuEntry& sme = _entries[btn._id];
+	//if (idx >= 0)
+	int idx = 0;
 
-				btn._hIcon = (HICON)-1;
+	for(; idx<(int)_buttons.size(); ++idx) {
+		SMBtnInfo& btn = _buttons[idx];
 
-				for(ShellEntrySet::const_iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
-					const Entry* entry = *it;
+		if (!btn._hIcon && btn._id>0) {
+			StartMenuEntry& sme = _entries[btn._id];
 
-					HICON hIcon = extract_icon(entry);
+			btn._hIcon = (HICON)-1;
 
-					if (hIcon) {
-						btn._hIcon = hIcon;
-						break;
-					}
-				}
+			for(ShellEntrySet::iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
+				Entry* entry = *it;
 
-				if (btn._hIcon != (HICON)-1) {
+				HICON hIcon = extract_icon(entry);
+
+				if (hIcon) {
+					btn._hIcon = hIcon;
+					entry->_hIcon = hIcon;
+
 					RECT rect;
+
 					GetButtonRect(btn._id, &rect);
 					WindowCanvas canvas(_hwnd);
-					DrawStartMenuButton(canvas, rect, NULL, btn._hIcon, btn._hasSubmenu, btn._enabled, btn._id==_selected_id, false);
+					DrawStartMenuButton(canvas, rect, NULL, btn, btn._id==_selected_id, false);
+
 					//InvalidateRect(_hwnd, &rect, FALSE);
 					//UpdateWindow(_hwnd);
+					//break;
+
 					break;
 				}
 			}
 		}
-
-		if (++idx < (int)_buttons.size())
-			PostMessage(_hwnd, PM_UPDATE_ICONS, idx, 0);
-
-		return;
 	}
+
+//	if (++idx < (int)_buttons.size())
+//		PostMessage(_hwnd, PM_UPDATE_ICONS, idx, 0);
+
 #else
+
 	int icons_extracted = 0;
 	int icons_updated = 0;
 
@@ -672,7 +674,7 @@ int StartMenu::Command(int id, int code)
 }
 
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, const Entry* entry)
+StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, Entry* entry)
 {
 	 // search for an already existing subdirectory entry with the same name
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -709,7 +711,7 @@ StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, int id)
 	return sme;
 }
 
-StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* entry)
+StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
 {
 	HICON hIcon = entry->_hIcon;
 
@@ -719,7 +721,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 	return AddEntry(folder.get_name(entry->_pidl), hIcon, entry);
 }
 
-StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const Entry* entry)
+StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, Entry* entry)
 {
 	HICON hIcon = entry->_hIcon;
 
@@ -939,12 +941,16 @@ int GetStartMenuBtnTextWidth(HDC hdc, LPCTSTR title, HWND hwnd)
 	return rect.right-rect.left;
 }
 
+#ifdef _LIGHT_STARTMENU
+void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed)
+#else
 void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
-						 bool hasSubmenu, bool enabled, bool has_focus, bool pushed)
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed);
+#endif
 {
 	UINT style = DFCS_BUTTONPUSH;
 
-	if (!enabled)
+	if (!btn._enabled)
 		style |= DFCS_INACTIVE;
 
 	POINT iconPos = {rect.left+2, (rect.top+rect.bottom-16)/2};
@@ -970,10 +976,10 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 	if (title)
 		FillRect(hdc, &rect, bk_brush);
 
-	DrawIconEx(hdc, iconPos.x, iconPos.y, hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+	DrawIconEx(hdc, iconPos.x, iconPos.y, btn._hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
 
 	 // draw submenu arrow at the right
-	if (hasSubmenu) {
+	if (btn._hasSubmenu) {
 		static SmallIcon arrowIcon(IDI_ARROW);
 		static SmallIcon selArrowIcon(IDI_ARROW_SELECTED);
 
@@ -985,7 +991,7 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 	if (title) {
 		BkMode bk_mode(hdc, TRANSPARENT);
 
-		if (!enabled)	// dis->itemState & (ODS_DISABLED|ODS_GRAYED)
+		if (!btn._enabled)	// dis->itemState & (ODS_DISABLED|ODS_GRAYED)
 			DrawGrayText(hdc, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 		else {
 			TextColor lcColor(hdc, GetSysColor(text_color));

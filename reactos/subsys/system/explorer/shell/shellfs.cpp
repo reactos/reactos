@@ -394,7 +394,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
 
-				if (ext) {//@@
+				if (ext && g_Globals._ftype_mgr[ext]._neverShowExt) {
 					int len = ext - entry->_data.cFileName;
 					entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
 					_tcsncpy(entry->_display_name, entry->_data.cFileName, len);

@@ -26,6 +26,20 @@
  //
 
 
+ /// management of file types
+struct FileTypeInfo {
+	String	_classname;
+	bool	_neverShowExt;
+};
+
+struct FileTypeManager : public map<String, FileTypeInfo>
+{
+	typedef map<String, FileTypeInfo> super;
+
+	const FileTypeInfo& operator[](String ext);
+};
+
+
  /// structure containing global variable of Explorer
 extern struct ExplorerGlobals
 {
@@ -43,6 +57,8 @@ extern struct ExplorerGlobals
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	DWORD(STDAPICALLTYPE* _SHRestricted)(RESTRICTIONS);
 #endif
+
+	FileTypeManager	_ftype_mgr;
 } g_Globals;
 
 

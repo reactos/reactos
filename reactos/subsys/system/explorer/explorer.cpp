@@ -78,6 +78,39 @@ void _log_(LPCTSTR txt)
 }
 
 
+const FileTypeInfo& FileTypeManager::operator[](String ext)
+{
+#ifndef __WINE__ ///@todo
+	_tcslwr((LPTSTR)ext.data());
+#endif
+
+	iterator found = find(ext);
+	if (found != end())
+		return found->second;
+
+	FileTypeInfo& ftype = super::operator[](ext);
+
+	ftype._neverShowExt = false;
+
+	HKEY hkey;
+	TCHAR value[MAX_PATH];
+	LONG valuelen = MAX_PATH;
+
+	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, value, &valuelen)) {
+		ftype._classname = value;
+
+		if (!RegOpenKey(HKEY_CLASSES_ROOT, ftype._classname, &hkey)) {
+			if (!RegQueryValueEx(hkey, TEXT("NeverShowExt"), 0, NULL, NULL, NULL))
+				ftype._neverShowExt = true;
+
+			RegCloseKey(hkey);
+		}
+	}
+
+	return ftype;
+}
+
+
 ResString::ResString(UINT nid)
 {
 	TCHAR buffer[BUFFER_LEN];
