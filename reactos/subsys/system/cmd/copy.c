@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: copy.c,v 1.2 2003/08/05 23:48:51 jimtabor Exp $
  *
  *  COPY.C -- copy internal command.
  *
@@ -243,7 +243,7 @@ ParseCommand (LPFILES f, int argc, char **arg, LPDWORD lpdwFlags)
 	INT dest;
 	INT source;
 	INT count;
-
+	char temp[128];
 	dest = 0;
 	source = 0;
 	count = 0;
@@ -261,14 +261,24 @@ ParseCommand (LPFILES f, int argc, char **arg, LPDWORD lpdwFlags)
 				source = 0;
 			else if (!_tcschr(arg[i], _T('+')) && source)
 			{
-				if (!AddFile(f, arg[i], &source, &dest, lpdwFlags))
+
+//				Make sure we have a clean workable path
+			
+				GetFullPathNameA( arg[i], 128, (LPSTR) &temp, NULL);
+//				printf("A Input %s, Output %s\n", arg[i], temp);
+
+				if (!AddFile(f, (char *) &temp, &source, &dest, lpdwFlags))
 					return -1;
 				f = f->next;
 				count++;
 			}
 			else
 			{
-				if (!AddFiles(f, arg[i], &source, &dest, &count, lpdwFlags))
+
+				GetFullPathNameA( arg[i], 128, (LPSTR) &temp, NULL);
+//				printf("B Input %s, Output %s\n", arg[i], temp);
+				
+				if (!AddFiles(f, (char *) &temp, &source, &dest, &count, lpdwFlags))
 					return -1;
 				while (f->next != NULL)
 					f = f->next;
@@ -489,8 +499,7 @@ SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
            char *drive_d, char *dir_d, char *file_d,
            char *ext_d, int *append, LPDWORD lpdwFlags)
 {
-	WIN32_FIND_DATA find;
-
+	WIN32_FIND_DATAA find;
 	char drive_s[_MAX_DRIVE];
 	CHAR dir_s[_MAX_DIR];
 	char file_s[_MAX_FNAME];
@@ -504,6 +513,7 @@ SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
 	BOOL bAll = FALSE;
 	BOOL bDone;
 	HANDLE hFind;
+	char temp[128];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("SetupCopy\n"));
@@ -524,8 +534,14 @@ SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
 
 	while (sources->next != NULL)
 	{
+
+/*		Force a clean full path
+*/
+		GetFullPathNameA( sources->szFile, 128, (LPSTR) &temp, NULL);
+
 		_splitpath (sources->szFile, drive_s, dir_s, file_s, ext_s);
-		hFind = FindFirstFile (sources->szFile, &find);
+
+		hFind = FindFirstFile ((char*)&temp, &find);
 		if (hFind == INVALID_HANDLE_VALUE)
 		{
 			error_file_not_found();
@@ -541,11 +557,17 @@ SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
 				goto next;
 
 			_makepath(from_merge, drive_d, dir_d, file_d, ext_d);
+
 			if (from_merge[_tcslen(from_merge) - 1] == _T('\\'))
 				from_merge[_tcslen(from_merge) - 1] = 0;
 
+//			printf("Merge %s, filename %s\n", from_merge, find.cFileName);
+
 			if (IsDirectory (from_merge))
 			{
+
+//			printf("Merge DIR\n");
+			
 				bMultiple = FALSE;
 				_tcscat (from_merge, _T("\\"));
 				_tcscat (from_merge, find.cFileName);
@@ -557,7 +579,7 @@ SetupCopy (LPFILES sources, char **p, BOOL bMultiple,
 			_makepath (real_source, drive_s, dir_s, find.cFileName, NULL);
 
 #ifdef _DEBUG
-			DebugPrintf (_T("copying %s -> %s (%sappending%s)\n"),
+			printf (_T("copying %s -> %s (%sappending%s)\n"),
 						 real_source, real_dest,
 						 *append ? "" : "not ",
 						 sources->dwFlag & ASCII ? ", ASCII" : ", BINARY");
@@ -685,6 +707,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		_splitpath (dest.szFile, drive_d, dir_d, file_d, ext_d);
 		if (IsDirectory (dest.szFile))
 		{
+//		printf("A szFile= %s, Dir = %s, File = %s, Ext = %s\n", dest.szFile, dir_d, file_d, ext_d);
 			_tcscat (dir_d, file_d);
 			_tcscat (dir_d, ext_d);
 			file_d[0] = _T('\0');
@@ -707,6 +730,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (bDestFound && !bWildcards)
 	{
+
+//		_tcscpy(sources->szFile, dest.szFile);
+
 		copied = SetupCopy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
 	}
 	else if (bDestFound && bWildcards)
@@ -721,6 +747,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		_splitpath (sources->szFile, drive_d, dir_d, file_d, ext_d);
 		if (IsDirectory (sources->szFile))
 		{
+//		printf("B File = %s, Ext = %s\n", file_d, ext_d);
+
 			_tcscat (dir_d, file_d);
 			_tcscat (dir_d, ext_d);
 			file_d[0] = _T('\0');
@@ -733,6 +761,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		_splitpath(sources->szFile, drive_d, dir_d, file_d, ext_d);
 		if (IsDirectory (sources->szFile))
 		{
+//		printf("C File = %s, Ext = %s\n", file_d, ext_d);
+
 			_tcscat (dir_d, file_d);
 			_tcscat (dir_d, ext_d);
 			file_d[0] = _T('\0');
