@@ -411,8 +411,6 @@ parse_file(char *filename)
           api_info->tag_id = tag_id;
           strcpy(api_info->name, name);
 
-printf("Name '%s'   File '%s'\n", name, filename);
-
           api_info->next = api_info_list;
           api_info_list = api_info;
 

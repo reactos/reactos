@@ -1,5 +1,9 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/rgenstat/rgenstat.c (parse_file): Be silent.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* rules.mak (XSLTPROC): Add.
 	* tools/Makefile: Add rgenstat.
 	* apistatus.lst: New file.
