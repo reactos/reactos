@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47 2003/02/12 03:44:20 ekohl Exp $
+/* $Id: stubs.c,v 1.48 2003/04/18 08:26:50 gvg Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -284,7 +284,7 @@ STDCALL
 GetACP (VOID)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return 1252;
 }
 
 #endif
