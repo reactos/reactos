@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.10 2002/09/08 10:23:07 chorns Exp $
+/* $Id: ctype.c,v 1.11 2002/10/01 18:57:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,7 @@
  *                  29/12/1999: Added missing functions and changed
  *                              all functions to use ctype table
  */
-
+#undef __MSVCRT__
 #include <ctype.h>
 
 #undef _pctype
