@@ -32,7 +32,6 @@
 #include <msvcrt/mbstring.h>
 #include <msvcrt/internal/stdio.h>
 
-#define CHECKPOINT1 do{ char a[30]; sprintf(a,"%i\n",__LINE__); OutputDebugStringA(a); } while(0)
 
 #ifdef __USE_W32API
 int __set_errno(int err);
@@ -81,7 +80,6 @@ unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int
    } while (0)
 # define conv_error() do {            \
      funlockfile (s);          \
-     CHECKPOINT1; \
      return done;           \
    } while (0)
 # define input_error() do {            \
@@ -899,18 +897,14 @@ number:
             if (flags & (LONG|LONGDBL))
             {
                double d = __strtod_internal (wp, &tw, flags & GROUP);
-               CHECKPOINT1;
                if (!(flags & SUPPRESS) && tw != wp){
-                  CHECKPOINT1;
                   *ARG (double *) = negative ? -d : d;
                }
             }
             else
             {
                float d = __strtof_internal (wp, &tw, flags & GROUP);
-               CHECKPOINT1;
                if (!(flags & SUPPRESS) && tw != wp){
-                  CHECKPOINT1;
                   *ARG (float *) = negative ? -d : d;
                }
             }

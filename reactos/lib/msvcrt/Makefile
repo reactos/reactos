@@ -15,7 +15,7 @@ TARGET_BASE = $(TARGET_BASE_LIB_MSVCRT)
 # don't remove @nn from exported symbols - needed so dlltool doesn't mess up mangled c++ exports
 RM_AT_FROM_SYMBOLS = no
 
-TARGET_LFLAGS = -nostartfiles -nostdlib --enable-stdcall-fixup
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = crt.a string.a kernel32.a ntdll.a wine.a
 
@@ -33,21 +33,10 @@ TARGET_CFLAGS += \
 	-DUSE_MSVCRT_PREFIX \
 	-D_MT
 
-TARGET_OBJECTS = $(TARGET_NAME).o
-
-TARGET_CLEAN = dllmain.o
+TARGET_OBJECTS = dllmain.o
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-
-
-
-OBJECTS = 	dllmain.o
-
-$(TARGET_NAME).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
-
 
 # EOF

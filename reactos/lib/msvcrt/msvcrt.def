@@ -481,7 +481,7 @@ _scalb
 ;_scprintf
 ;_scwprintf
 _searchenv
-_seh_longjmp_unwind@4
+_seh_longjmp_unwind=_seh_longjmp_unwind@4
 ;_set_error_mode
 ;_set_SSE2_enable
 ;_set_sbh_threshold
