@@ -45,7 +45,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "_NO_EXTENSIONS" /D "_WINE_" /D WINE_UNUSED= /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "_WINE_" /D WINE_UNUSED= /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.cmd
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "WineFile - Win32 Unicode Debug"
 
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.cmd
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ELSEIF  "$(CFG)" == "WineFile - Win32 UNICODE Release"
 
@@ -108,7 +108,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.cmd
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
 
 !ELSEIF  "$(CFG)" == "WineFile - Win32 Release"
 
@@ -135,7 +135,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.cmd
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib /nologo /subsystem:windows /machine:I386
 
 !ENDIF 
 
@@ -155,7 +155,7 @@ SOURCE=.\De.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\drivebar.bmp
+SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
@@ -164,11 +164,7 @@ SOURCE=.\En.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\images.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\resource.h
+SOURCE=.\res\images.bmp
 # End Source File
 # Begin Source File
 
@@ -177,11 +173,11 @@ SOURCE=.\resource.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\toolbar.bmp
+SOURCE=.\res\toolbar.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\winefile.ico
+SOURCE=.\res\winefile.ico
 # End Source File
 # Begin Source File
 
@@ -202,6 +198,10 @@ SOURCE=.\Makefile.in
 # End Source File
 # Begin Source File
 
+SOURCE=.\include\resource.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\splitpath.c
 # End Source File
 # Begin Source File
@@ -210,7 +210,7 @@ SOURCE=.\winefile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\winefile.h
+SOURCE=.\include\winefile.h
 # End Source File
 # End Target
 # End Project
