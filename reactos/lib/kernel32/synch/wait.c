@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.23 2003/07/10 18:50:51 chorns Exp $
+/* $Id: wait.c,v 1.24 2003/07/20 19:53:53 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -76,7 +76,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
     }
   else
     {
-      Time.QuadPart = -10000 * dwMilliseconds;
+      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
       TimePtr = &Time;
     }
 
@@ -181,7 +181,7 @@ WaitForMultipleObjectsEx(DWORD nCount,
     }
   else
     {
-      Time.QuadPart = -10000 * dwMilliseconds;
+      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
       TimePtr = &Time;
     }
 
@@ -258,7 +258,7 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
     }
   else
     {
-      Time.QuadPart = -10000 * dwMilliseconds;
+      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
       TimePtr = &Time;
     }
 
