@@ -26,6 +26,21 @@
 #define  SAM_REG_FILE			L"\\SystemRoot\\System32\\Config\\SAM"
 #define  SEC_REG_FILE			L"\\SystemRoot\\System32\\Config\\SECURITY"
 
+#define  REG_BLOCK_SIZE                4096
+#define  REG_HBIN_DATA_OFFSET          32
+#define  REG_BIN_ID                    0x6e696268
+#define  REG_INIT_BLOCK_LIST_SIZE      32
+#define  REG_INIT_HASH_TABLE_SIZE      3
+#define  REG_EXTEND_HASH_TABLE_SIZE    4
+#define  REG_VALUE_LIST_CELL_MULTIPLE  4
+#define  REG_KEY_CELL_ID               0x6b6e
+#define  REG_HASH_TABLE_BLOCK_ID       0x666c
+#define  REG_VALUE_CELL_ID             0x6b76
+#define  REG_LINK_KEY_CELL_TYPE        0x10
+#define  REG_KEY_CELL_TYPE             0x20
+#define  REG_ROOT_KEY_CELL_TYPE        0x2c
+#define  REG_HIVE_ID                   0x66676572
+
 #define  REGISTRY_FILE_MAGIC    "REGEDIT4"
 
 #define  REG_MACHINE_STD_HANDLE_NAME  "HKEY_LOCAL_MACHINE"
@@ -247,6 +262,7 @@ typedef struct _REGISTRY_HIVE
    atempts to access the key must not succeed */
 #define KO_MARKED_FOR_DELETE              0x00000001
 
+
 /* Type defining the Object Manager Key Object */
 typedef struct _KEY_OBJECT
 {
@@ -294,6 +310,9 @@ typedef struct _KEY_OBJECT
 
 
 extern BOOLEAN CmiDoVerify;
+extern PREGISTRY_HIVE CmiVolatileHive;
+extern POBJECT_TYPE CmiKeyType;
+extern KSPIN_LOCK CmiKeyListLock;
 
 
 VOID

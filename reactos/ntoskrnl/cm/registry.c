@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.72 2002/06/16 11:45:06 ekohl Exp $
+/* $Id: registry.c,v 1.73 2002/06/19 22:31:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,6 +42,10 @@ VOID
 CmiCheckKey(BOOLEAN Verbose,
   HANDLE Key);
 
+static NTSTATUS
+CmiCreateCurrentControlSetLink(VOID);
+
+/* FUNCTIONS ****************************************************************/
 
 VOID
 CmiCheckSubKeys(BOOLEAN Verbose,
@@ -471,7 +475,9 @@ CmInit2(PCHAR CommandLine)
 
   /* FIXME: Store current command line */
 
-  /* FIXME: Create the 'CurrentControlSet' link. */
+  /* Create the 'CurrentControlSet' link. */
+  CmiCreateCurrentControlSetLink();
+
 
   /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
   PiceStart = 4;
@@ -502,6 +508,100 @@ CmInit2(PCHAR CommandLine)
 			&PiceStart,
 			sizeof(ULONG));
 
+}
+
+
+static NTSTATUS
+CmiCreateCurrentControlSetLink(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[5];
+  WCHAR TargetNameBuffer[80];
+  ULONG TargetNameLength;
+  UNICODE_STRING LinkName;
+  UNICODE_STRING LinkValue;
+  ULONG CurrentSet;
+  ULONG DefaultSet;
+  ULONG Failed;
+  ULONG LastKnownGood;
+  NTSTATUS Status;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE KeyHandle;
+
+  DPRINT("CmiCreateCurrentControlSetLink() called\n");
+
+  RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+
+  QueryTable[0].Name = L"Current";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &CurrentSet;
+
+  QueryTable[1].Name = L"Default";
+  QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[1].EntryContext = &DefaultSet;
+
+  QueryTable[2].Name = L"Failed";
+  QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[2].EntryContext = &Failed;
+
+  QueryTable[3].Name = L"LastKnownGood";
+  QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[3].EntryContext = &LastKnownGood;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+				  L"\\Registry\\Machine\\SYSTEM\\Select",
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  DPRINT("Current %ld  Default %ld\n", CurrentSet, DefaultSet);
+
+  swprintf(TargetNameBuffer,
+	   L"\\Registry\\Machine\\SYSTEM\\ControlSet%03lu",
+	   CurrentSet);
+  TargetNameLength = wcslen(TargetNameBuffer) * sizeof(WCHAR);
+
+  DPRINT("Link target '%S'\n", TargetNameBuffer);
+
+  RtlInitUnicodeString(&LinkName,
+		       L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &LinkName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+			     NULL,
+			     NULL);
+  Status = NtCreateKey(&KeyHandle,
+		       KEY_ALL_ACCESS | KEY_CREATE_LINK,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+		       NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+  RtlInitUnicodeString(&LinkValue,
+		       L"SymbolicLinkValue");
+  Status=NtSetValueKey(KeyHandle,
+		       &LinkValue,
+		       0,
+		       REG_LINK,
+		       (PVOID)TargetNameBuffer,
+		       TargetNameLength);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+    }
+
+  NtClose(KeyHandle);
+
+  return(Status);
 }
 
 

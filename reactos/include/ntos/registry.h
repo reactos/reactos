@@ -1,4 +1,4 @@
-/* $Id: registry.h,v 1.2 2001/05/30 19:58:48 ekohl Exp $
+/* $Id: registry.h,v 1.3 2002/06/19 22:30:29 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -14,27 +14,30 @@
 #define __INCLUDE_NTOS_REGISTRY_H
 
 /* Key access rights */
-#define KEY_QUERY_VALUE	(1)
-#define KEY_SET_VALUE	(2)
-#define KEY_CREATE_SUB_KEY	(4)
-#define KEY_ENUMERATE_SUB_KEYS	(8)
-#define KEY_NOTIFY	(16)
-#define KEY_CREATE_LINK	(32)
+#define KEY_QUERY_VALUE			(1)
+#define KEY_SET_VALUE			(2)
+#define KEY_CREATE_SUB_KEY		(4)
+#define KEY_ENUMERATE_SUB_KEYS		(8)
+#define KEY_NOTIFY			(16)
+#define KEY_CREATE_LINK			(32)
 
-#define KEY_READ	(0x20019L)
-#define KEY_WRITE	(0x20006L)
-#define KEY_EXECUTE	(0x20019L)
-#define KEY_ALL_ACCESS	(0xf003fL)
+#define KEY_READ			(0x20019L)
+#define KEY_WRITE			(0x20006L)
+#define KEY_EXECUTE			(0x20019L)
+#define KEY_ALL_ACCESS			(0xf003fL)
 
+/* Key create options */
+#define REG_OPTION_NON_VOLATILE		(0x0L)
+#define REG_OPTION_VOLATILE		(0x1L)
+#define REG_OPTION_CREATE_LINK		(0x2L)
+#define REG_OPTION_BACKUP_RESTORE	(0x8L)
+#define REG_OPTION_OPEN_LINK		(0x8L)
 
-/* RegCreateKeyEx */
-#define REG_OPTION_VOLATILE	(0x1L)
-#define REG_OPTION_NON_VOLATILE	(0L)
-#define REG_CREATED_NEW_KEY	(0x1L)
-#define REG_OPENED_EXISTING_KEY	(0x2L)
+/* Key create/open disposition */
+#define REG_CREATED_NEW_KEY		(0x1L)
+#define REG_OPENED_EXISTING_KEY		(0x2L)
 
-
-/* RegEnumValue */
+/* Value types */
 #define REG_NONE			(0)
 #define REG_SZ				(1)
 #define REG_EXPAND_SZ			(2)

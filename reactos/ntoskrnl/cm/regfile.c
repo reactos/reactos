@@ -21,21 +21,6 @@
 #include "cm.h"
 
 
-#define REG_BLOCK_SIZE                4096
-#define REG_HBIN_DATA_OFFSET          32
-#define REG_BIN_ID                    0x6e696268
-#define REG_INIT_BLOCK_LIST_SIZE      32
-#define REG_INIT_HASH_TABLE_SIZE      3
-#define REG_EXTEND_HASH_TABLE_SIZE    4
-#define REG_VALUE_LIST_CELL_MULTIPLE  4
-#define REG_KEY_CELL_ID               0x6b6e
-#define REG_HASH_TABLE_BLOCK_ID       0x666c
-#define REG_VALUE_CELL_ID             0x6b76
-#define REG_KEY_CELL_TYPE             0x20
-#define REG_ROOT_KEY_CELL_TYPE        0x2c
-#define REG_HIVE_ID                   0x66676572
-
-extern PREGISTRY_HIVE  CmiVolatileHive;
 
 BOOLEAN CmiDoVerify = FALSE;
 
@@ -1067,11 +1052,11 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     &NKBOffset);
 
   if (NewKeyCell == NULL)
-	  {
-	    Status = STATUS_INSUFFICIENT_RESOURCES;
-	  }
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
   else
-	  {
+    {
 	    NewKeyCell->Id = REG_KEY_CELL_ID;
 	    NewKeyCell->Type = REG_KEY_CELL_TYPE;
 	    ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
@@ -1339,12 +1324,11 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
-	IN PKEY_CELL KeyCell,
-	IN PCHAR ValueName)
+		      IN PKEY_CELL KeyCell,
+		      IN PCHAR ValueName)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
-  PHBIN pBin;
   ULONG  i;
 
   ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
@@ -1358,7 +1342,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetBlock(RegistryHive, ValueListCell->Values[i], &pBin);
+      CurValueCell = CmiGetBlock(RegistryHive, ValueListCell->Values[i], NULL);
       if ((CurValueCell != NULL) &&
           (CurValueCell->NameSize == strlen(ValueName)) &&
           (memcmp(CurValueCell->Name, ValueName, strlen(ValueName)) == 0))
@@ -1376,8 +1360,6 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
           KeyCell->NumberOfValues -= 1;
           CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->Values[i]);
-          /* update time of heap */
-          ZwQuerySystemTime((PTIME) &pBin->DateModified);
           break;
         }
       CmiReleaseBlock(RegistryHive, CurValueCell);
@@ -1409,15 +1391,15 @@ CmiAllocateHashTableBlock(IN PREGISTRY_HIVE RegistryHive,
     HBOffset);
 
   if ((NewHashBlock == NULL) || (!NT_SUCCESS(Status)))
-	  {
-	    Status = STATUS_INSUFFICIENT_RESOURCES;
-	  }
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
   else
-	  {
-	    NewHashBlock->Id = REG_HASH_TABLE_BLOCK_ID;
-	    NewHashBlock->HashTableSize = HashTableSize;
-	    *HashBlock = NewHashBlock;
-	  }
+    {
+      NewHashBlock->Id = REG_HASH_TABLE_BLOCK_ID;
+      NewHashBlock->HashTableSize = HashTableSize;
+      *HashBlock = NewHashBlock;
+    }
 
   return Status;
 }
@@ -1864,6 +1846,9 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
 	BLOCK_OFFSET BlockOffset,
 	PHBIN * ppBin)
 {
+  if (ppBin)
+    *ppBin = NULL;
+
   if ((BlockOffset == 0) || (BlockOffset == -1))
     return NULL;
 

@@ -32,11 +32,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	IN ULONG CreateOptions,
 	OUT PULONG Disposition)
 {
-	UNICODE_STRING RemainingPath;
-	PKEY_OBJECT KeyObject;
-	NTSTATUS Status;
-	PVOID Object;
-	PWSTR End;
+  UNICODE_STRING RemainingPath;
+  PKEY_OBJECT KeyObject;
+  NTSTATUS Status;
+  PVOID Object;
+  PWSTR End;
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
          ObjectAttributes->ObjectName,
@@ -48,34 +48,34 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   Status = ObFindObject(ObjectAttributes, &Object, &RemainingPath, CmiKeyType);
 
   if (!NT_SUCCESS(Status))
-	  {
-	 	  return Status;
+    {
+      return Status;
     }
 
   DPRINT("RemainingPath %wZ\n", &RemainingPath);
 
   if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
-	  {
-	    /* Fail if the key has been deleted */
-	    if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
-		    {
-		      ObDereferenceObject(Object);
-		      return STATUS_UNSUCCESSFUL;
-		    }
+    {
+      /* Fail if the key has been deleted */
+      if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
+	{
+	  ObDereferenceObject(Object);
+	  return STATUS_UNSUCCESSFUL;
+	}
 
-	    if (Disposition)
-	      *Disposition = REG_OPENED_EXISTING_KEY;
+      if (Disposition)
+	*Disposition = REG_OPENED_EXISTING_KEY;
 
-	    Status = ObCreateHandle(PsGetCurrentProcess(),
-				Object,
-				DesiredAccess,
-				FALSE,
-				KeyHandle);
+      Status = ObCreateHandle(PsGetCurrentProcess(),
+			      Object,
+			      DesiredAccess,
+			      FALSE,
+			      KeyHandle);
 
-    	DPRINT("Status %x\n", Status);
-	    ObDereferenceObject(Object);
-	    return Status;
-	  }
+      DPRINT("Status %x\n", Status);
+      ObDereferenceObject(Object);
+      return Status;
+    }
 
   /* If RemainingPath contains \ we must return error
      because NtCreateKey don't create trees */
@@ -85,21 +85,21 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     End = wcschr(RemainingPath.Buffer, '\\');
 
   if (End != NULL)
-	  {
-	    ObDereferenceObject(Object);
-	    return STATUS_UNSUCCESSFUL;
-	  }
+    {
+      ObDereferenceObject(Object);
+      return STATUS_UNSUCCESSFUL;
+    }
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
   Status = ObCreateObject(KeyHandle,
-		DesiredAccess,
-		NULL,
-		CmiKeyType,
-		(PVOID*) &KeyObject);
+			  DesiredAccess,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&KeyObject);
 
   if (!NT_SUCCESS(Status))
-  	return(Status);
+    return(Status);
 
   KeyObject->ParentKey = Object;
 
@@ -115,13 +115,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 //  KeAcquireSpinLock(&Key->RegistryHive->RegLock, &OldIrql);
   /* add key to subkeys of parent if needed */
   Status = CmiAddSubKey(KeyObject->RegistryHive,
-		KeyObject->ParentKey,
-		KeyObject,
-		RemainingPath.Buffer,
-		RemainingPath.Length,
-		TitleIndex,
-		Class,
-		CreateOptions);
+			KeyObject->ParentKey,
+			KeyObject,
+			RemainingPath.Buffer,
+			RemainingPath.Length,
+			TitleIndex,
+			Class,
+			CreateOptions);
 
   if (!NT_SUCCESS(Status))
     {
@@ -134,21 +134,21 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeyObject->NameSize = KeyObject->KeyCell->NameSize;
 
   if (KeyObject->RegistryHive == KeyObject->ParentKey->RegistryHive)
-	  {
-	    KeyObject->KeyCell->ParentKeyOffset = KeyObject->ParentKey->BlockOffset;
-	    KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
-	  }
+    {
+      KeyObject->KeyCell->ParentKeyOffset = KeyObject->ParentKey->BlockOffset;
+      KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
+    }
   else
-		{
-		  KeyObject->KeyCell->ParentKeyOffset = -1;
-		  KeyObject->KeyCell->SecurityKeyOffset = -1;
-		  /* This key must rest in memory unless it is deleted
-		     or file is unloaded */
-		  ObReferenceObjectByPointer(KeyObject,
-				STANDARD_RIGHTS_REQUIRED,
-				NULL,
-				UserMode);
-		}
+    {
+      KeyObject->KeyCell->ParentKeyOffset = -1;
+      KeyObject->KeyCell->SecurityKeyOffset = -1;
+      /* This key must rest in memory unless it is deleted
+	 or file is unloaded */
+      ObReferenceObjectByPointer(KeyObject,
+				 STANDARD_RIGHTS_REQUIRED,
+				 NULL,
+				 UserMode);
+    }
 
   CmiAddKeyToList(KeyObject->ParentKey, KeyObject);
 //  KeReleaseSpinLock(&KeyObject->RegistryHive->RegLock, OldIrql);
@@ -807,61 +807,59 @@ END FIXME*/
 
 NTSTATUS STDCALL
 NtOpenKey(OUT PHANDLE KeyHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes)
+	  IN ACCESS_MASK DesiredAccess,
+	  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	UNICODE_STRING RemainingPath;
-	NTSTATUS Status;
-	PVOID Object;
+  UNICODE_STRING RemainingPath;
+  NTSTATUS Status;
+  PVOID Object;
 
   DPRINT("KH %x  DA %x  OA %x  OA->ON %x\n",
-  	KeyHandle,
-    DesiredAccess,
-  	ObjectAttributes,
-    ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
+	 KeyHandle,
+	 DesiredAccess,
+	 ObjectAttributes,
+	 ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
 
-	RemainingPath.Buffer = NULL;
-	Status = ObFindObject(ObjectAttributes,
-    &Object,
-    &RemainingPath,
-    CmiKeyType);
-
+  RemainingPath.Buffer = NULL;
+  Status = ObFindObject(ObjectAttributes,
+			&Object,
+			&RemainingPath,
+			CmiKeyType);
   if (!NT_SUCCESS(Status))
-		{
-      return Status;
-		}
+    {
+      return(Status);
+    }
 
   VERIFY_KEY_OBJECT((PKEY_OBJECT) Object);
 
-	DPRINT("RemainingPath.Buffer %x\n", RemainingPath.Buffer);
+  DPRINT("RemainingPath.Buffer %x\n", RemainingPath.Buffer);
 
-	if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
-		{
-			ObDereferenceObject(Object);
-			return STATUS_UNSUCCESSFUL;
-		}
+  if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
+    {
+      ObDereferenceObject(Object);
+      return(STATUS_UNSUCCESSFUL);
+    }
 
-	/* Fail if the key has been deleted */
-	if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
-		{
-			ObDereferenceObject(Object);
-			return STATUS_UNSUCCESSFUL;
-		}
-	  
-	Status = ObCreateHandle(
-		PsGetCurrentProcess(),
-		Object,
-		DesiredAccess,
-		FALSE,
-		KeyHandle);
-	ObDereferenceObject(Object);
+  /* Fail if the key has been deleted */
+  if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
+    {
+      ObDereferenceObject(Object);
+      return(STATUS_UNSUCCESSFUL);
+    }
 
-	if (!NT_SUCCESS(Status))
-		{
-		  return Status;
-		}
-	
-	return STATUS_SUCCESS;
+  Status = ObCreateHandle(PsGetCurrentProcess(),
+			  Object,
+			  DesiredAccess,
+			  FALSE,
+			  KeyHandle);
+  ObDereferenceObject(Object);
+
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -1185,13 +1183,12 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 
 
 NTSTATUS STDCALL
-NtSetValueKey(
-	IN	HANDLE			KeyHandle,
-	IN	PUNICODE_STRING		ValueName,
-	IN	ULONG			TitleIndex,
-	IN	ULONG			Type,
-	IN	PVOID			Data,
-	IN	ULONG			DataSize)
+NtSetValueKey(IN HANDLE KeyHandle,
+	      IN PUNICODE_STRING ValueName,
+	      IN ULONG TitleIndex,
+	      IN ULONG Type,
+	      IN PVOID Data,
+	      IN ULONG DataSize)
 {
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
@@ -1203,6 +1200,7 @@ NtSetValueKey(
   PDATA_CELL DataCell;
   PDATA_CELL NewDataCell;
   PHBIN pBin;
+  ULONG DesiredAccess;
 // KIRQL  OldIrql;
 
   DPRINT("KeyHandle %x  ValueName %S  Type %d\n",
@@ -1211,13 +1209,17 @@ NtSetValueKey(
   wcstombs(ValueName2,ValueName->Buffer, ValueName->Length >> 1);
   ValueName2[ValueName->Length>>1] = 0;
 
+  DesiredAccess = KEY_SET_VALUE;
+  if (Type == REG_LINK)
+    DesiredAccess |= KEY_CREATE_LINK;
+
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_SET_VALUE,
-		CmiKeyType,
-		UserMode,
-		(PVOID *) &KeyObject,
-		NULL);
+				     DesiredAccess,
+				     CmiKeyType,
+				     UserMode,
+				     (PVOID *)&KeyObject,
+				     NULL);
   if (!NT_SUCCESS(Status))
     return(Status);
 
@@ -1309,6 +1311,11 @@ NtSetValueKey(
 	  ValueCell->DataType = Type;
 	  CmiReleaseBlock(RegistryHive, NewDataCell);
 	  ValueCell->DataOffset = NewOffset;
+	}
+
+      if (strcmp(ValueName2, "SymbolicLinkValue") == 0)
+	{
+	  KeyCell->Type = REG_LINK_KEY_CELL_TYPE;
 	}
 
       /* Update time of heap */

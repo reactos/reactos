@@ -2,13 +2,13 @@ REGEDIT4
 
 [\Registry\Machine\SYSTEM]
 
-[\Registry\Machine\SYSTEM\CurrentControlSet]
+[\Registry\Machine\SYSTEM\ControlSet001]
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control]
+[\Registry\Machine\SYSTEM\ControlSet001\Control]
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\NLS]
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS\CodePage]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\NLS\CodePage]
 "10000"="c_10000.nls"
 "1252"="c_1252.nls"
 "437"="c_437.nls"
@@ -17,7 +17,7 @@ REGEDIT4
 "OEMCP"="437"
 "MACCP"="10000"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS\Language]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\NLS\Language]
 "0401"="l_intl.nls"
 "0402"="l_intl.nls"
 "0403"="l_intl.nls"
@@ -37,18 +37,18 @@ REGEDIT4
 "Default"="0409"
 "InstallLanguage"="0409"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\ServiceGroupOrder]
 "List"=multi:"SCSI Port", "SCSI Miniport", "Primary Disk", "SCSI Class Helper", \
              "SCSI Class", "Boot File System", "Base", "Pointer Port", \
              "Keyboard Port", "Pointer Class", "Keyboard Class", "Debug", \
              "Video Init", "Video", "File System", "Event log", "NDIS", \
              "PNP_TDI", "TDI", "Extended Base"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\Session Manager]
 "BootExecute"=multi:"autocheck autochk *"
 "ObjectDirectories"=multi:"\Windows", "\RPC Control"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\Session Manager\DOS Devices]
 "AUX"="\DosDevices\COM1"
 "MAILSLOT"="\Device\MailSlot"
 "NUL"="\Device\Null"
@@ -56,187 +56,197 @@ REGEDIT4
 "PRN"="\DosDevices\LPT1"
 "UNC"="\Device\Mup"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Environment]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\Session Manager\Environment]
 "ComSpec"=expand:"%SystemRoot%\system32\shell.exe"
 "OS"=expand:"ReactOS"
 "Path"=expand:"%SystemRoot%\system32;%SystemRoot%"
 "windir"=expand:"%SystemRoot%"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
+[\Registry\Machine\SYSTEM\ControlSet001\Control\Session Manager\Memory Management]
 "PagingFiles"=multi:"C:\reactos\pagefile.sys"
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services]
+[\Registry\Machine\SYSTEM\ControlSet001\Services]
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Afd]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Afd]
 "ErrorControl"=dword:00000001
 "Group"="TDI"
-"ImagePath"="system32\drivers\afd.sys"
+"ImagePath"=expand:"system32\drivers\afd.sys"
 "Start"=dword:00000002
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Atapi]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Miniport"
-"ImagePath"="system32\drivers\atapi.sys"
+"ImagePath"=expand:"system32\drivers\atapi.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Beep]
 "ErrorControl"=dword:00000000
 "Group"="Base"
-"ImagePath"="system32\drivers\beep.sys"
+"ImagePath"=expand:"system32\drivers\beep.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Blue]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Blue]
 "ErrorControl"=dword:00000000
 "Group"="Video Init"
-"ImagePath"="system32\drivers\blue.sys"
+"ImagePath"=expand:"system32\drivers\blue.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdfs]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Cdfs]
 "ErrorControl"=dword:00000000
 "Group"="File System"
-"ImagePath"="system32\drivers\cdfs.sys"
+"ImagePath"=expand:"system32\drivers\cdfs.sys"
 "Start"=dword:00000003
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Cdrom]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Class"
-"ImagePath"="system32\drivers\cdrom.sys"
+"ImagePath"=expand:"system32\drivers\cdrom.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Class2]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Class Helper"
-"ImagePath"="system32\drivers\class2.sys"
+"ImagePath"=expand:"system32\drivers\class2.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Disk]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Disk]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Class"
-"ImagePath"="system32\drivers\disk.sys"
+"ImagePath"=expand:"system32\drivers\disk.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\EventLog]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\EventLog]
 "ErrorControl"=dword:00000000
 "Group"="Event log"
-"ImagePath"="%SystemRoot%\system32\eventlog.exe"
+"ImagePath"=expand:"%SystemRoot%\system32\eventlog.exe"
 "Start"=dword:00000004
-"Type"=dword:00000020
+"Type"=dword:00000010
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Floppy]
 "ErrorControl"=dword:00000000
 "Group"="Primary Disk"
-"ImagePath"="system32\drivers\floppy.sys"
+"ImagePath"=expand:"system32\drivers\floppy.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Fs_Rec]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Fs_Rec]
 "ErrorControl"=dword:00000000
 "Group"="Boot file system"
-"ImagePath"="system32\drivers\fs_rec.sys"
+"ImagePath"=expand:"system32\drivers\fs_rec.sys"
 "Start"=dword:00000001
 "Type"=dword:00000008
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Ide]
 "ErrorControl"=dword:00000000
 "Group"="Primary Disk"
-"ImagePath"="system32\drivers\ide.sys"
+"ImagePath"=expand:"system32\drivers\ide.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Keyboard]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Keyboard]
 "ErrorControl"=dword:00000000
 "Group"="Keyboard Port"
-"ImagePath"="system32\drivers\keyboard.sys"
+"ImagePath"=expand:"system32\drivers\keyboard.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Msfs]
 "ErrorControl"=dword:00000000
 "Group"="File System"
-"ImagePath"="system32\drivers\msfs.sys"
+"ImagePath"=expand:"system32\drivers\msfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ne2000]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Ne2000]
 "ErrorControl"=dword:00000001
 "Group"="NDIS"
-"ImagePath"="system32\drivers\ne2000.sys"
+"ImagePath"=expand:"system32\drivers\ne2000.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ndis]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Ndis]
 "ErrorControl"=dword:00000001
 "Group"="NDIS"
-"ImagePath"="system32\drivers\ndis.sys"
+"ImagePath"=expand:"system32\drivers\ndis.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Npfs]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Npfs]
 "ErrorControl"=dword:00000000
 "Group"="File System"
-"ImagePath"="system32\drivers\npfs.sys"
+"ImagePath"=expand:"system32\drivers\npfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ntfs]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Ntfs]
 "ErrorControl"=dword:00000000
 "Group"="File System"
-"ImagePath"="system32\drivers\ntfs.sys"
+"ImagePath"=expand:"system32\drivers\ntfs.sys"
 "Start"=dword:00000003
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Null]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Null]
 "ErrorControl"=dword:00000000
 "Group"="Base"
-"ImagePath"="system32\drivers\null.sys"
+"ImagePath"=expand:"system32\drivers\null.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Pice]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Pice]
 "ErrorControl"=dword:00000000
 "Group"="Debug"
-"ImagePath"="system32\drivers\pice.sys"
+"ImagePath"=expand:"system32\drivers\pice.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\RpcSs]
+"ErrorControl"=dword:00000001
+"ImagePath"=expand:"%SystemRoot%\system32\rpcss.exe"
+"Start"=dword:00000004
+"Type"=dword:00000010
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Scsiport]
 "ErrorControl"=dword:00000000
 "Group"="SCSI Port"
-"ImagePath"="system32\drivers\scsiport.sys"
+"ImagePath"=expand:"system32\drivers\scsiport.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Tcpip]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip]
 "ErrorControl"=dword:00000001
 "Group"="PNP_TDI"
-"ImagePath"="system32\drivers\tcpip.sys"
+"ImagePath"=expand:"system32\drivers\tcpip.sys"
 "Start"=dword:00000002
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Vfatfs]
 "ErrorControl"=dword:00000000
 "Group"="Boot File System"
-"ImagePath"="system32\drivers\vfatfs.sys"
+"ImagePath"=expand:"system32\drivers\vfatfs.sys"
 "Start"=dword:00000000
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vga]
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Vga]
 "ErrorControl"=dword:00000000
 "Group"="Video"
-"ImagePath"="system32\drivers\vgamp.sys"
+"ImagePath"=expand:"system32\drivers\vgamp.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet002]
 
 [\Registry\Machine\SYSTEM\Select]
 "Current"=dword:00000001
 "Default"=dword:00000001
 "Failed"=dword:00000000
 "LastKnownGood"=dword:00000000
+
+[\Registry\Machine\SYSTEM\Setup]
