@@ -4,3 +4,4 @@
 *.coff
 *.sym
 *.map
+_regtests.c
