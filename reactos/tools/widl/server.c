@@ -63,7 +63,8 @@ static int print_server(const char *format, ...)
 
 static void write_procformatstring(type_t *iface)
 {
-    func_t *cur = iface->funcs;
+    func_t *func = iface->funcs;
+    var_t *var;
 
     print_server("static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =\n");
     print_server("{\n");
@@ -72,23 +73,107 @@ static void write_procformatstring(type_t *iface)
     print_server("{\n");
     indent++;
 
-    while (NEXT_LINK(cur)) cur = NEXT_LINK(cur);
-    while (cur)
+    while (NEXT_LINK(func)) func = NEXT_LINK(func);
+    while (func)
     {
-        var_t *def = cur->def;
+        /* emit argument data */
+        if (func->args)
+        {
+            var = func->args;
+            while (NEXT_LINK(var)) var = NEXT_LINK(var);
+            while (var)
+            {
+                switch(var->type->type)
+                {
+                case RPC_FC_BYTE:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_BYTE */\n", var->type->type);
+                    break;
+                case RPC_FC_CHAR:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_CHAR */\n", var->type->type);
+                    break;
+                case RPC_FC_WCHAR:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_WCHAR */\n", var->type->type);
+                    break;
+                case RPC_FC_USHORT:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_USHORT */\n", var->type->type);
+                    break;
+                case RPC_FC_SHORT:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_SHORT */\n", var->type->type);
+                    break;
+                case RPC_FC_ULONG:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_ULONG */\n", var->type->type);
+                    break;
+                case RPC_FC_LONG:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_LONG */\n", var->type->type);
+                    break;
+                case RPC_FC_HYPER:
+                    print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
+                    print_server("0x%02x,    /* RPC_FC_HYPER */\n", var->type->type);
+                    break;
+                default:
+                    error("Unknown/unsupported type\n");
+                }
 
-        if (is_void(def->type, NULL))
+                var = PREV_LINK(var);
+            }
+        }
+
+        /* emit return value data */
+        var = func->def;
+        if (is_void(var->type, NULL))
         {
             print_server("0x5b,    /* FC_END */\n");
             print_server("0x5c,    /* FC_PAD */\n");
         }
         else
         {
-            print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
-            print_server("0x%02x,    /* <type> */\n", def->type->type);
+            switch(var->type->type)
+            {
+            case RPC_FC_BYTE:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_BYTE */\n", var->type->type);
+                break;
+            case RPC_FC_CHAR:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_CHAR */\n", var->type->type);
+                break;
+            case RPC_FC_WCHAR:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_WCHAR */\n", var->type->type);
+                break;
+            case RPC_FC_USHORT:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_USHORT */\n", var->type->type);
+                break;
+            case RPC_FC_SHORT:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_SHORT */\n", var->type->type);
+                break;
+            case RPC_FC_ULONG:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_ULONG */\n", var->type->type);
+                break;
+            case RPC_FC_LONG:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_LONG */\n", var->type->type);
+                break;
+            case RPC_FC_HYPER:
+                print_server("0x53,    /* FC_RETURN_PARAM_BASETYPE */\n");
+                print_server("0x%02x,    /* RPC_FC_HYPER */\n", var->type->type);
+                break;
+            default:
+                error("Unknown/unsupported type\n");
+            }
         }
 
-        cur = PREV_LINK(cur);
+        func = PREV_LINK(func);
     }
 
     print_server("0x0\n");
@@ -118,7 +203,7 @@ static void write_typeformatstring(void)
 }
 
 
-unsigned int get_required_stack_size(type_t *type)
+unsigned int get_required_buffer_size(type_t *type)
 {
     switch(type->type)
     {
@@ -140,13 +225,81 @@ unsigned int get_required_stack_size(type_t *type)
 }
 
 
+static void unmarshall_arguments(func_t *func)
+{
+    unsigned int alignment;
+    unsigned int size;
+    unsigned int last_size = 0;
+    var_t *var;
+
+    if (!func->args)
+        return;
+
+    var = func->args;
+    while (NEXT_LINK(var)) var = NEXT_LINK(var);
+    while (var)
+    {
+        alignment = 0;
+        switch (var->type->type)
+        {
+        case RPC_FC_BYTE:
+        case RPC_FC_CHAR:
+            size = 1;
+            alignment = 0;
+            break;
+
+        case RPC_FC_WCHAR:
+        case RPC_FC_USHORT:
+        case RPC_FC_SHORT:
+            size = 2;
+            if (last_size != 0 && last_size < 2)
+                alignment = (2 - last_size);
+            break;
+
+        case RPC_FC_ULONG:
+        case RPC_FC_LONG:
+            size = 4;
+            if (last_size != 0 && last_size < 4)
+                alignment = (4 - last_size);
+            break;
+
+        case RPC_FC_HYPER:
+            size = 8;
+            if (last_size != 0 && last_size < 4)
+                alignment = (4 - last_size);
+            break;
+
+        default:
+            error("Unknown/unsupported type!");
+        }
+
+        if (alignment != 0)
+            print_server("_StubMsg.Buffer += %u;\n", alignment);
+
+        print_server("");
+        write_name(server, var);
+        fprintf(server, " = *((");
+        write_type(server, var->type, var, var->tname);
+        fprintf(server, " __RPC_FAR*)_StubMsg.Buffer)++;\n");
+        fprintf(server, "\n");
+
+        last_size = size;
+
+        var = PREV_LINK(var);
+    }
+}
+
+
 static void write_function_stubs(type_t *iface)
 {
-    func_t *cur = iface->funcs;
-    while (NEXT_LINK(cur)) cur = NEXT_LINK(cur);
-    while (cur)
+    func_t *func = iface->funcs;
+    var_t *var;
+    unsigned int proc_offset = 0;
+
+    while (NEXT_LINK(func)) func = NEXT_LINK(func);
+    while (func)
     {
-        var_t *def = cur->def;
+        var_t *def = func->def;
 
         write_type(server, def->type, def, def->tname);
         fprintf(server, " __RPC_STUB\n");
@@ -169,9 +322,28 @@ static void write_function_stubs(type_t *iface)
             fprintf(server, " _RetVal;\n");
         }
 
+        /* declare arguments */
+        if (func->args)
+        {
+            var = func->args;
+            while (NEXT_LINK(var)) var = NEXT_LINK(var);
+            while (var)
+            {
+                print_server("");
+                write_type(server, var->type, var, var->tname);
+                fprintf(server, " ");
+                write_name(server, var);
+                fprintf(server, ";\n");
+
+                var = PREV_LINK(var);
+            }
+        }
+
         print_server("MIDL_STUB_MESSAGE _StubMsg;\n");
         print_server("RPC_STATUS _Status;\n");
         fprintf(server, "\n");
+
+
         print_server("((void)(_Status));\n");
         print_server("NdrServerInitializeNew(\n");
         indent++;
@@ -187,6 +359,21 @@ static void write_function_stubs(type_t *iface)
         print_server("RpcTryExcept\n");
         print_server("{\n");
         indent++;
+
+        if (func->args)
+        {
+            print_server("if ((_pRpcMessage->DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)\n");
+            indent++;
+            print_server("NdrConvert(\n");
+            indent++;
+            print_server("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
+            print_server("(PFORMAT_STRING)&__MIDL_ProcFormatString.Format[%u]);\n", proc_offset);
+            indent -= 2;
+            fprintf(server, "\n");
+
+            unmarshall_arguments(func);
+        }
+
         print_server("if (_StubMsg.Buffer > _StubMsg.BufferEnd)\n");
         print_server("{\n");
         indent++;
@@ -212,14 +399,37 @@ static void write_function_stubs(type_t *iface)
             print_server("");
         write_name(server, def);
 
-        /* FIXME: handle argument list */
-        fprintf(server, "();\n");
+        if (func->args)
+        {
+            int first_arg = 1;
 
-        /* FIXME: Marshall the return value */
+            fprintf(server, "(\n");
+            indent++;
+            var = func->args;
+            while (NEXT_LINK(var)) var = NEXT_LINK(var);
+            while (var)
+            {
+                if (first_arg)
+                    first_arg = 0;
+                else
+                    fprintf(server, ",\n");
+                print_server("");
+                write_name(server, var);
+                var = PREV_LINK(var);
+            }
+            fprintf(server, ");\n");
+            indent--;
+        }
+        else
+        {
+            fprintf(server, "();\n");
+        }
+
+        /* marshall the return value */
         if (!is_void(def->type, NULL))
         {
             fprintf(server, "\n");
-            print_server("_StubMsg.BufferLength = %uU;\n", get_required_stack_size(def->type));
+            print_server("_StubMsg.BufferLength = %uU;\n", get_required_buffer_size(def->type));
             print_server("_pRpcMessage->BufferLength = _StubMsg.BufferLength;\n");
             fprintf(server, "\n");
             print_server("_Status = I_RpcGetBuffer(_pRpcMessage);\n");
@@ -253,7 +463,20 @@ static void write_function_stubs(type_t *iface)
         fprintf(server, "}\n");
         fprintf(server, "\n");
 
-        cur = PREV_LINK(cur);
+        /* update proc_offset */
+        if (func->args)
+        {
+            var = func->args;
+            while (NEXT_LINK(var)) var = NEXT_LINK(var);
+            while (var)
+            {
+                proc_offset += 2; /* FIXME */
+                var = PREV_LINK(var);
+            }
+        }
+        proc_offset += 2;  /* FIXME */
+
+        func = PREV_LINK(func);
     }
 }
 
@@ -375,18 +598,32 @@ static void write_formatdesc( const char *str )
 
 static void write_formatstringsdecl(type_t *iface)
 {
-    func_t *cur;
+    func_t *func;
+    var_t *var;
     int byte_count = 1;
 
     print_server("#define TYPE_FORMAT_STRING_SIZE %d\n", 3); /* FIXME */
 
     /* determine the proc format string size */
-    cur = iface->funcs;
-    while (NEXT_LINK(cur)) cur = NEXT_LINK(cur);
-    while (cur)
+    func = iface->funcs;
+    while (NEXT_LINK(func)) func = NEXT_LINK(func);
+    while (func)
     {
+        /* argument list size */
+        if (func->args)
+        {
+            var = func->args;
+            while (NEXT_LINK(var)) var = NEXT_LINK(var);
+            while (var)
+            {
+                byte_count += 2; /* FIXME: determine real size */
+                var = PREV_LINK(var);
+            }
+        }
+
+        /* return value size */
         byte_count += 2; /* FIXME: determine real size */
-        cur = PREV_LINK(cur);
+        func = PREV_LINK(func);
     }
     print_server("#define PROC_FORMAT_STRING_SIZE %d\n", byte_count);
 
