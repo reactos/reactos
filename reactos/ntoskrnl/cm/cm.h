@@ -258,8 +258,8 @@ typedef struct _REGISTRY_HIVE
 
 /* KEY_OBJECT.Flags */
 
-/* When set, the key is sheduled for deletion, and all
-   atempts to access the key must not succeed */
+/* When set, the key is scheduled for deletion, and all
+   attempts to access the key must not succeed */
 #define KO_MARKED_FOR_DELETE              0x00000001
 
 
@@ -279,10 +279,10 @@ typedef struct _KEY_OBJECT
   /* Name of key */
   PCHAR Name;
 
-  /* Registry hive the key belong to */
+  /* Registry hive the key belongs to */
   PREGISTRY_HIVE RegistryHive;
 
-  /* Block offset of the key cell this key belong in */
+  /* Block offset of the key cell this key belongs in */
   BLOCK_OFFSET BlockOffset;
 
   /* KEY_CELL this key belong in */
