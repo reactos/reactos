@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.43 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: mm.c,v 1.44 2001/03/08 22:06:01 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -32,33 +32,53 @@ extern PVOID MmSharedDataPagePhysicalAddress;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID STATIC
+MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
+{
+  PEPROCESS Process = (PEPROCESS)Context;
+    
+  if (PhysicalAddr != 0)
+    {
+      DPRINT("Freeing page at 0x%x (pa 0x%x)\n",
+	     Address, PhysicalAddr);
+      MmRemovePageFromWorkingSet(Process, Address);
+      MmDereferencePage((PVOID)PhysicalAddr);
+    }
+}
+
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
-   PVOID i;
+   NTSTATUS Status;
    
    DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
    
-   DPRINT("Releasing %x between %x %x\n",
-	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
+   DPRINT("Releasing %x between %x %x (type %d)\n",
+	   Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length,
+	   Marea->Type);
    
    switch (Marea->Type)
      {
      case MEMORY_AREA_SECTION_VIEW_COMMIT:
      case MEMORY_AREA_SECTION_VIEW_RESERVE:
-	MmUnmapViewOfSection(Process, Marea->BaseAddress);
+	Status = MmUnmapViewOfSection(Process, Marea->BaseAddress);
+	assert(Status == STATUS_SUCCESS);
 	return(STATUS_SUCCESS);
 
       case MEMORY_AREA_VIRTUAL_MEMORY:
-	for (i = Marea->BaseAddress; 
-	     i < (Marea->BaseAddress + Marea->Length);
-	     i = i + PAGESIZE)
-	  {
-	    MmDeleteVirtualMapping(Process, i, TRUE);
-	  }
-	ExFreePool(Marea);
-	break;	
+       Status = MmFreeMemoryArea(&Process->AddressSpace,
+				 Marea->BaseAddress,
+				 0,
+				 MmFreeVirtualMemoryPage,
+				 (PVOID)Process);
+       assert(Status == STATUS_SUCCESS);
+       break;	
 
      case MEMORY_AREA_SHARED_DATA:
+       Status = MmFreeMemoryArea(&Process->AddressSpace,
+				 Marea->BaseAddress,
+				 0,
+				 NULL,
+				 NULL);
        break;
 
      default:
@@ -73,14 +93,16 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    PLIST_ENTRY CurrentEntry;
    PMEMORY_AREA Current;
    
-   DPRINT("MmReleaseMmInfo(Process %x)\n",Process);
+   DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
+	   Process->ImageFileName);
    
    MmLockAddressSpace(&Process->AddressSpace);
-   
-   while (!IsListEmpty(&Process->AddressSpace.MAreaListHead))
+
+   CurrentEntry = Process->AddressSpace.MAreaListHead.Flink;
+   while (CurrentEntry != &Process->AddressSpace.MAreaListHead)
      {
-	CurrentEntry = RemoveHeadList(&Process->AddressSpace.MAreaListHead);
 	Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
+	CurrentEntry = CurrentEntry->Flink;
 	
 	MmReleaseMemoryArea(Process, Current);
      }

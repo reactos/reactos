@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.8 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: ncache.c,v 1.9 2001/03/08 22:06:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -80,12 +80,9 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    return ((PVOID)Result);
 }
 
-VOID static
-MmFreeNonCachedPage(PVOID Context, PVOID Address)
+VOID STATIC
+MmFreeNonCachedPage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
-  ULONG PhysAddr;
-
-  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
   if (PhysAddr != 0)
     {
       MmDereferencePage((PVOID)PhysAddr);

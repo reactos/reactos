@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.1 2001/03/07 13:44:40 ekohl Exp $
+/* $Id: cleanup.c,v 1.2 2001/03/08 22:06:02 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,7 +44,7 @@ VfatCleanup (PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    NTSTATUS Status;
 
-   DPRINT1("VfatCleanup(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+   DPRINT("VfatCleanup(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
    Status = VfatCleanupFile(DeviceExtension, FileObject);
 

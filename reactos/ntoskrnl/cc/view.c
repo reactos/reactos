@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.16 2001/03/07 16:48:40 dwelch Exp $
+/* $Id: view.c,v 1.17 2001/03/08 22:06:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -191,11 +191,8 @@ CcRequestCacheSegment(PBCB Bcb,
 }
 
 static
-VOID CcFreeCachePage(PVOID Context, PVOID Address)
+VOID CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
-  ULONG PhysAddr;
-
-  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
   if (PhysAddr != 0)
     {
       MmDereferencePage((PVOID)PhysAddr);

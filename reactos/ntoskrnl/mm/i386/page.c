@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.21 2001/02/18 22:16:05 dwelch Exp $
+/* $Id: page.c,v 1.22 2001/03/08 22:06:02 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -349,6 +349,10 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
      }
    Pte = ADDR_TO_PTE(Address);
    WasValid = (PAGE_MASK(*Pte) != 0);
+   if (WasValid)
+     {
+       MmMarkPageUnmapped((PVOID)PAGE_MASK(*Pte));
+     }
    if (FreePage && WasValid)
      {
         MmDereferencePage((PVOID)PAGE_MASK(*Pte));
@@ -528,6 +532,7 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
        DPRINT1("Setting kernel address with process context\n");
        KeBugCheck(0);
      }
+   MmMarkPageMapped((PVOID)PhysicalAddress);
    
    Attributes = ProtectToPTE(flProtect);
    
@@ -544,6 +549,10 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
 	     KeDetachProcess();
 	  }
 	return(Status);
+     }
+   if (PAGE_MASK((*Pte)) != 0)
+     {
+       MmMarkPageUnmapped((PVOID)PAGE_MASK((*Pte)));
      }
    *Pte = PhysicalAddress | Attributes;
    if (Process != NULL && 

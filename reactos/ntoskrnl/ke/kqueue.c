@@ -17,19 +17,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After, 
-			     PLIST_ENTRY Entry)
+VOID 
+InsertBeforeEntryInList(PLIST_ENTRY Head, PLIST_ENTRY After, PLIST_ENTRY Entry)
 {
    InsertHeadList(After, Entry);
 }
 
-BOOLEAN
-STDCALL
-KeInsertByKeyDeviceQueue (
-	PKDEVICE_QUEUE		DeviceQueue,
-	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
-	ULONG			SortKey
-	)
+BOOLEAN STDCALL
+KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
+			  PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
+			  ULONG			SortKey)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current;

@@ -88,29 +88,7 @@ KeValidateUserContext(PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
-HalReleaseTask(PETHREAD Thread)
-/*
- * FUNCTION: Releases the resource allocated for a thread by
- * HalInitTaskWithContext or HalInitTask
- * NOTE: The thread had better not be running when this is called
- */
-{
-#if 0
-   extern BYTE init_stack[MM_STACK_SIZE];
-   
-   KeFreeGdtSelector(Thread->Tcb.Context.nr / 8);
-   if (Thread->Tcb.Context.KernelStackBase != init_stack)
-     {       
-	ExFreePool(Thread->Tcb.Context.KernelStackBase);
-     }
-   if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
-     {
-	ExFreePool(Thread->Tcb.Context.SavedKernelStackBase);
-     }
-#endif
-   return(STATUS_SUCCESS);
-}
+
 
 NTSTATUS
 Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)

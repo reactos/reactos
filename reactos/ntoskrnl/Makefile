@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001/03/07 08:57:08 dwelch Exp $
+# $Id: Makefile,v 1.14 2001/03/08 22:06:00 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -10,6 +10,8 @@ OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
 CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror 
+#         -W -Wpointer-arith -Wconversion -Wstrict-prototypes -Wundef \
+#	 -Wmissing-prototypes -Wshadow\
 #CFLAGS += -DDBGPRINT_FILE_LOG
 
 all: \
@@ -37,7 +39,7 @@ OBJECTS_NT = \
 	nt/profile.o \
 	nt/zw.o \
 	nt/vdm.o
-	
+
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
 	rtl/bitmap.o \
@@ -100,7 +102,8 @@ OBJECTS_KE_I386 = \
 	ke/i386/tskswitch.o \
 	ke/i386/v86m.o \
 	ke/i386/v86m_sup.o \
-	ke/i386/bios.o
+	ke/i386/bios.o \
+        ke/i386/i386-mcount.o
  
 # Memory Manager (Mm)
 OBJECTS_MM = \

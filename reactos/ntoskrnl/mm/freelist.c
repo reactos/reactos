@@ -29,12 +29,13 @@
 
 typedef struct _PHYSICAL_PAGE
 {
-   ULONG Flags;
-   LIST_ENTRY ListEntry;
-   ULONG ReferenceCount;
-   KEVENT Event;
-   SWAPENTRY SavedSwapEntry;
-   ULONG LockCount;
+  ULONG Flags;
+  LIST_ENTRY ListEntry;
+  ULONG ReferenceCount;
+  KEVENT Event;
+  SWAPENTRY SavedSwapEntry;
+  ULONG LockCount;
+  ULONG MapCount;
 } PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 /* GLOBALS ****************************************************************/
@@ -104,6 +105,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 	MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	MmPageArray[i].ReferenceCount = 1;
 	MmPageArray[i].LockCount = 0;
+	MmPageArray[i].MapCount = 0;
 	MmPageArray[i].SavedSwapEntry = 0;
 	InsertTailList(&UsedPageListHead, &MmPageArray[i].ListEntry);
      }
@@ -302,6 +304,28 @@ VOID MmSetFlagsPage(PVOID PhysicalAddress,
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
+VOID 
+MmMarkPageMapped(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].MapCount++;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+VOID 
+MmMarkPageUnmapped(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].MapCount--;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
 ULONG MmGetFlagsPage(PVOID PhysicalAddress)
 {
    ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
@@ -427,20 +451,26 @@ VOID MmDereferencePage(PVOID PhysicalAddress)
      }
    
    KeAcquireSpinLock(&PageListLock, &oldIrql);
-   
+  
+
    if (MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_USED)
      {
 	DbgPrint("Dereferencing free page\n");
 	KeBugCheck(0);
      }
   
-   
    MmPageArray[Start].ReferenceCount--;
    if (MmPageArray[Start].ReferenceCount == 0)
      {
        MmStats.NrFreePages++;
        MmStats.NrSystemPages--;
        RemoveEntryList(&MmPageArray[Start].ListEntry);
+       if (MmPageArray[Start].MapCount != 0)
+	 {
+	   DbgPrint("Freeing mapped page (0x%x count %d)\n",
+		    PhysicalAddress, MmPageArray[Start].MapCount);
+	   KeBugCheck(0);
+	 }
        if (MmPageArray[Start].LockCount > 0)
 	 {
 	   DbgPrint("Freeing locked page\n");
@@ -561,6 +591,7 @@ MmAllocPage(SWAPENTRY SavedSwapEntry)
    PageDescriptor->Flags = MM_PHYSICAL_PAGE_USED;
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
+   PageDescriptor->MapCount = 0;
    PageDescriptor->SavedSwapEntry = SavedSwapEntry;
    ExInterlockedInsertTailList(&UsedPageListHead, ListEntry, 
 			       &PageListLock);

@@ -58,6 +58,27 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS 
+HalReleaseTask(PETHREAD Thread)
+/*
+ * FUNCTION: Releases the resource allocated for a thread by
+ * HalInitTaskWithContext or HalInitTask
+ * NOTE: The thread had better not be running when this is called
+ */
+{
+  extern unsigned int init_stack;
+   
+  if (Thread->Tcb.StackLimit != (ULONG)&init_stack)
+    {       
+      ExFreePool((PVOID)Thread->Tcb.StackLimit);
+    }
+  Thread->Tcb.StackLimit = 0;
+  Thread->Tcb.InitialStack = NULL;
+  Thread->Tcb.StackBase = NULL;
+  Thread->Tcb.KernelStack = NULL;
+  return(STATUS_SUCCESS);
+}
+
 VOID 
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 /*
@@ -87,7 +108,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
        Thread->InitialStack = (PVOID)&init_stack_top;
        Thread->StackBase = (PVOID)&init_stack_top;
        Thread->StackLimit = (ULONG)&init_stack;
-       Thread->KernelStack = (PVOID)&init_stack;
+       Thread->KernelStack = (PVOID)&init_stack_top;
      }
    /* 
     * The Native API function will initialize the TEB field later 

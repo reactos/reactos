@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.48 2001/03/07 16:48:44 dwelch Exp $
+/* $Id: section.c,v 1.49 2001/03/08 22:06:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1512,7 +1512,11 @@ MmMapViewOfSegment(PEPROCESS Process,
    InsertTailList(&Section->ViewListHead, 
 		  &MArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-   
+ 
+   ObReferenceObjectByPointer((PVOID)Section,
+			      SECTION_MAP_READ,
+			      NULL,
+			      ExGetPreviousMode());
    MArea->Data.SectionData.Segment = Segment;
    MArea->Data.SectionData.Section = Section;
    MArea->Data.SectionData.ViewOffset = ViewOffset;
@@ -1695,20 +1699,19 @@ NtMapViewOfSection(HANDLE SectionHandle,
 
    MmUnlockSection(Section);
    MmUnlockAddressSpace(AddressSpace);
-   ObDereferenceObject(Process);   
+   ObDereferenceObject(Section);
+   ObDereferenceObject(Process); 
    
    return(STATUS_SUCCESS);
 }
 
 VOID STATIC
-MmFreeSectionPage(PVOID Context, PVOID Address)
+MmFreeSectionPage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
-  ULONG PhysAddr;
   PMEMORY_AREA MArea;
 
   MArea = (PMEMORY_AREA)Context;
 
-  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
   if (PhysAddr != 0)
     {
       if (MmGetReferenceCountPage((PVOID)PhysAddr) == 1)
@@ -1729,7 +1732,7 @@ MmFreeSectionPage(PVOID Context, PVOID Address)
 
 NTSTATUS STDCALL
 MmUnmapViewOfSection(PEPROCESS Process,
-		    PVOID BaseAddress)
+		     PVOID BaseAddress)
 {
    NTSTATUS	Status;
    PMEMORY_AREA MemoryArea;
@@ -1774,9 +1777,9 @@ MmUnmapViewOfSection(PEPROCESS Process,
 				 MmFreeSectionPage,
 				 MemoryArea);
       }
-   ObDereferenceObject(Section);
    MmUnlockSection(Section);
    MmUnlockSectionSegment(Segment);
+   ObDereferenceObject(Section);
    MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }

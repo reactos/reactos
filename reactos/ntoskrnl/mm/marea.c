@@ -278,7 +278,8 @@ NTSTATUS
 MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
-		 VOID (*FreePage)(PVOID Context, PVOID Address),
+		 VOID (*FreePage)(PVOID Context, PVOID Address, 
+				  ULONG PhysAddr),
 		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
@@ -294,32 +295,24 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (FreePage != NULL)
+   for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGESIZE); i++)
      {
-	for (i=0;i<=(MemoryArea->Length/PAGESIZE);i++)
-	  {
-	    FreePage(FreePageContext, 
-		     MemoryArea->BaseAddress + (i * PAGESIZE));
-	  }
-     }
-   for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
-     {
-	if (AddressSpace->Process != NULL)
-	  {
-	     DPRINT("Freeing %x in %d\n", 
-		     MemoryArea->BaseAddress + (i*PAGESIZE),
-		     AddressSpace->Process->UniqueProcessId);
-	  }
-	else
-	  {
-//	     DPRINT("Freeing %x in kernel address space\n");
-	  }
+       ULONG PhysAddr;
+
+       PhysAddr = 
+	 MmGetPhysicalAddressForProcess(AddressSpace->Process,
+				      MemoryArea->BaseAddress + (i*PAGESIZE));
 	MmDeleteVirtualMapping(AddressSpace->Process,
 			       MemoryArea->BaseAddress + (i*PAGESIZE),
 			       FALSE);
+	if (FreePage != NULL)
+	 {
+	    FreePage(FreePageContext, 
+		     MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr);
+	 }
      }
    
-   RemoveEntryList(&(MemoryArea->Entry));
+   RemoveEntryList(&MemoryArea->Entry);
    ExFreePool(MemoryArea);
    
    DPRINT("MmFreeMemoryArea() succeeded\n");

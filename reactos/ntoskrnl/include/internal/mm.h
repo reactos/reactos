@@ -183,7 +183,8 @@ VOID ExInitNonPagedPool(ULONG BaseAddress);
 NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
-			  VOID (*FreePage)(PVOID Context, PVOID Address),
+			  VOID (*FreePage)(PVOID Context, PVOID Address,
+					   ULONG PhysAddr),
 			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
@@ -416,5 +417,9 @@ VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
 VOID
 MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
+VOID 
+MmMarkPageMapped(PVOID PhysicalAddress);
+VOID 
+MmMarkPageUnmapped(PVOID PhysicalAddress);
 
 #endif

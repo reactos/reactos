@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.8 2001/02/28 18:23:32 dwelch Exp $
+/* $Id: cont.c,v 1.9 2001/03/08 22:06:01 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,12 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID static
-MmFreeContinuousPage(PVOID Context, PVOID Address)
+VOID STATIC
+MmFreeContinuousPage(PVOID Context, PVOID Address, ULONG PhysAddr)
 {
-  ULONG PhysAddr;
-
-  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
   if (PhysAddr != 0)
     {
       MmDereferencePage((PVOID)PhysAddr);

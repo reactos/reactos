@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.40 2001/03/07 16:48:44 dwelch Exp $
+/* $Id: virtual.c,v 1.41 2001/03/08 22:06:02 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -269,7 +269,8 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Add the page to the process's working set
     */
-   MmAddPageToWorkingSet(PsGetCurrentProcess(), Address);
+   MmAddPageToWorkingSet(PsGetCurrentProcess(), 
+			 (PVOID)PAGE_ROUND_DOWN(Address));
    
    /*
     * Set the page. If we fail because we are out of memory then
@@ -338,15 +339,15 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	  LARGE_INTEGER PhysicalAddr;
 	  
 	  PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
+	  MmDeleteVirtualMapping(AddressSpace->Process,
+				 BaseAddress + (i*PAGESIZE),
+				 FALSE);
 	  if (PhysicalAddr.u.LowPart != 0)
 	    {
 	      MmRemovePageFromWorkingSet(AddressSpace->Process,
 					 BaseAddress + (i*PAGESIZE));
 	      MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
 	    }
-	  MmDeleteVirtualMapping(AddressSpace->Process,
-				 BaseAddress + (i*PAGESIZE),
-				 FALSE);
 	}
     }
 
@@ -947,6 +948,17 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 	UNIMPLEMENTED;
 }
 
+VOID STATIC
+MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
+{
+  PEPROCESS Process = (PEPROCESS)Context;
+  
+  if (PhysicalAddr != 0)
+    {
+      MmRemovePageFromWorkingSet(Process, Address);
+      MmDereferencePage((PVOID)PhysicalAddr);
+    }
+}
 
 NTSTATUS STDCALL 
 NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
@@ -970,7 +982,6 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    PMADDRESS_SPACE AddressSpace;
-   ULONG i;
    PVOID BaseAddress;
    ULONG RegionSize;
    
@@ -1023,28 +1034,11 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	  }
 #endif
 	
-	for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
-	  {
-	     ULONG PhysicalAddr;
-	     
-	     PhysicalAddr = 
-	       MmGetPhysicalAddressForProcess(Process, 
-					      MemoryArea->BaseAddress + 
-					      (i*PAGESIZE));
-	     if (PhysicalAddr != 0)
-	       {
-		  MmRemovePageFromWorkingSet(AddressSpace->Process,
-					     MemoryArea->BaseAddress +
-					     (i*PAGESIZE));
-		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr));
-	       }
-	  }
-	
 	MmFreeMemoryArea(&Process->AddressSpace,
 			 BaseAddress,
 			 0,
-			 NULL,
-			 NULL);
+			 MmFreeVirtualMemoryPage,
+			 (PVOID)Process);
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
