@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.15 2003/08/04 00:39:58 royce Exp $
+/* $Id: ppool.c,v 1.16 2003/08/04 08:26:19 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,9 +15,13 @@
 #include <internal/pool.h>
 #include <internal/mm.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
+
+/* Enable strict checking of the paged pool on every allocation */
+#define ENABLE_VALIDATE_POOL
 
 #undef assert
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
@@ -77,29 +81,25 @@ VOID MmInitializePagedPool(VOID)
   ExInitializeFastMutex(&MmPagedPoolLock);
 }
 
-#if 1
+#ifdef ENABLE_VALIDATE_POOL
 static void VerifyPagedPool ( int line )
 {
   PMM_PPOOL_FREE_BLOCK_HEADER p = MmPagedPoolFirstFreeBlock;
   int count = 0;
-  //DbgPrint ( "VerifyPagedPool(%i):\n", line );
+  DPRINT ( "VerifyPagedPool(%i):\n", line );
   while ( p )
   {
-    //DbgPrint ( "  0x%x: %lu bytes (next 0x%x)\n", p, p->Size, p->NextFree );
+    DPRINT ( "  0x%x: %lu bytes (next 0x%x)\n", p, p->Size, p->NextFree );
     ASSERT_PTR(p);
     ASSERT_SIZE(p->Size);
     count++;
     p = p->NextFree;
   }
-  //DbgPrint ( "VerifyPagedPool(%i): (%lu blocks)\n", line, count );
+  DPRINT ( "VerifyPagedPool(%i): (%lu blocks)\n", line, count );
 }
 #define VerifyPagedPool() VerifyPagedPool(__LINE__)
-#undef DPRINT
-#define DPRINT(...)
 #else
 #define VerifyPagedPool()
-#undef DPRINT
-#define DPRINT(...)
 #endif
 
 /**********************************************************************
@@ -125,6 +125,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   PMM_PPOOL_FREE_BLOCK_HEADER PreviousBlock;
   PMM_PPOOL_FREE_BLOCK_HEADER BestPreviousBlock;
   PVOID BlockAddress;
+  ULONG Alignment;
 
   /*
    * Don't bother allocating anything for a zero-byte block.
@@ -136,6 +137,19 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 
   DPRINT ( "ExAllocatePagedPoolWithTag(%i,%lu,%lu)\n", PoolType, NumberOfBytes, Tag );
   VerifyPagedPool();
+
+  if (NumberOfBytes >= PAGE_SIZE)
+    {
+      Alignment = PAGE_SIZE;
+    }
+  else if (PoolType == PagedPoolCacheAligned)
+    {
+      Alignment = MM_CACHE_LINE_SIZE;
+    }
+  else
+    {
+      Alignment = 0;
+    }
 
   /*
    * Calculate the total number of bytes we will need.
@@ -155,18 +169,18 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   PreviousBlock = NULL;
   BestPreviousBlock = BestBlock = NULL;
   CurrentBlock = MmPagedPoolFirstFreeBlock;
-  if ( PoolType == PagedPoolCacheAligned )
+  if ( Alignment > 0 )
     {
       PVOID BestAlignedAddr = NULL;
       while ( CurrentBlock != NULL )
 	{
 	  PVOID Addr = block_to_address(CurrentBlock);
-	  PVOID CurrentBlockEnd = Addr + CurrentBlock->Size;
-	  /* calculate last cache-aligned address available within this block */
-	  PVOID AlignedAddr = MM_CACHE_ALIGN_DOWN(CurrentBlockEnd-NumberOfBytes-MM_PPOOL_BOUNDARY_BYTES);
+	  PVOID CurrentBlockEnd = (PVOID)CurrentBlock + CurrentBlock->Size;
+	  /* calculate last size-aligned address available within this block */
+	  PVOID AlignedAddr = MM_ROUND_DOWN(CurrentBlockEnd-NumberOfBytes-MM_PPOOL_BOUNDARY_BYTES, Alignment);
 	  assert ( AlignedAddr+NumberOfBytes+MM_PPOOL_BOUNDARY_BYTES <= CurrentBlockEnd );
 
-	  /* special case, this address is already cache-aligned, and the right size */
+	  /* special case, this address is already size-aligned, and the right size */
 	  if ( Addr == AlignedAddr )
 	    {
 	      BestAlignedAddr = AlignedAddr;
@@ -177,7 +191,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 	  else if ( Addr < (PVOID)address_to_block(AlignedAddr) )
 	    {
 	      /*
-	       * there's enough room to allocate our cache-aligned memory out
+	       * there's enough room to allocate our size-aligned memory out
 	       * of this block, see if it's a better choice than any previous
 	       * finds
 	       */
@@ -218,7 +232,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 	      NewFreeBlock->NextFree = BestBlock->NextFree;
 	      BestBlock->NextFree = NewFreeBlock;
 
-	      /* we want the following code to use our cache-aligned block */
+	      /* we want the following code to use our size-aligned block */
 	      BestPreviousBlock = BestBlock;
 	      BestBlock = NewFreeBlock;
 
@@ -227,7 +241,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 	}
     }
   /*
-   * non-cache-aligned block search
+   * non-size-aligned block search
    */
   else while ( CurrentBlock != NULL )
     {

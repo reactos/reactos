@@ -27,17 +27,11 @@ extern ULONG MmPagedPoolSize;
 #define MM_KERNEL_MAP_SIZE	(16*1024*1024)
 
 /*
- * (number of bytes-1) per cache page
- *
- * FIXME - different architectures have different cache alignments...
+ * FIXME - different architectures have different cache line sizes...
  */
+#define MM_CACHE_LINE_SIZE  32
 
-#define MM_CACHE_ALIGN_BYTES 31
-
-#define MM_CACHE_ALIGN_UP(ptr) (PVOID)((((size_t)(ptr) + MM_CACHE_ALIGN_BYTES)) & (~MM_CACHE_ALIGN_BYTES))
-
-#define MM_CACHE_ALIGN_DOWN(ptr) (PVOID)(((size_t)(ptr)) & (~MM_CACHE_ALIGN_BYTES))
-
-#define MM_IS_CACHE_ALIGNED(ptr) ((PVOID)(ptr) == MM_CACHE_ALIGN(ptr))
+#define MM_ROUND_UP(x,s)    ((PVOID)(((ULONG)(x)+(s)-1) & ~((s)-1)))
+#define MM_ROUND_DOWN(x,s)  ((PVOID)(((ULONG)(x)) & ~((s)-1)))
 
 #endif /* __INTERNAL_POOL_H */
