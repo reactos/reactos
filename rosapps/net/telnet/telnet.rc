@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <reactos/resource.h>
+#include "resource/tnmsg.rc"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

@@ -12,7 +12,7 @@ TARGET_NAME = ncftp
 
 TARGET_SDKLIBS = kernel32.a ws2_32.a
 
-TARGET_CFLAGS = -Dncftp
+TARGET_CFLAGS = -Dncftp -D__USE_W32API
 
 TARGET_CLEAN = \
 sio/*.o Strn/*.o libncftp/*.o ncftp/*.o

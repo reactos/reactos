@@ -1,4 +1,4 @@
-/* $Id: niclist.c,v 1.2 2002/09/24 14:26:47 robd Exp $
+/* $Id: niclist.c,v 1.3 2004/01/12 22:45:53 sedwards Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS packet driver interface list utility
@@ -18,8 +18,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "trace.h"
-
 
 #define MAX_ADAPTERS 10
 #define NIC_BUFFER_SIZE 2048

@@ -7,6 +7,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = ipconfig
 
+TARGET_CFLAGS = -D__USE_W32API
+
 TARGET_SDKLIBS = user32.a iphlpapi.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o

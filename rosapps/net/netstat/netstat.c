@@ -10,6 +10,7 @@
 // Copyright (C) 1998-2002 Mark Russinovich
 // www.sysinternals.com
 
+#define ANY_SIZE 1
 
 #include <windows.h>
 #include <winsock.h>
@@ -27,14 +28,6 @@
 #include <tlhelp32.h>
 #include <iphlpapi.h>
 #include <snmp.h>
-
-//#include "windows.h"
-//#include "stdio.h"
-//#include "winsock.h"
-//#include "iprtrmib.h"
-//#include "tlhelp32.h"
-//#include "iphlpapi.h"
-//#include "netstatp.h"
 
 #include "trace.h"
 #include "resource.h"

@@ -1,4 +1,4 @@
-/* $Id: ping.c,v 1.1 2001/12/30 04:09:38 sedwards Exp $
+/* $Id: ping.c,v 1.2 2004/01/12 22:45:53 sedwards Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
@@ -210,11 +210,11 @@ BOOL ParseCmdline(int argc, char* argv[])
     INT i;
     BOOL ShowUsage;
     BOOL FoundTarget;
-#if 1
-    lstrcpy(TargetName, "127.0.0.1");
-    PingCount = 1;
-    return TRUE;
-#endif
+//#if 1
+//    lstrcpy(TargetName, "127.0.0.1");
+//    PingCount = 1;
+//    return TRUE;
+//#endif
     if (argc < 2) {
         ShowUsage = TRUE;
     } else {
