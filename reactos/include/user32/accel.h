@@ -1,17 +1,8 @@
-/* $Id: accel.h,v 1.1 2003/07/20 03:45:31 hyperion Exp $
+/* $Id: accel.h,v 1.2 2004/01/28 21:00:23 gvg Exp $
 */
 
 #ifndef __USER32_ACCEL_H_INCLUDED__
 #define __USER32_ACCEL_H_INCLUDED__
-
-/* RT_ACCELERATOR resources are arrays of RES_ACCEL structures */
-typedef struct _RES_ACCEL
-{
- WORD fVirt;
- WORD key;
- DWORD cmd;
-}
-RES_ACCEL;
 
 /* ACCELERATOR TABLES CACHE */
 /* Cache entry */

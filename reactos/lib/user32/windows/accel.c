@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.12 2003/12/07 16:54:44 chorns Exp $
+/* $Id: accel.c,v 1.13 2004/01/28 21:00:23 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -31,6 +31,16 @@
 #include <windows.h>
 #include <user32/accel.h>
 #include <win32k/ntuser.h>
+
+/* this is the 8 byte accel struct used in Win32 resources (internal only) */
+typedef struct
+{
+    BYTE   fVirt;
+    BYTE   pad0;
+    WORD   key;
+    WORD   cmd;
+    WORD   pad1;
+} PE_ACCEL, *LPPE_ACCEL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -80,8 +90,7 @@ HACCEL WINAPI U32LoadAccelerators(HINSTANCE hInstance, HRSRC hTableRes)
  HGLOBAL hAccTableData;
  HACCEL hAccTable = NULL;
  U32_ACCEL_CACHE_ENTRY * pEntry;
- RES_ACCEL * pAccTableResData;
- RES_ACCEL * p;
+ PE_ACCEL * pAccTableResData;
  SIZE_T i = 0;
  SIZE_T j = 0;
  ACCEL * pAccTableData;
@@ -110,26 +119,16 @@ HACCEL WINAPI U32LoadAccelerators(HINSTANCE hInstance, HRSRC hTableRes)
   goto l_Leave;
  }
 
- /* count the number of entries in the table */
- p = pAccTableResData = (RES_ACCEL *)hAccTableData;
-
- while(1)
- {
-  /* FIXME??? unknown flag 0x60 stops the scan */
-  if(p->fVirt & 0x60) break;
-
-  ++ i;
-  ++ p;
-
-  /* flag 0x80 marks the last entry of the table */
-  if(p->fVirt & 0x80) break;
- }
+ /* determine the number of entries in the table */
+ i = SizeofResource(hInstance, hTableRes) / sizeof(PE_ACCEL);
 
  /* allocate the buffer for the table to be passed to Win32K */
  pAccTableData = LocalAlloc(LMEM_FIXED, i * sizeof(ACCEL));
 
  /* failure */
  if(pAccTableData == NULL) goto l_Leave;
+
+ pAccTableResData = (PE_ACCEL *)hAccTableData;
 
  /* copy the table */
  for(j = 0; j < i; ++ j)
@@ -138,6 +137,7 @@ HACCEL WINAPI U32LoadAccelerators(HINSTANCE hInstance, HRSRC hTableRes)
   pAccTableData[j].key = pAccTableResData[j].key;
   pAccTableData[j].cmd = pAccTableResData[j].cmd;
  }
+ pAccTableData[i - 1].fVirt |= 0x80;
 
  /* create a new accelerator table object */
  hAccTable = NtUserCreateAcceleratorTable(pAccTableData, i);
