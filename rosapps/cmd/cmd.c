@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.27 2001/06/18 02:55:47 phreak Exp $
+/* $Id: cmd.c,v 1.28 2001/10/14 18:30:28 phreak Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -447,7 +447,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	{
 		HANDLE hFile;
 
-		hFile = CreateFile (in, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
@@ -519,7 +519,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		/* Final output to here */
 		HANDLE hFile;
 
-		hFile = CreateFile (out, GENERIC_WRITE, 0, NULL,
+		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, NULL,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
