@@ -20,6 +20,8 @@ extern VOID MmSafeCopyFromUserUnsafeStart(VOID);
 extern VOID MmSafeCopyFromUserRestart(VOID);
 extern VOID MmSafeCopyToUserUnsafeStart(VOID);
 extern VOID MmSafeCopyToUserRestart(VOID);
+extern VOID MmSafeReadPtrStart(VOID);
+extern VOID MmSafeReadPtrEnd(VOID);
 
 extern ULONG MmGlobalKernelPageDirectory[1024];
 
@@ -90,5 +92,14 @@ NTSTATUS MmPageFault(ULONG Cs,
       (*Eax) = STATUS_ACCESS_VIOLATION;
       return(STATUS_SUCCESS);
    }
+   if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
+         ((*Eip) >= (ULONG_PTR)MmSafeReadPtrStart) &&
+         ((*Eip) <= (ULONG_PTR)MmSafeReadPtrEnd))
+   {
+      (*Eip) = (ULONG_PTR)MmSafeReadPtrEnd;
+      (*Eax) = 0;
+      return(STATUS_SUCCESS);
+   }
+
    return(Status);
 }
