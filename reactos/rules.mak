@@ -114,3 +114,11 @@ XDK_PATH_INC=$(XDK_PATH)/include
 WINE_PATH=$(PATH_TO_TOP)/../wine
 WINE_PATH_LIB=$(WINE_PATH)/lib
 WINE_PATH_INC=$(WINE_PATH)/include
+
+# Posix+ Integration
+POSIX_PATH=$(PATH_TO_TOP)/../posix
+POSIX_PATH_LIB=$(POSIX_PATH)/lib
+POSIX_PATH_INC=$(POSIX_PATH)/include
+
+# Other systems integration
+ROOT_PATH=$(PATH_TO_TOP)/..

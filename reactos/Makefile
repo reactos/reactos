@@ -5,19 +5,18 @@
 PATH_TO_TOP = .
 
 #
-# Define to build WINE modules
+# Define to build ReactOS external targets
 #
-ifeq ($(ROS_BUILD_WINE),)
-ROS_BUILD_WINE = no
+ifeq ($(ROS_BUILD_EXT),)
+ROS_BUILD_EXT = no
 else
-ROS_BUILD_WINE = yes
+ROS_BUILD_EXT = yes
 endif
 
 include $(PATH_TO_TOP)/rules.mak
 
 # Required to run the system
 COMPONENTS = iface_native iface_additional hallib ntoskrnl
-
 
 # Hardware Abstraction Layers
 # halx86
@@ -89,35 +88,44 @@ TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_dat
             event file gditest hello isotest lpc mstest mutex nptest \
             pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
 
-# Test applications
+# Console system utilities
 # cabman cat net objdir partinfo pice ps sc stats
 UTIL_APPS = cat objdir partinfo sc stats
 
-ifeq ($(ROS_BUILD_WINE),yes)
+# External (sub)systems for ReactOS
+# wine posix os2 java
+EXTERNALS = posix
 
-# invoke wine global makefile here ?
-
+ifeq ($(ROS_BUILD_EXT),yes)
+EXT_MODULES = $(EXTERNALS)
 else
+EXT_MODULES =
 endif
 
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(TEST_APPS) \
-     $(UTIL_APPS)
+     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
+     $(TEST_APPS) $(UTIL_APPS) $(EXT_MODULES)
+
+#config: $(TOOLS:%=%_config)
+
+depends: $(DLLS:%=%_depends) $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
+         $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
         $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
         $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
-        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib)
+        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib) \
+        $(EXT_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(TEST_APPS:%=%_clean) \
-       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) \
+       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
        clean_after tools_clean
 
 clean_after:
@@ -128,15 +136,16 @@ install: tools install_dirs install_before \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install)
+         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install) \
+         $(EXT_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
       $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) $(TEST_APPS:%=%_dist) \
-      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist)
+      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist) $(EXT_MODULES:%=%_dist)
 
-.PHONY: all implib clean clean_before install dist
+.PHONY: all depends implib clean clean_before install dist
 
 
 #
@@ -165,6 +174,9 @@ $(SYS_APPS:%=%_install): %_install:
 $(SYS_SVC): %:
 	make -C services/$*
 
+$(SYS_SVC:%=%_depends): %_depends:
+	make -C services/$* depends
+
 $(SYS_SVC:%=%_implib): %_implib:
 	make -C services/$* implib
 
@@ -177,7 +189,7 @@ $(SYS_SVC:%=%_dist): %_dist:
 $(SYS_SVC:%=%_install): %_install:
 	make -C services/$* install
 
-.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install) $(SYS_SVC:%=%_dist)
+.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_depends) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install) $(SYS_SVC:%=%_dist)
 
 
 #
@@ -220,6 +232,30 @@ $(UTIL_APPS:%=%_install): %_install:
 	make -C apps/utils/$* install
 
 .PHONY: $(UTIL_APPS) $(UTIL_APPS:%=%_implib) $(UTIL_APPS:%=%_clean) $(UTIL_APPS:%=%_install) $(UTIL_APPS:%=%_dist)
+
+
+#
+# External ports and subsystem personalities
+#
+$(EXTERNALS): %:
+	make -C $(ROOT_PATH)/$*
+
+$(EXTERNALS:%=%_depends): %_depends:
+	make -C $(ROOT_PATH)/$* depends
+
+$(EXTERNALS:%=%_implib): %_implib:
+	make -C $(ROOT_PATH)/$* implib
+
+$(EXTERNALS:%=%_clean): %_clean:
+	make -C $(ROOT_PATH)/$* clean
+
+$(EXTERNALS:%=%_dist): %_dist:
+	make -C $(ROOT_PATH)/$* dist
+
+$(EXTERNALS:%=%_install): %_install:
+	make -C $(ROOT_PATH)/$* install
+
+.PHONY: $(EXTERNALS) $(EXTERNALS:%=%_depends) $(EXTERNALS:%=%_implib) $(EXTERNALS:%=%_clean) $(EXTERNALS:%=%_install) $(EXTERNALS:%=%_dist)
 
 
 #
@@ -565,6 +601,9 @@ $(HALS:%=%_dist): %_dist:
 $(DLLS): %:
 	make -C lib/$*
 
+$(DLLS:%=%_depends): %_depends:
+	make -C lib/$* depends
+
 $(DLLS:%=%_implib): %_implib:
 	make -C lib/$* implib
 
@@ -577,7 +616,7 @@ $(DLLS:%=%_install): %_install:
 $(DLLS:%=%_dist): %_dist:
 	make -C lib/$* dist
 
-.PHONY: $(DLLS) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
+.PHONY: $(DLLS) $(DLLS:%=%_depends) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
 
 #
 # Subsystem support modules
@@ -585,6 +624,9 @@ $(DLLS:%=%_dist): %_dist:
 
 $(SUBSYS): %:
 	make -C subsys/$*
+
+$(SUBSYS:%=%_depends): %_depends:
+	make -C subsys/$* depends
 
 $(SUBSYS:%=%_implib): %_implib:
 	make -C subsys/$* implib
@@ -598,7 +640,7 @@ $(SUBSYS:%=%_install): %_install:
 $(SUBSYS:%=%_dist): %_dist:
 	make -C subsys/$* dist
 
-.PHONY: $(SUBSYS) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_depends) $(SUBSYS:%=%_implib) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
         $(SUBSYS:%=%_dist)
 
 #
