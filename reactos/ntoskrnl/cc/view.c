@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.25 2001/05/01 23:08:18 chorns Exp $
+/* $Id: view.c,v 1.26 2001/05/04 01:21:43 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,7 +75,7 @@ static KSPIN_LOCK BcbListLock;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL 
-CcFlushCacheSegment(PCACHE_SEGMENT CacheSeg)
+CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Asks the FSD to flush the contents of the page back to disk
  */
@@ -91,7 +91,7 @@ CcFlushCacheSegment(PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcReleaseCacheSegment(PBCB Bcb,
+CcRosReleaseCacheSegment(PBCB Bcb,
 		      PCACHE_SEGMENT CacheSeg,
 		      BOOLEAN Valid)
 {
@@ -108,7 +108,7 @@ CcReleaseCacheSegment(PBCB Bcb,
 }
 
 NTSTATUS
-CcGetCacheSegment(PBCB Bcb,
+CcRosGetCacheSegment(PBCB Bcb,
 		  ULONG FileOffset,
 		  PULONG BaseOffset,
 		  PVOID* BaseAddress,
@@ -184,7 +184,7 @@ CcGetCacheSegment(PBCB Bcb,
 }
 
 NTSTATUS STDCALL 
-CcRequestCacheSegment(PBCB Bcb,
+CcRosRequestCacheSegment(PBCB Bcb,
 		      ULONG FileOffset,
 		      PVOID* BaseAddress,
 		      PBOOLEAN UptoDate,
@@ -202,7 +202,7 @@ CcRequestCacheSegment(PBCB Bcb,
       KeBugCheck(0);
     }
 
-  return(CcGetCacheSegment(Bcb,
+  return(CcRosGetCacheSegment(Bcb,
 			   FileOffset,
 			   &BaseOffset,
 			   BaseAddress,
@@ -220,7 +220,7 @@ CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
 }
 
 NTSTATUS STDCALL 
-CcFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
+CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Releases a cache segment associated with a BCB
  */
@@ -236,7 +236,7 @@ CcFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 /*
  * FUNCTION: Releases the BCB associated with a file object
  */
@@ -244,9 +244,9 @@ CcReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    
-   DPRINT("CcReleaseFileCache(FileObject %x, Bcb %x)\n", FileObject, Bcb);
+   DPRINT("CcRosReleaseFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, Bcb);
 
-   MmFreeSectionSegments(FileObject);
+   MmFreeSectionSegments(Bcb->FileObject);
    
    current_entry = Bcb->CacheSegmentListHead.Flink;
    while (current_entry != &Bcb->CacheSegmentListHead)
@@ -254,25 +254,26 @@ CcReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 	current = 
 	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
 	current_entry = current_entry->Flink;
-	CcFreeCacheSegment(Bcb, current);
+	CcRosFreeCacheSegment(Bcb, current);
      }
-   
+
+   ObDereferenceObject (Bcb->FileObject);
    ExFreePool(Bcb);
    
-   DPRINT("CcReleaseFileCache() finished\n");
+   DPRINT("CcRosReleaseFileCache() finished\n");
    
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL 
-CcInitializeFileCache(PFILE_OBJECT FileObject,
+CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 		      PBCB* Bcb,
 		      ULONG CacheSegmentSize)
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
 {
-   DPRINT("CcInitializeFileCache(FileObject %x)\n",FileObject);
+   DPRINT("CcRosInitializeFileCache(FileObject %x)\n",FileObject);
    
    (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
    if ((*Bcb) == NULL)
@@ -289,7 +290,7 @@ CcInitializeFileCache(PFILE_OBJECT FileObject,
    KeInitializeSpinLock(&(*Bcb)->BcbLock);
    (*Bcb)->CacheSegmentSize = CacheSegmentSize;
 
-   DPRINT("Finished CcInitializeFileCache() = %x\n", *Bcb);
+   DPRINT("Finished CcRosInitializeFileCache() = %x\n", *Bcb);
    
    return(STATUS_SUCCESS);
 }

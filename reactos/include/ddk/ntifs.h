@@ -12,23 +12,23 @@ struct _CACHE_SEGMENT;
 typedef struct _CACHE_SEGMENT* PCACHE_SEGMENT;
 
 NTSTATUS STDCALL
-CcFlushCacheSegment (struct _CACHE_SEGMENT*	CacheSeg);
+CcRosFlushCacheSegment (struct _CACHE_SEGMENT*	CacheSeg);
 NTSTATUS STDCALL
-CcReleaseCacheSegment (struct _BCB*		Bcb,
+CcRosReleaseCacheSegment (struct _BCB*		Bcb,
 		    struct _CACHE_SEGMENT*	CacheSeg,
 		    BOOLEAN		Valid);
 NTSTATUS STDCALL
-CcRequestCacheSegment (struct _BCB*		Bcb,
+CcRosRequestCacheSegment (struct _BCB*		Bcb,
 		       ULONG		FileOffset,
 		       PVOID* BaseAddress,
 		       PBOOLEAN	UptoDate,
 		       struct _CACHE_SEGMENT** CacheSeg);
 NTSTATUS STDCALL
-CcInitializeFileCache (PFILE_OBJECT	FileObject,
+CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
 		       struct _BCB** Bcb,
 		       ULONG CacheSegmentSize);
 NTSTATUS STDCALL
-CcReleaseFileCache (PFILE_OBJECT	FileObject,
+CcRosReleaseFileCache (PFILE_OBJECT	FileObject,
 		    struct _BCB*		Bcb);
 
 #include <ddk/cctypes.h>

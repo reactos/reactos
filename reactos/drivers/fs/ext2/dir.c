@@ -310,7 +310,7 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    DPRINT("Found file\n");
    
    Fcb->inode = current_inode;
-   CcInitializeFileCache(FileObject, &Fcb->Bcb);
+   CcRosInitializeFileCache(FileObject, &Fcb->Bcb);
    FileObject->FsContext = Fcb;
    
    return(STATUS_SUCCESS);

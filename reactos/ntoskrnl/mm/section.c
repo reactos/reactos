@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.56 2001/04/04 22:21:31 dwelch Exp $
+/* $Id: section.c,v 1.57 2001/05/04 01:21:44 rex Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -273,7 +273,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       LARGE_INTEGER SegOffset;
       PHYSICAL_ADDRESS Addr;
 
-      Status = CcGetCacheSegment(Fcb->Bcb,
+      Status = CcRosGetCacheSegment(Fcb->Bcb,
 				 (ULONG)Offset->QuadPart,
 				 &BaseOffset,
 				 &BaseAddress,
@@ -297,7 +297,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 			      TRUE);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      CcReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE);
 	      return(Status);
 	    }
 	}
@@ -307,7 +307,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       (*Page) = (PVOID)(ULONG)Addr.QuadPart;
       MmReferencePage((*Page));
 
-      CcReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE);
       return(STATUS_SUCCESS);
     }
   else

@@ -54,7 +54,7 @@ NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      {
 	if (Fcb->Bcb != NULL)
 	  {
-	     CcReleaseFileCache(FileObject, Fcb->Bcb);
+	     CcRosReleaseFileCache(FileObject, Fcb->Bcb);
 	  }
 	ExFreePool(Fcb);
 	FileObject->FsContext = NULL;
@@ -110,7 +110,7 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    DPRINT("DeviceExt->StorageDevice %x\n", DeviceExt->StorageDevice);
    DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
    DeviceExt->superblock = superblock;
-   CcInitializeFileCache(DeviceExt->FileObject,
+   CcRosInitializeFileCache(DeviceExt->FileObject,
 			 &DeviceExt->Bcb);
    
    DPRINT("Ext2Mount() = STATUS_SUCCESS\n");

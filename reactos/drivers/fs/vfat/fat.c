@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.24 2001/04/29 21:08:14 cnettel Exp $
+ * $Id: fat.c,v 1.25 2001/05/04 01:21:45 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,7 +40,7 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + 
     (CurrentCluster * sizeof(ULONG));
 
-  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+  Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
 				 PAGE_ROUND_DOWN(FATOffset),
 				 &BaseAddress,
 				 &Valid,
@@ -57,7 +57,7 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 			      BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
 	  return(Status);
 	}
     }
@@ -65,7 +65,7 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   CurrentCluster = *(PULONG)(BaseAddress + (FATOffset % PAGESIZE));
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
-  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
   *NextCluster = CurrentCluster;
   return (STATUS_SUCCESS);
 }
@@ -86,7 +86,7 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   
   FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + (CurrentCluster * 2);
   
-  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+  Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
 				 PAGE_ROUND_DOWN(FATOffset),
 				 &BaseAddress,
 				 &Valid,
@@ -103,7 +103,7 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 			      BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
 	  return(Status);
 	}
     }
@@ -111,7 +111,7 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % PAGESIZE)));
   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
     CurrentCluster = 0xffffffff;
-  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
   *NextCluster = CurrentCluster;
   return (STATUS_SUCCESS);
 }
@@ -134,7 +134,7 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 
  *NextCluster = 0;
 
- Status = CcRequestCacheSegment(DeviceExt->Fat12StorageBcb,
+ Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
 				0,
 				&BaseAddress,
 				&Valid,
@@ -151,7 +151,7 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
 	  return(Status);
 	}
     }
@@ -173,7 +173,7 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
     Entry = 0xffffffff;
 //  DPRINT("Returning %x\n",Entry);
   *NextCluster = Entry;
-  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
   return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
 }
 
@@ -203,9 +203,9 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 	{
 	  if (CacheSeg != NULL)
 	    {
-	      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+	      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	    }
-	  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+	  Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
 					 PAGE_ROUND_DOWN(FatStart + i),
 					 &BaseAddress,
 					 &Valid,
@@ -223,7 +223,7 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 				       BaseAddress);
 	      if (!NT_SUCCESS(Status))
 		{
-		  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, 
+		  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, 
 					FALSE);
 		  return(Status);
 		}
@@ -233,11 +233,11 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 	{
 	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i / 2;
-	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	  return(STATUS_SUCCESS);
 	}
     }
-  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
   return(STATUS_DISK_FULL);
 }
 
@@ -259,7 +259,7 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   
   *Cluster = 0;
 
-  Status = CcRequestCacheSegment(DeviceExt->Fat12StorageBcb,
+  Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
 				 0,
 				 &BaseAddress,
 				 &Valid,
@@ -276,7 +276,7 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
 	  return(Status);
 	}
     }
@@ -301,11 +301,11 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 	{
 	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i;
-	  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
+	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
 	  return(STATUS_SUCCESS);
 	}
     }
-  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
   return (STATUS_DISK_FULL);
 }
 
@@ -380,7 +380,7 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
   ULONG numberofclusters;
 
   ExAcquireResourceSharedLite (&DeviceExt->FatResource, TRUE);
-  Status = CcRequestCacheSegment(DeviceExt->Fat12StorageBcb,
+  Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
 				 0,
 				 &BaseAddress,
 				 &Valid,
@@ -398,7 +398,7 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
 			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
           ExReleaseResourceLite (&DeviceExt->FatResource);
           return 0; // Will the caller understand NTSTATUS values?
 	}
@@ -423,7 +423,7 @@ FAT12CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
 	ulCount++;
     }
 
-  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
+  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
   ExReleaseResourceLite (&DeviceExt->FatResource);
 
   return ulCount;
@@ -514,7 +514,7 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   BOOLEAN Valid;
   PCACHE_SEGMENT CacheSeg;
 
-  Status = CcRequestCacheSegment(DeviceExt->Fat12StorageBcb,
+  Status = CcRosRequestCacheSegment(DeviceExt->Fat12StorageBcb,
 				 0,
 				 &BaseAddress,
 				 &Valid,
@@ -531,7 +531,7 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
-	  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
+	  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, FALSE);
 	  return(Status);
 	}
     }
@@ -573,7 +573,7 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 			    1, CBlock + FATsector * 512);
 	}
     }
-  CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
+  CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
   return(STATUS_SUCCESS);
 }
 
@@ -598,7 +598,7 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 
   for (i = 0; i < DeviceExt->Boot->FATCount; i++)
     {  
-      Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+      Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
 				     PAGE_ROUND_DOWN(FATOffset),
 				     &BaseAddress,
 				     &Valid,
@@ -615,7 +615,7 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 				   BaseAddress);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
 	      return(Status);
 	    }
 	}
@@ -627,7 +627,7 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 				PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
 				PAGESIZE / BLOCKSIZE,
 				BaseAddress);
-      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
       
       DPRINT("DeviceExt->Boot->FATSectors %d\n",
 	      DeviceExt->Boot->FATSectors);

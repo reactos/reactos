@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.23 2001/04/26 01:28:54 phreak Exp $
+/* $Id: rw.c,v 1.24 2001/05/04 01:21:45 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -123,7 +123,7 @@ VfatReadBigCluster(PDEVICE_EXTENSION DeviceExt,
   
   if (!NoCache)
     {
-      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb,
+      Status = CcRosRequestCacheSegment(Fcb->RFCB.Bcb,
 				     StartOffset,
 				     &BaseAddress,
 				     &Valid,
@@ -162,7 +162,7 @@ VfatReadBigCluster(PDEVICE_EXTENSION DeviceExt,
 	{
 	  if (!NoCache)
 	    {
-	      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 	    }
 	  else if (InternalOffset != 0)
 	    {
@@ -180,7 +180,7 @@ VfatReadBigCluster(PDEVICE_EXTENSION DeviceExt,
     }
   if (!NoCache)
     {
-      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
     }
   else if (InternalOffset != 0)
     {
@@ -217,7 +217,7 @@ VfatReadSmallCluster(PDEVICE_EXTENSION DeviceExt,
    */
   if (!NoCache)
     {
-      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb, 
+      Status = CcRosRequestCacheSegment(Fcb->RFCB.Bcb, 
 				     StartOffset,
 				     &BaseAddress,
 				     &Valid,
@@ -263,7 +263,7 @@ VfatReadSmallCluster(PDEVICE_EXTENSION DeviceExt,
 	    {
 	      if (!NoCache)
 		{
-		  CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+		  CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 		}
 	      else if (InternalOffset != 0)
 		{
@@ -301,7 +301,7 @@ VfatReadSmallCluster(PDEVICE_EXTENSION DeviceExt,
     }
   if (!NoCache)
     {
-      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
     }
   else if (InternalOffset != 0)
     {
@@ -489,7 +489,7 @@ VfatWriteBigCluster(PDEVICE_EXTENSION DeviceExt,
    */  
   if (!NoCache)
     {
-      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb,
+      Status = CcRosRequestCacheSegment(Fcb->RFCB.Bcb,
 				     StartOffset,
 				     &BaseAddress,
 				     &Valid,
@@ -529,7 +529,7 @@ VfatWriteBigCluster(PDEVICE_EXTENSION DeviceExt,
 	{
 	  if (!NoCache)
 	    {
-	      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 	    }
 	  else if (InternalOffset != 0)
 	    {
@@ -556,7 +556,7 @@ VfatWriteBigCluster(PDEVICE_EXTENSION DeviceExt,
 			       *CurrentCluster);
   if (!NoCache)
     {
-      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
     }
   else if (InternalOffset != 0)
     {
@@ -596,7 +596,7 @@ VfatWriteSmallCluster(PDEVICE_EXTENSION DeviceExt,
   
   if (!NoCache)
     {
-      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb, 
+      Status = CcRosRequestCacheSegment(Fcb->RFCB.Bcb, 
 				     StartOffset,
 				     &BaseAddress,
 				     &Valid,
@@ -644,7 +644,7 @@ VfatWriteSmallCluster(PDEVICE_EXTENSION DeviceExt,
 	    {
 	      if (!NoCache)
 		{
-		  CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+		  CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 		}
 	      else if (InternalOffset != 0)
 		{
@@ -699,7 +699,7 @@ VfatWriteSmallCluster(PDEVICE_EXTENSION DeviceExt,
 	{
 	  if (!NoCache)
 	    {
-	      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 	    }
 	  else if (InternalOffset != 0)
 	    {
@@ -717,7 +717,7 @@ VfatWriteSmallCluster(PDEVICE_EXTENSION DeviceExt,
   
   if (!NoCache)
     {
-      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
     }
   else if (InternalOffset != 0)
     {

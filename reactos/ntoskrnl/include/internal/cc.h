@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.4 2001/04/09 02:45:03 dwelch Exp $ */
+/* $Id: cc.h,v 1.5 2001/05/04 01:21:44 rex Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -28,7 +28,7 @@ VOID STDCALL
 CcMdlReadCompleteDev (IN	PMDL		MdlChain,
 		      IN	PDEVICE_OBJECT	DeviceObject);
 NTSTATUS
-CcGetCacheSegment(PBCB Bcb,
+CcRosGetCacheSegment(PBCB Bcb,
 		  ULONG FileOffset,
 		  PULONG BaseOffset,
 		  PVOID* BaseAddress,

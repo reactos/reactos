@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.24 2001/05/02 03:18:03 rex Exp $
+/* $Id: create.c,v 1.25 2001/05/04 01:21:45 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -485,7 +485,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PVFATCCB newCCB;
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
-  ULONG BytesPerCluster;
+  ULONG BytesPerCluster, FileCacheQuantum;
 
   DPRINT ("VfatOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
@@ -635,31 +635,24 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   newCCB->pFcb = ParentFcb;
   newCCB->PtrFileObject = FileObject;
   ParentFcb->RefCount++;
+  ParentFcb->pDevExt = DeviceExt;
   /* FIXME : initialize all fields in FCB and CCB */
 
-  vfatAddFCBToTable (DeviceExt, ParentFcb);
-
-/*  vfat_wcsncpy (ParentFcb->PathName, FileName, MAX_PATH);
-  ParentFcb->ObjectName = ParentFcb->PathName + (current - FileName); */
-  ParentFcb->pDevExt = DeviceExt;
   BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
-  if (BytesPerCluster >= PAGESIZE)
-    {
-      Status = CcInitializeFileCache(FileObject, &ParentFcb->RFCB.Bcb,
-				     BytesPerCluster);
-    }
-  else
-    {
-      Status = CcInitializeFileCache(FileObject, &ParentFcb->RFCB.Bcb, 
-				     PAGESIZE);
-    }
+  FileCacheQuantum = (BytesPerCluster >= PAGESIZE) ? BytesPerCluster : PAGESIZE;
+  Status = CcRosInitializeFileCache(FileObject, 
+                                 &ParentFcb->RFCB.Bcb,
+                                 FileCacheQuantum);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("CcInitializeFileCache failed\n");
+      DbgPrint("CcRosInitializeFileCache failed\n");
       KeBugCheck(0);
     }
   DPRINT ("file open, fcb=%x\n", ParentFcb);
   DPRINT ("FileSize %d\n", ParentFcb->entry.FileSize);
+
+  vfatAddFCBToTable (DeviceExt, ParentFcb);
+
   if (Fcb)
     ExFreePool (Fcb);
   if (AbsFileName)

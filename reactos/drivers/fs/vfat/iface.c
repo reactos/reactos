@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.51 2001/03/07 13:44:40 ekohl Exp $
+/* $Id: iface.c,v 1.52 2001/05/04 01:21:45 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -200,7 +200,7 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 							  DeviceToMount);
    DeviceExt->StreamStorageDevice = IoCreateStreamFileObject(NULL,
 							     DeviceExt->StorageDevice);
-   Status = CcInitializeFileCache(DeviceExt->StreamStorageDevice,
+   Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
 				  &DeviceExt->StorageBcb,
 				  PAGESIZE);
    if (!NT_SUCCESS(Status))
@@ -213,7 +213,7 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
      {
 	DeviceExt->Fat12StorageDevice = 
 	  IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-	Status = CcInitializeFileCache(DeviceExt->Fat12StorageDevice,
+	Status = CcRosInitializeFileCache(DeviceExt->Fat12StorageDevice,
 				       &DeviceExt->Fat12StorageBcb,
 				       PAGESIZE * 3);
 	if (!NT_SUCCESS(Status))

@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.18 2001/05/02 03:18:03 rex Exp $
+/* $Id: dirwr.c,v 1.19 2001/05/04 01:21:45 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -421,12 +421,12 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
   if (BytesPerCluster >= PAGESIZE)
     {
-      Status = CcInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
+      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
 				     BytesPerCluster);
     }
   else
     {
-      Status = CcInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb, 
+      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb, 
 				     PAGESIZE);
     }
 
