@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.13 2004/10/09 18:46:41 gvg Exp $
+/* $Id: profile.c,v 1.14 2004/10/13 19:52:09 gvg Exp $
  *
  * Imported from Wine
  * Copyright 1993 Miguel de Icaza
@@ -1525,7 +1525,7 @@ GetProfileIntA(LPCSTR lpAppName,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetProfileSectionW(LPCWSTR lpAppName,
@@ -1535,12 +1535,12 @@ GetProfileSectionW(LPCWSTR lpAppName,
    return GetPrivateProfileSectionW(lpAppName,
 				    lpReturnedString,
 				    nSize,
-				    NULL);
+				    L"win.ini");
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetProfileSectionA(LPCSTR lpAppName,
@@ -1550,7 +1550,7 @@ GetProfileSectionA(LPCSTR lpAppName,
    return GetPrivateProfileSectionA(lpAppName,
 				    lpReturnedString,
 				    nSize,
-				    NULL);
+				    "win.ini");
 }
 
 
@@ -1569,7 +1569,7 @@ GetProfileStringW(LPCWSTR lpAppName,
 				   lpDefault,
 				   lpReturnedString,
 				   nSize,
-				   NULL);
+				   L"win.ini");
 }
 
 
@@ -1588,7 +1588,7 @@ GetProfileStringA(LPCSTR lpAppName,
 				   lpDefault,
 				   lpReturnedString,
 				   nSize,
-				   NULL);
+				   "win.ini");
 }
 
 
@@ -1795,7 +1795,7 @@ WriteProfileSectionA(LPCSTR lpAppName,
 {
    return WritePrivateProfileSectionA(lpAppName,
 				      lpString,
-				      NULL);
+				      "win.ini");
 }
 
 
@@ -1808,7 +1808,7 @@ WriteProfileSectionW(LPCWSTR lpAppName,
 {
    return WritePrivateProfileSectionW(lpAppName,
 				      lpString,
-				      NULL);
+				      L"win.ini");
 }
 
 
@@ -1823,7 +1823,7 @@ WriteProfileStringA(LPCSTR AppName,
    return WritePrivateProfileStringA(AppName,
 				     KeyName,
 				     String,
-				     NULL);
+				     "win.ini");
 }
 
 
@@ -1838,7 +1838,7 @@ WriteProfileStringW(LPCWSTR AppName,
    return WritePrivateProfileStringW(AppName,
 				     KeyName,
 				     String,
-				     NULL);
+				     L"win.ini");
 }
 
 /* EOF */
