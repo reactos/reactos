@@ -191,6 +191,7 @@ IoSecondStageCompletion(
    }
    
    DPRINT("Tail Value %x, Irp Value %x\n", Irp->Tail.Overlay.CurrentStackLocation - (PIO_STACK_LOCATION)(Irp+1), Irp->CurrentLocation); 
+   IoStack =  (PIO_STACK_LOCATION)(Irp+1) + Irp->CurrentLocation;
    DeviceObject = IoStack->DeviceObject;
 
    DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n", Irp, PriorityBoost);
