@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.48 2004/02/22 23:40:58 gvg Exp $
+/* $Id: menu.c,v 1.49 2004/02/23 21:18:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -507,11 +507,13 @@ IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi)
 
 int FASTCALL
 IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
-                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem)
+                     PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem)
 {
   PMENU_ITEM PrevItem = NULL;
   PMENU_ITEM CurItem = MenuObject->MenuItemList;
   int p;
+  int ret;
+
   if(MF_BYPOSITION & fFlag)
   {
     p = uSearchBy;
@@ -545,6 +547,21 @@ IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
         if(MenuItem) *MenuItem = CurItem;
         if(PrevMenuItem) *PrevMenuItem = PrevItem;
         return p;
+      }
+      else if (0 != (CurItem->fType & MF_POPUP))
+      {
+        MenuObject = IntGetMenuObject(CurItem->hSubMenu);
+        if (NULL != MenuObject)
+        {
+          ret = IntGetMenuItemByFlag(MenuObject, uSearchBy, fFlag,
+                                     MenuItem, PrevMenuItem);
+          if (-1 != ret)
+          {
+            IntReleaseMenuObject(MenuObject);
+            return ret;
+          }          
+        }
+        IntReleaseMenuObject(MenuObject);
       }
       PrevItem = CurItem;
       CurItem = CurItem->Next;
