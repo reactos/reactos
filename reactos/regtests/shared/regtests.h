@@ -50,35 +50,63 @@ AppendAssertion(char *message)
   _Result = TS_FAILED;
 }
 
+#define _AssertTrue(_Condition) \
+{ \
+  if (!(_Condition)) \
+    { \
+      char _message[100]; \
+      sprintf(_message, "Condition was not true at %s:%d", \
+        __FILE__, __LINE__); \
+      AppendAssertion(_message); \
+    } \
+}
+
+#define _AssertFalse(_Condition) \
+{ \
+  if (_Condition) \
+    { \
+      char _message[100]; \
+      sprintf(_message, "Condition was not false at %s:%d", \
+        __FILE__, __LINE__); \
+      AppendAssertion(_message); \
+    } \
+}
+
 #define _AssertEqualValue(_Expected, _Actual) \
 { \
-  if ((_Expected) != (_Actual)) \
+  ULONG __Expected = (ULONG) (_Expected); \
+  ULONG __Actual = (ULONG) (_Actual); \
+  if ((__Expected) != (__Actual)) \
     { \
       char _message[100]; \
       sprintf(_message, "Expected %d/0x%.08x was %d/0x%.08x at %s:%d", \
-        (_Expected), (_Expected), (_Actual), (_Actual), __FILE__, __LINE__); \
+        (__Expected), (__Expected), (__Actual), (__Actual), __FILE__, __LINE__); \
       AppendAssertion(_message); \
     } \
 }
 
 #define _AssertEqualWideString(_Expected, _Actual) \
 { \
-  if (wcscmp((_Expected), (_Actual)) != 0) \
+  LPWSTR __Expected = (LPWSTR) (_Expected); \
+  LPWSTR __Actual = (LPWSTR) (_Actual); \
+  if (wcscmp((__Expected), (__Actual)) != 0) \
     { \
       char _message[100]; \
       sprintf(_message, "Expected %S was %S at %s:%d", \
-        (_Expected), (_Actual), __FILE__, __LINE__); \
+        (__Expected), (__Actual), __FILE__, __LINE__); \
       AppendAssertion(_message); \
     } \
 }
 
 #define _AssertNotEqualValue(_Expected, _Actual) \
 { \
-  if ((_Expected) == (_Actual)) \
+  ULONG __Expected = (ULONG) (_Excepted); \
+  ULONG __Actual = (ULONG) (_Actual); \
+  if ((__Expected) == (__Actual)) \
     { \
       char _message[100]; \
       sprintf(_message, "Actual value expected to be different from %d/0x%.08x at %s:%d", \
-        (_Expected), (_Expected), __FILE__, __LINE__); \
+        (__Expected), (__Expected), __FILE__, __LINE__); \
       AppendAssertion(_message); \
     } \
 }
@@ -115,15 +143,12 @@ extern VOID InitializeTests();
 extern VOID RegisterTests();
 extern VOID PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName);
 
-/* Routines provided by the driver */
-extern PVOID AllocateMemory(ULONG Size);
-extern VOID FreeMemory(PVOID Base);
-
 
 typedef struct _API_DESCRIPTION
 {
   PCHAR FileName;
   PCHAR FunctionName;
+  PCHAR ForwardedFunctionName;
   PVOID FunctionAddress;
   PVOID MockFunctionAddress;
 } API_DESCRIPTION, *PAPI_DESCRIPTION;
@@ -131,33 +156,60 @@ typedef struct _API_DESCRIPTION
 extern API_DESCRIPTION ExternalDependencies[];
 extern ULONG MaxExternalDependency;
 
+HMODULE STDCALL
+_GetModuleHandleA(LPCSTR lpModuleName);
+
+FARPROC STDCALL
+_GetProcAddress(HMODULE hModule,
+  LPCSTR lpProcName);
+
+HINSTANCE STDCALL
+_LoadLibraryA(LPCSTR lpLibFileName);
+
+static inline PCHAR
+FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
+{
+  if (ApiDescription->ForwardedFunctionName != NULL)
+    {
+      return ApiDescription->ForwardedFunctionName;
+    }
+  else
+    {
+      return ApiDescription->FunctionName;
+    }
+}
+
 static inline PVOID
 FrameworkGetFunction(PAPI_DESCRIPTION ApiDescription)
 {
   HMODULE hModule;
-  PVOID Function;
+  PVOID function;
+  PCHAR exportedFunctionName;
 
-  hModule = GetModuleHandleA(ApiDescription->FileName);
+  exportedFunctionName = FrameworkGetExportedFunctionNameInternal(ApiDescription);
+
+  hModule = _GetModuleHandleA(ApiDescription->FileName);
   if (hModule != NULL) 
     {
-      Function = GetProcAddress(hModule, ApiDescription->FunctionName);
+      function = _GetProcAddress(hModule, exportedFunctionName);
     }
   else
 	  {
-      hModule = LoadLibraryA(ApiDescription->FileName);
+      hModule = _LoadLibraryA(ApiDescription->FileName);
       if (hModule != NULL)
         {
-          Function = GetProcAddress(hModule, ApiDescription->FunctionName);
+          function = _GetProcAddress(hModule, exportedFunctionName);
           //FreeLibrary(hModule);
         }
     }
-  return Function;
+  return function;
 }
 
-static inline PVOID STDCALL
+static inline PVOID
 FrameworkGetHookInternal(ULONG index)
 {
   PVOID address;
+  PCHAR exportedFunctionName;
 
   if (index > MaxExternalDependency)
     return NULL;
@@ -168,8 +220,10 @@ FrameworkGetHookInternal(ULONG index)
   if (ExternalDependencies[index].FunctionAddress != NULL)
     return ExternalDependencies[index].FunctionAddress;
 
+  exportedFunctionName = FrameworkGetExportedFunctionNameInternal(&ExternalDependencies[index]);
+
   printf("Calling function '%s' in DLL '%s'.\n",
-    ExternalDependencies[index].FunctionName,
+    exportedFunctionName,
     ExternalDependencies[index].FileName);
 
   address = FrameworkGetFunction(&ExternalDependencies[index]);
@@ -177,7 +231,7 @@ FrameworkGetHookInternal(ULONG index)
   if (address == NULL)
     {
       printf("Function '%s' not found in DLL '%s'.\n",
-        ExternalDependencies[index].FunctionName,
+        exportedFunctionName,
         ExternalDependencies[index].FileName);
     }
   ExternalDependencies[index].FunctionAddress = address;
@@ -193,7 +247,7 @@ _SetHook(PCHAR name,
   PAPI_DESCRIPTION api;
   ULONG index;
 
-  for (index = 0; index < MaxExternalDependency; index++)
+  for (index = 0; index <= MaxExternalDependency; index++)
     {
       api = &ExternalDependencies[index];
       if (strcmp(api->FunctionName, name) == 0)
@@ -244,7 +298,7 @@ _UnsetAllHooks()
   PAPI_DESCRIPTION api;
   ULONG index;
 
-  for (index = 0; index < MaxExternalDependency; index++)
+  for (index = 0; index <= MaxExternalDependency; index++)
     {
       api = &ExternalDependencies[index];
       api->MockFunctionAddress = NULL;

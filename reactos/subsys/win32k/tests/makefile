@@ -14,12 +14,7 @@ TARGET_LIBS = ../win32k.a
 
 -include Makefile.tests
 
-TARGET_OBJECTS = \
-  _rtstub.o \
-  _regtests.o \
-  _hooks.o \
-  _stubs.o \
-  $(addprefix tests/, $(TESTS))
+TARGET_OBJECTS = $(addprefix tests/, $(TESTS))
 
 include $(PATH_TO_TOP)/rules.mak
 

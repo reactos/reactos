@@ -1,0 +1,11 @@
+temp.exp
+*.d
+*.a
+*.o
+*.dll
+*.coff
+*.sym
+*.tmp
+*.gch
+*.pch
+*.map

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.90 2004/10/21 18:04:48 arty Exp $
+# $Id: helper.mk,v 1.91 2004/10/23 21:05:12 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -371,6 +371,7 @@ ifeq ($(TARGET_TYPE),test)
   MK_BOOTCDDIR := system32
   MK_DISTDIR := # none
   MK_RES_BASE :=
+  TARGET_OBJECTS := _rtstub.o _regtests.o $(TARGET_OBJECTS)
 endif
 
 
@@ -661,6 +662,10 @@ MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 MK_EXTRADEP := $(filter %.h,$(TARGET_OBJECTS))
 
+ifeq ($(TARGET_TYPE),test)
+MK_EXTRADEP += _stubs.o _hooks.o
+endif
+
 # We don't want to link header files
 MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
 
@@ -876,8 +881,8 @@ endif # MK_MODE
 # Static library target
 ifeq ($(MK_MODE),static)
 
-$(MK_FULLNAME): $(TARGET_OBJECTS)
-	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
+$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_OBJECTS)
+	$(AR) -r $(MK_FULLNAME) $(MK_OBJECTS)
 	@echo $(MK_BASENAME)$(MK_EXT) was successfully built.
 
 # Static libraries dont have a nostrip version
@@ -1017,7 +1022,7 @@ endif
 
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
-$(REGTEST_TARGETS): $(REGTEST_TESTS)
+$(REGTEST_TARGETS): $(REGTEST_TESTS) ./tests/stubs.tst
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
 	$(REGTESTS) -s ./tests/stubs.tst ./tests/_stubs.S ./tests/_hooks.c
 
@@ -1064,8 +1069,11 @@ endif
 
 ifeq ($(TARGET_TYPE),test)
 run: all
-	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(TARGET_LIBS) -lntdll
+	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
+	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a _hooks.o -lmsvcrt -lntdll
+	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
 	@_runtest.exe
+	@$(RM) regtests.dll
 	@$(RM) _runtest.exe
 endif
 

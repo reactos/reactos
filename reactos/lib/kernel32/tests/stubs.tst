@@ -3,6 +3,8 @@ ntdll.dll  CsrClientCallServer@16
 ntdll.dll  CsrClientConnectToServer@0
 ntdll.dll  CsrReleaseParameterBuffer@4
 ntdll.dll  DbgUiContinue@8
+ntdll.dll  HeapAlloc@12=RtlAllocateHeap
+ntdll.dll  HeapFree@12=RtlFreeHeap
 ntdll.dll  LdrAccessResource@16
 ntdll.dll  LdrDisableThreadCalloutsForDll@4
 ntdll.dll  LdrFindResource_U@16

@@ -6,18 +6,9 @@ TARGET_NAME = regtests
 
 TARGET_LIBPATH = .
 
-TARGET_CFLAGS = \
- -I../include \
- -DUNICODE \
- -Wall \
- -Werror \
- -fno-builtin \
- -D__USE_W32API \
- -DWINVER=0x0600 \
- -D_WIN32_WINNT=0x0501 \
- -I$(REGTESTS_PATH_INC)
+TARGET_CFLAGS = -I$(REGTESTS_PATH_INC)
 
-TARGET_LIBS = ../gdiplus.a
+TARGET_LIBS = ../ws2_32.a
 
 -include Makefile.tests
 

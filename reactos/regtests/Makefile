@@ -1,14 +1,18 @@
-# $Id: Makefile,v 1.5 2004/10/18 19:11:07 chorns Exp $
-
 PATH_TO_TOP = ..
 
 all:
+	$(MAKE) -C regtests all
 	$(MAKE) -C shared all
 
+implib:
+	- $(MAKE) -C regtests implib
+
 clean:
+	- $(MAKE) -C regtests clean
 	- $(MAKE) -C shared clean
 
 install:
+	$(MAKE) -C regtests install
 	$(MAKE) -C shared install
 
 .PHONY: all clean install

@@ -23,21 +23,19 @@ char *_Buffer;
 
 static LIST_ENTRY AllTests;
 
-int
-DriverTest()
+void *_alloca(size_t size)
 {
-  /* Dummy */
-  return 0;
+  void *ret;
+
+  asm ("movl %1, %%eax\n"
+       "addl $3, %%eax\n"
+       "andl $-4, %%eax\n"
+       "subl %%eax, %%esp\n"
+       "movl %%esp, %0\n"
+       : "=m" (ret) : "m" (size) : "eax");
+
+  return ret;
 }
-
-
-int
-_regtestsTest()
-{
-  /* Dummy */
-  return 0;
-}
-
 
 VOID
 InitializeTests()
@@ -83,7 +81,7 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
     (Test->Routine)(TESTCMD_RUN);
 #ifdef SEH
   } __except(EXCEPTION_EXECUTE_HANDLER) {
-    Result = TS_FAILED;
+    _Result = TS_FAILED;
     strcpy(Buffer, "Failed due to exception");
   }
 #endif
@@ -128,7 +126,7 @@ AddTest(TestRoutine Routine)
 {
   PROS_TEST Test;
 
-  Test = (PROS_TEST) AllocateMemory(sizeof(ROS_TEST));
+  Test = (PROS_TEST) malloc(sizeof(ROS_TEST));
   if (Test == NULL)
     {
       DbgPrint("Out of memory");
@@ -138,4 +136,10 @@ AddTest(TestRoutine Routine)
   Test->Routine = Routine;
 
   InsertTailList(&AllTests, &Test->ListEntry);
+}
+
+PVOID STDCALL
+FrameworkGetHook(ULONG index)
+{
+  return FrameworkGetHookInternal(index);
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.254 2004/10/23 17:07:06 weiden Exp $
+# $Id: Makefile,v 1.255 2004/10/23 21:05:11 chorns Exp $
 #
 # Global makefile
 #
@@ -137,7 +137,8 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLL
 implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
 	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) msvcrt_implib $(DLLS:%=%_implib) \
 	      $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-	      $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
+	      $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib) \
+	      $(REGTESTS:%=%_implib)
 
 test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
 	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) msvcrt_test $(DLLS:%=%_test) \
@@ -888,6 +889,9 @@ $(SUBSYS:%=%_bootcd): %_bootcd:
 
 $(REGTESTS): %: $(IMPLIB)
 	$(MAKE) --silent -C regtests
+
+$(REGTESTS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C regtests implib
 
 $(REGTESTS:%=%_clean): %_clean:
 	$(MAKE) -C regtests clean

@@ -6,3 +6,4 @@ Makefile.tests
 *.d
 *.o
 *.a
+*.pch

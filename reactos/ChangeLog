@@ -1,3 +1,36 @@
+2004-10-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: Support regtests_implib.
+	* rules.mak (REGTESTS_PATH): Define.
+	* drivers/net/tcpip/makefile (TARGET_BUILDENV_TEST): Remove.
+	* drivers/net/tcpip/tests/Makefile: Update.
+	* lib/gdiplus/tests/.cvsignore: Ditto.
+	* lib/gdiplus/tests/Makefile: Ditto.
+	* lib/kernel32/tests/Makefile: Ditto.
+	* lib/kernel32/tests/stubs.tst (HeapAlloc, HeapFree): Add.
+	* lib/ws2_32/makefile (TARGET_REGTESTS): Define to yes.
+	* regtests/Makefile: Update.
+ 	* regtests/shared/regtests.c (_alloca): Define.
+	(FrameworkGetHook): Move to here.
+ 	* regtests/shared/regtests.h (_AssertTrue, _AssertFalse): Define.
+ 	(_GetModuleHandleA, _GetProcAddress, _LoadLibraryA): Define.
+ 	(FrameworkGetExportedFunctionNameInternal): Define.
+ 	* subsys/win32k/tests/makefile: Update.
+ 	* tools/helper.mk: Create dependencies.
+ 	* tools/regtests.c: Move FrameworkGetHook; Support forwarded exports.
+	* lib/ws2_32/tests: New directory.
+	* lib/ws2_32/tests/.cvsignore: New file.
+	* lib/ws2_32/tests/Makefile: Ditto.
+	* lib/ws2_32/tests/stubs.tst: Ditto.
+	* lib/ws2_32/tests/tests: New directory.
+	* lib/ws2_32/tests/tests/.cvsignore: New file.
+	* lib/ws2_32/tests/tests/WinsockEvent.c: New file.
+	* regtests/regtests: New directory.
+	* regtests/regtests/.cvsignore: New file.
+	* regtests/regtests/Makefile: Ditto.
+	* regtests/regtests/regtests.c: Ditto.
+	* regtests/regtests/regtests.def: Ditto.
+
 2004-10-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/gdiplus/makefile (TARGET_BUILDENV_TEST): Remove.
