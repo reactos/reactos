@@ -102,7 +102,7 @@ VOID
 ClearScreen(VOID);
 
 VOID
-SetStatusText(PCHAR Text);
+SetStatusText(char* fmt, ...);
 
 VOID
 SetTextXY(SHORT x, SHORT y, PCHAR Text);

@@ -35,16 +35,12 @@
 
 
 
-#define FLG_ADDREG_DELREG_BIT             0x00008000
 #define FLG_ADDREG_BINVALUETYPE           0x00000001
 #define FLG_ADDREG_NOCLOBBER              0x00000002
 #define FLG_ADDREG_DELVAL                 0x00000004
 #define FLG_ADDREG_APPEND                 0x00000008
 #define FLG_ADDREG_KEYONLY                0x00000010
 #define FLG_ADDREG_OVERWRITEONLY          0x00000020
-#define FLG_ADDREG_64BITKEY               0x00001000
-#define FLG_ADDREG_KEYONLY_COMMON         0x00002000
-#define FLG_ADDREG_32BITKEY               0x00004000
 #define FLG_ADDREG_TYPE_SZ                0x00000000
 #define FLG_ADDREG_TYPE_MULTI_SZ          0x00010000
 #define FLG_ADDREG_TYPE_EXPAND_SZ         0x00020000
@@ -53,23 +49,8 @@
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
-#define FLG_DELREG_VALUE                 (0x00000000)
-#define FLG_DELREG_TYPE_MASK             FLG_ADDREG_TYPE_MASK
-#define FLG_DELREG_TYPE_SZ               FLG_ADDREG_TYPE_SZ
-#define FLG_DELREG_TYPE_MULTI_SZ         FLG_ADDREG_TYPE_MULTI_SZ
-#define FLG_DELREG_TYPE_EXPAND_SZ        FLG_ADDREG_TYPE_EXPAND_SZ
-#define FLG_DELREG_TYPE_BINARY           FLG_ADDREG_TYPE_BINARY
-#define FLG_DELREG_TYPE_DWORD            FLG_ADDREG_TYPE_DWORD
-#define FLG_DELREG_TYPE_NONE             FLG_ADDREG_TYPE_NONE
-#define FLG_DELREG_64BITKEY              FLG_ADDREG_64BITKEY
-#define FLG_DELREG_KEYONLY_COMMON        FLG_ADDREG_KEYONLY_COMMON
-#define FLG_DELREG_32BITKEY              FLG_ADDREG_32BITKEY
-#define FLG_DELREG_OPERATION_MASK        (0x000000FE)
-#define FLG_DELREG_MULTI_SZ_DELSTRING    (FLG_DELREG_TYPE_MULTI_SZ | FLG_ADDREG_DELREG_BIT | 0x00000002)
-
 
 /* FUNCTIONS ****************************************************************/
-
 
 static BOOLEAN
 GetRootKey (PWCHAR Name)
@@ -211,25 +192,12 @@ do_reg_operation(HANDLE KeyHandle,
   ULONG Size;
   NTSTATUS Status;
 
-  if (Flags & (FLG_ADDREG_DELREG_BIT | FLG_ADDREG_DELVAL))  /* deletion */
+  if (Flags & FLG_ADDREG_DELVAL)  /* deletion */
     {
 #if 0
-      if (ValueName && !(flags & FLG_DELREG_KEYONLY_COMMON))
+      if (ValueName)
 	{
-	  if ((Flags & FLG_DELREG_MULTI_SZ_DELSTRING) == FLG_DELREG_MULTI_SZ_DELSTRING)
-	    {
-                WCHAR *str;
-
-                if (!SetupGetStringFieldW( context, 5, NULL, 0, &size ) || !size) return TRUE;
-                if (!(str = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) ))) return FALSE;
-                SetupGetStringFieldW( context, 5, str, size, NULL );
-                delete_multi_sz_value( hkey, value, str );
-                HeapFree( GetProcessHeap(), 0, str );
-	    }
-	  else
-	    {
-	      RegDeleteValueW( hkey, value );
-	    }
+	  RegDeleteValueW( hkey, value );
 	}
       else
 	{
@@ -239,7 +207,7 @@ do_reg_operation(HANDLE KeyHandle,
       return TRUE;
     }
 
-  if (Flags & (FLG_ADDREG_KEYONLY | FLG_ADDREG_KEYONLY_COMMON))
+  if (Flags & FLG_ADDREG_KEYONLY)
     return TRUE;
 
 #if 0
@@ -334,48 +302,36 @@ do_reg_operation(HANDLE KeyHandle,
 	{
 	  ULONG dw = Str ? wcstol (Str, NULL, 0) : 0;
 
-	  DPRINT1("setting dword %wZ to %lx\n", ValueName, dw);
+	  DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
 
-	  Status = NtSetValueKey (KeyHandle,
-				  ValueName,
-				  0,
-				  Type,
-				  (PVOID)&dw,
-				  sizeof(ULONG));
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-	    }
+	  NtSetValueKey (KeyHandle,
+			 ValueName,
+			 0,
+			 Type,
+			 (PVOID)&dw,
+			 sizeof(ULONG));
 	}
       else
 	{
-	  DPRINT1("setting value %wZ to %S\n", ValueName, Str);
+	  DPRINT("setting value %wZ to %S\n", ValueName, Str);
 
 	  if (Str)
 	    {
-	      Status = NtSetValueKey (KeyHandle,
+	      NtSetValueKey (KeyHandle,
 			     ValueName,
 			     0,
 			     Type,
 			     (PVOID)Str,
 			     Size * sizeof(WCHAR));
-	      if (!NT_SUCCESS(Status))
-		{
-		  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-		}
 	    }
 	  else
 	    {
-	      Status = NtSetValueKey (KeyHandle,
+	      NtSetValueKey (KeyHandle,
 			     ValueName,
 			     0,
 			     Type,
 			     (PVOID)&EmptyStr,
 			     sizeof(WCHAR));
-	      if (!NT_SUCCESS(Status))
-		{
-		  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-		}
 	    }
 	}
       RtlFreeHeap (ProcessHeap, 0, Str);
@@ -393,20 +349,16 @@ do_reg_operation(HANDLE KeyHandle,
 	  if (Data == NULL)
 	    return FALSE;
 
-	  DPRINT1("setting binary data %wZ len %lu\n", ValueName, Size);
+	  DPRINT("setting binary data %wZ len %lu\n", ValueName, Size);
 	  InfGetBinaryField (Context, 5, Data, Size, NULL);
 	}
 
-      Status = NtSetValueKey (KeyHandle,
-			      ValueName,
-			      0,
-			      Type,
-			      (PVOID)Data,
-			      Size);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-	}
+      NtSetValueKey (KeyHandle,
+		     ValueName,
+		     0,
+		     Type,
+		     (PVOID)Data,
+		     Size);
 
       RtlFreeHeap (ProcessHeap, 0, Data);
     }
@@ -548,26 +500,13 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
       if (!InfGetStringField (&Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
 	*Buffer = 0;
 
-      DPRINT1("KeyName: <%S>\n", Buffer);
+      DPRINT("KeyName: <%S>\n", Buffer);
 
       /* get flags */
       if (!InfGetIntField (&Context, 4, (PLONG)&Flags))
 	Flags = 0;
 
-      DPRINT1("Flags: %lx\n", Flags);
-
-      if (!Delete)
-	{
-	  if (Flags & FLG_ADDREG_DELREG_BIT)
-	    continue;  /* ignore this entry */
-	}
-      else
-	{
-	  if (!Flags)
-	    Flags = FLG_ADDREG_DELREG_BIT;
-	  else if (!(Flags & FLG_ADDREG_DELREG_BIT))
-	    continue;  /* ignore this entry */
-	}
+      DPRINT("Flags: %lx\n", Flags);
 
       RtlInitUnicodeString (&Name,
 			    Buffer);
@@ -585,7 +524,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 			      &ObjectAttributes);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
+	      DPRINT("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
 	      continue;  /* ignore if it doesn't exist */
 	    }
 	}
@@ -596,7 +535,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 				    &ObjectAttributes);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
+	      DPRINT("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
 	      continue;
 	    }
 	}
@@ -628,7 +567,9 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
 
 BOOLEAN
-ImportRegistryData(PWSTR Filename)
+ImportRegistryFile(PWSTR Filename,
+		   PWSTR Section,
+		   BOOLEAN Delete)
 {
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
@@ -661,80 +602,6 @@ ImportRegistryData(PWSTR Filename)
   InfCloseFile (hInf);
 
   return TRUE;
-}
-
-
-NTSTATUS
-SetupUpdateRegistry(VOID)
-{
-#if 0
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-
-  RtlInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = NtCreateKey(&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-    }
-
-  NtClose(KeyHandle);
-
-
-  /* Create '\Registry\Machine\System\Setup' key */
-  RtlInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\SYSTEM\\Setup");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = NtCreateKey(&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-    }
-
-  /* FIXME: Create value 'SetupType' */
-
-  /* FIXME: Create value 'SystemSetupInProgress' */
-
-
-  NtClose(KeyHandle);
-#endif
-
-
-  SetStatusText("   Importing hivesys.inf...");
-
-  if (!ImportRegistryData (L"hivesys.inf"))
-    {
-      DPRINT1("ImportRegistryData (\"hivesys.inf\") failed\n");
-    }
-
-  SetStatusText("   Done...");
-
-  return STATUS_SUCCESS;
 }
 
 

@@ -1270,6 +1270,7 @@ RegistryPage(PINPUT_RECORD Ir)
   PWSTR Action;
   PWSTR File;
   PWSTR Section;
+  BOOLEAN Delete;
 
 
   SetTextXY(6, 8, "Setup is updating the system configuration");
@@ -1278,6 +1279,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
   if (!SetInstallPathValue(&DestinationPath))
     {
+      DPRINT("SetInstallPathValue() failed\n");
       PopupError("Setup failed to set the initialize the registry.",
 		 "ENTER = Reboot computer");
 
@@ -1296,7 +1298,7 @@ RegistryPage(PINPUT_RECORD Ir)
   Status = NtInitializeRegistry(TRUE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
+      DPRINT("NtInitializeRegistry() failed (Status %lx)\n", Status);
       PopupError("Setup failed to create the registry hives.",
 		 "ENTER = Reboot computer");
 
@@ -1314,11 +1316,10 @@ RegistryPage(PINPUT_RECORD Ir)
   /* Update registry */
   SetStatusText("   Updating registry hives...");
 
-#if 0
   if (!InfFindFirstLine(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
     {
       DPRINT1("InfFindFirstLine() failed\n");
-      PopupError("Setup failed to find the registry hive inf-files.",
+      PopupError("Setup failed to find the registry data files.",
 		 "ENTER = Reboot computer");
 
       while(TRUE)
@@ -1334,35 +1335,48 @@ RegistryPage(PINPUT_RECORD Ir)
 
   do
     {
-
       InfGetDataField (&InfContext, 0, &Action);
       InfGetDataField (&InfContext, 1, &File);
       InfGetDataField (&InfContext, 2, &Section);
 
       DPRINT1("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
-    }
-  while (InfFindNextLine (&InfContext, &InfContext));
-#endif
-
-
-  Status = SetupUpdateRegistry();
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("SetupUpdateRegistry() failed (Status %lx)\n", Status);
-      PopupError("Setup failed to update the registry.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
+      if (!_wcsicmp (Action, L"AddReg"))
 	{
-	  ConInKey(Ir);
+	  Delete = FALSE;
+	}
+      else if (!_wcsicmp (Action, L"DelReg"))
+	{
+	  Delete = TRUE;
+	}
+      else
+	{
+	  continue;
+	}
 
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+      SetStatusText("   Importing %S...", File);
+
+      if (!ImportRegistryFile(File, Section, Delete))
+	{
+	  DPRINT1("Importing %S failed\n", File);
+
+	  PopupError("Setup failed to import a hive file.",
+		     "ENTER = Reboot computer");
+
+	  while(TRUE)
 	    {
-	      return(QUIT_PAGE);
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		{
+		  return(QUIT_PAGE);
+		}
 	    }
 	}
     }
+  while (InfFindNextLine (&InfContext, &InfContext));
+
+  SetStatusText("   Done...");
 
   return(BOOT_LOADER_PAGE);
 }

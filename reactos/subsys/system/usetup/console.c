@@ -904,10 +904,16 @@ ClearScreen(VOID)
 
 
 VOID
-SetStatusText(PCHAR Text)
+SetStatusText(char* fmt, ...)
 {
+  char Buffer[128];
+  va_list ap;
   COORD coPos;
   ULONG Written;
+
+  va_start(ap, fmt);
+  vsprintf(Buffer, fmt, ap);
+  va_end(ap);
 
   coPos.X = 0;
   coPos.Y = yScreen - 1;
@@ -922,8 +928,8 @@ SetStatusText(PCHAR Text)
 			     coPos,
 			     &Written);
 
-  WriteConsoleOutputCharacters(Text,
-			       strlen(Text),
+  WriteConsoleOutputCharacters(Buffer,
+			       strlen(Buffer),
 			       coPos);
 }
 
