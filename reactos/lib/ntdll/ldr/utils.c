@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.97 2004/07/03 17:40:22 navaraf Exp $
+/* $Id: utils.c,v 1.98 2004/07/09 20:08:05 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -252,7 +252,10 @@ LdrpInitializeTlsForProccess(VOID)
                TlsData->StartAddressOfRawData = (PVOID)TlsDirectory->StartAddressOfRawData;
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
-               TlsData->TlsAddressOfCallBacks = *TlsDirectory->AddressOfCallBacks;
+               if (TlsDirectory->AddressOfCallBacks)
+                 TlsData->TlsAddressOfCallBacks = *(PIMAGE_TLS_CALLBACK)RVA(Module->BaseAddress, TlsDirectory->AddressOfCallBacks);
+               else
+                 TlsData->TlsAddressOfCallBacks = NULL;
                TlsData->Module = Module;
 #if 0
                DbgPrint("TLS directory for %wZ\n", &Module->BaseDllName);
