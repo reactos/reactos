@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.26 2002/09/08 10:22:42 chorns Exp $
+/* $Id: volume.c,v 1.27 2002/12/06 17:33:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,18 +30,21 @@
 
 #define MAX_DOS_DRIVES 26
 
-HANDLE InternalOpenDirW(PWCHAR DirName, BOOLEAN Write)
-{
-    UNICODE_STRING NtPathU;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS errCode;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE hFile;
 
-    if (!RtlDosPathNameToNtPathName_U ((LPWSTR)DirName,
-				       &NtPathU,
-				       NULL,
-				       NULL))
+static HANDLE
+InternalOpenDirW(LPCWSTR DirName,
+		 BOOLEAN Write)
+{
+  UNICODE_STRING NtPathU;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS errCode;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE hFile;
+
+  if (!RtlDosPathNameToNtPathName_U((LPWSTR)DirName,
+				    &NtPathU,
+				    NULL,
+				    NULL))
     {
 	DPRINT("Invalid path\n");
 	SetLastError(ERROR_BAD_PATHNAME);
@@ -75,6 +78,7 @@ HANDLE InternalOpenDirW(PWCHAR DirName, BOOLEAN Write)
     }
     return hFile;
 }
+
 
 DWORD STDCALL
 GetLogicalDriveStringsA(DWORD nBufferLength,
@@ -222,12 +226,12 @@ GetDiskFreeSpaceW(
         GetCurrentDirectoryW (MAX_PATH, RootPathName);
         RootPathName[3] = 0;
     }
-	
-    if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW((PWCHAR)lpRootPathName, FALSE)))
+
+  hFile = InternalOpenDirW(lpRootPathName, FALSE);
+  if (INVALID_HANDLE_VALUE == hFile)
     {
-        return FALSE;
+      return FALSE;
     }
-   
 
     errCode = NtQueryVolumeInformationFile(hFile,
                                            &IoStatusBlock,
@@ -321,8 +325,9 @@ GetDiskFreeSpaceExW(
         GetCurrentDirectoryW (MAX_PATH, RootPathName);
         RootPathName[3] = 0;
     }
-	
-    if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW(lpDirectoryName, FALSE)))
+
+    hFile = InternalOpenDirW(lpDirectoryName, FALSE);
+    if (INVALID_HANDLE_VALUE == hFile)
     {
         return FALSE;
     }
@@ -555,11 +560,11 @@ GetVolumeInformationW(
         DPRINT("FileFsVolume %p\n", FileFsVolume);
         DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
-	hFile = InternalOpenDirW(lpRootPathName, FALSE);
-	if (hFile == INVALID_HANDLE_VALUE)
-	{
-	    return FALSE;
-	}
+  hFile = InternalOpenDirW(lpRootPathName, FALSE);
+  if (hFile == INVALID_HANDLE_VALUE)
+    {
+      return FALSE;
+    }
 
         DPRINT("hFile: %x\n", hFile);
         errCode = NtQueryVolumeInformationFile(hFile,
@@ -677,8 +682,9 @@ SetVolumeLabelW(LPCWSTR lpRootPathName,
    LabelInfo->VolumeLabelLength = LabelLength;
    wcscpy(LabelInfo->VolumeLabel,
 	  lpVolumeName);
-   
-   if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW(lpRootPathName, TRUE)))
+
+   hFile = InternalOpenDirW(lpRootPathName, TRUE);
+   if (INVALID_HANDLE_VALUE == hFile)
    {
         return FALSE;
    }
