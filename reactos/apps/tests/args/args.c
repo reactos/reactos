@@ -18,7 +18,7 @@ void debug_printf(char* fmt, ...)
 }
 
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
    int i;
 
@@ -34,5 +34,6 @@ void main(int argc, char* argv[])
         debug_printf("Argv[%d]: %x\n",i,argv[i]);
         debug_printf("Argv[%d]: '%s'\n",i,argv[i]);
      }
+   return 0;
 }
 
