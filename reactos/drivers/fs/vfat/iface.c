@@ -11,6 +11,7 @@
                   Now works with long filenames that span over a sector boundary
      28-10-1998   Reads entire FAT into memory
                   VFatReadSector modified to read in more than one sector at a time
+     7-11-1998    Fixed bug that assumed that directory data could be fragmented
 
 */
 
@@ -58,20 +59,20 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    ULONG FATeis;
    PUSHORT Block;
 
-   Block = ExAllocatePool(NonPagedPool,1024);
+   Block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
    
    FATsector=CurrentCluster/(512/sizeof(USHORT));
    FATeis=CurrentCluster-(FATsector*256);
    
    
-//   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart+FATsector,
-//		  Block);
+//   VFATReadSectors(DeviceExt->StorageDevice,DeviceExt->FATStart+FATsector, 1,
+//		  (UCHAR *)Block);
 
-   memcpy(Block,&DeviceExt->FAT, BLOCKSIZE);
+   memcpy(Block,DeviceExt->FAT+FATsector*BLOCKSIZE, BLOCKSIZE);
    
    CurrentCluster = Block[FATeis];
-   
-   if (CurrentCluster >= 0xfff8 || CurrentCluster <= 0xffff)
+
+   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
      {
 	CurrentCluster = 0;
      }	
@@ -94,10 +95,10 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    
    FATsector = (CurrentCluster * 12) / (512 * 8);
 	
-//   VFATReadSector(DeviceExt->StorageDevice,DeviceExt->FATStart
-//		  +FATsector,CBlock);
+//   VFATReadSectors(DeviceExt->StorageDevice,DeviceExt->FATStart
+//		  +FATsector,1,CBlock);
 
-   memcpy(CBlock,&DeviceExt->FAT, BLOCKSIZE);
+   memcpy(CBlock,DeviceExt->FAT+FATsector*BLOCKSIZE, BLOCKSIZE);
    
    FATOffset = (CurrentCluster * 12) % (512 * 8);
    
@@ -402,8 +403,16 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
 		    }
 	       }
 
-	  }
-	if (Parent == NULL)
+       }
+
+
+       /* It seems that directory sectors cannot be fragmented and therefore,
+          they only have a first cluster, but the one's after it are marked
+          with 0xffff. This theory is still not 100% certain, so the following
+          lines are commented and not removed */
+
+       StartingSector++;
+       /*	if (Parent == NULL)
 	  {
 	     StartingSector++;
 	  }
@@ -416,7 +425,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
 		  return(STATUS_UNSUCCESSFUL);
 	       }
 	     StartingSector = ClusterToSector(DeviceExt,NextCluster);
-	  }	    	     
+	  } */
      }
    ExFreePool(block);
    return(STATUS_UNSUCCESSFUL);
