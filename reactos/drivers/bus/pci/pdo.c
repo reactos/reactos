@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.9 2004/08/20 13:33:51 ekohl Exp $
+/* $Id: pdo.c,v 1.10 2004/10/19 19:39:23 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -999,13 +999,17 @@ PdoPnpControl(
 
   case IRP_MN_SET_LOCK:
     break;
+#endif
 
   case IRP_MN_START_DEVICE:
+    Status = STATUS_SUCCESS;
     break;
 
   case IRP_MN_STOP_DEVICE:
+    Status = STATUS_SUCCESS;
     break;
 
+#if 0
   case IRP_MN_SURPRISE_REMOVAL:
     break;
 #endif
