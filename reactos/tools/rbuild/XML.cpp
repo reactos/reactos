@@ -7,7 +7,8 @@
 #include <assert.h>
 
 #include "XML.h"
-#include "rbuild.h"
+#include "exception.h"
+#include "ssprintf.h"
 
 using std::string;
 using std::vector;
@@ -274,6 +275,19 @@ XMLFile::get_token(string& token)
 	return true;
 }
 
+string
+XMLFile::Location() const
+{
+	int line = 1;
+	const char* p = strchr ( _buf.c_str(), '\n' );
+	while ( p && p < _p )
+	{
+		++line;
+		p = strchr ( p+1, '\n' );
+	}
+	return ssprintf ( "%s(%i)",_filename.c_str(), line );
+}
+
 XMLAttribute::XMLAttribute()
 {
 }
@@ -445,7 +459,9 @@ XMLParse(XMLFile& f,
 	while ( token[0] != '<' || !strncmp ( token.c_str(), "<!--", 4 ) )
 	{
 		if ( token[0] != '<' )
-			printf ( "syntax error: expecting xml tag, not '%s'\n", token.c_str() );
+			throw XMLSyntaxErrorException ( f.Location(),
+			                                "expecting xml tag, not '%s'",
+			                                token.c_str() );
 		if ( !f.get_token(token) )
 			return NULL;
 	}
@@ -464,7 +480,10 @@ XMLParse(XMLFile& f,
 		e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
 		XMLFile fInc;
 		if ( !fInc.open ( file ) )
-			throw FileNotFoundException ( file );
+			throw FileNotFoundException (
+				ssprintf("%s (referenced from %s)",
+					file.c_str(),
+					f.Location().c_str() ) );
 		else
 		{
 			Path path2 ( path, att->value );
@@ -485,7 +504,9 @@ XMLParse(XMLFile& f,
 		else if ( end_tag )
 		{
 			delete e;
-			printf ( "syntax error: end tag '%s' not expected\n", token.c_str() );
+			throw XMLSyntaxErrorException ( f.Location(),
+			                                "end tag '%s' not expected",
+			                                token.c_str() );
 			return NULL;
 		}
 		return e;
@@ -497,17 +518,24 @@ XMLParse(XMLFile& f,
 		{
 			if ( !f.get_token ( token ) || !token.size() )
 			{
-				printf ( "internal tool error - get_token() failed when more_tokens() returned true\n" );
+				throw Exception ( "internal tool error - get_token() failed when more_tokens() returned true" );
 				break;
 			}
 			if ( e->subElements.size() && !bThisMixingErrorReported )
 			{
-				printf ( "syntax error: mixing of inner text with sub elements\n" );
+				throw XMLSyntaxErrorException ( f.Location(),
+				                                "mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
+			}
+			if ( strchr ( token.c_str(), '>' ) )
+			{
+				throw XMLSyntaxErrorException ( f.Location(),
+				                                "invalid symbol '>'" );
 			}
 			if ( e->value.size() )
 			{
-				printf ( "syntax error: multiple instances of inner text\n" );
+				throw XMLSyntaxErrorException ( f.Location(),
+				                                "multiple instances of inner text" );
 				e->value += " " + token;
 			}
 			else
@@ -519,13 +547,15 @@ XMLParse(XMLFile& f,
 			if ( end_tag )
 			{
 				if ( e->name != e2->name )
-					printf ( "syntax error: end tag name mismatch\n" );
+					throw XMLSyntaxErrorException ( f.Location(),
+					                                "end tag name mismatch" );
 				delete e2;
 				break;
 			}
 			if ( e->value.size() && !bThisMixingErrorReported )
 			{
-				printf ( "syntax error: mixing of inner text with sub elements\n" );
+				throw XMLSyntaxErrorException ( f.Location(),
+				                                "mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
 			}
 			e->AddSubElement ( e2 );

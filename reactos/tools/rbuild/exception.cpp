@@ -56,6 +56,21 @@ InvalidBuildFileException::InvalidBuildFileException(const char* message,
 	va_end(args);
 }
 
+InvalidBuildFileException::InvalidBuildFileException()
+{
+}
+
+
+XMLSyntaxErrorException::XMLSyntaxErrorException ( const std::string& location,
+	                                               const char* message,
+	                                               ... )
+{
+	va_list args;
+	va_start ( args, message );
+	Message = location + ": " + ssvprintf ( message, args );
+	va_end ( args );
+}
+
 
 RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const std::string& attributeName,
                                                                        const std::string& elementName)

@@ -35,6 +35,7 @@ public:
 	bool more_tokens();
 	bool get_token(std::string& token);
 	const std::string& filename() { return _filename; }
+	std::string Location() const;
 
 private:
 	std::string _buf, _filename;

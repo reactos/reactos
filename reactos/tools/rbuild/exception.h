@@ -36,8 +36,19 @@ public:
 class InvalidBuildFileException : public Exception
 {
 public:
-	InvalidBuildFileException(const char* message,
-	                          ...);
+	InvalidBuildFileException ( const char* message,
+	                            ...);
+protected:
+	InvalidBuildFileException();
+};
+
+
+class XMLSyntaxErrorException : public InvalidBuildFileException
+{
+public:
+	XMLSyntaxErrorException ( const std::string& location,
+	                          const char* message,
+	                          ... );
 };
 
 
