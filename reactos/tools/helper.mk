@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.55 2004/02/22 17:30:33 chorns Exp $
+# $Id: helper.mk,v 1.56 2004/02/22 18:53:38 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -618,15 +618,15 @@ else
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
+  REGTEST_TARGETS := tests/_regtests.c tests/Makefile.tests tests/_rtstub.c 
 ifeq ($(MK_MODE),user)
     MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
 endif
-  MK_REGTESTS := gen_regtests
   MK_REGTESTS_CLEAN := clean_regtests
   MK_OBJECTS += tests/_rtstub.o tests/regtests.a
   TARGET_CFLAGS += -I$(REGTESTS_PATH_INC)
 else
-  MK_REGTESTS :=
+  REGTEST_TARGETS :=
   MK_REGTESTS_CLEAN :=
 endif
 
@@ -634,7 +634,7 @@ ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-all: $(MK_REGTESTS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
+all: $(REGTEST_TARGETS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
 $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 	$(DLLTOOL) \
@@ -645,7 +645,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 
 else # MK_IMPLIBONLY
 
-all: $(MK_REGTESTS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
+all: $(REGTEST_TARGETS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
 ifeq ($(MK_IMPLIB),yes)
@@ -943,7 +943,7 @@ $(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
 $(MK_RESOURCE): $(MK_RC_BINARIES)
 endif
 
-gen_regtests:
+$(REGTEST_TARGETS): tests/tests/* $(REGTESTS)
 ifeq ($(MK_MODE),user)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
 	$(MAKE) -C tests TARGET_REGTESTS=no all

@@ -1,8 +1,10 @@
-# $Id: Makefile,v 1.2 2003/12/07 11:34:41 chorns Exp $
+# $Id: Makefile,v 1.3 2004/02/22 18:53:39 dwelch Exp $
 
 PATH_TO_TOP = ..
 
-all: registrations
+REGTEST_TARGETS = kmregtests/_regtests.c kmregtests/Makefile.tests win32base/_regtests.c win32base/Makefile.tests
+
+all: $(REGTEST_TARGETS)
 	$(MAKE) -C shared all
 	$(MAKE) -C win32base all
 	$(MAKE) -C kmregtests all
@@ -25,7 +27,7 @@ install:
 	$(MAKE) -C kmrtint install
 	$(MAKE) -C regtests install
 
-registrations:
+$(REGTEST_TARGETS): kmregtests/tests/* win32base/tests/*
 	$(REGTESTS) ./kmregtests/tests ./kmregtests/_regtests.c ./kmregtests/Makefile.tests
 	$(REGTESTS) ./win32base/tests ./win32base/_regtests.c ./win32base/Makefile.tests
 
