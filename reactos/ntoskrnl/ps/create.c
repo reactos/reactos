@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.19 2000/07/04 08:52:46 dwelch Exp $
+/* $Id: create.c,v 1.20 2000/07/07 00:49:02 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -339,6 +339,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 	     DPRINT("Failed at %s:%d\n",__FILE__,__LINE__);
 	     return(Status);
 	  }
+	DPRINT( "Creating thread in process %x\n", Process );
      }
    else
      {
@@ -382,6 +383,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
 					      &PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
+   Thread->DeadThread = 0;
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    
    *ThreadPtr = Thread;

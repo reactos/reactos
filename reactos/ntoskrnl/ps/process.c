@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.50 2000/07/06 14:34:52 dwelch Exp $
+/* $Id: process.c,v 1.51 2000/07/07 00:49:02 phreak Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -152,7 +152,7 @@ VOID PiKillMostProcesses(VOID)
 	if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
 	    current->UniqueProcessId != (ULONG)PsGetCurrentProcessId())
 	  {
-	     PiTerminateProcess(current, STATUS_SUCCESS);
+	     PiTerminateProcessThreads(current, STATUS_SUCCESS);
 	  }
      }
    
