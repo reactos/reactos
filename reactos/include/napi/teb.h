@@ -154,14 +154,6 @@ typedef struct _GDI_TEB_BATCH
    ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
-typedef struct _W32THREAD
-{
-  PVOID MessageQueue;
-} __attribute__((packed)) W32THREAD, *PW32THREAD;
-
-PW32THREAD STDCALL
-PsGetWin32Thread(VOID);
-
 typedef struct _TEB
 {
    NT_TIB Tib;                         // 00h
@@ -173,7 +165,7 @@ typedef struct _TEB
    ULONG LastErrorValue;               // 34h
    ULONG CountOfOwnedCriticalSections; // 38h
    PVOID CsrClientThread;              // 3Ch
-   PW32THREAD Win32ThreadInfo;         // 40h
+   struct _W32THREAD* Win32ThreadInfo;         // 40h
    ULONG Win32ClientInfo[0x1F];        // 44h
    PVOID WOW32Reserved;                // C0h
    ULONG CurrentLocale;                // C4h

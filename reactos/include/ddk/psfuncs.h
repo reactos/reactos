@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.18 2002/01/03 17:58:44 ekohl Exp $
+/* $Id: psfuncs.h,v 1.19 2002/01/26 21:22:48 dwelch Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -44,7 +44,7 @@ VOID STDCALL PsEstablishWin32Callouts(PVOID Param1,
 				      PVOID Param2,
 				      PVOID Param3,
 				      PVOID Param4,
-				      PVOID Param5,
+				      ULONG W32ThreadSize,
 				      ULONG W32ProcessSize);
 
 struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);

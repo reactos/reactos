@@ -533,14 +533,12 @@ STDCALL
 NtUserGetCaretPos(
   DWORD Unknown0);
 
-DWORD
-STDCALL
-NtUserGetClassInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4);
+DWORD STDCALL
+NtUserGetClassInfo(IN LPWSTR ClassName,
+		   IN ULONG InfoClass,
+		   OUT PVOID Info,
+		   IN ULONG InfoLength,
+		   OUT PULONG ReturnedLength);
 
 DWORD
 STDCALL
