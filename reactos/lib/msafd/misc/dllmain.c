@@ -973,9 +973,14 @@ WSPAccept(
 	}
 
 	/* Return Address in SOCKADDR FORMAT */
-	RtlCopyMemory (SocketAddress, 
-					&ListenReceiveData->Address.Address[0].AddressType, 
-					sizeof(RemoteAddress));
+        if( SocketAddress ) {
+            RtlCopyMemory (SocketAddress, 
+                           &ListenReceiveData->Address.Address[0].AddressType, 
+                           sizeof(RemoteAddress));
+            if( *SocketAddressLength )
+                *SocketAddressLength = 
+                    ListenReceiveData->Address.Address[0].AddressLength;
+        }
 
 	NtClose( SockEvent );
  
