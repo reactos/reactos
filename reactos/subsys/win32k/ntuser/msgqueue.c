@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.101 2004/07/30 09:16:06 weiden Exp $
+/* $Id: msgqueue.c,v 1.102 2004/08/04 22:31:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -729,7 +729,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
   LRESULT Result;
-  BOOL Freed, Wake;
+  BOOL Freed;
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
   IntLockMessageQueue(MessageQueue);
@@ -775,18 +775,22 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
      MsqSendMessage() function (if timed out) */
   
   /* Let the sender know the result. */
-  Message->Result = Result;
-
-  Wake = (Message->Flags & USMF_WAKE_SENDER) != 0;
-
-  /* Notify the sender. */
-  if (Wake)
+  if (Message->Result != NULL)
     {
-      KeSetEvent(&Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      *Message->Result = Result;
     }
 
+  /* Notify the sender. */
+  if (Message->CompletionEvent != NULL)
+    {
+      KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
+    }
+  
+  /* unlock the sender's message queue, the safe operation is done */
+  IntUnLockMessageQueue(Message->SenderQueue);
+
   /* Notify the sender if they specified a callback. */
-  if (!Freed && Wake)
+  if (!Freed && Message->CompletionCallback != NULL)
     {
       if(!(NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
 					         sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG)))
@@ -794,7 +798,6 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
         DPRINT1("MsqDispatchOneSentMessage(): Not enough memory to create a callback notify message\n");
         goto Notified;
       }
-      /* FIXME
       NotifyMessage->CompletionCallback =
 	Message->CompletionCallback;
       NotifyMessage->CompletionCallbackContext =
@@ -803,23 +806,16 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       NotifyMessage->hWnd = Message->Msg.hwnd;
       NotifyMessage->Msg = Message->Msg.message;
       MsqSendNotifyMessage(Message->SenderQueue, NotifyMessage);
-      */
     }
 
 Notified:
-  /* unlock the sender's message queue, the safe operation is done */
-  IntUnLockMessageQueue(Message->SenderQueue);
-  if(!Wake)
-  {
-    IntDereferenceMessageQueue(Message->SenderQueue);
-  }
-  
   if(!Freed)
   {
     /* only dereference our message queue if the message has not been timed out */
     IntDereferenceMessageQueue(MessageQueue);
   }
   
+  /* only free the message if not freed already */
   ExFreePool(Message);
   return(TRUE);
 }
@@ -841,7 +837,9 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                UINT uTimeout, BOOL Block, ULONG_PTR *uResult)
 {
   PUSER_SENT_MESSAGE Message;
+  KEVENT CompletionEvent;
   NTSTATUS WaitStatus;
+  LRESULT Result;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   LARGE_INTEGER Timeout;
   PLIST_ENTRY Entry;
@@ -852,24 +850,26 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
     return STATUS_INSUFFICIENT_RESOURCES;
   }
   
-  KeInitializeEvent(&Message->CompletionEvent, NotificationEvent, FALSE);
+  KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
   
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   ASSERT(ThreadQueue != MessageQueue);
   
   Timeout.QuadPart = uTimeout * -10000;
   
+  /* FIXME - increase reference counter of sender's message queue here */
+  
+  Result = 0;
   Message->Msg.hwnd = Wnd;
   Message->Msg.message = Msg;
   Message->Msg.wParam = wParam;
   Message->Msg.lParam = lParam;
-  Message->Result = 0;
-  Message->Flags = USMF_WAKE_SENDER;
+  Message->CompletionEvent = &CompletionEvent;
+  Message->Result = &Result;
   Message->SenderQueue = ThreadQueue;
   Message->CompletionCallback = NULL;
   
   IntReferenceMessageQueue(MessageQueue);
-  IntReferenceMessageQueue(ThreadQueue);
   
   /* add it to the list of pending messages */
   IntLockMessageQueue(ThreadQueue);
@@ -888,11 +888,11 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   if(Block)
   {
     /* don't process messages sent to the thread */
-    WaitStatus = KeWaitForSingleObject(&Message->CompletionEvent, UserRequest, UserMode,
+    WaitStatus = KeWaitForSingleObject(&CompletionEvent, UserRequest, UserMode, 
                                        FALSE, (uTimeout ? &Timeout : NULL));
     if(WaitStatus == STATUS_TIMEOUT)
       {
-        /* look up if the message has not yet been dispatched, if so
+        /* look up if the message has not yet dispatched, if so
            make sure it can't pass a result and it must not set the completion event anymore */
 	IntLockMessageQueue(MessageQueue);
         Entry = MessageQueue->SentMessagesListHead.Flink;
@@ -901,11 +901,10 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
                 == Message)
               {
-                IntLockMessageQueue(ThreadQueue);
-                /* we can access Message here, it's secure because the sender message queue is locked
+                /* we can access Message here, it's secure because the message queue is locked
                    and the message is still hasn't been dispatched */
-		Message->Flags &= ~USMF_WAKE_SENDER;
-		IntUnLockMessageQueue(ThreadQueue);
+		Message->CompletionEvent = NULL;
+                Message->Result = NULL;
                 break;
               }
             Entry = Entry->Flink;
@@ -925,7 +924,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                    and the message has definitely not yet been destroyed, otherwise it would
                    have been removed from this list by the dispatching routine right after
 		   dispatching the message */
-                Message->Flags &= ~USMF_WAKE_SENDER;
+		Message->CompletionEvent = NULL;
+                Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
                 IntDereferenceMessageQueue(MessageQueue);
                 break;
@@ -942,7 +942,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   {
     PVOID WaitObjects[2];
     
-    WaitObjects[0] = &Message->CompletionEvent;
+    WaitObjects[0] = &CompletionEvent;
     WaitObjects[1] = &ThreadQueue->NewMessages;
     do
       {
@@ -959,11 +959,10 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                 if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
                     == Message)
                   {
-                    IntLockMessageQueue(ThreadQueue);
-                    /* we can access Message here, it's secure because the sender message queue is locked
+                    /* we can access Message here, it's secure because the message queue is locked
                        and the message is still hasn't been dispatched */
-                    Message->Flags &= ~USMF_WAKE_SENDER;
-                    IntUnLockMessageQueue(ThreadQueue);
+		    Message->CompletionEvent = NULL;
+                    Message->Result = NULL;
                     break;
                   }
                 Entry = Entry->Flink;
@@ -983,7 +982,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                        and the message has definitely not yet been destroyed, otherwise it would
                        have been removed from this list by the dispatching routine right after
 		       dispatching the message */
-                    Message->Flags &= ~USMF_WAKE_SENDER;
+		    Message->CompletionEvent = NULL;
+                    Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
                     IntDereferenceMessageQueue(MessageQueue);
                     break;
@@ -1001,13 +1001,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   }
   
   if(WaitStatus != STATUS_TIMEOUT)
-  {
-    *uResult = (STATUS_WAIT_0 == WaitStatus ? Message->Result : -1);
-  }
-  else
-  {
-    IntDereferenceMessageQueue(ThreadQueue);
-  }
+    *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
   
   return WaitStatus;
 }
@@ -1165,9 +1159,9 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       }
       
       /* wake the sender's thread */
-      if (CurrentSentMessage->Flags & USMF_WAKE_SENDER)
+      if (CurrentSentMessage->CompletionEvent != NULL)
       {
-        KeSetEvent(&CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
       
       /* dereference our message queue */
@@ -1188,9 +1182,9 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       DPRINT("Notify the sender, the thread has been terminated while dispatching a message!\n");
       
       /* wake the sender's thread */
-      if (CurrentSentMessage->Flags & USMF_WAKE_SENDER)
+      if (CurrentSentMessage->CompletionEvent != NULL)
       {
-        KeSetEvent(&CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
       
       /* dereference our message queue */
