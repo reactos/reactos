@@ -25,7 +25,7 @@ PETHREAD PiIdleThread;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+VOID STDCALL
 PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;
@@ -54,7 +54,7 @@ PsInitIdleThread(VOID)
 			NULL,
 			NULL,
 			NULL,
-			(PKSTART_ROUTINE) PsIdleThreadMain,
+			PsIdleThreadMain,
 			NULL);
    
    Priority = LOW_PRIORITY;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.54 2003/11/27 01:06:48 gdalsnes Exp $
+/* $Id: ps.h,v 1.55 2003/12/14 18:02:34 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -508,7 +508,7 @@ VOID
 PsApplicationProcessorInit(VOID);
 VOID
 PsPrepareForApplicationProcessorInit(ULONG Id);
-NTSTATUS STDCALL
+VOID STDCALL
 PsIdleThreadMain(PVOID Context);
 
 VOID STDCALL

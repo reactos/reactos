@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.122 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: thread.c,v 1.123 2003/12/14 18:02:33 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -199,7 +199,7 @@ PiWakeupReaperThread(VOID)
   KeSetEvent(&PiReaperThreadEvent, 0, FALSE);
 }
 
-NTSTATUS STDCALL
+VOID STDCALL
 PiReaperThreadMain(PVOID Ignored)
 {
   while (1)
@@ -506,7 +506,7 @@ PsInitThreadManagment(VOID)
 				 NULL,
 				 NULL,
 				 NULL,
-				 (PKSTART_ROUTINE) PiReaperThreadMain,
+				 PiReaperThreadMain,
 				 NULL);
    if (!NT_SUCCESS(Status))
      {
@@ -624,6 +624,8 @@ NtAlertResumeThread(IN	HANDLE ThreadHandle,
 		    OUT PULONG	SuspendCount)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
+
 }
 
 
