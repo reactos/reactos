@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/01/12 01:54:39 robd Exp $
+# $Id: Makefile,v 1.3 2003/02/21 14:47:34 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,6 +25,7 @@ TARGET_OBJECTS = \
 	debug.o \
 	libmain.o \
 	porting.o \
+	trace.o \
 	winedbgc.o \
 	winedbgc.dll.dbg.o
 
