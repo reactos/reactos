@@ -103,8 +103,8 @@ void InitVGAMode()
 
    WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
    i = vidmem[0];
-//   RtlZeroMemory(vidmem, 38400);
-   RtlZeroMemory(vidmem, 64000);
+//   VideoPortZeroMemory(vidmem, 38400);
+   VideoPortZeroMemory(vidmem, 64000);
 
    vgaPreCalc();
 }
