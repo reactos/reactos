@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		ch = fgetc(in);
 	}
 
-	fprintf(out, "\n};");
+	fprintf(out, "\n};\n");
 
 	fclose(in);
 	fclose(out);
