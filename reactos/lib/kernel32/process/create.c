@@ -1023,6 +1023,7 @@ CreateProcessW
    if (! NT_SUCCESS(Status))
    {
      NtClose(hSection);
+     DPRINT("Unable to get SectionImageInformation, status 0x%x\n", Status);
      SetLastErrorByStatus(Status);
      return FALSE;
    }
@@ -1030,7 +1031,17 @@ CreateProcessW
    if (0 != (Sii.Characteristics & IMAGE_FILE_DLL))
    {
      NtClose(hSection);
+     DPRINT("Can't execute a DLL\n");
      SetLastError(ERROR_BAD_EXE_FORMAT);
+     return FALSE;
+   }
+
+   if (IMAGE_SUBSYSTEM_WINDOWS_GUI != Sii.Subsystem
+       && IMAGE_SUBSYSTEM_WINDOWS_CUI != Sii.Subsystem)
+   {
+     NtClose(hSection);
+     DPRINT("Invalid subsystem %d\n", Sii.Subsystem);
+     SetLastError(ERROR_CHILD_NOT_COMPLETE);
      return FALSE;
    }
 
