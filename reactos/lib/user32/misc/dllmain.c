@@ -107,7 +107,6 @@ DllMain(
       hProcessHeap = RtlGetProcessHeap();
       Init();
       InitThread();
-	  CreateFrameBrushes();
       break;
     case DLL_THREAD_ATTACH:
       InitThread();
