@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2003/11/24 16:45:43 ekohl Exp $
+# $Id: Makefile,v 1.8 2004/04/26 20:19:21 gdalsnes Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -28,7 +28,8 @@ MODULES_CORE=\
 
 MODULES_ADVANCED=\
 	$(TARGET_FOLDER_LIB)/advapi32.a\
-	$(TARGET_FOLDER_LIB)/secur32.a
+	$(TARGET_FOLDER_LIB)/secur32.a\
+	$(TARGET_FOLDER_LIB)/imagehlp.a
 
 MODULES_SHELL=\
 	$(TARGET_FOLDER_LIB)/comctl32.a\
@@ -122,6 +123,11 @@ $(TARGET_FOLDER_LIB)/secur32.a: $(PATH_TO_TOP)/lib/secur32/secur32.def
 		-D secur32.dll\
 		-d $(PATH_TO_TOP)/lib/secur32/secur32.def
 
+$(TARGET_FOLDER_LIB)/imagehlp.a: $(PATH_TO_TOP)/lib/imagehlp/imagehlp.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D imagehlp.dll\
+		-d $(PATH_TO_TOP)/lib/imagehlp/imagehlp.def
 # --- SHELL ---
 
 $(TARGET_FOLDER_LIB)/shell32.a: $(PATH_TO_TOP)/lib/shell32/shell32.def
