@@ -49,6 +49,7 @@ TARGET_OBJECTS := \
 	utility/dragdropimpl.o \
 	utility/shellbrowserimpl.o \
 	utility/xmlstorage.o
+TARGET_CPPAPP := yes
 TARGET_PCH := precomp.h
 SUBDIRS := notifyhook
 DEP_OBJECTS := $(TARGET_OBJECTS)

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.74 2004/08/02 15:51:23 navaraf Exp $
+# $Id: helper.mk,v 1.75 2004/08/04 18:22:41 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -888,6 +888,12 @@ ifeq ($(ROS_USE_PCH),yes)
 ifneq ($(TARGET_PCH),)
 MK_PCHNAME = $(TARGET_PCH).pch
 
+ifeq ($(TARGET_CPPAPP),yes)
+PCH_CC := $(CXX)
+else
+PCH_CC := $(CC)
+endif
+
 # GCC generates wrong dependencies for header files.
 MK_PCHFAKE = $(TARGET_PCH:.h=.o)
 $(MK_PCHFAKE):
@@ -895,11 +901,11 @@ $(MK_PCHFAKE):
 
 $(MK_PCHNAME): depend.d
 	- $(RTOUCH) $(MK_PCHNAME)
-	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH)
+	- $(PCH_CC) $(TARGET_CFLAGS) $(TARGET_PCH)
 
 depend.d: $(MK_PCHFAKE)
 	- $(RTOUCH) depend.d
-	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
+	- $(PCH_CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
 
 include depend.d
 
