@@ -267,7 +267,7 @@ BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 	// then get the block pointer list otherwise it must
 	// be a fast symbolic link which doesn't have a block list
 	if (((InodeData.i_mode & EXT2_S_IFMT) == EXT2_S_IFREG) ||
-		((InodeData.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK && InodeData.i_size > 60))
+		((InodeData.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK && InodeData.i_size > FAST_SYMLINK_MAX_NAME_SIZE))
 	{
 		Ext2FileInfoPointer->FileBlockList = Ext2ReadBlockPointerList(&InodeData);
 
@@ -366,7 +366,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 		// Block pointer list is NULL
 		// so this better be a fast symbolic link or else
 		if (((Ext2FileInfo->Inode.i_mode & EXT2_S_IFMT) != EXT2_S_IFLNK) ||
-			(Ext2FileInfo->FileSize > 60))
+			(Ext2FileInfo->FileSize > FAST_SYMLINK_MAX_NAME_SIZE))
 		{
 			FileSystemError("Block pointer list is NULL and file is not a fast symbolic link.");
 			return FALSE;
@@ -395,7 +395,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 	// Check if this is a fast symbolic link
 	// if so then the read is easy
 	if (((Ext2FileInfo->Inode.i_mode & EXT2_S_IFMT) == EXT2_S_IFLNK) &&
-		(Ext2FileInfo->FileSize <= 60))
+		(Ext2FileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Reading fast symbolic link data\n"));
 

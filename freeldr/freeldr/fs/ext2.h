@@ -653,6 +653,8 @@ typedef struct ext3_dir_entry_2	EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 #define EXT2_S_IFLNK	0xA000	// Symbolic link
 #define EXT2_S_IFSOCK	0xC000	// Socket
 
+#define FAST_SYMLINK_MAX_NAME_SIZE	60
+
 typedef struct
 {
 	U64			FileSize;			// File size
