@@ -30,6 +30,8 @@
 #include "objbase.h"
 #include "undocshell.h"
 #include "shlguid.h"
+#include "winreg.h"
+#include "shlwapi.h"
 
 #include "wine/debug.h"
 #include "winerror.h"
@@ -150,6 +152,81 @@ static ULONG WINAPI IExtractIconW_fnRelease(IExtractIconW * iface)
 	return This->ref;
 }
 
+static HRESULT getIconLocationForFolder(IExtractIconW *iface, UINT uFlags,
+ LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+{
+    IExtractIconWImpl *This = (IExtractIconWImpl *)iface;
+
+    WCHAR path[MAX_PATH];
+    BOOL found = FALSE;
+    DWORD dwNr;
+
+    if (SUCCEEDED(SHGetPathFromIDListW(This->pidl, path)))
+    {
+        static const WCHAR desktopIni[] = { 'D','e','s','k','t','o','p','.',
+         'i','n','i',0 };
+        HANDLE hFile;
+
+        PathAppendW(path, desktopIni);
+        if ((hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+         OPEN_EXISTING, 0, NULL)) != INVALID_HANDLE_VALUE)
+        {
+            static const WCHAR shellClassInfo[] = { '.','S','h','e','l','l',
+             'C','l','a','s','s','I','n','f','o',0 };
+            static const WCHAR iconFile[] =
+             { 'I','c','o','n','F','i','l','e',0 };
+            static const WCHAR clsid[] = { 'C','L','S','I','D',0 };
+            static const WCHAR clsid2[] = { 'C','L','S','I','D','2',0 };
+            static const WCHAR defStr[] = { 0 };
+            WCHAR clsidStr[39];
+
+            CloseHandle(hFile);
+            if (GetPrivateProfileStringW(shellClassInfo, iconFile, defStr,
+             szIconFile, cchMax, path) && strlenW(szIconFile))
+            {
+                static const WCHAR iconIndex[] = { 'I','c','o','n',
+                 'I','n','d','e','x',0 };
+
+                found = TRUE;
+                *piIndex = (int)GetPrivateProfileIntW(shellClassInfo, iconIndex,
+                 0, path);
+            }
+            else if (GetPrivateProfileStringW(shellClassInfo, clsid, defStr,
+             clsidStr, sizeof(clsidStr) / sizeof(WCHAR), path) &&
+             strlenW(clsidStr))
+            {
+                if (HCR_GetDefaultIconW(clsidStr, szIconFile, cchMax, &dwNr))
+                {
+                    *piIndex = dwNr;
+                    found = TRUE;
+                }
+            }
+            else if (GetPrivateProfileStringW(shellClassInfo, clsid2, defStr,
+             clsidStr, sizeof(clsidStr) / sizeof(WCHAR), path) &&
+             strlenW(clsidStr))
+            {
+                if (HCR_GetDefaultIconW(clsidStr, szIconFile, cchMax, &dwNr))
+                {
+                    *piIndex = dwNr;
+                    found = TRUE;
+                }
+            }
+        }
+    }
+    if (!found)
+    {
+        static const WCHAR folder[] = { 'F','o','l','d','e','r',0 };
+
+        if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &dwNr))
+        {
+            lstrcpynW(szIconFile, swShell32Name, cchMax);
+            dwNr = 3;
+        }
+        *piIndex = (uFlags & GIL_OPENICON) ? dwNr + 1 : dwNr;
+    }
+    return S_OK;
+}
+
 WCHAR swShell32Name[MAX_PATH];
 
 /**************************************************************************
@@ -186,10 +263,10 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 	/* my computer and other shell extensions */
 	else if ((riid = _ILGetGUIDPointer(pSimplePidl)))
 	{
-	  static WCHAR fmt[] = { 'C','L','S','I','D','\\','{','%','0','8','l','x',
-       '-','%','0','4','x','-','%','0','4','x','-','%','0','2','x',
-       '%','0','2','x','-','%','0','2','x', '%','0','2','x', '%','0','2','x',
-       '%','0','2','x','%','0','2','x','%','0','2','x','}',0 };
+	  static const WCHAR fmt[] = { 'C','L','S','I','D','\\',
+       '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',
+       '%','0','2','x','%','0','2','x','-','%','0','2','x', '%','0','2','x',
+       '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x','}',0 };
 	  WCHAR xriid[50];
 
 	  sprintfW(xriid, fmt,
@@ -243,19 +320,11 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 		}
 	  }
 	}
-
 	else if (_ILIsFolder (pSimplePidl))
 	{
-	  static WCHAR folder[] = { 'F','o','l','d','e','r',0 };
-
-	  if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &dwNr))
-	  {
-	    lstrcpynW(szIconFile, swShell32Name, cchMax);
-	    dwNr = 3;
-	  }
-	  *piIndex = (uFlags & GIL_OPENICON) ? dwNr + 1 : dwNr;
+	  getIconLocationForFolder(iface, uFlags, szIconFile, cchMax, piIndex,
+	   pwFlags);
 	}
-
 	else
 	{
 	  BOOL found = FALSE;
@@ -295,10 +364,6 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 
 		if (SUCCEEDED(hr))
 		{
-		  /*no need to resolve shortcuts here
-		  hr = IShellLinkW_Resolve(psl, pThis->_hwnd, SLR_NO_UI);
-		  */
-
 		  hr = IShellLinkW_GetIconLocation(psl, szIconFile, MAX_PATH, piIndex);
 
 		  if (SUCCEEDED(hr) && *szIconFile)
