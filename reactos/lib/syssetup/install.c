@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.3 2003/09/08 09:56:57 weiden Exp $
+/* $Id: install.c,v 1.4 2004/01/09 20:05:04 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -31,11 +31,19 @@
 
 #include <syssetup.h>
 
+#if 0
+VOID Wizard (VOID);
+#endif
+
+/* userenv.dll */
+BOOL WINAPI InitializeProfiles (VOID);
+
 /* FUNCTIONS ****************************************************************/
 
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
+# if 0
   OutputDebugStringA ("InstallReactOS() called\n");
 
   if (!InitializeSetupActionLog (FALSE))
@@ -53,6 +61,27 @@ InstallReactOS (HINSTANCE hInstance)
 	   L"ReactOS Setup finished");
 
   TerminateSetupActionLog ();
+#endif
+
+
+  if (InitializeProfiles())
+    {
+      MessageBoxA (NULL,
+		   "Profiles initialized!\nRebooting now!",
+		   "ReactOS Setup",
+		   MB_OK);
+    }
+  else
+    {
+      MessageBoxA (NULL,
+		   "Profile initialization failed!\nRebooting now!",
+		   "ReactOS Setup",
+		   MB_OK);
+    }
+
+#if 0
+  Wizard ();
+#endif
 
   return 0;
 }
