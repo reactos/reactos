@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2001, 2002, 2003 ReactOS Team
+ *  Copyright (C) 2001, 2002, 2003, 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.46 2004/07/15 04:04:08 jimtabor Exp $
+/* $Id: disk.c,v 1.47 2004/11/24 11:09:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/disk/disk.c
  * PURPOSE:         disk class driver
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -53,7 +53,7 @@ typedef struct _DISK_DATA
   BOOLEAN BootIndicator;
   BOOLEAN DriveNotReady;
 } DISK_DATA, *PDISK_DATA;
-    
+
 BOOLEAN STDCALL
 DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 		     PUNICODE_STRING RegistryPath,
@@ -640,14 +640,12 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
       (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
-    { 
-
-	DiskClassCreateMediaChangeEvent(DiskDeviceExtension,DiskNumber); 
-	if(DiskDeviceExtension->MediaChangeEvent != NULL)
+    {
+      DiskClassCreateMediaChangeEvent(DiskDeviceExtension,DiskNumber); 
+      if (DiskDeviceExtension->MediaChangeEvent != NULL)
 	{
-	DPRINT("Allocated media change event!\n");
+	  DPRINT("Allocated media change event!\n");
 	}
-
     }
 
   /* Check disk for presence of a disk manager */
@@ -668,9 +666,10 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       ExFreePool(MbrBuffer);
       MbrBuffer = NULL;
     }
+
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
       (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
-    { 
+    {
       /* Allocate a partition list for a single entry. */
       PartitionList = ExAllocatePool(NonPagedPool,
 				     sizeof(DRIVE_LAYOUT_INFORMATION));
@@ -765,8 +764,10 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		 PartitionEntry->PartitionNumber,
 		 PartitionEntry->BootIndicator,
 		 PartitionEntry->PartitionType,
-		 PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-		 PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+		 PartitionEntry->StartingOffset.QuadPart /
+		   DiskDeviceExtension->DiskGeometry->BytesPerSector,
+		 PartitionEntry->PartitionLength.QuadPart /
+		   DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
 	  /* Create partition device object */
 	  sprintf(NameBuffer2,
@@ -890,7 +891,7 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       DPRINT("Drive not ready\n");
       DiskData->DriveNotReady = TRUE;
       if (PartitionList != NULL)
-          ExFreePool(PartitionList);      
+	ExFreePool(PartitionList);
       return Status;
     }
 
@@ -906,30 +907,32 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 
       if (PartitionList->PartitionCount)
         {
-          for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
+	  for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
 	    {
 	      PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
 
-      	      DiskData->PartitionType = PartitionEntry->PartitionType;
-      	      DiskData->PartitionNumber = PartitionNumber + 1;
-      	      DiskData->PartitionOrdinal = PartitionNumber + 1;
-      	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
-      	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
-      	      DiskData->DriveNotReady = FALSE;
-      	      DiskDeviceExtension->StartingOffset = PartitionEntry->StartingOffset;
-      	      DiskDeviceExtension->PartitionLength = PartitionEntry->PartitionLength;
-		
+	      DiskData->PartitionType = PartitionEntry->PartitionType;
+	      DiskData->PartitionNumber = PartitionNumber + 1;
+	      DiskData->PartitionOrdinal = PartitionNumber + 1;
+	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
+	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
+	      DiskData->DriveNotReady = FALSE;
+	      DiskDeviceExtension->StartingOffset = PartitionEntry->StartingOffset;
+	      DiskDeviceExtension->PartitionLength = PartitionEntry->PartitionLength;
+
 	      DPRINT1("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
 		      PartitionNumber,
 		      DiskData->PartitionNumber,
 		      DiskData->BootIndicator,
 		      DiskData->PartitionType,
-		      DiskDeviceExtension->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-		      DiskDeviceExtension->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+		      DiskDeviceExtension->StartingOffset.QuadPart /
+			DiskDeviceExtension->DiskGeometry->BytesPerSector,
+		      DiskDeviceExtension->PartitionLength.QuadPart /
+			DiskDeviceExtension->DiskGeometry->BytesPerSector);
 	    }
 	}
       else
-        {
+	{
 	  DiskData->PartitionType = 0;
 	  DiskData->PartitionNumber = 1;
 	  DiskData->PartitionOrdinal = 0;
@@ -938,7 +941,7 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 	  DiskData->DriveNotReady = FALSE;
 	  DiskDeviceExtension->StartingOffset.QuadPart = 0;
 	  DiskDeviceExtension->PartitionLength.QuadPart += DiskDeviceExtension->StartingOffset.QuadPart;
-	}    
+	}
     }
 
   DPRINT("DiskBuildPartitionTable() done\n");

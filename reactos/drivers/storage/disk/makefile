@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2004/06/10 08:20:20 hbirr Exp $
+# $Id: makefile,v 1.9 2004/11/24 11:09:49 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,6 +9,8 @@ TARGET_TYPE = driver
 TARGET_NAME = disk
 
 TARGET_DDKLIBS = class2.a
+
+TARGET_GCCLIBS = gcc
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
