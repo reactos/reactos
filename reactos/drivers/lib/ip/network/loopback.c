@@ -47,7 +47,7 @@ VOID LoopTransmit(
   TI_DbgPrint(MAX_TRACE, 
 	      ("Finished receive (complete: %x, context %x, packet %x)\n",
 	       PC(NdisPacket)->DLComplete, Context, NdisPacket));
-  PC(NdisPacket)->DLComplete(Context, NdisPacket, NDIS_STATUS_SUCCESS);
+  PC(NdisPacket)->DLComplete(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_SUCCESS);
   TI_DbgPrint(MAX_TRACE, ("Done\n"));
 }
 
