@@ -120,6 +120,7 @@ copy apps\tests\pteb\pteb.exe %ROS_INSTALL%\bin
 copy apps\tests\consume\consume.exe %ROS_INSTALL%\bin
 copy apps\tests\vmtest\vmtest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\gditest\gditest.exe %ROS_INSTALL_TESTS%
+copy apps\tests\shaptest\shaptest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\dibtest\dibtest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\mstest\msserver.exe %ROS_INSTALL_TESTS%
 copy apps\tests\mstest\msclient.exe %ROS_INSTALL_TESTS%
