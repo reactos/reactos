@@ -3145,7 +3145,7 @@ RegistryPage(PINPUT_RECORD Ir)
       InfGetDataField (&InfContext, 1, &File);
       InfGetDataField (&InfContext, 2, &Section);
 
-      DPRINT1("Action: %S  File: %S  Section %S\n", Action, File, Section);
+      DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
       if (!_wcsicmp (Action, L"AddReg"))
 	{
@@ -3187,6 +3187,24 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!ProcessKeyboardLayoutRegistry(LayoutList))
     {
       PopupError("Setup failed to update keyboard layout settings.",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return QUIT_PAGE;
+	    }
+	}
+    }
+
+  /* Update mouse registry settings */
+  SetStatusText("   Updating mouse registry settings...");
+  if (!ProcessMouseRegistry(SetupInf, PointerList))
+    {
+      PopupError("Setup failed to update mouse registry settings.",
 		 "ENTER = Reboot computer");
 
       while(TRUE)

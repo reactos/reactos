@@ -1,0 +1,15 @@
+[Version]
+Signature = "$ReactOS$"
+
+[AddReg]
+; Enable _one_ driver per section by removing the leading semicolon.
+
+;
+; Mouse driver section
+;
+
+; PS/2 mouse port driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
+
+; Serial mouse driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000001

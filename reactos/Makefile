@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.228 2004/06/05 13:39:02 chorns Exp $
+# $Id: Makefile,v 1.229 2004/06/07 12:24:00 ekohl Exp $
 #
 # Global makefile
 #
@@ -228,7 +228,7 @@ ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
 livecd: livecd_basic livecd_makecd
 
 registry: tools
-	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config
+	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config bootdata/hiveinst.inf
 
 .PHONY: all depends implib clean clean_before install freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd

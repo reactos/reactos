@@ -73,8 +73,19 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000809 = kgbgb.dll
 
 [Mouse]
-ps2mouse = "Mouse Port mouse (PS/2 mouse)"
-sermouse = "Serial mouse"
+;<id> = <user friendly name>,<spare>,<service key name>
+msps2 = "Microsoft PS2 Mouse",,psaux
+msser = "Microsoft Serial Mouse",,sermouse
+mswhs = "Microsoft Serial Wheel Mouse",,sermouse
+none  = "No Mouse"
+
+[Map.Mouse]
+;<id> = <pnp id string>
+msps2 = "MICROSOFT PS2 MOUSE"
+msser = "MICROSOFT SERIAL MOUSE"
+mswhs = "MICROSOFT MOUSE WITH WHEEL"
+none  = "NO MOUSE"
+
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg

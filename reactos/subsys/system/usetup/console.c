@@ -108,7 +108,7 @@ AllocConsole(VOID)
 VOID
 FreeConsole(VOID)
 {
-  DPRINT1("FreeConsole() called\n");
+  DPRINT("FreeConsole() called\n");
 
   if (StdInput != INVALID_HANDLE_VALUE)
     NtClose(StdInput);
@@ -116,7 +116,7 @@ FreeConsole(VOID)
   if (StdOutput != INVALID_HANDLE_VALUE)
     NtClose(StdOutput);
 
-  DPRINT1("FreeConsole() done\n");
+  DPRINT("FreeConsole() done\n");
 }
 
 

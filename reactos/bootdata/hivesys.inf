@@ -495,7 +495,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux\Parameters","DisableExtensionDetection",0x00010001,0x00000000
 
