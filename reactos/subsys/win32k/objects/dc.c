@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.70 2003/08/17 17:32:58 royce Exp $
+/* $Id: dc.c,v 1.71 2003/08/18 10:18:14 hbirr Exp $
  *
  * DC.C - Device context functions
  *
@@ -511,6 +511,7 @@ W32kDeleteDC(HDC  DCHandle)
   {
     if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
     {
+      PEPROCESS CurrentProcess;
       DPRINT( "No more references to driver, reseting display\n" );
       DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
       CHECKPOINT;
@@ -518,9 +519,16 @@ W32kDeleteDC(HDC  DCHandle)
       CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
 
-      KeAttachProcess(W32kDeviceProcess);
+      CurrentProcess = PsGetCurrentProcess();
+      if (CurrentProcess != W32kDeviceProcess)
+        {
+          KeAttachProcess(W32kDeviceProcess);
+	}
       ZwClose(PrimarySurface.DisplayDevice);
-      KeDetachProcess();
+      if (CurrentProcess != W32kDeviceProcess)
+        {
+          KeDetachProcess();
+	}
 
       PrimarySurfaceCreated = FALSE;
     }

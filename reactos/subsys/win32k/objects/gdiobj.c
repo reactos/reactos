@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.35 2003/08/17 17:32:58 royce Exp $
+ * $Id: gdiobj.c,v 1.36 2003/08/18 10:18:14 hbirr Exp $
  *
  */
 
@@ -534,9 +534,14 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
   DWORD i;
   PGDI_HANDLE_ENTRY handleEntry;
   PGDIOBJHDR objectHeader;
+  PEPROCESS CurrentProcess;
   //NTSTATUS Status;
 
-  KeAttachProcess(Process);
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != Process)
+    {
+      KeAttachProcess(Process);
+    }
 
   for(i = 1; i < GDI_HANDLE_NUMBER; i++)
     {
@@ -550,7 +555,10 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
 	}
     }
 
-  KeDetachProcess();
+  if (CurrentProcess != Process)
+    {
+      KeDetachProcess();
+    }
 
   return TRUE;
 }

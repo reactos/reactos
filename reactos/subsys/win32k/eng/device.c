@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.9 2003/07/11 15:59:37 royce Exp $
+/* $Id: device.c,v 1.10 2003/08/18 10:18:14 hbirr Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -50,13 +50,18 @@ EngDeviceIoControl(HANDLE  hDevice,
   KEVENT Event;
   IO_STATUS_BLOCK Iosb;
   PFILE_OBJECT FileObject;
+  PEPROCESS CurrentProcess;
 
   DPRINT("EngDeviceIoControl() called\n");
 
   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-  /* Switch to process context in which hDevice is valid */
-  KeAttachProcess(W32kDeviceProcess);
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != W32kDeviceProcess)
+    {  
+      /* Switch to process context in which hDevice is valid */
+      KeAttachProcess(W32kDeviceProcess);
+    }
 
   Status = ObReferenceObjectByHandle(hDevice,
 				     FILE_READ_DATA | FILE_WRITE_DATA,
@@ -64,7 +69,10 @@ EngDeviceIoControl(HANDLE  hDevice,
 				     KernelMode,
 				     (PVOID *)&FileObject,
 				     NULL);
-  KeDetachProcess();
+  if (CurrentProcess != W32kDeviceProcess)
+    {
+      KeDetachProcess();
+    }
 
   if (!NT_SUCCESS(Status))
     {

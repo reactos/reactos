@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.26 2003/08/13 20:24:05 chorns Exp $
+/* $Id: driver.c,v 1.27 2003/08/18 10:18:14 hbirr Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -244,9 +244,14 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   IO_STATUS_BLOCK Iosb;
   HANDLE DisplayHandle;
   NTSTATUS Status;
+  PEPROCESS CurrentProcess;
 
-  /* Switch to process context in which handle is to be valid */
-  KeAttachProcess(W32kDeviceProcess);
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != W32kDeviceProcess)
+    {
+      /* Switch to process context in which handle is to be valid */
+      KeAttachProcess(W32kDeviceProcess);
+    }
 
   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -261,7 +266,10 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 		      0,
 		      FILE_SYNCHRONOUS_IO_ALERT);
 
-  KeDetachProcess();
+  if (CurrentProcess != W32kDeviceProcess)
+    {
+      KeDetachProcess();
+    }
 
   if (!NT_SUCCESS(Status))
     {
