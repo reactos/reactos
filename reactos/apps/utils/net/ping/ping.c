@@ -1,4 +1,5 @@
-/*
+/* $Id: ping.c,v 1.3 2001/01/27 22:38:42 ea Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
  * FILE:        apps/net/ping/ping.c

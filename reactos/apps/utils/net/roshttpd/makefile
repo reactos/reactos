@@ -8,7 +8,7 @@ TARGETNAME=roshttpd
 CFLAGS = -Iinclude -DUNICODE -D_UNICODE -DDBG
 
 MAIN_OBJECTS = $(TARGETNAME).o config.o error.o http.o httpd.o
-COMMON_OBJECTS = common/list.o common/socket.o common/thread.o
+COMMON_OBJECTS = common/list.o common/socket.o common/thread.o common/$(TARGETNAME).coff
 
 OBJECTS = $(MAIN_OBJECTS) $(COMMON_OBJECTS)
 PROGS = $(TARGETNAME).exe

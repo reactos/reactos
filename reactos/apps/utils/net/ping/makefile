@@ -6,7 +6,7 @@ PATH_TO_TOP = ../../..
 TARGETNAME=ping
 CFLAGS = -I../../../include
 
-OBJECTS = $(TARGETNAME).o
+OBJECTS = $(TARGETNAME).o $(TARGETNAME).coff
 PROGS = $(TARGETNAME).exe
 LIBS = ../../../lib/ntdll/ntdll.a \
        ../../../lib/ws2_32/ws2_32.a
