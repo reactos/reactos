@@ -62,7 +62,6 @@ lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
 lib\user32\user32.dll                   1
 lib\version\version.dll                 1
-lib\winmm\winmm.dll                     1
 lib\winspool\winspool.drv               1
 lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1

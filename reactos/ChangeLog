@@ -1,3 +1,7 @@
+2003-08-30  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* bootdata/packages/reactos.dff: Don't include winmm.dll in reactos.cab.
+
 2003-08-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile: Copy freeloader files to bootable CD.
