@@ -43,7 +43,7 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KeFreeStackPage(PVOID Context, PVOID Address, ULONG PhysAddr)
+KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
 {
   if (PhysAddr != 0)
     {

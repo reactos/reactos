@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.68 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: section.c,v 1.69 2001/12/29 14:32:22 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -315,7 +315,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 			      TRUE);
 	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	    {
-	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE);
+	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return(Status);
 	    }
 	}
@@ -327,7 +327,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       (*Page) = (PVOID)(ULONG)Addr.QuadPart;
       MmReferencePage((*Page));
 
-      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, TRUE);
       return(STATUS_SUCCESS);
     }
   else
@@ -1852,7 +1852,7 @@ NtMapViewOfSection(HANDLE SectionHandle,
 }
 
 VOID STATIC
-MmFreeSectionPage(PVOID Context, PVOID Address, ULONG PhysAddr)
+MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
 {
   PMEMORY_AREA MArea;
   ULONG Entry;
@@ -2135,21 +2135,28 @@ MmAllocateSection (IN ULONG Length)
 	MmUnlockAddressSpace(AddressSpace);
 	return (NULL);
      }
+   MmUnlockAddressSpace(AddressSpace);
    DPRINT("Result %p\n",Result);
    for (i = 0; (i <= (Length / PAGESIZE)); i++)
      {
-	Status = MmCreateVirtualMapping (NULL,
-					 (Result + (i * PAGESIZE)),
-					 PAGE_READWRITE,
-					 (ULONG)MmAllocPage(0));
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Unable to create virtual mapping\n");
-	     MmUnlockAddressSpace(AddressSpace);
-		 KeBugCheck(0);
-	  }
+       PVOID Page;
+
+       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("Unable to allocate page\n");
+	   KeBugCheck(0);
+	 }
+       Status = MmCreateVirtualMapping (NULL,
+					(Result + (i * PAGESIZE)),
+					PAGE_READWRITE,
+					(ULONG)Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("Unable to create virtual mapping\n");	  
+	   KeBugCheck(0);
+	 }
      }
-   MmUnlockAddressSpace(AddressSpace);
    return ((PVOID)Result);
 }
 

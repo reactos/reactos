@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.2 2001/12/27 23:56:41 dwelch Exp $
+/* $Id: copy.c,v 1.3 2001/12/29 14:32:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,7 +47,7 @@ NTSTATUS ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
   Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &IoStatus, TRUE);
   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
   {
-    CcRosReleaseCacheSegment(CacheSeg->Bcb, CacheSeg, FALSE);
+    CcRosReleaseCacheSegment(CacheSeg->Bcb, CacheSeg, FALSE, FALSE, FALSE);
     DPRINT1("IoPageRead failed, Status %x\n", Status);
 	return Status;
   }
@@ -160,7 +160,7 @@ CcCopyRead (
        }
      }
      memcpy (Buffer, BaseAddress + ReadOffset % Bcb->CacheSegmentSize, TempLength);
-     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE);
+     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
      ReadLength += TempLength;
      Length -= TempLength;
      ReadOffset += TempLength;
@@ -190,7 +190,7 @@ CcCopyRead (
        }
      }
      memcpy (Buffer, BaseAddress, TempLength);
-     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE);
+     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
      ReadLength += TempLength;
      Length -= TempLength;
      ReadOffset += TempLength;
@@ -273,7 +273,7 @@ CcCopyWrite (
       {
         return FALSE;
       }
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
 
       Length -= TempLength;
       WriteOffset += TempLength;
@@ -301,7 +301,7 @@ CcCopyWrite (
       {
         return FALSE;
       }
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE);
+      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
       Length -= TempLength;
       WriteOffset += TempLength;
       Buffer += TempLength;

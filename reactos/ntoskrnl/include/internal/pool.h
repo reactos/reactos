@@ -20,4 +20,9 @@ extern ULONG MmPagedPoolSize;
 
 #define MM_PAGED_POOL_SIZE (4*1024*1024)
 
+/*
+ * Maximum size of the kmalloc area (this is totally arbitary)
+ */
+#define NONPAGED_POOL_SIZE   (4*1024*1024)
+
 #endif /* __INTERNAL_POOL_H */

@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.11 2001/08/03 09:36:18 ei Exp $
+/* $Id: ncache.c,v 1.12 2001/12/29 14:32:22 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,7 +85,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 }
 
 VOID STATIC
-MmFreeNonCachedPage(PVOID Context, PVOID Address, ULONG PhysAddr)
+MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
 {
   if (PhysAddr != 0)
     {

@@ -294,7 +294,7 @@ NTSTATUS
 MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
-		 VOID (*FreePage)(PVOID Context, PVOID Address, 
+		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
 				  ULONG PhysAddr),
 		 PVOID FreePageContext)
 {
@@ -307,10 +307,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
-     {
-       
-  DPRINT1("AddressSpace 0x%X - KASpace 0x%X\n", AddressSpace, MmGetKernelAddressSpace());
-  DPRINT1("Memory area is NULL\n");
+     {       
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -320,14 +317,14 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 
        PhysAddr = 
 	 MmGetPhysicalAddressForProcess(AddressSpace->Process,
-				      MemoryArea->BaseAddress + (i*PAGESIZE));
-	MmDeleteVirtualMapping(AddressSpace->Process,
+					MemoryArea->BaseAddress + (i*PAGESIZE));
+	MmDeleteVirtualMapping(AddressSpace->Process, 
 			       MemoryArea->BaseAddress + (i*PAGESIZE),
 			       FALSE, NULL, NULL);
 	if (FreePage != NULL)
 	 {
-	    FreePage(FreePageContext, 
-		     MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr);
+	   FreePage(FreePageContext, MemoryArea,
+		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr);
 	 }
      }
    

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.30 2001/12/27 23:56:41 dwelch Exp $
+/* $Id: view.c,v 1.31 2001/12/29 14:32:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,9 +57,18 @@
 #include <internal/mm.h>
 #include <internal/cc.h>
 #include <internal/pool.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* TYPES *********************************************************************/
+
+typedef struct _CC_FREE_CONTEXT
+{
+  DWORD Maximum;
+  PVOID* FreedPages; 
+} CC_FREE_CONTEXT, *PCC_FREE_CONTEXT;
 
 /* GLOBALS *******************************************************************/
 
@@ -71,23 +80,80 @@
 
 static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
+static LIST_ENTRY CacheSegmentLRUListHead;
 
 static FAST_MUTEX ViewLock;
 
+NTSTATUS STDCALL 
+CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg, PVOID Context);
+
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed, PVOID* FreedPages)
+{
+  PLIST_ENTRY current_entry;
+  PCACHE_SEGMENT current;
+  ULONG PagesPerSegment;
+  CC_FREE_CONTEXT FreeContext;
+  ULONG PagesFreed;
+
+  DPRINT("CcRosTrimCache(Target %d)\n", Target);
+
+  *NrFreed = 0;
+
+  ExAcquireFastMutex(&ViewLock);
+  current_entry = CacheSegmentLRUListHead.Flink;
+  while (current_entry != &CacheSegmentLRUListHead && Target > 0)
+    {
+      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, CacheSegmentLRUListEntry);
+      current_entry = current_entry->Flink;
+      ExAcquireFastMutex(&current->Lock);
+      if (current->MappedCount > 0 || current->Dirty || current->ReferenceCount > 0)
+	{
+	  ExReleaseFastMutex(&current->Lock);
+	  continue;
+	}
+      ExReleaseFastMutex(&current->Lock);
+      DPRINT("current->Bcb->CacheSegmentSize %d\n", current->Bcb->CacheSegmentSize);
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      FreeContext.Maximum = min(PagesPerSegment, Target);
+      FreeContext.FreedPages = FreedPages;
+      CcRosInternalFreeCacheSegment(current->Bcb, current, (PVOID)&FreeContext);      
+      DPRINT("CcRosTrimCache(): Freed %d\n", PagesPerSegment);
+      PagesFreed = min(PagesPerSegment, Target);
+      Target = Target - PagesFreed;
+      FreedPages = FreedPages + PagesFreed;
+      (*NrFreed) = (*NrFreed) + PagesFreed;
+    }
+  ExReleaseFastMutex(&ViewLock);
+  DPRINT("CcRosTrimCache() finished\n");
+  return(STATUS_SUCCESS);
+}
 
 NTSTATUS STDCALL 
 CcRosReleaseCacheSegment(PBCB Bcb,
-		      PCACHE_SEGMENT CacheSeg,
-		      BOOLEAN Valid)
+			 PCACHE_SEGMENT CacheSeg,
+			 BOOLEAN Valid,
+			 BOOLEAN Dirty,
+			 BOOLEAN Mapped)
 {
    DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
 	  Bcb, CacheSeg, Valid);
    
-   CacheSeg->ReferenceCount--;
    CacheSeg->Valid = Valid;
+   CacheSeg->Dirty = CacheSeg->Dirty || Dirty;
+   if (Mapped)
+     {
+       CacheSeg->MappedCount++;
+     }
    ExReleaseFastMutex(&CacheSeg->Lock);
-   
+   ExAcquireFastMutex(&ViewLock);
+   RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
+   InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
+   ExReleaseFastMutex(&ViewLock);
+   InterlockedDecrement(&CacheSeg->ReferenceCount);
+
    DPRINT("CcReleaseCachePage() finished\n");
    
    return(STATUS_SUCCESS);
@@ -165,17 +231,19 @@ CcRosGetCacheSegment(PBCB Bcb,
 	MmUnlockAddressSpace(MmGetKernelAddressSpace());
 	KeBugCheck(0);
      }
-   		
+   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    current->Valid = FALSE;
    current->Dirty = FALSE;
    current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
    current->Bcb = Bcb;
+   current->MappedCount = 0;
    ExInitializeFastMutex(&current->Lock);
    current->ReferenceCount = 1;
    KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
    InsertTailList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
    KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
    InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
+   InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
    current->DirtySegmentListEntry.Flink = current->DirtySegmentListEntry.Blink = NULL;
    ExAcquireFastMutex(&current->Lock);
    ExReleaseFastMutex(&ViewLock);
@@ -185,17 +253,24 @@ CcRosGetCacheSegment(PBCB Bcb,
    *BaseOffset = current->FileOffset;
    for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
      {
-       Status = MmCreateVirtualMapping(NULL,
-			      current->BaseAddress + (i * PAGESIZE),
-			      PAGE_READWRITE,
-			      (ULONG)MmAllocPage(0));
-   		
-		if (!NT_SUCCESS(Status)){
-			MmUnlockAddressSpace(MmGetKernelAddressSpace());
-			KeBugCheck(0);
-   		}
+       PVOID Page;
+
+       Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
 	 }
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
+
+       Status = MmCreateVirtualMapping(NULL,
+				       current->BaseAddress + (i * PAGESIZE),
+				       PAGE_READWRITE,
+				       (ULONG)Page);
+       
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+     }
    return(STATUS_SUCCESS);
 }
 
@@ -227,29 +302,53 @@ CcRosRequestCacheSegment(PBCB Bcb,
 }
 
 STATIC VOID 
-CcFreeCachePage(PVOID Context, PVOID Address, ULONG PhysAddr)
+CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr)
 {
+  PCC_FREE_CONTEXT FreeContext = (PCC_FREE_CONTEXT)Context;
+  ULONG Offset = (Address - MemoryArea->BaseAddress) / PAGESIZE;
   if (PhysAddr != 0)
     {
-      MmDereferencePage((PVOID)PhysAddr);
+      if (Context == NULL || Offset >= FreeContext->Maximum)
+	{
+	  MmReleasePageMemoryConsumer(MC_CACHE, (PVOID)PhysAddr);
+	}
+      else
+	{
+	  DPRINT("Address %X Offset %d PhysAddr %X\n", Address, Offset, PhysAddr);
+	  FreeContext->FreedPages[Offset] = (PVOID)PhysAddr;
+	}
     }
 }
 
 NTSTATUS STDCALL 
-CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
+CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg, PVOID Context)
 /*
  * FUNCTION: Releases a cache segment associated with a BCB
  */
 {
   DPRINT("Freeing cache segment %x\n", CacheSeg);
   RemoveEntryList(&CacheSeg->CacheSegmentListEntry);
+  RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
+  RemoveEntryList(&CacheSeg->BcbSegmentListEntry);
+  MmLockAddressSpace(MmGetKernelAddressSpace());
   MmFreeMemoryArea(MmGetKernelAddressSpace(),
 		   CacheSeg->BaseAddress,
 		   Bcb->CacheSegmentSize,
 		   CcFreeCachePage,
-		   NULL);
+		   Context);
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
   ExFreePool(CacheSeg);
   return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL 
+CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
+{
+  NTSTATUS Status;
+  ExAcquireFastMutex(&ViewLock);
+  Status = CcRosInternalFreeCacheSegment(Bcb, CacheSeg, NULL);
+  ExReleaseFastMutex(&ViewLock);
+  return(Status);
 }
 
 NTSTATUS STDCALL 
@@ -321,11 +420,12 @@ CcInitView(VOID)
   DPRINT1("CcInitView()\n");
   InitializeListHead(&CacheSegmentListHead);
   InitializeListHead(&DirtySegmentListHead);
+  InitializeListHead(&CacheSegmentLRUListHead);
   ExInitializeFastMutex(&ViewLock);
+  MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
 }
 
 /* EOF */
-
 
 
 

@@ -20,11 +20,6 @@
 #define PAGE_UNLOCKED_FUNCTION (PLACE_IN_SECTION("pagepo"))
 
 /*
- * Maximum size of the kmalloc area (this is totally arbitary)
- */
-#define NONPAGED_POOL_SIZE   (4*1024*1024)
-
-/*
  * Defines a descriptor as it appears in the processor tables
  */
 typedef struct _DESCRIPTOR

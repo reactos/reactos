@@ -185,8 +185,8 @@ VOID ExInitNonPagedPool(ULONG BaseAddress);
 NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
-			  VOID (*FreePage)(PVOID Context, PVOID Address,
-					   ULONG PhysAddr),
+			  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
+					   PVOID Address, ULONG PhysAddr),
 			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
@@ -472,5 +472,23 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 				ULONG flProtect,
 				ULONG PhysicalAddress);
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address);
+
+/* Memory balancing. */
+VOID
+MmInitializeMemoryConsumer(ULONG Consumer, 
+			   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, 
+					    PULONG NrFreed, PVOID* FreedPages));
+VOID
+MmInitializeBalancer(ULONG NrAvailablePages);
+NTSTATUS
+MmReleasePageMemoryConsumer(ULONG Consumer, PVOID Page);
+NTSTATUS
+MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPage);
+
+#define MC_CACHE          (0)
+#define MC_USER           (1)
+#define MC_PPOOL          (2)
+#define MC_NPPOOL         (3)
+#define MC_MAXIMUM        (4)
 
 #endif

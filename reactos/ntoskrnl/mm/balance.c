@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.1 2001/12/28 00:04:45 dwelch Exp $
+/* $Id: balance.c,v 1.2 2001/12/29 14:32:22 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -43,12 +43,6 @@ typedef struct _MM_MEMORY_CONSUMER
   ULONG PagesTarget;
   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed, PVOID* FreedPages);
 } MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
-
-#define MC_CACHE          (0)
-#define MC_USER           (1)
-#define MC_PPOOL          (2)
-#define MC_NPPOOL         (3)
-#define MC_MAXIMUM        (4)
 
 /* GLOBALS ******************************************************************/
 
@@ -116,6 +110,7 @@ MiRebalanceMemoryConsumers(PVOID* Page)
   PVOID* FreedPages;
   ULONG NrFreedPages;
   ULONG TotalFreedPages;
+  PVOID* OrigFreedPages;
 
   Target = MiMinimumAvailablePages - MiNrAvailablePages;
   if (Target < 0)
@@ -123,7 +118,7 @@ MiRebalanceMemoryConsumers(PVOID* Page)
       Target = 1;
     }
 
-  FreedPages = alloca(sizeof(PVOID) * Target);
+  OrigFreedPages = FreedPages = alloca(sizeof(PVOID) * Target);
   TotalFreedPages = 0;
 
   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
@@ -142,7 +137,7 @@ MiRebalanceMemoryConsumers(PVOID* Page)
     }
   if (Page != NULL)
     {
-      *Page = FreedPages[0];
+      *Page = OrigFreedPages[0];
       i = 1;
     }
   else
@@ -151,7 +146,7 @@ MiRebalanceMemoryConsumers(PVOID* Page)
     }
   for (; i < TotalFreedPages; i++)
     {
-      MmDereferencePage(FreedPages[i]);
+      MmDereferencePage(OrigFreedPages[i]);
     }
 }
 

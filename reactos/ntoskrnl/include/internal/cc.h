@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.7 2001/12/27 23:56:42 dwelch Exp $ */
+/* $Id: cc.h,v 1.8 2001/12/29 14:32:22 dwelch Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -23,12 +23,14 @@ typedef struct _CACHE_SEGMENT
   BOOLEAN Valid;
   /* Are the contents of the cache segment data newer than those on disk. */
   BOOLEAN Dirty;
+  ULONG MappedCount;
   /* Entry in the list of segments for this BCB. */
   LIST_ENTRY BcbSegmentListEntry;
   /* Entry in the list of segments which are dirty. */
   LIST_ENTRY DirtySegmentListEntry;
   /* Entry in the list of segments. */
   LIST_ENTRY CacheSegmentListEntry;
+  LIST_ENTRY CacheSegmentLRUListEntry;
   /* Offset in the file which this cache segment maps. */
   ULONG FileOffset;
   /* Lock. */

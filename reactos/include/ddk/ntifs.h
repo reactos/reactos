@@ -15,8 +15,10 @@ NTSTATUS STDCALL
 CcRosFlushCacheSegment (struct _CACHE_SEGMENT*	CacheSeg);
 NTSTATUS STDCALL
 CcRosReleaseCacheSegment (struct _BCB*		Bcb,
-		    struct _CACHE_SEGMENT*	CacheSeg,
-		    BOOLEAN		Valid);
+			  struct _CACHE_SEGMENT*	CacheSeg,
+			  BOOLEAN		Valid,
+			  BOOLEAN Dirty,
+			  BOOLEAN Mapped);
 NTSTATUS STDCALL
 CcRosRequestCacheSegment (struct _BCB*		Bcb,
 		       ULONG		FileOffset,

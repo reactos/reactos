@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.1 2001/10/10 21:49:15 hbirr Exp $
+/* $Id: pin.c,v 1.2 2001/12/29 14:32:21 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,7 +79,7 @@ CcMapData (
    {
       if (!Wait)
       {
-          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE);
+          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return FALSE;
       }
       if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
@@ -91,7 +91,7 @@ CcMapData (
    iBcb = ExAllocatePool (NonPagedPool, sizeof(INTERNAL_BCB));
    if (iBcb == NULL)
    {
-     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE);
+     CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
      return FALSE;
    }
    iBcb->CacheSegment = CacheSeg;
@@ -106,7 +106,7 @@ CcUnpinData (
    IN PVOID Bcb)
 {
    PINTERNAL_BCB iBcb = Bcb;
-   CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE);
+   CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE, FALSE, FALSE);
    ExFreePool(iBcb);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.49 2001/09/27 02:14:35 dwelch Exp $
+/* $Id: virtual.c,v 1.50 2001/12/29 14:32:22 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -1023,6 +1023,7 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 
 VOID STATIC
 MmFreeVirtualMemoryPage(PVOID Context,
+			MEMORY_AREA* MemoryArea,
 			PVOID Address,
 			ULONG PhysicalAddr)
 {
