@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.26 2004/01/17 15:20:25 navaraf Exp $
+/* $Id: objects.h,v 1.27 2004/02/06 22:18:56 rcampbell Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,7 @@
 #ifndef __ENG_OBJECTS_H
 #define __ENG_OBJECTS_H
 
+#include <ft2build.h>
 #include <freetype/freetype.h>
 
 /* Structure of internal gdi objects that win32k manages for ddi engine:
