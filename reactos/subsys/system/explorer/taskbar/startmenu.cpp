@@ -1009,7 +1009,7 @@ void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator)
 	CreateSubmenu(id, StartMenuFolders(), title, creator);
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_INFO creator)
+bool StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	try {
 		SpecialFolderPath folder(folder_id, _hwnd);
@@ -1018,12 +1018,17 @@ void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_
 		new_folders.push_back(folder);
 
 		CreateSubmenu(id, new_folders, title, creator);
+
+		return true;
 	} catch(COMException&) {
 		// ignore Exception and don't display anything
+		CloseOtherSubmenus(id);
+		_buttons[GetSelectionIndex()]._enabled = false;	// disable entries for non-existing folders
+		return false;
 	}
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC_INFO creator)
+bool StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	StartMenuFolders new_folders;
 
@@ -1037,8 +1042,14 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR ti
 	} catch(COMException&) {
 	}
 
-	if (!new_folders.empty())
+	if (!new_folders.empty()) {
 		CreateSubmenu(id, new_folders, title, creator);
+		return true;
+	} else {
+		CloseOtherSubmenus(id);
+		_buttons[GetSelectionIndex()]._enabled = false;	// disable entries for non-existing folders
+		return false;
+	}
 }
 
 void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator)
