@@ -5,6 +5,7 @@
 #include <win32k/fillshap.h>
 #include <win32k/dc.h>
 #include <win32k/pen.h>
+#include <include/object.h>
 
 // #define NDEBUG
 #include <win32k/debug1.h>
@@ -78,11 +79,12 @@ W32kRectangle(HDC  hDC,
                     int  BottomRect)
 {
   DC		*dc = DC_HandleToPtr(hDC);
-  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
   PBRUSHOBJ	BrushObj;
   BOOL ret;
   PRECTL	RectBounds;
   PENOBJ * pen;
+  RECTL        DestRect;
 
   if(!dc)
    return FALSE;
@@ -94,10 +96,15 @@ W32kRectangle(HDC  hDC,
     ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
   } else {
     // Draw the rectangle with the current pen
-	pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-	ASSERT(pen);
-	BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
-	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
+    pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+    ASSERT(pen);
+    BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
+    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
+
+    LeftRect += dc->w.DCOrgX;
+    RightRect += dc->w.DCOrgX;
+    TopRect += dc->w.DCOrgY;
+    BottomRect += dc->w.DCOrgY;
 
     ret = EngLineTo(SurfObj,
                     NULL, // ClipObj,
@@ -127,7 +134,27 @@ W32kRectangle(HDC  hDC,
                     RectBounds, // Bounding rectangle
                     dc->w.ROPmode); // MIX */
 
-    ExFreePool(BrushObj);
+    BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+    assert(BrushObj);
+    if (BrushObj->logbrush.lbStyle != BS_NULL)
+      {	
+	DestRect.left = LeftRect + 1;
+	DestRect.right = RightRect - 1;
+	DestRect.top = TopRect + 1;
+	DestRect.bottom = BottomRect - 1;
+	ret = EngBitBlt(SurfObj, 
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			&DestRect,
+			NULL,
+			NULL,
+			BrushObj,
+			NULL,
+			PATCOPY);
+      }
+    GDIOBJ_UnlockObj( dc->w.hBrush, GO_PEN_MAGIC );	
   }
 
 // FIXME: Move current position in DC?

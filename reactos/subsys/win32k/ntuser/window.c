@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.13 2002/08/31 23:18:47 dwelch Exp $
+/* $Id: window.c,v 1.14 2002/09/01 20:39:56 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -158,9 +158,10 @@ W32kReleaseWindowObject(PWINDOW_OBJECT Window)
 VOID
 W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 {
-  Rect->left = Rect->bottom = 0;
+  Rect->left = Rect->top = 0;
   Rect->right = WindowObject->ClientRect.right - WindowObject->ClientRect.left;
-  Rect->top = WindowObject->ClientRect.bottom - WindowObject->ClientRect.top;
+  Rect->bottom = 
+    WindowObject->ClientRect.bottom - WindowObject->ClientRect.top;
 }
 
 BOOL STDCALL

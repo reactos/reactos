@@ -146,5 +146,8 @@ W32kGetRegionData(HRGN hrgn,
 HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 HRGN STDCALL
 UnsafeW32kCreateRectRgnIndirect(CONST PRECT rc);
+INT STDCALL
+UnsafeW32kGetRgnBox(HRGN  hRgn,
+		    LPRECT  pRect);
 #endif
 

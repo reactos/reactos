@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.14 2002/07/13 21:37:26 ei Exp $
+/* $Id: brush.c,v 1.15 2002/09/01 20:39:56 dwelch Exp $
  */
 
 
@@ -8,6 +8,7 @@
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
 //#include <win32k/debug.h>
+#include <include/object.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -177,13 +178,63 @@ BOOL STDCALL W32kFixBrushOrgEx(VOID)
 }
 
 BOOL STDCALL W32kPatBlt(HDC  hDC,
-                 INT  XLeft,
-                 INT  YLeft,
-                 INT  Width,
-                 INT  Height,
-                 DWORD  ROP)
+			INT  XLeft,
+			INT  YLeft,
+			INT  Width,
+			INT  Height,
+			DWORD  ROP)
 {
-  UNIMPLEMENTED;
+  RECT DestRect;
+  PBRUSHOBJ BrushObj;
+  PSURFOBJ SurfObj;
+  DC *dc = DC_HandleToPtr(hDC);
+  BOOL ret;
+
+  if (dc == NULL)
+    {
+      return(FALSE);
+    }
+
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
+
+  BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+  assert(BrushObj);
+  if (BrushObj->logbrush.lbStyle != BS_NULL)
+    {	
+      if (Width > 0)
+	{
+	  DestRect.left = XLeft + dc->w.DCOrgX;
+	  DestRect.right = XLeft + Width + dc->w.DCOrgX;
+	}
+      else
+	{
+	  DestRect.left = XLeft + Width + dc->w.DCOrgX;
+	  DestRect.right = XLeft + dc->w.DCOrgX;
+	}
+      if (Height > 0)
+	{
+	  DestRect.top = YLeft + dc->w.DCOrgY;      
+	  DestRect.bottom = YLeft + Height + dc->w.DCOrgY;
+	}
+      else
+	{
+	  DestRect.top = YLeft + Height + dc->w.DCOrgY;      
+	  DestRect.bottom = YLeft + dc->w.DCOrgY;
+	}
+      ret = EngBitBlt(SurfObj, 
+		      NULL,
+		      NULL,
+		      NULL,
+		      NULL,
+		      &DestRect,
+		      NULL,
+		      NULL,
+		      BrushObj,
+		      NULL,
+		      PATCOPY);
+    }
+  GDIOBJ_UnlockObj( dc->w.hBrush, GO_PEN_MAGIC );	
+  return(ret);
 }
 
 BOOL STDCALL W32kSetBrushOrgEx(HDC  hDC,

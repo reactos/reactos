@@ -355,6 +355,7 @@ NtUserGetAsyncKeyState                  1
 NtUserGetCaretBlinkTime                 0
 NtUserGetCaretPos                       1
 NtUserGetClassInfo                      5
+NtUserGetClassLong			2
 NtUserGetClassName                      3
 NtUserGetClipboardData                  2
 NtUserGetClipboardFormatName            3

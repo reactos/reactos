@@ -72,9 +72,12 @@ EngBitBlt(SURFOBJ *Dest,
   if(Source != NULL) SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   if(Dest   != NULL) DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
 
-  MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
-                         (SourcePoint->x + abs(DestRect->right - DestRect->left)),
-                         (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+  if (Source != NULL)
+    {
+      MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
+			     (SourcePoint->x + abs(DestRect->right - DestRect->left)),
+			     (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+    }
   MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // If we don't have to do anything special, we can punt to DrvCopyBits

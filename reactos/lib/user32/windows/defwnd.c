@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.5 2002/08/31 23:18:46 dwelch Exp $
+/* $Id: defwnd.c,v 1.6 2002/09/01 20:39:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -67,6 +67,12 @@ HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
   return(CreatePen(PS_SOLID, 1, SysColours[nIndex]));
+}
+
+HBRUSH STDCALL
+GetSysColorBrush(int nIndex)
+{
+  return(CreateSolidBrush(SysColours[nIndex]));
 }
 
 

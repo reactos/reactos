@@ -7,6 +7,13 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+HGDIOBJ STDCALL
+GetStockObject(int Index)
+{
+  return(W32kGetStockObject(Index));
+}
+
+
 int STDCALL
 GetClipBox(HDC hDc, LPRECT Rect)
 {

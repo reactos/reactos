@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.10 2002/08/31 23:18:46 dwelch Exp $
+/* $Id: stubs.c,v 1.11 2002/09/01 20:39:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -221,14 +221,6 @@ GetSysColor(
   int nIndex)
 {
   return 0;
-}
-
-HBRUSH
-STDCALL
-GetSysColorBrush(
-  int nIndex)
-{
-  return (HBRUSH)0;
 }
 
 HMENU

@@ -614,8 +614,7 @@ STDCALL
 NtUserGetCursorInfo(
   DWORD Unknown0);
 
-DWORD
-STDCALL
+HDC STDCALL
 NtUserGetDC(HWND hWnd);
 
 HDC STDCALL NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags);

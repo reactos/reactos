@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.10 2002/08/16 01:39:17 dwelch Exp $
+/* $Id: class.c,v 1.11 2002/09/01 20:39:56 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,6 +18,7 @@
 #include <include/winsta.h>
 #include <include/object.h>
 #include <include/guicheck.h>
+#include <include/window.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -267,6 +268,37 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
 DWORD STDCALL
 NtUserGetClassLong(HWND hWnd, DWORD Offset)
 {
+  PWINDOW_OBJECT WindowObject;
+  LONG Ret;
+
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return(0);
+    }
+  switch (Offset)
+    {
+    case GCL_STYLE:
+      Ret = WindowObject->Class->Class.style;
+      break;
+    case GCL_CBWNDEXTRA:
+      Ret = WindowObject->Class->Class.cbWndExtra;
+      break;
+    case GCL_CBCLSEXTRA:
+      Ret = WindowObject->Class->Class.cbClsExtra;
+      break;
+    case GCL_HMODULE:
+      Ret = WindowObject->Class->Class.hInstance;
+      break;
+    case GCL_HBRBACKGROUND:
+      Ret = WindowObject->Class->Class.hbrBackground;
+      break;
+    default:
+      Ret = 0;
+      break;
+    }
+  W32kReleaseWindowObject(WindowObject);
+  return(Ret);
 }
 
 DWORD STDCALL

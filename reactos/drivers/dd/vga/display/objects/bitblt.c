@@ -57,9 +57,19 @@ BOOL DIBtoVGA(
           }
           tMask += Mask->lDelta;
         }
-
       }
-    } else
+    } else if (rop4 == PATCOPY)
+      {
+	for (j=0;j<dy;j++)
+	  {
+	    for (i=0;i<dx;i++)
+	      {
+		vgaPutPixel(DestRect->left+i, DestRect->top+j,
+			    Brush->iSolidColor);
+	      }
+	  }
+      }
+    else
       DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
 
   } else {

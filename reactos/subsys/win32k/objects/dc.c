@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.35 2002/08/19 21:49:45 ei Exp $
+/* $Id: dc.c,v 1.36 2002/09/01 20:39:56 dwelch Exp $
  *
  * DC.C - Device context functions
  *
@@ -307,7 +307,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /*  Initialize the DC state  */
   DC_InitDC(hNewDC);
 
-  W32kSetTextColor(hNewDC, RGB(0xff, 0xff, 0xff));
+  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, 640, 480);
+  W32kSetTextColor(hNewDC, RGB(0, 0, 0));
   W32kSetTextAlign(hNewDC, TA_BASELINE);
   DC_ReleasePtr( hNewDC );
   return hNewDC;
@@ -940,7 +941,8 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 	  if( PalGDI ){
       	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->iSolidColor);
+      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, 
+					     brush->logbrush.lbColor);
 	  	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
 	  }
       break;
@@ -1149,6 +1151,16 @@ HDC  DC_AllocDC(LPCWSTR  Driver)
   	  NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
   	  wcscpy(NewDC->DriverName, Driver);
   	}
+
+	NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
+	NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
+	NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
+	NewDC->w.xformWorld2Wnd.eM22 = 1.0f;
+	NewDC->w.xformWorld2Wnd.eDx = 0.0f;
+	NewDC->w.xformWorld2Wnd.eDy = 0.0f;
+	NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
+	NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
+	NewDC->w.vport2WorldValid = TRUE;
 
 	GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
   	return  hDC;

@@ -29,7 +29,7 @@ typedef struct tagDCE
     HWND         hwndDC;
     HRGN         hClipRgn;
     DCE_TYPE     type;
-    DWORD        DCXflags;
+    DWORD        DCXFlags;
 } DCE, *PDCE;
 
 

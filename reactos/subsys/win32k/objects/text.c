@@ -580,7 +580,7 @@ W32kTextOut(HDC  hDC,
   int error, glyph_index, n, load_flags = FT_LOAD_RENDER, i, j, sx, sy, scc;
   FT_Face face;
   FT_GlyphSlot glyph;
-  ULONG TextLeft = XStart, TextTop = YStart, SpaceBetweenChars = 2, pitch, previous;
+  ULONG TextLeft, TextTop, SpaceBetweenChars = 2, pitch, previous;
   FT_Bool use_kerning;
   RECTL DestRect, MaskRect;
   POINTL SourcePoint, BrushOrigin;
@@ -600,6 +600,11 @@ W32kTextOut(HDC  hDC,
 
   if( !dc )
 	return FALSE;
+
+  XStart += dc->w.DCOrgX;
+  YStart += dc->w.DCOrgY;
+  TextLeft = XStart;
+  TextTop = YStart;
 
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
 

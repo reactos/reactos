@@ -88,6 +88,6 @@ W32kIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
   Dest->left = max(Src1->left, Src2->left);
   Dest->right = min(Src1->right, Src2->right);
   Dest->top = max(Src1->top, Src2->top);
-  Dest->bottom = min(Src1->right, Src2->right);
+  Dest->bottom = min(Src1->bottom, Src2->bottom);
   return(TRUE);
 }

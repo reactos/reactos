@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.13 2002/06/18 21:51:09 dwelch Exp $
+/* $Id: class.c,v 1.14 2002/09/01 20:39:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -53,22 +53,26 @@ GetClassInfoW(
   return FALSE;
 }
 
-DWORD
-STDCALL
-GetClassLongA(
-  HWND hWnd,
-  int nIndex)
+DWORD STDCALL
+GetClassLongA(HWND hWnd, int nIndex)
 {
-  return 0;
+  switch (nIndex)
+    {
+    case GCL_WNDPROC:
+      UNIMPLEMENTED;
+      return(0);
+    case GCL_MENUNAME:
+      UNIMPLEMENTED;
+      return(0);
+    default:
+      return(GetClassLongW(hWnd, nIndex));
+    }
 }
 
-DWORD
-STDCALL
-GetClassLongW(
-  HWND hWnd,
-  int nIndex)
+DWORD STDCALL
+GetClassLongW(HWND hWnd, int nIndex)
 {
-  return 0;
+  return(NtUserGetClassLong(hWnd, nIndex));
 }
 
 int

@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.19 $
- * $Author: jfilby $
- * $Date: 2002/08/19 22:01:11 $
+ * $Revision: 1.20 $
+ * $Author: dwelch $
+ * $Date: 2002/09/01 20:39:53 $
  *
  */
 
@@ -13,6 +13,7 @@
 
 #define  DBG_PREFIX  "VGADDI: "
 
+static BOOL VGAInitialized = FALSE;
 
 DRVFN FuncList[] =
 {
@@ -186,12 +187,15 @@ DrvAssertMode(IN DHPDEV DPev,
       return FALSE;
     }
 
-    if (!InitVGA(ppdev, FALSE))
-    {
-      // Failed to initialize the VGA
-      return FALSE;
-    }
-
+    if (!VGAInitialized)
+      {
+	if (!InitVGA(ppdev, FALSE))
+	  {
+	    // Failed to initialize the VGA
+	    return FALSE;
+	  }
+	VGAInitialized = TRUE;
+      }
   } else {
     // Go back to last known mode
     DPRINT( "ppdev: %x, KMDriver: %x", ppdev, ppdev->KMDriver );
@@ -200,7 +204,7 @@ DrvAssertMode(IN DHPDEV DPev,
       // Failed to go back to mode
       return FALSE;
     }
-
+    VGAInitialized = FALSE;
   }
 
 }
@@ -323,10 +327,14 @@ DrvEnableSurface(IN DHPDEV PDev)
   DPRINT1("DrvEnableSurface() called\n");
 
   // Initialize the VGA
-  if (!InitVGA(ppdev, TRUE))
-  {
-    goto error_done;
-  }
+  if (!VGAInitialized)
+    {
+      if (!InitVGA(ppdev, TRUE))
+	{
+	  goto error_done;
+	}
+      VGAInitialized = TRUE;
+    }
 CHECKPOINT1;
 
   // dhsurf is of type DEVSURF, which is the drivers specialized surface type

@@ -11,6 +11,25 @@
 // #define NDEBUG
 #include <win32k/debug1.h>
 
+VOID
+CLIPPING_UpdateGCRegion(DC* Dc)
+{
+  if (Dc->w.hGCClipRgn == NULL)
+    {
+      Dc->w.hGCClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
+    }
+
+  if (Dc->w.hClipRgn == NULL)
+    {
+      W32kCombineRgn(Dc->w.hGCClipRgn, Dc->w.hVisRgn, 0, RGN_COPY);
+    }
+  else
+    {
+      W32kCombineRgn(Dc->w.hGCClipRgn, Dc->w.hClipRgn, Dc->w.hVisRgn,
+		     RGN_AND);
+    }
+}
+
 HRGN WINAPI SaveVisRgn(HDC hdc)
 {
   HRGN copy;
@@ -35,7 +54,8 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   return copy;
 }
 
-INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn)
+INT WINAPI 
+W32kSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
@@ -46,7 +66,7 @@ INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn)
   dc->w.flags &= ~DC_DIRTY;
 
   retval = W32kCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
-  //ei CLIPPING_UpdateGCRegion(dc);
+  CLIPPING_UpdateGCRegion(dc);
 
   return retval;
 }
@@ -74,7 +94,7 @@ int STDCALL W32kGetClipBox(HDC  hDC,
   DC *dc;
 
   if (!(dc = DC_HandleToPtr(hDC))) return ERROR;
-  retval = W32kGetRgnBox(dc->w.hGCClipRgn, rc);
+  retval = UnsafeW32kGetRgnBox(dc->w.hGCClipRgn, rc);
   rc->left -= dc->w.DCOrgX;
   rc->right -= dc->w.DCOrgX;
   rc->top -= dc->w.DCOrgY;

@@ -74,7 +74,7 @@ typedef struct _WINDOW_OBJECT
   /* Pointer to the parent window. */
   struct _WINDOW_OBJECT* Parent;
   /* DC Entries (DCE) */
-  PDCE dce;
+  PDCE Dce;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */

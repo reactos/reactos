@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.15 2002/08/04 18:21:59 ei Exp $
+ * $Id: gdiobj.c,v 1.16 2002/09/01 20:39:56 dwelch Exp $
  *
  */
 
@@ -252,7 +252,8 @@ PGDIOBJ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 
 	DPRINT("GDIOBJ_LockObj: hObj: %d, magic: %x, \n handleEntry: %x, mag %x\n", hObj, Magic, handleEntry, handleEntry->wMagic);
   	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
-	     || handleEntry->hProcessId != PsGetCurrentProcessId () )
+	     || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
+		 handleEntry->hProcessId != PsGetCurrentProcessId ()))
   	  return  NULL;
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
@@ -273,7 +274,8 @@ BOOL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 
 	DPRINT("GDIOBJ_UnlockObj: hObj: %d, magic: %x, \n handleEntry: %x\n", hObj, Magic, handleEntry);
   	if (handleEntry == 0 || (handleEntry->wMagic != Magic && handleEntry->wMagic != GO_MAGIC_DONTCARE )
-	      || handleEntry->hProcessId != PsGetCurrentProcessId ())
+	      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
+		 handleEntry->hProcessId != PsGetCurrentProcessId ()))
   	  return  FALSE;
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
@@ -375,6 +377,20 @@ PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ ObjectHandle, WORD Magic)
 }
 */
 
+VOID GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
+{
+  PGDI_HANDLE_ENTRY  handleEntry;
+
+  if (ObjectHandle == NULL)
+    return;
+
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
+  if (handleEntry == 0)
+    return;
+
+  handleEntry->hProcessId = (HANDLE)0xFFFFFFFF;
+}
+
 WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 {
   PGDI_HANDLE_ENTRY  handleEntry;
@@ -384,7 +400,8 @@ WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
 
   handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
   if (handleEntry == 0 ||
-      handleEntry->hProcessId != PsGetCurrentProcessId ())
+      (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
+       handleEntry->hProcessId != PsGetCurrentProcessId ()))
     return  0;
 
   return  handleEntry->wMagic;
@@ -409,22 +426,38 @@ VOID CreateStockObjects(void)
   // Create GDI Stock Objects from the logical structures we've defined
 
   StockObjects[WHITE_BRUSH] =  W32kCreateBrushIndirect(&WhiteBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[WHITE_BRUSH]);
   StockObjects[LTGRAY_BRUSH] = W32kCreateBrushIndirect(&LtGrayBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[LTGRAY_BRUSH]);
   StockObjects[GRAY_BRUSH] =   W32kCreateBrushIndirect(&GrayBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[GRAY_BRUSH]);
   StockObjects[DKGRAY_BRUSH] = W32kCreateBrushIndirect(&DkGrayBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[DKGRAY_BRUSH]);
   StockObjects[BLACK_BRUSH] =  W32kCreateBrushIndirect(&BlackBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[BLACK_BRUSH]);
   StockObjects[NULL_BRUSH] =   W32kCreateBrushIndirect(&NullBrush);
+  GDIOBJ_MarkObjectGlobal(StockObjects[NULL_BRUSH]);
 
   StockObjects[WHITE_PEN] = W32kCreatePenIndirect(&WhitePen);
+  GDIOBJ_MarkObjectGlobal(StockObjects[WHITE_PEN]);
   StockObjects[BLACK_PEN] = W32kCreatePenIndirect(&BlackPen);
+  GDIOBJ_MarkObjectGlobal(StockObjects[BLACK_PEN]);
   StockObjects[NULL_PEN] =  W32kCreatePenIndirect(&NullPen);
+  GDIOBJ_MarkObjectGlobal(StockObjects[NULL_PEN]);
 
   StockObjects[OEM_FIXED_FONT] =      W32kCreateFontIndirect(&OEMFixedFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[OEM_FIXED_FONT]);
   StockObjects[ANSI_FIXED_FONT] =     W32kCreateFontIndirect(&AnsiFixedFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[ANSI_FIXED_FONT]);
   StockObjects[SYSTEM_FONT] =         W32kCreateFontIndirect(&SystemFont);
-  StockObjects[DEVICE_DEFAULT_FONT] = W32kCreateFontIndirect(&DeviceDefaultFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FONT]);
+  StockObjects[DEVICE_DEFAULT_FONT] = 
+    W32kCreateFontIndirect(&DeviceDefaultFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[DEVICE_DEFAULT_FONT]);
   StockObjects[SYSTEM_FIXED_FONT] =   W32kCreateFontIndirect(&SystemFixedFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FIXED_FONT]);
   StockObjects[DEFAULT_GUI_FONT] =    W32kCreateFontIndirect(&DefaultGuiFont);
+  GDIOBJ_MarkObjectGlobal(StockObjects[DEFAULT_GUI_FONT]);
 
   StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
 }

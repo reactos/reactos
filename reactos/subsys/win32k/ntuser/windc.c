@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.5 2002/08/27 23:29:40 dwelch Exp $
+/* $Id: windc.c,v 1.6 2002/09/01 20:39:56 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,13 +25,26 @@
 #define NDEBUG
 #include <debug.h>
 
-static PDCE firstDCE;
+/* GLOBALS *******************************************************************/
+
+static PDCE FirstDce = NULL;
+
+#define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
+                              DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
 
 /* FUNCTIONS *****************************************************************/
 
-VOID DCE_FreeWindowDCE(HWND);
-INT  DCE_ExcludeRgn(HDC, HWND, HRGN);
-BOOL DCE_InvalidateDCE(HWND, const PRECTL);
+VOID STATIC
+DceOffsetVisRgn(HDC hDC, HRGN hVisRgn)
+{
+  DC *dc = DC_HandleToPtr(hDC);
+  if (dc == NULL)
+    {
+      return;
+    }
+  W32kOffsetRgn(hVisRgn, dc->w.DCOrgX, dc->w.DCOrgY);
+  DC_ReleasePtr(hDC);
+}
 
 BOOL STATIC
 DceGetVisRect(PWINDOW_OBJECT Window, BOOL ClientArea, RECT* Rect)
@@ -130,7 +143,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 
   if (Window != NULL && DceGetVisRect(Window, !(Flags & DCX_WINDOW), &Rect))
     {
-      if ((VisRgn = W32kCreateRectRgnIndirect(&Rect)) != NULL)
+      if ((VisRgn = UnsafeW32kCreateRectRgnIndirect(&Rect)) != NULL)
 	{
 	  HRGN ClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
 	  INT XOffset, YOffset;
@@ -232,8 +245,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   
 }
 
-DWORD
-STDCALL
+HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
     if (!hWnd)
@@ -241,159 +253,279 @@ NtUserGetDC(HWND hWnd)
     return NtUserGetDCEx(hWnd, 0, DCX_USESTYLE);
 }
 
+DCE* DceAllocDCE(HWND hWnd, DCE_TYPE Type)
+{
+  HDCE DceHandle;
+  DCE* Dce;
+
+  DceHandle = DCEOBJ_AllocDCE();
+  Dce = DCEOBJ_LockDCE(DceHandle);
+  Dce->hDC = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  Dce->hwndCurrent = hWnd;
+  Dce->hClipRgn = NULL;
+  Dce->next = FirstDce;
+  FirstDce = Dce;
+
+  if (Type != DCE_CACHE_DC)
+    {
+      Dce->DCXFlags = DCX_DCEBUSY;
+      if (hWnd != NULL)
+	{
+	  PWINDOW_OBJECT WindowObject;
+
+	  WindowObject = W32kGetWindowObject(hWnd);
+	  if (WindowObject->Style & WS_CLIPCHILDREN)
+	    {
+	      Dce->DCXFlags |= DCX_CLIPCHILDREN;
+	    }
+	  if (WindowObject->Style & WS_CLIPSIBLINGS)
+	    {
+	      Dce->DCXFlags |= DCX_CLIPSIBLINGS;
+	    }
+	  W32kReleaseWindowObject(WindowObject);
+	}
+    }
+  else
+    {
+      Dce->DCXFlags = DCX_CACHE | DCX_DCEEMPTY;
+    }
+
+  return(Dce);
+}
+
+VOID STATIC
+DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
+	       BOOL SetClipOrigin)
+{
+  DC *dc = DC_HandleToPtr(hDC);
+  if (WindowObject == NULL)
+    {
+      dc->w.DCOrgX = 0;
+      dc->w.DCOrgY = 0;
+    }
+  else
+    {
+      if (Flags & DCX_WINDOW)
+	{
+	  dc->w.DCOrgX = WindowObject->WindowRect.left;
+	  dc->w.DCOrgY = WindowObject->WindowRect.top;
+	}
+      else
+	{
+	  dc->w.DCOrgX = WindowObject->ClientRect.left;
+	  dc->w.DCOrgY = WindowObject->ClientRect.top;
+	}
+      /* FIXME: Offset by parent's client rectangle. */
+    }
+  DC_ReleasePtr(hDC);
+}
+
 HDC STDCALL
 NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 {
-    HDC 	hdc = 0;
-    HDCE	hdce;
-    PDCE	dce;
-    DWORD 	dcxFlags = 0;
-    BOOL	bUpdateVisRgn = TRUE;
-    BOOL	bUpdateClipOrigin = FALSE;
-    HWND parent, full;
-    PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT Window;
+  ULONG DcxFlags;
+  DCE* Dce;
+  BOOL UpdateVisRgn = TRUE;
+  BOOL UpdateClipOrigin = FALSE;
+  HANDLE hRgnVisible = NULL;
 
-    DPRINT("hWnd %04x, hRegion %04x, Flags %08x\n", hWnd, hRegion, (unsigned)Flags);
-
-    if (!hWnd) hWnd = W32kGetDesktopWindow();
-    if (!(Window = W32kGetWindowObject(hWnd))) return 0;
-
-    // fixup flags
-
-    if (Flags & (DCX_WINDOW | DCX_PARENTCLIP)) Flags |= DCX_CACHE;
-
-    if (Flags & DCX_USESTYLE)
+  if ((Window = W32kGetWindowObject(hWnd)) == NULL)
     {
-	Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
+      return(0);
+    }
 
-        if(Window->Style & WS_CLIPSIBLINGS)
-            Flags |= DCX_CLIPSIBLINGS;
+  if (Window->Dce == NULL)
+    {
+      Flags |= DCX_CACHE;
+    }
 
-	if (!(Flags & DCX_WINDOW))
+  if (Flags & DCX_USESTYLE)
+    {
+      Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
+
+      if (Window->Style & WS_CLIPSIBLINGS)
 	{
-            if (Window->ExStyle & CS_PARENTDC) Flags |= DCX_PARENTCLIP;
+	  Flags |= DCX_CLIPSIBLINGS;
+	}
 
-	    if (Window->Style & WS_CLIPCHILDREN &&
-                     !(Window->Style & WS_MINIMIZE)) Flags |= DCX_CLIPCHILDREN;
-            if (!Window->dce) Flags |= DCX_CACHE;
+      if (!(Flags & DCX_WINDOW))
+	{
+	  if (Window->Class->Class.style & CS_PARENTDC)
+	    {
+	      Flags |= DCX_PARENTCLIP;
+	    }
+
+	  if (Window->Style & WS_CLIPCHILDREN &&
+	      !(Window->Style & WS_MINIMIZE))
+	    {
+	      Flags |= DCX_CLIPCHILDREN;
+	    }
+	}
+      else
+	{
+	  Flags |= DCX_CACHE;
 	}
     }
 
-    if (Flags & DCX_WINDOW) Flags &= ~DCX_CLIPCHILDREN;
-
-    parent = W32kGetParentWindow(hWnd);
-    if (!parent || (parent == W32kGetDesktopWindow()))
-        Flags = (Flags & ~DCX_PARENTCLIP) | DCX_CLIPSIBLINGS;
-
-    // it seems parent clip is ignored when clipping siblings or children
-    if (Flags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN)) Flags &= ~DCX_PARENTCLIP;
-
-    if(Flags & DCX_PARENTCLIP)
+  if (Flags & DCX_NOCLIPCHILDREN)
     {
-        LONG parent_style = NtUserGetWindowLong(parent, GWL_STYLE);
-        if((Window->Style & WS_VISIBLE) && (parent_style & WS_VISIBLE))
-        {
-            Flags &= ~DCX_CLIPCHILDREN;
-            if (parent_style & WS_CLIPSIBLINGS) Flags |= DCX_CLIPSIBLINGS;
-        }
+      Flags |= DCX_CACHE;
+      Flags |= ~(DCX_PARENTCLIP | DCX_CLIPCHILDREN);
     }
 
-    // find a suitable DCE
-
-    dcxFlags = Flags & (DCX_PARENTCLIP | DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
-		        DCX_CACHE | DCX_WINDOW);
-
-    if (Flags & DCX_CACHE)
+  if (Flags & DCX_WINDOW)
     {
-	PDCE dceEmpty;
-	PDCE dceUnused;
+      Flags = (Flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
+    }
 
-	dceEmpty = dceUnused = NULL;
-
-	/* Strategy: First, we attempt to find a non-empty but unused DCE with
-	 * compatible flags. Next, we look for an empty entry. If the cache is
-	 * full we have to purge one of the unused entries.
-	 */
-
-	for (dce = firstDCE; (dce); dce = dce->next)
+  if (!(Window->Style & WS_CHILD) || Window->Parent == NULL)
+    {
+      Flags &= ~DCX_PARENTCLIP;
+    }
+  else if (Flags & DCX_PARENTCLIP)
+    {
+      Flags |= DCX_CACHE;
+      if (!(Flags & (DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS)))
 	{
-	    if ((dce->DCXflags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
+	  if ((Window->Style & WS_VISIBLE) && 
+	      (Window->Parent->Style & WS_VISIBLE))
 	    {
-		dceUnused = dce;
-
-		if (dce->DCXflags & DCX_DCEEMPTY)
-		    dceEmpty = dce;
-		else
-		if ((dce->hwndCurrent == hWnd) &&
-		   ((dce->DCXflags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
-				      DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)) == dcxFlags))
+	      Flags &= ~DCX_CLIPCHILDREN;
+	      if (Window->Parent->Style & WS_CLIPSIBLINGS)
 		{
-		    DPRINT("Found valid %08x dce [%04x], flags %08x\n",
-					(unsigned)dce, hWnd, (unsigned)dcxFlags);
-		    bUpdateVisRgn = FALSE;
-		    bUpdateClipOrigin = TRUE;
-		    break;
+		  Flags |= DCX_CLIPSIBLINGS;
+		}
+	    }
+	}
+    }
+
+  DcxFlags = Flags & DCX_CACHECOMPAREMASK;
+
+  if (Flags & DCX_CACHE)
+    {
+      DCE* DceEmpty = NULL;
+      DCE* DceUnused = NULL;
+
+      for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
+	{
+	  if ((Dce->DCXFlags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
+	    {
+	      DceUnused = Dce;
+	      if (Dce->DCXFlags & DCX_DCEEMPTY)
+		{
+		  DceEmpty = Dce;
+		}
+	      else if (Dce->hwndCurrent == hWnd &&
+		       ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
+		{
+		  UpdateVisRgn = FALSE;
+		  UpdateClipOrigin = TRUE;
+		  break;
 		}
 	    }
 	}
 
-	if (!dce) dce = (dceEmpty) ? dceEmpty : dceUnused;
-
-        // if there's no dce empty or unused, allocate a new one
-        if (!dce)
-        {
-            hdce = DCEOBJ_AllocDCE();
-            if (hdce == NULL)
-            {
-                return 0;
-            }
-            dce = DCEOBJ_LockDCE(hdce);
-            dce->type = DCE_CACHE_DC;
-            dce->hDC = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
-        }
-    }
-    else
-    {
-        dce = Window->dce;
-        if (dce && dce->hwndCurrent == hWnd)
+      if (Dce == NULL)
 	{
-	    DPRINT("skipping hVisRgn update\n");
-	    bUpdateVisRgn = FALSE; // updated automatically, via DCHook()
+	  Dce = (DceEmpty == NULL) ? DceEmpty : DceUnused;
+	}
+
+      if (Dce == NULL)
+	{
+	  Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
 	}
     }
-    if (!dce)
+  else
     {
-        hdc = 0;
-        goto END;
+      Dce = Window->Dce;
+      /* FIXME: Implement this. */
+      DbgBreakPoint();
     }
 
-    if (!(Flags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN))) hRegion = 0;
-
-    if (((Flags ^ dce->DCXflags) & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
-        (dce->hClipRgn != hRegion))
+  if (Dce == NULL)
     {
-        // if the extra clip region has changed, get rid of the old one
-/*        DCE_DeleteClipRgn(dce); */
+      W32kReleaseWindowObject(Window);
+      return(NULL);
     }
 
-    dce->hwndCurrent = hWnd;
-    dce->hClipRgn = hRegion;
-    dce->DCXflags = Flags & (DCX_PARENTCLIP | DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
-                             DCX_CACHE | DCX_WINDOW | DCX_WINDOWPAINT |
-                             DCX_KEEPCLIPRGN | DCX_INTERSECTRGN | DCX_EXCLUDERGN);
-    dce->DCXflags |= DCX_DCEBUSY;
-    dce->DCXflags &= ~DCX_DCEDIRTY;
-    hdc = dce->hDC;
+  Dce->hwndCurrent = hWnd;
+  Dce->hClipRgn = NULL;
+  Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
-/*    if (bUpdateVisRgn) SetHookFlags(hdc, DCHF_INVALIDATEVISRGN); // force update */
+  DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
 
-/*    if (!USER_Driver.pGetDC(hWnd, hdc, hRegion, Flags)) hdc = 0; */
+  if (UpdateVisRgn)
+    {
+      if (Flags & DCX_PARENTCLIP)
+	{
+	  PWINDOW_OBJECT Parent;
 
-    DPRINT("(%04x,%04x,0x%lx): returning %04x\n", hWnd, hRegion, Flags, hdc);
+	  Parent = Window->Parent;
 
-END:
-/*    WIN_ReleasePtr(Window); */
-    return hdc;
+	  if (Window->Style & WS_VISIBLE &&
+	      !(Parent->Style & WS_MINIMIZE))
+	    {
+	      if (Parent->Style & WS_CLIPSIBLINGS)
+		{
+		  DcxFlags = DCX_CLIPSIBLINGS | 
+		    (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
+		}
+	      else
+		{
+		  DcxFlags = Flags & 
+		    ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
+		}
+	      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
+					 Window->Self, Flags);
+	      if (Flags & DCX_WINDOW)
+		{
+		  W32kOffsetRgn(hRgnVisible, -Window->WindowRect.left,
+				-Window->WindowRect.top);
+		}
+	      else
+		{
+		  W32kOffsetRgn(hRgnVisible, -Window->ClientRect.left,
+				-Window->ClientRect.top);
+		}
+	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
+	    }
+	  else
+	    {
+	      hRgnVisible = W32kCreateRectRgn(0, 0, 0, 0);
+	    }
+	}
+      else
+	{
+	  if (hWnd == W32kGetDesktopWindow())
+	    {
+	      hRgnVisible = 
+		W32kCreateRectRgn(0, 0, 
+				  NtUserGetSystemMetrics(SM_CXSCREEN),
+				  NtUserGetSystemMetrics(SM_CYSCREEN));
+	    }
+	  else
+	    {
+	      hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
+	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
+	    }
+
+	  Dce->DCXFlags &= ~DCX_DCEDIRTY;
+	  W32kSelectVisRgn(Dce->hDC, hRgnVisible);
+	}
+    }
+
+  if (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN))
+    {
+      DPRINT1("FIXME.\n");
+    }
+
+  if (hRgnVisible != NULL)
+    {
+      W32kDeleteObject(hRgnVisible);
+    }
+  W32kReleaseWindowObject(Window);
+  return(Dce->hDC);
 }
 
 /* EOF */

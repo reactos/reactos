@@ -1682,29 +1682,47 @@ W32kFrameRgn(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-
-INT
-STDCALL
-W32kGetRgnBox(HRGN  hRgn,
-                   LPRECT  pRect)
+INT STDCALL
+UnsafeW32kGetRgnBox(HRGN  hRgn,
+		    LPRECT  pRect)
 {
   PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
   DWORD ret;
 
-  if( rgn ){
-	RECT SafeRect;
-	SafeRect.left = rgn->rdh.rcBound.left;
-  	SafeRect.top = rgn->rdh.rcBound.top;
-  	SafeRect.right = rgn->rdh.rcBound.right;
-  	SafeRect.bottom = rgn->rdh.rcBound.bottom;
-	ret = rgn->rdh.iType;
-	RGNDATA_UnlockRgn( hRgn );
+  if (rgn)
+    {
+      *pRect = rgn->rdh.rcBound;
+      ret = rgn->rdh.iType;
+      RGNDATA_UnlockRgn( hRgn );
+      
+      return ret;
+    }
+  return 0; //if invalid region return zero
+}
 
-	if(!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
-		return 0;
 
-	return ret;
-  }
+INT STDCALL
+W32kGetRgnBox(HRGN  hRgn,
+	      LPRECT  pRect)
+{
+  PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
+  DWORD ret;
+
+  if (rgn)
+    {
+      RECT SafeRect;
+      SafeRect.left = rgn->rdh.rcBound.left;
+      SafeRect.top = rgn->rdh.rcBound.top;
+      SafeRect.right = rgn->rdh.rcBound.right;
+      SafeRect.bottom = rgn->rdh.rcBound.bottom;
+      ret = rgn->rdh.iType;
+      RGNDATA_UnlockRgn( hRgn );
+      
+      if(!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
+	return 0;
+      
+      return ret;
+    }
   return 0; //if invalid region return zero
 }
 

@@ -217,6 +217,11 @@ SetPixel(HDC  hDC,
 	return W32kSetPixel(hDC, X, Y, Color);
 }
 
+BOOL STDCALL
+PatBlt(HDC hDC, INT Top, INT Left, INT Width, INT Height, ULONG Rop)
+{
+  return(W32kPatBlt(hDC, Top, Left, Width, Height, Rop));
+}
 
 
 

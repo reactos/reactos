@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.1 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: draw.c,v 1.2 2002/09/01 20:39:55 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -31,6 +31,10 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+#define COLOR_MAX (28)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -127,15 +131,25 @@ FlashWindowEx(
 {
   return FALSE;
 }
-int
-STDCALL
-FillRect(
-  HDC hDC,
-  CONST RECT *lprc,
-  HBRUSH hbr)
+
+int STDCALL
+FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
-  return 0;
+  HBRUSH prevhbr;
+  /*if (hbr <= (HBRUSH)(COLOR_MAX + 1))
+    {
+      hbr = GetSysColorBrush((INT)hbr - 1);
+      }*/
+  if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
+    {
+      return(FALSE);
+    }
+  PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+	 lprc->bottom - lprc->top, PATCOPY);
+  SelectObject(hDC, prevhbr);
+  return(TRUE);
 }
+
 WINBOOL
 STDCALL
 DrawAnimatedRects(

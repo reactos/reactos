@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.9 2002/08/31 23:18:45 dwelch Exp $
+/* $Id: stubs.c,v 1.10 2002/09/01 20:39:54 dwelch Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -690,15 +690,6 @@ GetRasterizerCaps(
 
 
 
-HGDIOBJ
-STDCALL
-GetStockObject(
-	int	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 
@@ -939,20 +930,6 @@ OffsetClipRgn(
 }
 
 
-BOOL
-STDCALL
-PatBlt(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	DWORD	a5
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 

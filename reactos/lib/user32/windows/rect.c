@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.5 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: rect.c,v 1.6 2002/09/01 20:39:55 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,30 +34,31 @@
 
 /* FUNCTIONS *****************************************************************/
 
-WINBOOL
-STDCALL
-CopyRect(
-  LPRECT lprcDst,
-  CONST RECT *lprcSrc)
+WINBOOL STDCALL
+CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 {
-  return FALSE;
+  *lprcDst = *lprcSrc;
+  return(TRUE);
 }
+
 WINBOOL
 STDCALL
 EqualRect(
   CONST RECT *lprc1,
   CONST RECT *lprc2)
 {
+  UNIMPLEMENTED;
   return FALSE;
 }
-WINBOOL
-STDCALL
-InflateRect(
-  LPRECT lprc,
-  int dx,
-  int dy)
+
+WINBOOL STDCALL
+InflateRect(LPRECT rect, int dx, int dy)
 {
-  return FALSE;
+  rect->left -= dx;
+  rect->top -= dy;
+  rect->right -= dx;
+  rect->bottom -= dy;
+  return(TRUE);
 }
 
 WINBOOL
@@ -67,66 +68,85 @@ IntersectRect(
   CONST RECT *lprcSrc1,
   CONST RECT *lprcSrc2)
 {
-  return FALSE;
-}
-WINBOOL
-STDCALL
-IsRectEmpty(
-  CONST RECT *lprc)
-{
-  return FALSE;
-}
-WINBOOL
-STDCALL
-OffsetRect(
-  LPRECT lprc,
-  int dx,
-  int dy)
-{
-  return FALSE;
-}
-WINBOOL
-STDCALL
-PtInRect(
-  CONST RECT *lprc,
-  POINT pt)
-{
-  return FALSE;
-}
-WINBOOL
-STDCALL
-SetRect(
-  LPRECT lprc,
-  int xLeft,
-  int yTop,
-  int xRight,
-  int yBottom)
-{
+  UNIMPLEMENTED;
   return FALSE;
 }
 
-WINBOOL
-STDCALL
-SetRectEmpty(
-  LPRECT lprc)
+WINBOOL STDCALL
+IsRectEmpty(CONST RECT *lprc)
 {
+  return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
+}
+
+WINBOOL STDCALL
+OffsetRect(LPRECT rect, int dx, int dy)
+{
+  rect->left += dx;
+  rect->top += dy;
+  rect->right += dx;
+  rect->bottom += dy;
+  return(TRUE);  
+}
+
+WINBOOL STDCALL
+PtInRect(CONST RECT *lprc, POINT pt)
+{
+  return((pt.x >= lprc->left) && (pt.x < lprc->right) &&
+	 (pt.y >= lprc->top) && (pt.y < lprc->bottom));
+}
+
+WINBOOL STDCALL
+SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom)
+{
+  lprc->left = xLeft;
+  lprc->top = yTop;
+  lprc->right = xRight;
+  lprc->bottom = yBottom;
+  return(TRUE);
+}
+
+BOOL STDCALL
+SetRectEmpty(LPRECT lprc)
+{
+  lprc->left = lprc->right = lprc->top = lprc->bottom = 0;
+  return(TRUE);
+}
+
+WINBOOL STDCALL
+SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
+{
+  UNIMPLEMENTED;
   return FALSE;
 }
-WINBOOL
-STDCALL
-SubtractRect(
-  LPRECT lprcDst,
-  CONST RECT *lprcSrc1,
-  CONST RECT *lprcSrc2)
+
+WINBOOL STDCALL
+UnionRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
-  return FALSE;
-}
-WINBOOL
-STDCALL
-UnionRect(
-  LPRECT lprcDst,
-  CONST RECT *lprcSrc1,
-  CONST RECT *lprcSrc2)
-{
-  return FALSE;
+  if (IsRectEmpty(lprcSrc1))
+    {
+      if (IsRectEmpty(lprcSrc2))
+	{
+	  SetRectEmpty(lprcDst);
+	  return(FALSE);
+	}
+      else
+	{
+	  *lprcDst = *lprcSrc2;
+	}
+    }
+  else
+    {
+      if (IsRectEmpty(lprcSrc2))
+	{
+	  *lprcDst = *lprcSrc1;
+	}
+      else
+	{
+	  lprcDst->left = min(lprcSrc1->left, lprcSrc2->left);
+	  lprcDst->top = min(lprcSrc1->top, lprcSrc2->top);
+	  lprcDst->right = max(lprcSrc1->right, lprcSrc2->right);
+	  lprcDst->bottom = max(lprcSrc1->bottom, lprcSrc2->bottom);
+	}
+    }
+  return(TRUE);
 }
