@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.80 2002/12/02 18:52:44 ekohl Exp $
+/* $Id: registry.c,v 1.81 2002/12/08 18:54:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,58 +85,58 @@ CmiCheckSubKeys(BOOLEAN Verbose,
   Index = 0;
   while (TRUE)
     {
-  	  BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
-	    KeyInfo = ExAllocatePool(PagedPool, BufferSize);
+      BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
+      KeyInfo = ExAllocatePool(PagedPool, BufferSize);
 
-	    Status = NtEnumerateKey(Key,
-			  Index,
-				KeyNodeInformation,
-				KeyInfo,
-				BufferSize,
-				&ResultSize);
+      Status = NtEnumerateKey(Key,
+			      Index,
+			      KeyNodeInformation,
+			      KeyInfo,
+			      BufferSize,
+			      &ResultSize);
       if (!NT_SUCCESS(Status))
-		    {
-          ExFreePool(KeyInfo);
-		      if (Status == STATUS_NO_MORE_ENTRIES)
-			      Status = STATUS_SUCCESS;
-		      break;
-		    }
+	{
+	  ExFreePool(KeyInfo);
+	  if (Status == STATUS_NO_MORE_ENTRIES)
+	    Status = STATUS_SUCCESS;
+	  break;
+	}
 
       wcsncpy(Name,
-        KeyInfo->Name,
-        KeyInfo->NameLength / sizeof(WCHAR));
+	      KeyInfo->Name,
+	      KeyInfo->NameLength / sizeof(WCHAR));
 
       if (Verbose)
-				{
-          DbgPrint("Key: %S\n", Name);
-				}
+	{
+	  DbgPrint("Key: %S\n", Name);
+	}
 
       /* FIXME: Check info. */
 
       ExFreePool(KeyInfo);
 
-    	wcscpy(KeyBuffer, L"\\Registry\\");
-    	wcscat(KeyBuffer, Name);
+      wcscpy(KeyBuffer, L"\\Registry\\");
+      wcscat(KeyBuffer, Name);
 
-    	RtlInitUnicodeString(&KeyPath, KeyBuffer);
+      RtlInitUnicodeString(&KeyPath, KeyBuffer);
 
-		  InitializeObjectAttributes(&ObjectAttributes,
-				&KeyPath,
-				OBJ_CASE_INSENSITIVE,
-				NULL,
-				NULL);
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyPath,
+				 OBJ_CASE_INSENSITIVE,
+				 NULL,
+				 NULL);
 
-		  Status = NtOpenKey(&SubKey,
-				KEY_ALL_ACCESS,
-				&ObjectAttributes);
+      Status = NtOpenKey(&SubKey,
+			 KEY_ALL_ACCESS,
+			 &ObjectAttributes);
 
-		  assert(NT_SUCCESS(Status));
-		
-		  CmiCheckKey(Verbose, SubKey);
-		
-		  NtClose(SubKey);
+      assert(NT_SUCCESS(Status));
 
-		  Index++;
+      CmiCheckKey(Verbose, SubKey);
+
+      NtClose(SubKey);
+
+      Index++;
     }
 
   assert(NT_SUCCESS(Status));
@@ -503,8 +503,13 @@ CmInit2(PCHAR CommandLine)
 
 
   /* Create the 'CurrentControlSet' link. */
-  CmiCreateCurrentControlSetLink();
-
+  Status = CmiCreateCurrentControlSetLink();
+#ifndef WIN32_REGDBG
+  if (!NT_SUCCESS(Status))
+    {
+      KeBugCheck(CONFIG_INITIALIZATION_FAILED);
+    }
+#endif
 
   /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
   PiceStart = 4;
@@ -536,7 +541,6 @@ CmInit2(PCHAR CommandLine)
 				 sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     {
-
       KeBugCheck(CONFIG_INITIALIZATION_FAILED);
     }
 #endif
@@ -825,8 +829,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   }
   else
   {
-    wcscpy(ConfigPath, L"\\SystemRoot\\system32\\config");
+    wcscpy(ConfigPath, L"\\SystemRoot");
   }
+  wcscat(ConfigPath, L"\\system32\\config");
+
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
   EndPtr = ConfigPath + wcslen(ConfigPath);
@@ -849,7 +855,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
-//  Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey, SetUpBoot);
   Status = CmiInitializeHive(ConfigPath,
 			     REG_SOFTWARE_KEY_NAME,
 			     "Software",
@@ -858,6 +863,7 @@ CmiInitHives(BOOLEAN SetUpBoot)
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+    return(Status);
   }
   //assert(NT_SUCCESS(Status));
 
@@ -865,7 +871,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_SAM_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
-//  Status = CmiInitializeHive(SAM_REG_FILE, REG_SAM_KEY_NAME, "Sam", CmiMachineKey, SetUpBoot);
   Status = CmiInitializeHive(ConfigPath,
 			     REG_SAM_KEY_NAME,
 			     "Sam",
@@ -874,13 +879,13 @@ CmiInitHives(BOOLEAN SetUpBoot)
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+    return(Status);
   }
   //assert(NT_SUCCESS(Status));
 
   /* Connect the SECURITY hive */
   wcscpy(EndPtr, REG_SEC_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
-//  Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey, SetUpBoot);
   Status = CmiInitializeHive(ConfigPath,
 			     REG_SEC_KEY_NAME,
 			     "Security",
@@ -889,6 +894,7 @@ CmiInitHives(BOOLEAN SetUpBoot)
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+    return(Status);
   }
   //assert(NT_SUCCESS(Status));
 
@@ -896,7 +902,6 @@ CmiInitHives(BOOLEAN SetUpBoot)
   wcscpy(EndPtr, REG_USER_FILE_NAME);
   DPRINT1("ConfigPath: %S\n", ConfigPath);
 
-//  Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey, SetUpBoot);
   Status = CmiInitializeHive(ConfigPath,
 			     REG_USER_KEY_NAME,
 			     ".Default",
@@ -905,6 +910,7 @@ CmiInitHives(BOOLEAN SetUpBoot)
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+    return(Status);
   }
   //assert(NT_SUCCESS(Status));
 
