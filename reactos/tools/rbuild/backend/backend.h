@@ -12,8 +12,7 @@ class Backend
 public:
 	class Factory
 	{
-		static std::vector<Factory*>* factories;
-		std::string name;
+		static std::map<const char*,Factory*>* factories;
 
 	protected:
 

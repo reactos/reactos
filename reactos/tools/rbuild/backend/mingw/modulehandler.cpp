@@ -8,10 +8,43 @@
 
 using std::string;
 using std::vector;
+using std::map;
 
-MingwModuleHandler::MingwModuleHandler ( FILE* fMakefile )
-	: fMakefile ( fMakefile )
+map<const char*,MingwModuleHandler*>*
+MingwModuleHandler::handler_map = NULL;
+
+FILE*
+MingwModuleHandler::fMakefile = NULL;
+
+MingwModuleHandler::MingwModuleHandler ( const char* moduletype_ )
 {
+	string moduletype ( moduletype_ );
+	strlwr ( &moduletype[0] );
+	if ( !handler_map )
+		handler_map = new map<const char*,MingwModuleHandler*>;
+	(*handler_map)[moduletype.c_str()] = this;
+}
+
+/*static*/ void
+MingwModuleHandler::SetMakefile ( FILE* f )
+{
+	fMakefile = f;
+}
+
+/*static*/ MingwModuleHandler*
+MingwModuleHandler::LookupHandler ( const string& moduletype_ )
+{
+	string moduletype ( moduletype_ );
+	strlwr ( &moduletype[0] );
+	if ( !handler_map )
+		throw Exception ( "internal tool error: no registered module handlers" );
+	MingwModuleHandler* h = (*handler_map)[moduletype.c_str()];
+	if ( !h )
+	{
+		throw UnknownModuleTypeException ( moduletype );
+		return NULL;
+	}
+	return h;
 }
 
 string
@@ -352,7 +385,7 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 		string invokeTarget = module.GetInvocationTarget ( i );
 		fprintf ( fMakefile,
 		          "%s: %s\n\n",
-   		          invoke.GetTargets ().c_str (),
+		          invoke.GetTargets ().c_str (),
 		          invokeTarget.c_str () );
 		fprintf ( fMakefile,
 		          "%s: %s\n",
@@ -398,20 +431,15 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 	          sourceFilenames.c_str (),
 	          preconditionDependenciesName.c_str ());
 	fprintf ( fMakefile,
-	          ".PNONY: %s\n\n",
+	          ".PHONY: %s\n\n",
 	          preconditionDependenciesName.c_str () );
 }
 
+static MingwBuildToolModuleHandler buildtool_handler;
 
-MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( FILE* fMakefile )
-	: MingwModuleHandler ( fMakefile )
+MingwBuildToolModuleHandler::MingwBuildToolModuleHandler()
+	: MingwModuleHandler ( "buildtool" )
 {
-}
-
-bool
-MingwBuildToolModuleHandler::CanHandleModule ( const Module& module ) const
-{
-	return module.type == BuildTool;
 }
 
 void
@@ -438,16 +466,11 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 	GenerateObjectFileTargetsHost ( module );
 }
 
+static MingwKernelModuleHandler kernelmodule_handler;
 
-MingwKernelModuleHandler::MingwKernelModuleHandler ( FILE* fMakefile )
-	: MingwModuleHandler ( fMakefile )
+MingwKernelModuleHandler::MingwKernelModuleHandler ()
+	: MingwModuleHandler ( "kernelmodedll" )
 {
-}
-
-bool
-MingwKernelModuleHandler::CanHandleModule ( const Module& module ) const
-{
-	return module.type == KernelModeDLL;
 }
 
 void
@@ -505,16 +528,11 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	GenerateObjectFileTargetsTarget ( module );
 }
 
+static MingwStaticLibraryModuleHandler staticlibrary_handler;
 
-MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ( FILE* fMakefile )
-	: MingwModuleHandler ( fMakefile )
+MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ()
+	: MingwModuleHandler ( "staticlibrary" )
 {
-}
-
-bool
-MingwStaticLibraryModuleHandler::CanHandleModule ( const Module& module ) const
-{
-	return module.type == StaticLibrary;
 }
 
 void

@@ -43,6 +43,7 @@ MingwBackend::CreateMakefile ()
 	fMakefile = fopen ( ProjectNode.makefile.c_str (), "w" );
 	if ( !fMakefile )
 		throw AccessDeniedException ( ProjectNode.makefile );
+	MingwModuleHandler::SetMakefile ( fMakefile );
 }
 
 void
@@ -89,25 +90,8 @@ MingwBackend::GenerateAllTarget ()
 void
 MingwBackend::ProcessModule ( Module& module )
 {
-	MingwModuleHandlerList moduleHandlers;
-	GetModuleHandlers ( moduleHandlers );
-	for (size_t i = 0; i < moduleHandlers.size (); i++)
-	{
-		MingwModuleHandler& moduleHandler = *moduleHandlers[i];
-		if (moduleHandler.CanHandleModule ( module ) )
-		{
-			moduleHandler.Process ( module );
-			return;
-		}
-	}
-}
-
-void
-MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers ) const
-{
-	moduleHandlers.push_back ( new MingwBuildToolModuleHandler ( fMakefile ) );
-	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
-	moduleHandlers.push_back ( new MingwStaticLibraryModuleHandler ( fMakefile ) );
+	MingwModuleHandler* h = MingwModuleHandler::LookupHandler ( module.name );
+	h->Process ( module );
 }
 
 string

@@ -6,9 +6,15 @@
 class MingwModuleHandler
 {
 public:
-	MingwModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( const Module& module ) const = 0;
+	static std::map<const char*,MingwModuleHandler*>* handler_map;
+
+	MingwModuleHandler ( const char* moduletype_ );
+	virtual ~MingwModuleHandler() {}
+
+	static void SetMakefile ( FILE* f );
+	static MingwModuleHandler* LookupHandler ( const std::string& moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
+
 protected:
 	std::string MingwModuleHandler::GetWorkingDirectory () const;
 	std::string ReplaceExtension ( const std::string& filename,
@@ -29,7 +35,7 @@ protected:
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
-	FILE* fMakefile;
+	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
@@ -49,8 +55,7 @@ private:
 class MingwBuildToolModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwBuildToolModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( const Module& module ) const;
+	MingwBuildToolModuleHandler ();
 	virtual void Process ( const Module& module );
 private:
 	void GenerateBuildToolModuleTarget ( const Module& module );
@@ -60,8 +65,7 @@ private:
 class MingwKernelModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwKernelModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( const Module& module ) const;
+	MingwKernelModuleHandler ();
 	virtual void Process ( const Module& module );
 private:
 	void GenerateKernelModuleTarget ( const Module& module );
@@ -71,8 +75,7 @@ private:
 class MingwStaticLibraryModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwStaticLibraryModuleHandler ( FILE* fMakefile );
-	virtual bool CanHandleModule ( const Module& module ) const;
+	MingwStaticLibraryModuleHandler ();
 	virtual void Process ( const Module& module );
 private:
 	void GenerateStaticLibraryModuleTarget ( const Module& module );

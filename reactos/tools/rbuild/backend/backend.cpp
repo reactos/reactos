@@ -6,15 +6,17 @@
 
 using std::string;
 using std::vector;
+using std::map;
 
-vector<Backend::Factory*>* Backend::Factory::factories = NULL;
+map<const char*,Backend::Factory*>* Backend::Factory::factories = NULL;
 
 Backend::Factory::Factory ( const std::string& name_ )
-	: name(name_)
 {
+	string name(name_);
+	strlwr ( &name[0] );
 	if ( !factories )
-		factories = new vector<Factory*>;
-	factories->push_back ( this );
+		factories = new map<const char*,Factory*>;
+	(*factories)[name.c_str()] = this;
 }
 
 /*static*/ Backend*
@@ -24,15 +26,13 @@ Backend::Factory::Create ( const std::string& name, Project& project )
 	strlwr ( &sname[0] );
 	if ( !factories || !factories->size() )
 		throw Exception ( "internal tool error: no registered factories" );
-	vector<Backend::Factory*>& fact = *factories;
-	for ( size_t i = 0; i < fact.size(); i++ )
+	Backend::Factory* f = (*factories)[sname.c_str()];
+	if ( !f )
 	{
-		//char* p = *fact[i];
-		if ( sname == fact[i]->name )
-			return (*fact[i]) ( project );
+		throw UnknownBackendException ( sname );
+		return NULL;
 	}
-	throw UnknownBackendException ( sname );
-	return NULL;
+	return (*f) ( project );
 }
 
 Backend::Backend ( Project& project )

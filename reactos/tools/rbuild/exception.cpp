@@ -122,3 +122,9 @@ UnknownBackendException::UnknownBackendException ( const string& name )
 	             name.c_str() )
 {
 }
+
+UnknownModuleTypeException::UnknownModuleTypeException ( const string& moduletype )
+	: Exception ( "module type requested: '%s'",
+	              moduletype.c_str() )
+{
+}

@@ -92,4 +92,10 @@ public:
 	UnknownBackendException ( const std::string& name );
 };
 
+class UnknownModuleTypeException : public Exception
+{
+public:
+	UnknownModuleTypeException ( const std::string& moduletype );
+};
+
 #endif /* __EXCEPTION_H */
