@@ -613,21 +613,6 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
               ValueFullInformation->Type = ValueCell->DataType;
               if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
                 {
-                  ValueFullInformation->DataOffset = 
-                    (DWORD)ValueFullInformation->Name - (DWORD) ValueFullInformation
-                    + (ValueCell->NameSize + 1) * sizeof(WCHAR);
-                }
-              else
-                {
-                  ValueFullInformation->DataOffset = 
-                    (DWORD)ValueFullInformation->Name - (DWORD) ValueFullInformation
-                    + ValueCell->NameSize + sizeof(WCHAR);
-                }
-              ValueFullInformation->DataOffset =
-                (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
-              ValueFullInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-                {
                   ValueFullInformation->NameLength =
                     (ValueCell->NameSize + 1) * sizeof(WCHAR);
 
@@ -645,6 +630,12 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 				ValueCell->NameSize);
                   ValueFullInformation->Name[ValueCell->NameSize / sizeof(WCHAR)] = 0;
                 }
+              ValueFullInformation->DataOffset = 
+                (ULONG)ValueFullInformation->Name - (ULONG)ValueFullInformation +
+                ValueFullInformation->NameLength;
+              ValueFullInformation->DataOffset =
+                (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
+              ValueFullInformation->DataLength = ValueCell->DataSize & LONG_MAX;
               if (ValueCell->DataSize > 0)
                 {
                   DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
@@ -1178,8 +1169,16 @@ NtQueryValueKey(IN HANDLE KeyHandle,
       switch (KeyValueInformationClass)
         {
         case KeyValueBasicInformation:
-          *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION)
-            + ValueCell->NameSize * sizeof(WCHAR);
+          if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+            {
+              *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + 
+                (ValueCell->NameSize + 1) * sizeof(WCHAR);
+            }
+          else
+            {
+              *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + 
+                ValueCell->NameSize + sizeof(WCHAR);
+            }
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_TOO_SMALL;
@@ -1190,11 +1189,24 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 KeyValueInformation;
               ValueBasicInformation->TitleIndex = 0;
               ValueBasicInformation->Type = ValueCell->DataType;
-              ValueBasicInformation->NameLength = 
-                (ValueCell->NameSize + 1) * sizeof(WCHAR);
-              mbstowcs(ValueBasicInformation->Name,
-                ValueCell->Name,ValueCell->NameSize * 2);
-              ValueBasicInformation->Name[ValueCell->NameSize] = 0;
+              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+                {
+                  ValueBasicInformation->NameLength =
+                    (ValueCell->NameSize + 1) * sizeof(WCHAR);
+                  CmiCopyPackedName(ValueBasicInformation->Name,
+                                    ValueCell->Name,
+                                    ValueCell->NameSize);
+                  ValueBasicInformation->Name[ValueCell->NameSize] = 0;
+                }
+              else
+                {
+                  ValueBasicInformation->NameLength =
+                    ValueCell->NameSize + sizeof(WCHAR);
+                  RtlCopyMemory(ValueBasicInformation->Name,
+                                ValueCell->Name,
+                                ValueCell->NameSize * sizeof(WCHAR));
+                  ValueBasicInformation->Name[ValueCell->NameSize / sizeof(WCHAR)] = 0;
+                }
             }
           break;
 
@@ -1230,9 +1242,18 @@ NtQueryValueKey(IN HANDLE KeyHandle,
           break;
 
         case KeyValueFullInformation:
-          *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION)
-            + (ValueCell->NameSize -1) * sizeof(WCHAR)
-            + (ValueCell->DataSize & LONG_MAX);
+          if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+            {
+              *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
+                (ValueCell->NameSize + 1) * sizeof(WCHAR) +
+                (ValueCell->DataSize & LONG_MAX);
+            }
+          else
+            {
+              *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
+                ValueCell->NameSize + sizeof(WCHAR) +
+                (ValueCell->DataSize & LONG_MAX);
+            }
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_TOO_SMALL;
@@ -1243,16 +1264,30 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 KeyValueInformation;
               ValueFullInformation->TitleIndex = 0;
               ValueFullInformation->Type = ValueCell->DataType;
+              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+                {
+                  ValueFullInformation->NameLength =
+                    (ValueCell->NameSize + 1) * sizeof(WCHAR);
+                  CmiCopyPackedName(ValueFullInformation->Name,
+                                    ValueCell->Name,
+                                    ValueCell->NameSize);
+                  ValueFullInformation->Name[ValueCell->NameSize] = 0;
+                }
+              else
+                {
+                  ValueFullInformation->NameLength =
+                    ValueCell->NameSize + sizeof(WCHAR);
+                  RtlCopyMemory(ValueFullInformation->Name,
+                                ValueCell->Name,
+                                ValueCell->NameSize);
+                  ValueFullInformation->Name[ValueCell->NameSize / sizeof(WCHAR)] = 0;
+                }
               ValueFullInformation->DataOffset = 
-                (DWORD)ValueFullInformation->Name - (DWORD)ValueFullInformation
-                + (ValueCell->NameSize + 1) * sizeof(WCHAR);
+                (ULONG)ValueFullInformation->Name - (ULONG)ValueFullInformation +
+                ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
-                (ValueFullInformation->DataOffset + 3) &0xfffffffc;
+                (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
               ValueFullInformation->DataLength = ValueCell->DataSize & LONG_MAX;
-              ValueFullInformation->NameLength =
-                (ValueCell->NameSize + 1) * sizeof(WCHAR);
-              mbstowcs(ValueFullInformation->Name, ValueCell->Name,ValueCell->NameSize*2);
-              ValueFullInformation->Name[ValueCell->NameSize] = 0;
               if (ValueCell->DataSize > 0)
                 {
                   DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
