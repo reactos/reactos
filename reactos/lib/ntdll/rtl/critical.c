@@ -16,7 +16,7 @@
 #include <ntdll/rtl.h>
 #include <ntos/synch.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -24,6 +24,8 @@
 static RTL_CRITICAL_SECTION RtlCriticalSectionLock;
 static LIST_ENTRY RtlCriticalSectionList;
 static BOOLEAN RtlpCritSectInitialized = FALSE;
+//static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[64];
+//static PRTL_CRITICAL_SECTION_DEBUG RtlpDebugInfoFreeList;
 
 /*++
  * RtlDeleteCriticalSection 
@@ -209,6 +211,7 @@ RtlInitializeCriticalSectionAndSpinCount (
     PVOID Heap;
     
     /* First things first, set up the Object */
+    DPRINT("Initializing Critical Section: %x\n", CriticalSection);
     CriticalSection->LockCount = -1;
     CriticalSection->RecursionCount = 0;
     CriticalSection->OwningThread = 0;
@@ -222,6 +225,7 @@ RtlInitializeCriticalSectionAndSpinCount (
     if ((Heap = RtlGetProcessHeap())) {
 
         CritcalSectionDebugData = RtlAllocateHeap(Heap, 0, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+        DPRINT("Allocated Critical Section Debug Data: %x\n", CritcalSectionDebugData);
         CritcalSectionDebugData->Type = RTL_CRITSECT_TYPE;
         CritcalSectionDebugData->ContentionCount = 0;
         CritcalSectionDebugData->EntryCount = 0;
@@ -235,6 +239,10 @@ RtlInitializeCriticalSectionAndSpinCount (
          */
         if ((CriticalSection != &RtlCriticalSectionLock) && (RtlpCritSectInitialized)) {
             
+            DPRINT("Securely Inserting into ProcessLocks: %x, %x\n", 
+                   &CritcalSectionDebugData->ProcessLocksList,
+                   CriticalSection);
+            
             /* Protect List */
             RtlEnterCriticalSection(&RtlCriticalSectionLock);
 
@@ -246,12 +254,17 @@ RtlInitializeCriticalSectionAndSpinCount (
         
         } else {
 
+            DPRINT("Inserting into ProcessLocks: %x, %x\n", 
+                   &CritcalSectionDebugData->ProcessLocksList,
+                   CriticalSection);
+            
             /* Add it directly */
             InsertTailList(&RtlCriticalSectionList, &CritcalSectionDebugData->ProcessLocksList);
         }
         
     } else {
 
+        DPRINT1("No Debug Data was allocated for: %x\n", CriticalSection);
         /* This shouldn't happen... */
         CritcalSectionDebugData = NULL;
     }
@@ -372,7 +385,9 @@ RtlpWaitForCriticalSection(
     BOOLEAN LastChance = FALSE;
     LARGE_INTEGER Timeout;
     
-    Timeout = RtlConvertLongToLargeInteger(150000);
+    /* Wait 2.5 minutes */
+    Timeout.QuadPart = 150000L * (ULONGLONG)10000;
+    Timeout.QuadPart = -Timeout.QuadPart;
     /* ^^ HACK HACK HACK. Good way:
     Timeout = &NtCurrentPeb()->CriticalSectionTimeout   */
     
@@ -382,14 +397,16 @@ RtlpWaitForCriticalSection(
     }
     
     /* Increase the Debug Entry count */
-    CriticalSection->DebugInfo->EntryCount++;
+    DPRINT("Waiting on Critical Section: %x\n", CriticalSection);
+    if (CriticalSection->DebugInfo) CriticalSection->DebugInfo->EntryCount++;
     
     for (;;) {
     
         /* Increase the number of times we've had contention */
-        CriticalSection->DebugInfo->ContentionCount++;
+        if (CriticalSection->DebugInfo) CriticalSection->DebugInfo->ContentionCount++;
         
         /* Wait on the Event */
+        DPRINT("Waiting on Event: %x\n", CriticalSection->LockSemaphore);
         Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
                                        FALSE,
                                        &Timeout);
@@ -399,6 +416,8 @@ RtlpWaitForCriticalSection(
             
             /* Is this the 2nd time we've timed out? */
             if (LastChance) {
+                
+                DPRINT1("Deadlock: %x\n", CriticalSection);
                 
                 /* Yes it is, we are raising an exception */
                 ExceptionRecord.ExceptionCode    = STATUS_POSSIBLE_DEADLOCK;
@@ -451,11 +470,13 @@ RtlpUnWaitCriticalSection(
     }
     
     /* Signal the Event */
+    DPRINT("Signaling CS Event\n");
     Status = NtSetEvent(CriticalSection->LockSemaphore, NULL);
             
     if (!NT_SUCCESS(Status)) {
         
         /* We've failed */
+        DPRINT1("Signaling Failed\n");
         RtlRaiseStatus(Status);
     }
 }
@@ -487,7 +508,7 @@ RtlpCreateCriticalSectionSem(
     /* Chevk if we have an event */
     if (!hEvent) {
         
-        DPRINT ("Creating Event\n");
+        DPRINT("Creating Event\n");
         /* No, so create it */
         if (!NT_SUCCESS(Status = NtCreateEvent(&hNewEvent,
                                                EVENT_ALL_ACCESS,
