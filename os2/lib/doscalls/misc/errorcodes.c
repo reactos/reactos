@@ -1,4 +1,4 @@
-/* $ld$
+/* $Id: errorcodes.c,v 1.2 2002/03/24 18:55:39 ea Exp $
 */
 
 /* some header*/

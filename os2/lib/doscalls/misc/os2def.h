@@ -1,3 +1,4 @@
+/* $Id: os2def.h,v 1.2 2002/03/24 18:55:39 ea Exp $ */
 /* This file conains common OS/2 types that are needed to build this dll */ 
 /* this file should have temporal character until a better idea is born */
 

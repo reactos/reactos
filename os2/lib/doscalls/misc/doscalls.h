@@ -1,4 +1,4 @@
-/* $ $
+/* $Id: doscalls.h,v 1.3 2002/03/24 18:55:39 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS OS/2 sub system
