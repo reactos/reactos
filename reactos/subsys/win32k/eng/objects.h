@@ -1,0 +1,127 @@
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS kernel
+ * PURPOSE:           GDI Internal Objects
+ * FILE:              subsys/win32k/eng/objects.h
+ * PROGRAMER:         Jason Filby
+ * REVISION HISTORY:
+ *                 21/8/1999: Created
+ */
+
+typedef struct _BRUSHGDI {
+
+} BRUSHGDI;
+
+typedef struct _CLIPGDI {
+   ULONG NumRegionRects;
+   ULONG NumIntersectRects;
+   RECTL *RegionRects;
+   RECTL *IntersectRects;
+
+   ULONG EnumPos;
+   ENUMRECTS EnumRects;
+} CLIPGDI;
+
+typedef struct _DRVFUNCTIONSGDI {
+   HDEV  hdev;
+   DRVFN Functions[INDEX_LAST];
+} DRVFUNCTIONSGDI;
+
+typedef struct _FLOATGDI {
+
+} FLOATGDI;
+
+typedef struct _FONTGDI {
+
+} FONTGDI;
+
+typedef struct _PALGDI {
+   ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+   ULONG NumColors;
+   ULONG *IndexedColors;
+   ULONG RedMask;
+   ULONG GreenMask;
+   ULONG BlueMask;
+} PALGDI;
+
+typedef struct _PATHGDI {
+
+} PATHGDI;
+
+typedef struct _STRGDI {
+
+} STRGDI;
+
+typedef BOOL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                           PXLATEOBJ, PRECTL, PPOINTL, PPOINTL,
+                           PBRUSHOBJ, PPOINTL, ROP4);
+
+typedef BOOL (*PFN_StretchBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                               PXLATEOBJ, PCOLORADJUSTMENT, PPOINTL,
+                               PRECTL, PRECTL, PPOINT, ULONG);
+
+typedef BOOL (*PFN_TextOut)(PSURFOBJ, PSTROBJ, PFONTOBJ, PCLIPOBJ,
+                            PRECTL, PRECTL, PBRUSHOBJ, PBRUSHOBJ,
+                            PPOINTL, MIX);
+
+typedef BOOL (*PFN_Paint)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ, PPOINTL, MIX);
+
+typedef BOOL (*PFN_StrokePath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PXFORMOBJ,
+                               PBRUSHOBJ, PPOINTL, PLINEATTRS, MIX);
+
+typedef BOOL (*PFN_FillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PBRUSHOBJ,
+                             PPOINTL, MIX, ULONG);
+
+typedef BOOL (*PFN_StrokeAndFillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ,
+                PXFORMOBJ, PBRUSHOBJ, PLINEATTRS, PBRUSHOBJ,
+                PPOINTL, MIX, ULONG);
+
+typedef BOOL (*PFN_LineTo)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ,
+                           LONG, LONG, LONG, LONG, PRECTL, MIX);
+
+typedef BOOL (*PFN_CopyBits)(PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                             PXLATEOBJ, PRECTL, PPOINTL);
+
+typedef VOID (*PFN_Synchronize)(DHPDEV, PRECTL);
+
+typedef struct _SURFGDI {
+   BYTE  BytesPerPixel;
+
+   PFN_BitBlt BitBlt;
+   PFN_StretchBlt StretchBlt;
+   PFN_TextOut TextOut;
+   PFN_Paint Paint;
+   PFN_StrokePath StrokePath;
+   PFN_FillPath FillPath;
+   PFN_StrokeAndFillPath StrokeAndFillPath;
+   PFN_LineTo LineTo;
+   PFN_CopyBits CopyBits;
+   PFN_Synchronize Synchronize;
+   BOOL SynchronizeAccess;
+} SURFGDI;
+
+typedef struct _XFORMGDI {
+
+} XFORMGDI;
+
+typedef struct _XLATEGDI {
+   HPALETTE DestPal;
+   HPALETTE SourcePal;
+
+   ULONG *translationTable;
+} XLATEGDI;
+
+// List of GDI objects
+// FIXME: Make more dynamic
+
+#define MAX_GDI_BRUSHES      255
+#define MAX_GDI_CLIPS        255
+#define MAX_GDI_DRVFUNCTIONS  16
+#define MAX_GDI_FLOATS       255
+#define MAX_GDI_FONTS        255
+#define MAX_GDI_PALS         255
+#define MAX_GDI_PATHS        255
+#define MAX_GDI_STRS         255
+#define MAX_GDI_SURFS        255
+#define MAX_GDI_XFORMS       255
+#define MAX_GDI_XLATES       255
