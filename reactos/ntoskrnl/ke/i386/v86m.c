@@ -32,7 +32,7 @@
 #include <internal/i386/segment.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -283,10 +283,10 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
   Ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
   if (ExceptionNr != 14)
     {
-  DbgPrint("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->Cs %x "
-	   "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->Cs,
-	   Tf->Eip);
-  DbgPrint("VTf %x VTf->regs %x\n", VTf, VTf->regs);
+      DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->Cs %x "
+	     "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->Cs,
+	     Tf->Eip);
+      DPRINT("VTf %x VTf->regs %x\n", VTf, VTf->regs);
     }
   if (ExceptionNr == 6 &&
       memcmp(Ip, VTf->regs->RecoveryInstruction, 4) == 0 &&
