@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.11 2000/03/13 17:58:06 ekohl Exp $
+/* $Id: dirwr.c,v 1.12 2000/06/17 22:02:09 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -110,8 +110,16 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
    for(NameLen=0;FileName[NameLen];NameLen++);
 
    // extract directory name from pathname
-   memcpy(DirName,PathFileName,posCar*sizeof(WCHAR));
-   DirName[posCar]=0;
+   if( posCar == 0 )
+     {
+       // root dir
+       DirName[0] = L'\\';
+       DirName[1] = 0;
+       }
+   else {
+     memcpy(DirName,PathFileName,posCar*sizeof(WCHAR));
+     DirName[posCar]=0;
+   }
    if(FileName[0]==0 && DirName[0]==0)
      return STATUS_SUCCESS;//root : nothing to do ?
    memset(&FileObject,0,sizeof(FILE_OBJECT));
@@ -343,9 +351,18 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
    {
       status=FsdReadFile(DeviceExt,&FileObject,&FatEntry
            ,sizeof(FATDirEntry),i*sizeof(FATDirEntry),&LengthRead);
-      if(IsLastEntry(&FatEntry,0))
+      if( status == STATUS_END_OF_FILE )
         break;
-
+      if( !NT_SUCCESS( status ) )
+	{
+	  DPRINT1( "FsdReadFile failed to read the directory entry\n" );
+	  break;
+	}
+      if( LengthRead != sizeof( FATDirEntry ) )
+	{
+	  DPRINT1( "FsdReadFile did not read a complete directory entry\n" );
+	  break;
+	}
       if(IsDeletedEntry(&FatEntry,0))
         nbFree++;
       else
@@ -377,6 +394,7 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
      Offset=(i-nbSlots+1)*sizeof(FATDirEntry);
      status=FsdWriteFile(DeviceExt,&FileObject,Buffer
           ,sizeof(FATDirEntry)*nbSlots,Offset);
+     DPRINT( "FsdWriteFile() returned: %x\n", status );
    }
    else
    {//write at end of directory
