@@ -1125,6 +1125,9 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 
 			shexinfo.lpIDList = &*shell_path;
 
+			 // add PIDL to the recent file list
+			SHAddToRecentDocs(SHARD_PIDL, shexinfo.lpIDList);
+
 			if (!ShellExecuteEx(&shexinfo))
 				display_error(hparent, GetLastError());
 
