@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.12 2003/10/15 13:39:09 weiden Exp $
+/* $Id: timer.c,v 1.13 2003/10/15 19:28:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -632,7 +632,7 @@ NtUserSetSystemTimer(
  TIMERPROC lpTimerFunc
 )
 {
-  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE);
+  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE);
 }
 
 
