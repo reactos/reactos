@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.86 2004/12/22 05:17:44 royce Exp $
+/* $Id: virtual.c,v 1.87 2004/12/30 18:30:44 ion Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -27,6 +27,7 @@
 /* INCLUDE *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <pseh.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -491,7 +492,17 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
       KeAttachProcess(&Process->Pcb);
 
       SystemAddress = MmGetSystemAddressForMdl(Mdl);
-      memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
+
+        Status = STATUS_SUCCESS;
+        _SEH_TRY {
+            ProbeForRead(BaseAddress, NumberOfBytesToRead, 1);
+            Status = STATUS_PARTIAL_COPY;
+            memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
+            Status = STATUS_SUCCESS;
+        } _SEH_HANDLE {
+            if(Status != STATUS_PARTIAL_COPY)
+                Status = _SEH_GetExceptionCode();
+        } _SEH_END;
 
       KeDetachProcess();
 
@@ -507,7 +518,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
    if (NumberOfBytesRead)
       *NumberOfBytesRead = NumberOfBytesToRead;
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 /* (tMk 2004.II.05)
