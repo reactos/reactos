@@ -1,8 +1,6 @@
 #ifndef __WIN32K_MISC_H
 #define __WIN32K_MISC_H
 
-#include <internal/ps.h>
-
 /* Process context in which miniport driver is opened/used */
 extern PEPROCESS W32kDeviceProcess;
 
@@ -12,6 +10,6 @@ W32kInitialize (VOID);
 
 VOID
 FASTCALL
-DestroyThreadWindows(PETHREAD Thread);
+DestroyThreadWindows(struct _ETHREAD *Thread);
 
 #endif /* __WIN32K_MISC_H */
