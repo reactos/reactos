@@ -7,17 +7,15 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
+#include <windows.h>
 #include <conio.h>
 #include <stdio.h>
-#include <windows.h>
+#include <io.h>
+
 
 extern int char_avail;
 extern int ungot_char;
 
-int getch( void )
-{
-	return _getch();
-}
 
 int
 _getch(void)
