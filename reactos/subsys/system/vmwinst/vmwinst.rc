@@ -2,6 +2,8 @@
 #include <reactos/resource.h>
 #include "vmwinst.h"
 
+#include "Es.rc"
+
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 VS_VERSION_INFO VERSIONINFO
@@ -130,4 +132,3 @@ BEGIN
   10002 "Medium (16BPP)"
   10003 "Highest (32BPP)"
 END
-
