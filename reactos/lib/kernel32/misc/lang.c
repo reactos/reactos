@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.17 2004/05/03 16:59:59 weiden Exp $
+/* $Id: lang.c,v 1.18 2004/05/03 17:12:27 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1246,10 +1246,7 @@ GetTimeFormatW (
 		SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-	INT x;
-	x = RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
-	DbgPrint("lpTimeStr: %ws ; format: %ws\n", lpTimeStr, lpFormat);
-	return x;
+	return RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
 }
 
 
