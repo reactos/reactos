@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.16 2004/10/11 12:37:04 ekohl Exp $
+/* $Id: fsctrl.c,v 1.17 2004/12/23 12:38:16 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -110,7 +110,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
   DPRINT("NpfsDisconnectPipe()\n");
 
   if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 
   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
     {
@@ -124,7 +124,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       Fcb->OtherSide = NULL;
 
       DPRINT("Pipe disconnected\n");
-      return(STATUS_SUCCESS);
+      return STATUS_SUCCESS;
     }
 
   if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
@@ -135,10 +135,10 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       /* FIXME: remove data queue(s) */
 
       DPRINT("Pipe disconnected\n");
-      return(STATUS_SUCCESS);
+      return STATUS_SUCCESS;
     }
 
-  return(STATUS_UNSUCCESSFUL);
+  return STATUS_UNSUCCESSFUL;
 }
 
 
@@ -191,10 +191,6 @@ NpfsWaitPipe(PIRP Irp,
 }
 
 
-static NTSTATUS
-NpfsGetState(
-  PIRP Irp,
-  PIO_STACK_LOCATION IrpSp)
 /*
  * FUNCTION: Return current state of a pipe
  * ARGUMENTS:
@@ -203,6 +199,9 @@ NpfsGetState(
  * RETURNS:
  *     Status of operation
  */
+static NTSTATUS
+NpfsGetState(PIRP Irp,
+	     PIO_STACK_LOCATION IrpSp)
 {
   ULONG OutputBufferLength;
   PNPFS_GET_STATE Reply;
@@ -214,10 +213,10 @@ NpfsGetState(
 
   /* Validate parameters */
   if (OutputBufferLength >= sizeof(NPFS_GET_STATE))
-  {
-    Fcb = IrpSp->FileObject->FsContext;
-    Reply = (PNPFS_GET_STATE)Irp->AssociatedIrp.SystemBuffer;
-    Pipe = Fcb->Pipe;
+    {
+      Fcb = IrpSp->FileObject->FsContext;
+      Reply = (PNPFS_GET_STATE)Irp->AssociatedIrp.SystemBuffer;
+      Pipe = Fcb->Pipe;
 
     if (Pipe->PipeWriteMode == FILE_PIPE_MESSAGE_MODE)
     {
@@ -265,10 +264,6 @@ NpfsGetState(
 }
 
 
-static NTSTATUS
-NpfsSetState(
-  PIRP Irp,
-  PIO_STACK_LOCATION IrpSp)
 /*
  * FUNCTION: Set state of a pipe
  * ARGUMENTS:
@@ -277,6 +272,9 @@ NpfsSetState(
  * RETURNS:
  *     Status of operation
  */
+static NTSTATUS
+NpfsSetState(PIRP Irp,
+	     PIO_STACK_LOCATION IrpSp)
 {
   ULONG InputBufferLength;
   PNPFS_SET_STATE Request;
@@ -339,9 +337,6 @@ NpfsSetState(
 }
 
 
-static NTSTATUS
-NpfsPeekPipe(PIRP Irp,
-	     PIO_STACK_LOCATION IoStack)
 /*
  * FUNCTION: Peek at a pipe (get information about messages)
  * ARGUMENTS:
@@ -350,6 +345,9 @@ NpfsPeekPipe(PIRP Irp,
  * RETURNS:
  *     Status of operation
  */
+static NTSTATUS
+NpfsPeekPipe(PIRP Irp,
+	     PIO_STACK_LOCATION IoStack)
 {
   ULONG OutputBufferLength;
   PNPFS_PIPE Pipe;
@@ -365,7 +363,7 @@ NpfsPeekPipe(PIRP Irp,
   if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
     {
       DPRINT("Buffer too small\n");
-      return(STATUS_INVALID_PARAMETER);
+      return STATUS_INVALID_PARAMETER;
     }
 
   Fcb = IoStack->FileObject->FsContext;
@@ -374,7 +372,7 @@ NpfsPeekPipe(PIRP Irp,
 
   Status = STATUS_NOT_IMPLEMENTED;
 
-  return(Status);
+  return Status;
 }
 
 
@@ -383,7 +381,7 @@ NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-  PEXTENDED_IO_STACK_LOCATION IoStack;
+  PIO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PNPFS_DEVICE_EXTENSION DeviceExt;
@@ -393,7 +391,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+  IoStack = IoGetCurrentIrpStackLocation(Irp);
   DPRINT("IoStack: %p\n", IoStack);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject: %p\n", FileObject);

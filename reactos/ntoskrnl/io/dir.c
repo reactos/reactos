@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.25 2004/08/24 17:08:18 navaraf Exp $
+/* $Id: dir.c,v 1.26 2004/12/23 12:34:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,7 +40,7 @@ NtNotifyChangeDirectoryFile (
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   PEXTENDED_IO_STACK_LOCATION IoStack;
+   PIO_STACK_LOCATION IoStack;
    KPROCESSOR_MODE PreviousMode;
    
    DPRINT("NtNotifyChangeDirectoryFile()\n");
@@ -83,7 +83,7 @@ NtNotifyChangeDirectoryFile (
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
    
-   IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
+   IoStack = IoGetNextIrpStackLocation(Irp);
    
    IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
    IoStack->MinorFunction = IRP_MN_NOTIFY_CHANGE_DIRECTORY;
@@ -104,7 +104,7 @@ NtNotifyChangeDirectoryFile (
 
    /* FIXME: Should we wait here or not for synchronously opened files? */
 
-   return(Status);
+   return Status;
 }
 
 
@@ -157,7 +157,7 @@ NtQueryDirectoryFile(
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   PEXTENDED_IO_STACK_LOCATION IoStack;
+   PIO_STACK_LOCATION IoStack;
    KPROCESSOR_MODE PreviousMode;
    
    DPRINT("NtQueryDirectoryFile()\n");
@@ -195,7 +195,7 @@ NtQueryDirectoryFile(
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
    
-   IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
+   IoStack = IoGetNextIrpStackLocation(Irp);
    
    IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
    IoStack->MinorFunction = IRP_MN_QUERY_DIRECTORY;

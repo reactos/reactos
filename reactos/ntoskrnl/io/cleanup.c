@@ -26,9 +26,9 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
    if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL)
      {
        IoControlCode = 
-	 ((PEXTENDED_IO_STACK_LOCATION)IoStack)->Parameters.FileSystemControl.FsControlCode;
+	 IoStack->Parameters.FileSystemControl.FsControlCode;
        OutputBufferLength = 
-	 ((PEXTENDED_IO_STACK_LOCATION)IoStack)->Parameters.FileSystemControl.OutputBufferLength;
+	 IoStack->Parameters.FileSystemControl.OutputBufferLength;
      }
    else
      {

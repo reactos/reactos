@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.17 2004/11/06 13:41:58 ekohl Exp $
+/* $Id: dirctl.c,v 1.18 2004/12/23 12:36:27 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -570,14 +570,14 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
   PCCB Ccb;
   FCB TempFcb;
   BOOLEAN First = FALSE;
-  PEXTENDED_IO_STACK_LOCATION Stack;
+  PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("CdfsQueryDirectory() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
-  Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+  Stack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = Stack->FileObject;
 
   Ccb = (PCCB)FileObject->FsContext2;

@@ -83,7 +83,7 @@ NtFsControlFile (
   PFILE_OBJECT FileObject;
   PDEVICE_OBJECT DeviceObject;
   PIRP Irp;
-  PEXTENDED_IO_STACK_LOCATION StackPtr;
+  PIO_STACK_LOCATION StackPtr;
   PKEVENT ptrEvent;
   KPROCESSOR_MODE PreviousMode;
 
@@ -148,7 +148,7 @@ NtFsControlFile (
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
-  StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
+  StackPtr = IoGetNextIrpStackLocation(Irp);
   StackPtr->FileObject = FileObject;
   StackPtr->DeviceObject = DeviceObject;
   StackPtr->Parameters.FileSystemControl.InputBufferLength = InputBufferSize;

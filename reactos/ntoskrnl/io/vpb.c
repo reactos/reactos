@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.26 2004/10/22 20:25:54 ekohl Exp $
+/* $Id: vpb.c,v 1.27 2004/12/23 12:34:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -281,7 +281,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    NTSTATUS Status;
-   PEXTENDED_IO_STACK_LOCATION StackPtr;
+   PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
    KPROCESSOR_MODE PreviousMode;
 
@@ -333,7 +333,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    Irp->UserIosb = IoStatusBlock;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
-   StackPtr = (PEXTENDED_IO_STACK_LOCATION) IoGetNextIrpStackLocation(Irp);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;

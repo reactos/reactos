@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.36 2004/12/05 16:31:50 gvg Exp $
+ * $Id: dir.c,v 1.37 2004/12/23 12:39:16 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -313,8 +313,8 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   VFAT_DIRENTRY_CONTEXT DirContext;
   WCHAR LongNameBuffer[MAX_PATH];
   WCHAR ShortNameBuffer[13];
-  
-  PEXTENDED_IO_STACK_LOCATION Stack = (PEXTENDED_IO_STACK_LOCATION) IrpContext->Stack;
+
+  PIO_STACK_LOCATION Stack = IrpContext->Stack;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;

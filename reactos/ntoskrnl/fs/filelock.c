@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.15 2004/10/22 20:19:58 ekohl Exp $
+/* $Id: filelock.c,v 1.16 2004/12/23 12:30:48 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -538,14 +538,14 @@ FsRtlpCompletePendingLocks(
    //walk pending list, FIFO order, try 2 complete locks
    PLIST_ENTRY                   EnumEntry;
    PIRP                          Irp;
-   PEXTENDED_IO_STACK_LOCATION            Stack;
+   PIO_STACK_LOCATION            Stack;
 
    EnumEntry = LockToc->PendingListHead.Blink;
    while (EnumEntry != &LockToc->PendingListHead) 
    {
       Irp = CONTAINING_RECORD(EnumEntry,IRP, Tail.Overlay.ListEntry);
 
-      Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+      Stack = IoGetCurrentIrpStackLocation(Irp);
       if (FsRtlpAddLock(LockToc,
                         Stack->FileObject,
                         &Stack->Parameters.LockControl.ByteOffset,
@@ -732,7 +732,7 @@ FsRtlpDumpFileLocks(
    PFILE_LOCK_GRANTED   Granted;
    PIRP                 Irp;
    PLIST_ENTRY          EnumEntry;
-   PEXTENDED_IO_STACK_LOCATION   Stack;
+   PIO_STACK_LOCATION   Stack;
 
    ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
@@ -772,7 +772,7 @@ FsRtlpDumpFileLocks(
    {
       Irp = CONTAINING_RECORD(EnumEntry, IRP , Tail.Overlay.ListEntry );
 
-      Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+      Stack = IoGetCurrentIrpStackLocation(Irp);
 
       DPRINT1("%s, start: %i, len: %i, end: %i, key: %i, proc: 0x%X, fob: 0x%X\n",
          (Stack->Flags & SL_EXCLUSIVE_LOCK) ? "EXCL" : "SHRD",
@@ -1081,12 +1081,12 @@ FsRtlProcessFileLock (
    IN PVOID        Context OPTIONAL
    )
 {
-   PEXTENDED_IO_STACK_LOCATION   Stack;
+   PIO_STACK_LOCATION   Stack;
    NTSTATUS             Status;
    IO_STATUS_BLOCK      LocalIoStatus;
 
    ASSERT(FileLock);
-   Stack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+   Stack = IoGetCurrentIrpStackLocation(Irp);
    Irp->IoStatus.Information = 0;
 
    switch(Stack->MinorFunction)
