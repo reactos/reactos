@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timedate.c,v 1.2 2004/11/07 16:03:51 ekohl Exp $
+/* $Id: timedate.c,v 1.3 2004/11/08 10:33:08 ekohl Exp $
  *
  * PROJECT:         ReactOS Timedate Control Panel
  * FILE:            lib/cpl/timedate/timedate.c
@@ -88,6 +88,25 @@ DateTimePageProc(HWND hwndDlg,
         GetTimeZoneInformation(&TimeZoneInfo);
 
         SendDlgItemMessageW(hwndDlg, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneInfo.StandardName);
+      }
+      break;
+
+    case WM_NOTIFY:
+      {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+          switch (lpnm->code)
+            {
+              case DTN_DATETIMECHANGE:
+              case MCN_SELECT:
+                /* Enable the 'Apply' button */
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                break;
+
+              default:
+                break;
+            }
+
       }
       break;
   }
@@ -298,8 +317,15 @@ DestroyTimeZoneList(VOID)
 static VOID
 ShowTimeZoneList(HWND hwnd)
 {
+  TIME_ZONE_INFORMATION TimeZoneInfo;
   PTIMEZONE_ENTRY Entry;
+  DWORD dwIndex;
+  DWORD i;
 
+  GetTimeZoneInformation(&TimeZoneInfo);
+
+  dwIndex = 0;
+  i = 0;
   Entry = TimeZoneListHead;
   while (Entry != NULL)
     {
@@ -308,13 +334,16 @@ ShowTimeZoneList(HWND hwnd)
 		   0,
 		   (LPARAM)Entry->Description);
 
+      if (!wcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
+	dwIndex = i;
 
+      i++;
       Entry = Entry->Next;
     }
 
   SendMessageW(hwnd,
 	       CB_SETCURSEL,
-	       (WPARAM)0, // index
+	       (WPARAM)dwIndex,
 	       0);
 }
 
