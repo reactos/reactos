@@ -38,39 +38,51 @@ GetCurrentDirectoryA (
 	ANSI_STRING AnsiString;
 	UNICODE_STRING UnicodeString;
 
-	/* initialize ansi string */
-	AnsiString.Length = 0;
-	AnsiString.MaximumLength = nBufferLength;
-	AnsiString.Buffer = lpBuffer;
-
 	/* allocate buffer for unicode string */
 	UnicodeString.Length = 0;
 	UnicodeString.MaximumLength = nBufferLength * sizeof(WCHAR);
-	UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                        0,
-	                                        UnicodeString.MaximumLength);
+	if (nBufferLength > 0)
+	{
+		UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+		                                        0,
+		                                        UnicodeString.MaximumLength);
 
+		/* initialize ansi string */
+		AnsiString.Length = 0;
+		AnsiString.MaximumLength = nBufferLength;
+		AnsiString.Buffer = lpBuffer;
+	}
+	else
+	{
+		UnicodeString.Buffer = NULL;
+	}
 	/* get current directory */
 	UnicodeString.Length = RtlGetCurrentDirectory_U (UnicodeString.MaximumLength,
 	                                                 UnicodeString.Buffer);
-	DPRINT("UnicodeString.Buffer %S\n", UnicodeString.Buffer);
+	if (nBufferLength > 0)
+	{
+		DPRINT("UnicodeString.Buffer %wZ\n", &UnicodeString);
 
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&AnsiString,
-		                              &UnicodeString,
-		                              FALSE);
+		/* convert unicode string to ansi (or oem) */
+		if (bIsFileApiAnsi)
+			RtlUnicodeStringToAnsiString (&AnsiString,
+			                              &UnicodeString,
+			                              FALSE);
+		else
+			RtlUnicodeStringToOemString (&AnsiString,
+			                             &UnicodeString,
+			                             FALSE);
+		DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
+
+		/* free unicode string */
+		RtlFreeHeap (RtlGetProcessHeap (),
+		             0,
+		             UnicodeString.Buffer);
+	}
 	else
-		RtlUnicodeStringToOemString (&AnsiString,
-		                             &UnicodeString,
-		                             FALSE);
-	DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
-
-	/* free unicode string */
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             UnicodeString.Buffer);
-
+	{
+		AnsiString.Length = UnicodeString.Length / sizeof(WCHAR);
+	}
 	return AnsiString.Length;
 }
 
