@@ -21,12 +21,12 @@
  *       handler and non atomic heap operations
  */
 
-#include "msvcrt.h"
-#include "msvcrt/errno.h"
+#include "precomp.h"
 
+#include "msvcrt/errno.h"
 #include "msvcrt/malloc.h"
 #include "msvcrt/stdlib.h"
-#include "mtdll.h"
+#include <msvcrt/internal/mtdll.h>
 
 #include "wine/debug.h"
 

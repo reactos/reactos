@@ -22,7 +22,7 @@
 #include "msvcrt.h"
 
 #include "msvcrt/malloc.h"
-#include "process.h"
+#include "msvcrt/process.h"
 
 #include "wine/debug.h"
 
@@ -31,6 +31,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 void _amsg_exit (int errnum);
 /* Index to TLS */
 DWORD MSVCRT_tls_index;
+
+typedef void (*_beginthread_start_routine_t)(void *);
+typedef unsigned int (__stdcall *_beginthreadex_start_routine_t)(void *);
 
 /********************************************************************/
 
@@ -73,8 +76,7 @@ static DWORD CALLBACK _beginthread_trampoline(LPVOID arg)
      * away seems safer.
      */
     memcpy(&local_trampoline,arg,sizeof(local_trampoline));
-//    MSVCRT_free(arg); //ROS
-	free(arg); //ROS
+	free(arg);
 
     local_trampoline.start_address(local_trampoline.arglist);
     return 0;
@@ -96,7 +98,6 @@ unsigned long _beginthread(
    * starts... typically after this function has returned.
    * _beginthread_trampoline is responsible for freeing the trampoline
    */
-//  trampoline=MSVCRT_malloc(sizeof(*trampoline));
   trampoline=malloc(sizeof(*trampoline));
   trampoline->start_address = start_address;
   trampoline->arglist = arglist;

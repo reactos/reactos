@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
+#include "wine/config.h"
 #include "wine/port.h"
 
 #include <stdarg.h>
@@ -37,7 +37,7 @@
 
 #include "msvcrt.h"
 #include "cppexcept.h"
-#include "mtdll.h"
+#include <msvcrt/internal/mtdll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
@@ -1023,7 +1023,6 @@ void MSVCRT_terminate(void)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     if (data->terminate_handler) data->terminate_handler();
-//    MSVCRT_abort();
     abort();
 }
 
