@@ -32,7 +32,7 @@
 #include <internal/i386/segment.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
