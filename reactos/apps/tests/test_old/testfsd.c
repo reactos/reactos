@@ -1,4 +1,4 @@
-/* $Id: testfsd.c,v 1.2 2001/05/01 17:36:04 rex Exp $
+/* $Id: testfsd.c,v 1.3 2001/05/01 19:42:56 narnaoud Exp $
  *
  * FILE:          testFSD.c
  * PURPOSE:       A test set for the File System Driver
@@ -16,7 +16,7 @@
 struct TestSuite
 {
   char *name;
-  (void)(*testFunc)(void);
+  void (*testFunc)(void);
 };
 
 #define ADD_TEST(x) {#x, x}
@@ -48,13 +48,15 @@ struct TestSuite gTests [] =
   ADD_TEST (testOpenNonExistant),
   ADD_TEST (testCreateExistant),
   ADD_TEST (testCreateNonExistant),
-  ADD_TEST (testOverwriteExistant),
-  ADD_TEST (testOverwriteNonExistant),
+/*  ADD_TEST (testOverwriteExistant),*/
+/*  ADD_TEST (testOverwriteNonExistant),*/
   ADD_TEST (testOpenWithBlankPathElements)
 };
 
 int main (void)
 {
+  int testIndex;
+
   tests = assertions = failures = successes = 0;
 
   for (testIndex = 0; testIndex < COUNT_TESTS(gTests); testIndex++)
