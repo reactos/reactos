@@ -1,4 +1,4 @@
-/* $Id: ArgumentParser.cpp,v 1.4 2001/01/13 23:53:46 narnaoud Exp $
+/* $Id: ArgumentParser.cpp,v 1.5 2001/04/16 04:58:31 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -52,6 +52,10 @@ m_pchArgumentListEnd = pchArguments + _tcslen(pchArguments);
  {
    switch(*pch)
    {
+   case _T('\\'):               // argument parser ignores escape sequences
+     if (pch[1])
+       pch++;
+     break;
    case _T('\"'):
     blnLongArg = !blnLongArg;
 		break;
