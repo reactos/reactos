@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.10 2004/01/15 21:00:49 gvg Exp $
+ * $Id: focus.c,v 1.11 2004/01/16 13:26:26 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -181,7 +181,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
   HWND Top;
   PWINDOW_OBJECT TopWindow;
 
-  Top = NtUserGetAncestor(Window->Self, GA_ROOTOWNER);
+  Top = NtUserGetAncestor(Window->Self, GA_ROOT);
   if (Top != Window->Self)
     {
       TopWindow = IntGetWindowObject(Top);
@@ -404,7 +404,7 @@ NtUserSetFocus(HWND hWnd)
          return 0;
       }
 
-      hWndTop = NtUserGetAncestor(hWnd, GA_ROOTOWNER);
+      hWndTop = NtUserGetAncestor(hWnd, GA_ROOT);
       if (hWndTop != NtUserGetActiveWindow())
       {
          NtUserSetActiveWindow(hWndTop);
