@@ -300,10 +300,8 @@ empty:
 	return TRUE;
 }
 
-/***********************************************************************
- *           REGION_CropRgn
- *
- *
+/*!
+ * \param
  * hSrc: 	Region to crop and offset.
  * lpRect: 	Clipping rectangle. Can be NULL (no clipping).
  * lpPt:	Points to offset the cropped region. Can be NULL (no offset).
@@ -312,7 +310,7 @@ empty:
  *       Allowed to be the same region as hSrc in which case everything
  *	 will be done in place, with no memory reallocations.
  *
- * Returns: hDst if success, 0 otherwise.
+ * \return	hDst if success, 0 otherwise.
  */
 HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
@@ -382,16 +380,14 @@ done:
   return 0;
 }
 
-/***********************************************************************
- *           REGION_Coalesce
- *
+/*!
  *      Attempt to merge the rects in the current band with those in the
  *      previous one. Used only by REGION_RegionOp.
  *
  * Results:
  *      The new index for the previous band.
  *
- * Side Effects:
+ * \note Side Effects:
  *      If coalescing takes place:
  *          - rectangles in the previous band will have their bottom fields
  *            altered.
@@ -517,9 +513,7 @@ static INT REGION_Coalesce (
     return (curStart);
 }
 
-/***********************************************************************
- *           REGION_RegionOp
- *
+/*!
  *      Apply an operation to two regions. Called by REGION_Union,
  *      REGION_Inverse, REGION_Subtract, REGION_Intersect...
  *
@@ -529,8 +523,7 @@ static INT REGION_Coalesce (
  * Side Effects:
  *      The new region is overwritten.
  *
- * Notes:
- *      The idea behind this function is to view the two regions as sets.
+ *\note The idea behind this function is to view the two regions as sets.
  *      Together they cover a rectangle of area that this function divides
  *      into horizontal bands where points are covered only by one region
  *      or by both. For the first case, the nonOverlapFunc is called with
@@ -824,15 +817,13 @@ static void REGION_RegionOp(
  ***********************************************************************/
 
 
-/***********************************************************************
- *	     REGION_IntersectO
- *
+/*!
  * Handle an overlapping band for REGION_Intersect.
  *
  * Results:
  *      None.
  *
- * Side Effects:
+ * \note Side Effects:
  *      Rectangles may be added to the region.
  *
  */
@@ -919,9 +910,7 @@ static void REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *	     Region Union
  ***********************************************************************/
 
-/***********************************************************************
- *	     REGION_UnionNonO
- *
+/*!
  *      Handle a non-overlapping band for the union operation. Just
  *      Adds the rectangles into the region. Doesn't have to check for
  *      subsumption or anything.
@@ -929,7 +918,7 @@ static void REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  * Results:
  *      None.
  *
- * Side Effects:
+ * \note Side Effects:
  *      pReg->numRects is incremented and the final rectangles overwritten
  *      with the rectangles we're passed.
  *
@@ -955,16 +944,14 @@ static void REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
     return;
 }
 
-/***********************************************************************
- *	     REGION_UnionO
- *
+/*!
  *      Handle an overlapping band for the union operation. Picks the
  *      left-most rectangle each time and merges it into the region.
  *
  * Results:
  *      None.
  *
- * Side Effects:
+ * \note Side Effects:
  *      Rectangles are overwritten in pReg->rects and pReg->numRects will
  *      be changed.
  *
@@ -1093,16 +1080,14 @@ static void REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *	     Region Subtraction
  ***********************************************************************/
 
-/***********************************************************************
- *	     REGION_SubtractNonO1
- *
+/*!
  *      Deal with non-overlapping band for subtraction. Any parts from
  *      region 2 we discard. Anything from region 1 we add to the region.
  *
  * Results:
  *      None.
  *
- * Side Effects:
+ * \note Side Effects:
  *      pReg may be affected.
  *
  */
@@ -1128,16 +1113,14 @@ static void REGION_SubtractNonO1 (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 }
 
 
-/***********************************************************************
- *	     REGION_SubtractO
- *
+/*!
  *      Overlapping band subtraction. x1 is the left-most point not yet
  *      checked.
  *
  * Results:
  *      None.
  *
- * Side Effects:
+ * \note Side Effects:
  *      pReg may have rectangles added to it.
  *
  */
@@ -1256,16 +1239,14 @@ static void REGION_SubtractO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
     return;
 }
 
-/***********************************************************************
- *	     REGION_SubtractRegion
- *
+/*!
  *      Subtract regS from regM and leave the result in regD.
  *      S stands for subtrahend, M for minuend and D for difference.
  *
  * Results:
  *      TRUE.
  *
- * Side Effects:
+ * \note Side Effects:
  *      regD is overwritten.
  *
  */
@@ -1332,9 +1313,8 @@ static void REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 }
 
 
-/***********************************************************************
- *           REGION_UnionRectWithRegion
- *           Adds a rectangle to a WINEREGION
+/*!
+ * Adds a rectangle to a REGION
  */
 static void REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
 {
@@ -1451,11 +1431,16 @@ W32kCombineRgn(HRGN  hDest,
                     INT  CombineMode)
 {
   INT result = ERROR;
-  PROSRGNDATA destRgn = RGNDATA_LockRgn(hDest);
+  GDIMULTILOCK Lock[3] = {{hDest, 0, GO_REGION_MAGIC}, {hSrc1, 0, GO_REGION_MAGIC}, {hSrc2, 0, GO_REGION_MAGIC}};
+  PROSRGNDATA destRgn, src1Rgn, src2Rgn;
+
+  GDIOBJ_LockMultipleObj( &Lock, 3 );
+
+  destRgn = (PROSRGNDATA) Lock[0].pObj;
+  src1Rgn = (PROSRGNDATA) Lock[1].pObj;
+  src2Rgn = (PROSRGNDATA) Lock[2].pObj;
 
   if( destRgn ){
-  	PROSRGNDATA src1Rgn = RGNDATA_LockRgn(hSrc1);
-
 	if( src1Rgn ){
   		if (CombineMode == RGN_COPY)
   		{
@@ -1465,7 +1450,6 @@ W32kCombineRgn(HRGN  hDest,
   		}
   		else
   		{
-  		  PROSRGNDATA src2Rgn = RGNDATA_LockRgn(hSrc2);
 		  if( src2Rgn ){
 	  		  switch (CombineMode)
 	  		  {
@@ -1483,17 +1467,15 @@ W32kCombineRgn(HRGN  hDest,
 	  		      break;
 	  		  }
 	  		  result = destRgn->rdh.iType;
-			  RGNDATA_UnlockRgn( hSrc2 );
 		  }
-		  RGNDATA_UnlockRgn( hSrc1 );
   		}
-		RGNDATA_UnlockRgn( hDest );
-	}
-	else{
-		DPRINT("W32kCombineRgn: hDest unavailable\n");
-		return ERROR;
 	}
   }
+  else{
+      DPRINT("W32kCombineRgn: hDest unavailable\n");
+	  result = ERROR;
+  }
+  GDIOBJ_UnlockMultipleObj( &Lock, 3 );
   return result;
 }
 
@@ -1815,6 +1797,8 @@ W32kPaintRgn(HDC  hDC,
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
+  DbgPrint("\t brush color: %x \n", pBrush->iSolidColor);
+
   BrushOrigin.x = dc->w.brushOrgX;
   BrushOrigin.y = dc->w.brushOrgY;
   SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
@@ -1944,9 +1928,7 @@ W32kUnionRectWithRgn(HRGN hDest, const RECT* unsafeRect)
 	return hDest;
 }
 
-/***********************************************************************
- *           GetRegionData   (GDI32.@)
- *
+/*!
  * MSDN: GetRegionData, Return Values:
  *
  * "If the function succeeds and dwCount specifies an adequate number of bytes,
