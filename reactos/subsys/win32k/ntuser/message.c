@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.76 2004/12/11 19:39:18 weiden Exp $
+/* $Id: message.c,v 1.77 2004/12/25 20:30:50 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -81,6 +81,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
+    { WM_COPYDATA, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
   };
@@ -148,6 +149,9 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
         case WM_NCCALCSIZE:
           return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
           break;
+
+        case WM_COPYDATA:
+          return sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
 
         default:
           assert(FALSE);

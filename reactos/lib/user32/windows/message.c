@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.45 2004/12/13 15:39:52 navaraf Exp $
+/* $Id: message.c,v 1.46 2004/12/25 20:30:49 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -190,6 +190,7 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
           KMMsg->lParam = (LPARAM) DdeLparam;
         }
         break;
+
       case WM_DDE_EXECUTE:
         {
           SIZE_T Size;
@@ -217,6 +218,31 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
           GlobalUnlock((HGLOBAL) UMMsg->lParam);
         }
         break;
+
+      case WM_COPYDATA:
+        {
+          PCOPYDATASTRUCT pUMCopyData = (PCOPYDATASTRUCT)UMMsg->lParam;
+          PCOPYDATASTRUCT pKMCopyData;
+
+          pKMCopyData = HeapAlloc(GetProcessHeap(), 0,
+                                  sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
+          if (pKMCopyData == NULL)
+            {
+              SetLastError(ERROR_OUTOFMEMORY);
+              return FALSE;
+            }
+
+          pKMCopyData->dwData = pUMCopyData->dwData;
+          pKMCopyData->cbData = pUMCopyData->cbData;
+          pKMCopyData->lpData = pKMCopyData + 1;
+
+          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData, 
+                        pUMCopyData->cbData);
+
+          KMMsg->lParam = (LPARAM)pKMCopyData;
+        }
+        break;
+
       default:
         break;
     }
@@ -231,6 +257,7 @@ MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
     {
       case WM_DDE_ACK:
       case WM_DDE_EXECUTE:
+      case WM_COPYDATA:
         HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
         break;
       default:
@@ -319,6 +346,13 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
             }
           UMMsg->wParam = (WPARAM) KMDdeExecuteData->Sender;
           UMMsg->lParam = (LPARAM) GlobalData;
+        }
+        break;
+
+      case WM_COPYDATA:
+        {
+          PCOPYDATASTRUCT pKMCopyData = (PCOPYDATASTRUCT)KMMsg->lParam;
+          pKMCopyData->lpData = pKMCopyData + 1;
         }
         break;
 
