@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.12 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: sd.c,v 1.13 2003/10/15 11:00:33 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -392,17 +392,17 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 			    PACL* Sacl,
 			    PULONG SaclLength)
 {
-  if (SecurityDescriptor->Owner == NULL)
-    {
-      *Owner = NULL;
-    }
-  else
+  if (SecurityDescriptor->Owner != NULL)
     {
       *Owner = SecurityDescriptor->Owner;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  *Owner = (PSID)((ULONG)*Owner + (ULONG)SecurityDescriptor);
 	}
+    }
+  else
+    {
+      *Owner = NULL;
     }
 
   if (*Owner != NULL)
@@ -439,15 +439,15 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 
   if (SecurityDescriptor->Group != NULL)
     {
-      *Group = NULL;
-    }
-  else
-    {
       *Group = SecurityDescriptor->Group;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  *Group = (PSID)((ULONG)*Group + (ULONG)SecurityDescriptor);
 	}
+    }
+  else
+    {
+      *Group = NULL;
     }
 
   if (*Group != NULL)
@@ -476,6 +476,10 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
   if (*Sacl != NULL)
     {
       *SaclLength = ((*Sacl)->AclSize + 3) & ~3;
+    }
+  else
+    {
+      *SaclLength = 0;
     }
 }
 
