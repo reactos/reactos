@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.14 2000/04/14 01:48:26 ekohl Exp $
+/* $Id: thread.c,v 1.15 2000/05/30 23:41:06 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,6 +20,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -173,7 +174,7 @@ VOID STDCALL ExitThread(UINT uExitCode)
 			       uExitCode);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
      }
 }
 
@@ -194,7 +195,7 @@ WINBOOL STDCALL GetThreadTimes(HANDLE hThread,
 				      &ReturnLength);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    memcpy(lpCreationTime, &KernelUserTimes.CreateTime, sizeof(FILETIME));
@@ -214,7 +215,7 @@ WINBOOL STDCALL GetThreadContext(HANDLE hThread,
 				lpContext);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    return TRUE;
@@ -229,7 +230,7 @@ WINBOOL STDCALL SetThreadContext(HANDLE hThread,
 				(void *)lpContext);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    return TRUE;
@@ -249,7 +250,7 @@ WINBOOL STDCALL GetExitCodeThread(HANDLE hThread,
 				      &DataWritten);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    memcpy(lpExitCode, &ThreadBasic.ExitStatus, sizeof(DWORD));
@@ -265,7 +266,7 @@ DWORD STDCALL ResumeThread(HANDLE hThread)
 			    &PreviousResumeCount);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return  -1;
      }
    return PreviousResumeCount;
@@ -285,7 +286,7 @@ TerminateThread (
 			    dwExitCode);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return  FALSE;
      }
    return TRUE;
@@ -301,7 +302,7 @@ DWORD STDCALL SuspendThread(HANDLE hThread)
 			     &PreviousSuspendCount);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return -1;
      }
    return PreviousSuspendCount;
@@ -327,7 +328,7 @@ WINBOOL STDCALL SetThreadPriority(HANDLE hThread,
 				      &DataWritten);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    ThreadBasic.BasePriority = nPriority;
@@ -337,7 +338,7 @@ WINBOOL STDCALL SetThreadPriority(HANDLE hThread,
 				    sizeof(THREAD_BASIC_INFORMATION));
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    return TRUE;
@@ -356,7 +357,7 @@ int STDCALL GetThreadPriority(HANDLE hThread)
 				      &DataWritten);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return THREAD_PRIORITY_ERROR_RETURN;
      }
    return ThreadBasic.BasePriority;

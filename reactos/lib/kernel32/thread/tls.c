@@ -1,4 +1,5 @@
-/*
+/* $Id: tls.c,v 1.5 2000/05/30 23:41:06 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/thread/tls.c
@@ -64,3 +65,6 @@ WINBOOL	STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
    NtCurrentTeb()->TlsSlots[dwTlsIndex] = lpTlsValue;
    return(TRUE);
 }
+
+
+/* EOF */
