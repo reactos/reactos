@@ -168,14 +168,22 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
-	fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "windres = windres\n" );
+#else
+	fprintf ( fMakefile, "host_gcc = gcc\n" );
+	fprintf ( fMakefile, "host_ar = ar\n" );
+	fprintf ( fMakefile, "host_ld = ld\n" );
+	fprintf ( fMakefile, "rm = rm -f\n" );
+	fprintf ( fMakefile, "gcc = mingw32-gcc\n" );
+	fprintf ( fMakefile, "ld = mingw32-ld\n" );
+	fprintf ( fMakefile, "ar = mingw32-ar\n" );
+	fprintf ( fMakefile, "dlltool = mingw32-dlltool\n" );
+	fprintf ( fMakefile, "windres = mingw32-windres\n" );
+#endif
+	fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
 	fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
-#else
-#error still need to generate tool macros for UNIX
-#endif
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
