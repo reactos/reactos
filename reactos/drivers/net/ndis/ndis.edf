@@ -296,7 +296,7 @@ NdisUpcaseUnicodeString=NdisUpcaseUnicodeString@8
 NdisUpdateSharedMemory=NdisUpdateSharedMemory@20
 NdisWaitEvent=NdisWaitEvent@8
 NdisWriteConfiguration=NdisWriteConfiguration@16
-;NdisWriteErrorLogEntry ?
+NdisWriteErrorLogEntry=NdisWriteErrorLogEntry@16
 NdisWriteEventLogEntry=NdisWriteEventLogEntry@28
 NdisWritePciSlotInformation=NdisWritePciSlotInformation@20
 NdisWritePcmciaAttributeMemory=NdisWritePcmciaAttributeMemory@16

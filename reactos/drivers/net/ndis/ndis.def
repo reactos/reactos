@@ -296,7 +296,7 @@ NdisUpcaseUnicodeString@8
 NdisUpdateSharedMemory@20
 NdisWaitEvent@8
 NdisWriteConfiguration@16
-;NdisWriteErrorLogEntry ?
+NdisWriteErrorLogEntry@16
 NdisWriteEventLogEntry@28
 NdisWritePciSlotInformation@20
 NdisWritePcmciaAttributeMemory@16
