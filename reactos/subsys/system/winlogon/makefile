@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2001/08/21 20:13:05 chorns Exp $
+# $Id: makefile,v 1.6 2003/03/25 19:26:32 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,7 +12,7 @@ TARGET_INSTALLDIR = system32
 
 TARGET_SDKLIBS = ntdll.a kernel32.a user32.a
 
-TARGET_OBJECTS = $(TARGET_NAME).o
+TARGET_OBJECTS = $(TARGET_NAME).o setup.o
 
 include $(PATH_TO_TOP)/rules.mak
 

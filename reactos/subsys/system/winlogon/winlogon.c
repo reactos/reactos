@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.17 2003/03/20 20:56:52 gvg Exp $
+/* $Id: winlogon.c,v 1.18 2003/03/25 19:26:33 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,8 +15,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <lsass/ntsecapi.h>
-
 #include <wchar.h>
+
+#include "setup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -384,12 +385,27 @@ WinMain(HINSTANCE hInstance,
 
    AllocConsole();
    SetConsoleTitle( "Winlogon" );
+
+  /* Check for pending setup */
+  if (GetSetupType () != 0)
+    {
+      DPRINT ("Winlogon: CheckForSetup() in setup mode\n");
+
+      /* Run setup and reboot when done */
+      RunSetup ();
+
+//      NtShutdownSystem (ShutdownReboot);
+      NtShutdownSystem (ShutdownNoReboot);
+      ExitProcess (0);
+      return 0;
+    }
+
    /* start system processes (services.exe & lsass.exe) */
    if (StartProcess("StartServices"))
      {
 	if (!StartServices())
 	  {
-	     DbgPrint("WL: Failed to Start Services (0x%X)\n", GetLastError());
+	     DbgPrint("WL: Failed to start Services (0x%X)\n", GetLastError());
 	  }
      }
 #if 0
@@ -397,7 +413,7 @@ WinMain(HINSTANCE hInstance,
      {
 	if (!StartLsass())
 	  {
-	     DbgPrint("WL: Failed to Start Security System (0x%X)\n", GetLastError());
+	     DbgPrint("WL: Failed to start LSASS (0x%X)\n", GetLastError());
 	  }
      }
 #endif
@@ -408,7 +424,7 @@ WinMain(HINSTANCE hInstance,
    Status = LsaRegisterLogonProcess(&ProcessName, &LsaHandle, &Mode);
    if (!NT_SUCCESS(Status))
      {
-        DbgPrint("WL: Failed to connect to lsass\n");
+        DbgPrint("WL: Failed to connect to LSASS\n");
         return(1);
      }
 #endif
