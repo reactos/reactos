@@ -1,1 +1,5 @@
-ping.coff
+*.o
+*.d
+*.exe
+*.coff
+*.sym

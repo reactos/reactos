@@ -180,6 +180,7 @@ int sc_main(const sc_cmd_entry* cmd_entry,
     if (!dwDesiredAccess) dwDesiredAccess = SC_MANAGER_CONNECT + GENERIC_READ;
 
     hSCManager = OpenSCManagerA(sc_machine_name, NULL, dwDesiredAccess);
+    //hSCManager = OpenSCManagerW(NULL, NULL, dwDesiredAccess);
     if (hSCManager != NULL) {
         result =  cmd_entry->funcptr(hSCManager, cmd_entry->sc_cmd, sc_cmd_arg);
         if (!CloseServiceHandle(hSCManager)) {

@@ -87,8 +87,6 @@ int EnumServicesInfo(void)
 
 int sc_query(SC_HANDLE hSCManager, SC_CMDS sc_cmd, char* argv[])
 {
-    dprintf("sc_query(%x, %d, %s) - called.\n", hSCManager, sc_cmd, argv[0]);
-
     switch (sc_cmd) {
     case SC_CMD_QUERY:
     case SC_CMD_QUERYEX:
@@ -98,7 +96,7 @@ int sc_query(SC_HANDLE hSCManager, SC_CMDS sc_cmd, char* argv[])
     case SC_CMD_SDSHOW:
     case SC_CMD_GETDISPLAYNAME:
     case SC_CMD_GETKEYNAME:
-        dprintf(" - not implemented.\n");
+        dprintf("sc_query(%x, %d, %s) - command not implemented.\n", hSCManager, sc_cmd, argv[0]);
         break;
     case SC_CMD_ENUMDEPEND:
         return EnumServicesInfo();
