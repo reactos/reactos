@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.6 2000/06/07 13:05:09 ekohl Exp $
+/* $Id: list.c,v 1.7 2000/06/18 15:21:53 ekohl Exp $
  *
  * COPYRIGHT:           See COPYING in the top level directory
  * PROJECT:             ReactOS kernel
@@ -16,6 +16,7 @@
 
 /* FUNCTIONS *************************************************************/
 
+#if 0
 static BOOLEAN CheckEntry(PLIST_ENTRY ListEntry)
 {
    assert(ListEntry!=NULL);
@@ -24,36 +25,6 @@ static BOOLEAN CheckEntry(PLIST_ENTRY ListEntry)
    assert(ListEntry->Flink!=NULL);
    assert(ListEntry->Flink->Blink==ListEntry);
    return(TRUE);
-}
-
-BOOLEAN IsListEmpty(PLIST_ENTRY ListHead)
-/*
- * FUNCTION: Determines if a list is empty
- * ARGUMENTS:
- *        ListHead = Head of the list
- * RETURNS: True if there are no entries in the list
- */
-{
-   return(ListHead->Flink==ListHead);
-}
-
-VOID RemoveEntryList(PLIST_ENTRY ListEntry)
-{
-   PLIST_ENTRY OldFlink;
-   PLIST_ENTRY OldBlink;
-   
-   DPRINT("RemoveEntryList(ListEntry %x)\n", ListEntry);
-   
-   assert(CheckEntry(ListEntry));
-   
-   OldFlink=ListEntry->Flink;
-   OldBlink=ListEntry->Blink;
-
-   OldFlink->Blink=OldBlink;
-   OldBlink->Flink=OldFlink;
-   
-   
-   DPRINT("RemoveEntryList()\n");
 }
 
 PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
@@ -70,60 +41,22 @@ PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
 }
 
 PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
-{  
+{
    PLIST_ENTRY Old;
-   
+
    DPRINT("RemoveHeadList(ListHead %x)\n",ListHead);
-   
+
    assert(CheckEntry(ListHead));
-   
+
    Old = ListHead->Flink;
    RemoveEntryList(ListHead->Flink);
-   
+
    DPRINT("RemoveHeadList()\n");
-   
+
    return(Old);
 }
+#endif
 
-VOID InitializeListHead(PLIST_ENTRY ListHead)
-/*
- * FUNCTION: Initializes a double linked list
- * ARGUMENTS: 
- *         ListHead = Caller supplied storage for the head of the list
- */
-{
-   ListHead->Flink = ListHead->Blink = ListHead;
-}
-
-VOID InsertTailList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
-/*
- * FUNCTION: Inserts an entry in a double linked list
- * ARGUMENTS:
- *        ListHead = Head of the list
- *        Entry = Entry to insert
- */
-{
-   PLIST_ENTRY Blink;
-
-   Blink = ListHead->Blink;
-   ListEntry->Flink=ListHead;
-   ListEntry->Blink=Blink;
-   Blink->Flink=ListEntry;
-   ListHead->Blink=ListEntry;
-   assert(CheckEntry(ListEntry));
-}
-
-VOID InsertHeadList(PLIST_ENTRY ListHead, PLIST_ENTRY ListEntry)
-{
-   PLIST_ENTRY OldFlink;
-   
-   OldFlink = ListHead->Flink;
-   ListEntry->Flink = OldFlink;
-   ListEntry->Blink = ListHead;
-   OldFlink->Blink = ListEntry;
-   ListHead->Flink = ListEntry;
-   assert( CheckEntry( ListEntry ) );
-}
 
 PLIST_ENTRY
 STDCALL
@@ -142,12 +75,12 @@ ExInterlockedInsertTailList (
 	Old = NULL;
      }
    else
-     {       
+     {
 	Old = ListHead->Blink;
      }
    InsertTailList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
-   
+
    return(Old);
 }
 
@@ -166,7 +99,7 @@ ExInterlockedInsertHeadList (
  *          Lock = Caller supplied spinlock used to synchronise access
  * RETURNS: The previous head of the list
  */
-{    
+{
    PLIST_ENTRY Old;
    KIRQL oldlvl;
 
@@ -181,7 +114,7 @@ ExInterlockedInsertHeadList (
      }
    InsertHeadList(ListHead,ListEntry);
    KeReleaseSpinLock(Lock,oldlvl);
-   
+
    return(Old);
 }
 
@@ -202,7 +135,7 @@ ExInterlockedRemoveHeadList (
 {
    PLIST_ENTRY ret;
    KIRQL oldlvl;
-  
+
    KeAcquireSpinLock(Lock,&oldlvl);
    if (IsListEmpty(Head))
      {
@@ -216,8 +149,11 @@ ExInterlockedRemoveHeadList (
    return(ret);
 }
 
-PLIST_ENTRY ExInterlockedRemoveTailList(PLIST_ENTRY Head,
-					PKSPIN_LOCK Lock)
+PLIST_ENTRY
+ExInterlockedRemoveTailList (
+	PLIST_ENTRY	Head,
+	PKSPIN_LOCK	Lock
+	)
 /*
  * FUNCTION: Removes the tail of a double linked list
  * ARGUMENTS:
@@ -228,7 +164,7 @@ PLIST_ENTRY ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 {
    PLIST_ENTRY ret;
    KIRQL oldlvl;
-  
+
    KeAcquireSpinLock(Lock,&oldlvl);
    if (IsListEmpty(Head))
      {

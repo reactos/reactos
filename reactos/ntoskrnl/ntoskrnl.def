@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.75 2000/06/12 14:53:09 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.76 2000/06/18 15:21:18 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1014,12 +1014,7 @@ wctomb
 ;
 ;	ReactOS Extensions (these should be macros!)
 ;
-;IoInitializeDpcRequest
-;IoRequestDpc
 MmGetSystemAddressForMdl
-InitializeListHead
-InsertTailList
-RemoveEntryList
 ;
 ;
 ; exports from hal.dll

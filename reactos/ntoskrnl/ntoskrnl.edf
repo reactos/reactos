@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.62 2000/06/12 14:53:09 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.63 2000/06/18 15:21:18 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -947,12 +947,7 @@ wctomb
 ;
 ;	ReactOS Extensions
 ;
-;IoInitializeDpcRequest
-;IoRequestDpc
 MmGetSystemAddressForMdl
-InitializeListHead
-InsertTailList
-RemoveEntryList
 ;
 ;
 ; exports from hal.dll

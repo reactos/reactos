@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.34 2000/05/13 01:44:53 ekohl Exp $
+/* $Id: rtl.h,v 1.35 2000/06/18 15:20:10 ekohl Exp $
  * 
  */
 
@@ -169,7 +169,6 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
  *        RootDirectory = Where the object should be placed or NULL
  *        SecurityDescriptor = Ignored
  */
-
 #define InitializeObjectAttributes(p,n,a,r,s) \
 { \
 	(p)->Length = sizeof(OBJECT_ATTRIBUTES); \
@@ -180,53 +179,248 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 	(p)->SecurityQualityOfService = NULL; \
 }
 
-VOID
-InitializeListHead (
-	PLIST_ENTRY	ListHead
-	);
 
-VOID
-InsertHeadList (
-	PLIST_ENTRY	ListHead,
-	PLIST_ENTRY	Entry
-	);
+/*
+ * VOID
+ * InitializeListHead (
+ *		PLIST_ENTRY	ListHead
+ *		);
+ *
+ * FUNCTION: Initializes a double linked list
+ * ARGUMENTS:
+ *         ListHead = Caller supplied storage for the head of the list
+ */
+#define InitializeListHead(ListHead) \
+{ \
+	(ListHead)->Flink = (ListHead); \
+	(ListHead)->Blink = (ListHead); \
+}
 
-VOID
-InsertTailList (
-	PLIST_ENTRY	ListHead,
-	PLIST_ENTRY	Entry
-	);
 
-BOOLEAN
-IsListEmpty (
-	PLIST_ENTRY	ListHead
-	);
+/*
+ * VOID
+ * InsertHeadList (
+ *		PLIST_ENTRY	ListHead,
+ *		PLIST_ENTRY	Entry
+ *		);
+ *
+ * FUNCTION: Inserts an entry in a double linked list
+ * ARGUMENTS:
+ *        ListHead = Head of the list
+ *        Entry = Entry to insert
+ */
+#define InsertHeadList(ListHead, ListEntry) \
+{ \
+	PLIST_ENTRY OldFlink; \
+	OldFlink = (ListHead)->Flink; \
+	(ListEntry)->Flink = OldFlink; \
+	(ListEntry)->Blink = (ListHead); \
+	OldFlink->Blink = (ListEntry); \
+	(ListHead)->Flink = (ListEntry); \
+	assert((ListEntry) != NULL); \
+	assert((ListEntry)->Blink!=NULL); \
+	assert((ListEntry)->Blink->Flink == (ListEntry)); \
+	assert((ListEntry)->Flink != NULL); \
+	assert((ListEntry)->Flink->Blink == (ListEntry)); \
+}
+
+
+/*
+ * VOID
+ * InsertTailList (
+ *		PLIST_ENTRY	ListHead,
+ *		PLIST_ENTRY	Entry
+ *		);
+ *
+ * FUNCTION: Inserts an entry in a double linked list
+ * ARGUMENTS:
+ *        ListHead = Head of the list
+ *        Entry = Entry to insert
+ */
+#define InsertTailList(ListHead, ListEntry) \
+{ \
+	PLIST_ENTRY OldBlink; \
+	OldBlink = (ListHead)->Blink; \
+	(ListEntry)->Flink = (ListHead); \
+	(ListEntry)->Blink = OldBlink; \
+	OldBlink->Flink = (ListEntry); \
+	(ListHead)->Blink = (ListEntry); \
+	assert((ListEntry) != NULL); \
+	assert((ListEntry)->Blink!=NULL); \
+	assert((ListEntry)->Blink->Flink == (ListEntry)); \
+	assert((ListEntry)->Flink != NULL); \
+	assert((ListEntry)->Flink->Blink == (ListEntry)); \
+}
+
+/*
+ * BOOLEAN
+ * IsListEmpty (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Checks if a double linked list is empty
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+*/
+#define IsListEmpty(ListHead) \
+	((ListHead)->Flink == (ListHead))
+
 
 PSINGLE_LIST_ENTRY
 PopEntryList (
 	PSINGLE_LIST_ENTRY	ListHead
 	);
+/*
+#define PopEntryList(ListHead) \
+	(ListHead)->Next; \
+	{ \
+		PSINGLE_LIST_ENTRY FirstEntry; \
+		FirstEntry = (ListHead)->Next; \
+		if (FirstEntry != NULL) \
+		{ \
+			(ListHead)->Next = FirstEntry->Next; \
+		} \
+	}
+*/
 
 VOID
 PushEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PSINGLE_LIST_ENTRY	Entry
 	);
+/*
+#define PushEntryList(ListHead,Entry) \
+    (Entry)->Next = (ListHead)->Next; \
+    (ListHead)->Next = (Entry)
+*/
 
-VOID
-RemoveEntryList (
-	PLIST_ENTRY	Entry
-	);
 
+/*
+ *VOID
+ *RemoveEntryList (
+ *	PLIST_ENTRY	Entry
+ *	);
+ *
+ * FUNCTION:
+ *	Removes an entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListEntry = Entry to remove
+ */
+#define RemoveEntryList(ListEntry) \
+{ \
+	PLIST_ENTRY OldFlink; \
+	PLIST_ENTRY OldBlink; \
+	assert((ListEntry) != NULL); \
+	assert((ListEntry)->Blink!=NULL); \
+	assert((ListEntry)->Blink->Flink == (ListEntry)); \
+	assert((ListEntry)->Flink != NULL); \
+	assert((ListEntry)->Flink->Blink == (ListEntry)); \
+	OldFlink = (ListEntry)->Flink; \
+	OldBlink = (ListEntry)->Blink; \
+	OldFlink->Blink = OldBlink; \
+	OldBlink->Flink = OldFlink; \
+}
+
+
+/*
+ * PLIST_ENTRY
+ * RemoveHeadList (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes the head entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ *
+ * RETURNS:
+ *	The removed entry
+ */
+/*
+#define RemoveHeadList(ListHead) \
+	(ListHead)->Flink; \
+	{RemoveEntryList((ListHead)->Flink)}
+*/
+/*
 PLIST_ENTRY
 RemoveHeadList (
 	PLIST_ENTRY	ListHead
 	);
+*/
 
+static
+inline
+PLIST_ENTRY
+RemoveHeadList (
+	PLIST_ENTRY	ListHead
+	)
+{
+	PLIST_ENTRY Old;
+	PLIST_ENTRY OldFlink;
+	PLIST_ENTRY OldBlink;
+
+	Old = ListHead->Flink;
+
+	OldFlink = ListHead->Flink->Flink;
+	OldBlink = ListHead->Flink->Blink;
+	OldFlink->Blink = OldBlink;
+	OldBlink->Flink = OldFlink;
+
+	return(Old);
+}
+
+
+/*
+ * PLIST_ENTRY
+ * RemoveTailList (
+ *	PLIST_ENTRY	ListHead
+ *	);
+ *
+ * FUNCTION:
+ *	Removes the tail entry from a double linked list
+ *
+ * ARGUMENTS:
+ *	ListHead = Head of the list
+ * RETURNS:
+ *	The removed entry
+ */
+/*
+#define RemoveTailList(ListHead) \
+	(ListHead)->Blink; \
+	{RemoveEntryList((ListHead)->Blink)}
+*/
+/*
 PLIST_ENTRY
 RemoveTailList (
 	PLIST_ENTRY	ListHead
 	);
+*/
+
+static
+inline
+PLIST_ENTRY
+RemoveTailList (
+	PLIST_ENTRY ListHead
+	)
+{
+	PLIST_ENTRY Old;
+	PLIST_ENTRY OldFlink;
+	PLIST_ENTRY OldBlink;
+
+	Old = ListHead->Blink;
+
+	OldFlink = ListHead->Blink->Flink;
+	OldBlink = ListHead->Blink->Blink;
+	OldFlink->Blink = OldBlink;
+	OldBlink->Flink = OldFlink;
+
+	return(Old);
+}
+
 
 PVOID
 STDCALL
