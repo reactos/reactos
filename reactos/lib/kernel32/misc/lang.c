@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.14 2004/04/12 10:49:48 mf Exp $
+/* $Id: lang.c,v 1.15 2004/04/12 15:08:14 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1325,57 +1325,34 @@ GetTimeFormatA (
 	if (lpFormat != NULL) {
 		/* First just determine the number of necessary bytes 
 		for the unicode string */
-		int numBytes = MultiByteToWideChar(CP_ACP,
-							MB_ERR_INVALID_CHARS,
-							lpFormat,
-							-1,
-							NULL,
-							0);
+		int numBytes = MultiByteToWideChar(CP_ACP, 0, lpFormat, -1, NULL, 0);
 
-		/* Try really hard not to fail due to format problems
-		If there are any problems with the format pass NULL
-		to GetTimeFormatW() */
 		if (numBytes > 0) {
-			lpFormatU = HeapAlloc(GetProcessHeap(),0,numBytes);
+			lpFormatU = HeapAlloc(GetProcessHeap(), 0, numBytes);
 
 			if (lpFormatU != NULL) 
-				MultiByteToWideChar(CP_ACP,
-								0,
-								lpFormat,
-								-1,
-								lpFormatU,
-								numBytes);
+				MultiByteToWideChar(CP_ACP, 0, lpFormat, -1, lpFormatU, numBytes);
 		}
 	}
 
 	/* Just get the number of characters needed to store the 
 	   Unicode output */
-	numCharsU = GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,NULL,0);
+	numCharsU = GetTimeFormatW(Locale, dwFlags, lpTime, lpFormatU, NULL, 0);
 
 	if (numCharsU != 0) {
-		lpTimeStrU = HeapAlloc(GetProcessHeap(),0,numCharsU*sizeof(WCHAR));
-		if (lpTimeStrU == NULL) {
-			if (lpFormatU != NULL) 
-				HeapFree(GetProcessHeap(),0,lpFormatU);
-			return 0;
+		lpTimeStrU = HeapAlloc(GetProcessHeap(), 0, numCharsU*sizeof(WCHAR));
+
+		if (lpTimeStrU != NULL) {
+			if (GetTimeFormatW(Locale, dwFlags, lpTime, lpFormatU, lpTimeStrU, numCharsU))
+				/* Convert the output string to ANSI */
+				retVal = WideCharToMultiByte(CP_ACP, 0, lpTimeStrU, numCharsU, lpTimeStr, cchTime, NULL, NULL);
+
+			HeapFree(GetProcessHeap(), 0, lpTimeStrU);
 		}
-
-		if (GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,lpTimeStrU,numCharsU))
-			/* Convert the output string to ANSI */
-			retVal = WideCharToMultiByte(CP_ACP,
-							0,
-							lpTimeStrU,
-							numCharsU,
-							lpTimeStr,
-							cchTime,
-							NULL,
-							NULL);
-
-		HeapFree(GetProcessHeap(),0,lpTimeStrU);
 	}
 
 	if (lpFormatU != NULL)
-		HeapFree(GetProcessHeap(),0,lpFormatU);
+		HeapFree(GetProcessHeap(), 0, lpFormatU);
 
 	return retVal;
 }
