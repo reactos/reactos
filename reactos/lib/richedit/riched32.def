@@ -1,6 +1,0 @@
-; File generated automatically from richedit/riched32.spec; do not edit!
-
-LIBRARY riched32.dll
-
-EXPORTS
-  DllGetVersion@4=RICHED32_DllGetVersion@4 @2
