@@ -133,7 +133,7 @@ typedef struct _LPCMESSAGE
 #define SystemInformation0			0
 #define SystemInformation1			1
 #define SystemPerformanceInformation		2
-#define SystemInformation3			3
+#define SystemTimeInformation			3
 #define SystemProcessInformation		5
 #define	SystemGlobalFlagInformation		9
 #define SystemDriverInformation			11
@@ -362,14 +362,20 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
 } SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
 #endif
 
+typedef struct _SYSTEM_TIME_INFO
+{
+	LARGE_INTEGER	BootTime;
+	LARGE_INTEGER	SystemTime;
+	LARGE_INTEGER	TimeZoneBias;
+	ULONG		TimeZoneId;
+	ULONG		Unknown;
+} SYSTEM_TIME_INFO, *PSYSTEM_TIME_INFO;
 
-typedef
-struct _SYSTEM_GLOBAL_FLAGS_INFO
+typedef struct _SYSTEM_GLOBAL_FLAGS_INFO
 {
 	DWORD	GlobalFlags;
 
 } SYSTEM_GLOBAL_FLAGS_INFO, * PSYSTEM_GLOBAL_FLAGS_INFO;
-
 
 #if 0
 #pragma pack(4)
