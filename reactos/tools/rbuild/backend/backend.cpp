@@ -4,8 +4,6 @@
 #include "../Rbuild.h"
 #include "backend.h"
 
-#include "mingw/mingw.h"
-
 using std::string;
 using std::vector;
 
