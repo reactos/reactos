@@ -103,12 +103,13 @@ NtReadFile (IN HANDLE FileHandle,
 
   _SEH_TRY
   {
-     Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_READ,
-				         FileObject->DeviceObject,
-				         Buffer,
-				         Length,
-				         ByteOffset,
-				         IoStatusBlock);
+     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				        FileObject->DeviceObject,
+				        Buffer,
+				        Length,
+				        ByteOffset,
+					EventObject,
+				        IoStatusBlock);
   }
   _SEH_HANDLE
   {
@@ -128,13 +129,6 @@ NtReadFile (IN HANDLE FileHandle,
         IoFreeIrp(Irp);
      }
      return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
-  }
-
-  Irp->UserEvent = EventObject;
-  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-  {
-     /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
-     IoQueueThreadIrp(Irp);
   }
 
   KeClearEvent(&FileObject->Event);
@@ -283,12 +277,13 @@ NtWriteFile (IN HANDLE FileHandle,
 
   _SEH_TRY
   {
-     Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_WRITE,
-				         FileObject->DeviceObject,
-				         Buffer,
-				         Length,
-				         ByteOffset,
-				         IoStatusBlock);
+     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+				        FileObject->DeviceObject,
+				        Buffer,
+				        Length,
+				        ByteOffset,
+					EventObject,
+				        IoStatusBlock);
   }
   _SEH_HANDLE
   {
@@ -308,13 +303,6 @@ NtWriteFile (IN HANDLE FileHandle,
         IoFreeIrp(Irp);
      }
      return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
-  }
-
-  Irp->UserEvent = EventObject;
-  if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-  {
-     /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
-     IoQueueThreadIrp(Irp);
   }
 
   KeClearEvent(&FileObject->Event);
