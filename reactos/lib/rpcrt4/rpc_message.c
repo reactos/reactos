@@ -330,6 +330,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
     }
   }
   if (dwRead != sizeof(common_hdr)) {
+    WARN("Short read of header, %ld/%d bytes\n", dwRead, sizeof(common_hdr));
     status = RPC_S_PROTOCOL_ERROR;
     goto fail;
   }
@@ -344,6 +345,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
 
   hdr_length = RPCRT4_GetHeaderSize((RpcPktHdr*)&common_hdr);
   if (hdr_length == 0) {
+    WARN("header length == 0\n");
     status = RPC_S_PROTOCOL_ERROR;
     goto fail;
   }
@@ -366,6 +368,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
     }
   }
   if (dwRead != hdr_length - sizeof(common_hdr)) {
+    WARN("bad header length, %ld/%ld bytes\n", dwRead, hdr_length - sizeof(common_hdr));
     status = RPC_S_PROTOCOL_ERROR;
     goto fail;
   }
@@ -382,6 +385,9 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   default:
     pMsg->BufferLength = common_hdr.frag_len - hdr_length;
   }
+
+  TRACE("buffer length = %u\n", pMsg->BufferLength);
+
   status = I_RpcGetBuffer(pMsg);
   if (status != RPC_S_OK) goto fail;
 
@@ -413,12 +419,15 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       }
     }
     if (dwRead != data_length) {
+      WARN("bad data length, %ld/%ld\n", dwRead, data_length);
       status = RPC_S_PROTOCOL_ERROR;
       goto fail;
     }
 
+    /* when there is no more data left, it should be the last packet */
     if (buffer_length == pMsg->BufferLength &&
         ((*Header)->common.flags & RPC_FLG_LAST) == 0) {
+      WARN("no more data left, but not last packet\n");
       status = RPC_S_PROTOCOL_ERROR;
       goto fail;
     }
@@ -610,6 +619,7 @@ RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
     status = RPC_S_CALL_FAILED; /* ? */
     goto fail;
   default:
+    WARN("bad packet type %d\n", hdr->common.ptype);
     goto fail;
   }
 

@@ -45,21 +45,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 #define BUFFER_PARANOIA 20
 
 #if defined(__i386__)
-  #define LITTLE_ENDIAN_UINT32_WRITE(pchar, uint32) \
+# define LITTLE_ENDIAN_UINT32_WRITE(pchar, uint32) \
     (*((UINT32 *)(pchar)) = (uint32))
 
-  #define LITTLE_ENDIAN_UINT32_READ(pchar) \
+# define LITTLE_ENDIAN_UINT32_READ(pchar) \
     (*((UINT32 *)(pchar)))
 #else
   /* these would work for i386 too, but less efficient */
-  #define LITTLE_ENDIAN_UINT32_WRITE(pchar, uint32) \
+# define LITTLE_ENDIAN_UINT32_WRITE(pchar, uint32) \
     (*(pchar)     = LOBYTE(LOWORD(uint32)), \
      *((pchar)+1) = HIBYTE(LOWORD(uint32)), \
      *((pchar)+2) = LOBYTE(HIWORD(uint32)), \
      *((pchar)+3) = HIBYTE(HIWORD(uint32)), \
      (uint32)) /* allow as r-value */
 
-  #define LITTLE_ENDIAN_UINT32_READ(pchar) \
+# define LITTLE_ENDIAN_UINT32_READ(pchar) \
     (MAKELONG( \
       MAKEWORD(*(pchar), *((pchar)+1)), \
       MAKEWORD(*((pchar)+2), *((pchar)+3))))
@@ -78,14 +78,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
     MAKEWORD(*((pchar)+1), *(pchar))))
 
 #ifdef NDR_LOCAL_IS_BIG_ENDIAN
-  #define NDR_LOCAL_UINT32_WRITE(pchar, uint32) \
+# define NDR_LOCAL_UINT32_WRITE(pchar, uint32) \
     BIG_ENDIAN_UINT32_WRITE(pchar, uint32)
-  #define NDR_LOCAL_UINT32_READ(pchar) \
+# define NDR_LOCAL_UINT32_READ(pchar) \
     BIG_ENDIAN_UINT32_READ(pchar)
 #else
-  #define NDR_LOCAL_UINT32_WRITE(pchar, uint32) \
+# define NDR_LOCAL_UINT32_WRITE(pchar, uint32) \
     LITTLE_ENDIAN_UINT32_WRITE(pchar, uint32)
-  #define NDR_LOCAL_UINT32_READ(pchar) \
+# define NDR_LOCAL_UINT32_READ(pchar) \
     LITTLE_ENDIAN_UINT32_READ(pchar)
 #endif
 
