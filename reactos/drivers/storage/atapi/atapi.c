@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.12 2002/03/15 16:34:52 ekohl Exp $
+/* $Id: atapi.c,v 1.13 2002/03/16 16:13:57 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -39,6 +39,9 @@
  *	- implement sending of atapi commands
  *	- handle removable atapi non-cdrom drives
  */
+
+#define ENABLE_PCI
+#define ENABLE_ISA
 
 //  -------------------------------------------------------------------------
 
@@ -263,6 +266,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.MapBuffers = TRUE;
 
   /* Search the PCI bus for compatibility mode ide controllers */
+#ifdef ENABLE_PCI
   InitData.HwFindAdapter = AtapiFindCompatiblePciController;
   InitData.NumberOfAccessRanges = 2;
   InitData.AdapterInterfaceType = PCIBus;
@@ -278,9 +282,10 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 			      NULL);
 //  if (newStatus < statusToReturn)
 //    statusToReturn = newStatus;
+#endif
 
   /* Search the ISA bus for ide controllers */
-#if 0
+#ifdef ENABLE_ISA
   InitData.HwFindAdapter = AtapiFindIsaBusController;
   InitData.NumberOfAccessRanges = 2;
   InitData.AdapterInterfaceType = Isa;
@@ -472,26 +477,81 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PBOOLEAN Again)
 {
   PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+  BOOLEAN ChannelFound = FALSE;
+  BOOLEAN DeviceFound = FALSE;
 
-  DPRINT("AtapiFindIsaBusController() called!\n");
+  DPRINT1("AtapiFindIsaBusController() called!\n");
 
   *Again = FALSE;
 
-  if (ConfigInfo->AtdiskPrimaryClaimed == TRUE)
-    {
-       DPRINT("Primary IDE controller already claimed!\n");
+  ConfigInfo->NumberOfBuses = 1;
+  ConfigInfo->MaximumNumberOfTargets = 2;
+  ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
 
+  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
+    {
+      /* Both channels unclaimed: Claim primary channel */
+      DPRINT1("Primary channel!\n");
+
+      DevExt->CommandPortBase = 0x01F0;
+      DevExt->ControlPortBase = 0x03F6;
+
+      ConfigInfo->BusInterruptLevel = 14;
+      ConfigInfo->BusInterruptVector = 14;
+      ConfigInfo->InterruptMode = LevelSensitive;
+
+      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x01F0);
+      ConfigInfo->AccessRanges[0].RangeLength = 8;
+      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
+
+      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x03F6);
+      ConfigInfo->AccessRanges[1].RangeLength = 1;
+      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+      ChannelFound = TRUE;
+      *Again = FALSE/*TRUE*/;
+    }
+  else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
+    {
+      /* Primary channel already claimed: claim secondary channel */
+      DPRINT1("Secondary channel!\n");
+
+      DevExt->CommandPortBase = 0x0170;
+      DevExt->ControlPortBase = 0x0376;
+
+      ConfigInfo->BusInterruptLevel = 15;
+      ConfigInfo->BusInterruptVector = 15;
+      ConfigInfo->InterruptMode = LevelSensitive;
+
+      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0170);
+      ConfigInfo->AccessRanges[0].RangeLength = 8;
+      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
+
+      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0376);
+      ConfigInfo->AccessRanges[1].RangeLength = 1;
+      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+      ChannelFound = TRUE;
+      *Again = FALSE;
+    }
+  else
+    {
+      DPRINT1("AtapiFindIsaBusController() both channels claimed. Returns: SP_RETURN_NOT_FOUND\n");
+      *Again = FALSE;
+      return(SP_RETURN_NOT_FOUND);
     }
 
-  if (ConfigInfo->AtdiskSecondaryClaimed == TRUE)
+  /* Find attached devices */
+  if (ChannelFound)
     {
-       DPRINT("Secondary IDE controller already claimed!\n");
-
+      DeviceFound = AtapiFindDevices(DevExt,
+				     ConfigInfo);
     }
 
-  DPRINT("AtapiFindIsaBusController() done!\n");
-
-  return(SP_RETURN_NOT_FOUND);
+  DPRINT1("AtapiFindIsaBusController() returns: SP_RETURN_FOUND\n");
+  return(SP_RETURN_FOUND);
 }
 
 
@@ -821,14 +881,16 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
     {
-      /* disable interrupts */
-      IDEWriteDriveControl(ControlPortBase,
-			   IDE_DC_nIEN);
-
-      /* select drive */
+      /* Select drive */
       IDEWriteDriveHead(CommandPortBase,
 			IDE_DH_FIXED | (UnitNumber ? IDE_DH_DRV1 : 0));
       ScsiPortStallExecution(500);
+
+      /* Disable interrupts */
+      IDEWriteDriveControl(ControlPortBase,
+			   IDE_DC_nIEN);
+      ScsiPortStallExecution(500);
+
       IDEWriteCylinderHigh(CommandPortBase, 0);
       IDEWriteCylinderLow(CommandPortBase, 0);
       IDEWriteCommand(CommandPortBase, IDE_CMD_RESET);
@@ -1086,9 +1148,14 @@ AtapiPolledRead(IN ULONG CommandPort,
   UCHAR Status;
   UCHAR Control;
 
+  /*  Write Drive/Head to select drive  */
+  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
+  ScsiPortStallExecution(500);
+
   /* Disable interrupts */
   Control = IDEReadAltStatus(ControlPort);
   IDEWriteDriveControl(ControlPort, Control | IDE_DC_nIEN);
+  ScsiPortStallExecution(500);
 
   /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
