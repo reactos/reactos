@@ -46,7 +46,7 @@ typedef struct
 BOOL DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
 {
 
-	DbgPrint((DPRINT_DISK, "DiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %d%d SectorCount: %d Buffer: 0x%x\n", DriveNumber, (U32)SectorNumber, SectorCount, Buffer));
+	DbgPrint((DPRINT_DISK, "DiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
 
 	//
 	// Check to see if it is a fixed disk drive
@@ -79,7 +79,7 @@ BOOL DiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 SectorCoun
 	U32							RetryCount;
 	PI386_DISK_ADDRESS_PACKET	Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
-	DbgPrint((DPRINT_DISK, "DiskReadLogicalSectorsLBA()\n"));
+	DbgPrint((DPRINT_DISK, "DiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
 	RegsIn.b.ah = 0x42;					// Subfunction 42h
