@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.5 2004/07/20 21:25:36 hbirr Exp $
+/* $Id: timer.c,v 1.6 2004/08/02 15:09:22 navaraf Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -97,7 +97,7 @@ static BOOLEAN UdelayCalibrated = FALSE;
  *    also access RAM at the same time - making the delay imprecise.
  * 2. Use compiler-specific #pragma's to disable optimization.
  * 3. Use inline assembly, making it equally unportable as #2.
- * For supported compilers we use incline assembler. for the others,
+ * For supported compilers we use inline assembler. For the others,
  * portable plain C.
  */
 VOID STDCALL
@@ -262,14 +262,13 @@ VOID HalpCalibrateStallExecution(VOID)
 VOID STDCALL
 HalCalibratePerformanceCounter(ULONG Count)
 {
-   ULONG i;
    ULONG flags;
 
    /* save flags and disable interrupts */
    Ki386SaveFlags(flags);
    Ki386DisableInterrupts();
 
-   for (i = 0; i < Count; i++);
+   __KeStallExecutionProcessor(Count);
 
    /* restore flags */
    Ki386RestoreFlags(flags);
