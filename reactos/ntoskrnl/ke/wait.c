@@ -103,7 +103,8 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
       case InternalSynchronizationEvent:
          hdr->SignalState = 0;
          break;
-
+      
+      case InternalQueueType:
       case InternalSemaphoreType:
          hdr->SignalState--;
          break;
@@ -348,6 +349,7 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
       case InternalSynchronizationTimer:
 	return(KeDispatcherObjectWakeOne(hdr));
 
+      case InternalQueueType:
       case InternalSemaphoreType:
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 	if(hdr->SignalState>0)
@@ -587,8 +589,18 @@ KeWaitForMultipleObjects(ULONG Count,
             blk->NextWaitBlock = blk + 1;
          }
 
-         //add wait block to disp. obj. wait list
-         InsertTailList(&hdr->WaitListHead, &blk->WaitListEntry);
+         /*
+          * add wait block to disp. obj. wait list
+          * Use FIFO for all waits except for queues which use LIFO
+          */
+         if (WaitReason == WrQueue)
+         {
+            InsertHeadList(&hdr->WaitListHead, &blk->WaitListEntry);
+         }
+         else
+         {
+            InsertTailList(&hdr->WaitListHead, &blk->WaitListEntry);
+         }
 
          blk = blk->NextWaitBlock;
       }
@@ -605,7 +617,26 @@ KeWaitForMultipleObjects(ULONG Count,
                         &CurrentThread->WaitBlock[3].WaitListEntry);
       }
 
-      PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql);
+      //io completion
+      if (CurrentThread->Queue)
+      {
+         CurrentThread->Queue->RunningThreads--;   
+         if (WaitReason != WrQueue && CurrentThread->Queue->RunningThreads < CurrentThread->Queue->MaximumThreads &&
+             !IsListEmpty(&CurrentThread->Queue->EntryListHead))
+         {
+            KeDispatcherObjectWake(&CurrentThread->Queue->Header);
+         }
+      }
+
+      PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql, WaitReason);
+
+      //io completion
+      if (CurrentThread->Queue)
+      {
+         CurrentThread->Queue->RunningThreads++;
+      }
+
+
    }
    while (Status == STATUS_KERNEL_APC);
 
