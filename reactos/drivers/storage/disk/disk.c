@@ -1,8 +1,8 @@
-/* $Id: disk.c,v 1.2 2002/01/14 01:44:03 ekohl Exp $
+/* $Id: disk.c,v 1.3 2002/01/27 01:25:15 ekohl Exp $
  *
  */
 
-//  -------------------------------------------------------------------------
+/* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 
@@ -10,14 +10,17 @@
 #include "../include/class2.h"
 #include "../include/ntddscsi.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define VERSION "V0.0.1"
 
 
-//static NTSTATUS
-//DiskCreateDevices(VOID);
+typedef struct _DISK_DEVICE_EXTENSION
+{
+  ULONG Dummy;
+} DISK_DEVICE_EXTENSION, *PDISK_DEVICE_EXTENSION;
+
 
 
 BOOLEAN STDCALL
@@ -27,6 +30,19 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 		     PDEVICE_OBJECT PortDeviceObject,
 		     ULONG PortNumber);
 
+BOOLEAN STDCALL
+DiskClassCheckDevice(IN PINQUIRYDATA InquiryData);
+
+
+static NTSTATUS
+DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
+			    IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			    IN PDEVICE_OBJECT PortDeviceObject,
+			    IN ULONG PortNumber,
+			    IN ULONG DiskNumber,
+			    IN PIO_SCSI_CAPABILITIES Capabilities, /* what's this used for? */
+			    IN PSCSI_INQUIRY_DATA InquiryData,
+			    IN PCLASS_INIT_DATA InitializationData);
 
 NTSTATUS STDCALL
 DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
@@ -38,6 +54,7 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 
 
+/* FUNCTIONS ****************************************************************/
 
 //    DriverEntry
 //
@@ -64,16 +81,22 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
   CLASS_INIT_DATA InitData;
 
-  DbgPrint("Disk Class Driver %s\n", VERSION);
+  DbgPrint("Disk Class Driver %s\n",
+	   VERSION);
+  DPRINT("RegistryPath '%wZ'\n",
+	 RegistryPath);
+
+  RtlZeroMemory(&InitData,
+		sizeof(CLASS_INIT_DATA));
 
   InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
-  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION);	// + sizeof(DISK_DATA)
+  InitData.DeviceExtensionSize = sizeof(DISK_DEVICE_EXTENSION);
   InitData.DeviceType = FILE_DEVICE_DISK;
   InitData.DeviceCharacteristics = 0;
 
   InitData.ClassError = NULL;				// DiskClassProcessError;
-  InitData.ClassReadWriteVerification = NULL;		// DiskClassReadWriteVerification;
-  InitData.ClassFindDeviceCallBack = NULL;		// DiskClassDeviceVerification;
+  InitData.ClassReadWriteVerification = NULL;		// DiskClassReadWriteCheck;
+  InitData.ClassFindDeviceCallBack = DiskClassCheckDevice;
   InitData.ClassFindDevices = DiskClassFindDevices;
   InitData.ClassDeviceControl = DiskClassDeviceControl;
   InitData.ClassShutdownFlush = DiskClassShutdownFlush;
@@ -86,25 +109,37 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 }
 
 
-//    DiskClassFindDevices
-//
-//  DESCRIPTION:
-//    This function searches for device that are attached to the given scsi port.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT   DriverObject        System allocated Driver Object for this driver
-//    IN  PUNICODE_STRING  RegistryPath        Name of registry driver service key
-//    IN  PCLASS_INIT_DATA InitializationData  Pointer to the main initialization data
-//    IN PDEVICE_OBJECT    PortDeviceObject    Scsi port device object
-//    IN ULONG             PortNumber          Port number
-//
-//  RETURNS:
-//    TRUE: At least one disk drive was found
-//    FALSE: No disk drive found
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassFindDevices
+ *
+ * DESCRIPTION
+ *	This function searches for device that are attached to the
+ *	given scsi port.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DriverObject
+ *		System allocated Driver Object for this driver
+ *
+ *	RegistryPath
+ *		Name of registry driver service key
+ *
+ *	InitializationData
+ *		Pointer to the main initialization data
+ *
+ *	PortDeviceObject
+ *		Pointer to the port Device Object
+ *
+ *	PortNumber
+ *		Port number
+ *
+ * RETURN VALUE
+ *	TRUE: At least one disk drive was found
+ *	FALSE: No disk drive found
+ */
 
 BOOLEAN STDCALL
 DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
@@ -113,12 +148,16 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 		     PDEVICE_OBJECT PortDeviceObject,
 		     ULONG PortNumber)
 {
-  PIO_SCSI_CAPABILITIES PortCapabilities = NULL;
+  PCONFIGURATION_INFORMATION ConfigInfo;
+  PIO_SCSI_CAPABILITIES PortCapabilities;
   PSCSI_ADAPTER_BUS_INFO AdapterBusInfo;
+  PSCSI_INQUIRY_DATA UnitInfo;
+  PINQUIRYDATA InquiryData;
   PCHAR Buffer;
+  ULONG Bus;
   ULONG DeviceCount;
+  BOOLEAN FoundDevice;
   NTSTATUS Status;
-//  PCONFIGURATION_INFORMATION ConfigInfo;
 
   DPRINT1("DiskClassFindDevices() called.\n");
 
@@ -131,160 +170,282 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
-//  DPRINT1("MaximumTransferLength: %lu\n", Capabilities.MaximumTransferLength);
+  DPRINT1("MaximumTransferLength: %lu\n", PortCapabilities->MaximumTransferLength);
 
   /* Get inquiry data */
   Status = ScsiClassGetInquiryData(PortDeviceObject,
 				   (PSCSI_ADAPTER_BUS_INFO *)&Buffer);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ScsiClassGetInquiryData() failed! (Status 0x%lX)\n", Status);
+      DPRINT("ScsiClassGetInquiryData() failed! (Status %x)\n", Status);
       return(FALSE);
     }
 
-  /* Get number of unclaimed devices */
+  /* Check whether there are unclaimed devices */
   AdapterBusInfo = (PSCSI_ADAPTER_BUS_INFO)Buffer;
   DeviceCount = ScsiClassFindUnclaimedDevices(InitializationData,
 					      AdapterBusInfo);
   if (DeviceCount == 0)
     {
-      DPRINT("ScsiClassFindUnclaimedDevices() returned 0!");
+      DPRINT1("No unclaimed devices!\n");
       return(FALSE);
     }
 
-//  ConfigInfo = IoGetConfigurationInformation();
-//  DPRINT1("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
+  DPRINT1("Found %lu unclaimed devices!\n", DeviceCount);
 
+  ConfigInfo = IoGetConfigurationInformation();
 
+  /* Search each bus of this adapter */
+  for (Bus = 0; Bus < (ULONG)AdapterBusInfo->NumberOfBuses; Bus++)
+    {
+      DPRINT("Searching bus %lu\n", Bus);
 
+      UnitInfo = (PSCSI_INQUIRY_DATA)(Buffer + AdapterBusInfo->BusData[Bus].InquiryDataOffset);
+
+      while (AdapterBusInfo->BusData[Bus].InquiryDataOffset)
+	{
+	  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
+
+	  if (((InquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ||
+	       (InquiryData->DeviceType == OPTICAL_DEVICE)) &&
+	      (InquiryData->DeviceTypeQualifier == 0) &&
+	      (UnitInfo->DeviceClaimed == FALSE))
+	    {
+	      DPRINT1("Vendor: '%.24s'\n",
+		     InquiryData->VendorId);
+
+	      /* Create device objects for disk */
+	      Status = DiskClassCreateDeviceObject(DriverObject,
+						   RegistryPath,
+						   PortDeviceObject,
+						   PortNumber,
+						   ConfigInfo->DiskCount,
+						   PortCapabilities,
+						   UnitInfo,
+						   InitializationData);
+	      if (NT_SUCCESS(Status))
+		{
+		  ConfigInfo->DiskCount++;
+		  FoundDevice = TRUE;
+		}
+	    }
+
+	  if (UnitInfo->NextInquiryDataOffset == 0)
+	    break;
+
+	  UnitInfo = (PSCSI_INQUIRY_DATA)(Buffer + UnitInfo->NextInquiryDataOffset);
+	}
+    }
 
   ExFreePool(Buffer);
+  ExFreePool(PortCapabilities);
 
-  return(TRUE);
+  DPRINT1("DiskClassFindDevices() done\n");
+
+  return(FoundDevice);
 }
 
 
-//    IDECreateDevice
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassCheckDevice
+ *
+ * DESCRIPTION
+ *	This function checks the InquiryData for the correct device
+ *	type and qualifier.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	InquiryData
+ *		Pointer to the inquiry data for the device in question.
+ *
+ * RETURN VALUE
+ *	TRUE: A disk device was found.
+ *	FALSE: Otherwise.
+ */
+
+BOOLEAN STDCALL
+DiskClassCheckDevice(IN PINQUIRYDATA InquiryData)
+{
+  return((InquiryData->DeviceType == DIRECT_ACCESS_DEVICE ||
+	  InquiryData->DeviceType == OPTICAL_DEVICE) &&
+	 InquiryData->DeviceTypeQualifier == 0);
+}
+
+
+
+//    IDECreateDevices
 //
 //  DESCRIPTION:
-//    Creates a device by calling IoCreateDevice and a symbolic link for Win32
+//    Create the raw device and any partition devices on this drive
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
 //
 //  ARGUMENTS:
-//    IN   PDRIVER_OBJECT      DriverObject      The system supplied driver object
-//    OUT  PDEVICE_OBJECT     *DeviceObject      The created device object
-//    IN   PCONTROLLER_OBJECT  ControllerObject  The Controller for the device
-//    IN   BOOLEAN             LBASupported      Does the drive support LBA addressing?
-//    IN   BOOLEAN             DMASupported      Does the drive support DMA?
-//    IN   int                 SectorsPerLogCyl  Sectors per cylinder
-//    IN   int                 SectorsPerLogTrk  Sectors per track
-//    IN   DWORD               Offset            First valid sector for this device
-//    IN   DWORD               Size              Count of valid sectors for this device
+//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
+//    IN  PCONTROLLER_OBJECT         ControllerObject
+//    IN  PIDE_CONTROLLER_EXTENSION  ControllerExtension
+//                                      The IDE controller extension for
+//                                      this device
+//    IN  int             DriveIdx      The index of the drive on this
+//                                      controller
+//    IN  int             HarddiskIdx   The NT device number for this
+//                                      drive
 //
 //  RETURNS:
-//    NTSTATUS
+//    TRUE   Drive exists and devices were created
+//    FALSE  no devices were created for this device
 //
-#if 0
-NTSTATUS
-IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
-                OUT PDEVICE_OBJECT *DeviceObject,
-                IN PCONTROLLER_OBJECT ControllerObject,
-                IN int UnitNumber,
-                IN ULONG DiskNumber,
-                IN ULONG PartitionNumber,
-                IN PIDE_DRIVE_IDENTIFY DrvParms,
-                IN DWORD Offset,
-                IN DWORD Size)
+
+static NTSTATUS
+DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
+			    IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			    IN PDEVICE_OBJECT PortDeviceObject,
+			    IN ULONG PortNumber,
+			    IN ULONG DiskNumber,
+			    IN PIO_SCSI_CAPABILITIES Capabilities, /* what's this used for? */
+			    IN PSCSI_INQUIRY_DATA InquiryData,
+			    IN PCLASS_INIT_DATA InitializationData) /* what's this used for? */
 {
-  WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
-  UNICODE_STRING         DeviceName;
-  UNICODE_STRING         ArcName;
-  NTSTATUS               RC;
-  PIDE_DEVICE_EXTENSION  DeviceExtension;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING UnicodeDeviceDirName;
+  WCHAR NameBuffer[80];
+  CHAR NameBuffer2[80];
+  PDEVICE_OBJECT DiskDeviceObject;
+  HANDLE Handle;
 
-    // Create a unicode device name
-  swprintf(NameBuffer,
-           L"\\Device\\Harddisk%d\\Partition%d",
-           DiskNumber,
-           PartitionNumber);
-  RtlInitUnicodeString(&DeviceName,
-                       NameBuffer);
-
-    // Create the device
-  RC = IoCreateDevice(DriverObject, sizeof(IDE_DEVICE_EXTENSION),
-      &DeviceName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
-  if (!NT_SUCCESS(RC))
-    {
-      DPRINT("IoCreateDevice call failed\n",0);
-      return RC;
-    }
-
-    //  Set the buffering strategy here...
-  (*DeviceObject)->Flags |= DO_DIRECT_IO;
-  (*DeviceObject)->AlignmentRequirement = FILE_WORD_ALIGNMENT;
-
-    //  Fill out Device extension data
-  DeviceExtension = (PIDE_DEVICE_EXTENSION) (*DeviceObject)->DeviceExtension;
-  DeviceExtension->DeviceObject = (*DeviceObject);
-  DeviceExtension->ControllerObject = ControllerObject;
-  DeviceExtension->UnitNumber = UnitNumber;
-  DeviceExtension->LBASupported = 
-    (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
-  DeviceExtension->DMASupported = 
-    (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
-    // FIXME: deal with bizarre sector sizes
-  DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
-  DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads *
-      DrvParms->SectorsPerTrack;
-  DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
-  DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
-  DeviceExtension->Offset = Offset;
-  DeviceExtension->Size = Size;
-  DPRINT("%wZ: offset %d size %d \n",
-         &DeviceName,
-         DeviceExtension->Offset,
-         DeviceExtension->Size);
-
-    //  Initialize the DPC object here
-  IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
-
-  if (PartitionNumber != 0)
-    {
-      DbgPrint("%wZ %dMB\n", &DeviceName, Size / 2048);
-    }
-
-  /* assign arc name */
-  if (PartitionNumber == 0)
-    {
-      swprintf(ArcNameBuffer,
-               L"\\ArcName\\multi(0)disk(0)rdisk(%d)",
-               DiskNumber);
-    }
-  else
-    {
-      swprintf(ArcNameBuffer,
-               L"\\ArcName\\multi(0)disk(0)rdisk(%d)partition(%d)",
-               DiskNumber,
-               PartitionNumber);
-    }
-  RtlInitUnicodeString (&ArcName,
-                        ArcNameBuffer);
-  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-  RC = IoAssignArcName (&ArcName,
-                        &DeviceName);
-  if (!NT_SUCCESS(RC))
-    {
-      DPRINT("IoAssignArcName (%wZ) failed (Status %x)\n",
-             &ArcName, RC);
-    }
-
-
-  return  RC;
-}
+#if 0
+  IDE_DRIVE_IDENTIFY     DrvParms;
+  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
+  PDEVICE_OBJECT PartitionDeviceObject;
+  PIDE_DEVICE_EXTENSION  PartitionDeviceExtension;
+  ULONG                  SectorCount = 0;
+  PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
+  PPARTITION_INFORMATION PartitionEntry;
 #endif
+  ULONG i;
+  NTSTATUS Status;
+
+  DPRINT1("DiskClassCreateDeviceObjects() called\n");
+
+  /* Create the harddisk device directory */
+  swprintf(NameBuffer,
+	   L"\\Device\\Harddisk%d",
+	   DiskNumber);
+  RtlInitUnicodeString(&UnicodeDeviceDirName,
+		       NameBuffer);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &UnicodeDeviceDirName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = ZwCreateDirectoryObject(&Handle,
+				   0,
+				   &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Could not create device dir object\n");
+      return(Status);
+    }
+
+  /* Claim the disk device */
+  Status = ScsiClassClaimDevice(PortDeviceObject,
+				InquiryData,
+				FALSE,
+				&PortDeviceObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Could not claim disk device\n");
+
+      ZwMakeTemporaryObject(Handle);
+      ZwClose(Handle);
+
+      return(Status);
+    }
+
+  /* Create disk device (Partition 0) */
+  sprintf(NameBuffer2,
+	  "\\Device\\Harddisk%d\\Partition0",
+	  DiskNumber);
+
+  Status = ScsiClassCreateDeviceObject(DriverObject,
+				       NameBuffer2,
+				       NULL,
+				       &DiskDeviceObject,
+				       InitializationData);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
+
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+      ZwMakeTemporaryObject(Handle);
+      ZwClose(Handle);
+
+      return(Status);
+    }
+
+
+#if 0
+  /* Read partition table */
+  Status = IoReadPartitionTable(DiskDeviceObject,
+                                DrvParms.BytesPerSector,
+                                TRUE,
+                                &PartitionList);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("IoReadPartitionTable() failed\n");
+      return FALSE;
+    }
+
+  DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
+  for (i=0;i < PartitionList->PartitionCount; i++)
+    {
+      PartitionEntry = &PartitionList->PartitionEntry[i];
+
+      DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
+             i,
+             PartitionEntry->PartitionNumber,
+             PartitionEntry->BootIndicator,
+             PartitionEntry->PartitionType,
+             PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
+             PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+
+      /* Create device for partition */
+      Status = IDECreateDevice(DriverObject,
+                               &PartitionDeviceObject,
+                               ControllerObject,
+                               DriveIdx,
+                               HarddiskIdx,
+                               &DrvParms,
+                               PartitionEntry->PartitionNumber,
+                               PartitionEntry->StartingOffset.QuadPart / 512 /* DrvParms.BytesPerSector*/,
+                               PartitionEntry->PartitionLength.QuadPart / 512 /*DrvParms.BytesPerSector*/);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("IDECreateDevice() failed\n");
+          break;
+        }
+
+      /* Initialize pointer to disk device extension */
+      PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
+      PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
+   }
+
+   if (PartitionList != NULL)
+     ExFreePool(PartitionList);
+#endif
+
+  DPRINT1("DiskClassCreateDeviceObjects() done\n");
+
+  return(STATUS_SUCCESS);
+}
+
 
 
 

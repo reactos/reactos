@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.2 2002/01/14 01:44:19 ekohl Exp $
+/* $Id: srb.h,v 1.3 2002/01/27 01:25:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,8 @@ typedef struct _PORT_CONFIGURATION_INFORMATION
   DMA_SPEED DmaSpeed;
   ULONG AlignmentMask;
   ULONG NumberOfAccessRanges;
-  ACCESS_RANGE (*AccessRanges)[];
+//  ACCESS_RANGE (*AccessRanges)[];
+  PACCESS_RANGE AccessRanges;
   PVOID Reserved;
   UCHAR NumberOfBuses;
   CCHAR InitiatorBusId[8];
@@ -336,102 +337,74 @@ ScsiPortConvertUlongToPhysicalAddress(IN ULONG UlongAddress);
 VOID STDCALL
 ScsiPortFlushDma(IN PVOID HwDeviceExtension);
 
-VOID
-STDCALL
-ScsiPortFreeDeviceBase (
-	IN	PVOID	HwDeviceExtension,
-	IN	PVOID	MappedAddress
-	);
-
-ULONG
-STDCALL
-ScsiPortGetBusData (
-	IN	PVOID	DeviceExtension,
-	IN	ULONG	BusDataType,
-	IN	ULONG	SystemIoBusNumber,
-	IN	ULONG	SlotNumber,
-	IN	PVOID	Buffer,
-	IN	ULONG	Length
-	);
-
-PVOID
-STDCALL
-ScsiPortGetDeviceBase (
-	IN	PVOID			HwDeviceExtension,
-	IN	INTERFACE_TYPE		BusType,
-	IN	ULONG			SystemIoBusNumber,
-	IN	SCSI_PHYSICAL_ADDRESS	IoAddress,
-	IN	ULONG			NumberOfBytes,
-	IN	BOOLEAN			InIoSpace
-	);
-
-PVOID
-STDCALL
-ScsiPortGetLogicalUnit (
-	IN	PVOID	HwDeviceExtension,
-	IN	UCHAR	PathId,
-	IN	UCHAR	TargetId,
-	IN	UCHAR	Lun
-	);
-
-SCSI_PHYSICAL_ADDRESS
-STDCALL
-ScsiPortGetPhysicalAddress (
-	IN	PVOID			HwDeviceExtension,
-	IN	PSCSI_REQUEST_BLOCK	Srb OPTIONAL,
-	IN	PVOID			VirtualAddress,
-	OUT	PULONG			Length
-	);
-
-PSCSI_REQUEST_BLOCK
-STDCALL
-ScsiPortGetSrb (
-	IN	PVOID	DeviceExtension,
-	IN	UCHAR	PathId,
-	IN	UCHAR	TargetId,
-	IN	UCHAR	Lun,
-	IN	LONG	QueueTag
-	);
-
-PVOID STDCALL
-ScsiPortGetUncachedExtension (
-	IN	PVOID				HwDeviceExtension,
-	IN	PPORT_CONFIGURATION_INFORMATION	ConfigInfo,
-	IN	ULONG				NumberOfBytes
-	);
-
-PVOID STDCALL
-ScsiPortGetVirtualAddress (
-	IN	PVOID			HwDeviceExtension,
-	IN	SCSI_PHYSICAL_ADDRESS	PhysicalAddress
-	);
+VOID STDCALL
+ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
+		       IN PVOID MappedAddress);
 
 ULONG STDCALL
-ScsiPortInitialize (
-	IN	PVOID				Argument1,
-	IN	PVOID				Argument2,
-	IN	struct _HW_INITIALIZATION_DATA	*HwInitializationData,
-	IN	PVOID				HwContext
-	);
+ScsiPortGetBusData(IN PVOID DeviceExtension,
+		   IN ULONG BusDataType,
+		   IN ULONG SystemIoBusNumber,
+		   IN ULONG SlotNumber,
+		   IN PVOID Buffer,
+		   IN ULONG Length);
+
+PVOID STDCALL
+ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
+		      IN INTERFACE_TYPE BusType,
+		      IN ULONG SystemIoBusNumber,
+		      IN SCSI_PHYSICAL_ADDRESS IoAddress,
+		      IN ULONG NumberOfBytes,
+		      IN BOOLEAN InIoSpace);
+
+PVOID STDCALL
+ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
+		       IN UCHAR PathId,
+		       IN UCHAR TargetId,
+		       IN UCHAR Lun);
+
+SCSI_PHYSICAL_ADDRESS STDCALL
+ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
+			   IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
+			   IN PVOID VirtualAddress,
+			   OUT PULONG Length);
+
+PSCSI_REQUEST_BLOCK STDCALL
+ScsiPortGetSrb(IN PVOID DeviceExtension,
+	       IN UCHAR PathId,
+	       IN UCHAR TargetId,
+	       IN UCHAR Lun,
+	       IN LONG QueueTag);
+
+PVOID STDCALL
+ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
+			     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+			     IN ULONG NumberOfBytes);
+
+PVOID STDCALL
+ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
+			  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress);
+
+ULONG STDCALL
+ScsiPortInitialize(IN PVOID Argument1,
+		   IN PVOID Argument2,
+		   IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
+		   IN PVOID HwContext);
 
 VOID STDCALL
-ScsiPortIoMapTransfer (
-	IN	PVOID			HwDeviceExtension,
-	IN	PSCSI_REQUEST_BLOCK	Srb,
-	IN	ULONG			LogicalAddress,
-	IN	ULONG			Length
-	);
+ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
+		      IN PSCSI_REQUEST_BLOCK Srb,
+		      IN ULONG LogicalAddress,
+		      IN ULONG Length);
 
 VOID STDCALL
-ScsiPortLogError (
-	IN	PVOID			HwDeviceExtension,
-	IN	PSCSI_REQUEST_BLOCK	Srb OPTIONAL,
-	IN	UCHAR			PathId,
-	IN	UCHAR			TargetId,
-	IN	UCHAR			Lun,
-	IN	ULONG			ErrorCode,
-	IN	ULONG			UniqueId
-	);
+ScsiPortLogError(IN PVOID HwDeviceExtension,
+		 IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
+		 IN UCHAR PathId,
+		 IN UCHAR TargetId,
+		 IN UCHAR Lun,
+		 IN ULONG ErrorCode,
+		 IN ULONG UniqueId);
 
 VOID STDCALL
 ScsiPortMoveMemory(OUT PVOID Destination,

@@ -1,4 +1,4 @@
-/* $Id: scsi.h,v 1.2 2002/01/14 01:44:18 ekohl Exp $
+/* $Id: scsi.h,v 1.3 2002/01/27 01:25:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,175 +10,157 @@
 #ifndef __STORAGE_INCLUDE_SCSI_H
 #define __STORAGE_INCLUDE_SCSI_H
 
-//
-// Command Descriptor Block. Passed by SCSI controller chip over the SCSI bus
-//
 
-typedef union _CDB {
+/* Command Descriptor Block */
 
-    //
-    // Generic 6-Byte CDB
-    //
-
-    struct _CDB6GENERIC {
-       UCHAR  OperationCode;
-       UCHAR  Immediate : 1;
-       UCHAR  CommandUniqueBits : 4;
-       UCHAR  LogicalUnitNumber : 3;
-       UCHAR  CommandUniqueBytes[3];
-       UCHAR  Link : 1;
-       UCHAR  Flag : 1;
-       UCHAR  Reserved : 4;
-       UCHAR  VendorUnique : 2;
+typedef union _CDB
+{
+  /* Generic 6-Byte CDB */
+  struct _CDB6GENERIC
+    {
+      UCHAR OperationCode;
+      UCHAR Immediate:1;
+      UCHAR CommandUniqueBits:4;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR CommandUniqueBytes[3];
+      UCHAR Link:1;
+      UCHAR Flag:1;
+      UCHAR Reserved:4;
+      UCHAR VendorUnique:2;
     } CDB6GENERIC, *PCDB6GENERIC;
 
-    //
-    // Standard 6-byte CDB
-    //
-
-    struct _CDB6READWRITE {
-        UCHAR OperationCode;
-        UCHAR LogicalBlockMsb1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR LogicalBlockMsb0;
-        UCHAR LogicalBlockLsb;
-        UCHAR TransferBlocks;
-        UCHAR Control;
+  /* Standard 6-byte CDB */
+  struct _CDB6READWRITE
+    {
+      UCHAR OperationCode;
+      UCHAR LogicalBlockMsb1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR LogicalBlockMsb0;
+      UCHAR LogicalBlockLsb;
+      UCHAR TransferBlocks;
+      UCHAR Control;
     } CDB6READWRITE, *PCDB6READWRITE;
 
-
-    //
-    // SCSI Inquiry CDB
-    //
-
-    struct _CDB6INQUIRY {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR PageCode;
-        UCHAR IReserved;
-        UCHAR AllocationLength;
-        UCHAR Control;
+  /* SCSI Inquiry CDB */
+  struct _CDB6INQUIRY
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR PageCode;
+      UCHAR IReserved;
+      UCHAR AllocationLength;
+      UCHAR Control;
     } CDB6INQUIRY, *PCDB6INQUIRY;
 
-    //
-    // SCSI Format CDB
-    //
-
-    struct _CDB6FORMAT {
-        UCHAR OperationCode;
-        UCHAR FormatControl : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR FReserved1;
-        UCHAR InterleaveMsb;
-        UCHAR InterleaveLsb;
-        UCHAR FReserved2;
+  /* SCSI Format CDB */
+  struct _CDB6FORMAT
+    {
+      UCHAR OperationCode;
+      UCHAR FormatControl:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR FReserved1;
+      UCHAR InterleaveMsb;
+      UCHAR InterleaveLsb;
+      UCHAR FReserved2;
     } CDB6FORMAT, *PCDB6FORMAT;
 
-    //
-    // Standard 10-byte CDB
-
-    struct _CDB10 {
-        UCHAR OperationCode;
-        UCHAR RelativeAddress : 1;
-        UCHAR Reserved1 : 2;
-        UCHAR ForceUnitAccess : 1;
-        UCHAR DisablePageOut : 1;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR LogicalBlockByte0;
-        UCHAR LogicalBlockByte1;
-        UCHAR LogicalBlockByte2;
-        UCHAR LogicalBlockByte3;
-        UCHAR Reserved2;
-        UCHAR TransferBlocksMsb;
-        UCHAR TransferBlocksLsb;
-        UCHAR Control;
+  /* Standard 10-byte CDB */
+  struct _CDB10
+    {
+      UCHAR OperationCode;
+      UCHAR RelativeAddress:1;
+      UCHAR Reserved1:2;
+      UCHAR ForceUnitAccess:1;
+      UCHAR DisablePageOut:1;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR LogicalBlockByte0;
+      UCHAR LogicalBlockByte1;
+      UCHAR LogicalBlockByte2;
+      UCHAR LogicalBlockByte3;
+      UCHAR Reserved2;
+      UCHAR TransferBlocksMsb;
+      UCHAR TransferBlocksLsb;
+      UCHAR Control;
     } CDB10, *PCDB10;
 
-    //
-    // CD Rom Audio CDBs
-    //
-
-    struct _PAUSE_RESUME {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[6];
-        UCHAR Action;
-        UCHAR Control;
+  /* CD Rom Audio CDBs */
+  struct _PAUSE_RESUME
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[6];
+      UCHAR Action;
+      UCHAR Control;
     } PAUSE_RESUME, *PPAUSE_RESUME;
 
-    //
-    // Read Table of Contents
-    //
-
-    struct _READ_TOC {
-        UCHAR OperationCode;
-        UCHAR Reserved0 : 1;
-        UCHAR Msf : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2[4];
-        UCHAR StartingTrack;
-        UCHAR AllocationLength[2];
-        UCHAR Control : 6;
-        UCHAR Format : 2;
+  /* Read Table of Contents */
+  struct _READ_TOC
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved0:1;
+      UCHAR Msf:1;
+      UCHAR Reserved1:3;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2[4];
+      UCHAR StartingTrack;
+      UCHAR AllocationLength[2];
+      UCHAR Control:6;
+      UCHAR Format:2;
     } READ_TOC, *PREAD_TOC;
 
-    struct _PLAY_AUDIO_MSF {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 5;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2;
-        UCHAR StartingM;
-        UCHAR StartingS;
-        UCHAR StartingF;
-        UCHAR EndingM;
-        UCHAR EndingS;
-        UCHAR EndingF;
-        UCHAR Control;
+  struct _PLAY_AUDIO_MSF
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1:5;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2;
+      UCHAR StartingM;
+      UCHAR StartingS;
+      UCHAR StartingF;
+      UCHAR EndingM;
+      UCHAR EndingS;
+      UCHAR EndingF;
+      UCHAR Control;
     } PLAY_AUDIO_MSF, *PPLAY_AUDIO_MSF;
 
-    //
-    // Read SubChannel Data
-    //
-
-    struct _SUBCHANNEL {
-        UCHAR OperationCode;
-        UCHAR Reserved0 : 1;
-        UCHAR Msf : 1;
-        UCHAR Reserved1 : 3;
-        UCHAR LogicalUnitNumber : 3;
-        UCHAR Reserved2 : 6;
-        UCHAR SubQ : 1;
-        UCHAR Reserved3 : 1;
-        UCHAR Format;
-        UCHAR Reserved4[2];
-        UCHAR TrackNumber;
-        UCHAR AllocationLength[2];
-        UCHAR Control;
+  /* Read SubChannel Data */
+  struct _SUBCHANNEL
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved0:1;
+      UCHAR Msf:1;
+      UCHAR Reserved1:3;
+      UCHAR LogicalUnitNumber:3;
+      UCHAR Reserved2:6;
+      UCHAR SubQ:1;
+      UCHAR Reserved3:1;
+      UCHAR Format;
+      UCHAR Reserved4[2];
+      UCHAR TrackNumber;
+      UCHAR AllocationLength[2];
+      UCHAR Control;
     } SUBCHANNEL, *PSUBCHANNEL;
 
-    //
-    // Read CD. Used by Atapi for raw sector reads.
-    //
-
-    struct _READ_CD {
-        UCHAR OperationCode;
-        UCHAR Reserved0 : 2;
-        UCHAR ExpectedSectorType : 3;
-        UCHAR Reserved1 : 3;
-        UCHAR StartingLBA[4];
-        UCHAR TransferBlocks[3];
-        UCHAR Reserved2 : 1;
-        UCHAR ErrorFlags : 2;
-        UCHAR IncludeEDC : 1;
-        UCHAR IncludeUserData : 1;
-        UCHAR HeaderCode : 2;
-        UCHAR IncludeSyncData : 1;
-        UCHAR SubChannelSelection : 3;
-        UCHAR Reserved3 : 5;
-        UCHAR Reserved4;
+  /* Read CD. Used by Atapi for raw sector reads. */
+  struct _READ_CD
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved0 : 2;
+      UCHAR ExpectedSectorType : 3;
+      UCHAR Reserved1 : 3;
+      UCHAR StartingLBA[4];
+      UCHAR TransferBlocks[3];
+      UCHAR Reserved2 : 1;
+      UCHAR ErrorFlags : 2;
+      UCHAR IncludeEDC : 1;
+      UCHAR IncludeUserData : 1;
+      UCHAR HeaderCode : 2;
+      UCHAR IncludeSyncData : 1;
+      UCHAR SubChannelSelection : 3;
+      UCHAR Reserved3 : 5;
+      UCHAR Reserved4;
     } READ_CD, *PREAD_CD;
 
     //
@@ -320,7 +302,7 @@ typedef union _CDB {
         UCHAR Control;
     } SEEK, *PSEEK;
 
-    struct _ERASE {
+  struct _ERASE {
         UCHAR OperationCode;
         UCHAR Long : 1;
         UCHAR Immediate : 1;
@@ -330,7 +312,8 @@ typedef union _CDB {
         UCHAR Control;
     } ERASE, *PERASE;
 
-    struct _START_STOP {
+  struct _START_STOP
+      {
         UCHAR OperationCode;
         UCHAR Immediate: 1;
         UCHAR Reserved1 : 4;
@@ -342,7 +325,7 @@ typedef union _CDB {
         UCHAR Control;
     } START_STOP, *PSTART_STOP;
 
-    struct _MEDIA_REMOVAL {
+  struct _MEDIA_REMOVAL {
         UCHAR OperationCode;
         UCHAR Reserved1 : 5;
         UCHAR LogicalUnitNumber : 3;
@@ -461,29 +444,25 @@ typedef union _CDB {
         UCHAR Reserved5[3];
     } LOAD_UNLOAD, *PLOAD_UNLOAD;
 
-    struct _MECH_STATUS {
-        UCHAR OperationCode;
-        UCHAR Reserved1[7];
-        UCHAR AllocationLength[2];
-        UCHAR Reserved2[2];
+  struct _MECH_STATUS
+    {
+      UCHAR OperationCode;
+      UCHAR Reserved1[7];
+      UCHAR AllocationLength[2];
+      UCHAR Reserved2[2];
     } MECH_STATUS, *PMECH_STATUS;
-
 } CDB, *PCDB;
 
-//
-// Command Descriptor Block constants.
-//
 
+/* Command Descriptor Block constants */
 #define CDB6GENERIC_LENGTH                   6
 #define CDB10GENERIC_LENGTH                  10
 #define CDB12GENERIC_LENGTH                  12
 
 #define SETBITON                             1
 #define SETBITOFF                            0
-//
-// Mode Sense/Select page constants.
-//
 
+/* Mode Sense/Select page constants */
 #define MODE_PAGE_ERROR_RECOVERY        0x01
 #define MODE_PAGE_DISCONNECT            0x02
 #define MODE_PAGE_FORMAT_DEVICE         0x03
@@ -863,10 +842,7 @@ typedef struct _SENSE_DATA
 #define SCSI_SENSEQ_END_OF_MEDIA_DETECTED 0x02
 #define SCSI_SENSEQ_BEGINNING_OF_MEDIA_DETECTED 0x04
 
-
-//
-// SCSI IO Device Control Codes
-//
+/* SCSI IO Device Control Codes */
 
 #define FILE_DEVICE_SCSI 0x0000001b
 
@@ -874,9 +850,7 @@ typedef struct _SENSE_DATA
 #define IOCTL_SCSI_EXECUTE_OUT  ((FILE_DEVICE_SCSI << 16) + 0x0012)
 #define IOCTL_SCSI_EXECUTE_NONE ((FILE_DEVICE_SCSI << 16) + 0x0013)
 
-//
-// SMART support in atapi
-//
+/* SMART support in atapi */
 
 #define IOCTL_SCSI_MINIPORT_SMART_VERSION           ((FILE_DEVICE_SCSI << 16) + 0x0500)
 #define IOCTL_SCSI_MINIPORT_IDENTIFY                ((FILE_DEVICE_SCSI << 16) + 0x0501)
@@ -893,8 +867,9 @@ typedef struct _SENSE_DATA
 // Read Capacity Data - returned in Big Endian format
 //
 
-typedef struct _READ_CAPACITY_DATA {
-    ULONG LogicalBlockAddress;
+typedef struct _READ_CAPACITY_DATA
+{
+  ULONG LogicalBlockAddress;
     ULONG BytesPerBlock;
 } READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
 
@@ -952,23 +927,22 @@ typedef struct _MODE_PARAMETER_BLOCK {
     UCHAR BlockLength[3];
 }MODE_PARAMETER_BLOCK, *PMODE_PARAMETER_BLOCK;
 
-//
-// Define Disconnect-Reconnect page.
-//
 
-typedef struct _MODE_DISCONNECT_PAGE {
-    UCHAR PageCode : 6;
-    UCHAR Reserved : 1;
-    UCHAR PageSavable : 1;
-    UCHAR PageLength;
-    UCHAR BufferFullRatio;
-    UCHAR BufferEmptyRatio;
-    UCHAR BusInactivityLimit[2];
-    UCHAR BusDisconnectTime[2];
-    UCHAR BusConnectTime[2];
-    UCHAR MaximumBurstSize[2];
-    UCHAR DataTransferDisconnect : 2;
-    UCHAR Reserved2[3];
+/* Define Disconnect-Reconnect page */
+typedef struct _MODE_DISCONNECT_PAGE
+{
+  UCHAR PageCode:6;
+  UCHAR Reserved:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR BufferFullRatio;
+  UCHAR BufferEmptyRatio;
+  UCHAR BusInactivityLimit[2];
+  UCHAR BusDisconnectTime[2];
+  UCHAR BusConnectTime[2];
+  UCHAR MaximumBurstSize[2];
+  UCHAR DataTransferDisconnect:2;
+  UCHAR Reserved2[3];
 }MODE_DISCONNECT_PAGE, *PMODE_DISCONNECT_PAGE;
 
 //
@@ -1212,14 +1186,15 @@ typedef struct _PORT_OUTPUT {
     UCHAR Volume;
 } PORT_OUTPUT, *PPORT_OUTPUT;
 
-typedef struct _AUDIO_OUTPUT {
-    UCHAR CodePage;
-    UCHAR ParameterLength;
-    UCHAR Immediate;
-    UCHAR Reserved[2];
-    UCHAR LbaFormat;
-    UCHAR LogicalBlocksPerSecond[2];
-    PORT_OUTPUT PortOutput[4];
+typedef struct _AUDIO_OUTPUT
+{
+  UCHAR CodePage;
+  UCHAR ParameterLength;
+  UCHAR Immediate;
+  UCHAR Reserved[2];
+  UCHAR LbaFormat;
+  UCHAR LogicalBlocksPerSecond[2];
+  PORT_OUTPUT PortOutput[4];
 } AUDIO_OUTPUT, *PAUDIO_OUTPUT;
 
 //

@@ -55,18 +55,18 @@ extern "C" {
 #define    IDE_DH_HDMASK          0x0F
 #define    IDE_DH_DRV0            0x00
 #define    IDE_DH_DRV1            0x10
-#define  IDE_REG_STATUS         0x0007
-#define    IDE_SR_BUSY            0x80
-#define    IDE_SR_DRDY            0x40
-#define    IDE_SR_DRQ             0x08
-#define    IDE_SR_ERR             0x01
-#define  IDE_REG_COMMAND        0x0007
-#define    IDE_CMD_READ           0x20
-#define    IDE_CMD_READ_RETRY     0x21
-#define    IDE_CMD_WRITE          0x30
-#define    IDE_CMD_WRITE_RETRY    0x31
-#define    IDE_CMD_IDENT_DRV      0xEC
-
+#define  IDE_REG_STATUS           0x0007
+#define    IDE_SR_BUSY              0x80
+#define    IDE_SR_DRDY              0x40
+#define    IDE_SR_DRQ               0x08
+#define    IDE_SR_ERR               0x01
+#define  IDE_REG_COMMAND          0x0007
+#define    IDE_CMD_READ             0x20
+#define    IDE_CMD_READ_RETRY       0x21
+#define    IDE_CMD_WRITE            0x30
+#define    IDE_CMD_WRITE_RETRY      0x31
+#define    IDE_CMD_IDENT_ATA_DRV    0xEC
+#define    IDE_CMD_IDENT_ATAPI_DRV  0xA1
 //
 //  Access macros for command registers
 //  Each macro takes an address of the command port block, and data
@@ -154,46 +154,6 @@ typedef struct _IDE_DEVICE_EXTENSION
 } IDE_DEVICE_EXTENSION, *PIDE_DEVICE_EXTENSION;
 
 
-//    ATAPI_PORT_EXTENSION
-//
-//  DESCRIPTION:
-//    Extension to be placed in each device object
-//
-//  ACCESS:
-//    Allocated from NON-PAGED POOL
-//    Available at any IRQL
-//
-
-typedef struct _ATAPI_PORT_EXTENSION
-{
-   PDEVICE_OBJECT         DeviceObject;
-   PCONTROLLER_OBJECT     ControllerObject;
-   ULONG PortNumber;
-#if 0
-  struct _IDE_DEVICE_EXTESION *DiskExtension;
-  PARTITION_INFORMATION  PartitionInfo;
-  int                    UnitNumber;
-  BOOLEAN                LBASupported;
-  BOOLEAN                DMASupported;
-  int                    BytesPerSector;
-  int                    LogicalHeads;
-  int                    LogicalCylinders;
-  int                    SectorsPerLogCyl;
-  int                    SectorsPerLogTrk;
-  int                    Offset;
-  int                    Size;
-
-  int                    Operation;
-  ULONG                  BytesRequested;
-  ULONG                  BytesToTransfer;
-  ULONG                  BytesRemaining;
-  ULONG                  StartingSector;
-  int                    SectorsTransferred;
-  BYTE                  *TargetAddress;
-#endif
-} ATAPI_PORT_EXTENSION, *PATAPI_PORT_EXTENSION;
-
-
 //    IDE_TIMER_STATES
 //
 //  DESCRIPTION:
@@ -217,7 +177,8 @@ typedef enum _IDE_TIMER_STATES {
 //    Available at any IRQL
 //
 
-typedef struct _IDE_CONTROLLER_EXTENSION {
+typedef struct _IDE_CONTROLLER_EXTENSION
+{
   KSPIN_LOCK             SpinLock;
   int                    Number;
   int                    Vector;
@@ -239,9 +200,12 @@ typedef struct _IDE_CONTROLLER_EXTENSION {
 
 } IDE_CONTROLLER_EXTENSION, *PIDE_CONTROLLER_EXTENSION;
 
+
+
 //    IDE_DRIVE_IDENTIFY
 
-typedef struct _IDE_DRIVE_IDENTIFY {
+typedef struct _IDE_DRIVE_IDENTIFY
+{
   WORD  ConfigBits;          /*00*/
   WORD  LogicalCyls;         /*01*/
   WORD  Reserved02;          /*02*/
@@ -280,7 +244,8 @@ typedef struct _IDE_DRIVE_IDENTIFY {
   WORD  Reserved59;          /*59*/
   WORD  TMSectorCountLo;     /*60*/
   WORD  TMSectorCountHi;     /*61*/
-  WORD  Reserved62[194];     /*62*/
+  WORD  Reserved62[193];     /*62*/
+  WORD  Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 

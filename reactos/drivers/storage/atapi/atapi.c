@@ -1,4 +1,4 @@
-/* $Id: atapi.c,v 1.3 2002/01/14 01:43:02 ekohl Exp $
+/* $Id: atapi.c,v 1.4 2002/01/27 01:24:44 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -25,21 +25,46 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
-#include <debug.h>
-
 #include "../include/srb.h"
+#include "../include/scsi.h"
 #include "../include/ntddscsi.h"
 
 #include "atapi.h"
 #include "partitio.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #define  VERSION  "V0.0.1"
 
 
 //  -------------------------------------------------------  File Static Data
 
-typedef struct _IDE_CONTROLLER_PARAMETERS 
+//    ATAPI_MINIPORT_EXTENSION
+//
+//  DESCRIPTION:
+//    Extension to be placed in each port device object
+//
+//  ACCESS:
+//    Allocated from NON-PAGED POOL
+//    Available at any IRQL
+//
+
+typedef struct _ATAPI_MINIPORT_EXTENSION
+{
+  IDE_DRIVE_IDENTIFY DeviceParms[2];
+  BOOLEAN DevicePresent[2];
+  BOOLEAN DeviceAtapi[2];
+} ATAPI_MINIPORT_EXTENSION, *PATAPI_MINIPORT_EXTENSION;
+
+
+typedef struct _UNIT_EXTENSION
+{
+  ULONG Dummy;
+} UNIT_EXTENSION, *PUNIT_EXTENSION;
+
+
+typedef struct _IDE_CONTROLLER_PARAMETERS
 {
   int              CommandPortBase;
   int              CommandPortSpan;
@@ -76,8 +101,6 @@ static BOOLEAN IDEInitialized = FALSE;
 
 #pragma  alloc_text(init, DriverEntry)
 #pragma  alloc_text(init, IDECreateController)
-#pragma  alloc_text(init, IDECreateDevices)
-#pragma  alloc_text(init, IDECreateDevice)
 #pragma  alloc_text(init, IDEPolledRead)
 
 //  make the PASSIVE_LEVEL routines pageable, so that they don't
@@ -92,64 +115,78 @@ static BOOLEAN IDEInitialized = FALSE;
 
 //  ---------------------------------------------------- Forward Declarations
 
-static NTSTATUS
-AtapiFindControllers(IN PDRIVER_OBJECT DriverObject);
+static ULONG STDCALL
+AtapiFindCompatiblePciController(PVOID DeviceExtension,
+				 PVOID HwContext,
+				 PVOID BusInformation,
+				 PCHAR ArgumentString,
+				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+				 PBOOLEAN Again);
 
-static NTSTATUS
-AtapiCreateController(IN PDRIVER_OBJECT DriverObject,
-		      IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
-		      IN ULONG ControllerIdx);
+static ULONG STDCALL
+AtapiFindIsaBusController(PVOID DeviceExtension,
+			  PVOID HwContext,
+			  PVOID BusInformation,
+			  PCHAR ArgumentString,
+			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+			  PBOOLEAN Again);
 
-static NTSTATUS
-AtapiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
-		      IN PCONTROLLER_OBJECT ControllerObject,
-		      IN ULONG ControllerNumber);
+static ULONG STDCALL
+AtapiFindNativePciController(PVOID DeviceExtension,
+			     PVOID HwContext,
+			     PVOID BusInformation,
+			     PCHAR ArgumentString,
+			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+			     PBOOLEAN Again);
+
+static BOOLEAN STDCALL
+AtapiInitialize(IN PVOID DeviceExtension);
+
+static BOOLEAN STDCALL
+AtapiResetBus(IN PVOID DeviceExtension,
+	      IN ULONG PathId);
+
+static BOOLEAN STDCALL
+AtapiStartIo(IN PVOID DeviceExtension,
+	     IN PSCSI_REQUEST_BLOCK Srb);
+
+static BOOLEAN STDCALL
+AtapiInterrupt(IN PVOID DeviceExtension);
 
 static BOOLEAN
-AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		 PPORT_CONFIGURATION_INFORMATION ConfigInfo);
 
-BOOLEAN
-AtapiIdentifyATAPIDrive(IN int CommandPort,
-                        IN int DriveNum,
-                        OUT PIDE_DRIVE_IDENTIFY DrvParms);
+static BOOLEAN
+AtapiIdentifyATADevice(IN ULONG CommandPort,
+		       IN ULONG DriveNum,
+		       OUT PIDE_DRIVE_IDENTIFY DrvParms);
 
-static BOOLEAN IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
-static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
-                                IN PCONTROLLER_OBJECT ControllerObject,
-                                IN PIDE_CONTROLLER_EXTENSION ControllerExtension,
-                                IN int DriveIdx,
-                                IN int HarddiskIdx);
-static BOOLEAN IDEGetDriveIdentification(IN int CommandPort,
-                                         IN int DriveNum,
-                                         OUT PIDE_DRIVE_IDENTIFY DrvParms);
-static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
-                                OUT PDEVICE_OBJECT *DeviceObject,
-                                IN PCONTROLLER_OBJECT ControllerObject,
-                                IN int UnitNumber,
-                                IN ULONG DiskNumber,
-                                IN PIDE_DRIVE_IDENTIFY DrvParms,
-                                IN ULONG PartitionIdx,
-                                IN ULONGLONG Offset,
-                                IN ULONGLONG Size);
-static int IDEPolledRead(IN WORD Address, 
-                         IN BYTE PreComp, 
-                         IN BYTE SectorCnt, 
-                         IN BYTE SectorNum , 
-                         IN BYTE CylinderLow, 
-                         IN BYTE CylinderHigh, 
-                         IN BYTE DrvHead, 
-                         IN BYTE Command, 
-                         OUT BYTE *Buffer);
-static NTSTATUS STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static BOOLEAN
+AtapiIdentifyATAPIDevice(IN ULONG CommandPort,
+		         IN ULONG DriveNum,
+		         OUT PIDE_DRIVE_IDENTIFY DrvParms);
+
+static BOOLEAN
+IDEResetController(IN WORD CommandPort,
+		   IN WORD ControlPort);
+
+static int
+IDEPolledRead(IN WORD Address,
+	      IN BYTE PreComp,
+	      IN BYTE SectorCnt,
+	      IN BYTE SectorNum,
+	      IN BYTE CylinderLow,
+	      IN BYTE CylinderHigh,
+	      IN BYTE DrvHead,
+	      IN BYTE Command,
+	      OUT BYTE *Buffer);
+
+
 
 static NTSTATUS STDCALL
-AtapiDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
-		  IN PIRP Irp);
-
-static NTSTATUS STDCALL
-AtapiDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-			   IN PIRP Irp);
+IDEDispatchReadWrite(IN PDEVICE_OBJECT DeviceObject,
+		     IN PIRP Irp);
 
 static VOID STDCALL
 IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
@@ -164,18 +201,30 @@ IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
 static BOOLEAN STDCALL
 IDEStartController(IN OUT PVOID Context);
 
-VOID IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+VOID
+IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension);
 
 static BOOLEAN STDCALL
 IDEIsr(IN PKINTERRUPT Interrupt,
        IN PVOID ServiceContext);
 
-static VOID IDEDpcForIsr(IN PKDPC Dpc, 
-                         IN PDEVICE_OBJECT DpcDeviceObject,
-                         IN PIRP DpcIrp, 
-                         IN PVOID DpcContext);
-static VOID IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
-static VOID STDCALL IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
+static VOID
+IDEDpcForIsr(IN PKDPC Dpc,
+	     IN PDEVICE_OBJECT DpcDeviceObject,
+	     IN PIRP DpcIrp,
+	     IN PVOID DpcContext);
+
+static VOID
+IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+
+static VOID STDCALL
+IDEIoTimer(PDEVICE_OBJECT DeviceObject,
+	   PVOID Context);
+
+
+static ULONG
+AtapiExecuteScsi(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		 IN PSCSI_REQUEST_BLOCK Srb);
 
 
 //  ----------------------------------------------------------------  Inlines
@@ -236,418 +285,371 @@ IdeFindDrive(int Address,
 //                                       key
 //
 //  RETURNS:
-//    NTSTATUS  
+//    NTSTATUS
 
 STDCALL NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
+  HW_INITIALIZATION_DATA InitData;
   NTSTATUS Status;
 
   DbgPrint("ATAPI Driver %s\n", VERSION);
 
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = IDEDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = IDEDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = IDEDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = IDEDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AtapiDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = AtapiDispatchScsi;
+  /* Initialize data structure */
+  RtlZeroMemory(&InitData,
+		sizeof(HW_INITIALIZATION_DATA));
+  InitData.HwInitializationDataSize = sizeof(HW_INITIALIZATION_DATA);
+  InitData.HwInitialize = AtapiInitialize;
+  InitData.HwResetBus = AtapiResetBus;
+  InitData.HwStartIo = AtapiStartIo;
+  InitData.HwInterrupt = AtapiInterrupt;
 
-  Status = AtapiFindControllers(DriverObject);
-  if (NT_SUCCESS(Status))
-    {
-      IDEInitialized = TRUE;
-    }
+  InitData.DeviceExtensionSize = sizeof(ATAPI_MINIPORT_EXTENSION);
+  InitData.SpecificLuExtensionSize = sizeof(UNIT_EXTENSION);
 
-  DPRINT( "Returning from DriverEntry\n" );
-  return Status;
-}
+  InitData.MapBuffers = TRUE;
 
+  /* Search the PCI bus for compatibility mode ide controllers */
+  InitData.HwFindAdapter = AtapiFindCompatiblePciController;
+  InitData.NumberOfAccessRanges = 2;
+  InitData.AdapterInterfaceType = PCIBus;
 
-static NTSTATUS
-AtapiFindControllers(IN PDRIVER_OBJECT DriverObject)
-{
-  PCI_COMMON_CONFIG PciConfig;
-  ULONG Bus;
-  ULONG Slot;
-  ULONG Size;
-  ULONG i;
-  NTSTATUS ReturnedStatus = STATUS_NO_SUCH_DEVICE;
-  NTSTATUS Status;
-  PCONFIGURATION_INFORMATION ConfigInfo;
+  InitData.VendorId = NULL;
+  InitData.VendorIdLength = 0;
+  InitData.DeviceId = NULL;
+  InitData.DeviceIdLength = 0;
 
-  DPRINT1("AtapiFindControllers() called!\n");
+  Status = ScsiPortInitialize(DriverObject,
+			      RegistryPath,
+			      &InitData,
+			      NULL);
+//  if (newStatus < statusToReturn)
+//    statusToReturn = newStatus;
 
-  ConfigInfo = IoGetConfigurationInformation();
-
-  /* Search PCI busses for IDE controllers */
-  for (Bus = 0; Bus < 8; Bus++)
-    {
-      for (Slot = 0; Slot < 256; Slot++)
-	{
-	  Size = ScsiPortGetBusData(NULL,
-				    PCIConfiguration,
-				    Bus,
-				    Slot,
-				    &PciConfig,
-				    sizeof(PCI_COMMON_CONFIG));
-	  if (Size != 0)
-	    {
-	      if ((PciConfig.BaseClass == 0x01) &&
-		  (PciConfig.SubClass == 0x01))
-		{
-		  DPRINT1("IDE controller found!\n");
-
-		  DPRINT1("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
-			Bus,
-			Slot>>3,
-			Slot & 0x07,
-			PciConfig.VendorID,
-			PciConfig.DeviceID);
-		  if ((PciConfig.HeaderType & 0x7FFFFFFF) == 0)
-		    {
-		      DPRINT1("  IPR 0x%X  ILR 0x%X\n",
-			      PciConfig.u.type0.InterruptPin,
-			      PciConfig.u.type0.InterruptLine);
-		    }
-
-		  if (PciConfig.ProgIf & 0x01)
-		    {
-		      DPRINT1("Primary channel: PCI native mode\n");
-		    }
-		  else
-		    {
-		      DPRINT1("Primary channel: Compatibility mode\n");
-		      if (ConfigInfo->AtDiskPrimaryAddressClaimed == FALSE)
-			{
-			  Status = AtapiCreateController(DriverObject,
-							 &Controllers[0],
-							 ConfigInfo->ScsiPortCount);
-			  if (NT_SUCCESS(Status))
-			    {
-			      ConfigInfo->AtDiskPrimaryAddressClaimed = TRUE;
-			      ConfigInfo->ScsiPortCount++;
-			      ReturnedStatus = Status;
-			    }
-			}
-		      else
-			{
-			  /*
-			   * FIXME: Switch controller to native pci mode
-			   *        if it is programmable.
-			   */
-			}
-		    }
-		  if (PciConfig.ProgIf & 0x02)
-		    {
-		      DPRINT1("Primary programmable: 1\n");
-		    }
-		  else
-		    {
-		      DPRINT1("Primary programmable: 0\n");
-		    }
-
-		  if (PciConfig.ProgIf & 0x04)
-		    {
-		      DPRINT1("Secondary channel: PCI native mode\n");
-		    }
-		  else
-		    {
-		      DPRINT1("Secondary channel: Compatibility mode\n");
-		      if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
-			{
-			  Status = AtapiCreateController(DriverObject,
-							 &Controllers[1],
-							 ConfigInfo->ScsiPortCount);
-			  if (NT_SUCCESS(Status))
-			    {
-			      ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
-			      ConfigInfo->ScsiPortCount++;
-			      ReturnedStatus = Status;
-			    }
-			}
-		      else
-			{
-			  /*
-			   * FIXME: Switch controller to native pci mode
-			   *        if it is programmable.
-			   */
-			}
-		    }
-		  if (PciConfig.ProgIf & 0x08)
-		    {
-		      DPRINT1("Secondary programmable: 1\n");
-		    }
-		  else
-		    {
-		      DPRINT1("Secondary programmable: 0\n");
-		    }
-
-		  if (PciConfig.ProgIf & 0x80)
-		    {
-		      DPRINT1("Master IDE device: 1\n");
-		    }
-		  else
-		    {
-		      DPRINT1("Master IDE device: 0\n");
-		    }
-
-		  for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
-		    {
-		      DPRINT1("BaseAddress: 0x%08X\n", PciConfig.u.type0.BaseAddresses[i]);
-		    }
-		}
+  /* Search the ISA bus for ide controllers */
 #if 0
-	      else if ((PciConfig.BaseClass == 0x01) &&
-		       (PciConfig.SubClass == 0x80))
-		{
-		  /* found other mass storage controller */
-		  DPRINT1("Found other mass storage controller!\n");
-		}
+  InitData.HwFindAdapter = AtapiFindIsaBusController;
+  InitData.NumberOfAccessRanges = 2;
+  InitData.AdapterInterfaceType = Isa;
+
+  InitData.VendorId = NULL;
+  InitData.VendorIdLength = 0;
+  InitData.DeviceId = NULL;
+  InitData.DeviceIdLength = 0;
+
+  Status = ScsiPortInitialize(DriverObject,
+			      RegistryPath,
+			      &InitData,
+			      NULL);
+//      if (newStatus < statusToReturn)
+//        statusToReturn = newStatus;
 #endif
-	    }
-	}
-    }
 
-  /* Search for ISA IDE controller if no primary controller was found */
-  if (ConfigInfo->AtDiskPrimaryAddressClaimed == FALSE)
-    {
-      DPRINT1("Searching for primary ISA IDE controller!\n");
+  /* Search the PCI bus for native mode ide controllers */
+#if 0
+  InitData.HwFindAdapter = AtapiFindNativePciController;
+  InitData.NumberOfAccessRanges = 2;
+  InitData.AdapterInterfaceType = PCIBus;
 
-      if (IDEResetController(Controllers[0].CommandPortBase,
-			     Controllers[0].ControlPortBase))
-	{
-	  Status = AtapiCreateController(DriverObject,
-					 &Controllers[0],
-					 ConfigInfo->ScsiPortCount);
-	  if (NT_SUCCESS(Status))
-	    {
-	      DPRINT1("  Found primary ISA IDE controller!\n");
-	      ConfigInfo->AtDiskPrimaryAddressClaimed = TRUE;
-	      ConfigInfo->ScsiPortCount++;
-	      ReturnedStatus = Status;
-	    }
-	}
-    }
+  InitData.VendorId = NULL;
+  InitData.VendorIdLength = 0;
+  InitData.DeviceId = NULL;
+  InitData.DeviceIdLength = 0;
 
-  if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
-    {
-      DPRINT1("Searching for secondary ISA IDE controller!\n");
+  Status = ScsiPortInitialize(DriverObject,
+			      RegistryPath,
+			      &InitData,
+			      (PVOID)i);
+//  if (newStatus < statusToReturn)
+//    statusToReturn = newStatus;
+#endif
 
-      if (IDEResetController(Controllers[1].CommandPortBase,
-			     Controllers[1].ControlPortBase))
-	{
-	  Status = AtapiCreateController(DriverObject,
-					 &Controllers[1],
-					 ConfigInfo->ScsiPortCount);
-	  if (NT_SUCCESS(Status))
-	    {
-	      DPRINT1("  Found secondary ISA IDE controller!\n");
-	      ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
-	      ConfigInfo->ScsiPortCount++;
-	      ReturnedStatus = Status;
-	    }
-	}
-    }
-
-  DPRINT1("AtapiFindControllers() done!\n");
-//for(;;);
-  return(ReturnedStatus);
-}
-
-
-//  ----------------------------------------------------  Discardable statics
-
-//    IDECreateController
-//
-//  DESCRIPTION:
-//    Creates a controller object and a device object for each valid
-//    device on the controller
-//
-//  RUN LEVEL:
-//    PASSIVE LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
-//    IN  PIDE_CONTROLLER_PARAMETERS    The parameter block for this
-//                    ControllerParams  controller
-//    IN  ULONG            ControllerIdx  The index of this controller
-//
-//  RETURNS:
-//    TRUE   Devices where found on this controller
-//    FALSE  The controller does not respond or there are no devices on it
-//
-
-static NTSTATUS
-AtapiCreateController(IN PDRIVER_OBJECT DriverObject,
-		      IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
-		      IN ULONG ControllerIdx)
-{
-  BOOLEAN                    CreatedDevices, ThisDriveExists;
-  int                        DriveIdx;
-  NTSTATUS                   Status;
-  PCONTROLLER_OBJECT         ControllerObject;
-  PIDE_CONTROLLER_EXTENSION  ControllerExtension;
-
-  ControllerObject = IoCreateController(sizeof(IDE_CONTROLLER_EXTENSION));
-  if (ControllerObject == NULL)
-    {
-      DbgPrint ("Could not create controller object for controller %d\n",
-                ControllerIdx);
-      return(STATUS_NO_SUCH_DEVICE);
-    }
-
-  /* Fill out Controller extension data */
-  ControllerExtension = (PIDE_CONTROLLER_EXTENSION)
-      ControllerObject->ControllerExtension;
-  ControllerExtension->Number = ControllerIdx;
-  ControllerExtension->CommandPortBase = ControllerParams->CommandPortBase;
-  ControllerExtension->ControlPortBase = ControllerParams->ControlPortBase;
-  ControllerExtension->Vector = ControllerParams->Vector;
-  ControllerExtension->DMASupported = FALSE;
-  ControllerExtension->ControllerInterruptBug = FALSE;
-  ControllerExtension->OperationInProgress = FALSE;
-
-  /* Initialize the spin lock in the controller extension */
-  KeInitializeSpinLock(&ControllerExtension->SpinLock);
-
-  /* Register an interrupt handler for this controller */
-  Status = IoConnectInterrupt(&ControllerExtension->Interrupt,
-			      IDEIsr,
-			      ControllerExtension,
-			      &ControllerExtension->SpinLock,
-			      ControllerExtension->Vector,
-			      ControllerParams->IrqL,
-			      ControllerParams->SynchronizeIrqL,
-			      ControllerParams->InterruptMode,
-			      FALSE,
-			      ControllerParams->Affinity,
-			      FALSE);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint ("Could not Connect Interrupt %d\n",
-                ControllerExtension->Vector);
-      IoDeleteController (ControllerObject);
-      return(Status);
-    }
-
-  Status = AtapiCreatePortDevice(DriverObject,
-				 ControllerObject,
-				 ControllerIdx);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Could not create port device %d\n",
-	       ControllerIdx);
-      IoDisconnectInterrupt(ControllerExtension->Interrupt);
-      IoDeleteController(ControllerObject);
-      return(Status);
-   }
-
-//  AtapiFindDrives(ControllerExtension);
-
-  return(STATUS_SUCCESS);
-}
-
-
-static NTSTATUS
-AtapiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
-		      IN PCONTROLLER_OBJECT ControllerObject,
-		      IN ULONG ControllerNumber)
-{
-  PATAPI_PORT_EXTENSION DeviceExtension;
-  PDEVICE_OBJECT PortDeviceObject;
-  WCHAR NameBuffer[IDE_MAX_NAME_LENGTH];
-  UNICODE_STRING DeviceName;
-  NTSTATUS Status;
-  PIDE_CONTROLLER_EXTENSION ControllerExtension;
-
-  /* Create a unicode device name */
-  swprintf(NameBuffer,
-	   L"\\Device\\ScsiPort%lu",
-	   ControllerNumber);
-  RtlInitUnicodeString(&DeviceName,
-		       NameBuffer);
-
-  DPRINT1("Creating device: %wZ\n", &DeviceName);
-
-  /* Create the port device */
-  Status = IoCreateDevice(DriverObject,
-			  sizeof(ATAPI_PORT_EXTENSION),
-			  &DeviceName,
-			  FILE_DEVICE_CONTROLLER,
-			  0,
-			  TRUE,
-			  &PortDeviceObject);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("IoCreateDevice call failed! (Status 0x%lX)\n", Status);
-//      DbgPrint("IoCreateDevice call failed\n");
-      return(Status);
-    }
-  DPRINT1("Created device: %wZ\n", &DeviceName);
-
-  /* Set the buffering strategy here... */
-  PortDeviceObject->Flags |= DO_DIRECT_IO;
-  PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
-
-  /* Fill out Device extension data */
-  DeviceExtension = (PATAPI_PORT_EXTENSION)PortDeviceObject->DeviceExtension;
-  DeviceExtension->DeviceObject = PortDeviceObject;
-  DeviceExtension->ControllerObject = ControllerObject;
-  DeviceExtension->PortNumber = ControllerNumber;
-
-
-  /* Initialize the DPC object here */
-  IoInitializeDpcRequest(PortDeviceObject,
-			 IDEDpcForIsr);
-
-  /*
-   * Initialize the controller timer here
-   * (since it has to be tied to a device)
-   */
-  ControllerExtension = (PIDE_CONTROLLER_EXTENSION)
-      ControllerObject->ControllerExtension;
-  ControllerExtension->TimerState = IDETimerIdle;
-  ControllerExtension->TimerCount = 0;
-  ControllerExtension->TimerDevice = PortDeviceObject;
-  IoInitializeTimer(PortDeviceObject,
-		    IDEIoTimer,
-		    ControllerExtension);
+  DPRINT1( "Returning from DriverEntry\n" );
 
   return(Status);
 }
 
 
-static BOOLEAN
-AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
+static ULONG STDCALL
+AtapiFindCompatiblePciController(PVOID DeviceExtension,
+				 PVOID HwContext,
+				 PVOID BusInformation,
+				 PCHAR ArgumentString,
+				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+				 PBOOLEAN Again)
 {
-  ULONG DriveIndex;
+  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+  PCI_SLOT_NUMBER SlotNumber;
+  PCI_COMMON_CONFIG PciConfig;
+  ULONG DataSize;
+  ULONG FunctionNumber;
+  BOOLEAN ChannelFound;
+  BOOLEAN DeviceFound;
+
+  DPRINT("AtapiFindCompatiblePciController() Bus: %lu  Slot: %lu\n",
+	  ConfigInfo->SystemIoBusNumber,
+	  ConfigInfo->SlotNumber);
+
+  *Again = FALSE;
+
+  /* both channels were claimed: exit */
+  if (ConfigInfo->AtdiskPrimaryClaimed == TRUE &&
+      ConfigInfo->AtdiskSecondaryClaimed == TRUE)
+    return(SP_RETURN_NOT_FOUND);
+
+
+  SlotNumber.u.AsULONG = 0;
+  for (FunctionNumber = 0 /*ConfigInfo->SlotNumber*/; FunctionNumber < 256; FunctionNumber++)
+    {
+//      SlotNumber.u.bits.FunctionNumber = FunctionNumber;
+//      SlotNumber.u.AsULONG = (FunctionNumber & 0x07);
+      SlotNumber.u.AsULONG = FunctionNumber;
+
+      ChannelFound = FALSE;
+      DeviceFound = FALSE;
+
+      DataSize = ScsiPortGetBusData(DeviceExtension,
+				    PCIConfiguration,
+				    0,
+				    SlotNumber.u.AsULONG,
+				    &PciConfig,
+				    sizeof(PCI_COMMON_CONFIG));
+//      if (DataSize != sizeof(PCI_COMMON_CONFIG) ||
+//	  PciConfig.VendorID == PCI_INVALID_VENDORID)
+      if (DataSize == 0)
+	{
+//	  if ((SlotNumber.u.AsULONG & 0x07) == 0)
+//	    return(SP_RETURN_ERROR); /* No bus found */
+
+	  continue;
+//	  return(SP_RETURN_ERROR);
+	}
+
+      if (PciConfig.BaseClass == 0x01 &&
+	  PciConfig.SubClass == 0x01) // &&
+//	  (PciConfig.ProgIf & 0x05) == 0)
+	{
+	  /* both channels are in compatibility mode */
+	  DPRINT1("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
+		 ConfigInfo->SystemIoBusNumber,
+//		 SlotNumber.u.AsULONG >> 3,
+//		 SlotNumber.u.AsULONG & 0x07,
+		 SlotNumber.u.bits.DeviceNumber,
+		 SlotNumber.u.bits.FunctionNumber,
+		 PciConfig.VendorID,
+		 PciConfig.DeviceID);
+	  DPRINT("ProgIF 0x%02hx\n", PciConfig.ProgIf);
+
+	  DPRINT1("Found IDE controller in compatibility mode!\n");
+
+	  ConfigInfo->NumberOfBuses = 1;
+	  ConfigInfo->MaximumNumberOfTargets = 2;
+	  ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
+
+	  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
+	    {
+	      /* both channels unclaimed: claim primary channel */
+	      DPRINT1("Primary channel!\n");
+
+	      ConfigInfo->BusInterruptLevel = 14;
+	      ConfigInfo->InterruptMode = LevelSensitive;
+
+	      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x01F0);
+	      ConfigInfo->AccessRanges[0].RangeLength = 8;
+	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
+
+	      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x03F6);
+	      ConfigInfo->AccessRanges[1].RangeLength = 1;
+	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+	      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
+	      ChannelFound = TRUE;
+	      *Again = TRUE;
+	    }
+	  else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
+	    {
+	      /* primary channel claimed: claim secondary channel */
+	      DPRINT1("Secondary channel!\n");
+
+	      ConfigInfo->BusInterruptLevel = 15;
+	      ConfigInfo->InterruptMode = LevelSensitive;
+
+	      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0170);
+	      ConfigInfo->AccessRanges[0].RangeLength = 8;
+	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
+
+	      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0376);
+	      ConfigInfo->AccessRanges[1].RangeLength = 1;
+	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+	      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
+	      ChannelFound = TRUE;
+	      *Again = FALSE;
+	    }
+
+	  /* Find attached devices */
+	  if (ChannelFound == TRUE)
+	    {
+	      DeviceFound = AtapiFindDevices(DevExt,
+					     ConfigInfo);
+	    }
+	  DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_FOUND\n");
+	  return(SP_RETURN_FOUND);
+        }
+    }
+
+  DPRINT("AtapiFindCompatiblePciController() returns: SP_RETURN_NOT_FOUND\n");
+
+  return(SP_RETURN_NOT_FOUND);
+}
+
+
+static ULONG STDCALL
+AtapiFindIsaBusController(PVOID DeviceExtension,
+			  PVOID HwContext,
+			  PVOID BusInformation,
+			  PCHAR ArgumentString,
+			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+			  PBOOLEAN Again)
+{
+  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+
+  DPRINT("AtapiFindIsaBusController() called!\n");
+
+  *Again = FALSE;
+
+  if (ConfigInfo->AtdiskPrimaryClaimed == TRUE)
+    {
+       DPRINT("Primary IDE controller already claimed!\n");
+
+    }
+
+  if (ConfigInfo->AtdiskSecondaryClaimed == TRUE)
+    {
+       DPRINT("Secondary IDE controller already claimed!\n");
+
+    }
+
+  DPRINT("AtapiFindIsaBusController() done!\n");
+
+  return(SP_RETURN_NOT_FOUND);
+}
+
+
+static ULONG STDCALL
+AtapiFindNativePciController(PVOID DeviceExtension,
+			     PVOID HwContext,
+			     PVOID BusInformation,
+			     PCHAR ArgumentString,
+			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+			     PBOOLEAN Again)
+{
+  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+
+  DPRINT("AtapiFindNativePciController() called!\n");
+
+  *Again = FALSE;
+
+  DPRINT("AtapiFindNativePciController() done!\n");
+
+  return(SP_RETURN_NOT_FOUND);
+}
+
+
+static BOOLEAN STDCALL
+AtapiInitialize(IN PVOID DeviceExtension)
+{
+  return(TRUE);
+}
+
+
+static BOOLEAN STDCALL
+AtapiResetBus(IN PVOID DeviceExtension,
+	      IN ULONG PathId)
+{
+  return(TRUE);
+}
+
+
+static BOOLEAN STDCALL
+AtapiStartIo(IN PVOID DeviceExtension,
+	     IN PSCSI_REQUEST_BLOCK Srb)
+{
+  PATAPI_MINIPORT_EXTENSION DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+  ULONG Result;
+
+  DPRINT1("AtapiStartIo() called\n");
+
+  switch (Srb->Function)
+    {
+      case SRB_FUNCTION_EXECUTE_SCSI:
+
+	Result = AtapiExecuteScsi(DevExt,
+				  Srb);
+
+	break;
+
+    }
+
+  Srb->SrbStatus = Result;
+
+  return(TRUE);
+}
+
+
+static BOOLEAN STDCALL
+AtapiInterrupt(IN PVOID DeviceExtension)
+{
+  return(TRUE);
+}
+
+
+
+
+
+
+//  ----------------------------------------------------  Discardable statics
+
+
+static BOOLEAN
+AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		 PPORT_CONFIGURATION_INFORMATION ConfigInfo)
+{
+  BOOLEAN DeviceFound = FALSE;
+  ULONG CommandPortBase;
+  ULONG UnitNumber;
   ULONG Retries;
   BYTE High, Low;
-  IDE_DRIVE_IDENTIFY     DrvParms;
 
-  DPRINT1("AtapiFindDrives() called\n");
+  DPRINT("AtapiFindDevices() called\n");
 
-  for (DriveIndex = 0; DriveIndex < 2; DriveIndex++)
+//  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[0].RangeStart);
+  CommandPortBase = ScsiPortConvertPhysicalAddressToUlong(ConfigInfo->AccessRanges[0].RangeStart);
+
+  DPRINT("  CommandPortBase: %x\n", CommandPortBase);
+
+  for (UnitNumber = 0; UnitNumber < 2; UnitNumber++)
     {
       /* disable interrupts */
-      IDEWriteDriveControl(ControllerExtension->ControlPortBase, IDE_DC_nIEN);
+      IDEWriteDriveControl(CommandPortBase,
+			   IDE_DC_nIEN);
 
       /* select drive */
-      IDEWriteDriveHead(ControllerExtension->CommandPortBase,
-			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
+      IDEWriteDriveHead(CommandPortBase,
+			IDE_DH_FIXED | (UnitNumber ? IDE_DH_DRV1 : 0));
       ScsiPortStallExecution(500);
-      IDEWriteCylinderHigh(ControllerExtension->CommandPortBase, 0);
-      IDEWriteCylinderLow(ControllerExtension->CommandPortBase, 0);
-      IDEWriteCommand(ControllerExtension->CommandPortBase, 0x08); /* IDE_COMMAND_ATAPI_RESET */
+      IDEWriteCylinderHigh(CommandPortBase, 0);
+      IDEWriteCylinderLow(CommandPortBase, 0);
+      IDEWriteCommand(CommandPortBase, 0x08); /* IDE_COMMAND_ATAPI_RESET */
 //      ScsiPortStallExecution(1000*1000);
-//      IDEWriteDriveHead(ControllerExtension->CommandPortBase,
-//			IDE_DH_FIXED | (DriveIndex ? IDE_DH_DRV1 : 0));
+//      IDEWriteDriveHead(CommandPortBase,
+//			IDE_DH_FIXED | (UnitNumber ? IDE_DH_DRV1 : 0));
 //			IDE_DH_FIXED);
 
       for (Retries = 0; Retries < 20000; Retries++)
 	{
-	  if (!(IDEReadStatus(ControllerExtension->CommandPortBase) & IDE_SR_BUSY))
+	  if (!(IDEReadStatus(CommandPortBase) & IDE_SR_BUSY))
 	    {
 	      break;
 	    }
@@ -655,47 +657,55 @@ AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
 	}
       if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
 	{
-	  DPRINT1("Timeout on drive %lu\n", DriveIndex);
-//	  return FALSE;
+	  DbgPrint("Timeout on drive %lu\n", UnitNumber);
+	  return(DeviceFound);
 	}
 
-      High = IDEReadCylinderHigh(ControllerExtension->CommandPortBase);
-      Low = IDEReadCylinderLow(ControllerExtension->CommandPortBase);
+      High = IDEReadCylinderHigh(CommandPortBase);
+      Low = IDEReadCylinderLow(CommandPortBase);
 
-      DPRINT1("Check drive %lu: High 0x%lx Low 0x%lx\n", DriveIndex, High, Low);
+      DPRINT("  Check drive %lu: High 0x%x Low 0x%x\n",
+	     UnitNumber,
+	     High,
+	     Low);
+
       if (High == 0xEB && Low == 0x14)
 	{
-//	  DPRINT1("ATAPI drive found!\n");
-	  if (!AtapiIdentifyATAPIDrive(ControllerExtension->CommandPortBase, DriveIndex, &DrvParms))
+	  if (AtapiIdentifyATAPIDevice(CommandPortBase,
+				       UnitNumber,
+				       &DeviceExtension->DeviceParms[UnitNumber]))
 	    {
-	      DPRINT1("No drive found!\n");
+	      DPRINT("  ATAPI drive found!\n");
+	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
+	      DeviceExtension->DeviceAtapi[UnitNumber] = TRUE;
+	      DeviceFound = TRUE;
 	    }
 	  else
 	    {
-	      DPRINT1("ATAPI drive found!\n");
+	      DPRINT("  No ATAPI drive found!\n");
 	    }
 	}
       else
 	{
-
-	  if (!IDEGetDriveIdentification(ControllerExtension->CommandPortBase, DriveIndex, &DrvParms))
+	  if (AtapiIdentifyATADevice(CommandPortBase,
+				     UnitNumber,
+				     &DeviceExtension->DeviceParms[UnitNumber]))
 	    {
-	      DPRINT1("No drive found!\n");
-//	      DPRINT1("Giving up on drive %d on controller %d...\n", 
-//	             DriveIndex,
-//	             ControllerExtension->CommandPortBase);
-//	     return  FALSE;
+	      DPRINT("  IDE drive found!\n");
+	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
+	      DeviceExtension->DeviceAtapi[UnitNumber] = FALSE;
+	      DeviceFound = TRUE;
 	    }
 	  else
 	    {
-	      DPRINT1("IDE drive found!\n");
+	      DPRINT("  No IDE drive found!\n");
 	    }
-
-
 	}
-
     }
-  return TRUE;
+
+  DPRINT("AtapiFindDrives() done\n");
+
+  return(DeviceFound);
 }
 
 
@@ -714,225 +724,46 @@ AtapiFindDrives(PIDE_CONTROLLER_EXTENSION ControllerExtension)
 //  RETURNS:
 //
 
-BOOLEAN  
-IDEResetController(IN WORD CommandPort, 
-                   IN WORD ControlPort) 
+static BOOLEAN
+IDEResetController(IN WORD CommandPort,
+                   IN WORD ControlPort)
 {
-  int  Retries;
+  int Retries;
 
-    //  Assert drive reset line
+  /* Assert drive reset line */
   IDEWriteDriveControl(ControlPort, IDE_DC_SRST);
 
-    //  Wait for min. 25 microseconds
+  /* Wait for min. 25 microseconds */
   ScsiPortStallExecution(IDE_RESET_PULSE_LENGTH);
 
-    //  Negate drive reset line
+  /* Negate drive reset line */
   IDEWriteDriveControl(ControlPort, 0);
 
-    //  Wait for BUSY negation
+  /* Wait for BUSY negation */
   for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++)
     {
       if (!(IDEReadStatus(CommandPort) & IDE_SR_BUSY))
-        {
-          break;
-        }
+	{
+	  break;
+	}
       ScsiPortStallExecution(10);
     }
-   CHECKPOINT;
+
+  CHECKPOINT;
   if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
     {
-      return FALSE;
+      return(FALSE);
     }
-   CHECKPOINT;
+
+  CHECKPOINT;
+
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
-  return  IDEReadError(CommandPort) == 1;
+  return(IDEReadError(CommandPort) == 1);
 }
 
-//    IDECreateDevices
-//
-//  DESCRIPTION:
-//    Create the raw device and any partition devices on this drive
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
-//    IN  PCONTROLLER_OBJECT         ControllerObject
-//    IN  PIDE_CONTROLLER_EXTENSION  ControllerExtension
-//                                      The IDE controller extension for
-//                                      this device
-//    IN  int             DriveIdx      The index of the drive on this
-//                                      controller
-//    IN  int             HarddiskIdx   The NT device number for this
-//                                      drive
-//
-//  RETURNS:
-//    TRUE   Drive exists and devices were created
-//    FALSE  no devices were created for this device
-//
 
-BOOLEAN
-IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
-                 IN PCONTROLLER_OBJECT ControllerObject,
-                 IN PIDE_CONTROLLER_EXTENSION ControllerExtension,
-                 IN int DriveIdx,
-                 IN int HarddiskIdx)
-{
-  WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  int                    CommandPort;
-  NTSTATUS               Status;
-  IDE_DRIVE_IDENTIFY     DrvParms;
-  PDEVICE_OBJECT         DiskDeviceObject;
-  PDEVICE_OBJECT         PartitionDeviceObject;
-  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
-  PIDE_DEVICE_EXTENSION  PartitionDeviceExtension;
-  UNICODE_STRING         UnicodeDeviceDirName;
-  OBJECT_ATTRIBUTES      DeviceDirAttributes;
-  HANDLE                 Handle;
-  ULONG                  SectorCount = 0;
-  PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
-  PPARTITION_INFORMATION PartitionEntry;
-  ULONG i;
-
-    //  Copy I/O port offsets for convenience
-  CommandPort = ControllerExtension->CommandPortBase;
-//  ControlPort = ControllerExtension->ControlPortBase;
-  DPRINT("probing IDE controller %d Addr %04lx Drive %d\n",
-         ControllerExtension->Number,
-         CommandPort,
-         DriveIdx);
-
-  /* Get the Drive Identification Data */
-  if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
-    {
-      DPRINT("Giving up on drive %d on controller %d...\n", 
-             DriveIdx,
-             ControllerExtension->Number);
-      return  FALSE;
-    }
-
-  /* Create the harddisk device directory */
-  swprintf (NameBuffer,
-            L"\\Device\\Harddisk%d",
-            HarddiskIdx);
-  RtlInitUnicodeString(&UnicodeDeviceDirName,
-                       NameBuffer);
-  InitializeObjectAttributes(&DeviceDirAttributes,
-                             &UnicodeDeviceDirName,
-                             0,
-                             NULL,
-                             NULL);
-  Status = ZwCreateDirectoryObject(&Handle, 0, &DeviceDirAttributes);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Could not create device dir object\n");
-      return FALSE;
-    }
-
-  /* Create the disk device */
-  if (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED)
-    {
-      SectorCount =
-         (ULONG)((DrvParms.TMSectorCountHi << 16) + DrvParms.TMSectorCountLo);
-    }
-  else
-    {
-      SectorCount =
-         (ULONG)(DrvParms.LogicalCyls * DrvParms.LogicalHeads * DrvParms.SectorsPerTrack);
-    }
-  DPRINT("SectorCount %lu\n", SectorCount);
-
-  Status = IDECreateDevice(DriverObject,
-                           &DiskDeviceObject,
-                           ControllerObject,
-                           DriveIdx,
-                           HarddiskIdx,
-                           &DrvParms,
-                           0,
-                           0,
-                           SectorCount);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("IDECreateDevice call failed for raw device\n");
-      return FALSE;
-    }
-
-  /* Increase number of available physical disk drives */
-  IoGetConfigurationInformation()->DiskCount++;
-
-  DiskDeviceExtension = (PIDE_DEVICE_EXTENSION)DiskDeviceObject->DeviceExtension;
-  DiskDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
-
-  /*
-   * Initialize the controller timer here
-   * (since it has to be tied to a device)
-   */
-  if (DriveIdx == 0)
-    {
-      ControllerExtension->TimerState = IDETimerIdle;
-      ControllerExtension->TimerCount = 0;
-      ControllerExtension->TimerDevice = DiskDeviceObject;
-      IoInitializeTimer(DiskDeviceObject,
-                        IDEIoTimer,
-                        ControllerExtension);
-    }
-
-   DPRINT("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
-
-  /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceObject,
-                                DrvParms.BytesPerSector,
-                                TRUE,
-                                &PartitionList);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("IoReadPartitionTable() failed\n");
-      return FALSE;
-    }
-
-  DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
-  for (i=0;i < PartitionList->PartitionCount; i++)
-    {
-      PartitionEntry = &PartitionList->PartitionEntry[i];
-
-      DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
-             i,
-             PartitionEntry->PartitionNumber,
-             PartitionEntry->BootIndicator,
-             PartitionEntry->PartitionType,
-             PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-             PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
-
-      /* Create device for partition */
-      Status = IDECreateDevice(DriverObject,
-                               &PartitionDeviceObject,
-                               ControllerObject,
-                               DriveIdx,
-                               HarddiskIdx,
-                               &DrvParms,
-                               PartitionEntry->PartitionNumber,
-                               PartitionEntry->StartingOffset.QuadPart / 512 /* DrvParms.BytesPerSector*/,
-                               PartitionEntry->PartitionLength.QuadPart / 512 /*DrvParms.BytesPerSector*/);
-      if (!NT_SUCCESS(Status))
-        {
-          DbgPrint("IDECreateDevice() failed\n");
-          break;
-        }
-
-      /* Initialize pointer to disk device extension */
-      PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
-      PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
-   }
-
-   if (PartitionList != NULL)
-     ExFreePool(PartitionList);
-
-  return  TRUE;
-}
-
-//    IDEGetDriveIdentification
+//    AtapiIdentifyATADevice
 //
 //  DESCRIPTION:
 //    Get the identification block from the drive
@@ -949,20 +780,76 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 //    TRUE  The drive identification block was retrieved successfully
 //
 
-BOOLEAN  
-IDEGetDriveIdentification(IN int CommandPort, 
-                          IN int DriveNum, 
-                          OUT PIDE_DRIVE_IDENTIFY DrvParms) 
+static BOOLEAN
+AtapiIdentifyATADevice(IN ULONG CommandPort,
+                       IN ULONG DriveNum,
+                       OUT PIDE_DRIVE_IDENTIFY DrvParms)
 {
-
-    //  Get the Drive Identify block from drive or die
-  if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
-                    IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0) 
+  /*  Get the Drive Identify block from drive or die  */
+  if (IDEPolledRead((WORD)CommandPort, 0, 1, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
+                    IDE_CMD_IDENT_ATA_DRV, (BYTE *)DrvParms) != 0) 
     {
       return FALSE;
     }
 
-    //  Report on drive parameters if debug mode
+  /*  Report on drive parameters if debug mode  */
+  IDESwapBytePairs(DrvParms->SerialNumber, 20);
+  IDESwapBytePairs(DrvParms->FirmwareRev, 8);
+  IDESwapBytePairs(DrvParms->ModelNumber, 40);
+  DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
+         DrvParms->ConfigBits,
+         DrvParms->LogicalCyls,
+         DrvParms->LogicalHeads,
+         DrvParms->SectorsPerTrack,
+         DrvParms->InterSectorGap,
+         DrvParms->InterSectorGapSize);
+  DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
+         DrvParms->BytesInPLO,
+         DrvParms->VendorUniqueCnt,
+         DrvParms->SerialNumber);
+  DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
+         DrvParms->ControllerType,
+         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
+         DrvParms->ECCByteCnt,
+         DrvParms->FirmwareRev);
+  DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
+  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
+         (DrvParms->RWMultImplemented) & 0xff,
+         (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
+         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0,
+         DrvParms->MinPIOTransTime,
+         DrvParms->MinDMATransTime);
+  DPRINT("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
+         DrvParms->TMCylinders,
+         DrvParms->TMHeads,
+         DrvParms->TMSectorsPerTrk,
+         (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
+  DPRINT("TM:SectorCount: 0x%04x%04x = %lu\n",
+         DrvParms->TMSectorCountHi,
+         DrvParms->TMSectorCountLo,
+         (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
+
+  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
+  if (DrvParms->BytesPerSector == 0)
+    DrvParms->BytesPerSector = 512; /* FIXME !!!*/
+  return TRUE;
+}
+
+
+static BOOLEAN
+AtapiIdentifyATAPIDevice(IN ULONG CommandPort,
+			 IN ULONG DriveNum,
+			 OUT PIDE_DRIVE_IDENTIFY DrvParms)
+{
+  /*  Get the Drive Identify block from drive or die  */
+  if (IDEPolledRead((WORD)CommandPort, 0, 1, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
+                    IDE_CMD_IDENT_ATAPI_DRV, (BYTE *)DrvParms) != 0) /* atapi_identify */
+    {
+      DPRINT1("IDEPolledRead() failed\n");
+      return FALSE;
+    }
+
+  /*  Report on drive parameters if debug mode  */
   IDESwapBytePairs(DrvParms->SerialNumber, 20);
   IDESwapBytePairs(DrvParms->FirmwareRev, 8);
   IDESwapBytePairs(DrvParms->ModelNumber, 40);
@@ -999,190 +886,9 @@ IDEGetDriveIdentification(IN int CommandPort,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
 
-  DPRINT1("BytesPerSector %d\n", DrvParms->BytesPerSector);
-  if (DrvParms->BytesPerSector == 0)
-    DrvParms->BytesPerSector = 512; /* FIXME !!!*/
-  return TRUE;
-}
-
-
-BOOLEAN
-AtapiIdentifyATAPIDrive(IN int CommandPort,
-                        IN int DriveNum,
-                        OUT PIDE_DRIVE_IDENTIFY DrvParms)
-{
-
-    //  Get the Drive Identify block from drive or die
-  if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
-                    0xA1 /*IDE_CMD_IDENT_DRV*/, (BYTE *)DrvParms) != 0) /* atapi_identify */
-    {
-      DPRINT1("IDEPolledRead() failed\n");
-      return FALSE;
-    }
-
-    //  Report on drive parameters if debug mode
-  IDESwapBytePairs(DrvParms->SerialNumber, 20);
-  IDESwapBytePairs(DrvParms->FirmwareRev, 8);
-  IDESwapBytePairs(DrvParms->ModelNumber, 40);
-  DPRINT1("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n", 
-         DrvParms->ConfigBits, 
-         DrvParms->LogicalCyls, 
-         DrvParms->LogicalHeads, 
-         DrvParms->SectorsPerTrack, 
-         DrvParms->InterSectorGap, 
-         DrvParms->InterSectorGapSize);
-  DPRINT1("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n", 
-         DrvParms->BytesInPLO, 
-         DrvParms->VendorUniqueCnt, 
-         DrvParms->SerialNumber);
-  DPRINT1("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n", 
-         DrvParms->ControllerType, 
-         DrvParms->BufferSize * IDE_SECTOR_BUF_SZ, 
-         DrvParms->ECCByteCnt, 
-         DrvParms->FirmwareRev);
-  DPRINT1("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT1("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
-         (DrvParms->RWMultImplemented) & 0xff, 
-         (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
-         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0, 
-         DrvParms->MinPIOTransTime,
-         DrvParms->MinDMATransTime);
-  DPRINT1("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%ld\n",
-         DrvParms->TMCylinders, 
-         DrvParms->TMHeads, 
-         DrvParms->TMSectorsPerTrk,
-         (ULONG)(DrvParms->TMCapacityLo + (DrvParms->TMCapacityHi << 16)));
-  DPRINT1("TM:SectorCount: 0x%04x%04x = %lu\n",
-         DrvParms->TMSectorCountHi,
-         DrvParms->TMSectorCountLo,
-         (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
-
-  DPRINT1("BytesPerSector %d\n", DrvParms->BytesPerSector);
+  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 //  DrvParms->BytesPerSector = 512; /* FIXME !!!*/
   return TRUE;
-}
-
-
-//    IDECreateDevice
-//
-//  DESCRIPTION:
-//    Creates a device by calling IoCreateDevice and a sylbolic link for Win32
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN   PDRIVER_OBJECT      DriverObject      The system supplied driver object
-//    OUT  PDEVICE_OBJECT     *DeviceObject      The created device object
-//    IN   PCONTROLLER_OBJECT  ControllerObject  The Controller for the device
-//    IN   BOOLEAN             LBASupported      Does the drive support LBA addressing?
-//    IN   BOOLEAN             DMASupported      Does the drive support DMA?
-//    IN   int                 SectorsPerLogCyl  Sectors per cylinder
-//    IN   int                 SectorsPerLogTrk  Sectors per track
-//    IN   DWORD               Offset            First valid sector for this device
-//    IN   DWORD               Size              Count of valid sectors for this device
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
-NTSTATUS
-IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
-                OUT PDEVICE_OBJECT *DeviceObject,
-                IN PCONTROLLER_OBJECT ControllerObject,
-                IN int UnitNumber,
-                IN ULONG DiskNumber,
-                IN PIDE_DRIVE_IDENTIFY DrvParms,
-                IN ULONG PartitionNumber,
-                IN ULONGLONG Offset,
-                IN ULONGLONG Size)
-{
-  WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
-  UNICODE_STRING         DeviceName;
-  UNICODE_STRING         ArcName;
-  NTSTATUS               RC;
-  PIDE_DEVICE_EXTENSION  DeviceExtension;
-
-    // Create a unicode device name
-  swprintf(NameBuffer,
-           L"\\Device\\Harddisk%d\\Partition%d",
-           DiskNumber,
-           PartitionNumber);
-  RtlInitUnicodeString(&DeviceName,
-                       NameBuffer);
-
-    // Create the device
-  RC = IoCreateDevice(DriverObject, sizeof(IDE_DEVICE_EXTENSION),
-      &DeviceName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
-  if (!NT_SUCCESS(RC))
-    {
-      DbgPrint ("IoCreateDevice call failed\n");
-      return  RC;
-    }
-
-    //  Set the buffering strategy here...
-  (*DeviceObject)->Flags |= DO_DIRECT_IO;
-  (*DeviceObject)->AlignmentRequirement = FILE_WORD_ALIGNMENT;
-
-    //  Fill out Device extension data
-  DeviceExtension = (PIDE_DEVICE_EXTENSION) (*DeviceObject)->DeviceExtension;
-  DeviceExtension->DeviceObject = (*DeviceObject);
-  DeviceExtension->ControllerObject = ControllerObject;
-  DeviceExtension->DiskExtension = NULL;
-  DeviceExtension->UnitNumber = UnitNumber;
-  DeviceExtension->LBASupported = 
-    (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
-  DeviceExtension->DMASupported = 
-    (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
-    // FIXME: deal with bizarre sector sizes
-  DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
-  DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads *
-      DrvParms->SectorsPerTrack;
-  DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
-  DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
-  DeviceExtension->LogicalCylinders = 
-    (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? DrvParms->TMCylinders : DrvParms->LogicalCyls;
-  DeviceExtension->Offset = Offset;
-  DeviceExtension->Size = Size;
-  DPRINT("%wZ: offset %lu size %lu \n",
-         &DeviceName,
-         DeviceExtension->Offset,
-         DeviceExtension->Size);
-
-    //  Initialize the DPC object here
-  IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
-
-  if (PartitionNumber != 0)
-    {
-      DbgPrint("%wZ %luMB\n", &DeviceName, Size / 2048);
-    }
-
-  /* assign arc name */
-  if (PartitionNumber == 0)
-    {
-      swprintf(ArcNameBuffer,
-               L"\\ArcName\\multi(0)disk(0)rdisk(%d)",
-               DiskNumber);
-    }
-  else
-    {
-      swprintf(ArcNameBuffer,
-               L"\\ArcName\\multi(0)disk(0)rdisk(%d)partition(%d)",
-               DiskNumber,
-               PartitionNumber);
-    }
-  RtlInitUnicodeString (&ArcName,
-                        ArcNameBuffer);
-  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-  RC = IoAssignArcName (&ArcName,
-                        &DeviceName);
-  if (!NT_SUCCESS(RC))
-    {
-      DbgPrint ("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, RC);
-    }
-
-  return  RC;
 }
 
 
@@ -1220,23 +926,24 @@ IDEPolledRead(IN WORD Address,
               IN BYTE Command,
               OUT BYTE *Buffer)
 {
-  BYTE   Status;
-  int    RetryCount;
+  ULONG SectorCount = 0;
+  ULONG RetryCount;
+  BOOLEAN Junk = FALSE;
+  UCHAR Status;
 
   /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
       if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-        {
-          break;
-        }
+	{
+	  break;
+	}
       ScsiPortStallExecution(10);
     }
   if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
-      CHECKPOINT1;
-      return IDE_ER_ABRT;
+      return(IDE_ER_ABRT);
     }
 
   /*  Write Drive/Head to select drive  */
@@ -1247,14 +954,13 @@ IDEPolledRead(IN WORD Address,
     {
       Status = IDEReadStatus(Address);
       if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-        {
-          break;
-        }
+	{
+	  break;
+	}
       ScsiPortStallExecution(10);
     }
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
-      CHECKPOINT1;
       return IDE_ER_ABRT;
     }
 
@@ -1262,21 +968,21 @@ IDEPolledRead(IN WORD Address,
   if (DrvHead & IDE_DH_LBA)
     {
       DPRINT("READ:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0,
-             ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-             SectorCnt,
-             Command);
+	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
+	     ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
+	     SectorCnt,
+	     Command);
     }
   else
     {
       DPRINT("READ:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0,
-             CylinderHigh,
-             CylinderLow,
-             DrvHead & 0x0f,
-             SectorNum,
-             SectorCnt,
-             Command);
+	     DrvHead & IDE_DH_DRV1 ? 1 : 0,
+	     CylinderHigh,
+	     CylinderLow,
+	     DrvHead & 0x0f,
+	     SectorNum,
+	     SectorCnt,
+	     Command);
     }
 
   /*  Setup command parameters  */
@@ -1291,98 +997,84 @@ IDEPolledRead(IN WORD Address,
   IDEWriteCommand(Address, Command);
   ScsiPortStallExecution(50);
 
+  /*  wait for DRQ or error  */
+  for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
+    {
+      Status = IDEReadStatus(Address);
+      if (!(Status & IDE_SR_BUSY))
+	{
+	  if (Status & IDE_SR_ERR)
+	    {
+	      return(IDE_ER_ABRT);
+	    }
+	  if (Status & IDE_SR_DRQ)
+	    {
+	      break;
+	    }
+	  else
+	    {
+	      return(IDE_ER_ABRT);
+	    }
+	}
+      ScsiPortStallExecution(10);
+    }
+
+  /*  timed out  */
+  if (RetryCount >= IDE_MAX_POLL_RETRIES)
+    {
+      return(IDE_ER_ABRT);
+    }
+
   while (1)
     {
-        //  wait for DRQ or error
-      for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
-        {
-          Status = IDEReadStatus(Address);
-          if (!(Status & IDE_SR_BUSY))
-            {
-              if (Status & IDE_SR_ERR)
-                {
-                  CHECKPOINT1;
-                  return IDE_ER_ABRT;
-                }
-              if (Status & IDE_SR_DRQ)
-                {
-                  break;
-                }
-              else
-                {
-                  CHECKPOINT1;
-                  return IDE_ER_ABRT;
-                }
-            }
-          ScsiPortStallExecution(10);
-        }
-      if (RetryCount >= IDE_MAX_POLL_RETRIES)
-        {
-          CHECKPOINT1;
-          return IDE_ER_ABRT;
-        }
+      /*  Read data into buffer  */
+      if (Junk == FALSE)
+	{
+	  IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
+	  Buffer += IDE_SECTOR_BUF_SZ;
+	}
+      else
+	{
+	  UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
+	  IDEReadBlock(Address, JunkBuffer, IDE_SECTOR_BUF_SZ);
+	}
+      SectorCount++;
 
-        //  Read data into buffer
-      IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
-      Buffer += IDE_SECTOR_BUF_SZ;
-
-        //  Check for more sectors to read
-/*
-      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES &&
-          (IDEReadStatus(Address) & IDE_SR_DRQ); RetryCount++)
-        ;
-      if (!(IDEReadStatus(Address) & IDE_SR_BUSY))
-        {
-          CHECKPOINT1;
-          return 0;
-        }
-*/
+      /*  Check for error or more sectors to read  */
       for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-        {
-          Status = IDEReadStatus(Address);
-          if (!(Status & IDE_SR_BUSY))
-            {
-              if (Status & IDE_SR_DRQ)
-                {
-                  break;
-                }
-              else
-                {
-                  CHECKPOINT1;
-                  return 0;
-                }
-            }
-        }
+	{
+	  Status = IDEReadStatus(Address);
+	  if (!(Status & IDE_SR_BUSY))
+	    {
+	      if (Status & IDE_SR_ERR)
+		{
+		  return(IDE_ER_ABRT);
+		}
+	      if (Status & IDE_SR_DRQ)
+		{
+		  if (SectorCount >= SectorCnt)
+		    {
+		      DPRINT("Buffer size exceeded!\n");
+		      Junk = TRUE;
+		    }
+		  break;
+		}
+	      else
+		{
+		  if (SectorCount > SectorCnt)
+		    {
+		      DPRINT("Read %lu sectors of junk!\n",
+			     SectorCount - SectorCnt);
+		    }
+		  return(0);
+		}
+	    }
+	}
     }
 }
 
+
 //  -------------------------------------------  Nondiscardable statics
-
-//    IDEDispatchOpenClose
-//
-//  DESCRIPTION:
-//    Answer requests for Open/Close calls: a null operation
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
-static NTSTATUS STDCALL
-IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO,
-                     IN PIRP Irp) 
-{
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = FILE_OPENED;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return STATUS_SUCCESS;
-}
 
 //    IDEDispatchReadWrite
 //
@@ -1467,102 +1159,6 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
    
   DPRINT("Returning STATUS_PENDING\n");
   return  STATUS_PENDING;
-}
-
-
-//    AtapiDispatchScsi
-//
-//  DESCRIPTION:
-//    Answer requests for SCSI calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
-static NTSTATUS STDCALL
-AtapiDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
-		  IN PIRP Irp)
-{
-  DPRINT1("AtapiDispatchScsi()\n");
-
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
-}
-
-
-//    AtapiDispatchDeviceControl
-//
-//  DESCRIPTION:
-//    Answer requests for device control calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
-
-static NTSTATUS STDCALL
-AtapiDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-			   IN PIRP Irp)
-{
-  PIO_STACK_LOCATION Stack;
-
-  DPRINT1("AtapiDispatchDeviceControl()\n");
-
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-
-  switch (Stack->Parameters.DeviceIoControl.IoControlCode)
-    {
-      case IOCTL_SCSI_GET_CAPABILITIES:
-	{
-	  PIO_SCSI_CAPABILITIES Capabilities;
-
-	  DPRINT1("  IOCTL_SCSI_GET_CAPABILITIES\n");
-
-	  Capabilities = (PIO_SCSI_CAPABILITIES)(*((PIO_SCSI_CAPABILITIES*)Irp->AssociatedIrp.SystemBuffer));
-	  Capabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
-	  Capabilities->MaximumTransferLength = 65536; /* FIXME: preliminary values!!! */
-	  Capabilities->MaximumPhysicalPages = 1;
-	  Capabilities->SupportedAsynchronousEvents = 0;
-	  Capabilities->AlignmentMask = 0;
-	  Capabilities->TaggedQueuing = FALSE;
-	  Capabilities->AdapterScansDown = FALSE;
-	  Capabilities->AdapterUsesPio = TRUE;
-
-	  Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
-	}
-	break;
-
-      case IOCTL_SCSI_GET_INQUIRY_DATA:
-	DPRINT1("  IOCTL_SCSI_GET_INQUIRY_DATA\n");
-	break;
-
-      default:
-	DPRINT1("  unknown ioctl code: 0x%lX\n",
-		Stack->Parameters.DeviceIoControl.IoControlCode);
-	break;
-    }
-
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
 }
 
 
@@ -2315,5 +1911,102 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
         }
     }
 }
+
+
+static ULONG
+AtapiExecuteScsi(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		 IN PSCSI_REQUEST_BLOCK Srb)
+{
+  ULONG SrbStatus = SRB_STATUS_SUCCESS;
+
+  DPRINT1("AtapiExecuteScsi() called!\n");
+
+  DPRINT1("PathId: %lu  TargetId: %lu  Lun: %lu\n",
+	  Srb->PathId,
+	  Srb->TargetId,
+	  Srb->Lun);
+
+  switch (Srb->Cdb[0])
+    {
+      case SCSIOP_INQUIRY:
+	if ((Srb->PathId == 0) &&
+	    (Srb->TargetId < 2) &&
+	    (Srb->Lun == 0) &&
+	    (DeviceExtension->DevicePresent[Srb->TargetId] == TRUE))
+	  {
+	    PINQUIRYDATA InquiryData;
+	    PIDE_DRIVE_IDENTIFY DeviceParams;
+	    ULONG i;
+
+	    DPRINT1("SCSIOP_INQUIRY: TargetId: %lu\n", Srb->TargetId);
+
+	    InquiryData = Srb->DataBuffer;
+	    DeviceParams = &DeviceExtension->DeviceParms[Srb->TargetId];
+
+	    /* clear buffer */
+	    for (i = 0; i < Srb->DataTransferLength; i++)
+	      {
+		((PUCHAR)Srb->DataBuffer)[i] = 0;
+	      }
+
+	    /* set device class */
+	    if (DeviceExtension->DeviceAtapi[Srb->TargetId] == FALSE)
+	      {
+		/* hard-disk */
+		InquiryData->DeviceType = DIRECT_ACCESS_DEVICE;
+	      }
+	    else
+	      {
+		/* FIXME: this is incorrect use SCSI-INQUIRY command!! */
+		/* cdrom drive */
+		InquiryData->DeviceType = READ_ONLY_DIRECT_ACCESS_DEVICE;
+	      }
+
+	    DPRINT1("ConfigBits: 0x%x\n", DeviceParams->ConfigBits);
+	    if (DeviceParams->ConfigBits & 0x80)
+	      {
+		DPRINT1("Removable media!\n");
+		InquiryData->RemovableMedia = 1;
+	      }
+
+	    for (i = 0; i < 20; i += 2)
+	      {
+		InquiryData->VendorId[i] =
+		  ((PUCHAR)DeviceParams->ModelNumber)[i];
+		InquiryData->VendorId[i+1] =
+		  ((PUCHAR)DeviceParams->ModelNumber)[i+1];
+	      }
+
+	    for (i = 0; i < 4; i++)
+	      {
+		InquiryData->ProductId[12+i] = ' ';
+	      }
+
+	    for (i = 0; i < 4; i += 2)
+	      {
+		InquiryData->ProductRevisionLevel[i] =
+		  ((PUCHAR)DeviceParams->FirmwareRev)[i];
+		InquiryData->ProductRevisionLevel[i+1] =
+		  ((PUCHAR)DeviceParams->FirmwareRev)[i+1];
+	      }
+
+	    SrbStatus = SRB_STATUS_SUCCESS;
+	  }
+	else
+	  {
+	    SrbStatus = SRB_STATUS_SELECTION_TIMEOUT;
+	  }
+	break;
+
+     case SCSIOP_MODE_SENSE:
+	break;
+
+    }
+
+  DPRINT1("AtapiExecuteScsi() done!\n");
+
+  return(SrbStatus);
+}
+
 
 /* EOF */

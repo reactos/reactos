@@ -1,4 +1,4 @@
-/* $Id: class2.c,v 1.2 2002/01/14 01:43:26 ekohl Exp $
+/* $Id: class2.c,v 1.3 2002/01/27 01:25:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,14 +7,21 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
+/*
+ * TODO:
+ *	- ScsiClassClaimDevice() must send a claim/unclaim request to
+ *	  scsiport.sys.
+ */
+
+/* INCLUDES *****************************************************************/
+
 #include <ddk/ntddk.h>
 #include "../include/scsi.h"
 #include "../include/class2.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
-//#define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 
 #define VERSION "0.0.1"
 
@@ -41,7 +48,8 @@ static NTSTATUS STDCALL
 ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
-//  -------------------------------------------------------  Public Interface
+
+/* FUNCTIONS ****************************************************************/
 
 //    DriverEntry
 //
@@ -113,7 +121,28 @@ ScsiClassClaimDevice(PDEVICE_OBJECT PortDeviceObject,
 		     BOOLEAN Release,
 		     PDEVICE_OBJECT *NewPortDeviceObject OPTIONAL)
 {
-  UNIMPLEMENTED;
+  NTSTATUS Status;
+
+  DPRINT1("ScsiClassClaimDevice() called\n");
+
+  if (NewPortDeviceObject != NULL)
+    *NewPortDeviceObject = NULL;
+
+  if (Release == TRUE)
+    {
+      ObDereferenceObject(PortDeviceObject);
+      return(STATUS_SUCCESS);
+    }
+
+  ObReferenceObjectByPointer(PortDeviceObject,
+			     0,
+			     NULL,
+			     KernelMode);
+
+  if (NewPortDeviceObject != NULL)
+    *NewPortDeviceObject = PortDeviceObject;
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -124,7 +153,20 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			    IN OUT PDEVICE_OBJECT *DeviceObject,
 			    IN PCLASS_INIT_DATA InitializationData)
 {
-  UNIMPLEMENTED;
+  DPRINT1("ScsiClassCreateDeviceObject() called\n");
+
+#if 0
+  Status = IoCreateDevice(DriverObject,
+			  InitializationData->DeviceExtensionSize,
+			  &UnicodeName,
+			  InitializationData->DeviceType,
+			  InitializationData->DeviceCharacteristics,
+			  FALSE,
+			  &InternalDeviceObject);
+#endif
+
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -150,8 +192,43 @@ ULONG STDCALL
 ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
 			      PSCSI_ADAPTER_BUS_INFO AdapterInformation)
 {
+  PSCSI_INQUIRY_DATA UnitInfo;
+  PINQUIRYDATA InquiryData;
+  PUCHAR Buffer;
+  ULONG Bus;
+  ULONG UnclaimedDevices = 0;
+  NTSTATUS Status;
+
   DPRINT("ScsiClassFindUnclaimedDevices() called!\n");
-  return(0);
+
+  DPRINT("NumberOfBuses: %lu\n",AdapterInformation->NumberOfBuses);
+  Buffer = (PUCHAR)AdapterInformation;
+  for (Bus = 0; Bus < (ULONG)AdapterInformation->NumberOfBuses; Bus++)
+    {
+      DPRINT("Searching bus %lu\n", Bus);
+
+      UnitInfo = (PSCSI_INQUIRY_DATA)(Buffer + AdapterInformation->BusData[Bus].InquiryDataOffset);
+
+      while (AdapterInformation->BusData[Bus].InquiryDataOffset)
+	{
+	  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
+
+	  DPRINT("Device: '%.8s'\n", InquiryData->VendorId);
+
+	  if ((InitializationData->ClassFindDeviceCallBack(InquiryData) == TRUE) &&
+	      (UnitInfo->DeviceClaimed == FALSE))
+	    {
+	      UnclaimedDevices++;
+	    }
+
+	  if (UnitInfo->NextInquiryDataOffset == 0)
+	    break;
+
+	  UnitInfo = (PSCSI_INQUIRY_DATA) (Buffer + UnitInfo->NextInquiryDataOffset);
+	}
+    }
+
+  return(UnclaimedDevices);
 }
 
 
@@ -159,10 +236,19 @@ NTSTATUS STDCALL
 ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 			 PIO_SCSI_CAPABILITIES *PortCapabilities)
 {
+  PIO_SCSI_CAPABILITIES Buffer;
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
+
+  *PortCapabilities = NULL;
+  Buffer = ExAllocatePool(NonPagedPool, /* FIXME: use paged pool */
+			  sizeof(IO_SCSI_CAPABILITIES));
+  if (Buffer == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   KeInitializeEvent(&Event,
 		    NotificationEvent,
@@ -172,13 +258,14 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 				      PortDeviceObject,
 				      NULL,
 				      0,
-				      PortCapabilities,
-				      sizeof(PVOID),
+				      Buffer,
+				      sizeof(IO_SCSI_CAPABILITIES),
 				      FALSE,
 				      &Event,
 				      &IoStatusBlock);
   if (Irp == NULL)
     {
+      ExFreePool(Buffer);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -191,7 +278,16 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 			    KernelMode,
 			    FALSE,
 			    NULL);
-      return(IoStatusBlock.Status);
+      Status = IoStatusBlock.Status;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(Buffer);
+    }
+  else
+    {
+      *PortCapabilities = Buffer;
     }
 
   return(Status);
@@ -208,10 +304,9 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
   KEVENT Event;
   PIRP Irp;
 
-  Buffer = ExAllocatePool(NonPagedPool, /* FIXME: use paged pool */
+  *ConfigInfo = NULL;
+  Buffer = ExAllocatePool(NonPagedPool,
 			  INQUIRY_DATA_SIZE);
-  *ConfigInfo = Buffer;
-
   if (Buffer == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
@@ -232,6 +327,7 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
 				      &IoStatusBlock);
   if (Irp == NULL)
     {
+      ExFreePool(Buffer);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -250,7 +346,10 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
   if (!NT_SUCCESS(Status))
     {
       ExFreePool(Buffer);
-      *ConfigInfo = NULL;
+    }
+  else
+    {
+      *ConfigInfo = Buffer;
     }
 
   return(Status);
@@ -262,14 +361,17 @@ ScsiClassInitialize(PVOID Argument1,
 		    PVOID Argument2,
 		    PCLASS_INIT_DATA InitializationData)
 {
+  PCONFIGURATION_INFORMATION ConfigInfo;
   PDRIVER_OBJECT DriverObject = Argument1;
   WCHAR NameBuffer[80];
   UNICODE_STRING PortName;
-  ULONG PortNumber = 0;
+  ULONG PortNumber;
   PDEVICE_OBJECT PortDeviceObject;
   PFILE_OBJECT FileObject;
   BOOLEAN DiskFound = FALSE;
   NTSTATUS Status;
+
+  DPRINT("ScsiClassInitialize() called!\n");
 
   DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiClassCreateClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiClassCreateClose;
@@ -284,20 +386,22 @@ ScsiClassInitialize(PVOID Argument1,
       DriverObject->DriverStartIo = InitializationData->ClassStartIo;
     }
 
+  ConfigInfo = IoGetConfigurationInformation();
+
   /* look for ScsiPortX scsi port devices */
-  do
+  for (PortNumber = 0; PortNumber < ConfigInfo->ScsiPortCount; PortNumber++)
     {
       swprintf(NameBuffer,
 	       L"\\Device\\ScsiPort%lu",
 	        PortNumber);
       RtlInitUnicodeString(&PortName,
 			   NameBuffer);
-      DPRINT1("Checking scsi port %ld\n", PortNumber);
+      DPRINT("Checking scsi port %ld\n", PortNumber);
       Status = IoGetDeviceObjectPointer(&PortName,
 					FILE_READ_ATTRIBUTES,
 					&FileObject,
 					&PortDeviceObject);
-      DPRINT1("Status 0x%08lX\n", Status);
+      DPRINT("Status 0x%08lX\n", Status);
       if (NT_SUCCESS(Status))
 	{
 	  DPRINT1("ScsiPort%lu found.\n", PortNumber);
@@ -311,14 +415,10 @@ ScsiClassInitialize(PVOID Argument1,
 	    {
 	      DiskFound = TRUE;
 	    }
-
-	  ObDereferenceObject(PortDeviceObject);
-	  ObDereferenceObject(FileObject);
 	}
-	PortNumber++;
     }
-  while (NT_SUCCESS(Status));
 
+  DPRINT("ScsiClassInitialize() done!\n");
 for(;;);
 
   return((DiskFound == TRUE) ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE);
@@ -434,18 +534,24 @@ ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
 }
 
 
-/* Internal Routines **************/
+/* INTERNAL FUNCTIONS *******************************************************/
 
 static NTSTATUS STDCALL
 ScsiClassCreateClose(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp)
 {
+//  PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+
+//  if (deviceExtension->ClassCreateClose)
+//    return(deviceExtension->ClassCreateClose(DeviceObject, Irp));
+
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return(STATUS_SUCCESS);
 }
+
 
 static NTSTATUS STDCALL
 ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
