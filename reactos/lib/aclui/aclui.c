@@ -16,18 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: aclui.c,v 1.1 2004/08/10 00:09:40 weiden Exp $
+/* $Id: aclui.c,v 1.2 2004/08/10 00:12:31 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
- * FILE:            lib/acledit/acledit.c
+ * FILE:            lib/aclui/aclui.c
  * PURPOSE:         Access Control List Editor
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *
- *                  Based on guess work and on this nice article:
- *                    http://www.sysinternals.com/ntw2k/info/acledit.shtml
- *
  * UPDATE HISTORY:
- *      07/09/2004  Created
+ *      08/10/2004  Created
  */
 #define INITGUID
 #include <windows.h>
