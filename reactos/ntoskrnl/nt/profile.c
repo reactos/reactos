@@ -27,7 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
@@ -457,7 +458,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   /*
    * Create the object
    */
-  Status = ObCreateObject(&ProfileHandle,
+  Status = ObRosCreateObject(&ProfileHandle,
 			  STANDARD_RIGHTS_ALL,
 			  NULL,
 			  ExProfileObjectType,

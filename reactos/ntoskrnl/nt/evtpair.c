@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.13 2002/09/08 10:23:38 chorns Exp $
+/* $Id: evtpair.c,v 1.14 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <ntos/synch.h>
 #include <limits.h>
 
@@ -83,7 +84,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
    NTSTATUS Status;
 
    DPRINT("NtCreateEventPair()\n");
-   Status = ObCreateObject(EventPairHandle,
+   Status = ObRosCreateObject(EventPairHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExEventPairObjectType,

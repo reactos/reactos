@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.115 2003/06/07 11:34:36 chorns Exp $
+/* $Id: section.c,v 1.116 2003/06/07 12:23:14 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -29,7 +29,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/mm.h>
 #include <internal/io.h>
 #include <internal/ps.h>
@@ -2090,7 +2091,7 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Status = ObCreateObject(SectionHandle,
+  Status = ObRosCreateObject(SectionHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  MmSectionObjectType,
@@ -2186,7 +2187,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Status = ObCreateObject(SectionHandle,
+  Status = ObRosCreateObject(SectionHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  MmSectionObjectType,
@@ -2555,7 +2556,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Status = ObCreateObject(SectionHandle,
+  Status = ObRosCreateObject(SectionHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  MmSectionObjectType,

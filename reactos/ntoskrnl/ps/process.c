@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.106 2003/06/05 22:45:22 gdalsnes Exp $
+/* $Id: process.c,v 1.107 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ob.h>
 #include <internal/mm.h>
 #include <internal/ke.h>
@@ -233,7 +234,7 @@ PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   Status = ObCreateObject(NULL,
+   Status = ObRosCreateObject(NULL,
 			   PROCESS_ALL_ACCESS,
 			   NULL,
 			   PsProcessType,
@@ -500,7 +501,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	return(Status);
      }
 
-   Status = ObCreateObject(ProcessHandle,
+   Status = ObRosCreateObject(ProcessHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   PsProcessType,
@@ -508,7 +509,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
 	ObDereferenceObject(ParentProcess);
-	DPRINT("ObCreateObject() = %x\n",Status);
+	DPRINT("ObRosCreateObject() = %x\n",Status);
 	return(Status);
      }
 

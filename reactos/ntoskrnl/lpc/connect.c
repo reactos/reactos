@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.15 2003/01/11 15:33:49 hbirr Exp $
+/* $Id: connect.c,v 1.16 2003/06/07 12:23:14 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
@@ -62,7 +63,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Create a port to represent our side of the connection
    */
-  Status = ObCreateObject (NULL,
+  Status = ObRosCreateObject (NULL,
 			   PORT_ALL_ACCESS,
 			   NULL,
 			   ExPortType,
@@ -547,7 +548,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt)
     {
-      Status = ObCreateObject(ServerPortHandle,
+      Status = ObRosCreateObject(ServerPortHandle,
 			      PORT_ALL_ACCESS,
 			      NULL,
 			      ExPortType,

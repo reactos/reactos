@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.1 2003/02/25 16:49:08 ekohl Exp $
+/* $Id: symlink.c,v 1.2 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ob.h>
 
 #define NDEBUG
@@ -227,7 +228,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 	 ObjectAttributes,
 	 DeviceName);
 
-  Status = ObCreateObject(SymbolicLinkHandle,
+  Status = ObRosCreateObject(SymbolicLinkHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ObSymbolicLinkType,

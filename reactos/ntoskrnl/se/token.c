@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.23 2003/05/31 11:10:30 ekohl Exp $
+/* $Id: token.c,v 1.24 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ps.h>
 #include <internal/se.h>
 #include <internal/safe.h>
@@ -144,14 +145,14 @@ SepDuplicateToken(PACCESS_TOKEN Token,
 
   PACCESS_TOKEN AccessToken;
 
-  Status = ObCreateObject(0,
+  Status = ObRosCreateObject(0,
 			  TOKEN_ALL_ACCESS,
 			  ObjectAttributes,
 			  SepTokenObjectType,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
       return(Status);
     }
 
@@ -970,7 +971,7 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
  /*
   * Initialize the token
   */
-  Status = ObCreateObject(NULL,
+  Status = ObRosCreateObject(NULL,
 			 TOKEN_ALL_ACCESS,
 			 NULL,
 			 SepTokenObjectType,
@@ -1186,14 +1187,14 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  Status = ObCreateObject(&TokenHandle,
+  Status = ObRosCreateObject(&TokenHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  SepTokenObjectType,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
       return(Status);
     }
 
@@ -1218,7 +1219,7 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 
   /*
    * Normally we would just point these members into the variable information
-   * area; however, our ObCreateObject() call can't allocate a variable information
+   * area; however, our ObRosCreateObject() call can't allocate a variable information
    * area, so we allocate them seperately and provide a destroy function.
    */
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.60 2003/06/05 23:36:35 gdalsnes Exp $
+/* $Id: create.c,v 1.61 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,7 +20,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
@@ -356,7 +357,7 @@ PsInitializeThread(HANDLE ProcessHandle,
    /*
     * Create and initialize thread
     */
-   Status = ObCreateObject(ThreadHandle,
+   Status = ObRosCreateObject(ThreadHandle,
 			   DesiredAccess,
 			   ThreadAttributes,
 			   PsThreadType,

@@ -29,7 +29,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <ntos/synch.h>
 
 #define NDEBUG
@@ -113,7 +114,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
   PKMUTEX Mutant;
   NTSTATUS Status;
 
-  Status = ObCreateObject(MutantHandle,
+  Status = ObRosCreateObject(MutantHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ExMutantObjectType,

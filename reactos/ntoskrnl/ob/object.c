@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.62 2003/06/02 16:49:33 ekohl Exp $
+/* $Id: object.c,v 1.63 2003/06/07 12:23:14 chorns Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
@@ -337,16 +338,18 @@ ObQueryNameString (IN PVOID Object,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	ObCreateObject@36
+ * 	ObRosCreateObject@20
  *
  * DESCRIPTION
  *
  * ARGUMENTS
  *
+ * NOTE
+ *   Internal ReactOS function
  * RETURN VALUE
  */
 NTSTATUS STDCALL
-ObCreateObject (OUT PHANDLE Handle,
+ObRosCreateObject (OUT PHANDLE Handle,
 		IN ACCESS_MASK DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes,
 		IN POBJECT_TYPE Type,
@@ -362,7 +365,7 @@ ObCreateObject (OUT PHANDLE Handle,
 
   assert_irql(APC_LEVEL);
 
-  DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
+  DPRINT("ObRosCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
 	 Handle, ObjectAttributes, Type);
 
   if (ObjectAttributes != NULL &&
@@ -459,6 +462,30 @@ ObCreateObject (OUT PHANDLE Handle,
   return(STATUS_SUCCESS);
 }
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	ObCreateObject@36
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
+NTSTATUS STDCALL
+ObCreateObject (IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
+  IN POBJECT_TYPE         ObjectType,
+  IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
+  IN KPROCESSOR_MODE      AccessMode,
+  IN OUT PVOID            ParseContext OPTIONAL,
+  IN ULONG                ObjectSize,
+  IN ULONG                PagedPoolCharge OPTIONAL,
+  IN ULONG                NonPagedPoolCharge OPTIONAL,
+  OUT PVOID               *Object)
+{
+  UNIMPLEMENTED
+  return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS STDCALL
 ObReferenceObjectByPointer(IN PVOID Object,

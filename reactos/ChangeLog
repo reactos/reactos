@@ -3,7 +3,7 @@
 	Changes for compiling with w32api
 
 	* include/ddk/obfuncs.h (ObCreateObject): Remove.
-	* include/ntos/zwtypes.h (ObRosCreateObject):
+	* include/ntos/zwtypes.h (ObRosCreateObject): Add.
 	* ntoskrnl/ntoskrnl.def, ntoskrnl/ntoskrnl.edf: Export ObCreateObject@36
 	and ObRosCreateObject@20.
 	* ntoskrnl/cm/ntfunc.c, ntoskrnl/cm/registry.c, ntoskrnl/cm/regobj.c,

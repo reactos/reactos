@@ -28,7 +28,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <limits.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/id.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
@@ -146,7 +147,7 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
        ObjectAttributes = NULL;
      }
 
-   Status = ObCreateObject(&EventHandle,
+   Status = ObRosCreateObject(&EventHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExEventObjectType,

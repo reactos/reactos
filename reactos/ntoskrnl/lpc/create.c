@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.9 2002/09/08 10:23:32 chorns Exp $
+/* $Id: create.c,v 1.10 2003/06/07 12:23:14 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
 
@@ -113,7 +114,7 @@ NtCreatePort (PHANDLE		      PortHandle,
       return (Status);
     }
   /* Ask Ob to create the object */
-  Status = ObCreateObject (PortHandle,
+  Status = ObRosCreateObject (PortHandle,
 			   PORT_ALL_ACCESS,
 			   ObjectAttributes,
 			   ExPortType,

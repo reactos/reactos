@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.17 2003/06/02 10:03:52 ekohl Exp $
+/* $Id: dirobj.c,v 1.18 2003/06/07 12:23:14 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,7 +11,8 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ob.h>
 #include <internal/io.h>
 
@@ -339,7 +340,7 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
 	  DirectoryHandle, DesiredAccess, ObjectAttributes,
 	  ObjectAttributes->ObjectName);
    
-   return(ObCreateObject(DirectoryHandle,
+   return(ObRosCreateObject(DirectoryHandle,
 			 DesiredAccess,
 			 ObjectAttributes,
 			 ObDirectoryType,
