@@ -39,8 +39,8 @@
 #include "fdi.h"
 #include "wine/unicode.h"
 
-#include "msvcrt/fcntl.h"
-#include "msvcrt/share.h"
+#include "fcntl.h"
+#include "share.h"
 
 #include "wine/debug.h"
 
