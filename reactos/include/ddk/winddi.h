@@ -281,6 +281,7 @@ enum _GLYPH_MODE
 #define  HOOK_COPYBITS           0x00000400
 #define  HOOK_SYNCHRONIZE        0x00001000
 #define  HOOK_SYNCHRONIZEACCESS  0x00004000
+#define  HOOK_TRANSPARENTBLT     0x00008000
 
 enum _DRV_HOOK_FUNCS
 {
@@ -340,6 +341,7 @@ enum _DRV_HOOK_FUNCS
   INDEX_DrvEnableDirectDraw,
   INDEX_DrvDisableDirectDraw,
   INDEX_DrvQuerySpoolType,
+  INDEX_DrvTransparentBlt = 74,
   INDEX_LAST
 };
 

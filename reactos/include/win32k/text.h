@@ -2,6 +2,24 @@
 #ifndef __WIN32K_TEXT_H
 #define __WIN32K_TEXT_H
 
+/* GDI logical font object */
+typedef struct
+{
+   LOGFONT    logfont;
+} TEXTOBJ, *PTEXTOBJ;
+
+/*  Internal interface  */
+
+#define  TEXTOBJ_AllocText() \
+  ((PTEXTOBJ) GDIOBJ_AllocObject (sizeof (TEXTOBJ), GO_FONT_MAGIC))
+#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ) hBMObj)
+#define  TEXTOBJ_HandleToPtr(hBMObj)  \
+  ((PTEXTOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_FONT_MAGIC))
+#define  TEXTOBJ_PtrToHandle(hBMObj)  \
+  ((HFONT) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_FONT_MAGIC))
+#define  TEXTOBJ_LockText(hBMObj) GDIOBJ_LockObject ((HGDIOBJ) hBMObj)
+#define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObject ((HGDIOBJ) hBMObj)
+
 int
 STDCALL
 W32kAddFontResource(LPCWSTR  Filename);
