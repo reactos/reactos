@@ -99,32 +99,48 @@ static HANDLE	hPerformancePageEvent = NULL;	// When this event becomes signaled 
 
 void		PerformancePageRefreshThread(void *lpParameter);
 
-void AdjustFramePostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+void AdjustFramePostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int)
 {
 	RECT	rc;
 	int		cx, cy;
     GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
     cx = rc.left + nXDifference;
     cy = rc.top + nYDifference;
     SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
     InvalidateRect(hCntrl, NULL, TRUE);
 }
 		 
-void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int pos)
 {
-	RECT	rc;
+    RECT	rc;
 	int		cx, cy, sx, sy;
     GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
-//    cx = rc.left + nXDifference;
-//    cy = rc.top + nYDifference;
-    cx = rc.left;
-    cy = rc.top;
-    sx = rc.right - rc.left + nXDifference;
-    sy = rc.bottom - rc.top + nYDifference;
-//    SetWindowPos(hCntrl, NULL, 0, 0, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-//    SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
+    if (pos) {
+        cx = rc.left;
+        cy = rc.top;
+        switch (pos) {
+        case 1:
+            break;
+        case 2:
+            cy += nYDifference / 2;
+            break;
+        case 3:
+            cx += nXDifference / 2;
+            break;
+        case 4:
+            cx += nXDifference / 2;
+            cy += nYDifference / 2;
+            break;
+        }
+        sx = rc.right - rc.left + nXDifference / 2;
+        sy = rc.bottom - rc.top + nYDifference / 2;
+    } else {
+        cx = rc.left + nXDifference;
+        cy = rc.top + nYDifference;
+        sx = sy = 0;
+    }
     SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
     InvalidateRect(hCntrl, NULL, TRUE);
 }
@@ -268,59 +284,84 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 //		SetWindowPos(hPerformancePageCpuUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
 		// Reposition the performance page's controls
-        AdjustFramePostion(hPerformancePageTotalsFrame, hDlg, nXDifference, nYDifference);
-        AdjustFramePostion(hPerformancePageCommitChargeFrame, hDlg, nXDifference, nYDifference);
-        AdjustFramePostion(hPerformancePageKernelMemoryFrame, hDlg, nXDifference, nYDifference);
-        AdjustFramePostion(hPerformancePagePhysicalMemoryFrame, hDlg, nXDifference, nYDifference);
-        AdjustFrameSize(hPerformancePageCpuUsageFrame, hDlg, nXDifference, nYDifference);
-//        AdjustFrameSize(hPerformancePageMemUsageFrame, hDlg, nXDifference, nYDifference);
-//        AdjustFrameSize(hPerformancePageCpuUsageHistoryFrame, hDlg, nXDifference, nYDifference);
-//        AdjustFrameSize(hPerformancePageMemUsageHistoryFrame, hDlg, nXDifference, nYDifference);
+        AdjustFramePostion(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
+        AdjustFramePostion(hPerformancePageCommitChargeFrame, hDlg, 0, nYDifference, 0);
+        AdjustFramePostion(hPerformancePageKernelMemoryFrame, hDlg, 0, nYDifference, 0);
+        AdjustFramePostion(hPerformancePagePhysicalMemoryFrame, hDlg, 0, nYDifference, 0);
 #if 0
-        AdjustControlPostion(hPerformancePageCommitChargeTotalLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargeLimitLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargePeakLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryTotalLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryPagedLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsHandleCountLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsProcessCountLabel, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsThreadCountLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeTotalLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeLimitLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargePeakLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryTotalLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryPagedLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsHandleCountLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsProcessCountLabel, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsThreadCountLabel, hDlg, 0, nYDifference);
 #else
-        AdjustCntrlPos(IDS_COMMIT_CHARGE_TOTAL, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_COMMIT_CHARGE_LIMIT, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_COMMIT_CHARGE_PEAK, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_KERNEL_MEMORY_TOTAL, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_KERNEL_MEMORY_PAGED, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_KERNEL_MEMORY_NONPAGED, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_TOTAL, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_AVAILABLE, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_TOTALS_HANDLE_COUNT, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, nXDifference, nYDifference);
-        AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_PAGED, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_NONPAGED, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_AVAILABLE, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
 #endif
 
-        AdjustControlPostion(hPerformancePageCommitChargeTotalEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargeLimitEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargePeakEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryTotalEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryPagedEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsHandleCountEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, nXDifference, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeLimitEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargePeakEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryPagedEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsHandleCountEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, 0, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, 0, nYDifference);
 
-//        AdjustControlPostion(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference);
-//        AdjustControlPostion(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference);
-//        AdjustControlPostion(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference);
-//        AdjustControlPostion(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference);
+    static int lastX, lastY;
+
+    nXDifference += lastX; 
+    nYDifference += lastY; 
+    lastX = lastY = 0; 
+    if (nXDifference % 2) {
+        if (nXDifference > 0) {
+            nXDifference--;
+            lastX++;
+        } else {
+            nXDifference++;
+            lastX--;
+        }
+    }
+    if (nYDifference % 2) {
+        if (nYDifference > 0) {
+            nYDifference--;
+            lastY++;
+        } else {
+            nYDifference++;
+            lastY--;
+        }
+    }
+        AdjustFrameSize(hPerformancePageCpuUsageFrame, hDlg, nXDifference, nYDifference, 1);
+        AdjustFrameSize(hPerformancePageMemUsageFrame, hDlg, nXDifference, nYDifference, 2);
+        AdjustFrameSize(hPerformancePageCpuUsageHistoryFrame, hDlg, nXDifference, nYDifference, 3);
+        AdjustFrameSize(hPerformancePageMemUsageHistoryFrame, hDlg, nXDifference, nYDifference, 4);
+/*
+        AdjustFramePostion(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
+        AdjustFramePostion(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
+        AdjustFramePostion(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
+        AdjustFramePostion(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
+ */
 		break;
 	}
 
