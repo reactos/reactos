@@ -13,7 +13,7 @@ BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
    ULONG x, y, d, i, length, xchange, ychange, error,
          iSolidColor, hx, vy;
    LONG  deltax, deltay;
-
+DbgPrint("drvlineto\n");
    iSolidColor = Brush->iSolidColor; // FIXME: Brush Realization...
 
    // FIXME: Implement clipping

@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.11 $
+ * $Revision: 1.12 $
  * $Author: jfilby $
- * $Date: 2001/03/31 15:40:33 $
+ * $Date: 2001/05/02 12:29:07 $
  *
  */
 
@@ -48,6 +48,10 @@ VOID VGADDIMovePointer(PSURFOBJ pso, LONG x, LONG y, PRECTL prcl);
 ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, PXLATEOBJ pxlo,
 			    LONG xHot, LONG yHot, LONG x, LONG y,
 			    PRECTL prcl, ULONG fl);
+BOOL VGADDITransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
+                       PCLIPOBJ Clip, PXLATEOBJ ColorTranslation,
+                       PRECTL DestRect, PRECTL SourceRect,
+                       ULONG TransparentColor, ULONG Reserved);
 
 DRVFN FuncList[] =
 {
@@ -62,6 +66,7 @@ DRVFN FuncList[] =
   {INDEX_DrvLineTo, (PFN) VGADDILineTo},
   {INDEX_DrvPaint, (PFN) VGADDIPaint},
   {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
+  {INDEX_DrvTransparentBlt, (PFN) VGADDITransparentBlt},
   {INDEX_DrvMovePointer, (PFN) VGADDIMovePointer},
   {INDEX_DrvSetPointerShape, (PFN) VGADDISetPointerShape},
 
@@ -387,7 +392,8 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
 
   InitSavedBits(ppdev);
 
-  if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO | HOOK_COPYBITS))
+  if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO | HOOK_COPYBITS |
+    HOOK_TRANSPARENTBLT))
   {
     EngDebugPrint("VGADDI:", "Successfully associated surface\n", 0);
     ppdev->SurfHandle = hsurf;

@@ -12,17 +12,21 @@
 // Note: All of our BitBlt ops expect to be working with 4BPP data
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, XLATEOBJ *,
-                           RECTL *, POINTL *);
+                           RECTL *, POINTL *, POINTL *,
+                           BRUSHOBJ *, POINTL *, ROP4);
 
 BOOL DIBtoVGA(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-   RECTL   *DestRect, POINTL *SourcePoint)
+   RECTL   *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
 {
-  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0;
-  BYTE  *GDIpos, *initial;
+  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, c8;
+  BYTE  *GDIpos, *initial, *tMask, *lMask;
 
-  GDIpos = Source->pvBits /* +
-           SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1) */ ;
+  if(Source != NULL) {
+    GDIpos = Source->pvBits /* +
+             SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1) */ ;
+  }
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
@@ -35,8 +39,28 @@ BOOL DIBtoVGA(
   if(ColorTranslation == NULL)
   {
 
-    // No color translation necessary, we assume BPP = 1
-    DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
+    if(Mask != NULL)
+    {
+      if(rop4 == 0xAACC) { // no source, just paint the brush according to the mask
+
+        tMask = Mask->pvBits;
+        for (j=0; j<dy; j++)
+        {
+          lMask = tMask;
+          c8 = 0;
+          for (i=0; i<dx; i++)
+          {
+            if((*lMask & maskbit[c8]) != 0)
+              vgaPutPixel(DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+            c8++;
+            if(c8 == 8) { lMask++; c8=0; }
+          }
+          tMask += Mask->lDelta;
+        }
+
+      }
+    } else
+      DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
 
   } else {
 
@@ -58,7 +82,8 @@ BOOL DIBtoVGA(
 
 BOOL VGAtoDIB(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-   RECTL   *DestRect, POINTL *SourcePoint)
+   RECTL   *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
 {
   LONG i, j, dx, dy, RGBulong;
   BYTE  *GDIpos, *initial, idxColor;
@@ -102,21 +127,24 @@ BOOL VGAtoDIB(
 
 BOOL DFBtoVGA(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-   RECTL   *DestRect, POINTL *SourcePoint)
+   RECTL   *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
 {
   // Do DFBs need color translation??
 }
 
 BOOL VGAtoDFB(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-   RECTL   *DestRect, POINTL *SourcePoint)
+   RECTL   *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
 {
   // Do DFBs need color translation??
 }
 
 BOOL VGAtoVGA(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
-   RECTL   *DestRect, POINTL *SourcePoint)
+   RECTL   *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4)
 {
   // FIXME: Use fast blts instead of get and putpixels
 
@@ -180,38 +208,45 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
    RECT_ENUM RectEnum;
    BOOL EnumMore;
    PFN_VGABlt  BltOperation;
+   ULONG SourceType;
+
+   if(Source == NULL)
+   {
+     SourceType = STYPE_BITMAP;
+   } else
+     SourceType = Source->iType;
 
 DPRINT("VGADDIBitBlt: Dest->pvScan0: %08x\n", Dest->pvScan0);
 
    // Determine the bltbit operation
 
-   if((Source->iType == STYPE_BITMAP) && (Dest->iType == STYPE_DEVICE))
+   if((SourceType == STYPE_BITMAP) && (Dest->iType == STYPE_DEVICE))
    {
 DPRINT("DIB2VGA\n");
       BltOperation = DIBtoVGA;
    } else
-   if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_BITMAP))
+   if((SourceType == STYPE_DEVICE) && (Dest->iType == STYPE_BITMAP))
    {
 DPRINT("VGA2DIB\n");
       BltOperation = VGAtoDIB;
    } else
-   if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVICE))
+   if((SourceType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVICE))
    {
 DPRINT("VGA2VGA\n");
       BltOperation = VGAtoVGA;
    } else
-   if((Source->iType == STYPE_DEVBITMAP) && (Dest->iType == STYPE_DEVICE))
+   if((SourceType == STYPE_DEVBITMAP) && (Dest->iType == STYPE_DEVICE))
    {
 DPRINT("DFB2VGA\n");
       BltOperation = DFBtoVGA;
    } else
-   if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVBITMAP))
+   if((SourceType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVBITMAP))
    {
 DPRINT("VGA2DFB\n");
       BltOperation = VGAtoDFB;
    } else
    {
-DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation (source:%u dest:%u)\n", Source->iType, Dest->iType);
+DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation (source:%u dest:%u)\n", SourceType, Dest->iType);
       // Cannot handle given surfaces for VGA BitBlt
       return FALSE;
    }
@@ -221,7 +256,7 @@ DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation (source:%u dest:%u
    if(Clip == NULL)
    {
       BltOperation(Dest, Source, Mask, ColorTranslation, DestRect,
-                   SourcePoint);
+                   SourcePoint, MaskPoint, Brush, BrushPoint, rop4);
    } else
    {
       switch(Clip->iMode) {
@@ -233,7 +268,7 @@ DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation (source:%u dest:%u
             // FIXME: Intersect clip rectangle
 
             BltOperation(Dest, Source, Mask, ColorTranslation,
-                         DestRect, SourcePoint);
+                         DestRect, SourcePoint, MaskPoint, Brush, BrushPoint, rop4);
          } else {
 
             // Enumerate all the rectangles and draw them
