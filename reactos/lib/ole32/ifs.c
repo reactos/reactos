@@ -565,7 +565,7 @@ LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
  *           CoRegisterMallocSpy        [OLE32.@]
  *
  * NOTES
- *  if a mallocspy is already registered, we cant do it again since
+ *  if a mallocspy is already registered, we can't do it again since
  *  only the spy knows, how to free a memory block
  */
 HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)

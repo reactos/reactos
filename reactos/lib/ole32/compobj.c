@@ -1588,22 +1588,22 @@ HINSTANCE WINAPI CoLoadLibrary(LPOLESTR lpszLibName, BOOL bAutoFree)
 /***********************************************************************
  *           CoFreeLibrary [OLE32.@]
  *
- * NOTES: don't belive the docu
+ * NOTES: don't believe the documentation
  */
 void WINAPI CoFreeLibrary(HINSTANCE hLibrary)
 {
-	FreeLibrary(hLibrary);
+    FreeLibrary(hLibrary);
 }
 
 
 /***********************************************************************
  *           CoFreeAllLibraries [OLE32.@]
  *
- * NOTES: don't belive the docu
+ * NOTES: don't believe the documentation
  */
 void WINAPI CoFreeAllLibraries(void)
 {
-        /* NOP */
+    /* NOP */
 }
 
 
@@ -2010,14 +2010,19 @@ HRESULT WINAPI OleDoAutoConvert(IStorage *pStg, LPCLSID pClsidNew)
 
 /******************************************************************************
  *              CoTreatAsClass        [OLE32.@]
+ *
+ * Sets TreatAs value of a class
  */
 HRESULT WINAPI CoTreatAsClass(REFCLSID clsidOld, REFCLSID clsidNew)
 {
     HKEY hkey = 0;
-    char buf[200], szClsidNew[200];
+    char buf[47];
+    char szClsidNew[39];
     HRESULT res = S_OK;
+    char auto_treat_as[39];
+    LONG auto_treat_as_size = sizeof(auto_treat_as);
+    CLSID id;
 
-    FIXME("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
     sprintf(buf,"CLSID\\");WINE_StringFromCLSID(clsidOld,&buf[6]);
     WINE_StringFromCLSID(clsidNew, szClsidNew);
     if (RegOpenKeyA(HKEY_CLASSES_ROOT,buf,&hkey))
@@ -2025,9 +2030,26 @@ HRESULT WINAPI CoTreatAsClass(REFCLSID clsidOld, REFCLSID clsidNew)
         res = REGDB_E_CLASSNOTREG;
 	goto done;
     }
-    if (RegSetValueA(hkey, "AutoTreatAs", REG_SZ, szClsidNew, strlen(szClsidNew)+1))
+    if (!memcmp( clsidOld, clsidNew, sizeof(*clsidOld) ))
     {
-        res = REGDB_E_WRITEREGDB;
+       if (!RegQueryValueA(hkey, "AutoTreatAs", auto_treat_as, &auto_treat_as_size) &&
+           !__CLSIDFromStringA(auto_treat_as, &id))
+       {
+           if (RegSetValueA(hkey, "TreatAs", REG_SZ, auto_treat_as, strlen(auto_treat_as)+1))
+           {
+               res = REGDB_E_WRITEREGDB;
+               goto done;
+           }
+       }
+       else
+       {
+           RegDeleteKeyA(hkey, "TreatAs");
+           goto done;
+       }
+    }
+    else if (RegSetValueA(hkey, "TreatAs", REG_SZ, szClsidNew, strlen(szClsidNew)+1))
+    {
+       res = REGDB_E_WRITEREGDB;
 	goto done;
     }
 

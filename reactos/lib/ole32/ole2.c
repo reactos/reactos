@@ -332,6 +332,9 @@ HRESULT WINAPI RegisterDragDrop(
 
   TRACE("(%p,%p)\n", hwnd, pDropTarget);
 
+  if (!pDropTarget)
+    return E_INVALIDARG;
+  
   /*
    * First, check if the window is already registered.
    */
