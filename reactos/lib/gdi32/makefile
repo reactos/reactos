@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.30 2003/07/21 03:56:27 royce Exp $
+# $Id: makefile,v 1.31 2003/08/04 00:28:44 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,7 +21,12 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 MAIN_OBJECTS = main/dllmain.o
 
-MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
+MISC_OBJECTS = \
+ misc/heap.o \
+ misc/stubs.o \
+ misc/stubsa.o \
+ misc/stubsw.o \
+ misc/win32k.o
 
 OBJECTS_OBJECTS = \
  objects/bitblt.o \

@@ -1,14 +1,15 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.7 $
- * $Author: chorns $
- * $Date: 2003/07/10 15:35:49 $
+ * $Revision: 1.8 $
+ * $Author: royce $
+ * $Date: 2003/08/04 00:28:44 $
  *
  */
 
 #include <windows.h>
 #include <win32k/win32k.h>
+#include <internal/heap.h>
 
 /*
  * GDI32.DLL doesn't have an entry point. The initialization is done by a call
@@ -64,7 +65,7 @@ VOID
 WINAPI
 GdiProcessSetup (VOID)
 {
-
+	hProcessHeap = RtlGetProcessHeap();
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.20 2003/07/29 16:44:48 royce Exp $
+/* $Id: stubsa.c,v 1.21 2003/08/04 00:28:44 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -20,29 +20,7 @@
 #include <win32k/dc.h>
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>
-
-NTSTATUS
-STATIC
-HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA )
-{
-  ULONG len;
-  *ppszW = NULL;
-  if ( !lpszA )
-    return STATUS_SUCCESS;
-  len = lstrlenA(lpszA);
-  *ppszW = RtlAllocateHeap ( hHeap, 0, (len+1) * sizeof(WCHAR) );
-  if ( !*ppszW )
-    return STATUS_NO_MEMORY;
-  return RtlMultiByteToUnicodeN ( *ppszW, len, NULL, (PCHAR)lpszA, len );
-}
-
-
-VOID
-STATIC HEAP_free ( HANDLE hHeap, LPVOID memory )
-{
-  RtlFreeHeap ( hHeap, 0, memory );
-}
-
+#include <internal/heap.h>
 
 /*
  * @implemented
@@ -52,18 +30,17 @@ STDCALL
 AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   PWSTR FilenameW;
   int rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &FilenameW, lpszFilename );
+  Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
   if ( !NT_SUCCESS (Status) )
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
 
-      HEAP_free ( hHeap, &FilenameW );
+      HEAP_free ( &FilenameW );
     }
   return rc;
 }
@@ -90,18 +67,17 @@ CopyMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   PWSTR lpszFileW;
   HMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszFileW, lpszFile );
+  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
     rc = W32kCopyMetaFile ( Src, lpszFileW );
 
-    HEAP_free ( hHeap, lpszFileW );
+    HEAP_free ( lpszFileW );
   }
 
   return rc;
@@ -121,22 +97,21 @@ CreateICA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
   DEVMODEW dvmInitW;
   HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszDriverW, lpszDriver );
+  Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    Status = HEAP_strdupA2W ( hHeap, &lpszDeviceW, lpszDevice );
+    Status = HEAP_strdupA2W ( &lpszDeviceW, lpszDevice );
     if (!NT_SUCCESS (Status))
       SetLastError (RtlNtStatusToDosError(Status));
     else
       {
-	Status = HEAP_strdupA2W ( hHeap, &lpszOutputW, lpszOutput );
+	Status = HEAP_strdupA2W ( &lpszOutputW, lpszOutput );
 	if (!NT_SUCCESS (Status))
 	  SetLastError (RtlNtStatusToDosError(Status));
 	else
@@ -149,11 +124,11 @@ CreateICA(
 				lpszOutputW,
 				lpdvmInit ? &dvmInitW : NULL );
 
-	    HEAP_free ( hHeap, lpszOutputW );
+	    HEAP_free ( lpszOutputW );
 	  }
-	HEAP_free ( hHeap, lpszDeviceW );
+	HEAP_free ( lpszDeviceW );
       }
-    HEAP_free ( hHeap, lpszDriverW );
+    HEAP_free ( lpszDriverW );
   }
   return rc;
 }
@@ -169,18 +144,17 @@ CreateMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   PWSTR lpszFileW;
   HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszFileW, lpszFile );
+  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kCreateMetaFile ( lpszFileW );
 
-      HEAP_free ( hHeap, lpszFileW );
+      HEAP_free ( lpszFileW );
     }
   return rc;
 }
@@ -199,21 +173,20 @@ CreateScalableFontResourceA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszFontResW, lpszFontFileW, lpszCurrentPathW;
   BOOL rc = FALSE;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszFontResW, lpszFontRes );
+  Status = HEAP_strdupA2W ( &lpszFontResW, lpszFontRes );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      Status = HEAP_strdupA2W ( hHeap, &lpszFontFileW, lpszFontFile );
+      Status = HEAP_strdupA2W ( &lpszFontFileW, lpszFontFile );
       if (!NT_SUCCESS (Status))
 	SetLastError (RtlNtStatusToDosError(Status));
       else
 	{
-	  Status = HEAP_strdupA2W ( hHeap, &lpszCurrentPathW, lpszCurrentPath );
+	  Status = HEAP_strdupA2W ( &lpszCurrentPathW, lpszCurrentPath );
 	  if (!NT_SUCCESS (Status))
 	    SetLastError (RtlNtStatusToDosError(Status));
 	  else
@@ -223,13 +196,13 @@ CreateScalableFontResourceA(
 						    lpszFontFileW,
 						    lpszCurrentPathW );
 
-	      HEAP_free ( hHeap, lpszCurrentPathW );
+	      HEAP_free ( lpszCurrentPathW );
 	    }
 
-	  HEAP_free ( hHeap, lpszFontFileW );
+	  HEAP_free ( lpszFontFileW );
 	}
 
-      HEAP_free ( hHeap, lpszFontResW );
+      HEAP_free ( lpszFontResW );
     }
   return rc;
 }
@@ -288,18 +261,17 @@ EnumFontFamiliesA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszFamilyW;
   int rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszFamilyW, lpszFamily );
+  Status = HEAP_strdupA2W ( &lpszFamilyW, lpszFamily );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kEnumFontFamilies ( hdc, lpszFamilyW, lpEnumFontFamProc, lParam );
 
-      HEAP_free ( hHeap, lpszFamilyW );
+      HEAP_free ( lpszFamilyW );
     }
 
   return rc;
@@ -319,18 +291,17 @@ EnumFontsA (
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpFaceNameW;
   int rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpFaceNameW, lpFaceName );
+  Status = HEAP_strdupA2W ( &lpFaceNameW, lpFaceName );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kEnumFonts ( hDC, lpFaceNameW, FontFunc, lParam );
 
-      HEAP_free ( hHeap, lpFaceNameW );
+      HEAP_free ( lpFaceNameW );
     }
   return rc;
 }
@@ -450,18 +421,17 @@ GetMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszMetaFileW;
   HMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszMetaFileW, lpszMetaFile );
+  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kGetMetaFile ( lpszMetaFileW );
 
-      HEAP_free ( hHeap, lpszMetaFileW );
+      HEAP_free ( lpszMetaFileW );
     }
 
   return rc;
@@ -500,11 +470,10 @@ GetTextExtentExPointA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszStrW;
   BOOL rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszStrW, lpszStr );
+  Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
@@ -512,7 +481,7 @@ GetTextExtentExPointA(
     rc = W32kGetTextExtentExPoint (
       hdc, lpszStrW, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
 
-    HEAP_free ( hHeap, lpszStrW );
+    HEAP_free ( lpszStrW );
   }
 
   return rc;
@@ -566,18 +535,17 @@ RemoveFontResourceA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpFileNameW;
   BOOL rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpFileNameW, lpFileName );
+  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kRemoveFontResource ( lpFileNameW );
 
-      HEAP_free ( hHeap, lpFileNameW );
+      HEAP_free ( lpFileNameW );
     }
 
   return rc;
@@ -595,18 +563,17 @@ CopyEnhMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszFileW;
   HENHMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszFileW, lpszFile );
+  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
       rc = W32kCopyEnhMetaFile ( hemfSrc, lpszFileW );
 
-      HEAP_free ( hHeap, lpszFileW );
+      HEAP_free ( lpszFileW );
     }
   return rc;
 }
@@ -625,16 +592,15 @@ CreateEnhMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpFileNameW, lpDescriptionW;
   HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpFileNameW, lpFileName );
+  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      Status = HEAP_strdupA2W ( hHeap, &lpDescriptionW, lpDescription );
+      Status = HEAP_strdupA2W ( &lpDescriptionW, lpDescription );
       if (!NT_SUCCESS (Status))
 	SetLastError (RtlNtStatusToDosError(Status));
       else
@@ -642,9 +608,9 @@ CreateEnhMetaFileA(
 	rc = W32kCreateEnhMetaFile (
 	  hdc, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
 
-	HEAP_free ( hHeap, lpDescriptionW );
+	HEAP_free ( lpDescriptionW );
       }
-      HEAP_free ( hHeap, lpFileNameW );
+      HEAP_free ( lpFileNameW );
     }
 
   return rc;
@@ -661,18 +627,17 @@ GetEnhMetaFileA(
 	)
 {
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
   LPWSTR lpszMetaFileW;
   HENHMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( hHeap, &lpszMetaFileW, lpszMetaFile );
+  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
   if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
     rc = W32kGetEnhMetaFile ( lpszMetaFileW );
 
-    HEAP_free ( hHeap, lpszMetaFileW );
+    HEAP_free ( lpszMetaFileW );
   }
 
   return rc;
@@ -682,23 +647,21 @@ GetEnhMetaFileA(
 /*
  * @implemented
  */
-UINT  
-STDCALL 
+UINT
+STDCALL
 GetEnhMetaFileDescriptionA(
 	HENHMETAFILE	hemf,
 	UINT		cchBuffer,
 	LPSTR		lpszDescription
 	)
 {
-  HANDLE hHeap;
   NTSTATUS Status;
   LPWSTR lpszDescriptionW;
   UINT rc;
 
   if ( lpszDescription && cchBuffer )
     {
-      hHeap = RtlGetProcessHeap();
-      lpszDescriptionW = (LPWSTR)RtlAllocateHeap ( hHeap, 0, cchBuffer*sizeof(WCHAR) );
+      lpszDescriptionW = (LPWSTR)HEAP_alloc ( cchBuffer*sizeof(WCHAR) );
       if ( !lpszDescriptionW )
 	{
 	  SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
@@ -717,7 +680,7 @@ GetEnhMetaFileDescriptionA(
 	                                NULL,
 	                                lpszDescriptionW,
 	                                cchBuffer );
-      RtlFreeHeap ( hHeap, 0, lpszDescriptionW );
+      HEAP_free ( lpszDescriptionW );
       if ( !NT_SUCCESS(Status) )
 	{
 	  SetLastError (RtlNtStatusToDosError(Status));
