@@ -94,7 +94,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION    1,0,0,0
+	FILEVERSION    5,1,2600,0
 	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
 	FILEFLAGSMASK	0x3fL
 #ifdef _DEBUG
@@ -112,7 +112,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"Cardplaying Helper DLL\0"
-            VALUE "FileVersion",	"1.0\0"
+            VALUE "FileVersion",	"5.1.2600\0"
             VALUE "InternalName",	"cards\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"cards.dll\0"
