@@ -91,6 +91,8 @@ PoSetPowerState(
   IN POWER_STATE State)
 {
   POWER_STATE ps;
+  
+  ASSERT_IRQL(DISPATCH_LEVEL);
 
   ps.SystemState = PowerSystemWorking;  // Fully on
   ps.DeviceState = PowerDeviceD0;       // Fully on
@@ -228,6 +230,8 @@ NtPowerInformation(
 	)
 {
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%x, "
           "InputBufferLength 0x%x, OutputBuffer 0x%x, OutputBufferLength 0x%x)\n",

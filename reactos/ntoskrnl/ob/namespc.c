@@ -55,6 +55,8 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    UNICODE_STRING RemainingPath;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
@@ -126,6 +128,8 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
    UNICODE_STRING RemainingPath;
    PVOID Object = NULL;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("ObOpenObjectByName(...)\n");
 

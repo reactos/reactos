@@ -50,6 +50,7 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
     ExInitializeRundownProtection(&Callback->RundownRef);
     Callback->Function = Function;
     Callback->Context = Context;
+    Callback->PendingDelete = FALSE;
     
     /* add it to the callback list and receive a cookie for the callback */
     ExAcquireFastMutex(&CmiCallbackLock);
@@ -87,22 +88,32 @@ CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
     CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
     if(CurrentCallback->Cookie.QuadPart == Cookie.QuadPart)
     {
-      /* found the callback, don't unlink it from the list yet so we don't screw
-         the calling loop */
-      ExReleaseFastMutex(&CmiCallbackLock);
+      if(!CurrentCallback->PendingDelete)
+      {
+        /* found the callback, don't unlink it from the list yet so we don't screw
+           the calling loop */
+        CurrentCallback->PendingDelete = TRUE;
+        ExReleaseFastMutex(&CmiCallbackLock);
 
-      /* if the callback is currently executing, wait until it finished */
-      ExWaitForRundownProtectionRelease(&CurrentCallback->RundownRef);
+        /* if the callback is currently executing, wait until it finished */
+        ExWaitForRundownProtectionRelease(&CurrentCallback->RundownRef);
 
-      /* time to unlink it. It's now safe because every attempt to acquire a
-         runtime protection on this callback will fail */
-      ExAcquireFastMutex(&CmiCallbackLock);
-      RemoveEntryList(&CurrentCallback->ListEntry);
-      ExReleaseFastMutex(&CmiCallbackLock);
+        /* time to unlink it. It's now safe because every attempt to acquire a
+           runtime protection on this callback will fail */
+        ExAcquireFastMutex(&CmiCallbackLock);
+        RemoveEntryList(&CurrentCallback->ListEntry);
+        ExReleaseFastMutex(&CmiCallbackLock);
 
-      /* free the callback */
-      ExFreePool(CurrentCallback);
-      return STATUS_SUCCESS;
+        /* free the callback */
+        ExFreePool(CurrentCallback);
+        return STATUS_SUCCESS;
+      }
+      else
+      {
+        /* pending delete, pretend like it already is deleted */
+        ExReleaseFastMutex(&CmiCallbackLock);
+        return STATUS_UNSUCCESSFUL;
+      }
     }
   }
   
@@ -127,7 +138,8 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
     PREGISTRY_CALLBACK CurrentCallback;
 
     CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
-    if(ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
+    if(!CurrentCallback->PendingDelete &&
+       ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
     {
       NTSTATUS Status;
       
