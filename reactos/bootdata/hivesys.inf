@@ -71,7 +71,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\shell.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\system32;%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 
 ; Pagefile settings
