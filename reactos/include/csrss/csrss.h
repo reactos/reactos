@@ -367,8 +367,8 @@ typedef struct
 
 #define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST))
 
-// FIXME: it should be 80. Is this a limit due to LPC msg size?
-#define CSRSS_MAX_TITLE_LENGTH          50
+// WCHARs, not bytes!
+#define CSRSS_MAX_TITLE_LENGTH          80
 
 #define CSRSS_CREATE_PROCESS                (0x0)
 #define CSRSS_TERMINATE_PROCESS             (0x1)
