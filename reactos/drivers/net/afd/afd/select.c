@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: select.c,v 1.3 2004/09/05 04:26:29 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -233,5 +233,5 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
 
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
-    AFD_DbgPrint(MID_TRACE,("Leaving"));
+    AFD_DbgPrint(MID_TRACE,("Leaving\n"));
 }

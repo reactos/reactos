@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.3 2004/07/18 22:53:59 arty Exp $
+/* $Id: bind.c,v 1.4 2004/09/05 04:26:29 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -16,7 +16,8 @@
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
+			    FCB->LocalAddress->Address[0].AddressType));
 
     if( FCB->LocalAddress ) {
 	Status = TdiOpenAddressFile
@@ -60,6 +61,9 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( NT_SUCCESS(Status) ) 
 	FCB->State = SOCKET_STATE_BOUND;
+    else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );
+
+    AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
     if( FCB->Flags & SGID_CONNECTIONLESS ) {
 	/* This will be the from address for subsequent recvfrom calls */
@@ -69,6 +73,8 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
 	FCB->PollState |= AFD_EVENT_SEND; 
 	/* A datagram socket is always sendable */
+
+	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
 	
 	Status = TdiReceiveDatagram
 	    ( &FCB->ReceiveIrp.InFlightRequest,
@@ -80,6 +86,9 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      &FCB->ReceiveIrp.Iosb,
 	      PacketSocketRecvComplete,
 	      FCB );
+
+	/* We don't want to wait for this read to complete. */
+	if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
     }
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );

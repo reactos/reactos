@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.19 2004/07/18 22:49:17 arty Exp $
+/* $Id: afd.h,v 1.20 2004/09/05 04:26:30 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -187,6 +187,7 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 
 VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
+VOID DestroySocket( PAFD_FCB FCB );
 
 /* read.c */
 

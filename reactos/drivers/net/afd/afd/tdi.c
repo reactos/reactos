@@ -8,6 +8,9 @@
  *   CSH 01/09-2000 Created
  */
 #include <afd.h>
+#ifndef _MSC_VER
+#include <pseh.h>
+#endif
 #include "debug.h"
 #include "tdiconn.h"
 
@@ -821,17 +824,13 @@ NTSTATUS TdiSend
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#ifdef _MSC_VER
-    try {
-#endif
+    _SEH_TRY {
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-    } except (EXCEPTION_EXECUTE_HANDLER) {
+    } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
         IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#endif
+    } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -896,18 +895,13 @@ NTSTATUS TdiReceive(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#ifdef _MSC_VER
-    try {
-#endif
+    _SEH_TRY {
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-    } except (EXCEPTION_EXECUTE_HANDLER) {
+    } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-        IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#endif
+    } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -985,18 +979,13 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#ifdef _MSC_VER
-    try {
-#endif
+    _SEH_TRY {
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-    } except (EXCEPTION_EXECUTE_HANDLER) {
+    } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-        IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#endif
+    } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -1045,6 +1034,8 @@ NTSTATUS TdiSendDatagram(
     NTSTATUS Status;
     PMDL Mdl;
 
+    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
+
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
@@ -1076,18 +1067,13 @@ NTSTATUS TdiSendDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#ifdef _MSC_VER
-    try {
-#endif
+    _SEH_TRY {
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-    } except (EXCEPTION_EXECUTE_HANDLER) {
+    } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-        IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#endif
+    } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 

@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.3 2004/07/18 22:53:59 arty Exp $
+/* $Id: listen.c,v 1.4 2004/09/05 04:26:29 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/listen.c
@@ -16,10 +16,25 @@ NTSTATUS DDKAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     PAFD_FCB FCB = (PAFD_FCB)Context;
+
+    if( !SocketAcquireStateLock( FCB ) ) return Status;
+
+    FCB->ListenIrp.InFlightRequest = NULL;
+
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
+	SocketStateUnlock( FCB );
+	DestroySocket( FCB );
+	return STATUS_SUCCESS;
+    }
+
     AFD_DbgPrint(MID_TRACE,("Completing listen request.\n"));
     AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", FCB->ListenIrp.Iosb.Status));
     AFD_DbgPrint(MID_TRACE,("Doing nothing as yet.\n"));
+
+    SocketStateUnlock( FCB );
+
     return STATUS_SUCCESS;
 }
 
@@ -33,6 +48,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+
     if( !(ListenReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 
 				       0, NULL, FALSE );

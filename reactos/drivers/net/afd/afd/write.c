@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.4 2004/08/22 18:42:42 arty Exp $
+/* $Id: write.c,v 1.5 2004/09/05 04:26:29 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -34,6 +34,12 @@ NTSTATUS DDKAPI SendComplete
 
     FCB->SendIrp.InFlightRequest = NULL; 
     /* Request is not in flight any longer */
+
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
+	SocketStateUnlock( FCB );
+	DestroySocket( FCB );
+	return STATUS_SUCCESS;
+    }
 
     if( !NT_SUCCESS(Status) ) {
 	/* Complete all following send IRPs with error */
@@ -236,6 +242,31 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
 }
 
+NTSTATUS DDKAPI PacketSocketSendComplete
+( PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context ) {
+    PAFD_FCB FCB = (PAFD_FCB)Context;
+
+    AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
+			    Irp->IoStatus.Status,
+			    Irp->IoStatus.Information));
+
+    /* It's ok if the FCB already died */
+    if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
+
+    FCB->SendIrp.InFlightRequest = NULL; 
+    /* Request is not in flight any longer */
+
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
+	SocketStateUnlock( FCB );
+	DestroySocket( FCB );
+	return STATUS_SUCCESS;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS STDCALL
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 			 PIO_STACK_LOCATION IrpSp) {
@@ -247,9 +278,13 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    /* Check that the socket is bound */
+    if( FCB->State != SOCKET_STATE_BOUND ) 
+	return UnlockAndMaybeComplete
+	    ( FCB, STATUS_UNSUCCESSFUL, Irp, 0, NULL, FALSE );
     if( !(SendReq = LockRequest( Irp, IrpSp )) ) 
-    return UnlockAndMaybeComplete
-	( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
+	return UnlockAndMaybeComplete
+	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
 
     /* Check the size of the Address given ... */
 
@@ -260,11 +295,11 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	  SendReq->BufferArray[0].len,
 	  SendReq->RemoteAddress,
 	  &FCB->SendIrp.Iosb,
-	  NULL,
-	  NULL );
+	  PacketSocketSendComplete,
+	  FCB );
 
     if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
-    
+
     AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
     
     return UnlockAndMaybeComplete

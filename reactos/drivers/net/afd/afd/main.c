@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2004/08/22 18:42:42 arty Exp $
+/* $Id: main.c,v 1.6 2004/09/05 04:26:29 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -22,8 +22,8 @@
 extern NTSTATUS DDKAPI MmCopyFromCaller( PVOID Dst, PVOID Src, UINT Size );
 
 /* See debug.h for debug/trace constants */
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = 0;
 
 #endif /* DBG */
 
@@ -88,7 +88,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return STATUS_NO_MEMORY;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x)\n", FCB, FileObject));
+    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo->EndpointFlags));
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
@@ -106,6 +106,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     for( i = 0; i < MAX_FUNCTIONS; i++ ) {
 	InitializeListHead( &FCB->PendingIrpList[i] );
     }
+
+    InitializeListHead( &FCB->DatagramList );
 
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
@@ -134,27 +136,31 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
-AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	       PIO_STACK_LOCATION IrpSp)
-{
-    PFILE_OBJECT FileObject = IrpSp->FileObject;
-    PAFD_FCB FCB = FileObject->FsContext;
+VOID DestroySocket( PAFD_FCB FCB ) {
     UINT i;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
+    BOOLEAN DontDeleteYet = FALSE;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );    
+    AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
+
+    if( !SocketAcquireStateLock( FCB ) ) return;
+
+    FCB->State = SOCKET_STATE_CLOSED;
 
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
 
-    AFD_DbgPrint(MID_TRACE,
-		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
-    
-    AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
+    if( FCB->ListenIrp.InFlightRequest || 
+	FCB->ReceiveIrp.InFlightRequest || 
+	FCB->SendIrp.InFlightRequest ) {
+	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
+				FCB->ListenIrp.InFlightRequest,
+				FCB->ReceiveIrp.InFlightRequest,
+				FCB->SendIrp.InFlightRequest));
+	DontDeleteYet = TRUE;
+    }
 
-    FileObject->FsContext = NULL;
     FCB->PollState |= AFD_EVENT_CLOSE;
     PollReeval( FCB->DeviceExt, FCB->FileObject ); 
     /* After PoolReeval, this FCB should not be involved in any outstanding
@@ -174,22 +180,44 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     SocketStateUnlock( FCB );
     
-    if( FCB->Recv.Window ) 
-	ExFreePool( FCB->Recv.Window );
-    if( FCB->Send.Window )
-	ExFreePool( FCB->Send.Window );
-    if( FCB->AddressFrom ) 
-	ExFreePool( FCB->AddressFrom );
-    if( FCB->LocalAddress )
-	ExFreePool( FCB->LocalAddress );
+    if( !DontDeleteYet ) {
+	if( FCB->Recv.Window ) 
+	    ExFreePool( FCB->Recv.Window );
+	if( FCB->Send.Window )
+	    ExFreePool( FCB->Send.Window );
+	if( FCB->AddressFrom ) 
+	    ExFreePool( FCB->AddressFrom );
+	if( FCB->LocalAddress )
+	    ExFreePool( FCB->LocalAddress );
+	
+	ExFreePool(FCB->TdiDeviceName.Buffer);
+	
+	ExFreePool(FCB);
+	AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
+    }
 
-    ExFreePool(FCB->TdiDeviceName.Buffer);
-    ExFreePool(FCB);
+    AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
+}
+
+NTSTATUS STDCALL
+AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	       PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    AFD_DbgPrint(MID_TRACE,
+		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
+    
+    AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
+
+    FileObject->FsContext = NULL;
+    DestroySocket( FCB );
     
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    
+
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
 
     return STATUS_SUCCESS;
