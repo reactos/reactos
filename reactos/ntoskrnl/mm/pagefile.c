@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.43 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: pagefile.c,v 1.44 2004/04/22 01:57:49 jimtabor Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -79,10 +79,10 @@ static KSPIN_LOCK PagingFileListLock;
 static ULONG MiPagingFileCount;
 
 /* Number of pages that are available for swapping */
-static ULONG MiFreeSwapPages;
+ULONG MiFreeSwapPages;
 
 /* Number of pages that have been allocated for swapping */
-static ULONG MiUsedSwapPages;
+ULONG MiUsedSwapPages;
 
 /*
  * Number of pages that have been reserved for swapping but not yet allocated 

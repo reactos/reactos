@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.28 2004/04/14 07:11:08 jimtabor Exp $
+/* $Id: balance.c,v 1.29 2004/04/22 01:57:49 jimtabor Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -36,15 +36,6 @@
 #include <internal/debug.h>
 
 /* TYPES ********************************************************************/
-
-typedef struct _MM_MEMORY_CONSUMER
-{
-   ULONG PagesUsed;
-   ULONG PagesTarget;
-   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
-}
-MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
-
 typedef struct _MM_ALLOCATION_REQUEST
 {
    PHYSICAL_ADDRESS Page;
@@ -55,7 +46,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 /* GLOBALS ******************************************************************/
 
-static MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
+MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
 ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;

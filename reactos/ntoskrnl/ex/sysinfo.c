@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.27 2004/04/14 07:10:44 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.28 2004/04/22 01:55:49 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,9 +23,13 @@
 #include <internal/ps.h>
 #include <internal/mm.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
+VOID STDCALL KeQueryInterruptTime(PLARGE_INTEGER CurrentTime);
+
+VOID MmPrintMemoryStatistic(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -293,19 +297,17 @@ QSI_DEF(SystemBasicInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-
 	Sbi->Unknown = 0;
-	Sbi->MaximumIncrement = 0; /* FIXME */
+	Sbi->MaximumIncrement = 100000; /* FIXME */
 	Sbi->PhysicalPageSize = PAGE_SIZE; /* FIXME: it should be PAGE_SIZE */
-	Sbi->NumberOfPhysicalPages = 0; /* FIXME */
-	Sbi->LowestPhysicalPage = 0; /* FIXME */
-	Sbi->HighestPhysicalPage = 0; /* FIXME */
+	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
+	Sbi->LowestPhysicalPage = 0; /* FIXME */ 
+	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
 	Sbi->AllocationGranularity = 65536; /* hard coded on Intel? */
-	Sbi->LowestUserAddress = 0; /* FIXME */
-	Sbi->HighestUserAddress = 0; /* FIXME */
+	Sbi->LowestUserAddress = 0x10000; /* Top of 64k */
+	Sbi->HighestUserAddress = 0x7ffeffff; /* From mm/mminit.c */
 	Sbi->ActiveProcessors = 0x00000001; /* FIXME */
 	Sbi->NumberProcessors = KeNumberProcessors;
-
 	return (STATUS_SUCCESS);
 }
 
@@ -333,13 +335,29 @@ QSI_DEF(SystemProcessorInformation)
 	
 	return (STATUS_SUCCESS);
 }
+/*
+typedef struct _MM_MEMORY_CONSUMER
+{
+   ULONG PagesUsed;
+   ULONG PagesTarget;
+   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
+}
+MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
 
+extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
+
+extern ULONG MiFreeSwapPages;
+extern ULONG MiUsedSwapPages;
+extern ULONG MmPagedPoolSize;
+*/
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
 	PSYSTEM_PERFORMANCE_INFORMATION Spi 
 		= (PSYSTEM_PERFORMANCE_INFORMATION) Buffer;
 
+	PEPROCESS TheIdleProcess;
+	
 	*ReqSize = sizeof (SYSTEM_PERFORMANCE_INFORMATION);
 	/*
 	 * Check user buffer's size 
@@ -349,7 +367,9 @@ QSI_DEF(SystemPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	Spi->IdleTime.QuadPart = PsInitialSystemProcess->Pcb.KernelTime * 100000;
+	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
+	
+	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000;
 
 	Spi->ReadTransferCount.QuadPart = 0; /* FIXME */
 	Spi->WriteTransferCount.QuadPart = 0; /* FIXME */
@@ -357,9 +377,11 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->ReadOperationCount = 0; /* FIXME */
 	Spi->WriteOperationCount = 0; /* FIXME */
 	Spi->OtherOperationCount = 0; /* FIXME */
+
 	Spi->AvailablePages = MiNrAvailablePages; 
-	Spi->TotalCommittedPages = 0; /* FIXME */
-	Spi->TotalCommitLimit = 0; /* FIXME */
+	Spi->TotalCommittedPages = MiUsedSwapPages;
+	Spi->TotalCommitLimit = MiFreeSwapPages + MiUsedSwapPages; /* FIXME */
+
 	Spi->PeakCommitment = 0; /* FIXME */
 	Spi->PageFaults = 0; /* FIXME */
 	Spi->WriteCopyFaults = 0; /* FIXME */
@@ -374,24 +396,28 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->PagefilePageWriteIos = 0; /* FIXME */
 	Spi->MappedFilePagesWritten = 0; /* FIXME */
 	Spi->MappedFilePageWriteIos = 0; /* FIXME */
-	Spi->PagedPoolUsage = 0; /* FIXME */
-	Spi->NonPagedPoolUsage = 0; /* FIXME */
+
+	Spi->PagedPoolUsage = MiMemoryConsumers[MC_PPOOL].PagesUsed;
 	Spi->PagedPoolAllocs = 0; /* FIXME */
 	Spi->PagedPoolFrees = 0; /* FIXME */
+	Spi->NonPagedPoolUsage = MiMemoryConsumers[MC_NPPOOL].PagesUsed;
 	Spi->NonPagedPoolAllocs = 0; /* FIXME */
 	Spi->NonPagedPoolFrees = 0; /* FIXME */
+
 	Spi->TotalFreeSystemPtes = 0; /* FIXME */
-	Spi->SystemCodePage = 0; /* FIXME */
+	
+	Spi->SystemCodePage = MmStats.NrSystemPages; /* FIXME */
+	
 	Spi->TotalSystemDriverPages = 0; /* FIXME */
 	Spi->TotalSystemCodePages = 0; /* FIXME */
 	Spi->SmallNonPagedLookasideListAllocateHits = 0; /* FIXME */
 	Spi->SmallPagedLookasideListAllocateHits = 0; /* FIXME */
 	Spi->Reserved3 = 0; /* FIXME */
 
-	Spi->MmSystemCachePage = 0; /* FIXME */
-	Spi->PagedPoolPage = 0; /* FIXME */
-	Spi->SystemDriverPage = 0; /* FIXME */
+	Spi->MmSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
+	Spi->PagedPoolPage = MmPagedPoolSize; /* FIXME */
 
+	Spi->SystemDriverPage = 0; /* FIXME */
 	Spi->FastReadNoWait = 0; /* FIXME */
 	Spi->FastReadWait = 0; /* FIXME */
 	Spi->FastReadResourceMiss = 0; /* FIXME */
@@ -437,7 +463,7 @@ QSI_DEF(SystemPerformanceInformation)
 /* Class 3 - Time Of Day Information */
 QSI_DEF(SystemTimeOfDayInformation)
 {
- LARGE_INTEGER CurrentTime;
+	LARGE_INTEGER CurrentTime;
  
 	PSYSTEM_TIMEOFDAY_INFORMATION Sti
 		= (PSYSTEM_TIMEOFDAY_INFORMATION) Buffer;
@@ -521,12 +547,8 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->NextEntryDelta = curSize+inLen; // relative offset to the beginnnig of the next structure
 		SpiCur->ThreadCount = nThreads;
 		SpiCur->CreateTime = pr->CreateTime;
-/*
- * System Clock is 18.2 psec.
- */		
 		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000; 
 		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000;
-
 		SpiCur->ProcessName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
 		SpiCur->ProcessName.MaximumLength = inLen;
 		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
@@ -540,15 +562,19 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
 		SpiCur->HandleCount = 0; // FIXME
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
-		SpiCur->VmCounters.VirtualSize = 0; // FIXME
+		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
 		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
 		SpiCur->VmCounters.PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
 		SpiCur->VmCounters.WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->VmCounters.QuotaPeakPagedPoolUsage = 0; // FIXME
-		SpiCur->VmCounters.QuotaPagedPoolUsage = 0; // FIXME
-		SpiCur->VmCounters.QuotaPeakNonPagedPoolUsage = 0; // FIXME
-		SpiCur->VmCounters.QuotaNonPagedPoolUsage = 0; // FIXME
-		SpiCur->VmCounters.PagefileUsage = 0; // FIXME
+		SpiCur->VmCounters.QuotaPeakPagedPoolUsage =
+ 					pr->QuotaPeakPoolUsage[0];
+		SpiCur->VmCounters.QuotaPagedPoolUsage =
+					pr->QuotaPoolUsage[0]; 
+		SpiCur->VmCounters.QuotaPeakNonPagedPoolUsage =
+					pr->QuotaPeakPoolUsage[1]; 
+		SpiCur->VmCounters.QuotaNonPagedPoolUsage = 
+					pr->QuotaPoolUsage[1]; 
+		SpiCur->VmCounters.PagefileUsage = pr->PagefileUsage; // FIXME
 		SpiCur->VmCounters.PeakPagefileUsage = pr->PeakPagefileUsage;
                 // KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
                 // doesn't seem to contain any equivalent field
@@ -614,6 +640,9 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	PSYSTEM_PROCESSORTIME_INFO Spi
 		= (PSYSTEM_PROCESSORTIME_INFO) Buffer;
 
+        PEPROCESS TheIdleProcess;
+	TIME CurrentTime;
+
 	*ReqSize = sizeof (SYSTEM_PROCESSORTIME_INFO);
 	/*
 	 * Check user buffer's size 
@@ -623,13 +652,17 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
+        PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
+
+	KeQueryInterruptTime((PLARGE_INTEGER) &CurrentTime);
+
         Spi->TotalProcessorRunTime.QuadPart = 
-		PsInitialSystemProcess->Pcb.KernelTime * 100000; // IdleTime
+		TheIdleProcess->Pcb.KernelTime * 100000; // IdleTime
         Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000; // KernelTime
         Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000;
         Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000;
-        Spi->TotalInterruptTime.QuadPart = 0;
-        Spi->TotalInterrupts = 0; // Interrupt Count
+        Spi->TotalInterruptTime = CurrentTime;
+        Spi->TotalInterrupts = CurrentTime.QuadPart / 100000; // Interrupt Count
         
 	return (STATUS_SUCCESS);
 }
@@ -784,8 +817,31 @@ SSI_DEF(SystemDpcBehaviourInformation)
 /* Class 25 - Full Memory Information */
 QSI_DEF(SystemFullMemoryInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+	PULONG Spi = (PULONG) Buffer;
+
+	PEPROCESS TheIdleProcess;
+
+	* ReqSize = sizeof (ULONG);
+
+	if (sizeof (ULONG) != Size)
+	{
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+	DPRINT1("SystemFullMemoryInformation\n");
+
+	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
+
+        DbgPrint("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
+                 TheIdleProcess->UniqueProcessId,
+                 TheIdleProcess->Pcb.KernelTime,
+                 MiFreeSwapPages,
+                 MiUsedSwapPages);
+
+	MmPrintMemoryStatistic();
+	
+	*Spi = MiMemoryConsumers[MC_USER].PagesUsed;
+
+	return (STATUS_SUCCESS);
 }
 
 /* Class 26 - Load Image */
@@ -1169,8 +1225,9 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   NTSTATUS Status;
   NTSTATUS FStatus;
 
-	DPRINT("NtQuerySystemInformation Start.\n");
-
+/*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
+					SystemInformationClass );
+*/
   /*if (ExGetPreviousMode() == KernelMode)
     {*/
       SystemInformation = UnsafeSystemInformation;

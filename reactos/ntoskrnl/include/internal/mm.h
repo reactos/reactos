@@ -10,6 +10,9 @@
 
 /* TYPES *********************************************************************/
 
+extern ULONG MiFreeSwapPages;
+extern ULONG MiUsedSwapPages;
+extern ULONG MmPagedPoolSize;
 extern ULONG MiNrAvailablePages;
 
 struct _EPROCESS;
@@ -520,6 +523,17 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 #define MC_PPOOL          (2)
 #define MC_NPPOOL         (3)
 #define MC_MAXIMUM        (4)
+
+
+typedef struct _MM_MEMORY_CONSUMER
+{
+   ULONG PagesUsed;
+   ULONG PagesTarget;
+   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
+}
+MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
+
+extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 
 VOID 
 MmSetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress, 
