@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.8.4 2004/09/14 01:00:44 weiden Exp $
+/* $Id: class.c,v 1.59.8.5 2004/09/26 22:28:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,12 +101,12 @@ IntReferenceClassByName(PCLASS_OBJECT *Class,
       (LPWSTR)ClassName->Buffer,
       &ClassAtom);
 
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
    {
-      return FALSE;
+      return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
    }
 
-   return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
+   return FALSE;
 }
 
 BOOL INTERNAL_CALL
@@ -162,7 +162,6 @@ IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nM
                                    &Length);
   if(!NT_SUCCESS(Status))
   {
-    DPRINT1("IntGetClassName: RtlQueryAtomInAtomTable failed\n");
     RtlFreeUnicodeString(ClassName);
     return FALSE;
   }
@@ -313,13 +312,9 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
     if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed adding class name (%wZ) to atom table\n", ClassName);
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
       return NULL;
     }
-  }
-  else
-  {
-    Atom = (RTL_ATOM)(ULONG)ClassName->Buffer;
   }
   
   Ret = IntCreateClass(lpwcx, Flags, wpExtra, MenuName, Atom);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.12 2004/09/25 01:11:07 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.13 2004/09/26 22:28:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1809,7 +1809,7 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
   /* copy the class name string */
   if(!IS_ATOM(SafeClassName.Buffer))
   {
-    NtStatus = IntSafeCopyUnicodeString(&SafeClassName, ClassName);
+    NtStatus = IntSafeCopyUnicodeStringTerminateNULL(&SafeClassName, ClassName);
     if(!NT_SUCCESS(NtStatus))
     {
       NTUSER_FAIL_NTERROR(NtStatus);
@@ -1819,7 +1819,7 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
   /* copy the menu name string */
   if(!IS_ATOM(SafeMenuName.Buffer))
   {
-    NtStatus = IntSafeCopyUnicodeString(&SafeMenuName, MenuName);
+    NtStatus = IntSafeCopyUnicodeStringTerminateNULL(&SafeMenuName, MenuName);
     if(!NT_SUCCESS(NtStatus))
     {
       if(!IS_ATOM(SafeClassName.Buffer))

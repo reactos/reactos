@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.120.2.4 2004/09/14 01:00:44 weiden Exp $
+/* $Id: winpos.c,v 1.120.2.5 2004/09/26 22:28:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -548,7 +548,7 @@ PWINDOW_OBJECT INTERNAL_CALL
 WinPosDoOwnedPopups(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter)
 {
    LONG Style;
-   PWINDOW_OBJECT DesktopWindow, Current;
+   PWINDOW_OBJECT DesktopWindow = NULL, Current;
    BOOL Searched = FALSE;
 
    ASSERT(Window);
@@ -563,30 +563,33 @@ WinPosDoOwnedPopups(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter)
       if (InsertAfter != WINDOW_TOPMOST)
       {
 	 DesktopWindow = IntGetDesktopWindow();
-         
-         for(Current = DesktopWindow->FirstChild; Current != NULL;
-             Current = Current->NextSibling)
+	 
+         if(DesktopWindow != NULL)
          {
-           Searched = TRUE;
-           
-	   if(Current == Window->Owner)
+           for(Current = DesktopWindow->FirstChild; Current != NULL;
+               Current = Current->NextSibling)
            {
-             break;
-           }
-           if(WINDOW_TOP == InsertAfter)
-           {
-             if (0 == (Current->ExStyle & WS_EX_TOPMOST))
+             Searched = TRUE;
+
+  	   if(Current == Window->Owner)
              {
                break;
              }
-           }
-           if(Current != Window)
-           {
-             LocalPrev = Current;
-           }
-           if(LocalPrev == InsertAfter)
-           {
-             break;
+             if(WINDOW_TOP == InsertAfter)
+             {
+               if (0 == (Current->ExStyle & WS_EX_TOPMOST))
+               {
+                 break;
+               }
+             }
+             if(Current != Window)
+             {
+               LocalPrev = Current;
+             }
+             if(LocalPrev == InsertAfter)
+             {
+               break;
+             }
            }
          }
       }
@@ -598,19 +601,25 @@ WinPosDoOwnedPopups(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter)
 
    if (!Searched)
    {
-      for(Current = DesktopWindow->FirstChild; Current != NULL;
-          Current = Current->NextSibling)
+      if(DesktopWindow == NULL)
+        DesktopWindow = IntGetDesktopWindow();
+
+      if(DesktopWindow != NULL)
       {
-        if(Current == Window)
+        for(Current = DesktopWindow->FirstChild; Current != NULL;
+            Current = Current->NextSibling)
         {
-          break;
-        }
-        
-        if(Current->Style & WS_POPUP && Current->Owner == Window)
-        {
-          WinPosSetWindowPos(Current, InsertAfter, 0, 0, 0, 0,
-                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-	  InsertAfter = Current;
+          if(Current == Window)
+          {
+            break;
+          }
+
+          if(Current->Style & WS_POPUP && Current->Owner == Window)
+          {
+            WinPosSetWindowPos(Current, InsertAfter, 0, 0, 0, 0,
+                               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+  	  InsertAfter = Current;
+          }
         }
       }
    }
