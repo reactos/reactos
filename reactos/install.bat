@@ -62,8 +62,8 @@ copy subsys\system\gstart\gstart.exe %ROS_INSTALL%\system32
 copy subsys\system\shell\shell.exe %ROS_INSTALL%\system32
 copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy subsys\system\services\services.exe %ROS_INSTALL%\system32
-copy subsys\system\eventlog\eventlog.exe %ROS_INSTALL%\system32
-copy subsys\system\rpcss\rpcss.exe %ROS_INSTALL%\system32
+copy services\eventlog\eventlog.exe %ROS_INSTALL%\system32
+copy services\rpcss\rpcss.exe %ROS_INSTALL%\system32
 copy lib\advapi32\advapi32.dll %ROS_INSTALL%\system32
 copy lib\crtdll\crtdll.dll %ROS_INSTALL%\system32
 copy lib\fmifs\fmifs.dll %ROS_INSTALL%\system32
