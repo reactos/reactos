@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/12/01 18:21:04 weiden Exp $
+# $Id: Makefile,v 1.6 2003/12/07 01:12:58 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,11 +6,14 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msgina
 
+TARGET_INSTALLDIR = system32
+
 TARGET_BASE = 0x75970000
 
 TARGET_CFLAGS = \
  -I./include \
  -DUNICODE \
+ -D_UNICODE \
  -D__REACTOS__ \
  -Wall \
  -Werror \
