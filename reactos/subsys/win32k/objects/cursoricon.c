@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.18 2003/11/11 17:50:58 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.19 2003/11/15 12:43:25 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -439,6 +439,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
 {
   PCURICON_OBJECT CurIconObject;
   PWINSTATION_OBJECT WinStaObject;
+  PBITMAPOBJ bmp;
   NTSTATUS Status;
   HICON Ret;
   
@@ -467,6 +468,23 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
         {
           CurIconObject->IconInfo.hbmMask = IntCopyBitmap(CurIconObject->IconInfo.hbmMask);
           CurIconObject->IconInfo.hbmColor = IntCopyBitmap(CurIconObject->IconInfo.hbmColor);
+        }
+        bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
+        if(bmp)
+        {
+          CurIconObject->Size.cx = bmp->size.cx;
+          CurIconObject->Size.cy = bmp->size.cy;
+          BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
+        }
+        else
+        {
+          bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask);
+          if(bmp)
+          {
+            CurIconObject->Size.cx = bmp->size.cx;
+            CurIconObject->Size.cy = bmp->size.cy / 2;
+            BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
+          }
         }
       }
       else
@@ -951,14 +969,24 @@ NtUserSetCursorIconContents(
       goto done;
     }
     
-    bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask);
-    if(!bmp)
-      goto done;
-    
-    CurIconObject->Size.cx = bmp->size.cx;
-    CurIconObject->Size.cy = bmp->size.cy;
-    
-    BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
+    bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
+    if(bmp)
+    {
+      CurIconObject->Size.cx = bmp->size.cx;
+      CurIconObject->Size.cy = bmp->size.cy;
+      BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
+    }
+    else
+    {
+      bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask);
+      if(!bmp)
+        goto done;
+      
+      CurIconObject->Size.cx = bmp->size.cx;
+      CurIconObject->Size.cy = bmp->size.cy / 2;
+      
+      BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
+    }
     
     Ret = TRUE;
     
