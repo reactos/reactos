@@ -629,7 +629,7 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 	}
 	va_end (ap);
 	// Spawn process
-	pid = spawnvp(P_NOWAIT,command, args);// argv[1], (const char* const*)&argv[1]);
+	pid = spawnvp(P_NOWAIT,command, (const char* const*)args);// argv[1], (const char* const*)&argv[1]);
 	if(!pid)
    	    exit (1);
 	// Duplicate copy of original stdin back into stdin

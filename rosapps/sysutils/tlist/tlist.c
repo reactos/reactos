@@ -1,4 +1,4 @@
-/* $Id: tlist.c,v 1.6 2003/08/03 18:06:02 ea Exp $
+/* $Id$
  *
  * ReactOS Project
  * TList
@@ -123,7 +123,7 @@ ProcessHasDescendants (
           ++ Count;
         }
       }
-      (PBYTE) pInfo += pInfo->NextEntryDelta;
+      pInfo = (PSYSTEM_PROCESSES)((PBYTE)pInfo + pInfo->NextEntryDelta);
 
   } while (0 != pInfo->NextEntryDelta);
 
@@ -201,7 +201,7 @@ PrintProcessAndDescendants (
 	}
       }
     }
-    (PBYTE) pInfo += pInfo->NextEntryDelta;
+    pInfo = (PSYSTEM_PROCESSES)((PBYTE)pInfo + pInfo->NextEntryDelta);
 
   } while (0 != pInfo->NextEntryDelta);
   

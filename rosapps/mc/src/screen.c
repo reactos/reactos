@@ -59,7 +59,7 @@
 
 #include "x.h"
 
-/* "$Id: screen.c,v 1.1 2001/12/30 09:55:21 sedwards Exp $" */
+/* "$Id$" */
 #define ELEMENTS(arr) ( sizeof(arr) / sizeof((arr)[0]) )
 
 /* If true, show the mini-info on the panel */
@@ -2020,13 +2020,13 @@ start_search (WPanel *panel)
     }
 }
 
-int
+void
 do_enter (WPanel *panel)
 {
     if (S_ISDIR (selection (panel)->buf.st_mode)
 	|| link_isdir (selection (panel))){
 	do_cd (selection (panel)->fname, cd_exact);
-	return 1;
+	return;
     } else { 
 	if (is_exe (selection (panel)->buf.st_mode) &&
 	    if_link_is_exe (selection (panel))) {
@@ -2053,15 +2053,9 @@ do_enter (WPanel *panel)
 	        free (tmp2);
 	    }
 #endif /* USE_VFS */	    
-	    return 1;
+	    return;
 	} else {
-	    char *p;
-	    
-	    p = regex_command (selection (panel)->fname, "Open", NULL, 0);
-	    if (p && (strcmp (p, "Success") == 0))
-		    return 1;
-	    else
-		    return 0;
+	    regex_command (selection (panel)->fname, "Open", NULL, 0);
 	}
     }
 }

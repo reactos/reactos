@@ -1,6 +1,6 @@
 //======================================================================
 //
-// $Id: format.c,v 1.3 2003/01/14 18:51:12 guido Exp $
+// $Id$
 //
 // Formatx
 //
@@ -334,7 +334,7 @@ wmain( int argc, WCHAR *argv[] )
 {
 	int		badArg;
 	
-	DWORD		media;
+	DWORD		media = 0;
 	DWORD		driveType;
 	
 	WCHAR		fileSystem [1024];

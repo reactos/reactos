@@ -1,4 +1,4 @@
-// $Id: pedump.c,v 1.1 2001/01/13 18:19:23 ea Exp $
+// $Id$
 //
 // This program was written by Sang Cho, assistant professor at 
 //                                       the department of 
@@ -48,6 +48,7 @@
 #include <string.h>
 #include <setjmp.h>
 #include <malloc.h>
+#include <ctype.h>
 
 #ifndef bcopy
 #define bcopy(s,d,z) memcpy((d),(s),(z))
@@ -1060,7 +1061,7 @@ GetActualAddress (
   int nSections = NumOfSections (lpFile);
   int i = 0;
 
-  if (dwRVA == NULL)
+  if (dwRVA == 0)
     return NULL;
   if (dwRVA & 0x80000000)
     {
@@ -1954,7 +1955,7 @@ TranslateFunctionName (
 {
 
 
-  int i, j, n;
+  int i, /*j,*/ n;
   char c, cc;
 
   static char buff[512];	// result of translation
@@ -2375,7 +2376,7 @@ GetExportFunctionNames (
 
   char buff[256];		// enough for any string ??
 
-  char *psz;			//===============================
+  char *psz = NULL;			//===============================
 
   DWORD *pdwAddress;
   DWORD *pdw1;
@@ -2737,8 +2738,8 @@ MenuScan (
 	   int *len,
 	   WORD ** pMenu)
 {
-  int num = 0;
-  int ndetails;
+  //int num = 0;
+  //int ndetails;
   WORD *pwd;
   WORD flag, flag1;
   WORD id, ispopup;
@@ -2805,12 +2806,12 @@ MenuFill (
 	   char **psz,
 	   WORD ** pMenu)
 {
-  int num = 0;
-  int ndetails;
-  char *ptr, *pTemp;
+  //int num = 0;
+  //int ndetails;
+  char *ptr/*, *pTemp*/;
   WORD *pwd;
   WORD flag, flag1;
-  WORD id, ispopup;
+  WORD id/*, ispopup*/;
 
   ptr = *psz;
   pwd = *pMenu;
@@ -2927,19 +2928,20 @@ GetContentsOfMenu (
   //PIMAGE_SECTION_HEADER              psh = (PIMAGE_SECTION_HEADER)
   //ImageDirectorySection (lpFile, IMAGE_DIRECTORY_ENTRY_RESOURCE);
   PIMAGE_MENU_HEADER pMenuHeader;
-  PIMAGE_POPUP_MENU_ITEM pPopup;
-  PIMAGE_NORMAL_MENU_ITEM pNormal;
+  //PIMAGE_POPUP_MENU_ITEM pPopup;
+  WORD* pPopup;
+  //PIMAGE_NORMAL_MENU_ITEM pNormal;
   char buff[32];
-  int nCnt = 0, i, j;
-  int num = 0;
+  int /*nCnt = 0,*/ i, j;
+  //int num = 0;
   int size;
   int sLength, nMenus;
   WORD flag;
   WORD *pwd;
-  DWORD prdeName;
+  //DWORD prdeName;
   //DWORD                   dwBase;    obsolete
-  char *pMem, *pTemp;
-  BOOL isStrange = FALSE;
+  char *pMem/*, *pTemp*/;
+  //BOOL isStrange = FALSE;
 
 
   /* get root directory of resource tree */
@@ -3020,7 +3022,7 @@ GetContentsOfMenu (
       // normal case
       else
 	{
-	  pPopup = (PIMAGE_POPUP_MENU_ITEM)
+	  pPopup = (WORD*)
 	    ((DWORD) pMenuHeader + sizeof (IMAGE_MENU_HEADER));
 	  while (1)
 	    {
@@ -3063,7 +3065,7 @@ GetContentsOfMenu (
       // normal case
       else
 	{
-	  pPopup = (PIMAGE_POPUP_MENU_ITEM)
+	  pPopup = (WORD*)
 	    ((DWORD) pMenuHeader + sizeof (IMAGE_MENU_HEADER));
 	  while (1)
 	    {
@@ -3127,7 +3129,7 @@ GetContentsOfMenu (
       // normal case
       else
 	{
-	  pPopup = (PIMAGE_POPUP_MENU_ITEM)
+	  pPopup = (WORD*)
 	    ((DWORD) pMenuHeader + sizeof (IMAGE_MENU_HEADER));
 	  while (1)
 	    {
@@ -3174,7 +3176,7 @@ GetContentsOfMenu (
       // normal case
       else
 	{
-	  pPopup = (PIMAGE_POPUP_MENU_ITEM)
+	  pPopup = (WORD*)
 	    ((DWORD) pMenuHeader + sizeof (IMAGE_MENU_HEADER));
 	  while (1)
 	    {
@@ -3200,10 +3202,10 @@ PrintStrangeMenu (
 		   char **psz)
 {
 
-  int i, j, k, l;
+  //int i, j, k, l;
   int num;
-  WORD flag1, flag2;
-  char buff[128];
+  //WORD flag1, flag2;
+  //char buff[128];
   char *ptr, *pmax;
 
   //return dumpMenu (psz, size);
@@ -3395,17 +3397,17 @@ GetContentsOfDialog (
   PIMAGE_RESOURCE_DIR_STRING_U pDialogName;
   PIMAGE_RESOURCE_DATA_ENTRY prData;
   PIMAGE_DIALOG_HEADER pDialogHeader;
-  PIMAGE_CONTROL_DATA pControlData;
+  //PIMAGE_CONTROL_DATA pControlData;
   char buff[32];
-  int nCnt = 0, i, j;
-  int num = 0;
+  int /*nCnt = 0,*/ i, j;
+  //int num = 0;
   int size;
   int sLength, nDialogs;
-  WORD flag;
+  //WORD flag;
   WORD *pwd;
-  DWORD prdeName;
-  char *pMem, *pTemp;
-  BOOL isStrange = FALSE;
+  //DWORD prdeName;
+  char *pMem/*, *pTemp*/;
+  //BOOL isStrange = FALSE;
 
 
   /* get root directory of resource tree */
@@ -3580,7 +3582,7 @@ GetContentsOfDialog (
 //                                                         October 14, 1997
 //
 /* print contents of dialog */
-int WINAPI 
+void WINAPI 
 PrintNameOrOrdinal (
 		     char **psz)
 {
@@ -3613,15 +3615,15 @@ PrintNameOrOrdinal (
 //                                                         October 14, 1997
 //
 /* print contents of dialog */
-int WINAPI 
+void WINAPI 
 PrintDialog (
 	      char **psz)
 {
-  int i, j, k, l, n, c;
+  int i/*, j, k, l, n, c*/;
   int num, size;
   DWORD flag;
   WORD class;
-  char buff[32];
+  //char buff[32];
   char *ptr, *pmax;
   BOOL isStrange = FALSE;
 
@@ -3924,9 +3926,9 @@ main (
   PIMAGE_FILE_HEADER pfh;
   PIMAGE_OPTIONAL_HEADER poh;
   PIMAGE_SECTION_HEADER psh;
-  IMAGE_SECTION_HEADER idsh;
+  //IMAGE_SECTION_HEADER idsh;
   IMAGE_SECTION_HEADER shdr[MAXSECTIONNUMBER];
-  PIMAGE_IMPORT_MODULE_DIRECTORY pid;
+  //PIMAGE_IMPORT_MODULE_DIRECTORY pid;
 
   int nSections;		// number of sections
 
@@ -3945,10 +3947,10 @@ main (
   int imageBase;
   int entryPoint;
 
-  int i, j, k, n;
-  int mnsize;
-  int nCnt;
-  int nSize;
+  int i, j, /*k,*/ n;
+  //int mnsize;
+  //int nCnt;
+  //int nSize;
   int fsize;
   char *pnstr;
   char *pst;

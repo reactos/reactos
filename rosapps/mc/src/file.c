@@ -122,7 +122,7 @@ static
 
 int do_reget;
 
-/* rcsid [] = "$Id: file.c,v 1.2 2003/06/27 21:10:35 gvg Exp $" */
+/* rcsid [] = "$Id$" */
 int verbose = 1;
 
 /* Recursive operation on subdirectories */
@@ -211,7 +211,7 @@ static char *dest_mask = NULL;
 
 /* To symlinks the difference between `follow Links' checked and not
    checked is the stat call used (mc_stat resp. mc_lstat) */
-int (*xstat)(char *, struct stat *) = mc_lstat;
+int (*xstat)(const char *, struct stat *) = mc_lstat;
 
 static int op_follow_links = 0;
 

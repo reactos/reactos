@@ -23,7 +23,7 @@ typedef double f8byte_t;
 typedef long uid_t;  // SunOS 5.5
 
 #define __P(x) x
-#define __STDC__ 1
+//#define __STDC__ 1
 
 /* utmp.h */
 #define UT_LINESIZE 8

@@ -248,7 +248,7 @@ static void restore_screen (void)
 void SLtt_write_string (char *str)
 {
 #ifdef WIN32
-   int bytes;
+   unsigned long bytes;
    
    (void) WriteConsole(hStdout, str, strlen(str), &bytes, NULL);
 #else
@@ -1017,7 +1017,7 @@ static void write_attributes (unsigned short *src, int count)
    register unsigned char *p = Line_Buffer;
    register unsigned short pair;
 #ifdef WIN32
-   register unsigned char * org_src = src;
+   register unsigned char * org_src = (unsigned char*)src;
    COORD coord;
    long bytes;
 #endif
@@ -1062,7 +1062,7 @@ static void write_attributes (unsigned short *src, int count)
   /* write color attributes */
    p = Line_Buffer;
    n = count;
-   src = org_src; /* restart the src pointer */
+   src = (unsigned short*)org_src; /* restart the src pointer */
    
   /* write into attributes only */
    while (n-- > 0)
@@ -1073,7 +1073,7 @@ static void write_attributes (unsigned short *src, int count)
 	*(p++) = 0; /* what's this for? */
      }
    
-   WriteConsoleOutputAttribute(hStdout, Line_Buffer, count, coord, &bytes);
+   WriteConsoleOutputAttribute(hStdout, (WORD*)Line_Buffer, count, coord, &bytes);
 #   else	/* __os2__ */
    /* ScreenUpdateLine (void *virtual_screen_line, int row); */
    p = Line_Buffer;

@@ -36,11 +36,6 @@ void UpdateStatus(HWND hWnd, Entry* pEntry);
 
 BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv);
 
-#ifndef _MSC_VER
-#define NMTVDISPINFO TV_DISPINFO
-#define NMTVDISPINFO TV_DISPINFO
-#endif
-
 void OnGetDispInfo(NMTVDISPINFO* ptvdi);
 
 

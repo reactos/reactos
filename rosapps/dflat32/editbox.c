@@ -515,7 +515,7 @@ static void KeyTyped(DFWINDOW wnd, int c)
         currchar = DfCurrChar;
     }
     /* ---- test typing at end of text ---- */
-    if (currchar == wnd->text+wnd->MaxTextLength)    {
+    if (currchar == (char*)(wnd->text+wnd->MaxTextLength))    {
         /* ---- typing at the end of maximum buffer ---- */
         DfBeep();
         return;
@@ -571,14 +571,14 @@ static void KeyTyped(DFWINDOW wnd, int c)
     /* ---------- test end of window --------- */
     if (DfWndCol == DfClientWidth(wnd)-1)    {
         if (!DfIsMultiLine(wnd))	{
-			if (!(currchar == wnd->text+wnd->MaxTextLength-2))
+			if (!(currchar == (char*)(wnd->text+wnd->MaxTextLength-2)))
             DfSendMessage(wnd, DFM_HORIZSCROLL, TRUE, 0);
 		}
 		else	{
 			char *cp = currchar;
-	        while (*cp != ' ' && cp != DfTextLine(wnd, wnd->CurrLine))
+	        while (*cp != ' ' && cp != (char*)DfTextLine(wnd, wnd->CurrLine))
 	            --cp;
-	        if (cp == DfTextLine(wnd, wnd->CurrLine) ||
+	        if (cp == (char*)DfTextLine(wnd, wnd->CurrLine) ||
 	                !wnd->WordWrapMode)
 	            DfSendMessage(wnd, DFM_HORIZSCROLL, TRUE, 0);
 	        else    {
@@ -807,7 +807,7 @@ static void ParagraphCmd(DFWINDOW wnd)
     if (*bel == '\n')
         --bel;
     /* --- change all newlines in block to spaces --- */
-    while (DfCurrChar < bel)    {
+    while ((char*)DfCurrChar < bel)    {
         if (*DfCurrChar == '\n')    {
             *DfCurrChar = ' ';
             wnd->CurrLine++;
@@ -818,7 +818,7 @@ static void ParagraphCmd(DFWINDOW wnd)
     }
     /* ---- insert newlines at new margin boundaries ---- */
     bb = bbl;
-    while (bbl < bel)    {
+    while ((char*)bbl < (char*)bel)    {
         bbl++;
         if ((int)(bbl - bb) == DfClientWidth(wnd)-1)    {
             while (*bbl != ' ' && bbl > bb)
