@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.21 2003/07/10 15:35:49 chorns Exp $
+/* $Id: stubs.c,v 1.22 2003/07/14 06:34:38 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -394,21 +394,6 @@ ExtFloodFill(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FillRgn(
-	HDC	a0,
-	HRGN	a1,
-	HBRUSH	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 /*

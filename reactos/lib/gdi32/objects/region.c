@@ -190,3 +190,18 @@ PaintRgn(
 {
 	return W32kPaintRgn( a0, a1 );
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FillRgn(
+	HDC	a0,
+	HRGN	a1,
+	HBRUSH	a2
+	)
+{
+	return W32kFillRgn(a0, a1, a2);
+}
