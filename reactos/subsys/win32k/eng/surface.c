@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.40 2004/05/30 14:01:12 weiden Exp $
+/* $Id: surface.c,v 1.41 2004/06/23 07:31:22 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -317,57 +317,68 @@ EngCreateBitmap(IN SIZEL Size,
   PVOID UncompressedBits;
   ULONG UncompressedFormat;
 
-  NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ), (PVOID*)&SurfGDI, (PVOID*)&SurfObj);
-  if( !ValidEngHandle( NewBitmap ) )
+if (Width < 0) __asm__("int $3\n");
+  NewBitmap = (HBITMAP) CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ), (PVOID*)&SurfGDI, (PVOID*)&SurfObj);
+  if (! ValidEngHandle(NewBitmap))
 	return 0;
 
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
-  if (Format == BMF_4RLE) {
-	  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
-	  SurfObj->cjBits = SurfObj->lDelta * Size.cy;
-	  UncompressedFormat = BMF_4BPP;
+  if (Format == BMF_4RLE)
+    {
+      SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
+      SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+      UncompressedFormat = BMF_4BPP;
       UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
-	  Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
-  } else {
-	  if (Format == BMF_8RLE) {
-		  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
-		  SurfObj->cjBits = SurfObj->lDelta * Size.cy;
-	      UncompressedFormat = BMF_8BPP;
-	      UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
-		  Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
-	  } else {
-  SurfObj->lDelta = Width;
-  SurfObj->cjBits = SurfObj->lDelta * Size.cy;
-		  UncompressedBits = Bits;
-		  UncompressedFormat = Format;
-	  }
-  }
-  if(UncompressedBits!=NULL)
-  {
-    SurfObj->pvBits = UncompressedBits;
-  } else
-  {
-    if (SurfObj->cjBits == 0)
-    {
-      SurfObj->pvBits = NULL;
+      Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
     }
-    else
+  else if (Format == BMF_8RLE)
     {
-      if(Flags & BMF_USERMEM)
-      {
-        SurfObj->pvBits = EngAllocUserMem(SurfObj->cjBits, 0);
-      } else {
-        if(Flags & BMF_NOZEROINIT)
-        {
-          SurfObj->pvBits = EngAllocMem(0, SurfObj->cjBits, 0);
-        } else {
-          SurfObj->pvBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
-        }
-      }
+      SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
+      SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+      UncompressedFormat = BMF_8BPP;
+      UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+      Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
     }
-  }
+  else
+    {
+      SurfObj->lDelta = Width;
+      SurfObj->cjBits = Width * Size.cy;
+      UncompressedBits = Bits;
+      UncompressedFormat = Format;
+    }
 
-  SurfObj->dhsurf = 0; // device managed surface
+  if (UncompressedBits != NULL)
+    {
+      SurfObj->pvBits = UncompressedBits;
+    }
+  else
+    {
+      if (SurfObj->cjBits == 0)
+        {
+          SurfObj->pvBits = NULL;
+        }
+      else
+        {
+          if (0 != (Flags & BMF_USERMEM))
+            {
+              SurfObj->pvBits = EngAllocUserMem(SurfObj->cjBits, 0);
+            }
+          else
+            {
+              SurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
+                                            SurfObj->cjBits, 0);
+             }
+         }
+     }
+
+
+  if (0 == (Flags & BMF_TOPDOWN))
+    {
+      SurfObj->pvBits = (PVOID) ((PCHAR) UncompressedBits + SurfObj->cjBits - SurfObj->lDelta);
+      SurfObj->lDelta = - SurfObj->lDelta;
+    }
+
+  SurfObj->dhsurf = 0; /* device managed surface */
   SurfObj->hsurf  = 0;
   SurfObj->dhpdev = NULL;
   SurfObj->hdev = NULL;
@@ -380,7 +391,7 @@ EngCreateBitmap(IN SIZEL Size,
 
   InitializeFuncs(SurfGDI, UncompressedFormat);
 
-  // Use flags to determine bitmap type -- TOP_DOWN or whatever
+  /* Use flags to determine bitmap type -- TOP_DOWN or whatever */
 
   return NewBitmap;
 }
