@@ -38,12 +38,6 @@
 #ifndef	_ROS_TCHAR_H_
 #define _ROS_TCHAR_H_
 
-#ifdef __USE_W32API
-
-#include_next <tchar.h>
-
-#else
-
 #include <msvcrt/string.h>
 
 /*
@@ -154,6 +148,7 @@ typedef wchar_t TCHAR;
 #define	_totupper	towupper
 #define	_totlower	towlower
 #define	_ttoi		_wtoi
+#define	_ttoi64		_wtoi64
 #define	_tcsftime	wcsftime
 #define	_tsplitpath	_wsplitpath
 #define	_tmakepath	_wmakepath
@@ -262,13 +257,12 @@ typedef char TCHAR;
 #define _totupper	toupper
 #define	_totlower	tolower
 #define	_ttoi		atoi
+#define	_ttoi64		_atoi64
 #define _tcsftime	strftime
 #define	_tsplitpath	_splitpath
 #define	_tmakepath	_makepath
 #define	_tfopen		fopen
 
 #endif	/* Not _UNICODE */
-
-#endif  /* Not __USE_W32API */
 
 #endif	/* Not _TCHAR_H_ */
