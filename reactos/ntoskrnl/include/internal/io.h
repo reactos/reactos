@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.16 2002/03/13 01:26:02 ekohl Exp $
+/* $Id: io.h,v 1.17 2002/03/15 23:59:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -313,6 +313,9 @@ NTSTATUS STDCALL IoPageWrite (PFILE_OBJECT		FileObject,
 
 NTSTATUS
 IoCreateArcNames(VOID);
+
+NTSTATUS
+IoCreateSystemRootLink(PCHAR ParameterLine);
 
 NTSTATUS
 IopInitiatePnpIrp(

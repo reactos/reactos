@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.1 2002/03/13 01:27:06 ekohl Exp $
+/* $Id: arcname.c,v 1.2 2002/03/15 23:59:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,7 @@
 #include "internal/xhal.h"
 
 #define NDEBUG
-#include <debug.h>
+#include <internal/debug.h>
 
 
 /* FUNCTIONS ****************************************************************/
@@ -167,6 +167,144 @@ IoCreateArcNames(VOID)
 
 
   DPRINT("IoCreateArcNames() done\n");
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+IoCreateSystemRootLink(PCHAR ParameterLine)
+{
+  UNICODE_STRING LinkName;
+  UNICODE_STRING DeviceName;
+  UNICODE_STRING ArcName;
+  UNICODE_STRING BootPath;
+  PCHAR ParamBuffer;
+  PWCHAR ArcNameBuffer;
+  PCHAR p;
+  NTSTATUS Status;
+  ULONG Length;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE Handle;
+
+  /* Create local parameter line copy */
+  ParamBuffer = ExAllocatePool(PagedPool, 256);
+  strcpy(ParamBuffer, (char *)ParameterLine);
+
+  DPRINT("%s\n", ParamBuffer);
+  /* Format: <arc_name>\<path> [options...] */
+
+  /* cut options off */
+  p = strchr(ParamBuffer, ' ');
+  if (p)
+    *p = 0;
+  DPRINT("%s\n", ParamBuffer);
+
+  /* extract path */
+  p = strchr(ParamBuffer, '\\');
+  if (p)
+    {
+      DPRINT("Boot path: %s\n", p);
+      RtlCreateUnicodeStringFromAsciiz(&BootPath, p);
+      *p = 0;
+    }
+  else
+    {
+      DPRINT("Boot path: %s\n", "\\");
+      RtlCreateUnicodeStringFromAsciiz(&BootPath, "\\");
+    }
+  DPRINT("Arc name: %s\n", ParamBuffer);
+
+  /* Only arc name left - build full arc name */
+  ArcNameBuffer = ExAllocatePool(PagedPool, 256 * sizeof(WCHAR));
+  swprintf(ArcNameBuffer,
+	   L"\\ArcName\\%S", ParamBuffer);
+  RtlInitUnicodeString(&ArcName, ArcNameBuffer);
+  DPRINT("Arc name: %wZ\n", &ArcName);
+
+  /* free ParamBuffer */
+  ExFreePool(ParamBuffer);
+
+  /* allocate device name string */
+  DeviceName.Length = 0;
+  DeviceName.MaximumLength = 256 * sizeof(WCHAR);
+  DeviceName.Buffer = ExAllocatePool(PagedPool, 256 * sizeof(WCHAR));
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &ArcName,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenSymbolicLinkObject(&Handle,
+				    SYMBOLIC_LINK_ALL_ACCESS,
+				    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&BootPath);
+      RtlFreeUnicodeString(&DeviceName);
+      CPRINT("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
+	     &ArcName,
+	     Status);
+      RtlFreeUnicodeString(&ArcName);
+
+      return(Status);
+    }
+  RtlFreeUnicodeString(&ArcName);
+
+  Status = NtQuerySymbolicLinkObject(Handle,
+				     &DeviceName,
+				     &Length);
+  NtClose (Handle);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&BootPath);
+      RtlFreeUnicodeString(&DeviceName);
+      CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
+	     Status);
+
+      return(Status);
+    }
+  DPRINT("Length: %lu DeviceName: %wZ\n", Length, &DeviceName);
+
+  RtlAppendUnicodeStringToString(&DeviceName,
+				 &BootPath);
+
+  RtlFreeUnicodeString(&BootPath);
+  DPRINT("DeviceName: %wZ\n", &DeviceName);
+
+  /* create the '\SystemRoot' link */
+  RtlInitUnicodeString(&LinkName,
+		       L"\\SystemRoot");
+
+  Status = IoCreateSymbolicLink(&LinkName,
+				&DeviceName);
+  RtlFreeUnicodeString (&DeviceName);
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("IoCreateSymbolicLink() failed (Status %x)\n",
+	     Status);
+
+      return(Status);
+    }
+
+  /* Check whether '\SystemRoot'(LinkName) can be opened */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &LinkName,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenSymbolicLinkObject(&Handle,
+				    SYMBOLIC_LINK_ALL_ACCESS,
+				    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
+	     Status);
+      return(Status);
+    }
+  NtClose(Handle);
 
   return(STATUS_SUCCESS);
 }

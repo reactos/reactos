@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.115 2002/03/13 01:26:32 ekohl Exp $
+/* $Id: main.c,v 1.116 2002/03/16 00:00:13 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -396,141 +396,6 @@ RtlpCheckFileNameExtension(PCHAR FileName,
      return TRUE;
    else
      return FALSE;
-}
-
-static VOID
-CreateSystemRootLink (PCSZ ParameterLine)
-{
-	UNICODE_STRING LinkName;
-	UNICODE_STRING DeviceName;
-	UNICODE_STRING ArcName;
-	UNICODE_STRING BootPath;
-	PCHAR ParamBuffer;
-	PWCHAR ArcNameBuffer;
-	PCHAR p;
-	NTSTATUS Status;
-	ULONG Length;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	HANDLE Handle;
-
-	/* create local parameter line copy */
-	ParamBuffer = ExAllocatePool (PagedPool, 256);
-	strcpy (ParamBuffer, (char *)ParameterLine);
-
-	DPRINT("%s\n", ParamBuffer);
-	/* Format: <arc_name>\<path> [options...] */
-
-	/* cut options off */
-	p = strchr (ParamBuffer, ' ');
-	if (p)
-		*p = 0;
-	DPRINT("%s\n", ParamBuffer);
-
-	/* extract path */
-	p = strchr (ParamBuffer, '\\');
-	if (p)
-	{
-		DPRINT("Boot path: %s\n", p);
-		RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
-		*p = 0;
-	}
-	else
-	{
-		DPRINT("Boot path: %s\n", "\\");
-		RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
-	}
-	DPRINT("Arc name: %s\n", ParamBuffer);
-	
-	/* Only arc name left - build full arc name */
-	ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-	swprintf (ArcNameBuffer,
-	          L"\\ArcName\\%S", ParamBuffer);
-	RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-	DPRINT("Arc name: %wZ\n", &ArcName);
-
-	/* free ParamBuffer */
-	ExFreePool (ParamBuffer);
-
-	/* allocate device name string */
-	DeviceName.Length = 0;
-	DeviceName.MaximumLength = 256 * sizeof(WCHAR);
-	DeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-
-	InitializeObjectAttributes (&ObjectAttributes,
-	                            &ArcName,
-	                            0,
-	                            NULL,
-	                            NULL);
-
-	Status = NtOpenSymbolicLinkObject (&Handle,
-	                                   SYMBOLIC_LINK_ALL_ACCESS,
-	                                   &ObjectAttributes);
-	if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeUnicodeString (&BootPath);
-	  RtlFreeUnicodeString (&DeviceName);
-	  DPRINT1("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
-		         &ArcName,
-		         Status);
-	  RtlFreeUnicodeString (&ArcName);
-
-	  KeBugCheck (0x0);
-	}
-	RtlFreeUnicodeString (&ArcName);
-
-	Status = NtQuerySymbolicLinkObject (Handle,
-	                                    &DeviceName,
-	                                    &Length);
-	NtClose (Handle);
-	if (!NT_SUCCESS(Status))
-	{
-		RtlFreeUnicodeString (&BootPath);
-		RtlFreeUnicodeString (&DeviceName);
-		CPRINT("NtQuerySymbolicObject() failed (Status %x)\n",
-		         Status);
-
-		KeBugCheck (0x0);
-	}
-	DPRINT("Length: %lu DeviceName: %wZ\n", Length, &DeviceName);
-
-	RtlAppendUnicodeStringToString (&DeviceName,
-					&BootPath);
-
-	RtlFreeUnicodeString (&BootPath);
-	DPRINT("DeviceName: %wZ\n", &DeviceName);
-
-	/* create the '\SystemRoot' link */
-	RtlInitUnicodeString (&LinkName,
-			      L"\\SystemRoot");
-
-	Status = IoCreateSymbolicLink (&LinkName,
-				       &DeviceName);
-	RtlFreeUnicodeString (&DeviceName);
-	if (!NT_SUCCESS(Status))
-	{
-		CPRINT("IoCreateSymbolicLink() failed (Status %x)\n",
-		         Status);
-
-		KeBugCheck (0x0);
-	}
-
-	/* Check if '\SystemRoot'(LinkName) can be opened, otherwise crash it! */
-	InitializeObjectAttributes (&ObjectAttributes,
-	                            &LinkName,
-	                            0,
-	                            NULL,
-	                            NULL);
-
-	Status = NtOpenSymbolicLinkObject (&Handle,
-	                                   SYMBOLIC_LINK_ALL_ACCESS,
-	                                   &ObjectAttributes);
-	if (!NT_SUCCESS(Status))
-	{
-		CPRINT("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
-		         Status);
-		KeBugCheck (0x0);
-	}
-	NtClose(Handle);
 }
 
 
@@ -1124,13 +989,13 @@ ExpInitializeExecutive(VOID)
 	  LdrProcessDriver((PVOID)start, name, length);
 	}
     }
-  
+
+  /* Create ARC names for boot devices */
   IoCreateArcNames();
-  
+
   /* Create the SystemRoot symbolic link */
   CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
-
-  CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
+  IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
 
 #ifdef DBGPRINT_FILE_LOG
   /* On the assumption that we can now access disks start up the debug 
