@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.39 2004/05/15 20:19:20 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.40 2004/05/26 18:49:06 weiden Exp $ */
 #include <w32k.h>
 
-VOID FASTCALL
+int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
@@ -46,7 +46,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    ASSERT(Dc->CombinedClip != NULL);
 
    RGNDATA_UnlockRgn(Dc->w.hGCClipRgn);
-   NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
+   return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
 HRGN WINAPI SaveVisRgn(HDC hdc)
@@ -128,6 +128,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
       {
         NtGdiDeleteObject(dc->w.hClipRgn);
         dc->w.hClipRgn = NULL;
+        retval = NULLREGION;
       }
     }
     else
@@ -162,7 +163,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
       NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hClipRgn, hrgn, fnMode);
   }
 
-  CLIPPING_UpdateGCRegion(dc);
+  retval = CLIPPING_UpdateGCRegion(dc);
   DC_UnlockDc( hDC );
 
   return retval;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.135 2004/05/14 16:55:18 navaraf Exp $
+/* $Id: dc.c,v 1.136 2004/05/26 18:49:06 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -1756,7 +1756,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   USHORT Mode;
 
   if(!hDC || !hGDIObj) return NULL;
-
+  
   dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
@@ -1949,6 +1949,12 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
     case GDI_OBJECT_TYPE_REGION:
       DC_UnlockDc (hDC);
+      /*
+       * The return value is one of the following values:
+       *  SIMPLEREGION
+       *  COMPLEXREGION
+       *  NULLREGION
+       */
       return (HGDIOBJ) NtGdiSelectClipRgn(hDC, (HRGN) hGDIObj);
 
     default:
