@@ -83,7 +83,9 @@ static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
 	return FALSE;
     WINMM_IData->hWinMM32Instance = hInstDLL;
     InitializeCriticalSection(&WINMM_IData->cs);
+/* FIXME crashes in ReactOS
     WINMM_IData->cs.DebugInfo->Spare[1] = (DWORD)"WINMM_IData";
+*/
     WINMM_IData->psStopEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     WINMM_IData->psLastEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     TRACE("Created IData (%p)\n", WINMM_IData);
