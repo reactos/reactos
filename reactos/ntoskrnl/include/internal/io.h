@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.48 2004/11/06 04:12:59 ion Exp $
+/* $Id: io.h,v 1.49 2004/11/19 21:31:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -522,4 +522,12 @@ STDCALL
 IopRemoveTimerFromTimerList(
 	IN PIO_TIMER Timer
 );
+
+#define CM_RESOURCE_LIST_SIZE(ResList) \
+  (ResList->Count == 1) ? \
+    FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList. \
+                 PartialDescriptors[(ResList)->List[0].PartialResourceList.Count]) \
+                        : \
+    FIELD_OFFSET(CM_RESOURCE_LIST, List)
+
 #endif

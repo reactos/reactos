@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.51 2004/11/09 00:38:37 ion Exp $
+/* $Id: pnpmgr.c,v 1.52 2004/11/19 21:31:02 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -217,8 +217,7 @@ IoGetDeviceProperty(
       Length = 0;
       if (DeviceNode->BootResources->Count != 0)
       {
-	Length = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
-		 DeviceNode->BootResources->Count * sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+	Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
       }
       Data = &DeviceNode->BootResources;
       break;
@@ -228,8 +227,7 @@ IoGetDeviceProperty(
       Length = 0;
       if (DeviceNode->BootResources->Count != 0)
       {
-	Length = FIELD_OFFSET(CM_RESOURCE_LIST, List) +
-		 DeviceNode->BootResources->Count * sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+	Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
       }
       Data = &DeviceNode->BootResources;
       break;
@@ -861,8 +859,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
       ResCount = DeviceNode->BootResources->Count;
       if (ResCount != 0)
       {
-	ListSize = sizeof(CM_RESOURCE_LIST) +
-		   ((ResCount - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+	ListSize = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
 
 	RtlInitUnicodeString(&KeyName,
 			     L"BootConfig");
