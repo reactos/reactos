@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../../..
+
 OBJECTS= sdisk.o ../../../ntoskrnl/ntoskrnl.a
 
 all: sdisk.sys

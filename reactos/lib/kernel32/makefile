@@ -1,7 +1,9 @@
-# $Id: makefile,v 1.38 2000/08/14 14:33:24 ea Exp $
+# $Id: makefile,v 1.39 2000/08/18 22:27:00 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET=kernel32
 
 KERNEL32_BASE = 0x77f00000
@@ -10,16 +12,7 @@ BASE_CFLAGS = -I../../include
 
 CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
 
-include ../../rules.mak
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 
@@ -161,5 +154,5 @@ else
 endif
 
 WITH_DEBUGGING=yes
-WARNINGS_ARE_ERRORS = yes
-
+#WARNINGS_ARE_ERRORS = yes
+include ../../rules.mak

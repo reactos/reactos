@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.35 2000/08/12 19:33:22 dwelch Exp $
+/* $Id: mm.c,v 1.36 2000/08/18 22:27:03 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -191,7 +191,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 					      (PVOID)Address);
 	break;
 	
-      case MEMORY_AREA_COMMIT:
+      case MEMORY_AREA_VIRTUAL_MEMORY:
 	Status = MmNotPresentFaultVirtualMemory(AddressSpace,
 						MemoryArea,
 						(PVOID)Address);

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS= ../common/crt0.o shell.o
 PROGS= shell.exe
 LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a

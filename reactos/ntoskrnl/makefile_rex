@@ -1,7 +1,9 @@
-# $Id: makefile_rex,v 1.83 2000/08/11 12:38:45 ekohl Exp $
+# $Id: makefile_rex,v 1.84 2000/08/18 22:27:02 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ..
+
 TARGETNAME = ntoskrnl
 
 OBJECTS_PATH = objects
@@ -537,22 +539,14 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/$(TARGETNAME).exe
 
 $(FLOPPY_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).exe $(FLOPPY_DIR)\$(TARGETNAME).exe
-else
 	$(CP) $(TARGETNAME).exe $(FLOPPY_DIR)/$(TARGETNAME).exe
-endif
 
 .PHONY: dist
 
 dist: ../$(DIST_DIR)/$(TARGETNAME).exe
 
 ../$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).exe ..\$(DIST_DIR)\$(TARGETNAME).exe
-else
 	$(CP) $(TARGETNAME).exe ../$(DIST_DIR)/$(TARGETNAME).exe
-endif
 
 .PHONY: dist
 

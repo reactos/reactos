@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.2 1999/08/29 13:44:52 dwelch Exp $
+# $Id: makefile,v 1.3 2000/08/18 22:26:58 dwelch Exp $
 #
 # ReactOS Operating System
 #
 # Generate:
 # - defedf
 #
+PATH_TO_TOP = ../..
+
 TARGET = defedf
 
 BASE_CFLAGS = -I../../include

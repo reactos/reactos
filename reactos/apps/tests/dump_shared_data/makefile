@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS = dump_shared_data.o
 PROGS = dump_shared_data.exe
 LIBS = 

@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.7 2000/08/11 12:41:58 ekohl Exp $
+# $Id: makefile,v 1.8 2000/08/18 22:27:04 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
+
 TARGET = beep
 OBJECTS = beep.o beep.coff ../../../ntoskrnl/ntoskrnl.a
 

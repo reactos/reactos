@@ -1,21 +1,15 @@
-# $Id: makefile,v 1.13 2000/08/11 12:31:17 ekohl Exp $
+# $Id: makefile,v 1.14 2000/08/18 22:26:59 dwelch Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
+PATH_TO_TOP = ../..
 
 BASE_CFLAGS = -I../../include
 
 TARGETNAME=advapi32
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGETNAME).a
-  else
-    DLLTARGET=$(TARGETNAME).dll
-  endif
-else
-  DLLTARGET=$(TARGETNAME).dll
-endif
+DLLTARGET=$(TARGETNAME).dll
+
 
 
 MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS= ../common/crt0.o apc.o
 PROGS= apc.exe
 

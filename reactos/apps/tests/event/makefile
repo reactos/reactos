@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 PROGS = event
 
 all: $(PROGS:%=%.exe)

@@ -1,5 +1,7 @@
-# $Id: Makefile,v 1.6 2000/06/29 23:35:09 dwelch Exp $
+# $Id: Makefile,v 1.7 2000/08/18 22:26:53 dwelch Exp $
 #
+
+PATH_TO_TOP = ../..
 
 BASE_CFLAGS = 
 TARGETNAME=buildno

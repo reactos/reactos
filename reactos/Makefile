@@ -6,7 +6,7 @@
 # Select your host
 #
 #HOST = mingw32-linux
-HOST = mingw32-windows
+#HOST = mingw32-windows
 
 include rules.mak
 
@@ -57,7 +57,16 @@ clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_cle
 
 .PHONY: clean
 
-install: make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
+ifeq ($(HOST),mingw32-linux)
+rcopy$(EXE_POSTFIX): rcopy.c
+	$(NATIVE_CC) -g -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+rcopy$(EXE_POSTFIX): rcopy.c
+	$(NATIVE_CC) -g -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
+endif
+
+install: rcopy$(EXE_POSTFIX) make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
         $(DLLS:%=%_install) $(LOADERS:%=%_install) \
         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
         $(APPS:%=%_install)

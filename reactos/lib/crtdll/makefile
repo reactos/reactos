@@ -1,17 +1,12 @@
-# $Id: makefile,v 1.37 2000/08/11 12:31:28 ekohl Exp $
+# $Id: makefile,v 1.38 2000/08/18 22:26:59 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET=crtdll
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
+
 
 BASE_CFLAGS = -I../../include
 

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
        temptest test-fseek test_rdwr
 

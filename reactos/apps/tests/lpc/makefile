@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 SRV_OBJECTS= ../common/crt0.o lpcsrv.o
 CLT_OBJECTS= ../common/crt0.o lpcclt.o
 

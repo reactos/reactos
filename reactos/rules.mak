@@ -15,7 +15,8 @@ NASM_FORMAT = win32
 PREFIX = i586-mingw32-
 EXE_POSTFIX = 
 EXE_PREFIX = ./
-CP = cp
+#CP = cp
+CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 KM_SPECS = $(TOPDIR)/specs
@@ -28,7 +29,8 @@ ifeq ($(HOST),mingw32-windows)
 NASM_FORMAT = win32
 PREFIX = 
 EXE_POSTFIX = .exe
-CP = copy /B
+#CP = copy /B
+CP = rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = del
@@ -95,5 +97,57 @@ RCINC = --include-dir ../include --include-dir ../../include --include-dir ../..
 %.coff: %.rc
 	$(RC) $(RCINC) $< $@
 
+%.sys: %.o
+	$(CC) \
+		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $^
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $@ \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-mdll \
+		-o $@.unstripped \
+		$^
+	- $(RM) temp.exp
+	$(STRIP) --strip-debug $<
+	$(CC) \
+		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $^
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $@ \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-mdll \
+		-o $@ \
+		$^
+	- $(RM) temp.exp
 
 RULES_MAK_INCLUDED = 1

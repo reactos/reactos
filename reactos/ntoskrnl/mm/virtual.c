@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.32 2000/07/07 10:30:56 dwelch Exp $
+/* $Id: virtual.c,v 1.33 2000/08/18 22:27:03 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -25,7 +25,63 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* TYPES *********************************************************************/
+
+typedef struct _MM_SEGMENT
+{
+   ULONG Type;
+   ULONG Protect;
+   ULONG Length;
+   LIST_ENTRY SegmentListEntry;
+} MM_SEGMENT, *PMM_SEGMENT;
+
+/* FUNCTIONS *****************************************************************/
+
+PMM_SEGMENT MmGetSegmentForAddress(PMEMORY_AREA MArea,
+				   PVOID Address,
+				   PVOID* PCurrentAddress)
+/*
+ * FUNCTION: Get the segment corresponding to a particular memory area and
+ * address. 
+ * ARGUMENTS:
+ *          MArea (IN) = The memory area
+ *          Address (IN) = The address to get the segment for
+ *          PCurrentAddress (OUT) = The start of the segment
+ * RETURNS:
+ *          The corresponding memory or NULL if an error occurred
+ */
+{
+   PVOID CurrentAddress;
+   PMM_SEGMENT CurrentSegment;
+   PLIST_ENTRY Current;
+   
+   if (Address < MArea->BaseAddress ||
+       Address >= (MArea->BaseAddress + MArea->Length))
+     {
+	KeBugCheck(0);
+	*PCurrentAddress = NULL;
+	return(NULL);
+     }
+   
+   Current = MArea->Data.VirtualMemoryData.SegmentListHead.Flink;
+   CurrentAddress = MArea->BaseAddress;
+   while (Current != &MArea->Data.VirtualMemoryData.SegmentListHead)
+     {
+	CurrentSegment = CONTAINING_RECORD(Current, 
+					   MM_SEGMENT,
+					   SegmentListEntry);
+	if (Address >= CurrentAddress &&
+	    Address < (CurrentAddress + CurrentSegment->Length))
+	  {
+	     *PCurrentAddress = CurrentAddress;
+	     return(CurrentSegment);
+	  }
+	CurrentAddress = CurrentAddress + CurrentSegment->Length;
+	Current = Current->Flink;
+     }
+   KeBugCheck(0);
+   return(NULL);
+}
 
 NTSTATUS MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 				  PMEMORY_AREA MArea,
@@ -160,6 +216,18 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 {
    PVOID Page;
    NTSTATUS Status;
+   PMM_SEGMENT Segment;
+   PVOID CurrentAddress;
+   
+   Segment = MmGetSegmentForAddress(MemoryArea, Address, &CurrentAddress);
+   if (Segment == NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Segment->Type == MEM_RESERVE)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
    
    if (MmIsPagePresent(NULL, Address))
      {	
@@ -200,10 +268,349 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
+VOID MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
+			PVOID BaseAddress,
+			ULONG RegionSize,
+			ULONG OldType,
+			ULONG OldProtect,
+			ULONG NewType,
+			ULONG NewProtect)
+{      
+   if (NewType == MEM_RESERVE &&
+       OldType == MEM_COMMIT)
+     {
+	ULONG i;
+	
+	for (i=0; i<=(RegionSize/PAGESIZE); i++)
+	  {
+	     LARGE_INTEGER PhysicalAddr;
+	     
+	     PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
+	     if (PhysicalAddr.u.LowPart != 0)
+	       {
+		  MmRemovePageFromWorkingSet(AddressSpace->Process,
+					     BaseAddress + (i*PAGESIZE));
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+	       }
+	  }
+     }
+   if (NewType == MEM_COMMIT && OldType == MEM_COMMIT &&
+       OldProtect != NewProtect)
+     {
+	ULONG i;
+   
+	for (i=0; i<(RegionSize/PAGESIZE); i++)
+	  {
+	     if (MmIsPagePresent(AddressSpace->Process, 
+				 BaseAddress + (i*PAGESIZE)))
+	       {
+		  MmSetPageProtect(AddressSpace->Process,
+				   BaseAddress + (i*PAGESIZE), 
+				   NewProtect);
+	       }
+	  }
+     }
+}
+
+VOID InsertAfterEntry(PLIST_ENTRY Previous,
+		      PLIST_ENTRY Entry)
+{
+   Previous->Flink->Blink = Entry;
+   
+   Entry->Flink = Previous->Flink;
+   Entry->Blink = Previous;
+   
+   Previous->Flink = Entry;
+}
+
+NTSTATUS MmSplitSegment(PMADDRESS_SPACE AddressSpace,
+			PMEMORY_AREA MemoryArea,
+			PVOID BaseAddress,
+			ULONG RegionSize,
+			ULONG Type,
+			ULONG Protect,
+			PMM_SEGMENT CurrentSegment,
+			PVOID CurrentAddress)
+/*
+ * FUNCTION: Split a memory segment internally 
+ */
+{
+   PMM_SEGMENT NewSegment;
+   PMM_SEGMENT NewTopSegment;
+   PMM_SEGMENT PreviousSegment;
+   ULONG OldType;
+   ULONG OldProtect;
+   
+   OldType = CurrentSegment->Type;
+   OldProtect = CurrentSegment->Protect;
+   
+   NewSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   if (NewSegment == NULL)
+     {
+	return(STATUS_NO_MEMORY);
+     }
+   NewTopSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   if (NewTopSegment == NULL)
+     {
+	ExFreePool(NewSegment);
+	return(STATUS_NO_MEMORY);
+     }
+   
+   if (CurrentSegment->Type == Type &&
+       CurrentSegment->Protect == Protect)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
+   if (CurrentAddress < BaseAddress)
+     {
+	NewSegment->Type = Type;
+	NewSegment->Protect = Protect;
+	NewSegment->Length = RegionSize;
+	
+	CurrentSegment->Length = BaseAddress - CurrentAddress;
+
+	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
+			 &NewSegment->SegmentListEntry);
+	
+	PreviousSegment = NewSegment;
+     }
+   else
+     {
+	CurrentSegment->Type = Type;
+	CurrentSegment->Protect = Protect;
+	
+	PreviousSegment = CurrentSegment;
+	
+	ExFreePool(NewSegment);
+	NewSegment = NULL;
+     }
+   
+   if ((CurrentAddress + CurrentSegment->Length) > (BaseAddress + RegionSize))
+     {
+	NewTopSegment->Type = OldType;
+	NewTopSegment->Protect = OldProtect;
+	NewTopSegment->Length =
+	  (CurrentAddress + CurrentSegment->Length) -
+	  (BaseAddress + RegionSize);
+	
+	InsertAfterEntry(&PreviousSegment->SegmentListEntry,
+			 &NewTopSegment->SegmentListEntry);
+     }
+   else
+     {
+	ExFreePool(NewTopSegment);
+	NewTopSegment = NULL;
+     }
+   
+   MmModifyAttributes(AddressSpace, BaseAddress, RegionSize, 
+		      OldType, OldProtect, Type, Protect);
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS MmGatherSegment(PMADDRESS_SPACE AddressSpace,
+			 PMEMORY_AREA MemoryArea,
+			 PVOID BaseAddress,
+			 ULONG RegionSize,
+			 ULONG Type,
+			 ULONG Protect,
+			 PMM_SEGMENT CurrentSegment,
+			 PVOID CurrentAddress)
+/*
+ * FUNCTION: Do a virtual memory operation that will effect several
+ * memory segments. 
+ * ARGUMENTS:
+ *          AddressSpace (IN) = Address space to affect
+ *          MemoryArea (IN) = Memory area to affect
+ *          BaseAddress (IN) = Base address of the region to affect
+ *          RegionSize (IN) = Size of the region to affect
+ *          Type (IN) = New type of the region
+ *          Protect (IN) = New protection of the region
+ *          CurrentSegment (IN) = First segment intersecting with the region
+ *          CurrentAddress (IN) = Start address of the first segment
+ *                                interesting with the region
+ * RETURNS: Status
+ */
+{
+   PMM_SEGMENT NewSegment;
+   PMM_SEGMENT NewTopSegment;
+   PMM_SEGMENT PreviousSegment;
+   PVOID LAddress;
+   ULONG RSize;
+   PLIST_ENTRY CurrentEntry;
+   PLIST_ENTRY ListHead;
+   
+   /*
+    * We will need a maximum of two new segments. Allocate them now
+    * because if we fail latter we may not be able to reverse the
+    * what we've already done
+    */
+   NewSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   if (NewSegment == NULL)
+     {
+	return(STATUS_NO_MEMORY);
+     }
+   NewTopSegment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   if (NewTopSegment == NULL)
+     {
+	ExFreePool(NewSegment);
+	return(STATUS_NO_MEMORY);
+     }
+   
+   if (CurrentAddress < BaseAddress)
+     {
+	/*
+	 * If a portion of the first segment is not covered by the region then
+	 * we need to split it into two segments
+	 */
+	
+	NewSegment->Type = Type;
+	NewSegment->Protect = Protect;
+	NewSegment->Length = RegionSize;
+	
+	CurrentSegment->Length = 
+	  BaseAddress - CurrentAddress;
+
+	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
+			 &NewSegment->SegmentListEntry);
+	
+	PreviousSegment = NewSegment;
+	
+	MmModifyAttributes(AddressSpace, BaseAddress, NewSegment->Length,
+			   CurrentSegment->Type, 
+			   CurrentSegment->Protect, Type, Protect);
+     }
+   else
+     {
+	/*
+	 *  Otherwise just change the attributes of the segment
+	 */
+	
+	ULONG OldType;
+	ULONG OldProtect;		
+	
+	OldType = CurrentSegment->Type;
+	OldProtect = CurrentSegment->Protect;
+	
+	CurrentSegment->Type = Type;
+	CurrentSegment->Protect = Protect;
+	
+	PreviousSegment = CurrentSegment;
+	
+	ExFreePool(NewSegment);
+	NewSegment = NULL;
+	
+	MmModifyAttributes(AddressSpace, BaseAddress, CurrentSegment->Length,
+			   OldType, OldProtect, Type, Protect);
+     }
+  
+   LAddress = BaseAddress + PreviousSegment->Length;
+   RSize = RegionSize - PreviousSegment->Length;
+   CurrentEntry = PreviousSegment->SegmentListEntry.Flink;
+   ListHead = &MemoryArea->Data.VirtualMemoryData.SegmentListHead;
+   
+   while (CurrentEntry != ListHead && RSize > 0)
+     {
+	ULONG OldType;
+	ULONG OldProtect;
+	
+	CurrentSegment = CONTAINING_RECORD(CurrentEntry,
+					   MM_SEGMENT,
+					   SegmentListEntry);
+		
+	if (CurrentSegment->Length > RSize)
+	  {
+	     break;
+	  }
+	
+	OldType = CurrentSegment->Type;
+	OldProtect = CurrentSegment->Protect;
+	CurrentSegment->Type = Type;
+	CurrentSegment->Protect = Protect;
+	
+	MmModifyAttributes(AddressSpace, LAddress, CurrentSegment->Length,
+			   OldType, OldProtect, Type, Protect);
+	
+	RSize = RSize - CurrentSegment->Length;
+	LAddress = LAddress + CurrentSegment->Length;
+	
+	CurrentEntry = CurrentEntry->Flink;
+     }
+   
+   if (CurrentEntry == ListHead && RSize > 0)
+     {
+	KeBugCheck(0);
+     }
+   
+   if (RSize > 0)
+     {
+	NewTopSegment->Type = CurrentSegment->Type;
+	NewTopSegment->Protect = CurrentSegment->Protect;
+	NewTopSegment->Length = CurrentSegment->Length - RSize;
+
+	CurrentSegment->Length = RSize;
+	CurrentSegment->Type = Type;
+	CurrentSegment->Protect = Protect;
+	
+	InsertAfterEntry(&CurrentSegment->SegmentListEntry,
+			 &NewTopSegment->SegmentListEntry);
+	
+	MmModifyAttributes(AddressSpace, LAddress, RSize,
+			   NewTopSegment->Type, 
+			   NewTopSegment->Protect, Type, Protect);
+     }
+   
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS MmComplexVirtualMemoryOperation(PMADDRESS_SPACE AddressSpace,
+					 PMEMORY_AREA MemoryArea,
+					 PVOID BaseAddress,
+					 ULONG RegionSize,
+					 ULONG Type,
+					 ULONG Protect)
+{
+   PMM_SEGMENT CurrentSegment;
+   PVOID CurrentAddress;
+   
+   CurrentSegment = MmGetSegmentForAddress(MemoryArea, 
+					   BaseAddress, 
+					   &CurrentAddress);
+   if (CurrentSegment == NULL)
+     {
+	KeBugCheck(0);
+     }
+   
+   if (BaseAddress >= CurrentAddress &&
+       (BaseAddress + RegionSize) <= (CurrentAddress + CurrentSegment->Length))
+     {
+	return((MmSplitSegment(AddressSpace,
+			       MemoryArea,
+			       BaseAddress,
+			       RegionSize,
+			       Type,
+			       Protect,
+			       CurrentSegment,
+			       CurrentAddress)));
+     }
+   else
+     {
+	return((MmGatherSegment(AddressSpace,
+				MemoryArea,
+				BaseAddress,
+				RegionSize,
+				Type,
+				Protect,
+				CurrentSegment,
+				CurrentAddress)));
+     }
+}
+
+
 NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
-					 IN OUT	PVOID	* BaseAddress,
+					 IN OUT	PVOID*  PBaseAddress,
 					 IN	ULONG	ZeroBits,
-					 IN OUT	PULONG	RegionSize,
+					 IN OUT	PULONG	PRegionSize,
 					 IN	ULONG	AllocationType, 
 					 IN	ULONG	Protect)
 /*
@@ -240,11 +647,18 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    ULONG Type;
    NTSTATUS Status;
    PMADDRESS_SPACE AddressSpace;
+   PMM_SEGMENT Segment;
+   PVOID BaseAddress;
+   ULONG RegionSize;
    
    DPRINT("NtAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	  "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
 	  ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	  Protect);
+   
+   BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
+   RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -
+     PAGE_ROUND_DOWN((*PBaseAddress));
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -252,7 +666,7 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 				      UserMode,
 				      (PVOID*)(&Process),
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	return(Status);
@@ -260,58 +674,61 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    
    if (AllocationType & MEM_RESERVE)
      {
-	Type = MEMORY_AREA_RESERVE;
+	Type = MEM_RESERVE;
      }
    else
      {
-	Type = MEMORY_AREA_COMMIT;
+	Type = MEM_COMMIT;
      }
    
    AddressSpace = &Process->AddressSpace;
    MmLockAddressSpace(AddressSpace);
    
-   if ((*BaseAddress) != 0)
+   if (BaseAddress != 0)
      {
 	MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace,
-					       *BaseAddress);
+					       BaseAddress);
 	
-	if (MemoryArea != NULL)
+	if (MemoryArea != NULL &&
+	    MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY &&
+	    MemoryArea->Length >= RegionSize)
 	  {
-	     if (MemoryArea->BaseAddress == (*BaseAddress) &&
-		 MemoryArea->Length == *RegionSize)
-	       {
-		  MemoryArea->Type = Type;
-		  MemoryArea->Attributes = Protect;
-		  DPRINT("*BaseAddress %x\n",*BaseAddress);
-		  MmUnlockAddressSpace(AddressSpace);
-		  ObDereferenceObject(Process);
-		  return(STATUS_SUCCESS);
-	       }
-	     
-	     MemoryArea = MmSplitMemoryArea(Process,
-					    &Process->AddressSpace,
-					    MemoryArea,
-					    *BaseAddress,
-					    *RegionSize,
-					    Type,
-					    Protect);
-	     DPRINT("*BaseAddress %x\n",*BaseAddress);
+	     Status = MmComplexVirtualMemoryOperation(AddressSpace,
+						      MemoryArea,
+						      BaseAddress,
+						      RegionSize,
+						      Type,
+						      Protect);
 	     /* FIXME: Reserve/dereserve swap pages */
 	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
-	     return(STATUS_SUCCESS);
+	     return(Status);
 	  }
+	else if (MemoryArea != NULL)
+	  {
+	     MmUnlockAddressSpace(AddressSpace);
+	     ObDereferenceObject(Process);
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+     }
+
+   Segment = ExAllocatePool(NonPagedPool, sizeof(MM_SEGMENT));
+   if (Segment == NULL)
+     {
+	MmUnlockAddressSpace(AddressSpace);
+	ObDereferenceObject(Process);
+	return(STATUS_UNSUCCESSFUL);
      }
    
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
-			       Type,
-			       BaseAddress,
-			       *RegionSize,
+			       MEMORY_AREA_VIRTUAL_MEMORY,
+			       &BaseAddress,
+			       RegionSize,
 			       Protect,
 			       &MemoryArea);
    
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 	MmUnlockAddressSpace(AddressSpace);	
@@ -319,13 +736,25 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(Status);
      }
    
+   InitializeListHead(&MemoryArea->Data.VirtualMemoryData.SegmentListHead);
+   
+   Segment->Type = Type;
+   Segment->Protect = Protect;
+   Segment->Length = RegionSize;
+   InsertTailList(&MemoryArea->Data.VirtualMemoryData.SegmentListHead,
+		  &Segment->SegmentListEntry);
+   
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    if ((AllocationType & MEM_COMMIT) &&
        ((Protect & PAGE_READWRITE) ||
 	(Protect & PAGE_EXECUTE_READWRITE)))
      {
-	MmReserveSwapPages(PAGE_ROUND_UP((*RegionSize)));
+	MmReserveSwapPages(RegionSize);
      }
+      
+   *PBaseAddress = BaseAddress;
+   *PRegionSize = RegionSize;
+   
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
@@ -352,8 +781,8 @@ NTSTATUS STDCALL NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 
 
 NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
-				     IN	PVOID	* BaseAddress,	
-				     IN	PULONG	RegionSize,	
+				     IN	PVOID*  PBaseAddress,	
+				     IN	PULONG	PRegionSize,	
 				     IN	ULONG	FreeType)
 /*
  * FUNCTION: Frees a range of virtual memory
@@ -373,11 +802,16 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    PEPROCESS Process;
    PMADDRESS_SPACE AddressSpace;
    ULONG i;
+   PVOID BaseAddress;
+   ULONG RegionSize;
    
    DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	  "*RegionSize %x, FreeType %x)\n",ProcessHandle,*BaseAddress,
 	  *RegionSize,FreeType);
 				 
+   BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
+   RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -
+     PAGE_ROUND_DOWN((*PBaseAddress));
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -385,7 +819,7 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 				      UserMode,
 				      (PVOID*)(&Process),
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -394,7 +828,7 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					  *BaseAddress);
+					  BaseAddress);
    if (MemoryArea == NULL)
      {
 	MmUnlockAddressSpace(AddressSpace);
@@ -405,18 +839,20 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    switch (FreeType)
      {
       case MEM_RELEASE:
-	if (MemoryArea->BaseAddress != (*BaseAddress))
+	if (MemoryArea->BaseAddress != BaseAddress)
 	  {
 	     MmUnlockAddressSpace(AddressSpace);
 	     ObDereferenceObject(Process);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
+#if 0	
 	if ((MemoryArea->Type == MEMORY_AREA_COMMIT) &&
 	    ((MemoryArea->Attributes & PAGE_READWRITE) ||
 	     (MemoryArea->Attributes & PAGE_EXECUTE_READWRITE)))
 	  {
 	     MmDereserveSwapPages(PAGE_ROUND_UP(MemoryArea->Length));
 	  }
+#endif
 	
 	for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
 	  {
@@ -442,22 +878,15 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	return(STATUS_SUCCESS);
 	
       case MEM_DECOMMIT:	
-	if ((MemoryArea->Type == MEMORY_AREA_COMMIT) &&
-	    ((MemoryArea->Attributes & PAGE_READWRITE) ||
-	     (MemoryArea->Attributes & PAGE_EXECUTE_READWRITE)))
-	  {
-	     MmDereserveSwapPages(PAGE_ROUND_UP((*RegionSize)));
-	  }
-	MmSplitMemoryArea(Process,
-			  &Process->AddressSpace,
-			  MemoryArea,
-			  *BaseAddress,
-			  *RegionSize,
-			  MEMORY_AREA_RESERVE,
-			  MemoryArea->Attributes);
+	Status = MmComplexVirtualMemoryOperation(AddressSpace,
+						 MemoryArea,
+						 BaseAddress,
+						 RegionSize,
+						 MEM_RESERVE,
+						 PAGE_NOACCESS);
 	MmUnlockAddressSpace(AddressSpace);	
 	ObDereferenceObject(Process);
-	return(STATUS_SUCCESS);
+	return(Status);
      }
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
@@ -619,7 +1048,8 @@ NTSTATUS STDCALL NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                   return (STATUS_SUCCESS);
                }
 
-             if (MemoryArea->Type == MEMORY_AREA_COMMIT)
+#if 0	     
+             if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
                {
                   Info->State = MEM_COMMIT;
                }
@@ -627,7 +1057,8 @@ NTSTATUS STDCALL NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                {
                   Info->State = MEM_RESERVE;
                }
-
+#endif
+	     
              Info->BaseAddress = MemoryArea->BaseAddress;
              Info->RegionSize  = MemoryArea->Length;
 

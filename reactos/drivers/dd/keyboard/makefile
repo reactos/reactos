@@ -1,13 +1,15 @@
-# $Id: makefile,v 1.10 2000/08/11 12:42:41 ekohl Exp $
+# $Id: makefile,v 1.11 2000/08/18 22:27:05 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
+
 TARGET=keyboard
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I. -I../../../include
 
-all: $(TARGET).sys
+all: $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: all
 
@@ -39,32 +41,6 @@ else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
-$(TARGET).sys: $(OBJECTS)
-	$(CC) \
-		-specs=../../svc_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		$(OBJECTS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-specs=../../svc_specs \
-		-mdll \
-		-o $(TARGET).sys \
-		$(OBJECTS)
-	- $(RM) temp.exp
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
 
 include ../../../rules.mak

@@ -1,6 +1,7 @@
-# $Id: makefile,v 1.8 2000/08/11 12:44:03 ekohl Exp $
+# $Id: makefile,v 1.9 2000/08/18 22:27:08 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
 TARGET=vidport
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 

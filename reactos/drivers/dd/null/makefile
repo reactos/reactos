@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.8 2000/08/11 12:42:58 ekohl Exp $
+# $Id: makefile,v 1.9 2000/08/18 22:27:06 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
+
 TARGETNAME=null
 OBJECTS= $(TARGETNAME).o $(TARGETNAME).coff ../../../ntoskrnl/ntoskrnl.a
 

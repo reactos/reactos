@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.2 2000/08/11 12:42:19 ekohl Exp $
+# $Id: Makefile,v 1.3 2000/08/18 22:27:04 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
+
 TARGET=floppy
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a

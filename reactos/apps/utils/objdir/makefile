@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 TARGET_NAME=objdir
 OBJECTS= $(TARGET_NAME).o
 

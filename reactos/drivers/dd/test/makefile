@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../../..
+
 OBJECTS= test.o ../../../ntoskrnl/ntoskrnl.a
 
 all: test.sys

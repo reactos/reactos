@@ -1,17 +1,11 @@
-# $Id: Makefile,v 1.2 2000/08/11 12:32:53 ekohl Exp $
+# $Id: Makefile,v 1.3 2000/08/18 22:27:00 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET_NAME=msvcrt
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    TARGET_DLL=$(TARGET_NAME).a
-  else
-    TARGET_DLL=$(TARGET_NAME).dll
-  endif
-else
-  TARGET_DLL=$(TARGET_NAME).dll
-endif
+TARGET_DLL=$(TARGET_NAME).dll
 
 BASE_CFLAGS = -I../../include
 

@@ -1,6 +1,7 @@
-# $Id: makefile,v 1.2 2000/08/11 12:43:51 ekohl Exp $
+# $Id: makefile,v 1.3 2000/08/18 22:27:08 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../../..
 BASE_CFLAGS = -I../../../../include
 
 MP_OBJECTS = vgamp.o initvga.o vgavideo.o vgamp.coff ../../../../ntoskrnl/ntoskrnl.a ../../vidport/vidport.a

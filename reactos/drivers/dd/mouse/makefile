@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../../..
+
 TARGET=mouse
 OBJECTS= mouse.o ../../../ntoskrnl/ntoskrnl.a
 

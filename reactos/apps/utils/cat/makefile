@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS= cat.o
 PROGS= cat.exe
 

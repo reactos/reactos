@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS = hello.o
 PROGS = hello.exe
 LIBS = 

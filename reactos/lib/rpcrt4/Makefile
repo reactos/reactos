@@ -1,7 +1,9 @@
-# $Id: Makefile,v 1.2 2000/08/11 12:37:21 ekohl Exp $
+# $Id: Makefile,v 1.3 2000/08/18 22:27:01 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET = midl rpcrt4 rpcss
 
 BASE_CFLAGS = -I../../include
@@ -10,16 +12,8 @@ CFLAGS = $(CFLAGS)
 
 midl:
 	
+DLLTARGET=$(TARGET).dll
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
 
 all: $(DLLTARGET)
 

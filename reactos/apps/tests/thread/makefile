@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 PROGS = thread
 
 all: $(PROGS:%=%.exe)

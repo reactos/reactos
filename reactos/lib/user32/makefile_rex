@@ -1,24 +1,18 @@
-# $Id: makefile_rex,v 1.10 2000/08/11 12:37:32 ekohl Exp $
+# $Id: makefile_rex,v 1.11 2000/08/18 22:27:02 dwelch Exp $
 #
 # ReactOS Operating System
 #
 # Makefile for user32.dll
 #
+PATH_TO_TOP = ../..
+
 BASE_CFLAGS = -I../../include
 
 include ../../rules.mak
 
 TARGET=user32
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 

@@ -1,9 +1,11 @@
-# $Id: makefile,v 1.6 2000/06/24 09:02:02 ea Exp $
+# $Id: makefile,v 1.7 2000/08/18 22:26:58 dwelch Exp $
 #
 # ReactOS Operating System
 #
 # Generate files for a kernel module that needs to add a service table.
 #
+PATH_TO_TOP = ../..
+
 #TARGETNAME = mktab
 TARGETNAME = genw32k
 

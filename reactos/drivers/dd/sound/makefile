@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../../..
+
 OBJECTS= sound.o ../../../ntoskrnl/ntoskrnl.a
 
 all: sound.sys

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 OBJECTS = pteb.o
 PROGS = pteb.exe
 LIBS = 

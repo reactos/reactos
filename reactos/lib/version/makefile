@@ -1,21 +1,14 @@
-# $Id: makefile,v 1.3 2000/08/11 12:37:42 ekohl Exp $
+# $Id: makefile,v 1.4 2000/08/18 22:27:02 dwelch Exp $
 #
 # Makefile for ReactOS version.dll
 #
+PATH_TO_TOP = ../..
+
 TARGET=version
 
 BASE_CFLAGS = -I../../include
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DOSCLI=yes
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 1999/08/29 13:44:52 dwelch Exp $
+# $Id: makefile,v 1.10 2000/08/18 22:26:58 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -8,6 +8,8 @@
 # - ntoskrnl.exe Zw functions stubs to call Nt functions from kernel mode;
 # - ntdll.dll stubs to call system functions from user mode applications.
 #
+PATH_TO_TOP = ../..
+
 TARGET = genntdll
 SYSTEM_CALLS_DB = sysfuncs.lst
 NTDLL_STUBS = ../../lib/ntdll/napi.c

@@ -1,7 +1,9 @@
-# $Id: Makefile,v 1.1 2000/08/12 19:33:19 dwelch Exp $
+# $Id: Makefile,v 1.2 2000/08/18 22:27:02 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET = secur32
 
 SECUR32_BASE = 0x10000000
@@ -11,15 +13,7 @@ BASE_CFLAGS = -I../../include
 CFLAGS = $(CFLAGS)
 
 include ../../rules.mak
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 

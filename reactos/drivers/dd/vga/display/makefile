@@ -1,7 +1,8 @@
-# $Id: makefile,v 1.9 2000/08/11 12:43:43 ekohl Exp $
+# $Id: makefile,v 1.10 2000/08/18 22:27:08 dwelch Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
+PATH_TO_TOP = ../../../..
 TARGET=vgaddi
 
 BASE_CFLAGS = -I../../../../include -I.

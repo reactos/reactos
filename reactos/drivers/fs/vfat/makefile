@@ -1,6 +1,7 @@
-# $Id: makefile,v 1.20 2000/08/11 12:44:40 ekohl Exp $
+# $Id: makefile,v 1.21 2000/08/18 22:27:09 dwelch Exp $
 #
 #
+PATH_TO_TOP = ../../..
 TARGET=vfatfs
 
 OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \

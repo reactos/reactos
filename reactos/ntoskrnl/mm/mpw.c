@@ -1,4 +1,4 @@
-/* $Id: mpw.c,v 1.2 2000/07/07 10:30:56 dwelch Exp $
+/* $Id: mpw.c,v 1.3 2000/08/18 22:27:03 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -57,7 +57,7 @@ ULONG MmWritePage(PMADDRESS_SPACE AddressSpace,
 					Address);
 	return(Status);
 		  
-      case MEMORY_AREA_COMMIT:
+      case MEMORY_AREA_VIRTUAL_MEMORY:
 	Status = MmWritePageVirtualMemory(AddressSpace,
 					  MArea,
 					  Address);

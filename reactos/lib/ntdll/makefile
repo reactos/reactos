@@ -1,7 +1,9 @@
-# $Id: makefile,v 1.51 2000/08/11 12:33:18 ekohl Exp $
+# $Id: makefile,v 1.52 2000/08/18 22:27:01 dwelch Exp $
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET = ntdll
 
 BASE_CFLAGS = -I../../include -D__NTDLL__

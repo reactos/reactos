@@ -1,18 +1,13 @@
-# $Id: makefile,v 1.7 2000/08/11 12:37:11 ekohl Exp $
+# $Id: makefile,v 1.8 2000/08/18 22:27:01 dwelch Exp $
 #
 # ReactOS psxdll.dll makefile
 #
+PATH_TO_TOP = ../..
+
 TARGETNAME=psxdll
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGETNAME).a
-  else
-    DLLTARGET=$(TARGETNAME).dll
-  endif
-else
-  DLLTARGET=$(TARGETNAME).dll
-endif
+DLLTARGET=$(TARGETNAME).dll
+
 
 BASE_CFLAGS =-Iinclude -I../../include -D__PSXDLL__
 

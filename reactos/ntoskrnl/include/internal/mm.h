@@ -22,8 +22,7 @@ enum
    MEMORY_AREA_IO_MAPPING,
    MEMORY_AREA_SYSTEM,
    MEMORY_AREA_MDL_MAPPING,
-   MEMORY_AREA_COMMIT,
-   MEMORY_AREA_RESERVE,
+   MEMORY_AREA_VIRTUAL_MEMORY,
    MEMORY_AREA_SECTION_VIEW_RESERVE,
    MEMORY_AREA_CACHE_SEGMENT,
    MEMORY_AREA_SHARED_DATA,
@@ -84,6 +83,10 @@ typedef struct
 	     ULONG ViewOffset;
 	     LIST_ENTRY ViewListEntry;
 	  } SectionData;
+	struct
+	  {
+	     LIST_ENTRY SegmentListHead;
+	  } VirtualMemoryData;
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 PROGS = gditest
 
 OBJECTS= ../common/crt0.o

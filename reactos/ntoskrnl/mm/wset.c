@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.4 2000/07/08 16:53:33 dwelch Exp $
+/* $Id: wset.c,v 1.5 2000/08/18 22:27:03 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -70,7 +70,7 @@ ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
 				     Ul);
 	return(Count);
 		  
-      case MEMORY_AREA_COMMIT:
+      case MEMORY_AREA_VIRTUAL_MEMORY:
 	Count = MmPageOutVirtualMemory(AddressSpace,
 				       MArea,
 				       Address,

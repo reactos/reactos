@@ -1,20 +1,15 @@
-# $Id: makefile,v 1.14 2000/08/11 12:31:49 ekohl Exp $
+# $Id: makefile,v 1.15 2000/08/18 22:27:00 dwelch Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
+PATH_TO_TOP = ../..
+
 TARGET=gdi32
 
 BASE_CFLAGS = -I../../include
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-  else
-    DLLTARGET=$(TARGET).dll
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-endif
+DLLTARGET=$(TARGET).dll
+
 
 all: $(DLLTARGET)
 

@@ -1,6 +1,8 @@
 #
 #
 #
+PATH_TO_TOP = ../..
+
 PROGS = bench-thread
 
 all: $(PROGS:%=%.exe)
