@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.6 2000/06/17 22:04:08 phreak Exp $
+/* $Id: rw.c,v 1.7 2000/06/29 23:35:51 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,11 +12,11 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
 #include <ddk/cctypes.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.47 2000/06/15 18:39:04 ekohl Exp $
+/* $Id: main.c,v 1.48 2000/06/29 23:35:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -162,7 +162,7 @@ unsigned int old_idt[256][2];
 //extern unsigned int idt[];
 unsigned int old_idt_valid = 1;
 
-asmlinkage void _main(boot_param* _bp)
+void _main(boot_param* _bp)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
  * ARGUMENTS:

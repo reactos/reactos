@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.13 2000/06/12 14:53:38 ekohl Exp $
+/* $Id: irq.c,v 1.14 2000/06/29 23:35:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,6 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/bitops.h>
-#include <internal/linkage.h>
 #include <string.h>
 #include <internal/string.h>
 
@@ -40,22 +39,22 @@
 #define NR_IRQS         (16)
 #define IRQ_BASE        (0x40)
 
-asmlinkage void irq_handler_0(void);
-asmlinkage void irq_handler_1(void);
-asmlinkage void irq_handler_2(void);
-asmlinkage void irq_handler_3(void);
-asmlinkage void irq_handler_4(void);
-asmlinkage void irq_handler_5(void);
-asmlinkage void irq_handler_6(void);
-asmlinkage void irq_handler_7(void);
-asmlinkage void irq_handler_8(void);
-asmlinkage void irq_handler_9(void);
-asmlinkage void irq_handler_10(void);
-asmlinkage void irq_handler_11(void);
-asmlinkage void irq_handler_12(void);
-asmlinkage void irq_handler_13(void);
-asmlinkage void irq_handler_14(void);
-asmlinkage void irq_handler_15(void);
+ void irq_handler_0(void);
+ void irq_handler_1(void);
+ void irq_handler_2(void);
+ void irq_handler_3(void);
+ void irq_handler_4(void);
+ void irq_handler_5(void);
+ void irq_handler_6(void);
+ void irq_handler_7(void);
+ void irq_handler_8(void);
+ void irq_handler_9(void);
+ void irq_handler_10(void);
+ void irq_handler_11(void);
+ void irq_handler_12(void);
+ void irq_handler_13(void);
+ void irq_handler_14(void);
+ void irq_handler_15(void);
 
 static unsigned int irq_handler[NR_IRQS]=
         {
@@ -92,7 +91,7 @@ static KSPIN_LOCK isr_table_lock = {0,};
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
-asmlinkage
+
 VOID
 HalpDispatchInterrupt (ULONG irq)
 /*

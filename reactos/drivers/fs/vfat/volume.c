@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.2 2000/02/22 02:02:08 ekohl Exp $
+/* $Id: volume.c,v 1.3 2000/06/29 23:35:51 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,11 +11,10 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
 #include <ddk/cctypes.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

@@ -1,6 +1,5 @@
 /* SYSTEM STRUCTURES ******************************************************/
 
-#include <internal/hal/hal.h>
 #include <ddk/cfgtypes.h>
 #include <ddk/ketypes.h>
 #include <ddk/obtypes.h>

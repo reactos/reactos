@@ -6,7 +6,7 @@
 #include <win32k/cliprgn.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 int STDCALL W32kExcludeClipRect(HDC  hDC,
                          int  LeftRect,

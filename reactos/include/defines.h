@@ -34,62 +34,17 @@
 
 #define WINBASEAPI
 
-#define EXCEPTION_MAXIMUM_PARAMETERS	(15)
-#define ANYSIZE_ARRAY	(1)
-
 #ifndef WIN32_NO_STATUS
-#define STATUS_WAIT_0     		(0x00000000L)
-#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
-#define STATUS_USER_APC    		(0x000000C0L)
-#define STATUS_TIMEOUT     		(0x00000102L)
-#define STATUS_PENDING     		(0x00000103L)
+//#define STATUS_WAIT_0     		(0x00000000L)
+//#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
+//#define STATUS_USER_APC    		(0x000000C0L)
+//#define STATUS_TIMEOUT     		(0x00000102L)
+//#define STATUS_PENDING     		(0x00000103L)
 #endif /* WIN32_NO_STATUS */
 
-#define SEC_COMMIT	(134217728)
-#define SEC_IMAGE	(16777216)
-#define SEC_NOCACHE	(268435456)
-#define SEC_RESERVE	(67108864)
-#define PAGE_READONLY	(2)
-#define PAGE_READWRITE	(4)
-#define PAGE_WRITECOPY	(8)
-#define PAGE_EXECUTE	(16)
-#define PAGE_EXECUTE_READ	(32)
-#define PAGE_EXECUTE_READWRITE	(64)
-#define PAGE_EXECUTE_WRITECOPY	(128)
-#define PAGE_GUARD	(256)
-#define PAGE_NOACCESS	(1)
-#define PAGE_NOCACHE	(512)
-#define MEM_COMMIT	(4096)
-#define MEM_FREE	(65536)
-#define MEM_RESERVE	(8192)
-#define MEM_IMAGE	(16777216)
-#define MEM_MAPPED	(262144)
-#define MEM_PRIVATE	(131072)
-#define MEM_DECOMMIT	(16384)
-#define MEM_RELEASE	(32768)
-#define MEM_TOP_DOWN	(1048576)
-#define EXCEPTION_GUARD_PAGE	(0x80000001L)
-#define SECTION_EXTEND_SIZE	(0x10)
-#define SECTION_MAP_READ	(0x4)
-#define SECTION_MAP_WRITE	(0x2)
-#define SECTION_QUERY	(0x1)
-#define SECTION_ALL_ACCESS	(0xf001fL)
 
 
 /* DuplicateHandle, MapViewOfFile */
-#define DUPLICATE_CLOSE_SOURCE	(1)
-#define DUPLICATE_SAME_ACCESS	(2)
-#define FILE_MAP_ALL_ACCESS	(0xf001fL)
-#define FILE_MAP_READ	(4)
-#define FILE_MAP_WRITE	(2)
-#define FILE_MAP_COPY	(1)
-#define MUTEX_ALL_ACCESS	(0x1f0001L)
-#define MUTEX_MODIFY_STATE	(1)
-#define SYNCHRONIZE	(0x100000L)
-#define SEMAPHORE_ALL_ACCESS	(0x1f0003L)
-#define SEMAPHORE_MODIFY_STATE	(2)
-#define EVENT_ALL_ACCESS	(0x1f0003L)
-#define EVENT_MODIFY_STATE	(2)
 #define KEY_ALL_ACCESS	(0xf003fL)
 #define KEY_CREATE_LINK	(32)
 #define KEY_CREATE_SUB_KEY	(4)
@@ -100,121 +55,10 @@
 #define KEY_READ	(0x20019L)
 #define KEY_SET_VALUE	(2)
 #define KEY_WRITE	(0x20006L)
-#define PROCESS_ALL_ACCESS	(0x1f0fffL)
-#define PROCESS_CREATE_PROCESS	(128)
-#define PROCESS_CREATE_THREAD	(2)
-#define PROCESS_DUP_HANDLE	(64)
-#define PROCESS_QUERY_INFORMATION	(1024)
-#define PROCESS_SET_INFORMATION	(512)
-#define PROCESS_TERMINATE	(1)
-#define PROCESS_VM_OPERATION	(8)
-#define PROCESS_VM_READ	(16)
-#define PROCESS_VM_WRITE	(32)
-#define THREAD_ALL_ACCESS	(0x1f03ffL)
-#define THREAD_DIRECT_IMPERSONATION	(512)
-#define THREAD_GET_CONTEXT	(8)
-#define THREAD_IMPERSONATE	(256)
-#define THREAD_QUERY_INFORMATION	(64)
-#define THREAD_SET_CONTEXT	(16)
-#define THREAD_SET_INFORMATION	(32)
-#define THREAD_SET_THREAD_TOKEN	(128)
-#define THREAD_SUSPEND_RESUME	(2)
-#define THREAD_TERMINATE	(1)
 
-#define PACKED __attribute__((packed))
-
-#define THREAD_PRIORITY_ABOVE_NORMAL	(1)
-#define THREAD_PRIORITY_BELOW_NORMAL	(-1)
-#define THREAD_PRIORITY_HIGHEST	(2)
-#define THREAD_PRIORITY_IDLE	(-15)
-#define THREAD_PRIORITY_LOWEST	(-2)
-#define THREAD_PRIORITY_NORMAL	(0)
-#define THREAD_PRIORITY_TIME_CRITICAL	(15)
-#define THREAD_PRIORITY_ERROR_RETURN	(2147483647)
 
 /* CreateFile, GetFileAttributes, SetFileAttributes */
-#define GENERIC_READ	(0x80000000L)
-#define GENERIC_WRITE	(0x40000000L)
-#define FILE_READ_DATA            ( 0x0001 )    /* file & pipe */
-#define FILE_LIST_DIRECTORY       ( 0x0001 )    /* directory */
 
-#define FILE_WRITE_DATA           ( 0x0002 )    /* file & pipe */
-#define FILE_ADD_FILE             ( 0x0002 )    /* directory */
-
-#define FILE_APPEND_DATA          ( 0x0004 )    /* file */
-#define FILE_ADD_SUBDIRECTORY     ( 0x0004 )    /* directory */
-#define FILE_CREATE_PIPE_INSTANCE ( 0x0004 )    /* named pipe */
-
-#define FILE_READ_EA              ( 0x0008 )    /* file & directory */
-#define FILE_READ_PROPERTIES      FILE_READ_EA
-
-#define FILE_WRITE_EA             ( 0x0010 )    /* file & directory */
-#define FILE_WRITE_PROPERTIES     FILE_WRITE_EA
-
-#define FILE_EXECUTE              ( 0x0020 )    /* file */
-#define FILE_TRAVERSE             ( 0x0020 )    /* directory */
-
-#define FILE_DELETE_CHILD         ( 0x0040 )    /* directory */
-
-#define FILE_READ_ATTRIBUTES      ( 0x0080 )    /* all */
-
-#define FILE_WRITE_ATTRIBUTES     ( 0x0100 )    /* all */
-
-#define FILE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x1FF)
-
-#define FILE_GENERIC_READ         (STANDARD_RIGHTS_READ     |\
-                                   FILE_READ_DATA           |\
-                                   FILE_READ_ATTRIBUTES     |\
-                                   FILE_READ_EA             |\
-                                   SYNCHRONIZE)
-
-
-#define FILE_GENERIC_WRITE        (STANDARD_RIGHTS_WRITE    |\
-                                   FILE_WRITE_DATA          |\
-                                   FILE_WRITE_ATTRIBUTES    |\
-                                   FILE_WRITE_EA            |\
-                                   FILE_APPEND_DATA         |\
-                                   SYNCHRONIZE)
-
-
-#define FILE_GENERIC_EXECUTE      (STANDARD_RIGHTS_EXECUTE  |\
-                                   FILE_READ_ATTRIBUTES     |\
-                                   FILE_EXECUTE             |\
-                                   SYNCHRONIZE)
-
-#define FILE_SHARE_DELETE	(4)
-#define FILE_SHARE_READ	(1)
-#define FILE_SHARE_WRITE	(2)
-#define CONSOLE_TEXTMODE_BUFFER	(1)
-#define CREATE_NEW	(1)
-#define CREATE_ALWAYS	(2)
-#define OPEN_EXISTING	(3)
-#define OPEN_ALWAYS	(4)
-#define TRUNCATE_EXISTING	(5)
-#define FILE_ATTRIBUTE_ARCHIVE	(32)
-#define FILE_ATTRIBUTE_COMPRESSED	(2048)
-#define FILE_ATTRIBUTE_DEVICE   (64)
-#define FILE_ATTRIBUTE_NORMAL	(128)
-#define FILE_ATTRIBUTE_DIRECTORY	(16)
-#define FILE_ATTRIBUTE_ENCRYPTED (16384)
-#define FILE_ATTRIBUTE_HIDDEN	(2)
-#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED (8192)
-#define FILE_ATTRIBUTE_OFFLINE  (4096)
-#define FILE_ATTRIBUTE_READONLY	(1)
-#define FILE_ATTRIBUTE_REPARSE_POINT (1024)
-#define FILE_ATTRIBUTE_SPARSE_FILE (512)
-#define FILE_ATTRIBUTE_SYSTEM	(4)
-#define FILE_ATTRIBUTE_TEMPORARY	(256)
-#define FILE_ATTRIBUTE_VALID_FLAGS     0x00007fb7
-#define FILE_ATTRIBUTE_VALID_SET_FLAGS 0x000031a7
-#define FILE_FLAG_WRITE_THROUGH	(2147483648)
-#define FILE_FLAG_OVERLAPPED	(1073741824)
-#define FILE_FLAG_NO_BUFFERING	(536870912)
-#define FILE_FLAG_RANDOM_ACCESS	(268435456)
-#define FILE_FLAG_SEQUENTIAL_SCAN	(134217728)
-#define FILE_FLAG_DELETE_ON_CLOSE	(67108864)
-#define FILE_FLAG_BACKUP_SEMANTICS	(33554432)
-#define FILE_FLAG_POSIX_SEMANTICS	(16777216)
 #define SECURITY_ANONYMOUS	(0)
 #define SECURITY_IDENTIFICATION	(65536)
 #define SECURITY_IMPERSONATION	(131072)
@@ -223,18 +67,7 @@
 #define SECURITY_EFFECTIVE_ONLY	(524288)
 #define SECURITY_SQOS_PRESENT	(1048576)
 
-/* Standard rights */
-#define STANDARD_RIGHTS_REQUIRED	(0xf0000L)
-#define STANDARD_RIGHTS_WRITE	(0x20000L)
-#define STANDARD_RIGHTS_READ	(0x20000L)
-#define STANDARD_RIGHTS_EXECUTE	(0x20000L)
-#define STANDARD_RIGHTS_ALL	(0x1f0000L)
-#define SPECIFIC_RIGHTS_ALL	(0xffffL)
 
-/* ACCESS_MASK */
-#define MAXIMUM_ALLOWED	(0x2000000L)
-#define GENERIC_ALL	(0x10000000L)
-#define GENERIC_EXECUTE	(0x20000000L)
 
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -248,8 +81,6 @@ extern "C" {
 #define LF_FACESIZE	(32)
 #define LF_FULLFACESIZE	(64)
 #define ELF_VENDOR_SIZE	(4)
-#define SECURITY_STATIC_TRACKING	(0)
-#define SECURITY_DYNAMIC_TRACKING	(1)
 #define MAX_DEFAULTCHAR	(2)
 #define MAX_LEADBYTES	(12)
 #define CCHDEVICENAME	(32)
@@ -706,20 +537,6 @@ extern "C" {
 #define ALTERNATE	(1)
 #define WINDING	(2)
 
-/* CreateProcess */
-#define CREATE_DEFAULT_ERROR_MODE	(67108864)
-#define CREATE_NEW_CONSOLE	(16)
-#define CREATE_NEW_PROCESS_GROUP	(512)
-#define CREATE_SEPARATE_WOW_VDM	(2048)
-#define CREATE_SUSPENDED	(4)
-#define CREATE_UNICODE_ENVIRONMENT	(1024)
-#define DEBUG_PROCESS	(1)
-#define DEBUG_ONLY_THIS_PROCESS	(2)
-#define DETACHED_PROCESS	(8)
-#define HIGH_PRIORITY_CLASS	(128)
-#define IDLE_PRIORITY_CLASS	(64)
-#define NORMAL_PRIORITY_CLASS	(32)
-#define REALTIME_PRIORITY_CLASS	(256)
 
 /* CreateService */
 #define SERVICE_ALL_ACCESS	(0xf01ffL)
@@ -1460,14 +1277,6 @@ extern "C" {
 /* GetComputerName */
 #define MAX_COMPUTERNAME_LENGTH	(15)
 
-/* GetConsoleMode */
-#define ENABLE_LINE_INPUT	(2)
-#define ENABLE_ECHO_INPUT	(4)
-#define ENABLE_PROCESSED_INPUT	(1)
-#define ENABLE_WINDOW_INPUT	(8)
-#define ENABLE_MOUSE_INPUT	(16)
-#define ENABLE_PROCESSED_OUTPUT	(1)
-#define ENABLE_WRAP_AT_EOL_OUTPUT	(2)
 
 /* GetCPInfo */
 #define CP_ACP	(0)
@@ -1740,7 +1549,6 @@ extern "C" {
 #define STD_INPUT_HANDLE	(DWORD)(-10)
 #define STD_OUTPUT_HANDLE	(DWORD)(-11)
 #define STD_ERROR_HANDLE	(DWORD)(-12)
-#define INVALID_HANDLE_VALUE	((HANDLE)-1)
 
 /* GetStockObject */
 #define BLACK_BRUSH	(4)
@@ -1969,14 +1777,6 @@ extern "C" {
 #define UOI_NAME	(2)
 #define UOI_TYPE	(3)
 
-/* GetVolumeInformation */
-#define FS_CASE_IS_PRESERVED	(2)
-#define FS_CASE_SENSITIVE	(1)
-#define FS_UNICODE_STORED_ON_DISK	(4)
-#define FS_PERSISTENT_ACLS	(8)
-#define FS_FILE_COMPRESSION	(16)
-#define FS_VOL_IS_COMPRESSED	(32768)
-
 /* GetWindowLong */
 #define GWL_EXSTYLE	(-20)
 #define GWL_STYLE	(-16)
@@ -2006,13 +1806,6 @@ extern "C" {
 #define GMEM_DISCARDED	(16384)
 #define GMEM_INVALID_HANDLE	(32768)
 #define GMEM_LOCKCOUNT	(255)
-
-/* HeapAlloc, HeapReAlloc */
-#define HEAP_GENERATE_EXCEPTIONS	(4)
-#define HEAP_NO_SERIALIZE	(1)
-#define HEAP_ZERO_MEMORY	(8)
-#define HEAP_REALLOC_IN_PLACE_ONLY	(16)
-#define HEAP_GROWABLE (32)
    
 /* ImageList_Create */
 #define ILC_COLOR	(0)
@@ -4354,124 +4147,6 @@ extern "C" {
 #define SW_PARENTCLOSING	(1)
 #define SW_PARENTOPENING	(3)
 
-/* Virtual Key codes */
-#define VK_LBUTTON	(1)
-#define VK_RBUTTON	(2)
-#define VK_CANCEL	(3)
-#define VK_MBUTTON	(4)
-#define VK_BACK	(8)
-#define VK_TAB	(9)
-#define VK_CLEAR	(12)
-#define VK_RETURN	(13)
-#define VK_SHIFT	(16)
-#define VK_CONTROL	(17)
-#define VK_MENU	(18)
-#define VK_PAUSE	(19)
-#define VK_CAPITAL	(20)
-#define VK_ESCAPE	(27)
-#define VK_SPACE	(32)
-#define VK_PRIOR	(33)
-#define VK_NEXT	(34)
-#define VK_END	(35)
-#define VK_HOME	(36)
-#define VK_LEFT	(37)
-#define VK_UP	(38)
-#define VK_RIGHT	(39)
-#define VK_DOWN	(40)
-#define VK_SELECT	(41)
-#define VK_PRINT	(42)
-#define VK_EXECUTE	(43)
-#define VK_SNAPSHOT	(44)
-#define VK_INSERT	(45)
-#define VK_DELETE	(46)
-#define VK_HELP	(47)
-#define VK_0	(48)
-#define VK_1	(49)
-#define VK_2	(50)
-#define VK_3	(51)
-#define VK_4	(52)
-#define VK_5	(53)
-#define VK_6	(54)
-#define VK_7	(55)
-#define VK_8	(56)
-#define VK_9	(57)
-#define VK_A	(65)
-#define VK_B	(66)
-#define VK_C	(67)
-#define VK_D	(68)
-#define VK_E	(69)
-#define VK_F	(70)
-#define VK_G	(71)
-#define VK_H	(72)
-#define VK_I	(73)
-#define VK_J	(74)
-#define VK_K	(75)
-#define VK_L	(76)
-#define VK_M	(77)
-#define VK_N	(78)
-#define VK_O	(79)
-#define VK_P	(80)
-#define VK_Q	(81)
-#define VK_R	(82)
-#define VK_S	(83)
-#define VK_T	(84)
-#define VK_U	(85)
-#define VK_V	(86)
-#define VK_W	(87)
-#define VK_X	(88)
-#define VK_Y	(89)
-#define VK_Z	(90)
-#define VK_NUMPAD0	(96)
-#define VK_NUMPAD1	(97)
-#define VK_NUMPAD2	(98)
-#define VK_NUMPAD3	(99)
-#define VK_NUMPAD4	(100)
-#define VK_NUMPAD5	(101)
-#define VK_NUMPAD6	(102)
-#define VK_NUMPAD7	(103)
-#define VK_NUMPAD8	(104)
-#define VK_NUMPAD9	(105)
-#define VK_MULTIPLY	(106)
-#define VK_ADD	(107)
-#define VK_SEPARATOR	(108)
-#define VK_SUBTRACT	(109)
-#define VK_DECIMAL	(110)
-#define VK_DIVIDE	(111)
-#define VK_F1	(112)
-#define VK_F2	(113)
-#define VK_F3	(114)
-#define VK_F4	(115)
-#define VK_F5	(116)
-#define VK_F6	(117)
-#define VK_F7	(118)
-#define VK_F8	(119)
-#define VK_F9	(120)
-#define VK_F10	(121)
-#define VK_F11	(122)
-#define VK_F12	(123)
-#define VK_F13	(124)
-#define VK_F14	(125)
-#define VK_F15	(126)
-#define VK_F16	(127)
-#define VK_F17	(128)
-#define VK_F18	(129)
-#define VK_F19	(130)
-#define VK_F20	(131)
-#define VK_F21	(132)
-#define VK_F22	(133)
-#define VK_F23	(134)
-#define VK_F24	(135)
-
-/* GetAsyncKeyState */
-#define VK_NUMLOCK	(144)
-#define VK_SCROLL	(145)
-#define VK_LSHIFT	(160)
-#define VK_LCONTROL	(162)
-#define VK_LMENU	(164)
-#define VK_RSHIFT	(161)
-#define VK_RCONTROL	(163)
-#define VK_RMENU	(165)
-
 /* ImmGetVirtualKey */
 #define VK_PROCESSKEY	(229)
 
@@ -4789,33 +4464,6 @@ extern "C" {
 #define RESOURCEDISPLAYTYPE_GROUP	(5)
 #define RESOURCEDISPLAYTYPE_SERVER	(2)
 #define RESOURCEDISPLAYTYPE_SHARE	(3)
-
-/* KEY_EVENT_RECORD structure */
-#define CAPSLOCK_ON	(128)
-#define ENHANCED_KEY	(256)
-#define LEFT_ALT_PRESSED	(2)
-#define LEFT_CTRL_PRESSED	(8)
-#define NUMLOCK_ON	(32)
-#define RIGHT_ALT_PRESSED	(1)
-#define RIGHT_CTRL_PRESSED	(4)
-#define SCROLLLOCK_ON	(64)
-#define SHIFT_PRESSED	(16)
-
-/* MOUSE_EVENT_RECORD structure */
-#define FROM_LEFT_1ST_BUTTON_PRESSED	(1)
-#define RIGHTMOST_BUTTON_PRESSED	(2)
-#define FROM_LEFT_2ND_BUTTON_PRESSED	(4)
-#define FROM_LEFT_3RD_BUTTON_PRESSED	(8)
-#define FROM_LEFT_4TH_BUTTON_PRESSED	(16)
-#define DOUBLE_CLICK	(2)
-#define MOUSE_MOVED	(1)
-
-/* INPUT_RECORD structure */
-#define KEY_EVENT	(1)
-#define MOUSE_EVENT	(2)
-#define WINDOW_BUFFER_SIZE_EVENT	(4)
-#define MENU_EVENT	(8)
-#define FOCUS_EVENT	(16)
 
 /* BITMAPINFOHEADER structure */
 #define BI_RGB	(0L)

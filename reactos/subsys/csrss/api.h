@@ -1,8 +1,6 @@
-#include <ddk/ntddk.h>
+#include <ntos.h>
 
 #include <csrss/csrss.h>
-#include <defines.h>
-#include <structs.h>
 
 /* Object type magic numbers */
 

@@ -11,9 +11,10 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "minix.h"
 

@@ -10,7 +10,7 @@
 
 #include <ddk/ntddk.h>
 
-DWORD APIENTRY EngDeviceIoControl(
+DWORD STDCALL EngDeviceIoControl(
    HANDLE  hDevice,
    DWORD   dwIoControlCode,
    LPVOID  lpInBuffer,

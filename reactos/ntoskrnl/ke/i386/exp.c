@@ -62,7 +62,7 @@ extern ULONG init_stack_top;
                 "iret\n\t"); }
 
 #define EXCEPTION_HANDLER_WITHOUT_ERROR(x,y)           \
-        asmlinkage void exception_handler##y (void);        \
+         void exception_handler##y (void);        \
         void tmp_exception_handler##y (void) { \
         __asm__("\n\t_exception_handler"##x":\n\t"           \
                 "pushl $0\n\t"                        \
@@ -87,8 +87,8 @@ extern ULONG init_stack_top;
                 "addl $4,%esp\n\t" \
                 "iret\n\t"); }
 
-asmlinkage void exception_handler_unknown(void);
-asmlinkage void tmp_exception_handler_unknown(void)
+ void exception_handler_unknown(void);
+ void tmp_exception_handler_unknown(void)
 {
         __asm__("\n\t_exception_handler_unknown:\n\t"           
                 "pushl $0\n\t"
@@ -156,7 +156,7 @@ static void print_address(PVOID address)
    DbgPrint("<%x>", address);
 }
 
-asmlinkage void exception_handler(unsigned int edi,
+ void exception_handler(unsigned int edi,
                                   unsigned int esi, unsigned int ebp,
                                   unsigned int esp, unsigned int ebx,
                                   unsigned int edx, unsigned int ecx,
@@ -420,7 +420,7 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
         KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
 }
 
-asmlinkage unsigned int ExHookException(exception_hook fn, unsigned int exp)
+ unsigned int ExHookException(exception_hook fn, unsigned int exp)
 /*
  * FUNCTION: Hook an exception
  */
@@ -433,7 +433,7 @@ asmlinkage unsigned int ExHookException(exception_hook fn, unsigned int exp)
         return(0);
 }
 
-asmlinkage void KeInitExceptions(void)
+ void KeInitExceptions(void)
 /*
  * FUNCTION: Initalize CPU exception handling
  */

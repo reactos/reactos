@@ -1,4 +1,5 @@
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

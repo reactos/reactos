@@ -20,15 +20,15 @@
 
 #include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
-#include <internal/linkage.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <internal/ldr.h>
+#include <napi/teb.h>
 
 #define NDEBUG
 #include <internal/debug.h>

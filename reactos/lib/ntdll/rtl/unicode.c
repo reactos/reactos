@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.15 2000/04/15 23:10:41 ekohl Exp $
+/* $Id: unicode.c,v 1.16 2000/06/29 23:35:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,10 +13,7 @@
 #include <ntdll/rtl.h>
 //#include <internal/nls.h>
 #include <ctype.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <ntos/minmax.h>
 
 /* FUNCTIONS *****************************************************************/
 

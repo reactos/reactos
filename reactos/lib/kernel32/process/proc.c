@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.32 2000/04/25 23:22:54 ea Exp $
+/* $Id: proc.c,v 1.33 2000/06/29 23:35:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,8 +19,8 @@
 #include <kernel32/error.h>
 #include <wchar.h>
 #include <string.h>
-#include <internal/i386/segment.h>
-#include <internal/teb.h>
+#include <napi/i386/segment.h>
+#include <napi/teb.h>
 #include <ntdll/csr.h>
 
 

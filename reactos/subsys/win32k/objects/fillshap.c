@@ -7,7 +7,7 @@
 #include <win32k/pen.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 BOOL
 STDCALL

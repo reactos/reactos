@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.41 2000/02/21 22:42:15 ekohl Exp $
+/* $Id: iface.c,v 1.42 2000/06/29 23:35:50 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,10 +24,9 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.18 2000/03/22 18:35:51 dwelch Exp $
+/* $Id: process.c,v 1.19 2000/06/29 23:35:31 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,9 +12,9 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/i386/segment.h>
+#include <napi/i386/segment.h>
 #include <ntdll/ldr.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 
@@ -290,7 +290,7 @@ RtlCreateUserProcess (
 	PRTL_USER_PROCESS_PARAMETERS	Ppb,			// verified
 	PSECURITY_DESCRIPTOR		ProcessSd,
 	PSECURITY_DESCRIPTOR		ThreadSd,
-	WINBOOL				bInheritHandles,
+	BOOL				bInheritHandles,
 	DWORD				dwCreationFlags,
 	ULONG				Unknown8,
 	ULONG				Unknown9,

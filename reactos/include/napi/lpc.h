@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_NAPI_LPC_H
 #define __INCLUDE_NAPI_LPC_H
 
-#include <security.h>
+#include <ntos/security.h>
 
 #define MAX_MESSAGE_DATA   (0x130)
 

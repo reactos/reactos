@@ -1,9 +1,10 @@
-/* $Id: lpcsrv.c,v 1.6 2000/04/03 21:54:33 dwelch Exp $
+/* $Id: lpcsrv.c,v 1.7 2000/06/29 23:35:10 dwelch Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
  */
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <napi/lpc.h>
 #include <stdarg.h>
 #include <string.h>

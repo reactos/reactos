@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.1 2000/04/15 23:10:41 ekohl Exp $
+/* $Id: luid.c,v 1.2 2000/06/29 23:35:31 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,8 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-#include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -11,12 +11,11 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include <internal/string.h>
-#include <internal/bitops.h>
+#include "../../../ntoskrnl/include/internal/bitops.h"
 #include <ddk/ntifs.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "minix.h"
 

@@ -13,7 +13,7 @@
 #include <ddk/ntifs.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "minix.h"
 

@@ -3,6 +3,7 @@
 
 #include <napi/lpc.h>
 #include <ddk/ntddblue.h>
+#include <ntos/keyboard.h>
 
 #define CSR_PRIORITY_CLASS_NORMAL	(0x10)
 #define CSR_PRIORITY_CLASS_IDLE		(0x20)

@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.11 2000/01/26 10:07:23 dwelch Exp $
+/* $Id: cmdline.c,v 1.12 2000/06/29 23:35:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,7 +17,7 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <ntdll/rtl.h>
 
 #define NDEBUG

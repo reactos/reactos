@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.4 1999/12/04 20:58:40 ea Exp $
+/* $Id: parallel.c,v 1.5 2000/06/29 23:35:49 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,12 +13,12 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/halio.h>
+#include "../../../ntoskrnl/include/internal/i386/io.h"
 
 #include "parallel.h"
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 #define LP_B (0x378)

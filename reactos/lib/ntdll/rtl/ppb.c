@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.6 2000/03/22 18:35:51 dwelch Exp $
+/* $Id: ppb.c,v 1.7 2000/06/29 23:35:31 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/ldr.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 

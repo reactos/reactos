@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.23 2000/05/26 05:43:33 phreak Exp $
+/* $Id: blue.c,v 1.24 2000/06/29 23:35:47 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -17,7 +17,7 @@
 #include <defines.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 /* DEFINITIONS ***************************************************************/
@@ -434,7 +434,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE:
             {
                 POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
-                LPWORD pAttr = (LPWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                PWORD pAttr = (PWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
@@ -458,7 +458,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE:
             {
                 POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
-                LPWORD pAttr = (LPWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
+                PWORD pAttr = (PWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
                 char *vidmem;
                 int offset;
                 DWORD dwCount;
@@ -480,7 +480,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
             break;
 
         case IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE:
-            DeviceExtension->CharAttribute = (WORD)*(LPWORD)Irp->AssociatedIrp.SystemBuffer;
+            DeviceExtension->CharAttribute = (WORD)*(PWORD)Irp->AssociatedIrp.SystemBuffer;
             Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;
             break;

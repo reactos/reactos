@@ -1,4 +1,4 @@
-/* $Id: serial.c,v 1.7 1999/12/04 20:58:41 ea Exp $
+/* $Id: serial.c,v 1.8 2000/06/29 23:35:49 dwelch Exp $
  *
  * Serial driver
  * Written by Jason Filby (jasonfilby@yahoo.com)
@@ -7,11 +7,11 @@
  */
 
 #include <ddk/ntddk.h>
-#include <internal/mmhal.h>
-#include <internal/halio.h>
+//#include <internal/mmhal.h>
+#include "../../../ntoskrnl/include/internal/i386/io.h"
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 #define COM1    0x3F8

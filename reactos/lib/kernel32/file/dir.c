@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.26 2000/06/03 14:47:32 ea Exp $
+/* $Id: dir.c,v 1.27 2000/06/29 23:35:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -276,7 +276,7 @@ RemoveDirectoryW (
 		return FALSE;
 	}
 
-	FileDispInfo.DeleteFile = TRUE;
+	FileDispInfo.DoDeleteFile = TRUE;
 
 	Status = NtSetInformationFile (DirectoryHandle,
 	                               &IoStatusBlock,

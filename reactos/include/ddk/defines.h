@@ -5,8 +5,6 @@
 
 #define _WIN32_WINNT 0x0400
 
-#include <internal/hal/irq.h>
-
 #include <ddk/kedef.h> 
 #include <ddk/iodef.h>
 
@@ -233,6 +231,8 @@ enum
 };
 
 #define MAXIMUM_VOLUME_LABEL_LENGTH (32)
+
+#include <ddk/i386/irql.h>
 
 /*
  * IRQ levels

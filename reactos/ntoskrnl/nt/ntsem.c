@@ -10,8 +10,10 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <ntos/synch.h>
 
 #define NDEBUG
 #include <internal/debug.h>

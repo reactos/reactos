@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.74 2000/06/25 03:59:14 dwelch Exp $
+# $Id: makefile_rex,v 1.75 2000/06/29 23:35:32 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -6,7 +6,8 @@ TARGETNAME = ntoskrnl
 
 OBJECTS_PATH = objects
 
-BASE_CFLAGS = -I../include -D__NTOSKRNL__
+AS_BASEFLAGS = -Iinclude
+BASE_CFLAGS = -I../include -Iinclude -D__NTOSKRNL__
 
 
 all: \
@@ -430,7 +431,7 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o utils/export/export $(TARGETNAME).o $(TARGETNAME).a junk.tmp \
-              base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).coff
+              base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff
 endif
 
 

@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.16 2000/06/16 07:22:37 jfilby Exp $
+/* $Id: dc.c,v 1.17 2000/06/29 23:35:53 dwelch Exp $
  *
  * DC.C - Device context functions
  * 
@@ -20,7 +20,7 @@
 #include "../eng/objects.h"
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 void TestEngXxx(PDC Dc)
 {

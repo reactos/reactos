@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.13 2000/03/01 22:52:25 ea Exp $
+/* $Id: ntddk.h,v 1.14 2000/06/29 23:35:12 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,15 +19,14 @@ extern "C"
 
 /* INCLUDES ***************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-
 /* GCC can not handle __fastcall */
 #ifndef FASTCALL
 #define FASTCALL STDCALL
 #endif
 
-#include <internal/id.h>
+#include <ntos/types.h>   
+#include <napi/types.h>
+   
 #include <ddk/status.h>
 #include <ddk/ntdef.h>
 #include <ddk/defines.h>
@@ -35,6 +34,7 @@ extern "C"
 // #include <ddk/cfgtypes.h>
 #include <ddk/cmtypes.h>
 #include <ddk/ketypes.h>
+#include <ntos/security.h>
 #include <ddk/obtypes.h>
 #include <ddk/setypes.h>
 #include <ddk/mmtypes.h>
@@ -44,7 +44,7 @@ extern "C"
 #include <ddk/zwtypes.h>
 #include <ddk/ioctrl.h>   
 #include <ddk/rtl.h>
-#include <internal/hal/ddk.h>
+#include <ddk/halddk.h>
    
 #include <ddk/zw.h>
 #include <ddk/cmfuncs.h>

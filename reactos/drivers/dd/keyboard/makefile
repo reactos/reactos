@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.8 1999/12/18 10:17:42 ea Exp $
+# $Id: makefile,v 1.9 2000/06/29 23:35:48 dwelch Exp $
 #
 #
 TARGET=keyboard
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-BASE_CFLAGS = -I../../../include
+BASE_CFLAGS = -I. -I../../../include
 
 all: $(TARGET).sys
 

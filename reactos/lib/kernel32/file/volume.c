@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.16 2000/06/03 14:47:32 ea Exp $
+/* $Id: volume.c,v 1.17 2000/06/29 23:35:24 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,6 +21,7 @@
 
 #include <ddk/ntddk.h>
 #include <windows.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

@@ -1,4 +1,4 @@
-/* $Id: apc.c,v 1.2 2000/06/27 19:20:43 dwelch Exp $
+/* $Id: apc.c,v 1.3 2000/06/29 23:35:29 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,8 +11,6 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-
-#include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

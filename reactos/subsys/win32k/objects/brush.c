@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.9 2000/06/16 07:22:37 jfilby Exp $
+/* $Id: brush.c,v 1.10 2000/06/29 23:35:53 dwelch Exp $
  */
 
 
@@ -10,7 +10,7 @@
 //#include <win32k/debug.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
 {

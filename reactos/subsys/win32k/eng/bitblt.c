@@ -10,6 +10,7 @@
 
 #include <ddk/winddi.h>
 #include <ddk/ntddk.h>
+#include <ntos/minmax.h>
 #include "brush.h"
 #include "enum.h"
 #include "objects.h"

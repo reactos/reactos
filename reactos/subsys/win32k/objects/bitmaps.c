@@ -7,7 +7,7 @@
 //#include <win32k/debug.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 BOOL STDCALL W32kBitBlt(HDC  hDCDest,
                  INT  XDest,

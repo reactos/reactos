@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.35 2000/06/18 15:20:10 ekohl Exp $
+/* $Id: rtl.h,v 1.36 2000/06/29 23:35:12 dwelch Exp $
  * 
  */
 
@@ -6,6 +6,9 @@
 #define __DDK_RTL_H
 
 #include <stddef.h>
+#include <stdarg.h>
+
+#include <pe.h>
 
 typedef struct _CONTROLLER_OBJECT
 {

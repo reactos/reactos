@@ -1,9 +1,10 @@
 #ifndef __INCLUDE_DDK_PSTYPES_H
 #define __INCLUDE_DDK_PSTYPES_H
 
-#include <kernel32/atom.h>
-#include <internal/hal.h>
-#include <internal/teb.h>
+#include <ntos/ps.h>
+
+#include <ddk/i386/tss.h>
+#include <napi/teb.h>
 
 #ifndef TLS_MINIMUM_AVAILABLE
 #define TLS_MINIMUM_AVAILABLE 	(64)

@@ -1,9 +1,32 @@
-/* $Id: rtl.h,v 1.16 2000/05/25 15:50:22 ekohl Exp $
+/* $Id: rtl.h,v 1.17 2000/06/29 23:35:22 dwelch Exp $
  *
  */
 
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
+
+#include <napi/teb.h>
+
+typedef struct _CRITICAL_SECTION_DEBUG {
+    WORD   Type;
+    WORD   CreatorBackTraceIndex;
+    struct _CRITICAL_SECTION *CriticalSection;
+    LIST_ENTRY ProcessLocksList;
+    DWORD EntryCount;
+    DWORD ContentionCount;
+    DWORD Depth;
+    PVOID OwnerBackTrace[ 5 ];
+} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
+
+typedef struct _CRITICAL_SECTION {
+    PCRITICAL_SECTION_DEBUG DebugInfo;
+    LONG LockCount;
+    LONG RecursionCount;
+    HANDLE OwningThread;
+    HANDLE LockSemaphore;
+    DWORD Reserved;
+} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
+
 
 /*
  * Preliminary data type!!
@@ -256,7 +279,7 @@ RtlCreateUserProcess (
 	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,	// verified
 	PSECURITY_DESCRIPTOR		ProcessSd,
 	PSECURITY_DESCRIPTOR		ThreadSd,
-	WINBOOL				bInheritHandles,
+	BOOL				bInheritHandles,
 	DWORD				dwCreationFlags,
 	ULONG				Unknown8,
 	ULONG				Unknown9,

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.5 2000/06/17 22:03:23 phreak Exp $
+ * $Id: fat.c,v 1.6 2000/06/29 23:35:50 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,11 +13,10 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
 #include <ddk/cctypes.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

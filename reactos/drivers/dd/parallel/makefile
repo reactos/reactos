@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.7 1999/12/04 20:58:40 ea Exp $
+# $Id: makefile,v 1.8 2000/06/29 23:35:49 dwelch Exp $
 #
 #
 TARGET=parallel
 OBJECTS= $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-BASE_CFLAGS = -I../../../include
+BASE_CFLAGS = -I. -I../../../include
 
 all: $(TARGET).sys
 

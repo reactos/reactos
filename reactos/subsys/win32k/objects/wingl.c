@@ -5,7 +5,7 @@
 #include <win32k/wingl.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 INT
 STDCALL

@@ -1,9 +1,10 @@
-/* $Id: shmsrv.c,v 1.4 2000/05/13 13:50:54 dwelch Exp $
+/* $Id: shmsrv.c,v 1.5 2000/06/29 23:35:10 dwelch Exp $
  *
  * FILE  : reactos/apps/shm/shmsrv.c
  * AUTHOR: David Welch
  */
 #include <ddk/ntddk.h>
+#include <windows.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

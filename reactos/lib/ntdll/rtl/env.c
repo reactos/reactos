@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.9 2000/02/27 15:45:57 ekohl Exp $
+/* $Id: env.c,v 1.10 2000/06/29 23:35:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <string.h>
 
 #define NDEBUG

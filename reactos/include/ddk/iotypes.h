@@ -1,9 +1,12 @@
-/* $Id: iotypes.h,v 1.17 2000/05/13 13:50:55 dwelch Exp $
+/* $Id: iotypes.h,v 1.18 2000/06/29 23:35:11 dwelch Exp $
  * 
  */
 
 #ifndef __INCLUDE_DDK_IOTYPES_H
 #define __INCLUDE_DDK_IOTYPES_H
+
+#include <ntos/disk.h>
+#include <ntos/file.h>
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;

@@ -1,4 +1,4 @@
-/* $Id: lib.c,v 1.6 2000/04/14 01:49:18 ekohl Exp $
+/* $Id: lib.c,v 1.7 2000/06/29 23:35:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,8 +18,8 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-#include <internal/i386/segment.h>
-#include <internal/teb.h>
+#include <napi/i386/segment.h>
+#include <napi/teb.h>
 
 #include <kernel32/kernel32.h>
 

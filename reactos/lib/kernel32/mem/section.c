@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.10 2000/03/15 18:30:14 ekohl Exp $
+/* $Id: section.c,v 1.11 2000/06/29 23:35:25 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -5,7 +5,7 @@
 #include <win32k/color.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 BOOL STDCALL W32kAnimatePalette(HPALETTE  hpal,
                          UINT  StartIndex,

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.15 2000/06/16 07:22:37 jfilby Exp $
+/* $Id: dllmain.c,v 1.16 2000/06/29 23:35:52 dwelch Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
-#include <internal/service.h>
+#include <ddk/service.h>
 
 #include <win32k/win32k.h>
 

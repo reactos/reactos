@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.3 2000/01/22 14:25:48 ea Exp $
+/* $Id: buildno.c,v 1.4 2000/06/29 23:35:09 dwelch Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <reactos/version.h>
+#include "../../include/reactos/version.h"
 
 #define FALSE 0
 #define TRUE  1

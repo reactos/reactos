@@ -20,6 +20,7 @@
 #include <internal/string.h>
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
+#include <internal/i386/hal.h>
 
 /* TYPES ******************************************************************/
 

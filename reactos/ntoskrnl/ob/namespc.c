@@ -10,6 +10,7 @@
 
 /* INCLUDES ***************************************************************/
 
+#include <limits.h>
 #include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>

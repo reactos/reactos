@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.5 2000/06/04 19:50:12 ekohl Exp $
+/* $Id: mutex.c,v 1.6 2000/06/29 23:35:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/id.h>
 
 #include <internal/debug.h>
 

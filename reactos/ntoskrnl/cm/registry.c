@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.22 1999/12/09 02:45:05 rex Exp $
+/* $Id: registry.c,v 1.23 2000/06/29 23:35:33 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1199,7 +1199,7 @@ NTSTATUS
 STDCALL
 NtQueryMultipleValueKey (
 	IN	HANDLE	KeyHandle,	
-	IN	PVALENT	ListOfValuesToQuery,	
+	IN	PWVALENT	ListOfValuesToQuery,	
 	IN	ULONG	NumberOfItems,	
 	OUT	PVOID	MultipleValueInformation,		
 	IN	ULONG	Length,

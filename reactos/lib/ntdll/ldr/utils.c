@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.25 2000/03/18 13:57:02 ekohl Exp $
+/* $Id: utils.c,v 1.26 2000/06/29 23:35:27 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,9 +14,9 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <string.h>
-#include <internal/string.h>
 #include <wchar.h>
 #include <ntdll/ldr.h>
+#include <ntos/minmax.h>
 
 #ifdef DBG_NTDLL_LDR_UTILS
 #define NDEBUG

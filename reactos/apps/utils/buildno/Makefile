@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.5 2000/01/29 20:32:12 phreak Exp $
+# $Id: Makefile,v 1.6 2000/06/29 23:35:09 dwelch Exp $
 #
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = 
 TARGETNAME=buildno
 CLEAN_FILES= $(TARGETNAME).o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).sym
 
@@ -10,7 +10,7 @@ all: $(TARGETNAME)$(EXE_POSTFIX)
 
 
 $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c ../../include/reactos/version.h
-	$(NATIVE_CC) -I../../include -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).c
+	$(NATIVE_CC) -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).c
 
 
 

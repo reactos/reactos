@@ -1,7 +1,8 @@
-#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <windows.h>
+#include <ddk/ntddk.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;

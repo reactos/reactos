@@ -12,8 +12,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/i386/segment.h>
-#include <internal/teb.h>
+#include <napi/i386/segment.h>
+#include <napi/teb.h>
 //#include <string.h>
 #include <ntdll/rtl.h>
 

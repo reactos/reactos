@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.11 2000/06/15 18:38:19 ekohl Exp $
+/* $Id: iomgr.c,v 1.12 2000/06/29 23:35:37 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,6 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>

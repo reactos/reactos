@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.1 2000/06/04 17:27:39 ea Exp $
+/* $Id: port.c,v 1.2 2000/06/29 23:35:40 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,8 @@
  */
 
 /* INCLUDES *****************************************************************/
+
+#include <limits.h>
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>

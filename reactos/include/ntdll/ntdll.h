@@ -1,4 +1,6 @@
 
+#include <ntos/ntdef.h>
+
 #define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
 #ifdef NDEBUG

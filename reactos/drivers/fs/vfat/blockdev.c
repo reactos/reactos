@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.28 2000/06/19 22:15:50 ekohl Exp $
+/* $Id: ide.c,v 1.29 2000/06/29 23:35:48 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -72,12 +72,11 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 
 //  -------------------------------------------------------------------------
 
-#include <internal/i386/io.h>
+#include "../../../ntoskrnl/include/internal/i386/io.h"
 #include <string.h>
-#include <internal/string.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ide.h"
 #include "idep.h"

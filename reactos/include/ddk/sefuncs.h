@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.11 2000/05/09 21:29:44 ekohl Exp $ */
+/* $Id: sefuncs.h,v 1.12 2000/06/29 23:35:12 dwelch Exp $ */
 NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
 NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
 NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
@@ -30,15 +30,15 @@ NTSTATUS STDCALL RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDesc
 NTSTATUS STDCALL RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN SaclPresent, PACL* Sacl, PBOOLEAN SaclDefauted);
 NTSTATUS STDCALL RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
 					      PSECURITY_DESCRIPTOR AbsSD,
-					      LPDWORD AbsSDSize,
+					      PDWORD AbsSDSize,
 					      PACL Dacl,
-					      LPDWORD DaclSize,
+					      PDWORD DaclSize,
 					      PACL Sacl,
-					      LPDWORD SaclSize,
+					      PDWORD SaclSize,
 					      PSID Owner,
-					      LPDWORD OwnerSize,
+					      PDWORD OwnerSize,
 					      PSID Group,
-					      LPDWORD GroupSize);
+					      PDWORD GroupSize);
 
 NTSTATUS STDCALL RtlAllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 					      UCHAR SubAuthorityCount,

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.14 2000/06/15 18:38:19 ekohl Exp $
+/* $Id: symlink.c,v 1.15 2000/06/29 23:35:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <wchar.h>

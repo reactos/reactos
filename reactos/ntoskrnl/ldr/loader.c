@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.56 2000/06/19 16:42:31 ekohl Exp $
+/* $Id: loader.c,v 1.57 2000/06/29 23:35:39 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,13 +15,13 @@
  *   JM   14/12/98   Built initial PE user module loader
  *   RJJ  06/03/99   Moved user PE loader into NTDLL
  *   JF   26/01/2000 Recoded some parts to retrieve export details correctly
+ *   DW   27/06/00   Removed redundant header files
  */
 
 /* INCLUDES *****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
-#include <internal/i386/segment.h>
-#include <internal/linkage.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
 #include <internal/mm.h>
@@ -860,8 +860,9 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
     }
   if (ExportAddress == 0)
     {
-      DbgPrint("Export not found for %d:%s\n", Hint, Name != NULL ? Name : "(Ordinal)");
-      for(;;) ;
+       DbgPrint("Export not found for %d:%s\n", Hint, 
+		Name != NULL ? Name : "(Ordinal)");
+       KeBugCheck(0);
     }
 
   return  ExportAddress;

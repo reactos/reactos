@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.1 2000/05/13 13:50:57 dwelch Exp $
+/* $Id: callback.c,v 1.2 2000/06/29 23:35:29 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,8 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 
-#include <internal/debug.h>
 
 /* TYPES *********************************************************************/
 

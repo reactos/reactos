@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.8 2000/03/09 00:14:10 ekohl Exp $
+/* $Id: mem.c,v 1.9 2000/06/29 23:35:31 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,10 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include <internal/string.h>
-
-#define NDEBUG
-#include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

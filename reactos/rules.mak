@@ -67,7 +67,6 @@ NATIVE_NM = nm
 CFLAGS = $(BASE_CFLAGS) \
 	-pipe \
 	-O2 \
-	-Iinclude \
 	$(LEAN_AND_MEAN_DEFINE)  \
 	$(DEFINES) -Wall \
 	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \
@@ -78,7 +77,8 @@ LD = $(PREFIX)ld
 NM = $(PREFIX)nm
 OBJCOPY = $(PREFIX)objcopy
 STRIP = $(PREFIX)strip
-AS = $(PREFIX)gcc -c -x assembler-with-cpp -D__ASM__ -I../include
+AS_INCLUDES = -I../include
+AS = $(PREFIX)gcc -c -x assembler-with-cpp -D__ASM__ $(AS_BASEFLAGS) $(AS_INCLUDES)
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres

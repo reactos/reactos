@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.17 2000/04/03 21:54:41 dwelch Exp $
+/* $Id: init.c,v 1.18 2000/06/29 23:35:51 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -26,7 +26,7 @@
  * 	19990530 (Emanuele Aliberti)
  * 		Compiled successfully with egcs 1.1.2
  */
-#include <ddk/ntddk.h>
+#include <ntos.h>
 #include <ntdll/rtl.h>
 #include <napi/lpc.h>
 

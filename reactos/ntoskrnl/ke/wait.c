@@ -20,6 +20,7 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>

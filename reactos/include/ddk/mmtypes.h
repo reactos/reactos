@@ -1,7 +1,9 @@
-/* $Id: mmtypes.h,v 1.6 2000/05/09 16:12:47 ekohl Exp $ */
+/* $Id: mmtypes.h,v 1.7 2000/06/29 23:35:12 dwelch Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
+
+#include <ntos/mm.h>
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED MmSectionObjectType;

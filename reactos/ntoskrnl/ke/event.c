@@ -12,6 +12,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -8,6 +8,8 @@
 #include <string.h>
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <ntos/heap.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -857,7 +859,7 @@ HANDLE STDCALL RtlCreateHeap(ULONG flags,
  *	TRUE: Success
  *	FALSE: Failure
  */
-BOOL WINAPI RtlDestroyHeap(
+BOOL STDCALL RtlDestroyHeap(
               HANDLE heap /* [in] Handle of heap */
 ) {
     HEAP *heapPtr = HEAP_GetPtr( heap );
@@ -884,7 +886,7 @@ BOOL WINAPI RtlDestroyHeap(
  *	Pointer to allocated memory block
  *	NULL: Failure
  */
-PVOID WINAPI RtlAllocateHeap(
+PVOID STDCALL RtlAllocateHeap(
               HANDLE heap, /* [in] Handle of private heap block */
 			     ULONG flags,   /* [in] Heap allocation control flags */
               ULONG size     /* [in] Number of bytes to allocate */
@@ -1003,7 +1005,7 @@ BOOLEAN STDCALL RtlFreeHeap(
  * 	Renamed RtlReAllocateHeap as in NT
  */
 LPVOID
-WINAPI
+STDCALL
 RtlReAllocateHeap (
 	HANDLE	heap,	/* [in] Handle of heap block */
 	DWORD	flags,	/* [in] Heap reallocation flags */
@@ -1125,7 +1127,7 @@ RtlReAllocateHeap (
 /***********************************************************************
  *           HeapCompact   (KERNEL32.335)
  */
-DWORD WINAPI RtlCompactHeap( HANDLE heap, DWORD flags )
+DWORD STDCALL RtlCompactHeap( HANDLE heap, DWORD flags )
 {
     return 0;
 }
@@ -1139,7 +1141,7 @@ DWORD WINAPI RtlCompactHeap( HANDLE heap, DWORD flags )
  *	TRUE: Success
  *	FALSE: Failure
  */
-BOOL WINAPI RtlLockHeap(
+BOOL STDCALL RtlLockHeap(
               HANDLE heap /* [in] Handle of heap to lock for exclusive access */
 ) {
     HEAP *heapPtr = HEAP_GetPtr( heap );
@@ -1157,7 +1159,7 @@ BOOL WINAPI RtlLockHeap(
  *	TRUE: Success
  *	FALSE: Failure
  */
-BOOL WINAPI RtlUnlockHeap(
+BOOL STDCALL RtlUnlockHeap(
               HANDLE heap /* [in] Handle to the heap to unlock */
 ) {
     HEAP *heapPtr = HEAP_GetPtr( heap );
@@ -1173,7 +1175,7 @@ BOOL WINAPI RtlUnlockHeap(
  *	Size in bytes of allocated memory
  *	0: Failure
  */
-DWORD WINAPI RtlSizeHeap(
+DWORD STDCALL RtlSizeHeap(
              HANDLE heap, /* [in] Handle of heap */
              DWORD flags,   /* [in] Heap size control flags */
              LPVOID ptr     /* [in] Address of memory to return size for */
@@ -1214,7 +1216,7 @@ DWORD WINAPI RtlSizeHeap(
  *	TRUE: Success
  *	FALSE: Failure
  */
-BOOL WINAPI RtlValidateHeap(
+BOOL STDCALL RtlValidateHeap(
               HANDLE heap, /* [in] Handle to the heap */
               DWORD flags,   /* [in] Bit flags that control access during operation */
               PVOID block  /* [in] Optional pointer to memory block to validate */
@@ -1266,7 +1268,7 @@ BOOL WINAPI RtlValidateHeap(
     return TRUE;
 }
 
-HANDLE WINAPI RtlGetProcessHeap(VOID)
+HANDLE STDCALL RtlGetProcessHeap(VOID)
 {
    DPRINT("RtlGetProcessHeap()\n");
    return (HANDLE)NtCurrentPeb()->ProcessHeap;
@@ -1286,7 +1288,7 @@ RtlpInitProcessHeaps (PPEB Peb)
 NTSTATUS
 STDCALL
 RtlEnumProcessHeaps (
-	DWORD WINAPI(*func)(void*,LONG),
+	DWORD STDCALL(*func)(void*,LONG),
 	LONG	lParam
 	)
 {

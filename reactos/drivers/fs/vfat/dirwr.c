@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.12 2000/06/17 22:02:09 phreak Exp $
+/* $Id: dirwr.c,v 1.13 2000/06/29 23:35:50 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -12,10 +12,10 @@
 #include <ddk/ntddk.h>
 #include <ctype.h>
 #include <wchar.h>
-#include <internal/string.h>
+#include <string.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "vfat.h"
 

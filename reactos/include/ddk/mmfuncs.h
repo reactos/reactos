@@ -1,9 +1,9 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.5 2000/04/02 13:32:38 ea Exp $ */
+/* $Id: mmfuncs.h,v 1.6 2000/06/29 23:35:12 dwelch Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
-#include <internal/mmhal.h>
+#include <ddk/i386/pagesize.h>
 
 #define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
 #define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))

@@ -43,37 +43,7 @@ extern "C" {
 #endif
 #endif /* !NULL */
 
-/*
- * Definitions needed for the ddk includes (we miss out win32 only stuff to
- * cut down on the compile time)					    
- */
-typedef unsigned char UCHAR;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef unsigned short USHORT;
-typedef unsigned short WCHAR;
-typedef unsigned short WORD;
-typedef int WINBOOL;
-typedef unsigned char BOOLEAN;
-typedef unsigned int DWORD; /* was unsigned long */
-typedef unsigned short *LPWSTR;
-typedef unsigned short *PWSTR;
-typedef unsigned char *PUCHAR;
-typedef unsigned int *PUINT;
-typedef unsigned long *PULONG;
-typedef unsigned short *PUSHORT;
-typedef void *PVOID;
-typedef unsigned char BYTE;
-typedef void *LPVOID;
-typedef DWORD *PDWORD;
-typedef float *PFLOAT;
-typedef unsigned short *PWCH;
-typedef unsigned short *PWORD;
-
-typedef long long LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef long long *PLONGLONG;
-typedef unsigned long long *PULONGLONG;
+#include <ntos/types.h>
 
 /* Check VOID before defining CHAR, SHORT, and LONG */
 #ifndef VOID
@@ -83,19 +53,7 @@ typedef short SHORT;
 typedef long LONG;
 #endif
 
-typedef CHAR *PCHAR;
-typedef CHAR *PCH;
-typedef void *HANDLE;
-typedef char CCHAR;
 
-
-#define FALSE 0
-#define TRUE 1
-
-typedef const unsigned short *PCWSTR;
-
-typedef char* PCSZ;
-   
 #define CONST const
 
 #ifdef i386
@@ -113,13 +71,7 @@ typedef char* PCSZ;
 #define APIENTRY    STDCALL
 #define WINGDIAPI
 
-typedef BYTE *PBOOLEAN;
-typedef HANDLE *PHANDLE;
    
-typedef DWORD CALLBACK (*PTHREAD_START_ROUTINE) (LPVOID);
-typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
-
-typedef unsigned short ATOM;
 
 #ifdef UNICODE
 typedef unsigned short *LPTCH;
@@ -128,36 +80,6 @@ typedef unsigned short *LPTSTR;
 typedef char *LPTCH;
 typedef char *LPTSTR;
 #endif /* UNICODE */
-
-typedef long *PLONG;
-typedef unsigned short *PWCHAR;
-typedef char *LPSTR;
-
-typedef enum _MEDIA_TYPE { 
-  Unknown,                
-  F5_1Pt2_512,            
-  F3_1Pt44_512,           
-  F3_2Pt88_512,           
-  F3_20Pt8_512,           
-  F3_720_512,             
-  F5_360_512,             
-  F5_320_512,             
-  F5_320_1024,            
-  F5_180_512,             
-  F5_160_512,             
-  RemovableMedia,         
-  FixedMedia              
-} MEDIA_TYPE; 
-
-#ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b)) 
-#endif
-
-#ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b)) 
-#endif
-
-
 
 #ifndef RC_INVOKED
 
@@ -232,17 +154,16 @@ typedef HANDLE HWINSTA;
 typedef HANDLE HWND;
 typedef int INT;
 typedef unsigned short LANGID;
-typedef DWORD LCID;
+//typedef DWORD LCID;
 typedef DWORD LCTYPE;
 /* typedef LOCALHANDLE */
 typedef unsigned short *LP;
 typedef long LPARAM;
+typedef int WINBOOL;
 typedef WINBOOL *LPBOOL;
-typedef BYTE *LPBYTE;
 typedef CONST CHAR *LPCCH;
 typedef CHAR *LPCH;
 typedef COLORREF *LPCOLORREF;
-typedef const char *LPCSTR;
    
 #ifdef UNICODE
 typedef const unsigned short *LPCTSTR;
@@ -251,7 +172,6 @@ typedef const char *LPCTSTR;
 #endif /* UNICODE */
 
 typedef const unsigned short *LPCWCH;
-typedef const unsigned short *LPCWSTR;
 typedef DWORD *LPDWORD;
 /* typedef LPFRHOOKPROC; */
 typedef HANDLE *LPHANDLE;
@@ -260,13 +180,11 @@ typedef int *LPINT;
 typedef long *LPLONG;
 
 typedef long LRESULT;
-typedef const void *LPCVOID;
 typedef unsigned short *LPWCH;
 typedef unsigned short *LPWORD;
 /* typedef NPSTR; */
 typedef unsigned short *NWPSTR;
 typedef WINBOOL *PWINBOOL;
-typedef BYTE *PBYTE;
 typedef const CHAR *PCCH;
 typedef const char *PCSTR;
 typedef const unsigned short *PCWCH;
@@ -330,10 +248,6 @@ typedef unsigned int WPARAM;
 /*
   Enumerations
 */
-typedef enum _ACL_INFORMATION_CLASS {
-  AclRevisionInformation = 1,   
-  AclSizeInformation            
-} ACL_INFORMATION_CLASS; 
  
  
 #define RASCS_DONE 0x2000
@@ -559,7 +473,6 @@ typedef WINBOOL CALLBACK (*PFNPROCESSPOLICIES) (HWND, LPCTSTR, LPCTSTR, LPCTSTR,
 typedef void (*CALLB) (void);
 typedef CALLB PFNCALLBACK;
 
-typedef WINBOOL SECURITY_CONTEXT_TRACKING_MODE;
 
 /* End of stuff from ddeml.h in old Cygnus headers */
 /* ----------------------------------------------- */

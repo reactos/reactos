@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.17 2000/06/27 19:20:45 dwelch Exp $
+/* $Id: create.c,v 1.18 2000/06/29 23:35:44 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -28,6 +28,7 @@
 #include <internal/hal.h>
 #include <internal/ps.h>
 #include <internal/ob.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>

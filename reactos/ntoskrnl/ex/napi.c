@@ -14,7 +14,7 @@
 
 /* GLOBALS ******************************************************************/
 
-#include <internal/service.h>
+#include <ddk/service.h>
 #include <ntdll/napi.h>
 
 /* FUNCTIONS *****************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.3 2000/04/06 02:29:16 ekohl Exp $
+/* $Id: sd.c,v 1.4 2000/06/29 23:35:32 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -402,15 +402,15 @@ STDCALL
 RtlSelfRelativeToAbsoluteSD (
 	PSECURITY_DESCRIPTOR	RelSD,
 	PSECURITY_DESCRIPTOR	AbsSD,
-	LPDWORD			AbsSDSize,
+	PDWORD			AbsSDSize,
 	PACL			Dacl,
-	LPDWORD			DaclSize,
+	PDWORD			DaclSize,
 	PACL			Sacl,
-	LPDWORD			SaclSize,
+	PDWORD			SaclSize,
 	PSID			Owner,
-	LPDWORD			OwnerSize,
+	PDWORD			OwnerSize,
 	PSID			Group,
-	LPDWORD			GroupSize
+	PDWORD			GroupSize
 	)
 {
    UNIMPLEMENTED;

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.31 2000/06/27 19:20:42 dwelch Exp $
+/* $Id: zw.h,v 1.32 2000/06/29 23:35:12 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,10 +17,11 @@
 #ifndef __DDK_ZW_H
 #define __DDK_ZW_H
 
-#include <security.h>
+#include <ntos/security.h>
+#include <ntos/atom.h>
 #include <napi/npipe.h>
 
-#define LCID ULONG
+//#define LCID ULONG
 //#define SECURITY_INFORMATION ULONG
 //typedef ULONG SECURITY_INFORMATION;
 
@@ -3053,7 +3054,7 @@ NTSTATUS
 STDCALL
 NtQueryMultipleValueKey(
    HANDLE KeyHandle,
-   PVALENT ListOfValuesToQuery,
+   PWVALENT ListOfValuesToQuery,
    ULONG NumberOfItems,
    PVOID MultipleValueInformation,
    ULONG Length,
@@ -3064,7 +3065,7 @@ NTSTATUS
 STDCALL
 ZwQueryMultipleValueKey(
    HANDLE KeyHandle,
-   PVALENT ListOfValuesToQuery,
+   PWVALENT ListOfValuesToQuery,
    ULONG NumberOfItems,
    PVOID MultipleValueInformation,
    ULONG Length,

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.15 2000/05/30 23:41:06 ea Exp $
+/* $Id: thread.c,v 1.16 2000/06/29 23:35:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include <windows.h>
 #include <kernel32/thread.h>
 #include <string.h>
-#include <internal/i386/segment.h>
+#include <napi/i386/segment.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.2 2000/04/05 01:39:41 ekohl Exp $
+/* $Id: acl.c,v 1.3 2000/06/29 23:35:28 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 
-#include <internal/debug.h>
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS ***************************************************************/
 

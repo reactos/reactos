@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.6 2000/04/20 05:29:27 phreak Exp $
+/* $Id: critical.c,v 1.7 2000/06/29 23:35:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -59,7 +59,7 @@ InterlockedIncrement(PLONG Addend)
 
 LONG 
 STDCALL
-InterlockedDecrement(LPLONG lpAddend)
+InterlockedDecrement(PLONG lpAddend)
 {
 	long ret;
 	__asm__

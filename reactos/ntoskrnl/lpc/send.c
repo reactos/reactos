@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.1 2000/06/04 17:27:39 ea Exp $
+/* $Id: send.c,v 1.2 2000/06/29 23:35:40 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,21 +34,15 @@
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-LpcSendTerminationPort (
-	IN	PEPORT	Port,
-	IN	TIME	CreationTime
-	)
+NTSTATUS STDCALL LpcSendTerminationPort (IN	PEPORT	Port,
+					 IN	TIME	CreationTime)
 {
 	NTSTATUS		Status;
 	LPC_TERMINATION_MESSAGE	Msg;
    
 	Msg.CreationTime = CreationTime;
-	Status = LpcRequestPort (
-			Port,
-			& Msg.Header
-			);
+	Status = LpcRequestPort (Port,
+				 &Msg.Header);
 	return(Status);
 }
 
@@ -65,17 +59,12 @@ LpcSendTerminationPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-LpcSendDebugMessagePort (
-	IN	PEPORT			Port,
-	IN	PLPC_DBG_MESSAGE	Message
-	)
+NTSTATUS STDCALL LpcSendDebugMessagePort (IN	PEPORT			Port,
+					  IN	PLPC_DBG_MESSAGE Message)
 {
    NTSTATUS Status;
    
-   Status = LpcRequestPort(Port,
-			   &Message->Header);
+   Status = LpcRequestPort(Port, &Message->Header);
    return(Status);
 }
 
@@ -92,12 +81,8 @@ LpcSendDebugMessagePort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-LpcRequestPort (
-	IN	PEPORT		Port,
-	IN	PLPC_MESSAGE	LpcMessage
-	)
+NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
+				 IN	PLPC_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
    
@@ -125,12 +110,8 @@ LpcRequestPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtRequestPort (
-	IN	HANDLE		PortHandle,
-	IN	PLPC_MESSAGE	LpcMessage
-	)
+NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
+				IN	PLPC_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -170,13 +151,9 @@ NtRequestPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtRequestWaitReplyPort (
-	IN	HANDLE		PortHandle,
-		PLPC_MESSAGE	LpcRequest,    
-		PLPC_MESSAGE	LpcReply
-	)
+NTSTATUS STDCALL NtRequestWaitReplyPort (IN	HANDLE		PortHandle,
+					 PLPC_MESSAGE	LpcRequest,    
+					 PLPC_MESSAGE	LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -249,18 +226,14 @@ NtRequestWaitReplyPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtWriteRequestData (
-	HANDLE		PortHandle,
-	PLPC_MESSAGE	Message,
-	ULONG		Index,
-	PVOID		Buffer,
-	ULONG		BufferLength,
-	PULONG		ReturnLength
-	)
+NTSTATUS STDCALL NtWriteRequestData (HANDLE		PortHandle,
+				     PLPC_MESSAGE	Message,
+				     ULONG		Index,
+				     PVOID		Buffer,
+				     ULONG		BufferLength,
+				     PULONG		ReturnLength)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 

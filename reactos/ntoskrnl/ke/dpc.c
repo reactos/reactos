@@ -30,13 +30,9 @@ ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-STDCALL
-KeInitializeDpc (
-	PKDPC			Dpc,
-	PKDEFERRED_ROUTINE	DeferredRoutine,
-	PVOID			DeferredContext
-	)
+VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
+			      PKDEFERRED_ROUTINE	DeferredRoutine,
+			      PVOID			DeferredContext)
 /*
  * FUNCTION: Initalizes a DPC
  * ARGUMENTS:
@@ -52,7 +48,7 @@ KeInitializeDpc (
    Dpc->Lock=0;
 }
 
-void KeDrainDpcQueue(void)
+VOID KeDrainDpcQueue(VOID)
 /*
  * FUNCTION: Called to execute queued dpcs
  */
@@ -98,11 +94,7 @@ void KeDrainDpcQueue(void)
      }
 }
 
-BOOLEAN
-STDCALL
-KeRemoveQueueDpc (
-	PKDPC	Dpc
-	)
+BOOLEAN STDCALL KeRemoveQueueDpc (PKDPC	Dpc)
 /*
  * FUNCTION: Removes DPC object from the system dpc queue
  * ARGUMENTS:
@@ -127,13 +119,9 @@ KeRemoveQueueDpc (
    return(TRUE);
 }
 
-BOOLEAN
-STDCALL
-KeInsertQueueDpc (
-	PKDPC	Dpc,
-	PVOID	SystemArgument1,
-	PVOID	SystemArgument2
-	)
+BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
+				  PVOID	SystemArgument1,
+				  PVOID	SystemArgument2)
 /*
  * FUNCTION: Queues a DPC for execution when the IRQL of a processor
  * drops below DISPATCH_LEVEL
@@ -170,7 +158,7 @@ KeInsertQueueDpc (
    return(TRUE);
 }
 
-void KeInitDpc(void)
+VOID KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling
  */

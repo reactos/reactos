@@ -10,14 +10,13 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/mmhal.h>
-#include <internal/halio.h>
 #include <string.h>
-#include <internal/string.h>
-#include <defines.h>
+#include <ntos/keyboard.h>
+#include "../../../ntoskrnl/include/internal/i386/io.h"
+#include <ntos/minmax.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "keyboard.h"
 

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.6 2000/05/25 15:55:35 ekohl Exp $
+/* $Id: token.c,v 1.7 2000/06/29 23:35:45 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,6 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>

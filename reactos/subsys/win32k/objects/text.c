@@ -8,7 +8,7 @@
 #include <win32k/kapi.h>
 
 // #define NDEBUG
-#include <internal/debug.h>
+#include <win32k/debug1.h>
 
 int
 STDCALL

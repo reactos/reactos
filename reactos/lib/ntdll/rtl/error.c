@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.5 2000/05/30 22:25:10 ea Exp $
+/* $Id: error.c,v 1.6 2000/06/29 23:35:29 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,6 +14,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <windows.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

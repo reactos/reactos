@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.33 2000/06/26 19:41:43 dwelch Exp $
+/* $Id: section.c,v 1.34 2000/06/29 23:35:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/ob.h>
@@ -333,7 +334,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 * Notify any other threads that fault on the same section offset
 	 * that a page-in is pending.
 	 */
-	Entry = ((ULONG)Page) | SPE_PENDING;
+	Entry = ((ULONG)Page) | SPE_PAGEIN_PENDING;
 	MmSetPageEntrySection(Section, 
 			      Offset.u.LowPart,
 			      Entry);
@@ -390,7 +391,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 */
 	MmSetWaitPage(Page);
      }
-   else if (Entry & SPE_PENDING)
+   else if (Entry & SPE_PAGEIN_PENDING)
      {
 	/*
 	 * If a page-in on that section offset is pending that wait for
@@ -409,7 +410,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	      * FIXME: What if the event is set and cleared after we
 	      * unlock the section but before we wait. 
 	      */
-	     Status = MmWaitForPage((PVOID)(Entry & (~SPE_PENDING)));
+	     Status = MmWaitForPage((PVOID)(Entry & (~SPE_PAGEIN_PENDING)));
 	     if (!NT_SUCCESS(Status))
 	       {
 		  /*
@@ -434,7 +435,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	      */
 	     Entry = MmGetPageEntrySection(Section,
 					   Offset.u.LowPart);					   
-	  } while (Entry & SPE_PENDING);
+	  } while (Entry & SPE_PAGEIN_PENDING);
 	
 	/*
 	 * Setting the entry to null means the read failing. 

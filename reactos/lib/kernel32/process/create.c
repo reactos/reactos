@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.28 2000/06/03 14:47:33 ea Exp $
+/* $Id: create.c,v 1.29 2000/06/29 23:35:26 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,9 +17,9 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-#include <internal/i386/segment.h>
+#include <napi/i386/segment.h>
 #include <ntdll/ldr.h>
-#include <internal/teb.h>
+#include <napi/teb.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>

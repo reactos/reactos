@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.11 2000/03/17 21:02:59 jfilby Exp $
+/* $Id: driver.c,v 1.12 2000/06/29 23:35:53 dwelch Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -12,12 +12,12 @@
 #include <windows.h>
 #include <win32k/driver.h>
 #include <wchar.h>
-#include <internal/module.h>
+#include "../../ntoskrnl/include/internal/module.h"
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+//#include "../../ntoskrnl/include/internal/debug.h"
 
 typedef struct _GRAPHICS_DRIVER
 {

@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.23 2000/06/18 17:37:57 ekohl Exp $
+# $Id: makefile,v 1.24 2000/06/29 23:35:51 dwelch Exp $
 #
 # WIN32K.SYS build spec
 #
 
 TARGET=win32k
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = -I. -I../../include
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \

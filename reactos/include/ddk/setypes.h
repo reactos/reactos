@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.4 2000/01/05 21:56:58 dwelch Exp $
+/* $Id: setypes.h,v 1.5 2000/06/29 23:35:12 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,7 @@
 #ifndef __INCLUDE_DDK_SETYPES_H
 #define __INCLUDE_DDK_SETYPES_H
 
-#include <security.h>
+#include <ntos/security.h>
 
 /* SID */
 #define SECURITY_NULL_RID	(0L)
