@@ -1,10 +1,28 @@
-/* $Id: display.c,v 1.1 2001/08/21 20:18:26 chorns Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: display.c,v 1.2 2002/01/10 01:01:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/display.c
  * PURPOSE:         Blue screen display
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  * UPDATE HISTORY:
  *                  Created 08/10/99
  */
@@ -50,43 +68,43 @@ static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
 static VOID
 HalClearDisplay (VOID)
 {
-    WORD *ptr = (WORD*)VideoBuffer;
-    ULONG i;
+   WORD *ptr = (WORD*)VideoBuffer;
+   ULONG i;
 
-    for (i = 0; i < SizeX * SizeY; i++, ptr++)
-        *ptr = ((CHAR_ATTRIBUTE << 8) + ' ');
+  for (i = 0; i < SizeX * SizeY; i++, ptr++)
+    *ptr = ((CHAR_ATTRIBUTE << 8) + ' ');
 
-    CursorX = 0;
-    CursorY = 0;
+  CursorX = 0;
+  CursorY = 0;
 }
 
 
 VOID
 HalScrollDisplay (VOID)
 {
-   WORD *ptr;
-   int i;
+  WORD *ptr;
+  int i;
 
-   ptr = VideoBuffer + SizeX;
-   RtlMoveMemory (VideoBuffer,
-           ptr,
-           SizeX * (SizeY - 1) * 2);
+  ptr = VideoBuffer + SizeX;
+  RtlMoveMemory(VideoBuffer,
+		ptr,
+		SizeX * (SizeY - 1) * 2);
 
-   ptr = VideoBuffer  + (SizeX * (SizeY - 1));
-   for (i = 0; i < SizeX; i++, ptr++)
-   {
-       *ptr = (CHAR_ATTRIBUTE << 8) + ' ';
-   }
+  ptr = VideoBuffer  + (SizeX * (SizeY - 1));
+  for (i = 0; i < SizeX; i++, ptr++)
+    {
+      *ptr = (CHAR_ATTRIBUTE << 8) + ' ';
+    }
 }
 
 
 static VOID
 HalPutCharacter (CHAR Character)
 {
-   WORD *ptr;
+  WORD *ptr;
 
-   ptr = VideoBuffer + ((CursorY * SizeX) + CursorX);
-   *ptr = (CHAR_ATTRIBUTE << 8) + Character;
+  ptr = VideoBuffer + ((CursorY * SizeX) + CursorX);
+  *ptr = (CHAR_ATTRIBUTE << 8) + Character;
 }
 
 
@@ -100,73 +118,70 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
  *         InitParameters = Parameters setup by the boot loader
  */
 {
-    if (DisplayInitialized == FALSE)
+  if (DisplayInitialized == FALSE)
     {
-        ULONG ScanLines;
-        ULONG Data;
+      ULONG ScanLines;
+      ULONG Data;
 
-        VideoBuffer = (WORD *)(0xd0000000 + 0xb8000);
-//        VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
+      VideoBuffer = (WORD *)(0xd0000000 + 0xb8000);
+//      VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
 
-        /* Set cursor position */
-//        CursorX = LoaderBlock->cursorx;
-//        CursorY = LoaderBlock->cursory;
-        CursorX = 0;
-        CursorY = 0;
+      /* Set cursor position */
+//      CursorX = LoaderBlock->cursorx;
+//      CursorY = LoaderBlock->cursory;
+      CursorX = 0;
+      CursorY = 0;
 
-        /* read screen size from the crtc */
-        /* FIXME: screen size should be read from the boot parameters */
-        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_COLUMNS);
-        SizeX = READ_PORT_UCHAR((PUCHAR)CRTC_DATA) + 1;
-        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_ROWS);
-        SizeY = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
-        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_OVERFLOW);
-        Data = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
-        SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
-        SizeY++;
-        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_SCANLINES);
-        ScanLines = (READ_PORT_UCHAR((PUCHAR)CRTC_DATA) & 0x1F) + 1;
-        SizeY = SizeY / ScanLines;
+      /* read screen size from the crtc */
+      /* FIXME: screen size should be read from the boot parameters */
+      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_COLUMNS);
+      SizeX = READ_PORT_UCHAR((PUCHAR)CRTC_DATA) + 1;
+      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_ROWS);
+      SizeY = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_OVERFLOW);
+      Data = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+      SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
+      SizeY++;
+      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_SCANLINES);
+      ScanLines = (READ_PORT_UCHAR((PUCHAR)CRTC_DATA) & 0x1F) + 1;
+      SizeY = SizeY / ScanLines;
 
 #ifdef BOCHS_30ROWS
-SizeY=30;
+      SizeY=30;
 #endif
-        HalClearDisplay ();
+      HalClearDisplay();
 
-        DisplayInitialized = TRUE;
+      DisplayInitialized = TRUE;
     }
 }
 
 
 VOID
-HalResetDisplay (VOID)
+HalResetDisplay(VOID)
 /*
  * FUNCTION: Reset the display
  * ARGUMENTS:
  *         None
  */
 {
-    if (HalResetDisplayParameters == NULL)
-        return;
+  if (HalResetDisplayParameters == NULL)
+    return;
 
-    if (HalOwnsDisplay == TRUE)
-        return;
+  if (HalOwnsDisplay == TRUE)
+    return;
 
-    if (HalResetDisplayParameters(SizeX, SizeY) == TRUE)
+  if (HalResetDisplayParameters(SizeX, SizeY) == TRUE)
     {
-        HalOwnsDisplay = TRUE;
-        HalClearDisplay ();
+      HalOwnsDisplay = TRUE;
+      HalClearDisplay();
     }
 }
 
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-VOID
-STDCALL
-HalAcquireDisplayOwnership (
-	IN	PHAL_RESET_DISPLAY_PARAMETERS	ResetDisplayParameters
-	)
+VOID STDCALL
+HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 /*
  * FUNCTION: 
  * ARGUMENTS:
@@ -174,13 +189,13 @@ HalAcquireDisplayOwnership (
  *         reset routine.
  */
 {
-    HalOwnsDisplay = FALSE;
-    HalResetDisplayParameters = ResetDisplayParameters;
+  HalOwnsDisplay = FALSE;
+  HalResetDisplayParameters = ResetDisplayParameters;
 }
 
 
 VOID STDCALL
-HalDisplayString (IN	PCH	String)
+HalDisplayString(IN PCH String)
 /*
  * FUNCTION: Switches the screen to HAL console mode (BSOD) if not there
  * already and displays a string
@@ -221,28 +236,28 @@ HalDisplayString (IN	PCH	String)
   while (*pch != 0)
     {
       if (*pch == '\n')
-        {
+	{
 	  CursorY++;
 	  CursorX = 0;
-        }
-      else
-        {
+	}
+      else if (*pch != '\r')
+	{
 	  HalPutCharacter (*pch);
 	  CursorX++;
 	  
 	  if (CursorX >= SizeX)
-            {
+	    {
 	      CursorY++;
 	      CursorX = 0;
-            }
-        }
-      
+	    }
+	}
+  
       if (CursorY >= SizeY)
-        {
+	{
 	  HalScrollDisplay ();
 	  CursorY = SizeY - 1;
-        }
-      
+	}
+  
       pch++;
     }
   
@@ -259,35 +274,29 @@ HalDisplayString (IN	PCH	String)
 }
 
 
-VOID
-STDCALL
-HalQueryDisplayParameters (
-	PULONG	DispSizeX,
-	PULONG	DispSizeY,
-	PULONG	CursorPosX,
-	PULONG	CursorPosY
-	)
+VOID STDCALL
+HalQueryDisplayParameters(OUT PULONG DispSizeX,
+			  OUT PULONG DispSizeY,
+			  OUT PULONG CursorPosX,
+			  OUT PULONG CursorPosY)
 {
-    if (DispSizeX)
-        *DispSizeX = SizeX;
-    if (DispSizeY)
-        *DispSizeY = SizeY;
-    if (CursorPosX)
-        *CursorPosX = CursorX;
-    if (CursorPosY)
-        *CursorPosY = CursorY;
+  if (DispSizeX)
+    *DispSizeX = SizeX;
+  if (DispSizeY)
+    *DispSizeY = SizeY;
+  if (CursorPosX)
+    *CursorPosX = CursorX;
+  if (CursorPosY)
+    *CursorPosY = CursorY;
 }
 
 
-VOID
-STDCALL
-HalSetDisplayParameters (
-	ULONG	CursorPosX,
-	ULONG	CursorPosY
-	)
+VOID STDCALL
+HalSetDisplayParameters(IN ULONG CursorPosX,
+			IN ULONG CursorPosY)
 {
-	CursorX = (CursorPosX < SizeX) ? CursorPosX : SizeX - 1;
-	CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
+  CursorX = (CursorPosX < SizeX) ? CursorPosX : SizeX - 1;
+  CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
 }
 
 /* EOF */
