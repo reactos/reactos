@@ -193,7 +193,7 @@ static
 WORD str_to_color(LPTSTR* arg_str)
 {
 	LPTSTR str;	
-	BOOL bBri=FALSE;
+	BOOL bBri;
 
 	WORD tmp_clr,ret_clr;
 
@@ -206,6 +206,8 @@ WORD str_to_color(LPTSTR* arg_str)
 
 
 	/*foreground*/
+        bBri = FALSE;
+
 	if(_tcsnicmp(str,"bri",3) == 0 )
 	{
 		bBri = TRUE;
@@ -226,7 +228,8 @@ WORD str_to_color(LPTSTR* arg_str)
 	ret_clr = tmp_clr | (bBri << 3);
 
 	/*background*/
-	
+	bBri = FALSE;
+
 	if(_tcsnicmp(str,"bri",3) == 0 )
 	{
 		bBri = TRUE;
