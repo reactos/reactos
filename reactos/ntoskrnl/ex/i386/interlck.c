@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.8 2004/08/15 16:39:01 chorns Exp $
+/* $Id: interlck.c,v 1.9 2004/09/09 18:51:17 hbirr Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
@@ -389,6 +389,62 @@ InterlockedCompareExchange(PLONG Destination,
 	__asm cmpxchg [ecx], edx
 	__asm ret 4
 }
+
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+/**********************************************************************
+ * FASTCALL: @InterlockedCompareExchange64@8
+ */
+#if defined(__GNUC__)
+LONGLONG FASTCALL
+ExfpInterlockedExchange64(LONGLONG volatile * Destination,
+                         PLONGLONG Exchange);
+
+__asm__("\n\t.global @ExfpInterlockedExchange64@8\n\t"
+	"@ExfpInterlockedExchange64@8:\n\t"
+	"pushl %ebx\n\t"
+	"pushl %esi\n\t"
+	"movl %ecx,%esi\n\t"
+	"movl (%edx),%ebx\n\t"
+	"movl 4(%edx),%ecx\n\t"
+	"\n1:\t"
+	"movl (%esi),%eax\n\t"
+	"movl 4(%esi),%edx\n\t"
+	"lock cmpxchg8b (%esi)\n\t"
+	"jnz 1b\n\t"
+	"popl %esi\n\t"
+	"popl %ebx\n\t"
+	"ret\n\t");
+
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+/**********************************************************************
+ * FASTCALL: @ExfInterlockedCompareExchange@12
+ */
+#if defined(__GNUC__)
+LONGLONG FASTCALL
+ExfInterlockedCompareExchange64(LONGLONG volatile * Destination,
+                                PLONGLONG Exchange,
+				PLONGLONG Comperand);
+
+__asm__("\n\t.global @ExfInterlockedCompareExchange64@12\n\t"
+	"@ExfInterlockedCompareExchange64@12:\n\t"
+	"pushl %ebx\n\t"
+	"pushl %esi\n\t"
+	"movl %ecx,%esi\n\t"
+	"movl (%edx),%ebx\n\t"
+	"movl 4(%edx),%ecx\n\t"
+	"movl 12(%esp),%edx\n\t"
+	"movl (%edx),%eax\n\t"
+	"movl 4(%edx),%edx\n\t"
+	"lock cmpxchg8b (%esi)\n\t"
+	"popl %esi\n\t"
+	"popl %ebx\n\t"
+	"ret  $4\n\t");
 
 #else
 #error Unknown compiler for inline assembler
