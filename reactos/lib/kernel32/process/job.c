@@ -1,4 +1,4 @@
-/* $Id: job.c,v 1.3 2004/09/23 18:46:10 weiden Exp $
+/* $Id: job.c,v 1.4 2004/09/23 18:55:18 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -65,6 +65,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
 {
   UNICODE_STRING JobName;
   OBJECT_ATTRIBUTES ObjectAttributes;
+  ULONG Attributes = 0;
   PVOID SecurityDescriptor;
   HANDLE hJob;
   NTSTATUS Status;
@@ -78,7 +79,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
   {
     if(lpJobAttributes->bInheritHandle)
     {
-      ObjectAttributes.Attributes |= OBJ_INHERIT;
+      Attributes |= OBJ_INHERIT;
     }
     SecurityDescriptor = lpJobAttributes->lpSecurityDescriptor;
   }
@@ -89,7 +90,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
   
   InitializeObjectAttributes(&ObjectAttributes,
                              ((lpName != NULL) ? &JobName : NULL),
-                             0,
+                             Attributes,
                              NULL,
                              SecurityDescriptor);
 
