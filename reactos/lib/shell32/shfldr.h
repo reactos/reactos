@@ -21,6 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define CHARS_IN_GUID 39
+
 typedef struct {
     int colnameid;
     int pcsFlags;
@@ -31,14 +33,12 @@ typedef struct {
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
 
+BOOL SHELL32_GetCustomFolderAttribute (LPCITEMIDLIST pidl, LPCWSTR pwszHeading, LPCWSTR pwszAttribute, LPWSTR pwszValue, DWORD cchValue);
+
 LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut);
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc, LPITEMIDLIST * pidlInOut,
 				  LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes);
 HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
-HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlChild, REFCLSID clsid, REFIID iid,
-				LPVOID * ppvOut);
-HRESULT SHELL32_CoCreateInitSFEx (LPCITEMIDLIST pidlRoot, LPCSTR pathRoot, LPCITEMIDLIST pidlChild, REFCLSID clsid,
-				  REFIID iid, LPVOID * ppvOut);
 HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, DWORD dwFlags, LPSTR szOut,
 				       DWORD dwOutLen);
 
