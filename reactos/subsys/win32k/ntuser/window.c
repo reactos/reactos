@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.226 2004/05/08 12:49:34 weiden Exp $
+/* $Id: window.c,v 1.227 2004/05/08 13:06:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1363,12 +1363,8 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 BOOL FASTCALL
 IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, BOOL IncPos)
 {
-  PDESKTOP_OBJECT Desktop;
   SIZE Sz;
   POINT Pos;
-  
-  Desktop = WindowObject->OwnerThread->Win32Thread->Desktop;
-  IntGetDesktopWorkArea(Desktop, rc);
   
   if(Parent != NULL)
   {
@@ -1732,10 +1728,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* default positioning for overlapped windows */
   if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
   {
-    RECT rc;
+    RECT rc, WorkArea;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     BOOL CalculatedDefPosSize = FALSE;
     
+    IntGetDesktopWorkArea(WindowObject->OwnerThread->Win32Thread->Desktop, &WorkArea);
+    
+    rc = WorkArea;
     ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
     
     if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
@@ -1745,8 +1744,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       if(ProcessParams->dwFlags & STARTF_USEPOSITION)
       {
         ProcessParams->dwFlags &= ~STARTF_USEPOSITION;
-        Pos.x = ProcessParams->dwX;
-        Pos.y = ProcessParams->dwY;
+        Pos.x = WorkArea.left + ProcessParams->dwX;
+        Pos.y = WorkArea.top + ProcessParams->dwY;
       }
       else
       {
