@@ -6,6 +6,7 @@
 # Select your host
 #
 #HOST = mingw32-linux
+#HOST = djgpp-msdos
 HOST = mingw32-windows
 
 include rules.mak
@@ -13,8 +14,8 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl 
-DLLS = ntdll kernel32 
+COMPONENTS = iface_native ntoskrnl
+DLLS = ntdll kernel32 crtdll
 #DLLS = crtdll mingw32
 
 #
@@ -30,14 +31,14 @@ LOADERS = dos
 
 #
 # Select the device drivers and filesystems you want
-# 
-DEVICE_DRIVERS = blue ide keyboard mouse null parallel sdisk serial
+#
+DEVICE_DRIVERS = blue ide keyboard mouse null parallel serial
 # DEVICE_DRIVERS = beep event floppy ide_test sound test test1
 FS_DRIVERS = minix vfat ext2
 # FS_DRIVERS = template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
-
-APPS = args hello shell
+		  
+APPS = args hello shell test cat bench
 # APPS = cmd
 
 all: $(COMPONENTS) $(DLLS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)

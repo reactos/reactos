@@ -108,13 +108,13 @@ void VirtualInit(boot_param* bp)
    MmInitSectionImplementation();
 }
 
-ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
+NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 {
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
 	     MemoryArea->Attributes,
 	     (ULONG)MmAllocPage());
-   return(TRUE);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
@@ -160,7 +160,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
    KPROCESSOR_MODE FaultMode;
    MEMORY_AREA* MemoryArea;
    KIRQL oldlvl;
-   ULONG stat;
+   NTSTATUS Status;
    
    /*
     * Get the address for the page fault
@@ -184,7 +184,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
    /*
     * Find the memory area for the faulting address
     */
-   if (cr2>=KERNEL_BASE)
+   if (cr2 >= KERNEL_BASE)
      {
 	/*
 	 * Check permissions
@@ -211,34 +211,27 @@ asmlinkage int page_fault_handler(unsigned int cs,
    switch (MemoryArea->Type)
      {
       case MEMORY_AREA_SYSTEM:
-	stat = 0;
+	Status = STATUS_UNSUCCESSFUL;
 	break;
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
-        if (MmSectionHandleFault(MemoryArea, (PVOID)cr2)==STATUS_SUCCESS)
-	  {
-	     stat = 1;
-	  }
-	else
-	  {
-	     stat = 0;
-	  }
+	Status = MmSectionHandleFault(MemoryArea, (PVOID)cr2);
 	break;
 	
       case MEMORY_AREA_COMMIT:
-	stat = MmCommitedSectionHandleFault(MemoryArea,(PVOID)cr2);
+	Status = MmCommitedSectionHandleFault(MemoryArea,(PVOID)cr2);
 	break;
 	
       default:
-	stat = 0;
+	Status = STATUS_UNSUCCESSFUL;
 	break;
      }
    DPRINT("Completed page fault handling\n");
-   if (stat)
+   if (NT_SUCCESS(Status))
      {
 	KeLowerIrql(oldlvl);
      }
-   return(stat);
+   return(NT_SUCCESS(Status));
 }
 
 BOOLEAN MmIsThisAnNtAsSystem(VOID)
