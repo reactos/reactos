@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.17 2002/09/08 10:23:52 chorns Exp $
+/* $Id: window.c,v 1.18 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -348,6 +348,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   /* Initialize gui state if necessary. */
   W32kGuiCheck();
+  W32kGraphicsCheck();
 
   if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
     {

@@ -55,11 +55,11 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
   ULONG i;
   LONG mouse_cx = 0, mouse_cy = 0;
-/*  HDC hDC = RetrieveDisplayHDC();
-  PDC dc = DC_HandleToPtr(hDC);
-  PSURFOBJ SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
-  PSURFGDI SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
-  RECTL MouseRect; */
+  HDC hDC = W32kGetScreenDC();
+  PDC dc;
+  PSURFOBJ SurfObj;
+  PSURFGDI SurfGDI;
+  RECTL MouseRect; 
 
   PDEVICE_OBJECT ClassDeviceObject = NULL;
   PFILE_OBJECT FileObject = NULL;
@@ -68,6 +68,15 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   IO_STATUS_BLOCK ioStatus;
   KEVENT event;
   PIRP irp;
+
+  if (hDC == 0)
+    {
+      return;
+    }
+
+  dc = DC_HandleToPtr(hDC);
+  SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
+  SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
 
   // Compile the total mouse movement change
   for (i=0; i<InputCount; i++)
@@ -87,53 +96,13 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     if(mouse_y > 460) mouse_y = 460;
 
     if((SafetySwitch == FALSE) && (SafetySwitch2 == FALSE)) ;
-/*      SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect); */
+    SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect); 
   }
 }
 
-NTSTATUS ConnectMouseClassDriver()
+VOID EnableMouse(HDC hDisplayDC)
 {
-   PDEVICE_OBJECT ClassDeviceObject = NULL;
-   PFILE_OBJECT FileObject = NULL;
-   NTSTATUS status;
-   UNICODE_STRING ClassName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
-   IO_STATUS_BLOCK ioStatus;
-   KEVENT event;
-   PIRP irp;
-   GDI_INFORMATION GDIInformation;
-
-   status = IoGetDeviceObjectPointer(&ClassName, FILE_READ_ATTRIBUTES, &FileObject, &ClassDeviceObject);
-
-   if(status != STATUS_SUCCESS)
-   {
-      DbgPrint("Win32k: Could not connect to mouse class driver\n");
-      return status;
-   }
-
-   // Connect our callback to the class driver
-
-   KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-   GDIInformation.CallBack = MouseGDICallBack;
-
-   irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_MOUSE_CONNECT,
-      ClassDeviceObject, &GDIInformation, sizeof(CLASS_INFORMATION), NULL, 0, TRUE, &event, &ioStatus);
-
-   status = IoCallDriver(ClassDeviceObject, irp);
-
-   if (status == STATUS_PENDING) {
-      KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-   } else {
-      ioStatus.Status = status;
-   }
-
-   return ioStatus.Status;
-}
-/*
-void TestMouse()
-{
-  HDC hDC = RetrieveDisplayHDC();
-  PDC dc = DC_HandleToPtr(hDC);
+  PDC dc = DC_HandleToPtr(hDisplayDC);
   PSURFOBJ SurfObj = (PSURFOBJ)AccessUserObject(dc->Surface);
   PSURFGDI SurfGDI = (PSURFGDI)AccessInternalObject(dc->Surface);
   BOOL txt;
@@ -182,10 +151,8 @@ void TestMouse()
   EngBitBlt(MouseSurf, SurfObj, NULL, NULL, NULL, &MouseRect, &ZeroPoint, NULL, NULL, NULL, 0);
   SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL, 0, 0, 50, 50, &MouseRect, 0);
 
-  // Connect the mouse class driver to the GDI
-  mouse_x = 50;
-  mouse_y = 50;
-  ConnectMouseClassDriver();
+  mouse_x = 320;
+  mouse_y = 240;
   MouseEnabled = TRUE;
 }
-*/
+

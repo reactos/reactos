@@ -1,4 +1,4 @@
-/* $Id: input.c,v 1.2 2002/08/20 20:37:19 hyperion Exp $
+/* $Id: input.c,v 1.3 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,17 +18,21 @@
 #include <include/error.h>
 #include <include/winsta.h>
 #include <include/msgqueue.h>
+#include "../../drivers/input/include/mouse.h"
 
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
+static HANDLE MouseDeviceHandle;
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
+
+VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -139,6 +143,14 @@ NTSTATUS
 InitInputImpl(VOID)
 {
   NTSTATUS Status;
+  UNICODE_STRING MouseDeviceName;
+  OBJECT_ATTRIBUTES MouseObjectAttributes;
+  IO_STATUS_BLOCK Iosb;
+  PIRP Irp;
+  PFILE_OBJECT FileObject;
+  GDI_INFORMATION GdiInfo;
+  KEVENT IoEvent;
+  PIO_STACK_LOCATION StackPtr;
 
   KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
@@ -154,7 +166,70 @@ InitInputImpl(VOID)
       DbgPrint("W32K: Failed to create keyboard thread.\n");
       NtClose(KeyboardThreadHandle);
     }
-  return(STATUS_SUCCESS);
+
+  /*
+   * Connect to the mouse class driver.
+   */  
+  RtlInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\MouseClass");
+  InitializeObjectAttributes(&MouseObjectAttributes,
+			     &MouseDeviceName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = NtOpenFile(&MouseDeviceHandle,
+		      FILE_ALL_ACCESS,
+		      &MouseObjectAttributes,
+		      &Iosb,
+		      0,
+		      0);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("W32K: Failed to open mouse.\n");
+      return(Status);
+    }
+  Status = ObReferenceObjectByHandle(MouseDeviceHandle,
+				     FILE_READ_DATA | FILE_WRITE_DATA,
+				     IoFileObjectType,
+				     KernelMode,
+				     (PVOID *) &FileObject,
+				     NULL);
+   
+   if (!NT_SUCCESS(Status))
+     {
+       DbgPrint("W32K: Failed to reference mouse file object.\n");
+       return(Status);
+     }
+   KeInitializeEvent(&IoEvent, FALSE, NotificationEvent);
+   GdiInfo.CallBack = MouseGDICallBack;
+   Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_MOUSE_CONNECT,
+				       FileObject->DeviceObject,
+				       &GdiInfo,
+				       sizeof(GdiInfo),
+				       NULL,
+				       0,
+				       TRUE,
+				       &FileObject->Event,
+				       &Iosb);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   StackPtr->DeviceObject = FileObject->DeviceObject;
+   StackPtr->Parameters.DeviceIoControl.InputBufferLength = sizeof(GdiInfo);
+   StackPtr->Parameters.DeviceIoControl.OutputBufferLength = 0;
+
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+   if (Status == STATUS_PENDING)
+     {
+       KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, FALSE,
+			     NULL);
+       Status = Iosb.Status;
+     }
+   if (!NT_SUCCESS(Status))
+     {
+       DbgPrint("W32K: Failed to connect to mouse driver.\n");
+       return(Status);
+     }
+
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS

@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.5 2002/08/31 23:18:47 dwelch Exp $
+/* $Id: painting.c,v 1.6 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -733,7 +733,7 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 }
 
 BOOL STDCALL
-NtUserEndPaint(HWND hWnd, PAINTSTRUCT* lPs)
+NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
 {
   NtUserReleaseDC(hWnd, lPs->hdc);
   /* FIXME: Show claret. */

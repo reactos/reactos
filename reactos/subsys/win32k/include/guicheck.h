@@ -6,6 +6,8 @@
 
 VOID
 W32kGuiCheck(VOID);
+VOID
+W32kGraphicsCheck(VOID);
 
 #endif /* __WIN32K_GUICHECK_H */
 

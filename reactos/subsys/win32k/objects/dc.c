@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.38 2002/09/08 10:23:52 chorns Exp $
+/* $Id: dc.c,v 1.39 2002/09/17 23:43:29 dwelch Exp $
  *
  * DC.C - Device context functions
  *
@@ -311,6 +311,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   W32kSetTextColor(hNewDC, RGB(0, 0, 0));
   W32kSetTextAlign(hNewDC, TA_BASELINE);
   DC_ReleasePtr( hNewDC );
+
   return hNewDC;
 
 Failure:
@@ -1161,6 +1162,8 @@ HDC  DC_AllocDC(LPCWSTR  Driver)
 	NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
 	NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
 	NewDC->w.vport2WorldValid = TRUE;
+
+	NewDC->w.hFont = W32kGetStockObject(SYSTEM_FONT);
 
 	GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
   	return  hDC;

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.9 2002/08/26 23:20:54 dwelch Exp $
+/* $Id: message.c,v 1.10 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,7 +42,7 @@ W32kCleanupMessageImpl(VOID)
 
 
 LRESULT STDCALL
-NtUserDispatchMessage(LPMSG lpMsg)
+NtUserDispatchMessage(CONST MSG* lpMsg)
 {
   LRESULT Result;
   ULONG PaintingFlag;

@@ -15,18 +15,11 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY, *PPROPERTY;
 
-typedef struct _INTERNALPOS
-{
-  RECT NormalRect;
-  POINT IconPos;
-  POINT MaxPos;
-  HWND IconTitle;
-} INTERNALPOS, *PINTERNALPOS;
+VOID
+WinPosSetupInternalPos(VOID);
 
 typedef struct _WINDOW_OBJECT
 {
-  /* Internal position. */
-  PINTERNALPOS InternalPos;
   /* Pointer to the window class. */
   PWNDCLASS_OBJECT Class;
   /* Extended style. */

@@ -1,4 +1,4 @@
- /* $Id: guicheck.c,v 1.8 2002/09/08 10:23:52 chorns Exp $
+ /* $Id: guicheck.c,v 1.9 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,11 +27,25 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+static ULONG NrGuiApplicationsRunning = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
-W32kGuiCheck(VOID)
+W32kGraphicsCheck(VOID)
 {
+  if (NrGuiApplicationsRunning == 0)
+    {
+      W32kInitializeDesktopGraphics();
+    }
+  NrGuiApplicationsRunning++;
+}
+
+VOID
+W32kGuiCheck(VOID)
+{ 
   if (PsGetWin32Process() == NULL)
     {
       NTSTATUS Status;

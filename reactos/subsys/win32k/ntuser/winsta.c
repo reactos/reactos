@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.9 2002/09/08 10:23:52 chorns Exp $
+/* $Id: winsta.c,v 1.10 2002/09/17 23:43:28 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,8 @@ STATIC PWNDCLASS_OBJECT DesktopWindowClass;
 STATIC HDESK InputDesktopHandle = NULL; 
 STATIC PDESKTOP_OBJECT InputDesktop = NULL;
 STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
+
+static HDC ScreenDeviceContext = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -834,6 +836,20 @@ NtUserSwitchDesktop(HDESK hDesktop)
   ObDereferenceObject(DesktopObject);
 
   return(TRUE);
+}
+
+VOID
+W32kInitializeDesktopGraphics(VOID)
+{
+  ScreenDeviceContext = W32kCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
+  EnableMouse(ScreenDeviceContext);
+}
+
+HDC
+W32kGetScreenDC(VOID)
+{
+  return(ScreenDeviceContext);
 }
 
 LRESULT CALLBACK
