@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.40 2000/01/14 02:22:40 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.41 2000/01/20 22:14:08 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -81,6 +81,7 @@ FsRtlAllocateResource@0
 FsRtlBalanceReads@4
 FsRtlCopyRead@32
 FsRtlCopyWrite@32
+FsRtlDeregisterUncProvider@4
 FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry@20
@@ -97,6 +98,7 @@ FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow@12
+FsRtlRegisterUncProvider@12
 FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry@12
 FsRtlSplitLargeMcb@20

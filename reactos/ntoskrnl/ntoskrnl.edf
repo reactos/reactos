@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.27 2000/01/14 02:22:40 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.28 2000/01/20 22:14:08 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -81,6 +81,7 @@ FsRtlAllocateResource=FsRtlAllocateResource@0
 FsRtlBalanceReads=FsRtlBalanceReads@4
 FsRtlCopyRead=FsRtlCopyRead@32
 FsRtlCopyWrite=FsRtlCopyWrite@32
+FsRtlDeregisterUncProvider=FsRtlDeregisterUncProvider@4
 FsRtlGetFileSize=FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
@@ -97,6 +98,7 @@ FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow=FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow=FsRtlPostStackOverflow@12
+FsRtlRegisterUncProvider=FsRtlRegisterUncProvider@12
 FsRtlRemoveLargeMcbEntry=FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry=FsRtlRemoveMcbEntry@12
 FsRtlSplitLargeMcb=FsRtlSplitLargeMcb@20
