@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.8 2000/08/05 18:01:52 dwelch Exp $
+/* $Id: critical.c,v 1.9 2001/01/21 00:07:51 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,65 +16,6 @@
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
-
-/* shouldn't these have correct Rtl equivalents?  I just copied from kernel32 */
-
-PVOID STDCALL 
-InterlockedCompareExchange(
-	    PVOID *Destination, 
-	    PVOID Exchange,     
-            PVOID Comperand     ) 
-{	
-	PVOID ret;
-	__asm__ ( /* lock for SMP systems */
-                  "lock\n\t"
-                  "cmpxchgl %2,(%1)"
-                  :"=r" (ret)
-                  :"r" (Destination),"r" (Exchange), "0" (Comperand)
-                  :"memory" );
-	return ret;
-
-}
-
-LONG STDCALL 
-InterlockedIncrement(PLONG Addend)
-{
-	long ret = 0;
-	__asm__
-	(	  	 
-	   "\tlock\n"	/* for SMP systems */
-	   "\tincl	(%1)\n"
-	   "\tje	2f\n"
-	   "\tjl	1f\n"
-	   "\tincl	%0\n"
-	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
-	   "2:\n"
-	   :"=r" (ret):"r" (Addend), "0" (0): "memory"
-	);
-	return ret;
-}
-
-LONG STDCALL
-InterlockedDecrement(PLONG lpAddend)
-{
-	long ret;
-	__asm__
-	(	  	 
-	   "\tlock\n"	/* for SMP systems */
-	   "\tdecl	(%1)\n"
-	   "\tje	2f\n"
-	   "\tjl	1f\n"
-	   "\tincl	%0\n"
-	   "\tjmp	2f\n"
-	   "1:\tdec	%0\n"    	  
-	   "2:\n"
-	   :"=r" (ret):"r" (lpAddend), "0" (0): "memory"          
-	);
-	return ret;
-
-
-}
 
 VOID STDCALL
 RtlDeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)

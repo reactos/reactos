@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.67 2000/12/29 13:49:15 ekohl Exp $
+; $Id: ntdll.def,v 1.68 2001/01/21 00:07:51 phreak Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -933,4 +933,8 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
+InterlockedIncrement@4
+InterlockedDecrement@4
+InterlockedExchange@8
+InterlockedCompareExchange@12
 ;EOF

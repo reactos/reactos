@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.56 2000/12/29 13:49:15 ekohl Exp $
+; $Id: ntdll.edf,v 1.57 2001/01/21 00:07:51 phreak Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -814,6 +814,10 @@ ZwWriteRequestData=ZwWriteRequestData@24
 ZwWriteVirtualMemory=ZwWriteVirtualMemory@20
 ZwW32Call=ZwW32Call@20
 ZwYieldExecution=ZwYieldExecution@0
+InterlockedIncrement=InterlockedIncrement@4
+InterlockedDecrement=InterlockedDecrement@4
+InterlockedExchange=InterlockedExchange@8
+InterlockedCompareExchange=InterlockedCompareExchange@12
 __isascii
 __iscsym
 __iscsymf
