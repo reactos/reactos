@@ -1,8 +1,7 @@
-- extend shell view code in Wine
+- read "DESCRIPT.ION" files to display file descriptions
 - tool tip texts for notification icons
 - context menus for quick launch bar
 - detect display mode changes and adjust desktop bar size
-- add rebars for resizable task bar, quick launch bar and notification area
 - handling of full screen applications
 - implement additional deskbands
 - Drag Drop and file renaming on the desktop does not work.
