@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.8 2003/07/28 08:09:51 ekohl Exp $
+/* $Id: messagebox.c,v 1.9 2003/07/28 23:23:17 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -24,7 +24,8 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * UPDATE HISTORY:
- *      07-27-2003  Code ported from wine
+ *      2003/07/28  Added some NT features
+ *      2003/07/27  Code ported from wine
  *      09-05-2001  CSH  Created
  */
 
@@ -48,14 +49,14 @@
 
 #define RT_DIALOGA         MAKEINTRESOURCEA(5)
 #define RT_DIALOGW         MAKEINTRESOURCEW(5)
-#define IDI_HANDA        MAKEINTRESOURCEA(32513)
-#define IDI_HANDW        MAKEINTRESOURCEW(32513)
-#define IDI_QUESTIONA    MAKEINTRESOURCEA(32514)
-#define IDI_QUESTIONW    MAKEINTRESOURCEW(32514)
-#define IDI_EXCLAMATIONA MAKEINTRESOURCEA(32515)
-#define IDI_EXCLAMATIONW MAKEINTRESOURCEW(32515)
-#define IDI_ASTERISKA    MAKEINTRESOURCEA(32516)
-#define IDI_ASTERISKW    MAKEINTRESOURCEW(32516)
+#define IDI_HANDA          MAKEINTRESOURCEA(32513)
+#define IDI_HANDW          MAKEINTRESOURCEW(32513)
+#define IDI_QUESTIONA      MAKEINTRESOURCEA(32514)
+#define IDI_QUESTIONW      MAKEINTRESOURCEW(32514)
+#define IDI_EXCLAMATIONA   MAKEINTRESOURCEA(32515)
+#define IDI_EXCLAMATIONW   MAKEINTRESOURCEW(32515)
+#define IDI_ASTERISKA      MAKEINTRESOURCEA(32516)
+#define IDI_ASTERISKW      MAKEINTRESOURCEW(32516)
 #define IDI_WINLOGOA       MAKEINTRESOURCEA(32517)
 #define IDI_WINLOGOW       MAKEINTRESOURCEW(32517)
 
@@ -67,6 +68,15 @@
 #endif
 #ifndef MB_DEFMASK
 #define MB_DEFMASK              0x00000F00
+#endif
+#ifndef MB_CANCELTRYCONTINUE
+#define MB_CANCELTRYCONTINUE    (0x6L)
+#endif
+#ifndef IDTRYAGAIN
+#define IDTRYAGAIN      10
+#endif
+#ifndef IDCONTINUE
+#define IDCONTINUE      11
 #endif
 
 
@@ -81,6 +91,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     int i, buttons;
     int bspace, bw, bh, theight, tleft, wwidth, wheight, bpos;
     int borheight, borwidth, iheight, ileft, iwidth, twidth, tiheight;
+    BOOL sdefbtn = FALSE;
     LPCWSTR lpszText;
     WCHAR buf[256];
     NONCLIENTMETRICSW nclm;
@@ -89,7 +100,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
     hFont = CreateFontIndirectW (&nclm.lfMessageFont);
     /* set button font */
-    for (i=1; i < 8; i++)
+    for (i = 1; i < 10; i++)
         SendDlgItemMessageW (hwnd, i, WM_SETFONT, (WPARAM)hFont, 0);
     /* set text font */
     SendDlgItemMessageW (hwnd, MSGBOX_IDTEXT, WM_SETFONT, (WPARAM)hFont, 0);
@@ -125,67 +136,95 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     SetWindowTextW(GetDlgItem(hwnd, MSGBOX_IDTEXT), lpszText);
 
     /* Hide not selected buttons */
-    switch(lpmb->dwStyle & MB_TYPEMASK) {
-    case MB_OK:
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
-	/* fall through */
-    case MB_OKCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	break;
-    case MB_ABORTRETRYIGNORE:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	break;
-    case MB_YESNO:
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
-	/* fall through */
-    case MB_YESNOCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	break;
-    case MB_RETRYCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	break;
+    switch(lpmb->dwStyle & MB_TYPEMASK)
+    {
+        case MB_OK:
+            ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+           /* fall through */
+        case MB_OKCANCEL:
+            ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
+            break;
+        case MB_CANCELTRYCONTINUE:
+            ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
+            break;
+        case MB_ABORTRETRYIGNORE:
+            ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
+            break;
+        case MB_YESNO:
+            ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+            /* fall through */
+        case MB_YESNOCANCEL:
+            ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
+            break;
+        case MB_RETRYCANCEL:
+            ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+            ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
+            break;
     }
-	/* Set the icon */
-    switch(lpmb->dwStyle & MB_ICONMASK) {
-    case MB_ICONEXCLAMATION:
-	SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
-			    (WPARAM)LoadIconW(0, IDI_EXCLAMATIONW), 0);
-	break;
-    case MB_ICONQUESTION:
-	SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
-			    (WPARAM)LoadIconW(0, IDI_QUESTIONW), 0);
-	break;
-    case MB_ICONASTERISK:
-	SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
-			    (WPARAM)LoadIconW(0, IDI_ASTERISKW), 0);
-	break;
-    case MB_ICONHAND:
-      SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
-			    (WPARAM)LoadIconW(0, IDI_HANDW), 0);
-      break;
-    case MB_USERICON:
-      SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
-			  (WPARAM)LoadIconW(lpmb->hInstance, (LPCWSTR)lpmb->lpszIcon), 0);
-      break;
-    default:
-	/* By default, Windows 95/98/NT do not associate an icon to message boxes.
-	 * So wine should do the same.
-	 */
-	break;
+    /* Hide Help button */
+    if(!(lpmb->dwStyle & MB_HELP))
+        ShowWindow(GetDlgItem(hwnd, IDHELP), SW_HIDE);
+
+    /* Set the icon */
+    switch(lpmb->dwStyle & MB_ICONMASK)
+    {
+        case MB_ICONEXCLAMATION:
+            SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
+                (WPARAM)LoadIconW(0, IDI_EXCLAMATIONW), 0);
+            MessageBeep(MB_ICONEXCLAMATION);
+            break;
+        case MB_ICONQUESTION:
+            SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
+                (WPARAM)LoadIconW(0, IDI_QUESTIONW), 0);
+            MessageBeep(MB_ICONQUESTION);
+            break;
+        case MB_ICONASTERISK:
+            SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
+                (WPARAM)LoadIconW(0, IDI_ASTERISKW), 0);
+            MessageBeep(MB_ICONASTERISK);
+            break;
+        case MB_ICONHAND:
+            SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
+                (WPARAM)LoadIconW(0, IDI_HANDW), 0);
+            MessageBeep(MB_ICONHAND);
+            break;
+        case MB_USERICON:
+            SendDlgItemMessageW(hwnd, 0x0440, STM_SETICON,
+                (WPARAM)LoadIconW(lpmb->hInstance, (LPCWSTR)lpmb->lpszIcon), 0);
+            MessageBeep(MB_OK);
+        break;
+        default:
+            /* By default, Windows 95/98/NT does not associate an icon to message boxes.
+             * So ReactOS should do the same.
+             */
+            MessageBeep(MB_OK);
+        break;
     }
 
     /* Position everything */
@@ -214,8 +253,10 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
 
     /* Get the number of visible buttons and their size */
     bh = bw = 1; /* Minimum button sizes */
-    for (buttons = 0, i = 1; i < 8; i++)
+    for (buttons = 0, i = 1; i < 12; i++)
     {
+        if (i == 8)
+            continue; /* skip id=8 because it doesn't exist, (MB_CLOSE) ?*/
         hItem = GetDlgItem(hwnd, i);
         if (GetWindowLongW(hItem, GWL_STYLE) & WS_VISIBLE)
         {
@@ -236,9 +277,9 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     }
     bw = max(bw, bh * 2);
     /* Button white space */
-    bh = bh * 2;
+    bh = bh * 2 - 4;
     bw = bw * 2;
-    bspace = bw/3; /* Space between buttons */
+    bspace = 10; /* Fixed space between buttons */
 
     /* Get the text size */
     GetClientRect(GetDlgItem(hwnd, MSGBOX_IDTEXT), &rect);
@@ -256,7 +297,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
         SelectObject(hdc, hPrevFont);
     ReleaseDC(hItem, hdc);
 
-    tiheight = 16 + max(iheight, theight);
+    tiheight = 16 + max(iheight, theight) + 16;
     wwidth  = tleft + twidth + ileft + borwidth;
     wheight = 8 + tiheight + bh + borheight;
 
@@ -284,11 +325,72 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
             {
                 SetFocus(hItem);
                 SendMessageW( hItem, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+                sdefbtn = TRUE;
             }
             SetWindowPos(hItem, 0, bpos, tiheight, bw, bh,
                          SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOREDRAW);
             bpos += bw + bspace;
         }
+    }
+
+    if(lpmb->dwStyle & MB_CANCELTRYCONTINUE)
+    {
+        for (i = 10; i < 12; i++)
+        {
+            hItem = GetDlgItem(hwnd, i);
+            if (GetWindowLongW(hItem, GWL_STYLE) & WS_VISIBLE)
+            {
+                if (buttons++ == ((lpmb->dwStyle & MB_DEFMASK) >> 8))
+                {
+                    SetFocus(hItem);
+                    SendMessageW( hItem, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+                    sdefbtn = TRUE;
+                }
+                SetWindowPos(hItem, 0, bpos, tiheight, bw, bh,
+                             SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOREDRAW);
+                bpos += bw + bspace;
+            }
+        }
+    }
+
+    if(lpmb->dwStyle & MB_HELP)
+    {
+        hItem = GetDlgItem(hwnd, IDHELP);
+        if (GetWindowLongW(hItem, GWL_STYLE) & WS_VISIBLE)
+        {
+            if (buttons++ == ((lpmb->dwStyle & MB_DEFMASK) >> 8))
+            {
+                SetFocus(hItem);
+                SendMessageW( hItem, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+                sdefbtn = TRUE;
+            }
+            SetWindowPos(hItem, 0, bpos, tiheight, bw, bh,
+                         SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOREDRAW);
+            bpos += bw + bspace; /* one extra space */
+        }
+    }
+
+    /* if there's no (valid) default selection, select first button */
+    if(!sdefbtn)
+    {
+        hItem = GetDlgItem(hwnd, (i + 5) % 7 + 1);
+        for (buttons = i = 0; i < 7; i++)
+        {
+            hItem = GetDlgItem(hwnd, (i + 5) % 7 + 1);
+            if (GetWindowLongW(hItem, GWL_STYLE) & WS_VISIBLE)
+            {
+                SetFocus(hItem);
+                SendMessageW( hItem, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+                break;
+            }
+        }
+    }
+
+    if(lpmb->dwStyle & MB_RIGHT)
+    {
+        hItem = GetDlgItem(hwnd, MSGBOX_IDTEXT);
+        SetWindowLong(hItem, GWL_STYLE, 
+                      GetWindowLong(hItem, GWL_STYLE) | SS_RIGHT);
     }
 
     /* handle modal MessageBoxes */
@@ -321,56 +423,69 @@ static INT_PTR CALLBACK MSGBOX_DlgProc( HWND hwnd, UINT message,
                                         WPARAM wParam, LPARAM lParam )
 {
   HFONT hFont;
+  HELPINFO hi;
 
-  switch(message)
-  {
-    case WM_INITDIALOG:
-    {
-       LPMSGBOXPARAMS mbp = (LPMSGBOXPARAMS)lParam;
-       SetWindowContextHelpId(hwnd, mbp->dwContextHelpId);
-       hFont = MSGBOX_OnInit(hwnd, mbp);
-       SetPropA(hwnd, "ROS_MSGBOX_HFONT", (HANDLE)hFont);
-       SetPropA(hwnd, "ROS_MSGBOX_HELPCALLBACK", (HANDLE)mbp->lpfnMsgBoxCallback);
-       break;
-    }
-
-    case WM_COMMAND:
-      switch (LOWORD(wParam))
-      {
-        case IDOK:
-        case IDCANCEL:
-        case IDABORT:
-        case IDRETRY:
-        case IDIGNORE:
-        case IDYES:
-        case IDNO:
-          hFont = GetPropA(hwnd, "ROS_MSGBOX_HFONT");
-          EndDialog(hwnd, wParam);
-          if (hFont)
-            DeleteObject(hFont);
-          break;
-      }
-      break;
-
-   case WM_HELP:
+  switch(message) {
+   case WM_INITDIALOG:
    {
-      MSGBOXCALLBACK callback = (MSGBOXCALLBACK)GetPropA(hwnd, "ROS_MSGBOX_HELPCALLBACK");
-      HELPINFO hi;
-
-      memcpy(&hi, (void *)lParam, sizeof(hi));
-      hi.dwContextId = GetWindowContextHelpId(hwnd);
-
-      if (callback)
-          callback(&hi);
-      else
-          SendMessageW(GetWindow(hwnd, GW_OWNER), WM_HELP, 0, (LPARAM)&hi);
-      break;
+       if(!GetPropA(hwnd, "ROS_MSGBOX"))
+       {
+            LPMSGBOXPARAMS mbp = (LPMSGBOXPARAMS)lParam;
+            SetWindowContextHelpId(hwnd, mbp->dwContextHelpId);
+            hFont = MSGBOX_OnInit(hwnd, mbp);
+            SetPropA(hwnd, "ROS_MSGBOX", (HANDLE)hwnd);
+            SetPropA(hwnd, "ROS_MSGBOX_HFONT", (HANDLE)hFont);
+            SetPropA(hwnd, "ROS_MSGBOX_HELPCALLBACK", (HANDLE)mbp->lpfnMsgBoxCallback);
+       }
+       return 0;
    }
 
-   default:
-     /* Ok. Ignore all the other messages */
-     DbgPrint("Message number 0x%04x is being ignored.\n", message);
-    break;
+   case WM_COMMAND:
+    switch (LOWORD(wParam))
+    {
+     case IDOK:
+     case IDCANCEL:
+     case IDABORT:
+     case IDRETRY:
+     case IDIGNORE:
+     case IDYES:
+     case IDNO:
+     case IDTRYAGAIN:
+     case IDCONTINUE:
+      hFont = GetPropA(hwnd, "ROS_MSGBOX_HFONT");
+      EndDialog(hwnd, wParam);
+      if (hFont)
+        DeleteObject(hFont);
+      return 0;
+    case IDHELP:
+      /* send WM_HELP message to messagebox window */
+      hi.cbSize = sizeof(HELPINFO);
+      hi.iContextType = HELPINFO_WINDOW;
+      hi.iCtrlId = LOWORD(wParam);
+      hi.hItemHandle = (HANDLE)lParam;
+      hi.dwContextId = 0;
+      GetCursorPos(&hi.MousePos);
+      SendMessageW(hwnd, WM_HELP, 0, (LPARAM)&hi);
+      return 0;
+    }
+    return 0;
+
+    case WM_HELP:
+    {
+        MSGBOXCALLBACK callback = (MSGBOXCALLBACK)GetPropA(hwnd, "ROS_MSGBOX_HELPCALLBACK");
+
+        memcpy(&hi, (void *)lParam, sizeof(hi));
+        hi.dwContextId = GetWindowContextHelpId(hwnd);
+
+        if (callback)
+            callback(&hi);
+        else {
+            HWND owner = GetWindow(hwnd, GW_OWNER);
+            if(owner)
+            SendMessageW(GetWindow(hwnd, GW_OWNER), WM_HELP, 0, (LPARAM)&hi);
+            }
+        return 0;
+    }
   }
   return 0;
 }
@@ -510,9 +625,12 @@ STDCALL
 MessageBoxIndirectW(
   CONST LPMSGBOXPARAMS lpMsgBoxParams)
 {
-    LPVOID tmplate;
+    LPVOID tmplate, ctmplate;
     HRSRC hRes;
     HMODULE hUser32;
+    DWORD ressize;
+    WORD *style;
+    WORD *exstyle;
 
     hUser32 = GetModuleHandleW(L"user32.dll");
     if (!(hRes = FindResourceExW(hUser32, RT_DIALOGW, L"MSGBOX", lpMsgBoxParams->dwLanguageId)))
@@ -521,8 +639,33 @@ MessageBoxIndirectW(
     if (!(tmplate = (LPVOID)LoadResource(hUser32, hRes)))
         return 0;
 
-    return DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tmplate, lpMsgBoxParams->hwndOwner,
+    /* Copy template */
+    ressize = SizeofResource(hUser32, hRes);
+    ctmplate = RtlAllocateHeap(RtlGetProcessHeap(), 0, ressize);
+    RtlMoveMemory(ctmplate, tmplate, ressize);
+
+    /* change dialog's style in the template before 
+       passing it to DialogBoxIndirectParamW        */
+
+    style = (WORD *)ctmplate;
+    exstyle = style + 2;
+    if(*(DWORD*)style == 0xffff0001)   /* DIALOGEX resource */
+    {
+        /* skip help id */
+        exstyle = style + 4;
+        style = exstyle + 2;
+    }
+
+    /* change window style before creating it */
+    if(lpMsgBoxParams->dwStyle & MB_RIGHT)
+        *exstyle = (WORD)(*(DWORD*)exstyle | WS_EX_RIGHT);
+    if(lpMsgBoxParams->dwStyle & MB_TOPMOST)
+        *exstyle = (WORD)(*(DWORD*)exstyle | WS_EX_TOPMOST);
+
+    return DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, ctmplate, lpMsgBoxParams->hwndOwner,
                                    MSGBOX_DlgProc, (LPARAM)lpMsgBoxParams);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ctmplate);
 }
 
 
