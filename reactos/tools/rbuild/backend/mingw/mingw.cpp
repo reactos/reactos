@@ -103,5 +103,5 @@ void MingwBackend::ProcessModule ( Module& module )
 
 void MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers )
 {
-	moduleHandlers.push_back ( new MingwKernelModuleHandler () );
+	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
 }

@@ -10,6 +10,7 @@
 class Project;
 class Module;
 class File;
+class Library;
 
 class Project
 {
@@ -42,8 +43,9 @@ public:
 	const XMLElement& node;
 	std::string name;
 	std::string path;
-	std::vector<File*> files;
 	ModuleType type;
+	std::vector<File*> files;
+	std::vector<Library*> libraries;
 
 	Module ( const XMLElement& moduleNode,
 	         const std::string& moduleName,
@@ -62,6 +64,15 @@ public:
 	std::string name;
 
 	File ( const std::string& _name );
+};
+
+
+class Library
+{
+public:
+	std::string name;
+
+	Library ( const std::string& _name );
 };
 
 #endif /* __RBUILD_H */

@@ -60,8 +60,6 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	else if ( e.name == "module" )
 	{
 		att = e.GetAttribute ( "name", true );
-		if ( !att )
-			return;
 		Module* module = new Module ( e, att->value, path );
 		modules.push_back ( module );
 		module->ProcessXML ( e, path );
@@ -69,10 +67,7 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	}
 	else if ( e.name == "directory" )
 	{
-		// this code is duplicated between Project::ProcessXML() and Module::ProcessXML() :(
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
-		if ( !att )
-			return;
 		subpath = path + "/" + att->value;
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )

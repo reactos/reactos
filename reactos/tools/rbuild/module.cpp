@@ -21,6 +21,8 @@ Module::~Module ()
 {
 	for ( size_t i = 0; i < files.size(); i++ )
 		delete files[i];
+	for ( size_t i = 0; i < libraries.size(); i++ )
+		delete libraries[i];
 }
 
 void Module::ProcessXML ( const XMLElement& e,
@@ -30,6 +32,10 @@ void Module::ProcessXML ( const XMLElement& e,
 	if ( e.name == "file" && e.value.size () )
 	{
 		files.push_back ( new File ( path + "/" + e.value ) );
+	}
+	else if ( e.name == "library" && e.value.size () )
+	{
+		libraries.push_back ( new Library ( e.value ) );
 	}
 	else if ( e.name == "directory" )
 	{
@@ -50,7 +56,14 @@ ModuleType Module::GetModuleType ( const XMLAttribute& attribute )
 	                                       attribute.value );
 }
 
+
 File::File ( const string& _name )
+	: name(_name)
+{
+}
+
+
+Library::Library ( const string& _name )
 	: name(_name)
 {
 }
