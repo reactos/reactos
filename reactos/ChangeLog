@@ -1,6 +1,6 @@
 2003-08-16  Martin Fuchs	<martin-fuchs@gmx.net>
 
-	* subsys/system/explorer/taskbar/taskbar.coo:
+	* subsys/system/explorer/taskbar/taskbar.cpp:
 	first draft of working task bar
 
 2003-08-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
