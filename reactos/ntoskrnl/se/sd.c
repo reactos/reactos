@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.13 2003/12/30 18:52:06 fireball Exp $
+/* $Id: sd.c,v 1.14 2004/05/20 12:42:11 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -779,6 +779,48 @@ RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
   RelSD->Control |= SE_SELF_RELATIVE;
 
   return(STATUS_SUCCESS);
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
+			      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      IN OUT PULONG Length,
+			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
+			    IN PSECURITY_INFORMATION SecurityInformation,
+			    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+			    IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+			    IN POOL_TYPE PoolType,
+			    IN PGENERIC_MAPPING GenericMapping)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOLEAN STDCALL
+SeValidSecurityDescriptor(IN ULONG Length,
+			  IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.3 2004/05/18 12:23:48 ekohl Exp $
+/* $Id: audit.c,v 1.4 2004/05/20 12:42:11 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -101,6 +101,9 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 SeDeleteObjectAuditAlarm(IN PVOID Object,
 			 IN HANDLE Handle)
@@ -109,6 +112,9 @@ SeDeleteObjectAuditAlarm(IN PVOID Object,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 		       IN PVOID Object OPTIONAL,
@@ -124,6 +130,9 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 				IN PVOID Object OPTIONAL,

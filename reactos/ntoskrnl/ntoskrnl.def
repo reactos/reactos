@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.180 2004/05/18 12:24:40 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.181 2004/05/20 12:42:51 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -896,7 +896,7 @@ SeDeleteObjectAuditAlarm@8
 SeExports DATA
 ;SeFreePrivileges@4
 SeImpersonateClient@8
-;SeLockSubjectContext@4
+SeLockSubjectContext@4
 ;SeMarkLogonSessionForTerminationNotification@4
 SeOpenObjectAuditAlarm@36
 SeOpenObjectForDeleteAuditAlarm@36
@@ -904,19 +904,19 @@ SePrivilegeCheck@12
 ;SePrivilegeObjectAuditAlarm@24
 SePublicDefaultDacl DATA
 SeQueryAuthenticationIdToken@8
-;SeQuerySecurityDescriptorInfo@16
+SeQuerySecurityDescriptorInfo@16
 ;SeRegisterLogonSessionTerminatedRoutine@4
 ;SeReleaseSecurityDescriptor@12
 SeReleaseSubjectContext@4
 ;SeSetAccessStateGenericMapping@8
-;SeSetSecurityDescriptorInfo@24
+SeSetSecurityDescriptorInfo@24
 SeSinglePrivilegeCheck@12
 SeSystemDefaultDacl DATA
 SeTokenImpersonationLevel@4
 SeTokenType@4
-;SeUnlockSubjectContext@4
+SeUnlockSubjectContext@4
 ;SeUnregisterLogonSessionTerminatedRoutine@4
-;SeValidSecurityDescriptor@8
+SeValidSecurityDescriptor@8
 WRITE_REGISTER_UCHAR@8
 WRITE_REGISTER_ULONG@8
 WRITE_REGISTER_USHORT@8

@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.29 2004/03/14 18:13:19 ekohl Exp $
+/* $Id: semgr.c,v 1.30 2004/05/20 12:42:11 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -38,20 +38,20 @@ SeInit1(VOID)
   SepInitLuid();
 
   if (!SepInitSecurityIDs())
-    return(FALSE);
+    return FALSE;
 
   if (!SepInitDACLs())
-    return(FALSE);
+    return FALSE;
 
   if (!SepInitSDs())
-    return(FALSE);
+    return FALSE;
 
   SepInitPrivileges();
 
   if (!SepInitExports())
-    return(FALSE);
+    return FALSE;
 
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -60,7 +60,7 @@ SeInit2(VOID)
 {
   SepInitializeTokenImplementation();
 
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -87,7 +87,7 @@ SeInitSRM(VOID)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to create 'Security' directory!\n");
-      return(FALSE);
+      return FALSE;
     }
 
   /* Create 'LSA_AUTHENTICATION_INITALIZED' event */
@@ -105,9 +105,9 @@ SeInitSRM(VOID)
 			 FALSE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to create 'Security' directory!\n");
+      DPRINT1("Failed to create 'LSA_AUTHENTICATION_INITALIZED' event!\n");
       NtClose(DirectoryHandle);
-      return(FALSE);
+      return FALSE;
     }
 
   NtClose(EventHandle);
@@ -115,7 +115,7 @@ SeInitSRM(VOID)
 
   /* FIXME: Create SRM port and listener thread */
 
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -126,7 +126,7 @@ SepInitExports(VOID)
 				    sizeof(SE_EXPORTS),
 				    TAG_SXPT);
   if (SeExports == NULL)
-    return(FALSE);
+    return FALSE;
 
   SeExports->SeCreateTokenPrivilege = SeCreateTokenPrivilege;
   SeExports->SeAssignPrimaryTokenPrivilege = SeAssignPrimaryTokenPrivilege;
@@ -172,7 +172,7 @@ SepInitExports(VOID)
   SeExports->SeAliasPrintOpsSid = SeAliasPrintOpsSid;
   SeExports->SeAliasBackupOpsSid = SeAliasBackupOpsSid;
 
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -220,21 +220,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  * @implemented
  */
 VOID STDCALL
-SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
-{
-  ObDereferenceObject (SubjectContext->PrimaryToken);
-  if (SubjectContext->ClientToken != NULL)
-    {
-      ObDereferenceObject (SubjectContext->ClientToken);
-    }
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
   PEPROCESS Process;
   BOOLEAN CopyOnOpen;
@@ -248,7 +234,41 @@ SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 				   &CopyOnOpen,
 				   &EffectiveOnly,
 				   &SubjectContext->ImpersonationLevel);
-   SubjectContext->PrimaryToken = PsReferencePrimaryToken (Process);
+  SubjectContext->PrimaryToken = PsReferencePrimaryToken (Process);
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+{
+  UNIMPLEMENTED;
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+{
+  ObDereferenceObject (SubjectContext->PrimaryToken);
+  if (SubjectContext->ClientToken != NULL)
+    {
+      ObDereferenceObject (SubjectContext->ClientToken);
+    }
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+{
+  UNIMPLEMENTED;
 }
 
 
@@ -360,7 +380,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 	if (Descriptor->Control & SE_SACL_PRESENT ||
 	    Descriptor->Sacl == NULL ||)
 	  {
-	     Sacl = NULL;	     
+	     Sacl = NULL;
 	  }
 	else
 	  {
@@ -379,7 +399,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 		      GenericMapping);
      }
 #else
-  UNIMPLEMENTED;   
+  UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);
 #endif
 }
@@ -449,13 +469,13 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
    PACE CurrentAce;
    PSID Sid;
    ACCESS_MASK CurrentAccess;
-   
+
    CurrentAccess = PreviouslyGrantedAccess;
-   
-   /*    
+
+   /*
     * Ignore the SACL for now
     */
-   
+
    /*
     * Check the DACL
     */
@@ -467,7 +487,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	return(Status);
      }
-   
+
    CurrentAce = (PACE)(Dacl + 1);
    for (i = 0; i < Dacl->AceCount; i++)
      {
@@ -493,16 +513,15 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
    if (!(CurrentAccess & DesiredAccess) &&
        !((~CurrentAccess) & DesiredAccess))
      {
-	*AccessStatus = STATUS_ACCESS_DENIED;	
+	*AccessStatus = STATUS_ACCESS_DENIED;
      }
    else
      {
 	*AccessStatus = STATUS_SUCCESS;
      }
    *GrantedAccess = CurrentAccess;
-   
+
    return(STATUS_SUCCESS);
 }
-
 
 /* EOF */
