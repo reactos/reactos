@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.76 2004/12/13 12:51:51 weiden Exp $
+ * $Id: gdiobj.c,v 1.77 2004/12/13 21:59:28 weiden Exp $
  */
 #include <w32k.h>
 
@@ -52,13 +52,13 @@ STDCALL PsGetProcessId(
 
 typedef struct _GDI_HANDLE_TABLE
 {
-  LONG HandlesCount;
-  LONG nEntries;
   PPAGED_LOOKASIDE_LIST LookasideLists;
+  
+  SLIST_HEADER FreeEntriesHead;
+  SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
+                          (sizeof(SLIST_ENTRY) << 3)];
 
-  PGDI_TABLE_ENTRY EntriesEnd;
-
-  GDI_TABLE_ENTRY Entries[1];
+  GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 typedef struct
@@ -116,20 +116,26 @@ static LARGE_INTEGER ShortDelay;
  * \param	Size - number of entries in the object table.
 */
 static PGDI_HANDLE_TABLE INTERNAL_CALL
-GDIOBJ_iAllocHandleTable(ULONG Entries)
+GDIOBJ_iAllocHandleTable(VOID)
 {
   PGDI_HANDLE_TABLE handleTable;
   UINT ObjType;
-  ULONG MemSize = sizeof(GDI_HANDLE_TABLE) + (sizeof(GDI_TABLE_ENTRY) * (Entries - 1));
+  UINT i;
+  PGDI_TABLE_ENTRY Entry;
 
-  handleTable = ExAllocatePoolWithTag(NonPagedPool, MemSize, TAG_GDIHNDTBLE);
+  handleTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(GDI_HANDLE_TABLE), TAG_GDIHNDTBLE);
   ASSERT( handleTable );
-  RtlZeroMemory(handleTable, MemSize);
-
-  handleTable->HandlesCount = 0;
-  handleTable->nEntries = Entries;
-
-  handleTable->EntriesEnd = &handleTable->Entries[Entries];
+  RtlZeroMemory(handleTable, sizeof(GDI_HANDLE_TABLE));
+  
+  /*
+   * initialize the free entry cache
+   */
+  InitializeSListHead(&handleTable->FreeEntriesHead);
+  Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
+  for(i = GDI_HANDLE_COUNT - 1; i >= RESERVE_ENTRIES_COUNT; i--)
+  {
+    InterlockedPushEntrySList(&handleTable->FreeEntriesHead, &handleTable->FreeEntries[i]);
+  }
 
   handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
@@ -214,12 +220,19 @@ GetObjectSize(DWORD ObjectType)
  * \todo return the object pointer and lock it by default.
 */
 HGDIOBJ INTERNAL_CALL
+#ifdef GDI_DEBUG
+GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType)
+#else /* !GDI_DEBUG */
 GDIOBJ_AllocObj(ULONG ObjectType)
+#endif /* GDI_DEBUG */
 {
   PW32PROCESS W32Process;
   PGDIOBJHDR  newObject;
   PPAGED_LOOKASIDE_LIST LookasideList;
   LONG CurrentProcessId, LockedProcessId;
+#ifdef GDI_DEBUG
+  ULONG Attempts = 0;
+#endif
 
   ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
@@ -229,6 +242,7 @@ GDIOBJ_AllocObj(ULONG ObjectType)
     newObject = ExAllocateFromPagedLookasideList(LookasideList);
     if(newObject != NULL)
     {
+      PSLIST_ENTRY FreeEntry;
       PGDI_TABLE_ENTRY Entry;
       PGDIOBJ ObjectBody;
       LONG TypeInfo;
@@ -244,6 +258,8 @@ GDIOBJ_AllocObj(ULONG ObjectType)
       newObject->Locks = 0;
 
 #ifdef GDI_DEBUG
+      newObject->createdfile = file;
+      newObject->createdline = line;
       newObject->lockfile = NULL;
       newObject->lockline = 0;
 #endif
@@ -253,40 +269,57 @@ GDIOBJ_AllocObj(ULONG ObjectType)
       RtlZeroMemory(ObjectBody, GetObjectSize(ObjectType));
 
       TypeInfo = (ObjectType & 0xFFFF0000) | (ObjectType >> 16);
-
-      /* Search for a free handle entry */
-      for(Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
-          Entry < HandleTable->EntriesEnd;
-          Entry++)
+      
+      FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
+      if(FreeEntry != NULL)
       {
-        LONG PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, 0);
+        LONG PrevProcId;
+        UINT Index;
+        HGDIOBJ Handle;
+        
+        /* calculate the entry from the address of the entry in the free slot array */
+        Index = ((ULONG_PTR)FreeEntry - (ULONG_PTR)&HandleTable->FreeEntries[0]) /
+                sizeof(HandleTable->FreeEntries[0]);
+        Entry = &HandleTable->Entries[Index];
+        Handle = (HGDIOBJ)((Index & 0xFFFF) | (ObjectType & 0xFFFF0000));
+
+LockHandle:
+        PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, 0);
         if(PrevProcId == 0)
         {
-          if(InterlockedCompareExchangePointer(&Entry->KernelData, ObjectBody, NULL) == NULL)
+          ASSERT(Entry->KernelData == NULL);
+          
+          Entry->KernelData = ObjectBody;
+
+          /* we found a free entry, no need to exchange this field atomically
+             since we're holding the lock */
+          Entry->Type = TypeInfo;
+
+          /* unlock the entry */
+          InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
+
+          if(W32Process != NULL)
           {
-            HGDIOBJ Handle;
-            UINT Index = GDI_ENTRY_TO_INDEX(HandleTable, Entry);
-            
-            Handle = (HGDIOBJ)((Index & 0xFFFF) | (ObjectType & 0xFFFF0000));
-
-            /* we found a free entry, no need to exchange this field atomically
-               since we're holding the lock */
-            Entry->Type = TypeInfo;
-
-            InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
-
-            if(W32Process != NULL)
-            {
-              InterlockedIncrement(&W32Process->GDIObjects);
-            }
-
-            DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, ObjectBody);
-            return Handle;
+            InterlockedIncrement(&W32Process->GDIObjects);
           }
-          else
+
+          DPRINT("GDIOBJ_AllocObj: 0x%x ob: 0x%x\n", Handle, ObjectBody);
+          return Handle;
+        }
+        else
+        {
+#ifdef GDI_DEBUG
+          if(++Attempts > 20)
           {
-            InterlockedExchange(&Entry->ProcessId, PrevProcId);
+            DPRINT1("[%d]Waiting on 0x%x\n", Attempts, Handle);
           }
+#endif
+          /* damn, someone is trying to lock the object even though it doesn't
+             eve nexist anymore, wait a little and try again!
+             FIXME - we shouldn't loop forever! Give up after some time! */
+          DelayExecution();
+          /* try again */
+          goto LockHandle;
         }
       }
 
@@ -373,6 +406,10 @@ LockHandle:
         
         /* unlock the handle slot */
         InterlockedExchange(&Entry->ProcessId, 0);
+        
+        /* push this entry to the free list */
+        InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
+                                  &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
         
         if(W32Process != NULL)
         {
@@ -536,7 +573,7 @@ InitGdiObjectHandleTable (VOID)
 {
   DPRINT("InitGdiObjectHandleTable\n");
 
-  HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_COUNT);
+  HandleTable = GDIOBJ_iAllocHandleTable();
   DPRINT("HandleTable: %x\n", HandleTable);
 }
 
@@ -561,7 +598,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
 BOOL INTERNAL_CALL
 GDI_CleanupForProcess (struct _EPROCESS *Process)
 {
-  PGDI_TABLE_ENTRY Entry;
+  PGDI_TABLE_ENTRY Entry, End;
   PEPROCESS CurrentProcess;
   PW32PROCESS W32Process;
   LONG ProcId;
@@ -582,8 +619,9 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
                we should delete it directly here! */
     ProcId = ((LONG)Process->UniqueProcessId << 1);
 
+    End = &HandleTable->Entries[GDI_HANDLE_COUNT];
     for(Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
-        Entry < HandleTable->EntriesEnd;
+        Entry < End;
         Entry++, Index++)
     {
       /* ignore the lock bit */
@@ -831,6 +869,9 @@ LockHandle:
           /* we should delete the handle */
           Entry->KernelData = NULL;
           InterlockedExchange(&Entry->ProcessId, 0);
+          
+          InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
+                                    &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
           
           if(W32Process != NULL)
           {

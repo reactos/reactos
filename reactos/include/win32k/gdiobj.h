@@ -65,6 +65,8 @@ typedef struct _GDIOBJHDR
   PETHREAD LockingThread; /* only assigned if a thread is holding the lock! */
   ULONG Locks;
 #ifdef GDI_DEBUG
+  const char* createdfile;
+  int createdline;
   const char* lockfile;
   int lockline;
 #endif
@@ -77,7 +79,6 @@ typedef struct _GDIMULTILOCK
   DWORD	ObjectType;
 } GDIMULTILOCK, *PGDIMULTILOCK;
 
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 BOOL    INTERNAL_CALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
@@ -92,16 +93,19 @@ BOOL    INTERNAL_CALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 #ifdef GDI_DEBUG
 
 /* a couple macros for debugging GDIOBJ locking */
+#define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(__FILE__,__LINE__,ty)
 #define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(__FILE__,__LINE__,obj,ty)
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
 #define GDIOBJ_UnlockObj(obj) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj)
 
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj);
 
 #else /* !GDI_DEBUG */
 
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_UnlockObj (HGDIOBJ hObj);
