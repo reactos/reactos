@@ -62,6 +62,7 @@ lib\kbduk\kbduk.dll                     1
 lib\kbdus\kbdus.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
+lib\mpr\mpr.dll                         1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
 lib\msvcrt\msvcrt.dll                   1
@@ -79,6 +80,7 @@ lib\user32\user32.dll                   1
 lib\userenv\userenv.dll                 1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1
+lib\wininet\wininet.dll                 1
 lib\winmm\winmm.dll                     1
 lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1
