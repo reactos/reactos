@@ -1,0 +1,103 @@
+/*
+ *  Notepad (English resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ */
+
+#define LANGUAGE_ID                     En
+#define LANGUAGE_NUMBER                 0
+#define LANGUAGE_MENU_ITEM              "&English"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&File"
+#define MENU_FILE_NEW                   "&New..."
+#define MENU_FILE_OPEN                  "&Open"
+#define MENU_FILE_SAVE                  "&Save"
+#define MENU_FILE_SAVEAS                "Save &as..."
+#define MENU_FILE_PRINT                 "&Print"
+#define MENU_FILE_PAGESETUP             "Page Se&tup..."
+#define MENU_FILE_PRINTSETUP            "P&rinter Setup..."
+#define MENU_FILE_EXIT                  "&Exit"
+
+#define MENU_EDIT                       "&Edit"
+#define MENU_EDIT_UNDO                  "&Undo\tCtrl+Z"
+#define MENU_EDIT_CUT                   "Cu&t\tCtrl+X"
+#define MENU_EDIT_COPY                  "&Copy\tCtrl+C"
+#define MENU_EDIT_PASTE                 "&Paste\tCtrl+V"
+#define MENU_EDIT_DELETE                "&Delete\tDel"
+#define MENU_EDIT_SELECTALL             "Select &all"
+#define MENU_EDIT_TIMEDATE              "&Time/Date\tF5"
+#define MENU_EDIT_WRAP                  "&Wrap long lines"
+
+#define MENU_SEARCH                     "&Search"
+#define MENU_SEARCH_SEARCH              "Search..."
+#define MENU_SEARCH_NEXT                "&Search next\tF3"
+
+#define MENU_LANGUAGE                   "&Language"
+
+#define MENU_HELP                       "&Help"
+#define MENU_HELP_CONTENTS              "&Contents"
+#define MENU_HELP_SEARCH                "&Search..."
+#define MENU_HELP_HELP_ON_HELP          "&Help on help"
+
+#define MENU_INFO                       "Inf&o..."
+#define MENU_INFO_LICENSE               "&License"
+#define MENU_INFO_NO_WARRANTY           "&NO WARRANTY"
+#define MENU_INFO_ABOUT_WINE            "&About Wine"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Cancel"
+#define DIALOG_BROWSE                   "&Browse..."
+#define DIALOG_HELP                     "&Help"
+
+#define DIALOG_PAGESETUP_CAPTION        "Page Setup"
+#define DIALOG_PAGESETUP_HEAD           "&Header:"
+#define DIALOG_PAGESETUP_TAIL           "&Footer:"
+#define DIALOG_PAGESETUP_MARGIN         "&Margins:"
+#define DIALOG_PAGESETUP_LEFT           "&Left:"
+#define DIALOG_PAGESETUP_RIGHT          "&Right:"
+#define DIALOG_PAGESETUP_TOP            "&Top:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Bottom:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Page &s"   /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Notepad"
+#define STRING_ERROR                    "ERROR"
+#define STRING_WARNING                  "WARNING"
+#define STRING_INFO                     "Information"
+
+#define STRING_UNTITLED                 "(untitled)"
+
+#define STRING_ALL_FILES                "All files (*.*)"
+#define STRING_TEXT_FILES_TXT           "Text files (*.txt)"
+
+#define STRING_TOOLARGE         "File '%s' is too large for notepad.\n \
+Please use a different editor."
+
+#define STRING_NOTEXT           "You didn't enter any text. \
+\nPlease type something and try again"
+
+#define STRING_NOTSAVED         "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+
+#define STRING_NOTFOUND         "'%s' can not be found."
+
+#define STRING_OUT_OF_MEMORY    "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree \
+memory."
+
+#include "notepad.rc"

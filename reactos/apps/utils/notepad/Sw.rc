@@ -1,0 +1,105 @@
+/*
+ *  Notepad (Swedish resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Swedish language by Karl Backström <karl_b@geocities.com>
+ */
+
+#define LANGUAGE_ID                     Sw
+#define LANGUAGE_NUMBER                 1d
+#define LANGUAGE_MENU_ITEM              "&Svenska"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&Arkiv"
+#define MENU_FILE_NEW                   "&Ny..."
+#define MENU_FILE_OPEN                  "Ö&ppna"
+#define MENU_FILE_SAVE                  "&Spara"
+#define MENU_FILE_SAVEAS                "Spara &som..."
+#define MENU_FILE_PRINT                 "&Skriv ut"
+#define MENU_FILE_PAGESETUP             "Sid La&yout..."
+#define MENU_FILE_PRINTSETUP            "Skrivar &inställningar..."
+#define MENU_FILE_EXIT                  "&Avsluta"
+
+#define MENU_EDIT                       "&Redigera"
+#define MENU_EDIT_UNDO                  "&Undo\tCtrl+Z"
+#define MENU_EDIT_CUT                   "Klippa\tCtrl+X"
+#define MENU_EDIT_COPY                  "&Kopiera\tCtrl+C"
+#define MENU_EDIT_PASTE                 "&Klistra in\tCtrl+V"
+#define MENU_EDIT_DELETE                "&Ta bort\tDel"
+#define MENU_EDIT_SELECTALL             "Markera &allt"
+#define MENU_EDIT_TIMEDATE              "&Tid/Datum\tF5"
+#define MENU_EDIT_WRAP                  "&Dela långa meningar"
+
+#define MENU_SEARCH                     "&Sök"
+#define MENU_SEARCH_SEARCH              "Sök..."
+#define MENU_SEARCH_NEXT                "&Sök nästa\tF3"
+
+#define MENU_LANGUAGE                   "&Språk"
+
+#define MENU_HELP                       "&Hjälp"
+#define MENU_HELP_CONTENTS              "&Innehåll"
+#define MENU_HELP_SEARCH                "&Sök..."
+#define MENU_HELP_HELP_ON_HELP          "Användningen &av hjälp"
+
+#define MENU_INFO                       "Inf&ormation..."
+#define MENU_INFO_LICENSE               "&Licens"
+#define MENU_INFO_NO_WARRANTY           "&INGEN GARANTI"
+#define MENU_INFO_ABOUT_WINE            "&Om Wine"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Avbryt"
+#define DIALOG_BROWSE                   "&Bläddra..."
+#define DIALOG_HELP                     "&Hjälp"
+
+#define DIALOG_PAGESETUP_CAPTION        "Sid Layout"
+#define DIALOG_PAGESETUP_HEAD           "&Huvudnot:"
+#define DIALOG_PAGESETUP_TAIL           "&Fotnot:"
+#define DIALOG_PAGESETUP_MARGIN         "Kanter:"
+#define DIALOG_PAGESETUP_LEFT           "&Vänster:"
+#define DIALOG_PAGESETUP_RIGHT          "&Höger:"
+#define DIALOG_PAGESETUP_TOP            "&Över:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Under:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Page &s"   /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Anteckningar"
+#define STRING_ERROR                    "FEL"
+#define STRING_WARNING                  "VARNING"
+#define STRING_INFO                     "Information"
+
+#define STRING_UNTITLED                 "(untitled)"
+
+#define STRING_ALL_FILES                "Alla filer (*.*)"
+#define STRING_TEXT_FILES_TXT           "Text filer (*.txt)"
+
+#define STRING_TOOLARGE         "Filen '%s' är för stor för notepad.\n \
+Använd en annan editor."
+
+#define STRING_NOTEXT           "Du skrev inte in någon text. \
+\nSkriv något och försök sedan igen"
+
+/* FIXME */
+
+#define STRING_NOTSAVED         "Filen '%s'\nhas been modified\n\n \
+Would you like to save your changes ?"
+
+#define STRING_NOTFOUND         "'%s' hittades inte."
+
+#define STRING_OUT_OF_MEMORY    "Inte tillräkligt med minne för att slutföra \
+den här uppgiften. \nAvsluta ett eller flera program för att öka mängden \nfritt \
+minne."
+
+#include "notepad.rc"

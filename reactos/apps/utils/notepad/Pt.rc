@@ -1,0 +1,102 @@
+/*
+ *  Notepad (English resources)
+ *
+ *  Copyright 1999 Marcel Baur <alves@correionet.com.br>
+ */
+
+#define LANGUAGE_ID                     Pt
+#define LANGUAGE_NUMBER                 16
+#define LANGUAGE_MENU_ITEM              "&Português"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&Arquivo"
+#define MENU_FILE_NEW                   "&Novo..."
+#define MENU_FILE_OPEN                  "A&brir"
+#define MENU_FILE_SAVE                  "&Salvar"
+#define MENU_FILE_SAVEAS                "Salvar &como..."
+#define MENU_FILE_PRINT                 "&Imprimir"
+#define MENU_FILE_PAGESETUP             "C&onfigurar Página..."
+#define MENU_FILE_PRINTSETUP            "Configurar I&mpressora..."
+#define MENU_FILE_EXIT                  "&Sair"
+
+#define MENU_EDIT                       "&Editar"
+#define MENU_EDIT_UNDO                  "&Desfazer\tCtrl+Z"
+#define MENU_EDIT_CUT                   "C&ortar\tCtrl+X"
+#define MENU_EDIT_COPY                  "&Copiar\tCtrl+C"
+#define MENU_EDIT_PASTE                 "Co&lar\tCtrl+V"
+#define MENU_EDIT_DELETE                "&Delete\tDel"
+#define MENU_EDIT_SELECTALL             "Selecionar &Tudo"
+#define MENU_EDIT_TIMEDATE              "&Data/Hora\tF5"
+#define MENU_EDIT_WRAP                  "&Quebrar linhas longas"
+
+#define MENU_SEARCH                     "&Pesquisa"
+#define MENU_SEARCH_SEARCH              "Pesquisar..."
+#define MENU_SEARCH_NEXT                "&Procurar Próxima\tF3"
+
+#define MENU_LANGUAGE                   "&Linguagem"
+
+#define MENU_HELP                       "&Ajuda"
+#define MENU_HELP_CONTENTS              "&Conteúdo"
+#define MENU_HELP_SEARCH                "&Procurar..."
+#define MENU_HELP_HELP_ON_HELP          "&Ajuda na ajuda"
+
+#define MENU_INFO                       "Inf&ormações..."
+#define MENU_INFO_LICENSE               "&Licença"
+#define MENU_INFO_NO_WARRANTY           "&SEM GARANTIA"
+#define MENU_INFO_ABOUT_WINE            "&Sobre Wine"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Cancelar"
+#define DIALOG_BROWSE                   "&Procurar..."
+#define DIALOG_HELP                     "&Ajuda"
+
+#define DIALOG_PAGESETUP_CAPTION        "Configurar Página"
+#define DIALOG_PAGESETUP_HEAD           "&Cabeçalho:"
+#define DIALOG_PAGESETUP_TAIL           "&Rodapé:"
+#define DIALOG_PAGESETUP_MARGIN         "&Margens:"
+#define DIALOG_PAGESETUP_LEFT           "&Esquerda:"
+#define DIALOG_PAGESETUP_RIGHT          "&Direita:"
+#define DIALOG_PAGESETUP_TOP            "&Superior:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Inferior:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Página &s"  /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Notepad"
+#define STRING_ERROR                    "ERRO"
+#define STRING_WARNING                  "AVISO"
+#define STRING_INFO                     "Informação"
+
+#define STRING_UNTITLED                 "(sem nome)"
+
+#define STRING_ALL_FILES                "Todos os arquivos (*.*)"
+#define STRING_TEXT_FILES_TXT           "Arquivos texto (*.txt)"
+
+#define STRING_TOOLARGE         "Arquivo '%s' é muito longo para o notepad.\n \
+Por favor use um editor diferente."
+
+#define STRING_NOTEXT           "Você não digitou nenhum texto. \
+\nPor favor digite alguma coisa e tente novamente"
+
+#define STRING_NOTSAVED         "Arquivo '%s'\nfoi modificado\n\n \
+Gostaria de salvar as alteraçÕes ?"
+
+#define STRING_NOTFOUND         "'%s' não pode ser encontrado."
+
+#define STRING_OUT_OF_MEMORY    "Não há memória suficiente para completar essa \
+tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória \
+livre."
+
+#include "notepad.rc"

@@ -1,0 +1,104 @@
+/*
+ *  Notepad (Finnish resources)
+ *
+ *  Copyright 1999 by Jukka Iivonen <iivonen@iki.fi>
+ */
+
+#define LANGUAGE_ID                     Fi
+#define LANGUAGE_NUMBER                 b
+#define LANGUAGE_MENU_ITEM              "&Finnish"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&Tiedosto"
+#define MENU_FILE_NEW                   "&Uusi..."
+#define MENU_FILE_OPEN                  "&Avaa"
+#define MENU_FILE_SAVE                  "Ta&lleta"
+#define MENU_FILE_SAVEAS                "Talleta &nimellä..."
+#define MENU_FILE_PRINT                 "T&ulosta"
+#define MENU_FILE_PAGESETUP             "&Sivun asetukset..."
+#define MENU_FILE_PRINTSETUP            "&Kirjoittimen asetukset..."
+#define MENU_FILE_EXIT                  "&Poistu"
+
+#define MENU_EDIT                       "&Muokkaa"
+#define MENU_EDIT_UNDO                  "&Palauta\tCtrl+Z"
+#define MENU_EDIT_CUT                   "&Leikkaa\tCtrl+X"
+#define MENU_EDIT_COPY                  "&Kopioi\tCtrl+C"
+#define MENU_EDIT_PASTE                 "L&iitä\tCtrl+V"
+#define MENU_EDIT_DELETE                "P&oista\tDel"
+#define MENU_EDIT_SELECTALL             "&Valitse kaikki"
+#define MENU_EDIT_TIMEDATE              "&Aika/Päivämäärä\tF5"
+#define MENU_EDIT_WRAP                  "Ka&tkaise pitkä rivi"
+
+#define MENU_SEARCH                     "&Etsi"
+#define MENU_SEARCH_SEARCH              "Etsi..."
+#define MENU_SEARCH_NEXT                "Etsi &seuraava\tF3"
+
+#define MENU_LANGUAGE                   "&Kieli"
+
+#define MENU_HELP                       "&Apua"
+#define MENU_HELP_CONTENTS              "&Sisältö"
+#define MENU_HELP_SEARCH                "&Etsi..."
+#define MENU_HELP_HELP_ON_HELP          "Apua &Opastuksesta"
+
+#define MENU_INFO                       "Inf&o..."
+#define MENU_INFO_LICENSE               "&Lisenssi"
+#define MENU_INFO_NO_WARRANTY           "&EI TAKUUTA"
+#define MENU_INFO_ABOUT_WINE            "&Tietoja Wine:ista"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Peruuta"
+#define DIALOG_BROWSE                   "&Selaa..."
+#define DIALOG_HELP                     "&Apua"
+
+#define DIALOG_PAGESETUP_CAPTION        "Sivun asetukset"
+#define DIALOG_PAGESETUP_HEAD           "&Yläotsikko:"
+#define DIALOG_PAGESETUP_TAIL           "Alao&tsikko:"
+#define DIALOG_PAGESETUP_MARGIN         "&Marginaali:"
+#define DIALOG_PAGESETUP_LEFT           "&Vasen:"
+#define DIALOG_PAGESETUP_RIGHT          "&Oikea:"
+#define DIALOG_PAGESETUP_TOP            "Y&lä:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Ala:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Sivu &s"   /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Notepad"
+#define STRING_ERROR                    "VIRHE"
+#define STRING_WARNING                  "VAROITUS"
+#define STRING_INFO                     "Tiedoitus"
+
+#define STRING_UNTITLED                 "(otsikoimaton)"
+
+#define STRING_ALL_FILES                "Kaikki tiedostot (*.*)"
+#define STRING_TEXT_FILES_TXT           "Teksti tiedostot (*.txt)"
+
+#define STRING_TOOLARGE         "Tiedosto '%s' on liian suuri.\n \
+Please use a different editor."
+
+#define STRING_NOTEXT           "Et syöttänyt lainkaan tekstiä. \
+\nKirjoita jotain ja yritä uudelleen"
+
+/* FIXME */
+
+#define STRING_NOTSAVED         "File '%s'\nhas been modified\n\n \
+Would you like to save your changes ?"
+
+#define STRING_NOTFOUND         "'%s' ei löydy."
+
+#define STRING_OUT_OF_MEMORY    "Muistia ei ole riittävästi tämän \
+\ntehtävän tekemiseksi. Sulje jokin sovellus vapauttaaksesi\n \
+muistia."
+
+#include "notepad.rc"

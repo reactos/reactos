@@ -1,0 +1,103 @@
+/*
+ *  Notepad (Danish resources)
+ *
+ *  Copyright 1998 Henrik Olsen <henrik@iaeste.dk>
+ */
+
+#define LANGUAGE_ID                     Da
+#define LANGUAGE_NUMBER                 6
+#define LANGUAGE_MENU_ITEM              "&Dansk"
+
+/* Menu */
+
+#define MENU_FILE                       "&Filef"
+#define MENU_FILE_NEW                   "&Ny..."
+#define MENU_FILE_OPEN                  "Å&bn\tEnter"
+#define MENU_FILE_SAVE                  "&Gem"
+#define MENU_FILE_SAVEAS                "Gem so&m..."
+#define MENU_FILE_PRINT                 "&Udskriv"
+#define MENU_FILE_PAGESETUP             "Side&opsætning..."
+#define MENU_FILE_PRINTSETUP            "&Indstil printer..."
+#define MENU_FILE_EXIT                  "&Afslut"
+
+#define MENU_EDIT                       "&Rediger"
+#define MENU_EDIT_UNDO                  "&Fortryd\tCtrl+Z"
+#define MENU_EDIT_CUT                   "&Klip\tCtrl+X"
+#define MENU_EDIT_COPY                  "K&opier\tCtrl+C"
+#define MENU_EDIT_PASTE                 "Sæt &ind\tCtrl+V"
+#define MENU_EDIT_DELETE                "&Slet\tDel"
+#define MENU_EDIT_SELECTALL             "Marker &alt"
+#define MENU_EDIT_TIMEDATE              "&Dato/tid\tF5"
+#define MENU_EDIT_WRAP                  "Automatisk &linjeskift"
+
+#define MENU_SEARCH                     "&Søg"
+#define MENU_SEARCH_SEARCH              "&Søg..."
+#define MENU_SEARCH_NEXT                "&Find næste\tF3"
+
+#define MENU_LANGUAGE                   "S&prog"
+
+#define MENU_HELP                       "&Hjælp"
+#define MENU_HELP_CONTENTS              "&Indhold"
+#define MENU_HELP_SEARCH                "&Søg efter hjælp om..."
+#define MENU_HELP_HELP_ON_HELP          "&Brug af Hjælp"
+
+#define MENU_INFO                       "&Om Notesblok..."
+#define MENU_INFO_LICENSE               "&Licens"
+#define MENU_INFO_NO_WARRANTY           "&NO WARRANTY"
+#define MENU_INFO_ABOUT_WINE            "&Om WINE"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Annuller"
+#define DIALOG_BROWSE                   "&Gennemse..."
+#define DIALOG_HELP                     "&Hjælp"
+
+#define DIALOG_PAGESETUP_CAPTION        "Sideopsætning"
+#define DIALOG_PAGESETUP_HEAD           "&Sidehoved:"
+#define DIALOG_PAGESETUP_TAIL           "Side&fod:"
+#define DIALOG_PAGESETUP_MARGIN         "Margener:"
+#define DIALOG_PAGESETUP_LEFT           "&Venstre:"
+#define DIALOG_PAGESETUP_RIGHT          "&Højre:"
+#define DIALOG_PAGESETUP_TOP            "&Top:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Bund:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Page &s"   /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Notesblok"
+#define STRING_ERROR                    "FEJL"
+#define STRING_WARNING                  "ADVARSEL"
+#define STRING_INFO                     "Information"
+
+#define STRING_UNTITLED                 "(ikke-navngivet)"
+
+#define STRING_ALL_FILES                "Alle filer (*.*)"
+#define STRING_TEXT_FILES_TXT           "Tekst filer (*.txt)"
+
+#define STRING_TOOLARGE         "Filen '%s' er for stor til Notesblok. \
+\nBrug en anden editor til at redigere filen."
+
+#define STRING_NOTEXT           "Du har ikke skrevet noget tekst. \
+\nSkriv noget tekst, og prøv så igen"
+
+/* FIXME: */
+
+#define STRING_NOTSAVED         "Filen '%s'\n has been modified.\n\n \
+Would you like to save the changes ?"
+
+#define STRING_NOTFOUND         "Kan ikke finde '%s'."
+
+#define STRING_OUT_OF_MEMORY    "Der er ikke nok hukommelse til at udføre \
+denne operation. \nAfslut et eller flere aktive programmer for at frigøre \
+hukommelse, og prøv så igen."
+
+#include "notepad.rc"

@@ -1,0 +1,104 @@
+/*
+ *  Notepad (German resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  To be distributed under the Wine License
+ */
+
+#define LANGUAGE_ID                     De
+#define LANGUAGE_NUMBER                 2
+#define LANGUAGE_MENU_ITEM              "&Deutsch"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&Datei"
+#define MENU_FILE_NEW                   "&Neu..."
+#define MENU_FILE_OPEN                  "Ö&ffnen..."
+#define MENU_FILE_SAVE                  "&Speichern"
+#define MENU_FILE_SAVEAS                "Speichern &unter..."
+#define MENU_FILE_PRINT                 "&Drucken"
+#define MENU_FILE_PAGESETUP             "Seite ein&richten..."
+#define MENU_FILE_PRINTSETUP            "Drucker&einrichtung..."
+#define MENU_FILE_EXIT                  "&Beenden"
+
+#define MENU_EDIT                       "&Bearbeiten"
+#define MENU_EDIT_UNDO                  "&Rückgängig\tStrg+Z"
+#define MENU_EDIT_CUT                   "&Ausschneiden\tStrg+X"
+#define MENU_EDIT_COPY                  "&Kopieren\tStrg+C"
+#define MENU_EDIT_PASTE                 "&Einfügen\tStrg+V"
+#define MENU_EDIT_DELETE                "&Löschen\tEntf"
+#define MENU_EDIT_SELECTALL             "Alles &markieren"
+#define MENU_EDIT_TIMEDATE              "&Uhrzeit/Datum\tF5"
+#define MENU_EDIT_WRAP                  "&Zeilenumbruch"
+
+#define MENU_SEARCH                     "&Suchen"
+#define MENU_SEARCH_SEARCH              "Suchen..."
+#define MENU_SEARCH_NEXT                "&Weitersuchen\tF3"
+
+#define MENU_LANGUAGE                   "&Sprache"
+
+#define MENU_HELP                       "&Hilfe"
+#define MENU_HELP_CONTENTS              "&Inhalt"
+#define MENU_HELP_SEARCH                "&Suchen..."
+#define MENU_HELP_HELP_ON_HELP          "&Hilfe benutzen"
+
+#define MENU_INFO                       "Inf&o..."
+#define MENU_INFO_LICENSE               "&Lizenz"
+#define MENU_INFO_NO_WARRANTY           "&KEINE GARANTIE"
+#define MENU_INFO_ABOUT_WINE            "&Über WINE"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "OK"
+#define DIALOG_CANCEL                   "Abbrechen"
+#define DIALOG_BROWSE                   "&Durchsuchen..."
+#define DIALOG_HELP                     "&Hilfe"
+
+#define DIALOG_PAGESETUP_CAPTION        "Seite einrichten"
+#define DIALOG_PAGESETUP_HEAD           "&Kopfzeile:"
+#define DIALOG_PAGESETUP_TAIL           "&Fußzeile:"
+#define DIALOG_PAGESETUP_MARGIN         "Ränder"
+#define DIALOG_PAGESETUP_LEFT           "&Links:"
+#define DIALOG_PAGESETUP_RIGHT          "&Rechts:"
+#define DIALOG_PAGESETUP_TOP            "&Oben:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Unten:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"
+#define STRING_PAGESETUP_FOOTERVALUE    "Page &s"
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"
+
+#define STRING_NOTEPAD                  "Editor"
+#define STRING_ERROR                    "FEHLER"
+#define STRING_WARNING                  "ACHTUNG"
+#define STRING_INFO                     "Information"
+
+#define STRING_UNTITLED                 "(unbenannt)"
+
+#define STRING_ALL_FILES                "Alle Dateien (*.*)"
+#define STRING_TEXT_FILES_TXT           "Textdateien (*.txt)"
+
+#define STRING_TOOLARGE       "'%s' ist zu gross für den Editor\n \
+Benutzen Sie bitte einen anderen Editor, um diese Datei zu bearbeiten."
+
+#define STRING_NOTEXT         "Sie haben keinen Text eingegeben, der \
+gespeichert\n werden könnte. Geben Sie Text ein, und versuchen Sie es \
+\nerneut."
+
+#define STRING_NOTSAVED       "Datei %s\n wurde geaendert.\n\n \
+Moechten Sie die Aenderungen speichern ?"
+
+#define STRING_NOTFOUND       "'%s' kann nicht gefunden werden."
+
+#define STRING_OUT_OF_MEMORY  "Nicht genügend Arbeitsspeicher, \
+um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
+\nAnwendungen, um den verfügbaren Arbeitsspeicher zu \nerhöhen."
+
+#include "notepad.rc"

@@ -1,0 +1,21 @@
+FIXME - and  list:
+ *  - use scroll bars (vertical done)
+ *  - cut 'n paste 
+ *  - save file (Not started)
+ *  - print file (Crashes Win9x)
+ *  - find dialog
+ *  - encapsulate data structures (?) - half done
+ *  - free unused memory
+ *  - solve Open problems (This seems to work)
+ *  - smoother scrolling
+ *  - separate view code and document code
+
+
+TODO -
+
+- Logfile feature   
+if Notepad opens a file with ".LOG" (really?) in the first line, the 
+current date/time should automatically be inserted into the last line
+of the file at startup. 
+
+- Upgrade Language Support
