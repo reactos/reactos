@@ -89,11 +89,20 @@ extern PACL SePublicOpenDacl;
 extern PACL SePublicOpenUnrestrictedDacl;
 extern PACL SeUnrestrictedDacl;
 
+/* SDs */
+extern PSECURITY_DESCRIPTOR SePublicDefaultSd;
+extern PSECURITY_DESCRIPTOR SePublicDefaultUnrestrictedSd;
+extern PSECURITY_DESCRIPTOR SePublicOpenSd;
+extern PSECURITY_DESCRIPTOR SePublicOpenUnrestrictedSd;
+extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
+extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
+
 
 /* Functions */
 
 BOOLEAN SeInit1(VOID);
 BOOLEAN SeInit2(VOID);
+BOOLEAN SeInitSRM(VOID);
 
 VOID SepInitLuid(VOID);
 VOID SepInitPrivileges(VOID);

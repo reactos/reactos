@@ -1,6 +1,14 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.19 2002/09/08 10:47:45 chorns Exp $ */
+/* $Id: sefuncs.h,v 1.20 2003/02/15 22:29:45 ekohl Exp $ */
+
+#ifdef __NTOSKRNL__
+extern PACL EXPORTED SePublicDefaultDacl;
+extern PACL EXPORTED SeSystemDefaultDacl;
+#else
+extern PACL IMPORTED SePublicDefaultDacl;
+extern PACL IMPORTED SeSystemDefaultDacl;
+#endif
 
 BOOLEAN STDCALL
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
