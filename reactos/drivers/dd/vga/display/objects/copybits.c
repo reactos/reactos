@@ -31,7 +31,8 @@ DrvCopyBits(OUT PSURFOBJ  DestObj,
     DIB_BltToVGA(DestRectL->left, DestRectL->top,
                  DestRectL->right - DestRectL->left,
                  DestRectL->bottom - DestRectL->top,
-                 SourceObj->pvScan0, SourceObj->lDelta);
+                 SourceObj->pvScan0, SourceObj->lDelta,
+                 0);
     Done = TRUE;
     }
 

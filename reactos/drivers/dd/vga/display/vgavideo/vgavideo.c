@@ -528,7 +528,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 #endif
 
 /* DIB blt to the VGA. */
-void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
+void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int StartMod)
 {
   PBYTE pb, opb = b;
   ULONG i, j;
@@ -545,7 +545,7 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
       WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);       // set the mask
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, maskbit[i]);
 
-      if (0 == ((i - x) % 2))
+      if (StartMod == ((i - x) % 2))
 	{
 	  for (j = y; j < y2; j++)
 	    {
@@ -566,12 +566,13 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
 	    }
 	}
 
-      if (0 != ((i - x) % 2))
+      if (StartMod != ((i - x) % 2))
 	{
 	  opb++;
 	}
     }
 }
+
 
 /* DIB blt to the VGA. */
 void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelta, PXLATEOBJ Xlate)

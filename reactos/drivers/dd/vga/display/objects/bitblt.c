@@ -38,6 +38,8 @@ static BOOL FASTCALL VGADDI_IntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL 
   return(FALSE);
 }
 
+void DIB_BltToVGA_Fixed(int x, int y, int w, int h, void *b, int Source_lDelta, int mod);
+
 BOOL
 DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
@@ -51,7 +53,7 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
     {
       DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy,
                    Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
-		   Source->lDelta);
+		   Source->lDelta, SourcePoint->x % 2);
     }
   else
     {
@@ -390,7 +392,7 @@ DrvBitBlt(SURFOBJ *Dest,
   unsigned i;
   POINTL Pt;
   ULONG Direction;
-  
+
   switch (rop4)
     {
     case BLACKNESS:
