@@ -1,3 +1,6 @@
+#include <ntddk.h>
+#define NDEBUG
+#include <debug.h>
 #include "../vgaddi.h"
 #include "../vgavideo/vgavideo.h"
 #include "brush.h"
@@ -30,7 +33,7 @@ BOOL GDItoVGA(
 
   if(ColorTranslation == NULL)
   {
-DbgPrint("GDItoVGA: No color translation\n");
+DPRINT("GDItoVGA: No color translation\n");
     // No color translation necessary, we assume BPP = 1
 
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
@@ -59,7 +62,7 @@ DbgPrint("GDItoVGA: No color translation\n");
       GDIpos = initial + Source->lDelta;
     }
   }
-DbgPrint("GDItoVGA: Done\n");
+DPRINT("GDItoVGA: Done\n");
 }
 
 BOOL VGAtoGDI(
@@ -73,7 +76,7 @@ BOOL VGAtoGDI(
 
   BPP = bytesPerPixel(Dest->iBitmapFormat);
 
-DbgPrint("VGAtoGDI: BPP: %u\n", BPP);
+DPRINT("VGAtoGDI: BPP: %u\n", BPP);
 
   GDIpos = Dest->pvBits +
            (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
@@ -83,7 +86,7 @@ DbgPrint("VGAtoGDI: BPP: %u\n", BPP);
 
   if(ColorTranslation == NULL)
   {
-DbgPrint("VGAtoGDI: No color translation\n");
+DPRINT("VGAtoGDI: No color translation\n");
     // No color translation necessary, we assume BPP = 1
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
     {
@@ -108,7 +111,7 @@ DbgPrint("VGAtoGDI: No color translation\n");
        GDIpos = initial + Dest->lDelta;
     }
   }
-DbgPrint("VGAtoGDI: Done\n");
+DPRINT("VGAtoGDI: Done\n");
 }
 
 BOOL DFBtoVGA(
@@ -197,31 +200,31 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
 
    if((Source->iType == STYPE_BITMAP) && (Dest->iType == STYPE_DEVICE))
    {
-DbgPrint("GDI2VGA\n");
+DPRINT("GDI2VGA\n");
       BltOperation = GDItoVGA;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_BITMAP))
    {
-DbgPrint("VGA2GDI\n");
+DPRINT("VGA2GDI\n");
       BltOperation = VGAtoGDI;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVICE))
    {
-DbgPrint("VGA2VGA\n");
+DPRINT("VGA2VGA\n");
       BltOperation = VGAtoVGA;
    } else
    if((Source->iType == STYPE_DEVBITMAP) && (Dest->iType == STYPE_DEVICE))
    {
-DbgPrint("DFB2VGA\n");
+DPRINT("DFB2VGA\n");
       BltOperation = DFBtoVGA;
    } else
    if((Source->iType == STYPE_DEVICE) && (Dest->iType == STYPE_DEVBITMAP))
    {
-DbgPrint("VGA2DFB\n");
+DPRINT("VGA2DFB\n");
       BltOperation = VGAtoDFB;
    } else
    {
-DbgPrint("VGA:bitblt.c: Can't handle requested BitBlt operation\n");
+DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation\n");
       // Cannot handle given surfaces for VGA BitBlt
       return FALSE;
    }
