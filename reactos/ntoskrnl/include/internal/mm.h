@@ -662,13 +662,13 @@ VOID MmDeleteVirtualMapping(struct _EPROCESS* Process,
 			    BOOL* WasDirty,
 			    PPFN_TYPE Page);
 
-VOID MmUpdateStackPageDir(PULONG LocalPageDir, struct _KTHREAD* KThread);
-
 BOOLEAN MmIsDirtyPage(struct _EPROCESS* Process, PVOID Address);
 
 VOID MmMarkPageMapped(PFN_TYPE Page);
 
 VOID MmMarkPageUnmapped(PFN_TYPE Page);
+
+VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size);
 
 /* wset.c ********************************************************************/
 

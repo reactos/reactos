@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.23 2004/08/15 16:39:05 chorns Exp $
+/* $Id: process.c,v 1.24 2004/08/19 21:47:51 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -43,7 +43,6 @@ KeAttachProcess (PEPROCESS Process)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
-   PULONG AttachedProcessPageDir;
    ULONG PageDir;
    
    DPRINT("KeAttachProcess(Process %x)\n",Process);
@@ -56,10 +55,6 @@ KeAttachProcess (PEPROCESS Process)
 	KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
      }
    
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-
-   KiSwapApcEnvironment(&CurrentThread->Tcb, &Process->Pcb);
-
    /* The stack of the current process may be located in a page which is
       not present in the page directory of the process we're attaching to.
       That would lead to a page fault when this function returns. However,
@@ -69,9 +64,11 @@ KeAttachProcess (PEPROCESS Process)
       To prevent this, make sure the page directory of the process we're
       attaching to is up-to-date. */
 
-   AttachedProcessPageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
-   MmUpdateStackPageDir(AttachedProcessPageDir, &CurrentThread->Tcb);
-   ExUnmapPage(AttachedProcessPageDir);
+   MmUpdatePageDir(Process, (PVOID)CurrentThread->Tcb.StackLimit, MM_STACK_SIZE);
+
+   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+
+   KiSwapApcEnvironment(&CurrentThread->Tcb, &Process->Pcb);
 
    CurrentThread->OldProcess = PsGetCurrentProcess();
    CurrentThread->ThreadsProcess = Process;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.70 2004/08/15 16:39:09 chorns Exp $
+/* $Id: page.c,v 1.71 2004/08/19 21:47:51 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1150,23 +1150,40 @@ MmGetPhysicalAddress(PVOID vaddr)
    return p;
 }
 
-
-VOID
-MmUpdateStackPageDir(PULONG LocalPageDir, PKTHREAD PThread)
+VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
-   unsigned EntryBase = ADDR_TO_PDE_OFFSET(PThread->StackLimit);
-   unsigned EntryTop  = ADDR_TO_PDE_OFFSET((char*)PThread->InitialStack - PAGE_SIZE);
+   PULONG Pde;
+   ULONG StartOffset, EndOffset, Offset; 
 
-   if (0 == LocalPageDir[EntryBase])
+   if (Address < (PVOID)KERNEL_BASE)
    {
-      LocalPageDir[EntryBase] = MmGlobalKernelPageDirectory[EntryBase];
+      KEBUGCHECK(0);
    }
-   if (EntryBase != EntryTop && 0 == LocalPageDir[EntryTop])
+   
+   StartOffset = ADDR_TO_PDE_OFFSET(Address);
+   EndOffset = ADDR_TO_PDE_OFFSET(Address + Size);
+   
+   if (Process != NULL && Process != PsGetCurrentProcess())
    {
-      LocalPageDir[EntryTop] = MmGlobalKernelPageDirectory[EntryTop];
+      Pde = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.u.LowPart >> PAGE_SHIFT);
+   }
+   else
+   {
+      Pde = (PULONG)PAGEDIRECTORY_MAP;
+   }
+   for (Offset = StartOffset; Offset <= EndOffset; Offset++) 
+   {
+      if (Offset != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP))
+      {
+         InterlockedCompareExchange(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
+      }
+   }
+   if (Pde != (PULONG)PAGEDIRECTORY_MAP)
+   {
+      ExUnmapPage(Pde);
    }
 }
-
+	    
 VOID INIT_FUNCTION
 MmInitGlobalKernelPageDirectory(VOID)
 {
