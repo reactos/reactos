@@ -17,10 +17,10 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
-NtCreateNamedPipeFile(PHANDLE FileHandle,
+NtCreateNamedPipeFile(PHANDLE FileHandleUnsafe,
 		      ACCESS_MASK DesiredAccess,
-		      POBJECT_ATTRIBUTES ObjectAttributes,
-		      PIO_STATUS_BLOCK IoStatusBlock,
+		      POBJECT_ATTRIBUTES ObjectAttributesUnsafe,
+		      PIO_STATUS_BLOCK IoStatusBlockUnsafe,
 		      ULONG ShareAccess,
 		      ULONG CreateDisposition,
 		      ULONG CreateOptions,
@@ -30,9 +30,14 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
 		      ULONG MaximumInstances,
 		      ULONG InboundQuota,
 		      ULONG OutboundQuota,
-		      PLARGE_INTEGER DefaultTimeout)
+		      PLARGE_INTEGER DefaultTimeoutUnsafe)
 {
   NAMED_PIPE_CREATE_PARAMETERS Buffer;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
 
   DPRINT("NtCreateNamedPipeFile(FileHandle %x, DesiredAccess %x, "
 	 "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -41,9 +46,28 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
-  if (DefaultTimeout != NULL)
+  if (DefaultTimeoutUnsafe != NULL)
     {
-      Buffer.DefaultTimeout.QuadPart = DefaultTimeout->QuadPart;
+      if (UserMode == PreviousMode)
+        {
+          Status = STATUS_SUCCESS;
+          _SEH_TRY
+            {
+              ProbeForRead(DefaultTimeoutUnsafe,
+                           sizeof(LARGE_INTEGER),
+                           sizeof(LARGE_INTEGER));
+              Buffer.DefaultTimeout.QuadPart = DefaultTimeoutUnsafe->QuadPart;
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+        }
+      else
+        {
+          Buffer.DefaultTimeout.QuadPart = DefaultTimeoutUnsafe->QuadPart;
+        }
       Buffer.TimeoutSpecified = TRUE;
     }
   else
@@ -57,20 +81,72 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
   Buffer.InboundQuota = InboundQuota;
   Buffer.OutboundQuota = OutboundQuota;
 
-  return IoCreateFile(FileHandle,
-		      DesiredAccess,
-		      ObjectAttributes,
-		      IoStatusBlock,
-		      NULL,
-		      FILE_ATTRIBUTE_NORMAL,
-		      ShareAccess,
-		      CreateDisposition,
-		      CreateOptions,
-		      NULL,
-		      0,
-		      CreateFileTypeNamedPipe,
-		      (PVOID)&Buffer,
-		      0);
+  PreviousMode = ExGetPreviousMode();
+  if (KernelMode == PreviousMode)
+    {
+      return IoCreateFile(FileHandleUnsafe,
+                          DesiredAccess,
+                          ObjectAttributesUnsafe,
+                          IoStatusBlockUnsafe,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          ShareAccess,
+                          CreateDisposition,
+                          CreateOptions,
+                          NULL,
+                          0,
+                          CreateFileTypeNamedPipe,
+                          (PVOID)&Buffer,
+                          0);
+    }
+
+  Status = RtlCaptureObjectAttributes(&ObjectAttributes,
+                                      PreviousMode,
+                                      PagedPool,
+                                      FALSE,
+                                      ObjectAttributesUnsafe);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  Status = IoCreateFile(&FileHandle,
+                        DesiredAccess,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        NULL,
+                        FILE_ATTRIBUTE_NORMAL,
+                        ShareAccess,
+                        CreateDisposition,
+                        CreateOptions,
+                        NULL,
+                        0,
+                        CreateFileTypeNamedPipe,
+                        (PVOID)&Buffer,
+                        0);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  _SEH_TRY
+    {
+      ProbeForWrite(FileHandleUnsafe,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+      *FileHandleUnsafe = FileHandle;
+      ProbeForWrite(IoStatusBlockUnsafe,
+                    sizeof(IO_STATUS_BLOCK),
+                    sizeof(ULONG));
+      *IoStatusBlockUnsafe = IoStatusBlock;
+    }
+  _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+  _SEH_END;
+
+  return Status;
 }
 
 /* EOF */

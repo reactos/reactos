@@ -17,7 +17,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_FILE_NAME     TAG('F', 'N', 'A', 'M')
+#define TAG_IO_CREATE     TAG('I', 'O', 'C', 'R')
 
 /* FUNCTIONS *************************************************************/
 
@@ -357,7 +357,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   Status = ObCreateObject(PreviousMode,
+   Status = ObCreateObject(KernelMode,
 			   IoFileObjectType,
 			   ObjectAttributes,
 			   PreviousMode,
@@ -533,32 +533,132 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
  * @implemented
  */
 NTSTATUS STDCALL
-NtCreateFile(PHANDLE FileHandle,
+NtCreateFile(PHANDLE FileHandleUnsafe,
 	     ACCESS_MASK DesiredAccess,
-	     POBJECT_ATTRIBUTES ObjectAttributes,
-	     PIO_STATUS_BLOCK IoStatusBlock,
-	     PLARGE_INTEGER AllocateSize,
+	     POBJECT_ATTRIBUTES ObjectAttributesUnsafe,
+	     PIO_STATUS_BLOCK IoStatusBlockUnsafe,
+	     PLARGE_INTEGER AllocateSizeUnsafe,
 	     ULONG FileAttributes,
 	     ULONG ShareAccess,
 	     ULONG CreateDisposition,
 	     ULONG CreateOptions,
-	     PVOID EaBuffer,
+	     PVOID EaBufferUnsafe,
 	     ULONG EaLength)
 {
-   return IoCreateFile(FileHandle,
-		       DesiredAccess,
-		       ObjectAttributes,
-		       IoStatusBlock,
-		       AllocateSize,
-		       FileAttributes,
-		       ShareAccess,
-		       CreateDisposition,
-		       CreateOptions,
-		       EaBuffer,
-		       EaLength,
-		       CreateFileTypeNone,
-		       NULL,
-		       0);
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status;
+   HANDLE FileHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   IO_STATUS_BLOCK IoStatusBlock;
+   LARGE_INTEGER AllocateSize;
+   PVOID EaBuffer;
+
+   PreviousMode = ExGetPreviousMode();
+   if (KernelMode == PreviousMode)
+     {
+        return IoCreateFile(FileHandleUnsafe,
+                            DesiredAccess,
+                            ObjectAttributesUnsafe,
+                            IoStatusBlockUnsafe,
+                            AllocateSizeUnsafe,
+                            FileAttributes,
+                            ShareAccess,
+                            CreateDisposition,
+                            CreateOptions,
+                            EaBufferUnsafe,
+                            EaLength,
+                            CreateFileTypeNone,
+                            NULL,
+                            0);
+     }
+
+   Status = RtlCaptureObjectAttributes(&ObjectAttributes,
+                                       PreviousMode,
+                                       PagedPool,
+                                       FALSE,
+                                       ObjectAttributesUnsafe);
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+
+   if (0 != EaLength)
+     {
+        EaBuffer = ExAllocatePoolWithTag(PagedPool, EaLength, TAG_IO_CREATE);
+        if (NULL == EaBuffer)
+          {
+             RtlReleaseCapturedObjectAttributes(&ObjectAttributes,
+                                                PreviousMode,
+                                                FALSE);
+             return STATUS_NO_MEMORY;
+          }
+     }
+
+   _SEH_TRY
+     {
+        if (NULL != AllocateSizeUnsafe)
+          {
+             ProbeForRead(AllocateSizeUnsafe,
+                          sizeof(LARGE_INTEGER),
+                          sizeof(ULONG));
+             AllocateSize = *AllocateSizeUnsafe;
+          }
+        if (0 != EaLength)
+          {
+             ProbeForRead(EaBufferUnsafe,
+                          EaLength,
+                          sizeof(UCHAR));
+             RtlCopyMemory(EaBuffer, EaBufferUnsafe, EaLength);
+          }
+     }
+   _SEH_HANDLE
+     {
+        Status = _SEH_GetExceptionCode();
+     }
+   _SEH_END;
+    
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+
+   Status = IoCreateFile(&FileHandle,
+                         DesiredAccess,
+                         &ObjectAttributes,
+                         &IoStatusBlock,
+                         (NULL == AllocateSizeUnsafe ? NULL : &AllocateSize),
+                         FileAttributes,
+                         ShareAccess,
+                         CreateDisposition,
+                         CreateOptions,
+                         (0 == EaLength ? NULL : EaBuffer),
+                         EaLength,
+                         CreateFileTypeNone,
+                         NULL,
+                         0);
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+
+   _SEH_TRY
+     {
+        ProbeForWrite(FileHandleUnsafe,
+                      sizeof(HANDLE),
+                      sizeof(ULONG));
+        *FileHandleUnsafe = FileHandle;
+        ProbeForWrite(IoStatusBlockUnsafe,
+                      sizeof(IO_STATUS_BLOCK),
+                      sizeof(ULONG));
+        *IoStatusBlockUnsafe = IoStatusBlock;
+     }
+   _SEH_HANDLE
+     {
+        Status = _SEH_GetExceptionCode();
+     }
+   _SEH_END;
+
+   return Status;
 }
 
 
@@ -598,27 +698,90 @@ NtCreateFile(PHANDLE FileHandle,
  * @implemented
  */
 NTSTATUS STDCALL
-NtOpenFile(PHANDLE FileHandle,
+NtOpenFile(PHANDLE FileHandleUnsafe,
 	   ACCESS_MASK DesiredAccess,
-	   POBJECT_ATTRIBUTES ObjectAttributes,
-	   PIO_STATUS_BLOCK IoStatusBlock,
+	   POBJECT_ATTRIBUTES ObjectAttributesUnsafe,
+	   PIO_STATUS_BLOCK IoStatusBlockUnsafe,
 	   ULONG ShareAccess,
 	   ULONG OpenOptions)
 {
-   return IoCreateFile(FileHandle,
-		       DesiredAccess,
-		       ObjectAttributes,
-		       IoStatusBlock,
-		       NULL,
-		       0,
-		       ShareAccess,
-		       FILE_OPEN,
-		       OpenOptions,
-		       NULL,
-		       0,
-		       CreateFileTypeNone,
-		       NULL,
-		       0);
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status;
+   HANDLE FileHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   IO_STATUS_BLOCK IoStatusBlock;
+
+   PreviousMode = ExGetPreviousMode();
+   if (KernelMode == PreviousMode)
+     {
+        return IoCreateFile(FileHandleUnsafe,
+                            DesiredAccess,
+                            ObjectAttributesUnsafe,
+                            IoStatusBlockUnsafe,
+                            NULL,
+                            0,
+                            ShareAccess,
+                            FILE_OPEN,
+                            OpenOptions,
+                            NULL,
+                            0,
+                            CreateFileTypeNone,
+                            NULL,
+                            0);
+     }
+
+   Status = RtlCaptureObjectAttributes(&ObjectAttributes,
+                                       PreviousMode,
+                                       PagedPool,
+                                       FALSE,
+                                       ObjectAttributesUnsafe);
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+    
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+
+   Status = IoCreateFile(&FileHandle,
+                         DesiredAccess,
+                         &ObjectAttributes,
+                         &IoStatusBlock,
+                         NULL,
+                         0,
+                         ShareAccess,
+                         FILE_OPEN,
+                         OpenOptions,
+                         NULL,
+                         0,
+                         CreateFileTypeNone,
+                         NULL,
+                         0);
+   if (! NT_SUCCESS(Status))
+     {
+        return Status;
+     }
+
+   _SEH_TRY
+     {
+        ProbeForWrite(FileHandleUnsafe,
+                      sizeof(HANDLE),
+                      sizeof(ULONG));
+        *FileHandleUnsafe = FileHandle;
+        ProbeForWrite(IoStatusBlockUnsafe,
+                      sizeof(IO_STATUS_BLOCK),
+                      sizeof(ULONG));
+        *IoStatusBlockUnsafe = IoStatusBlock;
+     }
+   _SEH_HANDLE
+     {
+        Status = _SEH_GetExceptionCode();
+     }
+   _SEH_END;
+
+   return Status;
 }
 
 /* EOF */
