@@ -17,12 +17,12 @@ void __stdcall Background (HDC Desktop)
 
 	MoveToEx (Desktop, 0, 0, NULL);
 	LineTo (Desktop, 640, 480);
-	for (y = 480, x = 0; x < 640; x+=2)
+	for (y = 479, x = 0; x < 640; x+=2)
 	{
 		MoveToEx (Desktop, 0, 0, NULL);
 		LineTo (Desktop, x, y);
 	}
-	for (y = 0, x = 640; y < 480; y+=2)
+	for (y = 0, x = 639; y < 480; y+=2)
 	{
 		MoveToEx (Desktop, 0, 0, NULL);
 		LineTo (Desktop, x, y);
