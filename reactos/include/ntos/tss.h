@@ -52,7 +52,7 @@ typedef struct _KTSSNOIOPM
   USHORT IoMapBase;
   /* no interrupt redirection map */
   UCHAR IoBitmap[1];
-} KTSSNOIOPM __attribute__((packed));
+} PACKED KTSSNOIOPM;
 
 typedef struct _KTSS
 {
@@ -96,7 +96,7 @@ typedef struct _KTSS
   USHORT IoMapBase;
   /* no interrupt redirection map */
   UCHAR  IoBitmap[8193];
-} KTSS __attribute__((packed));
+} PACKED KTSS;
 
 #endif /* not __ASM__ */
 

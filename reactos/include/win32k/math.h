@@ -18,15 +18,17 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: robd $
- * $Date: 2002/11/24 18:24:52 $
+ * $Revision: 1.3 $
+ * $Author: chorns $
+ * $Date: 2003/08/24 10:00:12 $
  *
  */
 // added modfl 
 
 #ifndef _MATH_H_
 #define _MATH_H_
+
+#include_next <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -142,7 +144,10 @@ double	_yn (int n, double x);
  * Non-underscored versions of non-ANSI functions. These reside in
  * liboldnames.a. Provided for extra portability.
  */
+#if 0
+/* GCC 3.4 warns that this is not equal to it's internal definition for cabs */
 double cabs (struct _complex x);
+#endif
 double hypot (double x, double y);
 double j0 (double x);
 double j1 (double x);

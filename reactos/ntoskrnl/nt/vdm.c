@@ -31,11 +31,14 @@ extern VOID Ki386RetToV86Mode(PKV86M_REGISTERS InRegs,
 VOID
 NtEarlyInitVdm(VOID)
 {
+  /* GCC 3.4 warns if NULL is passed in parameter 2 to the standard function memcpy */
+  PVOID start = (PVOID)0x0;
+
   /*
    * Save various BIOS data tables. At this point the lower 4MB memory
    * map is still active so we can just copy the data from low memory.
    */
-  memcpy(OrigIVT, (PVOID)0x0, 1024);
+  memcpy(OrigIVT, start, 1024);
   memcpy(OrigBDA, (PVOID)0x400, 256);
 }
 

@@ -226,7 +226,7 @@ typedef struct tagBITMAPFILEHEADER {
   WORD    bfReserved1;
   WORD    bfReserved2;
   DWORD   bfOffBits;
-} BITMAPFILEHEADER __attribute__((packed));
+} PACKED BITMAPFILEHEADER;
 
 typedef struct tagBITMAPINFOHEADER {
   DWORD  biSize;
@@ -1087,7 +1087,7 @@ typedef struct {
   short cx;
   short cy;
   WORD  id;
-} DLGITEMTEMPLATE PACKED;
+} PACKED DLGITEMTEMPLATE;
 
 typedef DLGITEMTEMPLATE *LPDLGITEMTEMPLATE;
 typedef DLGITEMTEMPLATE *PDLGITEMTEMPLATE;
@@ -1100,7 +1100,7 @@ typedef struct {
   short y;
   short cx;
   short cy;
-} DLGTEMPLATE PACKED;
+} PACKED DLGTEMPLATE;
 
 typedef DLGTEMPLATE *LPDLGTEMPLATE;
 typedef const DLGTEMPLATE *LPCDLGTEMPLATE;
@@ -2856,7 +2856,7 @@ typedef struct tagMETAHEADER {
   WORD  mtNoObjects;
   DWORD mtMaxRecord;
   WORD  mtNoParameters;
-} METAHEADER PACKED;
+} PACKED METAHEADER;
 
 typedef struct tagMETARECORD {
   DWORD rdSize;
@@ -3912,7 +3912,7 @@ typedef struct tagPDA {
   LPCSTR    lpSetupTemplateName;
   HANDLE    hPrintTemplate;
   HANDLE    hSetupTemplate;
-} PRINTDLGA PACKED, *LPPRINTDLGA PACKED;
+} PACKED PRINTDLGA, *LPPRINTDLGA;
 
 typedef struct tagPDW {
   DWORD     lStructSize;
@@ -3934,7 +3934,7 @@ typedef struct tagPDW {
   LPCWSTR   lpSetupTemplateName;
   HANDLE    hPrintTemplate;
   HANDLE    hSetupTemplate;
-} PRINTDLGW PACKED, *LPPRINTDLGW PACKED;
+} PACKED PRINTDLGW, *LPPRINTDLGW;
 
 typedef_tident(PRINTDLG)
 typedef_tident(LPPRINTDLG)

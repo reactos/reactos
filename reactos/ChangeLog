@@ -1,3 +1,14 @@
+2003-08-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/structs.h: Apply packed attribute to the typedef, not the
+	type's name.
+	* include/ntos/keyboard.h: Ditto.
+	* include/ntos/tss.h: Ditto.
+	* include/win32k/cursoricon.h: Ditto.
+	* include/win32k/math.h: Include the compiler's math.h for builtins.
+	* ntoskrnl/nt/vdm.c (NtEarlyInitVdm): Avoid warning when compiling using
+	GCC 3.4.
+
 2003-08-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apps/tests/tcpsvr/tcpsvr.c (main): Fix multiline string constant.

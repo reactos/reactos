@@ -95,7 +95,7 @@ typedef struct _KEY_EVENT_RECORD
     CHAR  AsciiChar;
   } uChar;
   DWORD dwControlKeyState;
-} KEY_EVENT_RECORD PACKED;
+} PACKED KEY_EVENT_RECORD;
 
 typedef struct _MOUSE_EVENT_RECORD
 {
