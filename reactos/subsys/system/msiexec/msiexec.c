@@ -67,9 +67,9 @@ static const char UsageStr[] =
 "Copyright 2004 Vincent Béron\n";
 
 static const WCHAR ActionAdmin[] = {
-   'A','C','T','I','O','N','=','A','D','M','I','N',' ',0 };
+   'A','C','T','I','O','N','=','A','D','M','I','N',0 };
 static const WCHAR RemoveAll[] = {
-   'R','E','M','O','V','E','=','A','L','L',' ',0 };
+   'R','E','M','O','V','E','=','A','L','L',0 };
 
 static const WCHAR InstallRunOnce[] = {
    'S','o','f','t','w','a','r','e','\\',
