@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.29 2004/05/10 17:07:18 weiden Exp $
+/* $Id: keyboard.c,v 1.30 2004/07/04 17:08:40 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,35 +82,44 @@ static UINT DontDistinguishShifts( UINT ret ) {
 }
 
 static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
+  ASSERT(vk <= 0xff);
+
   /* Special handling for toggles like numpad and caps lock */
-
-  if (vk == VK_CAPITAL || vk == VK_NUMLOCK) 
-    {
-      if (down) QueueKeyStateTable[key] ^= 1;
-    } 
-
-  if (vk == VK_LSHIFT && ext) {
-      SetKeyState(VK_RSHIFT, 0, 0, down);
-  } else if (vk == VK_LSHIFT || vk == VK_SHIFT) {
-      SetKeyState(VK_LSHIFT, 0, 0, down);
-  }
-
-  if (vk == VK_LCONTROL && ext) {
-      SetKeyState(VK_RCONTROL, 0, 0, down);
-  } else if (vk == VK_LCONTROL || vk == VK_CONTROL) {
-      SetKeyState(VK_LCONTROL, 0, 0, down);
-  }
-
-  if (vk == VK_LMENU && ext) {
-      SetKeyState(VK_RMENU, 0, 0, down);
-  } else if (vk == VK_LMENU || vk == VK_MENU) {
-      SetKeyState(VK_LMENU, 0, 0, down);
-  }
+  if (vk == VK_CAPITAL || vk == VK_NUMLOCK) {
+    if (down) QueueKeyStateTable[vk] ^= KS_LOCK_BIT;
+  } 
 
   if (down)
-    QueueKeyStateTable[key] |= KS_DOWN_BIT;
+    QueueKeyStateTable[vk] |= KS_DOWN_BIT;
   else
-    QueueKeyStateTable[key] &= ~KS_DOWN_MASK;
+    QueueKeyStateTable[vk] &= ~KS_DOWN_MASK;
+
+  if (vk == VK_LSHIFT || vk == VK_RSHIFT) {
+    if ((QueueKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
+        (QueueKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT)) {
+      QueueKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
+    } else {
+      QueueKeyStateTable[VK_SHIFT] &= ~KS_DOWN_MASK;
+    }
+  }
+
+  if (vk == VK_LCONTROL || vk == VK_RCONTROL) {
+    if ((QueueKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
+        (QueueKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT)) {
+      QueueKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
+    } else {
+      QueueKeyStateTable[VK_CONTROL] &= ~KS_DOWN_MASK;
+    }
+  }
+
+  if (vk == VK_LMENU || vk == VK_RMENU) {
+    if ((QueueKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
+        (QueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT)) {
+      QueueKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
+    } else {
+      QueueKeyStateTable[VK_MENU] &= ~KS_DOWN_MASK;
+    }
+  }
 }
 
 VOID DumpKeyState( PBYTE KeyState ) {
@@ -965,7 +974,10 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   ScanCode = (Msg->lParam >> 16) & 0xff;
   BaseMapping = Msg->wParam = 
     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
-  RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
+  if( ScanCode >= KeyboardLayout->bMaxVSCtoVK )
+    RawVk = 0;
+  else
+    RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
 
   if ((ModifierBits & NUMLOCK_BIT) && 
       !(ModifierBits & GetShiftBit(KeyboardLayout, VK_SHIFT)) && 
