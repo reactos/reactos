@@ -194,6 +194,10 @@ void FindProgramDlg::collect_programs_callback(ShellFolder& folder, ShellEntry* 
 				String menu_path;
 
 				int len = pThis->_common_programs.size();
+#ifdef __WINE__ //TODO
+#define	_tcsnicmp strncasecmp
+#define	_tcsicoll strcasecmp
+#endif
 				if (len && !_tcsnicmp(entry_path, pThis->_common_programs, len))
 					menu_path = ResString(IDS_ALL_USERS) + (String(entry_path)+len);
 				else if ((len=pThis->_user_programs.size()) && !_tcsnicmp(entry_path, pThis->_user_programs, len))
