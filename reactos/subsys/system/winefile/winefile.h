@@ -72,9 +72,9 @@
 #endif
 
 #ifdef _MSC_VER
-#define	LONGLONGARG TEXT("I64")
+#define	LONGLONGARG _T("I64")
 #else
-#define	LONGLONGARG TEXT("L")
+#define	LONGLONGARG _T("L")
 #endif
 
 #define	BUFFER_LEN	1024
@@ -111,10 +111,10 @@ enum IMAGE {
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 #endif
 
-#define	WINEFILEFRAME		TEXT("WFS_Frame")
-#define	WINEFILETREE		TEXT("WFS_Tree")
-#define	WINEFILEDRIVES		TEXT("WFS_Drives")
-#define	WINEFILEMDICLIENT	TEXT("WFS_MdiClient")
+#define	WINEFILEFRAME		_T("WFS_Frame")
+#define	WINEFILETREE		_T("WFS_Tree")
+#define	WINEFILEDRIVES		_T("WFS_Drives")
+#define	WINEFILEMDICLIENT	_T("WFS_MdiClient")
 
 #define	FRM_CALC_CLIENT		0xBF83
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))

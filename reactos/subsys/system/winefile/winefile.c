@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _WIN32
+#ifdef __WINE__
 #include "config.h"
 #include "wine/port.h"
 #endif
@@ -28,16 +28,14 @@
 #include "winefile.h"
 #include "resource.h"
 
-#ifdef _ROS_
-#include "externals.h"
-#endif
-
 
 /* for read_directory_unix() */
-#if !defined(_NO_EXTENSIONS) && !defined(_WIN32)
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 #include <dirent.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 #include <time.h>
 #endif
 
@@ -53,8 +51,8 @@
 #define _MAX_PATH           260
 #endif
 
-#ifdef __linux__
-#define	UNION_MEMBER(x) DUMMYUNIONNAME.##x
+#ifdef NONAMELESSUNION
+#define	UNION_MEMBER(x) DUMMYUNIONNAME.x
 #else
 #define	UNION_MEMBER(x) x
 #endif
@@ -386,7 +384,26 @@ static Entry* read_tree_win(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWND
 }
 
 
-#if !defined(_NO_EXTENSIONS) && defined(__linux__)
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
+
+static BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
+{
+	struct tm* tm = gmtime(t);
+	SYSTEMTIME stime;
+
+	if (!tm)
+		return FALSE;
+
+	stime.wYear = tm->tm_year+1900;
+	stime.wMonth = tm->tm_mon+1;
+	/*	stime.wDayOfWeek */
+	stime.wDay = tm->tm_mday;
+	stime.wHour = tm->tm_hour;
+	stime.wMinute = tm->tm_min;
+	stime.wSecond = tm->tm_sec;
+
+	return SystemTimeToFileTime(&stime, ftime);
+}
 
 static void read_directory_unix(Entry* dir, LPCTSTR path)
 {
@@ -520,7 +537,7 @@ static Entry* read_tree_unix(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWN
 	return entry;
 }
 
-#endif // !defined(_NO_EXTENSIONS) && defined(__linux__)
+#endif // !defined(_NO_EXTENSIONS) && defined(__WINE__)
 
 
 #ifdef _SHELL_FOLDERS
@@ -1157,7 +1174,7 @@ static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND 
 	}
 	else
 #endif
-#if !defined(_NO_EXTENSIONS) && defined(__linux__)
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 	if (dir->etype == ET_UNIX)
 	{
 		read_directory_unix(dir, path);
@@ -1260,7 +1277,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 	}
 	else
 #endif
-#if !defined(_NO_EXTENSIONS) && defined(__linux__)
+#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
 	if (*path == '/')
 	{
 		root->drive_type = GetDriveType(path);
@@ -1528,7 +1545,7 @@ static BOOL CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, L
 	return 0;
 }
 
-static BOOL CALLBACK sDestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+static BOOL CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 		case WM_INITDIALOG:
@@ -1892,7 +1909,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					CheckMenuItem(Globals.hMenuOptions, cmd, toggle_fullscreen(hwnd)?MF_CHECKED:0);
 					break;
 
-#ifdef __linux__
+#ifdef __WINE__
 				case ID_DRIVE_UNIX_FS: {
 					TCHAR path[MAX_PATH];
 					ChildWnd* child;
@@ -2918,7 +2935,7 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 			RECT clnt;
 			GetClientRect(pane->hwnd, &clnt);
 
-			/* move immediate to simulate HDS_FULLDRAG (for now [04/2000] not realy needed with WINELIB) */
+			/* move immediate to simulate HDS_FULLDRAG (for now [04/2000] not really needed with WINELIB) */
 			Header_SetItem(pane->hwndHeader, idx, phdn->pitem);
 
 			pane->widths[idx] += dx;
@@ -3521,7 +3538,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
 					int len;
 
-					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, sDestinationDlgProc, (LPARAM)new_name);
+					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, DestinationDlgProc, (LPARAM)new_name);
 					if (ret != IDOK)
 						break;
 
@@ -3793,7 +3810,7 @@ void show_frame(HWND hwndParent, int cmdshow)
 		drivebarBtn.fsStyle = BTNS_BUTTON;
 
 #ifndef _NO_EXTENSIONS
-#ifdef __linux__
+#ifdef __WINE__
 		/* insert unix file system button */
 		SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("/\0"));
 
@@ -3942,11 +3959,9 @@ int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 
 	InitInstance(hinstance);
 
-#ifndef _ROS_	// don't maximize if being called from the ROS desktop
 	if (cmdshow == SW_SHOWNORMAL)
 	        /*TODO: read window placement from registry */
 		cmdshow = SW_MAXIMIZE;
-#endif
 
 	show_frame(hwndParent, cmdshow);
 
