@@ -6,10 +6,7 @@ VPATH     = @srcdir@
 MODULE    = oleaut32.dll
 IMPORTS   = ole32 rpcrt4 user32 gdi32 advapi32 kernel32 ntdll
 DELAYIMPORTS = comctl32
-ALTNAMES  = ole2disp.dll typelib.dll
-EXTRALIBS = $(LIBUNICODE) -luuid @GIFLIB@ @JPEGLIB@
-
-SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+EXTRALIBS = $(LIBUNICODE) -luuid
 
 C_SRCS = \
 	connpt.c \
@@ -33,6 +30,10 @@ C_SRCS = \
 C_SRCS16 = \
 	ole2disp.c \
 	typelib16.c
+
+SPEC_SRCS16 = \
+	ole2disp.spec \
+	typelib.spec
 
 RC_SRCS = oleaut32.rc
 

@@ -17,8 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "winbase.h"
@@ -27,7 +30,7 @@
 #include "variant.h"
 #include "resource.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
 extern HMODULE OLEAUT32_hModule;
 
@@ -1356,7 +1359,7 @@ HRESULT WINAPI VarI4FromUI1(BYTE bIn, LONG *piOut)
  * Convert a VT_I2 to a VT_I4.
  *
  * PARAMS
- *  iIn     [I] Source
+ *  sIn     [I] Source
  *  piOut   [O] Destination
  *
  * RETURNS
@@ -3848,7 +3851,7 @@ HRESULT WINAPI VarCyRound(const CY cyIn, int cDecimals, CY* pCyOut)
  * RETURNS
  *  Success: VARCMP_LT, VARCMP_EQ or VARCMP_GT indicating that the value to
  *           compare is less, equal or greater than source respectively.
- *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparason
+ *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
 HRESULT WINAPI VarCyCmp(const CY cyLeft, const CY cyRight)
 {
@@ -3882,7 +3885,7 @@ HRESULT WINAPI VarCyCmp(const CY cyLeft, const CY cyRight)
  * RETURNS
  *  Success: VARCMP_LT, VARCMP_EQ or VARCMP_GT indicating that dblRight is
  *           less than, equal to or greater than cyLeft respectively.
- *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparason
+ *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
 HRESULT WINAPI VarCyCmpR8(const CY cyLeft, double dblRight)
 {
@@ -4574,7 +4577,7 @@ HRESULT WINAPI VarDecAbs(const DECIMAL* pDecIn, DECIMAL* pDecOut)
  */
 HRESULT WINAPI VarDecFix(const DECIMAL* pDecIn, DECIMAL* pDecOut)
 {
-  if (DEC_SIGN(pDecOut) & ~DECIMAL_NEG)
+  if (DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
   if (!DEC_SCALE(pDecIn))
@@ -4606,10 +4609,10 @@ HRESULT WINAPI VarDecFix(const DECIMAL* pDecIn, DECIMAL* pDecOut)
  */
 HRESULT WINAPI VarDecInt(const DECIMAL* pDecIn, DECIMAL* pDecOut)
 {
-  if (DEC_SIGN(pDecOut) & ~DECIMAL_NEG)
+  if (DEC_SIGN(pDecIn) & ~DECIMAL_NEG)
     return E_INVALIDARG;
 
-  if (!(DEC_SIGN(pDecOut) & DECIMAL_NEG) || !DEC_SCALE(pDecIn))
+  if (!(DEC_SIGN(pDecIn) & DECIMAL_NEG) || !DEC_SCALE(pDecIn))
     return VarDecFix(pDecIn, pDecOut); /* The same, if +ve or no fractionals */
 
   FIXME("semi-stub!\n");
@@ -4677,7 +4680,7 @@ HRESULT WINAPI VarDecRound(const DECIMAL* pDecIn, int cDecimals, DECIMAL* pDecOu
  * RETURNS
  *  Success: VARCMP_LT, VARCMP_EQ or VARCMP_GT indicating that pDecLeft
  *           is less than, equal to or greater than pDecRight respectively.
- *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparason
+ *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
 HRESULT WINAPI VarDecCmp(const DECIMAL* pDecLeft, const DECIMAL* pDecRight)
 {
@@ -4713,7 +4716,7 @@ HRESULT WINAPI VarDecCmp(const DECIMAL* pDecLeft, const DECIMAL* pDecRight)
  * RETURNS
  *  Success: VARCMP_LT, VARCMP_EQ or VARCMP_GT indicating that dblRight
  *           is less than, equal to or greater than pDecLeft respectively.
- *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparason
+ *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
 HRESULT WINAPI VarDecCmpR8(const DECIMAL* pDecLeft, double dblRight)
 {
@@ -5706,7 +5709,7 @@ HRESULT WINAPI VarBstrCat(BSTR pbstrLeft, BSTR pbstrRight, BSTR *pbstrOut)
  * PARAMS
  *  pbstrLeft  [I] Source
  *  pbstrRight [I] Value to compare
- *  lcid       [I] LCID for the comparason
+ *  lcid       [I] LCID for the comparison
  *  dwFlags    [I] Flags to pass directly to CompareStringW().
  *
  * RETURNS

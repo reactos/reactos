@@ -11,9 +11,10 @@ extern "C" {
 #define __VARIANT_NAME_1 n1
 #define __VARIANT_NAME_2 n2
 #define __VARIANT_NAME_3 n3
-#define __VARIANT_NAME_4 n4
+#define __VARIANT_NAME_4 brecVal
 #else
 #define __tagVARIANT
+#define __tagBRECORD
 #define __VARIANT_NAME_1
 #define __VARIANT_NAME_2
 #define __VARIANT_NAME_3
@@ -238,7 +239,7 @@ typedef struct tagVARIANT {
 		ULONG  *pulVal;
 		INT  *pintVal;
 		UINT  *puintVal;
-		_ANONYMOUS_STRUCT struct {
+		_ANONYMOUS_STRUCT struct __tagBRECORD {
 			PVOID pvRecord;
 			struct IRecordInfo *pRecInfo;
 		} __VARIANT_NAME_4;

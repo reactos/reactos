@@ -37,9 +37,13 @@
 #if __STDC__ || defined(NONAMELESSUNION)
 #define V_UNION(X,Y) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.__VARIANT_NAME_3.Y)
 #define V_VT(X) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.vt)
+#define V_RECORDINFO(X) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.__VARIANT_NAME_3.__VARIANT_NAME_4.pRecInfo)
+#define V_RECORD(X) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.__VARIANT_NAME_3.__VARIANT_NAME_4.pvRecord)
 #else
 #define V_UNION(X,Y) ((X)->Y)
 #define V_VT(X) ((X)->vt)
+#define V_RECORDINFO(X) ((X)->pRecInfo)
+#define V_RECORD(X) ((X)->pvRecord)
 #endif
 #define V_BOOL(X) V_UNION(X,boolVal)
 #define V_ISBYREF(X) (V_VT(X)&VT_BYREF)

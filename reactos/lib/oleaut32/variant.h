@@ -21,9 +21,9 @@
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winerror.h"
+#include "objbase.h"
 #include "oleauto.h"
 #include <math.h>
-
 
 /* Get just the type from a variant pointer */
 #define V_TYPE(v)  (V_VT((v)) & VT_TYPEMASK)
@@ -82,15 +82,13 @@ extern const char* wine_vflags[];
 #endif
 
 /* Macros for getting at a DECIMAL's parts */
-#ifndef DEC_LO64
-#define DEC_SIGN(d)      ((d)->u.s.sign)
-#define DEC_SCALE(d)     ((d)->u.s.scale)
-#define DEC_SIGNSCALE(d) ((d)->u.signscale)
+#define DEC_SIGN(d)      ((d)->sign)
+#define DEC_SCALE(d)     ((d)->scale)
+#define DEC_SIGNSCALE(d) ((d)->signscale)
 #define DEC_HI32(d)      ((d)->Hi32)
-#define DEC_MID32(d)     ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Mid32)
-#define DEC_LO32(d)      ((d)->DUMMYUNIONNAME2.DUMMYSTRUCTNAME2.Lo32)
-#define DEC_LO64(d)      ((d)->DUMMYUNIONNAME2.Lo64)
-#endif
+#define DEC_MID32(d)     ((d)->Mid32)
+#define DEC_LO32(d)      ((d)->Lo32)
+#define DEC_LO64(d)      ((d)->Lo64)
 
 #define DEC_MAX_SCALE    28 /* Maximum scale for a decimal */
 

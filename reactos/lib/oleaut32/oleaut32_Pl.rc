@@ -1,7 +1,8 @@
 /*
- * German resources for oleaut32
+ * Polish resources for oleaut32
  *
  * Copyright 2003 Jon Griffiths
+ * Copyright 2004 Jacek Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +19,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT 
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Wahr"
-  IDS_FALSE "Falsch"
-  IDS_YES   "Ja"
-  IDS_NO    "Nein"
-  IDS_ON    "Ein"
-  IDS_OFF   "Aus"
+  IDS_TRUE  "Prawda"
+  IDS_FALSE "Fa³sz"
+  IDS_YES   "Tak"
+  IDS_NO    "Nie"
+  IDS_ON    "W³¹czone"
+  IDS_OFF   "Wy³¹czone"
 }

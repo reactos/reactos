@@ -1,0 +1,33 @@
+--- variant.c	Thu Dec  2 19:30:53 2004
++++ variant.c	Thu Dec  2 19:38:26 2004
+@@ -2390,7 +2390,7 @@
+     ULONG64 tmp;
+     DECIMAL* pDec = &V_DECIMAL(pVarDst);
+ 
+-    DECIMAL_SETZERO(pDec);
++    DECIMAL_SETZERO(*pDec);
+     DEC_LO32(pDec) = 0;
+ 
+     if (pNumprs->dwOutFlags & NUMPRS_NEG)
+--- variant.h	Mon Aug 23 07:35:19 2004
++++ variant.h	Thu Dec  2 19:43:06 2004
+@@ -82,13 +82,13 @@
+ #endif
+ 
+ /* Macros for getting at a DECIMAL's parts */
+-#define DEC_SIGN(d)      ((d)->u.s.sign)
+-#define DEC_SCALE(d)     ((d)->u.s.scale)
+-#define DEC_SIGNSCALE(d) ((d)->u.signscale)
++#define DEC_SIGN(d)      ((d)->sign)
++#define DEC_SCALE(d)     ((d)->scale)
++#define DEC_SIGNSCALE(d) ((d)->signscale)
+ #define DEC_HI32(d)      ((d)->Hi32)
+-#define DEC_MID32(d)     ((d)->u1.s1.Mid32)
+-#define DEC_LO32(d)      ((d)->u1.s1.Lo32)
+-#define DEC_LO64(d)      ((d)->u1.Lo64)
++#define DEC_MID32(d)     ((d)->Mid32)
++#define DEC_LO32(d)      ((d)->Lo32)
++#define DEC_LO64(d)      ((d)->Lo64)
+ 
+ #define DEC_MAX_SCALE    28 /* Maximum scale for a decimal */
+ 

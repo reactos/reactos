@@ -45,7 +45,7 @@ reactos/lib/msacm		# Out of sync
 reactos/lib/msvidoe		# Out of sync
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
 reactos/lib/ole32               # Synced to Wine-20041019
-reactos/lib/oleaut32		# Out of sync
+reactos/lib/oleaut32		# Synced to Wine-20041202
 reactos/lib/oledlg              # Synced to Wine-20041019
 reactos/lib/oldpro32		# Out of sync
 reactos/lib/richedit		# Synced to Wine-20041019
