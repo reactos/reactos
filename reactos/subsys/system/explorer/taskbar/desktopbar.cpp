@@ -272,5 +272,5 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 			return notify_area->ProcessTrayNotification(ptr->notify_code, &ptr->nicon_data);
 	}
 
-	return 0;
+	return FALSE;
 }

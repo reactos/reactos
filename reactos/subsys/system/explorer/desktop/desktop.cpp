@@ -291,7 +291,7 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	 // subclass background window
 	new BackgroundWindow(_hwndListView);
 
-	_icon_algo = 0;
+	_icon_algo = 1;	// default icon arrangement
 
 	PositionIcons();
 	InitDragDrop();

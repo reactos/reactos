@@ -59,6 +59,7 @@ NotifyInfo::NotifyInfo()
 	_uCallbackMessage = 0;
 }
 
+
 NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 {
 	_hWnd = pnid->hWnd;
@@ -68,7 +69,9 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 		_uCallbackMessage = pnid->uCallbackMessage;
 
 	if (pnid->uFlags & NIF_ICON)
-		_hIcon = pnid->hIcon;
+		 // Some applications destroy the icon immediatelly after completing the,
+		 // NIM_ADD/MODIFY message, so we have to make a copy if it.
+		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, 16, 16, 0);
 
 #ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
 	if (pnid->uFlags & NIF_STATE)
@@ -119,15 +122,16 @@ NotifyArea::~NotifyArea()
 HWND NotifyArea::Create(HWND hwndParent)
 {
 	ClientRect clnt(hwndParent);
-	#ifndef _ROS_
+
+#ifndef _ROS_
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
-	#else
+#else
 	return Window::Create(WINDOW_CREATOR(NotifyArea), 0,
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
-	#endif
+#endif
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -179,7 +183,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					DWORD processId;
 					GetWindowThreadProcessId(entry._hWnd, &processId);
 
-					 // bind dynamicaly to AllowSetForegroundWindow() to be compatible to WIN98
+					 // bind dynamically to AllowSetForegroundWindow() to be compatible to WIN98
 					static DynamicFct<BOOL(WINAPI*)(DWORD dwProcessId)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
 
 					if (AllowSetForegroundWindow)
@@ -219,24 +223,33 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 				entry._idx = ++_next_idx;
 
 			Refresh();	///@todo call only if really changes occurred
+
+			return TRUE;
 		}
 		break;
 
-	  case NIM_DELETE:
-		if (_icon_map.erase(pnid))
+	  case NIM_DELETE: {
+		NotifyIconMap::iterator found = _icon_map.find(pnid);
+
+		if (found != _icon_map.end()) {
+			if (found->second._hIcon)
+				DestroyIcon(found->second._hIcon);
+			_icon_map.erase(found);
 			Refresh();
-		break;
+			return TRUE;
+		}
+		break;}
 
 #if NOTIFYICON_VERSION>=3	// currently (as of 21.08.2003) missing in MinGW headers
 	  case NIM_SETFOCUS:
-		break;
+		return TRUE;
 
 	  case NIM_SETVERSION:
-		break;
+		return FALSE;	///@todo
 #endif
 	}
 
-	return 0;
+	return FALSE;
 }
 
 void NotifyArea::Refresh()

@@ -495,6 +495,10 @@ SOURCE=.\res\folder.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icoali10.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\icoalig0.bmp
 # End Source File
 # Begin Source File
@@ -524,6 +528,14 @@ SOURCE=.\res\icoalig6.bmp
 # Begin Source File
 
 SOURCE=.\res\icoalig7.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig8.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icoalig9.bmp
 # End Source File
 # Begin Source File
 
