@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.50 2004/04/09 22:27:39 weiden Exp $
+/* $Id: bitblt.c,v 1.51 2004/04/10 00:58:14 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -739,8 +739,13 @@ EngStretchBlt(
   OutputRect.top = prclDest->top + Translate.y;
   OutputRect.bottom = prclDest->bottom + Translate.y;
 
-  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
-  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  if(BrushOrigin)
+  {
+    AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+    AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  }
+  else
+    AdjustedBrushOrigin = Translate;
 
   if (NULL != OutputObj)
     {
@@ -1129,8 +1134,13 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
 
-  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
-  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  if(BrushOrigin)
+  {
+    AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+    AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  }
+  else
+    AdjustedBrushOrigin = Translate;
 
   if (NULL != OutputObj)
     {
