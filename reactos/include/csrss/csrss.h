@@ -42,9 +42,15 @@ typedef struct
 
 typedef struct
 {
+   HANDLE EventHandle;
    ULONG NrCharactersRead;
    BYTE Buffer[1];
 } CSRSS_READ_CONSOLE_REPLY, *PCSRSS_READ_CONSOLE_REPLY;
+
+typedef struct
+{
+   HANDLE ConsoleHandle;
+} CSRSS_ALLOC_CONSOLE_REPLY, *PCSRSS_ALLOC_CONSOLE_REPLY;
 
 #define CSRSS_CREATE_PROCESS            (0x1)
 #define CSRSS_TERMINATE_PROCESS         (0x2)
@@ -77,6 +83,7 @@ typedef struct
 	CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
 	CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
 	CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
+	CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;
      } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
