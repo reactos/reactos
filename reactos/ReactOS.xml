@@ -9,6 +9,11 @@
 			<file>depends.c</file>
 		</module>
 	</directory>
+	<directory name="iface">
+		<directory name="native">
+			<xi:include href="iface/native/module.xml" />
+		</directory>
+	</directory>
 	<directory name="lib">
 		<xi:include href="lib/directory.xml" />
 	</directory>

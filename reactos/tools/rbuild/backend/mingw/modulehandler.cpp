@@ -181,7 +181,8 @@ MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 }
 
 void
-MingwModuleHandler::GenerateObjectFileTargets ( const Module& module ) const
+MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
+	                                            const string& cc) const
 {
 	if ( module.files.size () == 0 )
 		return;
@@ -195,7 +196,8 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module ) const
 		          objectFilename.c_str (),
 		          sourceFilename.c_str() );
 		fprintf ( fMakefile,
-		          "\t${gcc} -c %s -o %s %s\n",
+		          "\t%s -c %s -o %s %s\n",
+		          cc.c_str (),
 		          sourceFilename.c_str (),
 		          objectFilename.c_str (),
 		          GenerateGccParameters ( module ).c_str () );
@@ -205,7 +207,22 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module ) const
 }
 
 void
-MingwModuleHandler::GenerateArchiveTarget ( const Module& module ) const
+MingwModuleHandler::GenerateObjectFileTargetsHost ( const Module& module ) const
+{
+	GenerateObjectFileTargets ( module,
+	                            "${host_gcc}" );
+}
+
+void
+MingwModuleHandler::GenerateObjectFileTargetsTarget ( const Module& module ) const
+{
+	GenerateObjectFileTargets ( module,
+	                            "${gcc}" );
+}
+
+void
+MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
+	                                        const string& ar ) const
 {
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string sourceFilenames = GetSourceFilenames ( module );
@@ -217,9 +234,58 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module ) const
 	          objectFilenames.c_str ());
 
 	fprintf ( fMakefile,
-	         "\t${ar} -rc %s %s\n\n",
+	         "\t%s -rc %s %s\n\n",
+	         ar.c_str (),
 	         archiveFilename.c_str (),
 	         objectFilenames.c_str ());
+}
+
+void
+MingwModuleHandler::GenerateArchiveTargetHost ( const Module& module ) const
+{
+	GenerateArchiveTarget ( module,
+	                        "${host_ar}" );
+}
+
+void
+MingwModuleHandler::GenerateArchiveTargetTarget ( const Module& module ) const
+{
+	GenerateArchiveTarget ( module,
+	                        "${ar}" );
+}
+
+
+MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( FILE* fMakefile )
+	: MingwModuleHandler ( fMakefile )
+{
+}
+
+bool
+MingwBuildToolModuleHandler::CanHandleModule ( const Module& module ) const
+{
+	return module.type == BuildTool;
+}
+
+void
+MingwBuildToolModuleHandler::Process ( const Module& module )
+{
+	GenerateBuildToolModuleTarget ( module );
+}
+
+void
+MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& module )
+{
+	string target ( FixupTargetFilename(module.GetPath()) );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	fprintf ( fMakefile, "%s: %s\n",
+	          target.c_str (),
+	          archiveFilename.c_str () );
+	fprintf ( fMakefile,
+	          "\t${host_gcc} -o %s %s\n",
+	          target.c_str (),
+	          archiveFilename.c_str () );
+	GenerateArchiveTargetHost ( module );
+	GenerateObjectFileTargetsHost ( module );
 }
 
 
@@ -283,8 +349,8 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          "\t${rm} %s\n",
 	          temp_exp.c_str () );
 	
-	GenerateArchiveTarget ( module );
-	GenerateObjectFileTargets ( module );
+	GenerateArchiveTargetTarget ( module );
+	GenerateObjectFileTargetsTarget ( module );
 }
 
 
@@ -308,6 +374,6 @@ MingwStaticLibraryModuleHandler::Process ( const Module& module )
 void
 MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( const Module& module )
 {
-	GenerateArchiveTarget ( module );
-	GenerateObjectFileTargets ( module );
+	GenerateArchiveTargetTarget ( module );
+	GenerateObjectFileTargetsTarget ( module );
 }

@@ -19,8 +19,10 @@ protected:
 
 	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
 	std::string GetObjectFilenames ( const Module& module ) const;
-	void GenerateObjectFileTargets ( const Module& module ) const;
-	void GenerateArchiveTarget ( const Module& module ) const;
+	void GenerateObjectFileTargetsHost ( const Module& module ) const;
+	void GenerateObjectFileTargetsTarget ( const Module& module ) const;
+	void GenerateArchiveTargetHost ( const Module& module ) const;
+	void GenerateArchiveTargetTarget ( const Module& module ) const;
 	FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -30,6 +32,21 @@ private:
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
+	void GenerateObjectFileTargets ( const Module& module,
+	                                 const std::string& cc ) const;
+	void GenerateArchiveTarget ( const Module& module,
+	                             const std::string& ar ) const;
+};
+
+
+class MingwBuildToolModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwBuildToolModuleHandler ( FILE* fMakefile );
+	virtual bool CanHandleModule ( const Module& module ) const;
+	virtual void Process ( const Module& module );
+private:
+	void GenerateBuildToolModuleTarget ( const Module& module );
 };
 
 

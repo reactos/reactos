@@ -61,6 +61,9 @@ MingwBackend::GenerateHeader ()
 void
 MingwBackend::GenerateGlobalVariables ()
 {
+	fprintf ( fMakefile, "host_gcc = gcc\n" );
+	fprintf ( fMakefile, "host_ar = ar\n" );
+	fprintf ( fMakefile, "host_ld = ld\n" );
 	fprintf ( fMakefile, "rm = del /y\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
@@ -102,6 +105,7 @@ MingwBackend::ProcessModule ( Module& module )
 void
 MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers ) const
 {
+	moduleHandlers.push_back ( new MingwBuildToolModuleHandler ( fMakefile ) );
 	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
 	moduleHandlers.push_back ( new MingwStaticLibraryModuleHandler ( fMakefile ) );
 }

@@ -1,0 +1,4 @@
+<module name="genntdll" type="buildtool">
+	<include base="genntdll">.</include>
+	<file>genntdll.c</file>
+</module>
