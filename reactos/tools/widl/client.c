@@ -505,7 +505,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
 
                     print_client("*((");
                     write_type(client, var->type, NULL, var->tname);
-                    fprintf(client, " __RPC_FAR*)_StubMsg.Buffer)++ = ");
+                    fprintf(client, " __RPC_FAR*)_StubMsg.Buffer) = ");
                     if (var->ptr_level == 1)
                         fprintf(client, "*");
                     write_name(client, var);
