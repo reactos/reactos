@@ -22,9 +22,11 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
 int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
     LPTSTR lpCmdLine, int nCmdShow)
 {
+   WNDCLASS wc;
+   MSG msg;
+
    HInst = HInstance;
 
-   WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
     
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
@@ -51,7 +53,6 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
          ShowWindow(HWnd, nCmdShow);
          UpdateWindow(HWnd);
 
-         MSG msg;
          while (GetMessage(&msg, NULL, 0, 0))
          {
              TranslateMessage(&msg);

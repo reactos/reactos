@@ -1,5 +1,12 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* apps/tests/bitblt/bitblt.c (MainWndProc): Declare variables
+	before any statements are processed in the scope.
+	* apps/tests/icontest/icontest.c (WinMain): Ditto.
+	* apps/tests/wm_paint/wm_paint.c (WinMain, MainWndProc): Ditto.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/user32/controls/button.c (PB_Paint, GB_Paint): Declare variables
 	before any statements are processed in the scope.
 	* lib/user32/controls/combo.c (CBPaintButton): Ditto.

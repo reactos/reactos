@@ -24,6 +24,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
 int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
     LPTSTR lpCmdLine, int nCmdShow)
 {
+   MSG msg;
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
     
@@ -47,7 +48,6 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
          ShowWindow(HWnd, nCmdShow);
          UpdateWindow(HWnd);
 
-         MSG msg;
          while (GetMessage(&msg, NULL, 0, 0))
          {
              TranslateMessage(&msg);
@@ -63,17 +63,20 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
    LPARAM LParam)
 {
+  const char* text = "Persistent Text"; 
+
    switch (Msg)
    {
       case WM_PAINT:
       {
          // determine the invalidated area of the window            
-         RECT RUpdate;            
+         RECT RUpdate;
+         HDC Hdc;
          GetUpdateRect(HWnd, &RUpdate, NULL);
 
          // grab a handle to our window's
          // common display device context
-         HDC Hdc = GetDC(HWnd);
+         Hdc = GetDC(HWnd);
 #if 0
          try
 #endif
@@ -93,7 +96,6 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             FillRect(Hdc, &RClient, NULL);
             
             // render the persistent text
-            const char* text = "Persistent Text"; 
             SetTextColor(Hdc, PALETTERGB(0, 0, 255));
             DrawText(Hdc, text, strlen(text), &RClient,
                      DT_CENTER | DT_VCENTER | DT_SINGLELINE);

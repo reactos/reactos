@@ -18,10 +18,11 @@ WinMain(HINSTANCE hInstance,
     LPSTR lpszCmdLine,
     int nCmdShow)
 {
-  hInst = hInstance;
   WNDCLASS wc;
   MSG msg;
   HWND hWnd;
+
+  hInst = hInstance;
 
   wc.lpszClassName = "IconTestClass";
   wc.lpfnWndProc = MainWndProc;
