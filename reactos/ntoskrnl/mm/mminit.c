@@ -378,10 +378,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    
    MmInitGlobalKernelPageDirectory();
    
-   MiInitKernelMap();
-
-
-
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
 
    LastKernelAddress = (ULONG_PTR)MmInitializePageList(

@@ -52,10 +52,13 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define PAGETABLE_MAP     (0xf0000000)
-#define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
+#define PAGETABLE_MAP		(0xf0000000)
+#define PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (1024)))
 
 #define PAE_PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (512)))
+
+#define HYPERSPACE		(0xf0800000)  
+#define IS_HYPERSPACE(v)	(((ULONG)(v) >= 0xF0800000 && (ULONG)(v) < 0xF0C00000))
 
 ULONG MmGlobalKernelPageDirectory[1024];
 ULONGLONG MmGlobalKernelPageDirectoryForPAE[2048];
@@ -237,12 +240,12 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
       PULONGLONG Pde;
       ULONG k;
 
-      PageDirTable = (PULONGLONG)ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
+      PageDirTable = (PULONGLONG)MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       for (i = 0; i < 4; i++)
       {
+         PageDir = (PULONGLONG)MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(PageDirTable[i]));
          if (i < PAE_ADDR_TO_PDTE_OFFSET(KERNEL_BASE))
 	 {
-            PageDir = (PULONGLONG)ExAllocatePageWithPhysPage(PageDirTable[i] >> PAGE_SHIFT);
 	    for (j = 0; j < 512; j++)
 	    {
 	       if (PageDir[j] != 0LL)
@@ -251,7 +254,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 		          Process->UniqueProcessId,
 	                  (i * 512 + j) * 512 * PAGE_SIZE, (i * 512 + j + 1) * 512 * PAGE_SIZE - 1, 
 		          Process->AddressSpace.PageTableRefCountTable[i*512 + j]);
-                  Pde = ExAllocatePageWithPhysPage(PageDir[j] >> PAGE_SHIFT);
+                  Pde = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(PageDir[j]));
 	          for (k = 0; k < 512; k++)
 	          {
 	             if(Pde[k] != 0)
@@ -268,21 +271,27 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 	                }
 		     }
 		  }
-		  ExUnmapPage(Pde);
+		  MmDeleteHyperspaceMapping(Pde);
 	    	  MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[j]));
 	       }
 	    }
-	    ExUnmapPage(PageDir);
 	 }
-         MmReleasePageMemoryConsumer(MC_NPPOOL, PageDirTable[i] >> PAGE_SHIFT);
+	 else
+	 {
+	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)]));
+	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)+1]));
+	 }
+	 MmDeleteHyperspaceMapping(PageDir);
+         MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDirTable[i]));
       }
-      ExUnmapPage((PVOID)PageDirTable);
+      MmDeleteHyperspaceMapping((PVOID)PageDirTable);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
    }
    else
    {
       PULONG Pde;
       PULONG PageDir;
-      PageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
+      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
       for (i = 0; i < ADDR_TO_PDE_OFFSET(KERNEL_BASE); i++)
       {
          if (PageDir[i] != 0)
@@ -290,7 +299,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
             DPRINT1("Pde for %08x - %08x is not freed, RefCount %d\n", 
 	            i * 4 * 1024 * 1024, (i + 1) * 4 * 1024 * 1024 - 1, 
 		    Process->AddressSpace.PageTableRefCountTable[i]);
-	    Pde = ExAllocatePageWithPhysPage(PageDir[i] >> PAGE_SHIFT);
+	    Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(PageDir[i]));
 	    for (j = 0; j < 1024; j++)
 	    {
 	       if(Pde[j] != 0)
@@ -307,14 +316,15 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 	          }
 	       }
 	    }
-	    ExUnmapPage(Pde);
+	    MmDeleteHyperspaceMapping(Pde);
 	    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
 	 }
       }
-      ExUnmapPage(PageDir);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
+      MmDeleteHyperspaceMapping(PageDir);
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
    }
 
-   MmReleasePageMemoryConsumer(MC_NPPOOL, Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
 #if defined(__GNUC__)
 
    Process->Pcb.DirectoryTableBase.QuadPart = 0LL;
@@ -329,87 +339,75 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 
 NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 {
-   PHYSICAL_ADDRESS PhysPageDirectory;
    PKPROCESS KProcess = &Dest->Pcb;
-
+   NTSTATUS Status;
+   ULONG i, j;
+   PFN_TYPE Pfn[7];
+   ULONG Count;
+   
    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
+
+   Count = Ke386Pae ? 7 : 2;
+
+   for (i = 0; i < Count; i++)
+   {
+      Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
+      if (!NT_SUCCESS(Status))
+      {
+	 for (j = 0; j < i; j++)
+	 {
+	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
+	 }
+	 return Status;
+      }
+   }
 
    if (Ke386Pae)
    {
       PULONGLONG PageDirTable;
       PULONGLONG PageDir;
-      PFN_TYPE Pfn[4];
-      ULONG i, j;
-      NTSTATUS Status;
 
-      PageDirTable = ExAllocatePage();
-      if (PageDirTable == NULL)
-      {
-         return STATUS_UNSUCCESSFUL;
-      }
-      PhysPageDirectory = MmGetPhysicalAddress(PageDirTable);
-
+      PageDirTable = MmCreateHyperspaceMapping(Pfn[0]);
       for (i = 0; i < 4; i++)
       {
-         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
-	 if (!NT_SUCCESS(Status))
-	 {
-	    for (j = 0; j < i; j++)
-	    {
-	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-	    }
-	    ExUnmapPage(PageDirTable);
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, PhysPageDirectory.QuadPart >> PAGE_SHIFT);
-	    return Status;
-	 }
-	 PageDirTable[i] = (Pfn[i] << PAGE_SHIFT) | PA_PRESENT;
+	 PageDirTable[i] = PAE_PFN_TO_PTE(Pfn[1+i]) | PA_PRESENT;
       }
-      ExUnmapPage(PageDirTable);
+      MmDeleteHyperspaceMapping(PageDirTable);
       for (i = PAE_ADDR_TO_PDTE_OFFSET(KERNEL_BASE); i < 4; i++)
       {
-         PageDir = (PULONGLONG)ExAllocatePageWithPhysPage(Pfn[i]);
-         if (PageDir == NULL)
-         {
-	    for (j = 0; j < 4; j++)
-	    {
-	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-	    }
-	    ExUnmapPage(PageDirTable);
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, PhysPageDirectory.QuadPart >> PAGE_SHIFT);
-	    return STATUS_UNSUCCESSFUL;
-         }
+         PageDir = (PULONGLONG)MmCreateHyperspaceMapping(Pfn[i+1]);
          memcpy(PageDir, &MmGlobalKernelPageDirectoryForPAE[i * 512], 512 * sizeof(ULONGLONG));
 	 if (PAE_ADDR_TO_PDTE_OFFSET(PAGETABLE_MAP) == i)
 	 {
             for (j = 0; j < 4; j++)
             {
-               PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(PAGETABLE_MAP) + j] = (Pfn[j] << PAGE_SHIFT) | PA_PRESENT | PA_READWRITE;
+               PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(PAGETABLE_MAP) + j] = PAE_PFN_TO_PTE(Pfn[1+j]) | PA_PRESENT | PA_READWRITE;
             }
 	 }
-         ExUnmapPage(PageDir);
+	 if (PAE_ADDR_TO_PDTE_OFFSET(HYPERSPACE) == i)
+	 {
+	    PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)] = PAE_PFN_TO_PTE(Pfn[5]) | PA_PRESENT | PA_READWRITE;
+	    PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)+1] = PAE_PFN_TO_PTE(Pfn[6]) | PA_PRESENT | PA_READWRITE;
+	 }
+         MmDeleteHyperspaceMapping(PageDir);
       }
    }
    else
    {
       PULONG PageDirectory;
-      PageDirectory = ExAllocatePage();
-      if (PageDirectory == NULL)
-      {
-         return(STATUS_UNSUCCESSFUL);
-      }
-      PhysPageDirectory = MmGetPhysicalAddress(PageDirectory);
+      PageDirectory = MmCreateHyperspaceMapping(Pfn[0]);
 
       memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE),
              MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE),
              (1024 - ADDR_TO_PDE_OFFSET(KERNEL_BASE)) * sizeof(ULONG));
 
-      DPRINT("Addr %x\n",PAGETABLE_MAP / (4*1024*1024));
-      PageDirectory[PAGETABLE_MAP / (4*1024*1024)] =
-         PhysPageDirectory.u.LowPart | PA_PRESENT | PA_READWRITE;
+      DPRINT("Addr %x\n",ADDR_TO_PDE_OFFSET(PAGETABLE_MAP));
+      PageDirectory[ADDR_TO_PDE_OFFSET(PAGETABLE_MAP)] = PFN_TO_PTE(Pfn[0]) | PA_PRESENT | PA_READWRITE;
+      PageDirectory[ADDR_TO_PDE_OFFSET(HYPERSPACE)] = PFN_TO_PTE(Pfn[1]) | PA_PRESENT | PA_READWRITE;
 
-      ExUnmapPage(PageDirectory);
+      MmDeleteHyperspaceMapping(PageDirectory);
    }
-   KProcess->DirectoryTableBase = PhysPageDirectory;
+   KProcess->DirectoryTableBase.QuadPart = PFN_TO_PTE(Pfn[0]);
    DPRINT("Finished MmCopyMmInfo()\n");
    return(STATUS_SUCCESS);
 }
@@ -524,13 +522,13 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    }
    if (Address < (PVOID)KERNEL_BASE && Process && Process != PsGetCurrentProcess())
    {
-      PageDirTable = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
+      PageDirTable = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDirTable == NULL)
       {
          KEBUGCHECK(0);
       }
-      PageDir = ExAllocatePageWithPhysPage(PageDirTable[PAE_ADDR_TO_PDTE_OFFSET(Address)] >> PAGE_SHIFT);
-      ExUnmapPage(PageDirTable);
+      PageDir = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(PageDirTable[PAE_ADDR_TO_PDTE_OFFSET(Address)]));
+      MmDeleteHyperspaceMapping(PageDirTable);
       if (PageDir == NULL)
       {
          KEBUGCHECK(0);
@@ -541,7 +539,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       {
          if (Create == FALSE)
 	 {
-	    ExUnmapPage(PageDir);
+	    MmDeleteHyperspaceMapping(PageDir);
 	    return NULL;
 	 }
          Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
@@ -561,8 +559,8 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       {
          Pfn = PAE_PTE_TO_PFN(Entry);
       }
-      ExUnmapPage(PageDir);
-      Pt = ExAllocatePageWithPhysPage(Pfn);
+      MmDeleteHyperspaceMapping(PageDir);
+      Pt = MmCreateHyperspaceMapping(Pfn);
       if (Pt == NULL)
       {
          KEBUGCHECK(0);
@@ -630,7 +628,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    
    if (Address < (PVOID)KERNEL_BASE && Process && Process != PsGetCurrentProcess())
    {
-      PageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.QuadPart >> PAGE_SHIFT);
+      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDir == NULL)
       {
          KEBUGCHECK(0);
@@ -639,7 +637,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       {
          if (Create == FALSE)
 	 {
-	    ExUnmapPage(PageDir);
+	    MmDeleteHyperspaceMapping(PageDir);
 	    return NULL;
 	 }
          Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
@@ -658,8 +656,8 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       {
          Pfn = PTE_TO_PFN(PageDir[PdeOffset]);
       }
-      ExUnmapPage(PageDir);
-      Pt = ExAllocatePageWithPhysPage(Pfn);
+      MmDeleteHyperspaceMapping(PageDir);
+      Pt = MmCreateHyperspaceMapping(Pfn);
       if (Pt == NULL)
       {
          KEBUGCHECK(0);
@@ -733,7 +731,7 @@ BOOLEAN MmUnmapPageTable(PULONG Pt)
    }
    if (Pt)
    {
-      ExUnmapPage((PVOID)PAGE_ROUND_DOWN(Pt));
+      MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pt));
    }
    return FALSE;
 }
@@ -1907,7 +1905,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
    {
       if (!MmIsUsablePage(Pages[i]))
       {
-         DPRINT1("Page at address %x not usable\n", Pages[i] << PAGE_SHIFT);
+         DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
          KEBUGCHECK(0);
       }
    }
@@ -2075,6 +2073,176 @@ MmGetPhysicalAddress(PVOID vaddr)
    return p;
 }
 
+PVOID
+MmCreateHyperspaceMapping(PFN_TYPE Page)
+{
+   PVOID Address;
+   LONG i;
+
+   if (Ke386Pae)
+   {
+      ULONGLONG Entry;
+      ULONGLONG ZeroEntry = 0LL;
+      PULONGLONG Pte;
+
+      Entry = PFN_TO_PTE(Page) | PA_PRESENT | PA_READWRITE;
+      Pte = PAE_ADDR_TO_PTE(HYPERSPACE) + Page % 1024;
+
+      if (Page & 1024)
+      {
+         for (i = Page %1024; i < 1024; i++, Pte++)
+         {
+            if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
+	    {
+	       break;
+	    }
+         }
+         if (i >= 1024)
+         {
+            Pte = PAE_ADDR_TO_PTE(HYPERSPACE);
+	    for (i = 0; i < Page % 1024; i++, Pte++)
+	    {
+               if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
+	       {
+	          break;
+	       }
+	    }
+	    if (i >= Page % 1024)
+	    {
+	       KEBUGCHECK(0);
+	    }
+         }
+      }
+      else 
+      {
+         for (i = Page %1024; i >= 0; i--, Pte--)
+         {
+            if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
+	    {
+	       break;
+	    }
+         }
+         if (i < 0)
+         {
+            Pte = PAE_ADDR_TO_PTE(HYPERSPACE) + 1023;
+	    for (i = 1023; i > Page % 1024; i--, Pte--)
+	    {
+               if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
+	       {
+	          break;
+	       }
+	    }
+	    if (i <= Page % 1024)
+	    {
+	       KEBUGCHECK(0);
+	    }
+         }
+      }
+   }
+   else
+   {
+      ULONG Entry;
+      PULONG Pte;
+      Entry = PFN_TO_PTE(Page) | PA_PRESENT | PA_READWRITE;
+      Pte = ADDR_TO_PTE(HYPERSPACE) + Page % 1024;
+      if (Page & 1024)
+      {
+         for (i = Page % 1024; i < 1024; i++, Pte++)
+         {
+            if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
+            {
+               break;
+            }
+         }
+         if (i >= 1024)
+         {
+            Pte = ADDR_TO_PTE(HYPERSPACE);
+            for (i = 0; i < Page % 1024; i++, Pte++)
+            {
+               if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
+               {
+                  break;
+               }
+            }
+            if (i >= Page % 1024)
+            {
+               KEBUGCHECK(0);
+            }
+         }
+      }
+      else
+      {
+         for (i = Page % 1024; i >= 0; i--, Pte--)
+         {
+            if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
+            {
+               break;
+            }
+         }
+         if (i < 0)
+         {
+            Pte = ADDR_TO_PTE(HYPERSPACE) + 1023;
+            for (i = 1023; i > Page % 1024; i--, Pte--)
+            {
+               if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
+               {
+                  break;
+               }
+            }
+            if (i <= Page % 1024)
+            {
+               KEBUGCHECK(0);
+            }
+         }
+      }
+   }
+   Address = (PVOID)HYPERSPACE + i * PAGE_SIZE;
+   FLUSH_TLB_ONE(Address);
+   return Address;
+}
+
+PFN_TYPE 
+MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
+{
+   PFN_TYPE Pfn;
+   ASSERT (IS_HYPERSPACE(Address));
+   if (Ke386Pae)
+   {
+      ULONGLONG Entry = PAE_PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE;
+      Entry = (ULONG)ExfpInterlockedExchange64UL(PAE_ADDR_TO_PTE(Address), &Entry);
+      Pfn = PAE_PTE_TO_PFN(Entry);
+   }
+   else
+   {
+      ULONG Entry;
+      Entry = InterlockedExchange(ADDR_TO_PTE(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
+      Pfn = PTE_TO_PFN(Entry);
+   }
+   FLUSH_TLB_ONE(Address);
+   return Pfn;
+}
+
+PFN_TYPE
+MmDeleteHyperspaceMapping(PVOID Address)
+{
+   PFN_TYPE Pfn;
+   ASSERT (IS_HYPERSPACE(Address));
+   if (Ke386Pae)
+   {
+      ULONGLONG Entry = 0LL;
+      Entry = (ULONG)ExfpInterlockedExchange64UL(PAE_ADDR_TO_PTE(Address), &Entry);
+      Pfn = PAE_PTE_TO_PFN(Entry);
+   }
+   else
+   {
+      ULONG Entry;
+      Entry = InterlockedExchange(ADDR_TO_PTE(Address), 0);
+      Pfn = PTE_TO_PFN(Entry);
+   }
+   FLUSH_TLB_ONE(Address);
+   return Pfn;
+}
+
 VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
    ULONG StartOffset, EndOffset, Offset; 
@@ -2111,9 +2279,9 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 
          if (Process != NULL && Process != PsGetCurrentProcess())
          {
-            PageDirTable = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.u.LowPart >> PAGE_SHIFT);
-            Pde = (PULONGLONG)ExAllocatePageWithPhysPage(PageDirTable[i] >> PAGE_SHIFT);
-	    ExUnmapPage(PageDirTable);
+            PageDirTable = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
+            Pde = (PULONGLONG)MmCreateHyperspaceMapping(PTE_TO_PFN(PageDirTable[i]));
+	    MmDeleteHyperspaceMapping(PageDirTable);
          }
          else
          {
@@ -2138,7 +2306,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
    
       if (Process != NULL && Process != PsGetCurrentProcess())
       {
-         Pde = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase.u.LowPart >> PAGE_SHIFT);
+         Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
       }
       else
       {
@@ -2153,22 +2321,26 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
       }
       if (Pde != (PULONG)PAGEDIRECTORY_MAP)
       {
-         ExUnmapPage(Pde);
+         MmDeleteHyperspaceMapping(Pde);
       }
    }
 }
-	    
+
 VOID INIT_FUNCTION
 MmInitGlobalKernelPageDirectory(VOID)
 {
    ULONG i;
+
+   DPRINT("MmInitGlobalKernelPageDirectory()\n");
+
    if (Ke386Pae)
    {
       PULONGLONG CurrentPageDirectory = (PULONGLONG)PAE_PAGEDIRECTORY_MAP;
       for (i = PAE_ADDR_TO_PDE_OFFSET(KERNEL_BASE); i < 4 * 512; i++)
       {
-         if ((i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) || i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4) &&
-             0LL == MmGlobalKernelPageDirectoryForPAE[i] && 0LL != CurrentPageDirectory[i])
+         if (!(i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) && i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4) &&
+	     !(i >= PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE) && i < PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE) + 2) &&
+	     0LL == MmGlobalKernelPageDirectoryForPAE[i] && 0LL != CurrentPageDirectory[i])
          {
             ExfpInterlockedExchange64UL(&MmGlobalKernelPageDirectoryForPAE[i], &CurrentPageDirectory[i]);
 	    if (Ke386GlobalPagesEnabled)
@@ -2185,6 +2357,7 @@ MmInitGlobalKernelPageDirectory(VOID)
       for (i = ADDR_TO_PDE_OFFSET(KERNEL_BASE); i < 1024; i++)
       {
          if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&
+	     i != ADDR_TO_PDE_OFFSET(HYPERSPACE) &&
              0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
          {
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
@@ -2218,22 +2391,26 @@ MiEnablePAE(PVOID* LastKernelAddress)
       memcpy(PageDirTable, (PVOID)PAGEDIRECTORY_MAP, PAGE_SIZE);
 
       PageDir = (PULONGLONG)*LastKernelAddress;
-      (*LastKernelAddress) += 4 * PAGE_SIZE;
+      (*LastKernelAddress) += 6 * PAGE_SIZE;
       PageDirTable[0] = MmGetPhysicalAddress((PVOID)PageDir).QuadPart | PA_PRESENT;
       PageDirTable[1] = PageDirTable[0] + PAGE_SIZE;
       PageDirTable[2] = PageDirTable[1] + PAGE_SIZE;
       PageDirTable[3] = PageDirTable[2] + PAGE_SIZE;
 
-      memset(PageDir, 0, 4 * PAGE_SIZE);
+      memset(PageDir, 0, 6 * PAGE_SIZE);
 
       for (i = 0; i < 4; i++)
       {
-         PageDir[3*512+PAE_ADDR_TO_PDE_PAGE_OFFSET(PAGETABLE_MAP) + i] = PageDirTable[i] | PA_READWRITE;
+         PageDir[PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + i] = PageDirTable[i] | PA_READWRITE;
       }
+      PageDir[PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE)] = (PageDirTable[0] + 4 * PAGE_SIZE) | PA_READWRITE; 
+      PageDir[PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE)+1] = (PageDirTable[0] + 5 * PAGE_SIZE) | PA_READWRITE; 
 
       for (i = 0; i < 2048; i++)
       {
-         if (i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) || i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4)
+         if (!(i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) && i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4) &&
+	     !(i >= PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE) && i < PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE)+2))
+	     
          {
             PVOID Address = (PVOID)(i * 512 * PAGE_SIZE);
 	    PULONG Pde = ADDR_TO_PDE(Address);
@@ -2293,8 +2470,11 @@ VOID INIT_FUNCTION
 MiInitPageDirectoryMap(VOID)
 {
    MEMORY_AREA* kernel_map_desc = NULL;
+   MEMORY_AREA* hyperspace_desc = NULL;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PVOID BaseAddress;
+
+   DPRINT("MiInitPageDirectoryMap()\n");
 
    BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
@@ -2305,6 +2485,17 @@ MiInitPageDirectoryMap(VOID)
 		      Ke386Pae ? 0x800000 : 0x400000,
                       0,
                       &kernel_map_desc,
+                      TRUE,
+                      FALSE,
+                      BoundaryAddressMultiple);
+   BaseAddress = (PVOID)HYPERSPACE;
+   MmCreateMemoryArea(NULL,
+                      MmGetKernelAddressSpace(),
+                      MEMORY_AREA_SYSTEM,
+                      &BaseAddress,
+		      0x400000,
+                      0,
+                      &hyperspace_desc,
                       TRUE,
                       FALSE,
                       BoundaryAddressMultiple);

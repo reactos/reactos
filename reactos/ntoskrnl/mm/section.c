@@ -547,7 +547,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             return Status;
          }
       }
-      PageAddr = ExAllocatePageWithPhysPage(*Page);
+      PageAddr = MmCreateHyperspaceMapping(*Page);
       CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
@@ -570,7 +570,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                                        &CacheSeg);
          if (!NT_SUCCESS(Status))
          {
-            ExUnmapPage(PageAddr);
+            MmDeleteHyperspaceMapping(PageAddr);
             return(Status);
          }
          if (!UptoDate)
@@ -583,7 +583,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             if (!NT_SUCCESS(Status))
             {
                CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-               ExUnmapPage(PageAddr);
+               MmDeleteHyperspaceMapping(PageAddr);
                return Status;
             }
          }
@@ -597,7 +597,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          }
       }
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-      ExUnmapPage(PageAddr);
+      MmDeleteHyperspaceMapping(PageAddr);
    }
    return(STATUS_SUCCESS);
 }
@@ -1127,7 +1127,6 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PSECTION_OBJECT Section;
    PFN_TYPE OldPage;
    PFN_TYPE NewPage;
-   PVOID NewAddress;
    NTSTATUS Status;
    PVOID PAddress;
    ULONG Offset;
@@ -1242,10 +1241,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Copy the old page
     */
-
-   NewAddress = ExAllocatePageWithPhysPage(NewPage);
-   memcpy(NewAddress, PAddress, PAGE_SIZE);
-   ExUnmapPage(NewAddress);
+   MiCopyFromUserPage(NewPage, PAddress);
 
    /*
     * Delete the old entry.

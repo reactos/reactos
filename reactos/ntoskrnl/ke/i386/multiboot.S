@@ -114,7 +114,7 @@ _multiboot_entry:
 	movl	$(V2P(kernel_pagetable+4096) + 0x3), ((KERNEL_BASE >> 20) + 4)(%esi)
 
 	movl	$(V2P(startup_pagedirectory) + 0x3), 0xF00(%esi) 
-	movl	$(V2P(kernelmap_pagetable) + 0x3), 0xF0C(%esi)
+	movl	$(V2P(hyperspace_pagetable) + 0x3), 0xF08(%esi)
 #ifdef CONFIG_SMP
 	movl	$(V2P(apic_pagetable) + 0x3), 0xFEC(%esi)
 #endif /* CONFIG_SMP */
@@ -351,8 +351,9 @@ lowmem_pagetable:
 kernel_pagetable:
 	.fill 2*4096, 1, 0
 
-kernelmap_pagetable:
+hyperspace_pagetable:
 	.fill 4096, 1, 0
+	
 _pae_pagedirtable:
 	.fill 4096, 1, 0
 #ifdef CONFIG_SMP

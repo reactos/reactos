@@ -551,8 +551,6 @@ PVOID ExAllocatePage(VOID);
 
 VOID ExUnmapPage(PVOID Addr);
 
-VOID MiInitKernelMap(VOID);
-
 PVOID ExAllocatePageWithPhysPage(PFN_TYPE Page);
 
 NTSTATUS MiCopyFromUserPage(PFN_TYPE Page, PVOID SourceAddress);
@@ -648,6 +646,12 @@ PFN_TYPE MmGetContinuousPages(ULONG NumberOfBytes,
 NTSTATUS MmInitZeroPageThread(VOID);
 
 /* i386/page.c *********************************************************/
+
+PVOID MmCreateHyperspaceMapping(PFN_TYPE Page);
+
+PFN_TYPE MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE Page);
+
+PFN_TYPE MmDeleteHyperspaceMapping(PVOID Address);
 
 NTSTATUS MmCreateVirtualMappingForKernel(PVOID Address, 
 					 ULONG flProtect,

@@ -148,7 +148,6 @@ OBJECTS_MM = \
 	mm/region.o \
 	mm/rmap.o \
 	mm/section.o \
-	mm/slab.o \
 	mm/verifier.o \
 	mm/virtual.o \
 	mm/wset.o
