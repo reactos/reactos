@@ -19,7 +19,7 @@ MISC_SRCS =
 	error atom handle env
 	dllmain comm errormsg
 	console time toolhelp
-	stubs ldr res
+	stubs lang ldr res
 	sysinfo profile
 	mbchars muldiv getname
 	perfcnt
