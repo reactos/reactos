@@ -60,7 +60,7 @@ static VOID
 partstrlwr (LPTSTR str)
 {
 	LPTSTR c = str;
-	while (*c && !_istspace (*c))
+	while (*c && !_istspace (*c) && *c != _T('='))
 	{
 		*c = _totlower (*c);
 		c++;

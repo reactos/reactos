@@ -71,7 +71,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 
 			do
 				*dp++ = *sp++;
-			while (*sp != qc);
+			while (*sp && *sp != qc);
 
 			*dp++ = *sp++;
 		}
@@ -197,13 +197,13 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 
 			do
 				sp++;
-			while (*sp != qc);
+			while (*sp && *sp != qc);
 
 			sp++;
 		}
 		else if (*sp == _T('|'))
 		{
-			*sp++ = '\0';
+			*sp++ = _T('\0');
 			num++;
 		}
 		else

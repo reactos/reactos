@@ -76,6 +76,10 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	/* skip leading '=' */
+	if (*param == _T('='))
+		param++;
+
 	/* set PATH environment variable */
 	if (!SetEnvironmentVariable (_T("PATH"), param))
 		return 1;

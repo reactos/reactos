@@ -944,6 +944,16 @@ static VOID Initialize (int argc, char *argv[])
         if (argv)
                 SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
 #endif
+        ConOutPrintf("argc: %d\n", argc);
+        if (!argv)
+        {
+                ConOutPrintf("argc is NULL\n");
+        }
+        else
+        {
+
+        }
+
 
 	/* add ctrl handler */
 #if 0
@@ -998,5 +1008,4 @@ int main (int argc, char *argv[])
         FreeConsole ();
 
         return nExitCode;
-//        return 0;
 }
