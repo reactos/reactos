@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.23 2001/08/14 12:57:16 ea Exp $
+/* $Id: conio.c,v 1.24 2001/08/14 22:00:21 ea Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1412,13 +1412,14 @@ CSR_API(CsrGetTitle)
 	}
 	else
 	{
+		HANDLE ConsoleHandle = Request->Data.GetTitleRequest.ConsoleHandle;
+		
 		/* Copy title of the console to the user title buffer */
 		RtlZeroMemory (
 			& Reply->Data.GetTitleReply,
 			sizeof (CSRSS_GET_TITLE_REPLY)
 			);
-		Reply->Data.GetTitleReply.ConsoleHandle =
-			Request->Data.GetTitleRequest.ConsoleHandle;
+		Reply->Data.GetTitleReply.ConsoleHandle = ConsoleHandle;
 		Reply->Data.GetTitleReply.Length = Console->Title.Length;
 		wcscpy (Reply->Data.GetTitleReply.Title, Console->Title.Buffer);
 		Reply->Status = STATUS_SUCCESS;
