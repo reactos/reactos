@@ -49,7 +49,7 @@ NET_DEVICE_DRIVERS = ne2000
 #
 # storage drivers (don't change the order)
 #
-STORAGE_DRIVERS = class2 scsiport disk
+STORAGE_DRIVERS = class2 scsiport atapi disk
 
 #
 # system applications (required for startup)
