@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.6 2001/06/28 02:42:27 rex Exp $
+/* $Id: disk.h,v 1.7 2002/05/25 13:32:51 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -75,6 +75,7 @@
     ((P) == PTDOS3xPrimary  || \
      (P) == PTOLDDOS16Bit   || \
      (P) == PTDos5xPrimary  || \
+     (P) == PTIfs           || \
      (P) == PTWin95FAT32    || \
      (P) == PTWin95FAT32LBA || \
      (P) == PTWin95FAT16LBA || \

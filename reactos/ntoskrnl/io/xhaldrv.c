@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.20 2002/04/26 19:58:48 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.21 2002/05/25 13:32:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
     ((P) == PTDOS3xPrimary  || \
      (P) == PTOLDDOS16Bit   || \
      (P) == PTDos5xPrimary  || \
+     (P) == PTIfs           || \
      (P) == PTWin95FAT32    || \
      (P) == PTWin95FAT32LBA || \
      (P) == PTWin95FAT16LBA)
@@ -309,159 +310,187 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			 OUT PUCHAR NtSystemPath,
 			 OUT PSTRING NtSystemPathString)
 {
-   PDRIVE_LAYOUT_INFORMATION *LayoutArray;
-   PCONFIGURATION_INFORMATION ConfigInfo;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK StatusBlock;
-   UNICODE_STRING UnicodeString1;
-   UNICODE_STRING UnicodeString2;
-   HANDLE FileHandle;
-   PWSTR Buffer1;
-   PWSTR Buffer2;
-   ULONG i;
-   NTSTATUS Status;
-   ULONG j;
+  PDRIVE_LAYOUT_INFORMATION *LayoutArray;
+  PCONFIGURATION_INFORMATION ConfigInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK StatusBlock;
+  UNICODE_STRING UnicodeString1;
+  UNICODE_STRING UnicodeString2;
+  HANDLE FileHandle;
+  PWSTR Buffer1;
+  PWSTR Buffer2;
+  ULONG i;
+  NTSTATUS Status;
+  ULONG j;
 
-   DPRINT("xHalIoAssignDriveLetters()\n");
+  DPRINT("xHalIoAssignDriveLetters()\n");
 
-   ConfigInfo = IoGetConfigurationInformation ();
+  ConfigInfo = IoGetConfigurationInformation();
 
-   Buffer1 = (PWSTR)ExAllocatePool(PagedPool,
-				   64 * sizeof(WCHAR));
-   Buffer2 = (PWSTR)ExAllocatePool(PagedPool,
-				   32 * sizeof(WCHAR));
+  Buffer1 = (PWSTR)ExAllocatePool(PagedPool,
+				  64 * sizeof(WCHAR));
+  Buffer2 = (PWSTR)ExAllocatePool(PagedPool,
+				  32 * sizeof(WCHAR));
 
-   /* Create PhysicalDrive links */
-   DPRINT("Physical disk drives: %d\n", ConfigInfo->DiskCount);
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	swprintf(Buffer1,
-		 L"\\Device\\Harddisk%d\\Partition0",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
+  /* Create PhysicalDrive links */
+  DPRINT("Physical disk drives: %d\n", ConfigInfo->DiskCount);
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      swprintf(Buffer1,
+	       L"\\Device\\Harddisk%d\\Partition0",
+	        i);
+      RtlInitUnicodeString(&UnicodeString1,
+			   Buffer1);
 
-	InitializeObjectAttributes(&ObjectAttributes,
-				   &UnicodeString1,
-				   0,
-				   NULL,
-				   NULL);
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &UnicodeString1,
+				 0,
+				 NULL,
+				 NULL);
 
-	Status = NtOpenFile(&FileHandle,
-			    0x10001,
-			    &ObjectAttributes,
-			    &StatusBlock,
-			    1,
-			    FILE_SYNCHRONOUS_IO_NONALERT);
-	if (NT_SUCCESS(Status))
-	  {
-	     NtClose(FileHandle);
+      Status = NtOpenFile(&FileHandle,
+			  0x10001,
+			  &ObjectAttributes,
+			  &StatusBlock,
+			  1,
+			  FILE_SYNCHRONOUS_IO_NONALERT);
+      if (NT_SUCCESS(Status))
+	{
+	  NtClose(FileHandle);
 
-	     swprintf(Buffer2,
-		      L"\\??\\PhysicalDrive%d",
-		      i);
-	     RtlInitUnicodeString(&UnicodeString2,
-				  Buffer2);
+	  swprintf(Buffer2,
+		   L"\\??\\PhysicalDrive%d",
+		   i);
+	  RtlInitUnicodeString(&UnicodeString2,
+			       Buffer2);
 
-	     DPRINT("Creating link: %S ==> %S\n",
-		    Buffer2,
-		    Buffer1);
+	  DPRINT("Creating link: %S ==> %S\n",
+		 Buffer2,
+		 Buffer1);
 
-	     IoCreateSymbolicLink(&UnicodeString2,
-				  &UnicodeString1);
-	  }
-     }
+	  IoCreateSymbolicLink(&UnicodeString2,
+			       &UnicodeString1);
+	}
+    }
 
-   /* Initialize layout array */
-   LayoutArray = ExAllocatePool(NonPagedPool,
-				ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
-   RtlZeroMemory(LayoutArray,
-		 ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	swprintf(Buffer1,
-		 L"\\Device\\Harddisk%d\\Partition0",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
+  /* Initialize layout array */
+  LayoutArray = ExAllocatePool(NonPagedPool,
+			       ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+  RtlZeroMemory(LayoutArray,
+		ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      swprintf(Buffer1,
+	       L"\\Device\\Harddisk%d\\Partition0",
+	       i);
+      RtlInitUnicodeString(&UnicodeString1,
+			   Buffer1);
 
-	Status = xHalQueryDriveLayout(&UnicodeString1,
-				      &LayoutArray[i]);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
-		      Status);
-	     LayoutArray[i] = NULL;
-	     continue;
-	  }
-     }
+      Status = xHalQueryDriveLayout(&UnicodeString1,
+				    &LayoutArray[i]);
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
+		   Status);
+	  LayoutArray[i] = NULL;
+	  continue;
+	}
+    }
 
 #ifndef NDEBUG
-   /* Dump layout array */
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	DPRINT("Harddisk %d:\n",
-	       i);
+  /* Dump layout array */
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      DPRINT("Harddisk %d:\n",
+	     i);
 
-	if (LayoutArray[i] == NULL)
-	  continue;
+      if (LayoutArray[i] == NULL)
+	continue;
 
-	DPRINT("Logical partitions: %d\n",
-	       LayoutArray[i]->PartitionCount);
+      DPRINT("Logical partitions: %d\n",
+	     LayoutArray[i]->PartitionCount);
 
-	for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
-	  {
-	     DPRINT("  %d: nr:%x boot:%x type:%x startblock:%I64u count:%I64u\n",
-		    j,
-		    LayoutArray[i]->PartitionEntry[j].PartitionNumber,
-		    LayoutArray[i]->PartitionEntry[j].BootIndicator,
-		    LayoutArray[i]->PartitionEntry[j].PartitionType,
-		    LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart,
-		    LayoutArray[i]->PartitionEntry[j].PartitionLength.QuadPart);
-	  }
-     }
+      for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
+	{
+	  DPRINT("  %d: nr:%x boot:%x type:%x startblock:%I64u count:%I64u\n",
+		 j,
+		 LayoutArray[i]->PartitionEntry[j].PartitionNumber,
+		 LayoutArray[i]->PartitionEntry[j].BootIndicator,
+		 LayoutArray[i]->PartitionEntry[j].PartitionType,
+		 LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart,
+		 LayoutArray[i]->PartitionEntry[j].PartitionLength.QuadPart);
+	}
+    }
 #endif
 
-   /* Assign pre-assigned (registry) partitions */
+  /* Assign pre-assigned (registry) partitions */
 
 
-   /* Assign bootable partition on first harddisk */
-   DPRINT("Assigning bootable primary partition on first harddisk:\n");
-   if (ConfigInfo->DiskCount > 0)
-     {
-	/* search for bootable partition */
-	for (j = 0; j < LayoutArray[0]->PartitionCount; j++)
-	  {
-	     if ((LayoutArray[0]->PartitionEntry[j].BootIndicator == TRUE) &&
-		 IsUsablePartition(LayoutArray[0]->PartitionEntry[j].PartitionType))
-	       {
-		  swprintf(Buffer2,
-			   L"\\Device\\Harddisk0\\Partition%d",
-			   LayoutArray[0]->PartitionEntry[j].PartitionNumber);
-		  RtlInitUnicodeString(&UnicodeString2,
-				       Buffer2);
+  /* Assign bootable partition on first harddisk */
+  DPRINT("Assigning bootable primary partition on first harddisk:\n");
+  if (ConfigInfo->DiskCount > 0)
+    {
+      /* search for bootable partition */
+      for (j = 0; j < LayoutArray[0]->PartitionCount; j++)
+	{
+	  if ((LayoutArray[0]->PartitionEntry[j].BootIndicator == TRUE) &&
+	      IsUsablePartition(LayoutArray[0]->PartitionEntry[j].PartitionType))
+	    {
+	      swprintf(Buffer2,
+		       L"\\Device\\Harddisk0\\Partition%d",
+		       LayoutArray[0]->PartitionEntry[j].PartitionNumber);
+	      RtlInitUnicodeString(&UnicodeString2,
+				   Buffer2);
 
-		  DPRINT("  %wZ\n", &UnicodeString2);
+	      /* assign it */
+	      DPRINT("  %wZ\n", &UnicodeString2);
+	      HalpAssignDrive(&UnicodeString2,
+			      AUTO_DRIVE,
+			      DOSDEVICE_DRIVE_FIXED);
+	    }
+	}
+    }
 
-		  /* assign it */
-		  HalpAssignDrive(&UnicodeString2,
-				  AUTO_DRIVE,
-				  DOSDEVICE_DRIVE_FIXED);
-	       }
-	  }
-     }
+  /* Assign remaining  primary partitions */
+  DPRINT("Assigning remaining primary partitions:\n");
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      /* search for primary partitions */
+      for (j = 0; j < PARTITION_TBL_SIZE; j++)
+	{
+	  if (!(i == 0 &&
+	      LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
+	      IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
+	    {
+	      swprintf(Buffer2,
+		       L"\\Device\\Harddisk%d\\Partition%d",
+		       i,
+		       LayoutArray[i]->PartitionEntry[j].PartitionNumber);
+	      RtlInitUnicodeString(&UnicodeString2,
+				   Buffer2);
 
-   /* Assign remaining  primary partitions */
-   DPRINT("Assigning remaining primary partitions:\n");
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	/* search for primary partitions */
-	for (j = 0; j < PARTITION_TBL_SIZE; j++)
-	  {
-	     if (!(i == 0 &&
-		   LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
-		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
-	       {
+	      /* assign it */
+	      DPRINT("  %wZ\n",
+		     &UnicodeString2);
+	      HalpAssignDrive(&UnicodeString2,
+			      AUTO_DRIVE,
+			      DOSDEVICE_DRIVE_FIXED);
+	    }
+	}
+    }
+
+  /* Assign extended (logical) partitions */
+  DPRINT("Assigning extended (logical) partitions:\n");
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      if (LayoutArray[i])
+	{
+	  /* search for extended partitions */
+	  for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
+	    {
+	      if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
+		  (LayoutArray[i]->PartitionEntry[j].PartitionNumber != 0))
+		{
 		  swprintf(Buffer2,
 			   L"\\Device\\Harddisk%d\\Partition%d",
 			   i,
@@ -475,45 +504,17 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		  HalpAssignDrive(&UnicodeString2,
 				  AUTO_DRIVE,
 				  DOSDEVICE_DRIVE_FIXED);
-	       }
-	  }
-     }
-
-   /* Assign extended (logical) partitions */
-   DPRINT("Assigning extended (logical) partitions:\n");
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-		if( LayoutArray[i] ){
-			/* search for extended partitions */
-			for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
-			  {
-			     if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
-				 (LayoutArray[i]->PartitionEntry[j].PartitionNumber != 0))
-			       {
-				  swprintf(Buffer2,
-					   L"\\Device\\Harddisk%d\\Partition%d",
-					   i,
-					   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-				  RtlInitUnicodeString(&UnicodeString2,
-						       Buffer2);
-
-				  /* assign it */
-				  DPRINT("  %wZ\n",
-					 &UnicodeString2);
-				  HalpAssignDrive(&UnicodeString2,
-						  AUTO_DRIVE,
-						  DOSDEVICE_DRIVE_FIXED);
-			       }
-			  }
 		}
-     }
+	    }
+	}
+    }
 
 #if 0
 /* TEST */
-   /* Assign removable disk drives */
-   DPRINT("Assigning extended (logical) partitions:\n");
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
+  /* Assign removable disk drives */
+  DPRINT("Assigning extended (logical) partitions:\n");
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
 	/* Search for virtual partitions */
 	if (LayoutArray[i]->PartitionCount == 1 &&
 	    LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
@@ -531,58 +532,58 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			    AUTO_DRIVE,
 			    DOSDEVICE_DRIVE_REMOVABLE);
 	  }
-     }
+    }
 /* TEST END */
 #endif
 
-   /* Free layout array */
-   for (i = 0; i < ConfigInfo->DiskCount; i++)
-     {
-	if (LayoutArray[i] != NULL)
-	  ExFreePool(LayoutArray[i]);
-     }
-   ExFreePool(LayoutArray);
+  /* Free layout array */
+  for (i = 0; i < ConfigInfo->DiskCount; i++)
+    {
+      if (LayoutArray[i] != NULL)
+	ExFreePool(LayoutArray[i]);
+    }
+  ExFreePool(LayoutArray);
 
-   /* Assign floppy drives */
-   DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
-   for (i = 0; i < ConfigInfo->FloppyCount; i++)
-     {
-	swprintf(Buffer1,
-		 L"\\Device\\Floppy%d",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
+  /* Assign floppy drives */
+  DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
+  for (i = 0; i < ConfigInfo->FloppyCount; i++)
+    {
+      swprintf(Buffer1,
+	       L"\\Device\\Floppy%d",
+	       i);
+      RtlInitUnicodeString(&UnicodeString1,
+			   Buffer1);
 
-	/* assign drive letters A: or B: or first free drive letter */
-	DPRINT("  %wZ\n",
-	       &UnicodeString1);
-	HalpAssignDrive(&UnicodeString1,
-			(i < 2) ? i : AUTO_DRIVE,
-			DOSDEVICE_DRIVE_REMOVABLE);
-     }
+      /* assign drive letters A: or B: or first free drive letter */
+      DPRINT("  %wZ\n",
+	     &UnicodeString1);
+      HalpAssignDrive(&UnicodeString1,
+		      (i < 2) ? i : AUTO_DRIVE,
+		      DOSDEVICE_DRIVE_REMOVABLE);
+    }
 
-   /* Assign cdrom drives */
-   DPRINT("CD-Rom drives: %d\n", ConfigInfo->CDRomCount);
-   for (i = 0; i < ConfigInfo->CDRomCount; i++)
-     {
-	swprintf(Buffer1,
-		 L"\\Device\\CdRom%d",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
+  /* Assign cdrom drives */
+  DPRINT("CD-Rom drives: %d\n", ConfigInfo->CDRomCount);
+  for (i = 0; i < ConfigInfo->CDRomCount; i++)
+    {
+      swprintf(Buffer1,
+	       L"\\Device\\CdRom%d",
+	       i);
+      RtlInitUnicodeString(&UnicodeString1,
+			   Buffer1);
 
-	/* assign first free drive letter */
-	DPRINT("  %wZ\n", &UnicodeString1);
-	HalpAssignDrive(&UnicodeString1,
-			AUTO_DRIVE,
-			DOSDEVICE_DRIVE_CDROM);
-     }
+      /* assign first free drive letter */
+      DPRINT("  %wZ\n", &UnicodeString1);
+      HalpAssignDrive(&UnicodeString1,
+		      AUTO_DRIVE,
+		      DOSDEVICE_DRIVE_CDROM);
+    }
 
-   /* Anything else ?? */
+  /* Anything else ?? */
 
 
-   ExFreePool(Buffer2);
-   ExFreePool(Buffer1);
+  ExFreePool(Buffer2);
+  ExFreePool(Buffer1);
 }
 
 
@@ -694,7 +695,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		    PartitionTable->Partition[i].StartingHead,
 		    PartitionTable->Partition[i].StartingSector & 0x3f,
 		    (((PartitionTable->Partition[i].StartingSector) & 0xc0) << 2) +
-          PartitionTable->Partition[i].StartingCylinder,
+		      PartitionTable->Partition[i].StartingCylinder,
 		    PartitionTable->Partition[i].EndingHead,
 		    PartitionTable->Partition[i].EndingSector,
 		    PartitionTable->Partition[i].EndingCylinder,
@@ -780,13 +781,13 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	     if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  ExtendedFound = TRUE;
-                  if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
-                  {
-                    containerOffset = PartitionOffset;
-                  }
+		  if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
+		    {
+		      containerOffset = PartitionOffset;
+		    }
 		  nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
 		     (ULONGLONG) PartitionTable->Partition[i].StartingBlock * 
-                     (ULONGLONG) SectorSize;
+		     (ULONGLONG) SectorSize;
 	       }
 	  }
 	  PartitionOffset = nextPartitionOffset;
@@ -805,7 +806,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
 			      IN ULONG PartitionNumber,
 			      IN ULONG PartitionType)
 {
-   return STATUS_NOT_IMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -816,7 +817,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			  IN ULONG NumberOfHeads,
 			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-   return STATUS_NOT_IMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */
