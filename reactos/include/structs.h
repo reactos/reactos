@@ -2694,14 +2694,14 @@ typedef struct {
 } MENUITEMTEMPLATEHEADER; 
 typedef VOID MENUTEMPLATE, *LPMENUTEMPLATE;
  
-#if 0
 typedef struct tagMETAFILEPICT { 
+#if 0
   LONG      mm; 
   LONG      xExt; 
   LONG      yExt; 
   HMETAFILE hMF; 
-} METAFILEPICT, *PMETAFILEPICT, *LPMETAFILEPICT; 
 #endif
+} METAFILEPICT, *PMETAFILEPICT, *LPMETAFILEPICT; 
    
 typedef struct tagMETAHEADER {  
   WORD  mtType; 
