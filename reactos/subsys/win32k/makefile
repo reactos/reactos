@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 2001/06/12 17:50:28 chorns Exp $
+# $Id: makefile,v 1.34 2001/06/22 12:17:24 ekohl Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -9,7 +9,7 @@ TARGET=win32k
 # from atheos appserver makefile
 COPTS   = -pipe -O3 -I./freetype/include -c -Wall
 
-CFLAGS = -I. -DUNICODE
+CFLAGS = -D__NTDRIVER__ -I. -DUNICODE
 
 #define FT_FLAT_COMPILE
 
@@ -48,13 +48,13 @@ all: $(TARGET).sys
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = eng\*.o main\*.o misc\*.o ldr\*.o stubs\*.o objects\*.o  \
-              freetype\*.o  \
+CLEAN_FILES = dib\*.o eng\*.o freetype\*.o ldr\*.o main\*.o misc\*.o ntuser\*.o  \
+              objects\*.o stubs\*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 else
-CLEAN_FILES = eng/*.o main/*.o ldr/*.o misc/*.o stubs/*.o objects/*.o  \
-              freetype/*.o  \
+CLEAN_FILES = dib/*.o eng/*.o freetype/*.o ldr/*.o main/*.o misc/*.o ntuser/*.o  \
+              objects/*.o stubs/*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 endif
