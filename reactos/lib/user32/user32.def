@@ -690,8 +690,8 @@ WinHelpA
 WinHelpW
 WindowFromDC@4
 WindowFromPoint@8
-;keybd_event
-;mouse_event
+keybd_event
+mouse_event
 wsprintfA
 wsprintfW
 wvsprintfA@12

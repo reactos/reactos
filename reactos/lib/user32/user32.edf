@@ -691,8 +691,8 @@ WinHelpA=WinHelpA@16
 WinHelpW=WinHelpW@16
 WindowFromDC=WindowFromDC@4
 WindowFromPoint=WindowFromPoint@8
-;keybd_event
-;mouse_event
+keybd_event=keybd_event@16
+mouse_event=mouse_event@20
 wsprintfA
 wsprintfW
 wvsprintfA=wvsprintfA@12

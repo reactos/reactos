@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.18 2003/02/02 17:35:30 hyperion Exp $
+/* $Id: stubs.c,v 1.19 2003/04/30 22:03:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,6 +10,7 @@
  *      08-05-2001  CSH  Created
  */
 #include <windows.h>
+#include <debug.h>
 
 WINBOOL
 STDCALL
@@ -538,5 +539,29 @@ SetWindowsHookExW(
   return 0;
 }
 
+VOID
+STDCALL
+keybd_event(
+	    BYTE bVk,
+	    BYTE bScan,
+	    DWORD dwFlags,
+	    DWORD dwExtraInfo)
+
+ 
+{
+  UNIMPLEMENTED
+}
+
+VOID
+STDCALL
+mouse_event(
+	    DWORD dwFlags,
+	    DWORD dx,
+	    DWORD dy,
+	    DWORD cButtons,
+	    DWORD dwExtraInfo)
+{
+  UNIMPLEMENTED
+}
 
 /* EOF */
