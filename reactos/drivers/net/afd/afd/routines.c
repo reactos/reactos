@@ -40,7 +40,6 @@ ULONG WSABufferSize(
   return Count;
 }
 
-
 NTSTATUS MergeWSABuffers(
   LPWSABUF Buffers,
   DWORD BufferCount,
@@ -243,6 +242,54 @@ VOID BuildIPv4Header(
   /* Calculate checksum of IP header */
   IPHeader->Checksum = (USHORT)
     ChecksumCompute(IPHeader, sizeof(IPv4_HEADER), 0);
+}
+
+/* Contributed by Royce Mitchell */
+/* Arty -- TODO -- Distinguish TCP and UDP */
+short AfdpGetAvailablePort ( PUNICODE_STRING DeviceName )
+{
+    static short last_port = 1024;
+    SOCKADDR_IN addr;
+    static BOOL Initted = FALSE;
+    static FAST_MUTEX mutex;
+    short rc;
+#if 0
+    HANDLE handle;
+    NTSTATUS status;
+#endif
+
+    if( !Initted ) {
+	ExInitializeFastMutex( &mutex );
+	Initted = TRUE;
+    }
+
+    ExAcquireFastMutex ( &mutex );
+    addr.sin_family = AF_INET;
+    addr.sin_port = last_port;
+    addr.sin_addr.s_addr = 0;
+
+    for ( ;; )
+    {
+	addr.sin_port++;
+	if ( addr.sin_port > 5000 )
+	    addr.sin_port = 1024;
+#if 0
+	status = TdiOpenAddressFile 
+	    ( DeviceName, (LPSOCKADDR)&addr, &handle, NULL );
+	if ( !NT_SUCCESS(status) )
+	    break;
+	NtClose ( handle );
+#else
+	break;
+#endif
+    }
+
+    last_port = addr.sin_port;
+    rc = last_port;
+
+    ExReleaseFastMutex ( &mutex );
+
+    return rc;
 }
 
 /* EOF */

@@ -260,6 +260,14 @@ typedef struct _AF_SEARCH {
 * Connection-oriented communication support structures *
 *******************************************************/
 
+typedef struct _TCP_RECEIVE_REQUEST {
+  LIST_ENTRY ListEntry;                 /* Entry on list */
+  PNDIS_BUFFER Buffer;                  /* Pointer to receive buffer */
+  ULONG BufferSize;                     /* Size of Buffer */
+  DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
+  PVOID Context;                        /* Pointer to context information */
+} TCP_RECEIVE_REQUEST, *PTCP_RECEIVE_REQUEST;
+
 typedef struct _TCP_SEND_REQUEST {
   LIST_ENTRY ListEntry;                 /* Entry on list */
   DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
@@ -302,8 +310,10 @@ typedef enum {
 typedef struct _TCP_SEGMENT {
   LIST_ENTRY ListEntry;
   PIP_PACKET IPPacket;        /* Pointer to IP packet */
+  PVOID SegmentData;          /* Pointer to segment data */
   ULONG SequenceNumber;       /* Sequence number of first byte in segment */
   ULONG Length;               /* Number of bytes in segment */
+  ULONG BytesDelivered;       /* Number of bytes already delivered to the client */
 } TCP_SEGMENT, *PTCP_SEGMENT;
 
 
@@ -335,10 +345,11 @@ typedef struct _CONNECTION_ENDPOINT {
   ULONG SendISS;              /* Initial send sequence number */
 
   /* Receive sequence variables */
-  ULONG ReceiveNext;          /* Sequence number of last data block received */
+  ULONG ReceiveNext;          /* Next sequence number expected and start of receive window */
   ULONG ReceiveWindow;        /* Maximum allowed number of octets in a segment */
   ULONG ReceiveUrgentPointer; /* Sequence number of start of urgent data */
   ULONG ReceiveIRS;           /* Initial receive sequence number */
+  ULONG ReceiveDelivered;     /* Next sequence number to be delivered to the client */
 
   /* Statistics for computing the retransmission timeout */
   ULONG TimestampSend;        /* Timestamp when sending a segment */
@@ -346,9 +357,10 @@ typedef struct _CONNECTION_ENDPOINT {
 
   /* Requests */
   PTDI_REQUEST ListenRequest; /* Queued listen request */
+  LIST_ENTRY ReceiveRequests; /* Queued receive requests */
 
   /* Queues */
-  LIST_ENTRY ReceivedSegments;
+  LIST_ENTRY ReceivedSegments;/* Segments that are received */
 
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 

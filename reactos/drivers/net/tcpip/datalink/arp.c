@@ -68,15 +68,17 @@ PNDIS_PACKET PrepareARPPacket(
         ExFreePool(DataBuffer);
         return NULL;
     }
+    Track(NDIS_PACKET_TAG,NdisPacket);
 
     /* Allocate NDIS buffer for maximum link level header and ARP packet */
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
-        DataBuffer, Size);
+		       DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        NdisFreePacket(NdisPacket);
+        FreeNdisPacket(NdisPacket);
         ExFreePool(DataBuffer);
         return NULL;
     }
+    Track(NDIS_BUFFER_TAG,NdisBuffer);
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(NdisPacket, NdisBuffer);

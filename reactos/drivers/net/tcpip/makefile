@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.1 2004/03/29 07:01:36 arty Exp $
+# $Id: makefile,v 1.16.2.2 2004/04/18 03:01:12 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
 
-TARGET_CFLAGS = -I./include -DNDIS40 -D__USE_W32API
+TARGET_CFLAGS = -I./include -DNDIS40 -D__USE_W32API 
 
 TARGET_DDKLIBS = ndis.a
 
@@ -23,7 +23,8 @@ TARGET_CLEAN = \
 
 TCPIP_OBJECTS    = tcpip/main.o tcpip/address.o tcpip/checksum.o \
                    tcpip/dispatch.o tcpip/fileobjs.o \
-                   tcpip/pool.o tcpip/routines.o tcpip/interface.o
+                   tcpip/pool.o tcpip/routines.o tcpip/interface.o \
+		   tcpip/memtrack.o
 INFO_OBJECTS     = tcpip/info.o tcpip/ninfo.o tcpip/tinfo.o tcpip/iinfo.o
 DATALINK_OBJECTS = datalink/arp.o datalink/lan.o datalink/loopback.o
 NETWORK_OBJECTS  = network/icmp.o network/ip.o network/neighbor.o \

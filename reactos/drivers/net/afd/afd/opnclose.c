@@ -46,6 +46,9 @@ PAFDFCB AfdInitializeFCB(
 
   InitializeListHead(&NewFCB->ListenRequestQueue);
 
+  InitializeListHead(&NewFCB->ConnectRequestQueue);
+  KeInitializeSpinLock(&NewFCB->ConnectRequestQueueLock);
+
 	if (FileObject)
 		FileObject->FsContext = (PVOID)NewFCB;
 

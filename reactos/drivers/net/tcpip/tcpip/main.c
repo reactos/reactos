@@ -18,6 +18,7 @@
 #include <tcp.h>
 #include <rosrtl/string.h>
 #include <info.h>
+#include <memtrack.h>
 
 #ifdef DBG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -723,6 +724,10 @@ DriverEntry(
   NDIS_STRING DeviceName;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  
+  TrackingInit();
+  TrackTag(NDIS_BUFFER_TAG);
+  TrackTag(NDIS_PACKET_TAG);
 
   /* TdiInitialize() ? */
 
@@ -797,7 +802,7 @@ DriverEntry(
   }
 
   /* Allocate NDIS buffer descriptors */
-  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
+  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 25);
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;

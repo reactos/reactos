@@ -13,8 +13,8 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MID_TRACE;
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = MID_TRACE;
+DWORD DebugTraceLevel = 0x7fffffff;
 
 #endif /* DBG */
 
@@ -22,6 +22,7 @@ DWORD DebugTraceLevel = MID_TRACE;
 NPAGED_LOOKASIDE_LIST BufferLookasideList;
 NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
 NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
+NPAGED_LOOKASIDE_LIST ConnectRequestLookasideList;
 
 
 NTSTATUS
@@ -202,13 +203,22 @@ DriverEntry(
       TAG('A', 'F', 'D', 'R'),
       0);*/
 
-	ExInitializeNPagedLookasideList(
+    ExInitializeNPagedLookasideList(
       &ListenRequestLookasideList,
       NULL,
       NULL,
       0,
       sizeof(AFD_LISTEN_REQUEST),
       TAG('A', 'F', 'D', 'L'),
+      0);
+
+    ExInitializeNPagedLookasideList(
+      &ConnectRequestLookasideList,
+      NULL,
+      NULL,
+      0,
+      sizeof(AFD_CONNECT_REQUEST),
+      TAG('A', 'F', 'D', 'C'),
       0);
 
     return STATUS_SUCCESS;

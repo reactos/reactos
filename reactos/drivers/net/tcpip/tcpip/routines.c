@@ -402,20 +402,33 @@ VOID FreeNdisPacket(
 
     TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
 
+    MTMARK();
+    TrackDump();
+
     /* Free all the buffers in the packet first */
     NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
     for (; Buffer != NULL; Buffer = NextBuffer) {
         PVOID Data;
         UINT Length;
 
+	MTMARK();
+	TrackDump();
+
         NdisGetNextBuffer(Buffer, &NextBuffer);
         NdisQueryBuffer(Buffer, &Data, &Length);
         NdisFreeBuffer(Buffer);
+	Untrack(Buffer);
         ExFreePool(Data);
+
+	MTMARK();
+	TrackDump();
     }
 
     /* Finally free the NDIS packet discriptor */
     NdisFreePacket(Packet);
+    Untrack(Packet);
+
+    TrackDump();
 }
 
 

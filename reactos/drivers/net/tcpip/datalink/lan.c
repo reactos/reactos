@@ -93,10 +93,11 @@ PNDIS_PACKET AllocateTDPacket(
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS)
         return NULL;
+    Track(NDIS_PACKET_TAG,NdisPacket);
 
     Data = ExAllocatePool(NonPagedPool, Adapter->MTU);
     if (!Data) {
-        NdisFreePacket(NdisPacket);
+        FreeNdisPacket(NdisPacket);
         return NULL;
     }
         
@@ -106,10 +107,11 @@ PNDIS_PACKET AllocateTDPacket(
                       Data,
                       Adapter->MTU);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        NdisFreePacket(NdisPacket);
+        FreeNdisPacket(NdisPacket);
         ExFreePool(Data);
         return NULL;
     }
+    Track(NDIS_BUFFER_TAG,Buffer);
 
     NdisChainBufferAtFront(NdisPacket, Buffer);
 
@@ -246,9 +248,15 @@ VOID ProtocolSendComplete(
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
+    MTMARK();
+
     AdjustPacket(Packet, Adapter->HeaderSize, PC(Packet)->DLOffset);
 
+    MTMARK();
+
     (*PC(Packet)->DLComplete)(Adapter->Context, Packet, Status);
+
+    MTMARK();
 }
 
 
@@ -273,6 +281,8 @@ VOID ProtocolTransferDataComplete(
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    MTMARK();
 
     if (Status == NDIS_STATUS_SUCCESS) {
         PNDIS_BUFFER NdisBuffer;
@@ -308,6 +318,8 @@ VOID ProtocolTransferDataComplete(
     Adapter->TDPackets  = Packet;
 
     KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+
+    MTMARK();
 }
 
 
@@ -342,6 +354,8 @@ NDIS_STATUS ProtocolReceive(
     PETH_HEADER EHeader  = (PETH_HEADER)HeaderBuffer;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    MTMARK();
 
     if (Adapter->State != LAN_STATE_STARTED) {
         TI_DbgPrint(DEBUG_DATALINK, ("Adapter is stopped.\n"));
@@ -440,6 +454,8 @@ NDIS_STATUS ProtocolReceive(
 
     KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
 
+    MTMARK();
+
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -532,6 +548,8 @@ VOID LANTransmit(
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
+    MTMARK();
+
     /* NDIS send routines don't have an offset argument so we
        must offset the data in upper layers and adjust the
        packet here. We save the offset in the packet context
@@ -539,6 +557,8 @@ VOID LANTransmit(
     Data = AdjustPacket(NdisPacket, Offset, Adapter->HeaderSize);
     PC(NdisPacket)->DLOffset = Offset;
 
+    MTMARK();
+	
     if (Adapter->State == LAN_STATE_STARTED) {
         switch (Adapter->Media) {
         case NdisMedium802_3:
@@ -581,6 +601,8 @@ VOID LANTransmit(
             /* FIXME: Support other medias */
             break;
         }
+
+	MTMARK();
 
         NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
         if (NdisStatus != NDIS_STATUS_PENDING)
@@ -697,6 +719,7 @@ VOID BindAdapter(
     /* Allocate packets for NdisTransferData */
     /* FIXME: How many should we allocate? */
     Adapter->TDPackets = NULL;
+
     for (i = 0; i < 2; i++) {
         Packet              = AllocateTDPacket(Adapter);
         if (!Packet) {

@@ -59,6 +59,7 @@ NTSTATUS TdiCall(
 
     AFD_DbgPrint(MAX_TRACE, ("Called\n"));
     
+    KeSetEvent(Event, IO_NETWORK_INCREMENT, FALSE);
     Status = IoCallDriver(DeviceObject, Irp);
     AFD_DbgPrint(MAX_TRACE, ("IoCallDriver: %08x\n", Status));
 

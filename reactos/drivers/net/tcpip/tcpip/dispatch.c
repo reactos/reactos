@@ -384,6 +384,10 @@ NTSTATUS DispTdiConnect(
     Parameters->RequestConnectionInformation,
     Parameters->ReturnConnectionInformation);
 
+  Irp->UserIosb->Status = Status; /* XXX arty: Do I need this? */
+
+  TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
+
   return Status;
 }
 
@@ -684,9 +688,61 @@ NTSTATUS DispTdiReceive(
  *     Status of operation
  */
 {
+  PIO_STACK_LOCATION IrpSp;
+  PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
+  PTRANSPORT_CONTEXT TranContext;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
+  ULONG BytesReceived;
+
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-	return STATUS_NOT_IMPLEMENTED;
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  ReceiveInfo = (PTDI_REQUEST_KERNEL_RECEIVE)&(IrpSp->Parameters);
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (TranContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+      return STATUS_INVALID_CONNECTION;
+    }
+
+  if (TranContext->Handle.ConnectionContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+      return STATUS_INVALID_CONNECTION;
+    }
+
+  /* Initialize a receive request */
+  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
+  Request.RequestNotifyObject = DispDataRequestComplete;
+  Request.RequestContext = Irp;
+  Status = DispPrepareIrpForCancel(
+    IrpSp->FileObject->FsContext,
+    Irp,
+    (PDRIVER_CANCEL)DispCancelRequest);
+  if (NT_SUCCESS(Status))
+    {
+      Status = TCPReceiveData(
+        &Request,
+        (PNDIS_BUFFER)Irp->MdlAddress,
+        ReceiveInfo->ReceiveLength,
+        ReceiveInfo->ReceiveFlags,
+        &BytesReceived);
+      if (Status != STATUS_PENDING)
+        {
+          DispDataRequestComplete(Irp, Status, BytesReceived);
+        }
+    }
+
+  if (Status != STATUS_PENDING)
+    {
+      IrpSp->Control &= ~SL_PENDING_RETURNED;
+    }
+
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
+
+  return Status;
 }
 
 
@@ -713,6 +769,12 @@ NTSTATUS DispTdiReceiveDatagram(
   DgramInfo = (PTDI_REQUEST_KERNEL_RECEIVEDG)&(IrpSp->Parameters);
 
   TranContext = IrpSp->FileObject->FsContext;
+  if (TranContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+      return STATUS_INVALID_ADDRESS;
+    }
+
   /* Initialize a receive request */
   Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
   Request.RequestNotifyObject  = DispDataRequestComplete;
@@ -721,22 +783,26 @@ NTSTATUS DispTdiReceiveDatagram(
     IrpSp->FileObject->FsContext,
     Irp,
     (PDRIVER_CANCEL)DispCancelRequest);
-  if (NT_SUCCESS(Status)) {
-    Status = UDPReceiveDatagram(
-      &Request,
-      DgramInfo->ReceiveDatagramInformation,
-      (PNDIS_BUFFER)Irp->MdlAddress,
-      DgramInfo->ReceiveLength,
-      DgramInfo->ReceiveFlags,
-      DgramInfo->ReturnDatagramInformation,
-      &BytesReceived);
-    if (Status != STATUS_PENDING) {
-      DispDataRequestComplete(Irp, Status, BytesReceived);
-      /* Return STATUS_PENDING because DispPrepareIrpForCancel marks
-         the Irp as pending */
-      Status = STATUS_PENDING;
+  if (NT_SUCCESS(Status))
+    {
+      Status = UDPReceiveDatagram(
+        &Request,
+        DgramInfo->ReceiveDatagramInformation,
+        (PNDIS_BUFFER)Irp->MdlAddress,
+        DgramInfo->ReceiveLength,
+        DgramInfo->ReceiveFlags,
+        DgramInfo->ReturnDatagramInformation,
+        &BytesReceived);
+      if (Status != STATUS_PENDING)
+        {
+          DispDataRequestComplete(Irp, Status, BytesReceived);
+        }
     }
-  }
+
+  if (Status != STATUS_PENDING)
+    {
+      IrpSp->Control &= ~SL_PENDING_RETURNED;
+    }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
@@ -754,7 +820,7 @@ NTSTATUS DispTdiSend(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }

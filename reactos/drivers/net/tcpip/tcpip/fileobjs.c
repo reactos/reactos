@@ -310,7 +310,7 @@ NTSTATUS FileOpenAddress(
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
     AddrFile->Port = Address->Address[0].Address[0].sin_port;
-    AddrFile->Send = TCPSendDatagram;
+    AddrFile->Send = TCPSendData;
     break;
 
   case IPPROTO_UDP:
@@ -462,8 +462,16 @@ NTSTATUS FileOpenConnection(
   /* Save client context pointer */
   Connection->ClientContext = ClientContext;
 
-  /* Initialize receive queue */
+  /* Initialize receive requests queue */
+  InitializeListHead(&Connection->ReceiveRequests);
+
+  /* Initialize received segments queue */
   InitializeListHead(&Connection->ReceivedSegments);
+
+TI_DbgPrint(MIN_TRACE, ("X1 cur 0x%x\n", &Connection->ReceivedSegments));
+TI_DbgPrint(MIN_TRACE, ("X1 Flink 0x%x\n", Connection->ReceivedSegments.Flink));
+TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
+
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;

@@ -13,6 +13,7 @@
 #include <ddk/tdiinfo.h>
 #include <ddk/tdikrnl.h>
 #include <afd/shared.h>
+#include <winbase.h>
 #include <debug.h>
 
 #define	IP_MIB_STATS_ID				1
@@ -73,6 +74,8 @@ typedef struct _AFDFCB {
     LIST_ENTRY          ReadRequestQueue;
     KSPIN_LOCK          ReadRequestQueueLock;
     LIST_ENTRY          ListenRequestQueue;
+    LIST_ENTRY          ConnectRequestQueue;
+    KSPIN_LOCK          ConnectRequestQueueLock;
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
     PKEVENT             EventObject;
@@ -92,8 +95,16 @@ typedef struct _AFD_BUFFER {
 typedef struct _AFD_READ_REQUEST {
   LIST_ENTRY ListEntry;
   PIRP Irp;
-  PFILE_REQUEST_RECVFROM RecvFromRequest;
-  PFILE_REPLY_RECVFROM RecvFromReply;
+  union {
+    struct {
+      PFILE_REQUEST_RECVFROM Request;
+      PFILE_REPLY_RECVFROM Reply;
+    } RecvFrom;
+    struct {
+      PFILE_REQUEST_RECV Request;
+      PFILE_REPLY_RECV Reply;
+   } Recv;
+  };
 } AFD_READ_REQUEST, *PAFD_READ_REQUEST;
 
 typedef struct _AFD_LISTEN_REQUEST {
@@ -102,6 +113,14 @@ typedef struct _AFD_LISTEN_REQUEST {
   PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
   IO_STATUS_BLOCK Iosb;
 } AFD_LISTEN_REQUEST, *PAFD_LISTEN_REQUEST;
+
+typedef struct _AFD_CONNECT_REQUEST {
+  LIST_ENTRY ListEntry;
+  PAFDFCB Fcb;
+  PIRP Irp;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
+  IO_STATUS_BLOCK Iosb;
+} AFD_CONNECT_REQUEST, *PAFD_CONNECT_REQUEST;
 
 typedef struct IPSNMP_INFO {
 	ULONG Forwarding;
@@ -216,6 +235,7 @@ typedef struct IPv4_HEADER {
 extern NPAGED_LOOKASIDE_LIST BufferLookasideList;
 extern NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
 extern NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
+extern NPAGED_LOOKASIDE_LIST ConnectRequestLookasideList;
 
 /* Prototypes from dispatch.c */
 
@@ -332,6 +352,8 @@ VOID BuildIPv4Header(
     ULONG Protocol,
     PSOCKADDR SourceAddress,
     PSOCKADDR DestinationAddress);
+
+short AfdpGetAvailablePort( PUNICODE_STRING DeviceName );
 
 /* Prototypes from tdi.c */
 

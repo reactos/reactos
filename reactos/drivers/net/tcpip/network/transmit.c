@@ -123,16 +123,18 @@ NTSTATUS SendFragments(
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    Track(NDIS_PACKET_TAG, IFC->NdisPacket);
 
     /* Allocate NDIS buffer */
     NdisAllocateBuffer(&NdisStatus, &IFC->NdisBuffer,
         GlobalBufferPool, Data, MaxLLHeaderSize + PathMTU);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        NdisFreePacket(IFC->NdisPacket);
+        FreeNdisPacket(IFC->NdisPacket);
         ExFreePool(Data);
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    Track(NDIS_BUFFER_TAG, IFC->NdisBuffer);
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(IFC->NdisPacket, IFC->NdisBuffer);
@@ -228,6 +230,8 @@ NTSTATUS IPSendFragment(
  *     Lowest level IP send routine
  */
 {
+    MTMARK();
+
     TI_DbgPrint(MAX_TRACE, ("Called. NdisPacket (0x%X)  NCE (0x%X).\n", NdisPacket, NCE));
 
     TI_DbgPrint(MAX_TRACE, ("NCE->State = %d.\n", NCE->State));
@@ -272,12 +276,16 @@ NTSTATUS IPSendFragment(
         return STATUS_SUCCESS;
     }
 
+    MTMARK();
+
     PC(NdisPacket)->DLComplete = IPSendComplete;
     (*NCE->Interface->Transmit)(NCE->Interface->Context,
                                 NdisPacket,
                                 MaxLLHeaderSize,
                                 NCE->LinkAddress,
                                 LAN_PROTO_IPv4);
+
+    MTMARK();
 
     return STATUS_SUCCESS;
 }
@@ -302,28 +310,38 @@ NTSTATUS IPSendDatagram(
     PNEIGHBOR_CACHE_ENTRY NCE;
     UINT PathMTU;
 
+    MTMARK();
+
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
 
     DISPLAY_IP_PACKET(IPPacket);
 
     NCE = RCN->NCE;
 
+    MTMARK();
+
 #ifdef DBG
     if (!NCE) {
         TI_DbgPrint(MIN_TRACE, ("No NCE to use.\n"));
+	MTMARK();
         FreeNdisPacket(IPPacket->NdisPacket);
         return STATUS_SUCCESS;
     }
 #endif
 
+    MTMARK();
     /* Fetch path MTU now, because it may change */
     PathMTU = RCN->PathMTU;
+    MTMARK();
 
     if (IPPacket->TotalSize > PathMTU) {
+	MTMARK();
         return SendFragments(IPPacket, NCE, PathMTU);
     } else {
+	MTMARK();
         if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
             /* Calculate checksum of IP header */
+	    MTMARK();
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
 
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
@@ -331,10 +349,15 @@ NTSTATUS IPSendDatagram(
 
             TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
                 WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
+	    MTMARK();
         } else {
+	    MTMARK();
             TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
               IPPacket->Flags));
+	    MTMARK();
         }
+
+	MTMARK();
 
         return IPSendFragment(IPPacket->NdisPacket, NCE);
     }

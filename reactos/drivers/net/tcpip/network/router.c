@@ -150,8 +150,8 @@ UINT CommonPrefixLength(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Address1 (%s)  Address2 (%s).\n",
-        A2S(Address1), A2S(Address2)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Address1 (%s) \n", A2S(Address1)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Address2 (%s).\n", A2S(Address2)));
 
     if (Address1->Type == IP_ADDRESS_V4)
         Size = sizeof(IPv4_RAW_ADDRESS);
@@ -162,21 +162,26 @@ UINT CommonPrefixLength(
     Addr2 = (PUCHAR)&Address2->Address;
 
     /* Find first non-matching byte */
-    for (i = 0; ; i++) {
-        if (i == Size)
-            return 8 * i; /* The two addresses are equal */
-
+    for (i = 0; i < Size; i++) {
+	TI_DbgPrint(DEBUG_ROUTER, ("Comparing octet %d to %d\n", 
+				   Addr1[i], Addr2[i]));
         if (Addr1[i] != Addr2[i])
             break;
     }
 
+    if( i == Size ) return 8 * i;
+
     /* Find first non-matching bit */
     Bitmask = 0x80;
     for (j = 0; ; j++) {
+	TI_DbgPrint(DEBUG_ROUTER, ("Mask: %x, v1: %x, v2: %x\n",
+				   Bitmask, Addr1[i], Addr2[i]));
         if ((Addr1[i] & Bitmask) != (Addr2[i] & Bitmask))
             break;
         Bitmask >>= 1;
     }
+
+    TI_DbgPrint(DEBUG_ROUTER, ("They share %d bits\n", 8 * i + j));
 
     return 8 * i + j;
 }
@@ -249,7 +254,8 @@ PNET_TABLE_ENTRY RouterFindBestNTE(
 
     CurrentEntry = Interface->NTEListHead.Flink;
     while (CurrentEntry != &Interface->NTEListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
+	Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
+	TI_DbgPrint(DEBUG_ROUTER, ("Looking at NTE %s\n", A2S(Current->Address)));
 
         Length = CommonPrefixLength(Destination, Current->Address);
         if (BestNTE) {
@@ -384,8 +390,9 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)  NTE (0x%X).\n", Destination, NTE));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)  NTE (%s).\n",
-        A2S(Destination), A2S(NTE->Address)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)\n", A2S(Destination)));
+    if( NTE )
+	TI_DbgPrint(DEBUG_ROUTER, ("NTE (%s).\n", A2S(NTE->Address)));
 
     KeAcquireSpinLock(&FIBLock, &OldIrql);
 

@@ -64,6 +64,7 @@ NTSTATUS AddUDPHeaderIPv4(
     ExFreePool(Header);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
+  Track(NDIS_BUFFER_TAG, HeaderBuffer);
 
   /* Chain header at front of NDIS packet */
   NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
@@ -149,6 +150,7 @@ NTSTATUS BuildUDPPacket(
     (*Packet->Free)(Packet);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
+  Track(NDIS_PACKET_TAG, Packet->NdisPacket);
 
   switch (SendRequest->RemoteAddress->Type) {
   case IP_ADDRESS_V4:
@@ -163,7 +165,7 @@ NTSTATUS BuildUDPPacket(
   }
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n", Status));
-    NdisFreePacket(Packet->NdisPacket);
+    FreeNdisPacket(Packet->NdisPacket);
     (*Packet->Free)(Packet);
     return Status;
   }

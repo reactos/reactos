@@ -128,6 +128,7 @@ VOID SendDatagramComplete(
   /* Remove data buffer before releasing memory for packet buffers */
   NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
   NdisUnchainBufferAtBack(Packet, &NdisBuffer);
+  TI_DbgPrint(MAX_TRACE, ("@@@ Packet Freed @@@\n"));
   FreeNdisPacket(Packet);
   DereferenceObject(SendRequest->RemoteAddress);
   ExFreePool(SendRequest);
@@ -529,7 +530,7 @@ NTSTATUS DGTransmit(
       KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
       /* Send the datagram */
       DGSend(AddressFile, SendRequest);
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n")); 
     }
   return STATUS_PENDING;
 }

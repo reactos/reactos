@@ -35,6 +35,9 @@ typedef struct TCPv4_HEADER {
 
 #define TCPOPTLEN_MAX_SEG_SIZE  0x4
 
+/* Data offset; 32-bit words (leftmost 4 bits); convert to bytes */
+#define TCP_DATA_OFFSET(DataOffset)(((DataOffset) & 0xF0) >> (4-2))
+
 
 /* TCPv4 pseudo header */
 typedef struct TCPv4_PSEUDO_HEADER {
@@ -73,7 +76,7 @@ typedef struct TCPv4_PSEUDO_HEADER {
 
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
-  ULONG SequenceNumber,
+  PTCPv4_HEADER TCPHeader,
   ULONG SegmentLength);
 
 VOID TCPFreeSegment(
@@ -81,7 +84,8 @@ VOID TCPFreeSegment(
 
 VOID TCPAddSegment(
   PCONNECTION_ENDPOINT Connection,
-  PTCP_SEGMENT Segment);
+  PTCP_SEGMENT Segment,
+  PULONG Acknowledged);
 
 inline NTSTATUS TCPBuildSendRequest(
     PTCP_SEND_REQUEST *SendRequest,
@@ -111,7 +115,14 @@ NTSTATUS TCPListen(
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo);
 
-NTSTATUS TCPSendDatagram(
+NTSTATUS TCPReceiveData(
+  PTDI_REQUEST Request,
+  PNDIS_BUFFER Buffer,
+  ULONG ReceiveLength,
+  ULONG ReceiveFlags,
+  PULONG BytesReceived);
+
+NTSTATUS TCPSendData(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,

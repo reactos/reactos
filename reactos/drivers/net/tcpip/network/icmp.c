@@ -95,6 +95,7 @@ PIP_PACKET PrepareICMPPacket(
         ExFreePool(DataBuffer);
         return NULL;
     }
+    Track(NDIS_PACKET_TAG,NdisPacket);
 
     TI_DbgPrint(MAX_TRACE, ("NdisPacket at (0x%X).\n", NdisPacket));
 
@@ -103,11 +104,12 @@ PIP_PACKET PrepareICMPPacket(
         DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         (*IPPacket->Free)(IPPacket);
-        NdisFreePacket(NdisPacket);
+        FreeNdisPacket(NdisPacket);
         ExFreePool(DataBuffer);
         return NULL;
     }
-
+    Track(NDIS_BUFFER_TAG,NdisBuffer);
+    
     TI_DbgPrint(MAX_TRACE, ("NdisBuffer at (0x%X).\n", NdisBuffer));
 
     /* Link NDIS buffer into packet */
@@ -247,6 +249,7 @@ VOID ICMPTransmit(
         IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0);
 
     /* Get a route to the destination address */
+    PNEIGHBOR_CACHE_ENTRY *NCE = RouterGetRoute( &IPPacket->DstAddr, NULL );
     if (RouteGetRouteToDestination(&IPPacket->DstAddr, NTE, &RCN) == IP_SUCCESS) {
         /* Send the packet */
         if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS) {

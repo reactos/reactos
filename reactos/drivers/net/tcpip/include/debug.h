@@ -107,6 +107,8 @@ extern DWORD DebugTraceLevel;
 
 #define CP CHECKPOINT
 
+#include <memtrack.h>
+
 #endif /* __DEBUG_H */
 
 /* EOF */

@@ -66,12 +66,13 @@ NTSTATUS BuildRawIPPacket(
         (*Packet->Free)(Packet);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    Track(NDIS_PACKET_TAG, Packet->NdisPacket);
 
     if (MaxLLHeaderSize != 0) {
         Header = ExAllocatePool(NonPagedPool, MaxLLHeaderSize);
         if (!Header) {
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate memory for packet headers.\n"));
-            NdisFreePacket(Packet->NdisPacket);
+            FreeNdisPacket(Packet->NdisPacket);
             (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -88,10 +89,11 @@ NTSTATUS BuildRawIPPacket(
         if (NdisStatus != NDIS_STATUS_SUCCESS) {
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS buffer for packet headers. NdisStatus = (0x%X)\n", NdisStatus));
             ExFreePool(Header);
-            NdisFreePacket(Packet->NdisPacket);
+            FreeNdisPacket(Packet->NdisPacket);
             (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+	Track(NDIS_BUFFER_TAG, HeaderBuffer);
         /* Chain header at front of packet */
         NdisChainBufferAtFront(Packet->NdisPacket, HeaderBuffer);
     }

@@ -185,6 +185,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
 {
     PROUTE_CACHE_NODE RCN;
 
+    MTMARK();
+
     TI_DbgPrint(DEBUG_RCACHE, ("Called.\n"));
 
     RCN = ExAllocateFromNPagedLookasideList(&IPRCNList);
@@ -192,6 +194,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
+
+    MTMARK();
 
     RCN->Free = FreeRCN;
 
@@ -202,6 +206,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
     RCN->Parent = ExternalRCN->Parent;
     RCN->Left   = ExternalRCN;
     RCN->Right  = ExternalRCN;
+
+    MTMARK();
 
     return RCN;
 }

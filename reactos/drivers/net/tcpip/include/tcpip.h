@@ -63,6 +63,8 @@
 #define MAX(value1, value2) \
     ((value1 > value2)? value1 : value2)
 
+#define NDIS_BUFFER_TAG FOURCC('n','b','u','f')
+#define NDIS_PACKET_TAG FOURCC('n','p','k','t')
 
 #ifdef i386
 

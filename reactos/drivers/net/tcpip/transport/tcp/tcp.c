@@ -8,6 +8,7 @@
  *   CSH 01/08-2000 Created
  */
 #include <roscfg.h>
+#include <limits.h>
 #include <tcpip.h>
 #include <tcp.h>
 #include <pool.h>
@@ -16,6 +17,13 @@
 #include <checksum.h>
 #include <routines.h>
 
+/** Arty **
+ * 
+ * We are running out of buffers because NdisFreePacket is called rather than
+ * FreeNdisPacket.
+ *
+ * We are still running out.  Find out why.
+ */
 
 static BOOLEAN TCPInitialized = FALSE;
 static LONG IPIdentification = 0;
@@ -24,29 +32,34 @@ static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
-  ULONG SequenceNumber,
+  PTCPv4_HEADER TCPHeader,
   ULONG SegmentLength)
 /*
  * FUNCTION: Creates a TCP segment object
  * ARGUMENTS:
  *     IPPacket       = Pointer to IP packet containing segment data
- *     SequenceNumber = Sequence number of first byte in the segment
+ *     TCPHeader      = Pointer to TCP header
  *     SegmentLength  = Number of bytes in the segment
  * RETURNS:
  *     Pointer to the created TCP segment. NULL if there was not enough free resources.
  */
 {
   PTCP_SEGMENT Segment;
+  ULONG TCPDataOffset;
 
   ASSERT(IPPacket);
+  ASSERT(TCPHeader);
 
   Segment = ExAllocateFromNPagedLookasideList(&TCPSegmentList);
   if (Segment == NULL)
     return NULL;
 
+  TCPDataOffset = TCP_DATA_OFFSET(TCPHeader->DataOffset);
   Segment->IPPacket = IPPacket;
-  Segment->SequenceNumber = SequenceNumber;
+  Segment->SegmentData = (PVOID)((ULONG_PTR)IPPacket->Data + TCPDataOffset);
+  Segment->SequenceNumber = DN2H(TCPHeader->SequenceNumber);
   Segment->Length = SegmentLength;
+  Segment->BytesDelivered = 0;
 
   TI_DbgPrint(DEBUG_TCP, ("Created TCP segment (SequenceNumber %d, Length %d)\n",
     Segment->SequenceNumber, Segment->Length));
@@ -71,12 +84,15 @@ VOID TCPFreeSegment(
 
 VOID TCPAddSegment(
   PCONNECTION_ENDPOINT Connection,
-  PTCP_SEGMENT Segment)
+  PTCP_SEGMENT Segment,
+  PULONG Acknowledged)
 /*
  * FUNCTION: Adds a TCP segment object to the receive queue of a connection
  * ARGUMENTS:
- *     Connection = Pointer to connection endpoint
- *     Segment    = Pointer to TCP segment object
+ *     Connection   = Pointer to connection endpoint
+ *     Segment      = Pointer to TCP segment object
+ *     Acknowledged = Address of buffer that will receive next sequence number
+ *                    expected and start of receive window
  * RETURNS:
  *     Nothing.
  */
@@ -93,24 +109,41 @@ VOID TCPAddSegment(
   /* If all segments arrive in-order then all segments will be put last in the
      receive queue when they arrive */
 
+TI_DbgPrint(MIN_TRACE, ("1\n"));
+TI_DbgPrint(MIN_TRACE, ("1x cur 0x%x\n", &Connection->ReceivedSegments));
+TI_DbgPrint(MIN_TRACE, ("1x Flink 0x%x\n", Connection->ReceivedSegments.Flink));
+TI_DbgPrint(MIN_TRACE, ("1x Blink 0x%x\n", Connection->ReceivedSegments.Blink));
+
   if (IsListEmpty(&Connection->ReceivedSegments))
     {
       /* This is the first segment received since the connection was created
          or since all data is delivered to the client */
+TI_DbgPrint(MIN_TRACE, ("2\n"));
       InsertTailList(&Connection->ReceivedSegments, &Segment->ListEntry);
+TI_DbgPrint(MIN_TRACE, ("3\n"));
+      *Acknowledged = Segment->SequenceNumber + Segment->Length;
       return;
     }
 
+TI_DbgPrint(MIN_TRACE, ("4\n"));
   CurrentEntry = Connection->ReceivedSegments.Blink;
+  ASSERT(CurrentEntry);
+TI_DbgPrint(MIN_TRACE, ("5\n"));
   Current = CONTAINING_RECORD(CurrentEntry, TCP_SEGMENT, ListEntry);
+  ASSERT(Current);
+TI_DbgPrint(MIN_TRACE, ("6\n"));
   if (Segment->SequenceNumber >= Current->SequenceNumber)
     {
       /* This segment has the highest sequence number yet received since the
          connection was created */
+TI_DbgPrint(MIN_TRACE, ("7a\n"));
       InsertTailList(&Connection->ReceivedSegments, &Segment->ListEntry);
+TI_DbgPrint(MIN_TRACE, ("7b\n"));
+      *Acknowledged = Segment->SequenceNumber + Segment->Length;
       return;
     }
 
+  TI_DbgPrint(MIN_TRACE, ("10\n"));
 
   TI_DbgPrint(MIN_TRACE, ("FIXME: Cannot handle segments that arrive out-of-order.\n"));
 
@@ -180,8 +213,10 @@ NTSTATUS TCPiAddHeaderIPv4(
                      BufferSize);
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
     ExFreePool(Header);
+    TI_DbgPrint(MAX_TRACE, ("Error from NDIS: %08x\n", NdisStatus));
     return STATUS_INSUFFICIENT_RESOURCES;
   }
+  Track(NDIS_BUFFER_TAG, HeaderBuffer);
 
   /* Chain header at front of NDIS packet */
   NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
@@ -256,7 +291,7 @@ NTSTATUS TCPiBuildPacket(
  *     structure for the connection
  */
 {
-  NTSTATUS Status;
+  NTSTATUS Status = NDIS_STATUS_SUCCESS;
   PIP_PACKET Packet;
   NDIS_STATUS NdisStatus;
   PDATAGRAM_SEND_REQUEST SendRequest;
@@ -265,6 +300,7 @@ NTSTATUS TCPiBuildPacket(
   TCPv4_PSEUDO_HEADER TcpPseudoHeader;
   PTCPv4_HEADER TcpHeader;
   ULONG TcpHeaderLength;
+  PNDIS_BUFFER UnchainedBuffer;
 
   ASSERT(LocalAddress);
   ASSERT(IPPacket);
@@ -293,11 +329,15 @@ NTSTATUS TCPiBuildPacket(
     (*Packet->Free)(Packet);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
+  Track(NDIS_PACKET_TAG, Packet->NdisPacket);
 
+#if 0
   switch (SendRequest->RemoteAddress->Type) {
   case IP_ADDRESS_V4:
+#endif
     Status = TCPiAddHeaderIPv4(SendRequest, Connection, LocalAddress,
       LocalPort, Packet, &TcpHeader, &TcpHeaderLength);
+#if 0
     break;
   case IP_ADDRESS_V6:
     /* FIXME: Support IPv6 */
@@ -306,9 +346,16 @@ NTSTATUS TCPiBuildPacket(
     Status = STATUS_UNSUCCESSFUL;
     break;
   }
+#endif
+
+  /* MSDN: You have to unchain the buffers until finished before doing
+   * NdisFreePacket.
+   *
+   * FreeNdisPacket does this, but the name is confusing */
+
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Cannot add TCP header. Status (0x%X)\n", Status));
-    NdisFreePacket(Packet->NdisPacket);
+    FreeNdisPacket(Packet->NdisPacket);
     (*Packet->Free)(Packet);
     return Status;
   }
@@ -384,7 +431,7 @@ VOID TCPiSendRequestComplete(
 
   if (Complete != NULL)
     {
-      TI_DbgPrint(MAX_TRACE, ("Calling completion routine.\n"));
+      TI_DbgPrint(MAX_TRACE, ("Calling completion routine with status (0x%.08x).\n", Status));
 
       /* Call upper level completion routine */
       (*Complete)(CompleteContext, Status, Count);
@@ -454,7 +501,7 @@ inline NTSTATUS TCPBuildSendRequest(
     *SendRequest,                 /* Context for completion function */
     TCPiBuildPacket,              /* Packet build function */
     Flags);                       /* Protocol specific flags */
-  if (!NT_SUCCESS(Status)) {
+  if (!NT_SUCCESS(Status)) { /* May leak an Ndis packet? */
     ExFreePool(*SendRequest);
     return Status;
   }
@@ -628,7 +675,8 @@ NTSTATUS TCPConnect(
 			  Connection->AddressFile->ADE));
   TI_DbgPrint(MID_TRACE, ("ADEA: %08x\n", 
 			  Connection->AddressFile->ADE->Address));
-
+  
+  Connection->SendISS      = 0;
   Connection->LocalAddress = Connection->AddressFile->ADE->Address;
   Connection->LocalPort    = Connection->AddressFile->Port;
   Connection->State        = ctSynSent;
@@ -657,6 +705,7 @@ NTSTATUS TCPConnect(
     ExFreePool(Connection->RemoteAddress);
     return NdisStatus;
   }
+  Track(NDIS_BUFFER_TAG, NdisBuffer);
 
   /* Issue SYN segment */
 
@@ -726,7 +775,7 @@ NTSTATUS TCPListen(
   Connection->ListenRequest = Request;
 
   TI_DbgPrint(MIN_TRACE, ("Connection->LocalAddress (%s).\n", A2S(Connection->LocalAddress)));
-  TI_DbgPrint(MIN_TRACE, ("Connection->LocalPort (%d).\n", Connection->LocalPort));
+  TI_DbgPrint(MIN_TRACE, ("Connection->LocalPort (%d).\n", WN2H(Connection->LocalPort)));
 
   /* Start listening for connection requests */
   Connection->State = ctListen;
@@ -741,7 +790,7 @@ NTSTATUS TCPListen(
 }
 
 
-NTSTATUS TCPSendDatagram(
+NTSTATUS TCPSendData(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
@@ -761,6 +810,8 @@ NTSTATUS TCPSendDatagram(
   ASSERT(ConnInfo);
   ASSERT(Buffer);
 
+  TI_DbgPrint(MIN_TRACE, ("FIXME: Send %d bytes of TCP data.\n", DataSize));
+
   return STATUS_SUCCESS;
 }
 
@@ -772,6 +823,175 @@ static inline ULONG TCPiSelectISS(
 
   TI_DbgPrint(MIN_TRACE, ("Select ISS.\n"));
   return 0x10000;
+}
+
+
+static inline ULONG TCPiSequenceSpaceWindow(
+  ULONG a,
+  ULONG b)
+/*
+ * FUNCTION: Returns the difference between sequence number a and sequence number b
+ * ARGUMENTS:
+ *     a = Smallest sequence number
+ *     b = Largest sequence number
+ * NOTES:
+ *     Sequence space wraps are detected and handled.
+ */
+{
+  return b >= a ? b - a : ULONG_MAX - a + b;
+}
+
+
+static inline VOID TCPiDeliverData(
+  PCONNECTION_ENDPOINT Connection)
+/*
+ * FUNCTION: Delivers data to a user
+ * ARGUMENTS:
+ *     Connection = Pointer to connection object
+ * NOTES:
+ *     If there is a receive request, then we copy the data to the
+ *     buffer supplied by the user and complete the receive request.
+ *     If no suitable receive request exists, then we call the event
+ *     handler if it exists, otherwise we do nothing.
+ */
+{
+  PTDI_IND_RECEIVE ReceiveHandler;
+  PVOID HandlerContext;
+  ULONG BytesTaken;
+  NTSTATUS Status;
+
+  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (IsListEmpty(&Connection->ReceivedSegments))
+    {
+      TI_DbgPrint(MAX_TRACE, ("No segments received.\n"));
+      return;
+    }
+
+  if (!IsListEmpty(&Connection->ReceiveRequests))
+    {
+      PTCP_RECEIVE_REQUEST CurrentReceiveRequest;
+      PLIST_ENTRY CurrentSegmentEntry;
+      PTCP_SEGMENT CurrentSegment;
+      PLIST_ENTRY CurrentEntry;
+      ULONG BytesCopied;
+      PVOID DataBuffer;
+
+      TI_DbgPrint(DEBUG_TCP, ("There is a receive request.\n"));
+
+      CurrentEntry = RemoveHeadList(&Connection->ReceiveRequests);
+      CurrentReceiveRequest = CONTAINING_RECORD(CurrentEntry, TCP_RECEIVE_REQUEST, ListEntry);
+
+      CurrentSegmentEntry = RemoveHeadList(&Connection->ReceivedSegments);
+      CurrentSegment = CONTAINING_RECORD(CurrentSegmentEntry, TCP_SEGMENT, ListEntry);
+
+      TI_DbgPrint(DEBUG_TCP, ("CurrentSegment->BytesDelivered %d.\n", CurrentSegment->BytesDelivered));
+      TI_DbgPrint(DEBUG_TCP, ("CurrentSegment->Length %d.\n", CurrentSegment->Length));
+      ASSERT(CurrentSegment->BytesDelivered < CurrentSegment->Length);
+      DataBuffer = (PVOID)((ULONG_PTR)CurrentSegment->SegmentData + CurrentSegment->BytesDelivered);
+
+      /* Copy the data into buffer provided by the user */
+      BytesCopied = CopyBufferToBufferChain(CurrentReceiveRequest->Buffer,
+        0,
+        DataBuffer,
+        TCPiSequenceSpaceWindow(Connection->ReceiveNext, Connection->ReceiveDelivered));
+
+      CurrentSegment->BytesDelivered += BytesCopied;
+      TI_DbgPrint(DEBUG_TCP, ("CurrentSegment->BytesDelivered %d.\n", CurrentSegment->BytesDelivered));
+
+      ASSERT(CurrentSegment->BytesDelivered <= CurrentSegment->Length);
+      Connection->ReceiveDelivered += BytesCopied;
+      TI_DbgPrint(DEBUG_TCP, ("Connection->ReceiveDelivered %d.\n", Connection->ReceiveDelivered));
+
+      TI_DbgPrint(DEBUG_TCP, ("Connection->ReceiveDelivered %d.\n", Connection->ReceiveDelivered));
+
+      if (CurrentSegment->BytesDelivered < CurrentSegment->Length)
+        {
+          TI_DbgPrint(DEBUG_TCP, ("Segment not fully delivered.\n"));
+          InsertHeadList(&Connection->ReceivedSegments, &CurrentSegment->ListEntry);
+        }
+      else
+        {
+          TI_DbgPrint(DEBUG_TCP, ("Segment fully delivered.\n"));
+        }
+
+      /* Complete the receive request */
+      (*CurrentReceiveRequest->Complete)(CurrentReceiveRequest->Context, STATUS_SUCCESS, BytesCopied);
+
+      /* Finally free the receive request */
+      ExFreePool(CurrentReceiveRequest);
+    }
+  else if (Connection->AddressFile->RegisteredReceiveHandler)
+    {
+      PLIST_ENTRY CurrentSegmentEntry;
+      PTCP_SEGMENT CurrentSegment;
+      PVOID DataBuffer;
+
+      TI_DbgPrint(DEBUG_TCP, ("Calling receive event handler.\n"));
+
+      CurrentSegmentEntry = RemoveHeadList(&Connection->ReceivedSegments);
+      CurrentSegment = CONTAINING_RECORD(CurrentSegmentEntry, TCP_SEGMENT, ListEntry);
+
+      TI_DbgPrint(DEBUG_TCP, ("CurrentSegment->BytesDelivered %d (before current delivery).\n", CurrentSegment->BytesDelivered));
+      TI_DbgPrint(DEBUG_TCP, ("CurrentSegment->Length %d.\n", CurrentSegment->Length));
+      ASSERT(CurrentSegment->BytesDelivered < CurrentSegment->Length);
+      DataBuffer = (PVOID)((ULONG_PTR)CurrentSegment->SegmentData + CurrentSegment->BytesDelivered);
+
+      ReceiveHandler = Connection->AddressFile->ReceiveHandler;
+      HandlerContext = Connection->AddressFile->ReceiveHandlerContext;
+
+      TI_DbgPrint(DEBUG_TCP, ("Delivering (CurrentSegment->Length - CurrentSegment->BytesDelivered) %d bytes.\n",
+        CurrentSegment->Length - CurrentSegment->BytesDelivered));
+
+      TI_DbgPrint(DEBUG_TCP, ("TCPiSequenceSpaceWindow(Connection->ReceiveNext, Connection->ReceiveDelivered) %d.\n",
+        TCPiSequenceSpaceWindow(Connection->ReceiveNext, Connection->ReceiveDelivered)));
+
+      Status = (*ReceiveHandler)(HandlerContext,
+        (CONNECTION_CONTEXT)NULL, /* FIXME */
+        TDI_RECEIVE_NORMAL,
+        CurrentSegment->Length - CurrentSegment->BytesDelivered,
+        TCPiSequenceSpaceWindow(Connection->ReceiveNext, Connection->ReceiveDelivered),
+        &BytesTaken,
+        DataBuffer,
+        NULL);
+      if (NT_SUCCESS(Status))
+        {
+          TI_DbgPrint(DEBUG_TCP, ("Handler returned success. Status 0x%.08x. BytesTaken %d.\n", Status, BytesTaken));
+          Connection->ReceiveDelivered += BytesTaken;
+        }
+      else
+        {
+          TI_DbgPrint(DEBUG_TCP, ("Handler returned failure. Status 0x%.08x.\n", Status));
+        }
+
+      TI_DbgPrint(DEBUG_TCP, ("Connection->ReceiveDelivered %d.\n", Connection->ReceiveDelivered));
+    }
+  else
+    {
+      TI_DbgPrint(DEBUG_TCP, ("Not delivering any data.\n"));
+    }
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+}
+
+
+static inline VOID TCPiMaybeDeliverData(
+  PCONNECTION_ENDPOINT Connection)
+{
+  ASSERT(Connection);
+
+  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  TI_DbgPrint(MAX_TRACE, ("Connection->ReceiveNext %d, Connection->ReceiveDelivered %d.\n"));
+
+  if (Connection->ReceiveNext > Connection->ReceiveDelivered)
+    {
+      TCPiDeliverData(Connection);
+    }
+  else
+    {
+      TI_DbgPrint(MAX_TRACE, ("Not delivering data to user.\n"));
+    }
 }
 
 
@@ -862,13 +1082,13 @@ static inline VOID TCPiReceiveListen(
         }
 
         TI_DbgPrint(MIN_TRACE, ("IPPacket->HeaderSize: %d\n", IPPacket->HeaderSize));
-        TI_DbgPrint(MIN_TRACE, ("TCPHeader->DataOffset: %d\n", TCPHeader->DataOffset));
+        TI_DbgPrint(MIN_TRACE, ("TCPHeader->DataOffset: 0x%x\n", TCPHeader->DataOffset));
         TI_DbgPrint(MIN_TRACE, ("IPPacket->TotalSize: %d\n", IPPacket->TotalSize));
 
-      if (IPPacket->HeaderSize + (TCPHeader->DataOffset & 0x0F) > IPPacket->TotalSize)
+      if (IPPacket->HeaderSize + TCP_DATA_OFFSET(TCPHeader->DataOffset) > IPPacket->TotalSize)
         {
           TI_DbgPrint(MIN_TRACE, ("FIXME: Queue segment data (%d bytes) for later processing.\n",
-            (IPPacket->HeaderSize + (TCPHeader->DataOffset & 0x0F)) - IPPacket->TotalSize));
+            (IPPacket->HeaderSize - TCP_DATA_OFFSET(TCPHeader->DataOffset) - IPPacket->TotalSize)));
         }
 
       /* Issue SYN/ACK segment */
@@ -892,8 +1112,10 @@ static inline VOID TCPiReceiveListen(
 
       ASSERT(Connection->ListenRequest != NULL);
 
-      TI_DbgPrint(DEBUG_TCP, ("Completing listen request at %p.\n", Connection->ListenRequest));
+      TI_DbgPrint(DEBUG_TCP, ("Completing listen request at %p.\n", 
+			      Connection->ListenRequest));
 
+      /* Connection->ListenRequest->Iosb.Status = Status; */
       /* Complete the listen request */
       (*((DATAGRAM_COMPLETION_ROUTINE)Connection->ListenRequest->RequestNotifyObject))(
         Connection->ListenRequest->RequestContext,
@@ -912,19 +1134,28 @@ static inline VOID TCPiReceiveSynSent(
   PIP_PACKET IPPacket,
   PTCPv4_HEADER TCPHeader)
 {
+  PCONNECTION_ENDPOINT Connection = AddrFile->Connection;
+  SOCKADDR_IN AddrForAFDEvent;
+  IRP ConnectIrp;
+
   ASSERT(AddrFile);
   ASSERT(IPPacket);
   ASSERT(TCPHeader);
 
   /* FIXME: Protect AddrFile->Connection */
 
-  if ((TCPHeader->Flags & TCP_ACK) > 0 && !(TCPHeader->Flags & TCP_SYN))
+  if ((TCPHeader->Flags & TCP_ACK) > 0)
     {
       /* FIXME: If SEG.ACK =< ISS, or SEG.ACK > SND.NXT, send a reset (unless
           the RST bit is set, if so drop the segment and return)
           <SEQ=SEG.ACK><CTL=RST> */
-      TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
-      return;
+#if 0
+	if (TCPHeader->AckNumber <= Connection->SendISS ||
+	    TCPHeader->AckNumber > Connection->ReceiveNext) {
+	    TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+	    return;
+	}
+#endif
     }
 
   /* FIXME: If SND.UNA =< SEG.ACK =< SND.NXT then the ACK is acceptable. */
@@ -1005,7 +1236,6 @@ static inline VOID TCPiReceiveSynSent(
       /* FIXME: The security/compartment and precedence are acceptable */
       if (TRUE)
         {
-          PCONNECTION_ENDPOINT Connection = AddrFile->Connection;
           register NTSTATUS Status;
 
           /* FIXME: RCV.NXT is set to SEG.SEQ+1, IRS is set to
@@ -1043,6 +1273,13 @@ static inline VOID TCPiReceiveSynSent(
 
           if (Connection->SendUnacknowledged > Connection->SendISS)
             {
+	      PCONNECTION_ENDPOINT Connection = AddrFile->Connection;
+	      CONNECTION_CONTEXT ConnectionContext;
+	      
+	      ASSERT(AddrFile);
+	      ASSERT(IPPacket);
+	      ASSERT(TCPHeader);
+
               TI_DbgPrint(DEBUG_TCP, ("Go to ctEstablished connection state.\n"));
               Connection->State = ctEstablished;
 
@@ -1058,6 +1295,7 @@ static inline VOID TCPiReceiveSynSent(
                 SRF_ACK,                  /* Protocol specific flags */
                 Connection->SendNext,     /* Sequence number */
                 Connection->ReceiveNext); /* Acknowledgement number */
+
               if (!NT_SUCCESS(Status))
                 {
                   /* FIXME: Send RST (if no RST)
@@ -1066,7 +1304,29 @@ static inline VOID TCPiReceiveSynSent(
                   TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
                   return;
                 }
-            }
+	      else
+		{
+		  TI_DbgPrint
+		    (MAX_TRACE, ("** Calling back: Socket connected **\n"));
+		  AddrForAFDEvent.sin_family = AF_INET;
+		  AddrForAFDEvent.sin_port = Connection->RemotePort;
+		  RtlCopyMemory(&AddrForAFDEvent.sin_addr,
+				&Connection->RemoteAddress->Address,
+				sizeof(AddrForAFDEvent.sin_addr));
+		  
+		  if( AddrFile->RegisteredConnectHandler )
+		    Status = AddrFile->ConnectHandler
+		      (AddrFile->ConnectHandlerContext,
+		       sizeof(SOCKADDR_IN),
+		       &AddrForAFDEvent,
+		       0,
+		       NULL,
+		       0,
+		       0,
+		       ConnectionContext,
+		       &ConnectIrp);
+		}
+	    }
           else
             {
               TI_DbgPrint(MIN_TRACE, ("Go to ctSynReceived connection state.\n"));
@@ -1092,8 +1352,8 @@ static inline VOID TCPiReceiveSynSent(
                   TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
                   return;
                 }
-            }
-        }
+	    }
+	}
       else
         {
           /* FIXME: What happens here? */
@@ -1114,10 +1374,6 @@ static inline BOOLEAN TCPiReceiveSynReceived(
   PTCPv4_HEADER TCPHeader)
 {
   PCONNECTION_ENDPOINT Connection = AddrFile->Connection;
-
-  ASSERT(AddrFile);
-  ASSERT(IPPacket);
-  ASSERT(TCPHeader);
 
   /* FIXME: Protect AddrFile->Connection */
 
@@ -1151,7 +1407,7 @@ static inline VOID TCPiReceiveData(
   PADDRESS_FILE AddrFile,
   PIP_PACKET IPPacket,
   PTCPv4_HEADER TCPHeader,
-  ULONG Payload)
+  ULONG TCPPayload)
 {
   PCONNECTION_ENDPOINT Connection = AddrFile->Connection;
   PTCP_SEGMENT Segment;
@@ -1162,7 +1418,7 @@ static inline VOID TCPiReceiveData(
   ASSERT(IPPacket);
   ASSERT(TCPHeader);
 
-  TI_DbgPrint(DEBUG_TCP, ("Called (Payload %d bytes).\n", Payload));
+  TI_DbgPrint(DEBUG_TCP, ("Called (TCPPayload %d bytes).\n", TCPPayload));
 
   /* FIXME: Protect AddrFile->Connection */
 
@@ -1202,23 +1458,28 @@ static inline VOID TCPiReceiveData(
     RCV.NXT =< SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
   */
 
-  Segment = TCPCreateSegment(IPPacket,
-    DN2H(TCPHeader->SequenceNumber),
-    Payload);
-  if (Segment == NULL)
+
+  if (TCPPayload > 0)
     {
-      /* FIXME: Send RST (if no RST)
-      * <SEQ=SEG.ACK><CTL=RST>
-      */
-      TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
-      return;
+      Segment = TCPCreateSegment(IPPacket,
+        TCPHeader,
+        TCPPayload);
+      if (Segment == NULL)
+        {
+          /* FIXME: Send RST (if no RST)
+          * <SEQ=SEG.ACK><CTL=RST>
+          */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+          return;
+        }
+    
+      TCPAddSegment(Connection, Segment, &Connection->ReceiveNext);
     }
 
-  TCPAddSegment(Connection, Segment /*, &Acknowledged */);
-
-  //Connection->ReceiveNext += ;
+  /* FIXME: Maybe adjust ReceiveWindow */
 
   /* Issue ACK segment */
+#if 0
   Status = TCPBuildAndTransmitSendRequest2(
     Connection,               /* Connection endpoint */
     NULL,                     /* Completion routine */
@@ -1236,11 +1497,14 @@ static inline VOID TCPiReceiveData(
       TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
       return;
     }
+#endif
 
   if ((TCPHeader->Flags & TCP_PSH) > 0)
     {
       TI_DbgPrint(MIN_TRACE, ("FIXME: Handle PUSH flag.\n"));
     }
+
+  TCPiMaybeDeliverData(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("\n"));
 }
@@ -1250,7 +1514,7 @@ static inline VOID TCPiReceive(
   PADDRESS_FILE AddrFile,
   PIP_PACKET IPPacket,
   PTCPv4_HEADER TCPHeader,
-  ULONG Payload)
+  ULONG TCPPayload)
 {
   register CONNECTION_STATE State;
 
@@ -1381,14 +1645,6 @@ static inline VOID TCPiReceive(
       if (AddrFile->Connection->State == ctSynReceived)
         {
           /* FIXME: If the security/compartment and precedence in the segment do not
-             exactly match the security/compartment and precedence in the TCB
-             then send a reset, and return. */
-          TI_DbgPrint(MIN_TRACE, ("FIXME: Check security/compartment and precedence.\n"));
-        }
-
-      if (AddrFile->Connection->State == ctSynReceived)
-        {
-          /* FIXME: If the security/compartment and precedence in the segment do not
               exactly match the security/compartment and precedence in the TCB
               then send a reset, any outstanding RECEIVEs and SEND should
               receive "reset" responses.  All segment queues should be
@@ -1425,8 +1681,10 @@ static inline VOID TCPiReceive(
                   and an ack would have been sent in the first step (sequence
                   number check). */
 
+#if 0
               TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe go to ctClosed connection state.\n"));
               return;
+#endif
             }
         }
 
@@ -1496,7 +1754,7 @@ static inline VOID TCPiReceive(
             }
 
           /* Process any available data in the segment */
-          TCPiReceiveData(AddrFile, IPPacket, TCPHeader, Payload);
+          TCPiReceiveData(AddrFile, IPPacket, TCPHeader, TCPPayload);
 
           return;
         }
@@ -1580,7 +1838,7 @@ static inline VOID TCPiReceive(
         || State == ctFinWait2)
         {
           /* Process any available data in the segment */
-          TCPiReceiveData(AddrFile, IPPacket, TCPHeader, Payload);
+          TCPiReceiveData(AddrFile, IPPacket, TCPHeader, TCPPayload);
           return;
         }
 
@@ -1667,6 +1925,67 @@ static inline VOID TCPiReceive(
 }
 
 
+NTSTATUS TCPReceiveData(
+  PTDI_REQUEST Request,
+  PNDIS_BUFFER Buffer,
+  ULONG ReceiveLength,
+  ULONG ReceiveFlags,
+  PULONG BytesReceived)
+/*
+ * FUNCTION: Attempts to receive a TCP segment from a remote address
+ * ARGUMENTS:
+ *     Request       = Pointer to TDI request
+ *     Buffer        = Pointer to NDIS buffer chain to store received data
+ *     ReceiveLength = Maximum size to use of buffer, 0 if all can be used
+ *     ReceiveFlags  = Receive flags (None, Normal, Peek)
+ *     BytesReceive  = Pointer to structure for number of bytes received
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     This is the high level interface for receiving TCP data
+ */
+{
+  PTCP_RECEIVE_REQUEST ReceiveRequest;
+  PCONNECTION_ENDPOINT Connection;
+  NTSTATUS Status;
+
+  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  ASSERT(Request);
+  ASSERT(Buffer);
+
+  Connection = Request->Handle.ConnectionContext;
+  ASSERT(Connection);
+
+  ReceiveRequest = ExAllocatePool(NonPagedPool, sizeof(TCP_RECEIVE_REQUEST));
+  if (ReceiveRequest != NULL)
+    {
+      /* Initialize a receive request */
+      ReceiveRequest->Buffer = Buffer;
+      /* If ReceiveLength is 0, the whole buffer is available to us */
+      ReceiveRequest->BufferSize = (ReceiveLength == 0) ?
+        MmGetMdlByteCount(Buffer) : ReceiveLength;
+      ReceiveRequest->Complete = Request->RequestNotifyObject;
+      ReceiveRequest->Context = Request->RequestContext;
+
+      /* Queue receive request */
+      InsertTailList(&Connection->ReceiveRequests, &ReceiveRequest->ListEntry);
+
+      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+
+      return STATUS_PENDING;
+    }
+  else
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving with errors (0x%X).\n", Status));
+
+  return Status;
+}
+
+
 VOID TCPReceive(
     PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket)
@@ -1747,22 +2066,22 @@ VOID TCPReceive(
   
   if (AddrFile) {
     ULONG TotalLength;
-    ULONG DataOffset;
-    ULONG Payload;
+    ULONG TCPDataOffset;
+    ULONG TCPPayload;
 
     TotalLength = WN2H(IPv4Header->TotalLength);
-    DataOffset = (TCPHeader->DataOffset & 0xF0) >> (4 << 2); /* Left-most 4 bits (in 32-bit words)*/
-    Payload = TotalLength - DataOffset;
+    TCPDataOffset = TCP_DATA_OFFSET(TCPHeader->DataOffset);
+    TCPPayload = TotalLength - IPPacket->HeaderSize - TCPDataOffset;
 
-    TI_DbgPrint(DEBUG_TCP, ("TotalLength %d, DataOffset %d (%d bytes payload)\n",
-      TotalLength, DataOffset, Payload));
+    TI_DbgPrint(DEBUG_TCP, ("TotalLength %d, TCP DataOffset %d (%d bytes TCP payload)\n",
+      TotalLength, TCPDataOffset, TCPPayload));
 
     /* There can be only one client */
     TI_DbgPrint(MID_TRACE, ("Found address file object for IPv4 TCP datagram to address (0x%X).\n",
       DN2H(DstAddress->Address.IPv4Address)));
     /* FIXME: Slow but effective synchronization */
     KeAcquireSpinLock(&AddrFile->Connection->Lock, &OldIrql);
-    TCPiReceive(AddrFile, IPPacket, TCPHeader, Payload);
+    TCPiReceive(AddrFile, IPPacket, TCPHeader, TCPPayload);
     KeReleaseSpinLock(&AddrFile->Connection->Lock, OldIrql);
   } else {
     /* There are no open address files that will take this datagram */
