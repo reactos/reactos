@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.9 2003/03/19 23:16:00 gdalsnes Exp $
+/* $Id: zw.h,v 1.10 2003/03/22 11:25:33 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4314,31 +4314,6 @@ ZwQuerySystemTime (
 	);
 
 /*
- * FUNCTION: Loads a registry key.
- * ARGUMENTS:
- *       KeyHandle = Handle to the registry key
- *       ObjectAttributes = ???
- *       Unknown3 = ???
- * REMARK:
- *       This procedure maps to the win32 procedure RegLoadKey
- * RETURNS: Status
- */
-NTSTATUS
-STDCALL
-NtLoadKey2 (
-	PHANDLE			KeyHandle,
-	POBJECT_ATTRIBUTES	ObjectAttributes,
-	ULONG			Unknown3
-	);
-NTSTATUS
-STDCALL
-ZwLoadKey2 (
-	PHANDLE			KeyHandle,
-	POBJECT_ATTRIBUTES	ObjectAttributes,
-	ULONG			Unknown3
-	);
-
-/*
  * FUNCTION: Copies a handle from one process space to another
  * ARGUMENTS:
  *         SourceProcessHandle = The source process owning the handle. The source process should have opened
@@ -4677,39 +4652,64 @@ ZwGetTickCount(
 /*
  * FUNCTION: Loads a registry key.
  * ARGUMENTS:
- *       KeyHandle = Handle to the registry key
- *       ObjectAttributes = ???
+ *       KeyObjectAttributes = Key to be loaded
+ *       FileObjectAttributes = File to load the key from
  * REMARK:
  *      This procedure maps to the win32 procedure RegLoadKey
  * RETURNS: Status
  */
 NTSTATUS
-STDCALL 
+STDCALL
 NtLoadKey(
-	PHANDLE KeyHandle,
-	POBJECT_ATTRIBUTES ObjectAttributes
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes
 	);
 
 NTSTATUS
-STDCALL 
+STDCALL
 ZwLoadKey(
-	PHANDLE KeyHandle,
-	POBJECT_ATTRIBUTES ObjectAttributes
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes
 	);
 
 /*
- * FUNCTION: Locks a range of virtual memory. 
+ * FUNCTION: Loads a registry key.
+ * ARGUMENTS:
+ *       KeyObjectAttributes = Key to be loaded
+ *       FileObjectAttributes = File to load the key from
+ *       Flags = ???
+ * REMARK:
+ *       This procedure maps to the win32 procedure RegLoadKey
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtLoadKey2(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
+	IN	ULONG			Flags
+	);
+NTSTATUS
+STDCALL
+ZwLoadKey2(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes,
+	IN	ULONG			Flags
+	);
+
+/*
+ * FUNCTION: Locks a range of virtual memory.
  * ARGUMENTS: 
  *       ProcessHandle = Handle to the process
- *       BaseAddress =  Lower boundary of the range of bytes to lock. 
+ *       BaseAddress =  Lower boundary of the range of bytes to lock.
  *       NumberOfBytesLock = Offset to the upper boundary.
  *       NumberOfBytesLocked (OUT) = Number of bytes actually locked.
  * REMARK:
-	This procedure maps to the win32 procedure VirtualLock 
+	This procedure maps to the win32 procedure VirtualLock.
  * RETURNS: Status [STATUS_SUCCESS | STATUS_WAS_LOCKED ]
  */	
 NTSTATUS
-STDCALL 
+STDCALL
 NtLockVirtualMemory(
 	HANDLE ProcessHandle,
 	PVOID BaseAddress,
@@ -4718,7 +4718,7 @@ NtLockVirtualMemory(
 	);
 
 NTSTATUS
-STDCALL 
+STDCALL
 ZwLockVirtualMemory(
 	HANDLE ProcessHandle,
 	PVOID BaseAddress,
@@ -5213,13 +5213,13 @@ ZwSetTimer(
 NTSTATUS
 STDCALL
 NtUnloadKey(
-	HANDLE KeyHandle
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes
 	);
 
 NTSTATUS
 STDCALL
 ZwUnloadKey(
-	HANDLE KeyHandle
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes
 	);
 
 /*

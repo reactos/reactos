@@ -821,14 +821,11 @@ NtQueryKey(IN HANDLE KeyHandle,
 		NULL);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       return Status;
     }
-CHECKPOINT1;
 
   /* Acquire hive lock */
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
-CHECKPOINT1;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -840,7 +837,6 @@ CHECKPOINT1;
   switch (KeyInformationClass)
     {
     case KeyBasicInformation:
-CHECKPOINT1;
       /* Check size of buffer */
       if (Length < sizeof(KEY_BASIC_INFORMATION) + 
           KeyObject->NameSize * sizeof(WCHAR))
@@ -861,7 +857,6 @@ CHECKPOINT1;
           *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
             KeyObject->NameSize * sizeof(WCHAR);
         }
-CHECKPOINT1;
       break;
 
     case KeyNodeInformation:
@@ -943,11 +938,8 @@ CHECKPOINT1;
       break;
     }
 
-CHECKPOINT1;
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
-CHECKPOINT1;
   ObDereferenceObject(KeyObject);
-CHECKPOINT1;
 
   return(Status);
 }
@@ -1185,8 +1177,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PHBIN pBin;
   ULONG DesiredAccess;
 
-  DPRINT("NtSetValueKey(KeyHandle %x  ValueName %S  Type %d)\n",
-	 KeyHandle, ValueName? ValueName->Buffer : NULL, Type);
+  DPRINT("NtSetValueKey(KeyHandle %x  ValueName '%wZ'  Type %d)\n",
+	 KeyHandle, ValueName, Type);
 
   DesiredAccess = KEY_SET_VALUE;
   if (Type == REG_LINK)
@@ -1389,21 +1381,31 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
   return Status;
 }
 
-
+/*
+ * NOTE:
+ * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
+ * KeyObjectAttributes->Name specifies the name of the key to load.
+ */
 NTSTATUS STDCALL
-NtLoadKey(PHANDLE KeyHandle,
-	  POBJECT_ATTRIBUTES ObjectAttributes)
+NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+	  IN POBJECT_ATTRIBUTES FileObjectAttributes)
 {
-  return NtLoadKey2(KeyHandle, ObjectAttributes, 0);
+  return NtLoadKey2(KeyObjectAttributes, FileObjectAttributes, 0);
 }
 
 
+/*
+ * NOTE:
+ * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
+ * KeyObjectAttributes->Name specifies the name of the key to load.
+ */
 NTSTATUS STDCALL
-NtLoadKey2(IN PHANDLE KeyHandle,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ULONG Flags)
+NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+	   IN POBJECT_ATTRIBUTES FileObjectAttributes,
+	   IN ULONG Flags)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1579,8 +1581,13 @@ NtSetInformationKey(
 }
 
 
+/*
+ * NOTE:
+ * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
+ * KeyObjectAttributes->Name specifies the name of the key to unload.
+ */
 NTSTATUS STDCALL
-NtUnloadKey(IN HANDLE KeyHandle)
+NtUnloadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
   UNIMPLEMENTED;
 }
