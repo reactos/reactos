@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.229 2004/06/07 12:24:00 ekohl Exp $
+# $Id: Makefile,v 1.230 2004/06/07 17:31:50 navaraf Exp $
 #
 # Global makefile
 #
@@ -214,7 +214,7 @@ livecd_bootstrap_files:
 	$(MAKE) LIVECD_INSTALL=yes fastinstall
 
 livecd_install_before:
-	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(LIVECD_DIR)/reactos/system32/config bootdata/livecd.inf
+	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(LIVECD_DIR)/reactos/system32/config bootdata/livecd.inf bootdata/hiveinst.inf
 
 livecd_basic: livecd_directory_layout livecd_bootstrap_files livecd_install_before
 
