@@ -69,6 +69,85 @@ VBEFindAdapter(
 }
 
 /*
+ * VBESortModesCallback
+ *
+ * Helper function for sorting video mode list.
+ */
+
+static int
+VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
+{
+   DPRINT(("VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
+      VbeModeInfoA->XResolution, VbeModeInfoA->YResolution,
+      VbeModeInfoA->BitsPerPixel,
+      VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
+      VbeModeInfoB->BitsPerPixel));
+   
+   /*
+    * FIXME: Until some reasonable method for changing video modes will
+    * be available we favor more bits per pixel. It should be changed
+    * later.
+    */
+   if (VbeModeInfoA->BitsPerPixel < VbeModeInfoB->BitsPerPixel) return 1;
+   if (VbeModeInfoA->BitsPerPixel > VbeModeInfoB->BitsPerPixel) return -1;
+   if (VbeModeInfoA->XResolution < VbeModeInfoB->XResolution) return -1;
+   if (VbeModeInfoA->XResolution > VbeModeInfoB->XResolution) return 1;
+   if (VbeModeInfoA->YResolution < VbeModeInfoB->YResolution) return -1;
+   if (VbeModeInfoA->YResolution > VbeModeInfoB->YResolution) return 1;
+   return 0;
+}
+
+/*
+ * VBESortModes
+ *
+ * Simple function for sorting the video mode list. Uses bubble sort.
+ */
+
+VOID FASTCALL
+VBESortModes(PVBE_DEVICE_EXTENSION DeviceExtension)
+{
+   BOOLEAN Finished = FALSE;
+   ULONG Pos;
+   int Result;
+   VBE_MODEINFO TempModeInfo;
+   WORD TempModeNumber;
+
+   while (!Finished)
+   {
+      Finished = TRUE;
+      for (Pos = 0; Pos < DeviceExtension->ModeCount - 1; Pos++)
+      {
+         Result = VBESortModesCallback(
+            DeviceExtension->ModeInfo + Pos,
+            DeviceExtension->ModeInfo + Pos + 1);
+         if (Result > 0)
+         {
+            Finished = FALSE;
+
+            VideoPortMoveMemory(
+               &TempModeInfo,
+               DeviceExtension->ModeInfo + Pos,
+               sizeof(VBE_MODEINFO));
+            TempModeNumber = DeviceExtension->ModeNumbers[Pos];
+
+            VideoPortMoveMemory(
+               DeviceExtension->ModeInfo + Pos,
+               DeviceExtension->ModeInfo + Pos + 1,
+               sizeof(VBE_MODEINFO));
+            DeviceExtension->ModeNumbers[Pos] =
+               DeviceExtension->ModeNumbers[Pos + 1];
+
+            VideoPortMoveMemory(
+               DeviceExtension->ModeInfo + Pos + 1,
+               &TempModeInfo,
+               sizeof(VBE_MODEINFO));
+            DeviceExtension->ModeNumbers[Pos + 1] = TempModeNumber;
+         }
+      }
+   }
+}
+
+/*
  * VBEInitialize
  *
  * Performs the first initialization of the adapter, after the HAL has given
@@ -93,9 +172,6 @@ VBEInitialize(PVOID HwDeviceExtension)
    USHORT ModeTemp;
    ULONG CurrentMode;
    PVBE_MODEINFO VbeModeInfo;
-   VBE_MODEINFO TempVbeModeInfo;
-   WORD TempVbeModeNumber;
-   WORD DefaultMode;
 
    /*
     * Get the Int 10 interface that we will use for allocating real
@@ -112,7 +188,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    if (Status != NO_ERROR)
    {
       DPRINT(("Failed to get Int 10 service functions (Status %x)\n", Status));
-      return 0;
+      return FALSE;
    }
    
    /*
@@ -131,7 +207,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    if (Status != NO_ERROR)
    {
       DPRINT(("Failed to allocate virtual memory (Status %x)\n", Status));
-      return 0;
+      return FALSE;
    }
 
    /*
@@ -174,26 +250,14 @@ VBEInitialize(PVOID HwDeviceExtension)
 #endif
       {
          DPRINT(("VBE BIOS present, but incompatible version.\n"));
-         return ERROR_DEV_NOT_EXIST;
+         return FALSE;
       }
    }
    else
    {
       DPRINT(("No VBE BIOS found.\n"));
-      return ERROR_DEV_NOT_EXIST;
+      return FALSE;
    }
-
-#ifdef VBE12_SUPPORT
-   if (VBEDeviceExtension->VbeInfo.Version < 0x200)
-   {
-      /*
-       * FIXME: Build a mode list here based on the total memory
-       * available on the video card and the video mode tables
-       * from the VBE specification.
-       */
-      return ERROR_NOT_SUPPORTED;
-   }
-#endif
 
    /*
     * Build a mode list here that can be later used by
@@ -236,7 +300,7 @@ VBEInitialize(PVOID HwDeviceExtension)
     * Get the actual mode infos.
     */
    
-   for (CurrentMode = 0, SuitableModeCount = 0, DefaultMode = 0;
+   for (CurrentMode = 0, SuitableModeCount = 0;
         CurrentMode < ModeCount;
         CurrentMode++)
    {
@@ -272,16 +336,21 @@ VBEInitialize(PVOID HwDeviceExtension)
       if (BiosRegisters.Eax == VBE_SUCCESS &&
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
-          (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR))
+          (VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_PACKEDPIXEL ||
+           VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR))
       {
-         VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp | 0x4000;
-         if (VbeModeInfo->XResolution == 640 &&
-             VbeModeInfo->YResolution == 480 &&
-             VbeModeInfo->BitsPerPixel == 32)
+         if (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR)
          {
-            DefaultMode = SuitableModeCount;
+            VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp | 0x4000;
+            SuitableModeCount++;
          }
-         SuitableModeCount++;
+#ifdef VBE12_SUPPORT
+         else
+         {
+            VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp;
+            SuitableModeCount++;
+         }
+#endif
       }
    }
 
@@ -291,21 +360,13 @@ VBEInitialize(PVOID HwDeviceExtension)
       return FALSE;
    }
    
+   VBEDeviceExtension->ModeCount = SuitableModeCount;
+
    /*
-    * Exchange the default mode so it's at the first place in list.
+    * Sort the video mode list according to resolution and bits per pixel.
     */
 
-   VideoPortMoveMemory(&TempVbeModeInfo, VBEDeviceExtension->ModeInfo,
-      sizeof(VBE_MODEINFO));
-   VideoPortMoveMemory(VBEDeviceExtension->ModeInfo, VBEDeviceExtension->ModeInfo + DefaultMode,
-      sizeof(VBE_MODEINFO));
-   VideoPortMoveMemory(VBEDeviceExtension->ModeInfo + DefaultMode, &TempVbeModeInfo,
-      sizeof(VBE_MODEINFO));
-   TempVbeModeNumber = VBEDeviceExtension->ModeNumbers[0];
-   VBEDeviceExtension->ModeNumbers[0] = VBEDeviceExtension->ModeNumbers[DefaultMode];
-   VBEDeviceExtension->ModeNumbers[DefaultMode] = TempVbeModeNumber;
-
-   VBEDeviceExtension->ModeCount = SuitableModeCount;
+   VBESortModes(VBEDeviceExtension);
 
    /*
     * Print the supported video modes when DBG is set.

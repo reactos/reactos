@@ -73,10 +73,13 @@
 #define VBE_DISPLAY_DATA_CHANNEL             0x4F14
 
 /*
- * VBE Video Mode Information Attributes
+ * VBE Video Mode Information Definitions
  */
 
 #define VBE_MODEATTR_LINEAR                    0x80
+
+#define VBE_MEMORYMODEL_PACKEDPIXEL            0x04
+#define VBE_MEMORYMODEL_DIRECTCOLOR            0x06
 
 /*
  * VBE Return Codes
