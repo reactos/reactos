@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.25 2003/09/25 15:12:42 fireball Exp $ */
+/* $Id: color.c,v 1.26 2003/10/22 14:02:54 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -32,6 +32,7 @@
 #include <include/inteng.h>
 #include <include/color.h>
 #include <include/palette.h>
+#include <include/error.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -75,24 +76,105 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
+const COLORREF SysColours[] =
+{
+  RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
+  RGB(58, 110, 165) /* COLOR_BACKGROUND */,
+  RGB(0, 0, 128) /* COLOR_ACTIVECAPTION */,
+  RGB(128, 128, 128) /* COLOR_INACTIVECAPTION */,
+  RGB(192, 192, 192) /* COLOR_MENU */,
+  RGB(255, 255, 255) /* COLOR_WINDOW */,
+  RGB(0, 0, 0) /* COLOR_WINDOWFRAME */,
+  RGB(0, 0, 0) /* COLOR_MENUTEXT */,
+  RGB(0, 0, 0) /* COLOR_WINDOWTEXT */,
+  RGB(255, 255, 255) /* COLOR_CAPTIONTEXT */,
+  RGB(128, 128, 128) /* COLOR_ACTIVEBORDER */,
+  RGB(255, 255, 255) /* COLOR_INACTIVEBORDER */,
+  RGB(255, 255, 232) /* COLOR_APPWORKSPACE */,
+  RGB(224, 224, 224) /* COLOR_HILIGHT */,
+  RGB(0, 0, 128) /* COLOR_HILIGHTTEXT */,
+  RGB(192, 192, 192) /* COLOR_BTNFACE */,
+  RGB(128, 128, 128) /* COLOR_BTNSHADOW */,
+  RGB(192, 192, 192) /* COLOR_GRAYTEXT */,
+  RGB(0, 0, 0) /* COLOR_BTNTEXT */,
+  RGB(192, 192, 192) /* COLOR_INACTIVECAPTIONTEXT */,
+  RGB(255, 255, 255) /* COLOR_BTNHILIGHT */,
+  RGB(32, 32, 32) /* COLOR_3DDKSHADOW */,
+  RGB(192, 192, 192) /* COLOR_3DLIGHT */,
+  RGB(0, 0, 0) /* COLOR_INFOTEXT */,
+  RGB(255, 255, 192) /* COLOR_INFOBK */,
+  RGB(184, 180, 184) /* COLOR_ALTERNATEBTNFACE */,
+  RGB(0, 0, 255) /* COLOR_HOTLIGHT */,
+  RGB(16, 132, 208) /* COLOR_GRADIENTACTIVECAPTION */,
+  RGB(181, 181, 181) /* COLOR_GRADIENTINACTIVECAPTION */,
+};
+
 ULONG FASTCALL NtGdiGetSysColor(int nIndex)
 {
+#if 0
    const PALETTEENTRY *p = COLOR_sysPalTemplate + (nIndex * sizeof(PALETTEENTRY));
    return RGB(p->peRed, p->peGreen, p->peBlue);
+#else
+  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+    }
+
+  return SysColours[nIndex];
+#endif
 }
 
 HPEN STDCALL NtGdiGetSysColorPen(int nIndex)
 {
+#if 0
   COLORREF Col;
   memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
   return(NtGdiCreatePen(PS_SOLID, 1, Col));
+#else
+  static HPEN SysPens[sizeof(SysColours) / sizeof(SysColours[0])];
+
+  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  /* FIXME should register this object with DeleteObject() so it
+     can't be deleted */
+  if (NULL == SysPens[nIndex])
+    {
+      SysPens[nIndex] = (HPEN)((DWORD)NtGdiCreatePen(PS_SOLID, 0, SysColours[nIndex]) | 0x00800000);
+    }
+
+  return SysPens[nIndex];
+#endif
 }
 
 HBRUSH STDCALL NtGdiGetSysColorBrush(int nIndex)
 {
+#if 0
   COLORREF Col;
   memcpy(&Col, COLOR_sysPalTemplate + nIndex, sizeof(COLORREF));
   return(NtGdiCreateSolidBrush(Col));
+#else
+  static HBRUSH SysBrushes[sizeof(SysColours) / sizeof(SysColours[0])];
+
+  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  /* FIXME should register this object with DeleteObject() so it
+     can't be deleted */
+  if (NULL == SysBrushes[nIndex])
+    {
+      SysBrushes[nIndex] = (HBRUSH) ((DWORD)NtGdiCreateSolidBrush(SysColours[nIndex]) | 0x00800000);
+    }
+
+  return SysBrushes[nIndex];
+#endif
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.28 2003/09/27 12:32:52 gvg Exp $
+/* $Id: draw.c,v 1.29 2003/10/22 14:02:54 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1652,10 +1652,6 @@ int STDCALL
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
   HBRUSH prevhbr;
-  /*if (hbr <= (HBRUSH)(COLOR_MAX + 1))
-    {
-      hbr = GetSysColorBrush((INT)hbr - 1);
-      }*/
   if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
     {
       return(FALSE);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.36 2003/09/14 09:03:53 hbirr Exp $
+/* $Id: class.c,v 1.37 2003/10/22 14:02:54 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,6 +37,7 @@
 #include <include/object.h>
 #include <include/guicheck.h>
 #include <include/window.h>
+#include <include/color.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -420,6 +421,10 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
       break;
     case GCL_HBRBACKGROUND:
       Ret = (ULONG)WindowObject->Class->hbrBackground;
+      if (Ret != 0 && Ret < 0x4000)
+        {
+          Ret = (ULONG)NtGdiGetSysColorBrush(Ret - 1);
+        }
       break;
     case GCL_HCURSOR:
       Ret = (ULONG)WindowObject->Class->hCursor;
