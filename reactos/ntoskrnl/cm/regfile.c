@@ -71,7 +71,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Flags = REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED;
-  NtQuerySystemTime(&RootKeyCell->LastWriteTime);
+  ZwQuerySystemTime(&RootKeyCell->LastWriteTime);
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
@@ -384,7 +384,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   /* The rest of the block is free */
   FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
 
-  Status = NtWriteFile(FileHandle,
+  Status = ZwWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -403,7 +403,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
       return(Status);
     }
 
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
 
   return(Status);
@@ -483,7 +483,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
   else if (!NT_SUCCESS(Status))
     {
       DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      NtClose(HiveHandle);
+      ZwClose(HiveHandle);
       return(Status);
     }
 
@@ -499,7 +499,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
   /* Read hive base block */
   FileOffset.QuadPart = 0ULL;
-  Status = NtReadFile(HiveHandle,
+  Status = ZwReadFile(HiveHandle,
 		      0,
 		      0,
 		      0,
@@ -510,7 +510,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 		      0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
       goto ByeBye;
     }
 
@@ -541,7 +541,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
       /* Read log file header */
       FileOffset.QuadPart = 0ULL;
-      Status = NtReadFile(LogHandle,
+      Status = ZwReadFile(LogHandle,
 			  0,
 			  0,
 			  0,
@@ -552,7 +552,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 			  0);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+	  DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
 	  goto ByeBye;
 	}
 
@@ -585,14 +585,14 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
        */
 
       /* Get file size */
-      Status = NtQueryInformationFile(LogHandle,
+      Status = ZwQueryInformationFile(LogHandle,
 				      &IoStatusBlock,
 				      &fsi,
 				      sizeof(fsi),
 				      FileStandardInformation);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
+	  DPRINT("ZwQueryInformationFile() failed (Status %lx)\n", Status);
 	  goto ByeBye;
 	}
       FileSize = fsi.EndOfFile.u.LowPart;
@@ -617,7 +617,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
       /* Read log file header */
       FileOffset.QuadPart = 0ULL;
-      Status = NtReadFile(LogHandle,
+      Status = ZwReadFile(LogHandle,
 			  0,
 			  0,
 			  0,
@@ -628,7 +628,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 			  0);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+	  DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
 	  goto ByeBye;
 	}
 
@@ -656,9 +656,9 @@ ByeBye:
     ExFreePool(LogHeader);
 
   if (LogHandle != INVALID_HANDLE_VALUE)
-    NtClose(LogHandle);
+    ZwClose(LogHandle);
 
-  NtClose(HiveHandle);
+  ZwClose(HiveHandle);
 
   return(Status);
 }
@@ -929,7 +929,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
-	  NtClose(FileHandle);
+	  ZwClose(FileHandle);
 	  RtlFreeUnicodeString(&RegistryHive->HiveFileName);
 	  RtlFreeUnicodeString(&RegistryHive->LogFileName);
 	  return(Status);
@@ -972,7 +972,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      NtClose(FileHandle);
+      ZwClose(FileHandle);
       return(Status);
     }
   DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
@@ -996,7 +996,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      NtClose(FileHandle);
+      ZwClose(FileHandle);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   RtlZeroMemory (RegistryHive->BlockList,
@@ -1013,7 +1013,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      NtClose(FileHandle);
+      ZwClose(FileHandle);
       return Status;
     }
 
@@ -1023,7 +1023,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   ObDereferenceObject(SectionObject);
 
   /* Close the hive file */
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   /* Initialize the free cell list */
   Status = CmiCreateHiveFreeCellList (RegistryHive);
@@ -1438,7 +1438,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Write hive block and block bitmap */
   FileOffset.QuadPart = (ULONGLONG)0;
-  Status = NtWriteFile(FileHandle,
+  Status = ZwWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -1449,8 +1449,8 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -1479,7 +1479,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
       DPRINT("File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */
-      Status = NtWriteFile(FileHandle,
+      Status = ZwWriteFile(FileHandle,
 			   NULL,
 			   NULL,
 			   NULL,
@@ -1490,8 +1490,8 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-	  NtClose(FileHandle);
+	  DPRINT1("ZwWriteFile() failed (Status %lx)\n", Status);
+	  ZwClose(FileHandle);
 	  return(Status);
 	}
 
@@ -1501,40 +1501,40 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Truncate log file */
   EndOfFileInfo.EndOfFile.QuadPart = FileOffset.QuadPart;
-  Status = NtSetInformationFile(FileHandle,
+  Status = ZwSetInformationFile(FileHandle,
 				&IoStatusBlock,
 				&EndOfFileInfo,
 				sizeof(FILE_END_OF_FILE_INFORMATION),
 				FileEndOfFileInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       return(Status);
     }
 
   FileAllocationInfo.AllocationSize.QuadPart = FileOffset.QuadPart;
-  Status = NtSetInformationFile(FileHandle,
+  Status = ZwSetInformationFile(FileHandle,
 				&IoStatusBlock,
 				&FileAllocationInfo,
 				sizeof(FILE_ALLOCATION_INFORMATION),
 				FileAllocationInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       return(Status);
     }
 
   /* Flush the log file */
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   return(Status);
 }
@@ -1616,7 +1616,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Write hive block and block bitmap */
   FileOffset.QuadPart = (ULONGLONG)0;
-  Status = NtWriteFile(FileHandle,
+  Status = ZwWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -1627,8 +1627,8 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -1636,14 +1636,14 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
   ExFreePool(Buffer);
 
   /* Flush the log file */
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   return(Status);
 }
@@ -1697,20 +1697,20 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Truncate log file */
   EndOfFileInfo.EndOfFile.QuadPart = (ULONGLONG)BufferSize;
-  Status = NtSetInformationFile(FileHandle,
+  Status = ZwSetInformationFile(FileHandle,
 				&IoStatusBlock,
 				&EndOfFileInfo,
 				sizeof(FILE_END_OF_FILE_INFORMATION),
 				FileEndOfFileInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       return(Status);
     }
 
   FileAllocationInfo.AllocationSize.QuadPart = (ULONGLONG)BufferSize;
-  Status = NtSetInformationFile(FileHandle,
+  Status = ZwSetInformationFile(FileHandle,
 				&IoStatusBlock,
 				&FileAllocationInfo,
 				sizeof(FILE_ALLOCATION_INFORMATION),
@@ -1718,19 +1718,19 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      ZwClose(FileHandle);
       return(Status);
     }
 
   /* Flush the log file */
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   return(Status);
 }
@@ -1780,7 +1780,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Write hive block */
   FileOffset.QuadPart = (ULONGLONG)0;
-  Status = NtWriteFile(FileHandle,
+  Status = ZwWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -1791,8 +1791,8 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       return(Status);
     }
 
@@ -1819,7 +1819,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
       DPRINT("  File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */
-      Status = NtWriteFile(FileHandle,
+      Status = ZwWriteFile(FileHandle,
 			   NULL,
 			   NULL,
 			   NULL,
@@ -1830,22 +1830,22 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-	  NtClose(FileHandle);
+	  DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
+	  ZwClose(FileHandle);
 	  return(Status);
 	}
 
       BlockIndex++;
     }
 
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   return(Status);
 }
@@ -1892,7 +1892,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 
   /* Write hive block */
   FileOffset.QuadPart = (ULONGLONG)0;
-  Status = NtWriteFile(FileHandle,
+  Status = ZwWriteFile(FileHandle,
 		       NULL,
 		       NULL,
 		       NULL,
@@ -1903,19 +1903,19 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
+      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
+      ZwClose(FileHandle);
       return(Status);
     }
 
-  Status = NtFlushBuffersFile(FileHandle,
+  Status = ZwFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   return(Status);
 }
@@ -1939,7 +1939,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
 	 &RegistryHive->LogFileName);
 
   /* Update hive header modification time */
-  NtQuerySystemTime(&RegistryHive->HiveHeader->DateModified);
+  ZwQuerySystemTime(&RegistryHive->HiveHeader->DateModified);
 
   /* Start log update */
   Status = CmiStartLogUpdate(RegistryHive);
@@ -2436,7 +2436,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     {
       NewKeyCell->Id = REG_KEY_CELL_ID;
       NewKeyCell->Flags = 0;
-      NtQuerySystemTime(&NewKeyCell->LastWriteTime);
+      ZwQuerySystemTime(&NewKeyCell->LastWriteTime);
       NewKeyCell->ParentKeyOffset = -1;
       NewKeyCell->NumberOfSubKeys = 0;
       NewKeyCell->HashTableOffset = -1;
@@ -2552,7 +2552,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       ParentKeyCell->NumberOfSubKeys++;
     }
 
-  NtQuerySystemTime (&ParentKeyCell->LastWriteTime);
+  ZwQuerySystemTime (&ParentKeyCell->LastWriteTime);
   CmiMarkBlockDirty (RegistryHive, ParentKey->KeyCellOffset);
 
   return(Status);
@@ -2710,7 +2710,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	    }
 	}
 
-      NtQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
+      ZwQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
       CmiMarkBlockDirty(ParentKey->RegistryHive,
 			ParentKey->KeyCellOffset);
     }
@@ -3210,7 +3210,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
       /* Update time of heap */
       if (!IsNoFileHive(RegistryHive))
-	NtQuerySystemTime(&Bin->DateModified);
+	ZwQuerySystemTime(&Bin->DateModified);
     }
 
   /* Destroy the value cell */
@@ -3219,7 +3219,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   /* Update time of heap */
   if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, ValueCellOffset, &Bin))
     {
-      NtQuerySystemTime(&Bin->DateModified);
+      ZwQuerySystemTime(&Bin->DateModified);
     }
 
   return Status;
@@ -3254,7 +3254,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   RegistryHive->FileSize += BinSize;
   tmpBin->BinSize = BinSize;
   tmpBin->Unused1 = 0;
-  NtQuerySystemTime(&tmpBin->DateModified);
+  ZwQuerySystemTime(&tmpBin->DateModified);
   tmpBin->Unused2 = 0;
 
   DPRINT ("  BinOffset %lx  BinSize %lx\n", tmpBin->BinOffset,tmpBin->BinSize);
@@ -3382,7 +3382,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 		  return STATUS_UNSUCCESSFUL;
 		}
 
-	      NtQuerySystemTime(&Bin->DateModified);
+	      ZwQuerySystemTime(&Bin->DateModified);
 	      CmiMarkBlockDirty(RegistryHive, RegistryHive->FreeListOffset[i]);
 
 	      if ((i + 1) < RegistryHive->FreeListSize)
@@ -3471,7 +3471,7 @@ CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
 
       /* Update time of heap */
       if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, CellOffset,&pBin))
-	NtQuerySystemTime(&pBin->DateModified);
+	ZwQuerySystemTime(&pBin->DateModified);
 
       CmiMarkBlockDirty(RegistryHive, CellOffset);
     }
@@ -4247,7 +4247,7 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
 
   /* Write hive block */
   FileOffset.QuadPart = (ULONGLONG)0;
-  Status = NtWriteFile (FileHandle,
+  Status = ZwWriteFile (FileHandle,
 			NULL,
 			NULL,
 			NULL,
@@ -4258,7 +4258,7 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
 			NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtWriteFile() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwWriteFile() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -4272,7 +4272,7 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
       DPRINT ("File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */
-      Status = NtWriteFile (FileHandle,
+      Status = ZwWriteFile (FileHandle,
 			    NULL,
 			    NULL,
 			    NULL,
@@ -4283,16 +4283,16 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
 			    NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1 ("NtWriteFile() failed (Status %lx)\n", Status);
+	  DPRINT1 ("ZwWriteFile() failed (Status %lx)\n", Status);
 	  return Status;
 	}
     }
 
-  Status = NtFlushBuffersFile (FileHandle,
+  Status = ZwFlushBuffersFile (FileHandle,
 			       &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   DPRINT ("CmiSaveTempHive() done\n");

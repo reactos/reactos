@@ -237,16 +237,19 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 NTSTATUS STDCALL
 NtDeleteKey(IN HANDLE KeyHandle)
 {
+  KPROCESSOR_MODE PreviousMode;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
 
   DPRINT1("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
+  
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DELETE,
 				     CmiKeyType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -899,14 +902,17 @@ NtFlushKey(IN HANDLE KeyHandle)
   NTSTATUS Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
+  KPROCESSOR_MODE  PreviousMode;
 
   DPRINT("NtFlushKey (KeyHandle %lx) called\n", KeyHandle);
+  
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_QUERY_VALUE,
 				     CmiKeyType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -947,14 +953,38 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
   UNICODE_STRING RemainingPath;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
   PVOID Object;
+  HANDLE hKey;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
 	 KeyHandle,
 	 DesiredAccess,
 	 ObjectAttributes,
 	 ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
+
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(KeyHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   RemainingPath.Buffer = NULL;
   Status = ObFindObject(ObjectAttributes,
@@ -990,7 +1020,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			  Object,
 			  DesiredAccess,
 			  TRUE,
-			  KeyHandle);
+			  &hKey);
   ObDereferenceObject(Object);
 
   if (!NT_SUCCESS(Status))
@@ -998,7 +1028,17 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       return(Status);
     }
 
-  return(STATUS_SUCCESS);
+  _SEH_TRY
+  {
+    *KeyHandle = hKey;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  return Status;
 }
 
 
