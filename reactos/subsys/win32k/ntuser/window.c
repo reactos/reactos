@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.183 2004/02/15 07:39:12 gvg Exp $
+/* $Id: window.c,v 1.184 2004/02/15 20:50:56 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1280,7 +1280,14 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->IDMenu = 0;
   WindowObject->Instance = hInstance;
   WindowObject->Self = Handle;
-  IntSetMenu(WindowObject, hMenu, &MenuChanged);
+  if (0 != (dwStyle & WS_CHILD))
+    {
+      WindowObject->IDMenu = (UINT) hMenu;
+    }
+  else
+    {
+      IntSetMenu(WindowObject, hMenu, &MenuChanged);
+    }
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
