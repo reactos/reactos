@@ -1,7 +1,7 @@
 <module name="kjs" type="staticlibrary">
-	<include>.</include>
-	<include>src</include>
-	<include>include</include>
+	<include base="kjs">.</include>
+	<include base="kjs">src</include>
+	<include base="kjs">include</include>
 	<directory name="ksrc">
 		<file>setjmp.S</file>
 		<file>longjmp.S</file>

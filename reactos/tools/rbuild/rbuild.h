@@ -79,6 +79,7 @@ public:
 	         const std::string& modulePath );
 	~Module ();
 	ModuleType GetModuleType (const XMLAttribute& attribute );
+	std::string GetBasePath() const;
 	std::string GetPath () const;
 	void ProcessXML();
 private:
@@ -95,6 +96,7 @@ public:
 	const Module* module;
 	const XMLElement& node;
 	std::string directory;
+	const Module* base;
 
 	Include ( const Project& project,
 	          const XMLElement& includeNode );
@@ -135,6 +137,8 @@ public:
 	std::string name;
 
 	File ( const std::string& _name );
+
+	void ProcessXML();
 };
 
 

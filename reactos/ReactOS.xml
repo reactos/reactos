@@ -1,4 +1,6 @@
-<project name="ReactOS" makefile="Makefile.auto">
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<define name="_M_IX86"></define>
 	<include>include</include>
 	<include>w32api/include</include>

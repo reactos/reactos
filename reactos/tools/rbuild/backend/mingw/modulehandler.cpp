@@ -140,8 +140,7 @@ MingwModuleHandler::ConcatenatePaths ( const string& path1,
 }
 
 string
-MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const string& basePath,
-	                                                         const vector<Include*>& includes ) const
+MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Include*>& includes ) const
 {
 	string parameters;
 	for (size_t i = 0; i < includes.size (); i++)
@@ -149,9 +148,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const string& baseP
 		Include& include = *includes[i];
 		if (parameters.length () > 0)
 			parameters += " ";
-		parameters += "-I";
-		parameters += ConcatenatePaths ( basePath,
-		                                 include.directory );
+		parameters += "-I" + include.directory;
 	}
 	return parameters;
 }
@@ -159,10 +156,8 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const string& baseP
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccIncludeParametersFromVector ( ".",
-	                                                             module.project.includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.path,
-	                                                    module.includes );
+	string parameters = GenerateGccIncludeParametersFromVector ( module.project.includes );
+	string s = GenerateGccIncludeParametersFromVector ( module.includes );
 	if (s.length () > 0)
 	{
 		parameters += " ";

@@ -26,8 +26,7 @@ private:
 	                               const std::string& path2 ) const;
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
-	std::string GenerateGccIncludeParametersFromVector ( const std::string& basePath,
-	                                                     const std::vector<Include*>& includes ) const;
+	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
 };

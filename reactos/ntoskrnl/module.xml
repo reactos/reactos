@@ -4,8 +4,7 @@
 	<define name="__NTOSKRNL__" />
 	<define name="__3GB__" />
 	<include>.</include>
-	<include>./include</include>
-	<include>../lib/kjs/include</include>
+	<include base="kjs">./include</include>
 	<library>kjs</library>
 	<directory name="cc">
 		<file>cacheman.c</file>

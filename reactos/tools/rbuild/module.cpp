@@ -62,8 +62,14 @@ Module::ProcessXML()
 	size_t i;
 	for ( i = 0; i < node.subElements.size(); i++ )
 		ProcessXMLSubElement ( *node.subElements[i], path );
+	for ( i = 0; i < files.size(); i++ )
+		files[i]->ProcessXML();
 	for ( i = 0; i < libraries.size(); i++ )
 		libraries[i]->ProcessXML();
+	for ( i = 0; i < includes.size(); i++ )
+		includes[i]->ProcessXML();
+	for ( i = 0; i < defines.size(); i++ )
+		defines[i]->ProcessXML();
 }
 
 void
@@ -137,9 +143,15 @@ Module::GetDefaultModuleExtension () const
 }
 
 string
+Module::GetBasePath() const
+{
+	return path;
+}
+
+string
 Module::GetPath () const
 {
-	return FixSeparator (path) + CSEP + name + extension;
+	return path + CSEP + name + extension;
 }
 
 
@@ -148,6 +160,10 @@ File::File ( const string& _name )
 {
 }
 
+void
+File::ProcessXML()
+{
+}
 
 Library::Library ( const XMLElement& _node,
                    const Module& _module,
