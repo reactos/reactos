@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/04/01 08:38:28 gvg Exp $
+# $Id: Makefile,v 1.2 2003/04/02 23:25:56 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -33,7 +33,11 @@ unexport CFLAGS
 all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
 
 objs/*.o objs/libfreetype.a:
+ifeq ($(DBG), 1)
+	@$(MAKE) -f Makefile.freetype CFLAGS="-c -g -Wall"
+else
 	@$(MAKE) -f Makefile.freetype
+endif
 
 # Automatic dependency tracking
 DEP_OBJECTS := $(ROS_OBJECTS)
