@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.53 2004/09/23 11:26:41 ekohl Exp $
+/* $Id: driver.c,v 1.54 2004/09/24 10:51:35 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1189,7 +1189,7 @@ IopInitializeBootDrivers(VOID)
    DPRINT("IopInitializeBootDrivers()\n");
 
    BootDriverCount = 0;
-   for (i = 2; i < KeLoaderBlock.ModsCount; i++)
+   for (i = 0; i < KeLoaderBlock.ModsCount; i++)
    {
       ModuleStart = KeLoaderModules[i].ModStart;
       ModuleSize = KeLoaderModules[i].ModEnd - ModuleStart;
@@ -1199,26 +1199,21 @@ IopInitializeBootDrivers(VOID)
       if (Extension == NULL)
          Extension = "";
 
-      /*
-       * Pass symbol files to kernel debugger
-       */
-
       if (!_stricmp(Extension, ".sym"))
       {
+         /* Pass symbol files to kernel debugger */
          KDB_SYMBOLFILE_HOOK((PVOID)ModuleStart, ModuleName, ModuleSize);
-      } else
-
-      /*
-       * Load builtin driver
-       */
-      if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
+      }
+      else if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
       {
+        /* Log *.exe and *.dll files */
         RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
         IopBootLog(&DriverName, TRUE);
         RtlFreeUnicodeString(&DriverName);
       }
       else if (!_stricmp(Extension, ".sys"))
       {
+         /* Initialize and log boot start driver */
          if (!ModuleLoaded)
          {
             Status = IopInitializeBuiltinDriver(NULL,
@@ -1233,16 +1228,14 @@ IopInitializeBootDrivers(VOID)
       }
 
       /*
-       * Free memory for all boot files, except ntoskrnl.exe and hal.dll
+       * Free memory for all boot files, except ntoskrnl.exe, hal.dll
+       * and symbol files, if the kernel debugger is active
        */
-
+      if (_stricmp(Extension, ".exe") && _stricmp(Extension, ".dll")
 #ifdef KDBG
-      /*
-       * Do not free the memory from symbol files, if the kernel debugger
-       * is active
-       */
-      if (_stricmp(Extension, ".sym"))
+          && _stricmp(Extension, ".sym")
 #endif
+         )
       {
          MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
             KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);

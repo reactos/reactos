@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.1 2004/09/23 11:26:41 ekohl Exp $
+/* $Id: bootlog.c,v 1.2 2004/09/24 10:51:35 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -32,7 +32,7 @@ IopInitBootLog(VOID)
 }
 
 
-VOID // INIT_FUNCTION
+VOID
 IopStartBootLog(VOID)
 {
   IopBootLogCreate = TRUE;
@@ -40,7 +40,7 @@ IopStartBootLog(VOID)
 }
 
 
-VOID // INIT_FUNCTION
+VOID
 IopStopBootLog(VOID)
 {
   IopBootLogEnabled = FALSE;
@@ -90,7 +90,7 @@ IopBootLog(PUNICODE_STRING DriverName,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
+      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
@@ -110,7 +110,7 @@ CHECKPOINT1;
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
+      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
       NtClose(ControlSetKey);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
@@ -126,14 +126,15 @@ CHECKPOINT1;
   NtClose(BootLogKey);
   NtClose(ControlSetKey);
 
-  if (NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status))
     {
-      IopLogEntryCount++;
+      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
     }
   else
     {
-CHECKPOINT1;
+      IopLogEntryCount++;
     }
+
   ExReleaseResourceLite(&IopBootLogResource);
 }
 
@@ -271,7 +272,7 @@ IopCreateLogFile(VOID)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      CHECKPOINT1;
+      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -287,6 +288,10 @@ IopCreateLogFile(VOID)
 		       sizeof(WCHAR),
 		       &ByteOffset,
 		       NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtWriteKey() failed (Status %lx)\n", Status);
+    }
 
   NtClose(FileHandle);
 
@@ -311,22 +316,22 @@ IopSaveBootLogToFile(VOID)
   if (IopBootLogCreate == FALSE)
     return;
 
-  DPRINT1("IopSaveBootLogToFile() called\n");
+  DPRINT("IopSaveBootLogToFile() called\n");
 
   ExAcquireResourceExclusiveLite(&IopBootLogResource, TRUE);
 
   Status = IopCreateLogFile();
   if (!NT_SUCCESS(Status))
     {
-      CHECKPOINT1;
+      DPRINT1("IopCreateLogFile() failed (Status %lx)\n", Status);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
 
-  Status = IopWriteLogFile(L"ReactOS 0.2.4");
+  Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
   if (!NT_SUCCESS(Status))
     {
-      CHECKPOINT1;
+      DPRINT1("IopWriteLogFile() failed (Status %lx)\n", Status);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
@@ -334,7 +339,7 @@ IopSaveBootLogToFile(VOID)
   Status = IopWriteLogFile(NULL);
   if (!NT_SUCCESS(Status))
     {
-      CHECKPOINT1;
+      DPRINT1("IopWriteLogFile() failed (Status %lx)\n", Status);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
@@ -416,7 +421,7 @@ IopSaveBootLogToFile(VOID)
   IopLogFileEnabled = TRUE;
   ExReleaseResourceLite(&IopBootLogResource);
 
-  DPRINT1("IopSaveBootLogToFile() done\n");
+  DPRINT("IopSaveBootLogToFile() done\n");
 }
 
 
