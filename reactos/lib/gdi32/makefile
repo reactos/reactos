@@ -1,39 +1,66 @@
+# $Id: makefile,v 1.2 1999/05/23 07:41:33 ea Exp $
+#
+# Makefile for ReactOS gdi32.dll
+#
+TARGET=gdi32
 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=gdi32.a
+    DLLTARGET=$(TARGET).a
   else
-    DLLTARGET=gdi32.dll
+    DLLTARGET=$(TARGET).dll
   endif
 else
-  DLLTARGET=gdi32.dll
+  DLLTARGET=$(TARGET).dll
 endif
 
 all: $(DLLTARGET)
 
 MAIN_OBJECTS = main/dllmain.o
 
-OBJECTS = $(MAIN_OBJECTS)
+MISC_OBJECTS = misc/stubs.o
 
-gdi32.a: $(OBJECTS)
-        $(AR) csr gdi32.a $(OBJECTS)
+RESOURCE_OBJECTS = $(TARGET).coff
 
-gdi32.dll: $(DLLMAIN) $(OBJECTS) gdi32.def
-        $(LD) -r $(OBJECTS) -o gdi32.o
-        $(DLLTOOL) --dllname gdi32.dll --def gdi32.def \
-                   --output-lib gdi32.a
-	$(CC) -specs=k32_specs -mdll -o junk.tmp \
-              -Wl,--base-file,base.tmp gdi32.o  ../ntdll/ntdll.a
+OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(RESOURCE_OBJECTS)
+
+$(TARGET).a: $(OBJECTS)
+	$(AR) csr $(TARGET).a $(OBJECTS)
+
+$(TARGET).coff: $(TARGET).rc
+	$(RC) $(TARGET).rc $(TARGET).coff
+
+$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
+	$(LD) -r $(OBJECTS) -o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll 	
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
+	$(CC) $(TARGET).o \
+		../ntdll/ntdll.a\
+		-specs=$(TARGET)_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--base-file,base.tmp 
 	- $(RM) junk.tmp
-        $(DLLTOOL) --dllname gdi32.dll --base-file base.tmp \
-                   --output-exp temp.exp --def gdi32.def
+	$(DLLTOOL) \
+		--dllname $(TARGET).dll \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).def
 	- $(RM) base.tmp
-        $(CC) -specs=k32_specs -mdll -o gdi32.dll gdi32.o  ../ntdll/ntdll.a\
-	      -Wl,--image-base,0x70000000 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,temp.exp
+	$(CC) $(TARGET).o \
+		../ntdll/ntdll.a \
+		-specs=$(TARGET)_specs \
+		-mdll \
+		-o $(TARGET).dll 
+		-Wl,--image-base,0x70000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,temp.exp
 	- $(RM) temp.exp
-        $(NM) --numeric-sort gdi32.dll > gdi32.sym
+	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 include ../../rules.mak
+
+# EOF
