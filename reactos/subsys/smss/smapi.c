@@ -9,7 +9,7 @@
 #include "smss.h"
 #include <rosrtl/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBAL VARIABLES *********************************************************/
