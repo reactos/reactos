@@ -1865,6 +1865,7 @@ VOID SockProcessAsyncSelect(PSOCKET_INFORMATION Socket, PASYNC_DATA AsyncData)
 VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
 {
 	PASYNC_DATA AsyncData = Context;
+	BOOL FreeContext = TRUE;
 	PSOCKET_INFORMATION Socket;
 
 	/* Get the Socket */	
@@ -1877,12 +1878,16 @@ VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
 			/* Do the actuall select, if needed */
 			if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents))) {
 				SockProcessAsyncSelect(Socket, AsyncData);
+				FreeContext = FALSE;
 			}
 		}
 	}
 	
 	/* Free the Context */
-	HeapFree(GetProcessHeap(), 0, AsyncData);
+	if (FreeContext) {
+		HeapFree(GetProcessHeap(), 0, AsyncData);
+	}
+
 	return;
 }
 
