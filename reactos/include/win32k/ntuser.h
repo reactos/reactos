@@ -214,22 +214,22 @@ NtUserConvertMemHandle(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+int
 STDCALL
 NtUserCopyAcceleratorTable(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HACCEL Table,
+  LPACCEL Entries,
+  int EntriesCount);
 
 DWORD
 STDCALL
 NtUserCountClipboardFormats(VOID);
 
-DWORD
+HACCEL
 STDCALL
 NtUserCreateAcceleratorTable(
-  DWORD Unknown0,
-  DWORD Unknown1);
+ LPACCEL Entries,
+  SIZE_T EntriesCount);
 
 DWORD
 STDCALL
@@ -328,10 +328,10 @@ NtUserDeleteMenu(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 STDCALL
 NtUserDestroyAcceleratorTable(
-  DWORD Unknown0);
+  HACCEL Table);
 
 DWORD
 STDCALL
@@ -1086,7 +1086,9 @@ NtUserQueryUserCounters(
 
 DWORD
 STDCALL
-NtUserQueryWindow(HWND hWnd, DWORD Index);
+NtUserQueryWindow(
+  DWORD Unknown0,
+  DWORD Unknown1);
 
 DWORD
 STDCALL
@@ -1596,12 +1598,12 @@ NtUserTrackPopupMenuEx(
   DWORD Unknown4,
   DWORD Unknown5);
 
-DWORD
+int
 STDCALL
 NtUserTranslateAccelerator(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND Window,
+  HACCEL Table,
+  LPMSG Message);
 
 BOOL
 STDCALL
