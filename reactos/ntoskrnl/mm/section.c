@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.27 2000/04/02 13:32:41 ea Exp $
+/* $Id: section.c,v 1.28 2000/04/03 21:54:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,45 @@
 POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
+			   ULONG Offset,
+			   PVOID Entry)
+{
+   PSECTION_PAGE_TABLE Table;
+   ULONG DirectoryOffset;
+   ULONG TableOffset;
+   
+   DirectoryOffset = PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(Offset);
+   Table = Section->PageDirectory.PageTables[DirectoryOffset];
+   if (Table == NULL)
+     {
+	Table = 
+	  Section->PageDirectory.PageTables[DirectoryOffset] =
+	  ExAllocatePool(NonPagedPool, sizeof(SECTION_PAGE_TABLE));
+     }
+   TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
+   Table->Pages[TableOffset] = Entry;
+}
+
+PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
+			    ULONG Offset)
+{
+   PSECTION_PAGE_TABLE Table;
+   PVOID Entry;
+   ULONG DirectoryOffset;
+   ULONG TableOffset;
+   
+   DirectoryOffset = PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(Offset);
+   Table = Section->PageDirectory.PageTables[DirectoryOffset];
+   if (Table == NULL)
+     {
+	return(NULL);
+     }
+   TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
+   Entry = Table->Pages[TableOffset];
+   return(Entry);
+}
 
 PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
 				ULONG Offset)
@@ -72,6 +111,14 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
 
 VOID MmpDeleteSection(PVOID ObjectBody)
 {
+   DPRINT1("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
+}
+
+VOID MmpCloseSection(PVOID ObjectBody,
+		     ULONG HandleCount)
+{
+   DPRINT1("MmpCloseSection(OB %x, HC %d) RC %d\n",
+	   ObjectBody, HandleCount, ObGetReferenceCount(ObjectBody));
 }
 
 NTSTATUS MmpCreateSection(PVOID ObjectBody,
@@ -111,10 +158,10 @@ NTSTATUS MmpCreateSection(PVOID ObjectBody,
 
 NTSTATUS MmInitSectionImplementation(VOID)
 {
-   ANSI_STRING AnsiString;
-   
    MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
+   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
+
    MmSectionObjectType->TotalObjects = 0;
    MmSectionObjectType->TotalHandles = 0;
    MmSectionObjectType->MaxObjects = ULONG_MAX;
@@ -123,7 +170,7 @@ NTSTATUS MmInitSectionImplementation(VOID)
    MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
    MmSectionObjectType->Dump = NULL;
    MmSectionObjectType->Open = NULL;
-   MmSectionObjectType->Close = NULL;
+   MmSectionObjectType->Close = MmpCloseSection;
    MmSectionObjectType->Delete = MmpDeleteSection;
    MmSectionObjectType->Parse = NULL;
    MmSectionObjectType->Security = NULL;
@@ -131,9 +178,6 @@ NTSTATUS MmInitSectionImplementation(VOID)
    MmSectionObjectType->OkayToClose = NULL;
    MmSectionObjectType->Create = MmpCreateSection;
    
-   RtlInitAnsiString(&AnsiString,"Section");
-   RtlAnsiStringToUnicodeString(&MmSectionObjectType->TypeName,
-				&AnsiString,TRUE);
    return(STATUS_SUCCESS);
 }
 
@@ -448,6 +492,10 @@ NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
    KIRQL oldIrql;
    
    Section = MemoryArea->Data.SectionData.Section;
+   
+   DPRINT1("MmUnmapViewOfSection(Section %x) SectionRC %d\n",
+	   Section, ObGetReferenceCount(Section));
+   
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
    RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);

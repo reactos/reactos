@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.21 2000/02/20 22:52:49 ea Exp $
+/* $Id: object.c,v 1.22 2000/04/03 21:54:40 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -334,24 +334,20 @@ ULONG ObGetHandleCount(PVOID ObjectBody)
  * RETURN VALUE
  * 	The current value of the reference counter.
  */
-ULONG
-FASTCALL
-ObfReferenceObject (PVOID ObjectBody)
+ULONG FASTCALL ObfReferenceObject(PVOID ObjectBody)
 {
-	POBJECT_HEADER	Header = BODY_TO_HEADER(ObjectBody);
-	ULONG		ReferenceCount;
-
-	ReferenceCount = ++ Header->RefCount;
+   POBJECT_HEADER	Header = BODY_TO_HEADER(ObjectBody);
+   ULONG		ReferenceCount;
    
-	ObPerformRetentionChecks (Header);
-
-	return (ReferenceCount);
+   ReferenceCount = Header->RefCount++;
+   
+   ObPerformRetentionChecks (Header);
+   
+   return(ReferenceCount);
 }
 
 
-VOID
-FASTCALL
-ObfDereferenceObject (PVOID ObjectBody)
+VOID FASTCALL ObfDereferenceObject (PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
  * retention checks
@@ -384,11 +380,19 @@ ObfDereferenceObject (PVOID ObjectBody)
 }
 
 
-VOID
-STDCALL
-ObDereferenceObject (PVOID ObjectBody)
+VOID STDCALL ObDereferenceObject (PVOID ObjectBody)
 {
-	ObfDereferenceObject (ObjectBody);
+   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   extern POBJECT_TYPE PsProcessType;
+   
+   if (Header->ObjectType == PsProcessType)
+     {
+	DPRINT("Deref p 0x%x with refcount %d type %x ",
+		ObjectBody, Header->RefCount, PsProcessType);
+	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+     }
+   
+   ObfDereferenceObject (ObjectBody);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.6 2000/03/22 18:36:00 dwelch Exp $
+/* $Id: process.c,v 1.7 2000/04/03 21:54:41 dwelch Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -60,24 +60,20 @@ PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
 	     return(ProcessData[i]);
 	  }
      }
-   DbgPrint("CSR: CsrGetProcessData() failed\n");
+//   DbgPrint("CSR: CsrGetProcessData() failed\n");
    return(NULL);
 }
 
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_CREATE_PROCESS_REQUEST Request,
-			   PLPCMESSAGE* LpcReply)
+			   PCSRSS_API_REPLY Reply)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
-   PCSRSS_API_REPLY Reply;
    
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
+     sizeof(LPC_MESSAGE_HEADER);
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    
    NewProcessData = CsrGetProcessData(Request->NewProcessId);
    
@@ -111,25 +107,21 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 		   &Reply->Data.CreateProcessReply.ConsoleHandle,
 		   NewProcessData->Console);
    
-   DbgPrint("CSR: ConsoleHandle %x\n",
-	    Reply->Data.CreateProcessReply.ConsoleHandle);
-   DisplayString(L"CSR: Did CreateProcess successfully\n");
+//   DbgPrint("CSR: ConsoleHandle %x\n",
+//	    Reply->Data.CreateProcessReply.ConsoleHandle);
+//   DisplayString(L"CSR: Did CreateProcess successfully\n");
+//   DbgPrint("Reply->Header.MessageSize %d\n", Reply->Header.MessageSize);
    
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 			     PCSRSS_API_REQUEST LpcMessage,
-			     PLPCMESSAGE* LpcReply)
+			     PCSRSS_API_REPLY Reply)
 {
-      PCSRSS_API_REPLY Reply;
-   
-   (*LpcReply) = (PLPCMESSAGE)RtlAllocateHeap(CsrssApiHeap,
-					      HEAP_ZERO_MEMORY,
-					      sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
+     - sizeof(LPC_MESSAGE_HEADER);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
    
    Reply->Status = STATUS_NOT_IMPLEMENTED;
    
@@ -138,16 +130,11 @@ NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 
 NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_API_REQUEST Request,
-			   PLPCMESSAGE* LpcReply)
+			   PCSRSS_API_REPLY Reply)
 {
-      PCSRSS_API_REPLY Reply;
-   
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
+     sizeof(LPC_MESSAGE_HEADER);
    
    Reply->Status = STATUS_SUCCESS;
    

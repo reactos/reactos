@@ -875,9 +875,9 @@ _to_pmode:
         mov     ah,12
         int     10h
         
-;	mov     ax,1112h      ;! Use 8x8 font
-;	xor	bl,bl
-;	int     10h
+	mov     ax,1112h      ;! Use 8x8 font
+	xor	bl,bl
+	int     10h
         mov     ax,1200h      ;! Use alternate print screen
         mov     bl,20h
         int     10h

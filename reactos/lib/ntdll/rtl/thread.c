@@ -239,11 +239,8 @@ RtlInitializeContext(HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL
-RtlDestroyUserThreadStack(param1, param2)
+NTSTATUS STDCALL RtlDestroyUserThreadStack(param1, param2)
 {
-
-
 
 }
 

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.3 2000/03/22 18:35:59 dwelch Exp $
+/* $Id: conio.c,v 1.4 2000/04/03 21:54:41 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -23,53 +23,40 @@ static HANDLE KeyboardDeviceHandle;
 
 NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
 			 PCSRSS_API_REQUEST LpcMessage,
-			 PLPCMESSAGE* LpcReply)
+			 PCSRSS_API_REPLY LpcReply)
 {
-   PCSRSS_API_REPLY Reply;
-   
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   LpcReply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+     sizeof(LPC_MESSAGE_HEADER);
 
-   Reply->Status = STATUS_NOT_IMPLEMENTED;
+   LpcReply->Status = STATUS_NOT_IMPLEMENTED;
    
    return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
 			PCSRSS_API_REQUEST LpcMessage,
-			PLPCMESSAGE* LpcReply)
+			PCSRSS_API_REPLY LpcReply)
 {
-   PCSRSS_API_REPLY Reply;
-   
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   LpcReply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+     sizeof(LPC_MESSAGE_HEADER);
 
-   Reply->Status = STATUS_NOT_IMPLEMENTED;
+   LpcReply->Status = STATUS_NOT_IMPLEMENTED;
    
    return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 			PCSRSS_API_REQUEST LpcMessage,
-			PLPCMESSAGE* LpcReply)
+			PCSRSS_API_REPLY LpcReply)
 {
    KEY_EVENT_RECORD KeyEventRecord;
-   BOOL  stat = TRUE;
    PCHAR Buffer;
-   DWORD Result;
    int   i;
    ULONG nNumberOfCharsToRead;
    NTSTATUS Status;
    IO_STATUS_BLOCK Iosb;
-   PCSRSS_API_REPLY Reply;
    
 //   DbgPrint("CSR: CsrReadConsole()\n");
    
@@ -78,14 +65,11 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
    
 //   DbgPrint("CSR: NrCharactersToRead %d\n", nNumberOfCharsToRead);
    
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY) + 
+   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY) + 
      nNumberOfCharsToRead;
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);   
-   Buffer = Reply->Data.ReadConsoleReply.Buffer;
+   LpcReply->Header.DataSize = LpcReply->Header.MessageSize -
+     sizeof(LPC_MESSAGE_HEADER);
+   Buffer = LpcReply->Data.ReadConsoleReply.Buffer;
    
    Status = STATUS_SUCCESS;
    
@@ -104,35 +88,31 @@ NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 			    0);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("CSR: Read failed, bailing\n");
+//	     DbgPrint("CSR: Read failed, bailing\n");
 	  }
         if (KeyEventRecord.bKeyDown && KeyEventRecord.uChar.AsciiChar != 0)
 	  {
 	     Buffer[i] = KeyEventRecord.uChar.AsciiChar;
-	     //DbgPrint("CSR: Read '%c'\n", Buffer[i]);
+//	     DbgPrint("CSR: Read '%c'\n", Buffer[i]);
 	     i++;
 	  }
      }
-   Reply->Data.ReadConsoleReply.NrCharactersRead = i;
-   Reply->Status = Status;
+   LpcReply->Data.ReadConsoleReply.NrCharactersRead = i;
+   LpcReply->Status = Status;
    return(Status);
 }
 
 
 NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
 			 PCSRSS_API_REQUEST Message,
-			 PLPCMESSAGE* LpcReply)
+			 PCSRSS_API_REPLY LpcReply)
 {
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
-   PCSRSS_API_REPLY Reply;
    
-   (*LpcReply) = RtlAllocateHeap(CsrssApiHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof(LPCMESSAGE));
-   (*LpcReply)->ActualMessageLength = sizeof(CSRSS_API_REPLY);
-   (*LpcReply)->TotalMessageLength = sizeof(LPCMESSAGE);
-   Reply = (PCSRSS_API_REPLY)((*LpcReply)->MessageData);
+   LpcReply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   LpcReply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+     sizeof(LPC_MESSAGE_HEADER);
 
 //   DbgPrint("CSR: CsrWriteConsole()\n");
 //   DbgPrint("CSR: ConsoleDeviceHandle %x\n", ConsoleDeviceHandle);
@@ -155,8 +135,8 @@ NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
 //	DbgPrint("CSR: Write failed\n");
 	return(Status);
      }
-   Reply->Data.WriteConsoleReply.NrCharactersWritten = Iosb.Information;
-   Reply->Status = STATUS_SUCCESS;
+   LpcReply->Data.WriteConsoleReply.NrCharactersWritten = Iosb.Information;
+   LpcReply->Status = STATUS_SUCCESS;
    return(STATUS_SUCCESS);
 }
 
@@ -207,7 +187,6 @@ VOID CsrInitConsoleSupport(VOID)
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("CSR: Failed to open keyboard. Expect problems.\n");
-	for(;;);
      }
    
    DbgPrint("CSR: KeyboardDeviceHandle %x\n", KeyboardDeviceHandle);

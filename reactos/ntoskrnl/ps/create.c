@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.12 2000/03/22 18:35:57 dwelch Exp $
+/* $Id: create.c,v 1.13 2000/04/03 21:54:40 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -368,14 +368,13 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    KeInitializeDpc(&Thread->Tcb.TimerDpc, PiTimeoutThread, Thread);
    Thread->Tcb.WaitBlockList = NULL;
    InsertTailList(&Thread->ThreadsProcess->Pcb.ThreadListHead, 
-		  &Thread->Tcb.ProcessThreadListEntry );
-//   DPRINT1("Inserting %x into process %x list\n",
-//	   Thread, Thread->ThreadsProcess);
+		  &Thread->Tcb.ProcessThreadListEntry);
+   InitializeListHead(&Thread->TerminationPortList);
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
                                 InternalThreadType,
                                 sizeof(ETHREAD),
                                 FALSE);
-
+   KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
 					      &PiNextThreadUniqueId);

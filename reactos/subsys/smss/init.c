@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.16 2000/03/22 18:36:00 dwelch Exp $
+/* $Id: init.c,v 1.17 2000/04/03 21:54:41 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -28,6 +28,7 @@
  */
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <napi/lpc.h>
 
 #include "smss.h"
 

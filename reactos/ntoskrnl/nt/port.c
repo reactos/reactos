@@ -1,21 +1,12 @@
-/* $Id: port.c,v 1.17 2000/01/26 10:07:28 dwelch Exp $
+/* $Id: port.c,v 1.18 2000/04/03 21:54:39 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/nt/port.c
- * PURPOSE:         Communication mechanism (like Mach?)
+ * PURPOSE:         Communication mechanism
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
- */
-
-/* NOTES ********************************************************************
- * 
- * This is a very rough implementation, not compatible with mach or nt
- * 
- * 
- * 
- * 
  */
 
 /* INCLUDES *****************************************************************/
@@ -37,7 +28,9 @@
 #define EPORT_WAIT_FOR_ACCEPT         (2)
 #define EPORT_WAIT_FOR_COMPLETE_SRV   (3)
 #define EPORT_WAIT_FOR_COMPLETE_CLT   (4)
-#define EPORT_CONNECTED               (5)
+#define EPORT_CONNECTED_CLIENT        (5)
+#define EPORT_CONNECTED_SERVER        (6)
+#define EPORT_DISCONNECTED            (7)
 
 struct _EPORT;
 
@@ -45,7 +38,8 @@ typedef struct _QUEUEDMESSAGE
 {
    struct _EPORT* Sender;
    LIST_ENTRY QueueListEntry;
-   LPCMESSAGE Message;
+   LPC_MESSAGE Message;
+   UCHAR MessageData[MAX_MESSAGE_DATA];
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 /* GLOBALS *******************************************************************/
@@ -92,7 +86,7 @@ PQUEUEDMESSAGE EiDequeueConnectMessagePort(PEPORT Port)
 }
 
 NTSTATUS EiReplyOrRequestPort(PEPORT Port, 
-			      PLPCMESSAGE LpcReply, 
+			      PLPC_MESSAGE LpcReply, 
 			      ULONG MessageType,
 			      PEPORT Sender)
 {
@@ -104,11 +98,11 @@ NTSTATUS EiReplyOrRequestPort(PEPORT Port,
    
    if (LpcReply != NULL)
      {
-	memcpy(&MessageReply->Message, LpcReply, sizeof(LPCMESSAGE));
+	memcpy(&MessageReply->Message, LpcReply, LpcReply->MessageSize);
      }
    
-   MessageReply->Message.ClientProcessId = (DWORD)PsGetCurrentProcessId();
-   MessageReply->Message.ClientThreadId = (DWORD)PsGetCurrentThreadId();
+   MessageReply->Message.Cid.UniqueProcess = PsGetCurrentProcessId();
+   MessageReply->Message.Cid.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
    MessageReply->Message.MessageId = InterlockedIncrement(&EiNextLpcMessageId);
    
@@ -119,9 +113,51 @@ NTSTATUS EiReplyOrRequestPort(PEPORT Port,
    return(STATUS_SUCCESS);
 }
 
+VOID NiClosePort(PVOID ObjectBody,
+		 ULONG HandleCount)
+{
+   PEPORT Port = (PEPORT)ObjectBody;
+   LPC_MESSAGE Message;
+   
+//   DPRINT1("NiClosePort(ObjectBody %x, HandleCount %d) RefCount %d\n",
+//	   ObjectBody, HandleCount, ObGetReferenceCount(Port));
+   
+   if (HandleCount == 0 &&
+       Port->State == EPORT_CONNECTED_CLIENT &&
+       ObGetReferenceCount(Port) == 2)
+     {
+//	DPRINT1("All handles closed to client port\n");
+	
+	Message.MessageSize = sizeof(LPC_MESSAGE);
+	Message.DataSize = 0;
+	
+	EiReplyOrRequestPort(Port->OtherPort,
+			     &Message,
+			     LPC_PORT_CLOSED,
+			     Port);
+	KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+	
+	Port->OtherPort->OtherPort = NULL;
+	Port->OtherPort->State = EPORT_DISCONNECTED;
+	ObDereferenceObject(Port);
+     }
+   if (HandleCount == 0 &&
+       Port->State == EPORT_CONNECTED_SERVER &&
+       ObGetReferenceCount(Port) == 2)
+     {
+//	DPRINT("All handles closed to server\n");
+	
+	Port->OtherPort->OtherPort = NULL;
+	Port->OtherPort->State = EPORT_DISCONNECTED;
+	ObDereferenceObject(Port->OtherPort);
+     }
+}
 
 VOID NiDeletePort(PVOID ObjectBody)
 {
+//   PEPORT Port = (PEPORT)ObjectBody;
+   
+//   DPRINT1("Deleting port %x\n", Port);
 }
 
 NTSTATUS NiCreatePort(PVOID ObjectBody,
@@ -170,7 +206,7 @@ NTSTATUS NiInitPort(VOID)
    ExPortType->NonpagedPoolCharge = sizeof(EPORT);
    ExPortType->Dump = NULL;
    ExPortType->Open = NULL;
-   ExPortType->Close = NULL;
+   ExPortType->Close = NiClosePort;
    ExPortType->Delete = NiDeletePort;
    ExPortType->Parse = NULL;
    ExPortType->Security = NULL;
@@ -191,6 +227,7 @@ static NTSTATUS NiInitializePort(PEPORT Port)
    Port->OtherPort = NULL;
    Port->QueueLength = 0;
    Port->ConnectQueueLength = 0;
+   Port->State = EPORT_INACTIVE;
    InitializeListHead(&Port->QueueListHead);
    InitializeListHead(&Port->ConnectQueueListHead);
    
@@ -201,7 +238,7 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
 			      ULONG MaxConnectInfoLength,
 			      ULONG MaxDataLength,
-			      ULONG Unknown1)
+			      ULONG Reserved)
 {
    PEPORT Port;
    NTSTATUS Status;
@@ -221,17 +258,19 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
    Port->MaxConnectInfoLength = 260;
    Port->MaxDataLength = 328;
    
+   ObDereferenceObject(Port);
+   
    return(Status);
 }
 
-NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
-				IN	PUNICODE_STRING		PortName,
-				IN	PVOID     	        Unknown1,
-				IN      PLPCSECTIONINFO SectionInfo,
-				IN	PLPCSECTIONMAPINFO MapInfo,
-				IN	PVOID Unknown2,
-				IN	PVOID ConnectInfo,
-				IN	PULONG uConnectInfoLength)
+NTSTATUS STDCALL NtConnectPort (PHANDLE	ConnectedPort,
+				PUNICODE_STRING PortName,
+				PSECURITY_QUALITY_OF_SERVICE Qos,
+				PLPC_SECTION_WRITE WriteMap,
+				PLPC_SECTION_READ ReadMap,
+				PULONG MaxMessageSize,
+				PVOID ConnectInfo,
+				PULONG UserConnectInfoLength)
 /*
  * FUNCTION: Connect to a named port and wait for the other side to 
  * accept the connection
@@ -241,7 +280,7 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
    PEPORT NamedPort;
    PEPORT OurPort;
    HANDLE OurPortHandle;
-   LPCMESSAGE Request;
+   PLPC_MESSAGE Request;
    PQUEUEDMESSAGE Reply;
    ULONG ConnectInfoLength;
    KIRQL oldIrql;
@@ -252,7 +291,9 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
    /*
     * Copy in user parameters
     */
-   memcpy(&ConnectInfoLength, uConnectInfoLength, sizeof(*uConnectInfoLength));
+   memcpy(&ConnectInfoLength, 
+	  UserConnectInfoLength, 
+	  sizeof(*UserConnectInfoLength));
    
    /*
     * Get access to the port
@@ -285,12 +326,15 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
     */
    DPRINT("Creating request message\n");
    
-   Request.ActualMessageLength = ConnectInfoLength;
-   Request.TotalMessageLength = sizeof(LPCMESSAGE) + ConnectInfoLength;
-   Request.SharedSectionSize = 0;
+   Request = ExAllocatePool(NonPagedPool,
+			    sizeof(LPC_MESSAGE) + ConnectInfoLength);
+   
+   Request->DataSize = ConnectInfoLength;
+   Request->MessageSize = sizeof(LPC_MESSAGE) + ConnectInfoLength;
+   Request->SharedSectionSize = 0;
    if (ConnectInfo != NULL && ConnectInfoLength > 0)
      {
-	memcpy(Request.MessageData, ConnectInfo, ConnectInfoLength);
+	memcpy((PVOID)(Request + 1), ConnectInfo, ConnectInfoLength);
      }
    
    /*
@@ -298,7 +342,7 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
     */
    DPRINT("Queuing message\n");
    
-   EiReplyOrRequestPort(NamedPort, &Request, LPC_CONNECTION_REQUEST, OurPort);
+   EiReplyOrRequestPort(NamedPort, Request, LPC_CONNECTION_REQUEST, OurPort);
    KeSetEvent(&NamedPort->Event, IO_NO_INCREMENT, FALSE);
    
    DPRINT("Waiting for connection completion\n");
@@ -316,19 +360,25 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
    KeAcquireSpinLock(&OurPort->Lock, &oldIrql);
    Reply = EiDequeueMessagePort(OurPort);
    KeReleaseSpinLock(&OurPort->Lock, oldIrql);
-   memcpy(ConnectInfo, Reply->Message.MessageData,
-	  Reply->Message.ActualMessageLength);
-   *uConnectInfoLength = Reply->Message.ActualMessageLength;
+   memcpy(ConnectInfo, 
+	  Reply->MessageData,
+	  Reply->Message.DataSize);
+   *UserConnectInfoLength = Reply->Message.DataSize;
    
    if (Reply->Message.MessageType == LPC_CONNECTION_REFUSED)
      {
+	ObDereferenceObject(NamedPort);
+	ObDereferenceObject(OurPort);
 	ZwClose(OurPortHandle);
+	ExFreePool(Request);
 	ExFreePool(Reply);
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   *ConnectedPort = OurPortHandle;
+   OurPort->State = EPORT_CONNECTED_CLIENT;
+   *ConnectedPort = OurPortHandle;   
    ExFreePool(Reply);
+   ExFreePool(Request);
    
    DPRINT("Exited successfully\n");
    
@@ -338,10 +388,10 @@ NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
 
 NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE ServerPortHandle,
 				      HANDLE NamedPortHandle,
-				      PLPCMESSAGE LpcMessage,
-				      ULONG AcceptIt,
-				      ULONG Unknown2,
-				      PLPCSECTIONMAPINFO MapInfo)
+				      PLPC_MESSAGE LpcMessage,
+				      BOOLEAN AcceptIt,
+				      PLPC_SECTION_WRITE WriteMap,
+				      PLPC_SECTION_READ ReadMap)
 {
    NTSTATUS Status;
    PEPORT NamedPort;
@@ -386,7 +436,8 @@ NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE ServerPortHandle,
 			     LPC_CONNECTION_REFUSED,
 			     NamedPort);
 	KeSetEvent(&ConnectionRequest->Sender->Event, IO_NO_INCREMENT, FALSE);
-	ExFreePool(ConnectionRequest);
+	ObDereferenceObject(ConnectionRequest->Sender);
+	ExFreePool(ConnectionRequest);	
 	ObDereferenceObject(NamedPort);
 	return(STATUS_SUCCESS);
      }
@@ -402,6 +453,7 @@ NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE ServerPortHandle,
 			OurPort);
    ExFreePool(ConnectionRequest);
    
+   ObDereferenceObject(OurPort);   
    ObDereferenceObject(NamedPort);
     
    return(STATUS_SUCCESS);
@@ -428,20 +480,22 @@ NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle)
    
    KeSetEvent(&OurPort->OtherPort->Event, IO_NO_INCREMENT, FALSE);
    
+   OurPort->State = EPORT_CONNECTED_SERVER;
+   
    ObDereferenceObject(OurPort);
    
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtImpersonateClientOfPort (IN	HANDLE		PortHandle,
-					    IN	PLPCMESSAGE ClientMessage)
+NTSTATUS STDCALL NtImpersonateClientOfPort (HANDLE PortHandle,
+					    PLPC_MESSAGE ClientMessage)
 {
    UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL NtListenPort (IN HANDLE PortHandle,
-			       IN PLPCMESSAGE ConnectMsg)
+			       IN PLPC_MESSAGE ConnectMsg)
 /*
  * FUNCTION: Listen on a named port and wait for a connection attempt
  */
@@ -466,17 +520,17 @@ NTSTATUS STDCALL NtListenPort (IN HANDLE PortHandle,
 
 
 NTSTATUS STDCALL NtQueryInformationPort (IN HANDLE PortHandle,
-					 IN CINT PortInformationClass,	/* guess */
-					 OUT PVOID PortInformation,	/* guess */
-					 IN ULONG PortInformationLength,	/* guess */
-					 OUT PULONG ReturnLength		/* guess */)
+					 IN CINT PortInformationClass,	
+					 OUT PVOID PortInformation,    
+					 IN ULONG PortInformationLength,
+					 OUT PULONG ReturnLength)
 {
    UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL NtReplyPort (IN HANDLE PortHandle,
-			      IN PLPCMESSAGE LpcReply)
+			      IN PLPC_MESSAGE LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -507,10 +561,10 @@ NTSTATUS STDCALL NtReplyPort (IN HANDLE PortHandle,
 }
 
 
-NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
-					 PVOID Unknown,
-					 IN	PLPCMESSAGE	LpcReply,     
-					 OUT	PLPCMESSAGE	LpcMessage)
+NTSTATUS STDCALL NtReplyWaitReceivePort (HANDLE PortHandle,
+					 PULONG PortId,
+					 PLPC_MESSAGE LpcReply,     
+					 PLPC_MESSAGE LpcMessage)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -566,7 +620,7 @@ NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
     */
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    Request = EiDequeueMessagePort(Port);
-   memcpy(LpcMessage, &Request->Message, sizeof(*LpcMessage));
+   memcpy(LpcMessage, &Request->Message, Request->Message.MessageSize);
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
 	EiEnqueueConnectMessagePort(Port, Request);
@@ -585,8 +639,23 @@ NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS STDCALL LpcSendTerminationPort(PEPORT Port,
+					TIME CreationTime)
+{
+   NTSTATUS Status;
+   LPC_TERMINATION_MESSAGE Msg;
+   
+   Msg.CreationTime = CreationTime;
+   Status = EiReplyOrRequestPort(Port,
+				 &Msg.Header,
+				 LPC_DATAGRAM,
+				 NULL);
+   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS STDCALL LpcRequestPort(PEPORT Port,
-				PLPCMESSAGE LpcMessage)
+				PLPC_MESSAGE LpcMessage)
 {
    NTSTATUS Status;
    
@@ -602,7 +671,7 @@ NTSTATUS STDCALL LpcRequestPort(PEPORT Port,
 }
 
 NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
-				IN PLPCMESSAGE	LpcMessage	/* guess */)
+				IN PLPC_MESSAGE LpcMessage)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -630,8 +699,8 @@ NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
 
 
 NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
-					PLPCMESSAGE LpcRequest,    
-					PLPCMESSAGE LpcReply)
+					PLPC_MESSAGE LpcRequest,    
+					PLPC_MESSAGE LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -661,6 +730,7 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
    
    if (!NT_SUCCESS(Status))
      {
+	DbgPrint("Enqueue failed\n");
 	ObDereferenceObject(Port);
 	return(Status);
      }
@@ -680,70 +750,38 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    Message = EiDequeueMessagePort(Port);
    KeReleaseSpinLock(&Port->Lock, oldIrql);
-   memcpy(LpcReply, &Message->Message, sizeof(*LpcReply));
+   DPRINT("Message->Message.MessageSize %d\n",
+	   Message->Message.MessageSize);
+   memcpy(LpcReply, &Message->Message, Message->Message.MessageSize);
    ExFreePool(Message);
+   
+   ObDereferenceObject(Port);
    
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtReplyWaitReplyPort(PVOID a, PVOID b)
+NTSTATUS STDCALL NtReplyWaitReplyPort(HANDLE PortHandle,
+				      PLPC_MESSAGE ReplyMessage)
 {
    UNIMPLEMENTED;
 }
 
-/**********************************************************************
- * NAME							SYSTEM
- *	NtReadRequestData				NOT EXPORTED
- *
- * DESCRIPTION
- * 	Probably used only for FastLPC, to read data from the
- * 	recipient's address space directly.
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * 	The number of arguments is the same as in NT's.
- *
- * REVISIONS
- * 
- */
-NTSTATUS STDCALL NtReadRequestData (DWORD	a0,
-				    DWORD	a1,
-				    DWORD	a2,
-				    DWORD	a3,
-				    DWORD	a4,
-				    DWORD	a5)
+NTSTATUS STDCALL NtReadRequestData (HANDLE PortHandle,
+				    PLPC_MESSAGE Message,
+				    ULONG Index,
+				    PVOID Buffer,
+				    ULONG BufferLength,
+				    PULONG Returnlength)
 {
 	UNIMPLEMENTED;
 }
 
-
-/**********************************************************************
- * NAME							SYSTEM
- *	NtWriteRequestData				NOT EXPORTED
- *
- * DESCRIPTION
- * 	Probably used only for FastLPC, to write data in the
- * 	recipient's address space directly.
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * 	The number of arguments is the same as in NT's.
- *
- * REVISIONS
- * 
- */
-NTSTATUS STDCALL NtWriteRequestData (DWORD	a0,
-				     DWORD	a1,
-				     DWORD	a2,
-				     DWORD	a3,
-				     DWORD	a4,
-				     DWORD	a5)
+NTSTATUS STDCALL NtWriteRequestData (HANDLE PortHandle,
+				     PLPC_MESSAGE Message,
+				     ULONG Index,
+				     PVOID Buffer,
+				     ULONG BufferLength,
+				     PULONG ReturnLength)
 {
    UNIMPLEMENTED;
 }

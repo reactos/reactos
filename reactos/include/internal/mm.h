@@ -26,6 +26,22 @@ enum
    MEMORY_AREA_CACHE_SEGMENT,
 };
 
+#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) ((x) / (4*1024*1024))
+#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) (((x) % 4*1024*1024) / (4*1024))
+
+#define NR_SECTION_PAGE_TABLES           (1024)
+#define NR_SECTION_PAGE_ENTRIES          (1024)
+
+typedef struct
+{
+   PVOID Pages[NR_SECTION_PAGE_ENTRIES];
+} SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
+
+typedef struct
+{
+   PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
+} SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
+
 typedef struct
 {
    CSHORT Type;
@@ -36,6 +52,8 @@ typedef struct
    PFILE_OBJECT FileObject;
    LIST_ENTRY ViewListHead;
    KSPIN_LOCK ViewListLock;
+   KMUTEX Lock;
+   SECTION_PAGE_DIRECTORY PageDirectory;
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct

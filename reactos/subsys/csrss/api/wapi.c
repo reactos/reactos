@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.5 2000/03/22 18:36:00 dwelch Exp $
+/* $Id: wapi.c,v 1.6 2000/04/03 21:54:41 dwelch Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -25,36 +25,37 @@ HANDLE CsrssApiHeap;
 static void Thread_Api2(HANDLE ServerPort)
 {
    NTSTATUS Status;
-   PLPCMESSAGE LpcReply;
-   LPCMESSAGE LpcRequest;
+   LPC_MAX_MESSAGE LpcReply;
+   LPC_MAX_MESSAGE LpcRequest;
    PCSRSS_API_REQUEST Request;
    PCSRSS_PROCESS_DATA ProcessData;
    PCSRSS_API_REPLY Reply;
    
-   LpcReply = NULL;
+   Reply = NULL;
    
    for (;;)
      {
 	Status = NtReplyWaitReceivePort(ServerPort,
 					0,
-					LpcReply,
-					&LpcRequest);
+					&Reply->Header,
+					&LpcRequest.Header);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DisplayString(L"CSR: NtReplyWaitReceivePort failed\n");
 	  }
-	if (LpcReply != NULL)
+	
+	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
 	  {
-	     RtlFreeHeap(CsrssApiHeap,
-			 0,
-			 LpcReply);
+//	     DbgPrint("Client closed port\n");
+	     NtClose(ServerPort);
+	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 	  }
 	
-	Request = (PCSRSS_API_REQUEST)LpcRequest.MessageData;
-	LpcReply = NULL;
-	Reply = NULL;
+	Request = (PCSRSS_API_REQUEST)&LpcRequest;
+	Reply = (PCSRSS_API_REPLY)&LpcReply;
 	
-	ProcessData = CsrGetProcessData(LpcRequest.ClientProcessId);
+	ProcessData = CsrGetProcessData(
+				  (ULONG)LpcRequest.Header.Cid.UniqueProcess);
 	
 //	DisplayString(L"CSR: Received request\n");
 	
@@ -63,57 +64,50 @@ static void Thread_Api2(HANDLE ServerPort)
 	   case CSRSS_CREATE_PROCESS:
 	     Status = CsrCreateProcess(ProcessData, 
 				       &Request->Data.CreateProcessRequest,
-				       &LpcReply);
+				       Reply);
 	     break;
 	     
 	   case CSRSS_TERMINATE_PROCESS:
 	     Status = CsrTerminateProcess(ProcessData, 
 					  Request,
-					  &LpcReply);
+					  Reply);
 	     break;
 	     
 	   case CSRSS_WRITE_CONSOLE:
 	     Status = CsrWriteConsole(ProcessData, 
 				      Request,
-				      &LpcReply);
+				      Reply);
 	     break;
 	     
 	   case CSRSS_READ_CONSOLE:
 	     Status = CsrReadConsole(ProcessData, 
 				     Request,
-				     &LpcReply);
+				     Reply);
 	     break;
 	     
 	   case CSRSS_ALLOC_CONSOLE:
 	     Status = CsrAllocConsole(ProcessData, 
 				      Request,
-				      &LpcReply);
+				      Reply);
 	     break;
 	     
 	   case CSRSS_FREE_CONSOLE:
 	     Status = CsrFreeConsole(ProcessData, 
 				     Request,
-				     &LpcReply);
+				     Reply);
 	     break;
 	     
 	   case CSRSS_CONNECT_PROCESS:
 	     Status = CsrConnectProcess(ProcessData, 
 					Request,
-					&LpcReply);
+					Reply);
 	     break;
 	     
 	   default:
-	     LpcReply = RtlAllocateHeap(CsrssApiHeap,
-					HEAP_ZERO_MEMORY,
-					sizeof(LPCMESSAGE));
-	     Reply = (PCSRSS_API_REPLY)(LpcReply->MessageData);
+	     Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
+	       sizeof(LPC_MESSAGE_HEADER);
+	     Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
 	     Reply->Status = STATUS_NOT_IMPLEMENTED;
-	  }
-	
-	Reply = (PCSRSS_API_REPLY)(LpcReply->MessageData);
-	if (Reply->Status == STATUS_SUCCESS)
-	  {
-//	     DisplayString(L"CSR: Returning STATUS_SUCCESS\n");
 	  }
      }
 }
@@ -129,8 +123,9 @@ static void Thread_Api2(HANDLE ServerPort)
 void Thread_Api(PVOID PortHandle)
 {
    NTSTATUS Status;
-   LPCMESSAGE Request;
+   LPC_MAX_MESSAGE Request;
    HANDLE ServerPort;
+   HANDLE ServerThread;
    
    CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
 				NULL,
@@ -149,7 +144,7 @@ void Thread_Api(PVOID PortHandle)
    
    for (;;)
      {
-	Status = NtListenPort(PortHandle, &Request);
+	Status = NtListenPort(PortHandle, &Request.Header);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DisplayString(L"CSR: NtListenPort() failed\n");
@@ -183,7 +178,7 @@ void Thread_Api(PVOID PortHandle)
 				     NULL,
 				     (PTHREAD_START_ROUTINE)Thread_Api2,
 				     ServerPort,
-				     NULL,
+				     &ServerThread,
 				     NULL);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -191,6 +186,7 @@ void Thread_Api(PVOID PortHandle)
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
+	NtClose(ServerThread);
      }
 }
 

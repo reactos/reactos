@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.19 2000/03/26 22:00:09 dwelch Exp $
+/* $Id: handle.c,v 1.20 2000/04/03 21:54:40 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -464,8 +464,8 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    ASSERT_IRQL(PASSIVE_LEVEL);
    
    DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
-	  "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
-	  ObjectType,AccessMode,Object);
+	   "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
+	   ObjectType,AccessMode,Object);
 
    
    /*
@@ -474,6 +474,8 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    if (Handle == NtCurrentProcess() && 
        (ObjectType == PsProcessType || ObjectType == NULL))
      {
+	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
+	
 	ObReferenceObjectByPointer(PsGetCurrentProcess(),
 				   PROCESS_ALL_ACCESS,
 				   PsProcessType,
@@ -530,6 +532,11 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 	CHECKPOINT;
 	return(STATUS_OBJECT_TYPE_MISMATCH);
      }   
+   
+   if (ObjectHeader->ObjectType == PsProcessType)
+     {
+	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
+     }
    
    if (!(GrantedAccess & DesiredAccess) &&
        !((~GrantedAccess) & DesiredAccess))

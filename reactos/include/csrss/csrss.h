@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_CSRSS_CSRSS_H
 #define __INCLUDE_CSRSS_CSRSS_H
 
+#include <napi/lpc.h>
+
 typedef struct
 {
 } CSRSS_CONNECT_PROCESS_REQUEST, PCSRSS_CONNECT_PROCESS_REQUEST;
@@ -54,6 +56,7 @@ typedef struct
 
 typedef struct
 {
+   LPC_MESSAGE_HEADER Header;
    ULONG Type;
    union
      {
@@ -66,6 +69,7 @@ typedef struct
 
 typedef struct
 {
+   LPC_MESSAGE_HEADER Header;
    NTSTATUS Status;
    union
      {

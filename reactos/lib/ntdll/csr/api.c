@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.4 2000/03/22 18:35:50 dwelch Exp $
+/* $Id: api.c,v 1.5 2000/04/03 21:54:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,21 +28,20 @@ NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
 				     ULONG Length,
 				     ULONG ReplyLength)
 {
-   LPCMESSAGE LpcRequest;
-   LPCMESSAGE LpcReply;
    NTSTATUS Status;
    
-//   DbgPrint("Length %d\n", Length);
+//   DbgPrint("CsrClientCallServer(Request %x, Reply %x, Length %d, "
+//	    "ReplyLength %d)\n", Request, Reply, Length, ReplyLength);
    
-   LpcRequest.ActualMessageLength = Length;
-   LpcRequest.TotalMessageLength = sizeof(LPCMESSAGE) + Length;
-   memcpy(LpcRequest.MessageData, Request, Length);
+   Request->Header.DataSize = Length;
+   Request->Header.MessageSize = sizeof(LPC_MESSAGE_HEADER) + Length;
    
    Status = NtRequestWaitReplyPort(WindowsApiPort,
-				   &LpcRequest,
-				   &LpcReply);
-   memcpy(Reply, LpcReply.MessageData, ReplyLength);
-//   DbgPrint("Status %x Reply.Status %x\n", Status, Reply->Status);
+				   &Request->Header,
+				   &Reply->Header);
+   
+//   DbgPrint("Status %x\n", Status);
+   
    return(Status);
 }
 

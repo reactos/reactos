@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.10 2000/03/26 22:00:07 dwelch Exp $
+/* $Id: rw.c,v 1.11 2000/04/03 21:54:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,6 +35,8 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
 
+   DPRINT("WriteFile(hFile %x)\n",hFile);
+   
    if (IsConsoleHandle(hFile))
      {
 	return(WriteConsoleA(hFile,
@@ -43,9 +45,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			     lpNumberOfBytesWritten,
 			     NULL));
      }
-   
-   DPRINT("WriteFile(hFile %x)\n",hFile);
-   
+      
    if (lpOverLapped != NULL) 
      {
         Offset.u.LowPart = lpOverLapped->Offset;
@@ -99,6 +99,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    IO_STATUS_BLOCK IIosb;
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
+   
+   DbgPrint("ReadFile(hFile %x)\n", hFile);
    
    if (IsConsoleHandle(hFile))
      {

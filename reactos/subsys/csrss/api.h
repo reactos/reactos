@@ -25,31 +25,31 @@ VOID CsrInitProcessData(VOID);
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_CREATE_PROCESS_REQUEST Request,
-			   PLPCMESSAGE* Reply);
+			   PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrTerminateProcess(PCSRSS_PROCESS_DATA ProcessData,
 			     PCSRSS_API_REQUEST LpcMessage,
-			     PLPCMESSAGE* Reply);
+			     PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrWriteConsole(PCSRSS_PROCESS_DATA ProcessData,
 			 PCSRSS_API_REQUEST LpcMessage,
-			 PLPCMESSAGE* Reply);
+			 PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrAllocConsole(PCSRSS_PROCESS_DATA ProcessData,
 			 PCSRSS_API_REQUEST LpcMessage,
-			 PLPCMESSAGE* Reply);
+			 PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrFreeConsole(PCSRSS_PROCESS_DATA ProcessData,
 			PCSRSS_API_REQUEST LpcMessage,
-			PLPCMESSAGE* Reply);
+			PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrReadConsole(PCSRSS_PROCESS_DATA ProcessData,
 			PCSRSS_API_REQUEST LpcMessage,
-			PLPCMESSAGE* Reply);
+			PCSRSS_API_REPLY Reply);
 
 NTSTATUS CsrConnectProcess(PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_API_REQUEST Request,
-			   PLPCMESSAGE* Reply);
+			   PCSRSS_API_REPLY Reply);
 
 /* print.c */
 VOID DisplayString(LPCWSTR lpwString);

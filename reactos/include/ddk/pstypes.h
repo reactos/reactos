@@ -175,35 +175,35 @@ typedef struct
 
 typedef struct _ETHREAD 
 {
-   KTHREAD			Tcb;
-   TIME			CreateTime;
-   TIME			ExitTime;
-   NTSTATUS		ExitStatus;
-   LIST_ENTRY		PostBlockList;
-   LIST_ENTRY		TerminationPortList;  
-   ULONG			ActiveTimerListLock;
-   PVOID			ActiveTimerListHead;
-   CLIENT_ID		Cid;
-   PLARGE_INTEGER		LpcReplySemaphore;
-   PVOID			LpcReplyMessage;
-   PLARGE_INTEGER		LpcReplyMessageId;
-   PPS_IMPERSONATION_INFO     ImpersonationInfo;
-   LIST_ENTRY		IrpList; //
-   TOP_LEVEL_IRP		TopLevelIrp;
-   ULONG			ReadClusterSize;
-   UCHAR			ForwardClusterOnly;
-   UCHAR			DisablePageFaultClustering;
-   UCHAR			DeadThread;
-   UCHAR			HasTerminated;
-   ACCESS_MASK		GrantedAccess;
-   struct _EPROCESS*	ThreadsProcess;
-   PKSTART_ROUTINE		StartAddress;
-   LPTHREAD_START_ROUTINE  Win32StartAddress; // Should Specify a win32 start func
-   UCHAR 			LpcExitThreadCalled;
-   UCHAR 			HardErrorsAreDisabled;
-   UCHAR                   LpcReceivedMsgIdValid;
-   UCHAR                   ActiveImpersonationInfo;
-   ULONG                   PerformanceCountHigh;
+   KTHREAD Tcb;
+   TIME	CreateTime;
+   TIME	ExitTime;
+   NTSTATUS ExitStatus;
+   LIST_ENTRY PostBlockList;
+   LIST_ENTRY TerminationPortList;  
+   KSPIN_LOCK ActiveTimerListLock;
+   PVOID ActiveTimerListHead;
+   CLIENT_ID Cid;
+   PLARGE_INTEGER LpcReplySemaphore;
+   PVOID LpcReplyMessage;
+   PLARGE_INTEGER LpcReplyMessageId;
+   PPS_IMPERSONATION_INFO ImpersonationInfo;
+   LIST_ENTRY IrpList;
+   TOP_LEVEL_IRP TopLevelIrp;
+   ULONG ReadClusterSize;
+   UCHAR ForwardClusterOnly;
+   UCHAR DisablePageFaultClustering;
+   UCHAR DeadThread;
+   UCHAR HasTerminated;
+   ACCESS_MASK GrantedAccess;
+   struct _EPROCESS* ThreadsProcess;
+   PKSTART_ROUTINE StartAddress;
+   LPTHREAD_START_ROUTINE Win32StartAddress; 
+   UCHAR LpcExitThreadCalled;
+   UCHAR HardErrorsAreDisabled;
+   UCHAR LpcReceivedMsgIdValid;
+   UCHAR ActiveImpersonationInfo;
+   ULONG PerformanceCountHigh;
 
    /*
     * Added by David Welch (welch@cwcom.net)

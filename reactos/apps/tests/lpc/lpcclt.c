@@ -1,9 +1,10 @@
-/* $Id: lpcclt.c,v 1.5 2000/01/22 22:22:48 ea Exp $
+/* $Id: lpcclt.c,v 1.6 2000/04/03 21:54:33 dwelch Exp $
  *
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
  */
 #include <ddk/ntddk.h>
+#include <napi/lpc.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
    UNICODE_STRING PortName;
    NTSTATUS Status;
    HANDLE PortHandle;
-   LPCMESSAGE Request;
+   LPC_MAX_MESSAGE Request;
    ULONG ConnectInfoLength;
    
    printf("(lpcclt.exe) Lpc client\n");
@@ -52,15 +53,19 @@ int main(int argc, char* argv[])
 	return EXIT_FAILURE;
      }
    
-   strcpy(Request.MessageData, GetCommandLineA());
-   Request.ActualMessageLength = strlen(Request.MessageData);
-   Request.TotalMessageLength = sizeof(LPCMESSAGE);
+   strcpy(Request.Data, GetCommandLineA());
+   Request.Header.DataSize = strlen(Request.Data);
+   Request.Header.MessageSize = sizeof(LPC_MESSAGE_HEADER) + 
+     Request.Header.DataSize;
    
-   printf("(lpcclt.exe) Sending message \"%s\"\n", (char *) Request.MessageData);
-   Status = NtRequestPort(PortHandle, &Request);
+   printf("(lpcclt.exe) Sending message \"%s\"\n", 
+	  (char *) Request.Data);
+   Status = NtRequestPort(PortHandle, 
+			  &Request.Header);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcclt.exe) Failed to send request (Status = 0x%=8X)\n", Status);
+	printf("(lpcclt.exe) Failed to send request (Status = 0x%8X)\n", 
+	       Status);
 	return EXIT_FAILURE;
      }
    

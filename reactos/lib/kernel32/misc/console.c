@@ -47,10 +47,13 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 {
    PRTL_USER_PROCESS_PARAMETERS Ppb;
    
-   DPRINT("GetStdHandle(nStdHandle %d)\n",nStdHandle);
+//   DbgPrint("GetStdHandle(nStdHandle %d)\n",nStdHandle);
    
    SetLastError(ERROR_SUCCESS); /* OK */
+//   DbgPrint("NtCurrentPeb() %x\n", NtCurrentPeb());
    Ppb = NtCurrentPeb()->ProcessParameters;  
+//   DbgPrint("Ppb %x\n", Ppb);
+//   DbgPrint("Ppb->OutputHandle %x\n", Ppb->OutputHandle);
    switch (nStdHandle)
      {
       case STD_INPUT_HANDLE:	return Ppb->InputHandle;

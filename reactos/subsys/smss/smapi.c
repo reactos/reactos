@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.3 1999/12/28 16:25:21 ekohl Exp $
+/* $Id: smapi.c,v 1.4 2000/04/03 21:54:42 dwelch Exp $
  *
  * Reactos Session Manager
  *
@@ -6,7 +6,7 @@
  */
 
 #include <ddk/ntddk.h>
-
+#include <napi/lpc.h>
 
 #include "smss.h"
 
@@ -18,8 +18,8 @@ SmApiThread (HANDLE Port)
 {
     NTSTATUS Status;
     ULONG Unknown;
-    PLPCMESSAGE Reply = NULL;
-    LPCMESSAGE Message;
+    PLPC_MESSAGE Reply = NULL;
+    LPC_MESSAGE Message;
 
 #ifndef NDEBUG
     DisplayString (L"SmApiThread: running\n");

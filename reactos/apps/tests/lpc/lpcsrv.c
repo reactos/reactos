@@ -1,9 +1,10 @@
-/* $Id: lpcsrv.c,v 1.5 2000/03/10 13:46:07 ekohl Exp $
+/* $Id: lpcsrv.c,v 1.6 2000/04/03 21:54:33 dwelch Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
  */
 #include <ddk/ntddk.h>
+#include <napi/lpc.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
@@ -31,7 +32,7 @@ int main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE NamedPortHandle;
    HANDLE PortHandle;
-   LPCMESSAGE ConnectMsg;
+   LPC_MAX_MESSAGE ConnectMsg;
    
    printf("(lpcsrv.exe) Lpc test server\n");
    
@@ -57,7 +58,7 @@ int main(int argc, char* argv[])
    
    printf("(lpcsrv.exe) Listening for connections\n");
    Status = NtListenPort(NamedPortHandle,
-			 &ConnectMsg);
+			 &ConnectMsg.Header);
    if (!NT_SUCCESS(Status))
      {
 	printf("(lpcsrv.exe) Failed to listen for connections (Status = 0x%08lX)\n", Status);
@@ -87,19 +88,20 @@ int main(int argc, char* argv[])
    
    for(;;)
      {
-	LPCMESSAGE Request;
+	LPC_MAX_MESSAGE Request;
 	
 	Status = NtReplyWaitReceivePort(PortHandle,
 					0,
 					NULL,
-					&Request);
+					&Request.Header);
 	if (!NT_SUCCESS(Status))
 	  {
 	     printf("(lpcsrv.exe) Failed to receive request (Status = 0x%08lX)\n", Status);
              return EXIT_FAILURE;
 	  }
 	
-	printf("(lpcsrv.exe) Message contents are <%s>\n", Request.MessageData);
+	printf("(lpcsrv.exe) Message contents are <%s>\n", 
+	       Request.Data);
      }
    return EXIT_SUCCESS;
 }

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.27 2000/03/26 22:00:06 dwelch Exp $
+/* $Id: zw.h,v 1.28 2000/04/03 21:54:34 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5119,81 +5119,6 @@ ZwYieldExecution(
  * These prototypes are unknown as yet
  * (stack sizes by Peter-Michael Hager)
  */
-NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE	PortHandle,
-				      HANDLE NamedPortHandle,
-				      PLPCMESSAGE ServerReply,
-				      ULONG AcceptIt,
-				      ULONG Unknown3,
-				      PLPCSECTIONMAPINFO MapInfo);
-
-NTSTATUS STDCALL NtCompleteConnectPort (IN	HANDLE	PortHandle);
-
-NTSTATUS STDCALL NtConnectPort(OUT	PHANDLE		PortHandle,
-			       IN	PUNICODE_STRING	PortName,
-			       IN	PVOID Unknown1,
-			       IN	PLPCSECTIONINFO SectionInfo,
-			       IN	PLPCSECTIONMAPINFO MapInfo,
-			       IN	PVOID Unknown2,
-			       IN	PVOID ConnectInfo,
-			       IN	PULONG ConnectInfoLength);
-
-NTSTATUS STDCALL NtReplyWaitReplyPort(PVOID Unknown1,
-				      PVOID Unknown2);
-				      
- 
-NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
-			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      ULONG MaxConnectInfoLength,
-			      ULONG MaxDataLength,
-			      ULONG Unknown1);
-
-NTSTATUS STDCALL NtImpersonateClientOfPort (IN	HANDLE		PortHandle,
-					    IN	PLPCMESSAGE ClientMessage);
-
-NTSTATUS STDCALL NtListenPort (IN	HANDLE	PortHAndle,
-			       IN PLPCMESSAGE LpcMessage);
-
-NTSTATUS
-STDCALL
-NtQueryInformationPort ( /* @20 */
-	IN	HANDLE	PortHandle,
-	IN	CINT	PortInformationClass,	/* guess */
-	OUT	PVOID	PortInformation,	/* guess */
-	IN	ULONG	PortInformationLength,	/* guess */
-	OUT	PULONG	ReturnLength		/* guess */
-	);
-NTSTATUS STDCALL NtReplyPort (IN	HANDLE		PortHandle,
-			      IN	PLPCMESSAGE	LpcReply);
-NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
-					 PVOID Unknown1,
-					 PLPCMESSAGE MessageReply,
-					 PLPCMESSAGE MessageRequest);
-NTSTATUS STDCALL NtRequestPort ( IN	HANDLE		PortHandle,
-				IN 	PLPCMESSAGE	LpcMessage);
-NTSTATUS STDCALL NtRequestWaitReplyPort (IN	HANDLE		PortHandle,
-					 IN OUT	PLPCMESSAGE	LpcReply,      
-					 OUT     PLPCMESSAGE    LpcRequest); 
-NTSTATUS
-STDCALL
-NtReadRequestData ( /* @24 */
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	);
-NTSTATUS
-STDCALL
-NtWriteRequestData ( /* @24 */
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	);
-
 
 /* --- REGISTRY --- */
 

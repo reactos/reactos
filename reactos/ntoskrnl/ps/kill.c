@@ -15,6 +15,7 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 #include <internal/ob.h>
+#include <internal/port.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -170,8 +171,8 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
 				    NTSTATUS ExitStatus)
 {
-   DPRINT("PiTerminateProcess(Process %x, ExitStatus %x)\n",
-	   Process, ExitStatus);
+   DPRINT1("PiTerminateProcess(Process %x, ExitStatus %x) RC %d\n",
+	   Process, ExitStatus, ObGetReferenceCount(Process));
    
    if (Process->Pcb.ProcessState == PROCESS_STATE_TERMINATED)
      {
@@ -185,6 +186,7 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
+   DPRINT("RC %d\n", ObGetReferenceCount(Process));
    return(STATUS_SUCCESS);
 }
 
@@ -262,8 +264,53 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    return(STATUS_SUCCESS);
 }
 
-
-NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE	TerminationPort)
+NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread)
 {
-   UNIMPLEMENTED;
+   KIRQL oldIrql;
+   PLIST_ENTRY current_entry;
+   PEPORT_TERMINATION_REQUEST current;
+   
+   KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
+   while ((current_entry = RemoveHeadList(&Thread->TerminationPortList)) !=
+	  &Thread->TerminationPortList);
+     {
+	current = CONTAINING_RECORD(current_entry,
+				    EPORT_TERMINATION_REQUEST,
+				    ThreadListEntry);
+	KeReleaseSpinLock(&Thread->ActiveTimerListLock, oldIrql);
+	LpcSendTerminationPort(current->Port, 
+			       Thread->CreateTime);
+	KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
+     }
+   KeReleaseSpinLock(&Thread->ActiveTimerListLock, oldIrql);
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
+{
+   NTSTATUS Status;
+   PEPORT_TERMINATION_REQUEST Request;
+   PEPORT TerminationPort;
+   KIRQL oldIrql;
+   PETHREAD Thread;
+   
+   Status = ObReferenceObjectByHandle(TerminationPortHandle,
+				      PORT_ALL_ACCESS,
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&TerminationPort,
+				      NULL);   
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   Request = ExAllocatePool(NonPagedPool, sizeof(Request));
+   Request->Port = TerminationPort;
+   Thread = PsGetCurrentThread();
+   KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
+   InsertTailList(&Thread->TerminationPortList, &Request->ThreadListEntry);
+   KeReleaseSpinLock(&Thread->ActiveTimerListLock, oldIrql);
+   
+   return(STATUS_SUCCESS);
 }
