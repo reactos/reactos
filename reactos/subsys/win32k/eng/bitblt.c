@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.48 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: bitblt.c,v 1.49 2004/04/09 22:13:26 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -275,6 +275,7 @@ EngBitBlt(SURFOBJ *DestObj,
   ULONG              Direction;
   BOOL               UsesSource;
   BOOL               UsesPattern;
+  POINTL             AdjustedBrushOrigin;
 
   UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);
@@ -370,6 +371,9 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
 
+  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+
   if (NULL != OutputObj)
     {
     OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
@@ -408,7 +412,7 @@ EngBitBlt(SURFOBJ *DestObj,
   {
     case DC_TRIVIAL:
       Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
       break;
     case DC_RECT:
       // Clip the blt to the clip rectangle
@@ -420,7 +424,7 @@ EngBitBlt(SURFOBJ *DestObj,
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4);
+                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -454,7 +458,7 @@ EngBitBlt(SURFOBJ *DestObj,
 	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
 	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4) &&
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4) &&
 	            Ret;
 	    }
 	}
@@ -660,6 +664,7 @@ EngStretchBlt(
 //  unsigned           i;
   POINTL             Pt;
 //  ULONG              Direction;
+  POINTL AdjustedBrushOrigin;
 
     InputRect.left = prclSrc->left;
     InputRect.right = prclSrc->right;
@@ -729,6 +734,9 @@ EngStretchBlt(
   OutputRect.top = prclDest->top + Translate.y;
   OutputRect.bottom = prclDest->bottom + Translate.y;
 
+  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+
   if (NULL != OutputObj)
     {
     OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
@@ -761,7 +769,7 @@ EngStretchBlt(
   {
     case DC_TRIVIAL:
       Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-                          &OutputRect, &InputRect, MaskOrigin, BrushOrigin, Mode);
+                          &OutputRect, &InputRect, MaskOrigin, &AdjustedBrushOrigin, Mode);
       break;
     case DC_RECT:
       // Clip the blt to the clip rectangle
@@ -773,7 +781,7 @@ EngStretchBlt(
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-                           &OutputRect, &InputRect, MaskOrigin, BrushOrigin, Mode);
+                           &OutputRect, &InputRect, MaskOrigin, &AdjustedBrushOrigin, Mode);
       //Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
       //                     &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4);
       DPRINT("EngStretchBlt() doesn't support DC_RECT clipping yet, so blitting w/o clip.\n");
@@ -812,7 +820,7 @@ EngStretchBlt(
 	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
 	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4) &&
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, Rop4) &&
 	            Ret;
 	    }
 	}
@@ -1023,6 +1031,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   POINTL             Pt;
   ULONG              Direction;
   SURFGDI*           DestGDI;
+  POINTL             AdjustedBrushOrigin;
 
   if (NULL != SourcePoint)
     {
@@ -1115,6 +1124,9 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
 
+  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+
   if (NULL != OutputObj)
     {
     OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
@@ -1133,10 +1145,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     case DC_TRIVIAL:
       if(Mask->iBitmapFormat == BMF_8BPP)
         Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
         Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, 0xAACC);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
       break;
     case DC_RECT:
       // Clip the blt to the clip rectangle
@@ -1149,10 +1161,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       if(Mask->iBitmapFormat == BMF_8BPP)
         Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin);
+                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
         Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, 0xAACC);
+                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -1187,10 +1199,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
 	      if(Mask->iBitmapFormat == BMF_8BPP)
 	        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin) && Ret;
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin) && Ret;
               else
                 Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
-                                   &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, 0xAACC) && Ret;
+                                   &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC) && Ret;
 	    }
 	}
       while(EnumMore);
