@@ -239,6 +239,12 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
+  PETHREAD EThread = PsGetCurrentThread();
+  if (EThread->HasTerminated)
+  {
+     /* Someone else has already called PsTerminateCurrentThread */
+     return;
+  }
   PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
 }
 
