@@ -26,6 +26,8 @@
 #include "winuser.h"
 #include "richedit.h"
 
+#define NOWINEDEBUG 1
+
 extern VOID RICHED32_Register (VOID);
 extern VOID RICHED32_Unregister (VOID);
 

@@ -36,14 +36,22 @@
 
 #include "rtf.h"
 #include "rtf2text.h"
+#include "debug.h"
+
+#if 0
 #include "wine/debug.h"
 
-#define ID_EDIT      1
-
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+#else
+  #define TRACE DPRINT
+  #define WARN DPRINT
+  #define FIXME DPRINT
+#endif
 
 HANDLE RICHED32_hHeap = NULL;
 /* LPSTR  RICHED32_aSubclass = NULL; */
+
+#define ID_EDIT      1
 
 #define TRACE_EDIT_MSG32(str) \
         TRACE(\

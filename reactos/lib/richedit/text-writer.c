@@ -41,9 +41,17 @@
 #include "rtf.h"
 #include "rtf2text.h"
 #include "charlist.h"
+#include "debug.h"
+
+#if 0
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+#else
+  #define TRACE DPRINT
+  #define WARN DPRINT
+  #define FIXME DPRINT
+#endif
 
 static void	TextClass ();
 static void	ControlClass ();
