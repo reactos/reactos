@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.76 2004/12/05 16:31:50 gvg Exp $
+/* $Id: create.c,v 1.77 2004/12/06 00:26:47 gdalsnes Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -731,12 +731,24 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
     }
 
-  pFcb->OpenHandleCount++;
-  IoSetShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
+  if (pFcb->OpenHandleCount == 0)
+  {
+      IoSetShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
                    Stack->Parameters.Create.ShareAccess,
                    FileObject,
                    &pFcb->FCBShareAccess);
+   }
+   else
+   {
+      IoUpdateShareAccess(
+          FileObject,
+          &pFcb->FCBShareAccess
+         );
+      
+   }
 
+  pFcb->OpenHandleCount++;
+  
   /* FIXME : test write access if requested */
 
   return(Status);
