@@ -16,12 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.38 2003/08/31 07:56:24 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.39 2003/09/27 15:09:26 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
 #include <win32k/gdiobj.h>
 #include <win32k/bitmaps.h>
+#include <win32k/brush.h>
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
@@ -481,10 +482,10 @@ COLORREF STDCALL NtGdiSetPixel(HDC  hDC,
                        INT  Y,
                        COLORREF  Color)
 {
-   if(NtGdiSetPixelV(hDC,X,Y,Color))
+   COLORREF cr = NtGdiGetPixel(hDC,X,Y);
+   if(cr != CLR_INVALID && NtGdiSetPixelV(hDC,X,Y,Color))
    {
-      COLORREF cr = NtGdiGetPixel(hDC,X,Y);
-      if(CLR_INVALID != cr) return(cr);
+      return(cr);
    }
    return ((COLORREF) -1);
 }
@@ -494,26 +495,18 @@ BOOL STDCALL NtGdiSetPixelV(HDC  hDC,
                     INT  Y,
                     COLORREF  Color)
 {
-  PDC        dc = NULL;
-  PBITMAPOBJ bmp = NULL;
-  BITMAP     bm;
-
-  dc = DC_LockDc (hDC);
-  if(NULL == dc)
-  {
+  HBRUSH NewBrush = NtGdiCreateSolidBrush(Color);
+  HGDIOBJ OldBrush;
+  
+  if (NewBrush == NULL)
     return(FALSE);
-  }
-  bmp = BITMAPOBJ_LockBitmap (dc->w.hBitmap);
-  if(NULL == bmp)
-  {
-    DC_UnlockDc (hDC);
+  OldBrush = NtGdiSelectObject(hDC, NewBrush);
+  if (OldBrush == NULL)
     return(FALSE);
-  }
-  bm = bmp->bitmap;
-  //FIXME: set the actual pixel value
-  BITMAPOBJ_UnlockBitmap (dc->w.hBitmap);
-  DC_UnlockDc (hDC);
-  return(TRUE);
+  NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
+  NtGdiSelectObject(hDC, OldBrush);
+  NtGdiDeleteObject(NewBrush);
+  return TRUE;
 }
 
 BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
