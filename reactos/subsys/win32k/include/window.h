@@ -44,8 +44,6 @@ typedef struct _WINDOW_OBJECT
   HMENU SystemMenu;
   /* Handle of the module that created the window. */
   HINSTANCE Instance;
-  /* Unknown. */
-  LPVOID Parameters;
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
   /* Pointer to the extra data associated with the window. */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.132 2003/11/11 20:28:21 gvg Exp $
+/* $Id: window.c,v 1.133 2003/11/11 21:04:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -495,7 +495,6 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->Owner = NULL;
   WindowObject->IDMenu = 0;
   WindowObject->Instance = NULL;
-  WindowObject->Parameters = NULL;
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = NULL;
   WindowObject->ExtraData = NULL;
@@ -1463,7 +1462,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ContextHelpId = 0;
   WindowObject->IDMenu = (UINT)hMenu;
   WindowObject->Instance = hInstance;
-  WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
