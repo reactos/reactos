@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.36 1999/12/11 17:26:43 phreak Exp $
+/* $Id: thread.c,v 1.37 1999/12/12 00:49:00 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -46,7 +46,7 @@ KSPIN_LOCK PiThreadListLock;
 /*
  * PURPOSE: List of threads associated with each priority level
  */
-static LIST_ENTRY PiThreadListHead;
+static LIST_ENTRY PiThreadListHead = { &PiThreadListHead, &PiThreadListHead };
 static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS];
 static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
@@ -148,8 +148,6 @@ VOID PsReapThreads(VOID)
    
 //   DPRINT1("PsReapThreads()\n");
    
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   
    current_entry = PiThreadListHead.Flink;
    
    while (current_entry != &PiThreadListHead)
@@ -166,8 +164,6 @@ VOID PsReapThreads(VOID)
 	     ObDereferenceObject(current);
 	  }
      }
-   
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 static PETHREAD PsScanThreadList (KPRIORITY Priority)
@@ -217,7 +213,6 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
-	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     return;
 	  }
 	if (Candidate != NULL)
@@ -228,9 +223,12 @@ static VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    	     
 	     CurrentThread = Candidate;
 	     
-	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
-	     HalTaskSwitch(&CurrentThread->Tcb);
+	     KeReleaseSpinLockFromDpcLevel( &PiThreadListLock );
+		 HalTaskSwitch(&CurrentThread->Tcb);
+		 KeAcquireSpinLockAtDpcLevel( &PiThreadListLock );
+		 DPRINT( "Woken up, grabbed lock\n" );
 	     PsReapThreads();
+		 DPRINT( "Reaped\n" );
 	     return;
 	  }
      }
@@ -253,7 +251,7 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    CurrentThread->Tcb.WaitIrql = oldIrql;		// save wait Irql
    PsDispatchThreadNoLock(NewThreadStatus);
-//   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    KeLowerIrql(oldIrql);
 //   DPRINT("oldIrql %d\n",oldIrql);
 }
