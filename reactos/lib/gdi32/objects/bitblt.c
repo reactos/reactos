@@ -1,4 +1,4 @@
-/* $Id: bitblt.c,v 1.18 2004/03/15 04:21:17 royce Exp $
+/* $Id: bitblt.c,v 1.19 2004/03/24 00:13:31 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -345,6 +345,17 @@ SetPixel(HDC  hDC,
 	COLORREF  Color)
 {
 	return NtGdiSetPixel(hDC, X, Y, Color);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetPixelV ( HDC hDC, int XPos, int YPos, COLORREF Color )
+{
+	return NtGdiSetPixelV ( hDC, XPos, YPos, Color );
 }
 
 

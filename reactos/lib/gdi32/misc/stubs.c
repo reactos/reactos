@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.50 2004/03/23 00:18:54 gvg Exp $
+/* $Id: stubs.c,v 1.51 2004/03/24 00:13:31 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -526,23 +526,6 @@ SetMetaFileBitsEx(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetPixelV(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	COLORREF	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
