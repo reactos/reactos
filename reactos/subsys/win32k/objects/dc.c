@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.105 2003/12/03 19:28:23 gvg Exp $
+/* $Id: dc.c,v 1.106 2003/12/03 21:37:34 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -135,14 +135,19 @@ NtGdiCreateCompatableDC(HDC hDC)
   HRGN hVisRgn;
   BITMAPOBJ *pb;
 
+  DisplayDC = NULL;
   if (hDC == NULL)
     {
-      DisplayDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
-      if (NULL == DisplayDC)
+      hDC = IntGetScreenDC();
+      if (NULL == hDC)
         {
-          return NULL;
+          DisplayDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+          if (NULL == DisplayDC)
+            {
+              return NULL;
+            }
+          hDC = DisplayDC;
         }
-      hDC = DisplayDC;
     }
 
   /*  Allocate a new DC based on the original DC's device  */
