@@ -28,7 +28,7 @@ FILE _crtdll_iob[5] =
 	// stdaux
 {
  NULL, 0, NULL,
-  _IORW | _IONBF,
+   _IOREAD | _IOWRT | _IONBF,
   3,0,0, NULL
 },
 	// stdprn

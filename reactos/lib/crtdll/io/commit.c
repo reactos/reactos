@@ -3,6 +3,7 @@
 #include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
+//fixme change this constant to _OCOMMIT
 int _commode_dll = _IOCOMMIT;
 
 int _commit(int _fd)

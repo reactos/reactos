@@ -10,10 +10,18 @@
 
 #include <crtdll/mbstring.h>
 
-int _ismbbtrail( unsigned int b)
+  iskanji2()   :   ƒVƒtƒg JIS ƒR[ƒh‚Ì2ƒoƒCƒg–Ú(0x40 <= c <= 0x7E ‚ ‚é
+                     ‚¢‚Í0x80  <=  c <= 0xFC) ‚©‚Ç‚¤‚©
+
+int _ismbbtrail(unsigned int c)
 {
-	return ((b >= 0x40 && b <= 0x7e ) || (b >= 0x80 && b <= 0xfc ) );
+	return ((_jctype+1)[(unsigned char)(c)] & _KNJ_2);
 }
+
+//int _ismbbtrail( unsigned int b)
+//{
+//	return ((b >= 0x40 && b <= 0x7e ) || (b >= 0x80 && b <= 0xfc ) );
+//}
 
 
 int _ismbstrail( const unsigned char *str, const unsigned char *t)

@@ -231,6 +231,19 @@ int __fileno_setmode(int _fd, int _newmode)
 	return m;
 }
 
+int __fileno_getmode(int _fd)
+{
+	if ( _fd < minfno )
+		return -1;
+
+	if ( _fd >= maxfno )
+	 	return -1;
+
+	return fileno_modes[_fd].mode;
+
+}
+
+
 int	__fileno_close(int _fd)
 {
 	if ( _fd < 0 )

@@ -26,3 +26,19 @@ void *_expand( void *pold, size_t size )
 
    return NULL;
 }
+
+size_t	_msize (void* pBlock)
+{
+   PHEAP_BUCKET	pbucket;
+   PHEAP_SUBALLOC	psub;
+   PHEAP_FRAGMENT	pfrag=(PHEAP_FRAGMENT)((LPVOID)pBlock-HEAP_FRAG_ADMIN_SIZE);
+   
+   /* sanity checks */
+   if(pfrag->Magic!=HEAP_FRAG_MAGIC)
+      return 0;
+
+   /* get bucket size */
+   psub=pfrag->Sub;
+   pbucket=psub->Bucket;
+   return pbucket->Size;
+}

@@ -4,22 +4,24 @@
 #include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
+//getc can be a macro
+#undef getc
 
 int getc(FILE *fp)
 {
 
 // check for invalid stream
 
-	if ( (int)fp == NULL ) {
+	if ( !__validfp (fp) ) {
 		__set_errno(EINVAL);
-		return -1;
+		return EOF;
 	}
 // check for read access on stream
 
-	//if ( !READ_STREAM(fp) ) {
-	//	__set_errno(EINVAL);
-	//	return -1;
-	//}
+	if ( !OPEN4READING(fp) ) {
+		__set_errno(EINVAL);
+		return -1;
+	}
 
 	if(fp->_cnt > 0) {
 		fp->_cnt--;

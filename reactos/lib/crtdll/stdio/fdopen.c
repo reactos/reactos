@@ -36,8 +36,12 @@ FILE *_fdopen(int handle, char *mode)
   file->_cnt = 0;
   file->_file = handle;
   file->_bufsiz = 0;
+
+// The mode of the stream must be compatible with the mode of the file descriptor.
+// this should be checked.
+
   if (rw)
-    file->_flag = _IORW;
+    file->_flag = _IOREAD | _IOWRT;
   else if (*mode == 'r')
     file->_flag = _IOREAD;
   else

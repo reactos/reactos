@@ -5,36 +5,35 @@
 #include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
+// putc can be a macro
+#undef putc
+
 int putc(int c, FILE *fp)
 {
 
-	if ( c == 0 )
-		c = ' '; 
 // valid stream macro should check that fp 
 // is dword aligned
-	if (  fp == NULL ) {
+	if (!__validfp (fp)) {
 		__set_errno(EINVAL);
 		return -1;
 	}
 // check for write access on fp
 
-	//if ( !WRITE_STREAM(fp)  ) {
-	//	__set_errno(EINVAL);
-	//	return -1;
-	//}
+	if ( !OPEN4WRITING(fp)  ) {
+		__set_errno(EINVAL);
+		return -1;
+	}
 	
 	fp->_flag |= _IODIRTY;
 	if (fp->_cnt > 0 ) {
 		fp->_cnt--;
-       		*(fp)->_ptr++ = (char)c;
-		return (int)c; 
+       		*(fp)->_ptr++ = (unsigned char)c;
+		return (int)(unsigned char)c; 
 	}
 	else {
-		return _flsbuf(c,fp);
+		return _flsbuf((unsigned char)c,fp);
 	}
-
-
-	return -1;
+	return EOF;
 }
 
 wint_t putwc(wchar_t c, FILE *fp)

@@ -25,7 +25,7 @@ fclose(FILE *f)
 
 // flush only if stream was opened for writing
   if ( !(f->_flag&_IOSTRG) ) {
-  	if ( WRITE_STREAM(f) )
+  	if ( OPEN4WRITING(f) )
     		r = fflush(f);
   	
   	if (_close(fileno(f)) < 0)

@@ -1,17 +1,29 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-
 #include <crtdll/process.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdarg.h>
 
 
-#define scan_ptr() \
-	const char **ptr; \
-	union { const char **ccpp; const char *ccp; } u; \
-	for (ptr = &argv0; *ptr; ptr++); \
-	u.ccp = *++ptr; \
-	ptr = u.ccpp;
-
-int execlpe(const char *path, const char *argv0, ... /*, const char **envp */)
+int execlpe(const char *path, const char *szArgv0, ... /*, const char **envp */)
 {
-  scan_ptr();
-  return spawnvpe(P_OVERLAY, path, (char * const *)&argv0, (char * const *)ptr);
+  char *szArg[100];
+  const char *a;
+  char *ptr;
+  int i = 0;
+  va_list l = 0;
+  va_start(l,szArgv0);
+  do {
+  	a = (const char *)va_arg(l,const char *);
+	szArg[i++] = (char *)a;
+  } while ( a != NULL && i < 100 );
+
+
+// szArg0 is passed and not environment if there is only one parameter;
+
+  if ( i >=2 ) {
+  	ptr = szArg[i-2];
+  	szArg[i-2] = NULL;
+  }
+  else
+	ptr = NULL;
+  return spawnvpe(P_OVERLAY, path, (char * const *)szArg, (char * const *)ptr);
 }

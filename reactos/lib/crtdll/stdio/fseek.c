@@ -18,7 +18,7 @@ int fseek(FILE *f, long offset, int ptrname)
   }
   
   f->_flag &= ~_IOEOF;
-  if (!WRITE_STREAM(f))
+  if (!OPEN4WRITING(f))
   {
     if (f->_base && !(f->_flag & _IONBF))
     {
@@ -30,7 +30,7 @@ int fseek(FILE *f, long offset, int ptrname)
       }
       /* check if the target position is in the buffer and
         optimize seek by moving inside the buffer */
-      if (ptrname == SEEK_SET && (f->_flag & (_IOUNGETC|_IORW)) == 0
+      if (ptrname == SEEK_SET && (f->_flag & (_IOUNGETC|_IOREAD|_IOWRT )) == 0
       && p-offset <= f->_ptr-f->_base && offset-p <= f->_cnt)
       {
         f->_ptr+=offset-p;
@@ -39,9 +39,7 @@ int fseek(FILE *f, long offset, int ptrname)
       }
     }
 
- //   if (f->_flag & _IORW)
- //     f->_flag &= ~_IOREAD;
-
+ 
     p = lseek(fileno(f), offset, ptrname);
     f->_cnt = 0;
     f->_ptr = f->_base;

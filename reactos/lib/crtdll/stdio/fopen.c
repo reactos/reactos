@@ -56,6 +56,8 @@ FILE* fopen(const char *file, const char *mode)
   if (fd < 0)
     return NULL;
 
+// ms crtdll ensures that writes will end up at the end of file in append mode
+// we just move the file pointer to the end of file initially
   if (*mode == 'a')
     lseek(fd, 0, SEEK_END);
 
@@ -63,7 +65,7 @@ FILE* fopen(const char *file, const char *mode)
   f->_file = fd;
   f->_bufsiz = 0;
   if (rw)
-    f->_flag = _IORW;
+    f->_flag = _IOREAD | _IOWRT;
   else if (*mode == 'r')
     f->_flag = _IOREAD;
   else

@@ -1,11 +1,13 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/stdio.h>
-#include <crtdll/stdarg.h>
+#include <stdarg.h>
 #include <crtdll/malloc.h>
 #include <crtdll/internal/file.h>
 
 int _isnanl(double x);
 int _isinfl(double x);
+int _isnan(double x);
+int _isinf(double x);
 
 
 
@@ -168,7 +170,202 @@ static char * number(FILE * f, long num, int base, int size, int precision
 
 
 
-void numberf(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
+void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int type)
+{
+
+	double exponent = 0.0;
+	double e;
+	long ie;
+
+	//int x;
+	char *buf, *tmp;
+	int i = 0;
+	int j = 0;
+	//int k = 0;
+
+	double frac, intr;
+	double p;
+	char sign;
+	char c;
+	char ro = 0;
+
+	double_t *n = (double_t *)&__n;
+
+
+	if (  exp_sign == 'g' ||  exp_sign == 'G' || exp_sign == 'e' ||  exp_sign == 'E' ) {
+		ie = ((unsigned int)n->exponent - (unsigned int)0x3ff);
+		exponent = ie/3.321928;
+	}
+
+	if (   exp_sign == 'g' ||  exp_sign == 'G' ) {
+		type |= ZEROTRUNC;
+		if ( exponent < -4 || fabs(exponent) >= precision ) 
+			 exp_sign -= 2; // g -> e and G -> E
+
+	}
+	
+	if (  exp_sign == 'e' ||  exp_sign == 'E' ) {
+		frac = modf(exponent,&e);
+		if ( frac > 0.5 )
+			e++;
+		else if (  frac < -0.5  )
+			e--;
+
+
+
+		numberf(f,__n/pow(10.0L,e),'f',size-4, precision, type);
+		putc( exp_sign,f);
+		size--;
+		ie = (long)e;
+		type = LEFT | PLUS;
+		if ( ie < 0 )
+			type |= SIGN;
+
+		number(f,ie, 10,2, 2,type );
+		return;
+	}			
+			
+			
+	if (  exp_sign == 'f' ) {
+		
+		buf = alloca(4096);
+		if (type & LEFT) {
+                	type &= ~ZEROPAD;
+		}
+    
+        	c = (type & ZEROPAD) ? '0' : ' ';
+        	sign = 0;
+        	if (type & SIGN) {
+                	if (__n < 0) {
+                        	sign = '-';
+                        	__n = fabs(__n);
+                        	size--;
+                	} else if (type & PLUS) {
+                        	sign = '+';
+                       		size--;
+                	} else if (type & SPACE) {
+                        	sign = ' ';
+                        	size--;
+                	}
+        	}
+	
+
+	
+	
+		frac = modf(__n,&intr);
+	
+		
+
+		// # flags forces a . and prevents trucation of trailing zero's
+		
+		if ( precision > 0 ) {
+		
+
+			//frac = modfl(__n,&intr);
+	
+			i = precision-1;
+			while (  i >= 0  ) {		
+				frac*=10.0L;
+				frac = modf(frac, &p);
+				buf[i] = (int)p + '0';
+				i--;
+			}
+			i = precision;
+			size -= precision;
+
+			ro = 0;
+			if ( frac > 0.5 ) {
+				ro = 1;
+			}
+
+			if ( precision >= 1 || type & SPECIAL) {
+				buf[i++] = '.';
+				size--;
+			}
+		}
+
+
+
+		if ( intr == 0.0 ) {
+			buf[i++] = '0';
+			size--;
+		}
+		else {
+		
+		
+			while ( intr > 0.0 ) {
+
+				intr/=10.0L;
+				p = modf(intr, &intr);
+				
+				p *=10;
+			
+				buf[i++] = (int)p + '0';
+				size--;
+			}
+	
+		}
+
+
+		j = 0;
+		while ( j < i && ro == 1) {
+			if ( buf[j] >= '0' && buf[j] <= '8' ) {
+				buf[j]++;
+				ro = 0;
+			}
+			else if ( buf[j] == '9' ) {
+				buf[j] = '0';					
+			}
+			j++;
+		}
+		if ( ro == 1 )
+			buf[i++] = '1'; 
+			
+		buf[i] = 0;
+
+		size -= precision;
+        if (!(type&(ZEROPAD+LEFT)))
+                while(size-->0)
+                        putc( ' ',f);
+        if (sign)
+                putc( sign,f);
+
+		if (!(type&(ZEROPAD+LEFT)))
+			while(size-->0)
+				putc( ' ',f);
+		if (type & SPECIAL) {
+		}
+    
+        if (!(type & LEFT))
+                while (size-- > 0)
+                        putc( c,f);
+
+		tmp = buf;
+		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
+			j = 0;
+			while ( j < i && ( *tmp == '0' || *tmp == '.' )) {
+					tmp++;
+					i--;
+			}
+
+		}
+	//	else
+	//		while (i < precision--)
+	//			    putc( '0', f);
+        while (i-- > 0)
+                putc( tmp[i],f);
+        while (size-- > 0)
+                putc( ' ', f);
+	
+
+	
+		
+		
+	}
+		
+}
+
+void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
 {
 
 	long double exponent = 0.0;
@@ -185,7 +382,7 @@ void numberf(FILE * f, long double __n, char exp_sign,  int size, int precision,
 	long double p;
 	char sign;
 	char c;
-	char ro;
+	char ro = 0;
 
 	long_double_t *n = (long_double_t *)&__n;
 
@@ -259,7 +456,7 @@ void numberf(FILE * f, long double __n, char exp_sign,  int size, int precision,
 		if ( precision > 0 ) {
 		
 
-			frac = modfl(__n,&intr);
+			//frac = modfl(__n,&intr);
 	
 			i = precision-1;
 			while (  i >= 0  ) {		
@@ -370,6 +567,7 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 	unsigned long num;
 	int i, base;
 	long double _ldouble;
+	double _double;
 	const char *s;
         const short int* sw;
 
@@ -378,7 +576,7 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 	int field_width;	/* width of output field */
 	int precision;		/* min. # of digits for integers; max
 				   number of chars for from string */
-	int qualifier;		/* 'h', 'l', or 'L' for integer fields */
+	int qualifier = 0;		/* 'h', 'l', or 'L' for integer fields */
    
 	for (; *fmt ; ++fmt) {
 		if (*fmt != '%') {
@@ -498,42 +696,77 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
     		case 'g':
     		case 'G':
 
-      		   if (qualifier == 'l' || qualifier == 'L' ) 
+      		   if (qualifier == 'l' || qualifier == 'L' )  {
 			_ldouble = va_arg(args, long double);
-      		   else
-			_ldouble = (long double)va_arg(args, double);
-
-		   if ( _isnanl(_ldouble) ) {
-			s = "Nan";
-			len = 3;
-			while ( len > 0 ) {
-				putc(*s++,f);
-				len --;
-			}
 			
-		   }
-		   else if ( _isinfl(_ldouble) < 0 ) {
-			s = "-Inf";
-			len = 4;
-			while ( len > 0 ) {
-				putc(*s++,f);
-				len --;
-			}
-		   }
-		   else if ( _isinfl(_ldouble) > 0 ) {
-			s = "+Inf";
-			len = 4;
-			while ( len > 0 ) {
-				putc(*s++,f);
-				len --;
-			}
-		   }
-		   else {
-			if ( precision == -1 )
-				precision = 6;
-			numberf(f,_ldouble,*fmt,field_width,precision,flags);
+		   	if ( _isnanl(_ldouble) ) {
+				s = "Nan";
+				len = 3;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+			
+		   	}
+		   	else if ( _isinfl(_ldouble) < 0 ) {
+				s = "-Inf";
+				len = 4;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+		   	}
+		   	else if ( _isinfl(_ldouble) > 0 ) {
+				s = "+Inf";
+				len = 4;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+		   	}
+		   	else {
+				if ( precision == -1 )
+					precision = 6;
+				numberfl(f,_ldouble,*fmt,field_width,precision,flags);
 	
- 		   }
+ 		   	}
+		   }
+      		   else {
+			_double = (double)va_arg(args, double);
+			
+		   	if ( _isnan(_double) ) {
+				s = "Nan";
+				len = 3;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+			
+		   	}
+		   	else if ( _isinf(_double) < 0 ) {
+				s = "-Inf";
+				len = 4;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+		   	}
+		   	else if ( _isinf(_double) > 0 ) {
+				s = "+Inf";
+				len = 4;
+				while ( len > 0 ) {
+					putc(*s++,f);
+					len --;
+				}
+		   	}
+		   	else {
+				if ( precision == -1 )
+					precision = 6;
+				numberf(f,_double,*fmt,field_width,precision,flags);
+	
+ 		   	}
+	   	   }
+
 		   continue;
 		case 's':
 			s = va_arg(args, char *);

@@ -3,15 +3,24 @@
 #include <crtdll/stdio.h>
 #include <crtdll/internal/file.h>
 #include <crtdll/wchar.h>
+#include <crtdll/errno.h>
 
 int
 ungetc(int c, FILE *f)
 {
-  if (c == EOF
-      || (f->_flag & (_IOREAD|_IORW)) == 0
-      || f->_ptr == NULL
-      || f->_base == NULL)
-    return EOF;
+
+  if (!__validfp (f) || !OPEN4READING(f)) {
+      __set_errno (EINVAL);
+      return EOF;
+  }
+
+  if (c == EOF )
+	return EOF;
+
+  
+    
+  if ( f->_ptr == NULL || f->_base == NULL)
+   	 return EOF;
 
   if (f->_ptr == f->_base)
   {
@@ -36,11 +45,18 @@ ungetc(int c, FILE *f)
 wint_t
 ungetwc(wchar_t c, FILE *f)
 {
-  if ((char)c == EOF
-      || (f->_flag & (_IOREAD|_IORW)) == 0
-      || f->_ptr == NULL
-      || f->_base == NULL)
-    return EOF;
+  if (!__validfp (f) || !OPEN4READING(f)) {
+      __set_errno (EINVAL);
+      return EOF;
+  }
+
+  if (c == (wchar_t)EOF )
+	return EOF;
+
+  
+    
+  if ( f->_ptr == NULL || f->_base == NULL)
+   	 return EOF;
 
   if (f->_ptr == f->_base)
   {

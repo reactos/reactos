@@ -20,7 +20,7 @@
 #include <crtdll/errno.h>
 #include <limits.h>
 #include <crtdll/ctype.h>
-#include <crtdll/stdarg.h>
+#include <stdarg.h>
 #include <crtdll/stdio.h>
 #include <crtdll/stdlib.h>
 #include <crtdll/string.h>

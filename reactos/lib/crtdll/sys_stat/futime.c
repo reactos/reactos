@@ -2,6 +2,7 @@
 #include <crtdll/stdlib.h>
 #include <crtdll/sys/utime.h>
 #include <crtdll/io.h>
+#include <crtdll/time.h>
 #include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
@@ -18,8 +19,8 @@ int     _futime (int nHandle, struct _utimbuf *pTimes)
         
         if ( pTimes == NULL ) {
   		pTimes = alloca(sizeof(struct _utimbuf));
-  		time(pTimes->actime);
-  		time(pTimes->modtime);
+  		time(&pTimes->actime);
+  		time(&pTimes->modtime);
   	}
   	
   	if ( pTimes->actime < pTimes->modtime  ) {

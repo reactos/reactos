@@ -21,9 +21,9 @@ ftell(FILE *f)
   {
     adjust = - f->_cnt;
   }
-  else if (f->_flag&(_IOWRT|_IORW))
+  else if (f->_flag&(_IOWRT))
   {
-    if (f->_flag&_IOWRT && f->_base && (f->_flag&_IONBF)==0)
+    if (f->_base && (f->_flag&_IONBF)==0)
       adjust = f->_ptr - f->_base;
   }
 

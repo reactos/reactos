@@ -22,7 +22,7 @@ Cambridge, MA 02139, USA.  */
 #include <crtdll/wchar.h>
 #include <crtdll/alloc.h>
 
-#if 1
+#if 0
 
 int fscanf(FILE *stream,const char *format, ...)
 {

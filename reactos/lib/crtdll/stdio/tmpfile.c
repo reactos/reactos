@@ -57,7 +57,7 @@ tmpfile(void)
     f->_file   = temp_fd;
     f->_cnt    = 0;
     f->_bufsiz = 0;
-    f->_flag   = _IORMONCL | _IORW;
+    f->_flag   = _IORMONCL | _IOREAD | _IOWRT;
     f->_name_to_remove = n_t_r;
     strcpy(f->_name_to_remove, temp_name);
     f->_base = f->_ptr = NULL;

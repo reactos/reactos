@@ -52,7 +52,7 @@ STDIO_OBJECTS = stdio/getenv.o stdio/filbuf.o  \
 		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o stdio/setvbuf.o\
 		stdio/fread.o stdio/freopen.o  stdio/fscanf.o stdio/fseek.o \
 		stdio/fsetpos.o stdio/ftell.o stdio/fwalk.o stdio/fwrite.o stdio/getc.o \
-		stdio/getchar.o stdio/gets.o stdio/getw.o stdio/perror.o  \
+		stdio/getchar.o stdio/gets.o stdio/getw.o stdio/perror.o stdio/clearerr.o \
 		stdio/putc.o stdio/putchar.o stdio/puts.o stdio/putw.o \
 		stdio/remove.o stdio/rename.o stdio/rewind.o stdio/allocfil.o\
 		stdio/setbuf.o stdio/setbuffe.o stdlib/obsol.o stdio/setlineb.o\

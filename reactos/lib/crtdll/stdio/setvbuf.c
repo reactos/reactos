@@ -4,26 +4,34 @@
 #include <crtdll/stdio.h>
 #include <crtdll/stdlib.h>
 #include <crtdll/io.h>
+#include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
 
 int setvbuf(FILE *f, char *buf, int type, size_t len)
 {
   int mine=0;
-  if (!f)
-    return -1;
-  fflush(f);
+  if (!__validfp (f) ) {
+      	__set_errno (EINVAL);
+      	return 0;
+  }
+  if ( f->_base != NULL )
+  	fflush(f);
   switch (type)
   {
   case _IOFBF:
   case _IOLBF:
-    if (len <= 0)
-      return -1;
+    if (len <= 0) {
+	__set_errno (EINVAL);
+	return EOF;
+    }
     if (buf == 0)
     {
-      buf = (char *)malloc(len);
-      if (buf == 0)
+      buf = (char *)malloc(len+1);
+      if (buf == NULL) {
+	__set_errno (ENOMEM);
 	return -1;
+      }
       mine = 1;
     }
     /* FALLTHROUGH */
@@ -48,6 +56,7 @@ int setvbuf(FILE *f, char *buf, int type, size_t len)
     }
     return 0;
   default:
-    return -1;
+      __set_errno (EINVAL);
+      return EOF;
   }
 }

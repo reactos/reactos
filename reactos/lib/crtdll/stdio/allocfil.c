@@ -7,6 +7,16 @@
 
 FILE *	__alloc_file(void);
 
+char __validfp (FILE *f)
+{
+	if ( (unsigned int)f < 256)
+		return FALSE;
+
+	if( f == NULL || (int)f== -1 )
+		return FALSE;
+
+	return TRUE;
+}
 
 /* A FILE* is considered "free" if its flag is zero. */
 

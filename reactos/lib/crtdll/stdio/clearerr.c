@@ -1,5 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/stdio.h>
+#include <crtdll/errno.h>
 #include <crtdll/internal/file.h>
 
 #ifdef clearerr
@@ -10,7 +11,7 @@ void clearerr(FILE *stream);
 void
 clearerr(FILE *f)
 {
-  if (!f) {
+  if (!__validfp (f)) {
     __set_errno (EINVAL);
     return;
   }

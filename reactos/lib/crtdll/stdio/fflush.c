@@ -33,30 +33,46 @@ int fflush(FILE *f)
 
 // nothing to do if stream can not be written to
 
-  //if ( !WRITE_STREAM(f) )
-  //  return 0;
+  if ( !OPEN4WRITING(f) ) {
+	__set_errno (EINVAL);
+	return 0;
+  }
 
+// discard any unget characters
 
   f->_flag &= ~_IOUNGETC;
-//  if ((f->_flag&(_IONBF|_IOWRT))==_IOWRT
-//      && (base = f->_base) != NULL
-//      && (rn = n = f->_ptr - base) > 0)
-  if ((f->_flag&(_IODIRTY|_IONBF))==_IODIRTY 
-	&& (base = f->_base) != NULL 
-	&& (rn = n = f->_ptr - base) > 0)
+
+
+// check for buffered dirty block
+
+  if ( (f->_flag&(_IODIRTY|_IONBF)) ==_IODIRTY && f->_base != NULL)
   {
+
+    base = f->_base;
+   
+
+// if the buffer is read ahead and dirty we will flush it entirely
+// else the buffer is appended to the file to the extend it has valid bytes
+
+    if ( (f->_flag & _IOAHEAD) == _IOAHEAD )
+    	rn = n = f->_ptr - base + f->_cnt;
+    else
+	rn = n = f->_ptr - base;
+
     f->_ptr = base;
 
     if ((f->_flag & _IOFBF) == _IOFBF) {
      	if ( (f->_flag & _IOAHEAD) == _IOAHEAD )
- 	    _lseek(fileno(f),-(rn+f->_cnt), SEEK_CUR);
+ 	    _lseek(fileno(f),-rn, SEEK_CUR);
     }
 
     f->_flag &= ~_IOAHEAD;
 
 
     f->_cnt = (f->_flag&(_IOLBF|_IONBF)) ? 0 : f->_bufsiz;
-    f->_flag &= ~_IODIRTY;
+
+// how can write return less than rn without being on error ???
+
     do {
       n = _write(fileno(f), base, rn);
       if (n <= 0) {
@@ -66,11 +82,12 @@ int fflush(FILE *f)
       rn -= n;
       base += n;
     } while (rn > 0);
+    f->_flag &= ~_IODIRTY;
+
   }
-  if (f->_flag & _IORW)
+  if (OPEN4READING(f) && OPEN4WRITING(f) )
   {
     f->_cnt = 0;
-    //f->_flag &= ~(_IOWRT|_IOREAD);
     f->_ptr = f->_base;
   }
   return 0;

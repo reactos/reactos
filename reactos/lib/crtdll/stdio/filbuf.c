@@ -9,6 +9,7 @@
 #include <crtdll/internal/file.h>
 #include <crtdll/io.h>
 #include <crtdll/wchar.h>
+#include <crtdll/errno.h>
 
 int _readcnv(int fn, void *buf, size_t siz  );
 
@@ -19,8 +20,10 @@ _filbuf(FILE *f)
   char c;
 
  
-//  if ( !READ_STREAM(f))
-//    return EOF;
+  if ( !OPEN4READING(f)) {
+	__set_errno (EINVAL);
+	return EOF;
+  }
 
 
   if (f->_flag&(_IOSTRG|_IOEOF))
@@ -31,6 +34,7 @@ _filbuf(FILE *f)
     size = 4096;
     if ((f->_base = malloc(size+1)) == NULL)
     {
+	// error ENOMEM
       f->_flag |= _IONBF;
       f->_flag &= ~(_IOFBF|_IOLBF);
     }
@@ -41,9 +45,12 @@ _filbuf(FILE *f)
     }
   }
 
+
   if (f->_flag&_IONBF)
     f->_base = &c;
 
+
+// fush stdout before reading from stdin 
   if (f == stdin) {
     if (stdout->_flag&_IOLBF)
       fflush(stdout);
@@ -51,15 +58,14 @@ _filbuf(FILE *f)
       fflush(stderr);
   }
 
-// if(__is_text_file(f))
-//	 f->_cnt = _readcnv(fileno(f), f->_base,
-//		   f->_flag & _IONBF ? 1 : f->_bufsiz  );
-//  else
+// if we have a dirty stream we flush it
+  if ( f->_flag &_IODIRTY == _IODIRTY )
+	 fflush(f);
 
 
-  	f->_cnt = _read(fileno(f), f->_base,
-		   f->_flag & _IONBF ? 1 : f->_bufsiz  );
-	f->_flag |= _IOAHEAD;
+
+  f->_cnt = _read(fileno(f), f->_base, f->_flag & _IONBF ? 1 : f->_bufsiz  );
+  f->_flag |= _IOAHEAD;
 
   if(__is_text_file(f) && f->_cnt>0)
   {
@@ -72,18 +78,23 @@ _filbuf(FILE *f)
       f->_cnt = newcnt;
     }
   }
+
   f->_ptr = f->_base;
+
   if (f->_flag & _IONBF) 
      f->_base = NULL; // statically allocated buffer for sprintf
   
+
+//check for error
   if (--f->_cnt < 0) {
     if (f->_cnt == -1) {
       f->_flag |= _IOEOF;
-      //if (f->_flag & _IORW)
-	//f->_flag &= ~_IOREAD;
     } else
       f->_flag |= _IOERR;
     f->_cnt = 0;
+
+// should set errno 
+
     return EOF;
   }
 

@@ -7,6 +7,7 @@
 #include <crtdll/stdlib.h>
 #include <crtdll/internal/file.h>
 #include <crtdll/io.h>
+#include <crtdll/errno.h>
 
 int cntcr(char *bufp, int bufsiz);
 int convert(char *endp, int bufsiz,int n);
@@ -15,15 +16,17 @@ int _writecnv(int fn, void *buf, size_t bufsiz);
 int
 _flsbuf(int c, FILE *f)
 {
- char *base;
+  char *base;
   int n, rn;
   char c1;
   int size;
 
 
 
-//  if (!WRITE_STREAM(f))
-//    return EOF;
+  if (!OPEN4WRITING(f)) {
+	__set_errno (EINVAL);
+	return EOF;
+  }
 
   /* if the buffer is not yet allocated, allocate it */
   if ((base = f->_base) == NULL && (f->_flag & _IONBF) == 0)
@@ -87,10 +90,7 @@ _flsbuf(int c, FILE *f)
   f->_flag &= ~_IODIRTY;
   while (rn > 0)
   {
-//    if(__is_text_file(f) )
-//    	n = _writecnv(fileno(f), base, rn);
-//    else
-	n = _write(fileno(f), base, rn);
+    n = _write(fileno(f), base, rn);
     if (n <= 0)
     {
       f->_flag |= _IOERR;

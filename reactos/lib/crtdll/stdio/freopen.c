@@ -56,7 +56,7 @@ freopen(const char *file, const char *mode, FILE *f)
   f->_file = fd;
   f->_bufsiz = 0;
   if (rw)
-    f->_flag = _IORW;
+    f->_flag = _IOREAD | _IOWRT;
   else if (*mode == 'r')
     f->_flag = _IOREAD;
   else
