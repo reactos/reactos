@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.17 2003/08/14 10:40:08 ekohl Exp $ */
+/* $Id: mmfuncs.h,v 1.18 2003/11/18 05:11:41 royce Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -543,7 +543,7 @@ STDCALL
 MmUnmapViewOfSection (
 	PEPROCESS	Process,
 	PMEMORY_AREA	MemoryArea
-	)
+	);
 #endif
 VOID
 STDCALL
