@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: aclui.c,v 1.7 2004/09/26 15:55:52 weiden Exp $
+/* $Id: aclui.c,v 1.8 2004/10/21 18:28:05 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/aclui.c
@@ -140,7 +140,7 @@ CreateSecurityPage(LPSECURITYINFO psi)
     return NULL;
   }
 
-  /* get the object information from the client interface */
+  /* get the object information from the server interface */
   hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
 
   if(FAILED(hRet))
@@ -195,7 +195,7 @@ EditSecurity(HWND hwndOwner, LPSECURITYINFO psi)
     return FALSE;
   }
   
-  /* get the object information from the client interface */
+  /* get the object information from the server interface */
   hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
   
   if(FAILED(hRet))
