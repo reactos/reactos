@@ -194,7 +194,7 @@ char *hookup(char *host, int port)
 			perror("ftp: setsockopt");
 		}
 	}
-#endif SO_OOBINLINE
+#endif //SO_OOBINLINE
 
 	return (hostname);
 bad:
@@ -1428,7 +1428,7 @@ void proxtrans(cmd, local, remote)
 	char *cmd, *local, *remote;
 {
 //	void (*oldintr)(int);
-	void abortpt(int);
+	//void abortpt(int);
 	int tmptype, oldtype = 0, secndflag = 0, nfnd;
 	extern jmp_buf ptabort;
 	char *cmd2;
