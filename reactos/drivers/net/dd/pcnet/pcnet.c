@@ -35,7 +35,7 @@
 #include "pcnethw.h"
 #include "pcnet.h"
 
-#define USE_IMMEDIATE_PORT_IO 1
+#define USE_IMMEDIATE_PORT_IO 0
 
 VOID
 STDCALL
