@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.77 2004/11/13 23:08:35 hbirr Exp $
+/* $Id: page.c,v 1.78 2004/11/27 16:37:52 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -82,6 +82,52 @@ extern BOOLEAN Ke386NoExecute;
 extern BOOLEAN Ke386GlobalPagesEnabled;
 
 /* FUNCTIONS ***************************************************************/
+
+BOOLEAN MmUnmapPageTable(PULONG Pt);
+
+VOID
+STDCALL
+MiFlushTlbIpiRoutine(PVOID Address)
+{
+   if (Address == (PVOID)0xffffffff)
+   {
+      KeFlushCurrentTb();
+   }
+   else if (Address == (PVOID)0xfffffffe)
+   {
+      FLUSH_TLB;
+   }
+   else
+   {
+      FLUSH_TLB_ONE(Address);
+   }
+}
+
+VOID
+MiFlushTlb(PULONG Pt, PVOID Address)
+{
+#ifdef MP
+   if (Pt)
+   {
+      MmUnmapPageTable(Pt);
+   }
+   if (KeNumberProcessors>1)
+   {
+      KeIpiGenericCall(MiFlushTlbIpiRoutine, Address);
+   }
+   else
+   {
+      MiFlushTlbIpiRoutine(Address);
+   }
+#else
+   if ((Pt && MmUnmapPageTable(Pt)) || Address >= (PVOID)KERNEL_BASE)
+   {
+      FLUSH_TLB_ONE(Address);
+   }
+#endif
+}
+
+
 
 PULONG
 MmGetPageDirectory(VOID)
@@ -391,7 +437,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
       KEBUGCHECK(0);
       //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
    }
-   FLUSH_TLB;
+   MiFlushTlb(NULL, Address);
    if (Process != NULL && Process != CurrentProcess)
    {
       KeDetachProcess();
@@ -442,7 +488,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
       Pfn = PTE_TO_PFN(*(ADDR_TO_PDE(Address)));
       *(ADDR_TO_PDE(Address)) = 0;
    }
-   FLUSH_TLB;
+   MiFlushTlb(NULL, Address);
 
    if (Address >= (PVOID)KERNEL_BASE)
    {
@@ -776,10 +822,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
 	tmpPte = Pte & ~PA_PRESENT;
       } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte)); 
 
-      if (MmUnmapPageTable((PULONG)Pt) || Address >= (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb((PULONG)Pt, Address);
       WasValid = PAE_PAGE_MASK(Pte) != 0LL ? TRUE : FALSE;
       if (!WasValid)
       {
@@ -816,10 +859,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
         Pte = *Pt;
       } while (Pte != InterlockedCompareExchange(Pt, Pte & ~PA_PRESENT, Pte)); 
 
-      if (MmUnmapPageTable(Pt) || Address >= (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb(Pt, Address);
       WasValid = (PAGE_MASK(Pte) != 0);
       if (!WasValid)
       {
@@ -854,7 +894,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
           * Set the entry to zero
           */
 	 ExfpInterlockedExchange64(Pt, &ZeroPte);
-         FLUSH_TLB_ONE(Address);
+         MiFlushTlb((PULONG)Pt, Address);
       }
    }
    else
@@ -868,7 +908,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
           * Set the entry to zero
           */
          *Pt = 0;
-         FLUSH_TLB_ONE(Address);
+         MiFlushTlb(Pt, Address);
       }
    }
 }
@@ -910,10 +950,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
       Pte = 0LL;
       Pte = ExfpInterlockedExchange64(Pt, &Pte);
 
-      if ((MmUnmapPageTable((PULONG)Pt) || Address >=(PVOID)KERNEL_BASE) && Pte)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb((PULONG)Pt, Address);
 
       WasValid = PAE_PAGE_MASK(Pte) != 0 ? TRUE : FALSE;
       if (WasValid)
@@ -968,10 +1005,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
        */
       Pte = InterlockedExchange(Pt, 0);
 
-      if ((MmUnmapPageTable(Pt) || Address >=(PVOID)KERNEL_BASE) && Pte)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb(Pt, Address);
 
       WasValid = (PAGE_MASK(Pte) != 0);
       if (WasValid)
@@ -1047,10 +1081,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
       Pte = 0LL;
       Pte = ExfpInterlockedExchange64(Pt, &Pte);
 
-      if (MmUnmapPageTable((PULONG)Pt) || Address >= (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb((PULONG)Pt, Address);
 
       /*
        * Decrement the reference count for this page table.
@@ -1094,10 +1125,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
        */
       Pte = InterlockedExchange(Pt, 0);
 
-      if (MmUnmapPageTable(Pt) || Address >= (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb(Pt, Address);
 
       /*
        * Decrement the reference count for this page table.
@@ -1206,10 +1234,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 
       if (Pte & PA_ACCESSED)
       {
-         if (MmUnmapPageTable((PULONG)Pt) || Address >= (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb((PULONG)Pt, Address);
          return TRUE;
       }
       else
@@ -1236,10 +1261,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 
       if (Pte & PA_ACCESSED)
       {
-         if (MmUnmapPageTable(Pt) || Address >= (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb(Pt, Address);
          return TRUE;
       }
       else
@@ -1278,10 +1300,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 
       if (Pte & PA_DIRTY)
       {
-         if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb((PULONG)Pt, Address);
       }
       else
       {
@@ -1307,10 +1326,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 
       if (Pte & PA_DIRTY)
       {
-         if (MmUnmapPageTable(Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb(Pt, Address);
       }
       else
       {
@@ -1345,10 +1361,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
       } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
       if (!(Pte & PA_DIRTY))
       {
-         if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb((PULONG)Pt, Address);
       }
       else
       {
@@ -1372,10 +1385,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
       } while (Pte != InterlockedCompareExchange(Pt, Pte | PA_DIRTY, Pte));
       if (!(Pte & PA_DIRTY))
       {
-         if (MmUnmapPageTable(Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb(Pt, Address);
       }
       else
       {
@@ -1405,10 +1415,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
       } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
       if (!(Pte & PA_PRESENT))
       {
-         if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb((PULONG)Pt, Address);
       }
       else
       {
@@ -1432,10 +1439,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
       } while (Pte != InterlockedCompareExchange(Pt, Pte | PA_PRESENT, Pte));
       if (!(Pte & PA_PRESENT))
       {
-         if (MmUnmapPageTable(Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb(Pt, Address);
       }
       else
       {
@@ -1639,10 +1643,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 
       if (Pte != 0) 
       {
-         if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb((PULONG)Pt, Address);
       }
       else
       {
@@ -1667,10 +1668,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
       *Pt = SwapEntry << 1;
       if (Pte != 0) 
       {
-         if (MmUnmapPageTable(Pt) || Address > (PVOID)KERNEL_BASE)
-         {
-            FLUSH_TLB_ONE(Address);
-         }
+         MiFlushTlb(Pt, Address);
       }
       else
       {
@@ -1819,7 +1817,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             if (Address > (PVOID)KERNEL_BASE ||
                 (Pt >= (PULONGLONG)PAGETABLE_MAP && Pt < (PULONGLONG)PAGETABLE_MAP + 4*512*512))
             {
-               FLUSH_TLB_ONE(Address);
+              MiFlushTlb((PULONG)Pt, Address);
             }
          }
       }
@@ -1884,7 +1882,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             if (Address > (PVOID)KERNEL_BASE ||
                 (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
             {
-               FLUSH_TLB_ONE(Address);
+               MiFlushTlb(Pt, Address);
             }
          }
       }
@@ -2018,10 +2016,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 	}
       } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
 
-      if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb((PULONG)Pt, Address);
    }
    else
    {
@@ -2033,10 +2028,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
          KEBUGCHECK(0);
       }
       *Pt = PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY));
-      if (MmUnmapPageTable(Pt) || Address > (PVOID)KERNEL_BASE)
-      {
-         FLUSH_TLB_ONE(Address);
-      }
+      MiFlushTlb(Pt, Address);
    }
 }
 
