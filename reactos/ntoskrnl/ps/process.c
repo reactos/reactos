@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.71 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: process.c,v 1.72 2002/01/02 21:00:02 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,6 +25,7 @@
 #include <internal/dbg.h>
 #include <napi/shared_data.h>
 #include <internal/pool.h>
+#include <roscfg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -263,6 +264,37 @@ PsInitProcessManagment(VOID)
 		  &SystemProcessHandle);
 }
 
+#ifdef KDBG
+
+VOID
+PiFreeSymbols(PPEB Peb)
+{
+  PLIST_ENTRY CurrentEntry;
+  PLDR_MODULE Current;
+  PSYMBOL NextSymbol;
+  PSYMBOL Symbol;
+
+  assert (Peb);
+  assert (Peb->Ldr);
+
+	CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
+	while ((CurrentEntry != &Peb->Ldr->InLoadOrderModuleList) && (CurrentEntry != NULL))
+	{
+	  Current = CONTAINING_RECORD (CurrentEntry, LDR_MODULE, InLoadOrderModuleList);
+    Symbol = Current->Symbols.Symbols;
+		while (Symbol != NULL)
+		{
+      NextSymbol = Symbol->Next;
+      ExFreePool (Symbol);
+	    Symbol = NextSymbol;
+		}
+    Current->Symbols.SymbolCount = 0;
+    Current->Symbols.Symbols = NULL;
+    CurrentEntry = CurrentEntry->Flink;
+  }
+}
+
+#endif /* KDBG */
 
 VOID STDCALL
 PiDeleteProcess(PVOID ObjectBody)
@@ -274,6 +306,11 @@ PiDeleteProcess(PVOID ObjectBody)
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    RemoveEntryList(&((PEPROCESS)ObjectBody)->ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+
+#ifdef KDBG
+   PiFreeSymbols(((PEPROCESS)ObjectBody)->Peb);
+#endif /* KDBG */
+
    (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
    ObDeleteHandleTable((PEPROCESS)ObjectBody);
 }

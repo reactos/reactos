@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.93 2001/12/05 01:40:24 dwelch Exp $
+/* $Id: loader.c,v 1.94 2002/01/02 21:00:55 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -630,6 +630,9 @@ LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
   ULONG Length;
   IO_STATUS_BLOCK IoStatusBlock;
 
+  ModuleObject->TextSection->Symbols.SymbolCount = 0;
+  ModuleObject->TextSection->Symbols.Symbols = NULL;
+
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
 
@@ -728,6 +731,9 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
   NTSTATUS Status;
   ULONG Length;
   IO_STATUS_BLOCK IoStatusBlock;
+
+  ModuleObject->Symbols.SymbolCount = 0;
+  ModuleObject->Symbols.Symbols = NULL;
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
