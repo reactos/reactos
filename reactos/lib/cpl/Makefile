@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-CONTROL_PANELS = access appwiz ncpa sysdm control
+CONTROL_PANELS = access appwiz desk ncpa sysdm control
 
 all: $(CONTROL_PANELS)
 
