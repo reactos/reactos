@@ -110,6 +110,7 @@ copy subsys\system\usetup\usetup.exe %ROS_INSTALL%\system32
 echo.
 echo installing user-mode dlls...
 copy lib\advapi32\advapi32.dll %ROS_INSTALL%\system32
+copy lib\cards\cards.dll %ROS_INSTALL%\system32
 copy lib\crtdll\crtdll.dll %ROS_INSTALL%\system32
 copy lib\fmifs\fmifs.dll %ROS_INSTALL%\system32
 copy lib\freetype\freetype.dll %ROS_INSTALL%\system32
