@@ -362,8 +362,6 @@ apic_pagetable:
 
 kpcr_pagetable:
 	.fill 4096, 1, 0
-
-	.fill 4096, 1, 0
 _pagetable_end:
 _unmap_me:
 	.fill 4096, 1, 0
