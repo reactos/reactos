@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.17 2003/08/30 18:38:08 weiden Exp $
+/* $Id: dialog.c,v 1.18 2003/09/20 19:24:11 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -1699,7 +1699,7 @@ GetDlgItem(
     GETDLGITEMINFO info;
     info.nIDDlgItem = nIDDlgItem;
     info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (ENUMWINDOWSPROC)&GetDlgItemEnumProc, (LPARAM)&info))
+    if(hDlg && EnumChildWindows(hDlg, (ENUMWINDOWSPROC)&GetDlgItemEnumProc, (LPARAM)&info))
         return info.control;
     else
         return 0;
