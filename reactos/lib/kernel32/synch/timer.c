@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.8 2001/02/17 00:07:49 ekohl Exp $
+/* $Id: timer.c,v 1.9 2001/02/18 19:43:14 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -30,9 +30,9 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
    ULONG TimerType;
    
    if (bManualReset)
-     TimerType = 1;
+     TimerType = NotificationTimer;
    else
-     TimerType = 2;
+     TimerType = SynchronizationTimer;
 
    RtlInitUnicodeString(&UnicodeName, lpTimerName);
    InitializeObjectAttributes(&ObjectAttributes,

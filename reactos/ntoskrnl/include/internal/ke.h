@@ -87,7 +87,10 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 #if 0
 VOID KiInterruptDispatch(ULONG irq);
 #endif
-VOID KeExpireTimers(VOID);
+VOID KeExpireTimers( PKDPC Apc,
+		     PVOID Arg1,
+		     PVOID Arg2,
+		     PVOID Arg3 );
 NTSTATUS KeAddThreadTimeout(struct _KTHREAD* Thread, 
 			    PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,

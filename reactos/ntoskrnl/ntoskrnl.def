@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.96 2001/01/29 00:32:13 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.97 2001/02/18 19:43:14 phreak Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -503,6 +503,7 @@ NtBuildNumber DATA
 NtClose@4
 NtConnectPort@32
 NtCreateEvent@20
+NtCreateTimer@16
 NtOpenEvent@12
 NtCreateFile@44
 NtCreateSection@28

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.38 2001/02/06 00:11:18 dwelch Exp $
+/* $Id: timer.c,v 1.39 2001/02/18 19:43:15 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -74,6 +74,7 @@ volatile ULONG KiRawTicks = 0;
  */
 static LIST_ENTRY TimerListHead;
 static KSPIN_LOCK TimerListLock;
+static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to HIGH_LEVEL and grab spin lock there, to sync with ISR */
 
@@ -247,8 +248,7 @@ KeSetTimerEx (PKTIMER		Timer,
    KIRQL oldlvl;
    
    DPRINT("KeSetTimerEx(Timer %x), DueTime: \n",Timer);
-   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
-   KeAcquireSpinLockAtDpcLevel(&TimerListLock);
+   KeAcquireSpinLock( &TimerListLock, &oldlvl );
    
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
@@ -379,7 +379,10 @@ static void HandleExpiredTimer(PKTIMER current)
 			 NULL);
 	DPRINT("Finished dpc routine\n");
      }
+   KeAcquireDispatcherDatabaseLock( FALSE );
    current->Header.SignalState = TRUE;
+   KeDispatcherObjectWake( &current->Header );
+   KeReleaseDispatcherDatabaseLock( FALSE );
    if (current->Period != 0)
      {
 	current->DueTime.QuadPart += 
@@ -392,22 +395,18 @@ static void HandleExpiredTimer(PKTIMER current)
      }
 }
 
-VOID KeExpireTimers(VOID)
+VOID KeExpireTimers( PKDPC Dpc,
+		     PVOID Context1,
+		     PVOID Arg1,
+		     PVOID Arg2 )
 {
    PLIST_ENTRY current_entry = NULL;
    PKTIMER current = NULL;
-   KIRQL oldlvl;
 
    DPRINT("KeExpireTimers()\n");
    
    current_entry = TimerListHead.Flink;
    
-//   DPRINT("&TimerListHead %x\n",&TimerListHead);
-//   DPRINT("current_entry %x\n",current_entry);
-//   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
-//   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
-       
-   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
    while (current_entry!=(&TimerListHead))
@@ -422,8 +421,7 @@ VOID KeExpireTimers(VOID)
 	  }      
      }
    
-   KeReleaseSpinLock(&TimerListLock, oldlvl);
-//   DPRINT("Finished KeExpireTimers()\n");
+   KeReleaseSpinLockFromDpcLevel( &TimerListLock );
 }
 
 
@@ -487,7 +485,7 @@ VOID KiUpdateSystemTime (VOID)
 	*vidmem=0x7;
 	vidmem++;
      }
-   KeExpireTimers();
+   KeInsertQueueDpc( &ExpireTimerDpc, 0, 0 );
 }
 
 
@@ -507,7 +505,7 @@ VOID KeInitializeTimerImpl(VOID)
    
    InitializeListHead(&TimerListHead);
    KeInitializeSpinLock(&TimerListLock);
-   
+   KeInitializeDpc( &ExpireTimerDpc, KeExpireTimers, 0 );
    TimerInitDone = TRUE;
    
    /*

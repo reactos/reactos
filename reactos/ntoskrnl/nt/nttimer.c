@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.7 2001/02/04 17:28:13 ekohl Exp $
+/* $Id: nttimer.c,v 1.8 2001/02/18 19:43:15 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -74,23 +74,18 @@ NtpTimerDpcRoutine(PKDPC Dpc,
 		   PVOID SystemArgument2)
 {
    PNTTIMER Timer;
-   KIRQL OldIrql;
    
    DPRINT("NtpTimerDpcRoutine()\n");
    
    Timer = (PNTTIMER)DeferredContext;
    
-   OldIrql = KeRaiseIrqlToDpcLevel();
-   
-   if (Timer->Running == TRUE)
+   if ( Timer->Running )
      {
 	KeInsertQueueApc(&Timer->Apc,
 			 SystemArgument1,
 			 SystemArgument2,
 			 KernelMode);
      }
-   
-   KeLowerIrql(OldIrql);
 }
 
 
@@ -265,23 +260,24 @@ NtSetTimer(IN HANDLE TimerHandle,
 	Timer->Running = FALSE;
 	KeLowerIrql(OldIrql);
      }
-
-   KeInitializeApc(&Timer->Apc,
-		   KeGetCurrentThread(),
-		   0,
-		   (PKKERNEL_ROUTINE)NtpTimerApcKernelRoutine,
-		   (PKRUNDOWN_ROUTINE)NULL,
-		   (PKNORMAL_ROUTINE)TimerApcRoutine,
-		   KeGetPreviousMode(),
-		   TimerContext);
+   if( TimerApcRoutine )
+      KeInitializeApc(&Timer->Apc,
+		      KeGetCurrentThread(),
+		      0,
+		      (PKKERNEL_ROUTINE)NtpTimerApcKernelRoutine,
+		      (PKRUNDOWN_ROUTINE)NULL,
+		      (PKNORMAL_ROUTINE)TimerApcRoutine,
+		      KeGetPreviousMode(),
+		      TimerContext);
 
    Result = KeSetTimerEx (&Timer->Timer,
 			  *DueTime,
 			  Period,
-			  &Timer->Dpc);
-   if (Result == FALSE)
+			  TimerApcRoutine ? &Timer->Dpc : 0 );
+   if (Result == TRUE)
      {
 	ObDereferenceObject(Timer);
+	DPRINT1( "KeSetTimer says the timer was already running, this shouldn't be\n" );
 	return STATUS_UNSUCCESSFUL;
      }
 
