@@ -1,3 +1,6 @@
+wmc
+*.coff
 *.d
+*.exe
 *.o
 *.sym
