@@ -1548,6 +1548,8 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
                 WCHAR wideRemoteStatic[MAX_PATH];
                 DWORD wideRemoteSize = sizeof(wideRemoteStatic) / sizeof(WCHAR);
 
+                MultiByteToWideChar(CP_ACP, 0, lpLocalName, -1, wideLocalName, len);
+
                 /* try once without memory allocation */
                 ret = WNetGetConnectionW(wideLocalName, wideRemoteStatic,
                  &wideRemoteSize);
@@ -1633,28 +1635,27 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
         ret = WN_BAD_LOCALNAME;
     else
     {
-        WCHAR label[40];
-
         if (lpLocalName[1] == ':')
         {
             switch(GetDriveTypeW(lpLocalName))
             {
             case DRIVE_REMOTE:
-                if (!GetVolumeInformationW( lpLocalName, label, sizeof(label),
-                                            NULL, NULL, NULL, NULL, 0 ))
-                    label[0] = 0;
-                if (strlenW(label) + 1 > *lpBufferSize)
+            {
+                WCHAR remote[MAX_PATH];
+                if (!QueryDosDeviceW( lpLocalName, remote, MAX_PATH )) remote[0] = 0;
+                if (strlenW(remote) + 1 > *lpBufferSize)
                 {
-                    *lpBufferSize = strlenW(label) + 1;
+                    *lpBufferSize = strlenW(remote) + 1;
                     ret = WN_MORE_DATA;
                 }
                 else
                 {
-                    strcpyW( lpRemoteName, label );
+                    strcpyW( lpRemoteName, remote );
                     *lpBufferSize = strlenW(lpRemoteName) + 1;
                     ret = WN_SUCCESS;
                 }
                 break;
+            }
             case DRIVE_REMOVABLE:
             case DRIVE_FIXED:
             case DRIVE_CDROM:

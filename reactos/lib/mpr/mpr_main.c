@@ -81,6 +81,9 @@ DWORD WINAPI DllCanUnloadNow(void)
     return S_OK;
 }
 
+/*****************************************************************
+ *  DllMain  [MPR.init]
+ */
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     switch (fdwReason) {
