@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.103 2003/08/21 23:07:40 weiden Exp $
+/* $Id: window.c,v 1.104 2003/08/25 23:24:02 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -929,7 +929,7 @@ NtUserBuildHwndList(
       WindowObject = IntGetWindowObject ( hwndParent );
       if ( !WindowObject )
 	{
-	  DPRINT("Bad window handle 0x%x\n", hWnd);
+	  DPRINT("Bad window handle 0x%x\n", hwndParent);
 	  SetLastWin32Error(ERROR_INVALID_HANDLE);
 	  return 0;
 	}
@@ -1225,6 +1225,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       if (!(dwStyle & WS_POPUP))
 	{
 	  WindowObject->Style |= WS_CAPTION;
+      WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
       DbgPrint("4: Style is now %d\n", WindowObject->Style);
 	  /* FIXME: Note the window needs a size. */ 
 	}
@@ -1346,6 +1347,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     } 
   
   /* Send move and size messages. */
+  /* FIXME: Breaks Solitaire, probably shouldn't be there. FiN */
+#if 0		  
   if (!(WindowObject->Flags & WINDOWOBJECT_NEED_SIZE))
     {
       LONG lParam;
@@ -1364,7 +1367,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  WindowObject->ClientRect.top);
       DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
       IntCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
+
+      WindowObject->Flags &= ~WINDOWOBJECT_NEED_SIZE;
     }
+#endif
 
   /* Move from parent-client to screen coordinates */
   if (0 != (WindowObject->Style & WS_CHILD))

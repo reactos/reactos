@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.29 2003/08/24 20:58:09 gvg Exp $
+ * $Id: dib.c,v 1.30 2003/08/25 23:24:02 rcampbell Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -631,7 +631,7 @@ DIB_CreateDIBSection(
   if (section)
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize); */
-    DPRINT("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
+    DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
   else if (ovr_pitch && offset)
     bm.bmBits = (LPVOID) offset;
   else {

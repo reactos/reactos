@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.23 2003/08/20 07:45:01 gvg Exp $
+/* $Id: surface.c,v 1.24 2003/08/25 23:24:02 rcampbell Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -174,7 +174,6 @@ EngCreateBitmap(IN SIZEL Size,
   HBITMAP NewBitmap;
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
-
 
   NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
   if( !ValidEngHandle( NewBitmap ) )

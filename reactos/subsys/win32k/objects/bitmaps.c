@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.35 2003/08/20 20:45:28 ea Exp $ */
+/* $Id: bitmaps.c,v 1.36 2003/08/25 23:24:02 rcampbell Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -195,12 +195,12 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
   // Allocate memory for bitmap bits
   bmp->bitmap.bmBits = ExAllocatePool(PagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight);
 
+  BITMAPOBJ_UnlockBitmap( hBitmap );
+
   if (Bits) /* Set bitmap bits */
   {
     NtGdiSetBitmapBits(hBitmap, Height * bmp->bitmap.bmWidthBytes, Bits);
   }
-
-  BITMAPOBJ_UnlockBitmap( hBitmap );
 
   return  hBitmap;
 }
@@ -439,6 +439,8 @@ LONG STDCALL NtGdiSetBitmapBits(HBITMAP  hBitmap,
       }
     }
 
+  BITMAPOBJ_UnlockBitmap(hBitmap);
+
   return ret;
 }
 
@@ -573,6 +575,7 @@ HBITMAP FASTCALL BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 
   bm = bmp->bitmap;
   bm.bmBits = NULL;
+  BITMAPOBJ_UnlockBitmap(hBitmap);
   res = NtGdiCreateBitmapIndirect(&bm);
   if(res)
   {

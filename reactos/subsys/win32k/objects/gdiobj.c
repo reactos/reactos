@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.39 2003/08/21 20:16:55 gvg Exp $
+ * $Id: gdiobj.c,v 1.40 2003/08/25 23:24:03 rcampbell Exp $
  *
  */
 
@@ -491,7 +491,7 @@ CreateStockObjects(void)
       if (NULL != StockObjects[Object])
 	{
 	  GDIOBJ_MarkObjectGlobal(StockObjects[Object]);
-	  GDI_HANDLE_SET_STOCKOBJ(StockObjects[Object]);
+/*	  GDI_HANDLE_SET_STOCKOBJ(StockObjects[Object]);*/
 	}
     }
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.25 2003/08/11 19:05:27 gdalsnes Exp $
+/* $Id: stubs.c,v 1.26 2003/08/25 23:24:02 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
 
 DWORD
 STDCALL
@@ -209,7 +208,8 @@ NtUserCreateAcceleratorTable(
   DWORD Unknown0,
   DWORD Unknown1)
 {
-  UNIMPLEMENTED
+/*  UNIMPLEMENTED */
+  DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__);
 
   return 0;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.73 2003/08/20 07:45:02 gvg Exp $
+/* $Id: dc.c,v 1.74 2003/08/25 23:24:02 rcampbell Exp $
  *
  * DC.C - Device context functions
  *
@@ -135,20 +135,20 @@ NtGdiCreateCompatableDC(HDC  hDC)
   if (OrigDC == NULL)
   {
     hNewDC = DC_AllocDC(L"DISPLAY");
-    if( hNewDC )
-      NewDC = DC_LockDc( hNewDC );
   }
   else
   {
     /*  Allocate a new DC based on the original DC's device  */
     hNewDC = DC_AllocDC(OrigDC->DriverName);
-    if( hNewDC )
-      NewDC = DC_LockDc( hNewDC );
   }
 
   if (NewDC == NULL)
   {
     return  NULL;
+  }
+  else
+  {
+    NewDC = DC_LockDc( hNewDC );
   }
 
   /* Copy information from original DC to new DC  */
@@ -190,6 +190,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   /* Create default bitmap */
   if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, 1, NULL )))
   {
+    DC_UnlockDc( hDC );
     DC_UnlockDc( hNewDC );
     DC_FreeDC( hNewDC );
     return NULL;
