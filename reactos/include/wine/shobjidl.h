@@ -4117,8 +4117,7 @@ void __RPC_STUB IContextMenu3_HandleMenuMsg2_Stub(
 typedef struct IShellExecuteHookA IShellExecuteHookA;
 #endif
 
-typedef struct _SHELLEXECUTEINFOA *LPSHELLEXECUTEINFOA;
-
+struct _SHELLEXECUTEINFOA;
 /*****************************************************************************
  * IShellExecuteHookA interface
  */
@@ -4130,7 +4129,7 @@ DEFINE_GUID(IID_IShellExecuteHookA, 0x000214f5, 0x0000, 0x0000, 0xc0,0x00, 0x00,
 struct IShellExecuteHookA : public IUnknown
 {
     virtual HRESULT STDMETHODCALLTYPE Execute(
-        LPSHELLEXECUTEINFOA pei) = 0;
+        struct _SHELLEXECUTEINFOA* pei) = 0;
 
 };
 #else
@@ -4156,7 +4155,7 @@ struct IShellExecuteHookAVtbl {
     /*** IShellExecuteHookA methods ***/
     HRESULT (STDMETHODCALLTYPE *Execute)(
         IShellExecuteHookA* This,
-        LPSHELLEXECUTEINFOA pei);
+        struct _SHELLEXECUTEINFOA* pei);
 
 };
 
@@ -4176,11 +4175,11 @@ struct IShellExecuteHookAVtbl {
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
     STDMETHOD_(ULONG,Release)(THIS) PURE; \
     /*** IShellExecuteHookA methods ***/ \
-    STDMETHOD_(HRESULT,Execute)(THIS_ LPSHELLEXECUTEINFOA pei) PURE;
+    STDMETHOD_(HRESULT,Execute)(THIS_ struct _SHELLEXECUTEINFOA* pei) PURE;
 
 HRESULT CALLBACK IShellExecuteHookA_Execute_Proxy(
     IShellExecuteHookA* This,
-    LPSHELLEXECUTEINFOA pei);
+    struct _SHELLEXECUTEINFOA* pei);
 void __RPC_STUB IShellExecuteHookA_Execute_Stub(
     struct IRpcStubBuffer* This,
     struct IRpcChannelBuffer* pRpcChannelBuffer,
@@ -4194,8 +4193,7 @@ void __RPC_STUB IShellExecuteHookA_Execute_Stub(
 typedef struct IShellExecuteHookW IShellExecuteHookW;
 #endif
 
-typedef struct _SHELLEXECUTEINFOW *LPSHELLEXECUTEINFOW;
-
+struct _SHELLEXECUTEINFOW;
 /*****************************************************************************
  * IShellExecuteHookW interface
  */
@@ -4207,7 +4205,7 @@ DEFINE_GUID(IID_IShellExecuteHookW, 0x000214fb, 0x0000, 0x0000, 0xc0,0x00, 0x00,
 struct IShellExecuteHookW : public IUnknown
 {
     virtual HRESULT STDMETHODCALLTYPE Execute(
-        LPSHELLEXECUTEINFOW pei) = 0;
+        struct _SHELLEXECUTEINFOW* pei) = 0;
 
 };
 #else
@@ -4233,7 +4231,7 @@ struct IShellExecuteHookWVtbl {
     /*** IShellExecuteHookW methods ***/
     HRESULT (STDMETHODCALLTYPE *Execute)(
         IShellExecuteHookW* This,
-        LPSHELLEXECUTEINFOW pei);
+        struct _SHELLEXECUTEINFOW* pei);
 
 };
 
@@ -4253,11 +4251,11 @@ struct IShellExecuteHookWVtbl {
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
     STDMETHOD_(ULONG,Release)(THIS) PURE; \
     /*** IShellExecuteHookW methods ***/ \
-    STDMETHOD_(HRESULT,Execute)(THIS_ LPSHELLEXECUTEINFOW pei) PURE;
+    STDMETHOD_(HRESULT,Execute)(THIS_ struct _SHELLEXECUTEINFOW* pei) PURE;
 
 HRESULT CALLBACK IShellExecuteHookW_Execute_Proxy(
     IShellExecuteHookW* This,
-    LPSHELLEXECUTEINFOW pei);
+    struct _SHELLEXECUTEINFOW* pei);
 void __RPC_STUB IShellExecuteHookW_Execute_Stub(
     struct IRpcStubBuffer* This,
     struct IRpcChannelBuffer* pRpcChannelBuffer,
