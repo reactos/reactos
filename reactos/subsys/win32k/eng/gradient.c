@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.6 2004/03/21 10:18:33 weiden Exp $
+/* $Id: gradient.c,v 1.7 2004/04/06 21:53:48 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,6 +30,7 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <include/eng.h>
+#include <include/inteng.h>
 #include <include/object.h>
 #include <include/paint.h>
 #include <include/surface.h>
@@ -570,13 +571,13 @@ IntEngGradientFill(
     {
       IntLockGDIDriver(SurfGDI);
       SurfGDI->BitBlt(psoDest, NULL, NULL, pco, pxlo,
-                      prclExtents, pptlDitherOrg, NULL, NULL, NULL, 0x00AA0029);
+                      prclExtents, pptlDitherOrg, NULL, NULL, NULL, ROP_NOOP);
       IntUnLockGDIDriver(SurfGDI);
       MouseSafetyOnDrawEnd(psoDest, SurfGDI);
       return TRUE;
     }
     EngBitBlt(psoDest, NULL, NULL, pco, pxlo,
-              prclExtents, pptlDitherOrg, NULL, NULL, NULL, 0x00AA0029);
+              prclExtents, pptlDitherOrg, NULL, NULL, NULL, ROP_NOOP);
   }
   MouseSafetyOnDrawEnd(psoDest, SurfGDI);
   return Ret;

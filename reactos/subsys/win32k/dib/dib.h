@@ -3,7 +3,7 @@ extern unsigned char altnotmask[2];
 #define MASK1BPP(x) (1<<(7-((x)&7)))
 ULONG   DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern);
 ULONG   DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation);
-ULONG   DIB_GetOriginalSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy);
+ULONG   DIB_GetSourceIndex(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy);
 
 VOID    DIB_1BPP_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c);
 ULONG   DIB_1BPP_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y);

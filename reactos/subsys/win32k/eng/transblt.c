@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.14 2004/04/06 17:54:32 weiden Exp $
+/* $Id: transblt.c,v 1.15 2004/04/06 21:53:48 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -152,7 +152,7 @@ EngTransparentBlt(PSURFOBJ Dest,
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       Ret = OutputGDI->DIB_TransparentBlt(OutputObj, InputObj, OutputGDI, InputGDI, &CombinedRect, 
-                                         &Pt, ColorTranslation, iTransColor);
+                                          &Pt, ColorTranslation, iTransColor);
       break;
     }
     case DC_COMPLEX:
@@ -283,6 +283,22 @@ IntEngTransparentBlt(PSURFOBJ Dest,
   {
     Ret = EngTransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
                             SourceRect, iTransColor, Reserved);
+  }
+  
+  if(Ret)
+  {
+    /* Dummy BitBlt to let driver know that something has changed.
+       0x00AA0029 is the Rop for D (no-op) */
+    if(SurfGDIDest->BitBlt)
+    {
+      IntLockGDIDriver(SurfGDIDest);
+      SurfGDIDest->BitBlt(Dest, NULL, NULL, Clip, ColorTranslation,
+                          &OutputRect, NULL, NULL, NULL, NULL, ROP_NOOP);
+      IntUnLockGDIDriver(SurfGDIDest);
+    }
+    else
+      EngBitBlt(Dest, NULL, NULL, Clip, ColorTranslation,
+                &OutputRect, NULL, NULL, NULL, NULL, ROP_NOOP);
   }
   
   MouseSafetyOnDrawEnd(Dest, SurfGDIDest);

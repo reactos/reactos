@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.19 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: dib32bpp.c,v 1.20 2004/04/06 21:53:48 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -572,12 +572,11 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  ULONG X, Y;
-  ULONG SourceX, SourceY, Source, wd;
-  PULONG DestBits;
+  ULONG X, Y, SourceX, SourceY, Source, wd;
+  ULONG *DestBits;
   
   SourceY = SourcePoint->y;
-  DestBits = (PULONG)(DestSurf->pvScan0 +
+  DestBits = (ULONG*)(DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
   wd = ((DestRect->right - DestRect->left) << 2) - DestSurf->lDelta;
@@ -587,21 +586,15 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     SourceX = SourcePoint->x;
     for(X = DestRect->left; X < DestRect->right; X++, DestBits++, SourceX++)
     {
-      Source = DIB_GetOriginalSource(SourceSurf, SourceGDI, SourceX, SourceY);
-      if(Source == iTransColor)
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX, SourceY);
+      if(Source != iTransColor)
       {
-        /* Skip transparent pixels */
-        continue;
-      }
-      
-      if(ColorTranslation)
         *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
-      else
-        *DestBits = Source;
+      }
     }
     
     SourceY++;
-    DestBits = (PULONG)((ULONG_PTR)DestBits - wd);
+    DestBits = (ULONG*)((ULONG_PTR)DestBits - wd);
   }
   
   return TRUE;

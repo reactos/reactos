@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.19 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: dib24bpp.c,v 1.20 2004/04/06 21:53:48 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -367,7 +367,34 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  return FALSE;
+  ULONG X, Y, SourceX, SourceY, Source, wd, Dest;
+  BYTE *DestBits;
+  
+  SourceY = SourcePoint->y;
+  DestBits = (BYTE*)(DestSurf->pvScan0 +
+                      (DestRect->left << 2) +
+                      DestRect->top * DestSurf->lDelta);
+  wd = ((DestRect->right - DestRect->left) << 2) - DestSurf->lDelta;
+  
+  for(Y = DestRect->top; Y < DestRect->bottom; Y++)
+  {
+    SourceX = SourcePoint->x;
+    for(X = DestRect->left; X < DestRect->right; X++, DestBits += 3, SourceX++)
+    {
+      Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX, SourceY);
+      if(Source != iTransColor)
+      {
+        Dest = XLATEOBJ_iXlate(ColorTranslation, Source) & 0xFFFFFF;
+         *(PUSHORT)(DestBits) = Dest & 0xFFFF;
+         *(DestBits + 2) = Dest >> 16;
+      }
+    }
+    
+    SourceY++;
+    DestBits = (BYTE*)((ULONG_PTR)DestBits - wd);
+  }
+  
+  return TRUE;
 }
 
 /* EOF */

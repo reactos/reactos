@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.8 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: dib.c,v 1.9 2004/04/06 21:53:48 weiden Exp $ */
 
 #include <windows.h>
 #include <ddk/winddi.h>
@@ -68,7 +68,7 @@ DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATE
 }
 
 ULONG
-DIB_GetOriginalSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy)
+DIB_GetSourceIndex(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy)
 {
   switch (SourceGDI->BitsPerPixel)
     {

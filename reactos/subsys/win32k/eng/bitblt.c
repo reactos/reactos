@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.44 2004/04/05 21:26:24 navaraf Exp $
+/* $Id: bitblt.c,v 1.45 2004/04/06 21:53:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,8 +45,6 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
-
-#define ROP_NOOP 0x00AA0029
 
 typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFGDI* OutputGDI,

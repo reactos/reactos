@@ -1,6 +1,8 @@
 #ifndef _WIN32K_INTENG_H
 #define _WIN32K_INTENG_H
 
+#define ROP_NOOP	0x00AA0029
+
 /* Definitions of IntEngXxx functions */
 
 BOOL STDCALL IntEngLineTo(SURFOBJ *Surface,
