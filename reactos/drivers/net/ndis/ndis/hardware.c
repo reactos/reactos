@@ -62,7 +62,7 @@ NdisMPciAssignResources(
     IN  ULONG                   SlotNumber,
     OUT PNDIS_RESOURCE_LIST     *AssignedResources)
 {
-  PNDIS_MINIPORT_BLOCK MiniportBlock = WrapperContext->DeviceObject->DeviceExtension;
+  PNDIS_MINIPORT_BLOCK MiniportBlock = &((PLOGICAL_ADAPTER)MiniportHandle)->NdisMiniportBlock;
 
   if (MiniportBlock->BusType != PCIBus ||
       MiniportBlock->AllocatedResources == NULL)
@@ -71,7 +71,8 @@ NdisMPciAssignResources(
       return NDIS_STATUS_FAILURE;
     }
 
-  *AssignedResources = MiniportBlock->AllocatedResources;
+  *AssignedResources = &MiniportBlock->AllocatedResources->List[0].PartialResourceList;
+
   return NDIS_STATUS_SUCCESS;
 }
 
