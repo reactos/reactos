@@ -51,6 +51,9 @@ drivers\net\wshtcpip\wshtcpip.dll       1
 drivers\net\dd\ne2000\ne2000.sys        2
 lib\advapi32\advapi32.dll               1
 lib\cards\cards.dll                     1
+lib\cpl\appwiz\appwiz.cpl               1
+lib\cpl\control\control.exe             1
+lib\cpl\sysdm\sysdm.cpl                 1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
