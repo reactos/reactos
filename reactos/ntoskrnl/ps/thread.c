@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.33 1999/12/05 23:23:50 phreak Exp $
+/* $Id: thread.c,v 1.34 1999/12/10 17:04:36 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -65,6 +65,11 @@ PKTHREAD KeGetCurrentThread(VOID)
 PETHREAD PsGetCurrentThread(VOID)
 {
    return(CurrentThread);
+}
+
+HANDLE PsGetCurrentThreadId(VOID)
+{
+   return(CurrentThread->Cid.UniqueThread);
 }
 
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)

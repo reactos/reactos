@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.4 1999/11/02 08:55:43 dwelch Exp $
+/* $Id: interlck.c,v 1.5 1999/12/10 17:04:37 dwelch Exp $
  *
  * reactos/ntoskrnl/rtl/interlck.c
  *
@@ -9,6 +9,7 @@
 #include <ntos.h>
 #include <internal/debug.h>
 
+#if 0
 LONG FASTCALL InterlockedIncrement(PLONG Addend)
 {
    LONG r;
@@ -24,12 +25,13 @@ LONG FASTCALL InterlockedDecrement(PLONG Addend)
    r = (*Addend);
    return(r);
 }
+#endif
 
 /**********************************************************************
  * FASTCALL: @InterlockedIncrement@0
  * STDCALL : _InterlockedIncrement@4
  */
-#if 0
+#if 1
 LONG FASTCALL InterlockedIncrement (PLONG Addend);
 /*
  * FUNCTION: Increments a caller supplied variable of type LONG as an 
@@ -78,7 +80,7 @@ __asm__(
  * FASTCALL: @InterlockedDecrement@0
  * STDCALL : _InterlockedDecrement@4
  */
-#if 0
+#if 1
 LONG FASTCALL InterlockedDecrement(PLONG Addend);
 __asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"_InterlockedDecrement@4:\n\t"

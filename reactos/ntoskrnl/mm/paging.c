@@ -17,14 +17,3 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-NtCreatePagingFile (
-	IN	PUNICODE_STRING	PageFileName,
-	IN	ULONG		MiniumSize,
-	IN	ULONG		MaxiumSize,
-	OUT	PULONG		ActualSize
-	)
-{
-	UNIMPLEMENTED;
-}

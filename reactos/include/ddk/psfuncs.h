@@ -1,6 +1,7 @@
 
 
 HANDLE PsGetCurrentProcessId(VOID);
+HANDLE PsGetCurrentThreadId(VOID);
 
 /*
  * FUNCTION: Creates a thread which executes in kernel mode

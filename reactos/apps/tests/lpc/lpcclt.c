@@ -23,8 +23,7 @@ void main(int argc, char* argv[])
    UNICODE_STRING PortName;
    NTSTATUS Status;
    HANDLE PortHandle;
-   LPC_MESSAGE Request;
-   char buffer[255];
+   LPCMESSAGE Request;
    
    printf("(lpcclt.exe) Lpc client\n");
    
@@ -37,7 +36,7 @@ void main(int argc, char* argv[])
 			  0,
 			  0,
 			  0,
-			  0,
+			  NULL,
 			  0);
    if (!NT_SUCCESS(Status))
      {
@@ -45,14 +44,12 @@ void main(int argc, char* argv[])
 	return;
      }
    
-   strcpy(buffer, GetCommandLineA());
-   Request.Buffer = buffer;
-   Request.Length = strlen(buffer);
+   strcpy(Request.MessageData, GetCommandLineA());
+   Request.ActualMessageLength = strlen(Request.MessageData);
+   Request.TotalMessageLength = sizeof(LPCMESSAGE);
    
    printf("(lpcclt.exe) Sending message\n");
-   Status = NtRequestWaitReplyPort(PortHandle,
-				   NULL,
-				   &Request);
+   Status = NtRequestPort(PortHandle, &Request);
    if (!NT_SUCCESS(Status))
      {
 	printf("(lpcclt.exe) Failed to send request\n");

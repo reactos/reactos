@@ -1,4 +1,5 @@
-/* $Id: zw.h,v 1.22 1999/12/06 00:14:47 ekohl Exp $
+
+/* $Id: zw.h,v 1.23 1999/12/10 17:04:33 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5169,50 +5170,40 @@ ZwYieldExecution(
  * These prototypes are unknown as yet
  * (stack sizes by Peter-Michael Hager)
  */
-NTSTATUS
-STDCALL
-NtAcceptConnectPort ( /* @24 */
-	IN	HANDLE	PortHandle,
-	OUT	PHANDLE	ConnectedPort,
-	IN	DWORD	Unknown2,
-	IN	DWORD	Unknown3,
-	IN	DWORD	Unknown4,
-	IN	DWORD	Unknown5
-	);
-NTSTATUS
-STDCALL
-NtCompleteConnectPort ( /* @4 */
-	IN	HANDLE	PortHandle
-	);
-NTSTATUS
-STDCALL
-NtConnectPort ( 
-	OUT	PHANDLE		PortHandle,
-	IN	PUNICODE_STRING	PortName,
-	IN	POBJECT_ATTRIBUTES PortAttributes,
-	IN	DWORD		Unknown3,
-	IN	DWORD		Unknown4,
-	IN	DWORD		Unknown5,
-	IN	DWORD		Unknown6,
-	IN	ULONG		Flags	
-	);
+NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE	PortHandle,
+				      HANDLE NamedPortHandle,
+				      PLPCMESSAGE ServerReply,
+				      ULONG AcceptIt,
+				      ULONG Unknown3,
+				      PLPCSECTIONMAPINFO MapInfo);
+
+NTSTATUS STDCALL NtCompleteConnectPort (IN	HANDLE	PortHandle);
+
+NTSTATUS STDCALL NtConnectPort(OUT	PHANDLE		PortHandle,
+			       IN	PUNICODE_STRING	PortName,
+			       IN	PVOID Unknown1,
+			       IN	PLPCSECTIONINFO SectionInfo,
+			       IN	PLPCSECTIONMAPINFO MapInfo,
+			       IN	PVOID Unknown2,
+			       IN	PVOID ConnectInfo,
+			       IN	PULONG ConnectInfoLength);
+
+NTSTATUS STDCALL NtReplyWaitReplyPort(PVOID Unknown1,
+				      PVOID Unknown2);
+				      
+ 
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
-			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      DWORD a3,
-			      DWORD a4);
-NTSTATUS
-STDCALL
-NtImpersonateClientOfPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN	PCLIENT_ID	ClientId
-	);
-NTSTATUS
-STDCALL
-NtListenPort ( /* @8 */
-	IN	HANDLE	PortHAndle,
-	IN	DWORD	QueueSize	/* guess */
-	);
+			      ULONG MaxConnectInfoLength,
+			      ULONG MaxDataLength,
+			      ULONG Unknown1);
+
+NTSTATUS STDCALL NtImpersonateClientOfPort (IN	HANDLE		PortHandle,
+					    IN	PLPCMESSAGE ClientMessage);
+
+NTSTATUS STDCALL NtListenPort (IN	HANDLE	PortHAndle,
+			       IN PLPCMESSAGE LpcMessage);
+
 NTSTATUS
 STDCALL
 NtQueryInformationPort ( /* @20 */
@@ -5222,39 +5213,17 @@ NtQueryInformationPort ( /* @20 */
 	IN	ULONG	PortInformationLength,	/* guess */
 	OUT	PULONG	ReturnLength		/* guess */
 	);
-NTSTATUS
-STDCALL
-NtReplyPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN	PLPC_MESSAGE	LpcReply	/* guess */
-	);
-NTSTATUS
-STDCALL
-NtReplyWaitReceivePort ( /* @16 */
-	IN	HANDLE		PortHandle,
-	IN	PLPC_MESSAGE	LpcReply,	/* guess */
-	OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
-	OUT	PULONG		MessageLength	/* guess */
-	);
-NTSTATUS
-STDCALL
-NtReplyWaitReplyPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_MESSAGE	LpcReply	/* guess */
-	);
-NTSTATUS
-STDCALL
-NtRequestPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN 	PLPC_MESSAGE	LpcMessage	/* guess */
-	);
-NTSTATUS
-STDCALL
-NtRequestWaitReplyPort ( /* @12 */
-	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_MESSAGE	LpcReply,	/* guess */
-	OUT     PLPC_MESSAGE    LpcRequest 	/* guess */
-	); 
+NTSTATUS STDCALL NtReplyPort (IN	HANDLE		PortHandle,
+			      IN	PLPCMESSAGE	LpcReply);
+NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
+					 PVOID Unknown1,
+					 PLPCMESSAGE MessageReply,
+					 PLPCMESSAGE MessageRequest);
+NTSTATUS STDCALL NtRequestPort ( IN	HANDLE		PortHandle,
+				IN 	PLPCMESSAGE	LpcMessage);
+NTSTATUS STDCALL NtRequestWaitReplyPort (IN	HANDLE		PortHandle,
+					 IN OUT	PLPCMESSAGE	LpcReply,      
+					 OUT     PLPCMESSAGE    LpcRequest); 
 NTSTATUS
 STDCALL
 NtReadRequestData ( /* @24 */

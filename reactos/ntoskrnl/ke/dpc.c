@@ -64,9 +64,10 @@ void KeDrainDpcQueue(void)
      }
    DPRINT("KeDrainDpcQueue()\n");
    
+   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
-   KeRaiseIrql(HIGH_LEVEL,&oldlvl);
    current_entry = RemoveHeadList(&DpcQueueHead);
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    KeLowerIrql(oldlvl);
    current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
    while (current_entry!=(&DpcQueueHead))
@@ -80,15 +81,16 @@ void KeDrainDpcQueue(void)
 				 current->SystemArgument2);
 	CHECKPOINT;
 	current->Lock=FALSE;
-	KeRaiseIrql(HIGH_LEVEL,&oldlvl);
+	KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+	KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
 	current_entry = RemoveHeadList(&DpcQueueHead);
 	DPRINT("current_entry %x\n", current_entry);
 	DpcQueueSize--;
+	KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
 	KeLowerIrql(oldlvl);
 	current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
 	DPRINT("current %x\n", current);
      }
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
 }
 
 BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)

@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.14 1999/12/06 06:43:45 phreak Exp $
+/* $Id: blue.c,v 1.15 1999/12/10 17:04:37 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -25,7 +25,7 @@
 #define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
 
-#define NR_ROWS            25
+#define NR_ROWS            50
 #define NR_COLUMNS         80
 #define NR_SCANLINES       8
 

@@ -35,7 +35,7 @@ else
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
-args.exe: $(OBJECTS) $(LIBS)
+args.exe: $(OBJECTS)
 	$(CC) $(OBJECTS) -o args.exe
 	$(NM) --numeric-sort args.exe > args.sym
 

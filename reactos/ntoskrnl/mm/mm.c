@@ -121,6 +121,7 @@ VOID MmInitVirtualMemory(boot_param* bp)
 //  while (inb_p(0x60)!=0x1); inb_p(0x60);
    
    MmInitSectionImplementation();
+   MmInitPagingFile();
 }
 
 NTSTATUS MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)

@@ -1,23 +1,49 @@
 #ifndef __INCLUDE_DDK_ZWTYPES_H
 #define __INCLUDE_DDK_ZWTYPES_H
 
-typedef
-enum {
-	LpcMessageTypeUnknown,	/* invalid */
-	LpcMessageTypeBase,	/* <256 bytes */
-	LpcMessageTypeLarge,	/* >255 bytes */
-	LpcMessageTypeFast,	/* 3.51 GDI */
-	LpcMessageTypeMaximum
+#define MAX_MESSAGE_DATA   (0x130)
 
-} LPC_MESSAGE_TYPE;
+#define UNUSED_MSG_TYPE    (0x0)
+#define LPC_REQUEST        (0x1)
+#define LPC_REPLY          (0x2)
+#define LPC_DATAGRAM       (0x3)
+#define LPC_LOST_REPLY     (0x4)
+#define LPC_PORT_CLOSED    (0x5)
+#define LPC_CLIENT_DIED    (0x6)
+#define LPC_EXCEPTION      (0x7)
+#define LPC_DEBUG_EVENT    (0x8)
+#define LPC_ERROR_EVENT    (0x9)
+#define LPC_CONNECTION_REQUEST (0xa)
+#define LPC_CONNECTION_REFUSED (0xb)
 
-typedef struct _LPC_MESSAGE
+typedef struct _LPCSECTIONINFO
 {
-   LPC_MESSAGE_TYPE	Type;
-   ULONG			Length;
-   PVOID			Buffer; /* Page aligned! */
-   DWORD			Flags; /* To be defined */
-} LPC_MESSAGE, * PLPC_MESSAGE;
+   DWORD Length;
+   HANDLE SectionHandle;
+   DWORD Unknown1;
+   DWORD SectionSize;
+   DWORD ClientBaseAddress;
+   DWORD ServerBaseAddress;
+} LPCSECTION, *PLPCSECTIONINFO;
+
+typedef struct _LPCSECTIONMAPINFO
+{
+   DWORD Length;
+   DWORD SectionSize;
+   DWORD ServerBaseAddress;
+} LPCSECTIONMAPINFO, *PLPCSECTIONMAPINFO;
+
+typedef struct _LPCMESSAGE
+{
+   WORD ActualMessageLength;
+   WORD TotalMessageLength;
+   DWORD MessageType;
+   DWORD ClientProcessId;
+   DWORD ClientThreadId;
+   DWORD MessageId;
+   DWORD SharedSectionSize;
+   BYTE MessageData[MAX_MESSAGE_DATA];
+} LPCMESSAGE, *PLPCMESSAGE;
 
 
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )

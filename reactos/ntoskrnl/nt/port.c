@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.12 1999/12/02 20:53:54 dwelch Exp $
+/* $Id: port.c,v 1.13 1999/12/10 17:04:36 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,6 +31,8 @@
 
 /* TYPES ********************************************************************/
 
+#define PORT_ALL_ACCESS               (0x1)
+
 #define EPORT_INACTIVE                (0)
 #define EPORT_WAIT_FOR_CONNECT        (1)
 #define EPORT_WAIT_FOR_ACCEPT         (2)
@@ -38,33 +40,101 @@
 #define EPORT_WAIT_FOR_COMPLETE_CLT   (4)
 #define EPORT_CONNECTED               (5)
 
-typedef struct _QUEUED_MESSAGE
+struct _EPORT;
+
+typedef struct _QUEUEDMESSAGE
 {
-   LPC_MESSAGE_TYPE Type;
-   ULONG Length;
-   PVOID Buffer;
-   DWORD Flags;
-   PEPROCESS Sender;
-} QUEUED_MESSAGE, *PQUEUED_MESSAGE;
+   struct _EPORT* Sender;
+   LIST_ENTRY QueueListEntry;
+   LPCMESSAGE Message;
+} QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 typedef struct _EPORT
 {
    KSPIN_LOCK Lock;
-   ULONG State;
    KEVENT Event;
+   
    struct _EPORT* OtherPort;
-   struct _EPORT* NamedPort;
-   ULONG NumberOfQueuedMessages;
-   QUEUED_MESSAGE Msg;
-   PEPROCESS ConnectingProcess;
-   struct _EPORT* ConnectingPort;
+   
+   ULONG QueueLength;
+   LIST_ENTRY QueueListHead;
+   
+   ULONG ConnectQueueLength;
+   LIST_ENTRY ConnectQueueListHead;
+   
+   ULONG MaxDataLength;
+   ULONG MaxConnectInfoLength;
 } EPORT, *PEPORT;
 
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE ExPortType = NULL;
+static ULONG EiNextLpcMessageId;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID EiEnqueueMessagePort(PEPORT Port, PQUEUEDMESSAGE Message)
+{
+   InsertTailList(&Port->QueueListHead, &Message->QueueListEntry);
+   Port->QueueLength++;
+}
+
+PQUEUEDMESSAGE EiDequeueMessagePort(PEPORT Port)
+{
+   PQUEUEDMESSAGE Message;
+   PLIST_ENTRY entry;
+   
+   entry = RemoveHeadList(&Port->QueueListHead);
+   Message = CONTAINING_RECORD(entry, QUEUEDMESSAGE, QueueListEntry);
+   Port->QueueLength--;
+   
+   return(Message);
+}
+
+VOID EiEnqueueConnectMessagePort(PEPORT Port, PQUEUEDMESSAGE Message)
+{
+   InsertTailList(&Port->ConnectQueueListHead, &Message->QueueListEntry);
+   Port->ConnectQueueLength++;
+}
+
+PQUEUEDMESSAGE EiDequeueConnectMessagePort(PEPORT Port)
+{
+   PQUEUEDMESSAGE Message;
+   PLIST_ENTRY entry;
+   
+   entry = RemoveHeadList(&Port->ConnectQueueListHead);
+   Message = CONTAINING_RECORD(entry, QUEUEDMESSAGE, QueueListEntry);
+   Port->ConnectQueueLength--;
+   
+   return(Message);
+}
+
+NTSTATUS EiReplyOrRequestPort(PEPORT Port, PLPCMESSAGE LpcReply, 
+			      ULONG MessageType)
+{
+   KIRQL oldIrql;
+   PQUEUEDMESSAGE MessageReply;
+   
+   MessageReply = ExAllocatePool(NonPagedPool, sizeof(QUEUEDMESSAGE));
+   MessageReply->Sender = Port;
+   
+   if (LpcReply != NULL)
+     {
+	memcpy(&MessageReply->Message, LpcReply, sizeof(LPCMESSAGE));
+     }
+   
+   MessageReply->Message.ClientProcessId = (DWORD)PsGetCurrentProcessId();
+   MessageReply->Message.ClientThreadId = (DWORD)PsGetCurrentThreadId();
+   MessageReply->Message.MessageType = MessageType;
+   MessageReply->Message.MessageId = InterlockedIncrement(&EiNextLpcMessageId);
+   
+   KeAcquireSpinLock(&Port->OtherPort->Lock, &oldIrql);
+   EiEnqueueMessagePort(Port->OtherPort, MessageReply);
+   KeReleaseSpinLock(&Port->OtherPort->Lock, oldIrql);
+   
+   return(STATUS_SUCCESS);
+}
+
 
 VOID NiDeletePort(PVOID ObjectBody)
 {
@@ -124,6 +194,8 @@ NTSTATUS NiInitPort(VOID)
    ExPortType->OkayToClose = NULL;
    ExPortType->Create = NiCreatePort;
    
+   EiNextLpcMessageId = 0;
+   
    return(STATUS_SUCCESS);
 }
 
@@ -132,26 +204,26 @@ static NTSTATUS NiInitializePort(PEPORT Port)
    memset(Port, 0, sizeof(EPORT));
    KeInitializeSpinLock(&Port->Lock);
    KeInitializeEvent(&Port->Event, SynchronizationEvent, FALSE);
-   Port->State = EPORT_INACTIVE;
    Port->OtherPort = NULL;
-   Port->NumberOfQueuedMessages = 0;
+   Port->QueueLength = 0;
+   Port->ConnectQueueLength = 0;
    
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
-			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      DWORD a3,
-			      DWORD a4)
+			      ULONG MaxConnectInfoLength,
+			      ULONG MaxDataLength,
+			      ULONG Unknown1)
 {
    PEPORT Port;
    NTSTATUS Status;
    
-   DPRINT("NtCreaatePort() Name %x\n", ObjectAttributes->ObjectName->Buffer);
+   DPRINT("NtCreatePort() Name %x\n", ObjectAttributes->ObjectName->Buffer);
    
    Port = ObCreateObject(PortHandle,
-			 1,      // DesiredAccess
+			 PORT_ALL_ACCESS,
 			 ObjectAttributes,
 			 ExPortType);
    if (Port == NULL)
@@ -160,23 +232,131 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
      }
    
    Status = NiInitializePort(Port);
-     
+   Port->MaxConnectInfoLength = 260;
+   Port->MaxDataLength = 328;
+   
    return(Status);
 }
 
-NTSTATUS STDCALL NtAcceptConnectPort (IN HANDLE	PortHandle,
-				      OUT PHANDLE OurPortHandle,
-				      DWORD a2,
-				      DWORD	a3,
-				      DWORD	a4,
-				      DWORD	a5)
+NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
+				IN	PUNICODE_STRING		PortName,
+				IN	PVOID     	        Unknown1,
+				IN      PLPCSECTIONINFO SectionInfo,
+				IN	PLPCSECTIONMAPINFO MapInfo,
+				IN	PVOID Unknown2,
+				IN	PVOID ConnectInfo,
+				IN	PULONG uConnectInfoLength)
+/*
+ * FUNCTION: Connect to a named port and wait for the other side to 
+ * accept the connection
+ */
 {
    NTSTATUS Status;
    PEPORT NamedPort;
    PEPORT OurPort;
+   HANDLE OurPortHandle;
+   LPCMESSAGE Request;
+   PQUEUEDMESSAGE Reply;
+   ULONG ConnectInfoLength;
+   KIRQL oldIrql;
    
-   Status = ObReferenceObjectByHandle(PortHandle,
-				      1,   /* AccessRequired */
+   DPRINT("NtConnectPort(PortName %w)\n", PortName->Buffer);
+   
+   /*
+    * Copy in user parameters
+    */
+   memcpy(&ConnectInfoLength, uConnectInfoLength, sizeof(*uConnectInfoLength));
+   
+   /*
+    * Get access to the port
+    */
+   Status = ObReferenceObjectByName(PortName,
+				    0,
+				    NULL,
+				    PORT_ALL_ACCESS,  /* DesiredAccess */
+				    ExPortType,
+				    UserMode,
+				    NULL,
+				    (PVOID*)&NamedPort);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Failed to reference named port (status %x)\n", Status);
+	return(Status);
+     }
+   
+   /*
+    * Create a port to represent our side of the connection
+    */
+   OurPort = ObCreateObject(&OurPortHandle,
+			    PORT_ALL_ACCESS,
+			    NULL,
+			    ExPortType);
+   NiInitializePort(OurPort);
+   
+   /*
+    * Create a request message
+    */
+   Request.ActualMessageLength = ConnectInfoLength;
+   Request.TotalMessageLength = sizeof(LPCMESSAGE) + ConnectInfoLength;
+   Request.SharedSectionSize = 0;
+   memcpy(Request.MessageData, ConnectInfo, ConnectInfoLength);
+   
+   /*
+    * Queue the message to the named port
+    */
+   KeAcquireSpinLock(&NamedPort->Lock, &oldIrql);
+   EiReplyOrRequestPort(NamedPort, &Request, LPC_CONNECTION_REQUEST);
+   KeReleaseSpinLock(&NamedPort->Lock, oldIrql);
+   
+   DPRINT("Waiting for connection completion\n");
+   
+   /*
+    * Wait for them to accept our connection
+    */
+   KeWaitForSingleObject(&OurPort->Event,
+			 UserRequest,
+			 UserMode,
+			 FALSE,
+			 NULL);
+   
+   KeAcquireSpinLock(&OurPort->Lock, &oldIrql);
+   Reply = EiDequeueMessagePort(OurPort);
+   KeReleaseSpinLock(&OurPort->Lock, oldIrql);
+   memcpy(ConnectInfo, Reply->Message.MessageData,
+	  Reply->Message.ActualMessageLength);
+   *uConnectInfoLength = Reply->Message.ActualMessageLength;
+   
+   if (Reply->Message.MessageType == LPC_CONNECTION_REFUSED)
+     {
+	ZwClose(OurPortHandle);
+	ExFreePool(Reply);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   *ConnectedPort = OurPortHandle;
+   ExFreePool(Reply);
+   
+   DPRINT("Exited successfully\n");
+   
+   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE ServerPortHandle,
+				      HANDLE NamedPortHandle,
+				      PLPCMESSAGE LpcMessage,
+				      ULONG AcceptIt,
+				      ULONG Unknown2,
+				      PLPCSECTIONMAPINFO MapInfo)
+{
+   NTSTATUS Status;
+   PEPORT NamedPort;
+   PEPORT OurPort;
+   PQUEUEDMESSAGE ConnectionRequest;
+   KIRQL oldIrql;
+   
+   Status = ObReferenceObjectByHandle(NamedPortHandle,
+				      PORT_ALL_ACCESS,
 				      ExPortType,
 				      UserMode,
 				      (PVOID*)&NamedPort,
@@ -186,33 +366,43 @@ NTSTATUS STDCALL NtAcceptConnectPort (IN HANDLE	PortHandle,
 	return(Status);
      }
    
-   if (NamedPort->State != EPORT_WAIT_FOR_ACCEPT)
-     {
-	ObDereferenceObject(NamedPort);
-	return(STATUS_INVALID_PARAMETER);
-     }
-   
    /*
     * Create a port object for our side of the connection
     */
-   OurPort = ObCreateObject(OurPortHandle,
-			    1,
-			    NULL,
-			    ExPortType);
-   NiInitializePort(OurPort);
+   if (AcceptIt != 1)
+     {
+	OurPort = ObCreateObject(ServerPortHandle,
+				 PORT_ALL_ACCESS,
+				 NULL,
+				 ExPortType);
+	NiInitializePort(OurPort);
+     }
    
    /*
-    * Connect the two port
+    * Dequeue the connection request
     */
-   OurPort->OtherPort = NamedPort->ConnectingPort;  
-   OurPort->OtherPort->OtherPort = OurPort;
-   OurPort->State = EPORT_WAIT_FOR_COMPLETE_SRV;
-   OurPort->OtherPort->State = EPORT_WAIT_FOR_COMPLETE_CLT;
-   OurPort->NamedPort = NamedPort;
+   KeAcquireSpinLock(&NamedPort->Lock, &oldIrql);
+   ConnectionRequest = EiDequeueConnectMessagePort(OurPort);
+   KeReleaseSpinLock(&NamedPort->Lock, oldIrql);
+      
+   if (AcceptIt != 1)
+     {	
+	EiReplyOrRequestPort(ConnectionRequest->Sender, 
+			 LpcMessage, 
+			 LPC_CONNECTION_REFUSED);
+	KeSetEvent(&ConnectionRequest->Sender->Event, IO_NO_INCREMENT, FALSE);
+	ExFreePool(ConnectionRequest);
+	ObDereferenceObject(NamedPort);
+	return(STATUS_SUCCESS);
+     }
    
-   NamedPort->State = EPORT_INACTIVE;
-   NamedPort->ConnectingProcess = NULL;
-   NamedPort->ConnectingPort = NULL;
+   /*
+    * Connect the two ports
+    */
+   OurPort->OtherPort = ConnectionRequest->Sender;
+   OurPort->OtherPort->OtherPort = OurPort;
+   EiReplyOrRequestPort(ConnectionRequest->Sender, LpcMessage, LPC_REPLY);
+   ExFreePool(ConnectionRequest);
    
    ObDereferenceObject(NamedPort);
     
@@ -226,7 +416,7 @@ NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle)
    PEPORT OurPort;
    
    Status = ObReferenceObjectByHandle(PortHandle,
-				      1,   /* AccessRequired */
+				      PORT_ALL_ACCESS,
 				      ExPortType,
 				      UserMode,
 				      (PVOID*)&OurPort,
@@ -236,148 +426,40 @@ NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle)
 	return(Status);
      }
    
-   if (OurPort->State != EPORT_WAIT_FOR_COMPLETE_SRV)
-     {
-	ObDereferenceObject(OurPort);
-	return(Status);
-     }
+   KeSetEvent(&OurPort->OtherPort->Event, IO_NO_INCREMENT, FALSE);
    
-   OurPort->State = EPORT_CONNECTED;
-   OurPort->OtherPort->State = EPORT_CONNECTED;
-   
-   KeSetEvent(&OurPort->NamedPort->Event, IO_NO_INCREMENT, FALSE);
+   ObDereferenceObject(OurPort);
    
    return(STATUS_SUCCESS);
 }
-
-
-NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
-				IN	PUNICODE_STRING		PortName,
-				IN	POBJECT_ATTRIBUTES	PortAttributes,
-				IN	DWORD			a3,
-				IN	DWORD			a4,
-				IN	DWORD			a5,
-				IN	DWORD			a6,
-				IN	ULONG			Flags)
-/*
- * FUNCTION: Connect to a named port and wait for the other side to 
- * accept the connection
- */
-{
-   NTSTATUS Status;
-   PEPORT NamedPort;
-   PEPORT OurPort;
-   HANDLE OurPortHandle;
-   
-   DPRINT("NtConnectPort(PortName %w)\n", PortName->Buffer);
-   
-   Status = ObReferenceObjectByName(PortName,
-				    0,
-				    NULL,
-				    1,  /* DesiredAccess */
-				    ExPortType,
-				    UserMode,
-				    NULL,
-				    (PVOID*)&NamedPort);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("Failed to reference named port (status %x)\n", Status);
-	return(Status);
-     }
-   
-   if (NamedPort->State != EPORT_WAIT_FOR_CONNECT)
-     {
-	DPRINT("Named port is in the wrong state\n");
-	ObDereferenceObject(NamedPort);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   /*
-    * Create a port to represent our side of the connection
-    */
-   OurPort = ObCreateObject(&OurPortHandle,
-			    1,
-			    PortAttributes,
-			    ExPortType);
-   NiInitializePort(OurPort);
-   OurPort->NamedPort = NamedPort;
-   
-   /*
-    * 
-    */
-   NamedPort->ConnectingProcess = PsGetCurrentProcess();
-   NamedPort->State = EPORT_WAIT_FOR_ACCEPT;
-   NamedPort->ConnectingPort = OurPort;
-   
-   /*
-    * Tell the other side they have a connection
-    */
-   KeSetEvent(&NamedPort->Event, IO_NO_INCREMENT, FALSE);
-   
-   DPRINT("Waiting for connection completion\n");
-   
-   /*
-    * Wait for them to accept our connection
-    */
-   KeWaitForSingleObject(&NamedPort->Event,
-			 UserRequest,
-			 UserMode,
-			 FALSE,
-			 NULL);
-   
-   *ConnectedPort = OurPortHandle;
-   
-   DPRINT("Exited successfully\n");
-   
-   return(STATUS_SUCCESS);
-}
-
 
 NTSTATUS STDCALL NtImpersonateClientOfPort (IN	HANDLE		PortHandle,
-					    IN	PCLIENT_ID	ClientId)
+					    IN	PLPCMESSAGE ClientMessage)
 {
    UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL NtListenPort (IN HANDLE PortHandle,
-			       IN DWORD	QueueSize	/* guess */)
+			       IN PLPCMESSAGE ConnectMsg)
 /*
  * FUNCTION: Listen on a named port and wait for a connection attempt
  */
 {
    NTSTATUS Status;
-   PEPORT Port;
    
-   DPRINT("NtListenPort(PortHandle %x, QueueSize %d)\n",
-	  PortHandle, QueueSize);
-   
-   Status = ObReferenceObjectByHandle(PortHandle,
-				      1,   /* AccessRequired */
-				      ExPortType,
-				      UserMode,
-				      (PVOID*)&Port,
-				      NULL);
-   if (!NT_SUCCESS(Status))
+   for(;;)
      {
-	DPRINT("Failed to reference object (status %x)\n",
-	       Status);
-	return(Status);
+	Status = NtReplyWaitReceivePort(PortHandle,
+					NULL,
+					NULL,
+					ConnectMsg);
+	if (!NT_SUCCESS(Status) || 
+	    ConnectMsg->MessageType == LPC_CONNECTION_REQUEST)
+	  {
+	     break;
+	  }
      }
-   
-   if (Port->State != EPORT_INACTIVE)
-     {
-	ObDereferenceObject(Port);
-	return(STATUS_INVALID_PARAMETER);
-     }
-   
-   Port->State = EPORT_WAIT_FOR_CONNECT;
-   Status = KeWaitForSingleObject(&Port->Event,
-				  UserRequest,
-				  UserMode,
-				  FALSE,
-				  NULL);
-   
    return(Status);
 }
 
@@ -391,48 +473,153 @@ NTSTATUS STDCALL NtQueryInformationPort (IN HANDLE PortHandle,
    UNIMPLEMENTED;
 }
 
+
 NTSTATUS STDCALL NtReplyPort (IN HANDLE PortHandle,
-			      IN PLPC_MESSAGE LpcReply	/* guess */)
+			      IN PLPCMESSAGE LpcReply)
 {
-	UNIMPLEMENTED;
+   NTSTATUS Status;
+   PEPORT Port
+   
+   DPRINT("NtReplyPort(PortHandle %x, LpcReply %x)\n", PortHandle, LpcReply);
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      PORT_ALL_ACCESS,   /* AccessRequired */
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NtReplyPort() = %x\n", Status);
+	return(Status);
+     }
+   
+   Status = EiReplyOrRequestPort(Port, LpcReply, LPC_REPLY);
+   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
+   
+   ObDereferenceObject(Port);
+   
+   return(Status);
 }
 
 
-NTSTATUS STDCALL NtReplyWaitReceivePort ( IN	HANDLE		PortHandle,
-					 IN	PLPC_MESSAGE	LpcReply,	/* guess */
-					 OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
-					 OUT	PULONG		MessageLength	/* guess */)
+NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
+					 PVOID Unknown,
+					 IN	PLPCMESSAGE	LpcReply,     
+					 OUT	PLPCMESSAGE	LpcMessage)
 {
-   UNIMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL NtReplyWaitReplyPort (IN	HANDLE		PortHandle,
-				       IN OUT	PLPC_MESSAGE	LpcReply	/* guess */)
-{
-   UNIMPLEMENTED;
+   NTSTATUS Status;
+   PEPORT Port;
+   KIRQL oldIrql;
+   PQUEUEDMESSAGE Request;
+   
+   DPRINT("NtReplyWaitReceivePort(PortHandle %x, LpcReply %x, "
+	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      PORT_ALL_ACCESS,
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NtReplyWaitReceivePort() = %x\n", Status);
+	return(Status);
+     }
+   
+   /*
+    * Send the reply
+    */
+   if (LpcReply != NULL)
+     {
+	Status = EiReplyOrRequestPort(Port, LpcReply, LPC_REPLY);
+	KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
+	
+	if (!NT_SUCCESS(Status))
+	  {
+	     ObDereferenceObject(Port);
+	     return(Status);
+	  }
+     }
+   
+   /*
+    * Want for a message to be received
+    */
+   KeWaitForSingleObject(&Port->Event,
+			 UserRequest,
+			 UserMode,
+			 FALSE,
+			 NULL);
+   
+   /*
+    * Dequeue the message
+    */
+   KeAcquireSpinLock(&Port->Lock, &oldIrql);
+   Request = EiDequeueMessagePort(Port);
+   memcpy(LpcMessage, &Request->Message, sizeof(*LpcMessage));
+   if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
+     {
+	EiEnqueueConnectMessagePort(Port, Request);
+	KeReleaseSpinLock(&Port->Lock, oldIrql);
+     }
+   else
+     {
+	KeReleaseSpinLock(&Port->Lock, oldIrql);
+	ExFreePool(Request);
+     }
+   
+   /*
+    * 
+    */
+   ObDereferenceObject(Port);
+   return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
-				IN PLPC_MESSAGE	LpcMessage	/* guess */)
-{
-   return(NtRequestWaitReplyPort(PortHandle, NULL, LpcMessage));
-}
-
-
-NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
-					IN OUT PLPC_MESSAGE LpcReply,	/* guess */
-					OUT PLPC_MESSAGE LpcMessage 	/* guess */)
+				IN PLPCMESSAGE	LpcMessage	/* guess */)
 {
    NTSTATUS Status;
    PEPORT Port;
    
-   DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcReply %x, "
-	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+   DPRINT("NtRequestPort(PortHandle %x LpcMessage %x)\n", PortHandle, 
+	  LpcMessage);
    
    Status = ObReferenceObjectByHandle(PortHandle,
-				      1,   /* AccessRequired */
+				      PORT_ALL_ACCESS,
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NtRequestPort() = %x\n", Status);
+	return(Status);
+     }
+
+   Status = EiReplyOrRequestPort(Port, LpcMessage, LPC_DATAGRAM);
+   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
+   
+   ObDereferenceObject(Port);
+   return(Status);
+}
+
+
+NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
+					PLPCMESSAGE LpcRequest,    
+					PLPCMESSAGE LpcReply)
+{
+   NTSTATUS Status;
+   PEPORT Port;
+   PQUEUEDMESSAGE Message;
+   KIRQL oldIrql;
+   
+   DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcRequest %x, "
+	  "LpcReply %x)\n", PortHandle, LpcRequest, LpcReply);
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      PORT_ALL_ACCESS, 
 				      ExPortType,
 				      UserMode,
 				      (PVOID*)&Port,
@@ -442,50 +629,18 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
 	return(Status);
      }
    
-   DPRINT("Port %x Port->OtherPort %x Port->OtherPort->OtherPort %x\n",
-	  Port, Port->OtherPort, Port->OtherPort->OtherPort);
    
-   if (LpcMessage != NULL)
-     {
-	DPRINT("Copying message onto other port's queue\n");
-	
-	DPRINT("LpcMessage->Length %d\n", LpcMessage->Length);
-	
-	/*
-	 * Put the message on the other port's queue
-	 */
-	Port->OtherPort->Msg.Type = LpcMessage->Type;
-	Port->OtherPort->Msg.Length = LpcMessage->Length;
-	Port->OtherPort->Msg.Buffer = ExAllocatePool(NonPagedPool, 
-						Port->OtherPort->Msg.Length);
-	memcpy(Port->OtherPort->Msg.Buffer, LpcMessage->Buffer, 
-	       Port->OtherPort->Msg.Length);
-	Port->OtherPort->Msg.Flags = LpcMessage->Flags;
-	Port->OtherPort->Msg.Sender = PsGetCurrentProcess();
-	Port->OtherPort->NumberOfQueuedMessages++;
-	
-	DPRINT("Waking other side\n");
-	
-	/*
-	 * Wake up the other side (if it's waiting)
-	 */
-	KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
-	
-     }
+   Status = EiReplyOrRequestPort(Port, LpcRequest, LPC_REQUEST);
+   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
    
-   /*
-    * If we aren't waiting for a reply then return
-    */
-   if (LpcReply == NULL)
+   if (!NT_SUCCESS(Status))
      {
 	ObDereferenceObject(Port);
-	return(STATUS_SUCCESS);
+	return(Status);
      }
    
-   DPRINT("Wait for other side to reply\n");
-   
    /*
-    * Wait the other side to reply to you
+    * Wait for a reply
     */
    KeWaitForSingleObject(&Port->Event,
 			 UserRequest,
@@ -493,32 +648,23 @@ NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
 			 FALSE,
 			 NULL);
    
-   DPRINT("Copy reply from our port\n");
-   
    /*
-    * Copy the received message into the process's address space
+    * Dequeue the reply
     */
-   DPRINT("LpcReply->Length %d\n", LpcReply->Length);
-   
-   LpcReply->Length = Port->Msg.Length;
-   LpcReply->Type = Port->Msg.Type;
-   memcpy(LpcReply->Buffer, Port->Msg.Buffer, LpcReply->Length);
-   LpcReply->Flags = Port->Msg.Flags;
-   
-   DPRINT("Freeing message\n");
-   
-   /*
-    * Deallocate the message and remove it from the other side's queue
-    */
-   ExFreePool(Port->Msg.Buffer);
-   Port->NumberOfQueuedMessages--;
-   
-   DPRINT("Finished with success\n");
+   KeAcquireSpinLock(&Port->Lock, &oldIrql);
+   Message = EiDequeueMessagePort(Port);
+   KeReleaseSpinLock(&Port->Lock, oldIrql);
+   memcpy(LpcReply, &Message->Message, sizeof(*LpcReply));
+   ExFreePool(Message);
    
    return(STATUS_SUCCESS);
 }
 
- 
+NTSTATUS STDCALL NtReplyWaitReplyPort(PVOID a, PVOID b)
+{
+   UNIMPLEMENTED;
+}
+
 /**********************************************************************
  * NAME							SYSTEM
  *	NtReadRequestData				NOT EXPORTED

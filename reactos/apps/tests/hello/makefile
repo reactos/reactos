@@ -1,11 +1,10 @@
 #
 #
 #
-OBJECTS = ../common/crt0.o hello.o
+OBJECTS = hello.o
 PROGS = hello.exe
-LIBS = ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
+LIBS = 
 CLEAN_FILES = hello.o hello.exe
-BASE_CFLAGS = -I../../include
 
 all: hello.exe
 
@@ -34,7 +33,7 @@ else
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
-hello.exe: $(OBJECTS) $(LIBS)
-	$(LD) $(OBJECTS) $(LIBS) -o hello.exe
+hello.exe: $(OBJECTS)
+	$(CC) $(OBJECTS) -o hello.exe
 
 include ../../rules.mak

@@ -37,6 +37,6 @@ endif
 
 cat.exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) -o cat.exe
-	$(NM) --numeric-sort cat.exe > args.sym
+	$(NM) --numeric-sort cat.exe > cat.sym
 
 include ../../rules.mak

@@ -25,6 +25,7 @@ void main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE NamedPortHandle;
    HANDLE PortHandle;
+   LPCMESSAGE ConnectMsg;
    
    printf("(lpcsrv.exe) Lpc test server\n");
    
@@ -37,8 +38,8 @@ void main(int argc, char* argv[])
    
    printf("(lpcsrv.exe) Creating port\n");
    Status = NtCreatePort(&NamedPortHandle,
-			 0,
 			 &ObjectAttributes,
+			 0,
 			 0,
 			 0);
    if (!NT_SUCCESS(Status))
@@ -50,7 +51,7 @@ void main(int argc, char* argv[])
    
    printf("(lpcsrv.exe) Listening for connections\n");
    Status = NtListenPort(NamedPortHandle,
-			 0);
+			 &ConnectMsg);
    if (!NT_SUCCESS(Status))
      {
 	printf("(lpcsrv.exe) Failed to listen for connections\n");
@@ -58,12 +59,12 @@ void main(int argc, char* argv[])
      }
    
    printf("(lpcsrv.exe) Accepting connections\n");
-   Status = NtAcceptConnectPort(NamedPortHandle,
-				&PortHandle,
+   Status = NtAcceptConnectPort(&PortHandle,
+				NamedPortHandle,
+				NULL,
+				1,
 				0,
-				0,
-				0,
-				0);
+				NULL);
    if (!NT_SUCCESS(Status))
      {
 	printf("(lpcsrv.exe) Failed to accept connection\n");
@@ -80,20 +81,18 @@ void main(int argc, char* argv[])
    
    for(;;)
      {
-	LPC_MESSAGE Request;
-	char buffer[255];
+	LPCMESSAGE Request;
 	
-	Request.Buffer = buffer;
-	
-	Status = NtRequestWaitReplyPort(PortHandle,
-					&Request,
-					NULL);
+	Status = NtReplyWaitReceivePort(PortHandle,
+					0,
+					NULL,
+					&Request);
 	if (!NT_SUCCESS(Status))
 	  {
 	     printf("(lpcsrv.exe) Failed to receive request\n");
 	     return;
 	  }
 	
-	printf("(lpcsrv.exe) Message contents are <%s>\n", Request.Buffer);
+	printf("(lpcsrv.exe) Message contents are <%s>\n", Request.MessageData);
      }
 }
