@@ -276,6 +276,14 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 		{
 		  PrevBlock->NextWaitBlock = current->NextWaitBlock;
 		}
+	      current->NextWaitBlock = NULL;
+	      /* if the last block is the timeout block then remove this block */
+              PrevBlock = current->Thread->WaitBlockList;
+	      if (PrevBlock == &current->Thread->WaitBlock[3] && PrevBlock->NextWaitBlock == NULL)
+		{
+	          RemoveEntryList(&current->Thread->WaitBlock[3].WaitListEntry);
+                  current->Thread->WaitBlockList = NULL;
+		}
 	    }
 	}
       KiSideEffectsBeforeWake(hdr, current->Thread, &Abandoned);
@@ -341,6 +349,14 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
                    PrevBlock->NextWaitBlock = current->NextWaitBlock;
                 }
 	   }
+	current->NextWaitBlock = NULL;
+	/* if the last block is the timeout block then remove this block */
+        PrevBlock = current->Thread->WaitBlockList;
+	if (PrevBlock == &current->Thread->WaitBlock[3] && PrevBlock->NextWaitBlock == NULL)
+           {
+	       RemoveEntryList(&current->Thread->WaitBlock[3].WaitListEntry);
+               current->Thread->WaitBlockList = NULL;
+           }
     }
 
   DPRINT("Waking %x\n",current->Thread);
@@ -348,8 +364,11 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
   Status = current->WaitKey;
   if (Abandoned)
     Status += STATUS_ABANDONED_WAIT_0;
-  PsUnblockThread(CONTAINING_RECORD(current->Thread, ETHREAD, Tcb),
-		  &Status);
+      if (current->Thread->WaitBlockList == NULL)
+	{
+	  PsUnblockThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
+			  &Status);
+	}
   return(TRUE);
 }
 
@@ -465,11 +484,11 @@ KeWaitForSingleObject(PVOID Object,
 	*/
        if (KiIsObjectSignalled(hdr, CurrentThread, &Abandoned))
 	 {
-	   KeReleaseDispatcherDatabaseLock(FALSE);
 	   if (Timeout != NULL)
 	     {
-	       KeCancelTimer(&KeGetCurrentThread()->Timer);
+	       KeCancelTimer(&CurrentThread->Timer);
 	     }
+	   KeReleaseDispatcherDatabaseLock(FALSE);
 	   if (Abandoned == TRUE)
 	     return(STATUS_ABANDONED_WAIT_0);
 	   return(STATUS_WAIT_0);
@@ -481,11 +500,8 @@ KeWaitForSingleObject(PVOID Object,
        if (Timeout != NULL && 
 	   KiIsObjectSignalled(&CurrentThread->Timer.Header, CurrentThread, NULL))
 	 {
+	   KeCancelTimer(&CurrentThread->Timer);
 	   KeReleaseDispatcherDatabaseLock(FALSE);
-	   if (Timeout != NULL)
-	     {
-	       KeCancelTimer(&KeGetCurrentThread()->Timer);
-	     }
 	   return(STATUS_TIMEOUT);
 	 }
        
@@ -504,14 +520,14 @@ KeWaitForSingleObject(PVOID Object,
        if (Timeout != NULL)
 	 {
 	   CurrentThread->WaitBlock[0].NextWaitBlock = 
-	     &CurrentThread->WaitBlock[1];
-	   CurrentThread->WaitBlock[1].Object = (PVOID)&CurrentThread->Timer;
-	   CurrentThread->WaitBlock[1].Thread = CurrentThread;
-	   CurrentThread->WaitBlock[1].WaitKey = STATUS_TIMEOUT;
-	   CurrentThread->WaitBlock[1].WaitType = WaitAny;
-	   CurrentThread->WaitBlock[1].NextWaitBlock = NULL;
+	     &CurrentThread->WaitBlock[3];
+	   CurrentThread->WaitBlock[3].Object = (PVOID)&CurrentThread->Timer;
+	   CurrentThread->WaitBlock[3].Thread = CurrentThread;
+	   CurrentThread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
+	   CurrentThread->WaitBlock[3].WaitType = WaitAny;
+	   CurrentThread->WaitBlock[3].NextWaitBlock = NULL;
 	   InsertTailList(&CurrentThread->Timer.Header.WaitListHead,
-			  &CurrentThread->WaitBlock[1].WaitListEntry);
+			  &CurrentThread->WaitBlock[3].WaitListEntry);
 	 }
        else
 	 {
@@ -522,7 +538,7 @@ KeWaitForSingleObject(PVOID Object,
    
    if (Timeout != NULL)
      {
-       KeCancelTimer(&KeGetCurrentThread()->Timer);
+       KeCancelTimer(&CurrentThread->Timer);
      }
 
    DPRINT("Returning from KeWaitForSingleObject()\n");
@@ -567,7 +583,7 @@ KeWaitForMultipleObjects(ULONG Count,
 		   __FILE__,__LINE__);
 	  return(STATUS_UNSUCCESSFUL);
         }
-      blk = &CurrentThread->WaitBlock[0];
+      WaitBlockArray = &CurrentThread->WaitBlock[0];
     }
   else
     {
@@ -577,7 +593,6 @@ KeWaitForMultipleObjects(ULONG Count,
 		   __FILE__,__LINE__);
 	  return(STATUS_UNSUCCESSFUL);
         }
-      blk = WaitBlockArray;
     }
 
   /*
@@ -616,6 +631,10 @@ KeWaitForMultipleObjects(ULONG Count,
 	       
 	       if (WaitType == WaitAny)
 		 {
+	           if (Timeout != NULL)
+		   {
+	                KeCancelTimer(&CurrentThread->Timer);
+		   }
 		   KeReleaseDispatcherDatabaseLock(FALSE);
 		   DPRINT("One object is already signaled!\n");
 		   if (Abandoned == TRUE)
@@ -627,6 +646,10 @@ KeWaitForMultipleObjects(ULONG Count,
        
        if ((WaitType == WaitAll) && (CountSignaled == Count))
 	 {
+	   if (Timeout != NULL)
+	     {
+	       KeCancelTimer(&CurrentThread->Timer);
+	     }
 	   KeReleaseDispatcherDatabaseLock(FALSE);
 	   DPRINT("All objects are already signaled!\n");
 	   return(STATUS_WAIT_0);
@@ -638,20 +661,18 @@ KeWaitForMultipleObjects(ULONG Count,
        if (Timeout != NULL && 
 	   KiIsObjectSignalled(&CurrentThread->Timer.Header, CurrentThread, NULL))
 	 {
+           KeCancelTimer(&CurrentThread->Timer);
 	   KeReleaseDispatcherDatabaseLock(FALSE);
-	   if (Timeout != NULL)
-	     {
-	       KeCancelTimer(&KeGetCurrentThread()->Timer);
-	     }
 	   return(STATUS_TIMEOUT);
 	 }
 
        /* Append wait block to the KTHREAD wait block list */
-       CurrentThread->WaitBlockList = blk;
+       CurrentThread->WaitBlockList = blk = WaitBlockArray;
   
        /*
 	* Set up the wait
 	*/
+       CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
        for (i = 0; i < Count; i++)
 	 {
 	   hdr = (DISPATCHER_HEADER *)Object[i];
@@ -696,7 +717,7 @@ KeWaitForMultipleObjects(ULONG Count,
   
   if (Timeout != NULL)
     {
-      KeCancelTimer(&KeGetCurrentThread()->Timer);
+      KeCancelTimer(&CurrentThread->Timer);
     }
 
   DPRINT("Returning from KeWaitForMultipleObjects()\n");
