@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.10 2003/07/20 03:45:31 hyperion Exp $
+/* $Id: accel.c,v 1.11 2003/07/23 20:39:45 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -238,11 +238,15 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
  */
 HACCEL WINAPI LoadAcceleratorsA(HINSTANCE hInstance, LPCSTR lpTableName)
 {
- return U32LoadAccelerators
- (
-  hInstance, 
-  FindResourceExA(hInstance, MAKEINTRESOURCEA(RT_ACCELERATOR), lpTableName, 0)
- );
+  HRSRC Accel;
+
+  Accel = FindResourceExA(hInstance, MAKEINTRESOURCEA(RT_ACCELERATOR), lpTableName, 0);
+  if (NULL == Accel)
+    {
+      return NULL;
+    }
+
+  return U32LoadAccelerators(hInstance, Accel);
 }
 
 /*
