@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.29 2004/01/01 17:08:38 sedwards Exp $
+; $Id: msvcrt.def,v 1.30 2004/02/24 15:42:06 vizzini Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -126,9 +126,9 @@ __iscsymf
 __mb_cur_max DATA
 __p___argc
 __p___argv
+__p___wargv
 __p___initenv
 __p___mb_cur_max
-;__p___wargv
 ;__p___winitenv
 __p__acmdln
 ;__p__amblksiz
