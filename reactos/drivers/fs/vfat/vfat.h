@@ -121,7 +121,6 @@ typedef struct
   LIST_ENTRY     NextCCB;
   PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;
-  ULONG StartSector; // for DirectoryControl
   ULONG StartEntry;  //for DirectoryControl
 //    PSTRING DirectorySearchPattern;// for DirectoryControl ?
 } VfatCCB, *PVfatCCB;
@@ -156,27 +155,27 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 
 //internal functions in iface.c :
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
-          PVfatFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
+          PVfatFCB Parent, PWSTR FileToFind,ULONG *Entry);
 NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject);
 NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
                                    PFILE_STANDARD_INFORMATION StandardInfo);
 NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
              PWSTR FileName);
-NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB pFcb,
 		     PVOID Buffer, ULONG Length, ULONG ReadOffset,
              PULONG LengthRead);
-NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-              PVOID Buffer, ULONG Length, ULONG WriteOffset);
+NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB pFcb,
+             PVOID Buffer, ULONG Length, ULONG WriteOffset);
 ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster);
-BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset);
-BOOLEAN IsLastEntry(PVOID Block, ULONG Offset);
+BOOLEAN IsDeletedEntry(FATDirEntry *pEntry);
+BOOLEAN IsLastEntry(FATDirEntry *pEntry);
 wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
 void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
 
 //internal functions in dirwr.c
 NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
                   ,PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr);
-NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
+NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PVfatFCB pFcb);
 
 
 //FIXME : following defines must be removed
