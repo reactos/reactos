@@ -661,7 +661,7 @@ NdisRegisterProtocol(
   UINT MinSize;
   HANDLE DriverKeyHandle = NULL;
   PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
-  UINT DataOffset = 0;
+  WCHAR *DataPtr;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -807,8 +807,9 @@ NdisRegisterProtocol(
       }
   }
 
-  DataOffset = 0;
-  while((KeyInformation->Data)[DataOffset])
+  for (DataPtr = (WCHAR *)KeyInformation->Data;
+       *DataPtr != 0;
+       DataPtr += wcslen(DataPtr) + 1)
     {
       /* BindContext is for tracking pending binding operations */
       VOID *BindContext = 0;
@@ -817,7 +818,7 @@ NdisRegisterProtocol(
       WCHAR *RegistryPathStr = NULL;
       ULONG PathLength = 0;
 
-      RtlInitUnicodeString(&DeviceName, (WCHAR *)KeyInformation->Data);	/* we know this is 0-term */
+      RtlInitUnicodeString(&DeviceName, DataPtr);	/* we know this is 0-term */
 
       /*
        * RegistryPath should be:
@@ -828,7 +829,7 @@ NdisRegisterProtocol(
        */
 
       PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
-          wcslen( ((WCHAR *)KeyInformation->Data)+8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
+          wcslen( DataPtr + 8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
           sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
           ProtocolCharacteristics->Name.Length;                         /* Tcpip                                                */
 
@@ -881,8 +882,6 @@ NdisRegisterProtocol(
           // what to do here?
         }
        */
-
-      DataOffset += wcslen((WCHAR *)KeyInformation->Data);
     }
 
   *Status             = NDIS_STATUS_SUCCESS;
