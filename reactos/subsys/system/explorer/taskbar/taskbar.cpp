@@ -274,8 +274,14 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			if (!last_id)
 				found->second._id = pThis->_next_id++;
 		} else {
+			HBITMAP hbmp;
 			HICON hIcon = get_window_icon(hwnd);
-			HBITMAP hbmp = hIcon? create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), WindowCanvas(pThis->_htoolbar)): 0;
+
+			if (hIcon) {
+				hbmp = create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), WindowCanvas(pThis->_htoolbar));
+				DestroyIcon(hIcon); // some icons can be freed, some not - so ignore any error return of DestroyIcon()
+			} else
+				hbmp = 0;
 
 			TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 			int bmp_idx = SendMessage(pThis->_htoolbar, TB_ADDBITMAP, 1, (LPARAM)&ab);
@@ -358,6 +364,7 @@ void TaskBar::Refresh()
 	//EnumDesktopWindows(GetThreadDesktop(GetCurrentThreadId()), EnumWndProc, (LPARAM)_htoolbar);
 
 	set<int> btn_idx_to_delete;
+	set<HBITMAP> hbmp_to_delete;
 
 	for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it) {
 		TaskBarEntry& entry = it->second;
@@ -365,6 +372,7 @@ void TaskBar::Refresh()
 		if (!entry._used && entry._id) {
 			 // store button indexes to remove
 			btn_idx_to_delete.insert(entry._btn_idx);
+			hbmp_to_delete.insert(entry._hbmp);
 			entry._id = 0;
 		}
 	}
@@ -383,6 +391,21 @@ void TaskBar::Refresh()
 				if (entry._btn_idx > idx)
 					--entry._btn_idx;
 			}
+		}
+
+		for(set<HBITMAP>::iterator it=hbmp_to_delete.begin(); it!=hbmp_to_delete.end(); ++it) {
+			HBITMAP hbmp = *it;
+
+			TBREPLACEBITMAP tbrepl = {0, (UINT_PTR)hbmp, 0, 0};
+			SendMessage(_htoolbar, TB_REPLACEBITMAP, 0, (LPARAM)&tbrepl);
+
+			DeleteObject(hbmp);
+
+			for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it)
+				if (it->second._hbmp == hbmp) {
+					_map.erase(it);
+					break;
+				}
 		}
 
 		SendMessage(_htoolbar, TB_AUTOSIZE, 0, 0);	///@todo useless?
