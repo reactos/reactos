@@ -26,7 +26,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
-#include "winnetwk.h"
 #include "netspi.h"
 #include "wine/debug.h"
 #include "winerror.h"
@@ -212,4 +211,3 @@ LPVOID WINAPI NPSNotifyGetContextA( NOTIFYCALLBACK pfNotifyCallBack )
     FIXME( "(%p): stub\n", pfNotifyCallBack );
     return NULL;
 }
-
