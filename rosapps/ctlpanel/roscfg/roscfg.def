@@ -6,4 +6,4 @@
 ;
 LIBRARY roscfg.cpl
 EXPORTS
-CPlApplet
+CPlApplet@16

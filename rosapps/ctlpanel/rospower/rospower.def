@@ -6,4 +6,4 @@
 ;
 LIBRARY rospower.cpl
 EXPORTS
-CPlApplet
+CPlApplet@16
