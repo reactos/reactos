@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.88 2003/10/12 20:23:25 gvg Exp $
+/* $Id: dc.c,v 1.89 2003/10/20 17:57:05 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -413,6 +413,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
     PrimarySurface.GDIInfo.ulLogPixelsY = 96;
   }
+  GDIOBJ_MarkObjectGlobal(PrimarySurface.DevInfo.hpalDefault);
 
   DPRINT("calling completePDev\n");
 

@@ -66,6 +66,8 @@ BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, DWORD ObjectType);
 BOOL    FASTCALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 DWORD   FASTCALL GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle);
+BOOL    FASTCALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
+void    FASTCALL GDIOBJ_TakeOwnership(HGDIOBJ ObjectHandle);
 
 /* a couple macros for debugging GDIOBJ locking */
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)

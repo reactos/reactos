@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.47 2003/10/16 03:26:51 vizzini Exp $
+ * $Id: gdiobj.c,v 1.48 2003/10/20 17:57:05 gvg Exp $
  *
  */
 
@@ -63,6 +63,8 @@
 #define GDI_TYPE_TO_MAGIC(t) ((WORD) ((t) >> 16))
 #define GDI_MAGIC_TO_TYPE(m) ((DWORD)(m) << 16)
 
+/* FIXME Ownership of GDI objects by processes not properly implemented yet */
+#if 0
 #define GDI_VALID_OBJECT(h, obj, t, f) \
   (NULL != (obj) \
    && (GDI_MAGIC_TO_TYPE((obj)->Magic) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
@@ -70,6 +72,12 @@
    && (((obj)->hProcessId == PsGetCurrentProcessId()) \
        || (GDI_GLOBAL_PROCESS == (obj)->hProcessId) \
        || ((f) & GDIOBJFLAG_IGNOREPID)))
+#else
+#define GDI_VALID_OBJECT(h, obj, t, f) \
+  (NULL != (obj) \
+   && (GDI_MAGIC_TO_TYPE((obj)->Magic) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
+   && (GDI_HANDLE_GET_TYPE((h)) == GDI_MAGIC_TO_TYPE((obj)->Magic)))
+#endif
 
 typedef struct _GDI_HANDLE_TABLE
 {
@@ -438,7 +446,7 @@ GDIOBJ_UnmarkObjectGlobal(HGDIOBJ ObjectHandle)
 
   DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
   ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
-  if (NULL == ObjHdr || GDI_GLOBAL_PROCESS != ObjHdr->hProcessId)
+  if (NULL == ObjHdr /*|| GDI_GLOBAL_PROCESS != ObjHdr->hProcessId*/)
     {
       return;
     }
@@ -620,6 +628,8 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       else if (ObjHdr->hProcessId != GDI_GLOBAL_PROCESS
 	   && ObjHdr->hProcessId != PsGetCurrentProcessId())
 	{
+DPRINT1("object proc 0x%x current proc 0x%x\n", ObjHdr->hProcessId, PsGetCurrentProcessId());
+__asm__("int $3\n");
 	  reason = 3;
 	}
       else if (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
@@ -753,6 +763,31 @@ GDIOBJ_UnlockObj(HGDIOBJ hObj, DWORD ObjectType)
   ExReleaseFastMutex(&RefCountHandling);
 
   return TRUE;
+}
+
+BOOL FASTCALL
+GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
+{
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+
+  DPRINT("GDIOBJ_OwnedByCurrentProcess: ObjectHandle: 0x%08x\n", ObjectHandle);
+  ASSERT(GDI_VALID_OBJECT(ObjectHandle, ObjHdr, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_IGNOREPID));
+
+  return ObjHdr->hProcessId == PsGetCurrentProcessId();
+}
+
+void FASTCALL
+GDIOBJ_TakeOwnership(HGDIOBJ ObjectHandle)
+{
+  PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+
+  DPRINT("GDIOBJ_OwnedByCurrentProcess: ObjectHandle: 0x%08x\n", ObjectHandle);
+  ASSERT(GDI_VALID_OBJECT(ObjectHandle, ObjHdr, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_IGNOREPID));
+
+  if (GDI_GLOBAL_PROCESS != ObjHdr->hProcessId)
+    {
+      ObjHdr->hProcessId = PsGetCurrentProcessId();
+    }
 }
 
 /* EOF */

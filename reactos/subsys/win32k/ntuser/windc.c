@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.32 2003/10/17 21:35:45 gvg Exp $
+/* $Id: windc.c,v 1.33 2003/10/20 17:57:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -266,6 +266,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   BOOL UpdateVisRgn = TRUE;
   BOOL UpdateClipOrigin = FALSE;
   HANDLE hRgnVisible = NULL;
+  PDC DC;
 
   if (NULL == hWnd)
     {
@@ -380,6 +381,28 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	{
 	  Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
 	}
+      else if (! GDIOBJ_OwnedByCurrentProcess(Dce->Self))
+        {
+          GDIOBJ_TakeOwnership(Dce->Self);
+          GDIOBJ_TakeOwnership(Dce->hDC);
+          DC = DC_LockDc(Dce->hDC);
+          if (NULL != DC)
+            {
+              if (NULL != DC->w.hClipRgn)
+                {
+                  GDIOBJ_TakeOwnership(DC->w.hClipRgn);
+                }
+              if (NULL != DC->w.hVisRgn)
+                {
+                  GDIOBJ_TakeOwnership(DC->w.hVisRgn);
+                }
+              if (NULL != DC->w.hGCClipRgn)
+                {
+                  GDIOBJ_TakeOwnership(DC->w.hGCClipRgn);
+                }
+              DC_UnlockDc(Dce->hDC);
+            }
+        }
     }
   else
     {
