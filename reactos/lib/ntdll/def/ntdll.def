@@ -23,6 +23,7 @@ CsrProbeForWrite@12
 CsrSetPriorityClass@8
 DbgBreakPoint@0
 DbgPrint
+DbgPrintEx
 DbgPrompt@12
 DbgSsHandleKmApiMsg@8
 DbgSsInitialize@16
