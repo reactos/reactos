@@ -8,6 +8,7 @@
 #include <user32/menu.h>
 #include <user32/nc.h>
 #include <user32/heapdup.h>
+#include <user32/widgets.h>
 
 #include <wchar.h>
 //#include <stdlib.h>
@@ -1177,7 +1178,7 @@ WINBOOL MENU_PatchResidentPopup( HQUEUE checkQueue, WND* checkWnd )
 	{
 //	    assert( uSubPWndLevel == 0 );
 
-	    pTopPopupWnd = WIN_FindWndPtr(CreateWindowA( POPUPMENU_CLASS_ATOM, NULL,
+	    pTopPopupWnd = WIN_FindWndPtr(CreateWindowA( POPUPMENU_CLASS_NAME, NULL,
 					  WS_POPUP, x, y, width, height,
 					  hwndOwner, 0, wndOwner->hInstance,
 					  (LPVOID)hmenu ));
@@ -1189,7 +1190,7 @@ WINBOOL MENU_PatchResidentPopup( HQUEUE checkQueue, WND* checkWnd )
 	    {
 		/* create a new window for the submenu */
 
-		menu->hWnd = CreateWindowA( POPUPMENU_CLASS_ATOM, NULL,
+		menu->hWnd = CreateWindowA( POPUPMENU_CLASS_NAME, NULL,
 					  WS_POPUP, x, y, width, height,
 					  menu->hWnd, 0, wndOwner->hInstance,
 					  (LPVOID)hmenu );

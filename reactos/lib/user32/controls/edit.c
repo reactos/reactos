@@ -17,6 +17,7 @@
 #include <user32/nc.h>
 #include <user32/resource.h>
 #include <user32/combo.h>
+#include <user32/widgets.h>
 #include <user32/debug.h>
 
 #define MAX(x,y) x > y ? x : y 

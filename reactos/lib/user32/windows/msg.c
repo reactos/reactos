@@ -269,7 +269,7 @@ LRESULT STDCALL SendMessageA( HWND hwnd, UINT msg, WPARAM wParam,
 	MSG_CallWndProcHook( (LPMSG)&hwnd, FALSE);
 
   
-    return MSG_SendMessage(wndPtr,msg,wParam,lParam,FALSE);
+    return MSG_SendMessage(wndPtr,msg,wParam,lParam);
 }
 
 
@@ -295,7 +295,7 @@ LRESULT STDCALL SendMessageW(  HWND hwnd,  UINT msg,  WPARAM wParam,
 	MSG_CallWndProcHook( (LPMSG)&hwnd, FALSE);
 
   
-    return MSG_SendMessage(wndPtr,msg,wParam,lParam,TRUE);
+    return MSG_SendMessage(wndPtr,msg,wParam,lParam);
 }
 
 /***********************************************************************

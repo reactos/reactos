@@ -428,16 +428,5 @@ LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 }
 
 
-/***********************************************************************
- *           FillWindow    (USER.324)
- */
-void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush )
-{
-    RECT rect;
-    GetClientRect( hwnd, &rect );
-   // DPtoLP16( hdc, (LPPOINT16)&rect, 2 );
-   // PaintRect( hwndParent, hwnd, hdc, hbrush, &rect );
-}
-
 
 
