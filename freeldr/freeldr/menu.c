@@ -141,6 +141,8 @@ void InitMenu(void)
 	nOSListBoxRight = nOSListBoxLeft + width;
 	nOSListBoxTop = (nScreenHeight - height) / 2 + 1;
 	nOSListBoxBottom = nOSListBoxTop + height;
+
+	nOSSelected = 0;
 }
 
 void DrawMenu(void)

@@ -40,6 +40,21 @@
 # define EXT_C(sym)                     sym
 #endif
 
+#define MB_INFO_FLAG_MEM_SIZE			0x00000001
+#define MB_INFO_FLAG_BOOT_DEVICE		0x00000002
+#define MB_INFO_FLAG_COMMAND_LINE		0x00000004
+#define MB_INFO_FLAG_MODULES			0x00000008
+#define MB_INFO_FLAG_AOUT_SYMS			0x00000010
+#define MB_INFO_FLAG_ELF_SYMS			0x00000020
+#define MB_INFO_FLAG_MEMORY_MAP			0x00000040
+#define MB_INFO_FLAG_DRIVES				0x00000080
+#define MB_INFO_FLAG_CONFIG_TABLE		0x00000100
+#define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
+#define MB_INFO_FLAG_APM_TABLE			0x00000400
+#define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+
 #ifndef ASM
 /* Do not include here in boot.S. */
 
@@ -116,14 +131,22 @@ typedef struct memory_map
   unsigned long type;
 } memory_map_t;
 
+
+multiboot_header_t		mb_header;							// Multiboot header structure defined in kernel image file
+multiboot_info_t		mb_info;							// Multiboot info structure passed to kernel
+char					multiboot_kernel_cmdline[255];		// Command line passed to kernel
+module_t				multiboot_modules[64];				// Array to hold boot module info loaded for the kernel
+char					multiboot_module_strings[64][256];	// Array to hold module names
+
+
+void	boot_reactos(void);
+
+BOOL	MultiBootLoadKernel(FILE *KernelImage);
+BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
+int		GetBootPartition(char *OperatingSystemName);
+
+
 #endif /* ! ASM */
-
-
-multiboot_header_t	mb_header;				// Multiboot header structure defined in kernel image file
-multiboot_info_t	mb_info;				// Multiboot info structure passed to kernel
-char			multiboot_kernel_cmdline[255];		// Command line passed to kernel
-module_t		multiboot_modules[64];			// Array to hold boot module info loaded for the kernel
-char			multiboot_module_strings[64][256];	// Array to hold module names
 
 
 #endif // defined __MULTIBOOT_H

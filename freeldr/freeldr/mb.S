@@ -20,14 +20,16 @@
 	.text
 	.code16
 
+#define ASM
 #include "asmcode.h"
+#include "multiboot.h"
 
 	/*
      * Here we assume the kernel is loaded at 1mb
      * This boots the kernel
 	 */
 	.code32
-EXTERN(_boot_ros)
+EXTERN(_boot_reactos)
 	call	switch_to_real
 	.code16
 

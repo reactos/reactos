@@ -20,7 +20,7 @@
 #include "freeldr.h"
 #include "stdlib.h"
 #include "fs.h"
-#include "rosboot.h"
+#include "reactos.h"
 #include "tui.h"
 #include "asmcode.h"
 #include "menu.h"
@@ -114,6 +114,8 @@ void BootMain(void)
 			LoadAndBootDrive(nOSToBoot);
 			break;
 		}
+
+		DrawBackdrop()
 	}
 
 	MessageBox("Press any key to reboot.");

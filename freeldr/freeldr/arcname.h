@@ -1,6 +1,8 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+ *  FreeLoader - arcname.h
+ *
+ *  Copyright (C) 2001  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2001  Eric Kohl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,31 +19,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-	.text
-	.code16
+#ifndef __ARCNAME_H
+#define __ARCNAME_H
 
-#define ASM
-#include "asmcode.h"
-#include "multiboot.h"
+BOOL	DissectArcPath(char *ArcPath, char *BootPath, unsigned int *BootDrive, unsigned int *BootPartition);
+//BOOL	ConvertBiosDriveToArcName()
+//BOOL	ConvertArcNameToBiosDrive()
 
-
-	.code32
-EXTERN(_JumpToBootCode)
-	call	switch_to_real
-	.code16
-
-	/* Set the boot drive */
-	movb	(_BootDrive),%dl
-
-	ljmpl	$0x0000,$0x7C00
-
-
-	.code32
-EXTERN(_JumpToLinuxBootCode)
-	call	switch_to_real
-	.code16
-
-	/* Set the boot drive */
-	movb	(_BootDrive),%dl
-
-	ljmpl	$0x0200,$0x9000
+#endif // defined __ARCNAME_H

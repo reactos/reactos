@@ -20,6 +20,7 @@
 	.text
 	.code16
 
+#define ASM
 #include "asmcode.h"
 
 

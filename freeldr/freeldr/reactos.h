@@ -20,30 +20,8 @@
 #ifndef __ROSBOOT_H
 #define __ROSBOOT_H
 
-#include "freeldr.h"
-#include "stdlib.h"
-#include "pe.h"
-
-#define PACKED __attribute__((packed))
-
-#define MB_INFO_FLAG_MEM_SIZE			0x00000001
-#define MB_INFO_FLAG_BOOT_DEVICE		0x00000002
-#define MB_INFO_FLAG_COMMAND_LINE		0x00000004
-#define MB_INFO_FLAG_MODULES			0x00000008
-#define MB_INFO_FLAG_AOUT_SYMS			0x00000010
-#define MB_INFO_FLAG_ELF_SYMS			0x00000020
-#define MB_INFO_FLAG_MEMORY_MAP			0x00000040
-#define MB_INFO_FLAG_DRIVES				0x00000080
-#define MB_INFO_FLAG_CONFIG_TABLE		0x00000100
-#define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
-#define MB_INFO_FLAG_APM_TABLE			0x00000400
-#define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
 
 void	LoadAndBootReactOS(char *OperatingSystemName);
-BOOL	MultiBootLoadKernel(FILE *KernelImage);
-BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
-void	enable_a20(void);
-void	boot_ros(void);
 
 
 #endif // defined __ROSBOOT_H

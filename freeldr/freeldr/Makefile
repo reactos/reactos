@@ -28,10 +28,11 @@ export CP = cmd /C copy
 FLAGS = -Wall -fno-builtin
 
 # asmcode.o has to be first in the link line because it contains the startup code
-OBJS = asmcode.a asmcode.o multiboot.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
-	rosboot.o tui.o menu.o miscboot.o options.o linux.o
-ASM_OBJS = asmcode.o multiboot.o boot.o
-C_OBJS = freeldr.o stdlib.o fs.a rosboot.o tui.o menu.o miscboot.o options.o linux.o
+OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o stdlib.o fs.a fs.o fs_fat.o \
+	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o
+ASM_OBJS = asmcode.o mb.o boot.o
+C_OBJS = freeldr.o stdlib.o fs.a reactos.o tui.o menu.o miscboot.o options.o linux.o \
+	multiboot.o arcname.o
 
 all:	freeldr.sys
 
@@ -47,7 +48,7 @@ c_code.a:	$(C_OBJS)
 asmcode.o:	asmcode.S asmcode.h Makefile
 	$(CC) $(FLAGS) -o asmcode.o -c asmcode.S
 
-freeldr.o:	freeldr.c freeldr.h stdlib.h fs.h rosboot.h tui.h asmcode.h menu.h miscboot.h Makefile
+freeldr.o:	freeldr.c freeldr.h stdlib.h fs.h reactos.h tui.h asmcode.h menu.h miscboot.h Makefile
 	$(CC) $(FLAGS) -o freeldr.o -c freeldr.c
 
 stdlib.o:	stdlib.c freeldr.h stdlib.h Makefile
@@ -62,11 +63,14 @@ fs.o:	fs.c freeldr.h fs.h stdlib.h tui.h asmcode.h Makefile
 fs_fat.o:	fs_fat.c freeldr.h fs.h stdlib.h tui.h Makefile
 	$(CC) $(FLAGS) -o fs_fat.o -c fs_fat.c
 
-rosboot.o:	rosboot.c freeldr.h rosboot.h stdlib.h fs.h tui.h multiboot.h Makefile
-	$(CC) $(FLAGS) -o rosboot.o -c rosboot.c
+reactos.o:	reactos.c freeldr.h reactos.h stdlib.h fs.h tui.h multiboot.h Makefile
+	$(CC) $(FLAGS) -o reactos.o -c reactos.c
 
-multiboot.o:	multiboot.S asmcode.h multiboot.h Makefile
-	$(CC) $(FLAGS) -o multiboot.o -c multiboot.S
+multiboot.o:	multiboot.c freeldr.h stdlib.h fs.h multiboot.h tui.h Makefile
+	$(CC) $(FLAGS) -o multiboot.o -c multiboot.c
+
+mb.o:	mb.S asmcode.h multiboot.h Makefile
+	$(CC) $(FLAGS) -o mb.o -c mb.S
 
 tui.o:	tui.c freeldr.h stdlib.h tui.h Makefile
 	$(CC) $(FLAGS) -o tui.o -c tui.c
@@ -86,5 +90,10 @@ options.o:	options.c freeldr.h stdlib.h tui.h options.h Makefile
 linux.o:	linux.c freeldr.h stdlib.h tui.h linux.h Makefile
 	$(CC) $(FLAGS) -o linux.o -c linux.c
 
+arcname.o:	arcname.c freeldr.h arcname.h stdlib.h Makefile
+	$(CC) $(FLAGS) -o arcname.o -c arcname.c
+
 clean:
-	$(RM) $(OBJS)
+	$(RM) *.o
+	$(RM) *.a
+	$(RM) freeldr.sys

@@ -55,3 +55,11 @@
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:
 
+
+
+
+#ifndef ASM
+
+void	enable_a20(void);
+
+#endif /* ! ASM */
