@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.46 2004/04/07 16:38:27 weiden Exp $
+/* $Id: bitblt.c,v 1.47 2004/04/07 19:57:43 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -571,9 +571,11 @@ IntEngBitBlt(SURFOBJ *DestObj,
 
   if (! ret)
     {
+      IntLockGDIDriver(DestGDI);
       ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
                       Rop4);
+      IntUnLockGDIDriver(DestGDI);
     }
 
   MouseSafetyOnDrawEnd(DestObj, DestGDI);
