@@ -2,6 +2,8 @@
 #include <msvcrt/string.h>
 #include <msvcrt/internal/tls.h>
 
+char** _lasttoken(); /* lasttok.c */
+
 /*
  * @implemented
  */
@@ -10,9 +12,14 @@ char* strtok(char* s, const char* delim)
   const char *spanp;
   int c, sc;
   char *tok;
+#if 1
+  char ** lasttoken = _lasttoken();
+#else
   PTHREADDATA ThreadData = GetThreadData();
+  char ** lasttoken = &ThreadData->lasttoken;
+#endif
 
-  if (s == NULL && (s = ThreadData->lasttoken) == NULL)
+  if (s == NULL && (s = *lasttoken) == NULL)
     return (NULL);
 
   /*
@@ -26,7 +33,7 @@ char* strtok(char* s, const char* delim)
   }
 
   if (c == 0) {			/* no non-delimiter characters */
-    ThreadData->lasttoken = NULL;
+    *lasttoken = NULL;
     return (NULL);
   }
   tok = s - 1;
@@ -44,7 +51,7 @@ char* strtok(char* s, const char* delim)
 	  s = NULL;
 	else
 	  s[-1] = 0;
-	ThreadData->lasttoken = s;
+	*lasttoken = s;
 	return (tok);
       }
     } while (sc != 0);

@@ -1,6 +1,8 @@
 #include <msvcrt/string.h>
 #include <msvcrt/internal/tls.h>
 
+wchar_t** _wlasttoken(); /* wlasttok.c */
+
 /*
  * @implemented
  */
@@ -9,9 +11,14 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 	const wchar_t *spanp;
 	int c, sc;
 	wchar_t *tok;
+#if 1
+	wchar_t ** wlasttoken = _wlasttoken();
+#else
 	PTHREADDATA ThreadData = GetThreadData();
+	wchar_t ** wlasttoken = &ThreadData->wlasttoken;
+#endif
 
-	if (s == NULL && (s = ThreadData->wlasttoken) == NULL)
+	if (s == NULL && (s = *wlasttoken) == NULL)
 		return (NULL);
 
 	/*
@@ -26,7 +33,7 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 	}
 
 	if (c == 0) {			/* no non-ctiter characters */
-		ThreadData->wlasttoken = NULL;
+		*wlasttoken = NULL;
 		return (NULL);
 	}
 	tok = s - 2;
@@ -45,7 +52,7 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 					s = NULL;
 				else
 					s[-1] = 0;
-				ThreadData->wlasttoken = s;
+				*wlasttoken = s;
 				return (tok);
 			}
 			spanp+=2;

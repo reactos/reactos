@@ -1,5 +1,12 @@
 2003-07-16  Royce Mitchell III <royce3@ev1.net>
 
+	* modifed strtok & wcstok in msvcrt so that crtdll can use it.
+	* new private support functions _lasttoken and _wlasttoken to support
+	strtok and wcstok respectively.
+	* fixed lib/msvcrt/stdio/vfscanf.c to remove unnecessary globals.
+
+2003-07-16  Royce Mitchell III <royce3@ev1.net>
+
 	* fixed warnings at lib/msvcrt/stdio/fputs.c:79
 	and lib/msvcrt/stdlib/errno.c:14
 	and lib/msvcrt/stdlib/wputenv.c:24

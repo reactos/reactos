@@ -103,25 +103,21 @@ unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int
 # define flockfile(S) /* nothing */
 # define funlockfile(S) /* nothing */
 
-  char *wp = NULL;		/* Workspace.  */
-  size_t wpmax = 0;		/* Maximal size of workspace.  */
-  size_t wpsize = 0;		/* Currently used bytes in workspace.  */
-
-
-void ADDW(int Ch)	\
-{
-  if (wpsize == wpmax)
-    {
-      char *old = wp;
-      wpmax = UCHAR_MAX > 2 * wpmax ? UCHAR_MAX : 2 * wpmax;
-      wp = (char *) malloc (wpmax);
-	  if (old != NULL) {					    
-	  memcpy (wp, old, wpsize);
-	  free(old);
-	}
-    }
-  wp[wpsize++] = (Ch);
-}
+# define ADDW(Ch)							      \
+do{									      \
+  if (wpsize == wpmax)							      \
+    {									      \
+      char *old = wp;							      \
+      wpmax = UCHAR_MAX > 2 * wpmax ? UCHAR_MAX : 2 * wpmax;		      \
+      wp = (char *) malloc (wpmax);					      \
+      if (old != NULL)							      \
+	{								      \
+	  memcpy (wp, old, wpsize);					      \
+	  free(old);							      \
+	}								      \
+    }									      \
+  wp[wpsize++] = (Ch);							      \
+}while(0)
 
 
 int __vfscanf (FILE *s, const char *format, va_list argptr)
@@ -165,6 +161,9 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
      available anymore.  */
   int skip_space = 0;
   /* Workspace.  */
+  char *wp = NULL;		/* Workspace.  */
+  size_t wpmax = 0;		/* Maximal size of workspace.  */
+  size_t wpsize = 0;		/* Currently used bytes in workspace.  */
   char *tw;			/* Temporary pointer.  */
 
 #ifdef __va_copy

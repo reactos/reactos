@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.37 2003/07/16 13:29:01 royce Exp $
+# $Id: Makefile,v 1.38 2003/07/16 21:54:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -400,6 +400,7 @@ STDLIB_OBJECTS = \
 	stdlib/wtoi64.o
 
 STRING_OBJECTS = \
+	string/lasttok.o \
 	string/memicmp.o \
 	string/strcoll.o \
 	string/strdup.o \
@@ -452,7 +453,8 @@ WSTRING_OBJECTS = \
 	wstring/wcsstr.o \
 	wstring/wcstok.o \
 	wstring/wcsupr.o \
-	wstring/wcsxfrm.o
+	wstring/wcsxfrm.o \
+	wstring/wlasttok.o
 
 OBJECTS = \
 	$(CONIO_OBJECTS) \

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.57 2003/07/15 19:27:24 royce Exp $
+# $Id: makefile,v 1.58 2003/07/16 21:54:22 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -353,7 +353,7 @@ STDIO_OBJECTS = \
 	$(PATH_TO_MSVCRT)/stdio/tmpnam.o \
 	$(PATH_TO_MSVCRT)/stdio/ungetc.o \
 	stdio/vfprintf.o \
-	stdio/vfscanf.o \
+	$(PATH_TO_MSVCRT)/stdio/vfscanf.o \
 	stdio/vfwprint.o \
 	$(PATH_TO_MSVCRT)/stdio/vprintf.o \
 	$(PATH_TO_MSVCRT)/stdio/vscanf.o \
@@ -398,7 +398,8 @@ STDLIB_OBJECTS = \
 	$(PATH_TO_MSVCRT)/stdlib/wcstomb.o \
 
 STRING_OBJECTS = \
-	string/strtok.o \
+	string/lasttok.o \
+	$(PATH_TO_MSVCRT)/string/strtok.o \
 	string/str_old.o \
 	string/strerror.o \
 
@@ -440,7 +441,9 @@ TIME_OBJECTS = \
 	$(PATH_TO_MSVCRT)/time/strtime.o \
 	time/tz_vars.o \
 
-WSTRING_OBJECTS = 
+WSTRING_OBJECTS = \
+	$(PATH_TO_MSVCRT)/wstring/wcstok.o \
+	wchar/wlasttok.o
 
 #	wchar/wcscoll.o \
 #	wchar/wcstod.o \
