@@ -1,1 +1,1 @@
-loadros system32\ntoskrnl.exe system32\hal.dll system32\drivers\ide.sys system32\drivers\vfatfs.sys
+loadros system32\ntoskrnl.exe system32\hal.dll system32\drivers\ide.sys system32\drivers\vfatfs.sys system32\config\system.hiv
