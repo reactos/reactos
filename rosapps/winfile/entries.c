@@ -254,7 +254,7 @@ void scan_entry(ChildWnd* child, Entry* entry)
 // expand a directory entry
 BOOL expand_entry(ChildWnd* child, Entry* dir)
 {
-	int idx;
+	int idx = 0;
 	Entry* p;
 
 	if (!dir || dir->expanded || !dir->down)

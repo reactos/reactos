@@ -1,5 +1,5 @@
 /*
- *  ReactOS Application Debug Routines
+ *  ReactOS Application Network support routines
  *
  *  network.h
  *

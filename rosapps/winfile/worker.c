@@ -92,7 +92,7 @@ void MonitorThreadProc(void *lpParameter)
     HWND hWnd = (HWND)lpParameter;
 
 	// Create the event
-	hMonitorThreadEvent = CreateEvent(NULL, TRUE, TRUE, "Winfile Monitor Event");
+	hMonitorThreadEvent = CreateEvent(NULL, TRUE, TRUE, _T("Winfile Monitor Event"));
 
 	// If we couldn't create the event then exit the thread
 	if (!hMonitorThreadEvent)

@@ -7,8 +7,6 @@
 #include "windows.h"
 #include "trace.h"
 
-DeclAssertFile;  // Should be added at the begining of each .C/.CPP
-
 
 #ifdef _DEBUG
 

@@ -308,7 +308,7 @@ void NetworkMonitorThreadProc(void *lpParameter)
     HWND hWnd = (HWND)lpParameter;
 
 	// Create the event
-	hNetworkMonitorThreadEvent = CreateEvent(NULL, TRUE, TRUE, "Winfile Network Monitor Event");
+	hNetworkMonitorThreadEvent = CreateEvent(NULL, TRUE, TRUE, _T("Winfile Network Monitor Event"));
 
 	// If we couldn't create the event then exit the thread
 	if (!hNetworkMonitorThreadEvent)

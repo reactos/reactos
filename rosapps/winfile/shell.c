@@ -72,7 +72,7 @@ void FormatDisk(HWND hWnd)
         if (pSHFormatDrive)	{
 		    UINT OldMode = SetErrorMode(0); // Get the current Error Mode settings.
 		    SetErrorMode(OldMode & ~SEM_FAILCRITICALERRORS); // Force O/S to handle
-            pSHFormatDrive(hWnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
+            pSHFormatDrive(0/*hWnd*/, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
 		    SetErrorMode(OldMode); // Put it back the way it was. 			
         }
         FreeLibrary(hShell32);

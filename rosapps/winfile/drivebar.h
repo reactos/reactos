@@ -1,9 +1,9 @@
 /*
- *  ReactOS File Manager
+ *  ReactOS Application Drivebar support routines
  *
- *  run.h
+ *  drivebar.h
  *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,29 +19,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
-// run.h - definitions necessary to use Microsoft's "Run" dialog
-// Undocumented Windows call
-// use the type below to declare a function pointer
-
-// Information taken from http://www.geocities.com/SiliconValley/4942/
-// Copyright © 1998-1999 James Holderness. All Rights Reserved.
-// jholderness@geocities.com
-
-#ifndef __RUN_H__
-#define __RUN_H__
+    
+#ifndef __DRIVEBAR_H__
+#define __DRIVEBAR_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-void OnFileRun(void);
-BOOL OpenTarget(HWND hWnd, TCHAR* target);
+void ConfigureDriveBar(HWND hDriveBar);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __RUN_H__
+#endif // __DRIVEBAR_H__

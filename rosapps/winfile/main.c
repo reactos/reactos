@@ -170,16 +170,25 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         {
 #define DRIVEBOX_WIDTH  200
 #define DRIVEBOX_HEIGHT 8
-
+/*
+typedef struct _TBBUTTON {
+    int iBitmap; 
+    int idCommand; 
+    BYTE fsState; 
+    BYTE fsStyle; 
+    DWORD dwData; 
+    INT_PTR iString; 
+} TBBUTTON, NEAR* PTBBUTTON, FAR* LPTBBUTTON; 
+ */
 		TBBUTTON toolbarBtns[] = {
 			{DRIVEBOX_WIDTH+10, 0, 0, TBSTYLE_SEP},
 			{0, 0, 0, TBSTYLE_SEP},
 
 //			{1, ID_FILE_OPEN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_OPEN }, 
-			{2, ID_FILE_MOVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_MOVE}, 
-			{3, ID_FILE_COPY, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_COPY}, 
-			{4, ID_FILE_COPY_CLIPBOARD, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_COPY_CLIPBOARD}, 
-			{5, ID_FILE_DELETE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_DELETE}, 
+//			{2, ID_FILE_MOVE, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_MOVE}, 
+//			{3, ID_FILE_COPY, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_COPY}, 
+//			{4, ID_FILE_COPY_CLIPBOARD, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, ID_FILE_COPY_CLIPBOARD}, 
+			{5, ID_FILE_DELETE, TBSTATE_ENABLED, TBSTYLE_BUTTON}, 
 			{6, ID_FILE_RENAME, TBSTATE_ENABLED, TBSTYLE_BUTTON}, 
 			{7, ID_FILE_PROPERTIES, TBSTATE_ENABLED, TBSTYLE_BUTTON}, 
 			{8, ID_FILE_COMPRESS, TBSTATE_ENABLED, TBSTYLE_BUTTON}, 
@@ -258,7 +267,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
             // Create the edit control. Notice that the parent of
             // the toolbar, is used as the parent of the edit control.    
             //hWndEdit = CreateWindowEx(0L, WC_COMBOBOXEX, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
-            Globals.hDriveCombo = CreateWindowEx(0L, "ComboBox", NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
+            Globals.hDriveCombo = CreateWindowEx(0L, _T("ComboBox"), NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
                 | CBS_DROPDOWNLIST | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
                 10, 0, DRIVEBOX_WIDTH, DRIVEBOX_HEIGHT, Globals.hMainWnd, (HMENU)IDW_DRIVEBOX, hInstance, 0);
             // Set the toolbar window as the parent of the edit control

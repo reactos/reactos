@@ -24,10 +24,9 @@ PATH_TO_TOP = ..
 
 TARGET = winfile
 
-BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400
+BASE_CFLAGS = -D_WIN32_IE=0x0400
 
-RCFLAGS = -DGCC -D_WIN32_IE=0x0400
-
+RCFLAGS = -D_WIN32_IE=0x0400
 
 OBJS =	about.o \
         childwnd.o \
@@ -61,23 +60,25 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-about.o:	about.c about.h resource.h
+main.h:		resource.h makefile 
 
-main.o:		main.c main.h childwnd.h framewnd.h resource.h
+about.o:	about.c about.h main.h
 
-childwnd.o:	childwnd.c childwnd.h resource.h
+main.o:		main.c main.h childwnd.h framewnd.h main.h
 
-framewnd.o:	framewnd.c framewnd.h resource.h
+childwnd.o:	childwnd.c childwnd.h main.h
 
-debug.o:	debug.c debug.h
+framewnd.o:	framewnd.c framewnd.h main.h
 
-font.o:		font.c font.h
+debug.o:	debug.c debug.h main.h
 
-run.o:		run.c run.h
+font.o:		font.c font.h main.h
 
-setttings.o:	setttings.c setttings.h resource.h
+run.o:		run.c run.h main.h
 
-$(TARGET).o:	$(TARGET).c $(TARGET).h resource.h
+setttings.o:	setttings.c setttings.h  main.h
+
+$(TARGET).o:	$(TARGET).c $(TARGET).h main.h makefile
 
 
 clean:

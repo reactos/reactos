@@ -37,8 +37,8 @@
 #include <windowsx.h>
 #include <shellapi.h>
 #include <ctype.h>
-#include <assert.h>
-#define ASSERT assert
+//#include <assert.h>
+//#define ASSERT assert
 
 #include "main.h"
 #include "treeview.h"

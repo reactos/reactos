@@ -47,7 +47,7 @@ TCHAR ViewTypeMaskStr[MAX_TYPE_MASK_LEN];
 void LoadSettings(void)
 {
     HKEY    hKey;
-    char    szSubKey[] = "Software\\ReactWare\\FileManager";
+    TCHAR   szSubKey[] = _T("Software\\ReactWare\\FileManager");
 /*
     int     i;
     DWORD   dwSize;
@@ -154,9 +154,9 @@ void LoadSettings(void)
 void SaveSettings(void)
 {
     HKEY hKey;
-    char szSubKey1[] = "Software";
-    char szSubKey2[] = "Software\\ReactWare";
-    char szSubKey3[] = "Software\\ReactWare\\FileManager";
+    TCHAR szSubKey1[] = _T("Software");
+    TCHAR szSubKey2[] = _T("Software\\ReactWare");
+    TCHAR szSubKey3[] = _T("Software\\ReactWare\\FileManager");
 
     // Open (or create) the key
     hKey = NULL;

@@ -1,5 +1,5 @@
 /*
- *  ReactOS Application Debug Routines
+ *  ReactOS Application Shell support routines
  *
  *  shell.h
  *
