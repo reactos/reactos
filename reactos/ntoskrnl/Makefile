@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.81 2002/09/07 15:12:47 chorns Exp $
+# $Id: Makefile,v 1.82 2002/09/07 16:44:12 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -34,7 +34,7 @@ endif
 
 ifeq ($(strip $(SDK_PATH_INC)),)
 ASFLAGS += -I./include
-CFLAGS += --I./include -D_NTOSKRNL_ $(CFLAGS_DBG) -Wall -Werror
+CFLAGS += -I./include -D_NTOSKRNL_ $(CFLAGS_DBG) -Wall -Werror
 else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
 CFLAGS += -I./include -I$(SDK_PATH_INC) -D_NTOSKRNL_ $(CFLAGS_DBG) -Wall -Werror
