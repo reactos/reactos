@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.26 2004/03/04 00:07:02 navaraf Exp $
+/* $Id: ppool.c,v 1.27 2004/03/30 09:28:44 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,8 +20,8 @@
 
 /* GLOBALS *******************************************************************/
 
-/* Enable strict checking of the paged pool on every allocation */
-#define ENABLE_VALIDATE_POOL
+/* Define to enable strict checking of the paged pool on every allocation */
+/* #define ENABLE_VALIDATE_POOL */
 
 #undef assert
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
