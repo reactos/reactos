@@ -37,4 +37,12 @@ MiLockVirtualMemory(HANDLE ProcessHandle,
   PMmProbeAndLockPages pMmProbeAndLockPages,
   PExFreePool pExFreePool);
 
+NTSTATUS FASTCALL
+MiQueryVirtualMemory (IN HANDLE ProcessHandle,
+                      IN PVOID Address,
+                      IN CINT VirtualMemoryInformationClass,
+                      OUT PVOID VirtualMemoryInformation,
+                      IN ULONG Length,
+                      OUT PULONG ResultLength);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_TEST_H */
