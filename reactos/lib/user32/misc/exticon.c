@@ -48,7 +48,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "user32/cursoricon.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
