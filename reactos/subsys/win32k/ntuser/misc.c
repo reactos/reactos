@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.49 2004/02/15 07:39:12 gvg Exp $
+/* $Id: misc.c,v 1.50 2004/02/16 07:25:01 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -546,37 +546,6 @@ NtUserSystemParametersInfo(
           SetLastNtError(Status);
           return FALSE;
         }
-        return TRUE;
-      }
-    case SPI_GETNONCLIENTMETRICS:
-      {
-        /* FIXME - use MmCopyToCaller() !!! */
-        LPNONCLIENTMETRICSW pMetrics = (LPNONCLIENTMETRICSW)pvParam;
-    
-        if (pMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 
-            uiParam != sizeof(NONCLIENTMETRICSW))
-        {
-          return FALSE;
-        }
-
-        memset((char *)pvParam + sizeof(pMetrics->cbSize), 0,
-          pMetrics->cbSize - sizeof(pMetrics->cbSize));
-
-        pMetrics->iBorderWidth = 1;
-        pMetrics->iScrollWidth = NtUserGetSystemMetrics(SM_CXVSCROLL);
-        pMetrics->iScrollHeight = NtUserGetSystemMetrics(SM_CYHSCROLL);
-        pMetrics->iCaptionWidth = NtUserGetSystemMetrics(SM_CXSIZE);
-        pMetrics->iCaptionHeight = NtUserGetSystemMetrics(SM_CYSIZE);
-        memcpy((LPVOID)&(pMetrics->lfCaptionFont), &CaptionFont, sizeof(CaptionFont));
-        pMetrics->lfCaptionFont.lfWeight = FW_BOLD;
-        pMetrics->iSmCaptionWidth = NtUserGetSystemMetrics(SM_CXSMSIZE);
-        pMetrics->iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
-        memcpy((LPVOID)&(pMetrics->lfSmCaptionFont), &CaptionFont, sizeof(CaptionFont));
-        pMetrics->iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
-        pMetrics->iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
-        memcpy((LPVOID)&(pMetrics->lfMenuFont), &CaptionFont, sizeof(CaptionFont));
-        memcpy((LPVOID)&(pMetrics->lfStatusFont), &CaptionFont, sizeof(CaptionFont));
-        memcpy((LPVOID)&(pMetrics->lfMessageFont), &CaptionFont, sizeof(CaptionFont));
         return TRUE;
       }
     case SPI_GETGRADIENTCAPTIONS:
