@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.3 2004/08/07 19:13:25 ion Exp $
+/* $Id: version.c,v 1.4 2004/11/07 18:45:52 hyperion Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -97,5 +97,67 @@ RtlVerifyVersionInfo(
 	return STATUS_NOT_IMPLEMENTED;
 }
 */
+
+/*
+ Header hell made me do it, don't blame me. Please move these somewhere more
+ sensible
+*/
+#define VER_EQUAL         1
+#define VER_GREATER       2
+#define VER_GREATER_EQUAL 3
+#define VER_LESS          4
+#define VER_LESS_EQUAL    5
+#define VER_AND           6
+#define VER_OR            7
+
+#define VER_CONDITION_MASK              7
+#define VER_NUM_BITS_PER_CONDITION_MASK 3
+
+#define VER_MINORVERSION     0x0000001
+#define VER_MAJORVERSION     0x0000002
+#define VER_BUILDNUMBER      0x0000004
+#define VER_PLATFORMID       0x0000008
+#define VER_SERVICEPACKMINOR 0x0000010
+#define VER_SERVICEPACKMAJOR 0x0000020
+#define VER_SUITENAME        0x0000040
+#define VER_PRODUCT_TYPE     0x0000080
+
+/*
+ * @implemented
+ */
+ULONGLONG NTAPI VerSetConditionMask
+(
+ IN ULONGLONG dwlConditionMask,
+ IN DWORD dwTypeBitMask,
+ IN BYTE dwConditionMask
+)
+{
+ if(dwTypeBitMask == 0)
+  return dwlConditionMask;
+
+ dwConditionMask &= VER_CONDITION_MASK;
+
+ if(dwConditionMask == 0)
+  return dwlConditionMask;
+
+ if(dwTypeBitMask & VER_PRODUCT_TYPE)
+  dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_SUITENAME)
+  dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_SERVICEPACKMAJOR)
+  dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_SERVICEPACKMINOR)
+  dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_PLATFORMID)
+  dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_BUILDNUMBER)
+  dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_MAJORVERSION)
+  dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+ else if(dwTypeBitMask & VER_MINORVERSION)
+  dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+
+ return dwlConditionMask;
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.110 2004/11/07 13:08:24 hyperion Exp $
+# $Id: makefile,v 1.111 2004/11/07 18:45:52 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -122,9 +122,6 @@ STRING_OBJECTS = \
 	string/strupr.o \
 	string/wstring.o
 
-VER_OBJECTS = \
-	ver/ver.o
-
 ARCH_OBJECTS = \
 	$(RTL_I386_OBJECTS)
 
@@ -137,8 +134,7 @@ TARGET_OBJECTS = \
 	$(RTL_OBJECTS) \
 	$(STDIO_OBJECTS) \
 	$(STDLIB_OBJECTS) \
-	$(STRING_OBJECTS) \
-        $(VER_OBJECTS)
+	$(STRING_OBJECTS)
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER = napi.%

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.197 2004/10/30 23:48:57 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.198 2004/11/07 18:45:52 hyperion Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1281,6 +1281,7 @@ SeTokenType@4
 SeUnlockSubjectContext@4
 SeUnregisterLogonSessionTerminatedRoutine@4
 SeValidSecurityDescriptor@8
+VerSetConditionMask@16
 WRITE_REGISTER_UCHAR@8
 WRITE_REGISTER_ULONG@8
 WRITE_REGISTER_USHORT@8
