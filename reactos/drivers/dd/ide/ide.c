@@ -57,6 +57,11 @@
 // FIXME: finish implementation of QueryInformation
 // FIXME: finish implementation of SetInformation
 // FIXME: finish implementation of DeviceControl
+// FIXME: bring up to ATA-3 spec
+// FIXME: add general support for ATAPI devices
+// FIXME: add support for ATAPI CDROMs
+// FIXME: add support for ATAPI ZIP drives/RHDs
+// FIXME: add support for ATAPI tape drives
 
 #include <ddk/ntddk.h>
 
@@ -107,6 +112,7 @@ IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] =
   {0x0168, 8, 0x0368, 8, 10, 10, 15, LevelSensitive, 0xffff}
 };
 
+static BOOLEAN IDEInitialized = FALSE;
 static int TotalPartitions = 0;
 
 //  -----------------------------------------------  Discardable Declarations
@@ -248,6 +254,11 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     {
       WeGotSomeDisks |= IDECreateController(DriverObject, 
           &Controllers[ControllerIdx], ControllerIdx);
+    }
+
+  if (WeGotSomeDisks)
+    {
+      IDEInitialized = TRUE;
     }
 
   return  WeGotSomeDisks ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
@@ -538,7 +549,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
           ControllerExtension->TimerState = IDETimerIdle;
           ControllerExtension->TimerCount = 0;
           ControllerExtension->TimerDevice = RawDeviceObject;
-//          IoInitializeTimer(RawDeviceObject, IDEIoTimer, ControllerExtension);
+          IoInitializeTimer(RawDeviceObject, IDEIoTimer, ControllerExtension);
         }
     }
 
@@ -554,7 +565,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     {
 
         //  build devices for all partitions in table
-      DPRINT("partitions on Harddisk%d:\n", HarddiskIdx);
+      DPRINT("partitions on %s:\n", DeviceDirName);
       for (PartitionIdx = 0; PartitionIdx < 4; PartitionIdx++) 
         {
 
@@ -564,8 +575,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
             //  if the partition entry is in use, create a device for it
           if (PartitionIsSupported(p)) 
             {
-              DPRINT("Harddisk%d type:%02x Offset:%d Size:%d\n",
-                     HarddiskIdx, 
+              DPRINT("%s ptbl entry:%d type:%02x Offset:%d Size:%d\n",
+                     DeviceDirName,
+                     PartitionIdx, 
                      p->PartitionType, 
                      p->StartingBlock, 
                      p->SectorCount);
@@ -920,6 +932,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
   if (Win32Alias != NULL)
     {
+      DPRINT("Creating SymLink %s --> %s\n", DeviceName, Win32Alias);
       RtlInitAnsiString(&AnsiSymLink, Win32Alias);
       RtlAnsiStringToUnicodeString(&SymLink, &AnsiSymLink, TRUE);
       IoCreateSymbolicLink(&SymLink, &UnicodeName);
@@ -1131,7 +1144,6 @@ IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO,
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
   DeviceExtension = (PIDE_DEVICE_EXTENSION)pDO->DeviceExtension;
-  DPRINT("MajorFunction %d\n", IrpStack->MajorFunction);
 
     //  Validate operation parameters
   AdjustedOffset = RtlEnlargedIntegerMultiply(DeviceExtension->Offset, 
@@ -1304,14 +1316,10 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       DeviceExtension->BytesRequested -= DeviceExtension->BytesToTransfer;
       DeviceExtension->SectorsTransferred = 0;
       DeviceExtension->TargetAddress = (BYTE *)MmGetSystemAddressForMdl(Irp->MdlAddress);
-DPRINT("UserBuffer %x MdlAddress %x TargetAddress %x\n", 
-       Irp->UserBuffer, 
-       Irp->MdlAddress, 
-       DeviceExtension->TargetAddress);
-KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
       IoAllocateController(DeviceExtension->ControllerObject,
           DeviceObject, IDEAllocateController, NULL);
-KeLowerIrql(OldIrql);
+      KeLowerIrql(OldIrql);
       break;
 
     default:
@@ -1523,6 +1531,11 @@ IDEIsr(IN PKINTERRUPT Interrupt,
   PIRP  Irp;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
+
+  if (IDEInitialized == FALSE)
+    {
+      return FALSE;
+    }
 
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) ServiceContext;
 
