@@ -305,7 +305,6 @@ static void print_message_buffer_size(func_t *func)
             if (last_size != -1)
                 fprintf(server, " +");
             fprintf(server, " %dU", (size == 0) ? 0 : size + alignment);
-            printf("1: %dU", (size == 0) ? 0 : size + alignment);
 
             last_size = size;
         }
