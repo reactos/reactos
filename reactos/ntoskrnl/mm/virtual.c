@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.69 2003/08/14 10:40:51 ekohl Exp $
+/* $Id: virtual.c,v 1.70 2003/08/20 10:37:33 silverblade Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -62,9 +62,43 @@ NTSTATUS STDCALL
 NtLockVirtualMemory(HANDLE	ProcessHandle,
 		    PVOID	BaseAddress,
 		    ULONG	NumberOfBytesToLock,
-		    PULONG	NumberOfBytesLocked)
+		    PULONG	NumberOfBytesLocked)   // ULONG LockOption?
 {
-  UNIMPLEMENTED;
+    // AG [08-20-03] : I have *no* idea if this is correct, I just used the
+    // other functions as a template and made a few intelligent guesses...
+
+  NTSTATUS Status;
+  PMDL Mdl;
+  PEPROCESS Process;
+  
+  DPRINT("NtLockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+	 "NumberOfBytesToLock %d), NumberOfBytesLocked %x\n",ProcessHandle,BaseAddress,
+	 NumberOfBytesToLock, NumberOfBytesLocked);
+  
+  Status = ObReferenceObjectByHandle(ProcessHandle,
+				     PROCESS_VM_WRITE,
+				     NULL,
+				     UserMode,
+				     (PVOID*)(&Process),
+				     NULL);
+  if (Status != STATUS_SUCCESS)
+    {
+      return(Status);
+    }
+  
+  Mdl = MmCreateMdl(NULL, 
+		    BaseAddress,
+		    NumberOfBytesToLock);
+  MmProbeAndLockPages(Mdl,
+		      UserMode,
+		      IoWriteAccess);
+  
+  ExFreePool(Mdl);  // Are we supposed to do this here?
+  
+  ObDereferenceObject(Process);
+  
+  *NumberOfBytesLocked = NumberOfBytesToLock;
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL 
@@ -285,7 +319,44 @@ NtUnlockVirtualMemory(HANDLE	ProcessHandle,
 		      ULONG	NumberOfBytesToUnlock,
 		      PULONG NumberOfBytesUnlocked OPTIONAL)
 {
-  UNIMPLEMENTED;
+    // AG [08-20-03] : I have *no* idea if this is correct, I just used the
+    // other functions as a template and made a few intelligent guesses...
+
+  NTSTATUS Status;
+  PMDL Mdl;
+  PEPROCESS Process;
+  
+  DPRINT("NtUnlockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+	 "NumberOfBytesToUnlock %d), NumberOfBytesUnlocked %x\n",ProcessHandle,BaseAddress,
+	 NumberOfBytesToUnlock, NumberOfBytesUnlocked);
+  
+  Status = ObReferenceObjectByHandle(ProcessHandle,
+				     PROCESS_VM_WRITE,
+				     NULL,
+				     UserMode,
+				     (PVOID*)(&Process),
+				     NULL);
+  if (Status != STATUS_SUCCESS)
+    {
+      return(Status);
+    }
+  
+  Mdl = MmCreateMdl(NULL, 
+		    BaseAddress,
+		    NumberOfBytesToUnlock);
+
+   ObDereferenceObject(Process);
+
+   if (Mdl->MappedSystemVa != NULL)
+     {
+       MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+     }
+   MmUnlockPages(Mdl);
+   ExFreePool(Mdl);
+   
+   *NumberOfBytesUnlocked = NumberOfBytesToUnlock;
+   
+   return(STATUS_SUCCESS);
 }
 
 
