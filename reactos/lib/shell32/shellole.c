@@ -297,7 +297,7 @@ DWORD WINAPI SHCLSIDFromStringAW (LPVOID clsid, CLSID *id)
  */
 
 /* set the vtable later */
-extern ICOM_VTABLE(IMalloc) VT_Shell_IMalloc32;
+static ICOM_VTABLE(IMalloc) VT_Shell_IMalloc32;
 
 /* this is the static object instance */
 typedef struct {
@@ -305,10 +305,10 @@ typedef struct {
 	DWORD dummy;
 } _ShellMalloc;
 
-_ShellMalloc Shell_Malloc = { &VT_Shell_IMalloc32,1};
+static _ShellMalloc Shell_Malloc = { &VT_Shell_IMalloc32,1};
 
 /* this is the global allocator of shell32 */
-IMalloc * ShellTaskAllocator = NULL;
+static IMalloc * ShellTaskAllocator = NULL;
 
 /******************************************************************************
  *              IShellMalloc_QueryInterface        [VTABLE]

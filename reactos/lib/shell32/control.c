@@ -171,7 +171,7 @@ static BOOL	Control_Localize(const CPanel* panel, unsigned cx, unsigned cy,
     RECT	rc;
 
     GetClientRect(panel->hWnd, &rc);
-    for (applet = panel->first; applet; applet = applet = applet->next) {
+    for (applet = panel->first; applet; applet = applet->next) {
         for (i = 0; i < applet->count; i++) {
 	    if (!applet->info[i].dwSize) continue;
 	    if (x + XSTEP >= rc.right - rc.left) {
@@ -201,7 +201,7 @@ static LRESULT Control_WndProc_Paint(const CPanel* panel, WPARAM wParam)
     hdc = (wParam) ? (HDC)wParam : BeginPaint(panel->hWnd, &ps);
     hOldFont = SelectObject(hdc, GetStockObject(ANSI_VAR_FONT));
     GetClientRect(panel->hWnd, &rc);
-    for (applet = panel->first; applet; applet = applet = applet->next) {
+    for (applet = panel->first; applet; applet = applet->next) {
         for (i = 0; i < applet->count; i++) {
 	    if (x + XSTEP >= rc.right - rc.left) {
 	        x = 0;
