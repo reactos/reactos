@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.5 2001/03/01 15:35:40 ekohl Exp $
+/* $Id: atom.c,v 1.6 2001/05/26 17:49:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,7 +66,7 @@ NtFindAtom(OUT PRTL_ATOM Atom,
      return STATUS_ACCESS_DENIED;
 
    return (RtlLookupAtomInAtomTable(AtomTable,
-				    AtomString,
+				    AtomString->Buffer,
 				    Atom));
 }
 
@@ -148,7 +148,7 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 
 NTSTATUS STDCALL
 RtlEmptyAtomTable(IN PRTL_ATOM_TABLE AtomTable,
-		  ULONG Unknown2)
+		  IN BOOLEAN DeletePinned)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -176,7 +176,7 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 NTSTATUS STDCALL
 RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
-			 IN PUNICODE_STRING AtomName,
+			 IN PWSTR AtomName,
 			 OUT PRTL_ATOM Atom)
 {
    UNIMPLEMENTED;
@@ -186,7 +186,7 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 NTSTATUS STDCALL
 RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
-		      IN PRTL_ATOM Atom)
+		      IN RTL_ATOM Atom)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -195,11 +195,11 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 NTSTATUS STDCALL
 RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
-			IN PRTL_ATOM Atom,
-			IN ULONG Unknown3,
-			IN ULONG Unknown4,
-			IN OUT PVOID Buffer,
-			IN OUT PULONG ReturnLength)
+			IN RTL_ATOM Atom,
+			IN OUT PULONG RefCount,
+			IN OUT PULONG PinCount,
+			IN OUT PWSTR AtomName,
+			IN OUT PULONG NameLength)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
