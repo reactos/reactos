@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.51 2002/03/05 11:33:12 ekohl Exp $
+/* $Id: kill.c,v 1.52 2002/04/27 19:25:16 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -264,7 +264,7 @@ NtTerminateProcess(IN	HANDLE		ProcessHandle,
      {
        return(Status);
      }
-   
+   Process->ExitStatus = ExitStatus;
    PiTerminateProcessThreads(Process, ExitStatus);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
      {
