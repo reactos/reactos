@@ -419,13 +419,13 @@ HalQueryDisplayOwnership();
 static inline BYTE Ki386ReadFsByte(ULONG offset)
 {
    BYTE b;
-   __asm__ __volatile__("movb %%fs:(%1),%0":"=q" (b):"0" (offset));
+   __asm__ __volatile__("movb %%fs:(%1),%0":"=r" (b):"r" (offset));
    return b;
 }
 
 static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
 {
-    __asm__ __volatile__("movb %0,%%fs:(%1)"::"q" (value), "r" (offset));
+   __asm__ __volatile__("movb %0,%%fs:(%1)"::"r" (value), "r" (offset));
 }
 
 #elif defined(_MSC_VER)
