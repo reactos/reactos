@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.37 2004/03/08 18:09:05 sedwards Exp $
+# $Id: makefile,v 1.38 2004/03/10 21:56:04 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,7 +11,7 @@ TARGET_CFLAGS = -Wall -Werror -fno-builtin
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a libwine.a msvcrt.a
 
 TARGET_BASE = 0x77DB0000
 
@@ -36,7 +36,8 @@ SECURITY_OBJECTS = \
 SERVICE_OBJECTS = \
 	service/scm.o \
 	service/sctrl.o \
-	service/undoc.o
+	service/undoc.o \
+	service/eventlog.o
 
 TOKEN_OBJECTS = \
 	token/privilege.o \
