@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.27 2001/08/07 14:10:42 ekohl Exp $
+/* $Id: process.c,v 1.28 2002/08/08 17:54:13 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -36,6 +36,8 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   INITIAL_TEB InitialTeb;
   ULONG OldPageProtection;
   CLIENT_ID Cid;
+  ULONG InitialStack[5];
+  ULONG ResultLength;
   
   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
   ObjectAttributes.RootDirectory = NULL;
@@ -134,6 +136,22 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   ThreadContext.EFlags = (1<<1) + (1<<9);
 
   DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
+
+  /*
+   * Write in the initial stack.
+   */
+  InitialStack[0] = 0;
+  InitialStack[1] = PEB_BASE;
+  Status = ZwWriteVirtualMemory(ProcessHandle,
+				(PVOID)ThreadContext.Esp,
+				InitialStack,
+				sizeof(InitialStack),
+				&ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to write initial stack.\n");
+      return(Status);
+    }
 
   Status = NtCreateThread(ThreadHandle,
 			  THREAD_ALL_ACCESS,
@@ -251,7 +269,8 @@ RtlpMapFile(PRTL_USER_PROCESS_PARAMETERS Ppb,
 }
 
 static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
-			   PRTL_USER_PROCESS_PARAMETERS	Ppb)
+			   PRTL_USER_PROCESS_PARAMETERS	Ppb,
+			   PVOID* ImageBaseAddress)
 {
    NTSTATUS Status;
    PVOID PpbBase;
@@ -343,6 +362,14 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 			sizeof(PpbBase),
 			&BytesWritten);
 
+   /* Read image base address. */
+   Offset = FIELD_OFFSET(PEB, ImageBaseAddress);
+   NtReadVirtualMemory(ProcessHandle,
+		       (PVOID)(PEB_BASE + Offset),
+		       ImageBaseAddress,
+		       sizeof(PVOID),
+		       &BytesWritten);
+
    return(STATUS_SUCCESS);
 }
 
@@ -366,6 +393,9 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
    ULONG retlen;
    CHAR FileName[8];
    ANSI_STRING ProcedureName;
+   SECTION_IMAGE_INFORMATION Sii;
+   ULONG ResultLength;
+   PVOID ImageBaseAddress;
    
    DPRINT("RtlCreateUserProcess\n");
    
@@ -418,29 +448,26 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
     */
    DPRINT("Creating peb\n");
    KlInitPeb(ProcessInfo->ProcessHandle,
-	     ProcessParameters);
+	     ProcessParameters,
+	     &ImageBaseAddress);
 
-   DPRINT("Retrieving entry point address\n");
-   RtlInitAnsiString (&ProcedureName, "LdrInitializeThunk");
-   Status = LdrGetProcedureAddress ((PVOID)NTDLL_BASE,
-				    &ProcedureName,
-				    0,
-				    (PVOID*)&lpStartAddress);
-   if (!NT_SUCCESS(Status))
+   Status = NtQuerySection(hSection,
+			   SectionImageInformation,
+			   &Sii,
+			   sizeof(Sii),
+			   &ResultLength);
+   if (!NT_SUCCESS(Status) || ResultLength != sizeof(Sii))
      {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	NtClose(hSection);
-	return (Status);
+       DPRINT("Failed to get section image information.\n");
+       NtClose(hSection);
+       return(Status);
      }
-   DPRINT("lpStartAddress 0x%08lx\n", (ULONG)lpStartAddress);
 
    DPRINT("Creating thread for process\n");
    Status = RtlpCreateFirstThread(ProcessInfo->ProcessHandle,
-//				  Headers.OptionalHeader.SizeOfStackReserve,
-				  0x200000,
-//				  Headers.OptionalHeader.SizeOfStackCommit,
-				  0x1000,
-				  lpStartAddress,
+				  Sii.StackReserve,
+				  Sii.StackCommit,
+				  ImageBaseAddress + (ULONG)Sii.EntryPoint,
 				  &ProcessInfo->ClientId,
 				  &ProcessInfo->ThreadHandle);
    if (!NT_SUCCESS(Status))
@@ -449,6 +476,7 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
 	NtClose(hSection);
 	return(Status);
    }
+   NtClose(hSection);
    return(STATUS_SUCCESS);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.21 2002/07/18 00:25:30 dwelch Exp $
+/* $Id: catch.c,v 1.22 2002/08/08 17:54:14 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -272,13 +272,20 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
       /* PreviousMode == KernelMode */
       
-      if ((!KdDebuggerEnabled) || (!(KdDebugState & KD_DEBUG_GDB)))
-        {
-	  /* FIXME: Get ExceptionNr and CR2 */
+      if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB)
+	{
+	  Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
+	}
+#ifdef KDBG
+      else if (KdDebuggerEnable && KdDebugState & KD_DEBUG_KDB)
+	{
+	  Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
+	}
+#endif /* KDBG */
+      else
+	{
 	  KeBugCheckWithTf (KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
 	}
-
-      Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
       if (Action != kdHandleException)
 	{
 	  Value = RtlpDispatchException (ExceptionRecord, Context);

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.47 2002/07/10 15:17:34 ekohl Exp $
+/* $Id: create.c,v 1.48 2002/08/08 17:54:16 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -27,6 +27,7 @@
 #include <internal/se.h>
 #include <internal/id.h>
 #include <internal/dbg.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -271,35 +272,20 @@ PiTimeoutThread(struct _KDPC *dpc,
 		PVOID arg1,
 		PVOID arg2)
 {
-   // wake up the thread, and tell it it timed out
-   NTSTATUS Status = STATUS_TIMEOUT;
+  /* Wake up the thread, and tell it it timed out */
+  NTSTATUS Status = STATUS_TIMEOUT;
    
-   DPRINT("PiTimeoutThread()\n");
-   
-   KeRemoveAllWaitsThread((PETHREAD)Context, Status);
+  DPRINT("PiTimeoutThread()\n");
+  
+  KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
 VOID
 PiBeforeBeginThread(CONTEXT c)
 {
    DPRINT("PiBeforeBeginThread(Eip %x)\n", c.Eip);
-   //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
 }
-
-#if 0
-VOID 
-PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
-{
-   NTSTATUS Ret;
-   
-   //   KeReleaseSpinLock(&PiThreadListLock,PASSIVE_LEVEL);
-   KeLowerIrql(PASSIVE_LEVEL);
-   Ret = StartRoutine(StartContext);
-   PsTerminateSystemThread(Ret);
-   KeBugCheck(0);
-}
-#endif
 
 VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
@@ -544,6 +530,21 @@ PsCreateTeb(HANDLE ProcessHandle,
    return Status;
 }
 
+VOID STDCALL
+LdrInitApcRundownRoutine(PKAPC Apc)
+{
+   ExFreePool(Apc);
+}
+
+VOID STDCALL
+LdrInitApcKernelRoutine(PKAPC Apc,
+			PKNORMAL_ROUTINE* NormalRoutine,
+			PVOID* NormalContext,
+			PVOID* SystemArgument1,
+			PVOID* SystemArgument2)
+{
+  ExFreePool(Apc);
+}
 
 NTSTATUS STDCALL
 NtCreateThread(PHANDLE ThreadHandle,
@@ -558,6 +559,7 @@ NtCreateThread(PHANDLE ThreadHandle,
   PETHREAD Thread;
   PTEB TebBase;
   NTSTATUS Status;
+  PKAPC LdrInitApc;
 
   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	 ThreadHandle,ThreadContext);
@@ -605,35 +607,32 @@ NtCreateThread(PHANDLE ThreadHandle,
   DbgkCreateThread((PVOID)ThreadContext->Eip);
 
   /*
-   * Start the thread running
+   * First, force the thread to be non-alertable for user-mode alerts.
    */
-  if (!CreateSuspended)
-    {
-      DPRINT("Not creating suspended\n");
-      PsUnblockThread(Thread, NULL);
-    }
-  else
-    {
-      DPRINT("Creating suspended\n");
+  Thread->Tcb.Alertable = FALSE;
 
-      /*
-       * Simulate a call to NtWaitForSingleObject() upon thread startup
-       */
+  /*
+   * If the thread is to be created suspended then queue an APC to
+   * do the suspend before we run any userspace code.
+   */
 
-      /* Increment the suspend counter */
-      Thread->Tcb.SuspendCount++;
+  /*
+   * Queue an APC to the thread that will execute the ntdll startup
+   * routine.
+   */
+  LdrInitApc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+  KeInitializeApc(LdrInitApc, &Thread->Tcb, 0, LdrInitApcKernelRoutine,
+		  LdrInitApcRundownRoutine, LdrpGetSystemDllEntryPoint(), 
+		  UserMode, NULL);
+  KeInsertQueueApc(LdrInitApc, NULL, NULL, UserMode);
 
-      /* Add one wait-block for suspend semaphore */
-      Thread->Tcb.WaitStatus = STATUS_UNSUCCESSFUL;
-      Thread->Tcb.WaitBlockList = &Thread->Tcb.WaitBlock[0];
-      Thread->Tcb.WaitBlock[0].Object = (POBJECT)&Thread->Tcb.SuspendSemaphore;
-      Thread->Tcb.WaitBlock[0].Thread = &Thread->Tcb;
-      Thread->Tcb.WaitBlock[0].WaitKey = STATUS_WAIT_0;
-      Thread->Tcb.WaitBlock[0].WaitType = WaitAny;
-      Thread->Tcb.WaitBlock[0].NextWaitBlock = NULL;
-      InsertTailList(&Thread->Tcb.SuspendSemaphore.Header.WaitListHead,
-		     &Thread->Tcb.WaitBlock[0].WaitListEntry);
-    }
+  /*
+   * Start the thread running and force it to execute the APC(s) we just
+   * queued before it runs anything else in user-mode.
+   */
+  Thread->Tcb.Alertable = TRUE;
+  Thread->Tcb.Alerted[0] = 1;
+  PsUnblockThread(Thread, NULL);
 
   return(STATUS_SUCCESS);
 }

@@ -157,76 +157,78 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 	DbgPrint("KiDeliverUserApc called but no APC was pending\n");
 	return(FALSE);
      }
-   
-   current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
-   Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
-   
-   /*
-    * Save the thread's current context (in other words the registers
-    * that will be restored when it returns to user mode) so the
-    * APC dispatcher can restore them later
-    */
-   Context = (PCONTEXT)(((PUCHAR)TrapFrame->Esp) - sizeof(CONTEXT));
-   memset(Context, 0, sizeof(CONTEXT));
-   Context->ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | 
-     CONTEXT_SEGMENTS | CONTEXT_i386;
-   Context->SegGs = TrapFrame->Gs;
-   Context->SegFs = TrapFrame->Fs;
-   Context->SegEs = TrapFrame->Es;
-   Context->SegDs = TrapFrame->Ds;
-   Context->Edi = TrapFrame->Edi;
-   Context->Esi = TrapFrame->Esi;
-   Context->Ebx = TrapFrame->Ebx;
-   Context->Edx = TrapFrame->Edx;
-   Context->Ecx = TrapFrame->Ecx;
-   Context->Eax = TrapFrame->Eax;
-   Context->Ebp = TrapFrame->Ebp;
-   Context->Eip = TrapFrame->Eip;
-   Context->SegCs = TrapFrame->Cs;
-   Context->EFlags = TrapFrame->Eflags;
-   Context->Esp = TrapFrame->Esp;
-   Context->SegSs = TrapFrame->Ss;
-   
-   /*
-    * Setup the trap frame so the thread will start executing at the
-    * APC Dispatcher when it returns to user-mode
-    */
-   Esp = (PULONG)(((PUCHAR)TrapFrame->Esp) - 
-		  (sizeof(CONTEXT) + (6 * sizeof(ULONG))));
-   
-   Esp[0] = 0xdeadbeef;
-   Esp[1] = (ULONG)Apc->NormalRoutine;
-   Esp[2] = (ULONG)Apc->NormalContext;
-   Esp[3] = (ULONG)Apc->SystemArgument1;
-   Esp[4] = (ULONG)Apc->SystemArgument2;
-   Esp[5] = (ULONG)Context;
-   TrapFrame->Eip = (ULONG)LdrpGetSystemDllApcDispatcher();
-   TrapFrame->Esp = (ULONG)Esp;     
-   
-   /*
-    * We've dealt with one pending user-mode APC
-    */
-   Thread->ApcState.UserApcPending--;
-   
-   /*
-    * FIXME: Give some justification for this
-    */
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
+
+   while (!IsListEmpty(&Thread->ApcState.ApcListHead[1]))
+     {
+       current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
+       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
        
-   /*
-    * Now call for the kernel routine for the APC, which will free
-    * the APC data structure, we can't do this ourselves because
-    * the APC may be embedded in some larger structure e.g. an IRP
-    * We also give the kernel routine a last chance to modify the arguments to 
-    * the user APC routine.
-    */
-   Apc->KernelRoutine(Apc,
-		      (PKNORMAL_ROUTINE*)&Esp[1],
-		      (PVOID*)&Esp[2],
-		      (PVOID*)&Esp[3],
-		      (PVOID*)&Esp[4]);
-   
+       /*
+	* Save the thread's current context (in other words the registers
+	* that will be restored when it returns to user mode) so the
+	* APC dispatcher can restore them later
+	*/
+       Context = (PCONTEXT)(((PUCHAR)TrapFrame->Esp) - sizeof(CONTEXT));
+       memset(Context, 0, sizeof(CONTEXT));
+       Context->ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | 
+	 CONTEXT_SEGMENTS | CONTEXT_i386;
+       Context->SegGs = TrapFrame->Gs;
+       Context->SegFs = TrapFrame->Fs;
+       Context->SegEs = TrapFrame->Es;
+       Context->SegDs = TrapFrame->Ds;
+       Context->Edi = TrapFrame->Edi;
+       Context->Esi = TrapFrame->Esi;
+       Context->Ebx = TrapFrame->Ebx;
+       Context->Edx = TrapFrame->Edx;
+       Context->Ecx = TrapFrame->Ecx;
+       Context->Eax = TrapFrame->Eax;
+       Context->Ebp = TrapFrame->Ebp;
+       Context->Eip = TrapFrame->Eip;
+       Context->SegCs = TrapFrame->Cs;
+       Context->EFlags = TrapFrame->Eflags;
+       Context->Esp = TrapFrame->Esp;
+       Context->SegSs = TrapFrame->Ss;
+       
+       /*
+	* Setup the trap frame so the thread will start executing at the
+	* APC Dispatcher when it returns to user-mode
+	*/
+       Esp = (PULONG)(((PUCHAR)TrapFrame->Esp) - 
+		      (sizeof(CONTEXT) + (6 * sizeof(ULONG))));
+       
+       Esp[0] = 0xdeadbeef;
+       Esp[1] = (ULONG)Apc->NormalRoutine;
+       Esp[2] = (ULONG)Apc->NormalContext;
+       Esp[3] = (ULONG)Apc->SystemArgument1;
+       Esp[4] = (ULONG)Apc->SystemArgument2;
+       Esp[5] = (ULONG)Context;
+       TrapFrame->Eip = (ULONG)LdrpGetSystemDllApcDispatcher();
+       TrapFrame->Esp = (ULONG)Esp;     
+       
+       /*
+	* We've dealt with one pending user-mode APC
+	*/
+       Thread->ApcState.UserApcPending--;
+       
+       /*
+	* Now call for the kernel routine for the APC, which will free
+	* the APC data structure, we can't do this ourselves because
+	* the APC may be embedded in some larger structure e.g. an IRP
+	* We also give the kernel routine a last chance to modify the 
+	* arguments to the user APC routine.
+	*/
+       Apc->KernelRoutine(Apc,
+			  (PKNORMAL_ROUTINE*)&Esp[1],
+			  (PVOID*)&Esp[2],
+			  (PVOID*)&Esp[3],
+			  (PVOID*)&Esp[4]);
+
+       KeAcquireSpinLock(&PiApcLock, &oldlvl);
+     }       
    Thread->Alerted[0] = 0;
+   KeReleaseSpinLock(&PiApcLock, oldlvl);
+
    return(TRUE);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.13 2002/07/19 03:56:47 ei Exp $
+/* $Id: kd.h,v 1.14 2002/08/08 17:54:14 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -17,6 +17,7 @@
 #define KD_DEBUG_BOCHS		0x10
 #define KD_DEBUG_FILELOG	0x20
 #define KD_DEBUG_MDA            0x40
+#define KD_DEBUG_KDB            0x80
 
 extern ULONG KdDebugState;
 
@@ -98,5 +99,9 @@ VOID
 KdbFreeSymbolsProcess(PPEB Peb);
 BOOLEAN
 KdbPrintAddress(PVOID address);
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+			  PCONTEXT Context,
+			  PKTRAP_FRAME TrapFrame);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.15 2002/06/26 18:36:41 hbirr Exp $
+/* $Id: fcb.c,v 1.16 2002/08/08 17:54:12 dwelch Exp $
  *
  *
  * FILE:             fcb.c
@@ -104,8 +104,7 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   pFCB->RefCount--;
   if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pVCB, pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
   {
-    RemoveEntryList (&pFCB->FcbListEntry);
-    CcRosReleaseFileCache (NULL, pFCB->RFCB.Bcb);
+    RemoveEntryList (&pFCB->FcbListEntry);    
     vfatDestroyFCB (pFCB);
   }
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);

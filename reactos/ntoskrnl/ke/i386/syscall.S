@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.6 2002/07/04 19:56:36 dwelch Exp $
+/* $Id: syscall.S,v 1.7 2002/08/08 17:54:15 dwelch Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -33,7 +33,8 @@
 /*
  *
  */
-.globl KeReturnFromSystemCall	
+.globl KeReturnFromSystemCall
+.globl KeReturnFromSystemCallWithHook
 .globl _interrupt_handler2e
 _interrupt_handler2e:
 
@@ -209,6 +210,7 @@ new_shadowServiceInRange:
            /*  Deallocate the kernel stack frame  */
            movl %ebp,%esp
 
+KeReturnFromSystemCallWithHook:	
 	   /* Call the post system call hook and deliver any pending APCs */
 	   pushl %esp
 	   pushl %eax
@@ -216,7 +218,7 @@ new_shadowServiceInRange:
 	   addl $8,%esp
 
 KeReturnFromSystemCall:
-
+	
            /* Restore the user context */
 	   /* Get a pointer to the current thread */
            movl %fs:0x124, %esi

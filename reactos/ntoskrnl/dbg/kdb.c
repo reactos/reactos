@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.7 2002/07/18 00:25:30 dwelch Exp $
+/* $Id: kdb.c,v 1.8 2002/08/08 17:54:14 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -677,3 +677,13 @@ KdbInternalEnter(PKTRAP_FRAME Tf)
   __asm__ __volatile__("sti\n\t");
 }
 
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+			  PCONTEXT Context,
+			  PKTRAP_FRAME TrapFrame)
+{
+  DbgPrint("Entered debugger on exception number %d.\n", 
+	   TrapFrame->DebugArgMark);
+  KdbInternalEnter(TrapFrame);
+  return(kdHandleException);
+}

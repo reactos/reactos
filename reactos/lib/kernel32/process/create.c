@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.46 2002/05/07 22:25:40 hbirr Exp $
+/* $Id: create.c,v 1.47 2002/08/08 17:54:12 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -185,6 +185,8 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   INITIAL_TEB InitialTeb;
   BOOLEAN CreateSuspended = FALSE;
   ULONG OldPageProtection;
+  ULONG ResultLength;
+  ULONG InitialStack[5];
 
   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
   ObjectAttributes.RootDirectory = NULL;
@@ -293,6 +295,22 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 
   DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
 
+  /*
+   * Write in the initial stack.
+   */
+  InitialStack[0] = 0;
+  InitialStack[1] = PEB_BASE;
+  Status = ZwWriteVirtualMemory(ProcessHandle,
+				(PVOID)ThreadContext.Esp,
+				InitialStack,
+				sizeof(InitialStack),
+				&ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to write initial stack.\n");
+      return(Status);
+    }
+
   Status = NtCreateThread(&ThreadHandle,
 			  THREAD_ALL_ACCESS,
 			  &ObjectAttributes,
@@ -391,7 +409,8 @@ KlMapFile(LPCWSTR lpApplicationName)
 
 static NTSTATUS 
 KlInitPeb (HANDLE ProcessHandle,
-	   PRTL_USER_PROCESS_PARAMETERS	Ppb)
+	   PRTL_USER_PROCESS_PARAMETERS	Ppb,
+	   PVOID* ImageBaseAddress)
 {
    NTSTATUS Status;
    PVOID PpbBase;
@@ -493,6 +512,14 @@ KlInitPeb (HANDLE ProcessHandle,
 			sizeof(PpbBase),
 			&BytesWritten);
 
+   /* Read image base address. */
+   Offset = FIELD_OFFSET(PEB, ImageBaseAddress);
+   NtReadVirtualMemory(ProcessHandle,
+		       (PVOID)(PEB_BASE + Offset),
+		       ImageBaseAddress,
+		       sizeof(PVOID),
+		       &BytesWritten);
+
    return(STATUS_SUCCESS);
 }
 
@@ -530,6 +557,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    WCHAR TempApplicationNameW[256];
    WCHAR TempCommandLineNameW[256];
    UNICODE_STRING RuntimeInfo_U;
+   PVOID ImageBaseAddress;
 
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
@@ -869,7 +897,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    DPRINT("Creating peb\n");
 
-   KlInitPeb(hProcess, Ppb);
+   KlInitPeb(hProcess, Ppb, &ImageBaseAddress);
 
    RtlDestroyProcessParameters (Ppb);
 
@@ -878,32 +906,14 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				    ImageFileName,
 				    8);
    /*
-    * Retrieve the start address
-    */
-   DPRINT("Retrieving entry point address\n");
-   RtlInitAnsiString (&ProcedureName, "LdrInitializeThunk");
-   Status = LdrGetProcedureAddress ((PVOID)NTDLL_BASE,
-				    &ProcedureName,
-				    0,
-				    (PVOID*)&lpStartAddress);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	return FALSE;
-     }
-   DPRINT("lpStartAddress 0x%08lx\n", (ULONG)lpStartAddress);
-
-   /*
     * Create the thread for the kernel
     */
    DPRINT("Creating thread for process\n");
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
-				  //Sii.StackReserve,
-				  0x200000,
-				  //Sii.StackCommit,
-				  0x1000,
-				  lpStartAddress,
+				  Sii.StackReserve,
+				  Sii.StackCommit,
+				  ImageBaseAddress + (ULONG)Sii.EntryPoint,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == NULL)

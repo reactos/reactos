@@ -938,8 +938,8 @@ GspSetHwBreakpoint(ULONG BreakpointNumber,
  */
 KD_CONTINUE_TYPE
 KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-  PCONTEXT Context,
-	PKTRAP_FRAME TrapFrame)
+			 PCONTEXT Context,
+			 PKTRAP_FRAME TrapFrame)
 {
   BOOLEAN Stepping;
   LONG Address;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.24 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: bug.c,v 1.25 2002/08/08 17:54:14 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -165,11 +165,7 @@ KeBugCheckEx(ULONG BugCheckCode,
       DbgBreakPoint();
     }
 
-  for(;;)
-    {
-      /* PJS: use HLT instruction, rather than busy wait */
-      __asm__("hlt\n\t");
-    }
+  for(;;);
 }
 
 VOID STDCALL

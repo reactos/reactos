@@ -94,21 +94,67 @@ KeValidateUserContext(PCONTEXT Context)
 NTSTATUS
 Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 {
-   PULONG KernelStack;
+  PULONG KernelStack;
+  ULONG InitSize;
+  PKTRAP_FRAME TrapFrame;
 
   /*
    * Setup a stack frame for exit from the task switching routine
    */
   
-  KernelStack = (PULONG)(Thread->KernelStack - ((4 * 5) + sizeof(CONTEXT)));
-  /* FIXME: Add initial floating point information */
-  /* FIXME: Add initial debugging information */
+  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) + 
+    sizeof(FLOATING_SAVE_AREA) + sizeof(KTRAP_FRAME);
+  KernelStack = (PULONG)(Thread->KernelStack - InitSize);
+
+  /* Set up the initial frame for the return from the dispatcher. */
   KernelStack[0] = 0;      /* EDI */
   KernelStack[1] = 0;      /* ESI */
   KernelStack[2] = 0;      /* EBX */
   KernelStack[3] = 0;      /* EBP */
   KernelStack[4] = (ULONG)PsBeginThreadWithContextInternal;   /* EIP */
-  memcpy((PVOID)&KernelStack[5], (PVOID)Context, sizeof(CONTEXT));
+
+  /* Set up the initial values of the debugging registers. */
+  KernelStack[5] = Context->Dr0;
+  KernelStack[6] = Context->Dr1;
+  KernelStack[7] = Context->Dr2;
+  KernelStack[8] = Context->Dr3;
+  KernelStack[9] = Context->Dr6;
+  KernelStack[10] = Context->Dr7;
+
+  /* Set up the initial floating point state. */
+  memcpy((PVOID)&KernelStack[11], (PVOID)&Context->FloatSave,
+	 sizeof(FLOATING_SAVE_AREA));
+
+  /* Set up a trap frame from the context. */
+  TrapFrame = (PKTRAP_FRAME)
+    ((PBYTE)KernelStack + 11 * sizeof(DWORD) + sizeof(FLOATING_SAVE_AREA));
+  TrapFrame->DebugEbp = (PVOID)Context->Ebp;
+  TrapFrame->DebugEip = (PVOID)Context->Eip;
+  TrapFrame->DebugArgMark = 0;
+  TrapFrame->DebugPointer = 0;
+  TrapFrame->TempCs = 0;
+  TrapFrame->TempEip = 0;
+  TrapFrame->Gs = Context->SegGs;
+  TrapFrame->Es = Context->SegEs;
+  TrapFrame->Ds = Context->SegDs;
+  TrapFrame->Edx = Context->Ebx;
+  TrapFrame->Ecx = Context->Ecx;
+  TrapFrame->Eax = Context->Eax;
+  TrapFrame->PreviousMode = UserMode;
+  TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;
+  TrapFrame->Fs = TEB_SELECTOR;
+  TrapFrame->Edi = Context->Edi;
+  TrapFrame->Esi = Context->Esi;
+  TrapFrame->Ebx = Context->Ebx;
+  TrapFrame->Ebp = Context->Ebp;
+  TrapFrame->ErrorCode = 0;
+  TrapFrame->Cs = Context->SegCs;
+  TrapFrame->Eip = Context->Eip;
+  TrapFrame->Esp = Context->Esp;
+  TrapFrame->Ss = Context->SegSs;
+  /* FIXME: Should check for a v86 mode context here. */
+
+  /* Save back the new value of the kernel stack. */
   Thread->KernelStack = (PVOID)KernelStack;
 
   return(STATUS_SUCCESS);

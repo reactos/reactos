@@ -1,3 +1,76 @@
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/section (NtQuerySection): Return the
+	right result length.
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ke/usertrap.c (print_user_address): Check for
+	a NULL LDR structure in the PEB; copy the LDR pointer in
+	safely.	
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ke/apc.c (KiDeliverUserApc): Deliver all present
+	APCs; release the APC spinlock while acccessing user memory.
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* include/internal/ps.h: Adjusted offsets into the ETHREAD
+	structure.
+	* include/internal/ps.h: Removed redundant members from the
+	KTHREAD structure.
+	* ntoskrnl/ke/kthread.c (KeInitializeThread): Removed
+	redundant members from the KTHREAD structure.
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/dbg/kdb.c (KdbEnterDebuggerException): New
+	function to enter the debugger on an exception.
+	* ntoskrnl/kd/kdebug.c (KdInitSystem): Initialize the
+	local kernel debugger if enabled.
+	* ntoskrnl/ke/catch.c (KiDispatchException): Enter the
+	local kernel debugger on an exception.
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* include/ntdll/ldr.h: Added definition for a DLL entrypoint.
+	* lib/kernel32/process/create.c (KlCreateFirstThread): Put
+	the argument to the NtProcessStartup function on the stack.
+	* lib/kernel32/process/create.c (KlInitPeb): Read the
+	base address of the new image from the PEB.
+	* lib/kernel32/process/create.c (CreateProcessW): Start the
+	first thread at the entrypoint of the new image.
+	* lib/ntdll/ldr/startup.c (LdrInitializeThunk): If the
+	function is called after the initial startup then just call the
+	entrypoints for the loaded DLLs with DLL_THREAD_ATTACH. Don't
+	call the entrypoint of the image.
+	* lib/ntdll/rtl/process.c (RtlpCreateFirstThread): Put the
+	argument to the NtProcessStartup function on the stack.
+	* lib/ntdll/rtl/process.c (KlInitPeb): Read the base address of
+	the new image from the PEB.
+	* lib/ntdll/rtl/process.c (RtlCreateUserProcess): Start the
+	first thread at the entrypoint of the new image.
+	* ntoskrnl/ke/i386/bthread.S (PsBeginThreadWithContextInternal):
+	Use the system call path to begin a usermode thread.
+	* ntoskrnl/ke/i386/thread.c (Ke386InitThreadWithContext): Convert
+	the supplied context into a trap frame.
+	* ntoskrnl/ldr/init.c (LdrLoadInitialProcess): Put the PEB argument
+	to the NtProcessStartup function on the new stack; start the
+	first thread at the entrypoint of the image.
+	* ntoskrnl/ps/create.c (NtCreateThread): Create an APC to call
+	LdrInitializeThunk in the context of a new thread before its
+	entrypoint.
+
+2002-08-08  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/fs/vfat/cleanup.c (VfatCleanupFile): Uninitialise
+	the cache on file cleanup.
+	* drivers/fs/vfat/fcb.c (vfatReleaseFcb): Don't uninitialise
+	the cache on file close.
+	* ntoskrnl/cc/copy.c: Renamed zero page global variable.
+	* ntoskrnl/cc/view.c: Added cache delete function.
+
 2002-07-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* rules.mak (RSYM): Define.

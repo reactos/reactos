@@ -6,6 +6,12 @@
 
 typedef NTSTATUS STDCALL (*PEPFUNC)(PPEB);
 
+/* Type for a DLL's entry point */
+typedef BOOL STDCALL
+(* PDLLMAIN_FUNC)(HANDLE hInst,
+		  ULONG ul_reason_for_call,
+		  LPVOID lpReserved);
+
 typedef struct _LDR_MODULE
 {
    LIST_ENTRY     InLoadOrderModuleList;

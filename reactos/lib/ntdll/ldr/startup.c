@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.38 2002/07/13 12:44:06 chorns Exp $
+/* $Id: startup.c,v 1.39 2002/08/08 17:54:13 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,27 @@ LdrInitializeThunk (ULONG Unknown1,
    WCHAR FullNtDllPath[MAX_PATH];
 
    DPRINT("LdrInitializeThunk()\n");
+   if (NtCurrentPeb()->Ldr != NULL && NtCurrentPeb()->Ldr->Initialized == TRUE)
+     {
+       PLIST_ENTRY current_entry;
+       PDLLMAIN_FUNC Entrypoint;
+       PLDR_MODULE current;
+
+       current_entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
+       while (current_entry != &NtCurrentPeb()->Ldr->InLoadOrderModuleList)
+	 {
+	   current = CONTAINING_RECORD(current_entry, LDR_MODULE, 
+				       InLoadOrderModuleList);
+	   Entrypoint = (PDLLMAIN_FUNC)current->EntryPoint;
+	   if (Entrypoint != NULL &&
+	       current->BaseAddress != NtCurrentPeb()->ImageBaseAddress)
+	     {
+	       (VOID)Entrypoint(current->BaseAddress, DLL_THREAD_ATTACH, NULL);
+	     }
+	   current_entry = current_entry->Flink;
+	 }
+       return;
+     }
 
    Peb = (PPEB)(PEB_BASE);
    DPRINT("Peb %x\n", Peb);
@@ -242,14 +263,12 @@ LdrInitializeThunk (ULONG Unknown1,
    /* all required dlls are loaded now */
    Peb->Ldr->Initialized = TRUE;
 
+   /* Check before returning that we can run the image safely. */
    if (EntryPoint == NULL)
      {
 	DbgPrint("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
-
-   Status = EntryPoint(Peb);
-   ZwTerminateProcess(NtCurrentProcess(),Status);
 }
 
 /* EOF */

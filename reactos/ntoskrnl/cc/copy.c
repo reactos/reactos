@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.7 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: copy.c,v 1.8 2002/08/08 17:54:13 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,7 @@ static PHYSICAL_ADDRESS CcZeroPage = (PHYSICAL_ADDRESS)0LL;
 /* FUNCTIONS *****************************************************************/
 
 VOID 
-InitCacheZeroPage(VOID)
+CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
 

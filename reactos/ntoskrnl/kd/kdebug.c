@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.37 2002/07/04 19:56:35 dwelch Exp $
+/* $Id: kdebug.c,v 1.38 2002/08/08 17:54:14 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -70,6 +70,12 @@ KdInitSystem(ULONG Reserved,
 #ifdef KDBG
   /* Initialize runtime debugging if available */
   DbgRDebugInit();
+#endif
+
+#ifdef KDBG
+  /* Initialize the local kernel debugger. */
+  KdDebuggerEnabled = TRUE;
+  KdDebugState |= KD_DEBUG_KDB;
 #endif
 
   /* Set debug port default values */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.86 2002/06/10 21:34:37 hbirr Exp $
+/* $Id: section.c,v 1.87 2002/08/08 17:54:15 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2755,8 +2755,8 @@ NtQuerySection (IN	HANDLE	SectionHandle,
 	Sbi->Attributes = 0;
 	Sbi->Size.QuadPart = 0;
 
+	*ResultLength = sizeof(SECTION_BASIC_INFORMATION);
 	Status = STATUS_SUCCESS;
-
 	break;
       }
 
@@ -2785,12 +2785,14 @@ NtQuerySection (IN	HANDLE	SectionHandle,
 	  Sii->Unknown4[0] = 0;
 	  Sii->Unknown4[1] = 0;
 	  Sii->Unknown4[2] = 0;
-	  
+
+	  *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
 	  Status = STATUS_SUCCESS;
 	  break;
 	}
 
     default:
+      *ResultLength = 0;
       Status = STATUS_INVALID_INFO_CLASS;
     }
   ObDereferenceObject(Section);

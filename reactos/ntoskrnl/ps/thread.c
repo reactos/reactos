@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.99 2002/07/10 15:15:00 ekohl Exp $
+/* $Id: thread.c,v 1.100 2002/08/08 17:54:16 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -282,38 +282,38 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   if (KThread->ApcState.KernelApcPending)
   {
     if (!DispatcherLock)
-    {
-      KeAcquireDispatcherDatabaseLock(FALSE);
-    }
+      {
+	KeAcquireDispatcherDatabaseLock(FALSE);
+      }
     WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
     while (WaitBlock)
-    {
-      RemoveEntryList (&WaitBlock->WaitListEntry);
-      WaitBlock = WaitBlock->NextWaitBlock;
-    }
+      {
+	RemoveEntryList (&WaitBlock->WaitListEntry);
+	WaitBlock = WaitBlock->NextWaitBlock;
+      }
     Thread->Tcb.WaitBlockList = NULL;
     KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
     PsDispatchThreadNoLock (THREAD_STATE_READY);
     if (Status != NULL)
-    {
-      *Status = STATUS_KERNEL_APC;
-    }
+      {
+	*Status = STATUS_KERNEL_APC;
+      }
   }
   else
-  {
-    if (DispatcherLock)
     {
-      KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+      if (DispatcherLock)
+	{
+	  KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+	}
+      Thread->Tcb.Alertable = Alertable;
+      Thread->Tcb.WaitMode = WaitMode;
+      Thread->Tcb.WaitIrql = WaitIrql;
+      PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+      if (Status != NULL)
+	{
+	  *Status = Thread->Tcb.WaitStatus;
+	}
     }
-    Thread->Tcb.Alertable = Alertable;
-    Thread->Tcb.WaitMode = WaitMode;
-    Thread->Tcb.WaitIrql = WaitIrql;
-    PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
-    if (Status != NULL)
-    {
-      *Status = Thread->Tcb.WaitStatus;
-    }
-  }
   KeLowerIrql(WaitIrql);
 }
 

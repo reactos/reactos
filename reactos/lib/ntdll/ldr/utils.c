@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.51 2002/07/13 12:44:06 chorns Exp $
+/* $Id: utils.c,v 1.52 2002/08/08 17:54:13 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,13 +32,6 @@
 #include <ntdll/ntdll.h>
 
 /* PROTOTYPES ****************************************************************/
-
-
-/* Type for a DLL's entry point */
-typedef WINBOOL STDCALL
-(* PDLLMAIN_FUNC)(HANDLE hInst,
-		  ULONG ul_reason_for_call,
-		  LPVOID lpReserved);
 
 static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module);
 static PVOID LdrFixupForward(PCHAR ForwardName);

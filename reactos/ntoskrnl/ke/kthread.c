@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.29 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: kthread.c,v 1.30 2002/08/08 17:54:14 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -235,10 +235,6 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    */
   Thread->ProcessThreadListEntry.Flink = NULL;
   Thread->ProcessThreadListEntry.Blink = NULL;
-  KeInitializeDpc(&Thread->TimerDpc,
-		  (PKDEFERRED_ROUTINE)PiTimeoutThread,
-		  Thread);
-  Thread->LastEip = 0;
    
    /*
     * Do x86 specific part

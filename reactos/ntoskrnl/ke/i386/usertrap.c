@@ -77,22 +77,30 @@ print_user_address(PVOID address)
    PEPROCESS CurrentProcess;
    PPEB Peb = NULL;
    ULONG_PTR RelativeAddress;
+   PPEB_LDR_DATA Ldr;
+   NTSTATUS Status;
 
    CurrentProcess = PsGetCurrentProcess();
    if (NULL != CurrentProcess)
-    {
-      Peb = CurrentProcess->Peb;
-    }
-
+     {
+       Peb = CurrentProcess->Peb;
+     }
+   
    if (NULL == Peb)
-	   {
+     {
        DbgPrint("<%x>", address);
        return(TRUE);
      }
 
-   current_entry = Peb->Ldr->InLoadOrderModuleList.Flink;
+   Status = MmSafeCopyFromUser(&Ldr, Peb->Ldr, sizeof(PPEB_LDR_DATA));
+   if (!NT_SUCCESS(Status))
+     {
+       DbgPrint("<%x>", address);
+       return(TRUE);
+     }
+   current_entry = Ldr->InLoadOrderModuleList.Flink;
    
-   while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
+   while (current_entry != &Ldr->InLoadOrderModuleList &&
 	  current_entry != NULL)
      {
 	current = 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.36 2002/07/10 15:11:46 ekohl Exp $
+/* $Id: ps.h,v 1.37 2002/08/08 17:54:14 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -39,7 +39,7 @@
 #define KTHREAD_TRAP_FRAME        0x128
 #define KTHREAD_CALLBACK_STACK    0x120
 
-#define ETHREAD_THREADS_PROCESS   0x258
+#define ETHREAD_THREADS_PROCESS   0x234
 
 #define KPROCESS_DIRECTORY_TABLE_BASE 0x18
 
@@ -196,12 +196,6 @@ typedef struct _KTHREAD
    
    /* Added by Phillip Susi for list of threads in a process */
    LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
-
-   /* Added by Phillip Susi for internal KeAddThreadTimeout() implementation */
-   KDPC              TimerDpc;		             /* 1B8 */
-
-   /* Record the last EIP value when the thread is suspended */
-   ULONG             LastEip;                        /* 1D8 */
 } __attribute__((packed)) KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and
@@ -241,7 +235,7 @@ typedef struct
 typedef struct _ETHREAD
 {
   KTHREAD Tcb;                                      /* 000 */
-  TIME CreateTime;                                  /* 1B0/1DC */
+  TIME CreateTime;                                  /* 1B0/1B8 */
   union
   {
     TIME ExitTime;                                  /* 1B8/1E4 */

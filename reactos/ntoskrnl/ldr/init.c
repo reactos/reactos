@@ -1,7 +1,24 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ldr/loader.c
+ * FILE:            ntoskrnl/ldr/init.c
  * PURPOSE:         Loaders for PE executables
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
@@ -44,14 +61,16 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    HANDLE SectionHandle;
-   PVOID LdrStartupAddr;
    PIMAGE_NT_HEADERS NTHeaders;
-   PPEB Peb;
    PEPROCESS Process;
    CONTEXT Context;
    HANDLE ThreadHandle;
    INITIAL_TEB InitialTeb;
    ULONG OldPageProtection;
+   SECTION_IMAGE_INFORMATION Sii;
+   ULONG ResultLength;
+   PVOID ImageBaseAddress;
+   ULONG InitialStack[5];
    
    /*
     * Get the absolute path to smss.exe using the
@@ -100,6 +119,21 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 	return(Status);
      }
    ZwClose(FileHandle);
+
+   /*
+    * Get information about the process image.
+    */
+   Status = ZwQuerySection(SectionHandle,
+			   SectionImageInformation,
+			   &Sii,
+			   sizeof(Sii),
+			   &ResultLength);
+   if (!NT_SUCCESS(Status) || ResultLength != sizeof(Sii))
+     {
+       DPRINT("ZwQuerySection failed (Status %X)\n", Status);
+       ZwClose(SectionHandle);
+       return(Status);
+     }
    
    DPRINT("Creating process\n");
    Status = ZwCreateProcess(&ProcessHandle,
@@ -121,12 +155,6 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     */
    
    /*
-    * Aargh!
-    */
-   LdrStartupAddr = (PVOID)LdrpGetSystemDllEntryPoint();
-   DPRINT("LdrStartupAddr %x\n", LdrStartupAddr);
-   
-   /*
     * Create page backed section for stack
     */
    DPRINT("Allocating stack\n");
@@ -146,17 +174,13 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    
    DPRINT("Attaching to process\n");
    KeAttachProcess(Process);
-   Peb = (PPEB)PEB_BASE;
-   DPRINT("Peb %x\n", Peb);
-   DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
-	  PsGetCurrentProcess(),
-	  Peb->ImageBaseAddress);
-   NTHeaders = RtlImageNtHeader(Peb->ImageBaseAddress);
+   ImageBaseAddress = Process->Peb->ImageBaseAddress;
+   NTHeaders = RtlImageNtHeader(ImageBaseAddress);
    DPRINT("NTHeaders %x\n", NTHeaders);
    InitialTeb.StackReserve = NTHeaders->OptionalHeader.SizeOfStackReserve;
    /* FIXME: use correct commit size */
    InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackReserve - PAGESIZE;
-//   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackCommit;
+   //   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackCommit;
    /* add guard page size */
    InitialTeb.StackCommit += PAGESIZE;
    DPRINT("StackReserve 0x%lX  StackCommit 0x%lX\n",
@@ -165,111 +189,116 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    DPRINT("Dereferencing process\n");
    ObDereferenceObject(Process);
    
-  DPRINT("Allocating stack\n");
-  InitialTeb.StackAllocate = NULL;
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb.StackAllocate,
-				   0,
-				   &InitialTeb.StackReserve,
-				   MEM_RESERVE,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Stack allocation failed (Status %x)", Status);
-      return(Status);
-    }
+   DPRINT("Allocating stack\n");
+   InitialTeb.StackAllocate = NULL;
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+				    &InitialTeb.StackAllocate,
+				    0,
+				    &InitialTeb.StackReserve,
+				    MEM_RESERVE,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT("Stack allocation failed (Status %x)", Status);
+       return(Status);
+     }
+   
+   DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
+	  InitialTeb.StackAllocate, InitialTeb.StackReserve);
+   
+   InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
+   InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
+   
+   DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
+	  InitialTeb.StackBase, InitialTeb.StackCommit);
+   
+   /* Commit stack */
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+				    &InitialTeb.StackLimit,
+				    0,
+				    &InitialTeb.StackCommit,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+       /* release the stack space */
+       NtFreeVirtualMemory(ProcessHandle,
+			   InitialTeb.StackAllocate,
+			   &InitialTeb.StackReserve,
+			   MEM_RELEASE);
+       
+       DPRINT("Error comitting stack page!\n");
+       return(Status);
+     }
+   
+   DPRINT("StackLimit: %p\nStackCommit: 0x%lX\n",
+	  InitialTeb.StackLimit,
+	  InitialTeb.StackCommit);
+   
+   /* Protect guard page */
+   Status = NtProtectVirtualMemory(ProcessHandle,
+				   InitialTeb.StackLimit,
+				   PAGESIZE,
+				   PAGE_GUARD | PAGE_READWRITE,
+				   &OldPageProtection);
+   if (!NT_SUCCESS(Status))
+     {
+       /* release the stack space */
+       NtFreeVirtualMemory(ProcessHandle,
+			   InitialTeb.StackAllocate,
+			   &InitialTeb.StackReserve,
+			   MEM_RELEASE);
 
-  DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
-	 InitialTeb.StackAllocate, InitialTeb.StackReserve);
+       DPRINT("Error protecting guard page!\n");
+       return(Status);
+     }
+   
+   /*
+    * Initialize context to point to LdrStartup
+    */
+   memset(&Context,0,sizeof(CONTEXT));
+   Context.Eip = (ULONG)(ImageBaseAddress + (ULONG)Sii.EntryPoint);
+   Context.SegCs = USER_CS;
+   Context.SegDs = USER_DS;
+   Context.SegEs = USER_DS;
+   Context.SegFs = TEB_SELECTOR;
+   Context.SegGs = USER_DS;
+   Context.SegSs = USER_DS;
+   Context.EFlags = 0x202;
+   Context.Esp = (ULONG)InitialTeb.StackBase - 20;
 
-  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
-  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
-
-  DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
-	 InitialTeb.StackBase, InitialTeb.StackCommit);
-
-  /* Commit stack */
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb.StackLimit,
-				   0,
-				   &InitialTeb.StackCommit,
-				   MEM_COMMIT,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("Error comitting stack page!\n");
-      return(Status);
-    }
-
-  DPRINT("StackLimit: %p\nStackCommit: 0x%lX\n",
-         InitialTeb.StackLimit,
-         InitialTeb.StackCommit);
-
-  /* Protect guard page */
-  Status = NtProtectVirtualMemory(ProcessHandle,
-				  InitialTeb.StackLimit,
-				  PAGESIZE,
-				  PAGE_GUARD | PAGE_READWRITE,
-				  &OldPageProtection);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("Error protecting guard page!\n");
-      return(Status);
-    }
-  
-  DPRINT("Attaching to process\n");
-  KeAttachProcess(Process);
-  Peb = (PPEB)PEB_BASE;
-  DPRINT("Peb %x\n", Peb);
-  DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
-	 PsGetCurrentProcess(),
-	 Peb->ImageBaseAddress);
-  KeDetachProcess();
-
-  /*
-   * Initialize context to point to LdrStartup
-   */
-  memset(&Context,0,sizeof(CONTEXT));
-  Context.Eip = (ULONG)LdrStartupAddr;
-  Context.SegCs = USER_CS;
-  Context.SegDs = USER_DS;
-  Context.SegEs = USER_DS;
-  Context.SegFs = TEB_SELECTOR;
-  Context.SegGs = USER_DS;
-  Context.SegSs = USER_DS;
-  Context.EFlags = 0x202;
-  Context.Esp = (ULONG)InitialTeb.StackBase - 20;
-
-  DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
-  
-  /*
-   * FIXME: Create process and let 'er rip
-   */
-  DPRINT("Creating thread for initial process\n");
-  Status = ZwCreateThread(&ThreadHandle,
-			  THREAD_ALL_ACCESS,
-			  NULL,
-			  ProcessHandle,
-			  NULL,
-			  &Context,
-			  &InitialTeb,
-			  FALSE);
+   /*
+    * Write in the initial stack.
+    */
+   InitialStack[0] = 0;
+   InitialStack[1] = PEB_BASE;
+   Status = ZwWriteVirtualMemory(ProcessHandle,
+				 (PVOID)Context.Esp,
+				 InitialStack,
+				 sizeof(InitialStack),
+				 &ResultLength);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("Failed to write initial stack.\n");
+       return(Status);
+     }
+   
+   /*
+    * FIXME: Create process and let 'er rip
+    */
+   DPRINT("Creating thread for initial process\n");
+   Status = ZwCreateThread(&ThreadHandle,
+			   THREAD_ALL_ACCESS,
+			   NULL,
+			   ProcessHandle,
+			   NULL,
+			   &Context,
+			   &InitialTeb,
+			   FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Thread creation failed (Status %x)\n", Status);
-
+      
       NtFreeVirtualMemory(ProcessHandle,
 			  InitialTeb.StackAllocate,
 			  &InitialTeb.StackReserve,
@@ -277,18 +306,10 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 
       /* FIXME: unmap the section here  */
       /* FIXME: destroy the section here  */
+      /* FIXME: Kill the process here */
 
       return(Status);
     }
-  
-  DPRINT("Attaching to process\n");
-  KeAttachProcess(Process);
-  Peb = (PPEB)PEB_BASE;
-  DPRINT("Peb %x\n", Peb);
-  DPRINT("CurrentProcess %x Peb->ImageBaseAddress %x\n", 
-	 PsGetCurrentProcess(),
-	 Peb->ImageBaseAddress);
-  KeDetachProcess();
   
   return(STATUS_SUCCESS);
 }

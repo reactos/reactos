@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.44 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: view.c,v 1.45 2002/08/08 17:54:13 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -507,7 +507,7 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 /*
  * FUNCTION: Releases the BCB associated with a file object
  */
@@ -562,9 +562,19 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 }
 
 NTSTATUS STDCALL 
+CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+/*
+ * FUNCTION: Called by the file system when a handle to a file object
+ * has been closed.
+ */
+{
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
-		      PBCB* Bcb,
-		      ULONG CacheSegmentSize)
+			 PBCB* Bcb,
+			 ULONG CacheSegmentSize)
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
@@ -603,7 +613,7 @@ CcInitView(VOID)
   InitializeListHead(&CacheSegmentLRUListHead);
   ExInitializeFastMutex(&ViewLock);
   MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
-  InitCacheZeroPage();
+  CcInitCacheZeroPage();
 }
 
 /* EOF */
