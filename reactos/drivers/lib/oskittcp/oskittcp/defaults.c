@@ -46,8 +46,8 @@ struct domain localdomain;	/* see uipc_domain.c ADDDOMAIN macro */
 struct proc *
 pfind(pid_t pid)
 {
-	printf(__FUNCTION__" called, pid=%d, returning x%p\n", 
-		(int)pid, (void*)&proc0);
+	printf("%s called, pid=%d, returning x%p\n", 
+	       __FUNCTION__, (int)pid, (void*)&proc0);
 	return &proc0;
 }
 
@@ -57,7 +57,7 @@ pfind(pid_t pid)
 void    
 psignal (struct proc *p, int sig)
 {
-	printf(__FUNCTION__" called, proc=x%p sig=%d\n", p, sig);
+    printf("%s called, proc=x%p sig=%d\n", __FUNCTION__, p, sig);
 }
 
 /*
@@ -66,7 +66,7 @@ psignal (struct proc *p, int sig)
 void    
 gsignal (int pgid, int sig)
 {
-	printf(__FUNCTION__" called, pgid=%d sig=%d\n", pgid, sig);
+	printf("%s called, pgid=%d sig=%d\n", __FUNCTION__, pgid, sig);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -97,12 +97,12 @@ copyout (void *kaddr, void *udaddr, u_int len)
  */
 int subyte          (void *base, int byte)
 {
-	return (int)((char *)base = (char)byte);
+    return (int)(base = (char *)byte);
 }
 
 int suibyte         (void *base, int byte)
 {
-	return (int)((char *)base = (char)byte);
+	return (int)(base = (char *)byte);
 }
 
 /* ---------------------------------------------------------------------- */
