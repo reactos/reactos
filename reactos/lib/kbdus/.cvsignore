@@ -9,3 +9,4 @@ temp.exp
 *.sym
 *.tmp
 *.map
+*.d
