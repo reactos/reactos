@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.12 2003/03/06 23:57:03 gvg Exp $
+/* $Id: message.c,v 1.13 2003/05/04 15:42:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,7 +23,7 @@
 #include <include/callback.h>
 #include <include/painting.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -390,7 +390,8 @@ W32kSendMessage(HWND hWnd,
 
   /* FIXME: Check for an exiting window. */
 
-  if (Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+  if (NULL != PsGetWin32Thread() &&
+      Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
       if (KernelMessage)
 	{
