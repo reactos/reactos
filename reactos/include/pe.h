@@ -1,6 +1,10 @@
 #ifndef __INCLUDE_PE_H
 #define __INCLUDE_PE_H
 
+#define _ANONYMOUS_UNION __extension__
+#define _ANONYMOUS_STRUCT __extension__
+#define NTAPI
+
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define IMAGE_SECTION_CHAR_CODE          0x00000020
@@ -24,38 +28,6 @@
 #define IMAGE_VXD_SIGNATURE     0x454c
 #define IMAGE_NT_SIGNATURE      0x00004550
 
-
-typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
-    WORD   e_magic;                     // Magic number
-    WORD   e_cblp;                      // Bytes on last page of file
-    WORD   e_cp;                        // Pages in file
-    WORD   e_crlc;                      // Relocations
-    WORD   e_cparhdr;                   // Size of header in paragraphs
-    WORD   e_minalloc;                  // Minimum extra paragraphs needed
-    WORD   e_maxalloc;                  // Maximum extra paragraphs needed
-    WORD   e_ss;                        // Initial (relative) SS value
-    WORD   e_sp;                        // Initial SP value
-    WORD   e_csum;                      // Checksum
-    WORD   e_ip;                        // Initial IP value
-    WORD   e_cs;                        // Initial (relative) CS value
-    WORD   e_lfarlc;                    // File address of relocation table
-    WORD   e_ovno;                      // Overlay number
-    WORD   e_res[4];                    // Reserved words
-    WORD   e_oemid;                     // OEM identifier (for e_oeminfo)
-    WORD   e_oeminfo;                   // OEM information; e_oemid specific
-    WORD   e_res2[10];                  // Reserved words
-    LONG   e_lfanew;                    // File address of new exe header
-} IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
-
-typedef struct _IMAGE_FILE_HEADER {
-    WORD    Machine;
-    WORD    NumberOfSections;
-    DWORD   TimeDateStamp;
-    DWORD   PointerToSymbolTable;
-    DWORD   NumberOfSymbols;
-    WORD    SizeOfOptionalHeader;
-    WORD    Characteristics;
-} IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
 
 #define IMAGE_SIZEOF_FILE_HEADER             20
 
@@ -82,63 +54,8 @@ typedef struct _IMAGE_FILE_HEADER {
 #define IMAGE_FILE_MACHINE_POWERPC           0x1F0   // IBM PowerPC Little-Endian
 
 
-//
-// Directory format.
-//
-
-typedef struct _IMAGE_DATA_DIRECTORY {
-    DWORD   VirtualAddress;
-    DWORD   Size;
-} IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;
-
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES    16
 
-//
-// Optional header format.
-//
-
-typedef struct _IMAGE_OPTIONAL_HEADER {
-    //
-    // Standard fields.
-    //
-
-    WORD    Magic;                                                // 0x04
-    BYTE    MajorLinkerVersion;
-    BYTE    MinorLinkerVersion;
-    DWORD   SizeOfCode;                                           // 0x08
-    DWORD   SizeOfInitializedData;                                // 0x0C
-    DWORD   SizeOfUninitializedData;                              // 0x10
-    DWORD   AddressOfEntryPoint;                                  // 0x14
-    DWORD   BaseOfCode;                                           // 0x18
-    DWORD   BaseOfData;                                           // 0x1C
-
-    //
-    // NT additional fields.
-    //
-
-    DWORD   ImageBase;                                             // 0x20
-    DWORD   SectionAlignment;                                      // 0x24
-    DWORD   FileAlignment;                                         // 0x28
-    WORD    MajorOperatingSystemVersion;                           // 0x2C
-    WORD    MinorOperatingSystemVersion;                           // 0x2E
-    WORD    MajorImageVersion;                                     // 0x30
-    WORD    MinorImageVersion;                                     // 0x32
-    WORD    MajorSubsystemVersion;                                 // 0x34
-    WORD    MinorSubsystemVersion;                                 // 0x36
-    DWORD   Win32VersionValue;                                     // 0x38
-    DWORD   SizeOfImage;                                           // 0x3C
-    DWORD   SizeOfHeaders;                                         // 0x40
-    DWORD   CheckSum;                                              // 0x44
-    WORD    Subsystem;                                             // 0x48
-    WORD    DllCharacteristics;                                    // 0x4A
-    DWORD   SizeOfStackReserve;                                    // 0x4C
-    DWORD   SizeOfStackCommit;                                     // 0x50
-    DWORD   SizeOfHeapReserve;                                     // 0x54
-    DWORD   SizeOfHeapCommit;                                      // 0x58
-    DWORD   LoaderFlags;                                           // 0x5C
-    DWORD   NumberOfRvaAndSizes;
-    IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
-} IMAGE_OPTIONAL_HEADER, *PIMAGE_OPTIONAL_HEADER;
 
 #define IMAGE_SUBSYSTEM_UNKNOWN		0
 #define IMAGE_SUBSYSTEM_NATIVE		1
@@ -150,11 +67,6 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
 #define IMAGE_SUBSYSTEM_POSIX_CUI	7
 #define IMAGE_SUBSYSTEM_WINDOWS_CE_GUI	9
 
-typedef struct _IMAGE_NT_HEADERS {
-    DWORD Signature;
-    IMAGE_FILE_HEADER FileHeader;
-    IMAGE_OPTIONAL_HEADER OptionalHeader;
-} IMAGE_NT_HEADERS, *PIMAGE_NT_HEADERS;
 
 
 // Directory Entries
@@ -171,28 +83,213 @@ typedef struct _IMAGE_NT_HEADERS {
 #define IMAGE_DIRECTORY_ENTRY_TLS            9   // TLS Directory
 #define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG   10   // Load Configuration Directory
 #define IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT  11   // Bound Import Directory in headers
-#define IMAGE_DIRECTORY_ENTRY_IAT           12   // Import Address 
+#define IMAGE_DIRECTORY_ENTRY_IAT           12   // Import Address
 //
 // Section header format.
 //
+#define IMAGE_SIZEOF_FILE_HEADER	20
+#define IMAGE_FILE_MACHINE_UNKNOWN	0
+#define IMAGE_NT_SIGNATURE 0x00004550
+#define IMAGE_NT_OPTIONAL_HDR_MAGIC 0x10b
+#define IMAGE_ROM_OPTIONAL_HDR_MAGIC 0x107
+#define IMAGE_SEPARATE_DEBUG_SIGNATURE 0x4944
+#define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
+#define IMAGE_SIZEOF_ROM_OPTIONAL_HEADER 56
+#define IMAGE_SIZEOF_STD_OPTIONAL_HEADER 28
+#define IMAGE_SIZEOF_NT_OPTIONAL_HEADER 224
+#define IMAGE_SIZEOF_SHORT_NAME 8
+#define IMAGE_SIZEOF_SECTION_HEADER 40
+#define IMAGE_SIZEOF_SYMBOL 18
+#define IMAGE_SIZEOF_AUX_SYMBOL 18
+#define IMAGE_SIZEOF_RELOCATION 10
+#define IMAGE_SIZEOF_BASE_RELOCATION 8
+#define IMAGE_SIZEOF_LINENUMBER 6
+#define IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR 60
+#define SIZEOF_RFPO_DATA 16
+#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
+#define IMAGE_SCN_TYPE_NO_PAD 8
+#define IMAGE_SCN_CNT_CODE 32
+#define IMAGE_SCN_CNT_INITIALIZED_DATA 64
+#define IMAGE_SCN_CNT_UNINITIALIZED_DATA 128
+#define IMAGE_SCN_LNK_OTHER 256
+#define IMAGE_SCN_LNK_INFO 512
+#define IMAGE_SCN_LNK_REMOVE 2048
+#define IMAGE_SCN_LNK_COMDAT 4096
+#define IMAGE_SCN_MEM_FARDATA 0x8000
+#define IMAGE_SCN_MEM_PURGEABLE 0x20000
+#define IMAGE_SCN_MEM_16BIT 0x20000
+#define IMAGE_SCN_MEM_LOCKED  0x40000
+#define IMAGE_SCN_MEM_PRELOAD 0x80000
+#define IMAGE_SCN_ALIGN_1BYTES 0x100000
+#define IMAGE_SCN_ALIGN_2BYTES 0x200000
+#define IMAGE_SCN_ALIGN_4BYTES 0x300000
+#define IMAGE_SCN_ALIGN_8BYTES 0x400000
+#define IMAGE_SCN_ALIGN_16BYTES 0x500000
+#define IMAGE_SCN_ALIGN_32BYTES 0x600000
+#define IMAGE_SCN_ALIGN_64BYTES 0x700000
+#define IMAGE_SCN_LNK_NRELOC_OVFL 0x1000000
+#define IMAGE_SCN_MEM_DISCARDABLE 0x2000000
+#define IMAGE_SCN_MEM_NOT_CACHED 0x4000000
+#define IMAGE_SCN_MEM_NOT_PAGED 0x8000000
+#define IMAGE_SCN_MEM_SHARED 0x10000000
+#define IMAGE_SCN_MEM_EXECUTE 0x20000000
+#define IMAGE_SCN_MEM_READ 0x40000000
+#define IMAGE_SCN_MEM_WRITE 0x80000000
+#define IMAGE_SYM_UNDEFINED	0
+#define IMAGE_SYM_ABSOLUTE (-1)
+#define IMAGE_SYM_DEBUG	(-2)
+#define IMAGE_SYM_TYPE_NULL 0
+#define IMAGE_SYM_TYPE_VOID 1
+#define IMAGE_SYM_TYPE_CHAR 2
+#define IMAGE_SYM_TYPE_SHORT 3
+#define IMAGE_SYM_TYPE_INT 4
+#define IMAGE_SYM_TYPE_LONG 5
+#define IMAGE_SYM_TYPE_FLOAT 6
+#define IMAGE_SYM_TYPE_DOUBLE 7
+#define IMAGE_SYM_TYPE_STRUCT 8
+#define IMAGE_SYM_TYPE_UNION 9
+#define IMAGE_SYM_TYPE_ENUM 10
+#define IMAGE_SYM_TYPE_MOE 11
+#define IMAGE_SYM_TYPE_BYTE 12
+#define IMAGE_SYM_TYPE_WORD 13
+#define IMAGE_SYM_TYPE_UINT 14
+#define IMAGE_SYM_TYPE_DWORD 15
+#define IMAGE_SYM_TYPE_PCODE 32768
+#define IMAGE_SYM_DTYPE_NULL 0
+#define IMAGE_SYM_DTYPE_POINTER 1
+#define IMAGE_SYM_DTYPE_FUNCTION 2
+#define IMAGE_SYM_DTYPE_ARRAY 3
+#define IMAGE_SYM_CLASS_END_OF_FUNCTION	(-1)
+#define IMAGE_SYM_CLASS_NULL 0
+#define IMAGE_SYM_CLASS_AUTOMATIC 1
+#define IMAGE_SYM_CLASS_EXTERNAL 2
+#define IMAGE_SYM_CLASS_STATIC 3
+#define IMAGE_SYM_CLASS_REGISTER 4
+#define IMAGE_SYM_CLASS_EXTERNAL_DEF 5
+#define IMAGE_SYM_CLASS_LABEL 6
+#define IMAGE_SYM_CLASS_UNDEFINED_LABEL 7
+#define IMAGE_SYM_CLASS_MEMBER_OF_STRUCT 8
+#define IMAGE_SYM_CLASS_ARGUMENT 9
+#define IMAGE_SYM_CLASS_STRUCT_TAG 10
+#define IMAGE_SYM_CLASS_MEMBER_OF_UNION 11
+#define IMAGE_SYM_CLASS_UNION_TAG 12
+#define IMAGE_SYM_CLASS_TYPE_DEFINITION 13
+#define IMAGE_SYM_CLASS_UNDEFINED_STATIC 14
+#define IMAGE_SYM_CLASS_ENUM_TAG 15
+#define IMAGE_SYM_CLASS_MEMBER_OF_ENUM 16
+#define IMAGE_SYM_CLASS_REGISTER_PARAM 17
+#define IMAGE_SYM_CLASS_BIT_FIELD 18
+#define IMAGE_SYM_CLASS_FAR_EXTERNAL 68
+#define IMAGE_SYM_CLASS_BLOCK 100
+#define IMAGE_SYM_CLASS_FUNCTION 101
+#define IMAGE_SYM_CLASS_END_OF_STRUCT 102
+#define IMAGE_SYM_CLASS_FILE 103
+#define IMAGE_SYM_CLASS_SECTION 104
+#define IMAGE_SYM_CLASS_WEAK_EXTERNAL 105
+#define IMAGE_COMDAT_SELECT_NODUPLICATES 1
+#define IMAGE_COMDAT_SELECT_ANY 2
+#define IMAGE_COMDAT_SELECT_SAME_SIZE 3
+#define IMAGE_COMDAT_SELECT_EXACT_MATCH 4
+#define IMAGE_COMDAT_SELECT_ASSOCIATIVE 5
+#define IMAGE_COMDAT_SELECT_LARGEST 6
+#define IMAGE_COMDAT_SELECT_NEWEST 7
+#define IMAGE_WEAK_EXTERN_SEARCH_NOLIBRARY 1
+#define IMAGE_WEAK_EXTERN_SEARCH_LIBRARY 2
+#define IMAGE_WEAK_EXTERN_SEARCH_ALIAS 3
+#define IMAGE_REL_I386_ABSOLUTE 0
+#define IMAGE_REL_I386_DIR16 1
+#define IMAGE_REL_I386_REL16 2
+#define IMAGE_REL_I386_DIR32 6
+#define IMAGE_REL_I386_DIR32NB 7
+#define IMAGE_REL_I386_SEG12 9
+#define IMAGE_REL_I386_SECTION 10
+#define IMAGE_REL_I386_SECREL 11
+#define IMAGE_REL_I386_REL32 20
+#define IMAGE_REL_MIPS_ABSOLUTE 0
+#define IMAGE_REL_MIPS_REFHALF 1
+#define IMAGE_REL_MIPS_REFWORD 2
+#define IMAGE_REL_MIPS_JMPADDR 3
+#define IMAGE_REL_MIPS_REFHI 4
+#define IMAGE_REL_MIPS_REFLO 5
+#define IMAGE_REL_MIPS_GPREL 6
+#define IMAGE_REL_MIPS_LITERAL 7
+#define IMAGE_REL_MIPS_SECTION 10
+#define IMAGE_REL_MIPS_SECREL 11
+#define IMAGE_REL_MIPS_SECRELLO 12
+#define IMAGE_REL_MIPS_SECRELHI 13
+#define IMAGE_REL_MIPS_REFWORDNB 34
+#define IMAGE_REL_MIPS_PAIR 35
+#define IMAGE_REL_ALPHA_ABSOLUTE 0
+#define IMAGE_REL_ALPHA_REFLONG 1
+#define IMAGE_REL_ALPHA_REFQUAD 2
+#define IMAGE_REL_ALPHA_GPREL32 3
+#define IMAGE_REL_ALPHA_LITERAL 4
+#define IMAGE_REL_ALPHA_LITUSE 5
+#define IMAGE_REL_ALPHA_GPDISP 6
+#define IMAGE_REL_ALPHA_BRADDR 7
+#define IMAGE_REL_ALPHA_HINT 8
+#define IMAGE_REL_ALPHA_INLINE_REFLONG 9
+#define IMAGE_REL_ALPHA_REFHI 10
+#define IMAGE_REL_ALPHA_REFLO 11
+#define IMAGE_REL_ALPHA_PAIR 12
+#define IMAGE_REL_ALPHA_MATCH 13
+#define IMAGE_REL_ALPHA_SECTION 14
+#define IMAGE_REL_ALPHA_SECREL 15
+#define IMAGE_REL_ALPHA_REFLONGNB 16
+#define IMAGE_REL_ALPHA_SECRELLO 17
+#define IMAGE_REL_ALPHA_SECRELHI 18
+#define IMAGE_REL_PPC_ABSOLUTE 0
+#define IMAGE_REL_PPC_ADDR64 1
+#define IMAGE_REL_PPC_ADDR32 2
+#define IMAGE_REL_PPC_ADDR24 3
+#define IMAGE_REL_PPC_ADDR16 4
+#define IMAGE_REL_PPC_ADDR14 5
+#define IMAGE_REL_PPC_REL24 6
+#define IMAGE_REL_PPC_REL14 7
+#define IMAGE_REL_PPC_TOCREL16 8
+#define IMAGE_REL_PPC_TOCREL14 9
+#define IMAGE_REL_PPC_ADDR32NB 10
+#define IMAGE_REL_PPC_SECREL 11
+#define IMAGE_REL_PPC_SECTION 12
+#define IMAGE_REL_PPC_IFGLUE 13
+#define IMAGE_REL_PPC_IMGLUE 14
+#define IMAGE_REL_PPC_SECREL16 15
+#define IMAGE_REL_PPC_REFHI 16
+#define IMAGE_REL_PPC_REFLO 17
+#define IMAGE_REL_PPC_PAIR 18
+#define IMAGE_REL_PPC_TYPEMASK 255
+#define IMAGE_REL_PPC_NEG 256
+#define IMAGE_REL_PPC_BRTAKEN 512
+#define IMAGE_REL_PPC_BRNTAKEN 1024
+#define IMAGE_REL_PPC_TOCDEFN 2048
+#define IMAGE_REL_BASED_ABSOLUTE 0
+#define IMAGE_REL_BASED_HIGH 1
+#define IMAGE_REL_BASED_LOW 2
+#define IMAGE_REL_BASED_HIGHLOW 3
+#define IMAGE_REL_BASED_HIGHADJ 4
+#define IMAGE_REL_BASED_MIPS_JMPADDR 5
+#define IMAGE_ARCHIVE_START_SIZE 8
+#define IMAGE_ARCHIVE_START "!<arch>\n"
+#define IMAGE_ARCHIVE_END "`\n"
+#define IMAGE_ARCHIVE_PAD "\n"
+#define IMAGE_ARCHIVE_LINKER_MEMBER "/               "
+#define IMAGE_ARCHIVE_LONGNAMES_MEMBER "//              "
+#define IMAGE_ORDINAL_FLAG 0x80000000
+#define IMAGE_SNAP_BY_ORDINAL(o) ((o&IMAGE_ORDINAL_FLAG)!=0)
+#define IMAGE_RESOURCE_NAME_IS_STRING 0x80000000
+#define IMAGE_RESOURCE_DATA_IS_DIRECTORY 0x80000000
+#define IMAGE_DEBUG_TYPE_UNKNOWN 0
+#define IMAGE_DEBUG_TYPE_COFF 1
+#define IMAGE_DEBUG_TYPE_CODEVIEW 2
+#define IMAGE_DEBUG_TYPE_FPO 3
+#define IMAGE_DEBUG_TYPE_MISC 4
+#define IMAGE_DEBUG_TYPE_EXCEPTION 5
+#define IMAGE_DEBUG_TYPE_FIXUP 6
+#define IMAGE_DEBUG_TYPE_OMAP_TO_SRC 7
+#define IMAGE_DEBUG_TYPE_OMAP_FROM_SRC 8
+
 
 #define IMAGE_SIZEOF_SHORT_NAME              8
-
-typedef struct _IMAGE_SECTION_HEADER {
-    BYTE    Name[IMAGE_SIZEOF_SHORT_NAME];
-    union {
-            DWORD   PhysicalAddress;
-            DWORD   VirtualSize;
-    } Misc;
-    DWORD   VirtualAddress;
-    DWORD   SizeOfRawData;
-    DWORD   PointerToRawData;
-    DWORD   PointerToRelocations;
-    DWORD   PointerToLinenumbers;
-    WORD    NumberOfRelocations;
-    WORD    NumberOfLinenumbers;
-    DWORD   Characteristics;
-} IMAGE_SECTION_HEADER, *PIMAGE_SECTION_HEADER;
 
 #define IMAGE_SIZEOF_SECTION_HEADER          40
 
@@ -200,32 +297,413 @@ typedef struct _IMAGE_SECTION_HEADER {
 #define IMAGE_SECTION_INITIALIZED_DATA (0x40)
 #define IMAGE_SECTION_UNINITIALIZED_DATA (0x80)
 
-//
-// Export Format
-//
-
+#pragma pack(push,4)
+typedef struct _IMAGE_FILE_HEADER {
+	WORD Machine;
+	WORD NumberOfSections;
+	DWORD TimeDateStamp;
+	DWORD PointerToSymbolTable;
+	DWORD NumberOfSymbols;
+	WORD SizeOfOptionalHeader;
+	WORD Characteristics;
+} IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
+typedef struct _IMAGE_DATA_DIRECTORY {
+	DWORD VirtualAddress;
+	DWORD Size;
+} IMAGE_DATA_DIRECTORY,*PIMAGE_DATA_DIRECTORY;
+typedef struct _IMAGE_OPTIONAL_HEADER {
+	WORD Magic;
+	BYTE MajorLinkerVersion;
+	BYTE MinorLinkerVersion;
+	DWORD SizeOfCode;
+	DWORD SizeOfInitializedData;
+	DWORD SizeOfUninitializedData;
+	DWORD AddressOfEntryPoint;
+	DWORD BaseOfCode;
+	DWORD BaseOfData;
+	DWORD ImageBase;
+	DWORD SectionAlignment;
+	DWORD FileAlignment;
+	WORD MajorOperatingSystemVersion;
+	WORD MinorOperatingSystemVersion;
+	WORD MajorImageVersion;
+	WORD MinorImageVersion;
+	WORD MajorSubsystemVersion;
+	WORD MinorSubsystemVersion;
+	DWORD Reserved1;
+	DWORD SizeOfImage;
+	DWORD SizeOfHeaders;
+	DWORD CheckSum;
+	WORD Subsystem;
+	WORD DllCharacteristics;
+	DWORD SizeOfStackReserve;
+	DWORD SizeOfStackCommit;
+	DWORD SizeOfHeapReserve;
+	DWORD SizeOfHeapCommit;
+	DWORD LoaderFlags;
+	DWORD NumberOfRvaAndSizes;
+	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+} IMAGE_OPTIONAL_HEADER,*PIMAGE_OPTIONAL_HEADER;
+typedef struct _IMAGE_ROM_OPTIONAL_HEADER {
+	WORD Magic;
+	BYTE MajorLinkerVersion;
+	BYTE MinorLinkerVersion;
+	DWORD SizeOfCode;
+	DWORD SizeOfInitializedData;
+	DWORD SizeOfUninitializedData;
+	DWORD AddressOfEntryPoint;
+	DWORD BaseOfCode;
+	DWORD BaseOfData;
+	DWORD BaseOfBss;
+	DWORD GprMask;
+	DWORD CprMask[4];
+	DWORD GpValue;
+} IMAGE_ROM_OPTIONAL_HEADER,*PIMAGE_ROM_OPTIONAL_HEADER;
+#pragma pack(pop)
+#pragma pack(push,2)
+typedef struct _IMAGE_DOS_HEADER {
+	WORD e_magic;
+	WORD e_cblp;
+	WORD e_cp;
+	WORD e_crlc;
+	WORD e_cparhdr;
+	WORD e_minalloc;
+	WORD e_maxalloc;
+	WORD e_ss;
+	WORD e_sp;
+	WORD e_csum;
+	WORD e_ip;
+	WORD e_cs;
+	WORD e_lfarlc;
+	WORD e_ovno;
+	WORD e_res[4];
+	WORD e_oemid;
+	WORD e_oeminfo;
+	WORD e_res2[10];
+	LONG e_lfanew;
+} IMAGE_DOS_HEADER,*PIMAGE_DOS_HEADER;
+typedef struct _IMAGE_OS2_HEADER {
+	WORD ne_magic;
+	CHAR ne_ver;
+	CHAR ne_rev;
+	WORD ne_enttab;
+	WORD ne_cbenttab;
+	LONG ne_crc;
+	WORD ne_flags;
+	WORD ne_autodata;
+	WORD ne_heap;
+	WORD ne_stack;
+	LONG ne_csip;
+	LONG ne_sssp;
+	WORD ne_cseg;
+	WORD ne_cmod;
+	WORD ne_cbnrestab;
+	WORD ne_segtab;
+	WORD ne_rsrctab;
+	WORD ne_restab;
+	WORD ne_modtab;
+	WORD ne_imptab;
+	LONG ne_nrestab;
+	WORD ne_cmovent;
+	WORD ne_align;
+	WORD ne_cres;
+	BYTE ne_exetyp;
+	BYTE ne_flagsothers;
+	WORD ne_pretthunks;
+	WORD ne_psegrefbytes;
+	WORD ne_swaparea;
+	WORD ne_expver;
+} IMAGE_OS2_HEADER,*PIMAGE_OS2_HEADER;
+#pragma pack(pop)
+#pragma pack(push,4)
+typedef struct _IMAGE_NT_HEADERS {
+	DWORD Signature;
+	IMAGE_FILE_HEADER FileHeader;
+	IMAGE_OPTIONAL_HEADER OptionalHeader;
+} IMAGE_NT_HEADERS,*PIMAGE_NT_HEADERS;
+typedef struct _IMAGE_ROM_HEADERS {
+	IMAGE_FILE_HEADER FileHeader;
+	IMAGE_ROM_OPTIONAL_HEADER OptionalHeader;
+} IMAGE_ROM_HEADERS,*PIMAGE_ROM_HEADERS;
+typedef struct _IMAGE_SECTION_HEADER {
+	BYTE Name[IMAGE_SIZEOF_SHORT_NAME];
+	union {
+		DWORD PhysicalAddress;
+		DWORD VirtualSize;
+	} Misc;
+	DWORD VirtualAddress;
+	DWORD SizeOfRawData;
+	DWORD PointerToRawData;
+	DWORD PointerToRelocations;
+	DWORD PointerToLinenumbers;
+	WORD NumberOfRelocations;
+	WORD NumberOfLinenumbers;
+	DWORD Characteristics;
+} IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
+#pragma pack(pop)
+#pragma pack(push,2)
+typedef struct _IMAGE_SYMBOL {
+	union {
+		BYTE ShortName[8];
+		struct {
+			DWORD Short;
+			DWORD Long;
+		} Name;
+		PBYTE LongName[2];
+	} N;
+	DWORD Value;
+	SHORT SectionNumber;
+	WORD Type;
+	BYTE StorageClass;
+	BYTE NumberOfAuxSymbols;
+} IMAGE_SYMBOL,*PIMAGE_SYMBOL;
+typedef union _IMAGE_AUX_SYMBOL {
+	struct {
+		DWORD TagIndex;
+		union {
+			struct {
+				WORD Linenumber;
+				WORD Size;
+			} LnSz;
+			DWORD TotalSize;
+		} Misc;
+		union {
+			struct {
+				DWORD PointerToLinenumber;
+				DWORD PointerToNextFunction;
+			} Function;
+			struct {
+				WORD Dimension[4];
+			} Array;
+		} FcnAry;
+		WORD TvIndex;
+	} Sym;
+	struct {
+		BYTE Name[IMAGE_SIZEOF_SYMBOL];
+	} File;
+	struct {
+		DWORD Length;
+		WORD NumberOfRelocations;
+		WORD NumberOfLinenumbers;
+		DWORD CheckSum;
+		SHORT Number;
+		BYTE Selection;
+	} Section;
+} IMAGE_AUX_SYMBOL,*PIMAGE_AUX_SYMBOL;
+typedef struct _IMAGE_COFF_SYMBOLS_HEADER {
+	DWORD NumberOfSymbols;
+	DWORD LvaToFirstSymbol;
+	DWORD NumberOfLinenumbers;
+	DWORD LvaToFirstLinenumber;
+	DWORD RvaToFirstByteOfCode;
+	DWORD RvaToLastByteOfCode;
+	DWORD RvaToFirstByteOfData;
+	DWORD RvaToLastByteOfData;
+} IMAGE_COFF_SYMBOLS_HEADER,*PIMAGE_COFF_SYMBOLS_HEADER;
+typedef struct _IMAGE_RELOCATION {
+	_ANONYMOUS_UNION union {
+		DWORD VirtualAddress;
+		DWORD RelocCount;
+	} DUMMYUNIONNAME;
+	DWORD SymbolTableIndex;
+	WORD Type;
+} IMAGE_RELOCATION,*PIMAGE_RELOCATION;
+#pragma pack(pop)
+#pragma pack(push,4)
+typedef struct _IMAGE_BASE_RELOCATION {
+	DWORD VirtualAddress;
+	DWORD SizeOfBlock;
+} IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
+#pragma pack(pop)
+#pragma pack(push,2)
+typedef struct _IMAGE_LINENUMBER {
+	union {
+		DWORD SymbolTableIndex;
+		DWORD VirtualAddress;
+	} Type;
+	WORD Linenumber;
+} IMAGE_LINENUMBER,*PIMAGE_LINENUMBER;
+#pragma pack(pop)
+#pragma pack(push,4)
+typedef struct _IMAGE_ARCHIVE_MEMBER_HEADER {
+	BYTE Name[16];
+	BYTE Date[12];
+	BYTE UserID[6];
+	BYTE GroupID[6];
+	BYTE Mode[8];
+	BYTE Size[10];
+	BYTE EndHeader[2];
+} IMAGE_ARCHIVE_MEMBER_HEADER,*PIMAGE_ARCHIVE_MEMBER_HEADER;
 typedef struct _IMAGE_EXPORT_DIRECTORY {
-    DWORD   Characteristics;
-    DWORD   TimeDateStamp;
-    WORD    MajorVersion;
-    WORD    MinorVersion;
-    DWORD   Name;
-    DWORD   Base;
-    DWORD   NumberOfFunctions;
-    DWORD   NumberOfNames;
-    PDWORD  *AddressOfFunctions;
-    PDWORD  *AddressOfNames;
-    PWORD   *AddressOfNameOrdinals;
-} IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
+	DWORD Characteristics;
+	DWORD TimeDateStamp;
+	WORD MajorVersion;
+	WORD MinorVersion;
+	DWORD Name;
+	DWORD Base;
+	DWORD NumberOfFunctions;
+	DWORD NumberOfNames;
+	PDWORD *AddressOfFunctions;
+	PDWORD *AddressOfNames;
+	PWORD *AddressOfNameOrdinals;
+} IMAGE_EXPORT_DIRECTORY,*PIMAGE_EXPORT_DIRECTORY;
+typedef struct _IMAGE_IMPORT_BY_NAME {
+	WORD Hint;
+	BYTE Name[1];
+} IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
+typedef struct _IMAGE_THUNK_DATA {
+	union {
+		PBYTE ForwarderString;
+		PDWORD Function;
+		DWORD Ordinal;
+		PIMAGE_IMPORT_BY_NAME AddressOfData;
+	} u1;
+} IMAGE_THUNK_DATA,*PIMAGE_THUNK_DATA;
+typedef struct _IMAGE_IMPORT_DESCRIPTOR {
+	_ANONYMOUS_UNION union {
+		DWORD Characteristics;
+		PIMAGE_THUNK_DATA OriginalFirstThunk;
+	} DUMMYUNIONNAME;
+	DWORD TimeDateStamp;
+	DWORD ForwarderChain;
+	DWORD Name;
+	PIMAGE_THUNK_DATA FirstThunk;
+} IMAGE_IMPORT_DESCRIPTOR,*PIMAGE_IMPORT_DESCRIPTOR;
+typedef struct _IMAGE_BOUND_IMPORT_DESCRIPTOR {
+	DWORD TimeDateStamp;
+	WORD OffsetModuleName;
+	WORD NumberOfModuleForwarderRefs;
+} IMAGE_BOUND_IMPORT_DESCRIPTOR,*PIMAGE_BOUND_IMPORT_DESCRIPTOR;
+typedef struct _IMAGE_BOUND_FORWARDER_REF {
+	DWORD TimeDateStamp;
+	WORD OffsetModuleName;
+	WORD Reserved;
+} IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
+typedef void(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID,DWORD,PVOID);
+typedef struct _IMAGE_TLS_DIRECTORY {
+	DWORD StartAddressOfRawData;
+	DWORD EndAddressOfRawData;
+	PDWORD AddressOfIndex;
+	PIMAGE_TLS_CALLBACK *AddressOfCallBacks;
+	DWORD SizeOfZeroFill;
+	DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY,*PIMAGE_TLS_DIRECTORY;
+typedef struct _IMAGE_RESOURCE_DIRECTORY {
+	DWORD Characteristics;
+	DWORD TimeDateStamp;
+	WORD MajorVersion;
+	WORD MinorVersion;
+	WORD NumberOfNamedEntries;
+	WORD NumberOfIdEntries;
+} IMAGE_RESOURCE_DIRECTORY,*PIMAGE_RESOURCE_DIRECTORY;
+/*_ANONYMOUS_STRUCT typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
+	_ANONYMOUS_UNION union {
+		_ANONYMOUS_STRUCT struct {
+			DWORD NameOffset:31;
+			DWORD NameIsString:1;
+		}DUMMYSTRUCTNAME;
+		DWORD Name;
+		WORD Id;
+	} DUMMYUNIONNAME;
+	_ANONYMOUS_UNION union {
+		DWORD OffsetToData;
+		_ANONYMOUS_STRUCT struct {
+			DWORD OffsetToDirectory:31;
+			DWORD DataIsDirectory:1;
+		} DUMMYSTRUCTNAME2;
+	} DUMMYUNIONNAME2;
+} IMAGE_RESOURCE_DIRECTORY_ENTRY,*PIMAGE_RESOURCE_DIRECTORY_ENTRY;
+*/
+typedef struct _IMAGE_RESOURCE_DIRECTORY_STRING {
+	WORD Length;
+	CHAR NameString[1];
+} IMAGE_RESOURCE_DIRECTORY_STRING,*PIMAGE_RESOURCE_DIRECTORY_STRING;
+typedef struct _IMAGE_RESOURCE_DIR_STRING_U {
+	WORD Length;
+	WCHAR NameString[1];
+} IMAGE_RESOURCE_DIR_STRING_U,*PIMAGE_RESOURCE_DIR_STRING_U;
+typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
+	DWORD OffsetToData;
+	DWORD Size;
+	DWORD CodePage;
+	DWORD Reserved;
+} IMAGE_RESOURCE_DATA_ENTRY,*PIMAGE_RESOURCE_DATA_ENTRY;
+typedef struct _IMAGE_LOAD_CONFIG_DIRECTORY {
+	DWORD Characteristics;
+	DWORD TimeDateStamp;
+	WORD MajorVersion;
+	WORD MinorVersion;
+	DWORD GlobalFlagsClear;
+	DWORD GlobalFlagsSet;
+	DWORD CriticalSectionDefaultTimeout;
+	DWORD DeCommitFreeBlockThreshold;
+	DWORD DeCommitTotalFreeThreshold;
+	PVOID LockPrefixTable;
+	DWORD MaximumAllocationSize;
+	DWORD VirtualMemoryThreshold;
+	DWORD ProcessHeapFlags;
+	DWORD Reserved[4];
+} IMAGE_LOAD_CONFIG_DIRECTORY,*PIMAGE_LOAD_CONFIG_DIRECTORY;
+typedef struct _IMAGE_RUNTIME_FUNCTION_ENTRY {
+	DWORD BeginAddress;
+	DWORD EndAddress;
+	PVOID ExceptionHandler;
+	PVOID HandlerData;
+	DWORD PrologEndAddress;
+} IMAGE_RUNTIME_FUNCTION_ENTRY,*PIMAGE_RUNTIME_FUNCTION_ENTRY;
+typedef struct _IMAGE_DEBUG_DIRECTORY {
+	DWORD Characteristics;
+	DWORD TimeDateStamp;
+	WORD MajorVersion;
+	WORD MinorVersion;
+	DWORD Type;
+	DWORD SizeOfData;
+	DWORD AddressOfRawData;
+	DWORD PointerToRawData;
+} IMAGE_DEBUG_DIRECTORY,*PIMAGE_DEBUG_DIRECTORY;
+typedef struct _FPO_DATA {
+	DWORD ulOffStart;
+	DWORD cbProcSize;
+	DWORD cdwLocals;
+	WORD cdwParams;
+	WORD cbProlog:8;
+	WORD cbRegs:3;
+	WORD fHasSEH:1;
+	WORD fUseBP:1;
+	WORD reserved:1;
+	WORD cbFrame:2;
+} FPO_DATA,*PFPO_DATA;
+typedef struct _IMAGE_DEBUG_MISC {
+	DWORD DataType;
+	DWORD Length;
+	BOOLEAN Unicode;
+	BYTE Reserved[3];
+	BYTE Data[1];
+} IMAGE_DEBUG_MISC,*PIMAGE_DEBUG_MISC;
+typedef struct _IMAGE_FUNCTION_ENTRY {
+	DWORD StartingAddress;
+	DWORD EndingAddress;
+	DWORD EndOfPrologue;
+} IMAGE_FUNCTION_ENTRY,*PIMAGE_FUNCTION_ENTRY;
+typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
+	WORD Signature;
+	WORD Flags;
+	WORD Machine;
+	WORD Characteristics;
+	DWORD TimeDateStamp;
+	DWORD CheckSum;
+	DWORD ImageBase;
+	DWORD SizeOfImage;
+	DWORD NumberOfSections;
+	DWORD ExportedNamesSize;
+	DWORD DebugDirectorySize;
+	DWORD Reserved[3];
+} IMAGE_SEPARATE_DEBUG_HEADER,*PIMAGE_SEPARATE_DEBUG_HEADER;
+#pragma pack(pop)
 
 //
 // Import Format
 //
-
-typedef struct _IMAGE_IMPORT_BY_NAME {
-    WORD    Hint;
-    BYTE    Name[1];
-} IMAGE_IMPORT_BY_NAME, *PIMAGE_IMPORT_BY_NAME;
 
 #define IMAGE_ORDINAL_FLAG 0x80000000
 #define IMAGE_ORDINAL(Ordinal) (Ordinal & 0xffff)
@@ -274,13 +752,11 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 // set to indicate this.  Otherwise the high bit is clear and the offset
 // field points to a resource data entry.
 //
-
 typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
     DWORD    Name;
     DWORD    OffsetToData;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
-
-
+/*
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
     DWORD   Characteristics;
     DWORD   TimeDateStamp;
@@ -290,7 +766,7 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY {
     WORD    NumberOfIdEntries;
     IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[0];
 } IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;
-
+*/
 #define IMAGE_RESOURCE_NAME_IS_STRING        0x80000000
 #define IMAGE_RESOURCE_DATA_IS_DIRECTORY     0x80000000
 
@@ -304,7 +780,7 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY {
 // the impact of these variable length objects on the alignment of the fixed
 // size directory entry objects.
 //
-
+/* defined above from mingw. ei
 typedef struct _IMAGE_RESOURCE_DIRECTORY_STRING {
     WORD    Length;
     CHAR    NameString[ 1 ];
@@ -315,7 +791,7 @@ typedef struct _IMAGE_RESOURCE_DIR_STRING_U {
     WORD    Length;
     WCHAR   NameString[ 1 ];
 } IMAGE_RESOURCE_DIR_STRING_U, *PIMAGE_RESOURCE_DIR_STRING_U;
-
+*/
 
 //
 // Each resource data entry describes a leaf node in the resource directory
@@ -325,14 +801,14 @@ typedef struct _IMAGE_RESOURCE_DIR_STRING_U {
 // decoding code point values within the resource data.  Typically for new
 // applications the code page would be the unicode code page.
 //
-
+/* ei
 typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
     DWORD   OffsetToData;
     DWORD   Size;
     DWORD   CodePage;
     DWORD   Reserved;
 } IMAGE_RESOURCE_DATA_ENTRY, *PIMAGE_RESOURCE_DATA_ENTRY;
-
+*/
 
 //  Menu Resources	 ... added by .....sang cho....
 
@@ -369,18 +845,18 @@ typedef struct _IMAGE_NORMAL_MENU_ITEM{
 
 // Dialog Box Resources	.................. added by sang cho.
 
-// A dialog box is contained in a single resource and has a header and 
+// A dialog box is contained in a single resource and has a header and
 // a portion repeated for each control in the dialog box.
 // The item DWORD IStyle is a standard window style composed of flags found
 // in WINDOWS.H.
 // The default style for a dialog box is:
 // WS_POPUP | WS_BORDER | WS_SYSMENU
-// 
+//
 // The itme marked "Name or Ordinal" are :
 // If the first word is an 0xffff, the next two bytes contain an ordinal ID.
 // Otherwise, the first one or more WORDS contain a double-null-terminated string.
 // An empty string is represented by a single WORD zero in the first location.
-// 
+//
 // The WORD wPointSize and WCHAR szFontName entries are present if the FONT
 // statement was included for the dialog box. This can be detected by checking
 // the entry IStyle. If IStyle & DS_SETFONT ( which is 0x40), then these
@@ -459,21 +935,6 @@ typedef struct _IMAGE_CONTROL_DATA{
 // SCROLLBAR           SCROLLBAR             None
 ///
 
-//
-// Debug Format
-//
-
-typedef struct _IMAGE_DEBUG_DIRECTORY {
-    DWORD   Characteristics;
-    DWORD   TimeDateStamp;
-    WORD    MajorVersion;
-    WORD    MinorVersion;
-    DWORD   Type;
-    DWORD   SizeOfData;
-    DWORD   AddressOfRawData;
-    DWORD   PointerToRawData;
-} IMAGE_DEBUG_DIRECTORY, *PIMAGE_DEBUG_DIRECTORY;
-
 #define IMAGE_DEBUG_TYPE_UNKNOWN          0
 #define IMAGE_DEBUG_TYPE_COFF             1
 #define IMAGE_DEBUG_TYPE_CODEVIEW         2
@@ -484,15 +945,6 @@ typedef struct _IMAGE_DEBUG_DIRECTORY {
 #define IMAGE_DEBUG_TYPE_OMAP_TO_SRC      7
 #define IMAGE_DEBUG_TYPE_OMAP_FROM_SRC    8
 
-
-typedef struct _IMAGE_DEBUG_MISC {
-    DWORD       DataType;               // type of misc data, see defines
-    DWORD       Length;                 // total length of record, rounded to four
-                                        // byte multiple.
-    BOOLEAN     Unicode;                // TRUE if data is unicode string
-    BYTE        Reserved[ 3 ];
-    BYTE        Data[ 1 ];              // Actual data
-} IMAGE_DEBUG_MISC, *PIMAGE_DEBUG_MISC;
 
 
 //
@@ -514,7 +966,7 @@ typedef struct _IMAGE_DEBUG_MISC {
 // compute the name of the .DBG file, from the name of the image in the
 // IMAGE_DEBUG_MISC structure.
 //
-
+/*  ei
 typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
     WORD        Signature;
     WORD        Flags;
@@ -530,7 +982,7 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
     DWORD       SectionAlignment;
     DWORD       Reserved[2];
 } IMAGE_SEPARATE_DEBUG_HEADER, *PIMAGE_SEPARATE_DEBUG_HEADER;
-
+*/
 #define IMAGE_SEPARATE_DEBUG_SIGNATURE  0x4944
 
 #define IMAGE_SEPARATE_DEBUG_FLAGS_MASK 0x8000
@@ -567,6 +1019,15 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 			 SIZE_OF_NT_SIGNATURE		     +	\
 			 sizeof (IMAGE_FILE_HEADER)	     +	\
 			 sizeof (IMAGE_OPTIONAL_HEADER)))
+
+//#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+/* defined above ei
+#define IMAGE_FIRST_SECTION( ntheader ) ((PIMAGE_SECTION_HEADER)        \
+    ((ULONG_PTR)ntheader +                                              \
+     FIELD_OFFSET( IMAGE_NT_HEADERS, OptionalHeader ) +                 \
+     ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader   \
+    ))
+*/
 
 #define MakePtr( cast, ptr, addValue ) (cast)( (DWORD)(ptr) + (DWORD)(addValue))
 
