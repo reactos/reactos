@@ -7,10 +7,42 @@
 using std::string;
 using std::vector;
 
+Project::Project(string filename)
+{
+	if ( !xmlfile.open ( filename ) )
+		throw FileNotFoundException ( filename );
+	ReadXml();
+}
+
 Project::~Project()
 {
 	for ( size_t i = 0; i < modules.size(); i++ )
 		delete modules[i];
+}
+
+void Project::ReadXml()
+{
+	Path path;
+	bool projectFound = false;
+	do
+	{
+		XMLElement* head = XMLParse ( xmlfile, path );
+		if ( !head )
+			throw InvalidBuildFileException ( "Document contains no 'project' tag." );
+
+		if ( head->name == "!--" )
+			continue; // ignore comments
+
+		if ( head->name != "project" )
+		{
+			throw InvalidBuildFileException ( "Expected 'project', got '%s'.",
+			                                  head->name.c_str());
+		}
+
+		this->ProcessXML ( *head, "." );
+		delete head;
+		projectFound = true;
+	} while (!projectFound);
 }
 
 void

@@ -1,10 +1,11 @@
 #ifndef __RBUILD_H
 #define __RBUILD_H
 
-#include "XML.h"
-
 #include <string>
 #include <vector>
+#include "ssprintf.h"
+#include "exception.h"
+#include "XML.h"
 
 class Project;
 class Module;
@@ -16,8 +17,12 @@ public:
 	std::string name;
 	std::vector<Module*> modules;
 
-	~Project();
+	Project ( string filename );
+	~Project ();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
+private:
+	void ReadXml ();
+	XMLFile xmlfile;
 };
 
 class Module

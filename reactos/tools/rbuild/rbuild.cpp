@@ -17,40 +17,17 @@ main ( int argc, char** argv )
 {
 	InitWorkingDirectory();
 
-	XMLFile f;
-	Path path;
-	string xml_file ( "ReactOS.xml" );
-	if ( !f.open ( xml_file ) )
+	try
 	{
-		printf ( "couldn't open ReactOS.xml!\n" );
-		return -1;
-	}
+		string projectFilename ( "ReactOS.xml" );
+		Project* project = new Project( projectFilename );
 
-	vector<string> xml_dependencies;
-	xml_dependencies.push_back ( xml_file );
-	for ( ;; )
-	{
-		XMLElement* head = XMLParse ( f, path );
-		if ( !head )
-			break; // end of file
-
-		if ( head->name == "!--" )
-			continue; // ignore comments
-
-		if ( head->name != "project" )
-		{
-			printf ( "error: expecting 'project', got '%s'\n", head->name.c_str() );
-			continue;
-		}
-
-		Project* proj = new Project;
-		proj->ProcessXML ( *head, "." );
-
+		Path path;
 		// REM TODO FIXME actually do something with Project object...
-		printf ( "Found %d modules:\n", proj->modules.size() );
-		for ( size_t i = 0; i < proj->modules.size(); i++ )
+		printf ( "Found %d modules:\n", project->modules.size() );
+		for ( size_t i = 0; i < project->modules.size(); i++ )
 		{
-			Module& m = *proj->modules[i];
+			Module& m = *project->modules[i];
 			printf ( "\t%s in folder: %s\n",
 			         m.name.c_str(),
 			         m.path.c_str() );
@@ -74,10 +51,14 @@ main ( int argc, char** argv )
 				printf ( "\t\t%s\n", m.files[j]->name.c_str() );
 			}
 		}
+	
+		delete project;
 
-		delete proj;
-		delete head;
+		return 0;
 	}
-
-	return 0;
+	catch (Exception& ex)
+	{
+		printf ( ex.Message.c_str() );
+		return 1;
+	}
 }
