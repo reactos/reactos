@@ -62,7 +62,7 @@ void controller_wait(void)
   unsigned long timeout;
   LARGE_INTEGER Millisecond_Timeout;
 
-  Millisecond_Timeout.QuadPart = 1;
+  Millisecond_Timeout.QuadPart = -10000L;
 
   for(timeout = 0; timeout < CONTROLLER_TIMEOUT; timeout++)
   {
@@ -87,7 +87,7 @@ int controller_wait_for_input(void)
   int timeout;
   LARGE_INTEGER Millisecond_Timeout;
 
-  Millisecond_Timeout.QuadPart = 1;
+  Millisecond_Timeout.QuadPart = -10000L;
 
   for(timeout = KEYBOARD_INIT_TIMEOUT; timeout > 0; timeout--)
   {
