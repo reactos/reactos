@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.10 2003/07/10 15:05:55 chorns Exp $
+/* $Id: shutdown.c,v 1.11 2004/01/20 01:40:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -22,8 +22,7 @@
  *
  * @unimplemented
  */
-WINBOOL
-STDCALL
+BOOL STDCALL
 AbortSystemShutdownW(LPCWSTR lpMachineName)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -36,8 +35,7 @@ AbortSystemShutdownW(LPCWSTR lpMachineName)
  *
  * @unimplemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 AbortSystemShutdownA(LPCSTR lpMachineName)
 {
     ANSI_STRING MachineNameA;
@@ -64,8 +62,7 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
  *
  * @unimplemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 InitiateSystemShutdownW(
     LPWSTR  lpMachineName,
     LPWSTR  lpMessage,

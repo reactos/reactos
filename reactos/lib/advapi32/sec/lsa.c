@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.6 2003/09/08 09:56:56 weiden Exp $
+/* $Id: lsa.c,v 1.7 2004/01/20 01:40:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,9 +10,11 @@
  *	19990515 EA stubs
  *      20030202 KJK compressed stubs
  */
+
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ntsecapi.h>
+
 /*
  * @unimplemented
  */
@@ -289,7 +291,7 @@ STDCALL
 LsaRemoveAccountRights(
     LSA_HANDLE PolicyHandle,
     PSID AccountSid,
-    WINBOOL AllRights,
+    BOOL AllRights,
     PLSA_UNICODE_STRING UserRights,
     ULONG CountOfRights
     )
@@ -348,7 +350,7 @@ LsaSetForestTrustInformation(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
     PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-    WINBOOL CheckOnly,
+    BOOL CheckOnly,
     PLSA_FOREST_TRUST_COLLISION_INFORMATION * CollisionInfo
     )
 {

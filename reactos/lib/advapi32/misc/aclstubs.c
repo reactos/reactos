@@ -233,14 +233,14 @@ DWORD STDCALL SetSecurityInfo(HANDLE handle,SE_OBJECT_TYPE ObjectType,SECURITY_I
 /*
  * @unimplemented
  */
-DWORD STDCALL GetInheritanceSourceA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,WINBOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMA pInheritArray)
+DWORD STDCALL GetInheritanceSourceA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo, BOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMA pInheritArray)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-DWORD STDCALL GetInheritanceSourceW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,WINBOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMW pInheritArray)
+DWORD STDCALL GetInheritanceSourceW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo, BOOL Container,GUID ** pObjectClassGuids ,DWORD GuidCount,PACL pAcl,PFN_OBJECT_MGR_FUNCTS pfnArray OPTIONAL,PGENERIC_MAPPING pGenericMapping,PINHERITED_FROMW pInheritArray)
 {
   return(FALSE);
 }
@@ -254,14 +254,14 @@ DWORD STDCALL FreeInheritedFromArray(PINHERITED_FROMW pInheritArray,USHORT AceCn
 /*
  * @unimplemented
  */
-DWORD STDCALL TreeResetNamedSecurityInfoA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,WINBOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args)
+DWORD STDCALL TreeResetNamedSecurityInfoA(LPSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,BOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-DWORD STDCALL TreeResetNamedSecurityInfoW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,WINBOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args)
+DWORD STDCALL TreeResetNamedSecurityInfoW(LPWSTR pObjectName,SE_OBJECT_TYPE ObjectType,SECURITY_INFORMATION SecurityInfo,PSID pOwner,PSID pGroup,PACL pDacl,PACL pSacl,BOOL KeepExplicit,FN_PROGRESS fnProgress,PROG_INVOKE_SETTING ProgressInvokeSetting,PVOID Args)
 {
   return(FALSE);
 }

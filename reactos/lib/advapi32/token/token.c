@@ -1,4 +1,5 @@
-/*
+/* $Id: token.c,v 1.8 2004/01/20 01:40:19 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/token.c
@@ -15,11 +16,10 @@
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
+BOOL STDCALL
 AdjustTokenGroups (
 		   HANDLE TokenHandle,
-		   WINBOOL ResetToDefault,
+		   BOOL ResetToDefault,
 		   PTOKEN_GROUPS NewState,
 		   DWORD BufferLength,
 		   PTOKEN_GROUPS PreviousState,
@@ -40,11 +40,10 @@ AdjustTokenGroups (
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
+BOOL STDCALL
 AdjustTokenPrivileges (
 		       HANDLE TokenHandle,
-		       WINBOOL DisableAllPrivileges,
+		       BOOL DisableAllPrivileges,
 		       PTOKEN_PRIVILEGES NewState,
 		       DWORD BufferLength,
 		       PTOKEN_PRIVILEGES PreviousState,
@@ -64,8 +63,7 @@ AdjustTokenPrivileges (
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
+BOOL STDCALL
 GetTokenInformation (
 		     HANDLE TokenHandle,
 		     TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -88,8 +86,7 @@ GetTokenInformation (
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
+BOOL STDCALL
 SetTokenInformation (
 		     HANDLE TokenHandle,
 		     TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -111,163 +108,168 @@ SetTokenInformation (
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-AccessCheck (
-	     PSECURITY_DESCRIPTOR pSecurityDescriptor,
+BOOL STDCALL
+AccessCheck (PSECURITY_DESCRIPTOR pSecurityDescriptor,
 	     HANDLE ClientToken,
 	     DWORD DesiredAccess,
 	     PGENERIC_MAPPING GenericMapping,
 	     PPRIVILEGE_SET PrivilegeSet,
 	     LPDWORD PrivilegeSetLength,
 	     LPDWORD GrantedAccess,
-	     LPBOOL AccessStatus
-	      )
+	     LPBOOL AccessStatus)
 {
-	NTSTATUS errCode;
-	errCode = NtAccessCheck( pSecurityDescriptor,
-	     ClientToken,
-	     DesiredAccess,
-	     GenericMapping,
-             PrivilegeSet,
-	     (PULONG)PrivilegeSetLength,
-	     (PULONG)GrantedAccess,
-	     (PBOOLEAN)AccessStatus);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtAccessCheck (pSecurityDescriptor,
+			  ClientToken,
+			  DesiredAccess,
+			  GenericMapping,
+			  PrivilegeSet,
+			  (PULONG)PrivilegeSetLength,
+			  (PULONG)GrantedAccess,
+			  (PBOOLEAN)AccessStatus);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-OpenProcessToken (
-		  HANDLE ProcessHandle,
+BOOL STDCALL
+OpenProcessToken (HANDLE ProcessHandle,
 		  DWORD DesiredAccess,
-		  PHANDLE TokenHandle
-		   )
+		  PHANDLE TokenHandle)
 {
-	NTSTATUS errCode;
-	errCode = NtOpenProcessToken(ProcessHandle,DesiredAccess,TokenHandle);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtOpenProcessToken (ProcessHandle,
+			       DesiredAccess,
+			       TokenHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-OpenThreadToken (
-		 HANDLE ThreadHandle,
+BOOL STDCALL
+OpenThreadToken (HANDLE ThreadHandle,
 		 DWORD DesiredAccess,
-		 WINBOOL OpenAsSelf,
-		 PHANDLE TokenHandle
-		  )
+		 BOOL OpenAsSelf,
+		 PHANDLE TokenHandle)
 {
-	NTSTATUS errCode;
-	errCode = NtOpenThreadToken(ThreadHandle,DesiredAccess,OpenAsSelf,TokenHandle);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+
+  Status = NtOpenThreadToken (ThreadHandle,
+			      DesiredAccess,
+			      OpenAsSelf,
+			      TokenHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-SetThreadToken (
-                PHANDLE ThreadHandle,
-                HANDLE TokenHandle
-                 )
+BOOL STDCALL
+SetThreadToken (PHANDLE ThreadHandle,
+                HANDLE TokenHandle)
 {
-	NTSTATUS errCode;
-	HANDLE hThread  = NtCurrentThread();
-	if ( ThreadHandle != NULL )
-		hThread = ThreadHandle;
-	errCode = NtSetInformationThread(hThread,ThreadImpersonationToken,TokenHandle,sizeof(HANDLE));
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  NTSTATUS Status;
+  HANDLE hThread;
+
+  hThread = NtCurrentThread();
+  if (ThreadHandle != NULL)
+    hThread = ThreadHandle;
+
+  Status = NtSetInformationThread (hThread,
+				   ThreadImpersonationToken,
+				   TokenHandle,
+				   sizeof(HANDLE));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-DuplicateTokenEx (
-                  HANDLE ExistingTokenHandle,
+BOOL STDCALL
+DuplicateTokenEx (HANDLE ExistingTokenHandle,
                   DWORD  dwDesiredAccess,
                   LPSECURITY_ATTRIBUTES lpTokenAttributes,
                   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
                   TOKEN_TYPE TokenType,
-                  PHANDLE DuplicateTokenHandle
-                   )
+                  PHANDLE DuplicateTokenHandle)
 {
-	NTSTATUS errCode;
-	HANDLE NewToken;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE NewToken;
+  NTSTATUS Status;
 
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	
+  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+  ObjectAttributes.RootDirectory = NULL;
+  ObjectAttributes.ObjectName = NULL;
+  ObjectAttributes.Attributes = 0;
+  if (lpTokenAttributes->bInheritHandle)
+    {
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+    }
+  ObjectAttributes.SecurityDescriptor = lpTokenAttributes->lpSecurityDescriptor;
+  ObjectAttributes.SecurityQualityOfService = NULL;
 
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   	ObjectAttributes.RootDirectory = NULL;
-   	ObjectAttributes.ObjectName = NULL;
-   	ObjectAttributes.Attributes = 0;
-	if ( lpTokenAttributes->bInheritHandle )
-		ObjectAttributes.Attributes |= OBJ_INHERIT;	
+  Status = NtDuplicateToken (ExistingTokenHandle,
+			     dwDesiredAccess,
+			     &ObjectAttributes,
+			     ImpersonationLevel,
+			     TokenType,
+			     &NewToken);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
 
-	ObjectAttributes.SecurityDescriptor = lpTokenAttributes->lpSecurityDescriptor;
-	ObjectAttributes.SecurityQualityOfService = NULL;
-
-	errCode = NtDuplicateToken(  ExistingTokenHandle, dwDesiredAccess, 
- 		&ObjectAttributes, ImpersonationLevel,
-		TokenType,  &NewToken     );
-
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-DuplicateToken (
-                HANDLE ExistingTokenHandle,
+BOOL STDCALL
+DuplicateToken (HANDLE ExistingTokenHandle,
                 SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                PHANDLE DuplicateTokenHandle
-                 )
+                PHANDLE DuplicateTokenHandle)
 {
- 	return DuplicateTokenEx (
-                  ExistingTokenHandle,
-                  TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_QUERY,
-                  NULL,
-                  ImpersonationLevel,
-                  TokenImpersonation,
-                  DuplicateTokenHandle
-                   );
+  return DuplicateTokenEx (ExistingTokenHandle,
+                           TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_QUERY,
+                           NULL,
+                           ImpersonationLevel,
+                           TokenImpersonation,
+                           DuplicateTokenHandle);
 }
 
 /* EOF */

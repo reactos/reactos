@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.12 2003/08/28 13:38:23 gvg Exp $
+/* $Id: sctrl.c,v 1.13 2004/01/20 01:40:19 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -222,7 +222,7 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
  *
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetServiceObjectSecurity(SC_HANDLE hService,
 			 SECURITY_INFORMATION dwSecurityInformation,
 			 PSECURITY_DESCRIPTOR lpSecurityDescriptor)

@@ -9,7 +9,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AreAllAccessesGranted(DWORD GrantedAccess,
 		      DWORD DesiredAccess)
 {
@@ -21,7 +21,7 @@ AreAllAccessesGranted(DWORD GrantedAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AreAnyAccessesGranted(DWORD GrantedAccess,
 		      DWORD DesiredAccess)
 {
@@ -33,7 +33,7 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetKernelObjectSecurity(HANDLE Handle,
 			SECURITY_INFORMATION RequestedInformation,
 			PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -93,7 +93,7 @@ MapGenericMask(PDWORD AccessMask,
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
 {

@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.7 2003/07/10 15:05:55 chorns Exp $
+/* $Id: ac.c,v 1.8 2004/01/20 01:40:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetAclInformation (
 	PACL			pAcl,
@@ -126,7 +126,7 @@ GetExplicitEntriesFromAclW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InitializeAcl (
 	PACL	pAcl,
@@ -152,7 +152,7 @@ InitializeAcl (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsValidAcl (
 	PACL	pAcl
@@ -165,7 +165,7 @@ IsValidAcl (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetAclInformation (
 	PACL			pAcl,
@@ -226,7 +226,7 @@ SetEntriesInAclW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessAllowedAce (
 	PACL	pAcl,
@@ -254,7 +254,7 @@ AddAccessAllowedAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessDeniedAce (
 	PACL	pAcl,
@@ -282,7 +282,7 @@ AddAccessDeniedAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAce (
 	PACL	pAcl,
@@ -312,15 +312,15 @@ AddAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAuditAccessAce (
 	PACL	pAcl,
 	DWORD	dwAceRevision,
 	DWORD	dwAccessMask,
 	PSID	pSid,
-	WINBOOL	bAuditSuccess,
-	WINBOOL	bAuditFailure
+	BOOL	bAuditSuccess,
+	BOOL	bAuditFailure
 	)
 {
 	NTSTATUS Status;
@@ -344,7 +344,7 @@ AddAuditAccessAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteAce (
 	PACL	pAcl,
@@ -368,7 +368,7 @@ DeleteAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindFirstFreeAce (
 	PACL	pAcl,
@@ -383,7 +383,7 @@ FindFirstFreeAce (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetAce (
 	PACL	pAcl,

@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.8 2003/07/10 15:05:55 chorns Exp $
+/* $Id: sid.c,v 1.9 2004/01/20 01:40:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -99,7 +99,7 @@ CopySid (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EqualPrefixSid (
 	PSID	pSid1,
@@ -112,7 +112,7 @@ EqualPrefixSid (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 EqualSid (
 	PSID	pSid1,
@@ -205,7 +205,7 @@ GetSidSubAuthorityCount (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InitializeSid (
 	PSID				Sid,
@@ -231,17 +231,17 @@ InitializeSid (
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 IsValidSid(PSID pSid)
 {
-  return((WINBOOL)RtlValidSid(pSid));
+  return((BOOL)RtlValidSid(pSid));
 }
 
 
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 LookupAccountNameA(LPCSTR lpSystemName,
 		   LPCSTR lpAccountName,
 		   PSID Sid,
@@ -257,7 +257,7 @@ LookupAccountNameA(LPCSTR lpSystemName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 LookupAccountNameW(LPCWSTR lpSystemName,
 		   LPCWSTR lpAccountName,
 		   PSID Sid,
@@ -273,7 +273,7 @@ LookupAccountNameW(LPCWSTR lpSystemName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 LookupAccountSidA(LPCSTR lpSystemName,
 		  PSID Sid,
 		  LPSTR Name,
@@ -289,7 +289,7 @@ LookupAccountSidA(LPCSTR lpSystemName,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 LookupAccountSidW(LPCWSTR lpSystemName,
 		  PSID Sid,
 		  LPWSTR Name,

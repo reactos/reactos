@@ -10,7 +10,7 @@
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeregisterEventSource (
 		       HANDLE hEventLog
@@ -48,7 +48,7 @@ RegisterEventSourceW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReportEventA (
      HANDLE     hEventLog,
@@ -68,7 +68,7 @@ ReportEventA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReportEventW (
      HANDLE     hEventLog,
@@ -88,7 +88,7 @@ ReportEventW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFileSecurityW (
     LPCWSTR lpFileName,
@@ -102,7 +102,7 @@ SetFileSecurityW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ChangeServiceConfig2A(
     SC_HANDLE    hService,
@@ -116,7 +116,7 @@ ChangeServiceConfig2A(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueryServiceConfig2A(
     SC_HANDLE   hService,
@@ -146,7 +146,7 @@ RegisterServiceCtrlHandlerExA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ChangeServiceConfig2W(
     SC_HANDLE    hService,
@@ -160,7 +160,7 @@ ChangeServiceConfig2W(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 QueryServiceConfig2W(
     SC_HANDLE   hService,
@@ -190,7 +190,7 @@ RegisterServiceCtrlHandlerExW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessAllowedAceEx (
  PACL pAcl,
@@ -206,7 +206,7 @@ AddAccessAllowedAceEx (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessAllowedObjectAce (
  PACL pAcl,
@@ -224,7 +224,7 @@ AddAccessAllowedObjectAce (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessDeniedAceEx (
  PACL pAcl,
@@ -240,7 +240,7 @@ AddAccessDeniedAceEx (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAccessDeniedObjectAce (
  PACL pAcl,
@@ -258,7 +258,7 @@ AddAccessDeniedObjectAce (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAuditAccessAceEx(
  PACL pAcl,
@@ -266,8 +266,8 @@ AddAuditAccessAceEx(
  DWORD AceFlags,
  DWORD dwAccessMask,
  PSID pSid,
- WINBOOL bAuditSuccess,
- WINBOOL bAuditFailure
+ BOOL bAuditSuccess,
+ BOOL bAuditFailure
  )
 {
   return(FALSE);
@@ -276,7 +276,7 @@ AddAuditAccessAceEx(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AddAuditAccessObjectAce (
  PACL pAcl,
@@ -286,8 +286,8 @@ AddAuditAccessObjectAce (
  GUID *ObjectTypeGuid,
  GUID *InheritedObjectTypeGuid,
  PSID pSid,
- WINBOOL bAuditSuccess,
- WINBOOL bAuditFailure
+ BOOL bAuditSuccess,
+ BOOL bAuditFailure
  )
 {
   return(FALSE);
@@ -296,12 +296,12 @@ AddAuditAccessObjectAce (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 APIENTRY
 CheckTokenMembership(
  HANDLE TokenHandle,
  PSID SidToCheck,
- PWINBOOL IsMember
+ PBOOL IsMember
  )
 {
   return(FALSE);
@@ -321,7 +321,7 @@ CloseEncryptedFileRaw(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CloseEventLog (
  HANDLE hEventLog
@@ -333,14 +333,14 @@ CloseEventLog (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ConvertToAutoInheritPrivateObjectSecurity(
  PSECURITY_DESCRIPTOR ParentDescriptor,
  PSECURITY_DESCRIPTOR CurrentSecurityDescriptor,
  PSECURITY_DESCRIPTOR *NewSecurityDescriptor,
  GUID *ObjectType,
- WINBOOL IsDirectoryObject,
+ BOOL IsDirectoryObject,
  PGENERIC_MAPPING GenericMapping
  )
 {
@@ -350,13 +350,13 @@ ConvertToAutoInheritPrivateObjectSecurity(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreatePrivateObjectSecurity (
  PSECURITY_DESCRIPTOR ParentDescriptor,
  PSECURITY_DESCRIPTOR CreatorDescriptor,
  PSECURITY_DESCRIPTOR * NewDescriptor,
- WINBOOL IsDirectoryObject,
+ BOOL IsDirectoryObject,
  HANDLE Token,
  PGENERIC_MAPPING GenericMapping
  )
@@ -367,14 +367,14 @@ CreatePrivateObjectSecurity (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreatePrivateObjectSecurityEx (
  PSECURITY_DESCRIPTOR ParentDescriptor,
  PSECURITY_DESCRIPTOR CreatorDescriptor,
  PSECURITY_DESCRIPTOR * NewDescriptor,
  GUID *ObjectType,
- WINBOOL IsContainerObject,
+ BOOL IsContainerObject,
  ULONG AutoInheritFlags,
  HANDLE Token,
  PGENERIC_MAPPING GenericMapping
@@ -386,7 +386,7 @@ CreatePrivateObjectSecurityEx (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreatePrivateObjectSecurityWithMultipleInheritance (
  PSECURITY_DESCRIPTOR ParentDescriptor,
@@ -394,7 +394,7 @@ CreatePrivateObjectSecurityWithMultipleInheritance (
  PSECURITY_DESCRIPTOR * NewDescriptor,
  GUID **ObjectTypes,
  ULONG GuidCount,
- WINBOOL IsContainerObject,
+ BOOL IsContainerObject,
  ULONG AutoInheritFlags,
  HANDLE Token,
  PGENERIC_MAPPING GenericMapping
@@ -403,32 +403,11 @@ CreatePrivateObjectSecurityWithMultipleInheritance (
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-CreateProcessWithLogonW(
- LPCWSTR lpUsername,
- LPCWSTR lpDomain,
- LPCWSTR lpPassword,
- DWORD dwLogonFlags,
- LPCWSTR lpApplicationName,
- LPWSTR lpCommandLine,
- DWORD dwCreationFlags,
- LPVOID lpEnvironment,
- LPCWSTR lpCurrentDirectory,
- LPSTARTUPINFOW lpStartupInfo,
- LPPROCESS_INFORMATION lpProcessInformation
- )
-{
-  return(FALSE);
-}
 
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 APIENTRY
 CreateRestrictedToken(
  HANDLE ExistingTokenHandle,
@@ -448,7 +427,7 @@ CreateRestrictedToken(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateWellKnownSid(
  WELL_KNOWN_SID_TYPE WellKnownSidType,
@@ -463,7 +442,7 @@ CreateWellKnownSid(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DestroyPrivateObjectSecurity (
  PSECURITY_DESCRIPTOR * ObjectDescriptor
@@ -475,12 +454,12 @@ DestroyPrivateObjectSecurity (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EqualDomainSid(
  PSID pSid1,
  PSID pSid2,
- WINBOOL *pfEqual
+ BOOL *pfEqual
  )
 {
   return(FALSE);
@@ -489,7 +468,7 @@ EqualDomainSid(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetEventLogInformation (
  HANDLE hEventLog,
@@ -505,7 +484,7 @@ GetEventLogInformation (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetNumberOfEventLogRecords (
  HANDLE hEventLog,
@@ -518,7 +497,7 @@ GetNumberOfEventLogRecords (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetOldestEventLogRecord (
  HANDLE hEventLog,
@@ -531,7 +510,7 @@ GetOldestEventLogRecord (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetPrivateObjectSecurity (
  PSECURITY_DESCRIPTOR ObjectDescriptor,
@@ -560,7 +539,7 @@ GetSecurityDescriptorRMControl(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetWindowsAccountDomainSid(
  PSID pSid,
@@ -574,7 +553,7 @@ GetWindowsAccountDomainSid(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 APIENTRY
 ImpersonateAnonymousToken(
  HANDLE ThreadHandle
@@ -586,7 +565,7 @@ ImpersonateAnonymousToken(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ImpersonateNamedPipeClient(
  HANDLE hNamedPipe
@@ -598,7 +577,7 @@ ImpersonateNamedPipeClient(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsTextUnicode(
  CONST VOID* lpBuffer,
@@ -612,7 +591,7 @@ IsTextUnicode(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsTokenRestricted(
  HANDLE TokenHandle
@@ -624,7 +603,7 @@ IsTokenRestricted(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsTokenUntrusted(
  HANDLE TokenHandle
@@ -636,7 +615,7 @@ IsTokenUntrusted(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 IsWellKnownSid (
  PSID pSid,
@@ -649,7 +628,7 @@ IsWellKnownSid (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 MakeAbsoluteSD2 (
  PSECURITY_DESCRIPTOR pSelfRelativeSecurityDescriptor,
@@ -662,7 +641,7 @@ MakeAbsoluteSD2 (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 NotifyChangeEventLog(
  HANDLE hEventLog,
@@ -703,7 +682,7 @@ WriteEncryptedFileRaw(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetPrivateObjectSecurity (
  SECURITY_INFORMATION SecurityInformation,
@@ -719,7 +698,7 @@ SetPrivateObjectSecurity (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetPrivateObjectSecurityEx (
  SECURITY_INFORMATION SecurityInformation,
@@ -736,7 +715,7 @@ SetPrivateObjectSecurityEx (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetSecurityDescriptorControl (
  PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -763,7 +742,7 @@ SetSecurityDescriptorRMControl(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BackupEventLogA (
  HANDLE hEventLog,
@@ -776,7 +755,7 @@ BackupEventLogA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ClearEventLogA (
  HANDLE hEventLog,
@@ -786,36 +765,11 @@ ClearEventLogA (
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-CreateProcessAsUserA (
- HANDLE hToken,
- LPCSTR lpApplicationName,
- LPSTR lpCommandLine,
- LPSECURITY_ATTRIBUTES lpProcessAttributes,
- LPSECURITY_ATTRIBUTES lpThreadAttributes,
- WINBOOL bInheritHandles,
- DWORD dwCreationFlags,
- LPVOID lpEnvironment,
- LPCSTR lpCurrentDirectory,
- LPSTARTUPINFOA lpStartupInfo,
- LPPROCESS_INFORMATION lpProcessInformation
- )
-{
-  /* redirect call to CreateProcess() as long as we don't support user logins */
-  return CreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes,
-                        lpThreadAttributes, bInheritHandles, dwCreationFlags,
-                        lpEnvironment, lpCurrentDirectory, lpStartupInfo,
-                        lpProcessInformation);
-}
 
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DecryptFileA(
  LPCSTR lpFileName,
@@ -828,7 +782,7 @@ DecryptFileA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EncryptFileA(
  LPCSTR lpFileName
@@ -840,7 +794,7 @@ EncryptFileA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FileEncryptionStatusA(
  LPCSTR lpFileName,
@@ -853,7 +807,7 @@ FileEncryptionStatusA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCurrentHwProfileA (
  LPHW_PROFILE_INFOA lpHwProfileInfo
@@ -863,44 +817,6 @@ GetCurrentHwProfileA (
   strcpy(lpHwProfileInfo->szHwProfileGuid,"{12340001-1234-1234-1234-1233456789012}");
   strcpy(lpHwProfileInfo->szHwProfileName,"ReactOS Profile");
   return(TRUE);
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-LogonUserA (
- LPCSTR lpszUsername,
- LPCSTR lpszDomain,
- LPCSTR lpszPassword,
- DWORD dwLogonType,
- DWORD dwLogonProvider,
- PHANDLE phToken
- )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-LogonUserExA (
- LPCSTR lpszUsername,
- LPCSTR lpszDomain,
- LPCSTR lpszPassword,
- DWORD dwLogonType,
- DWORD dwLogonProvider,
- PHANDLE phToken ,
- PSID *ppLogonSid ,
- PVOID *ppProfileBuffer ,
- LPDWORD pdwProfileLength ,
- PQUOTA_LIMITS pQuotaLimits
- )
-{
-  return(FALSE);
 }
 
 /*
@@ -946,7 +862,7 @@ OpenEventLogA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReadEventLogA (
  HANDLE hEventLog,
@@ -964,7 +880,7 @@ ReadEventLogA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BackupEventLogW (
  HANDLE hEventLog,
@@ -977,7 +893,7 @@ BackupEventLogW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ClearEventLogW (
  HANDLE hEventLog,
@@ -990,33 +906,7 @@ ClearEventLogW (
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-CreateProcessAsUserW (
- HANDLE hToken,
- LPCWSTR lpApplicationName,
- LPWSTR lpCommandLine,
- LPSECURITY_ATTRIBUTES lpProcessAttributes,
- LPSECURITY_ATTRIBUTES lpThreadAttributes,
- WINBOOL bInheritHandles,
- DWORD dwCreationFlags,
- LPVOID lpEnvironment,
- LPCWSTR lpCurrentDirectory,
- LPSTARTUPINFOW lpStartupInfo,
- LPPROCESS_INFORMATION lpProcessInformation
- )
-{
-  /* redirect call to CreateProcess() as long as we don't support user logins */
-  return CreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes,
-                        lpThreadAttributes, bInheritHandles, dwCreationFlags,
-                        lpEnvironment, lpCurrentDirectory, lpStartupInfo,
-                        lpProcessInformation);
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
+BOOL
 STDCALL
 DecryptFileW(
  LPCWSTR lpFileName,
@@ -1029,7 +919,7 @@ DecryptFileW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 EncryptFileW(
  LPCWSTR lpFileName
@@ -1041,7 +931,7 @@ EncryptFileW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 FileEncryptionStatusW(
  LPCWSTR lpFileName,
@@ -1054,48 +944,10 @@ FileEncryptionStatusW(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetCurrentHwProfileW (
  LPHW_PROFILE_INFOW lpHwProfileInfo
- )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-LogonUserW (
- LPCWSTR lpszUsername,
- LPCWSTR lpszDomain,
- LPCWSTR lpszPassword,
- DWORD dwLogonType,
- DWORD dwLogonProvider,
- PHANDLE phToken
- )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-LogonUserExW (
- LPCWSTR lpszUsername,
- LPCWSTR lpszDomain,
- LPCWSTR lpszPassword,
- DWORD dwLogonType,
- DWORD dwLogonProvider,
- PHANDLE phToken ,
- PSID *ppLogonSid ,
- PVOID *ppProfileBuffer ,
- LPDWORD pdwProfileLength ,
- PQUOTA_LIMITS pQuotaLimits
  )
 {
   return(FALSE);
@@ -1144,7 +996,7 @@ OpenEventLogW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 ReadEventLogW (
  HANDLE hEventLog,
@@ -1162,7 +1014,7 @@ ReadEventLogW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 InitiateSystemShutdownExA(LPSTR lpMachineName,LPSTR lpMessage,DWORD dwTimeout,BOOL bForceAppsClosed,BOOL bRebootAfterShutdown,DWORD dwReason)
 {
@@ -1172,7 +1024,7 @@ InitiateSystemShutdownExA(LPSTR lpMachineName,LPSTR lpMessage,DWORD dwTimeout,BO
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 InitiateSystemShutdownExW(LPWSTR lpMachineName,LPWSTR lpMessage,DWORD dwTimeout,BOOL bForceAppsClosed,BOOL bRebootAfterShutdown,DWORD dwReason)
 {
@@ -1182,9 +1034,9 @@ InitiateSystemShutdownExW(LPWSTR lpMachineName,LPWSTR lpMessage,DWORD dwTimeout,
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
-NotifyBootConfigStatus(WINBOOL BootAcceptable)
+NotifyBootConfigStatus(BOOL BootAcceptable)
 {
   return(FALSE);
 }
@@ -1262,7 +1114,7 @@ Wow64Win32ApiEntry (DWORD dwFuncNumber,DWORD dwFlag,DWORD dwRes)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByType(
 PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -1284,7 +1136,7 @@ LPBOOL AccessStatus
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeResultList(
 PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -1306,7 +1158,7 @@ LPDWORD AccessStatusList
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeAndAuditAlarmA(
 LPCSTR SubsystemName,
@@ -1321,7 +1173,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPBOOL AccessStatus,
 LPBOOL pfGenerateOnClose
@@ -1333,7 +1185,7 @@ LPBOOL pfGenerateOnClose
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeAndAuditAlarmW(
 LPCWSTR SubsystemName,
@@ -1348,7 +1200,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPBOOL AccessStatus,
 LPBOOL pfGenerateOnClose
@@ -1360,7 +1212,7 @@ LPBOOL pfGenerateOnClose
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeResultListAndAuditAlarmA(
 LPCSTR SubsystemName,
@@ -1375,7 +1227,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPDWORD AccessStatusList,
 LPBOOL pfGenerateOnClose
@@ -1387,7 +1239,7 @@ LPBOOL pfGenerateOnClose
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeResultListAndAuditAlarmW(
 LPCWSTR SubsystemName,
@@ -1402,7 +1254,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPDWORD AccessStatusList,
 LPBOOL pfGenerateOnClose
@@ -1414,7 +1266,7 @@ LPBOOL pfGenerateOnClose
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeResultListAndAuditAlarmByHandleA(
 LPCSTR SubsystemName,
@@ -1430,7 +1282,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPDWORD AccessStatusList,
 LPBOOL pfGenerateOnClose
@@ -1442,7 +1294,7 @@ LPBOOL pfGenerateOnClose
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 AccessCheckByTypeResultListAndAuditAlarmByHandleW(
 LPCWSTR SubsystemName,
@@ -1458,7 +1310,7 @@ DWORD Flags,
 POBJECT_TYPE_LIST ObjectTypeList,
 DWORD ObjectTypeListLength,
 PGENERIC_MAPPING GenericMapping,
-WINBOOL ObjectCreation,
+BOOL ObjectCreation,
 LPDWORD GrantedAccess,
 LPDWORD AccessStatusList,
 LPBOOL pfGenerateOnClose

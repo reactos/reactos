@@ -227,7 +227,7 @@ IsValidSecurityDescriptor (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MakeAbsoluteSD (
 	PSECURITY_DESCRIPTOR	pSelfRelativeSecurityDescriptor,
@@ -269,7 +269,7 @@ MakeAbsoluteSD (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MakeSelfRelativeSD (
 	PSECURITY_DESCRIPTOR	pAbsoluteSecurityDescriptor,
@@ -423,7 +423,7 @@ GetUserNameW(LPWSTR lpBuffer, LPDWORD nSize)
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetFileSecurityA (
     LPCSTR lpFileName,
@@ -440,7 +440,7 @@ GetFileSecurityA (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetFileSecurityW (
     LPCWSTR lpFileName,
@@ -457,7 +457,7 @@ GetFileSecurityW (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetFileSecurityA (
     LPCSTR lpFileName,

@@ -3,7 +3,7 @@
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptAcquireContextA(HCRYPTPROV *phProv, LPCSTR pszContainer,
+BOOL STDCALL CryptAcquireContextA(HCRYPTPROV *phProv, LPCSTR pszContainer,
 				   LPCSTR pszProvider, DWORD dwProvType,
 				   DWORD dwFlags)
 {
@@ -12,7 +12,7 @@ WINBOOL STDCALL CryptAcquireContextA(HCRYPTPROV *phProv, LPCSTR pszContainer,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptAcquireContextW (HCRYPTPROV *phProv, LPCWSTR pszContainer,
+BOOL STDCALL CryptAcquireContextW (HCRYPTPROV *phProv, LPCWSTR pszContainer,
 		LPCWSTR pszProvider, DWORD dwProvType, DWORD dwFlags)
 {
   return(FALSE);
@@ -20,21 +20,21 @@ WINBOOL STDCALL CryptAcquireContextW (HCRYPTPROV *phProv, LPCWSTR pszContainer,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGenRandom (HCRYPTPROV hProv, DWORD dwLen, BYTE *pbBuffer)
+BOOL STDCALL CryptGenRandom (HCRYPTPROV hProv, DWORD dwLen, BYTE *pbBuffer)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptContextAddRef (HCRYPTPROV hProv, DWORD *pdwReserved, DWORD dwFlags)
+BOOL STDCALL CryptContextAddRef (HCRYPTPROV hProv, DWORD *pdwReserved, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptCreateHash (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey,
+BOOL STDCALL CryptCreateHash (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey,
 		DWORD dwFlags, HCRYPTHASH *phHash)
 {
   return(FALSE);
@@ -42,7 +42,7 @@ WINBOOL STDCALL CryptCreateHash (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDecrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, WINBOOL Final,
+BOOL STDCALL CryptDecrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 		DWORD dwFlags, BYTE *pbData, DWORD *pdwDataLen)
 {
   return(FALSE);
@@ -50,7 +50,7 @@ WINBOOL STDCALL CryptDecrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, WINBOOL Final,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDeriveKey (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBaseData,
+BOOL STDCALL CryptDeriveKey (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBaseData,
 		DWORD dwFlags, HCRYPTKEY *phKey)
 {
   return(FALSE);
@@ -58,28 +58,28 @@ WINBOOL STDCALL CryptDeriveKey (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTHASH hBase
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDestroyHash (HCRYPTHASH hHash)
+BOOL STDCALL CryptDestroyHash (HCRYPTHASH hHash)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDestroyKey (HCRYPTKEY hKey)
+BOOL STDCALL CryptDestroyKey (HCRYPTKEY hKey)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDuplicateKey (HCRYPTKEY hKey, DWORD *pdwReserved, DWORD dwFlags, HCRYPTKEY *phKey)
+BOOL STDCALL CryptDuplicateKey (HCRYPTKEY hKey, DWORD *pdwReserved, DWORD dwFlags, HCRYPTKEY *phKey)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptDuplicateHash (HCRYPTHASH hHash, DWORD *pdwReserved,
+BOOL STDCALL CryptDuplicateHash (HCRYPTHASH hHash, DWORD *pdwReserved,
 		DWORD dwFlags, HCRYPTHASH *phHash)
 {
   return(FALSE);
@@ -87,7 +87,7 @@ WINBOOL STDCALL CryptDuplicateHash (HCRYPTHASH hHash, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptEncrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, WINBOOL Final,
+BOOL STDCALL CryptEncrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 		DWORD dwFlags, BYTE *pbData, DWORD *pdwDataLen, DWORD dwBufLen)
 {
   return(FALSE);
@@ -95,7 +95,7 @@ WINBOOL STDCALL CryptEncrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, WINBOOL Final,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptEnumProvidersA (DWORD dwIndex, DWORD *pdwReserved,
+BOOL STDCALL CryptEnumProvidersA (DWORD dwIndex, DWORD *pdwReserved,
 		DWORD dwFlags, DWORD *pdwProvType, LPSTR pszProvName, DWORD *pcbProvName)
 {
   return(FALSE);
@@ -103,7 +103,7 @@ WINBOOL STDCALL CryptEnumProvidersA (DWORD dwIndex, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
+BOOL STDCALL CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 		DWORD dwFlags, DWORD *pdwProvType, LPWSTR pszProvName, DWORD *pcbProvName)
 {
   return(FALSE);
@@ -111,7 +111,7 @@ WINBOOL STDCALL CryptEnumProvidersW (DWORD dwIndex, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
+BOOL STDCALL CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
 		DWORD dwFlags, DWORD *pdwProvType, LPSTR pszTypeName, DWORD *pcbTypeName)
 {
   return(FALSE);
@@ -119,7 +119,7 @@ WINBOOL STDCALL CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptEnumProviderTypesW (DWORD dwIndex, DWORD *pdwReserved,
+BOOL STDCALL CryptEnumProviderTypesW (DWORD dwIndex, DWORD *pdwReserved,
 		DWORD dwFlags, DWORD *pdwProvType, LPWSTR pszTypeName, DWORD *pcbTypeName)
 {
   return(FALSE);
@@ -127,7 +127,7 @@ WINBOOL STDCALL CryptEnumProviderTypesW (DWORD dwIndex, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobType,
+BOOL STDCALL CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobType,
 		DWORD dwFlags, BYTE *pbData, DWORD *pdwDataLen)
 {
   return(FALSE);
@@ -135,14 +135,14 @@ WINBOOL STDCALL CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobT
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGenKey (HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYPTKEY *phKey)
+BOOL STDCALL CryptGenKey (HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYPTKEY *phKey)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData,
+BOOL STDCALL CryptGetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData,
 		DWORD *pdwDataLen, DWORD dwFlags)
 {
   return(FALSE);
@@ -150,7 +150,7 @@ WINBOOL STDCALL CryptGetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData,
+BOOL STDCALL CryptGetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData,
 		DWORD *pdwDataLen, DWORD dwFlags)
 {
   return(FALSE);
@@ -158,7 +158,7 @@ WINBOOL STDCALL CryptGetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
+BOOL STDCALL CryptGetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData,
 		DWORD *pdwDataLen, DWORD dwFlags)
 {
   return(FALSE);
@@ -166,7 +166,7 @@ WINBOOL STDCALL CryptGetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
+BOOL STDCALL CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 		DWORD dwFlags, LPSTR pszProvName, DWORD *pcbProvName)
 {
   return(FALSE);
@@ -174,7 +174,7 @@ WINBOOL STDCALL CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
+BOOL STDCALL CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
 		DWORD dwFlags, LPWSTR pszProvName, DWORD *pcbProvName)
 {
   return(FALSE);
@@ -182,28 +182,28 @@ WINBOOL STDCALL CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptGetUserKey (HCRYPTPROV hProv, DWORD dwKeySpec, HCRYPTKEY *phUserKey)
+BOOL STDCALL CryptGetUserKey (HCRYPTPROV hProv, DWORD dwKeySpec, HCRYPTKEY *phUserKey)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptHashData (HCRYPTHASH hHash, BYTE *pbData, DWORD dwDataLen, DWORD dwFlags)
+BOOL STDCALL CryptHashData (HCRYPTHASH hHash, BYTE *pbData, DWORD dwDataLen, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptHashSessionKey (HCRYPTHASH hHash, HCRYPTKEY hKey, DWORD dwFlags)
+BOOL STDCALL CryptHashSessionKey (HCRYPTHASH hHash, HCRYPTKEY hKey, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
+BOOL STDCALL CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
 		HCRYPTKEY hPubKey, DWORD dwFlags, HCRYPTKEY *phKey)
 {
   return(FALSE);
@@ -211,14 +211,14 @@ WINBOOL STDCALL CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptReleaseContext (HCRYPTPROV hProv, DWORD dwFlags)
+BOOL STDCALL CryptReleaseContext (HCRYPTPROV hProv, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSignHashA (HCRYPTHASH hHash, DWORD dwKeySpec, LPCSTR sDescription,
+BOOL STDCALL CryptSignHashA (HCRYPTHASH hHash, DWORD dwKeySpec, LPCSTR sDescription,
 		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen)
 {
   return(FALSE);
@@ -226,7 +226,7 @@ WINBOOL STDCALL CryptSignHashA (HCRYPTHASH hHash, DWORD dwKeySpec, LPCSTR sDescr
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDescription,
+BOOL STDCALL CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDescription,
 		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen)
 {
   return(FALSE);
@@ -234,56 +234,56 @@ WINBOOL STDCALL CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDesc
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL STDCALL CryptSetHashParam (HCRYPTHASH hHash, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL STDCALL CryptSetKeyParam (HCRYPTKEY hKey, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetProviderA (LPCSTR pszProvName, DWORD dwProvType)
+BOOL STDCALL CryptSetProviderA (LPCSTR pszProvName, DWORD dwProvType)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetProviderW (LPCWSTR pszProvName, DWORD dwProvType)
+BOOL STDCALL CryptSetProviderW (LPCWSTR pszProvName, DWORD dwProvType)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
+BOOL STDCALL CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
+BOOL STDCALL CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
+BOOL STDCALL CryptSetProvParam (HCRYPTPROV hProv, DWORD dwParam, BYTE *pbData, DWORD dwFlags)
 {
   return(FALSE);
 }
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
+BOOL STDCALL CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
 		HCRYPTKEY hPubKey, LPCSTR sDescription, DWORD dwFlags)
 {
   return(FALSE);
@@ -291,7 +291,7 @@ WINBOOL STDCALL CryptVerifySignatureA (HCRYPTHASH hHash, BYTE *pbSignature, DWOR
 /*
  * @unimplemented
  */
-WINBOOL STDCALL CryptVerifySignatureW (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
+BOOL STDCALL CryptVerifySignatureW (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dwSigLen,
 		HCRYPTKEY hPubKey, LPCWSTR sDescription, DWORD dwFlags)
 {
   return(FALSE);
