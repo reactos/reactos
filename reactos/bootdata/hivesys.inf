@@ -558,4 +558,89 @@ HKLM,"SYSTEM\Setup","SetupType",0x00010001,0x00000000
 HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
 
+; ----------------------------- KJS Init ----------------------------
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","kjsinit",0x00010000,\
+"function init(v) { var rk = '\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Kdb'; eval(System.regread(rk,v)); } for( i = 1; i <= 40; i++ ) { init((new Number(i)).toString()); }"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","1",0x00010000,\
+"function write(x) { System.print(x); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","2",0x00010000,\
+"function regs(n) { return System.regs(n); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","3",0x00010000,\
+"function ebp() { return regs(0); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","4",0x00010000,\
+"function eip() { return regs(1); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","5",0x00010000,\
+"function tf_argmark() { return regs(2); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","6",0x00010000,\
+"function tf_pointer() { return regs(3); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","7",0x00010000,\
+"function tf_tempcs() { return regs(4); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","8",0x00010000,\
+"function tf_tempeip() { return regs(5); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","9",0x00010000,\
+"function dr0() { return regs(6); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","10",0x00010000,\
+"function dr1() { return regs(7); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","11",0x00010000,\
+"function dr2() { return regs(8); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","12",0x00010000,\
+"function dr3() { return regs(9); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","13",0x00010000,\
+"function dr6() { return regs(10); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","14",0x00010000,\
+"function dr7() { return regs(11); } "
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","15",0x00010000,\
+"function gs()  { return regs(12) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","16",0x00010000,\
+"function es()  { return regs(13) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","17",0x00010000,\
+"function ds()  { return regs(14) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","18",0x00010000,\
+"function edx() { return regs(15); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","19",0x00010000,\
+"function ecx() { return regs(16); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","20",0x00010000,\
+"function eax() { return regs(17); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","21",0x00010000,\
+"function tf_pmode() { return regs(18); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","22",0x00010000,\
+"function tf_exl() { return regs(19); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","23",0x00010000,\
+"function fs()  { return regs(20) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","24",0x00010000,\
+"function edi() { return regs(21); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","25",0x00010000,\
+"function cs()  { return regs(22) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","26",0x00010000,\
+"function eflags() { return regs(23); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","27",0x00010000,\
+"function esp() { return regs(24); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","28",0x00010000,\
+"function ss()  { return regs(25) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","29",0x00010000,\
+"function v86_es() { return regs(26) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","30",0x00010000,\
+"function v86_ds() { return regs(27) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","31",0x00010000,\
+"function v86_fs() { return regs(28) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","32",0x00010000,\
+"function v86_gs() { return regs(29) & 0xffff; }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","33",0x00010000,\
+"function peekl(a) { return System.mread(4,a); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","34",0x00010000,\
+"function pokel(a,b) { return System.mwrite(4,a,b); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","35",0x00010000,\
+"function peekw(a) { return System.mread(2,a); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","36",0x00010000,\
+"function pokew(a,b) { return System.mwrite(2,a,b); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","37",0x00010000,\
+"function peek(a) { return System.mread(1,a); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","38",0x00010000,\
+"function poke(a,b) { return System.mwrite(1,a,b); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","39",0x00010000,\
+"function regread(x,y) { return System.regread(x,y); }"
+HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","40",0x00010000,\
+"write('JS Registry Init Complete.  Welcome to ReactOS kernel scripting');"
+
 ; EOF
