@@ -415,7 +415,7 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
   else
     Buffer[0] = COMMAND_WRITE_DATA; 
 
-  Buffer[0] |= READ_DATA_MFM | READ_DATA_MT | READ_DATA_SK;
+  Buffer[0] |= READ_DATA_MFM | READ_DATA_MT;
 
   Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | Unit;
   Buffer[2] = Cylinder;
