@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.40 2003/08/25 23:24:03 rcampbell Exp $
+ * $Id: gdiobj.c,v 1.41 2003/09/09 10:57:03 gvg Exp $
  *
  */
 
@@ -414,6 +414,28 @@ GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
     }
 
   ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;
+}
+
+/*!
+ * Removes the global mark from the object. Global objects may be
+ * accessed by any process.
+ * \param 	ObjectHandle - handle of the object to make local.
+ *
+ * \note	Only stock objects should be marked global.
+*/
+VOID FASTCALL
+GDIOBJ_UnmarkObjectGlobal(HGDIOBJ ObjectHandle)
+{
+  PGDIOBJHDR ObjHdr;
+
+  DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
+  ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+  if (NULL == ObjHdr || GDI_GLOBAL_PROCESS != ObjHdr->hProcessId)
+    {
+      return;
+    }
+
+  ObjHdr->hProcessId = PsGetCurrentProcessId();
 }
 
 /*!

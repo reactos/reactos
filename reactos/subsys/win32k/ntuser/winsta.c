@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.33 2003/08/29 08:46:20 weiden Exp $
+/* $Id: winsta.c,v 1.34 2003/09/09 10:57:03 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -956,6 +956,7 @@ IntEndDesktopGraphics(VOID)
   EnableMouse(FALSE);
   if (NULL != ScreenDeviceContext)
     {
+      GDIOBJ_UnmarkObjectGlobal(ScreenDeviceContext);
       NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
     }
