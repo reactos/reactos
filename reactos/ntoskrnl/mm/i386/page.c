@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.75 2004/10/05 18:53:28 hbirr Exp $
+/* $Id: page.c,v 1.76 2004/11/11 22:23:52 ion Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -375,7 +375,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 
    if (Process != NULL && Process != CurrentProcess)
    {
-      KeAttachProcess(Process);
+      KeAttachProcess(&Process->Pcb);
    }
 
    if (Ke386Pae)
@@ -408,7 +408,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    DPRINT("ProcessId %d, Address %x\n", Process->UniqueProcessId, Address);
    if (Process != NULL && Process != CurrentProcess)
    {
-      KeAttachProcess(Process);
+      KeAttachProcess(&Process->Pcb);
    }
    if (Ke386Pae)
    {

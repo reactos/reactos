@@ -123,12 +123,12 @@ KeInsertQueueApc (PKAPC	Apc,
 	PLIST_ENTRY ApcListEntry;
 	PKAPC QueuedApc;
    
+	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 	DPRINT ("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
 		"SystemArgument2 %x)\n",Apc,SystemArgument1,
 		SystemArgument2);
 
-	/* FIXME: Implement Dispatcher Lock */
-	OldIrql = KeRaiseIrqlToDpcLevel();
+	OldIrql = KeAcquireDispatcherDatabaseLock();
 	
 	/* Get the Thread specified in the APC */
 	Thread = Apc->Thread;
@@ -136,7 +136,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	/* Make sure the thread allows APC Queues */
 	if (Thread->ApcQueueable == FALSE) {
 		DPRINT("Thread doesn't allow APC Queues\n");
-		KeLowerIrql(OldIrql);
+		KeReleaseDispatcherDatabaseLock(OldIrql);
 		return FALSE;
 	}
 	
@@ -146,7 +146,7 @@ KeInsertQueueApc (PKAPC	Apc,
 
 	/* Don't do anything if the APC is already inserted */
 	if (Apc->Inserted) {
-		KeLowerIrql(OldIrql);	
+		KeReleaseDispatcherDatabaseLock(OldIrql);
 		return FALSE;
 	}
 	
@@ -208,7 +208,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	}
 
 	/* Return Sucess if we are here */
-	KeLowerIrql(OldIrql);
+	KeReleaseDispatcherDatabaseLock(OldIrql);
 	return TRUE;
 }
 
@@ -226,10 +226,10 @@ KeRemoveQueueApc (PKAPC Apc)
 	KIRQL OldIrql;
 	PKTHREAD Thread = Apc->Thread;
 
+	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 	DPRINT("KeRemoveQueueApc called for APC: %x \n", Apc);
 	
-	/* FIXME: Implement Dispatcher Lock */
-	OldIrql = KeRaiseIrqlToDpcLevel();
+	OldIrql = KeAcquireDispatcherDatabaseLock();
 	KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
 	
 	/* Remove it from the Queue if it's inserted */
@@ -247,13 +247,13 @@ KeRemoveQueueApc (PKAPC Apc)
 		}
 	} else {
 		KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
-		KeLowerIrql(OldIrql);
+		KeReleaseDispatcherDatabaseLock(OldIrql);
 		return(FALSE);
 	}
 	
 	/* Restore IRQL and Return */
 	KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
-	KeLowerIrql(OldIrql);
+	KeReleaseDispatcherDatabaseLock(OldIrql);
 	return(TRUE);
 }
 
@@ -269,9 +269,10 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 	PKTHREAD Thread = KeGetCurrentThread();
 	BOOLEAN OldState;
    
-	/* FIXME: Implement Dispatcher Lock */
-	OldIrql = KeRaiseIrqlToDpcLevel();
-	KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
+	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+	
+	OldIrql = KeAcquireDispatcherDatabaseLock();
+	KiAcquireSpinLock(&Thread->ApcQueueLock);
 	
 	OldState = Thread->Alerted[(int)AlertMode];
 	
@@ -283,9 +284,8 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 		Thread->ApcState.UserApcPending = TRUE;
 	}
 	
-	/* FIXME: Implement Dispatcher Lock */
-	KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
-	KeLowerIrql(OldIrql);
+	KiReleaseSpinLock(&Thread->ApcQueueLock);
+	KeReleaseDispatcherDatabaseLock(OldIrql);
 	return OldState;
 }
 
@@ -444,12 +444,25 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 	}
 }
 
-VOID KiInitializeUserApc(IN PVOID Reserved,
-			 IN PKTRAP_FRAME TrapFrame,
-			 IN PKNORMAL_ROUTINE NormalRoutine,
-			 IN PVOID NormalContext,
-			 IN PVOID SystemArgument1,
-			 IN PVOID SystemArgument2)  
+VOID 
+STDCALL
+KiFreeApcRoutine(PKAPC Apc,
+		 PKNORMAL_ROUTINE* NormalRoutine,
+		 PVOID* NormalContext,
+		 PVOID* SystemArgument1,
+		 PVOID* SystemArgument2)
+{
+	/* Free the APC and do nothing else */
+	ExFreePool(Apc);
+}
+
+VOID 
+KiInitializeUserApc(IN PVOID Reserved,
+		    IN PKTRAP_FRAME TrapFrame,
+		    IN PKNORMAL_ROUTINE NormalRoutine,
+		    IN PVOID NormalContext,
+		    IN PVOID SystemArgument1,
+		    IN PVOID SystemArgument2)  
 /*
  * FUNCTION: Prepares the Context for a user mode APC through ntdll.dll
  */
@@ -508,77 +521,87 @@ KeAreApcsDisabled(
 	VOID
 	)
 {
- 	return KeGetCurrentThread()->KernelApcDisable ? FALSE : TRUE;
+ 	return KeGetCurrentThread()->KernelApcDisable ? TRUE : FALSE;
 }
 
-VOID STDCALL
-NtQueueApcRundownRoutine(PKAPC Apc)
-{
-   ExFreePool(Apc);
-}
-
-VOID STDCALL
-NtQueueApcKernelRoutine(PKAPC Apc,
-			PKNORMAL_ROUTINE* NormalRoutine,
-			PVOID* NormalContext,
-			PVOID* SystemArgument1,
-			PVOID* SystemArgument2)
-{
-   ExFreePool(Apc);
-}
-
-NTSTATUS STDCALL
+NTSTATUS 
+STDCALL
 NtQueueApcThread(HANDLE			ThreadHandle,
 		 PKNORMAL_ROUTINE	ApcRoutine,
 		 PVOID			NormalContext,
 		 PVOID			SystemArgument1,
 		 PVOID			SystemArgument2)
+/*
+ * FUNCTION: 
+ *           This function is used to queue an APC from user-mode for the specified thread.
+ *           The thread must enter an alertable wait before the APC will be delivered.
+ *
+ * ARGUMENTS:
+ *           Thread Handle - Handle to the Thread. This handle must have THREAD_SET_CONTEXT privileges.
+ *           ApcRoutine - Pointer to the APC Routine to call when the APC executes.
+ *           NormalContext - User-defined value to pass to the APC Routine
+ *           SystemArgument1 - User-defined value to pass to the APC Routine
+ *           SystemArgument2 - User-defined value to pass to the APC Routine
+ *
+ * RETURNS:  NTSTATUS SUCCESS or Failure Code from included calls.
+ */
 {
-   PKAPC Apc;
-   PETHREAD Thread;
-   NTSTATUS Status;
-   PVOID ThreadVar;
 
-   ThreadVar = &Thread;
+	PKAPC Apc;
+	PETHREAD Thread;
+	NTSTATUS Status;
+
+	/* Get ETHREAD from Handle */
+	Status = ObReferenceObjectByHandle(ThreadHandle,
+					   THREAD_SET_CONTEXT,
+					   PsThreadType,
+					   KeGetPreviousMode(),
+					   (PVOID)&Thread,
+					   NULL);
+	
+	/* Fail if the Handle is invalid for some reason */
+	if (!NT_SUCCESS(Status)) {
+		return(Status);
+	}
+	
+	/* If this is a Kernel or System Thread, then fail */
+	if (Thread->Tcb.Teb == NULL) {
+		ObDereferenceObject(Thread);
+		return STATUS_INVALID_HANDLE;
+	}
    
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_ALL_ACCESS, /* FIXME */
-				      PsThreadType,
-				      UserMode,
-				      &ThreadVar,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+	/* Allocate an APC */
+	Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_KAPC);
+	if (Apc == NULL) {
+		ObDereferenceObject(Thread);
+		return(STATUS_NO_MEMORY);
+	}
    
-   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_KAPC);
-   if (Apc == NULL)
-     {
+	/* Initialize and Queue */
+	KeInitializeApc(Apc,
+			&Thread->Tcb,
+			OriginalApcEnvironment,
+			KiFreeApcRoutine,
+			NULL,
+			ApcRoutine,
+			UserMode,
+			NormalContext);
+	if (!KeInsertQueueApc(Apc, SystemArgument1, SystemArgument2, IO_NO_INCREMENT)) {
+		Status = STATUS_UNSUCCESSFUL;
+	} else {
+		Status = STATUS_SUCCESS;
+	}
+   
+	/* Dereference Thread and Return */
 	ObDereferenceObject(Thread);
-	return(STATUS_NO_MEMORY);
-     }
-   
-   KeInitializeApc(Apc,
-		   &Thread->Tcb,
-                   OriginalApcEnvironment,
-		   NtQueueApcKernelRoutine,
-		   NtQueueApcRundownRoutine,
-		   ApcRoutine,
-		   UserMode,
-		   NormalContext);
-   KeInsertQueueApc(Apc,
-		    SystemArgument1,
-		    SystemArgument2,
-		    IO_NO_INCREMENT);
-   
-   ObDereferenceObject(Thread);
-   return(STATUS_SUCCESS);
+	return Status;
 }
 
-
-NTSTATUS STDCALL NtTestAlert(VOID)
+NTSTATUS
+STDCALL
+NtTestAlert(VOID)
 {
+	/* Check and Alert Thread if needed */
 	if (KeTestAlertThread(KeGetPreviousMode())) {
 		return STATUS_ALERTED;
 	} else {
@@ -586,103 +609,31 @@ NTSTATUS STDCALL NtTestAlert(VOID)
 	}
 }
 
-VOID INIT_FUNCTION
-PiInitApcManagement(VOID)
+static inline VOID RepairList(PLIST_ENTRY Original, 
+			      PLIST_ENTRY Copy,
+			      KPROCESSOR_MODE Mode)
 {
+	/* Copy Source to Desination */
+	if (IsListEmpty(&Original[(int)Mode])) {
+		InitializeListHead(&Copy[(int)Mode]);
+	} else {
+		Copy[(int)Mode].Flink = Original[(int)Mode].Flink; 
+		Copy[(int)Mode].Blink = Original[(int)Mode].Blink;
+		Original[(int)Mode].Flink->Blink = &Copy[(int)Mode];
+		Original[(int)Mode].Blink->Flink = &Copy[(int)Mode];
+	}
 }
 
-static VOID FASTCALL
-RepairList(PLIST_ENTRY Original, PLIST_ENTRY Copy, int Mode)
+VOID
+STDCALL
+KiMoveApcState (PKAPC_STATE OldState,
+		PKAPC_STATE NewState)
 {
-  if (IsListEmpty(&Original[Mode]))
-    {
-      InitializeListHead(&Copy[Mode]);
-    }
-  else
-    {
-      Copy[Mode].Flink->Blink = &Copy[Mode];
-      Copy[Mode].Blink->Flink = &Copy[Mode];
-    }
-}
-
-
-VOID FASTCALL
-KiSwapApcEnvironment(
-  PKTHREAD Thread,
-  PKPROCESS NewProcess)
-{
-  if (Thread->ApcStateIndex == AttachedApcEnvironment)
-  {
-    /* NewProcess must be the same as in the original-environment */
-    ASSERT(NewProcess == Thread->ApcStatePointer[OriginalApcEnvironment]->Process);
-
-    /*    
-    FIXME: Deliver any pending apc's queued to the attached environment before 
-    switching back to the original environment.
-    This is not crucial thou, since i don't think we'll ever target apc's
-    to attached environments (or?)...   
-    Remove the following asserts if implementing this.
-    -Gunnar
-    */
-
-    /* we don't support targeting apc's at attached-environments (yet)... */
-    ASSERT(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]));
-    ASSERT(IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]));
-    ASSERT(Thread->ApcState.KernelApcInProgress == FALSE);
-    ASSERT(Thread->ApcState.KernelApcPending == FALSE);
-    ASSERT(Thread->ApcState.UserApcPending == FALSE);
+	/* Restore backup of Original Environment */
+	*NewState = *OldState;
     
-    /* restore backup of original environment */
-    Thread->ApcState = Thread->SavedApcState;
-    /* repair lists */
-    RepairList(Thread->SavedApcState.ApcListHead, Thread->ApcState.ApcListHead,
-               KernelMode);
-    RepairList(Thread->SavedApcState.ApcListHead, Thread->ApcState.ApcListHead,
-               UserMode);
-
-    /* update environment pointers */
-    Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
-    Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
-
-    /* update current-environment index */
-    Thread->ApcStateIndex = OriginalApcEnvironment;
-  }
-  else if (Thread->ApcStateIndex == OriginalApcEnvironment)
-  {
-    /* backup original environment */
-    Thread->SavedApcState = Thread->ApcState;
-    /* repair lists */
-    RepairList(Thread->ApcState.ApcListHead, Thread->SavedApcState.ApcListHead,
-               KernelMode);
-    RepairList(Thread->ApcState.ApcListHead, Thread->SavedApcState.ApcListHead,
-               UserMode);
-
-    /*
-    FIXME: Is it possible to target an apc to an attached environment even if the 
-    thread is not currently attached???? If so, then this is bougus since it 
-    reinitializes the attached apc environment then located in SavedApcState.
-    -Gunnar
-    */
-
-    /* setup a fresh new attached environment */
-    InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);
-    InitializeListHead(&Thread->ApcState.ApcListHead[UserMode]);
-    Thread->ApcState.Process = NewProcess;
-    Thread->ApcState.KernelApcInProgress = FALSE;
-    Thread->ApcState.KernelApcPending = FALSE;
-    Thread->ApcState.UserApcPending = FALSE;
-
-    /* update environment pointers */
-    Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->SavedApcState;
-    Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->ApcState;
-
-    /* update current-environment index */
-    Thread->ApcStateIndex = AttachedApcEnvironment;
-  }
-  else
-  {
-    /* FIXME: Is this the correct bug code? */
-    KEBUGCHECK(APC_INDEX_MISMATCH);
-  }
+	/* Repair Lists */
+	RepairList(NewState->ApcListHead, OldState->ApcListHead, KernelMode);
+	RepairList(NewState->ApcListHead, OldState->ApcListHead, UserMode);
 }
 

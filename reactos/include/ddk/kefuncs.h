@@ -20,13 +20,14 @@ KeSaveFloatingPointState(
 #define KeFlushIoBuffers(Mdl, ReadOperation, DmaOperation)
 #endif
 
-VOID STDCALL KeAttachProcess (struct _EPROCESS*	Process);
+VOID STDCALL KeAttachProcess(struct _KPROCESS *Process);
 
 VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID KeDrainApcQueue(VOID);
+
 struct _KPROCESS* KeGetCurrentProcess(VOID);
 
 /*

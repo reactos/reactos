@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.23 2004/09/28 15:02:29 weiden Exp $
+/* $Id: psmgr.c,v 1.24 2004/11/11 22:23:52 ion Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -32,7 +32,6 @@ PiInitProcessManager(VOID)
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
-   PiInitApcManagement();
    PsInitialiseSuspendImplementation();
    PsInitialiseW32Call();
 }

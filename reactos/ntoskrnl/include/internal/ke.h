@@ -96,6 +96,10 @@ VOID KiInitializeUserApc(IN PVOID Reserved,
 			 IN PVOID SystemArgument1,
 			 IN PVOID SystemArgument2);
 
+VOID STDCALL KiAttachProcess(struct _KTHREAD *Thread, struct _KPROCESS *Process, KIRQL ApcLock, struct _KAPC_STATE *SavedApcState);
+
+VOID STDCALL KiSwapProcess(struct _KPROCESS *NewProcess, struct _KPROCESS *OldProcess);
+
 BOOLEAN
 STDCALL
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode);
@@ -122,10 +126,10 @@ VOID KeInit2(VOID);
 
 BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame);
 
-VOID FASTCALL
-KiSwapApcEnvironment(
-  struct _KTHREAD* Thread,
-  struct _KPROCESS* NewProcess);
+VOID
+STDCALL
+KiMoveApcState (PKAPC_STATE OldState,
+		PKAPC_STATE NewState);
 
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Pc);

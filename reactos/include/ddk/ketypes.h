@@ -122,6 +122,24 @@ typedef struct _KAPC
 
 #include <poppack.h>
 
+#ifndef __USE_W32API
+
+#include <pshpack1.h>
+
+typedef struct _KAPC_STATE
+{
+   LIST_ENTRY ApcListHead[2];
+   struct _KPROCESS* Process;
+   UCHAR KernelApcInProgress;
+   UCHAR KernelApcPending;
+   UCHAR UserApcPending;
+   UCHAR Reserved;
+} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
+
+#include <poppack.h>
+
+#endif /* __USE_W32API */
+
 typedef struct _KBUGCHECK_CALLBACK_RECORD
 {
    LIST_ENTRY Entry;

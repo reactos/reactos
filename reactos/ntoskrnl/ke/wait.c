@@ -197,9 +197,6 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
 {
    PKWAIT_BLOCK WaitBlock, PrevWaitBlock;
    BOOLEAN WasWaiting = FALSE;
-   KIRQL OldIrql;
-
-   OldIrql = KeAcquireDispatcherDatabaseLock ();
 
    WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
    if (WaitBlock != NULL)
@@ -223,8 +220,6 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
      {
 	PsUnblockThread(Thread, &WaitStatus);
      }
-
-   KeReleaseDispatcherDatabaseLock (OldIrql);
 }
 
 static BOOLEAN
@@ -542,15 +537,40 @@ KeWaitForMultipleObjects(ULONG Count,
          OldIrql = KeAcquireDispatcherDatabaseLock ();
       }
 
-      /*
-       * If we are going to wait alertably and a user apc is pending
-       * then return
+      /* Alertability 101 
+       * ----------------
+       * A Wait can either be Alertable, or Non-Alertable.
+       * An Alertable Wait means that APCs can "Wake" the Thread, also called UnWaiting
+       * If an APC is Pending however, we must refuse an Alertable Wait. Such a wait would
+       * be pointless since an APC is just about to be delivered.
+       *
+       * There are many ways to check if it's safe to be alertable, and these are the ones
+       * that I could think of:
+       *         - The Thread is already Alerted. So someone beat us to the punch and we bail out.
+       *         - The Thread is Waiting in User-Mode, the APC Queue is not-empty.
+       *           It's defintely clear that we have incoming APCs, so we need to bail out and let the system
+       *           know that there are Pending User APCs (so they can be Delivered and maybe we can try again)
+       *
+       * Furthermore, wether or not we want to be Alertable, if the Thread is waiting in User-Mode, and there
+       * are Pending User APCs, we should bail out, since APCs will be delivered any second.
        */
-      if (Alertable && KeTestAlertThread(KeGetPreviousMode()))
-      {
-         KeReleaseDispatcherDatabaseLock(OldIrql);
-         return (STATUS_USER_APC);
-      }
+	if (Alertable) {
+		if (CurrentThread->Alerted[(int)WaitMode]) {
+			CurrentThread->Alerted[(int)WaitMode] = FALSE;
+			DPRINT("Alertability failed\n");
+        		KeReleaseDispatcherDatabaseLock(OldIrql);
+			return (STATUS_ALERTED);
+		} else if ((!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])) && (WaitMode == UserMode)) {
+			DPRINT1("Alertability failed\n");
+			CurrentThread->ApcState.UserApcPending = TRUE;
+        		KeReleaseDispatcherDatabaseLock(OldIrql);
+        		return (STATUS_USER_APC);
+		}
+	} else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode != KernelMode)) {
+		DPRINT1("Alertability failed\n");
+        	KeReleaseDispatcherDatabaseLock(OldIrql);
+        	return (STATUS_USER_APC);
+	}
 
       /*
        * Check if the wait is (already) satisfied

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.73 2004/11/10 02:50:59 ion Exp $
+/* $Id: ps.h,v 1.74 2004/11/11 22:23:52 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -52,24 +52,6 @@ extern HANDLE SystemProcessHandle;
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
-
-#ifndef __USE_W32API
-
-#include <pshpack1.h>
-
-typedef struct _KAPC_STATE
-{
-   LIST_ENTRY ApcListHead[2];
-   struct _KPROCESS* Process;
-   UCHAR KernelApcInProgress;
-   UCHAR KernelApcPending;
-   UCHAR UserApcPending;
-   UCHAR Reserved;
-} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
-
-#include <poppack.h>
-
-#endif /* __USE_W32API */
 
 #include <pshpack1.h>
 
