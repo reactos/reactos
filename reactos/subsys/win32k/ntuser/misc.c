@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.69 2004/05/02 17:25:21 weiden Exp $
+/* $Id: misc.c,v 1.70 2004/05/08 12:42:46 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -711,7 +711,7 @@ IntSystemParametersInfo(
       }
       
       ASSERT(pvParam);
-      *((PRECT)pvParam) = *(IntGetDesktopWorkArea(Desktop));
+      IntGetDesktopWorkArea(Desktop, (PRECT)pvParam);
       
       return TRUE;
     }

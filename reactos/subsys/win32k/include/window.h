@@ -95,6 +95,8 @@ typedef struct _WINDOW_OBJECT
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   PINTERNALPOS InternalPos;
   ULONG Status;
+  /* counter for tiled child windows */
+  ULONG TiledCounter;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.115 2004/05/02 17:25:21 weiden Exp $
+/* $Id: window.c,v 1.116 2004/05/08 12:42:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -168,7 +168,6 @@ CreateWindowExA(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXA wce;
   HWND Handle;
-  INT sw;
 
 #if 0
   DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
@@ -211,56 +210,6 @@ CreateWindowExA(DWORD dwExStyle,
       SetLastError(ERROR_OUTOFMEMORY);
       return (HWND)0;
     }
-
-  /* Fixup default coordinates. */
-  sw = SW_SHOW;
-  if (x == (LONG) CW_USEDEFAULT || nWidth == (LONG) CW_USEDEFAULT)
-    {
-      if (dwStyle & (WS_CHILD | WS_POPUP))
-	{
-	  if (x == (LONG) CW_USEDEFAULT)
-	    {
-	      x = y = 0;
-	    }
-	  if (nWidth == (LONG) CW_USEDEFAULT)
-	    {
-	      nWidth = nHeight = 0;
-	    }
-	}
-      else
-	{
-	  STARTUPINFOA info;
-
-	  GetStartupInfoA(&info);
-
-	  if (x == (LONG) CW_USEDEFAULT)
-	    {
-	      if (y != (LONG) CW_USEDEFAULT)
-		{
-		  sw = y;
-		}
-	      x = (info.dwFlags & STARTF_USEPOSITION) ? info.dwX : 0;
-	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
-	    }
-	  
-	  if (nWidth == (LONG) CW_USEDEFAULT)
-	    {
-	      if (info.dwFlags & STARTF_USESIZE)
-		{
-		  nWidth = info.dwXSize;
-		  nHeight = info.dwYSize;
-		}
-	      else
-		{
-		  RECT r;
-
-		  SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
-		  nWidth = (((r.right - r.left) * 3) / 4) - x;
-		  nHeight = (((r.bottom - r.top) * 3) / 4) - y;
-		}
-	    }
-	}
-    }
     
   if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
@@ -283,7 +232,7 @@ CreateWindowExA(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				sw,
+				SW_SHOW,
 				FALSE);
 
 #if 0
@@ -322,7 +271,6 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXW wce;
   HANDLE Handle;
-  UINT sw;
 
   /* Register built-in controls if not already done */
   if (! ControlsInitialized)
@@ -346,56 +294,6 @@ CreateWindowExW(DWORD dwExStyle,
 
   RtlInitUnicodeString(&WindowName, lpWindowName);
 
-  /* Fixup default coordinates. */
-  sw = SW_SHOW;
-  if (x == (LONG) CW_USEDEFAULT || nWidth == (LONG) CW_USEDEFAULT)
-    {
-      if (dwStyle & (WS_CHILD | WS_POPUP))
-	{
-	  if (x == (LONG) CW_USEDEFAULT)
-	    {
-	      x = y = 0;
-	    }
-	  if (nWidth == (LONG) CW_USEDEFAULT)
-	    {
-	      nWidth = nHeight = 0;
-	    }
-	}
-      else
-	{
-	  STARTUPINFOW info;
-
-	  GetStartupInfoW(&info);
-
-	  if (x == (LONG) CW_USEDEFAULT)
-	    {
-	      if (y != (LONG) CW_USEDEFAULT)
-		{
-		  sw = y;
-		}
-	      x = (info.dwFlags & STARTF_USEPOSITION) ? info.dwX : 0;
-	      y = (info.dwFlags & STARTF_USEPOSITION) ? info.dwY : 0;
-	    }
-	  
-	  if (nWidth == (LONG) CW_USEDEFAULT)
-	    {
-	      if (info.dwFlags & STARTF_USESIZE)
-		{
-		  nWidth = info.dwXSize;
-		  nHeight = info.dwYSize;
-		}
-	      else
-		{
-		  RECT r;
-
-		  SystemParametersInfoW(SPI_GETWORKAREA, 0, &r, 0);
-		  nWidth = (((r.right - r.left) * 3) / 4) - x;
-		  nHeight = (((r.bottom - r.top) * 3) / 4) - y;
-		}
-	    }
-	}
-    }
-
   if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
     wce.cbSize = sizeof(WNDCLASSEXW);
@@ -417,7 +315,7 @@ CreateWindowExW(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				sw,
+				SW_SHOW,
 				TRUE);
 
   return (HWND)Handle;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.12 2004/05/05 22:47:06 weiden Exp $
+ *  $Id: desktop.c,v 1.13 2004/05/08 12:42:46 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -118,10 +118,12 @@ IntValidateDesktopHandle(
    return Status;
 }
 
-PRECT FASTCALL
-IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop)
+VOID FASTCALL
+IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
 {
   PRECT Ret;
+  
+  ASSERT(Desktop);
   
   Ret = &Desktop->WorkArea;
   if((Ret->right == -1) && ScreenDeviceContext)
@@ -138,7 +140,10 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop)
     DC_UnlockDc(ScreenDeviceContext);
   }
   
-  return Ret;
+  if(Rect)
+  {
+    *Rect = *Ret;
+  }
 }
 
 PDESKTOP_OBJECT FASTCALL
@@ -432,7 +437,7 @@ NtUserCreateDesktop(
   DesktopObject->WorkArea.top = 0;
   DesktopObject->WorkArea.right = -1;
   DesktopObject->WorkArea.bottom = -1;
-  IntGetDesktopWorkArea(DesktopObject);
+  IntGetDesktopWorkArea(DesktopObject, NULL);
 
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.224 2004/05/05 22:26:04 weiden Exp $
+/* $Id: window.c,v 1.225 2004/05/08 12:42:46 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,6 +63,9 @@
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
 #define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
+
+/* dialog resources appear to pass this in 16 bits, handle them properly */
+#define CW_USEDEFAULT16	(0x8000)
 
 #define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
 
@@ -1355,6 +1358,57 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 
 
 /*
+ * calculates the default position of a window
+ */
+BOOL FASTCALL
+IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, BOOL IncPos)
+{
+  PDESKTOP_OBJECT Desktop;
+  SIZE Sz;
+  POINT Pos;
+  DbgPrint("IntCalcDefPosSize: Parent: 0x%x, Window: 0x%x, IncPos: 0x%x\n", Parent, WindowObject, IncPos);
+  Desktop = WindowObject->OwnerThread->Win32Thread->Desktop;
+  IntGetDesktopWorkArea(Desktop, rc);
+  
+  if(Parent != NULL)
+  {
+    NtGdiIntersectRect(rc, rc, &Parent->ClientRect);
+    
+    if(IncPos)
+    {
+      Pos.x = Parent->TiledCounter * (NtUserGetSystemMetrics(SM_CXSIZE) + NtUserGetSystemMetrics(SM_CXFRAME));
+      Pos.y = Parent->TiledCounter * (NtUserGetSystemMetrics(SM_CYSIZE) + NtUserGetSystemMetrics(SM_CYFRAME));
+      if(Pos.x > ((rc->right - rc->left) / 4) ||
+         Pos.y > ((rc->bottom - rc->top) / 4))
+      {
+        /* reset counter and position */
+        Pos.x = 0;
+        Pos.y = 0;
+        Parent->TiledCounter = 0;
+      }
+      Parent->TiledCounter++;
+    }
+    Pos.x += rc->left;
+    Pos.y += rc->top;
+  }
+  else
+  {
+    Pos.x = rc->left;
+    Pos.y = rc->top;
+  }
+  
+  Sz.cx = EngMulDiv(rc->right - rc->left, 3, 4);
+  Sz.cy = EngMulDiv(rc->bottom - rc->top, 3, 4);
+  
+  rc->left = Pos.x;
+  rc->top = Pos.y;
+  rc->right = rc->left + Sz.cx;
+  rc->bottom = rc->top + Sz.cy;
+  return TRUE;
+}
+
+
+/*
  * @implemented
  */
 HWND STDCALL
@@ -1383,6 +1437,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
+  POINT Pos;
+  SIZE Size;
 #if 0
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
 #else
@@ -1607,6 +1663,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	}
     }
   
+  if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
+  {
+    /* Automatically assign the caption and border style. Also always
+       clip siblings for overlapped windows. */
+    WindowObject->Style |= (WS_CAPTION | WS_BORDER | WS_CLIPSIBLINGS);
+  }
+  
   /* create system menu */
   if((WindowObject->Style & WS_SYSMENU) && (WindowObject->Style & WS_CAPTION))
   {
@@ -1631,26 +1694,20 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   /* FIXME:  Handle "CS_CLASSDC" */
 
-  /* Initialize the window dimensions. */
-  WindowObject->WindowRect.left = x;
-  WindowObject->WindowRect.top = y;
-  WindowObject->WindowRect.right = x + nWidth;
-  WindowObject->WindowRect.bottom = y + nHeight;
-  if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
-    {
-      NtGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
-                      ParentWindow->ClientRect.top);
-    }
-  WindowObject->ClientRect = WindowObject->WindowRect;
+  Pos.x = x;
+  Pos.y = y;
+  Size.cx = nWidth;
+  Size.cy = nHeight;
 
+  /* call hook */
   Cs.lpCreateParams = lpParam;
   Cs.hInstance = hInstance;
   Cs.hMenu = hMenu;
   Cs.hwndParent = ParentWindowHandle;
-  Cs.cx = nWidth;
-  Cs.cy = nHeight;
-  Cs.x = x;
-  Cs.y = y;
+  Cs.cx = Size.cx;
+  Cs.cy = Size.cy;
+  Cs.x = Pos.x;
+  Cs.y = Pos.y;
   Cs.style = dwStyle;
   Cs.lpszName = OrigWindowName; /* pass the original pointer to usermode! */
   Cs.lpszClass = lpClassName->Buffer;
@@ -1666,6 +1723,96 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       DPRINT1("CBT-hook returned !0\n");
       return (HWND) NULL;
     }
+
+  x = Cs.x;
+  y = Cs.y;
+  nWidth = Cs.cx;
+  nHeight = Cs.cy;
+
+  /* default positioning for overlapped windows */
+  if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
+  {
+    RECT rc;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+    BOOL CalculatedDefPosSize = FALSE;
+    
+    ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
+    
+    DbgPrint("Creating WS_OVERLAPPED window (0x%x, 0x%x, 0x%x, 0x%x)\n", x, y, nWidth, nHeight);
+    if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+    {
+      CalculatedDefPosSize = IntCalcDefPosSize(ParentWindow, WindowObject, &rc, TRUE);
+      
+      if(ProcessParams->dwFlags & STARTF_USEPOSITION)
+      {
+        ProcessParams->dwFlags &= ~STARTF_USEPOSITION;
+        Pos.x = ProcessParams->dwX;
+        Pos.y = ProcessParams->dwY;
+      }
+      else
+      {
+        Pos.x = rc.left;
+        Pos.y = rc.top;
+      }
+      
+      /* According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
+         y is something else */
+      if(y != CW_USEDEFAULT && y != CW_USEDEFAULT16)
+      {
+        dwShowMode = y;
+      }
+    }
+    if(nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16)
+    {
+      if(!CalculatedDefPosSize)
+      {
+        IntCalcDefPosSize(ParentWindow, WindowObject, &rc, FALSE);
+      }
+      if(ProcessParams->dwFlags & STARTF_USESIZE)
+      {
+        ProcessParams->dwFlags &= ~STARTF_USESIZE;
+        Size.cx = ProcessParams->dwXSize;
+        Size.cy = ProcessParams->dwYSize;
+      }
+      else
+      {
+        Size.cx = rc.right - rc.left;
+        Size.cy = rc.bottom - rc.top;
+      }
+      
+      /* move the window if necessary */
+      if(Pos.x > rc.left)
+        Pos.x = max(rc.left, 0);
+      if(Pos.y > rc.top)
+        Pos.y = max(rc.top, 0);
+    }
+  }
+  else
+  {
+    /* if CW_USEDEFAULT(16) is set for non-overlapped windows, both values are set to zero) */
+    if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+    {
+      Pos.x = 0;
+      Pos.y = 0;
+    }
+    if(nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16)
+    {
+      Size.cx = 0;
+      Size.cy = 0;
+    }
+  }
+
+  /* Initialize the window dimensions. */
+  WindowObject->WindowRect.left = Pos.x;
+  WindowObject->WindowRect.top = Pos.y;
+  WindowObject->WindowRect.right = Pos.x + Size.cx;
+  WindowObject->WindowRect.bottom = Pos.y + Size.cy;
+  if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
+    {
+      NtGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
+                      ParentWindow->ClientRect.top);
+    }
+  WindowObject->ClientRect = WindowObject->WindowRect;
 
   /*
    * Get the size and position of the window.
@@ -1685,10 +1832,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       if (nHeight < 0) nHeight = 0;
     }
 
-  WindowObject->WindowRect.left = x;
-  WindowObject->WindowRect.top = y;
-  WindowObject->WindowRect.right = x + nWidth;
-  WindowObject->WindowRect.bottom = y + nHeight;
+  WindowObject->WindowRect.left = Pos.x;
+  WindowObject->WindowRect.top = Pos.y;
+  WindowObject->WindowRect.right = Pos.x + Size.cx;
+  WindowObject->WindowRect.bottom = Pos.y + Size.cy;
   if (0 != (WindowObject->Style & WS_CHILD) && ParentWindow)
     {
       NtGdiOffsetRect(&(WindowObject->WindowRect), ParentWindow->ClientRect.left,
@@ -1699,10 +1846,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* FIXME: Initialize the window menu. */
 
   /* Send a NCCREATE message. */
-  Cs.cx = nWidth;
-  Cs.cy = nHeight;
-  Cs.x = x;
-  Cs.y = y;
+  Cs.cx = Size.cx;
+  Cs.cy = Size.cy;
+  Cs.x = Pos.x;
+  Cs.y = Pos.y;
 
   DPRINT("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
