@@ -391,7 +391,8 @@ static INT_PTR CALLBACK BrsFolderDlgProc(HWND hWnd, UINT msg, WPARAM wParam,
 	    switch (wParam)
 	    { case IDOK:
 	        pdump ( pidlRet );
-	        SHGetPathFromIDListW(pidlRet, lpBrowseInfo->pszDisplayName);
+		if (lpBrowseInfo->pszDisplayName)
+	            SHGetPathFromIDListW(pidlRet, lpBrowseInfo->pszDisplayName);
 	        EndDialog(hWnd, (DWORD) ILClone(pidlRet));
 	        return TRUE;
 
@@ -438,7 +439,7 @@ static INT_PTR CALLBACK BrsFolderDlgProc(HWND hWnd, UINT msg, WPARAM wParam,
 	return FALSE;
 }
 
-static WCHAR swBrowseTempName[] = {'S','H','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
+static const WCHAR swBrowseTempName[] = {'S','H','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
 
 /*************************************************************************
  * SHBrowseForFolderA [SHELL32.@]
@@ -460,9 +461,9 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
 	bi.pidlRoot = lpbi->pidlRoot;
 	if (lpbi->pszDisplayName)
 	{
-	  len = MultiByteToWideChar(CP_ACP, 0, lpbi->pszDisplayName, -1, NULL, 0);
-	  bi.pszDisplayName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-	  MultiByteToWideChar(CP_ACP, 0, lpbi->pszDisplayName, -1, bi.pszDisplayName, len);
+	  /*lpbi->pszDisplayName is assumed to be MAX_PATH (MSDN) */
+	  bi.pszDisplayName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+	  MultiByteToWideChar(CP_ACP, 0, lpbi->pszDisplayName, -1, bi.pszDisplayName, MAX_PATH);
 	}
 	else
 	  bi.pszDisplayName = NULL;

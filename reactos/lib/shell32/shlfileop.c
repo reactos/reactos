@@ -53,9 +53,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define FO_MASK         0xF
 
 CHAR aWildcardFile[] = {'*','.','*',0};
-WCHAR wWildcardFile[] = {'*','.','*',0};
-WCHAR wWildcardChars[] = {'*','?',0};
-WCHAR wBackslash[] = {'\\',0};
+static const WCHAR wWildcardFile[] = {'*','.','*',0};
+static const WCHAR wWildcardChars[] = {'*','?',0};
+static const WCHAR wBackslash[] = {'\\',0};
 
 static DWORD SHNotifyCreateDirectoryA(LPCSTR path, LPSECURITY_ATTRIBUTES sec);
 static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
@@ -1309,4 +1309,15 @@ BOOL WINAPI IsNetDrive(DWORD drive)
 	strcpy(root, "A:\\");
 	root[0] += (char)drive;
 	return (GetDriveTypeA(root) == DRIVE_REMOTE);
+}
+
+
+/*************************************************************************
+ * RealDriveType                [SHELL32.524]
+ */
+INT WINAPI RealDriveType(INT drive, BOOL bQueryNet)
+{
+    char root[] = "A:\\";
+    root[0] += (char)drive;
+    return GetDriveTypeA(root);
 }
