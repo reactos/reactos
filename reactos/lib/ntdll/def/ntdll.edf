@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.111 2004/06/13 10:35:52 navaraf Exp $
+; $Id: ntdll.edf,v 1.112 2004/06/27 12:21:14 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -51,7 +51,7 @@ LdrGetDllHandle=LdrGetDllHandle@16
 LdrGetProcedureAddress=LdrGetProcedureAddress@16
 LdrInitializeThunk=LdrInitializeThunk@16
 LdrLoadDll=LdrLoadDll@16
-;LdrProcessRelocationBlock
+LdrProcessRelocationBlock=LdrProcessRelocationBlock@16
 LdrQueryImageFileExecutionOptions=LdrQueryImageFileExecutionOptions@24
 LdrQueryProcessModuleInformation=LdrQueryProcessModuleInformation@12
 LdrShutdownProcess=LdrShutdownProcess@0

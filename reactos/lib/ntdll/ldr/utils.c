@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.95 2004/06/26 15:11:14 navaraf Exp $
+/* $Id: utils.c,v 1.96 2004/06/27 12:20:33 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1226,10 +1226,10 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 {
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-  ULONG Count, ProtectSize, OldProtect, OldProtect2, i;
+  ULONG Count, ProtectSize, OldProtect, OldProtect2;
   PVOID Page, ProtectPage, ProtectPage2;
-  PWORD TypeOffset;
-  ULONG Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
+  PUSHORT TypeOffset;
+  ULONG_PTR Delta;
   NTSTATUS Status;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
@@ -1244,19 +1244,21 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
     {
       return STATUS_SUCCESS;
     }
-   
+
   ProtectSize = PAGE_SIZE;
-  RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase + 
+  Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
+  RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)ImageBase +
                   RelocationDDir->VirtualAddress);
-  RelocationEnd = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase +
+  RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)ImageBase +
                   RelocationDDir->VirtualAddress + RelocationDDir->Size);
+
   while (RelocationDir < RelocationEnd &&
          RelocationDir->SizeOfBlock > 0)
     {
       Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
-              sizeof(WORD);
+              sizeof(USHORT);
       Page = ImageBase + RelocationDir->VirtualAddress;
-      TypeOffset = (PWORD)(RelocationDir + 1);
+      TypeOffset = (PUSHORT)(RelocationDir + 1);
 
       /* Unprotect the page(s) we're about to relocate. */
       ProtectPage = Page;
@@ -1268,7 +1270,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
       if (!NT_SUCCESS(Status))
         {
           DPRINT1("Failed to unprotect relocation target.\n");
-          return(Status);
+          return Status;
         }
 
       if (RelocationDir->VirtualAddress + PAGE_SIZE <
@@ -1288,35 +1290,20 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                                      &ProtectSize,
                                      OldProtect,
                                      &OldProtect);
-              return(Status);
+              return Status;
             }
         }
-
-      /* Patch the page. */
-      for (i = 0; i < Count; i++)
+      else
         {
-          SHORT Offset = TypeOffset[i] & 0xFFF;
-          USHORT Type = TypeOffset[i] >> 12;
-
-          switch (Type)
-            {
-              case IMAGE_REL_BASED_ABSOLUTE:
-                break;
-              case IMAGE_REL_BASED_HIGH:
-                *(PUSHORT)(Page + Offset) += HIWORD(Delta);
-                break;
-              case IMAGE_REL_BASED_LOW:
-                *(PUSHORT)(Page + Offset) += LOWORD(Delta);
-                break;
-              case IMAGE_REL_BASED_HIGHLOW:
-                *(PULONG)(Page + Offset) += Delta;
-                break;
-              case IMAGE_REL_BASED_HIGHADJ:
-              default:
-                DPRINT("Unknown/unsupported fixup type %d.\n", type);
-                return STATUS_UNSUCCESSFUL;
-            }
+          ProtectPage2 = NULL;
         }
+
+      RelocationDir = LdrProcessRelocationBlock(Page,
+                                                Count,
+                                                TypeOffset,
+                                                Delta);
+      if (RelocationDir == NULL)
+        return STATUS_UNSUCCESSFUL;
 
       /* Restore old page protection. */
       NtProtectVirtualMemory(NtCurrentProcess(),
@@ -1325,8 +1312,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                              OldProtect,
                              &OldProtect);
 
-      if (RelocationDir->VirtualAddress + PAGE_SIZE <
-          NTHeaders->OptionalHeader.SizeOfImage)
+      if (ProtectPage2 != NULL)
         {
           NtProtectVirtualMemory(NtCurrentProcess(),
                                  &ProtectPage2,
@@ -1334,9 +1320,6 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                                  OldProtect2,
                                  &OldProtect2);
         }
-
-      RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)RelocationDir +
-                      RelocationDir->SizeOfBlock);
     }
 
   return STATUS_SUCCESS;
@@ -3028,6 +3011,57 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
     }
 
   return Status;
+}
+
+
+PIMAGE_BASE_RELOCATION STDCALL
+LdrProcessRelocationBlock(IN PVOID Address,
+			  IN USHORT Count,
+			  IN PUSHORT TypeOffset,
+			  IN ULONG_PTR Delta)
+{
+  SHORT Offset;
+  USHORT Type;
+  USHORT i;
+  PUSHORT ShortPtr;
+  PULONG LongPtr;
+
+  for (i = 0; i < Count; i++)
+    {
+      Offset = *TypeOffset & 0xFFF;
+      Type = *TypeOffset >> 12;
+
+      switch (Type)
+        {
+          case IMAGE_REL_BASED_ABSOLUTE:
+            break;
+
+          case IMAGE_REL_BASED_HIGH:
+            ShortPtr = (PUSHORT)(Address + Offset);
+            *ShortPtr += HIWORD(Delta);
+            break;
+
+          case IMAGE_REL_BASED_LOW:
+            ShortPtr = (PUSHORT)(Address + Offset);
+            *ShortPtr += LOWORD(Delta);
+            break;
+
+          case IMAGE_REL_BASED_HIGHLOW:
+            LongPtr = (PULONG)(Address + Offset);
+            *LongPtr += Delta;
+            break;
+
+          case IMAGE_REL_BASED_HIGHADJ:
+          case IMAGE_REL_BASED_MIPS_JMPADDR:
+          default:
+            DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
+            return NULL;
+        }
+
+      TypeOffset++;
+    }
+
+  return (PIMAGE_BASE_RELOCATION)TypeOffset;
 }
 
 /* EOF */
