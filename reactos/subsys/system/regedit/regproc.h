@@ -26,6 +26,8 @@
 #define SUCCESS               0
 #define KEY_VALUE_ALREADY_SET 2
 
+extern HINSTANCE hInst;
+
 typedef void (*CommandAPI)(LPSTR lpsLine);
 
 void doSetValue(LPSTR lpsLine);
@@ -71,3 +73,13 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data);
  * api queryValue prototypes
  */
 void    processQueryValue(LPSTR cmdline);
+
+/*
+ * Permission prototypes
+ */
+
+BOOL InitializeAclUiDll(VOID);
+VOID UnloadAclUiDll(VOID);
+BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);
+
+/* EOF */

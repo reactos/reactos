@@ -69,6 +69,8 @@ BEGIN
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
         END
         MENUITEM SEPARATOR
+        MENUITEM "&Permissions...",		ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
         MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
         MENUITEM "&Rename",                     ID_EDIT_RENAME
         MENUITEM SEPARATOR
@@ -287,6 +289,29 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "All Files (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "Full Control"
+  IDS_ACCESS_READ               "Read"
+  IDS_ACCESS_QUERYVALUE         "Query Value"
+  IDS_ACCESS_SETVALUE           "Set Value"
+  IDS_ACCESS_CREATESUBKEY       "Create Subkey"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Enumerate Subkeys"
+  IDS_ACCESS_NOTIFY             "Notify"
+  IDS_ACCESS_CREATELINK         "Create Link"
+  IDS_ACCESS_DELETE             "Delete"
+  IDS_ACCESS_WRITEDAC           "Write DAC"
+  IDS_ACCESS_WRITEOWNER         "Write Owner"
+  IDS_ACCESS_READCONTROL        "Read Control"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "This key only"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "This key and subkeys"
+  IDS_INHERIT_SUBKEYSONLY        "Subkeys only"
 END
 
 /*****************************************************************/

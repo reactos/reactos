@@ -68,6 +68,8 @@ TCHAR szChildClass[MAX_LOADSTRING];
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
+    BOOL AclUiAvailable;
+    
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
                              CS_HREDRAW | CS_VREDRAW/*style*/,
@@ -111,6 +113,21 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
+    
+    AclUiAvailable = InitializeAclUiDll();
+    if(!AclUiAvailable)
+    {
+      HMENU hEditMenu;
+      int mePos;
+      /* hide the Edit/Permissions... menu entry */
+      hEditMenu = GetSubMenu(hMenuFrame, 1);
+      if(hEditMenu != NULL)
+      {
+        RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
+        /* remove the separator after the menu item */
+        RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
+      }
+    }
 
     nClipboardFormat = RegisterClipboardFormat(strClipboardFormat);
     /* if (nClipboardFormat == 0) {
@@ -145,6 +162,7 @@ void ExitInstance(HINSTANCE hInstance)
 {
     UnregisterHexEditorClass(hInstance);
     DestroyMenu(hMenuFrame);
+    UnloadAclUiDll();
 }
 
 BOOL TranslateChildTabMessage(MSG *msg)
