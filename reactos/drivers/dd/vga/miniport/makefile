@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2000/03/17 21:02:57 jfilby Exp $
+# $Id: makefile,v 1.2 2000/08/11 12:43:51 ekohl Exp $
 #
 #
 BASE_CFLAGS = -I../../../../include
@@ -47,7 +47,7 @@ vgamp.sys: $(MP_OBJECTS)
 		$(MP_OBJECTS)
 	- $(RM) temp.exp
 
-floppy: $(FLOPPY_DIR)/drivers/vgamp.sys
+install: $(FLOPPY_DIR)/drivers/vgamp.sys
 
 $(FLOPPY_DIR)/drivers/vgamp.sys: vgamp.sys
 ifeq ($(DOSCLI),yes)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2000/02/20 22:52:49 ea Exp $
+# $Id: makefile,v 1.7 2000/08/11 12:37:11 ekohl Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -108,7 +108,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 ifeq ($(DOSCLI),yes)

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.28 2000/08/05 18:01:51 dwelch Exp $
+/* $Id: utils.c,v 1.29 2000/08/11 12:34:58 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -96,13 +96,15 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 		strncpy(fqname, Name, 256);
 
 	DPRINT("fqname \"%s\"\n", fqname);
+
 	/*
 	 * Open the DLL's image file.
 	 */
-
-   if (LdrFindDll(Dll, Name) == STATUS_SUCCESS)
-     return STATUS_SUCCESS;
-
+	if (LdrFindDll(Dll, Name) == STATUS_SUCCESS)
+	{
+		DPRINT ("DLL %s already loaded.\n");
+		return STATUS_SUCCESS;
+	}
 
 	RtlInitAnsiString(
 		& AnsiString,
@@ -164,19 +166,16 @@ NTSTATUS LdrLoadDll (PDLL* Dll,
 	/*
 	 * Check it is a PE image file.
 	 */
-	if (	(DosHeader->e_magic != IMAGE_DOS_MAGIC)
-		|| (DosHeader->e_lfanew == 0L)
-//		|| (*(PULONG)((PUCHAR)BlockBuffer + DosHeader->e_lfanew) != IMAGE_PE_MAGIC)
-		|| (*(PULONG)(NTHeaders) != IMAGE_PE_MAGIC)
-		)
+	if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
+	    || (DosHeader->e_lfanew == 0L)
+	    || (*(PULONG)(NTHeaders) != IMAGE_PE_MAGIC))
 	{
 		DPRINT("NTDLL format invalid\n");
 		ZwClose(FileHandle);
-	
+
 		return STATUS_UNSUCCESSFUL;
 	}
 
-//	NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
 	ImageBase = (PVOID) NTHeaders->OptionalHeader.ImageBase;
 	ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
 
@@ -319,27 +318,27 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
 	  .VirtualAddress;
 	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
 	  ((ULONG)ExportDir + (ULONG)current->BaseAddress);
-	
+
 	DPRINT("Scanning  %x %x %x\n",ExportDir->Name,
 	       current->BaseAddress,
 	       (ExportDir->Name + current->BaseAddress));
 	DPRINT("Scanning %s %s\n",
 	       ExportDir->Name + current->BaseAddress, Name);
-	
+
 	if (_stricmp(ExportDir->Name + current->BaseAddress, Name) == 0)
 	  {
 	     *Dll = current;
 	     current->ReferenceCount++;
 	     return STATUS_SUCCESS;
 	  }
-	
+
 	current = current->Next;
 	
      } while (current != & LdrDllListHead);
 
    DPRINT("Failed to find dll %s\n",Name);
 
-   return -1;
+   return STATUS_UNSUCCESSFUL;
 }
 
 
@@ -363,14 +362,13 @@ NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
 			HANDLE			SectionHandle,
 			PIMAGE_NT_HEADERS	NTHeaders)
 {
-   ULONG		i;
+   ULONG	i;
    NTSTATUS	Status;
-   
-   
+
    for (i = 0; (i < NTHeaders->FileHeader.NumberOfSections); i++)
      {
 	PIMAGE_SECTION_HEADER	Sections;
-	LARGE_INTEGER		Offset;	
+	LARGE_INTEGER		Offset;
 	ULONG			Base;
 	ULONG Size;
 	
@@ -694,17 +692,17 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 				 .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
 			     .VirtualAddress);
    DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
-   
+
    while (ImportModuleDirectory->dwRVAModuleName)
      {
-	PVOID	* ImportAddressList; 
+	PVOID	* ImportAddressList;
 	PULONG	FunctionNameList;
 	DWORD	pName;
 	PWORD	pHint;
-	
+
 	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
-	
+
 	Status = LdrLoadDll(&Module,
 			    (PCHAR)(ImageBase
 				    +ImportModuleDirectory->dwRVAModuleName));
@@ -712,6 +710,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	  {
 	     return Status;
 	  }
+
 	/*
 	 * Get the import address list.
 	 */
@@ -824,7 +823,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
     */
    DosHeader = (PIMAGE_DOS_HEADER) ImageBase;
    NTHeaders = (PIMAGE_NT_HEADERS) (ImageBase + DosHeader->e_lfanew);
-   
+
    /*
     * Initialize image sections.
     */
@@ -835,7 +834,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 		       SectionHandle,
 		       NTHeaders);
      }
-   
+
    /*
     * If the base address is different from the
     * one the DLL is actually loaded, perform any
@@ -850,7 +849,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 	     return NULL;
 	  }
      }
-   
+
    /*
     * If the DLL's imports symbols from other
     * modules, fixup the imported calls entry points.
@@ -866,7 +865,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
 	     return NULL;
 	  }
      }
-   
+
    /*
     * Compute the DLL's entry point's address.
     */
@@ -878,6 +877,7 @@ PEPFUNC LdrPEStartup (PVOID	ImageBase,
    DPRINT("LdrPEStartup() = %x\n",EntryPoint);
    return EntryPoint;
 }
+
 
 NTSTATUS LdrUnloadDll(PDLL Dll)
 {
@@ -1080,11 +1080,13 @@ NTSTATUS LdrAccessResource(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntr
 NTSTATUS
 STDCALL
 LdrDisableThreadCalloutsForDll (
-	PVOID	IN	ImageBase,
-	BOOLEAN	IN	Disable
+	IN	PVOID	BaseAddress,
+	IN	BOOLEAN	Disable
 	)
 {
-	return STATUS_NOT_IMPLEMENTED;
+	/* FIXME: implement it! */
+
+	return STATUS_SUCCESS;
 }
 
 
@@ -1100,12 +1102,17 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    PULONG AddressPtr;
    ULONG i = 0;
 
+   DPRINT("LdrGetProcedureAddress (BaseAddress %x Name %Z Ordinal %lu ProcedureAddress %x)\n",
+          BaseAddress, Name, Ordinal, ProcedureAddress);
+
    /* Get the pointer to the export directory */
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
 		RtlImageDirectoryEntryToData (BaseAddress,
 					      TRUE,
 					      IMAGE_DIRECTORY_ENTRY_EXPORT,
 					      &i);
+
+   DPRINT("ExportDir %x i %lu\n", ExportDir, i);
 
    if (!ExportDir || !i || !ProcedureAddress)
      {

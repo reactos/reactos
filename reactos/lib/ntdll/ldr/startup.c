@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.27 2000/08/05 18:01:51 dwelch Exp $
+/* $Id: startup.c,v 1.28 2000/08/11 12:34:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,7 +48,7 @@ LdrInitializeThunk (ULONG Unknown1,
    PIMAGE_NT_HEADERS NTHeaders;
    PVOID ImageBase;
    PPEB Peb;
-   
+
    DPRINT("LdrInitializeThunk()\n");
 
    LdrDllListHead.BaseAddress = (PVOID)&_image_base__;
@@ -58,7 +58,7 @@ LdrInitializeThunk (ULONG Unknown1,
    PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
    LdrDllListHead.Headers = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
 						PEDosHeader->e_lfanew);
-   
+
    Peb = (PPEB)(PEB_BASE);
    DPRINT("Peb %x\n", Peb);
    ImageBase = Peb->ImageBaseAddress;
@@ -124,7 +124,7 @@ LdrInitializeThunk (ULONG Unknown1,
 	DbgPrint("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
-   
+
    DbgPrint("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.58 2000/08/05 18:01:51 dwelch Exp $
+; $Id: ntdll.def,v 1.59 2000/08/11 12:34:13 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -35,6 +35,7 @@ DbgUserBreakPoint@0
 LdrAccessResource
 LdrDisableThreadCalloutsForDll@8
 ;LdrEnumResources
+;LdrFindEntryForAddress
 ;LdrFindResourceDirectory_U
 LdrFindResource_U
 ;LdrGetDllHandle
@@ -298,7 +299,7 @@ RtlAreBitsSet@12
 RtlAssert@16
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
-;RtlCheckRegistryKey
+RtlCheckRegistryKey@8
 RtlClearAllBits@4
 RtlClearBits@12
 ;RtlClosePropertySet
@@ -330,7 +331,7 @@ RtlCreateHeap@24
 RtlCreateProcessParameters@40
 ;RtlCreatePropertySet
 ;RtlCreateQueryDebugBuffer
-;RtlCreateRegistryKey
+RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
 RtlCreateUnicodeString@8
@@ -349,7 +350,7 @@ RtlDeleteAce@8
 RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
-;RtlDeleteRegistryValue
+RtlDeleteRegistryValue@12
 ;RtlDeleteResource
 ;RtlDeleteSecurityObject
 ;RtlDestroyAtomTable
@@ -417,8 +418,8 @@ RtlGetDaclSecurityDescriptor@16
 RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor@12
 RtlGetLongestNtPathLength@0
-;RtlGetNtGlobalFlags
-;RtlGetNtProductType
+RtlGetNtGlobalFlags@0
+RtlGetNtProductType@4
 RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetProcessHeap@0
@@ -504,7 +505,7 @@ RtlQueryInformationAcl@16
 ;RtlQueryProperties
 ;RtlQueryPropertyNames
 ;RtlQueryPropertySet
-;RtlQueryRegistryValues
+RtlQueryRegistryValues@20
 ;RtlQuerySecutityObject
 ;RtlQueryTagHeap
 ;RtlQueryTimeZoneInformation
@@ -586,12 +587,12 @@ RtlValidSid@4
 RtlValidateHeap@12
 RtlValidateProcessHeaps@0
 ;RtlWalkHeap
-;RtlWriteRegistryValue
+RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory@8
 ;RtlpNtCreateKey
 ;RtlpNtEnumerateSubKey
-;RtlpNtMakeTemporaryKey
+RtlpNtMakeTemporaryKey@4
 ;RtlpNtOpenKey
 ;RtlpNtQueryValueKey
 ;RtlpNtSetValueKey

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.24 2000/06/29 23:35:51 dwelch Exp $
+# $Id: makefile,v 1.25 2000/08/11 12:46:47 ekohl Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -101,7 +101,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

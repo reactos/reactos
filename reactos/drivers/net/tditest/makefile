@@ -60,7 +60,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2000/08/05 18:01:57 dwelch Exp $
+# $Id: makefile,v 1.8 2000/08/11 12:46:24 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -44,7 +44,7 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-floppy: $(FLOPPY_DIR)/subsys/$(TARGET).exe
+install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
 ifeq ($(DOSCLI),yes)

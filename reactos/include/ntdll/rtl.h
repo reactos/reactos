@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.17 2000/06/29 23:35:22 dwelch Exp $
+/* $Id: rtl.h,v 1.18 2000/08/11 12:30:18 ekohl Exp $
  *
  */
 
@@ -173,6 +173,10 @@ STDCALL
 RtlGetLongestNtPathLength (
 	VOID
 	);
+
+ULONG STDCALL RtlGetNtGlobalFlags(VOID);
+
+BOOLEAN STDCALL RtlGetNtProductType(PULONG ProductType);
 
 ULONG
 STDCALL

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 1999/12/04 20:58:41 ea Exp $
+# $Id: makefile,v 1.8 2000/08/11 12:44:03 ekohl Exp $
 #
 #
 TARGET=vidport
@@ -21,7 +21,7 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

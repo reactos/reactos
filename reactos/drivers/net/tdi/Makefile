@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2000/08/08 17:41:25 ekohl Exp $
+# $Id: Makefile,v 1.8 2000/08/11 12:45:45 ekohl Exp $
 #
 # TDI.SYS build spec
 #
@@ -88,7 +88,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)

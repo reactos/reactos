@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.71 2000/07/10 21:47:36 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.72 2000/08/11 12:38:45 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -630,7 +630,7 @@ RtlAreBitsSet=RtlAreBitsSet@12
 RtlAssert=RtlAssert@16
 ;RtlCaptureStackBackTrace
 RtlCharToInteger=RtlCharToInteger@12
-;RtlCheckRegistryKey
+RtlCheckRegistryKey=RtlCheckRegistryKey@8
 RtlClearAllBits=RtlClearAllBits@4
 RtlClearBits=RtlClearBits@12
 RtlCompareMemory=RtlCompareMemory@12
@@ -649,7 +649,7 @@ RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateAcl=RtlCreateAcl@12
 ;RtlCreateAtomTable
 ;RtlCreateHeap
-;RtlCreateRegistryKey
+RtlCreateRegistryKey=RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
@@ -660,7 +660,7 @@ RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 ;RtlDeleteAtomFromAtomTable
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
-;RtlDeleteRegisterValue
+RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 ;RtlDescribeChunk
 ;RtlDestroyAtomTable
 ;RtlDestroyHeap
@@ -746,7 +746,7 @@ RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlPrefixString=RtlPrefixString@12
 RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
-;RtlQueryRegistryValues
+RtlQueryRegistryValues=RtlQueryRegistryValues@20
 ;RtlQueryTimeZoneInformation
 ;RtlRaiseException
 ;RtlRandom
@@ -791,7 +791,7 @@ RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
 RtlValidSecurityDescriptor=RtlValidSecurityDescriptor@4
 RtlValidSid=RtlValidSid@4
-;RtlWriteRegistryValue
+RtlWriteRegistryValue=RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory=RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
@@ -1014,14 +1014,14 @@ HalAllProcessorsStarted=HalAllProcessorsStarted@0
 HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters=HalAllocateCrashDumpRegisters@8
 HalAssignSlotResource=HalAssignSlotResources@32
-;HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
+HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
 ;HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
 ;HalClearSoftwareInterrupt=@HalClearSoftwareInterrupt@4
 ;HalClearSoftwareInterrupt=HalClearSoftwareInterrupt@4
-;HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
+HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
 HalDisplayString=HalDisplayString@4
-;HalEnableSystemInterrupt=HalEnableSystemInterrupt@12
-;HalEndSystemInterrupt=HalEndSystemInterrupt@8
+HalEnableSystemInterrupt=HalEnableSystemInterrupt@12
+HalEndSystemInterrupt=HalEndSystemInterrupt@8
 HalFlushCommonBuffer=HalFlushCommonBuffer@32
 HalFreeCommonBuffer=HalFreeCommonBuffer@24
 HalGetAdapter=HalGetAdapter@8

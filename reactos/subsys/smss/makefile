@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 1999/12/01 15:18:54 ekohl Exp $
+# $Id: makefile,v 1.4 2000/08/11 12:46:37 ekohl Exp $
 #
 # Session Manager
 #
@@ -38,7 +38,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
 
-floppy: $(FLOPPY_DIR)/subsys/$(TARGET).exe
+install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
 ifeq ($(DOSCLI),yes)

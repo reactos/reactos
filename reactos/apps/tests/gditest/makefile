@@ -21,7 +21,7 @@ clean: $(PROGS:%=%_clean)
 
 .phony: clean
 
-floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
+install: $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
 
 $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
 ifeq ($(DOSCLI),yes)

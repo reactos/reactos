@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2000/08/05 18:01:55 dwelch Exp $
+# $Id: makefile,v 1.9 2000/08/11 12:43:43 ekohl Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
@@ -78,7 +78,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
+install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 ifeq ($(DOSCLI),yes)

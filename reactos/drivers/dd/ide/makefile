@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2000/08/05 18:01:54 dwelch Exp $
+# $Id: makefile,v 1.14 2000/08/11 12:42:31 ekohl Exp $
 #
 #
 TARGET=ide
@@ -22,7 +22,7 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

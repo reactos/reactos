@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.11 2000/07/19 14:18:20 dwelch Exp $
+# $Id: makefile_rex,v 1.12 2000/08/11 12:44:24 ekohl Exp $
 #
 # Minix IFS Driver makefile
 #
@@ -84,7 +84,7 @@ minixfs.sys: $(OBJECTS)
 
 minix.coff: ../../../include/reactos/buildno.h minix.rc
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
 ifeq ($(DOSCLI),yes)

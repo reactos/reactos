@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.24 2000/08/11 08:17:41 jean Exp $
+/* $Id: registry.c,v 1.25 2000/08/11 12:39:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,7 +19,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-#define  PROTO_REG  1  /* Comment out to disable */
+//#define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
@@ -38,7 +38,7 @@
 #define  REG_ROOT_KEY_BLOCK_TYPE  0x2c
 
 #define  REG_ROOT_KEY_NAME  L"\\Registry"
-#define  SYSTEM_REG_FILE  L"\\SystemDir\\System32\\Config\\SYSTEM.DAT"
+#define  SYSTEM_REG_FILE  L"\\SystemRoot\\System32\\Config\\SYSTEM.DAT"
 
 
 // BLOCK_OFFSET = offset in file after header block
@@ -1215,12 +1215,13 @@ NtNotifyChangeKey (
 NTSTATUS
 STDCALL
 NtQueryMultipleValueKey (
-	IN	HANDLE	KeyHandle,	
-	IN	PWVALENT	ListOfValuesToQuery,	
-	IN	ULONG	NumberOfItems,	
-	OUT	PVOID	MultipleValueInformation,		
-	IN	ULONG	Length,
-	OUT	PULONG	ReturnLength)
+	IN	HANDLE		KeyHandle,
+	IN	PWVALENT	ListOfValuesToQuery,
+	IN	ULONG		NumberOfItems,
+	OUT	PVOID		MultipleValueInformation,
+	IN	ULONG		Length,
+	OUT	PULONG		ReturnLength
+	)
 {
 	UNIMPLEMENTED;
 }
@@ -1229,7 +1230,7 @@ NtQueryMultipleValueKey (
 NTSTATUS
 STDCALL
 NtReplaceKey (
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes, 
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	IN	HANDLE			Key,
 	IN	POBJECT_ATTRIBUTES	ReplacedObjectAttributes
 	)
@@ -1294,18 +1295,18 @@ NtInitializeRegistry (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlCheckRegistryKey (
-	ULONG	RelativeTo,
-	PWSTR	Path
+	IN	ULONG	RelativeTo,
+	IN	PWSTR	Path
 	)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlCreateRegistryKey (
 	IN	ULONG	RelativeTo,
@@ -1316,10 +1317,10 @@ RtlCreateRegistryKey (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlDeleteRegistryValue (
-	IN	ULONG	RelativeTo, 
+	IN	ULONG	RelativeTo,
 	IN	PWSTR	Path,
 	IN	PWSTR	ValueName
 	)
@@ -1328,29 +1329,29 @@ RtlDeleteRegistryValue (
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlQueryRegistryValues (
 	IN	ULONG				RelativeTo,
 	IN	PWSTR				Path,
-		PRTL_QUERY_REGISTRY_TABLE	QueryTable,
-		PVOID				Context,
-		PVOID				Environment
+	IN	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
+	IN	PVOID				Context,
+	IN	PVOID				Environment
 	)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlWriteRegistryValue (
-	ULONG	RelativeTo,
-	PWSTR	Path,
-	PWSTR	ValueName,
-	ULONG	ValueType,
-	PVOID	ValueData,
-	ULONG	ValueLength
+	IN	ULONG	RelativeTo,
+	IN	PWSTR	Path,
+	IN	PWSTR	ValueName,
+	IN	ULONG	ValueType,
+	IN	PVOID	ValueData,
+	IN	ULONG	ValueLength
 	)
 {
 	UNIMPLEMENTED;
@@ -1794,7 +1795,7 @@ CHECKPOINT;
       CmiReleaseBlock(RegistryFile, CurKeyBlock);
       CurKeyBlock = SubKeyBlock;
 
-      Remainder = NextSlash + 1;      
+      Remainder = NextSlash + 1;
     }
 CHECKPOINT;
   if (NT_SUCCESS(Status))

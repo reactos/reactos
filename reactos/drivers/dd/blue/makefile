@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/05/08 23:25:36 ekohl Exp $
+# $Id: makefile,v 1.12 2000/08/11 12:42:07 ekohl Exp $
 #
 #
 TARGET = blue
@@ -21,7 +21,7 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

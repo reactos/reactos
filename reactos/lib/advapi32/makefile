@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2000/04/05 01:40:35 ekohl Exp $
+# $Id: makefile,v 1.13 2000/08/11 12:31:17 ekohl Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -96,7 +96,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 ifeq ($(DOSCLI),yes)

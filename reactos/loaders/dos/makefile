@@ -12,7 +12,7 @@ clean:
 
 .PHONY: clean
 
-floppy: $(FLOPPY_DIR)/loadros.com
+install: $(FLOPPY_DIR)/loadros.com
 
 $(FLOPPY_DIR)/loadros.com: loadros.com
 ifeq ($(DOSCLI),yes)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2000/08/05 18:01:55 dwelch Exp $
+# $Id: makefile,v 1.20 2000/08/11 12:44:40 ekohl Exp $
 #
 #
 TARGET=vfatfs
@@ -27,7 +27,7 @@ endif
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

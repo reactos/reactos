@@ -4,7 +4,7 @@
 #define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
 #ifdef NDEBUG
-#define DPRINT(args...) 
+#define DPRINT(args...)
 #define CHECKPOINT
 #else
 #define DPRINT(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
@@ -12,6 +12,7 @@
 #endif
 
 #define DPRINT1(args...) do { DbgPrint("(NTDLL:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+#define CHECKPOINT1 do { DbgPrint("(NTDLL:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
 
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))

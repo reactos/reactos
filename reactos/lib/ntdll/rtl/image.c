@@ -1,34 +1,40 @@
-/* $Id: image.c,v 1.1 2000/03/18 13:56:01 ekohl Exp $
+/* $Id: image.c,v 1.2 2000/08/11 12:35:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/rtl/image.c
  * PURPOSE:         Image handling functions
+ * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
- *                  17/03/2000 Created by Eric Kohl
+ *                  17/03/2000 Created
  */
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 
+#define NDEBUG
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS ****************************************************************/
 
-PIMAGE_NT_HEADERS
-STDCALL
-RtlImageNtHeader (
-	PVOID BaseAddress
-	)
+PIMAGE_NT_HEADERS STDCALL
+RtlImageNtHeader (IN PVOID BaseAddress)
 {
 	PIMAGE_NT_HEADERS NtHeader;
 	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
 
-	if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+	if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
 	{
+		DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
+		DPRINT1("NtHeader %x\n", (BaseAddress + DosHeader->e_lfanew));
+	}
+
+//	if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+//	{
 		NtHeader = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
 		if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
 			return NtHeader;
-	}
+//	}
 	return NULL;
 }
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.50 2000/08/05 18:01:50 dwelch Exp $
+# $Id: makefile,v 1.51 2000/08/11 12:33:18 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -21,7 +21,8 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
               rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o rtl/ppb.o \
               rtl/bitmap.o rtl/time.o rtl/acl.o rtl/sid.o rtl/image.o \
-              rtl/access.o rtl/apc.o rtl/callback.o rtl/luid.o
+              rtl/access.o rtl/apc.o rtl/callback.o rtl/luid.o rtl/misc.o \
+              rtl/registry.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 
@@ -103,7 +104,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
+install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 ifeq ($(DOSCLI),yes)

@@ -6,7 +6,6 @@
 # Select your host
 #
 #HOST = mingw32-linux
-#HOST = djgpp-msdos
 #HOST = mingw32-windows
 
 include rules.mak
@@ -16,7 +15,6 @@ include rules.mak
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
 DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32
-#DLLS = mingw32
 SUBSYS = smss win32k csrss
 
 #
@@ -59,10 +57,10 @@ clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_cle
 
 .PHONY: clean
 
-floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
-        $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
-        $(KERNEL_SERVICES:%=%_floppy) $(SUBSYS:%=%_floppy) \
-        $(APPS:%=%_floppy)
+install: make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
+        $(DLLS:%=%_install) $(LOADERS:%=%_install) \
+        $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
+        $(APPS:%=%_install)
 
 dist: clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
@@ -77,11 +75,11 @@ buildno: include/reactos/version.h
 buildno_clean:
 	make -C apps/buildno clean
 
-buildno_floppy:
-
 buildno_dist:
 
-.PHONY: buildno buildno_clean buildno_floppy buildno_dist
+buildno_install:
+
+.PHONY: buildno buildno_clean buildno_dist buildno_install
 
 #
 # Applications
@@ -92,13 +90,13 @@ $(APPS): %:
 $(APPS:%=%_clean): %_clean:
 	make -C apps/$* clean
 
-$(APPS:%=%_floppy): %_floppy:
-	make -C apps/$* floppy
-
 $(APPS:%=%_dist): %_dist:
 	make -C apps/$* dist
 
-.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_floppy) $(APPS:%=%_dist)
+$(APPS:%=%_install): %_install:
+	make -C apps/$* install
+
+.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
 
 #
 # Interfaces
@@ -109,7 +107,7 @@ iface_native:
 iface_native_clean:
 	make -C iface/native clean
 
-iface_native_floppy:
+iface_native_install:
 
 iface_native_dist:
 
@@ -119,13 +117,13 @@ iface_additional:
 iface_additional_clean:
 	make -C iface/addsys clean
 
-iface_additional_floppy:
+iface_additional_install:
 
 iface_additional_dist:
 
-.PHONY: iface_native iface_native_clean iface_native_floppy \
+.PHONY: iface_native iface_native_clean iface_native_install \
         iface_native_dist \
-        iface_additional iface_additional_clean iface_additional_floppy \
+        iface_additional iface_additional_clean iface_additional_install \
         iface_additional_dist
 
 #
@@ -137,14 +135,14 @@ $(DEVICE_DRIVERS): %:
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
 	make -C services/dd/$* clean
 
-$(DEVICE_DRIVERS:%=%_floppy): %_floppy:
-	make -C services/dd/$* floppy
+$(DEVICE_DRIVERS:%=%_install): %_install:
+	make -C services/dd/$* install
 
 $(DEVICE_DRIVERS:%=%_dist): %_dist:
 	make -C services/dd/$* dist
 
 .PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_clean) \
-        $(DEVICE_DRIVERS:%=%_floppy) $(DEVICE_DRIVERS:%=%_dist)
+        $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
 	make -C services/fs/$*
@@ -152,13 +150,13 @@ $(FS_DRIVERS): %:
 $(FS_DRIVERS:%=%_clean): %_clean:
 	make -C services/fs/$* clean
 
-$(FS_DRIVERS:%=%_floppy): %_floppy:
-	make -C services/fs/$* floppy
+$(FS_DRIVERS:%=%_install): %_install:
+	make -C services/fs/$* install
 
 $(FS_DRIVERS:%=%_dist): %_dist:
 	make -C services/fs/$* dist
 
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_floppy) \
+.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_install) \
         $(FS_DRIVERS:%=%_dist)
 
 $(NET_DRIVERS): %:
@@ -167,13 +165,13 @@ $(NET_DRIVERS): %:
 $(NET_DRIVERS:%=%_clean): %_clean:
 	make -C services/net/$* clean
 
-$(NET_DRIVERS:%=%_floppy): %_floppy:
-	make -C services/net/$* floppy
+$(NET_DRIVERS:%=%_install): %_install:
+	make -C services/net/$* install
 
 $(NET_DRIVERS:%=%_dist): %_dist:
 	make -C services/net/$* dist
 
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_floppy) \
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_install) \
         $(NET_DRIVERS:%=%_dist)
 
 #
@@ -186,13 +184,13 @@ $(LOADERS): %:
 $(LOADERS:%=%_clean): %_clean:
 	make -C loaders/$* clean
 
-$(LOADERS:%=%_floppy): %_floppy:
-	make -C loaders/$* floppy
+$(LOADERS:%=%_install): %_install:
+	make -C loaders/$* install
 
 $(LOADERS:%=%_dist): %_dist:
 	make -C loaders/$* dist
 
-.PHONY: $(LOADERS) $(LOADERS:%=%_clean) $(LOADERS:%=%_floppy) \
+.PHONY: $(LOADERS) $(LOADERS:%=%_clean) $(LOADERS:%=%_install) \
         $(LOADERS:%=%_dist)
 
 #
@@ -205,13 +203,13 @@ ntoskrnl:
 ntoskrnl_clean:
 	make -C ntoskrnl clean
 
-ntoskrnl_floppy:
-	make -C ntoskrnl floppy
+ntoskrnl_install:
+	make -C ntoskrnl install
 
 ntoskrnl_dist:
 	make -C ntoskrnl dist
 
-.PHONY: ntoskrnl ntoskrnl_clean ntoskrnl_floppy ntoskrnl_dist
+.PHONY: ntoskrnl ntoskrnl_clean ntoskrnl_install ntoskrnl_dist
 
 #
 # Required DLLs
@@ -223,13 +221,13 @@ $(DLLS): %:
 $(DLLS:%=%_clean): %_clean:
 	make -C lib/$* clean
 
-$(DLLS:%=%_floppy): %_floppy:
-	make -C lib/$* floppy
+$(DLLS:%=%_install): %_install:
+	make -C lib/$* install
 
 $(DLLS:%=%_dist): %_dist:
 	make -C lib/$* dist
 
-.PHONY: $(DLLS) $(DLLS:%=%_clean) $(DLLS:%=%_floppy) $(DLLS:%=%_dist)
+.PHONY: $(DLLS) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
 
 #
 # Kernel Subsystems
@@ -241,13 +239,13 @@ $(SUBSYS): %:
 $(SUBSYS:%=%_clean): %_clean:
 	make -C subsys/$* clean
 
-$(SUBSYS:%=%_floppy): %_floppy:
-	make -C subsys/$* floppy
+$(SUBSYS:%=%_install): %_install:
+	make -C subsys/$* install
 
 $(SUBSYS:%=%_dist): %_dist:
 	make -C subsys/$* dist
 
-.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_floppy) \
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_install) \
         $(SUBSYS:%=%_dist)
 
 #
@@ -259,7 +257,7 @@ install: all
 	./install.sh /mnt/hda4
 	./install.bochs
 
-make_floppy_dirs:
+make_install_dirs:
 ifeq ($(DOSCLI),yes)
 	mkdir $(FLOPPY_DIR)\dlls
 	mkdir $(FLOPPY_DIR)\apps
@@ -270,9 +268,9 @@ else
 	mkdir $(FLOPPY_DIR)/subsys
 endif
 
-.PHONY: make_floppy_dirs
+.PHONY: make_install_dirs
 
-autoexec_floppy: $(FLOPPY_DIR)/autoexec.bat
+autoexec_install: $(FLOPPY_DIR)/autoexec.bat
 
 $(FLOPPY_DIR)/autoexec.bat: bootflop.bat
 ifeq ($(DOSCLI),yes)

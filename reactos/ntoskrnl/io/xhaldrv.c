@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.1 2000/06/30 22:52:49 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.2 2000/08/11 12:41:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -169,8 +169,6 @@ xHalIoAssignDriveLetters (
 			NtClose (FileHandle);
 		}
 	}
-	ExFreePool (Buffer2);
-	ExFreePool (Buffer1);
 
 	// Assign pre-assigned (registry) partitions
 
@@ -183,11 +181,52 @@ xHalIoAssignDriveLetters (
 	// Assign floppy drives
 	DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
 
+	for (i = 0; i < ConfigInfo->FloppyCount; i++)
+	{
+		swprintf (Buffer1,
+		          L"\\Device\\Floppy%d",
+		          i);
+		RtlInitUnicodeString (&UnicodeString1,
+		                      Buffer1);
+
+		InitializeObjectAttributes (&ObjectAttributes,
+		                            &UnicodeString1,
+		                            0,
+		                            NULL,
+		                            NULL);
+
+		if (i < 2)
+		{
+			/* drives A: and B: */
+			swprintf (Buffer2,
+			          L"\\??\\%C:",
+			          L'A' + i);
+		}
+		else
+		{
+			/* FIXME: append other floppy drives */
+			break;
+		}
+		RtlInitUnicodeString (&UnicodeString2,
+		                      Buffer2);
+
+		DPRINT ("Creating link: %S ==> %S\n",
+		        Buffer2,
+		        Buffer1);
+
+		IoCreateSymbolicLink (&UnicodeString2,
+		                      &UnicodeString1);
+	}
+
+
 	// Assign cdrom drives
 	DPRINT("CD-Rom drives: %d\n", ConfigInfo->CDRomCount);
 
 	// Any more ??
 
+
+	ExFreePool (Buffer2);
+	ExFreePool (Buffer1);
 }
 
 /* EOF */

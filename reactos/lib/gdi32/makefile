@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2000/08/05 18:01:48 dwelch Exp $
+# $Id: makefile,v 1.14 2000/08/11 12:31:49 ekohl Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -79,7 +79,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
+install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 ifeq ($(DOSCLI),yes)

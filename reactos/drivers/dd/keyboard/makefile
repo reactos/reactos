@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2000/06/29 23:35:48 dwelch Exp $
+# $Id: makefile,v 1.10 2000/08/11 12:42:41 ekohl Exp $
 #
 #
 TARGET=keyboard
@@ -21,7 +21,7 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)

@@ -27,12 +27,9 @@ LdrLoadDll (PDLL* Dll,PCHAR	Name);
 
 NTSTATUS LdrUnloadDll(PDLL Dll);
 
-NTSTATUS
-STDCALL
-LdrDisableThreadCalloutsForDll (
-	PVOID	IN	ImageBase,
-	BOOLEAN	IN	Disable
-	);
+NTSTATUS STDCALL
+LdrDisableThreadCalloutsForDll (IN PVOID BaseAddress,
+                                IN BOOLEAN Disable);
 
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,

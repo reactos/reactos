@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.82 2000/07/10 21:47:36 ekohl Exp $
+# $Id: makefile_rex,v 1.83 2000/08/11 12:38:45 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -534,7 +534,7 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/$(TARGETNAME).exe
+install: $(FLOPPY_DIR)/$(TARGETNAME).exe
 
 $(FLOPPY_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
 ifeq ($(DOSCLI),yes)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2000/07/07 11:55:02 ekohl Exp $
+# $Id: makefile,v 1.9 2000/08/11 12:43:33 ekohl Exp $
 #
 #
 all:
@@ -12,3 +12,7 @@ clean:
 dist:
 	make -C display dist
 	make -C miniport dist
+
+install:
+	make -C display install
+	make -C miniport install

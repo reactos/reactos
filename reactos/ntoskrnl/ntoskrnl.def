@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.84 2000/07/10 21:47:36 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.85 2000/08/11 12:38:45 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -631,7 +631,7 @@ RtlAreBitsSet@12
 RtlAssert@16
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
-;RtlCheckRegistryKey
+RtlCheckRegistryKey@8
 RtlClearAllBits@4
 RtlClearBits@12
 RtlCompareMemory@12
@@ -650,7 +650,7 @@ RtlCopyUnicodeString@8
 RtlCreateAcl@12
 ;RtlCreateAtomTable
 ;RtlCreateHeap
-;RtlCreateRegistryKey
+RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
 RtlCustomCPToUnicodeN@24
@@ -661,7 +661,7 @@ RtlCustomCPToUnicodeN@24
 ;RtlDeleteAtomFromAtomTable
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
-;RtlDeleteRegisterValue
+RtlDeleteRegistryValue@12
 ;RtlDescribeChunk
 ;RtlDestroyAtomTable
 ;RtlDestroyHeap
@@ -748,7 +748,7 @@ RtlOemToUnicodeN@20
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
-;RtlQueryRegistryValues
+RtlQueryRegistryValues=RtlQueryRegistryValues@20
 ;RtlQueryTimeZoneInformation
 ;RtlRaiseException
 ;RtlRandom
@@ -793,7 +793,7 @@ RtlUpperChar@4
 RtlUpperString@8
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
-;RtlWriteRegistryValue
+RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory@8
 RtlxAnsiStringToUnicodeSize@4
@@ -1016,13 +1016,13 @@ HalAllProcessorsStarted@0
 HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
-;HalBeginSystemInterrupt@12
+HalBeginSystemInterrupt@12
 ;HalCalibratePerformanceCounter@4
 ;@HalClearSoftwareInterrupt@4
-;HalDisableSystemInterrupt@8
+HalDisableSystemInterrupt@8
 HalDisplayString@4
-;HalEnableSystemInterrupt@12
-;HalEndSystemInterrupt@8
+HalEnableSystemInterrupt@12
+HalEndSystemInterrupt@8
 HalFlushCommonBuffer@32
 HalFreeCommonBuffer@24
 HalGetAdapter@8
