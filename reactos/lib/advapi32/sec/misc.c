@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.12 2004/03/25 11:30:07 ekohl Exp $
+/* $Id: misc.c,v 1.13 2004/04/11 19:21:43 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -421,14 +421,47 @@ LookupPrivilegeValueA (LPCSTR lpSystemName,
 /**********************************************************************
  * LookupPrivilegeValueW				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 LookupPrivilegeValueW (LPCWSTR lpSystemName,
 		       LPCWSTR lpName,
 		       PLUID lpLuid)
 {
-  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  static LPCWSTR DefaultPrivilegeNames[] =
+    {
+      NULL, NULL,
+      L"SeCreateTokenPrivilege", L"SeAssignPrimaryTokenPrivilege",
+      L"SeLockMemoryPrivilege", L"SeIncreaseQuotaPrivilege",
+      L"SeMachineAccountPrivilege", L"SeTcbPrivilege",
+      L"SeSecurityPrivilege", L"SeTakeOwnershipPrivilege",
+      L"SeLoadDriverPrivilege", L"SeSystemProfilePrivilege",
+      L"SeSystemtimePrivilege", L"SeProfileSingleProcessPrivilege",
+      L"SeIncreaseBasePriorityPrivilege", L"SeCreatePagefilePrivilege",
+      L"SeCreatePermanentPrivilege", L"SeBackupPrivilege",
+      L"SeRestorePrivilege", L"SeShutdownPrivilege",
+      L"SeDebugPrivilege", L"SeAuditPrivilege",
+      L"SeSystemEnvironmentPrivilege", L"SeChangeNotifyPrivilege",
+      L"SeRemoteShutdownPrivilege",
+    };
+  static unsigned DefaultPrivilegeCount = 
+    sizeof(DefaultPrivilegeNames) / sizeof(DefaultPrivilegeNames[0]);
+  int i;
+
+  for (i = 0; i < DefaultPrivilegeCount; i++)
+    {
+      if (!DefaultPrivilegeNames[i] ||
+          lstrcmpW(DefaultPrivilegeNames[i], lpName))
+        {
+          continue;
+        }
+
+      lpLuid->LowPart = i;
+      lpLuid->HighPart = 0;
+
+      return TRUE;
+    }
+
   return FALSE;
 }
 
