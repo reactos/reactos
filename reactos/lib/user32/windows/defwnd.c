@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.51 2003/06/14 09:59:17 gvg Exp $
+/* $Id: defwnd.c,v 1.52 2003/06/24 00:55:02 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -147,21 +147,7 @@ DefFrameProcA( HWND hWnd,
   UNIMPLEMENTED;
   return((LRESULT)0);
 }
-/*
-static LRESULT WINAPI DefButtonWndProc( HWND hWnd, UINT uMsg,
-                                       WPARAM wParam, LPARAM lParam )
-{
-    return ((LRESULT)0);
-}
 
-
-static LRESULT WINAPI DefDesktopWndProc( HWND hWnd, UINT uMsg,
-                                        WPARAM wParam, LPARAM lParam )
-{
-    return ((LRESULT)0);
-}
-
-*/
 LRESULT STDCALL
 DefFrameProcW(HWND hWnd,
 	      HWND hWndMDIClient,
@@ -437,8 +423,9 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 }
 
 VOID
-UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
+UserDrawFrameNC(HWND hWnd, RECT* rect, BOOL dlgFrame, BOOL active)
 {
+	HDC hDC = GetWindowDC(hWnd);
     SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
     DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
@@ -473,11 +460,11 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hDC, &rect, FALSE, Active);
+      UserDrawFrameNC(hWnd, &rect, FALSE, Active);
     }
   else if (UserHasDlgFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hDC, &rect, TRUE, Active);
+      UserDrawFrameNC(hWnd, &rect, TRUE, Active);
     }
   if (Style & WS_CAPTION)
     {
@@ -1134,6 +1121,12 @@ User32DefWindowProc(HWND hWnd,
 		     GetSystemMetrics(SM_CYICON)) / 2;
 		DrawIcon(hDC, x, y, hIcon);
 	      } 
+		if(GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE)
+		{
+			RECT WindowRect;
+			GetClientRect(hWnd, &WindowRect);
+			DrawEdge(hDC, &WindowRect, EDGE_SUNKEN, BF_RECT);
+		}
 	    EndPaint(hWnd, &Ps);
 	  }
 	return(0);
