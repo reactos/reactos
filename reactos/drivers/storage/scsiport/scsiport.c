@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.16 2002/06/06 23:20:08 ekohl Exp $
+/* $Id: scsiport.c,v 1.17 2002/07/15 18:25:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1233,9 +1233,9 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	((PUCHAR)AdapterInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
 	 (sizeof(SCSI_BUS_DATA) * (AdapterInfo->NumberOfBuses - 1)));
 
-  Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
   RtlZeroMemory(&Srb,
 		sizeof(SCSI_REQUEST_BLOCK));
+  Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
   Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
   Srb.DataTransferLength = 256;
   Srb.Cdb[0] = SCSIOP_INQUIRY;
