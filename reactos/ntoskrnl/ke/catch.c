@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.55 2004/11/20 17:45:15 arty Exp $
+/* $Id: catch.c,v 1.56 2004/12/18 19:22:10 blight Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -77,7 +77,10 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
     }
 
-  if (Action == kdContinue) return;
+  if (Action == kdContinue)
+    {
+      return;
+    }
 
   if (Action != kdDoNotHandleException)
     {
@@ -167,8 +170,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n",
 		     ExceptionRecord->ExceptionAddress );
 #ifdef KDBG
-	      KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
-					 Context, Tf, TRUE); 
+              Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
+                                                  Context, Tf, TRUE);
+              if (Action == kdContinue)
+                {
+                  return;
+                }
 #endif
 	      KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
 	    }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.35 2004/11/18 02:10:28 arty Exp $
+/* $Id: kdb.c,v 1.36 2004/12/18 19:22:10 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -1656,17 +1656,24 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   LONG BreakPointNr;
   ULONG ExpNr = (ULONG)TrapFrame->DebugArgMark;
 
-  DbgPrint( ":KDBG:Entered:%s:%s\n", 
-	    PreviousMode==KernelMode ? "kmode" : "umode",
-	    AlwaysHandle ? "always" : "if-unhandled" );
+  if (ExpNr != 1 && ExpNr != 3)
+    {
+      DbgPrint(":KDBG:Entered:%s:%s\n",
+               PreviousMode==KernelMode ? "kmode" : "umode",
+               AlwaysHandle ? "always" : "if-unhandled");
+    }
   
   /* If we aren't handling umode exceptions then return */
-  if( PreviousMode == UserMode && !KdbHandleUmode && !AlwaysHandle )
+  if (PreviousMode == UserMode && !KdbHandleUmode && !AlwaysHandle)
+    {
       return kdContinue;
+    }
 
   /* If the exception would be unhandled (and we care) then handle it */
-  if( PreviousMode == KernelMode && !KdbHandleHandled && !AlwaysHandle )
+  if (PreviousMode == KernelMode && !KdbHandleHandled && !AlwaysHandle)
+    {
       return kdContinue;
+    }
 
   /* Exception inside the debugger? Game over. */
   if (KdbEntryCount > 0)
