@@ -1,11 +1,13 @@
-# $Id: makefile,v 1.3 2001/07/15 21:18:58 rex Exp $
+# $Id: makefile,v 1.4 2001/07/25 06:20:17 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
-TARGET=ramdrv
+TARGET = ramdrv
 
-OBJECTS = ramdrv.o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = ramdrv.o
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -D__NTDRIVER__ -I.
 
@@ -16,7 +18,7 @@ ramdrv.o: ramdrv.h
 .phony: all
 
 clean:
-	- $(RM) floppy.o junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
+	- $(RM) *.o *.sym *.coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
@@ -25,12 +27,12 @@ install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGET).sys: $(OBJECTS)
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 
 WITH_DEBUGGING=yes
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

@@ -1,4 +1,5 @@
 base.tmp
 junk.tmp
 temp.exp
-
+test.coff
+test.sys.unstripped
