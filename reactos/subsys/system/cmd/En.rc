@@ -48,6 +48,11 @@ CD[..|-]\n\n \
 Type CD drive: to display the current directory on the specified drive.\n \
 Type CD without a parameter to display the current drive and directory. "
 
+STRING_CHCP_HELP,   "Displays or sets the active code page number.\n\n \
+CHCP [nnn]\n\n \
+  nnn   Specifies the active code page number.\n\n \
+Type CHCP without a parameter to display the active code page number."
+
 STRING_CHOICE_HELP, "Waits for the user to choose one of a set of choices.\n\n \
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n \
   /C[:]choices  Specifies allowable keys. Default is YN.\n \
@@ -58,6 +63,29 @@ CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n \
 ERRORLEVEL is set to offset of key user presses in choices."
 
 STRING_CLS_HELP, "Clears the screen.\n\nCLS"
+
+STRING_CMD_HELP1, "\nInternal commands available:\n"
+
+STRING_CMD_HELP2, "\nFeatures available:"
+
+STRING_CMD_HELP3,"  [aliases]"
+
+STRING_CMD_HELP4,"  [history]"
+
+STRING_CMD_HELP5,"  [unix filename completion]"
+
+STRING_CMD_HELP6,"  [directory stack]"
+
+STRING_CMD_HELP7,"  [redirections and piping]"
+
+STRING_CMD_HELP8, "Starts a new instance of the ReactOS command line interpreter.\n\n \
+CMD [/[C|K] command][/P][/Q][/T:bf]\n\n \
+  /C command  Runs the specified command and terminates.\n \
+  /K command  Runs the specified command and remains.\n \
+  /P          CMD becomes permanent and runs autoexec.bat\n \
+              (cannot be terminated).\n \
+  /T:bf       Sets the background/foreground color (see COLOR command)."
+
 
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
 
@@ -79,16 +107,21 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 STRING_CHOICE_OPTION         "YN"
 
 
-
+STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
+STRING_BATCH_ERROR,          "Error opening batch file\n"
+STRING_CHCP_ERROR1,          "Active code page: %u\n"
+STRING_CHCP_ERROR2,          "Invalid parameter format - %s\n"
+STRING_CHCP_ERROR3,          "Parameter format incorrect - %s\n"
+STRING_CHCP_ERROR4,          "Invalid code page\n"
 STRING_CHOICE_ERROR,         "Invalid option. Expected format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Invalid option. Expected format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Illegal Option: %s"
+STRING_CMD_ERROR1,           "Can't redirect input from file %s\n"
+STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
+STRING_CMD_ERROR3,           "Can't redirect to file %s\n"
+STRING_CMD_ERROR4,           "Running %s...\n"
+STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
 STRING_PARAM_ERROR,          "Required parameter missing\n"
-
-
-STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
-
-STRING_BATCH_ERROR,          "Error opening batch file\n"
 
 
 }
