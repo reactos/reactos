@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.85 2004/03/27 00:35:02 weiden Exp $ */
+/* $Id: text.c,v 1.86 2004/03/28 22:39:59 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1057,6 +1057,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   Lf->lfHeight = TM->tmHeight;
   Lf->lfWidth = TM->tmAveCharWidth;
   Lf->lfWeight = TM->tmWeight;
+  Lf->lfItalic = TM->tmItalic;
   Lf->lfPitchAndFamily = (TM->tmPitchAndFamily & 0xf1) + 1;
   Lf->lfCharSet = TM->tmCharSet;
   Lf->lfOutPrecision = OUT_STROKE_PRECIS;
@@ -2566,93 +2567,189 @@ NtGdiTextOut(
    return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
 }
 
+static UINT FASTCALL
+GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
+{
+  ANSI_STRING EntryFaceNameA;
+  UNICODE_STRING EntryFaceNameW;
+  unsigned Size;
+  OUTLINETEXTMETRICW *Otm;
+  LONG WeightDiff;
+  NTSTATUS Status;
+  UINT Score = 1;
+  
+  RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
+  Status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+  if (NT_SUCCESS(Status))
+    {
+      if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
+        {
+          EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
+          EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
+        }
+      if (0 == RtlCompareUnicodeString(FaceName, &EntryFaceNameW, TRUE))
+        {
+          Score += 49;
+        }
+      RtlFreeUnicodeString(&EntryFaceNameW);
+    }
+
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  if (NULL == Otm)
+    {
+      return Score;
+    }
+  IntGetOutlineTextMetrics(FontGDI, Size, Otm);
+
+  if ((0 != LogFont->lfItalic && 0 != Otm->otmTextMetrics.tmItalic) ||
+      (0 == LogFont->lfItalic && 0 == Otm->otmTextMetrics.tmItalic))
+    {
+      Score += 25;
+    }
+  if (LogFont->lfWeight < Otm->otmTextMetrics.tmWeight)
+    {
+      WeightDiff = Otm->otmTextMetrics.tmWeight - LogFont->lfWeight;
+    }
+  else
+    {
+      WeightDiff = LogFont->lfWeight - Otm->otmTextMetrics.tmWeight;
+    }
+  Score += (1000 - WeightDiff) / (1000 / 25);
+
+  ExFreePool(Otm);
+
+  return Score;
+}
+
+static VOID FASTCALL
+FindBestFontFromList(HFONT *Font, UINT *MatchScore, LOGFONTW *LogFont,
+                     PUNICODE_STRING FaceName, PLIST_ENTRY Head)
+{
+  PLIST_ENTRY Entry;
+  PFONT_ENTRY CurrentEntry;
+  PFONTGDI FontGDI;
+  UINT Score;
+
+  Entry = Head->Flink;
+  while (Entry != Head)
+    {
+      CurrentEntry = (PFONT_ENTRY) CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+      if (NULL == (FontGDI = AccessInternalObject((ULONG) CurrentEntry->hFont)))
+        {
+          Entry = Entry->Flink;
+          continue;
+        }
+      Score = GetFontScore(LogFont, FaceName, FontGDI);
+      if (*MatchScore < Score)
+        {
+          *Font = CurrentEntry->hFont;
+          *MatchScore = Score;
+        }
+      Entry = Entry->Flink;
+    }
+}
+
+static BOOLEAN FASTCALL
+SubstituteFontFamilyKey(PUNICODE_STRING FaceName,
+                        LPCWSTR Key)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+  UNICODE_STRING Value;
+
+  RtlInitUnicodeString(&Value, NULL);
+
+  QueryTable[0].QueryRoutine = NULL;
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_NOEXPAND |
+                        RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].Name = FaceName->Buffer;
+  QueryTable[0].EntryContext = &Value;
+  QueryTable[0].DefaultType = REG_NONE;
+  QueryTable[0].DefaultData = NULL;
+  QueryTable[0].DefaultLength = 0;
+
+  QueryTable[1].QueryRoutine = NULL;
+  QueryTable[1].Name = NULL;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                  Key,
+                                  QueryTable,
+                                  NULL,
+                                  NULL);
+  if (NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(FaceName);
+      *FaceName = Value;
+    }
+
+  return NT_SUCCESS(Status);
+}
+
+static void FASTCALL
+SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
+{
+  if (10 < Level) /* Enough is enough */
+    {
+      return;
+    }
+
+  if (SubstituteFontFamilyKey(FaceName, L"SysFontSubstitutes") ||
+      SubstituteFontFamilyKey(FaceName, L"FontSubstitutes"))
+    {
+      SubstituteFontFamily(FaceName, Level + 1);
+    }
+}
+
 NTSTATUS FASTCALL
 TextIntRealizeFont(HFONT FontHandle)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
   UNICODE_STRING FaceName;
-  PLIST_ENTRY Entry;
-  PFONT_ENTRY CurrentEntry;
   PW32PROCESS Win32Process;
-  BOOL Private = FALSE;
+  UINT MatchScore;
 
   TextObj = TEXTOBJ_LockText(FontHandle);
-  ASSERT(TextObj);
-  if (NULL != TextObj)
+  if (NULL == TextObj)
     {
-    RtlInitUnicodeString(&FaceName, TextObj->logfont.lfFaceName);
-    
-    /* find font in private fonts */
-    Win32Process = PsGetWin32Process();
-    
-    IntLockProcessPrivateFonts(Win32Process);
-    
-    Entry = Win32Process->PrivateFontListHead.Flink;
-    while(Entry != &Win32Process->PrivateFontListHead)
-    {
-      CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-      
-      if (0 == RtlCompareUnicodeString(&CurrentEntry->FaceName, &FaceName, TRUE))
-      {
-	    TextObj->GDIFontHandle = CurrentEntry->hFont;
-	    Private = TRUE;
-	    goto check;
-      }
-      Entry = Entry->Flink;
+      return STATUS_INVALID_HANDLE;
     }
-    IntUnLockProcessPrivateFonts(Win32Process);
-    
-    /* find font in system fonts */
-    IntLockGlobalFonts;
-    
-    Entry = FontListHead.Flink;
-    while(Entry != &FontListHead)
-    {
-      CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-      
-      if (0 == RtlCompareUnicodeString(&CurrentEntry->FaceName, &FaceName, TRUE))
-      {
-	    TextObj->GDIFontHandle = CurrentEntry->hFont;
-	    break;
-      }
-      Entry = Entry->Flink;
-    }
-    
-    check:
-    if (NULL == TextObj->GDIFontHandle)
-    {
-      Entry = (Private ? Win32Process->PrivateFontListHead.Flink : FontListHead.Flink);
-      
-      if(Entry != (Private ? &Win32Process->PrivateFontListHead : &FontListHead))
-      {
-	    DPRINT("Requested font %S not found, using first available font\n",
-  	             TextObj->logfont.lfFaceName)
-        CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        TextObj->GDIFontHandle = CurrentEntry->hFont;
-      }
-      else
-      {
-        DPRINT1("Requested font %S not found, no fonts loaded at all\n",
-                TextObj->logfont.lfFaceName);
-        Status = STATUS_NOT_FOUND;
-      }
-      
-    }
-    
-    if(Private)
-      IntUnLockProcessPrivateFonts(Win32Process);
-    else
-      IntUnLockGlobalFonts;
 
-    ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
+  if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
+    {
+      TEXTOBJ_UnlockText(FontHandle);
+      return STATUS_NO_MEMORY;
+    }
+  SubstituteFontFamily(&FaceName, 0);
+  MatchScore = 0;
+  TextObj->GDIFontHandle = NULL;
+    
+  /* First search private fonts */
+  Win32Process = PsGetWin32Process();
+  IntLockProcessPrivateFonts(Win32Process);
+  FindBestFontFromList(&TextObj->GDIFontHandle, &MatchScore,
+                       &TextObj->logfont, &FaceName,
+                       &Win32Process->PrivateFontListHead);
+  IntUnLockProcessPrivateFonts(Win32Process);
+    
+  /* Search system fonts */
+  IntLockGlobalFonts;
+  FindBestFontFromList(&TextObj->GDIFontHandle, &MatchScore,
+                       &TextObj->logfont, &FaceName,
+                       &FontListHead);
+  IntUnLockGlobalFonts;
 
-    TEXTOBJ_UnlockText(FontHandle);
-  }
-  else
-  {
-    Status = STATUS_INVALID_HANDLE;
-  }
+  if (NULL == TextObj->GDIFontHandle)
+    {
+      DPRINT1("Requested font %S not found, no fonts loaded at all\n",
+              TextObj->logfont.lfFaceName);
+      Status = STATUS_NOT_FOUND;
+    }
+
+  RtlFreeUnicodeString(&FaceName);
+  TEXTOBJ_UnlockText(FontHandle);
+  ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
 
   return Status;
 }
