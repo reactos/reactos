@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.4 2003/03/03 00:17:24 gvg Exp $
+/* $Id: videoprt.c,v 1.5 2003/06/19 15:57:45 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -391,9 +391,9 @@ VideoPortInitialize(IN PVOID  Context1,
       MPDriverObject->DeviceObject = MPDeviceObject;
 
       /* Initialize the miniport drivers dispatch table */
-      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
-      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
-      MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
+      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) VidDispatchOpenClose;
+      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) VidDispatchOpenClose;
+      MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) VidDispatchDeviceControl;
 
       /* Initialize our device extension */
       DeviceExtension = 
@@ -729,8 +729,27 @@ VideoPortScanRom(IN PVOID  HwDeviceExtension,
                  IN ULONG  RomLength,
                  IN PUCHAR  String)
 {
-  DPRINT("VideoPortScanRom\n");
-  UNIMPLEMENTED;
+  ULONG StringLength;
+  BOOLEAN Found;
+  PUCHAR SearchLocation;
+
+  DPRINT("VideoPortScanRom RomBase %p RomLength 0x%x String %s\n", RomBase, RomLength, String);
+
+  StringLength = strlen(String);
+  Found = FALSE;
+  SearchLocation = RomBase;
+  for (SearchLocation = RomBase;
+       ! Found && SearchLocation < RomBase + RomLength - StringLength;
+       SearchLocation++)
+    {
+      Found = (RtlCompareMemory(SearchLocation, String, StringLength) == StringLength);
+      if (Found)
+	{
+	  DPRINT("Match found at %p\n", SearchLocation);
+	}
+    }
+
+  return Found;
 }
 
 ULONG 
@@ -820,8 +839,49 @@ VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
                               IN PMINIPORT_SYNCHRONIZE_ROUTINE  SynchronizeRoutine,
                               OUT PVOID  Context)
 {
+  BOOLEAN Ret;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+  KIRQL OldIrql;
+
   DPRINT("VideoPortSynchronizeExecution\n");
-  UNIMPLEMENTED;
+
+  switch(Priority)
+    {
+    case VpLowPriority:
+      Ret = (*SynchronizeRoutine)(Context);
+      break;
+    case VpMediumPriority:
+      DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          VIDEO_PORT_DEVICE_EXTENSION,
+                                          MiniPortDeviceExtension);
+      if (NULL == DeviceExtension->InterruptObject)
+	{
+	  Ret = (*SynchronizeRoutine)(Context);
+	}
+      else
+	{
+	  Ret = KeSynchronizeExecution(DeviceExtension->InterruptObject,
+	                               SynchronizeRoutine,
+	                               Context);
+	}
+      break;
+    case VpHighPriority:
+      OldIrql = KeGetCurrentIrql();
+      if (OldIrql < SYNCH_LEVEL)
+	{
+	  OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+	}
+      Ret = (*SynchronizeRoutine)(Context);
+      if (OldIrql < SYNCH_LEVEL)
+	{
+	  KfLowerIrql(OldIrql);
+	}
+      break;
+    default:
+      Ret = FALSE;
+    }
+
+  return Ret;
 }
 
 VP_STATUS 
@@ -1197,12 +1257,8 @@ InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
 	  AddressMapping->MappingCount--;
 	  if (0 == AddressMapping->MappingCount)
 	    {
-#ifdef TODO
 	      MmUnmapIoSpace(AddressMapping->MappedAddress,
 	                     AddressMapping->NumberOfUchars);
-#else
-DPRINT("MmUnmapIoSpace(0x%08x, 0x%08x)\n", AddressMapping->MappedAddress, AddressMapping->NumberOfUchars);
-#endif
 	      RemoveEntryList(Entry);
 	      ExFreePool(AddressMapping);
 
