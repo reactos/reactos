@@ -175,7 +175,7 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Irp->Tail.Overlay.CurrentStackLocation--;
    Irp->CurrentLocation--;
    
-   DPRINT("MajorFunction %d\n",MajorFunction);
+   DPRINT("MajorFunction %d\n",param->MajorFunction);
    DPRINT("DriverObject->MajorFunction[param->MajorFunction] %x\n",
 	    DriverObject->MajorFunction[param->MajorFunction]);
    Status = DriverObject->MajorFunction[param->MajorFunction](DeviceObject,
