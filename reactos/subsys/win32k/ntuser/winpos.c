@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.23 2003/08/11 21:10:49 royce Exp $
+/* $Id: winpos.c,v 1.24 2003/08/15 10:53:16 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1249,6 +1249,8 @@ WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
     {
       ActiveQueue->ActiveWindow = NULL;
     }
+  /* FIXME:  Unset this flag for inactive windows */
+  //if ((Window->Style) & WS_CHILD) Window->Flags |= WIN_NCACTIVATED;
 
   /* FIXME: Send palette messages. */
 

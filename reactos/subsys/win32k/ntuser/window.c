@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.92 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: window.c,v 1.93 2003/08/15 10:53:16 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -678,15 +678,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle;
   DbgPrint("1: Style is now %d\n", WindowObject->Style);
-
-  if (0 == (dwStyle & WS_CHILD))
-    {
-      WindowObject->Flags |= WIN_NCACTIVATED;
-
-    // THIS MESSES UP BUTTONS: WIN_NCACTIVATED == BS_BITMAP !
-      WindowObject->Style = WindowObject->Style | WIN_NCACTIVATED;
-      DbgPrint("2: Style is now %d\n", WindowObject->Style);
-    }
+  
   WindowObject->x = x;
   WindowObject->y = y;
   WindowObject->Width = nWidth;
@@ -922,7 +914,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       DPRINT("NtUserCreateWindow(): About to show window\n");
       WinPosShowWindow(WindowObject->Self, dwShowMode);
     }
-
+  /* FIXME:  Should code be reworked to accomodate the following line? */
+	DbgPrint("Setting Active Window to %d\n\n\n",WindowObject->Self);
+  NtUserSetActiveWindow(WindowObject->Self);
   DPRINT("NtUserCreateWindow(): = %X\n", Handle);
   return((HWND)Handle);
 }
