@@ -127,7 +127,7 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
 	if ( Len == 0 )
-	  return NULL;
+	  return FALSE;
 	if ( PathNameW[Len-1] != L'\\' ) {
 	   PathNameW[Len] = L'\\';
 	   PathNameW[Len+1] = 0;
@@ -145,10 +145,10 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    DirectoryNameString.Length = wcslen (DirectoryNameW)*sizeof(WCHAR);
 
    if ( DirectoryNameString.Length == 0 )
-	return NULL;
+	return FALSE;
 
    if ( DirectoryNameString.Length > MAX_PATH*sizeof(WCHAR) )
-	return NULL;
+	return FALSE;
 
    DirectoryNameString.Buffer = (WCHAR *)DirectoryNameW;
    DirectoryNameString.MaximumLength = DirectoryNameString.Length + sizeof(WCHAR);
@@ -235,7 +235,7 @@ WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
 	if ( Len == 0 )
-	  return NULL;
+	  return FALSE;
 	if ( PathNameW[Len-1] != L'\\' ) {
 	   PathNameW[Len] = L'\\';
 	   PathNameW[Len+1] = 0;
@@ -589,12 +589,6 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
 
    return wcslen(lpBuffer);
 }
-
-
-
-
-	
-		
 
 
 DWORD
