@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.22 2003/08/10 20:01:16 hbirr Exp $
+/* $Id: fsctl.c,v 1.23 2003/08/27 21:28:07 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -428,7 +428,7 @@ VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
 static NTSTATUS 
 VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
 {
-   PIO_STACK_LOCATION Stack;
+  PIO_STACK_LOCATION Stack;
    LARGE_INTEGER Vcn;
    PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
    PFILE_OBJECT FileObject;
@@ -524,6 +524,28 @@ VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+static NTSTATUS
+VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
+{
+   PDEVICE_EXTENSION DeviceExt;
+   PROS_QUERY_LCN_MAPPING LcnQuery;
+   PIO_STACK_LOCATION Stack;
+
+   DPRINT("VfatGetRetrievalPointers(IrpContext %x)\n", IrpContext);
+
+   DeviceExt = IrpContext->DeviceExt;
+   Stack = IrpContext->Stack;
+   if (IrpContext->Irp->AssociatedIrp.SystemBuffer == NULL ||
+       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ROS_QUERY_LCN_MAPPING))
+   {
+      return STATUS_BUFFER_TOO_SMALL;
+   }
+   LcnQuery = (PROS_QUERY_LCN_MAPPING)(IrpContext->Irp->AssociatedIrp.SystemBuffer);
+   LcnQuery->LcnDiskOffset.QuadPart = DeviceExt->FatInfo.dataStart * DeviceExt->FatInfo.BytesPerSector;
+   IrpContext->Irp->IoStatus.Information = sizeof(ROS_QUERY_LCN_MAPPING);
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: File system control
@@ -553,6 +575,9 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	       break;
 	    case FSCTL_MOVE_FILE:
 	       Status = VfatMoveFile(IrpContext);
+	       break;
+ 	    case FSCTL_ROS_QUERY_LCN_MAPPING:
+	       Status = VfatRosQueryLcnMapping(IrpContext);
 	       break;
 	    default:
 	       Status = STATUS_INVALID_DEVICE_REQUEST;

@@ -13,6 +13,14 @@ CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
 NTSTATUS STDCALL
 CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
+#define FSCTL_ROS_QUERY_LCN_MAPPING \
+        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+typedef struct _ROS_QUERY_LCN_MAPPING
+{
+  LARGE_INTEGER LcnDiskOffset;
+} ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
+
 #include <ddk/cctypes.h>
 
 #include <ddk/ccfuncs.h>

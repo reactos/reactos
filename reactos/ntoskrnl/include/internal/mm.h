@@ -646,5 +646,9 @@ VOID
 MmRawDeleteVirtualMapping(PVOID Address);
 VOID
 MiStopPagerThread(VOID);
+NTSTATUS 
+MmCreateVirtualMappingDump(PVOID Address, 
+			   ULONG flProtect,
+			   PHYSICAL_ADDRESS PhysicalAddress);
 
 #endif

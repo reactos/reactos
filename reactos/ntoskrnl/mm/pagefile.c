@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.34 2003/08/10 20:03:10 hbirr Exp $
+/* $Id: pagefile.c,v 1.35 2003/08/27 21:28:08 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -33,6 +33,7 @@
 #include <internal/mm.h>
 #include <napi/core.h>
 #include <internal/ps.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -92,12 +93,14 @@ static ULONG MiReservedSwapPages;
  */
 #define MM_PAGEFILE_COMMIT_GRACE      (256)
 
-static PVOID MmCoreDumpPageFrame;
-static PULONG MmCoreDumpBlockMap;
+static PVOID MmCoreDumpPageFrame = NULL;
 static ULONG MmCoreDumpSize;
-static PULONG MmCoreDumpBlockMap = NULL;
-static MM_DUMP_POINTERS MmCoreDumpDeviceFuncs;
-ULONG MmCoreDumpType;
+static DUMP_POINTERS MmCoreDumpPointers;
+static PMM_CORE_DUMP_FUNCTIONS MmCoreDumpFunctions;
+static ULONG MmCoreDumpPageFile = 0xFFFFFFFF;
+static ROS_QUERY_LCN_MAPPING MmCoreDumpLcnMapping;
+
+ULONG MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
 
 /*
  * Translate between a swap entry and a file and offset pair.
@@ -279,14 +282,17 @@ MmInitPagingFile(VOID)
    /*
     * Initialize the crash dump support.
     */
-   MmCoreDumpPageFrame = MmAllocateSection(PAGE_SIZE);
-   if (MmCoreDumpType == MM_CORE_DUMP_TYPE_FULL)
+   if (MmCoreDumpType != MM_CORE_DUMP_TYPE_NONE)
      {
-       MmCoreDumpSize = MmStats.NrTotalPages * 4096 + 1024 * 1024;
-     }
-   else
-     {
-       MmCoreDumpSize = 1024 * 1024;
+       MmCoreDumpPageFrame = MmAllocateSection(PAGE_SIZE);
+       if (MmCoreDumpType == MM_CORE_DUMP_TYPE_FULL)
+	 {
+	   MmCoreDumpSize = MmStats.NrTotalPages * 4096 + 1024 * 1024;
+	 }
+       else
+	 {
+	   MmCoreDumpSize = 1024 * 1024;
+	 }
      }
 }
 
@@ -428,6 +434,33 @@ MmAllocSwapPage(VOID)
    return(0);
 }
 
+LARGE_INTEGER STATIC
+MmGetOffsetPageFile(PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers, LARGE_INTEGER Offset)
+{
+  ULONG j;
+  for (j = 0; j < RetrievalPointers->NumberOfPairs; j++)
+    {
+      if (Offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
+	{
+	  if (j == 0)
+	    {
+	      Offset.QuadPart += RetrievalPointers->Pair[0].Lcn - RetrievalPointers->StartVcn;
+	    }
+	  else
+	    {
+	      Offset.QuadPart += RetrievalPointers->Pair[j].Lcn  - RetrievalPointers->Pair[j-1].Vcn;
+	    }
+	  break;
+	}
+    }
+  if (j >= RetrievalPointers->NumberOfPairs)
+    {
+      CHECKPOINT1;
+      KEBUGCHECK(0);
+    }
+  return(Offset);
+}
+
 NTSTATUS STDCALL 
 MmDumpToPagingFile(ULONG BugCode,
 		   ULONG BugCodeParameter1,
@@ -437,22 +470,23 @@ MmDumpToPagingFile(ULONG BugCode,
 		   PKTRAP_FRAME TrapFrame)
 {
   PMM_CORE_DUMP_HEADER Headers;
-  PVOID Context;
   NTSTATUS Status;
   UCHAR MdlBase[sizeof(MDL) + sizeof(PVOID)];
   PMDL Mdl = (PMDL)MdlBase;
   PETHREAD Thread = PsGetCurrentThread();
   ULONG StackSize;
   PULONG MdlMap;
-  ULONG NextOffset = 0;
+  LONGLONG NextOffset = 0;
   ULONG i;
+  PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+  LARGE_INTEGER DiskOffset;
 
-  if (MmCoreDumpBlockMap == NULL)
+  if (MmCoreDumpPageFile == 0xFFFFFFFF)
     {
       return(STATUS_UNSUCCESSFUL);
     }
 
-  DbgPrint("MM: Dumping core");
+  DbgPrint("\nMM: Dumping core: ");
 
   /* Prepare the dump headers. */
   Headers = (PMM_CORE_DUMP_HEADER)MmCoreDumpPageFrame;
@@ -482,8 +516,7 @@ MmDumpToPagingFile(ULONG BugCode,
   Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
   /* Initialize the dump device. */
-  Context = MmCoreDumpDeviceFuncs.Context;
-  Status = MmCoreDumpDeviceFuncs.DeviceInit(Context);
+  MmCoreDumpFunctions->DumpInit();
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MM: Failed to initialize core dump device.\n");
@@ -501,36 +534,24 @@ MmDumpToPagingFile(ULONG BugCode,
   Mdl->ByteOffset = 0;
   MdlMap = (PULONG)(Mdl + 1);
 
+  
+  /* Initialize the retrieval offsets. */
+  RetrievalPointers = PagingFileList[MmCoreDumpPageFile]->RetrievalPointers;
+
   /* Dump the header. */
   MdlMap[0] = MmGetPhysicalAddress(MmCoreDumpPageFrame).u.LowPart;
-  Status = MmCoreDumpDeviceFuncs.DeviceWrite(Context, 
-					     MmCoreDumpBlockMap[NextOffset], 
-					     Mdl);
+  DiskOffset = MmGetOffsetPageFile(RetrievalPointers, (LARGE_INTEGER)0LL);
+  DiskOffset.QuadPart += MmCoreDumpLcnMapping.LcnDiskOffset.QuadPart;
+  Status = MmCoreDumpFunctions->DumpWrite(DiskOffset, Mdl);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("MM: Failed to write core dump header\n.");
+      return(Status);
     }
-  NextOffset++;
-  DbgPrint(".");
+  NextOffset += PAGE_SIZE;;
+  DbgPrint("00");
 
-  /* Write out the kernel mode stack of the faulting thread. */
-  for (i = 0; i < (StackSize / PAGE_SIZE); i++)
-    {
-      Mdl->MappedSystemVa = (PVOID)(Thread->Tcb.StackLimit + (i * PAGE_SIZE));
-      MdlMap[0] = MmGetPhysicalAddress(Mdl->MappedSystemVa).u.LowPart;      
-      Status = 
-	MmCoreDumpDeviceFuncs.DeviceWrite(Context, 
-					  MmCoreDumpBlockMap[NextOffset],
-					  Mdl);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("MM: Failed to write page to core dump.\n");
-	  return(Status);
-	}
-      DbgPrint(".");
-      NextOffset++;
-    }
-
+  
   /* Write out the contents of physical memory. */
   if (MmCoreDumpType == MM_CORE_DUMP_TYPE_FULL)
     {
@@ -539,24 +560,139 @@ MmDumpToPagingFile(ULONG BugCode,
 	  LARGE_INTEGER PhysicalAddress;
 	  PhysicalAddress.QuadPart = i * PAGE_SIZE;
 	  MdlMap[0] = i * PAGE_SIZE;
-	  MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame,
-					  PAGE_READWRITE,
-					  PhysicalAddress);
-	  Status = 
-	    MmCoreDumpDeviceFuncs.DeviceWrite(Context, 
-					      MmCoreDumpBlockMap[NextOffset],
-					      Mdl);
+	  MmCreateVirtualMappingDump(MmCoreDumpPageFrame,
+				     PAGE_READWRITE,
+				     PhysicalAddress);
+	  DiskOffset = MmGetOffsetPageFile(RetrievalPointers, 
+					   (LARGE_INTEGER)NextOffset);
+	  DiskOffset.QuadPart += MmCoreDumpLcnMapping.LcnDiskOffset.QuadPart;
+	  Status = MmCoreDumpFunctions->DumpWrite(DiskOffset, Mdl);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1("MM: Failed to write page to core dump.\n");
 	      return(Status);
 	    }
-	  DbgPrint(".");
-	  NextOffset++;
+	  if ((i % ((1024*1024) / PAGE_SIZE)) == 0)
+	    {
+	      DbgPrint("\b\b%.2d", i / ((1024*1024)/PAGE_SIZE));
+	    }
+	  NextOffset += PAGE_SIZE;
 	}
     }
 
   DbgPrint("\n");
+  MmCoreDumpFunctions->DumpFinish();
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL
+MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
+{
+  PFILE_OBJECT PageFile;
+  PDEVICE_OBJECT PageFileDevice;
+  NTSTATUS Status;
+  PIRP Irp;
+  KEVENT Event;
+  IO_STATUS_BLOCK Iosb;
+  UNICODE_STRING DiskDumpName;
+  ANSI_STRING ProcName;
+  PIO_STACK_LOCATION StackPtr;
+  PMODULE_OBJECT ModuleObject;  
+
+  Status = ZwFsControlFile(PageFileHandle,
+			   0,
+			   NULL,
+			   NULL,
+			   &Iosb,
+			   FSCTL_ROS_QUERY_LCN_MAPPING,
+			   NULL,
+			   0,
+			   &MmCoreDumpLcnMapping,
+			   sizeof(ROS_QUERY_LCN_MAPPING));
+  if (!NT_SUCCESS(Status) ||
+      Iosb.Information != sizeof(ROS_QUERY_LCN_MAPPING))
+    {
+      return(Status);
+    }
+
+  /* Get the underlying storage device. */
+  Status = 
+    ObReferenceObjectByHandle(PageFileHandle,
+			      FILE_ALL_ACCESS,
+			      NULL,
+			      KernelMode,
+			      (PVOID*)&PageFile,
+			      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  PageFileDevice = PageFile->Vpb->RealDevice;
+
+  /* Get the dump pointers. */
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  Irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_GET_DUMP_POINTERS,
+				      PageFileDevice,
+				      NULL,
+				      0,
+				      &MmCoreDumpPointers,
+				      sizeof(MmCoreDumpPointers),
+				      FALSE,
+				      &Event,
+				      &Iosb);
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->FileObject = PageFile;
+  StackPtr->DeviceObject = PageFileDevice;
+  StackPtr->Parameters.DeviceIoControl.InputBufferLength = 0;
+  StackPtr->Parameters.DeviceIoControl.OutputBufferLength = sizeof(MmCoreDumpPointers);
+  
+  Status = IoCallDriver(PageFileDevice,Irp);
+  if (Status == STATUS_PENDING)
+    {
+      Status = KeWaitForSingleObject(&Event,
+				     Executive,
+				     KernelMode,
+				     FALSE,
+				     NULL);
+    }
+  if (Status != STATUS_SUCCESS || 
+      Iosb.Information != sizeof(MmCoreDumpPointers))
+    {
+      ObDereferenceObject(PageFile);
+      return(Status);
+    }
+
+  /* Load the diskdump driver. */
+  RtlInitUnicodeStringFromLiteral(&DiskDumpName, L"DiskDump");
+  ModuleObject = LdrGetModuleObject(&DiskDumpName);
+  if (ModuleObject == NULL)
+    {
+      return(STATUS_OBJECT_NAME_NOT_FOUND);
+    }
+  RtlInitAnsiString(&ProcName, "DiskDumpFunctions");
+  Status = LdrGetProcedureAddress(ModuleObject->Base,
+				  &ProcName,
+				  0,
+				  (PVOID*)&MmCoreDumpFunctions);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(PageFile);
+      return(Status);
+    }
+
+  /* Prepare for disk dumping. */
+  Status = MmCoreDumpFunctions->DumpPrepare(PageFileDevice,
+					    &MmCoreDumpPointers);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(PageFile);
+      return(Status);
+    }
+
+  MmCoreDumpPageFile = PageFileNum;
+  ObDereferenceObject(PageFile);
+  *(PULONG)0 = 0;
   return(STATUS_SUCCESS);
 }
 
@@ -795,54 +931,11 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
    
    /* Check whether this pagefile can be a crash dump target. */
-   if (PagingFile->CurrentSize.QuadPart >= MmCoreDumpSize &&
-       MmCoreDumpBlockMap != NULL)
+   if (MmCoreDumpType != MM_CORE_DUMP_TYPE_NONE &&
+       PagingFile->CurrentSize.QuadPart >= MmCoreDumpSize &&
+       MmCoreDumpPageFile == 0xFFFFFFFF)
      {
-       MmCoreDumpBlockMap = 
-	 ExAllocatePool(NonPagedPool, 
-			(MmCoreDumpSize / PAGE_SIZE) * sizeof(ULONG));
-       if (MmCoreDumpBlockMap == NULL)
-	 {
-	   DPRINT1("Failed to allocate block map.\n");
-	   NtClose(FileHandle);
-	   return(STATUS_SUCCESS);
-	 }
-       Status = ZwFsControlFile(FileHandle,
-				NULL,
-				NULL,
-				NULL,
-				&IoStatus,
-				FSCTL_GET_DUMP_BLOCK_MAP,
-				&MmCoreDumpSize,
-				sizeof(ULONG),
-				MmCoreDumpBlockMap,
-				(MmCoreDumpSize / PAGE_SIZE) * sizeof(ULONG));
-       if (!NT_SUCCESS(Status))
-	 {
-	   DPRINT1("Failed to get dump block map (Status %X)\n", Status);
-	   NtClose(FileHandle);
-	   ExFreePool(MmCoreDumpBlockMap);
-	   MmCoreDumpBlockMap = NULL;
-	   return(STATUS_SUCCESS);
-	 }
-       Status = ZwDeviceIoControlFile(FileHandle,
-				      NULL,
-				      NULL,
-				      NULL,
-				      &IoStatus,
-				      IOCTL_GET_DUMP_POINTERS,
-				      NULL,
-				      0,
-				      &MmCoreDumpDeviceFuncs,
-				      sizeof(MmCoreDumpDeviceFuncs));
-       if (!NT_SUCCESS(Status))
-	 {
-	   DPRINT1("Failed to get dump block map (Status %X)\n", Status);
-	   NtClose(FileHandle);
-	   ExFreePool(MmCoreDumpBlockMap);
-	   MmCoreDumpBlockMap = NULL;
-	   return(STATUS_SUCCESS);
-	 }
+       MmInitializeCrashDump(FileHandle, i);       
      }
    NtClose(FileHandle);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.37 2003/08/24 12:08:16 dwelch Exp $
+/* $Id: bug.c,v 1.38 2003/08/27 21:28:08 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -94,6 +94,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
+  KIRQL OldIrql;
 
   /* Make sure we're switching back to the blue screen and print messages on it */
   HalReleaseDisplayOwnership();
@@ -103,6 +104,10 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     }
 
   __asm__("cli\n\t");
+  if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    }
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,
 	   BugCheckParameter1,
@@ -174,12 +179,17 @@ KeBugCheckEx(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
+  KIRQL OldIrql;
 
   /* Make sure we're switching back to the blue screen and print messages on it */
   HalReleaseDisplayOwnership();
   KdDebugState |= KD_DEBUG_SCREEN;
 
   __asm__("cli\n\t");
+  if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    }
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,
 	   BugCheckParameter1,

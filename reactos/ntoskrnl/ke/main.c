@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.169 2003/08/24 12:08:16 dwelch Exp $
+/* $Id: main.c,v 1.170 2003/08/27 21:28:08 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -51,6 +51,7 @@
 #include <internal/nls.h>
 #include <reactos/bugcodes.h>
 #include <ntos/bootvid.h>
+#include <napi/core.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -78,6 +79,7 @@ static ULONG FirstKrnlPhysAddr;
 static ULONG LastKrnlPhysAddr;
 static ULONG LastKernelAddress;
 volatile BOOLEAN Initialized = FALSE;
+extern ULONG MmCoreDumpType;
 
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
@@ -383,6 +385,22 @@ ExpInitializeExecutive(VOID)
       {
         p2 += 12;
         NoBootScreen = TRUE;
+      }
+     else if (!_strnicmp(p2, "CRASHDUMP", 9))
+      {
+	p2 += 9;
+	if (*p2 == ':')
+	  {
+	    p2++;
+	    if (!_strnicmp(p2, "FULL", 4))
+	      {
+		MmCoreDumpType = MM_CORE_DUMP_TYPE_FULL;
+	      }
+	    else
+	      {
+		MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
+	      }	    
+	  }
       }
      p1 = p2;
   }

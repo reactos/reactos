@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.38 2003/07/12 13:10:45 ekohl Exp $
+/* $Id: class2.c,v 1.39 2003/08/27 21:28:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -441,6 +441,31 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   InputBufferLength = Stack->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = Stack->Parameters.DeviceIoControl.OutputBufferLength;
 
+  if (IoControlCode == IOCTL_SCSI_GET_DUMP_POINTERS)
+    {
+      PDUMP_POINTERS DumpPointers;
+
+      if (OutputBufferLength < sizeof(DUMP_POINTERS))
+	{
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	  return(STATUS_BUFFER_TOO_SMALL);
+	}
+      DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
+
+      /* Initialize next stack location for call to the port driver */
+      NextStack = IoGetNextIrpStackLocation(Irp);
+
+      NextStack->Parameters = Stack->Parameters;
+      NextStack->MajorFunction = Stack->MajorFunction;
+      NextStack->MinorFunction = Stack->MinorFunction;
+
+      /* Call port driver */
+      return(IoCallDriver(DeviceExtension->PortDeviceObject,
+			  Irp));
+    }
   if (IoControlCode == IOCTL_SCSI_GET_ADDRESS)
     {
       PSCSI_ADDRESS ScsiAddress;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.58 2003/08/21 04:17:15 royce Exp $
+/* $Id: page.c,v 1.59 2003/08/27 21:28:08 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -974,6 +974,45 @@ BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 }
 
 NTSTATUS 
+MmCreateVirtualMappingDump(PVOID Address, 
+			   ULONG flProtect,
+			   PHYSICAL_ADDRESS PhysicalAddress)
+{
+   ULONG Attributes;
+   PULONG Pte;
+   NTSTATUS Status;
+
+   if (Address < (PVOID)KERNEL_BASE)
+     {
+       DPRINT1("No process\n");
+       KEBUGCHECK(0);
+     }
+   
+   Attributes = ProtectToPTE(flProtect);
+   if (!(Attributes & PA_PRESENT) && PhysicalAddress.QuadPart != 0)
+     {
+       DPRINT1("Setting physical address but not allowing access at address "
+	       "0x%.8X with attributes %x/%x.\n", 
+	       Address, Attributes, flProtect);
+       KEBUGCHECK(0);
+     }
+   
+   Status = MmGetPageEntry2(Address, &Pte, FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   if (PAGE_MASK((*Pte)) != 0 && !((*Pte) & PA_PRESENT))
+     {
+       KEBUGCHECK(0);
+     }
+   *Pte = PhysicalAddress.QuadPart | Attributes;
+   FLUSH_TLB;
+   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS 
 MmCreateVirtualMappingForKernel(PVOID Address, 
 				ULONG flProtect,
 				PHYSICAL_ADDRESS PhysicalAddress)
@@ -1116,6 +1155,8 @@ MmCreatePageFileMapping(PEPROCESS Process,
     }
   return(STATUS_SUCCESS);
 }
+
+
 
 NTSTATUS 
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,

@@ -1,4 +1,4 @@
-/* $Id: ntddscsi.h,v 1.3 2003/06/22 16:35:58 ekohl Exp $
+/* $Id: ntddscsi.h,v 1.4 2003/08/27 21:28:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -131,6 +131,11 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT
 #define SCSI_IOCTL_DATA_OUT		0
 #define SCSI_IOCTL_DATA_IN		1
 #define SCSI_IOCTL_DATA_UNSPECIFIED	2
+
+typedef struct _DUMP_POINTERS
+{
+  PVOID DeviceObject;
+} DUMP_POINTERS, *PDUMP_POINTERS;
 
 #endif /* __STORAGE_INCLUDE_NTDDSCSI_H */
 
