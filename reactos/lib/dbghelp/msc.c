@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
+ 
 /*
  * Note - this handles reading debug information for 32 bit applications
  * that run under Windows-NT for example.  I doubt that this would work well
@@ -31,14 +31,14 @@
  *	Get 16 bit CV stuff working.
  *	Add symbol size to internal symbol table.
  */
-
+ 
 #include "config.h"
 #include "wine/port.h"
-
+ 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+ 
 #include <string.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
@@ -51,35 +51,35 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "winternl.h"
-
-#include "wine/exception.h"
+ 
+#include <pseh.h>
+ 
 #include "wine/debug.h"
-#include "excpt.h"
 #include "dbghelp_private.h"
 #include "mscvpdb.h"
-
+ 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_msc);
-
+ 
 #define MAX_PATHNAME_LEN 1024
-
+ 
 /*========================================================================
  * Debug file access helper routines
  */
-
-static WINE_EXCEPTION_FILTER(page_fault)
+ 
+static _SEH_FILTER(page_fault)
 {
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return EXCEPTION_EXECUTE_HANDLER;
-    return EXCEPTION_CONTINUE_SEARCH;
+    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+        return _SEH_EXECUTE_HANDLER;
+    return _SEH_CONTINUE_SEARCH;
 }
-
+ 
 static void dump(const void* ptr, unsigned len)
 {
     int         i, j;
     BYTE        msg[128];
     const char* hexof = "0123456789abcdef";
     const BYTE* x = (const BYTE*)ptr;
-
+ 
     for (i = 0; i < len; i += 16)
     {
         sprintf(msg, "%08x: ", i);
@@ -97,16 +97,16 @@ static void dump(const void* ptr, unsigned len)
         FIXME("%s\n", msg);
     }
 }
-
+ 
 /*========================================================================
  * Process CodeView type information.
  */
-
+ 
 #define MAX_BUILTIN_TYPES	0x0480
 #define FIRST_DEFINABLE_TYPE    0x1000
-
+ 
 static struct symt*     cv_basic_types[MAX_BUILTIN_TYPES];
-
+ 
 #define SymTagCVBitField        (SymTagMax + 0x100)
 struct codeview_bitfield
 {
@@ -115,13 +115,13 @@ struct codeview_bitfield
     unsigned            bitposition;
     unsigned            bitlength;
 };
-
+ 
 struct cv_defined_module
 {
     BOOL                allowed;
     unsigned int        num_defined_types;
     struct symt**       defined_types;
-
+ 
     struct codeview_bitfield* bitfields;
     unsigned            num_bitfields;
     unsigned            used_bitfields;
@@ -130,7 +130,7 @@ struct cv_defined_module
 #define CV_MAX_MODULES          32
 static struct cv_defined_module cv_zmodules[CV_MAX_MODULES];
 static struct cv_defined_module*cv_current_module;
-
+ 
 static void codeview_init_basic_types(struct module* module)
 {
     /*
@@ -153,7 +153,7 @@ static void codeview_init_basic_types(struct module* module)
     cv_basic_types[T_WCHAR]  = &symt_new_basic(module, btWChar, "wchar_t", 2)->symt;
     cv_basic_types[T_INT4]   = &symt_new_basic(module, btInt,   "INT4", 4)->symt;
     cv_basic_types[T_UINT4]  = &symt_new_basic(module, btUInt,  "UINT4", 4)->symt;
-
+ 
     cv_basic_types[T_32PVOID]   = &symt_new_pointer(module, cv_basic_types[T_VOID])->symt;
     cv_basic_types[T_32PCHAR]   = &symt_new_pointer(module, cv_basic_types[T_CHAR])->symt;
     cv_basic_types[T_32PSHORT]  = &symt_new_pointer(module, cv_basic_types[T_SHORT])->symt;
@@ -170,12 +170,12 @@ static void codeview_init_basic_types(struct module* module)
     cv_basic_types[T_32PINT4]   = &symt_new_pointer(module, cv_basic_types[T_INT4])->symt;
     cv_basic_types[T_32PUINT4]  = &symt_new_pointer(module, cv_basic_types[T_UINT4])->symt;
 }
-
+ 
 static int numeric_leaf(int* value, const unsigned short int* leaf)
 {
     unsigned short int type = *leaf++;
     int length = 2;
-
+ 
     if (type < LF_NUMERIC)
     {
         *value = type;
@@ -188,121 +188,121 @@ static int numeric_leaf(int* value, const unsigned short int* leaf)
             length += 1;
             *value = *(const char*)leaf;
             break;
-
+ 
         case LF_SHORT:
             length += 2;
             *value = *(const short*)leaf;
             break;
-
+ 
         case LF_USHORT:
             length += 2;
             *value = *(const unsigned short*)leaf;
             break;
-
+ 
         case LF_LONG:
             length += 4;
             *value = *(const int*)leaf;
             break;
-
+ 
         case LF_ULONG:
             length += 4;
             *value = *(const unsigned int*)leaf;
             break;
-
+ 
         case LF_QUADWORD:
         case LF_UQUADWORD:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 8;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_REAL32:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 4;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_REAL48:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 6;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_REAL64:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 8;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_REAL80:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 10;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_REAL128:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 16;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_COMPLEX32:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 4;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_COMPLEX64:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 8;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_COMPLEX80:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 10;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_COMPLEX128:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 16;
             *value = 0;    /* FIXME */
             break;
-
+ 
         case LF_VARSTRING:
 	    FIXME("Unsupported numeric leaf type %04x\n", type);
             length += 2 + *leaf;
             *value = 0;    /* FIXME */
             break;
-
+ 
         default:
 	    FIXME("Unknown numeric leaf type %04x\n", type);
             *value = 0;
             break;
         }
     }
-
+ 
     return length;
 }
-
+ 
 /* convert a pascal string (as stored in debug information) into
  * a C string (null terminated).
  */
 static const char* terminate_string(const struct p_string* p_name)
 {
     static char symname[256];
-
+ 
     memcpy(symname, p_name->name, p_name->namelen);
     symname[p_name->namelen] = '\0';
-
+ 
     return (!*symname || strcmp(symname, "__unnamed") == 0) ? NULL : symname;
 }
-
+ 
 static struct symt*  codeview_get_type(unsigned int typeno, BOOL allow_special)
 {
     struct symt*        symt = NULL;
-
+ 
     /*
      * Convert Codeview type numbers into something we can grok internally.
      * Numbers < FIRST_DEFINABLE_TYPE are all fixed builtin types.
@@ -318,9 +318,9 @@ static struct symt*  codeview_get_type(unsigned int typeno, BOOL allow_special)
         unsigned        mod_index = typeno >> 24;
         unsigned        mod_typeno = typeno & 0x00FFFFFF;
         struct cv_defined_module*       mod;
-
+ 
         mod = (mod_index == 0) ? cv_current_module : &cv_zmodules[mod_index];
-
+ 
         if (mod_index >= CV_MAX_MODULES || !mod->allowed) 
             FIXME("Module of index %d isn't loaded yet (%x)\n", mod_index, typeno);
         else
@@ -334,7 +334,7 @@ static struct symt*  codeview_get_type(unsigned int typeno, BOOL allow_special)
     if (!symt && typeno) FIXME("Returning NULL symt for type-id %x\n", typeno);
     return symt;
 }
-
+ 
 static int codeview_add_type(unsigned int typeno, struct symt* dt)
 {
     if (typeno < FIRST_DEFINABLE_TYPE)
@@ -359,18 +359,18 @@ static int codeview_add_type(unsigned int typeno, struct symt* dt)
             cv_current_module->defined_types = (struct symt**)
                 HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                           cv_current_module->num_defined_types * sizeof(struct symt*));
-
+ 
         if (cv_current_module->defined_types == NULL) return FALSE;
     }
-
+ 
     cv_current_module->defined_types[typeno - FIRST_DEFINABLE_TYPE] = dt;
     return TRUE;
 }
-
+ 
 static void codeview_clear_type_table(void)
 {
     int i;
-
+ 
     for (i = 0; i < CV_MAX_MODULES; i++)
     {
         if (cv_zmodules[i].allowed && cv_zmodules[i].defined_types)
@@ -385,7 +385,7 @@ static void codeview_clear_type_table(void)
     }
     cv_current_module = NULL;
 }
-
+ 
 static int codeview_add_type_pointer(struct module* module, unsigned int typeno, 
                                      unsigned int datatype)
 {
@@ -393,7 +393,7 @@ static int codeview_add_type_pointer(struct module* module, unsigned int typeno,
                                           codeview_get_type(datatype, FALSE))->symt;
     return codeview_add_type(typeno, symt);
 }
-
+ 
 static int codeview_add_type_array(struct module* module, 
                                    unsigned int typeno, const char* name,
                                    unsigned int elemtype, unsigned int arr_len)
@@ -401,7 +401,7 @@ static int codeview_add_type_array(struct module* module,
     struct symt*        symt;
     struct symt*        elem = codeview_get_type(elemtype, FALSE);
     DWORD               arr_max = 0;
-
+ 
     if (elem)
     {
         DWORD elem_size;
@@ -411,7 +411,7 @@ static int codeview_add_type_array(struct module* module,
     symt = &symt_new_array(module, 0, arr_max, elem)->symt;
     return codeview_add_type(typeno, symt);
 }
-
+ 
 static int codeview_add_type_bitfield(unsigned int typeno, unsigned int bitoff,
                                       unsigned int nbits, unsigned int basetype)
 {
@@ -434,40 +434,40 @@ static int codeview_add_type_bitfield(unsigned int typeno, unsigned int bitoff,
         }
         if (!cv_current_module->bitfields) return 0;
     }
-    
+ 
     cv_current_module->bitfields[cv_current_module->used_bitfields].symt.tag    = SymTagCVBitField;
     cv_current_module->bitfields[cv_current_module->used_bitfields].subtype     = basetype;
     cv_current_module->bitfields[cv_current_module->used_bitfields].bitposition = bitoff;
     cv_current_module->bitfields[cv_current_module->used_bitfields].bitlength   = nbits;
-
+ 
     return codeview_add_type(typeno, &cv_current_module->bitfields[cv_current_module->used_bitfields++].symt);
 }
-
+ 
 static int codeview_add_type_enum_field_list(struct module* module, 
                                              unsigned int typeno, 
                                              const unsigned char* list, int len)
 {
     struct symt_enum*           symt;
     const unsigned char*        ptr = list;
-
+ 
     symt = symt_new_enum(module, NULL);
     while (ptr - list < len)
     {
         const union codeview_fieldtype* type = (const union codeview_fieldtype*)ptr;
-
+ 
         if (*ptr >= 0xf0)       /* LF_PAD... */
         {
             ptr += *ptr & 0x0f;
             continue;
         }
-
+ 
         switch (type->generic.id)
         {
         case LF_ENUMERATE_V1:
         {
             int value, vlen = numeric_leaf(&value, &type->enumerate_v1.value);
             const struct p_string* p_name = (const struct p_string*)((const unsigned char*)&type->enumerate_v1.value + vlen);
-
+ 
             symt_add_enum_element(module, symt, terminate_string(p_name), value);
             ptr += 2 + 2 + vlen + (1 + p_name->namelen);
             break;
@@ -476,21 +476,21 @@ static int codeview_add_type_enum_field_list(struct module* module,
         {
             int value, vlen = numeric_leaf(&value, &type->enumerate_v3.value);
             const char* name = (const char*)&type->enumerate_v3.value + vlen;
-
+ 
             symt_add_enum_element(module, symt, name, value);
             ptr += 2 + 2 + vlen + (1 + strlen(name));
             break;
         }
-
+ 
         default:
             FIXME("Unsupported type %04x in ENUM field list\n", type->generic.id);
             return FALSE;
         }
     }
-
+ 
     return codeview_add_type(typeno, &symt->symt);
 }
-
+ 
 static int codeview_add_type_struct_field_list(struct module* module, 
                                                unsigned int typeno, 
                                                const unsigned char* list, int len)
@@ -502,67 +502,67 @@ static int codeview_add_type_struct_field_list(struct module* module,
     const char*                 c_name;
     struct symt*                subtype;
     const unsigned short int* p_vboff;
-
+ 
     symt = symt_new_udt(module, NULL, 0, UdtStruct /* don't care */);
     while (ptr - list < len)
     {
         const union codeview_fieldtype* type = (const union codeview_fieldtype*)ptr;
-
+ 
         if (*ptr >= 0xf0)       /* LF_PAD... */
         {
             ptr +=* ptr & 0x0f;
             continue;
         }
-
+ 
         switch (type->generic.id)
         {
         case LF_BCLASS_V1:
             leaf_len = numeric_leaf(&value, &type->bclass_v1.offset);
-
+ 
             /* FIXME: ignored for now */
-
+ 
             ptr += 2 + 2 + 2 + leaf_len;
             break;
-
+ 
         case LF_BCLASS_V2:
             leaf_len = numeric_leaf(&value, &type->bclass_v2.offset);
-
+ 
             /* FIXME: ignored for now */
-
+ 
             ptr += 2 + 2 + 4 + leaf_len;
             break;
-
+ 
         case LF_VBCLASS_V1:
         case LF_IVBCLASS_V1:
             {
                 leaf_len = numeric_leaf(&value, &type->vbclass_v1.vbpoff);
                 p_vboff = (const unsigned short int*)((const char*)&type->vbclass_v1.vbpoff + leaf_len);
                 vplen = numeric_leaf(&vpoff, p_vboff);
-
+ 
                 /* FIXME: ignored for now */
-
+ 
                 ptr += 2 + 2 + 2 + 2 + leaf_len + vplen;
             }
             break;
-
+ 
         case LF_VBCLASS_V2:
         case LF_IVBCLASS_V2:
             {
                 leaf_len = numeric_leaf(&value, &type->vbclass_v2.vbpoff);
                 p_vboff = (const unsigned short int*)((const char*)&type->vbclass_v2.vbpoff + leaf_len);
                 vplen = numeric_leaf(&vpoff, p_vboff);
-
+ 
                 /* FIXME: ignored for now */
-
+ 
                 ptr += 2 + 2 + 4 + 4 + leaf_len + vplen;
             }
             break;
-
+ 
         case LF_MEMBER_V1:
             leaf_len = numeric_leaf(&value, &type->member_v1.offset);
             p_name = (const struct p_string*)((const char*)&type->member_v1.offset + leaf_len);
             subtype = codeview_get_type(type->member_v1.type, TRUE);
-
+ 
             if (!subtype || subtype->tag != SymTagCVBitField)
             {
                 DWORD elem_size = 0;
@@ -578,15 +578,15 @@ static int codeview_add_type_struct_field_list(struct module* module,
                                      codeview_get_type(cvbf->subtype, FALSE),
                                      cvbf->bitposition, cvbf->bitlength);
             }
-
+ 
             ptr += 2 + 2 + 2 + leaf_len + (1 + p_name->namelen);
             break;
-
+ 
         case LF_MEMBER_V2:
             leaf_len = numeric_leaf(&value, &type->member_v2.offset);
             p_name = (const struct p_string*)((const unsigned char*)&type->member_v2.offset + leaf_len);
             subtype = codeview_get_type(type->member_v2.type, TRUE);
-
+ 
             if (!subtype || subtype->tag != SymTagCVBitField)
             {
                 DWORD elem_size = 0;
@@ -601,15 +601,15 @@ static int codeview_add_type_struct_field_list(struct module* module,
                                      codeview_get_type(cvbf->subtype, FALSE),
                                      cvbf->bitposition, cvbf->bitlength);
             }
-
+ 
             ptr += 2 + 2 + 4 + leaf_len + (1 + p_name->namelen);
             break;
-
+ 
         case LF_MEMBER_V3:
             leaf_len = numeric_leaf(&value, &type->member_v3.offset);
             c_name = (const char*)&type->member_v3.offset + leaf_len;
             subtype = codeview_get_type(type->member_v3.type, TRUE);
-
+ 
             if (!subtype || subtype->tag != SymTagCVBitField)
             {
                 DWORD elem_size = 0;
@@ -624,50 +624,50 @@ static int codeview_add_type_struct_field_list(struct module* module,
                                      codeview_get_type(cvbf->subtype, FALSE),
                                      cvbf->bitposition, cvbf->bitlength);
             }
-
+ 
             ptr += 2 + 2 + 4 + leaf_len + (strlen(c_name) + 1);
             break;
-
+ 
         case LF_STMEMBER_V1:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + 2 + (1 + type->stmember_v1.p_name.namelen);
             break;
-
+ 
         case LF_STMEMBER_V2:
             /* FIXME: ignored for now */
             ptr += 2 + 4 + 2 + (1 + type->stmember_v2.p_name.namelen);
             break;
-
+ 
         case LF_METHOD_V1:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + 2 + (1 + type->method_v1.p_name.namelen);
             break;
-
+ 
         case LF_METHOD_V2:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + 4 + (1 + type->method_v2.p_name.namelen);
             break;
-
+ 
         case LF_NESTTYPE_V1:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + (1 + type->nesttype_v1.p_name.namelen);
             break;
-
+ 
         case LF_NESTTYPE_V2:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + 4 + (1 + type->nesttype_v2.p_name.namelen);
             break;
-
+ 
         case LF_VFUNCTAB_V1:
             /* FIXME: ignored for now */
             ptr += 2 + 2;
             break;
-
+ 
         case LF_VFUNCTAB_V2:
             /* FIXME: ignored for now */
             ptr += 2 + 2 + 4;
             break;
-
+ 
         case LF_ONEMETHOD_V1:
             /* FIXME: ignored for now */
             switch ((type->onemethod_v1.attribute >> 2) & 7)
@@ -675,13 +675,13 @@ static int codeview_add_type_struct_field_list(struct module* module,
             case 4: case 6: /* (pure) introducing virtual method */
                 ptr += 2 + 2 + 2 + 4 + (1 + type->onemethod_virt_v1.p_name.namelen);
                 break;
-
+ 
             default:
                 ptr += 2 + 2 + 2 + (1 + type->onemethod_v1.p_name.namelen);
                 break;
             }
             break;
-
+ 
         case LF_ONEMETHOD_V2:
             /* FIXME: ignored for now */
             switch ((type->onemethod_v2.attribute >> 2) & 7)
@@ -689,47 +689,47 @@ static int codeview_add_type_struct_field_list(struct module* module,
             case 4: case 6: /* (pure) introducing virtual method */
                 ptr += 2 + 2 + 4 + 4 + (1 + type->onemethod_virt_v2.p_name.namelen);
                 break;
-
+ 
             default:
                 ptr += 2 + 2 + 4 + (1 + type->onemethod_v2.p_name.namelen);
                 break;
             }
             break;
-
+ 
         default:
             FIXME("Unsupported type %04x in STRUCT field list\n", type->generic.id);
             return FALSE;
         }
     }
-
+ 
     return codeview_add_type(typeno, &symt->symt);
 }
-
+ 
 static int codeview_add_type_enum(struct module* module, unsigned int typeno, 
                                   const char* name, unsigned int fieldlist)
 {
     struct symt_enum*   symt = symt_new_enum(module, name);
     struct symt*        list = codeview_get_type(fieldlist, FALSE);
-
+ 
     /* FIXME: this is rather ugly !!! */
     if (list) symt->vchildren = ((struct symt_enum*)list)->vchildren;
-
+ 
     return codeview_add_type(typeno, &symt->symt);
 }
-
+ 
 static int codeview_add_type_struct(struct module* module, unsigned int typeno, 
                                     const char* name, int structlen, 
                                     unsigned int fieldlist, enum UdtKind kind)
 {
     struct symt_udt*    symt = symt_new_udt(module, name, structlen, kind);
     struct symt*        list = codeview_get_type(fieldlist, FALSE);
-
+ 
     /* FIXME: this is rather ugly !!! */
     if (list) symt->vchildren = ((struct symt_udt*)list)->vchildren;
-
+ 
     return codeview_add_type(typeno, &symt->symt);
 }
-
+ 
 static int codeview_new_func_signature(struct module* module, unsigned typeno,
                                            unsigned ret_type)
 {
@@ -738,7 +738,7 @@ static int codeview_new_func_signature(struct module* module, unsigned typeno,
                                         codeview_get_type(ret_type, FALSE))->symt;
     return codeview_add_type(typeno, symt);
 }
-
+ 
 static int codeview_parse_type_table(struct module* module, const char* table,
                                      int len)
 {
@@ -749,12 +749,12 @@ static int codeview_parse_type_table(struct module* module, const char* table,
     int                         value, leaf_len;
     const struct p_string*      p_name;
     const char*                 c_name;
-
+ 
     while (ptr - table < len)
     {
         retv = TRUE;
         type = (const union codeview_type*)ptr;
-
+ 
         switch (type->generic.id)
         {
         case LF_MODIFIER_V1:
@@ -781,7 +781,7 @@ static int codeview_parse_type_table(struct module* module, const char* table,
             codeview_add_type(curr_type, 
                               codeview_get_type(type->modifier_v2.type, FALSE));
             break;
-
+ 
         case LF_POINTER_V1:
             retv = codeview_add_type_pointer(module, curr_type, 
                                              type->pointer_v1.datatype);
@@ -790,29 +790,29 @@ static int codeview_parse_type_table(struct module* module, const char* table,
             retv = codeview_add_type_pointer(module, curr_type, 
                                              type->pointer_v2.datatype);
             break;
-
+ 
         case LF_ARRAY_V1:
             leaf_len = numeric_leaf(&value, &type->array_v1.arrlen);
             p_name = (const struct p_string*)((const unsigned char*)&type->array_v1.arrlen + leaf_len);
-
+ 
             retv = codeview_add_type_array(module, curr_type, terminate_string(p_name),
                                            type->array_v1.elemtype, value);
             break;
         case LF_ARRAY_V2:
             leaf_len = numeric_leaf(&value, &type->array_v2.arrlen);
             p_name = (const struct p_string*)((const unsigned char*)&type->array_v2.arrlen + leaf_len);
-
+ 
             retv = codeview_add_type_array(module, curr_type, terminate_string(p_name),
                                            type->array_v2.elemtype, value);
             break;
         case LF_ARRAY_V3:
             leaf_len = numeric_leaf(&value, &type->array_v3.arrlen);
             c_name = (const char*)&type->array_v3.arrlen + leaf_len;
-
+ 
             retv = codeview_add_type_array(module, curr_type, c_name,
                                            type->array_v3.elemtype, value);
             break;
-
+ 
         case LF_BITFIELD_V1:
             /* a bitfield is a CodeView specific data type which represent a bitfield
              * in a structure or a class. For now, we store it in a SymTag-like type
@@ -846,7 +846,7 @@ static int codeview_parse_type_table(struct module* module, const char* table,
                 */
                const char* list = type->fieldlist.list;
                int   len  = (ptr + type->generic.len + 2) - list;
-
+ 
                if (((const union codeview_fieldtype*)list)->generic.id == LF_ENUMERATE_V1 ||
                    ((const union codeview_fieldtype*)list)->generic.id == LF_ENUMERATE_V3)
                    retv = codeview_add_type_enum_field_list(module, curr_type, list, len);
@@ -854,63 +854,63 @@ static int codeview_parse_type_table(struct module* module, const char* table,
                    retv = codeview_add_type_struct_field_list(module, curr_type, list, len);
            }
            break;
-
+ 
         case LF_STRUCTURE_V1:
         case LF_CLASS_V1:
             leaf_len = numeric_leaf(&value, &type->struct_v1.structlen);
             p_name = (const struct p_string*)((const unsigned char*)&type->struct_v1.structlen + leaf_len);
-
+ 
             retv = codeview_add_type_struct(module, curr_type, terminate_string(p_name),
                                             value, type->struct_v1.fieldlist,
                                             type->generic.id == LF_CLASS_V1 ? UdtClass : UdtStruct);
             break;
-
+ 
         case LF_STRUCTURE_V2:
         case LF_CLASS_V2:
             leaf_len = numeric_leaf(&value, &type->struct_v2.structlen);
             p_name = (const struct p_string*)((const unsigned char*)&type->struct_v2.structlen + leaf_len);
-
+ 
             retv = codeview_add_type_struct(module, curr_type, terminate_string(p_name),
                                             value, type->struct_v2.fieldlist,
                                             type->generic.id == LF_CLASS_V2 ? UdtClass : UdtStruct);
             break;
-
+ 
         case LF_STRUCTURE_V3:
         case LF_CLASS_V3:
             leaf_len = numeric_leaf(&value, &type->struct_v3.structlen);
             c_name = (const char*)&type->struct_v3.structlen + leaf_len;
-
+ 
             retv = codeview_add_type_struct(module, curr_type, c_name,
                                             value, type->struct_v3.fieldlist,
                                             type->generic.id == LF_CLASS_V3 ? UdtClass : UdtStruct);
             break;
-
+ 
         case LF_UNION_V1:
             leaf_len = numeric_leaf(&value, &type->union_v1.un_len);
             p_name = (const struct p_string*)((const unsigned char*)&type->union_v1.un_len + leaf_len);
-
+ 
             retv = codeview_add_type_struct(module, curr_type, terminate_string(p_name),
                                             value, type->union_v1.fieldlist, UdtUnion);
             break;
         case LF_UNION_V2:
             leaf_len = numeric_leaf(&value, &type->union_v2.un_len);
             p_name = (const struct p_string*)((const unsigned char*)&type->union_v2.un_len + leaf_len);
-
+ 
             retv = codeview_add_type_struct(module, curr_type, terminate_string(p_name),
                                             value, type->union_v2.fieldlist, UdtUnion);
             break;
         case LF_UNION_V3:
             leaf_len = numeric_leaf(&value, &type->union_v3.un_len);
             c_name = (const char*)&type->union_v3.un_len + leaf_len;
-
+ 
             retv = codeview_add_type_struct(module, curr_type, c_name,
                                             value, type->union_v3.fieldlist, UdtUnion);
-
+ 
         case LF_ENUM_V1:
             retv = codeview_add_type_enum(module, curr_type, terminate_string(&type->enumeration_v1.p_name),
                                           type->enumeration_v1.field);
             break;
-
+ 
         case LF_ENUM_V2:
             retv = codeview_add_type_enum(module, curr_type, terminate_string(&type->enumeration_v2.p_name),
                                           type->enumeration_v2.field);
@@ -949,7 +949,7 @@ static int codeview_parse_type_table(struct module* module, const char* table,
                     FIXME("Not adding parameters' types to function signature\n");
             }
             break;
-
+ 
         default:
             FIXME("Unsupported type-id leaf %x\n", type->generic.id);
             dump(type, 2 + type->generic.len);
@@ -959,14 +959,14 @@ static int codeview_parse_type_table(struct module* module, const char* table,
         curr_type++;
         ptr += type->generic.len + 2;
     }
-
+ 
     return TRUE;
 }
-
+ 
 /*========================================================================
  * Process CodeView line number information.
  */
-
+ 
 static struct codeview_linetab* codeview_snarf_linetab(struct module* module, 
                                                        const char* linetab, int size,
                                                        BOOL pascal_str)
@@ -986,16 +986,16 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
     const struct startend*      start;
     int				this_seg;
     struct symt_compiland*      compiland;
-
+ 
     /*
      * Now get the important bits.
      */
     pnt.c = linetab;
     nfile = *pnt.s++;
     nseg = *pnt.s++;
-
+ 
     filetab = (const unsigned int*) pnt.c;
-
+ 
     /*
      * Now count up the number of segments in the file.
      */
@@ -1005,7 +1005,7 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
         pnt2.c = linetab + filetab[i];
         nseg += *pnt2.s;
     }
-
+ 
     /*
      * Next allocate the header we will be returning.
      * There is one header for each segment, so that we can reach in
@@ -1017,14 +1017,14 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
     {
         goto leave;
     }
-
+ 
     /*
      * Now fill the header we will be returning, one for each segment.
      * Note that this will basically just contain pointers into the existing
      * line table, and we do not actually copy any additional information
      * or allocate any additional memory.
      */
-
+ 
     this_seg = 0;
     for (i = 0; i < nfile; i++)
     {
@@ -1033,11 +1033,11 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
          */
         pnt2.c = linetab + filetab[i];
         file_segcount = *pnt2.s;
-
+ 
         pnt2.ui++;
         lt_ptr = (const unsigned int*) pnt2.c;
         start = (const struct startend*)(lt_ptr + file_segcount);
-
+ 
         /*
          * Now snarf the filename for all of the segments for this file.
          */
@@ -1050,7 +1050,7 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
         }
         else
             compiland = symt_new_compiland(module, (const char*)(start + file_segcount));
-        
+ 
         for (k = 0; k < file_segcount; k++, this_seg++)
 	{
             pnt2.c = linetab + lt_ptr[k];
@@ -1063,34 +1063,34 @@ static struct codeview_linetab* codeview_snarf_linetab(struct module* module,
             lt_hdr[this_seg].linetab    = (const unsigned short*)(pnt2.ui + lt_hdr[this_seg].nline);
 	}
     }
-
+ 
 leave:
-
+ 
   return lt_hdr;
-
+ 
 }
-
+ 
 /*========================================================================
  * Process CodeView symbol information.
  */
-
+ 
 static unsigned int codeview_map_offset(const struct msc_debug_info* msc_dbg,
                                         unsigned int offset)
 {
     int                 nomap = msc_dbg->nomap;
     const OMAP_DATA*    omapp = msc_dbg->omapp;
     int                 i;
-
+ 
     if (!nomap || !omapp) return offset;
-
+ 
     /* FIXME: use binary search */
     for (i = 0; i < nomap - 1; i++)
         if (omapp[i].from <= offset && omapp[i+1].from > offset)
             return !omapp[i].to ? 0 : omapp[i].to + (offset - omapp[i].from);
-
+ 
     return 0;
 }
-
+ 
 static const struct codeview_linetab*
 codeview_get_linetab(const struct codeview_linetab* linetab,
                      unsigned seg, unsigned offset)
@@ -1108,25 +1108,25 @@ codeview_get_linetab(const struct codeview_linetab* linetab,
     }
     return linetab;
 }
-
+ 
 static unsigned codeview_get_address(const struct msc_debug_info* msc_dbg, 
                                      unsigned seg, unsigned offset)
 {
     int			        nsect = msc_dbg->nsect;
     const IMAGE_SECTION_HEADER* sectp = msc_dbg->sectp;
-
+ 
     if (!seg || seg > nsect) return 0;
     return msc_dbg->module->module.BaseOfImage +
         codeview_map_offset(msc_dbg, sectp[seg-1].VirtualAddress + offset);
 }
-
+ 
 static void codeview_add_func_linenum(struct module* module, 
                                       struct symt_function* func,
                                       const struct codeview_linetab* linetab,
                                       unsigned offset, unsigned size)
 {
     unsigned int        i;
-
+ 
     if (!linetab) return;
     for (i = 0; i < linetab->nline; i++)
     {
@@ -1137,7 +1137,7 @@ static void codeview_add_func_linenum(struct module* module,
         }
     }
 }
-
+ 
 static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root, 
                           int offset, int size,
                           struct codeview_linetab* linetab)
@@ -1148,7 +1148,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
     struct symt_block*                  block = NULL;
     struct symt*                        symt;
     const char*                         name;
-
+ 
     /*
      * Loop over the different types of records and whenever we
      * find something we are interested in, record it and move on.
@@ -1158,7 +1158,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
         const union codeview_symbol* sym = (const union codeview_symbol*)(root + i);
         length = sym->generic.len + 2;
         if (length & 3) FIXME("unpadded len %u\n", length + 2);
-
+ 
         switch (sym->generic.id)
         {
         /*
@@ -1197,7 +1197,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                          0,
                                          codeview_get_type(sym->data_v3.symtype, FALSE));
 	    break;
-
+ 
 	case S_PUB_V1: /* FIXME is this really a 'data_v1' structure ?? */
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
@@ -1218,7 +1218,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                 0, TRUE /* FIXME */, TRUE /* FIXME */);
             }
 	    break;
-
+ 
         /*
          * Sort of like a global function, but it just points
          * to a thunk, which is a stupid name for what amounts to
@@ -1238,7 +1238,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                            codeview_get_address(msc_dbg, sym->thunk_v3.segment, sym->thunk_v3.offset),
                            sym->thunk_v3.thunk_len);
 	    break;
-
+ 
         /*
          * Global and static functions.
          */
@@ -1305,7 +1305,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                 block, codeview_get_type(sym->stack_v3.symtype, FALSE),
                                 sym->stack_v3.name);
             break;
-
+ 
         case S_REGISTER_V1:
             symt_add_func_local(msc_dbg->module, curr_func, 0, sym->register_v1.reg,
                                 block, codeview_get_type(sym->register_v1.type, FALSE),
@@ -1316,7 +1316,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                 block, codeview_get_type(sym->register_v2.type, FALSE),
                                 terminate_string(&sym->register_v2.p_name));
             break;
-
+ 
         case S_BLOCK_V1:
             block = symt_open_func_block(msc_dbg->module, curr_func, block, 
                                          codeview_get_address(msc_dbg, sym->block_v1.segment, sym->block_v1.offset),
@@ -1327,7 +1327,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                          codeview_get_address(msc_dbg, sym->block_v3.segment, sym->block_v3.offset),
                                          sym->block_v3.length);
             break;
-
+ 
         case S_END_V1:
             if (block)
             {
@@ -1339,14 +1339,14 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                 curr_func = NULL;
             }
             break;
-
+ 
         /* FIXME: we should use this as a compiland, instead of guessing it on the fly */
         case S_COMPILAND_V1:
             TRACE("S-Compiland-V1e %x %s\n", 
                   sym->compiland_v1.unknown, 
                   terminate_string(&sym->compiland_v1.p_name));
             break;
-
+ 
         case S_COMPILAND_V2:
             TRACE("S-Compiland-V2 %s\n", 
                   terminate_string(&sym->compiland_v2.p_name));
@@ -1376,11 +1376,11 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                 }
             }
             break;
-
+ 
         case S_OBJNAME_V1:
             TRACE("S-ObjName %.*s\n", ((const BYTE*)sym)[8], (const BYTE*)sym + 9);
             break;
-
+ 
         case S_LABEL_V1:
             if (curr_func)
             {
@@ -1402,21 +1402,21 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
             else
                 FIXME("No current function for label %s\n", sym->label_v3.name);
             break;
-
+ 
         case S_CONSTANT_V1:
             {
                 int                     val, vlen;
                 const struct p_string*  name;
                 const char*             x;
                 struct symt*            se;
-
+ 
                 vlen = numeric_leaf(&val, &sym->constant_v1.cvalue);
                 name = (const struct p_string*)((const char*)&sym->constant_v1.cvalue + vlen);
                 se = codeview_get_type(sym->constant_v1.type, FALSE);
                 if (!se) x = "---";
                 else if (se->tag == SymTagEnum) x = ((struct symt_enum*)se)->name;
                 else x = "###";
-                    
+ 
                 TRACE("S-Constant-V1 %u %s %x (%s)\n", 
                       val, terminate_string(name), sym->constant_v1.type, x);
                 /* FIXME: we should add this as a constant value */
@@ -1428,14 +1428,14 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                 const struct p_string*  name;
                 const char*             x;
                 struct symt*            se;
-
+ 
                 vlen = numeric_leaf(&val, &sym->constant_v2.cvalue);
                 name = (const struct p_string*)((const char*)&sym->constant_v2.cvalue + vlen);
                 se = codeview_get_type(sym->constant_v2.type, FALSE);
                 if (!se) x = "---";
                 else if (se->tag == SymTagEnum) x = ((struct symt_enum*)se)->name;
                 else x = "###";
-                    
+ 
                 TRACE("S-Constant-V2 %u %s %x (%s)\n", 
                       val, terminate_string(name), sym->constant_v2.type, x);
                 /* FIXME: we should add this as a constant value */
@@ -1447,20 +1447,20 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                 const char*             name;
                 const char*             x;
                 struct symt*            se;
-
+ 
                 vlen = numeric_leaf(&val, &sym->constant_v3.cvalue);
                 name = (const char*)&sym->constant_v3.cvalue + vlen;
                 se = codeview_get_type(sym->constant_v3.type, FALSE);
                 if (!se) x = "---";
                 else if (se->tag == SymTagEnum) x = ((struct symt_enum*)se)->name;
                 else x = "###";
-                    
+ 
                 TRACE("S-Constant-V3 %u %s %x (%s)\n", 
                       val, name, sym->constant_v3.type, x);
                 /* FIXME: we should add this as a constant value */
             }
             break;
-
+ 
         case S_UDT_V1:
             if (sym->udt_v1.type)
             {
@@ -1493,7 +1493,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                           sym->udt_v3.name, sym->udt_v3.type);
             }
             break;
-
+ 
          /*
          * These are special, in that they are always followed by an
          * additional length-prefixed string which is *not* included
@@ -1505,7 +1505,7 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
             name = (const char*)sym + length;
             length += (*name + 1 + 3) & ~3;
             break;
-
+ 
         case S_PUB_DATA_V3:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
@@ -1529,27 +1529,27 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
                                 0, TRUE /* FIXME */, TRUE);
             }
             break;
-
+ 
         case S_MSTOOL_V3: /* just to silence a few warnings */
             break;
-
+ 
         default:
             FIXME("Unsupported symbol id %x\n", sym->generic.id);
             dump(sym, 2 + sym->generic.len);
             break;
         }
     }
-
+ 
     if (curr_func) symt_normalize_function(msc_dbg->module, curr_func);
-
+ 
     if (linetab) HeapFree(GetProcessHeap(), 0, linetab);
     return TRUE;
 }
-
+ 
 /*========================================================================
  * Process PDB file.
  */
-
+ 
 struct pdb_lookup
 {
     const char*                 filename;
@@ -1568,66 +1568,66 @@ struct pdb_lookup
         } ds;
     } u;
 };
-
+ 
 static void* pdb_jg_read(const struct PDB_JG_HEADER* pdb, const WORD* block_list,
                          int size)
 {
     int                         i, num_blocks;
     BYTE*                       buffer;
-
+ 
     if (!size) return NULL;
-
+ 
     num_blocks = (size + pdb->block_size - 1) / pdb->block_size;
     buffer = HeapAlloc(GetProcessHeap(), 0, num_blocks * pdb->block_size);
-
+ 
     for (i = 0; i < num_blocks; i++)
         memcpy(buffer + i * pdb->block_size,
                (const char*)pdb + block_list[i] * pdb->block_size, pdb->block_size);
-
+ 
     return buffer;
 }
-
+ 
 static void* pdb_ds_read(const struct PDB_DS_HEADER* pdb, const DWORD* block_list,
                          int size)
 {
     int                         i, num_blocks;
     BYTE*                       buffer;
-
+ 
     if (!size) return NULL;
-
+ 
     num_blocks = (size + pdb->block_size - 1) / pdb->block_size;
     buffer = HeapAlloc(GetProcessHeap(), 0, num_blocks * pdb->block_size);
-
+ 
     for (i = 0; i < num_blocks; i++)
         memcpy(buffer + i * pdb->block_size,
                (const char*)pdb + block_list[i] * pdb->block_size, pdb->block_size);
-
+ 
     return buffer;
 }
-
+ 
 static void* pdb_read_jg_file(const struct PDB_JG_HEADER* pdb,
                               const struct PDB_JG_TOC* toc, DWORD file_nr)
 {
     const WORD*                 block_list;
     DWORD                       i;
-
+ 
     if (!toc || file_nr >= toc->num_files) return NULL;
-
+ 
     block_list = (const WORD*) &toc->file[toc->num_files];
     for (i = 0; i < file_nr; i++)
         block_list += (toc->file[i].size + pdb->block_size - 1) / pdb->block_size;
-
+ 
     return pdb_jg_read(pdb, block_list, toc->file[file_nr].size);
 }
-
+ 
 static void* pdb_read_ds_file(const struct PDB_DS_HEADER* pdb,
                               const struct PDB_DS_TOC* toc, DWORD file_nr)
 {
     const DWORD*                block_list;
     DWORD                       i;
-
+ 
     if (!toc || file_nr >= toc->num_files) return NULL;
-
+ 
     if (toc->file_size[file_nr] == 0 || toc->file_size[file_nr] == 0xFFFFFFFF)
     {
         FIXME(">>> requesting NULL stream (%lu)\n", file_nr);
@@ -1636,10 +1636,10 @@ static void* pdb_read_ds_file(const struct PDB_DS_HEADER* pdb,
     block_list = &toc->file_size[toc->num_files];
     for (i = 0; i < file_nr; i++)
         block_list += (toc->file_size[i] + pdb->block_size - 1) / pdb->block_size;
-
+ 
     return pdb_ds_read(pdb, block_list, toc->file_size[file_nr]);
 }
-
+ 
 static void* pdb_read_file(const BYTE* image, const struct pdb_lookup* pdb_lookup,
                            DWORD file_nr)
 {
@@ -1654,7 +1654,7 @@ static void* pdb_read_file(const BYTE* image, const struct pdb_lookup* pdb_looku
     }
     return NULL;
 }
-
+ 
 static unsigned pdb_get_file_size(const struct pdb_lookup* pdb_lookup, DWORD file_nr)
 {
     switch (pdb_lookup->kind)
@@ -1664,12 +1664,12 @@ static unsigned pdb_get_file_size(const struct pdb_lookup* pdb_lookup, DWORD fil
     }
     return 0;
 }
-
+ 
 static void pdb_free(void* buffer)
 {
     HeapFree(GetProcessHeap(), 0, buffer);
 }
-
+ 
 static void pdb_free_lookup(const struct pdb_lookup* pdb_lookup)
 {
     switch (pdb_lookup->kind)
@@ -1682,12 +1682,12 @@ static void pdb_free_lookup(const struct pdb_lookup* pdb_lookup)
         break;
     }
 }
-    
+ 
 static void pdb_convert_types_header(PDB_TYPES* types, const BYTE* image)
 {
     memset(types, 0, sizeof(PDB_TYPES));
     if (!image) return;
-
+ 
     if (*(const DWORD*)image < 19960000)   /* FIXME: correct version? */
     {
         /* Old version of the types record header */
@@ -1705,13 +1705,13 @@ static void pdb_convert_types_header(PDB_TYPES* types, const BYTE* image)
         *types = *(const PDB_TYPES*)image;
     }
 }
-
+ 
 static void pdb_convert_symbols_header(PDB_SYMBOLS* symbols,
                                        int* header_size, const BYTE* image)
 {
     memset(symbols, 0, sizeof(PDB_SYMBOLS));
     if (!image) return;
-
+ 
     if (*(const DWORD*)image != 0xffffffff)
     {
         /* Old version of the symbols record header */
@@ -1725,7 +1725,7 @@ static void pdb_convert_symbols_header(PDB_SYMBOLS* symbols,
         symbols->hash1_file      = old->hash1_file;
         symbols->hash2_file      = old->hash2_file;
         symbols->gsym_file       = old->gsym_file;
-
+ 
         *header_size = sizeof(PDB_SYMBOLS_OLD);
     }
     else
@@ -1735,11 +1735,11 @@ static void pdb_convert_symbols_header(PDB_SYMBOLS* symbols,
         *header_size = sizeof(PDB_SYMBOLS);
     }
 }
-
+ 
 static void pdb_convert_symbol_file(const PDB_SYMBOLS* symbols, 
                                     PDB_SYMBOL_FILE_EX* sfile, 
                                     unsigned* size, const void* image)
-
+ 
 {
     if (symbols->version < 19970000)
     {
@@ -1757,18 +1757,18 @@ static void pdb_convert_symbol_file(const PDB_SYMBOLS* symbols,
         *size = sizeof(PDB_SYMBOL_FILE_EX) - 1;
     }
 }
-
+ 
 static BOOL CALLBACK pdb_match(char* file, void* user)
 {
     /* accept first file */
     return FALSE;
 }
-
+ 
 static HANDLE open_pdb_file(const struct process* pcs, const char* filename)
 {
     HANDLE      h;
     char        dbg_file_path[MAX_PATH];
-
+ 
     h = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, 
                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     /* FIXME: should give more bits on the file to look at */
@@ -1781,18 +1781,18 @@ static HANDLE open_pdb_file(const struct process* pcs, const char* filename)
     }
     return (h == INVALID_HANDLE_VALUE) ? NULL : h;
 }
-
+ 
 static void pdb_process_types(const struct msc_debug_info* msc_dbg, 
                               const char* image, struct pdb_lookup* pdb_lookup)
 {
     char*       types_image = NULL;
-
+ 
     types_image = pdb_read_file(image, pdb_lookup, 2);
     if (types_image)
     {
         PDB_TYPES   types;
         pdb_convert_types_header(&types, types_image);
-
+ 
         /* Check for unknown versions */
         switch (types.version)
         {
@@ -1804,17 +1804,17 @@ static void pdb_process_types(const struct msc_debug_info* msc_dbg,
         default:
             ERR("-Unknown type info version %ld\n", types.version);
         }
-
+ 
         /* Read type table */
         codeview_parse_type_table(msc_dbg->module, types_image + types.type_offset,
                                   types.type_size);
         pdb_free(types_image);
     }
 }
-
+ 
 static const char       PDB_JG_IDENT[] = "Microsoft C/C++ program database 2.00\r\n\032JG\0";
 static const char       PDB_DS_IDENT[] = "Microsoft C/C++ MSF 7.00\r\n\032DS\0";
-
+ 
 static BOOL pdb_init(struct pdb_lookup* pdb_lookup, const char* image)
 {
     /* check the file header, and if ok, load the TOC */
@@ -1832,7 +1832,7 @@ static BOOL pdb_init(struct pdb_lookup* pdb_lookup, const char* image)
         {
             const struct PDB_JG_HEADER* pdb = (const struct PDB_JG_HEADER*)image;
             struct PDB_JG_ROOT*         root;
-
+ 
             pdb_lookup->u.jg.toc = pdb_jg_read(pdb, pdb->toc_block, pdb->toc.size);
             root = pdb_read_jg_file(pdb, pdb_lookup->u.jg.toc, 1);
             if (!root)
@@ -1871,7 +1871,7 @@ static BOOL pdb_init(struct pdb_lookup* pdb_lookup, const char* image)
         {
             const struct PDB_DS_HEADER* pdb = (const struct PDB_DS_HEADER*)image;
             struct PDB_DS_ROOT*         root;
-
+ 
             pdb_lookup->u.ds.toc = 
                 pdb_ds_read(pdb, 
                             (const DWORD*)((const char*)pdb + pdb->toc_page * pdb->block_size), 
@@ -1901,17 +1901,17 @@ static BOOL pdb_init(struct pdb_lookup* pdb_lookup, const char* image)
         }
         break;
     }
-
+ 
     if (0) /* some tool to dump the internal files from a PDB file */
     {
         int     i, num_files;
-        
+ 
         switch (pdb_lookup->kind)
         {
         case PDB_JG: num_files = pdb_lookup->u.jg.toc->num_files; break;
         case PDB_DS: num_files = pdb_lookup->u.ds.toc->num_files; break;
         }
-
+ 
         for (i = 1; i < num_files; i++)
         {
             unsigned char* x = pdb_read_file(image, pdb_lookup, i);
@@ -1923,12 +1923,12 @@ static BOOL pdb_init(struct pdb_lookup* pdb_lookup, const char* image)
     }
     return TRUE;
 }
-
+ 
 static BOOL pdb_process_internal(const struct process* pcs, 
                                  const struct msc_debug_info* msc_dbg,
                                  struct pdb_lookup* pdb_lookup,
                                  unsigned module_index);
-
+ 
 static void pdb_process_symbol_imports(const struct process* pcs, 
                                        const struct msc_debug_info* msc_dbg,
                                        PDB_SYMBOLS* symbols, 
@@ -1943,7 +1943,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
         const void*             last;
         const char*             ptr;
         int                     i = 0;
-
+ 
         imp = (const PDB_SYMBOL_IMPORT*)((const char*)symbols_image + sizeof(PDB_SYMBOLS) + 
                                          symbols->module_size + symbols->offset_size + 
                                          symbols->hash_size + symbols->srcmodule_size);
@@ -1961,7 +1961,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
             else
             {
                 struct pdb_lookup       imp_pdb_lookup;
-
+ 
                 imp_pdb_lookup.filename = imp->filename;
                 imp_pdb_lookup.kind = PDB_JG;
                 imp_pdb_lookup.u.jg.timestamp = imp->TimeDateStamp;
@@ -1976,7 +1976,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
     cv_current_module->allowed = TRUE;
     pdb_process_types(msc_dbg, image, pdb_lookup);
 }
-
+ 
 static BOOL pdb_process_internal(const struct process* pcs, 
                                  const struct msc_debug_info* msc_dbg,
                                  struct pdb_lookup* pdb_lookup, 
@@ -1986,9 +1986,9 @@ static BOOL pdb_process_internal(const struct process* pcs,
     HANDLE      hFile, hMap = NULL;
     char*       image = NULL;
     char*       symbols_image = NULL;
-
+ 
     TRACE("Processing PDB file %s\n", pdb_lookup->filename);
-
+ 
     /* Open and map() .PDB file */
     if ((hFile = open_pdb_file(pcs, pdb_lookup->filename)) == NULL ||
         ((hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) == NULL) ||
@@ -1998,7 +1998,7 @@ static BOOL pdb_process_internal(const struct process* pcs,
         goto leave;
     }
     pdb_init(pdb_lookup, image);
-
+ 
     symbols_image = pdb_read_file(image, pdb_lookup, 3);
     if (symbols_image)
     {
@@ -2006,7 +2006,7 @@ static BOOL pdb_process_internal(const struct process* pcs,
         char*       modimage;
         char*       file;
         int         header_size = 0;
-        
+ 
         pdb_convert_symbols_header(&symbols, &header_size, symbols_image);
         switch (symbols.version)
         {
@@ -2019,19 +2019,19 @@ static BOOL pdb_process_internal(const struct process* pcs,
             ERR("-Unknown symbol info version %ld %08lx\n", 
                 symbols.version, symbols.version);
         }
-
+ 
         pdb_process_symbol_imports(pcs, msc_dbg, &symbols, symbols_image, image, pdb_lookup, module_index);
-
+ 
         /* Read global symbol table */
         modimage = pdb_read_file(image, pdb_lookup, symbols.gsym_file);
         if (modimage)
         {
             codeview_snarf(msc_dbg, modimage, 0, 
                            pdb_get_file_size(pdb_lookup, symbols.gsym_file), NULL);
-
+ 
             pdb_free(modimage);
         }
-
+ 
         /* Read per-module symbol / linenumber tables */
         file = symbols_image + header_size;
         while (file - symbols_image < header_size + symbols.module_size)
@@ -2039,25 +2039,25 @@ static BOOL pdb_process_internal(const struct process* pcs,
             PDB_SYMBOL_FILE_EX          sfile;
             const char*                 file_name;
             unsigned                    size;
-
+ 
             HeapValidate(GetProcessHeap(), 0, NULL);
             pdb_convert_symbol_file(&symbols, &sfile, &size, file);
-
+ 
             modimage = pdb_read_file(image, pdb_lookup, sfile.file);
             if (modimage)
             {
                 struct codeview_linetab*    linetab = NULL;
-
+ 
                 if (sfile.lineno_size)
                     linetab = codeview_snarf_linetab(msc_dbg->module, 
                                                      modimage + sfile.symbol_size,
                                                      sfile.lineno_size,
                                                      pdb_lookup->kind == PDB_JG);
-
+ 
                 if (sfile.symbol_size)
                     codeview_snarf(msc_dbg, modimage, sizeof(DWORD),
                                    sfile.symbol_size, linetab);
-
+ 
                 pdb_free(modimage);
             }
             file_name = (const char*)file + size;
@@ -2070,48 +2070,48 @@ static BOOL pdb_process_internal(const struct process* pcs,
                                    module_index);
     msc_dbg->module->module.SymType = SymCv;
     ret = TRUE;
-
+ 
  leave:
     /* Cleanup */
     if (symbols_image) pdb_free(symbols_image);
     pdb_free_lookup(pdb_lookup);
-
+ 
     if (image) UnmapViewOfFile(image);
     if (hMap) CloseHandle(hMap);
     if (hFile) CloseHandle(hFile);
-
+ 
     return ret;
 }
-
+ 
 static BOOL pdb_process_file(const struct process* pcs, 
                              const struct msc_debug_info* msc_dbg,
                              struct pdb_lookup* pdb_lookup)
 {
     BOOL        ret;
-
+ 
     memset(cv_zmodules, 0, sizeof(cv_zmodules));
     codeview_init_basic_types(msc_dbg->module);
     ret = pdb_process_internal(pcs, msc_dbg, pdb_lookup, -1);
     codeview_clear_type_table();
     return ret;
 }
-
+ 
 /*========================================================================
  * Process CodeView debug information.
  */
-
+ 
 #define MAKESIG(a,b,c,d)        ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 #define CODEVIEW_NB09_SIG       MAKESIG('N','B','0','9')
 #define CODEVIEW_NB10_SIG       MAKESIG('N','B','1','0')
 #define CODEVIEW_NB11_SIG       MAKESIG('N','B','1','1')
 #define CODEVIEW_RSDS_SIG       MAKESIG('R','S','D','S')
-
+ 
 typedef struct _CODEVIEW_HEADER_NBxx
 {
     DWORD       dwSignature;
     DWORD       lfoDirectory;
 } CODEVIEW_HEADER_NBxx,* PCODEVIEW_HEADER_NBxx;
-
+ 
 typedef struct _CODEVIEW_HEADER_RSDS
 {
     DWORD       dwSignature;
@@ -2119,14 +2119,14 @@ typedef struct _CODEVIEW_HEADER_RSDS
     DWORD       unknown;
     CHAR        name[1];
 } CODEVIEW_HEADER_RSDS,* PCODEVIEW_HEADER_RSDS;
-
+ 
 typedef struct _CODEVIEW_PDB_DATA
 {
     DWORD       timestamp;
     DWORD       unknown;
     CHAR        name[1];
 } CODEVIEW_PDB_DATA, *PCODEVIEW_PDB_DATA;
-
+ 
 typedef struct _CV_DIRECTORY_HEADER
 {
     WORD        cbDirHeader;
@@ -2135,7 +2135,7 @@ typedef struct _CV_DIRECTORY_HEADER
     DWORD       lfoNextDir;
     DWORD       flags;
 } CV_DIRECTORY_HEADER, *PCV_DIRECTORY_HEADER;
-
+ 
 typedef struct _CV_DIRECTORY_ENTRY
 {
     WORD        subsection;
@@ -2143,19 +2143,19 @@ typedef struct _CV_DIRECTORY_ENTRY
     DWORD       lfo;
     DWORD       cb;
 } CV_DIRECTORY_ENTRY, *PCV_DIRECTORY_ENTRY;
-
+ 
 #define	sstAlignSym		0x125
 #define	sstSrcModule		0x127
-
+ 
 static BOOL codeview_process_info(const struct process* pcs, 
                                   const struct msc_debug_info* msc_dbg)
 {
     const CODEVIEW_HEADER_NBxx* cv = (const CODEVIEW_HEADER_NBxx*)msc_dbg->root;
     BOOL                        ret = FALSE;
     struct pdb_lookup           pdb_lookup;
-
+ 
     TRACE("Processing signature %.4s\n", (const char*)&cv->dwSignature);
-
+ 
     switch (cv->dwSignature)
     {
     case CODEVIEW_NB09_SIG:
@@ -2166,7 +2166,7 @@ static BOOL codeview_process_info(const struct process* pcs,
         const CV_DIRECTORY_ENTRY*       prev;
         const CV_DIRECTORY_ENTRY*       next;
         unsigned int                    i;
-
+ 
         codeview_init_basic_types(msc_dbg->module);
         ent = (const CV_DIRECTORY_ENTRY*)((const BYTE*)hdr + hdr->cbDirHeader);
         for (i = 0; i < hdr->cDir; i++, ent = next)
@@ -2175,7 +2175,7 @@ static BOOL codeview_process_info(const struct process* pcs,
                    (const CV_DIRECTORY_ENTRY*)((const BYTE*)ent + hdr->cbDirEntry);
             prev = (i == 0)? NULL :
                    (const CV_DIRECTORY_ENTRY*)((const BYTE*)ent - hdr->cbDirEntry);
-
+ 
             if (ent->subsection == sstAlignSym)
             {
                 /*
@@ -2186,29 +2186,29 @@ static BOOL codeview_process_info(const struct process* pcs,
                  * FIXME: This is not a general solution!
                  */
                 struct codeview_linetab*        linetab = NULL;
-
+ 
                 if (next && next->iMod == ent->iMod && 
                     next->subsection == sstSrcModule)
                     linetab = codeview_snarf_linetab(msc_dbg->module, 
                                                      msc_dbg->root + next->lfo, next->cb, 
                                                      TRUE);
-
+ 
                 if (prev && prev->iMod == ent->iMod &&
                     prev->subsection == sstSrcModule)
                     linetab = codeview_snarf_linetab(msc_dbg->module, 
                                                      msc_dbg->root + prev->lfo, prev->cb, 
                                                      TRUE);
-
+ 
                 codeview_snarf(msc_dbg, msc_dbg->root + ent->lfo, sizeof(DWORD),
                                ent->cb, linetab);
             }
         }
-
+ 
         msc_dbg->module->module.SymType = SymCv;
         ret = TRUE;
         break;
     }
-
+ 
     case CODEVIEW_NB10_SIG:
     {
         const CODEVIEW_PDB_DATA* pdb = (const CODEVIEW_PDB_DATA*)(cv + 1);
@@ -2221,7 +2221,7 @@ static BOOL codeview_process_info(const struct process* pcs,
     case CODEVIEW_RSDS_SIG:
     {
         const CODEVIEW_HEADER_RSDS* rsds = (const CODEVIEW_HEADER_RSDS*)msc_dbg->root;
-
+ 
         TRACE("Got RSDS type of PDB file: guid=%s unk=%08lx name=%s\n",
               wine_dbgstr_guid(&rsds->guid), rsds->unknown, rsds->name);
         pdb_lookup.filename = rsds->name;
@@ -2235,10 +2235,10 @@ static BOOL codeview_process_info(const struct process* pcs,
             cv->dwSignature, msc_dbg->module->module.ModuleName);
         break;
     }
-
+ 
     return ret;
 }
-
+ 
 /*========================================================================
  * Process debug directory.
  */
@@ -2250,17 +2250,17 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
     BOOL                        ret;
     int                         i;
     struct msc_debug_info       msc_dbg;
-
+ 
     msc_dbg.module = module;
     msc_dbg.nsect  = nsect;
     msc_dbg.sectp  = sectp;
     msc_dbg.nomap  = 0;
     msc_dbg.omapp  = NULL;
-
-    __TRY
+ 
+    _SEH_TRY_FILTER(page_fault)
     {
         ret = FALSE;
-
+ 
         /* First, watch out for OMAP data */
         for (i = 0; i < nDbg; i++)
         {
@@ -2271,7 +2271,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
                 break;
             }
         }
-  
+ 
         /* Now, try to parse CodeView debug info */
         for (i = 0; i < nDbg; i++)
         {
@@ -2281,7 +2281,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
                 if ((ret = codeview_process_info(pcs, &msc_dbg))) goto done;
             }
         }
-    
+ 
         /* If not found, try to parse COFF debug info */
         for (i = 0; i < nDbg; i++)
         {
@@ -2300,18 +2300,18 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
             if (dbg[i].Type == IMAGE_DEBUG_TYPE_FPO)
                 FIXME("This guy has FPO information\n");
 #if 0
-
+ 
 #define FRAME_FPO   0
 #define FRAME_TRAP  1
 #define FRAME_TSS   2
-
+ 
 typedef struct _FPO_DATA 
 {
 	DWORD       ulOffStart;            /* offset 1st byte of function code */
 	DWORD       cbProcSize;            /* # bytes in function */
 	DWORD       cdwLocals;             /* # bytes in locals/4 */
 	WORD        cdwParams;             /* # bytes in params/4 */
-
+ 
 	WORD        cbProlog : 8;          /* # bytes in prolog */
 	WORD        cbRegs   : 3;          /* # regs saved */
 	WORD        fHasSEH  : 1;          /* TRUE if SEH in func */
@@ -2320,13 +2320,13 @@ typedef struct _FPO_DATA
 	WORD        cbFrame  : 2;          /* frame type */
 } FPO_DATA;
 #endif
-
+ 
     }
-    __EXCEPT(page_fault)
+    _SEH_HANDLE
     {
         ERR("Got a page fault while loading symbols\n");
         ret = FALSE;
     }
-    __ENDTRY
+    _SEH_END;
     return ret;
 }
