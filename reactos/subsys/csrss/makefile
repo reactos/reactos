@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2002/10/28 15:19:09 robd Exp $
+# $Id: makefile,v 1.20 2002/10/28 15:27:01 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -23,7 +23,8 @@ OBJECTS_MISC = \
   $(TARGET_NAME).o \
   init.o \
   print.o \
-  video.o
+  video.o \
+  win32k.o
 
 TARGET_OBJECTS = \
   $(OBJECTS_API) \
