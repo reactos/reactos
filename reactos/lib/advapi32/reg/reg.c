@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.64 2004/12/02 14:08:27 ekohl Exp $
+/* $Id: reg.c,v 1.65 2004/12/18 22:54:37 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1730,6 +1730,7 @@ RegOpenKeyA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1780,6 +1781,7 @@ RegOpenKeyW (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1828,6 +1830,8 @@ RegOpenKeyExA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+         hKey, lpSubKey, ulOptions, samDesired, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1877,6 +1881,8 @@ RegOpenKeyExW (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+  DPRINT("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+         hKey, lpSubKey, ulOptions, samDesired, phkResult);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -2435,6 +2441,9 @@ RegQueryValueExA (HKEY hKey,
   DWORD Length;
   DWORD Type;
 
+  DPRINT("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
+	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
+
   if (lpData != NULL && lpcbData == NULL)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
@@ -2533,6 +2542,9 @@ RegQueryValueA (HKEY hKey,
   LONG ValueSize;
   LONG ErrorCode;
 
+  DPRINT("hKey 0x%X lpSubKey %s lpValue %p lpcbValue %d\n",
+	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
+
   if (lpValue != NULL &&
       lpcbValue == NULL)
     {
@@ -2620,6 +2632,9 @@ RegQueryValueW (HKEY hKey,
   LONG ErrorCode;
   BOOL CloseRealKey;
   NTSTATUS Status;
+
+  DPRINT("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
+	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
