@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.13 2000/02/22 20:53:11 ekohl Exp $
+/* $Id: dllmain.c,v 1.14 2000/04/02 13:09:50 jfilby Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -57,7 +57,11 @@ BOOLEAN
 STDCALL
 W32kInitialize (VOID)
 {
-	DbgPrint("W32kInitialize called\n");
+	UNICODE_STRING DriverNameW;
+
+	// FIXME: Retrieve name from registry
+	RtlInitUnicodeString (&DriverNameW, L"\\??\\C:\\reactos\\system32\\drivers\\vidport.sys");
+	EngLoadImage(&DriverNameW);
 
 	return TRUE;
 }
