@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.53 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: irp.c,v 1.54 2003/11/19 20:54:31 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -104,6 +104,7 @@ IoInitializeIrp(PIRP Irp,
   Irp->Size = PacketSize;
   Irp->StackCount = StackSize;
   Irp->CurrentLocation = StackSize;
+  InitializeListHead(&Irp->ThreadListEntry);
   Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
 }
 
@@ -292,7 +293,7 @@ IofCompleteRequest(PIRP Irp,
       KeInitializeApc(  &Irp->Tail.Apc,
                         &Irp->Tail.Overlay.Thread->Tcb,
                         OriginalApcEnvironment,
-                        IoSecondStageCompletion,
+                        IoSecondStageCompletion,//kernel routine
                         NULL,
                         (PKNORMAL_ROUTINE) NULL,
                         KernelMode,
@@ -327,8 +328,7 @@ VOID STDCALL
 IoCompleteRequest(PIRP Irp,
 		  CCHAR PriorityBoost)
 {
-  IofCompleteRequest(Irp,
-		     PriorityBoost);
+  IofCompleteRequest(Irp, PriorityBoost);
 }
 
 
@@ -377,12 +377,12 @@ IoIsOperationSynchronous(IN PIRP Irp)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 IoEnqueueIrp(IN PIRP Irp)
 {
-  UNIMPLEMENTED;
+  return IoQueueThreadIrp(Irp);
 }
 
 
@@ -410,12 +410,43 @@ IoGetTopLevelIrp(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL
 IoQueueThreadIrp(IN PIRP Irp)
 {
-  UNIMPLEMENTED;
+/* undefine this when (if ever) implementing irp cancellation */
+#if 0
+  KIRQL oldIrql;
+  
+  oldIrql = KfRaiseIrql(APC_LEVEL);
+  
+  /* Synchronous irp's are queued to requestor thread. If they are not completed
+  when the thread exits, they are canceled (cleaned up).
+  -Gunnar */
+  InsertTailList(&PsGetCurrentThread()->IrpList, &Irp->ThreadListEntry);
+    
+  KfLowerIrql(oldIrql);    
+#endif
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoReuseIrp(
+  IN OUT PIRP Irp,
+  IN NTSTATUS Status)
+{
+  
+  UCHAR AllocationFlags;
+  
+  /* Reference: Chris Cant's "Writing WDM Device Drivers" */
+  AllocationFlags = Irp->AllocationFlags;
+  IoInitializeIrp(Irp, Irp->Size, Irp->StackCount);
+  Irp->IoStatus.Status = Status;
+  Irp->AllocationFlags = AllocationFlags;
 }
 
 /* EOF */
