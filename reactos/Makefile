@@ -30,7 +30,8 @@ BUS = acpi isapnp pci
 # advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
 # oleaut32 psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = advapi32 crtdll fmifs gdi32 kernel32 packet msafd msvcrt ntdll \
-       secur32 user32 version winmm ws2help ws2_32 wshirda
+       secur32 user32 version winedbgc ws2help ws2_32 wshirda #winmm 
+
 SUBSYS = smss win32k csrss ntvdm
 
 #
@@ -62,7 +63,7 @@ FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
 
 # Kernel mode networking drivers
 # afd ndis npf tcpip tdi wshtcpip
-NET_DRIVERS = afd ndis packet tcpip tdi wshtcpip
+NET_DRIVERS = afd ndis npf tcpip tdi wshtcpip
 
 # Kernel mode networking device drivers
 # ne2000
