@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.27 2004/02/26 18:54:52 navaraf Exp $
+/* $Id: pool.c,v 1.28 2004/04/10 22:35:25 gdalsnes Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -25,40 +25,40 @@
 
 STATIC PVOID STDCALL
 EiAllocatePool(POOL_TYPE PoolType,
-	       ULONG NumberOfBytes,
-	       ULONG Tag,
-	       PVOID Caller)
+               ULONG NumberOfBytes,
+               ULONG Tag,
+               PVOID Caller)
 {
    PVOID Block;
-  
-   
+
+
    switch(PoolType)
-     {
+   {
       case NonPagedPool:
       case NonPagedPoolMustSucceed:
       case NonPagedPoolCacheAligned:
       case NonPagedPoolCacheAlignedMustS:
-	Block = 
-	  ExAllocateNonPagedPoolWithTag(PoolType,
-					NumberOfBytes,
-					Tag,
-					Caller);
-	break;
-	
+         Block =
+            ExAllocateNonPagedPoolWithTag(PoolType,
+                                          NumberOfBytes,
+                                          Tag,
+                                          Caller);
+         break;
+
       case PagedPool:
       case PagedPoolCacheAligned:
-	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-	break;
-	
+         Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+         break;
+
       default:
-	return(NULL);
-     };
-   
-   if ((PoolType==NonPagedPoolMustSucceed || 
-	PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)     
-     {
-	KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
-     }
+         return(NULL);
+   };
+
+   if ((PoolType==NonPagedPoolMustSucceed ||
+         PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)
+   {
+      KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
+   }
    return(Block);
 }
 
@@ -91,18 +91,21 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
    PVOID Block;
 #if defined(__GNUC__)
+
    Block = EiAllocatePool(PoolType,
-			  NumberOfBytes,
-			  TAG_NONE,
-			  (PVOID)__builtin_return_address(0));
+                          NumberOfBytes,
+                          TAG_NONE,
+                          (PVOID)__builtin_return_address(0));
 #elif defined(_MSC_VER)
+
    Block = EiAllocatePool(PoolType,
-			  NumberOfBytes,
-			  TAG_NONE,
-			  &ExAllocatePool);
+                          NumberOfBytes,
+                          TAG_NONE,
+                          &ExAllocatePool);
 #else
 #error Unknown compiler
 #endif
+
    return(Block);
 }
 
@@ -115,18 +118,21 @@ ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
 #if defined(__GNUC__)
+
    Block = EiAllocatePool(PoolType,
-			  NumberOfBytes,
-			  Tag,
-			  (PVOID)__builtin_return_address(0));
+                          NumberOfBytes,
+                          Tag,
+                          (PVOID)__builtin_return_address(0));
 #elif defined(_MSC_VER)
+
    Block = EiAllocatePool(PoolType,
-			  NumberOfBytes,
-			  Tag,
-			  &ExAllocatePoolWithTag);
+                          NumberOfBytes,
+                          Tag,
+                          &ExAllocatePoolWithTag);
 #else
 #error Unknown compiler
 #endif
+
    return(Block);
 }
 
@@ -137,7 +143,7 @@ ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 PVOID STDCALL
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
-  return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
+   return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
 }
 
 
@@ -145,20 +151,21 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @unimplemented
  */
 PVOID STDCALL
-ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
-			    IN	ULONG		NumberOfBytes,
-			    IN	ULONG		Tag)
+ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
+                            IN ULONG  NumberOfBytes,
+                            IN ULONG  Tag)
 {
 #if 0
-  PVOID Block;
-  Block = EiAllocatePool(PoolType,
-			 NumberOfBytes,
-			 Tag,
-			 (PVOID)__builtin_return_address(0));
-  return(Block);
+   PVOID Block;
+   Block = EiAllocatePool(PoolType,
+                          NumberOfBytes,
+                          Tag,
+                          (PVOID)__builtin_return_address(0));
+   return(Block);
 #else
-  UNIMPLEMENTED;
-  return(NULL);
+
+   UNIMPLEMENTED;
+   return(NULL);
 #endif
 }
 
@@ -168,14 +175,14 @@ ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {
-  if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-    {
+   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
+   {
       ExFreePagedPool(Block);
-    }
-  else
-    {
+   }
+   else
+   {
       ExFreeNonPagedPool(Block);
-    }
+   }
 }
 
 /*
@@ -184,8 +191,8 @@ ExFreePool(IN PVOID Block)
 VOID STDCALL
 ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
 {
-  /* FIXME: Validate the tag */
-  ExFreePool(Block);
+   /* FIXME: Validate the tag */
+   ExFreePool(Block);
 }
 
 /* EOF */

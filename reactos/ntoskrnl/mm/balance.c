@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.26 2004/03/05 11:31:59 hbirr Exp $
+/* $Id: balance.c,v 1.27 2004/04/10 22:35:25 gdalsnes Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -39,17 +39,19 @@
 
 typedef struct _MM_MEMORY_CONSUMER
 {
-  ULONG PagesUsed;
-  ULONG PagesTarget;
-  NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
-} MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
+   ULONG PagesUsed;
+   ULONG PagesTarget;
+   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed);
+}
+MM_MEMORY_CONSUMER, *PMM_MEMORY_CONSUMER;
 
 typedef struct _MM_ALLOCATION_REQUEST
 {
-  PHYSICAL_ADDRESS Page;
-  LIST_ENTRY ListEntry;
-  KEVENT Event;
-} MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
+   PHYSICAL_ADDRESS Page;
+   LIST_ENTRY ListEntry;
+   KEVENT Event;
+}
+MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 /* GLOBALS ******************************************************************/
 
@@ -72,381 +74,397 @@ static LONG MiBalancerWork = 0;
 
 VOID MmPrintMemoryStatistic(VOID)
 {
-  DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MiNrAvailablePages %d\n",
-           MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed, 
-           MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
-	   MiNrAvailablePages); 
+   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MiNrAvailablePages %d\n",
+            MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed,
+            MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
+            MiNrAvailablePages);
 }
 
 VOID INIT_FUNCTION
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
-  memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
-  InitializeListHead(&AllocationListHead);
-  KeInitializeSpinLock(&AllocationListLock);
+   memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
+   InitializeListHead(&AllocationListHead);
+   KeInitializeSpinLock(&AllocationListLock);
 
-  MiNrAvailablePages = MiNrTotalPages = NrAvailablePages;
+   MiNrAvailablePages = MiNrTotalPages = NrAvailablePages;
 
-  /* Set up targets. */
-  MiMinimumAvailablePages = 64;
-  MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 2;
-  MiMemoryConsumers[MC_USER].PagesTarget = 
-    NrAvailablePages - MiMinimumAvailablePages;
-  MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
-  MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
-  MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
+   /* Set up targets. */
+   MiMinimumAvailablePages = 64;
+   MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 2;
+   MiMemoryConsumers[MC_USER].PagesTarget =
+      NrAvailablePages - MiMinimumAvailablePages;
+   MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
+   MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
+   MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
 }
 
 VOID INIT_FUNCTION
-MmInitializeMemoryConsumer(ULONG Consumer, 
-			   NTSTATUS (*Trim)(ULONG Target, ULONG Priority, 
-					    PULONG NrFreed))
+MmInitializeMemoryConsumer(ULONG Consumer,
+                           NTSTATUS (*Trim)(ULONG Target, ULONG Priority,
+                                            PULONG NrFreed))
 {
-  MiMemoryConsumers[Consumer].Trim = Trim;
+   MiMemoryConsumers[Consumer].Trim = Trim;
 }
 
 NTSTATUS
 MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
 {
-  PMM_ALLOCATION_REQUEST Request;
-  PLIST_ENTRY Entry;
-  KIRQL oldIrql;
-  ULONG OldAvailable;
+   PMM_ALLOCATION_REQUEST Request;
+   PLIST_ENTRY Entry;
+   KIRQL oldIrql;
+   ULONG OldAvailable;
 
 #if defined(__GNUC__)
-  if (Page.QuadPart == 0LL)
+
+   if (Page.QuadPart == 0LL)
 #else
-  if (Page.QuadPart == 0)
+
+   if (Page.QuadPart == 0)
 #endif
-    {
+
+   {
       DPRINT1("Tried to release page zero.\n");
       KEBUGCHECK(0);
-    }
+   }
 
-  KeAcquireSpinLock(&AllocationListLock, &oldIrql);
-  if (MmGetReferenceCountPage(Page) == 1)
-    {
+   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
+   if (MmGetReferenceCountPage(Page) == 1)
+   {
       InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
       OldAvailable = InterlockedIncrement((LONG *)&MiNrAvailablePages);
       if (IsListEmpty(&AllocationListHead) || OldAvailable + 1 < MiMinimumAvailablePages)
-	{
-	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	  MmDereferencePage(Page);
-	}
+      {
+         KeReleaseSpinLock(&AllocationListLock, oldIrql);
+         MmDereferencePage(Page);
+      }
       else
-	{
-	  Entry = RemoveHeadList(&AllocationListHead);
-	  Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
-	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	  Request->Page = Page;
-	  KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
-	}
-    }
-  else
-    {
+      {
+         Entry = RemoveHeadList(&AllocationListHead);
+         Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
+         KeReleaseSpinLock(&AllocationListLock, oldIrql);
+         Request->Page = Page;
+         KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
+      }
+   }
+   else
+   {
       KeReleaseSpinLock(&AllocationListLock, oldIrql);
       MmDereferencePage(Page);
-    }
+   }
 
-  return(STATUS_SUCCESS);
+   return(STATUS_SUCCESS);
 }
 
 VOID
 MiTrimMemoryConsumer(ULONG Consumer)
 {
-  LONG Target;
-  ULONG NrFreedPages;
+   LONG Target;
+   ULONG NrFreedPages;
 
-  Target = MiMemoryConsumers[Consumer].PagesUsed - 
-    MiMemoryConsumers[Consumer].PagesTarget;
-  if (Target < 1)
-    {
+   Target = MiMemoryConsumers[Consumer].PagesUsed -
+            MiMemoryConsumers[Consumer].PagesTarget;
+   if (Target < 1)
+   {
       Target = 1;
-    }
+   }
 
-  if (MiMemoryConsumers[Consumer].Trim != NULL)
-    {
+   if (MiMemoryConsumers[Consumer].Trim != NULL)
+   {
       MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
-    }
+   }
 }
 
 VOID
 MmRebalanceMemoryConsumers(VOID)
 {
-  LONG Target;
-  ULONG i;
-  ULONG NrFreedPages;
-  NTSTATUS Status;
+   LONG Target;
+   ULONG i;
+   ULONG NrFreedPages;
+   NTSTATUS Status;
 
-  Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
-  Target = max(Target, (LONG) MiMinimumPagesPerRun);
+   Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
+   Target = max(Target, (LONG) MiMinimumPagesPerRun);
 
-  for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
-    {
+   for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
+   {
       if (MiMemoryConsumers[i].Trim != NULL)
-	{
-	  Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      KEBUGCHECK(0);
-	    }
-	  Target = Target - NrFreedPages;
-	}
-    }
+      {
+         Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
+         if (!NT_SUCCESS(Status))
+         {
+            KEBUGCHECK(0);
+         }
+         Target = Target - NrFreedPages;
+      }
+   }
 }
 
 static BOOLEAN
 MiIsBalancerThread(VOID)
 {
-  return MiBalancerThreadHandle != NULL && 
-         PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
+   return MiBalancerThreadHandle != NULL &&
+          PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
 NTSTATUS
-MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, 
-			    PHYSICAL_ADDRESS* AllocatedPage)
+MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
+                            PHYSICAL_ADDRESS* AllocatedPage)
 {
-  ULONG OldUsed;
-  ULONG OldAvailable;
-  PHYSICAL_ADDRESS Page;
-  KIRQL oldIrql;
-  
-  /*
-   * Make sure we don't exceed our individual target.
-   */
-  OldUsed = InterlockedIncrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
-  if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
-      !MiIsBalancerThread())
-    {
-      if (!CanWait)
-	{
-	  InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
-	  return(STATUS_NO_MEMORY);
-	}
-      MiTrimMemoryConsumer(Consumer);
-    }
+   ULONG OldUsed;
+   ULONG OldAvailable;
+   PHYSICAL_ADDRESS Page;
+   KIRQL oldIrql;
 
-  OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
-  /*
-   * Allocate always memory for the non paged pool and for the pager thread. 
-   */
-  if (Consumer == MC_NPPOOL || MiIsBalancerThread())
-    {
+   /*
+    * Make sure we don't exceed our individual target.
+    */
+   OldUsed = InterlockedIncrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
+   if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
+         !MiIsBalancerThread())
+   {
+      if (!CanWait)
+      {
+         InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
+         return(STATUS_NO_MEMORY);
+      }
+      MiTrimMemoryConsumer(Consumer);
+   }
+
+   OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
+   /*
+    * Allocate always memory for the non paged pool and for the pager thread. 
+    */
+   if (Consumer == MC_NPPOOL || MiIsBalancerThread())
+   {
       Page = MmAllocPage(Consumer, 0);
 #if defined(__GNUC__)
+
       if (Page.QuadPart == 0LL)
 #else
+
       if (Page.QuadPart == 0)
 #endif
-        {
-	  KEBUGCHECK(0);
-	}
+
+      {
+         KEBUGCHECK(0);
+      }
       *AllocatedPage = Page;
       if (OldAvailable < MiMinimumAvailablePages &&
-	  MiBalancerThreadHandle != NULL)
-        {
-          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
-	}
+            MiBalancerThreadHandle != NULL)
+      {
+         KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+      }
       return(STATUS_SUCCESS);
-    }
+   }
 
-  /*
-   * Make sure we don't exceed global targets.
-   */
-  if (OldAvailable < MiMinimumAvailablePages)
-    {
+   /*
+    * Make sure we don't exceed global targets.
+    */
+   if (OldAvailable < MiMinimumAvailablePages)
+   {
       MM_ALLOCATION_REQUEST Request;
 
       if (!CanWait)
-	{
-	  InterlockedIncrement((LONG *)&MiNrAvailablePages);
-	  InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
-	  return(STATUS_NO_MEMORY);
-	}
+      {
+         InterlockedIncrement((LONG *)&MiNrAvailablePages);
+         InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
+         return(STATUS_NO_MEMORY);
+      }
 
       /* Insert an allocation request. */
 #if defined(__GNUC__)
       Request.Page.QuadPart = 0LL;
 #else
+
       Request.Page.QuadPart = 0;
 #endif
+
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
       InterlockedIncrement((LONG *)&MiPagesRequired);
 
-      KeAcquireSpinLock(&AllocationListLock, &oldIrql);     
+      KeAcquireSpinLock(&AllocationListLock, &oldIrql);
 
       if (MiBalancerThreadHandle != NULL)
-        {
-          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
-	}
+      {
+         KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+      }
       InsertTailList(&AllocationListHead, &Request.ListEntry);
       KeReleaseSpinLock(&AllocationListLock, oldIrql);
 
       KeWaitForSingleObject(&Request.Event,
-			    0,
-			    KernelMode,
-			    FALSE,
-			    NULL);
-      
+                            0,
+                            KernelMode,
+                            FALSE,
+                            NULL);
+
       Page = Request.Page;
 #if defined(__GNUC__)
+
       if (Page.QuadPart == 0LL)
 #else
+
       if (Page.QuadPart == 0)
 #endif
-	{
-	  KEBUGCHECK(0);
-	}
+
+      {
+         KEBUGCHECK(0);
+      }
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
       InterlockedDecrement((LONG *)&MiPagesRequired);
       return(STATUS_SUCCESS);
-    }
-  
-  /*
-   * Actually allocate the page.
-   */
-  Page = MmAllocPage(Consumer, 0);
-#if defined(__GNUC__)
-  if (Page.QuadPart == 0LL)
-#else
-  if (Page.QuadPart == 0)
-#endif
-    {
-      KEBUGCHECK(0);
-    }
-  *AllocatedPage = Page;
+   }
 
-  return(STATUS_SUCCESS);
+   /*
+    * Actually allocate the page.
+    */
+   Page = MmAllocPage(Consumer, 0);
+#if defined(__GNUC__)
+
+   if (Page.QuadPart == 0LL)
+#else
+
+   if (Page.QuadPart == 0)
+#endif
+
+   {
+      KEBUGCHECK(0);
+   }
+   *AllocatedPage = Page;
+
+   return(STATUS_SUCCESS);
 }
 
 VOID STDCALL
 MiBalancerThread(PVOID Unused)
 {
-  PVOID WaitObjects[2];
-  NTSTATUS Status;
-  ULONG i;
-  ULONG NrFreedPages;
-  ULONG NrPagesUsed;
-  ULONG Target;
-  BOOLEAN ShouldRun;
+   PVOID WaitObjects[2];
+   NTSTATUS Status;
+   ULONG i;
+   ULONG NrFreedPages;
+   ULONG NrPagesUsed;
+   ULONG Target;
+   BOOLEAN ShouldRun;
 
 
-  WaitObjects[0] = &MiBalancerEvent;
-  WaitObjects[1] = &MiBalancerTimer;
+   WaitObjects[0] = &MiBalancerEvent;
+   WaitObjects[1] = &MiBalancerTimer;
 
-  while (1)
-    {
+   while (1)
+   {
       Status = KeWaitForMultipleObjects(2,
-	                                WaitObjects,
-					WaitAny,
-					Executive,
-					KernelMode,
-					FALSE,
-					NULL,
-					NULL);
+                                        WaitObjects,
+                                        WaitAny,
+                                        Executive,
+                                        KernelMode,
+                                        FALSE,
+                                        NULL,
+                                        NULL);
 
       if (Status == STATUS_SUCCESS)
-        {
-	  /* MiBalancerEvent */
-	  CHECKPOINT;
-	  while (MiNrAvailablePages < MiMinimumAvailablePages + 5)
-	    {
-	      for (i = 0; i < MC_MAXIMUM; i++)
-	        {
-                  if (MiMemoryConsumers[i].Trim != NULL)
-	            {
-	              NrFreedPages = 0;
-	              Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
-	              if (!NT_SUCCESS(Status))
-	                {
-	                  KEBUGCHECK(0);
-	                }
-		    }
-		}
-	    }
-	  InterlockedExchange(&MiBalancerWork, 0);
-	  CHECKPOINT;
-	}
+      {
+         /* MiBalancerEvent */
+         CHECKPOINT;
+         while (MiNrAvailablePages < MiMinimumAvailablePages + 5)
+         {
+            for (i = 0; i < MC_MAXIMUM; i++)
+            {
+               if (MiMemoryConsumers[i].Trim != NULL)
+               {
+                  NrFreedPages = 0;
+                  Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
+                  if (!NT_SUCCESS(Status))
+                  {
+                     KEBUGCHECK(0);
+                  }
+               }
+            }
+         }
+         InterlockedExchange(&MiBalancerWork, 0);
+         CHECKPOINT;
+      }
       else if (Status == STATUS_SUCCESS + 1)
-        {
-	  /* MiBalancerTimer */
-	  ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
-	  for (i = 0; i < MC_MAXIMUM; i++)
-	    {
-              if (MiMemoryConsumers[i].Trim != NULL)
-	        {
-		  NrPagesUsed = MiMemoryConsumers[i].PagesUsed;
-		  if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget || ShouldRun)
-		    {
-		      if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget)
-		        {
-		          Target = max (NrPagesUsed - MiMemoryConsumers[i].PagesTarget,
-			                MiMinimumPagesPerRun);
-			}
-		      else
-		        {
-			  Target = MiMinimumPagesPerRun;
-			}
-	              NrFreedPages = 0;
-	              Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
-	              if (!NT_SUCCESS(Status))
-	                {
-	                  KEBUGCHECK(0);
-	                }
-		    }
-		}
-	    }
-	}
+      {
+         /* MiBalancerTimer */
+         ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
+         for (i = 0; i < MC_MAXIMUM; i++)
+         {
+            if (MiMemoryConsumers[i].Trim != NULL)
+            {
+               NrPagesUsed = MiMemoryConsumers[i].PagesUsed;
+               if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget || ShouldRun)
+               {
+                  if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget)
+                  {
+                     Target = max (NrPagesUsed - MiMemoryConsumers[i].PagesTarget,
+                                   MiMinimumPagesPerRun);
+                  }
+                  else
+                  {
+                     Target = MiMinimumPagesPerRun;
+                  }
+                  NrFreedPages = 0;
+                  Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
+                  if (!NT_SUCCESS(Status))
+                  {
+                     KEBUGCHECK(0);
+                  }
+               }
+            }
+         }
+      }
       else
-        {
-	  DPRINT1("KeWaitForMultipleObjects failt, status = %x\n", Status);
-	  KEBUGCHECK(0);
-	}
-    }
+      {
+         DPRINT1("KeWaitForMultipleObjects failt, status = %x\n", Status);
+         KEBUGCHECK(0);
+      }
+   }
 }
 
 VOID INIT_FUNCTION
 MiInitBalancerThread(VOID)
 {
-  KPRIORITY Priority;
-  NTSTATUS Status;
+   KPRIORITY Priority;
+   NTSTATUS Status;
 #if !defined(__GNUC__)
-  LARGE_INTEGER dummyJunkNeeded;
-  dummyJunkNeeded.QuadPart = -20000000;	/* 2 sec */;
+
+   LARGE_INTEGER dummyJunkNeeded;
+   dummyJunkNeeded.QuadPart = -20000000; /* 2 sec */
+   ;
 #endif
 
-  CHECKPOINT;
+   CHECKPOINT;
 
-  KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
-  KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
-  KeSetTimerEx(&MiBalancerTimer, 
+   KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
+   KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
+   KeSetTimerEx(&MiBalancerTimer,
 #if defined(__GNUC__)
-               (LARGE_INTEGER)(LONGLONG)-20000000LL,	    /* 2 sec */
+                (LARGE_INTEGER)(LONGLONG)-20000000LL,     /* 2 sec */
 #else
-               dummyJunkNeeded,
+                dummyJunkNeeded,
 #endif
-		2000,					    /* 2 sec */
-		NULL);
+                2000,         /* 2 sec */
+                NULL);
 
-  Status = PsCreateSystemThread(&MiBalancerThreadHandle,
-				THREAD_ALL_ACCESS,
-				NULL,
-				NULL,
-				&MiBalancerThreadId,
-				(PKSTART_ROUTINE) MiBalancerThread,
-				NULL);
-  if (!NT_SUCCESS(Status))
-    {
+   Status = PsCreateSystemThread(&MiBalancerThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &MiBalancerThreadId,
+                                 (PKSTART_ROUTINE) MiBalancerThread,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
       KEBUGCHECK(0);
-    }
-  
-  Priority = LOW_REALTIME_PRIORITY + 1;
-  NtSetInformationThread(MiBalancerThreadHandle,
-			 ThreadPriority,
-			 &Priority,
-			 sizeof(Priority));
-  
+   }
+
+   Priority = LOW_REALTIME_PRIORITY + 1;
+   NtSetInformationThread(MiBalancerThreadHandle,
+                          ThreadPriority,
+                          &Priority,
+                          sizeof(Priority));
+
 }
 
 

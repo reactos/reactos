@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.26 2004/03/07 17:48:41 arty Exp $
+/* $Id: anonmem.c,v 1.27 2004/04/10 22:35:25 gdalsnes Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -38,96 +38,96 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
+NTSTATUS
 MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			 PMEMORY_AREA MemoryArea,
-			 PVOID Address,
-			 PMM_PAGEOP PageOp)
+                         PMEMORY_AREA MemoryArea,
+                         PVOID Address,
+                         PMM_PAGEOP PageOp)
 {
-  SWAPENTRY SwapEntry;
-  LARGE_INTEGER PhysicalAddress;
-  PMDL Mdl;
-  NTSTATUS Status;
+   SWAPENTRY SwapEntry;
+   LARGE_INTEGER PhysicalAddress;
+   PMDL Mdl;
+   NTSTATUS Status;
 
-  /*
-   * Check for paging out from a deleted virtual memory area.
-   */
-  if (MemoryArea->DeleteInProgress)
-    {
+   /*
+    * Check for paging out from a deleted virtual memory area.
+    */
+   if (MemoryArea->DeleteInProgress)
+   {
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
-    }
+   }
 
-  PhysicalAddress = 
-    MmGetPhysicalAddressForProcess(AddressSpace->Process, Address);
+   PhysicalAddress =
+      MmGetPhysicalAddressForProcess(AddressSpace->Process, Address);
 
-  /*
-   * Get that the page actually is dirty.
-   */
-  if (!MmIsDirtyPage(MemoryArea->Process, Address))
-    {
+   /*
+    * Get that the page actually is dirty.
+    */
+   if (!MmIsDirtyPage(MemoryArea->Process, Address))
+   {
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
-    }
+   }
 
-  /*
-   * Speculatively set the mapping to clean.
-   */
-  MmSetCleanPage(MemoryArea->Process, Address);
-  
-  /*
-   * If necessary, allocate an entry in the paging file for this page
-   */
-  SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
-  if (SwapEntry == 0)
-    {
+   /*
+    * Speculatively set the mapping to clean.
+    */
+   MmSetCleanPage(MemoryArea->Process, Address);
+
+   /*
+    * If necessary, allocate an entry in the paging file for this page
+    */
+   SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
+   if (SwapEntry == 0)
+   {
       SwapEntry = MmAllocSwapPage();
       if (SwapEntry == 0)
-	{
-	  MmSetDirtyPage(MemoryArea->Process, Address);
-	  PageOp->Status = STATUS_PAGEFILE_QUOTA_EXCEEDED;
-	  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	  MmReleasePageOp(PageOp);
-	  return(STATUS_PAGEFILE_QUOTA_EXCEEDED);
-	}
-    }
+      {
+         MmSetDirtyPage(MemoryArea->Process, Address);
+         PageOp->Status = STATUS_PAGEFILE_QUOTA_EXCEEDED;
+         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         MmReleasePageOp(PageOp);
+         return(STATUS_PAGEFILE_QUOTA_EXCEEDED);
+      }
+   }
 
-  /*
-   * Write the page to the pagefile
-   */
-  Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-  MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
-  Status = MmWriteToSwapPage(SwapEntry, Mdl);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
-	      Status);
+   /*
+    * Write the page to the pagefile
+    */
+   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
+   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
+              Status);
       MmSetDirtyPage(MemoryArea->Process, Address);
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
       return(STATUS_UNSUCCESSFUL);
-    }
-  
-  /*
-   * Otherwise we have succeeded.
-   */
-  MmSetSavedSwapEntryPage(PhysicalAddress, SwapEntry);
-  PageOp->Status = STATUS_SUCCESS;
-  KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-  MmReleasePageOp(PageOp);
-  return(STATUS_SUCCESS);
+   }
+
+   /*
+    * Otherwise we have succeeded.
+    */
+   MmSetSavedSwapEntryPage(PhysicalAddress, SwapEntry);
+   PageOp->Status = STATUS_SUCCESS;
+   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+   MmReleasePageOp(PageOp);
+   return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+NTSTATUS
 MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
-		       PMEMORY_AREA MemoryArea,
-		       PVOID Address,
-		       PMM_PAGEOP PageOp)
+                       PMEMORY_AREA MemoryArea,
+                       PVOID Address,
+                       PMM_PAGEOP PageOp)
 {
    PHYSICAL_ADDRESS PhysicalAddress;
    BOOL WasDirty;
@@ -136,67 +136,67 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    PMDL Mdl;
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
-	   Address, MemoryArea->Process->UniqueProcessId);
+          Address, MemoryArea->Process->UniqueProcessId);
 
    /*
     * Check for paging out from a deleted virtual memory area.
     */
    if (MemoryArea->DeleteInProgress)
-     {
-       PageOp->Status = STATUS_UNSUCCESSFUL;
-       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-       MmReleasePageOp(PageOp);
-       return(STATUS_UNSUCCESSFUL);
-     }
+   {
+      PageOp->Status = STATUS_UNSUCCESSFUL;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_UNSUCCESSFUL);
+   }
 
    /*
     * Disable the virtual mapping.
     */
    MmDisableVirtualMapping(MemoryArea->Process, Address,
-			   &WasDirty, &PhysicalAddress);
+                           &WasDirty, &PhysicalAddress);
 
    if (PhysicalAddress.QuadPart == 0)
-     {
-       KEBUGCHECK(0);
-     }
+   {
+      KEBUGCHECK(0);
+   }
 
    /*
     * Paging out non-dirty data is easy. 
     */
    if (!WasDirty)
-     {
-       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
-       MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
-       if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
-	 {
-	   MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
-	   MmSetSavedSwapEntryPage(PhysicalAddress, 0);
-	 }
-       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
-       PageOp->Status = STATUS_SUCCESS;
-       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-       MmReleasePageOp(PageOp);
-       return(STATUS_SUCCESS);
-     }
+   {
+      MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+      MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+      if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
+      {
+         MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
+         MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+      }
+      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+      PageOp->Status = STATUS_SUCCESS;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_SUCCESS);
+   }
 
    /*
     * If necessary, allocate an entry in the paging file for this page
     */
    SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
    if (SwapEntry == 0)
-     {
-       SwapEntry = MmAllocSwapPage();
-       if (SwapEntry == 0)
-	 {
-	   MmShowOutOfSpaceMessagePagingFile();
-	   MmEnableVirtualMapping(MemoryArea->Process, Address);
-	   PageOp->Status = STATUS_UNSUCCESSFUL;
-	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	   MmReleasePageOp(PageOp);
-	   return(STATUS_PAGEFILE_QUOTA);
-	 }
-     }
-   
+   {
+      SwapEntry = MmAllocSwapPage();
+      if (SwapEntry == 0)
+      {
+         MmShowOutOfSpaceMessagePagingFile();
+         MmEnableVirtualMapping(MemoryArea->Process, Address);
+         PageOp->Status = STATUS_UNSUCCESSFUL;
+         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         MmReleasePageOp(PageOp);
+         return(STATUS_PAGEFILE_QUOTA);
+      }
+   }
+
    /*
     * Write the page to the pagefile
     */
@@ -204,15 +204,15 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    MmBuildMdlFromPages(Mdl, (ULONG *)&PhysicalAddress.u.LowPart);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
-	       Status);
-       MmEnableVirtualMapping(MemoryArea->Process, Address);
-       PageOp->Status = STATUS_UNSUCCESSFUL;
-       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-       MmReleasePageOp(PageOp);
-       return(STATUS_UNSUCCESSFUL);
-     }
+   {
+      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
+              Status);
+      MmEnableVirtualMapping(MemoryArea->Process, Address);
+      PageOp->Status = STATUS_UNSUCCESSFUL;
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_UNSUCCESSFUL);
+   }
 
    /*
     * Otherwise we have succeeded, free the page
@@ -231,9 +231,9 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS
 MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
-			       MEMORY_AREA* MemoryArea, 
-			       PVOID Address,
-			       BOOLEAN Locked)
+                               MEMORY_AREA* MemoryArea,
+                               PVOID Address,
+                               BOOLEAN Locked)
 /*
  * FUNCTION: Move data into memory to satisfy a page not present fault
  * ARGUMENTS:
@@ -248,118 +248,118 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    NTSTATUS Status;
    PMM_REGION Region;
    PMM_PAGEOP PageOp;
-   
+
    /*
     * There is a window between taking the page fault and locking the
     * address space when another thread could load the page so we check
     * that.
     */
    if (MmIsPagePresent(NULL, Address))
-     {
-	if (Locked)
-	  {
-	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
-	  }  
-	return(STATUS_SUCCESS);
-     }
+   {
+      if (Locked)
+      {
+         MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+      }
+      return(STATUS_SUCCESS);
+   }
 
    /*
     * Check for the virtual memory area being deleted.
     */
    if (MemoryArea->DeleteInProgress)
-     {
-       return(STATUS_UNSUCCESSFUL);
-     }
+   {
+      return(STATUS_UNSUCCESSFUL);
+   }
 
    /*
     * Get the segment corresponding to the virtual address
     */
-   Region = MmFindRegion(MemoryArea->BaseAddress, 
-			 &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			 Address, NULL);
+   Region = MmFindRegion(MemoryArea->BaseAddress,
+                         &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                         Address, NULL);
    if (Region->Type == MEM_RESERVE || Region->Protect == PAGE_NOACCESS)
-     {
-	return(STATUS_ACCESS_VIOLATION);
-     }
+   {
+      return(STATUS_ACCESS_VIOLATION);
+   }
 
    /*
     * Get or create a page operation
     */
-   PageOp = MmGetPageOp(MemoryArea, (ULONG)MemoryArea->Process->UniqueProcessId, 
-			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
-			MM_PAGEOP_PAGEIN, FALSE);
+   PageOp = MmGetPageOp(MemoryArea, (ULONG)MemoryArea->Process->UniqueProcessId,
+                        (PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
+                        MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
-     {
-       DPRINT1("MmGetPageOp failed");
-       KEBUGCHECK(0);
-     }
+   {
+      DPRINT1("MmGetPageOp failed");
+      KEBUGCHECK(0);
+   }
 
    /*
     * Check if someone else is already handling this fault, if so wait
     * for them
     */
    if (PageOp->Thread != PsGetCurrentThread())
-     {
-       MmUnlockAddressSpace(AddressSpace);
-       Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-				      0,
-				      KernelMode,
-				      FALSE,
-				      NULL);
-       /*
-	* Check for various strange conditions
-	*/
-       if (Status != STATUS_SUCCESS)
-	 {
-	   DPRINT1("Failed to wait for page op\n");
-	   KEBUGCHECK(0);
-	 }
-       if (PageOp->Status == STATUS_PENDING)
-	 {
-	   DPRINT1("Woke for page op before completion\n");
-	   KEBUGCHECK(0);
-	 }
-       /*
-	* If this wasn't a pagein then we need to restart the handling
-	*/
-       if (PageOp->OpType != MM_PAGEOP_PAGEIN)
-	 {
-           MmLockAddressSpace(AddressSpace);
-           KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	   MmReleasePageOp(PageOp);
-	   return(STATUS_MM_RESTART_OPERATION);
-	 }
-       /*
-	* If the thread handling this fault has failed then we don't retry
-	*/
-       if (!NT_SUCCESS(PageOp->Status))
-	 {
-           MmLockAddressSpace(AddressSpace);
-           KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-           Status = PageOp->Status;
-	   MmReleasePageOp(PageOp);
-	   return(Status);
-	 }
-       MmLockAddressSpace(AddressSpace);
-       if (Locked)
-	 {
-	   MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
-	 }
-       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-       MmReleasePageOp(PageOp);
-       return(STATUS_SUCCESS);
-     }
-   
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+                                     0,
+                                     KernelMode,
+                                     FALSE,
+                                     NULL);
+      /*
+      * Check for various strange conditions
+      */
+      if (Status != STATUS_SUCCESS)
+      {
+         DPRINT1("Failed to wait for page op\n");
+         KEBUGCHECK(0);
+      }
+      if (PageOp->Status == STATUS_PENDING)
+      {
+         DPRINT1("Woke for page op before completion\n");
+         KEBUGCHECK(0);
+      }
+      /*
+      * If this wasn't a pagein then we need to restart the handling
+      */
+      if (PageOp->OpType != MM_PAGEOP_PAGEIN)
+      {
+         MmLockAddressSpace(AddressSpace);
+         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         MmReleasePageOp(PageOp);
+         return(STATUS_MM_RESTART_OPERATION);
+      }
+      /*
+      * If the thread handling this fault has failed then we don't retry
+      */
+      if (!NT_SUCCESS(PageOp->Status))
+      {
+         MmLockAddressSpace(AddressSpace);
+         KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         Status = PageOp->Status;
+         MmReleasePageOp(PageOp);
+         return(Status);
+      }
+      MmLockAddressSpace(AddressSpace);
+      if (Locked)
+      {
+         MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+      }
+      KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      MmReleasePageOp(PageOp);
+      return(STATUS_SUCCESS);
+   }
+
    /*
     * Try to allocate a page
     */
    Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
    if (Status == STATUS_NO_MEMORY)
-     {
-       MmUnlockAddressSpace(AddressSpace);
-       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-       MmLockAddressSpace(AddressSpace);
-     }
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+      MmLockAddressSpace(AddressSpace);
+   }
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
@@ -370,46 +370,46 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Handle swapped out pages.
     */
    if (MmIsPageSwapEntry(NULL, Address))
-     {
-       SWAPENTRY SwapEntry;
-       PMDL Mdl;
+   {
+      SWAPENTRY SwapEntry;
+      PMDL Mdl;
 
-       MmDeletePageFileMapping(MemoryArea->Process, Address, &SwapEntry);
-       Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-       MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-       Status = MmReadFromSwapPage(SwapEntry, Mdl);
-       if (!NT_SUCCESS(Status))
-	 {
-	   KEBUGCHECK(0);
-	 }
-       MmSetSavedSwapEntryPage(Page, SwapEntry);
-     }
-   
+      MmDeletePageFileMapping(MemoryArea->Process, Address, &SwapEntry);
+      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+      MmBuildMdlFromPages(Mdl, (PULONG)&Page);
+      Status = MmReadFromSwapPage(SwapEntry, Mdl);
+      if (!NT_SUCCESS(Status))
+      {
+         KEBUGCHECK(0);
+      }
+      MmSetSavedSwapEntryPage(Page, SwapEntry);
+   }
+
    /*
     * Set the page. If we fail because we are out of memory then
     * try again
     */
-   Status = MmCreateVirtualMapping(MemoryArea->Process,		      
-				   (PVOID)PAGE_ROUND_DOWN(Address),
-				   Region->Protect,
-				   Page,
-				   FALSE);
+   Status = MmCreateVirtualMapping(MemoryArea->Process,
+                                   (PVOID)PAGE_ROUND_DOWN(Address),
+                                   Region->Protect,
+                                   Page,
+                                   FALSE);
    while (Status == STATUS_NO_MEMORY)
-     {
-	MmUnlockAddressSpace(AddressSpace);
-	Status = MmCreateVirtualMapping(MemoryArea->Process,	      
-					Address,
-					Region->Protect,
-					Page,
-					TRUE);
-	MmLockAddressSpace(AddressSpace);
-     }  
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      Status = MmCreateVirtualMapping(MemoryArea->Process,
+                                      Address,
+                                      Region->Protect,
+                                      Page,
+                                      TRUE);
+      MmLockAddressSpace(AddressSpace);
+   }
    if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
-       KEBUGCHECK(0);
-       return(Status);
-     }
+   {
+      DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
+      KEBUGCHECK(0);
+      return(Status);
+   }
 
    /*
     * Add the page to the process's working set
@@ -420,9 +420,9 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Finish the operation
     */
    if (Locked)
-     {
-       MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
-     }  
+   {
+      MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
+   }
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
    MmReleasePageOp(PageOp);
@@ -431,92 +431,92 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
 VOID STATIC
 MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
-		   PVOID BaseAddress,
-		   ULONG RegionSize,
-		   ULONG OldType,
-		   ULONG OldProtect,
-		   ULONG NewType,
-		   ULONG NewProtect)
+                   PVOID BaseAddress,
+                   ULONG RegionSize,
+                   ULONG OldType,
+                   ULONG OldProtect,
+                   ULONG NewType,
+                   ULONG NewProtect)
 /*
  * FUNCTION: Modify the attributes of a memory region
  */
-{      
-  /*
-   * If we are switching a previously committed region to reserved then
-   * free any allocated pages within the region
-   */
-  if (NewType == MEM_RESERVE && OldType == MEM_COMMIT)
-    {
+{
+   /*
+    * If we are switching a previously committed region to reserved then
+    * free any allocated pages within the region
+    */
+   if (NewType == MEM_RESERVE && OldType == MEM_COMMIT)
+   {
       ULONG i;
-      
+
       for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
-	{
-	  LARGE_INTEGER PhysicalAddr;
+      {
+         LARGE_INTEGER PhysicalAddr;
 
-	  if (MmIsPageSwapEntry(AddressSpace->Process,
-				(char*)BaseAddress + (i * PAGE_SIZE)))
-	    {
-	      SWAPENTRY SwapEntry;
-	      
-	      MmDeletePageFileMapping(AddressSpace->Process,
-				      (char*)BaseAddress + (i * PAGE_SIZE),
-				      &SwapEntry);
-	      MmFreeSwapPage(SwapEntry);
-	    }
-	  else
-	    {
-	      MmDeleteVirtualMapping(AddressSpace->Process,
-				     (char*)BaseAddress + (i*PAGE_SIZE),
-				     FALSE, NULL, &PhysicalAddr);
-	      if (PhysicalAddr.QuadPart != 0)
-		{
-		  SWAPENTRY SavedSwapEntry;
-		  SavedSwapEntry = MmGetSavedSwapEntryPage(PhysicalAddr);
-		  if (SavedSwapEntry != 0)
-		    {
-		      MmFreeSwapPage(SavedSwapEntry);
-		      MmSetSavedSwapEntryPage(PhysicalAddr, 0);
-		    }
-		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
-			       (char*)BaseAddress + (i * PAGE_SIZE));
-		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
-		}
-	    }
-	}
-    }
+         if (MmIsPageSwapEntry(AddressSpace->Process,
+                               (char*)BaseAddress + (i * PAGE_SIZE)))
+         {
+            SWAPENTRY SwapEntry;
 
-  /*
-   * If we are changing the protection attributes of a committed region then
-   * alter the attributes for any allocated pages within the region
-   */
-  if (NewType == MEM_COMMIT && OldType == MEM_COMMIT && 
-      OldProtect != NewProtect)
-    {
+            MmDeletePageFileMapping(AddressSpace->Process,
+                                    (char*)BaseAddress + (i * PAGE_SIZE),
+                                    &SwapEntry);
+            MmFreeSwapPage(SwapEntry);
+         }
+         else
+         {
+            MmDeleteVirtualMapping(AddressSpace->Process,
+                                   (char*)BaseAddress + (i*PAGE_SIZE),
+                                   FALSE, NULL, &PhysicalAddr);
+            if (PhysicalAddr.QuadPart != 0)
+            {
+               SWAPENTRY SavedSwapEntry;
+               SavedSwapEntry = MmGetSavedSwapEntryPage(PhysicalAddr);
+               if (SavedSwapEntry != 0)
+               {
+                  MmFreeSwapPage(SavedSwapEntry);
+                  MmSetSavedSwapEntryPage(PhysicalAddr, 0);
+               }
+               MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
+                            (char*)BaseAddress + (i * PAGE_SIZE));
+               MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
+            }
+         }
+      }
+   }
+
+   /*
+    * If we are changing the protection attributes of a committed region then
+    * alter the attributes for any allocated pages within the region
+    */
+   if (NewType == MEM_COMMIT && OldType == MEM_COMMIT &&
+         OldProtect != NewProtect)
+   {
       ULONG i;
-   
+
       for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
-	{
-	  if (MmIsPagePresent(AddressSpace->Process, 
-			      (char*)BaseAddress + (i*PAGE_SIZE)))
-	    {
-	      MmSetPageProtect(AddressSpace->Process,
-			       (char*)BaseAddress + (i*PAGE_SIZE), 
-			       NewProtect);
-	    }
-	}
-    }
+      {
+         if (MmIsPagePresent(AddressSpace->Process,
+                             (char*)BaseAddress + (i*PAGE_SIZE)))
+         {
+            MmSetPageProtect(AddressSpace->Process,
+                             (char*)BaseAddress + (i*PAGE_SIZE),
+                             NewProtect);
+         }
+      }
+   }
 }
 
 /*
  * @implemented
  */
 NTSTATUS STDCALL
-NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
-			IN OUT	PVOID*  UBaseAddress,
-			IN	ULONG	ZeroBits,
-			IN OUT	PULONG	URegionSize,
-			IN	ULONG	AllocationType,
-			IN	ULONG	Protect)
+NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
+                        IN OUT PVOID*  UBaseAddress,
+                        IN ULONG ZeroBits,
+                        IN OUT PULONG URegionSize,
+                        IN ULONG AllocationType,
+                        IN ULONG Protect)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -551,120 +551,120 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
-	  "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
-	  *UBaseAddress,ZeroBits,*URegionSize,AllocationType,
-	  Protect);
-   
+          "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
+          *UBaseAddress,ZeroBits,*URegionSize,AllocationType,
+          Protect);
+
    /*
     * Check the validity of the parameters
     */
    if ((Protect & PAGE_FLAGS_VALID_FROM_USER_MODE) != Protect)
-     {
-       return(STATUS_INVALID_PAGE_PROTECTION);
-     }
+   {
+      return(STATUS_INVALID_PAGE_PROTECTION);
+   }
    if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
-     {
-       return(STATUS_INVALID_PARAMETER);
-     }
-   
+   {
+      return(STATUS_INVALID_PARAMETER);
+   }
+
    PBaseAddress = *UBaseAddress;
    PRegionSize = *URegionSize;
    BoundaryAddressMultiple.QuadPart = 0;
-   
+
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
    RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
-     PAGE_ROUND_DOWN(PBaseAddress);
-   
+                PAGE_ROUND_DOWN(PBaseAddress);
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_VM_OPERATION,
-				      NULL,
-				      UserMode,
-				      (PVOID*)(&Process),
-				      NULL);
+                                      PROCESS_VM_OPERATION,
+                                      NULL,
+                                      UserMode,
+                                      (PVOID*)(&Process),
+                                      NULL);
    if (!NT_SUCCESS(Status))
-     {
-	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-	return(Status);
-     }
-   
+   {
+      DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+      return(Status);
+   }
+
    Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
    DPRINT("Type %x\n", Type);
-   
+
    AddressSpace = &Process->AddressSpace;
    MmLockAddressSpace(AddressSpace);
-   
+
    if (PBaseAddress != 0)
-     {
-	MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					       BaseAddress);
-	
-	if (MemoryArea != NULL &&
-	    MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY &&
-	    MemoryArea->Length >= RegionSize)
-	  {
-	    Status = 
-	      MmAlterRegion(AddressSpace, 
-			    MemoryArea->BaseAddress, 
-			    &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			    BaseAddress, RegionSize,
-			    Type, Protect, MmModifyAttributes);
-	    MmUnlockAddressSpace(AddressSpace);
-	    ObDereferenceObject(Process);
-	    DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-	    return(Status);
-	  }
-	else if (MemoryArea != NULL && MemoryArea->Length >= RegionSize)
-	  {
-	    Status =
-	      MmAlterRegion(AddressSpace,
-			    MemoryArea->BaseAddress,
-			    &MemoryArea->Data.SectionData.RegionListHead,
-			    BaseAddress, RegionSize,
-			    Type, Protect, MmModifyAttributes);
-	    MmUnlockAddressSpace(AddressSpace);
-	    ObDereferenceObject(Process);
-	    DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-	    return(Status);
-	  }
-	else if (MemoryArea != NULL)
-	  {
-	    MmUnlockAddressSpace(AddressSpace);
-	    ObDereferenceObject(Process);
-	    return(STATUS_UNSUCCESSFUL);
-	  }
-     }
-   
+   {
+      MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+                                             BaseAddress);
+
+      if (MemoryArea != NULL &&
+            MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY &&
+            MemoryArea->Length >= RegionSize)
+      {
+         Status =
+            MmAlterRegion(AddressSpace,
+                          MemoryArea->BaseAddress,
+                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                          BaseAddress, RegionSize,
+                          Type, Protect, MmModifyAttributes);
+         MmUnlockAddressSpace(AddressSpace);
+         ObDereferenceObject(Process);
+         DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+         return(Status);
+      }
+      else if (MemoryArea != NULL && MemoryArea->Length >= RegionSize)
+      {
+         Status =
+            MmAlterRegion(AddressSpace,
+                          MemoryArea->BaseAddress,
+                          &MemoryArea->Data.SectionData.RegionListHead,
+                          BaseAddress, RegionSize,
+                          Type, Protect, MmModifyAttributes);
+         MmUnlockAddressSpace(AddressSpace);
+         ObDereferenceObject(Process);
+         DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+         return(Status);
+      }
+      else if (MemoryArea != NULL)
+      {
+         MmUnlockAddressSpace(AddressSpace);
+         ObDereferenceObject(Process);
+         return(STATUS_UNSUCCESSFUL);
+      }
+   }
+
    Status = MmCreateMemoryArea(Process,
-			       AddressSpace,
-			       MEMORY_AREA_VIRTUAL_MEMORY,
-			       &BaseAddress,
-			       RegionSize,
-			       Protect,
-			       &MemoryArea,
-			       PBaseAddress != 0,
-			       (AllocationType & MEM_TOP_DOWN),
-			       BoundaryAddressMultiple);
+                               AddressSpace,
+                               MEMORY_AREA_VIRTUAL_MEMORY,
+                               &BaseAddress,
+                               RegionSize,
+                               Protect,
+                               &MemoryArea,
+                               PBaseAddress != 0,
+                               (AllocationType & MEM_TOP_DOWN),
+                               BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
-     {
-	MmUnlockAddressSpace(AddressSpace);
-	ObDereferenceObject(Process);
-	DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-	return(Status);
-     }
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      ObDereferenceObject(Process);
+      DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+      return(Status);
+   }
    MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-		      RegionSize, Type, Protect);
-   
+                      RegionSize, Type, Protect);
+
    if ((AllocationType & MEM_COMMIT) &&
-       ((Protect & PAGE_READWRITE) ||
-	(Protect & PAGE_EXECUTE_READWRITE)))
-     {
-	MmReserveSwapPages(RegionSize);
-     }
-   
+         ((Protect & PAGE_READWRITE) ||
+          (Protect & PAGE_EXECUTE_READWRITE)))
+   {
+      MmReserveSwapPages(RegionSize);
+   }
+
    *UBaseAddress = BaseAddress;
    *URegionSize = RegionSize;
    DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
-   
+
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
@@ -672,109 +672,109 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 
 VOID STATIC
 MmFreeVirtualMemoryPage(PVOID Context,
-			MEMORY_AREA* MemoryArea,
-			PVOID Address,
-			PHYSICAL_ADDRESS PhysicalAddr,
-			SWAPENTRY SwapEntry,
-			BOOLEAN Dirty)
+                        MEMORY_AREA* MemoryArea,
+                        PVOID Address,
+                        PHYSICAL_ADDRESS PhysicalAddr,
+                        SWAPENTRY SwapEntry,
+                        BOOLEAN Dirty)
 {
-  PEPROCESS Process = (PEPROCESS)Context;
-  
-  if (PhysicalAddr.QuadPart != 0)
-    {
+   PEPROCESS Process = (PEPROCESS)Context;
+
+   if (PhysicalAddr.QuadPart != 0)
+   {
       SWAPENTRY SavedSwapEntry;
       SavedSwapEntry = MmGetSavedSwapEntryPage(PhysicalAddr);
       if (SavedSwapEntry != 0)
-	{
-	  MmFreeSwapPage(SavedSwapEntry);
-	  MmSetSavedSwapEntryPage(PhysicalAddr, 0);
-	}
+      {
+         MmFreeSwapPage(SavedSwapEntry);
+         MmSetSavedSwapEntryPage(PhysicalAddr, 0);
+      }
       MmDeleteRmap(PhysicalAddr, Process, Address);
       MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
-    }
-  else if (SwapEntry != 0)
-    {
+   }
+   else if (SwapEntry != 0)
+   {
       MmFreeSwapPage(SwapEntry);
-    }
+   }
 }
 
 VOID
 MmFreeVirtualMemory(PEPROCESS Process,
-		    PMEMORY_AREA MemoryArea)
+                    PMEMORY_AREA MemoryArea)
 {
-  PLIST_ENTRY current_entry;
-  PMM_REGION current;
-  ULONG i;
-  
-  DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process, 
-	 MemoryArea);
-  
-  /* Mark this memory area as about to be deleted. */
-  MemoryArea->DeleteInProgress = TRUE;
+   PLIST_ENTRY current_entry;
+   PMM_REGION current;
+   ULONG i;
 
-  /* 
-   * Wait for any ongoing paging operations. Notice that since we have
-   * flagged this memory area as deleted no more page ops will be added.
-   */
-  if (MemoryArea->PageOpCount > 0)
-    {
+   DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process,
+          MemoryArea);
+
+   /* Mark this memory area as about to be deleted. */
+   MemoryArea->DeleteInProgress = TRUE;
+
+   /*
+    * Wait for any ongoing paging operations. Notice that since we have
+    * flagged this memory area as deleted no more page ops will be added.
+    */
+   if (MemoryArea->PageOpCount > 0)
+   {
       for (i = 0; i < PAGE_ROUND_UP(MemoryArea->Length) / PAGE_SIZE; i++)
-	{
-	  PMM_PAGEOP PageOp;
+      {
+         PMM_PAGEOP PageOp;
 
-	  if (MemoryArea->PageOpCount == 0)
-	    {
-	      break;
-	    }
-	  
-	  PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
-				    (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
-				    NULL, 0);
-	  if (PageOp != NULL)
-	    {
-	      NTSTATUS Status;
-	      MmUnlockAddressSpace(&Process->AddressSpace);
-	      Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-					     0,
-					     KernelMode,
-					     FALSE,
-					     NULL);
-	      if (Status != STATUS_SUCCESS)
-		{
-		  DPRINT1("Failed to wait for page op\n");
-		  KEBUGCHECK(0);
-		}
-	      MmLockAddressSpace(&Process->AddressSpace);
-	      MmReleasePageOp(PageOp);
-	    }
-	}
-    }
+         if (MemoryArea->PageOpCount == 0)
+         {
+            break;
+         }
 
-  /* Free all the individual segments. */
-  current_entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;
-  while (current_entry != &MemoryArea->Data.VirtualMemoryData.RegionListHead)
-    {
+         PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
+                                   (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
+                                   NULL, 0);
+         if (PageOp != NULL)
+         {
+            NTSTATUS Status;
+            MmUnlockAddressSpace(&Process->AddressSpace);
+            Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+                                           0,
+                                           KernelMode,
+                                           FALSE,
+                                           NULL);
+            if (Status != STATUS_SUCCESS)
+            {
+               DPRINT1("Failed to wait for page op\n");
+               KEBUGCHECK(0);
+            }
+            MmLockAddressSpace(&Process->AddressSpace);
+            MmReleasePageOp(PageOp);
+         }
+      }
+   }
+
+   /* Free all the individual segments. */
+   current_entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;
+   while (current_entry != &MemoryArea->Data.VirtualMemoryData.RegionListHead)
+   {
       current = CONTAINING_RECORD(current_entry, MM_REGION, RegionListEntry);
       current_entry = current_entry->Flink;
       ExFreePool(current);
-    }
+   }
 
-  /* Actually free the memory area. */
-  MmFreeMemoryArea(&Process->AddressSpace,
-		   MemoryArea->BaseAddress,
-		   0,
-		   MmFreeVirtualMemoryPage,
-		   (PVOID)Process);
+   /* Actually free the memory area. */
+   MmFreeMemoryArea(&Process->AddressSpace,
+                    MemoryArea->BaseAddress,
+                    0,
+                    MmFreeVirtualMemoryPage,
+                    (PVOID)Process);
 }
 
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL 
-NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
-		    IN	PVOID*  PBaseAddress,	
-		    IN	PULONG	PRegionSize,	
-		    IN	ULONG	FreeType)
+NTSTATUS STDCALL
+NtFreeVirtualMemory(IN HANDLE ProcessHandle,
+                    IN PVOID*  PBaseAddress,
+                    IN PULONG PRegionSize,
+                    IN ULONG FreeType)
 /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
@@ -794,67 +794,67 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
    PMADDRESS_SPACE AddressSpace;
    PVOID BaseAddress;
    ULONG RegionSize;
-   
+
    DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *PBaseAddress %x, "
-	  "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
-	  *PRegionSize,FreeType);
-				 
+          "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
+          *PRegionSize,FreeType);
+
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
    RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -
-     PAGE_ROUND_DOWN((*PBaseAddress));
-   
+                PAGE_ROUND_DOWN((*PBaseAddress));
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_VM_OPERATION,
-				      PsProcessType,
-				      UserMode,
-				      (PVOID*)(&Process),
-				      NULL);
+                                      PROCESS_VM_OPERATION,
+                                      PsProcessType,
+                                      UserMode,
+                                      (PVOID*)(&Process),
+                                      NULL);
    if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
+   {
+      return(Status);
+   }
+
    AddressSpace = &Process->AddressSpace;
-   
+
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					  BaseAddress);
+                                          BaseAddress);
    if (MemoryArea == NULL)
-     {
-	MmUnlockAddressSpace(AddressSpace);
-	ObDereferenceObject(Process);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      ObDereferenceObject(Process);
+      return(STATUS_UNSUCCESSFUL);
+   }
+
    switch (FreeType)
-     {
+   {
       case MEM_RELEASE:
-	/* We can only free a memory area in one step. */
-	if (MemoryArea->BaseAddress != BaseAddress)
-	  {
-	     MmUnlockAddressSpace(AddressSpace);
-	     ObDereferenceObject(Process);
-	     return(STATUS_UNSUCCESSFUL);
-	  }	
-	MmFreeVirtualMemory(Process, MemoryArea);
-	MmUnlockAddressSpace(AddressSpace);
-	ObDereferenceObject(Process);
-	return(STATUS_SUCCESS);
-	
+         /* We can only free a memory area in one step. */
+         if (MemoryArea->BaseAddress != BaseAddress)
+         {
+            MmUnlockAddressSpace(AddressSpace);
+            ObDereferenceObject(Process);
+            return(STATUS_UNSUCCESSFUL);
+         }
+         MmFreeVirtualMemory(Process, MemoryArea);
+         MmUnlockAddressSpace(AddressSpace);
+         ObDereferenceObject(Process);
+         return(STATUS_SUCCESS);
+
       case MEM_DECOMMIT:
-	Status = 
-	  MmAlterRegion(AddressSpace,
-			MemoryArea->BaseAddress,
-			&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			BaseAddress,
-			RegionSize,
-			MEM_RESERVE,
-			PAGE_NOACCESS,
-			MmModifyAttributes);
-	MmUnlockAddressSpace(AddressSpace);	
-	ObDereferenceObject(Process);
-	return(Status);
-     }
+         Status =
+            MmAlterRegion(AddressSpace,
+                          MemoryArea->BaseAddress,
+                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                          BaseAddress,
+                          RegionSize,
+                          MEM_RESERVE,
+                          PAGE_NOACCESS,
+                          MmModifyAttributes);
+         MmUnlockAddressSpace(AddressSpace);
+         ObDereferenceObject(Process);
+         return(Status);
+   }
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
    return(STATUS_NOT_IMPLEMENTED);
@@ -862,49 +862,49 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 
 NTSTATUS
 MmProtectAnonMem(PMADDRESS_SPACE AddressSpace,
-		 PMEMORY_AREA MemoryArea,
-		 PVOID BaseAddress,
-		 ULONG Length,
-		 ULONG Protect,
-		 PULONG OldProtect)
+                 PMEMORY_AREA MemoryArea,
+                 PVOID BaseAddress,
+                 ULONG Length,
+                 ULONG Protect,
+                 PULONG OldProtect)
 {
-  PMM_REGION Region;
-  NTSTATUS Status;
+   PMM_REGION Region;
+   NTSTATUS Status;
 
-  Region = MmFindRegion(MemoryArea->BaseAddress, 
-			&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			BaseAddress, NULL);
-  *OldProtect = Region->Protect;
-  Status = MmAlterRegion(AddressSpace, MemoryArea->BaseAddress,
-			 &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			 BaseAddress, Length, Region->Type, Protect, 
-			 MmModifyAttributes);
-  return(Status);
+   Region = MmFindRegion(MemoryArea->BaseAddress,
+                         &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                         BaseAddress, NULL);
+   *OldProtect = Region->Protect;
+   Status = MmAlterRegion(AddressSpace, MemoryArea->BaseAddress,
+                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                          BaseAddress, Length, Region->Type, Protect,
+                          MmModifyAttributes);
+   return(Status);
 }
 
 NTSTATUS STDCALL
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
-	       PVOID Address,
-	       PMEMORY_BASIC_INFORMATION Info,
-	       PULONG ResultLength)
+               PVOID Address,
+               PMEMORY_BASIC_INFORMATION Info,
+               PULONG ResultLength)
 {
-  PMM_REGION Region;
-  PVOID RegionBase;
+   PMM_REGION Region;
+   PVOID RegionBase;
 
-  Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
+   Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
 
-  Region = MmFindRegion(MemoryArea->BaseAddress,
-			&MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			Address, &RegionBase);
-  Info->AllocationBase = RegionBase;
-  Info->AllocationProtect = Region->Protect;  /* FIXME */
-  Info->RegionSize = (char*)RegionBase + Region->Length - (char*)Info->BaseAddress;
-  Info->State = Region->Type;
-  Info->Protect = Region->Protect;
-  Info->Type = MEM_PRIVATE;
+   Region = MmFindRegion(MemoryArea->BaseAddress,
+                         &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                         Address, &RegionBase);
+   Info->AllocationBase = RegionBase;
+   Info->AllocationProtect = Region->Protect;  /* FIXME */
+   Info->RegionSize = (char*)RegionBase + Region->Length - (char*)Info->BaseAddress;
+   Info->State = Region->Type;
+   Info->Protect = Region->Protect;
+   Info->Type = MEM_PRIVATE;
 
-  *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-  return(STATUS_SUCCESS);
+   *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+   return(STATUS_SUCCESS);
 }
 
 /* EOF */

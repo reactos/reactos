@@ -1,4 +1,4 @@
-/* $Id: drvlck.c,v 1.4 2003/07/10 21:05:03 royce Exp $
+/* $Id: drvlck.c,v 1.5 2004/04/10 22:35:25 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,8 +30,8 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
  *                             MmLockPagableDataSection
  */
 {
-//  MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-  UNIMPLEMENTED;
+   //  MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+   UNIMPLEMENTED;
 }
 #endif
 
@@ -42,8 +42,8 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
 VOID STDCALL
 MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 {
-//  MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
-  UNIMPLEMENTED;
+   //  MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+   UNIMPLEMENTED;
 }
 
 
@@ -51,10 +51,10 @@ MmLockPagableSectionByHandle(IN PVOID ImageSectionHandle)
 PVOID
 MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 {
-  PVOID Handle;
-  Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
-  MmLockPagableSectionByHandle(Handle);
-  return(Handle);
+   PVOID Handle;
+   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+   MmLockPagableSectionByHandle(Handle);
+   return(Handle);
 }
 #endif
 
@@ -65,10 +65,10 @@ MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 PVOID STDCALL
 MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
-  PVOID Handle;
-  Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
-  MmLockPagableSectionByHandle(Handle);
-  return(Handle);
+   PVOID Handle;
+   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+   MmLockPagableSectionByHandle(Handle);
+   return(Handle);
 }
 
 
@@ -77,8 +77,7 @@ MmLockPagableDataSection(IN PVOID AddressWithinSection)
  */
 VOID STDCALL
 MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
-{
-}
+{}
 
 
 /*
@@ -86,8 +85,7 @@ MmUnlockPagableImageSection(IN PVOID ImageSectionHandle)
  */
 VOID STDCALL
 MmPageEntireDriver(IN PVOID AddressWithinSection)
-{
-}
+{}
 
 
 /*
@@ -95,7 +93,6 @@ MmPageEntireDriver(IN PVOID AddressWithinSection)
  */
 VOID STDCALL
 MmResetDriverPaging(IN PVOID AddressWithinSection)
-{
-}
+{}
 
 /* EOF */

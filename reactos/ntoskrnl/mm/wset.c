@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.17 2003/07/12 01:52:10 dwelch Exp $
+/* $Id: wset.c,v 1.18 2004/04/10 22:35:26 gdalsnes Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -41,30 +41,30 @@
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
-  PHYSICAL_ADDRESS CurrentPhysicalAddress;
-  PHYSICAL_ADDRESS NextPhysicalAddress;
-  NTSTATUS Status;
+   PHYSICAL_ADDRESS CurrentPhysicalAddress;
+   PHYSICAL_ADDRESS NextPhysicalAddress;
+   NTSTATUS Status;
 
-  (*NrFreedPages) = 0;
+   (*NrFreedPages) = 0;
 
-  CurrentPhysicalAddress = MmGetLRUFirstUserPage();
-  while (CurrentPhysicalAddress.QuadPart != 0 && Target > 0)
-    {
+   CurrentPhysicalAddress = MmGetLRUFirstUserPage();
+   while (CurrentPhysicalAddress.QuadPart != 0 && Target > 0)
+   {
       NextPhysicalAddress = MmGetLRUNextUserPage(CurrentPhysicalAddress);
 
       Status = MmPageOutPhysicalAddress(CurrentPhysicalAddress);
       if (NT_SUCCESS(Status))
-	{
-	  DPRINT("Succeeded\n");
-	  Target--;
-	  (*NrFreedPages)++;
-	}
+      {
+         DPRINT("Succeeded\n");
+         Target--;
+         (*NrFreedPages)++;
+      }
       else if (Status == STATUS_PAGEFILE_QUOTA)
-	{
-	  MmSetLRULastPage(CurrentPhysicalAddress);
-	}
+      {
+         MmSetLRULastPage(CurrentPhysicalAddress);
+      }
 
       CurrentPhysicalAddress = NextPhysicalAddress;
-    }
-  return(STATUS_SUCCESS);
+   }
+   return(STATUS_SUCCESS);
 }

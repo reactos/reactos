@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.11 2004/03/04 00:07:02 navaraf Exp $
+/* $Id: slab.c,v 1.12 2004/04/10 22:35:26 gdalsnes Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -44,27 +44,30 @@ struct _SLAB_CACHE_PAGE;
 
 typedef struct _SLAB_CACHE
 {
-  SLAB_CACHE_CONSTRUCTOR Constructor;
-  SLAB_CACHE_DESTRUCTOR Destructor;
-  ULONG BaseSize;
-  ULONG ObjectSize;
-  ULONG ObjectsPerPage;
-  LIST_ENTRY PageListHead;
-  struct _SLAB_CACHE_PAGE* FirstFreePage;
-  KSPIN_LOCK SlabLock;
-} SLAB_CACHE, *PSLAB_CACHE;
+   SLAB_CACHE_CONSTRUCTOR Constructor;
+   SLAB_CACHE_DESTRUCTOR Destructor;
+   ULONG BaseSize;
+   ULONG ObjectSize;
+   ULONG ObjectsPerPage;
+   LIST_ENTRY PageListHead;
+   struct _SLAB_CACHE_PAGE* FirstFreePage;
+   KSPIN_LOCK SlabLock;
+}
+SLAB_CACHE, *PSLAB_CACHE;
 
 typedef struct _SLAB_CACHE_BUFCTL
 {
-  struct _SLAB_CACHE_BUFCTL* NextFree;
-} SLAB_CACHE_BUFCTL, *PSLAB_CACHE_BUFCTL;
+   struct _SLAB_CACHE_BUFCTL* NextFree;
+}
+SLAB_CACHE_BUFCTL, *PSLAB_CACHE_BUFCTL;
 
 typedef struct _SLAB_CACHE_PAGE
 {
-  LIST_ENTRY PageListEntry;
-  PSLAB_CACHE_BUFCTL FirstFreeBuffer;
-  ULONG ReferenceCount;
-} SLAB_CACHE_PAGE, *PSLAB_CACHE_PAGE;
+   LIST_ENTRY PageListEntry;
+   PSLAB_CACHE_BUFCTL FirstFreeBuffer;
+   ULONG ReferenceCount;
+}
+SLAB_CACHE_PAGE, *PSLAB_CACHE_PAGE;
 
 /* GLOBALS ******************************************************************/
 
@@ -72,252 +75,252 @@ typedef struct _SLAB_CACHE_PAGE
 
 PSLAB_CACHE
 ExCreateSlabCache(PUNICODE_STRING Name, ULONG Size, ULONG Align,
-		  SLAB_CACHE_CONSTRUCTOR Constructor,
-		  SLAB_CACHE_DESTRUCTOR Destructor)
+                  SLAB_CACHE_CONSTRUCTOR Constructor,
+                  SLAB_CACHE_DESTRUCTOR Destructor)
 {
-  PSLAB_CACHE Slab;
-  ULONG ObjectSize;
-  ULONG AlignSize;
+   PSLAB_CACHE Slab;
+   ULONG ObjectSize;
+   ULONG AlignSize;
 
-  Slab = ExAllocatePool(NonPagedPool, sizeof(SLAB_CACHE));
-  if (Slab == NULL)
-    {
+   Slab = ExAllocatePool(NonPagedPool, sizeof(SLAB_CACHE));
+   if (Slab == NULL)
+   {
       return(NULL);
-    }
+   }
 
-  Slab->Constructor = Constructor;
-  Slab->Destructor = Destructor;
-  Slab->BaseSize = Size;
-  ObjectSize = Size + sizeof(SLAB_CACHE_BUFCTL);
-  AlignSize = Align - (ObjectSize % Align);
-  Slab->ObjectSize = ObjectSize + AlignSize;
-  Slab->ObjectsPerPage = 
-    (PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
-  Slab->FirstFreePage = NULL;
-  InitializeListHead(&Slab->PageListHead);
-  KeInitializeSpinLock(&Slab->SlabLock);
-  
-  return(Slab);
+   Slab->Constructor = Constructor;
+   Slab->Destructor = Destructor;
+   Slab->BaseSize = Size;
+   ObjectSize = Size + sizeof(SLAB_CACHE_BUFCTL);
+   AlignSize = Align - (ObjectSize % Align);
+   Slab->ObjectSize = ObjectSize + AlignSize;
+   Slab->ObjectsPerPage =
+      (PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
+   Slab->FirstFreePage = NULL;
+   InitializeListHead(&Slab->PageListHead);
+   KeInitializeSpinLock(&Slab->SlabLock);
+
+   return(Slab);
 }
 
 PSLAB_CACHE_PAGE
 ExGrowSlabCache(PSLAB_CACHE Slab)
 {
-  PSLAB_CACHE_PAGE SlabPage;
-  PHYSICAL_ADDRESS PhysicalPage;
-  PVOID Page;
-  NTSTATUS Status;
-  ULONG i;
-  PSLAB_CACHE_BUFCTL BufCtl;
-  PVOID Object;
-  
-  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PhysicalPage);
-  if (!NT_SUCCESS(Status))
-    {
-      return(NULL);
-    }
+   PSLAB_CACHE_PAGE SlabPage;
+   PHYSICAL_ADDRESS PhysicalPage;
+   PVOID Page;
+   NTSTATUS Status;
+   ULONG i;
+   PSLAB_CACHE_BUFCTL BufCtl;
+   PVOID Object;
 
-  Page = ExAllocatePageWithPhysPage(PhysicalPage);
-  if (Page == NULL)
-    {
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PhysicalPage);
+   if (!NT_SUCCESS(Status))
+   {
+      return(NULL);
+   }
+
+   Page = ExAllocatePageWithPhysPage(PhysicalPage);
+   if (Page == NULL)
+   {
       MmReleasePageMemoryConsumer(MC_NPPOOL, PhysicalPage);
       return(NULL);
-    }
+   }
 
-  SlabPage = (PSLAB_CACHE_PAGE)((char*)Page + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE));
-  SlabPage->ReferenceCount = 0;
-  SlabPage->FirstFreeBuffer = (PSLAB_CACHE_BUFCTL)Page;
-  for (i = 0; i < Slab->ObjectsPerPage; i++)
-    {
+   SlabPage = (PSLAB_CACHE_PAGE)((char*)Page + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE));
+   SlabPage->ReferenceCount = 0;
+   SlabPage->FirstFreeBuffer = (PSLAB_CACHE_BUFCTL)Page;
+   for (i = 0; i < Slab->ObjectsPerPage; i++)
+   {
       BufCtl = (PSLAB_CACHE_BUFCTL)((char*)Page + (i * Slab->ObjectSize));
       Object = (PVOID)(BufCtl + 1);
       if (Slab->Constructor != NULL)
-	{
-	  Slab->Constructor(Object, Slab->BaseSize);
-	}
+      {
+         Slab->Constructor(Object, Slab->BaseSize);
+      }
       if (i == (Slab->ObjectsPerPage - 1))
-	{
-	  BufCtl->NextFree = 
-	    (PSLAB_CACHE_BUFCTL)((char*)Page + ((i + 1) * Slab->ObjectSize));
-	}
+      {
+         BufCtl->NextFree =
+            (PSLAB_CACHE_BUFCTL)((char*)Page + ((i + 1) * Slab->ObjectSize));
+      }
       else
-	{
-	  BufCtl->NextFree = NULL;
-	}
-    }
+      {
+         BufCtl->NextFree = NULL;
+      }
+   }
 
-  return(SlabPage);
+   return(SlabPage);
 }
 
 PVOID
 ExAllocateSlabCache(PSLAB_CACHE Slab, BOOLEAN MayWait)
 {
-  KIRQL oldIrql;
-  PSLAB_CACHE_PAGE Page;
-  PVOID Object;
-  BOOLEAN NewPage;
+   KIRQL oldIrql;
+   PSLAB_CACHE_PAGE Page;
+   PVOID Object;
+   BOOLEAN NewPage;
 
-  KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
-  
-  /*
-   * Check if there is a page with free objects
-   * present, if so allocate from it, if
-   * not grow the slab.
-   */
-  if (Slab->FirstFreePage == NULL)
-    {
+   KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
+
+   /*
+    * Check if there is a page with free objects
+    * present, if so allocate from it, if
+    * not grow the slab.
+    */
+   if (Slab->FirstFreePage == NULL)
+   {
       KeReleaseSpinLock(&Slab->SlabLock, oldIrql);
       Page = ExGrowSlabCache(Slab);
       NewPage = TRUE;
       KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
-    }
-  else
-    {
+   }
+   else
+   {
       Page = Slab->FirstFreePage;
       NewPage = FALSE;
-    }
-  
-  /*
-   * We shouldn't have got a page without free buffers.
-   */
-  if (Page->FirstFreeBuffer == NULL)
-    {
+   }
+
+   /*
+    * We shouldn't have got a page without free buffers.
+    */
+   if (Page->FirstFreeBuffer == NULL)
+   {
       DPRINT1("First free page had no free buffers.\n");
       KEBUGCHECK(0);
-    }
+   }
 
-  /*
-   * Allocate the first free object from the page.
-   */
-  Object = (PVOID)((char*)Page->FirstFreeBuffer + sizeof(SLAB_CACHE_BUFCTL));
-  Page->FirstFreeBuffer = Page->FirstFreeBuffer->NextFree;
-  Page->ReferenceCount++;
+   /*
+    * Allocate the first free object from the page.
+    */
+   Object = (PVOID)((char*)Page->FirstFreeBuffer + sizeof(SLAB_CACHE_BUFCTL));
+   Page->FirstFreeBuffer = Page->FirstFreeBuffer->NextFree;
+   Page->ReferenceCount++;
 
-  /*
-   * If we just allocated all the objects from this page
-   * and it was the first free page then adjust the
-   * first free page pointer and move the page to the head
-   * of the list.
-   */
-  if (Page->ReferenceCount == Slab->ObjectsPerPage && !NewPage)
-    {
+   /*
+    * If we just allocated all the objects from this page
+    * and it was the first free page then adjust the
+    * first free page pointer and move the page to the head
+    * of the list.
+    */
+   if (Page->ReferenceCount == Slab->ObjectsPerPage && !NewPage)
+   {
       if (Page->PageListEntry.Flink == &Slab->PageListHead)
-	{
-	  Slab->FirstFreePage = NULL;
-	}
+      {
+         Slab->FirstFreePage = NULL;
+      }
       else
-	{
-	  PSLAB_CACHE_PAGE NextPage;
-	  
-	  NextPage = CONTAINING_RECORD(Page->PageListEntry.Flink,
-				       SLAB_CACHE_PAGE,
-				       PageListEntry);
-	  Slab->FirstFreePage = NextPage;
-	}
+      {
+         PSLAB_CACHE_PAGE NextPage;
+
+         NextPage = CONTAINING_RECORD(Page->PageListEntry.Flink,
+                                      SLAB_CACHE_PAGE,
+                                      PageListEntry);
+         Slab->FirstFreePage = NextPage;
+      }
       RemoveEntryList(&Page->PageListEntry);
       InsertHeadList(&Slab->PageListHead, &Page->PageListEntry);
-    }
-  /*
-   * Otherwise if we created a new page then add it to the end of
-   * the page list.
-   */
-  else if (NewPage)
-    {
+   }
+   /*
+    * Otherwise if we created a new page then add it to the end of
+    * the page list.
+    */
+   else if (NewPage)
+   {
       InsertTailList(&Slab->PageListHead, &Page->PageListEntry);
       if (Slab->FirstFreePage == NULL)
-	{
-	  Slab->FirstFreePage = Page;
-	}
-    }
-  KeReleaseSpinLock(&Slab->SlabLock, oldIrql);
-  return(Object);
+      {
+         Slab->FirstFreePage = Page;
+      }
+   }
+   KeReleaseSpinLock(&Slab->SlabLock, oldIrql);
+   return(Object);
 }
 
 VOID
 ExFreeFromPageSlabCache(PSLAB_CACHE Slab,
-			PSLAB_CACHE_PAGE Page,
-			PVOID Object)
+                        PSLAB_CACHE_PAGE Page,
+                        PVOID Object)
 {
-  PSLAB_CACHE_BUFCTL BufCtl;
+   PSLAB_CACHE_BUFCTL BufCtl;
 
-  BufCtl = (PSLAB_CACHE_BUFCTL)((char*)Object - sizeof(SLAB_CACHE_BUFCTL));
-  BufCtl->NextFree = Page->FirstFreeBuffer;
-  Page->FirstFreeBuffer = BufCtl;
-  Page->ReferenceCount--;
+   BufCtl = (PSLAB_CACHE_BUFCTL)((char*)Object - sizeof(SLAB_CACHE_BUFCTL));
+   BufCtl->NextFree = Page->FirstFreeBuffer;
+   Page->FirstFreeBuffer = BufCtl;
+   Page->ReferenceCount--;
 }
 
 VOID
 ExFreeSlabCache(PSLAB_CACHE Slab, PVOID Object)
 {
-  KIRQL oldIrql;
-  PLIST_ENTRY current_entry;
-  PSLAB_CACHE_PAGE current;
+   KIRQL oldIrql;
+   PLIST_ENTRY current_entry;
+   PSLAB_CACHE_PAGE current;
 
-  KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
-  current_entry = Slab->PageListHead.Flink;
-  while (current_entry != &Slab->PageListHead)
-    {
+   KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
+   current_entry = Slab->PageListHead.Flink;
+   while (current_entry != &Slab->PageListHead)
+   {
       PVOID Base;
 
       current = CONTAINING_RECORD(current_entry,
-				  SLAB_CACHE_PAGE,
-				  PageListEntry);
+                                  SLAB_CACHE_PAGE,
+                                  PageListEntry);
       Base = (PVOID)((char*)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE);
-      if (Base >= Object && 
-	  ((char*)Base + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) >= 
-	   ((char*)Object + Slab->ObjectSize))
-	{
-	  ExFreeFromPageSlabCache(Slab, current, Object);
-	  /*
-	   * If the page just become free then rearrange things.
-	   */
-	  if (current->ReferenceCount == 0)
-	    {
-	      RemoveEntryList(&current->PageListEntry);
-	      InsertTailList(&Slab->PageListHead, &current->PageListEntry);
-	      if (Slab->FirstFreePage == NULL)
-		{
-		  Slab->FirstFreePage = current;
-		}
-	    }
-	  KeReleaseSpinLock(&Slab->SlabLock, oldIrql);
-	  return;
-	}
-    }
-  DPRINT1("Tried to free object not in cache.\n");
-  KEBUGCHECK(0);
+      if (Base >= Object &&
+            ((char*)Base + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) >=
+            ((char*)Object + Slab->ObjectSize))
+      {
+         ExFreeFromPageSlabCache(Slab, current, Object);
+         /*
+          * If the page just become free then rearrange things.
+          */
+         if (current->ReferenceCount == 0)
+         {
+            RemoveEntryList(&current->PageListEntry);
+            InsertTailList(&Slab->PageListHead, &current->PageListEntry);
+            if (Slab->FirstFreePage == NULL)
+            {
+               Slab->FirstFreePage = current;
+            }
+         }
+         KeReleaseSpinLock(&Slab->SlabLock, oldIrql);
+         return;
+      }
+   }
+   DPRINT1("Tried to free object not in cache.\n");
+   KEBUGCHECK(0);
 }
 
 VOID
 ExDestroySlabCache(PSLAB_CACHE Slab)
 {
-  PLIST_ENTRY current_entry;
-  PSLAB_CACHE_PAGE current;
-  ULONG i;
-  PVOID Object;
+   PLIST_ENTRY current_entry;
+   PSLAB_CACHE_PAGE current;
+   ULONG i;
+   PVOID Object;
 
-  current_entry = Slab->PageListHead.Flink;
-  while (current_entry != &Slab->PageListHead)
-    {
+   current_entry = Slab->PageListHead.Flink;
+   while (current_entry != &Slab->PageListHead)
+   {
       PVOID Base;
       PHYSICAL_ADDRESS PhysicalPage;
 
       current = CONTAINING_RECORD(current_entry,
-				  SLAB_CACHE_PAGE,
-				  PageListEntry);
+                                  SLAB_CACHE_PAGE,
+                                  PageListEntry);
       Base = (PVOID)((char*)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE);
       if (Slab->Destructor != NULL)
-	{
-	  for (i = 0; i < Slab->ObjectsPerPage; i++)
-	    {
-	      Object = (char*)Base + (i * Slab->ObjectSize) + 
-		sizeof(SLAB_CACHE_BUFCTL);
-	      Slab->Destructor(Object, Slab->BaseSize);
-	    }
-	}
+      {
+         for (i = 0; i < Slab->ObjectsPerPage; i++)
+         {
+            Object = (char*)Base + (i * Slab->ObjectSize) +
+                     sizeof(SLAB_CACHE_BUFCTL);
+            Slab->Destructor(Object, Slab->BaseSize);
+         }
+      }
       PhysicalPage = MmGetPhysicalAddressForProcess(NULL, Base);
       ExUnmapPage(Base);
       MmReleasePageMemoryConsumer(MC_NPPOOL, PhysicalPage);
-    }
-  ExFreePool(Slab);
+   }
+   ExFreePool(Slab);
 }

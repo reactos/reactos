@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.16 2004/03/04 00:07:01 navaraf Exp $
+/* $Id: aspace.c,v 1.17 2004/04/10 22:35:25 gdalsnes Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,30 +26,30 @@ STATIC MADDRESS_SPACE KernelAddressSpace;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-  /*
-   * Don't bother with locking if we are the first thread.
-   */
-  if (KeGetCurrentThread() == NULL)
-    {
+   /*
+    * Don't bother with locking if we are the first thread.
+    */
+   if (KeGetCurrentThread() == NULL)
+   {
       return;
-    }
-  ExAcquireFastMutex(&AddressSpace->Lock);
+   }
+   ExAcquireFastMutex(&AddressSpace->Lock);
 }
 
-VOID 
+VOID
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-  /*
-   * Don't bother locking if we are the first thread.
-   */
-  if (KeGetCurrentThread() == NULL)
-    {
+   /*
+    * Don't bother locking if we are the first thread.
+    */
+   if (KeGetCurrentThread() == NULL)
+   {
       return;
-    }
-  ExReleaseFastMutex(&AddressSpace->Lock);
+   }
+   ExReleaseFastMutex(&AddressSpace->Lock);
 }
 
 VOID INIT_FUNCTION
@@ -68,44 +68,44 @@ PMADDRESS_SPACE MmGetKernelAddressSpace(VOID)
    return(&KernelAddressSpace);
 }
 
-NTSTATUS 
+NTSTATUS
 MmInitializeAddressSpace(PEPROCESS Process,
-			 PMADDRESS_SPACE AddressSpace)
+                         PMADDRESS_SPACE AddressSpace)
 {
    InitializeListHead(&AddressSpace->MAreaListHead);
    ExInitializeFastMutex(&AddressSpace->Lock);
    if (Process != NULL)
-     {
-	AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
-     }
+   {
+      AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
+   }
    else
-     {
-	AddressSpace->LowestAddress = KERNEL_BASE;
-     }
+   {
+      AddressSpace->LowestAddress = KERNEL_BASE;
+   }
    AddressSpace->Process = Process;
    if (Process != NULL)
-     {
-	AddressSpace->PageTableRefCountTable = 
-	  ExAllocatePoolWithTag(NonPagedPool, 768 * sizeof(USHORT),
-				TAG_PTRC);
-	RtlZeroMemory(AddressSpace->PageTableRefCountTable, 768 * sizeof(USHORT));
-	AddressSpace->PageTableRefCountTableSize = 768;
-     }
+   {
+      AddressSpace->PageTableRefCountTable =
+         ExAllocatePoolWithTag(NonPagedPool, 768 * sizeof(USHORT),
+                               TAG_PTRC);
+      RtlZeroMemory(AddressSpace->PageTableRefCountTable, 768 * sizeof(USHORT));
+      AddressSpace->PageTableRefCountTableSize = 768;
+   }
    else
-     {
-	AddressSpace->PageTableRefCountTable = NULL;
-	AddressSpace->PageTableRefCountTableSize = 0;
-     }
+   {
+      AddressSpace->PageTableRefCountTable = NULL;
+      AddressSpace->PageTableRefCountTableSize = 0;
+   }
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+NTSTATUS
 MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-  if (AddressSpace->PageTableRefCountTable != NULL)
-    {
+   if (AddressSpace->PageTableRefCountTable != NULL)
+   {
       ExFreePool(AddressSpace->PageTableRefCountTable);
-    }
+   }
    return(STATUS_SUCCESS);
 }
 

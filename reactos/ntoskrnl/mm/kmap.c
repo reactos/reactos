@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.31 2004/01/05 14:28:21 weiden Exp $
+/* $Id: kmap.c,v 1.32 2004/04/10 22:35:25 gdalsnes Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -36,64 +36,64 @@ extern ULONG MiKernelMapLength;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID 
+VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
    ULONG Base = ((char*)Addr - (char*)MiKernelMapStart) / PAGE_SIZE;
-   
+
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
-   
+
    MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL);
-   KeAcquireSpinLock(&AllocMapLock, &oldIrql);   
+   KeAcquireSpinLock(&AllocMapLock, &oldIrql);
    RtlClearBits(&AllocMap, Base, 1);
    AllocMapHint = min(AllocMapHint, Base);
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
-PVOID 
+PVOID
 ExAllocatePage(VOID)
 {
-  PHYSICAL_ADDRESS PhysPage;
-  NTSTATUS Status;
+   PHYSICAL_ADDRESS PhysPage;
+   NTSTATUS Status;
 
-  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PhysPage);
-  if (!NT_SUCCESS(Status))
-    {
+   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PhysPage);
+   if (!NT_SUCCESS(Status))
+   {
       return(NULL);
-    }
+   }
 
-  return(ExAllocatePageWithPhysPage(PhysPage));
+   return(ExAllocatePageWithPhysPage(PhysPage));
 }
 
 NTSTATUS
 MiZeroPage(PHYSICAL_ADDRESS PhysPage)
 {
-  PVOID TempAddress;
+   PVOID TempAddress;
 
-  TempAddress = ExAllocatePageWithPhysPage(PhysPage);
-  if (TempAddress == NULL)
-    {
+   TempAddress = ExAllocatePageWithPhysPage(PhysPage);
+   if (TempAddress == NULL)
+   {
       return(STATUS_NO_MEMORY);
-    }
-  memset(TempAddress, 0, PAGE_SIZE);
-  ExUnmapPage(TempAddress);
-  return(STATUS_SUCCESS);
+   }
+   memset(TempAddress, 0, PAGE_SIZE);
+   ExUnmapPage(TempAddress);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS
 MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress)
 {
-  PVOID TempAddress;
+   PVOID TempAddress;
 
-  TempAddress = ExAllocatePageWithPhysPage(DestPhysPage);
-  if (TempAddress == NULL)
-    {
+   TempAddress = ExAllocatePageWithPhysPage(DestPhysPage);
+   if (TempAddress == NULL)
+   {
       return(STATUS_NO_MEMORY);
-    }
-  memcpy(TempAddress, SourceAddress, PAGE_SIZE);
-  ExUnmapPage(TempAddress);
-  return(STATUS_SUCCESS);
+   }
+   memcpy(TempAddress, SourceAddress, PAGE_SIZE);
+   ExUnmapPage(TempAddress);
+   return(STATUS_SUCCESS);
 }
 
 PVOID
@@ -111,15 +111,15 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
       AllocMapHint = Base + 1;
       KeReleaseSpinLock(&AllocMapLock, oldlvl);
       Addr = (char*)MiKernelMapStart + Base * PAGE_SIZE;
-      Status = MmCreateVirtualMapping(NULL, 
-	                              Addr, 
-				      PAGE_READWRITE | PAGE_SYSTEM, 
-				      PhysPage,
-				      TRUE);
+      Status = MmCreateVirtualMapping(NULL,
+                                      Addr,
+                                      PAGE_READWRITE | PAGE_SYSTEM,
+                                      PhysPage,
+                                      TRUE);
       if (!NT_SUCCESS(Status))
       {
-          DbgPrint("Unable to create virtual mapping\n");
-	  KEBUGCHECK(0);
+         DbgPrint("Unable to create virtual mapping\n");
+         KEBUGCHECK(0);
       }
       return Addr;
    }
@@ -138,22 +138,22 @@ MiInitKernelMap(VOID)
 VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
-  ULONG i;
-  ULONG Base = ((char*)Addr - (char*)MiKernelMapStart) / PAGE_SIZE;
-  KIRQL oldlvl;
-  
-  for (i = 0; i < Count; i++)
-  {
-      MmDeleteVirtualMapping(NULL, 
-			     (char*)Addr + (i * PAGE_SIZE), 
-			     Free, 
-			     NULL, 
-			     NULL);
-  }
-  KeAcquireSpinLock(&AllocMapLock, &oldlvl);
-  RtlClearBits(&AllocMap, Base, Count);
-  AllocMapHint = min(AllocMapHint, Base);
-  KeReleaseSpinLock(&AllocMapLock, oldlvl);
+   ULONG i;
+   ULONG Base = ((char*)Addr - (char*)MiKernelMapStart) / PAGE_SIZE;
+   KIRQL oldlvl;
+
+   for (i = 0; i < Count; i++)
+   {
+      MmDeleteVirtualMapping(NULL,
+                             (char*)Addr + (i * PAGE_SIZE),
+                             Free,
+                             NULL,
+                             NULL);
+   }
+   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
+   RtlClearBits(&AllocMap, Base, Count);
+   AllocMapHint = min(AllocMapHint, Base);
+   KeReleaseSpinLock(&AllocMapLock, oldlvl);
 }
 
 PVOID
