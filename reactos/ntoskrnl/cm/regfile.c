@@ -2476,8 +2476,6 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   BLOCK_OFFSET VBOffset;
   NTSTATUS Status;
 
-  *pVBOffset = VBOffset;
-
   Status = CmiAllocateValueCell(RegistryHive,
 				&NewValueCell,
 				&VBOffset,
@@ -2537,6 +2535,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   KeyCell->NumberOfValues++;
 
   *pValueCell = NewValueCell;
+  *pVBOffset = VBOffset;
 
   return STATUS_SUCCESS;
 }
