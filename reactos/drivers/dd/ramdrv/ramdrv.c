@@ -1,6 +1,7 @@
 #include <ntddk.h>
 #include "ramdrv.h"
 #include <debug.h>
+#include "../../../lib/bzip2/bzlib.h"
 
 NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
@@ -51,6 +52,9 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   IO_STATUS_BLOCK iosb;
   LARGE_INTEGER allocsize;
   HANDLE event;
+  void *tbuff;
+  unsigned int dstlen = 1024 * 1440;
+  FILE_STANDARD_INFORMATION finfo;
   
   DbgPrint("Ramdisk driver\n");
   
@@ -80,38 +84,35 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   devext->Buffer = ExAllocatePool( PagedPool, devext->Size );
   if( !devext->Buffer )
     {
-      IoDeleteDevice( DeviceObject );
-      return STATUS_INSUFFICIENT_RESOURCES;
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto cleandevice;
     }
   RtlInitUnicodeString( &LinkName, L"\\ArcName\\virt(0)disk(0)ram(0)" );
   IoAssignArcName( &LinkName, &DeviceName );
   RtlInitUnicodeString( &LinkName, L"\\??\\Z:" );
   IoCreateSymbolicLink( &LinkName, &DeviceName );
 
-  RtlInitUnicodeString( &LinkName, L"\\Device\\Floppy0" );
+  RtlInitUnicodeString( &LinkName, L"\\Device\\Floppy0\\ramdisk.bz2" );
   InitializeObjectAttributes( &objattr,
 			      &LinkName,
 			      0,
 			      0,
 			      0 );
   allocsize.u.LowPart = allocsize.u.HighPart = 0;
-  
-  Status = NtCreateFile( &file,
-			 GENERIC_READ | GENERIC_WRITE,
+
+  Status = NtOpenFile( &file,
+			 GENERIC_READ,
 			 &objattr,
 			 &iosb,
-			 &allocsize,
-			 0,
-			 0,
-			 OPEN_EXISTING,
-			 0,
-			 0,
-			 0 );
+		         FILE_SHARE_READ,
+			 FILE_NO_INTERMEDIATE_BUFFERING );
+
   if( !NT_SUCCESS( Status ) )
     {
       DPRINT( "Failed to open floppy\n" );
-      return STATUS_SUCCESS;
+      goto cleanbuffer;
     }
+
   InitializeObjectAttributes( &objattr,
 			      0,
 			      0,
@@ -125,36 +126,76 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   if( !NT_SUCCESS( Status ) )
     {
       DPRINT( "Failed to create event\n" );
-      NtClose( file );
-      return STATUS_SUCCESS;
+      goto cleanfile;
     }
-  
+
+  Status = NtQueryInformationFile( file,
+				   &iosb,
+				   &finfo,
+				   sizeof( finfo ),
+				   FileStandardInformation );
+
+  if( !NT_SUCCESS( Status ) )
+    {
+      DPRINT1( "Failed to query file information\n" );
+      goto cleanevent;
+    }
+  tbuff = ExAllocatePool( PagedPool, finfo.EndOfFile.u.LowPart );
+  if( !tbuff )
+    {
+      DPRINT1( "Failed to allocate buffer of size %d\n", finfo.EndOfFile.u.LowPart );
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto cleanevent;
+    }
+
   Status = NtReadFile( file,
 		       event,
 		       0,
 		       0,
 		       &iosb,
-		       devext->Buffer,
-		       1440 * 1024,
+		       tbuff,
+		       finfo.EndOfFile.u.LowPart,
 		       &allocsize,
 		       0 );
+
   if( !NT_SUCCESS( Status ) )
     {
-      NtClose( file );
-      NtClose( event );
       DPRINT( "Failed to read floppy\n" );
-      return STATUS_SUCCESS;
+      goto cleantbuff;
     }
   Status = NtWaitForSingleObject( event, FALSE, 0 );
   if( Status != STATUS_WAIT_0 || !NT_SUCCESS( iosb.Status ) )
     {
       DPRINT( "Failed to read floppy\n" );
-      NtClose( file );
-      NtClose( event );
-      return STATUS_SUCCESS;
+      goto cleantbuff;
     }
+  DPRINT( "Read in %d bytes, decompressing now\n", iosb.Information );
+  asm( "int3" );
+  BZ2_bzBuffToBuffDecompress( devext->Buffer,
+			      &dstlen,
+			      tbuff,
+			      iosb.Information,
+			      1,
+			      0 );
+  DPRINT( "Decompressed\n" );
+  ExFreePool( tbuff );
   NtClose( file );
   NtClose( event );
   return STATUS_SUCCESS;
+
+ cleantbuff:
+  ExFreePool( tbuff );
+ cleanevent:
+  NtClose( event );
+ cleanfile:
+  NtClose( file );
+ cleanbuffer:
+  ExFreePool( devext->Buffer );
+
+ cleandevice:
+  IoDeleteDevice( DeviceObject );
+  for(;;);
+
+  return Status;
 }
 
