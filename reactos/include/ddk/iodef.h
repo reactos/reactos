@@ -159,15 +159,27 @@ enum
 /*
  * PURPOSE: Bus types
  */
-enum
+typedef enum _INTERFACE_TYPE
 {
+   InterfaceTypeUndefined = -1,
    Internal,
    Isa,
+   Eisa,
    MicroChannel,
    TurboChannel,
    PCIBus,
-   MaximumInterfaceType,
-};
+   VMEBus,
+   NuBus,
+   PCMCIABus,
+   CBus,
+   MPIBus,
+   MPSABus,
+   ProcessorInternal,
+   InternalPowerBus,
+   PNPISABus,
+   MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
+
 
 /*
  * FIXME: These are not in the correct order

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.12 2000/03/06 01:02:30 ea Exp $
+/* $Id: iotypes.h,v 1.13 2000/03/12 01:22:37 ekohl Exp $
  * 
  */
 
@@ -30,9 +30,6 @@ typedef enum _CREATE_FILE_TYPE
 	CreateFileTypeMailslot
 } CREATE_FILE_TYPE;
 
-
-typedef ULONG INTERFACE_TYPE;
-typedef INTERFACE_TYPE* PINTERFACE_TYPE;
 
 /*
  * FIXME: Definition needed
