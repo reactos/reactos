@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.159 2004/08/18 02:29:37 navaraf Exp $
+/* $Id: section.c,v 1.160 2004/08/20 21:23:49 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3440,30 +3440,41 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL
-NtQuerySection (IN HANDLE SectionHandle,
-                IN CINT SectionInformationClass,
-                OUT PVOID SectionInformation,
-                IN ULONG Length,
-                OUT PULONG ResultLength)
-/*
- * FUNCTION: Queries the information of a section object.
- * ARGUMENTS:
- *        SectionHandle = Handle to the section link object
- *   SectionInformationClass = Index to a certain information structure
- *        SectionInformation (OUT)= Caller supplies storage for resulting
- *                                  information
- *        Length =  Size of the supplied storage
- *        ResultLength = Data written
- * RETURNS: Status
+/**
+ * Queries the information of a section object.
+ * 
+ * @param SectionHandle
+ *        Handle to the section object. It must be opened with SECTION_QUERY
+ *        access.
+ * @param SectionInformationClass
+ *        Index to a certain information structure. Can be either
+ *        SectionBasicInformation or SectionImageInformation. The latter
+ *        is valid only for sections that were created with the SEC_IMAGE
+ *        flag.
+ * @param SectionInformation
+ *        Caller supplies storage for resulting information.
+ * @param Length
+ *        Size of the supplied storage.
+ * @param ResultLength
+ *        Data written.
  *
+ * @return Status.
+ *
+ * @todo Guard by SEH.
+ * @implemented
  */
+NTSTATUS STDCALL
+NtQuerySection(IN HANDLE SectionHandle,
+               IN CINT SectionInformationClass,
+               OUT PVOID SectionInformation,
+               IN ULONG Length,
+               OUT PULONG ResultLength)
 {
    PSECTION_OBJECT Section;
    NTSTATUS Status;
 
    Status = ObReferenceObjectByHandle(SectionHandle,
-                                      SECTION_MAP_READ,
+                                      SECTION_QUERY,
                                       MmSectionObjectType,
                                       UserMode,
                                       (PVOID*)&Section,
@@ -3487,9 +3498,17 @@ NtQuerySection (IN HANDLE SectionHandle,
 
             Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
 
-            Sbi->BaseAddress = 0;
-            Sbi->Attributes = 0;
-            Sbi->Size.QuadPart = 0;
+            Sbi->Attributes = Section->AllocationAttributes;
+            if (Section->AllocationAttributes & SEC_IMAGE)
+            {
+               Sbi->BaseAddress = 0;
+               Sbi->Size.QuadPart = 0;
+            }
+            else
+            {
+               Sbi->BaseAddress = Section->Segment->VirtualAddress;
+               Sbi->Size.QuadPart = Section->Segment->Length;
+            }
 
             *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
             Status = STATUS_SUCCESS;
@@ -3537,12 +3556,56 @@ NtQuerySection (IN HANDLE SectionHandle,
 }
 
 
+/**
+ * Extends size of file backed section.
+ * 
+ * @param SectionHandle
+ *        Handle to the section object. It must be opened with
+ *        SECTION_EXTEND_SIZE access.
+ * @param NewMaximumSize
+ *        New maximum size of the section in bytes.
+ *
+ * @return Status.
+ *
+ * @todo Guard by SEH.
+ * @todo Move the actual code to internal function MmExtendSection.
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtExtendSection(IN HANDLE SectionHandle,
-                IN ULONG NewMaximumSize)
+                IN PLARGE_INTEGER NewMaximumSize)
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+   PSECTION_OBJECT Section;
+   NTSTATUS Status;
+
+   Status = ObReferenceObjectByHandle(SectionHandle,
+                                      SECTION_EXTEND_SIZE,
+                                      MmSectionObjectType,
+                                      UserMode,
+                                      (PVOID*)&Section,
+                                      NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return Status;
+   }
+
+   if (!(Section->AllocationAttributes & SEC_FILE))
+   {
+      ObfDereferenceObject(Section);
+      return STATUS_INVALID_PARAMETER;
+   }
+   
+   /*
+    * - Acquire file extneding resource.
+    * - Check if we're not resizing the section below it's actual size!
+    * - Extend segments if needed.
+    * - Set file information (FileAllocationInformation) to the new size.
+    * - Release file extending resource.
+    */
+
+   ObDereferenceObject(Section);
+
+   return STATUS_NOT_IMPLEMENTED;
 }
 
 

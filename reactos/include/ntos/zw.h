@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.28 2004/07/17 05:13:05 ion Exp $
+/* $Id: zw.h,v 1.29 2004/08/20 21:23:49 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5251,7 +5251,7 @@ NTSTATUS
 STDCALL
 NtExtendSection(
 	IN HANDLE SectionHandle,
-	IN ULONG NewMaximumSize
+	IN PLARGE_INTEGER NewMaximumSize
 	);
 
 /*
@@ -6441,7 +6441,7 @@ NTSTATUS
 STDCALL
 ZwExtendSection(
 	IN HANDLE SectionHandle,
-	IN ULONG NewMaximumSize
+	IN PLARGE_INTEGER NewMaximumSize
 	);
 
 /*
