@@ -1,3 +1,4 @@
+# $Id: makefile,v 1.13 1999/10/31 22:43:40 ea Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -24,7 +25,6 @@ OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
 all: $(TARGET).sys
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = main\*.o misc\*.o stubs\*.o objects\*.o $(TARGET).coff $(TARGET).o  \
@@ -36,28 +36,48 @@ endif
 
 $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	$(LD) -r $(OBJECTS) -o $(TARGET).o
-	$(DLLTOOL) --dllname $(TARGET).sys --def $(TARGET).def \
-	           --output-lib $(TARGET).a
-	$(CC) --subsystem=windows -mdll --dll -e _DllMain@12 -o junk.tmp \
-	      -Wl,--image-base,0x0 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp $(TARGET).o \
-              -specs=../../specs ../../ntoskrnl/ntoskrnl.a
+	$(DLLTOOL) \
+		--dllname $(TARGET).sys \
+		--def $(TARGET).def \
+		--output-lib $(TARGET).a
+	$(CC) \
+		--subsystem=native \
+		-mdll \
+		--dll \
+		-e _DllMain@12 \
+		-o junk.tmp \
+		-Wl,--image-base,0x0 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $(TARGET).o \
+		-specs=../../specs \
+		../../ntoskrnl/ntoskrnl.a
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname $(TARGET).sys --base-file base.tmp \
-	           --output-exp temp.exp --def $(TARGET).def
+	$(DLLTOOL) \
+		--dllname $(TARGET).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).def
 	- $(RM) base.tmp
-	$(CC) --subsystem=windows -mdll --dll -e _DllMain@12 \
-              -o $(TARGET).sys $(TARGET).o ../../ntoskrnl/ntoskrnl.a \
-	      -Wl,--image-base,0x0 \
-	      -Wl,--file-alignment,0x1000 \
-	      -Wl,--section-alignment,0x1000 \
-	      -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,temp.exp -specs=../../specs
+	$(CC) \
+		--subsystem=native \
+		-mdll \
+		--dll \
+		-e _DllMain@12 \
+		-o $(TARGET).sys \
+		$(TARGET).o \
+		../../ntoskrnl/ntoskrnl.a \
+		-Wl,--image-base,0x0 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,temp.exp \
+		-specs=../../specs
               
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym

@@ -1,4 +1,5 @@
-/*
+/* $Id: dc.c,v 1.8 1999/10/31 22:43:40 ea Exp $
+ *
  * DC.C - Device context functions
  * 
  */
@@ -336,7 +337,7 @@ BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
   return  TRUE;
 }
 
-HDC  W32kGetDCState16(HDC  hDC)
+HDC STDCALL W32kGetDCState16(HDC  hDC)
 {
   PDC  newdc, dc;
     
