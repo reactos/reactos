@@ -131,7 +131,7 @@ struct timezone; /* XXX arty */
 ADNS_API int adns_gettimeofday(struct timeval *tv, struct timezone *tz);
 ADNS_API int adns_writev (SOCKET FileDescriptor, const struct iovec * iov, int iovCount);
 ADNS_API int adns_inet_aton(const char *cp, struct in_addr *inp);
-ADNS_API int adns_getpid();
+ADNS_API int adns_getpid(void);
 
 #ifdef ADNS_DLL
  ADNS_API void *adns_malloc(const size_t bytes);
