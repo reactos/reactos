@@ -148,6 +148,27 @@ asmlinkage void exception_handler(unsigned int edi,
    unsigned int cr2;
    unsigned int i;
    unsigned int* stack;
+   static char *TypeStrings[] = 
+     {
+       "Divide Error",
+       "Debug Trap",
+       "Unknown(2)",
+       "Breakpoint",
+       "Overflow",
+       "BOUND range exceeded",
+       "Invalid Opcode",
+       "No Math Coprocessor",
+       "Double Fault",
+       "Unknown(9)",
+       "Invalid TSS",
+       "Segment Not Present",
+       "Stack Segment Fault",
+       "General Protection",
+       "Page Fault",
+       "Math Fault",
+       "Alignment Check",
+       "Machine Check"
+     };
    
    __asm__("cli\n\t");
    
@@ -175,7 +196,14 @@ asmlinkage void exception_handler(unsigned int edi,
    /*
     * Print out the CPU registers
     */
-   printk("Exception: %d(%x)\n",type,error_code&0xffff);
+   if (type < 19)
+     {
+       printk("%s Exception: %d(%x)\n",TypeStrings[type],type,error_code&0xffff);
+     }
+   else
+     {
+       printk("Exception: %d(%x)\n",type,error_code&0xffff);
+     }
    printk("CS:EIP %x:%x\n",cs&0xffff,eip);
    printk("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
 	  gs&0xfff);
