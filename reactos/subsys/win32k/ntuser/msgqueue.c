@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.103 2004/08/08 17:57:34 weiden Exp $
+/* $Id: msgqueue.c,v 1.104 2004/08/25 22:31:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -855,7 +855,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   ASSERT(ThreadQueue != MessageQueue);
   
-  Timeout.QuadPart = uTimeout * -10000;
+  Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
   
   /* FIXME - increase reference counter of sender's message queue here */
   
