@@ -630,9 +630,11 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 
 VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize)
 {
-  __ProcessHeap = VirtualAlloc(base, maxsize, MEM_RESERVE, PAGE_READWRITE);
-  VirtualAlloc(__ProcessHeap, PAGESIZE, MEM_COMMIT, PAGE_READWRITE);
-  __HeapPrepare(__ProcessHeap, minsize, maxsize, 0);
+  PHEAP NewHeap;
+  NewHeap = VirtualAlloc(base, maxsize, MEM_RESERVE, PAGE_READWRITE);
+  VirtualAlloc(NewHeap, PAGESIZE, MEM_COMMIT, PAGE_READWRITE);
+  __HeapPrepare(NewHeap, minsize, maxsize, 0);
+  __ProcessHeap = NewHeap;
 }
 
 
