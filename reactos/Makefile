@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.250 2004/09/26 09:56:22 weiden Exp $
+# $Id: Makefile,v 1.251 2004/09/26 12:39:30 weiden Exp $
 #
 # Global makefile
 #
@@ -52,7 +52,7 @@ DLLS_SHELLEXT = shellext
 # User mode libraries
 # libpcap packet epsapi
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
-	gdi32 gdiplus glu32 imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 mpr msacm msafd msgina \
+	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 mpr msacm msafd msgina \
 	msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
 	richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
