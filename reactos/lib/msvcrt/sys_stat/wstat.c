@@ -11,7 +11,7 @@
 int _wstat (const wchar_t *path, struct stat *buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
-  wchar_t ext;
+  wchar_t *ext;
 
   if (!buffer)
   {
@@ -61,7 +61,7 @@ int _wstat (const wchar_t *path, struct stat *buffer)
 __int64 _wstati64 (const wchar_t *path, struct _stati64 *buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
-  wchar_t ext;
+  wchar_t *ext;
 
   if (!buffer)
   {
