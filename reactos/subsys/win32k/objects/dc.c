@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.84 2003/10/03 18:04:37 gvg Exp $
+/* $Id: dc.c,v 1.85 2003/10/03 22:07:40 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1442,47 +1442,75 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   switch (objectType)
   {
     case GDI_OBJECT_TYPE_PEN:
-      objOrg = (HGDIOBJ)dc->w.hPen;
-      dc->w.hPen = hGDIObj;
-
+      objOrg = NULL;
       /* Convert the color of the pen to the format of the DC */
       PalGDI = PALETTE_LockPalette(dc->w.hPalette);
       if (NULL != PalGDI)
-      {
-	Mode = PalGDI->Mode;
-	PALETTE_UnlockPalette(dc->w.hPalette);
-	XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
-	ASSERT ( XlateObj );
-	pen = PENOBJ_LockPen(dc->w.hPen);
-	if( pen )
-	{
-	  pen->iSolidColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
-	  PENOBJ_UnlockPen(dc->w.hPen);
-	}
-	EngDeleteXlate(XlateObj);
-      }
+        {
+          Mode = PalGDI->Mode;
+          PALETTE_UnlockPalette(dc->w.hPalette);
+          XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+          if (NULL != XlateObj)
+            {
+              pen = PENOBJ_LockPen((HPEN) hGDIObj);
+              if (NULL != pen)
+                {
+                  pen->iSolidColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+                  PENOBJ_UnlockPen((HPEN) hGDIObj);
+                  objOrg = (HGDIOBJ)dc->w.hPen;
+                  dc->w.hPen = hGDIObj;
+                }
+              else
+                {
+                  SetLastWin32Error(ERROR_INVALID_HANDLE);
+                }
+              EngDeleteXlate(XlateObj);
+	    }
+          else
+            {
+              SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            }
+        }
+      else
+        {
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+        }
       break;
 
     case GDI_OBJECT_TYPE_BRUSH:
-      objOrg = (HGDIOBJ)dc->w.hBrush;
-      dc->w.hBrush = (HBRUSH) hGDIObj;
-
+      objOrg = NULL;
       /* Convert the color of the brush to the format of the DC */
       PalGDI = PALETTE_LockPalette(dc->w.hPalette);
       if (NULL != PalGDI)
-      {
-	Mode = PalGDI->Mode;
-	PALETTE_UnlockPalette(dc->w.hPalette);
-	XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
-	ASSERT(XlateObj);
-	brush = BRUSHOBJ_LockBrush(dc->w.hBrush);
-	if( brush )
-	{
-	  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
-	}
-	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-	EngDeleteXlate(XlateObj);
-      }
+        {
+	  Mode = PalGDI->Mode;
+          PALETTE_UnlockPalette(dc->w.hPalette);
+          XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+          if (NULL != XlateObj)
+            {
+              brush = BRUSHOBJ_LockBrush((HBRUSH) hGDIObj);
+              if (NULL != brush)
+                {
+                  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
+                  BRUSHOBJ_UnlockBrush((HBRUSH) hGDIObj);
+                  objOrg = (HGDIOBJ)dc->w.hBrush;
+                  dc->w.hBrush = (HBRUSH) hGDIObj;
+                }
+              else
+                {
+                  SetLastWin32Error(ERROR_INVALID_HANDLE);
+                }
+              EngDeleteXlate(XlateObj);
+            }
+          else
+            {
+              SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            }
+        }
+      else
+        {
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+        }
       break;
 
     case GDI_OBJECT_TYPE_FONT:
