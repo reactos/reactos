@@ -325,11 +325,20 @@ CmiCreateDefaultBinCell (PHBIN BinCell)
 
 
 static VOID
-CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell)
+CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCHAR KeyName)
 {
-  assert(RootKeyCell);
-  memset (RootKeyCell, 0, sizeof(KEY_CELL));
-  RootKeyCell->CellSize = -sizeof(KEY_CELL);
+  PCHAR BaseKeyName;
+  U32 NameSize;
+  U32 CellSize;
+
+  assert (RootKeyCell);
+
+  BaseKeyName = strrchr(KeyName, '\\') + 1;
+  NameSize = strlen(BaseKeyName);
+  CellSize = ROUND_UP(sizeof(KEY_CELL) + NameSize - 1, 16);
+
+  memset (RootKeyCell, 0, CellSize);
+  RootKeyCell->CellSize = -CellSize;
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
   RootKeyCell->LastWriteTime = 0ULL;
@@ -340,13 +349,14 @@ CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell)
   RootKeyCell->ValueListOffset = -1;
   RootKeyCell->SecurityKeyOffset = 0;
   RootKeyCell->ClassNameOffset = -1;
-  RootKeyCell->NameSize = 0;
+  RootKeyCell->NameSize = NameSize;
   RootKeyCell->ClassSize = 0;
+  memcpy (RootKeyCell->Name, BaseKeyName, NameSize);
 }
 
 
 static PREGISTRY_HIVE
-CmiCreateHive (VOID)
+CmiCreateHive (PCHAR KeyName)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeCell;
@@ -418,15 +428,15 @@ CmiCreateHive (VOID)
 
   /* Init root key cell */
   RootKeyCell = (PKEY_CELL)((U32)BinCell + REG_HBIN_DATA_OFFSET);
-  CmiCreateDefaultRootKeyCell(RootKeyCell);
+  CmiCreateDefaultRootKeyCell(RootKeyCell, KeyName);
   Hive->HiveHeader->RootKeyOffset = REG_HBIN_DATA_OFFSET;
 
   /* Init free cell */
-  FreeCell = (PCELL_HEADER)((U32)RootKeyCell + sizeof(KEY_CELL));
-  FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
+  FreeCell = (PCELL_HEADER)((U32)RootKeyCell - RootKeyCell->CellSize);
+  FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET - RootKeyCell->CellSize);
 
   Hive->FreeList[0] = FreeCell;
-  Hive->FreeListOffset[0] = REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL);
+  Hive->FreeListOffset[0] = REG_HBIN_DATA_OFFSET - RootKeyCell->CellSize;
   Hive->FreeListSize++;
 
   return Hive;
@@ -1615,7 +1625,7 @@ RegExportBinaryHive(PCHAR KeyName,
   *ChunkSize = 0;
   InitMbMemory (ChunkBase);
 
-  Hive = CmiCreateHive ();
+  Hive = CmiCreateHive (KeyName);
   if (Hive == NULL)
     return FALSE;
 
