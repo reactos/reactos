@@ -160,7 +160,6 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_ADDRESS_CLOSED, 0);
-    ExFreePool(ReceiveRequest);
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     CurrentEntry = NextEntry;
   }

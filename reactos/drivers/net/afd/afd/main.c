@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2004/11/16 18:07:57 chorns Exp $
+/* $Id: main.c,v 1.12 2004/11/17 05:17:22 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -212,6 +212,9 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("FCB %x\n", FCB));
 
     FileObject->FsContext = NULL;
+    FCB->PollState |= AFD_EVENT_CLOSE;
+    PollReeval( FCB->DeviceExt, FileObject );
+
     DestroySocket( FCB );
     
     Irp->IoStatus.Status = STATUS_SUCCESS;

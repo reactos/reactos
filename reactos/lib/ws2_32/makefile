@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2004/10/23 21:05:11 chorns Exp $
+# $Id: makefile,v 1.18 2004/11/17 05:17:21 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,7 +19,6 @@ TARGET_CFLAGS = \
  -fno-builtin \
  -DUNICODE \
  -DLE \
- -DDBG \
  -D__USE_W32API
 
 # require os code to explicitly request A/W version of structs/functions

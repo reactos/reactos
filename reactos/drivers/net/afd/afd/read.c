@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.10 2004/11/15 18:24:57 arty Exp $
+/* $Id: read.c,v 1.11 2004/11/17 05:17:22 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -416,7 +416,8 @@ PacketSocketRecvComplete(
 	AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 	FCB->PollState |= AFD_EVENT_RECEIVE;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
-    }
+    } else 
+	FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	/* Now relaunch the datagram request */
@@ -483,9 +484,6 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, RecvReq->BufferArray[0].len, NULL, TRUE );
 	} else {
-	    if( IsListEmpty( &FCB->DatagramList ) ) 
-		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
 	    Status = SatisfyPacketRecvRequest
 		( FCB, Irp, DatagramRecv, 
 		  (PUINT)&Irp->IoStatus.Information );
@@ -493,10 +491,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL, TRUE );
 	}
     } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+	FCB->PollState &= ~AFD_EVENT_RECEIVE;
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 	Status = STATUS_CANT_WAIT;
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
     } else {
+	FCB->PollState &= ~AFD_EVENT_RECEIVE;
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.6 2004/11/15 18:24:57 arty Exp $
+/* $Id: lock.c,v 1.7 2004/11/17 05:17:22 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -112,6 +112,40 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
     }
 
     ExFreePool( Buf );
+}
+
+/* Produce a kernel-land handle array with handles replaced by object
+ * pointers.  This will allow the system to do proper alerting */
+PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
+    UINT i;
+    NTSTATUS Status;
+
+    PAFD_HANDLE FileObjects = ExAllocatePool
+	( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
+
+    for( i = 0; FileObjects && i < HandleCount; i++ ) {
+	HandleArray[i].Status = 0;
+	HandleArray[i].Events = HandleArray[i].Events;
+	Status = ObReferenceObjectByHandle
+	    ( (PVOID)HandleArray[i].Handle,
+	      FILE_ALL_ACCESS,
+	      NULL,
+	      KernelMode,
+	      (PVOID*)&FileObjects[i].Handle,
+	      NULL );
+    }
+
+    return FileObjects;
+}
+
+VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
+    UINT i;
+
+    for( i = 0; i < HandleCount; i++ ) {
+	ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+    }
+
+    ExFreePool( HandleArray );
 }
 
 /* Returns transitioned state or SOCKET_STATE_INVALID_TRANSITION */

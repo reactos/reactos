@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.23 2004/11/15 18:24:57 arty Exp $
+/* $Id: afd.h,v 1.24 2004/11/17 05:17:22 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -186,6 +186,8 @@ NTSTATUS DDKAPI UnlockAndMaybeComplete
   BOOL ShouldUnlockIrp );
 VOID SocketStateUnlock( PAFD_FCB FCB );
 NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp );
+PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
+VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID SocketCalloutEnter( PAFD_FCB FCB );

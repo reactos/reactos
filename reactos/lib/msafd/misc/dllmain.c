@@ -413,113 +413,142 @@ WSPSelect(
 	struct timeval *timeout, 
 	LPINT lpErrno)
 {
-	IO_STATUS_BLOCK			IOSB;
-	PAFD_POLL_INFO			PollInfo;
-	NTSTATUS				Status;
-	ULONG					HandleCount;
-	ULONG					PollBufferSize;
-	LARGE_INTEGER			uSec;
-	PVOID					PollBuffer;
-	ULONG					i, j = 0;
-	HANDLE                                  SockEvent;
+    IO_STATUS_BLOCK			IOSB;
+    PAFD_POLL_INFO			PollInfo;
+    NTSTATUS				Status;
+    ULONG				HandleCount, OutCount = 0;
+    ULONG				PollBufferSize;
+    LARGE_INTEGER			uSec;
+    PVOID				PollBuffer;
+    ULONG				i, j = 0, x;
+    HANDLE                              SockEvent;
+    
+    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+			    NULL, 1, FALSE );
+    
+    if( !NT_SUCCESS(Status) ) return -1;
+    
+    /* Find out how many sockets we have, and how large the buffer needs 
+     * to be */
+    
+    HandleCount = 
+	( readfds ? readfds->fd_count : 0 ) + 
+	( writefds ? writefds->fd_count : 0 ) + 
+	( exceptfds ? exceptfds->fd_count : 0 );
+    PollBufferSize = sizeof(*PollInfo) + 
+	(HandleCount * sizeof(AFD_HANDLE));
+    
+    /* Allocate */
+    PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
+    PollInfo = (PAFD_POLL_INFO)PollBuffer;
+    
+    RtlZeroMemory( PollInfo, PollBufferSize );
 
-	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
-				NULL, 1, FALSE );
-
-	if( !NT_SUCCESS(Status) ) return -1;
-
-	/* Find out how many sockets we have, and how large the buffer needs to be */
-	HandleCount = ( readfds ? readfds->fd_count : 0 ) + 
-					( writefds ? writefds->fd_count : 0 ) + 
-					( exceptfds ? exceptfds->fd_count : 0 );
-	PollBufferSize = sizeof(*PollInfo) + (HandleCount * sizeof(AFD_HANDLE));
-
-	/* Allocate */
-	PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
-	PollInfo = (PAFD_POLL_INFO)PollBuffer;
-
-	/* Convert Timeout to NT Format */
-	if (timeout == NULL) {
-		PollInfo->Timeout.u.LowPart = -1;
-		PollInfo->Timeout.u.HighPart = 0x7FFFFFFF;
-	} else {
-		PollInfo->Timeout = RtlEnlargedIntegerMultiply(timeout->tv_sec, -10000000);
-		uSec = RtlEnlargedIntegerMultiply(timeout->tv_usec, -10);
-		PollInfo->Timeout.QuadPart += uSec.QuadPart;
+    /* Convert Timeout to NT Format */
+    if (timeout == NULL) {
+	PollInfo->Timeout.u.LowPart = -1;
+	PollInfo->Timeout.u.HighPart = 0x7FFFFFFF;
+    } else {
+	PollInfo->Timeout = RtlEnlargedIntegerMultiply
+	    ((timeout->tv_sec * 1000) + timeout->tv_usec, -10000);
+	PollInfo->Timeout.QuadPart += uSec.QuadPart;
+    }
+    
+    /* Number of handles for AFD to Check */
+    PollInfo->HandleCount = HandleCount;
+    PollInfo->InternalUse = 0;
+    
+    if (readfds != NULL) {
+	for (i = 0; i < readfds->fd_count; i++, j++) {
+	    PollInfo->Handles[j].Handle = readfds->fd_array[i];
+	    PollInfo->Handles[j].Events = AFD_EVENT_RECEIVE | AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+	} 
+    }
+    if (writefds != NULL) {
+	for (i = 0; i < writefds->fd_count; i++, j++) {
+	    PollInfo->Handles[j].Handle = writefds->fd_array[i];
+	    PollInfo->Handles[j].Events |= AFD_EVENT_SEND;
 	}
 	
-	/* Number of handles for AFD to Check */
-	PollInfo->HandleCount = HandleCount;
-	PollInfo->Unknown = 0;
-
-	if (readfds != NULL) {
-		for (i = 0; i < readfds->fd_count; i++, j++) {
-			PollInfo->Handles[j].Handle = readfds->fd_array[i];
-			PollInfo->Handles[j].Events = AFD_EVENT_RECEIVE | AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
-		} 
-	} else if (writefds != NULL) {
-		for (i = 0; i < writefds->fd_count; i++, j++) {
-			PollInfo->Handles[j].Handle = writefds->fd_array[i];
-			PollInfo->Handles[j].Events = AFD_EVENT_SEND;
-		}
-
-	} else if (exceptfds != NULL) {
-		for (i = 0; i < exceptfds->fd_count; i++, j++) {
-			PollInfo->Handles[j].Handle = exceptfds->fd_array[i];
-			PollInfo->Handles[j].Events = AFD_EVENT_OOB_RECEIVE | AFD_EVENT_CONNECT_FAIL;
-		}
+    }
+    if (exceptfds != NULL) {
+	for (i = 0; i < exceptfds->fd_count; i++, j++) {
+	    PollInfo->Handles[j].Handle = exceptfds->fd_array[i];
+	    PollInfo->Handles[j].Events |= 
+		AFD_EVENT_OOB_RECEIVE | AFD_EVENT_CONNECT_FAIL;
 	}
+    }
+    
+    /* Send IOCTL */
+    Status = NtDeviceIoControlFile( (HANDLE)Sockets[0]->Handle,
+				    SockEvent,
+				    NULL,
+				    NULL,
+				    &IOSB,
+				    IOCTL_AFD_SELECT,
+				    PollInfo,
+				    PollBufferSize,
+				    PollInfo,
+				    PollBufferSize);
 
-	/* Send IOCTL */
-	Status = NtDeviceIoControlFile( (HANDLE)Sockets[0]->Handle,
-					SockEvent,
-					NULL,
-					NULL,
-					&IOSB,
-					IOCTL_AFD_SELECT,
-					PollInfo,
-					PollBufferSize,
-					PollInfo,
-					PollBufferSize);
-
-	/* Wait for Completition */
-	if (Status == STATUS_PENDING) {
-		WaitForSingleObject(SockEvent, 0);
+    AFD_DbgPrint(MID_TRACE,("DeviceIoControlFile => %x\n", Status));
+    
+    /* Wait for Completition */
+    if (Status == STATUS_PENDING) {
+	WaitForSingleObject(SockEvent, 0);
+    }
+    
+    /* Clear the Structures */
+    if( readfds ) FD_ZERO(readfds);
+    if( writefds ) FD_ZERO(writefds);
+    if( exceptfds ) FD_ZERO(exceptfds);
+    
+    /* Loop through return structure */
+    HandleCount = PollInfo->HandleCount;
+    
+    /* Return in FDSET Format */
+    for (i = 0; i < HandleCount; i++) {
+	for(x = 1; x; x<<=1) {
+	    switch (PollInfo->Handles[i].Events & x) {
+	    case AFD_EVENT_RECEIVE: 
+	    case AFD_EVENT_DISCONNECT: 
+	    case AFD_EVENT_ABORT: 
+	    case AFD_EVENT_ACCEPT: 
+	    case AFD_EVENT_CLOSE:
+		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
+					PollInfo->Handles[i].Events,
+					PollInfo->Handles[i].Handle));
+		OutCount++;
+		if( readfds ) FD_SET(PollInfo->Handles[i].Handle, readfds);
+	    case AFD_EVENT_SEND: case AFD_EVENT_CONNECT:
+		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
+					PollInfo->Handles[i].Events,
+					PollInfo->Handles[i].Handle));
+		OutCount++;
+		if( writefds ) FD_SET(PollInfo->Handles[i].Handle, writefds);
+		break;
+		
+	    case AFD_EVENT_OOB_RECEIVE: case AFD_EVENT_CONNECT_FAIL:
+		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
+					PollInfo->Handles[i].Events,
+					PollInfo->Handles[i].Handle));
+		OutCount++;
+		if( exceptfds ) FD_SET(PollInfo->Handles[i].Handle, exceptfds);
+		break;
+	    }
 	}
+    }
 
-	/* Clear the Structures */
-	readfds ? FD_ZERO(readfds) : 0;
-	writefds ? FD_ZERO(writefds) : 0;
-	exceptfds ? FD_ZERO(exceptfds) : 0;
+    NtClose( SockEvent );
+    switch( IOSB.Status ) {
+    case STATUS_SUCCESS: 
+    case STATUS_TIMEOUT: *lpErrno = 0; break;
+    default: *lpErrno = WSAEINVAL;
+    }
 
-	/* Loop through return structure */
-	HandleCount = PollInfo->HandleCount;
-
-	/* Return in FDSET Format */
-	for (i = 0; i < HandleCount; i++) {
-		switch (PollInfo->Handles[i].Events) {
-
-			case AFD_EVENT_RECEIVE: 
-			case AFD_EVENT_DISCONNECT: 
-			case AFD_EVENT_ABORT: 
-			case AFD_EVENT_ACCEPT: 
-			case AFD_EVENT_CLOSE:
-				FD_SET(PollInfo->Handles[i].Handle, readfds);
-				break;
-
-			case AFD_EVENT_SEND: case AFD_EVENT_CONNECT:
-				FD_SET(PollInfo->Handles[i].Handle, writefds);
-				break;
-
-			case AFD_EVENT_OOB_RECEIVE: case AFD_EVENT_CONNECT_FAIL:
-				FD_SET(PollInfo->Handles[i].Handle, exceptfds);
-				break;
-		}
-	}
-
-	NtClose( SockEvent );
-
-	return 0;
+    AFD_DbgPrint(MID_TRACE,("%d events\n", OutCount));
+    
+    return OutCount;
 }
 
 SOCKET
