@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.26 2002/07/18 00:30:22 ekohl Exp $
+/* $Id: atapi.c,v 1.27 2002/08/28 18:36:18 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -79,6 +79,7 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
 
   ULONG CommandPortBase;
   ULONG ControlPortBase;
+  ULONG BusMasterRegisterBase;
 
   BOOLEAN ExpectingInterrupt;
   PSCSI_REQUEST_BLOCK CurrentSrb;
@@ -274,7 +275,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   /* Search the PCI bus for compatibility mode ide controllers */
 #ifdef ENABLE_PCI
   InitData.HwFindAdapter = AtapiFindCompatiblePciController;
-  InitData.NumberOfAccessRanges = 2;
+  InitData.NumberOfAccessRanges = 3;
   InitData.AdapterInterfaceType = PCIBus;
 
   InitData.VendorId = NULL;
@@ -328,7 +329,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //    statusToReturn = newStatus;
 #endif
 
-  DPRINT( "Returning from DriverEntry\n" );
+  DPRINT("Returning from DriverEntry\n");
 
   return(Status);
 }
@@ -365,8 +366,6 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
   SlotNumber.u.AsULONG = 0;
   for (FunctionNumber = 0 /*ConfigInfo->SlotNumber*/; FunctionNumber < 256; FunctionNumber++)
     {
-//      SlotNumber.u.bits.FunctionNumber = FunctionNumber;
-//      SlotNumber.u.AsULONG = (FunctionNumber & 0x07);
       SlotNumber.u.AsULONG = FunctionNumber;
 
       ChannelFound = FALSE;
@@ -408,6 +407,16 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	  ConfigInfo->MaximumNumberOfTargets = 2;
 	  ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
 
+	  if (PciConfig.ProgIf & 0x80)
+	    {
+	      DPRINT("Found IDE Bus Master controller!\n");
+	      if (PciConfig.u.type0.BaseAddresses[4] & 0x00000001)
+		{
+		  DPRINT("  IDE Bus Master Registers at IO %lx\n",
+			  PciConfig.u.type0.BaseAddresses[4] & ~0x00000003);
+		}
+	    }
+
 	  if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
 	    {
 	      /* Both channels unclaimed: Claim primary channel */
@@ -420,13 +429,27 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	      ConfigInfo->BusInterruptVector = 14;
 	      ConfigInfo->InterruptMode = LevelSensitive;
 
-	      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x01F0);
+	      ConfigInfo->AccessRanges[0].RangeStart =
+		ScsiPortConvertUlongToPhysicalAddress(0x01F0);
 	      ConfigInfo->AccessRanges[0].RangeLength = 8;
 	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
 
-	      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x03F6);
+	      ConfigInfo->AccessRanges[1].RangeStart =
+		ScsiPortConvertUlongToPhysicalAddress(0x03F6);
 	      ConfigInfo->AccessRanges[1].RangeLength = 1;
 	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+	      /* Claim bus master registers */
+	      if (PciConfig.ProgIf & 0x80)
+		{
+		  DevExt->BusMasterRegisterBase =
+		    PciConfig.u.type0.BaseAddresses[4] & ~0x00000003;
+
+		  ConfigInfo->AccessRanges[2].RangeStart =
+		    ScsiPortConvertUlongToPhysicalAddress(DevExt->BusMasterRegisterBase);
+		  ConfigInfo->AccessRanges[2].RangeLength = 8;
+		  ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
+		}
 
 	      ConfigInfo->AtdiskPrimaryClaimed = TRUE;
 	      ChannelFound = TRUE;
@@ -444,13 +467,27 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	      ConfigInfo->BusInterruptVector = 15;
 	      ConfigInfo->InterruptMode = LevelSensitive;
 
-	      ConfigInfo->AccessRanges[0].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0170);
+	      ConfigInfo->AccessRanges[0].RangeStart =
+		ScsiPortConvertUlongToPhysicalAddress(0x0170);
 	      ConfigInfo->AccessRanges[0].RangeLength = 8;
 	      ConfigInfo->AccessRanges[0].RangeInMemory = FALSE;
 
-	      ConfigInfo->AccessRanges[1].RangeStart = ScsiPortConvertUlongToPhysicalAddress(0x0376);
+	      ConfigInfo->AccessRanges[1].RangeStart =
+		ScsiPortConvertUlongToPhysicalAddress(0x0376);
 	      ConfigInfo->AccessRanges[1].RangeLength = 1;
 	      ConfigInfo->AccessRanges[1].RangeInMemory = FALSE;
+
+	      /* Claim bus master registers */
+	      if (PciConfig.ProgIf & 0x80)
+		{
+		  DevExt->BusMasterRegisterBase =
+		    (PciConfig.u.type0.BaseAddresses[4] & ~0x00000003) + 8;
+
+		  ConfigInfo->AccessRanges[2].RangeStart =
+		    ScsiPortConvertUlongToPhysicalAddress(DevExt->BusMasterRegisterBase);
+		  ConfigInfo->AccessRanges[2].RangeLength = 8;
+		  ConfigInfo->AccessRanges[2].RangeInMemory = FALSE;
+		}
 
 	      ConfigInfo->AtdiskSecondaryClaimed = TRUE;
 	      ChannelFound = TRUE;
