@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.20 2003/07/10 18:50:51 chorns Exp $
+/* $Id: section.c,v 1.21 2003/12/16 21:32:18 gvg Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -15,6 +15,9 @@
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/
+
+#define MASK_PAGE_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY)
+#define MASK_SEC_FLAGS  (SEC_COMMIT | SEC_IMAGE | SEC_NOCACHE | SEC_RESERVE)
 
 /*
  * @implemented
@@ -35,6 +38,12 @@ CreateFileMappingA(HANDLE hFile,
    UNICODE_STRING UnicodeName;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
 
+   if ((flProtect & (MASK_PAGE_FLAGS | MASK_SEC_FLAGS)) != flProtect)
+     {
+        DPRINT1("Invalid flProtect 0x%08x\n", flProtect);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+     }
    if (lpFileMappingAttributes)
      {
         SecurityDescriptor = lpFileMappingAttributes->lpSecurityDescriptor;
@@ -60,8 +69,8 @@ CreateFileMappingA(HANDLE hFile,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes,
 			    &MaximumSize,
-			    flProtect,
-			    0,
+			    flProtect & MASK_PAGE_FLAGS,
+			    flProtect & MASK_SEC_FLAGS,
 			    hFile==INVALID_HANDLE_VALUE ? NULL : hFile);
    RtlFreeUnicodeString(&UnicodeName);
    if (!NT_SUCCESS(Status))
@@ -92,6 +101,12 @@ CreateFileMappingW(HANDLE hFile,
    UNICODE_STRING UnicodeName;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
 
+   if ((flProtect & (MASK_PAGE_FLAGS | MASK_SEC_FLAGS)) != flProtect)
+     {
+        DPRINT1("Invalid flProtect 0x%08x\n", flProtect);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+     }
    if (lpFileMappingAttributes)
      {
         SecurityDescriptor = lpFileMappingAttributes->lpSecurityDescriptor;
@@ -122,8 +137,8 @@ CreateFileMappingW(HANDLE hFile,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes,
 			    MaximumSizePointer,
-			    flProtect,
-			    0,
+			    flProtect & MASK_PAGE_FLAGS,
+			    flProtect & MASK_SEC_FLAGS,
 			    hFile==INVALID_HANDLE_VALUE ? NULL : hFile);
    if (!NT_SUCCESS(Status))
      {
