@@ -155,6 +155,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   TrapFrame->ErrorCode = 0;
   TrapFrame->Cs = Context->SegCs;
   TrapFrame->Eip = Context->Eip;
+  TrapFrame->Eflags = Context->EFlags | FLAG_IF;
+  TrapFrame->Eflags &= ~(FLAG_VM | FLAG_NT | FLAG_IOPL);
   TrapFrame->Esp = Context->Esp;
   TrapFrame->Ss = Context->SegSs;
   /* FIXME: Should check for a v86 mode context here. */
