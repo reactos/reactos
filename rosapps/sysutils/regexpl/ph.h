@@ -1,4 +1,4 @@
-/* $Id: ph.h,v 1.5 2004/10/11 01:24:22 sedwards Exp $ */
+/* $Id$ */
 
 // ph.h : include file for standard system include files,
 //  or project specific include files that are used frequently, but
@@ -18,24 +18,29 @@
 #define _DEBUG
 #endif
 
-#include <tchar.h>
+#include <stdarg.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <wchar.h>
+#include <windef.h>
+#include <wincon.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
+
 #include <assert.h>
-#include <ctype.h>
-#include <tchar.h>
 #define ASSERT	assert
 #ifdef _DEBUG
 #define VERIFY ASSERT
 #else
 #define VERIFY(e)	(e)
 #endif
-#include <windows.h>
-#include <wincon.h>
+
 #include <conio.h>
 #include <limits.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 // INHERITED_ACE is from windows 2000
 #ifndef INHERITED_ACE

@@ -24,12 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-#include <assert.h>
-#include <tchar.h>
+#include "ph.h"
 #include "SecurityDescriptor.h"
-
-#define ASSERT assert
 
 // *** THIS SHOULD GO IN A MINGW/ROS HEADER - Begin
 #if 1
