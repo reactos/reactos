@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.32 2004/07/08 14:41:38 ekohl Exp $
+/* $Id: winlogon.c,v 1.33 2004/07/11 13:31:28 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -546,6 +546,14 @@ WinMain(HINSTANCE hInstance,
   
   hAppInstance = hInstance;
   
+  if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
+  {
+    DbgPrint("WL: Could not register logon process\n");
+    NtShutdownSystem(ShutdownNoReboot);
+    ExitProcess(0);
+    return 0;
+  }
+  
 #if START_LSASS
    if (StartProcess(L"StartLsass"))
      {
@@ -565,14 +573,6 @@ WinMain(HINSTANCE hInstance,
   }
   
   WLSession->LogonStatus = LOGON_INITIALIZING;
-
-  if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
-  {
-    DbgPrint("WL: Could not register logon process\n");
-    NtShutdownSystem(ShutdownNoReboot);
-    ExitProcess(0);
-    return 0;
-  }
   
   if(!WlxCreateWindowStationAndDesktops(WLSession))
   {
