@@ -1,9 +1,15 @@
+# $Id: makefile_rex,v 1.8 2000/04/01 14:19:48 ea Exp $
+#
+# Minix IFS Driver makefile
+#
 BASE_CFLAGS = -I../../../include
 
-all: minixfs.sys
+TARGETNAME=minixfs
+
+all: $(TARGETNAME).sys
 
 OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o cache.o \
-          ../../../ntoskrnl/ntoskrnl.a 
+          minix.coff ../../../ntoskrnl/ntoskrnl.a 
 
 .phony: all
 
@@ -18,7 +24,7 @@ clean:
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) minixfs.sys
+	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
 
@@ -26,17 +32,35 @@ minix.o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o minix.o
 
 minixfs.sys: $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp \
+		$(OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname minixfs.sys --base-file base.tmp \
-	           --output-exp temp.exp
+	$(DLLTOOL) \
+		--dllname $(TARGETNAME).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-	      -specs=../../svc_specs -mdll -o minixfs.sys $(OBJECTS) -Wl,temp.exp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-specs=../../svc_specs \
+		-mdll \
+		-o $(TARGETNAME).sys \
+		$(OBJECTS) \
+		-Wl,temp.exp
 	- $(RM) temp.exp
+
+minix.coff: ../../../include/reactos/buildno.h minix.rc
 
 WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak
+# EOF
