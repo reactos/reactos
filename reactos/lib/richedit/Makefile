@@ -13,8 +13,6 @@ TARGET_SDKLIBS = winedbgc.a
 
 TARGET_OBJECTS = charlist.o reader.o richedit.o text-writer.o
 
-TARGET_NORC = yes
-
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
