@@ -2252,7 +2252,8 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
 	DWORD dwAccessMask = 0;
 	DWORD dwShareMode = 0;
 	UNICODE_STRING TmpFileName;
- 	OBJECT_ATTRIBUTES ObjectAttributes;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK StatusBlock;
 	HANDLE hfile;
 	NTSTATUS status;
 
@@ -2287,7 +2288,7 @@ HANDLE PICE_open (LPCWSTR	lpPathName,	int	iReadWrite)
 	status = NtOpenFile( &hfile,
                       dwAccessMask,
                       &ObjectAttributes,
-                      NULL, dwShareMode, FILE_NO_INTERMEDIATE_BUFFERING);
+                      &StatusBlock, dwShareMode, FILE_NO_INTERMEDIATE_BUFFERING);
 	//BUG BUG check status!!!
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_open: NtOpenFile error: %x\n", status));
