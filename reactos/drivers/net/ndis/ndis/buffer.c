@@ -376,25 +376,9 @@ NdisAllocateBuffer(
 
         Temp->Next = NULL;
 
-#ifdef _MSC_VER
         MmInitializeMdl(&Temp->Mdl, VirtualAddress, Length);
         Temp->Mdl.MdlFlags      |= (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
         Temp->Mdl.MappedSystemVa = VirtualAddress;
-#else
-	Temp->Mdl.Next = (PMDL)NULL;
-	Temp->Mdl.Size = (CSHORT)(sizeof(MDL) +
-				  (ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length) * sizeof(ULONG)));
-	Temp->Mdl.MdlFlags   = (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
-	;	    Temp->Mdl.StartVa    = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
-	Temp->Mdl.ByteOffset = (ULONG_PTR)(VirtualAddress - PAGE_ROUND_DOWN(VirtualAddress));
-	Temp->Mdl.ByteCount  = Length;
-        Temp->Mdl.MappedSystemVa = VirtualAddress;
-#if 0
-	    //Temp->Mdl.Process    = PsGetCurrentProcess();
-#else
-        Temp->Mdl.Process    = NULL;
-#endif
-#endif
         
         Temp->BufferPool = Pool;
 
@@ -1021,6 +1005,29 @@ NdisQueryBuffer(
 		*(PVOID*)VirtualAddress = MmGetSystemAddressForMdl(Buffer);
 
 	*Length = MmGetMdlByteCount(Buffer);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisQueryBufferSafe(
+    IN  PNDIS_BUFFER    Buffer,
+    OUT PVOID           *VirtualAddress OPTIONAL,
+    OUT PUINT           Length,
+    IN  UINT            Priority)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    if (VirtualAddress != NULL)
+        *VirtualAddress = MmGetSystemAddressForMdlSafe(Buffer, Priority);
+    *Length = MmGetMdlByteCount(Buffer);
 }
 
 

@@ -259,7 +259,7 @@ NdisMapIoSpace(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID
 EXPORT
@@ -274,12 +274,7 @@ NdisOverrideBusNumber(
  *    NDIS 4.0
  */
 {
-  PWRAPPER_CONTEXT WrapperContext = (PWRAPPER_CONTEXT)WrapperConfigurationContext;
-  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
-
-  WrapperContext->BusNumber = BusNumber;
-  if (Adapter)
-    Adapter->BusNumber = BusNumber;
+    UNIMPLEMENTED
 }
 
 

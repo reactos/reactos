@@ -39,6 +39,8 @@ NdisAnsiStringToUnicodeString(
       (PANSI_STRING)SourceString, FALSE);
 }
 
+#undef NdisEqualString
+
 
 /*
  * @implemented

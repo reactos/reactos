@@ -38,17 +38,7 @@ NdisCompleteUnbindAdapter(
 }
 
 
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisInitializeListHead(
-    IN  PLIST_ENTRY ListHead)
-{
-	InitializeListHead(ListHead);
-}
-
+#undef NdisInterlockedAddUlong
 
 /*
  * @implemented
@@ -60,9 +50,11 @@ NdisInterlockedAddUlong (
     IN  ULONG           Increment,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-  ExInterlockedAddUlong ( Addend, Increment, (PKSPIN_LOCK)SpinLock );
+   ExInterlockedAddUlong ( Addend, Increment, (PKSPIN_LOCK)SpinLock );
 }
 
+
+#undef NdisInterlockedInsertHeadList
 
 /*
  * @implemented
@@ -78,6 +70,8 @@ NdisInterlockedInsertHeadList(
 }
 
 
+#undef NdisInterlockedInsertTailList
+
 /*
  * @implemented
  */
@@ -91,6 +85,8 @@ NdisInterlockedInsertTailList(
   return ExInterlockedInsertTailList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
 }
 
+
+#undef NdisInterlockedRemoveHeadList
 
 /*
  * @implemented
@@ -186,6 +182,8 @@ NdisIMDeInitializeDeviceInstance(
 	return NDIS_STATUS_FAILURE;
 }
 
+
+#undef NdisIMInitializeDeviceInstance
 
 /*
  * @unimplemented
@@ -543,6 +541,8 @@ NdisGetSystemUptime(
 }
 
 
+#undef NdisInterlockedDecrement
+
 /*
  * @implemented
  */
@@ -560,6 +560,8 @@ NdisInterlockedDecrement(
   return InterlockedDecrement ( Addend );
 }
 
+
+#undef NdisInterlockedIncrement
 
 /*
  * @implemented
@@ -828,27 +830,6 @@ NdisQueryAdapterInstanceName(
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisQueryBufferSafe(
-    IN  PNDIS_BUFFER    Buffer,
-    OUT PVOID           *VirtualAddress OPTIONAL,
-    OUT PUINT           Length,
-    IN  UINT            Priority)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
 }
 
 

@@ -19,8 +19,12 @@
 #include <ndis.h>
 #else /* _MSC_VER */
 #include <ddk/ntddk.h>
+#include <ddk/ndis.h>
 #include <ddk/xfilter.h>
-#include <net/ndis.h>
+#include <ddk/afilter.h>
+typedef struct _ATM_ADDRESS *PATM_ADDRESS;
+/* FIXME: Get rid of this dependance. */
+#include <ddk/ntapi.h>
 #endif /* _MSC_VER */
 
 #include "miniport.h"

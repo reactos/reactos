@@ -10,12 +10,6 @@
 
 #include <ndissys.h>
 
-/* WrapperConfigurationContext is a pointer to this structure */
-typedef struct _WRAPPER_CONTEXT {
-  PDEVICE_OBJECT DeviceObject;
-  ULONG BusNumber;
-  HANDLE DeviceKeyHandle;
-} WRAPPER_CONTEXT, *PWRAPPER_CONTEXT;
 
 typedef struct _HARDWARE_ADDRESS {
     union {
@@ -59,23 +53,22 @@ typedef struct _MINIPORT_BUGCHECK_CONTEXT {
 
 /* a miniport's shared memory */
 typedef struct _MINIPORT_SHARED_MEMORY {
-    PADAPTER_OBJECT   AdapterObject;
+    PDMA_ADAPTER      AdapterObject;
     ULONG             Length;
     PHYSICAL_ADDRESS  PhysicalAddress;
     PVOID             VirtualAddress;
     BOOLEAN           Cached;
 } MINIPORT_SHARED_MEMORY, *PMINIPORT_SHARED_MEMORY;
 
-#define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
-
-/* detected adapters that are driverless */
-typedef struct _ORPHAN_ADATER {
-    LIST_ENTRY        ListEntry;
-    NDIS_STRING       RegistryPath;
-    INTERFACE_TYPE    BusType;
+/* A structure of WrapperConfigurationContext (not compatible with the
+   Windows one). */
+typedef struct _NDIS_WRAPPER_CONTEXT {
+    HANDLE            RegistryHandle;
+    PDEVICE_OBJECT    DeviceObject;
     ULONG             BusNumber;
-    ULONG             SlotNumber;
-} ORPHAN_ADAPTER, *PORPHAN_ADAPTER;
+} NDIS_WRAPPER_CONTEXT, *PNDIS_WRAPPER_CONTEXT;
+
+#define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
 
 /* Information about a logical adapter */
 typedef struct _LOGICAL_ADAPTER 
@@ -83,7 +76,6 @@ typedef struct _LOGICAL_ADAPTER
     NDIS_MINIPORT_BLOCK         NdisMiniportBlock;      /* NDIS defined fields */
     KDPC                        MiniportDpc;            /* DPC routine for adapter */
     BOOLEAN                     MiniportBusy;           /* A MiniportXxx routine is executing */
-    NDIS_HANDLE                 MiniportAdapterBinding; /* Binding handle for current caller */
     ULONG                       WorkQueueLevel;         /* Number of used work item buffers */
     NDIS_MINIPORT_WORK_ITEM     WorkQueue[NDIS_MINIPORT_WORK_QUEUE_SIZE];
     PNDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
@@ -93,7 +85,6 @@ typedef struct _LOGICAL_ADAPTER
     LIST_ENTRY                  ProtocolListHead;       /* List of bound protocols */
     ULONG                       RefCount;               /* Reference count */
     PMINIPORT_DRIVER            Miniport;               /* Miniport owning this adapter */
-    UNICODE_STRING              DeviceName;             /* Device name of this adapter */
     ULONG                       Attributes;             /* Attributes of adapter */
     BOOLEAN                     AttributesSet;          /* Whether NdisMSetAttributes(Ex) has been called */
     PVOID                       QueryBuffer;            /* Buffer to use for queries */
@@ -103,25 +94,12 @@ typedef struct _LOGICAL_ADAPTER
     ULONG                       AddressLength;          /* Length of hardware address */
     PUCHAR                      LookaheadBuffer;        /* Pointer to lookahead buffer */
     ULONG                       LookaheadLength;        /* Length of lookahead buffer */
-    ULONG                       CurLookaheadLength;     /* Current (selected) length of lookahead buffer */
-    ULONG                       MaxLookaheadLength;     /* Maximum length of lookahead buffer */
     PNDIS_PACKET                PacketQueueHead;        /* Head of packet queue */
     PNDIS_PACKET                PacketQueueTail;        /* Head of packet queue */
     PNDIS_PACKET                LoopPacket;             /* Current packet beeing looped */
     PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
     KEVENT                      DmaEvent;               /* Event to support DMA register allocation */
     KSPIN_LOCK                  DmaLock;                /* Spinlock to protect the dma list */
-    UINT                        BusNumber;              /* The bus number of the adapter  */
-    INTERFACE_TYPE              BusType;                /* The bus type of the adapter */
-    UINT                        SlotNumber;             /* The slot number of the adapter*/
-    ULONG                       Irql;                   /* The Irql assigned to the adapter */
-    ULONG                       Vector;                 /* The interrupt vector assigned to the adapter */
-    KAFFINITY                   Affinity;               /* The processor affinity of the adapter */
-    PHYSICAL_ADDRESS            BaseIoAddress;          /* The base IO address of the adapter */
-    PHYSICAL_ADDRESS            BaseMemoryAddress;      /* The base memory address of mapped memory for the adapter */
-    ULONG                       DmaChannel;             /* The DMA channel number of the adapter */
-    ULONG                       DmaPort;                /* The DMA port number of the adapter */
-    PNDIS_MINIPORT_TIMER        Timer;                  /* The timer  object of the adapter */
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
 #define GET_LOGICAL_ADAPTER(Handle)((PLOGICAL_ADAPTER)Handle)
@@ -169,16 +147,14 @@ FASTCALL
 MiniQueueWorkItem(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_WORK_ITEM_TYPE WorkItemType,
-    PVOID               WorkItemContext,
-    NDIS_HANDLE         Initiator);
+    PVOID               WorkItemContext);
 
 NDIS_STATUS
 FASTCALL
 MiniDequeueWorkItem(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_WORK_ITEM_TYPE *WorkItemType,
-    PVOID               *WorkItemContext,
-    NDIS_HANDLE         *Initiator);
+    PVOID               *WorkItemContext);
 
 NDIS_STATUS
 MiniDoRequest(

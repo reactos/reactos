@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.22 2004/10/09 18:17:08 navaraf Exp $
+# $Id: Makefile,v 1.23 2004/11/23 18:58:44 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,9 @@ TARGET_NAME = ndis
 
 TARGET_PCH = include/ndissys.h
 
-TARGET_CFLAGS = -I./include -DNDIS_WRAPPER -Wall -Werror
+TARGET_CFLAGS = -I./include -D__USE_W32API -Wall -Werror
+
+TARGET_CFLAGS += -DNDIS_WRAPPER -DNDIS50 -DNDIS50_MINIPORT -DBINARY_COMPATIBLE
 
 TARGET_OBJECTS = \
   ndis/main.o \
@@ -27,7 +29,8 @@ TARGET_OBJECTS = \
   ndis/protocol.o \
   ndis/string.o \
   ndis/stubs.o \
-  ndis/time.o
+  ndis/time.o \
+  ndis/efilter.o
 
 include $(PATH_TO_TOP)/rules.mak
 
