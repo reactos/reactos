@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.15 2002/11/11 21:49:17 hbirr Exp $
+/* $Id: close.c,v 1.16 2003/01/11 15:56:43 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,15 +56,9 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
       if (pFcb->Flags & FCB_DELETE_PENDING)
       {
         delEntry (DeviceExt, FileObject);
-	pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
       }
       else
        Status = STATUS_DELETE_PENDING;
-    }
-    if (pFcb->Flags & FCB_UPDATE_DIRENTRY)
-    {
-       VfatUpdateEntry (DeviceExt, FileObject);
-       pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
     }
     FileObject->FsContext2 = NULL;
     vfatReleaseFCB (DeviceExt, pFcb);
@@ -92,8 +86,13 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_SUCCESS;
       goto ByeBye;
     }
-
+#if 0
+  /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose 
+     in CmLazyCloseThreadMain if VfatClose is execute asynchronous in a worker thread. */
   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+#else
+  if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, TRUE))
+#endif
   {
      return VfatQueueRequest (IrpContext);
   }
