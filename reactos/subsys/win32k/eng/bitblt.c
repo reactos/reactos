@@ -128,6 +128,14 @@ EngBitBlt(SURFOBJ *Dest,
     }
   }
 
+  /* The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
+   * paint a brush pattern on the destination. */
+  if(!Source)
+  {
+    DbgPrint("EngBitBlt: A source is currently required, even though not all operations require one (FIXME)\n");
+    return FALSE;
+  }
+
   // * The source bitmap is not managed by the GDI and we didn't already obtain it using EngCopyBits from the device
   if(Source->iType != STYPE_BITMAP && SourceGDI->CopyBits == NULL)
   {

@@ -134,26 +134,30 @@ W32kRectangle(HDC  hDC,
                     RectBounds, // Bounding rectangle
                     dc->w.ROPmode); // MIX */
 
+    // FIXME: BrushObj is obtained above; decide which one is correct
     BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-    assert(BrushObj);
-    if (BrushObj->logbrush.lbStyle != BS_NULL)
-      {	
-	DestRect.left = LeftRect + 1;
-	DestRect.right = RightRect - 1;
-	DestRect.top = TopRect + 1;
-	DestRect.bottom = BottomRect - 1;
-	ret = EngBitBlt(SurfObj, 
-			NULL,
-			NULL,
-			NULL,
-			NULL,
-			&DestRect,
-			NULL,
-			NULL,
-			BrushObj,
-			NULL,
-			PATCOPY);
-      }
+
+    if (BrushObj)
+    {
+      if (BrushObj->logbrush.lbStyle != BS_NULL)
+        {	
+          DestRect.left = LeftRect + 1;
+          DestRect.right = RightRect - 1;
+          DestRect.top = TopRect + 1;
+          DestRect.bottom = BottomRect - 1;
+          ret = EngBitBlt(SurfObj, 
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &DestRect,
+                          NULL,
+                          NULL,
+                          BrushObj,
+                          NULL,
+                          PATCOPY);
+        }
+    }
     GDIOBJ_UnlockObj( dc->w.hBrush, GO_PEN_MAGIC );	
   }
 
