@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.7 2004/02/27 17:35:42 hbirr Exp $
+/* $Id: conio.c,v 1.8 2004/03/07 20:03:43 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -1155,14 +1155,14 @@ ConioGetShiftState(PBYTE KeyState)
       ssOut |= SHIFT_PRESSED;
 
   if (KeyState[VK_LCONTROL] & 0x80)
-      ssOut |= RIGHT_CTRL_PRESSED;
-  else if (KeyState[VK_RCONTROL] & 0x80)
       ssOut |= LEFT_CTRL_PRESSED;
+  if (KeyState[VK_RCONTROL] & 0x80)
+      ssOut |= RIGHT_CTRL_PRESSED;
 
   if (KeyState[VK_LMENU] & 0x80)
-      ssOut |= RIGHT_ALT_PRESSED;
-  else if (KeyState[VK_RMENU] & 0x80)
       ssOut |= LEFT_ALT_PRESSED;
+  if (KeyState[VK_RMENU] & 0x80)
+      ssOut |= RIGHT_ALT_PRESSED;
 
   return ssOut;
 }
@@ -2427,7 +2427,7 @@ CSR_API(CsrReadConsoleOutputChar)
   Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE);
   ReadBuffer = Reply->Data.ReadConsoleOutputCharReply.String;
 
-  Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, Buff);
+  Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
     {
       return Reply->Status = Status;
