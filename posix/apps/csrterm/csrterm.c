@@ -1,4 +1,4 @@
-/* $Id: csrterm.c,v 1.3 2002/04/07 14:06:46 ea Exp $
+/* $Id: csrterm.c,v 1.4 2002/04/10 21:12:41 ea Exp $
  *
  * PROJECT    : ReactOS Operating System / POSIX+ Environment Subsystem
  * DESCRIPTION: CSRTERM - A DEC VT-100 terminal emulator for the PSX subsystem
@@ -99,8 +99,8 @@ TRACE;
 	TerminalRead.PsxHeader.Procedure = PSX_TERMINAL_INTERRUPT;
 	/* Terminal I/O */
         TerminalRead.Size = Size;
-        RtlCopyMemory (TerminalRead.Buffer, Buffer, Size);
 #if 0
+        RtlCopyMemory (TerminalRead.Buffer, Buffer, Size);
         Status = NtRequestWaitReplyPort (
 			Session.ServerPort.Handle,
 			& TerminalRead
@@ -123,9 +123,21 @@ TRACE;
  *	Initialize our data for managing the control connection
  *	initiated by the PSXSS.EXE process.
  */
-PRIVATE NTSTATUS STDCALL ProcessConnectionRequest (PPSX_MAX_MESSAGE Request)
+PRIVATE NTSTATUS STDCALL ProcessConnectionRequest (PLPC_MAX_MESSAGE Request)
 {
+    PPSX_CONNECT_PORT_DATA ConnectData = (PPSX_CONNECT_PORT_DATA) & Request->Data;
+
 TRACE;
+    if (PSX_CONNECTION_TYPE_SERVER != ConnectData->ConnectionType)
+    {
+        
+        return STATUS_UNSUCCESSFUL;
+    }
+    if (PSX_LPC_PROTOCOL_VERSION != ConnectData->Version)
+    {
+        
+        return STATUS_UNSUCCESSFUL;
+    }
     Session.SsLinkIsActive = TRUE;
     return STATUS_SUCCESS;
 }
@@ -167,6 +179,7 @@ TRACE;
     while (TRUE)
     {
         Reply = NULL;
+        NullReply = FALSE;
         while (!NullReply)
         {
             Status = NtReplyWaitReceivePort (
@@ -183,7 +196,7 @@ TRACE;
             switch (RequestType)
             {
             case LPC_CONNECTION_REQUEST:
-                ProcessConnectionRequest (& Request);
+                ProcessConnectionRequest ((PLPC_MAX_MESSAGE) & Request);
                 NullReply = TRUE;
                 continue;
             case LPC_CLIENT_DIED:
@@ -227,7 +240,7 @@ PRIVATE NTSTATUS STDCALL CreateSessionObjects (DWORD Pid)
     NTSTATUS          Status;
     ULONG             Id = 0;
     OBJECT_ATTRIBUTES Oa;
-    LARGE_INTEGER     SectionSize =  {65536L,0};
+    LARGE_INTEGER     SectionSize =  {PSX_TERMINAL_SECTION_SIZE,0};
 
 TRACE;
 
@@ -308,7 +321,7 @@ TRACE;
         return Status;
     }
     Session.Section.BaseAddress = NULL;
-    Session.Section.ViewSize = 0;
+    Session.Section.ViewSize = SectionSize.u.LowPart;
     Status = NtMapViewOfSection (
                 Session.Section.Handle,
                 NtCurrentProcess(),
@@ -421,15 +434,16 @@ TRACE;
  */
 PRIVATE NTSTATUS STDCALL PsxCreateLeaderProcess (char * Command)
 {
-
+        NTSTATUS Status;
 TRACE;
 
 	if (NULL == Command)
 	{
-		Command = "/bin/sh";
+		Command = "sh";
 	}
 	/* TODO: request PSXSS to init the process slot */
-	return STATUS_NOT_IMPLEMENTED;
+	vtprintf ("%s: %s: calling CSRSS not implemented!", MyName, __FUNCTION__);
+	return STATUS_SUCCESS;
 }
 /**********************************************************************
  *	PrintInformationProcess/0
