@@ -51,7 +51,7 @@ typedef struct tagHOTKEY_INFO
     WCHAR strNone[15]; /* hope its long enough ... */
 } HOTKEY_INFO;
 
-#define HOTKEY_GetInfoPtr(hwnd) ((HOTKEY_INFO *)GetWindowLongA (hwnd, 0))
+#define HOTKEY_GetInfoPtr(hwnd) ((HOTKEY_INFO *)GetWindowLongPtrA (hwnd, 0))
 
 static const WCHAR HOTKEY_plussep[] = { ' ', '+', ' ' };
 
@@ -217,7 +217,7 @@ HOTKEY_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* allocate memory for info structure */
     infoPtr = (HOTKEY_INFO *)Alloc (sizeof(HOTKEY_INFO));
-    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
     infoPtr->HotKey = infoPtr->InvComb = infoPtr->InvMod = infoPtr->CurrMod = 0;
@@ -242,7 +242,7 @@ HOTKEY_Destroy (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     HWND hwnd = infoPtr->hwndSelf;
     /* free hotkey info data */
     Free (infoPtr);
-    SetWindowLongW (hwnd, 0, 0);
+    SetWindowLongPtrW (hwnd, 0, 0);
     return 0;
 }
 

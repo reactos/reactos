@@ -112,7 +112,7 @@ static LRESULT notify_hdr(TRACKBAR_INFO *infoPtr, INT code, LPNMHDR pnmh)
     TRACE("(code=%d)\n", code);
 
     pnmh->hwndFrom = infoPtr->hwndSelf;
-    pnmh->idFrom = GetWindowLongW(infoPtr->hwndSelf, GWL_ID);
+    pnmh->idFrom = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     pnmh->code = code;
     result = SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
 			  (WPARAM)pnmh->idFrom, (LPARAM)pnmh);
@@ -563,7 +563,8 @@ TRACKBAR_DrawTic (TRACKBAR_INFO *infoPtr, HDC hdc, LONG ticPos, int flags)
 static void
 TRACKBAR_DrawTics (TRACKBAR_INFO *infoPtr, HDC hdc, DWORD dwStyle)
 {
-    int i, ticFlags = dwStyle & 0x0f;
+    unsigned int i;
+    int ticFlags = dwStyle & 0x0f;
     LOGPEN ticPen = { PS_SOLID, {1, 0}, GetSysColor (COLOR_3DDKSHADOW) };
     HPEN hOldPen, hTicPen;
     
@@ -809,7 +810,7 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
 
     ZeroMemory(&nmcd, sizeof(nmcd));
     nmcd.hdr.hwndFrom = infoPtr->hwndSelf;
-    nmcd.hdr.idFrom = GetWindowLongW (infoPtr->hwndSelf, GWL_ID);
+    nmcd.hdr.idFrom = GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_ID);
     nmcd.hdr.code = NM_CUSTOMDRAW;
     nmcd.hdc = hdc;
 
@@ -1339,7 +1340,7 @@ TRACKBAR_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
 
     infoPtr = (TRACKBAR_INFO *)Alloc (sizeof(TRACKBAR_INFO));
     if (!infoPtr) return -1;
-    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* set default values */
     infoPtr->hwndSelf  = hwnd;
@@ -1401,7 +1402,7 @@ TRACKBAR_Destroy (TRACKBAR_INFO *infoPtr)
     	DestroyWindow (infoPtr->hwndToolTip);
 
     Free (infoPtr);
-    SetWindowLongW (infoPtr->hwndSelf, 0, 0);
+    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
     return 0;
 }
 
@@ -1635,7 +1636,7 @@ TRACKBAR_KeyUp (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
 static LRESULT WINAPI
 TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TRACKBAR_INFO *infoPtr = (TRACKBAR_INFO *)GetWindowLongW (hwnd, 0);
+    TRACKBAR_INFO *infoPtr = (TRACKBAR_INFO *)GetWindowLongPtrW (hwnd, 0);
 
     TRACE("hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, uMsg, wParam, lParam);
 
@@ -1815,11 +1816,11 @@ void TRACKBAR_Register (void)
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS;
-    wndClass.lpfnWndProc   = (WNDPROC)TRACKBAR_WindowProc;
+    wndClass.lpfnWndProc   = TRACKBAR_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(TRACKBAR_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wndClass.lpszClassName = TRACKBAR_CLASSW;
 
     RegisterClassW (&wndClass);

@@ -114,7 +114,7 @@ typedef struct
 static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 
 
-#define MONTHCAL_GetInfoPtr(hwnd) ((MONTHCAL_INFO *)GetWindowLongA(hwnd, 0))
+#define MONTHCAL_GetInfoPtr(hwnd) ((MONTHCAL_INFO *)GetWindowLongPtrW(hwnd, 0))
 
 /* helper functions  */
 
@@ -1302,7 +1302,7 @@ static void MONTHCAL_GoToNextMonth(HWND hwnd, MONTHCAL_INFO *infoPtr)
     int i;
 
     nmds.nmhdr.hwndFrom = hwnd;
-    nmds.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmds.nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmds.nmhdr.code     = MCN_GETDAYSTATE;
     nmds.cDayState	= infoPtr->monthRange;
     nmds.prgDayState	= Alloc(infoPtr->monthRange * sizeof(MONTHDAYSTATE));
@@ -1332,7 +1332,7 @@ static void MONTHCAL_GoToPrevMonth(HWND hwnd,  MONTHCAL_INFO *infoPtr)
     int i;
 
     nmds.nmhdr.hwndFrom = hwnd;
-    nmds.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmds.nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmds.nmhdr.code     = MCN_GETDAYSTATE;
     nmds.cDayState	= infoPtr->monthRange;
     nmds.prgDayState	= Alloc
@@ -1491,7 +1491,7 @@ MONTHCAL_LButtonDown(HWND hwnd, WPARAM wParam, LPARAM lParam)
     MONTHCAL_SetCurSel(hwnd,0,(LPARAM) &selArray);
     TRACE("MCHT_CALENDARDATE\n");
     nmsc.nmhdr.hwndFrom = hwnd;
-    nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmsc.nmhdr.code     = MCN_SELCHANGE;
     MONTHCAL_CopyTime(&infoPtr->minSel,&nmsc.stSelStart);
     MONTHCAL_CopyTime(&infoPtr->maxSel,&nmsc.stSelEnd);
@@ -1559,7 +1559,7 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
     return TRUE;
   }
   nmhdr.hwndFrom = hwnd;
-  nmhdr.idFrom   = GetWindowLongA( hwnd, GWL_ID);
+  nmhdr.idFrom   = GetWindowLongPtrW( hwnd, GWLP_ID);
   nmhdr.code     = NM_RELEASEDCAPTURE;
   TRACE("Sent notification from %p to %p\n", hwnd, infoPtr->hwndNotify);
 
@@ -1571,7 +1571,7 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
   /* only send MCN_SELECT if currently displayed month's day was selected */
   if(hit == MCHT_CALENDARDATE) {
     nmsc.nmhdr.hwndFrom = hwnd;
-    nmsc.nmhdr.idFrom   = GetWindowLongA(hwnd, GWL_ID);
+    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmsc.nmhdr.code     = MCN_SELECT;
     MONTHCAL_CopyTime(&infoPtr->minSel, &nmsc.stSelStart);
     MONTHCAL_CopyTime(&infoPtr->maxSel, &nmsc.stSelEnd);
@@ -1877,13 +1877,13 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   /* allocate memory for info structure */
   infoPtr =(MONTHCAL_INFO*)Alloc(sizeof(MONTHCAL_INFO));
-  SetWindowLongA(hwnd, 0, (DWORD)infoPtr);
+  SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
   if(infoPtr == NULL) {
     ERR( "could not allocate info memory!\n");
     return 0;
   }
-  if((MONTHCAL_INFO*)GetWindowLongA(hwnd, 0) != infoPtr) {
+  if((MONTHCAL_INFO*)GetWindowLongPtrW(hwnd, 0) != infoPtr) {
     ERR( "pointer assignment error!\n");
     return 0;
   }
@@ -1934,7 +1934,7 @@ MONTHCAL_Destroy(HWND hwnd, WPARAM wParam, LPARAM lParam)
   if(infoPtr->monthdayState)
       Free(infoPtr->monthdayState);
   Free(infoPtr);
-  SetWindowLongA(hwnd, 0, 0);
+  SetWindowLongPtrW(hwnd, 0, 0);
   return 0;
 }
 

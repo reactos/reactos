@@ -631,7 +631,8 @@ INT WINAPI
 FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST)hList;
-    UINT i, ret;
+    INT ret;
+    UINT i;
     LPSTR dataA = NULL;
 
     if (!mp->extview.lpfnCompare) {

@@ -92,7 +92,7 @@ typedef struct
 #define VERT_BORDER     3
 #define DIVIDER_WIDTH  10
 
-#define HEADER_GetInfoPtr(hwnd) ((HEADER_INFO *)GetWindowLongA(hwnd,0))
+#define HEADER_GetInfoPtr(hwnd) ((HEADER_INFO *)GetWindowLongPtrW(hwnd,0))
 
 
 inline static LRESULT
@@ -108,8 +108,8 @@ static INT
 HEADER_OrderToIndex(HWND hwnd, WPARAM wParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
-    INT i,iorder = (INT)wParam;
-
+    INT iorder = (INT)wParam;
+    UINT i;
 
     if ((iorder <0) || iorder >infoPtr->uNumItem)
       return iorder;
@@ -125,7 +125,8 @@ HEADER_SetItemBounds (HWND hwnd)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *phdi;
     RECT rect;
-    int i, x;
+    unsigned int i;
+    int x;
 
     infoPtr->bRectsValid = TRUE;
 
@@ -190,7 +191,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     if (phdi->fmt & HDF_OWNERDRAW) {
 	DRAWITEMSTRUCT dis;
 	dis.CtlType    = ODT_HEADER;
-	dis.CtlID      = GetWindowLongA (hwnd, GWL_ID);
+	dis.CtlID      = GetWindowLongPtrW (hwnd, GWLP_ID);
 	dis.itemID     = iItem;
 	dis.itemAction = ODA_DRAWENTIRE;
 	dis.itemState  = phdi->bDown ? ODS_SELECTED : 0;
@@ -354,7 +355,8 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     HFONT hFont, hOldFont;
     RECT rect;
     HBRUSH hbrBk;
-    INT i, x;
+    UINT i;
+    INT x;
 
     /* get rect for the bar, adjusted for the border */
     GetClientRect (hwnd, &rect);
@@ -401,7 +403,8 @@ HEADER_InternalHitTest (HWND hwnd, LPPOINT lpPt, UINT *pFlags, INT *pItem)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     RECT rect, rcTest;
-    INT  iCount, width;
+    UINT iCount;
+    INT width;
     BOOL bNoWidth;
 
     GetClientRect (hwnd, &rect);
@@ -542,7 +545,7 @@ HEADER_SendSimpleNotify (HWND hwnd, UINT code)
     NMHDR nmhdr;
 
     nmhdr.hwndFrom = hwnd;
-    nmhdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+    nmhdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
     nmhdr.code     = code;
 
     return (BOOL)SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
@@ -557,7 +560,7 @@ HEADER_SendHeaderNotify (HWND hwnd, UINT code, INT iItem, INT mask)
     HDITEMA nmitem;
 
     nmhdr.hdr.hwndFrom = hwnd;
-    nmhdr.hdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+    nmhdr.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
     nmhdr.hdr.code = code;
     nmhdr.iItem = iItem;
     nmhdr.iButton = 0;
@@ -586,7 +589,7 @@ HEADER_SendClickNotify (HWND hwnd, UINT code, INT iItem)
     NMHEADERA nmhdr;
 
     nmhdr.hdr.hwndFrom = hwnd;
-    nmhdr.hdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+    nmhdr.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
     nmhdr.hdr.code = code;
     nmhdr.iItem = iItem;
     nmhdr.iButton = 0;
@@ -814,7 +817,7 @@ HEADER_GetOrderArray(HWND hwnd, WPARAM wParam, LPARAM lParam)
     LPINT order = (LPINT) lParam;
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
 
-    if ((int)wParam <infoPtr->uNumItem)
+    if ((unsigned int)wParam <infoPtr->uNumItem)
       return FALSE;
     for (i=0; i<(int)wParam; i++)
       *order++=HEADER_OrderToIndex(hwnd,i);
@@ -829,7 +832,7 @@ HEADER_SetOrderArray(HWND hwnd, WPARAM wParam, LPARAM lParam)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *lpItem;
 
-    if ((int)wParam <infoPtr->uNumItem)
+    if ((unsigned int)wParam <infoPtr->uNumItem)
       return FALSE;
     for (i=0; i<(int)wParam; i++)
       {
@@ -856,10 +859,10 @@ HEADER_HitTest (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     HEADER_InternalHitTest (hwnd, &phti->pt, &phti->flags, &phti->iItem);
 
-    if (phti->flags == HHT_ONHEADER)
-        return phti->iItem;
-    else
+    if (phti->flags == HHT_NOWHERE)
         return -1;
+    else
+        return phti->iItem;
 }
 
 
@@ -870,7 +873,8 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     HDITEMA   *phdi = (HDITEMA*)lParam;
     INT       nItem = (INT)wParam;
     HEADER_ITEM *lpItem;
-    INT       len, i, iOrder;
+    INT       len, iOrder;
+    UINT      i;
 
     if ((phdi == NULL) || (nItem < 0))
 	return -1;
@@ -971,7 +975,8 @@ HEADER_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     HDITEMW   *phdi = (HDITEMW*)lParam;
     INT       nItem = (INT)wParam;
     HEADER_ITEM *lpItem;
-    INT       len, i, iOrder;
+    INT       len, iOrder;
+    UINT      i;
 
     if ((phdi == NULL) || (nItem < 0))
 	return -1;
@@ -1284,7 +1289,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     HDC   hdc;
 
     infoPtr = (HEADER_INFO *)Alloc (sizeof(HEADER_INFO));
-    SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrA (hwnd, 0, (DWORD_PTR)infoPtr);
 
     infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
     infoPtr->uNumItem = 0;
@@ -1335,7 +1340,7 @@ HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	ImageList_Destroy (infoPtr->himl);
 
     Free (infoPtr);
-    SetWindowLongA (hwnd, 0, 0);
+    SetWindowLongPtrA (hwnd, 0, 0);
     return 0;
 }
 
@@ -1496,9 +1501,9 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		infoPtr->items[infoPtr->iMoveItem].cxy = nWidth;
             }
 
-			HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGINGA, infoPtr->iMoveItem, HDI_WIDTH);
 	    HEADER_SetItemBounds (hwnd);
-	    InvalidateRect(hwnd, NULL, FALSE);
+	    InvalidateRect(hwnd, NULL, TRUE);
+	    HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGEDA, infoPtr->iMoveItem, HDI_WIDTH);
        /*
 	* }
         */
@@ -1571,7 +1576,7 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	}
 	else if (infoPtr->bTracking) {
 	    if (dwStyle & HDS_FULLDRAG) {
-		if (HEADER_SendHeaderNotify (hwnd, HDN_ITEMCHANGINGA, infoPtr->iMoveItem, HDI_WIDTH))
+		if (HEADER_SendHeaderNotify (hwnd, HDN_TRACKA, infoPtr->iMoveItem, HDI_WIDTH))
 		{
 		nWidth = pt.x - infoPtr->items[infoPtr->iMoveItem].rect.left + infoPtr->xTrackOffset;
 		if (nWidth < 0)
@@ -1580,7 +1585,6 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 			HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGEDA, infoPtr->iMoveItem, HDI_WIDTH);
 		}
 		HEADER_SetItemBounds (hwnd);
-		InvalidateRect(hwnd, NULL, FALSE);
 	    }
 	    else {
 		hdc = GetDC (hwnd);

@@ -110,7 +110,7 @@ extern int MONTHCAL_MonthLength(int month, int year);
 #define DTHT_MCPOPUP  0x300     /* & DTHT_DATEFIELD 0 when DATETIME_KeyDown */
 #define DTHT_GOTFOCUS 0x400     /* tests for date-fields */
 
-#define DATETIME_GetInfoPtr(hwnd) ((DATETIME_INFO *)GetWindowLongA (hwnd, 0))
+#define DATETIME_GetInfoPtr(hwnd) ((DATETIME_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 static BOOL DATETIME_SendSimpleNotify (HWND hwnd, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (HWND hwnd);
@@ -256,7 +256,8 @@ DATETIME_SetMonthCalFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static void
 DATETIME_UseFormat (DATETIME_INFO *infoPtr, const char *formattxt)
 {
- int i,j,k,len;
+ unsigned int i;
+ int j,k,len;
  int *nrFields=& infoPtr->nrFields;
 
  TRACE ("%s\n",formattxt);
@@ -267,7 +268,7 @@ DATETIME_UseFormat (DATETIME_INFO *infoPtr, const char *formattxt)
  len=strlen(allowedformatchars);
  k=0;
 
- for (i=0; i<strlen (formattxt); i++)  {
+ for (i=0; formattxt[i]; i++)  {
 	TRACE ("\n%d %c:",i, formattxt[i]);
  	for (j=0; j<len; j++) {
  		if (allowedformatchars[j]==formattxt[i]) {
@@ -1128,7 +1129,7 @@ DATETIME_SendDateTimeChangeNotify (HWND hwnd)
 
  TRACE ("\n");
  dtdtc.nmhdr.hwndFrom = hwnd;
- dtdtc.nmhdr.idFrom   = GetWindowLongA( hwnd, GWL_ID);
+ dtdtc.nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
  dtdtc.nmhdr.code     = DTN_DATETIMECHANGE;
 
  if ((GetWindowLongA (hwnd, GWL_STYLE) & DTS_SHOWNONE))
@@ -1150,7 +1151,7 @@ DATETIME_SendSimpleNotify (HWND hwnd, UINT code)
 
     TRACE("%x\n",code);
     nmhdr.hwndFrom = hwnd;
-    nmhdr.idFrom   = GetWindowLongA( hwnd, GWL_ID);
+    nmhdr.idFrom   = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmhdr.code     = code;
 
     return (BOOL) SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
@@ -1221,14 +1222,14 @@ DATETIME_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     return 0;
   }
 
-  SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
+  SetWindowLongPtrA (hwnd, 0, (DWORD_PTR)infoPtr);
 
   if (dwStyle & DTS_SHOWNONE) {
     infoPtr->hwndCheckbut=CreateWindowExA (0,"button", 0,
          WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
          2,2,13,13,
          hwnd,
-         0, (HINSTANCE)GetWindowLongA  (hwnd, GWL_HINSTANCE), 0);
+         0, (HINSTANCE)GetWindowLongPtrW (hwnd, GWLP_HINSTANCE), 0);
          SendMessageA (infoPtr->hwndCheckbut, BM_SETCHECK, 1, 0);
   }
 
@@ -1276,7 +1277,7 @@ DATETIME_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	infoPtr->hMonthCal = NULL;
     }
     Free (infoPtr);
-    SetWindowLongA( hwnd, 0, 0 ); /* clear infoPtr */
+    SetWindowLongPtrA( hwnd, 0, 0 ); /* clear infoPtr */
     return 0;
 }
 

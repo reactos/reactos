@@ -47,7 +47,7 @@ typedef struct
     DWORD dwDummy;  /* just to keep the compiler happy ;-) */
 } FLATSB_INFO, *LPFLATSB_INFO;
 
-#define FlatSB_GetInfoPtr(hwnd) ((FLATSB_INFO*)GetWindowLongA (hwnd, 0))
+#define FlatSB_GetInfoPtr(hwnd) ((FLATSB_INFO*)GetWindowLongPtrW (hwnd, 0))
 
 
 /***********************************************************************

@@ -112,7 +112,7 @@ typedef struct
 #define FLAT_BTN_SPACINGX       8
 #define DEFAULT_TAB_WIDTH       96
 
-#define TAB_GetInfoPtr(hwnd) ((TAB_INFO *)GetWindowLongA(hwnd,0))
+#define TAB_GetInfoPtr(hwnd) ((TAB_INFO *)GetWindowLongPtrW(hwnd,0))
 
 /******************************************************************************
  * Hot-tracking timer constants
@@ -136,10 +136,10 @@ TAB_SendSimpleNotify (HWND hwnd, UINT code)
     NMHDR nmhdr;
 
     nmhdr.hwndFrom = hwnd;
-    nmhdr.idFrom = GetWindowLongA(hwnd, GWL_ID);
+    nmhdr.idFrom = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmhdr.code = code;
 
-    return (BOOL) SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
+    return (BOOL) SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
             (WPARAM) nmhdr.idFrom, (LPARAM) &nmhdr);
 }
 
@@ -157,7 +157,7 @@ TAB_RelayEvent (HWND hwndTip, HWND hwndMsg, UINT uMsg,
     msg.pt.x = LOWORD(GetMessagePos ());
     msg.pt.y = HIWORD(GetMessagePos ());
 
-    SendMessageA (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
+    SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
 
 static void
@@ -514,7 +514,7 @@ static LRESULT TAB_FocusChanging(
   /*
    * Don't otherwise disturb normal behavior.
    */
-  return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+  return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 }
 
 static INT TAB_InternalHitTest (
@@ -917,7 +917,7 @@ static LRESULT TAB_OnHScroll(
 
      TAB_RecalcHotTrack(hwnd, NULL, NULL, NULL);
      TAB_InvalidateTabArea(hwnd, infoPtr);
-     SendMessageA(infoPtr->hwndUpDown, UDM_SETPOS, 0,
+     SendMessageW(infoPtr->hwndUpDown, UDM_SETPOS, 0,
                    MAKELONG(infoPtr->leftmostVisible, 0));
    }
 
@@ -1033,7 +1033,7 @@ static void TAB_SetupScrolling(
       ShowWindow(infoPtr->hwndUpDown, SW_HIDE);
   }
   if (infoPtr->hwndUpDown)
-     SendMessageA(infoPtr->hwndUpDown, UDM_SETRANGE32, 0, maxRange);
+     SendMessageW(infoPtr->hwndUpDown, UDM_SETRANGE32, 0, maxRange);
 }
 
 /******************************************************************************
@@ -1051,7 +1051,7 @@ static void TAB_SetItemBounds (HWND hwnd)
   TAB_INFO*   infoPtr = TAB_GetInfoPtr(hwnd);
   LONG        lStyle  = GetWindowLongA(hwnd, GWL_STYLE);
   TEXTMETRICA fontMetrics;
-  INT         curItem;
+  UINT        curItem;
   INT         curItemLeftPos;
   INT         curItemRowCount;
   HFONT       hFont, hOldFont;
@@ -1243,8 +1243,8 @@ static void TAB_SetItemBounds (HWND hwnd)
   /* Arrange all tabs evenly if style says so */
    if (!(lStyle & TCS_RAGGEDRIGHT) &&  ((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) && (infoPtr->uNumItem > 0))
    {
-      INT tabPerRow,remTab;
-      INT iRow,iItm;
+      INT tabPerRow,remTab,iRow;
+      UINT iItm;
       INT iCount=0;
 
       /*
@@ -1637,10 +1637,18 @@ TAB_DrawItemInterior
     DRAWITEMSTRUCT dis;
     UINT id;
 
+    drawRect->top += 2;
+    drawRect->right -= 1;
+    if ( iItem == infoPtr->iSelected )
+    {
+        drawRect->right -= 1;
+        drawRect->left += 1;
+    }
+
     /*
      * get the control id
      */
-    id = GetWindowLongA( hwnd, GWL_ID );
+    id = (UINT)GetWindowLongPtrW( hwnd, GWLP_ID );
 
     /*
      * put together the DRAWITEMSTRUCT
@@ -1663,7 +1671,7 @@ TAB_DrawItemInterior
     /*
      * send the draw message
      */
-    SendMessageA( infoPtr->hwndNotify, WM_DRAWITEM, (WPARAM)id, (LPARAM)&dis );
+    SendMessageW( infoPtr->hwndNotify, WM_DRAWITEM, (WPARAM)id, (LPARAM)&dis );
   }
   else
   {
@@ -2278,29 +2286,6 @@ TAB_SetRedraw (HWND hwnd, WPARAM wParam)
   return 0;
 }
 
-static LRESULT TAB_EraseBackground(
-  HWND hwnd,
-  HDC  givenDC)
-{
-  HDC  hdc;
-  RECT clientRect;
-
-  HBRUSH brush = CreateSolidBrush(comctl32_color.clrBtnFace);
-
-  hdc = givenDC ? givenDC : GetDC(hwnd);
-
-  GetClientRect(hwnd, &clientRect);
-
-  FillRect(hdc, &clientRect, brush);
-
-  if (givenDC==0)
-    ReleaseDC(hwnd, hdc);
-
-  DeleteObject(brush);
-
-  return 0;
-}
-
 /******************************************************************************
  * TAB_EnsureSelectionVisible
  *
@@ -2333,7 +2318,7 @@ static void TAB_EnsureSelectionVisible(
 
       if (newselected != iTargetRow)
       {
-         INT i;
+         UINT i;
          if(lStyle & TCS_VERTICAL)
          {
            for (i=0; i < infoPtr->uNumItem; i++)
@@ -2379,7 +2364,8 @@ static void TAB_EnsureSelectionVisible(
   else
   {
      RECT r;
-     INT  width, i;
+     INT width;
+     UINT i;
 
      /* Calculate the part of the client area that is visible */
      GetClientRect(hwnd, &r);
@@ -2411,7 +2397,7 @@ static void TAB_EnsureSelectionVisible(
   if (infoPtr->leftmostVisible != iOrigLeftmostVisible)
     TAB_RecalcHotTrack(hwnd, NULL, NULL, NULL);
 
-  SendMessageA(infoPtr->hwndUpDown, UDM_SETPOS, 0,
+  SendMessageW(infoPtr->hwndUpDown, UDM_SETPOS, 0,
                MAKELONG(infoPtr->leftmostVisible, 0));
 }
 
@@ -2494,10 +2480,6 @@ TAB_Paint (HWND hwnd, WPARAM wParam)
     TRACE("erase %d, rect=(%ld,%ld)-(%ld,%ld)\n",
          ps.fErase,
          ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
-
-    if (ps.fErase)
-      TAB_EraseBackground (hwnd, hdc);
-
   } else {
     hdc = (HDC)wParam;
   }
@@ -3122,12 +3104,12 @@ TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
       NMTOOLTIPSCREATED nmttc;
 
       nmttc.hdr.hwndFrom = hwnd;
-      nmttc.hdr.idFrom = GetWindowLongA(hwnd, GWL_ID);
+      nmttc.hdr.idFrom = GetWindowLongPtrW(hwnd, GWLP_ID);
       nmttc.hdr.code = NM_TOOLTIPSCREATED;
       nmttc.hwndToolTips = infoPtr->hwndToolTip;
 
-      SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
-		    (WPARAM)GetWindowLongA(hwnd, GWL_ID), (LPARAM)&nmttc);
+      SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
+		    (WPARAM)GetWindowLongPtrW(hwnd, GWLP_ID), (LPARAM)&nmttc);
     }
   }
 
@@ -3165,7 +3147,7 @@ static LRESULT
 TAB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
   TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-  INT iItem;
+  UINT iItem;
 
   if (!infoPtr)
       return 0;
@@ -3218,7 +3200,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     TRACE("hwnd=%p msg=%x wParam=%x lParam=%lx\n", hwnd, uMsg, wParam, lParam);
     if (!TAB_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
-      return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+      return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
     switch (uMsg)
     {
@@ -3344,16 +3326,13 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_LButtonUp (hwnd, wParam, lParam);
 
     case WM_NOTIFY:
-      return SendMessageA(infoPtr->hwndNotify, WM_NOTIFY, wParam, lParam);
+      return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, wParam, lParam);
 
     case WM_RBUTTONDOWN:
       return TAB_RButtonDown (hwnd, wParam, lParam);
 
     case WM_MOUSEMOVE:
       return TAB_MouseMove (hwnd, wParam, lParam);
-
-    case WM_ERASEBKGND:
-      return TAB_EraseBackground (hwnd, (HDC)wParam);
 
     case WM_PAINT:
       return TAB_Paint (hwnd, wParam);
@@ -3389,7 +3368,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       if ((uMsg >= WM_USER) && (uMsg < WM_APP))
 	WARN("unknown msg %04x wp=%08x lp=%08lx\n",
 	     uMsg, wParam, lParam);
-      return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+      return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }
 
     return 0;
@@ -3399,23 +3378,23 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 TAB_Register (void)
 {
-  WNDCLASSA wndClass;
+  WNDCLASSW wndClass;
 
-  ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+  ZeroMemory (&wndClass, sizeof(WNDCLASSW));
   wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-  wndClass.lpfnWndProc   = (WNDPROC)TAB_WindowProc;
+  wndClass.lpfnWndProc   = TAB_WindowProc;
   wndClass.cbClsExtra    = 0;
   wndClass.cbWndExtra    = sizeof(TAB_INFO *);
-  wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
-  wndClass.hbrBackground = NULL;
-  wndClass.lpszClassName = WC_TABCONTROLA;
+  wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+  wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
+  wndClass.lpszClassName = WC_TABCONTROLW;
 
-  RegisterClassA (&wndClass);
+  RegisterClassW (&wndClass);
 }
 
 
 VOID
 TAB_Unregister (void)
 {
-    UnregisterClassA (WC_TABCONTROLA, NULL);
+    UnregisterClassW (WC_TABCONTROLW, NULL);
 }

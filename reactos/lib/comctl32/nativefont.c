@@ -45,7 +45,7 @@ typedef struct
     DWORD  dwDummy;   /* just to keep the compiler happy ;-) */
 } NATIVEFONT_INFO;
 
-#define NATIVEFONT_GetInfoPtr(hwnd) ((NATIVEFONT_INFO *)GetWindowLongA (hwnd, 0))
+#define NATIVEFONT_GetInfoPtr(hwnd) ((NATIVEFONT_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 
 static LRESULT
@@ -55,7 +55,7 @@ NATIVEFONT_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* allocate memory for info structure */
     infoPtr = (NATIVEFONT_INFO *)Alloc (sizeof(NATIVEFONT_INFO));
-    SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
 
     /* initialize info structure */
@@ -75,7 +75,7 @@ NATIVEFONT_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* free comboex info data */
     Free (infoPtr);
-    SetWindowLongA( hwnd, 0, 0 );
+    SetWindowLongPtrW( hwnd, 0, 0 );
 
     return 0;
 }

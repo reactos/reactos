@@ -71,7 +71,7 @@ typedef struct
 #define POS_SELALL	3
 
 #define IP_SUBCLASS_PROP "CCIP32SubclassInfo"
-#define IPADDRESS_GetInfoPtr(hwnd) ((IPADDRESS_INFO *)GetWindowLongW (hwnd, 0))
+#define IPADDRESS_GetInfoPtr(hwnd) ((IPADDRESS_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 
 static LRESULT CALLBACK
@@ -84,7 +84,7 @@ static LRESULT IPADDRESS_Notify (IPADDRESS_INFO *infoPtr, UINT command)
     TRACE("(command=%x)\n", command);
 
     return SendMessageW (infoPtr->Notify, WM_COMMAND,
-             MAKEWPARAM (GetWindowLongW (hwnd, GWL_ID), command), (LPARAM)hwnd);
+             MAKEWPARAM (GetWindowLongPtrW (hwnd, GWLP_ID), command), (LPARAM)hwnd);
 }
 
 static INT IPADDRESS_IPNotify (IPADDRESS_INFO *infoPtr, INT field, INT value)
@@ -94,7 +94,7 @@ static INT IPADDRESS_IPNotify (IPADDRESS_INFO *infoPtr, INT field, INT value)
     TRACE("(field=%x, value=%d)\n", field, value);
 
     nmip.hdr.hwndFrom = infoPtr->Self;
-    nmip.hdr.idFrom   = GetWindowLongW (infoPtr->Self, GWL_ID);
+    nmip.hdr.idFrom   = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
     nmip.hdr.code     = IPN_FIELDCHANGED;
 
     nmip.iField = field;
@@ -164,7 +164,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
 
     infoPtr = (IPADDRESS_INFO *)Alloc (sizeof(IPADDRESS_INFO));
     if (!infoPtr) return -1;
-    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     GetClientRect (hwnd, &rcClient);
 
@@ -187,11 +187,11 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
 		CreateWindowW (EDIT, NULL, WS_CHILD | WS_VISIBLE | ES_CENTER,
                                edit.left, edit.top, edit.right - edit.left,
 			       edit.bottom - edit.top, hwnd, (HMENU) 1,
-			       (HINSTANCE)GetWindowLongW(hwnd, GWL_HINSTANCE), NULL);
+			       (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
 	SetPropA(part->EditHwnd, IP_SUBCLASS_PROP, hwnd);
         part->OrigProc = (WNDPROC)
-		SetWindowLongW (part->EditHwnd, GWL_WNDPROC,
-				(LONG)IPADDRESS_SubclassProc);
+		SetWindowLongPtrW (part->EditHwnd, GWLP_WNDPROC,
+				(DWORD_PTR)IPADDRESS_SubclassProc);
     }
 
     return 0;
@@ -206,10 +206,10 @@ static LRESULT IPADDRESS_Destroy (IPADDRESS_INFO *infoPtr)
 
     for (i = 0; i < 4; i++) {
 	IPPART_INFO* part = &infoPtr->Part[i];
-        SetWindowLongW (part->EditHwnd, GWL_WNDPROC, (LONG)part->OrigProc);
+        SetWindowLongPtrW (part->EditHwnd, GWLP_WNDPROC, (DWORD_PTR)part->OrigProc);
     }
 
-    SetWindowLongW (infoPtr->Self, 0, 0);
+    SetWindowLongPtrW (infoPtr->Self, 0, 0);
     Free (infoPtr);
     return 0;
 }
@@ -565,12 +565,12 @@ void IPADDRESS_Register (void)
     WNDCLASSW wndClass;
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSW));
-    wndClass.style         = CS_GLOBALCLASS;
-    wndClass.lpfnWndProc   = (WNDPROC)IPADDRESS_WindowProc;
+    wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
+    wndClass.lpfnWndProc   = IPADDRESS_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(IPADDRESS_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_IBEAM);
-    wndClass.hbrBackground = GetStockObject(WHITE_BRUSH);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
     wndClass.lpszClassName = WC_IPADDRESSW;
 
     RegisterClassW (&wndClass);

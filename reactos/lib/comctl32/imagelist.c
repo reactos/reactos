@@ -3,7 +3,7 @@
  *
  *  Copyright 1998 Eric Kohl
  *  Copyright 2000 Jason Mawdsley
- *  Copyright 2001 Michael Stefaniuc
+ *  Copyright 2001, 2004 Michael Stefaniuc
  *  Copyright 2001 Charles Loep for CodeWeavers
  *  Copyright 2002 Dimitrie O. Paun
  *
@@ -34,12 +34,6 @@
  *    - Add support for ILD_PRESERVEALPHA, ILD_SCALE, ILD_DPISCALE
  *    - Add support for ILS_GLOW, ILS_SHADOW, ILS_SATURATE, ILS_ALPHA
  *    - Thread-safe locking
- *
- *  FIXME:
- *    - Hotspot handling still not correct. The Hotspot passed to BeginDrag
- *	is the offset of the image position relative to the actual mouse pointer
- *	position. However the Hotspot passed to SetDragCursorImage is the
- *	offset of the mouse messages sent to the application...
  */
 
 #include <stdarg.h>
@@ -76,10 +70,9 @@ typedef struct
     BOOL	bShow;
     /* saved background */
     HBITMAP	hbmBg;
-    BOOL	bHSPending;
 } INTERNALDRAG;
 
-static INTERNALDRAG InternalDrag = { 0, 0, 0, 0, 0, 0, FALSE, 0, FALSE };
+static INTERNALDRAG InternalDrag = { 0, 0, 0, 0, 0, 0, FALSE, 0 };
 
 static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT height);
 
@@ -424,7 +417,6 @@ ImageList_BeginDrag (HIMAGELIST himlTrack, INT iTrack,
     BitBlt (InternalDrag.himl->hdcMask, 0, 0, cx, cy, himlTrack->hdcMask, iTrack * cx, 0, SRCCOPY);
 
     InternalDrag.himl->cCurImage = 1;
-    InternalDrag.bHSPending = TRUE;
 
     return TRUE;
 }
@@ -1279,7 +1271,6 @@ ImageList_EndDrag (void)
     InternalDrag.bShow = FALSE;
     DeleteObject(InternalDrag.hbmBg);
     InternalDrag.hbmBg = 0;
-    InternalDrag.bHSPending = FALSE;
 }
 
 
@@ -2362,7 +2353,11 @@ ImageList_SetBkColor (HIMAGELIST himl, COLORREF clrBk)
  *     Failure: FALSE
  *
  * NOTES
- *     When this function is called and the drag image is visible, a
+ *   - The names dxHotspot, dyHotspot are misleading because they have nothing
+ *     to do with a hotspot but are only the offset of the origin of the new
+ *     image relative to the origin of the old image.
+ *
+ *   - When this function is called and the drag image is visible, a
  *     short flickering occurs but this matches the Win9x behavior. It is
  *     possible to fix the flickering using code like in ImageList_DragMove.
  */
@@ -2372,7 +2367,6 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 			      INT dxHotspot, INT dyHotspot)
 {
     HIMAGELIST himlTemp;
-    INT dx, dy;
     BOOL visible;
 
     if (!is_valid(InternalDrag.himl) || !is_valid(himlDrag))
@@ -2383,20 +2377,8 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 
     visible = InternalDrag.bShow;
 
-    /* Calculate the offset between the origin of the old image and the
-     * origin of the second image.
-     * dxHotspot, dyHotspot is the offset of THE Hotspot (there is only one
-     * hotspot) to the origin of the second image.
-     * See M$DN for details */
-    if(InternalDrag.bHSPending) {
-	dx = 0;
-	dy = 0;
-	InternalDrag.bHSPending = FALSE;
-    } else {
-	dx = InternalDrag.dxHotspot - dxHotspot;
-	dy = InternalDrag.dyHotspot - dyHotspot;
-    }
-    himlTemp = ImageList_Merge (InternalDrag.himl, 0, himlDrag, iDrag, dx, dy);
+    himlTemp = ImageList_Merge (InternalDrag.himl, 0, himlDrag, iDrag,
+                                dxHotspot, dyHotspot);
 
     if (visible) {
 	/* hide the drag image */
@@ -2411,13 +2393,6 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 
     ImageList_Destroy (InternalDrag.himl);
     InternalDrag.himl = himlTemp;
-
-    /* update the InternalDragOffset, if the origin of the
-     * DragImage was changed by ImageList_Merge. */
-    if (dx <= 0)
-	InternalDrag.dxHotspot = dxHotspot;
-    if (dy <= 0)
-	InternalDrag.dyHotspot = dyHotspot;
 
     if (visible) {
 	/* show the drag image */

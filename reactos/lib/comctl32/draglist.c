@@ -74,7 +74,7 @@ typedef struct _DRAGLISTDATA
     RECT last_drag_icon_rect;
 } DRAGLISTDATA;
 
-static UINT uDragListMessage = 0; /* registered window message code */
+UINT uDragListMessage = 0; /* registered window message code */
 static DWORD dwLastScrollTime = 0;
 static HICON hDragArrow = NULL;
 
@@ -99,9 +99,10 @@ static inline void DragList_EndDrag(HWND hwnd, DRAGLISTDATA * data)
 {
     KillTimer(hwnd, DRAGLIST_TIMERID);
     ReleaseCapture();
-    data->dragging = FALSE;
     /* clear any drag insert icon present */
     InvalidateRect(GetParent(hwnd), &data->last_drag_icon_rect, TRUE);
+    /* clear data for next use */
+    memset(data, 0, sizeof(*data));
 }
 
 /***********************************************************************
@@ -118,8 +119,6 @@ DragList_SubclassWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
     {
     case WM_LBUTTONDOWN:
         SetFocus(hwnd);
-        data->cursor = NULL;
-        SetRectEmpty(&data->last_drag_icon_rect);
         data->dragging = DragList_Notify(hwnd, DL_BEGINDRAG);
         if (data->dragging)
         {
@@ -180,15 +179,6 @@ DragList_SubclassWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
         {
             DragList_EndDrag(hwnd, data);
             DragList_Notify(hwnd, DL_DROPPED);
-        }
-        break;
-
-	case WM_SETCURSOR:
-	    /* if app has told us to set a cursor then do so */
-        if (data->dragging && data->cursor)
-        {
-            SetCursor(data->cursor);
-            return TRUE;
         }
         break;
 

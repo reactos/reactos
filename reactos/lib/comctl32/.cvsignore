@@ -18,5 +18,8 @@ idc_divider.cur
 idc_divideropen.cur
 idc_movebutton.cur
 idi_dragarrow.ico
+idi_tt_error_sm.ico
+idi_tt_info_sm.ico
+idi_tt_warn_sm.ico
 idt_check.bmp
 comctl32.spec.def

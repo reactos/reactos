@@ -59,7 +59,7 @@ typedef struct
     INT    direction;  /* direction of the scroll, (e.g. PGF_SCROLLUP) */
 } PAGER_INFO;
 
-#define PAGER_GetInfoPtr(hwnd) ((PAGER_INFO *)GetWindowLongA(hwnd, 0))
+#define PAGER_GetInfoPtr(hwnd) ((PAGER_INFO *)GetWindowLongPtrW(hwnd, 0))
 #define PAGER_IsHorizontal(hwnd) ((GetWindowLongA (hwnd, GWL_STYLE) & PGS_HORZ))
 
 #define MIN_ARROW_WIDTH  8
@@ -330,12 +330,12 @@ PAGER_CalcSize (HWND hwnd, INT* size, BOOL getWidth)
     NMPGCALCSIZE nmpgcs;
     ZeroMemory (&nmpgcs, sizeof (NMPGCALCSIZE));
     nmpgcs.hdr.hwndFrom = hwnd;
-    nmpgcs.hdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+    nmpgcs.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
     nmpgcs.hdr.code = PGN_CALCSIZE;
     nmpgcs.dwFlag = getWidth ? PGF_CALCWIDTH : PGF_CALCHEIGHT;
     nmpgcs.iWidth = getWidth ? *size : 0;
     nmpgcs.iHeight = getWidth ? 0 : *size;
-    SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
+    SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
                   (WPARAM)nmpgcs.hdr.idFrom, (LPARAM)&nmpgcs);
 
     *size = getWidth ? nmpgcs.iWidth : nmpgcs.iHeight;
@@ -515,7 +515,7 @@ PAGER_UpdateBtns(HWND hwnd, PAGER_INFO *infoPtr,
     }
 
     if (repaintBtns)
-        SendMessageA(hwnd, WM_NCPAINT, 0, 0);
+        SendMessageW(hwnd, WM_NCPAINT, 0, 0);
 }
 
 static LRESULT
@@ -571,7 +571,7 @@ PAGER_HandleWindowPosChanging(HWND hwnd, WPARAM wParam, WINDOWPOS *winpos)
 	return 0;
     }
 
-    DefWindowProcA (hwnd, WM_WINDOWPOSCHANGING, wParam, (LPARAM)winpos);
+    DefWindowProcW (hwnd, WM_WINDOWPOSCHANGING, wParam, (LPARAM)winpos);
 
     return 1;
 }
@@ -643,8 +643,8 @@ PAGER_SetFixedHeight(HWND hwnd, PAGER_INFO* infoPtr)
  * this module), the native control does only the following:      *
  *                                                                *
  *    if (some condition)                                         *
- *          PostMessageA(hwnd, EM_FMTLINES, 0, 0);                *
- *    return DefWindowProcA(hwnd, PGM_RECALCSIZE, 0, 0);          *
+ *          PostMessageW(hwnd, EM_FMTLINES, 0, 0);                *
+ *    return DefWindowProcW(hwnd, PGM_RECALCSIZE, 0, 0);          *
  *                                                                *
  * When we figure out what the "some condition" is we will        *
  * implement that for the message processing.                     *
@@ -777,7 +777,7 @@ PAGER_Scroll(HWND hwnd, INT dir)
     {
         ZeroMemory (&nmpgScroll, sizeof (NMPGSCROLL));
         nmpgScroll.hdr.hwndFrom = hwnd;
-        nmpgScroll.hdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+        nmpgScroll.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
         nmpgScroll.hdr.code = PGN_SCROLL;
 
         GetWindowRect(hwnd, &rcWnd);
@@ -797,7 +797,7 @@ PAGER_Scroll(HWND hwnd, INT dir)
         }
         nmpgScroll.iScroll -= 2*infoPtr->nButtonSize;
 
-        SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
+        SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
                     (WPARAM)nmpgScroll.hdr.idFrom, (LPARAM)&nmpgScroll);
 
         TRACE("[%p] PGN_SCROLL returns iScroll=%d\n", hwnd, nmpgScroll.iScroll);
@@ -830,7 +830,7 @@ PAGER_FmtLines(HWND hwnd)
 		 0,0,infoPtr->nWidth,infoPtr->nHeight,
 		 0);
 
-    return DefWindowProcA (hwnd, EM_FMTLINES, 0, 0);
+    return DefWindowProcW (hwnd, EM_FMTLINES, 0, 0);
 }
 
 static LRESULT
@@ -841,7 +841,7 @@ PAGER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* allocate memory for info structure */
     infoPtr = (PAGER_INFO *)Alloc (sizeof(PAGER_INFO));
-    SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* set default settings */
     infoPtr->hwndChild = NULL;
@@ -882,7 +882,7 @@ PAGER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
     PAGER_INFO *infoPtr = PAGER_GetInfoPtr (hwnd);
     /* free pager info data */
     Free (infoPtr);
-    SetWindowLongA (hwnd, 0, 0);
+    SetWindowLongPtrW (hwnd, 0, 0);
     return 0;
 }
 
@@ -904,7 +904,7 @@ PAGER_NCCalcSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
      * coordinates of the corresponding window's client area.
      */
 
-    DefWindowProcA (hwnd, WM_NCCALCSIZE, wParam, lParam);
+    DefWindowProcW (hwnd, WM_NCCALCSIZE, wParam, lParam);
 
     TRACE("orig rect=(%ld,%ld)-(%ld,%ld)\n",
 	  lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
@@ -1029,7 +1029,7 @@ PAGER_NCPaint (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (dwStyle & WS_MINIMIZE)
         return 0;
 
-    DefWindowProcA (hwnd, WM_NCPAINT, wParam, lParam);
+    DefWindowProcW (hwnd, WM_NCPAINT, wParam, lParam);
 
     if (!(hdc = GetDCEx (hwnd, 0, DCX_USESTYLE | DCX_WINDOW)))
         return 0;
@@ -1155,7 +1155,7 @@ PAGER_SetCursor( HWND hwnd, WPARAM wParam, LPARAM lParam )
     {
 	PAGER_CaptureandTrack(infoPtr, hwnd);
 
-        SendMessageA(hwnd, WM_NCPAINT, 0, 0);
+        SendMessageW(hwnd, WM_NCPAINT, 0, 0);
     }
 
     return TRUE;
@@ -1178,9 +1178,9 @@ PAGER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
         NMHDR nmhdr;
         ZeroMemory (&nmhdr, sizeof (NMHDR));
         nmhdr.hwndFrom = hwnd;
-        nmhdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+        nmhdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
         nmhdr.code = NM_RELEASEDCAPTURE;
-        SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
+        SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
                         (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
     }
 
@@ -1253,7 +1253,7 @@ PAGER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    PAGER_DrawButton(hdc, infoPtr->clrBk, *btnrect,
 			     PAGER_IsHorizontal(hwnd), topLeft, btnstate);
 	    ReleaseDC(hwnd, hdc);
-	    return DefWindowProcA (hwnd, WM_MOUSEMOVE, wParam, lParam);
+	    return DefWindowProcW (hwnd, WM_MOUSEMOVE, wParam, lParam);
 	}
     }
 
@@ -1268,16 +1268,16 @@ PAGER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		NMHDR nmhdr;
 		ZeroMemory (&nmhdr, sizeof (NMHDR));
 		nmhdr.hwndFrom = hwnd;
-		nmhdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
+		nmhdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
 		nmhdr.code = NM_RELEASEDCAPTURE;
-		SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
+		SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
 			      (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
 	    }
 	}
 	if (IsWindow(hwnd))
 	    KillTimer(hwnd, TIMERID1);
     }
-    return DefWindowProcA (hwnd, WM_MOUSEMOVE, wParam, lParam);
+    return DefWindowProcW (hwnd, WM_MOUSEMOVE, wParam, lParam);
 }
 
 static LRESULT
@@ -1310,7 +1310,7 @@ PAGER_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
 
     if (repaintBtns)
-        SendMessageA(hwnd, WM_NCPAINT, 0, 0);
+        SendMessageW(hwnd, WM_NCPAINT, 0, 0);
 
     switch(hit)
     {
@@ -1417,7 +1417,7 @@ PAGER_EraseBackground (HWND hwnd, WPARAM wParam, LPARAM lParam)
      *   pt.x=0; pt.y=0; ?????
      *   MapWindowPoints(pager, parent, &pt, 1)
      *   OffsetWindowOrgEx(hdc, pt.x, pt.y, &ptorg)
-     *   SendMessageA(parent, WM_ERASEBKGND, hdc, 0)
+     *   SendMessageW(parent, WM_ERASEBKGND, hdc, 0)
      *   SetWindowOrgEx(hdc, 0, 0, 0)
      */
 
@@ -1426,7 +1426,7 @@ PAGER_EraseBackground (HWND hwnd, WPARAM wParam, LPARAM lParam)
     parent = GetParent(hwnd);
     MapWindowPoints(hwnd, parent, &pt, 1);
     OffsetWindowOrgEx (hdc, pt.x, pt.y, &ptorig);
-    SendMessageA (parent, WM_ERASEBKGND, wParam, lParam);
+    SendMessageW (parent, WM_ERASEBKGND, wParam, lParam);
     SetWindowOrgEx (hdc, ptorig.x, ptorig.y, 0);
 
 
@@ -1475,7 +1475,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     PAGER_INFO *infoPtr = PAGER_GetInfoPtr (hwnd);
 
     if (!infoPtr && (uMsg != WM_CREATE))
-	return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
     switch (uMsg)
     {
@@ -1551,7 +1551,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_MOUSEMOVE:
             if (infoPtr->bForward && infoPtr->hwndChild)
-                PostMessageA(infoPtr->hwndChild, WM_MOUSEMOVE, wParam, lParam);
+                PostMessageW(infoPtr->hwndChild, WM_MOUSEMOVE, wParam, lParam);
             return PAGER_MouseMove (hwnd, wParam, lParam);
 
         case WM_MOUSELEAVE:
@@ -1578,10 +1578,10 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_NOTIFY:
         case WM_COMMAND:
-            return SendMessageA (infoPtr->hwndNotify, uMsg, wParam, lParam);
+            return SendMessageW (infoPtr->hwndNotify, uMsg, wParam, lParam);
 
         default:
-            return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+            return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 
     return 0;
@@ -1591,23 +1591,23 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 PAGER_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
-    wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_SAVEBITS;
-    wndClass.lpfnWndProc   = (WNDPROC)PAGER_WindowProc;
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
+    wndClass.style         = CS_GLOBALCLASS;
+    wndClass.lpfnWndProc   = PAGER_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(PAGER_INFO *);
-    wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
-    wndClass.hbrBackground = 0;
-    wndClass.lpszClassName = WC_PAGESCROLLERA;
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
+    wndClass.lpszClassName = WC_PAGESCROLLERW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 }
 
 
 VOID
 PAGER_Unregister (void)
 {
-    UnregisterClassA (WC_PAGESCROLLERA, NULL);
+    UnregisterClassW (WC_PAGESCROLLERW, NULL);
 }

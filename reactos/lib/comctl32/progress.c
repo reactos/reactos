@@ -499,7 +499,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     TRACE("hwnd=%p msg=%04x wparam=%x lParam=%lx\n", hwnd, message, wParam, lParam);
 
-    infoPtr = (PROGRESS_INFO *)GetWindowLongW(hwnd, 0);
+    infoPtr = (PROGRESS_INFO *)GetWindowLongPtrW(hwnd, 0);
 
     if (!infoPtr && message != WM_CREATE)
         return DefWindowProcW( hwnd, message, wParam, lParam );
@@ -518,7 +518,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         /* allocate memory for info struct */
         infoPtr = (PROGRESS_INFO *)Alloc (sizeof(PROGRESS_INFO));
         if (!infoPtr) return -1;
-        SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+        SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
         /* initialize the info struct */
         infoPtr->Self = hwnd;
@@ -538,7 +538,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_DESTROY:
         TRACE("Progress Ctrl destruction, hwnd=%p\n", hwnd);
         Free (infoPtr);
-        SetWindowLongW(hwnd, 0, 0);
+        SetWindowLongPtrW(hwnd, 0, 0);
         return 0;
 
     case WM_GETFONT:

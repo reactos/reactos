@@ -95,7 +95,7 @@ typedef struct
 #define BUDDY_UPDOWN_HWND        "buddyUpDownHWND"
 #define BUDDY_SUPERCLASS_WNDPROC "buddySupperClassWndProc"
 
-#define UPDOWN_GetInfoPtr(hwnd) ((UPDOWN_INFO *)GetWindowLongA (hwnd,0))
+#define UPDOWN_GetInfoPtr(hwnd) ((UPDOWN_INFO *)GetWindowLongPtrW (hwnd,0))
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
 static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action);
@@ -491,7 +491,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
                when we reset the upDown ctrl buddy to another buddy because it is not
                good to break the window proc chain. */
             if (!GetPropA(bud, BUDDY_SUPERCLASS_WNDPROC)) {
-                baseWndProc = (WNDPROC)SetWindowLongW(bud, GWL_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
+                baseWndProc = (WNDPROC)SetWindowLongPtrW(bud, GWLP_WNDPROC, (LPARAM)UPDOWN_Buddy_SubclassProc);
                 SetPropA(bud, BUDDY_SUPERCLASS_WNDPROC, (HANDLE)baseWndProc);
             }
         }
@@ -572,7 +572,7 @@ static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action)
     ni.iPos = infoPtr->CurVal;
     ni.iDelta = delta;
     ni.hdr.hwndFrom = infoPtr->Self;
-    ni.hdr.idFrom   = GetWindowLongW (infoPtr->Self, GWL_ID);
+    ni.hdr.idFrom   = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
     ni.hdr.code = UDN_DELTAPOS;
     if (!SendMessageW(infoPtr->Notify, WM_NOTIFY, (WPARAM)ni.hdr.idFrom, (LPARAM)&ni)) {
         /* Parent said: OK to adjust */
@@ -623,7 +623,7 @@ static BOOL UPDOWN_CancelMode (UPDOWN_INFO *infoPtr)
     if (GetCapture() == infoPtr->Self) {
 	NMHDR hdr;
 	hdr.hwndFrom = infoPtr->Self;
-	hdr.idFrom   = GetWindowLongW (infoPtr->Self, GWL_ID);
+	hdr.idFrom   = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
 	hdr.code = NM_RELEASEDCAPTURE;
 	SendMessageW(infoPtr->Notify, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
 	ReleaseCapture();
@@ -725,7 +725,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam,
         case WM_CREATE:
             SetWindowLongW (hwnd, GWL_STYLE, dwStyle & ~WS_BORDER);
             infoPtr = (UPDOWN_INFO*)Alloc (sizeof(UPDOWN_INFO));
-	    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+	    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
 	    /* initialize the info struct */
 	    infoPtr->Self = hwnd;
@@ -753,7 +753,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam,
 	    if(infoPtr->Buddy) RemovePropA(infoPtr->Buddy, BUDDY_UPDOWN_HWND);
 
 	    Free (infoPtr);
-	    SetWindowLongW (hwnd, 0, 0);
+	    SetWindowLongPtrW (hwnd, 0, 0);
 	    TRACE("UpDown Ctrl destruction, hwnd=%p\n", hwnd);
 	    break;
 
@@ -958,11 +958,11 @@ void UPDOWN_Register(void)
 
     ZeroMemory( &wndClass, sizeof( WNDCLASSW ) );
     wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)UpDownWindowProc;
+    wndClass.lpfnWndProc   = UpDownWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(UPDOWN_INFO*);
     wndClass.hCursor       = LoadCursorW( 0, (LPWSTR)IDC_ARROW );
-    wndClass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wndClass.lpszClassName = UPDOWN_CLASSW;
 
     RegisterClassW( &wndClass );

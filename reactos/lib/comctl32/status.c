@@ -91,7 +91,7 @@ typedef struct
 #define VERT_BORDER 2
 #define HORZ_GAP    2
 
-#define STATUSBAR_GetInfoPtr(hwnd) ((STATUSWINDOWINFO *)GetWindowLongW (hwnd, 0))
+#define STATUSBAR_GetInfoPtr(hwnd) ((STATUSWINDOWINFO *)GetWindowLongPtrW (hwnd, 0))
 
 /* prototype */
 static void
@@ -165,7 +165,7 @@ STATUSBAR_DrawPart (HDC hdc, const STATUSWINDOWPART *part, const STATUSWINDOWINF
 	{
 	    DRAWITEMSTRUCT dis;
 
-	    dis.CtlID = GetWindowLongW (infoPtr->Self, GWL_ID);
+	    dis.CtlID = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
 	    dis.itemID = itemID;
 	    dis.hwndItem = infoPtr->Self;
 	    dis.hDC = hdc;
@@ -777,7 +777,7 @@ STATUSBAR_Simple (STATUSWINDOWINFO *infoPtr, BOOL simple)
 
     /* send notification */
     nmhdr.hwndFrom = infoPtr->Self;
-    nmhdr.idFrom = GetWindowLongW (infoPtr->Self, GWL_ID);
+    nmhdr.idFrom = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
     nmhdr.code = SBN_SIMPLEMODECHANGE;
     SendMessageW (infoPtr->Notify, WM_NOTIFY, 0, (LPARAM)&nmhdr);
     InvalidateRect(infoPtr->Self, NULL, FALSE);
@@ -807,7 +807,7 @@ STATUSBAR_WMDestroy (STATUSWINDOWINFO *infoPtr)
     if (infoPtr->hwndToolTip)
 	DestroyWindow (infoPtr->hwndToolTip);
 
-    SetWindowLongW(infoPtr->Self, 0, 0);
+    SetWindowLongPtrW(infoPtr->Self, 0, 0);
     Free (infoPtr);
     return 0;
 }
@@ -826,7 +826,7 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     TRACE("\n");
     infoPtr = (STATUSWINDOWINFO*)Alloc (sizeof(STATUSWINDOWINFO));
     if (!infoPtr) goto create_fail;
-    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     infoPtr->Self = hwnd;
     infoPtr->Notify = lpCreate->hwndParent;
@@ -908,13 +908,13 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
 	    CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,
 			     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			     CW_USEDEFAULT, hwnd, 0,
-			     (HINSTANCE)GetWindowLongW(hwnd, GWL_HINSTANCE), NULL);
+			     (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
 
 	if (infoPtr->hwndToolTip) {
 	    NMTOOLTIPSCREATED nmttc;
 
 	    nmttc.hdr.hwndFrom = hwnd;
-	    nmttc.hdr.idFrom = GetWindowLongW (hwnd, GWL_ID);
+	    nmttc.hdr.idFrom = GetWindowLongPtrW (hwnd, GWLP_ID);
 	    nmttc.hdr.code = NM_TOOLTIPSCREATED;
 	    nmttc.hwndToolTips = infoPtr->hwndToolTip;
 
@@ -1106,7 +1106,7 @@ STATUSBAR_SendNotify (HWND hwnd, UINT code)
 
     TRACE("code %04x\n", code);
     nmhdr.hwndFrom = hwnd;
-    nmhdr.idFrom = GetWindowLongW (hwnd, GWL_ID);
+    nmhdr.idFrom = GetWindowLongPtrW (hwnd, GWLP_ID);
     nmhdr.code = code;
     SendMessageW (infoPtr->Notify, WM_NOTIFY, 0, (LPARAM)&nmhdr);
     return 0;
@@ -1270,11 +1270,11 @@ STATUS_Register (void)
 
     ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)StatusWindowProc;
+    wndClass.lpfnWndProc   = StatusWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(STATUSWINDOWINFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wndClass.lpszClassName = STATUSCLASSNAMEW;
 
     RegisterClassW (&wndClass);

@@ -333,7 +333,7 @@ typedef struct
                     else b->rcBand.left += (i); } while(0)
 
 
-#define REBAR_GetInfoPtr(wndPtr) ((REBAR_INFO *)GetWindowLongA (hwnd, 0))
+#define REBAR_GetInfoPtr(wndPtr) ((REBAR_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 
 /* "constant values" retrieved when DLL was initialized    */
@@ -751,8 +751,8 @@ REBAR_AdjustBands (REBAR_INFO *infoPtr, UINT rowstart, UINT rowend,
      /*   start and end bands are *not* hidden                       */
 {
     REBAR_BAND *lpBand;
-    UINT x, xsep, extra, curwidth, fudge;
-    INT i, last_adjusted;
+    UINT xsep, extra, curwidth, fudge;
+    INT x, i, last_adjusted;
 
     TRACE("start=%u, end=%u, max x=%d, max y=%d\n",
 	  rowstart, rowend, maxx, mcy);
@@ -3841,7 +3841,7 @@ REBAR_Destroy (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     DeleteObject (infoPtr->hcurVert);
     DeleteObject (infoPtr->hcurDrag);
     if(infoPtr->hDefaultFont) DeleteObject (infoPtr->hDefaultFont);
-    SetWindowLongA (infoPtr->hwndSelf, 0, 0);
+    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
 
     /* free rebar info data */
     Free (infoPtr);
@@ -4124,7 +4124,7 @@ REBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* allocate memory for info structure */
     infoPtr = (REBAR_INFO *)Alloc (sizeof(REBAR_INFO));
-    SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure - initial values are 0 */
     infoPtr->clrBk = CLR_NONE;

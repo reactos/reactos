@@ -122,7 +122,7 @@ typedef struct
 #define CBE_SEP			4
 
 #define COMBOEX_SUBCLASS_PROP	"CCComboEx32SubclassInfo"
-#define COMBOEX_GetInfoPtr(hwnd) ((COMBOEX_INFO *)GetWindowLongW (hwnd, 0))
+#define COMBOEX_GetInfoPtr(hwnd) ((COMBOEX_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 
 /* Things common to the entire DLL */
@@ -400,14 +400,14 @@ static void COMBOEX_AdjustEditPos (COMBOEX_INFO *infoPtr)
 static void COMBOEX_ReSize (COMBOEX_INFO *infoPtr)
 {
     SIZE mysize;
-    UINT cy;
+    LONG cy;
     IMAGEINFO iinfo;
 
     COMBOEX_GetComboFontSize (infoPtr, &mysize);
     cy = mysize.cy + CBE_EXTRA;
     if (infoPtr->himl && ImageList_GetImageInfo(infoPtr->himl, 0, &iinfo)) {
 	cy = max (iinfo.rcImage.bottom - iinfo.rcImage.top, cy);
-	TRACE("upgraded height due to image:  height=%d\n", cy);
+	TRACE("upgraded height due to image:  height=%ld\n", cy);
     }
     SendMessageW (infoPtr->hwndSelf, CB_SETITEMHEIGHT, (WPARAM)-1, (LPARAM)cy);
     if (infoPtr->hwndCombo) {
@@ -943,7 +943,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
     }
     infoPtr->NtfUnicode = (i == NFR_UNICODE);
 
-    SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* create combo box */
     GetWindowRect(hwnd, &wnrc1);
@@ -967,8 +967,8 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 			 WS_CHILD | WS_VISIBLE | CBS_OWNERDRAWFIXED |
 			 GetWindowLongW (hwnd, GWL_STYLE),
 			 cs->y, cs->x, cs->cx, cs->cy, hwnd,
-			 (HMENU) GetWindowLongW (hwnd, GWL_ID),
-			 (HINSTANCE)GetWindowLongW (hwnd, GWL_HINSTANCE), NULL);
+			 (HMENU) GetWindowLongPtrW (hwnd, GWLP_ID),
+			 (HINSTANCE)GetWindowLongPtrW (hwnd, GWLP_HINSTANCE), NULL);
 
     /*
      * native does the following at this point according to trace:
@@ -983,8 +983,8 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
      * data structure.
      */
     SetPropA(infoPtr->hwndCombo, COMBOEX_SUBCLASS_PROP, hwnd);
-    infoPtr->prevComboWndProc = (WNDPROC)SetWindowLongW(infoPtr->hwndCombo,
-	                        GWL_WNDPROC, (LONG)COMBOEX_ComboWndProc);
+    infoPtr->prevComboWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndCombo,
+	                        GWLP_WNDPROC, (DWORD_PTR)COMBOEX_ComboWndProc);
     infoPtr->font = (HFONT)SendMessageW (infoPtr->hwndCombo, WM_GETFONT, 0, 0);
 
 
@@ -997,8 +997,8 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 		    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_AUTOHSCROLL,
 		    0, 0, 0, 0,  /* will set later */
 		    infoPtr->hwndCombo,
-		    (HMENU) GetWindowLongW (hwnd, GWL_ID),
-		    (HINSTANCE)GetWindowLongW (hwnd, GWL_HINSTANCE), NULL);
+		    (HMENU) GetWindowLongPtrW (hwnd, GWLP_ID),
+		    (HINSTANCE)GetWindowLongPtrW (hwnd, GWLP_HINSTANCE), NULL);
 
 	/* native does the following at this point according to trace:
 	 *  GetWindowThreadProcessId(hwndEdit,0)
@@ -1012,8 +1012,8 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 	 * data structure.
 	 */
         SetPropA(infoPtr->hwndEdit, COMBOEX_SUBCLASS_PROP, hwnd);
-	infoPtr->prevEditWndProc = (WNDPROC)SetWindowLongW(infoPtr->hwndEdit,
-				 GWL_WNDPROC, (LONG)COMBOEX_EditWndProc);
+	infoPtr->prevEditWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndEdit,
+				 GWLP_WNDPROC, (DWORD_PTR)COMBOEX_EditWndProc);
 	infoPtr->font = (HFONT)SendMessageW(infoPtr->hwndCombo, WM_GETFONT, 0, 0);
     }
 
@@ -1546,7 +1546,7 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 
     /* free comboex info data */
     Free (infoPtr);
-    SetWindowLongW (infoPtr->hwndSelf, 0, 0);
+    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
     return 0;
 }
 
@@ -1610,7 +1610,7 @@ static LRESULT COMBOEX_Size (COMBOEX_INFO *infoPtr, INT width, INT height)
 static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 {
     RECT cbx_wrect, cbx_crect, cb_wrect;
-    UINT width, height;
+    INT width, height;
 
     GetWindowRect (infoPtr->hwndSelf, &cbx_wrect);
     GetClientRect (infoPtr->hwndSelf, &cbx_crect);
@@ -2262,6 +2262,10 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOWPOSCHANGING:
 	    return COMBOEX_WindowPosChanging (infoPtr, (WINDOWPOS *)lParam);
+
+        case WM_SETFOCUS:
+            SetFocus(infoPtr->hwndCombo);
+            return 0;
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))

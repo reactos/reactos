@@ -41,7 +41,7 @@
  * Bugs
  *   -- Expand large item in ICON mode when the cursor is flying over the icon or text.
  *   -- Support CustonDraw options for _WIN32_IE >= 0x560 (see NMLVCUSTOMDRAW docs.
- *   -- in LISTVIEW_AddGroupSelection, se whould send LVN_ODSTATECHANGED 
+ *   -- in LISTVIEW_AddGroupSelection, we would send LVN_ODSTATECHANGED 
  *   -- LVA_SNAPTOGRID not implemented
  *   -- LISTVIEW_ApproximateViewRect partially implemented
  *   -- LISTVIEW_[GS]etColumnOrderArray stubs
@@ -717,7 +717,7 @@ static LRESULT notify_hdr(LISTVIEW_INFO *infoPtr, INT code, LPNMHDR pnmh)
     TRACE("(code=%d)\n", code);
 
     pnmh->hwndFrom = infoPtr->hwndSelf;
-    pnmh->idFrom = GetWindowLongW(infoPtr->hwndSelf, GWL_ID);
+    pnmh->idFrom = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     pnmh->code = code;
     result = SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
 			  (WPARAM)pnmh->idFrom, (LPARAM)pnmh);
@@ -1732,7 +1732,7 @@ static void LISTVIEW_ShowFocusRect(LISTVIEW_INFO *infoPtr, BOOL fShow)
 	   
 	ZeroMemory(&dis, sizeof(dis)); 
 	dis.CtlType = ODT_LISTVIEW;
-	dis.CtlID = GetWindowLongW(infoPtr->hwndSelf, GWL_ID);
+	dis.CtlID = (UINT)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
 	dis.itemID = item.iItem;
 	dis.itemAction = ODA_FOCUS;
 	if (fShow) dis.itemState |= ODS_FOCUS;
@@ -3691,7 +3691,7 @@ postpaint:
  */
 static void LISTVIEW_RefreshOwnerDraw(LISTVIEW_INFO *infoPtr, ITERATOR *i, HDC hdc, DWORD cdmode)
 {
-    UINT uID = GetWindowLongW(infoPtr->hwndSelf, GWL_ID);
+    UINT uID = (UINT)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     DWORD cditemmode = CDRF_DODEFAULT;
     NMLVCUSTOMDRAW nmlvcd;
     POINT Origin, Position;
@@ -7380,7 +7380,7 @@ static LRESULT LISTVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
   infoPtr = (LISTVIEW_INFO *)Alloc(sizeof(LISTVIEW_INFO));
   if (!infoPtr) return -1;
 
-  SetWindowLongW(hwnd, 0, (LONG)infoPtr);
+  SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
   infoPtr->hwndSelf = hwnd;
   infoPtr->dwStyle = lpcs->style;
@@ -7725,7 +7725,7 @@ static LRESULT LISTVIEW_MouseWheel(LISTVIEW_INFO *infoPtr, INT wheelDelta)
 {
     UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
     INT gcWheelDelta = 0;
-    UINT pulScrollLines = 3;
+    INT pulScrollLines = 3;
     SCROLLINFO scrollInfo;
 
     TRACE("(wheelDelta=%d)\n", wheelDelta);
@@ -8182,7 +8182,7 @@ static LRESULT LISTVIEW_NCDestroy(LISTVIEW_INFO *infoPtr)
   if (infoPtr->hDefaultFont) DeleteObject(infoPtr->hDefaultFont);
   if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
 
-  SetWindowLongW(infoPtr->hwndSelf, 0, 0);
+  SetWindowLongPtrW(infoPtr->hwndSelf, 0, 0);
 
   /* free listview info pointer*/
   Free(infoPtr);
@@ -8774,7 +8774,7 @@ static INT LISTVIEW_StyleChanged(LISTVIEW_INFO *infoPtr, WPARAM wStyleType,
 static LRESULT WINAPI
 LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongW(hwnd, 0);
+  LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongPtrW(hwnd, 0);
 
   TRACE("(uMsg=%x wParam=%x lParam=%lx)\n", uMsg, wParam, lParam);
 
@@ -9382,7 +9382,7 @@ static LRESULT LISTVIEW_Command(LISTVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lP
  */
 static LRESULT EditLblWndProcT(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL isW)
 {
-    LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongW(GetParent(hwnd), 0);
+    LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongPtrW(GetParent(hwnd), 0);
     BOOL cancel = FALSE;
 
     TRACE("(hwnd=%p, uMsg=%x, wParam=%x, lParam=%lx, isW=%d)\n",
@@ -9400,7 +9400,7 @@ static LRESULT EditLblWndProcT(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	{
 	    WNDPROC editProc = infoPtr->EditWndProc;
 	    infoPtr->EditWndProc = 0;
-	    SetWindowLongW(hwnd, GWL_WNDPROC, (LONG)editProc);
+	    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (DWORD_PTR)editProc);
 	    return CallWindowProcT(editProc, hwnd, uMsg, wParam, lParam, isW);
 	}
 
@@ -9501,7 +9501,7 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style,
     HDC hdc;
     HDC hOldFont=0;
     TEXTMETRICW textMetric;
-    HINSTANCE hinst = (HINSTANCE)GetWindowLongW(infoPtr->hwndSelf, GWL_HINSTANCE);
+    HINSTANCE hinst = (HINSTANCE)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_HINSTANCE);
 
     TRACE("(text=%s, ..., isW=%d)\n", debugtext_t(text, isW), isW);
 
@@ -9532,8 +9532,8 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style,
     if (!hedit) return 0;
 
     infoPtr->EditWndProc = (WNDPROC)
-	(isW ? SetWindowLongW(hedit, GWL_WNDPROC, (LONG)EditLblWndProcW) :
-               SetWindowLongA(hedit, GWL_WNDPROC, (LONG)EditLblWndProcA) );
+	(isW ? SetWindowLongPtrW(hedit, GWLP_WNDPROC, (DWORD_PTR)EditLblWndProcW) :
+               SetWindowLongPtrA(hedit, GWLP_WNDPROC, (DWORD_PTR)EditLblWndProcA) );
 
     SendMessageW(hedit, WM_SETFONT, (WPARAM)infoPtr->hFont, FALSE);
 

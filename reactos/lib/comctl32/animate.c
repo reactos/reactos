@@ -85,7 +85,7 @@ typedef struct
    HBITMAP  	    	hbmPrevFrame;
 } ANIMATE_INFO;
 
-#define ANIMATE_GetInfoPtr(hWnd) ((ANIMATE_INFO *)GetWindowLongA(hWnd, 0))
+#define ANIMATE_GetInfoPtr(hWnd) ((ANIMATE_INFO *)GetWindowLongPtrW(hWnd, 0))
 #define ANIMATE_COLOR_NONE  	0xffffffff
 
 static void ANIMATE_Notify(ANIMATE_INFO* infoPtr, UINT notif)
@@ -704,7 +704,7 @@ static LRESULT ANIMATE_OpenA(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
 
     if (!hInstance)
-       hInstance = (HINSTANCE)GetWindowLongA(hWnd, GWL_HINSTANCE);
+       hInstance = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
 
     if (HIWORD(lParam)) {
 	TRACE("(\"%s\");\n", (LPSTR)lParam);
@@ -794,13 +794,13 @@ static LRESULT ANIMATE_Create(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
 
     /* store crossref hWnd <-> info structure */
-    SetWindowLongA(hWnd, 0, (DWORD)infoPtr);
+    SetWindowLongPtrW(hWnd, 0, (DWORD_PTR)infoPtr);
     infoPtr->hwndSelf = hWnd;
     infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
     infoPtr->transparentColor = ANIMATE_COLOR_NONE;
     infoPtr->hbmPrevFrame = 0;
 
-    TRACE("Animate style=0x%08lx, parent=%08lx\n", GetWindowLongA(hWnd, GWL_STYLE), (DWORD)infoPtr->hwndNotify);
+    TRACE("Animate style=0x%08lx, parent=%p\n", GetWindowLongA(hWnd, GWL_STYLE), infoPtr->hwndNotify);
 
     InitializeCriticalSection(&infoPtr->cs);
 
@@ -818,7 +818,7 @@ static LRESULT ANIMATE_Destroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     /* free animate info data */
     Free(infoPtr);
-    SetWindowLongA(hWnd, 0, 0);
+    SetWindowLongPtrW(hWnd, 0, 0);
 
     return 0;
 }
