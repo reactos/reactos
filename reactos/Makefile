@@ -21,6 +21,13 @@
 #        a path separator at the end. The variable defaults to the current
 #        directory.
 #
+#    ROS_BUILDMAP
+#        This variable controls if map files are to be generated for executable
+#        output files. Map files have the extension .map. The value can be either
+#        full (to build map files with assembly code), yes (to build map files
+#        without source code) or no (to not build any map files). The variable
+#        defaults to no.
+#
 
 .PHONY: all
 .PHONY: clean
@@ -66,6 +73,8 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_BIN2RES =@echo [BIN2RES]  $<
   ECHO_DLLTOOL =@echo [DLLTOOL]  $@
   ECHO_LD      =@echo [LD]       $@
+  ECHO_NM      =@echo [NM]       $@
+  ECHO_OBJDUMP =@echo [OBJDUMP]  $@
   ECHO_RBUILD  =@echo [RBUILD]   $@
   ECHO_RSYM    =@echo [RSYM]     $@
   ECHO_WMC     =@echo [WMC]      $@
@@ -88,6 +97,8 @@ else
   ECHO_BIN2RES =
   ECHO_DLLTOOL =
   ECHO_LD      =
+  ECHO_NM      =
+  ECHO_OBJDUMP =
   ECHO_RBUILD  =
   ECHO_RSYM    =
   ECHO_WMC     =
@@ -112,6 +123,8 @@ ifeq ($(HOST),mingw32-linux)
 	gcc = $(Q)mingw32-gcc
 	gpp = $(Q)mingw32-g++
 	ld = $(Q)mingw32-ld
+	nm = $(Q)mingw32-nm
+	objdump = $(Q)mingw32-objdump
 	ar = $(Q)mingw32-ar
 	objcopy = $(Q)mingw32-objcopy
 	dlltool = $(Q)mingw32-dlltool
@@ -128,6 +141,8 @@ else # mingw32-windows
 	gcc = $(Q)gcc
 	gpp = $(Q)g++
 	ld = $(Q)ld
+	nm = $(Q)nm
+	objdump = $(Q)objdump
 	ar = $(Q)ar
 	objcopy = $(Q)objcopy
 	dlltool = $(Q)dlltool
@@ -147,7 +162,7 @@ INTERMEDIATE_ := $(INTERMEDIATE)$(SEP)
 ifneq ($(ROS_OUTPUT),)
   OUTPUT := $(ROS_OUTPUT)
 else
-  OUTPUT := obj-i386
+  OUTPUT := output-i386
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
 
