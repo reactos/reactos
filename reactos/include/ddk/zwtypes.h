@@ -717,13 +717,16 @@ struct _SYSTEM_DRIVER_LOAD
 } SYSTEM_DRIVER_LOAD, *PSYSTEM_DRIVER_LOAD;
 
 // SystemTimeZoneInformation (44)
-// typedef
+typedef
 struct _SYSTEM_TIME_ZONE_INFORMATION
 {
 	LONG		Bias;
 	WCHAR		StandardName [32];
 	SYSTEMTIME	StandardDate;
 	LONG		StandardBias;
+	WCHAR		DaylightName [32];
+	SYSTEMTIME	DaylightDate;
+	LONG		DaylightBias;
 
 } SYSTEM_TIME_ZONE_INFORMATION, * PSYSTEM_TIME_ZONE_INFORMATION;
 
