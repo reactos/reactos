@@ -39,6 +39,7 @@ IopCompleteRequest1(struct _KAPC* Apc,
    PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
    
    IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
+   FileObject = IoStack->FileObject;
    
    (*SystemArgument1) = (PVOID)Irp->UserIosb;
    (*SystemArgument2) = (PVOID)Irp->IoStatus.Information;
@@ -50,11 +51,11 @@ IopCompleteRequest1(struct _KAPC* Apc,
    if (Irp->UserEvent!=NULL)
      {
 	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
-	ObDereferenceObject( Irp->UserEvent );
+	// if the event is not the one in the file object, it needs dereferenced
+	if( FileObject && Irp->UserEvent != &FileObject->Event )
+	  ObDereferenceObject( Irp->UserEvent );
      }
 
-   FileObject = IoStack->FileObject;
-   
    if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
      {
 	ObDereferenceObject(FileObject);
@@ -249,10 +250,6 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
      }
 
    if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
-     {
-	//ObDereferenceObject(FileObject);
-     }
-   if (FileObject != NULL && (IoStack->MajorFunction == IRP_MJ_READ || IoStack->MajorFunction == IRP_MJ_WRITE || IoStack->MajorFunction ==IRP_MJ_CLEANUP || IoStack->MajorFunction ==IRP_MJ_CREATE || IoStack->MajorFunction==IRP_MJ_DIRECTORY_CONTROL))
      {
 	ObDereferenceObject(FileObject);
      }

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.16 2002/04/07 18:36:13 phreak Exp $
+/* $Id: file.c,v 1.17 2002/04/27 19:21:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,7 +125,6 @@ NtQueryInformationFile(HANDLE FileHandle,
     }
    
    ExFreePool(SystemBuffer);
-   ObDereferenceObject(FileObject);
    
    return(Status);
 }
@@ -201,7 +200,6 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 	*ReturnedLength = IoStatusBlock.Information;
      }
    
-   ObDereferenceObject(FileObject);
    
    return Status;
 }
@@ -308,8 +306,7 @@ NtSetInformationFile(HANDLE FileHandle,
        *IoStatusBlock = IoSB;
      }
    ExFreePool(SystemBuffer);
-   ObDereferenceObject(FileObject);
-   
+ 
    return Status;
 }
 
