@@ -190,7 +190,7 @@ ReadPciConfigUshort(U8 Bus,
     {
       case 1:
         WRITE_PORT_ULONG((PU32)0xCF8, CONFIG_CMD(Bus, Slot, Offset));
-        *Value = READ_PORT_USHORT((PU16)0xCFC + (Offset & 1));
+        *Value = READ_PORT_USHORT((PU16)0xCFC + (Offset & 2));
         return TRUE;
 
       case 2:
