@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.85 2003/09/09 09:39:21 gvg Exp $
+/* $Id: defwnd.c,v 1.86 2003/09/10 18:18:25 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -419,6 +419,7 @@ DrawCaption(
     HFONT hOldFont = NULL;
     HBRUSH OldBrush = NULL;
     HDC MemDC = NULL;
+    int ButtonWidth;
 
 #ifdef DOUBLE_BUFFER_CAPTION
     HBITMAP MemBMP = NULL, OldBMP = NULL;
@@ -486,6 +487,16 @@ DrawCaption(
         r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
 
     r.right = (lprc->right - lprc->left);
+    ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_SYSMENU)
+    {
+      r.right -= 3 + ButtonWidth;
+      if (! (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+      {
+	r.right -= 2 + 2 * ButtonWidth;
+      }
+    }
+    r.right -= 2;
 
     nclm.cbSize = sizeof(nclm);
     if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;
