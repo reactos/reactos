@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.77 2004/03/22 20:14:29 weiden Exp $
+ *  $Id: painting.c,v 1.78 2004/03/23 11:20:58 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -892,21 +892,46 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
  */
 
 BOOL STDCALL
-NtUserGetUpdateRect(HWND hWnd, LPRECT lpRect, BOOL fErase)
+NtUserGetUpdateRect(HWND Wnd, LPRECT UnsafeRect, BOOL Erase)
 {
-   HRGN hRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+  RECT Rect;
+  HRGN Rgn;
+  PROSRGNDATA RgnData;
+  NTSTATUS Status;
 
-   if (!lpRect)
-   {
+  Rgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+  if (NULL == Rgn)
+    {
+      NtGdiDeleteObject(Rgn);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return FALSE;
+    }
+  NtUserGetUpdateRgn(Wnd, Rgn, Erase);
+  RgnData = RGNDATA_LockRgn(Rgn);
+  if (NULL == RgnData)
+    {
+      NtGdiDeleteObject(Rgn);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return FALSE;
+    }
+  if (ERROR == UnsafeIntGetRgnBox(RgnData, &Rect))
+    {
+      RGNDATA_UnlockRgn(Rgn);
+      NtGdiDeleteObject(Rgn);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return FALSE;
+    }
+  RGNDATA_UnlockRgn(Rgn);
+  NtGdiDeleteObject(Rgn);
+
+  Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECT));
+  if (! NT_SUCCESS(Status))
+    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
-   }
+    }
 
-   NtUserGetUpdateRgn(hWnd, hRgn, fErase);
-   NtGdiGetRgnBox(hRgn, lpRect);
-   NtGdiDeleteObject(hRgn);
-
-   return lpRect->left < lpRect->right && lpRect->top < lpRect->bottom;
+  return Rect.left < Rect.right && Rect.top < Rect.bottom;
 }
 
 /*

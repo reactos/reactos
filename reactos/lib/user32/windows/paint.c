@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.22 2004/01/26 08:44:51 weiden Exp $
+/* $Id: paint.c,v 1.23 2004/03/23 11:20:58 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            lib/user32/windows/paint.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -120,17 +120,16 @@ ExcludeUpdateRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetUpdateRect(
-  HWND hWnd,
-  LPRECT lpRect,
-  BOOL bErase)
+  HWND Wnd,
+  LPRECT Rect,
+  BOOL Erase)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserGetUpdateRect(Wnd, Rect, Erase);
 }
 
 
