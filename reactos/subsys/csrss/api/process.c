@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.28 2003/08/18 10:58:49 hbirr Exp $
+/* $Id: process.c,v 1.29 2003/10/20 18:02:04 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -39,7 +39,6 @@ VOID STDCALL CsrInitProcessData(VOID)
 
 PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
 {
-   ULONG i;
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
 
@@ -59,7 +58,6 @@ PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId)
 
 PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId)
 {
-   ULONG i;
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
 

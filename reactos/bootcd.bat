@@ -108,6 +108,7 @@ copy /Y services\eventlog\eventlog.exe %BOOTCD_DIR%\disk\reactos
 copy /Y services\rpcss\rpcss.exe %BOOTCD_DIR%\disk\reactos
 
 copy /Y subsys\csrss\csrss.exe %BOOTCD_DIR%\disk\reactos
+copy /Y subsys\csrss\usercsr\usercsr.dll %BOOTCD_DIR%\disk\reactos
 copy /Y subsys\ntvdm\ntvdm.exe %BOOTCD_DIR%\disk\reactos
 copy /Y subsys\smss\smss.exe %BOOTCD_DIR%\disk\reactos
 copy /Y subsys\system\autochk\autochk.exe %BOOTCD_DIR%\disk\reactos

@@ -1,0 +1,7 @@
+usercsr.coff
+usercsr.dll
+usercsr.nostrip.dll
+*.d
+*.o
+*.sym
+*.map

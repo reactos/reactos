@@ -104,6 +104,7 @@ copy services\eventlog\eventlog.exe %ROS_INSTALL%\system32
 copy services\rpcss\rpcss.exe %ROS_INSTALL%\system32
 copy subsys\smss\smss.exe %ROS_INSTALL%\system32
 copy subsys\csrss\csrss.exe %ROS_INSTALL%\system32
+copy subsys\csrss\usercsr\usercsr.dll %ROS_INSTALL%\system32
 copy subsys\ntvdm\ntvdm.exe %ROS_INSTALL%\system32
 copy subsys\win32k\win32k.sys %ROS_INSTALL%\system32
 copy subsys\system\usetup\usetup.exe %ROS_INSTALL%\system32

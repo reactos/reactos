@@ -24,6 +24,7 @@ typedef struct ConsoleInput_t
   BOOLEAN Fake;          // synthesized, not a real event
 } ConsoleInput;
 
+typedef struct CSRSS_CONSOLE_t *PCSRSS_CONSOLE;
 
 /************************************************************************
  * Screen buffer structure represents the win32 screen buffer object.   *
@@ -53,6 +54,8 @@ typedef struct CSRSS_SCREEN_BUFFER_t
    USHORT VirtualX;                 /* top row of buffer being displayed, reported to callers */
    CONSOLE_CURSOR_INFO CursorInfo;
    USHORT Mode;
+   PCSRSS_CONSOLE Console;          /* Console this buffer is currently attached to */
+   CRITICAL_SECTION Lock;
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
 
 typedef struct CSRSS_CONSOLE_t
@@ -74,8 +77,10 @@ typedef struct CSRSS_CONSOLE_t
    BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
    DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
    HWND hWindow;
+   COORD Size;
+   PVOID GuiConsoleData;
    LIST_ENTRY ProcessList;
-} CSRSS_CONSOLE, *PCSRSS_CONSOLE;
+} CSRSS_CONSOLE;
 
 typedef struct _CSRSS_PROCESS_DATA
 {
@@ -160,7 +165,10 @@ extern HANDLE CsrssApiHeap;
 NTSTATUS STDCALL CsrInitConsole(PCSRSS_CONSOLE Console);
 VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console );
 VOID STDCALL CsrDeleteScreenBuffer( PCSRSS_SCREEN_BUFFER Buffer );
-NTSTATUS STDCALL CsrInitConsoleScreenBuffer( PCSRSS_SCREEN_BUFFER Console );
+NTSTATUS STDCALL CsrInitConsoleScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer,
+                                            PCSRSS_CONSOLE Console,
+                                            unsigned Width,
+                                            unsigned Height);
 VOID STDCALL CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
@@ -174,7 +182,7 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray);
 NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Console );
+VOID STDCALL CsrDrawConsole(PCSRSS_CONSOLE Console);
 NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
 
 #endif /* ndef _CSRSS_API_H */

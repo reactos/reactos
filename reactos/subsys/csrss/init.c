@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.21 2003/08/19 11:48:49 weiden Exp $
+/* $Id: init.c,v 1.22 2003/10/20 18:02:04 gvg Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -50,9 +50,7 @@ CsrParseCommandLine (
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES Attributes;
-   ANSI_STRING       AnsiString;
 
-   ULONG i;
 
    /*   DbgPrint ("Arguments: %ld\n", ArgumentCount);
    for (i = 0; i < ArgumentCount; i++)

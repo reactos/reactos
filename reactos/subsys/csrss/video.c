@@ -1,4 +1,4 @@
-/* $Id: video.c,v 1.6 2002/09/08 10:23:44 chorns Exp $
+/* $Id: video.c,v 1.7 2003/10/20 18:02:04 gvg Exp $
  *
  * ReactOS Project
  */
@@ -14,7 +14,6 @@ InitializeVideoAddressSpace(VOID)
    PVOID BaseAddress;
    LARGE_INTEGER Offset;
    ULONG ViewSize;
-   PUCHAR TextMap;
    CHAR IVT[1024];
    CHAR BDA[256];
 

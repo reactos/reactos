@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.5 2002/09/08 10:23:44 chorns Exp $
+/* $Id: print.c,v 1.6 2003/10/20 18:02:04 gvg Exp $
  *
  * smss.c - Session Manager
  * 
@@ -46,7 +46,6 @@ VOID STDCALL PrintString (char* fmt, ...)
    va_list ap;
    UNICODE_STRING UnicodeString;
    ANSI_STRING AnsiString;
-   ULONG i;
    
    va_start(ap, fmt);
 	vsprintf(buffer, fmt, ap);

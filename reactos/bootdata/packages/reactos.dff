@@ -68,6 +68,7 @@ lib\ws2help\ws2help.dll                 1
 lib\wshirda\wshirda.dll                 1
 lib\wsock32\wsock32.dll                 1
 subsys\csrss\csrss.exe                  1
+subsys\csrss\usercsr\usercsr.dll        1
 subsys\ntvdm\ntvdm.exe                  1
 subsys\smss\smss.exe                    1
 subsys\win32k\win32k.sys                1
