@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.22 2003/08/04 16:54:54 gdalsnes Exp $
+/* $Id: stubs.c,v 1.23 2003/08/06 11:32:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -140,27 +140,6 @@ NtUserCallHwndParamLock(
 DWORD
 STDCALL
 NtUserCallMsgFilter(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCallNoParam(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCallOneParam(
   DWORD Unknown0,
   DWORD Unknown1)
 {

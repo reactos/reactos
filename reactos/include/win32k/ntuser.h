@@ -158,13 +158,15 @@ NtUserCallNextHookEx(
 DWORD
 STDCALL
 NtUserCallNoParam(
-  DWORD Unknown0);
+  DWORD Routine);
 
+#define ONEPARAM_ROUTINE_GETMENU            0x01
+#define ONEPARAM_ROUTINE_ISWINDOWUNICODE    0x02
 DWORD
 STDCALL
 NtUserCallOneParam(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  DWORD Param,
+  DWORD Routine);
 
 #define TWOPARAM_ROUTINE_ENABLEWINDOW       0x53
 #define TWOPARAM_ROUTINE_UNKNOWN            0x54

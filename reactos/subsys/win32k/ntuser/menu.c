@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.9 2003/08/05 19:50:57 weiden Exp $
+/* $Id: menu.c,v 1.10 2003/08/06 11:32:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,7 +101,7 @@ CleanupMenuImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-#if 0
+#if 1
 void FASTCALL
 DumpMenuItemList(PMENU_ITEM MenuItem)
 {
@@ -532,7 +532,7 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   }
   
   pos = W32kInsertMenuItemToList(MenuObject, MenuItem, pos);
-  
+  DumpMenuItemList(MenuObject->MenuItemList);
   return pos >= 0;
 }
 
@@ -713,7 +713,7 @@ NtUserBuildMenuItemList(
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return -1;
   }
   
@@ -730,7 +730,9 @@ NtUserBuildMenuItemList(
   {
     res = MenuObject->MenuItemCount;
   }
+  
   W32kReleaseMenuObject(MenuObject);
+
   return res;
 }
 
@@ -748,7 +750,7 @@ NtUserCheckMenuItem(
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hmenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return (DWORD)-1;
   }
   ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
@@ -815,7 +817,7 @@ NtUserDestroyMenu(
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
 
@@ -837,7 +839,7 @@ NtUserEnableMenuItem(
   MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return res;
   }
   ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
@@ -864,7 +866,7 @@ NtUserInsertMenuItem(
   MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return 0;
   }
   ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
@@ -955,7 +957,7 @@ NtUserHiliteMenuItem(
   if(!MenuObject)
   {
     W32kReleaseWindowObject(WindowObject);
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return res;
   }
   if(WindowObject->Menu == hmenu)
@@ -991,7 +993,7 @@ NtUserMenuInfo(
   MenuObject = W32kGetMenuObject(hmenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }  
   if(fsog)
@@ -1070,7 +1072,7 @@ NtUserSetMenuContextHelpId(
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hmenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
 
@@ -1094,7 +1096,7 @@ NtUserSetMenuDefaultItem(
   MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
   ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
@@ -1117,7 +1119,7 @@ NtUserSetMenuFlagRtoL(
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
 
