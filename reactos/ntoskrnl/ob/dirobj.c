@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.18 2003/06/07 12:23:14 chorns Exp $
+/* $Id: dirobj.c,v 1.19 2003/09/03 20:15:02 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -86,12 +86,12 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
  * 	Reads information from a directory in the system namespace.
  * 	
  * ARGUMENTS
- * 	DirObjHandle
+ * 	DirectoryHandle
  * 		Handle, obtained with NtOpenDirectoryObject(), which
  * 		must grant DIRECTORY_QUERY access to the directory
  * 		object.
  * 		
- *	DirObjInformation (OUT)
+ *	Buffer (OUT)
  *		Buffer to hold the data read.
  *		
  *	BufferLength
@@ -106,11 +106,11 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
  *		If FALSE start reading at the index specified
  *		by object index *ObjectIndex.
  *		
- *	ObjectIndex
+ *	Context
  *		Zero based index into the directory, interpretation
  *		depends on RestartScan.
  *		
- *	DataWritten (OUT)
+ *	ReturnLength (OUT)
  *		Caller supplied storage for the number of bytes
  *		written (or NULL).
  *
@@ -124,27 +124,27 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
  * 		Mostly rewritten.
  */
 NTSTATUS STDCALL
-NtQueryDirectoryObject (IN HANDLE DirObjHandle,
-			OUT POBJDIR_INFORMATION DirObjInformation,
+NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
+			OUT PVOID Buffer,
 			IN ULONG BufferLength,
 			IN BOOLEAN ReturnSingleEntry,
 			IN BOOLEAN RestartScan,
-			IN OUT PULONG ObjectIndex,
-			OUT PULONG DataWritten OPTIONAL)
+			IN OUT PULONG Context,
+			OUT PULONG ReturnLength OPTIONAL)
 {
     PDIRECTORY_OBJECT   dir = NULL;
     PLIST_ENTRY         current_entry = NULL;
     POBJECT_HEADER      current = NULL;
     ULONG               i = 0;
     NTSTATUS            Status = STATUS_SUCCESS;
-    DWORD		DirectoryCount = 0;
-    DWORD		DirectorySize = 0;
+    ULONG               DirectoryCount = 0;
+    ULONG               DirectorySize = 0;
     ULONG               SpaceLeft = BufferLength;
     ULONG               SpaceRequired = 0;
     ULONG               NameLength = 0;
     ULONG               TypeNameLength = 0;
-    POBJDIR_INFORMATION current_odi = DirObjInformation;
-    PBYTE               FirstFree = (PBYTE) DirObjInformation;
+    PDIRECTORY_BASIC_INFORMATION current_odi = (PDIRECTORY_BASIC_INFORMATION) Buffer;
+    PUCHAR              FirstFree = (PUCHAR) Buffer;
 
 
     DPRINT("NtQueryDirectoryObject(DirObjHandle %x)\n", DirObjHandle);
@@ -153,7 +153,7 @@ NtQueryDirectoryObject (IN HANDLE DirObjHandle,
      * on user params. */
 
     /* Reference the DIRECTORY_OBJECT */
-    Status = ObReferenceObjectByHandle(DirObjHandle,
+    Status = ObReferenceObjectByHandle(DirectoryHandle,
 				      DIRECTORY_QUERY,
 				      ObDirectoryType,
 				      UserMode,
@@ -163,8 +163,8 @@ NtQueryDirectoryObject (IN HANDLE DirObjHandle,
       {
         return (Status);
       }
-    /* Check ObjectIndex is not NULL */
-    if (NULL == ObjectIndex)
+    /* Check Context is not NULL */
+    if (NULL == Context)
       {
         return (STATUS_INVALID_PARAMETER);
       }
@@ -188,7 +188,7 @@ NtQueryDirectoryObject (IN HANDLE DirObjHandle,
 	DirectoryCount = 1;
     }
     // count is DirectoryCount + one null entry
-    DirectorySize = (DirectoryCount + 1) * sizeof (OBJDIR_INFORMATION);
+    DirectorySize = (DirectoryCount + 1) * sizeof (DIRECTORY_BASIC_INFORMATION);
     if (DirectorySize > SpaceLeft)
     {
 	return (STATUS_BUFFER_TOO_SMALL);
@@ -201,7 +201,7 @@ NtQueryDirectoryObject (IN HANDLE DirObjHandle,
     if (FALSE == RestartScan)
       {
 	/* RestartScan == FALSE */
-        register ULONG EntriesToSkip = *ObjectIndex;
+        register ULONG EntriesToSkip = *Context;
 
 	CHECKPOINT;
 	
@@ -289,16 +289,16 @@ NtQueryDirectoryObject (IN HANDLE DirObjHandle,
 
     } while (FALSE == ReturnSingleEntry);
     /*
-     * Store current index in ObjectIndex
+     * Store current index in Context
      */
-    *ObjectIndex += DirectoryCount;
+    *Context += DirectoryCount;
     /*
      * Report to the caller how much bytes
      * we wrote in the user buffer.
      */
-    if (NULL != DataWritten) 
+    if (NULL != ReturnLength)
       {
-        *DataWritten = (BufferLength - SpaceLeft);
+        *ReturnLength = (BufferLength - SpaceLeft);
       }
     return (STATUS_SUCCESS);
 }

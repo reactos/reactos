@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.15 2003/08/19 23:59:08 dwelch Exp $
+/* $Id: zw.h,v 1.16 2003/09/03 20:14:22 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4575,25 +4575,26 @@ NtProtectVirtualMemory(
 /*
  * FUNCTION: Query information about the content of a directory object
  * ARGUMENTS:
-	DirObjInformation =   Buffer must be large enough to hold the name strings too
-        GetNextIndex = If TRUE :return the index of the next object in this directory in ObjectIndex
-		       If FALSE:  return the number of objects in this directory in ObjectIndex
-        IgnoreInputIndex= If TRUE:  ignore input value of ObjectIndex  always start at index 0
-         		  If FALSE use input value of ObjectIndex
-	ObjectIndex =   zero based index of object in the directory  depends on GetNextIndex and IgnoreInputIndex
-        DataWritten  = Actual size of the ObjectIndex ???
+	DirectoryHandle =
+	Buffer =   Buffer must be large enough to hold the name strings too
+        ReturnSingleEntry = If TRUE :return the index of the next object in this directory in ObjectIndex
+			    If FALSE:  return the number of objects in this directory in ObjectIndex
+        RestartScan = If TRUE:  ignore input value of ObjectIndex  always start at index 0
+		      If FALSE use input value of ObjectIndex
+	Context =   zero based index of object in the directory  depends on GetNextIndex and IgnoreInputIndex
+        ReturnLength  = Actual size of the ObjectIndex ???
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtQueryDirectoryObject(
-	IN	HANDLE			DirObjHandle,
-	OUT	POBJDIR_INFORMATION	DirObjInformation,
-	IN	ULONG			BufferLength,
-	IN	BOOLEAN			GetNextIndex,
-	IN	BOOLEAN			IgnoreInputIndex,
-	IN OUT	PULONG			ObjectIndex,
-	OUT	PULONG			DataWritten OPTIONAL
+	IN	HANDLE	DirectoryHandle,
+	OUT	PVOID	Buffer,
+	IN	ULONG	BufferLength,
+	IN	BOOLEAN	ReturnSingleEntry,
+	IN	BOOLEAN	RestartScan,
+	IN OUT	PULONG	Context,
+	OUT	PULONG	ReturnLength OPTIONAL
 	);
 
 /*
@@ -5212,25 +5213,26 @@ ZwQueryInformationAtom(
 /*
  * FUNCTION: Query information about the content of a directory object
  * ARGUMENTS:
-	DirObjInformation =   Buffer must be large enough to hold the name strings too
-        GetNextIndex = If TRUE :return the index of the next object in this directory in ObjectIndex
-		       If FALSE:  return the number of objects in this directory in ObjectIndex
-        IgnoreInputIndex= If TRUE:  ignore input value of ObjectIndex  always start at index 0
-         		  If FALSE use input value of ObjectIndex
-	ObjectIndex =   zero based index of object in the directory  depends on GetNextIndex and IgnoreInputIndex
-        DataWritten  = Actual size of the ObjectIndex ???
+	DirectoryHandle =
+	Buffer =   Buffer must be large enough to hold the name strings too
+        ReturnSingleEntry = If TRUE :return the index of the next object in this directory in ObjectIndex
+			    If FALSE:  return the number of objects in this directory in ObjectIndex
+        RestartScan = If TRUE:  ignore input value of ObjectIndex  always start at index 0
+		      If FALSE use input value of ObjectIndex
+	Context =   zero based index of object in the directory  depends on GetNextIndex and IgnoreInputIndex
+        ReturnLength  = Actual size of the ObjectIndex ???
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 ZwQueryDirectoryObject(
-	IN HANDLE DirObjHandle,
-	OUT POBJDIR_INFORMATION DirObjInformation,
-	IN ULONG                BufferLength,
-	IN BOOLEAN              GetNextIndex,
-	IN BOOLEAN              IgnoreInputIndex,
-	IN OUT PULONG           ObjectIndex,
-	OUT PULONG              DataWritten OPTIONAL
+	IN	HANDLE	DirectoryHandle,
+	OUT	PVOID	Buffer,
+	IN	ULONG	BufferLength,
+	IN	BOOLEAN	ReturnSingleEntry,
+	IN	BOOLEAN	RestartScan,
+	IN OUT	PULONG	Context,
+	OUT	PULONG	ReturnLength OPTIONAL
 	);
 
 /*

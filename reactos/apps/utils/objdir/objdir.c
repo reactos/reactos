@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.11 2003/06/07 16:16:38 chorns Exp $
+/* $Id: objdir.c,v 1.12 2003/09/03 20:16:06 ekohl Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -171,8 +171,8 @@ ListDirectory (
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 	NTSTATUS		Status;
 	HANDLE			DirectoryHandle;
-	BYTE			DirectoryEntry [MAX_DIR_ENTRY * sizeof(OBJDIR_INFORMATION)];
-	POBJDIR_INFORMATION	pDirectoryEntry = (POBJDIR_INFORMATION) DirectoryEntry;
+	BYTE			DirectoryEntry [MAX_DIR_ENTRY * sizeof(DIRECTORY_BASIC_INFORMATION)];
+	PDIRECTORY_BASIC_INFORMATION pDirectoryEntry = (PDIRECTORY_BASIC_INFORMATION) DirectoryEntry;
 	ULONG			Context = 0;
 	ULONG			ReturnLength = 0;
 	ULONG			EntryCount = 0;
@@ -294,7 +294,7 @@ ListDirectory (
 	 */
 	if (FALSE != Recurse)
 	{
-		pDirectoryEntry = (POBJDIR_INFORMATION) DirectoryEntry;
+		pDirectoryEntry = (PDIRECTORY_BASIC_INFORMATION) DirectoryEntry;
 		while (0 != pDirectoryEntry->ObjectTypeName.Length)
 		{
 			if (0 == wcscmp (L"Directory", pDirectoryEntry->ObjectTypeName.Buffer))

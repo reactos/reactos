@@ -1599,11 +1599,11 @@ typedef struct _OBJECT_TYPE_INFORMATION
 
 // directory information
 
-typedef struct _OBJDIR_INFORMATION {
+typedef struct _DIRECTORY_BASIC_INFORMATION
+{
 	UNICODE_STRING ObjectName;
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-	UCHAR          Data[0];
-} OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
+} DIRECTORY_BASIC_INFORMATION, *PDIRECTORY_BASIC_INFORMATION;
 
 
 /*

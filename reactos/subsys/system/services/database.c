@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.9 2003/08/28 13:38:24 gvg Exp $
+/* $Id: database.c,v 1.10 2003/09/03 20:15:35 ekohl Exp $
  *
  * service control manager
  * 
@@ -318,7 +318,7 @@ ScmCheckDriver(PSERVICE Service)
   UNICODE_STRING DirName;
   HANDLE DirHandle;
   NTSTATUS Status;
-  POBJDIR_INFORMATION DirInfo;
+  PDIRECTORY_BASIC_INFORMATION DirInfo;
   ULONG BufferLength;
   ULONG DataLength;
   ULONG Index;
@@ -352,7 +352,7 @@ ScmCheckDriver(PSERVICE Service)
       return(Status);
     }
 
-  BufferLength = sizeof(OBJDIR_INFORMATION) +
+  BufferLength = sizeof(DIRECTORY_BASIC_INFORMATION) +
 		 2 * MAX_PATH * sizeof(WCHAR);
   DirInfo = HeapAlloc(GetProcessHeap(),
 		      HEAP_ZERO_MEMORY,
