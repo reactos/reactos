@@ -475,7 +475,7 @@ WSPSendTo(
 	DWORD dwBufferCount, 
 	LPDWORD lpNumberOfBytesSent, 
 	DWORD iFlags, 
-	struct sockaddr *SocketAddress, 
+	const struct sockaddr *SocketAddress, 
 	int SocketAddressLength, 
 	LPWSAOVERLAPPED lpOverlapped, 
 	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine, 

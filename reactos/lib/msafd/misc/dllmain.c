@@ -23,7 +23,7 @@ DWORD DebugTraceLevel = 0;
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
-ULONG SocketCount;
+ULONG SocketCount = 0;
 PSOCKET_INFORMATION *Sockets = NULL;
 LIST_ENTRY SockHelpersListHead = {NULL};
 ULONG SockAsyncThreadRefCount;
@@ -271,7 +271,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
     case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
     case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
     default: {
-	DbgPrint("MSAFD: Error %d is unknown\n", Errno);
+	DbgPrint("MSAFD: Error %x is unknown\n", Status);
 	*Errno = WSAEINVAL; break;
     } break;
     }
@@ -421,7 +421,7 @@ INT
 WSPAPI
 WSPBind(
 	SOCKET Handle, 
-	struct sockaddr *SocketAddress, 
+	const struct sockaddr *SocketAddress, 
 	int SocketAddressLength, 
 	LPINT lpErrno)
 /*
@@ -608,26 +608,29 @@ WSPSelect(
     if (readfds != NULL) {
 	for (i = 0; i < readfds->fd_count; i++, j++) {
 	    PollInfo->Handles[j].Handle = readfds->fd_array[i];
-	    PollInfo->Handles[j].Events = AFD_EVENT_RECEIVE | AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+	    PollInfo->Handles[j].Events = AFD_EVENT_RECEIVE | 
+	                                  AFD_EVENT_DISCONNECT |
+	                                  AFD_EVENT_ABORT |
+	                                  AFD_EVENT_ACCEPT;
 	} 
     }
     if (writefds != NULL) {
 	for (i = 0; i < writefds->fd_count; i++, j++) {
 	    PollInfo->Handles[j].Handle = writefds->fd_array[i];
-	    PollInfo->Handles[j].Events |= AFD_EVENT_SEND;
-	}
-	
+	    PollInfo->Handles[j].Events = AFD_EVENT_SEND |
+	                                  AFD_EVENT_CONNECT;
+	}	
     }
     if (exceptfds != NULL) {
 	for (i = 0; i < exceptfds->fd_count; i++, j++) {
 	    PollInfo->Handles[j].Handle = exceptfds->fd_array[i];
-	    PollInfo->Handles[j].Events |= 
-		AFD_EVENT_OOB_RECEIVE | AFD_EVENT_CONNECT_FAIL;
+	    PollInfo->Handles[j].Events = AFD_EVENT_OOB_RECEIVE |
+	                                  AFD_EVENT_CONNECT_FAIL;
 	}
     }
     
     /* Send IOCTL */
-    Status = NtDeviceIoControlFile( (HANDLE)Sockets[0]->Handle,
+    Status = NtDeviceIoControlFile( (HANDLE)PollInfo->Handles[0].Handle,
 				    SockEvent,
 				    NULL,
 				    NULL,
@@ -988,7 +991,7 @@ int
 WSPAPI 
 WSPConnect(
 	SOCKET Handle, 
-	struct sockaddr * SocketAddress, 
+	const struct sockaddr * SocketAddress, 
 	int SocketAddressLength, 
 	LPWSABUF lpCallerData, 
 	LPWSABUF lpCalleeData, 
@@ -1318,8 +1321,111 @@ WSPIoctl(
 	AFD_DbgPrint(MID_TRACE,("[%x] Set nonblocking %d\n",
 				Handle, Socket->SharedData.NonBlocking));
 	return 0;
+
     default:
+	*lpErrno = WSAEINVAL;
 	return SOCKET_ERROR;
+    }
+}
+
+
+INT
+WSPAPI
+WSPGetSockOpt(
+    IN      SOCKET Handle,
+    IN      INT Level,
+    IN      INT OptionName,
+    OUT	    CHAR FAR* OptionValue,
+    IN OUT  LPINT OptionLength,
+    OUT     LPINT lpErrno)
+{
+    PSOCKET_INFORMATION Socket = NULL;
+    PVOID Buffer;
+    INT BufferSize;
+    BOOLEAN BoolBuffer;
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (Socket == NULL)
+    {
+        *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+    AFD_DbgPrint(MID_TRACE, ("Called\n"));
+
+    switch (Level)
+    {
+        case SOL_SOCKET:
+            switch (OptionName)
+            {
+                case SO_TYPE:
+                    Buffer = &Socket->SharedData.SocketType;
+                    BufferSize = sizeof(INT);
+                    break;
+
+                case SO_RCVBUF:
+                    Buffer = &Socket->SharedData.SizeOfRecvBuffer;
+                    BufferSize = sizeof(INT);
+                    break;
+
+                case SO_SNDBUF:
+                    Buffer = &Socket->SharedData.SizeOfSendBuffer;
+                    BufferSize = sizeof(INT);
+                    break;
+
+                case SO_ACCEPTCONN:
+                    BoolBuffer = Socket->SharedData.Listening;
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOLEAN);
+                    break;
+
+                case SO_BROADCAST:
+                    BoolBuffer = Socket->SharedData.Broadcast;
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOLEAN);
+                    break;
+
+                case SO_DEBUG:
+                    BoolBuffer = Socket->SharedData.Debug;
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOLEAN);
+                    break;
+
+                /* case SO_CONDITIONAL_ACCEPT: */
+                case SO_DONTLINGER:
+                case SO_DONTROUTE:
+                case SO_ERROR:
+                case SO_GROUP_ID:
+                case SO_GROUP_PRIORITY:
+                case SO_KEEPALIVE:
+                case SO_LINGER:
+                case SO_MAX_MSG_SIZE:
+                case SO_OOBINLINE:
+                case SO_PROTOCOL_INFO:
+                case SO_REUSEADDR:
+                    AFD_DbgPrint(MID_TRACE, ("Unimplemented option (%x)\n",
+                                 OptionName));
+
+                default:
+                    *lpErrno = WSAEINVAL;
+                    return SOCKET_ERROR;
+            }
+            
+            if (*OptionLength < BufferSize)
+            {
+                *lpErrno = WSAEFAULT;
+                *OptionLength = BufferSize;
+                return SOCKET_ERROR;
+            }
+            RtlCopyMemory(OptionValue, Buffer, BufferSize);
+
+            return 0;
+
+        case IPPROTO_TCP: /* FIXME */
+        default:
+            *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
     }
 }
 
@@ -1356,11 +1462,11 @@ WSPStartup(
     lpProcTable->lpWSPAccept = WSPAccept;
     lpProcTable->lpWSPAddressToString = WSPAddressToString;
     lpProcTable->lpWSPAsyncSelect = WSPAsyncSelect;
-    lpProcTable->lpWSPBind = (LPWSPBIND)WSPBind;
+    lpProcTable->lpWSPBind = WSPBind;
     lpProcTable->lpWSPCancelBlockingCall = WSPCancelBlockingCall;
     lpProcTable->lpWSPCleanup = WSPCleanup;
     lpProcTable->lpWSPCloseSocket = WSPCloseSocket;
-    lpProcTable->lpWSPConnect = (LPWSPCONNECT)WSPConnect;
+    lpProcTable->lpWSPConnect = WSPConnect;
     lpProcTable->lpWSPDuplicateSocket = WSPDuplicateSocket;
     lpProcTable->lpWSPEnumNetworkEvents = WSPEnumNetworkEvents;
     lpProcTable->lpWSPEventSelect = WSPEventSelect;
@@ -1370,7 +1476,7 @@ WSPStartup(
     lpProcTable->lpWSPGetSockOpt = WSPGetSockOpt;
     lpProcTable->lpWSPGetQOSByName = WSPGetQOSByName;
     lpProcTable->lpWSPIoctl = WSPIoctl;
-    lpProcTable->lpWSPJoinLeaf = (LPWSPJOINLEAF)WSPJoinLeaf;
+    lpProcTable->lpWSPJoinLeaf = WSPJoinLeaf;
     lpProcTable->lpWSPListen = WSPListen;
     lpProcTable->lpWSPRecv = WSPRecv;
     lpProcTable->lpWSPRecvDisconnect = WSPRecvDisconnect;
@@ -1378,7 +1484,7 @@ WSPStartup(
     lpProcTable->lpWSPSelect = WSPSelect;
     lpProcTable->lpWSPSend = WSPSend;
     lpProcTable->lpWSPSendDisconnect = WSPSendDisconnect;
-    lpProcTable->lpWSPSendTo = (LPWSPSENDTO)WSPSendTo;
+    lpProcTable->lpWSPSendTo = WSPSendTo;
     lpProcTable->lpWSPSetSockOpt = WSPSetSockOpt;
     lpProcTable->lpWSPShutdown = WSPShutdown;
     lpProcTable->lpWSPSocket = WSPSocket;
