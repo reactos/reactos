@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.76 2003/12/28 10:56:20 gvg Exp $
+/* $Id: winpos.c,v 1.77 2003/12/28 12:17:15 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -467,9 +467,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
     }
   
   *WindowRect = WindowObject->WindowRect;
-  *ClientRect = 
-    (WindowObject->Style & WS_MINIMIZE) ? WindowObject->WindowRect :
-    WindowObject->ClientRect;
+  *ClientRect = WindowObject->ClientRect;
 
   if (!(WinPos->flags & SWP_NOSIZE))
     {
