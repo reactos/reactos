@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.2 2004/04/19 10:54:23 ekohl Exp $
+/* $Id: wizard.c,v 1.3 2004/05/22 12:04:10 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -46,6 +46,29 @@ static SETUPDATA SetupData;
 
 /* FUNCTIONS ****************************************************************/
 
+static VOID
+CenterWindow(HWND hWnd)
+{
+  HWND hWndParent;
+  RECT rcParent;
+  RECT rcWindow;
+
+  hWndParent = GetParent(hWnd);
+  if (hWndParent == NULL)
+    hWndParent = GetDesktopWindow();
+
+  GetWindowRect(hWndParent, &rcParent);
+  GetWindowRect(hWnd, &rcWindow);
+
+  SetWindowPos(hWnd,
+	       HWND_TOP,
+	       ((rcParent.right - rcParent.left) - (rcWindow.right - rcWindow.left)) / 2,
+	       ((rcParent.bottom - rcParent.top) - (rcWindow.bottom - rcWindow.top)) / 2,
+	       0,
+	       0,
+	       SWP_NOSIZE);
+}
+
 
 BOOL CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
@@ -60,8 +83,12 @@ WelcomeDlgProc(HWND hwndDlg,
           HWND hwndControl;
           DWORD dwStyle;
 
-          /* Hide the system menu */
           hwndControl = GetParent(hwndDlg);
+
+          /* Center the wizard window */
+          CenterWindow (hwndControl);
+
+          /* Hide the system menu */
           dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
           SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 
@@ -73,7 +100,7 @@ WelcomeDlgProc(HWND hwndDlg,
         break;
 
 
-    case WM_NOTIFY:
+      case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
 
@@ -90,10 +117,11 @@ WelcomeDlgProc(HWND hwndDlg,
         }
         break;
 
-    default:
+      default:
         break;
     }
-    return FALSE;
+
+  return FALSE;
 }
 
 
@@ -122,7 +150,7 @@ OwnerPageDlgProc(HWND hwndDlg,
         break;
 
 
-    case WM_NOTIFY:
+      case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
 
@@ -140,7 +168,8 @@ OwnerPageDlgProc(HWND hwndDlg,
                               _T("Setup cannot continue until you enter your name."),
                               _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
-                  return -1;
+                  SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                  return TRUE;
                 }
                 GetDlgItemText(hwndDlg, IDC_OWNERORGANIZATION, SetupData->OwnerOrganization, 50);
                 break;
@@ -151,11 +180,11 @@ OwnerPageDlgProc(HWND hwndDlg,
         }
         break;
 
-    default:
+      default:
         break;
     }
 
-  return 0;
+  return FALSE;
 }
 
 
@@ -197,7 +226,7 @@ ComputerPageDlgProc(HWND hwndDlg,
         break;
 
 
-    case WM_NOTIFY:
+      case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
 
@@ -215,7 +244,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                               _T("Setup cannot continue until you enter the name of your computer."),
                               _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
-                  return -1;
+                  SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                  return TRUE;
                 }
 
                 /* FIXME: check computer name for invalid characters */
@@ -230,7 +260,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                                  "the desired password again."),
                               _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
-                  return -1;
+                  SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                  return TRUE;
                 }
 
                 /* FIXME: check password for invalid characters */
@@ -244,9 +275,10 @@ ComputerPageDlgProc(HWND hwndDlg,
         }
         break;
 
-    default:
+      default:
         break;
     }
+
   return FALSE;
 }
 
@@ -258,41 +290,41 @@ FinishDlgProc(HWND hwndDlg,
               LPARAM lParam)
 {
 
-    switch (uMsg)
+  switch (uMsg)
     {
-    case WM_INITDIALOG:
+      case WM_INITDIALOG:
         break;
 
-    case WM_NOTIFY:
+      case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
 
-        switch (lpnm->code)
+          switch (lpnm->code)
             {
-            case PSN_SETACTIVE:
+              case PSN_SETACTIVE:
                 /* Enable the correct buttons on for the active page */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
                 break;
 
-            case PSN_WIZBACK:
+              case PSN_WIZBACK:
                 /* Handle a Back button click, if necessary */
                 break;
 
-            case PSN_WIZFINISH:
+              case PSN_WIZFINISH:
                 /* Handle a Finish button click, if necessary */
                 break;
 
-            default:
+              default:
                 break;
             }
         }
-    break;
+        break;
 
-    default:
+      default:
         break;
     }
 
-  return 0;
+  return FALSE;
 }
 
 
@@ -353,7 +385,7 @@ InstallWizard (VOID)
 //  psh.pszbmHeader =       MAKEINTRESOURCE(IDB_BANNER);
 
   /* Display the wizard */
-  PropertySheet (&psh);
+  PropertySheet(&psh);
 }
 
 /* EOF */
