@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.5 2000/04/07 12:45:22 ekohl Exp $
+/* $Id: time.c,v 1.6 2000/04/26 06:56:12 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -287,7 +287,7 @@ RtlLocalTimeToSystemTime (
       return Status;
 
    SystemTime->QuadPart = LocalTime->QuadPart +
-                          TimeInformation.TimeZoneBias.QuadPart;
+                          TimeInformation.ExpTimeZoneBias.QuadPart;
 
    return STATUS_SUCCESS;
 }
@@ -311,7 +311,7 @@ RtlSystemTimeToLocalTime (
       return Status;
 
    LocalTime->QuadPart = SystemTime->QuadPart -
-                         TimeInformation.TimeZoneBias.QuadPart;
+                         TimeInformation.ExpTimeZoneBias.QuadPart;
 
    return STATUS_SUCCESS;
 }

@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.6 2000/04/25 23:22:55 ea Exp $
+/* $Id: api.c,v 1.7 2000/04/26 06:56:11 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -94,7 +94,7 @@ CsrSetPriorityClass (
 	)
 {
 	/* FIXME: call csrss to get hProcess' priority */
-	*PriorityClass = PS_PRIORITY_CLASS_NORMAL;
+	*PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
 
 	return (STATUS_NOT_IMPLEMENTED);
 }
