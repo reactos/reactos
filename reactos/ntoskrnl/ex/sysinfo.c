@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.39 2004/07/22 17:22:36 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.40 2004/07/23 07:44:25 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -531,12 +531,11 @@ QSI_DEF(SystemPathInformation)
 /* Class 5 - Process Information */
 QSI_DEF(SystemProcessInformation)
 {
-	ULONG ovlSize=0, nThreads=1;
+	ULONG ovlSize=0, nThreads;
 	PEPROCESS pr, syspr;
 	unsigned char *pCur;
 
 	/* scan the process list */
-	// TODO: Add thread information
 
 	PSYSTEM_PROCESSES Spi
 		= (PSYSTEM_PROCESSES) Buffer;
@@ -555,14 +554,15 @@ QSI_DEF(SystemProcessInformation)
 	do
 	{
 		PSYSTEM_PROCESSES SpiCur;
-		int curSize;
+		int curSize, i = 0;
 		ANSI_STRING	imgName;
 		int inLen=32; // image name len in bytes
-		
+		PLIST_ENTRY current_entry;
+		PETHREAD current;
 
 		SpiCur = (PSYSTEM_PROCESSES)pCur;
 
-		nThreads = 1; // FIXME
+		nThreads = PsEnumThreadsByProcess(pr);
 		
 		// size of the structure for every process
 		curSize = sizeof(SYSTEM_PROCESSES)-sizeof(SYSTEM_THREADS)+sizeof(SYSTEM_THREADS)*nThreads;
@@ -612,6 +612,27 @@ QSI_DEF(SystemProcessInformation)
 		// KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
 		// doesn't seem to contain any equivalent field
 		//SpiCur->TotalPrivateBytes = pr->NumberOfPrivatePages; //FIXME: bytes != pages
+
+          current_entry = pr->ThreadListHead.Flink;
+          while (current_entry != &pr->ThreadListHead)
+               {
+                 current = CONTAINING_RECORD(current_entry, ETHREAD,
+                                               Tcb.ProcessThreadListEntry);
+
+                 SpiCur->Threads[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
+                 SpiCur->Threads[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
+//                 SpiCur->Threads[i].CreateTime = current->CreateTime;
+                 SpiCur->Threads[i].WaitTime = current->Tcb.WaitTime;
+                 SpiCur->Threads[i].StartAddress = (PVOID) current->StartAddress;
+                 SpiCur->Threads[i].ClientId = current->Cid;
+                 SpiCur->Threads[i].Priority = current->Tcb.Priority;
+                 SpiCur->Threads[i].BasePriority = current->Tcb.BasePriority;
+                 SpiCur->Threads[i].ContextSwitchCount = 0; //FIXME!
+                 SpiCur->Threads[i].State = current->Tcb.State;
+                 SpiCur->Threads[i].WaitReason = current->Tcb.WaitReason;
+                 i++;
+                 current_entry = current_entry->Flink;
+               }
 
 		pr = PsGetNextProcess(pr);
 

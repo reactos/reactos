@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.129 2004/07/21 01:05:26 ion Exp $
+/* $Id: thread.c,v 1.130 2004/07/23 07:44:26 jimtabor Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -576,6 +576,26 @@ PsFreezeAllThreads(PEPROCESS Process)
     }
 
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
+
+ULONG
+PsEnumThreadsByProcess(PEPROCESS Process)
+{
+  KIRQL oldIrql;
+  PLIST_ENTRY current_entry;
+  ULONG Count = 0;
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+  current_entry = Process->ThreadListHead.Flink;
+  while (current_entry != &Process->ThreadListHead)
+    {
+      Count++;
+      current_entry = current_entry->Flink;
+    }
+  
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+  return Count;
 }
 
 /*
