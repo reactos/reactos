@@ -1380,7 +1380,6 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	      }
 	      return TRUE;
 	    }
-	    break;
 
 	  case LVN_ENDLABELEDITA:
 	    {
@@ -1411,7 +1410,6 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	      }
 	      return FALSE;
 	    }
-	    break;
 
 	  case LVN_KEYDOWN:
 	    {
@@ -1822,7 +1820,7 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 	{
 	  ZeroMemory(&wc, sizeof(wc));
 	  wc.style		= CS_HREDRAW | CS_VREDRAW;
-	  wc.lpfnWndProc	= (WNDPROC) ShellView_WndProc;
+	  wc.lpfnWndProc	= ShellView_WndProc;
 	  wc.cbClsExtra		= 0;
 	  wc.cbWndExtra		= 0;
 	  wc.hInstance		= shell32_hInstance;

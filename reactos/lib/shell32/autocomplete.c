@@ -187,10 +187,8 @@ static ULONG WINAPI IAutoComplete_fnRelease(
 
     if (!--(This->ref)) {
 	TRACE(" destroying IAutoComplete(%p)\n",This);
-	if (This->quickComplete)
-	    HeapFree(GetProcessHeap(), 0, This->quickComplete);
-	if (This->txtbackup)
-	    HeapFree(GetProcessHeap(), 0, This->txtbackup);
+        HeapFree(GetProcessHeap(), 0, This->quickComplete);
+        HeapFree(GetProcessHeap(), 0, This->txtbackup);
 	if (This->hwndListBox)
 	    DestroyWindow(This->hwndListBox);
 	if (This->enumstr)

@@ -28,13 +28,9 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
-#include "undocshell.h"
 #include "shlwapi.h"
-#include "winerror.h"
-#include "objbase.h"
 
 #include "pidl.h"
-#include "shlguid.h"
 #include "enumidlist.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

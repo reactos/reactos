@@ -34,10 +34,8 @@
 #include "undocshell.h"
 #include "shlguid.h"
 #include "winreg.h"
-#include "shlwapi.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "pidl.h"
 #include "shell32_main.h"

@@ -704,7 +704,7 @@ UINT WINAPI DragQueryFileA(
 
 	lpDrop = (LPSTR) lpDropFileStruct + lpDropFileStruct->pFiles;
 
-        if(lpDropFileStruct->fWide == TRUE) {
+        if(lpDropFileStruct->fWide) {
             LPWSTR lpszFileW = NULL;
 
             if(lpszFile) {

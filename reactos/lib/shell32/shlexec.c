@@ -38,17 +38,12 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "winreg.h"
-#include "wownt32.h"
-#include "shellapi.h"
-#include "wingdi.h"
 #include "winuser.h"
-#include "shlobj.h"
 #include "shlwapi.h"
 #include "ddeml.h"
 
 #include "wine/winbase16.h"
 #include "shell32_main.h"
-#include "undocshell.h"
 #include "pidl.h"
 
 #include "wine/debug.h"
@@ -1284,7 +1279,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
             retval = execute_from_key(lpstrProtocol, wszApplicationName, env, sei_tmp.lpParameters, execfunc, &sei_tmp, sei);
         else
             retval = execfunc(wszQuotedCmd, env, FALSE, &sei_tmp, sei);
-        if (env) HeapFree( GetProcessHeap(), 0, env );
+        HeapFree( GetProcessHeap(), 0, env );
     }
     else if (PathIsURLW((LPWSTR)lpFile))    /* File not found, check for URL */
     {
@@ -1366,17 +1361,6 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation,LPCSTR lpFile,
 
     ShellExecuteExA (&sei);
     return sei.hInstApp;
-}
-
-/*************************************************************************
- * ShellExecuteEx				[SHELL32.291]
- *
- */
-BOOL WINAPI ShellExecuteExAW (LPVOID sei)
-{
-    if (SHELL_OsIsUnicode())
-	return ShellExecuteExW32 (sei, SHELL_ExecuteW);
-    return ShellExecuteExA (sei);
 }
 
 /*************************************************************************

@@ -47,7 +47,6 @@
 #include "shlwapi.h"
 
 #include "pidl.h"
-#include "debughlp.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
@@ -1058,7 +1057,7 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
 
     _ILParsePathW(wPath, NULL, TRUE, &pidl, NULL);
 
-    if (wPath) HeapFree(GetProcessHeap(), 0, wPath);
+    HeapFree(GetProcessHeap(), 0, wPath);
     TRACE("%s %p\n", debugstr_a(lpszPath), pidl);
     return pidl;
 }
@@ -1363,18 +1362,6 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 
 	TRACE_(shell)("-- %s, 0x%08lx\n",debugstr_w(pszPath), hr);
 	return SUCCEEDED(hr);
-}
-
-/*************************************************************************
- * SHGetPathFromIDList		[SHELL32.@][NT 4.0: SHELL32.219]
- */
-BOOL WINAPI SHGetPathFromIDListAW(LPCITEMIDLIST pidl,LPVOID pszPath)
-{
-	TRACE_(shell)("(pidl=%p,%p)\n",pidl,pszPath);
-
-	if (SHELL_OsIsUnicode())
-	  return SHGetPathFromIDListW(pidl,pszPath);
-	return SHGetPathFromIDListA(pidl,pszPath);
 }
 
 /*************************************************************************

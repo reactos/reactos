@@ -33,7 +33,6 @@
 #include "shlobj.h"
 #include "shell32_main.h"
 
-#include "debughlp.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);

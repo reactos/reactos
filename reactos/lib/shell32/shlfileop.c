@@ -1335,8 +1335,7 @@ shfileop_end:
 	if (hFind != INVALID_HANDLE_VALUE)
 	    FindClose(hFind);
 	hFind = INVALID_HANDLE_VALUE;
-	if (pTempFrom)
-	    HeapFree(GetProcessHeap(), 0, pTempFrom);
+        HeapFree(GetProcessHeap(), 0, pTempFrom);
 	if (retCode)
 	    nFileOp.fAnyOperationsAborted = TRUE;
 	TRACE("%s level=%ld AnyOpsAborted=%s ret=0x%x, with %s %s%s\n",
@@ -1346,17 +1345,6 @@ shfileop_end:
 
 	lpFileOp->fAnyOperationsAborted = nFileOp.fAnyOperationsAborted;
 	return retCode;
-}
-
-/*************************************************************************
- * SHFileOperation        [SHELL32.@]
- *
- */
-DWORD WINAPI SHFileOperationAW(LPVOID lpFileOp)
-{
-	if (SHELL_OsIsUnicode())
-	  return SHFileOperationW(lpFileOp);
-	return SHFileOperationA(lpFileOp);
 }
 
 #define SHDSA_GetItemCount(hdsa) (*(int*)(hdsa))
