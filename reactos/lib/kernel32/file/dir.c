@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.41 2003/12/28 21:25:48 gvg Exp $
+/* $Id: dir.c,v 1.42 2004/01/21 23:20:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -167,7 +167,7 @@ CreateDirectoryExW (
 	                                   NULL))
 		return FALSE;
 
-	DPRINT1 ("NtPathU \'%wZ\'\n", &NtPathU);
+	DPRINT ("NtPathU \'%wZ\'\n", &NtPathU);
 
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
