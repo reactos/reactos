@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.3 2002/08/17 01:42:02 dwelch Exp $
+/* $Id: anonmem.c,v 1.4 2002/08/17 15:27:54 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -153,7 +153,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Disable the virtual mapping.
     */
    MmDisableVirtualMapping(MemoryArea->Process, Address,
-			   &WasDirty, (PULONG)&PhysicalAddress);
+			   &WasDirty, &PhysicalAddress);
    if (PhysicalAddress.QuadPart == 0)
      {
        KeBugCheck(0);

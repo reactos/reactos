@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.40 2002/08/14 20:58:37 dwelch Exp $
+/* $Id: page.c,v 1.41 2002/08/17 15:27:54 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -345,7 +345,7 @@ MmGetPhysicalAddressForProcess(PEPROCESS Process,
 }
 
 VOID
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
 /*
  * FUNCTION: Delete a virtual mapping 
  */
@@ -409,7 +409,8 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG*
      }
    if (PhysicalAddr != NULL)
      {
-       *PhysicalAddr = PAGE_MASK(Pte);
+       PhysicalAddr->u.HighPart = 0;
+       PhysicalAddr->u.LowPart = PAGE_MASK(Pte);
      }
 }
 

@@ -507,7 +507,7 @@ NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
 VOID
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr);
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr);
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address);
 VOID
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, 
