@@ -147,36 +147,39 @@ typedef union _ULARGE_INTEGER
 
 typedef struct _FILETIME
 {
-   DWORD dwLowDateTime;
-   DWORD dwHighDateTime;
+  DWORD dwLowDateTime;
+  DWORD dwHighDateTime;
 } FILETIME, *LPFILETIME, *PFILETIME;
 
-typedef struct _LIST_ENTRY {
+typedef struct _LIST_ENTRY
+{
   struct _LIST_ENTRY *Flink;
   struct _LIST_ENTRY *Blink;
 } LIST_ENTRY, *PLIST_ENTRY;
 
-typedef struct _SINGLE_LIST_ENTRY {
+typedef struct _SINGLE_LIST_ENTRY
+{
   struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
 
 typedef struct _UNICODE_STRING
 {
-   USHORT Length;
-   USHORT MaximumLength;
-   PWSTR Buffer;
+  USHORT Length;
+  USHORT MaximumLength;
+  PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-typedef struct _FLOATING_SAVE_AREA {
-    DWORD   ControlWord;
-    DWORD   StatusWord;
-    DWORD   TagWord;
-    DWORD   ErrorOffset;
-    DWORD   ErrorSelector;
-    DWORD   DataOffset;
-    DWORD   DataSelector;
-    BYTE    RegisterArea[80];
-    DWORD   Cr0NpxState;
+typedef struct _FLOATING_SAVE_AREA
+{
+  DWORD   ControlWord;
+  DWORD   StatusWord;
+  DWORD   TagWord;
+  DWORD   ErrorOffset;
+  DWORD   ErrorSelector;
+  DWORD   DataOffset;
+  DWORD   DataSelector;
+  BYTE    RegisterArea[80];
+  DWORD   Cr0NpxState;
 } FLOATING_SAVE_AREA;
 
 typedef unsigned short RTL_ATOM;
@@ -219,10 +222,10 @@ typedef unsigned short *PRTL_ATOM;
 
 #ifndef __USE_W32API
 
-#define CONTEXT_CONTROL         (CONTEXT_i386 | 1)	
-#define CONTEXT_INTEGER         (CONTEXT_i386 | 2)	
-#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 4)	
-#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 8)	
+#define CONTEXT_CONTROL         (CONTEXT_i386 | 1)
+#define CONTEXT_INTEGER         (CONTEXT_i386 | 2)
+#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 4)
+#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 8)
 #define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x10)
 #define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS)
 
@@ -234,138 +237,140 @@ typedef unsigned short *PRTL_ATOM;
 
 #endif
 
-typedef struct _CONTEXT_X86 {
-    DWORD ContextFlags;
+typedef struct _CONTEXT_X86
+{
+  DWORD ContextFlags;
 
-    DWORD   Dr0;
-    DWORD   Dr1;
-    DWORD   Dr2;
-    DWORD   Dr3;
-    DWORD   Dr6;
-    DWORD   Dr7;
+  DWORD   Dr0;
+  DWORD   Dr1;
+  DWORD   Dr2;
+  DWORD   Dr3;
+  DWORD   Dr6;
+  DWORD   Dr7;
 
-    FLOATING_SAVE_AREA FloatSave;
+  FLOATING_SAVE_AREA FloatSave;
 
-    DWORD   SegGs;
-    DWORD   SegFs;
-    DWORD   SegEs;
-    DWORD   SegDs;
+  DWORD   SegGs;
+  DWORD   SegFs;
+  DWORD   SegEs;
+  DWORD   SegDs;
 
-    DWORD   Edi;
-    DWORD   Esi;
-    DWORD   Ebx;
-    DWORD   Edx;
-    DWORD   Ecx;
-    DWORD   Eax;
+  DWORD   Edi;
+  DWORD   Esi;
+  DWORD   Ebx;
+  DWORD   Edx;
+  DWORD   Ecx;
+  DWORD   Eax;
 
-    DWORD   Ebp;
-    DWORD   Eip;
-    DWORD   SegCs;
-    DWORD   EFlags;
-    DWORD   Esp;
-    DWORD   SegSs;
+  DWORD   Ebp;
+  DWORD   Eip;
+  DWORD   SegCs;
+  DWORD   EFlags;
+  DWORD   Esp;
+  DWORD   SegSs;
 } CONTEXT_X86, *PCONTEXT_X86, *LPCONTEXT_X86;
 
 typedef struct _CONTEXT_PPC
-  {
-    /* Floating point registers returned when CONTEXT_FLOATING_POINT is set */
-    double Fpr0;
-    double Fpr1;
-    double Fpr2;
-    double Fpr3;
-    double Fpr4;
-    double Fpr5;
-    double Fpr6;
-    double Fpr7;
-    double Fpr8;
-    double Fpr9;
-    double Fpr10;
-    double Fpr11;
-    double Fpr12;
-    double Fpr13;
-    double Fpr14;
-    double Fpr15;
-    double Fpr16;
-    double Fpr17;
-    double Fpr18;
-    double Fpr19;
-    double Fpr20;
-    double Fpr21;
-    double Fpr22;
-    double Fpr23;
-    double Fpr24;
-    double Fpr25;
-    double Fpr26;
-    double Fpr27;
-    double Fpr28;
-    double Fpr29;
-    double Fpr30;
-    double Fpr31;
-    double Fpscr;
+{
+  /* Floating point registers returned when CONTEXT_FLOATING_POINT is set */
+  double Fpr0;
+  double Fpr1;
+  double Fpr2;
+  double Fpr3;
+  double Fpr4;
+  double Fpr5;
+  double Fpr6;
+  double Fpr7;
+  double Fpr8;
+  double Fpr9;
+  double Fpr10;
+  double Fpr11;
+  double Fpr12;
+  double Fpr13;
+  double Fpr14;
+  double Fpr15;
+  double Fpr16;
+  double Fpr17;
+  double Fpr18;
+  double Fpr19;
+  double Fpr20;
+  double Fpr21;
+  double Fpr22;
+  double Fpr23;
+  double Fpr24;
+  double Fpr25;
+  double Fpr26;
+  double Fpr27;
+  double Fpr28;
+  double Fpr29;
+  double Fpr30;
+  double Fpr31;
+  double Fpscr;
 
-    /* Integer registers returned when CONTEXT_INTEGER is set.  */
-    DWORD Gpr0;
-    DWORD Gpr1;
-    DWORD Gpr2;
-    DWORD Gpr3;
-    DWORD Gpr4;
-    DWORD Gpr5;
-    DWORD Gpr6;
-    DWORD Gpr7;
-    DWORD Gpr8;
-    DWORD Gpr9;
-    DWORD Gpr10;
-    DWORD Gpr11;
-    DWORD Gpr12;
-    DWORD Gpr13;
-    DWORD Gpr14;
-    DWORD Gpr15;
-    DWORD Gpr16;
-    DWORD Gpr17;
-    DWORD Gpr18;
-    DWORD Gpr19;
-    DWORD Gpr20;
-    DWORD Gpr21;
-    DWORD Gpr22;
-    DWORD Gpr23;
-    DWORD Gpr24;
-    DWORD Gpr25;
-    DWORD Gpr26;
-    DWORD Gpr27;
-    DWORD Gpr28;
-    DWORD Gpr29;
-    DWORD Gpr30;
-    DWORD Gpr31;
+  /* Integer registers returned when CONTEXT_INTEGER is set. */
+  DWORD Gpr0;
+  DWORD Gpr1;
+  DWORD Gpr2;
+  DWORD Gpr3;
+  DWORD Gpr4;
+  DWORD Gpr5;
+  DWORD Gpr6;
+  DWORD Gpr7;
+  DWORD Gpr8;
+  DWORD Gpr9;
+  DWORD Gpr10;
+  DWORD Gpr11;
+  DWORD Gpr12;
+  DWORD Gpr13;
+  DWORD Gpr14;
+  DWORD Gpr15;
+  DWORD Gpr16;
+  DWORD Gpr17;
+  DWORD Gpr18;
+  DWORD Gpr19;
+  DWORD Gpr20;
+  DWORD Gpr21;
+  DWORD Gpr22;
+  DWORD Gpr23;
+  DWORD Gpr24;
+  DWORD Gpr25;
+  DWORD Gpr26;
+  DWORD Gpr27;
+  DWORD Gpr28;
+  DWORD Gpr29;
+  DWORD Gpr30;
+  DWORD Gpr31;
 
-    DWORD Cr;			/* Condition register */
-    DWORD Xer;			/* Fixed point exception register */
+  DWORD Cr;	/* Condition register */
+  DWORD Xer;	/* Fixed point exception register */
 
-    /* The following are set when CONTEXT_CONTROL is set.  */
-    DWORD Msr;			/* Machine status register */
-    DWORD Iar;			/* Instruction address register */
-    DWORD Lr;			/* Link register */
-    DWORD Ctr;			/* Control register */
+  /* The following are set when CONTEXT_CONTROL is set. */
+  DWORD Msr;	/* Machine status register */
+  DWORD Iar;	/* Instruction address register */
+  DWORD Lr;	/* Link register */
+  DWORD Ctr;	/* Control register */
 
-    /* Control which context values are returned */
-    DWORD ContextFlags;
-    DWORD Fill[3];
+  /* Control which context values are returned */
+  DWORD ContextFlags;
+  DWORD Fill[3];
 
-    /* Registers returned if CONTEXT_DEBUG_REGISTERS is set.  */
-    DWORD Dr0;                          /* Breakpoint Register 1 */
-    DWORD Dr1;                          /* Breakpoint Register 2 */
-    DWORD Dr2;                          /* Breakpoint Register 3 */
-    DWORD Dr3;                          /* Breakpoint Register 4 */
-    DWORD Dr4;                          /* Breakpoint Register 5 */
-    DWORD Dr5;                          /* Breakpoint Register 6 */
-    DWORD Dr6;                          /* Debug Status Register */
-    DWORD Dr7;                          /* Debug Control Register */
+  /* Registers returned if CONTEXT_DEBUG_REGISTERS is set. */
+  DWORD Dr0;	/* Breakpoint Register 1 */
+  DWORD Dr1;	/* Breakpoint Register 2 */
+  DWORD Dr2;	/* Breakpoint Register 3 */
+  DWORD Dr3;	/* Breakpoint Register 4 */
+  DWORD Dr4;	/* Breakpoint Register 5 */
+  DWORD Dr5;	/* Breakpoint Register 6 */
+  DWORD Dr6;	/* Debug Status Register */
+  DWORD Dr7;	/* Debug Control Register */
 } CONTEXT_PPC, *PCONTEXT_PPC, *LPCONTEXT_PPC;
 
-typedef struct value_ent {
-    LPWSTR ve_valuename;
-    DWORD  ve_valuelen;
-    DWORD  ve_valueptr;
-    DWORD  ve_type;
+typedef struct value_ent
+{
+  LPWSTR ve_valuename;
+  DWORD  ve_valuelen;
+  DWORD  ve_valueptr;
+  DWORD  ve_type;
 } WVALENT, *PWVALENT;
 
 //#include "except.h"
@@ -390,12 +395,14 @@ typedef LPCONTEXT_PPC LPCONTEXT;
 
 typedef WORD ATOM;
 
-typedef struct _COORD {
+typedef struct _COORD
+{
   SHORT X;
   SHORT Y;
 } COORD;
 
-typedef struct _SMALL_RECT {
+typedef struct _SMALL_RECT
+{
   SHORT Left;
   SHORT Top;
   SHORT Right;

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.3 2002/11/15 21:56:37 chorns Exp $
+/* $Id: rtl.h,v 1.4 2002/11/16 00:08:45 ekohl Exp $
  * 
  */
 
@@ -176,21 +176,18 @@
 		} \
 	}
 */
-static
-inline
-PSINGLE_LIST_ENTRY
- PopEntryList(
-	PSINGLE_LIST_ENTRY	ListHead
-	)
+static inline PSINGLE_LIST_ENTRY
+PopEntryList(PSINGLE_LIST_ENTRY ListHead)
 {
-	PSINGLE_LIST_ENTRY ListEntry;
+  PSINGLE_LIST_ENTRY ListEntry;
 
-	ListEntry = ListHead->Next;
-	if (ListEntry!=NULL)
-	{
-		ListHead->Next = ListEntry->Next;
-	}
-	return ListEntry;
+  ListEntry = ListHead->Next;
+  if (ListEntry!=NULL)
+  {
+    ListHead->Next = ListEntry->Next;
+  }
+
+  return(ListEntry);
 }
 
 #define RtlCopyMemory(Destination,Source,Length) \
@@ -485,37 +482,32 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 
 
 /*
-VOID
-InitializeUnicodeString (
-	PUNICODE_STRING	DestinationString,
-        USHORT          Lenght,
-        USHORT          MaximumLength,
-	PCWSTR		Buffer
-	);
-
- Initialize an UNICODE_STRING from its fields. Use when you know the values of
- all the fields in advance
-
+ * VOID
+ * InitializeUnicodeString(PUNICODE_STRING DestinationString,
+ *                         USHORT Lenght,
+ *                         USHORT MaximumLength,
+ *                         PCWSTR Buffer);
+ *
+ * Initialize n UNICODE_STRING from its fields. Use when you know the values of
+ * all the fields in advance
  */
 
 #define InitializeUnicodeString(__PDEST_STRING__,__LENGTH__,__MAXLENGTH__,__BUFFER__) \
 { \
- (__PDEST_STRING__)->Length = (__LENGTH__); \
- (__PDEST_STRING__)->MaximumLength = (__MAXLENGTH__); \
- (__PDEST_STRING__)->Buffer = (__BUFFER__); \
+  (__PDEST_STRING__)->Length = (__LENGTH__); \
+  (__PDEST_STRING__)->MaximumLength = (__MAXLENGTH__); \
+  (__PDEST_STRING__)->Buffer = (__BUFFER__); \
 }
 
+
 /*
-VOID
-RtlInitUnicodeStringFromLiteral (
-	PUNICODE_STRING	DestinationString,
-	PCWSTR		SourceString
-	);
-
- Initialize an UNICODE_STRING from a wide string literal. WARNING: use only with
- string literals and statically initialized arrays, it will calculate the wrong
- length otherwise
-
+ * VOID
+ * RtlInitUnicodeStringFromLiteral(PUNICODE_STRING DestinationString,
+ *                                 PCWSTR SourceString);
+ *
+ * Initialize a UNICODE_STRING from a wide string literal. WARNING: use only with
+ * string literals and statically initialized arrays, it will calculate the wrong
+ * length otherwise
  */
 
 #define RtlInitUnicodeStringFromLiteral(__PDEST_STRING__,__SOURCE_STRING__) \
@@ -524,28 +516,31 @@ RtlInitUnicodeStringFromLiteral (
   sizeof(__SOURCE_STRING__) - sizeof(WCHAR), \
   sizeof(__SOURCE_STRING__), \
   (__SOURCE_STRING__) \
- )
+)
+
 
 /*
- Static initializer for UNICODE_STRING variables. Usage:
-
- UNICODE_STRING wstr = UNICODE_STRING_INITIALIZER(L"string");
-
-*/
+ * Static initializer for UNICODE_STRING variables.
+ *
+ * Usage:
+ *    UNICODE_STRING wstr = UNICODE_STRING_INITIALIZER(L"string");
+ */
 
 #define UNICODE_STRING_INITIALIZER(__SOURCE_STRING__) \
 { \
- sizeof((__SOURCE_STRING__)) - sizeof(WCHAR), \
- sizeof((__SOURCE_STRING__)), \
- (__SOURCE_STRING__) \
+  sizeof((__SOURCE_STRING__)) - sizeof(WCHAR), \
+  sizeof((__SOURCE_STRING__)), \
+  (__SOURCE_STRING__) \
 }
 
+
 /*
- Initializer for empty UNICODE_STRING variables. Usage:
+ * Initializer for empty UNICODE_STRING variables.
+ *
+ * Usage:
+ *    UNICODE_STRING wstr = EMPTY_UNICODE_STRING;
+ */
 
- UNICODE_STRING wstr = EMPTY_UNICODE_STRING;
-
-*/
 #define EMPTY_UNICODE_STRING {0, 0, NULL}
 
 
@@ -562,7 +557,9 @@ PushEntryList (
 	(ListHead)->Next = (Entry)
 */
 
+
 #ifndef __USE_W32API
+
 
 /*
  * An ReactOS extension

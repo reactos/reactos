@@ -43,4 +43,3 @@ typedef struct _IMAGE_SYMBOL_INFO
 	|| (si)->LineNumberSymbols.Symbols)
 
 #endif
-

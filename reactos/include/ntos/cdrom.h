@@ -1,11 +1,11 @@
-/* $Id: cdrom.h,v 1.4 2002/11/14 18:21:03 chorns Exp $
+/* $Id: cdrom.h,v 1.5 2002/11/16 00:08:45 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
  * FILE:         include/ntos/cdrom.h
  * PURPOSE:      CD-ROM related definitions used by all the parts of the system
  * PROGRAMMER:   Eric Kohl <ekohl@rz-online.de>
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *               10/04/2002: Created
  */
 
@@ -13,13 +13,14 @@
 #define __INCLUDE_NTOS_CDROM_H
 
 #define IOCTL_CDROM_READ_TOC		CTL_CODE(FILE_DEVICE_CD_ROM, 0x0000, METHOD_BUFFERED, FILE_READ_ACCESS)
-#define IOCTL_CDROM_GET_LAST_SESSION    CTL_CODE(FILE_DEVICE_CD_ROM, 0x000E, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define IOCTL_CDROM_GET_LAST_SESSION	CTL_CODE(FILE_DEVICE_CD_ROM, 0x000E, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_CDROM_GET_DRIVE_GEOMETRY	CTL_CODE(FILE_DEVICE_CD_ROM, 0x0013, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 #define MAXIMUM_NUMBER_TRACKS		100
-#define MAXIMUM_CDROM_SIZE              804
+#define MAXIMUM_CDROM_SIZE		804
 
-typedef struct _TRACK_DATA {
+typedef struct _TRACK_DATA
+{
   UCHAR  Reserved;
   UCHAR  Control : 4;
   UCHAR  Adr : 4;
@@ -28,7 +29,8 @@ typedef struct _TRACK_DATA {
   UCHAR  Address[4];
 } TRACK_DATA, *PTRACK_DATA;
 
-typedef struct _CDROM_TOC {
+typedef struct _CDROM_TOC
+{
   UCHAR  Length[2];
   UCHAR  FirstTrack;
   UCHAR  LastTrack;
@@ -36,8 +38,6 @@ typedef struct _CDROM_TOC {
 } CDROM_TOC, *PCDROM_TOC;
 
 #define CDROM_TOC_SIZE sizeof(CDROM_TOC)
-
-
 
 #endif /* __INCLUDE_NTOS_CDROM_H */
 
