@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.5 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: finfo.c,v 1.6 2001/03/06 23:36:35 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -129,6 +129,24 @@ VfatSetDispositionInformation (PFILE_OBJECT FileObject,
   return (STATUS_SUCCESS);
 }
 
+NTSTATUS
+VfatGetNameInformation (PFILE_OBJECT FileObject, PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
+			PFILE_NAME_INFORMATION NameInfo)
+/*
+ * FUNCTION: Retrieve the file name information
+ * FIXME: We would need the IRP to check the length of the passed buffer. Now, it can cause overflows.
+ */
+{
+  assert (NameInfo != NULL);
+  assert (FCB != NULL);
+
+  NameInfo->FileNameLength = wcslen(FCB->PathName);
+  memcpy(NameInfo->FileName, FCB->PathName, sizeof(WCHAR)*(NameInfo->FileNameLength+1));
+
+  return STATUS_SUCCESS;
+}
+
+
 
 NTSTATUS STDCALL
 VfatQueryInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -176,6 +194,10 @@ VfatQueryInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       break;
     case FileBasicInformation:
       RC = VfatGetBasicInformation (FileObject,
+				   FCB, DeviceObject, SystemBuffer);
+      break;
+    case FileNameInformation:
+      RC = VfatGetNameInformation (FileObject,
 				   FCB, DeviceObject, SystemBuffer);
       break;
     default:
