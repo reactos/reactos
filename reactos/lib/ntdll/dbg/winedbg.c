@@ -29,10 +29,10 @@ static inline struct debug_info *get_info(void)
             tmp.str_pos = tmp.strings;
             tmp.out_pos = tmp.output;
         }
-        if (!GetProcessHeap()) return &tmp;
+        if (!RtlGetProcessHeap()) return &tmp;
         /* setup the temp structure in case HeapAlloc wants to print something */
         NtCurrentTeb()->WineDebugInfo = &tmp;
-        info = HeapAlloc( GetProcessHeap(), 0, sizeof(*info) );
+        info = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*info) );
         info->str_pos = info->strings;
         info->out_pos = info->output;
         NtCurrentTeb()->WineDebugInfo = info;
@@ -202,8 +202,12 @@ int wine_dbg_vprintf( const char *format, va_list args )
     else
     {
         char *pos = info->output;
+	char saved_ch;
         p++;
-        write( 2, pos, p - pos );
+	saved_ch = *p;
+	*p = 0;
+        DbgPrint(pos);
+	*p = saved_ch;
         /* move beginning of next line to start of buffer */
         while ((*pos = *p++)) pos++;
         info->out_pos = pos;

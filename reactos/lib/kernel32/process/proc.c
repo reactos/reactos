@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.43 2002/05/07 22:26:29 hbirr Exp $
+/* $Id: proc.c,v 1.44 2002/08/26 11:24:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -477,263 +477,219 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 }
 
 
-BOOL
-STDCALL
-FlushInstructionCache (
-	HANDLE	hProcess,
-	LPCVOID	lpBaseAddress,
-	DWORD	dwSize
-	)
+BOOL STDCALL
+FlushInstructionCache (HANDLE	hProcess,
+		       LPCVOID	lpBaseAddress,
+		       DWORD	dwSize)
 {
-	NTSTATUS	errCode;
-
-	errCode = NtFlushInstructionCache (
-			hProcess,
-			(PVOID) lpBaseAddress,
-			dwSize);
-	if (!NT_SUCCESS(errCode))
-	{
-		SetLastErrorByStatus (errCode);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-
-VOID
-STDCALL
-ExitProcess (
-	UINT	uExitCode
-	)
-{
-        CSRSS_API_REQUEST CsrRequest;
-        CSRSS_API_REPLY CsrReply;
-	NTSTATUS Status;
-
-	/* unload all dll's */
-	LdrShutdownProcess ();
-
-	/* notify csrss of process termination */
-	CsrRequest.Type = CSRSS_TERMINATE_PROCESS;
-	Status = CsrClientCallServer(&CsrRequest, 
-		                     &CsrReply,
-				     sizeof(CSRSS_API_REQUEST),
-				     sizeof(CSRSS_API_REPLY));
-	if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
-	{
-		DbgPrint("Failed to tell csrss about terminating process. Expect trouble.\n");
-	}
-
-
-	NtTerminateProcess (NtCurrentProcess (),
-	                    uExitCode);
-}
-
-
-WINBOOL
-STDCALL
-TerminateProcess (
-	HANDLE	hProcess,
-	UINT	uExitCode
-	)
-{
-    if (0 == hProcess)
+  NTSTATUS	errCode;
+  
+  errCode = NtFlushInstructionCache (hProcess,
+				     (PVOID) lpBaseAddress,
+				     dwSize);
+  if (!NT_SUCCESS(errCode))
     {
-        SetLastError (ERROR_INVALID_HANDLE);
+      SetLastErrorByStatus (errCode);
+      return FALSE;
     }
-    else
+  return TRUE;
+}
+
+
+VOID STDCALL
+ExitProcess (UINT	uExitCode)
+{
+  CSRSS_API_REQUEST CsrRequest;
+  CSRSS_API_REPLY CsrReply;
+  NTSTATUS Status;
+  
+  /* unload all dll's */
+  LdrShutdownProcess ();
+
+  /* notify csrss of process termination */
+  CsrRequest.Type = CSRSS_TERMINATE_PROCESS;
+  Status = CsrClientCallServer(&CsrRequest, 
+			       &CsrReply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
     {
-        NTSTATUS Status = NtTerminateProcess (hProcess, uExitCode);
-	
-        if (NT_SUCCESS(Status))
-	{
-            return TRUE;
-        }
-        SetLastErrorByStatus (Status);
+      DbgPrint("Failed to tell csrss about terminating process. "
+	       "Expect trouble.\n");
     }
-    return FALSE;
+  
+  
+  NtTerminateProcess (NtCurrentProcess (),
+		      uExitCode);
 }
 
 
-VOID
-STDCALL
-FatalAppExitA (
-	UINT	uAction,
-	LPCSTR	lpMessageText
-	)
+WINBOOL STDCALL
+TerminateProcess (HANDLE	hProcess,
+		  UINT	uExitCode)
 {
-	UNICODE_STRING MessageTextU;
-	ANSI_STRING MessageText;
-
-	RtlInitAnsiString (& MessageText,
-	                   (LPSTR) lpMessageText);
-
-	RtlAnsiStringToUnicodeString (& MessageTextU,
-	                              & MessageText,
-	                              TRUE);
-
-	FatalAppExitW (uAction,
-	               MessageTextU.Buffer);
-
-	RtlFreeUnicodeString (&MessageTextU);
+  NTSTATUS Status = NtTerminateProcess (hProcess, uExitCode);
+      
+  if (NT_SUCCESS(Status))
+    {
+      return TRUE;
+    }
+  SetLastErrorByStatus (Status);
+  return FALSE;
 }
 
 
-VOID
-STDCALL
-FatalAppExitW (
-	UINT	uAction,
-	LPCWSTR	lpMessageText
-	)
+VOID STDCALL
+FatalAppExitA (UINT	uAction,
+	       LPCSTR	lpMessageText)
 {
-	return;
+  UNICODE_STRING MessageTextU;
+  ANSI_STRING MessageText;
+  
+  RtlInitAnsiString (&MessageText, (LPSTR) lpMessageText);
+
+  RtlAnsiStringToUnicodeString (&MessageTextU,
+				&MessageText,
+				TRUE);
+
+  FatalAppExitW (uAction, MessageTextU.Buffer);
+
+  RtlFreeUnicodeString (&MessageTextU);
 }
 
 
-VOID
-STDCALL
-FatalExit (
-	  int ExitCode
-	  )
+VOID STDCALL
+FatalAppExitW (UINT	uAction,
+	       LPCWSTR	lpMessageText)
 {
-	ExitProcess(ExitCode);
+  return;
 }
 
 
-DWORD
-STDCALL
-GetPriorityClass (
-	HANDLE	hProcess
-	)
+VOID STDCALL
+FatalExit (int ExitCode)
 {
-	HANDLE		hProcessTmp;
-	DWORD		CsrPriorityClass = 0; // This tells CSRSS we want to GET it!
-	NTSTATUS	Status;
+  ExitProcess(ExitCode);
+}
+
+
+DWORD STDCALL
+GetPriorityClass (HANDLE	hProcess)
+{
+  HANDLE		hProcessTmp;
+  DWORD		CsrPriorityClass = 0; // This tells CSRSS we want to GET it!
+  NTSTATUS	Status;
 	
-	Status = NtDuplicateObject (
-			GetCurrentProcess(),
-			hProcess,
-			GetCurrentProcess(),
-			& hProcessTmp,
-			(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
-			FALSE,
-			0
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return (0); /* ERROR */
-	}
-	/* Ask CSRSS to set it */
-	CsrSetPriorityClass (
-		hProcessTmp,
-		& CsrPriorityClass
-		);
-	NtClose (hProcessTmp);
-	/* Translate CSR->W32 priorities */
-	switch (CsrPriorityClass)
-	{
-		case CSR_PRIORITY_CLASS_NORMAL:
-			return (NORMAL_PRIORITY_CLASS);	/* 32 */
-		case CSR_PRIORITY_CLASS_IDLE:
-			return (IDLE_PRIORITY_CLASS);	/* 64 */
-		case CSR_PRIORITY_CLASS_HIGH:
-			return (HIGH_PRIORITY_CLASS);	/* 128 */
-		case CSR_PRIORITY_CLASS_REALTIME:
-			return (REALTIME_PRIORITY_CLASS);	/* 256 */
-	}
-	SetLastError (ERROR_ACCESS_DENIED);
-	return (0); /* ERROR */
+  Status = 
+    NtDuplicateObject (GetCurrentProcess(),
+		       hProcess,
+		       GetCurrentProcess(),
+		       &hProcessTmp,
+		       (PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
+		       FALSE,
+		       0);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return (0); /* ERROR */
+    }
+  /* Ask CSRSS to set it */
+  CsrSetPriorityClass (hProcessTmp, &CsrPriorityClass);
+  NtClose (hProcessTmp);
+  /* Translate CSR->W32 priorities */
+  switch (CsrPriorityClass)
+    {
+    case CSR_PRIORITY_CLASS_NORMAL:
+      return (NORMAL_PRIORITY_CLASS);	/* 32 */
+    case CSR_PRIORITY_CLASS_IDLE:
+      return (IDLE_PRIORITY_CLASS);	/* 64 */
+    case CSR_PRIORITY_CLASS_HIGH:
+      return (HIGH_PRIORITY_CLASS);	/* 128 */
+    case CSR_PRIORITY_CLASS_REALTIME:
+      return (REALTIME_PRIORITY_CLASS);	/* 256 */
+    }
+  SetLastError (ERROR_ACCESS_DENIED);
+  return (0); /* ERROR */
 }
 
 
 
-WINBOOL
-STDCALL
-SetPriorityClass (
-	HANDLE	hProcess,
-	DWORD	dwPriorityClass
-	)
+WINBOOL STDCALL
+SetPriorityClass (HANDLE	hProcess,
+		  DWORD	dwPriorityClass)
 {
-	HANDLE		hProcessTmp;
-	DWORD		CsrPriorityClass;
-	NTSTATUS	Status;
-
-	switch (dwPriorityClass)
-	{
-		case NORMAL_PRIORITY_CLASS:	/* 32 */
-			CsrPriorityClass = CSR_PRIORITY_CLASS_NORMAL;
-			break;
-		case IDLE_PRIORITY_CLASS:	/* 64 */
-			CsrPriorityClass = CSR_PRIORITY_CLASS_IDLE;
-			break;
-		case HIGH_PRIORITY_CLASS:	/* 128 */
-			CsrPriorityClass = CSR_PRIORITY_CLASS_HIGH;
-			break;
-		case REALTIME_PRIORITY_CLASS:	/* 256 */
-			CsrPriorityClass = CSR_PRIORITY_CLASS_REALTIME;
-			break;
-		default:
-			SetLastError (ERROR_INVALID_PARAMETER);
-			return (FALSE);
-	}
-	Status = NtDuplicateObject (
-			GetCurrentProcess(),
-			hProcess,
-			GetCurrentProcess(),
-			& hProcessTmp,
-			(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
-			FALSE,
-			0
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return (FALSE); /* ERROR */
-	}
-	/* Ask CSRSS to set it */
-	Status = CsrSetPriorityClass (
-			hProcessTmp,
-			& CsrPriorityClass
-			);
-	NtClose (hProcessTmp);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return (FALSE);
-	}
-	return (TRUE);
+  HANDLE		hProcessTmp;
+  DWORD		CsrPriorityClass;
+  NTSTATUS	Status;
+  
+  switch (dwPriorityClass)
+    {
+    case NORMAL_PRIORITY_CLASS:	/* 32 */
+      CsrPriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+      break;
+    case IDLE_PRIORITY_CLASS:	/* 64 */
+      CsrPriorityClass = CSR_PRIORITY_CLASS_IDLE;
+      break;
+    case HIGH_PRIORITY_CLASS:	/* 128 */
+      CsrPriorityClass = CSR_PRIORITY_CLASS_HIGH;
+      break;
+    case REALTIME_PRIORITY_CLASS:	/* 256 */
+      CsrPriorityClass = CSR_PRIORITY_CLASS_REALTIME;
+      break;
+    default:
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return (FALSE);
+    }
+  Status = 
+    NtDuplicateObject (GetCurrentProcess(),
+		       hProcess,
+		       GetCurrentProcess(),
+		       &hProcessTmp,
+		       (PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
+		       FALSE,
+		       0);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return (FALSE); /* ERROR */
+    }
+  /* Ask CSRSS to set it */
+  Status = CsrSetPriorityClass (hProcessTmp, &CsrPriorityClass);
+  NtClose (hProcessTmp);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return (FALSE);
+    }
+  return (TRUE);
 }
 
 
-DWORD
-STDCALL
-GetProcessVersion (
-	DWORD	ProcessId
-	)
+DWORD STDCALL
+GetProcessVersion (DWORD	ProcessId)
 {
-	DWORD			Version = 0;
-	PIMAGE_NT_HEADERS	NtHeader = NULL;
-	PVOID			BaseAddress = NULL;
+  DWORD			Version = 0;
+  PIMAGE_NT_HEADERS	NtHeader = NULL;
+  PVOID			BaseAddress = NULL;
 
-	/* Caller's */
-	if (0 == ProcessId)
+  /* Caller's */
+  if (0 == ProcessId)
+    {
+      BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
+      NtHeader = RtlImageNtHeader (BaseAddress);
+      if (NULL != NtHeader)
 	{
-		BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
-		NtHeader = RtlImageNtHeader (BaseAddress);
-		if (NULL != NtHeader)
-		{
-			Version =
-				(NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16)
-				| (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
-		}
+	  Version =
+	    (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) | 
+	    (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
 	}
-	else /* other process */
-	{
-		/* FIXME: open the other process */
-		SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	}
-	return (Version);
+    }
+  else /* other process */
+    {
+      /* FIXME: open the other process */
+      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+  return (Version);
 }
 
 

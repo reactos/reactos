@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.47 2002/08/08 17:54:12 dwelch Exp $
+/* $Id: create.c,v 1.48 2002/08/26 11:24:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -891,6 +891,31 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	 DPRINT("NtDuplicateObject failed, status %x\n", Status);
       }
    }
+
+   /*
+    * Initialize some other fields in the PPB
+    */
+   if (lpStartupInfo)
+     {
+       Ppb->Flags = lpStartupInfo->Flags;
+       if (Ppb->Flags & STARTF_USESHOWWINDOW)
+	 {
+	   Ppb->ShowWindowFlags = lpStartupInfo->wShowWindow;
+	 }
+       else
+	 {
+	   Ppb->ShowWindowFlags = SW_SHOWDEFAULT;
+	 }
+       Ppb->StartingX = Ppb->dwX;
+       Ppb->StartingY = Ppb->dwY;
+       Ppb->CountX = Ppb->dwXSize;
+       Ppb->CountY = Ppb->dwYSize;
+       Ppb->FillAttribute = Ppb->dwFillAttribute;
+     }
+   else
+     {
+       Ppb->Flags = 0;
+     }
    
    /*
     * Create Process Environment Block
