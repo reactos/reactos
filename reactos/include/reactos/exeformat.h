@@ -1,6 +1,33 @@
 #ifndef REACTOS_EXEFORMAT_H_INCLUDED_
 #define REACTOS_EXEFORMAT_H_INCLUDED_ 1
 
+/*
+ * LOADER API
+ */
+#define EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED       (1 << 0)
+#define EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP   (1 << 1)
+#define EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED (1 << 2)
+/*
+ * CALLBACKS
+ */
+typedef NTSTATUS (NTAPI * PEXEFMT_LOADER_READ_FILE)
+(
+ IN struct _FILE_OBJECT * FileObject,
+ OUT PVOID Buffer,
+ IN ULONG BufferSize,
+ IN PLARGE_INTEGER Offset,
+ OUT PULONG ReadSize
+);
+
+typedef PMM_SECTION_SEGMENT (NTAPI * PEXEFMT_LOADER_ALLOCATE_SEGMENTS)
+(
+ IN ULONG NrSegments
+);
+
+/*
+ * STATUS CONSTANTS
+ */
+
 #define FACILITY_ROS_EXEFMT        (0x10)
 
 /*
@@ -8,20 +35,21 @@
  * as opposed to STATUS_INVALID_IMAGE_FORMAT meaning the format is supported,
  * but the particular file is malformed
  */
-#define STATUS_ROS_EXEFMT_UNKNOWN_FORMAT /* TODO */
+#define STATUS_ROS_EXEFMT_UNKNOWN_FORMAT (0xA0100001)
 
 /*
  * Returned by MmCreateSection to signal successful loading of an executable
  * image, saving the caller the effort of determining the executable's format
- * again
+ * again. The full status to return is obtained by performing a bitwise OR of
+ * STATUS_ROS_EXEFMT_LOADED_FORMAT and the appropriate EXEFMT_LOADED_XXX
  */
 #define FACILITY_ROS_EXEFMT_FORMAT      (0x11)
-#define STATUS_ROS_EXEFMT_LOADED_FORMAT /* TODO */
+#define STATUS_ROS_EXEFMT_LOADED_FORMAT (0x60110000)
 
 /* non-standard format, ZwQuerySection required to retrieve the format tag */
 #define EXEFMT_LOADED_EXTENDED (0x0000FFFF)
 
-/* Windows PE/PE+ */
+/* Windows PE32/PE32+ */
 #define EXEFMT_LOADED_PE32     (0x00000000)
 #define EXEFMT_LOADED_PE64     (0x00000001)
 

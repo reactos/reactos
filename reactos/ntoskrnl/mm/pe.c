@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pe.c,v 1.1.2.1 2004/12/08 20:01:41 hyperion Exp $
+/* $Id: pe.c,v 1.1.2.2 2004/12/09 19:31:26 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
@@ -24,13 +24,17 @@
  * PROGRAMMER:      KJK::Hyperion <hackbunny@reactos.com>
  * UPDATE HISTORY:
  *                  2004-12-06 Created
+ *                  2004-12-09 Compiles
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <internal/debug.h>
+
+#include <reactos/exeformat.h>
 
 static ULONG SectionCharacteristicsToProtect[16] =
 {
@@ -147,13 +151,28 @@ BOOLEAN FASTCALL Intsafe_MulULong32
 
 BOOLEAN FASTCALL Intsafe_CanOffsetPointer
 (
- IN PVOID Pointer,
+ IN CONST VOID * Pointer,
  IN SIZE_T Offset
 )
 {
  /* FIXME: (PVOID)MAXULONG_PTR isn't necessarily a valid address */
  return Intsafe_CanAddULongPtr((ULONG_PTR)Pointer, Offset);
 }
+
+/* TODO: these are standard DDK/PSDK macros */
+#ifndef RTL_FIELD_SIZE
+#define RTL_FIELD_SIZE(TYPE_, FIELD_) (sizeof(((TYPE_ *)0)->FIELD_))
+#endif
+
+#ifndef RTL_SIZEOF_THROUGH_FIELD
+#define RTL_SIZEOF_THROUGH_FIELD(TYPE_, FIELD_) \
+ (FIELD_OFFSET(TYPE_, FIELD_) + RTL_FIELD_SIZE(TYPE_, FIELD_))
+#endif
+
+#ifndef RTL_CONTAINS_FIELD
+#define RTL_CONTAINS_FIELD(P_, SIZE_, FIELD_) \
+ ((((char *)(P_)) + (SIZE_)) > (((char *)(&((P_)->FIELD_))) + sizeof((P_)->FIELD_)))
+#endif
 
 BOOLEAN FASTCALL IsPowerOf2(IN ULONG Number)
 {
@@ -213,14 +232,15 @@ NTSTATUS NTAPI PeFmtCreateSection
  ULONG cbSectionHeadersOffset;
  ULONG cbSectionHeadersSize;
  ULONG cbSectionHeadersOffsetSize;
+ ULONG cbOptHeaderSize;
  ULONG cbHeadersSize;
  ULONG nSectionAlignment;
  ULONG nFileAlignment;
- PIMAGE_DOS_HEADER pidhDosHeader;
- PIMAGE_NT_HEADERS32 pinhNtHeader;
- PIMAGE_OPTIONAL_HEADER32 piohOptHeader;
- PIMAGE_SECTION_HEADER pishSectionHeaders;
- PMM_SECTION_SEGMENTS pssSegments;
+ const IMAGE_DOS_HEADER * pidhDosHeader;
+ const IMAGE_NT_HEADERS32 * pinhNtHeader;
+ const IMAGE_OPTIONAL_HEADER32 * piohOptHeader;
+ const IMAGE_SECTION_HEADER * pishSectionHeaders;
+ PMM_SECTION_SEGMENT pssSegments;
  LARGE_INTEGER lnOffset;
  PVOID pBuffer;
  ULONG nPrevVirtualEndOfSegment;
@@ -426,7 +446,7 @@ l_ReadHeaderFromFile:
     goto l_Return;
 
    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
-    ImageSectionObject->ImageBase = (PVOID)piohOptHeader->ImageBase;
+    ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
 
    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackReserve))
     ImageSectionObject->StackReserve = piohOptHeader->SizeOfStackReserve;
@@ -452,7 +472,7 @@ l_ReadHeaderFromFile:
     if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
      goto l_Return;
 
-    ImageSectionObject->ImageBase = (PVOID)pioh64OptHeader->ImageBase;
+    ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
    }
 
    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
@@ -516,7 +536,7 @@ l_ReadHeaderFromFile:
  }
 
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
-  ImageSectionObject->EntryPoint = (PVOID)piohOptHeader->AddressOfEntryPoint;
+  ImageSectionObject->EntryPoint = piohOptHeader->AddressOfEntryPoint;
 
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
   ImageSectionObject->Executable = piohOptHeader->SizeOfCode != 0;
@@ -695,7 +715,7 @@ l_ReadHeaderFromFile:
   nCharacteristics = pishSectionHeaders[i].Characteristics;
 
   /* no explicit protection */
-  if(nCharacteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE) == 0)
+  if((nCharacteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE)) == 0)
   {
    if(nCharacteristics & IMAGE_SCN_CNT_CODE)
     nCharacteristics |= IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ;
@@ -742,7 +762,7 @@ l_ReadHeaderFromFile:
  /* Success */
  nStatus = STATUS_ROS_EXEFMT_LOADED_FORMAT & EXEFMT_LOADED_PE32;
 
-l_Return;
+l_Return:
  if(pBuffer)
   ExFreePool(pBuffer);
 

@@ -149,6 +149,7 @@ OBJECTS_MM = \
 	mm/pageop.o \
 	mm/pager.o \
 	mm/paging.o \
+	mm/pe.o \
 	mm/pool.o \
 	mm/ppool.o \
 	mm/physical.o \
