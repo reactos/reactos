@@ -3754,6 +3754,13 @@ BOOL WINAPI SetCaretBlinkTime(UINT);
 BOOL WINAPI SetCaretPos(int,int);
 DWORD WINAPI SetClassLongA(HWND,int,LONG);
 DWORD WINAPI SetClassLongW(HWND,int,LONG);
+#ifdef _WIN64
+ULONG_PTR WINAPI SetClassLongPtrA(HWND,INT,LONG_PTR);
+ULONG_PTR WINAPI SetClassLongPtrW(HWND,INT,LONG_PTR);
+#else
+#define SetClassLongPtrA SetClassLongA
+#define SetClassLongPtrW SetClassLongW
+#endif
 WORD WINAPI SetClassWord(HWND,int,WORD);
 HANDLE WINAPI SetClipboardData(UINT,HANDLE);
 HWND WINAPI SetClipboardViewer(HWND);
@@ -4027,6 +4034,7 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define SendMessageTimeout SendMessageTimeoutW
 #define SendNotifyMessage SendNotifyMessageW
 #define SetClassLong SetClassLongW
+#define SetClassLongPtr SetClassLongPtrW
 #define SetDlgItemText SetDlgItemTextW
 #define SetMenuItemInfo SetMenuItemInfoW
 #define SetProp SetPropW
@@ -4192,6 +4200,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define SendMessageTimeout SendMessageTimeoutA
 #define SendNotifyMessage SendNotifyMessageA
 #define SetClassLong SetClassLongA
+#define SetClassLongPtr SetClassLongPtrA
 #define SetDlgItemText SetDlgItemTextA
 #define SetMenuItemInfo SetMenuItemInfoA
 #define SetProp SetPropA

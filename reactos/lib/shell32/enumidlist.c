@@ -25,6 +25,7 @@
 #define COBJMACROS
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -103,24 +104,27 @@ BOOL AddToEnumList(
  */
 BOOL CreateFolderEnumList(
 	IEnumIDList *list,
-	LPCSTR lpszPath,
+	LPCWSTR lpszPath,
 	DWORD dwFlags)
 {
     LPITEMIDLIST pidl=NULL;
-    WIN32_FIND_DATAA stffile;
+    WIN32_FIND_DATAW stffile;
     HANDLE hFile;
-    CHAR  szPath[MAX_PATH];
+    WCHAR  szPath[MAX_PATH];
     BOOL succeeded = TRUE;
+    const static WCHAR stars[] = { '*','.','*',0 };
+    const static WCHAR dot[] = { '.',0 };
+    const static WCHAR dotdot[] = { '.','.',0 };
 
-    TRACE("(%p)->(path=%s flags=0x%08lx) \n",list,debugstr_a(lpszPath),dwFlags);
+    TRACE("(%p)->(path=%s flags=0x%08lx) \n",list,debugstr_w(lpszPath),dwFlags);
 
     if(!lpszPath || !lpszPath[0]) return FALSE;
 
-    strcpy(szPath, lpszPath);
-    PathAddBackslashA(szPath);
-    strcat(szPath,"*.*");
+    strcpyW(szPath, lpszPath);
+    PathAddBackslashW(szPath);
+    strcatW(szPath,stars);
 
-    hFile = FindFirstFileA(szPath,&stffile);
+    hFile = FindFirstFileW(szPath,&stffile);
     if ( hFile != INVALID_HANDLE_VALUE )
     {
         BOOL findFinished = FALSE;
@@ -132,21 +136,21 @@ BOOL CreateFolderEnumList(
             {
                 if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
                  dwFlags & SHCONTF_FOLDERS &&
-                 strcmp (stffile.cFileName, ".") && strcmp (stffile.cFileName, ".."))
+                 strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
                 {
-                    pidl = _ILCreateFromFindDataA(&stffile);
+                    pidl = _ILCreateFromFindDataW(&stffile);
                     succeeded = succeeded && AddToEnumList(list, pidl);
                 }
                 else if (!(stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                  && dwFlags & SHCONTF_NONFOLDERS)
                 {
-                    pidl = _ILCreateFromFindDataA(&stffile);
+                    pidl = _ILCreateFromFindDataW(&stffile);
                     succeeded = succeeded && AddToEnumList(list, pidl);
                 }
             }
             if (succeeded)
             {
-                if (!FindNextFileA(hFile, &stffile))
+                if (!FindNextFileW(hFile, &stffile))
                 {
                     if (GetLastError() == ERROR_NO_MORE_FILES)
                         findFinished = TRUE;
