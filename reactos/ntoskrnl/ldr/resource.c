@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.6 2003/08/22 20:00:39 weiden Exp $
+/* $Id: resource.c,v 1.7 2004/06/23 19:49:11 ion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -188,6 +188,41 @@ found:;
      }
 
   return Status;
+}
+
+/* STUBS */
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+LdrFindResourceDirectory_U(
+	IN PVOID   	BaseAddress,
+	IN PLDR_RESOURCE_INFO			ResourceInfo,
+	IN  ULONG						Level,
+	OUT PIMAGE_RESOURCE_DIRECTORY	*ResourceDirectory
+)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+LdrEnumResources(
+	IN PVOID   	BaseAddress,
+	IN PLDR_RESOURCE_INFO			ResourceInfo,
+	IN  ULONG						Level,
+	IN OUT PULONG					ResourceCount,
+	OUT PVOID						Resources  OPTIONAL
+)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */
