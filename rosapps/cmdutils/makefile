@@ -4,12 +4,16 @@
 
 PATH_TO_TOP=..
 
-TARGET=more.exe sort.exe tee.exe y.exe
+TARGET=find.exe more.exe sort.exe tee.exe y.exe
 
 all: $(TARGET)
 
 
 CLEAN_FILES = *.o *.exe *.sym *.coff
+
+find.exe: find.o find.coff
+	$(CC) find.o -lkernel32 -lmsvcrt -o find.exe find.coff
+	$(NM) --numeric-sort find.exe > find.sym
 
 more.exe: more.o more.coff
 	$(CC) more.o -lkernel32 -lmsvcrt -o more.exe more.coff
