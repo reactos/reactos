@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.63 2002/01/04 13:09:36 ekohl Exp $
+# $Id: Makefile,v 1.64 2002/01/21 22:34:36 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -635,10 +635,13 @@ clean:
 
 .PHONY: clean 
 
-install: all $(INSTALL_DIR)/system32/$(TARGETNAME).exe
+install: all $(INSTALL_DIR)/system32/$(TARGETNAME).exe $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
 $(INSTALL_DIR)/system32/$(TARGETNAME).exe: $(TARGETNAME).exe
 	$(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
+
+$(INSTALL_DIR)/symbols/$(TARGETNAME).sym: $(TARGETNAME).sym
+	$(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
 .PHONY: install
 
