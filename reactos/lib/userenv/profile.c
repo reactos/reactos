@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.13 2004/09/30 20:23:00 ekohl Exp $
+/* $Id: profile.c,v 1.14 2004/10/03 09:27:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -127,7 +127,7 @@ CreateUserProfileW (PSID Sid,
   HKEY hKey;
   NTSTATUS Status;
 
-  DPRINT ("CreateUserProfileW() called\n");
+  DPRINT("CreateUserProfileW() called\n");
 
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -282,12 +282,13 @@ CreateUserProfileW (PSID Sid,
   RegCloseKey (hKey);
 
   /* Create user hive name */
-  wcscat (szUserProfilePath, L"\\ntuser.dat");
+  wcscpy (szBuffer, szUserProfilePath);
+  wcscat (szBuffer, L"\\ntuser.dat");
 
   /* Create new user hive */
   if (RegLoadKeyW (HKEY_USERS,
 		   SidString.Buffer,
-		   szUserProfilePath))
+		   szBuffer))
     {
       DPRINT1("Error: %lu\n", GetLastError());
       RtlFreeUnicodeString (&SidString);
@@ -295,7 +296,7 @@ CreateUserProfileW (PSID Sid,
     }
 
   /* Initialize user hive */
-  if (!CreateUserHive (SidString.Buffer))
+  if (!CreateUserHive (SidString.Buffer, szUserProfilePath))
     {
       DPRINT1("Error: %lu\n", GetLastError());
       RtlFreeUnicodeString (&SidString);
@@ -307,7 +308,7 @@ CreateUserProfileW (PSID Sid,
 
   RtlFreeUnicodeString (&SidString);
 
-  DPRINT ("CreateUserProfileW() done\n");
+  DPRINT("CreateUserProfileW() done\n");
 
   return TRUE;
 }

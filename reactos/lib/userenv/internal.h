@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: internal.h,v 1.9 2004/09/30 20:23:00 ekohl Exp $ 
+/* $Id: internal.h,v 1.10 2004/10/03 09:27:22 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -98,7 +98,13 @@ AppendSystemPostfix (LPWSTR lpName,
 
 /* registry.c */
 BOOL
-CreateUserHive (LPCWSTR lpKeyName);
+CreateUserHive (LPCWSTR lpKeyName,
+		LPCWSTR lpProfilePath);
+
+/* setup.c */
+BOOL
+UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
+			       HKEY hUserKey);
 
 #endif /* _INTERNAL_H */
 

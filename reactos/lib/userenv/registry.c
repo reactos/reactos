@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.6 2004/09/30 20:23:00 ekohl Exp $
+/* $Id: registry.c,v 1.7 2004/10/03 09:27:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -240,11 +240,11 @@ CopyKey (HKEY hDstKey,
 
 
 BOOL
-CreateUserHive (LPCWSTR lpKeyName)
+CreateUserHive (LPCWSTR lpKeyName,
+		LPCWSTR lpProfilePath)
 {
   HKEY hDefaultKey;
   HKEY hUserKey;
-  BOOL bResult;
 
   DPRINT ("CreateUserHive(%S) called\n", lpKeyName);
 
@@ -269,8 +269,22 @@ CreateUserHive (LPCWSTR lpKeyName)
       return FALSE;
     }
 
-  bResult = CopyKey (hUserKey,
-		     hDefaultKey);
+  if (!CopyKey(hUserKey, hDefaultKey))
+    {
+      DPRINT1 ("Error: %lu\n", GetLastError());
+      RegCloseKey (hUserKey);
+      RegCloseKey (hDefaultKey);
+      return FALSE;
+    }
+
+  if (!UpdateUsersShellFolderSettings(lpProfilePath,
+				      hUserKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hUserKey);
+      RegCloseKey (hDefaultKey);
+      return FALSE;
+    }
 
   RegFlushKey (hUserKey);
 
@@ -279,7 +293,7 @@ CreateUserHive (LPCWSTR lpKeyName)
 
   DPRINT ("CreateUserHive() done\n");
 
-  return bResult;
+  return TRUE;
 }
 
 /* EOF */

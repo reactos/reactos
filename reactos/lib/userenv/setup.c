@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.8 2004/10/02 12:31:28 ekohl Exp $ 
+/* $Id: setup.c,v 1.9 2004/10/03 09:27:22 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -463,7 +463,66 @@ InitializeProfiles (VOID)
   RegCloseKey(hKey);
 
 
-  DPRINT1("Success\n");
+  DPRINT("Success\n");
+
+  return TRUE;
+}
+
+
+BOOL
+UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
+			       HKEY hUserKey)
+{
+  WCHAR szBuffer[MAX_PATH];
+  DWORD dwLength;
+  PFOLDERDATA lpFolderData;
+  HKEY hFoldersKey;
+
+  DPRINT("UpdateUsersShellFolderSettings() called\n");
+
+  DPRINT("User profile path: %S\n", lpUserProfilePath);
+
+  if (RegOpenKeyExW(hUserKey,
+		    L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hFoldersKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  lpFolderData = &UserShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
+    {
+      if (lpFolderData->bShellFolder)
+	{
+	  wcscpy(szBuffer, lpUserProfilePath);
+	  wcscat(szBuffer, L"\\");
+	  wcscat(szBuffer, lpFolderData->Path);
+
+	  DPRINT("%S: %S\n", lpFolderData->ValueName, szBuffer);
+
+	  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+	  if (RegSetValueExW(hFoldersKey,
+			     lpFolderData->ValueName,
+			     0,
+			     REG_SZ,
+			     (LPBYTE)szBuffer,
+			     dwLength))
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey(hFoldersKey);
+	      return FALSE;
+	    }
+	}
+
+      lpFolderData++;
+    }
+
+  RegCloseKey(hFoldersKey);
+
+  DPRINT("UpdateUsersShellFolderSettings() done\n");
 
   return TRUE;
 }
