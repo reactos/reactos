@@ -265,8 +265,13 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
     }
 
     /* transmit packet header */
-    if (!WriteFile(Connection->conn, Header, hdr_size, &count, NULL)) {
+    ResetEvent(Connection->ovl.hEvent);
+    if (!WriteFile(Connection->conn, Header, hdr_size, &count, &Connection->ovl)) {
       WARN("WriteFile failed with error %ld\n", GetLastError());
+      return GetLastError();
+    }
+    if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &count, TRUE)) {
+      WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
       return GetLastError();
     }
 
@@ -277,8 +282,13 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
     }
 
     /* send the fragment data */
-    if (!WriteFile(Connection->conn, buffer_pos, Header->common.frag_len - hdr_size, &count, NULL)) {
+    ResetEvent(Connection->ovl.hEvent);
+    if (!WriteFile(Connection->conn, buffer_pos, Header->common.frag_len - hdr_size, &count, &Connection->ovl)) {
       WARN("WriteFile failed with error %ld\n", GetLastError());
+      return GetLastError();
+    }
+    if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &count, TRUE)) {
+      WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
       return GetLastError();
     }
 
@@ -309,9 +319,15 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   TRACE("(%p, %p, %p)\n", Connection, Header, pMsg);
 
   /* read packet common header */
-  if (!ReadFile(Connection->conn, &common_hdr, sizeof(common_hdr), &dwRead, NULL)) {
+  ResetEvent(Connection->ovl.hEvent);
+  if (!ReadFile(Connection->conn, &common_hdr, sizeof(common_hdr), &dwRead, &Connection->ovl)) {
+    WARN("ReadFile failed with error %ld\n", GetLastError());
+    status = RPC_S_PROTOCOL_ERROR;
+    goto fail;
+  }
+  if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &dwRead, TRUE)) {
     if (GetLastError() != ERROR_MORE_DATA) {
-      WARN("ReadFile failed with error %ld\n", GetLastError());
+      WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
       status = RPC_S_PROTOCOL_ERROR;
       goto fail;
     }
@@ -339,10 +355,16 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   memcpy(*Header, &common_hdr, sizeof(common_hdr));
 
   /* read the rest of packet header */
+  ResetEvent(Connection->ovl.hEvent);
   if (!ReadFile(Connection->conn, &(*Header)->common + 1,
-                hdr_length - sizeof(common_hdr), &dwRead, NULL)) {
+                hdr_length - sizeof(common_hdr), &dwRead, &Connection->ovl)) {
+    WARN("ReadFile failed with error %ld\n", GetLastError());
+    status = RPC_S_PROTOCOL_ERROR;
+    goto fail;
+  }
+  if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &dwRead, TRUE)) {
     if (GetLastError() != ERROR_MORE_DATA) {
-      WARN("ReadFile failed with error %ld\n", GetLastError());
+      WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
       status = RPC_S_PROTOCOL_ERROR;
       goto fail;
     }
@@ -351,6 +373,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
     status = RPC_S_PROTOCOL_ERROR;
     goto fail;
   }
+
 
   /* read packet body */
   switch (common_hdr.ptype) {
@@ -379,12 +402,19 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       goto fail;
     }
 
-    if (data_length == 0) dwRead = 0; else
-    if (!ReadFile(Connection->conn, buffer_ptr, data_length, &dwRead, NULL)) {
-      if (GetLastError() != ERROR_MORE_DATA) {
+    if (data_length == 0) dwRead = 0; else {
+      ResetEvent(Connection->ovl.hEvent);
+      if (!ReadFile(Connection->conn, buffer_ptr, data_length, &dwRead, &Connection->ovl)) {
         WARN("ReadFile failed with error %ld\n", GetLastError());
         status = RPC_S_PROTOCOL_ERROR;
         goto fail;
+      }
+      if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &dwRead, TRUE)) {
+        if (GetLastError() != ERROR_MORE_DATA) {
+          WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
+          status = RPC_S_PROTOCOL_ERROR;
+          goto fail;
+        }
       }
     }
     if (dwRead != data_length) {
@@ -403,10 +433,16 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       TRACE("next header\n");
 
       /* read the header of next packet */
-      if (!ReadFile(Connection->conn, *Header, hdr_length, &dwRead, NULL)) {
+      ResetEvent(Connection->ovl.hEvent);
+      if (!ReadFile(Connection->conn, *Header, hdr_length, &dwRead, &Connection->ovl)) {
+        WARN("ReadFile failed with error %ld\n", GetLastError());
+        status = GetLastError();
+        goto fail;
+      }
+      if (!GetOverlappedResult(Connection->conn, &Connection->ovl, &dwRead, TRUE)) {
         if (GetLastError() != ERROR_MORE_DATA) {
-          WARN("ReadFile failed with error %ld\n", GetLastError());
-          status = GetLastError();
+          WARN("GetOverlappedResult failed with error %ld\n", GetLastError());
+          status = RPC_S_PROTOCOL_ERROR;
           goto fail;
         }
       }
