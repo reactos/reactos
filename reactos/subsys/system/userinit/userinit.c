@@ -143,7 +143,6 @@ WinMain(HINSTANCE hInst,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
-  DPRINT1("Hello\n");
   SetUserSettings();
   StartShell();
   return 0;

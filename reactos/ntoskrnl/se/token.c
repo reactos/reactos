@@ -1564,7 +1564,7 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
 NTSTATUS STDCALL
 NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 	      IN ACCESS_MASK DesiredAccess,
-	      IN POBJECT_ATTRIBUTES UnsafeObjectAttributes,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes,
 	      IN TOKEN_TYPE TokenType,
 	      IN PLUID AuthenticationId,
 	      IN PLARGE_INTEGER ExpirationTime,
@@ -1579,7 +1579,6 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   HANDLE TokenHandle;
   PTOKEN AccessToken;
   NTSTATUS Status;
-  POBJECT_ATTRIBUTES ObjectAttributes;
   LUID TokenId;
   LUID ModifiedId;
   PVOID EndMem;

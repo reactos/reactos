@@ -1695,7 +1695,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    NTSTATUS Status = STATUS_SUCCESS;
    
    PreviousMode = ExGetPreviousMode();
-   
+
+   DPRINT1("NtSetInformationProcess() %d %x  %x called\n", ProcessInformationClass, ProcessInformation, ProcessInformationLength);
    DefaultSetInfoBufferCheck(ProcessInformationClass,
                              PsProcessInfoClass,
                              ProcessInformation,
@@ -1704,7 +1705,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                              &Status);
    if(!NT_SUCCESS(Status))
    {
-     DPRINT1("NtSetInformationProcess() failed, Status: 0x%x\n", Status);
+     DPRINT1("NtSetInformationProcess() %x failed, Status: 0x%x\n", Status);
      return Status;
    }
    

@@ -373,7 +373,8 @@ typedef struct _INFORMATION_CLASS_INFO
     else if(ClassList[Class].RequiredSize##Mode > 0 &&                         \
             (BufferLen) != ClassList[Class].RequiredSize##Mode)                \
     {                                                                          \
-      if(!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) ||            \
+      if((!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&           \
+           (BufferLen) != ClassList[Class].RequiredSize##Mode) ||              \
          ((ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
           (BufferLen) < ClassList[Class].RequiredSize##Mode))                  \
       {                                                                        \
@@ -386,6 +387,7 @@ typedef struct _INFORMATION_CLASS_INFO
     *(StatusVar) = STATUS_INVALID_INFO_CLASS;                                  \
   }                                                                            \
   } while(0)
+
 
 #define GetInfoClassAlignment(Class, ClassList, AlignmentVar, Mode)            \
   do {                                                                         \
