@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2002/10/26 00:32:17 chorns Exp $
+# $Id: Makefile,v 1.25 2002/10/31 07:26:08 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -227,23 +227,8 @@ OBJECTS_PROCESS = \
 	process/_cwait.o \
 	process/_system.o \
 	process/dll.o \
-	process/execl.o \
-	process/execle.o \
-	process/execlp.o \
-	process/execlpe.o \
-	process/execv.o \
-	process/execve.o \
-	process/execvp.o \
-	process/execvpe.o \
+	process/process.o \
 	process/procid.o \
-	process/spawnl.o \
-	process/spawnle.o \
-	process/spawnlp.o \
-	process/spawnlpe.o \
-	process/spawnv.o \
-	process/spawnve.o \
-	process/spawnvp.o \
-	process/spawnvpe.o \
 	process/thread.o \
 	process/threadid.o
 
