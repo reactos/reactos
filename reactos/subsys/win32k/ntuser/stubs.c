@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.18 2003/07/27 11:54:42 dwelch Exp $
+/* $Id: stubs.c,v 1.19 2003/07/30 04:00:47 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -282,6 +282,16 @@ NtUserCreateLocalMemHandle(
   UNIMPLEMENTED
 
   return 0;
+}
+
+DWORD
+STDCALL
+NtUserCreateMenu(VOID)
+{
+   UNIMPLEMENTED
+ 
+   return 0;
+   
 }
 
 DWORD

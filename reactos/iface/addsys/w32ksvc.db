@@ -315,6 +315,7 @@ NtUserCreateAcceleratorTable            2
 NtUserCreateCaret                       4
 NtUserCreateDesktop                     5
 NtUserCreateLocalMemHandle              4
+NtUserCreateMenu			0
 NtUserCreateWindowEx                    13
 NtUserCreateWindowStation               6
 NtUserDdeGetQualityOfService            3

@@ -256,6 +256,10 @@ NtUserCreateLocalMemHandle(
   DWORD Unknown2,
   DWORD Unknown3);
 
+DWORD
+STDCALL
+NtUserCreateMenu(VOID);
+
 HWND
 STDCALL
 NtUserCreateWindowEx(
