@@ -12,7 +12,7 @@
 
 VOID
 UserSetupInternalPos(VOID);
-VOID UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down );
+BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 PINTERNALPOS
 UserGetInternalPos(HWND hWnd);
 ULONG

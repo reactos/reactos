@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.69 2003/08/16 20:16:50 gvg Exp $
+/* $Id: defwnd.c,v 1.70 2003/08/20 00:41:04 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -39,7 +39,9 @@ static HBITMAP hbScrDwn;
 static HBITMAP hbScrLeft;
 static HBITMAP hbScrRight;
 */
-static COLORREF SysColours[] =
+
+
+static COLORREF SysColours[29] =
   {
     RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
     RGB(58, 110, 165) /* COLOR_BACKGROUND */,
@@ -304,24 +306,34 @@ UserGetInsideRectNC( HWND hWnd, RECT *rect )
       }
 }
 
-VOID
-UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
+WINBOOL
+UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT Rect, BOOL down )
 {
-  RECT Rect;
-  HDC hDcMem;
-  HBITMAP hSavedBitmap;
+    HDC hDcMem;
+    HBITMAP hSavedBitmap;
+    WINBOOL result = FALSE;
 
-  hbSysMenu = (HBITMAP)LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE));
-  UserGetInsideRectNC(hWnd, &Rect);
-  hDcMem = CreateCompatibleDC(hDC);
-  hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
-  BitBlt(hDC, Rect.left + 2, Rect.top +
+    hbSysMenu = (HBITMAP)LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE));
+    hDcMem = CreateCompatibleDC(hDC);
+    if (! hDcMem) goto cleanup;
+    hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
+    if (! hSavedBitmap) goto cleanup;
+
+    BitBlt(hDC, Rect->left + 2, Rect->top +
          2, 16, 16, hDcMem,
          (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ?
-	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
-  SelectObject(hDcMem, hSavedBitmap);
-  DeleteDC(hDcMem);
-}
+	       GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
+
+    result = TRUE;
+
+    cleanup:
+        if (hDcMem)
+        {
+            if(hSavedBitmap) SelectObject(hDcMem, hSavedBitmap);
+            DeleteDC(hDcMem);
+        }
+        return result;
+ }
 
 /* FIXME:  Cache bitmaps, then just bitblt instead of calling DFC() (and
            wasting precious CPU cycles) every time */
@@ -396,6 +408,136 @@ UserDrawCaptionButton( HWND hWnd, HDC hDC, BOOL bDown, ULONG Type )
   }
 }
 
+
+// Enabling this will cause captions to draw smoother, but slower:
+// #define DOUBLE_BUFFER_CAPTION
+// NOTE: Double buffering appears to be broken for this at the moment
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+DrawCaption(
+  HWND hWnd,
+  HDC hDC,
+  LPRECT lprc,
+  UINT uFlags)
+{
+    NONCLIENTMETRICSW nclm;
+    BOOL result = FALSE;
+    RECT r = *lprc;
+    UINT VCenter = 0, Padding = 0;
+    WCHAR buffer[256];
+    HFONT   hFont = NULL,
+            hOldFont = NULL;
+    HBRUSH  OldBrush = NULL;
+    HDC     MemDC = NULL;
+
+#ifdef DOUBLE_BUFFER_CAPTION
+    HBITMAP MemBMP = NULL,
+            OldBMP = NULL;
+
+    MemDC = CreateCompatibleDC(hDC);
+    if (! MemDC) goto cleanup;
+    MemBMP = CreateCompatibleBitmap(hDC, lprc->right - lprc->left, lprc->bottom - lprc->top);
+    if (! MemBMP) goto cleanup;
+    OldBMP = SelectObject(MemDC, MemBMP);
+    if (! OldBMP) goto cleanup;
+#else
+    MemDC = hDC;
+    
+    OffsetViewportOrgEx(MemDC, lprc->left, lprc->top, NULL);
+#endif
+
+    // If DC_GRADIENT is specified, a Win 98/2000 style caption gradient should
+    // be painted. For now, that flag is ignored.
+
+    // Draw the caption background
+    OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+    if (! OldBrush) goto cleanup;
+    PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY );
+
+    VCenter = (lprc->bottom - lprc->top) / 2;
+    Padding = VCenter - (GetSystemMetrics(SM_CYCAPTION) / 2);
+
+    r.left = Padding;
+    r.right = r.left + (lprc->right - lprc->left);
+    r.top = Padding;
+    r.bottom = r.top + (GetSystemMetrics(SM_CYCAPTION) / 2);
+
+    if (uFlags & DC_ICON)
+    {
+        // For some reason the icon isn't centered correctly...
+        r.top --;
+        UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
+        r.top ++;
+    }
+
+    r.top ++;
+    r.left += 2;
+
+  if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
+  {
+    r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
+    r.right = (lprc->right - lprc->left) - r.left;
+
+    nclm.cbSize = sizeof(nclm);
+    if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0)) goto cleanup;
+    SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
+    SetBkMode( MemDC, TRANSPARENT );
+    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
+    else
+        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
+
+    if (! hFont) goto cleanup;
+
+    hOldFont = SelectObject(MemDC, hFont);
+    if (! hOldFont) goto cleanup;
+
+    DrawTextW(MemDC, buffer, wcslen(buffer), &r, DT_VCENTER | DT_END_ELLIPSIS);
+    // Old method:
+    // TextOutW(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), lprc->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, wcslen(buffer));
+  }
+
+    if (uFlags & DC_BUTTONS)
+    {
+        // Windows XP draws the caption buttons with DC_BUTTONS
+//        r.left += GetSystemMetrics(SM_CXSIZE) + 1;
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
+//        r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
+    }
+
+#ifdef DOUBLE_BUFFER_CAPTION
+    if (! BitBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left, lprc->bottom - lprc->top,
+            MemDC, 0, 0, SRCCOPY)) goto cleanup;
+#endif
+
+    result = TRUE;
+
+    cleanup :
+        if (MemDC)
+        {
+            if (OldBrush) SelectObject(MemDC, OldBrush);
+            if (hOldFont) SelectObject(MemDC, hOldFont);
+            if (hFont) DeleteObject(hFont);
+#ifdef DOUBLE_BUFFER_CAPTION
+            if (OldBMP) SelectObject(MemDC, OldBMP);
+            if (MemBMP) DeleteObject(MemBMP);
+            DeleteDC(MemDC);
+#else
+            OffsetViewportOrgEx(MemDC, -lprc->left, -lprc->top, NULL);
+#endif
+        }
+
+        return result;
+}
+
+
+
 static void
 UserDrawCaptionNC (
 	HDC hDC,
@@ -405,39 +547,32 @@ UserDrawCaptionNC (
 	BOOL active )
 {
   RECT r = *rect;
-  WCHAR buffer[256];
-  /* FIXME:  Implement and Use DrawCaption() */
-  SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+  UINT capflags = 0;
 
-  PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
-     GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2), (rect->top + 
-     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
+    capflags = DC_ICON | DC_TEXT;
+    capflags += active & DC_ACTIVE;
+
+//  Old code:
+//  PatBlt(hDC,rect->left + GetSystemMetrics(SM_CXFRAME), rect->top +
+//     GetSystemMetrics(SM_CYFRAME), rect->right - (GetSystemMetrics(SM_CXFRAME) * 2), (rect->top + 
+//     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
+
+    r.left += GetSystemMetrics(SM_CXFRAME);
+    r.top += GetSystemMetrics(SM_CYFRAME);
+    r.right -= GetSystemMetrics(SM_CXFRAME);
+    r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION);
+//     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
+
+    DrawCaption(hWnd, hDC, &r, capflags);
   
   if (style & WS_SYSMENU)
   {
-    UserDrawSysMenuButton( hWnd, hDC, FALSE);
+//    UserDrawSysMenuButton( hWnd, hDC, FALSE);
     r.left += GetSystemMetrics(SM_CXSIZE) + 1;
     UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
     r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
     UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
-  }
-  if (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) ))
-  {
-    NONCLIENTMETRICSW nclm;
-    HFONT hFont, hOldFont;
-
-    nclm.cbSize = sizeof(nclm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
-    SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
-    SetBkMode( hDC, TRANSPARENT );
-    if (style & WS_EX_TOOLWINDOW)
-        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
-    else
-        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
-    hOldFont = SelectObject(hDC, hFont);
-    TextOutW(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), rect->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, wcslen(buffer));
-    DeleteObject (SelectObject (hDC, hOldFont));
   }
 }
 
@@ -736,7 +871,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	      if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
 		{
 		  HDC hDC = GetWindowDC(hWnd);
-		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
+//		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
 		  ReleaseDC(hWnd, hDC);
 		}
 	      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,

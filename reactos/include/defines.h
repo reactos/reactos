@@ -850,8 +850,15 @@ extern "C" {
 #define IDANI_CLOSE	(2)
 
 /* DrawCaption */
-#define DC_ACTIVE	(1)
-#define DC_SMALLCAP	(2)
+#define DC_ACTIVE	1
+#define DC_SMALLCAP	2
+#define DC_ICON	4
+#define DC_TEXT	8
+#define DC_INBUTTON	16
+#define DC_GRADIENT 32
+#define DC_BUTTONS 64
+#define DC_CAPTION	(DC_ICON|DC_TEXT|DC_BUTTONS|DC_GRADIENT)
+#define DC_NC	(DC_CAPTION|DC_FRAME)
 
 /* DrawEdge */
 #define BDR_OUTER       (3)

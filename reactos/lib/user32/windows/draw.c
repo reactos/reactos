@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.24 2003/08/19 03:05:42 royce Exp $
+/* $Id: draw.c,v 1.25 2003/08/20 00:41:04 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,6 +34,7 @@
 // Needed for DrawState
 #include <string.h>
 #include <unicode.h>
+#include <draw.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1687,22 +1688,6 @@ DrawAnimatedRects(
  */
 WINBOOL
 STDCALL
-DrawCaption(
-  HWND hwnd,
-  HDC hdc,
-  LPRECT lprc,
-  UINT uFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
 DrawFocusRect(
   HDC hDC,
   CONST RECT *lprc)
@@ -1743,16 +1728,17 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
     BOOL retval = FALSE;
     INT cx = rc->right - rc->left;
     INT cy = rc->bottom - rc->top;
-    
-    if (((type == DST_TEXT) || (type == DST_PREFIXTEXT)) && (lpOutputFunc))
-        type = DST_COMPLEX;
+
+//  Is this supposed to happen?
+//    if (((type == DST_TEXT) || (type == DST_PREFIXTEXT)) && (lpOutputFunc))
+//        type = DST_COMPLEX;
 
     switch(type)
     {
         case DST_TEXT :
         case DST_PREFIXTEXT :
         {
-            DbgPrint("DST_TEXT\n");
+            DbgPrint("Drawing DST_TEXT\n");
             if (unicode)
                 return DrawTextW(hdc, (LPWSTR)lData, (INT)wData, rc, dtflags);
             else
@@ -1762,23 +1748,26 @@ WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
         case DST_ICON :
         {
             // TODO
+            DbgPrint("Drawing DST_ICON\n");
             return retval;
         }
         
         case DST_BITMAP :
         {
             // TODO
+            DbgPrint("Drawing DST_BITMAP\n");
             return retval;
         }
         
         case DST_COMPLEX :
         {
-            DbgPrint("DST_COMPLEX\n");
+            DbgPrint("Drawing DST_COMPLEX\n");
             // Call lpOutputFunc, if necessary
             if (lpOutputFunc)
             {
+                // Something seems to be wrong with OffsetViewportOrgEx:
                 OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
-                DbgPrint("Calling lpOutputFunc\n");
+                DbgPrint("Calling lpOutputFunc(0x%x, 0x%x, 0x%x, %d, %d)\n", hdc, lData, wData, cx, cy);
                 retval = lpOutputFunc(hdc, lData, wData, cx, cy);
                 OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
                 return retval;
@@ -1856,9 +1845,9 @@ WINBOOL INTERNAL_DrawState(
             case DST_TEXT :
             case DST_PREFIXTEXT :
             {
+                DbgPrint("Calculating rect of DST_TEXT / DST_PREFIXTEXT\n");
+            
                 BOOL success;
-
-                DbgPrint("DST_TEXT / DST_PREFIXTEXT\n");
 
                 if (unicode)
                     success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
@@ -1871,14 +1860,14 @@ WINBOOL INTERNAL_DrawState(
 
             case DST_ICON :
             {
-                DbgPrint("DST_ICON\n");
+                DbgPrint("Calculating rect of DST_ICON\n");
                 // TODO
                 break;
             }
 
             case DST_BITMAP :
             {
-                DbgPrint("DST_BITMAP\n");
+                DbgPrint("Calculating rect of DST_BITMAP\n");
 
                 if (!GetObjectA((HBITMAP) lData, sizeof(bm), &bm))
                     return FALSE;
@@ -1889,7 +1878,7 @@ WINBOOL INTERNAL_DrawState(
             }
 
             case DST_COMPLEX :  // cx and cy must be set in this mode
-                DbgPrint("DST_COMPLEX\n");
+                DbgPrint("Calculating rect of DST_COMPLEX - Not allowed!\n");
                 return FALSE;
         }
         
@@ -1906,9 +1895,8 @@ WINBOOL INTERNAL_DrawState(
     // No additional processing needed for DSS_NORMAL
     if (state == DSS_NORMAL)
     {
-        DbgPrint("DSS_NORMAL\n");
+        DbgPrint("DSS_NORMAL (no additional processing necessary)\n");
         SetRect(&rect, x, y, x + cx, y + cy);
-        DbgPrint("L == %d  R == %d  T == %d  B == %d\n", rect.left, rect.right, rect.top, rect.bottom);
         return INTERNAL_DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
     }
     
