@@ -203,9 +203,9 @@ CmiVerifyRootKeyCell(PKEY_CELL RootKeyCell)
 
   if (!(RootKeyCell->Flags & REG_KEY_ROOT_CELL))
     {
-      DbgPrint("Type is %.08x (should be %.08x)\n",
+      DbgPrint("Flags is %.08x (should be %.08x)\n",
         RootKeyCell->Flags, REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED);
-      assert(!(RootKeyCell->Type & REG_KEY_ROOT_CELL));
+      assert(!(RootKeyCell->Flags & (REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED)));
     }
 
     }
