@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.8 2004/01/23 16:51:41 navaraf Exp $
+/* $Id: install.c,v 1.9 2004/03/21 14:37:19 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -29,10 +29,13 @@
 
 #include <ntos.h>
 #include <windows.h>
+#include <commctrl.h>
 #include <stdio.h>
 
 #include <samlib.h>
 #include <syssetup.h>
+
+#include "resource.h"
 
 // #define NO_GUI
 
@@ -132,6 +135,44 @@ AppendRidToSid (PSID *Dst,
 			       Dst);
 }
 
+INT_PTR CALLBACK
+RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+   switch(msg)
+   {
+      case WM_INITDIALOG:
+         SendDlgItemMessage(hWnd, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
+            MAKELPARAM(0, 300)); 
+         SetTimer(hWnd, 0, 50, NULL);
+         return TRUE;
+
+      case WM_TIMER:
+         {
+            INT Position;
+            HWND hWndProgress;
+
+            hWndProgress = GetDlgItem(hWnd, IDC_RESTART_PROGRESS);
+            Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
+            if (Position == 300)
+               EndDialog(hWnd, 0);
+            else
+               SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
+         }
+         return TRUE;
+
+      case WM_COMMAND:
+         switch (wParam)
+         {
+            case IDOK:
+            case IDCANCEL:
+               EndDialog(hWnd, 0);
+               return TRUE;
+         }
+         break;
+   }
+
+   return FALSE;
+}
 
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
@@ -225,11 +266,15 @@ InstallReactOS (HINSTANCE hInstance)
   RtlFreeSid (AdminSid);
   RtlFreeSid (DomainSid);
 
-  DebugPrint ("System setup successful\n");
-
 #if 0
   Wizard ();
 #endif
+
+  DialogBox(
+     GetModuleHandle(TEXT("syssetup.dll")),
+     MAKEINTRESOURCE(IDD_RESTART),
+     NULL,
+     RestartDlgProc);
 
   return 0;
 }

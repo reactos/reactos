@@ -1,7 +1,8 @@
-#include <defines.h>
+#include <windows.h>
 #include <reactos/resource.h>
+#include "resource.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
@@ -36,3 +37,11 @@ BEGIN
     END
 END
 
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+
+#include "syssetup_En.rc"
+#include "syssetup_Cz.rc"

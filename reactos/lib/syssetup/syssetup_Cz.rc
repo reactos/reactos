@@ -1,0 +1,31 @@
+/*
+ * Copyright (C) 2004 Filip Navara
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_RESTART DIALOG 6, 18, 245, 116
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Instatalace ReactOSu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+   LTEXT "Instalace ReactOSu byla úspìšnì dokonèena.", -1, 13, 12, 212, 16
+   LTEXT "Pro pokraèování potøebuje instalaèní program restartovat Váš poèítaè. Poèítaè bude automaticky restartován za 15 sekund nebo zmáèknete-li tlaèítko Restartovat.", -1, 13, 33, 212, 32
+/*   GROUPBOX "", -1, 7, 3, 231, 106 */
+   CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
+   PUSHBUTTON "&Restartovat", IDOK, 98, 87, 50, 14
+END
