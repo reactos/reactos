@@ -2195,6 +2195,9 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 		const Module& m = *module.project.modules[i];
 		if ( m.bootstrap != NULL )
 		{
+			string sourceFilename = PassThruCacheDirectory (
+				NormalizeFilename ( m.GetPath () ),
+				backend->outputDirectory );
 			string targetFilenameNoFixup ( bootcdDirectory + SSEP + m.bootstrap->base + SSEP + m.bootstrap->nameoncd );
 			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( targetFilenameNoFixup ),
@@ -2203,7 +2206,7 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			          "\t$(ECHO_CP)\n" );
 			fprintf ( fMakefile,
 			          "\t${cp} %s %s 1>$(NUL)\n",
-			          m.GetPath ().c_str (),
+			          sourceFilename.c_str (),
 			          targetFilename.c_str () );
 		}
 	}
@@ -2314,16 +2317,21 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
+	string bootcd = PassThruCacheDirectory (
+		NormalizeFilename ( bootcdDirectory + SSEP ),
+		backend->outputDirectory );
 	string isoboot = PassThruCacheDirectory (
-		NormalizeFilename ( "boot/freeldr/bootsect/isoboot.o" ),
-		backend->intermediateDirectory );
-	string bootcdReactosNoFixup = bootcdDirectory + "/reactos";
+		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "bootsect" SSEP "isoboot.o" ),
+		backend->outputDirectory );
+	string bootcdReactosNoFixup = bootcdDirectory + SSEP "reactos";
 	string bootcdReactos = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup ),
 		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
-	string reactosInf = ros_temp + NormalizeFilename ( bootcdReactosNoFixup + "/reactos.inf" );
-	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
+	string reactosInf = PassThruCacheDirectory (
+		NormalizeFilename ( bootcdReactosNoFixup + SSEP "reactos.inf" ),
+		backend->outputDirectory );
+	string reactosDff = NormalizeFilename ( "bootdata" SSEP "packages" SSEP "reactos.dff" );
 	string cdDirectories = GetCdDirectories ( bootcdDirectory );
 	vector<string> vCdFiles;
 	GetCdFiles ( vCdFiles );
@@ -2340,7 +2348,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          cdFiles.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I\n",
+	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          reactosDff.c_str (),
 	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
@@ -2357,7 +2365,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -m -b %s %s REACTOS ReactOS.iso\n",
 	          isoboot.c_str (),
-	          bootcdDirectory.c_str () );
+	          bootcd.c_str () );
 	fprintf ( fMakefile,
 	          "\n" );
 }

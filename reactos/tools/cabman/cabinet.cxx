@@ -1755,23 +1755,20 @@ unsigned long CCabinet::AddFile(char* FileName)
 {
     FILEHANDLE SrcFile;
     PCFFILE_NODE FileNode;
+    char* NewFileName;
 
-    FileNode = NewFileNode();
-    if (!FileNode) {
+    NewFileName = (char*)AllocateMemory(strlen(FileName) + 1);
+    if (!NewFileName) {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
         return CAB_STATUS_NOMEMORY;
     }
-
-	FileNode->FolderNode = CurrentFolderNode;
-
-    FileNode->FileName = (char*)AllocateMemory(strlen(FileName) + 1);
-    strcpy(FileNode->FileName, FileName);
-    ConvertPath(FileNode->FileName, false);
+    strcpy(NewFileName, FileName);
+    ConvertPath(NewFileName, false);
 
     /* Try to open file */
 #if defined(WIN32)
     SrcFile = CreateFile(
-        FileNode->FileName,      // Open this file
+        NewFileName,             // Open this file
         GENERIC_READ,            // Open for reading
         FILE_SHARE_READ,         // Share for reading
         NULL,                    // No security
@@ -1779,21 +1776,34 @@ unsigned long CCabinet::AddFile(char* FileName)
         FILE_ATTRIBUTE_NORMAL,   // Normal file
         NULL);                   // No attribute template
     if (SrcFile == INVALID_HANDLE_VALUE) {
-        DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
+        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_OPEN;
     }
 #else /* !WIN32 */
-    SrcFile = fopen(FileNode->FileName, "rb");
+    SrcFile = fopen(NewFileName, "rb");
     if (SrcFile == NULL) {
-        DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
+        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_OPEN;
     }
 #endif
+
+    FileNode = NewFileNode();
+    if (!FileNode) {
+        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
+        FreeMemory(NewFileName);
+        return CAB_STATUS_NOMEMORY;
+    }
+
+	FileNode->FolderNode = CurrentFolderNode;
+    FileNode->FileName = NewFileName;
 
     /* FIXME: Check for and handle large files (>= 2GB) */
     FileNode->File.FileSize = GetSizeOfFile(SrcFile);
     if (FileNode->File.FileSize == (unsigned long)-1) {
         DPRINT(MIN_TRACE, ("Cannot read from file.\n"));
+        FreeMemory(NewFileName);
         return CAB_STATUS_CANNOT_READ;
     }
 

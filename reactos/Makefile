@@ -181,7 +181,7 @@ OUTPUT_ := $(OUTPUT)$(SEP)
 ifneq ($(ROS_TEMPORARY),)
   TEMPORARY := $(ROS_TEMPORARY)
 else
-  TEMPORARY := .
+  TEMPORARY :=
 endif
 TEMPORARY_ := $(TEMPORARY)$(SEP)
 

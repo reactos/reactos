@@ -31,6 +31,9 @@
 <directory name="reporterror">
 	<xi:include href="reporterror/reporterror.xml" />
 </directory>
+<directory name="rundll32">
+	<xi:include href="rundll32/rundll32.xml" />
+</directory>
 <directory name="services">
 	<xi:include href="services/services.xml" />
 </directory>

@@ -1016,8 +1016,9 @@ unsigned long CDFParser::PerformFileCopy()
     char SrcName[MAX_PATH];
     char DstName[MAX_PATH];
     char InfLine[MAX_PATH];
+    char BaseFilename[MAX_PATH];
 
-    strcpy(SrcName, FileRelativePath);
+    strcpy(SrcName, "");
     strcpy(DstName, "");
 
     i = CurrentChar;
@@ -1031,7 +1032,8 @@ unsigned long CDFParser::PerformFileCopy()
     CurrentString[i] = '\0';
     CurrentToken = TokenString;
     CurrentChar  = i + 1;
-    strcat(SrcName, CurrentString);
+    strcpy(BaseFilename, CurrentString);
+    strcat(SrcName, BaseFilename);
 
     SkipSpaces();
 
@@ -1080,6 +1082,11 @@ unsigned long CDFParser::PerformFileCopy()
     WriteInfLine(InfLine);
 
     Status = AddFile(SrcName);
+    if (Status == CAB_STATUS_CANNOT_OPEN) {
+	    strcpy(SrcName, FileRelativePath);
+	    strcat(SrcName, BaseFilename);
+    	Status = AddFile(SrcName);
+    }
     if (Status != CAB_STATUS_SUCCESS) {
         if (Status == CAB_STATUS_CANNOT_OPEN)
 		    printf("File does not exist: %s.\n", SrcName);
