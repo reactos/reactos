@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.56 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: create.c,v 1.57 2003/06/07 11:34:36 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -490,7 +490,7 @@ VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Fcb->RFCB.ValidDataLength.QuadPart = 0;
       /* Notify cache manager about the change in file size if caching is
          initialized on the file stream */
-      if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+      if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
         {
           CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
         }
@@ -558,7 +558,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
       memset(pCcb, 0, sizeof(VFATCCB));
       FileObject->Flags |= FO_FCB_IS_VALID;
-      FileObject->SectionObjectPointers = &pFcb->SectionObjectPointers;
+      FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;
       pFcb->RefCount++;

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.28 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: fcb.c,v 1.29 2003/06/07 11:34:36 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -154,7 +154,7 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
         if (vfatFCBIsDirectory(pFCB))
         {
            /* Uninitialize file cache if initialized for this file object. */
-           if (pFCB->FileObject->SectionObjectPointers->SharedCacheMap)
+           if (pFCB->FileObject->SectionObjectPointer->SharedCacheMap)
 	   {
               CcRosReleaseFileCache(pFCB->FileObject);
 	   }
@@ -284,7 +284,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   memset (newCCB, 0, sizeof (VFATCCB));
 
   fileObject->Flags |= FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
   fcb->FileObject = fileObject;
@@ -461,7 +461,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 
   fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
   fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
   DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);

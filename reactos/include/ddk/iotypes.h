@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.48 2003/05/28 18:09:09 chorns Exp $
+/* $Id: iotypes.h,v 1.49 2003/06/07 11:34:36 chorns Exp $
  *
  */
 
@@ -595,7 +595,7 @@ typedef struct _FILE_OBJECT
    struct _VPB* Vpb;
    PVOID FsContext;
    PVOID FsContext2;
-   PSECTION_OBJECT_POINTERS SectionObjectPointers;
+   PSECTION_OBJECT_POINTERS SectionObjectPointer;
    PVOID PrivateCacheMap;
    NTSTATUS FinalStatus;
    struct _FILE_OBJECT* RelatedFileObject;

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.29 2003/06/04 18:01:02 hbirr Exp $
+/* $Id: finfo.c,v 1.30 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -193,13 +193,13 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
   }
   if (DispositionInfo->DoDeleteFile)
   {
-    if (MmFlushImageSection (FileObject->SectionObjectPointers, MmFlushForDelete))
+    if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
     {
       KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
       count = FCB->RefCount;
       if (FCB->RefCount > 1)
       {
-	DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointers));
+	DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
         Status = STATUS_ACCESS_DENIED;
       }
       else
@@ -402,7 +402,7 @@ VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG Clu
    Fcb->RFCB.FileSize.QuadPart = Size;
    Fcb->RFCB.ValidDataLength.QuadPart = Size;
 
-   if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+   if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
    {
       CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
    }

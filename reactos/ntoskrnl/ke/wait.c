@@ -634,8 +634,8 @@ KeWaitForMultipleObjects(ULONG Count,
       //io completion
       if (CurrentThread->Queue)
       {
-         CurrentThread->Queue->RunningThreads--;   
-         if (WaitReason != WrQueue && CurrentThread->Queue->RunningThreads < CurrentThread->Queue->MaximumThreads &&
+         CurrentThread->Queue->CurrentCount--;   
+         if (WaitReason != WrQueue && CurrentThread->Queue->CurrentCount < CurrentThread->Queue->MaximumCount &&
              !IsListEmpty(&CurrentThread->Queue->EntryListHead))
          {
             KeDispatcherObjectWake(&CurrentThread->Queue->Header);
@@ -647,7 +647,7 @@ KeWaitForMultipleObjects(ULONG Count,
       //io completion
       if (CurrentThread->Queue)
       {
-         CurrentThread->Queue->RunningThreads++;
+         CurrentThread->Queue->CurrentCount++;
       }
 
 

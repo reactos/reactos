@@ -78,7 +78,7 @@ typedef struct
 
 typedef struct _FCB
 {
-  REACTOS_COMMON_FCB_HEADER RFCB;
+  FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
 
   PFILE_OBJECT FileObject;

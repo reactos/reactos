@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.17 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: close.c,v 1.18 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,7 +67,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
     
   FileObject->FsContext2 = NULL;
   FileObject->FsContext = NULL;
-  FileObject->SectionObjectPointers = NULL;
+  FileObject->SectionObjectPointer = NULL;
 
   if (pCcb)
   {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.61 2003/06/06 21:02:42 hbirr Exp $
+/* $Id: view.c,v 1.62 2003/06/07 11:34:36 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -922,7 +922,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    Bcb->RefCount++;
    ExReleaseFastMutex(&ViewLock);
 
-   CcFlushCache(FileObject->SectionObjectPointers, NULL, 0, NULL);
+   CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, NULL);
 
    ExAcquireFastMutex(&ViewLock);
    Bcb->RefCount--;
@@ -934,7 +934,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
          Bcb->BcbRemoveListEntry.Flink = NULL;
       }
 
-      FileObject->SectionObjectPointers->SharedCacheMap = NULL;  
+      FileObject->SectionObjectPointer->SharedCacheMap = NULL;  
 
       /*
        * Release all cache segments.
@@ -977,7 +977,7 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
 {
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
-  Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = (PBCB)FileObject->SectionObjectPointer->SharedCacheMap;
   assert(Bcb);
   if (Bcb->RefCount == 0)
   {
@@ -1016,7 +1016,7 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
 {
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
-  Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = (PBCB)FileObject->SectionObjectPointer->SharedCacheMap;
   assert(Bcb);
   if (Bcb->RefCount > 0)
   {
@@ -1049,9 +1049,9 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 
   ExAcquireFastMutex(&ViewLock);
 
-  if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+  if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
   {
-    Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
     if (FileObject->PrivateCacheMap != NULL)
     {
       FileObject->PrivateCacheMap = NULL;
@@ -1090,7 +1090,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 
    ExAcquireFastMutex(&ViewLock);
 
-   Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    if (Bcb == NULL)
    {
       Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);	
@@ -1109,13 +1109,13 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
       if (FileObject->FsContext)
       {
          Bcb->AllocationSize = 
-	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
+	   ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
          Bcb->FileSize = 
-	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
+	   ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
       }
       KeInitializeSpinLock(&Bcb->BcbLock);
       InitializeListHead(&Bcb->BcbSegmentListHead);
-      FileObject->SectionObjectPointers->SharedCacheMap = Bcb;
+      FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
    }
    if (FileObject->PrivateCacheMap == NULL)
    {

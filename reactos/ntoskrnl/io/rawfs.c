@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.2 2003/05/15 13:34:37 ekohl Exp $
+/* $Id: rawfs.c,v 1.3 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,7 +65,7 @@ typedef struct _RAWFS_IRP_CONTEXT
 typedef struct _RAWFS_FCB
 {
   /* Start FCB header required by ReactOS/Windows NT */
-  REACTOS_COMMON_FCB_HEADER RFCB;
+  FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
   ERESOURCE MainResource;
   ERESOURCE PagingIoResource;
@@ -457,7 +457,7 @@ RawFsCreateFile(IN PRAWFS_IRP_CONTEXT IrpContext)
       	}
 
       FileObject->Flags |= FO_FCB_IS_VALID;
-      FileObject->SectionObjectPointers = &pFcb->SectionObjectPointers;
+      FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;
       pFcb->RefCount++;

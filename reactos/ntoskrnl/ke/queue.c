@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.5 2003/03/19 23:10:31 gdalsnes Exp $
+/* $Id: queue.c,v 1.6 2003/06/07 11:34:36 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -48,8 +48,8 @@ KeInitializeQueue(IN PKQUEUE Queue,
 			       0);
   InitializeListHead(&Queue->EntryListHead);
   InitializeListHead(&Queue->ThreadListHead);
-  Queue->RunningThreads = 0;
-  Queue->MaximumThreads = (Count == 0) ? (ULONG) KeNumberProcessors : Count;
+  Queue->CurrentCount = 0;
+  Queue->MaximumCount = (Count == 0) ? (ULONG) KeNumberProcessors : Count;
 }
 
 
@@ -85,7 +85,7 @@ KiInsertQueue(
       InsertTailList(&Queue->EntryListHead, Entry);
    }
 
-   if (Queue->RunningThreads < Queue->MaximumThreads && InitialState == 0)
+   if (Queue->CurrentCount < Queue->MaximumCount && InitialState == 0)
    {
       KeDispatcherObjectWake(&Queue->Header);
    }
@@ -134,11 +134,11 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
       //associate with this queue
       InsertHeadList(&Queue->ThreadListHead, &Thread->QueueListEntry);
-      Queue->RunningThreads++;
+      Queue->CurrentCount++;
       Thread->Queue = Queue;
    }
    
-   if (Queue->RunningThreads <= Queue->MaximumThreads && !IsListEmpty(&Queue->EntryListHead))
+   if (Queue->CurrentCount <= Queue->MaximumCount && !IsListEmpty(&Queue->EntryListHead))
    {
       ListEntry = RemoveHeadList(&Queue->EntryListHead);
       Queue->Header.SignalState--;

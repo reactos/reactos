@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.15 2003/06/07 10:37:50 chorns Exp $
+/* $Id: spinlock.c,v 1.16 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,6 +63,8 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
    *SpinLock = 0;
 }
 
+#undef KeAcquireSpinLockAtDpcLevel
+
 VOID STDCALL
 KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
@@ -94,6 +96,8 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 #endif /* MP */
      }
 }
+
+#undef KeReleaseSpinLockFromDpcLevel
 
 VOID STDCALL
 KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)

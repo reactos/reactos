@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.114 2003/06/06 21:00:28 hbirr Exp $
+/* $Id: section.c,v 1.115 2003/06/07 11:34:36 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -94,14 +94,14 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
 VOID
 MmFreeSectionSegments(PFILE_OBJECT FileObject)
 {
-  if (FileObject->SectionObjectPointers->ImageSectionObject != NULL)
+  if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
     {
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
 
       ULONG i;
 
       ImageSectionObject = 
-	(PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointers->
+	(PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointer->
 	ImageSectionObject;
       
       for (i = 0; i < ImageSectionObject->NrSegments; i++)
@@ -115,13 +115,13 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
 	  MmFreePageTablesSectionSegment(&ImageSectionObject->Segments[i]);
 	}
       ExFreePool(ImageSectionObject);
-      FileObject->SectionObjectPointers->ImageSectionObject = NULL;
+      FileObject->SectionObjectPointer->ImageSectionObject = NULL;
     }
-  if (FileObject->SectionObjectPointers->DataSectionObject != NULL)
+  if (FileObject->SectionObjectPointer->DataSectionObject != NULL)
     {
       PMM_SECTION_SEGMENT Segment;
 
-      Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointers->
+      Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
 	DataSectionObject;
 
       if (Segment->ReferenceCount != 0)
@@ -131,7 +131,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
 	}
       MmFreePageTablesSectionSegment(Segment);
       ExFreePool(Segment);
-      FileObject->SectionObjectPointers->DataSectionObject = NULL;
+      FileObject->SectionObjectPointer->DataSectionObject = NULL;
     }
 }
 
@@ -310,7 +310,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
               (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
 	    {
 	      NTSTATUS Status;
-              Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+              Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 	      Status = CcRosUnmapCacheSegment(Bcb, FileOffset, Dirty);
 	      if (!NT_SUCCESS(Status))
 		{
@@ -343,7 +343,7 @@ BOOL MiIsPageFromCache(PMEMORY_AREA MemoryArea,
   PBCB Bcb;
   PCACHE_SEGMENT CacheSeg;
 
-  Bcb = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
   CacheSeg = CcRosLookupCacheSegment(Bcb, SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset);
   if (CacheSeg)
   {
@@ -378,7 +378,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   ULONG Length;
  
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   RawLength = MemoryArea->Data.SectionData.Segment->RawLength;
   FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset;
   IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
@@ -1313,7 +1313,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   DirectMapped = FALSE;
   if (FileObject != NULL)
     {
-      Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   
       /*
        * If the file system is letting us go directly to the cache and the
@@ -1676,7 +1676,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   DirectMapped = FALSE;
   if (FileObject != NULL)
     {
-      Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   
       /*
        * If the file system is letting us go directly to the cache and the
@@ -2268,11 +2268,11 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   else
     {
       MaximumSize = 
-	((PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
+	((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
     }
 
   if (MaximumSize.QuadPart > 
-      ((PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize.QuadPart)
+      ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize.QuadPart)
     {
       IO_STATUS_BLOCK Iosb;
       Status = NtSetInformationFile(FileHandle,
@@ -2309,7 +2309,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
    * If this file hasn't been mapped as a data file before then allocate a
    * section segment to describe the data file mapping
    */
-  if (FileObject->SectionObjectPointers->DataSectionObject == NULL)
+  if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
     {
       Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
 				      TAG_MM_SECTION_SEGMENT);
@@ -2342,7 +2342,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
 	  ObDereferenceObject(FileObject);
 	  return(Status);
 	}
-      FileObject->SectionObjectPointers->DataSectionObject = (PVOID)Segment;
+      FileObject->SectionObjectPointer->DataSectionObject = (PVOID)Segment;
 
       Segment->FileOffset = 0;
       Segment->Protection = 0;
@@ -2368,7 +2368,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
        * to extend it
        */      
       Segment = 
-	(PMM_SECTION_SEGMENT)FileObject->SectionObjectPointers->
+	(PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
 	DataSectionObject;
       Section->Segments = Segment;
       InterlockedIncrement((PLONG)&Segment->ReferenceCount);
@@ -2653,7 +2653,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
    * section segments to describe the mapping
    */
   NrSegments = PEHeader.FileHeader.NumberOfSections + 1;
-  if (FileObject->SectionObjectPointers->ImageSectionObject == NULL)
+  if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
       ULONG i;
       ULONG Size;
@@ -2758,7 +2758,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	  KeInitializeMutex(&SectionSegments[i].Lock, 0);
 	}
 
-      FileObject->SectionObjectPointers->ImageSectionObject = 
+      FileObject->SectionObjectPointer->ImageSectionObject = 
 	(PVOID)ImageSectionObject;       
     }
   else
@@ -2766,7 +2766,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
       ULONG i;
 
       ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)
-	FileObject->SectionObjectPointers->ImageSectionObject;
+	FileObject->SectionObjectPointer->ImageSectionObject;
       SectionSegments = ImageSectionObject->Segments;
       Section->Segments = SectionSegments;
 
@@ -3086,7 +3086,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (PhysAddr.QuadPart == PAGE_FROM_SSE(Entry) && Dirty)
 	{
 	  FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-	  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+	  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 	  CcRosMarkDirtyCacheSegment(Bcb, Offset);
 	  assert(SwapEntry == 0);
 	}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.15 2003/05/11 09:51:26 hbirr Exp $
+/* $Id: fsctl.c,v 1.16 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -303,7 +303,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
    DeviceExt->FATFileObject->FsContext = Fcb;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
-   DeviceExt->FATFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
+   DeviceExt->FATFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
    DeviceExt->FATFileObject->PrivateCacheMap = NULL;
    DeviceExt->FATFileObject->Vpb = DeviceObject->Vpb;
    Fcb->FileObject = DeviceExt->FATFileObject;

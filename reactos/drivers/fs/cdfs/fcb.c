@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.12 2003/02/13 22:24:15 hbirr Exp $
+/* $Id: fcb.c,v 1.13 2003/06/07 11:34:35 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -236,7 +236,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
+  FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;
@@ -414,7 +414,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
+  FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.57 2003/05/11 09:51:26 hbirr Exp $ */
+/* $Id: vfat.h,v 1.58 2003/06/07 11:34:36 chorns Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -182,7 +182,7 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 typedef struct _VFATFCB
 {
   /* FCB header required by ROS/NT */
-  REACTOS_COMMON_FCB_HEADER RFCB;
+  FSRTL_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
   ERESOURCE MainResource;
   ERESOURCE PagingIoResource;

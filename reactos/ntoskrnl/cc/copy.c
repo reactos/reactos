@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.16 2003/05/25 21:50:18 hbirr Exp $
+/* $Id: copy.c,v 1.17 2003/06/07 11:34:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -267,7 +267,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	 FileObject, (ULONG)FileOffset->QuadPart, Length, Wait,
 	 Buffer, IoStatus);
 
-  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   ReadOffset = FileOffset->QuadPart;
   
   DPRINT("AllocationSize %d, FileSize %d\n",
@@ -369,7 +369,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	  "Length %d, Wait %d, Buffer %x)\n",
           FileObject, (ULONG)FileOffset->QuadPart, Length, Wait, Buffer);
 
-   Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    WriteOffset = (ULONG)FileOffset->QuadPart;
 
    if (!Wait)
@@ -473,7 +473,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   
   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
 
-  if (FileObject->SectionObjectPointers->SharedCacheMap == NULL)
+  if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
     {
       /* File is not cached */
       WriteOffset.QuadPart = StartOffset->QuadPart;
@@ -533,7 +533,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       PHYSICAL_ADDRESS page;
 
       Start = StartOffset->u.LowPart;
-      Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
       if (Wait)
 	{
           /* testing, if the requested datas are available */

@@ -91,7 +91,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
          (ULONG)FileSizes->FileSize.QuadPart,
          (ULONG)FileSizes->ValidDataLength.QuadPart);
 
-  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   assert(Bcb);
  
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)

@@ -73,13 +73,18 @@ typedef VOID STDCALL_FUNC
 (*PFLUSH_TO_LSN)(IN PVOID LogHandle,
 		 IN LARGE_INTEGER Lsn);
 
-typedef struct _REACTOS_COMMON_FCB_HEADER
-{
-  CSHORT NodeTypeCode;
-  CSHORT NodeByteSize;
-  LARGE_INTEGER AllocationSize;
-  LARGE_INTEGER FileSize;
-  LARGE_INTEGER ValidDataLength;
-} REACTOS_COMMON_FCB_HEADER, *PREACTOS_COMMON_FCB_HEADER;
+typedef struct _FSRTL_COMMON_FCB_HEADER {
+    CSHORT          NodeTypeCode;
+    CSHORT          NodeByteSize;
+    UCHAR           Flags;
+    UCHAR           IsFastIoPossible;
+    UCHAR           Flags2;
+    UCHAR           Reserved;
+    PERESOURCE      Resource;
+    PERESOURCE      PagingIoResource;
+    LARGE_INTEGER   AllocationSize;
+    LARGE_INTEGER   FileSize;
+    LARGE_INTEGER   ValidDataLength;
+} FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
 #endif /* __INCLUDE_DDK_CCTYPES_H */

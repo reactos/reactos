@@ -2,6 +2,29 @@
 
 	Changes for compiling with w32api
 
+	* include/ddk/cctypes.h (PREACTOS_COMMON_FCB_HEADER): Remove.
+	(FSRTL_COMMON_FCB_HEADER): Add.
+	* include/ddk/iotypes.h (FILE_OBJECT): Rename field
+	SectionObjectPointers to SectionObjectPointer.
+	* ntoskrnl/cc/copy.c, ntoskrnl/cc/misc.c, ntoskrnl/cc/pin.c,
+	ntoskrnl/cc/view.c, ntoskrnl/io/rawfs.c, ntoskrnl/mm/section.c,
+	drivers/fs/cdfs/cleanup.c, drivers/fs/cdfs/fcb.c,
+	drivers/fs/cdfs/fsctl.c, drivers/fs/ntfs/fcb.c, drivers/fs/ntfs/fsctl.c,
+	drivers/fs/vfat/close.c, drivers/fs/vfat/create.c,
+	drivers/fs/vfat/finfo.c, drivers/fs/vfat/fcb.c, drivers/fs/vfat/fsctl.c:
+	Use new	FILE_OBJECT structure.
+	* drivers/fs/cdfs/cdfs.h, drivers/fs/ntfs/ntfs.h, drivers/fs/vfat/vfat.h:
+	Use new FSRTL_COMMON_FCB_HEADER structure.
+	* drivers/net/afd/include/afd.h (FSRTL_COMMON_FCB_HEADER): Remove.
+	* include/ddk/ketypes.h (KQUEUE): Match w32api structure.
+	* ntoskrnl/ke/queue.c, ntoskrnl/ke/wait.c: Use new structure.
+	* ntoskrnl/ke/spinlock.c (KeAcquireSpinLockAtDpcLevel,
+	KeReleaseSpinLockFromDpcLevel): Undefine before declaring.
+
+2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
+
 	* include/ddk/ketypes.h (KSPIN_LOCK, PKSPIN_LOCK): Match w32api
 	structures.
 	* ntoskrnl/ke/spinlock.c: Use new structures.
