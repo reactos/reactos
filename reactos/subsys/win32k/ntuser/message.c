@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.23 2003/07/23 17:00:55 gvg Exp $
+/* $Id: message.c,v 1.24 2003/07/24 05:51:26 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -437,22 +437,28 @@ NtUserPostThreadMessage(DWORD idThread,
 			LPARAM lParam)
 {
   MSG Mesg;
-  
+
   PUSER_MESSAGE Message;
   PETHREAD peThread;
   PW32THREAD pThread;
   NTSTATUS Status;
-  
-  Status = PsLookupThreadByThreadId(idThread,&peThread);
 
+  Status = PsLookupThreadByThreadId((void *)idThread,&peThread);
+  
   if( Status == STATUS_SUCCESS ) {
     pThread = peThread->Win32Thread;
+    if( !pThread || !pThread->MessageQueue )
+      {
+	ObDereferenceObject( peThread );
+	return FALSE;
+      }
     Mesg.hwnd = 0;
     Mesg.message = Msg;
     Mesg.wParam = wParam;
     Mesg.lParam = lParam;
     Message = MsqCreateMessage(&Mesg);
     MsqPostMessage(pThread->MessageQueue, Message);
+    ObDereferenceObject( peThread );
     return TRUE;
   } else {
     SetLastNtError( Status );
