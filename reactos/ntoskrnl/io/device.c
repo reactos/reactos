@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.69 2004/03/27 19:41:32 navaraf Exp $
+/* $Id: device.c,v 1.70 2004/04/08 16:01:47 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -66,7 +66,8 @@ IopInitializeDevice(
       {
          /* FIXME: What do we do? Unload the driver or just disable the device? */
          DbgPrint("An FDO was not attached\n");
-         KEBUGCHECK(0);
+         IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+         return STATUS_UNSUCCESSFUL;
       }
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
