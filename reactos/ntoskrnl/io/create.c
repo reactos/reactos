@@ -67,7 +67,11 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
 	DPRINT("DeviceObject was NULL\n");
 	return(STATUS_SUCCESS);
      }
-   
+   if( BODY_TO_HEADER( Parent )->ObjectType != IoDeviceType )
+     {
+       DPRINT( "Parent is not a device type\n" );
+       return STATUS_UNSUCCESSFUL;
+     }
    Status = ObReferenceObjectByPointer(DeviceObject,
 				       STANDARD_RIGHTS_REQUIRED,
 				       IoDeviceType,

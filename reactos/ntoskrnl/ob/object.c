@@ -176,7 +176,10 @@ PVOID ObCreateObject(PHANDLE Handle,
 					    ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	  {
-	     return(NULL);
+	    ObDereferenceObject( Parent );
+	    RtlFreeUnicodeString( &Header->Name );
+	    ExFreePool( Header );
+	    return(NULL);
 	  }
      }
    return(HEADER_TO_BODY(Header));
@@ -260,6 +263,7 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 	if (Header->Name.Buffer != NULL)
 	  {
 	     ObRemoveEntry(Header);
+	     RtlFreeUnicodeString( &Header->Name );
 	  }
 	DPRINT("ObPerformRetentionChecks() = Freeing object\n");
 	ExFreePool(Header);
