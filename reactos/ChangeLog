@@ -1,5 +1,20 @@
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/net/tcpip/makefile (TCP_OBJECTS): Add transport/tcp/tcpcore.o,
+	transport/tcp/tcp_input.o, transport/tcp/tcp_ipv4.o,
+	transport/tcp/tcp_output.o, and transport/tcp/tcp_timer.o.
+	* drivers/net/tcpip/transport/tcp/tcp.c (TCPStartup): Call tcp_init().
+	* drivers/net/tcpip/include/linux.h: New file.
+	* drivers/net/tcpip/include/tcpcore.h: Ditto.
+	* drivers/net/tcpip/include/tcpdef.h: Ditto.
+	* drivers/net/tcpip/transport/tcp/tcp_input.c: Ditto.
+	* drivers/net/tcpip/transport/tcp/tcp_ipv4.c: Ditto.
+	* drivers/net/tcpip/transport/tcp/tcp_output.c: Ditto.
+	* drivers/net/tcpip/transport/tcp/tcp_timer.c: Ditto.
+	* drivers/net/tcpip/transport/tcp/tcpcore.c: Ditto.
+
+2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/kernel32/k32.h: New file.
 	* lib/kernel32/makefile (TARGET_CFLAGS): Add -I./.
 	(TARGET_PCH): Set to k32.h.

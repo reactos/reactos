@@ -467,6 +467,8 @@ NTSTATUS TCPStartup(
  *     Status of operation
  */
 {
+  tcp_init();
+
   /* Register this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_TCP, TCPReceive);
 
