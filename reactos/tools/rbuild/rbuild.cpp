@@ -552,10 +552,12 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 			return;
 		Module* module = new Module ( e, att->value, path );
 		modules.push_back ( module );
-		return; // REM TODO FIXME no processing of modules... yet
+		module->ProcessXML ( e, path );
+		return;
 	}
 	else if ( e.name == "directory" )
 	{
+		// this code is duplicated between Project::ProcessXML() and Module::ProcessXML() :(
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		if ( !att )
 			return;
@@ -611,6 +613,25 @@ main ( int argc, char** argv )
 			printf ( "\t%s in folder: %s\n",
 			         m.name.c_str(),
 			         m.path.c_str() );
+			printf ( "\txml dependencies:\n\t\tReactOS.xml\n" );
+			const XMLElement* e = &m.node;
+			while ( e )
+			{
+				if ( e->name == "xi:include" )
+				{
+					const XMLAttribute* att = e->GetAttribute("top_href",false);
+					if ( att )
+					{
+						printf ( "\t\t%s\n", att->value.c_str() );
+					}
+				}
+				e = e->parentElement;
+			}
+			printf ( "\tfiles:\n" );
+			for ( size_t j = 0; j < m.files.size(); j++ )
+			{
+				printf ( "\t\t%s\n", m.files[j]->name.c_str() );
+			}
 		}
 
 		delete proj;

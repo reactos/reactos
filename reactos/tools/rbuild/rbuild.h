@@ -72,6 +72,7 @@ public:
 
 class Project;
 class Module;
+class File;
 
 class Project
 {
@@ -89,10 +90,23 @@ public:
 	const XMLElement& node;
 	std::string name;
 	std::string path;
+	std::vector<File*> files;
 
 	Module ( const XMLElement& moduleNode,
 	         const std::string& moduleName,
 	         const std::string& modulePath );
+
+	~Module();
+
+	void ProcessXML ( const XMLElement& e, const std::string& path );
+};
+
+class File
+{
+public:
+	std::string name;
+
+	File ( const std::string& _name );
 };
 
 #endif /* __RBUILD_H */
