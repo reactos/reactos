@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.12 2003/11/05 22:46:05 gvg Exp $
+/* $Id: device.c,v 1.13 2004/03/11 23:07:16 dwelch Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -71,7 +71,12 @@ EngDeviceIoControl(HANDLE  hDevice,
       (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
     }
 
-  return (Status);
+  DPRINT("EngDeviceIoControl(): Returning %X/%X\n", Iosb.Status,
+	 Iosb.Information);
+
+  /* Return information to the caller about the operation. */
+  *lpBytesReturned = Iosb.Information;
+  return Iosb.Status;
 }
 
 /* EOF */
