@@ -19,6 +19,7 @@ isapnp.sys   = 3
 
 beep.sys     = 3
 blue.sys     = 3
+debugout.sys = 3
 floppy.sys   = 3
 null.sys     = 3
 serial.sys   = 3

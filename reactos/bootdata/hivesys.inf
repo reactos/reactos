@@ -134,6 +134,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Class2","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Class2","Type",0x00010001,0x00000001
 
+; Debug output driver
+HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Group",0x00000000,"Debug"
+HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ImagePath",0x00020000,"system32\drivers\debugout.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Type",0x00010001,0x00000001
+
 ; Disk class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Group",0x00000000,"SCSI Class"

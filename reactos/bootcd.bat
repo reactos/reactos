@@ -45,6 +45,7 @@ copy /Y drivers\bus\isapnp\isapnp.sys %BOOTCD_DIR%\disk\reactos
 
 copy /Y drivers\dd\beep\beep.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\dd\blue\blue.sys %BOOTCD_DIR%\disk\reactos
+copy /Y drivers\dd\debugout\debugout.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\dd\floppy\floppy.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\dd\null\null.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\dd\serial\serial.sys %BOOTCD_DIR%\disk\reactos

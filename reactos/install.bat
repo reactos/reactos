@@ -44,6 +44,7 @@ copy drivers\input\mouclass\mouclass.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\psaux\psaux.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\blue\blue.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\beep\beep.sys %ROS_INSTALL%\system32\drivers
+copy drivers\dd\debugout\debugout.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\null\null.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\serial\serial.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\serenum\serenum.sys %ROS_INSTALL%\system32\drivers
