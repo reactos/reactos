@@ -17,6 +17,7 @@ Environment:
 Author:
 
     Klaus P. Gerlicher
+	Reactos Port by Eugene Ingerman
 
 Revision History:
 
@@ -42,41 +43,70 @@ Copyright notice:
 ////////////////////////////////////////////////////
 // PROTOTYPES
 ////
+extern void pice_save_current_registers(void);
+extern void pice_restore_current_registers(void);
+extern void pice_set_mode_3_80x50(void);
+extern void pice_set_mode_3_80x25(void);
+
+extern UCHAR cGraphTable[8*256];
+
+// storage for original VGA font
+UCHAR cGraphTable2[16*256];
 
 ////////////////////////////////////////////////////
 // DEFINES
 ////
-#define LOCAL_CONSOLE // undefine this to get text only hercules version
+#define VGA_EXTENDED  // define this for 80x50 console mode
+
+#ifndef VGA_EXTENDED
+#define SCREEN_BUFFER_SIZE (80*25*2)
+#else
+#define SCREEN_BUFFER_SIZE (80*50*2)
+#endif
+
+/* Port addresses of control regs */
+#define MISCOUTPUT  0x3c2
+#define FEATURECONTROL 0x3da
+#define SEQUENCER 0x3c4
+#define CRTC 0x03d4
+#define GRAPHICS 0x3ce
+#define ATTRIBS 0x03c0
+#define PELADDRESSWRITE 0x3c8
+#define PELDATAREG 0x3c9
+
+/* Number of regs on the various controllers */
+
+#define MAXSEQ 5
+#define MAXCRTC 0x19
+#define MAXGRAPH 0x9
+#define MAXATTRIB 0x015
 
 ////////////////////////////////////////////////////
 // GLOBALS
 ////
-// used for HERCUELS text and VGA text mode
-/*
+// used for HERCULES text and VGA text mode
 WINDOW wWindowVga[4]=
+#ifndef VGA_EXTENDED
 {
 	{1,3,1,0,FALSE},
 	{5,4,1,0,FALSE},
 	{10,9,1,0,FALSE},
 	{20,4,1,0,FALSE}
 };
-*/
-
-WINDOW wWindowVga[4]=
+#else // VGA_EXTENDED
 {
 	{1,3,1,0,FALSE},
-	{5,7,1,0,FALSE},
-	{14,15,1,0,FALSE},
-	{30,14,1,0,FALSE}
+	{5,4,1,0,FALSE},
+	{10,24,1,0,FALSE},
+	{35,14,1,0,FALSE}
 };
-
-// 25 line text mode
-UCHAR MGATable25[]={97,80,82,15,25, 6,25,25, 2,13,11,12, 0, 0, 0, 0};
+#endif // VGA_EXTENDED
 
 PUCHAR pScreenBufferVga;
 PUCHAR pScreenBufferSaveVga = NULL;
 PUCHAR pScreenBufferTempVga;
 PUCHAR pScreenBufferHardwareVga;
+PUCHAR pFontBufferVga = NULL;
 
 UCHAR offset_a = 0;
 UCHAR offset_c = 0,offset_d = 0;
@@ -96,6 +126,115 @@ struct _attr
         UCHAR Asuchar;
     }u;
 }attr;
+
+unsigned char oldgraphicsmode;
+unsigned char oldgraphicsmisc;
+unsigned char oldsqregmapmask;
+unsigned char oldsqregmemory;
+unsigned char oldgraphicssetresetenable;
+unsigned char oldgraphicsreadmapsel;
+
+unsigned char read_vga_reg(int port, int reg)
+{
+  outportb(port,reg);
+  return(inportb(port+1));
+}
+
+void write_vga_reg(int port, unsigned char reg, unsigned char value)
+{
+	outportb(port,reg);
+	outportb(port+1,value);
+}
+
+/* Registers within controllers */
+#define VREND 0x11
+#define GRREGSETRESET 0
+#define GRREGENABLESETRESET 1
+#define GRREGREADMAPSEL 4
+#define SQREGMAPMASK 2
+#define SQREGMEMORY 4
+#define GRREGWRMODE 5
+#define GRREGMISC 6
+
+void map_font_memory(void)
+{
+	oldgraphicssetresetenable = read_vga_reg(GRAPHICS, GRREGENABLESETRESET);
+	oldgraphicsmode = read_vga_reg(GRAPHICS, GRREGWRMODE);
+	oldgraphicsmisc = read_vga_reg(GRAPHICS, GRREGMISC);
+	oldgraphicsreadmapsel = read_vga_reg(GRAPHICS, GRREGREADMAPSEL);
+	oldsqregmapmask = read_vga_reg(SEQUENCER, SQREGMAPMASK);
+	oldsqregmemory = read_vga_reg(SEQUENCER, SQREGMEMORY);
+
+
+	/* Make sure set/reset enable is off */
+	write_vga_reg(GRAPHICS,GRREGENABLESETRESET,0);
+	/* Select read plane 2 */
+	write_vga_reg(GRAPHICS,GRREGREADMAPSEL,0x02);
+	/* Make sure write and read mode = 0 */
+	write_vga_reg(GRAPHICS,GRREGWRMODE,0x00);
+	/* Set mapping to 64K at a000:0 & turn off odd/even at the graphics reg */
+	write_vga_reg(GRAPHICS,GRREGMISC, 0x04);
+	/* Set sequencer plane to 2 */
+	write_vga_reg(SEQUENCER,SQREGMAPMASK, 0x04);
+	/* Turn off odd/even at the sequencer */
+	write_vga_reg(SEQUENCER,SQREGMEMORY, 0x07);
+}
+
+void unmap_font_memory(void)
+{
+	write_vga_reg(GRAPHICS,GRREGENABLESETRESET,oldgraphicssetresetenable);
+	write_vga_reg(GRAPHICS,GRREGWRMODE,oldgraphicsmode);
+	write_vga_reg(GRAPHICS,GRREGREADMAPSEL,oldgraphicsreadmapsel);
+	write_vga_reg(GRAPHICS,GRREGMISC, oldgraphicsmisc);
+	write_vga_reg(SEQUENCER,SQREGMAPMASK, oldsqregmapmask);
+	write_vga_reg(SEQUENCER,SQREGMEMORY, oldsqregmemory);
+}
+
+/* Font and palette constants */
+#define BYTESPERFONT 8
+#define FONTENTRIES 256
+#define FONTBUFFERSIZE 8192
+
+void save_font(UCHAR* graph_table)
+{
+	PUCHAR FontBase = pFontBufferVga;
+	int i,j;
+	map_font_memory();
+
+	for (i=0; i < FONTENTRIES; i++)
+		for (j=0; j < 16; j++)
+				graph_table[i*16+j] = FontBase[i*32+j];
+
+	unmap_font_memory();
+}
+
+void load_font(UCHAR* graph_table,int bEnter)
+{
+	PUCHAR FontBase = pFontBufferVga;
+	int i,j;
+	map_font_memory();
+
+	if(bEnter)
+	{
+#ifdef VGA_EXTENDED
+		for (i=0; i < FONTENTRIES; i++)
+			for (j=0; j < 8; j++)
+					FontBase[i*32+j] = graph_table[i*BYTESPERFONT+j];
+#else // VGA_EXTENDED
+		for (i=0; i < FONTENTRIES; i++)
+			for (j=0; j < 16; j++)
+					FontBase[i*32+j] = graph_table[i*BYTESPERFONT+(j/2)] << (j&1);
+#endif // VGA_EXTENDED
+	}
+	else
+	{
+		for (i=0; i < FONTENTRIES; i++)
+			for (j=0; j < 16; j++)
+					FontBase[i*32+j] = graph_table[i*16+j];
+	}
+
+	unmap_font_memory();
+}
 
 //*************************************************************************
 // SetForegroundColorVga()
@@ -137,13 +276,8 @@ void ShowCursorVga(void)
 
     bCursorEnabled=TRUE;
 
-#ifdef LOCAL_CONSOLE
 	outb_p(0x0a,0x3d4);
 	outb_p(inb_p(0x3d5)&~0x20,0x3d5);
-#else
-	outb_p(0x0a,0x3b4);
-	outb_p(inb_p(0x3b5)&~0x20,0x3b5);
-#endif
 
     LEAVE_FUNC();
 }
@@ -158,13 +292,8 @@ void HideCursorVga(void)
     ENTER_FUNC();
 	bCursorEnabled=FALSE;
 
-#ifdef LOCAL_CONSOLE
 	outb_p(0x0a,0x3d4);
 	outb_p(inb_p(0x3d5)|0x20,0x3d5);
-#else
-	outb_p(0x0a,0x3b4);
-	outb_p(inb_p(0x3b5)|0x20,0x3b5);
-#endif
 
     LEAVE_FUNC();
 }
@@ -176,13 +305,11 @@ void HideCursorVga(void)
 //*************************************************************************
 void CopyLineToVga(USHORT dest,USHORT src)
 {
-	USHORT i;
     PUSHORT p = (PUSHORT)pScreenBufferVga;
 
     ENTER_FUNC();
 
-	for(i=0;i<GLOBAL_SCREEN_WIDTH;i++)
-		p[dest*GLOBAL_SCREEN_WIDTH+i] = p[src*GLOBAL_SCREEN_WIDTH+i];
+	PICE_memcpy(&p[dest*GLOBAL_SCREEN_WIDTH],&p[src*GLOBAL_SCREEN_WIDTH],GLOBAL_SCREEN_WIDTH*sizeof(USHORT));
 
     LEAVE_FUNC();
 }
@@ -196,22 +323,15 @@ void InvertLineVga(ULONG line)
 {
     ULONG i;
     PUSHORT p = (PUSHORT)pScreenBufferVga;
-#ifdef LOCAL_CONSOLE
     USHORT attr;
-#endif
 
-    if(line<25)
+    if(line < GLOBAL_SCREEN_HEIGHT)
     {
-#ifdef LOCAL_CONSOLE
         attr = p[line*GLOBAL_SCREEN_WIDTH]>>8;
         attr = ((attr & 0x07)<<4) | ((attr & 0xF0)>>4);
         attr <<= 8;
         for(i=0;i<GLOBAL_SCREEN_WIDTH;i++)
             p[line*GLOBAL_SCREEN_WIDTH + i] = (p[line*GLOBAL_SCREEN_WIDTH + i] & 0x00FF) | attr;
-#else
-        for(i=0;i<GLOBAL_SCREEN_WIDTH;i++)
-            p[line*GLOBAL_SCREEN_WIDTH + i] = p[line*GLOBAL_SCREEN_WIDTH + i] ^ 0xFF00;
-#endif
     }
 }
 
@@ -225,7 +345,7 @@ void HatchLineVga(ULONG line)
     ULONG i;
     PUSHORT p = (PUSHORT)pScreenBufferVga;
 
-    if(line<GLOBAL_SCREEN_HEIGHT)
+    if(line < GLOBAL_SCREEN_HEIGHT)
     {
         for(i=0;i<GLOBAL_SCREEN_WIDTH;i++)
             p[line*GLOBAL_SCREEN_WIDTH + i] = (p[line*GLOBAL_SCREEN_WIDTH + i] & 0xF0FF) | 0x0c00;
@@ -242,7 +362,7 @@ void ClrLineVga(ULONG line)
     ULONG i;
     PUSHORT p = (PUSHORT)pScreenBufferVga;
 
-    if(line<GLOBAL_SCREEN_HEIGHT)
+    if(line < GLOBAL_SCREEN_HEIGHT)
     {
         for(i=0;i<GLOBAL_SCREEN_WIDTH;i++)
             p[line*GLOBAL_SCREEN_WIDTH + i] = (USHORT)((attr.u.Asuchar<<8) | 0x20);
@@ -276,15 +396,6 @@ void PrintCursorVga(BOOLEAN bForce)
 
         charoffset = (y* GLOBAL_SCREEN_WIDTH + x);
 
-#ifndef LOCAL_CONSOLE
-		outb_p(0x0e,0x3b4);
-		data=(UCHAR)((charoffset>>8)&0xFF);
-		outb_p(data,0x3b5);
-
-		outb_p(0x0d,0x3b4);
-		data=(UCHAR)(charoffset & 0xFF);
-		outb_p(data,0x3b5);
-#else
 		outb_p(0x0e,0x3d4);
 		data=(UCHAR)((charoffset>>8)&0xFF);
 		outb_p(data,0x3d5);
@@ -292,7 +403,6 @@ void PrintCursorVga(BOOLEAN bForce)
         outb_p(0x0f,0x3d4);
 		data=(UCHAR)(charoffset & 0xFF);
 		outb_p(data,0x3d5);
-#endif
     }
 }
 
@@ -302,33 +412,37 @@ void PrintCursorVga(BOOLEAN bForce)
 //*************************************************************************
 void SaveGraphicsStateVga(void)
 {
-#ifdef LOCAL_CONSOLE
-    // copy the screen content to temp area
-    PICE_memcpy(pScreenBufferTempVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
+	UCHAR data;
+
+	// save current regs
+	pice_save_current_registers();
+
+	// unprotect crtc regs 0-7
+	outb_p(0x11,0x3d4);
+	data = inb_p(0x3d5);
+	outb_p(data & 0x7F,0x3d5);
+
+	// save current font
+	save_font(cGraphTable2);
+
+	// restore original regs
+#ifdef VGA_EXTENDED
+	pice_set_mode_3_80x50();
+#else
+	pice_set_mode_3_80x25();
+#endif
+
+	// load a font
+	load_font(cGraphTable,1);
+
+	// copy the screen content to temp area
+    PICE_memcpy(pScreenBufferTempVga,pScreenBufferHardwareVga,SCREEN_BUFFER_SIZE);
     // copy the console to the screen
-    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferVga,SCREEN_BUFFER_SIZE);
     // save original pointer
     pScreenBufferSaveVga = pScreenBufferVga;
     // pScreenBufferVga now points to screen
     pScreenBufferVga = pScreenBufferHardwareVga;
-
-    // save video RAM start address
-    outb_p(0xc,0x3d4);
-    offset_c = inb_p(0x3d5);
-    outb_p(0x0,0x3d5);
-    outb_p(0xd,0x3d4);
-    offset_d = inb_p(0x3d5);
-    outb_p(0x0,0x3d5);
-
-    // cursor state
-    outb_p(0x0a,0x3d4);
-	offset_a = inb_p(0x3d5);
-    // cursor position
-	outb_p(0x0e,0x3d4);
-	offset_e = inb_p(0x3d5);
-	outb_p(0x0f,0x3d4);
-	offset_f = inb_p(0x3d5);
-#endif
 }
 
 //*************************************************************************
@@ -337,28 +451,24 @@ void SaveGraphicsStateVga(void)
 //*************************************************************************
 void RestoreGraphicsStateVga(void)
 {
-#ifdef LOCAL_CONSOLE
+	UCHAR data;
+
+	// unprotect crtc regs 0-7
+	outb_p(0x11,0x3d4);
+	data = inb_p(0x3d5);
+	outb_p(data & 0x7F,0x3d5);
+
+	// restore original regs
+	pice_restore_current_registers();
+
+	// load a font
+	load_font(cGraphTable2,0);
+
     pScreenBufferVga = pScreenBufferSaveVga;
     // copy screen to the console
-    PICE_memcpy(pScreenBufferVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferVga,pScreenBufferHardwareVga,SCREEN_BUFFER_SIZE);
     // copy the temp area to the screen
-    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferTempVga,FRAMEBUFFER_SIZE);
-
-    // restore video RAM start address
-    outb_p(0xc,0x3d4);
-    outb_p(offset_c,0x3d5);
-    outb_p(0xd,0x3d4);
-    outb_p(offset_d,0x3d5);
-
-    // cursor state
-    outb_p(0x0a,0x3d4);
-	outb_p(offset_a,0x3d5);
-    // cursor position
-	outb_p(0x0e,0x3d4);
-    outb_p(offset_e,0x3d5);
-	outb_p(0x0f,0x3d4);
-    outb_p(offset_f,0x3d5);
-#endif
+    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferTempVga,SCREEN_BUFFER_SIZE);
 }
 
 //*************************************************************************
@@ -369,12 +479,9 @@ void RestoreGraphicsStateVga(void)
 BOOLEAN ConsoleInitVga(void)
 {
 	BOOLEAN bResult = FALSE;
-#ifndef LOCAL_CONSOLE
-	PUCHAR pMGATable = MGATable25;
-	UCHAR i,reg,data;
-#endif
     PUSHORT p;
 	PHYSICAL_ADDRESS FrameBuffer;
+	PHYSICAL_ADDRESS FontBuffer;
 
 
     ENTER_FUNC();
@@ -399,32 +506,27 @@ BOOLEAN ConsoleInitVga(void)
     SetWindowGeometry(wWindowVga);
 
     GLOBAL_SCREEN_WIDTH = 80;
-    GLOBAL_SCREEN_HEIGHT = 45;
+#ifndef VGA_EXTENDED
+    GLOBAL_SCREEN_HEIGHT = 25;
+#else // VGA_EXTENDED
+    GLOBAL_SCREEN_HEIGHT = 50;
+#endif // VGA_EXTENDED
 
     attr.u.Asuchar = 0x07;
 
-#ifdef LOCAL_CONSOLE
     // the real framebuffer
 	FrameBuffer.u.LowPart = 0xB8000;
-	pScreenBufferHardwareVga = MmMapIoSpace(FrameBuffer,FRAMEBUFFER_SIZE,FALSE);
-    // the console
-	pScreenBufferVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL);
-    // the save area
-	pScreenBufferTempVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL);
-#else
-	outb_p(0,0x3b8);
-	outb_p(0,0x3bf);
-	for(i=0;i<sizeof(MGATable25);i++)
-	{
-		reg=i;
-		outb_p(reg,0x3b4);
-		data=pMGATable[i];
-		outb_p(data,0x3b5);
-	}
-	outb_p(0x08,0x3b8);
+	pScreenBufferHardwareVga = MmMapIoSpace(FrameBuffer,SCREEN_BUFFER_SIZE,FALSE);
 
-	pScreenBufferVga=MmMapIoSpace(0xB0000,FRAMEBUFFER_SIZE,MmWriteCombined);
-#endif
+	//The real font buffer
+	FontBuffer.u.LowPart = 0xA0000;
+	pFontBufferVga = MmMapIoSpace(FontBuffer,FONTBUFFERSIZE,FALSE);
+
+    // the console
+	pScreenBufferVga = PICE_malloc(SCREEN_BUFFER_SIZE,NONPAGEDPOOL);
+    // the save area
+	pScreenBufferTempVga = PICE_malloc(SCREEN_BUFFER_SIZE,NONPAGEDPOOL);
+
 	if(pScreenBufferVga)
 	{
         DPRINT((0,"VGA memory phys. 0x000b0000 mapped to virt. 0x%x\n",pScreenBufferVga));
@@ -433,7 +535,7 @@ BOOLEAN ConsoleInitVga(void)
 
         p = (PUSHORT)pScreenBufferVga;
 
-		PICE_memset(pScreenBufferVga,0x0,FRAMEBUFFER_SIZE);
+		PICE_memset(pScreenBufferVga,0x0,SCREEN_BUFFER_SIZE);
 
         DPRINT((0,"VGA memory cleared!\n"));
 
@@ -456,21 +558,15 @@ void ConsoleShutdownVga(void)
 {
     ENTER_FUNC();
 
-#ifdef LOCAL_CONSOLE
 	if(pScreenBufferVga)
     {
         PICE_free(pScreenBufferVga);
         PICE_free(pScreenBufferTempVga);
-		MmUnmapIoSpace(pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
+		MmUnmapIoSpace(pScreenBufferHardwareVga,SCREEN_BUFFER_SIZE);
+		MmUnmapIoSpace(pFontBufferVga,FONTBUFFERSIZE);
     }
-#else
-	// HERC video off
-	outb_p(0,0x3b8);
-	outb_p(0,0x3bf);
-
-	if(pScreenBufferVga)
-		MmUnmapIoSpace(pScreenBufferVga,FRAMEBUFFER_SIZE);
-#endif
 
     LEAVE_FUNC();
 }
+
+

@@ -27,6 +27,7 @@ TARGET_OBJECTS = \
   syscall.o \
   trace.o \
   vga.o \
+  vga_utils.o \
   utils.o
 
 include $(PATH_TO_TOP)/rules.mak
