@@ -3,7 +3,19 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "WineFile"=.\WineFile.dsp - Package Owner=<4>
+Project: "make_explorer"=.\make_winefile.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wine_explore"=.\wine_explore.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.41 2003/07/27 14:08:38 hbirr Exp $
+# $Id: helper.mk,v 1.42 2003/08/09 17:08:14 mf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -318,6 +318,10 @@ ifeq ($(TARGET_TYPE),gdi_driver)
 endif
 
 
+# can be overidden with $(CXX) for linkage of c++ executables
+LD_CC = $(CC)
+
+
 ifeq ($(TARGET_TYPE),program)
   ifeq ($(TARGET_APPTYPE),windows)
     MK_DEFENTRY := _WinMainCRTStartup
@@ -581,7 +585,7 @@ endif
 
 $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-o junk.tmp \
@@ -591,7 +595,7 @@ ifeq ($(MK_EXETYPE),dll)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		temp.exp \
@@ -603,7 +607,7 @@ ifeq ($(MK_EXETYPE),dll)
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
-	$(CC) $(TARGET_LFLAGS) \
+	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
 	  	-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
@@ -619,7 +623,7 @@ $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
 ifeq ($(MK_EXETYPE),dll)
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,--strip-debug \
 		$(TARGET_LFLAGS) \
@@ -630,7 +634,7 @@ ifeq ($(MK_EXETYPE),dll)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,--strip-debug \
 		$(TARGET_LFLAGS) \
@@ -643,7 +647,7 @@ ifeq ($(MK_EXETYPE),dll)
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
-	$(CC) $(TARGET_LFLAGS) \
+	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,--strip-debug \
 		$(MK_EXTRACMD2) \
@@ -665,7 +669,7 @@ else
 endif
 
 $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-nostartfiles -nostdlib \
@@ -676,7 +680,7 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) $(TARGET_LFLAGS) \
+	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
@@ -697,7 +701,7 @@ endif
 $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_NOSTRIPNAME)
 	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
 	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
-	$(CC) -Wl,--base-file,base.tmp \
+	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-nostartfiles -nostdlib \
@@ -708,7 +712,7 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS) $(MK_N
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) $(TARGET_LFLAGS) \
+	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
@@ -879,9 +883,9 @@ endif # ROS_USE_PCH
 %.o: %.c $(MK_PCHNAME)
 	$(CC) $(TARGET_CFLAGS) -c $< -o $@
 %.o: %.cc
-	$(CC) $(TARGET_CPPFLAGS) -c $< -o $@
+	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.cpp
-	$(CC) $(TARGET_CPPFLAGS) -c $< -o $@
+	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
 %.o: %.S
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.s

@@ -1,5 +1,5 @@
 /*
- * Copyright 2000 Martin Fuchs
+ * Copyright 2003 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,16 +16,40 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windows.h"
-#include "include/resource.h"
 
-/* define language neutral resources */
+ //
+ // Explorer clone
+ //
+ // winfs.h
+ //
+ // Martin Fuchs, 23.07.2003
+ //
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#include "resource.rc"
+struct WinEntry : public Entry {
+	WinEntry(Entry* parent) : Entry(parent) {}
 
-/* include localised resources */
+protected:
+	WinEntry() : Entry(ET_WINDOWS) {}
 
-#include "De.rc"
-#include "En.rc"
+	virtual void get_path(PTSTR path);
+};
+
+struct WinDirectory : public WinEntry, public Directory {
+	WinDirectory(LPCTSTR root_path)
+	 :	WinEntry(),
+		Directory(_tcsdup(root_path))
+	{
+	}
+
+	WinDirectory(WinDirectory* parent, LPCTSTR path)
+	 :	WinEntry(parent),
+		Directory(_tcsdup(path))
+	{
+	}
+
+	virtual void read_directory();
+	virtual const void* get_next_path_component(const void*);
+	virtual Entry* find_entry(const void*);
+};
+

@@ -36,7 +36,6 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
-#include <shellapi.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
@@ -44,6 +43,14 @@
 
 #ifdef _MSC_VER
 #include <malloc.h>	/* for alloca() */
+#endif
+
+#ifndef _NO_EXTENSIONS
+#define	_SHELL_FOLDERS
+
+#include <objbase.h>
+#include <shellapi.h>
+#include <shlobj.h>
 #endif
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
@@ -61,9 +68,9 @@
 #endif
 
 #ifdef _MSC_VER
-#define	LONGLONGARG _T("I64")
+#define	LONGLONGARG TEXT("I64")
 #else
-#define	LONGLONGARG _T("L")
+#define	LONGLONGARG TEXT("L")
 #endif
 
 #define	BUFFER_LEN	1024
@@ -100,10 +107,10 @@ enum IMAGE {
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 #endif
 
-#define	WINEFILEFRAME		_T("WFS_Frame")
-#define	WINEFILETREE		_T("WFS_Tree")
-#define	WINEFILEDRIVES		_T("WFS_Drives")
-#define	WINEFILEMDICLIENT	_T("WFS_MdiClient")
+#define	WINEFILEFRAME		TEXT("WFS_Frame")
+#define	WINEFILETREE		TEXT("WFS_Tree")
+#define	WINEFILEDRIVES		TEXT("WFS_Drives")
+#define	WINEFILEMDICLIENT	TEXT("WFS_MdiClient")
 
 #define	FRM_CALC_CLIENT		0xBF83
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
@@ -135,7 +142,13 @@ typedef struct
   TCHAR		drives[BUFFER_LEN];
   BOOL		prescan_node;	/*TODO*/
 
-  UINT		wStringTableOffset;
+//UINT		wStringTableOffset;
+
+#ifdef _SHELL_FOLDERS
+  IShellFolder*	iDesktop;
+  IMalloc*		iMalloc;
+  UINT			cfStrFName;
+#endif
 } WINEFILE_GLOBALS;
 
 extern WINEFILE_GLOBALS Globals;

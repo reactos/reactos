@@ -8,14 +8,34 @@
 #include <stdio.h>
 #include <windows.h>
 
-#include "include/explorer.h"
+#include "../utility/utility.h"
+
+#include "../externals.h"
 
 
-const TCHAR DesktopClassName[] = TEXT("DesktopWindow");
+/* GetShellWindow is already present in the header files
+static HWND (WINAPI*GetShellWindow)(); */
+static BOOL (WINAPI*SetShellWindow)(HWND);
 
 
-HWND (WINAPI*GetShellWindow)();
-void (WINAPI*SetShellWindow)(HWND);
+BOOL IsAnyDesktopRunning()
+{
+/*	POINT pt;*/
+	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
+
+	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
+
+/* GetShellWindow is already present in the header files
+	GetShellWindow = (HWND(WINAPI*)()) GetProcAddress(shell32, "GetShellWindow");
+
+	if (GetShellWindow) */
+		return GetShellWindow() != 0;
+/*
+	pt.x = 0;
+	pt.y = 0;
+
+	return WindowFromPoint(pt) != GetDesktopWindow(); */
+}
 
 
 LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -66,7 +86,7 @@ LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
 		case WM_LBUTTONDBLCLK:
-			ShowFileMgr(hwnd, SW_SHOWNORMAL);
+			explorer_show_frame(hwnd, SW_SHOWNORMAL);
 			break;
 
 		case WM_DESTROY:
@@ -82,70 +102,78 @@ LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-BOOL IsAnyDesktopRunning()
+const TCHAR DesktopClassName[] = TEXT("DesktopWindow");
+
+
+HWND create_desktop_window(HINSTANCE hInstance)
 {
-	POINT pt;
-	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
+    WNDCLASSEX wc;
+	HWND hwndDesktop;
+    int Width, Height;
 
-	GetShellWindow = (HWND(WINAPI*)()) GetProcAddress(shell32, "GetShellWindow");
-	SetShellWindow = (void(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
+	wc.cbSize       = sizeof(WNDCLASSEX);
+	wc.style        = CS_DBLCLKS;
+	wc.lpfnWndProc  = &DeskWndProc;
+	wc.cbClsExtra   = 0;
+	wc.cbWndExtra   = 0;
+	wc.hInstance    = hInstance;
+	wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName= DesktopClassName;
+	wc.hIconSm      = NULL;
 
-	if (GetShellWindow)
-		return GetShellWindow() != 0;
+	if (!RegisterClassEx(&wc))
+		return 0;
 
-	pt.x = 0;
-	pt.y = 0;
+	Width = GetSystemMetrics(SM_CXSCREEN);
+	Height = GetSystemMetrics(SM_CYSCREEN);
 
-	return WindowFromPoint(pt) != GetDesktopWindow();
+	hwndDesktop = CreateWindowEx(0, DesktopClassName, TEXT("Desktop"),
+							WS_VISIBLE | WS_POPUP | WS_CLIPCHILDREN,
+							0, 0, Width, Height,
+							NULL, NULL, hInstance, NULL);
+
+	if (SetShellWindow)
+		SetShellWindow(hwndDesktop);
+
+	return hwndDesktop;
 }
 
 
+#ifdef _CONSOLE
 int main(int argc, char *argv[])
+#else
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
+#endif
 {
-    int Width, Height;
-    WNDCLASSEX wc;
+	int ret;
     HWND hwndDesktop = 0;
 
+#ifdef _CONSOLE
 	STARTUPINFO startupinfo;
-	int nCmdShow = SW_SHOWNORMAL;
+	int nShowCmd = SW_SHOWNORMAL;
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
+#endif
 
 	 // create desktop window and task bar only, if there is no other shell and we are
 	 // the first explorer instance (just in case SetShellWindow() is not supported by the OS)
 	BOOL startup_desktop = !IsAnyDesktopRunning() && !find_window_class(DesktopClassName);
 
+#ifdef _CONSOLE
 	if (argc>1 && !strcmp(argv[1],"-desktop"))
+#else
+	if (!lstrcmp(lpCmdLine,TEXT("-desktop")))
+#endif
 		startup_desktop = TRUE;
 
 	if (startup_desktop)
 	{
 		HWND hwndExplorerBar;
 
-		wc.cbSize       = sizeof(WNDCLASSEX);
-		wc.style        = CS_DBLCLKS;
-		wc.lpfnWndProc  = &DeskWndProc;
-		wc.cbClsExtra   = 0;
-		wc.cbWndExtra   = 0;
-		wc.hInstance    = hInstance;
-		wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
-		wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
-		wc.lpszMenuName = NULL;
-		wc.lpszClassName= DesktopClassName;
-		wc.hIconSm      = NULL;
-
-		if (!RegisterClassEx(&wc))
-			return 1; // error
-
-
-		Width = GetSystemMetrics(SM_CXSCREEN);
-		Height = GetSystemMetrics(SM_CYSCREEN);
-
-		hwndDesktop = CreateWindowEx(0, DesktopClassName, TEXT("Desktop"),
-								WS_VISIBLE | WS_POPUP | WS_CLIPCHILDREN,
-								0, 0, Width, Height,
-								NULL, NULL, hInstance, NULL);
+		hwndDesktop = create_desktop_window(hInstance);
 
 		if (!hwndDesktop)
 		{
@@ -153,32 +181,42 @@ int main(int argc, char *argv[])
 			return 1;   // error
 		}
 
-		if (SetShellWindow)
-			SetShellWindow(hwndDesktop);
-
+#ifdef _CONSOLE
 		 // call winefile startup routine
 		GetStartupInfo(&startupinfo);
 
 		if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
-			nCmdShow = startupinfo.wShowWindow;
+			nShowCmd = startupinfo.wShowWindow;
+#endif
 
 		 // Initializing the Explorer Bar
-		if (!(hwndExplorerBar=InitializeExplorerBar(hInstance, nCmdShow)))
+		if (!(hwndExplorerBar=InitializeExplorerBar(hInstance, nShowCmd)))
 		{
 			fprintf(stderr,"FATAL: Explorer bar could not be initialized properly ! Exiting !\n");
 			return 1;
 		}
 
 		 // Load plugins
-		if (!ExplorerLoadPlugins(hwndExplorerBar))
+		if (!LoadAvailablePlugIns(hwndExplorerBar))
 		{
 			fprintf(stderr,"WARNING: No plugin for desktop bar could be loaded.\n");
 		}
 
 #ifndef _DEBUG	//MF: disabled for debugging
+#ifdef _CONSOLE
 	    startup(argc, argv); // invoke the startup groups
+#else
+		{
+		char* argv[] = {""};
+	    startup(1, argv);
+		}
+#endif
 #endif
 	}
 
-	return winefile_main(hInstance, hwndDesktop, nCmdShow);
+	ret = explorer_main(hInstance, hwndDesktop, nShowCmd);
+
+	ReleaseAvailablePlugIns();
+
+	return ret;
 }

@@ -58,18 +58,20 @@
 #define	ID_HELP_USING					0xE144
 #define	ID_HELP 					0xE146
 
-/* range for drive bar command ids: 0x9000..0x90FF */
-#define	ID_DRIVE_FIRST					0x9001
-
 
 /* winefile extensions */
 #define	ID_ABOUT_WINE					0x8000
-#define	ID_LICENSE					0x8001
+#define	ID_LICENSE						0x8001
 #define	ID_NO_WARRANTY					0x8002
 #define	ID_WINDOW_AUTOSORT				0x8003
 #define	ID_VIEW_FULLSCREEN				0x8004
 #define	ID_PREFERED_SIZES				0x8005
 
+
+/* range for drive bar command ids: 0x9000..0x90FF */
 #ifdef __linux__
 #define	ID_DRIVE_UNIX_FS				0x9000
 #endif
+#define	ID_DRIVE_SHELL_NS				0x9001
+
+#define	ID_DRIVE_FIRST					0x9002

@@ -1,11 +1,6 @@
 #include <defines.h>
 #include <reactos/resource.h>
-
-#ifdef _WINEFILE_
 #include "winefile.rc"
-#else
-#include "explorer_intres.rc"
-#endif
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

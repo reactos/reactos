@@ -30,7 +30,7 @@ IDA_WINEFILE ACCELERATORS DISCARDABLE
 
 IDI_WINEFILE ICON DISCARDABLE
 #ifdef _WIN32
- "res/winefile.ico"
+ "../res/winefile.ico"
 #else
 {
  '00 00 01 00 01 00 20 20 10 00 00 00 00 00 E8 02'
@@ -86,7 +86,7 @@ IDI_WINEFILE ICON DISCARDABLE
 
 IDB_TOOLBAR BITMAP DISCARDABLE
 #ifdef _WIN32
- "res/toolbar.bmp"
+ "../res/toolbar.bmp"
 #else
 {
  '42 4D BE 03 00 00 00 00 00 00 76 00 00 00 28 00'
@@ -154,7 +154,7 @@ IDB_TOOLBAR BITMAP DISCARDABLE
 
 IDB_DRIVEBAR BITMAP DISCARDABLE
 #ifdef _WIN32
- "res/drivebar.bmp"
+ "../res/drivebar.bmp"
 #else
 {
  '42 4D E6 02 00 00 00 00 00 00 76 00 00 00 28 00'
@@ -209,7 +209,7 @@ IDB_DRIVEBAR BITMAP DISCARDABLE
 
 IDB_IMAGES BITMAP DISCARDABLE
 #ifdef _WIN32
- "res/images.bmp"
+ "../res/images.bmp"
 #else
 {
  '42 4D 86 04 00 00 00 00 00 00 76 00 00 00 28 00'

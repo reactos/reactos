@@ -270,7 +270,7 @@ const WCHAR runkeys_names[][30]=
  * If wait is FALSE - returns 0 if successful.
  * If wait is TRUE - returns the program's return value.
  */
-static DWORD runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
+static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
 {
     STARTUPINFOW si;
     PROCESS_INFORMATION info;

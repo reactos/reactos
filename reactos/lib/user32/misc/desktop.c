@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.20 2003/08/09 13:13:43 mf Exp $
+/* $Id: desktop.c,v 1.21 2003/08/09 17:08:14 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -351,7 +351,7 @@ SetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
 BOOL STDCALL
 SetShellWindow(HWND hwndShell)
 {
-	return SetShellWindowEx(hwndShell, 0);
+	return SetShellWindowEx(hwndShell, hwndShell);
 }
 
 /* EOF */

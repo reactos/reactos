@@ -8,4 +8,6 @@
 15.10.2002	m. fuchs	Programmaufruf über Doppelklick in der Dateiliste
 
 07.06.2003	m. fuchs	integration with ROS desktop window
-
+21.07.2003	m. fuchs	extension of winefile for shell namespace
+04.08.2003	m. fuchs	C++ explorer with architecture like MS Explorer:
+						usage of IShellView C++, implementation of IShellBrowser, ...
