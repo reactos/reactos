@@ -610,6 +610,13 @@ pe_load_module:
 	mov	[_current_filehandle], ax
 
 	;;
+	;; Print space
+	;;
+	mov	ah,02h
+	mov	dl,' '
+	int	021h
+
+	;;
 	;; Seek to the start of the file
 	;;
 	mov	ax, 0x4200
@@ -695,9 +702,11 @@ pe_load_module:
 	mov	dx, error_file_read_failed
 	jmp	.error
 .read_data_succeeded:
+%ifndef NDEBUG
 	mov	ah,02h
 	mov	dl,'#'
 	int	021h
+%endif
 
 	;;
 	;; Copy the file data just read in to high memory
@@ -706,9 +715,15 @@ pe_load_module:
 	mov	esi, 0x90000
 	mov	ecx, 32768
 	call	_himem_copy
+%ifndef NDEBUG
 	mov	ah,02h
 	mov	dl,'$'
 	int	021h
+%else
+	mov	ah,02h
+	mov	dl,'.'
+	int	021h
+%endif
 
 	sub	dword [_current_size], 32768
 	jmp	.read_next
@@ -731,9 +746,11 @@ pe_load_module:
 	mov	dx, error_file_read_failed
 	jmp	.error
 .read_last_data_succeeded:
+%ifndef NDEBUG
 	mov	ah,02h
 	mov	dl,'#'
 	int	021h
+%endif
 
 	;;
 	;; Copy the tailing part to high memory
@@ -742,9 +759,15 @@ pe_load_module:
 	mov	ecx, [_current_size]
 	mov	esi, 0x90000
 	call	_himem_copy
+%ifndef NDEBUG
 	mov	ah,02h
 	mov	dl,'$'
 	int	021h
+%else
+	mov	ah,02h
+	mov	dl,'.'
+	int	021h
+%endif
 
 .do_round:
 	test	di, 0xfff
@@ -771,7 +794,7 @@ pe_load_module:
 	;;
 	;; On error print a message and return zero
 	;;
-.error:	
+.error:
 	mov	ah, 0x9
 	int	0x21
 	mov	eax, 0
@@ -803,7 +826,7 @@ _himem_copy:
 	mov	cr0, eax
 
 	jmp	.l1		; Flush prefetch queue
-.l1:	
+.l1:
 	
 	mov	eax, KERNEL_DS	; Load DS with a suitable selector
 	mov	ds, ax
