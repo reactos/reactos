@@ -129,8 +129,7 @@ VfatFormat(
 				ClusterSize,
 				Callback);
 	}
-#if 0
-      else if (PartitionInfo.PartitionType == PARTITION_FAT12)
+      else if (PartitionInfo.PartitionType == PARTITION_FAT_12)
 	{
 	  Status = Fat12Format (FileHandle,
 				&PartitionInfo,
@@ -140,7 +139,6 @@ VfatFormat(
 				ClusterSize,
 				Callback);
 	}
-#endif
       else
 	{
 	  Status = Fat16Format (FileHandle,

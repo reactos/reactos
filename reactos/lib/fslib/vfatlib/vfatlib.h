@@ -88,6 +88,15 @@ typedef struct _FAT32_FSINFO
 
 
 NTSTATUS
+Fat12Format (HANDLE  FileHandle,
+	     PPARTITION_INFORMATION  PartitionInfo,
+	     PDISK_GEOMETRY DiskGeometry,
+	     PUNICODE_STRING Label,
+	     BOOL  QuickFormat,
+	     DWORD  ClusterSize,
+	     PFMIFSCALLBACK  Callback);
+
+NTSTATUS
 Fat16Format (HANDLE  FileHandle,
 	     PPARTITION_INFORMATION  PartitionInfo,
 	     PDISK_GEOMETRY DiskGeometry,

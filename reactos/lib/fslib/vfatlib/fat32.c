@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VFAT filesystem library
- * FILE:        fat16.c
- * PURPOSE:     Fat16 support
- * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
+ * FILE:        fat32.c
+ * PURPOSE:     Fat32 support
+ * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Eric Kohl (ekohl@rz-online.de)
  * REVISIONS:
  *   EK 05/04-2003 Created
  */
@@ -25,6 +26,27 @@ GetShiftCount(ULONG Value)
       Value /= 2;
     }
   return i - 2;
+}
+
+
+static ULONG
+CalcVolumeSerialNumber(VOID)
+{
+  LARGE_INTEGER SystemTime;
+  TIME_FIELDS TimeFields;
+  ULONG Serial;
+  PUCHAR Buffer;
+
+  NtQuerySystemTime (&SystemTime);
+  RtlTimeToTimeFields (&SystemTime, &TimeFields);
+
+  Buffer = (PUCHAR)&Serial;
+  Buffer[0] = (UCHAR)(TimeFields.Year & 0xFF) + (UCHAR)(TimeFields.Hour & 0xFF);
+  Buffer[1] = (UCHAR)(TimeFields.Year >> 8) + (UCHAR)(TimeFields.Minute & 0xFF);
+  Buffer[2] = (UCHAR)(TimeFields.Month & 0xFF) + (UCHAR)(TimeFields.Second & 0xFF);
+  Buffer[3] = (UCHAR)(TimeFields.Day & 0xFF) + (UCHAR)(TimeFields.Milliseconds & 0xFF);
+
+  return Serial;
 }
 
 
@@ -377,7 +399,7 @@ Fat32Format (HANDLE  FileHandle,
   BootSector.BootBackup = 6;
   BootSector.Drive = 0xff; /* No BIOS boot drive available */
   BootSector.ExtBootSignature = 0x29;
-  BootSector.VolumeID = 0x45768798; /* FIXME: */
+  BootSector.VolumeID = CalcVolumeSerialNumber ();
   if ((Label == NULL) || (Label->Buffer == NULL))
     {
       memcpy(&BootSector.VolumeLabel[0], "NO NAME    ", 11);
@@ -415,6 +437,14 @@ Fat32Format (HANDLE  FileHandle,
       while (TmpVal3 > TmpVal2);
       BootSector.FATSectors32 = TmpVal2;
     }
+
+#if 0
+  /* experimental */
+  /* 128 FAT entries (32bit) fit into one 512 byte sector */
+  TmpVal1 = BootSector.SectorsHuge - BootSector.ReservedSectors;
+  TmpVal2 = (128 * BootSector.SectorsPerCluster) + BootSector.FATCount;
+  BootSector.FATSectors32 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
+#endif
 
   Status = Fat32WriteBootSector(FileHandle,
     &BootSector);

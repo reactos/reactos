@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VFAT filesystem library
- * FILE:        fat16.c
- * PURPOSE:     Fat16 support
+ * FILE:        fat12.c
+ * PURPOSE:     Fat12 support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Eric Kohl (ekohl@rz-online.de)
  * REVISIONS:
@@ -51,7 +51,7 @@ CalcVolumeSerialNumber(VOID)
 
 
 static NTSTATUS
-Fat16WriteBootSector(IN HANDLE FileHandle,
+Fat12WriteBootSector(IN HANDLE FileHandle,
   IN PFAT16_BOOT_SECTOR BootSector)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -102,7 +102,7 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
 
 
 static NTSTATUS
-Fat16WriteFAT(IN HANDLE FileHandle,
+Fat12WriteFAT(IN HANDLE FileHandle,
   ULONG SectorOffset,
   IN PFAT16_BOOT_SECTOR BootSector)
 {
@@ -126,13 +126,10 @@ Fat16WriteFAT(IN HANDLE FileHandle,
   /* Zero the buffer */
   memset(Buffer, 0, 32 * 1024);
 
-  /* FAT cluster 0 */
+  /* FAT cluster 0 & 1*/
   Buffer[0] = 0xf8; /* Media type */
   Buffer[1] = 0xff;
-
-  /* FAT cluster 1 */
-  Buffer[2] = 0xff; /* Clean shutdown, no disk read/write errors, end-of-cluster (EOC) mark */
-  Buffer[3] = 0xff;
+  Buffer[2] = 0xff;
 
   /* Write first sector of the FAT */
   FileOffset.QuadPart = (SectorOffset + BootSector->ReservedSectors) * BootSector->BytesPerSector;
@@ -153,7 +150,7 @@ Fat16WriteFAT(IN HANDLE FileHandle,
     }
 
   /* Zero the begin of the buffer */
-  memset(Buffer, 0, 4);
+  memset(Buffer, 0, 3);
 
   /* Zero the rest of the FAT */
   Sectors = 32 * 1024 / BootSector->BytesPerSector;
@@ -192,7 +189,7 @@ Fat16WriteFAT(IN HANDLE FileHandle,
 
 
 static NTSTATUS
-Fat16WriteRootDirectory(IN HANDLE FileHandle,
+Fat12WriteRootDirectory(IN HANDLE FileHandle,
   IN PFAT16_BOOT_SECTOR BootSector)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -266,7 +263,7 @@ Fat16WriteRootDirectory(IN HANDLE FileHandle,
 
 
 NTSTATUS
-Fat16Format (HANDLE  FileHandle,
+Fat12Format (HANDLE  FileHandle,
 	     PPARTITION_INFORMATION  PartitionInfo,
 	     PDISK_GEOMETRY DiskGeometry,
 	     PUNICODE_STRING Label,
@@ -286,30 +283,17 @@ Fat16Format (HANDLE  FileHandle,
   /* Calculate cluster size */
   if (ClusterSize == 0)
     {
-      if (PartitionInfo->PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL)
-	{
-	  /* Partition < 16MB ==> 1KB Cluster */
-	  ClusterSize = 1024;
-	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 128ULL * 1024ULL * 1024ULL)
-	{
-	  /* Partition < 128MB ==> 2KB Cluster */
-	  ClusterSize = 2048;
-	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 256ULL * 1024ULL * 1024ULL)
-	{
-	  /* Partition < 256MB ==> 4KB Cluster */
-	  ClusterSize = 4096;
-	}
-      else
-	{
-	  /* Partition >= 256MB (< 512MB) ==> 8KB Cluster */
-	  ClusterSize = 8192;
-	}
+      /* 4KB Cluster (Harddisk only) */
+      ClusterSize = 4096;
     }
 
   SectorCount = PartitionInfo->PartitionLength.QuadPart >>
     GetShiftCount(DiskGeometry->BytesPerSector); /* Use shifting to avoid 64-bit division */
+
+//  SectorCount =
+//    PartitionInfo->PartitionLength.u.LowPart / DiskGeometry->BytesPerSector;
+
+  DPRINT1("SectorCount = %lu\n", SectorCount);
 
   memset(&BootSector, 0, sizeof(FAT16_BOOT_SECTOR));
   memcpy(&BootSector.OEMName[0], "MSWIN4.1", 8);
@@ -340,54 +324,52 @@ Fat16Format (HANDLE  FileHandle,
         VolumeLabel.Length < 11 ? VolumeLabel.Length : 11);
       RtlFreeAnsiString(&VolumeLabel);
     }
-  memcpy(&BootSector.SysType[0], "FAT16   ", 8);
-
-  DPRINT("BootSector.SectorsHuge = %lx\n", BootSector.SectorsHuge);
+  memcpy(&BootSector.SysType[0], "FAT12   ", 8);
 
   RootDirSectors = ((BootSector.RootEntries * 32) +
     (BootSector.BytesPerSector - 1)) / BootSector.BytesPerSector;
 
-  /* 265 FAT entries (16bit) fit into one 512 byte sector */
+  /* 341 FAT entries (12bit) fit into one 512 byte sector */
   TmpVal1 = SectorCount - (BootSector.ReservedSectors + RootDirSectors);
-  TmpVal2 = (256 * BootSector.SectorsPerCluster) + BootSector.FATCount;
+  TmpVal2 = (341 * BootSector.SectorsPerCluster) + BootSector.FATCount;
   TmpVal3 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
   BootSector.FATSectors = (unsigned short)(TmpVal3 & 0xffff);
 
-  DPRINT("BootSector.FATSectors = %hx\n", BootSector.FATSectors);
+  DPRINT1("BootSector.FATSectors = %hx\n", BootSector.FATSectors);
 
-  Status = Fat16WriteBootSector(FileHandle,
+  Status = Fat12WriteBootSector(FileHandle,
     &BootSector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Fat16WriteBootSector() failed with status 0x%.08x\n", Status);
+      DPRINT("Fat12WriteBootSector() failed with status 0x%.08x\n", Status);
       return Status;
     }
 
   /* Write first FAT copy */
-  Status = Fat16WriteFAT(FileHandle,
+  Status = Fat12WriteFAT(FileHandle,
     0,
     &BootSector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Fat16WriteFAT() failed with status 0x%.08x\n", Status);
+      DPRINT("Fat12WriteFAT() failed with status 0x%.08x\n", Status);
       return Status;
     }
 
   /* Write second FAT copy */
-  Status = Fat16WriteFAT(FileHandle,
+  Status = Fat12WriteFAT(FileHandle,
     (ULONG)BootSector.FATSectors,
     &BootSector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Fat16WriteFAT() failed with status 0x%.08x.\n", Status);
+      DPRINT("Fat12WriteFAT() failed with status 0x%.08x.\n", Status);
       return Status;
     }
 
-  Status = Fat16WriteRootDirectory(FileHandle,
+  Status = Fat12WriteRootDirectory(FileHandle,
     &BootSector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Fat16WriteRootDirectory() failed with status 0x%.08x\n", Status);
+      DPRINT("Fat12WriteRootDirectory() failed with status 0x%.08x\n", Status);
     }
 
   return Status;
