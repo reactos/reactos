@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.18 2003/08/25 23:55:46 weiden Exp $
+/* $Id: msgqueue.c,v 1.19 2003/08/26 00:06:16 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,8 +177,8 @@ MsqInsertSystemMessage(MSG* Msg)
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
   
   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
-  if(Msg->message == WM_MOUSEMOVE)
-    mmov = MsgFindSystemMouseMoveMessage();
+  //if(Msg->message == WM_MOUSEMOVE)
+  //  mmov = MsgFindSystemMouseMoveMessage();
     
   if(mmov != (ULONG)-1)
   {
