@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.22 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: cdrom.c,v 1.23 2003/11/07 12:56:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -120,6 +120,11 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 VOID STDCALL
 CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
+
+NTSTATUS STDCALL
+CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
+			      IN PIRP Irp,
+			      IN PVOID Context);
 
 VOID STDCALL
 CdromTimerRoutine(IN PDEVICE_OBJECT DeviceObject,
@@ -492,6 +497,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
   DiskDeviceExtension->LockCount = 0;
   DiskDeviceExtension->DeviceNumber = DeviceNumber;
+  DiskDeviceExtension->DeviceObject = DiskDeviceObject;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
   DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
   DiskDeviceExtension->PortCapabilities = Capabilities;
@@ -586,6 +592,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   CdromData->XaFlags |= XA_USE_6_BYTE;
 
   /* Read 'error recovery page' to get additional drive capabilities */
+#if 0
   Length = sizeof(MODE_READ_RECOVERY_PAGE) +
 	   MODE_BLOCK_DESC_LENGTH +
 	   MODE_HEADER_LENGTH;
@@ -672,6 +679,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       CdromData->RecoveryData.Data6.Header.ModeDataLength = 0;
     }
   ExFreePool (Buffer);
+#endif
 
   /* Initialize device timer */
   IoInitializeTimer(DiskDeviceObject,
@@ -810,7 +818,8 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	DPRINT("IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
 	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
 	  {
-	    Status = STATUS_INVALID_PARAMETER;
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	    break;
 	  }
 	else
 	  {
@@ -835,6 +844,21 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	  }
 	break;
+
+      case IOCTL_CDROM_CHECK_VERIFY:
+	DPRINT ("IOCTL_CDROM_CHECK_VERIFY\n");
+	if (OutputLength != 0 && OutputLength < sizeof (ULONG))
+	  {
+	    DPRINT1("Buffer too small\n");
+	    Status = STATUS_BUFFER_TOO_SMALL;
+	    break;
+	  }
+	IoMarkIrpPending (Irp);
+	IoStartPacket (DeviceObject,
+		       Irp,
+		       NULL,
+		       NULL);
+	return STATUS_PENDING;
 
       case IOCTL_CDROM_READ_TOC:
 	DPRINT("IOCTL_CDROM_READ_TOC\n");
@@ -916,9 +940,9 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Information;
   IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+		    IO_DISK_INCREMENT);
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
@@ -946,8 +970,13 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
+  PIO_STACK_LOCATION SubIrpStack;
   ULONG MaximumTransferLength;
   ULONG TransferPages;
+  PSCSI_REQUEST_BLOCK Srb;
+  PIRP SubIrp;
+  PUCHAR SenseBuffer;
+  PCDB Cdb;
 
   DPRINT("CdromClassStartIo() called!\n");
 
@@ -958,7 +987,7 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 
   if (IrpStack->MajorFunction == IRP_MJ_READ)
     {
-      DPRINT("  IRP_MJ_READ\n");
+      DPRINT ("CdromClassStartIo: IRP_MJ_READ\n");
 
       TransferPages =
 	ADDRESS_AND_SIZE_TO_SPAN_PAGES (MmGetMdlVirtualAddress(Irp->MdlAddress),
@@ -994,19 +1023,114 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
     }
   else if (IrpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL)
     {
-      DPRINT1("  IRP_MJ_IRP_MJ_DEVICE_CONTROL\n");
+      DPRINT ("CdromClassStartIo: IRP_MJ_IRP_MJ_DEVICE_CONTROL\n");
 
-      UNIMPLEMENTED;
-#if 0
+      /* Allocate an IRP for sending requests to the port driver */
+      SubIrp = IoAllocateIrp ((CCHAR)(DeviceObject->StackSize + 1),
+			      FALSE);
+      if (SubIrp == NULL)
+	{
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+	  IoCompleteRequest (Irp,
+			     IO_DISK_INCREMENT);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  return;
+	}
+
+      /* Allocate an SRB */
+      Srb = ExAllocatePool (NonPagedPool,
+			    sizeof (SCSI_REQUEST_BLOCK));
+      if (Srb == NULL)
+	{
+	  IoFreeIrp (SubIrp);
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+	  IoCompleteRequest (Irp,
+			     IO_DISK_INCREMENT);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  return;
+	}
+
+      /* Allocte a sense buffer */
+      SenseBuffer = ExAllocatePool (NonPagedPoolCacheAligned,
+				    SENSE_BUFFER_SIZE);
+      if (SenseBuffer == NULL)
+	{
+	  ExFreePool (Srb);
+	  IoFreeIrp (SubIrp);
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+	  IoCompleteRequest (Irp,
+			     IO_DISK_INCREMENT);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  return;
+	}
+
+      /* Initialize the IRP */
+      IoSetNextIrpStackLocation (SubIrp);
+      SubIrp->IoStatus.Information = 0;
+      SubIrp->IoStatus.Status = STATUS_SUCCESS;
+      SubIrp->Flags = 0;
+      SubIrp->UserBuffer = NULL;
+
+      SubIrpStack = IoGetCurrentIrpStackLocation (SubIrp);
+      SubIrpStack->DeviceObject = DeviceExtension->DeviceObject;
+      SubIrpStack->Parameters.Others.Argument2 = (PVOID)Irp;
+
+      /* Initialize next stack location */
+      SubIrpStack = IoGetNextIrpStackLocation (SubIrp);
+      SubIrpStack->MajorFunction = IRP_MJ_SCSI;
+      SubIrpStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_SCSI_EXECUTE_IN;
+      SubIrpStack->Parameters.Scsi.Srb = Srb;
+
+      /* Initialize the SRB */
+      RtlZeroMemory(Srb,
+		    sizeof (SCSI_REQUEST_BLOCK));
+      Srb->Length = sizeof (SCSI_REQUEST_BLOCK);
+      Srb->PathId = DeviceExtension->PathId;
+      Srb->TargetId = DeviceExtension->TargetId;
+      Srb->Lun = DeviceExtension->Lun;
+      Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+      Srb->SrbStatus = SRB_STATUS_SUCCESS;
+      Srb->ScsiStatus = 0;
+      Srb->NextSrb = 0;
+      Srb->OriginalRequest = SubIrp;
+      Srb->SenseInfoBuffer = SenseBuffer;
+      Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+
+      /* Initialize the CDB */
+      Cdb = (PCDB)Srb->Cdb;
+
+      /* Set the completion routine */
+      IoSetCompletionRoutine (SubIrp,
+			      CdromDeviceControlCompletion,
+			      Srb,
+			      TRUE,
+			      TRUE,
+			      TRUE);
+
       switch (IrpStack->Parameters.DeviceIoControl.IoControlCode)
 	{
+	  case IOCTL_CDROM_CHECK_VERIFY:
+	    DPRINT ("CdromClassStartIo: IOCTL_CDROM_CHECK_VERIFY\n");
+	    Srb->CdbLength = 6;
+	    Srb->TimeOutValue = DeviceExtension->TimeOutValue * 2;
+	    Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
+
+	    Cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
+	    IoCallDriver (DeviceExtension->PortDeviceObject,
+			  SubIrp);
+	    return;
 
 	  default:
 	    IoCompleteRequest (Irp,
 			       IO_NO_INCREMENT);
 	    return;
 	}
-#endif
     }
 
   /* Call the SCSI port driver */
@@ -1015,11 +1139,127 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 }
 
 
+NTSTATUS STDCALL
+CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
+			      IN PIRP Irp,
+			      IN PVOID Context)
+{
+  PDEVICE_EXTENSION DeviceExtension;
+  PDEVICE_EXTENSION PhysicalExtension;
+  PIO_STACK_LOCATION IrpStack;
+  PIO_STACK_LOCATION OrigCurrentIrpStack;
+  PIO_STACK_LOCATION OrigNextIrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+  PIRP OrigIrp;
+  BOOLEAN Retry;
+  NTSTATUS Status;
+
+  DPRINT ("CdromDeviceControlCompletion() called\n");
+
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PhysicalExtension = (PDEVICE_EXTENSION)DeviceExtension->PhysicalDevice->DeviceExtension;
+  Srb = (PSCSI_REQUEST_BLOCK) Context;
+
+  IrpStack = IoGetCurrentIrpStackLocation (Irp);
+
+  /* Get the original IRP */
+  OrigIrp = (PIRP)IrpStack->Parameters.Others.Argument2;
+  OrigCurrentIrpStack = IoGetCurrentIrpStackLocation (OrigIrp);
+  OrigNextIrpStack = IoGetNextIrpStackLocation (OrigIrp);
+
+  if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
+    {
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      DPRINT ("SrbStatus %lx\n", Srb->SrbStatus);
+
+      /* Interpret sense info */
+      Retry = ScsiClassInterpretSenseInfo (DeviceObject,
+					   Srb,
+					   IrpStack->MajorFunction,
+					   IrpStack->Parameters.DeviceIoControl.IoControlCode,
+					   MAXIMUM_RETRIES - (ULONG)OrigNextIrpStack->Parameters.Others.Argument1,
+					   &Status);
+      DPRINT ("Retry %u\n", Retry);
+
+
+      DPRINT ("Status %lx\n", Status);
+    }
+
+  if (NT_SUCCESS (Status))
+    {
+      switch (OrigCurrentIrpStack->Parameters.DeviceIoControl.IoControlCode)
+	{
+	  case IOCTL_CDROM_CHECK_VERIFY:
+	    DPRINT ("CdromDeviceControlCompletion: IOCTL_CDROM_CHECK_VERIFY\n");
+	    if (OrigCurrentIrpStack->Parameters.DeviceIoControl.OutputBufferLength != 0)
+	      {
+		/* Return the media change counter */
+		*((PULONG)(OrigIrp->AssociatedIrp.SystemBuffer)) =
+		  PhysicalExtension->MediaChangeCount;
+		OrigIrp->IoStatus.Information = sizeof(ULONG);
+	      }
+	    else
+	      {
+		OrigIrp->IoStatus.Information = 0;
+	      }
+	    break;
+
+
+	  default:
+	    OrigIrp->IoStatus.Information = 0;
+	    Status = STATUS_INVALID_DEVICE_REQUEST;
+	    break;
+	}
+    }
+
+  /* Release the SRB and associated buffers */
+  if (Srb != NULL)
+    {
+      DPRINT("Srb %p\n", Srb);
+
+      if (Srb->SenseInfoBuffer != NULL)
+	ExFreePool (Srb->SenseInfoBuffer);
+
+      ExFreePool (Srb);
+    }
+
+  if (OrigIrp->PendingReturned)
+    {
+      IoMarkIrpPending (OrigIrp);
+    }
+
+  /* Release the sub irp */
+  IoFreeIrp (Irp);
+
+  /* Set io status information */
+  OrigIrp->IoStatus.Status = Status;
+  if (!NT_SUCCESS(Status) && IoIsErrorUserInduced (Status))
+    {
+      IoSetHardErrorOrVerifyDevice (OrigIrp,
+				    DeviceObject);
+      OrigIrp->IoStatus.Information = 0;
+    }
+
+  /* Complete the original IRP */
+  IoCompleteRequest (OrigIrp,
+		     IO_DISK_INCREMENT);
+  IoStartNextPacket (DeviceObject,
+		     FALSE);
+
+  DPRINT ("CdromDeviceControlCompletion() done\n");
+
+  return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
 VOID STDCALL
 CdromTimerRoutine(PDEVICE_OBJECT DeviceObject,
 		  PVOID Context)
 {
-  DPRINT("CdromTimerRoutine() called\n");
+  DPRINT ("CdromTimerRoutine() called\n");
 
 }
 
