@@ -133,7 +133,7 @@ typedef struct _NOTIFYICONDATAA {
 	DWORD dwState;
 	DWORD dwStateMask;
 	CHAR szInfo[256];
-	union {
+	_ANONYMOUS_UNION union {
 		UINT uTimeout;
 		UINT uVersion;
 	} DUMMYUNIONNAME;
@@ -159,7 +159,7 @@ typedef struct _NOTIFYICONDATAW {
 	DWORD dwState;
 	DWORD dwStateMask;
 	WCHAR szInfo[256];
-	union {
+	_ANONYMOUS_UNION union {
 		UINT uTimeout;
 		UINT uVersion;
 	} DUMMYUNIONNAME;
