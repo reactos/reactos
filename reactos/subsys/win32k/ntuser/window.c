@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.249 2004/11/20 16:46:06 weiden Exp $
+/* $Id: window.c,v 1.250 2004/11/20 19:08:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1418,7 +1418,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   BOOL MenuChanged;
   BOOL ClassFound;
   PWSTR ClassNameString;
-  DPRINT1("PsGetWin32Thread()->Desktop == 0x%x\n", PsGetWin32Thread()->Desktop);
+
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
 
