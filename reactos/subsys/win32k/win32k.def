@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.25 2004/03/06 01:22:04 navaraf Exp $
+; $Id: win32k.def,v 1.26 2004/03/07 12:49:27 dwelch Exp $
 ;
 ; win32k.def
 ;
@@ -12,6 +12,7 @@ BRUSHOBJ_ulGetBrushColor@4
 CLIPOBJ_bEnum@12
 CLIPOBJ_cEnumStart@20
 CLIPOBJ_ppoGetPath@4
+EngAlphaBlend@28
 EngAcquireSemaphore@4
 EngAllocMem@12
 EngAllocUserMem@8
@@ -19,6 +20,7 @@ EngAssociateSurface@12
 EngBitBlt@44
 EngCheckAbort@4
 EngComputeGlyphSet@12
+EngControlSprites@8
 EngCopyBits@24
 EngCreateBitmap@24
 EngCreateClip@0

@@ -19,6 +19,31 @@ typedef PVOID EVENT, *PEVENT;
 
 BOOL
 STDCALL
+EngAlphaBlend(
+  IN SURFOBJ  *psoDest,
+  IN SURFOBJ  *psoSrc,
+  IN CLIPOBJ  *pco,
+  IN XLATEOBJ  *pxlo,
+  IN RECTL  *prclDest,
+  IN RECTL  *prclSrc,
+  IN BLENDOBJ  *pBlendObj)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+EngControlSprites(
+  IN WNDOBJ  *pwo,
+  IN FLONG  fl)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
 EngCreateEvent ( OUT PEVENT *ppEvent )
 {
   // www.osr.com/ddk/graphics/gdifncs_1civ.htm

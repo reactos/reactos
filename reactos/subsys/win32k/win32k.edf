@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.21 2004/03/06 01:22:04 navaraf Exp $
+; $Id: win32k.edf,v 1.22 2004/03/07 12:49:27 dwelch Exp $
 ;
 ; win32k.def
 ;
@@ -15,10 +15,12 @@ CLIPOBJ_ppoGetPath=CLIPOBJ_ppoGetPath@4
 EngAcquireSemaphore=EngAcquireSemaphore@4
 EngAllocMem=EngAllocMem@12
 EngAllocUserMem=EngAllocUserMem@8
+EngAlphaBlend=EngAlphaBlend@28
 EngAssociateSurface=EngAssociateSurface@12
 EngBitBlt=EngBitBlt@44
 EngCheckAbort=EngCheckAbort@4
 EngComputeGlyphSet=EngComputeGlyphSet@12
+EngControlSprites=EngControlSprites@8
 EngCopyBits=EngCopyBits@24
 EngCreateBitmap=EngCreateBitmap@24
 EngCreateClip=EngCreateClip@0
