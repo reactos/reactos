@@ -194,21 +194,21 @@ DWORD
 ReadLines()
 {
   DWORD ReadBytes, LineLen, Lines = 0;
-  static TCHAR FileBuffer[1024];
-  TCHAR LastChar = _T('\0');
-  TCHAR *Current;
+  static char FileBuffer[1024];
+  char LastChar = '\0';
+  char *Current;
   
   LineLen = 0;
-  while(ReadFile (FileHandle, FileBuffer, sizeof(FileBuffer), &ReadBytes, NULL) && ReadBytes >= sizeof(TCHAR))
+  while(ReadFile (FileHandle, FileBuffer, sizeof(FileBuffer), &ReadBytes, NULL) && ReadBytes >= sizeof(char))
   {
     if(ReadBytes & 0x1)
       ReadBytes--;
     
-    for(Current = FileBuffer; ReadBytes > 0; ReadBytes -= sizeof(TCHAR), Current++)
+    for(Current = FileBuffer; ReadBytes > 0; ReadBytes -= sizeof(char), Current++)
     {
-      if(*Current == 0x0A && LastChar == 0x0D)
+      if(*Current == '\n' && LastChar == '\r')
       {
-        LastChar = _T('\0');
+        LastChar = '\0';
         if(LineLen > 0)
           Lines++;
         LineLen = 0;
@@ -417,6 +417,10 @@ Execute(LPTSTR Path)
 int
 main (int argc, char * argv [])
 {
+#if UNICODE
+  TCHAR Path[MAX_PATH + 1];
+#endif
+
   _tprintf (_T("\nReactOS project statistics generator.\n\n"));
 
   if (argc < 2)
@@ -429,7 +433,13 @@ main (int argc, char * argv [])
   AddExtension (_T("c\0\0"), _T("Ansi C Source files"));
   AddExtension (_T("cpp\0cxx\0\0"), _T("C++ Source files"));
   AddExtension (_T("h\0\0"), _T("Header files"));
+#if UNICODE
+  ZeroMemory(Path, sizeof(Path));
+  if(MultiByteToWideChar(CP_ACP, 0, argv[1], -1, Path, MAX_PATH) > 0)
+    Execute (Path);
+#else
   Execute (argv[1]);
+#endif
   Cleanup();
 
   return 0;
