@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.19 2003/02/19 22:44:57 mdill Exp $
+/* $Id: defwnd.c,v 1.20 2003/02/28 22:59:30 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -341,33 +341,8 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 VOID
 UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
 {
-  if (dlgFrame)
-    {
-      /* Unimplemented */
-    }
-  else
-    {
-      /* Unimplemented */
-    }
-
-  SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
-  
-  PatBlt( hDC, rect->left, rect->top, rect->right, rect->bottom, PATCOPY);
-
-  SelectObject( hDC, GetStockObject( WHITE_BRUSH ) );
-  
-  PatBlt( hDC, rect->left + 1, rect->top + 1, rect->right - 2, 1, PATCOPY );
-  PatBlt( hDC, rect->left + 1, rect->top + 1, 1, rect->bottom - 2, PATCOPY );
-
-  SelectObject( hDC, GetStockObject( GRAY_BRUSH ) );
-  
-  PatBlt( hDC, rect->left + 1, rect->bottom - 1, rect->right - 2, 1, PATCOPY );
-  PatBlt( hDC, rect->right - 1, rect->top + 1, 1, rect->bottom - 2, PATCOPY );
-  
-  SelectObject( hDC, GetStockObject( DKGRAY_BRUSH ) );
-  
-  PatBlt( hDC, rect->left, rect->bottom, rect->right, 1, PATCOPY );
-  PatBlt( hDC, rect->right, rect->top, 1, rect->bottom, PATCOPY );
+    SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
+    DrawEdge(hDC, rect, dlgFrame ? EDGE_RAISED : EDGE_ETCHED, BF_RECT | BF_MIDDLE);
 }
 
 void SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
