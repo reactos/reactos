@@ -1,0 +1,37 @@
+LIBRARY advpack.dll
+
+EXPORTS
+AddDelBackupEntry=AddDelBackupEntry@16
+AdvInstallFile=AdvInstallFile@28
+CloseINFEngine=CloseINFEngine@4
+DelNode=DelNode@8
+DelNodeRunDLL32=DelNodeRunDLL32@16
+DllMain=DllMain@12
+DoInfInstall=DoInfInstall@4
+ExecuteCab=ExecuteCab@12
+ExtractFiles=ExtractFiles@24
+FileSaveMarkNotExist=FileSaveMarkNotExist@12
+FileSaveRestore=FileSaveRestore@20
+FileSaveRestoreOnINF=FileSaveRestoreOnINF@28
+GetVersionFromFile=GetVersionFromFile@16
+GetVersionFromFileEx=GetVersionFromFileEx@16
+IsNTAdmin=IsNTAdmin@8
+LaunchINFSection=LaunchINFSection@16
+LaunchINFSectionEx=LaunchINFSectionEx@16
+NeedReboot=NeedReboot@4
+NeedRebootInit=NeedRebootInit@0
+OpenINFEngine=OpenINFEngine@20
+RebootCheckOnInstall=RebootCheckOnInstall@16
+RegInstall=RegInstall@12
+RegRestoreAll=RegRestoreAll@12
+RegSaveRestore=RegSaveRestore@28
+RegSaveRestoreOnINF=RegSaveRestoreOnINF@28
+RegisterOCX=RegisterOCX@4
+RunSetupCommand=RunSetupCommand@32
+SetPerUserSecValues=SetPerUserSecValues@4
+TranslateInfString=TranslateInfString@28
+TranslateInfStringEx=TranslateInfStringEx@32
+UserInstStubWrapper=UserInstStubWrapper@16
+UserUnInstStubWrapper=UserUnInstStubWrapper@16
+
+; EOF
