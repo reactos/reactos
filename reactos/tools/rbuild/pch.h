@@ -29,6 +29,7 @@ inline char* strlwr ( char* str )
 #define _finite __finite
 #define _isnan __isnan
 #define stricmp strcasecmp
+#define MAX_PATH PATH_MAX 
 #endif
 
 #endif//PCH_H
