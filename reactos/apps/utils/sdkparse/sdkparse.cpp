@@ -45,6 +45,7 @@ Type process ( const string& element, vector<string>& names, bool& isTypedef, ve
 void process_preprocessor ( const char* filename, Header& h, const string& element );
 void process_c ( Header& h, const string& element );
 int parse_type ( Type t, const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
+int parse_asm ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_tident ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_variable ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_struct ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
@@ -53,18 +54,24 @@ int parse_function_ptr ( const vector<string>& tokens, int off, vector<string>& 
 int parse_ifwhile ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_do ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 
+const char* libc_includes[] =
+{
+	"basestd.h",
+	"except.h",
+	"limits.h",
+	"stdarg.h",
+	"stdlib.h"
+};
+
 bool is_libc_include ( const string& inc )
 {
 	string s ( inc );
 	strlwr ( &s[0] );
-	if ( s == "basetsd.h" )
-		return true;
-	if ( s == "except.h" )
-		return true;
-	if ( s == "limits.h" )
-		return true;
-	if ( s == "stdarg.h" )
-		return true;
+	for ( int i = 0; i < sizeof(libc_includes)/sizeof(libc_includes[0]); i++ )
+	{
+		if ( s == libc_includes[i] )
+			return true;
+	}
 	return false;
 }
 
@@ -77,8 +84,11 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
-	//import_file ( "test.h" );
+#if 1
+	import_file ( "../test.h" );
+#else
 	EnumFilesInDirectory ( "c:/cvs/reactos/apps/utils/sdkparse/include", "*.h", FileEnumProc, 0, TRUE, FALSE );
+#endif
 }
 
 bool import_file ( const char* filename )
@@ -273,6 +283,26 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 		h.ifs.pop_back();
 		h.ifspreproc.pop_back();
 	}
+	else if ( preproc == "elif" )
+	{
+		string& oldpre = h.ifspreproc.back();
+		string old = h.ifs.back();
+		string condold;
+		if ( oldpre == "ifdef" )
+			condold = string("!defined(") + old + ")";
+		else if ( oldpre == "ifndef" )
+			condold = string("defined(") + old + ")";
+		else if ( oldpre == "if" )
+			condold = string("!(") + old + ")";
+		else
+		{
+			printf ( "unrecognized preproc '%s'\n", oldpre.c_str() );
+			ASSERT(0);
+			return;
+		}
+		h.ifs.back() = string("(") + element + ") && " + condold;
+		h.ifspreproc.back() = "if";
+	}
 	else if ( preproc == "else" )
 	{
 		string& oldpre = h.ifspreproc.back();
@@ -298,6 +328,10 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 	else if ( preproc == "pragma" )
 	{
 		h.pragmas.push_back ( element );
+	}
+	else if ( preproc == "error" )
+	{
+		// FIXME - how to handle these
 	}
 	else
 	{
@@ -373,8 +407,8 @@ char* skipsemi ( char* p )
 
 char* findend ( char* p, bool& externc )
 {
-	if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb", 40 ) )
-		_CrtDbgBreak();
+	//if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb", 40 ) )
+	//	_CrtDbgBreak();
 	// special-case for 'extern "C"'
 	if ( !strncmp ( p, "extern", 6 ) )
 	{
@@ -420,7 +454,18 @@ char* findend ( char* p, bool& externc )
 			&& !__iscsym(pStruct[-1])
 			&& !__iscsym(pStruct[strlen(structs[i])]) )
 		{
-			isStruct = true;
+			// make sure there's at most one identifier followed
+			// by a {
+			pStruct += strlen(structs[i]);
+			pStruct = skip_ws ( pStruct );
+			if ( __iscsymf(*pStruct) )
+			{
+				while ( __iscsym(*pStruct) )
+					pStruct++;
+				pStruct = skip_ws ( pStruct );
+			}
+			if ( *pStruct == '{' )
+				isStruct = true;
 			break;
 		}
 	}
@@ -449,7 +494,9 @@ Type identify ( const vector<string>& tokens, int off )
 		if ( tokens[off+2] == "_OBJECTS_AND_SID" )
 			_CrtDbgBreak();
 	}*/
-	if ( tokens[off] == "typedef_tident" )
+	if ( tokens[off] == "__asm__" )
+		return T_ASM;
+	else if ( tokens[off] == "typedef_tident" )
 		return T_TIDENT;
 	else if ( tokens[off] == "if" )
 		return T_IF;
@@ -514,6 +561,8 @@ int parse_type ( Type t, const vector<string>& tokens, int off, vector<string>& 
 {
 	switch ( t )
 	{
+	case T_ASM:
+		return parse_asm ( tokens, off, names, dependencies );
 	case T_TIDENT:
 		return parse_tident ( tokens, off, names, dependencies );
 	case T_VARIABLE:
@@ -563,6 +612,16 @@ void depend ( const string& ident, vector<string>& dependencies )
 	dependencies.push_back ( ident );
 }
 
+int parse_asm ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
+{
+	TOKASSERT ( tokens[off] == "__asm__" );
+	off++;
+	while ( tokens[off] != ";" )
+		off++;
+	ASSERT ( tokens[off] == ";" );
+	return off + 1;
+}
+
 int parse_tident ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
 	TOKASSERT ( tokens[off] == "typedef_tident" );
@@ -580,8 +639,7 @@ int parse_variable ( const vector<string>& tokens, int off, vector<string>& name
 	while ( tokens[off] != ";" )
 		name ( tokens[off++], names );
 	TOKASSERT ( tokens[off] == ";" );
-	off++;
-	return off;
+	return off + 1;
 }
 
 int parse_struct ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
