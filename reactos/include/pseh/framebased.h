@@ -215,12 +215,21 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 
 #define _SEH_LEAVE break
 
+#define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
+
+#define _SEH_GetExceptionPointers() \
+ ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
+
+#define _SEH_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
+
 /* New syntax */
 #define _SEH2_STATE_INIT_EXCEPT  (1)
 #define _SEH2_STATE_INIT_FINALLY (_SEH2_STATE_INIT_EXCEPT + 1)
 #define _SEH2_STATE_BODY         (_SEH2_STATE_INIT_FINALLY + 1)
 #define _SEH2_STATE_HANDLER      (_SEH2_STATE_BODY + 1)
 #define _SEH2_STATE_DONE         (_SEH2_STATE_HANDLER + 1)
+
+#define _SEH2_LEAVE { _SEH2State = _SEH2_STATE_DONE; break; }
 
 #define _SEH2_TRY \
 {                                                                              \
@@ -300,12 +309,9 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 
 #define _SEH2_HANDLE _SEH2_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
 
-#define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
-
-#define _SEH_GetExceptionPointers() \
- ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
-
-#define _SEH_AbnormalTermination() (_SEHPortableFrame->SPF_Code != 0)
+#define _SEH2_GetExceptionCode     _SEH_GetExceptionCode
+#define _SEH2_GetExceptionPointers _SEH_GetExceptionPointers
+#define _SEH2_AbnormalTermination  _SEH_AbnormalTermination
 
 #endif
 
