@@ -1,4 +1,4 @@
-/* $Id: capclock.c,v 1.1 2003/09/04 21:33:11 ea Exp $
+/* $Id: capclock.c,v 1.2 2003/09/24 20:05:29 weiden Exp $
  *
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)
@@ -22,7 +22,7 @@ INT STDCALL WinMain (HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR lpCmdLine, INT 
 	wc.lpfnWndProc    = DefDlgProc;
 	wc.cbWndExtra     = DLGWINDOWEXTRA;
 	wc.hInstance      = hinst;
-	wc.hCursor        = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor        = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
 	wc.hbrBackground  = (HBRUSH) (COLOR_WINDOW + 1);
 	wc.lpszClassName  = "CapClock";
 	RegisterClass (& wc);
