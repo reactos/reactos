@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2004/02/15 00:04:07 arty Exp $
+# $Id: makefile,v 1.13 2004/08/10 10:57:54 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,8 @@ THREAD_OBJECTS = \
  thread/stack.o
 
 STRING_OBJECTS = \
- string/append.o
+ string/append.o \
+ string/resstr.o
 
 REGISTRY_OBJECTS = \
  registry/registry.o
