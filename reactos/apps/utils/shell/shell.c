@@ -256,7 +256,7 @@ void ExecuteCommand(char* line)
    cmd = line;
 
 
-   if (cmd==NULL)
+   if (cmd==NULL || *cmd == '\0' )
      {
 	return;
      }
