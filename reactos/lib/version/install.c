@@ -131,10 +131,10 @@ static int testFileExistenceW( const WCHAR *path, const WCHAR *file, BOOL excl )
  *         Reimplementation of VerFindFile from original stub.
  */
 DWORD WINAPI VerFindFileA(
-    UINT flags,
-    LPCSTR lpszFilename,
-    LPCSTR lpszWinDir,
-    LPCSTR lpszAppDir,
+    DWORD flags,
+    LPSTR lpszFilename,
+    LPSTR lpszWinDir,
+    LPSTR lpszAppDir,
     LPSTR lpszCurDir,
     UINT *lpuCurDirLen,
     LPSTR lpszDestDir,
@@ -226,8 +226,8 @@ DWORD WINAPI VerFindFileA(
 /*****************************************************************************
  * VerFindFileW						[VERSION.@]
  */
-DWORD WINAPI VerFindFileW( UINT flags,LPCWSTR lpszFilename,LPCWSTR lpszWinDir,
-                           LPCWSTR lpszAppDir, LPWSTR lpszCurDir,UINT *lpuCurDirLen,
+DWORD WINAPI VerFindFileW( DWORD flags,LPWSTR lpszFilename,LPWSTR lpszWinDir,
+                           LPWSTR lpszAppDir, LPWSTR lpszCurDir,UINT *lpuCurDirLen,
                            LPWSTR lpszDestDir,UINT *lpuDestDirLen )
 {
     static const WCHAR emptyW;
@@ -367,8 +367,8 @@ _error2vif(DWORD error) {
  * VerInstallFileA [VERSION.@]
  */
 DWORD WINAPI VerInstallFileA(
-	UINT flags,LPCSTR srcfilename,LPCSTR destfilename,LPCSTR srcdir,
- 	LPCSTR destdir,LPCSTR curdir,LPSTR tmpfile,UINT *tmpfilelen )
+	DWORD flags,LPSTR srcfilename,LPSTR destfilename,LPSTR srcdir,
+ 	LPSTR destdir,LPSTR curdir,LPSTR tmpfile,UINT *tmpfilelen )
 {
     LPCSTR pdest;
     char	destfn[260],tmpfn[260],srcfn[260];
@@ -534,8 +534,8 @@ DWORD WINAPI VerInstallFileA(
  * VerInstallFileW				[VERSION.@]
  */
 DWORD WINAPI VerInstallFileW(
-	UINT flags,LPCWSTR srcfilename,LPCWSTR destfilename,LPCWSTR srcdir,
-	LPCWSTR destdir,LPCWSTR curdir,LPWSTR tmpfile,UINT *tmpfilelen )
+	DWORD flags,LPWSTR srcfilename,LPWSTR destfilename,LPWSTR srcdir,
+	LPWSTR destdir,LPWSTR curdir,LPWSTR tmpfile,UINT *tmpfilelen )
 {
     LPSTR wsrcf = NULL, wsrcd = NULL, wdestf = NULL, wdestd = NULL, wtmpf = NULL, wcurd = NULL;
     DWORD ret;

@@ -38,6 +38,14 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
+#ifdef __REACTOS__
+DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
+                                    LPCSTR lpszResId, LPDWORD lpdwFileOffset );
+DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
+                                LPCSTR lpszResId, DWORD dwFileOffset,
+                                DWORD dwResLen, LPVOID lpvData )
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 
 
@@ -436,13 +444,14 @@ END:
     return len;
 #else /* __MINGW32__ */
 FIXME("No Support for 16bit version information on ReactOS\n");
+return 0;
 #endif /* __MINGW32__ */
 }
 
 /***********************************************************************
  *           GetFileVersionInfoSizeA         [VERSION.@]
  */
-DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
+DWORD WINAPI GetFileVersionInfoSizeA( LPSTR filename, LPDWORD handle )
 {
     VS_FIXEDFILEINFO *vffi;
     DWORD len, ret, offset;
@@ -505,7 +514,7 @@ DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
 /***********************************************************************
  *           GetFileVersionInfoSizeW         [VERSION.@]
  */
-DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
+DWORD WINAPI GetFileVersionInfoSizeW( LPWSTR filename, LPDWORD handle )
 {
     DWORD ret, len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
     LPSTR fn = HeapAlloc( GetProcessHeap(), 0, len );
@@ -518,7 +527,7 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
 /***********************************************************************
  *           GetFileVersionInfoA             [VERSION.@]
  */
-BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle,
+BOOL WINAPI GetFileVersionInfoA( LPSTR filename, DWORD handle,
                                     DWORD datasize, LPVOID data )
 {
     DWORD len;
@@ -557,7 +566,7 @@ DO_CONVERT:
 /***********************************************************************
  *           GetFileVersionInfoW             [VERSION.@]
  */
-BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
+BOOL WINAPI GetFileVersionInfoW( LPWSTR filename, DWORD handle,
                                     DWORD datasize, LPVOID data )
 {
     DWORD len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
@@ -634,7 +643,7 @@ static VS_VERSION_INFO_STRUCT32 *VersionInfo32_FindChild( VS_VERSION_INFO_STRUCT
 /***********************************************************************
  *           VerQueryValueA              [VERSION.@]
  */
-DWORD WINAPI VerQueryValueA( LPVOID pBlock, LPCSTR lpSubBlock,
+BOOL WINAPI VerQueryValueA( const LPVOID pBlock, LPSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     VS_VERSION_INFO_STRUCT16 *info = (VS_VERSION_INFO_STRUCT16 *)pBlock;
@@ -661,7 +670,7 @@ DWORD WINAPI VerQueryValueA( LPVOID pBlock, LPCSTR lpSubBlock,
     while ( *lpSubBlock )
     {
         /* Find next path component */
-        LPCSTR lpNextSlash;
+        LPSTR lpNextSlash;
         for ( lpNextSlash = lpSubBlock; *lpNextSlash; lpNextSlash++ )
             if ( *lpNextSlash == '\\' )
                 break;
@@ -691,7 +700,7 @@ DWORD WINAPI VerQueryValueA( LPVOID pBlock, LPCSTR lpSubBlock,
 /***********************************************************************
  *           VerQueryValueW              [VERSION.@]
  */
-DWORD WINAPI VerQueryValueW( LPVOID pBlock, LPCWSTR lpSubBlock,
+BOOL WINAPI VerQueryValueW( const LPVOID pBlock, LPWSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     VS_VERSION_INFO_STRUCT32 *info = (VS_VERSION_INFO_STRUCT32 *)pBlock;
@@ -707,7 +716,7 @@ DWORD WINAPI VerQueryValueW( LPVOID pBlock, LPCWSTR lpSubBlock,
     while ( *lpSubBlock )
     {
         /* Find next path component */
-        LPCWSTR lpNextSlash;
+        LPWSTR lpNextSlash;
         for ( lpNextSlash = lpSubBlock; *lpNextSlash; lpNextSlash++ )
             if ( *lpNextSlash == '\\' )
                 break;
