@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.186 2004/02/21 13:13:27 navaraf Exp $
+/* $Id: window.c,v 1.187 2004/02/21 14:00:30 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3342,7 +3342,7 @@ static PWINDOW_OBJECT RestrictiveSearchChildWindows(PWINDOW_OBJECT Window, POINT
         */
         if (!IsStaticClass(ChildWindow) &&
             !IsDisabled(ChildWindow)    &&
-            IntIsWindowVisible(ChildWindow))
+            IntIsWindowVisible(ChildWindow->Self))
         {
             /*
             **Now find the deepest child window
