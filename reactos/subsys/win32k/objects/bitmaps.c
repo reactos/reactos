@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.30 2003/06/28 08:39:18 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.31 2003/08/07 16:18:02 royce Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -40,19 +40,32 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
                  INT  YSrc,
                  DWORD  ROP)
 {
-  PDC DCDest = DC_HandleToPtr(hDCDest);
-  PDC DCSrc  = DC_HandleToPtr(hDCSrc);
+  GDIMULTILOCK Lock[2] = {{hDCDest, 0, GO_DC_MAGIC}, {hDCSrc, 0, GO_DC_MAGIC}};
+  PDC DCDest = NULL;
+  PDC DCSrc  = NULL;
   PSURFOBJ SurfDest, SurfSrc;
   PSURFGDI SurfGDIDest, SurfGDISrc;
   RECTL DestRect;
   POINTL SourcePoint;
-  PBITMAPOBJ DestBitmapObj;
-  PBITMAPOBJ SrcBitmapObj;
+  //PBITMAPOBJ DestBitmapObj;
+  //PBITMAPOBJ SrcBitmapObj;
   BOOL Status, SurfDestAlloc, SurfSrcAlloc, XlateAlloc;
   PPALOBJ DCLogPal;
   PPALGDI PalDestGDI, PalSourceGDI;
   PXLATEOBJ XlateObj = NULL;
   HPALETTE SourcePalette, DestPalette;
+
+  if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
+    {
+      DPRINT1("GDIOBJ_LockMultipleObj() failed\n" );
+      return STATUS_INVALID_PARAMETER;
+    }
+
+  DCDest = Lock[0].pObj;
+  DCSrc = Lock[1].pObj;
+
+  if ( !DCDest || !DCSrc )
+    return STATUS_INVALID_PARAMETER;
 
   /* Offset the destination and source by the origin of their DCs. */
   XDest += DCDest->w.DCOrgX;
@@ -73,14 +86,14 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   XlateAlloc = FALSE;
 
   // Determine surfaces to be used in the bitblt
-  SurfDest = (PSURFOBJ)AccessUserObject(DCDest->Surface);
-  SurfSrc  = (PSURFOBJ)AccessUserObject(DCSrc->Surface);
+  SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+  SurfSrc  = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
 
   SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
   SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 
   // Retrieve the logical palette of the destination DC
-  DCLogPal = (PPALOBJ)AccessUserObject(DCDest->w.hPalette);
+  DCLogPal = (PPALOBJ)AccessUserObject((ULONG)DCDest->w.hPalette);
 
   if(DCLogPal)
     if(DCLogPal->logicalToSystem)
@@ -90,19 +103,17 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   if((BitsPerFormat(SurfDest->iBitmapFormat) != BitsPerFormat(SurfSrc->iBitmapFormat)) && (XlateObj == NULL))
   {
     if(DCDest->w.hPalette != 0)
-    {
       DestPalette = DCDest->w.hPalette;
-    } else
+    else
       DestPalette = W32kGetStockObject(DEFAULT_PALETTE);
 
     if(DCSrc->w.hPalette != 0)
-    {
       SourcePalette = DCSrc->w.hPalette;
-    } else
+    else
       SourcePalette = W32kGetStockObject(DEFAULT_PALETTE);
 
-    PalDestGDI   = (PPALGDI)AccessInternalObject(DestPalette);
-    PalSourceGDI = (PPALGDI)AccessInternalObject(SourcePalette);
+    PalDestGDI   = (PPALGDI)AccessInternalObject((ULONG)DestPalette);
+    PalSourceGDI = (PPALGDI)AccessInternalObject((ULONG)SourcePalette);
 
     XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
     XlateAlloc = TRUE;
@@ -116,8 +127,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   if (SurfDestAlloc) ExFreePool(SurfDest);
   if (SurfSrcAlloc) ExFreePool(SurfSrc);
 
-  DC_ReleasePtr(hDCDest);
-  DC_ReleasePtr(hDCSrc);
+  GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0]));
 
   return Status;
 }
