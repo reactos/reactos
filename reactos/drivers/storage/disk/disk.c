@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.39 2004/04/01 15:01:35 jimtabor Exp $
+/* $Id: disk.c,v 1.40 2004/04/01 17:24:47 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -839,7 +839,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
 static NTSTATUS
 DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
-		      IN PIRP Irp)
+                        IN PIRP Irp)
 {
   PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
   PDEVICE_EXTENSION DiskDeviceExtension;
@@ -912,7 +912,7 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 
   DPRINT("DiskBuildPartitionTable() done\n");
   if (PartitionList != NULL)
-        ExFreePool(PartitionList);
+       ExFreePool(PartitionList);
   return(STATUS_SUCCESS);
 }
 
@@ -1002,7 +1002,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	if ((DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
 	(DeviceExtension->DiskGeometry->MediaType == RemovableMedia))
 	{
-		/* Allocate a partition list for a single entry. */
+		/* Update a partition list for a single entry. */
 		Status = DiskBuildPartitionTable(DeviceObject,Irp);
 	}
 	
@@ -1179,22 +1179,25 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  ExFreePool (ModeData);
 	}
 	break;
- 
+
 
       case IOCTL_DISK_CHECK_VERIFY:
-	    DPRINT("IOCTL_DISK_CHECK_VERIFY\n");
-	    if (DeviceObject->Flags & DO_VERIFY_VOLUME)
+          DPRINT("IOCTL_DISK_CHECK_VERIFY\n");
+          Information = 0;
+	  if (OutputLength != 0)
 	    {
-	    	DPRINT("Do Verify Set\n");
-	    	Status = STATUS_VERIFY_REQUIRED;
-	    	Information = 0;
+	       ((PULONG)(Irp->AssociatedIrp.SystemBuffer)) =
+                             DeviceExtension->MediaChangeCount;
+	       Information = sizeof(ULONG);
+
 	    }
-	    else
-	    {
-	    	DPRINT("Do Verify Clear\n");
-	        Status = STATUS_SUCCESS;
-	        Information = 0;
-	    }
+          if (DeviceObject->Flags & DO_VERIFY_VOLUME)
+            {
+               DPRINT("Do Verify Set\n");
+               Status = STATUS_VERIFY_REQUIRED;
+            }
+            else
+	       Status = STATUS_SUCCESS;
 	break;
 
       case IOCTL_DISK_VERIFY:
