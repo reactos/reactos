@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.2 2004/01/13 12:34:09 ekohl Exp $ 
+/* $Id: setup.c,v 1.3 2004/01/16 15:31:53 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,23 +56,6 @@ AllUsersDirectories[] =
 };
 
 
-static LPWSTR
-AppendBackslash(LPWSTR String)
-{
-  ULONG Length;
-
-  Length = lstrlenW (String);
-  if (String[Length - 1] != L'\\')
-    {
-      String[Length] = L'\\';
-      Length++;
-      String[Length] = (WCHAR)0;
-    }
-
-  return &String[Length];
-}
-
-
 void
 DebugPrint(char* fmt,...)
 {
@@ -92,9 +75,7 @@ InitializeProfiles (VOID)
 {
   WCHAR szProfilesPath[MAX_PATH];
   WCHAR szProfilePath[MAX_PATH];
-  WCHAR szSystemRoot[MAX_PATH];
   WCHAR szBuffer[MAX_PATH];
-  LPWSTR lpszPostfix;
   LPWSTR lpszPtr;
   DWORD dwLength;
   PDIRDATA lpDirData;
@@ -146,31 +127,14 @@ InitializeProfiles (VOID)
 	}
     }
 
-  /* Build profile name postfix */
-  if (!ExpandEnvironmentStringsW (L"%SystemRoot%",
-				  szSystemRoot,
-				  MAX_PATH))
+  /* Set 'DefaultUserProfile' value */
+  wcscpy (szBuffer, L"Default User");
+  if (!AppendSystemPostfix (szBuffer, MAX_PATH))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
       RegCloseKey (hKey);
       return FALSE;
     }
-
-  /* Get name postfix */
-  szSystemRoot[2] = L'.';
-  lpszPostfix = &szSystemRoot[2];
-  lpszPtr = lpszPostfix;
-  while (*lpszPtr != (WCHAR)0)
-    {
-      if (*lpszPtr == L'\\')
-	*lpszPtr = '_';
-      lpszPtr++;
-    }
-  _wcsupr (lpszPostfix);
-
-  /* Set 'DefaultUserProfile' value */
-  wcscpy (szBuffer, L"Default User");
-  wcscat (szBuffer, lpszPostfix);
 
   dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
   if (RegSetValueExW (hKey,
@@ -231,7 +195,12 @@ InitializeProfiles (VOID)
 
   /* Set 'AllUsersProfile' value */
   wcscpy (szBuffer, L"All Users");
-  wcscat (szBuffer, lpszPostfix);
+  if (!AppendSystemPostfix (szBuffer, MAX_PATH))
+    {
+      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
 
   dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
   if (RegSetValueExW (hKey,

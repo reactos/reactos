@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.2 2004/01/15 14:59:06 ekohl Exp $
+/* $Id: profile.c,v 1.3 2004/01/16 15:31:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,63 @@
 
 
 /* FUNCTIONS ***************************************************************/
+
+BOOL
+AppendSystemPostfix (LPWSTR lpName,
+		     DWORD dwMaxLength)
+{
+  WCHAR szSystemRoot[MAX_PATH];
+  WCHAR szDrivePostfix[3];
+  LPWSTR lpszPostfix;
+  LPWSTR lpszPtr;
+  DWORD dwPostfixLength;
+
+  /* Build profile name postfix */
+  if (!ExpandEnvironmentStringsW (L"%SystemRoot%",
+				  szSystemRoot,
+				  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  _wcsupr (szSystemRoot);
+
+  /* Get name postfix */
+  szSystemRoot[2] = L'.';
+  lpszPostfix = &szSystemRoot[2];
+  lpszPtr = lpszPostfix;
+  while (*lpszPtr != (WCHAR)0)
+    {
+      if (*lpszPtr == L'\\')
+	*lpszPtr = '_';
+      lpszPtr++;
+    }
+
+  dwPostfixLength = wcslen (lpszPostfix);
+  if (szSystemRoot[0] != L'C')
+    {
+      dwPostfixLength += 2;
+      szDrivePostfix[0] = L'_';
+      szDrivePostfix[1] = szSystemRoot[0];
+      szDrivePostfix[2] = (WCHAR)0;
+    }
+
+  if (wcslen (lpName) + dwPostfixLength >= dwMaxLength)
+    {
+      DPRINT1("Error: buffer overflow\n");
+      return FALSE;
+    }
+
+  wcscat (lpName, lpszPostfix);
+  if (szSystemRoot[0] != L'C')
+    {
+      wcscat (lpName, szDrivePostfix);
+    }
+
+  return TRUE;
+}
+
 
 BOOL WINAPI
 CreateUserProfileW (PSID Sid,
@@ -87,6 +144,13 @@ CreateUserProfileW (PSID Sid,
   wcscpy (szUserProfilePath, szProfilesPath);
   wcscat (szUserProfilePath, L"\\");
   wcscat (szUserProfilePath, lpUserName);
+  if (!AppendSystemPostfix (szUserProfilePath, MAX_PATH))
+    {
+      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      RegCloseKey (hKey);
+      return FALSE;
+    }
 
   wcscpy (szDefaultUserPath, szProfilesPath);
   wcscat (szDefaultUserPath, L"\\");
@@ -121,9 +185,6 @@ CreateUserProfileW (PSID Sid,
 	  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
   wcscat (szBuffer, SidString.Buffer);
 
-//  DebugPrint ("User SID: %wZ\n", &SidString);
-//  RtlFreeUnicodeString (&SidString);
-
   /* Create user profile key */
   if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
 		       szBuffer,
@@ -144,6 +205,13 @@ CreateUserProfileW (PSID Sid,
   wcscpy (szBuffer, szRawProfilesPath);
   wcscat (szBuffer, L"\\");
   wcscat (szBuffer, lpUserName);
+  if (!AppendSystemPostfix (szBuffer, MAX_PATH))
+    {
+      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      RegCloseKey (hKey);
+      return FALSE;
+    }
 
   /* Set 'ProfileImagePath' value (non-expanded) */
   if (RegSetValueExW (hKey,
@@ -178,6 +246,7 @@ CreateUserProfileW (PSID Sid,
   /* Create user hive name */
   wcscat (szUserProfilePath, L"\\ntuser.dat");
 
+#if 0
   /* Create new user hive */
   if (RegLoadKeyW (HKEY_USERS,
 		   SidString.Buffer,
@@ -188,10 +257,17 @@ CreateUserProfileW (PSID Sid,
       return FALSE;
     }
 
-  /* FIXME: Copy default user hive */
+  /* Create user hive */
+  if (!CreateUserHive (SidString.Buffer))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
 
   RegUnLoadKeyW (HKEY_USERS,
 		 SidString.Buffer);
+#endif
 
   RtlFreeUnicodeString (&SidString);
 
