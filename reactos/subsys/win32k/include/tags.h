@@ -41,4 +41,7 @@
 #define TAG_GDITEXT	TAG('T', 'X', 'T', 'O') /* text */
 #define TAG_FONT	TAG('F', 'N', 'T', 'O') /* font entry */
 
+/* misc */
+#define TAG_DRIVER  TAG('G', 'D', 'R', 'V') /* video drivers */
+
 #endif /* _WIN32K_TAGS_H */

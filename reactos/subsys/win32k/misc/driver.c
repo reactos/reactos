@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.35 2004/02/08 21:37:53 weiden Exp $
+/* $Id: driver.c,v 1.36 2004/02/22 12:06:43 weiden Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -34,11 +34,10 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 #include <rosrtl/string.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define DRIVER_TAG TAG('G', 'D', 'R', 'V')
 
 typedef struct _GRAPHICS_DRIVER
 {
@@ -53,7 +52,7 @@ static PGRAPHICS_DRIVER  GenericDriver = 0;
 
 BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
-  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Driver), DRIVER_TAG);
+  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Driver), TAG_DRIVER);
   DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
   if (!Driver)  return  FALSE;
   Driver->ReferenceCount = 0;
@@ -62,7 +61,7 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   {
     Driver->Name = ExAllocatePoolWithTag(PagedPool,
                                          (wcslen(Name) + 1) * sizeof(WCHAR),
-                                         DRIVER_TAG);
+                                         TAG_DRIVER);
     wcscpy(Driver->Name, Name);
     Driver->Next  = DriverList;
     DriverList = Driver;
@@ -118,7 +117,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   {
     Size += sizeof(DefaultExtension) - sizeof(WCHAR);
   }
-  FullName = ExAllocatePoolWithTag(PagedPool, Size, DRIVER_TAG);
+  FullName = ExAllocatePoolWithTag(PagedPool, Size, TAG_DRIVER);
   if (NULL == FullName)
   {
     DPRINT1("Out of memory\n");
