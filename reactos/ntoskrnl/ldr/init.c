@@ -203,7 +203,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    Context.Eip = (ULONG)LdrStartupAddr;
    Context.SegDs = USER_DS;
    Context.SegEs = USER_DS;
-   Context.SegFs = USER_DS;
+   Context.SegFs = TEB_SELECTOR;
    Context.SegGs = USER_DS;
 
    DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);

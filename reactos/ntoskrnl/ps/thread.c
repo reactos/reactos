@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.56 2000/10/07 13:41:54 dwelch Exp $
+/* $Id: thread.c,v 1.57 2000/10/08 16:32:53 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -411,7 +411,7 @@ VOID PsInitThreadManagment(VOID)
    FirstThread->Tcb.FreezeCount = 0;
    CurrentThread = FirstThread;
    CURRENT_KPCR->CurrentThread = (PVOID)FirstThread;
-   ZwClose(FirstThreadHandle);
+   NtClose(FirstThreadHandle);
    
    DPRINT("FirstThread %x\n",FirstThread);
       

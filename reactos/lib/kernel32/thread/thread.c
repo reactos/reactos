@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.20 2000/09/05 23:01:07 ekohl Exp $
+/* $Id: thread.c,v 1.21 2000/10/08 16:32:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -163,7 +163,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    memset(&ThreadContext,0,sizeof(CONTEXT));
    ThreadContext.Eip = (LONG)ThreadStartup;
    ThreadContext.SegGs = USER_DS;
-   ThreadContext.SegFs = USER_DS;
+   ThreadContext.SegFs = TEB_SELECTOR;
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.31 2000/09/05 11:01:02 ekohl Exp $
+/* $Id: startup.c,v 1.32 2000/10/08 16:32:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -148,6 +148,7 @@ LdrInitializeThunk (ULONG Unknown1,
 	DbgPrint("Failed to create loader module entry (NTDLL)\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
+   memset(NtModule, 0, sizeof(LDR_MODULE));
 
    NtModule->BaseAddress = (PVOID)&_image_base__;
    NtModule->EntryPoint = 0; /* no entry point */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.20 2000/08/05 18:01:52 dwelch Exp $
+/* $Id: process.c,v 1.21 2000/10/08 16:32:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -68,7 +68,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    memset(&ThreadContext,0,sizeof(CONTEXT));
    ThreadContext.Eip = (ULONG)lpStartAddress;
    ThreadContext.SegGs = USER_DS;
-   ThreadContext.SegFs = USER_DS;
+   ThreadContext.SegFs = TEB_SELECTOR;
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;

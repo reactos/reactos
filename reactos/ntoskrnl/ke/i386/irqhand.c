@@ -15,6 +15,7 @@
         "pusha\n\t"                     \
         "pushl %ds\n\t"                 \
         "pushl %es\n\t"                 \
+        "pushl %fs\n\t"                  \
         "movl  $0xceafbeef,%eax\n\t"      \
         "pushl %eax\n\t"                \
         "movw  $"STR(KERNEL_DS)",%ax\n\t"       \
@@ -27,6 +28,7 @@
         "call  _KiInterruptDispatch\n\t"\
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
+        "popl  %fs\n\t"                 \
         "popl  %es\n\t"                 \
         "popl  %ds\n\t"                 \
         "popa\n\t"                      \
@@ -38,6 +40,7 @@
         "pusha\n\t"                     \
         "pushl %ds\n\t"                 \
         "pushl %es\n\t"                 \
+        "pushl %fs\n\t"                 \
         "movl  $0xceafbeef,%eax\n\t"      \
         "pushl %eax\n\t"                \
         "movw  $"STR(KERNEL_DS)",%ax\n\t"       \
@@ -50,6 +53,7 @@
         "call  _KiInterruptDispatch\n\t"\
         "popl  %eax\n\t"                \
         "popl  %eax\n\t"                \
+        "popl  %fs\n\t"                 \
         "popl  %es\n\t"                 \
         "popl  %ds\n\t"                 \
         "popa\n\t"                      \

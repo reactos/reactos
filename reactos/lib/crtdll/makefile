@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.39 2000/10/07 13:41:47 dwelch Exp $
+# $Id: makefile,v 1.40 2000/10/08 16:32:51 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -177,6 +177,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp \
+		-Wl,--entry=_DllMain@12 \
 		$(TARGET).o \
 		../kernel32/kernel32.a -lgcc
 	- $(RM) junk.tmp
@@ -195,7 +196,8 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-Wl,--image-base,0x77630000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
+		-Wl,temp.exp \
+		-Wl,--entry=_DllMain@12
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 

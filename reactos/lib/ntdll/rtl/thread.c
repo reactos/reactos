@@ -209,7 +209,7 @@ RtlInitializeContext(HANDLE ProcessHandle,
 
     Context->Eip = (LONG)StartAddress;
     Context->SegGs = USER_DS;
-    Context->SegFs = USER_DS;
+    Context->SegFs = TEB_SELECTOR;
     Context->SegEs = USER_DS;
     Context->SegDs = USER_DS;
     Context->SegCs = USER_CS;

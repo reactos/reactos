@@ -31,9 +31,6 @@ static NTSTATUS PsIdleThreadMain(PVOID Context)
    
    for(;;)
      {
-//        DPRINT1("Idling DpcQueueSize %d, Irql\n",DpcQueueSize, 
-//	       KeGetCurrentIrql());
-//	DbgPrint(".");
 	if (DpcQueueSize > 0)
 	  {
 	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
@@ -57,7 +54,7 @@ VOID PsInitIdleThread(VOID)
 			NULL);
    
    Priority = LOW_PRIORITY;
-   ZwSetInformationThread(PsIdleThreadHandle,
+   NtSetInformationThread(PsIdleThreadHandle,
 			  ThreadPriority,
 			  &Priority,
 			  sizeof(Priority));

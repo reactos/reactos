@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.42 2000/10/08 12:42:24 ekohl Exp $
+/* $Id: rtl.h,v 1.43 2000/10/08 16:32:51 dwelch Exp $
  * 
  */
 
@@ -283,8 +283,6 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 #define InsertTailList(ListHead, ListEntry) \
 { \
 	PLIST_ENTRY OldBlink; \
-        assert((ListEntry)->Blink == NULL); \
-        assert((ListEntry)->Flink == NULL); \
 	OldBlink = (ListHead)->Blink; \
 	(ListEntry)->Flink = (ListHead); \
 	(ListEntry)->Blink = OldBlink; \

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.63 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: loader.c,v 1.64 2000/10/08 16:32:53 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,7 @@ VOID LdrInitModuleManagement(VOID)
                              NULL,
                              NULL);
   DPRINT("Create dir: %wZ\n", &ModuleName);
-  Status = ZwCreateDirectoryObject(&DirHandle, 0, &ObjectAttributes);
+  Status = NtCreateDirectoryObject(&DirHandle, 0, &ObjectAttributes);
   assert(NT_SUCCESS(Status));
 
   /*  Add module entry for NTOSKRNL  */
@@ -318,7 +318,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
                              NULL,
                              NULL);
   CHECKPOINT;
-  Status = ZwOpenFile(&FileHandle,
+  Status = NtOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
                       NULL, 0, 0);
@@ -331,7 +331,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
 
   /*  Get the size of the file  */
-  Status = ZwQueryInformationFile(FileHandle,
+  Status = NtQueryInformationFile(FileHandle,
                                   NULL,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
@@ -355,7 +355,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
    
   /*  Load driver into memory chunk  */
-  Status = ZwReadFile(FileHandle, 
+  Status = NtReadFile(FileHandle, 
                       0, 0, 0, 0, 
                       ModuleLoadBase, 
                       FileStdInfo.EndOfFile.u.LowPart, 
@@ -369,7 +369,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
     }
   CHECKPOINT;
 
-  ZwClose(FileHandle);
+  NtClose(FileHandle);
 
   /*  Build module object name  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
