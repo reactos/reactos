@@ -2,14 +2,16 @@
 #  ReactOS cmdutils makefile
 #
 
-TARGET=tee.exe
+TARGET=more.exe tee.exe
 
 all: $(TARGET)
 
-OBJECTS = tee.o
 
 CLEAN_FILES = *.o *.exe *.sym *.coff
 
+more.exe: more.o
+	$(CC) more.o -lkernel32 -lcrtdll -o more.exe
+	$(NM) --numeric-sort more.exe > more.sym
 
 tee.exe: tee.o
 	$(CC) tee.o -lkernel32 -lcrtdll -o tee.exe
@@ -34,13 +36,13 @@ else
 endif
 
 
-dist: $(TARGET:%=../$(DIST_DIR)/%)
+dist: $(TARGET:%=../$(DIST_DIR)/apps/%)
 
-$(TARGET:%=../$(DIST_DIR)/%): ../$(DIST_DIR)/%: %
+$(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
-	$(CP) $* ..\$(DIST_DIR)\$*
+	$(CP) $* ..\$(DIST_DIR)\apps\$*
 else
-	$(CP) $* ../$(DIST_DIR)/$*
+	$(CP) $* ../$(DIST_DIR)/apps/$*
 endif
 
 include ../rules.mak
