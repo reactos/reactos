@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.22 2003/12/08 18:05:30 fireball Exp $ */
+/* $Id: dib4bpp.c,v 1.23 2004/02/08 09:27:39 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -239,14 +239,14 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		PBRUSHOBJ Brush, PPOINTL BrushOrigin,
 		XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
-  LONG     i, j, k, sx, sy;
-  ULONG    Dest, Source, Pattern;
-  PULONG   DestBits;
-  BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
-  BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-  LONG    RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x7);
-  static const ULONG ExpandSolidColor[16] = 
-    {
+   LONG i, j, sx, sy;
+   ULONG Dest, Source, Pattern;
+   PULONG DestBits;
+   BOOL UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+   BOOL UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
+   LONG RoundedRight = DestRect->right - ((DestRect->right - DestRect->left) & 0x7);
+   static const ULONG ExpandSolidColor[16] = 
+   {
       0x00000000 /* 0 */,
       0x11111111 /* 1 */,
       0x22222222 /* 2 */,
@@ -263,61 +263,79 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       0xDDDDDDDD /* 13 */,
       0xEEEEEEEE /* 14 */,
       0xFFFFFFFF /* 15 */,
-    };
+   };
 
-  if (Rop4 == SRCCOPY)
-    {
+   if (Rop4 == SRCCOPY)
+   {
       return(DIB_4BPP_BitBltSrcCopy(DestSurf, SourceSurf, DestGDI, SourceGDI, DestRect, SourcePoint, ColorTranslation));
-    }
-  else
-    {
+   }
+   else
+   {
       sy = SourcePoint->y;
 
-      for (j=DestRect->top; j<DestRect->bottom; j++)
+      for (j = DestRect->top; j < DestRect->bottom; j++, sy++)
       {
-        sx = SourcePoint->x;
-	DestBits = (PULONG)(DestSurf->pvScan0 + (DestRect->left>>1) + j * DestSurf->lDelta);
-        for (i=DestRect->left; i<RoundedRight; i+=8, DestBits++)
-	  {
-	    Dest = *DestBits;
-	    if (UsesSource)
-	      {
-		Source = 0;
-		for (k = 0; k < 8; k += 2)
-		  {
-		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << ((k + 1) * 4))
-                              | (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k + 1, sy, ColorTranslation) << (k * 4));
-		  }
-	      }
-	    if (UsesPattern)
-	      {
-		/* FIXME: No support for pattern brushes. */
-		Pattern = ExpandSolidColor[Brush->iSolidColor & 0xF];
-	      }
-	    *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
-	  }
-	if (i < DestRect->right)
-	  {
-	    Dest = *DestBits;
-	    for (; i < DestRect->right; i++)
-	      {
-		if (UsesSource)
-		  {
-		    Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation);
-		  }
-		if (UsesPattern)
-		  {
-		    /* FIXME: No support for pattern brushes. */
-		    Pattern = ExpandSolidColor[Brush->iSolidColor & 0xF];
-		  }				
-		DIB_4BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
-		Dest >>= 4;
-	      }	 
-	  }
-        sy++;
+         DestBits = (PULONG)(DestSurf->pvScan0 + (DestRect->left >> 1) + j * DestSurf->lDelta);
+         sx = SourcePoint->x;
+
+         /* Process all pixels on the left that aren't DWORD aligned */
+         for (i = DestRect->left; i & 0x7; i++, sx++)
+         {
+            Dest = DIB_4BPP_GetPixel(DestSurf, i, j);
+            if (UsesSource)
+            {
+               Source = DIB_GetSource(SourceSurf, SourceGDI, sx, sy, ColorTranslation);
+            }
+            if (UsesPattern)
+            {
+               /* FIXME: No support for pattern brushes. */
+               Pattern = ExpandSolidColor[Brush->iSolidColor & 0xF];
+            }				
+            DIB_4BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
+	       }
+
+	       /* Process all DWORD aligned pixels */
+         for (; i < RoundedRight; i += 8, sx += 8, DestBits++)
+         {
+            Dest = *DestBits;
+            if (UsesSource)
+            {
+               Source =
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 1, sy, ColorTranslation)) | 
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 0, sy, ColorTranslation) << 4) |
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 3, sy, ColorTranslation) << 8) | 
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 2, sy, ColorTranslation) << 12) |
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 5, sy, ColorTranslation) << 16) | 
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 4, sy, ColorTranslation) << 20) |
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 7, sy, ColorTranslation) << 24) | 
+                  (DIB_GetSource(SourceSurf, SourceGDI, sx + 6, sy, ColorTranslation) << 28);
+            }
+            if (UsesPattern)
+            {
+               /* FIXME: No support for pattern brushes. */
+               Pattern = ExpandSolidColor[Brush->iSolidColor & 0xF];
+            }
+            *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
+         }
+
+         /* Process the rest of pixel on the line */
+         for (; i < DestRect->right; i++, sx++)
+         {
+            Dest = DIB_4BPP_GetPixel(DestSurf, i, j);
+            if (UsesSource)
+            {
+               Source = DIB_GetSource(SourceSurf, SourceGDI, sx, sy, ColorTranslation);
+            }
+            if (UsesPattern)
+            {
+               /* FIXME: No support for pattern brushes. */
+               Pattern = ExpandSolidColor[Brush->iSolidColor & 0xF];
+            }				
+            DIB_4BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
+         }	 
       }
-    }
-  return TRUE;
+   }
+   return TRUE;
 }
 
 BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.59 2004/02/06 21:12:55 navaraf Exp $
+/* $Id: mouse.c,v 1.60 2004/02/08 09:27:39 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -566,10 +566,10 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       DestRect.top = max(ppdev->PointerAttributes.Row, 0);
       DestRect.right = min(
          ppdev->PointerAttributes.Column + ppdev->PointerAttributes.Width,
-         DestSurface->sizlBitmap.cx - 1);
+         DestSurface->sizlBitmap.cx);
       DestRect.bottom = min(
          ppdev->PointerAttributes.Row + ppdev->PointerAttributes.Height,
-         DestSurface->sizlBitmap.cy - 1);
+         DestSurface->sizlBitmap.cy);
 
       SrcPoint.x = max(-ppdev->PointerAttributes.Column, 0);
       SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
@@ -610,10 +610,10 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       DestRect.top = SrcPoint.y - ppdev->PointerAttributes.Row;
       DestRect.right = min(
          ppdev->PointerAttributes.Width,
-         DestSurface->sizlBitmap.cx - ppdev->PointerAttributes.Column - 1);
+         DestSurface->sizlBitmap.cx - ppdev->PointerAttributes.Column);
       DestRect.bottom = min(
          ppdev->PointerAttributes.Height,
-         DestSurface->sizlBitmap.cy - ppdev->PointerAttributes.Row - 1);
+         DestSurface->sizlBitmap.cy - ppdev->PointerAttributes.Row);
 
       SaveSurface = EngLockSurface(ppdev->PointerSaveSurface);
       EngBitBlt(SaveSurface, DestSurface, NULL, NULL, NULL,
@@ -635,10 +635,10 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       DestRect.top = max(ppdev->PointerAttributes.Row, 0);
       DestRect.right = min(
          ppdev->PointerAttributes.Column + ppdev->PointerAttributes.Width,
-         DestSurface->sizlBitmap.cx - 1);
+         DestSurface->sizlBitmap.cx);
       DestRect.bottom = min(
          ppdev->PointerAttributes.Row + ppdev->PointerAttributes.Height,
-         DestSurface->sizlBitmap.cy - 1);
+         DestSurface->sizlBitmap.cy);
 
       SrcPoint.x = max(-ppdev->PointerAttributes.Column, 0);
       SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
