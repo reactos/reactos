@@ -7,8 +7,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
+#include <msvcrt/ctype.h>
 
-#include <crtdll/ctype.h>
 
 int __iscsymf(int c)
 {

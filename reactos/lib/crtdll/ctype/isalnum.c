@@ -7,17 +7,17 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <crtdll/ctype.h>
+#include <msvcrt/ctype.h>
 
 
 #undef isalnum
 int isalnum(int c)
 {
-   return _isctype(c,_ALPHA | _DIGIT);
+    return _isctype(c,_ALPHA | _DIGIT);
 }
 
 #undef iswalnum
 int iswalnum(wint_t c)
 {
-   return iswctype(c,_ALPHA | _DIGIT);
+    return iswctype(c,_ALPHA | _DIGIT);
 }

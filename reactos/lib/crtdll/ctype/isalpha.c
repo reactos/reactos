@@ -7,17 +7,17 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
+#include <msvcrt/ctype.h>
 
-#include <crtdll/ctype.h>
 
 #undef isalpha
 int isalpha(int c)
 {
- 	return _isctype(c,_ALPHA);
+    return _isctype(c, _ALPHA);
 }
 
 #undef iswalpha
 int iswalpha(wint_t c)
 {
-	return iswctype(c,_ALPHA);
+    return iswctype(c, _ALPHA);
 }

@@ -1,6 +1,7 @@
-#include <crtdll/float.h>
-#include <crtdll/math.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/float.h>
+#include <msvcrt/math.h>
+#include <msvcrt/internal/ieee.h>
+
 
 #define _FPCLASS_SNAN	0x0001	/* signaling NaN */
 #define _FPCLASS_QNAN	0x0002	/* quiet NaN */
@@ -28,38 +29,35 @@ typedef int fpclass_t;
 
 fpclass_t _fpclass(double __d)
 {
-	double_t *d = (double_t *)&__d;
+	double_t* d = (double_t*)&__d;
 
-	if ( d->exponent == 0 ) {
-		if ( d->mantissah == 0 &&  d->mantissal == 0 ) {
-			if ( d->sign ==0 )
+	if (d->exponent == 0) {
+		if (d->mantissah == 0 &&  d->mantissal == 0) {
+			if (d->sign ==0)
 				return FP_NZERO;
 			else
 				return FP_PZERO;
 		} else {
-			if ( d->sign ==0 )
+			if (d->sign ==0)
 				return FP_NDENORM;
 			else
 				return FP_PDENORM;
 		}
 	}
-	if (d->exponent == 0x7ff ) {
-		if ( d->mantissah == 0 &&  d->mantissal == 0 ) {
-			if ( d->sign ==0 )
+	if (d->exponent == 0x7ff) {
+		if (d->mantissah == 0 &&  d->mantissal == 0) {
+			if (d->sign ==0)
 				return FP_NINF;
 			else
 				return FP_PINF;
 		} 
-		else if ( d->mantissah == 0 &&  d->mantissal != 0 ) {
+		else if (d->mantissah == 0 &&  d->mantissal != 0) {
 			return FP_QNAN;
 		}
-		else if ( d->mantissah == 0 &&  d->mantissal != 0 ) {
+		else if (d->mantissah == 0 &&  d->mantissal != 0) {
 			return FP_SNAN;
 		}
 	
 	}
-
 	return 0;
 }
-
-
