@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.54 2004/09/14 22:09:06 hbirr Exp $
+/* $Id: atapi.c,v 1.55 2004/09/26 09:14:20 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1170,6 +1170,11 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
              return FALSE;
            }
         }
+
+      /* Select drive */
+      IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED |
+                        (UnitNumber ? IDE_DH_DRV1 : IDE_DH_DRV0));
+      ScsiPortStallExecution(500);
 
       High = IDEReadCylinderHigh(CommandPortBase);
       Low = IDEReadCylinderLow(CommandPortBase);
