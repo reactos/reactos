@@ -11,7 +11,7 @@
 #include <bm.h>
 #include <bn.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 FADT_DESCRIPTOR_REV2 acpi_fadt;
@@ -126,7 +126,7 @@ FdoQueryBusRelations(
   ANSI_STRING AnsiString;
   ACPI_STATUS AcpiStatus;
   PACPI_DEVICE Device;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BM_NODE *Node;
   ULONG Size;
   ULONG i;
