@@ -34,7 +34,7 @@ typedef struct IPDATAGRAM_REASSEMBLY {
     IP_ADDRESS DstAddr;          /* Destination address */
     UCHAR Protocol;              /* Internet Protocol number */
     USHORT Id;                   /* Identification number */
-    PIPv4_HEADER IPv4Header;     /* Pointer to IP header */
+    IP_HEADER IPv4Header;        /* Pointer to IP header */
     UINT HeaderSize;             /* Length of IP header */
     LIST_ENTRY FragmentListHead; /* IP fragment list */
     LIST_ENTRY HoleListHead;     /* IP datagram hole list */

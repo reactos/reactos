@@ -13,6 +13,7 @@
 extern ULONG TCP_IPIdentification;
 extern LIST_ENTRY SleepingThreadsList;
 extern FAST_MUTEX SleepingThreadsLock;
+extern RECURSIVE_MUTEX TCPLock;
 
 int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
@@ -30,6 +31,8 @@ int TCPSocketState(void *ClientData,
 	TI_DbgPrint(MID_TRACE,("Socket closing.\n"));
 	return 0;
     }
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     if( (NewState & SEL_CONNECT) && 
 	!(Connection->State & SEL_CONNECT) ) {
@@ -75,7 +78,7 @@ int TCPSocketState(void *ClientData,
 	    TI_DbgPrint(MID_TRACE,
 			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
 
-	    if( NewState & SEL_FIN && !RecvLen ) {
+	    if( (NewState & SEL_FIN) && !RecvLen ) {
 		Status = STATUS_END_OF_FILE;
 		Received = 0;
 	    } else {
@@ -119,6 +122,8 @@ int TCPSocketState(void *ClientData,
 	    }
 	}
     } 
+
+    TcpipRecursiveMutexLeave( &TCPLock );
 
     return 0;
 }

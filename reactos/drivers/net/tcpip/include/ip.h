@@ -22,17 +22,16 @@ typedef IPv6_RAW_ADDRESS *PIPv6_RAW_ADDRESS;
 /* IP style address */
 typedef struct IP_ADDRESS {
     DEFINE_TAG
-    UCHAR Type;                         /* Type of IP address */
+    UCHAR Type;                      /* Type of IP address */
     union {
-        IPv4_RAW_ADDRESS IPv4Address;   /* IPv4 address (in network byte order) */
-        PIPv6_RAW_ADDRESS IPv6Address;  /* IPv6 address (in network byte order) */
+        IPv4_RAW_ADDRESS IPv4Address;/* IPv4 address (in network byte order) */
+        IPv6_RAW_ADDRESS IPv6Address;/* IPv6 address (in network byte order) */
     } Address;
-    OBJECT_FREE_ROUTINE Free;           /* The free routine */
 } IP_ADDRESS, *PIP_ADDRESS;
 
 /* IP type constants */
-#define IP_ADDRESS_V4   0x00 /* IPv4 style address */
-#define IP_ADDRESS_V6   0x01 /* IPv6 style address */
+#define IP_ADDRESS_V4   0x04 /* IPv4 style address */
+#define IP_ADDRESS_V6   0x06 /* IPv6 style address */
 
 
 /* IPv4 header format */
@@ -48,6 +47,21 @@ typedef struct IPv4_HEADER {
     IPv4_RAW_ADDRESS SrcAddr;    /* Source Address */
     IPv4_RAW_ADDRESS DstAddr;    /* Destination Address */
 } IPv4_HEADER, *PIPv4_HEADER;
+
+/* IPv6 header format */
+typedef struct IPv6_HEADER {
+    ULONG VTF;                   /* Version, Traffic Class, Flow Label */
+    USHORT PayloadLength;
+    UCHAR NextHeader;            /* Same as Protocol in IPv4 */
+    UCHAR HopLimit;              /* Same as Ttl in IPv4 */
+    IPv6_RAW_ADDRESS SrcAddr;
+    IPv6_RAW_ADDRESS DstAddr;
+} IPv6_HEADER, *PIPv6_HEADER;
+
+typedef union _IP_HEADER {
+    IPv4_HEADER v4;
+    IPv6_HEADER v6;
+} IP_HEADER, *PIP_HEADER;
 
 #define IPv4_FRAGOFS_MASK       0x1FFF /* Fragment offset mask (host byte order) */
 #define IPv4_MF_MASK            0x2000 /* More fragments (host byte order) */
@@ -99,7 +113,7 @@ typedef struct _ADDRESS_ENTRY {
     OBJECT_FREE_ROUTINE     Free;       /* Routine used to free resources for the object */
     struct _NET_TABLE_ENTRY *NTE;       /* NTE associated with this address */
     UCHAR                   Type;       /* Address type */
-    PIP_ADDRESS             Address;    /* Pointer to address identifying this entry */
+    IP_ADDRESS              Address;    /* Pointer to address identifying this entry */
 } ADDRESS_ENTRY, *PADDRESS_ENTRY;
 
 /* Values for address type -- also the interface flags */

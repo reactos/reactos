@@ -69,7 +69,7 @@ PADDRESS_FILE AddrSearchNext(
     while (CurrentEntry != &AddressFileListHead) {
         Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
 
-        IPAddress = Current->ADE->Address;
+        IPAddress = &Current->ADE->Address;
 
         TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
             WN2H(Current->Port),
@@ -340,7 +340,7 @@ NTSTATUS FileOpenAddress(
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication.\n",
-    A2S(AddrFile->ADE->Address)));
+    A2S(&AddrFile->ADE->Address)));
 
   /* Protocol specific handling */
   switch (Protocol) {

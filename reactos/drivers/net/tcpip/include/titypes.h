@@ -182,7 +182,7 @@ typedef struct _ADDRESS_FILE {
     struct _CONNECTION_ENDPOINT *Connection;
                                           /* Associated connection or NULL if no
                                              associated connection exist */
-    PIP_ADDRESS AddrCache;                /* One entry address cache (destination
+    IP_ADDRESS AddrCache;                 /* One entry address cache (destination
                                              address of last packet transmitted) */
 
     /* The following members are used to control event notification */

@@ -200,7 +200,7 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 
     while( (ListEntry = 
 	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
-	WorkItem = CONTAINING_RECORD(ListEntry,  LAN_WQ_ITEM, ListEntry);
+	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 	
 	Packet = WorkItem->Packet;
 	Adapter = WorkItem->Adapter;
@@ -732,8 +732,6 @@ VOID BindAdapter(
 	/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
 	if(RegHandle)  
 	    ZwClose(RegHandle);
-	if(Address) Address->Free(Address);
-	if(Netmask) Netmask->Free(Netmask);
 	IPDestroyInterface(IF);
 	return;
     }
@@ -750,13 +748,10 @@ VOID BindAdapter(
 
     /* Create a net table entry for this interface */
     if (!IPCreateNTE(IF, Address, AddrCountPrefixBits(Netmask))) {
-	Netmask->Free(Netmask);
         TI_DbgPrint(MIN_TRACE, ("IPCreateNTE() failed.\n"));
         IPDestroyInterface(IF);
         return;
     }
-
-    Netmask->Free(Netmask);
 
     /* Register interface with IP layer */
     IPRegisterInterface(IF);

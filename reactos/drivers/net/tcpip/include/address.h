@@ -18,7 +18,6 @@
     INIT_TAG((IPAddress), TAG('I','P','V','4'));      \
     (IPAddress)->Type                = IP_ADDRESS_V4; \
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
-    (IPAddress)->Free =                IPAddressFree; \
 }
 
 #ifdef DBG

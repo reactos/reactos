@@ -112,7 +112,7 @@ NTSTATUS RawIPSendDatagram(
     if( Status == NDIS_STATUS_SUCCESS )
 	Status = BuildRawIPPacket( &Packet,
 				   BufferLen,
-				   AddrFile->ADE->Address,
+				   &AddrFile->ADE->Address,
 				   AddrFile->Port );
 
     if( Status == NDIS_STATUS_SUCCESS ) {

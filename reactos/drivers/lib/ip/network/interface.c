@@ -19,7 +19,7 @@ NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 
     ForEachADE(Interface->ADEListHead,CurrentADE) {
 	if (CurrentADE->Type == TargetType) {
-	    *Address = CurrentADE->Address->Address.IPv4Address;
+	    *Address = CurrentADE->Address.Address.IPv4Address;
 	    return STATUS_SUCCESS;
 	}
     } EndFor(CurrentADE);

@@ -217,7 +217,7 @@ NTSTATUS UDPSendDatagram(
     Status = BuildUDPPacket( &Packet,
 			     &RemoteAddress,
 			     RemotePort,
-			     AddrFile->ADE->Address,
+			     &AddrFile->ADE->Address,
 			     AddrFile->Port,
 			     BufferData,
 			     DataSize );

@@ -107,12 +107,6 @@ VOID FreeIPDR(
     CurrentEntry = NextEntry;
   }
 
-  /* Free resources for the header, if it exists */
-  if (IPDR->IPv4Header) {
-    TI_DbgPrint(DEBUG_IP, ("Freeing IPv4 header data at (0x%X).\n", IPDR->IPv4Header));
-    exFreePool(IPDR->IPv4Header);
-  }
-
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
 
   TcpipFreeToNPagedLookasideList(&IPDRList, IPDR);
@@ -229,7 +223,7 @@ PIP_PACKET ReassembleDatagram(
   }
 
   /* Copy the header into the buffer */
-  RtlCopyMemory(IPPacket->Header, IPDR->IPv4Header, IPDR->HeaderSize);  
+  RtlCopyMemory(IPPacket->Header, &IPDR->IPv4Header, IPDR->HeaderSize);  
   
   Data = IPPacket->Header + IPDR->HeaderSize;
   IPPacket->Data = Data;
@@ -337,7 +331,6 @@ VOID ProcessFragment(
     AddrInitIPv4(&IPDR->DstAddr, IPv4Header->DstAddr);
     IPDR->Id         = IPv4Header->Id;
     IPDR->Protocol   = IPv4Header->Protocol;
-    IPDR->IPv4Header = NULL;
     InitializeListHead(&IPDR->FragmentListHead);
     InitializeListHead(&IPDR->HoleListHead);
     InsertTailList(&IPDR->HoleListHead, &Hole->ListEntry);
@@ -403,17 +396,10 @@ VOID ProcessFragment(
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
-	IPDR->IPv4Header = exAllocatePool(NonPagedPool, IPPacket->HeaderSize);
-      if (!IPDR->IPv4Header) {
-        /* We don't have the resources to process this packet, discard it */
-        Cleanup(&IPDR->Lock, OldIrql, IPDR, NULL);
-        return;
-      }
-
       TI_DbgPrint(DEBUG_IP, ("First fragment found. Header buffer is at (0x%X). "
         "Header size is (%d).\n", IPDR->IPv4Header, IPPacket->HeaderSize));
 
-      RtlCopyMemory(IPDR->IPv4Header, IPPacket->Header, IPPacket->HeaderSize);
+      RtlCopyMemory(&IPDR->IPv4Header, IPPacket->Header, IPPacket->HeaderSize);
       IPDR->HeaderSize = IPPacket->HeaderSize;
     }
 
@@ -467,9 +453,9 @@ VOID ProcessFragment(
 
     Datagram = ReassembleDatagram(IPDR);
 
+    RemoveIPDR(IPDR);
     TcpipReleaseSpinLock(&IPDR->Lock, OldIrql);
 
-    RemoveIPDR(IPDR);
     FreeIPDR(IPDR);
 
     if (!Datagram)

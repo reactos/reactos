@@ -54,7 +54,7 @@ PPREFIX_LIST_ENTRY CreatePLE(PIP_INTERFACE IF, PIP_ADDRESS Prefix, UINT Length)
 
     INIT_TAG(PLE, TAG('P','L','E',' '));
     PLE->Interface    = IF;
-    PLE->Prefix       = Prefix;
+    RtlCopyMemory(&PLE->Prefix, Prefix, sizeof(PLE->Prefix));
     PLE->PrefixLength = Length;
 
     /* Add PLE to the global prefix list */

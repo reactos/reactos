@@ -124,7 +124,7 @@ PADDRESS_ENTRY CreateADE(
     ADE->Free     = FreeADE;
     ADE->NTE      = NTE;
     ADE->Type     = Type;
-    ADE->Address  = Address;
+    RtlCopyMemory(&ADE->Address,Address,sizeof(ADE->Address));
 
     /* Add ADE to the list on the interface */
     InsertTailList(&IF->ADEListHead, &ADE->ListEntry);
@@ -408,7 +408,7 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
 
     while (CurrentEntry != &IF->ADEListHead) {
 	      Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
-        if (AddrIsEqual(Address, Current->Address)) {
+        if (AddrIsEqual(Address, &Current->Address)) {
             *AddressType = Current->Type;
             TcpipReleaseSpinLock(&IF->Lock, OldIrql);
             return Current->NTE;
@@ -497,7 +497,7 @@ PADDRESS_ENTRY IPLocateADE(
     ForEachInterface(CurrentIF) {
         /* Search the address entry list and return the ADE if found */
 	ForEachADE(CurrentIF->ADEListHead,CurrentADE) {
-            if ((AddrIsEqual(Address, CurrentADE->Address)) && 
+            if ((AddrIsEqual(Address, &CurrentADE->Address)) && 
                 (CurrentADE->Type == AddressType)) {
                 TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
                 return CurrentADE;
@@ -729,7 +729,7 @@ BOOLEAN IPRegisterInterface(
         }
 
         /* NCE is already referenced */
-        if (!RouterAddRoute(Current->Address, Current->PLE->Prefix, NCE, 1)) {
+        if (!RouterAddRoute(Current->Address, &Current->PLE->Prefix, NCE, 1)) {
             TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
         }
 

@@ -244,7 +244,7 @@ VOID ARPReceive(
         (UCHAR)Interface->AddressLength, /* Hardware address length */
         (UCHAR)Header->ProtoAddrLen,     /* Protocol address length */
         Interface->Address,              /* Sender's (local) hardware address */
-        &ADE->Address->Address,          /* Sender's (local) protocol address */
+        &ADE->Address.Address,           /* Sender's (local) protocol address */
         SenderHWAddress,                 /* Target's (remote) hardware address */
         SenderProtoAddress,              /* Target's (remote) protocol address */
         ARP_OPCODE_REPLY);               /* ARP reply */

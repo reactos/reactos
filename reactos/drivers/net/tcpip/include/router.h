@@ -14,8 +14,8 @@
 typedef struct _FIB_ENTRY {
     LIST_ENTRY ListEntry;         /* Entry on list */
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources for the object */
-    PIP_ADDRESS NetworkAddress;   /* Address of network */
-    PIP_ADDRESS Netmask;          /* Netmask of network */
+    IP_ADDRESS NetworkAddress;    /* Address of network */
+    IP_ADDRESS Netmask;           /* Netmask of network */
     PNEIGHBOR_CACHE_ENTRY Router; /* Pointer to NCE of router to use */
     UINT Metric;                  /* Cost of this route */
 } FIB_ENTRY, *PFIB_ENTRY;

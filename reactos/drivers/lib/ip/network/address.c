@@ -309,7 +309,6 @@ PIP_ADDRESS AddrBuildIPv4(
     if (IPAddress != NULL) {
         IPAddress->Type                = IP_ADDRESS_V4;
         IPAddress->Address.IPv4Address = Address;
-        IPAddress->Free                = IPAddressFree;
     }
 
     return IPAddress;

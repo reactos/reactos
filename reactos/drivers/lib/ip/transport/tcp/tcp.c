@@ -373,6 +373,7 @@ NTSTATUS TCPReceiveData
 	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
 	if( !Bucket ) {
 	    TI_DbgPrint(MID_TRACE,("Failed to allocate bucket\n"));
+	    TcpipRecursiveMutexLeave( &TCPLock );
 	    return STATUS_NO_MEMORY;
 	}
 	

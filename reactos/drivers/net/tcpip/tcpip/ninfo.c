@@ -85,20 +85,19 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     
     while( RtCurrent < RouteEntries + RtCount ) {
 	/* Copy Desitnation */
-	if( RCacheCur->NetworkAddress && RCacheCur->Netmask && 
-	    RCacheCur->Router ) {
+	if( RCacheCur->Router ) {
 	    TI_DbgPrint(MAX_TRACE, ("%d: NA %08x NM %08x GW %08x MT %d\n",
 				    RtCurrent - RouteEntries,
-				    RCacheCur->NetworkAddress->Address,
-				    RCacheCur->Netmask->Address,
+				    &RCacheCur->NetworkAddress.Address,
+				    &RCacheCur->Netmask.Address,
 				    RCacheCur->Router->Address.Address,
 				    RCacheCur->Metric));
 	    
 	    RtlCopyMemory( &RtCurrent->Dest, 
-			   &RCacheCur->NetworkAddress->Address,
+			   &RCacheCur->NetworkAddress.Address,
 			   sizeof(RtCurrent->Dest) );
 	    RtlCopyMemory( &RtCurrent->Mask,
-			   &RCacheCur->Netmask->Address,
+			   &RCacheCur->Netmask.Address,
 			   sizeof(RtCurrent->Mask) );
 	    /* Currently, this address is stuffed into the pointer.
 	     * That probably is not intended. */

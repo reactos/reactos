@@ -12,7 +12,7 @@ typedef struct _PREFIX_LIST_ENTRY {
     DEFINE_TAG
     LIST_ENTRY ListEntry;    /* Entry on list */
     PIP_INTERFACE Interface; /* Pointer to interface */
-    PIP_ADDRESS Prefix;      /* Pointer to prefix */
+    IP_ADDRESS Prefix;       /* Pointer to prefix */
     UINT PrefixLength;       /* Length of prefix */
 } PREFIX_LIST_ENTRY, *PPREFIX_LIST_ENTRY;
 

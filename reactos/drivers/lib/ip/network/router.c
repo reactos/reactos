@@ -272,7 +272,7 @@ PIP_INTERFACE RouterFindOnLinkInterface(
     while (CurrentEntry != &PrefixListHead) {
 	    Current = CONTAINING_RECORD(CurrentEntry, PREFIX_LIST_ENTRY, ListEntry);
 
-        if (HasPrefix(Address, Current->Prefix, Current->PrefixLength) &&
+        if (HasPrefix(Address, &Current->Prefix, Current->PrefixLength) &&
             ((!NTE) || (NTE->Interface == Current->Interface)))
             return Current->Interface;
 
@@ -321,9 +321,10 @@ PFIB_ENTRY RouterAddRoute(
 
    INIT_TAG(Router, TAG('R','O','U','T'));
 
-    FIBE->Free           = FreeFIB;
-    FIBE->NetworkAddress = NetworkAddress;
-    FIBE->Netmask        = Netmask;
+    RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress, 
+		   sizeof(FIBE->NetworkAddress) );
+    RtlCopyMemory( &FIBE->Netmask, Netmask, 
+		   sizeof(FIBE->Netmask) );
     FIBE->Router         = Router;
     FIBE->Metric         = Metric;
 
@@ -415,8 +416,8 @@ VOID RouterRemoveRoute(
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. FIBE (0x%X).\n", FIBE));
-
-    TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(FIBE->NetworkAddress)));
+    
+    TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(&FIBE->NetworkAddress)));
 
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
     DestroyFIBE(FIBE);
@@ -483,10 +484,6 @@ PFIB_ENTRY RouterCreateRouteIPv4(
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
-
-        (pNetworkAddress->Free)(pNetworkAddress);
-        (pNetmask->Free)(pNetmask);
-        (pRouterAddress->Free)(pRouterAddress);
     }
 
     return FIBE;
