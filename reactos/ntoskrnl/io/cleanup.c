@@ -15,6 +15,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/ob.h>
+#include <internal/mm.h>
 #include <internal/ps.h>
 
 #define NDEBUG
@@ -114,7 +115,7 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 	  }
 	ExFreePool(Irp->AssociatedIrp.SystemBuffer);
      }
-   if (DeviceObject->Flags & DO_DIRECT_IO)
+   if (DeviceObject->Flags & DO_DIRECT_IO && !(Irp->Flags & IRP_PAGING_IO))
      {
 	DPRINT("Tearing down MDL\n");
 	if (Irp->MdlAddress->MappedSystemVa!=NULL)
