@@ -96,7 +96,7 @@ LPWSTR RPCRT4_strndupW(LPWSTR src, INT slen)
 
 void RPCRT4_strfree(LPSTR src)
 {
-  if (src) HeapFree(GetProcessHeap(), 0, src);
+  HeapFree(GetProcessHeap(), 0, src);
 }
 
 RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPSTR Protseq, LPSTR NetworkAddr, LPSTR Endpoint, LPSTR NetworkOptions, RpcBinding* Binding)
@@ -147,7 +147,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
-        Connection->ovl.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         if (!ConnectNamedPipe(Connection->conn, &Connection->ovl)) {
           WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           if (GetLastError() == ERROR_PIPE_CONNECTED) {
@@ -171,7 +171,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
-        Connection->ovl.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         if (!ConnectNamedPipe(Connection->conn, &Connection->ovl)) {
           WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           if (GetLastError() == ERROR_PIPE_CONNECTED) {
@@ -223,7 +223,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         /* pipe is connected; change to message-read mode. */
         dwMode = PIPE_READMODE_MESSAGE; 
         SetNamedPipeHandleState(conn, &dwMode, NULL, NULL);
-        Connection->ovl.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         Connection->conn = conn;
       }
       /* protseq=ncacn_np: named pipes */
@@ -257,7 +257,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         /* pipe is connected; change to message-read mode. */
         dwMode = PIPE_READMODE_MESSAGE;
         SetNamedPipeHandleState(conn, &dwMode, NULL, NULL);
-        Connection->ovl.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         Connection->conn = conn;
       } else {
         ERR("protseq %s not supported\n", Connection->Protseq);

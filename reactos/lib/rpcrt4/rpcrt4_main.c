@@ -748,3 +748,53 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
 
     return TRUE;
 }
+
+/* DceErrorInqText
+ *
+ * Notes
+ * 1. On passing a NULL pointer the code does bomb out.
+ * 2. The size of the required buffer is not defined in the documentation.
+ *    It appears to be 256.
+ * 3. The function is defined to return RPC_S_INVALID_ARG but I don't know
+ *    of any value for which it does.
+ * 4. The MSDN documentation currently declares that the second argument is
+ *    unsigned char *, even for the W version.  I don't believe it.
+ */
+
+#define MAX_RPC_ERROR_TEXT 256
+
+RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
+{
+    DWORD count;
+    count = FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
+                FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL, e, 0, buffer, MAX_RPC_ERROR_TEXT, NULL);
+    if (!count)
+    {
+        count = FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
+                FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL, RPC_S_NOT_RPC_ERROR, 0, buffer, MAX_RPC_ERROR_TEXT, NULL);
+        if (!count)
+        {
+            ERR ("Failed to translate error");
+            return RPC_S_INVALID_ARG;
+        }
+    }
+    return RPC_S_OK;
+}
+
+RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, unsigned char *buffer)
+{
+    RPC_STATUS status;
+    WCHAR bufferW [MAX_RPC_ERROR_TEXT];
+    if ((status = DceErrorInqTextW (e, bufferW)) == RPC_S_OK)
+    {
+        if (!WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buffer, MAX_RPC_ERROR_TEXT,
+                NULL, NULL))
+        {
+            ERR ("Failed to translate error");
+            status = RPC_S_INVALID_ARG;
+        }
+    }
+    return status;
+}

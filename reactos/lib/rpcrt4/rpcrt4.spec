@@ -1,5 +1,5 @@
-@ stub DceErrorInqTextA
-@ stub DceErrorInqTextW
+@ stdcall DceErrorInqTextA (long ptr)
+@ stdcall DceErrorInqTextW (long ptr)
 @ stdcall -private DllRegisterServer() RPCRT4_DllRegisterServer
 
 @ stub MesBufferHandleReset
