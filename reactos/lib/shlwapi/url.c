@@ -643,7 +643,7 @@ HRESULT WINAPI UrlCombineA(LPCSTR pszBase, LPCSTR pszRelative,
 	  debugstr_a(pszBase),debugstr_a(pszRelative),
 	  pcchCombined?*pcchCombined:0,dwFlags);
 
-    if(!pszBase || !pszRelative || !pszCombined || !pcchCombined)
+    if(!pszBase || !pszRelative || !pcchCombined)
 	return E_INVALIDARG;
 
     base = (LPWSTR) HeapAlloc(GetProcessHeap(), 0,
@@ -653,10 +653,11 @@ HRESULT WINAPI UrlCombineA(LPCSTR pszBase, LPCSTR pszRelative,
 
     MultiByteToWideChar(0, 0, pszBase, -1, base, INTERNET_MAX_URL_LENGTH);
     MultiByteToWideChar(0, 0, pszRelative, -1, relative, INTERNET_MAX_URL_LENGTH);
-    len = INTERNET_MAX_URL_LENGTH;
+    len = *pcchCombined;
 
-    ret = UrlCombineW(base, relative, combined, &len, dwFlags);
+    ret = UrlCombineW(base, relative, pszCombined?combined:NULL, &len, dwFlags);
     if (ret != S_OK) {
+	*pcchCombined = len;
 	HeapFree(GetProcessHeap(), 0, base);
 	return ret;
     }
@@ -667,7 +668,7 @@ HRESULT WINAPI UrlCombineA(LPCSTR pszBase, LPCSTR pszRelative,
 	HeapFree(GetProcessHeap(), 0, base);
 	return E_POINTER;
     }
-    WideCharToMultiByte(0, 0, combined, len+1, pszCombined, *pcchCombined,
+    WideCharToMultiByte(0, 0, combined, len+1, pszCombined, (*pcchCombined)+1,
 			0, 0);
     *pcchCombined = len2;
     HeapFree(GetProcessHeap(), 0, base);
@@ -687,15 +688,15 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     DWORD myflags, sizeloc = 0;
     DWORD len, res1, res2, process_case = 0;
     LPWSTR work, preliminary, mbase, mrelative;
-    WCHAR myfilestr[] = {'f','i','l','e',':','/','/','/','\0'};
-    WCHAR single_slash[] = {'/','\0'};
+    static const WCHAR myfilestr[] = {'f','i','l','e',':','/','/','/','\0'};
+    static const WCHAR single_slash[] = {'/','\0'};
     HRESULT ret;
 
     TRACE("(base %s, Relative %s, Combine size %ld, flags %08lx)\n",
 	  debugstr_w(pszBase),debugstr_w(pszRelative),
 	  pcchCombined?*pcchCombined:0,dwFlags);
 
-    if(!pszBase || !pszRelative || !pszCombined || !pcchCombined)
+    if(!pszBase || !pszRelative || !pcchCombined)
 	return E_INVALIDARG;
 
     base.size = 24;
@@ -829,12 +830,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	      * Return pszRelative appended to what ever is in pszCombined,
 	      * (which may the string "file:///"
 	      */
-	len = strlenW(mrelative) + strlenW(preliminary);
-	if (len+1 > *pcchCombined) {
-	    *pcchCombined = len;
-	    ret = E_POINTER;
-	    break;
-	}
 	strcatW(preliminary, mrelative);
 	break;
 
@@ -842,12 +837,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	      * Same as case 1, but if URL_PLUGGABLE_PROTOCOL was specified
 	      * and pszRelative starts with "//", then append a "/"
 	      */
-	len = strlenW(mrelative) + 1;
-	if (len+1 > *pcchCombined) {
-	    *pcchCombined = len;
-	    ret = E_POINTER;
-	    break;
-	}
 	strcpyW(preliminary, mrelative);
 	if (!(dwFlags & URL_PLUGGABLE_PROTOCOL) &&
 	    URL_JustLocation(relative.ap2))
@@ -855,15 +844,9 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	break;
 
     case 3:  /*
-	      * Return the pszBase scheme with pszRelative. Basicly
+	      * Return the pszBase scheme with pszRelative. Basically
 	      * keeps the scheme and replaces the domain and following.
 	      */
-	len = base.sizep1 + 1 + relative.sizep2 + 1;
-	if (len+1 > *pcchCombined) {
-	    *pcchCombined = len;
-	    ret = E_POINTER;
-	    break;
-	}
 	strncpyW(preliminary, base.ap1, base.sizep1 + 1);
 	work = preliminary + base.sizep1 + 1;
 	strcpyW(work, relative.ap2);
@@ -877,12 +860,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	      * after the location is pszRelative. (Replace document
 	      * from root on.)
 	      */
-	len = base.sizep1 + 1 + sizeloc + relative.sizep2 + 1;
-	if (len+1 > *pcchCombined) {
-	    *pcchCombined = len;
-	    ret = E_POINTER;
-	    break;
-	}
 	strncpyW(preliminary, base.ap1, base.sizep1+1+sizeloc);
 	work = preliminary + base.sizep1 + 1 + sizeloc;
 	if (dwFlags & URL_PLUGGABLE_PROTOCOL)
@@ -894,12 +871,6 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	      * Return the pszBase without its document (if any) and
 	      * append pszRelative after its scheme.
 	      */
-	len = base.sizep1 + 1 + base.sizep2 + relative.sizep2;
-	if (len+1 > *pcchCombined) {
-	    *pcchCombined = len;
-	    ret = E_POINTER;
-	    break;
-	}
 	strncpyW(preliminary, base.ap1, base.sizep1+1+base.sizep2);
 	work = preliminary + base.sizep1+1+base.sizep2 - 1;
 	if (*work++ != L'/')
@@ -913,21 +884,10 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     }
 
     if (ret == S_OK) {
-	/*
-	 * Now that the combining is done, process the escape options if
-	 * necessary, otherwise just copy the string.
-	 */
-	myflags = dwFlags & (URL_ESCAPE_PERCENT |
-			     URL_ESCAPE_SPACES_ONLY |
-                             URL_DONT_ESCAPE_EXTRA_INFO |
-			     URL_ESCAPE_SEGMENT_ONLY);
-	if (myflags)
-	    ret = UrlEscapeW(preliminary, pszCombined,
-			     pcchCombined, myflags);
-	else {
-	    len = (strlenW(preliminary) + 1) * sizeof(WCHAR);
-	    memcpy(pszCombined, preliminary, len);
-	    *pcchCombined = strlenW(preliminary);
+	/* Reuse mrelative as temp storage as its already allocated and not needed anymore */
+	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, dwFlags);
+	if(SUCCEEDED(ret) && pszCombined) {
+	    lstrcpyW(pszCombined, mrelative);
 	}
 	TRACE("return-%ld len=%ld, %s\n",
 	      process_case, *pcchCombined, debugstr_w(pszCombined));

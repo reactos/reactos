@@ -1047,7 +1047,7 @@ DWORD WINAPI SHSetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
 {
   DWORD dwRet = ERROR_SUCCESS, dwDummy;
   HKEY  hSubKey;
-  char  szEmpty[] = "";
+  static const char  szEmpty[] = { '\0' };
 
   TRACE("(hkey=%p,%s,%s,%ld,%p,%ld)\n", hKey, debugstr_a(lpszSubKey),
           debugstr_a(lpszValue), dwType, pvData, cbData);
@@ -1076,7 +1076,7 @@ DWORD WINAPI SHSetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
 {
   DWORD dwRet = ERROR_SUCCESS, dwDummy;
   HKEY  hSubKey;
-  WCHAR szEmpty[] = { '\0' };
+  static const WCHAR szEmpty[] = { '\0' };
 
   TRACE("(hkey=%p,%s,%s,%ld,%p,%ld)\n", hKey, debugstr_w(lpszSubKey),
         debugstr_w(lpszValue), dwType, pvData, cbData);

@@ -1141,8 +1141,8 @@ BOOL WINAPI PathFileExistsDefExtA(LPSTR lpszPath,DWORD dwWhich)
  */
 static BOOL WINAPI SHLWAPI_PathFindInOtherDirs(LPWSTR lpszFile, DWORD dwWhich)
 {
-  static WCHAR szSystem[] = { 'S','y','s','t','e','m','\0'};
-  static WCHAR szPath[] = { 'P','A','T','H','\0'};
+  static const WCHAR szSystem[] = { 'S','y','s','t','e','m','\0'};
+  static const WCHAR szPath[] = { 'P','A','T','H','\0'};
   DWORD dwLenPATH;
   LPCWSTR lpszCurr;
   WCHAR *lpszPATH;

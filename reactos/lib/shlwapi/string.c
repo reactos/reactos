@@ -2530,7 +2530,7 @@ DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen)
 INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
                              LPINT lpiLen)
 {
-  WCHAR emptyW[] = { '\0' };
+  static const WCHAR emptyW[] = { '\0' };
   int len , reqLen;
   LPSTR mem;
 

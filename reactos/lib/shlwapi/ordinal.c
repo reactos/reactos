@@ -2437,7 +2437,7 @@ typedef struct tagPOLICYDATA
 #define SHELL_NO_POLICY 0xffffffff
 
 /* default shell policy registry key */
-static WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o',
+static const WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o',
                                       's','o','f','t','\\','W','i','n','d','o','w','s','\\',
                                       'C','u','r','r','e','n','t','V','e','r','s','i','o','n',
                                       '\\','P','o','l','i','c','i','e','s',0};
@@ -2461,7 +2461,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 	HKEY hKey;
 
 	if (!lpSubKey)
-	  lpSubKey = (LPCWSTR)strRegistryPolicyW;
+	  lpSubKey = strRegistryPolicyW;
 
 	retval = RegOpenKeyW(HKEY_LOCAL_MACHINE, lpSubKey, &hKey);
     if (retval != ERROR_SUCCESS)
@@ -2641,7 +2641,7 @@ DWORD WINAPI WhichPlatform()
   GET_FUNC(pDllGetVersion, shell32, "DllGetVersion", 1);
   dwState = pDllGetVersion ? 2 : 1;
 
-  /* Set or delete the key accordinly */
+  /* Set or delete the key accordingly */
   dwRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
                         "Software\\Microsoft\\Internet Explorer", 0,
                          KEY_ALL_ACCESS, &hKey);
@@ -3887,7 +3887,7 @@ HRESULT WINAPI SHCoCreateInstanceAC(REFCLSID rclsid, LPUNKNOWN pUnkOuter,
  */
 BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
 {
-  static WCHAR szSkipBinding[] = { 'S','k','i','p',' ',
+  static const WCHAR szSkipBinding[] = { 'S','k','i','p',' ',
     'B','i','n','d','i','n','g',' ','C','L','S','I','D','\0' };
   BOOL bRet = FALSE;
 
@@ -3895,7 +3895,7 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
   {
     IUnknown* lpUnk;
 
-    if (SUCCEEDED(IBindCtx_GetObjectParam(pbc, szSkipBinding, &lpUnk)))
+    if (SUCCEEDED(IBindCtx_GetObjectParam(pbc, (LPOLESTR)szSkipBinding, &lpUnk)))
     {
       CLSID clsid;
 

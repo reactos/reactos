@@ -310,7 +310,7 @@ BOOL WINAPI SHCreateThread(LPTHREAD_START_ROUTINE pfnThreadProc, VOID *pData,
     if(hThread)
     {
       /* Wait for the thread to signal us to continue */
-      WaitForSingleObject(ti.hEvent, -1);
+      WaitForSingleObject(ti.hEvent, INFINITE);
       CloseHandle(hThread);
       bCalled = TRUE;
     }
