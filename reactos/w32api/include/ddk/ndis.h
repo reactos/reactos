@@ -539,6 +539,11 @@ typedef struct _NDIS_DMA_BLOCK {
   BOOLEAN  InProgress;
 } NDIS_DMA_BLOCK, *PNDIS_DMA_BLOCK;
 
+typedef UCHAR NDIS_DMA_SIZE;
+
+#define NDIS_DMA_24BITS                         ((NDIS_DMA_SIZE)0)
+#define NDIS_DMA_32BITS                         ((NDIS_DMA_SIZE)1)
+#define NDIS_DMA_64BITS                         ((NDIS_DMA_SIZE)2)
 
 /* Possible hardware architecture */
 typedef enum _NDIS_INTERFACE_TYPE {
@@ -1345,6 +1350,7 @@ typedef VOID DDKAPI
 #define NDIS30_PROTOCOL_CHARACTERISTICS_S \
   UCHAR  MajorNdisVersion; \
   UCHAR  MinorNdisVersion; \
+  USHORT  Filler; \
   _ANONYMOUS_UNION union { \
     UINT  Reserved; \
     UINT  Flags; \
@@ -1701,7 +1707,6 @@ VOID
 DDKAPI
 NdisFreeBuffer(
   IN PNDIS_BUFFER  Buffer);
-
 
 /*
  * VOID
@@ -3749,6 +3754,7 @@ typedef NDIS_STATUS DDKAPI
 #define NDIS30_MINIPORT_CHARACTERISTICS_S \
   UCHAR  MajorNdisVersion; \
   UCHAR  MinorNdisVersion; \
+  USHORT Filler; \
   UINT  Reserved; \
   W_CHECK_FOR_HANG_HANDLER  CheckForHangHandler; \
   W_DISABLE_INTERRUPT_HANDLER  DisableInterruptHandler; \
@@ -4532,7 +4538,7 @@ DDKAPI
 NdisMAllocateMapRegisters(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN UINT  DmaChannel,
-  IN BOOLEAN  Dma32BitAddresses,
+  IN NDIS_DMA_SIZE  DmaSize,
   IN ULONG  PhysicalMapRegistersNeeded,
   IN ULONG  MaximumPhysicalMapping);
 
@@ -5201,6 +5207,7 @@ typedef VOID (*REMOVE_ADAPTER_HANDLER)(
 typedef struct _NDIS_MAC_CHARACTERISTICS {
   UCHAR  MajorNdisVersion;
   UCHAR  MinorNdisVersion;
+  USHORT  Filler;
   UINT  Reserved;
   OPEN_ADAPTER_HANDLER  OpenAdapterHandler;
   CLOSE_ADAPTER_HANDLER  CloseAdapterHandler;
