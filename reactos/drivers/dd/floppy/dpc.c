@@ -216,7 +216,8 @@ FloppyDpcReadWrite (PKDPC Dpc,
   Stack->Parameters.Read.Length -= ControllerExtension->TransferLength;
 
   /* drivercontext used for current va */
-  (ULONG)ControllerExtension->Irp->Tail.Overlay.DriverContext[0] += ControllerExtension->TransferLength;
+  ControllerExtension->Irp->Tail.Overlay.DriverContext[0] = (PVOID) ((ULONG) ControllerExtension->Irp->Tail.Overlay.DriverContext[0]
+                                                                     + ControllerExtension->TransferLength);
   DPRINT ("First ulong: %x\n", *((PULONG)ControllerExtension->MapRegisterBase))
 
   /* If there is more IO to be done, restart execute routine to issue next read */

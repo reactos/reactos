@@ -544,11 +544,11 @@ template<typename BASE> struct ResizeController : public BASE
 
 	virtual void GetClientSpace(PRECT prect)
 	{
-		 if (!IsIconic(_hwnd)) {
-			GetClientRect(_hwnd, prect);
+		 if (!IsIconic(this->_hwnd)) {
+			GetClientRect(this->_hwnd, prect);
 		 } else {
 			WINDOWPLACEMENT wp;
-			GetWindowPlacement(_hwnd, &wp);
+			GetWindowPlacement(this->_hwnd, &wp);
 			prect->left = prect->top = 0;
 			prect->right = wp.rcNormalPosition.right-wp.rcNormalPosition.left-
 				2*(GetSystemMetrics(SM_CXSIZEFRAME)+GetSystemMetrics(SM_CXEDGE));
@@ -632,7 +632,7 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 		switch(nmsg) {
 		  case WM_DRAWITEM:
 			if (wparam) {	// should there be drawn a control?
-				HWND hctl = GetDlgItem(_hwnd, wparam);
+				HWND hctl = GetDlgItem(this->_hwnd, wparam);
 
 				if (hctl)
 					return SendMessage(hctl, PM_DISPATCH_DRAWITEM, wparam, lparam);

@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.44 2004/02/10 16:22:55 navaraf Exp $
+/* $Id: blue.c,v 1.45 2004/05/10 18:02:19 gvg Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -471,7 +471,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
           for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
             {
-              (char) *pAttr = vidmem[offset + (dwCount * 2)];
+              *((char *) pAttr) = vidmem[offset + (dwCount * 2)];
             }
 
           Buf->dwTransfered = dwCount;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.52 2004/04/01 17:29:53 jimtabor Exp $
+/* $Id: class2.c,v 1.53 2004/05/10 18:02:20 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1380,9 +1380,9 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
 
       /* Retry the request */
       if ((Retry) &&
-	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
+	  ((ULONG_PTR)IrpStack->Parameters.Others.Argument4 > 0))
 	{
-	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
+	  IrpStack->Parameters.Others.Argument4 = (PVOID) ((ULONG_PTR)IrpStack->Parameters.Others.Argument4 - 1);
 
 	  ScsiClassRetryRequest(DeviceObject,
 				Irp,
@@ -1502,9 +1502,9 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
 
       /* Retry the request */
       if ((Retry) &&
-	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
+	  ((ULONG_PTR)IrpStack->Parameters.Others.Argument4 > 0))
 	{
-	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
+	  IrpStack->Parameters.Others.Argument4 = (PVOID) ((ULONG_PTR)IrpStack->Parameters.Others.Argument4 - 1);
 
 	  ScsiClassRetryRequest(DeviceObject,
 				Irp,

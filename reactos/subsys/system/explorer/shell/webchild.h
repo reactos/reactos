@@ -117,7 +117,7 @@ template<typename BASE> struct IComSrvQI : public BASE
 
 	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv) {*ppv=0;
 	 if (IsEqualIID(riid, _uuid_base) ||
-		 IsEqualIID(riid, IID_IUnknown)) {*ppv=static_cast<BASE*>(this); AddRef(); return S_OK;}
+		 IsEqualIID(riid, IID_IUnknown)) {*ppv=static_cast<BASE*>(this); this->AddRef(); return S_OK;}
 	 return E_NOINTERFACE;}
 
 protected:
@@ -158,7 +158,7 @@ template<typename T> struct ConnectionPoint : public SIfacePtr<T>
 {
 	ConnectionPoint(IConnectionPointContainer* pCPC, REFIID riid)
 	{
-		CheckError(pCPC->FindConnectionPoint(riid, &_p));
+		CheckError(pCPC->FindConnectionPoint(riid, &this->_p));
 	}
 };
 

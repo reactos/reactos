@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.40 2004/04/01 17:24:47 jimtabor Exp $
+/* $Id: disk.c,v 1.41 2004/05/10 18:02:20 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1186,8 +1186,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           Information = 0;
 	  if (OutputLength != 0)
 	    {
-	       ((PULONG)(Irp->AssociatedIrp.SystemBuffer)) =
-                             DeviceExtension->MediaChangeCount;
+	       Irp->AssociatedIrp.SystemBuffer = (PVOID) DeviceExtension->MediaChangeCount;
 	       Information = sizeof(ULONG);
 
 	    }

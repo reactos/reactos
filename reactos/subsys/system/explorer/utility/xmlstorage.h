@@ -295,7 +295,7 @@ struct String_from_XML_Char : public String
 inline bool operator==(const String& s1, const char* s2)
 {
 	LPCWSTR p = s1;
-	const char* q = s2;
+	const unsigned char* q = (const unsigned char *) s2;
 
 	while(*p && *q)
 		if (*p++ != *q++)
