@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.3 2003/07/27 18:37:23 dwelch Exp $ */
+/* $Id: dib32bpp.c,v 1.4 2003/08/12 21:55:47 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -75,11 +75,10 @@ DIB_32BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 }
 
 BOOLEAN
-DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-		 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-		 PRECTL  DestRect,  POINTL  *SourcePoint,
-		 PBRUSHOBJ BrushObj, PPOINTL BrushOrigin,
-		 XLATEOBJ *ColorTranslation, ULONG Rop4)
+DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+		        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+		        PRECTL  DestRect,  POINTL  *SourcePoint,
+		        XLATEOBJ *ColorTranslation)
 {
   ULONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
@@ -203,13 +202,27 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     case 32:
       if (NULL == ColorTranslation || 0 != (ColorTranslation->flXlate & XO_TRIVIAL))
       {
-	SourceBits = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + 4 * SourcePoint->x;
-	for (j = DestRect->top; j < DestRect->bottom; j++)
-	{
-	  RtlCopyMemory(DestBits, SourceBits, 4 * (DestRect->right - DestRect->left));
-	  SourceBits += SourceSurf->lDelta;
-	  DestBits += DestSurf->lDelta;
-	}
+	if (DestRect->top < SourcePoint->y)
+	  {
+	    SourceBits = SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + 4 * SourcePoint->x;
+	    for (j = DestRect->top; j < DestRect->bottom; j++)
+	      {
+		RtlMoveMemory(DestBits, SourceBits, 4 * (DestRect->right - DestRect->left));
+		SourceBits += SourceSurf->lDelta;
+		DestBits += DestSurf->lDelta;
+	      }
+	  }
+	else
+	  {
+	    SourceBits = SourceSurf->pvScan0 + ((SourcePoint->y + DestRect->bottom - DestRect->top - 1) * SourceSurf->lDelta) + 4 * SourcePoint->x;
+	    DestBits = DestSurf->pvScan0 + ((DestRect->bottom - 1) * DestSurf->lDelta) + 4 * DestRect->left;
+	    for (j = DestRect->bottom - 1; DestRect->top <= j; j--)
+	      {
+		RtlMoveMemory(DestBits, SourceBits, 4 * (DestRect->right - DestRect->left));
+		SourceBits -= SourceSurf->lDelta;
+		DestBits -= DestSurf->lDelta;
+	      }
+	  }
       }
       else
       {
@@ -226,4 +239,49 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   return TRUE;
 }
+
+BOOLEAN
+DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+		 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+		 PRECTL  DestRect,  POINTL  *SourcePoint,
+		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
+		 XLATEOBJ *ColorTranslation, ULONG Rop4)
+{
+  LONG     i, j, k, sx, sy;
+  ULONG    Dest, Source, Pattern;
+  PULONG   DestBits;
+  BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+  BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
+
+  if (Rop4 == SRCCOPY)
+    {
+      return(DIB_32BPP_BitBltSrcCopy(DestSurf, SourceSurf, DestGDI, SourceGDI, DestRect, SourcePoint, ColorTranslation));
+    }
+  else
+    {
+      sy = SourcePoint->y;
+
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        sx = SourcePoint->x;
+	DestBits = (PULONG)(DestSurf->pvScan0 + 4 * DestRect->left + j * DestSurf->lDelta);
+        for (i=DestRect->left; i<DestRect->right; i++, DestBits++)
+	  {
+	    Dest = *DestBits;
+	    if (UsesSource)
+	      {
+		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + i + k, sy, ColorTranslation);
+	      }
+	    if (UsesPattern)
+	      {
+		/* FIXME: No support for pattern brushes. */
+		Pattern = Brush->iSolidColor;
+	      }
+	    *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
+	  }
+      }
+    }
+  return TRUE;
+}
+
 /* EOF */

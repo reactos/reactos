@@ -1,6 +1,8 @@
 extern unsigned char notmask[2];
 extern unsigned char altnotmask[2];
 extern unsigned char mask1Bpp[8];
+ULONG   DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern);
+ULONG   DIB_GetSource(SURFOBJ* SourceSurf, SURFGDI* SourceGDI, ULONG sx, ULONG sy, XLATEOBJ* ColorTranslation);
 
 VOID    DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c);
 ULONG   DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y);
