@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.50 2004/03/07 19:53:08 hbirr Exp $
+/* $Id: class2.c,v 1.51 2004/03/31 03:34:55 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -585,6 +585,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  {
 	    if (OutputBufferLength < sizeof(ULONG))
 	      {
+		DPRINT ("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY SMALL\n");
 		Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
 		Irp->IoStatus.Information = 0;
 		ExFreePool (Srb);
@@ -598,6 +599,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 				    FALSE);
 	    if (SubIrp == NULL)
 	      {
+	      DPRINT ("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY NotEnuf\n");
 		Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
 		Irp->IoStatus.Information = 0;
 		ExFreePool (Srb);
@@ -620,6 +622,8 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 				    TRUE,
 				    TRUE);
 
+	DPRINT ("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY IoSet\n");
+
 	    IoSetNextIrpStackLocation (SubIrp);
 	    NextStack = IoGetCurrentIrpStackLocation (SubIrp);
 	    NextStack->DeviceObject = DeviceObject;
@@ -634,6 +638,8 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	Srb->TimeOutValue = DeviceExtension->TimeOutValue;
 	Cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
 
+DPRINT ("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY SrbAsync\n");
+
 	return(ScsiClassSendSrbAsynchronous(DeviceObject,
 					    Srb,
 					    Irp,
@@ -642,7 +648,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 					    FALSE));
 
       default:
-	DPRINT1("Unknown device io control code %lx\n",
+	DPRINT("Unknown device io control code %lx\n",
 		ModifiedControlCode);
 	ExFreePool(Srb);
 
@@ -1000,7 +1006,7 @@ NTSTATUS STDCALL
 ScsiClassInternalIoControl(IN PDEVICE_OBJECT DeviceObject,
 			   IN PIRP Irp)
 {
-  DPRINT1("ScsiClassInternalIoContol() called\n");
+  DPRINT("ScsiClassInternalIoContol() called\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
@@ -1090,8 +1096,17 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 
 		case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE:
 		  DPRINT("SCSI_ADSENSE_NO_MEDIA_IN_DEVICE\n");
-		  *Status = STATUS_NO_MEDIA_IN_DEVICE;
+	   	  *Status = STATUS_NO_MEDIA_IN_DEVICE;
 		  Retry = FALSE;
+		  
+		  if((DeviceExtension->MediaChangeEvent != NULL) &&
+		    (!DeviceExtension->MediaChangeEvent))
+		    {
+		    KeSetEvent(DeviceExtension->MediaChangeEvent,
+		    	       0,
+		    	       FALSE);
+		    DeviceExtension->MediaChangeNoMedia = TRUE;
+		    }
 		  break;
 	      }
 	    break;
@@ -1171,6 +1186,8 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	    if ((DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
 		(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	      {
+	    DPRINT("SCSI_SENSE_UNIT_ATTENTION set DoVerifyVol\n");
+
 		DeviceObject->Flags |= DO_VERIFY_VOLUME;
 		*Status = STATUS_VERIFY_REQUIRED;
 		Retry = FALSE;
@@ -1196,7 +1213,7 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	    break;
 
 	  default:
-	    DPRINT1("SCSI error (sense key: %x)\n",
+	    DPRINT("SCSI error (sense key: %x)\n",
 		    SenseData->SenseKey & 0xf);
 	    *Status = STATUS_IO_DEVICE_ERROR;
 	    break;
@@ -1234,7 +1251,7 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	    break;
 
 	  default:
-	    DPRINT1("SCSI error (SRB status: %x)\n",
+	    DPRINT("SCSI error (SRB status: %x)\n",
 		    SRB_STATUS(Srb->SrbStatus));
 	    LogError = TRUE;
 	    *Status = STATUS_IO_DEVICE_ERROR;
@@ -1260,7 +1277,7 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 					     5 * sizeof(ULONG));
       if (LogPacket == NULL)
 	{
-	  DPRINT1 ("Failed to allocate a log packet!\n");
+	  DPRINT ("Failed to allocate a log packet!\n");
 	  return Retry;
 	}
 
@@ -1740,6 +1757,10 @@ TryAgain:
       DeviceExtension->PartitionLength.QuadPart =
 	(DeviceExtension->PartitionLength.QuadPart << DeviceExtension->SectorShift);
 
+      DeviceExtension->PartitionLength.QuadPart =
+      (DeviceExtension->PartitionLength.QuadPart -
+                                   DeviceExtension->StartingOffset.QuadPart);
+
       if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
 	{
 	  DeviceExtension->DiskGeometry->MediaType = RemovableMedia;
@@ -1752,7 +1773,8 @@ TryAgain:
       DeviceExtension->DiskGeometry->SectorsPerTrack = 32;
       DeviceExtension->DiskGeometry->TracksPerCylinder = 64;
 
-      DPRINT("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
+      DPRINT("SectorSize: %lu  SectorCount: %lu PartitionLenght %I64d\n", SectorSize, LastSector + 1,
+      DeviceExtension->PartitionLength.QuadPart / 512 );
     }
 
   /* Try again if device needs to be verified */
@@ -1917,7 +1939,7 @@ ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     FALSE,
 			     Irp))
 	    {
-	      DPRINT1("Mdl-Allocation failed\n");
+	      DPRINT("Mdl-Allocation failed\n");
 	      return(STATUS_INSUFFICIENT_RESOURCES);
 	    }
 
