@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.1 2001/11/02 22:44:34 hbirr Exp $
+/* $Id: misc.c,v 1.2 2002/05/05 20:19:45 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -205,5 +205,39 @@ NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext)
    return STATUS_PENDING;
 }
 
+PVOID VfatGetUserBuffer(IN PIRP Irp)
+{
+   assert(Irp);
+
+   if (Irp->MdlAddress)
+   {
+      return MmGetSystemAddressForMdl(Irp->MdlAddress);
+   }
+   else
+   {
+      return Irp->UserBuffer;
+   }
+}
+
+NTSTATUS VfatLockUserBuffer(IN PIRP Irp, IN ULONG Length, IN LOCK_OPERATION Operation)
+{
+   assert(Irp);
+
+   if (Irp->MdlAddress)
+   {
+      return STATUS_SUCCESS;
+   }
+
+   IoAllocateMdl(Irp->UserBuffer, Length, FALSE, FALSE, Irp);
+
+   if (!Irp->MdlAddress)
+   {
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+
+   return STATUS_SUCCESS;
+}
 
 
