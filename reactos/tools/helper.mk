@@ -295,6 +295,12 @@ ifeq ($(TARGET_TYPE),hal)
   MK_RES_BASE := $(TARGET_NAME)
   MK_INSTALL_BASENAME := hal
   MK_INSTALL_FULLNAME := hal.dll
+  ifeq ($(TARGET_BOOTSTRAP),yes)
+    TARGET_BOOTSTRAP_NAME := hal.dll
+  else
+    TARGET_BOOTSTRAP_NAME := $(TARGET_NAME)$(MK_DEFEXT)
+  endif
+  TARGET_BOOTSTRAP := yes
 endif
 
 ifeq ($(TARGET_TYPE),bootpgm)
