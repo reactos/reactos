@@ -81,6 +81,12 @@ typedef struct _SLEEPING_THREAD {
 #define SRF_SYN   TCP_SYN
 #define SRF_FIN   TCP_FIN
 
+PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
+VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
+
+NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection, 
+		    UINT Family, UINT Type, UINT Proto );
+
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
   PTCPv4_HEADER TCPHeader,
@@ -95,30 +101,35 @@ VOID TCPAddSegment(
   PULONG Acknowledged);
 
 NTSTATUS TCPConnect(
-  PTDI_REQUEST Request,
+  PCONNECTION_ENDPOINT Connection,
   PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo);
+  PTDI_CONNECTION_INFORMATION ReturnInfo,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context);
 
 NTSTATUS TCPListen(
-  PTDI_REQUEST Request,
-  UINT Backlog );
+  PCONNECTION_ENDPOINT Connection,
+  UINT Backlog,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context);
 
 NTSTATUS TCPReceiveData(
-  PTDI_REQUEST Request,
+  PCONNECTION_ENDPOINT Connection,    
   PNDIS_BUFFER Buffer,
   ULONG ReceiveLength,
+  PULONG BytesReceived,
   ULONG ReceiveFlags,
-  PULONG BytesReceived);
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context);
 
 NTSTATUS TCPSendData(
-  PTDI_REQUEST Request,
-  PNDIS_BUFFER Buffer,
+  PCONNECTION_ENDPOINT Connection,
+  PCHAR Buffer,
   ULONG DataSize,
-  ULONG Flags,
-  PULONG DataUsed);
+  PULONG DataUsed,
+  ULONG Flags);
 
-NTSTATUS TCPClose
-( PTDI_REQUEST Request );
+NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
 PVOID TCPPrepareInterface( PIP_INTERFACE IF );
 

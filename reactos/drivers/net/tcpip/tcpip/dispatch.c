@@ -345,7 +345,6 @@ NTSTATUS DispTdiConnect(
   PTDI_REQUEST_KERNEL Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  TDI_REQUEST Request;
   NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -368,11 +367,6 @@ NTSTATUS DispTdiConnect(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  /* Initialize a connect request */
-  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
-  Request.RequestNotifyObject      = DispDataRequestComplete;
-  Request.RequestContext           = Irp;
-
 #if 0
   Status = TCPBind( Connection,
 		    &Connection->SocketContext,
@@ -384,9 +378,11 @@ NTSTATUS DispTdiConnect(
 #endif
 
       Status = TCPConnect(
-	  &Request,
+	  TranContext->Handle.ConnectionContext,
 	  Parameters->RequestConnectionInformation,
-	  Parameters->ReturnConnectionInformation);
+	  Parameters->ReturnConnectionInformation,
+	  DispDataRequestComplete,
+	  Irp );
   
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
@@ -561,7 +557,9 @@ NTSTATUS DispTdiListen(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = TCPListen( Request, 1024 /* BACKLOG */ );
+  Status = TCPListen( Request->Handle.ConnectionContext, 1024 /* BACKLOG */,
+		      DispDataRequestComplete,
+		      Irp );
 
   return Status;
 }
@@ -663,7 +661,6 @@ NTSTATUS DispTdiReceive(
   PIO_STACK_LOCATION IrpSp;
   PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
   PTRANSPORT_CONTEXT TranContext;
-  TDI_REQUEST Request;
   NTSTATUS Status;
   ULONG BytesReceived;
 
@@ -686,9 +683,6 @@ NTSTATUS DispTdiReceive(
     }
 
   /* Initialize a receive request */
-  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
-  Request.RequestNotifyObject = DispDataRequestComplete;
-  Request.RequestContext = Irp;
   Status = DispPrepareIrpForCancel(
     IrpSp->FileObject->FsContext,
     Irp,
@@ -697,11 +691,13 @@ NTSTATUS DispTdiReceive(
   if (NT_SUCCESS(Status))
     {
       Status = TCPReceiveData(
-        &Request,
-        (PNDIS_BUFFER)Irp->MdlAddress,
-        ReceiveInfo->ReceiveLength,
-        ReceiveInfo->ReceiveFlags,
-        &BytesReceived);
+	  TranContext->Handle.ConnectionContext,
+	  (PNDIS_BUFFER)Irp->MdlAddress,
+	  ReceiveInfo->ReceiveLength,
+	  &BytesReceived,
+	  ReceiveInfo->ReceiveFlags,
+	  DispDataRequestComplete,
+	  Irp);
       if (Status != STATUS_PENDING)
       {
           DispDataRequestComplete(Irp, Status, BytesReceived);
@@ -796,7 +792,6 @@ NTSTATUS DispTdiSend(
   PIO_STACK_LOCATION IrpSp;
   PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
   PTRANSPORT_CONTEXT TranContext;
-  TDI_REQUEST Request;
   NTSTATUS Status;
   ULONG BytesReceived;
 
@@ -818,10 +813,6 @@ NTSTATUS DispTdiSend(
       return STATUS_INVALID_CONNECTION;
     }
 
-  /* Initialize a receive request */
-  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
-  Request.RequestNotifyObject = DispDataRequestComplete;
-  Request.RequestContext = Irp;
   Status = DispPrepareIrpForCancel(
     IrpSp->FileObject->FsContext,
     Irp,
@@ -829,13 +820,18 @@ NTSTATUS DispTdiSend(
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
+	PCHAR Data;
+	UINT Len;
+
+	NdisQueryBuffer( Irp->MdlAddress, &Data, &Len );
+	
 	TI_DbgPrint(MID_TRACE,("About to TCPSendData\n"));
 	Status = TCPSendData(
-	    &Request,
-	    (PNDIS_BUFFER)Irp->MdlAddress,
+	    TranContext->Handle.ConnectionContext,
+	    Data,
 	    ReceiveInfo->ReceiveLength,
-	    ReceiveInfo->ReceiveFlags,
-	    &BytesReceived);
+	    &BytesReceived,
+	    ReceiveInfo->ReceiveFlags);
 	if (Status != STATUS_PENDING)
 	{
 	    DispDataRequestComplete(Irp, Status, BytesReceived);

@@ -19,6 +19,86 @@ KSPIN_LOCK AddressFileListLock;
 LIST_ENTRY ConnectionEndpointListHead;
 KSPIN_LOCK ConnectionEndpointListLock;
 
+/*
+ * FUNCTION: Searches through address file entries to find the first match
+ * ARGUMENTS:
+ *     Address       = IP address
+ *     Port          = Port number
+ *     Protocol      = Protocol number
+ *     SearchContext = Pointer to search context
+ * RETURNS:
+ *     Pointer to address file, NULL if none was found
+ */
+PADDRESS_FILE AddrSearchFirst(
+    PIP_ADDRESS Address,
+    USHORT Port,
+    USHORT Protocol,
+    PAF_SEARCH SearchContext)
+{
+    SearchContext->Address  = Address;
+    SearchContext->Port     = Port;
+    SearchContext->Next     = AddressFileListHead.Flink;
+    SearchContext->Protocol = Protocol;
+
+    return AddrSearchNext(SearchContext);
+}
+
+/*
+ * FUNCTION: Searches through address file entries to find next match
+ * ARGUMENTS:
+ *     SearchContext = Pointer to search context
+ * RETURNS:
+ *     Pointer to address file, NULL if none was found
+ */
+PADDRESS_FILE AddrSearchNext(
+    PAF_SEARCH SearchContext)
+{
+    PLIST_ENTRY CurrentEntry;
+    PIP_ADDRESS IPAddress;
+    KIRQL OldIrql;
+    PADDRESS_FILE Current = NULL;
+    BOOLEAN Found = FALSE;
+
+    if (IsListEmpty(SearchContext->Next))
+        return NULL;
+
+    CurrentEntry = SearchContext->Next;
+
+    KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
+
+    while (CurrentEntry != &AddressFileListHead) {
+        Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
+
+        IPAddress = Current->ADE->Address;
+
+        TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
+            WN2H(Current->Port),
+            Current->Protocol,
+            A2S(IPAddress),
+            WN2H(SearchContext->Port),
+            SearchContext->Protocol,
+            A2S(SearchContext->Address)));
+
+        /* See if this address matches the search criteria */
+        if (((Current->Port    == SearchContext->Port) &&
+            (Current->Protocol == SearchContext->Protocol) &&
+            (AddrIsEqual(IPAddress, SearchContext->Address))) ||
+            (AddrIsUnspecified(IPAddress))) {
+            /* We've found a match */
+            Found = TRUE;
+            break;
+        }
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&AddressFileListLock, OldIrql);
+
+    if (Found) {
+        SearchContext->Next = CurrentEntry->Flink;
+        return Current;
+    } else
+        return NULL;
+}
 
 VOID AddrFileFree(
     PVOID Object)
@@ -435,30 +515,8 @@ NTSTATUS FileOpenConnection(
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  Connection = ExAllocatePool(NonPagedPool, sizeof(CONNECTION_ENDPOINT));
-  if (!Connection)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  TI_DbgPrint(DEBUG_CPOINT, ("Connection point file object allocated at (0x%X).\n", Connection));
-
-  RtlZeroMemory(Connection, sizeof(CONNECTION_ENDPOINT));
-
-  /* Initialize spin lock that protects the connection endpoint file object */
-  KeInitializeSpinLock(&Connection->Lock);
-  InitializeListHead(&Connection->ConnectRequest);
-  InitializeListHead(&Connection->ListenRequest);
-  InitializeListHead(&Connection->ReceiveRequest);
-
-  /* Reference the object */
-  Connection->RefCount = 1;
-
-  /* Save client context pointer */
-  Connection->ClientContext = ClientContext;
-  Status = OskitTCPSocket( Connection,
-			   &Connection->SocketContext,
-			   AF_INET,
-			   SOCK_STREAM,
-			   IPPROTO_TCP );
+  
+  Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
   DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
 
   /* Initialize received segments queue */
@@ -501,7 +559,7 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
-  TCPClose(Request);
+  TCPClose(Connection);
   DeleteConnectionEndpoint(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));

@@ -14,20 +14,6 @@
 
 #ifdef MEMTRACK
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
-#define NdisAllocateBuffer(x,y,z,a,b) { \
-    NdisAllocateBuffer(x,y,z,a,b); \
-    if( *x == NDIS_STATUS_SUCCESS ) { \
-        Track(NDIS_BUFFER_TAG, *y); \
-    } \
-}
-#define NdisAllocatePacket(x,y,z) { \
-    NdisAllocatePacket(x,y,z); \
-    if( *x == NDIS_STATUS_SUCCESS ) { \
-        Track(NDIS_PACKET_TAG, *y); \
-    } \
-}
-#define NdisFreePacket(x) { Untrack(x); NdisFreePacket(x); }
-#define NdisFreeBuffer(x) { Untrack(x); NdisFreeBuffer(x); }
 #define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__) 
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exFreePool(x) ExFreePoolX(x,__FILE__,__LINE__)

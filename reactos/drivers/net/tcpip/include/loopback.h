@@ -9,9 +9,7 @@
 
 #include <lan.h>
 
-
 extern PIP_INTERFACE Loopback;
-
 
 NDIS_STATUS LoopRegisterAdapter(
     PNDIS_STRING AdapterName,

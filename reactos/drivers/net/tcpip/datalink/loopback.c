@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 WORK_QUEUE_ITEM LoopWorkItem;
 PIP_INTERFACE Loopback = NULL;
 /* Indicates wether the loopback interface is currently transmitting */
