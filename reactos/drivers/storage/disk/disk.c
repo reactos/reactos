@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.10 2002/03/20 19:54:06 ekohl Exp $
+/* $Id: disk.c,v 1.11 2002/03/22 20:35:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -331,7 +331,21 @@ NTSTATUS STDCALL
 DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp)
 {
+  PDEVICE_EXTENSION DeviceExtension;
+  PDISK_DATA DiskData;
+
   DPRINT1("DiskClassCheckReadWrite() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+
+  if (DiskData->DriveNotReady == TRUE)
+    {
+      Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
+      IoSetHardErrorOrVerifyDevice(Irp,
+				   DeviceObject);
+      return(STATUS_INVALID_PARAMETER);
+    }
 
   return(STATUS_SUCCESS);
 }
