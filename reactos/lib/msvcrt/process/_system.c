@@ -1,7 +1,8 @@
-/*
+/* $Id: _system.c,v 1.2 2002/05/07 22:33:07 hbirr Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/process/system.c
+ * FILE:        lib/msvcrt/process/system.c
  * PURPOSE:     Excutes a shell command
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -11,14 +12,17 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 #include <msvcrt/process.h>
+#include <msvcrt/errno.h>
 
 int system(const char *command)
 {
-  char szCmdLine[MAX_PATH];
-  char *szComSpec=NULL;
+  char *szCmdLine = NULL;
+  char *szComSpec = NULL;
 
   PROCESS_INFORMATION ProcessInformation;
-  STARTUPINFOA StartupInfo;
+  STARTUPINFO StartupInfo;
+  char *s;
+  BOOL result;
 
   int nStatus;
 
@@ -31,25 +35,50 @@ int system(const char *command)
       if (szComSpec == NULL)
 	return 0;
       else
+      {
+	free(szComSpec);
 	return -1;
+      }
     }
 
 // should return 127 or 0 ( MS ) if the shell is not found
 // __set_errno(ENOENT);
 
   if (szComSpec == NULL)
-    szComSpec = "cmd.exe";
+  {
+    szComSpec = strdup("cmd.exe");
+    if (szComSpec == NULL)
+    {
+       __set_errno(ENOMEM);
+       return -1;
+    }
+  }
 
-  strcpy(szCmdLine, " /C ");
+  s = max(strchr(szComSpec, '\\'), strchr(szComSpec, '/'));
+  if (s == NULL)
+    s = szComSpec;
+  else
+    s++;
 
-  strncat(szCmdLine, command, MAX_PATH-5);
+  szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1); 
+  if (szCmdLine == NULL)
+  {
+     free (szComSpec);
+     __set_errno(ENOMEM);
+     return -1;
+  }
 
-//check for a too long argument E2BIG
+  strcpy(szCmdLine, s);
+  s = strrchr(szCmdLine, '.');
+  if (s)
+    *s = 0;
+  strcat(szCmdLine, " /C ");
+  strcat(szCmdLine, command);
 
 //command file has invalid format ENOEXEC
 
-
-  StartupInfo.cb = sizeof(STARTUPINFOA);
+  memset (&StartupInfo, 0, sizeof(STARTUPINFO));
+  StartupInfo.cb = sizeof(STARTUPINFO);
   StartupInfo.lpReserved= NULL;
   StartupInfo.dwFlags = 0;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
@@ -63,17 +92,30 @@ int system(const char *command)
 
 //SIGCHILD should be blocked aswell
 
-  if (CreateProcessA(szComSpec,szCmdLine,NULL,NULL,TRUE,CREATE_NEW_PROCESS_GROUP,NULL,NULL,&StartupInfo,&ProcessInformation) == FALSE)
-    {
-      return -1;
-    }
+  result = CreateProcessA(szComSpec,
+	                  szCmdLine,
+			  NULL,
+			  NULL,
+			  TRUE,
+			  0,
+			  NULL,
+			  NULL,
+			  &StartupInfo,
+			  &ProcessInformation);
+  free(szCmdLine);
+  free(szComSpec);
+
+  if (result == FALSE)
+  {
+     __set_errno(ENOEXEC);
+     return -1;
+  }
+  
+  CloseHandle(ProcessInformation.hThread);
 
 // system should wait untill the calling process is finished
-
   _cwait(&nStatus,(int)ProcessInformation.hProcess,0);
-
-// free the comspec [ if the COMSPEC == NULL provision is removed
-//  free(szComSpec);
+  CloseHandle(ProcessInformation.hProcess);
 
   return nStatus;
 }
