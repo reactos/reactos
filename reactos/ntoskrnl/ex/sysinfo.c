@@ -411,7 +411,7 @@ QSI_DEF(SystemPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
+	TheIdleProcess = PsIdleProcess;
 	
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
@@ -1040,7 +1040,7 @@ QSI_DEF(SystemFullMemoryInformation)
 	}
 	DPRINT("SystemFullMemoryInformation\n");
 
-	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
+	TheIdleProcess = PsIdleProcess;
 
         DPRINT("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
                TheIdleProcess->UniqueProcessId,
