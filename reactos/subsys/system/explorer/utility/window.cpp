@@ -386,7 +386,7 @@ ChildWindow::ChildWindow(HWND hwnd, const ChildWndInfo& info)
 
 
 ChildWindow* ChildWindow::create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
-									LPCTSTR classname, LPCTSTR title)
+									LPCTSTR classname, LPCTSTR title, DWORD style)
 {
 	MDICREATESTRUCT mcs;
 
@@ -397,7 +397,7 @@ ChildWindow* ChildWindow::create(const ChildWndInfo& info, const RECT& rect, CRE
 	mcs.y		= rect.top;
 	mcs.cx		= rect.right - rect.left;
 	mcs.cy		= rect.bottom - rect.top;
-	mcs.style	= 0;
+	mcs.style	= style;
 	mcs.lParam	= 0;
 
 	return static_cast<ChildWindow*>(create_mdi_child(info, mcs, creator));

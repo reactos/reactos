@@ -41,12 +41,10 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 	{
 #ifndef _NO_MDI
 		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
-			WINDOW_CREATOR_INFO(ShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL);
+			WINDOW_CREATOR_INFO(ShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL, info._pos.showCmd==SW_SHOWMAXIMIZED? WS_MAXIMIZE: 0);
 #else
 		///@todo SDI implementation
 #endif
-
-		ShowWindow(*child, info._pos.showCmd);
 
 		return static_cast<ShellBrowserChild*>(child);
 	}

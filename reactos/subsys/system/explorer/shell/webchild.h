@@ -903,9 +903,7 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	static WebChildWindow* create(const FileChildWndInfo& info)
 	{
 		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
-			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL);
-
-		ShowWindow(*child, info._pos.showCmd);
+			WINDOW_CREATOR_INFO(WebChildWindow,WebChildWndInfo), CLASSNAME_CHILDWND, NULL, info._pos.showCmd==SW_SHOWMAXIMIZED? WS_MAXIMIZE: 0);
 
 		return static_cast<WebChildWindow*>(child);
 	}

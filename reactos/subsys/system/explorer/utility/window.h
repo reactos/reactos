@@ -293,7 +293,7 @@ struct ChildWindow : public Window
 	ChildWindow(HWND hwnd, const ChildWndInfo& info);
 
 	static ChildWindow* create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
-								LPCTSTR classname, LPCTSTR title=NULL);
+								LPCTSTR classname, LPCTSTR title=NULL, DWORD style=0);
 
 	bool	go_to(LPCTSTR url);
 
