@@ -699,6 +699,9 @@ typedef struct _NDIS_DMA_BLOCK
     BOOLEAN         InProgress;
 } NDIS_DMA_BLOCK, *PNDIS_DMA_BLOCK;
 
+#define NDIS_DMA_24BITS 0
+#define NDIS_DMA_32BITS 1
+#define NDIS_DMA_64BITS 2
 
 /* Possible hardware architecture */
 typedef enum _NDIS_INTERFACE_TYPE
@@ -755,7 +758,6 @@ typedef struct _NDIS_CONFIGURATION_PARAMETER
 		  BINARY_DATA BinaryData;
     } ParameterData;
 } NDIS_CONFIGURATION_PARAMETER, *PNDIS_CONFIGURATION_PARAMETER;
-
 
 typedef PHYSICAL_ADDRESS NDIS_PHYSICAL_ADDRESS, *PNDIS_PHYSICAL_ADDRESS;
 
@@ -2270,6 +2272,24 @@ NdisImmediateWritePciSlotInformation(
 	IN	ULONG					Length
 	);
 
+ULONG
+EXPIMP
+NdisReadPciSlotInformation(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       SlotNumber,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length);
+
+ULONG
+EXPIMP
+NdisWritePciSlotInformation(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       SlotNumber,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length);
+
 /* String management routines */
 
 /*
@@ -2583,7 +2603,7 @@ NdisOpenConfigurationKeyByName(
 
 
 VOID
-EXPIMP
+/*EXPIMP*/
 NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
@@ -3387,22 +3407,22 @@ NdisIMInitializeDeviceInstanceEx(
 
 /* Prototypes for NDIS_MINIPORT_CHARACTERISTICS */
 
-typedef BOOLEAN (*W_CHECK_FOR_HANG_HANDLER)(
+typedef BOOLEAN STDCALL (*W_CHECK_FOR_HANG_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef VOID (*W_DISABLE_INTERRUPT_HANDLER)(
+typedef VOID STDCALL (*W_DISABLE_INTERRUPT_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef VOID (*W_ENABLE_INTERRUPT_HANDLER)(
+typedef VOID STDCALL (*W_ENABLE_INTERRUPT_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef VOID (*W_HALT_HANDLER)(
+typedef VOID STDCALL (*W_HALT_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef VOID (*W_HANDLE_INTERRUPT_HANDLER)(
+typedef VOID STDCALL (*W_HANDLE_INTERRUPT_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef NDIS_STATUS (*W_INITIALIZE_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_INITIALIZE_HANDLER)(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
     IN  PNDIS_MEDIUM    MediumArray,
@@ -3410,12 +3430,12 @@ typedef NDIS_STATUS (*W_INITIALIZE_HANDLER)(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE     WrapperConfigurationContext);
 
-typedef VOID (*W_ISR_HANDLER)(
+typedef VOID STDCALL STDCALL (*W_ISR_HANDLER)(
     OUT PBOOLEAN				InterruptRecognized,
     OUT PBOOLEAN				QueueMiniportHandleInterrupt,
     IN	NDIS_HANDLE				MiniportAdapterContext);
 
-typedef NDIS_STATUS (*W_QUERY_INFORMATION_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_QUERY_INFORMATION_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -3423,26 +3443,26 @@ typedef NDIS_STATUS (*W_QUERY_INFORMATION_HANDLER)(
     OUT PULONG      BytesWritten,
     OUT PULONG      BytesNeeded);
 
-typedef NDIS_STATUS (*W_RECONFIGURE_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_RECONFIGURE_HANDLER)(
     OUT PNDIS_STATUS    OpenErrorStatus,
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE	    WrapperConfigurationContext);
 
-typedef NDIS_STATUS (*W_RESET_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_RESET_HANDLER)(
     OUT PBOOLEAN    AddressingReset,
     IN  NDIS_HANDLE MiniportAdapterContext);
 
-typedef NDIS_STATUS (*W_SEND_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_SEND_HANDLER)(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  PNDIS_PACKET    Packet,
     IN  UINT            Flags);
 
-typedef NDIS_STATUS (*WM_SEND_HANDLER)(
+typedef NDIS_STATUS STDCALL (*WM_SEND_HANDLER)(
     IN  NDIS_HANDLE         MiniportAdapterContext,
     IN  NDIS_HANDLE         NdisLinkHandle,
     IN  PNDIS_WAN_PACKET    Packet);
 
-typedef NDIS_STATUS (*W_SET_INFORMATION_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_SET_INFORMATION_HANDLER)(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -3450,7 +3470,7 @@ typedef NDIS_STATUS (*W_SET_INFORMATION_HANDLER)(
     OUT PULONG      BytesRead,
     OUT PULONG      BytesNeeded);
 
-typedef NDIS_STATUS (*W_TRANSFER_DATA_HANDLER)(
+typedef NDIS_STATUS STDCALL (*W_TRANSFER_DATA_HANDLER)(
     OUT PNDIS_PACKET    Packet,
     OUT PUINT           BytesTransferred,
     IN  NDIS_HANDLE     MiniportAdapterContext,
@@ -3458,7 +3478,7 @@ typedef NDIS_STATUS (*W_TRANSFER_DATA_HANDLER)(
     IN  UINT            ByteOffset,
     IN  UINT            BytesToTransfer);
 
-typedef NDIS_STATUS (*WM_TRANSFER_DATA_HANDLER)(
+typedef NDIS_STATUS STDCALL (*WM_TRANSFER_DATA_HANDLER)(
     VOID);
 
 
@@ -4431,7 +4451,7 @@ typedef VOID (*FDDI_RCV_INDICATE_HANDLER)(
     IN  UINT            LookaheadBufferSize,
     IN  UINT            PacketSize);
 
-typedef VOID (*FILTER_PACKET_INDICATION_HANDLER)(
+typedef VOID STDCALL (*FILTER_PACKET_INDICATION_HANDLER)(
     IN  NDIS_HANDLE     Miniport,
     IN  PPNDIS_PACKET   PacketArray,
     IN  UINT            NumberOfPackets);
