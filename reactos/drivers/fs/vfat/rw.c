@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.69 2004/08/31 20:02:24 hbirr Exp $
+/* $Id: rw.c,v 1.70 2004/09/28 10:52:55 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -828,6 +828,11 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    }
 
    ByteOffset = IrpContext->Stack->Parameters.Write.ByteOffset;
+   if (ByteOffset.u.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+       ByteOffset.u.HighPart == 0xffffffff)
+   {
+      ByteOffset.QuadPart = Fcb->RFCB.FileSize.QuadPart;
+   }
    Length = IrpContext->Stack->Parameters.Write.Length;
    BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
 
