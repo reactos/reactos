@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.30 2003/09/13 13:58:38 weiden Exp $
+/* $Id: menu.c,v 1.31 2003/10/04 16:04:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -690,7 +690,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   if(MenuObject->MenuItemCount >= MAX_MENU_ITEMS)
   {
     /* FIXME Set last error code? */
-    SetLastWin32Error(STATUS_NO_MEMORY);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
   
@@ -710,7 +710,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   if(!MenuItem)
   {
     /* FIXME Set last error code? */
-    SetLastWin32Error(STATUS_NO_MEMORY);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
   
@@ -1125,7 +1125,7 @@ NtUserCreateMenu(VOID)
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
       PROCESS_WINDOW_STATION());
-    SetLastWin32Error(Status);
+    SetLastNtError(Status);
     return (HMENU)0;
   }
 

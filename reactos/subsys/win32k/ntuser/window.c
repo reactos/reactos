@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.109 2003/09/21 06:44:51 gvg Exp $
+/* $Id: window.c,v 1.110 2003/10/04 16:04:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2585,6 +2585,7 @@ NtUserSetMenu(
 {
   PWINDOW_OBJECT WindowObject;
   PMENU_OBJECT MenuObject;
+  BOOL Changed = FALSE;
   WindowObject = IntGetWindowObject((HWND)hWnd);
   if(!WindowObject)
   {
@@ -2603,6 +2604,7 @@ NtUserSetMenu(
       return FALSE;
     }
     
+    Changed = (WindowObject->IDMenu != (UINT)hMenu);
     WindowObject->IDMenu = (UINT)hMenu;
     
     IntReleaseMenuObject(MenuObject);
@@ -2610,19 +2612,17 @@ NtUserSetMenu(
   else
   {
     /* remove the menu handle */
+    Changed = (WindowObject->IDMenu != 0);
     WindowObject->IDMenu = 0;
   }
   
   IntReleaseWindowObject(WindowObject);
   
-  /* FIXME (from wine)
-  if(bRepaint)
+  if(Changed && bRepaint && IntIsWindowVisible(hWnd))
   {
-    if (IsWindowVisible(hWnd))
-        SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                      SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+    WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
   }
-  */
   
   return TRUE;
 }
