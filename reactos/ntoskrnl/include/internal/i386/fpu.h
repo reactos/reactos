@@ -78,6 +78,9 @@ KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_ARE
 BOOL
 KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context);
 
+VOID
+KiClearFloatingPointState(BOOLEAN Save);
+
 #endif /* !__ASM__ */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H */

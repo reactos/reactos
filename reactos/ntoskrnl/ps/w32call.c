@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.18 2004/11/20 23:46:37 blight Exp $
+/* $Id: w32call.c,v 1.19 2004/11/27 16:12:26 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -45,6 +45,7 @@ typedef struct _NTW32CALL_SAVED_STATE
   PKTRAP_FRAME SavedTrapFrame;
   PVOID SavedCallbackStack;
   PVOID SavedExceptionStack;
+  BYTE SavedNpxState;
 } NTW32CALL_SAVED_STATE, *PNTW32CALL_SAVED_STATE;
 
 typedef struct
@@ -83,6 +84,7 @@ NtCallbackReturn (PVOID		Result,
   PKTRAP_FRAME SavedTrapFrame;
   PVOID SavedCallbackStack;
   PVOID SavedExceptionStack;
+  BYTE SavedNpxState;
 
   Thread = PsGetCurrentThread();
   if (Thread->Tcb.CallbackStack == NULL)
@@ -105,7 +107,7 @@ NtCallbackReturn (PVOID		Result,
   SavedTrapFrame = State->SavedTrapFrame;
   SavedCallbackStack = State->SavedCallbackStack;
   SavedExceptionStack = State->SavedExceptionStack;
-
+  SavedNpxState = State->SavedNpxState;
   /*
    * Copy the callback status and the callback result to NtW32Call
    */
@@ -127,20 +129,14 @@ NtCallbackReturn (PVOID		Result,
    * Restore the old stack.
    */
   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-  if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
-    {
-      memcpy((char*)InitialStack - sizeof(FX_SAVE_AREA),
-             (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),
-             sizeof(FX_SAVE_AREA));
-    }
+  KiClearFloatingPointState(FALSE);
+  Thread->Tcb.NpxState = SavedNpxState;
   Thread->Tcb.InitialStack = InitialStack;
   Thread->Tcb.StackBase = StackBase;
   Thread->Tcb.StackLimit = StackLimit;
   Thread->Tcb.TrapFrame = SavedTrapFrame;
   Thread->Tcb.CallbackStack = SavedCallbackStack;
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)SavedExceptionStack;
-  Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS); /* set TS */
   KeStackSwitchAndRet((PVOID)(OldStack + 1));
 
   /* Should never return. */
@@ -243,6 +239,7 @@ PsAllocateCallbackStack(ULONG StackSize)
 	}
       return(NULL);
     }
+  DPRINT1("KernelStack %x\n", KernelStack);
   return(KernelStack);
 }
 
@@ -288,9 +285,7 @@ NtW32Call (IN ULONG RoutineIndex,
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK,
 					ListEntry);
       NewStack = AssignedStack->BaseAddress;
-
-      MmUpdatePageDir(PsGetCurrentProcess(), NewStack, StackSize);
-
+      memset(NewStack, 0, StackSize);
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
   memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),
@@ -316,17 +311,15 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedState.SavedTrapFrame = Thread->Tcb.TrapFrame;
   SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
   SavedState.SavedExceptionStack = (PVOID)KeGetCurrentKPCR()->TSS->Esp0;
-  if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
-    {
-      memcpy((char*)NewStack + StackSize - sizeof(FX_SAVE_AREA),
-             (char*)SavedState.SavedInitialStack - sizeof(FX_SAVE_AREA),
-             sizeof(FX_SAVE_AREA));
-    }
+
+  KiClearFloatingPointState(TRUE);
+
+  SavedState.SavedNpxState = Thread->Tcb.NpxState;
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
   Thread->Tcb.KernelStack = (char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA);
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA);
+  Thread->Tcb.NpxState = NPX_STATE_INVALID;
   KePushAndStackSwitchAndSysRet((ULONG)&SavedState, Thread->Tcb.KernelStack);
 
   /* 

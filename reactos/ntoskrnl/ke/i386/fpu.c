@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.17 2004/11/25 13:22:54 blight Exp $
+/* $Id: fpu.c,v 1.18 2004/11/27 16:12:26 hbirr Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -402,6 +402,44 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 
   return STATUS_SUCCESS;
 }
+
+VOID
+KiClearFloatingPointState(BOOLEAN Save)
+{
+   PKTHREAD CurrentThread;
+   PFX_SAVE_AREA FxSaveArea;
+
+   ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+   CurrentThread = KeGetCurrentThread();
+
+   if (CurrentThread->NpxState & NPX_STATE_DIRTY)
+   {
+      if (Save)
+      {
+         FxSaveArea = (PFX_SAVE_AREA)((char *)CurrentThread->InitialStack - sizeof (FX_SAVE_AREA));
+         if (FxsrSupport)
+         {
+            asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
+         }
+         else
+         {
+            asm volatile("fnsave %0" : : "m"(FxSaveArea->U.FnArea));
+         }
+         CurrentThread->NpxState = NPX_STATE_VALID;
+      }
+      else
+      {
+         CurrentThread->NpxState = NPX_STATE_INVALID;
+      }
+      Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
+   }
+   if (KeGetCurrentKPCR()->PrcbData.NpxThread == CurrentThread)
+   {
+      KeGetCurrentKPCR()->PrcbData.NpxThread = NULL;
+   }
+}
+  
 
 NTSTATUS
 KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
