@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.80 2003/09/07 11:52:54 weiden Exp $
+/* $Id: defwnd.c,v 1.81 2003/09/07 17:35:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -48,8 +48,8 @@ static COLORREF SysColours[29] =
     RGB(0, 0, 128) /* COLOR_ACTIVECAPTION */,
     RGB(128, 128, 128) /* COLOR_INACTIVECAPTION */,
     RGB(192, 192, 192) /* COLOR_MENU */,
-    RGB(192, 192, 192) /* COLOR_WINDOW */,
-    RGB(192, 192, 192) /* COLOR_WINDOWFRAME */,
+    RGB(255, 255, 255) /* COLOR_WINDOW */,
+    RGB(0, 0, 0) /* COLOR_WINDOWFRAME */,
     RGB(0, 0, 0) /* COLOR_MENUTEXT */,
     RGB(0, 0, 0) /* COLOR_WINDOWTEXT */,
     RGB(255, 255, 255) /* COLOR_CAPTIONTEXT */,
