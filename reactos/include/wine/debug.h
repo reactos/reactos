@@ -55,6 +55,14 @@ inline static const char *debugres_w( const wchar_t *s ) { return wine_dbgstr_wn
 #define TRACE_ON(ch) 1
 #endif
 
+#define WINE_TRACE        DPRINT
+#define WINE_TRACE_(ch)   DPRINT
+#ifdef NDEBUG
+#define WINE_TRACE_ON(ch) 0
+#else
+#define WINE_TRACE_ON(ch) 1
+#endif
+
 #define WARN         DPRINT
 #define WARN_(ch)    DPRINT
 #ifdef NDEBUG
@@ -74,12 +82,31 @@ inline static const char *debugres_w( const wchar_t *s ) { return wine_dbgstr_wn
 #define FIXME_ON(ch) 1
 #endif
 
+#ifdef WINE_FIXME
+#undef WINE_FIXME
+#endif
+#define WINE_FIXME        DPRINT1
+#define WINE_FIXME_(ch)   DPRINT1
+#ifdef NDEBUG
+#define WINE_FIXME_ON(ch) 0
+#else
+#define WINE_FIXME_ON(ch) 1
+#endif
+
 #define ERR          DPRINT1
 #define ERR_(ch)     DPRINT1
 #ifdef NDEBUG
 #define ERR_ON(ch)   0
 #else
 #define ERR_ON(ch)   1
+#endif
+
+#define WINE_ERR          DPRINT1
+#define WINE_ERR_(ch)     DPRINT1
+#ifdef NDEBUG
+#define WINE_ERR_ON(ch)   0
+#else
+#define WINE_ERR_ON(ch)   1
 #endif
 
 #define DECLARE_DEBUG_CHANNEL(ch)
