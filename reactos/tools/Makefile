@@ -56,7 +56,7 @@ rsym$(EXE_POSTFIX): rsym.c
 	$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rsym.c -o rsym$(EXE_POSTFIX)
 endif
 ifeq ($(HOST),mingw32-windows)
-rsym$(EX_POSTFIX): rsym.c
+rsym$(EXE_POSTFIX): rsym.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rsym.c -o rsym$(EXE_POSTFIX)
 endif
 
