@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.8 2004/09/14 21:46:39 ekohl Exp $
+/* $Id: misc.c,v 1.9 2004/11/06 13:41:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -59,10 +59,11 @@ CdfsSwapString(PWCHAR Out,
 
 
 VOID
-CdfsDateTimeToFileTime(PFCB Fcb,
-		       TIME *FileTime)
+CdfsDateTimeToSystemTime(PFCB Fcb,
+			 PLARGE_INTEGER SystemTime)
 {
   TIME_FIELDS TimeFields;
+  LARGE_INTEGER LocalTime;
 
   TimeFields.Milliseconds = 0;
   TimeFields.Second = Fcb->Entry.Second;
@@ -74,7 +75,8 @@ CdfsDateTimeToFileTime(PFCB Fcb,
   TimeFields.Year = Fcb->Entry.Year + 1900;
 
   RtlTimeFieldsToTime(&TimeFields,
-		      (PLARGE_INTEGER)FileTime);
+		      &LocalTime);
+  ExLocalTimeToSystemTime(&LocalTime, SystemTime);
 }
 
 

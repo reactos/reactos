@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.41 2004/08/05 02:48:18 navaraf Exp $
+/* $Id: dirwr.c,v 1.42 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,8 +29,8 @@ VfatUpdateEntry (PVFATFCB pFcb)
   PFAT_DIR_ENTRY PinEntry;
   LARGE_INTEGER Offset;
 
-  assert (pFcb);
-  assert (pFcb->parentFcb);
+  ASSERT(pFcb);
+  ASSERT(pFcb->parentFcb);
 
   DPRINT ("updEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
 
@@ -174,7 +174,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   BOOLEAN lCaseBase = FALSE, uCaseBase, lCaseExt = FALSE, uCaseExt;
   PVFATFCB newFCB;
   ULONG CurrentCluster;
-  LARGE_INTEGER SystemTime, LocalTime, FileOffset;
+  LARGE_INTEGER SystemTime, FileOffset;
   NTSTATUS Status = STATUS_SUCCESS;
   PVFATFCB pDirFcb;
   ULONG size;
@@ -360,19 +360,18 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
   /* set dates and times */
   KeQuerySystemTime (&SystemTime);
-  ExSystemTimeToLocalTime (&SystemTime, &LocalTime);
 #if 0
   {
     TIME_FIELDS tf;
-    RtlTimeToTimeFields (&LocalTime, &tf);
+    RtlTimeToTimeFields (&SystemTime, &tf);
     DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%S'\n", 
 	    tf.Day, tf.Month, tf.Year, tf.Hour, 
 	    tf.Minute, tf.Second, tf.Milliseconds,
 	    pFileObject->FileName.Buffer);
   }
 #endif
-  FsdFileTimeToDosDateTime ((TIME *) & LocalTime, &DirContext.FatDirEntry.CreationDate,
-                            &DirContext.FatDirEntry.CreationTime);
+  FsdSystemTimeToDosDateTime (&SystemTime, &DirContext.FatDirEntry.CreationDate,
+                              &DirContext.FatDirEntry.CreationTime);
   DirContext.FatDirEntry.UpdateDate = DirContext.FatDirEntry.CreationDate;
   DirContext.FatDirEntry.UpdateTime = DirContext.FatDirEntry.CreationTime;
   DirContext.FatDirEntry.AccessDate = DirContext.FatDirEntry.CreationDate;
@@ -523,8 +522,8 @@ VfatDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
   LARGE_INTEGER Offset;
   FATDirEntry* pDirEntry;
 
-  assert (pFcb);
-  assert (pFcb->parentFcb);
+  ASSERT(pFcb);
+  ASSERT(pFcb->parentFcb);
 
   DPRINT ("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
   DPRINT ("delete entry: %d to %d\n", pFcb->startIndex, pFcb->dirIndex);
@@ -537,11 +536,11 @@ VfatDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
           {
             CcSetDirtyPinnedData(Context, NULL);
             CcUnpinData(Context);
-          } 
+          }
           Offset.u.LowPart = (i * sizeof(FATDirEntry) / PAGE_SIZE) * PAGE_SIZE;
           CcMapData (pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
                      &Context, (PVOID*)&pDirEntry);
-	}
+        }
       pDirEntry[i % (PAGE_SIZE / sizeof(FATDirEntry))].Filename[0] = 0xe5;
       if (i == pFcb->dirIndex)
         {

@@ -372,8 +372,8 @@ CdfsSwapString(PWCHAR Out,
 	       ULONG Count);
 
 VOID
-CdfsDateTimeToFileTime(PFCB Fcb,
-		       TIME *FileTime);
+CdfsDateTimeToSystemTime(PFCB Fcb,
+			 PLARGE_INTEGER SystemTime);
 
 VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.12 2004/09/14 21:46:39 ekohl Exp $
+/* $Id: create.c,v 1.13 2004/11/06 13:41:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,7 +50,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
 
   DPRINT("try related for %wZ\n", RelativeFileName);
   Fcb = FileObject->FsContext;
-  assert(Fcb);
+  ASSERT(Fcb);
 
   /* verify related object is a directory and target name
      don't start with \. */
@@ -65,7 +65,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
            sizeof(WCHAR) +
            RelativeFileName->Length +
            sizeof(WCHAR);
-//  assert(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
+//  ASSERT(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
 //          <= MAX_PATH);
 //  rcName = ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
 //  if (!rcName)
@@ -249,9 +249,9 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   DPRINT("CdfsCreateFile() called\n");
 
   DeviceExt = DeviceObject->DeviceExtension;
-  assert (DeviceExt);
+  ASSERT(DeviceExt);
   Stack = IoGetCurrentIrpStackLocation (Irp);
-  assert (Stack);
+  ASSERT(Stack);
 
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
   RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;

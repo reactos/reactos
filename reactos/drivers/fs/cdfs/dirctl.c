@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.16 2004/09/14 21:46:39 ekohl Exp $
+/* $Id: dirctl.c,v 1.17 2004/11/06 13:41:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -414,14 +414,14 @@ CdfsGetDirectoryInformation(PFCB Fcb,
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->CreationTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastAccessTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastWriteTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->ChangeTime);
 
   /* Convert file flags */
   CdfsFileFlagsToAttributes(Fcb,
@@ -465,14 +465,14 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->CreationTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastAccessTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastWriteTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->ChangeTime);
 
   /* Convert file flags */
   CdfsFileFlagsToAttributes(Fcb,
@@ -518,14 +518,14 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->CreationTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastAccessTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->LastWriteTime);
-  CdfsDateTimeToFileTime(Fcb,
-			 &Info->ChangeTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->CreationTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastAccessTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->LastWriteTime);
+  CdfsDateTimeToSystemTime(Fcb,
+			   &Info->ChangeTime);
 
   /* Convert file flags */
   CdfsFileFlagsToAttributes(Fcb,

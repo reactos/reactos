@@ -1,4 +1,4 @@
-/* $Id: flush.c,v 1.5 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: flush.c,v 1.6 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -117,7 +117,7 @@ NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext)
   }
 
   Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
-  assert(Fcb);
+  ASSERT(Fcb);
 
   if (Fcb->Flags & FCB_IS_VOLUME)
   {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.74 2004/08/31 16:08:37 navaraf Exp $
+/* $Id: create.c,v 1.75 2004/11/06 13:44:56 ekohl Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -721,9 +721,9 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
  */
 {
   NTSTATUS Status;
-  
-  assert (IrpContext);
-  
+
+  ASSERT(IrpContext);
+
   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
       /* DeviceObject represents FileSystem instead of logical volume */
@@ -734,12 +734,12 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
       VfatFreeIrpContext(IrpContext);
       return(STATUS_SUCCESS);
     }
-  
+
   if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT))
     {
       return(VfatQueueRequest (IrpContext));
     }
-  
+
   IrpContext->Irp->IoStatus.Information = 0;
   ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, TRUE);
   Status = VfatCreateFile (IrpContext->DeviceObject, IrpContext->Irp);

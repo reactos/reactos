@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.35 2004/08/05 02:48:18 navaraf Exp $
+/* $Id: fsctl.c,v 1.36 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -308,7 +308,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
-   assert (IrpContext);
+   ASSERT(IrpContext);
 
    if (IrpContext->DeviceObject != VfatGlobalData->DeviceObject)
    {
@@ -688,9 +688,9 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 
    DPRINT("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
 
-   assert (IrpContext);
-   assert (IrpContext->Irp);
-   assert (IrpContext->Stack);
+   ASSERT(IrpContext);
+   ASSERT(IrpContext->Irp);
+   ASSERT(IrpContext->Stack);
 
    IrpContext->Irp->IoStatus.Information = 0;
 

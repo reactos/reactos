@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.26 2004/08/01 21:57:18 navaraf Exp $
+/* $Id: volume.c,v 1.27 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -179,7 +179,7 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   ULONG BufferLength;
 
   /* PRECONDITION */
-  assert(IrpContext);
+  ASSERT(IrpContext);
 
   DPRINT("VfatQueryVolumeInformation(IrpContext %x)\n", IrpContext);
 
@@ -253,7 +253,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   PEXTENDED_IO_STACK_LOCATION Stack = (PEXTENDED_IO_STACK_LOCATION) IrpContext->Stack;
 
   /* PRECONDITION */
-  assert(IrpContext);
+  ASSERT(IrpContext);
 
   DPRINT1("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
 

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.37 2004/08/28 22:19:12 navaraf Exp $
+/* $Id: finfo.c,v 1.38 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,8 +34,8 @@ VfatGetStandardInformation(PVFATFCB FCB,
     return STATUS_BUFFER_OVERFLOW;
 
   /* PRECONDITION */
-  assert (StandardInfo != NULL);
-  assert (FCB != NULL);
+  ASSERT(StandardInfo != NULL);
+  ASSERT(FCB != NULL);
 
   if (vfatFCBIsDirectory(FCB))
     {
@@ -64,8 +64,9 @@ VfatSetPositionInformation(PFILE_OBJECT FileObject,
 
   DPRINT ("PositionInfo %x\n", PositionInfo);
   DPRINT ("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
-  memcpy (&FileObject->CurrentByteOffset, &PositionInfo->CurrentByteOffset,
-	  sizeof (LARGE_INTEGER));
+
+  FileObject->CurrentByteOffset.QuadPart =
+    PositionInfo->CurrentByteOffset.QuadPart;
 
   return (STATUS_SUCCESS);
 }
@@ -100,22 +101,22 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
 {
   DPRINT("VfatSetBasicInformation()\n");
 
-  assert (NULL != FileObject);
-  assert (NULL != FCB);
-  assert (NULL != DeviceExt);
-  assert (NULL != BasicInfo);
+  ASSERT(NULL != FileObject);
+  ASSERT(NULL != FCB);
+  ASSERT(NULL != DeviceExt);
+  ASSERT(NULL != BasicInfo);
   /* Check volume label bit */
-  assert(0 == (FCB->entry.Attrib & 0x08));
+  ASSERT(0 == (FCB->entry.Attrib & 0x08));
 
-  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->CreationTime),
-                           &(FCB->entry.CreationDate),  
-                           &(FCB->entry.CreationTime));
-  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->LastAccessTime),
-                           &(FCB->entry.AccessDate),  
-                           NULL);
-  FsdFileTimeToDosDateTime((TIME *)&(BasicInfo->LastWriteTime),
-                           &(FCB->entry.UpdateDate),
-                           &(FCB->entry.UpdateTime));
+  FsdSystemTimeToDosDateTime(&BasicInfo->CreationTime,
+                             &FCB->entry.CreationDate,
+                             &FCB->entry.CreationTime);
+  FsdSystemTimeToDosDateTime(&BasicInfo->LastAccessTime,
+                             &FCB->entry.AccessDate,
+                             NULL);
+  FsdSystemTimeToDosDateTime(&BasicInfo->LastWriteTime,
+                             &FCB->entry.UpdateDate,
+                             &FCB->entry.UpdateTime);
 
   FCB->entry.Attrib = (unsigned char)((FCB->entry.Attrib &
                        (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
@@ -143,15 +144,15 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
   if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
     return STATUS_BUFFER_OVERFLOW;
 
-  FsdDosDateTimeToFileTime(FCB->entry.CreationDate,
-			   FCB->entry.CreationTime,
-			   (TIME *)&BasicInfo->CreationTime);
-  FsdDosDateTimeToFileTime(FCB->entry.AccessDate,
-			   0,
-			   (TIME *)&BasicInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,
-			   FCB->entry.UpdateTime,
-			   (TIME *)&BasicInfo->LastWriteTime);
+  FsdDosDateTimeToSystemTime(FCB->entry.CreationDate,
+			     FCB->entry.CreationTime,
+			     &BasicInfo->CreationTime);
+  FsdDosDateTimeToSystemTime(FCB->entry.AccessDate,
+			     0,
+			     &BasicInfo->LastAccessTime);
+  FsdDosDateTimeToSystemTime(FCB->entry.UpdateDate,
+			     FCB->entry.UpdateTime,
+			     &BasicInfo->LastWriteTime);
   BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
 
   BasicInfo->FileAttributes = FCB->entry.Attrib & 0x3f;
@@ -183,9 +184,9 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 
   DPRINT ("FsdSetDispositionInformation()\n");
 
-  assert (DeviceExt != NULL);
-  assert (DeviceExt->FatInfo.BytesPerCluster != 0);
-  assert (FCB != NULL);
+  ASSERT(DeviceExt != NULL);
+  ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
+  ASSERT(FCB != NULL);
 
   if (FCB->entry.Attrib & FILE_ATTRIBUTE_READONLY) 
     {
@@ -251,9 +252,8 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
  * FUNCTION: Retrieve the file name information
  */
 {
-
-  assert (NameInfo != NULL);
-  assert (FCB != NULL);
+  ASSERT(NameInfo != NULL);
+  ASSERT(FCB != NULL);
 
   if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + FCB->PathNameU.Length + sizeof(WCHAR))
     return STATUS_BUFFER_OVERFLOW;
@@ -272,8 +272,8 @@ VfatGetInternalInformation(PVFATFCB Fcb,
 			   PFILE_INTERNAL_INFORMATION InternalInfo,
 			   PULONG BufferLength)
 {
-  assert (InternalInfo);
-  assert (Fcb);
+  ASSERT(InternalInfo);
+  ASSERT(Fcb);
 
   if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
     return STATUS_BUFFER_OVERFLOW;
@@ -292,22 +292,22 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
  * FUNCTION: Retrieve the file network open information
  */
 {
-  assert (NetworkInfo);
-  assert (Fcb);
+  ASSERT(NetworkInfo);
+  ASSERT(Fcb);
 
   if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
     return(STATUS_BUFFER_OVERFLOW);
 
-  FsdDosDateTimeToFileTime(Fcb->entry.CreationDate,
-			   Fcb->entry.CreationTime,
-			   &NetworkInfo->CreationTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.AccessDate,
-			   0,
-			   &NetworkInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
-			   Fcb->entry.UpdateTime,
-			   &NetworkInfo->LastWriteTime);
-  NetworkInfo->ChangeTime = NetworkInfo->LastWriteTime;
+  FsdDosDateTimeToSystemTime(Fcb->entry.CreationDate,
+			     Fcb->entry.CreationTime,
+			     &NetworkInfo->CreationTime);
+  FsdDosDateTimeToSystemTime(Fcb->entry.AccessDate,
+			     0,
+			     &NetworkInfo->LastAccessTime);
+  FsdDosDateTimeToSystemTime(Fcb->entry.UpdateDate,
+			     Fcb->entry.UpdateTime,
+			     &NetworkInfo->LastWriteTime);
+  NetworkInfo->ChangeTime.QuadPart = NetworkInfo->LastWriteTime.QuadPart;
   if (vfatFCBIsDirectory(Fcb))
     {
       NetworkInfo->EndOfFile.QuadPart = 0L;
@@ -334,24 +334,23 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
  * FUNCTION: Retrieve the all file information
  */
 {
-
-  assert (Info);
-  assert (Fcb);
+  ASSERT(Info);
+  ASSERT(Fcb);
 
   if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + Fcb->PathNameU.Length + sizeof(WCHAR))
     return(STATUS_BUFFER_OVERFLOW);
 
   /* Basic Information */
-  FsdDosDateTimeToFileTime(Fcb->entry.CreationDate,
-			   Fcb->entry.CreationTime,
-			   (TIME *)&Info->BasicInformation.CreationTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.AccessDate,
-			   0,
-			   (TIME *)&Info->BasicInformation.LastAccessTime);
-  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
-			   Fcb->entry.UpdateTime,
-			   (TIME *)&Info->BasicInformation.LastWriteTime);
-  Info->BasicInformation.ChangeTime = Info->BasicInformation.LastWriteTime;
+  FsdDosDateTimeToSystemTime(Fcb->entry.CreationDate,
+			     Fcb->entry.CreationTime,
+			     &Info->BasicInformation.CreationTime);
+  FsdDosDateTimeToSystemTime(Fcb->entry.AccessDate,
+			     0,
+			     &Info->BasicInformation.LastAccessTime);
+  FsdDosDateTimeToSystemTime(Fcb->entry.UpdateDate,
+			     Fcb->entry.UpdateTime,
+			     &Info->BasicInformation.LastWriteTime);
+  Info->BasicInformation.ChangeTime.QuadPart = Info->BasicInformation.LastWriteTime.QuadPart;
   Info->BasicInformation.FileAttributes = Fcb->entry.Attrib & 0x3f;
 
   /* Standard Information */
@@ -587,7 +586,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   ULONG BufferLength;
 
   /* PRECONDITION */
-  assert (IrpContext);
+  ASSERT(IrpContext);
 
   /* INITIALIZATION */
   FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
@@ -686,7 +685,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   BOOL CanWait = IrpContext->Flags & IRPCONTEXT_CANWAIT;
   
   /* PRECONDITION */
-  assert(IrpContext);
+  ASSERT(IrpContext);
   
   DPRINT("VfatSetInformation(IrpContext %x)\n", IrpContext);
   

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.41 2004/08/28 22:19:12 navaraf Exp $
+/* $Id: fcb.c,v 1.42 2004/11/06 13:44:57 ekohl Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -59,7 +59,7 @@ vfatSplitPathName(PUNICODE_STRING PathNameU, PUNICODE_STRING DirNameU, PUNICODE_
     {
       pName--;
     }
-  assert(*pName == L'\\');
+  ASSERT(*pName == L'\\');
   FileNameU->Buffer = pName + 1;
   DirNameU->Length = (FileNameU->Buffer - PathNameU->Buffer) * sizeof(WCHAR);
   DirNameU->MaximumLength = DirNameU->Length;
@@ -522,9 +522,9 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
   BOOLEAN FoundLong = FALSE;
   BOOLEAN FoundShort = FALSE;
 
-  assert (pDeviceExt);
-  assert (pDirectoryFCB);
-  assert (FileToFindU);
+  ASSERT(pDeviceExt);
+  ASSERT(pDirectoryFCB);
+  ASSERT(FileToFindU);
 
   DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%wZ)\n",
           pDeviceExt,

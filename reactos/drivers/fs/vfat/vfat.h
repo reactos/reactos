@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.68 2004/08/28 22:19:12 navaraf Exp $ */
+/* $Id: vfat.h,v 1.69 2004/11/06 13:44:57 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -379,13 +379,13 @@ NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
 
-BOOL FsdDosDateTimeToFileTime (WORD wDosDate,
-                               WORD wDosTime,
-                               TIME *FileTime);
+BOOL FsdDosDateTimeToSystemTime (WORD wDosDate,
+                                 WORD wDosTime,
+                                 PLARGE_INTEGER SystemTime);
 
-BOOL FsdFileTimeToDosDateTime (TIME *FileTime,
-                               WORD *pwDosDate,
-                               WORD *pwDosTime);
+BOOL FsdSystemTimeToDosDateTime (PLARGE_INTEGER SystemTime,
+                                 WORD *pwDosDate,
+                                 WORD *pwDosTime);
 
 /*  --------------------------------------------------------  create.c  */
 

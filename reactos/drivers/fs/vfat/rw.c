@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.70 2004/09/28 10:52:55 ekohl Exp $
+/* $Id: rw.c,v 1.71 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -142,12 +142,12 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   ULONG LastOffset;
 
   /* PRECONDITION */
-  assert (IrpContext);
+  ASSERT(IrpContext);
   DeviceExt = IrpContext->DeviceExt;
-  assert (DeviceExt);
-  assert (DeviceExt->FatInfo.BytesPerCluster);
-  assert (IrpContext->FileObject);
-  assert (IrpContext->FileObject->FsContext2 != NULL);
+  ASSERT(DeviceExt);
+  ASSERT(DeviceExt->FatInfo.BytesPerCluster);
+  ASSERT(IrpContext->FileObject);
+  ASSERT(IrpContext->FileObject->FsContext2 != NULL);
 
   DPRINT("VfatReadFileData(DeviceExt %x, FileObject %x, "
 	 "Length %d, ReadOffset 0x%I64x)\n", DeviceExt,
@@ -160,9 +160,9 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
   BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
 
-  assert(ReadOffset.QuadPart + Length <= ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector));
-  assert(ReadOffset.u.LowPart % BytesPerSector == 0);
-  assert(Length % BytesPerSector == 0);
+  ASSERT(ReadOffset.QuadPart + Length <= ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector));
+  ASSERT(ReadOffset.u.LowPart % BytesPerSector == 0);
+  ASSERT(Length % BytesPerSector == 0);
 
   /* Is this a read of the FAT? */
   if (Fcb->Flags & FCB_IS_FAT)
@@ -356,12 +356,12 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    ULONG LastOffset;
 
    /* PRECONDITION */
-   assert (IrpContext);
+   ASSERT(IrpContext);
    DeviceExt = IrpContext->DeviceExt;
-   assert (DeviceExt);
-   assert (DeviceExt->FatInfo.BytesPerCluster);
-   assert (IrpContext->FileObject);
-   assert (IrpContext->FileObject->FsContext2 != NULL);
+   ASSERT(DeviceExt);
+   ASSERT(DeviceExt->FatInfo.BytesPerCluster);
+   ASSERT(IrpContext->FileObject);
+   ASSERT(IrpContext->FileObject->FsContext2 != NULL);
 
    Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
    Fcb = IrpContext->FileObject->FsContext;
@@ -373,9 +373,9 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 	  IrpContext->FileObject, Length, WriteOffset,
 	  &Fcb->PathNameU);
 
-   assert(WriteOffset.QuadPart + Length <= Fcb->RFCB.AllocationSize.QuadPart);
-   assert(WriteOffset.u.LowPart % BytesPerSector == 0);
-   assert(Length % BytesPerSector == 0)
+   ASSERT(WriteOffset.QuadPart + Length <= Fcb->RFCB.AllocationSize.QuadPart);
+   ASSERT(WriteOffset.u.LowPart % BytesPerSector == 0);
+   ASSERT(Length % BytesPerSector == 0)
 
    // Is this a write of the volume ?
    if (Fcb->Flags & FCB_IS_VOLUME)
@@ -422,7 +422,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 
    if (FirstCluster == 1)
    {
-      assert(WriteOffset.u.LowPart + Length <= DeviceExt->FatInfo.rootDirectorySectors * BytesPerSector);
+      ASSERT(WriteOffset.u.LowPart + Length <= DeviceExt->FatInfo.rootDirectorySectors * BytesPerSector);
       // Directory of FAT12/16 needs a special handling
       WriteOffset.u.LowPart += DeviceExt->FatInfo.rootStart * BytesPerSector;
       // Fire up the write command
@@ -555,11 +555,11 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    PDEVICE_OBJECT DeviceToVerify;
    ULONG BytesPerSector;
 
-   assert(IrpContext);
+   ASSERT(IrpContext);
 
    DPRINT("VfatRead(IrpContext %x)\n", IrpContext);
 
-   assert(IrpContext->DeviceObject);
+   ASSERT(IrpContext->DeviceObject);
 
    // This request is not allowed on the main device object
    if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
@@ -569,10 +569,10 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   assert(IrpContext->DeviceExt);
-   assert(IrpContext->FileObject);
+   ASSERT(IrpContext->DeviceExt);
+   ASSERT(IrpContext->FileObject);
    Fcb = IrpContext->FileObject->FsContext;
-   assert(Fcb);
+   ASSERT(Fcb);
 
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
@@ -788,11 +788,11 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    PVOID Buffer;
    ULONG BytesPerSector;
 
-   assert (IrpContext);
+   ASSERT(IrpContext);
 
    DPRINT("VfatWrite(IrpContext %x)\n", IrpContext);
 
-   assert(IrpContext->DeviceObject);
+   ASSERT(IrpContext->DeviceObject);
 
    // This request is not allowed on the main device object
    if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
@@ -802,10 +802,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   assert(IrpContext->DeviceExt);
-   assert(IrpContext->FileObject);
+   ASSERT(IrpContext->DeviceExt);
+   ASSERT(IrpContext->FileObject);
    Fcb = IrpContext->FileObject->FsContext;
-   assert(Fcb);
+   ASSERT(Fcb);
 
    DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
@@ -1022,12 +1022,11 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    {
       if(!(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
       {
-         LARGE_INTEGER SystemTime, LocalTime;
+         LARGE_INTEGER SystemTime;
          // set dates and times
          KeQuerySystemTime (&SystemTime);
-         ExSystemTimeToLocalTime (&SystemTime, &LocalTime);
-         FsdFileTimeToDosDateTime ((TIME*)&LocalTime, &Fcb->entry.UpdateDate,
-		    	           &Fcb->entry.UpdateTime);
+         FsdSystemTimeToDosDateTime (&SystemTime, &Fcb->entry.UpdateDate,
+                                     &Fcb->entry.UpdateTime);
          Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
          /* set date and times to dirty */
 	 Fcb->Flags |= FCB_IS_DIRTY;

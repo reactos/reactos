@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.34 2004/05/23 13:34:32 hbirr Exp $
+ * $Id: dir.c,v 1.35 2004/11/06 13:44:57 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,13 +20,15 @@
 
 
 // function like DosDateTimeToFileTime
-BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, TIME * FileTime)
+BOOL
+FsdDosDateTimeToSystemTime (WORD wDosDate, WORD wDosTime, PLARGE_INTEGER SystemTime)
 {
   PDOSTIME pdtime = (PDOSTIME) & wDosTime;
   PDOSDATE pddate = (PDOSDATE) & wDosDate;
   TIME_FIELDS TimeFields;
+  LARGE_INTEGER LocalTime;
 
-  if (FileTime == NULL)
+  if (SystemTime == NULL)
     return FALSE;
 
   TimeFields.Milliseconds = 0;
@@ -38,7 +40,8 @@ BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, TIME * FileTime)
   TimeFields.Month = pddate->Month;
   TimeFields.Year = 1980 + pddate->Year;
 
-  RtlTimeFieldsToTime (&TimeFields, (PLARGE_INTEGER) FileTime);
+  RtlTimeFieldsToTime (&TimeFields, &LocalTime);
+  ExLocalTimeToSystemTime(&LocalTime, SystemTime);
 
   return TRUE;
 }
@@ -46,16 +49,18 @@ BOOL FsdDosDateTimeToFileTime (WORD wDosDate, WORD wDosTime, TIME * FileTime)
 
 // function like FileTimeToDosDateTime
 BOOL
-FsdFileTimeToDosDateTime (TIME * FileTime, WORD * pwDosDate, WORD * pwDosTime)
+FsdSystemTimeToDosDateTime (PLARGE_INTEGER SystemTime, WORD * pwDosDate, WORD * pwDosTime)
 {
   PDOSTIME pdtime = (PDOSTIME) pwDosTime;
   PDOSDATE pddate = (PDOSDATE) pwDosDate;
   TIME_FIELDS TimeFields;
+  LARGE_INTEGER LocalTime;
 
-  if (FileTime == NULL)
+  if (SystemTime == NULL)
     return FALSE;
 
-  RtlTimeToTimeFields ((PLARGE_INTEGER) FileTime, &TimeFields);
+  ExSystemTimeToLocalTime (SystemTime, &LocalTime);
+  RtlTimeToTimeFields (&LocalTime, &TimeFields);
 
   if (pdtime)
     {
@@ -103,12 +108,14 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
   memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
-			    DirContext->FatDirEntry.CreationTime, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 0,
-			    &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
-                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.CreationDate,
+			      DirContext->FatDirEntry.CreationTime,
+			      &pInfo->CreationTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.AccessDate, 0,
+			      &pInfo->LastAccessTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.UpdateDate,
+			      DirContext->FatDirEntry.UpdateTime,
+			      &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   if (DirContext->FatDirEntry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
     {
@@ -141,12 +148,14 @@ VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
   memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
-			    DirContext->FatDirEntry.CreationTime, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 
-                            0, &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
-                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.CreationDate,
+			      DirContext->FatDirEntry.CreationTime,
+			      &pInfo->CreationTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.AccessDate,
+                              0, &pInfo->LastAccessTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.UpdateDate,
+                              DirContext->FatDirEntry.UpdateTime,
+                              &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   pInfo->EndOfFile.u.HighPart = 0;
   pInfo->EndOfFile.u.LowPart = DirContext->FatDirEntry.FileSize;
@@ -173,12 +182,14 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   pInfo->ShortNameLength = DirContext->ShortNameU.Length;
   memcpy (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.CreationDate,
-			    DirContext->FatDirEntry.CreationDate, &pInfo->CreationTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.AccessDate, 0,
-			    &pInfo->LastAccessTime);
-  FsdDosDateTimeToFileTime (DirContext->FatDirEntry.UpdateDate, 
-                            DirContext->FatDirEntry.UpdateTime, &pInfo->LastWriteTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.CreationDate,
+                              DirContext->FatDirEntry.CreationDate,
+                              &pInfo->CreationTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.AccessDate, 0,
+                              &pInfo->LastAccessTime);
+  FsdDosDateTimeToSystemTime (DirContext->FatDirEntry.UpdateDate,
+                              DirContext->FatDirEntry.UpdateTime,
+                              &pInfo->LastWriteTime);
   pInfo->ChangeTime = pInfo->LastWriteTime;
   if (DirContext->FatDirEntry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
     {
