@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.57 2003/12/12 21:37:39 weiden Exp $ */
+/* $Id: text.c,v 1.58 2003/12/12 22:50:20 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -44,13 +44,16 @@
 
 FT_Library  library;
 
-typedef struct _FONTTABLE {
+typedef struct _FONT_ENTRY {
+  LIST_ENTRY ListEntry;
   HFONT hFont;
-  LPCWSTR FaceName;
-} FONTTABLE, *PFONTTABLE;
+  UNICODE_STRING FaceName;
+  BYTE CanEnum;
+} FONT_ENTRY, *PFONT_ENTRY;
 
-FONTTABLE FontTable[256];
-INT FontsLoaded = 0;
+static LIST_ENTRY FontListHead;
+static FAST_MUTEX FontListLock;
+static INT FontsLoaded = 0;
 
 int FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
@@ -67,8 +70,8 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   INT error;
   FT_Face face;
   ANSI_STRING StringA;
-  UNICODE_STRING StringU;
   IO_STATUS_BLOCK Iosb;
+  PFONT_ENTRY entry;
 
   NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
   FontObj = (PFONTOBJ) AccessUserObject( (ULONG) NewFont );
@@ -139,6 +142,13 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     DPRINT1("Error reading font file (error code: %u)\n", error); // 48
     return 0;
   }
+  
+  entry = ExAllocatePool(NonPagedPool, sizeof(FONT_ENTRY));
+  if(!entry)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
 
   // FontGDI->Filename = Filename; perform strcpy
   FontGDI->face = face;
@@ -152,15 +162,15 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   DPRINT("Num glyphs: %u\n", face->num_glyphs);
 
   // Add this font resource to the font table
-  FontTable[FontsLoaded].hFont = NewFont;
+  entry->hFont = NewFont;
 
   RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
-  RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
-  FontTable[FontsLoaded].FaceName = ExAllocatePool(NonPagedPool, (StringU.Length + 1) * 2);
-  wcscpy((LPWSTR)FontTable[FontsLoaded].FaceName, StringU.Buffer);
-  RtlFreeUnicodeString(&StringU);
-
+  RtlAnsiStringToUnicodeString(&entry->FaceName, &StringA, TRUE);
+  
+  ExAcquireFastMutex(&FontListLock);
+  InsertTailList(&FontListHead, &entry->ListEntry);
   FontsLoaded++;
+  ExReleaseFastMutex(&FontListLock);
 
   return 1;
 }
@@ -186,12 +196,17 @@ BOOL FASTCALL InitFontSupport(VOID)
   L"\\SystemRoot\\media\\fonts\\VeraSe.ttf",
   L"\\SystemRoot\\media\\fonts\\VeraSeBd.ttf"
   };
+  
+  InitializeListHead(&FontListHead);
+  ExInitializeFastMutex(&FontListLock);
 
   error = FT_Init_FreeType(&library);
   if(error)
   {
     return FALSE;
   }
+  
+  /* FIXME load fonts from registry */
 
   for (File = 0; File < sizeof(FontFiles) / sizeof(WCHAR *); File++)
     {
@@ -1343,36 +1358,51 @@ NtGdiTranslateCharsetInfo(PDWORD  Src,
 NTSTATUS FASTCALL
 TextIntRealizeFont(HFONT FontHandle)
 {
-  LONG i;
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
+  UNICODE_STRING FaceName;
+  PLIST_ENTRY Entry;
+  PFONT_ENTRY CurrentEntry;
 
   TextObj = TEXTOBJ_LockText(FontHandle);
   ASSERT(TextObj);
   if (NULL != TextObj)
     {
-    for(i = 0; NULL == TextObj->GDIFontHandle && i < FontsLoaded; i++)
+    RtlInitUnicodeString(&FaceName, TextObj->logfont.lfFaceName);
+    
+    ExAcquireFastMutex(&FontListLock);
+    
+    Entry = FontListHead.Flink;
+    while(Entry != &FontListHead)
     {
-      if (0 == wcscmp(FontTable[i].FaceName, TextObj->logfont.lfFaceName))
+      CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+      
+      if (0 == RtlCompareUnicodeString(&CurrentEntry->FaceName, &FaceName, TRUE))
       {
-	TextObj->GDIFontHandle = FontTable[i].hFont;
+	    TextObj->GDIFontHandle = CurrentEntry->hFont;
+	    break;
       }
+      Entry = Entry->Flink;
     }
+    ExReleaseFastMutex(&FontListLock);
 
     if (NULL == TextObj->GDIFontHandle)
     {
-      if (0 != FontsLoaded)
+      Entry = FontListHead.Flink;
+      if(Entry != &FontListHead)
       {
-	DPRINT("Requested font %S not found, using first available font\n",
-	       TextObj->logfont.lfFaceName)
-	TextObj->GDIFontHandle = FontTable[0].hFont;
+	    DPRINT("Requested font %S not found, using first available font\n",
+  	             TextObj->logfont.lfFaceName)
+        CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        TextObj->GDIFontHandle = CurrentEntry->hFont;
       }
       else
       {
-	DPRINT1("Requested font %S not found, no fonts loaded at all\n",
-	        TextObj->logfont.lfFaceName)
-	Status = STATUS_NOT_FOUND;
+        DPRINT1("Requested font %S not found, no fonts loaded at all\n",
+                TextObj->logfont.lfFaceName);
+        Status = STATUS_NOT_FOUND;
       }
+      
     }
 
     ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
