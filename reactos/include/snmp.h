@@ -28,6 +28,23 @@ extern "C" {
 #endif
 
 
+///////////////////////////////////////////////////////////////////////////////
+// SNMP Error Codes
+//
+	
+#define SNMP_MEM_ALLOC_ERROR            1
+#define SNMP_BERAPI_INVALID_LENGTH      10
+#define SNMP_BERAPI_INVALID_TAG         11
+#define SNMP_BERAPI_OVERFLOW            12
+#define SNMP_BERAPI_SHORT_BUFFER        13
+#define SNMP_BERAPI_INVALID_OBJELEM     14
+#define SNMP_PDUAPI_UNRECOGNIZED_PDU    20
+#define SNMP_PDUAPI_INVALID_ES          21
+#define SNMP_PDUAPI_INVALID_GT          22
+#define SNMP_AUTHAPI_INVALID_VERSION    30
+#define SNMP_AUTHAPI_INVALID_MSG_TYPE   31
+#define SNMP_AUTHAPI_TRIV_AUTH_FAILED   32
+
 ////////////////////////////////////////////////////////////////////////////////
 // SNMP Type Definitions
 //
