@@ -28,7 +28,7 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
-VOID KeDumpStackFrames(ULONG DummyArg);
+VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

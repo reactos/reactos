@@ -1,47 +1,94 @@
 This is the file "copying.dj".  It does NOT apply to any sources or
+
 binaries copyrighted by UCB Berkeley, the Free Software Foundation, or
+
 any other agency besides DJ Delorie and others who have agreed to
+
 allow their sources to be distributed under these terms.
 
+
+
    Copyright Information for sources and executables that are marked
+
    Copyright (C) DJ Delorie
+
                  7 Kim Lane
+
                  Rochester NH  03867-2954
 
+
+
 This document is Copyright (C) DJ Delorie and may be distributed
+
 verbatim, but changing it is not allowed.
 
+
+
 Source code copyright DJ Delorie is distributed under the terms of the
+
 GNU General Public Licence, with the following exceptions:
 
+
+
 * Sources used to build crt0.o, gcrt0.o, libc.a, libdbg.a, and
+
   libemu.a are distributed under the terms of the GNU Library General
+
   Public License, rather than the GNU GPL.
 
+
+
 * Any existing copyright or authorship information in any given source
+
   file must remain intact.  If you modify a source file, a notice to that
+
   effect must be added to the authorship information in the source file. 
 
+
+
 * Runtime binaries, as provided by DJ in DJGPP, may be distributed
+
   without sources ONLY if the recipient is given sufficient information
+
   to obtain a copy of djgpp themselves.  This primarily applies to
+
   go32-v2.exe, emu387.dxe, and stubedit.exe.
 
+
+
 * Runtime objects and libraries, as provided by DJ in DJGPP, when
+
   linked into an application, may be distributed without sources ONLY
+
   if the recipient is given sufficient information to obtain a copy of
+
   djgpp themselves.  This primarily applies to crt0.o and libc.a.
+
+
 
 -----
 
+
+
 Changes to source code copyright BSD or FSF by DJ Delorie fall under
+
 the terms of the original copyright.
 
+
+
 A copy of the files "COPYING" and "COPYING.LIB" are included with this
+
 document.  If you did not receive a copy of these files, you may
+
 obtain one from whence this document was obtained, or by writing:
 
+
+
       Free Software Foundation
+
       675 Mass Ave
+
       Cambridge, MA  02139
+
       USA
+

@@ -194,11 +194,12 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
 {
    PIRP Irp;
    
-   DPRINT("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
+   DbgPrint("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
           StackSize,
 	  ChargeQuota);
-//   if (ChargeQuota)
-   if (0)
+   KeDumpStackFrames(0,8);
+   
+   if (ChargeQuota)
      {
 	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
      }

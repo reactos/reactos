@@ -48,7 +48,7 @@ static HEAP_BUCKET __HeapDefaultBuckets[]=
   { NULL, 256, 15, 4088 },
 };
 
-PHEAP	__ProcessHeap;
+PHEAP	__ProcessHeap = NULL;
 
 static BOOL   __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end);
 static BOOL   __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end);
@@ -604,8 +604,10 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
    pheap->End= ((LPVOID)pheap)+minsize;
    pheap->Flags=flags;
    pheap->LastBlock=(LPVOID)pheap + PAGESIZE;
-   CopyMemory(pheap->Bucket,__HeapDefaultBuckets,sizeof(__HeapDefaultBuckets));
-   if(__ProcessHeap)
+   CopyMemory(pheap->Bucket,
+	      __HeapDefaultBuckets,
+	      sizeof(__HeapDefaultBuckets));
+   if (__ProcessHeap)
    {
       pheap->NextHeap=__ProcessHeap->NextHeap;
       __ProcessHeap->NextHeap=pheap;

@@ -18,6 +18,8 @@
 
 /* TYPES *********************************************************************/
 
+#define CACHE_SEGMENT_SIZE     (0x10000)
+
 #define CACHE_SEGMENT_INVALID  (0)     // Isn't valid
 #define CACHE_SEGMENT_WRITTEN  (1)     // Written
 #define CACHE_SEGMENT_READ     (2)
@@ -28,7 +30,7 @@ typedef struct _CACHE_SEGMENT
    ULONG Size;
    LIST_ENTRY ListEntry;          // Entry in the per-open list of segments
    PVOID BaseAddress;             // Base address of the mapping   
-   ULONG Length;                  // Length of the mapping
+   ULONG ValidLength;                  // Length of the mapping
    ULONG State;                   // Information
    MEMORY_AREA* MemoryArea;       // Memory area for the mapping
    ULONG FileOffset;              // Offset within the file of the mapping
@@ -59,51 +61,56 @@ PVOID Cc1PurgeView(PCC1_CCB CacheDesc,
 {
 }
 
-BOOLEAN Cc1AcquireCacheSegment(PCACHE_SEGMENT CacheSegment,
-			       BOOLEAN AcquireForWrite,
-			       BOOLEAN Wait)
-{
-   
-}
+
  
-PVOID Cc1RequestView(PCC1_CCB CacheDesc,
-		     ULONG FileOffset,
-		     ULONG Length,
-		     BOOLEAN Wait,
-		     BOOLEAN AcquireForWrite)
+NTSTATUS Cc1RequestView(PCC1_CCB CacheDesc,
+			ULONG FileOffset,
+			ULONG Length,
+			PCACHE_SEGMENT ReturnedSegments[],
+			PULONG NrSegments)
 /*
  * FUNCTION: Request a view for caching data
- * ARGUMENTS:
- *          FileObject = File to have information cached in the view
- *          FileOffset = Offset within the file of the cached information
- *          Length = Length of the information to be cached
- *          Wait = If the view is being created then wait for the creater
- *                 to make the view valid
- *          AcquireForWrite = True if the view is being acquired for writing
- *          Buffer = Pointer to a variable to hold the base address of the view
- * RETURNS: True if the view contains valid data,
- *          False otherwise
  */
 {
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
+   PCACHE_SEGMENT new_segment;
+   ULONG MaxSegments;
+   ULONG LengthDelta;
+   
+   MaxSegments = *NrSegments;
+   (*NrSegments) = 0;
    
    KeAcquireSpinLock(&CacheDesc->CacheSegmentListLock);
    
    current_entry = CacheDesc->CacheSegmentListHead.Flink;
-   while (current_entry != &CacheDesc->CacheSegmentListHead)
+   while (current_entry != &(CacheDesc->CacheSegmentListHead))
      {
-	current = CONTAING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);       	
+	current = CONTAING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
 	
 	if (current->FileOffset <= FileOffset &&
-	    (current->FileOffset + current->length) >= (FileOffset + Length))
+	    (current->FileOffset + current->ValidLength) > FileOffset)
 	  {
-	     if (!Cc1AcquireCacheSegment(AcquireForWrite, Wait))
+	     ReturnedSegments[(*NrSegments)] = current;
+	     (*NrSegments)++;
+	     FileOffset = current->FileOffset + current->ValidLength;
+	     LengthDelta = (FileOffset - current->FileOffset);
+	     if (Length <= LengthDelta)
 	       {
-		  return(NULL);
+		  KeReleaseSpinLock(&CacheDesc->CacheSegmentListLock);
+		  return(STATUS_SUCCESS);
 	       }
-	     return(current->BaseAddress + (FileOffset - current->FileOffset));
+	     Length = Length - LengthDelta;
 	  }
+	else if (current->FileOffset <= (FileOffset + Length) &&
+                 (current->FileOffset + current->ValidLength) >
+		 (FileOffset + Length))
+	  {
+	     ReturnedSegments[(*NrSegments)] = current;
+	     (*NrSegments)++;
+	     Length = Length - ((FileOffset + Length) - current->FileOffset);
+	  }
+	
 	current_entry = current_entry->Flink;
      }
    
@@ -118,8 +125,14 @@ PCC1_CCB Cc1InitializeFileCache(PFILE_OBJECT FileObject)
    PCC1_CCB CacheDesc;
    
    CacheDesc = ExAllocatePool(NonPagedPool, sizeof(CC1_CCB));
+   if (CacheDesc == NULL)
+     {
+	return(NULL);
+     }
+   
+   CacheDesc->Type = CC1_CCB_ID;
    InitializeListHead(&CacheDesc->CacheSegmentListHead);
-   KeAcquireSpinLock(&CacheDesc->CacheSegmentListLock);
+   KeInitializeSpinLock(&CacheDesc->CacheSegmentListLock);
    
    return(CacheDesc);
 }

@@ -55,25 +55,26 @@ void ExecuteDir(char* cmdline)
  TIME_FIELDS fTime;
 
   shandle = FindFirstFile("*",&FindData);
-
-  if (shandle==INVALID_HANDLE_VALUE)
-  {
-          return;
-  }
-  do
-  {
-    debug_printf("%-15.15s",FindData.cAlternateFileName);
-    if(FindData.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
-         debug_printf("<REP>       "),nRep++;
-       else
-         debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
-//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
+   
+   if (shandle==INVALID_HANDLE_VALUE)
+     {
+	debug_printf("Invalid directory\n");
+	return;
+     }
+   do
+     {
+	debug_printf("%-15.15s",FindData.cAlternateFileName);
+	if(FindData.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
+	  debug_printf("<REP>       "),nRep++;
+	else
+	  debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
+	//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
 //    debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
 //        ,fTime.Month,fTime.Day,fTime.Year
 //        ,fTime.Hour,fTime.Minute,fTime.Second);
-    debug_printf("%s\n",FindData.cFileName);
-  } while(FindNextFile(shandle,&FindData));
-  debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
+	debug_printf("%s\n",FindData.cFileName);
+     } while(FindNextFile(shandle,&FindData));
+   debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
 }
 
 void ExecuteType(char* cmdline)

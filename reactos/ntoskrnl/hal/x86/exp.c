@@ -255,7 +255,7 @@ asmlinkage void exception_handler(unsigned int edi,
    for(;;);
 }
 
-VOID KeDumpStackFrames(ULONG DummyArg)
+VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames)
 {
    PULONG Stack = &((&DummyArg)[-1]);
    ULONG i;
@@ -263,7 +263,7 @@ VOID KeDumpStackFrames(ULONG DummyArg)
    Stack = (PVOID)(((ULONG)Stack) & (~0x3));
    
    DbgPrint("Frames:\n");
-   for (i=0; i<32; i++)
+   for (i=0; i<NrFrames; i++)
      {
 	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
 	  {
