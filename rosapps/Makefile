@@ -28,12 +28,12 @@ APPS = 	calc \
 	net$(SEP)ping \
 	regedit \
 	regedt32 \
-	taskmgr \
 	welcome \
 	winfile
 
 # Removed due to dependance on C++ compiler
 #
+#	taskmgr \
 #	sysutils$(SEP)regexpl \
 #
 
