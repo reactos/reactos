@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.8 2001/07/12 16:28:24 ekohl Exp $
+/* $Id: dllmain.c,v 1.9 2001/07/27 23:54:05 ekohl Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -75,8 +75,10 @@ DllMain(PVOID hinstDll,
 				return FALSE;
 
 			_acmdln = (char *)GetCommandLineA();
-			if( BlockEnvToEnviron() )
-			  return FALSE;
+
+			/* FIXME: This crashes all applications */
+//			if( BlockEnvToEnviron() )
+//			  return FALSE;
 
 			/* FIXME: more initializations... */
 
