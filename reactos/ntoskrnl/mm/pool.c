@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.19 2003/07/21 21:53:53 royce Exp $
+/* $Id: pool.c,v 1.20 2003/07/31 01:44:17 royce Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -24,21 +24,31 @@
 /* FUNCTIONS ***************************************************************/
 
 PVOID STDCALL STATIC
-EiAllocatePool(POOL_TYPE PoolType,
-	       ULONG NumberOfBytes,
-	       ULONG Tag,
-	       PVOID Caller)
+EiAllocatePool(
+	POOL_TYPE PoolType,
+	ULONG NumberOfBytes,
+	ULONG Tag,
+	PVOID Caller)
 {
-   PVOID Block;
-   
-   if (PoolType == NonPagedPoolCacheAligned || 
-       PoolType == NonPagedPoolCacheAlignedMustS)
-     {
-	UNIMPLEMENTED;
-     }
-   
-   switch(PoolType)
-     {
+  PVOID Block;
+  BOOL CacheAligned = FALSE;
+  BOOL MustSucceed = FALSE;
+  static const ULONG nCacheAlignBytes = 31;
+  
+  if ( PoolType == NonPagedPoolCacheAligned
+    || PoolType == NonPagedPoolCacheAlignedMustS
+    || PoolType == PagedPoolCacheAligned )
+    {
+      CacheAligned = TRUE;
+      NumberOfBytes += nCacheAlignBytes;
+    }
+
+  if ( PoolType == NonPagedPoolMustSucceed
+    || PoolType == NonPagedPoolCacheAlignedMustS )
+    MustSucceed = TRUE;
+
+  switch ( PoolType )
+    {
       case NonPagedPool:
       case NonPagedPoolMustSucceed:
       case NonPagedPoolCacheAligned:
@@ -48,23 +58,33 @@ EiAllocatePool(POOL_TYPE PoolType,
 					NumberOfBytes,
 					Tag,
 					Caller);
-	break;
-	
+	  break;
+	  
       case PagedPool:
       case PagedPoolCacheAligned:
-	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+	Block =
+	  ExAllocatePagedPoolWithTag(PoolType,
+				     NumberOfBytes,
+				     Tag);
 	break;
-	
+
       default:
-	return(NULL);
-     };
-   
-   if ((PoolType==NonPagedPoolMustSucceed || 
-	PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)     
-     {
-	KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
-     }
-   return(Block);
+	DbgPrint ( "Unknown PoolType in call to EiAllocatePool!\n" );
+	/* a bug check may be overdramatic, but let's catch problems
+	   as soon as we detect them, no? */
+	KEBUGCHECK(0);
+	return NULL;
+    };
+
+  if ( Block == NULL && MustSucceed == TRUE )
+    {
+      KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
+    }
+
+  if ( Block != NULL && CacheAligned == TRUE )
+    Block = (PVOID)(((size_t)(Block + nCacheAlignBytes)) & (~nCacheAlignBytes));
+
+  return(Block);
 }
 
 /*

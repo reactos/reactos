@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.146 2003/07/25 23:51:23 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.147 2003/07/31 01:44:18 royce Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -217,8 +217,8 @@ InterlockedDecrement=@InterlockedDecrement@4
 InterlockedExchange=@InterlockedExchange@8
 InterlockedExchangeAdd=@InterlockedExchangeAdd@8
 InterlockedIncrement=@InterlockedIncrement@4
-@InterlockedPushEntrySList=@InterlockedPushEntrySList@8
-@InterlockedPopEntrySList=@InterlockedPopEntrySList@4
+InterlockedPushEntrySList=@InterlockedPushEntrySList@8
+InterlockedPopEntrySList=@InterlockedPopEntrySList@4
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA
