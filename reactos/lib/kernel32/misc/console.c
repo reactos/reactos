@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.29 2001/01/31 02:23:52 phreak Exp $
+/* $Id: console.c,v 1.30 2001/02/10 22:26:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -123,7 +123,7 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
    NTSTATUS Status;
    WORD Size;
    
-   Request = HeapAlloc(GetProcessHeap(),
+   Request = RtlAllocateHeap(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
 		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_REQUEST);
    if (Request == NULL)
@@ -154,14 +154,14 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
 	 
 	 if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
-	       HeapFree( GetProcessHeap(), 0, Request );
+	       RtlFreeHeap( GetProcessHeap(), 0, Request );
 	       SetLastErrorByStatus (Status);
 	       return(FALSE);
 	    }
 	 nNumberOfCharsToWrite -= Size;
 	 lpBuffer += Size;
       }
-   HeapFree( GetProcessHeap(), 0, Request );
+   RtlFreeHeap( GetProcessHeap(), 0, Request );
    return TRUE;
 }
 
@@ -180,7 +180,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    NTSTATUS Status;
    ULONG CharsRead = 0;
    
-   Reply = HeapAlloc(GetProcessHeap(),
+   Reply = RtlAllocateHeap(GetProcessHeap(),
 		     HEAP_ZERO_MEMORY,
 		     sizeof(CSRSS_API_REPLY) + nNumberOfCharsToRead);
    if (Reply == NULL)
@@ -201,7 +201,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
      {
 	DbgPrint( "CSR returned error in ReadConsole\n" );
 	SetLastErrorByStatus ( Status );
-	HeapFree( GetProcessHeap(), 0, Reply );
+	RtlFreeHeap( GetProcessHeap(), 0, Reply );
 	return(FALSE);
      }
    if( Reply->Status == STATUS_NOTIFY_CLEANUP )
@@ -223,7 +223,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
        if( !NT_SUCCESS( Status ) )
 	  {
 	     DbgPrint( "Wait for console input failed!\n" );
-	     HeapFree( GetProcessHeap(), 0, Reply );
+	     RtlFreeHeap( GetProcessHeap(), 0, Reply );
 	     return FALSE;
 	  }
        Request.Data.ReadConsoleRequest.nCharsCanBeDeleted = CharsRead;
@@ -231,7 +231,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
        if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply->Status ) )
 	 {
 	   SetLastErrorByStatus ( Status );
-	   HeapFree( GetProcessHeap(), 0, Reply );
+	   RtlFreeHeap( GetProcessHeap(), 0, Reply );
 	   return FALSE;
 	 }
        if( Reply->Status == STATUS_NOTIFY_CLEANUP )
@@ -250,7 +250,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
    if (lpNumberOfCharsRead != NULL)
      *lpNumberOfCharsRead = CharsRead;
-   HeapFree(GetProcessHeap(),
+   RtlFreeHeap(GetProcessHeap(),
 	    0,
 	    Reply);
    
@@ -683,7 +683,7 @@ WriteConsoleOutputCharacterA(
    NTSTATUS Status;
    WORD Size;
 
-   Request = HeapAlloc(GetProcessHeap(),
+   Request = RtlAllocateHeap(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
 		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
    if( !Request )
@@ -757,7 +757,7 @@ WriteConsoleOutputAttribute(
    WORD Size;
    int c;
 
-   Request = HeapAlloc(GetProcessHeap(),
+   Request = RtlAllocateHeap(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
 		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB);
    if( !Request )
@@ -1314,7 +1314,7 @@ WriteConsoleW(
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    
-   Request = HeapAlloc(GetProcessHeap(),
+   Request = RtlAllocateHeap(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
 		       sizeof(CSRSS_API_REQUEST) + nNumberOfCharsToWrite * sizeof(WCHAR));
    if (Request == NULL)
@@ -1338,7 +1338,7 @@ WriteConsoleW(
 				nNumberOfCharsToWrite,
 				sizeof(CSRSS_API_REPLY));
 
-   HeapFree(GetProcessHeap(),
+   RtlFreeHeap(GetProcessHeap(),
 	    0,
 	    Request);
 

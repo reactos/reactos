@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.27 2000/06/29 23:35:23 dwelch Exp $
+/* $Id: dir.c,v 1.28 2001/02/10 22:25:42 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -615,7 +615,7 @@ SearchPathW (
 		}
 	
 		j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,0);
-		EnvironmentBufferW = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,(j+1)*sizeof(WCHAR));
+		EnvironmentBufferW = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,(j+1)*sizeof(WCHAR));
 
 		j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,j+1);
 
@@ -630,7 +630,7 @@ SearchPathW (
 			i += lstrlenW(&EnvironmentBufferW[i]) + 1;
 		}
 
-		HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
+		RtlFreeHeap(GetProcessHeap(),0,EnvironmentBufferW);
 
 		return retCode;
 	}
