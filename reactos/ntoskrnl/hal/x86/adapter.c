@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.6 2001/04/02 23:54:37 phreak Exp $
+/* $Id: adapter.c,v 1.7 2001/04/26 01:30:17 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,7 +75,7 @@ IoFlushAdapterBuffers (PADAPTER_OBJECT	AdapterObject,
 {
   // if this was a read from device, copy data back to caller buffer, otherwise, do nothing
   if( !WriteToDevice )
-    memcpy( MmGetSystemAddressForMdl( Mdl ), MapRegisterBase, Length );
+    memcpy( (PVOID)((DWORD)MmGetSystemAddressForMdl( Mdl ) + (DWORD)CurrentVa - (DWORD)MmGetMdlVirtualAddress( Mdl )), MapRegisterBase, Length );
   return TRUE;
 }
 
