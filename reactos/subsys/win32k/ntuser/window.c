@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.205 2004/03/31 18:37:12 gvg Exp $
+/* $Id: window.c,v 1.206 2004/03/31 19:20:18 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2616,7 +2616,6 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
       return NULL;
    }
   
-   IntLockRelatives(WindowObject);
    switch (Relationship)
    {
       case GW_HWNDFIRST:
@@ -2642,28 +2641,35 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
          break;
 
       case GW_HWNDNEXT:
+         IntLockRelatives(WindowObject);
          if (WindowObject->NextSibling)
             hWndResult = WindowObject->NextSibling->Self;
+         IntUnLockRelatives(WindowObject);
          break;
 
       case GW_HWNDPREV:
+         IntLockRelatives(WindowObject);
          if (WindowObject->PrevSibling)
             hWndResult = WindowObject->PrevSibling->Self;
+         IntUnLockRelatives(WindowObject);
          break;
 
       case GW_OWNER:
+         IntLockRelatives(WindowObject);
          if((Parent = IntGetWindowObject(WindowObject->Owner)))
          {
            hWndResult = Parent->Self;
            IntReleaseWindowObject(Parent);
          }
+         IntUnLockRelatives(WindowObject);
          break;
       case GW_CHILD:
+         IntLockRelatives(WindowObject);
          if (WindowObject->FirstChild)
             hWndResult = WindowObject->FirstChild->Self;
+         IntUnLockRelatives(WindowObject);
          break;
    }
-   IntUnLockRelatives(WindowObject);
 
    IntReleaseWindowObject(WindowObject);
 
