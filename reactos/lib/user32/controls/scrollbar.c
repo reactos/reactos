@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.20 2003/11/24 16:15:00 gvg Exp $
+/* $Id: scrollbar.c,v 1.21 2003/12/14 11:36:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -142,7 +142,7 @@ arrowSize, PSCROLLBARINFO psbi)
    */
   if ( nBar == SB_CTL )
   {
-    hBrush = (HBRUSH) NtUserSendMessage (GetParent (hwnd), WM_CTLCOLORSCROLLBAR, (WPARAM) hdc, (LPARAM) hwnd);
+    hBrush = (HBRUSH) SendMessageW(GetParent (hwnd), WM_CTLCOLORSCROLLBAR, (WPARAM) hdc, (LPARAM) hwnd);
     if(!hBrush)
       hBrush = GetSysColorBrush(COLOR_SCROLLBAR);
   }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.46 2003/12/13 12:12:41 weiden Exp $
+ *  $Id: painting.c,v 1.47 2003/12/14 11:36:43 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -159,7 +159,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
-          NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
+          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0, TRUE);
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -170,7 +170,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
                                            DCX_INTERSECTUPDATE);
               if (hDC != NULL)
                 {
-                  if (NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
+                  if (IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0, TRUE))
                     {
                       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
                     }
@@ -184,7 +184,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           if (Window->UpdateRegion != NULL ||
               Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
-              NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
+              IntSendMessage(hWnd, WM_PAINT, 0, 0, TRUE);
               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
                 {
                   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
@@ -775,7 +775,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
       Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
-      lPs->fErase = !NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)lPs->hdc, 0);
+      lPs->fErase = !IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)lPs->hdc, 0, TRUE);
    }
    else
    {

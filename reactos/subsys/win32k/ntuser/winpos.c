@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.54 2003/12/13 18:42:52 gvg Exp $
+/* $Id: winpos.c,v 1.55 2003/12/14 11:36:43 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -160,7 +160,7 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 	    {
 	      if (!(IconWindow->Style & WS_VISIBLE))
 		{
-		  NtUserSendMessage(hWnd, WM_SHOWWINDOW, TRUE, 0);
+		  IntSendMessage(hWnd, WM_SHOWWINDOW, TRUE, 0, TRUE);
 		  WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE |
 				     SWP_NOMOVE | SWP_NOACTIVATE | 
 				     SWP_NOZORDER | SWP_SHOWWINDOW);
@@ -221,7 +221,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
     {
       if (WindowObject->Style & WS_MINIMIZE)
 	{
-	  if (!NtUserSendMessage(WindowObject->Self, WM_QUERYOPEN, 0, 0))
+	  if (!IntSendMessage(WindowObject->Self, WM_QUERYOPEN, 0, 0, TRUE))
 	    {
 	      return(SWP_NOSIZE | SWP_NOMOVE);
 	    }
@@ -383,11 +383,12 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
     }
 
 #if 0
-  NtUserSendMessage(hWnd,
-    WM_ACTIVATE,
-	  MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
+  IntSendMessage(hWnd,
+      WM_ACTIVATE,
+      MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
       (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
-      (LPARAM)IntGetDesktopWindow());  /* FIXME: Previous active window */
+      (LPARAM)IntGetDesktopWindow(),  /* FIXME: Previous active window */
+      TRUE);
 #endif
   IntSetForegroundWindow(WindowObject);
 
@@ -975,7 +976,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    {
       if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
       {
-         NtUserSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
+         IntSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0, TRUE);
       }
       else
       {
@@ -1098,7 +1099,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   ShowFlag = (Cmd != SW_HIDE);
   if (ShowFlag != WasVisible)
     {
-      NtUserSendMessage(Wnd, WM_SHOWWINDOW, ShowFlag, 0);
+      IntSendMessage(Wnd, WM_SHOWWINDOW, ShowFlag, 0, TRUE);
       /* 
        * FIXME: Need to check the window wasn't destroyed during the 
        * window procedure. 
@@ -1156,14 +1157,14 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	  wParam = SIZE_MINIMIZED;
 	}
 
-      NtUserSendMessage(Wnd, WM_SIZE, wParam,
-			MAKELONG(Window->ClientRect.right - 
-				 Window->ClientRect.left,
-				 Window->ClientRect.bottom -
-				 Window->ClientRect.top));
-      NtUserSendMessage(Wnd, WM_MOVE, 0,
-			MAKELONG(Window->ClientRect.left,
-				 Window->ClientRect.top));
+      IntSendMessage(Wnd, WM_SIZE, wParam,
+                     MAKELONG(Window->ClientRect.right - 
+                              Window->ClientRect.left,
+                              Window->ClientRect.bottom -
+                              Window->ClientRect.top), TRUE);
+      IntSendMessage(Wnd, WM_MOVE, 0,
+                     MAKELONG(Window->ClientRect.left,
+                              Window->ClientRect.top), TRUE);
     }
 
   /* Activate the window if activation is not requested and the window is not minimized */

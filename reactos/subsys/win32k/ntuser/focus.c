@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.4 2003/12/07 19:29:33 weiden Exp $
+ * $Id: focus.c,v 1.5 2003/12/14 11:36:42 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -56,10 +56,10 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      NtUserSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
-      NtUserSendMessage(hWndPrev, WM_ACTIVATE,
+      IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0, TRUE);
+      IntSendMessage(hWndPrev, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
-         (LPARAM)NULL);
+         (LPARAM)NULL, TRUE);
    }
 }
 
@@ -69,10 +69,10 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
    if (hWnd)
    {
       /* Send palette messages */
-      if (NtUserSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0, TRUE))
       {
-         NtUserSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
-            (WPARAM)hWnd, 0);
+         IntSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
+            (WPARAM)hWnd, 0, TRUE);
       }
 
       WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
@@ -80,11 +80,11 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
 
       /* FIXME: IntIsWindow */
 
-      NtUserSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0);
+      IntSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0, TRUE);
       /* FIXME: WA_CLICKACTIVE */
-      NtUserSendMessage(hWnd, WM_ACTIVATE,
+      IntSendMessage(hWnd, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
-         (LPARAM)hWndPrev);
+         (LPARAM)hWndPrev, TRUE);
    }
 }
 
@@ -93,7 +93,7 @@ IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      NtUserSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      IntSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0, TRUE);
    }
 }
 
@@ -102,7 +102,7 @@ IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWnd)
    {
-      NtUserSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      IntSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0, TRUE);
    }
 }
 
@@ -326,7 +326,7 @@ NtUserSetCapture(HWND hWnd)
       }
    }
    hWndPrev = ThreadQueue->CaptureWindow;
-   NtUserSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd, TRUE);
 /*   ExAcquireFastMutex(&ThreadQueue->Lock);*/
    ThreadQueue->CaptureWindow = hWnd;
 /*   ExReleaseFastMutex(&ThreadQueue->Lock);*/

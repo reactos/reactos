@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.4 2003/12/07 17:22:13 weiden Exp $
+/* $Id: accelerator.c,v 1.5 2003/12/14 11:36:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -145,7 +145,7 @@ NtUserCreateAcceleratorTable(
   NTSTATUS Status;
   HACCEL Handle;
 
-  DbgPrint("NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
+  DPRINT("NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
     Entries, EntriesCount);
 
   Status = IntValidateWindowStationHandle(NtUserGetProcessWindowStation(),
@@ -155,7 +155,7 @@ NtUserCreateAcceleratorTable(
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(STATUS_ACCESS_DENIED);
-    DbgPrint("E1\n");
+    DPRINT1("E1\n");
     return FALSE;
   }
 
@@ -168,7 +168,7 @@ NtUserCreateAcceleratorTable(
   {
     ObDereferenceObject(WindowStation);
     SetLastNtError(STATUS_NO_MEMORY);
-    DbgPrint("E2\n");
+    DPRINT1("E2\n");
     return (HACCEL) 0;
   }
 
@@ -181,7 +181,7 @@ NtUserCreateAcceleratorTable(
 		ObmCloseHandle(WindowStation->HandleTable, Handle);
 		ObDereferenceObject(WindowStation);
 		SetLastNtError(Status);
-		DbgPrint("E3\n");
+		DPRINT1("E3\n");
 		return (HACCEL) 0;
 	}
 
@@ -192,7 +192,7 @@ NtUserCreateAcceleratorTable(
 	  ObmCloseHandle(WindowStation->HandleTable, Handle);
       ObDereferenceObject(WindowStation);
       SetLastNtError(Status);
-      DbgPrint("E4\n");
+      DPRINT1("E4\n");
       return (HACCEL) 0;
     }
   }
@@ -201,7 +201,7 @@ NtUserCreateAcceleratorTable(
 
   /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
 
-  DbgPrint("NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x end\n",
+  DPRINT("NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x end\n",
     Entries, EntriesCount, Handle);
 
   return (HACCEL) Handle;
@@ -221,7 +221,7 @@ NtUserDestroyAcceleratorTable(
 	 FIXME: Destroy only tables created using CreateAcceleratorTable.
    */
 
-  DbgPrint("NtUserDestroyAcceleratorTable(Table %x)\n",
+  DPRINT("NtUserDestroyAcceleratorTable(Table %x)\n",
     Table);
 
   Status = IntValidateWindowStationHandle(NtUserGetProcessWindowStation(),
@@ -231,7 +231,7 @@ NtUserDestroyAcceleratorTable(
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(STATUS_ACCESS_DENIED);
-    DbgPrint("E1\n");
+    DPRINT1("E1\n");
     return FALSE;
   }
 
@@ -243,7 +243,7 @@ NtUserDestroyAcceleratorTable(
   {
     SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
     ObDereferenceObject(WindowStation);
-    DbgPrint("E2\n");
+    DPRINT1("E2\n");
     return FALSE;
   }
 
@@ -256,7 +256,7 @@ NtUserDestroyAcceleratorTable(
 
   ObDereferenceObject(WindowStation);
 
-  DbgPrint("NtUserDestroyAcceleratorTable(Table %x)\n",
+  DPRINT("NtUserDestroyAcceleratorTable(Table %x)\n",
     Table);
 
   return TRUE;
@@ -273,12 +273,12 @@ IntTranslateAccelerator(HWND hWnd,
 {
   UINT mesg = 0;
 
-  DbgPrint("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
+  DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
     hWnd, message, wParam, lParam, fVirt, key, cmd);
 
   if (wParam != key)
     {
-      DbgPrint("T0\n");
+      DPRINT1("T0\n");
       return FALSE;
     }
 
@@ -286,7 +286,7 @@ IntTranslateAccelerator(HWND hWnd,
     {
       if (!(fVirt & FALT) && !(fVirt & FVIRTKEY))
         {
-          DbgPrint("found accel for WM_CHAR: ('%c')\n", wParam & 0xff);
+          DPRINT("found accel for WM_CHAR: ('%c')\n", wParam & 0xff);
           goto found;
         }
     }
@@ -295,21 +295,21 @@ IntTranslateAccelerator(HWND hWnd,
       if ((fVirt & FVIRTKEY) > 0)
         {
           INT mask = 0;
-          DbgPrint("found accel for virt_key %04x (scan %04x)\n",
+          DPRINT("found accel for virt_key %04x (scan %04x)\n",
             wParam, 0xff & HIWORD(lParam));
 
-		  DbgPrint("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
+		  DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
             NtUserGetKeyState(VK_SHIFT));
-		  DbgPrint("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
+		  DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
             NtUserGetKeyState(VK_CONTROL));
-		  DbgPrint("NtUserGetKeyState(VK_MENU) = 0x%x\n",
+		  DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
             NtUserGetKeyState(VK_MENU));
 
 		  if (NtUserGetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
           if (NtUserGetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
           if (NtUserGetKeyState(VK_MENU) & 0x8000) mask |= FALT;
           if (mask == (fVirt & (FSHIFT | FCONTROL | FALT))) goto found;
-          DbgPrint(", but incorrect SHIFT/CTRL/ALT-state\n");
+          DPRINT("but incorrect SHIFT/CTRL/ALT-state\n");
         }
       else
         {
@@ -317,14 +317,14 @@ IntTranslateAccelerator(HWND hWnd,
             {
               if ((fVirt & FALT) && (lParam & 0x20000000))
                 {                            /* ^^ ALT pressed */
-                  DbgPrint("found accel for Alt-%c\n", wParam & 0xff);
+                  DPRINT("found accel for Alt-%c\n", wParam & 0xff);
                   goto found;
                 }
             }
         }
     }
 
-  DbgPrint("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
+  DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
     hWnd, message, wParam, lParam, fVirt, key, cmd);
 
   return FALSE;
@@ -351,12 +351,12 @@ IntTranslateAccelerator(HWND hWnd,
         nPos = cmd;
         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
         {
-			NtUserSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
+			IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L, TRUE);
             if(hSubMenu != hSysMenu)
             {
                 nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
                 TRACE_(accel)("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
-                NtUserSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
+                IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE), TRUE);
             }
             uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
         }
@@ -366,12 +366,12 @@ IntTranslateAccelerator(HWND hWnd,
             nPos = cmd;
             if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
             {
-                NtUserSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
+                IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L, TRUE);
                 if(hSubMenu != hMenu)
                 {
                     nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
                     TRACE_(accel)("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
-                    NtUserSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+                    IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE), TRUE);
                 }
                 uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
             }
@@ -411,13 +411,13 @@ IntTranslateAccelerator(HWND hWnd,
 
   if (mesg == WM_COMMAND)
     {
-      DbgPrint(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
-      NtUserSendMessage(hWnd, mesg, 0x10000 | cmd, 0L);
+      DPRINT(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
+      IntSendMessage(hWnd, mesg, 0x10000 | cmd, 0L, TRUE);
     }
   else if (mesg == WM_SYSCOMMAND)
     {
-      DbgPrint(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
-      NtUserSendMessage(hWnd, mesg, cmd, 0x00010000L);
+      DPRINT(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
+      IntSendMessage(hWnd, mesg, cmd, 0x00010000L, TRUE);
     }
   else
     {
@@ -430,14 +430,14 @@ IntTranslateAccelerator(HWND hWnd,
        *   #5: it's a menu option, but window is iconic
        *   #6: it's a menu option, but disabled
        */
-      DbgPrint(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
+      DPRINT(", but won't send WM_{SYS}COMMAND, reason is #%d\n", mesg);
       if (mesg == 0)
 	    {
-          DbgPrint(" unknown reason - please report!");
+          DPRINT1(" unknown reason - please report!");
 	    }
     }
 
-  DbgPrint("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
+  DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
     hWnd, message, wParam, lParam, fVirt, key, cmd);
 
   return TRUE;
@@ -455,20 +455,20 @@ NtUserTranslateAccelerator(
   NTSTATUS Status;
   ULONG i;
 
-  DbgPrint("NtUserTranslateAccelerator(Window %x, Table %x, Message %p)\n",
+  DPRINT("NtUserTranslateAccelerator(Window %x, Table %x, Message %p)\n",
     Window, Table, Message);
 
   if (Message == NULL)
     {
 	  SetLastNtError(STATUS_INVALID_PARAMETER);
-	  DbgPrint("E0a\n");
+	  DPRINT1("E0a\n");
       return 0;
     }
 
   if (Table == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
-	  DbgPrint("E0b\n");
+	  DPRINT1("E0b\n");
       return 0;
     }
 
@@ -478,7 +478,7 @@ NtUserTranslateAccelerator(
 	  (Message->message != WM_SYSKEYUP) &&
 	  (Message->message != WM_CHAR))
   {
-    DbgPrint("E0c\n");
+    DPRINT1("E0c\n");
     return 0;
   }
 
@@ -489,7 +489,7 @@ NtUserTranslateAccelerator(
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(STATUS_ACCESS_DENIED);
-    DbgPrint("E1\n");
+    DPRINT1("E1\n");
     return 0;
   }
 
@@ -501,7 +501,7 @@ NtUserTranslateAccelerator(
   {
     SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
     ObDereferenceObject(WindowStation);
-    DbgPrint("E2\n");
+    DPRINT1("E2\n");
     return 0;
   }
 
@@ -516,7 +516,7 @@ NtUserTranslateAccelerator(
 		  AcceleratorTable->Table[i].cmd))
 	    {
 		  ObDereferenceObject(WindowStation);
-          DbgPrint("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
+          DPRINT1("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
             Window, Table, Message, 1);
           return 1;
 		}
@@ -529,7 +529,7 @@ NtUserTranslateAccelerator(
 
   ObDereferenceObject(WindowStation);
 
-  DbgPrint("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
+  DPRINT1("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
     Window, Table, Message, 0);
 
   return 0;

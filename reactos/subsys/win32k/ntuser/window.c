@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.159 2003/12/12 18:18:21 weiden Exp $
+/* $Id: window.c,v 1.160 2003/12/14 11:36:43 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -308,7 +308,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       /*
        * Send the WM_NCDESTROY to the window being destroyed.
        */
-      NtUserSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0, TRUE);
     }
 
   /* reset shell window handles */
@@ -746,7 +746,7 @@ static void IntSendDestroyMsg(HWND Wnd)
   /*
    * Send the WM_DESTROY to the window.
    */
-  NtUserSendMessage(Wnd, WM_DESTROY, 0, 0);
+  IntSendMessage(Wnd, WM_DESTROY, 0, 0, TRUE);
 
   /*
    * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow

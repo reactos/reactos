@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.36 2003/11/24 00:22:53 arty Exp $
+/* $Id: message.c,v 1.37 2003/12/14 11:36:43 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -516,9 +516,70 @@ LRESULT STDCALL
 NtUserSendMessage(HWND Wnd,
 		  UINT Msg,
 		  WPARAM wParam,
-		  LPARAM lParam)
+		  LPARAM lParam,
+                  PNTUSERSENDMESSAGEINFO UnsafeInfo)
 {
-  return IntSendMessage(Wnd, Msg, wParam, lParam, FALSE);
+  LRESULT Result;
+  NTSTATUS Status;
+  PWINDOW_OBJECT Window;
+  NTUSERSENDMESSAGEINFO Info;
+
+  /* FIXME: Check for a broadcast or topmost destination. */
+
+  /* FIXME: Call hooks. */
+  Window = IntGetWindowObject(Wnd);
+  if (NULL == Window)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+    }
+
+  /* FIXME: Check for an exiting window. */
+
+  /* See if the current thread can handle the message */
+  if (NULL != PsGetWin32Thread() &&
+      Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+    {
+      /* Gather the information usermode needs to call the window proc directly */
+      Info.HandledByKernel = FALSE;
+      if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
+        {
+          if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
+            {
+              /* Both Unicode and Ansi winprocs are real */
+              Info.Ansi = ! Window->Unicode;
+              Info.Proc = (Window->Unicode ? Window->WndProcW : Window->WndProcA);
+            }
+          else
+            {
+              /* Real Unicode winproc */
+              Info.Ansi = FALSE;
+              Info.Proc = Window->WndProcW;
+            }
+        }
+      else
+        {
+          /* Must have real Ansi winproc */
+          Info.Ansi = TRUE;
+          Info.Proc = Window->WndProcA;
+        }
+      IntReleaseWindowObject(Window);
+    }
+  else
+    {
+      /* Must be handled by other thread */
+      IntReleaseWindowObject(Window);
+      Info.HandledByKernel = TRUE;
+      Result = IntSendMessage(Wnd, Msg, wParam, lParam, FALSE);
+    }
+
+  Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    }
+
+  return Result;
 }
 
 BOOL STDCALL

@@ -470,7 +470,7 @@ NtUserSBGetParms                        4
 NtUserScrollDC                          7
 NtUserScrollWindowEx                    8
 NtUserSendInput                         3
-NtUserSendMessage                       4
+NtUserSendMessage                       5
 NtUserSendMessageCallback               6
 NtUserSendNotifyMessage                 4
 NtUserSetActiveWindow                   1

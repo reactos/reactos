@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.28 2003/11/19 13:19:39 weiden Exp $
+/* $Id: message.c,v 1.29 2003/12/14 11:36:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -194,31 +194,14 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 
 
 BOOL
-MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
+MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
   switch (AnsiMsg->message)
     {
     case WM_GETTEXT:
     case WM_ASKCBFORMATNAME:
       {
-        LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
-        LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
-        if (UnicodeMsg->wParam > 0 &&
-            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
-            AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
-          {
-            AnsiBuffer[UnicodeMsg->wParam - 1] = 0;
-          }
-        HeapFree(GetProcessHeap(), 0, Buffer);
-        break;
-      }
-
-    case WM_GETTEXTLENGTH:
-    case CB_GETLBTEXTLEN:
-    case LB_GETTEXTLEN:
-      {
-        /* FIXME: There may be one DBCS char for each Unicode char */
-        *Result *= 2;
+        HeapFree(GetProcessHeap(), 0, (PVOID) UnicodeMsg->lParam);
         break;
       }
 
@@ -280,6 +263,41 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
       break;
     }
   return(TRUE);
+}
+
+
+BOOL
+MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
+{
+  switch (AnsiMsg->message)
+    {
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
+        LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
+        if (UnicodeMsg->wParam > 0 &&
+            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+            AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
+          {
+            AnsiBuffer[UnicodeMsg->wParam - 1] = 0;
+          }
+        break;
+      }
+
+    case WM_GETTEXTLENGTH:
+    case CB_GETLBTEXTLEN:
+    case LB_GETTEXTLEN:
+      {
+        /* FIXME: There may be one DBCS char for each Unicode char */
+        *Result *= 2;
+        break;
+      }
+    }
+
+  MsgiAnsiToUnicodeCleanup(UnicodeMsg, AnsiMsg);
+
+  return TRUE;
 }
 
 
@@ -383,6 +401,65 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
+STATIC LRESULT FASTCALL
+IntCallWindowProcW(BOOL IsAnsiProc,
+                   WNDPROC WndProc,
+                   HWND hWnd,
+                   UINT Msg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+  LRESULT Result;
+
+  if (IsAnsiProc)
+    {
+      User32ConvertToAsciiMessage(&Msg, &wParam, &lParam);
+      Result = WndProc(hWnd, Msg, wParam, lParam);
+      User32FreeAsciiConvertedMessage(Msg, wParam, lParam);
+      return Result;
+    }
+  else
+    {
+      return WndProc(hWnd, Msg, wParam, lParam);
+    }
+}
+
+STATIC LRESULT FASTCALL
+IntCallWindowProcA(BOOL IsAnsiProc,
+                   WNDPROC WndProc,
+                   HWND hWnd,
+                   UINT Msg,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+  MSG AnsiMsg;
+  MSG UnicodeMsg;
+  LRESULT Result;
+
+  if (IsAnsiProc)
+    {
+      return WndProc(hWnd, Msg, wParam, lParam);
+    }
+  else
+    {
+      AnsiMsg.hwnd = hWnd;
+      AnsiMsg.message = Msg;
+      AnsiMsg.wParam = wParam;
+      AnsiMsg.lParam = lParam;
+      if (! MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
+        {
+          return FALSE;
+        }
+      Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
+                       UnicodeMsg.wParam, UnicodeMsg.lParam);
+      if (! MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
+        {
+          return FALSE;
+        }
+      return Result;
+    }
+}
+
 
 /*
  * @implemented
@@ -394,39 +471,18 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  MSG AnsiMsg;
-  MSG UnicodeMsg;
-  LRESULT Result;
   BOOL IsHandle;
   WndProcHandle wphData;
 
   IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
-  AnsiMsg.hwnd = hWnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-  if (!IsHandle)
-  {
-      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
-  } else {
-    if (wphData.IsUnicode)
+  if (! IsHandle)
     {
-      if (!MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
-        {
-          return(FALSE);
-        }
-      Result = wphData.WindowProc(UnicodeMsg.hwnd, UnicodeMsg.message,
-                                  UnicodeMsg.wParam, UnicodeMsg.lParam);
-      if (!MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
-        {
-          return(FALSE);
-        }
-      return(Result);
+      return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
     }
   else
     {
-		return(wphData.WindowProc(hWnd, Msg, wParam, lParam));
-	}
+      return IntCallWindowProcA(! wphData.IsUnicode, wphData.WindowProc,
+                                hWnd, Msg, wParam, lParam);
     }
 }
 
@@ -445,22 +501,14 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
   WndProcHandle wphData;
 
   IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
-  if (!IsHandle)
-  {
-      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
-  } else {
-   if (!wphData.IsUnicode)
+  if (! IsHandle)
     {
-      LRESULT Result;
-      User32ConvertToAsciiMessage(&Msg, &wParam, &lParam);
-      Result = wphData.WindowProc(hWnd, Msg, wParam, lParam);
-      User32FreeAsciiConvertedMessage(Msg, wParam, lParam);
-      return(Result);
+      return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
     }
   else
     {
-		return(wphData.WindowProc(hWnd, Msg, wParam, lParam));
-	}
+      return IntCallWindowProcW(! wphData.IsUnicode, wphData.WindowProc,
+                                hWnd, Msg, wParam, lParam);
     }
 }
 
@@ -649,12 +697,22 @@ PostThreadMessageW(
  * @implemented
  */
 LRESULT STDCALL
-SendMessageW(HWND hWnd,
+SendMessageW(HWND Wnd,
 	     UINT Msg,
 	     WPARAM wParam,
 	     LPARAM lParam)
 {
-  return(NtUserSendMessage(hWnd, Msg, wParam, lParam));
+  NTUSERSENDMESSAGEINFO Info;
+  LRESULT Result;
+
+  Result = NtUserSendMessage(Wnd, Msg, wParam, lParam, &Info);
+  if (! Info.HandledByKernel)
+    {
+      /* We need to send the message ourselves */
+      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, Wnd, Msg, wParam, lParam);
+    }
+
+  return Result;
 }
 
 
@@ -662,27 +720,49 @@ SendMessageW(HWND hWnd,
  * @implemented
  */
 LRESULT STDCALL
-SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   MSG AnsiMsg;
   MSG UcMsg;
   LRESULT Result;
+  NTUSERSENDMESSAGEINFO Info;
 
-  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.hwnd = Wnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+    {
+      return FALSE;
+    }
 
-  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  Result = NtUserSendMessage(UcMsg.hwnd, UcMsg.message,
+                             UcMsg.wParam, UcMsg.lParam, &Info);
+  if (! Info.HandledByKernel)
     {
-      return(FALSE);
+      /* We need to send the message ourselves */
+      if (Info.Ansi)
+        {
+          /* Ansi message and Ansi window proc, that's easy. Clean up
+             the Unicode message though */
+          MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Wnd, Msg, wParam, lParam);
+        }
+      else
+        {
+          /* Unicode winproc. Although we started out with an Ansi message we
+             already converted it to Unicode for the kernel call. Reuse that
+             message to avoid another conversion */
+          Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UcMsg.hwnd,
+                                      UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+          if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
+            {
+              return FALSE;
+            }
+        }
     }
-  Result = SendMessageW(UcMsg.hwnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
-  if (!MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
-    {
-      return(FALSE);
-    }
-  return(Result);
+
+  return Result;
 }
 
 

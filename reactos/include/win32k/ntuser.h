@@ -1259,11 +1259,19 @@ NtUserSendInput(
   DWORD Unknown1,
   DWORD Unknown2);
 
+typedef struct tagNTUSERSENDMESSAGEINFO
+{
+  BOOL HandledByKernel;
+  BOOL Ansi;
+  WNDPROC Proc;
+} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
+
 LRESULT STDCALL
 NtUserSendMessage(HWND hWnd,
 		  UINT Msg,
 		  WPARAM wParam,
-		  LPARAM lParam);
+		  LPARAM lParam,
+                  PNTUSERSENDMESSAGEINFO Info);
 
 BOOL
 STDCALL
