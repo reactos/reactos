@@ -62,7 +62,7 @@ BOOL FASTCALL
 IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess);
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle, BOOL AsSysMenuTemplate);
+IntCreateMenu(PHANDLE Handle);
 
 PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source);

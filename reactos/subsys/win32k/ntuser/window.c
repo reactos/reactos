@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.99 2003/08/21 16:04:26 weiden Exp $
+/* $Id: window.c,v 1.100 2003/08/21 20:29:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -306,9 +306,15 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
 {
   PMENU_OBJECT MenuObject, NewMenuObject;
   PW32PROCESS W32Process;
+  HMENU NewMenu;
 
   if(bRevert)
   {
+    W32Process = PsGetWin32Process();
+    
+    if(!W32Process->WindowStation)
+      return (HMENU)0;
+      
     if(WindowObject->SystemMenu)
     {
       MenuObject = IntGetMenuObject(WindowObject->SystemMenu);
@@ -317,7 +323,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
         IntDestroyMenuObject(MenuObject, FALSE, TRUE);
       }
     }
-    W32Process = PsGetWin32Process();
+      
     if(W32Process->WindowStation->SystemMenuTemplate)
     {
       /* clone system menu */
@@ -333,6 +339,24 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
         IntReleaseMenuObject(NewMenuObject);
       }
       IntReleaseMenuObject(MenuObject);
+    }
+    else
+    {
+      NewMenu = IntLoadSysMenuTemplate();
+      if(!NewMenu)
+        return (HMENU)0;
+      MenuObject = IntGetMenuObject(NewMenu);
+      if(!MenuObject)
+        return (HMENU)0;
+      
+      NewMenuObject = IntCloneMenu(MenuObject);
+      if(NewMenuObject)
+      {
+        WindowObject->SystemMenu = NewMenuObject->Self;
+        NewMenuObject->IsSystemMenu = TRUE;
+        IntReleaseMenuObject(NewMenuObject);
+      }
+      IntDestroyMenuObject(MenuObject, FALSE, TRUE);
     }
     return (HMENU)0;
   }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.26 2003/08/20 10:08:53 weiden Exp $
+/* $Id: menu.c,v 1.27 2003/08/21 20:29:43 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -36,6 +36,7 @@
 #include <window.h>
 #include <strpool.h>
 
+#include <user32/callback.h>
 #include "user32/regcontrol.h"
 #include "../controls/controls.h"
 
@@ -238,6 +239,17 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
   } while(!end);
 
   return res;
+}
+
+
+NTSTATUS STDCALL
+User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  LRESULT Result;
+  HMODULE hUser32;
+  hUser32 = GetModuleHandleW(L"user32.dll");
+  Result = (LRESULT)LoadMenuW(hUser32, L"SYSMENU");
+  return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
 
@@ -811,7 +823,6 @@ InsertMenuItemW(
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
       len = lstrlenW(lpmii->dwTypeData);
-
       mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
       if(!mi.dwTypeData)
       {

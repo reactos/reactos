@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.8 2003/08/21 16:04:26 weiden Exp $
+/* $Id: misc.c,v 1.9 2003/08/21 20:29:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -136,12 +136,6 @@ NtUserCallTwoParam(
       WindowObject->ContextHelpId = Param2;
       
       IntReleaseWindowObject(WindowObject);
-      return (DWORD)TRUE;
-      
-    case TWOPARAM_ROUTINE_SETWINSTASYSMENU:
-      if(!Param1 || !Param2)
-        return (DWORD)FALSE;
-      /* FIXME clone menu and assign it to the window station */
       return (DWORD)TRUE;
 
   }

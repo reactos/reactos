@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.23 2003/08/21 15:26:19 weiden Exp $
+/* $Id: menu.c,v 1.24 2003/08/21 20:29:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -225,8 +225,8 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProc
   
   if(MenuObject)
   {
-    if(RemoveFromProcess)
-      W32Process = PsGetWin32Process();
+    W32Process = PsGetWin32Process();
+    
     /* remove all menu items */
     ExAcquireFastMutexUnsafe (&MenuObject->MenuItemsLock);
     IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
@@ -249,21 +249,14 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProc
 }
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle, BOOL AsSysMenuTemplate)
+IntCreateMenu(PHANDLE Handle)
 {
   PW32PROCESS Win32Process = PsGetWin32Process();
-  
+
   PMENU_OBJECT MenuObject = (PMENU_OBJECT)ObmCreateObject(
       Win32Process->WindowStation->HandleTable, Handle, 
       otMenu, sizeof(MENU_OBJECT));
-      
-  if(AsSysMenuTemplate && !Win32Process->WindowStation->SystemMenuTemplate)
-  {
-    Win32Process->WindowStation->SystemMenuTemplate = (HANDLE)*Handle;
-  }
-  else
-    AsSysMenuTemplate = FALSE;
-  
+
   if(!MenuObject)
   {
     *Handle = 0;
@@ -283,23 +276,102 @@ IntCreateMenu(PHANDLE Handle, BOOL AsSysMenuTemplate)
   MenuObject->MenuItemCount = 0;
   MenuObject->MenuItemList = NULL;
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
-  
-  if(!AsSysMenuTemplate)
-  {
-    /* Insert menu item into process menu handle list */
-    ExAcquireFastMutexUnsafe (&Win32Process->MenuListLock);
-    InsertTailList (&Win32Process->MenuListHead,  &MenuObject->ListEntry);
-    ExReleaseFastMutexUnsafe (&Win32Process->MenuListLock);
+
+  /* Insert menu item into process menu handle list */
+  ExAcquireFastMutexUnsafe (&Win32Process->MenuListLock);
+  InsertTailList (&Win32Process->MenuListHead,  &MenuObject->ListEntry);
+  ExReleaseFastMutexUnsafe (&Win32Process->MenuListLock);
+
+  return MenuObject;
+}
+
+BOOL FASTCALL
+IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
+{
+  PMENU_ITEM MenuItem, NewMenuItem, Old = NULL;
+  DbgPrint("IntCloneMenuItems(1) = %d\n", Source->MenuItemCount);
+  if(!Source->MenuItemCount)
+    return FALSE;
+DbgPrint("IntCloneMenuItems(2)\n");
+  ExAcquireFastMutexUnsafe(&Destination->MenuItemsLock);
+  ExAcquireFastMutexUnsafe(&Source->MenuItemsLock);
+DbgPrint("IntCloneMenuItems(3)\n");
+  MenuItem = Source->MenuItemList;
+  while(MenuItem)
+  {DbgPrint("IntCloneMenuItems(%d)\n", Source->MenuItemCount + 1);
+    Old = NewMenuItem;
+    NewMenuItem = ExAllocatePool(PagedPool, sizeof(MENU_ITEM));
+    if(!NewMenuItem)
+    {
+      goto finish;
+    }
+    
+    NewMenuItem->fType = MenuItem->fType;
+    NewMenuItem->fState = MenuItem->fState;
+    NewMenuItem->wID = MenuItem->wID;
+    NewMenuItem->hSubMenu = MenuItem->hSubMenu;
+    NewMenuItem->hbmpChecked = MenuItem->hbmpChecked;
+    NewMenuItem->hbmpUnchecked = MenuItem->hbmpUnchecked;
+    NewMenuItem->dwItemData = MenuItem->dwItemData;
+    NewMenuItem->dwTypeData = MenuItem->dwTypeData;
+    if((MENU_ITEM_TYPE(NewMenuItem->fType) == MF_STRING) &&
+           NewMenuItem->dwTypeData)
+    {
+      DbgPrint("Copy menu item %ws\n", (LPWSTR)MenuItem->dwTypeData);
+      NewMenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (MenuItem->cch + 1) * sizeof(WCHAR));
+      if(!NewMenuItem->dwTypeData)
+      {
+        ExFreePool(NewMenuItem);
+        goto finish;
+      }
+      memcpy(NewMenuItem->dwTypeData, MenuItem->dwTypeData, (MenuItem->cch + 1) * sizeof(WCHAR));
+    }
+    NewMenuItem->cch = MenuItem->cch;
+    NewMenuItem->hbmpItem = MenuItem->hbmpItem;
+
+    Old->Next = NewMenuItem;
+    NewMenuItem->Next = NULL;
+    Source->MenuItemCount++;
+    MenuItem = MenuItem->Next;
   }
   
-  return MenuObject;
+finish:
+  ExReleaseFastMutexUnsafe(&Source->MenuItemsLock);
+  ExReleaseFastMutexUnsafe(&Destination->MenuItemsLock);
+  return TRUE;
 }
 
 PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source)
 {
-  DbgPrint("IntCloneMenu()\n");
-  return NULL;
+  HANDLE Handle;
+  
+  if(!Source)
+    return NULL;
+    
+  PMENU_OBJECT MenuObject = (PMENU_OBJECT)ObmCreateObject(
+    PsGetWin32Process()->WindowStation->HandleTable, Handle, 
+    otMenu, sizeof(MENU_OBJECT));  
+  if(!MenuObject)
+    return NULL;
+  
+  MenuObject->Self = Handle;
+  MenuObject->RtoL = Source->RtoL;
+  MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
+  MenuObject->MenuInfo.fMask = Source->MenuInfo.fMask;
+  MenuObject->MenuInfo.dwStyle = Source->MenuInfo.dwStyle;
+  MenuObject->MenuInfo.cyMax = Source->MenuInfo.cyMax;
+  MenuObject->MenuInfo.hbrBack = Source->MenuInfo.hbrBack;
+  MenuObject->MenuInfo.dwContextHelpID = Source->MenuInfo.dwContextHelpID; 
+  MenuObject->MenuInfo.dwMenuData = Source->MenuInfo.dwMenuData;
+  
+  MenuObject->MenuItemCount = 0;
+  MenuObject->MenuItemList = NULL;  
+  ExInitializeFastMutex(&MenuObject->MenuItemsLock);
+
+  IntCloneMenuItems(MenuObject, Source);
+
+  return MenuObject;
 }
 
 BOOL FASTCALL
@@ -981,12 +1053,12 @@ NtUserCreateMenu(VOID)
 {
   PWINSTATION_OBJECT WinStaObject;
   HANDLE Handle;
-  
+
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
 				       0,
 				       &WinStaObject);
-				       
+			       
   if (!NT_SUCCESS(Status))
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
@@ -995,7 +1067,8 @@ NtUserCreateMenu(VOID)
     return (HMENU)0;
   }
 
-  IntCreateMenu(&Handle, FALSE);
+  IntCreateMenu(&Handle);
+
   ObDereferenceObject(WinStaObject);
   return (HMENU)Handle;
 }

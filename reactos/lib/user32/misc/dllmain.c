@@ -111,6 +111,8 @@ Init(VOID)
     (PVOID)User32SendSTYLECHANGINGMessageForKernel;
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDSTYLECHANGED] =
     (PVOID)User32SendSTYLECHANGEDMessageForKernel;
+  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
+    (PVOID)User32LoadSysMenuTemplateForKernel;
 
   /* Allocate an index for user32 thread local data. */
   User32TlsIndex = TlsAlloc();
