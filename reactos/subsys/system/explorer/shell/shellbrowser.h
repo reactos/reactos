@@ -123,7 +123,7 @@ protected:
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
 
-	HRESULT OnDefaultCommand(LPIDA pIDList);
+	HRESULT OnDefaultCommand(LPIDA pida);
 
 	void	OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh);
 	void	OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv);

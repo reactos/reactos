@@ -58,42 +58,23 @@ HRESULT IShellBrowserImpl::QueryInterface(REFIID iid, void** ppvObject)
  // process default command: look for folders and traverse into them
 HRESULT IShellBrowserImpl::OnDefaultCommand(IShellView* ppshv)
 {
-	static UINT CF_IDLIST = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
-
 	IDataObject* selection;
+
 	HRESULT hr = ppshv->GetItemObject(SVGIO_SELECTION, IID_IDataObject, (void**)&selection);
 	if (FAILED(hr))
 		return hr;
 
+	PIDList pidList;
 
-    FORMATETC fetc;
-    fetc.cfFormat = CF_IDLIST;
-    fetc.ptd = NULL;
-    fetc.dwAspect = DVASPECT_CONTENT;
-    fetc.lindex = -1;
-    fetc.tymed = TYMED_HGLOBAL;
-
-    hr = selection->QueryGetData(&fetc);
-	if (FAILED(hr))
+	hr = pidList.GetData(selection);
+	if (FAILED(hr)) {
+		selection->Release();
 		return hr;
+	}
 
-
-	STGMEDIUM stgm = {sizeof(STGMEDIUM), {0}, 0};
-
-    hr = selection->GetData(&fetc, &stgm);
-	if (FAILED(hr))
-		return hr;
-
-    DWORD pData = (DWORD)GlobalLock(stgm.hGlobal);
-	LPIDA pIDList = (LPIDA)pData;
-
-	HRESULT ret = OnDefaultCommand(pIDList);
-
-	GlobalUnlock(stgm.hGlobal);
-    ReleaseStgMedium(&stgm);
-
+	hr = OnDefaultCommand(pidList);
 
 	selection->Release();
 
-	return ret;
+	return hr;
 }

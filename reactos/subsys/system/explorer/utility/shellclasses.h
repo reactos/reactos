@@ -937,3 +937,53 @@ struct ShellItemEnumerator : public SIfacePtr<IEnumIDList>
 		CHECKERROR(folder->EnumObjects(0, flags, &_p));
 	}
 };
+
+
+ /// list of PIDLs
+struct PIDList
+{
+	PIDList()
+	{
+		memset(&_stgm, 0, sizeof(STGMEDIUM));
+	}
+
+	~PIDList()
+	{
+		if (_stgm.hGlobal) {
+			GlobalUnlock(_stgm.hGlobal);
+			ReleaseStgMedium(&_stgm);
+		}
+	}
+
+	HRESULT GetData(IDataObject* selection)
+	{
+		static UINT CF_IDLIST = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+
+		FORMATETC fetc;
+		fetc.cfFormat = CF_IDLIST;
+		fetc.ptd = NULL;
+		fetc.dwAspect = DVASPECT_CONTENT;
+		fetc.lindex = -1;
+		fetc.tymed = TYMED_HGLOBAL;
+
+		HRESULT hr = selection->QueryGetData(&fetc);
+		if (FAILED(hr))
+			return hr;
+
+		hr = selection->GetData(&fetc, &_stgm);
+		if (FAILED(hr))
+			return hr;
+
+		_pIDList = (LPIDA)GlobalLock(_stgm.hGlobal);
+
+		return hr;
+	}
+
+	operator LPIDA() {return _pIDList;}
+
+protected:
+	STGMEDIUM _stgm;
+	LPIDA _pIDList;
+};
+
+extern HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* ppidl, int x, int y);

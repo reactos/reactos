@@ -72,7 +72,7 @@ struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
 protected:
 	DWORD	_dwRef;
 
-	virtual HRESULT OnDefaultCommand(LPIDA pIDList) {return E_NOTIMPL;}
+	virtual HRESULT OnDefaultCommand(LPIDA pida) {return E_NOTIMPL;}
 };
 
 #ifndef WM_GETISHELLBROWSER

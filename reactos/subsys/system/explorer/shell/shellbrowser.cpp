@@ -209,7 +209,6 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	LPARAM itemData = TreeView_GetItemData(hwndTreeView, hItem);
 
 	if (itemData) {
-		HWND hwndParent = ::GetParent(hwndTreeView);
 		Entry* entry = (Entry*)itemData;
 
 		IShellFolder* shell_folder;
@@ -228,55 +227,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 		if (shell_folder) {
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-			IContextMenu* pcm;
-
-			HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, 1, &pidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
-//			HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
-
-			if (SUCCEEDED(hr)) {
-				HMENU hPopup = CreatePopupMenu();
-
-				if (hPopup) {
-					hr = pcm->QueryContextMenu(hPopup, 0, 1, 0x7fff, CMF_NORMAL|CMF_EXPLORE);
-
-					if (SUCCEEDED(hr)) {
-					   IContextMenu2* pcm2;
-
-					   pcm->QueryInterface(IID_IContextMenu2, (LPVOID*)&pcm2);
-
-					   UINT idCmd = TrackPopupMenu(hPopup,
-											   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
-											   pptScreen->x,
-											   pptScreen->y,
-											   0,
-											   hwndParent,
-											   NULL);
-
-						if (pcm2) {
-						  pcm2->Release();
-						  pcm2 = NULL;
-						}
-
-						if (idCmd) {
-						  CMINVOKECOMMANDINFO  cmi;
-						  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
-						  cmi.fMask = 0;
-						  cmi.hwnd = hwndParent;
-						  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - 1);
-						  cmi.lpParameters = NULL;
-						  cmi.lpDirectory = NULL;
-						  cmi.nShow = SW_SHOWNORMAL;
-						  cmi.dwHotKey = 0;
-						  cmi.hIcon = NULL;
-						  hr = pcm->InvokeCommand(&cmi);
-						}
-					}
-				}
-
-				pcm->Release();
-			}
-
-			shell_folder->Release();
+			ShellFolderContextMenu(shell_folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y);
 		}
 	}
 }
@@ -485,11 +436,11 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 }
 
 
-HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
+HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 {
 	CONTEXT("ShellBrowserChild::OnDefaultCommand()");
 
-	if (pIDList->cidl>=1) {
+	if (pida->cidl>=1) {
 		if (_left_hwnd) {	// explorer mode
 			if (_last_sel) {
 				ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
@@ -501,8 +452,8 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 						return e.Error();
 					}
 
-					UINT firstOffset = pIDList->aoffset[1];
-					LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pIDList+firstOffset);
+					UINT firstOffset = pida->aoffset[1];
+					LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pida+firstOffset);
 
 					Entry* entry = parent->find_entry(pidl);
 
@@ -512,11 +463,11 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 				}
 			}
 		} else { // no tree control
-			if (MainFrame::OpenShellFolders(pIDList, _hWndFrame))
+			if (MainFrame::OpenShellFolders(pida, _hWndFrame))
 				return S_OK;
 
 /* create new Frame Window
-			if (MainFrame::OpenShellFolders(pIDList, 0))
+			if (MainFrame::OpenShellFolders(pida, 0))
 				return S_OK;
 */
 		}

@@ -211,15 +211,15 @@ ChildWindow* MainFrame::CreateChild(LPCITEMIDLIST pidl, int mode)
 }
 
 
-int MainFrame::OpenShellFolders(LPIDA pIDList, HWND hFrameWnd)
+int MainFrame::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 {
 	int cnt = 0;
 
-	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pIDList+pIDList->aoffset[0]);
+	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
 	ShellFolder folder(parent_pidl);
 
-	for(int i=pIDList->cidl; i>0; --i) {
-		LPCITEMIDLIST pidl = (LPCITEMIDLIST)((LPBYTE)pIDList+pIDList->aoffset[i]);
+	for(int i=pida->cidl; i>0; --i) {
+		LPCITEMIDLIST pidl = (LPCITEMIDLIST)((LPBYTE)pida+pida->aoffset[i]);
 
 		SFGAOF attribs = SFGAO_FOLDER;
 		HRESULT hr = folder->GetAttributesOf(1, &pidl, &attribs);

@@ -78,5 +78,23 @@ protected:
 	IShellView*	_pShellView;
 	WindowHandle _desktopBar;
 
-	virtual HRESULT OnDefaultCommand(LPIDA pIDList);
+	virtual HRESULT OnDefaultCommand(LPIDA pida);
+};
+
+
+ /// subclassed ShellView window
+struct DesktopShellView : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	DesktopShellView(HWND hwnd, IShellView* pShellView);
+
+protected:
+	IShellView* _pShellView;
+
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
+	int		Notify(int id, NMHDR* pnmh);
+
+	bool	DoContextMenu(int x, int y);
 };

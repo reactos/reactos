@@ -171,6 +171,9 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		///@todo use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
 
 		if (SUCCEEDED(hr)) {
+			 // subclass shellview window
+			new DesktopShellView(hWndView, _pShellView);
+
 			_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 
 		/*
@@ -207,6 +210,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 			 // Without this the desktop has mysteriously only a size of 800x600 pixels.
 			MoveWindow(hwndFolderView, 0, 0, rect.right, rect.bottom, TRUE);
 
+			 // subclass background window
 			new BackgroundWindow(hwndFolderView);
 		}
 	}
@@ -265,10 +269,75 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 }
 
 
-HRESULT DesktopWindow::OnDefaultCommand(LPIDA pIDList)
+HRESULT DesktopWindow::OnDefaultCommand(LPIDA pida)
 {
-	if (MainFrame::OpenShellFolders(pIDList, 0))
+	if (MainFrame::OpenShellFolders(pida, 0))
 		return S_OK;
 
 	return E_NOTIMPL;
+}
+
+
+DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
+ :	super(hwnd),
+	_pShellView(pShellView)
+{
+}
+
+LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_CONTEXTMENU:
+		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
+			goto def;	///@todo desktop context menu
+		break;
+
+	  default: def:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+int DesktopShellView::Command(int id, int code)
+{
+	return super::Command(id, code);
+}
+
+int DesktopShellView::Notify(int id, NMHDR* pnmh)
+{
+	return super::Notify(id, pnmh);
+}
+
+bool DesktopShellView::DoContextMenu(int x, int y)
+{
+	IDataObject* selection;
+
+	HRESULT hr = _pShellView->GetItemObject(SVGIO_SELECTION, IID_IDataObject, (void**)&selection);
+	if (FAILED(hr))
+		return false;
+
+	PIDList pidList;
+
+	hr = pidList.GetData(selection);
+	if (FAILED(hr)) {
+		selection->Release();
+		//CHECKERROR(hr);
+		return false;
+	}
+
+	LPIDA pida = pidList;
+
+	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
+	LPCITEMIDLIST first_pidl = (LPCITEMIDLIST)((LPBYTE)pida+pida->aoffset[1]);
+
+	ShellFolder folder(parent_pidl);
+
+	hr = ShellFolderContextMenu(folder, _hwnd, pida->cidl, &first_pidl, x, y);
+
+	selection->Release();
+
+	CHECKERROR(hr);
+
+	return true;
 }

@@ -257,7 +257,7 @@ LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int Window::Command(int id, int code)
 {
-	return 0;
+	return 1;	// WM_COMMAND not yet handled
 }
 
 int Window::Notify(int id, NMHDR* pnmh)
@@ -277,10 +277,40 @@ void Window::CancelModes(HWND hwnd)
 SubclassedWindow::SubclassedWindow(HWND hwnd)
  :	super(hwnd)
 {
-	_orgWndProc = SubclassWindow(_hwnd, WindowWndProc);
+	_orgWndProc = SubclassWindow(_hwnd, SubclassedWndProc);
 
 	if (!_orgWndProc)
 		delete this;
+}
+
+LRESULT CALLBACK SubclassedWindow::SubclassedWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	SubclassedWindow* pThis = GET_WINDOW(SubclassedWindow, hwnd);
+	assert(pThis);
+
+	if (pThis) {
+		switch(nmsg) {
+		  case WM_COMMAND:
+			if (!pThis->Command(LOWORD(wparam), HIWORD(wparam)))
+				return 0;
+			break;
+
+		  case WM_NOTIFY:
+			return pThis->Notify(wparam, (NMHDR*)lparam);
+
+		  case WM_CREATE:
+			return pThis->Init((LPCREATESTRUCT)lparam);
+
+		  case WM_NCDESTROY:
+			delete pThis;
+			return 0;
+
+		  default:
+			return pThis->WndProc(nmsg, wparam, lparam);
+		}
+	}
+
+	return CallWindowProc(pThis->_orgWndProc, hwnd, nmsg, wparam, lparam);
 }
 
 LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -292,6 +322,16 @@ LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		CancelModes((HWND)wparam);
 */
 	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
+}
+
+int SubclassedWindow::Command(int id, int code)
+{
+	return 1;	// WM_COMMAND not yet handled
+}
+
+int SubclassedWindow::Notify(int id, NMHDR* pnmh)
+{
+	return CallWindowProc(_orgWndProc, _hwnd, WM_NOTIFY, id, (LPARAM)pnmh);
 }
 
 

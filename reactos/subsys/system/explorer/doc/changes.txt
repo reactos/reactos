@@ -48,3 +48,4 @@ If you search for more information, look into the CVS repository.
 19.10.2003	m. fuchs	implemented floating start menus
 29.11.2003	m. fuchs	implemented GDB stub for remote debugging
 06.12.2003	m. fuchs	basic support to display NTFS streams in winefile windows
+20.12.2003	m. fuchs	context menu implementation for desktop window 

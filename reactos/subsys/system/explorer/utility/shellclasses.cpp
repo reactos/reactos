@@ -421,3 +421,55 @@ UINT ILGetSize(LPCITEMIDLIST pidl)
 }
 
 #endif
+
+
+HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* apidl, int x, int y)
+{
+	IContextMenu* pcm;
+
+	HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, cidl, apidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+//	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
+
+	if (SUCCEEDED(hr)) {
+		HMENU hPopup = CreatePopupMenu();
+
+		if (hPopup) {
+			hr = pcm->QueryContextMenu(hPopup, 0, 1, 0x7fff, CMF_NORMAL|CMF_EXPLORE);
+
+			if (SUCCEEDED(hr)) {
+				IContextMenu2* pcm2;
+
+				pcm->QueryInterface(IID_IContextMenu2, (LPVOID*)&pcm2);
+
+				UINT idCmd = TrackPopupMenu(hPopup, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, hwndParent, NULL);
+
+				if (pcm2) {
+				  pcm2->Release();
+				  pcm2 = NULL;
+				}
+
+				if (idCmd) {
+				  CMINVOKECOMMANDINFO  cmi;
+
+				  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
+				  cmi.fMask = 0;
+				  cmi.hwnd = hwndParent;
+				  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - 1);
+				  cmi.lpParameters = NULL;
+				  cmi.lpDirectory = NULL;
+				  cmi.nShow = SW_SHOWNORMAL;
+				  cmi.dwHotKey = 0;
+				  cmi.hIcon = NULL;
+
+				  hr = pcm->InvokeCommand(&cmi);
+				}
+			}
+		}
+
+		pcm->Release();
+	}
+
+	shell_folder->Release();
+
+	return hr;
+}

@@ -169,7 +169,11 @@ struct SubclassedWindow : public Window
 protected:
 	WNDPROC	_orgWndProc;
 
-	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK SubclassedWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual int		Command(int id, int code);
+	virtual int		Notify(int id, NMHDR* pnmh);
 };
 
 
