@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fat.c,v 1.1 2002/05/15 09:40:47 ekohl Exp $
+/* $Id: fat.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,13 +29,68 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "fs_rec.h"
 
 
 /* FUNCTIONS ****************************************************************/
+
+static NTSTATUS
+FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
+{
+  DISK_GEOMETRY DiskGeometry;
+  PUCHAR Buffer;
+  ULONG Size;
+  NTSTATUS Status;
+
+  Size = sizeof(DISK_GEOMETRY);
+  Status = FsRecDeviceIoControl(DeviceObject,
+				IOCTL_DISK_GET_DRIVE_GEOMETRY,
+				NULL,
+				0,
+				&DiskGeometry,
+				&Size);
+  DPRINT("FsRecDeviceIoControl() Status %lx\n", Status);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
+  Buffer = ExAllocatePool(NonPagedPool,
+			  DiskGeometry.BytesPerSector);
+  if (Buffer == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  Status = FsRecReadSectors(DeviceObject,
+			    0, /* Partition boot sector */
+			    1,
+			    DiskGeometry.BytesPerSector,
+			    Buffer);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  if ((strncmp(&Buffer[0x36], "FAT12", 5) == 0) ||
+      (strncmp(&Buffer[0x36], "FAT16", 5) == 0) ||
+      (strncmp(&Buffer[0x52], "FAT32", 5) == 0))
+    {
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      Status = STATUS_UNRECOGNIZED_VOLUME;
+    }
+
+  ExFreePool(Buffer);
+
+  return(Status);
+}
 
 
 NTSTATUS
@@ -51,24 +106,20 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
   switch (Stack->MinorFunction)
     {
       case IRP_MN_MOUNT_VOLUME:
-	DPRINT("Fat: IRP_MN_MOUNT_VOLUME\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-#if 0
+	DPRINT("FAT: IRP_MN_MOUNT_VOLUME\n");
 	Status = FsRecIsFatVolume(Stack->Parameters.MountVolume.DeviceObject);
 	if (NT_SUCCESS(Status))
 	  {
 	    DPRINT("Identified FAT volume\n");
 	    Status = STATUS_FS_DRIVER_REQUIRED;
 	  }
-#endif
 	break;
 
       case IRP_MN_LOAD_FILE_SYSTEM:
-	DPRINT("Fat: IRP_MN_LOAD_FILE_SYSTEM\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
+	DPRINT("FAT: IRP_MN_LOAD_FILE_SYSTEM\n");
 #if 0
-#if 0
-	RtlInitUnicodeString(&RegistryPath, FSD_REGISTRY_PATH);
+	RtlInitUnicodeString(&RegistryPath,
+			     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Vfatfs");
 #endif
 	RtlInitUnicodeString(&RegistryPath,
 			     L"\\SystemRoot\\system32\\drivers\\vfatfs.sys");
@@ -81,11 +132,10 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 	  {
 	    IoUnregisterFileSystem(DeviceObject);
 	  }
-#endif
 	break;
 
       default:
-	DPRINT("Fat: Unknown minor function %lx\n", Stack->MinorFunction);
+	DPRINT("FAT: Unknown minor function %lx\n", Stack->MinorFunction);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
 	break;
     }

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.62 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: iface.c,v 1.63 2002/05/15 18:05:00 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -58,7 +58,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DPRINT("VFAT 0.0.6\n");
 
    RtlInitUnicodeString(&DeviceName,
-			L"\\Device\\Vfat");
+			L"\\Fat");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(VFAT_GLOBAL_DATA),
 			   &DeviceName,

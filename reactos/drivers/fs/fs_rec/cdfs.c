@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.1 2002/05/15 09:40:47 ekohl Exp $
+/* $Id: cdfs.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,11 +40,27 @@
 static NTSTATUS
 FsRecIsCdfsVolume(IN PDEVICE_OBJECT DeviceObject)
 {
+  DISK_GEOMETRY DiskGeometry;
   PUCHAR Buffer;
   NTSTATUS Status;
+  ULONG Size;
 
+  Size = sizeof(DISK_GEOMETRY);
+  Status = FsRecDeviceIoControl(DeviceObject,
+				IOCTL_CDROM_GET_DRIVE_GEOMETRY,
+				NULL,
+				0,
+				&DiskGeometry,
+				&Size);
+  DPRINT("FsRecDeviceIoControl() Status %lx\n", Status);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
   Buffer = ExAllocatePool(NonPagedPool,
-			  2048);
+			  DiskGeometry.BytesPerSector);
   if (Buffer == NULL)
     {
       return(STATUS_INSUFFICIENT_RESOURCES);
@@ -53,7 +69,7 @@ FsRecIsCdfsVolume(IN PDEVICE_OBJECT DeviceObject)
   Status = FsRecReadSectors(DeviceObject,
 			    16, /* CDFS_PVD_SECTOR */
 			    1,
-			    2048,
+			    DiskGeometry.BytesPerSector,
 			    Buffer);
   if (!NT_SUCCESS(Status))
     {
@@ -90,7 +106,6 @@ FsRecCdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
     {
       case IRP_MN_MOUNT_VOLUME:
 	DPRINT("Cdfs: IRP_MN_MOUNT_VOLUME\n");
-
 	Status = FsRecIsCdfsVolume(Stack->Parameters.MountVolume.DeviceObject);
 	if (NT_SUCCESS(Status))
 	  {
@@ -102,7 +117,8 @@ FsRecCdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("Cdfs: IRP_MN_LOAD_FILE_SYSTEM\n");
 #if 0
-	RtlInitUnicodeString(&RegistryPath, FSD_REGISTRY_PATH);
+	RtlInitUnicodeString(&RegistryPath,
+			     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Cdfs");
 #endif
 	RtlInitUnicodeString(&RegistryPath,
 			     L"\\SystemRoot\\system32\\drivers\\cdfs.sys");

@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.10 2002/05/05 20:18:33 hbirr Exp $
+/* $Id: close.c,v 1.11 2002/05/15 18:05:00 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -80,6 +80,13 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
 
   DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
+  if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
+    {
+      DPRINT("Closing file system\n");
+      Status = STATUS_SUCCESS;
+      goto ByeBye;
+    }
+
   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
   {
      return VfatQueueRequest (IrpContext);
@@ -88,6 +95,7 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
   Status = VfatCloseFile (IrpContext->DeviceExt, IrpContext->FileObject);
   ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
 
+ByeBye:
   IrpContext->Irp->IoStatus.Status = Status;
   IrpContext->Irp->IoStatus.Information = 0;
   IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);

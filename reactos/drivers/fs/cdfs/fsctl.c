@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.5 2002/05/14 23:16:23 ekohl Exp $
+/* $Id: fsctl.c,v 1.6 2002/05/15 18:01:30 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,8 +118,6 @@ CdfsGetSVDData(PUCHAR Buffer,
       JolietLevel = 3;
     }
 
-  /* Don't support Joliet yet! */
-//#if 0
   Vcb->CdInfo.JolietLevel = JolietLevel;
 
   if (JolietLevel != 0)
@@ -130,7 +128,6 @@ CdfsGetSVDData(PUCHAR Buffer,
       DPRINT("RootStart: %lu\n", Svd->RootDirRecord.ExtentLocationL);
       DPRINT("RootSize: %lu\n", Svd->RootDirRecord.DataLengthL);
     }
-//#endif
 }
 
 

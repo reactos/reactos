@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.c,v 1.1 2002/05/15 09:40:47 ekohl Exp $
+/* $Id: fs_rec.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -217,7 +217,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	}
     }
 
-#if 0
   Status = FsRecRegisterFs(DriverObject,
 			   L"\\Fat",
 			   L"\\FileSystem\\FatRecognizer",
@@ -227,7 +226,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     {
       DeviceCount++;
     }
-#endif
 
   Status = FsRecRegisterFs(DriverObject,
 			   L"\\Ntfs",

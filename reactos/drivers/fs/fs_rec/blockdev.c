@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: blockdev.c,v 1.1 2002/05/15 09:40:47 ekohl Exp $
+/* $Id: blockdev.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,11 +48,17 @@ FsRecReadSectors(IN PDEVICE_OBJECT DeviceObject,
   IO_STATUS_BLOCK IoStatus;
   LARGE_INTEGER Offset;
   ULONG BlockSize;
-  KEVENT Event;
+  PKEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
-  KeInitializeEvent(&Event,
+  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+  if (Event == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  KeInitializeEvent(Event,
 		    NotificationEvent,
 		    FALSE);
 
@@ -71,38 +77,90 @@ FsRecReadSectors(IN PDEVICE_OBJECT DeviceObject,
 				     Buffer,
 				     BlockSize,
 				     &Offset,
-				     &Event,
+				     Event,
 				     &IoStatus);
   if (Irp == NULL)
     {
       DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      ExFreePool(Event);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   DPRINT("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver(DeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation for %x\n", Irp);
   if (Status == STATUS_PENDING)
     {
       DPRINT("Operation pending\n");
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for %x\n", Irp);
+      KeWaitForSingleObject(Event, Suspended, KernelMode, FALSE, NULL);
       Status = IoStatus.Status;
     }
 
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("FsrecReadSectors() failed (Status %x)\n", Status);
-      DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
-	     DeviceObject, DiskSector, Buffer,
-	     Offset.QuadPart);
-      return(Status);
-    }
-
-  DPRINT("Block request succeeded for %x\n", Irp);
+  ExFreePool(Event);
 
   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+FsRecDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
+		     IN ULONG ControlCode,
+		     IN PVOID InputBuffer,
+		     IN ULONG InputBufferSize,
+		     IN OUT PVOID OutputBuffer,
+		     IN OUT PULONG OutputBufferSize)
+{
+  ULONG BufferSize = 0;
+  PKEVENT Event;
+  PIRP Irp;
+  IO_STATUS_BLOCK IoStatus;
+  NTSTATUS Status;
+
+  if (OutputBufferSize != NULL)
+    {
+      BufferSize = *OutputBufferSize;
+    }
+
+  Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+  if (Event == NULL)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  KeInitializeEvent(Event, NotificationEvent, FALSE);
+
+  DPRINT("Building device I/O control request ...\n");
+  Irp = IoBuildDeviceIoControlRequest(ControlCode,
+				      DeviceObject,
+				      InputBuffer,
+				      InputBufferSize,
+				      OutputBuffer,
+				      BufferSize,
+				      FALSE,
+				      Event,
+				      &IoStatus);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+      ExFreePool(Event);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  DPRINT("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver(DeviceObject, Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(Event, Suspended, KernelMode, FALSE, NULL);
+      Status = IoStatus.Status;
+    }
+
+  if (OutputBufferSize)
+    {
+      *OutputBufferSize = BufferSize;
+    }
+
+  ExFreePool(Event);
+
+  return(Status);
 }
 
 /* EOF */

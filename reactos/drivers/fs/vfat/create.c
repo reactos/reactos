@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2002/05/05 20:18:33 hbirr Exp $
+/* $Id: create.c,v 1.41 2002/05/15 18:05:00 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -816,7 +816,8 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
 
   assert (IrpContext);
 
-  if (IrpContext->DeviceObject->Size == sizeof (DEVICE_OBJECT))
+//  if (IrpContext->DeviceObject->Size == sizeof (DEVICE_OBJECT))
+  if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
   {
      /* DeviceObject represents FileSystem instead of logical volume */
      DPRINT ("FsdCreate called with file system\n");
