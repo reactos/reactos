@@ -976,9 +976,9 @@ int main(int argc, char* argv[])
     dprintf("  1 = Create key\n");
     dprintf("  2 = Delete key\n");
     dprintf("  3 = Enumerate key\n");
-    dprintf("  4 = Create value\n");
-    dprintf("  5 = Delete value\n");
-    dprintf("  6 = Enumerate value\n");
+//    dprintf("  4 = Create value\n");
+//    dprintf("  5 = Delete value\n");
+//    dprintf("  6 = Enumerate value\n");
 //    dprintf("  7=Registry link delete test\n");
 //    dprintf("  8=Not available\n");
 //    dprintf("  9=Ntxx read tcp/ip key test\n");
@@ -999,7 +999,7 @@ int main(int argc, char* argv[])
      case '3':
       EnumerateKeyTest();
       break;
-
+#if 0
      case '4':
       CreateValueTest();
       break;
@@ -1010,6 +1010,7 @@ int main(int argc, char* argv[])
      case '6':
       test6();
       break;
+#endif
 #if 0
      case '7':
       test7();
