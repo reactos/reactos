@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.35 2003/03/20 10:09:24 gvg Exp $
+/* $Id: window.c,v 1.36 2003/03/22 03:05:26 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -840,43 +840,39 @@ NtUserMoveWindow(
     int nHeight,
     BOOL bRepaint)
 {
-    PWINDOW_OBJECT Window;
-    NTSTATUS Status;
-    INT OffsetY, OffsetX;
-    Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       hWnd,
-			       otWindow,
-			       (PVOID*)&Window);
-    if (!NT_SUCCESS(Status))
+    PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
+    ULONG uStyle, uExStyle;
+    if (!Window)
     {
-      return(FALSE);
+        return FALSE;
     }
-    OffsetX = Window->ClientRect.left - Window->WindowRect.left;
-    OffsetY = Window->ClientRect.top - Window->WindowRect.top;
+    uStyle = Window->Style;
+    uExStyle = Window->ExStyle;
     if (X)
-    {
         Window->WindowRect.left = X;
-        Window->ClientRect.left = X;
-    }
     if (Y)
-    {
         Window->WindowRect.top = Y;
-        Window->ClientRect.top = Y;
-    }
     if (nWidth)
-    {
         Window->WindowRect.right = Window->WindowRect.left + nWidth;
-        Window->ClientRect.right = Window->ClientRect.left + nWidth - OffsetX - NtUserGetSystemMetrics(SM_CXFRAME);
-    }
     if (nHeight)
-    {
         Window->WindowRect.bottom = Window->WindowRect.top + nHeight;
-        Window->ClientRect.bottom = Window->ClientRect.top + nHeight - OffsetY - NtUserGetSystemMetrics(SM_CYFRAME);
+    Window->ClientRect = Window->WindowRect;
+    
+    if (uStyle & WS_BORDER)
+    {
+      Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYSIZEFRAME);
+      Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYSIZEFRAME);
+      Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXSIZEFRAME);
+      Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
     }
-    ObmDereferenceObject(Window);
-    /* if (bRepaint) NtUserUpdateWindow(hWnd); doesn't exist? */
-    return(TRUE);
+    if (uStyle & WS_CAPTION)
+       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION);
+    if (Window->Menu)
+    {
+        Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
+    }
+    W32kReleaseWindowObject(Window);
+    return TRUE;
 }
 
 DWORD STDCALL
