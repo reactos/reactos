@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2003/12/03 21:50:49 gvg Exp $
+# $Id: makefile,v 1.27 2003/12/30 05:11:54 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,7 +9,7 @@ TARGET_APPTYPE = native
 
 TARGET_NAME = csrss
 
-#TARGET_SDKLIBS = kernel32.a gdi32.a user32.a ntdll.a
+TARGET_SDKLIBS = rosrtl.a ntdll.a
 
 TARGET_INSTALLDIR = system32
 
