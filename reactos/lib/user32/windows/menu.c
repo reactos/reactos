@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.74 2004/12/11 19:45:10 navaraf Exp $
+/* $Id: menu.c,v 1.75 2004/12/11 20:18:06 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -203,26 +203,29 @@ MenuInitRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
 static BOOL FASTCALL
 MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
 {
-  UNICODE_STRING Text;
+  UNICODE_STRING Text = {0, 0, NULL};
 
-  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType) && NULL != ItemInfo->dwTypeData)
+  if (MF_STRING == MENU_ITEM_TYPE(ItemInfo->fType))
     {
-      /* There's already a buffer allocated */
-      Text.Buffer = ItemInfo->dwTypeData;
-      Text.Length = ItemInfo->cch * sizeof(WCHAR);
-      Text.MaximumLength = (ItemInfo->cch < INITIAL_STRING_SIZE ? INITIAL_STRING_SIZE
-                            : ItemInfo->cch + 1) * sizeof(WCHAR);
-    }
-  else
-    {
-      Text.Buffer = HeapAlloc(GetProcessHeap(), 0, INITIAL_STRING_SIZE * sizeof(WCHAR));
-      if (NULL == Text.Buffer)
+      if (NULL != ItemInfo->dwTypeData)
         {
-          return FALSE;
+          /* There's already a buffer allocated */
+          Text.Buffer = ItemInfo->dwTypeData;
+          Text.Length = ItemInfo->cch * sizeof(WCHAR);
+          Text.MaximumLength = (ItemInfo->cch < INITIAL_STRING_SIZE ? INITIAL_STRING_SIZE
+                                : ItemInfo->cch + 1) * sizeof(WCHAR);
         }
-      Text.Length = 0;
-      Text.MaximumLength = INITIAL_STRING_SIZE * sizeof(WCHAR);
-      ItemInfo->cch = INITIAL_STRING_SIZE - 1;
+      else
+        {
+          Text.Buffer = HeapAlloc(GetProcessHeap(), 0, INITIAL_STRING_SIZE * sizeof(WCHAR));
+          if (NULL == Text.Buffer)
+            {
+              return FALSE;
+            }
+          Text.Length = 0;
+          Text.MaximumLength = INITIAL_STRING_SIZE * sizeof(WCHAR);
+          ItemInfo->cch = INITIAL_STRING_SIZE - 1;
+        }
     }
   ItemInfo->dwTypeData = (LPWSTR) &Text;
 
@@ -260,7 +263,7 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
           ItemInfo->cch++;
           if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
             {
-              HeapFree(GetProcessHeap(), 0, ItemInfo->dwTypeData);
+              HeapFree(GetProcessHeap(), 0, Text.Buffer);
               ItemInfo->dwTypeData = NULL;
               ItemInfo->cch = 0;
               ItemInfo->fType = 0;
@@ -280,6 +283,8 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
       if (NULL != Text.Buffer)
         {
           HeapFree(GetProcessHeap(), 0, Text.Buffer);
+          ItemInfo->dwTypeData = NULL;
+          ItemInfo->cch = 0;
         }
     }
 
