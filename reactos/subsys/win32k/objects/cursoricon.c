@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.32 2003/12/09 20:58:16 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.33 2003/12/10 17:33:42 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -259,6 +259,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
         return Object;
       }
     }
+    CurrentEntry = CurrentEntry->Flink;
   }
   
   ExReleaseFastMutex(&HandleTable->ListLock);
