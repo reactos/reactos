@@ -449,9 +449,14 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 		NameSize *= sizeof(WCHAR);
 	      }
 	  }
-	*ResultLength = sizeof(KEY_BASIC_INFORMATION) + NameSize;
 
-	if (Length < *ResultLength)
+	/*
+	 * NOTE: It's perfetly valid to call NtEnumerateKey to get
+         * all the information but name. Actually the NT4 sound
+         * framework does that while querying parameters from registry.
+         * -- Filip Navara, 19/07/2004
+         */
+	if (Length < FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]))
 	  {
 	    Status = STATUS_BUFFER_OVERFLOW;
 	  }
@@ -464,30 +469,32 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    BasicInformation->TitleIndex = Index;
 	    BasicInformation->NameLength = NameSize;
 
+	    NameSize = min(NameSize, Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]));
+
 	    if (SubKeyObject != NULL)
 	      {
-		BasicInformation->NameLength = SubKeyObject->Name.Length;
 		RtlCopyMemory(BasicInformation->Name,
 			      SubKeyObject->Name.Buffer,
-			      SubKeyObject->Name.Length);
+			      NameSize);
 	      }
 	    else
 	      {
-		BasicInformation->NameLength = NameSize;
 		if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
 		  {
 		    CmiCopyPackedName(BasicInformation->Name,
 				      SubKeyCell->Name,
-				      SubKeyCell->NameSize);
+				      NameSize / sizeof(WCHAR));
 		  }
 		else
 		  {
 		    RtlCopyMemory(BasicInformation->Name,
 				  SubKeyCell->Name,
-				  SubKeyCell->NameSize);
+				  NameSize);
 		  }
 	      }
 	  }
+
+	*ResultLength = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) + NameSize;
 	break;
 
       case KeyNodeInformation:
@@ -504,7 +511,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 		NameSize *= sizeof(WCHAR);
 	      }
 	  }
-	*ResultLength = sizeof(KEY_NODE_INFORMATION) +
+	*ResultLength = FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) +
 	  NameSize + SubKeyCell->ClassSize;
 
 	if (Length < *ResultLength)
@@ -559,7 +566,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
       case KeyFullInformation:
 	/* Check size of buffer */
-	*ResultLength = sizeof(KEY_FULL_INFORMATION) +
+	*ResultLength = FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) +
 	  SubKeyCell->ClassSize;
 
 	if (Length < *ResultLength)
@@ -685,7 +692,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             {
 	      NameSize *= sizeof(WCHAR);
 	    }
-          *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameSize;
+          *ResultLength = FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) + NameSize;
           if (Length < *ResultLength)
             {
               Status = STATUS_BUFFER_OVERFLOW;
@@ -713,7 +720,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
           break;
 
         case KeyValuePartialInformation:
-          *ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 
+          *ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + 
             (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
@@ -748,7 +755,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
             {
 	      NameSize *= sizeof(WCHAR);
 	    }
-          *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
+          *ResultLength = FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) + 
              NameSize + (ValueCell->DataSize & REG_DATA_SIZE_MASK);
           if (Length < *ResultLength)
             {
