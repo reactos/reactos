@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.16 2002/03/13 01:27:06 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.17 2002/03/21 19:35:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -400,6 +400,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
    /* Assign pre-assigned (registry) partitions */
 
+#if 0
    /* Assign bootable partitions */
    DPRINT("Assigning bootable primary partitions:\n");
    for (i = 0; i < ConfigInfo->DiskCount; i++)
@@ -426,7 +427,35 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	       }
 	  }
      }
+#endif
 
+   /* Assign bootable partition on first harddisk */
+   DPRINT("Assigning bootable primary partition on first harddisk:\n");
+   if (ConfigInfo->DiskCount > 0)
+     {
+	/* search for bootable partition */
+	for (j = 0; j < LayoutArray[0]->PartitionCount; j++)
+	  {
+	     if ((LayoutArray[0]->PartitionEntry[j].BootIndicator == TRUE) &&
+		 IsUsablePartition(LayoutArray[0]->PartitionEntry[j].PartitionType))
+	       {
+		  swprintf(Buffer2,
+			   L"\\Device\\Harddisk0\\Partition%d",
+			   LayoutArray[0]->PartitionEntry[j].PartitionNumber);
+		  RtlInitUnicodeString(&UnicodeString2,
+				       Buffer2);
+
+		  DPRINT("  %wZ\n", &UnicodeString2);
+
+		  /* assign it */
+		  HalpAssignDrive(&UnicodeString2,
+				  &DriveMap,
+				  AUTO_DRIVE);
+	       }
+	  }
+     }
+
+#if 0
    /* Assign non-bootable primary partitions */
    DPRINT("Assigning non-bootable primary partitions:\n");
    for (i = 0; i < ConfigInfo->DiskCount; i++)
@@ -435,6 +464,35 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	for (j = 0; j < PARTITION_TBL_SIZE; j++)
 	  {
 	     if ((LayoutArray[i]->PartitionEntry[j].BootIndicator == FALSE) &&
+		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
+	       {
+		  swprintf(Buffer2,
+			   L"\\Device\\Harddisk%d\\Partition%d",
+			   i,
+			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
+		  RtlInitUnicodeString(&UnicodeString2,
+				       Buffer2);
+
+		  /* assign it */
+		  DPRINT("  %wZ\n",
+			 &UnicodeString2);
+		  HalpAssignDrive(&UnicodeString2,
+				  &DriveMap,
+				  AUTO_DRIVE);
+	       }
+	  }
+     }
+#endif
+
+   /* Assign remaining  primary partitions */
+   DPRINT("Assigning remaining primary partitions:\n");
+   for (i = 0; i < ConfigInfo->DiskCount; i++)
+     {
+	/* search for primary partitions */
+	for (j = 0; j < PARTITION_TBL_SIZE; j++)
+	  {
+	     if (!(i == 0 &&
+		   LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
 		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
 	       {
 		  swprintf(Buffer2,
