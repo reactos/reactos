@@ -350,6 +350,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
                           SFGAO_CANDELETE |         /*0x00000020 */
                           SFGAO_HASPROPSHEET |      /*0x00000040 */
                           SFGAO_DROPTARGET |        /*0x00000100 */
+                          SFGAO_LINK |              /*0x00010000 */
                           SFGAO_READONLY |          /*0x00040000 */
                           SFGAO_HIDDEN |            /*0x00080000 */
                           SFGAO_FILESYSANCESTOR |   /*0x10000000 */
@@ -385,6 +386,13 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 
 	if ((SFGAO_READONLY & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_READONLY))
 	    *pdwAttributes &= ~SFGAO_READONLY;
+
+	if (SFGAO_LINK & *pdwAttributes) {
+	    char ext[_MAX_EXT];
+
+	    if (!_ILGetExtension(pidl, ext, _MAX_EXT) || stricmp(ext, "lnk"))
+		*pdwAttributes &= ~SFGAO_READONLY;
+	}
     } else {
 	*pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME|SFGAO_CANLINK;
     }
