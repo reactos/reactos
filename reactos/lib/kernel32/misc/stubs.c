@@ -1,10 +1,18 @@
-/* $Id: stubs.c,v 1.35 2002/09/30 21:01:32 hbirr Exp $
+/* $Id: stubs.c,v 1.36 2002/10/29 04:05:26 mdill Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <windows.h>
 
+
+BOOL
+STDCALL
+IsProcessorFeaturePresent( DWORD ProcessorFeature )
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
 
 
 BOOL

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.14 2002/09/23 19:20:34 sedwards Exp $
+; $Id: kernel32.edf,v 1.15 2002/10/29 04:05:26 mdill Exp $
 ;
 ; kernel32.edf
 ;
@@ -420,6 +420,7 @@ IsBadWritePtr=IsBadWritePtr@8
 IsDBCSLeadByte=IsDBCSLeadByte@4
 IsDBCSLeadByteEx=IsDBCSLeadByteEx@8
 IsDebuggerPresent=IsDebuggerPresent@0
+IsProcessorFeaturePresent=IsProcessorFeaturePresent@4
 IsValidCodePage=IsValidCodePage@4
 IsValidLocale=IsValidLocale@8
 LCMapStringA=LCMapStringA@24

@@ -416,6 +416,7 @@ IsBadWritePtr@8
 IsDBCSLeadByte@4
 IsDBCSLeadByteEx@8
 IsDebuggerPresent@0
+IsProcessorFeaturePresent@4
 IsValidCodePage@4
 IsValidLocale@8
 LCMapStringA@24
