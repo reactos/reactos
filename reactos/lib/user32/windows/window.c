@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.72 2003/09/13 13:58:38 weiden Exp $
+/* $Id: window.c,v 1.73 2003/09/20 19:52:23 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -844,7 +844,10 @@ User32EnumWindows (
     if ( !(ULONG)pHwnd[i] ) /* don't enumerate a NULL HWND */
       continue;
     if ( !(*lpfn)( pHwnd[i], lParam ) )
-      break;
+    {
+      HeapFree ( hHeap, 0, pHwnd );
+      return FALSE;
+    }
   }
   if ( pHwnd )
     HeapFree ( hHeap, 0, pHwnd );
