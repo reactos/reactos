@@ -455,13 +455,19 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				IShellFolder* parentFolder;
 				LPCITEMIDLIST pidlLast;
 
-				 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
-				if (SUCCEEDED(SHBindToParent(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
-					HRESULT hr = ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidlLast, pos.x, pos.y);
+				static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
 
-					parentFolder->Release();
+				if (SHBindToParent) {
+					 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
+					if (SUCCEEDED((*SHBindToParent)(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
+						HRESULT hr = ShellFolderContextMenu(parentFolder, _hwnd, 1, &pidlLast, pos.x, pos.y);
 
-					CHECKERROR(hr);
+						parentFolder->Release();
+
+						CHECKERROR(hr);
+					}
+				} else {
+					CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl_abs, pos.x, pos.y));
 				}
 			}
 			break;}
