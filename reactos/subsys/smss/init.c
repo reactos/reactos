@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.54 2004/01/06 16:10:11 ekohl Exp $
+/* $Id: init.c,v 1.55 2004/06/05 09:35:52 navaraf Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -633,6 +633,14 @@ SmCreatePagingFiles(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
+
+  /*
+   * Disable paging file on MiniNT/Live CD.
+   */
+  if (RtlCheckRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT") == STATUS_SUCCESS)
+    {
+      return STATUS_SUCCESS;
+    }
 
   RtlZeroMemory(&QueryTable,
 		sizeof(QueryTable));
