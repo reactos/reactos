@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.7 2001/10/21 18:58:31 chorns Exp $
+/* $Id: fsctrl.c,v 1.8 2001/11/20 20:34:29 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -351,123 +351,163 @@ NpfsSetState(
 }
 
 
+static NTSTATUS
+NpfsPeekPipe(PIRP Irp,
+	     PIO_STACK_LOCATION IoStack)
+/*
+ * FUNCTION: Peek at a pipe (get information about messages)
+ * ARGUMENTS:
+ *     Irp = Pointer to I/O request packet
+ *     IoStack = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  ULONG OutputBufferLength;
+  PNPFS_PIPE Pipe;
+  PFILE_PIPE_PEEK_BUFFER Reply;
+  PNPFS_FCB Fcb;
+  NTSTATUS Status;
+
+  DPRINT("NpfsPeekPipe\n");
+
+  OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
+    {
+      DPRINT("Buffer too small\n");
+      return(STATUS_INVALID_PARAMETER);
+    }
+
+  Fcb = IoStack->FileObject->FsContext;
+  Reply = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+  Pipe = Fcb->Pipe;
+
+  Status = STATUS_NOT_IMPLEMENTED;
+
+  return(Status);
+}
+
+
+
 NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
-   PFILE_OBJECT FileObject;
-   NTSTATUS Status;
-   PNPFS_DEVICE_EXTENSION DeviceExt;
-   PNPFS_PIPE Pipe;
-   PNPFS_FCB Fcb;
-   
-   DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-   
-   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
-   DPRINT("IoStack: %p\n", IoStack);
-   FileObject = IoStack->FileObject;
-   DPRINT("FileObject: %p\n", FileObject);
-   Fcb = FileObject->FsContext;
-   DPRINT("Fcb: %p\n", Fcb);
-   Pipe = Fcb->Pipe;
-   DPRINT("Pipe: %p\n", Pipe);
-   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
-   
-   switch (IoStack->Parameters.FileSystemControl.IoControlCode)
-     {
+  PIO_STACK_LOCATION IoStack;
+  PFILE_OBJECT FileObject;
+  NTSTATUS Status;
+  PNPFS_DEVICE_EXTENSION DeviceExt;
+  PNPFS_PIPE Pipe;
+  PNPFS_FCB Fcb;
+
+  DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+
+  DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  DPRINT("IoStack: %p\n", IoStack);
+  FileObject = IoStack->FileObject;
+  DPRINT("FileObject: %p\n", FileObject);
+  Fcb = FileObject->FsContext;
+  DPRINT("Fcb: %p\n", Fcb);
+  Pipe = Fcb->Pipe;
+  DPRINT("Pipe: %p\n", Pipe);
+  DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
+
+  switch (IoStack->Parameters.FileSystemControl.IoControlCode)
+    {
       case FSCTL_PIPE_ASSIGN_EVENT:
-      	DPRINT("Assign event\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Assign event\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_DISCONNECT:
-	      DPRINT("Disconnecting pipe %wZ\n", &Pipe->PipeName);
-	      Status = NpfsDisconnectPipe(Fcb);
-	      break;
+	DPRINT("Disconnecting pipe %wZ\n", &Pipe->PipeName);
+	Status = NpfsDisconnectPipe(Fcb);
+	break;
 
       case FSCTL_PIPE_LISTEN:
-	      DPRINT("Connecting pipe %wZ\n", &Pipe->PipeName);
-	      Status = NpfsConnectPipe(Fcb);
-	      break;
+	DPRINT("Connecting pipe %wZ\n", &Pipe->PipeName);
+	Status = NpfsConnectPipe(Fcb);
+	break;
 
       case FSCTL_PIPE_PEEK:
-      	DPRINT("Peek\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Peeking pipe %wZ\n", &Pipe->PipeName);
+	Status = NpfsPeekPipe(Irp, IoStack);
+	break;
 
       case FSCTL_PIPE_QUERY_EVENT:
-      	DPRINT("Query event\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Query event\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_TRANSCEIVE:
-      	DPRINT("Transceive\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Transceive\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_WAIT:
-	      DPRINT("Waiting for pipe %wZ\n", &Pipe->PipeName);
-	      Status = NpfsWaitPipe(Irp, Fcb);
-	      break;
+	DPRINT("Waiting for pipe %wZ\n", &Pipe->PipeName);
+	Status = NpfsWaitPipe(Irp, Fcb);
+	break;
 
       case FSCTL_PIPE_IMPERSONATE:
-      	DPRINT("Impersonate\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Impersonate\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_SET_CLIENT_PROCESS:
-      	DPRINT("Set client process\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Set client process\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
-      	DPRINT("Query client process\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Query client process\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_GET_STATE:
-      	DPRINT("Get state\n");
-        Status = NpfsGetState(Irp, IoStack); 
-        break;
+	DPRINT("Get state\n");
+	Status = NpfsGetState(Irp, IoStack);
+	break;
 
       case FSCTL_PIPE_SET_STATE:
-      	DPRINT("Set state\n");
-        Status = NpfsSetState(Irp, IoStack); 
-        break;
+	DPRINT("Set state\n");
+	Status = NpfsSetState(Irp, IoStack);
+	break;
 
       case FSCTL_PIPE_INTERNAL_READ:
-      	DPRINT("Internal read\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Internal read\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_INTERNAL_WRITE:
-      	DPRINT("Internal write\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Internal write\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
-      	DPRINT("Internal transceive\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Internal transceive\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
-      	DPRINT("Internal read overflow\n");
-        Status = STATUS_NOT_IMPLEMENTED; 
-        break;
+	DPRINT("Internal read overflow\n");
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
 
       default:
-        DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.IoControlCode)
-        Status = STATUS_UNSUCCESSFUL;
-     }
-   
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   
-   return(Status);
+	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.IoControlCode)
+	Status = STATUS_UNSUCCESSFUL;
+    }
+
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(Status);
 }
 
 /* EOF */

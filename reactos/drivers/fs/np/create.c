@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.10 2001/10/21 18:58:31 chorns Exp $
+/* $Id: create.c,v 1.11 2001/11/20 20:34:29 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -53,6 +53,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	Irp->IoStatus.Information = 0;
 	
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	DPRINT("No memory!\n");
 	
 	return(STATUS_NO_MEMORY);
      }
@@ -96,7 +97,15 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    ClientFcb->OtherSide = NULL;
    ClientFcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
    
+   /* initialize data list */
+   InitializeListHead(&ClientFcb->DataListHead);
+   KeInitializeSpinLock(&ClientFcb->DataListLock);
+   
    KeInitializeEvent(&ClientFcb->ConnectEvent,
+		     SynchronizationEvent,
+		     FALSE);
+   
+   KeInitializeEvent(&ClientFcb->ReadEvent,
 		     SynchronizationEvent,
 		     FALSE);
    
@@ -108,7 +117,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    KeUnlockMutex(&DeviceExt->PipeListLock);
 
-  if (Disposition == FILE_OPEN)
+#if 0
+  if (Disposition == OPEN_EXISTING)
     {
       /* do not connect to listening servers */
       FileObject->FsContext = ClientFcb;
@@ -117,9 +127,11 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       Irp->IoStatus.Information = 0;
 
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      DPRINT("Success!\n");
 
       return(STATUS_SUCCESS);
     }
+#endif
 
    /* search for disconnected or listening server fcb */
    current_entry = Pipe->ServerFcbListHead.Flink;
@@ -167,6 +179,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    Irp->IoStatus.Information = 0;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   DPRINT("Success!\n");
    
    return(STATUS_SUCCESS);
 }
@@ -238,11 +251,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    InitializeListHead(&Pipe->ClientFcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
 
-   InitializeListHead(&Pipe->ServerDataListHead);
-   KeInitializeSpinLock(&Pipe->ServerDataListLock);
-   InitializeListHead(&Pipe->ClientDataListHead);
-   KeInitializeSpinLock(&Pipe->ClientDataListLock);
-
    Pipe->PipeType = Buffer->WriteModeMessage;
    Pipe->PipeWriteMode = Buffer->WriteModeMessage;
    Pipe->PipeReadMode = Buffer->ReadModeMessage;
@@ -294,13 +302,20 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
    Fcb->ReadDataAvailable = 0;
    Fcb->WriteQuotaAvailable = 0;
-//   Fcb->InBuffer = NULL;
-//   Fcb->OutBuffer = NULL;
+
+   /* initialize data list */
+   InitializeListHead(&Fcb->DataListHead);
+   KeInitializeSpinLock(&Fcb->DataListLock);
 
    KeInitializeEvent(&Fcb->ConnectEvent,
 		     SynchronizationEvent,
 		     FALSE);
    
+   KeInitializeEvent(&Fcb->ReadEvent,
+		     SynchronizationEvent,
+		     FALSE);
+
+
    KeUnlockMutex(&DeviceExt->PipeListLock);
    
    FileObject->FsContext = Fcb;

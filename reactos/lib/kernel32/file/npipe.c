@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.8 2001/10/21 19:06:42 chorns Exp $
+/* $Id: npipe.c,v 1.9 2001/11/20 20:35:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -441,7 +441,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
 }
 
 
-WINBOOL STDCALL
+BOOL STDCALL
 CallNamedPipeA(LPCSTR lpNamedPipeName,
 	       LPVOID lpInBuffer,
 	       DWORD nInBufferSize,
@@ -450,12 +450,27 @@ CallNamedPipeA(LPCSTR lpNamedPipeName,
 	       LPDWORD lpBytesRead,
 	       DWORD nTimeOut)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  UNICODE_STRING PipeName;
+  BOOL Result;
+  
+  RtlCreateUnicodeStringFromAsciiz(&PipeName,
+				   (LPSTR)lpNamedPipeName);
+  
+  Result = CallNamedPipeW(PipeName.Buffer,
+			  lpInBuffer,
+			  nInBufferSize,
+			  lpOutBuffer,
+			  nOutBufferSize,
+			  lpBytesRead,
+			  nTimeOut);
+  
+  RtlFreeUnicodeString(&PipeName);
+  
+  return(Result);
 }
 
 
-WINBOOL STDCALL
+BOOL STDCALL
 CallNamedPipeW(LPCWSTR lpNamedPipeName,
 	       LPVOID lpInBuffer,
 	       DWORD nInBufferSize,
@@ -464,45 +479,45 @@ CallNamedPipeW(LPCWSTR lpNamedPipeName,
 	       LPDWORD lpBytesRead,
 	       DWORD nTimeOut)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
-WINBOOL STDCALL
+BOOL STDCALL
 DisconnectNamedPipe(HANDLE hNamedPipe)
 {
-   IO_STATUS_BLOCK Iosb;
-   NTSTATUS Status;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
 
-   Status = NtFsControlFile(hNamedPipe,
-			    NULL,
-			    NULL,
-			    NULL,
-			    &Iosb,
-			    FSCTL_PIPE_DISCONNECT,
-			    NULL,
-			    0,
-			    NULL,
-			    0);
-   if (Status == STATUS_PENDING)
-     {
-	Status = NtWaitForSingleObject(hNamedPipe,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SetLastErrorByStatus(Status);
-	     return(FALSE);
-	  }
-     }
+  Status = NtFsControlFile(hNamedPipe,
+			   NULL,
+			   NULL,
+			   NULL,
+			   &Iosb,
+			   FSCTL_PIPE_DISCONNECT,
+			   NULL,
+			   0,
+			   NULL,
+			   0);
+  if (Status == STATUS_PENDING)
+    {
+      Status = NtWaitForSingleObject(hNamedPipe,
+				     FALSE,
+				     NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+    }
 
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return(FALSE);
-     }
-   return(TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
 
@@ -515,8 +530,46 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
 			 LPWSTR lpUserName,
 			 DWORD nMaxUserNameSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  FILE_PIPE_LOCAL_INFORMATION LocalInfo;
+  FILE_PIPE_INFORMATION PipeInfo;
+  IO_STATUS_BLOCK StatusBlock;
+  NTSTATUS Status;
+
+  if (lpState != NULL)
+    {
+      Status = NtQueryInformationFile(hNamedPipe,
+				      &StatusBlock,
+				      &PipeInfo,
+				      sizeof(FILE_PIPE_INFORMATION),
+				      FilePipeInformation);
+      if (!NT_SUCCESS(Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+      *lpState = 0; /* FIXME */
+    }
+
+  if (lpCurInstances != NULL)
+    {
+      Status = NtQueryInformationFile(hNamedPipe,
+				      &StatusBlock,
+				      &LocalInfo,
+				      sizeof(FILE_PIPE_LOCAL_INFORMATION),
+				      FilePipeLocalInformation);
+      if (!NT_SUCCESS(Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+      *lpCurInstances = min(LocalInfo.CurrentInstances, 255);
+    }
+
+
+  /* FIXME: retrieve remaining information */
+
+
+  return(TRUE);
 }
 
 
@@ -580,7 +633,7 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
 }
 
 
-WINBOOL STDCALL
+BOOL STDCALL
 PeekNamedPipe(HANDLE hNamedPipe,
 	      LPVOID lpBuffer,
 	      DWORD nBufferSize,
@@ -588,12 +641,80 @@ PeekNamedPipe(HANDLE hNamedPipe,
 	      LPDWORD lpTotalBytesAvail,
 	      LPDWORD lpBytesLeftThisMessage)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  PFILE_PIPE_PEEK_BUFFER Buffer;
+  IO_STATUS_BLOCK Iosb;
+  ULONG BufferSize;
+  NTSTATUS Status;
+
+  BufferSize = nBufferSize + sizeof(FILE_PIPE_PEEK_BUFFER);
+  Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+			   0,
+			   BufferSize);
+
+  Status = NtFsControlFile(hNamedPipe,
+			   NULL,
+			   NULL,
+			   NULL,
+			   &Iosb,
+			   FSCTL_PIPE_PEEK,
+			   NULL,
+			   0,
+			   Buffer,
+			   BufferSize);
+  if (Status == STATUS_PENDING)
+    {
+      Status = NtWaitForSingleObject(hNamedPipe,
+				     FALSE,
+				     NULL);
+      if (NT_SUCCESS(Status))
+	Status = Iosb.Status;
+    }
+
+  if (Status == STATUS_BUFFER_OVERFLOW)
+    {
+      Status = STATUS_SUCCESS;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeHeap(RtlGetProcessHeap(),
+		  0,
+		  Buffer);
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  if (lpTotalBytesAvail != NULL)
+    {
+      *lpTotalBytesAvail = Buffer->ReadDataAvailable;
+    }
+
+  if (lpBytesRead != NULL)
+    {
+      *lpBytesRead = Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER);
+    }
+
+  if (lpBytesLeftThisMessage != NULL)
+    {
+      *lpBytesLeftThisMessage = Buffer->MessageLength -
+	(Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER));
+    }
+
+  if (lpBuffer != NULL)
+    {
+      memcpy(lpBuffer, Buffer->Data,
+	     min(nBufferSize, Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER)));
+    }
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+	      0,
+	      Buffer);
+
+  return(TRUE);
 }
 
 
-WINBOOL STDCALL
+BOOL STDCALL
 TransactNamedPipe(HANDLE hNamedPipe,
 		  LPVOID lpInBuffer,
 		  DWORD nInBufferSize,

@@ -159,6 +159,14 @@ typedef struct _NPFS_GET_STATE
    LARGE_INTEGER Timeout;
 } NPFS_GET_STATE, *PNPFS_GET_STATE;
 
+typedef struct _FILE_PIPE_PEEK_BUFFER
+{
+  ULONG NamedPipeState;
+  ULONG ReadDataAvailable;
+  ULONG NumberOfMessages;
+  ULONG MessageLength;
+  CHAR Data[1];
+} FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
 #define FILE_PIPE_BYTE_STREAM_TYPE	0x00000000
 #define FILE_PIPE_MESSAGE_TYPE		0x00000001

@@ -4,8 +4,8 @@
 
 typedef struct
 {
-   LIST_ENTRY PipeListHead;
-   KMUTEX PipeListLock;
+  LIST_ENTRY PipeListHead;
+  KMUTEX PipeListLock;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
 typedef struct
@@ -18,40 +18,38 @@ typedef struct
 
 typedef struct
 {
-   UNICODE_STRING PipeName;
-   LIST_ENTRY PipeListEntry;
-   KSPIN_LOCK FcbListLock;
-   LIST_ENTRY ServerFcbListHead;
-   LIST_ENTRY ClientFcbListHead;
-   /* Server posted data */
-   LIST_ENTRY ServerDataListHead;
-   KSPIN_LOCK ServerDataListLock;
-   /* Client posted data */
-   LIST_ENTRY ClientDataListHead;
-   KSPIN_LOCK ClientDataListLock;
-   ULONG ReferenceCount;
-   ULONG PipeType;
-   ULONG PipeReadMode;
-   ULONG PipeWriteMode;
-   ULONG PipeBlockMode;
-   ULONG PipeConfiguration;
-   ULONG MaximumInstances;
-   ULONG CurrentInstances;
-   ULONG InboundQuota;
-   ULONG OutboundQuota;
-   LARGE_INTEGER TimeOut;
+  UNICODE_STRING PipeName;
+  LIST_ENTRY PipeListEntry;
+  KSPIN_LOCK FcbListLock;
+  LIST_ENTRY ServerFcbListHead;
+  LIST_ENTRY ClientFcbListHead;
+  ULONG ReferenceCount;
+  ULONG PipeType;
+  ULONG PipeReadMode;
+  ULONG PipeWriteMode;
+  ULONG PipeBlockMode;
+  ULONG PipeConfiguration;
+  ULONG MaximumInstances;
+  ULONG CurrentInstances;
+  ULONG InboundQuota;
+  ULONG OutboundQuota;
+  LARGE_INTEGER TimeOut;
 } NPFS_PIPE, *PNPFS_PIPE;
 
 typedef struct _NPFS_FCB
 {
-   LIST_ENTRY FcbListEntry;
-   struct _NPFS_FCB* OtherSide;
-   PNPFS_PIPE Pipe;
-   KEVENT ConnectEvent;
-   ULONG PipeEnd;
-   ULONG PipeState;
-   ULONG ReadDataAvailable;
-   ULONG WriteQuotaAvailable;
+  LIST_ENTRY FcbListEntry;
+  struct _NPFS_FCB* OtherSide;
+  PNPFS_PIPE Pipe;
+  KEVENT ConnectEvent;
+  KEVENT ReadEvent;
+  ULONG PipeEnd;
+  ULONG PipeState;
+  ULONG ReadDataAvailable;
+  ULONG WriteQuotaAvailable;
+
+  LIST_ENTRY DataListHead;	/* Data queue */
+  KSPIN_LOCK DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
 
 

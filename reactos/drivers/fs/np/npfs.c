@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.2 2001/10/21 18:58:31 chorns Exp $
+/* $Id: npfs.c,v 1.3 2001/11/20 20:34:29 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -30,7 +30,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    
    DbgPrint("Named Pipe FSD 0.0.2\n");
    
-   DeviceObject->Flags = 0;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
      NpfsCreateNamedPipe;
@@ -69,6 +68,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
 	return(Status);
      }
+   
+   /* initialize the device object */
+   DeviceObject->Flags = DO_DIRECT_IO;
    
    /* initialize the device extension */
    DeviceExtension = DeviceObject->DeviceExtension;
