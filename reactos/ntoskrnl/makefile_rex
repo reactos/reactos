@@ -48,7 +48,9 @@ LDR_OBJECTS = ldr/loader.o
 OBJECTS = $(HAL_OBJECTS) $(KE_OBJECTS) $(RTL_OBJECTS) $(MM_OBJECTS) \
           $(IO_OBJECTS) $(OB_OBJECTS) $(PS_OBJECTS) $(EX_OBJECTS) \
 	  $(SE_OBJECTS) $(CFG_OBJECTS) $(TST_OBJECTS) $(DBG_OBJECTS) 
-	  
+
+LIBS = d:/tools/djgpp/lib/gcc-lib/djgpp/2.81/libgcc.a
+
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 
@@ -57,7 +59,7 @@ ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
 kimage: $(OBJECTS)
-	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) -o kimage
+	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBS) -o kimage
 	$(NM) --numeric-sort kimage > kernel.sym
 	$(OBJCOPY) -O binary kimage kimage.bin
 
