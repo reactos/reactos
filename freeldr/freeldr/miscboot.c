@@ -84,7 +84,6 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	// Read boot sector
 	if (!ReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
 	{
-		DiskError("Disk read error.");
 		return;
 	}
 

@@ -22,11 +22,11 @@
 
 
 /* just some stuff */
-#define VERSION		"FreeLoader v1.0"
+#define VERSION		"FreeLoader v1.01"
 #define COPYRIGHT	"Copyright (C) 1998-2002 Brian Palmer <brianp@sginet.com>"
 
 #define ROSLDR_MAJOR_VERSION	1
-#define ROSLDR_MINOR_VERSION	0
+#define ROSLDR_MINOR_VERSION	01
 #define ROSLDR_PATCH_VERSION	0
 
 #define	size_t	unsigned int

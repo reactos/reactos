@@ -356,8 +356,8 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 EntryCount, P
 	ULONG			CurrentEntry;
 	PDIRENTRY		DirEntry;
 	PLFN_DIRENTRY	LfnDirEntry;
-	UCHAR			LfnNameBuffer[261];
-	UCHAR			ShortNameBuffer[13];
+	UCHAR			LfnNameBuffer[265];
+	UCHAR			ShortNameBuffer[20];
 	UINT32			StartCluster;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName));
@@ -369,6 +369,9 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 EntryCount, P
 	{
 		DirEntry = (PDIRENTRY)(DirectoryBuffer + (CurrentEntry * 32) );
 		LfnDirEntry = (PLFN_DIRENTRY)DirEntry;
+
+		//DbgPrint((DPRINT_FILESYSTEM, "Dumping directory entry %d:\n", CurrentEntry));
+		//DbgDumpBuffer(DPRINT_FILESYSTEM, DirEntry, sizeof(DIRENTRY));
 
 		//
 		// Check if this is the last file in the directory
@@ -467,6 +470,9 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 EntryCount, P
 			{
 				LfnNameBuffer[12 + (LfnDirEntry->SequenceNumber * 13)] = (UCHAR)LfnDirEntry->Name11_12[1];
 			}
+
+			//DbgPrint((DPRINT_FILESYSTEM, "Dumping long name buffer:\n"));
+			//DbgDumpBuffer(DPRINT_FILESYSTEM, LfnNameBuffer, 260);
 
 			continue;
 		}
@@ -707,6 +713,7 @@ void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
 	ULONG	Idx;
 
 	Idx = 0;
+	RtlZeroMemory(Buffer, 13);
 
 	//
 	// Fixup first character
@@ -740,11 +747,6 @@ void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
 		Buffer[Idx++] = (DirEntry->FileName[9] == ' ') ? '\0' : DirEntry->FileName[9];
 		Buffer[Idx++] = (DirEntry->FileName[10] == ' ') ? '\0' : DirEntry->FileName[10];
 	}
-
-	//
-	// Null-Terminate string
-	//
-	Buffer[Idx + 4] = '\0';
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatParseShortFileName() ShortName = %s\n", Buffer));
 }

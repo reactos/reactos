@@ -1,0 +1,20 @@
+Changes in v1.01 (4/28/2002)
+
+- Fixed FAT short file name buffer overflow that was causing
+  some long filenames not to work correctly.
+
+Changes in v1.0 (4/24/2002)
+
+- FreeLoader version 1.0!
+- Supports booting ReactOS
+- Supports booting Linux bzImage kernels
+- No initrd support (yet)
+- No zImage support (yet)
+- No ext2 file system support (yet)
+- Supports FAT & ISO-9660 file systems
+- Forward slashes '/' as well as backslashes '\' can be used
+  for path names in FAT & ISO-9600
+- Fixed bug in LBA code where it was only reading one sector
+  even if you asked for more
+- Fixed bug in FAT code, was also present in ISO-9660 code where
+  it wasn't incrementing the buffer address correctly

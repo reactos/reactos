@@ -28,6 +28,7 @@
 #include "debug.h"
 #include "mm.h"
 #include "inifile.h"
+#include "oslist.h" // For RemoveQuotes()
 
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
@@ -176,6 +177,7 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 	// Get the command line
 	if (IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLine, 260))
 	{
+		RemoveQuotes(LinuxCommandLine);
 		LinuxCommandLineSize = strlen(LinuxCommandLine) + 1;
 	}
 
