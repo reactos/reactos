@@ -19,7 +19,7 @@ unsigned int _mbbtombc(unsigned int c);
 unsigned int _mbctombb(unsigned int c);
 
 unsigned char * _mbscat(unsigned char *dst, const unsigned char *src);
-unsigned char * _mbschr(const unsigned char *str, unsigned int c);
+unsigned char * _mbschr(unsigned char *str, unsigned char* c);
 int _mbscmp(const unsigned char *, const unsigned char *);
 int _mbscoll(const unsigned char *, const unsigned char *);
 unsigned char * _mbscpy(unsigned char *, const unsigned char *);
@@ -62,7 +62,7 @@ unsigned char * _mbsset(unsigned char *, unsigned int);
 size_t _mbsspn(const unsigned char *, const unsigned char *);
 
 unsigned char * _mbsstr(const unsigned char *, const unsigned char *);
-unsigned char * _mbstok(unsigned char *, const unsigned char *);
+unsigned char * _mbstok(unsigned char *, unsigned char *);
 
 unsigned char * _mbslwr(unsigned char *str);
 unsigned char * _mbsupr(unsigned char *str);

@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.1 2001/09/16 13:18:24 chorns Exp $
+/* $Id: pci.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -544,7 +544,7 @@ PciAddDevice(
 
   RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
 
-  DeviceExtension->IsFDO = TRUE;
+  DeviceExtension->Common.IsFDO = TRUE;
 
   DeviceExtension->Ldo =
     IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
@@ -569,9 +569,9 @@ DriverEntry(
 {
   DbgPrint("Peripheral Component Interconnect Bus Driver\n");
 
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = PciDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_PNP] = PciPnpControl;
-  DriverObject->MajorFunction[IRP_MJ_POWER] = PciPowerControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) PciDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) PciPnpControl;
+  DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH) PciPowerControl;
   DriverObject->DriverExtension->AddDevice = PciAddDevice;
 
   return STATUS_SUCCESS;

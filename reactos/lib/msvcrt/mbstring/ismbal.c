@@ -14,3 +14,4 @@ int _ismbbalpha(unsigned char c)
 {
   return (isalpha(c) || _ismbbkalnum(c));
 }
+

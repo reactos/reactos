@@ -13,3 +13,4 @@ void *_lsearch(const void *key, void *base, size_t *nelp, size_t width,
         (*nelp)++;
         return base ;
 }
+

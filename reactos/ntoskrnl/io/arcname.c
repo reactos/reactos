@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.2 2002/03/15 23:59:38 ekohl Exp $
+/* $Id: arcname.c,v 1.3 2002/05/05 14:57:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

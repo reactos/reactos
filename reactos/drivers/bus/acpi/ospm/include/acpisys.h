@@ -41,7 +41,7 @@ typedef struct _COMMON_DEVICE_EXTENSION
 typedef struct _PDO_DEVICE_EXTENSION
 {
   // Common device data
-  COMMON_DEVICE_EXTENSION;
+  COMMON_DEVICE_EXTENSION Common;
   // Hardware IDs
   UNICODE_STRING HardwareIDs;
   // Compatible IDs
@@ -51,7 +51,7 @@ typedef struct _PDO_DEVICE_EXTENSION
 typedef struct _FDO_DEVICE_EXTENSION
 {
   // Common device data
-  COMMON_DEVICE_EXTENSION;
+  COMMON_DEVICE_EXTENSION Common;
   // Physical Device Object
   PDEVICE_OBJECT Pdo;
   // Current state of the driver

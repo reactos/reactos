@@ -30,3 +30,4 @@ unsigned int _mbctokata( unsigned int c )
 {
   return c;
 }
+

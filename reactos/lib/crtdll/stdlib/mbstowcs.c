@@ -9,3 +9,4 @@ int mbtowc( wchar_t *wchar, const char *mbchar, size_t count )
 {
 	return 0;
 }
+

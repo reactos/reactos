@@ -26,9 +26,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: ekohl $
- * $Date: 2001/07/03 12:55:00 $
+ * $Revision: 1.2 $
+ * $Author: chorns $
+ * $Date: 2002/05/05 14:57:39 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -72,8 +72,10 @@ typedef char* va_list;
  * pack shorts and such into a smaller argument list. Fortunately a
  * neatly arranged version is available through the use of __builtin_next_arg.
  */
+#ifndef va_start
 #define va_start(ap, pN)	\
 	((ap) = ((va_list) __builtin_next_arg(pN)))
+#endif
 #else
 /*
  * For a simple minded compiler this should work (it works in GNU too for
@@ -87,8 +89,10 @@ typedef char* va_list;
 /*
  * End processing of variable argument list. In this case we do nothing.
  */
+#ifndef va_end
 #define va_end(ap)	((void)0)
-
+#endif
+	
 
 /*
  * Increment ap to the next argument in the list while returing a
@@ -98,10 +102,13 @@ typedef char* va_list;
  * increasing the alignment requirement.
  */
 
+#ifndef va_arg
 #define va_arg(ap, t)					\
 	 (((ap) = (ap) + __va_argsiz(t)),		\
 	  *((t*) (void*) ((ap) - __va_argsiz(t))))
-
+#endif
+	
 #endif /* Not RC_INVOKED */
 
 #endif /* not _STDARG_H_ */
+	

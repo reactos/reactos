@@ -113,3 +113,4 @@ inline static const char *debugres_w( const WCHAR *s ) { return wine_dbgstr_wn( 
 #define MESSAGE wine_dbg_printf
 
 #endif  /* __WINE_DEBUGTOOLS_H */
+

@@ -20,27 +20,28 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
-#PREFIX = i586-mingw32-
-PREFIX = /usr/mingw32-2.95.3-fc/bin/mingw32-pc-
-EXE_POSTFIX := 
+PREFIX = i386-mingw32msv-
+EXE_POSTFIX :=
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 DOSCLI =
 FLOPPY_DIR = /mnt/floppy
 SEP := /
+PIPE :=
 endif
 
 ifeq ($(HOST),mingw32-windows)
 NASM_FORMAT = win32
-PREFIX = 
-EXE_PREFIX := 
+PREFIX =
+EXE_PREFIX :=
 EXE_POSTFIX := .exe
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasmw
 DOSCLI = yes
 FLOPPY_DIR = A:
 SEP := \$(EMPTY_VAR)
+PIPE := -pipe
 endif
 
 
@@ -63,7 +64,7 @@ LD = $(PREFIX)ld
 NM = $(PREFIX)nm
 OBJCOPY = $(PREFIX)objcopy
 STRIP = $(PREFIX)strip
-AS = $(PREFIX)gcc -c -x assembler-with-cpp 
+AS = $(PREFIX)gcc -c -x assembler-with-cpp
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
@@ -79,7 +80,15 @@ MC = $(TOOLS_PATH)/wmc/wmc
 
 
 # Maybe we can delete these soon
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -m386
+
+ifeq ($(HOST),mingw32-linux)
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -march=i386
+endif
+
+ifeq ($(HOST),mingw32-windows)
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -march=i386
+endif
+
 CXXFLAGS = $(CFLAGS)
 NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
 ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__

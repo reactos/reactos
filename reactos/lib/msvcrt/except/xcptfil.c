@@ -8,3 +8,4 @@ _XcptFilter(DWORD ExceptionCode,
 	//fixme XcptFilter
 //	return UnhandledExceptionFilter(ExceptionInfo);
 }
+

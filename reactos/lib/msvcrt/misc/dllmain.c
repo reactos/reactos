@@ -1,5 +1,5 @@
-/* $Id: dllmain.c,v 1.12 2002/04/28 22:37:00 hbirr Exp $
- * 
+/* $Id: dllmain.c,v 1.13 2002/05/05 14:57:41 chorns Exp $
+ *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 #include <windows.h>

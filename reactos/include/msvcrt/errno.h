@@ -1,4 +1,4 @@
-/* 
+/*
  * errno.h
  *
  * Error numbers and access to error reporting.
@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ekohl $
- * $Date: 2001/10/04 16:05:41 $
+ * $Revision: 1.4 $
+ * $Author: chorns $
+ * $Date: 2002/05/05 14:57:39 $
  *
  */
 
@@ -98,17 +98,20 @@ extern "C" {
 int*	_errno(void);
 #define	errno		(*_errno())
 
-unsigned long*	__doserrno(void);
+int*	__doserrno(void);
 #define	_doserrno	(*__doserrno())
 
 /* One of the MSVCRTxx libraries */
 
 extern int*	__imp__sys_nerr;
+#ifndef sys_nerr
 #define	sys_nerr	(*__imp__sys_nerr)
+#endif
 
 extern char**	__imp__sys_errlist;
+#ifndef sys_errlist
 #define	sys_errlist	(__imp__sys_errlist)
-
+#endif
 
 #ifdef	__cplusplus
 }

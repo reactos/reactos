@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.1 2001/09/16 13:18:24 chorns Exp $ */
+/* $Id: pci.h,v 1.2 2002/05/05 14:57:45 chorns Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -52,7 +52,7 @@ typedef struct _COMMON_DEVICE_EXTENSION
 typedef struct _PDO_DEVICE_EXTENSION
 {
   // Common device data
-  COMMON_DEVICE_EXTENSION;
+  COMMON_DEVICE_EXTENSION Common;
   // Device ID
   UNICODE_STRING DeviceID;
   // Instance ID
@@ -71,7 +71,7 @@ typedef struct _PDO_DEVICE_EXTENSION
 typedef struct _FDO_DEVICE_EXTENSION
 {
   // Common device data
-  COMMON_DEVICE_EXTENSION;
+  COMMON_DEVICE_EXTENSION Common;
   // Physical Device Object
   PDEVICE_OBJECT Pdo;
   // Current state of the driver

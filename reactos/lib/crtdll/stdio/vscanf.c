@@ -33,3 +33,4 @@ __vscanf (const char *format, va_list arg)
   return __vfscanf (stdin, format, arg);
 }
 //weak_alias (__vscanf, vscanf)
+

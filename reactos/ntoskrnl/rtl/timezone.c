@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.1 2001/06/01 17:13:24 ekohl Exp $
+/* $Id: timezone.c,v 1.2 2002/05/05 14:57:44 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -31,7 +31,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    NTSTATUS Status;
    
    DPRINT("RtlQueryTimeZoneInformation()\n");
-   
+
    Status = RtlpGetRegistryHandle(RTL_REGISTRY_CONTROL,
 				  L"TimeZoneInformation",
 				  TRUE,
@@ -64,7 +64,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    QueryTable[2].Name = L"Standard Bias";
    QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[2].EntryContext = &TimeZoneInformation->StandardBias;
-   
+
    QueryTable[3].Name = L"Standard Start";
    QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[3].EntryContext = &TimeZoneInformation->StandardDate;

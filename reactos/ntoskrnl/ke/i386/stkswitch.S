@@ -78,4 +78,4 @@ _KePushAndStackSwitchAndSysRet@28:
 	call	_KeLowerIrql@4
 
 	jmp	KeReturnFromSystemCall
-			
+	

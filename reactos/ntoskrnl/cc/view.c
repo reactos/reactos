@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.37 2002/02/08 02:57:06 chorns Exp $
+/* $Id: view.c,v 1.38 2002/05/05 14:57:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,7 +32,7 @@
  *
  * This is not the NT implementation of a file cache nor anything much like 
  * it. 
- * 
+ *
  * The general procedure for a filesystem to implement a read or write 
  * dispatch routine is as follows
  * 
@@ -62,6 +62,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern void * alloca(size_t);
+
 /* GLOBALS *******************************************************************/
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -76,7 +78,7 @@ static LIST_ENTRY CacheSegmentLRUListHead;
 
 static FAST_MUTEX ViewLock;
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg);
 
 /* FUNCTIONS *****************************************************************/

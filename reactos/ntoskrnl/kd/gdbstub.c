@@ -151,7 +151,7 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Gs) }
 };
 
-static CHAR GspThreadStates[THREAD_STATE_MAX] =
+static PCHAR GspThreadStates[THREAD_STATE_MAX] =
 {
   "Invalid",      /* THREAD_STATE_INVALID */
   "Runnable",     /* THREAD_STATE_RUNNABLE */
@@ -742,7 +742,7 @@ GspQuery(PCHAR Request)
     /* Get thread information */
     if (GspFindThread (ptr, &ThreadInfo))
 	  {
-      PCHAR String = &GspThreadStates[ThreadInfo->Tcb.State];
+      PCHAR String = GspThreadStates[ThreadInfo->Tcb.State];
       GspMem2Hex (String, &GspOutBuffer[0], strlen (String), FALSE);
 	  }
   }

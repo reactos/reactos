@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.5 2001/05/05 19:13:08 chorns Exp $
+/* $Id: kdb.c,v 1.6 2002/05/05 14:57:43 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -94,7 +94,7 @@ struct
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-static unsigned long
+unsigned long
 strtoul(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;

@@ -55,3 +55,4 @@ __vsscanf (const char *s,const char *format,va_list arg)
 
 
 //weak_alias (__vsscanf, vsscanf)
+

@@ -47,3 +47,4 @@ int __vsscanf(const char *s,const char *format,va_list arg)
 
   return __vfscanf(&f, format, arg);
 }
+

@@ -1,4 +1,4 @@
-/* $Id: acpisys.c,v 1.4 2001/08/27 01:24:36 ekohl Exp $
+/* $Id: acpisys.c,v 1.5 2002/05/05 14:57:44 chorns Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpisys.c
@@ -136,7 +136,7 @@ ACPIAddDevice(
 
   DeviceExtension->Pdo = PhysicalDeviceObject;
 
-  DeviceExtension->Ldo =
+  DeviceExtension->Common.Ldo =
     IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
 
   DeviceExtension->State = dsStopped;
@@ -157,9 +157,9 @@ DriverEntry(
 {
   DbgPrint("Advanced Configuration and Power Interface Bus Driver\n");
 
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ACPIDispatchDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_PNP] = ACPIPnpControl;
-  DriverObject->MajorFunction[IRP_MJ_POWER] = ACPIPowerControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) ACPIDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) ACPIPnpControl;
+  DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH) ACPIPowerControl;
   DriverObject->DriverExtension->AddDevice = ACPIAddDevice;
 
   return STATUS_SUCCESS;

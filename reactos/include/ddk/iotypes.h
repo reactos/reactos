@@ -1,5 +1,5 @@
-/* $Id: iotypes.h,v 1.36 2002/04/10 09:55:10 ekohl Exp $
- * 
+/* $Id: iotypes.h,v 1.37 2002/05/05 14:57:38 chorns Exp $
+ *
  */
 
 #ifndef __INCLUDE_DDK_IOTYPES_H
@@ -438,10 +438,10 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
   
   struct _DEVICE_OBJECT* DeviceObject;
   struct _FILE_OBJECT* FileObject;
-  
+
   PIO_COMPLETION_ROUTINE CompletionRoutine;
   PVOID CompletionContext;
-  
+
 } __attribute__((packed)) IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 
 
@@ -669,13 +669,6 @@ typedef struct _DEVICE_OBJECT
    PVOID Reserved;
 } DEVICE_OBJECT, *PDEVICE_OBJECT;
 
-/*
- * Dispatch routine type declaration
- */
-typedef NTSTATUS STDCALL
-(*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*,
-		    IRP*);
-
 
 /*
  * Fast i/o routine type declaration
@@ -726,6 +719,13 @@ typedef struct _FAST_IO_DISPATCH {
 /*
  * Dispatch routine type declaration
  */
+typedef NTSTATUS STDCALL
+(*PDRIVER_DISPATCH)(IN struct _DEVICE_OBJECT *DeviceObject,
+		   IN struct _IRP *Irp);
+
+/*
+ * Dispatch routine type declaration
+ */
 typedef VOID STDCALL
 (*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
@@ -755,7 +755,7 @@ struct _FAST_IO_DISPATCH_TABLE
 {
 	ULONG			Count;
 	PFAST_IO_DISPATCH	Dispatch;
-	
+
 } FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
 #endif
 

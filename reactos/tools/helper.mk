@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.12 2002/04/29 23:02:12 hyperion Exp $
+# $Id: helper.mk,v 1.13 2002/05/05 14:57:45 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -350,12 +350,12 @@ endif
 
 ifeq ($(MK_MODE),user)
   MK_DEFBASE := 0x400000
-  MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS) $(TARGET_SDKLIBS))
+  MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS) $(TARGET_SDKLIBS)) $(TARGET_LIBS)
 endif
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
-  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS))
+  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS)) $(TARGET_LIBS)
 endif
 
 
@@ -374,17 +374,16 @@ endif
 #
 include $(PATH_TO_TOP)/config
 
-
 TARGET_CFLAGS += $(MK_CFLAGS)
-TARGET_CFLAGS += -pipe -march=$(ARCH)
+TARGET_CFLAGS += $(PIPE) -march=$(ARCH)
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS)
-TARGET_CPPFLAGS += -pipe -march=$(ARCH)
+TARGET_CPPFLAGS += $(PIPE) -march=$(ARCH)
 
 TARGET_RCFLAGS += $(MK_RCFLAGS)
 
 TARGET_ASFLAGS += $(MK_ASFLAGS)
-TARGET_ASFLAGS += -pipe -march=$(ARCH)
+TARGET_ASFLAGS += $(PIPE) -march=$(ARCH)
 
 TARGET_NFLAGS += $(MK_NFLAGS)
 
@@ -397,7 +396,7 @@ MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 # We don't want to link header files
-MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS)) 
+MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
 MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
 
 ifeq ($(MK_IMPLIBONLY),yes)
@@ -417,7 +416,7 @@ else # MK_IMPLIBONLY
 
 
 all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
-	
+
 
 ifeq ($(MK_IMPLIB),yes)
   MK_EXTRACMD := --def $(MK_EDFNAME)
@@ -551,7 +550,7 @@ ifeq ($(MK_IMPLIB),yes)
 endif
 
 # Be carefull not to clean non-object files
-MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS)) 
+MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 
 clean:
 	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \

@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.6 2001/09/16 13:19:32 chorns Exp $
+/* $Id: pnproot.c,v 1.7 2002/05/05 14:57:43 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -64,7 +64,7 @@ typedef struct _PNPROOT_COMMON_DEVICE_EXTENSION
 typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 {
   // Common device data
-  PNPROOT_COMMON_DEVICE_EXTENSION;
+  PNPROOT_COMMON_DEVICE_EXTENSION Common;
   // Device ID
   UNICODE_STRING DeviceID;
   // Instance ID
@@ -75,7 +75,7 @@ typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
 {
   // Common device data
-  PNPROOT_COMMON_DEVICE_EXTENSION;
+  PNPROOT_COMMON_DEVICE_EXTENSION Common;
   // Physical Device Object
   PDEVICE_OBJECT Pdo;
   // Lower device object
@@ -144,11 +144,11 @@ PnpRootCreateDevice(
 
   RtlZeroMemory(PdoDeviceExtension, sizeof(PNPROOT_PDO_DEVICE_EXTENSION));
 
-  PdoDeviceExtension->IsFDO = FALSE;
+  PdoDeviceExtension->Common.IsFDO = FALSE;
 
-  PdoDeviceExtension->DeviceObject = Device->Pdo;
+  PdoDeviceExtension->Common.DeviceObject = Device->Pdo;
 
-  PdoDeviceExtension->DevicePowerState = PowerDeviceD0;
+  PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
   if (!IopCreateUnicodeString(
     &PdoDeviceExtension->DeviceID,
@@ -648,11 +648,11 @@ PnpRootQueryBusRelations(
 
       RtlZeroMemory(PdoDeviceExtension, sizeof(PNPROOT_PDO_DEVICE_EXTENSION));
 
-      PdoDeviceExtension->IsFDO = FALSE;
+      PdoDeviceExtension->Common.IsFDO = FALSE;
 
-      PdoDeviceExtension->DeviceObject = Device->Pdo;
+      PdoDeviceExtension->Common.DeviceObject = Device->Pdo;
 
-      PdoDeviceExtension->DevicePowerState = PowerDeviceD0;
+      PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
       if (!IopCreateUnicodeString(
         &PdoDeviceExtension->DeviceID,
@@ -913,7 +913,7 @@ PnpRootAddDevice(
 
   RtlZeroMemory(DeviceExtension, sizeof(PNPROOT_FDO_DEVICE_EXTENSION));
 
-  DeviceExtension->IsFDO = TRUE;
+  DeviceExtension->Common.IsFDO = TRUE;
 
   DeviceExtension->State = dsStopped;
 
@@ -955,8 +955,8 @@ PnpRootDriverEntry(
 {
   DPRINT("Called\n");
 
-  DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
-  DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) PnpRootPnpControl;
+  DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH) PnpRootPowerControl;
   DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
   return STATUS_SUCCESS;

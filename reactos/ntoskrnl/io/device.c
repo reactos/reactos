@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.39 2002/04/19 20:27:20 ekohl Exp $
+/* $Id: device.c,v 1.40 2002/05/05 14:57:43 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -228,7 +228,7 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 	Current = Current->AttachedDevice;
 //	DPRINT("Current %x\n",Current);
      }
-   
+
 //   DPRINT("IoGetAttachedDevice() = %x\n",DeviceObject);
    return(Current);
 }
@@ -238,7 +238,7 @@ STDCALL
 IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
 {
    PDEVICE_OBJECT Current = DeviceObject;
-  
+
    while (Current->AttachedDevice!=NULL)
      {
 	Current = Current->AttachedDevice;
@@ -256,7 +256,7 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    
    DPRINT("IoAttachDeviceToDeviceStack(SourceDevice %x, TargetDevice %x)\n",
 	  SourceDevice,TargetDevice);
-   
+
    AttachedDevice = IoGetAttachedDevice(TargetDevice);
    AttachedDevice->AttachedDevice = SourceDevice;
    SourceDevice->AttachedDevice = NULL;
@@ -273,7 +273,6 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
-
 NTSTATUS STDCALL
 IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
@@ -284,7 +283,6 @@ IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   return(STATUS_NOT_IMPLEMENTED);
 }
-
 
 NTSTATUS
 IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
@@ -315,10 +313,10 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
 
   Object->Type = InternalDriverType;
-   
+
   for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
-  Object->MajorFunction[i] = IopDefaultDispatchFunction;
+  Object->MajorFunction[i] = (PDRIVER_DISPATCH) IopDefaultDispatchFunction;
     }
 
   *DriverObject = Object;

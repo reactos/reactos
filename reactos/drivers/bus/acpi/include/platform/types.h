@@ -793,3 +793,4 @@ VOID
 #endif /* __INCLUDE_ACPI_TYPES_H */
 
 #endif
+

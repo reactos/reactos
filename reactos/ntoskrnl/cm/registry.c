@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.70 2002/03/16 19:57:26 ekohl Exp $
+/* $Id: registry.c,v 1.71 2002/05/05 14:57:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -599,19 +599,19 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* Connect the SOFTWARE hive */
   Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey, SetUpBoot);
-  assert(NT_SUCCESS(Status));
+  //assert(NT_SUCCESS(Status));
 
   /* Connect the SAM hive */
   Status = CmiInitializeHive(SAM_REG_FILE,REG_SAM_KEY_NAME, "Sam", CmiMachineKey, SetUpBoot);
-  assert(NT_SUCCESS(Status));
+  //assert(NT_SUCCESS(Status));
 
   /* Connect the SECURITY hive */
   Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey, SetUpBoot);
-  assert(NT_SUCCESS(Status));
+  //assert(NT_SUCCESS(Status));
 
   /* Connect the DEFAULT hive */
   Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey, SetUpBoot);
-  assert(NT_SUCCESS(Status));
+  //assert(NT_SUCCESS(Status));
 
   /* FIXME : initialize standards symbolic links */
 

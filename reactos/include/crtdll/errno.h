@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Revision: 1.4 $
+ * $Author: chorns $
+ * $Date: 2002/05/05 14:57:38 $
  *
  */
 
@@ -108,7 +108,9 @@ extern int*	__imp__sys_nerr;
 #define	sys_nerr	(*__imp__sys_nerr)
 
 extern char**	__imp__sys_errlist;
+#ifndef sys_errlist
 #define	sys_errlist	(__imp__sys_errlist)
+#endif
 
 #else
 /* CRTDLL run time library */

@@ -10,4 +10,4 @@ double _copysign (double __d, double __s)
 
 	return __d;
 }
-	
+

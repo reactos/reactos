@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.1 2001/08/23 17:32:04 chorns Exp $
+/* $Id: fdo.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/fdo.c
@@ -87,11 +87,11 @@ FdoQueryBusRelations(
 
       Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 
-      PdoDeviceExtension->DeviceObject = Device->Pdo;
+      PdoDeviceExtension->Common.DeviceObject = Device->Pdo;
 
-      PdoDeviceExtension->DevicePowerState = PowerDeviceD0;
+      PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
-      PdoDeviceExtension->Ldo = IoAttachDeviceToDeviceStack(
+      PdoDeviceExtension->Common.Ldo = IoAttachDeviceToDeviceStack(
         DeviceObject,
         Device->Pdo);
 

@@ -7,7 +7,8 @@
 #define VGA_OR     16
 #define VGA_XOR    24
 
-typedef struct { int quot, rem; } div_t;
+//This is in mingw standard headers
+//typedef struct { int quot, rem; } div_t;
 
 int maskbit[640], y80[480], xconv[640], bit8[640], startmasks[8], endmasks[8];
 

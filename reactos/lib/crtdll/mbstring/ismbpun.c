@@ -11,3 +11,4 @@ int _ismbbpunct(unsigned char c)
 // (0xA1 <= c <= 0xA6)
 	return (ispunct(c) ||  _ismbbkana(c));
 }
+

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.7 2000/06/29 23:35:28 dwelch Exp $
+/* $Id: dllmain.c,v 1.8 2002/05/05 14:57:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,8 +13,8 @@
 #include <ntdll/ntdll.h>
 #include <windows.h>
 
-BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDll, 
-			      DWORD fdwReason, 
+BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDll,
+			      DWORD fdwReason,
 			      LPVOID fImpLoad)
 {
   return TRUE;

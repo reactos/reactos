@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.120 2002/05/02 23:45:33 dwelch Exp $
+/* $Id: main.c,v 1.121 2002/05/05 14:57:44 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -202,7 +202,7 @@ VOID CreateDefaultRegistryForLegacyDriver(
     }
 #ifdef FULLREG
   DwordData = 0;
-  Length = Length = sizeof(DWORD);
+  Length = sizeof(DWORD);
   Status = RtlWriteRegistryValue(
     RTL_REGISTRY_HANDLE,
     (PWSTR)KeyHandle,

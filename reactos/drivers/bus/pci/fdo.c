@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.1 2001/09/16 13:18:24 chorns Exp $
+/* $Id: fdo.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -195,11 +195,11 @@ FdoQueryBusRelations(
 
       RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
 
-      PdoDeviceExtension->IsFDO = FALSE;
+      PdoDeviceExtension->Common.IsFDO = FALSE;
 
-      PdoDeviceExtension->DeviceObject = Device->Pdo;
+      PdoDeviceExtension->Common.DeviceObject = Device->Pdo;
 
-      PdoDeviceExtension->DevicePowerState = PowerDeviceD0;
+      PdoDeviceExtension->Common.DevicePowerState = PowerDeviceD0;
 
       /* FIXME: Get device properties (Hardware IDs, etc.) */
 

@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.28 2002/04/26 13:05:09 ekohl Exp $
+/* $Id: ntddk.h,v 1.29 2002/05/05 14:57:38 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -23,7 +23,14 @@ extern "C"
 
 #define STATIC static
 
-
+#ifndef _GNU_H_WINDOWS_H
+/* NASTY HACK! Our msvcrt are messed up, causing msvcrt.dll to crash when
+ * the headers are mixed with MinGW msvcrt headers. Not including stdlib.h
+ * seems to correct this.
+ */
+#include <stdlib.h>
+#include <string.h>
+#endif
 #include <ntos/types.h>
 #include <ntos/time.h>
 #include <ntos/cdrom.h>
