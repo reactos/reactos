@@ -1,4 +1,4 @@
-/* $Id: tlist.c,v 1.2 2002/09/03 18:44:18 chorns Exp $
+/* $Id: tlist.c,v 1.3 2003/03/31 21:03:42 hyperion Exp $
  *
  * ReactOS Project
  * TList
@@ -78,11 +78,11 @@ BOOL STDCALL AcquirePrivileges (VOID)
   return TRUE;
 }
 
-PSYSTEM_PROCESS_INFORMATION STDCALL
+PSYSTEM_PROCESSES STDCALL
 GetProcessAndThreadsInfo (PULONG Size)
 {
   NTSTATUS                    Status = STATUS_SUCCESS;
-  PSYSTEM_PROCESS_INFORMATION pInfo = NULL;
+  PSYSTEM_PROCESSES pInfo = NULL;
   ULONG                       Length = PAGE_SIZE;
   ULONG                       RequiredLength = 0;
 
@@ -131,7 +131,7 @@ GetProcessAndThreadsInfo (PULONG Size)
 int STDCALL
 ProcessHasDescendants (
   ULONG                       Pid,
-  PSYSTEM_PROCESS_INFORMATION pInfo
+  PSYSTEM_PROCESSES pInfo
   )
 {
   LONG Count = 0;
@@ -139,16 +139,16 @@ ProcessHasDescendants (
   if (NULL == pInfo) return 0;
   do {
 
-      if (ALREADY_PROCESSED != pInfo->ParentProcessId)
+      if (ALREADY_PROCESSED != pInfo->InheritedFromProcessId)
       {
-        if ((Pid != pInfo->ProcessId) && (Pid == pInfo->ParentProcessId))
+        if ((Pid != pInfo->ProcessId) && (Pid == pInfo->InheritedFromProcessId))
         {
           ++ Count;
         }
       }
-      (PBYTE) pInfo += pInfo->RelativeOffset;
+      (PBYTE) pInfo += pInfo->NextEntryDelta;
 
-  } while (0 != pInfo->RelativeOffset);
+  } while (0 != pInfo->NextEntryDelta);
 
   return Count;
 }
@@ -156,18 +156,18 @@ ProcessHasDescendants (
 
 BOOL STDCALL
 GetProcessInfo (
-  PSYSTEM_PROCESS_INFORMATION pInfo,
+  PSYSTEM_PROCESSES pInfo,
   LPWSTR                      * Module,
   LPWSTR                      * Title
   )
 {
-      *Module = (pInfo->Name.Length ? pInfo->Name.Buffer : L"System process");
+      *Module = (pInfo->ProcessName.Length ? pInfo->ProcessName.Buffer : L"System process");
       *Title = L""; /* TODO: check if the process has any window */
       return TRUE;
 }
 
 int STDCALL PrintProcessInfoDepth (
-  PSYSTEM_PROCESS_INFORMATION pInfo,
+  PSYSTEM_PROCESSES pInfo,
   LONG                        Depth
   )
 {
@@ -181,7 +181,7 @@ int STDCALL PrintProcessInfoDepth (
     L"%s (%d, %d) %s\n",
     Module,
     pInfo->ProcessId,
-    pInfo->ParentProcessId,
+    pInfo->InheritedFromProcessId,
     Title
     );
   return EXIT_SUCCESS;
@@ -189,8 +189,8 @@ int STDCALL PrintProcessInfoDepth (
 
 int STDCALL
 PrintProcessAndDescendants (
-  PSYSTEM_PROCESS_INFORMATION pInfo,
-  PSYSTEM_PROCESS_INFORMATION pInfoBase,
+  PSYSTEM_PROCESSES pInfo,
+  PSYSTEM_PROCESSES pInfoBase,
   LONG                        Depth
   )
 {
@@ -199,15 +199,15 @@ PrintProcessAndDescendants (
   if (NULL == pInfo) return EXIT_FAILURE;
   /* Print current pInfo process */
   PrintProcessInfoDepth (pInfo, Depth ++);
-  pInfo->ParentProcessId = ALREADY_PROCESSED;
+  pInfo->InheritedFromProcessId = ALREADY_PROCESSED;
   /* Save current process' PID */
   Pid = pInfo->ProcessId;
   /* Scan and print possible children */
   do {
 
-    if (ALREADY_PROCESSED != pInfo->ParentProcessId)
+    if (ALREADY_PROCESSED != pInfo->InheritedFromProcessId)
     {
-      if (Pid == pInfo->ParentProcessId)
+      if (Pid == pInfo->InheritedFromProcessId)
       {
         if (ProcessHasDescendants (Pid, pInfoBase))
         {
@@ -220,21 +220,21 @@ PrintProcessAndDescendants (
 	else
 	{
           PrintProcessInfoDepth (pInfo, Depth);
-	  pInfo->ParentProcessId = ALREADY_PROCESSED;
+	  pInfo->InheritedFromProcessId = ALREADY_PROCESSED;
 	}
       }
     }
-    (PBYTE) pInfo += pInfo->RelativeOffset;
+    (PBYTE) pInfo += pInfo->NextEntryDelta;
 
-  } while (0 != pInfo->RelativeOffset);
+  } while (0 != pInfo->NextEntryDelta);
   
   return EXIT_SUCCESS;
 }
 
 int STDCALL PrintProcessList (BOOL DisplayTree)
 {
-  PSYSTEM_PROCESS_INFORMATION pInfo = NULL;
-  PSYSTEM_PROCESS_INFORMATION pInfoBase = NULL;
+  PSYSTEM_PROCESSES pInfo = NULL;
+  PSYSTEM_PROCESSES pInfoBase = NULL;
   LONG                        Length = 0;
   LPWSTR                      Module = L"";
   LPWSTR                      Title = L"";
@@ -252,19 +252,19 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 	  pInfo->ProcessId,
 	  Module,
 	  Title,
-	  pInfo->ParentProcessId
+	  pInfo->InheritedFromProcessId
 	  );
       }
       else 
       {
-	if (ALREADY_PROCESSED != pInfo->ParentProcessId)
+	if (ALREADY_PROCESSED != pInfo->InheritedFromProcessId)
 	{
 	  PrintProcessAndDescendants (pInfo, pInfoBase, 0);
 	}
       }
-      (PBYTE) pInfo += pInfo->RelativeOffset;
+      (PBYTE) pInfo += pInfo->NextEntryDelta;
 
-    } while (0 != pInfo->RelativeOffset);
+    } while (0 != pInfo->NextEntryDelta);
   
     NtFreeVirtualMemory (
       NtCurrentProcess(),
@@ -277,7 +277,7 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 }
 
 
-int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
+int STDCALL PrintThreads (PSYSTEM_PROCESSES pInfo)
 {
   ULONG                    ThreadIndex = 0;
   NTSTATUS                 Status = STATUS_SUCCESS;
@@ -297,7 +297,7 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
 	       & hThread,
 	       THREAD_QUERY_INFORMATION,
 	       & Oa,
-	       & pInfo->ThreadSysInfo[ThreadIndex].ClientId
+	       & pInfo->Threads[ThreadIndex].ClientId
                );
     if (!NT_SUCCESS(Status))
     {
@@ -334,10 +334,10 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
 
     /* Now print the collected information */
     wprintf (L"   %4d Win32StartAddr:0x%08x LastErr:0x%08x State:%s\n",
-      pInfo->ThreadSysInfo[ThreadIndex].ClientId.UniqueThread,
+      pInfo->Threads[ThreadIndex].ClientId.UniqueThread,
       Win32StartAddress,
       0 /* FIXME: ((PTEB) tInfo.TebBaseAddress)->LastErrorValue */,
-      ThreadStateName[pInfo->ThreadSysInfo[ThreadIndex].State]
+      ThreadStateName[pInfo->Threads[ThreadIndex].State]
       );
   } 
   return EXIT_SUCCESS;
@@ -349,9 +349,9 @@ int STDCALL PrintModules (VOID)
 	return EXIT_SUCCESS;
 }
 
-PSYSTEM_PROCESS_INFORMATION STDCALL
+PSYSTEM_PROCESSES STDCALL
 GetProcessInfoPid (
-  PSYSTEM_PROCESS_INFORMATION pInfoBase,
+  PSYSTEM_PROCESSES pInfoBase,
   DWORD                       Pid
   )
 {
@@ -362,9 +362,9 @@ GetProcessInfoPid (
     {
       return pInfoBase;
     }
-    (PBYTE) pInfoBase += pInfoBase->RelativeOffset;
+    (PBYTE) pInfoBase += pInfoBase->NextEntryDelta;
 
-  } while (0 != pInfoBase->RelativeOffset);
+  } while (0 != pInfoBase->NextEntryDelta);
 
   return NULL;
 }
@@ -395,8 +395,8 @@ int STDCALL PrintProcess (char * PidStr)
     ULONG                       ReturnLength = 0;
     PROCESS_BASIC_INFORMATION   PsBasic;
     VM_COUNTERS                 PsVm;
-    PSYSTEM_PROCESS_INFORMATION pInfo = NULL;
-    PSYSTEM_PROCESS_INFORMATION pInfoBase = NULL;
+    PSYSTEM_PROCESSES pInfo = NULL;
+    PSYSTEM_PROCESSES pInfoBase = NULL;
     LONG                        pInfoBaseLength = 0;
     LPWSTR                      Module = L"";
     LPWSTR                      Title = L"";
