@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.108 2004/07/30 09:16:06 weiden Exp $ */
+/* $Id: text.c,v 1.109 2004/08/21 02:22:45 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -155,7 +155,7 @@ IntLoadSystemFonts(VOID)
    BOOL bRestartScan = TRUE;
    NTSTATUS Status;
 
-   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\Media\\Fonts\\");
+   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\media\\fonts\\");
    /* FIXME: Add support for other font types */
    RtlInitUnicodeString(&SearchPattern, L"*.ttf");
 
@@ -1521,7 +1521,8 @@ NtGdiExtTextOut(
    int error, glyph_index, n, i;
    FT_Face face;
    FT_GlyphSlot glyph;
-   ULONG TextLeft, TextTop, pitch, previous, BackgroundLeft;
+   LONGLONG TextLeft, RealXStart;
+   ULONG TextTop, pitch, previous, BackgroundLeft;
    FT_Bool use_kerning;
    RECTL DestRect, MaskRect;
    POINTL SourcePoint, BrushOrigin;
@@ -1576,7 +1577,7 @@ NtGdiExtTextOut(
    Start.x = XStart; Start.y = YStart;
    IntLPtoDP(dc, &Start, 1);
 
-   XStart = Start.x + dc->w.DCOrgX;
+   RealXStart = (Start.x + dc->w.DCOrgX) << 6;
    YStart = Start.y + dc->w.DCOrgY;
 
    /* Create the brushes */
@@ -1717,7 +1718,7 @@ NtGdiExtTextOut(
 
    if (dc->w.textAlign & (TA_RIGHT | TA_CENTER))
    {
-      UINT TextWidth = 0;
+      ULONGLONG TextWidth = 0;
       LPCWSTR TempText = String;
       int Start;
 
@@ -1728,7 +1729,7 @@ NtGdiExtTextOut(
       if (NULL != Dx)
       {
          Start = Count < 2 ? 0 : Count - 2;
-         TextWidth = Count < 2 ? 0 : Dx[Count - 2];
+         TextWidth = Count < 2 ? 0 : (Dx[Count - 2] << 6);
       }
       else
       {
@@ -1757,10 +1758,10 @@ NtGdiExtTextOut(
             IntLockFreeType;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             IntUnLockFreeType;
-            TextWidth += delta.x >> 6;
+            TextWidth += delta.x;
          }
 
-         TextWidth += glyph->advance.x >> 6;
+         TextWidth += glyph->advance.x;
 
          previous = glyph_index;
          TempText++;
@@ -1770,17 +1771,17 @@ NtGdiExtTextOut(
 
       if (dc->w.textAlign & TA_RIGHT)
       {
-         XStart -= TextWidth;
+         RealXStart -= TextWidth;
       }
       else
       {
-         XStart -= TextWidth / 2;
+         RealXStart -= TextWidth / 2;
       }
    }
 
-   TextLeft = XStart;
+   TextLeft = RealXStart;
    TextTop = YStart;
-   BackgroundLeft = XStart;
+   BackgroundLeft = (RealXStart + 32) >> 6;
 
    /*
     * The main rendering loop.
@@ -1810,7 +1811,7 @@ NtGdiExtTextOut(
          IntLockFreeType;
          FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
          IntUnLockFreeType;
-         TextLeft += delta.x >> 6;
+         TextLeft += delta.x;
       }
 
       if (glyph->format == ft_glyph_format_outline)
@@ -1833,7 +1834,7 @@ NtGdiExtTextOut(
       if (fuOptions & ETO_OPAQUE)
       {
          DestRect.left = BackgroundLeft;
-         DestRect.right = TextLeft + ((glyph->advance.x + 32) >> 6);
+         DestRect.right = (TextLeft + glyph->advance.x + 32) >> 6;
          DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
          DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
@@ -1851,8 +1852,8 @@ NtGdiExtTextOut(
          BackgroundLeft = DestRect.right;
       }
 
-      DestRect.left = TextLeft;
-      DestRect.right = TextLeft + glyph->bitmap.width;
+      DestRect.left = ((TextLeft + 32) >> 6) + glyph->bitmap_left;
+      DestRect.right = DestRect.left + glyph->bitmap.width;
       DestRect.top = TextTop + yoff - glyph->bitmap_top;
       DestRect.bottom = DestRect.top + glyph->bitmap.rows;
 	
@@ -1892,11 +1893,11 @@ NtGdiExtTextOut(
 
       if (NULL == Dx)
       {
-        TextLeft += (glyph->advance.x + 32) >> 6;
+        TextLeft += glyph->advance.x;
       }
       else
       {
-        TextLeft += Dx[i];
+        TextLeft += Dx[i] << 6;
       }
       previous = glyph_index;
 
@@ -2082,7 +2083,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    {
       glyph_index = FT_Get_Char_Index(face, i);
       FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      SafeBuffer[i - FirstChar] = face->glyph->advance.x >> 6;
+      SafeBuffer[i - FirstChar] = (face->glyph->advance.x + 32) >> 6;
    }
    IntUnLockFreeType;
    TEXTOBJ_UnlockText(hFont);
@@ -2186,7 +2187,7 @@ TextIntGetTextExtentPoint(HDC hDC,
   FT_Face face;
   FT_GlyphSlot glyph;
   INT error, n, glyph_index, i, previous;
-  LONG TotalWidth = 0;
+  ULONGLONG TotalWidth = 0;
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
 
@@ -2266,25 +2267,25 @@ TextIntGetTextExtentPoint(HDC hDC,
           IntLockFreeType;
 	  FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
           IntUnLockFreeType;
-	  TotalWidth += delta.x >> 6;
+	  TotalWidth += delta.x;
 	}
 
-      TotalWidth += glyph->advance.x >> 6;
+      TotalWidth += glyph->advance.x;
 
-      if (TotalWidth <= MaxExtent && NULL != Fit)
+      if (((TotalWidth + 32) >> 6) <= MaxExtent && NULL != Fit)
 	{
 	  *Fit = i + 1;
 	}
       if (NULL != Dx)
 	{
-	  Dx[i] = TotalWidth;
+	  Dx[i] = (TotalWidth + 32) >> 6;
 	}
 
       previous = glyph_index;
       String++;
     }
 
-  Size->cx = TotalWidth;
+  Size->cx = (TotalWidth + 32) >> 6;
   Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
   Size->cy = EngMulDiv(Size->cy, NtGdiGetDeviceCaps(hDC, LOGPIXELSY), 72);
 
