@@ -6,21 +6,29 @@
 class Exception
 {
 public:
-	Exception(const std::string& message);
-	Exception(const char* format,
-	          ...);
+	Exception ( const std::string& message );
+	Exception ( const char* format,
+	            ...);
 	std::string Message;
 protected:
-	Exception();
-	void SetMessage(const char* message,
-	                va_list args);
+	Exception ();
+	void SetMessage ( const char* message,
+	                  va_list args);
+};
+
+
+class InvalidOperationException : public Exception
+{
+public:
+	InvalidOperationException ( const char* filename,
+	                            const int linenumber);
 };
 
 
 class FileNotFoundException : public Exception
 {
 public:
-	FileNotFoundException(const std::string& filename);
+	FileNotFoundException ( const std::string& filename );
 	std::string Filename;
 };
 
@@ -28,7 +36,7 @@ public:
 class AccessDeniedException : public Exception
 {
 public:
-	AccessDeniedException(const std::string& filename);
+	AccessDeniedException ( const std::string& filename );
 	std::string Filename;
 };
 
@@ -39,7 +47,7 @@ public:
 	InvalidBuildFileException ( const char* message,
 	                            ...);
 protected:
-	InvalidBuildFileException();
+	InvalidBuildFileException ();
 };
 
 
@@ -55,16 +63,16 @@ public:
 class RequiredAttributeNotFoundException : public InvalidBuildFileException
 {
 public:
-	RequiredAttributeNotFoundException(const std::string& attributeName,
-	                                   const std::string& elementName);
+	RequiredAttributeNotFoundException ( const std::string& attributeName,
+	                                     const std::string& elementName );
 };
 
 
 class InvalidAttributeValueException : public InvalidBuildFileException
 {
 public:
-	InvalidAttributeValueException(const std::string& name,
-	                               const std::string& value);
+	InvalidAttributeValueException ( const std::string& name,
+	                                 const std::string& value );
 };
 
 

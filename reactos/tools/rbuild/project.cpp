@@ -59,9 +59,7 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	}
 	else if ( e.name == "module" )
 	{
-		att = e.GetAttribute ( "name", true );
-		assert(att);
-		Module* module = new Module ( this, e, att->value, path );
+		Module* module = new Module ( this, e, path );
 		modules.push_back ( module );
 		module->ProcessXML ( e, path );
 		return;

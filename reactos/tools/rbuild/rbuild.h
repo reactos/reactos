@@ -64,6 +64,7 @@ public:
 	Project* project;
 	const XMLElement& node;
 	std::string name;
+	std::string extension;
 	std::string path;
 	ModuleType type;
 	std::vector<File*> files;
@@ -73,12 +74,13 @@ public:
 
 	Module ( Project* project,
 	         const XMLElement& moduleNode,
-	         const std::string& moduleName,
 	         const std::string& modulePath );
 	~Module ();
 	ModuleType GetModuleType (const XMLAttribute& attribute );
 	std::string GetPath ();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
+private:
+	std::string GetDefaultModuleExtension ();
 };
 
 

@@ -1,8 +1,8 @@
-<module name="ntoskrnl" type="kernelmodedll">
-	<define name="_SEH_NO_NATIVE_NLG"></define>
-	<define name="_DISABLE_TIDENTS"></define>
-	<define name="__NTOSKRNL__"></define>
-	<define name="__3GB__"></define>
+<module name="ntoskrnl" type="kernelmodedll" extension=".exe">
+	<define name="_SEH_NO_NATIVE_NLG" />
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__NTOSKRNL__" />
+	<define name="__3GB__" />
 	<include>.</include>
 	<include>./include</include>
 	<include>../lib/kjs/include</include>
@@ -44,12 +44,14 @@
 			</group>
 		</if>
 		<or>
+			<!--
 			<if property="kdbg" value="true">
 				<group>
 					<file>kdb_stabs.c</file>
 					<file>kdb_symbols.c</file>
 				</group>
 			</if>
+			-->
 			<if property="dbg" value="true">
 				<group>
 					<file>kdb_stabs.c</file>

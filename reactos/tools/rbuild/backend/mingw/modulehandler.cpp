@@ -128,7 +128,20 @@ MingwModuleHandler::GenerateGccDefineParameters ( Module& module )
 }
 
 string
-MingwModuleHandler::GenerateGccIncludeParametersFromVector ( vector<Include*> includes )
+MingwModuleHandler::ConcatenatePaths ( string path1,
+	                                   string path2 )
+{
+	if ( ( path1.length () == 0 ) || ( path1 == "." ) || ( path1 == "./" ) )
+		return path2;
+	if ( path1[path1.length ()] == CSEP )
+		return path1 + path2;
+	else
+		return path1 + CSEP + path2;
+}
+
+string
+MingwModuleHandler::GenerateGccIncludeParametersFromVector ( string basePath,
+	                                                         vector<Include*> includes )
 {
 	string parameters;
 	for (size_t i = 0; i < includes.size (); i++)
@@ -137,7 +150,8 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( vector<Include*> in
 		if (parameters.length () > 0)
 			parameters += " ";
 		parameters += "-I";
-		parameters += include.directory;
+		parameters += ConcatenatePaths ( basePath,
+		                                 include.directory );
 	}
 	return parameters;
 }
@@ -145,8 +159,10 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( vector<Include*> in
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( Module& module )
 {
-	string parameters = GenerateGccIncludeParametersFromVector ( module.project->includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.includes );
+	string parameters = GenerateGccIncludeParametersFromVector ( ".",
+	                                                             module.project->includes );
+	string s = GenerateGccIncludeParametersFromVector ( module.path,
+	                                                    module.includes );
 	if (s.length () > 0)
 	{
 		parameters += " ";
@@ -202,7 +218,7 @@ MingwModuleHandler::GenerateArchiveTarget ( Module& module )
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          archiveFilename.c_str (),
-	          sourceFilenames.c_str ());
+	          objectFilenames.c_str ());
 
 	fprintf ( fMakefile,
 	         "\t${ar} -rc %s %s\n\n",
@@ -219,7 +235,7 @@ MingwKernelModuleHandler::MingwKernelModuleHandler ( FILE* fMakefile )
 bool
 MingwKernelModuleHandler::CanHandleModule ( Module& module )
 {
-	return true;
+	return module.type == KernelModeDLL;
 }
 
 void
@@ -265,6 +281,31 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
 	          "\t${rm} %s" SSEP "temp.exp\n",
 	          workingDirectory.c_str () );
 	
+	GenerateArchiveTarget ( module );
+	GenerateObjectFileTargets ( module );
+}
+
+
+MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ( FILE* fMakefile )
+	: MingwModuleHandler ( fMakefile )
+{
+}
+
+bool
+MingwStaticLibraryModuleHandler::CanHandleModule ( Module& module )
+{
+	return module.type == StaticLibrary;
+}
+
+void
+MingwStaticLibraryModuleHandler::Process ( Module& module )
+{
+	GenerateStaticLibraryModuleTarget ( module );
+}
+
+void
+MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( Module& module )
+{
 	GenerateArchiveTarget ( module );
 	GenerateObjectFileTargets ( module );
 }

@@ -1,7 +1,7 @@
 <project name="ReactOS" makefile="Makefile.auto">
 	<define name="_M_IX86"></define>
-	<include>./include</include>
-	<include>./w32api/include</include>
+	<include>include</include>
+	<include>w32api/include</include>
 	<directory name="tools">
 		<module name="depends" type="buildtool">
 			<file>depends.c</file>

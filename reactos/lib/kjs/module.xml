@@ -1,7 +1,7 @@
 <module name="kjs" type="staticlibrary">
 	<include>.</include>
-	<include>./src</include>
-	<include>./include</include>
+	<include>src</include>
+	<include>include</include>
 	<directory name="ksrc">
 		<file>setjmp.S</file>
 		<file>longjmp.S</file>
@@ -24,7 +24,6 @@
 		<file>vmjumps.c</file>
 		<file>vmswitch.c</file>
 		<file>vmswt0.c</file>
-		<file>longjmp.c</file>
 	</directory>
 	<directory name="src">
 		<file>b_array.c</file>

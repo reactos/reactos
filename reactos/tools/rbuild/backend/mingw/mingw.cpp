@@ -103,4 +103,5 @@ void
 MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers )
 {
 	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
+	moduleHandlers.push_back ( new MingwStaticLibraryModuleHandler ( fMakefile ) );
 }

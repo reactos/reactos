@@ -22,9 +22,12 @@ protected:
 	void GenerateArchiveTarget ( Module& module );
 	FILE* fMakefile;
 private:
+	std::string ConcatenatePaths ( std::string path1,
+	                               std::string path2 );
 	std::string GenerateGccDefineParametersFromVector ( std::vector<Define*> defines );
 	std::string GenerateGccDefineParameters ( Module& module );
-	std::string GenerateGccIncludeParametersFromVector ( std::vector<Include*> includes );
+	std::string GenerateGccIncludeParametersFromVector ( std::string basePath,
+	                                                     std::vector<Include*> includes );
 	std::string GenerateGccIncludeParameters ( Module& module );
 	std::string GenerateGccParameters ( Module& module );
 };
@@ -38,6 +41,17 @@ public:
 	virtual void Process ( Module& module );
 private:
 	void GenerateKernelModuleTarget ( Module& module );
+};
+
+
+class MingwStaticLibraryModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwStaticLibraryModuleHandler ( FILE* fMakefile );
+	virtual bool CanHandleModule ( Module& module );
+	virtual void Process ( Module& module );
+private:
+	void GenerateStaticLibraryModuleTarget ( Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

@@ -30,7 +30,7 @@ Include::~Include ()
 void
 Include::Initialize ( const XMLElement& includeNode )
 {
-	directory = includeNode.value;
+	directory = FixSeparator ( includeNode.value );
 }
 
 void

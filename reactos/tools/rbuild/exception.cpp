@@ -5,58 +5,71 @@
 
 using std::string;
 
-Exception::Exception()
+Exception::Exception ()
 {
 }
 
-Exception::Exception(const string& message)
+Exception::Exception ( const string& message )
 {
 	Message = message;
 }
 
-Exception::Exception(const char* format,
-                     ...)
+Exception::Exception ( const char* format,
+                       ...)
 {
 	va_list args;
-	va_start(args,
-	         format);
-	Message = ssvprintf(format,
-	                    args);
-	va_end(args);
+	va_start ( args,
+	           format);
+	Message = ssvprintf ( format,
+	                      args);
+	va_end ( args );
 }
 
-void Exception::SetMessage(const char* message,
-                           va_list args)
+void Exception::SetMessage ( const char* message,
+                             va_list args)
 {
-	Message = ssvprintf(message,
-	                    args);
+	Message = ssvprintf ( message,
+	                      args);
 }
 
 
-FileNotFoundException::FileNotFoundException(const string& filename)
-	: Exception ( "File '%s' not found.", filename.c_str() )
+InvalidOperationException::InvalidOperationException ( const char* filename,
+	                                                   const int linenumber)
+{
+	Message = ssprintf ( "%s:%d",
+	                     filename,
+	                     linenumber );
+}
+
+
+FileNotFoundException::FileNotFoundException ( const string& filename )
+	: Exception ( "File '%s' not found.",
+	              filename.c_str() )
 {
 	Filename = filename;
 }
 
 
-AccessDeniedException::AccessDeniedException(const string& filename)
-	: Exception ( "Access denied to file '%s'.", filename.c_str() )
+AccessDeniedException::AccessDeniedException ( const string& filename)
+	: Exception ( "Access denied to file '%s'.",
+	             filename.c_str() )
 {
 	Filename = filename;
 }
 
 
-InvalidBuildFileException::InvalidBuildFileException(const char* message,
-                                                     ...)
+InvalidBuildFileException::InvalidBuildFileException ( const char* message,
+                                                       ...)
 {
 	va_list args;
-	va_start( args, message);
-	SetMessage(message, args);
-	va_end(args);
+	va_start ( args,
+	           message );
+	SetMessage ( message,
+	            args );
+	va_end ( args );
 }
 
-InvalidBuildFileException::InvalidBuildFileException()
+InvalidBuildFileException::InvalidBuildFileException ()
 {
 }
 
@@ -66,36 +79,39 @@ XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
 	                                               ... )
 {
 	va_list args;
-	va_start ( args, message );
+	va_start ( args,
+	          message );
 	Message = location + ": " + ssvprintf ( message, args );
 	va_end ( args );
 }
 
 
-RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const string& attributeName,
-                                                                       const string& elementName)
+RequiredAttributeNotFoundException::RequiredAttributeNotFoundException ( const string& attributeName,
+                                                                         const string& elementName )
 	: InvalidBuildFileException ( "Required attribute '%s' not found on '%s'.",
 	                              attributeName.c_str (),
 	                              elementName.c_str ())
 {
 }
 
-InvalidAttributeValueException::InvalidAttributeValueException(const string& name,
-	                                                           const string& value)
+InvalidAttributeValueException::InvalidAttributeValueException ( const string& name,
+	                                                             const string& value )
 	: InvalidBuildFileException ( "Attribute '%s' has an invalid value '%s'.",
 	                              name.c_str (),
-	                              value.c_str ())
+	                              value.c_str () )
 {
 	
 }
 
 BackendNameConflictException::BackendNameConflictException ( const string& name )
-	: Exception ( "Backend name conflict: '%s'", name.c_str() )
+	: Exception ( "Backend name conflict: '%s'",
+	             name.c_str() )
 {
 }
 
 
 UnknownBackendException::UnknownBackendException ( const string& name )
-	: Exception ( "Unknown Backend requested: '%s'", name.c_str() )
+	: Exception ( "Unknown Backend requested: '%s'",
+	             name.c_str() )
 {
 }

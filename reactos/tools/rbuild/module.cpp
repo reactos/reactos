@@ -23,14 +23,25 @@ FixSeparator ( const string& s )
 
 Module::Module ( Project* project,
                  const XMLElement& moduleNode,
-                 const string& moduleName,
                  const string& modulePath )
 	: project(project),
-	  node(moduleNode),
-	  name(moduleName),
-	  path(modulePath)
+	  node(moduleNode)
 {
-	type = GetModuleType ( *moduleNode.GetAttribute ( "type", true ) );
+  	path = FixSeparator ( modulePath );
+
+	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
+	assert(att);
+	name = att->value;
+
+	att = moduleNode.GetAttribute ( "type", true );
+	assert(att);
+	type = GetModuleType ( *att );
+
+	att = moduleNode.GetAttribute ( "extension", false );
+	if (att != NULL)
+		extension = att->value;
+	else
+		extension = GetDefaultModuleExtension ();
 }
 
 Module::~Module ()
@@ -49,7 +60,7 @@ Module::ProcessXML ( const XMLElement& e,
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () )
 	{
-		files.push_back ( new File ( path + CSEP + e.value ) );
+		files.push_back ( new File ( FixSeparator ( path + CSEP + e.value ) ) );
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
@@ -59,7 +70,7 @@ Module::ProcessXML ( const XMLElement& e,
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		assert(att);
-		subpath = path + CSEP + att->value;
+		subpath = FixSeparator ( path + CSEP + att->value );
 	}
 	else if ( e.name == "include" )
 	{
@@ -91,9 +102,25 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 }
 
 string
+Module::GetDefaultModuleExtension ()
+{
+	switch (type)
+	{
+		case BuildTool:
+			return EXEPOSTFIX;
+		case StaticLibrary:
+			return ".a";
+		case KernelModeDLL:
+			return ".dll";
+	}
+	throw InvalidOperationException (__FILE__,
+	                                 __LINE__);
+}
+
+string
 Module::GetPath ()
 {
-	return FixSeparator (path) + CSEP + name + EXEPOSTFIX;
+	return FixSeparator (path) + CSEP + name + extension;
 }
 
 
