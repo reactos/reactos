@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.8 2004/08/14 01:03:38 weiden Exp $
+/* $Id: stubs.c,v 1.9 2004/08/14 10:47:19 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -155,17 +155,6 @@ GI_CreateApplication(sCreateApplication *application)
 {
   STUB("GI_CreateApplication(0x%x) returns NULL!\n", application);
   return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_EnableMouseTracking(s_window *win)
-{
-  STUB("GI_EnableMouseTracking(0x%x) returns 0!\n", win);
-  return 0;
 }
 
 

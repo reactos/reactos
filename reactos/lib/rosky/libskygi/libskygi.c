@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.10 2004/08/14 07:15:05 navaraf Exp $
+/* $Id: libskygi.c,v 1.11 2004/08/14 10:47:19 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -35,6 +35,7 @@ typedef struct
 {
   s_window Window;
   HWND hWnd;
+  BOOL MouseInput;
 } SKY_WINDOW, *PSKY_WINDOW;
 
 typedef struct
@@ -218,36 +219,44 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
       smsg->para2 = 0;
       return TRUE;
 
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    {
-      POINT pt;
-
-      switch (Msg->message)
-      {
-        case WM_LBUTTONDOWN: smsg->type = MSG_MOUSE_BUT1_PRESSED; break;
-        case WM_LBUTTONUP: smsg->type = MSG_MOUSE_BUT1_RELEASED; break;
-        case WM_RBUTTONDOWN: smsg->type = MSG_MOUSE_BUT2_PRESSED; break;
-        case WM_RBUTTONUP: smsg->type = MSG_MOUSE_BUT2_RELEASED; break;
-      }
-#if 0
-      pt.x = LOWORD(Msg->lParam);
-      pt.y = HIWORD(Msg->lParam);
-#else
-      pt = Msg->pt;
-      MapWindowPoints(NULL, skw->hWnd, &pt, 1);
-#endif
-      smsg->para1 = pt.x;
-      smsg->para2 = pt.y;
-      return TRUE;
-    }
-
     case WM_COMMAND:
       smsg->type = MSG_COMMAND;
       smsg->para1 = LOWORD(Msg->wParam);
       return TRUE;
+  }
+  
+  if(skw->MouseInput)
+  {
+    switch(Msg->message)
+    {
+      case WM_LBUTTONDOWN:
+        smsg->type = MSG_MOUSE_BUT1_PRESSED;
+        goto DoMouseInputMessage;
+      case WM_LBUTTONUP:
+        smsg->type = MSG_MOUSE_BUT1_RELEASED;
+        goto DoMouseInputMessage;
+      case WM_RBUTTONDOWN:
+        smsg->type = MSG_MOUSE_BUT2_PRESSED;
+        goto DoMouseInputMessage;
+      case WM_RBUTTONUP:
+      {
+        POINT pt;
+
+        smsg->type = MSG_MOUSE_BUT2_RELEASED;
+
+DoMouseInputMessage:
+#if 0
+        pt.x = LOWORD(Msg->lParam);
+        pt.y = HIWORD(Msg->lParam);
+#else
+        pt = Msg->pt;
+        MapWindowPoints(NULL, skw->hWnd, &pt, 1);
+#endif
+        smsg->para1 = pt.x;
+        smsg->para2 = pt.y;
+        return TRUE;
+      }
+    }
   }
   
   return FALSE;
@@ -1169,6 +1178,28 @@ GI_messagebox(s_window *Window,
    }
 
    return 0;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_EnableMouseTracking(s_window *win)
+{
+  DBG("GI_EnableMouseTracking(0x%x)!\n", win);
+  if(win != NULL)
+  {
+    ((PSKY_WINDOW)win)->MouseInput = TRUE;
+    return 1;
+  }
+   #if DEBUG
+   else
+   {
+     DBG("GI_EnableMouseTracking: win == NULL!\n");
+   }
+   #endif
+  return 0;
 }
 
 /* EOF */
