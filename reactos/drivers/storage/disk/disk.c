@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.36 2004/03/31 03:33:48 jimtabor Exp $
+/* $Id: disk.c,v 1.37 2004/03/31 03:39:12 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,15 +110,6 @@ ScsiDiskCalcMbrCheckSum(IN PDEVICE_EXTENSION DeviceExtension,
 static NTSTATUS
 DiskBuildPartionTable(IN PDEVICE_OBJECT DiskDeviceObject,
 		      IN PIRP Irp);
-
-VOID STDCALL
-DiskClassStartIo (IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp);
-
-NTSTATUS STDCALL
-DiskDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
-			      IN PIRP Irp,
-			      IN PVOID Context);
 
 
 /* FUNCTIONS ****************************************************************/
