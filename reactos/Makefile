@@ -59,7 +59,7 @@ DRIVERS_LIB = bzip2
 # Kernel mode device drivers
 # Obsolete: ide
 # beep blue floppy null parallel ramdrv serenum serial vga videoprt
-DEVICE_DRIVERS = beep blue debugout floppy null serial vga videoprt
+DEVICE_DRIVERS = beep blue debugout floppy null serial vga videoprt bootvid
 
 # Kernel mode input drivers
 INPUT_DRIVERS = keyboard mouclass psaux sermouse
