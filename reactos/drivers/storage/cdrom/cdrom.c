@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.23 2003/11/07 12:56:26 ekohl Exp $
+/* $Id: cdrom.c,v 1.24 2003/11/07 17:14:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -821,29 +821,12 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	    Status = STATUS_INFO_LENGTH_MISMATCH;
 	    break;
 	  }
-	else
-	  {
-	    PDISK_GEOMETRY Geometry;
-
-	    if (DeviceExtension->DiskGeometry == NULL)
-	      {
-		DPRINT("No cdrom geometry available!\n");
-		DeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
-							       sizeof(DISK_GEOMETRY));
-	      }
-	    Status = ScsiClassReadDriveCapacity(DeviceObject);
-	    if (NT_SUCCESS(Status))
-	      {
-		Geometry = (PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer;
-		RtlMoveMemory(Geometry,
-			      DeviceExtension->DiskGeometry,
-			      sizeof(DISK_GEOMETRY));
-
-		Status = STATUS_SUCCESS;
-		Information = sizeof(DISK_GEOMETRY);
-	      }
-	  }
-	break;
+	IoMarkIrpPending (Irp);
+	IoStartPacket (DeviceObject,
+		       Irp,
+		       NULL,
+		       NULL);
+	return STATUS_PENDING;
 
       case IOCTL_CDROM_CHECK_VERIFY:
 	DPRINT ("IOCTL_CDROM_CHECK_VERIFY\n");
@@ -976,6 +959,7 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
   PSCSI_REQUEST_BLOCK Srb;
   PIRP SubIrp;
   PUCHAR SenseBuffer;
+  PVOID DataBuffer;
   PCDB Cdb;
 
   DPRINT("CdromClassStartIo() called!\n");
@@ -1115,13 +1099,66 @@ CdromClassStartIo (IN PDEVICE_OBJECT DeviceObject,
 
       switch (IrpStack->Parameters.DeviceIoControl.IoControlCode)
 	{
+	  case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
+	    DPRINT1 ("CdromClassStartIo: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+	    Srb->DataTransferLength = sizeof(READ_CAPACITY_DATA);
+	    Srb->CdbLength = 10;
+	    Srb->TimeOutValue = DeviceExtension->TimeOutValue;
+	    Srb->SrbFlags = SRB_FLAGS_DISABLE_SYNCH_TRANSFER | SRB_FLAGS_DATA_IN;
+
+	    /* Allocate data buffer */
+	    DataBuffer = ExAllocatePool (NonPagedPoolCacheAligned,
+					 sizeof(READ_CAPACITY_DATA));
+	    if (DataBuffer == NULL)
+	      {
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+		IoCompleteRequest (Irp,
+				   IO_DISK_INCREMENT);
+		ExFreePool (SenseBuffer);
+		ExFreePool (Srb);
+		IoFreeIrp (SubIrp);
+		IoStartNextPacket (DeviceObject,
+				   FALSE);
+		return;
+	      }
+
+	    /* Allocate an MDL for the data buffer */
+	    SubIrp->MdlAddress = IoAllocateMdl (DataBuffer,
+						sizeof(READ_CAPACITY_DATA),
+						FALSE,
+						FALSE,
+						NULL);
+	    if (SubIrp->MdlAddress == NULL)
+	      {
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+		IoCompleteRequest (Irp,
+				   IO_DISK_INCREMENT);
+		ExFreePool (DataBuffer);
+		ExFreePool (SenseBuffer);
+		ExFreePool (Srb);
+		IoFreeIrp (SubIrp);
+		IoStartNextPacket (DeviceObject,
+				   FALSE);
+		return;
+	      }
+
+	    MmBuildMdlForNonPagedPool (SubIrp->MdlAddress);
+	    Srb->DataBuffer = DataBuffer;
+	    Cdb->CDB10.OperationCode = SCSIOP_READ_CAPACITY;
+
+	    IoCallDriver (DeviceExtension->PortDeviceObject,
+			  SubIrp);
+	    return;
+
 	  case IOCTL_CDROM_CHECK_VERIFY:
 	    DPRINT ("CdromClassStartIo: IOCTL_CDROM_CHECK_VERIFY\n");
 	    Srb->CdbLength = 6;
 	    Srb->TimeOutValue = DeviceExtension->TimeOutValue * 2;
 	    Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
-
 	    Cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
+
 	    IoCallDriver (DeviceExtension->PortDeviceObject,
 			  SubIrp);
 	    return;
@@ -1192,6 +1229,55 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
     {
       switch (OrigCurrentIrpStack->Parameters.DeviceIoControl.IoControlCode)
 	{
+	  case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
+	    {
+	      PREAD_CAPACITY_DATA CapacityBuffer;
+	      ULONG LastSector;
+	      ULONG SectorSize;
+
+	      DPRINT1 ("CdromClassControlCompletion: IOCTL_CDROM_GET_DRIVE_GEOMETRY\n");
+
+	      CapacityBuffer = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
+	      SectorSize = (((PUCHAR)&CapacityBuffer->BytesPerBlock)[0] << 24) |
+			   (((PUCHAR)&CapacityBuffer->BytesPerBlock)[1] << 16) |
+			   (((PUCHAR)&CapacityBuffer->BytesPerBlock)[2] << 8) |
+			    ((PUCHAR)&CapacityBuffer->BytesPerBlock)[3];
+
+	      LastSector = (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[0] << 24) |
+			   (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[1] << 16) |
+			   (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[2] << 8) |
+			    ((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[3];
+
+	      if (SectorSize == 0)
+		SectorSize = 2048;
+	      DeviceExtension->DiskGeometry->BytesPerSector = SectorSize;
+
+	      DeviceExtension->PartitionLength.QuadPart = (LONGLONG)(LastSector + 1);
+	      WHICH_BIT(DeviceExtension->DiskGeometry->BytesPerSector,
+			DeviceExtension->SectorShift);
+	      DeviceExtension->PartitionLength.QuadPart =
+		(DeviceExtension->PartitionLength.QuadPart << DeviceExtension->SectorShift);
+
+	      if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+		{
+		  DeviceExtension->DiskGeometry->MediaType = RemovableMedia;
+		}
+	      else
+		{
+		  DeviceExtension->DiskGeometry->MediaType = FixedMedia;
+		}
+	      DeviceExtension->DiskGeometry->Cylinders.QuadPart =
+		(LONGLONG)((LastSector + 1)/(32 * 64));
+	      DeviceExtension->DiskGeometry->SectorsPerTrack = 32;
+	      DeviceExtension->DiskGeometry->TracksPerCylinder = 64;
+
+	      RtlCopyMemory (OrigIrp->AssociatedIrp.SystemBuffer,
+			     DeviceExtension->DiskGeometry,
+			     sizeof(DISK_GEOMETRY));
+	      OrigIrp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+	    }
+	    break;
+
 	  case IOCTL_CDROM_CHECK_VERIFY:
 	    DPRINT ("CdromDeviceControlCompletion: IOCTL_CDROM_CHECK_VERIFY\n");
 	    if (OrigCurrentIrpStack->Parameters.DeviceIoControl.OutputBufferLength != 0)
@@ -1220,6 +1306,9 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
     {
       DPRINT("Srb %p\n", Srb);
 
+      if (Srb->DataBuffer != NULL)
+	ExFreePool (Srb->DataBuffer);
+
       if (Srb->SenseInfoBuffer != NULL)
 	ExFreePool (Srb->SenseInfoBuffer);
 
@@ -1229,6 +1318,12 @@ CdromDeviceControlCompletion (IN PDEVICE_OBJECT DeviceObject,
   if (OrigIrp->PendingReturned)
     {
       IoMarkIrpPending (OrigIrp);
+    }
+
+  /* Release the MDL */
+  if (Irp->MdlAddress != NULL)
+    {
+      IoFreeMdl (Irp->MdlAddress);
     }
 
   /* Release the sub irp */
