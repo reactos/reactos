@@ -1,3 +1,4 @@
+/* $Id: spawnve.c,v 1.3 2002/05/07 22:31:26 hbirr Exp $ */
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
@@ -12,6 +13,7 @@
 #include <msvcrt/process.h>
 #include <msvcrt/ctype.h>
 #include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
 
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
@@ -36,36 +38,93 @@
 // information about crtdll file handles is not passed to child
 int _fileinfo_dll = 0;
 
+extern int maxfno;
+
 static int
-direct_exec_tail(const char *program, const char *args,
-		 const char * envp,
-		PROCESS_INFORMATION *ProcessInformation)
+direct_exec_tail(int mode, const char *program, 
+		 const char *args, const char * envp)
 {
 
-	static STARTUPINFO StartupInfo;
+	STARTUPINFO StartupInfo;
+	PROCESS_INFORMATION ProcessInformation;
+	char* fmode;
+	HANDLE* hFile;
+	int i, last;
+	BOOL bResult;
 
+	DPRINT("direct_exec_tail()\n");
+
+	memset (&StartupInfo, 0, sizeof(STARTUPINFO));
 	StartupInfo.cb = sizeof(STARTUPINFO);
-	StartupInfo.lpReserved= NULL;
-	StartupInfo.dwFlags = 0 /*STARTF_USESTDHANDLES*/;
-	StartupInfo.wShowWindow = SW_SHOWDEFAULT; 
-	StartupInfo.lpReserved2 = NULL;
-	StartupInfo.cbReserved2 = 0; 
-	StartupInfo.hStdInput = _get_osfhandle(0);
-	StartupInfo.hStdOutput = _get_osfhandle(1);
-	StartupInfo.hStdError = _get_osfhandle(2);
 
-
-	if (! CreateProcessA((char *)program,(char *)args,NULL,NULL,TRUE,0,(LPVOID)envp,NULL,&StartupInfo,ProcessInformation) ) 
+        for (last = i = 0; i < maxfno; i++)
 	{
+	   if ((void*)-1 != _get_osfhandle(i))
+	   {
+	      last = i + 1;
+	   }
+	}
+
+	if (last)
+	{
+	   StartupInfo.cbReserved2 = sizeof(ULONG) + last * (sizeof(char) + sizeof(HANDLE));
+	   StartupInfo.lpReserved2 = malloc(StartupInfo.cbReserved2);
+	   if (StartupInfo.lpReserved2 == NULL)
+	   {
+	      return -1;
+	   } 
+
+	   *(DWORD*)StartupInfo.lpReserved2 = last;
+	   fmode = (char*)(StartupInfo.lpReserved2 + sizeof(ULONG));
+	   hFile = (HANDLE*)(StartupInfo.lpReserved2 + sizeof(ULONG) + last * sizeof(char));
+	   for (i = 0; i < last; i++)
+	   {
+              int mode = __fileno_getmode(i);
+	      HANDLE h = _get_osfhandle(i);
+	      /* FIXME: The test of console handles (((ULONG)Handle) & 0x10000003) == 0x3) 
+	       *        is possible wrong 
+	       */
+	      if ((((ULONG)h) & 0x10000003) == 0x3 || mode & _O_NOINHERIT)
+	      {
+		 *hFile = INVALID_HANDLE_VALUE;
+	      }
+	      else
+	      {
+	         *hFile = h;
+	         *fmode = (_O_ACCMODE & mode) | (((_O_TEXT | _O_BINARY) & mode) >> 8);
+	      }
+              fmode++;
+	      hFile++;
+	   }
+	}
+
+	bResult = CreateProcessA((char *)program,
+		                 (char *)args,
+				 NULL,
+				 NULL,
+				 TRUE,
+				 mode == _P_DETACH ? DETACHED_PROCESS : 0,
+				 (LPVOID)envp,
+				 NULL,
+				 &StartupInfo,
+				 &ProcessInformation);
+	Sleep(100);
+	if (StartupInfo.lpReserved2)
+	{
+	  free(StartupInfo.lpReserved2);
+	}
+
+	if (!bResult) 
+	{
+	  DPRINT("%x\n", GetLastError());
 	  __set_errno( GetLastError() );
           return -1;
 	}
-
-	return (int)ProcessInformation->hProcess;
+	CloseHandle(ProcessInformation.hThread);
+	return (int)ProcessInformation.hProcess;
 }
 
-static int vdm_exec(const char *program, char **argv, char **envp,
-	PROCESS_INFORMATION *ProcessInformation)
+static int vdm_exec(int mode, const char *program, char **argv, char *envp)
 {
 	static char args[1024];
 	int i = 0;
@@ -78,11 +137,10 @@ static int vdm_exec(const char *program, char **argv, char **envp,
         i++; 
 	}
   
-	return direct_exec_tail(program,args,envp,ProcessInformation);
+	return direct_exec_tail(mode,program,args,envp);
 }
 
-static int go32_exec(const char *program, char **argv, char **envp,
-	PROCESS_INFORMATION *ProcessInformation)
+static int go32_exec(int mode, const char *program, char **argv, char **envp)
 {
 	char * penvblock, * ptr;
 	char * args;
@@ -118,16 +176,16 @@ static int go32_exec(const char *program, char **argv, char **envp,
             strcat(args," ");
 	  }
 	}
-  
-	result = direct_exec_tail(program,args,(const char*)penvblock,ProcessInformation);
+
+        DPRINT("'%s'\n", args);
+	result = direct_exec_tail(mode, program,args,(const char*)penvblock);
 	free(args);
 	free(penvblock);
 	return result;
 }
 
 int
-command_exec(const char *program, char **argv, char **envp,
-	PROCESS_INFORMATION *ProcessInformation)
+command_exec(int mode, const char *program, char **argv, char *envp)
 {
  	static char args[1024];
 	int i = 0;
@@ -143,12 +201,11 @@ command_exec(const char *program, char **argv, char **envp,
         i++; 
 	}
   
-	return direct_exec_tail(program,args,envp,ProcessInformation);
+	return direct_exec_tail(mode,program,args,envp);
 
 }
 
-static int script_exec(const char *program, char **argv, char **envp,
-	PROCESS_INFORMATION *ProcessInformation)
+static int script_exec(int mode, const char *program, char **argv, char **envp)
 {
 	return 0;
 }
@@ -160,8 +217,7 @@ static int script_exec(const char *program, char **argv, char **envp,
    executable from one of the shells used on MSDOS.  */
 static struct {
   const char *extension;
-  int (*interp)(const char *, char **, char **,
-	PROCESS_INFORMATION *);
+  int (*interp)(int , const char*, char **, char **);
 } interpreters[] = {
 	{ ".com", vdm_exec },
 	{ ".exe", go32_exec },
@@ -190,7 +246,6 @@ static struct {
 int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
 {
   /* This is the one that does the work! */
-  PROCESS_INFORMATION ProcessInformation;
   union { char *const *x; char **p; } u;
   int i = -1;
   char **argvp;
@@ -201,7 +256,7 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
   int found = 0;
   DWORD ExitCode;
 
-  DPRINT("_spawnve('%s')\n", path);
+  DPRINT("_spawnve(mode %x, '%s')\n", mode, path);
 
   if (path == 0 || argv[0] == 0)
   {
@@ -275,20 +330,22 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
     return -1;
   }
   errno = e;
-  i = interpreters[i].interp(rpath, argvp, envpp, &ProcessInformation);
+  i = interpreters[i].interp(mode, rpath, argvp, envpp);
+  if (i < 0)
+  {
+     return -1;
+  }
   if (mode == P_OVERLAY)
+  {
+    CloseHandle((HANDLE)i); 
     exit(i);
+  }
   if (mode == P_WAIT)
   {
-    WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
-    GetExitCodeProcess(ProcessInformation.hProcess,&ExitCode);
+    WaitForSingleObject((HANDLE)i, INFINITE);
+    GetExitCodeProcess((HANDLE)i, &ExitCode);
+    CloseHandle((HANDLE)i);
     i = (int)ExitCode;
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-  }
-  else
-  {
-     CloseHandle(ProcessInformation.hThread);
   }
   return i;
 }

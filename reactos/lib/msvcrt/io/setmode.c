@@ -1,4 +1,5 @@
-/*
+/* $Id: setmode.c,v 1.4 2002/05/07 22:31:25 hbirr Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/crtdll/io/setmode.c
@@ -19,7 +20,5 @@
 int _setmode(int _fd, int _newmode)
 {
   DPRINT("_setmod(fd %d, newmode %x)\n", _fd, _newmode);
-  if (_fd >= 0 && _fd < 5)
-	  return _O_TEXT;
   return __fileno_setmode(_fd, _newmode);
 }

@@ -1,7 +1,8 @@
-/*
+/* $Id: fstat.c,v 1.9 2002/05/07 22:31:26 hbirr Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/sys/fstat.c
+ * FILE:        lib/msvcrt/sys/fstat.c
  * PURPOSE:     Gather file information
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -18,69 +19,124 @@
 int _fstat(int fd, struct stat *statbuf)
 {
   BY_HANDLE_FILE_INFORMATION  FileInformation;
+  DWORD dwFileType;
+  void* handle;
 
   if (!statbuf)
-    {
-      __set_errno(EINVAL);
-      return -1;
-    }
-
-  if (fd >= 0 && fd <= 4)
   {
-    memset(statbuf, 0, sizeof(struct stat));
-    statbuf->st_dev = fd;
-    statbuf->st_mode = S_IFCHR;
-    return 0;
+    __set_errno(EINVAL);
+    return -1;
   }
 
-  if (!GetFileInformationByHandle(_get_osfhandle(fd),&FileInformation))
+  if ((void*)-1 == (handle = _get_osfhandle(fd)))
+  {
+    __set_errno(EBADF);
+    return -1;
+  }
+
+  memset (statbuf, 0, sizeof(struct stat));
+
+  dwFileType = GetFileType(handle);
+
+  if (dwFileType == FILE_TYPE_DISK)
+  {
+    if (!GetFileInformationByHandle(handle,&FileInformation))
     {
       __set_errno(EBADF);
       return -1;
     }
-  statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
-  statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
-  statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
+    statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
+    statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
+    statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
 
-  statbuf->st_dev = fd;
-  statbuf->st_size = FileInformation.nFileSizeLow;
-  statbuf->st_mode = S_IREAD;
-  if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
-    statbuf->st_mode |= S_IFDIR;
+    statbuf->st_dev = fd;
+    statbuf->st_size = FileInformation.nFileSizeLow;
+    statbuf->st_mode = S_IREAD;
+    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+      statbuf->st_mode |= S_IFDIR;
+    else
+      statbuf->st_mode |= S_IFREG;
+    if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
+  }
+  else if (dwFileType == FILE_TYPE_CHAR)
+  {
+    statbuf->st_dev = fd;
+    statbuf->st_mode = S_IFCHR;
+  }
+  else if (dwFileType == FILE_TYPE_PIPE)
+  {
+    statbuf->st_dev = fd;
+    statbuf->st_mode = S_IFIFO;
+  }
   else
-    statbuf->st_mode |= S_IFREG;
-  if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
+  {
+    // dwFileType is FILE_TYPE_UNKNOWN or has a bad value
+    __set_errno(EBADF);
+    return -1;
+  }
   return 0;
 }
 
 __int64 _fstati64 (int fd, struct _stati64* statbuf)
 {
   BY_HANDLE_FILE_INFORMATION FileInformation;
+  DWORD dwFileType;
+  void *handle;
 
   if (!statbuf)
-    {
-      __set_errno(EINVAL);
-      return -1;
-    }
+  {
+    __set_errno(EINVAL);
+    return -1;
+  }
 
-  if (!GetFileInformationByHandle(_get_osfhandle(fd),
-				  &FileInformation))
-    {
-      __set_errno(EBADF);
-      return -1;
-    }
-  statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
-  statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
-  statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
+  if ((void*)-1 == (handle = _get_osfhandle(fd)))
+  {
+    __set_errno(EBADF);
+    return -1;
+  }
+  
+  memset(statbuf, 0, sizeof(struct _stati64));
 
-  statbuf->st_dev = fd;
-  statbuf->st_size = (((__int64)FileInformation.nFileSizeHigh) << 32) +
+  dwFileType = GetFileType(handle);
+
+  if (dwFileType == FILE_TYPE_DISK)
+  {
+    if (!GetFileInformationByHandle(handle,&FileInformation))
+    {
+       __set_errno(EBADF);
+       return -1;
+    }
+    statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
+    statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
+    statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
+
+    statbuf->st_dev = fd;
+    statbuf->st_size = (((__int64)FileInformation.nFileSizeHigh) << 32) +
 		     FileInformation.nFileSizeLow;
-  statbuf->st_mode = S_IREAD;
-  if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
-    statbuf->st_mode |= S_IFDIR;
+    statbuf->st_mode = S_IREAD;
+    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+      statbuf->st_mode |= S_IFDIR;
+    else
+      statbuf->st_mode |= S_IFREG;
+    if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
+  }
+  else if (dwFileType == FILE_TYPE_CHAR)
+  {
+    statbuf->st_dev = fd;
+    statbuf->st_mode = S_IFCHR;
+  }
+  else if (dwFileType == FILE_TYPE_PIPE)
+  {
+    statbuf->st_dev = fd;
+    statbuf->st_mode = S_IFIFO;
+  }
   else
-    statbuf->st_mode |= S_IFREG;
-  if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
+  {
+    // dwFileType is FILE_TYPE_UNKNOWN or has a bad value
+    __set_errno(EBADF);
+    return -1;
+  }
   return 0;
 }
+
+

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.13 2002/05/05 14:57:41 chorns Exp $
+/* $Id: dllmain.c,v 1.14 2002/05/07 22:31:25 hbirr Exp $
  *
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -99,6 +99,10 @@ DllMain(PVOID hinstDll,
 					return FALSE;
 				}
 			}
+			if (nAttachCount==0)
+			{
+				__fileno_init();
+			}
 
 			/* create tls stuff */
 			if (!CreateThreadData())
@@ -113,6 +117,7 @@ DllMain(PVOID hinstDll,
 			/* FIXME: more initializations... */
 
 			nAttachCount++;
+			DPRINT("Attach done\n");
 			break;
 
 		case DLL_THREAD_ATTACH://2
@@ -149,6 +154,7 @@ DllMain(PVOID hinstDll,
 					hHeap = NULL;
 #endif
 				}
+			DPRINT("Detach done\n");
 			}
 			break;
 	}

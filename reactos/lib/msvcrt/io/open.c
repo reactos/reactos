@@ -1,4 +1,5 @@
-/*
+/* $Id: open.c,v 1.8 2002/05/07 22:31:25 hbirr Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/crtdll/io/open.c
@@ -28,6 +29,9 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+#define STD_AUX_HANDLE 3
+#define STD_PRINTER_HANDLE 4
+
 typedef struct _fileno_modes_type
 {
 	HANDLE hFile;
@@ -37,8 +41,7 @@ typedef struct _fileno_modes_type
 
 fileno_modes_type *fileno_modes = NULL;
 
-int maxfno = 5;
-int minfno = 5;
+int maxfno = 0;
 
 char __is_text_file(FILE *p)
 {
@@ -60,6 +63,7 @@ int _open(const char *_path, int _oflag,...)
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
    DWORD dwLastError;
+   SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 #if !defined(NDEBUG) && defined(DBG)
    va_start(arg, _oflag);
@@ -126,11 +130,14 @@ int _open(const char *_path, int _oflag,...)
      dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
      DPRINT("FILE_FLAG_DELETE_ON_CLOSE\n");
    }
+
+   if (_oflag & _O_NOINHERIT)
+     sa.bInheritHandle = FALSE;
    
    hFile = CreateFileA(_path,
 		       dwDesiredAccess,
 		       dwShareMode,	
-		       NULL, 
+		       &sa, 
 		       dwCreationDistribution,	
 		       dwFlagsAndAttributes,
 		       NULL);
@@ -150,6 +157,10 @@ int _open(const char *_path, int _oflag,...)
      return -1;
    }
    DPRINT("OK\n");
+   if (!(_oflag & (_O_TEXT|_O_BINARY)))
+   {
+	   _oflag |= _fmode;
+   }
    return  __fileno_alloc(hFile,_oflag);
 }
 
@@ -165,6 +176,7 @@ int _wopen(const wchar_t *_path, int _oflag,...)
    DWORD dwShareMode = 0;
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
+   SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 #if !defined(NDEBUG) && defined(DBG)
    va_start(arg, _oflag);
@@ -230,10 +242,13 @@ int _wopen(const wchar_t *_path, int _oflag,...)
    if (( _oflag &  _O_SHORT_LIVED ) == _O_SHORT_LIVED )
      dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
    
+   if (_oflag & _O_NOINHERIT)
+     sa.bInheritHandle = FALSE;
+
    hFile = CreateFileW(_path,
 		       dwDesiredAccess,
 		       dwShareMode,
-		       NULL,
+		       &sa,
 		       dwCreationDistribution,
 		       dwFlagsAndAttributes,
 		       NULL);
@@ -251,7 +266,7 @@ __fileno_alloc(HANDLE hFile, int mode)
   if (hFile < 0)
 	return -1;
 
-  for(i=minfno;i<maxfno;i++) {
+  for(i=5;i<maxfno;i++) {
 	if (fileno_modes[i].fd == -1 ) {
 		fileno_modes[i].fd = i;
 		fileno_modes[i].mode = mode;
@@ -273,7 +288,7 @@ __fileno_alloc(HANDLE hFile, int mode)
 	memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
         free ( old_fileno_modes );
     }
-    memset(fileno_modes + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes));
+    memset(fileno_modes + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes_type));
   }
 
   /* Fill in the value */
@@ -285,61 +300,80 @@ __fileno_alloc(HANDLE hFile, int mode)
 
 void *filehnd(int fileno)
 {
-	if ( fileno < 0 )
-		return (void *)-1;
-#define STD_AUX_HANDLE 3
-#define STD_PRINTER_HANDLE 4
-
-	switch(fileno)
+	if ( fileno < 0 || fileno>= maxfno || fileno_modes[fileno].fd == -1)
 	{
-	case 0:
-		return GetStdHandle(STD_INPUT_HANDLE);
-	case 1:
-		return GetStdHandle(STD_OUTPUT_HANDLE);
-	case 2:
-		return GetStdHandle(STD_ERROR_HANDLE);
-	case 3:
-		return GetStdHandle(STD_AUX_HANDLE);
-	case 4:
-		return GetStdHandle(STD_PRINTER_HANDLE);
-	default:
-		break;
+		return (void *)-1;
 	}
-
-	if ( fileno >= maxfno )
-		return (void *)-1;
-
-	if ( fileno_modes[fileno].fd == -1 )
-		return (void *)-1;
 	return fileno_modes[fileno].hFile;
 }
 
 int __fileno_dup2( int handle1, int handle2 )
 {
-	if ( handle1 >= maxfno )
-		return -1;
-
-	if ( handle1 < 0 )
-		return -1;
-	if ( handle2 >= maxfno )
-		return -1;
-
-	if ( handle2 < 0 )
-		return -1;
-
-	memcpy(&fileno_modes[handle1],&fileno_modes[handle2],sizeof(fileno_modes));
-
-	return handle1;
+   HANDLE hProcess;
+   BOOL result;
+   if (handle1 >= maxfno || handle1 < 0 || handle2 >= maxfno || handle2 < 0 )
+   {
+      __set_errno(EBADF);
+      return -1;
+   }
+   if (fileno_modes[handle1].fd == -1)
+   {
+      __set_errno(EBADF);
+      return -1;
+   }
+   if (handle1 == handle2)
+      return handle1;
+   if (fileno_modes[handle2].fd != -1)
+   {
+      _close(handle2);
+   }
+   hProcess = GetCurrentProcess();
+   result = DuplicateHandle(hProcess, 
+	                    fileno_modes[handle1].hFile, 
+			    hProcess, 
+			    &fileno_modes[handle2].hFile, 
+			    0, 
+			    TRUE,  
+			    DUPLICATE_SAME_ACCESS);
+   if (result)
+   {
+      fileno_modes[handle2].fd = handle2;
+      fileno_modes[handle2].mode = fileno_modes[handle1].mode;
+      switch (handle2)
+      {
+         case 0:
+	    SetStdHandle(STD_INPUT_HANDLE, fileno_modes[handle2].hFile);
+	    break;
+	 case 1:
+	    SetStdHandle(STD_OUTPUT_HANDLE, fileno_modes[handle2].hFile);
+	    break;
+	 case 2:
+	    SetStdHandle(STD_ERROR_HANDLE, fileno_modes[handle2].hFile);
+	    break;
+	 case 3:
+	    SetStdHandle(STD_AUX_HANDLE, fileno_modes[handle2].hFile);
+	    break;
+	 case 4:
+	    SetStdHandle(STD_AUX_HANDLE, fileno_modes[handle2].hFile);
+	    break;
+      }
+      return handle1;
+   }
+   else
+   {
+      __set_errno(EMFILE);	// Is this the correct error no.?
+      return -1;
+   }
 }
 
 int __fileno_setmode(int _fd, int _newmode)
 {
 	int m;
-	if ( _fd < minfno )
+	if ( _fd < 0 || _fd >= maxfno )
+	{
+		__set_errno(EBADF);
 		return -1;
-
-	if ( _fd >= maxfno )
-		return -1;
+	}
 
 	m = fileno_modes[_fd].mode;
 	fileno_modes[_fd].mode = _newmode;
@@ -348,24 +382,22 @@ int __fileno_setmode(int _fd, int _newmode)
 
 int __fileno_getmode(int _fd)
 {
-	if ( _fd < minfno )
+	if ( _fd < 0 || _fd >= maxfno )
+	{
+		__set_errno(EBADF);
 		return -1;
-
-	if ( _fd >= maxfno )
-		return -1;
-
+	}
 	return fileno_modes[_fd].mode;
 
 }
 
-
 int __fileno_close(int _fd)
 {
-	if ( _fd < 0 )
+	if ( _fd < 0 || _fd >= maxfno )
+	{
+		__set_errno(EBADF);
 		return -1;
-
-	if ( _fd >= maxfno )
-		return -1;
+	}
 
 	fileno_modes[_fd].fd = -1;
 	fileno_modes[_fd].hFile = (HANDLE)-1;
@@ -381,3 +413,78 @@ void *_get_osfhandle( int fileno )
 {
 	return filehnd(fileno);
 }
+
+void __fileno_init(void)
+{
+   ULONG count = 0, i;
+   HANDLE *pFile;
+   char* pmode;
+   STARTUPINFO StInfo;
+
+   GetStartupInfoA(&StInfo);
+
+   if (StInfo.lpReserved2 && StInfo.cbReserved2 >= sizeof(ULONG))
+   {
+      count = *(ULONG*)StInfo.lpReserved2;
+/*
+      if (sizeof(ULONG) + count * (sizeof(HANDLE) + sizeof(char)) != StInfo.cbReserved2)
+      {
+          count = 0;
+      }
+*/
+   }
+   maxfno = 255;
+   while(count >= maxfno)
+      maxfno += 255;
+
+   fileno_modes = (fileno_modes_type*)malloc(sizeof(fileno_modes_type) * maxfno);
+   memset(fileno_modes, -1, sizeof(fileno_modes_type) * maxfno);
+
+   if (count)
+   {
+      pFile = (HANDLE*)(StInfo.lpReserved2 + sizeof(ULONG) + count * sizeof(char));
+      pmode = (char*)(StInfo.lpReserved2 + sizeof(ULONG));
+      for (i = 0; i <  count; i++)
+      {
+          if (*pFile != INVALID_HANDLE_VALUE)
+	  {
+             fileno_modes[i].fd = i;
+             fileno_modes[i].mode = ((*pmode << 8) & (_O_TEXT|_O_BINARY)) | (*pmode & _O_ACCMODE);
+             fileno_modes[i].hFile = *pFile;
+	  }
+          pFile++;
+          pmode++;
+      }
+   }
+
+   if (fileno_modes[0].fd == -1)
+   {
+      fileno_modes[0].fd = 0;
+      fileno_modes[0].hFile = GetStdHandle(STD_INPUT_HANDLE);
+      fileno_modes[0].mode = _O_RDONLY|_O_TEXT;
+   }
+   if (fileno_modes[1].fd == -1)
+   {
+      fileno_modes[1].fd = 1;
+      fileno_modes[1].hFile = GetStdHandle(STD_OUTPUT_HANDLE);
+      fileno_modes[1].mode = _O_WRONLY|_O_TEXT;
+   }
+   if (fileno_modes[2].fd == -1)
+   {
+      fileno_modes[2].fd = 2;
+      fileno_modes[2].hFile = GetStdHandle(STD_ERROR_HANDLE);
+      fileno_modes[2].mode = _O_WRONLY|_O_TEXT;
+   }
+   if (fileno_modes[3].fd == -1)
+   {
+      fileno_modes[3].fd = 3;
+      fileno_modes[3].hFile = GetStdHandle(STD_AUX_HANDLE);
+      fileno_modes[3].mode = _O_WRONLY|_O_TEXT;
+   }
+   if (fileno_modes[4].fd == -1)
+   {
+      fileno_modes[4].fd = 4;
+      fileno_modes[4].hFile = GetStdHandle(STD_PRINTER_HANDLE);
+      fileno_modes[4].mode = _O_WRONLY|_O_TEXT;
+   }
+}				
