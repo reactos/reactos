@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.45 2004/01/26 23:22:48 weiden Exp $
+/* $Id: menu.c,v 1.46 2004/02/01 20:45:02 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -353,8 +353,9 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   HMENU mnu;
   HANDLE hHeap;
   PVOID Buf, hBuf;
-  DWORD BufSize, Items, Items2;
+  DWORD BufSize, Items, Items2, hItems;
   MENUITEMINFOW *mii;
+  PVOID milist, *mih;
   SETMENUITEMRECT smir;
   RECT *omir, *mir = NULL;
   LPWSTR str;
@@ -374,64 +375,112 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
     
     if(!Draw)
     {
-    bottom = line = Rect->top;
-    smir.fByPosition = TRUE;
-    smir.uItem = 0;
-    /* calculate menu item rectangles */
-    while(Items > 0)
-    {
-      omir = mir;
-      mii = (LPMENUITEMINFOW)Buf;
-      Buf += sizeof(MENUITEMINFOW);
-      mir = (LPRECT)Buf;
-      Buf += sizeof(RECT);
-      if(mii->cch)
+      bottom = line = Rect->top;
+      smir.fByPosition = TRUE;
+      smir.uItem = 0;
+      /* calculate menu item rectangles */
+      milist = NULL;
+      hItems = 0;
+      while(Items > 0)
       {
-        str = (LPWSTR)Buf;
-        Buf += (mii->cch + 1) * sizeof(WCHAR);
+        omir = mir;
+        mii = (LPMENUITEMINFOW)Buf;
+        Buf += sizeof(MENUITEMINFOW);
+        mir = (LPRECT)Buf;
+        Buf += sizeof(RECT);
+        if(mii->cch)
+        {
+          str = (LPWSTR)Buf;
+          Buf += (mii->cch + 1) * sizeof(WCHAR);
+        }
+        else
+          str = NULL;
+        if(omir)
+        {
+          mir->left = omir->right + 1;
+          mir->top = omir->top;
+          mir->right += mir->left;
+          mir->bottom += mir->top;
+        }
+        else
+        {
+          mir->left = Rect->left;
+          mir->top = Rect->top;
+        }
+        if((mii->fType & MFT_RIGHTJUSTIFY) && !milist)
+        {
+          milist = mih = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Items * sizeof(MENUITEMINFOW*));
+          hItems = Items;
+        }
+        
+        MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
+        
+        if((mir->right > Rect->right) || (mii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK)))
+        {
+          mir->right -= (mir->left - Rect->left);
+          mir->left = Rect->left;
+          mir->top += line;
+          mir->bottom += line;
+          line = mir->bottom - mir->top;
+        }
+        
+        if(!milist)
+        {
+          smir.rcRect = *mir;
+          NtUserSetMenuItemRect(mnu, &smir);
+          smir.uItem++;
+        }
+        else
+        {
+          *(mih++) = mii;
+        }
+        
+        bottom = max(bottom, mir->bottom);
+        line = max(line, mir->bottom - mir->top);
+        Items--;
       }
-      else
-        str = NULL;
-      if(omir)
+      /* align help menus to the right */
+      if(milist)
       {
-        mir->left = omir->right + 1;
-        mir->top = omir->top;
-        mir->right += mir->left;
-        mir->bottom += mir->top;
+        LONG x;
+        x = Rect->right;
+        mii = NULL;
+        smir.uItem = Items2 - 1;
+        while(hItems > 0)
+        {
+          LONG wd;
+          MENUITEMINFOW *omii;
+          
+          omii = mii;
+          mii = (MENUITEMINFOW*)(*(--mih));
+          mir = (LPRECT)(mii + 1);
+          
+          if(omii && ((mir->right >= x) || (omii->fType & (MFT_MENUBREAK | MFT_MENUBARBREAK))))
+          {
+            x = Rect->right;
+          }
+          
+          wd = (mir->right - mir->left);
+          mir->right = x - 1;
+          mir->left = mir->right - wd;
+          x = mir->left;
+          
+          smir.rcRect = *mir;
+          
+          NtUserSetMenuItemRect(mnu, &smir);
+          smir.uItem--;
+          hItems--;
+        }
       }
-      else
-      {
-        mir->left = Rect->left;
-        mir->top = Rect->top;
-      }
-      MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
       
-      if(mir->right > Rect->right)
-      {
-        mir->right -= (mir->left - Rect->left);
-        mir->left = Rect->left;
-        mir->top += line;
-        mir->bottom += line;
-        line = mir->bottom - mir->top;
-      }
+      if(milist)
+        HeapFree(GetProcessHeap(), 0, milist);
       
-      smir.rcRect = *mir;
-      NtUserSetMenuItemRect(mnu, &smir);
-      
-      bottom = max(bottom, mir->bottom);
-      line = max(line, mir->bottom - mir->top);
-      /* DbgPrint("Measure menu item %ws: (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
-      Items--;
-      smir.uItem++;
-    }
-    bottom = max(bottom, Rect->top + GetSystemMetrics(SM_CYMENU));
-    if(bottom - Rect->top > 0)
-    {
-      if(NtUserSetMenuBarHeight(mnu, bottom - Rect->top) && Draw)
+      bottom = max(bottom, Rect->top + GetSystemMetrics(SM_CYMENU));
+      if(bottom - Rect->top > 0)
       {
-        /* FIXME - update frame */
+        NtUserSetMenuBarHeight(mnu, bottom - Rect->top);
       }
-    }
     }
     else
     {
@@ -896,8 +945,9 @@ InsertMenuA(
 {
   MENUITEMINFOA mii;
   mii.cbSize = sizeof(MENUITEMINFOA);
-  mii.fMask = MIIM_FTYPE | MIIM_STRING;
-  mii.fType = 0;  
+  mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
+  mii.fType = 0;
+  mii.fState = MFS_ENABLED;
   
   if(uFlags & MF_BITMAP)
   {
@@ -907,6 +957,28 @@ InsertMenuA(
   {
     mii.fType |= MFT_OWNERDRAW;
   }
+  
+  if(uFlags & MF_RIGHTJUSTIFY)
+  {
+    mii.fType |= MFT_RIGHTJUSTIFY;
+  }
+  if(uFlags & MF_MENUBREAK)
+  {
+    mii.fType |= MFT_MENUBREAK;
+  }
+  if(uFlags & MF_MENUBARBREAK)
+  {
+    mii.fType |= MFT_MENUBARBREAK;
+  }
+  if(uFlags & MF_DISABLED)
+  {
+    mii.fState |= MFS_DISABLED;
+  }
+  if(uFlags & MF_GRAYED)
+  {
+    mii.fState |= MFS_GRAYED;
+  }
+  
   mii.dwTypeData = (LPSTR)lpNewItem;
   if(uFlags & MF_POPUP)
   {
@@ -1033,8 +1105,9 @@ InsertMenuW(
 {
   MENUITEMINFOW mii;
   mii.cbSize = sizeof(MENUITEMINFOW);
-  mii.fMask = MIIM_FTYPE | MIIM_STRING;
+  mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
   mii.fType = 0;
+  mii.fState = MFS_ENABLED;
 
   if(uFlags & MF_BITMAP)
   {
@@ -1044,6 +1117,28 @@ InsertMenuW(
   {
     mii.fType |= MFT_OWNERDRAW;
   }
+  
+  if(uFlags & MF_RIGHTJUSTIFY)
+  {
+    mii.fType |= MFT_RIGHTJUSTIFY;
+  }
+  if(uFlags & MF_MENUBREAK)
+  {
+    mii.fType |= MFT_MENUBREAK;
+  }
+  if(uFlags & MF_MENUBARBREAK)
+  {
+    mii.fType |= MFT_MENUBARBREAK;
+  }
+  if(uFlags & MF_DISABLED)
+  {
+    mii.fState |= MFS_DISABLED;
+  }
+  if(uFlags & MF_GRAYED)
+  {
+    mii.fState |= MFS_GRAYED;
+  }
+  
   mii.dwTypeData = (LPWSTR)lpNewItem;
   if(uFlags & MF_POPUP)
   {
