@@ -6,6 +6,9 @@
 
 using std::string;
 using std::vector;
+using std::set;
+
+typedef set<string> set_string;
 
 static class MingwFactory : public Backend::Factory
 {
@@ -24,6 +27,19 @@ MingwBackend::MingwBackend ( Project& project )
 }
 
 void
+MingwBackend::CreateDirectoryTargetIfNotYetCreated ( const string& directory )
+{
+	directories.insert ( directory );
+}
+
+const string
+MingwBackend::GetDirectoryDependency ( const string& directory )
+{
+	return directory + SSEP "$(CREATED)";
+}
+
+
+void
 MingwBackend::Process ()
 {
 	DetectPCHSupport();
@@ -39,6 +55,7 @@ MingwBackend::Process ()
 		Module& module = *ProjectNode.modules[i];
 		ProcessModule ( module );
 	}
+	GenerateDirectoryTargets ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -160,8 +177,7 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-#define TOOL_PREFIX "$(Q)." SSEP "tools" SSEP
-	fprintf ( fMakefile, "mkdir = " TOOL_PREFIX "rmkdir" EXEPOSTFIX "\n" );
+#define TOOL_PREFIX "$(Q)$(INTERMEDIATE)tools" SSEP
 	fprintf ( fMakefile, "winebuild = " TOOL_PREFIX "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "bin2res = " TOOL_PREFIX "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cabman = " TOOL_PREFIX "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
@@ -230,23 +246,9 @@ MingwBackend::GetBuildToolDependencies () const
 void
 MingwBackend::GenerateInitTarget () const
 {
-	string tools = "$(ROS_INTERMEDIATE)." SSEP "tools";
 	fprintf ( fMakefile,
-	          "INIT = %s %s\n",
-	          tools.c_str (),
+	          "INIT = %s\n",
 	          GetBuildToolDependencies ().c_str () );
-
-	fprintf ( fMakefile,
-	          "%s:\n",
-	          tools.c_str () );
-	fprintf ( fMakefile,
-	          "ifneq ($(ROS_INTERMEDIATE),)\n" );
-	fprintf ( fMakefile,
-	          "\t${nmkdir} $(ROS_INTERMEDIATE)\n" );
-	fprintf ( fMakefile,
-	          "endif\n" );
-	fprintf ( fMakefile,
-	          "\t${nmkdir} $(ROS_INTERMEDIATE)." SSEP "tools\n" );
 	fprintf ( fMakefile,
 	          "\n" );
 }
@@ -301,11 +303,12 @@ MingwBackend::CheckAutomaticDependencies ()
 }
 
 void
-MingwBackend::ProcessModule ( Module& module ) const
+MingwBackend::ProcessModule ( Module& module )
 {
-	MingwModuleHandler* h = MingwModuleHandler::LookupHandler (
+	MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 		module.node.location,
-		module.type );
+		module.type,
+	    this );
 	MingwModuleHandler::string_list clean_files;
 	if ( module.host == HostDefault )
 	{
@@ -314,13 +317,46 @@ MingwBackend::ProcessModule ( Module& module ) const
 	}
 	h->Process ( module, clean_files );
 	h->GenerateCleanTarget ( module, clean_files );
-	h->GenerateDirectoryTargets ();
+}
+
+bool
+MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
+{
+	if ( directory == "$(INTERMEDIATE)tools")
+		return false;
+	else
+		return true;
+}
+
+void
+MingwBackend::GenerateDirectoryTargets ()
+{
+	if ( directories.size () == 0 )
+		return;
+	
+	set_string::iterator i;
+	for ( i = directories.begin ();
+	      i != directories.end ();
+	      i++ )
+	{
+		if ( IncludeDirectoryTarget ( *i ) )
+		{
+			fprintf ( fMakefile,
+			          "%s:\n",
+			          GetDirectoryDependency ( *i ).c_str () );
+			fprintf ( fMakefile, 
+			          "\t${mkdir} %s\n\n",
+			          i->c_str () );
+		}
+	}
+
+	directories.clear ();
 }
 
 string
 FixupTargetFilename ( const string& targetFilename )
 {
-	return string("$(ROS_INTERMEDIATE)") + NormalizeFilename ( targetFilename );
+	return string("$(INTERMEDIATE)") + NormalizeFilename ( targetFilename );
 }
 
 void

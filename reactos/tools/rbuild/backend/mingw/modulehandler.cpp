@@ -7,19 +7,8 @@
 
 using std::string;
 using std::vector;
-using std::map;
-using std::set;
-
-typedef set<string> set_string;
 
 #define CLEAN_FILE(f) clean_files.push_back ( f ); /*if ( module.name == "crt" ) printf ( "%s(%i): clean: %s\n", __FILE__, __LINE__, f.c_str() )*/
-
-map<ModuleType,MingwModuleHandler*>*
-MingwModuleHandler::handler_map = NULL;
-set_string
-MingwModuleHandler::directory_set;
-int
-MingwModuleHandler::ref = 0;
 
 FILE*
 MingwModuleHandler::fMakefile = NULL;
@@ -84,27 +73,27 @@ string v2s ( const vector<string>& v, int wrap_at )
 	return s;
 }
 
-MingwModuleHandler::MingwModuleHandler ( ModuleType moduletype )
+MingwModuleHandler::MingwModuleHandler ( ModuleType moduletype,
+                                         MingwBackend* backend_ )
+	: backend ( backend_ )
 {
-	if ( !ref++ )
-		handler_map = new map<ModuleType,MingwModuleHandler*>;
-	(*handler_map)[moduletype] = this;
 }
 
 MingwModuleHandler::~MingwModuleHandler()
 {
-	if ( !--ref )
-	{
-		delete handler_map;
-		handler_map = NULL;
-	}
 }
 
 const string &
-MingwModuleHandler::PassThruCacheDirectory ( const string &file ) const 
+MingwModuleHandler::PassThruCacheDirectory ( const string &file )
 {
-	directory_set.insert ( GetDirectory ( file ) );
+	backend->CreateDirectoryTargetIfNotYetCreated ( GetDirectory ( file ) );
 	return file;
+}
+
+const string
+MingwModuleHandler::GetDirectoryDependency ( const string& file )
+{
+	return backend->GetDirectoryDependency ( GetDirectory ( file ) );
 }
 
 void
@@ -120,18 +109,57 @@ MingwModuleHandler::SetUsePch ( bool b )
 }
 
 MingwModuleHandler*
-MingwModuleHandler::LookupHandler ( const string& location,
-                                    ModuleType moduletype )
+MingwModuleHandler::InstanciateHandler ( const string& location,
+                                         ModuleType moduletype,
+                                         MingwBackend* backend )
 {
-	if ( !handler_map )
-		throw Exception ( "internal tool error: no registered module handlers" );
-	MingwModuleHandler* h = (*handler_map)[moduletype];
-	if ( !h )
+	MingwModuleHandler* handler;
+	switch ( moduletype )
 	{
-		throw UnknownModuleTypeException ( location, moduletype );
-		return NULL;
+		case BuildTool:
+			handler = new MingwBuildToolModuleHandler ( backend );
+			break;
+		case StaticLibrary:
+			handler = new MingwStaticLibraryModuleHandler ( backend );
+			break;
+		case ObjectLibrary:
+			handler = new MingwObjectLibraryModuleHandler ( backend );
+			break;
+		case Kernel:
+			handler = new MingwKernelModuleHandler ( backend );
+			break;
+		case NativeCUI:
+			handler = new MingwNativeCUIModuleHandler ( backend );
+			break;
+		case Win32CUI:
+			handler = new MingwWin32CUIModuleHandler ( backend );
+			break;
+		case Win32GUI:
+			handler = new MingwWin32GUIModuleHandler ( backend );
+			break;
+		case KernelModeDLL:
+			handler = new MingwKernelModeDLLModuleHandler ( backend );
+			break;
+		case NativeDLL:
+			handler = new MingwNativeDLLModuleHandler ( backend );
+			break;
+		case Win32DLL:
+			handler = new MingwWin32DLLModuleHandler ( backend );
+			break;
+		case KernelModeDriver:
+			handler = new MingwKernelModeDriverModuleHandler ( backend );
+			break;
+		case BootLoader:
+			handler = new MingwBootLoaderModuleHandler ( backend );
+			break;
+		case BootSector:
+			handler = new MingwBootSectorModuleHandler ( backend );
+			break;
+		case Iso:
+			handler = new MingwIsoModuleHandler ( backend );
+			break;
 	}
-	return h;
+	return handler;
 }
 
 string
@@ -180,7 +208,7 @@ MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 }
 
 string
-MingwModuleHandler::GetImportLibraryDependency ( const Module& importedModule ) const
+MingwModuleHandler::GetImportLibraryDependency ( const Module& importedModule )
 {
 	if ( importedModule.type == ObjectLibrary )
 		return GetObjectsMacro ( importedModule );
@@ -189,7 +217,7 @@ MingwModuleHandler::GetImportLibraryDependency ( const Module& importedModule ) 
 }
 
 string
-MingwModuleHandler::GetModuleDependencies ( const Module& module ) const
+MingwModuleHandler::GetModuleDependencies ( const Module& module )
 {
 	if ( module.dependencies.size () == 0 )
 		return "";
@@ -297,7 +325,7 @@ MingwModuleHandler::GenerateCleanTarget (
 }
 
 string
-MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
+MingwModuleHandler::GetObjectFilenames ( const Module& module )
 {
 	const vector<File*>& files = module.non_if_data.files;
 	if ( files.size () == 0 )
@@ -312,65 +340,6 @@ MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 			GetObjectFilename ( module, files[i]->name ) );
 	}
 	return objectFilenames;
-}
-
-bool
-MingwModuleHandler::IncludeDirectoryTarget ( const string& directory ) const
-{
-	if ( directory == "$(ROS_INTERMEDIATE)." SSEP "tools")
-		return false;
-	else
-		return true;
-}
-
-void
-MingwModuleHandler::GenerateDirectoryTargets () const
-{
-	if ( directory_set.size () == 0 )
-		return;
-	
-	set_string::iterator it;
-	size_t wrap_count = 0;
-
-	fprintf ( fMakefile, "ifneq ($(ROS_INTERMEDIATE),)\n" );
-	fprintf ( fMakefile, "directories::" );
-
-	for ( it = directory_set.begin ();
-	      it != directory_set.end ();
-	      it++ )
-	{
-		if ( IncludeDirectoryTarget ( *it ) )
-		{
-			if ( wrap_count++ == 5 )
-				fprintf ( fMakefile, " \\\n\t\t" ), wrap_count = 0;
-			fprintf ( fMakefile,
-			          " %s",
-			          it->c_str () );
-		}
-	}
-
-	fprintf ( fMakefile, "\n\n" );
-	wrap_count = 0;
-
-	for ( it = directory_set.begin ();
-	      it != directory_set.end ();
-	      it++ )
-	{
-		if ( IncludeDirectoryTarget ( *it ) )
-		{
-			if ( wrap_count++ == 5 )
-				fprintf ( fMakefile, " \\\n\t\t" ), wrap_count = 0;
-			fprintf ( fMakefile,
-			          "%s ",
-			          it->c_str () );
-		}
-	}
-
-	fprintf ( fMakefile, 
-	          "::\n\t${mkdir} $@\n" );
-	fprintf ( fMakefile, "endif\n\n" );
-
-	directory_set.clear ();
 }
 
 string
@@ -476,7 +445,7 @@ MingwModuleHandler::GenerateLinkerParametersFromVector ( const vector<LinkerFlag
 
 string
 MingwModuleHandler::GenerateImportLibraryDependenciesFromVector (
-	const vector<Library*>& libraries ) const
+	const vector<Library*>& libraries )
 {
 	string dependencies ( "" );
 	int wrap_count = 0;
@@ -502,7 +471,7 @@ MingwModuleHandler::GenerateMacro (
 	const char* assignmentOperation,
 	const string& macro,
 	const IfableData& data,
-	const vector<CompilerFlag*>* compilerFlags ) const
+	const vector<CompilerFlag*>* compilerFlags )
 {
 	size_t i;
 
@@ -560,7 +529,7 @@ MingwModuleHandler::GenerateMacros (
 	const string& linkerflags_macro,
 	const string& objs_macro,
 	const string& libs_macro,
-	const string& linkdeps_macro ) const
+	const string& linkdeps_macro )
 {
 	size_t i;
 
@@ -685,7 +654,7 @@ MingwModuleHandler::GenerateMacros (
 	const string& linkerflags_macro,
 	const string& objs_macro,
 	const string& libs_macro,
-	const string& linkdeps_macro ) const
+	const string& linkdeps_macro )
 {
 	GenerateMacros (
 		module,
@@ -754,7 +723,7 @@ void
 MingwModuleHandler::GenerateGccCommand ( const Module& module,
                                          const string& sourceFilename,
                                          const string& cc,
-                                         const string& cflagsMacro ) const
+                                         const string& cflagsMacro )
 {
 	string deps = sourceFilename;
 	if ( module.pch && use_pch )
@@ -762,8 +731,9 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	string objectFilename = PassThruCacheDirectory (
 		GetObjectFilename ( module, sourceFilename ) );
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s %s\n",
 	          objectFilename.c_str (),
+	          GetDirectoryDependency ( objectFilename ).c_str (),
 	          deps.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
@@ -778,13 +748,14 @@ void
 MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
                                                   const string& sourceFilename,
                                                   const string& cc,
-                                                  const string& cflagsMacro ) const
+                                                  const string& cflagsMacro )
 {
 	string objectFilename = PassThruCacheDirectory (
 		GetObjectFilename ( module, sourceFilename ) );
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s %s\n",
 	          objectFilename.c_str (),
+	          GetDirectoryDependency ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
@@ -798,13 +769,14 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 void
 MingwModuleHandler::GenerateNasmCommand ( const Module& module,
                                           const string& sourceFilename,
-                                          const string& nasmflagsMacro ) const
+                                          const string& nasmflagsMacro )
 {
 	string objectFilename = PassThruCacheDirectory (
 		GetObjectFilename ( module, sourceFilename ) );
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s %s\n",
 	          objectFilename.c_str (),
+	          GetDirectoryDependency ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
@@ -818,7 +790,7 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 void
 MingwModuleHandler::GenerateWindresCommand ( const Module& module,
                                              const string& sourceFilename,
-                                             const string& windresflagsMacro ) const
+                                             const string& windresflagsMacro )
 {
 	string objectFilename = PassThruCacheDirectory ( 
 		GetObjectFilename ( module, sourceFilename ) );
@@ -827,8 +799,9 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	string resFilename = ReplaceExtension ( sourceFilename,
 	                                        ".res" );
 	fprintf ( fMakefile,
-	          "%s: %s $(WRC_TARGET)\n",
+	          "%s: %s %s $(WRC_TARGET)\n",
 	          objectFilename.c_str (),
+	          GetDirectoryDependency ( objectFilename ).c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 	fprintf ( fMakefile,
@@ -899,7 +872,7 @@ MingwModuleHandler::GenerateCommands (
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
 	const string& windresflagsMacro,
-	string_list& clean_files ) const
+	string_list& clean_files )
 {
 	CLEAN_FILE ( GetObjectFilename(module,sourceFilename) );
 	string extension = GetExtension ( sourceFilename );
@@ -1059,7 +1032,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
 	const string& windresflagsMacro,
-	string_list& clean_files ) const
+	string_list& clean_files )
 {
 	size_t i;
 
@@ -1101,7 +1074,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
 	const string& windresflagsMacro,
-	string_list& clean_files ) const
+	string_list& clean_files )
 {
 	if ( module.pch )
 	{
@@ -1198,7 +1171,7 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	const Module& module,
 	const string* cflags,
 	const string* nasmflags,
-	string_list& clean_files ) const
+	string_list& clean_files )
 {
 	string cc = ( module.host == HostTrue ? "${host_gcc}" : "${gcc}" );
 	string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
@@ -1213,13 +1186,13 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	string linkDepsMacro = ssprintf ("%s_LINKDEPS", module.name.c_str ());
 
 	GenerateMacros ( module,
-	                cflagsMacro,
-	                nasmflagsMacro,
-	                windresflagsMacro,
-	                linkerFlagsMacro,
-	                objectsMacro,
-	                libsMacro,
-	                linkDepsMacro );
+	                 cflagsMacro,
+	                 nasmflagsMacro,
+	                 windresflagsMacro,
+	                 linkerFlagsMacro,
+	                 objectsMacro,
+	                 libsMacro,
+	                 linkDepsMacro );
 
 	if ( cflags != NULL )
 	{
@@ -1267,7 +1240,7 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 }
 
 string
-MingwModuleHandler::GetInvocationDependencies ( const Module& module ) const
+MingwModuleHandler::GetInvocationDependencies ( const Module& module )
 {
 	string dependencies;
 	for ( size_t i = 0; i < module.invocations.size (); i++ )
@@ -1332,13 +1305,13 @@ MingwModuleHandler::GetDefaultDependencies ( const Module& module ) const
 	if ( module.type == BuildTool
 		|| module.name == "zlib"
 		|| module.name == "hostzlib" )
-		return "$(ROS_INTERMEDIATE)." SSEP "tools $(ROS_INTERMEDIATE)." SSEP "lib" SSEP "zlib";
+		return "";
 	else
 		return "$(INIT)";
 }
 
 void
-MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) const
+MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module )
 {
 	string preconditionDependenciesName = GetPreconditionDependenciesName ( module );
 	string sourceFilenames = GetSourceFilenamesWithoutGeneratedFiles ( module );
@@ -1392,16 +1365,17 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 void
 MingwModuleHandler::GenerateImportLibraryTargetIfNeeded (
 	const Module& module,
-	string_list& clean_files ) const
+	string_list& clean_files )
 {
 	if ( module.importLibrary != NULL )
 	{
-		string library_target = FixupTargetFilename( module.GetDependencyPath () ).c_str ();
+		string library_target = PassThruCacheDirectory ( FixupTargetFilename ( module.GetDependencyPath () ) ).c_str ();
 		CLEAN_FILE ( library_target );
 
 		string definitionDependencies = GetDefinitionDependencies ( module );
-		fprintf ( fMakefile, "%s: %s\n",
+		fprintf ( fMakefile, "%s: %s %s\n",
 		          library_target.c_str (),
+		          GetDirectoryDependency ( library_target ).c_str (),
 		          definitionDependencies.c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
@@ -1424,7 +1398,7 @@ MingwModuleHandler::GetSpecObjectDependencies ( const string& filename ) const
 }
 
 string
-MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
+MingwModuleHandler::GetDefinitionDependencies ( const Module& module )
 {
 	string dependencies;
 	string dkNkmLibNoFixup = "dk/nkm/lib";
@@ -1446,16 +1420,15 @@ MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 }
 
 bool
-MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
+MingwModuleHandler::IsCPlusPlusModule ( const Module& module )
 {
 	return module.cplusplus;
 }
 
 
-static MingwBuildToolModuleHandler buildtool_handler;
-
-MingwBuildToolModuleHandler::MingwBuildToolModuleHandler()
-	: MingwModuleHandler ( BuildTool )
+MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( BuildTool,
+	                       backend )
 {
 }
 
@@ -1502,10 +1475,9 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 }
 
 
-static MingwKernelModuleHandler kernelmodule_handler;
-
-MingwKernelModuleHandler::MingwKernelModuleHandler ()
-	: MingwModuleHandler ( Kernel )
+MingwKernelModuleHandler::MingwKernelModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Kernel,
+	                       backend )
 {
 }
 
@@ -1587,10 +1559,9 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module, str
 }
 
 
-static MingwStaticLibraryModuleHandler staticlibrary_handler;
-
-MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ()
-	: MingwModuleHandler ( StaticLibrary )
+MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( StaticLibrary,
+	                       backend )
 {
 }
 
@@ -1609,10 +1580,9 @@ MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( const Modul
 }
 
 
-static MingwObjectLibraryModuleHandler objectlibrary_handler;
-
-MingwObjectLibraryModuleHandler::MingwObjectLibraryModuleHandler ()
-	: MingwModuleHandler ( ObjectLibrary )
+MingwObjectLibraryModuleHandler::MingwObjectLibraryModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( ObjectLibrary,
+	                       backend )
 {
 }
 
@@ -1631,10 +1601,9 @@ MingwObjectLibraryModuleHandler::GenerateObjectLibraryModuleTarget ( const Modul
 }
 
 
-static MingwKernelModeDLLModuleHandler kernelmodedll_handler;
-
-MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler ()
-	: MingwModuleHandler ( KernelModeDLL )
+MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( KernelModeDLL,
+	                       backend )
 {
 }
 
@@ -1689,10 +1658,9 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget (
 }
 
 
-static MingwKernelModeDriverModuleHandler kernelmodedriver_handler;
-
-MingwKernelModeDriverModuleHandler::MingwKernelModeDriverModuleHandler ()
-	: MingwModuleHandler ( KernelModeDriver )
+MingwKernelModeDriverModuleHandler::MingwKernelModeDriverModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( KernelModeDriver,
+	                       backend )
 {
 }
 
@@ -1752,10 +1720,9 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget (
 }
 
 
-static MingwNativeDLLModuleHandler nativedll_handler;
-
-MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler ()
-	: MingwModuleHandler ( NativeDLL )
+MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( NativeDLL,
+	                       backend )
 {
 }
 
@@ -1808,10 +1775,9 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 }
 
 
-static MingwNativeCUIModuleHandler nativecui_handler;
-
-MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler ()
-	: MingwModuleHandler ( NativeCUI )
+MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( NativeCUI,
+	                       backend )
 {
 }
 
@@ -1868,10 +1834,9 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 }
 
 
-static MingwWin32DLLModuleHandler win32dll_handler;
-
-MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler ()
-	: MingwModuleHandler ( Win32DLL )
+MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Win32DLL,
+	                       backend )
 {
 }
 
@@ -1954,10 +1919,9 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module,
 }
 
 
-static MingwWin32CUIModuleHandler win32cui_handler;
-
-MingwWin32CUIModuleHandler::MingwWin32CUIModuleHandler ()
-	: MingwModuleHandler ( Win32CUI )
+MingwWin32CUIModuleHandler::MingwWin32CUIModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Win32CUI,
+	                       backend )
 {
 }
 
@@ -2016,10 +1980,9 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module,
 }
 
 
-static MingwWin32GUIModuleHandler win32gui_handler;
-
-MingwWin32GUIModuleHandler::MingwWin32GUIModuleHandler ()
-	: MingwModuleHandler ( Win32GUI )
+MingwWin32GUIModuleHandler::MingwWin32GUIModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Win32GUI,
+	                       backend )
 {
 }
 
@@ -2078,10 +2041,9 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module,
 }
 
 
-static MingwBootLoaderModuleHandler bootloadermodule_handler;
-
-MingwBootLoaderModuleHandler::MingwBootLoaderModuleHandler ()
-	: MingwModuleHandler ( BootLoader )
+MingwBootLoaderModuleHandler::MingwBootLoaderModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( BootLoader,
+	                       backend )
 {
 }
 
@@ -2133,10 +2095,9 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget (
 }
 
 
-static MingwBootSectorModuleHandler bootsectormodule_handler;
-
-MingwBootSectorModuleHandler::MingwBootSectorModuleHandler ()
-	: MingwModuleHandler ( BootSector )
+MingwBootSectorModuleHandler::MingwBootSectorModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( BootSector,
+	                       backend )
 {
 }
 
@@ -2168,10 +2129,9 @@ MingwBootSectorModuleHandler::GenerateBootSectorModuleTarget ( const Module& mod
 }
 
 
-static MingwIsoModuleHandler isomodule_handler;
-
-MingwIsoModuleHandler::MingwIsoModuleHandler ()
-	: MingwModuleHandler ( Iso )
+MingwIsoModuleHandler::MingwIsoModuleHandler ( MingwBackend* backend )
+	: MingwModuleHandler ( Iso,
+	                       backend )
 {
 }
 
@@ -2185,7 +2145,7 @@ MingwIsoModuleHandler::Process ( const Module& module, string_list& clean_files 
 
 void
 MingwIsoModuleHandler::OutputBootstrapfileCopyCommands ( const string& bootcdDirectory,
-                                                         const Module& module ) const
+                                                         const Module& module )
 {
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
@@ -2204,7 +2164,7 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands ( const string& bootcdDir
 
 void
 MingwIsoModuleHandler::OutputCdfileCopyCommands ( const string& bootcdDirectory,
-                                                  const Module& module ) const
+                                                  const Module& module )
 {
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
@@ -2220,7 +2180,7 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands ( const string& bootcdDirectory,
 
 string
 MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory,
-                                                   const Module& module ) const
+                                                   const Module& module )
 {
 	string directories;
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
@@ -2231,7 +2191,7 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 			string targetDirecctory = bootcdDirectory + SSEP + m.bootstrap->base;
 			if ( directories.size () > 0 )
 				directories += " ";
-			directories += FixupTargetFilename ( targetDirecctory );
+			directories += GetDirectoryDependency ( PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) ) );
 		}
 	}
 	return directories;
@@ -2239,7 +2199,7 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 
 string
 MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string& bootcdDirectory,
-                                                   const Module& module ) const
+                                                   const Module& module )
 {
 	string directories;
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
@@ -2248,14 +2208,14 @@ MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string& bootcdDirectory
 		string targetDirecctory = bootcdDirectory + SSEP + cdfile.base;
 		if ( directories.size () > 0 )
 			directories += " ";
-		directories += FixupTargetFilename ( targetDirecctory );
+		directories += GetDirectoryDependency ( PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) ) );
 	}
 	return directories;
 }
 
 string
 MingwIsoModuleHandler::GetCdDirectories ( const string& bootcdDirectory,
-                                          const Module& module ) const
+                                          const Module& module )
 {
 	string directories = GetBootstrapCdDirectories ( bootcdDirectory,
 	                                                 module );
@@ -2308,7 +2268,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	PassThruCacheDirectory ( bootcdReactos + SSEP );
 	string reactosInf = FixupTargetFilename ( bootcdReactosNoFixup + "/reactos.inf" );
 	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
-	string cdDirectories = bootcdReactos + " " + GetCdDirectories ( bootcdDirectory,
+	string cdDirectories = GetCdDirectories ( bootcdDirectory,
 	                                                                module );
 	vector<string> vCdFiles;
 	GetCdFiles ( vCdFiles, module );
@@ -2317,9 +2277,10 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s %s %s ${CABMAN_TARGET} ${CDMAKE_TARGET}\n",
+	          "%s: all %s %s %s %s ${CABMAN_TARGET} ${CDMAKE_TARGET}\n",
 	          module.name.c_str (),
 	          isoboot.c_str (),
+	          GetDirectoryDependency ( PassThruCacheDirectory ( bootcdReactos ) ).c_str (),
 	          cdDirectories.c_str (),
 	          cdFiles.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
@@ -2328,10 +2289,10 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	          reactosDff.c_str (),
 	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cabman} -C %s -RC %s -L %s -N\n",
+	          "\t${cabman} -C %s -RC %s -L %s -N -P $(OUTPUT)\n",
 	          reactosDff.c_str (),
 	          reactosInf.c_str (),
-	          bootcdReactos.c_str () );
+	          bootcdReactos.c_str ());
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s\n",
 	          reactosInf.c_str () );
