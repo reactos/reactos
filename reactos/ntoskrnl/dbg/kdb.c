@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.30 2004/08/27 00:14:01 blight Exp $
+/* $Id: kdb.c,v 1.31 2004/08/31 23:53:40 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -829,8 +829,8 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
   ULONG i = 1;
 
   DbgPrint("Frames:  ");
-  while (Frame != NULL && (ULONG)Frame >= StackLimit && 
-	 (ULONG)Frame < StackBase)
+  while (Frame != NULL && (ULONG_PTR)Frame >= StackLimit && 
+	 (ULONG_PTR)Frame < StackBase)
     {
       KdbSymPrintAddress((PVOID)Frame[1]);
       DbgPrint("\n");
@@ -1096,7 +1096,7 @@ DbgScriptCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
 ULONG
 DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
-  ULONG StackBase, StackLimit;
+  ULONG_PTR StackBase, StackLimit;
   extern unsigned int init_stack, init_stack_top;
 
   /* Without an argument we print the current stack. */
@@ -1104,13 +1104,13 @@ DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
     {
       if (PsGetCurrentThread() != NULL)
 	{
-	  StackBase = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+	  StackBase = (ULONG_PTR)PsGetCurrentThread()->Tcb.StackBase;
 	  StackLimit = PsGetCurrentThread()->Tcb.StackLimit;
 	}
       else
 	{
-	  StackBase = (ULONG)&init_stack_top;
-	  StackLimit = (ULONG)&init_stack;
+	  StackBase = (ULONG_PTR)&init_stack_top;
+	  StackLimit = (ULONG_PTR)&init_stack;
 	}
       DbgPrintBackTrace((PULONG)&Tf->DebugEbp, StackBase, StackLimit);
     }
