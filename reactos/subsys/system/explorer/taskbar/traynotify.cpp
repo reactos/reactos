@@ -68,10 +68,14 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 	if (pnid->uFlags & NIF_MESSAGE)
 		_uCallbackMessage = pnid->uCallbackMessage;
 
-	if (pnid->uFlags & NIF_ICON)
-		 // Some applications destroy the icon immediatelly after completing the,
-		 // NIM_ADD/MODIFY message, so we have to make a copy if it.
+	if (pnid->uFlags & NIF_ICON) {
+		 // Some applications destroy the icon immediatelly after completing the
+		 // NIM_ADD/MODIFY message, so we have to make a copy of it.
+		if (_hIcon)
+			DestroyIcon(_hIcon);
+
 		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, 16, 16, 0);
+	}
 
 #ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
 	if (pnid->uFlags & NIF_STATE)
