@@ -2,6 +2,8 @@
 all: crtdll.a
 
 
+ASSERT_OBJECTS = assert/assert.o
+
 CTYPE_OBJECTS = ctype/isalnum.o \
 		ctype/isalpha.o ctype/isascii.o ctype/iscntrl.o ctype/isdigit.o ctype/isgraph.o \
 		ctype/islower.o ctype/isprint.o ctype/ispunct.o ctype/isspace.o ctype/isupper.o \
@@ -67,21 +69,22 @@ PROCESS_OBJECTS = process/cwait.o process/dll.o process/spawnl.o process/spawnlp
 
 TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o 
 
-FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o
+FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o
 
 SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o 
+
 
 MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o\
 		math/atanh.o math/ceil.o math/cos.o math/cosh.o math/exp.o math/fabs.o\
 		math/floor.o math/fmod.o math/frexp.o math/huge_val.o math/hypot.o\
-		math/ldexp.o math/log.o math/log10.o math/modf.o math/modfl.o math/pow.o\
+		math/ldexp.o math/log.o math/log10.o math/modf.o math/pow.o\
 		math/sin.o math/sinh.o math/sqrt.o math/tan.o\
 		math/tanh.o
 
 
-OBJECTS = $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) $(MISC_OBJECTS) \
-	  $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
-	  $(IO_OBJECTS) $(PROCESS_OBJECTS) $(TIME_OBJECTS)  \
+OBJECTS = $(ASSERT_OBJECTS) $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)\
+	  $(MISC_OBJECTS) $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
+	  $(IO_OBJECTS)  $(PROCESS_OBJECTS) $(TIME_OBJECTS)  \
 	  $(SYS_STAT_OBJECTS) $(SIGNAL_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS)
 
 
