@@ -4,7 +4,7 @@
  * FILE:             services/dd/keyboard/keyboard.c
  * PURPOSE:          Keyboard driver
  * PROGRAMMER:       Victor Kirhenshtein (sauros@iname.com)
- *                   Jason Filby (jasonfilby@yahoo.com);
+ *                   Jason Filby (jasonfilby@yahoo.com)
  */
 
 /* INCLUDES ****************************************************************/
@@ -36,6 +36,7 @@ static BYTE capsDown,numDown,scrollDown;
 static DWORD ctrlKeyState;
 static PKINTERRUPT KbdInterrupt;
 static KDPC KbdDpc;
+static BOOLEAN AlreadyOpened = FALSE;
 
 /*
  * PURPOSE: Current irp being processed
@@ -623,7 +624,15 @@ VOID KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 #endif
 
    DPRINT("KeyboardStartIo(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
-
+   
+   if (KeSynchronizeExecution(KbdInterrupt, KbdSynchronizeRoutine, Irp))
+     {
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	IoStartNextPacket(DeviceObject, FALSE);
+     }
+   
    DPRINT("stk->Parameters.Read.Length %d\n",stk->Parameters.Read.Length);
    DPRINT("KeysRequired %d\n",KeysRequired);     
 }
@@ -635,26 +644,37 @@ NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    DPRINT("DeviceObject %x\n",DeviceObject);
    DPRINT("Irp %x\n",Irp);
-
+   
+   DPRINT("IRP_MJ_CREATE %d stk->MajorFunction %d\n",
+	  IRP_MJ_CREATE, stk->MajorFunction);
+   DPRINT("AlreadyOpened %d\n",AlreadyOpened);
+   
    switch (stk->MajorFunction)
      {
       case IRP_MJ_CREATE:
+	if (AlreadyOpened == TRUE)
+	  {
+	     CHECKPOINT;
+//	     Status = STATUS_UNSUCCESSFUL;
+	     Status = STATUS_SUCCESS;
+	  }
+	else
+	  {
+	     CHECKPOINT;
+	     Status = STATUS_SUCCESS;
+	     AlreadyOpened = TRUE;
+	  }
+	break;
+	
       case IRP_MJ_CLOSE:
         Status = STATUS_SUCCESS;
 	break;
 
       case IRP_MJ_READ:
         DPRINT("Handling Read request\n");
-        if (KeSynchronizeExecution(KbdInterrupt,KbdSynchronizeRoutine,Irp))
-           {
-                Status = STATUS_SUCCESS;
-           }
-        else
-           {
-	      DPRINT("Queueing packet\n");
-	      IoStartPacket(DeviceObject,Irp,NULL,NULL);
-	      Status = STATUS_PENDING;
-           }
+	DPRINT("Queueing packet\n");
+	IoStartPacket(DeviceObject,Irp,NULL,NULL);
+	Status = STATUS_PENDING;
 	break;
 
       default:

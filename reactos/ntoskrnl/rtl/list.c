@@ -16,6 +16,16 @@
 
 /* FUNCTIONS *************************************************************/
 
+static BOOLEAN CheckEntry(PLIST_ENTRY ListEntry)
+{
+   assert(ListEntry!=NULL);
+   assert(ListEntry->Blink!=NULL);
+   assert(ListEntry->Blink->Flink!=NULL);
+   assert(ListEntry->Flink!=NULL);
+   assert(ListEntry->Flink->Blink!=NULL);
+   return(TRUE);
+}
+
 BOOLEAN IsListEmpty(PLIST_ENTRY ListHead)
 /*
  * FUNCTION: Determines if a list is empty
@@ -31,12 +41,20 @@ VOID RemoveEntryList(PLIST_ENTRY ListEntry)
 {
    PLIST_ENTRY OldFlink;
    PLIST_ENTRY OldBlink;
-   DPRINT("RemoveEntryList(ListEntry %x)\n",ListEntry);
+   
+   DPRINT("RemoveEntryList(ListEntry %x)\n", ListEntry);
+   
+   assert(CheckEntry(ListEntry));
+   
    OldFlink=ListEntry->Flink;
    OldBlink=ListEntry->Blink;
-   DPRINT("OldFlink %x OldBlink %x\n",OldFlink,OldBlink);
+
    OldFlink->Blink=OldBlink;
    OldBlink->Flink=OldFlink;
+   
+   assert(CheckEntry(ListEntry));
+   
+   DPRINT("RemoveEntryList()\n");
 }
 
 PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
@@ -54,9 +72,19 @@ PLIST_ENTRY RemoveTailList(PLIST_ENTRY ListHead)
 
 PLIST_ENTRY RemoveHeadList(PLIST_ENTRY ListHead)
 {  
-   PLIST_ENTRY Old = ListHead->Flink;
+   PLIST_ENTRY Old;
+   
    DPRINT("RemoveHeadList(ListHead %x)\n",ListHead);
+   
+   assert(CheckEntry(ListHead));
+   
+   Old = ListHead->Flink;
    RemoveEntryList(ListHead->Flink);
+   
+   assert(CheckEntry(ListHead));
+   
+   DPRINT("RemoveHeadList()\n");
+   
    return(Old);
 }
 
