@@ -2,10 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <utime.h>
 #ifdef WIN32
 #include <io.h>
 #include <dos.h>
-#include <utime.h>
 #else
 #include <sys/io.h>
 #include <errno.h>
