@@ -163,6 +163,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (!lstrcmp(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
 
+	if (!lstrcmp(lpCmdLine,TEXT("-nodesktop")))
+		startup_desktop = FALSE;
+
 	if (!lstrcmp(lpCmdLine,TEXT("-noexplorer"))) {
 		nShowCmd = SW_HIDE;
 		startup_desktop = TRUE;
