@@ -22,6 +22,7 @@ typedef struct ConsoleInput_t
   INPUT_RECORD InputEvent;
   BOOLEAN Echoed;        // already been echoed or not
   BOOLEAN Fake;          // synthesized, not a real event
+  BOOLEAN NotChar;       // message should not be used to return a character
 } ConsoleInput;
 
 typedef struct CSRSS_CONSOLE_t *PCSRSS_CONSOLE;
@@ -183,6 +184,8 @@ BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray)
 NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 VOID STDCALL CsrDrawConsole(PCSRSS_CONSOLE Console);
+NTSTATUS CsrpEchoUnicodeChar( PCSRSS_SCREEN_BUFFER Console, 
+			      WCHAR UnicodeChar );
 NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
 
 #endif /* ndef _CSRSS_API_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.20 2003/11/23 12:24:21 weiden Exp $
+/* $Id: input.c,v 1.21 2003/11/24 00:22:53 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,10 @@ KeyboardThreadMain(PVOID StartContext)
   OBJECT_ATTRIBUTES KeyboardObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
-
+  MSG msg;
+  PUSER_MESSAGE_QUEUE FocusQueue;
+  struct _ETHREAD *FocusThread;
+  
   RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
 			     &KeyboardDeviceName,
@@ -144,9 +147,55 @@ KeyboardThreadMain(PVOID StartContext)
 
 	  /* FIXME: Support MOD_WIN */
 
+	  lParam = KeyEvent.wRepeatCount | 
+	    ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
+	  
+	  /* Bit 24 indicates if this is an extended key */
+	  if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+	    {
+	      lParam |= (1 << 24);
+	    }
+	  
+	  if (fsModifiers & MOD_ALT)
+	    {
+	      /* Context mode. 1 if ALT if pressed while the key is pressed */
+	      lParam |= (1 << 29);
+	    }
+	  
+	  if(KeyEvent.bKeyDown && (fsModifiers & MOD_ALT)) 
+	    msg.message = WM_SYSKEYDOWN;
+	  else if(KeyEvent.bKeyDown)
+	    msg.message = WM_KEYDOWN;
+	  else if(fsModifiers & MOD_ALT)
+	    msg.message = WM_SYSKEYUP;
+	  else
+	    msg.message = WM_KEYUP;
+
+	  /* Find the target thread whose locale is in effect */
+	  FocusQueue = IntGetFocusMessageQueue();
+	  if (!FocusQueue) {
+	    FocusQueue = W32kGetPrimitiveMessageQueue();
+	  }
+
+	  msg.wParam = KeyEvent.wVirtualKeyCode;
+	  msg.lParam = lParam;
+
+	  if (!FocusQueue) continue;
+
+	  FocusThread = FocusQueue->Thread;
+
+	  if (FocusThread && FocusThread->Win32Thread && 
+	      FocusThread->Win32Thread->KeyboardLayout) 
+	    {
+	      W32kKeyProcessMessage(&msg,
+				    FocusThread->Win32Thread->KeyboardLayout);
+	    } 
+	  else
+	    continue;
+	  
 	  if (GetHotKey(InputWindowStation,
-		    fsModifiers,
-			KeyEvent.wVirtualKeyCode,
+			fsModifiers,
+			msg.wParam,
 			&Thread,
 			&hWnd,
 			&id))
@@ -157,55 +206,16 @@ KeyboardThreadMain(PVOID StartContext)
 		  MsqPostHotKeyMessage (Thread,
 					hWnd,
 					(WPARAM)id,
-					MAKELPARAM((WORD)fsModifiers, (WORD)KeyEvent.wVirtualKeyCode));
+					MAKELPARAM((WORD)fsModifiers, 
+						   (WORD)msg.wParam));
 		}
 	    }
-	  else
-
-	  /*
-	   * Post a keyboard message.
-	   */
-	  if (KeyEvent.bKeyDown)
+	  else 
 	    {
-	      lParam = KeyEvent.wRepeatCount | 
-		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
-
-	      /* Bit 24 indicates if this is an extended key */
-	      if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
-		{
-		  lParam |= (1 << 24);
-		}
-
-	      if (fsModifiers & MOD_ALT)
-		{
-		  /* Context mode. 1 if ALT if pressed while the key is pressed */
-		  lParam |= (1 << 29);
-		}
-
-	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYDOWN : WM_KEYDOWN,
-				     KeyEvent.wVirtualKeyCode,
-				     lParam);
-	    }
-	  else
-	    {
-	      lParam = KeyEvent.wRepeatCount | 
-		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0xC0000000;
-
-	      /* Bit 24 indicates if this is an extended key */
-	      if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
-		{
-		  lParam |= (1 << 24);
-		}
-
-	      if (fsModifiers & MOD_ALT)
-		{
-		  /* Context mode. 1 if ALT if pressed while the key is pressed */
-		  lParam |= (1 << 29);
-		}
-
-	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYUP : WM_KEYUP,
-				     KeyEvent.wVirtualKeyCode,
-				     lParam);
+	      /*
+	       * Post a keyboard message.
+	       */
+	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
       DbgPrint( "Input Thread Stopped...\n" );

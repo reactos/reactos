@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.53 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: dllmain.c,v 1.54 2003/11/24 00:22:53 arty Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -242,6 +242,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize input implementation.\n");
+      return(Status);
+    }
+
+  Status = InitKeyboardImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize keyboard implementation.\n");
       return(Status);
     }
 

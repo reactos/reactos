@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.56 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: conio.c,v 1.57 2003/11/24 00:22:52 arty Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -759,7 +759,6 @@ NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWOR
   return(STATUS_SUCCESS);
 }
 
-
 inline BOOLEAN CsrpIsEqualRect(
   SMALL_RECT Rect1,
   SMALL_RECT Rect2)
@@ -1363,6 +1362,18 @@ static DWORD CsrpGetShiftState( PBYTE KeyState ) {
       case VK_RMENU:
 	ssOut |= RIGHT_ALT_PRESSED | ENHANCED_KEY;
 	break;
+
+      case VK_CAPITAL:
+	ssOut |= CAPSLOCK_ON;
+	break;
+
+      case VK_NUMLOCK:
+	ssOut |= NUMLOCK_ON;
+	break;
+
+      case VK_SCROLL:
+	ssOut |= SCROLLLOCK_ON;
+	break;
       }
     }
   }
@@ -1375,70 +1386,64 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
 {
   static PCSRSS_CONSOLE SwapConsole = 0; /* console we are thinking about swapping with */
   static BYTE KeyState[256] = { 0 };
+  /* MSDN mentions that you should use the last virtual key code received
+   * when putting a virtual key identity to a WM_CHAR message since multiple
+   * or translated keys may be involved. */
+  static UINT LastVirtualKey = 0;
+  DWORD ShiftState;
   ConsoleInput *ConInRec;
   UINT RepeatCount;
+  CHAR AsciiChar;
   WCHAR UnicodeChar;
   UINT VirtualKeyCode;
   UINT VirtualScanCode;
-  CHAR AsciiChar;
-  DWORD ShiftState;
   BOOL Down = FALSE;
-  BOOL Ext = FALSE;
-  int RetChars;
-  WCHAR Chars[2] = { 0 };
   INPUT_RECORD er;
   NTSTATUS Status;
   IO_STATUS_BLOCK Iosb;
-  BYTE Mask;
-  ULONG ResultSize;
+  ULONG ResultSize = 0;
 
   RepeatCount = 1;
   VirtualScanCode = (msg->lParam >> 16) & 0xff;
-  VirtualKeyCode = msg->wParam;
-  Down = msg->message == WM_KEYDOWN || msg->message == WM_SYSKEYDOWN;
-  Ext = msg->lParam & 0x01000000 ? TRUE : FALSE;
+  Down = msg->message == WM_KEYDOWN || msg->message == WM_CHAR || 
+    msg->message == WM_SYSKEYDOWN || msg->message == WM_SYSCHAR;
 
-  Mask = (Ext ? 0x40 : 0x80);
+  NtUserGetKeyboardState((VOID *)KeyState);
+  ShiftState = CsrpGetShiftState(KeyState);
 
-  if (Down)
+  if (msg->message == WM_CHAR || msg->message == WM_SYSCHAR)
     {
-      KeyState[VirtualScanCode] |= Mask;
-    }
+      VirtualKeyCode = LastVirtualKey;
+      UnicodeChar = msg->wParam;
+    } 
   else
-    {
-      KeyState[VirtualScanCode] &= ~Mask;
+    { 
+      WCHAR Chars[2];
+      INT RetChars = 0;
+
+      VirtualKeyCode = msg->wParam;
+      RetChars = NtUserToUnicodeEx(VirtualKeyCode,
+				   VirtualScanCode,
+				   KeyState,
+				   Chars,
+				   2,
+				   0,
+				   0);
+      UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
-
-  ShiftState = CsrpGetShiftState( KeyState );
-
-  RetChars = NtUserToUnicodeEx(VirtualKeyCode,
-                               VirtualScanCode,
-                               KeyState,
-                               Chars,
-                               2,
-                               0,
-                               0);
-
-  UnicodeChar = (1 == RetChars ? Chars[0] : 0);
-
-
-  RtlUnicodeToOemN(&AsciiChar,
-                   1,
-                   &ResultSize,
-                   &UnicodeChar,
-                   2);
-  if (0 == ResultSize)
-    {
-      AsciiChar = '\0';
-    }
-
+  if (UnicodeChar)
+    RtlUnicodeToOemN(&AsciiChar,
+		     1,
+		     &ResultSize,
+		     &UnicodeChar,
+		     sizeof(WCHAR));
+  if (!ResultSize) AsciiChar = 0;
+  
   er.EventType = KEY_EVENT;
   er.Event.KeyEvent.bKeyDown = Down;
   er.Event.KeyEvent.wRepeatCount = RepeatCount;
-//  er.Event.KeyEvent.uChar.AsciiChar = AsciiChar;
-//  er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
-  er.Event.KeyEvent.uChar.UnicodeChar = AsciiChar;
+  er.Event.KeyEvent.uChar.UnicodeChar = AsciiChar & 0xff;
   er.Event.KeyEvent.dwControlKeyState = ShiftState;
   er.Event.KeyEvent.wVirtualKeyCode = VirtualKeyCode;
   er.Event.KeyEvent.wVirtualScanCode = VirtualScanCode;
@@ -1535,10 +1540,29 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
     }
     
   ConInRec->InputEvent = er;
-  ConInRec->Fake = FALSE;
+  ConInRec->Fake = AsciiChar && 
+    (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
+     msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
+  ConInRec->NotChar = (msg->message != WM_CHAR && msg->message != WM_SYSCHAR);
   ConInRec->Echoed = FALSE;
+  if (ConInRec->NotChar)
+    LastVirtualKey = msg->wParam;
+
+  DbgPrint("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
+	   Down ? "down" : "up  ",
+	   (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
+	   "char" : "key ",
+	   ConInRec->Fake ? "fake" : "real",
+	   ConInRec->NotChar ? "notc" : "char",
+	   VirtualScanCode,
+	   VirtualKeyCode,
+	   (AsciiChar >= ' ') ? AsciiChar : '.',
+	   ShiftState);
     
-  CsrpProcessChar(Console, ConInRec);
+  if (!ConInRec->Fake || !ConInRec->NotChar)
+    CsrpProcessChar(Console, ConInRec);
+  else
+    RtlFreeHeap(CsrssApiHeap,0,ConInRec);
   UNLOCK;
 }
 
@@ -1559,8 +1583,9 @@ VOID Console_Api( DWORD RefreshEvent )
     NtUserGetMessage( &msg, 0,0,0 );
     NtUserTranslateMessage( &msg, 0 );
 
-    if (msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
-	msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP) {
+    if ((msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
+	 msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
+	 msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)) {
        CsrpProcessKey(&msg, ActiveConsole);
     }
   }

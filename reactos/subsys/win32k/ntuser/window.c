@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.144 2003/11/23 12:31:53 weiden Exp $
+/* $Id: window.c,v 1.145 2003/11/24 00:22:53 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -842,7 +842,7 @@ IntSetFocusWindow(HWND hWnd)
           hWndTop = NtUserGetAncestor(hWndTop, GA_PARENT);
         }
 
-#if 0 /* FIXME */
+#if 0
       /* call hooks */
       if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
         {
@@ -860,16 +860,13 @@ IntSetFocusWindow(HWND hWnd)
               return NULL;
             }
 #endif
-#if 0 /* FIXME */
           if (! NtUserIsWindow(hWnd))
             {
               /* Abort if window destroyed */
               return NULL;
             }
-#endif
         }
     }
-#if 0 /* FIXME */
   else
     {
       /* call hooks */
@@ -879,7 +876,6 @@ IntSetFocusWindow(HWND hWnd)
           return NULL;
         }
     }
-#endif
 
   hWndOldFocus = set_focus_window(hWnd, WindowObject, hWndOldFocus);
   if (WindowObject != NULL)

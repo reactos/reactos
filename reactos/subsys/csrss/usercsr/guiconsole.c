@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.1 2003/10/20 18:02:04 gvg Exp $
+/* $Id: guiconsole.c,v 1.2 2003/11/24 00:22:53 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -427,6 +427,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_KEYUP:
       case WM_SYSKEYDOWN:
       case WM_SYSKEYUP:
+      case WM_CHAR:
         GuiConsoleHandleKey(hWnd, msg, wParam, lParam);
         Result = 0;
         break;

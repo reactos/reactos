@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.37 2003/11/23 12:08:00 weiden Exp $
+/* $Id: msgqueue.c,v 1.38 2003/11/24 00:22:53 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -223,9 +223,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     */
     if (0 != Wnd && Wnd != IntGetFocusWindow())
     {
-        DbgPrint("Changing Focus window to 0x%X\n", Wnd);
-        
-        SpareLParam = MAKELONG(WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window), Msg);
+        SpareLParam = 
+	  MAKELONG(WinPosWindowFromPoint(ScopeWin, 
+					 Message->Msg.pt, 
+					 &Window), Msg);
         
         if(Window)
         {
@@ -490,20 +491,15 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
 
+  Msg.hwnd = 0;
+  Msg.message = uMsg;
+  Msg.wParam = wParam;
+  Msg.lParam = lParam;
+  /* FIXME: Initialize time and point. */
+  
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
-    Msg.hwnd = 0;
-    Msg.message = uMsg;
-    Msg.wParam = wParam;
-    Msg.lParam = lParam;
-    /* FIXME: Initialize time and point. */
-
     if( W32kGetPrimitiveMessageQueue() ) {
-      Msg.hwnd = 0;
-      Msg.message = uMsg;
-      Msg.wParam = wParam;
-      Msg.lParam = lParam;
-      /* FIXME: Initialize time and point. */
       Message = MsqCreateMessage(&Msg);
       MsqPostMessage(W32kGetPrimitiveMessageQueue(), Message);
     }
@@ -517,11 +513,6 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (FocusMessageQueue->FocusWindow != (HWND)0)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
-	Msg.message = uMsg;
-	Msg.wParam = wParam;
-	Msg.lParam = lParam;
-	/* FIXME: Initialize time and point. */
-	
 	Message = MsqCreateMessage(&Msg);
 	MsqPostMessage(FocusMessageQueue, Message);
       }
