@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.13 2002/11/05 20:48:08 hbirr Exp $
+/* $Id: rmap.c,v 1.14 2002/11/09 20:27:03 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -104,6 +104,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
   if (MemoryArea == NULL)
     {
+      MmUnlockAddressSpace(&Process->AddressSpace);
       ObDereferenceObject(Process);
       return(STATUS_UNSUCCESSFUL);
     }
