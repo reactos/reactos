@@ -96,7 +96,7 @@ DriverEntry(
     UNICODE_STRING UnicodeDeviceName;
     PDEVICE_OBJECT DeviceObject = NULL;
     PDEVICE_EXTENSION DeviceExtension = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     NTSTATUS ErrorCode = STATUS_SUCCESS;
     NDIS_STRING ProtoName = NDIS_STRING_CONST("PacketDriver");
     ULONG          DevicesCreated=0;
@@ -594,6 +594,7 @@ BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
 //-------------------------------------------------------------------
 
 VOID
+STDCALL_FUNC
 NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 {
     PDEVICE_OBJECT     DeviceObject;

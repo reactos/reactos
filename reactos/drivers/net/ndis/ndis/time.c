@@ -44,7 +44,7 @@ NdisCancelTimer(
 VOID
 EXPORT
 NdisGetCurrentSystemTime (
-    IN  OUT PLONGLONG   pSystemTime)
+    IN  OUT PLARGE_INTEGER   pSystemTime)
 {
     KeQuerySystemTime (pSystemTime);
 }
@@ -62,7 +62,7 @@ NdisInitializeTimer(
 {
     KeInitializeTimer (&Timer->Timer);
 
-    KeInitializeDpc (&Timer->Dpc, TimerFunction, FunctionContext);
+    KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
 }
 
 

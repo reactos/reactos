@@ -20,15 +20,24 @@ NdisAllocateMemoryWithTag(
     IN  UINT    Length,
     IN  ULONG   Tag)
 /*
- * FUNCTION:
+ * FUNCTION:  Allocates a block of memory, with a 32-bit tag
  * ARGUMENTS:
+ *   VirtualAddress = a pointer to the returned memory block
+ *   Length         = the number of requested bytes
+ *   Tag            = 32-bit pool tag 
  * NOTES:
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    PVOID Block;
 
-    return NDIS_STATUS_FAILURE;
+    /* Plain nonpaged memory with tag */
+    Block           = ExAllocatePoolWithTag(NonPagedPool, Length, Tag);
+    *VirtualAddress = Block;
+    if (!Block)
+        return NDIS_STATUS_FAILURE;
+
+	return NDIS_STATUS_SUCCESS;
 }
 
 

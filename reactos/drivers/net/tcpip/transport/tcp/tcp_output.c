@@ -15,7 +15,7 @@
  *
  *		Implementation of the Transmission Control Protocol(TCP).
  *
- * Version:	$Id: tcp_output.c,v 1.1 2003/01/15 21:57:31 chorns Exp $
+ * Version:	$Id: tcp_output.c,v 1.2 2003/07/24 18:14:59 royce Exp $
  *
  * Authors:	Ross Biro, <bir7@leland.Stanford.Edu>
  *		Fred N. van Kempen, <waltje@uWalt.NL.Mugnet.ORG>
@@ -1418,7 +1418,7 @@ void tcp_send_ack(struct sock *sk)
 		tcp_transmit_skb(sk, buff);
 	}
 #else
-  return 0;
+  return;
 #endif
 }
 

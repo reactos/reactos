@@ -167,13 +167,13 @@ DriverEntry(
     KeInitializeSpinLock(&DeviceExt->FCBListLock);
     InitializeListHead(&DeviceExt->FCBListHead);
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = AfdCreate;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = AfdClose;
-    DriverObject->MajorFunction[IRP_MJ_READ] = AfdRead;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdWrite;
-    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = AfdFileSystemControl;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)AfdCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)AfdClose;
+    DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)AfdRead;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)AfdWrite;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = (PDRIVER_DISPATCH)AfdFileSystemControl;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)AfdClose;
 
     DriverObject->DriverUnload = (PDRIVER_UNLOAD)AfdUnload;
 

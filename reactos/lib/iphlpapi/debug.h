@@ -28,6 +28,7 @@ extern DWORD DebugTraceLevel;
 		DbgPrint _x_; \
     }
 
+#if 0
 #ifdef ASSERT
 #undef ASSERT
 #endif
@@ -38,11 +39,13 @@ extern DWORD DebugTraceLevel;
 #define ASSERT(x) if (!(x)) { WSH_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); ExitProcess(0); }
 #endif /* NASSERT */
 
+#endif
+
 #else /* DBG */
 
 #define WSH_DbgPrint(_t_, _x_)
 
-#define ASSERT(x)
+/*#define ASSERT(x)*/
 
 #endif /* DBG */
 

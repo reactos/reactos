@@ -120,14 +120,14 @@
 
   This IOCTL is used to perform an OID set operation on the NIC driver. 
 */
-#define  BIOCSETOID 2147483648
+#define  BIOCSETOID 2147483648U
 
 /*!
   \brief IOCTL code: get an OID value
 
   This IOCTL is used to perform an OID get operation on the NIC driver. 
 */
-#define  BIOCQUERYOID 2147483652
+#define  BIOCQUERYOID 2147483652U
 
 /*!
   \brief IOCTL code: set the name of a the file used by kernel dump mode
@@ -713,6 +713,7 @@ NPF_StatusComplete(IN NDIS_HANDLE  ProtocolBindingContext);
   service (from control panel or with a console 'net stop npf').
 */
 VOID
+STDCALL_FUNC
 NPF_Unload(IN PDRIVER_OBJECT DriverObject);
 
 

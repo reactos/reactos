@@ -51,15 +51,12 @@ NdisCompleteUnbindAdapter(
 }
 
 
-/*
- * @unimplemented
- */
 VOID
 EXPORT
 NdisInitializeListHead(
     IN  PLIST_ENTRY ListHead)
 {
-    UNIMPLEMENTED
+	InitializeListHead(ListHead);
 }
 
 

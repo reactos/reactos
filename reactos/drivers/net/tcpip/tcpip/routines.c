@@ -137,7 +137,7 @@ __inline INT SkipToOffset(
         if (!Buffer)
             return -1;
 
-        NdisQueryBuffer(Buffer, Data, Size);
+        NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
             ((ULONG_PTR)*Data) += Offset;
@@ -203,7 +203,7 @@ UINT CopyBufferToBufferChain(
             if (!DstBuffer)
                 break;
 
-            NdisQueryBuffer(DstBuffer, &DstData, &DstSize);
+            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
         }
     }
 
@@ -262,7 +262,7 @@ UINT CopyBufferChainToBuffer(
             if (!SrcBuffer)
                 break;
 
-            NdisQueryBuffer(SrcBuffer, &SrcData, &SrcSize);
+            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
         }
     }
 
@@ -335,12 +335,12 @@ UINT CopyPacketToBufferChain(
     TI_DbgPrint(DEBUG_BUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcPacket, SrcOffset, Length));
 
     /* Skip DstOffset bytes in the destination buffer chain */
-    NdisQueryBuffer(DstBuffer, &DstData, &DstSize);
+    NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
     if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
         return 0;
 
     /* Skip SrcOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, &SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
 
@@ -369,7 +369,7 @@ UINT CopyPacketToBufferChain(
             if (!DstBuffer)
                 break;
 
-            NdisQueryBuffer(DstBuffer, &DstData, &DstSize);
+            NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
         }
 
         SrcSize -= Count;
@@ -380,7 +380,7 @@ UINT CopyPacketToBufferChain(
             if (!SrcBuffer)
                 break;
 
-            NdisQueryBuffer(SrcBuffer, &SrcData, &SrcSize);
+            NdisQueryBuffer(SrcBuffer, (PVOID)&SrcData, &SrcSize);
         }
     }
 

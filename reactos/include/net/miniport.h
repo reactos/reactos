@@ -4,6 +4,7 @@
  * FILE:        include/net/miniport.h
  * PURPOSE:     Type definitions available only to NDIS miniport drivers
  */
+#if 0
 #ifndef __MINIPORT_H
 #define __MINIPORT_H
 
@@ -847,3 +848,4 @@ WRITE_REGISTER_USHORT(
 #endif /* __MINIPORT_H */
 
 /* EOF */
+#endif

@@ -43,3 +43,4 @@ uint32 normal_lut_wo_insert(uint8 *key, TME_DATA *data, MEM_TYPE *mem_ex, struct
 #define DUMMY_INSERT                    1234
 
 #endif
+

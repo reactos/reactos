@@ -96,7 +96,7 @@ DriverEntry(
     UNICODE_STRING UnicodeDeviceName;
     PDEVICE_OBJECT DeviceObject = NULL;
     PDEVICE_EXTENSION DeviceExtension = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     NTSTATUS ErrorCode = STATUS_SUCCESS;
     NDIS_STRING ProtoName = NDIS_STRING_CONST("PacketDriver");
     ULONG          DevicesCreated=0;
@@ -173,11 +173,11 @@ DriverEntry(
     NdisAllocateSpinLock(&Opened_Instances_Lock);
 
     // Set up the device driver entry points.
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = NPF_Open;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = NPF_Close;
-    DriverObject->MajorFunction[IRP_MJ_READ]   = NPF_Read;
-    DriverObject->MajorFunction[IRP_MJ_WRITE]  = NPF_Write;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]  = NPF_IoControl;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)NPF_Open;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH)NPF_Close;
+    DriverObject->MajorFunction[IRP_MJ_READ]   = (PDRIVER_DISPATCH)NPF_Read;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]  = (PDRIVER_DISPATCH)NPF_Write;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]  = (PDRIVER_DISPATCH)NPF_IoControl;
     DriverObject->DriverUnload = NPF_Unload;
 
 /*

@@ -237,12 +237,10 @@ UINT CopyPacketToBufferChain(
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
     if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
         return 0;
-
     /* Skip SrcOffset bytes in the source packet */
     NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
         return 0;
-
     /* Copy the data */
     for (Total = 0;;) {
         /* Find out how many bytes we can copy at one time */

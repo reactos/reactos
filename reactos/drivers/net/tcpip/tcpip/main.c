@@ -400,12 +400,12 @@ NTSTATUS TiCleanupFileObject(
 
 
 NTSTATUS
-#ifndef _MSC_VER
-STDCALL
-#endif
+//#ifndef _MSC_VER
+STDCALL_FUNC
+//#endif
 TiDispatchOpenClose(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp)
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp)
 /*
  * FUNCTION: Main dispath routine
  * ARGUMENTS:
@@ -872,11 +872,11 @@ DriverEntry(
   TCPDeviceObject->Flags   |= DO_DIRECT_IO;
 
   /* Initialize the driver object with this driver's entry points */
-  DriverObject->MajorFunction[IRP_MJ_CREATE]  = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE]   = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = TiDispatchInternal;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
+  DriverObject->MajorFunction[IRP_MJ_CREATE]  = (PDRIVER_DISPATCH)TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE]   = (PDRIVER_DISPATCH)TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)TiDispatchInternal;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)TiDispatch;
 
   DriverObject->DriverUnload = (PDRIVER_UNLOAD)TiUnload;
 

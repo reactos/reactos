@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.48 2003/06/09 13:45:22 ekohl Exp $
+/* $Id: init.c,v 1.49 2003/07/24 18:14:59 royce Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -880,6 +880,8 @@ InitSessionManager(HANDLE Children[])
       return(Status);
     }
 
+  PrintString("SM: loading well-known DLLs\n");
+
   /* Load the well known DLLs */
   Status = SmLoadKnownDlls();
   if (!NT_SUCCESS(Status))
@@ -888,6 +890,8 @@ InitSessionManager(HANDLE Children[])
       /* Don't crash ReactOS if DLLs cannot be loaded */
     }
 
+  PrintString("SM: creating system paging files\n");
+
   /* Create paging files */
   Status = SmCreatePagingFiles();
   if (!NT_SUCCESS(Status))
@@ -895,6 +899,8 @@ InitSessionManager(HANDLE Children[])
       PrintString("SM: Failed to create paging files (Status %lx)\n", Status);
       return(Status);
     }
+
+  PrintString("SM: initializing registry\n");
 
   /* Load remaining registry hives */
   NtInitializeRegistry(FALSE);
@@ -909,6 +915,8 @@ InitSessionManager(HANDLE Children[])
     }
 #endif
 
+  PrintString("SM: loading subsystems\n");
+
   /* Load the subsystems */
   Status = SmLoadSubsystems();
   if (!NT_SUCCESS(Status))
@@ -916,6 +924,8 @@ InitSessionManager(HANDLE Children[])
       PrintString("SM: Failed to load subsystems (Status %lx)\n", Status);
       return(Status);
     }
+
+  PrintString("SM: initializing csrss\n");
 
   /* Run csrss.exe */
   RtlInitUnicodeStringFromLiteral(&UnicodeString,
@@ -985,6 +995,8 @@ InitSessionManager(HANDLE Children[])
   /*
    * Start the logon process (winlogon.exe)
    */
+
+  PrintString("SM: starting winlogon\n");
 
   /* initialize executable path */
   wcscpy(UnicodeBuffer, L"\\??\\");

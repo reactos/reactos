@@ -17,7 +17,7 @@ NDIS_STATUS
 EXPORT
 NdisAnsiStringToUnicodeString(
     IN OUT  PNDIS_STRING        DestinationString,
-    IN      PNDIS_ANSI_STRING   SourceString)
+    IN      PANSI_STRING   SourceString)
 /*
  * FUNCTION: Converts an ANSI string to an NDIS (unicode) string
  * ARGUMENTS:
@@ -61,7 +61,7 @@ NdisEqualString(
 VOID
 EXPORT
 NdisInitAnsiString(
-    IN OUT  PNDIS_ANSI_STRING   DestinationString,
+    IN OUT  PANSI_STRING   DestinationString,
     IN      PCSTR               SourceString)
 /*
  * FUNCTION: Initializes an ANSI string
@@ -131,7 +131,7 @@ NdisInitUnicodeString(
 NDIS_STATUS
 EXPORT
 NdisUnicodeStringToAnsiString(
-    IN OUT  PNDIS_ANSI_STRING   DestinationString,
+    IN OUT  PANSI_STRING   DestinationString,
     IN      PNDIS_STRING        SourceString)
 /*
  * FUNCTION: Converts an NDIS (unicode) string to an ANSI string

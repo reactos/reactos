@@ -407,4 +407,14 @@ typedef struct _NET_PNP_TRANSLATE_LIST
 
 #endif /* __NDISOID_H */
 
+/* PNP OIDs */
+#define OID_PNP_CAPABILITIES                     0xFD010100
+#define OID_PNP_SET_POWER                        0xFD010101
+#define OID_PNP_QUERY_POWER                      0xFD010102
+#define OID_PNP_ADD_WAKE_UP_PATTERN              0xFD010103
+#define OID_PNP_REMOVE_WAKE_UP_PATTERN           0xFD010104
+#define OID_PNP_WAKE_UP_PATTERN_LIST             0xFD010105
+#define OID_PNP_ENABLE_WAKE_UP                   0xFD010106
+
+
 /* EOF */

@@ -171,6 +171,7 @@ NdisInterlockedInsertTailList@12
 NdisInterlockedPopEntrySList@8
 NdisInterlockedPushEntrySList@12
 NdisInterlockedRemoveHeadList@8
+NdisInitializeListHead@4
 NdisMAllocateMapRegisters@20
 NdisMAllocateSharedMemory@20
 NdisMAllocateSharedMemoryAsync@16
