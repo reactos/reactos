@@ -1,3 +1,7 @@
+#
+# Jamfile for Explorer to be used with Boost Build V2
+#
+
 
 # import rc ;
 import rc-mingw ;
