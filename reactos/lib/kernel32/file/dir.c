@@ -54,7 +54,7 @@ CreateDirectoryExA (
    PWCHAR NewDirectoryW = NULL;
    BOOL ret;
 
-   if (TemplateDirectoryW != NULL &&
+   if (lpTemplateDirectory != NULL &&
        !(TemplateDirectoryW = FilenameA2W(lpTemplateDirectory, FALSE)))
       return FALSE;
       
