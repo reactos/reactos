@@ -34,8 +34,6 @@
 #include <stdio.h>
 #endif
 
-#include <shellapi.h>
-//#include <winspool.h>
 #include <windowsx.h>
 #include <shellapi.h>
 #include <ctype.h>
@@ -153,10 +151,6 @@ static void init_output(HWND hWnd)
 HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
 { 
     HTREEITEM hItem = 0;
-#if 0
-    hItem = AddItemToTree(hwndTV, entry->data.cFileName, entry->level);
-#else
-//HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel)
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
     static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
@@ -222,7 +216,6 @@ HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
     } 
  */
     hItem = hPrev; 
-#endif
     return hItem;
 }
 
@@ -322,31 +315,6 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     return TRUE; 
 } 
 
-// CreateTreeView - creates a tree view control. 
-// Returns the handle to the new control if successful,
-// or NULL otherwise. 
-// hwndParent - handle to the control's parent window. 
-
-static HWND CreateTreeView(HWND hwndParent, int id) 
-{ 
-    RECT rcClient;  // dimensions of client area 
-    HWND hwndTV;    // handle to tree view control 
- 
-    // Get the dimensions of the parent window's client area, and create 
-    // the tree view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
-    // Initialize the image list, and add items to the control. 
-    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV)) { 
-        DestroyWindow(hwndTV); 
-        return NULL; 
-    } 
-    return hwndTV;
-} 
-
 #ifndef _MSC_VER
 #define NMTVDISPINFO TV_DISPINFO
 #define NMTVDISPINFO TV_DISPINFO
@@ -433,7 +401,6 @@ static BOOL OnExpanding(HWND hWnd, NMTREEVIEW* pnmtv)
 { 
     static int expanding;
 
-    //LPARAM parm = pnmtv->itemNew.lParam;
     Entry* entry = (Entry*)pnmtv->itemNew.lParam;
 
     TRACE(_T("TreeWndProc(...) OnExpanding() entry: %p\n"), entry);
@@ -467,54 +434,79 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
 	switch (message) {
 #ifndef _NO_EXTENSIONS
-		case WM_HSCROLL:
-			set_header(pane);
-			break;
+	case WM_HSCROLL:
+		set_header(pane);
+		break;
 #endif
-        case WM_NOTIFY:
-            switch (((LPNMHDR)lParam)->code) { 
-            case TVM_EXPAND: 
-                //return OnExpand((int)wParam, (HTREEITEM*)lParam);
-                OnExpand((int)wParam, (HTREEITEM*)lParam);
-                break;
-            case TVN_GETDISPINFO: 
-                OnGetDispInfo((NMTVDISPINFO*)lParam); 
-                break; 
-            case TVN_ITEMEXPANDING: 
-                return OnExpanding(hWnd, (NMTREEVIEW*)lParam);
-                break;
-//            case TVN_SELCHANGED:
-//                return OnSelChanged((NMTREEVIEW*)lParam);
-//                break;
-#if 0
-            case TVN_SINGLEEXPAND:
-                TRACE("TreeWndProc(...) TVN_SINGLEEXPAND\n");
-                //lpnmtv = (LPNMTREEVIEW)lParam;
-                //return TVNRET_DEFAULT;
-//                return TVNRET_SKIPOLD; // Skip default processing of the item being unselected. 
-//                return TVNRET_SKIPNEW; // Skip default processing of the item being selected. 
-                break;
-#endif
-            case TVN_ENDLABELEDIT: 
-                return OnEndLabelEdit((NMTVDISPINFO*)lParam);
-                break;
-            }
-            return 0;
-			break;
-		case WM_SETFOCUS:
-			child->nFocusPanel = pane == &child->right? 1: 0;
-			//ListBox_SetSel(hWnd, TRUE, 1);
-			//TODO: check menu items
-			break;
-		case WM_KEYDOWN:
-			if (wParam == VK_TAB) {
-				//TODO: SetFocus(Globals.hDriveBar)
-				SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
-			}
+    case WM_NOTIFY:
+        switch (((LPNMHDR)lParam)->code) { 
+        case TVM_EXPAND: 
+            //return OnExpand((int)wParam, (HTREEITEM*)lParam);
+            OnExpand((int)wParam, (HTREEITEM*)lParam);
             break;
+        case TVN_GETDISPINFO: 
+            OnGetDispInfo((NMTVDISPINFO*)lParam); 
+            break; 
+        case TVN_ITEMEXPANDING: 
+            return OnExpanding(hWnd, (NMTREEVIEW*)lParam);
+            break;
+        case TVN_SELCHANGED:
+//            return OnSelChanged((NMTREEVIEW*)lParam);
+//           break;
+#if 0
+        case TVN_SINGLEEXPAND:
+            TRACE("TreeWndProc(...) TVN_SINGLEEXPAND\n");
+            //lpnmtv = (LPNMTREEVIEW)lParam;
+            //return TVNRET_DEFAULT;
+//            return TVNRET_SKIPOLD; // Skip default processing of the item being unselected. 
+//            return TVNRET_SKIPNEW; // Skip default processing of the item being selected. 
+            break;
+#endif
+        case TVN_ENDLABELEDIT: 
+            return OnEndLabelEdit((NMTVDISPINFO*)lParam);
+            break;
+        }
+        return 0;
+		break;
+	case WM_SETFOCUS:
+		child->nFocusPanel = pane == &child->right? 1: 0;
+		//ListBox_SetSel(hWnd, TRUE, 1);
+		//TODO: check menu items
+		break;
+	case WM_KEYDOWN:
+		if (wParam == VK_TAB) {
+			//TODO: SetFocus(Globals.hDriveBar)
+			SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
+		}
+        break;
 	}
 	return CallWindowProc(g_orgTreeWndProc, hWnd, message, wParam, lParam);
 }
+
+// CreateTreeView - creates a tree view control. 
+// Returns the handle to the new control if successful,
+// or NULL otherwise. 
+// hwndParent - handle to the control's parent window. 
+
+static HWND CreateTreeView(HWND hwndParent, int id) 
+{ 
+    RECT rcClient;  // dimensions of client area 
+    HWND hwndTV;    // handle to tree view control 
+ 
+    // Get the dimensions of the parent window's client area, and create 
+    // the tree view control. 
+    GetClientRect(hwndParent, &rcClient); 
+    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
+        WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+        0, 0, rcClient.right, rcClient.bottom, 
+        hwndParent, (HMENU)id, hInst, NULL); 
+    // Initialize the image list, and add items to the control. 
+    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV)) { 
+        DestroyWindow(hwndTV); 
+        return NULL; 
+    } 
+    return hwndTV;
+} 
 
 //void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPTSTR lpszFileName)
 void CreateTreeWnd(HWND parent, Pane* pane, int id)
