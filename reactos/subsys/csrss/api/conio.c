@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.42 2003/03/02 01:24:37 mdill Exp $
+/* $Id: conio.c,v 1.43 2003/03/09 21:40:19 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -46,6 +46,12 @@ CSR_API(CsrAllocConsole)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE);
+
+   if (ProcessData == NULL)
+   {
+     return(Reply->Status = STATUS_INVALID_PARAMETER);
+   }
+
    if( ProcessData->Console )
       {
 	 Reply->Status = STATUS_INVALID_PARAMETER;
@@ -116,6 +122,11 @@ CSR_API(CsrFreeConsole)
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE);
 
+   if (ProcessData == NULL)
+   {
+     return(Reply->Status = STATUS_INVALID_PARAMETER);
+   }
+
    Reply->Status = STATUS_NOT_IMPLEMENTED;
    
    return(STATUS_NOT_IMPLEMENTED);
@@ -136,8 +147,8 @@ CSR_API(CsrReadConsole)
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = Reply->Header.MessageSize -
      sizeof(LPC_MESSAGE);
+
    Buffer = Reply->Data.ReadConsoleReply.Buffer;
-   Reply->Data.ReadConsoleReply.EventHandle = ProcessData->ConsoleEvent;
    LOCK;   
    Status = CsrGetObject( ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle, (Object_t **)&Console );
    if( !NT_SUCCESS( Status ) )
@@ -152,11 +163,12 @@ CSR_API(CsrReadConsole)
 	 UNLOCK;
 	 return STATUS_INVALID_HANDLE;
       }
+   Reply->Data.ReadConsoleReply.EventHandle = ProcessData->ConsoleEvent;
    for (; i<nNumberOfCharsToRead && Console->InputEvents.Flink != &Console->InputEvents; i++ )     
       {
 	 // remove input event from queue
-   CurrentEntry = RemoveHeadList(&Console->InputEvents);
-   Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+        CurrentEntry = RemoveHeadList(&Console->InputEvents);
+        Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
 	 // only pay attention to valid ascii chars, on key down
 	 if( Input->InputEvent.EventType == KEY_EVENT &&
@@ -257,8 +269,8 @@ NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWOR
 	    case '\n':
 	       Buff->CurrentX = 0;
 	       /* slide the viewable screen */
-	       if( ((PhysicalConsoleSize.Y + Buff->ShowY) % Buff->MaxY) == (Buff->CurrentY + 1) % Buff->MaxY)
-		 if( ++Buff->ShowY == (Buff->MaxY - 1) )
+	       if (((Buff->CurrentY-Buff->ShowY + Buff->MaxY) % Buff->MaxY) == PhysicalConsoleSize.Y - 1)
+	         if (++Buff->ShowY == Buff->MaxY)
 		   Buff->ShowY = 0;
 	       if( ++Buff->CurrentY == Buff->MaxY )
 		  {
@@ -317,7 +329,7 @@ NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWOR
 		     /* clear new line */
 		     ClearLineBuffer (Buff, 0);
 		     /* slide the viewable screen */
-		     if( (Buff->CurrentY - Buff->ShowY) == PhysicalConsoleSize.Y )
+	             if( (Buff->CurrentY - Buff->ShowY + Buff->MaxY - 1) % Buff->MaxY == PhysicalConsoleSize.Y -1)
 		       if( ++Buff->ShowY == Buff->MaxY )
 			 Buff->ShowY = 0;
 		  }
@@ -344,13 +356,13 @@ NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWOR
 }
 
 #define CsrpRectHeight(Rect) \
-  ((Rect.Bottom) - (Rect.Top) + 1)
+    ((Rect.Top) > (Rect.Bottom) ? 0 : (Rect.Bottom) - (Rect.Top) + 1)
 
 #define CsrpRectWidth(Rect) \
-  ((Rect.Right) - (Rect.Left) + 1)
+    ((Rect.Left) > (Rect.Right) ? 0 : (Rect.Right) - (Rect.Left) + 1)
 
 #define CsrpIsRectEmpty(Rect) \
-  ((Rect.Left >= Rect.Right) || (Rect.Top >= Rect.Bottom))
+  ((Rect.Left > Rect.Right) || (Rect.Top > Rect.Bottom))
 
 
 inline BOOLEAN CsrpIsEqualRect(
@@ -368,13 +380,13 @@ inline BOOLEAN CsrpGetIntersection(
 {
   if (CsrpIsRectEmpty(Rect1) ||
     (CsrpIsRectEmpty(Rect2)) ||
-    (Rect1.Top >= Rect2.Bottom) ||
-    (Rect1.Left >= Rect2.Right) ||
-    (Rect1.Bottom <= Rect2.Top) ||
-    (Rect1.Right <= Rect2.Left))
+    (Rect1.Top > Rect2.Bottom) ||
+    (Rect1.Left > Rect2.Right) ||
+    (Rect1.Bottom < Rect2.Top) ||
+    (Rect1.Right < Rect2.Left))
   {
     /* The rectangles do not intersect */
-    CsrpInitRect(*Intersection, 0, 0, 0, 0)
+    CsrpInitRect(*Intersection, 0, -1, 0, -1)
     return FALSE;
   }
 
@@ -396,7 +408,7 @@ inline BOOLEAN CsrpGetUnion(
     {
 	    if (CsrpIsRectEmpty(Rect2))
 	    {
-	      CsrpInitRect(*Union, 0, 0, 0, 0);
+	      CsrpInitRect(*Union, 0, -1, 0, -1);
 	      return FALSE;
 	    }
 	  else
@@ -430,7 +442,7 @@ inline BOOLEAN CsrpSubtractRect(
 
   if (CsrpIsRectEmpty(Rect1))
     {
-	    CsrpInitRect(*Subtraction, 0, 0, 0, 0);
+	    CsrpInitRect(*Subtraction, 0, -1, 0, -1);
 	    return FALSE;
     }
   *Subtraction = Rect1;
@@ -438,7 +450,7 @@ inline BOOLEAN CsrpSubtractRect(
     {
 	    if (CsrpIsEqualRect(tmp, *Subtraction))
 	      {
-	        CsrpInitRect(*Subtraction, 0, 0, 0, 0);
+	        CsrpInitRect(*Subtraction, 0, -1, 0, -1);
 	        return FALSE;
 	      }
 	    if ((tmp.Top == Subtraction->Top) && (tmp.Bottom == Subtraction->Bottom))
@@ -471,18 +483,42 @@ static VOID CsrpCopyRegion(
   DWORD SrcOffset;
   DWORD DstOffset;
   DWORD BytesPerLine;
+  ULONG i;
 
   DstY = DstRegion.Top;
   BytesPerLine = CsrpRectWidth(DstRegion) * 2;
-  for (SrcY = SrcRegion.Top; SrcY <= SrcRegion.Bottom; SrcY++)
+
+  SrcY = (SrcRegion.Top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
+  DstY = (DstRegion.Top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
+  SrcOffset = (SrcY * ScreenBuffer->MaxX + SrcRegion.Left + ScreenBuffer->ShowX) * 2;
+  DstOffset = (DstY * ScreenBuffer->MaxX + DstRegion.Left + ScreenBuffer->ShowX) * 2;
+  
+  for (i = SrcRegion.Top; i <= SrcRegion.Bottom; i++)
   {
-    SrcOffset = (SrcY * ScreenBuffer->MaxX * 2) + (SrcRegion.Left * 2);
-    DstOffset = (DstY * ScreenBuffer->MaxX * 2) + (DstRegion.Left * 2);
     RtlCopyMemory(
       &ScreenBuffer->Buffer[DstOffset],
       &ScreenBuffer->Buffer[SrcOffset],
       BytesPerLine);
-    DstY++;
+
+    if (++DstY == ScreenBuffer->MaxY)
+    {
+      DstY = 0;
+      DstOffset = (DstRegion.Left + ScreenBuffer->ShowX) * 2;
+    }
+    else
+    {
+      DstOffset += ScreenBuffer->MaxX * 2;
+    }
+
+    if (++SrcY == ScreenBuffer->MaxY)
+    {
+      SrcY = 0;
+      SrcOffset = (SrcRegion.Left + ScreenBuffer->ShowX) * 2;
+    }
+    else
+    {
+      SrcOffset += ScreenBuffer->MaxX * 2;
+    }
   }
 }
 
@@ -496,13 +532,27 @@ static VOID CsrpFillRegion(
 {
   SHORT X, Y;
   DWORD Offset;
+  DWORD Delta;
+  ULONG i;
 
-  for (Y = Region.Top; Y <= Region.Bottom; Y++)
+  Y = (Region.Top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
+  Offset = (Y * ScreenBuffer->MaxX + Region.Left + ScreenBuffer->ShowX) * 2;
+  Delta = (ScreenBuffer->MaxX - CsrpRectWidth(Region)) * 2;
+
+  for (i = Region.Top; i <= Region.Bottom; i++)
   {
-    Offset = (Y * ScreenBuffer->MaxX + Region.Left) * 2;
     for (X = Region.Left; X <= Region.Right; X++)
     {
       SET_CELL_BUFFER(ScreenBuffer, Offset, CharInfo.Char.AsciiChar, CharInfo.Attributes);
+    }
+    if (++Y == ScreenBuffer->MaxY)
+    {
+      Y = 0;
+      Offset = (Region.Left + ScreenBuffer->ShowX) * 2;
+    }
+    else
+    {
+      Offset += Delta;
     }
   }
 }
@@ -551,13 +601,12 @@ static VOID CsrpDrawRegion(
 
    /* blast out buffer */
    BytesPerLine = CsrpRectWidth(Region) * 2;
-   SrcOffset = (Region.Top * ScreenBuffer->MaxX + Region.Left) * 2;
+   SrcOffset = (((Region.Top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY) * ScreenBuffer->MaxX + Region.Left + ScreenBuffer->ShowX) * 2;
    SrcDelta = ScreenBuffer->MaxX * 2;
-   for( i = Region.Top - ScreenBuffer->ShowY, y = ScreenBuffer->ShowY;
-        i <= Region.Bottom - ScreenBuffer->ShowY; i++ )
+   for( i = Region.Top, y = ScreenBuffer->ShowY; i <= Region.Bottom; i++ )
      {
         /* Position the cursor correctly */
-        Status = CsrpSetConsoleDeviceCursor(ScreenBuffer, Region.Left - ScreenBuffer->ShowX, i);
+        Status = CsrpSetConsoleDeviceCursor(ScreenBuffer, Region.Left, i);
         if( !NT_SUCCESS( Status ) )
           {
             DbgPrint( "CSR: Failed to set console info\n" );
@@ -577,7 +626,7 @@ static VOID CsrpDrawRegion(
        if( ++y == ScreenBuffer->MaxY )
        {
 	 y = 0;
-         SrcOffset = Region.Left * 2;
+         SrcOffset = (Region.Left + ScreenBuffer->ShowX) * 2;
        }
        else
        {
@@ -616,6 +665,8 @@ CSR_API(CsrWriteConsole)
 {
    BYTE *Buffer = Request->Data.WriteConsoleRequest.Buffer;
    PCSRSS_SCREEN_BUFFER Buff;
+
+   DPRINT("CsrWriteConsole\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -738,10 +789,10 @@ VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Buff )
 
    CsrpInitRect(
      Region,
-     Buff->ShowY,
-     Buff->ShowX,
-     Buff->ShowY + PhysicalConsoleSize.Y - 1,
-     Buff->ShowX + PhysicalConsoleSize.X - 1);
+     0,
+     0,
+     PhysicalConsoleSize.Y - 1,
+     PhysicalConsoleSize.X - 1);
 
    CsrpDrawRegion(Buff, Region);
 }
@@ -904,7 +955,6 @@ VOID Console_Api( DWORD RefreshEvent )
 	      ANSI_STRING Title;
 	      void * Buffer;
 	      COORD *pos;
-	      unsigned int src, dst;
 	      
 	       /* alt-tab, swap consoles */
 	       // move SwapConsole to next console, and print its title
@@ -919,18 +969,13 @@ VOID Console_Api( DWORD RefreshEvent )
 	      Title.Length = 0;
 	      Buffer = RtlAllocateHeap( CsrssApiHeap,
 					0,
-					sizeof( COORD ) + Title.MaximumLength );
+					sizeof( COORD ) + Title.MaximumLength);
 	      pos = (COORD *)Buffer;
 	      Title.Buffer = Buffer + sizeof( COORD );
 
-	      /* this does not seem to work
-		 RtlUnicodeStringToAnsiString( &Title, &SwapConsole->Title, FALSE ); */
-	      // temp hack
-	      for( src = 0, dst = 0; src <= SwapConsole->Title.Length; src += sizeof(WCHAR), dst++ )
-		Title.Buffer[dst] = (char)SwapConsole->Title.Buffer[dst];
-	      
+              RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
 	      pos->Y = PhysicalConsoleSize.Y / 2;
-	      pos->X = ( PhysicalConsoleSize.X - Title.MaximumLength ) / 2;
+	      pos->X = ( PhysicalConsoleSize.X - Title.Length ) / 2;
 	      // redraw the console to clear off old title
 	      CsrDrawConsole( ActiveConsole->ActiveBuffer );
 	      Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
@@ -942,7 +987,7 @@ VOID Console_Api( DWORD RefreshEvent )
 					      0,
 					      0,
 					      Buffer,
-					      sizeof (COORD) + Title.MaximumLength );
+					      sizeof (COORD) + Title.Length);
 	      if( !NT_SUCCESS( Status ) )
 		{
 		  DPRINT1( "Error writing to console\n" );
@@ -1196,6 +1241,8 @@ CSR_API(CsrWriteConsoleOutputChar)
    DWORD X, Y;
    NTSTATUS Status;
    IO_STATUS_BLOCK Iosb;
+
+   DPRINT("CsrWriteConsoleOutputChar\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -1209,24 +1256,9 @@ CSR_API(CsrWriteConsoleOutputChar)
    X = Buff->CurrentX;
    Y = Buff->CurrentY;
    Buff->CurrentX = Request->Data.WriteConsoleOutputCharRequest.Coord.X;
-   Buff->CurrentY = Request->Data.WriteConsoleOutputCharRequest.Coord.Y;
+   Buff->CurrentY = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
    Buffer[Request->Data.WriteConsoleOutputCharRequest.Length] = 0;
    CsrpWriteConsole( Buff, Buffer, Request->Data.WriteConsoleOutputCharRequest.Length, FALSE );
-   if( ActiveConsole->ActiveBuffer == Buff )
-     {
-       Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
-				       NULL,
-				       NULL,
-				       NULL,
-				       &Iosb,
-				       IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				       0,
-				       0,
-				       &Request->Data.WriteConsoleOutputCharRequest.Coord,
-				       sizeof (COORD) + Request->Data.WriteConsoleOutputCharRequest.Length );
-       if( !NT_SUCCESS( Status ) )
-	 DPRINT1( "Failed to write output chars: %x\n", Status );
-     }
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Buff->CurrentY + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
    Buff->CurrentY = Y;
@@ -1239,6 +1271,8 @@ CSR_API(CsrFillOutputChar)
 {
    PCSRSS_SCREEN_BUFFER Buff;
    DWORD X, Y, i;
+
+   DPRINT("CsrFillOutputChar\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -1251,7 +1285,7 @@ CSR_API(CsrFillOutputChar)
 	 return Reply->Status = STATUS_INVALID_HANDLE;
       }
    X = Request->Data.FillOutputRequest.Position.X + Buff->ShowX;
-   Y = Request->Data.FillOutputRequest.Position.Y + Buff->ShowY;
+   Y = (Request->Data.FillOutputRequest.Position.Y + Buff->ShowY) % Buff->MaxY;
    for( i = 0; i < Request->Data.FillOutputRequest.Length; i++ )
       {
 	 Buff->Buffer[ (Y * 2 * Buff->MaxX) + (X * 2) ] = Request->Data.FillOutputRequest.Char;
@@ -1345,6 +1379,8 @@ CSR_API(CsrWriteConsoleOutputAttrib)
    NTSTATUS Status;
    int X, Y;
    IO_STATUS_BLOCK Iosb;
+
+   DPRINT("CsrWriteConsoleOutputAttrib\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -1403,6 +1439,8 @@ CSR_API(CsrFillOutputAttrib)
    int X, Y;
    IO_STATUS_BLOCK Iosb;
    OUTPUT_ATTRIBUTE Attr;
+
+   DPRINT("CsrFillOutputAttrib\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -1418,7 +1456,7 @@ CSR_API(CsrFillOutputAttrib)
    X = Buff->CurrentX;
    Y = Buff->CurrentY;
    Buff->CurrentX = Request->Data.FillOutputAttribRequest.Coord.X + Buff->ShowX;
-   Buff->CurrentY = Request->Data.FillOutputAttribRequest.Coord.Y + Buff->ShowY;
+   Buff->CurrentY = (Request->Data.FillOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
    for( c = 0; c < Request->Data.FillOutputAttribRequest.Length; c++ )
       {
 	 Buff->Buffer[(Buff->CurrentY * Buff->MaxX * 2) + (Buff->CurrentX * 2) + 1] = Request->Data.FillOutputAttribRequest.Attribute;
@@ -1514,6 +1552,8 @@ CSR_API(CsrSetTextAttrib)
    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
    IO_STATUS_BLOCK Iosb;
    PCSRSS_SCREEN_BUFFER Buff;
+
+   DPRINT("CsrSetTextAttrib\n");
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
@@ -1609,11 +1649,18 @@ CSR_API(CsrGetConsoleMode)
 
 CSR_API(CsrCreateScreenBuffer)
 {
-   PCSRSS_SCREEN_BUFFER Buff = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
+   PCSRSS_SCREEN_BUFFER Buff;
    NTSTATUS Status;
    
    Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   if (ProcessData == NULL)
+   {
+     return(Reply->Status = STATUS_INVALID_PARAMETER);
+   }
+
+   Buff = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( CSRSS_SCREEN_BUFFER ) );
    if( !Buff )
       Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
    LOCK;
@@ -1732,6 +1779,8 @@ CSR_API(CsrWriteConsoleOutput)
    DWORD Offset;
    DWORD PSize;
 
+   DPRINT("CsrWriteConsoleOutput\n");
+
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
    LOCK;
@@ -1759,8 +1808,8 @@ CSR_API(CsrWriteConsoleOutput)
 
    SizeY = RtlMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(WriteRegion));
    SizeX = RtlMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(WriteRegion));
-   WriteRegion.Bottom = WriteRegion.Top + SizeY;
-   WriteRegion.Right = WriteRegion.Left + SizeX;
+   WriteRegion.Bottom = WriteRegion.Top + SizeY - 1;
+   WriteRegion.Right = WriteRegion.Left + SizeX - 1;
 
    /* Make sure WriteRegion is inside the screen buffer */
    CsrpInitRect(ScreenBuffer, 0, 0, Buff->MaxY - 1, Buff->MaxX - 1);
@@ -1774,8 +1823,8 @@ CSR_API(CsrWriteConsoleOutput)
 
    for ( i = 0, Y = WriteRegion.Top; Y <= WriteRegion.Bottom; i++, Y++ )
    {
-     CurCharInfo = CharInfo + (i * BufferSize.Y);
-     Offset = (Y * Buff->MaxX + WriteRegion.Left) * 2;
+     CurCharInfo = CharInfo + (i + BufferCoord.Y) * BufferSize.X + BufferCoord.X;
+     Offset = (((Y + Buff->ShowY) % Buff->MaxY) * Buff->MaxX + WriteRegion.Left) * 2;
      for ( X = WriteRegion.Left; X <= WriteRegion.Right; X++ )
       {
         SET_CELL_BUFFER(Buff, Offset, CurCharInfo->Char.AsciiChar, CurCharInfo->Attributes);
@@ -1959,7 +2008,7 @@ CSR_API(CsrReadConsoleOutputChar)
     }
 
   Xpos = Request->Data.ReadConsoleOutputCharRequest.ReadCoord.X + ScreenBuffer->ShowX;
-  Ypos = Request->Data.ReadConsoleOutputCharRequest.ReadCoord.Y + ScreenBuffer->ShowY;
+  Ypos = (Request->Data.ReadConsoleOutputCharRequest.ReadCoord.Y + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
 
   for (i = 0; i < Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead; ++i)
     {
@@ -1982,7 +2031,7 @@ CSR_API(CsrReadConsoleOutputChar)
 
   Reply->Status = STATUS_SUCCESS;
   Reply->Data.ReadConsoleOutputCharReply.EndCoord.X = Xpos - ScreenBuffer->ShowX;
-  Reply->Data.ReadConsoleOutputCharReply.EndCoord.Y = Ypos - ScreenBuffer->ShowY;
+  Reply->Data.ReadConsoleOutputCharReply.EndCoord.Y = (Ypos - ScreenBuffer->ShowY + ScreenBuffer->MaxY) % ScreenBuffer->MaxY;
   Reply->Header.MessageSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
   Reply->Header.DataSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
 
@@ -2022,7 +2071,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
     }
 
   Xpos = Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.X + ScreenBuffer->ShowX;
-  Ypos = Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.Y + ScreenBuffer->ShowY;
+  Ypos = (Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.Y + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
 
   for (i = 0; i < Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead; ++i)
     {
@@ -2045,7 +2094,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
 
   Reply->Status = STATUS_SUCCESS;
   Reply->Data.ReadConsoleOutputAttribReply.EndCoord.X = Xpos - ScreenBuffer->ShowX;
-  Reply->Data.ReadConsoleOutputAttribReply.EndCoord.Y = Ypos - ScreenBuffer->ShowY;
+  Reply->Data.ReadConsoleOutputAttribReply.EndCoord.Y = (Ypos - ScreenBuffer->ShowY + ScreenBuffer->MaxY) % ScreenBuffer->MaxY;
   Reply->Header.MessageSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
   Reply->Header.DataSize += Request->Data.ReadConsoleOutputAttribRequest.NumAttrsToRead;
 
@@ -2242,7 +2291,7 @@ CSR_API(CsrReadConsoleOutput)
    {
      CurCharInfo = CharInfo + (i * BufferSize.Y);
      
-     Offset = (Y * ScreenBuffer->MaxX + ReadRegion.Left) * 2;
+     Offset = (((Y + ScreenBuffer->ShowY) % ScreenBuffer->MaxY) * ScreenBuffer->MaxX + ReadRegion.Left) * 2;
      for(X = ReadRegion.Left; X < ReadRegion.Right; ++X)
      {
         CurCharInfo->Char.AsciiChar = GET_CELL_BUFFER(ScreenBuffer, Offset);
