@@ -35,21 +35,21 @@ all: reactos.a
 reactos.a:	$(OBJS)
 	$(LD) -r -o reactos.a $(OBJS)
 
-reactos.o:	reactos.c ../reactos.h Makefile
+reactos.o:	reactos.c ../reactos.h
 	$(CC) $(FLAGS) -o reactos.o -c reactos.c
 
-arcname.o:	arcname.c ../reactos.h Makefile
+arcname.o:	arcname.c ../reactos.h
 	$(CC) $(FLAGS) -o arcname.o -c arcname.c
 
-hwdetect.o:	hwdetect.c ../reactos.h Makefile
+hwdetect.o:	hwdetect.c ../reactos.h
 	$(CC) $(FLAGS) -o hwdetect.o -c hwdetect.c
 
-reghive.o:	reghive.c ../reactos.h Makefile
+reghive.o:	reghive.c ../reactos.h
 	$(CC) $(FLAGS) -o reghive.o -c reghive.c
 
-registry.o:	registry.c ../reactos.h Makefile
+registry.o:	registry.c ../reactos.h
 	$(CC) $(FLAGS) -o registry.o -c registry.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

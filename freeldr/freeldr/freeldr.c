@@ -160,7 +160,7 @@ ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSys
 {
 	UCHAR	DefaultOSText[80];
 	ULONG	SectionId;
-	ULONG	DefaultOS;
+	ULONG	DefaultOS = 0;
 	ULONG	Idx;
 
 	if (!OpenSection("FreeLoader", &SectionId))
@@ -178,10 +178,6 @@ ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSys
 				break;
 			}
 		}
-	}
-	else
-	{
-		DefaultOS = 0;
 	}
 
 	return DefaultOS;

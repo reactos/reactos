@@ -35,12 +35,12 @@ all: fs.a
 fs.a:	$(OBJS)
 	$(LD) -r -o fs.a $(OBJS)
 
-fs.o:	fs.c fat.h ../fs.h Makefile
+fs.o:	fs.c fat.h ../fs.h
 	$(CC) $(FLAGS) -o fs.o -c fs.c
 
-fat.o:	fat.c fat.h ../fs.h Makefile
+fat.o:	fat.c fat.h ../fs.h
 	$(CC) $(FLAGS) -o fat.o -c fat.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

@@ -35,12 +35,12 @@ all: comm.a
 comm.a:	$(OBJS)
 	$(LD) -r -o comm.a $(OBJS)
 
-rs232.o:	rs232.c ../comm.h Makefile
+rs232.o:	rs232.c ../comm.h
 	$(CC) $(FLAGS) -o rs232.o -c rs232.c
 
-portio.o:	portio.c ../comm.h Makefile
+portio.o:	portio.c ../comm.h
 	$(CC) $(FLAGS) -o portio.o -c portio.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

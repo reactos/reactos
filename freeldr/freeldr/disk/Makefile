@@ -35,9 +35,9 @@ all: disk.a
 disk.a:	$(OBJS)
 	$(LD) -r -o disk.a $(OBJS)
 
-disk.o:	disk.c ../disk.h Makefile
+disk.o:	disk.c ../disk.h
 	$(CC) $(FLAGS) -o disk.o -c disk.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

@@ -35,12 +35,12 @@ all: ui.a
 ui.a:	$(OBJS)
 	$(LD) -r -o ui.a $(OBJS)
 
-tui.o:	tui.c ../ui.h Makefile
+tui.o:	tui.c ../ui.h
 	$(CC) $(FLAGS) -o tui.o -c tui.c
 
-menu.o:	menu.c ../ui.h Makefile
+menu.o:	menu.c ../ui.h
 	$(CC) $(FLAGS) -o menu.o -c menu.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

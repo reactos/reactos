@@ -35,18 +35,18 @@ all: rtl.a
 rtl.a:	$(OBJS)
 	$(LD) -r -o rtl.a $(OBJS)
 
-memory.o:	memory.c ../rtl.h Makefile
+memory.o:	memory.c ../rtl.h
 	$(CC) $(FLAGS) -o memory.o -c memory.c
 
-print.o:	print.c ../rtl.h Makefile
+print.o:	print.c ../rtl.h
 	$(CC) $(FLAGS) -o print.o -c print.c
 
-stdlib.o:	stdlib.c ../rtl.h Makefile
+stdlib.o:	stdlib.c ../rtl.h
 	$(CC) $(FLAGS) -o stdlib.o -c stdlib.c
 
-string.o:	string.c ../rtl.h Makefile
+string.o:	string.c ../rtl.h
 	$(CC) $(FLAGS) -o string.o -c string.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a

@@ -18,24 +18,24 @@
 #
 	
 
-export CC = gcc
-export LD = ld
-export AR = ar
-export RM = cmd /C del
-export CP = cmd /C copy
+export CC		= gcc
+export LD		= ld
+export AR		= ar
+export RM		= cmd /C del
+export CP		= cmd /C copy
+export MAKE		= make
 
-#FLAGS = -Wall -nostdinc -fno-builtin
-FLAGS = -Wall -fno-builtin -I./ -DDEBUG -O3
-#FLAGS = -Wall -fno-builtin
+#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -DDEBUG -O3
+FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -DDEBUG -O3
 
 # asmcode.o has to be first in the link line because it contains the startup code
 #OBJS = asmcode.a asmcode.o mb.o boot.o freeldr.o rtl.o fs.a fs.o fat.o \
 #	reactos.o tui.o menu.o miscboot.o options.o linux.o multiboot.o arcname.o \
 #	mem.o memory.o debug.o parseini.o registry.o import.o
 ASM_OBJS = asmcode.o mb.o boot.o mem.o
-C_OBJS = freeldr.o rtl/rtl.a fs/fs.a ui/ui.a miscboot.o options.o linux.o multiboot.o \
-		 reactos/reactos.a comm/comm.a disk/disk.a mm/mm.a
-C_OBJS2 = debug.o parseini.o oslist.o
+OBJS = freeldr.o miscboot.o options.o linux.o multiboot.o debug.o parseini.o oslist.o
+LIBS = rtl fs ui reactos comm disk mm
+LIB_FILES = rtl/rtl.a fs/fs.a ui/ui.a reactos/reactos.a comm/comm.a disk/disk.a mm/mm.a
 
 .PHONY : clean
 
@@ -51,62 +51,38 @@ freeldr.exe:	asmcode.a c_code.a
 asmcode.a:	$(ASM_OBJS)
 	$(LD) -r -o asmcode.a $(ASM_OBJS)
 
-c_code.a:	c_code1.a c_code2.a
-	$(LD) -r -o c_code.a c_code1.a c_code2.a
+c_code.a:	c_code1.a $(LIBS)
+	$(LD) -r -o c_code.a c_code1.a $(LIB_FILES)
 
-c_code1.a:	$(C_OBJS)
-	$(LD) -r -o c_code1.a $(C_OBJS)
+c_code1.a:	$(OBJS)
+	$(LD) -r -o c_code1.a $(OBJS)
 
-c_code2.a:	$(C_OBJS2)
-	$(LD) -r -o c_code2.a $(C_OBJS2)
-
-asmcode.o:	asmcode.S asmcode.h Makefile
+asmcode.o:	asmcode.S asmcode.h
 	$(CC) $(FLAGS) -o asmcode.o -c asmcode.S
 
-mb.o:	mb.S asmcode.h multiboot.h Makefile
+mb.o:	mb.S asmcode.h multiboot.h
 	$(CC) $(FLAGS) -o mb.o -c mb.S
 
-boot.o:	boot.S asmcode.h Makefile
+boot.o:	boot.S asmcode.h
 	$(CC) $(FLAGS) -o boot.o -c boot.S
 
-mem.o:	mem.S asmcode.h Makefile
+mem.o:	mem.S asmcode.h
 	$(CC) $(FLAGS) -o mem.o -c mem.S
 
-freeldr.o:	freeldr.c freeldr.h rtl.h fs.h reactos.h ui.h asmcode.h miscboot.h Makefile
+freeldr.o:	freeldr.c freeldr.h rtl.h fs.h reactos.h ui.h asmcode.h miscboot.h
 	$(CC) $(FLAGS) -o freeldr.o -c freeldr.c
 
-rtl/rtl.a:	rtl/print.o rtl/stdlib.o rtl/string.o rtl/memory.o Makefile
-	$(MAKE) -C rtl
-
-fs/fs.a:	fs/fs.o fs/fat.o Makefile
-	$(MAKE) -C fs
-
-ui/ui.a:	ui/tui.o ui/menu.o Makefile
-	$(MAKE) -C ui
-
-miscboot.o:	miscboot.c freeldr.h asmcode.h rtl.h fs.h ui.h miscboot.h Makefile
+miscboot.o:	miscboot.c freeldr.h asmcode.h rtl.h fs.h ui.h miscboot.h
 	$(CC) $(FLAGS) -o miscboot.o -c miscboot.c
 
-options.o:	options.c freeldr.h rtl.h ui.h options.h Makefile
+options.o:	options.c freeldr.h rtl.h ui.h options.h
 	$(CC) $(FLAGS) -o options.o -c options.c
 
-linux.o:	linux.c freeldr.h rtl.h ui.h linux.h Makefile
+linux.o:	linux.c freeldr.h rtl.h ui.h linux.h
 	$(CC) $(FLAGS) -o linux.o -c linux.c
 
-multiboot.o:	multiboot.c freeldr.h rtl.h fs.h multiboot.h ui.h Makefile
+multiboot.o:	multiboot.c freeldr.h rtl.h fs.h multiboot.h ui.h
 	$(CC) $(FLAGS) -o multiboot.o -c multiboot.c
-
-reactos/reactos.a:	reactos/arcname.o reactos/reactos.o reactos/reghive.o reactos/registry.o reactos/hwdetect.o Makefile
-	$(MAKE) -C reactos
-
-comm/comm.a:	comm/rs232.o comm/portio.o Makefile
-	$(MAKE) -C comm
-
-disk/disk.a:	disk/disk.o Makefile
-	$(MAKE) -C disk
-
-mm/mm.a:	mm/mm.o Makefile
-	$(MAKE) -C mm
 
 debug.o:	debug.c debug.h Makefile
 	$(CC) $(FLAGS) -o debug.o -c debug.c
@@ -117,10 +93,33 @@ parseini.o:	parseini.c parseini.h Makefile
 oslist.o:	oslist.c oslist.h Makefile
 	$(CC) $(FLAGS) -o oslist.o -c oslist.c
 
+rtl:
+	$(MAKE) -C rtl
+
+fs:
+	$(MAKE) -C fs
+
+ui:
+	$(MAKE) -C ui
+
+reactos:
+	$(MAKE) -C reactos
+
+comm:
+	$(MAKE) -C comm
+
+disk:
+	$(MAKE) -C disk
+
+mm:
+	$(MAKE) -C mm
+
+.PHONY : $(LIBS)
+
 clean:
-	$(RM) *.o
-	$(RM) *.a
-	$(RM) *.sys
+	- $(RM) *.o
+	- $(RM) *.a
+	- $(RM) *.sys
 	$(MAKE) -C reactos clean
 	$(MAKE) -C comm clean
 	$(MAKE) -C disk clean

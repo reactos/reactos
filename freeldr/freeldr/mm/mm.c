@@ -52,7 +52,7 @@ VOID		DumpMemoryAllocMap(VOID);
 VOID		IncrementAllocationCount(VOID);
 VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
-#endif DEBUG
+#endif // DEBUG
 
 VOID InitMemoryManager(PVOID BaseAddress, ULONG Length)
 {
@@ -151,7 +151,7 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 	IncrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d blocks) of memory starting at block %d. AllocCount: %d\n", NumberOfBytes, BlocksNeeded, Idx, AllocationCount));
 	VerifyHeap();
-#endif DEBUG
+#endif // DEBUG
 
 	// Now return the pointer
 	return MemPointer;
@@ -170,7 +170,7 @@ VOID FreeMemory(PVOID MemBlock)
 	{
 		BugCheck((DPRINT_MEMORY, "Bogus memory pointer (0x%x) passed to FreeMemory()\n", MemBlock));
 	}
-#endif DEBUG
+#endif // DEBUG
 
 	// Find out the block number if the first
 	// block of memory they allocated
@@ -197,7 +197,7 @@ VOID FreeMemory(PVOID MemBlock)
 	DecrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Freed %d blocks of memory starting at block %d. AllocationCount: %d\n", BlockCount, BlockNumber, AllocationCount));
 	VerifyHeap();
-#endif DEBUG
+#endif // DEBUG
 }
 
 #ifdef DEBUG
@@ -330,4 +330,4 @@ VOID MemAllocTest(VOID)
 	printf("MemPtr5: 0x%x\n", (int)MemPtr5);
 	getch();
 }
-#endif DEBUG
+#endif // DEBUG

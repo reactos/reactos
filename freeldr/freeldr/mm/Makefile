@@ -35,9 +35,9 @@ all: mm.a
 mm.a:	$(OBJS)
 	$(LD) -r -o mm.a $(OBJS)
 
-mm.o:	mm.c ../mm.h Makefile
+mm.o:	mm.c ../mm.h
 	$(CC) $(FLAGS) -o mm.o -c mm.c
 
 clean:
-	$(RM) *.o
-	$(RM) *.a
+	- $(RM) *.o
+	- $(RM) *.a
