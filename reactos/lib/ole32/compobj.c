@@ -1190,7 +1190,7 @@ end:
 /***********************************************************************
  *	compobj_RegReadPath	[internal]
  *
- *	Reads a registry value and expands it when nessesary
+ *	Reads a registry value and expands it when necessary
  */
 HRESULT compobj_RegReadPath(char * keyname, char * valuename, char * dst, int dstlen)
 {

@@ -287,7 +287,7 @@ CHAR OLEClipbrd_WNDCLASS[] = "CLIPBRDWNDCLASS";
 
 /*
  *  If we need to store state info we can store it here.
- *  For now we dont need this functionality.
+ *  For now we don't need this functionality.
  *
 typedef struct tagClipboardWindowInfo
 {
@@ -733,8 +733,8 @@ static HWND OLEClipbrd_CreateWindow()
 
     wcex.cbSize         = sizeof(WNDCLASSEXA);
     /* Windows creates this class with a style mask of 0
-     * We dont bother doing this since the FindClassByAtom code
-     * would have to be changed to deal with this idiosyncracy. */
+     * We don't bother doing this since the FindClassByAtom code
+     * would have to be changed to deal with this idiosyncrasy. */
     wcex.style          = CS_GLOBALCLASS;
     wcex.lpfnWndProc    = (WNDPROC)OLEClipbrd_WndProc;
     wcex.hInstance      = 0;
@@ -748,7 +748,7 @@ static HWND OLEClipbrd_CreateWindow()
 
 /*
  *  If we need to store state info we can store it here.
- *  For now we dont need this functionality.
+ *  For now we don't need this functionality.
  *   ClipboardWindowInfo clipboardInfo;
  *   ZeroMemory( &trackerInfo, sizeof(ClipboardWindowInfo));
  */

@@ -75,14 +75,14 @@ static int SetSpyedBlockTableLength ( int NewLength )
 {
 	LPVOID *NewSpyedBlocks;
 
-	if (!Malloc32.SpyedBlocks) NewSpyedBlocks = (LPVOID*)LocalAlloc(GMEM_ZEROINIT, NewLength);
-        else NewSpyedBlocks = (LPVOID*)LocalReAlloc((HLOCAL)Malloc32.SpyedBlocks, NewLength, GMEM_ZEROINIT);
+	if (!Malloc32.SpyedBlocks) NewSpyedBlocks = LocalAlloc(GMEM_ZEROINIT, NewLength);
+	else NewSpyedBlocks = LocalReAlloc(Malloc32.SpyedBlocks, NewLength, GMEM_ZEROINIT);
 	if (NewSpyedBlocks) {
 		Malloc32.SpyedBlocks = NewSpyedBlocks;
-	        Malloc32.SpyedBlockTableLength = NewLength;
+		Malloc32.SpyedBlockTableLength = NewLength;
 	}
 
-	return NewSpyedBlocks ? 1 : 0;
+	return NewSpyedBlocks != NULL;
 }
 
 /* add a location to the table */

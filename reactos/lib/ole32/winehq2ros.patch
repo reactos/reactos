@@ -1,13 +1,10 @@
-? Makefile.ros
-? Makefile.ros-template
-? winehq2ros.patch
 Index: antimoniker.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/antimoniker.c,v
 retrieving revision 1.16
 diff -u -r1.16 antimoniker.c
 --- antimoniker.c	11 Sep 2003 03:06:25 -0000	1.16
-+++ antimoniker.c	2 Jan 2004 19:11:37 -0000
++++ antimoniker.c	22 Jan 2004 20:13:24 -0000
 @@ -287,9 +287,9 @@
  
      /* Normaly the sizemax must be the  size of DWORD ! but I tested this function it ususlly return 16 bytes */
@@ -23,10 +20,10 @@ diff -u -r1.16 antimoniker.c
 Index: compobj.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/compobj.c,v
-retrieving revision 1.84
-diff -u -r1.84 compobj.c
---- compobj.c	6 Oct 2003 21:03:32 -0000	1.84
-+++ compobj.c	2 Jan 2004 19:11:38 -0000
+retrieving revision 1.85
+diff -u -r1.85 compobj.c
+--- compobj.c	16 Jan 2004 21:26:08 -0000	1.85
++++ compobj.c	22 Jan 2004 20:13:25 -0000
 @@ -565,7 +565,7 @@
  /*****************************************************************************/
  
@@ -53,10 +50,10 @@ diff -u -r1.84 compobj.c
 Index: compositemoniker.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/compositemoniker.c,v
-retrieving revision 1.25
-diff -u -r1.25 compositemoniker.c
---- compositemoniker.c	30 Sep 2003 00:24:08 -0000	1.25
-+++ compositemoniker.c	2 Jan 2004 19:11:39 -0000
+retrieving revision 1.26
+diff -u -r1.26 compositemoniker.c
+--- compositemoniker.c	6 Jan 2004 22:08:34 -0000	1.26
++++ compositemoniker.c	22 Jan 2004 20:13:26 -0000
 @@ -442,8 +442,8 @@
      if (pcbSize!=NULL)
          return E_POINTER;
@@ -85,7 +82,7 @@ RCS file: /home/wine/wine/dlls/ole32/datacache.c,v
 retrieving revision 1.21
 diff -u -r1.21 datacache.c
 --- datacache.c	11 Sep 2003 03:06:25 -0000	1.21
-+++ datacache.c	2 Jan 2004 19:11:40 -0000
++++ datacache.c	22 Jan 2004 20:13:27 -0000
 @@ -696,7 +696,7 @@
      LPCWSTR name = elem->pwcsName;
  
@@ -155,10 +152,10 @@ diff -u -r1.21 datacache.c
 Index: filemoniker.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/filemoniker.c,v
-retrieving revision 1.27
-diff -u -r1.27 filemoniker.c
---- filemoniker.c	1 Oct 2003 03:14:29 -0000	1.27
-+++ filemoniker.c	2 Jan 2004 19:11:42 -0000
+retrieving revision 1.28
+diff -u -r1.28 filemoniker.c
+--- filemoniker.c	6 Jan 2004 22:08:34 -0000	1.28
++++ filemoniker.c	22 Jan 2004 20:13:28 -0000
 @@ -459,8 +459,8 @@
                 sizeof(WORD)+            /* constant : 0x3 */
                 len*sizeof(WCHAR);       /* unicde filePath string */
@@ -176,7 +173,7 @@ RCS file: /home/wine/wine/dlls/ole32/git.c,v
 retrieving revision 1.8
 diff -u -r1.8 git.c
 --- git.c	9 Sep 2003 19:39:31 -0000	1.8
-+++ git.c	2 Jan 2004 19:11:42 -0000
++++ git.c	22 Jan 2004 20:13:29 -0000
 @@ -309,8 +309,8 @@
    }
    
@@ -191,10 +188,10 @@ diff -u -r1.8 git.c
 Index: hglobalstream.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/hglobalstream.c,v
-retrieving revision 1.20
-diff -u -r1.20 hglobalstream.c
---- hglobalstream.c	26 Nov 2003 03:36:18 -0000	1.20
-+++ hglobalstream.c	2 Jan 2004 19:11:42 -0000
+retrieving revision 1.21
+diff -u -r1.21 hglobalstream.c
+--- hglobalstream.c	16 Jan 2004 21:22:41 -0000	1.21
++++ hglobalstream.c	22 Jan 2004 20:13:29 -0000
 @@ -283,14 +283,14 @@
      /*
       * Start the stream at the beginning.
@@ -273,7 +270,7 @@ diff -u -r1.20 hglobalstream.c
 @@ -576,7 +576,7 @@
    ULARGE_INTEGER newPosition;
  
-   TRACE("(%p, %ld, %ld, %p)\n", iface,
+   TRACE("(%p, %lx%08lx, %ld, %p)\n", iface, dlibMove.s.HighPart,
 -	dlibMove.s.LowPart, dwOrigin, plibNewPosition);
 +	dlibMove.u.LowPart, dwOrigin, plibNewPosition);
  
@@ -405,7 +402,7 @@ RCS file: /home/wine/wine/dlls/ole32/ifs.h,v
 retrieving revision 1.10
 diff -u -r1.10 ifs.h
 --- ifs.h	14 Oct 2003 20:23:01 -0000	1.10
-+++ ifs.h	2 Jan 2004 19:11:42 -0000
++++ ifs.h	22 Jan 2004 20:13:29 -0000
 @@ -31,6 +31,7 @@
  
  typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
@@ -420,7 +417,7 @@ RCS file: /home/wine/wine/dlls/ole32/itemmoniker.c,v
 retrieving revision 1.21
 diff -u -r1.21 itemmoniker.c
 --- itemmoniker.c	11 Sep 2003 03:06:25 -0000	1.21
-+++ itemmoniker.c	2 Jan 2004 19:11:43 -0000
++++ itemmoniker.c	22 Jan 2004 20:13:30 -0000
 @@ -363,13 +363,13 @@
  
      /* for more details see ItemMonikerImpl_Save coments */
@@ -443,7 +440,7 @@ RCS file: /home/wine/wine/dlls/ole32/memlockbytes.c,v
 retrieving revision 1.16
 diff -u -r1.16 memlockbytes.c
 --- memlockbytes.c	26 Nov 2003 03:36:18 -0000	1.16
-+++ memlockbytes.c	2 Jan 2004 19:11:43 -0000
++++ memlockbytes.c	22 Jan 2004 20:13:30 -0000
 @@ -200,19 +200,19 @@
       ERR("Cannot ILockBytes_Stat, %lx\n",hres);
       return hres;
@@ -568,7 +565,7 @@ RCS file: /home/wine/wine/dlls/ole32/ole2.c,v
 retrieving revision 1.48
 diff -u -r1.48 ole2.c
 --- ole2.c	8 Dec 2003 22:46:08 -0000	1.48
-+++ ole2.c	2 Jan 2004 19:11:45 -0000
++++ ole2.c	22 Jan 2004 20:13:31 -0000
 @@ -1419,6 +1419,7 @@
   */
  BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* lpwCmd)
@@ -593,7 +590,7 @@ RCS file: /home/wine/wine/dlls/ole32/ole2stubs.c,v
 retrieving revision 1.34
 diff -u -r1.34 ole2stubs.c
 --- ole2stubs.c	8 Dec 2003 22:46:08 -0000	1.34
-+++ ole2stubs.c	2 Jan 2004 19:11:45 -0000
++++ ole2stubs.c	22 Jan 2004 20:13:31 -0000
 @@ -47,11 +47,11 @@
  /******************************************************************************
   *              OleDuplicateData        [OLE32.@]
@@ -614,7 +611,7 @@ RCS file: /home/wine/wine/dlls/ole32/oleproxy.c,v
 retrieving revision 1.12
 diff -u -r1.12 oleproxy.c
 --- oleproxy.c	14 Oct 2003 05:24:21 -0000	1.12
-+++ oleproxy.c	2 Jan 2004 19:11:45 -0000
++++ oleproxy.c	22 Jan 2004 20:13:32 -0000
 @@ -184,14 +184,14 @@
  	    return hres;
  	}
@@ -640,7 +637,7 @@ RCS file: /home/wine/wine/dlls/ole32/rpc.c,v
 retrieving revision 1.13
 diff -u -r1.13 rpc.c
 --- rpc.c	14 Oct 2003 05:24:21 -0000	1.13
-+++ rpc.c	2 Jan 2004 19:11:45 -0000
++++ rpc.c	22 Jan 2004 20:13:32 -0000
 @@ -547,7 +547,7 @@
    if (hres) return hres;
    hres = IStream_Write(pStm,marshalbuffer,bufferlen,&res);
@@ -653,18 +650,25 @@ diff -u -r1.13 rpc.c
 Index: stg_bigblockfile.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/stg_bigblockfile.c,v
-retrieving revision 1.11
-diff -u -r1.11 stg_bigblockfile.c
---- stg_bigblockfile.c	9 Sep 2003 19:39:31 -0000	1.11
-+++ stg_bigblockfile.c	2 Jan 2004 19:11:46 -0000
-@@ -236,12 +236,12 @@
+retrieving revision 1.12
+diff -u -r1.12 stg_bigblockfile.c
+--- stg_bigblockfile.c	19 Jan 2004 21:44:02 -0000	1.12
++++ stg_bigblockfile.c	22 Jan 2004 20:13:32 -0000
+@@ -222,10 +222,10 @@
+   if (This->hfile == INVALID_HANDLE_VALUE)
      return FALSE;
-   }
  
 -  This->filesize.s.LowPart = GetFileSize(This->hfile,
 -					 &This->filesize.s.HighPart);
 +  This->filesize.u.LowPart = GetFileSize(This->hfile,
 +					 &This->filesize.u.HighPart);
+ 
+-  if( This->filesize.s.LowPart || This->filesize.s.HighPart )
++  if( This->filesize.u.LowPart || This->filesize.u.HighPart )
+   {
+     /* create the file mapping object
+      */
+@@ -246,7 +246,7 @@
  
    This->maplist = NULL;
  
@@ -673,7 +677,7 @@ diff -u -r1.11 stg_bigblockfile.c
  
    return TRUE;
  }
-@@ -273,12 +273,12 @@
+@@ -278,12 +278,12 @@
     */
    ILockBytes_AddRef(This->pLkbyt);
  
@@ -689,7 +693,7 @@ diff -u -r1.11 stg_bigblockfile.c
  
    return TRUE;
  }
-@@ -333,10 +333,10 @@
+@@ -338,10 +338,10 @@
     *
     */
    if (This->blocksize * (index + 1)
@@ -702,7 +706,7 @@ diff -u -r1.11 stg_bigblockfile.c
      return NULL;
    }
  
-@@ -363,12 +363,12 @@
+@@ -368,12 +368,12 @@
    /*
     * make sure that the block physically exists
     */
@@ -718,7 +722,7 @@ diff -u -r1.11 stg_bigblockfile.c
  
      BIGBLOCKFILE_SetSize(This, newSize);
    }
-@@ -404,10 +404,10 @@
+@@ -409,10 +409,10 @@
   */
  void BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
  {
@@ -731,7 +735,7 @@ diff -u -r1.11 stg_bigblockfile.c
    /*
     * unmap all views, must be done before call to SetEndFile
     */
-@@ -436,7 +436,7 @@
+@@ -442,7 +442,7 @@
       * This hack is only needed when saving to smbfs.
       */
      memset(buf, '0', 10);
@@ -740,7 +744,7 @@ diff -u -r1.11 stg_bigblockfile.c
      WriteFile(This->hfile, buf, 10, NULL, NULL);
      /*
       * END HACK
-@@ -445,7 +445,7 @@
+@@ -451,7 +451,7 @@
      /*
       * set the new end of file
       */
@@ -749,7 +753,7 @@ diff -u -r1.11 stg_bigblockfile.c
      SetEndOfFile(This->hfile);
  
      /*
-@@ -473,8 +473,8 @@
+@@ -479,8 +479,8 @@
      This->pbytearray = GlobalLock(This->hbytearray);
    }
  
@@ -760,9 +764,9 @@ diff -u -r1.11 stg_bigblockfile.c
  
    BIGBLOCKFILE_RemapAllMappedPages(This);
  }
-@@ -662,8 +662,8 @@
- 	DWORD numBytesToMap;
- 	DWORD desired_access;
+@@ -671,8 +671,8 @@
+         if( !This->hfilemap )
+             return FALSE;
  
 -	if (lowoffset + PAGE_SIZE > This->filesize.s.LowPart)
 -	    numBytesToMap = This->filesize.s.LowPart - lowoffset;
@@ -771,7 +775,7 @@ diff -u -r1.11 stg_bigblockfile.c
  	else
  	    numBytesToMap = PAGE_SIZE;
  
-@@ -822,7 +822,7 @@
+@@ -831,7 +831,7 @@
      {
  	MappedPage *next = list->next;
  
@@ -786,7 +790,7 @@ RCS file: /home/wine/wine/dlls/ole32/stg_stream.c,v
 retrieving revision 1.18
 diff -u -r1.18 stg_stream.c
 --- stg_stream.c	5 Sep 2003 23:08:33 -0000	1.18
-+++ stg_stream.c	2 Jan 2004 19:11:46 -0000
++++ stg_stream.c	22 Jan 2004 20:13:33 -0000
 @@ -106,14 +106,14 @@
      /*
       * Start the stream at the beginning.
@@ -1030,7 +1034,7 @@ RCS file: /home/wine/wine/dlls/ole32/storage32.c,v
 retrieving revision 1.44
 diff -u -r1.44 storage32.c
 --- storage32.c	22 Sep 2003 19:46:13 -0000	1.44
-+++ storage32.c	2 Jan 2004 19:11:50 -0000
++++ storage32.c	22 Jan 2004 20:13:37 -0000
 @@ -678,7 +678,7 @@
  end:
    if (res == S_OK)

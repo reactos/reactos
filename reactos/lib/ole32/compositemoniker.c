@@ -648,7 +648,7 @@ HRESULT WINAPI CompositeMonikerImpl_BindToObject(IMoniker* iface,
 
         if (SUCCEEDED(res)){
 
-            /* if the requested class was loaded befor ! we dont need to reload it */
+            /* if the requested class was loaded before ! we don't need to reload it */
             res = IRunningObjectTable_GetObject(prot,iface,(IUnknown**)ppvResult);
 
             if (res==S_OK)

@@ -57,7 +57,7 @@ static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
 
     /*
      * Allocate a new buffer to hold the string.
-     * dont't forget to keep an empty spot at the beginning of the
+     * don't forget to keep an empty spot at the beginning of the
      * buffer for the character count and an extra character at the
      * end for the '\0'.
      */

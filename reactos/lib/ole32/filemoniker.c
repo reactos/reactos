@@ -579,7 +579,7 @@ HRESULT WINAPI FileMonikerImpl_BindToObject(IMoniker* iface,
         res=IBindCtx_GetRunningObjectTable(pbc,&prot);
 
         if (SUCCEEDED(res)){
-            /* if the requested class was loaded befor ! we dont need to reload it */
+            /* if the requested class was loaded before ! we don't need to reload it */
             res = IRunningObjectTable_GetObject(prot,iface,&pObj);
 
             if (res==S_FALSE){

@@ -575,7 +575,7 @@ HRESULT WINAPI HGLOBALStreamImpl_Seek(
 
   ULARGE_INTEGER newPosition;
 
-  TRACE("(%p, %ld, %ld, %p)\n", iface,
+  TRACE("(%p, %lx%08lx, %ld, %p)\n", iface, dlibMove.s.HighPart,
 	dlibMove.u.LowPart, dwOrigin, plibNewPosition);
 
   /*
