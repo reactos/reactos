@@ -8,9 +8,41 @@
 using std::string;
 using std::vector;
 
+#ifdef WIN32
+#define EXEPOSTFIX ".exe"
+#define SEP "\\"
+string
+FixSeparator ( const string& s )
+{
+	string s2(s);
+	char* p = strchr ( &s2[0], '/' );
+	while ( p )
+	{
+		*p++ = '\\';
+		p = strchr ( p, '/' );
+	}
+	return s2;
+}
+#else
+#define EXEPOSTFIX
+#define SEP "/"
+string
+FixSeparator ( const string& s )
+{
+	string s2(s);
+	char* p = strchr ( &s2[0], '\\' );
+	while ( p )
+	{
+		*p++ = '/';
+		p = strchr ( p, '\\' );
+	}
+	return s2;
+}
+#endif
+
 Module::Module ( const XMLElement& moduleNode,
                  const string& moduleName,
-                 const string& modulePath)
+                 const string& modulePath )
 	: node(moduleNode),
 	  name(moduleName),
 	  path(modulePath)
@@ -59,6 +91,12 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 		return KernelModeDLL;
 	throw InvalidAttributeValueException ( attribute.name,
 	                                       attribute.value );
+}
+
+string
+Module::GetPath ()
+{
+	return FixSeparator (path) + SEP + name + EXEPOSTFIX;
 }
 
 

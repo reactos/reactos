@@ -28,6 +28,7 @@ private:
 	void CreateMakefile ();
 	void CloseMakefile ();
 	void GenerateHeader ();
+	void GenerateGlobalVariables ();
 	void GenerateAllTarget ();
 	FILE* fMakefile;
 };

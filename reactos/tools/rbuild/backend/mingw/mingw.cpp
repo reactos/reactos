@@ -16,37 +16,6 @@ public:
 	}
 } factory;
 
-#ifdef WIN32
-#define EXEPOSTFIX ".exe"
-#define SEP "\\"
-string
-FixSep ( const string& s )
-{
-	string s2(s);
-	char* p = strchr ( &s2[0], '/' );
-	while ( p )
-	{
-		*p++ = '\\';
-		p = strchr ( p, '/' );
-	}
-	return s2;
-}
-#else
-#define EXEPOSTFIX
-#define SEP "/"
-string
-FixSep ( const string& s )
-{
-	string s2(s);
-	char* p = strchr ( &s2[0], '\\' );
-	while ( p )
-	{
-		*p++ = '/';
-		p = strchr ( p, '\\' );
-	}
-	return s2;
-}
-#endif
 
 MingwBackend::MingwBackend ( Project& project )
 	: Backend ( project )
@@ -58,6 +27,7 @@ MingwBackend::Process ()
 {
 	CreateMakefile ();
 	GenerateHeader ();
+	GenerateGlobalVariables ();
 	GenerateAllTarget ();
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
@@ -89,18 +59,26 @@ MingwBackend::GenerateHeader ()
 }
 
 void
+MingwBackend::GenerateGlobalVariables ()
+{
+	fprintf ( fMakefile, "gcc = gcc\n" );
+	fprintf ( fMakefile, "ld = ld\n" );
+	fprintf ( fMakefile, "ar = ar\n" );
+	fprintf ( fMakefile, "\n" );
+}
+
+void
 MingwBackend::GenerateAllTarget ()
 {
-	fprintf ( fMakefile, "all: " );
+	fprintf ( fMakefile, "all:" );
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
 		fprintf ( fMakefile,
-		          " %s" SEP "%s" EXEPOSTFIX,
-		          FixSep(module.path).c_str (),
-		          module.name.c_str () );
+		          " %s",
+		          module.GetPath ().c_str () );
 	}
-	fprintf ( fMakefile, "\n\n" );
+	fprintf ( fMakefile, "\n\t\n\n" );
 }
 
 void

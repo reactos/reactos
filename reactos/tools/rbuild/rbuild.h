@@ -50,10 +50,9 @@ public:
 	Module ( const XMLElement& moduleNode,
 	         const std::string& moduleName,
 	         const std::string& modulePath );
-	ModuleType GetModuleType (const XMLAttribute& attribute );
-
 	~Module();
-
+	ModuleType GetModuleType (const XMLAttribute& attribute );
+	std::string GetPath ();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
 };
 
