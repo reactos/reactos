@@ -52,6 +52,7 @@ lib\cards\cards.dll                     1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
+lib\expat\libexpat.dll                  1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
@@ -97,7 +98,6 @@ subsys\system\autochk\autochk.exe       1
 subsys\system\cmd\cmd.exe               1
 subsys\system\explorer\explorer.exe     4
 subsys\system\explorer\notifyhook.dll   1
-subsys\system\explorer\libexpat.dll     1
 subsys\system\format\format.exe         1
 subsys\system\regedit\regedit.exe       4
 subsys\system\services\services.exe     1
