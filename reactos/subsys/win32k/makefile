@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.39 2001/08/21 20:13:17 chorns Exp $
+# $Id: makefile,v 1.40 2001/09/08 12:12:41 jfilby Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,8 +14,6 @@ TARGET_ENTRY = _DllMain@8
 COPTS   = -pipe -O3 -I./freetype/include -c -Wall
 
 TARGET_CFLAGS = -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE
-
-#define FT_FLAT_COMPILE
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
     eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
@@ -34,11 +32,15 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o objects/palette.o
 DIB_OBJECTS = dib/dib4bpp.o dib/dib24bpp.o
-FREETYPE_OBJECTS = freetype/grfont.o freetype/ctype.o \
-	freetype/ftsystem.o freetype/ftdebug.o freetype/ftinit.o freetype/ftbase.o \
-	freetype/ftglyph.o freetype/ftmm.o freetype/autohint.o freetype/cff.o \
-	freetype/type1cid.o freetype/psnames.o freetype/raster1.o freetype/sfnt.o \
-	freetype/smooth.o freetype/truetype.o freetype/winfnt.o freetype/type1z.o
+FREETYPE_OBJECTS = freetype/ctype.o freetype/grfont.o \
+		freetype/src/base/ftsystem.o freetype/src/base/ftdebug.o \
+		freetype/src/base/ftinit.o freetype/src/base/ftbase.o \
+		freetype/src/base/ftglyph.o freetype/src/base/ftmm.o \
+		freetype/src/autohint/autohint.o freetype/src/cff/cff.o \
+		freetype/src/cid/type1cid.o freetype/src/psnames/psnames.o \
+		freetype/src/winfonts/winfnt.o freetype/src/raster1/raster1.o \
+		freetype/src/sfnt/sfnt.o freetype/src/smooth/smooth.o \
+		freetype/src/truetype/truetype.o freetype/src/type1z/type1z.o
 STUBS_OBJECTS = stubs/stubs.o
 
 TARGET_OBJECTS = \
