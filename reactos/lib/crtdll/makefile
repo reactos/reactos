@@ -111,7 +111,7 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 
 
 OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
-          stdlib/_exit.o stdlib/atexit.o stdio/fileno.o io/fmode.o \
+	  stdlib/_exit.o stdlib/atexit.o stdio/fileno.o io/fmode.o \
 	  float/fpreset.o stdio/stdhnd.o io/setmode.o io/open.o \
 	  stdio/vsprintf.o $(CTYPE_OBJECTS) stdlib/atoi.o stdlib/strtol.o \
 	  stdio/flsbuf.o stdio/putc.o stdio/vfprintf.o $(STRING_OBJECTS)\
@@ -122,13 +122,26 @@ OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
 RESOURCE_OBJECT = crtdll.coff
 
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
-          $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
+	  $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
 	  $(STDIO_OBJECTS) $(CTYPE_OBJECTS) $(MATH_OBJECTS) \
 	  $(STRING_OBJECTS) $(TIME_OBJECTS) $(WCHAR_OBJECTS) \
 	  $(SYS_STAT_OBJECTS) misc/dllmain.o $(MALLOC_OBJECTS) \
 	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) \
 	  $(SIGNAL_OBJECTS) $(RESOURCE_OBJECT)
 
+ifeq ($(DOSCLI), yes)
+CLEAN_FILES = assert\*.o conio\*.o ctype\*.o direct\*.o dirent\*.o \
+	except\*.o float\*.o io\*.o libc\*.o locale\*.o malloc\*.o \
+	math\*.o mbstring\*.o misc\*.o process\*.o quad\*.o search\*.o \
+	setjmp\*.o stdio\*.o stdlib\*.o string\*.o sys_stat\*.o tchar\*.o \
+	time\*.o wchar\*.o crtdll.a crtdll.o crtdll.dll crtdll.sym
+else
+CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
+	except/*.o float/*.o io/*.o libc/*.o locale/*.o malloc/*.o \
+	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
+	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
+	time/*.o wchar/*.o crtdll.a crtdll.o crtdll.dll crtdll.sym
+endif
 
 crtdll.coff: crtdll.rc ../../include/reactos/resource.h
 	windres crtdll.rc crtdll.coff
@@ -155,7 +168,11 @@ crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort crtdll.dll > crtdll.sym
 
-clean:
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
 
 include ../../rules.mak
 
