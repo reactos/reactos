@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.59 2004/12/13 13:32:24 navaraf Exp $
+/* $Id: thread.c,v 1.60 2004/12/18 13:26:57 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
-#include <pseh/framebased.h>
 
 #define NDEBUG
 #include "../include/debug.h"

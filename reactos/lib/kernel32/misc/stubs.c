@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.100 2004/12/09 19:11:07 weiden Exp $
+/* $Id: stubs.c,v 1.101 2004/12/18 13:26:57 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1673,24 +1673,6 @@ BOOL STDCALL SetHandleContext(HANDLE hnd,DWORD context)
 /*
  * @unimplemented
  */
-BOOL STDCALL SetConsoleInputExeNameA(LPCSTR name)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL SetConsoleInputExeNameW(LPCWSTR name)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL STDCALL UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
                         LPSTR lpszInitName, LPSTR lpszProcName,
                         FARPROC *ppfn32Thunk, FARPROC pfnUT32CallBack,
@@ -1725,24 +1707,6 @@ FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PVOID pdli)
  * @unimplemented
  */
 NTSTATUS STDCALL CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,ULONG Size,ULONG AccessMask)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL GetConsoleInputExeNameA(ULONG length,LPCSTR name)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL GetConsoleInputExeNameW(ULONG length,LPCWSTR name)
 {
     STUB;
     return 0;

@@ -36,3 +36,5 @@
 #include <rosrtl/registry.h>
 
 #include "include/kernel32.h"
+
+#include <pseh/framebased.h>

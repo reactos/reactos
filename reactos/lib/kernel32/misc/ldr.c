@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.21 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: ldr.c,v 1.22 2004/12/18 13:26:57 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -72,6 +72,8 @@ LoadLibraryExA (
 	NTSTATUS Status;
 
         (void)hFile;
+        
+        DbgPrint("LoadLibraryExA: 0x%x (=%s) 0x%x, 0x%x\n", lpLibFileName, lpLibFileName ? lpLibFileName : "NULL", hFile, dwFlags);
 
 	RtlInitAnsiString (&LibFileName,
 	                   (LPSTR)lpLibFileName);
