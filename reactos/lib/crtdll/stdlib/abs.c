@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int
-abs(int j)
+abs(int _i)
 {
-  return j<0 ? -j : j;
+  return _i<0 ? -_i : _i;
 }

@@ -173,7 +173,7 @@ qst(char *base, char *max)
  */
 
 void
-qsort(void *base0, size_t n, size_t size, int (*compar)(const void *, const void *))
+qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
 {
   char *base = (char *)base0;
   char c, *i, *j, *lo, *hi;

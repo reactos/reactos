@@ -20,7 +20,7 @@ fstat(int handle, struct stat *statbuf)
       return -1;
     }
 
-  if ( !GetFileInformationByHandle(filehnd(handle),&FileInformation) )
+  if ( !GetFileInformationByHandle(_get_osfhandle(handle),&FileInformation) )
 	return -1;
   statbuf->st_ctime = FileTimeToUnixTime( &FileInformation.ftCreationTime,NULL);
   statbuf->st_atime = FileTimeToUnixTime( &FileInformation.ftLastAccessTime,NULL);

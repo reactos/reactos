@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-//#include <libc/unconst.h>
 
 
 char __syserr00[] = "No Error";
