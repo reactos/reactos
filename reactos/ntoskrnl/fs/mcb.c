@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.2 2002/08/09 22:57:48 ekohl Exp $
+/* $Id: mcb.c,v 1.3 2002/09/05 20:41:05 ea Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -74,6 +74,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
 {
   UNIMPLEMENTED
+	Mcb->PoolType = PoolType;
 }
 
 
