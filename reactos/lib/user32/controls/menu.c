@@ -14,20 +14,20 @@
 
 
 
-#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#undef WIN32_LEAN_AND_MEAN
+
+
 #include <windows.h>
 #include <user32/win.h>
-//#include <user32/debug.h>
+#include <user32/debug.h>
 #include <user32/resource.h>
 #include <user32/sysmetr.h>
 #include <user32/menu.h>
+#include <user32/syscolor.h>
 
-#include<stdio.h>
-#define DPRINT printf
+
 
 
 /**********************************************************************
@@ -49,7 +49,7 @@ HMENU STDCALL CreateMenu(void)
     menu->hWnd   = 0;
     menu->items  = NULL;
     menu->FocusedItem = NO_SELECTED_ITEM;
-    //TRACE(menu, "return %04x\n", hMenu );
+    DPRINT( "return %04x\n", hMenu );
     return hMenu;
 }
 
@@ -254,10 +254,10 @@ WINBOOL STDCALL DrawMenuBar( HWND hWnd )
  */
 HMENU STDCALL LoadMenuA( HINSTANCE instance, LPCSTR name )
 {
-// instance should be a module handle GetModuleHandle(NULL)
-    HRSRC hrsrc = FindResourceA( instance, name, (LPCSTR)RT_MENU );
+
+    HRSRC hrsrc = FindResourceA(  GetModuleHandle(NULL), name, (LPCSTR)RT_MENU );
     if (!hrsrc) return 0;
-    return LoadMenuIndirectA( (LPCVOID)LoadResource( instance, hrsrc ));
+    return LoadMenuIndirectA( (LPCVOID)LoadResource( GetModuleHandle(NULL), hrsrc ));
 }
 
 
@@ -267,19 +267,61 @@ HMENU STDCALL LoadMenuA( HINSTANCE instance, LPCSTR name )
 HMENU STDCALL LoadMenuW( HINSTANCE hInstance, LPCWSTR name )
 {
 
-    HRSRC hrsrc = FindResourceW( hInstance, name, (LPCWSTR)RT_MENU );
-    if (!hrsrc) 
-	return 0;
-    return LoadMenuIndirectW( (LPCVOID)LoadResource( hInstance, hrsrc ));
+    HRSRC hrsrc = FindResourceW(  GetModuleHandle(NULL), name, (LPCSTR)RT_MENU );
+    if (!hrsrc) return 0;
+    return LoadMenuIndirectW( (LPCVOID)LoadResource( GetModuleHandle(NULL), hrsrc ));
 }
 /*
 
+A menu template consists of a MENUITEMTEMPLATEHEADER structure 
+followed by one or more contiguous MENUITEMTEMPLATE structures. 
+In Windows 95, an extended menu template consists of a 
+MENUEX_TEMPLATE_HEADER structure followed by one or more 
+contiguous MENUEX_TEMPLATE_ITEM structures.  
 
-typedef struct {  
-    WORD mtOption;       
-    WORD mtID;         
-    WCHAR mtString[1];   
+
+typedef struct {
+  WORD  wVersion; 
+  WORD  wOffset; 
+  DWORD dwHelpId; 
+} MENUEX_TEMPLATE_HEADER;
+
+typedef struct { 
+  DWORD  dwType; 
+  DWORD  dwState; 
+  UINT   uId; 
+  BYTE   bResInfo; 
+  WCHAR  szText[1]; 
+  DWORD dwHelpId; 
+} MENUEX_TEMPLATE_ITEM; 
+
+typedef struct tagMENUITEMINFO {
+  UINT    cbSize; 
+  UINT    fMask; 
+  UINT    fType; 
+  UINT    fState; 
+  UINT    wID; 
+  HMENU   hSubMenu; 
+  HBITMAP hbmpChecked; 
+  HBITMAP hbmpUnchecked; 
+  DWORD   dwItemData; 
+  LPTSTR  dwTypeData; 
+  UINT    cch; 
+} MENUITEMINFO, *LPMENUITEMINFO; 
+typedef MENUITEMINFO CONST *LPCMENUITEMINFO;
+ 
+typedef struct {   
+  WORD mtOption;      
+  WORD mtID;          
+  WCHAR mtString[1];  
 } MENUITEMTEMPLATE; 
+ 
+typedef struct {      
+  WORD versionNumber; 
+  WORD offset;        
+} MENUITEMTEMPLATEHEADER; 
+typedef VOID MENUTEMPLATE, *LPMENUTEMPLATE;
+
 */
 
 /**********************************************************************
@@ -986,8 +1028,7 @@ INT STDCALL GetMenuStringA( HMENU hMenu, UINT wItemID,
     MENUITEM *item;
     int i;
     int len;
-    //TRACE(menu, "menu=%04x item=%04x ptr=%p len=%d flags=%04x\n",
-    //             hMenu, wItemID, str, nMaxSiz, wFlags );
+    DPRINT( "menu=%04x item=%04x ptr=%p len=%d flags=%04x\n",  hMenu, wItemID, str, nMaxSiz, wFlags );
     if (!str || !nMaxSiz)
 	 return 0;
     str[0] = '\0';
@@ -1012,8 +1053,7 @@ INT STDCALL GetMenuStringW( HMENU hMenu, UINT wItemID,
 {
     MENUITEM *item;
 
-    //TRACE(menu, "menu=%04x item=%04x ptr=%p len=%d flags=%04x\n",
-    //             hMenu, wItemID, str, nMaxSiz, wFlags );
+    DPRINT( "menu=%04x item=%04x ptr=%p len=%d flags=%04x\n",   hMenu, wItemID, str, nMaxSiz, wFlags );
     if (!str || !nMaxSiz) 
 	return 0;
     str[0] = '\0';
@@ -1030,8 +1070,8 @@ WINBOOL STDCALL HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
                                 UINT wHilite )
 {
     LPPOPUPMENU menu;
-//    DPRINT("menu (%04x, %04x, %04x, %04x);\n", 
-//                 hWnd, hMenu, wItemID, wHilite);
+    DPRINT("menu (%04x, %04x, %04x, %04x);\n", hWnd, hMenu, wItemID, wHilite);
+
     if (!MENU_FindItem( &hMenu, &wItemID, wHilite )) return FALSE;
     if (!(menu = (LPPOPUPMENU) (hMenu))) return FALSE;
     if (menu->FocusedItem == wItemID) return TRUE;
@@ -1268,7 +1308,6 @@ LONG
 STDCALL
 GetMenuCheckMarkDimensions(VOID)
 {
-
 
     return MAKELONG(GetSystemMetrics(SM_CXMENUCHECK), GetSystemMetrics(SM_CYMENUCHECK) );
 }

@@ -1,7 +1,10 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <user32/nc.h>
+#include <user32/syscolor.h>
 #include <user32/debug.h>
+
+// GetBitmapDimensionEx in NC_DrawMaxButton95 returns TRUE on invalid bitmap
 
 static HBITMAP hbitmapClose = 0;
 static HBITMAP hbitmapCloseD = 0;
@@ -126,6 +129,7 @@ NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
 
     /* Decide if the window will be managed (see CreateWindowEx) */
     // Options.managed &&
+
     if (!( !(style & WS_CHILD) &&
           ((style & (WS_DLGFRAME | WS_THICKFRAME)) ||
            (exStyle & WS_EX_DLGMODALFRAME))))
@@ -136,10 +140,10 @@ NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
         {
             if (HAS_SIZEFRAME(style))
                 InflateRect( rect, SYSMETRICS_CXFRAME, SYSMETRICS_CYFRAME );
-#if 0
+
             if (style & WS_BORDER)
                 InflateRect( rect, SYSMETRICS_CXBORDER, SYSMETRICS_CYBORDER);
-#endif
+
         }
 
         if ((style & WS_CAPTION) == WS_CAPTION)
@@ -151,10 +155,12 @@ NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
         }
     } else {
 
-
+	if (HAS_SIZEFRAME(style))
+                InflateRect( rect, SYSMETRICS_CXFRAME, SYSMETRICS_CYFRAME );
+#if 0
         if (style & WS_BORDER)
             InflateRect( rect, SYSMETRICS_CXBORDER, SYSMETRICS_CYBORDER);
-
+#endif
 
         if ((style & WS_CAPTION) == WS_CAPTION)
         {
@@ -326,13 +332,13 @@ NC_GetInsideRect95 (HWND hwnd, RECT *rect)
           InflateRect( rect, -SYSMETRICS_CXBORDER, -SYSMETRICS_CYBORDER );*/
     }
 
-    if (wndPtr->dwStyle & WS_CHILD) {
+//    if (wndPtr->dwStyle & WS_CHILD) {
 	if (wndPtr->dwExStyle & WS_EX_CLIENTEDGE)
 	    InflateRect(rect, -SYSMETRICS_CXEDGE, -SYSMETRICS_CYEDGE);
 
 	if (wndPtr->dwExStyle & WS_EX_STATICEDGE)
 	    InflateRect(rect, -SYSMETRICS_CXBORDER, -SYSMETRICS_CYBORDER);
-    }
+  //  }
 
     return;
 }
@@ -827,13 +833,22 @@ static void  NC_DrawMaxButton95(
     WND *wndPtr = WIN_FindWndPtr( hwnd );
     SIZE  bmsz;
     HBITMAP  bm;
+    BITMAP bmp;
     HDC hdcMem;
 
-    if( !(wndPtr->flags & WIN_MANAGED) &&
+
+    if( !(wndPtr->flags & WIN_MANAGED) ) {
 	GetBitmapDimensionEx((bm = IsZoomed(hwnd) ?
-				(down ? hbitmapRestoreD : hbitmapRestore ) :
-				(down ? hbitmapMaximizeD : hbitmapMaximize)),
-			       &bmsz)) {
+			(down ? hbitmapRestoreD : hbitmapRestore ) :
+			(down ? hbitmapMaximizeD : hbitmapMaximize)),
+			 &bmsz);
+
+	if ( bmsz.cx == 0 || bmsz.cy == 0 ) {
+		GetObject(bm, sizeof(BITMAP), &bmp);
+		bmsz.cx = bmp.bmWidth;
+		bmsz.cy = bmp.bmHeight;
+		DPRINT("WARN GetBitmapDimensionEx returned 0 size ");
+	}
 
 	NC_GetInsideRect95( hwnd, &rect );
 
@@ -1169,7 +1184,7 @@ static void NC_DrawCaption( HDC hdc, RECT *rect, HWND hwnd,
  *
  *****************************************************************************/
 
-static void  NC_DrawCaption95(
+void  NC_DrawCaption95(
     HDC  hdc,
     RECT *rect,
     HWND hwnd,
@@ -1181,6 +1196,7 @@ static void  NC_DrawCaption95(
     WND     *wndPtr = WIN_FindWndPtr( hwnd );
     char    buffer[256];
     HPEN  hPrevPen;
+    int txt;
 
     if (wndPtr->flags & WIN_MANAGED) return;
 
@@ -1188,7 +1204,7 @@ static void  NC_DrawCaption95(
     MoveToEx( hdc, r.left, r.bottom - 1, NULL );
     LineTo( hdc, r.right, r.bottom - 1 );
     SelectObject( hdc, hPrevPen );
-    r.bottom-2;
+ //   r.bottom - 2;
    
 
     FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
@@ -1221,8 +1237,14 @@ static void  NC_DrawCaption95(
 	NC_DrawMinButton95( hwnd, hdc, FALSE );
 	r.right -= SYSMETRICS_CXSIZE + 1;
     }
+   
+    if ( wndPtr->class->bUnicode )
+    	txt = GetWindowTextW( hwnd, buffer, sizeof(buffer) );
+    else
+    	txt = GetWindowTextA( hwnd, buffer, sizeof(buffer) );
 
-    if (GetWindowTextA( hwnd, buffer, sizeof(buffer) )) {
+
+    if (txt) {
 	NONCLIENTMETRICS nclm;
 	HFONT hFont, hOldFont;
 	nclm.cbSize = sizeof(NONCLIENTMETRICS);
@@ -1236,7 +1258,11 @@ static void  NC_DrawCaption95(
 	else SetTextColor( hdc, GetSysColor( COLOR_INACTIVECAPTIONTEXT ) );
 	SetBkMode( hdc, TRANSPARENT );
 	r.left += 2;
-	DrawTextA( hdc, buffer, -1, &r,
+	if ( wndPtr->class->bUnicode )
+		DrawTextW( hdc, buffer, -1, &r,
+		     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_LEFT );
+	else
+		DrawTextA( hdc, buffer, -1, &r,
 		     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_LEFT );
 	DeleteObject(SelectObject (hdc, hOldFont));
     }
@@ -1378,10 +1404,10 @@ void  NC_DoNCPaint95(
 
     if (!(hdc = GetDCEx( hwnd, 0, DCX_USESTYLE | DCX_WINDOW ))) return;
 
-    if (ExcludeVisRect( hdc, wndPtr->rectClient.left-wndPtr->rectWindow.left,
-		        wndPtr->rectClient.top-wndPtr->rectWindow.top,
-		        wndPtr->rectClient.right-wndPtr->rectWindow.left,
-		        wndPtr->rectClient.bottom-wndPtr->rectWindow.top )
+    if (ExcludeVisRect( hdc, wndPtr->rectClient.left -wndPtr->rectWindow.left,
+		        wndPtr->rectClient.top  -wndPtr->rectWindow.top,
+		        wndPtr->rectClient.right  -wndPtr->rectWindow.left,
+		        wndPtr->rectClient.bottom  -wndPtr->rectWindow.top )
 	== NULLREGION)
     {
 	ReleaseDC( hwnd, hdc );
@@ -1495,10 +1521,10 @@ LONG NC_HandleNCActivate( WND *wndPtr, WPARAM wParam )
 {
     WORD wStateChange;
 
-    if( wParam ) wStateChange = !(wndPtr->flags & WIN_NCACTIVATED);
-    else wStateChange = wndPtr->flags & WIN_NCACTIVATED;
+//    if( wParam ) wStateChange = !(wndPtr->flags & WIN_NCACTIVATED);
+//    else wStateChange = wndPtr->flags & WIN_NCACTIVATED;
 
-    if( wStateChange )
+//    if( wStateChange )
     {
 	if (wParam) wndPtr->flags |= WIN_NCACTIVATED;
 	else wndPtr->flags &= ~WIN_NCACTIVATED;

@@ -1,9 +1,18 @@
-
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/user32/windows/class.c
+ * PURPOSE:     Registers a window class
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              28/05/99: Created
+ */
 #include <windows.h>
 #include <user32/class.h>
 #include <user32/win.h>
 #include <user32/dce.h>
 #include <user32/heapdup.h>
+
 
 CLASS *rootClass;
 
@@ -80,7 +89,7 @@ ATOM STDCALL RegisterClassExA(const WNDCLASSEX* wc)
 
 
     if (classExtra) 
-	memset( classPtr->wExtra, 0, classExtra );
+	HEAP_memset( classPtr->wExtra, 0, classExtra );
 
     if (!classPtr) {
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -136,7 +145,7 @@ ATOM STDCALL RegisterClassExW( const WNDCLASSEX* wc )
     CLASS *classPtr;
     INT classExtra, winExtra;
 
-    int i, len;
+    int len;
     if ( wc == NULL || wc->cbSize != sizeof(WNDCLASSEX)) {
 	SetLastError(ERROR_INVALID_DATA);
 	return FALSE;
@@ -165,7 +174,7 @@ ATOM STDCALL RegisterClassExW( const WNDCLASSEX* wc )
 
 
     if (classExtra) 
-	memset( classPtr->wExtra, 0, classExtra );
+	HEAP_memset( classPtr->wExtra, 0, classExtra );
 
     if (!classPtr) {
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -189,13 +198,17 @@ ATOM STDCALL RegisterClassExW( const WNDCLASSEX* wc )
     classPtr->dce         = (wc->style & CS_CLASSDC) ?
                                  CreateDC( "DISPLAY", NULL,NULL,NULL ) : NULL;
 
-    len = lstrlenW((LPWSTR)wc->lpszMenuName);
-    classPtr->menuName = HeapAlloc(GetProcessHeap(),0,(len+1)*2);
-    lstrcpyW((LPWSTR)classPtr->menuName, (LPWSTR)wc->lpszMenuName);
+   if ( wc->lpszMenuName != NULL ) {
+	len = lstrlenW(wc->lpszMenuName);
+    	classPtr->menuName = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(len+1));
+    	lstrcpyW(classPtr->menuName,wc->lpszMenuName);
+    }
+    else
+	classPtr->menuName = NULL;
 
 
     len = lstrlenW((LPWSTR)wc->lpszClassName);
-    classPtr->className = HeapAlloc(GetProcessHeap(),0,(len+1)*2);
+    classPtr->className = HeapAlloc(GetProcessHeap(),0,(len+1)*sizeof(WCHAR));
     lstrcpyW((LPWSTR)classPtr->className,(LPWSTR) wc->lpszClassName );
 
     classPtr->next        = rootClass;
@@ -283,7 +296,7 @@ WINBOOL GetClassInfoExW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASSE
 	if ( HIWORD(lpClassName) != 0 )
 		a = FindAtomW(lpClassName);
 	else
-		a = lpClassName;
+		a = (ATOM)lpClassName;
 
 	classPtr = CLASS_FindClassByAtom(  a, hInstance );
 	if ( classPtr == NULL )
@@ -408,7 +421,7 @@ WORD STDCALL GetClassWord( HWND hWnd, INT nIndex )
     if (nIndex >= 0)
     {
         if (nIndex <= wndPtr->class->cbClsExtra - sizeof(WORD))
-            return (WORD)((char *)wndPtr->class->wExtra) + nIndex;
+            return (WORD)(wndPtr->class->wExtra + nIndex);
     }
     else switch(nIndex)
     {

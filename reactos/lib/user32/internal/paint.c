@@ -15,6 +15,7 @@
   /* Last CTLCOLOR id */
 //#define CTLCOLOR_MAX   CTLCOLOR_STATIC
 
+HBRUSH DEFWND_ControlColor( HDC hDC, UINT ctlType );
 
 
 /***********************************************************************
@@ -45,28 +46,21 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
 
     if (!hwnd) hwnd = GetDesktopWindow();
     if (!(wndPtr = WIN_FindWndPtr( hwnd ))) return FALSE;
+
+#ifdef OPTIMIZE
     if (!WIN_IsWindowDrawable( wndPtr, !(flags & RDW_FRAME) ) )
         return TRUE;  /* No redraw needed */
+#endif
 
     bIcon = (wndPtr->dwStyle & WS_MINIMIZE && wndPtr->class->hIcon);
-    if (rectUpdate)
-    {
-        DPRINT( "%04x %d,%d-%d,%d %04x flags=%04x\n",
-                    hwnd, rectUpdate->left, rectUpdate->top,
-                    rectUpdate->right, rectUpdate->bottom, hrgnUpdate, flags );
-    }
-    else
-    {
-        DPRINT( "%04x NULL %04x flags=%04x\n", hwnd, hrgnUpdate, flags);
-    }
-
+ 
     GetClientRect( hwnd, &rectClient );
 
     if (flags & RDW_INVALIDATE)  /* Invalidate */
     {
         int rgnNotEmpty = COMPLEXREGION;
 
-        if (wndPtr->hrgnUpdate > 1)  /* Is there already an update region? */
+        if (wndPtr->hrgnUpdate > (HRGN)1)  /* Is there already an update region? */
         {
             if ((hrgn = hrgnUpdate) == 0)
                 hrgn = CreateRectRgnIndirect( rectUpdate ? rectUpdate :
@@ -116,7 +110,7 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
     else if (flags & RDW_VALIDATE)  /* Validate */
     {
           /* We need an update region in order to validate anything */
-        if (wndPtr->hrgnUpdate > 1)
+        if (wndPtr->hrgnUpdate > (HRGN)1)
         {
             if (!hrgnUpdate && !rectUpdate)
             {
@@ -148,13 +142,13 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
 
     if (flags & RDW_INTERNALPAINT)
     {
-	if ( wndPtr->hrgnUpdate <= 1 && !(wndPtr->flags & WIN_INTERNAL_PAINT))
+	if ( wndPtr->hrgnUpdate <= (HRGN)1 && !(wndPtr->flags & WIN_INTERNAL_PAINT))
 	    QUEUE_IncPaintCount( wndPtr->hmemTaskQ );
 	wndPtr->flags |= WIN_INTERNAL_PAINT;	    
     }
     else if (flags & RDW_NOINTERNALPAINT)
     {
-	if ( wndPtr->hrgnUpdate <= 1 && (wndPtr->flags & WIN_INTERNAL_PAINT))
+	if ( wndPtr->hrgnUpdate <= (HRGN)1 && (wndPtr->flags & WIN_INTERNAL_PAINT))
 	    QUEUE_DecPaintCount( wndPtr->hmemTaskQ );
 	wndPtr->flags &= ~WIN_INTERNAL_PAINT;
     }
@@ -168,10 +162,10 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
     }
     else if (flags & RDW_ERASENOW)
     {
-        if (wndPtr->flags & WIN_NEEDS_NCPAINT)
+        //if (wndPtr->flags & WIN_NEEDS_NCPAINT)
 	    WIN_UpdateNCArea( wndPtr, FALSE);
 
-        if (wndPtr->flags & WIN_NEEDS_ERASEBKGND)
+        //if (wndPtr->flags & WIN_NEEDS_ERASEBKGND)
         {
             HDC hdc = GetDCEx( hwnd, wndPtr->hrgnUpdate,
                                    DCX_INTERSECTRGN | DCX_USESTYLE |
@@ -248,4 +242,37 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
     }
     return TRUE;
 }
+
+/***********************************************************************
+ *           GetControlBrush   Not A Win32 API
+ */
+HBRUSH GetControlBrush( HWND hwnd, HDC hdc, UINT ctlType )
+{
+    WND* wndPtr = WIN_FindWndPtr( hwnd );
+
+    if((ctlType <= CTLCOLOR_MAX) && wndPtr )
+    {
+	WND* parent;
+	if( wndPtr->dwStyle & WS_POPUP ) parent = wndPtr->owner;
+	else parent = wndPtr->parent;
+	if( !parent ) parent = wndPtr;
+	return (HBRUSH)PAINT_GetControlBrush( parent->hwndSelf, hwnd, hdc, ctlType );
+    }
+    return (HBRUSH)0;
+}
+
+/***********************************************************************
+ *	     PAINT_GetControlBrush
+ */
+HBRUSH PAINT_GetControlBrush( HWND hParent, HWND hWnd, HDC hDC, UINT ctlType )
+{
+    LOGBRUSH LogBrush;
+    HBRUSH bkgBrush = (HBRUSH)SendMessageA( hParent, WM_CTLCOLORMSGBOX + ctlType, 
+							     (WPARAM)hDC, (LPARAM)hWnd );
+    if( !GetObject(bkgBrush,sizeof(LOGBRUSH),&LogBrush) )
+	bkgBrush = DEFWND_ControlColor( hDC, ctlType );
+    return bkgBrush;
+}
+
+
 

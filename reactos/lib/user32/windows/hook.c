@@ -287,12 +287,12 @@ LRESULT HOOK_CallHook( HHOOK hook, INT fromtype, INT code,
                               WPARAM wParam, LPARAM lParam )
 {
    // MESSAGEQUEUE *queue;
-    HANDLE prevHook;
+    //HANDLE prevHook;
     HOOKDATA *data = (HOOKDATA *)(hook);
     LRESULT ret;
 
-    WPARAM wParamOrig = wParam;
-    LPARAM lParamOrig = lParam;
+    //WPARAM wParamOrig = wParam;
+    //LPARAM lParamOrig = lParam;
    // HOOK_MapFunc MapFunc;
    // HOOK_UnMapFunc UnMapFunc;
 
@@ -337,7 +337,16 @@ WINBOOL HOOK_IsHooked( INT id )
     return HOOK_GetHook( id, GetThreadQueue(0) ) != 0;
 }
 
+LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wParam,
+                           LPARAM lParam ,WINBOOL bUnicode)
+{
+	if ( bUnicode == TRUE )
+		return HOOK_CallHooksW( id, code, wParam,lParam );
+	else
+		return HOOK_CallHooksA( id, code, wParam,lParam );
 
+	return 0;
+}
 
 /***********************************************************************
  *           HOOK_CallHooksA

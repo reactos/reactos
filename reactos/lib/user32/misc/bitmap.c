@@ -84,3 +84,6 @@ HBITMAP BITMAP_LoadBitmapW(HINSTANCE instance,LPCWSTR name,
     return hbitmap;
 #endif
 }
+
+
+

@@ -1,7 +1,9 @@
 
 #include <windows.h>
 
+#include <user32/static.h>
 
+HICON LoadStandardIcon(UINT IconId);
 
 HICON
 STDCALL
@@ -27,8 +29,42 @@ CreateIcon(
 HICON
 STDCALL
 CreateIconIndirect(
-		   PICONINFO piconinfo)
+		   PICONINFO lpIconInfo)
 {
+    BITMAP bmpXor,bmpAnd;
+    HICON hObj;
+    int	sizeXor,sizeAnd;
+
+    GetObject(lpIconInfo->hbmColor,sizeof(BITMAP),&bmpXor);
+    GetObject(lpIconInfo->hbmMask,sizeof(BITMAP),&bmpAnd);
+   
+   
+
+    sizeXor = bmpXor.bmHeight * bmpXor.bmWidthBytes;
+    sizeAnd = bmpAnd.bmHeight * bmpAnd.bmWidthBytes;
+
+    hObj = GlobalAlloc( GMEM_MOVEABLE, 
+		     sizeof(ICONINFO) + sizeXor + sizeAnd );
+    if (hObj)
+    {
+	ICONINFO *info;
+
+	info = (ICONINFO *)( hObj );
+	info->xHotspot   = lpIconInfo->xHotspot;
+	info->yHotspot   = lpIconInfo->yHotspot;
+	//info->nWidth        = bmpXor.bmWidth;
+	//info->nHeight       = bmpXor.bmHeight;
+	//info->nWidthBytes   = bmpXor.bmWidthBytes;
+	//info->bPlanes       = bmpXor.bmPlanes;
+	//info->bBitsPerPixel = bmpXor.bmBitsPixel;
+
+	/* Transfer the bitmap bits to the CURSORICONINFO structure */
+
+	GetBitmapBits( lpIconInfo->hbmMask ,sizeAnd,(char*)(info + 1) );
+	GetBitmapBits( lpIconInfo->hbmColor,sizeXor,(char*)(info + 1) +sizeAnd);
+	
+    }
+    return hObj;
 }
 
  
@@ -53,14 +89,79 @@ GetIconInfo(
 
 HICON LoadIconA(HINSTANCE hInstance,LPCSTR  lpIconName )
 {
-	return CreateIcon(hInstance,	GetSystemMetrics(SM_CXSMICON),
-	GetSystemMetrics(SM_CYSMICON),
- 	0,0,NULL,NULL);
+	HRSRC hrsrc;
+	ICONINFO *IconInfo;
+	
+	if ( hInstance == NULL ) {
+		return LoadStandardIcon((UINT)lpIconName);
+	}
+//RT_GROUP_ICON
+hrsrc = FindResourceExA(hInstance,RT_GROUP_ICON, lpIconName, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+
+	if ( hrsrc == NULL )
+		return NULL;
+
+	IconInfo = (ICONINFO *)LoadResource(hInstance, hrsrc);
+	if ( IconInfo != NULL || IconInfo->fIcon == FALSE )
+		return NULL;	
+
+    	return CreateIconIndirect(IconInfo);
 }
 
 HICON LoadIconW(HINSTANCE hInstance,LPCWSTR  lpIconName )
 {
-	return CreateIcon(hInstance,	GetSystemMetrics(SM_CXSMICON),
-	GetSystemMetrics(SM_CYSMICON),
- 	0,0,NULL,NULL);
+	HRSRC hrsrc;
+	ICONINFO *IconInfo;
+
+	if ( hInstance == NULL ) {
+		return LoadStandardIcon((UINT)lpIconName);
+	}
+
+	hrsrc = FindResourceW(hInstance,lpIconName,RT_GROUP_ICON);
+	if ( hrsrc == NULL )
+		return NULL;
+
+	IconInfo = (ICONINFO *)LoadResource(hInstance, hrsrc);
+	if ( IconInfo != NULL || IconInfo->fIcon == FALSE )
+		return NULL;	
+
+    	return CreateIconIndirect(IconInfo);
+}
+
+HICON LoadStandardIcon(UINT IconId)
+{
+	HMODULE hModule = LoadLibraryA("user32.dll");
+	switch (IconId )
+	{	
+		case IDI_APPLICATION:
+			IconId = 100;
+			return LoadIconW(hModule,(LPWSTR)IconId);
+			break;
+		case IDI_ASTERISK:
+		//
+			IconId = 103;
+			return LoadIconW(hModule,(LPWSTR)IconId);
+			break;
+		case IDI_EXCLAMATION:
+			IconId = 101;
+			return LoadIconW(hModule,(LPWSTR)IconId);
+			break;
+		case IDI_HAND:
+		// 
+			return LoadIconW(hModule,(LPWSTR)MAKEINTRESOURCE(104));
+			break;
+		case IDI_QUESTION:
+			IconId = 102;
+			return LoadIconW(hModule,(LPWSTR)IconId);
+			break;
+		case IDI_WINLOGO:
+			IconId = 105;
+			return LoadIconW(hModule,(LPWSTR)IconId);
+			break;
+		default:
+			return NULL;
+			break;
+	
+	}
+	return NULL;
 }

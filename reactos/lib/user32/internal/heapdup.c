@@ -72,6 +72,7 @@ int lpstrncpyA( LPSTR ptr1,LPSTR ptr2, int n)
 		if ( ptr1[i] == 0 )
 			break;
 	}
+	return i;
 }
 int lpstrncpyW( LPWSTR ptr1,LPWSTR ptr2, int n)
 {
@@ -81,6 +82,7 @@ int lpstrncpyW( LPWSTR ptr1,LPWSTR ptr2, int n)
 		if ( ptr1[i] == 0 )
 			break;
 	}
+	return i;
 }
 
 LPSTR HEAP_strdupA(HANDLE  hHeap,DWORD  dwFlags,LPCSTR ptr)
@@ -100,4 +102,14 @@ LPWSTR HEAP_strdupW(HANDLE  hHeap,DWORD  dwFlags,LPCWSTR ptr)
 	 	lstrcpyW(lpszString,ptr);
 	 
 	 return lpszString;
+}
+
+int HEAP_memset( void *d,int c ,int count)
+{
+	return memset(d,c,count);
+}
+
+int HEAP_memcpy( void *d,void *s,int c)
+{
+	return memcpy(d,s,c);
 }

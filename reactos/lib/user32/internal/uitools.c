@@ -6,9 +6,9 @@
  */
 
 #include <windows.h>
+#include <user32/syscolor.h>
 #include <user32/debug.h>
 
-HPEN STDCALL GetSysColorPen( INT index );
 
 static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
                                        0xaaaa, 0x5555, 0xaaaa, 0x5555 };
@@ -18,11 +18,7 @@ static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
  * UITOOLS_DrawRectEdge()
  */
 
-/* DrawEdge() flags */
-#define BDR_RAISEDOUTER    0x0001
-#define BDR_SUNKENOUTER    0x0002
-#define BDR_RAISEDINNER    0x0004
-#define BDR_SUNKENINNER    0x0008
+
 
 #define BDR_OUTER          0x0003
 #define BDR_INNER          0x000c

@@ -8,12 +8,10 @@
 
 
 #include <windows.h>
-//#include <user32/syscolor.h>
+#include <user32/syscolor.h>
 #include <user32/nc.h>
 
 
-void SYSCOLOR_SetColor( int index, COLORREF color );
-void SYSCOLOR_Init(void);
 
 static const char * const DefSysColors[] =
 {
@@ -149,7 +147,7 @@ HBRUSH STDCALL GetSysColorBrush( INT index )
  * Windows. However, it is a natural complement for GetSysColorBrush
  * in the Win API and is needed quite a bit inside Wine.
  */
-HPEN STDCALL GetSysColorPen( INT index )
+HPEN  GetSysColorPen( INT index )
 {
     /* We can assert here, because this function is internal to Wine */
     //assert (0 <= index && index < NUM_SYS_COLORS);

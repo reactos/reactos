@@ -1,8 +1,11 @@
 #include <windows.h>
+#include <stdio.h>
+
 
 LRESULT CALLBACK WindowFunc(HWND,UINT,WPARAM, LPARAM);
 
 char szName[] = "Hallo";
+
 
 int _CRT_fmode = 0;
 int _CRT_glob = 0;
@@ -13,24 +16,34 @@ int __main(int argc, char **argv)
 }
 
 
+int i;
+
+
+
 int main(int argc, char **argv)
 {
+	WIDGETS_Init();
+#if 0
 	HWND hwnd;
+	HWND User32hWnd;
 	HMENU hmenu;
 	MSG msg;
 	WNDCLASSEX wc1;
 	HINSTANCE hInst = 0;
 	int nWinMode = SW_SHOW;
+        unsigned short *test;
 
-	RECT rect;
+        
+	HANDLE hMod, hrsrc;
+	RECT rect, cl;
 
 	wc1.hInstance = hInst;
 	wc1.lpszClassName = szName;
 	wc1.lpfnWndProc = WindowFunc;
 	wc1.style = 0;
 	wc1.cbSize = sizeof(WNDCLASSEX);
-	wc1.hIcon = NULL;
-	wc1.hIconSm = NULL;
+	wc1.hIcon = LoadIcon(NULL,IDI_APPLICATION);
+	wc1.hIconSm = LoadIcon(NULL,IDI_WINLOGO);;
 
 	wc1.hCursor = NULL;
 	wc1.lpszMenuName = NULL;
@@ -38,21 +51,30 @@ int main(int argc, char **argv)
 	wc1.cbClsExtra = 0;
 	wc1.cbWndExtra = 0;
 
-	wc1.hbrBackground = NULL;
+	wc1.hbrBackground = GetStockObject(WHITE_BRUSH);
+
 
 	if ( !RegisterClassEx(&wc1)) return 0;
 
-	hmenu = CreateMenu();
 
-	hwnd = CreateWindowEx(0, szName, "test", WS_OVERLAPPEDWINDOW,
+	hwnd = CreateWindowEx
+	(0, szName, "test2", WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
-		NULL,hmenu,hInst, NULL);
+		NULL,NULL,hInst, NULL);
 
-      
+
+        MessageBox(NULL,"Hallo","Hallo",MB_OK);
+
 	ShowWindow(hwnd,nWinMode);
 	UpdateWindow(hwnd);
+#endif
+	MessageBox(NULL,"xxx","yyyy",MB_OK);
+#if 0
+	GetWindowRect(hwnd,&rect);
+	GetClientRect(hwnd,&cl);
 
-	SetWindowText(hwnd,"Hallo");
+	printf("%d\n",(rect.left - rect.right) - (cl.left - cl.right));
+	SetWindowText(hwnd,"Hallo3");
 
 	DrawMenuBar(hwnd);	
 //	SendMessage( hwnd, WM_MOVE, 0,MAKELONG(0,0));
@@ -64,10 +86,11 @@ int main(int argc, char **argv)
 	}
 	Sleep(10000);
 	return msg.wParam;
+#endif
 }
 
 
-	//printf("hallo\n");
+	
 	
 	
 

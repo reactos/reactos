@@ -9,5 +9,7 @@
 LPCVOID SYSRES_GetResPtr( int id )
 {
 //    return SYSRES_Resources[Options.language][id]->data;
+
+
 	return NULL;
 }

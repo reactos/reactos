@@ -1,15 +1,16 @@
-#undef WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <user32/win.h>
-//#include <user32/debug.h>
+#include <user32/debug.h>
 #include <user32/resource.h>
 #include <user32/sysmetr.h>
+#include <user32/syscolor.h>
 #include <user32/menu.h>
 #include <user32/nc.h>
-#include <stdlib.h>
+#include <user32/heapdup.h>
 
 #include <wchar.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
 typedef struct tagMDINEXTMENU 
 {
@@ -47,9 +48,6 @@ UINT uSubPWndLevel = 0;
   /* Flag set by EndMenu() to force an exit from menu tracking */
 WINBOOL fEndMenu = FALSE;
 
-
-#include<stdio.h>
-#define DPRINT printf
 
 
 /***********************************************************************
@@ -684,7 +682,7 @@ void MENU_PopupMenuCalcSize( LPPOPUPMENU lppop, HWND hwndOwner )
  *
  * Calculate the size of the menu bar.
  */
-static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect,
+void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect,
                                   LPPOPUPMENU lppop, HWND hwndOwner )
 {
     MENUITEM *lpitem;
@@ -1451,7 +1449,7 @@ WINBOOL MENU_PatchResidentPopup( HQUEUE checkQueue, WND* checkWnd )
     }
     menu->items = newItems;
     menu->nItems++;
-    memset( &newItems[pos], 0, sizeof(*newItems) );
+    HEAP_memset( &newItems[pos], 0, sizeof(*newItems) );
     return &newItems[pos];
 }
 

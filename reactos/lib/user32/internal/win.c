@@ -9,6 +9,8 @@
 #include <user32/dce.h>
 #include <user32/caret.h>
 #include <user32/debug.h>
+#include <user32/heapdup.h>
+#include <user32/dialog.h>
 
 WND *rootWnd;
 //////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +95,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
 			     ? MENU_GetSysMenu( hWnd, 0 ) : 0;
 
     if (classPtr->cbWndExtra) 
-	memset( wndPtr->wExtra, 0, classPtr->cbWndExtra);
+	HEAP_memset( wndPtr->wExtra, 0, classPtr->cbWndExtra);
 
 
     /* Call the WH_CBT hook */
@@ -107,7 +109,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
 
 	cbtc.lpcs = cs;
 	cbtc.hwndInsertAfter = hWndLinkAfter;
-        ret = HOOK_CallHooksW(WH_CBT, HCBT_CREATEWND, hWnd, (LPARAM)&cbtc);
+        ret = HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (INT)hWnd, (LPARAM)&cbtc,  classPtr->bUnicode);
         if (ret)
 	{
 
@@ -232,21 +234,14 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     maxPos.x = wndPtr->rectWindow.left;
     maxPos.y = wndPtr->rectWindow.top;
 
-    if ( classPtr->bUnicode == TRUE ) {
-    	if( SendMessageW( hWnd, WM_NCCREATE, 0, (LPARAM)cs) == 0)
-    	{
+
+    if( MSG_SendMessage( wndPtr, WM_NCCREATE, 0, (LPARAM)cs) == 0)
+    {
 	    /* Abort window creation */
-		WIN_DestroyWindow( wndPtr );
-	 	return NULL;
-    	}
-    } else {
-	if( SendMessageA( hWnd, WM_NCCREATE, 0, (LPARAM)cs) == 0)
-    	{
-	    /* Abort window creation */
-		WIN_DestroyWindow( wndPtr );
-	 	return NULL;
-    	}
+	WIN_DestroyWindow( wndPtr );
+	return NULL;
     }
+   
 	
     /* Insert the window in the linked list */
 
@@ -258,7 +253,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
                                           maxPos.y - wndPtr->rectWindow.top);
 
 
-    if( (SendMessageA( hWnd, WM_CREATE, 0, (LPARAM)cs )) == -1 )
+    if( (MSG_SendMessage( wndPtr, WM_CREATE, 0, (LPARAM)cs)) == -1 )
     {
 	WIN_UnlinkWindow( hWnd );
 	WIN_DestroyWindow( wndPtr );
@@ -272,12 +267,12 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
 	if (((wndPtr->rectClient.right-wndPtr->rectClient.left) <0)
 		    ||((wndPtr->rectClient.bottom-wndPtr->rectClient.top)<0))
 		 
-         SendMessageA( hWnd, WM_SIZE, SIZE_RESTORED,
+         MSG_SendMessage( wndPtr, WM_SIZE, SIZE_RESTORED,
                                 MAKELONG(wndPtr->rectClient.right-wndPtr->rectClient.left,
                                          wndPtr->rectClient.bottom-wndPtr->rectClient.top));
-         SendMessageA( hWnd, WM_MOVE, 0,
+         MSG_SendMessage( wndPtr, WM_MOVE, 0,
                                 MAKELONG( wndPtr->rectClient.left,
-                                          wndPtr->rectClient.top ) );
+                                          wndPtr->rectClient.top) );
     }
 
             /* Show the window, maximizing or minimizing if needed */
@@ -299,7 +294,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     {
 		/* Notify the parent window only */
 
-		SendMessageA( wndPtr->parent->hwndSelf, WM_PARENTNOTIFY,
+		MSG_SendMessage( wndPtr->parent, WM_PARENTNOTIFY,
 				MAKEWPARAM(WM_CREATE, wndPtr->wIDmenu), (LPARAM)hWnd );
 		if( !IsWindow(hWnd) ) return 0;
     }
@@ -310,12 +305,18 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
             /* Call WH_SHELL hook */
 
     if (!(wndPtr->dwStyle & WS_CHILD) && !wndPtr->owner)
-                HOOK_CallHooksW( WH_SHELL, HSHELL_WINDOWCREATED, hWnd, 0L );
+                HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWCREATED, (INT)hWnd, 0L,  classPtr->bUnicode);
 
             
     return hWnd;
  
 
+}
+
+WINBOOL WIN_IsWindow(HANDLE hWnd)
+{	
+        if (WIN_FindWndPtr( hWnd ) == NULL) return FALSE;
+	return TRUE;
 }
 
 /***********************************************************************
@@ -446,7 +447,7 @@ LONG WIN_SetWindowLong( HWND hwnd, INT offset, LONG newval )
         /* Special case for dialog window procedure */
         if ((offset == DWL_DLGPROC) && (wndPtr->flags & WIN_ISDIALOG))
         {
-		retval = ptr;
+		retval = (LONG)ptr;
 		*ptr = newval;
             	return (LONG)retval;
         }
@@ -454,12 +455,12 @@ LONG WIN_SetWindowLong( HWND hwnd, INT offset, LONG newval )
     else switch(offset)
     {
 	case GWL_ID:
-		ptr = (DWORD*)&wndPtr->wIDmenu;
+		ptr = (LONG*)&wndPtr->wIDmenu;
 		break;
 	case GWL_HINSTANCE:
-		return SetWindowWord( hwnd, offset, newval );
+		return (LONG)SetWindowWord( hwnd, offset, newval );
 	case GWL_WNDPROC:
-		retval = wndPtr->winproc;
+		retval = (LONG)wndPtr->winproc;
 		wndPtr->winproc = (WNDPROC)newval;
 		return retval;
 	case GWL_STYLE:
@@ -467,24 +468,22 @@ LONG WIN_SetWindowLong( HWND hwnd, INT offset, LONG newval )
 		newval &= ~(WS_VISIBLE | WS_CHILD);	/* Some bits can't be changed this way */
 		style.styleNew = newval | (style.styleOld & (WS_VISIBLE | WS_CHILD));
 
-		//if (wndPtr->flags & WIN_ISWIN32)
-			SendMessageA(hwnd,WM_STYLECHANGING,GWL_STYLE,(LPARAM)&style);
+		
+		MSG_SendMessage(wndPtr,WM_STYLECHANGING,GWL_STYLE,(LPARAM)&style);
 		wndPtr->dwStyle = style.styleNew;
-		//if (wndPtr->flags & WIN_ISWIN32)
-			SendMessageA(hwnd,WM_STYLECHANGED,GWL_STYLE,(LPARAM)&style);
+		
+		MSG_SendMessage(wndPtr,WM_STYLECHANGED,GWL_STYLE,(LPARAM)&style);
 		return style.styleOld;
 		    
         case GWL_USERDATA: 
-		ptr = &wndPtr->userdata; 
+		ptr = (LONG *)&wndPtr->userdata; 
 		break;
         case GWL_EXSTYLE:  
 	        style.styleOld = wndPtr->dwExStyle;
 		style.styleNew = newval;
-		//if (wndPtr->flags & WIN_ISWIN32)
-			SendMessageA(hwnd,WM_STYLECHANGING,GWL_EXSTYLE,(LPARAM)&style);
-		wndPtr->dwExStyle = newval;
-		//if (wndPtr->flags & WIN_ISWIN32)
-			SendMessageA(hwnd,WM_STYLECHANGED,GWL_EXSTYLE,(LPARAM)&style);
+		MSG_SendMessage(wndPtr,WM_STYLECHANGING,GWL_EXSTYLE,(LPARAM)&style);
+		wndPtr->dwExStyle = newval;		
+		MSG_SendMessage(wndPtr,WM_STYLECHANGED,GWL_EXSTYLE,(LPARAM)&style);
 		return style.styleOld;
 
 	default:
@@ -511,19 +510,20 @@ WINBOOL WIN_DestroyWindow( WND* wndPtr )
     HWND hWnd;
     WND *pWnd;
 
+    if ( wndPtr == NULL )
+	return FALSE;
+
     hWnd = wndPtr->hwndSelf;
 
-#ifdef CONFIG_IPC
-    if (main_block)
-	DDE_DestroyWindow(wndPtr->hwndSelf);
-#endif  /* CONFIG_IPC */
+
 	
     /* free child windows */
 
     while ((pWnd = wndPtr->child))
-        wndPtr->child = WIN_DestroyWindow( pWnd );
+        if ( !WIN_DestroyWindow( pWnd ) )
+		break;
 
-    SendMessageA( wndPtr->hwndSelf, WM_NCDESTROY, 0, 0);
+    MSG_SendMessage( wndPtr, WM_NCDESTROY, 0, 0);
 
     /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
@@ -570,9 +570,9 @@ WINBOOL WIN_DestroyWindow( WND* wndPtr )
     if (!(wndPtr->dwStyle & WS_CHILD))
        if (wndPtr->wIDmenu) DestroyMenu( (HMENU)wndPtr->wIDmenu );
     if (wndPtr->hSysMenu) DestroyMenu( wndPtr->hSysMenu );
-    //wndPtr->pDriver->pDestroyWindow( wndPtr );
+   
 
-    //DeleteDC(wndPtr->dc)    /* Always do this to catch orphaned DCs */ 
+  //  DeleteDC(wndPtr->dc)    /* Always do this to catch orphaned DCs */ 
 
     wndPtr->winproc = NULL;
     wndPtr->hwndSelf = NULL;
@@ -779,10 +779,7 @@ WINBOOL WIN_LinkWindow( HWND hWnd, HWND hWndInsertAfter )
 void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
 {
     POINT pt = {0, 0}; 
-    HRGN hClip = 1;
-
-    DPRINT("hwnd %04x, hrgnUpdate %04x\n", 
-                      wnd->hwndSelf, wnd->hrgnUpdate );
+    HRGN hClip = (HRGN)1;
 
     /* desktop window doesn't have nonclient area */
     if(wnd == WIN_GetDesktop()) 
@@ -791,7 +788,7 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
         return;
     }
 
-    if( wnd->hrgnUpdate > 1 )
+    if( wnd->hrgnUpdate > (HRGN)1 )
     {
 	ClientToScreen(wnd->hwndSelf, &pt);
 
@@ -799,7 +796,7 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
         if (!CombineRgn( hClip, wnd->hrgnUpdate, 0, RGN_COPY ))
         {
             DeleteObject(hClip);
-            hClip = 1;
+            hClip = (HRGN)1;
         }
 	else
 	    OffsetRgn( hClip, pt.x, pt.y );
@@ -815,7 +812,7 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
                                        hrgn, RGN_AND) == NULLREGION))
             {
                 DeleteObject( wnd->hrgnUpdate );
-                wnd->hrgnUpdate = 1;
+                wnd->hrgnUpdate = (HRGN)1;
             }
 
             DeleteObject( hrgn );
@@ -824,17 +821,19 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
 
     wnd->flags &= ~WIN_NEEDS_NCPAINT;
 
+#ifdef OPTIMIZE
     if ((wnd->hwndSelf == GetActiveWindow()) &&
         !(wnd->flags & WIN_NCACTIVATED))
     {
         wnd->flags |= WIN_NCACTIVATED;
-        if( hClip > 1) DeleteObject( hClip );
-        hClip = 1;
+        if( hClip > (HRGN)1) DeleteObject( hClip );
+        hClip = (HRGN)1;
     }
+#endif
 
-    if (hClip) SendMessage( wnd->hwndSelf, WM_NCPAINT, hClip, 0L );
+    if (hClip) MSG_SendMessage( wnd, WM_NCPAINT, (WPARAM)hClip, 0L );
 
-    if (hClip > 1) DeleteObject( hClip );
+    if (hClip > (HRGN)1) DeleteObject( hClip );
 }
 
 /***********************************************************************
@@ -888,9 +887,9 @@ void WIN_SendDestroyMsg( WND* pWnd )
     WIN_CheckFocus(pWnd);
 
     if( CARET_GetHwnd() == pWnd->hwndSelf ) DestroyCaret();
-//    CLIPBOARD_GetDriver()->pResetOwner( pWnd, TRUE ); 
+
   
-    SendMessageA( pWnd->hwndSelf, WM_DESTROY, 0, 0);
+    MSG_SendMessage( pWnd, WM_DESTROY, 0, 0);
 
     if( IsWindow(pWnd->hwndSelf) )
     {
@@ -907,6 +906,26 @@ void WIN_SendDestroyMsg( WND* pWnd )
 }
 
 
+/***********************************************************************
+ *           IsDialogMessage   (USER32.90)
+ */
+WINBOOL STDCALL WIN_IsDialogMessage( HWND hwndDlg, LPMSG msg )
+{
+
+    WINBOOL ret, translate, dispatch;
+    INT dlgCode;
+
+    if ((hwndDlg != msg->hwnd) && !IsChild( hwndDlg, msg->hwnd ))
+        return FALSE;
+
+    dlgCode = SendMessage( msg->hwnd, WM_GETDLGCODE, 0, (LPARAM)msg);
+    ret = DIALOG_IsDialogMessage( msg->hwnd, hwndDlg, msg->message,
+                                  msg->wParam, msg->lParam,
+                                  &translate, &dispatch, dlgCode );
+    if (translate) TranslateMessage( msg );
+    if (dispatch) DispatchMessage( msg );
+    return ret;
+}
 
 
 

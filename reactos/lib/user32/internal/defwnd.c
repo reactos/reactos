@@ -14,6 +14,7 @@
 #include <user32/dce.h>
 #include <user32/sysmetr.h>
 #include <user32/paint.h>
+#include <user32/defwnd.h>
 #include <user32/debug.h>
 
 
@@ -65,11 +66,22 @@ void DEFWND_HandleWindowPosChanged( WND *wndPtr, UINT flags )
  *
  * Set the window text.
  */
+
+void DEFWND_SetText( WND *wndPtr,const void *text )
+{
+ 	if ( wndPtr->class->bUnicode )
+		DEFWND_SetTextW( wndPtr, (LPCWSTR) text );
+	else
+		DEFWND_SetTextA( wndPtr, (LPCSTR) text );
+	   
+}
+
 void DEFWND_SetTextA( WND *wndPtr, LPCSTR text )
 {
     if (!text) text = "";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
-    wndPtr->text = (void *)HEAP_strdupA( GetProcessHeap(), 0, text );    
+    wndPtr->text = (void *)HEAP_strdupA( GetProcessHeap(), 0, text );   
+    NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */
 }
 
 
@@ -77,7 +89,8 @@ void DEFWND_SetTextW( WND *wndPtr, LPCWSTR text )
 {
     if (!text) text = L"";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
-    wndPtr->text = (void *)HEAP_strdupW( GetProcessHeap(), 0, text );    
+    wndPtr->text = (void *)HEAP_strdupW( GetProcessHeap(), 0, text );  
+    NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */  
 
 }
 /***********************************************************************
@@ -125,7 +138,7 @@ void DEFWND_SetRedraw( WND* wndPtr, WPARAM wParam )
     {
 	if( !bVisible )
 	{
-	    wndPtr->dwStyle |= WS_VISIBLE;
+	    //wndPtr->dwStyle |= WS_VISIBLE;
 	    DCE_InvalidateDCE( wndPtr, &wndPtr->rectWindow );
 	}
     }
@@ -136,7 +149,7 @@ void DEFWND_SetRedraw( WND* wndPtr, WPARAM wParam )
 
 	PAINT_RedrawWindow( wndPtr->hwndSelf, NULL, 0, wParam, 0 );
 	DCE_InvalidateDCE( wndPtr, &wndPtr->rectWindow );
-	wndPtr->dwStyle &= ~WS_VISIBLE;
+//	wndPtr->dwStyle &= ~WS_VISIBLE;
     }
 }
 
@@ -171,8 +184,8 @@ LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
         if ((wndPtr->flags & WIN_ISWIN) || (TWEAK_WineLook > WIN31_LOOK))
         {
 	    ClientToScreen(wndPtr->hwndSelf, (LPPOINT)&lParam);
-            SendMessageA( wndPtr->hwndSelf, WM_CONTEXTMENU,
-			    wndPtr->hwndSelf, lParam);
+            MSG_SendMessage( wndPtr, WM_CONTEXTMENU,
+			    (WPARAM)wndPtr->hwndSelf,(LPARAM) lParam);
         }
         break;
 

@@ -5,9 +5,11 @@
 #include <user32/winpos.h>
 #include <user32/hook.h>
 #include <user32/property.h>
+#include <user32/paint.h>
 #include <user32/debug.h>
 
 
+// change style on WS_OVERLAPPEDWINDOW
 
 #undef CreateWindowA
 HWND STDCALL CreateWindowA(LPCSTR  lpClassName, LPCSTR  lpWindowName,
@@ -51,17 +53,11 @@ HWND STDCALL CreateWindowExA( DWORD exStyle, LPCSTR lpClassName,
     //if(exStyle & WS_EX_MDICHILD)
     //    return MDI_CreateMDIWindowA(className, windowName, style, x, y, width, height, parent, instance, data);
 
-#if 0
-    while ((*lpWindowName)!=0 && i < MAX_PATH)
-     {
-	WindowNameW[i] = *lpWindowName;
-	lpWindowName++;
-	i++;
-     }
-    WindowNameW[i] = 0;
-#endif
+
 
    
+    if ( style ==  WS_OVERLAPPEDWINDOW )
+	style |= (WS_OVERLAPPED| WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX |WS_MAXIMIZEBOX  );
 
 
     /* Create the window */
@@ -91,8 +87,6 @@ HWND STDCALL CreateWindowExW( DWORD exStyle, LPCWSTR lpClassName,
                                  HWND parent, HMENU menu,
                                  HINSTANCE hInstance, LPVOID data )
 {
-//    WCHAR WindowNameW[MAX_PATH];
-//    WCHAR ClassNameW[MAX_PATH];
     CLASS *p;
     DWORD status;
     CREATESTRUCTW cs;
@@ -103,7 +97,8 @@ HWND STDCALL CreateWindowExW( DWORD exStyle, LPCWSTR lpClassName,
     if ( p == NULL )
 		return NULL;
 
-  
+    if ( style ==  WS_OVERLAPPEDWINDOW )
+	style |= (WS_OVERLAPPED| WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX |WS_MAXIMIZEBOX  );
 
     /* Create the window */
 
@@ -133,22 +128,25 @@ WINBOOL STDCALL DestroyWindow( HWND hwnd )
 {
     WND * wndPtr;
 
-    DPRINT( "(%04x)\n", hwnd);
-    
       /* Initialization */
 
     if (!(wndPtr = WIN_FindWndPtr( hwnd ))) return FALSE;
     //if (wndPtr == pWndDesktop) return FALSE; /* Can't destroy desktop */
 
+
+    if ( hwnd == NULL )
+	return FALSE;
+
+ 
       /* Call hooks */
 	
 
-    if( HOOK_CallHooksA( WH_CBT, HCBT_DESTROYWND, hwnd, 0L) )
+    if( HOOK_CallHooks( WH_CBT, HCBT_DESTROYWND, hwnd, 0L, wndPtr->class->bUnicode ) )
         return FALSE;
 
     if (!(wndPtr->dwStyle & WS_CHILD) && !wndPtr->owner)
     {
-        HOOK_CallHooksA( WH_SHELL, HSHELL_WINDOWDESTROYED, hwnd, 0L );
+        HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWDESTROYED, hwnd, 0L,  wndPtr->class->bUnicode  );
         /* FIXME: clean up palette - see "Internals" p.352 */
     }
 
@@ -156,12 +154,13 @@ WINBOOL STDCALL DestroyWindow( HWND hwnd )
 	if( wndPtr->dwStyle & WS_CHILD && !(wndPtr->dwExStyle & WS_EX_NOPARENTNOTIFY) )
 	{
 	    /* Notify the parent window only */
-	    SendMessageA( wndPtr->parent->hwndSelf, WM_PARENTNOTIFY,
+	    if ( wndPtr->parent  != NULL )
+	    	SendMessageA( wndPtr->parent->hwndSelf, WM_PARENTNOTIFY,
 			    MAKEWPARAM(WM_DESTROY, wndPtr->wIDmenu), (LPARAM)hwnd );
 	    if( !IsWindow(hwnd) ) return TRUE;
 	}
 
-  //  CLIPBOARD_GetDriver()->pResetOwner( wndPtr, FALSE ); /* before the window is unmapped */
+ 
 
       /* Hide the window */
 
@@ -182,7 +181,10 @@ WINBOOL STDCALL DestroyWindow( HWND hwnd )
 
       for (;;)
       {
-        WND *siblingPtr = wndPtr->parent->child;  /* First sibling */
+
+        WND *siblingPtr = NULL;
+        if ( wndPtr->parent != NULL )
+		siblingPtr = wndPtr->parent->child;  /* First sibling */
         while (siblingPtr)
         {
             if (siblingPtr->owner == wndPtr)
@@ -571,20 +573,22 @@ WINBOOL STDCALL IsWindowVisible( HWND hwnd )
 
 
 /***********************************************************************
- *           ShowWindow32   (USER32.534)
+ *           ShowWindow   (USER32.534)
  */
 WINBOOL STDCALL ShowWindow( HWND hwnd, INT cmd ) 
 {    
     WND* 	wndPtr = WIN_FindWndPtr( hwnd );
-    WINBOOL 	wasVisible, showFlag;
+    WINBOOL 	wasVisible = FALSE, showFlag;
     RECT 	newPos = {0, 0, 0, 0};
     int 	swp = 0;
 
     if (!wndPtr) return FALSE;
 
 //    DPRINT("hwnd=%04x, cmd=%d\n", hwnd, cmd);
+#ifdef OPTIMIZATION
 
     wasVisible = (wndPtr->dwStyle & WS_VISIBLE) != 0;
+#endif
 
     switch(cmd)
     {
@@ -680,6 +684,51 @@ WINBOOL STDCALL ShowWindow( HWND hwnd, INT cmd )
  //   SendMessage(hwnd, WM_NCACTIVATE,TRUE,0);
  //   SendMessage(hwnd, WM_NCPAINT,CreateRectRgn(100,100,100, 100) ,0);
 
+   
+    
     return wasVisible;
 }
+
+
+/*******************************************************************
+ *            FlashWindow  (USER32.202)
+ */
+WINBOOL STDCALL FlashWindow( HWND hWnd, WINBOOL bInvert )
+{
+    WND *wndPtr = WIN_FindWndPtr(hWnd);
+
+
+    if (!wndPtr) return FALSE;
+
+    if (wndPtr->dwStyle & WS_MINIMIZE)
+    {
+        if (bInvert && !(wndPtr->flags & WIN_NCACTIVATED))
+        {
+            HDC hDC = GetDC(hWnd);
+            
+            if (!SendMessage( hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0 ))
+                wndPtr->flags |= WIN_NEEDS_ERASEBKGND;
+            
+            ReleaseDC( hWnd, hDC );
+            wndPtr->flags |= WIN_NCACTIVATED;
+        }
+        else
+        {
+            PAINT_RedrawWindow( hWnd, 0, 0, RDW_INVALIDATE | RDW_ERASE |
+					  RDW_UPDATENOW | RDW_FRAME, 0 );
+            wndPtr->flags &= ~WIN_NCACTIVATED;
+        }
+        return TRUE;
+    }
+    else
+    {
+        WPARAM wparam;
+        if (bInvert) wparam = !(wndPtr->flags & WIN_NCACTIVATED);
+        else wparam = (hWnd == GetActiveWindow());
+
+        SendMessage( hWnd, WM_NCACTIVATE, wparam, (LPARAM)0 );
+        return wparam;
+    }
+}
+
 

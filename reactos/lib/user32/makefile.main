@@ -1,25 +1,36 @@
 all: user32.exe
 
 INTERNAL_OBJECTS = internal/property.o internal/menu.o internal/heapdup.o internal/nc.o\
-		internal/scroll.o internal/win.o internal/dce.o internal/msg.o internal/queue.o\
+		 internal/win.o internal/dce.o internal/msg.o internal/queue.o\
 		internal/signal.o internal/event.o internal/timer.o internal/region.o\
-		internal/text.o internal/defwnd.o internal/paint.o internal/uitools.o
+		internal/text.o internal/defwnd.o internal/paint.o internal/uitools.o\
+		internal/dialog.o
 
 MISC_OBJECTS = misc/sprintf.o  misc/dllmain.o misc/string.o misc/sysmetr.o\
 		misc/main.o misc/bitmap.o misc/cursor.o misc/vk.o
 
 
 WINDOWS_OBJECTS = windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
-		windows/queue.o windows/winpos.o windows/class.o windows/menu.o windows/dc.o\
+		windows/queue.o windows/winpos.o windows/class.o windows/dc.o\
 		windows/timer.o windows/rect.o windows/msg.o windows/input.o windows/property.o\
-		windows/focus.o windows/paint.o
+		windows/focus.o windows/paint.o windows/msgbox.o windows/dialog.o\
+		windows/scroll.o windows/defdlg.o
 
 GRAPHICS_OBJECTS = graphics/rect.o graphics/caret.o graphics/text.o graphics/syscol.o graphics/fill.o\
 		graphics/draw.o graphics/icon.o
 
-RESOURCE_OBJECTS = resources/sysres.o 
+CONTROLS_OBJECTS = controls/button.o controls/combo.o controls/edit.o controls/icontitle.o controls/listbox.o\
+		controls/widgets.o controls/menu.o controls/scroll.o controls/static.o
 
-OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJECTS) $(WINDOWS_OBJECTS)
+RESOURCE_OBJECTS = resources/sysres.o
+
+RESOURCE_OBJECT = user32.coff
+
+OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJECTS) $(RESOURCE_OBJECT)\
+	$(CONTROLS_OBJECTS) $(WINDOWS_OBJECTS)
+
+user32.coff: user32.rc ../../include/reactos/resource.h
+	windres user32.rc user32.coff
 
 user32.exe: $(OBJECTS)
 	$(LD) $(OBJECTS)  F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/crt1.o ./libgdi32.a ./libkernel32.a ./libcrtdll.a   -o user32.exe

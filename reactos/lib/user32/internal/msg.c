@@ -4,10 +4,10 @@
  * Copyright 1993, 1994 Alexandre Julliard
  */
 
-#include <stdlib.h>
+
 #include <string.h>
 #include <ctype.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <sys/types.h>
 #include <windows.h>
 #include <user32/msg.h>
@@ -16,6 +16,7 @@
 #include <user32/debug.h>
 #include <user32/winpos.h>
 #include <user32/queue.h>
+#include <user32/heapdup.h>
 
 
 
@@ -158,16 +159,16 @@ DWORD MSG_TranslateMouseMsg( HWND hTopWnd, DWORD filter,
 
     if (HOOK_IsHooked( WH_MOUSE ))
     { 
-	MOUSEHOOKSTRUCT *hook = malloc(sizeof(MOUSEHOOKSTRUCT));
+	MOUSEHOOKSTRUCT *hook = HeapAlloc(GetProcessHeap(),0,sizeof(MOUSEHOOKSTRUCT));
 	if( hook )
 	{
 	    hook->pt           = screen_pt;
 	    hook->hwnd         = hWnd;
 	    hook->wHitTestCode = hittest;
 	    hook->dwExtraInfo  = 0;
-	    ret = HOOK_CallHooksA( WH_MOUSE, remove ? HC_ACTION : HC_NOREMOVE,
-	                            message, (LPARAM)(hook) );
-	    free(hook);
+	    ret = HOOK_CallHooks( WH_MOUSE, remove ? HC_ACTION : HC_NOREMOVE,
+	                            message, (LPARAM)(hook), pWnd->class->bUnicode );
+	    HeapFree(GetProcessHeap(),0,hook);
 	}
 	if( ret ) return MAKELONG((INT)SYSQ_MSG_SKIP, hittest);
     }
@@ -523,24 +524,47 @@ WINBOOL MSG_PeekHardwareMsg( MSG *msg, HWND hwnd, DWORD filter,
     return FALSE;
 }
 
+
 /***********************************************************************
  *           MSG_SendMessage
  *
  * Implementation of an inter-task SendMessage.
  */
-LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
-                                WPARAM wParam, LPARAM lParam, WORD flags )
+LRESULT MSG_SendMessageInterTask( HWND hwnd, UINT msg,
+                                WPARAM wParam, LPARAM lParam, WINBOOL bUnicode)
 {
+
+    WND *wndPtr;
+    WND **list, **ppWnd;
     INT	  prevSMRL = debugSMRL;
     QSMCTRL 	  qCtrl = { 0, 1};
     MESSAGEQUEUE *queue, *destQ;
 
-    if (!(queue = (MESSAGEQUEUE*)GlobalLock( GetFastQueue() ))) return 0;
-    if (!(destQ = (MESSAGEQUEUE*)GlobalLock( hDestQueue ))) return 0;
+    if (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST)
+    {
+    	if (!(list = WIN_BuildWinArray( WIN_GetDesktop(), 0, NULL )))
+        	return TRUE;
+        for (ppWnd = list; *ppWnd; ppWnd++)
+        {
+            wndPtr = *ppWnd;
+            //if (!WIN_IsWindow(wndPtr)) 
+		//continue;
+            if (wndPtr->dwStyle & WS_POPUP || wndPtr->dwStyle & WS_CAPTION) 
+                MSG_SendMessageInterTask( wndPtr->hwndSelf, msg, wParam, lParam, bUnicode );
+        }
+	HeapFree( GetProcessHeap(), 0, list );
+        return TRUE;
+    }
 
-    if (
+
+// should turn queue and destQ around
+    
+    if (!(queue = (MESSAGEQUEUE*)GlobalLock( GetFastQueue() ))) return 0;
+    if (!(destQ = (MESSAGEQUEUE*)GlobalLock( wndPtr->hmemTaskQ ))) return 0;
+
+    //if (
 	//IsTaskLocked() || 
-	!IsWindow(hwnd)) return 0;
+	//!IsWindow(hwnd)) return 0;
 
     debugSMRL+=4;
     DPRINT("%*sSM: %s [%04x] (%04x -> %04x)\n", 
@@ -551,6 +575,9 @@ LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
       DPRINT("\tIntertask SendMessage: sleeping since unreplied SendMessage pending\n");
       QUEUE_WaitBits( QS_SMPARAMSFREE );
     }
+
+
+
 
     /* resume sending */ 
 
@@ -563,7 +590,7 @@ LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
     destQ->hSendingTask = GetFastQueue();
 
     QUEUE_ClearWakeBit( queue, QS_SMPARAMSFREE );
-    queue->flags = (queue->flags & ~(QUEUE_SM_ASCII|QUEUE_SM_UNICODE)) | flags;
+//    queue->flags = (queue->flags & ~(QUEUE_SM_ASCII|QUEUE_SM_UNICODE)) | flags;
 
     DPRINT("%*ssm: smResultInit = %08x\n", prevSMRL, "", (unsigned)&qCtrl);
 
@@ -610,6 +637,52 @@ LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
 WINBOOL MSG_PeekMessage( LPMSG msg, HWND hwnd, WORD first, WORD last,
                                WORD flags, WINBOOL peek )
 {
+#if 0
+			case MOUSE_EVENT:
+				MouseEvent = &Buffer.Event;
+				if ( MouseEvent->dwEventFlags == MOUSE_MOVED ) {
+					msg->hwnd    = hwnd;
+				        msg->message = WM_MOUSEMOVE;
+					msg->wParam = MouseEvent->dwControlKeyState;
+				        msg->lParam  = 
+					MAKELONG(MouseEvent->dwMousePosition.X,MouseEvent->dwMousePosition.Y);	
+				}
+				else if ( MouseEvent->dwEventFlags == DOUBLE_CLICK ) {
+					msg->hwnd    = hwnd;
+				        msg->message = WM_MBUTTONDBLCLK;
+					msg->wParam = MouseEvent->dwControlKeyState;
+				        msg->lParam  = 
+					MAKELONG(MouseEvent->dwMousePosition.X,MouseEvent->dwMousePosition.Y);
+
+				}
+				else {
+				 if (MouseEvent->dwButtonState ==  FROM_LEFT_1ST_BUTTON_PRESSED ) {
+					msg->hwnd    = hwnd;
+				        msg->message = WM_MBUTTONDOWN ;
+					msg->wParam = MouseEvent->dwControlKeyState;
+				        msg->lParam  = 
+					MAKELONG(MouseEvent->dwMousePosition.X,MouseEvent->dwMousePosition.Y);
+				 }
+				 else {
+					msg->hwnd    = hwnd;
+				        msg->message = WM_MBUTTONUP ;
+					msg->wParam = MouseEvent->dwControlKeyState;
+				        msg->lParam  = 
+					MAKELONG(MouseEvent->dwMousePosition.X,MouseEvent->dwMousePosition.Y);
+				 }
+				}
+				break; 				
+	#endif	
+
+
+msg->hwnd    = hwnd;
+msg->message = WM_MBUTTONDBLCLK;
+msg->wParam = 0;
+msg->lParam  = MAKELONG(200,200);			
+
+return TRUE;
+
+#if 0	
     int pos, mask;
     MESSAGEQUEUE *msgQueue;
     HQUEUE hQueue;
@@ -769,6 +842,9 @@ WINBOOL MSG_PeekMessage( LPMSG msg, HWND hwnd, WORD first, WORD last,
     }
     if (peek) return TRUE;
     else return (msg->message != WM_QUIT);
+
+ #endif
+
 }
 
 /***********************************************************************
@@ -1040,6 +1116,29 @@ WINBOOL MSG_DoTranslateMessage( UINT message, HWND hwnd,
 }
 
 
+LRESULT MSG_SendMessage(  WND *wndPtr, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    
+    LRESULT ret;   
+
+    if ( wndPtr == NULL )
+	return 0;
+
+  //  if (QUEUE_IsExitingQueue(wndPtr->hmemTaskQ))
+  //      return 0;  /* Don't send anything if the task is dying */
+
+    
+    
+    if ( wndPtr->class->bUnicode )
+	ret = CallWindowProcW( (WNDPROC)wndPtr->winproc,
+                                 wndPtr->hwndSelf, msg, wParam, lParam );
+    else
+	ret = CallWindowProcA( (WNDPROC)wndPtr->winproc,
+                                wndPtr->hwndSelf, msg, wParam, lParam );
+
+    return ret;
+}
+
 HTASK GetCurrentTask(void)
 {
     return (HTASK)-2;
@@ -1054,7 +1153,7 @@ HQUEUE  GetThreadQueue( DWORD thread )
 {
 	if ( init == 0 ) {
 		init = 1;
-		memset(&Queue,0,sizeof(MESSAGEQUEUE));
+		HEAP_memset(&Queue,0,sizeof(MESSAGEQUEUE));
 	}
 	return hThreadQ;
 }
