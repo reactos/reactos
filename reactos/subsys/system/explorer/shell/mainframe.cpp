@@ -50,13 +50,12 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 		hMainFrame = SDIMainFrame::Create();
 
 	if (hMainFrame) {
-		String sPath;
 		HWND hwndOld = g_Globals._hMainWnd;
 
 		g_Globals._hMainWnd = hMainFrame;
 
 		if (path) {
-			sPath = path;	// copy path to avoid accessing freed memory
+			static String sPath = path;	// copy path to avoid accessing freed memory
 			path = sPath;
 		}
 
