@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.23 2003/08/31 07:56:24 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.24 2003/09/09 09:39:21 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -69,6 +69,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       NtGdiCombineRgn(Combined, Dc->w.hClipRgn, Dc->w.hVisRgn,
 		     RGN_AND);
     }
+  NtGdiOffsetRgn(Combined, Dc->w.DCOrgX, Dc->w.DCOrgY);
 
   CombinedRegion = RGNDATA_LockRgn(Combined);
   ASSERT(NULL != CombinedRegion);
@@ -161,10 +162,6 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
   if (!(dc = DC_LockDc(hDC)))
   	return ERROR;
   retval = UnsafeIntGetRgnBox(dc->w.hGCClipRgn, rc);
-  rc->left -= dc->w.DCOrgX;
-  rc->right -= dc->w.DCOrgX;
-  rc->top -= dc->w.DCOrgY;
-  rc->bottom -= dc->w.DCOrgY;
 
   DC_UnlockDc( hDC );
   NtGdiDPtoLP(hDC, (LPPOINT)rc, 2);
@@ -241,7 +238,6 @@ int STDCALL NtGdiSelectClipRgn(HDC  hDC,
 	  DC_UnlockDc(hDC);
 	  return ERROR;
 	}
-      NtGdiOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgY);
     }
   else
     {

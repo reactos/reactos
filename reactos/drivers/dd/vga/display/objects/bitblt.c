@@ -380,6 +380,8 @@ DrvBitBlt(SURFOBJ *Dest,
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   unsigned i;
+  POINTL Pt;
+  ULONG Direction;
   
   switch (rop4)
     {
@@ -420,13 +422,30 @@ DrvBitBlt(SURFOBJ *Dest,
     case DC_RECT:
       // Clip the blt to the clip rectangle
       VGADDI_IntersectRect(&CombinedRect, DestRect, &(Clip->rclBounds));
+      Pt.x = SourcePoint->x + CombinedRect.left - DestRect->left;
+      Pt.y = SourcePoint->y + CombinedRect.top - DestRect->top;
       Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
-                           SourcePoint, MaskPoint, Brush, BrushPoint,
+                           &Pt, MaskPoint, Brush, BrushPoint,
 	                   rop4);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
-      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, ENUM_RECT_LIMIT);
+      if (Dest == Source)
+	{
+	  if (DestRect->top <= SourcePoint->y)
+	    {
+	      Direction = DestRect->left < SourcePoint->x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	    }
+	  else
+	    {
+	      Direction = DestRect->left < SourcePoint->x ? CD_RIGHTUP : CD_LEFTUP;
+	    }
+	}
+      else
+	{
+	  Direction = CD_ANY;
+	}
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -434,8 +453,10 @@ DrvBitBlt(SURFOBJ *Dest,
 	  for (i = 0; i < RectEnum.c; i++)
 	    {
 	      VGADDI_IntersectRect(&CombinedRect, DestRect, RectEnum.arcl + i);
+	      Pt.x = SourcePoint->x + CombinedRect.left - DestRect->left;
+	      Pt.y = SourcePoint->y + CombinedRect.top - DestRect->top;
 	      Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
-	                           SourcePoint, MaskPoint, Brush, BrushPoint, rop4) &&
+	                           &Pt, MaskPoint, Brush, BrushPoint, rop4) &&
 	            Ret;
 	    }
 	}

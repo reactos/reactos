@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.26 2003/08/17 17:32:58 royce Exp $
+/* $Id: bitblt.c,v 1.27 2003/09/09 09:39:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -105,11 +105,11 @@ BltMask(PSURFOBJ Dest,
 
   if (Mask != NULL)
     {
-      tMask = Mask->pvBits;
+      tMask = Mask->pvBits + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
       for (j = 0; j < dy; j++)
 	{
 	  lMask = tMask;
-	  c8 = 0;
+	  c8 = SourcePoint->x & 0x07;
 	  for (i = 0; i < dx; i++)
 	    {
 	      if (0 != (*lMask & maskbit[c8]))
@@ -213,6 +213,8 @@ EngBitBlt(SURFOBJ *DestObj,
   BOOLEAN            Ret;
   RECTL              ClipRect;
   unsigned           i;
+  POINTL             Pt;
+  ULONG              Direction;
 
   if (NULL != SourcePoint)
     {
@@ -340,12 +342,29 @@ EngBitBlt(SURFOBJ *DestObj,
       ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
       ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
       EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
       Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-                           &CombinedRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4);
+                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
-      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, ENUM_RECT_LIMIT);
+      if (OutputObj == InputObj)
+	{
+	  if (OutputRect.top < InputPoint.y)
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	    }
+	  else
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTUP : CD_LEFTUP;
+	    }
+	}
+      else
+	{
+	  Direction = CD_ANY;
+	}
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
       do
 	{
 	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
@@ -357,8 +376,10 @@ EngBitBlt(SURFOBJ *DestObj,
 	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
 	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
 	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
 	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
-	                           &CombinedRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, Rop4) &&
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4) &&
 	            Ret;
 	    }
 	}

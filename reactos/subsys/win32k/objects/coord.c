@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.18 2003/08/20 22:07:36 royce Exp $
+/* $Id: coord.c,v 1.19 2003/09/09 09:39:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -229,7 +229,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
     MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
 
-    IntLPtoDP ( dc, UnsafePoints, Count );
+    IntLPtoDP ( dc, Points, Count );
 
     MmCopyToCaller ( UnsafePoints, Points, Count*sizeof(POINT) );
 

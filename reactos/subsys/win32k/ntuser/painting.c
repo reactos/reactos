@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.30 2003/08/28 13:38:24 gvg Exp $
+/* $Id: painting.c,v 1.31 2003/09/09 09:39:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -274,7 +274,8 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		}
 	      Window->UpdateRegion =
 		REGION_CropRgn(Window->UpdateRegion,
-			       Window->UpdateRegion, &Rect, NULL);
+			       Window->UpdateRegion ? Window->UpdateRegion : hRgn,
+	                       &Rect, NULL);
 	      if (! HadOne)
 		{
 		  UnsafeIntGetRgnBox(Window->UpdateRegion, &Rect);
@@ -389,42 +390,38 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	{
 	  POINT Total = {0, 0};
 	  POINT PrevOrign = {0, 0};
-	  POINT Client;
 	  PWINDOW_OBJECT Child;
 
-	  Client.x = Window->ClientRect.left - Window->WindowRect.left;
-	  Client.y = Window->ClientRect.top - Window->WindowRect.top;	  
+	  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+	  Child = Window->FirstChild;
+	  while (Child)
+	    {
+	      if (0 != (Child->Style & WS_VISIBLE))
+		{
+		  POINT Offset;
 
-    ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
-    Child = Window->FirstChild;
-    while (Child)
-      {
-        if (0 != (Child->Style & WS_VISIBLE))
-    {
-      POINT Offset;
+		  Rect.left = Child->WindowRect.left - Window->WindowRect.left;
+		  Rect.top = Child->WindowRect.top - Window->WindowRect.top;
+		  Rect.right = Child->WindowRect.right - Window->WindowRect.left;
+		  Rect.bottom = Child->WindowRect.bottom - Window->WindowRect.top;
 
-      Rect.left = Window->WindowRect.left + Client.x;
-      Rect.right = Window->WindowRect.right + Client.x;
-      Rect.top = Window->WindowRect.top + Client.y;
-      Rect.bottom = Window->WindowRect.bottom + Client.y;
+		  Offset.x = Rect.left - PrevOrign.x;
+		  Offset.y = Rect.top - PrevOrign.y;
+		  NtGdiOffsetRect(&Rect, -Total.x, -Total.y);
 
-      Offset.x = Rect.left - PrevOrign.x;
-      Offset.y = Rect.top - PrevOrign.y;
-      NtGdiOffsetRect(&Rect, -Total.x, -Total.y);
-
-      if (NtGdiRectInRegion(hRgn, &Rect))
-        {
-          NtGdiOffsetRgn(hRgn, -Total.x, -Total.y);
-          PaintUpdateRgns(Child, hRgn, Flags, FALSE);
-          PrevOrign.x = Rect.left + Total.x;
-          PrevOrign.y = Rect.right + Total.y;
-          Total.x += Offset.x;
-          Total.y += Offset.y;
-        }
-    }
-        Child = Child->NextSibling;
-      }
-    ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+		  if (UnsafeIntRectInRegion(hRgn, &Rect))
+		    {
+		      NtGdiOffsetRgn(hRgn, -Offset.x, -Offset.y);
+		      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
+		      PrevOrign.x = Rect.left + Total.x;
+		      PrevOrign.y = Rect.right + Total.y;
+		      Total.x += Offset.x;
+		      Total.y += Offset.y;
+		    }
+		}
+	      Child = Child->NextSibling;
+	    }
+	  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
 
 	  NtGdiOffsetRgn(hRgn, Total.x, Total.y);
 	  HasChildren = FALSE;
@@ -746,11 +743,11 @@ PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 	  UnsafeIntGetRgnBox(Window->UpdateRegion, &UpdateRegionBox);
 	  NtGdiUnionRect(&Rect, &ClientRect, &UpdateRegionBox);
 	  if (Rect.left != ClientRect.left || Rect.top != ClientRect.top ||
-	      Rect.right != ClientRect.right || Rect.right != ClientRect.right)
+	      Rect.right != ClientRect.right || Rect.bottom != ClientRect.bottom)
 	    {
 	      hClip = Window->UpdateRegion;
 	      Window->UpdateRegion = REGION_CropRgn(hRgn, hClip,
-						 &Rect, NULL);
+						    &ClientRect, NULL);
 	      if (Flags & UNC_REGION)
 		{
 		  hRgnRet = hClip;
@@ -854,6 +851,28 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
   return(TRUE);
 }
 
+static
+HRGN FASTCALL
+GetClientUpdateRegion(PWINDOW_OBJECT Window)
+{
+  POINT Offset;
+  RECT Rect;
+
+  if ((DWORD) Window->UpdateRegion <= 1)
+    {
+      return Window->UpdateRegion;
+    }
+
+  Offset.x = Window->WindowRect.left - Window->ClientRect.left;
+  Offset.y = Window->WindowRect.top - Window->ClientRect.top;
+  Rect.left = - Offset.x;
+  Rect.top = - Offset.y;
+  Rect.right = Rect.left + (Window->ClientRect.right - Window->ClientRect.left);
+  Rect.bottom = Rect.top + (Window->ClientRect.bottom - Window->ClientRect.top);
+
+  return REGION_CropRgn(NULL, Window->UpdateRegion, &Rect, &Offset);
+}
+
 HDC STDCALL
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 {
@@ -881,7 +900,11 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   }
 
   /* retrieve update region */
-  UpdateRegion = Window->UpdateRegion;
+  UpdateRegion = GetClientUpdateRegion(Window);
+  if (1 < (DWORD) Window->UpdateRegion)
+    {
+      NtGdiDeleteObject(Window->UpdateRegion);
+    }
   Window->UpdateRegion = 0;
   if (UpdateRegion != NULL || (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
     {

@@ -154,5 +154,6 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
 HRGN STDCALL UnsafeIntCreateRectRgnIndirect(CONST PRECT rc);
 INT STDCALL UnsafeIntGetRgnBox(HRGN  hRgn, LPRECT pRect);
 HRGN FASTCALL UnsafeIntUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
+BOOL FASTCALL UnsafeIntRectInRegion(HRGN hRgn, CONST LPRECT rc);
 #endif
 

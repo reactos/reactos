@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.35 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: region.c,v 1.36 2003/09/09 09:39:21 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -139,6 +139,7 @@ static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
 		pReg->rdh.rcBound.top = 0;
 		pReg->rdh.rcBound.right = 0;
 		pReg->rdh.rcBound.bottom = 0;
+		pReg->rdh.iType = NULLREGION;
 		return;
     }
 
@@ -166,6 +167,7 @@ static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
 		    pExtents->right = pRect->right;
 		pRect++;
     }
+    pReg->rdh.iType = (1 == pReg->rdh.nCount ? SIMPLEREGION : COMPLEXREGION);
 }
 
 
@@ -1573,34 +1575,44 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
 
 HRGN
 STDCALL
-NtGdiCreateRectRgn(INT  LeftRect,
-                        INT  TopRect,
-                        INT  RightRect,
-                        INT  BottomRect)
+NtGdiCreateRectRgn(INT LeftRect,
+                   INT TopRect,
+                   INT RightRect,
+                   INT BottomRect)
 {
   HRGN hRgn;
   PROSRGNDATA pRgnData;
   PRECT pRect;
 
-  // Allocate region data structure with space for 1 RECT
-  if( ( hRgn = RGNDATA_AllocRgn(1) ) ){
-	if( ( pRgnData = RGNDATA_LockRgn( hRgn ) ) ){
-    	pRect = (PRECT)pRgnData->Buffer;
-    	ASSERT(pRect);
+  if (RightRect < LeftRect || BottomRect < TopRect)
+    {
+      DPRINT1("Invalid parameters (%d, %d) - (%d, %d)\n", LeftRect, TopRect, RightRect, BottomRect);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
 
-    	// Fill in the region data header
-    	pRgnData->rdh.iType = SIMPLEREGION;
-    	NtGdiSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
+  /* Allocate region data structure with space for 1 RECT */
+  if ((hRgn = RGNDATA_AllocRgn(1)))
+    {
+      if ((pRgnData = RGNDATA_LockRgn(hRgn)))
+	{
+	  pRect = (PRECT)pRgnData->Buffer;
+	  ASSERT(pRect);
 
-    	// use NtGdiCopyRect when implemented
-    	NtGdiSetRect(pRect, LeftRect, TopRect, RightRect, BottomRect);
-		RGNDATA_UnlockRgn( hRgn );
+    	  /* Fill in the region data header */
+	  pRgnData->rdh.iType = (LeftRect == RightRect || TopRect == BottomRect) ? NULLREGION : SIMPLEREGION;
+	  NtGdiSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
 
-    	return hRgn;
+	  /* use NtGdiCopyRect when implemented */
+	  NtGdiSetRect(pRect, LeftRect, TopRect, RightRect, BottomRect);
+	  RGNDATA_UnlockRgn(hRgn);
+
+	  return hRgn;
 	}
-	NtGdiDeleteObject( hRgn );
-  }
-  DPRINT("NtGdiCreateRectRgn: can't allocate region\n");
+      NtGdiDeleteObject( hRgn );
+    }
+
+  DPRINT1("NtGdiCreateRectRgn: can't allocate region\n");
   return NULL;
 }
 
@@ -1764,25 +1776,21 @@ INT STDCALL
 NtGdiGetRgnBox(HRGN  hRgn,
 	      LPRECT  pRect)
 {
-  PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
+  RECT SafeRect;
   DWORD ret;
 
-  if (rgn)
+  ret = UnsafeIntGetRgnBox(hRgn, &SafeRect);
+  if (ERROR == ret)
     {
-      RECT SafeRect;
-      SafeRect.left = rgn->rdh.rcBound.left;
-      SafeRect.top = rgn->rdh.rcBound.top;
-      SafeRect.right = rgn->rdh.rcBound.right;
-      SafeRect.bottom = rgn->rdh.rcBound.bottom;
-      ret = rgn->rdh.iType;
-      RGNDATA_UnlockRgn( hRgn );
-
-      if(!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
-	return 0;
-
       return ret;
     }
-  return 0; //if invalid region return zero
+
+  if (!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
+    {
+      return ERROR;
+    }
+
+  return ret;
 }
 
 BOOL
@@ -1917,19 +1925,13 @@ NtGdiPtInRegion(HRGN  hRgn,
 }
 
 BOOL
-STDCALL
-NtGdiRectInRegion(HRGN  hRgn,
-                       CONST LPRECT  unsaferc)
+FASTCALL
+UnsafeIntRectInRegion(HRGN  hRgn,
+                      CONST LPRECT rc)
 {
   PROSRGNDATA rgn;
   PRECT pCurRect, pRectEnd;
-  PRECT rc;
   BOOL bRet = FALSE;
-
-  if( !NT_SUCCESS( MmCopyFromCaller( rc, unsaferc, sizeof( RECT ) ) ) ){
-	DPRINT("NtGdiRectInRegion: bogus rc\n");
-	return ERROR;
-  }
 
   if( !( rgn  = RGNDATA_LockRgn(hRgn) ) )
 	return ERROR;
@@ -1949,6 +1951,22 @@ NtGdiRectInRegion(HRGN  hRgn,
   }
   RGNDATA_UnlockRgn(hRgn);
   return bRet;
+}
+
+BOOL
+STDCALL
+NtGdiRectInRegion(HRGN  hRgn,
+                       CONST LPRECT  unsaferc)
+{
+  RECT rc;
+
+  if (!NT_SUCCESS(MmCopyFromCaller(&rc, unsaferc, sizeof(RECT))))
+    {
+      DPRINT1("NtGdiRectInRegion: bogus rc\n");
+      return ERROR;
+    }
+
+  return UnsafeIntRectInRegion(hRgn, &rc);
 }
 
 BOOL

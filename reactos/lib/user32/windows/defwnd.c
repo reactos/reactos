@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.84 2003/09/08 18:50:00 weiden Exp $
+/* $Id: defwnd.c,v 1.85 2003/09/09 09:39:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -602,11 +602,9 @@ UserDrawCaptionNC (
 }
 
 
-VOID
-UserDrawFrameNC(HWND hWnd, RECT* rect, BOOL dlgFrame, BOOL active)
+static VOID
+UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
 {
-  HDC hDC = GetWindowDC(hWnd);
-  SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
   DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
 
@@ -624,7 +622,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   ULONG ExStyle;
   int wFrame = 0;
 
-    // This won't work because it conflicts with BS_BITMAP :
   if (GetActiveWindow() == hWnd) Active = TRUE;
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
@@ -645,12 +642,12 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hWnd, &rect, FALSE, Active);
+      UserDrawFrameNC(hDC, &rect, FALSE, Active);
       wFrame = GetSystemMetrics(SM_CXSIZEFRAME);
     }
   else if (UserHasDlgFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hWnd, &rect, TRUE, Active);
+      UserDrawFrameNC(hDC, &rect, TRUE, Active);
       wFrame = GetSystemMetrics(SM_CXDLGFRAME);
     }
   if (Style & WS_CAPTION)

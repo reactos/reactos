@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.22 2003/08/20 07:45:01 gvg Exp $
+/* $Id: windc.c,v 1.23 2003/09/09 09:39:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -416,12 +416,12 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	    }
 	}
 
-      if (0 != (Dce->DCXFlags & DCX_INTERSECTRGN))
+      if (0 != (Flags & DCX_INTERSECTRGN))
 	{
 	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
 	}
 
-      if (0 != (Dce->DCXFlags & DCX_EXCLUDERGN))
+      if (0 != (Flags & DCX_EXCLUDERGN))
 	{
 	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
 	}
