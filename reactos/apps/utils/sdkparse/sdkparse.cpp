@@ -23,6 +23,16 @@
 #include "Type.h"
 #include "Header.h"
 
+#define TOKASSERT(x) \
+if(!(x))\
+{\
+	printf("ASSERT FAILURE: (%s) at %s:%i\n", #x, __FILE__, __LINE__);\
+	printf("WHILE PROCESSING: \n");\
+	for ( int ajf83pfj = 0; ajf83pfj < tokens.size(); ajf83pfj++ )\
+		printf("%s ", tokens[ajf83pfj].c_str() );\
+	printf("\n");\
+	_CrtDbgBreak();\
+}
 using std::string;
 using std::vector;
 
@@ -40,21 +50,8 @@ int parse_variable ( const vector<string>& tokens, int off, vector<string>& name
 int parse_struct ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_function ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 int parse_function_ptr ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
-
-/*
-#ifndef ASSERT
-#define ASSERT(x) \
-do \
-{ \
-	if ( !(x) ) \
-	{ \
-		printf("%s:%i - ASSERTION FAILURE: \"%s\"\n", __FILE__, __LINE__, #x); \
-		getch(); \
-		exit(0); \
-	} \
-}while(0)
-#endif//ASSERT
-*/
+int parse_ifwhile ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
+int parse_do ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies );
 
 bool is_libc_include ( const string& inc )
 {
@@ -80,6 +77,7 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
+	//import_file ( "test.h" );
 	EnumFilesInDirectory ( "c:/cvs/reactos/apps/utils/sdkparse/include", "*.h", FileEnumProc, 0, TRUE, FALSE );
 }
 
@@ -97,7 +95,7 @@ bool import_file ( const char* filename )
 	if ( !File::LoadIntoString ( s, filename ) )
 	{
 		printf ( "Couldn't load \"%s\" for input.\n", filename );
-		exit(0);
+		ASSERT(0);
 	}
 
 	printf ( "%s\n", filename );
@@ -125,6 +123,8 @@ bool import_file ( const char* filename )
 		if ( *p == '#' )
 		{
 			char* end = strchr ( p, '\n' );
+			while ( end && end[-1] == '\\' )
+				end = strchr ( end+1, '\n' );
 			if ( !end )
 				end = p + strlen(p);
 			string element ( p, end-p );
@@ -144,14 +144,11 @@ bool import_file ( const char* filename )
 		{
 			bool externc = false;
 			char* end = findend ( p, externc );
+			ASSERT(end);
 			if ( externc )
 				h->externc = true;
 			else
 			{
-				if ( !end )
-					end = p + strlen(p);
-				else if ( *end )
-					end++;
 				string element ( p, end-p );
 
 				process_c ( *h, element );
@@ -219,13 +216,17 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 					if ( !headers[i]->done )
 					{
 						printf ( "circular dependency between '%s' and '%s'\n", filename, include_filename.c_str() );
-						exit ( -1 );
+						ASSERT ( 0 );
 					}
 					loaded = true;
 				}
 			}
 			if ( !loaded )
+			{
+				printf ( "(diverting to '%s')\n", include_filename.c_str() );
 				import_file ( include_filename.c_str() );
+				printf ( "(now back to '%s')\n", filename );
+			}
 			h.includes.push_back ( include_filename );
 		}
 	}
@@ -372,6 +373,8 @@ char* skipsemi ( char* p )
 
 char* findend ( char* p, bool& externc )
 {
+	if ( !strncmp ( p, "static inline struct _TEB * NtCurrentTeb ( void )", 49 ) )
+		_CrtDbgBreak();
 	// special-case for 'extern "C"'
 	if ( !strncmp ( p, "extern", 6 ) )
 	{
@@ -396,16 +399,21 @@ char* findend ( char* p, bool& externc )
 		return end;
 	}
 	externc = false;
-	for ( ;; )
-	{
-		char* end = strchr ( p, ';' );
-		if ( !end )
-			end = p + strlen(p);
-		char* semi = strchr ( p, '{' );
-		if ( !semi || semi > end )
-			return end;
-		p = skipsemi ( semi );
-	}
+	bool isStruct = false;
+
+	char* end = strchr ( p, ';' );
+	if ( !end )
+		end = p + strlen(p);
+	else
+		end++;
+	char* semi = strchr ( p, '{' );
+	if ( !semi || semi > end )
+		return end;
+	p = skipsemi ( semi );
+	char* p2 = skip_ws ( p );
+	if ( *p2 == ';' )
+		p = p2 + 1;
+	return end;
 }
 
 Type identify ( const vector<string>& tokens, int off )
@@ -490,8 +498,13 @@ int parse_type ( Type t, const vector<string>& tokens, int off, vector<string>& 
 		return parse_function ( tokens, off, names, dependencies );
 	case T_FUNCTION_PTR:
 		return parse_function_ptr ( tokens, off, names, dependencies );
+	case T_IF:
+	case T_WHILE:
+		return parse_ifwhile ( tokens, off, names, dependencies );
+	case T_DO:
+		return parse_do ( tokens, off, names, dependencies );
 	default:
-		ASSERT(0);
+		TOKASSERT(!"unidentified type in parse_type()");
 		return 0;
 	}
 }
@@ -526,8 +539,8 @@ void depend ( const string& ident, vector<string>& dependencies )
 
 int parse_tident ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
 {
-	ASSERT ( tokens[off] == "typedef_tident" );
-	ASSERT ( tokens[off+1] == "(" && tokens[off+3] == ")" );
+	TOKASSERT ( tokens[off] == "typedef_tident" );
+	TOKASSERT ( tokens[off+1] == "(" && tokens[off+3] == ")" );
 	names.push_back ( tokens[off+2] );
 	dependencies.push_back ( "typedef_tident" );
 	return off + 4;
@@ -538,12 +551,11 @@ int parse_variable ( const vector<string>& tokens, int off, vector<string>& name
 	// NOTE - Test with bitfields, I think this code will actually handle them properly...
 	depend ( tokens[off++], dependencies );
 	int done = tokens.size();
-	while ( off < done && tokens[off] != ";" )
+	while ( tokens[off] != ";" )
 		name ( tokens[off++], names );
-	if ( off < done )
-		return off + 1;
-	else
-		return off;
+	TOKASSERT ( tokens[off] == ";" );
+	off++;
+	return off;
 }
 
 int parse_struct ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
@@ -556,7 +568,7 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 	while ( off < done && tokens[off] != "struct" && tokens[off] != "union" )
 		depend ( tokens[off++], dependencies );
 
-	ASSERT ( tokens[off] == "struct" || tokens[off] == "union" );
+	TOKASSERT ( tokens[off] == "struct" || tokens[off] == "union" );
 	if ( tokens[off] != "struct" && tokens[off] != "union" )
 		return off;
 	off++;
@@ -564,7 +576,7 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 	if ( tokens[off] != "{" )
 		name ( tokens[off++], names );
 
-	ASSERT ( tokens[off] == "{" );
+	TOKASSERT ( tokens[off] == "{" );
 	off++;
 
 	// skip through body of struct - noting any dependencies
@@ -588,6 +600,9 @@ int parse_struct ( const vector<string>& tokens, int off, vector<string>& names,
 		off++;
 	}
 
+	TOKASSERT ( tokens[off] == ";" );
+	off++;
+
 	return off;
 }
 
@@ -607,13 +622,13 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 		depend ( tokens[off++], dependencies );
 	name ( tokens[off++], names );
 
-	ASSERT ( tokens[off] == "(" );
+	TOKASSERT ( tokens[off] == "(" );
 
 	while ( tokens[off] != ")" )
 	{
 		off++;
 		off = parse_param ( tokens, off, fauxnames, dependencies );
-		ASSERT ( tokens[off] == "," || tokens[off] == ")" );
+		TOKASSERT ( tokens[off] == "," || tokens[off] == ")" );
 	}
 
 	off++;
@@ -623,7 +638,7 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 		return off;
 
 	// we have a function body...
-	ASSERT ( tokens[off] == "{" );
+	TOKASSERT ( tokens[off] == "{" );
 	off++;
 
 	while ( tokens[off] != "}" )
@@ -631,6 +646,9 @@ int parse_function ( const vector<string>& tokens, int off, vector<string>& name
 		Type t = identify ( tokens, off );
 		off = parse_type ( t, tokens, off, fauxnames, dependencies );
 	}
+
+	TOKASSERT ( tokens[off] == "}" );
+	off++;
 
 	return off;
 }
@@ -640,28 +658,89 @@ int parse_function_ptr ( const vector<string>& tokens, int off, vector<string>& 
 	while ( tokens[off] != "(" )
 		depend ( tokens[off++], dependencies );
 
-	ASSERT ( tokens[off] == "(" );
+	TOKASSERT ( tokens[off] == "(" );
 	off++;
 
 	while ( tokens[off+1] != ")" )
 		depend ( tokens[off++], dependencies );
 	name ( tokens[off++], names );
 
-	ASSERT ( tokens[off] == ")" );
+	TOKASSERT ( tokens[off] == ")" );
 	
 	off++;
 
-	ASSERT ( tokens[off] == "(" );
+	TOKASSERT ( tokens[off] == "(" );
 
 	while ( tokens[off] != ")" )
 	{
 		off++;
 		vector<string> fauxnames;
 		off = parse_param ( tokens, off, fauxnames, dependencies );
-		ASSERT ( tokens[off] == "," || tokens[off] == ")" );
+		TOKASSERT ( tokens[off] == "," || tokens[off] == ")" );
 	}
 
 	off++;
-	ASSERT ( tokens[off] == ";" );
+	TOKASSERT ( tokens[off] == ";" );
+	off++;
 	return off;
 }
+
+int parse_ifwhile ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
+{
+	TOKASSERT ( tokens[off] == "if" || tokens[off] == "while" );
+	off++;
+
+	TOKASSERT ( tokens[off] == "(" );
+	off++;
+
+	TOKASSERT ( tokens[off] != ")" );
+	while ( tokens[off] != ")" )
+		off++;
+
+	if ( tokens[off] == "{" )
+	{
+		while ( tokens[off] != "}" )
+		{
+			Type t = identify ( tokens, off );
+			off = parse_type ( t, tokens, off, names, dependencies );
+		}
+		off++;
+	}
+	return off;
+}
+
+int parse_do ( const vector<string>& tokens, int off, vector<string>& names, vector<string>& dependencies )
+{
+	TOKASSERT ( tokens[off] == "do" );
+	off++;
+
+	if ( tokens[off] != "{" )
+	{
+		Type t = identify ( tokens, off );
+		off = parse_type ( t, tokens, off, names, dependencies );
+	}
+	else
+	{
+		while ( tokens[off] != "}" )
+		{
+			Type t = identify ( tokens, off );
+			off = parse_type ( t, tokens, off, names, dependencies );
+		}
+	}
+
+	TOKASSERT ( tokens[off] == "while" );
+	off++;
+
+	TOKASSERT ( tokens[off] == "(" );
+	while ( tokens[off] != ")" )
+		off++;
+
+	TOKASSERT ( tokens[off] == ")" );
+	off++;
+
+	TOKASSERT ( tokens[off] == ";" );
+	off++;
+
+	return off;
+}
+

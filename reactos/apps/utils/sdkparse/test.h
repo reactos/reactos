@@ -1,4 +1,4 @@
-/* $Id: test.h,v 1.2 2003/11/06 02:50:12 royce Exp $
+/* $Id: test.h,v 1.3 2003/11/06 19:38:23 royce Exp $
 */
 /*
  * test.h
@@ -21,6 +21,21 @@
 
 #ifndef __INTERNAL_PSAPI_H_INCLUDED__
 #define __INTERNAL_PSAPI_H_INCLUDED__
+
+static inline struct _TEB * NtCurrentTeb(void)
+{
+ struct _TEB * pTeb;
+
+ /* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
+ __asm__ __volatile__
+ (
+  "movl %%fs:0x18, %0\n" /* fs:18h == Teb->Tib.Self */
+  : "=r" (pTeb) /* can't have two memory operands */
+  : /* no inputs */
+ );
+
+ return pTeb;
+}
 
 typedef struct tagFOO
 {
