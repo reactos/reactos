@@ -1,10 +1,13 @@
-; $Id: ntdll.def,v 1.35 1999/12/30 14:39:27 ekohl Exp $
+; $Id: ntdll.def,v 1.36 2000/01/10 20:33:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
+DbgBreakPoint
+DbgPrint
+DbgUserBreakPoint
 NlsAnsiCodePage
 NlsMbCodePageTag
 NlsMbOemCodePageTag
@@ -552,8 +555,8 @@ _ltoa
 _ltow
 _memccpy
 _memicmp
-;_snprintf
-;_snwprintf
+_snprintf
+_snwprintf
 _splitpath
 _strcmpi
 _stricmp
@@ -564,7 +567,7 @@ _tolower
 _toupper
 _ultoa
 _ultow
-;_vsnprintf
+_vsnprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp
@@ -622,7 +625,7 @@ strspn
 strstr
 strtol
 strtoul
-;swprintf
+swprintf
 tan
 tolower
 toupper

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.11 1999/12/10 17:48:34 ekohl Exp $
+/* $Id: unicode.c,v 1.12 2000/01/10 20:30:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,13 +11,10 @@
 
 #include <ddk/ntddk.h>
 //#include <internal/nls.h>
+#include <ctype.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
-
-extern unsigned long simple_strtoul(const char *cp, char **endp,
-				    unsigned int base);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -252,7 +249,36 @@ RtlCharToInteger (
 	IN	ULONG	Base,
 	IN OUT	PULONG	Value)
 {
-	*Value=simple_strtoul((const char *)String, NULL, Base);
+	ULONG Val;
+
+	*Value = 0;
+
+	if (Base == 0)
+	{
+		Base = 10;
+		if (*String == '0')
+		{
+			Base = 8;
+			String++;
+			if ((*String == 'x') && isxdigit (String[1]))
+			{
+				String++;
+				Base = 16;
+			}
+		}
+	}
+
+	if (!isxdigit (*String))
+		return STATUS_INVALID_PARAMETER;
+
+	while (isxdigit (*String) &&
+	       (Val = isdigit (*String) ? * String - '0' : (islower (*String)
+	        ? toupper (*String) : *String) - 'A' + 10) < Base)
+	{
+		*Value = *Value * Base + Val;
+		String++;
+	}
+
 	return STATUS_SUCCESS;
 }
 
@@ -976,68 +1002,87 @@ RtlUnicodeStringToInteger (
 	IN	ULONG		Base,
 	OUT	PULONG		Value)
 {
-	return STATUS_NOT_IMPLEMENTED;
-#if 0
-        char *str;
-        unsigned long i, lenmin=0;
-        BOOLEAN addneg=FALSE;
+	PWCHAR Str;
+	ULONG lenmin = 0;
+	ULONG i;
+	ULONG Val;
+	BOOLEAN addneg = FALSE;
 
-        str = RtlAllocateHeap (RtlGetProcessHeap (),
-                               0,
-                               String->Length+1);
+	Str = String->Buffer;
+	for (i = 0; i < String->Length; i++)
+	{
+		if (*Str == L'b')
+		{
+			Base = 2;
+			lenmin++;
+		}
+		else if (*Str == L'o')
+		{
+			Base = 8;
+			lenmin++;
+		}
+		else if (*Str == L'd')
+		{
+			Base = 10;
+			lenmin++;
+		}
+		else if (*Str == L'x')
+		{
+			Base = 16;
+			lenmin++;
+		}
+		else if (*Str == L'+')
+		{
+			lenmin++;
+		}
+		else if (*Str == L'-')
+		{
+			addneg = TRUE;
+			lenmin++;
+		}
+		else if ((*Str > L'1') && (Base == 2))
+		{
+			*Value = 0;
+			return STATUS_INVALID_PARAMETER;
+		}
+		else if (((*Str > L'7') || (*Str < L'0')) && (Base == 8))
+		{
+			*Value = 0;
+			return STATUS_INVALID_PARAMETER;
+		}
+		else if (((*Str > L'9') || (*Str < L'0')) && (Base == 10))
+		{
+			*Value = 0;
+			return STATUS_INVALID_PARAMETER;
+		}
+		else if ((((*Str > L'9') || (*Str < L'0')) ||
+		          ((towupper (*Str) > L'F') ||
+		           (towupper (*Str) < L'A'))) && (Base == 16))
+		{
+			*Value = 0;
+			return STATUS_INVALID_PARAMETER;
+		}
+		else
+			Str++;
+	}
 
-        for(i=0; i<String->Length; i++)
-        {
-                *str=*String->Buffer;
+	Str = String->Buffer + lenmin;
 
-                if(*str=='b') { Base=2;  lenmin++; } else
-                if(*str=='o') { Base=8;  lenmin++; } else
-                if(*str=='d') { Base=10; lenmin++; } else
-                if(*str=='x') { Base=16; lenmin++; } else
-                if(*str=='+') { lenmin++; } else
-                if(*str=='-') { addneg=TRUE; lenmin++; } else
-                if((*str>'1') && (Base==2)) {
-                        String->Buffer-=i;
-                        *Value=0;
-                        return STATUS_INVALID_PARAMETER;
-                } else
-                if(((*str>'7') || (*str<'0')) && (Base==8)) {
-                        String->Buffer-=i;
-                        *Value=0;
-                        return STATUS_INVALID_PARAMETER;
-                } else
-                if(((*str>'9') || (*str<'0')) && (Base==10)) {
-                        String->Buffer-=i;
-                        *Value=0;
-                        return STATUS_INVALID_PARAMETER;
-                } else
-                if((((*str>'9') || (*str<'0')) ||
-                    ((toupper(*str)>'F') || (toupper(*str)<'A'))) && (Base==16))
-                {
-                        String->Buffer-=i;
-                        *Value=0;
-                        return STATUS_INVALID_PARAMETER;
-                } else
-                        str++;
+	if (Base == 0)
+		Base = 10;
 
-                String->Buffer++;
-        };
+	while (iswxdigit (*Str) &&
+	       (Val = iswdigit (*Str) ? *Str - L'0' : (iswlower (*Str)
+	        ? toupper (*Str) : *Str) - L'A' + 10) < Base)
+	{
+		*Value = *Value * Base + Val;
+		Str++;
+	}
 
-        *str=0;
-        String->Buffer-=String->Length;
-        str-=(String->Length-lenmin);
+	if (addneg == TRUE)
+		*Value *= -1;
 
-        if(addneg==TRUE) {
-          *Value=simple_strtoul(str, NULL, Base)*-1;
-        } else
-          *Value=simple_strtoul(str, NULL, Base);
-
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     str);
-
-        return(STATUS_SUCCESS);
-#endif
+	return STATUS_SUCCESS;
 }
 
 

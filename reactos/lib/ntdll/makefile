@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 1999/12/30 14:39:43 ekohl Exp $
+# $Id: makefile,v 1.34 2000/01/10 20:34:41 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -25,11 +25,13 @@ all: $(DLLTARGET)
 
 CSR_OBJECTS = csr/api.o
 
-DBG_OBJECTS = dbg/brkpoint.o
+DBG_OBJECTS = dbg/brkpoint.o dbg/print.o
 
 RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/security.o \
               rtl/thread.o rtl/unicode.o rtl/env.o
+
+STDIO_OBJECTS = stdio/swprintf.o stdio/vsprintf.o
 
 STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
                  stdlib/itoa.o stdlib/itow.o stdlib/labs.o stdlib/splitp.o \
@@ -48,7 +50,7 @@ STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
 OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
-          stdio/vsprintf.o $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
+          $(STDIO_OBJECTS) $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
           stubs/stubs.o ldr/utils.o $(CSR_OBJECTS) $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)

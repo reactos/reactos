@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.6 2000/01/05 17:49:00 ekohl Exp $
+/* $Id: ctype.c,v 1.7 2000/01/10 20:30:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -355,15 +355,32 @@ int isupper(int c)
    return (_isctype (c, _UPPER));
 }
 
+int isxdigit(int c)
+{
+   return (_isctype (c, _HEX));
+}
+
+
 int iswalpha(wint_t c)
 {
    return (iswctype (c, _ALPHA));
 }
 
-int isxdigit(int c)
+int iswdigit(wint_t c)
 {
-   return (_isctype (c, _HEX));
+   return (iswctype (c, _DIGIT));
 }
+
+int iswlower(wint_t c)
+{
+   return (iswctype (c, _LOWER));
+}
+
+int iswxdigit(wint_t c)
+{
+   return (iswctype (c, _HEX));
+}
+
 
 int __toascii(int c)
 {
