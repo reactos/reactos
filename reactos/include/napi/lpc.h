@@ -60,6 +60,8 @@ typedef struct _LPC_MAX_MESSAGE
    BYTE Data[MAX_MESSAGE_DATA];
 } LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
 
+#define PORT_MESSAGE_TYPE(m) (USHORT)((m).Header.MessageType)
+
 NTSTATUS STDCALL NtAcceptConnectPort (PHANDLE	PortHandle,
 				      HANDLE NamedPortHandle,
 				      PLPC_MESSAGE ServerReply,
