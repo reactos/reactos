@@ -452,7 +452,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
         PARTITION_TABLE_ENTRY PartitionTableEntry;
         U32 rosPartition;
-	BOOL TextHive = FALSE;
 
 	//
 	// Open the operating system section
