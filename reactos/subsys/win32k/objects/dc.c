@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.90 2003/10/24 08:22:29 gvg Exp $
+/* $Id: dc.c,v 1.91 2003/10/25 10:59:19 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -50,6 +50,8 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+#define TAG_DC  TAG('D', 'C', 'D', 'C')
 
 static GDIDEVICE PrimarySurface;
 static BOOL PrimarySurfaceCreated = FALSE;
@@ -247,18 +249,17 @@ NtGdiCreateCompatableDC(HDC  hDC)
   return  hNewDC;
 }
 
-static BOOL STDCALL
-FindDriverFileNames(PUNICODE_STRING DriverFileNames)
+static BOOL FASTCALL
+GetRegistryPath(PUNICODE_STRING RegistryPath)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  UNICODE_STRING RegistryPath;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&RegistryPath, NULL);
+  RtlInitUnicodeString(RegistryPath, NULL);
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
   QueryTable[0].Name = L"\\Device\\Video0";
-  QueryTable[0].EntryContext = &RegistryPath;
+  QueryTable[0].EntryContext = RegistryPath;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
                                   L"VIDEO",
@@ -266,13 +267,31 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames)
                                   NULL,
                                   NULL);
   if (! NT_SUCCESS(Status))
-  {
-    DPRINT1("No \\Device\\Video0 value in DEVICEMAP\\VIDEO found\n");
-    return FALSE;
-  }
+    {
+      DPRINT1("No \\Device\\Video0 value in DEVICEMAP\\VIDEO found\n");
+      return FALSE;
+    }
 
   DPRINT("RegistryPath %S\n", RegistryPath.Buffer);
 
+  return TRUE;
+}
+
+static BOOL FASTCALL
+FindDriverFileNames(PUNICODE_STRING DriverFileNames)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING RegistryPath;
+  NTSTATUS Status;
+
+  if (! GetRegistryPath(&RegistryPath))
+    {
+      DPRINT("GetRegistryPath failed\n");
+      return FALSE;
+    }
+
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
   QueryTable[0].Name = L"InstalledDisplayDrivers";
   QueryTable[0].EntryContext = DriverFileNames;
 
@@ -283,10 +302,10 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames)
                                   NULL);
   RtlFreeUnicodeString(&RegistryPath);
   if (! NT_SUCCESS(Status))
-  {
-    DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
-    return FALSE;
-  }
+    {
+      DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
+      return FALSE;
+    }
 
   DPRINT("DriverFileNames %S\n", DriverFileNames->Buffer);
 
@@ -310,6 +329,166 @@ CloseMiniport()
     }
 }
 
+static NTSTATUS STDCALL
+DevModeCallback(IN PWSTR ValueName,
+                IN ULONG ValueType,
+                IN PVOID ValueData,
+                IN ULONG ValueLength,
+                IN PVOID Context,
+                IN PVOID EntryContext)
+{
+  PDEVMODEW DevMode = (PDEVMODEW) Context;
+
+  DPRINT("Found registry value for name %S: type %d, length %d\n",
+         ValueName, ValueType, ValueLength);
+
+  if (REG_DWORD == ValueType && sizeof(DWORD) == ValueLength)
+    {
+      if (0 == _wcsicmp(ValueName, L"DefaultSettings.BitsPerPel"))
+        {
+          DevMode->dmBitsPerPel = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.Flags"))
+        {
+          DevMode->dmDisplayFlags = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.VRefresh"))
+        {
+          DevMode->dmDisplayFrequency = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.XPanning"))
+        {
+          DevMode->dmPanningWidth = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.XResolution"))
+        {
+          DevMode->dmPelsWidth = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.YPanning"))
+        {
+          DevMode->dmPanningHeight = *((DWORD *) ValueData);
+        }
+      else if (0 == _wcsicmp(ValueName, L"DefaultSettings.YResolution"))
+        {
+          DevMode->dmPelsHeight = *((DWORD *) ValueData);
+        }
+    }
+
+  return STATUS_SUCCESS;
+}
+
+static BOOL FASTCALL
+SetupDevMode(PDEVMODEW DevMode)
+{
+  static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
+  static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
+  static WCHAR ControlSet[] = L"CONTROLSET";
+  static WCHAR Insert[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+  UNICODE_STRING RegistryPath;
+  BOOL Valid;
+  PWCHAR AfterControlSet;
+  PWCHAR ProfilePath;
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  if (! GetRegistryPath(&RegistryPath))
+    {
+      DPRINT("GetRegistryPath failed\n");
+      return FALSE;
+    }
+
+  Valid = (0 == _wcsnicmp(RegistryPath.Buffer, RegistryMachineSystem,
+                          wcslen(RegistryMachineSystem)));
+  if (Valid)
+    {
+      AfterControlSet = RegistryPath.Buffer + wcslen(RegistryMachineSystem);
+      if (0 == _wcsnicmp(AfterControlSet, CurrentControlSet, wcslen(CurrentControlSet)))
+        {
+          AfterControlSet += wcslen(CurrentControlSet);
+        }
+      else if (0 == _wcsnicmp(AfterControlSet, ControlSet, wcslen(ControlSet)))
+        {
+          AfterControlSet += wcslen(ControlSet);
+          while (L'0' <= *AfterControlSet && L'9' <= *AfterControlSet)
+            {
+              AfterControlSet++;
+            }
+          Valid = (L'\\' == *AfterControlSet);
+          AfterControlSet++;
+        }
+      else
+        {
+          Valid = FALSE;
+        }
+    }
+
+  if (Valid)
+    {
+      ProfilePath = ExAllocatePoolWithTag(PagedPool,
+                                          (wcslen(RegistryPath.Buffer) + 
+                                           wcslen(Insert) + 1) * sizeof(WCHAR),
+                                          TAG_DC);
+      if (NULL != ProfilePath)
+        {
+          wcsncpy(ProfilePath, RegistryPath.Buffer, AfterControlSet - RegistryPath.Buffer);
+          wcscpy(ProfilePath + (AfterControlSet - RegistryPath.Buffer), Insert);
+          wcscat(ProfilePath, AfterControlSet);
+
+          RtlZeroMemory(QueryTable, sizeof(QueryTable));
+          QueryTable[0].QueryRoutine = DevModeCallback;
+          QueryTable[0].Flags = 0;
+          QueryTable[0].Name = NULL;
+          QueryTable[0].EntryContext = NULL;
+          QueryTable[0].DefaultType = REG_NONE;
+          QueryTable[0].DefaultData = NULL;
+          QueryTable[0].DefaultLength = 0;
+
+          Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                          ProfilePath,
+                                          QueryTable,
+                                          DevMode,
+                                          NULL);
+          if (! NT_SUCCESS(Status))
+            {
+              DPRINT1("RtlQueryRegistryValues for %S failed with status 0x%08x\n",
+                      ProfilePath, Status);
+              Valid = FALSE;
+            }
+          else
+            {
+              DPRINT("dmBitsPerPel %d dmDisplayFrequency %d dmPelsWidth %d dmPelsHeight %d\n",
+                     DevMode->dmBitsPerPel, DevMode->dmDisplayFrequency,
+                     DevMode->dmPelsWidth, DevMode->dmPelsHeight);
+              if (0 == DevMode->dmBitsPerPel || 0 == DevMode->dmDisplayFrequency
+                  || 0 == DevMode->dmPelsWidth || 0 == DevMode->dmPelsHeight)
+                {
+                  DPRINT("Not all required devmode members are set\n");
+                  Valid = FALSE;
+                }
+            }
+
+          ExFreePool(ProfilePath);
+        }
+      else
+        {
+          Valid = FALSE;
+        }
+    }
+  else
+    {
+      DPRINT1("Unparsable registry path %S in DEVICEMAP\\VIDEO0", RegistryPath.Buffer);
+    }
+
+  RtlFreeUnicodeString(&RegistryPath);
+
+  if (! Valid)
+    {
+      RtlZeroMemory(DevMode, sizeof(DEVMODEW));
+    }
+
+  return Valid;
+}
+
 BOOL STDCALL
 NtGdiCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
@@ -321,6 +500,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   UNICODE_STRING DriverFileNames;
   PWSTR CurrentName;
   BOOL GotDriver;
+  BOOL DoDefault;
   extern void FASTCALL IntInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
@@ -400,33 +580,55 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   }
 
   /*  Allocate a phyical device handle from the driver  */
-  if (Device != NULL)
-  {
-    DPRINT("Device in u: %u\n", Device);
-//    wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME); FIXME: this crashes everything?
-  }
+  if (SetupDevMode(&PrimarySurface.DMW))
+    {
+      PrimarySurface.PDev =
+        PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
+                                                  L"",
+                                                  HS_DDI_MAX,
+                                                  PrimarySurface.FillPatterns,
+                                                  sizeof(PrimarySurface.GDIInfo),
+                                                  (ULONG *) &PrimarySurface.GDIInfo,
+                                                  sizeof(PrimarySurface.DevInfo),
+                                                  &PrimarySurface.DevInfo,
+                                                  NULL,
+                                                  L"",
+                                                  PrimarySurface.DisplayDevice);
+      DoDefault = (NULL == PrimarySurface.PDev);
+      if (DoDefault)
+        {
+          DPRINT1("DrvEnablePDev with registry parameters failed\n");
+        }
+    }
+  else
+    {
+      DoDefault = TRUE;
+    }
 
-  DPRINT("Enabling PDev\n");
+  if (DoDefault)
+    {
+      RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
+      PrimarySurface.PDev =
+        PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
+                                                  L"",
+                                                  HS_DDI_MAX,
+                                                  PrimarySurface.FillPatterns,
+                                                  sizeof(PrimarySurface.GDIInfo),
+                                                  (ULONG *) &PrimarySurface.GDIInfo,
+                                                  sizeof(PrimarySurface.DevInfo),
+                                                  &PrimarySurface.DevInfo,
+                                                  NULL,
+                                                  L"",
+                                                  PrimarySurface.DisplayDevice);
 
-  PrimarySurface.PDev =
-    PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
-					     L"",
-					     HS_DDI_MAX,
-					     PrimarySurface.FillPatterns,
-					     sizeof(PrimarySurface.GDIInfo),
-					     (ULONG *) &PrimarySurface.GDIInfo,
-					     sizeof(PrimarySurface.DevInfo),
-					     &PrimarySurface.DevInfo,
-					     NULL,
-					     L"",
-					     PrimarySurface.DisplayDevice);
-  if (PrimarySurface.PDev == NULL)
-  {
-    CloseMiniport();
-    DPRINT1("DrvEnablePDEV failed\n");
-    DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
-    return(FALSE);
-  }
+      if (NULL == PrimarySurface.PDev)
+        {
+          CloseMiniport();
+          DPRINT1("DrvEnablePDEV with default parameters failed\n");
+          DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
+          return FALSE;
+        }
+    }
 
   if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
   {
@@ -1578,7 +1780,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           if(pb->dib->dsBmih.biBitCount == 4) { NumColors = 16; } else
           if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
 
-          ColorMap = ExAllocatePool(PagedPool, sizeof(COLORREF) * NumColors);
+          ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(COLORREF) * NumColors, TAG_DC);
           ASSERT(ColorMap);
           for (Index = 0; Index < NumColors; Index++)
           {
@@ -1680,7 +1882,7 @@ DC_AllocDC(LPCWSTR Driver)
 
   if (Driver != NULL)
   {
-    NewDC->DriverName = ExAllocatePool(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR));
+    NewDC->DriverName = ExAllocatePoolWithTag(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR), TAG_DC);
     wcscpy(NewDC->DriverName, Driver);
   }
 
