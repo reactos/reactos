@@ -1,6 +1,7 @@
 #ifndef _RTF
 #define _RTF
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "windef.h"

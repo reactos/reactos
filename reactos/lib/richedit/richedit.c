@@ -22,6 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdarg.h>
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
@@ -36,22 +37,14 @@
 
 #include "rtf.h"
 #include "rtf2text.h"
-#include "debug.h"
-
-#if 0
 #include "wine/debug.h"
 
+#define ID_EDIT      1
+
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
-#else
-  #define TRACE DPRINT
-  #define WARN DPRINT
-  #define FIXME DPRINT
-#endif
 
 HANDLE RICHED32_hHeap = NULL;
 /* LPSTR  RICHED32_aSubclass = NULL; */
-
-#define ID_EDIT      1
 
 #define TRACE_EDIT_MSG32(str) \
         TRACE(\
@@ -810,7 +803,7 @@ VOID RICHED32_Register(void)
     wndClass.lpfnWndProc = (WNDPROC)RICHED32_WindowProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 0; /*(sizeof(RICHED32_INFO *);*/
-    wndClass.hCursor = LoadCursorA(0, IDC_ARROWA);
+    wndClass.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszClassName = RICHEDIT_CLASS10A; /* WC_RICHED32A; */
 

@@ -64,17 +64,9 @@
 #include "charlist.h"
 #include "windef.h"
 #include "winbase.h"
-#include "debug.h"
-
-#if 0
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
-#else
-  #define TRACE DPRINT
-  #define WARN DPRINT
-  #define FIXME DPRINT
-#endif
 
 extern HANDLE RICHED32_hHeap;
 
@@ -2769,7 +2761,7 @@ FILE *RTFOpenLibFile (char *file, char *mode)
 
 static void DefaultMsgProc(char *s)
 {
-    DPRINT( "%s", s);
+    MESSAGE( "%s", s);
 }
 
 
@@ -2806,7 +2798,7 @@ char	buf[rtfBufSiz];
 
 static void DefaultPanicProc(char *s)
 {
-    DPRINT( "%s", s);
+    MESSAGE( "%s", s);
 	/*exit (1);*/
 }
 
