@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.17 2003/11/12 22:53:31 weiden Exp $
+/* $Id: timer.c,v 1.18 2003/12/21 20:37:42 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -391,6 +391,8 @@ TimerThreadMain(PVOID StartContext)
   PLIST_ENTRY EnumEntry;
   PMSG_TIMER_ENTRY MsgTimer, MsgTimer2;
   PETHREAD Thread;
+  PETHREAD *ThreadsToDereference;
+  ULONG ThreadsToDereferenceCount, ThreadsToDereferencePos;
   
   for(;;)
   {
@@ -409,11 +411,37 @@ TimerThreadMain(PVOID StartContext)
     
     KeQuerySystemTime(&CurrentTime);
     
+    ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
+
+    for (EnumEntry = TimerListHead.Flink;
+         EnumEntry != &TimerListHead;
+         EnumEntry = EnumEntry->Flink)
+    {
+       MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
+          ++ThreadsToDereferenceCount;
+       else
+          break;
+    }
+
+    for (EnumEntry = SysTimerListHead.Flink;
+         EnumEntry != &SysTimerListHead;
+         EnumEntry = EnumEntry->Flink)
+    {
+       MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
+          ++ThreadsToDereferenceCount;
+       else
+          break;
+    }
+
+    ThreadsToDereference = (PETHREAD *)ExAllocatePool(
+       NonPagedPool, ThreadsToDereferenceCount * sizeof(PETHREAD));
+
     EnumEntry = TimerListHead.Flink;
     while (EnumEntry != &TimerListHead)
     {
       MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      EnumEntry = EnumEntry->Flink;
       
       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
       {
@@ -431,7 +459,8 @@ TimerThreadMain(PVOID StartContext)
         
         MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, MsqCreateMessage(&MsgTimer->Msg));
         
-        ObDereferenceObject(Thread);
+        ThreadsToDereference[ThreadsToDereferencePos] = Thread;
+        ++ThreadsToDereferencePos;
         
         //set up next periodic timeout
         MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000); 
@@ -441,13 +470,14 @@ TimerThreadMain(PVOID StartContext)
       {
         break;
       }
+
+      EnumEntry = EnumEntry->Flink;
     }
     
     EnumEntry = SysTimerListHead.Flink;
     while (EnumEntry != &SysTimerListHead)
     {
       MsgTimer2 = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      EnumEntry = EnumEntry->Flink;
       
       if (CurrentTime.QuadPart >= MsgTimer2->Timeout.QuadPart)
       {
@@ -465,7 +495,8 @@ TimerThreadMain(PVOID StartContext)
         
         MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, MsqCreateMessage(&MsgTimer2->Msg));
         
-        ObDereferenceObject(Thread);
+        ThreadsToDereference[ThreadsToDereferencePos] = Thread;
+        ++ThreadsToDereferencePos;
         
         //set up next periodic timeout
         MsgTimer2->Timeout.QuadPart += (MsgTimer2->Period * 10000); 
@@ -475,6 +506,8 @@ TimerThreadMain(PVOID StartContext)
       {
         break;
       }
+
+      EnumEntry = EnumEntry->Flink;
     }
     
     //set up next timeout from first entry (if any)
@@ -509,6 +542,13 @@ TimerThreadMain(PVOID StartContext)
     }
     
     ExReleaseFastMutex(&Mutex);
+
+    for (ThreadsToDereferencePos = 0;
+         ThreadsToDereferencePos < ThreadsToDereferenceCount;
+         ThreadsToDereferencePos++)
+       ObDereferenceObject(ThreadsToDereference[ThreadsToDereferencePos]);
+
+     ExFreePool(ThreadsToDereference);
   }
 }
 

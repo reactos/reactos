@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.62 2003/12/21 18:38:37 navaraf Exp $ */
+/* $Id: text.c,v 1.63 2003/12/21 20:37:42 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -471,8 +471,10 @@ BOOL STDCALL
 NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
    CONST RECT *lprc, LPCWSTR String, UINT Count, CONST INT *lpDx)
 {
+#if 1
   /* FIXME: Implement */
-//  return NtGdiTextOut(hdc, X, Y, lpString, cbCount);
+  return NtGdiTextOut(hDC, XStart, YStart, String, Count);
+#else
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
   DC *dc;
@@ -737,6 +739,7 @@ fail:
     }
   DC_UnlockDc( hDC );
   return FALSE;
+#endif
 }
 
 BOOL
