@@ -5,7 +5,7 @@
  * PURPOSE:          Minix FSD
  * PROGRAMMER:       David Welch (welch@mcmail.com)
  * UPDATE HISTORY: 
-4 */
+ */
 
 /* INCLUDES *****************************************************************/
 

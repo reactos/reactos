@@ -104,7 +104,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
           
    DriverObject = _DriverObject;
    
-   RtlInitUnicodeString(&ustr, L"\\Device\\Minux");
+   RtlInitUnicodeString(&ustr, L"\\Device\\Minix");
    ret = IoCreateDevice(DriverObject,0,&ustr,
                         FILE_DEVICE_PARALLEL_PORT,0,FALSE,&DeviceObject);
    if (ret!=STATUS_SUCCESS)
