@@ -11,7 +11,8 @@ OBJECTS = applicat.o barchart.o box.o button.o calendar.o checkbox.o clipbord.o 
           direct.o edit.o editbox.o fileopen.o helpbox.o htree.o keys.o \
           listbox.o lists.o log.o menu.o menubar.o menus.o message.o msgbox.o \
           normal.o pictbox.o popdown.o radio.o rect.o search.o slidebox.o spinbutt.o \
-          statbar.o sysmenu.o text.o textbox.o video.o watch.o window.o
+          statbar.o sysmenu.o text.o textbox.o video.o watch.o window.o \
+	  edit.coff
 
 CLEAN_FILES = *.o *.exe *.sym *.coff
 
