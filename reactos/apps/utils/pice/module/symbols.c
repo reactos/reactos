@@ -817,8 +817,8 @@ LPSTR FindFunctionByAddress(ULONG ulValue,PULONG pulstart,PULONG pulend)
 
 					while( pSym < pSymEnd )
 					{
-						//symbol is a function is it's type is 0x20, storage class is external and section>0
-						if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_EXTERNAL) &&
+						//symbol is a function is it's type is 0x20, and section>0
+						if(( (pSym->Type == 0x20) &&
 						   (pSym->SectionNumber > 0 )))
 						{
 							ULONG ulCurrAddr;
@@ -1035,7 +1035,9 @@ ULONG ExtractTypeNumber(LPSTR p)
 	ULONG ulTypeNumber = 0;
 
     DPRINT((0,"ExtractTypeNumber(%s)\n",p));
+
 	pTypeNumber = PICE_strchr(p,'(');
+
 	if(pTypeNumber)
 	{
 		pTypeNumber++;
@@ -1203,88 +1205,88 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 
         switch(pStab->n_type)
         {
-            case N_UNDF:
-                nOffset += nNextOffset;
-                nNextOffset = pStab->n_value;
-                break;
-            case N_SO:
-                if((strLen = PICE_strlen(pName)))
-                {
-                    if(pName[strLen-1]!='/')
-                    {
-						ulCurrentFileNumber++;
-                        if(PICE_strlen(szCurrentPath))
-                        {
-                            PICE_strcat(szCurrentPath,pName);
-                            DPRINT((0,"FindTypeDefinition()1: cha %s, %u\n",szCurrentPath, ulCurrentFileNumber));
-                        }
-                        else
-                        {
-                            DPRINT((0,"FindTypeDefinition(): cha %s, %u\n",pName, ulCurrentFileNumber));
-                        }
-                    }
-                    else
-                        PICE_strcpy(szCurrentPath,pName);
-                }
-                else
-				{
-                    szCurrentPath[0]=0;
-				}
-				break;
-			case N_LSYM:
+	case N_UNDF:
+	  nOffset += nNextOffset;
+	  nNextOffset = pStab->n_value;
+	  break;
+	case N_SO:
+	  if((strLen = PICE_strlen(pName)))
+	    {
+	      if(pName[strLen-1]!='/')
+		{
+		  ulCurrentFileNumber++;
+		  if(PICE_strlen(szCurrentPath))
+		    {
+		      PICE_strcat(szCurrentPath,pName);
+		      DPRINT((0,"FindTypeDefinition()1: cha %s, %u\n",szCurrentPath, ulCurrentFileNumber));
+		    }
+		  else
+		    {
+		      DPRINT((0,"FindTypeDefinition(): cha %s, %u\n",pName, ulCurrentFileNumber));
+		    }
+		}
+	      else
+		PICE_strcpy(szCurrentPath,pName);
+	    }
+	  else
+	    {
+	      szCurrentPath[0]=0;
+	    }
+	  break;
+	case N_LSYM:
 				// stab has no value -> must be type definition
 				//ei File number count is not reliable
-				if(pStab->n_value == 0 /*&& ulCurrentFileNumber==ulFileNumber*/)
-				{
-                    DPRINT((0,"FindTypeDefinition(): pre type definition %s\n",pName));
-					// handle multi-line symbols
-					if(strrchr(pName,'\\'))
-					{
-						if(PICE_strlen(szAccumulatedName))
-						{
-							PICE_strcat(szAccumulatedName,pName);
-                            DPRINT((0,"FindTypeDefinition(): [1] accum. %s\n",szAccumulatedName));
-						}
-						else
-						{
-							PICE_strcpy(szAccumulatedName,pName);
-                            DPRINT((0,"FindTypeDefinition(): [2] accum. %s\n",szAccumulatedName));
-						}
-                        szAccumulatedName[PICE_strlen(szAccumulatedName)-1]=0;
-					}
-					else
-					{
-                        DPRINT((0,"FindTypeDefinition(): [3] accum. %s, pname: %s\n",szAccumulatedName, pName));
-						if(PICE_strlen(szAccumulatedName)==0)
-                        {
-                            PICE_strcpy(szAccumulatedName,pName);
-                        }
-                        else
-                        {
-                            PICE_strcat(szAccumulatedName,pName);
-                        }
-                        pTypeString = szAccumulatedName;
-
-                        pTypeSymbol = PICE_strchr(pTypeString,':');
-						if(pTypeSymbol && (*(pTypeSymbol+1)=='t' || *(pTypeSymbol+1)=='T'))
-						{
-							// parse it
-							ulCurrentTypeNumber = ExtractTypeNumber(pTypeString);
-                            DPRINT((0,"FindTypeDefinition(): ulCurrType: %u, LSYM is type %s\n",ulCurrentTypeNumber,pName));
-							if(ulCurrentTypeNumber == ulTypeNumber)
-							{
-                                DPRINT((0,"FindTypeDefinition(): type definition %s\n",pTypeString));
-								return pTypeString;
-							}
-						}
-                        *szAccumulatedName=0;
-					}
-				}
-				break;
+	  if(pStab->n_value == 0 /*&& ulCurrentFileNumber==ulFileNumber*/)
+	    {
+	      DPRINT((0,"FindTypeDefinition(): pre type definition %s\n",pName));
+	      // handle multi-line symbols
+	      if(strrchr(pName,'\\'))
+		{
+		  if(PICE_strlen(szAccumulatedName))
+		    {
+		      PICE_strcat(szAccumulatedName,pName);
+		      DPRINT((0,"FindTypeDefinition(): [1] accum. %s\n",szAccumulatedName));
+		    }
+		  else
+		    {
+		      PICE_strcpy(szAccumulatedName,pName);
+		      DPRINT((0,"FindTypeDefinition(): [2] accum. %s\n",szAccumulatedName));
+		    }
+		  szAccumulatedName[PICE_strlen(szAccumulatedName)-1]=0;
+		}
+	      else
+		{
+		  DPRINT((0,"FindTypeDefinition(): [3] accum. %s, pname: %s\n",szAccumulatedName, pName));
+		  if(PICE_strlen(szAccumulatedName)==0)
+		    {
+		      PICE_strcpy(szAccumulatedName,pName);
+		    }
+		  else
+		    {
+		      PICE_strcat(szAccumulatedName,pName);
+		    }
+		  pTypeString = szAccumulatedName;
+		  
+		  pTypeSymbol = PICE_strchr(pTypeString,':');
+		  if(pTypeSymbol && (*(pTypeSymbol+1)=='t' || *(pTypeSymbol+1)=='T'))
+		    {
+		      // parse it
+		      ulCurrentTypeNumber = ExtractTypeNumber(pTypeString);
+		      DPRINT((0,"FindTypeDefinition(): ulCurrType: %u, LSYM is type %s\n",ulCurrentTypeNumber,pName));
+		      if(ulCurrentTypeNumber == ulTypeNumber)
+			{
+			  DPRINT((0,"FindTypeDefinition(): type definition %s\n",pTypeString));
+			  return pTypeString;
+			}
+		    }
+		  *szAccumulatedName=0;
+		}
+	    }
+	  break;
         }
         pStab++;
     }
-
+    
     return FindTypeDefinitionForCombinedTypes(pSymbols,ulTypeNumber,ulFileNumber);
 
 }
@@ -2288,103 +2290,108 @@ void SkipSpaces(void)
 //*************************************************************************
 BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumber,PULONG pulFileNumber)
 {
-    ULONG i;
-    PSTAB_ENTRY pStab;
-    LPSTR pStr,pName;
-    int nStabLen;
-    int nOffset=0,nNextOffset=0,nLen,strLen;
-    PICE_SYMBOLFILE_HEADER* pSymbols;
-	ULONG ulTypeNumber;
-	static char SymbolName[1024];
-    static char szCurrentPath[256];
-	ULONG ulCurrentFileNumber=0;
-    LPSTR pTypeDefIncluded;
-    ULONG addr;
+  ULONG i;
+  PSTAB_ENTRY pStab;
+  LPSTR pStr,pName;
+  int nStabLen;
+  int nOffset=0,nNextOffset=0,nLen,strLen;
+  PICE_SYMBOLFILE_HEADER* pSymbols;
+  ULONG ulTypeNumber;
+  static char SymbolName[1024];
+  static char szCurrentPath[256];
+  ULONG ulCurrentFileNumber=0;
+  LPSTR pTypeDefIncluded;
+  ULONG addr;
 
-    // must have a current module
-	if(pCurrentMod)
+  // must have a current module
+  if(pCurrentMod)
+    {
+      // in case we query for the kernel we need to use the fake kernel module
+      addr = (ULONG)pCurrentMod->BaseAddress;
+
+      // find the symbols for the module
+      pSymbols = FindModuleSymbols(addr);
+      if(pSymbols)
 	{
-        // in case we query for the kernel we need to use the fake kernel module
-        addr = (ULONG)pCurrentMod->BaseAddress;
+	  // prepare table access
+	  pStab = (PSTAB_ENTRY )((ULONG)pSymbols + pSymbols->ulOffsetToStabs);
+	  nStabLen = pSymbols->ulSizeOfStabs;
+	  pStr = (LPSTR)((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings);
+	  // starting at file 0
+	  *pulFileNumber = 0;
 
-        // find the symbols for the module
-		pSymbols = FindModuleSymbols(addr);
-		if(pSymbols)
+	  // go through stabs
+	  for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
+	    {
+	      pName = &pStr[pStab->n_strx + nOffset];
+
+	      switch(pStab->n_type)
 		{
-            // prepare table access
-			pStab = (PSTAB_ENTRY )((ULONG)pSymbols + pSymbols->ulOffsetToStabs);
-			nStabLen = pSymbols->ulSizeOfStabs;
-			pStr = (LPSTR)((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings);
-            // starting at file 0
-			*pulFileNumber = 0;
-
-            // go through stabs
-			for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
+		  // an N_UNDF symbol marks a change of string table offset
+		case N_UNDF:
+		  nOffset += nNextOffset;
+		  nNextOffset = pStab->n_value;
+		  break;
+		  // a source file symbol
+		case N_SO:
+		  if((strLen = PICE_strlen(pName)))
+		    {
+		      if(pName[strLen-1]!='/')
 			{
-				pName = &pStr[pStab->n_strx + nOffset];
-
-				switch(pStab->n_type)
-				{
-                    // an N_UNDF symbol marks a change of string table offset
-					case N_UNDF:
-						nOffset += nNextOffset;
-						nNextOffset = pStab->n_value;
-						break;
-                    // a source file symbol
-					case N_SO:
-						if((strLen = PICE_strlen(pName)))
-						{
-							if(pName[strLen-1]!='/')
-							{
-								ulCurrentFileNumber++;
-								if(PICE_strlen(szCurrentPath))
-								{
-									PICE_strcat(szCurrentPath,pName);
-									DPRINT((0,"changing source file %s\n",szCurrentPath));
-								}
-								else
-								{
-									DPRINT((0,"changing source file %s\n",pName));
-								}
-							}
-							else
-								PICE_strcpy(szCurrentPath,pName);
-						}
-						else
-						{
-							szCurrentPath[0]=0;
-						}
-						break;
-					case N_GSYM:
-                        // symbol-name:type-identifier type-number =
-						nLen = StrLenUpToWhiteChar(pName,":");
-						PICE_strncpy(SymbolName,pName,nLen);
-						SymbolName[nLen] = 0;
-						if(PICE_strcmpi(SymbolName,pExpression)==0)
-						{
-                            DPRINT((0,"global symbol %s\n",pName));
-                            // extract type-number from stab
-							ulTypeNumber = ExtractTypeNumber(pName);
-							DPRINT((0,"type number = %x\n",ulTypeNumber));
-							*pulTypeNumber = ulTypeNumber;
-                            // look for symbols address in external symbols
-							*pValue = FindFunctionInModuleByName(SymbolName,pCurrentMod);
-							DPRINT((0,"value = %x\n",*pValue));
-							*pulFileNumber = ulCurrentFileNumber;
-							DPRINT((0,"file = %x\n",ulCurrentFileNumber));
-                            if((pTypeDefIncluded = PICE_strchr(pName,'=')) )
-                            {
-                                DPRINT((0,"symbol includes type definition (%s)\n",pTypeDefIncluded));
-                            }
-    						return TRUE;
-						}
-						break;
-				}
-				pStab++;
+			  ulCurrentFileNumber++;
+			  if(PICE_strlen(szCurrentPath))
+			    {
+			      PICE_strcat(szCurrentPath,pName);
+			      DPRINT((0,"changing source file %s\n",szCurrentPath));
+			    }
+			  else
+			    {
+			      DPRINT((0,"changing source file %s\n",pName));
+			    }
 			}
+		      else
+			PICE_strcpy(szCurrentPath,pName);
+		    }
+		  else
+		    {
+		      szCurrentPath[0]=0;
+		    }
+		  break;
+		case N_GSYM:
+		case N_LSYM:
+		case N_PSYM:
+		  // symbol-name:type-identifier type-number =
+		  nLen = StrLenUpToWhiteChar(pName,":");
+		  PICE_strncpy(SymbolName,pName,nLen);
+		  SymbolName[nLen] = 0;
+		  if(PICE_strcmpi(SymbolName,pExpression)==0)
+		    {
+		      DPRINT((0,"global symbol %s\n",pName));
+		      // extract type-number from stab
+		      ulTypeNumber = ExtractTypeNumber(pName);
+		      DPRINT((0,"type number = %x, from %s\n",ulTypeNumber, pName));
+		      *pulTypeNumber = ulTypeNumber;
+		      // look for symbols address in external symbols
+		      if( pStab->n_type == N_LSYM || pStab->n_type == N_PSYM )
+			*pValue = CurrentEBP + pStab->n_value;
+		      else *pValue = FindFunctionInModuleByName(SymbolName,pCurrentMod);
+
+		      DPRINT((0,"value = %x\n",*pValue));
+		      *pulFileNumber = ulCurrentFileNumber;
+		      DPRINT((0,"file = %x\n",ulCurrentFileNumber));
+		      if((pTypeDefIncluded = PICE_strchr(pName,'=')) )
+			{
+			  DPRINT((0,"symbol includes type definition (%s)\n",pTypeDefIncluded));
+			}
+		      return TRUE;
+		    }
+		  break;
 		}
+	      pStab++;
+	    }
 	}
-	return FALSE;
+    }
+  return FALSE;
 }
 
 //*************************************************************************
@@ -2682,7 +2689,6 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
         {
             if(!(pTypeDef = FindTypeDefinition(pvr->pSymbols,pvr->type,pvr->file)))
                 break;
-
             PICE_strcpy(type_def,pTypeDef);
 
             pTypeDef = type_def;
@@ -2851,7 +2857,23 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                     bDone = TRUE; // meanwhile
                     break;
                 default:
-                    DPRINT((0,"DEFAULT %x\n",pvr->type));
+                    DPRINT((0,"DEFAULT %x, base: %c\n",pvr->type, *pTypeBase));
+		    pvr->address = pvr->value;
+		    if(IsRangeValid(pvr->value,ulBytes))
+		      {
+			switch(ulBytes)
+			  {
+			  case 1:
+			    pvr->value = *(PUCHAR)pvr->value;
+			    break;
+			  case 2:
+			    pvr->value = *(PUSHORT)pvr->value;
+			    break;
+			  case 4:
+			    pvr->value = *(PULONG)pvr->value;
+			    break;
+			  }
+		      }
                     bDone = TRUE;
                     break;
             }
