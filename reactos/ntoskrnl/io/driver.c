@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.6 2002/06/16 11:44:13 ekohl Exp $
+/* $Id: driver.c,v 1.7 2002/06/18 07:11:44 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -131,7 +131,6 @@ NTSTATUS STDCALL
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
-  WCHAR ImagePathBuffer[MAX_PATH];
   WCHAR FullImagePathBuffer[MAX_PATH];
   UNICODE_STRING ImagePath;
   UNICODE_STRING FullImagePath;
@@ -141,13 +140,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
   PMODULE_OBJECT ModuleObject;
   LPWSTR Start;
 
-  DPRINT("DriverServiceName: '%wZ'\n", DriverServiceName);
+  DPRINT("NtLoadDriver(%wZ) called\n", DriverServiceName);
 
-  ImagePath.Length = 0;
-  ImagePath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  ImagePath.Buffer = ImagePathBuffer;
-  RtlZeroMemory(ImagePathBuffer,
-		MAX_PATH * sizeof(WCHAR));
+  RtlInitUnicodeString(&ImagePath, NULL);
 
   /* Get service data */
   RtlZeroMemory(&QueryTable,
@@ -169,21 +164,27 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      RtlFreeUnicodeString(&ImagePath);
       return(Status);
     }
 
   if (ImagePath.Length == 0)
     {
       wcscpy(FullImagePathBuffer, L"\\SystemRoot\\system32\\drivers");
-      wcscat(ImagePathBuffer, wcsrchr(DriverServiceName->Buffer, L'\\'));
-      wcscat(ImagePathBuffer, L".sys");
+      wcscat(FullImagePathBuffer, wcsrchr(DriverServiceName->Buffer, L'\\'));
+      wcscat(FullImagePathBuffer, L".sys");
+    }
+  else if (ImagePath.Buffer[0] != L'\\')
+    {
+      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
+      wcscat(FullImagePathBuffer, ImagePath.Buffer);
     }
   else
     {
-      wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
-      wcscat(FullImagePathBuffer, ImagePathBuffer);
+      wcscpy(FullImagePathBuffer, ImagePath.Buffer);
     }
 
+  RtlFreeUnicodeString(&ImagePath);
   RtlInitUnicodeString(&FullImagePath, FullImagePathBuffer);
 
   DPRINT("FullImagePath: '%S'\n", FullImagePathBuffer);
@@ -193,6 +194,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -217,7 +219,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 			       (Type == 2 || Type == 8));
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
+      DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
       LdrUnloadModule(ModuleObject);
       IopFreeDeviceNode(DeviceNode);
     }
@@ -277,27 +279,19 @@ static NTSTATUS STDCALL
 IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[6];
-  WCHAR ServiceGroupBuffer[MAX_PATH];
-  WCHAR ImagePathBuffer[MAX_PATH];
-  UNICODE_STRING ServiceGroup;
-  UNICODE_STRING ImagePath;
   PSERVICE Service;
   NTSTATUS Status;
-  ULONG Start, Type, ErrorControl;
 
   DPRINT("ServiceName: '%wZ'\n", ServiceName);
 
-  ServiceGroup.Length = 0;
-  ServiceGroup.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  ServiceGroup.Buffer = ServiceGroupBuffer;
-  RtlZeroMemory(ServiceGroupBuffer,
-		MAX_PATH * sizeof(WCHAR));
-
-  ImagePath.Length = 0;
-  ImagePath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  ImagePath.Buffer = ImagePathBuffer;
-  RtlZeroMemory(ImagePathBuffer,
-		MAX_PATH * sizeof(WCHAR));
+  /* Allocate service entry */
+  Service = (PSERVICE)ExAllocatePool(NonPagedPool, sizeof(SERVICE));
+  if (Service == NULL)
+    {
+      DPRINT1("ExAllocatePool() failed\n");
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  RtlZeroMemory(Service, sizeof(SERVICE));
 
   /* Get service data */
   RtlZeroMemory(&QueryTable,
@@ -305,107 +299,67 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 
   QueryTable[0].Name = L"Start";
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[0].EntryContext = &Start;
+  QueryTable[0].EntryContext = &Service->Start;
 
   QueryTable[1].Name = L"Type";
   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[1].EntryContext = &Type;
+  QueryTable[1].EntryContext = &Service->Type;
 
   QueryTable[2].Name = L"ErrorControl";
   QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[2].EntryContext = &ErrorControl;
+  QueryTable[2].EntryContext = &Service->ErrorControl;
 
   QueryTable[3].Name = L"Group";
   QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[3].EntryContext = &ServiceGroup;
+  QueryTable[3].EntryContext = &Service->ServiceGroup;
 
   QueryTable[4].Name = L"ImagePath";
   QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[4].EntryContext = &ImagePath;
+  QueryTable[4].EntryContext = &Service->ImagePath;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
 				  ServiceName->Buffer,
 				  QueryTable,
 				  NULL,
 				  NULL);
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status) || Service->Start > 1)
     {
-      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      RtlFreeUnicodeString(&Service->ServiceGroup);
+      RtlFreeUnicodeString(&Service->ImagePath);
+      ExFreePool(Service);
       return(Status);
     }
 
-  if (Start < 2)
-    {
-      /* Allocate service entry */
-      Service = (PSERVICE)ExAllocatePool(NonPagedPool, sizeof(SERVICE));
-      if (Service == NULL)
-	{
-	  DPRINT1("ExAllocatePool() failed\n");
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
-      RtlZeroMemory(Service, sizeof(SERVICE));
+  /* Copy service name */
+  Service->ServiceName.Length = ServiceName->Length;
+  Service->ServiceName.MaximumLength = ServiceName->Length + sizeof(WCHAR);
+  Service->ServiceName.Buffer = ExAllocatePool(NonPagedPool,
+					       Service->ServiceName.MaximumLength);
+  RtlCopyMemory(Service->ServiceName.Buffer,
+		ServiceName->Buffer,
+		ServiceName->Length);
+  Service->ServiceName.Buffer[ServiceName->Length / sizeof(WCHAR)] = 0;
 
-      /* Copy service name */
-      Service->ServiceName.Length = ServiceName->Length;
-      Service->ServiceName.MaximumLength = ServiceName->Length + sizeof(WCHAR);
-      Service->ServiceName.Buffer = ExAllocatePool(NonPagedPool,
-						   Service->ServiceName.MaximumLength);
-      RtlCopyMemory(Service->ServiceName.Buffer,
-		    ServiceName->Buffer,
-		    ServiceName->Length);
-      Service->ServiceName.Buffer[ServiceName->Length / sizeof(WCHAR)] = 0;
+  /* Build registry path */
+  Service->RegistryPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  Service->RegistryPath.Buffer = ExAllocatePool(NonPagedPool,
+						MAX_PATH * sizeof(WCHAR));
+  wcscpy(Service->RegistryPath.Buffer,
+	 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+  wcscat(Service->RegistryPath.Buffer,
+	 Service->ServiceName.Buffer);
+  Service->RegistryPath.Length = wcslen(Service->RegistryPath.Buffer) * sizeof(WCHAR);
 
-      /* Build registry path */
-      Service->RegistryPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-      Service->RegistryPath.Buffer = ExAllocatePool(NonPagedPool,
-						    MAX_PATH * sizeof(WCHAR));
-      wcscpy(Service->RegistryPath.Buffer,
-	     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-      wcscat(Service->RegistryPath.Buffer,
-	     Service->ServiceName.Buffer);
-      Service->RegistryPath.Length = wcslen(Service->RegistryPath.Buffer) * sizeof(WCHAR);
+  DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
+  DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
+  DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
+  DPRINT("ImagePath: '%wZ'\n", &Service->ImagePath);
+  DPRINT("Start %lx  Type %lx  ErrorControl %lx\n",
+	 Service->Start, Service->Type, Service->ErrorControl);
 
-      /* Copy service group */
-      if (ServiceGroup.Length > 0)
-	{
-	  Service->ServiceGroup.Length = ServiceGroup.Length;
-	  Service->ServiceGroup.MaximumLength = ServiceGroup.Length + sizeof(WCHAR);
-	  Service->ServiceGroup.Buffer = ExAllocatePool(NonPagedPool,
-							ServiceGroup.Length + sizeof(WCHAR));
-	  RtlCopyMemory(Service->ServiceGroup.Buffer,
-			ServiceGroup.Buffer,
-			ServiceGroup.Length);
-	  Service->ServiceGroup.Buffer[ServiceGroup.Length / sizeof(WCHAR)] = 0;
-	}
-
-      /* Copy image path */
-      if (ImagePath.Length > 0)
-	{
-	  Service->ImagePath.Length = ImagePath.Length;
-	  Service->ImagePath.MaximumLength = ImagePath.Length + sizeof(WCHAR);
-	  Service->ImagePath.Buffer = ExAllocatePool(NonPagedPool,
-						     ImagePath.Length + sizeof(WCHAR));
-	  RtlCopyMemory(Service->ImagePath.Buffer,
-			ImagePath.Buffer,
-			ImagePath.Length);
-	  Service->ImagePath.Buffer[ImagePath.Length / sizeof(WCHAR)] = 0;
-	}
-
-      Service->Start = Start;
-      Service->Type = Type;
-      Service->ErrorControl = ErrorControl;
-
-      DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
-      DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
-      DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
-      DPRINT("ImagePath: '%wZ'\n", &Service->ImagePath);
-      DPRINT("Start %lx  Type %lx  ErrorControl %lx\n",
-	     Service->Start, Service->Type, Service->ErrorControl);
-
-      /* Append service entry */
-      InsertTailList(&ServiceListHead,
-		     &Service->ServiceListEntry);
-    }
+  /* Append service entry */
+  InsertTailList(&ServiceListHead,
+		 &Service->ServiceListEntry);
 
   return(STATUS_SUCCESS);
 }
@@ -641,8 +595,9 @@ IoDestroyDriverList(VOID)
       CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
       RtlFreeUnicodeString(&CurrentGroup->GroupName);
-
       RemoveEntryList(GroupEntry);
+      ExFreePool(CurrentGroup);
+
       GroupEntry = GroupListHead.Flink;
     }
 
@@ -656,8 +611,9 @@ IoDestroyDriverList(VOID)
       RtlFreeUnicodeString(&CurrentService->RegistryPath);
       RtlFreeUnicodeString(&CurrentService->ServiceGroup);
       RtlFreeUnicodeString(&CurrentService->ImagePath);
-
       RemoveEntryList(ServiceEntry);
+      ExFreePool(CurrentService);
+
       ServiceEntry = ServiceListHead.Flink;
     }
 
