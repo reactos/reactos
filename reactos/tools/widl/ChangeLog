@@ -2,6 +2,13 @@ ChangeLog
 
 2005-03-13 royce3
 
+   tools/widl/write_msft.c
+
+Fixup *nix port, added include fcntl.h and unistd.h.
+
+
+2005-03-13 royce3
+
    tools/widl/hash.c
    tools/widl/Makefile
    tools/widl/write_msft.c
