@@ -29,7 +29,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ctype.h>
 #include "kdb.h"
+
 #define NDEBUG
 #include <internal/debug.h>
 
