@@ -116,14 +116,14 @@ int main(int argc, char **argv)
 		leave(1);
 	}
 
-	bzero(/*(caddr_t)*/&sin, sizeof (sin));
+	memset(/*(caddr_t)*/&sin, 0, sizeof(sin));
 	sin.sin_family = hp->h_addrtype;
 	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 		perror("whois: bind");
 		leave(1);
 	}
 
-	bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
+	memcpy((char *)&sin.sin_addr, hp->h_addr, hp->h_length);
 	sp = getservbyname("whois", "tcp");
 	if (sp == NULL) {
 		(void)fprintf(stderr, "whois: whois/tcp: unknown service\n");
