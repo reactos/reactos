@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.3 2004/08/27 15:56:05 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.4 2004/08/28 20:15:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1337,7 +1337,6 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 {
   NTUSERGETMESSAGEINFO Info;
   USER_MESSAGE Msg;
-  BOOL Present;
   
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_BUFFERS();
@@ -1365,7 +1364,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
   LEAVE_CRITICAL();
   
   /* Peek the message from the queue */
-  Present = IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, RemoveMsg);
+  Result = IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, RemoveMsg);
   
   if(Window != NULL)
   {
@@ -1373,7 +1372,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     ObmDereferenceObject(Window);
   }
   
-  if (Present)
+  if (Result)
   {
     PMSGMEMORY MsgMemoryEntry;
     UINT Size;
