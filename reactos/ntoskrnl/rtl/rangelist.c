@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.2 2004/08/15 16:39:11 chorns Exp $
+/* $Id: rangelist.c,v 1.3 2004/10/22 16:30:58 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -690,8 +690,10 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
   while (Entry != &RangeList->ListHead)
     {
       Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (!((Current->Range.Start > End && Current->Range.End > End) ||
-	    (Current->Range.Start < Start && Current->Range.End < Start)))
+      if (!((Current->Range.Start >= End && Current->Range.End > End) ||
+	    (Current->Range.Start <= Start && Current->Range.End < Start &&
+	     (!(Flags & RTL_RANGE_SHARED) ||
+	      !(Current->Range.Flags & RTL_RANGE_SHARED)))))
 	{
 	  if (Callback != NULL)
 	    {
