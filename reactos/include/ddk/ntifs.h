@@ -3,33 +3,13 @@
 
 struct _BCB;
 
-typedef struct _BCB* PBCB;
-
-struct _MEMORY_AREA;
-
-struct _CACHE_SEGMENT;
-
-typedef struct _CACHE_SEGMENT* PCACHE_SEGMENT;
-
-NTSTATUS STDCALL
-CcRosReleaseCacheSegment (struct _BCB*		Bcb,
-			  struct _CACHE_SEGMENT*	CacheSeg,
-			  BOOLEAN		Valid,
-			  BOOLEAN Dirty,
-			  BOOLEAN Mapped);
-NTSTATUS STDCALL
-CcRosRequestCacheSegment (struct _BCB*		Bcb,
-		       ULONG		FileOffset,
-		       PVOID* BaseAddress,
-		       PBOOLEAN	UptoDate,
-		       struct _CACHE_SEGMENT** CacheSeg);
 NTSTATUS STDCALL
 CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
-		       struct _BCB** Bcb,
-		       ULONG CacheSegmentSize);
+		          struct _BCB** Bcb,
+		          ULONG		CacheSegmentSize);
 NTSTATUS STDCALL
 CcRosReleaseFileCache (PFILE_OBJECT	FileObject,
-		    struct _BCB*		Bcb);
+		       struct _BCB*	Bcb);
 
 #include <ddk/cctypes.h>
 

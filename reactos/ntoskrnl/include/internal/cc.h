@@ -1,18 +1,22 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.16 2002/09/08 10:23:21 chorns Exp $ */
+/* $Id: cc.h,v 1.17 2003/01/11 15:21:09 hbirr Exp $ */
 #include <ddk/ntifs.h>
+
 
 typedef struct _BCB
 {
   LIST_ENTRY BcbSegmentListHead;
+  LIST_ENTRY BcbRemoveListEntry;
+  BOOLEAN RemoveOnClose;
+  ULONG TimeStamp;
   PFILE_OBJECT FileObject;
   ULONG CacheSegmentSize;
   LARGE_INTEGER AllocationSize;
   LARGE_INTEGER FileSize;
   KSPIN_LOCK BcbLock;
   ULONG RefCount;
-} BCB;
+} BCB, *PBCB;
 
 typedef struct _CACHE_SEGMENT
 {
@@ -45,45 +49,83 @@ typedef struct _CACHE_SEGMENT
   PBCB Bcb;
   /* Pointer to the next cache segment in a chain. */
   struct _CACHE_SEGMENT* NextInChain;
-} CACHE_SEGMENT;
+} CACHE_SEGMENT, *PCACHE_SEGMENT;
+
+typedef struct _INTERNAL_BCB
+{
+  PUBLIC_BCB PFCB;
+  PCACHE_SEGMENT CacheSegment;
+  BOOLEAN Dirty;
+} INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID STDCALL
-CcMdlReadCompleteDev (IN	PMDL		MdlChain,
-		      IN	PDEVICE_OBJECT	DeviceObject);
+CcMdlReadCompleteDev (IN PMDL		MdlChain,
+		      IN PDEVICE_OBJECT	DeviceObject);
+
 NTSTATUS
 CcRosGetCacheSegment(PBCB Bcb,
-		  ULONG FileOffset,
-		  PULONG BaseOffset,
-		  PVOID* BaseAddress,
-		  PBOOLEAN UptoDate,
-		  PCACHE_SEGMENT* CacheSeg);
+		     ULONG FileOffset,
+		     PULONG BaseOffset,
+		     PVOID* BaseAddress,
+		     PBOOLEAN UptoDate,
+		     PCACHE_SEGMENT* CacheSeg);
 VOID
 CcInitView(VOID);
 
+NTSTATUS 
+CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
 
-NTSTATUS STDCALL CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
+NTSTATUS 
+ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 
-NTSTATUS ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
-
-NTSTATUS WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
+NTSTATUS 
+WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 VOID CcInit(VOID);
+
 NTSTATUS
 CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+
 NTSTATUS
 CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+
 NTSTATUS
 CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG FileOffset,
 			  ULONG Length,
 			  PCACHE_SEGMENT* CacheSeg);
-VOID CcInitCacheZeroPage(VOID);
+
+VOID 
+CcInitCacheZeroPage(VOID);
+
 NTSTATUS
 CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset);
+
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count);
 
-VOID CcRosDereferenceCache(PFILE_OBJECT FileObject);
-VOID CcRosReferenceCache(PFILE_OBJECT FileObject);
+VOID 
+CcRosDereferenceCache(PFILE_OBJECT FileObject);
+
+VOID 
+CcRosReferenceCache(PFILE_OBJECT FileObject);
+
+VOID 
+CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
+
+NTSTATUS
+CcRosReleaseCacheSegment (BCB*		    Bcb,
+			  CACHE_SEGMENT*    CacheSeg,
+			  BOOLEAN	    Valid,
+			  BOOLEAN	    Dirty,
+			  BOOLEAN	    Mapped);
+
+NTSTATUS STDCALL
+CcRosRequestCacheSegment (BCB*		    Bcb,
+		          ULONG		    FileOffset,
+		          PVOID*	    BaseAddress,
+		          PBOOLEAN	    UptoDate,
+		          CACHE_SEGMENT**   CacheSeg);
+
 
 #endif
