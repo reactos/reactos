@@ -739,9 +739,9 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
 }
 
 NTSTATUS STDCALL
-NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
-                   IN PLARGE_INTEGER InitialSizeUnsafe,
-                   IN PLARGE_INTEGER MaximumSizeUnsafe,
+NtCreatePagingFile(IN PUNICODE_STRING FileName,
+                   IN PLARGE_INTEGER InitialSize,
+                   IN PLARGE_INTEGER MaximumSize,
                    IN ULONG Reserved)
 {
    NTSTATUS Status;
@@ -763,8 +763,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    ULONG Count;
    ULONG Size;
    KPROCESSOR_MODE PreviousMode;
-   UNICODE_STRING FileName;
-   LARGE_INTEGER InitialSize, MaximumSize;
+   UNICODE_STRING CapturedFileName;
+   LARGE_INTEGER SafeInitialSize, SafeMaximumSize;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
           FileName, InitialSize->QuadPart);
@@ -775,11 +775,11 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    }
 
    PreviousMode = ExGetPreviousMode();
-   Status = RtlCaptureUnicodeString(&FileName,
+   Status = RtlCaptureUnicodeString(&CapturedFileName,
                                     PreviousMode,
                                     PagedPool,
                                     FALSE,
-                                    FileNameUnsafe);
+                                    FileName);
    if (!NT_SUCCESS(Status))
    {
       return(Status);
@@ -788,14 +788,14 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    {
       _SEH_TRY
       {
-         ProbeForRead(InitialSizeUnsafe,
+         ProbeForRead(InitialSize,
                       sizeof(LARGE_INTEGER),
                       sizeof(ULONG));
-         InitialSize = *InitialSizeUnsafe;
-         ProbeForRead(MaximumSizeUnsafe,
+         SafeInitialSize = *InitialSize;
+         ProbeForRead(MaximumSize,
                       sizeof(LARGE_INTEGER),
                       sizeof(ULONG));
-         MaximumSize = *MaximumSizeUnsafe;
+         SafeMaximumSize = *MaximumSize;
       }
       _SEH_HANDLE
       {
@@ -810,12 +810,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    }
    else
    {
-      InitialSize = *InitialSizeUnsafe;
-      MaximumSize = *MaximumSizeUnsafe;
+      SafeInitialSize = *InitialSize;
+      SafeMaximumSize = *MaximumSize;
    }
 
    InitializeObjectAttributes(&ObjectAttributes,
-                              &FileName,
+                              &CapturedFileName,
                               0,
                               NULL,
                               NULL);
@@ -834,7 +834,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
                          CreateFileTypeNone,
                          NULL,
                          SL_OPEN_PAGING_FILE);
-   RtlReleaseCapturedUnicodeString(&FileName,
+   RtlReleaseCapturedUnicodeString(&CapturedFileName,
                                    PreviousMode,
                                    FALSE);
    if (!NT_SUCCESS(Status))
@@ -862,7 +862,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
 
    Status = ZwSetInformationFile(FileHandle,
                                  &IoStatus,
-                                 &InitialSize,
+                                 &SafeInitialSize,
                                  sizeof(LARGE_INTEGER),
                                  FileAllocationInformation);
    if (!NT_SUCCESS(Status))
@@ -874,7 +874,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    Status = ObReferenceObjectByHandle(FileHandle,
                                       FILE_ALL_ACCESS,
                                       IoFileObjectType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)&FileObject,
                                       NULL);
    if (!NT_SUCCESS(Status))
@@ -900,7 +900,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
 #endif
 
    ExtentCount = 0;
-   MaxVcn = (ULONG)((InitialSize.QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit);
+   MaxVcn = (ULONG)((SafeInitialSize.QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit);
    while(1)
    {
       Status = ZwFsControlFile(FileHandle,
@@ -967,9 +967,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileNameUnsafe,
    RtlZeroMemory(PagingFile, sizeof(*PagingFile));
 
    PagingFile->FileObject = FileObject;
-   PagingFile->MaximumSize.QuadPart = MaximumSize.QuadPart;
-   PagingFile->CurrentSize.QuadPart = InitialSize.QuadPart;
-   PagingFile->FreePages = (ULONG)(InitialSize.QuadPart / PAGE_SIZE);
+   PagingFile->MaximumSize.QuadPart = SafeMaximumSize.QuadPart;
+   PagingFile->CurrentSize.QuadPart = SafeInitialSize.QuadPart;
+   PagingFile->FreePages = (ULONG)(SafeInitialSize.QuadPart / PAGE_SIZE);
    PagingFile->UsedPages = 0;
    KeInitializeSpinLock(&PagingFile->AllocMapLock);
 

@@ -180,6 +180,10 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
       return Status;
     }
   }
+  else
+  {
+    NewSystemTime = *SystemTime;
+  }
   
   if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege,
                              PreviousMode))
