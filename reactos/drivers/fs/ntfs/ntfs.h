@@ -254,6 +254,14 @@ typedef struct
   WCHAR Name[1];
 } FILENAME_ATTRIBUTE, *PFILENAME_ATTRIBUTE;
 
+typedef struct
+{
+  ULONGLONG Unknown1;
+  UCHAR MajorVersion;
+  UCHAR MinorVersion;
+  USHORT Flags;
+  ULONG Unknown2;
+} VOLINFO_ATTRIBUTE, *PVOLINFO_ATTRIBUTE;
 
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
