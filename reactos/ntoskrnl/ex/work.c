@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.21 2004/11/15 23:14:36 gdalsnes Exp $
+/* $Id: work.c,v 1.22 2004/11/17 23:55:36 gdalsnes Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -36,7 +36,7 @@ typedef struct _WORK_QUEUE
    /*
     * PURPOSE: Worker threads with nothing to do wait on this event
     */
-   KEVENT Event;
+   KSEMAPHORE Sem;
    
    /*
     * PURPOSE: Thread associated with work queue
@@ -84,7 +84,7 @@ ExWorkerThreadEntryPoint(IN PVOID context)
 	  }
 	else
 	  {
-	     KeWaitForSingleObject((PVOID)&queue->Event,
+	     KeWaitForSingleObject((PVOID)&queue->Sem,
 				   Executive,
 				   KernelMode,
 				   FALSE,
@@ -102,10 +102,9 @@ static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
    
    InitializeListHead(&WorkQueue->Head);
    KeInitializeSpinLock(&WorkQueue->Lock);
-   KeInitializeEvent(&WorkQueue->Event,
-                     SynchronizationEvent,
-                     FALSE);   
-
+   KeInitializeSemaphore(&WorkQueue->Sem,
+			 0,
+			 256);
    for (i=0; i<NUMBER_OF_WORKER_THREADS; i++)
      {
 	PsCreateSystemThread(&WorkQueue->Thread[i],
@@ -165,27 +164,30 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
 	    ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
 				    &WorkItem->List,
 				    &EiNormalWorkQueue.Lock);
-       KeSetEvent(&EiNormalWorkQueue.Event,
-                  IO_NO_INCREMENT,
-                  FALSE);
+	    KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
+			   IO_NO_INCREMENT,
+			   1,
+			   FALSE);
 	break;
 	
     case CriticalWorkQueue:
         ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
 				    &WorkItem->List,
 				    &EiCriticalWorkQueue.Lock);
-        KeSetEvent(&EiCriticalWorkQueue.Event,
-                   IO_NO_INCREMENT,
-                   FALSE);
+        KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
+	       	  	   IO_NO_INCREMENT,
+	       		   1,
+	       		   FALSE);
 	    break;
 
     case HyperCriticalWorkQueue:
 	    ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
 				    &WorkItem->List,
 				    &EiHyperCriticalWorkQueue.Lock);
-       KeSetEvent(&EiHyperCriticalWorkQueue.Event,
-                  IO_NO_INCREMENT,
-                  FALSE);
+	    KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
+			   IO_NO_INCREMENT,
+			   1,
+			   FALSE);
     	break;
 
 #ifdef __USE_W32API
