@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pe.c,v 1.1.2.3 2004/12/13 05:55:32 hyperion Exp $
+/* $Id: pe.c,v 1.1.2.4 2004/12/18 02:36:09 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
@@ -31,7 +31,7 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
+/*#define NDEBUG*/
 #include <internal/debug.h>
 
 #include <reactos/exeformat.h>
@@ -188,7 +188,7 @@ BOOLEAN FASTCALL IsPowerOf2(IN ULONG Number)
 ULONG FASTCALL GetExcess(IN ULONG Address, IN ULONG Alignment)
 {
  ASSERT(IsPowerOf2(Alignment));
- return Address & ~(Alignment - 1);
+ return Address & (Alignment - 1);
 }
 
 BOOLEAN FASTCALL IsAligned(IN ULONG Address, IN ULONG Alignment)
@@ -203,12 +203,15 @@ BOOLEAN FASTCALL AlignUp
  IN ULONG Alignment
 )
 {
- return Intsafe_AddULong32
- (
-  AlignedAddress,
-  Address,
-  Alignment - GetExcess(Address, Alignment)
- );
+ ULONG nExcess = GetExcess(Address, Alignment);
+
+ if(nExcess == 0)
+ {
+  *AlignedAddress = Address;
+  return nExcess == 0;
+ }
+ else
+  return Intsafe_AddULong32(AlignedAddress, Address, Alignment - nExcess);
 }
 
 /*
@@ -259,6 +262,8 @@ NTSTATUS NTAPI PeFmtCreateSection
  ASSERT(FileHeaderSize >= sizeof(IMAGE_DOS_HEADER));
  ASSERT(((UINT_PTR)FileHeader % TYPE_ALIGNMENT(IMAGE_DOS_HEADER)) == 0);
 
+#define DIE(ARGS_) { DPRINT ARGS_; goto l_Return; }
+
  pBuffer = NULL;
  pidhDosHeader = FileHeader;
 
@@ -267,17 +272,17 @@ NTSTATUS NTAPI PeFmtCreateSection
 
  /* no MZ signature */
  if(pidhDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-  goto l_Return;
+  DIE(("No MZ signature found, e_magic is %hX\n", pidhDosHeader->e_magic));
 
  /* not a Windows executable */
  if(pidhDosHeader->e_lfanew <= 0)
-  goto l_Return;
+  DIE(("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
 
  /* NT HEADER */
  nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
  if(!Intsafe_AddULong32(&cbFileHeaderOffsetSize, pidhDosHeader->e_lfanew, RTL_SIZEOF_THROUGH_FIELD(IMAGE_NT_HEADERS32, FileHeader)))
-  goto l_Return;
+  DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
 
  if(FileHeaderSize < cbFileHeaderOffsetSize)
   pinhNtHeader = NULL;
@@ -307,63 +312,58 @@ NTSTATUS NTAPI PeFmtCreateSection
  )
  {
   SIZE_T cbNtHeaderSize;
-  SIZE_T cbReadSize;
+  ULONG cbReadSize;
+  PVOID pData;
 
 l_ReadHeaderFromFile:
-
-  nStatus = STATUS_INSUFFICIENT_RESOURCES;
-
-  /* allocate the buffer. We use the largest size (IMAGE_NT_HEADERS64) */
-  pBuffer = ExAllocatePoolWithTag
-  (
-   NonPagedPool,
-   sizeof(IMAGE_NT_HEADERS64),
-   TAG('P', 'e', 'F', 'm')
-  );
-
-  if(pBuffer == NULL)
-   goto l_Return;
-
   lnOffset.QuadPart = pidhDosHeader->e_lfanew;
 
   /* read the header from the file */
   nStatus = ReadFileCb
   (
    File,
-   pBuffer,
-   sizeof(IMAGE_NT_HEADERS64),
    &lnOffset,
+   sizeof(IMAGE_NT_HEADERS64),
+   &pData,
+   &pBuffer,
    &cbReadSize
   );
 
   if(!NT_SUCCESS(nStatus))
-   goto l_Return;
+   DIE(("ReadFile failed, status %08X\n", nStatus));
 
-  nStatus = STATUS_UNSUCCESSFUL;
-
-  if(cbReadSize == 0)
-   goto l_Return;
+  ASSERT(pData);
+  ASSERT(pBuffer);
+  ASSERT(cbReadSize > 0);
 
   nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
   /* the buffer doesn't contain the file header */
   if(cbReadSize < RTL_SIZEOF_THROUGH_FIELD(IMAGE_NT_HEADERS32, FileHeader))
-   goto l_Return;
+   DIE(("The file doesn't contain the PE file header"));
 
-  pinhNtHeader = pBuffer;
+  pinhNtHeader = pData;
+
+  /* object still not aligned: copy it to the beginning of the buffer */
+  if((UINT_PTR)pinhNtHeader % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) != 0)
+  {
+   ASSERT((UINT_PTR)pBuffer % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) == 0);
+   RtlMoveMemory(pBuffer, pData, cbReadSize);
+   pinhNtHeader = pBuffer;
+  }
 
   /* invalid NT header */
   if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
-   goto l_Return;
+   DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
 
   if(!Intsafe_AddULong32(&cbNtHeaderSize, pinhNtHeader->FileHeader.SizeOfOptionalHeader, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
-   goto l_Return;
+   DIE(("The full NT header is too large\n"));
 
   nStatus = STATUS_UNSUCCESSFUL;
 
   /* the buffer doesn't contain the whole NT header */
   if(cbReadSize < cbNtHeaderSize)
-   goto l_Return;
+   DIE(("The file doesn't contain the full NT header\n"));
  }
  else
  {
@@ -373,13 +373,13 @@ l_ReadHeaderFromFile:
 
   /* don't trust an invalid NT header */
   if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
-   goto l_Return;
+   DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
   
   if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, pidhDosHeader->e_lfanew, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
-   goto l_Return;
+   DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
 
   if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, cbOptHeaderOffsetSize, pinhNtHeader->FileHeader.SizeOfOptionalHeader))
-   goto l_Return;
+   DIE(("The NT header is too large, SizeOfOptionalHeader is %X\n", pinhNtHeader->FileHeader.SizeOfOptionalHeader));
 
   /* the buffer doesn't contain the whole NT header: read it from the file */
   if(cbOptHeaderOffsetSize > FileHeaderSize)
@@ -393,7 +393,7 @@ l_ReadHeaderFromFile:
  nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
  if(!RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Magic))
-  goto l_Return;
+  DIE(("The optional header doesn't contain the Magic field, SizeOfOptionalHeader is %X\n", cbOptHeaderSize));
 
  /* ASSUME: RtlZeroMemory(ImageSectionObject, sizeof(*ImageSectionObject)); */
 
@@ -404,7 +404,7 @@ l_ReadHeaderFromFile:
    break;
   
   default:
-   goto l_Return;
+   DIE(("Unrecognized optional header, Magic is %X\n", piohOptHeader->Magic));
  }
 
  if
@@ -417,16 +417,16 @@ l_ReadHeaderFromFile:
   if(piohOptHeader->SectionAlignment < PAGE_SIZE)
   {
    if(piohOptHeader->FileAlignment != piohOptHeader->SectionAlignment)
-    goto l_Return;
+    DIE(("Sections aren't page-aligned and the file alignment isn't the same\n"));
   }
   else if(piohOptHeader->SectionAlignment < piohOptHeader->FileAlignment)
-   goto l_Return;
+   DIE(("The section alignment is smaller than the file alignment\n"));
 
   nSectionAlignment = piohOptHeader->SectionAlignment;
   nFileAlignment = piohOptHeader->FileAlignment;
 
   if(!IsPowerOf2(nSectionAlignment) || !IsPowerOf2(nFileAlignment))
-   goto l_Return;
+   DIE(("The section alignment (%u) and file alignment (%u) aren't both powers of 2\n", nSectionAlignment, nFileAlignment));
  }
  else
  {
@@ -442,9 +442,6 @@ l_ReadHeaderFromFile:
   /* PE32 */
   case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
   {
-   if(cbOptHeaderSize > sizeof(IMAGE_OPTIONAL_HEADER32))
-    goto l_Return;
-
    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
     ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
 
@@ -462,15 +459,12 @@ l_ReadHeaderFromFile:
   {
    PIMAGE_OPTIONAL_HEADER64 pioh64OptHeader;
 
-   if(cbOptHeaderSize > sizeof(IMAGE_OPTIONAL_HEADER64))
-    goto l_Return;
-
    pioh64OptHeader = (PIMAGE_OPTIONAL_HEADER64)piohOptHeader;
 
    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, ImageBase))
    {
     if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
-     goto l_Return;
+     DIE(("ImageBase exceeds the address space\n"));
 
     ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
    }
@@ -478,7 +472,7 @@ l_ReadHeaderFromFile:
    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
    {
     if(pioh64OptHeader->SizeOfStackReserve > MAXULONG_PTR)
-     goto l_Return;
+     DIE(("SizeOfStackReserve exceeds the address space\n"));
 
     ImageSectionObject->StackReserve = pioh64OptHeader->SizeOfStackReserve;
    }
@@ -486,7 +480,7 @@ l_ReadHeaderFromFile:
    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackCommit))
    {
     if(pioh64OptHeader->SizeOfStackCommit > MAXULONG_PTR)
-     goto l_Return;
+     DIE(("SizeOfStackCommit exceeds the address space\n"));
 
     ImageSectionObject->StackCommit = pioh64OptHeader->SizeOfStackCommit;
    }
@@ -495,26 +489,9 @@ l_ReadHeaderFromFile:
   }
  }
 
-#if 0
- /* some defaults */
- if(ImageSectionObject->StackReserve == 0)
-  ImageSectionObject->StackReserve = 0x40000;
-
- if(ImageSectionObject->StackCommit == 0)
-  ImageSectionObject->StackCommit = 0x1000;
-
- if(ImageSectionObject->ImageBase == NULL)
- {
-  if(pinhNtHeader->FileHeader.Characteristics & IMAGE_FILE_DLL)
-   ImageSectionObject->ImageBase = (PVOID)0x10000000;
-  else
-   ImageSectionObject->ImageBase = (PVOID)0x00400000;
- }
-#endif
-
  /* [1], section 3.4.2 */
  if((ULONG_PTR)ImageSectionObject->ImageBase % 0x10000)
-  goto l_Return;
+  DIE(("ImageBase is not aligned on a 64KB boundary"));
 
  /*
   ASSUME: all the fields used here have the same offset and size in both
@@ -551,7 +528,7 @@ l_ReadHeaderFromFile:
 
  /* see [1], section 3.3 */
  if(pinhNtHeader->FileHeader.NumberOfSections > 96)
-  goto l_Return;
+  DIE(("Too many sections, NumberOfSections is %u\n", pinhNtHeader->FileHeader.NumberOfSections));
 
  /*
   the additional segment is for the file's headers. They need to be present for
@@ -562,31 +539,31 @@ l_ReadHeaderFromFile:
 
  /* file offset for the section headers */
  if(!Intsafe_AddULong32(&cbSectionHeadersOffset, pidhDosHeader->e_lfanew, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
-  goto l_Return;
+  DIE(("Offset overflow\n"));
 
  if(!Intsafe_AddULong32(&cbSectionHeadersOffset, cbSectionHeadersOffset, pinhNtHeader->FileHeader.SizeOfOptionalHeader))
-  goto l_Return;
+  DIE(("Offset overflow\n"));
 
  /* size of the section headers */
  ASSERT(Intsafe_CanMulULong32(pinhNtHeader->FileHeader.NumberOfSections, sizeof(IMAGE_SECTION_HEADER)));
  cbSectionHeadersSize = pinhNtHeader->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER);
 
  if(!Intsafe_AddULong32(&cbSectionHeadersOffsetSize, cbSectionHeadersOffset, cbSectionHeadersSize))
-  goto l_Return;
+  DIE(("Section headers too large\n"));
 
  /* size of the executable's headers */
  if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfHeaders))
  {
   if(!IsAligned(piohOptHeader->SizeOfHeaders, nFileAlignment))
-   goto l_Return;
+   DIE(("SizeOfHeaders is not aligned\n"));
 
   if(cbSectionHeadersSize > piohOptHeader->SizeOfHeaders)
-   goto l_Return;
+   DIE(("The section headers overflow SizeOfHeaders\n"));
 
   cbHeadersSize = piohOptHeader->SizeOfHeaders;
  }
  else if(!AlignUp(&cbHeadersSize, cbSectionHeadersOffsetSize, nFileAlignment))
-  goto l_Return;
+  DIE(("Overflow aligning the size of headers\n"));
 
  if(pBuffer)
  {
@@ -619,20 +596,8 @@ l_ReadHeaderFromFile:
   (UINT_PTR)pishSectionHeaders % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) != 0
  )
  {
-  SIZE_T cbReadSize;
-
-  nStatus = STATUS_INSUFFICIENT_RESOURCES;
-
-  /* allocate the buffer */
-  pBuffer = ExAllocatePoolWithTag
-  (
-   NonPagedPool,
-   cbSectionHeadersSize,
-   TAG('P', 'e', 'F', 'm')
-  );
-
-  if(pBuffer == NULL)
-   goto l_Return;
+  PVOID pData;
+  ULONG cbReadSize;
 
   lnOffset.QuadPart = cbSectionHeadersOffset;
 
@@ -640,20 +605,35 @@ l_ReadHeaderFromFile:
   nStatus = ReadFileCb
   (
    File,
-   pBuffer,
-   cbSectionHeadersSize,
    &lnOffset,
+   cbSectionHeadersSize,
+   &pData,
+   &pBuffer,
    &cbReadSize
   );
 
   if(!NT_SUCCESS(nStatus))
-   goto l_Return;
+   DIE(("ReadFile failed with status %08X\n", nStatus));
 
-  nStatus = STATUS_UNSUCCESSFUL;
+  ASSERT(pData);
+  ASSERT(pBuffer);
+  ASSERT(cbReadSize > 0);
+
+  nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
   /* the buffer doesn't contain all the section headers */
   if(cbReadSize < cbSectionHeadersSize)
-   goto l_Return;
+   DIE(("The file doesn't contain all of the section headers\n"));
+
+  pishSectionHeaders = pData;
+
+  /* object still not aligned: copy it to the beginning of the buffer */
+  if((UINT_PTR)pishSectionHeaders % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) != 0)
+  {
+   ASSERT((UINT_PTR)pBuffer % TYPE_ALIGNMENT(IMAGE_SECTION_HEADER) == 0);
+   RtlMoveMemory(pBuffer, pData, cbReadSize);
+   pishSectionHeaders = pBuffer;
+  }
  }
 
  /* SEGMENTS */
@@ -662,15 +642,18 @@ l_ReadHeaderFromFile:
  ImageSectionObject->Segments = AllocateSegmentsCb(ImageSectionObject->NrSegments);
 
  if(ImageSectionObject->Segments == NULL)
-  goto l_Return;
+  DIE(("AllocateSegments failed\n"));
 
  /* initialize the headers segment */
  pssSegments = ImageSectionObject->Segments;
 
  ASSERT(IsAligned(cbHeadersSize, nFileAlignment));
 
+ if(!AlignUp(&nPrevFileEndOfSegment, cbHeadersSize, nFileAlignment))
+  DIE(("Cannot align the size of the section headers\n"));
+
  if(!AlignUp(&nPrevVirtualEndOfSegment, cbHeadersSize, nSectionAlignment))
-  goto l_Return;
+  DIE(("Cannot align the size of the section headers\n"));
 
  pssSegments[0].FileOffset = 0;
  pssSegments[0].Protection = PAGE_READONLY;
@@ -690,27 +673,36 @@ l_ReadHeaderFromFile:
   ULONG nCharacteristics;
 
   /* validate the alignment */
-  if(!IsAligned(pishSectionHeaders[i].SizeOfRawData, nFileAlignment))
-   goto l_Return;
-
-  if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
-   goto l_Return;
-
-  if(!IsAligned(pishSectionHeaders[i].Misc.VirtualSize, nSectionAlignment))
-   goto l_Return;
-
   if(!IsAligned(pishSectionHeaders[i].VirtualAddress, nSectionAlignment))
-   goto l_Return;
+   DIE(("VirtualAddress[%u] is not aligned\n", i));
 
   /* sections must be contiguous, ordered by base address and non-overlapping */
-  if(pishSectionHeaders[i].PointerToRawData != nPrevFileEndOfSegment)
-   goto l_Return;
-
   if(pishSectionHeaders[i].VirtualAddress != nPrevVirtualEndOfSegment)
-   goto l_Return;
+   DIE(("Memory gap between section %u and the previous\n", i));
 
-  /* conversion */
-  pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;
+  /* ignore explicit BSS sections */
+  if(pishSectionHeaders[i].SizeOfRawData != 0)
+  {
+   /* validate the alignment */
+   if(!IsAligned(pishSectionHeaders[i].SizeOfRawData, nFileAlignment))
+    DIE(("SizeOfRawData[%u] is not aligned\n", i));
+
+   if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
+    DIE(("PointerToRawData[%u] is not aligned\n", i));
+
+   /* sections must be contiguous, ordered by base address and non-overlapping */
+   if(pishSectionHeaders[i].PointerToRawData != nPrevFileEndOfSegment)
+    DIE(("File gap between section %u and the previous\n", i));
+
+   /* conversion */
+   pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;
+   pssSegments[i].RawLength = pishSectionHeaders[i].SizeOfRawData;
+  }
+  else
+  {
+   ASSERT(pssSegments[i].FileOffset == 0);
+   ASSERT(pssSegments[i].RawLength == 0);
+  }
 
   nCharacteristics = pishSectionHeaders[i].Characteristics;
 
@@ -730,12 +722,16 @@ l_ReadHeaderFromFile:
   /* see table above */
   pssSegments[i].Protection = SectionCharacteristicsToProtect[nCharacteristics >> 28];
 
-  pssSegments[i].RawLength = pishSectionHeaders[i].SizeOfRawData;
-
-  if(pishSectionHeaders[i].Misc.VirtualSize != 0)
-   pssSegments[i].Length = pishSectionHeaders[i].Misc.VirtualSize;
-  else
+  if(pishSectionHeaders[i].Misc.VirtualSize == 0 || pishSectionHeaders[i].Misc.VirtualSize < pishSectionHeaders[i].SizeOfRawData)
    pssSegments[i].Length = pishSectionHeaders[i].SizeOfRawData;
+  else
+   pssSegments[i].Length = pishSectionHeaders[i].Misc.VirtualSize;
+
+  if(!AlignUp(&pssSegments[i].Length, pssSegments[i].Length, nSectionAlignment))
+   DIE(("Cannot align the virtual size of section %u\n", i));
+
+  if(pssSegments[i].Length == 0)
+   DIE(("Virtual size of section %u is null\n", i));
 
   /* ExInitializeFastMutex(&pssSegments[i].Lock); */
   /* pssSegments[i].ReferenceCount = 1; */
@@ -743,12 +739,21 @@ l_ReadHeaderFromFile:
   pssSegments[i].VirtualAddress = pishSectionHeaders[i].VirtualAddress;
   pssSegments[i].Characteristics = pishSectionHeaders[i].Characteristics;
 
-  /* ensure the image is no larger than 4GB */
-  if(!Intsafe_AddULong32(&nPrevFileEndOfSegment, pssSegments[i].FileOffset, pssSegments[i].RawLength))
-   goto l_Return;
+  /* ensure the executable is no larger than 4GB */
+  if(pssSegments[i].RawLength != 0)
+  {
+   if(!Intsafe_AddULong32(&nPrevFileEndOfSegment, pssSegments[i].FileOffset, pssSegments[i].RawLength))
+    DIE(("The executable is larger than 4GB\n"));
+  }
 
+  /* ensure the memory image is no larger than 4GB */
   if(!Intsafe_AddULong32(&nPrevVirtualEndOfSegment, pssSegments[i].VirtualAddress, pssSegments[i].Length))
-   goto l_Return;
+   DIE(("The image is larger than 4GB\n"));
+
+  DPRINT("FileOffset    [%u] = %lX\n", i, (ULONG)pssSegments[i].FileOffset);
+  DPRINT("RawLength     [%u] = %lX\n", i, pssSegments[i].RawLength);
+  DPRINT("VirtualAddress[%u] = %lX\n", i, pssSegments[i].VirtualAddress);
+  DPRINT("Length        [%u] = %lX\n", i, pssSegments[i].Length);
  }
 
  /* spare our caller some work in validating the segments */

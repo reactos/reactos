@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.166.2.3 2004/12/13 05:55:32 hyperion Exp $
+/* $Id: section.c,v 1.166.2.4 2004/12/18 02:36:09 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -137,15 +137,19 @@ MmspPageRead(IN PFILE_OBJECT FileObject,
 {
    NTSTATUS Status;
    KEVENT Event;
-   MDL Mdl;
+   PMDL Mdl;
    IO_STATUS_BLOCK Iosb;
 
+   Mdl = IoAllocateMdl(Buffer, BufferSize, FALSE, FALSE, NULL);
+
+   if(Mdl == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+   MmBuildMdlForNonPagedPool(Mdl);
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-   MmInitializeMdl(&Mdl, Buffer, BufferSize);
-   MmBuildMdlForNonPagedPool(&Mdl);
 
    Status = IoPageRead(FileObject,
-                       &Mdl,
+                       Mdl,
                        Offset,
                        &Event,
                        &Iosb);
@@ -155,6 +159,65 @@ MmspPageRead(IN PFILE_OBJECT FileObject,
 
    *ReadSize = Iosb.Information;
    return Iosb.Status;
+}
+
+extern
+NTSTATUS
+NTAPI
+IopReadFile(IN PFILE_OBJECT FileObject,
+            IN KPROCESSOR_MODE AccessMode,
+	    IN PKEVENT EventObject OPTIONAL,
+	    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	    IN PVOID ApcContext OPTIONAL,
+	    OUT PIO_STATUS_BLOCK IoStatusBlock,
+	    OUT PVOID Buffer,
+	    IN ULONG Length,
+	    IN PLARGE_INTEGER ByteOffset OPTIONAL,
+	    IN PULONG Key OPTIONAL);
+
+/*
+ * This is, basically, a hack. We "touch" the file with an 1-byte read so
+ * caching is enabled for the file. This is wrong, wrong, WRONG: it moves the
+ * file pointer (and I'm NOT hiding the bug by moving it back), it's subject to
+ * whatever mode the file was opened in (synchronous vs asynchronous, cached vs
+ * non-cached, etc.) and in real Windows this is never necessary, but we get
+ * caching and memory mapping TOTALLY WRONG and BACKWARDS, with Mm calling Cc
+ * instead of the other way around. But it isn't "more wrong" than the previous
+ * implementation, so I'm leaving it this way. You're in for one hell of a ride,
+ * should this break something and should you need to fix it...
+ *   [KJK::Hyperion - 2004-12-17]
+ */
+static
+NTSTATUS
+NTAPI
+MmspInitializeFileCache(IN PFILE_OBJECT FileObject)
+{
+   /*
+    * FIXME HACK HACK HORRIBLE HACK PLEASE LET ME DIE:
+    * Since the function can return too soon in case the file was opened for
+    * asyncronous I/O (this is the same behavior as before, when ZwReadFile was
+    * used), we at least limit the damage and pass static buffers. PLEASE, if
+    * you come across this comment, FIX THIS, because it means I still haven't.
+    * IopReadFile itself is a HACK, in kernel mode we should use completion
+    * routines, because any other notification mechanism is tailored towards
+    * consumption from user mode (e.g. EventObject can't be a bare KEVENT)
+    */
+   static UCHAR Buffer[1];
+   static IO_STATUS_BLOCK Iosb;
+   static LARGE_INTEGER FileOffset;
+
+   FileOffset.QuadPart = 0;
+
+   return IopReadFile(FileObject,
+                      KernelMode,
+                      NULL,
+                      NULL,
+                      NULL,
+                      &Iosb,
+                      Buffer,
+                      1,
+                      &FileOffset,
+                      NULL);
 }
 
 VOID
@@ -176,14 +239,14 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
 VOID
 MmFreeSectionSegments(PFILE_OBJECT FileObject)
 {
-   if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
    {
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
       PMM_SECTION_SEGMENT SectionSegments;
       ULONG NrSegments;
       ULONG i;
 
-      ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointer->ImageSectionObject;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointer->ImageSectionObject;
       NrSegments = ImageSectionObject->NrSegments;
       SectionSegments = ImageSectionObject->Segments;
       for (i = 0; i < NrSegments; i++)
@@ -198,13 +261,13 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
       }
       ExFreePool(ImageSectionObject->Segments);
       ExFreePool(ImageSectionObject);
-      FileObject->SectionObjectPointer->ImageSectionObject = NULL;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);FileObject->SectionObjectPointer->ImageSectionObject = NULL;
    }
-   if (FileObject->SectionObjectPointer->DataSectionObject != NULL)
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (FileObject->SectionObjectPointer->DataSectionObject != NULL)
    {
       PMM_SECTION_SEGMENT Segment;
 
-      Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
                 DataSectionObject;
 
       if (Segment->ReferenceCount != 0)
@@ -214,7 +277,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
       }
       MmFreePageTablesSectionSegment(Segment);
       ExFreePool(Segment);
-      FileObject->SectionObjectPointer->DataSectionObject = NULL;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);FileObject->SectionObjectPointer->DataSectionObject = NULL;
    }
 }
 
@@ -374,7 +437,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
          {
             NTSTATUS Status;
-            Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+            if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
             IsDirectMapped = TRUE;
             Status = CcRosUnmapCacheSegment(Bcb, FileOffset, Dirty);
             if (!NT_SUCCESS(Status))
@@ -494,7 +557,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    ULONG Length;
 
    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    RawLength = MemoryArea->Data.SectionData.Segment->RawLength;
    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset;
    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
@@ -1399,7 +1462,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    if (FileObject != NULL &&
        !(Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
       /*
        * If the file system is letting us go directly to the cache and the
@@ -1743,7 +1806,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    if (FileObject != NULL &&
          !(Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
       /*
        * If the file system is letting us go directly to the cache and the
@@ -2059,22 +2122,26 @@ MmpDeleteSection(PVOID ObjectBody)
          return;
 
       SectionSegments = Section->ImageSection->Segments;
-      NrSegments = Section->ImageSection->NrSegments;
-
-      for (i = 0; i < NrSegments; i++)
+      
+      if (SectionSegments)
       {
-         if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
+         NrSegments = Section->ImageSection->NrSegments;
+   
+         for (i = 0; i < NrSegments; i++)
          {
-            MmLockSectionSegment(&SectionSegments[i]);
-         }
-         RefCount = InterlockedDecrement(&SectionSegments[i].ReferenceCount);
-         if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
-         {
-            if (RefCount == 0)
+            if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
             {
-               MmpFreePageFileSegment(&SectionSegments[i]);
+               MmLockSectionSegment(&SectionSegments[i]);
             }
-            MmUnlockSectionSegment(&SectionSegments[i]);
+            RefCount = InterlockedDecrement(&SectionSegments[i].ReferenceCount);
+            if (SectionSegments[i].Characteristics & IMAGE_SECTION_CHAR_SHARED)
+            {
+               if (RefCount == 0)
+               {
+                  MmpFreePageFileSegment(&SectionSegments[i]);
+               }
+               MmUnlockSectionSegment(&SectionSegments[i]);
+            }
          }
       }
    }
@@ -2410,7 +2477,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       }
    }
 
-   if (FileObject->SectionObjectPointer == NULL ||
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (FileObject->SectionObjectPointer == NULL ||
          FileObject->SectionObjectPointer->SharedCacheMap == NULL)
    {
       /*
@@ -2434,7 +2501,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
          ObDereferenceObject(FileObject);
          return(Status);
       }
-      if (FileObject->SectionObjectPointer == NULL ||
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (FileObject->SectionObjectPointer == NULL ||
             FileObject->SectionObjectPointer->SharedCacheMap == NULL)
       {
          /* FIXME: handle this situation */
@@ -2459,7 +2526,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     * If this file hasn't been mapped as a data file before then allocate a
     * section segment to describe the data file mapping
     */
-   if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (FileObject->SectionObjectPointer->DataSectionObject == NULL)
    {
       Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                       TAG_MM_SECTION_SEGMENT);
@@ -2477,7 +2544,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
        * Set the lock before assigning the segment to the file object
        */
       ExAcquireFastMutex(&Segment->Lock);
-      FileObject->SectionObjectPointer->DataSectionObject = (PVOID)Segment;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);FileObject->SectionObjectPointer->DataSectionObject = (PVOID)Segment;
 
       Segment->FileOffset = 0;
       Segment->Protection = SectionPageProtection;
@@ -2501,7 +2568,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
        * If the file is already mapped as a data file then we may need
        * to extend it
        */
-      Segment =
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Segment =
          (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
          DataSectionObject;
       Section->Segment = Segment;
@@ -2549,11 +2616,437 @@ static PEXEFMT_LOADER ExeFmtpLoaders[] =
  PeFmtCreateSection
 };
 
-static PMM_SECTION_SEGMENT NTAPI MmspAllocateSegments(IN ULONG NrSegments)
+static
+PMM_SECTION_SEGMENT
+NTAPI
+ExeFmtpAllocateSegments(IN ULONG NrSegments)
 {
- return ExAllocatePoolWithTag(NonPagedPool,
-                              sizeof(MM_SECTION_SEGMENT) * NrSegments,
-                              TAG_MM_SECTION_SEGMENT);
+ SIZE_T SizeOfSegments;
+ PMM_SECTION_SEGMENT Segments;
+
+ /* TODO: check for integer overflow */
+ SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
+
+ Segments = ExAllocatePoolWithTag(NonPagedPool,
+                                  SizeOfSegments,
+                                  TAG_MM_SECTION_SEGMENT);
+
+ if(Segments)
+  RtlZeroMemory(Segments, SizeOfSegments);
+
+ return Segments;
+}
+
+static
+NTSTATUS
+NTAPI
+ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
+                IN PLARGE_INTEGER Offset,
+                IN ULONG Length,
+                OUT PVOID * Data,
+                OUT PVOID * AllocBase,
+                OUT PULONG ReadSize)
+{
+   NTSTATUS Status;
+   LARGE_INTEGER FileOffset;
+   ULONG AdjustOffset;
+   ULONG OffsetAdjustment;
+   ULONG BufferSize;
+   ULONG UsedSize;
+   PVOID Buffer;
+
+   ASSERT_IRQL_LESS(DISPATCH_LEVEL);
+
+   if(Length == 0)
+   {
+      KEBUGCHECK(STATUS_INVALID_PARAMETER_4);
+   }
+
+   FileOffset = *Offset;
+
+   /* Negative/special offset: it cannot be used in this context */
+   if(FileOffset.u.HighPart < 0)
+   {
+      KEBUGCHECK(STATUS_INVALID_PARAMETER_5);
+   }
+
+   ASSERT(PAGE_SIZE <= MAXULONG);
+   AdjustOffset = PAGE_ROUND_DOWN(FileOffset.u.LowPart);
+   OffsetAdjustment = FileOffset.u.LowPart - AdjustOffset;
+   FileOffset.u.LowPart = AdjustOffset;
+
+   BufferSize = Length + OffsetAdjustment;
+   BufferSize = PAGE_ROUND_UP(BufferSize);
+
+   /*
+    * It's ok to use paged pool, because this is a temporary buffer only used in
+    * the loading of executables. The assumption is that MmCreateSection is
+    * always called at low IRQLs and that these buffers don't survive a brief
+    * initialization phase
+    */
+   Buffer = ExAllocatePoolWithTag(PagedPool,
+                                  BufferSize,
+                                  TAG('M', 'm', 'X', 'r'));
+
+   UsedSize = 0;
+
+   Status = MmspPageRead(FileObject,
+                         Buffer,
+                         BufferSize,
+                         &FileOffset,
+                         &UsedSize);
+
+   if(UsedSize < OffsetAdjustment)
+   {
+      Status = STATUS_IN_PAGE_ERROR;
+      ASSERT(!NT_SUCCESS(Status));
+   }
+
+   if(NT_SUCCESS(Status))
+   {
+      *Data = (PVOID)((ULONG_PTR)Buffer + OffsetAdjustment);
+      *AllocBase = Buffer;
+      *ReadSize = UsedSize - OffsetAdjustment;
+   }
+   else
+   {
+      ExFreePool(Buffer);
+   }
+
+   return Status;
+}
+
+#ifdef NASSERT
+# define MmspAssertSegmentsSorted(OBJ_) ((void)0)
+# define MmspAssertSegmentsNoOverlap(OBJ_) ((void)0)
+# define MmspAssertSegmentsPageAligned(OBJ_) ((void)0)
+#else
+static
+VOID
+NTAPI
+MmspAssertSegmentsSorted(IN PMM_IMAGE_SECTION_OBJECT ImageSectionObject)
+{
+   ULONG i;
+
+   for( i = 1; i < ImageSectionObject->NrSegments; ++ i )
+   {
+      ASSERT(ImageSectionObject->Segments[i].VirtualAddress >=
+             ImageSectionObject->Segments[i - 1].VirtualAddress);
+   }
+}
+
+static
+VOID
+NTAPI
+MmspAssertSegmentsNoOverlap(IN PMM_IMAGE_SECTION_OBJECT ImageSectionObject)
+{
+   ULONG i;
+
+   MmspAssertSegmentsSorted(ImageSectionObject);
+
+   for( i = 0; i < ImageSectionObject->NrSegments; ++ i )
+   {
+      ASSERT(ImageSectionObject->Segments[i].Length > 0);
+
+      if(i > 0)
+      {
+         ASSERT(ImageSectionObject->Segments[i].VirtualAddress >=
+                (ImageSectionObject->Segments[i - 1].VirtualAddress +
+                 ImageSectionObject->Segments[i - 1].Length));
+      }
+   }
+}
+
+static
+VOID
+NTAPI
+MmspAssertSegmentsPageAligned(IN PMM_IMAGE_SECTION_OBJECT ImageSectionObject)
+{
+   ULONG i;
+
+   for( i = 0; i < ImageSectionObject->NrSegments; ++ i )
+   {
+      ASSERT((ImageSectionObject->Segments[i].VirtualAddress % PAGE_SIZE) == 0);
+      ASSERT((ImageSectionObject->Segments[i].Length % PAGE_SIZE) == 0);
+   }
+}
+#endif
+
+static
+int
+__cdecl
+MmspCompareSegments(const void * x,
+                    const void * y)
+{
+   PMM_SECTION_SEGMENT Segment1 = (PMM_SECTION_SEGMENT)x;
+   PMM_SECTION_SEGMENT Segment2 = (PMM_SECTION_SEGMENT)y;
+
+   return
+      (Segment1->VirtualAddress - Segment2->VirtualAddress) >>
+      ((sizeof(ULONG_PTR) - sizeof(int)) * 8);
+}
+
+/*
+ * Ensures an image section's segments are sorted in memory
+ */
+static
+VOID
+NTAPI
+MmspSortSegments(IN OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+                 IN ULONG Flags)
+{
+   if (Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED)
+   {
+      MmspAssertSegmentsSorted(ImageSectionObject);
+   }
+   else
+   {
+      qsort(ImageSectionObject->Segments,
+            ImageSectionObject->NrSegments,
+            sizeof(ImageSectionObject->Segments[0]),
+            MmspCompareSegments);
+   }
+}
+
+
+/*
+ * Ensures an image section's segments don't overlap in memory and don't have
+ * gaps and don't have a null size. We let them map to overlapping file regions,
+ * though - that's not necessarily an error
+ */
+static
+BOOLEAN
+NTAPI
+MmspCheckSegmentBounds
+(
+ IN OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+ IN ULONG Flags
+)
+{
+   ULONG i;
+
+   if (Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP)
+   {
+      MmspAssertSegmentsNoOverlap(ImageSectionObject);
+      return TRUE;
+   }
+
+   ASSERT(ImageSectionObject->NrSegments >= 1);
+
+   for ( i = 0; i < ImageSectionObject->NrSegments; ++ i )
+   {
+      if(ImageSectionObject->Segments[i].Length == 0)
+      {
+         return FALSE;
+      }
+
+      if(i > 0)
+      {
+         /*
+          * TODO: relax the limitation on gaps. For example, gaps smaller than a
+          * page could be OK (Windows seems to be OK with them), and larger gaps
+          * could lead to image sections spanning several discontiguous regions
+          * (NtMapViewOfSection could then refuse to map them, and they could 
+          * e.g. only be allowed as parameters to NtCreateProcess, like on UNIX)
+          */
+         if ((ImageSectionObject->Segments[i - 1].VirtualAddress +
+              ImageSectionObject->Segments[i - 1].Length) !=
+              ImageSectionObject->Segments[i].VirtualAddress)
+         {
+            return FALSE;
+         }
+      }
+   }
+
+   return TRUE;
+}
+
+/*
+ * Merges and pads an image section's segments until they all are page-aligned
+ * and have a size that is a multiple of the page size
+ */
+static
+BOOLEAN
+NTAPI
+MmspPageAlignSegments
+(
+ IN OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+ IN ULONG Flags
+)
+{
+   ULONG i;
+   ULONG LastSegment;
+   BOOLEAN Initialized;
+
+   if (Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED)
+   {
+      MmspAssertSegmentsPageAligned(ImageSectionObject);
+      return TRUE;
+   }
+
+   Initialized = FALSE;
+   LastSegment = 0;
+
+   for ( i = 0; i < ImageSectionObject->NrSegments; ++ i )
+   {
+      PMM_SECTION_SEGMENT EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
+
+      /*
+       * The first segment requires special handling
+       */
+      if (i == 0)
+      {
+         ULONG_PTR VirtualAddress;
+         ULONG_PTR VirtualOffset;
+
+         VirtualAddress = EffectiveSegment->VirtualAddress;
+   
+         /* Round down the virtual address to the nearest page */
+         EffectiveSegment->VirtualAddress = PAGE_ROUND_DOWN(VirtualAddress);
+   
+         /* Round up the virtual size to the nearest page */
+         EffectiveSegment->Length = PAGE_ROUND_UP(VirtualAddress + EffectiveSegment->Length) -
+                                    EffectiveSegment->VirtualAddress;
+   
+         /* Adjust the raw address and size */
+         VirtualOffset = VirtualAddress - EffectiveSegment->VirtualAddress;
+   
+         if (EffectiveSegment->FileOffset < VirtualOffset)
+         {
+            return FALSE;
+         }
+   
+         /*
+          * Garbage in, garbage out: unaligned base addresses make the file 
+          * offset point in curious and odd places, but that's what we were 
+          * asked for
+          */
+         EffectiveSegment->FileOffset -= VirtualOffset;
+         EffectiveSegment->RawLength += VirtualOffset;
+      }
+      else
+      {
+         PMM_SECTION_SEGMENT Segment = &ImageSectionObject->Segments[i];
+         ULONG_PTR EndOfEffectiveSegment;
+
+         EndOfEffectiveSegment = EffectiveSegment->VirtualAddress + EffectiveSegment->Length;
+         ASSERT((EndOfEffectiveSegment % PAGE_SIZE) == 0);
+   
+         /*
+          * The current segment begins exactly where the current effective
+          * segment ended, therefore beginning a new effective segment
+          */
+         if (EndOfEffectiveSegment == Segment->VirtualAddress)
+         {
+            LastSegment ++;
+            ASSERT(LastSegment <= i);
+            ASSERT(LastSegment < ImageSectionObject->NrSegments);
+
+            EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
+
+            /*
+             * Copy the current segment. If necessary, the effective segment
+             * will be expanded later
+             */
+            *EffectiveSegment = *Segment;
+
+            /*
+             * Page-align the virtual size. We know for sure the virtual address
+             * already is
+             */
+            ASSERT((EffectiveSegment->VirtualAddress % PAGE_SIZE) == 0);
+            EffectiveSegment->Length = PAGE_ROUND_UP(EffectiveSegment->Length);
+         }
+         /*
+          * The current segment is still part of the current effective segment:
+          * extend the effective segment to reflect this
+          */
+         else if (EndOfEffectiveSegment > Segment->VirtualAddress)
+         {
+            static const ULONG FlagsToProtection[16] =
+            {
+               PAGE_NOACCESS,
+               PAGE_READONLY,
+               PAGE_READWRITE,
+               PAGE_READWRITE,
+               PAGE_EXECUTE_READ,
+               PAGE_EXECUTE_READ,
+               PAGE_EXECUTE_READWRITE,
+               PAGE_EXECUTE_READWRITE,
+               PAGE_WRITECOPY,
+               PAGE_WRITECOPY,
+               PAGE_WRITECOPY,
+               PAGE_WRITECOPY,
+               PAGE_EXECUTE_WRITECOPY,
+               PAGE_EXECUTE_WRITECOPY,
+               PAGE_EXECUTE_WRITECOPY,
+               PAGE_EXECUTE_WRITECOPY
+            };
+
+            unsigned ProtectionFlags;
+
+            /*
+             * Extend the file size
+             */
+   
+            /* Unaligned segments must be contiguous within the file */
+            if (Segment->FileOffset != (EffectiveSegment->FileOffset +
+                                        EffectiveSegment->RawLength))
+            {
+               return FALSE;
+            }
+            
+            EffectiveSegment->RawLength += Segment->RawLength;
+   
+            /*
+             * Extend the virtual size
+             */
+            ASSERT(PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) > EndOfEffectiveSegment);
+   
+            EffectiveSegment->Length = PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) -
+                                       EffectiveSegment->VirtualAddress;
+   
+            /*
+             * Merge the protection
+             */
+            EffectiveSegment->Protection |= Segment->Protection;
+
+            /* Clean up redundance */
+            ProtectionFlags = 0;
+
+            if(EffectiveSegment->Protection & PAGE_IS_READABLE)
+               ProtectionFlags |= 1 << 0;
+
+            if(EffectiveSegment->Protection & PAGE_IS_WRITABLE)
+               ProtectionFlags |= 1 << 1;
+
+            if(EffectiveSegment->Protection & PAGE_IS_EXECUTABLE)
+               ProtectionFlags |= 1 << 2;
+
+            if(EffectiveSegment->Protection & PAGE_IS_WRITECOPY)
+               ProtectionFlags |= 1 << 3;
+
+            ASSERT(ProtectionFlags < 16);
+            EffectiveSegment->Protection = FlagsToProtection[ProtectionFlags];
+
+            /* If a segment was required to be shared and cannot, fail */
+            if(!(Segment->Protection & PAGE_IS_WRITECOPY) &&
+               EffectiveSegment->Protection & PAGE_IS_WRITECOPY)
+            {
+               return FALSE;
+            }
+         }
+         /*
+          * We assume no holes between segments at this point
+          */
+         else
+         {
+            ASSERT(FALSE);
+         }
+      }
+   }
+
+   return TRUE;
 }
 
 NTSTATUS
@@ -2597,9 +3090,9 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
     */
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
+   Section->ImageSection = NULL;
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
-   Section->FileObject = FileObject;
 
    /*
     * Initialized caching for this file object if previously caching
@@ -2607,12 +3100,21 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
     */
    Status = CcTryToInitializeFileCache(FileObject);
 
-   if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
+   if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
    {
       LARGE_INTEGER Offset;
       PVOID FileHeader;
       ULONG FileHeaderSize;
       ULONG Flags;
+      ULONG OldNrSegments;
+      NTSTATUS StatusExeFmt;
+
+      Status = MmspInitializeFileCache(FileObject);
+
+      if (!NT_SUCCESS(Status))
+      {
+         goto l_DereferenceSection;
+      }
 
       /*
        * Allocate the image section object
@@ -2675,43 +3177,100 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       {
          ImageSectionObject->Segments = NULL;
 
-         Status = ExeFmtpLoaders[i](FileHeader,
-                                    FileHeaderSize,
-                                    FileObject,
-                                    ImageSectionObject,
-                                    &Flags,
-                                    MmspPageRead,
-                                    MmspAllocateSegments);
+         StatusExeFmt = ExeFmtpLoaders[i](FileHeader,
+                                          FileHeaderSize,
+                                          FileObject,
+                                          ImageSectionObject,
+                                          &Flags,
+                                          ExeFmtpReadFile,
+                                          ExeFmtpAllocateSegments);
 
-         if (!NT_SUCCESS(Status))
+         if (!NT_SUCCESS(StatusExeFmt))
          {
             if (ImageSectionObject->Segments)
+            {
                ExFreePool(ImageSectionObject->Segments);
+               ImageSectionObject->Segments = NULL;
+            }
          }
 
-         if (Status != STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
+         if (StatusExeFmt != STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
             break;
       }
 
       /*
        * No loader handled the format
        */
-      if (Status == STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
+      if (StatusExeFmt == STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
+      {
          Status = STATUS_INVALID_IMAGE_FORMAT;
+         ASSERT(!NT_SUCCESS(Status));
+      }
+      else
+      {
+         Status = StatusExeFmt;
+      }
 
       ExFreePool(FileHeader);
 
       if (!NT_SUCCESS(Status))
+      {
          goto l_UnlockFile;
+      }
 
       /*
        * And now the fun part: fixing the segments
        */
-      if (!(Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_OK))
+
+      /* Sort them by virtual address */
+      MmspSortSegments(ImageSectionObject, Flags);
+
+      Status = STATUS_INVALID_IMAGE_FORMAT;
+
+      /* Ensure they don't overlap in memory */
+      if (!MmspCheckSegmentBounds(ImageSectionObject, Flags))
       {
+         goto l_UnlockFile;
       }
 
-      if (0 != InterlockedCompareExchange((PLONG)&FileObject->SectionObjectPointer->ImageSectionObject,
+      /* Ensure they are aligned */
+      OldNrSegments = ImageSectionObject->NrSegments;
+
+      if (!MmspPageAlignSegments(ImageSectionObject, Flags))
+      {
+         goto l_UnlockFile;
+      }
+
+      /* Trim them if the alignment phase merged some of them */
+      if (ImageSectionObject->NrSegments < OldNrSegments)
+      {
+         PMM_SECTION_SEGMENT Segments;
+         SIZE_T SizeOfSegments;
+
+         SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * ImageSectionObject->NrSegments;
+
+         Status = STATUS_INSUFFICIENT_RESOURCES;
+
+         Segments = ExAllocatePoolWithTag(NonPagedPool,
+                                          SizeOfSegments,
+                                          TAG_MM_SECTION_SEGMENT);
+
+         if (Segments == NULL)
+            goto l_UnlockFile;
+
+         RtlCopyMemory(Segments, ImageSectionObject->Segments, SizeOfSegments);
+         ExFreePool(ImageSectionObject->Segments);
+         ImageSectionObject->Segments = Segments;
+      }
+
+      /* And finish their initialization */
+      for ( i = 0; i < ImageSectionObject->NrSegments; ++ i )
+      {
+         ExInitializeFastMutex(&ImageSectionObject->Segments[i].Lock);
+         ImageSectionObject->Segments[i].ReferenceCount = 1;
+      }
+
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);if (0 != InterlockedCompareExchange((PLONG)&FileObject->SectionObjectPointer->ImageSectionObject,
                                           (LONG)ImageSectionObject, 0))
       {
          /*
@@ -2719,7 +3278,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
           */
          ExFreePool(ImageSectionObject->Segments);
          ExFreePool(ImageSectionObject);
-         ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
+         if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
          Section->ImageSection = ImageSectionObject;
 
          for (i = 0; i < ImageSectionObject->NrSegments; i++)
@@ -2728,12 +3287,24 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          }
       }
 
+      ASSERT(NT_SUCCESS(StatusExeFmt));
+      Status = StatusExeFmt;
       goto l_Success;
 
-l_UnlockFile:         MmspReleaseFileLock(FileObject);
-l_FreeImageSection:   ExFreePool(ImageSectionObject);
-l_DereferenceSection: ObDereferenceObject(Section);
-                      return Status;
+l_UnlockFile:
+      MmspReleaseFileLock(FileObject);
+
+l_FreeImageSection:
+      if (ImageSectionObject->Segments)
+         ExFreePool(ImageSectionObject->Segments);
+
+      ExFreePool(ImageSectionObject);
+      Section->ImageSection = NULL;
+
+l_DereferenceSection:
+      ObDereferenceObject(Section);
+
+      return Status;
 
 l_Success:
       (void)0;
@@ -2750,7 +3321,7 @@ l_Success:
          return(Status);
       }
 
-      ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
+      if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
       Section->ImageSection = ImageSectionObject;
 
       /*
@@ -2764,6 +3335,7 @@ l_Success:
       Status = STATUS_SUCCESS;
    }
 
+   Section->FileObject = FileObject;
    CcRosReferenceCache(FileObject);
    MmspReleaseFileLock(FileObject);
    *SectionObject = Section;
@@ -3080,7 +3652,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (Page == PFN_FROM_SSE(Entry) && Dirty)
       {
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-         Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+         if(FileObject->SectionObjectPointer == (PVOID)0xCCCCCCCC) KEBUGCHECK(0);Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
          CcRosMarkDirtyCacheSegment(Bcb, Offset);
          ASSERT(SwapEntry == 0);
       }
@@ -3999,36 +4571,83 @@ MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
                  IN ULONG   SectionPageProtection,
                  IN ULONG   AllocationAttributes,
                  IN HANDLE   FileHandle   OPTIONAL,
-                 IN PFILE_OBJECT  File      OPTIONAL)
+                 IN PFILE_OBJECT  FileObject    OPTIONAL)
 {
-   if (AllocationAttributes & SEC_IMAGE)
+   NTSTATUS Status;
+   ACCESS_MASK DesiredFileAccess = 0;
+
+   /*
+    * If both are NULL, we create a paging file section. Otherwise, FileObject 
+    * takes precedence
+    */
+   if(FileObject == NULL && FileHandle != NULL)
    {
-      return(MmCreateImageSection(SectionObject,
-                                  DesiredAccess,
-                                  ObjectAttributes,
-                                  MaximumSize,
-                                  SectionPageProtection,
-                                  AllocationAttributes,
-                                  FileHandle));
+      if(SectionPageProtection & PAGE_IS_READABLE)
+         DesiredFileAccess |= FILE_READ_DATA;
+   
+      if(SectionPageProtection & PAGE_IS_WRITABLE)
+      {
+         if(SectionPageProtection & PAGE_IS_WRITECOPY)
+            DesiredFileAccess |= FILE_READ_DATA;
+         else
+            DesiredFileAccess |= FILE_READ_DATA | FILE_WRITE_DATA;
+      }
+   
+      if(SectionPageProtection & PAGE_IS_EXECUTABLE)
+         DesiredFileAccess |= FILE_EXECUTE;
+   
+      Status = ObReferenceObjectByHandle(FileHandle,
+                                         DesiredFileAccess,
+                                         IoFileObjectType,
+                                         ExGetPreviousMode(),
+                                         (PVOID *)&FileObject,
+                                         NULL);
+
+      if(!NT_SUCCESS(Status))
+         return Status;
+
+      ASSERT(FileObject);
    }
 
-   if (FileHandle != NULL)
+   if (AllocationAttributes & SEC_IMAGE)
    {
-      return(MmCreateDataFileSection(SectionObject,
+      Status = MmCreateImageSection(SectionObject,
+                                    DesiredAccess,
+                                    ObjectAttributes,
+                                    MaximumSize,
+                                    SectionPageProtection,
+                                    AllocationAttributes,
+                                    FileObject);
+   }
+   /*
+    * TODO: MmCreateDataFileSection is too tied to the use of a handle to change
+    * it now. Note to self: change it later
+    */
+   else if (FileHandle != NULL)
+   /* else if (FileObject != NULL) */
+   {
+      Status = MmCreateDataFileSection(SectionObject,
+                                       DesiredAccess,
+                                       ObjectAttributes,
+                                       MaximumSize,
+                                       SectionPageProtection,
+                                       AllocationAttributes,
+                                       FileHandle);
+   }
+   else
+   {
+      return MmCreatePageFileSection(SectionObject,
                                      DesiredAccess,
                                      ObjectAttributes,
                                      MaximumSize,
                                      SectionPageProtection,
-                                     AllocationAttributes,
-                                     FileHandle));
+                                     AllocationAttributes);
    }
 
-   return(MmCreatePageFileSection(SectionObject,
-                                  DesiredAccess,
-                                  ObjectAttributes,
-                                  MaximumSize,
-                                  SectionPageProtection,
-                                  AllocationAttributes));
+   if(FileHandle)
+      ObDereferenceObject(FileObject);
+
+   return Status;
 }
 
 /* EOF */
