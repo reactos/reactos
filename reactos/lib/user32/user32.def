@@ -592,7 +592,7 @@ SetScrollInfo@16
 SetScrollPos@16
 SetScrollRange@20
 SetShellWindow@4
-;SetShellWindowEx
+SetShellWindowEx@8
 SetSysColors@12
 ;SetSysColorsTemp
 SetSystemCursor@8

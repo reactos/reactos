@@ -1,7 +1,7 @@
 2003-09-09  Martin Fuchs	<martin-fuchs@gmx.net>
 	
-	* include/func.h: added GetShellWindow() since it's now contained in the MS Platform SDK headers
-	* lib/user32/misc/desktop.c: implemented GetShellWindow() and SetShellWindow().
+	* include/func.h: added GetShellWindow()
+	* lib/user32/misc/desktop.c: implemented GetShellWindow(), SetShellWindow() and SetShellWindowEx().
 	* lib/user32/user32.def: Ditto.
 	* lib/user32/user32.edf: Ditto.
 
