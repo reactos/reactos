@@ -278,6 +278,8 @@ LRESULT BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			DWORD reset_mask = LOWORD(lparam);
 			DWORD xor_mask = HIWORD(lparam);
 			_display_version = ((_display_version&~reset_mask) | or_mask) ^ xor_mask;
+			RegSetDWORDValue(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), TEXT("PaintDesktopVersion"), _display_version);
+			///@todo Changing the PaintDesktopVersion-Flag needs a restart of the shell -> display a message box
 			InvalidateRect(_hwnd, NULL, TRUE);
 		}
 		return _display_version;
@@ -298,28 +300,6 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 	FillRect(hdc, &rect, bkgndBrush);
 	DeleteBrush(bkgndBrush);
 */
-	if (_display_version) {
-		static const String s_bkgnd_txt = ResString(IDS_EXPLORER_VERSION_STR) + TEXT("\nby Martin Fuchs\n%s");
-		static String s_version_str = get_windows_version_str();
-
-		FmtString txt(s_bkgnd_txt, (LPCTSTR)ResString(IDS_VERSION_STR), (LPCTSTR)s_version_str);
-		ClientRect rect(_hwnd);
-
-		rect.left = rect.right - 440;
-		rect.top = rect.bottom - 90 - DESKTOPBARBAR_HEIGHT;
-		rect.right = rect.left + 420;
-		rect.bottom = rect.top + 70;
-
-		BkMode bkMode(hdc, TRANSPARENT);
-
-		TextColor textColor(hdc, RGB(128,128,192));
-		DrawText(hdc, txt, -1, &rect, DT_RIGHT);
-
-		SetTextColor(hdc, RGB(255,255,255));
-		--rect.right;
-		++rect.top;
-		DrawText(hdc, txt, -1, &rect, DT_RIGHT);
-	}
 }
 
 

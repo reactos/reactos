@@ -454,6 +454,21 @@ DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def)
 }
 
 
+BOOL RegSetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD value)
+{
+	HKEY hkey;
+	BOOL ret = FALSE;
+
+	if (!RegOpenKey(root, path, &hkey)) {
+		ret = RegSetValueEx(hkey, valueName, 0, NULL, (LPBYTE)&value, sizeof(value));
+
+		RegCloseKey(hkey);
+	}
+
+	return ret;
+}
+
+
 BOOL exists_path(LPCTSTR path)
 {
 	WIN32_FIND_DATA fd;

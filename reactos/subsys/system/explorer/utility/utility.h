@@ -152,6 +152,9 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in);
  // read DWORD value from registry
 DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def);
 
+ // write DWORD value to registry
+BOOL RegSetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD value);
+
  // test for existing directory
 BOOL exists_path(LPCTSTR path);
 
