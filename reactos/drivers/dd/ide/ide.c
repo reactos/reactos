@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.51 2002/02/08 02:57:08 chorns Exp $
+/* $Id: ide.c,v 1.52 2002/03/12 20:16:53 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -78,7 +78,7 @@
 #define  VERSION  "V0.1.5"
 
 /* uncomment the following line to enable the secondary ide channel */
-//#define ENABLE_SECONDARY_IDE_CHANNEL
+#define ENABLE_SECONDARY_IDE_CHANNEL
 
 //  -------------------------------------------------------  File Static Data
 
@@ -953,12 +953,19 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
   DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
   DeviceExtension->LogicalCylinders = 
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? DrvParms->TMCylinders : DrvParms->LogicalCyls;
-  DeviceExtension->Offset = 0;
-  DeviceExtension->Size = SectorCount;
-  DPRINT("%wZ: offset %lu size %lu \n",
+
+  DeviceExtension->StartingOffset.QuadPart = 0;
+  DeviceExtension->PartitionLength.QuadPart = (ULONGLONG)SectorCount *
+                                              (ULONGLONG)DrvParms->BytesPerSector;
+  DeviceExtension->HiddenSectors = 0;
+  DeviceExtension->PartitionNumber = 0;
+  DeviceExtension->PartitionType = 0;
+  DeviceExtension->BootIndicator = FALSE;
+
+  DPRINT("%wZ: offset %I64d length %I64d\n",
          &DeviceName,
-         DeviceExtension->Offset,
-         DeviceExtension->Size);
+         DeviceExtension->StartingOffset.QuadPart,
+         DeviceExtension->PartitionLength.QuadPart);
 
   /* Initialize the DPC object here */
   IoInitializeDpcRequest(*DeviceObject,
@@ -1061,18 +1068,24 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
   DeviceExtension->LogicalCylinders =
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? DrvParms->TMCylinders : DrvParms->LogicalCyls;
 
-  DeviceExtension->Offset = PartitionInfo->StartingOffset.QuadPart / 512; /* DrvParms->BytesPerSector */
-  DeviceExtension->Size = PartitionInfo->PartitionLength.QuadPart / 512; /* DrvParms->BytesPerSector */
+  DeviceExtension->StartingOffset = PartitionInfo->StartingOffset;
+  DeviceExtension->PartitionLength = PartitionInfo->PartitionLength;
+  DeviceExtension->HiddenSectors = PartitionInfo->HiddenSectors;
+  DeviceExtension->PartitionNumber = PartitionInfo->PartitionNumber;
+  DeviceExtension->PartitionType = PartitionInfo->PartitionType;
+  DeviceExtension->BootIndicator = PartitionInfo->BootIndicator;
 
-  DPRINT("%wZ: offset %lu size %lu \n",
+  DPRINT("%wZ: offset %I64d size %I64d\n",
          &DeviceName,
-         DeviceExtension->Offset,
-         DeviceExtension->Size);
+         DeviceExtension->StartingOffset.QuadPart,
+         DeviceExtension->PartitionLength.QuadPart);
 
   /* Initialize the DPC object here */
   IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
 
-  DPRINT("%wZ %luMB\n", &DeviceName, DeviceExtension->Size / 2048);
+  DPRINT("%wZ %I64dMB\n",
+         &DeviceName,
+         DeviceExtension->PartitionLength.QuadPart >> 20);
 
   /* assign arc name */
   swprintf(ArcNameBuffer,
@@ -1307,57 +1320,38 @@ IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO,
 //    NTSTATUS
 //
 
-static  NTSTATUS  
-STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, 
-                     IN PIRP Irp) 
+static NTSTATUS STDCALL
+IDEDispatchReadWrite(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
 {
-  ULONG                  IrpInsertKey;
-  LARGE_INTEGER          AdjustedOffset, AdjustedExtent, PartitionExtent, InsertKeyLI;
-  PIO_STACK_LOCATION     IrpStack;
-  PIDE_DEVICE_EXTENSION  DeviceExtension;
+  ULONG                 IrpInsertKey;
+  LARGE_INTEGER         AdjustedOffset, AdjustedExtent, PartitionExtent, InsertKeyLI;
+  PIO_STACK_LOCATION    IrpStack;
+  PIDE_DEVICE_EXTENSION DeviceExtension;
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  DeviceExtension = (PIDE_DEVICE_EXTENSION)pDO->DeviceExtension;
+  DeviceExtension = (PIDE_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //  Validate operation parameters
-  AdjustedOffset = RtlEnlargedIntegerMultiply(DeviceExtension->Offset, 
-                                              DeviceExtension->BytesPerSector);
-DPRINT("Offset:%ld * BytesPerSector:%ld  = AdjOffset:%ld:%ld\n",
-       DeviceExtension->Offset, 
-       DeviceExtension->BytesPerSector,
-       (unsigned long) AdjustedOffset.u.HighPart,
-       (unsigned long) AdjustedOffset.u.LowPart);
-DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld\n",
-       (unsigned long) AdjustedOffset.u.HighPart,
-       (unsigned long) AdjustedOffset.u.LowPart,
-       (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.HighPart,
-       (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.LowPart);
-  AdjustedOffset = RtlLargeIntegerAdd(AdjustedOffset, 
-                                      IrpStack->Parameters.Read.ByteOffset);
-DPRINT(" = AdjOffset:%ld:%ld\n",
-       (unsigned long) AdjustedOffset.u.HighPart,
-       (unsigned long) AdjustedOffset.u.LowPart);
-  AdjustedExtent = RtlLargeIntegerAdd(AdjustedOffset, 
-                                      RtlConvertLongToLargeInteger(IrpStack->Parameters.Read.Length));
-DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
-       (unsigned long) AdjustedOffset.u.HighPart,
-       (unsigned long) AdjustedOffset.u.LowPart,
-       IrpStack->Parameters.Read.Length,
-       (unsigned long) AdjustedExtent.u.HighPart,
-       (unsigned long) AdjustedExtent.u.LowPart);
-    /*FIXME: this assumption will fail on drives bigger than 1TB */
-  PartitionExtent.QuadPart = DeviceExtension->Offset + DeviceExtension->Size;
-  PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
-                                               DeviceExtension->BytesPerSector);
+  AdjustedOffset.QuadPart = DeviceExtension->StartingOffset.QuadPart +
+                            IrpStack->Parameters.Read.ByteOffset.QuadPart;
+  DPRINT("AdjustedOffset: %I64x\n", AdjustedOffset.QuadPart);
+
+  AdjustedExtent.QuadPart = AdjustedOffset.QuadPart +
+                            (ULONGLONG)IrpStack->Parameters.Read.Length;
+  DPRINT("AdjustedExtent: %I64x\n", AdjustedExtent.QuadPart);
+
+  PartitionExtent.QuadPart = DeviceExtension->StartingOffset.QuadPart +
+                             DeviceExtension->PartitionLength.QuadPart;
+  DPRINT("PartitionExtent: %I64x\n", PartitionExtent.QuadPart);
+
   if ((AdjustedExtent.QuadPart > PartitionExtent.QuadPart) ||
-      (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1))) 
+      (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1)))
     {
       DPRINT("Request failed on bad parameters\n",0);
-      DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
-             (unsigned int) AdjustedExtent.u.HighPart,
-             (unsigned int) AdjustedExtent.u.LowPart,
-             (unsigned int) PartitionExtent.u.HighPart,
-             (unsigned int) PartitionExtent.u.LowPart,
+      DPRINT("AdjustedExtent=%I64x PartitionExtent=%I64x ReadLength=%lx\n",
+             AdjustedExtent.QuadPart,
+             PartitionExtent.QuadPart,
              IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1369,10 +1363,10 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
 
     //  Start the packet and insert the request in order of sector offset
   assert(DeviceExtension->BytesPerSector == 512);
-  InsertKeyLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9); 
+  InsertKeyLI.QuadPart = IrpStack->Parameters.Read.ByteOffset.QuadPart >> 9;
   IrpInsertKey = InsertKeyLI.u.LowPart;
-  IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
-   
+  IoStartPacket(DeviceObject, Irp, &IrpInsertKey, NULL);
+  
   DPRINT("Returning STATUS_PENDING\n");
   return  STATUS_PENDING;
 }
@@ -1439,6 +1433,37 @@ DPRINT("DiskDeviceExtension->BytesPerSector %lu\n", DiskDeviceExtension->BytesPe
       break;
 
     case IOCTL_DISK_GET_PARTITION_INFO:
+      DPRINT("IOCTL_DISK_GET_PARTITION_INFO\n");
+      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
+          sizeof(PARTITION_INFORMATION))
+        {
+          Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+      else if (DeviceExtension->PartitionNumber == 0)
+        {
+          Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+        }
+      else
+        {
+          PPARTITION_INFORMATION PartitionInfo;
+
+          PartitionInfo = (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+          PartitionInfo->PartitionType = DeviceExtension->PartitionType;
+          PartitionInfo->StartingOffset = DeviceExtension->StartingOffset;
+          PartitionInfo->PartitionLength = DeviceExtension->PartitionLength;
+          PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
+          PartitionInfo->PartitionNumber = DeviceExtension->PartitionNumber;
+          PartitionInfo->BootIndicator = DeviceExtension->BootIndicator;
+          PartitionInfo->RewritePartition = FALSE;
+          PartitionInfo->RecognizedPartition =
+            IsRecognizedPartition(DeviceExtension->PartitionType);
+
+          Irp->IoStatus.Status = STATUS_SUCCESS;
+          Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+        }
+      break;
+
     case IOCTL_DISK_SET_PARTITION_INFO:
       RC = STATUS_INVALID_DEVICE_REQUEST;
       Irp->IoStatus.Status = RC;

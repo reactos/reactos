@@ -139,8 +139,13 @@ typedef struct _IDE_DEVICE_EXTENSION
   int                    LogicalCylinders;
   int                    SectorsPerLogCyl;
   int                    SectorsPerLogTrk;
-  int                    Offset;
-  int                    Size;
+
+  LARGE_INTEGER          StartingOffset;
+  LARGE_INTEGER          PartitionLength;
+  ULONG                  HiddenSectors;
+  ULONG                  PartitionNumber;
+  UCHAR                  PartitionType;
+  BOOLEAN                BootIndicator;
 
   int                    Operation;
   ULONG                  BytesRequested;
