@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.76 2002/09/08 10:23:17 chorns Exp $
+/* $Id: registry.c,v 1.77 2002/11/13 05:18:03 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,9 @@
  *                  Created 22/05/98
  */
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <limits.h>
@@ -22,6 +25,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 /*  -------------------------------------------------  File Statics  */
 
@@ -500,14 +504,14 @@ CmInit2(PCHAR CommandLine)
 	}
       p1 = p2;
     }
-
+#ifndef WIN32_REGDBG
   RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
 			L"\\Pice",
 			L"Start",
 			REG_DWORD,
 			&PiceStart,
 			sizeof(ULONG));
-
+#endif
 }
 
 
@@ -619,7 +623,7 @@ CmiConnectHive(PWSTR FileName,
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  DPRINT("Called. FileName %S\n", FullName);
+  DPRINT("CmiConnectHive(%S, %S, %s, %p, %d) - Called.\n", FileName, FullName, KeyName, Parent, CreateNew);
 
   Status = CmiCreateRegistryHive(FileName, &RegistryHive, CreateNew);
   if (!NT_SUCCESS(Status))
@@ -695,25 +699,24 @@ CmiInitializeHive(PWSTR FileName,
   //Status = CmiConnectHive(FileName, FullName, KeyName, Parent, FALSE);
   Status = CmiConnectHive(FileName, FullName, KeyName, Parent, CreateNew);
 
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Status %.08x\n", Status);
-#if 0
+  if (!NT_SUCCESS(Status)) {
+#ifdef WIN32_REGDBG
       WCHAR AltFileName[MAX_PATH];
 
       CPRINT("WARNING! Registry file %S not found\n", FileName);
+      //DPRINT("Status %.08x\n", Status);
 
       wcscpy(AltFileName, FileName);
       wcscat(AltFileName, L".alt");
 
+      DPRINT("Attempting to connect the alternative hive %S\n", AltFileName);
       /* Try to connect the alternative hive */
       Status = CmiConnectHive(AltFileName, FullName, KeyName, Parent, TRUE);
 
-      if (!NT_SUCCESS(Status))
-	{
-	  CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
-	  DPRINT("Status %.08x\n", Status);
-	}
+      if (!NT_SUCCESS(Status)) {
+	      CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
+	    //DPRINT("Status %.08x\n", Status);
+	  }
 #endif
     }
 
