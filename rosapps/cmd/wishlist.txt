@@ -12,4 +12,4 @@ Wishlist for ReactOS CMD
 
 More ideas?
 
- Eric Kohl <ekohl@abo.rhein-zeitung.de>
+ Eric Kohl <ekohl@rz-online.de>

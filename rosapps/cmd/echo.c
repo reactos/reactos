@@ -1,4 +1,4 @@
-/* $Id: echo.c,v 1.3 1999/10/03 22:15:33 ekohl Exp $
+/* $Id: echo.c,v 1.4 2000/07/19 06:58:13 ekohl Exp $
  *
  *  ECHO.C - internal echo commands.
  *
@@ -19,6 +19,9 @@
  *
  *    19-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection ready!
+ *
+ *    13-Jul-2000 (Eric Kohl <ekohl@rz-online.de>)
+ *        Implemented 'echo.' and 'echoerr.'.
  */
 
 #include "config.h"
@@ -39,20 +42,34 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Displays a message or switches command echoing on or off.\n\n"
-				   "ECHO [ON | OFF]\nECHO [message]\n\n"
-				   "Type ECHO without a parameter to display the current ECHO setting.");
+		ConOutPuts ("Displays a message or switches command echoing on or off.\n"
+			    "\n"
+			    "  ECHO [ON | OFF]\n"
+			    "  ECHO [message]\n"
+			    "  ECHO.             prints an empty line\n"
+			    "\n"
+			    "Type ECHO without a parameter to display the current ECHO setting.");
 		return 0;
 	}
 
-	if (_tcsicmp (param, D_OFF) == 0)
-		bEcho = FALSE;
-	else if (_tcsicmp (param, D_ON) == 0)
-		bEcho = TRUE;
-	else if (*param)
-		ConOutPuts (param);
+	if (_tcsicmp (cmd, _T("echo.")) == 0)
+	{
+		if (param[0] == 0)
+			ConOutChar (_T('\n'));
+		else
+			ConOutPuts (param);
+	}
 	else
-		ConOutPrintf (_T("ECHO is %s\n"), bEcho ? D_ON : D_OFF);
+	{
+		if (_tcsicmp (param, D_OFF) == 0)
+			bEcho = FALSE;
+		else if (_tcsicmp (param, D_ON) == 0)
+			bEcho = TRUE;
+		else if (*param)
+			ConOutPuts (param);
+		else
+			ConOutPrintf (_T("ECHO is %s\n"), bEcho ? D_ON : D_OFF);
+	}
 
 	return 0;
 }
@@ -67,7 +84,7 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutPuts ("Display a messages without trailing carridge return and line feed.\n"
 		            "\n"
-		            "ECHOS message\n");
+		            "  ECHOS message");
 		return 0;
 	}
 
@@ -88,12 +105,22 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutPuts ("Displays a message to the standard error.\n"
 		            "\n"
-		            "ECHOERR message");
+		            "  ECHOERR message\n"
+		            "  ECHOERR.           prints an empty line");
 		return 0;
 	}
 
-	if (*param)
+	if (_tcsicmp (cmd, _T("echoerr.")) == 0)
+	{
+		if (param[0] == 0)
+			ConErrChar (_T('\n'));
+		else
+			ConErrPuts (param);
+	}
+	else if (*param)
+	{
 		ConErrPuts (param);
+	}
 
 	return 0;
 }
@@ -108,12 +135,12 @@ INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutPuts ("Prints a messages to standard error output without trailing carridge return and line feed.\n"
 		            "\n"
-		            "ECHOSERR message\n");
+		            "  ECHOSERR message");
 		return 0;
 	}
 
 	if (*param)
-		ConOutPrintf ("%s", param);
+		ConOutPrintf (_T("%s"), param);
 
 	return 0;
 }

@@ -132,9 +132,6 @@
 #include "cmd.h"
 
 
-extern COMMAND cmds[];	/* The internal command table, used in '?' */
-
-
 #ifdef INCLUDE_CMD_CHDIR
 
 static LPTSTR lpLastPath;
@@ -473,27 +470,7 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 
 INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
 {
-	LPCOMMAND cmdptr;
-	INT y;
-
-	y = 0;
-	cmdptr = cmds;
-	while (cmdptr->name)
-	{
-		if (++y == 8)
-		{
-			ConOutPuts (cmdptr->name);
-			y = 0;
-		}
-		else
-			ConOutPrintf (_T("%-10s"), cmdptr->name);
-
-		cmdptr++;
-	}
-
-	if (y != 0)
-		ConOutChar (_T('\n'));
-
+	PrintCommandList ();
 	return 0;
 }
 

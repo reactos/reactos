@@ -97,8 +97,10 @@ COMMAND cmds[] =
 #endif
 
 	{_T("echo"), 0, CommandEcho},
+	{_T("echo."), CMD_HIDE, CommandEcho},
 	{_T("echos"), 0, CommandEchos},
 	{_T("echoerr"), 0, CommandEchoerr},
+	{_T("echoerr."), CMD_HIDE, CommandEchoerr},
 	{_T("echoserr"), 0, CommandEchoserr},
 
 #ifdef INCLUDE_CMD_DEL
@@ -227,5 +229,35 @@ COMMAND cmds[] =
 
 	{NULL, 0, NULL}
 };
+
+
+VOID PrintCommandList (VOID)
+{
+	LPCOMMAND cmdptr;
+	INT y;
+
+	y = 0;
+	cmdptr = cmds;
+	while (cmdptr->name)
+	{
+		if (!(cmdptr->flags & CMD_HIDE))
+		{
+			if (++y == 8)
+			{
+				ConOutPuts (cmdptr->name);
+				y = 0;
+			}
+			else
+			{
+				ConOutPrintf (_T("%-10s"), cmdptr->name);
+			}
+		}
+
+		cmdptr++;
+	}
+
+	if (y != 0)
+		ConOutChar ('\n');
+}
 
 /* EOF */

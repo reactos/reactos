@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.21 2000/05/26 06:06:05 phreak Exp $
+/* $Id: cmd.c,v 1.22 2000/07/19 06:58:12 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -898,27 +898,9 @@ VOID RemoveBreakHandler (VOID)
 static VOID
 ShowCommands (VOID)
 {
-	LPCOMMAND cmdptr;
-	INT y;
-
+	/* print command list */
 	ConOutPrintf (_T("\nInternal commands available:\n"));
-	y = 0;
-	cmdptr = cmds;
-	while (cmdptr->name)
-	{
-		if (++y == 8)
-		{
-			ConOutPuts (cmdptr->name);
-			y = 0;
-		}
-		else
-			ConOutPrintf (_T("%-10s"), cmdptr->name);
-
-		cmdptr++;
-	}
-
-	if (y != 0)
-		ConOutChar ('\n');
+	PrintCommandList ();
 
 	/* print feature list */
 	ConOutPuts ("\nFeatures available:");
@@ -1024,28 +1006,38 @@ Initialize (int argc, char *argv[])
 			{
 				/* This just runs a program and exits */
 				++i;
-				_tcscpy (commandline, argv[i]);
-				while (argv[++i])
+				if (argv[i])
 				{
-					_tcscat (commandline, " ");
-					_tcscat (commandline, argv[i]);
-				}
+					_tcscpy (commandline, argv[i]);
+					while (argv[++i])
+					{
+						_tcscat (commandline, " ");
+						_tcscat (commandline, argv[i]);
+					}
 
-				ParseCommandLine(commandline);
-				ExitProcess (ProcessInput (TRUE));
+					ParseCommandLine(commandline);
+					ExitProcess (ProcessInput (TRUE));
+				}
+				else
+				{
+					ExitProcess (0);
+				}
 			}
 			else if (!_tcsicmp (argv[i], _T("/k")))
 			{
 				/* This just runs a program and remains */
 				++i;
-				_tcscpy (commandline, argv[i]);
-				while (argv[++i])
+				if (argv[i])
 				{
-					_tcscat (commandline, " ");
-					_tcscat (commandline, argv[i]);
-				}
+					_tcscpy (commandline, argv[i]);
+					while (argv[++i])
+					{
+						_tcscat (commandline, " ");
+						_tcscat (commandline, argv[i]);
+					}
 
-				ParseCommandLine(commandline);
+					ParseCommandLine(commandline);
+				}
 			}
 #ifdef INCLUDE_CMD_COLOR
 			else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
@@ -1174,7 +1166,7 @@ int main (int argc, char *argv[])
 	SetFileApisToOEM ();
 
 	if( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &Info ) == FALSE )
-	   printf( "GetConsoleScreenBufferInfo: Error: %d\n", GetLastError() );
+	   printf( "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError() );
 	wColor = Info.wAttributes;
 	wDefColor = wColor;
 	/* check switches on command-line */

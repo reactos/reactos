@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.19 2000/02/01 18:29:11 paolopan Exp $
+/* $Id: cmd.h,v 1.20 2000/07/19 06:58:13 ekohl Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -125,6 +125,7 @@ VOID ReadCommand (LPTSTR, INT);
 /* Prototypes for CMDTABLE.C */
 #define CMD_SPECIAL     1
 #define CMD_BATCHONLY   2
+#define CMD_HIDE        4
 
 typedef struct tagCOMMAND
 {
@@ -134,6 +135,8 @@ typedef struct tagCOMMAND
 } COMMAND, *LPCOMMAND;
 
 extern COMMAND cmds[];		/* The internal command table */
+
+VOID PrintCommandList (VOID);
 
 
 /* Prototypes for COLOR.C */
