@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.26 2003/11/13 14:18:26 ekohl Exp $
+/* $Id: cdrom.c,v 1.27 2004/02/29 12:26:09 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,7 @@
 #include <ddk/scsi.h>
 #include <ddk/class2.h>
 #include <ddk/ntddscsi.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -50,7 +51,6 @@
 typedef struct _ERROR_RECOVERY_DATA6
 {
   MODE_PARAMETER_HEADER Header;
-  MODE_PARAMETER_BLOCK BlockDescriptor;
   MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
 } ERROR_RECOVERY_DATA6, *PERROR_RECOVERY_DATA6;
 
@@ -58,22 +58,26 @@ typedef struct _ERROR_RECOVERY_DATA6
 typedef struct _ERROR_RECOVERY_DATA10
 {
   MODE_PARAMETER_HEADER10 Header;
-  MODE_PARAMETER_BLOCK BlockDescriptor;
   MODE_READ_RECOVERY_PAGE ReadRecoveryPage;
 } ERROR_RECOVERY_DATA10, *PERROR_RECOVERY_DATA10;
 
+typedef struct _MODE_CAPABILITIES_DATA6
+{
+  MODE_PARAMETER_HEADER Header;
+  MODE_CAPABILITIES_PAGE2 CababilitiesPage;
+} MODE_CAPABILITIES_DATA6, *PMODE_CAPABILITIES_DATA6;
+
+typedef struct _MODE_CAPABILITIES_DATA10
+{
+  MODE_PARAMETER_HEADER10 Header;
+  MODE_CAPABILITIES_PAGE2 CababilitiesPage;
+} MODE_CAPABILITIES_DATA10, *PMODE_CAPABILITIES_DATA10;
 
 typedef struct _CDROM_DATA
 {
   BOOLEAN PlayActive;
   BOOLEAN RawAccess;
   USHORT XaFlags;
-
-  union
-    {
-      ERROR_RECOVERY_DATA6 Data6;
-      ERROR_RECOVERY_DATA10 Data10;
-    } RecoveryData;
 
 } CDROM_DATA, *PCDROM_DATA;
 
@@ -440,12 +444,10 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   PDEVICE_OBJECT DiskDeviceObject;
   PCDROM_DATA CdromData;
   CHAR NameBuffer[80];
-#if 0
   SCSI_REQUEST_BLOCK Srb;
   PUCHAR Buffer;
   ULONG Length;
   PCDB Cdb;
-#endif
   NTSTATUS Status;
 
   DPRINT("CdromClassCreateDeviceObject() called\n");
@@ -591,10 +593,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   CdromData->XaFlags |= XA_USE_6_BYTE;
 
   /* Read 'error recovery page' to get additional drive capabilities */
-#if 0
-  Length = sizeof(MODE_READ_RECOVERY_PAGE) +
-	   MODE_BLOCK_DESC_LENGTH +
-	   MODE_HEADER_LENGTH;
+  Length = sizeof(MODE_READ_RECOVERY_PAGE) + MODE_HEADER_LENGTH;
 
   RtlZeroMemory (&Srb,
 		 sizeof(SCSI_REQUEST_BLOCK));
@@ -607,8 +606,10 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
 
   Buffer = ExAllocatePool (NonPagedPool,
-			   sizeof(MODE_READ_RECOVERY_PAGE) +
-			     MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH10);
+                           max(sizeof(ERROR_RECOVERY_DATA6), 
+			       max(sizeof(ERROR_RECOVERY_DATA10), 
+			           max(sizeof(MODE_CAPABILITIES_DATA6), 
+				       sizeof(MODE_CAPABILITIES_DATA10)))));
   if (Buffer == NULL)
     {
       DPRINT1("Allocating recovery page buffer failed!\n");
@@ -620,16 +621,15 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 					Buffer,
 					Length,
 					FALSE);
+
   if (!NT_SUCCESS (Status))
     {
       DPRINT("MODE_SENSE(6) failed\n");
 
       /* Try the 10 byte version */
-      Length = sizeof(MODE_READ_RECOVERY_PAGE) +
-	       MODE_BLOCK_DESC_LENGTH +
-	       MODE_HEADER_LENGTH10;
+      Length = sizeof(MODE_READ_RECOVERY_PAGE) + MODE_HEADER_LENGTH10;
 
-      RtlZeroMemory (&Srb,
+      RtlZeroMemory (&Srb, 
 		     sizeof(SCSI_REQUEST_BLOCK));
       Srb.CdbLength = 10;
       Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
@@ -638,13 +638,14 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       Cdb->MODE_SENSE10.OperationCode = SCSIOP_MODE_SENSE10;
       Cdb->MODE_SENSE10.PageCode = 0x01;
       Cdb->MODE_SENSE10.AllocationLength[0] = (UCHAR)(Length >> 8);
-      Cdb->MODE_SENSE10.AllocationLength[1] = (UCHAR)(Length && 0xFF);
+      Cdb->MODE_SENSE10.AllocationLength[1] = (UCHAR)(Length & 0xFF);
 
       Status = ScsiClassSendSrbSynchronous (DiskDeviceObject,
 					    &Srb,
 					    Buffer,
 					    Length,
 					    FALSE);
+
       if (Status == STATUS_DATA_OVERRUN)
 	{
 	  DPRINT1("Data overrun\n");
@@ -654,12 +655,6 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       else if (NT_SUCCESS (Status))
 	{
 	  DPRINT("Use 10 byte commands\n");
-	  RtlCopyMemory (&CdromData->RecoveryData.Data10.Header,
-			 Buffer,
-			 sizeof (ERROR_RECOVERY_DATA10));
-	  CdromData->RecoveryData.Data10.Header.ModeDataLength[0] = 0;
-	  CdromData->RecoveryData.Data10.Header.ModeDataLength[1] = 0;
-
 	  CdromData->XaFlags &= XA_USE_6_BYTE;
 	  CdromData->XaFlags |= XA_USE_10_BYTE;
 	}
@@ -672,13 +667,237 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   else
     {
       DPRINT("Use 6 byte commands\n");
-      RtlCopyMemory (&CdromData->RecoveryData.Data6.Header,
-		     Buffer,
-		     sizeof (ERROR_RECOVERY_DATA6));
-      CdromData->RecoveryData.Data6.Header.ModeDataLength = 0;
     }
-  ExFreePool (Buffer);
+
+  /* Read 'capabilities & mechanical status page' to get additional drive capabilities */
+  Length = sizeof(MODE_READ_RECOVERY_PAGE) + MODE_HEADER_LENGTH;
+
+  if (!(CdromData->XaFlags & XA_NOT_SUPPORTED))
+    {
+      RtlZeroMemory (&Srb, sizeof(SCSI_REQUEST_BLOCK));
+      Srb.CdbLength = 10;
+      Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
+      Cdb = (PCDB)Srb.Cdb;
+
+      if (CdromData->XaFlags & XA_USE_10_BYTE)
+        {
+          /* Try the 10 byte version */
+          Length = sizeof(MODE_CAPABILITIES_PAGE2) + MODE_HEADER_LENGTH10;
+
+          Cdb->MODE_SENSE10.OperationCode = SCSIOP_MODE_SENSE10;
+          Cdb->MODE_SENSE10.PageCode = 0x2a;
+          Cdb->MODE_SENSE10.AllocationLength[0] = (UCHAR)(Length >> 8);
+          Cdb->MODE_SENSE10.AllocationLength[1] = (UCHAR)(Length & 0xFF);
+	}
+      else
+        {
+          Length = sizeof(MODE_CAPABILITIES_PAGE2) + MODE_HEADER_LENGTH;
+
+          Cdb->MODE_SENSE.OperationCode = SCSIOP_MODE_SENSE;
+          Cdb->MODE_SENSE.PageCode = 0x2a;
+          Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
+        }
+      Status = ScsiClassSendSrbSynchronous (DiskDeviceObject,
+					    &Srb,
+					    Buffer,
+					    Length,
+					    FALSE);
+      if (NT_SUCCESS (Status))
+	{
+#if 0
+          PMODE_CAPABILITIES_PAGE2 CapabilitiesData;
+	  if (CdromData->XaFlags & XA_USE_10_BYTE)
+	    {
+	      CapabilitiesData = (PMODE_CAPABILITIES_PAGE2)(Buffer + sizeof(MODE_PARAMETER_HEADER10));
+	    }
+	  else
+	    {
+	      CapabilitiesData = (PMODE_CAPABILITIES_PAGE2)(Buffer + sizeof(MODE_PARAMETER_HEADER));
+	    }
+
+	  DbgPrint("Capabilities for '%s':\n", NameBuffer);
+	  if (CapabilitiesData->Reserved2[0] & 0x20)
+	    {
+	      DbgPrint("  Drive supports reading of DVD-RAM discs\n");
+	    }
+	  if (CapabilitiesData->Reserved2[0] & 0x10)
+	    {
+	      DbgPrint("  Drive supports reading of DVD-R discs\n");
+	    }
+	  if (CapabilitiesData->Reserved2[0] & 0x08)
+	    {
+	      DbgPrint("  Drive supports reading of DVD-ROM discs\n");
+	    }
+	  if (CapabilitiesData->Reserved2[0] & 0x04)
+	    {
+	      DbgPrint("  Drive supports reading CD-R discs with addressing method 2\n");
+	    }
+	  if (CapabilitiesData->Reserved2[0] & 0x02)
+	    {
+	      DbgPrint("  Drive can read from CD-R/W (CD-E) discs (orange book, part III)\n");
+	    }
+	  if (CapabilitiesData->Reserved2[0] & 0x01)
+	    {
+	      DbgPrint("  Drive supports read from CD-R discs (orange book, part II)\n");
+	    }
+	  DPRINT("CapabilitiesData.Reserved2[1] %x\n", CapabilitiesData->Reserved2[1]);
+	  if (CapabilitiesData->Reserved2[1] & 0x01)
+	    {
+	      DbgPrint("  Drive can write to CD-R discs (orange book, part II)\n");
+	    }
+	  if (CapabilitiesData->Reserved2[1] & 0x02)
+	    {
+	      DbgPrint("  Drive can write to CD-R/W (CD-E) discs (orange book, part III)\n");
+	    }
+	  if (CapabilitiesData->Reserved2[1] & 0x04)
+	    {
+	      DbgPrint("  Drive can fake writes\n");
+	    }
+	  if (CapabilitiesData->Reserved2[1] & 0x10)
+	    {
+	      DbgPrint("  Drive can write DVD-R discs\n");
+	    }
+	  if (CapabilitiesData->Reserved2[1] & 0x20)
+	    {
+	      DbgPrint("  Drive can write DVD-RAM discs\n");
+	    }
+	  DPRINT("CapabilitiesData.Capabilities[0] %x\n", CapabilitiesData->Capabilities[0]);
+	  if (CapabilitiesData->Capabilities[0] & 0x01)
+	    {
+	      DbgPrint("  Drive supports audio play operations\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x02)
+	    {
+	      DbgPrint("  Drive can deliver a composite audio/video data stream\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x04)
+	    {
+	      DbgPrint("  Drive supports digital output on port 1\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x08)
+	    {
+	      DbgPrint("  Drive supports digital output on port 2\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x10)
+	    {
+	      DbgPrint("  Drive can read mode 2, form 1 (XA) data\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x20)
+	    {
+	      DbgPrint("  Drive can read mode 2, form 2 data\n");
+	    }
+	  if (CapabilitiesData->Capabilities[0] & 0x40)
+	    {
+	      DbgPrint("  Drive can read multisession discs\n");
+	    }
+	  DPRINT("CapabilitiesData.Capabilities[1] %x\n", CapabilitiesData->Capabilities[1]);
+	  if (CapabilitiesData->Capabilities[1] & 0x01)
+	    {
+	      DbgPrint("  Drive can read Red Book audio data\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x02)
+	    {
+	      DbgPrint("  Drive can continue a read cdda operation from a loss of streaming\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x04)
+	    {
+	      DbgPrint("  Subchannel reads can return combined R-W information\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x08)
+	    {
+	      DbgPrint("  R-W data will be returned deinterleaved and error corrected\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x10)
+	    {
+	      DbgPrint("  Drive supports C2 error pointers\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x20)
+	    {
+	      DbgPrint("  Drive can return International Standard Recording Code info\n");
+	    }
+	  if (CapabilitiesData->Capabilities[1] & 0x40)
+	    {
+	      DbgPrint("  Drive can return Media Catalog Number (UPC) info\n");
+	    }
+	  DPRINT("CapabilitiesData.Capabilities[2] %x\n", CapabilitiesData->Capabilities[2]);
+	  if (CapabilitiesData->Capabilities[2] & 0x01)
+	    {
+	      DbgPrint("  Drive can lock the door\n");
+	    }
+	  if (CapabilitiesData->Capabilities[2] & 0x02)
+	    {
+	      DbgPrint("  The door is locked\n");
+	    }
+	  if (CapabilitiesData->Capabilities[2] & 0x04)
+	    {
+	    }
+	  if (CapabilitiesData->Capabilities[2] & 0x08)
+	    {
+	      DbgPrint("  Drive can eject a disc or changer cartridge\n");
+	    }
+	  if (CapabilitiesData->Capabilities[2] & 0x10)
+	    {
+	      DbgPrint("  Drive supports C2 error pointers\n");
+	    }
+	  switch (CapabilitiesData->Capabilities[2] >> 5)
+	    {
+	      case 0:
+	        DbgPrint("  Drive use a caddy type loading mechanism\n");
+		break;
+	      case 1:
+	        DbgPrint("  Drive use a tray type loading mechanism\n");
+		break;
+	      case 2:
+	        DbgPrint("  Drive use a pop-up type loading mechanism\n");
+		break;
+	      case 4:
+	        DbgPrint("  Drive is a changer with individually changeable discs\n");
+		break;
+	      case 5:
+	        DbgPrint("  Drive is a changer with cartridge mechanism\n");
+		break;
+	    }
+	  DPRINT("CapabilitiesData.Capabilities[3] %x\n", CapabilitiesData->Capabilities[3]);
+	  if (CapabilitiesData->Capabilities[3] & 0x01)
+	    {
+	      DbgPrint("  Audio level for each channel can be controlled independently\n");
+	    }
+	  if (CapabilitiesData->Capabilities[3] & 0x02)
+	    {
+	      DbgPrint("  Audio for each channel can be muted independently\n");
+	    }
+	  if (CapabilitiesData->Capabilities[3] & 0x04)
+	    {
+	      DbgPrint("  Changer can report exact contents of slots\n");
+	    }
+	  if (CapabilitiesData->Capabilities[3] & 0x08)
+	    {
+	      DbgPrint("  Drive supports software slot selection\n");
+	    }
+	  DbgPrint("  Maximum speed is %d kB/s\n", 
+	          (CapabilitiesData->MaximumSpeedSupported[0] << 8) 
+		  | CapabilitiesData->MaximumSpeedSupported[1]);
+	  DbgPrint("  Current speed is %d kB/s\n", 
+	          (CapabilitiesData->CurrentSpeed[0] << 8) 
+		  | CapabilitiesData->CurrentSpeed[1]);
+	  DbgPrint("  Number of discrete volume levels is %d\n",
+	          (CapabilitiesData->Reserved3 << 8) 
+		  | CapabilitiesData->NumberVolumeLevels);
+	  DbgPrint("  Buffer size is %d kB\n",
+	          (CapabilitiesData->BufferSize[0] << 8) 
+		  | CapabilitiesData->BufferSize[1]);
 #endif
+	}
+      else
+	{
+	  DPRINT("XA not supported\n");
+	  CdromData->XaFlags |= XA_NOT_SUPPORTED;
+	}
+
+    }
+
+
+  ExFreePool (Buffer);
 
   /* Initialize device timer */
   IoInitializeTimer(DiskDeviceObject,
