@@ -1,8 +1,8 @@
-/* $Id: ShellCommandSACL.cpp,v 1.5 2004/10/11 01:24:22 sedwards Exp $
+/* $Id$
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000-2005 Nedko Arnaudov <nedko@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
