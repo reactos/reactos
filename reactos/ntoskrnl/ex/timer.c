@@ -11,6 +11,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES ********************************************************************/
@@ -22,7 +24,6 @@ typedef struct _ETIMER {
     KDPC TimerDpc;
     LIST_ENTRY ActiveTimerListEntry;
     KSPIN_LOCK Lock;
-    LONG Period;
     BOOLEAN ApcAssociated;
     BOOLEAN WakeTimer;
     LIST_ENTRY WakeTimerListEntry;
@@ -60,54 +61,46 @@ ExTimerRundown(VOID)
     PETHREAD Thread = PsGetCurrentThread();
     KIRQL OldIrql;
     PLIST_ENTRY CurrentEntry;
-    BOOLEAN KillTimer = FALSE;
     PETIMER Timer;
     
     /* Lock the Thread's Active Timer List*/
     KeAcquireSpinLock(&Thread->ActiveTimerListLock, &OldIrql);
     
-    /* Loop through all the timers */
-    CurrentEntry = Thread->ActiveTimerListHead.Flink;
-    while (CurrentEntry != &Thread->ActiveTimerListHead) {
-    
+    while (!IsListEmpty(&Thread->ActiveTimerListHead)) 
+    {
+        
+        /* Remove a Timer */
+	CurrentEntry = RemoveTailList(&Thread->ActiveTimerListHead);
+
         /* Get the Timer */
         Timer = CONTAINING_RECORD(CurrentEntry, ETIMER, ActiveTimerListEntry);
+        
+        ASSERT (Timer->ApcAssociated);
+	Timer->ApcAssociated = FALSE;      
+	
         DPRINT("Timer, ThreadList: %x, %x\n", Timer, Thread);
         
         /* Unlock the list */
-        KeReleaseSpinLock(&Thread->ActiveTimerListLock, OldIrql);
+        KeReleaseSpinLockFromDpcLevel(&Thread->ActiveTimerListLock);
             
         /* Lock the Timer */
-        KeAcquireSpinLock(&Timer->Lock, &OldIrql);
+        KeAcquireSpinLockAtDpcLevel(&Timer->Lock);
         
-        /* Relock the active list */
-        KeAcquireSpinLockAtDpcLevel(&Thread->ActiveTimerListLock);
+        ASSERT (&Thread->Tcb == Timer->TimerApc.Thread);
         
-        /* Make sure it's associated to us */
-        if ((Timer->ApcAssociated) && (&Thread->Tcb == Timer->TimerApc.Thread)) {
-        
-            /* Remove it */
-            DPRINT("Removing from Thread: %x\n", Thread);
-            RemoveEntryList(&Thread->ActiveTimerListHead); 
-            KeCancelTimer(&Timer->KeTimer);
-            KeRemoveQueueDpc(&Timer->TimerDpc);
-            KeRemoveQueueApc(&Timer->TimerApc);   
-            Timer->ApcAssociated = FALSE;      
-            KillTimer = TRUE;
-        }
+        KeCancelTimer(&Timer->KeTimer);
+        KeRemoveQueueDpc(&Timer->TimerDpc);
+        KeRemoveQueueApc(&Timer->TimerApc);   
                        
-        /* Unlock the list */
-        KeReleaseSpinLockFromDpcLevel(&Thread->ActiveTimerListLock);
         
         /* Unlock the Timer */
         KeReleaseSpinLock(&Timer->Lock, OldIrql);
         
         /* Dereference it, if needed */
-        if (KillTimer) ObDereferenceObject(Timer);
+        ObDereferenceObject(Timer);
         
         /* Loop again */
         KeAcquireSpinLock(&Thread->ActiveTimerListLock, &OldIrql);
-        CurrentEntry = CurrentEntry->Flink;
     }       
     
     KeReleaseSpinLock(&Thread->ActiveTimerListLock, OldIrql);
@@ -126,11 +119,12 @@ ExpDeleteTimer(PVOID ObjectBody)
     KeAcquireSpinLock(&ExpWakeListLock, &OldIrql);
     
     /* Check if it has a Wait List */
-    if (!IsListEmpty(&Timer->WakeTimerListEntry)) {
+    if (Timer->WakeTimer) {
     
         /* Remove it from the Wait List */
         DPRINT("Removing wake list\n");
         RemoveEntryList(&Timer->WakeTimerListEntry);
+	Timer->WakeTimer = FALSE;
     }
     
     /* Release the Wake List */
@@ -202,8 +196,8 @@ ExpTimerApcKernelRoutine(PKAPC Apc,
      */
     if ((Timer->ApcAssociated) && 
         (&CurrentThread->Tcb == Timer->TimerApc.Thread) && 
-        (!Timer->Period)) {
-    
+        (!Timer->KeTimer.Period)) {
+
         /* Remove it from the Active Timers List */
         DPRINT("Removing Timer\n");
         RemoveEntryList(&Timer->ActiveTimerListEntry);
@@ -433,7 +427,6 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
 
         /* Set Initial State */
         Timer->ApcAssociated = FALSE;
-        InitializeListHead(&Timer->WakeTimerListEntry);
         Timer->WakeTimer = FALSE;
         
         /* Insert the Timer */
@@ -691,16 +684,16 @@ NtSetTimer(IN HANDLE TimerHandle,
         /* Handle Wake Timers */
         DPRINT("Doing Wake Semantics\n");
         KeAcquireSpinLockAtDpcLevel(&ExpWakeListLock);
-        if (WakeTimer) {
+        if (WakeTimer && !Timer->WakeTimer) {
         
             /* Insert it into the list */
+            Timer->WakeTimer = TRUE;
             InsertTailList(&ExpWakeList, &Timer->WakeTimerListEntry);
-        
-        } else {
+        } else if (!WakeTimer && Timer->WakeTimer) {
             
             /* Remove it from the list */
             RemoveEntryList(&Timer->WakeTimerListEntry);
-            Timer->WakeTimerListEntry.Flink = NULL;
+            Timer->WakeTimer = FALSE;
         }
         KeReleaseSpinLockFromDpcLevel(&ExpWakeListLock);
         
@@ -740,9 +733,6 @@ NtSetTimer(IN HANDLE TimerHandle,
         /* Dereference the Object */
         ObDereferenceObject(Timer);
         
-        /* Unlock the Timer */
-        KeReleaseSpinLock(&Timer->Lock, OldIrql);
-                
         /* Dereference if it was previously enabled */
         if (!TimerApcRoutine) ObDereferenceObject(Timer);
         if (KillTimer) ObDereferenceObject(Timer);
