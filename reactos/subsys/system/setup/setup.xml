@@ -1,0 +1,8 @@
+<module name="setup" type="win32gui">
+	<include base="setup">.</include>
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x0400</define>
+	<library>kernel32</library>
+	<file>setup.c</file>
+	<file>setup.rc</file>
+</module>

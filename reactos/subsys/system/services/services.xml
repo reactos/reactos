@@ -1,0 +1,10 @@
+<module name="services" type="win32cui">
+	<include base="services">.</include>
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<file>services.c</file>
+	<file>database.c</file>
+	<file>services.rc</file>
+</module>

@@ -724,7 +724,9 @@ MingwModuleHandler::GenerateCommands ( const Module& module,
 		                     cflagsMacro );
 		return;
 	}
-	else if ( extension == ".cc" || extension == ".CC" || extension == ".cxx" || extension == ".CXX" )
+	else if ( extension == ".cc" || extension == ".CC" ||
+	          extension == ".cpp" || extension == ".CPP" ||
+	          extension == ".cxx" || extension == ".CXX" )
 	{
 		GenerateGccCommand ( module,
 		                     sourceFilename,
@@ -1259,6 +1261,16 @@ MingwModuleHandler::GetLinkingDependencies ( const Module& module ) const
 	return dependencies;
 }
 
+bool
+MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
+{
+	if ( module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
+		return true;
+	if ( module.HasFileWithExtensions ( ".cpp", ".CPP" ) )
+		return true;
+	return false;
+}
+
 
 static MingwBuildToolModuleHandler buildtool_handler;
 
@@ -1285,7 +1297,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 	GenerateMacrosAndTargetsHost ( module );
 
 	string linker;
-	if ( module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
+	if ( IsCPlusPlusModule ( module ) )
 		linker = "${host_gpp}";
 	else
 		linker = "${host_gcc}";
@@ -1698,7 +1710,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		          linkingDependencies.c_str () );
 
 		string linker;
-		if ( module.HasFileWithExtensions ( ".cc", ".CC" ) || module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
+		if ( IsCPlusPlusModule ( module ) )
 			linker = "${gpp}";
 		else
 			linker = "${gcc}";
@@ -1807,10 +1819,16 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		          objectFilenames.c_str (),
 		          importLibraryDependencies.c_str () );
 
+		string linker;
+		if ( IsCPlusPlusModule ( module ) )
+			linker = "${gpp}";
+		else
+			linker = "${gcc}";
+
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
 		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
-		                        "${gcc}",
+		                        linker,
 		                        linkerParameters,
 		                        objectFilenames );
 	}

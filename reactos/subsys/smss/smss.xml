@@ -1,0 +1,9 @@
+<module name="smss" type="nativecui">
+	<include base="smss">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<library>ntdll</library>
+	<file>init.c</file>
+	<file>smapi.c</file>
+	<file>smss.c</file>
+	<file>smss.rc</file>
+</module>

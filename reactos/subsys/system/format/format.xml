@@ -1,0 +1,6 @@
+<module name="format" type="win32cui">
+	<include base="format">.</include>
+	<library>ntdll</library>
+	<library>fmifs</library>
+	<file>format.c</file>
+</module>

@@ -62,6 +62,7 @@ protected:
 	void GenerateImportLibraryTargetIfNeeded ( const Module& module ) const;
 	std::string GetDefinitionDependencies ( const Module& module ) const;
 	std::string GetLinkingDependencies ( const Module& module ) const;
+	bool IsCPlusPlusModule ( const Module& module ) const;
 	static FILE* fMakefile;
 	static std::set<std::string> directory_set;
 private:
