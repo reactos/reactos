@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.144 2004/07/14 20:48:58 navaraf Exp $
+/* $Id: dc.c,v 1.145 2004/07/17 21:10:25 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -560,7 +560,7 @@ IntCreatePrimarySurface()
       /* Allocate a phyical device handle from the driver */
       if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
       {
-         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDev(
+         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
             &PrimarySurface.DMW,
             L"",
             HS_DDI_MAX,
@@ -586,7 +586,7 @@ IntCreatePrimarySurface()
       if (DoDefault)
       {
          RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
-         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDev(
+         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
             &PrimarySurface.DMW,
             L"",
             HS_DDI_MAX,
@@ -623,7 +623,7 @@ IntCreatePrimarySurface()
       DPRINT("calling completePDev\n");
 
       /* Complete initialization of the physical device */
-      PrimarySurface.DriverFunctions.CompletePDev(
+      PrimarySurface.DriverFunctions.CompletePDEV(
          PrimarySurface.PDev,
 	 (HDEV)&PrimarySurface);
 
@@ -639,7 +639,7 @@ IntCreatePrimarySurface()
       if (NULL == PrimarySurface.Handle)
       {
 /*         PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);*/
-         PrimarySurface.DriverFunctions.DisablePDev(PrimarySurface.PDev);
+         PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
          ObDereferenceObject(PrimarySurface.VideoFileObject);
          DPRINT1("DrvEnableSurface failed\n");
          /* return FALSE; */
@@ -670,7 +670,7 @@ IntDestroyPrimarySurface()
     DPRINT("Reseting display\n" );
     PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
     PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
-    PrimarySurface.DriverFunctions.DisablePDev(PrimarySurface.PDev);
+    PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
 
     DceEmptyCache();
 
