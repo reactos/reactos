@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.2 2001/05/27 15:40:31 ekohl Exp $
+/* $Id: profile.c,v 1.3 2001/06/07 21:27:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,21 +11,23 @@
  */
 
 #include <ddk/ntddk.h>
-#include <kernel32/proc.h>
-#include <kernel32/thread.h>
+#include <windows.h>
 #include <wchar.h>
 #include <string.h>
 //#include <stdlib.h>
 
+
+/* FUNCTIONS *****************************************************************/
+
 BOOL STDCALL
-CloseProfileUserMapping (VOID)
+CloseProfileUserMapping(VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
-UINT
-STDCALL
+
+UINT STDCALL
 GetPrivateProfileIntW (
 	LPCWSTR	lpAppName,
 	LPCWSTR	lpKeyName,
@@ -38,8 +40,7 @@ GetPrivateProfileIntW (
 }
 
 
-UINT
-STDCALL
+UINT STDCALL
 GetPrivateProfileIntA (
 	LPCSTR	lpAppName,
 	LPCSTR	lpKeyName,
@@ -52,8 +53,7 @@ GetPrivateProfileIntA (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileSectionW (
 	LPCWSTR	lpAppName,
 	LPWSTR	lpReturnedString,
@@ -66,8 +66,7 @@ GetPrivateProfileSectionW (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileSectionA (
 	LPCSTR	lpAppName,
 	LPSTR	lpReturnedString,
@@ -80,8 +79,7 @@ GetPrivateProfileSectionA (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileSectionNamesW (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -93,8 +91,7 @@ GetPrivateProfileSectionNamesW (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileSectionNamesA (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -106,8 +103,7 @@ GetPrivateProfileSectionNamesA (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileStringW (
 	LPCWSTR lpAppName,
 	LPCWSTR lpKeyName,
@@ -122,8 +118,7 @@ GetPrivateProfileStringW (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileStringA (
 	LPCSTR	lpAppName,
 	LPCSTR	lpKeyName,
@@ -138,8 +133,7 @@ GetPrivateProfileStringA (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileStructW (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -153,8 +147,7 @@ GetPrivateProfileStructW (
 }
 
 
-DWORD
-STDCALL
+DWORD STDCALL
 GetPrivateProfileStructA (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -167,97 +160,95 @@ GetPrivateProfileStructA (
 	return 0;
 }
 
-UINT
-STDCALL
-GetProfileIntW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	INT	nDefault
-	)
+UINT STDCALL
+GetProfileIntW(LPCWSTR lpAppName,
+	       LPCWSTR lpKeyName,
+	       INT nDefault)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileIntW(lpAppName,
+				lpKeyName,
+				nDefault,
+				NULL);
 }
 
 
-UINT
-STDCALL
-GetProfileIntA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	INT	nDefault
-	)
+UINT STDCALL
+GetProfileIntA(LPCSTR lpAppName,
+	       LPCSTR lpKeyName,
+	       INT nDefault)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileIntA(lpAppName,
+				lpKeyName,
+				nDefault,
+				NULL);
 }
 
 
-DWORD
-STDCALL
-GetProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize
-	)
+DWORD STDCALL
+GetProfileSectionW(LPCWSTR lpAppName,
+		   LPWSTR lpReturnedString,
+		   DWORD nSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileSectionW(lpAppName,
+				    lpReturnedString,
+				    nSize,
+				    NULL);
 }
 
 
-DWORD
-STDCALL
-GetProfileSectionA (
-	LPCSTR	lpAppName,
-	LPSTR	lpReturnedString,
-	DWORD	nSize
-	)
+DWORD STDCALL
+GetProfileSectionA(LPCSTR lpAppName,
+		   LPSTR lpReturnedString,
+		   DWORD nSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileSectionA(lpAppName,
+				    lpReturnedString,
+				    nSize,
+				    NULL);
 }
 
 
-DWORD
-STDCALL
-GetProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpDefault,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize
-	)
+DWORD STDCALL
+GetProfileStringW(LPCWSTR lpAppName,
+		  LPCWSTR lpKeyName,
+		  LPCWSTR lpDefault,
+		  LPWSTR lpReturnedString,
+		  DWORD nSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileStringW(lpAppName,
+				   lpKeyName,
+				   lpDefault,
+				   lpReturnedString,
+				   nSize,
+				   NULL);
 }
 
 
-DWORD
-STDCALL
-GetProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpDefault,
-	LPSTR	lpReturnedString,
-	DWORD	nSize
-	)
+DWORD STDCALL
+GetProfileStringA(LPCSTR lpAppName,
+		  LPCSTR lpKeyName,
+		  LPCSTR lpDefault,
+		  LPSTR lpReturnedString,
+		  DWORD nSize)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return GetPrivateProfileStringA(lpAppName,
+				   lpKeyName,
+				   lpDefault,
+				   lpReturnedString,
+				   nSize,
+				   NULL);
 }
 
-DWORD
-STDCALL
+
+BOOL STDCALL
 OpenProfileUserMapping (VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
 
-WINBOOL
-STDCALL
+
+WINBOOL STDCALL
 QueryWin31IniFilesMappedToRegistry (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -269,8 +260,8 @@ QueryWin31IniFilesMappedToRegistry (
 	return FALSE;
 }
 
-WINBOOL
-STDCALL
+
+WINBOOL STDCALL
 WritePrivateProfileSectionA (
 	LPCSTR	lpAppName,
 	LPCSTR	lpString,
@@ -282,8 +273,7 @@ WritePrivateProfileSectionA (
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 WritePrivateProfileSectionW (
 	LPCWSTR	lpAppName,
 	LPCWSTR	lpString,
@@ -295,36 +285,29 @@ WritePrivateProfileSectionW (
 }
 
 
-WINBOOL
-STDCALL
-WritePrivateProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpString,
-	LPCSTR	lpFileName
-	)
+WINBOOL STDCALL
+WritePrivateProfileStringA(LPCSTR lpAppName,
+			   LPCSTR lpKeyName,
+			   LPCSTR lpString,
+			   LPCSTR lpFileName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
 
-WINBOOL
-STDCALL
-WritePrivateProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpString,
-	LPCWSTR	lpFileName
-	)
+WINBOOL STDCALL
+WritePrivateProfileStringW(LPCWSTR lpAppName,
+			   LPCWSTR lpKeyName,
+			   LPCWSTR lpString,
+			   LPCWSTR lpFileName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 WritePrivateProfileStructA (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -338,8 +321,7 @@ WritePrivateProfileStructA (
 }
 
 
-WINBOOL
-STDCALL
+WINBOOL STDCALL
 WritePrivateProfileStructW (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
@@ -353,57 +335,47 @@ WritePrivateProfileStructW (
 }
 
 
-
-
-WINBOOL
-STDCALL
-WriteProfileSectionA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpString
-	)
+WINBOOL STDCALL
+WriteProfileSectionA(LPCSTR lpAppName,
+		     LPCSTR lpString)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+   return WritePrivateProfileSectionA(lpAppName,
+				      lpString,
+				      NULL);
 }
 
 
-WINBOOL
-STDCALL
-WriteProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpString
-	)
+WINBOOL STDCALL
+WriteProfileSectionW(LPCWSTR lpAppName,
+		     LPCWSTR lpString)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+   return WritePrivateProfileSectionW(lpAppName,
+				      lpString,
+				      NULL);
 }
 
 
-WINBOOL
-STDCALL
-WriteProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpString
-	)
+WINBOOL STDCALL
+WriteProfileStringA(LPCSTR lpAppName,
+		    LPCSTR lpKeyName,
+		    LPCSTR lpString)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+   return WritePrivateProfileStringA(lpAppName,
+				     lpKeyName,
+				     lpString,
+				     NULL);
 }
 
 
-WINBOOL
-STDCALL
-WriteProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpString
-	)
+WINBOOL STDCALL
+WriteProfileStringW(LPCWSTR lpAppName,
+		    LPCWSTR lpKeyName,
+		    LPCWSTR lpString)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+   return WritePrivateProfileStringW(lpAppName,
+				     lpKeyName,
+				     lpString,
+				     NULL);
 }
-
-
 
 /* EOF */
