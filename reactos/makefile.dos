@@ -106,7 +106,7 @@ keyboard: dummy
 	make -C services/dd/keyboard
 
 blue: dummy
-	make -C services/dd/blue
+	make -C services/dd/blue --file=makefile
 
 mouse: dummy
 	make -C services/dd/mouse
