@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.199 2004/01/03 23:12:19 sedwards Exp $
+# $Id: Makefile,v 1.200 2004/01/09 19:55:29 ekohl Exp $
 #
 # Global makefile
 #
@@ -43,8 +43,8 @@ DLLS_KBD = kbdus kbdgr kbdfr kbduk
 # imagehlp
 DLLS =	libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand \
 	msafd msvcrt msvcrt20 ntdll ole32 psapi richedit rpcrt4 secur32 shell32 shlwapi \
-	syssetup twain unicode user32 version winspool ws2help ws2_32 wsock32 wshirda \
-	iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
+	syssetup twain unicode user32 userenv version winspool ws2help ws2_32 wsock32 \
+	wshirda iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
 
 # Uncomment this after the update W32API headers will be released.
 # DLLS += ole32 shlwapi
