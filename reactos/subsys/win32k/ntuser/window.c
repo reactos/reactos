@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.184 2004/02/15 20:50:56 gvg Exp $
+/* $Id: window.c,v 1.184.2.1 2004/02/22 15:20:57 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1738,6 +1738,7 @@ NtUserDestroyWindow(HWND Wnd)
 
   /* Unlink now so we won't bother with the children later on */
   IntUnlinkWindow(Window);
+  Window->Parent = NULL;
 
   /* Destroy the window storage */
   IntDestroyWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);
