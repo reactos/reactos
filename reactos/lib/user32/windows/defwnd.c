@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.26 2003/03/03 19:51:31 rcampbell Exp $
+/* $Id: defwnd.c,v 1.27 2003/03/04 13:19:01 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -362,7 +362,7 @@ VOID
 UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
 {
     SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
-    DrawEdge(hDC, rect, dlgFrame ? EDGE_RAISED : EDGE_ETCHED, BF_RECT | BF_MIDDLE);
+    DrawEdge(hDC, rect,EDGE_RAISED, BF_RECT | BF_MIDDLE);
 }
 
 void SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
