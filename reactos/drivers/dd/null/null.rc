@@ -1,7 +1,0 @@
-/* $Id: null.rc,v 1.4 2004/10/16 20:27:23 gvg Exp $ */
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"Null Device Driver\0"
-#define REACTOS_STR_INTERNAL_NAME	"null\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"null.sys\0"
-#include <reactos/version.rc>

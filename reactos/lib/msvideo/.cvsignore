@@ -1,9 +1,0 @@
-*.coff
-*.dll
-*.sym
-*.o
-*.d
-*.map
-*.tmp
-Makefile.ros
-msvfw32.spec.def

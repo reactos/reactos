@@ -1,7 +1,0 @@
-win32csr.coff
-win32csr.dll
-win32csr.nostrip.dll
-*.d
-*.o
-*.sym
-*.map

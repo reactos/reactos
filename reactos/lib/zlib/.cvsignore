@@ -1,6 +1,0 @@
-*.a
-*.d
-*.o
-*.sym
-*.map
-hostobjs
