@@ -1,7 +1,7 @@
 function write(x) { System.print(x); }'
 function regs(n) { return System.regs(n); }
-function ebp() { return regs(0); }
-function eip() { return regs(1); }
+function debugebp() { return regs(0); }
+function debugeip() { return regs(1); }
 function tf_argmark() { return regs(2); }
 function tf_pointer() { return regs(3); }
 function tf_tempcs() { return regs(4); } 
@@ -22,14 +22,19 @@ function tf_pmode() { return regs(18); }
 function tf_exl() { return regs(19); }
 function fs()  { return regs(20) & 0xffff; }
 function edi() { return regs(21); }
-function cs()  { return regs(22) & 0xffff; }
-function eflags() { return regs(23); }
-function esp() { return regs(24); }
-function ss()  { return regs(25) & 0xffff; }
-function v86_es() { return regs(26) & 0xffff; }
-function v86_ds() { return regs(27) & 0xffff; }
-function v86_fs() { return regs(28) & 0xffff; }
-function v86_gs() { return regs(29) & 0xffff; }
+function esi() { return regs(22); }
+function ebx() { return regs(23); }
+function ebp() { return regs(24); }
+function error_code() { return regs(25); }
+function eip() { return regs(26); }
+function cs()  { return regs(27) & 0xffff; }
+function eflags() { return regs(28); }
+function esp() { return regs(29); }
+function ss()  { return regs(30) & 0xffff; }
+function v86_es() { return regs(31) & 0xffff; }
+function v86_ds() { return regs(32) & 0xffff; }
+function v86_fs() { return regs(33) & 0xffff; }
+function v86_gs() { return regs(34) & 0xffff; }
 function peekl(a) { return System.mread(4,a); }
 function pokel(a,b) { return System.mwrite(4,a,b); }
 function peekw(a) { return System.mread(2,a); }
