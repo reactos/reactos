@@ -71,7 +71,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 //  -------------------------------------------------------------------------
 
 #include <internal/kernel.h>
-#include <internal/hal/io.h>
+#include <internal/i386/io.h>
 #include <internal/string.h>
 
 //#define NDEBUG
@@ -81,7 +81,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 #include "idep.h"
 #include "partitio.h"
 
-#define  VERSION  "V0.1.2"
+#define  VERSION  "V0.1.3"
 
 //  -------------------------------------------------------  File Static Data
 
@@ -105,10 +105,10 @@ typedef struct _IDE_CONTROLLER_PARAMETERS
 #define  IDE_MAX_CONTROLLERS  4
 IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] = 
 {
-  {0x01f0, 8, 0x03f0, 8, 14, 14, 15, LevelSensitive, 0xffff},
-  {0x0170, 8, 0x0370, 8, 15, 15, 15, LevelSensitive, 0xffff},
-  {0x01E8, 8, 0x03e8, 8, 11, 11, 15, LevelSensitive, 0xffff},
-  {0x0168, 8, 0x0368, 8, 10, 10, 15, LevelSensitive, 0xffff}
+  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff},
+  {0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff},
+  {0x01E8, 8, 0x03ee, 1, 11, 11, 15, LevelSensitive, 0xffff},
+  {0x0168, 8, 0x036e, 1, 10, 10, 15, LevelSensitive, 0xffff}
 };
 
 static BOOLEAN IDEInitialized = FALSE;
@@ -634,7 +634,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 
                 //  Create devices for logical partitions within an extended partition
             } 
-          else if (p->PartitionType == PTDosExtended) 
+          else if (PartitionIsExtended(p)) 
             {
               ExtOffset = p->StartingBlock;
 
