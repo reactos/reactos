@@ -15,7 +15,7 @@ TEST_APPS = alive apc args atomtest bench bitblt consume copymove count \
             dump_shared_data event file gditest hello isotest lpc messagebox \
             mstest mutex event file gditest hello isotest lpc messagebox mstest \
             mutex nptest pteb regtest sectest shm thread tokentest vmtest \
-            winhello dibtest lock hivetest shaptest wm_paint
+            winhello dibtest lock hivetest shaptest wm_paint multiwin
 
 TEST_MISC = 
 
