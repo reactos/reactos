@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.63 2003/06/16 19:16:32 hbirr Exp $
+/* $Id: view.c,v 1.64 2003/06/27 21:28:30 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -1076,6 +1076,39 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject)
   ExReleaseFastMutex(&ViewLock);
   return(STATUS_SUCCESS);
 }
+
+NTSTATUS 
+CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
+{
+   PBCB Bcb;
+   NTSTATUS Status;
+
+   ExAcquireFastMutex(&ViewLock);
+
+   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+   if (Bcb == NULL)
+   {
+      Status = STATUS_UNSUCCESSFUL;
+   }
+   else
+   {
+      if (FileObject->PrivateCacheMap == NULL)
+      {
+         FileObject->PrivateCacheMap = Bcb;
+         Bcb->RefCount++;
+      }
+      if (Bcb->BcbRemoveListEntry.Flink != NULL)
+      {
+         RemoveEntryList(&Bcb->BcbRemoveListEntry);
+         Bcb->BcbRemoveListEntry.Flink = NULL;
+      }
+      Status = STATUS_SUCCESS;
+   }
+   ExReleaseFastMutex(&ViewLock);
+
+   return Status;
+}
+
 
 NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,

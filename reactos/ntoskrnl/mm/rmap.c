@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.18 2003/06/06 21:01:36 hbirr Exp $
+/* $Id: rmap.c,v 1.19 2003/06/27 21:28:30 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -150,8 +150,14 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 
       if (PageOp->Thread != PsGetCurrentThread())
 	{
-	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(AddressSpace);
+          Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+				         0,
+				         KernelMode,
+				         FALSE,
+				         NULL);
+          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	  MmReleasePageOp(PageOp);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
               ObDereferenceObject(Process);
@@ -298,8 +304,14 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
       if (PageOp->Thread != PsGetCurrentThread())
 	{
-	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(AddressSpace);
+          Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+				         0,
+				         KernelMode,
+				         FALSE,
+				         NULL);
+          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	  MmReleasePageOp(PageOp);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
               ObDereferenceObject(Process);
@@ -443,6 +455,7 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
       DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
       KeBugCheck(0);
     }
+  MmSetRmapListHeadPage(PhysicalAddress, NULL);
   while (current_entry != NULL)
     {
       previous_entry = current_entry;
@@ -454,7 +467,6 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
 	}
       ExFreeToNPagedLookasideList(&RmapLookasideList, previous_entry);
     }
-  MmSetRmapListHeadPage(PhysicalAddress, NULL);
   ExReleaseFastMutex(&RmapListLock);
 }
 

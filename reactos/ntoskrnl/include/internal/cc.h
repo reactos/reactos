@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.17 2003/01/11 15:21:09 hbirr Exp $ */
+/* $Id: cc.h,v 1.18 2003/06/27 21:28:30 hbirr Exp $ */
 #include <ddk/ntifs.h>
 
 
@@ -86,8 +86,8 @@ VOID CcInit(VOID);
 NTSTATUS
 CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 
-NTSTATUS
-CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+PCACHE_SEGMENT 
+CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset);
 
 NTSTATUS
 CcRosGetCacheSegmentChain(PBCB Bcb,
@@ -126,6 +126,9 @@ CcRosRequestCacheSegment (BCB*		    Bcb,
 		          PVOID*	    BaseAddress,
 		          PBOOLEAN	    UptoDate,
 		          CACHE_SEGMENT**   CacheSeg);
+
+NTSTATUS 
+CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 
 #endif

@@ -79,7 +79,7 @@ typedef struct _MM_SECTION_SEGMENT
   ULONG Attributes;
   ULONG Length;
   ULONG RawLength;
-  KMUTEX Lock;
+  FAST_MUTEX Lock;
   ULONG ReferenceCount;
   SECTION_PAGE_DIRECTORY PageDirectory;
   ULONG Flags;
@@ -87,6 +87,22 @@ typedef struct _MM_SECTION_SEGMENT
   ULONG Characteristics;
   BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
+
+typedef struct _MM_IMAGE_SECTION_OBJECT
+{
+  PVOID ImageBase;
+  PVOID EntryPoint;
+  ULONG StackReserve;
+  ULONG StackCommit;
+  ULONG Subsystem;
+  ULONG MinorSubsystemVersion;
+  ULONG MajorSubsystemVersion;
+  ULONG ImageCharacteristics;
+  USHORT Machine;
+  BOOLEAN Executable;
+  ULONG NrSegments;
+  MM_SECTION_SEGMENT Segments[0];
+} MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 typedef struct _SECTION_OBJECT
 {
@@ -98,19 +114,11 @@ typedef struct _SECTION_OBJECT
   PFILE_OBJECT FileObject;
   LIST_ENTRY ViewListHead;
   KSPIN_LOCK ViewListLock;
-  KMUTEX Lock;
-  ULONG NrSegments;
-  PMM_SECTION_SEGMENT Segments;
-  PVOID ImageBase;
-  PVOID EntryPoint;
-  ULONG StackReserve;
-  ULONG StackCommit;
-  ULONG Subsystem;
-  ULONG MinorSubsystemVersion;
-  ULONG MajorSubsystemVersion;
-  ULONG ImageCharacteristics;
-  USHORT Machine;
-  BOOLEAN Executable;
+  union
+  {
+    PMM_IMAGE_SECTION_OBJECT ImageSection;
+    PMM_SECTION_SEGMENT Segment;
+  };
 } SECTION_OBJECT;
 
 #ifndef __USE_W32API
@@ -444,11 +452,7 @@ MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress);
 VOID
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
-typedef struct _MM_IMAGE_SECTION_OBJECT
-{
-  ULONG NrSegments;
-  MM_SECTION_SEGMENT Segments[0];
-} MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
+
 
 VOID 
 MmFreeVirtualMemory(struct _EPROCESS* Process, PMEMORY_AREA MemoryArea);
