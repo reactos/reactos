@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.17 2004/07/29 13:43:38 weiden Exp $
+/* $Id: guiconsole.c,v 1.18 2004/07/29 13:54:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -34,6 +34,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
   HBITMAP MemoryBitmap;
   RECT Selection;
   POINT SelectionStart;
+  BOOL MouseDown;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -639,6 +640,8 @@ GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
   
   SetCapture(hWnd);
   
+  GuiData->MouseDown = TRUE;
+  
   GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
 }
 
@@ -652,7 +655,7 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
   
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
-  if (GuiData->Selection.left == -1) return;
+  if (GuiData->Selection.left == -1 || !GuiData->MouseDown) return;
   
   pt = MAKEPOINTS(lParam);
   
@@ -676,6 +679,8 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
     rc.top = max(rc.bottom - 1, 0);
     rc.bottom = tmp + 1;
   }
+  
+  GuiData->MouseDown = FALSE;
 
   GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
   
@@ -693,8 +698,8 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   if (!(wParam & MK_LBUTTON)) return;
   
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-  if (Console == NULL || GuiData == NULL) return;
-  
+  if (Console == NULL || GuiData == NULL || !GuiData->MouseDown) return;
+
   pt = MAKEPOINTS(lParam);
 
   rc.left = GuiData->SelectionStart.x;
