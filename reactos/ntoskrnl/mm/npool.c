@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.54 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: npool.c,v 1.55 2002/01/01 05:09:50 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1027,7 +1027,8 @@ ExAllocateWholePageBlock(ULONG UserSize)
       MmCreateVirtualMapping(NULL, 
 			     Address + (i * PAGESIZE),
 			     PAGE_READWRITE | PAGE_SYSTEM,
-			     (ULONG)Page);
+			     (ULONG)Page,
+			     TRUE);
     }
 
   *((PULONG)((ULONG)Address + (NrPages * PAGESIZE) - Size)) = NrPages;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.73 2002/01/01 03:29:15 dwelch Exp $
+/* $Id: section.c,v 1.74 2002/01/01 05:09:50 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -394,6 +394,10 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * we might have to move other things out of memory
        */
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, Page);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
 
       /*
        * Create an mdl to hold the page we are going to read data into.
@@ -500,6 +504,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockAddressSpace(AddressSpace);
 	   MmReleasePageOp(PageOp);
+	   DPRINT("Address 0x%.8X\n", Address);
 	   return(STATUS_MM_RESTART_OPERATION);
 	 }
        /*
@@ -508,6 +513,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        if (!NT_SUCCESS(PageOp->Status))
 	 {
 	   MmLockAddressSpace(AddressSpace);
+	   DPRINT("Address 0x%.8X\n", Address);
 	   return(PageOp->Status);
 	 }
        MmLockAddressSpace(AddressSpace);
@@ -544,6 +550,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        MmReleasePageOp(PageOp);
+       DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
      }
 
@@ -579,14 +586,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 				       FALSE);
        while (Status == STATUS_NO_MEMORY)
 	 {
-	   MmUnlockAddressSpace(AddressSpace);
-	   KeBugCheck(0);
-	   MmLockAddressSpace(AddressSpace);
+	   MmUnlockAddressSpace(AddressSpace);	   
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
 					   MemoryArea->Attributes,
 					   (ULONG)Page,
-					   FALSE);
+					   TRUE);
+	   MmLockAddressSpace(AddressSpace);
 	 }  
        if (!NT_SUCCESS(Status))
 	 {
@@ -598,7 +604,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        /*
 	* Add the page to the process's working set
 	*/
-       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));       
        
        /*
 	* Finish the operation
@@ -610,6 +616,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        PageOp->Status = STATUS_SUCCESS;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
+       DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
      }
 
@@ -640,6 +647,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmReleasePageOp(PageOp);
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
+       DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
      }
    
@@ -679,13 +687,16 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmReleasePageOp(PageOp);
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
+       DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
      }
 
    /*
     * Check if this page needs to be mapped COW
     */
-   if (Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView)
+   if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+       (MemoryArea->Attributes == PAGE_READWRITE ||
+	MemoryArea->Attributes == PAGE_EXECUTE_READWRITE))
      {
        Attributes = PAGE_READONLY;
      }
@@ -958,9 +969,20 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmLockSectionSegment(Segment);
 
    /*
+    * Sanity check.
+    */
+   if (MmGetPageEntrySectionSegment(Segment, Offset.QuadPart) == 0)
+     {
+       DPRINT1("COW fault for page with PESS 0. Address was 0x%.8X\n",
+	       Address);
+     }
+
+   /*
     * Check if we are doing COW
     */
-   if (!(Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView))
+   if (!((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+	 (MemoryArea->Attributes == PAGE_READWRITE ||
+	  MemoryArea->Attributes == PAGE_EXECUTE_READWRITE)))
      {
        MmUnlockSection(Section);
        MmUnlockSectionSegment(Segment);
@@ -2108,33 +2130,61 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	    ImageSections[i-1].PointerToRawData;
 	  SectionSegments[i].Characteristics = 
 	    ImageSections[i-1].Characteristics;
-	  if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+
+	  /*
+	   * Set up the protection and write copy variables.
+	   */
+	  if ((ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_READABLE) ||
+	      (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_WRITABLE) ||
+	      (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_EXECUTABLE))
+	    {
+	      SectionSegments[i].Protection = 
+		SectionCharacteristicsToProtect[ImageSections[i-1].Characteristics >> 28];
+	      SectionSegments[i].WriteCopy = 
+		!(ImageSections[i - 1].Characteristics & IMAGE_SECTION_CHAR_SHARED);
+	    }
+	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_EXECUTE_READ;
-	      SectionSegments[i].Attributes = 0;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
 	  else if (ImageSections[i-1].Characteristics & 
 		   IMAGE_SECTION_CHAR_DATA)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
-	      SectionSegments[i].Attributes = 0;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
 	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_BSS)
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
-	      SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
 	  else
 	    {
-	      SectionSegments[i].Protection = 
-		SectionCharacteristicsToProtect[ImageSections[i-1].Characteristics >> 28];
-	      SectionSegments[i].Attributes = 0;
-	      SectionSegments[i].WriteCopy = 
-		!(ImageSections[i - 1].Characteristics & IMAGE_SECTION_CHAR_SHARED);
+	      SectionSegments[i].Protection = PAGE_NOACCESS;
+	      SectionSegments[i].WriteCopy = TRUE;
 	    }
+	  
+	  /*
+	   * Set up the attributes.
+	   */
+	  if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+	    {
+	      SectionSegments[i].Attributes = 0;
+	    }
+	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_DATA)	    
+	    {
+	      SectionSegments[i].Attributes = 0;
+	    }
+	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_BSS)
+	    {
+	      SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
+	    }
+	  else
+	    {
+	      SectionSegments[i].Attributes = 0;
+	    }
+
 	  SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
 	  SectionSegments[i].Length = 
 	    ImageSections[i-1].Misc.VirtualSize;
