@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.23 2003/05/18 17:16:17 ea Exp $
+/* $Id: mouse.c,v 1.24 2003/05/18 19:21:24 ea Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -206,7 +206,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   return(TRUE);
 }
 
-VOID FASTCALL
+VOID /* STDCALL */
 MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 /*
  * FUNCTION: Call by the mouse driver when input events occur.
@@ -303,9 +303,14 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     mouse_x = min(mouse_x, 620);
     mouse_y = min(mouse_y, 460);
 
+
     if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
     {
+#if 1
       SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
+#else
+      DbgPrint("WIN32K.%s: call SurfGDI->MovePointer()\n",__FUNCTION__);
+#endif
     }
   }
 }
