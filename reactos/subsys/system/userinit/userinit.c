@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userinit.c,v 1.1 2003/12/07 01:12:58 weiden Exp $
+/* $Id: userinit.c,v 1.2 2003/12/07 01:17:28 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
@@ -70,11 +70,8 @@ BOOL GetShell(WCHAR *CommandLine)
   return Ret;
 }
 
-int WINAPI
-WinMain(HINSTANCE hInst,
-	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
-	int nCmdShow)
+static
+void StartShell(void)
 {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
@@ -84,6 +81,7 @@ WinMain(HINSTANCE hInst,
   
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
+  ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
   
   if(CreateProcess(NULL,
                    Shell,
@@ -99,7 +97,15 @@ WinMain(HINSTANCE hInst,
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
-  
+}
+
+int WINAPI
+WinMain(HINSTANCE hInst,
+	HINSTANCE hPrevInstance,
+	LPSTR lpszCmdLine,
+	int nCmdShow)
+{
+  StartShell();
   return 0;
 }
 
