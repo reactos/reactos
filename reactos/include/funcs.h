@@ -5658,6 +5658,14 @@ WINBOOL
 STDCALL
 FrameRgn(HDC, HRGN, HBRUSH, int, int);
 
+WINBOOL
+STDCALL
+GdiDllInitialize (HANDLE, DWORD, LPVOID);
+
+VOID
+STDCALL
+GdiProcessSetup (VOID);
+
 int
 STDCALL
 GetROP2(HDC);

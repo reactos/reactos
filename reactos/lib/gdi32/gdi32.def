@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.4 1999/10/26 19:47:03 ea Exp $
+; $Id: gdi32.def,v 1.5 2000/02/22 20:55:23 ekohl Exp $
 ;
 ; gdi32.def
 ;
@@ -114,11 +114,13 @@ FlattenPath@4
 FloodFill@16
 FrameRgn@20
 GdiComment@12
+GdiDllInitialize@12
 GdiFlush@0
 GdiGetBatchLimit@0
 GdiPlayDCScript@24
 GdiPlayJournal@20
 GdiPlayScript@28
+GdiProcessSetup@0
 GdiSetBatchLimit@4
 GetArcDirection@4
 GetAspectRatioFilterEx@8

@@ -1,4 +1,4 @@
-; $Id: gdi32.edf,v 1.2 1999/10/26 19:47:04 ea Exp $
+; $Id: gdi32.edf,v 1.3 2000/02/22 20:55:23 ekohl Exp $
 ;
 ; gdi32.def
 ;
@@ -114,11 +114,13 @@ FlattenPath=FlattenPath@4
 FloodFill=FloodFill@16
 FrameRgn=FrameRgn@20
 GdiComment=GdiComment@12
+GdiDllInitialize=GdiDllInitialize@12
 GdiFlush=GdiFlush@0
 GdiGetBatchLimit=GdiGetBatchLimit@0
 GdiPlayDCScript=GdiPlayDCScript@24
 GdiPlayJournal=GdiPlayJournal@20
 GdiPlayScript=GdiPlayScript@28
+GdiProcessSetup=GdiProcessSetup@0
 GdiSetBatchLimit=GdiSetBatchLimit@4
 GetArcDirection=GetArcDirection@4
 GetAspectRatioFilterEx=GetAspectRatioFilterEx@8
