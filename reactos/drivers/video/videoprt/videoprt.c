@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.14 2004/03/08 20:27:33 dwelch Exp $
+ * $Id: videoprt.c,v 1.15 2004/03/08 20:54:10 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -1264,6 +1264,7 @@ InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
   DPRINT("- IoAddress: %lx\n", IoAddress.u.LowPart);
   DPRINT("- NumberOfUchars: %lx\n", NumberOfUchars);
   DPRINT("- InIoSpace: %x\n", InIoSpace);
+  InIoSpace &= ~VIDEO_MEMORY_SPACE_DENSE;
   if (0 != (InIoSpace & VIDEO_MEMORY_SPACE_P6CACHE))
     {
       DPRINT("VIDEO_MEMORY_SPACE_P6CACHE not supported, turning off\n");
