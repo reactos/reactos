@@ -1,5 +1,15 @@
 
-all: crtdll.a
+ifneq ($(HOST),mingw32-windows)
+  ifneq ($(HOST),mingw32-linux)
+    DLLTARGET=crtdll.a
+  else
+    DLLTARGET=crtdll.dll
+  endif
+else
+  DLLTARGET=crtdll.dll
+endif
+
+all: $(DLLTARGET)
 
 
 ASSERT_OBJECTS = assert/assert.o
@@ -91,7 +101,23 @@ OBJECTS = $(ASSERT_OBJECTS) $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)\
 crtdll.a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o crtdll.a
 
-dummy:
+crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
+	$(LD) -r $(OBJECTS) -o crtdll.o
+	$(DLLTOOL) --dllname crtdll.dll --def crtdll.def \
+	           --output-lib crtdll.a
+	$(CC) -specs=crt_specs -mdll -o junk.tmp \
+	      -Wl,--base-file,base.tmp crtdll.o  ../ntdll/ntdll.a
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname crtdll.dll --base-file base.tmp \
+	           --output-exp temp.exp --def crtdll.def
+	- $(RM) base.tmp
+	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  ../ntdll/ntdll.a\
+	      -Wl,--image-base,0x20000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,temp.exp
+	- $(RM) temp.exp
+	$(NM) --numeric-sort crtdll.dll > crtdll.sym
 
 include ../../Rules.mak
 

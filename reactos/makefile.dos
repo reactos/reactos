@@ -19,8 +19,8 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl ntdll kernel32
 # crtdll mingw32
+COMPONENTS = iface_native ntoskrnl ntdll kernel32
 
 #
 # Select the server(s) you want to build
