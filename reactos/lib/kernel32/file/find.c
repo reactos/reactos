@@ -112,19 +112,11 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
-   DWORD Len = 0;
-   
-   DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
-	   lpFileName, lpFindFileData);
+//   DWORD Len = 0;
 
-/*   
-   Len = GetCurrentDirectoryW(MAX_PATH, CurrentDirectory);
-   if (CurrentDirectory[Len - 1] != L'\\')
-     {
-	CurrentDirectory[Len] = L'\\';
-	CurrentDirectory[Len + 1] = 0;
-     }
-*/
+   DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
+       lpFileName, lpFindFileData);
+
    GetFullPathNameW(lpFileName, MAX_PATH, CurrentDirectory, NULL);
    Directory[0] = '\\';
    Directory[1] = '?';
@@ -134,15 +126,17 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    DPRINT("Directory %w\n",Directory);
    wcscat(Directory, CurrentDirectory);
    DPRINT("Directory %w\n",Directory);
-//   wcscat(Directory, lpFileName);
-//   DPRINT("Directory %w\n",Directory);
    End = wcsrchr(Directory, '\\');
    *End = 0;
    
    wcscpy(Pattern, End+1);
    *(End+1) = 0;
    *End = '\\';
-   
+
+   /* change pattern: "*.*" --> "*" */
+   if (!wcscmp(Pattern, L"*.*"))
+        Pattern[1] = 0;
+
    DPRINT("Directory %w Pattern %w\n",Directory,Pattern);
    
    IData = HeapAlloc(GetProcessHeap(), 
@@ -155,7 +149,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
 			      0,
 			      NULL,
 			      NULL);
-   
+
    if (ZwOpenFile(&IData->DirectoryHandle,
 		  FILE_LIST_DIRECTORY,
 		  &ObjectAttributes,
@@ -165,7 +159,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
      {
 	return(NULL);
      }
-   
+
    RtlInitUnicodeString(&(IData->PatternStr), Pattern);
    
    NtQueryDirectoryFile(IData->DirectoryHandle,
@@ -209,9 +203,9 @@ HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
 	return(INVALID_HANDLE_VALUE);
      }
 
-   
+
    Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
-   
+
    DPRINT("IData->FileInfo.FileNameLength %d\n",
 	  IData->FileInfo.FileNameLength);
    for (i=0; i<IData->FileInfo.FileNameLength; i++)
@@ -232,7 +226,7 @@ HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
      }
    Ret->cAlternateFileName[i] = 0;
 
-   
+
    return(IData);
 }
 
@@ -291,7 +285,7 @@ BOOL FindClose(HANDLE hFindFile)
    return(TRUE);
 }
 
-HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName, 
+HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
 			      LPWIN32_FIND_DATA lpFindFileData)
 {
    PWIN32_FIND_DATA_UNICODE Ret;
