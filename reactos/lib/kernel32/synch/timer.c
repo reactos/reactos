@@ -1,8 +1,8 @@
-/* $Id: timer.c,v 1.7 2001/01/27 19:35:04 ekohl Exp $
+/* $Id: timer.c,v 1.8 2001/02/17 00:07:49 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 lib/kernel32/mem/timer.c
+ * FILE:                 lib/kernel32/synch/timer.c
  * PURPOSE:              Implementing timer
  * PROGRAMMER:           
  */
@@ -13,21 +13,20 @@
 #include <kernel32/error.h>
 #include <windows.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 /* FUNCTIONS *****************************************************************/
 
-HANDLE
-STDCALL
-CreateWaitableTimerW (
-	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
-	WINBOOL			bManualReset,
-	LPWSTR			lpTimerName
-	)
+HANDLE STDCALL
+CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
+		     WINBOOL bManualReset,
+		     LPWSTR lpTimerName)
 {
-   NTSTATUS errCode;
+   NTSTATUS Status;
    HANDLE TimerHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
-
    ULONG TimerType;
    
    if (bManualReset)
@@ -39,25 +38,27 @@ CreateWaitableTimerW (
    InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
 			      0,
-			      NULL,
+			      hBaseDir,
 			      NULL);
-   //TIMER_ALL_ACCESS
-   errCode = NtCreateTimer(&TimerHandle,
-			   0,
-			   &ObjectAttributes,
-			   TimerType);
+   
+   Status = NtCreateTimer(&TimerHandle,
+			  TIMER_ALL_ACCESS,
+			  &ObjectAttributes,
+			  TimerType);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return NULL;
+     }
 
    return TimerHandle;
 }
 
 
-HANDLE
-STDCALL
-CreateWaitableTimerA (
-	LPSECURITY_ATTRIBUTES	lpTimerAttributes,
-	WINBOOL			bManualReset,
-	LPCSTR			lpTimerName
-	)
+HANDLE STDCALL
+CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
+		     WINBOOL bManualReset,
+		     LPCSTR lpTimerName)
 {
 	UNICODE_STRING TimerNameU;
 	ANSI_STRING TimerName;
@@ -79,48 +80,47 @@ CreateWaitableTimerA (
 }
 
 
-HANDLE
-STDCALL
-OpenWaitableTimerW (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCWSTR	lpTimerName
-	)
+HANDLE STDCALL
+OpenWaitableTimerW(DWORD dwDesiredAccess,
+		   WINBOOL bInheritHandle,
+		   LPCWSTR lpTimerName)
 {
-	NTSTATUS errCode;
+   NTSTATUS Status;
+   HANDLE TimerHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING UnicodeName;
+   ULONG Attributes = 0;
 
-	HANDLE TimerHandle;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING UnicodeName;
-	ULONG Attributes = 0;
+   if (bInheritHandle)
+     {
+	Attributes = OBJ_INHERIT;
+     }
 
-	if ( bInheritHandle )
-		Attributes = OBJ_INHERIT;
-
-	RtlInitUnicodeString(&UnicodeName, lpTimerName);
-	InitializeObjectAttributes(&ObjectAttributes,
+   RtlInitUnicodeString(&UnicodeName,
+			lpTimerName);
+   InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
 			      Attributes,
-			      NULL,
+			      hBaseDir,
 			      NULL);
 
-	errCode = NtOpenTimer(
-		&TimerHandle,
-		dwDesiredAccess,
-		&ObjectAttributes
-	);
+   Status = NtOpenTimer(&TimerHandle,
+			dwDesiredAccess,
+			&ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return NULL;
+     }
 
-	return TimerHandle;
+   return TimerHandle;
 }
 
 
-HANDLE
-STDCALL
-OpenWaitableTimerA (
-	DWORD dwDesiredAccess,
-	WINBOOL bInheritHandle,
-	LPCSTR lpTimerName
-	)
+HANDLE STDCALL
+OpenWaitableTimerA(DWORD dwDesiredAccess,
+		   WINBOOL bInheritHandle,
+		   LPCSTR lpTimerName)
 {
 	UNICODE_STRING TimerNameU;
 	ANSI_STRING TimerName;
@@ -142,43 +142,47 @@ OpenWaitableTimerA (
 }
 
 
-WINBOOL STDCALL SetWaitableTimer(
-  HANDLE hTimer,
-  const LARGE_INTEGER *pDueTime,
-  LONG lPeriod,
-  PTIMERAPCROUTINE pfnCompletionRoutine,
-  LPVOID lpArgToCompletionRoutine,
-  WINBOOL fResume
-)
+WINBOOL STDCALL
+SetWaitableTimer(HANDLE hTimer,
+		 const LARGE_INTEGER *pDueTime,
+		 LONG lPeriod,
+		 PTIMERAPCROUTINE pfnCompletionRoutine,
+		 LPVOID lpArgToCompletionRoutine,
+		 WINBOOL fResume)
 {
-	NTSTATUS errCode;
-	BOOLEAN pState;
+   NTSTATUS Status;
+   BOOLEAN pState;
 
-	errCode = NtSetTimer(hTimer, (LARGE_INTEGER *)pDueTime,
-		 pfnCompletionRoutine,
-		lpArgToCompletionRoutine, fResume, lPeriod, &pState);
-
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastErrorByStatus (errCode);
-		return FALSE;
-	}
-	return TRUE;
+   Status = NtSetTimer(hTimer,
+		       (LARGE_INTEGER *)pDueTime,
+		       pfnCompletionRoutine,
+		       lpArgToCompletionRoutine,
+		       fResume,
+		       lPeriod,
+		       &pState);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+   return TRUE;
 }
 
-WINBOOL STDCALL CancelWaitableTimer(HANDLE hTimer)
-{
-	NTSTATUS errCode;
-	BOOLEAN CurrentState;
 
-	errCode = NtCancelTimer(
-		hTimer,
-		&CurrentState
-	);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastErrorByStatus (errCode);
-		return FALSE;
-	}
-	return TRUE;
+WINBOOL STDCALL
+CancelWaitableTimer(HANDLE hTimer)
+{
+   NTSTATUS Status;
+   BOOLEAN CurrentState;
+
+   Status = NtCancelTimer(hTimer,
+			  &CurrentState);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+   return TRUE;
 }
 
 /* EOF */
