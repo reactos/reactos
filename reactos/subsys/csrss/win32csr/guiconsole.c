@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.22 2004/11/20 16:46:05 weiden Exp $
+/* $Id: guiconsole.c,v 1.23 2004/12/04 22:09:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -130,8 +130,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
                                                  Console->Size.X * GuiData->CharWidth, 
 						 Console->Size.Y * GuiData->CharHeight);
   DeleteObject(SelectObject(GuiData->MemoryDC, GuiData->MemoryBitmap));
-  DeleteObject(SelectObject(GuiData->MemoryDC, GuiData->Font));
-
+  SelectObject(GuiData->MemoryDC, GuiData->Font); /* Don't delete stock font. */
 
   ReleaseDC(hWnd, Dc);
   GuiData->CursorBlinkOn = TRUE;
