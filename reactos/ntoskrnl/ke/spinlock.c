@@ -178,11 +178,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
    * FIXME: This depends on gcc assembling this test to a single load from
    * the spinlock's value.
    */
-  if (*SpinLock >= 2)
-  {
-    DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
-    KEBUGCHECK(0);
-  }
+  ASSERT(*SpinLock == 0 || 1);
    
   while ((i = InterlockedExchangeUL(SpinLock, 1)) == 1)
   {
@@ -199,7 +195,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 #endif
 #else
     DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
-    KEBUGCHECK(0);
+    KEBUGCHECKEX(SPIN_LOCK_ALREADY_OWNED, (ULONG)SpinLock, 0, 0, 0);
 #endif /* CONFIG_SMP */
   }
 }
@@ -227,7 +223,7 @@ KiReleaseSpinLock(PKSPIN_LOCK SpinLock)
   if (*SpinLock != 1)
   {
     DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-    KEBUGCHECK(0);
+    KEBUGCHECKEX(SPIN_LOCK_NOT_OWNED, (ULONG)SpinLock, 0, 0, 0);
   }
   (void)InterlockedExchangeUL(SpinLock, 0);
 }

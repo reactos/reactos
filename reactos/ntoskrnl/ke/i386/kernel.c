@@ -355,7 +355,7 @@ KeInit2(VOID)
 {
    PKPCR Pcr = KeGetCurrentKPCR();
 
-   KeInitializeBugCheck();
+   KiInitializeBugCheck();
    KeInitializeDispatcher();
    KiInitializeSystemClock();
 

@@ -260,19 +260,6 @@ ExRaiseHardError (
 /*
  * @unimplemented
  */
-BOOLEAN
-STDCALL
-KeDeregisterBugCheckReasonCallback(
-    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
-    )
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-/*
- * @unimplemented
- */
 ULONG
 STDCALL
 KeGetRecommendedSharedDataAlignment(
@@ -281,22 +268,6 @@ KeGetRecommendedSharedDataAlignment(
 {
 	UNIMPLEMENTED;
 	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-KeRegisterBugCheckReasonCallback(
-    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
-    IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
-    IN KBUGCHECK_CALLBACK_REASON Reason,
-    IN PUCHAR Component
-    )
-{
-	UNIMPLEMENTED;
-	return FALSE;
 }
 
 /* EOF */

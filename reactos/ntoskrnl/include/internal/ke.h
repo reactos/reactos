@@ -196,7 +196,7 @@ VOID KeInitDpc(struct _KPCR* Pcr);
 VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KiInitializeSystemClock(VOID);
-VOID KeInitializeBugCheck(VOID);
+VOID KiInitializeBugCheck(VOID);
 VOID Phase1Initialization(PVOID Context);
 
 VOID KeInit1(PCHAR CommandLine, PULONG LastKernelAddress);
