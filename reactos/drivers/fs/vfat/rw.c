@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.26 2001/08/04 11:02:47 hbirr Exp $
+/* $Id: rw.c,v 1.27 2001/08/04 11:10:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -369,7 +369,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   assert (FileObject != NULL);
   assert (FileObject->FsContext != NULL);
 
-  DPRINT1("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
+  DPRINT("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
 	 "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,
 	 Length, ReadOffset);
 
@@ -786,7 +786,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   NTSTATUS Status;
   BOOLEAN Extend;
 
-  DPRINT1 ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
+  DPRINT ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
 	   "WriteOffset %x\n", FileObject, Buffer, Length, WriteOffset);
 
   /* Locate the first cluster of the file */
