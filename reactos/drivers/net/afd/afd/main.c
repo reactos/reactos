@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: main.c,v 1.3 2004/07/29 04:09:06 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -51,6 +51,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PWCHAR EaInfoValue;
     UINT Disposition, i;
 
+    __asm("int3");
+
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
 
@@ -80,7 +82,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
-    FCB = ExAllocatePool(NonPagedPool, sizeof(PAFD_FCB));
+    FCB = ExAllocatePool(NonPagedPool, sizeof(AFD_FCB));
     if( FCB == NULL ) {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

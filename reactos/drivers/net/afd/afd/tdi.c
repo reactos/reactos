@@ -140,6 +140,7 @@ NTSTATUS TdiOpenDevice(
     } else {
         AFD_DbgPrint(MIN_TRACE, ("ZwCreateFile() failed with status (0x%X)\n", Status));
     }
+
     return Status;
 }
 
@@ -203,6 +204,7 @@ NTSTATUS TdiOpenAddressFile(
   Address = 
       (PTRANSPORT_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); /* 0-terminated */
   TaCopyTransportAddressInPlace( Address, Name );
+
   Status = TdiOpenDevice(DeviceName,
                          EaLength,
                          EaInfo,

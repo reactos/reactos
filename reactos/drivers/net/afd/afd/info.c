@@ -1,4 +1,4 @@
-/* $Id: info.c,v 1.3 2004/07/18 22:53:59 arty Exp $
+/* $Id: info.c,v 1.4 2004/07/29 04:09:06 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/info.c
@@ -11,6 +11,7 @@
 #include "tdi_proto.h"
 #include "tdiconn.h"
 #include "debug.h"
+#include "pseh.h"
 
 NTSTATUS STDCALL
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
@@ -22,29 +23,34 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq, 
 			    InfoReq ? InfoReq->InformationClass : 0));
-    
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
 
-    switch( InfoReq->InformationClass ) {
-    case AFD_INFO_RECEIVE_WINDOW_SIZE:
-	InfoReq->Information.Ulong = FCB->Recv.Size;
-	break;
-
-    case AFD_INFO_SEND_WINDOW_SIZE:
-	InfoReq->Information.Ulong = FCB->Send.Size;
-	AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
-	break;
-
-    case AFD_INFO_GROUP_ID_TYPE:
-	InfoReq->Information.Ulong = 0; /* What is group id */
-	break;
-
-    default:
-	AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n", 
-				InfoReq->InformationClass));
+    _SEH_TRY {
+	if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+	
+	switch( InfoReq->InformationClass ) {
+	case AFD_INFO_RECEIVE_WINDOW_SIZE:
+	    InfoReq->Information.Ulong = FCB->Recv.Size;
+	    break;
+	    
+	case AFD_INFO_SEND_WINDOW_SIZE:
+	    InfoReq->Information.Ulong = FCB->Send.Size;
+	    AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
+	    break;
+	    
+	case AFD_INFO_GROUP_ID_TYPE:
+	    InfoReq->Information.Ulong = 0; /* What is group id */
+	    break;
+	    
+	default:
+	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n", 
+				    InfoReq->InformationClass));
+	    Status = STATUS_INVALID_PARAMETER;
+	    break;
+	}
+    } _SEH_HANDLE {
+	AFD_DbgPrint(MID_TRACE,("Exception executing GetInfo\n"));
 	Status = STATUS_INVALID_PARAMETER;
-	break;
-    }
+    } _SEH_END;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
