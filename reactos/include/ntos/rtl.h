@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.28 2004/05/17 13:20:05 ekohl Exp $
+/* $Id: rtl.h,v 1.29 2004/05/31 19:51:47 gdalsnes Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -2196,6 +2196,100 @@ RtlxUnicodeStringToOemSize (
 	IN	PUNICODE_STRING	UnicodeString
 	);
 
+NTSTATUS
+FASTCALL
+RtlpOemStringToCountedUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN POEM_STRING OemSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS 
+FASTCALL
+RtlpUpcaseUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS 
+FASTCALL
+RtlpUpcaseUnicodeStringToAnsiString(
+   IN OUT PANSI_STRING AnsiDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS 
+FASTCALL
+RtlpUpcaseUnicodeStringToCountedOemString(
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS 
+FASTCALL
+RtlpUpcaseUnicodeStringToOemString (
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS 
+FASTCALL
+RtlpDowncaseUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS
+FASTCALL
+RtlpAnsiStringToUnicodeString(
+   IN OUT PUNICODE_STRING DestinationString,
+   IN PANSI_STRING SourceString,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);   
+   
+NTSTATUS
+FASTCALL
+RtlpUnicodeStringToAnsiString(
+   IN OUT PANSI_STRING AnsiDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+NTSTATUS
+FASTCALL
+RtlpOemStringToUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN POEM_STRING OemSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+
+NTSTATUS
+FASTCALL
+RtlpUnicodeStringToOemString(
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN  AllocateDestinationString,
+   IN POOL_TYPE PoolType);
+   
+BOOLEAN
+FASTCALL
+RtlpCreateUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PWSTR  Source,
+   IN POOL_TYPE PoolType);   
+
+NTSTATUS
+FASTCALL
+RtlpUnicodeStringToCountedOemString(
+   IN OUT POEM_STRING OemDest,
+   IN PUNICODE_STRING UniSource,
+   IN BOOLEAN AllocateDestinationString,
+   IN POOL_TYPE PoolType);
 
 /* Register io functions */
 
