@@ -17,6 +17,7 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -286,11 +287,20 @@ closesocket(
 
   CloseProviderHandle((HANDLE)s);
 
+  WS_DbgPrint(MAX_TRACE,("DereferenceProviderByHandle\n"));
+
   DereferenceProviderByPointer(Provider);
 
+  WS_DbgPrint(MAX_TRACE,("DereferenceProviderByHandle Done\n"));
+
   Status = Provider->ProcTable.lpWSPCloseSocket(s, &Errno);
+
+  WS_DbgPrint(MAX_TRACE,("Provider Close Done\n"));
+
   if (Status == SOCKET_ERROR)
     WSASetLastError(Errno);
+
+  WS_DbgPrint(MAX_TRACE,("Returning success\n"));
 
   return 0;
 }

@@ -317,6 +317,8 @@ WSPSend(
 	PVOID						APCFunction;
 	HANDLE						Event;
 
+	AFD_DbgPrint(MID_TRACE,("Called\n"));
+
     /* Set up the Send Structure */
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.BufferCount = dwBufferCount;
@@ -384,11 +386,14 @@ WSPSend(
 	}
 
 	if (Status == STATUS_PENDING) {
-        return WSA_IO_PENDING;
+	    AFD_DbgPrint(MID_TRACE,("Leaving (Pending)\n"));
+	    return WSA_IO_PENDING;
 	}
 
 	/* Return Number of bytes Sent */
-    *lpNumberOfBytesSent = (DWORD)IOSB->Information;
+	*lpNumberOfBytesSent = (DWORD)IOSB->Information;
+
+	AFD_DbgPrint(MID_TRACE,("Leaving (Success, %d)\n", IOSB->Information));
 
 	/* Success */
 	return STATUS_SUCCESS;

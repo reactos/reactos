@@ -9,6 +9,7 @@
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
  */
+#include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
 #include <helpers.h>
@@ -118,6 +119,10 @@ WSPSocket(
 	Socket->SharedData.GroupType = 0;
 	Socket->SharedData.UseSAN = FALSE;
 	Socket->SanData = NULL;
+
+	/* Ask alex about this */
+	if( Socket->SharedData.SocketType == SOCK_DGRAM )
+	    Socket->SharedData.ServiceFlags1 |= XP1_CONNECTIONLESS;
 
 	/* Packet Size */
 	SizeOfPacket = TransportName.Length + sizeof(AFD_CREATE_PACKET) + sizeof(WCHAR);

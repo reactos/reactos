@@ -25,6 +25,7 @@ recv(
   IN  INT len,
   IN  INT flags)
 {
+  DWORD Error;
   DWORD BytesReceived;
   WSABUF WSABuf;
 
@@ -34,9 +35,9 @@ recv(
   WSABuf.len = len;
   WSABuf.buf = (CHAR FAR*)buf;
 
-  WSARecv(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, NULL, NULL);
+  Error = WSARecv(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, NULL, NULL);
 
-  return BytesReceived;
+  if( Error ) return -1; else return BytesReceived;
 }
 
 
@@ -53,6 +54,7 @@ recvfrom(
   OUT     LPSOCKADDR from,
   IN OUT  INT FAR* fromlen)
 {
+  DWORD Error;
   DWORD BytesReceived;
   WSABUF WSABuf;
 
@@ -62,9 +64,9 @@ recvfrom(
   WSABuf.len = len;
   WSABuf.buf = (CHAR FAR*)buf;
 
-  WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
+  Error = WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
 
-  return BytesReceived;
+  if( Error ) return -1; else return BytesReceived;
 }
 
 
@@ -80,6 +82,7 @@ send(
   IN  INT flags)
 {
   DWORD BytesSent;
+  DWORD Error;
   WSABUF WSABuf;
 
   WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
@@ -88,7 +91,9 @@ send(
   WSABuf.len = len;
   WSABuf.buf = (CHAR FAR*)buf;
 
-  return WSASend(s, &WSABuf, 1, &BytesSent, flags, NULL, NULL);
+  Error = WSASend(s, &WSABuf, 1, &BytesSent, flags, NULL, NULL);
+
+  if( Error ) return -1; else return BytesSent;
 }
 
 
@@ -105,6 +110,7 @@ sendto(
   IN  CONST struct sockaddr *to, 
   IN  INT tolen)
 {
+  DWORD Error;
   DWORD BytesSent;
   WSABUF WSABuf;
 
@@ -114,7 +120,9 @@ sendto(
   WSABuf.len = len;
   WSABuf.buf = (CHAR FAR*)buf;
 
-  return WSASendTo(s, &WSABuf, 1, &BytesSent, flags, to, tolen, NULL, NULL);
+  Error = WSASendTo(s, &WSABuf, 1, &BytesSent, flags, to, tolen, NULL, NULL);
+
+  if( Error ) return -1; else return BytesSent;
 }
 
 
