@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.12 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: database.c,v 1.13 2004/04/11 16:09:11 jfilby Exp $
  *
  * service control manager
  * 
@@ -34,7 +34,7 @@
 
 #include "services.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 
@@ -461,6 +461,7 @@ ScmStartService(PSERVICE Service,
   DPRINT("ScmStartService() called\n");
 
   Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
+  DPRINT("Service->Type: %u\n", Service->Type);
 
   if (Service->Type == SERVICE_KERNEL_DRIVER ||
       Service->Type == SERVICE_FILE_SYSTEM_DRIVER ||
