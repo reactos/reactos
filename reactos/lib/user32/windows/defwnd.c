@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.118 2003/12/26 16:19:15 weiden Exp $
+/* $Id: defwnd.c,v 1.119 2003/12/28 00:41:31 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -961,15 +961,6 @@ User32DefWindowProc(HWND hWnd,
             return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));
         }
 
-        case WM_NCRBUTTONDOWN:
-        {
-            if (wParam == HTCAPTION)
-            {
-                SetCapture(hWnd);
-            }
-            break;
-        }
-
         case WM_WINDOWPOSCHANGING:
         {
             return (DefWndHandleWindowPosChanging(hWnd, (WINDOWPOS*)lParam));
@@ -1019,10 +1010,13 @@ User32DefWindowProc(HWND hWnd,
             {
                 LONG HitCode;
                 POINT Pt;
-
+                DWORD Style;
+                
+                Style = GetWindowLongW(hWnd, GWL_STYLE);
+                
                 Pt.x = SLOWORD(lParam);
                 Pt.y = SHIWORD(lParam);
-                if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
+                if (Style & WS_CHILD)
                 {
                     ScreenToClient(GetParent(hWnd), &Pt);
                 }
@@ -1031,9 +1025,21 @@ User32DefWindowProc(HWND hWnd,
 
                 if (HitCode == HTCAPTION || HitCode == HTSYSMENU)
                 {
-                    TrackPopupMenu(GetSystemMenu(hWnd, FALSE),
-                                   TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
-                                   Pt.x, Pt.y, 0, hWnd, NULL);
+                    HMENU SystemMenu;
+                    UINT DefItem = SC_CLOSE;
+                    
+                    if((SystemMenu = GetSystemMenu(hWnd, FALSE)))
+                    {
+                      if(HitCode == HTCAPTION)
+                        DefItem = ((Style & (WS_MAXIMIZE | WS_MINIMIZE)) ? 
+                                   SC_RESTORE : SC_MAXIMIZE);
+                      
+                      SetMenuDefaultItem(SystemMenu, DefItem, MF_BYCOMMAND);
+                      
+                      TrackPopupMenu(SystemMenu,
+                                     TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                     Pt.x, Pt.y, 0, hWnd, NULL);
+                    }
                 }
 	    }
             break;

@@ -867,12 +867,6 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         {
 	  if (GetWindowLongW(hWnd, GWL_STYLE) & WS_SYSMENU)
             {
-	      if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
-		{
-		  HDC hDC = GetWindowDC(hWnd);
-//		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
-		  ReleaseDC(hWnd, hDC);
-		}
 	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			   lParam);
 	    }
