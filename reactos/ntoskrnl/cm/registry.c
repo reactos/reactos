@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.127 2004/10/22 20:14:04 ekohl Exp $
+/* $Id: registry.c,v 1.128 2004/11/20 21:14:16 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -642,7 +642,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   NewKey->NumberOfSubKeys = 0;
   if (NewKey->KeyCell->NumberOfSubKeys != 0)
     {
-      NewKey->SubKeys = ExAllocatePool(PagedPool,
+      NewKey->SubKeys = ExAllocatePool(NonPagedPool,
 				       NewKey->KeyCell->NumberOfSubKeys * sizeof(ULONG));
       if (NewKey->SubKeys == NULL)
 	{
