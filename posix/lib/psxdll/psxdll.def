@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.5 2002/03/10 17:10:30 hyperion Exp $
+; $Id: psxdll.def,v 1.6 2002/03/11 20:49:09 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -38,13 +38,13 @@ __fdtable_entry_remove
 __fdtable_entry_get
 ;misc/heap
 ;for Microsoft POSIX and Interix compatibility
-GetProcessHeap
+GetProcessHeap@0
 HeapAlloc
 HeapFree
 HeapReAlloc
 HeapSize
 ;misc/init
-__PdxInitializeData
+__PdxInitializeData@8
 ;misc/path
 __PdxPosixPathGetNextComponent_A
 __PdxPosixPathGetNextComponent_U
@@ -54,7 +54,7 @@ __PdxPosixPathNameToNtPathName
 ;misc/safeobj
 __safeobj_validate
 ;misc/spawn
-__PdxSpawnPosixProcess
+__PdxSpawnPosixProcess@24
 
 ;pthread
 pthread_create
