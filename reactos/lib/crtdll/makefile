@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.53 2003/04/06 13:10:21 gvg Exp $
+# $Id: makefile,v 1.54 2003/04/24 22:21:13 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -161,7 +161,6 @@ MATH_OBJECTS = \
 	math/floor.o \
 	$(PATH_TO_MSVCRT)/math/fmod.o \
 	$(PATH_TO_MSVCRT)/math/frexp.o \
-	$(PATH_TO_MSVCRT)/math/ftol.o \
 	math/huge_val.o \
 	$(PATH_TO_MSVCRT)/math/hypot.o \
 	$(PATH_TO_MSVCRT)/math/j0_y0.o \

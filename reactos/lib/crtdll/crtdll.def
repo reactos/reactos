@@ -19,9 +19,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.14 $
-; $Author: ea $
-; $Date: 2000/12/22 23:20:15 $
+; $Revision: 1.15 $
+; $Author: gvg $
+; $Date: 2003/04/24 22:21:13 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -151,7 +151,7 @@ _fputwchar
 _fsopen
 _fstat
 _ftime
-_ftol
+_ftol=NTDLL._ftol
 _fullpath
 _futime
 _gcvt
