@@ -1,35 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.2 2001/08/23 16:13:40 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-PROGS = winhello
+TARGET_NORC = yes
 
-OBJECTS = 
-LIBS= ../../lib/kernel32/kernel32.a ../../lib/gdi32/gdi32.a
-CFLAGS = -I../../include
+TARGET_TYPE = program
 
-all: $(PROGS:%=%.exe)
+TARGET_APPTYPE = windows
 
-.phony: all
+TARGET_NAME = winhello
 
-clean:
-	- $(RM) *.o *.exe *.sym
+TARGET_SDKLIBS = kernel32.a gdi32.a
 
-.phony: clean
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+include $(TOOLS_PATH)/helper.mk
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
-
-winhello.exe: winhello.c
-	$(CC) $(CFLAGS) winhello.c $(LIBS) -o winhello.exe
-	$(NM) --numeric-sort winhello.exe > winhello.sym
-
-include ../../rules.mak
+# EOF
