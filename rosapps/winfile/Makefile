@@ -28,9 +28,9 @@ TARGET_SDKLIBS = \
 	gdi32.a \
 	advapi32.a \
 	version.a \
-	$(COMCTL32_TARGET).a \
-	$(COMDLG32_TARGET).a
-
+	comdlg32.a \
+	comctl32.a
+	
 TARGET_OBJECTS = \
 	about.o \
         childwnd.o \
