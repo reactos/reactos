@@ -1120,7 +1120,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
   PREGISTRY_HIVE Hive;
   NTSTATUS Status;
 
-  DPRINT1 ("CmiCreateTempHive() called\n");
+  DPRINT ("CmiCreateTempHive() called\n");
 
   *RegistryHive = NULL;
 
@@ -1147,7 +1147,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
   RtlZeroMemory (Hive->HiveHeader,
 		 REG_BLOCK_SIZE);
 
-  DPRINT1 ("HiveHeader %x\n", Hive->HiveHeader);
+  DPRINT ("HiveHeader %x\n", Hive->HiveHeader);
 
   Hive->Flags = HIVE_NO_FILE;
 
@@ -3814,7 +3814,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
   ULONG i;
   NTSTATUS Status;
 
-  DPRINT1 ("CmiCopyKey() called\n");
+  DPRINT ("CmiCopyKey() called\n");
 
   if (DstKeyCell == NULL)
     {
@@ -3826,10 +3826,12 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 				 &NewKeyCellOffset);
       if (!NT_SUCCESS(Status))
 	{
+	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	  return Status;
 	}
       if (NewKeyCell == NULL)
 	{
+	  DPRINT1 ("Failed to allocate a key cell\n");
 	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -3855,7 +3857,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 				     &NewClassNameOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
-CHECKPOINT1;
+	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	      return Status;
 	    }
 
@@ -3880,7 +3882,7 @@ CHECKPOINT1;
 					  NewHashTableSize);
       if (!NT_SUCCESS(Status))
 	{
-CHECKPOINT1;
+	  DPRINT1 ("CmiAllocateHashTableBlock() failed (Status %lx)\n", Status);
 	  return Status;
 	}
       NewKeyCell->HashTableOffset = NewHashTableOffset;
@@ -3909,7 +3911,7 @@ CHECKPOINT1;
 				 &NewKeyCell->ValuesOffset);
       if (!NT_SUCCESS(Status))
 	{
-CHECKPOINT1;
+	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	  return Status;
 	}
 
@@ -3930,7 +3932,7 @@ CHECKPOINT1;
 				     &ValueCellOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
-CHECKPOINT1;
+	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	      return Status;
 	    }
 
@@ -3950,7 +3952,7 @@ CHECKPOINT1;
 					 &ValueDataCellOffset);
 	      if (!NT_SUCCESS(Status))
 		{
-CHECKPOINT1;
+		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 		  return Status;
 		}
 	      RtlCopyMemory (NewValueDataCell,
@@ -3988,12 +3990,12 @@ CHECKPOINT1;
 				     &NewSubKeyCellOffset);
 	  if (!NT_SUCCESS(Status))
 	    {
-CHECKPOINT1;
+	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	      return Status;
 	    }
 	  if (NewKeyCell == NULL)
 	    {
-CHECKPOINT1;
+	      DPRINT1 ("Failed to allocate a sub key cell\n");
 	      return STATUS_INSUFFICIENT_RESOURCES;
 	    }
 
@@ -4022,7 +4024,7 @@ CHECKPOINT1;
 					 &NewClassNameOffset);
 	      if (!NT_SUCCESS(Status))
 		{
-CHECKPOINT1;
+		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 		  return Status;
 		}
 
@@ -4039,7 +4041,7 @@ CHECKPOINT1;
 			       SrcSubKeyCell);
 	  if (!NT_SUCCESS(Status))
 	    {
-CHECKPOINT1;
+	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
 	      return Status;
 	    }
 	}
