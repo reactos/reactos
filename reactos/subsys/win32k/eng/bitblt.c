@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.21 2003/06/28 08:39:18 gvg Exp $
+/* $Id: bitblt.c,v 1.22 2003/07/09 07:00:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,16 +67,19 @@ BOOL STDCALL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
   prcDst->right = min(prcSrc1->right, prcSrc2->right);
 
   if (prcDst->left < prcDst->right)
-  {
-    prcDst->top    = max(prcSrc1->top, prcSrc2->top);
-    prcDst->bottom = min(prcSrc1->bottom, prcSrc2->bottom);
+    {
+      prcDst->top    = max(prcSrc1->top, prcSrc2->top);
+      prcDst->bottom = min(prcSrc1->bottom, prcSrc2->bottom);
 
-    if (prcDst->top < prcDst->bottom) return(TRUE);
-  }
+      if (prcDst->top < prcDst->bottom)
+	{
+	  return TRUE;
+	}
+    }
 
   *prcDst = rclEmpty;
 
-  return(FALSE);
+  return FALSE;
 }
 
 static BOOLEAN STDCALL
@@ -208,13 +211,6 @@ EngBitBlt(SURFOBJ *DestObj,
   RECTL              ClipRect;
   unsigned           i;
 
-  /* Check for degenerate case: if height or width of DestRect is 0 pixels there's
-     nothing to do */
-  if (DestRect->right == DestRect->left || DestRect->bottom == DestRect->top)
-    {
-    return TRUE;
-    }
-
   if (NULL != SourcePoint)
     {
     InputRect.left = SourcePoint->x;
@@ -252,6 +248,39 @@ EngBitBlt(SURFOBJ *DestObj,
     }
 
   OutputRect = *DestRect;
+  if (NULL != ClipRegion)
+    {
+      if (OutputRect.left < ClipRegion->rclBounds.left)
+	{
+	  InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
+	  InputPoint.x += ClipRegion->rclBounds.left - OutputRect.left;
+	  OutputRect.left = ClipRegion->rclBounds.left;
+	}
+      if (ClipRegion->rclBounds.right < OutputRect.right)
+	{
+	  InputRect.right -=  OutputRect.right - ClipRegion->rclBounds.right;
+	  OutputRect.right = ClipRegion->rclBounds.right;
+	}
+      if (OutputRect.top < ClipRegion->rclBounds.top)
+	{
+	  InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
+	  InputPoint.y += ClipRegion->rclBounds.top - OutputRect.top;
+	  OutputRect.top = ClipRegion->rclBounds.top;
+	}
+      if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
+	{
+	  InputRect.bottom -=  OutputRect.bottom - ClipRegion->rclBounds.bottom;
+	  OutputRect.bottom = ClipRegion->rclBounds.bottom;
+	}
+    }
+
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
+     nothing to do */
+  if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return TRUE;
+    }
 
   if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
     {
@@ -263,7 +292,6 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.right = DestRect->right + Translate.x;
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
-
 
   if (NULL != OutputObj)
     {
@@ -300,7 +328,6 @@ EngBitBlt(SURFOBJ *DestObj,
     }
 
 
-  // We don't handle color translation just yet [we dont have to.. REMOVE REMOVE REMOVE]
   switch(clippingType)
   {
     case DC_TRIVIAL:
@@ -363,31 +390,58 @@ IntEngBitBlt(SURFOBJ *DestObj,
   BOOLEAN ret;
   SURFGDI *DestGDI;
   SURFGDI *SourceGDI;
+  RECTL OutputRect;
+  POINTL InputPoint;
+
+  if (NULL != SourcePoint)
+    {
+      InputPoint = *SourcePoint;
+    }
+
+  /* Clip against the bounds of the clipping region so we won't try to write
+   * outside the surface */
+  if (NULL != ClipRegion)
+    {
+      if (! EngIntersectRect(&OutputRect, DestRect, &ClipRegion->rclBounds))
+	{
+	  return TRUE;
+	}
+      InputPoint.x += OutputRect.left - DestRect->left;
+      InputPoint.y += OutputRect.top - DestRect->top;
+    }
+  else
+    {
+      OutputRect = *DestRect;
+    }
 
   if (NULL != SourceObj)
     {
     SourceGDI = (PSURFGDI) AccessInternalObjectFromUserObject(SourceObj);
-    MouseSafetyOnDrawStart(SourceObj, SourceGDI, SourcePoint->x, SourcePoint->y,
-                           (SourcePoint->x + abs(DestRect->right - DestRect->left)),
-			   (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+    MouseSafetyOnDrawStart(SourceObj, SourceGDI, InputPoint.x, InputPoint.y,
+                           (InputPoint.x + abs(DestRect->right - DestRect->left)),
+			   (InputPoint.y + abs(DestRect->bottom - DestRect->top)));
     }
 
   /* No success yet */
   ret = FALSE;
   DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  MouseSafetyOnDrawStart(DestObj, DestGDI, DestRect->left, DestRect->top,
-                         DestRect->right, DestRect->bottom);
+  MouseSafetyOnDrawStart(DestObj, DestGDI, OutputRect.left, OutputRect.top,
+                         OutputRect.right, OutputRect.bottom);
 
   /* Call the driver's DrvBitBlt if available */
-  if (NULL != DestGDI->BitBlt) {
-    ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-                          DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, Rop4);
-  }
+  if (NULL != DestGDI->BitBlt)
+    {
+      ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                            &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
+                            Rop4);
+    }
 
-  if (! ret) {
-    ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-                    DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, Rop4);
-  }
+  if (! ret)
+    {
+      ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                      &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
+                      Rop4);
+    }
 
   MouseSafetyOnDrawEnd(DestObj, DestGDI);
   if (NULL != SourceObj)
