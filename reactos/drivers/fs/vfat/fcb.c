@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.23 2002/12/15 17:01:51 chorns Exp $
+/* $Id: fcb.c,v 1.24 2003/01/02 16:03:56 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -590,6 +590,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
 
   currentElement = wcsrchr(pFileName, L'\\');
   wcsncpy(pathName, pFileName, currentElement - pFileName);
+  pathName[currentElement - pFileName] = L'\0';
   currentElement++;
 
   FCB = vfatGrabFCBFromTable(pVCB, pathName);
