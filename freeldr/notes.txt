@@ -1,7 +1,5 @@
 FreeLoader notes
 
-To build FreeLoader you will need DJGPP because Mingw32 doesn't support 16-bit code
-
 Memory layout:
 
 0000:0000 - 0000:0FFF: Interrupt vector table & BIOS data
