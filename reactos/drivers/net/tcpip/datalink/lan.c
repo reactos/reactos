@@ -672,9 +672,6 @@ VOID LANTransmit(
 	LanChainCompletion( Adapter, NdisPacket );
 	TI_DbgPrint(MID_TRACE, ("NdisSend Done\n"));
 	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
-
-        if (NdisStatus != NDIS_STATUS_PENDING)
-            ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
     } else {
         ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NDIS_STATUS_CLOSED);
     }
