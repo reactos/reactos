@@ -197,7 +197,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	 */
 	if (cs != KERNEL_CS)
 	  {
-	     printk("%s:%d\n",__FILE__,__LINE__);
+	     DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	     return(0);
 	  }
 	FaultMode = UserMode;
@@ -210,7 +210,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
    MemoryArea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),(PVOID)cr2);
    if (MemoryArea == NULL)
      {
-	printk("%s:%d\n",__FILE__,__LINE__);
+	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	return(0);
      }
    

@@ -39,12 +39,6 @@ extern descriptor gdt[256];
 /*
  * printf style functions
  */
-void __putchar(char c);
-void __goxy(unsigned x, unsigned y);
-unsigned __wherex (void);
-unsigned __wherey (void);
-void __getscreensize (unsigned *maxx, unsigned *maxy);
-asmlinkage void printk(const char* fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
 int sprintf(char* buf, const char* fmt, ...);
 
@@ -93,7 +87,5 @@ VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID HalInitConsole(boot_param* bp);
 VOID CmInitializeRegistry(VOID);
-
-extern WCHAR wtolower(WCHAR ch);
 
 #endif

@@ -391,7 +391,7 @@ ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 	
       default:
 	ret = -1;
-	printk("(%s:%d) Don't know that bus type\n",__FILE__,__LINE__);
+	DbgPrint("(%s:%d) Don't know that bus type\n",__FILE__,__LINE__);
 	break;
      }
    return(ret);

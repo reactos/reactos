@@ -83,7 +83,7 @@ BOOL static checksum(bios32* service_entry)
      {
 	sum=sum+p[i];
      }
-//   printk("sum = %d\n",sum);
+//   DbgPrint("sum = %d\n",sum);
    if (sum==0)
      {
 	return(TRUE);
@@ -131,7 +131,7 @@ VOID Hal_bios32_probe()
 	  {
 	     continue;
 	  }
-//        printk("Signature detected at %x\n",i);
+//        DbgPrint("Signature detected at %x\n",i);
 	if (!checksum(service_entry))
 	  {
 	     continue;

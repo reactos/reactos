@@ -113,6 +113,9 @@ static unsigned int in_hal_console = 1;
 /* FUNCTIONS ***************************************************************/
 
 
+void __putchar(char c);
+
+
 void HalSwitchToBlueScreen(void)
 /*
  * FUNCTION: Switches the monitor to text mode and writes a blue background
@@ -164,11 +167,18 @@ void HalDisplayString(char* string)
  * mode
  */
 {
+   char* str=string;
+
    if (!in_hal_console)
      {
 	HalSwitchToBlueScreen();
      }
-   printk("%s",string);
+
+   while ((*str)!=0)
+     {
+	__putchar(*str);
+	str++;
+     }
 }
 
 void __putchar(char c)
@@ -219,24 +229,7 @@ void __putchar(char c)
 	     cursorx = 0;
 	  }
      }
-   
-   #if 0
-   if (lines_seen == 24)
-   {
-        char str[] = "--- press escape to continue";
-
-        lines_seen = 0;
-        for (i = 0; str[i] != 0; i++)
-        {
-                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2] = str[i];
-                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2+1] = CharAttribute;
-        }
-
-        while (inb_p(0x60)!=0x81);
-        memset(&vidmem[NR_COLUMNS*(NR_ROWS-1)*2],0,NR_COLUMNS*2);
-   }
-   #endif
-   
+  
   if (cursory >= NR_ROWS)
     {
       unsigned short *LinePtr;
@@ -265,55 +258,10 @@ void __putchar(char c)
    outb_p(CRTC_DATA, offset);
 }
 
-asmlinkage void printk(const char* fmt, ...)
-/*
- * FUNCTION: Print a formatted string to the hal console
- * ARGUMENTS: As for printf
- * NOTE: So it can used from irq handlers this function disables interrupts
- * during its execution, they are restored to the previous state on return
- */
-{
-   char buffer[256];
-   char* str=buffer;
-   va_list ap;
-   unsigned int eflags;
-
-   /*
-    * Because this is used by alomost every subsystem including irqs it
-    * must be atomic. The following code sequence disables interrupts after
-    * saving the previous state of the interrupt flag
-    */
-   __asm__("pushf\n\tpop %0\n\tcli\n\t"
-	   : "=m" (eflags)
-	   : /* */);
-
-   /*
-    * Process the format string into a fixed length buffer using the
-    * standard C RTL function
-    */
-   va_start(ap,fmt);
-   vsprintf(buffer,fmt,ap);
-   va_end(ap);
-   
-   while ((*str)!=0)
-     {
-	__putchar(*str);
-	str++;
-     }
-   
-   /*
-    * Restore the interrupt flag
-    */
-   __asm__("push %0\n\tpopf\n\t"
-	   :
-	   : "m" (eflags));
-}
-
 
 ULONG DbgPrint(PCH Format, ...)
 {
    char buffer[256];
-   char* str=buffer;
    va_list ap;
    unsigned int eflags;
 
@@ -333,13 +281,9 @@ ULONG DbgPrint(PCH Format, ...)
    va_start(ap,Format);
    vsprintf(buffer,Format,ap);
    va_end(ap);
-   
-   while ((*str)!=0)
-     {
-	__putchar(*str);
-	str++;
-     }
-   
+
+   HalDisplayString (buffer);
+
    /*
     * Restore the interrupt flag
     */

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.23 1999/10/07 23:36:00 ekohl Exp $
+/* $Id: main.c,v 1.24 1999/10/14 16:53:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,7 +57,7 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
    
    if (i>3)
      {
-	printk("Invalid breakpoint index at %s:%d\n",__FILE__,__LINE__);
+	DbgPrint("Invalid breakpoint index at %s:%d\n",__FILE__,__LINE__);
 	return;
      }
    
@@ -210,7 +210,7 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Enter idle loop
     */
-   printk("Finished main()\n");
+   DbgPrint("Finished main()\n");
    PsTerminateSystemThread(STATUS_SUCCESS);
 }
 

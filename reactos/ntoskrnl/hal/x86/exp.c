@@ -244,7 +244,7 @@ asmlinkage void exception_handler(unsigned int edi,
       DbgPrint("ESP %x\n",esp);
       stack = (unsigned int *) (esp + 24);
 	
-      printk("Stack:\n");
+      DbgPrint("Stack:\n");
       for (i = 0; i < 16; i = i + 4)
         {
           DbgPrint("%.8x %.8x %.8x %.8x\n", 
@@ -253,7 +253,7 @@ asmlinkage void exception_handler(unsigned int edi,
                    stack[i+2], 
                    stack[i+3]);
         }
-      printk("Frames:\n");
+      DbgPrint("Frames:\n");
       for (i = 0; i < 32; i++)
         {
           if (stack[i] > ((unsigned int) &stext))

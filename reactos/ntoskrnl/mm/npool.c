@@ -161,22 +161,22 @@ static void validate_free_list(void)
 	    (base_addr+current->size) >
 	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {		       
-	     printk("Block %x found outside pool area\n",current);
-	     printk("Size %d\n",current->size);
-	     printk("Limits are %x %x\n",kernel_pool_base,
+	     DbgPrint("Block %x found outside pool area\n",current);
+	     DbgPrint("Size %d\n",current->size);
+	     DbgPrint("Limits are %x %x\n",kernel_pool_base,
 		    kernel_pool_base+NONPAGED_POOL_SIZE);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	blocks_seen++;
 	if (blocks_seen > nr_free_blocks)
 	  {
-	     printk("Too many blocks on list\n");
+	     DbgPrint("Too many blocks on list\n");
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 //                verify_for_write(base_addr,current->size);                
 	if (current->next!=NULL&&current->next->previous!=current)
 	  {
-	     printk("%s:%d:Break in list (current %x next %x "
+	     DbgPrint("%s:%d:Break in list (current %x next %x "
 		    "current->next->previous %x)\n",
 		    __FILE__,__LINE__,current,current->next,
 		    current->next->previous);
@@ -208,19 +208,19 @@ static void validate_used_list(void)
 	    (base_addr+current->size) >
 	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {
-	     printk("Block %x found outside pool area\n",current);
+	     DbgPrint("Block %x found outside pool area\n",current);
 	     for(;;);
 	  }
 	blocks_seen++;
 	if (blocks_seen > EiNrUsedBlocks)
 	  {
-	     printk("Too many blocks on list\n");
+	     DbgPrint("Too many blocks on list\n");
 	     for(;;);
 	  }
 	//                verify_for_write(base_addr,current->size);
 	if (current->next!=NULL&&current->next->previous!=current)
 	  {
-	     printk("Break in list (current %x next %x)\n",
+	     DbgPrint("Break in list (current %x next %x)\n",
 		    current,current->next);
 	     for(;;);
 	  }
@@ -251,14 +251,14 @@ static void check_duplicates(block_hdr* blk)
 
 	if ( (int)current > base && (int)current < last ) 
 	  {
-	     printk("intersecting blocks on list\n");
+	     DbgPrint("intersecting blocks on list\n");
 	     for(;;);
 	  }
 	if  ( (int)current < base &&
 	     ((int)current + current->size + sizeof(block_hdr))
 	     > base )
 	  {
-	     printk("intersecting blocks on list\n");
+	     DbgPrint("intersecting blocks on list\n");
 	     for(;;);
 	  }
 	current=current->next;
@@ -268,14 +268,14 @@ static void check_duplicates(block_hdr* blk)
      {
 	if ( (int)current > base && (int)current < last ) 
 	  {
-	     printk("intersecting blocks on list\n");
+	     DbgPrint("intersecting blocks on list\n");
 	     for(;;);
 	  }
 	if  ( (int)current < base &&
 	     ((int)current + current->size + sizeof(block_hdr))
 	     > base )
 	  {
-	     printk("intersecting blocks on list\n");
+	     DbgPrint("intersecting blocks on list\n");
 	     for(;;);
 	  }
 	current=current->next;
@@ -454,7 +454,7 @@ static unsigned int alloc_pool_region(unsigned int nr_pages)
 	     length=0;
 	  }
      }
-   printk("CRITICAL: Out of non-paged pool space\n");
+   DbgPrint("CRITICAL: Out of non-paged pool space\n");
    for(;;);
    return(0);
 }
