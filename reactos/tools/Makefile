@@ -21,7 +21,8 @@ LIBS = lib_unicode lib_wpp
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) $(LIBS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target buildno_target
+	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target widl_target \
+	buildno_target
 
 regtests$(EXE_POSTFIX): regtests.c
 	@$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
@@ -130,6 +131,9 @@ bin2res_target:
 wrc_target: $(LIBS)
 	$(MAKE) --silent -C wrc wrc$(EXE_POSTFIX)
 
+widl_target: lib_wpp
+	$(MAKE) --silent -C widl widl$(EXE_POSTFIX)
+
 buildno_target:
 	$(MAKE) --silent -C buildno buildno$(EXE_POSTFIX)
 
@@ -140,12 +144,13 @@ lib_wpp:
 	$(MAKE) -C wpp
 
 .PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target \
-        buildno_target lib_unicode lib_wpp
+        widl_target buildno_target lib_unicode lib_wpp
 
 
 ifeq ($(HOST),mingw32-linux)
 clean:
 	$(MAKE) --silent -C buildno clean
+	$(MAKE) --silent -C widl clean
 	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
@@ -164,6 +169,7 @@ endif
 ifeq ($(HOST),mingw32-windows)
 clean:
 	$(MAKE) --silent -C buildno clean
+	$(MAKE) --silent -C widl clean
 	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
