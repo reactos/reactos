@@ -158,82 +158,108 @@ CreateMutexW(
 
 DWORD 
 STDCALL
-WaitForSingleObject(
-    HANDLE  hHandle,
-    DWORD  dwMilliseconds 	
-   )
+WaitForSingleObject(HANDLE  hHandle,
+                    DWORD  dwMilliseconds)
 {
-	return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE);	
+   return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE); 
 }
 
-DWORD STDCALL WaitForSingleObjectEx(HANDLE  hHandle,	
-				    DWORD  dwMilliseconds,	
-				    BOOL  bAlertable)
+
+DWORD
+STDCALL
+WaitForSingleObjectEx(HANDLE hHandle,
+                      DWORD  dwMilliseconds, 
+                      BOOL   bAlertable)
 {
-   
    NTSTATUS  errCode;
    PLARGE_INTEGER TimePtr;
    LARGE_INTEGER Time;
    DWORD retCode;
-   
+
    if (dwMilliseconds == INFINITE)
      {
 	TimePtr = NULL;
      }
    else
      {
-        Time.u.LowPart = dwMilliseconds;
-        Time.u.HighPart = 0;
+        Time.QuadPart = -10000 * dwMilliseconds;
 	TimePtr = &Time;
      }
 
    errCode = NtWaitForSingleObject(hHandle,
 				   (BOOLEAN) bAlertable,
 				   TimePtr);
-   
+   if (errCode == STATUS_TIMEOUT)
+     {
+         return WAIT_TIMEOUT;
+     }
+   else if (errCode == WAIT_OBJECT_0)
+     {
+        return WAIT_OBJECT_0;
+     }
+
    retCode = RtlNtStatusToDosError(errCode);
    SetLastError(retCode);
-   return retCode;
+
+   return 0xFFFFFFFF;
 }
+
 
 DWORD 
 STDCALL
-WaitForMultipleObjects(
-    DWORD  nCount,
-    CONST HANDLE *  lpHandles,	
-    BOOL  bWaitAll,	
-    DWORD  dwMilliseconds 	
-   )
+WaitForMultipleObjects(DWORD nCount,
+                       CONST HANDLE *lpHandles,
+                       BOOL  bWaitAll,
+                       DWORD dwMilliseconds)
 {
-	return WaitForMultipleObjectsEx(nCount,lpHandles,bWaitAll,dwMilliseconds,FALSE);
+   return WaitForMultipleObjectsEx(nCount,lpHandles,bWaitAll,dwMilliseconds,FALSE);
 }
+
 
 DWORD 
 STDCALL
-WaitForMultipleObjectsEx(
-    DWORD  nCount,	
-    CONST HANDLE *  lpHandles,	
-    BOOL  bWaitAll,	
-    DWORD  dwMilliseconds,	
-    BOOL  bAlertable 	
-   )
+WaitForMultipleObjectsEx(DWORD nCount,
+                         CONST HANDLE *lpHandles,
+                         BOOL  bWaitAll,
+                         DWORD dwMilliseconds,
+                         BOOL  bAlertable)
 {
-	NTSTATUS  errCode;
-	LARGE_INTEGER Time;
-	DWORD retCode;
+   NTSTATUS  errCode;
+   LARGE_INTEGER Time;
+   PLARGE_INTEGER TimePtr;
+   DWORD retCode;
 
-        Time.u.LowPart = dwMilliseconds;
-        Time.u.HighPart = 0;
+   if (dwMilliseconds == INFINITE)
+     {
+        TimePtr = NULL;
+     }
+   else
+     {
+        Time.QuadPart = -10000 * dwMilliseconds;
+        TimePtr = &Time;
+     }
 	
-	errCode = NtWaitForMultipleObjects (
-	nCount,
-	(PHANDLE)lpHandles,
-	(CINT)bWaitAll,
-	(BOOLEAN)bAlertable,
-	&Time 
-	);
+   errCode = NtWaitForMultipleObjects (nCount,
+                                       (PHANDLE)lpHandles,
+                                       (CINT)bWaitAll,
+                                       (BOOLEAN)bAlertable,
+                                       TimePtr);
 
-	retCode = RtlNtStatusToDosError(errCode);
-	SetLastError(retCode);
-	return retCode;
+   if (errCode == STATUS_TIMEOUT)
+     {
+         return WAIT_TIMEOUT;
+     }
+   else if ((errCode >= WAIT_OBJECT_0) &&
+            (errCode <= WAIT_OBJECT_0 + nCount - 1))
+     {
+        return errCode;
+     }
+
+   retCode = RtlNtStatusToDosError(errCode);
+   SetLastError(retCode);
+
+   return 0xFFFFFFFF;
 }
+
+/* EOF */
+
