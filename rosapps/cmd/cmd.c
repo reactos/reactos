@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.17 1999/12/15 00:50:41 ekohl Exp $
+/* $Id: cmd.c,v 1.18 1999/12/28 23:06:21 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -110,6 +110,9 @@
  *
  *    15-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed current directory
+ *
+ *    28-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Restore window title after program/batch execution
  */
 
 #include "config.h"
@@ -167,6 +170,9 @@ static VOID
 Execute (LPTSTR first, LPTSTR rest)
 {
 	TCHAR szFullName[MAX_PATH];
+#ifndef __REACTOS__
+	TCHAR szWindowTitle[MAX_PATH];
+#endif
 	DWORD dwExitCode = 0;
 
 #ifdef _DEBUG
@@ -222,6 +228,10 @@ Execute (LPTSTR first, LPTSTR rest)
 		error_bad_command ();
 		return;
 	}
+
+#ifndef __REACTOS__
+	GetConsoleTitle (szWindowTitle, MAX_PATH);
+#endif
 
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
@@ -301,6 +311,10 @@ Execute (LPTSTR first, LPTSTR rest)
 			              "Error executing CreateProcess()!!\n");
 		}
 	}
+
+#ifndef __REACTOS__
+	SetConsoleTitle (szWindowTitle);
+#endif
 }
 
 

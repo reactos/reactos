@@ -344,8 +344,8 @@ o Added CHCP command.
 o Fixed keyboard input bug.
 o Rewrote DEL and MOVE commands.
 
-01-Sep-1999 ReactOS CMD version 0.1 pre 7 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+28-Dec-1999 ReactOS CMD version 0.1 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Cleaned up DIR command.
 o Searching for executables in the right order.
 o Fixed some little but nasty bugs.
@@ -355,4 +355,5 @@ o Added CHOICE, TIMER, FREE and MEMORY commands.
 o Added MSGBOX command (not available under ReactOS).
 o Added and fixed missing help texts.
 o Fixed bugs in MD and RD that crashed cmd when no directory was specified.
-
+o Improved history support.
+o Improved COLOR command.

@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.17 1999/12/15 00:50:41 ekohl Exp $
+/* $Id: cmd.h,v 1.18 1999/12/28 23:06:35 ekohl Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -113,7 +113,6 @@ INT cmd_cls (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CMD.C */
-//void command(char *);
 VOID ParseCommandLine (LPTSTR);
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
@@ -139,7 +138,6 @@ extern COMMAND cmds[];		/* The internal command table */
 
 /* Prototypes for COLOR.C */
 VOID SetScreenColor(WORD wArgColor, BOOL bFill);
-//VOID SetScreenColor (WORD);
 INT CommandColor (LPTSTR, LPTSTR);
 
 
@@ -153,9 +151,7 @@ VOID ConInDisable (VOID);
 VOID ConInEnable (VOID);
 VOID ConInFlush (VOID);
 VOID ConInKey (PINPUT_RECORD);
-
 VOID ConInString (LPTSTR, DWORD);
-
 
 VOID ConOutChar (TCHAR);
 VOID ConOutPuts (LPTSTR);

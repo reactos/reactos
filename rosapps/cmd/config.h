@@ -9,8 +9,8 @@
  *
  */
 
-/* undefine only if used under ReactOS */
-//#define __REACTOS__
+/* Define only if used under ReactOS */
+#define __REACTOS__
 
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
@@ -102,18 +102,5 @@
 #ifndef __REACTOS__
 #define INCLUDE_CMD_WINDOW
 #endif
-
-/*
-commands that do not have a define:
-
-exit
-call
-echo
-goto
-for
-if
-shift
-
-*/
 
 #endif /* _CONFIG_H_INCLUDED_ */
