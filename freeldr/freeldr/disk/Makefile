@@ -19,7 +19,7 @@
 	
 include ../rules.mk
 
-OBJS = disk.o geometry.o
+OBJS = disk.o geometry.o partition.o
 
 .PHONY : clean
 
@@ -33,6 +33,9 @@ disk.o:	disk.c ../disk.h
 
 geometry.o:	geometry.c ../disk.h
 	$(CC) $(FLAGS) -o geometry.o -c geometry.c
+
+partition.o:	partition.c ../disk.h
+	$(CC) $(FLAGS) -o partition.o -c partition.c
 
 clean:
 	- $(RM) *.o

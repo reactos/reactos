@@ -50,7 +50,7 @@ VOID DiskError(PUCHAR ErrorString)
 	}
 }
 
-BOOL DiskReadMultipleLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+BOOL DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	ULONG		PhysicalSector;
 	ULONG		PhysicalHead;
@@ -146,79 +146,6 @@ BOOL DiskReadMultipleLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG
 			Buffer += (NumberOfSectorsToRead * DriveGeometry.BytesPerSector);
 			SectorCount -= NumberOfSectorsToRead;
 			SectorNumber += NumberOfSectorsToRead;
-		}
-	}
-
-	return TRUE;
-}
-
-BOOL DiskReadLogicalSector(ULONG DriveNumber, ULONG SectorNumber, PVOID Buffer)
-{
-	ULONG		PhysicalSector;
-	ULONG		PhysicalHead;
-	ULONG		PhysicalTrack;
-	GEOMETRY	DriveGeometry;
-
-	DbgPrint((DPRINT_DISK, "ReadLogicalSector() DriveNumber: 0x%x SectorNumber: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, Buffer));
-
-	//
-	// Check to see if it is a fixed disk drive
-	// If so then check to see if Int13 extensions work
-	// If they do then use them, otherwise default back to BIOS calls
-	//
-	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
-	{
-		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", DriveNumber, BiosInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
-
-		//
-		// LBA is easy, nothing to calculate
-		// Just do the read
-		//
-		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, 1, Buffer))
-		{
-			DiskError("Disk read error.");
-			return FALSE;
-		}
-	}
-	else
-	{
-		//
-		// Get the drive geometry
-		//
-		if (!DiskGetDriveGeometry(DriveNumber, &DriveGeometry))
-		{
-			return FALSE;
-		}
-
-		//
-		// Calculate the physical disk offsets
-		//
-		PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
-		PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
-		PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
-
-		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalHead: %d\n", PhysicalHead));
-		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalTrack: %d\n", PhysicalTrack));
-		DbgPrint((DPRINT_DISK, "Calling BiosInt13Read() with PhysicalSector: %d\n", PhysicalSector));
-
-		//
-		// Make sure the read is within the geometry boundaries
-		//
-		if ((PhysicalHead >= DriveGeometry.Heads) ||
-			(PhysicalTrack >= DriveGeometry.Cylinders) ||
-			(PhysicalSector > DriveGeometry.Sectors))
-		{
-			DiskError("Disk read exceeds drive geometry limits.");
-			return FALSE;
-		}
-
-		//
-		// Perform the read
-		//
-		if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, Buffer))
-		{
-			DiskError("Disk read error.");
-			return FALSE;
 		}
 	}
 

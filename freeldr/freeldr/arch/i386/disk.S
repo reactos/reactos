@@ -385,8 +385,8 @@ EXTERN(_get_heads)
 	int		$0x13
 	jc		_get_heads_error
 
-	incb	%dh
 	movzbl	%dh,%edx
+	incl	%edx
 	movl	%edx,_biosdisk_retval
 	jmp		_get_heads_done
 
@@ -511,5 +511,95 @@ _get_sectors_done:
 
 	ret
 
+
+/*
+ * BOOL BiosInt13GetDriveParameters(ULONG Drive, PGEOMETRY Geometry);
+ */
+_bios_int13_cylinders:
+	.long	0
+_bios_int13_heads:
+	.long	0
+_bios_int13_sectors:
+	.long	0
+_bios_int13_bytes_per_sector:
+	.long	0
+_bios_int13_drive_parameters_struct_address:
+	.long	0
+EXTERN(_BiosInt13GetDriveParameters)
+	.code32
+
+	push	%ebx
+	push	%ecx
+	push	%edx
+	push	%edi
+	push	%esi
+	push	%es
+
+	/* Get drive */
+	movl	0x1c(%esp),%eax
+	movl	%eax,_biosdisk_drive
+	movl	0x20(%esp),%eax
+	movl	%eax,_bios_int13_drive_parameters_struct_address
+
+	call	switch_to_real
+
+	.code16
+
+	movb	$0x08,%ah
+	movb	_biosdisk_drive,%dl
+	int		$0x13
+	jc		_BiosInt13GetDriveParameters_Error
+
+	// Get the heads
+	movzbl	%dh,%eax
+	incl	%eax
+	movl	%eax,_bios_int13_heads
+
+	// Get the sectors
+	movw	%cx,%dx
+	andb	$0x3f,%dl
+	movzbl	%dl,%edx
+	movl	%edx,_bios_int13_sectors
+
+	// Get the cylinders
+	xorl	%edx,%edx
+	andb	$0xc0,%cl
+	shrb	$0x06,%cl
+	movb	%cl,%dh
+	movb	%ch,%dl
+	incl	%edx
+	movl	%edx,_bios_int13_cylinders
+
+	// Get the bytes per sector
+	movl	$512,_bios_int13_bytes_per_sector		// Just assume 512 bytes per sector
+	movl	$0x01,_biosdisk_retval
+	jmp		_BiosInt13GetDriveParameters_Done
+
+_BiosInt13GetDriveParameters_Error:
+	movl	$0x00,_biosdisk_retval
+
+_BiosInt13GetDriveParameters_Done:
+
+	call	switch_to_prot
+
+	.code32
+
+	// Copy drive parameters to structure
+	movl	$_bios_int13_cylinders,%esi
+	movl	_bios_int13_drive_parameters_struct_address,%edi
+	movl	$0x04,%ecx
+	cld
+	rep movsl
+
+	movl	_biosdisk_retval,%eax	// Get return value
+
+	pop		%es
+	pop		%esi
+	pop		%edi
+	pop		%edx
+	pop		%ecx
+	pop		%ebx
+
+	ret
 
 

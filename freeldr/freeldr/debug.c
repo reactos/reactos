@@ -39,11 +39,12 @@ ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
 
 #define BOCHS_OUTPUT_PORT	0xe9
 
-//ULONG	DebugPort = RS232;
+ULONG	DebugPort = RS232;
 //ULONG	DebugPort = SCREEN;
-ULONG	DebugPort = BOCHS;
+//ULONG	DebugPort = BOCHS;
 ULONG	ComPort = COM1;
-ULONG	BaudRate = 19200;
+//ULONG	BaudRate = 19200;
+ULONG	BaudRate = 115200;
 
 BOOL	DebugStartOfLine = TRUE;
 

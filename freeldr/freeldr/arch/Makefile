@@ -21,11 +21,13 @@ include ../rules.mk
 
 TARGET = i386
 
+OBJS = $(TARGET)/arch.S $(TARGET)/boot.S $(TARGET)/mb.S $(TARGET)/mem.S $(TARGET)/disk.S
+
 .PHONY : clean
 
 all: arch.a
 
-arch.a:
+arch.a: $(OBJS)
 	$(MAKE) -C $(TARGET)
 
 clean:

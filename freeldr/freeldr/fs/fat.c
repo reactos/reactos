@@ -43,9 +43,6 @@ ULONG				FatDriveNumber = 0;
 
 BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
-	ULONG	PhysicalTrack;
-	ULONG	PhysicalHead;
-	ULONG	PhysicalSector;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
 
@@ -80,26 +77,9 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 
 	// Now try to read the boot sector
 	// If this fails then abort
-	if (BiosInt13ExtensionsSupported(DriveNumber))
+	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, FatVolumeBootSector))
 	{
-		if (!BiosInt13ReadExtended(DriveNumber, VolumeStartSector, 1, FatVolumeBootSector))
-		{
-			FileSystemError("Disk read error.");
-			return FALSE;
-		}
-	}
-	else
-	{
-		// Calculate the physical disk offsets
-		PhysicalSector = 1 + (VolumeStartSector % get_sectors(DriveNumber));
-		PhysicalHead = (VolumeStartSector / get_sectors(DriveNumber)) % get_heads(DriveNumber);
-		PhysicalTrack = (VolumeStartSector / get_sectors(DriveNumber)) / get_heads(DriveNumber);
-
-		if (!BiosInt13Read(DriveNumber, PhysicalHead, PhysicalTrack, PhysicalSector, 1, FatVolumeBootSector))
-		{
-			FileSystemError("Disk read error.");
-			return FALSE;
-		}
+		return FALSE;
 	}
 
 	// Get the FAT type
@@ -177,14 +157,6 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 	if (FatVolumeBootSector->BootSectorMagic != 0xaa55)
 	{
 		FileSystemError("Invalid boot sector magic (0xaa55)");
-		return FALSE;
-	}
-
-	//
-	// Set the drive geometry
-	//
-	if (!DiskSetDriveGeometry(DriveNumber, get_cylinders(DriveNumber), get_heads(DriveNumber), get_sectors(DriveNumber), FatVolumeBootSector->BytesPerSector))
-	{
 		return FALSE;
 	}
 

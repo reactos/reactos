@@ -26,7 +26,7 @@ CP		= cmd /C copy
 MAKE	= make
 
 # For a release build uncomment this line
-FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -O3
+#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -O3
 
 # For a debug build uncomment this line
-#FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -DDEBUG -O3
+FLAGS = -Wall -nostdlib -nostdinc -fno-builtin -I./ -I../ -I../../ -DDEBUG -O3
