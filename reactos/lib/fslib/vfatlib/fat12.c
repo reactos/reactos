@@ -223,7 +223,7 @@ Fat12WriteRootDirectory(IN HANDLE FileHandle,
   memset(Buffer, 0, 32 * 1024);
 
   Sectors = 32 * 1024 / BootSector->BytesPerSector;
-  for (i = 1; i < RootDirSectors; i += Sectors)
+  for (i = 0; i < RootDirSectors; i += Sectors)
     {
       /* Zero some sectors of the root directory */
       FileOffset.QuadPart = (FirstRootDirSector + i) * BootSector->BytesPerSector;
