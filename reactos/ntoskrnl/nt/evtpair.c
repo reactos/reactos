@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.15 2003/09/10 06:12:21 vizzini Exp $
+/* $Id: evtpair.c,v 1.16 2003/09/14 09:18:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -222,7 +222,7 @@ NtSetLowEventPair(IN HANDLE EventPairHandle)
 
    KeSetEvent(&EventPair->LowEvent,
 	      EVENT_INCREMENT,
-	      TRUE);
+	      FALSE);
 
    ObDereferenceObject(EventPair);
    return(STATUS_SUCCESS);
