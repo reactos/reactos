@@ -118,7 +118,7 @@ MiniDisplayPacket2(
             if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
             DbgPrint("%02X ", *p);
-            (ULONG_PTR)p += 1;
+            *(ULONG_PTR*)p += 1;
         }
 
         DbgPrint("\nFRAME:");
@@ -129,7 +129,7 @@ MiniDisplayPacket2(
             if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
             DbgPrint("%02X ", *p);
-            (ULONG_PTR)p += 1;
+            *(ULONG_PTR*)p += 1;
         }
 
         DbgPrint("\n*** RECEIVE PACKET STOP ***\n");
