@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.2 2004/01/20 23:16:42 ekohl Exp $
+/* $Id: logon.c,v 1.3 2004/01/23 10:35:52 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -159,6 +159,117 @@ LogonUserA (LPCSTR lpszUsername,
 }
 
 
+static BOOL STDCALL
+SamGetUserSid (LPCWSTR UserName,
+	       PSID *Sid)
+{
+  PSID lpSid;
+  DWORD dwLength;
+  HKEY hAccountKey;
+  HKEY hUserKey;
+
+  if (Sid != NULL)
+    *Sid = NULL;
+
+  /* Open the Account key */
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SAM\\SAM\\Domains\\Account",
+		     0,
+		     KEY_READ,
+		     &hAccountKey))
+    {
+//#if 0
+//      DebugPrint ("Failed to open Account key! (Error %lu)\n", GetLastError());
+//#endif
+      return FALSE;
+    }
+
+  /* Open the user key */
+  if (RegOpenKeyExW (hAccountKey,
+		     UserName,
+		     0,
+		     KEY_READ,
+		     &hUserKey))
+    {
+      if (GetLastError () == ERROR_FILE_NOT_FOUND)
+	{
+//#if 0
+//	  DebugPrint ("Invalid user name!\n");
+//#endif
+	  SetLastError (ERROR_NO_SUCH_USER);
+	}
+      else
+	{
+//#if 0
+//	  DebugPrint ("Failed to open user key! (Error %lu)\n", GetLastError());
+//#endif
+	}
+
+      RegCloseKey (hAccountKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hAccountKey);
+
+  /* Get SID size */
+  dwLength = 0;
+  if (RegQueryValueExW (hUserKey,
+			L"Sid",
+			NULL,
+			NULL,
+			NULL,
+			&dwLength))
+    {
+//#if 0
+//      DebugPrint ("Failed to read the SID size! (Error %lu)\n", GetLastError());
+//#endif
+      RegCloseKey (hUserKey);
+      return FALSE;
+    }
+
+  /* FIXME: Allocate sid buffer */
+//#if 0
+//  DebugPrint ("Required SID buffer size: %lu\n", dwLength);
+//#endif
+
+  lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
+				 0,
+				 dwLength);
+  if (lpSid == NULL)
+    {
+//#if 0
+//      DebugPrint ("Failed to allocate SID buffer!\n");
+//#endif
+      RegCloseKey (hUserKey);
+      return FALSE;
+    }
+
+  /* Read sid */
+  if (RegQueryValueExW (hUserKey,
+			L"Sid",
+			NULL,
+			NULL,
+			(LPBYTE)lpSid,
+			&dwLength))
+    {
+//#if 0
+//      DebugPrint ("Failed to read the SID! (Error %lu)\n", GetLastError());
+//#endif
+      RtlFreeHeap (RtlGetProcessHeap (),
+		   0,
+		   lpSid);
+      RegCloseKey (hUserKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hUserKey);
+
+  *Sid = lpSid;
+
+  return TRUE;
+}
+
+
 /*
  * @unimplemented
  */
@@ -206,7 +317,9 @@ LogonUserW (LPCWSTR lpszUsername,
   AuthenticationId.HighPart = 0;
   ExpirationTime.QuadPart = -1;
 
-  /* FIXME: Get the user SID from the registry */
+  /* Get the user SID from the registry */
+  if (!SamGetUserSid (lpszUsername, &UserSid))
+    {
   RtlAllocateAndInitializeSid (&SystemAuthority,
 			       5,
 			       SECURITY_NT_NON_UNIQUE_RID,
@@ -218,6 +331,7 @@ LogonUserW (LPCWSTR lpszUsername,
 			       SECURITY_NULL_RID,
 			       SECURITY_NULL_RID,
 			       &UserSid);
+    }
 
   TokenUser.User.Sid = UserSid;
   TokenUser.User.Attributes = 0;
@@ -237,6 +351,7 @@ LogonUserW (LPCWSTR lpszUsername,
   Status = RtlCreateAcl (&Dacl, sizeof(ACL), ACL_REVISION);
   if (!NT_SUCCESS(Status))
     {
+      RtlFreeSid (UserSid);
       return FALSE;
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.6 2004/01/16 21:33:23 ekohl Exp $
+/* $Id: install.c,v 1.7 2004/01/23 10:34:23 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -31,7 +31,10 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <samlib.h>
 #include <syssetup.h>
+
+// #define NO_GUI
 
 #if 0
 VOID Wizard (VOID);
@@ -53,14 +56,22 @@ PSID AdminSid = NULL;
 void
 DebugPrint(char* fmt,...)
 {
-  char buffer[512];
+  char Buffer[512];
   va_list ap;
 
   va_start(ap, fmt);
   vsprintf(buffer, fmt, ap);
   va_end(ap);
 
+#ifdef NO_GUI
   OutputDebugStringA(buffer);
+#else
+  strcat (buffer, "\nRebooting now!");
+  MessageBoxA (NULL,
+	       Buffer,
+	       "ReactOS Setup",
+	       MB_OK);
+#endif
 }
 
 
@@ -86,6 +97,7 @@ CreateRandomSid (PSID *Sid)
 			       SECURITY_NULL_RID,
 			       Sid);
 }
+
 
 static VOID
 AppendRidToSid (PSID *Dst,
@@ -120,47 +132,6 @@ AppendRidToSid (PSID *Dst,
 			       Dst);
 }
 
-static BOOL
-SaveDomainSid (PSID Sid)
-{
-  DWORD dwDisposition;
-  HKEY hKey;
-
-  if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
-		       L"SAM\\Accounts",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hKey,
-		       &dwDisposition))
-    {
-#if 0
-      DebugPrint ("Failed to create Accounts key! (Error %lu)\n", GetLastError());
-#endif
-      return FALSE;
-    }
-
-  if (RegSetValueExW (hKey,
-		      L"DomainSID",
-		      0,
-		      REG_BINARY,
-		      (LPBYTE)Sid,
-		      RtlLengthSid (Sid)))
-    {
-#if 0
-      DebugPrint ("Failed to set DomainSID value! (Error %lu)\n", GetLastError());
-#endif
-      RegCloseKey (hKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hKey);
-
-  return TRUE;
-}
-
 
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
@@ -190,27 +161,15 @@ InstallReactOS (HINSTANCE hInstance)
 
   if (!InitializeProfiles ())
     {
-#if 0
-      OutputDebugStringA ("InitializeProfiles() failed\n");
-#endif
-      MessageBoxA (NULL,
-		   "Profile initialization failed!\nRebooting now!",
-		   "ReactOS Setup",
-		   MB_OK);
+      DebugPrint ("InitializeProfiles() failed\n");
       return 0;
     }
 
+  /* Create the semi-random Domain-SID */
   CreateRandomSid (&DomainSid);
   if (DomainSid == NULL)
     {
-#if 0
-      OutputDebugStringA ("Failed to create the Domain-SID!\n");
-#endif
-      MessageBoxA (NULL,
-		   "Failed to create the Domain SID!\nRebooting now!",
-		   "ReactOS Setup",
-		   MB_OK);
-
+      DebugPrint ("Domain-SID creation failed!\n");
       return 0;
     }
 
@@ -220,38 +179,44 @@ InstallReactOS (HINSTANCE hInstance)
   RtlFreeUnicodeString (&SidString);
 #endif
 
-  if (!SaveDomainSid (DomainSid))
+  /* Initialize the Security Account Manager (SAM) */
+  if (!SamInitializeSAM ())
     {
-#if 0
-      OutputDebugStringA ("Failed to create the Domain-SID!\n");
-#endif
-      MessageBoxA (NULL,
-		   "Failed to save the Domain SID!\nRebooting now!",
-		   "ReactOS Setup",
-		   MB_OK);
-
+      DebugPrint ("SamInitializeSAM() failed!\n");
       RtlFreeSid (DomainSid);
       return 0;
     }
 
+  /* Set the Domain SID (aka Computer SID) */
+  if (!SamSetDomainSid (DomainSid))
+    {
+      DebugPrint ("SamSetDomainSid() failed!\n");
+      RtlFreeSid (DomainSid);
+      return 0;
+    }
+
+  /* Append the Admin-RID */
   AppendRidToSid (&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
 
 #if 0
-  RtlConvertSidToUnicodeString (&SidString, AdminSid, TRUE);
-  DebugPrint ("Admin SID: %wZ\n", &SidString);
+  RtlConvertSidToUnicodeString (&SidString, DomainSid, TRUE);
+  DebugPrint ("Admin-SID: %wZ\n", &SidString);
   RtlFreeUnicodeString (&SidString);
 #endif
 
+  /* Create the Administrator account */
+  if (!SamCreateUser (L"Administrator", L"", AdminSid))
+    {
+      DebugPrint ("SamCreateUser() failed!\n");
+      RtlFreeSid (AdminSid);
+      RtlFreeSid (DomainSid);
+      return 0;
+    }
+
+  /* Create the Administrator profile */
   if (!CreateUserProfileW (AdminSid, L"Administrator"))
     {
-#if 0
-      DebugPrint ("Failed to create the admin user profile!\n");
-#endif
-      MessageBoxA (NULL,
-		   "Failed to create the admin user profile!\nRebooting now!",
-		   "ReactOS Setup",
-		   MB_OK);
-
+      DebugPrint ("CreateUserProfileW() failed!\n");
       RtlFreeSid (AdminSid);
       RtlFreeSid (DomainSid);
       return 0;
@@ -260,13 +225,7 @@ InstallReactOS (HINSTANCE hInstance)
   RtlFreeSid (AdminSid);
   RtlFreeSid (DomainSid);
 
-#if 0
-  OutputDebugStringA ("System setup successful\n");
-#endif
-  MessageBoxA (NULL,
-	       "Profile initialization successful!\nRebooting now!",
-	       "ReactOS Setup",
-	       MB_OK);
+  DebugPrint ("System setup successful\n");
 
 #if 0
   Wizard ();
