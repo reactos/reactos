@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: services.c,v 1.2.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: services.c,v 1.2.2.2 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -82,5 +82,3 @@ VideoPortGetAgpServices(
    UNIMPLEMENTED;
    return FALSE;
 }
-
-

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.1.2.2 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: interrupt.c,v 1.1.2.3 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -40,7 +40,7 @@ IntVideoPortInterruptRoutine(
    ASSERT(DriverExtension->InitializationData.HwInterrupt != NULL);
 
    return DriverExtension->InitializationData.HwInterrupt(
-      DeviceExtension->MiniPortDeviceExtension);
+      &DeviceExtension->MiniPortDeviceExtension);
 }
 
 BOOLEAN STDCALL
@@ -62,11 +62,11 @@ IntVideoPortSetupInterrupt(
       KIRQL Irql;
       KAFFINITY Affinity;
 
-      if (ConfigInfo->BusInterruptVector != 0)
-         DeviceExtension->InterruptVector = ConfigInfo->BusInterruptVector;
+      if (ConfigInfo->BusInterruptVector == 0)
+         ConfigInfo->BusInterruptVector = DeviceExtension->InterruptVector;
 
-      if (ConfigInfo->BusInterruptLevel != 0)
-         DeviceExtension->InterruptLevel = ConfigInfo->BusInterruptLevel;
+      if (ConfigInfo->BusInterruptLevel == 0)
+         ConfigInfo->BusInterruptLevel = DeviceExtension->InterruptLevel;
 
       InterruptVector = HalGetInterruptVector(
          ConfigInfo->AdapterInterfaceType,
@@ -120,10 +120,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 
    DPRINT("VideoPortEnableInterrupt\n");
 
-   DeviceExtension = CONTAINING_RECORD(
-      HwDeviceExtension,
-      VIDEO_PORT_DEVICE_EXTENSION,
-      MiniPortDeviceExtension);
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
    Status = HalEnableSystemInterrupt(
       DeviceExtension->InterruptVector,
@@ -145,10 +142,7 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 
    DPRINT("VideoPortDisableInterrupt\n");
 
-   DeviceExtension = CONTAINING_RECORD(
-      HwDeviceExtension,
-      VIDEO_PORT_DEVICE_EXTENSION,
-      MiniPortDeviceExtension);
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
    Status = HalDisableSystemInterrupt(
       DeviceExtension->InterruptVector,

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.8 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.9 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -105,8 +105,6 @@ IntVideoPortDispatchOpen(
 
    DPRINT("IntVideoPortDispatchOpen\n");
 
-   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
    if (CsrssInitialized == FALSE)
    {
       /*
@@ -120,40 +118,37 @@ IntVideoPortDispatchOpen(
 
       CsrssInitialized = TRUE;
 
-      DeviceExtension->OpenReferenceCount++;
-
       Irp->IoStatus.Information = FILE_OPENED;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
       return STATUS_SUCCESS;
    }
 
-   if (DeviceExtension->OpenReferenceCount++ == 0)
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   DriverExtension = IoGetDriverObjectExtension(
+      DeviceObject->DriverObject,
+      DeviceObject->DriverObject);
+
+   if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
    {
-      DriverExtension = IoGetDriverObjectExtension(
-         DeviceObject->DriverObject,
-         DeviceObject->DriverObject);
+      Irp->IoStatus.Status = STATUS_SUCCESS;
 
-      if (DriverExtension->InitializationData.HwInitialize(DeviceExtension->MiniPortDeviceExtension))
-      {
-         Irp->IoStatus.Status = STATUS_SUCCESS;
+      /*
+       * Storing the device extension pointer in a static variable is an
+       * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
+       * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
+       * parameter. On the bright side, the DISPLAY device is opened
+       * exclusively, so there can be only one device extension active at
+       * any point in time.
+       */
 
-         /*
-          * Storing the device extension pointer in a static variable is an
-          * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
-          * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
-          * parameter. On the bright side, the DISPLAY device is opened
-          * exclusively, so there can be only one device extension active at
-          * any point in time.
-          */
-
-         ResetDisplayParametersDeviceExtension = DeviceExtension;
-         HalAcquireDisplayOwnership(IntVideoPortResetDisplayParameters);
-      }
-      else
-      {
-         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-      }
+      ResetDisplayParametersDeviceExtension = DeviceExtension;
+      HalAcquireDisplayOwnership(IntVideoPortResetDisplayParameters);
+   }
+   else
+   {
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
    }
 
    Irp->IoStatus.Information = FILE_OPENED;
@@ -176,16 +171,10 @@ IntVideoPortDispatchClose(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-
    DPRINT("IntVideoPortDispatchClose\n");
 
-   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   if (--DeviceExtension->OpenReferenceCount == 0)
-   {
-      if (ResetDisplayParametersDeviceExtension != NULL)
-         HalReleaseDisplayOwnership();
-   }
+   if (ResetDisplayParametersDeviceExtension != NULL)
+      HalReleaseDisplayOwnership();
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -241,7 +230,7 @@ IntVideoPortDispatchDeviceControl(
 
    /* Call the Miniport Driver with the VRP */
    DriverExtension->InitializationData.HwStartIO(
-      (PVOID)&DeviceExtension->MiniPortDeviceExtension,
+      &DeviceExtension->MiniPortDeviceExtension,
       vrp);
 
    /* Free the VRP */

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: timer.c,v 1.1.2.2 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: timer.c,v 1.1.2.3 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -34,13 +34,13 @@ IntVideoPortTimerRoutine(
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
 
    DriverExtension = IoGetDriverObjectExtension(
-      DeviceExtension->FunctionalDeviceObject->DriverObject,
-      DeviceExtension->FunctionalDeviceObject->DriverObject);
+      DeviceObject->DriverObject,
+      DeviceObject->DriverObject);
   
    ASSERT(DriverExtension->InitializationData.HwTimer != NULL);
 
    DriverExtension->InitializationData.HwTimer(
-      DeviceExtension->MiniPortDeviceExtension);
+      &DeviceExtension->MiniPortDeviceExtension);
 }
 
 BOOLEAN STDCALL
@@ -64,7 +64,7 @@ IntVideoPortSetupTimer(
 
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);          
+         DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);
          return FALSE;
       }
    }
@@ -79,20 +79,23 @@ IntVideoPortSetupTimer(
  */
 
 VOID STDCALL
-VideoPortStartTimer(IN PVOID  HwDeviceExtension)
+VideoPortStartTimer(IN PVOID HwDeviceExtension)
 {
    DPRINT("VideoPortStartTimer\n");
+/*
    IoStartTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
+*/
 }
-
 
 /*
  * @implemented
  */
 
 VOID STDCALL
-VideoPortStopTimer(IN PVOID  HwDeviceExtension)
+VideoPortStopTimer(IN PVOID HwDeviceExtension)
 {
    DPRINT("VideoPortStopTimer\n");
+/*
    IoStopTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
+*/
 }

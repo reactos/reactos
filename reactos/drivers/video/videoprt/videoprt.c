@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.4 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.5 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -125,7 +125,7 @@ IntVideoPortDeferredRoutine(
    IN PVOID SystemArgument2)
 {
    PVOID HwDeviceExtension = 
-      ((PVIDEO_PORT_DEVICE_EXTENSION)DeferredContext)->MiniPortDeviceExtension;
+      &((PVIDEO_PORT_DEVICE_EXTENSION)DeferredContext)->MiniPortDeviceExtension;
    ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
 }
 
@@ -238,9 +238,10 @@ IntVideoPortFindAdapter(
 
    DeviceExtension->RegistryPath.Length = 
    DeviceExtension->RegistryPath.MaximumLength = 
-      DriverExtension->RegistryPath.Length + (8 * sizeof(WCHAR));
+      DriverExtension->RegistryPath.Length + (9 * sizeof(WCHAR));
+   DeviceExtension->RegistryPath.Length -= sizeof(WCHAR);
    DeviceExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(
-      PagedPool,
+      NonPagedPool,
       DeviceExtension->RegistryPath.MaximumLength,
       TAG_VIDEO_PORT);      
    swprintf(DeviceExtension->RegistryPath.Buffer, L"%s\\Device0",
@@ -367,6 +368,7 @@ IntVideoPortFindAdapter(
          else
          {
             DPRINT("HwFindAdapter call failed with error %X\n", Status);
+            RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
             IoDeleteDevice(DeviceObject);
 
             return Status;
@@ -387,8 +389,8 @@ IntVideoPortFindAdapter(
    if (Status != NO_ERROR)
    {
       DPRINT("HwFindAdapter call failed with error %X\n", Status);
+      RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
-
       return Status;
    }
 
@@ -410,7 +412,7 @@ IntVideoPortFindAdapter(
       DeviceVideoBuffer,
       REG_SZ,
       DeviceExtension->RegistryPath.Buffer,
-      DeviceExtension->RegistryPath.Length + sizeof(WCHAR));
+      DeviceExtension->RegistryPath.MaximumLength);
 
    /* FIXME: Allocate hardware resources for device. */
 
@@ -420,6 +422,7 @@ IntVideoPortFindAdapter(
 
    if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, &ConfigInfo))
    {
+      RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
@@ -432,6 +435,7 @@ IntVideoPortFindAdapter(
    {
       if (DeviceExtension->InterruptObject != NULL)
          IoDisconnectInterrupt(DeviceExtension->InterruptObject);
+      RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
       DPRINT("STATUS_INSUFFICIENT_RESOURCES\n");
       return STATUS_INSUFFICIENT_RESOURCES;

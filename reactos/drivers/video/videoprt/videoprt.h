@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.6.2.3 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: videoprt.h,v 1.6.2.4 2004/03/18 21:28:21 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -64,7 +64,6 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG SystemIoSlotNumber;
    LIST_ENTRY AddressMappingListHead;
    KDPC DpcObject;
-   ULONG OpenReferenceCount;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
@@ -188,5 +187,10 @@ VP_STATUS STDCALL
 IntInt10CallBios(
    IN PVOID Context,
    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments);
+
+VP_STATUS STDCALL
+VideoPortInt10(
+   IN PVOID HwDeviceExtension,
+   IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments);
 
 #endif /* VIDEOPRT_H */
