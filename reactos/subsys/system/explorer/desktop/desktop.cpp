@@ -124,7 +124,7 @@ HWND DesktopWindow::Create()
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
-	HWND hwnd = Window::Create(WINDOW_CREATOR(DesktopWindow),
+	HWND hwndDesktop = Window::Create(WINDOW_CREATOR(DesktopWindow),
 					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 
@@ -133,9 +133,9 @@ HWND DesktopWindow::Create()
 
 	 // work around for Windows NT, Win 98, ...
 	 // Without this the desktop has mysteriously only a size of 800x600 pixels.
-	MoveWindow(hwnd, 0, 0, width, height, TRUE);
+	MoveWindow(hwndDesktop, 0, 0, width, height, TRUE);
 
-	return hwnd;
+	return hwndDesktop;
 }
 
 
