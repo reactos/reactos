@@ -1001,8 +1001,8 @@ static BOOL HEAP_IsRealArena(
 HANDLE STDCALL
 RtlCreateHeap(ULONG flags,
 	      PVOID BaseAddress,
-	      ULONG initialSize,
 	      ULONG maxSize,
+	      ULONG initialSize,
 	      PVOID Unknown,
 	      PRTL_HEAP_DEFINITION Definition)
 {
