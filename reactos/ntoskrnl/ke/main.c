@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.98 2001/06/29 20:43:55 ekohl Exp $
+/* $Id: main.c,v 1.99 2001/06/29 21:08:50 ea Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -39,7 +39,7 @@
 #include <internal/ke.h>
 #include <internal/io.h>
 #include <internal/po.h>
-#include <internal/se.h>
+//#include <internal/se.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
