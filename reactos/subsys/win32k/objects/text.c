@@ -204,7 +204,6 @@ W32kCreateFontIndirect(CONST LPLOGFONT  lf)
         fontPtr->logfont.lfOrientation = fontPtr->logfont.lfEscapement;
       }
       hFont = TEXTOBJ_PtrToHandle(fontPtr);
-      TEXTOBJ_UnlockText(hFont);
     }
   }
 
@@ -530,7 +529,6 @@ W32kSetTextAlign(HDC  hDC,
     }
   prevAlign = dc->w.textAlign;
   dc->w.textAlign = Mode;
-  DC_UnlockDC (hDC);
   
   return  prevAlign;
 }
@@ -550,8 +548,6 @@ W32kSetTextColor(HDC hDC,
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
-
-  DC_UnlockDC(hDC);
 
   return  oldColor;
 }

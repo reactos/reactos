@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.20 2001/06/12 17:50:29 chorns Exp $
+/* $Id: dllmain.c,v 1.21 2001/11/02 06:10:11 rex Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -80,6 +80,8 @@ STDCALL
 W32kInitialize (VOID)
 {
   DbgPrint("W32kInitialize\n");
+
+  InitGdiObjectHandleTable ();
 
   // FIXME: Retrieve name from registry
   EngLoadImage(L"\\SystemRoot\\system32\\drivers\\vidport.sys");

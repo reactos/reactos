@@ -56,7 +56,6 @@ W32kGetGraphicsMode(HDC  hDC)
   }
   
   GraphicsMode = dc->w.GraphicsMode;
-  DC_UnlockDC (hDC);
   
   return  GraphicsMode;
 }
@@ -78,7 +77,6 @@ W32kGetWorldTransform(HDC  hDC,
     return  FALSE;
   }
   *XForm = dc->w.xformWorld2Wnd;
-  DC_UnlockDC (hDC);
     
   return  TRUE;
 }
@@ -139,7 +137,6 @@ W32kModifyWorldTransform(HDC  hDC,
       return FALSE;
   }
   DC_UpdateXforms (dc);
-  DC_UnlockDC (hDC);
 
   return  TRUE;
 }
@@ -214,7 +211,6 @@ W32kSetGraphicsMode(HDC  hDC,
   }
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
-  DC_UnlockDC (hDC);
   
   return  ret;
 }
@@ -292,7 +288,6 @@ W32kSetWorldTransform(HDC  hDC,
   }
   dc->w.xformWorld2Wnd = *XForm;
   DC_UpdateXforms (dc);
-  DC_UnlockDC (hDC);
 
   return  TRUE;
 }

@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.10 2001/06/25 09:30:06 ekohl Exp $
+ * $Id: gdiobj.c,v 1.11 2001/11/02 06:10:11 rex Exp $
  *
  */
 
@@ -95,114 +95,148 @@ static UINT align_DefaultGuiFont = 1;
 static HGDIOBJ *StockObjects[NB_STOCK_OBJECTS]; // we dont assign these statically as WINE does because we might redesign
                                                 // the way handles work, so it's more dynamic now
 
+
 HBITMAP hPseudoStockBitmap; /* 1x1 bitmap for memory DCs */
+
+static PGDI_HANDLE_TABLE  HandleTable = 0;
+static FAST_MUTEX  HandleTableMutex;
+
+static PGDI_HANDLE_TABLE
+GDIOBJ_iAllocHandleTable (WORD Size)
+{
+  PGDI_HANDLE_TABLE  handleTable;
+
+//  ExAcquireFastMutexUnsafe (&HandleTableMutex);
+  handleTable = ExAllocatePool(PagedPool, 
+                               sizeof (GDI_HANDLE_TABLE) + 
+                                 sizeof (GDI_HANDLE_ENTRY) * Size);
+  memset (handleTable, 
+          0, 
+          sizeof (GDI_HANDLE_TABLE) + sizeof (GDI_HANDLE_ENTRY) * Size);
+  handleTable->wTableSize = Size;
+//  ExReleaseFastMutexUnsafe (&HandleTableMutex);
+
+  return  handleTable;
+}
+
+static PGDI_HANDLE_ENTRY
+GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
+{
+  return  &HandleTable->Handles [TableIndex];
+}
+
+static WORD
+GDIOBJ_iGetNextOpenHandleIndex (void)
+{
+  WORD  tableIndex;
+
+//  ExAcquireFastMutexUnsafe (&HandleTableMutex);
+  for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
+  {
+    if (HandleTable->Handles [tableIndex].wMagic == 0)
+    {
+      HandleTable->Handles [tableIndex].wMagic = GO_MAGIC_DONTCARE;
+      break;
+    }
+  }
+//  ExReleaseFastMutexUnsafe (&HandleTableMutex);
+  
+  return  (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
+}
 
 PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
 {
-  PGDIOBJHDR  NewObj;
+  PGDIOBJHDR  newObject;
+  PGDI_HANDLE_ENTRY  handleEntry;
 
-  NewObj = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR)); // FIXME: Allocate with tag of MAGIC?
+  newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
+  if (newObject == NULL)
+  {
+    return  NULL;
+  }
+  RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
 
-  if (NewObj == NULL)
-    {
-      return  NULL;
-    }
+  newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
+  handleEntry->wMagic = Magic;
+  handleEntry->hProcessId = 0; // PsGetCurrentProcessId ();
+  handleEntry->pObject = newObject;
 
-  RtlZeroMemory(NewObj, Size + sizeof (GDIOBJHDR));
-
-  NewObj->wMagic = Magic;
-#if 0
-  KeInitializeSpinlock(&NewObj->Lock);
-#endif
-
-  return  (PGDIOBJ)(((PCHAR) NewObj) + sizeof (GDIOBJHDR));
+  return  (PGDIOBJ)(((PCHAR) newObject) + sizeof (GDIOBJHDR));
 }
 
 BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic)
 {
-  PGDIOBJHDR  ObjHdr;
+  PGDIOBJHDR  objectHeader;
+  PGDI_HANDLE_ENTRY  handleEntry;
 
-  ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  if (ObjHdr->wMagic != Magic)
-  {
-    return FALSE;
-  }
-  ExFreePool (ObjHdr);
-  return TRUE;
+  objectHeader = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex (objectHeader->wTableIndex);
+  if (handleEntry == 0 || handleEntry->wMagic != Magic)
+    return  FALSE;
+  handleEntry->hProcessId = 0;
+  handleEntry->pObject = 0;
+  // (RJJ) set wMagic last to avoid race condition
+  handleEntry->wMagic = 0;
+  ExFreePool (objectHeader);
+
+  return  TRUE;
 }
 
 HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
 {
-  PGDIOBJHDR  objHeader;
+  PGDIOBJHDR  objectHeader;
+  PGDI_HANDLE_ENTRY  handleEntry;
   
-  if (Obj == NULL) return NULL;
-  objHeader = (PGDIOBJHDR) (((PCHAR)Obj) - sizeof (GDIOBJHDR));
-  if (objHeader->wMagic != Magic)
-  {
+  if (Obj == NULL) 
+    return  NULL;
+  objectHeader = (PGDIOBJHDR) (((PCHAR)Obj) - sizeof (GDIOBJHDR));
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex (objectHeader->wTableIndex);
+  if (handleEntry == 0 || 
+      handleEntry->wMagic != Magic ||
+      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
+    return  NULL;
+  
+  return  (HGDIOBJ) objectHeader->wTableIndex;
+}
+
+PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ ObjectHandle, WORD Magic)
+{
+  PGDI_HANDLE_ENTRY  handleEntry;
+
+  if (ObjectHandle == NULL)
+    return NULL;
+
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
+  if (handleEntry == 0 || 
+      (Magic != GO_MAGIC_DONTCARE && handleEntry->wMagic != Magic) ||
+      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
+    return  NULL;
+
+  return  (PGDIOBJ) (((PCHAR)handleEntry->pObject) + sizeof (GDIOBJHDR));
+}
+
+WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
+{
+  PGDI_HANDLE_ENTRY  handleEntry;
+
+  if (ObjectHandle == NULL)
     return  0;
-  }
-  
-  return  (HGDIOBJ) objHeader;
-}
 
-PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic)
-{
-  PGDIOBJHDR  objHeader;
-
-  if (Obj == NULL) return NULL;
-
-  objHeader = (PGDIOBJHDR) Obj;
-
-  /*  FIXME: Lock object for duration  */
-
-  if ((objHeader->wMagic != Magic) && (Magic != GO_MAGIC_DONTCARE))
-  {
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
+  if (handleEntry == 0 || 
+      handleEntry->hProcessId != 0 /* PsGetCurrentProcess () */)
     return  0;
-  }
 
-  return  (PGDIOBJ) (((PCHAR)Obj) + sizeof (GDIOBJHDR));
+  return  handleEntry->wMagic;
 }
 
-BOOL  GDIOBJ_LockObject (HGDIOBJ Obj)
+VOID
+InitGdiObjectHandleTable (void)
 {
-  /* FIXME: write this  */
-  // return  TRUE;
-}
-
-BOOL  GDIOBJ_UnlockObject (HGDIOBJ Obj)
-{
-  /* FIXME: write this  */
-  return  TRUE;
-}
-
-HGDIOBJ  GDIOBJ_GetNextObject (HGDIOBJ Obj, WORD Magic)
-{
-  PGDIOBJHDR  objHeader;
-  
-  objHeader = (PGDIOBJHDR) ((PCHAR) Obj - sizeof (GDIOBJHDR));
-  if (objHeader->wMagic != Magic)
-  {
-    return 0;
-  }
-
-  return objHeader->hNext;
-}
-
-HGDIOBJ  GDIOBJ_SetNextObject (HGDIOBJ Obj, WORD Magic, HGDIOBJ NextObj)
-{
-  PGDIOBJHDR  objHeader;
-  HGDIOBJ  oldNext;
-  
-  /* FIXME: should we lock/unlock the object here? */
-  objHeader = (PGDIOBJHDR) ((PCHAR) Obj - sizeof (GDIOBJHDR));
-  if (objHeader->wMagic != Magic)
-  {
-    return  0;
-  }
-  oldNext = objHeader->hNext;
-  objHeader->hNext = NextObj;
-  
-  return  oldNext;
+  DbgPrint ("InitGdiObjectHandleTable\n");
+//  ExInitializeFastMutex (&HandleTableMutex);
+  HandleTable = GDIOBJ_iAllocHandleTable (0x1000);
 }
 
 VOID CreateStockObjects(void)

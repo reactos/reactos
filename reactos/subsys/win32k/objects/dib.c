@@ -229,7 +229,6 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
   if (Count == 0)
   {
     DPRINT("Less then one entire line requested\n");
-    BITMAPOBJ_UnlockBitmap (hBitmap);
     return  0;
   }
 
@@ -266,7 +265,6 @@ LONG STDCALL W32kGetBitmapBits(HBITMAP  hBitmap,
       ret = Count;
     }
   }
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return  ret;
 }
@@ -377,7 +375,6 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
   if ((dc = DC_HandleToPtr(hDC)))
   {
     hbitmap = DIB_CreateDIBSection(dc, bmi, Usage, Bits, hSection, dwOffset, 0);
-    DC_UnlockDC (hDC);
   }
 
   if (bDesktopDC)
@@ -506,7 +503,7 @@ HBITMAP DIB_CreateDIBSection(
       
     if (colorMap) { ExFreePool(colorMap); colorMap = NULL; }
     if (dib) { ExFreePool(dib); dib = NULL; }
-    if (bmp) { BITMAPOBJ_UnlockBitmap(res); bmp = NULL; }
+    if (bmp) { bmp = NULL; }
     if (res) { GDIOBJ_FreeObject(res, GO_BITMAP_MAGIC); res = 0; }
   }
 
@@ -529,7 +526,6 @@ HBITMAP DIB_CreateDIBSection(
   } */
 
   // Return BITMAP handle and storage location
-  if (bmp) BITMAPOBJ_UnlockBitmap(res);
   if (bm.bmBits && bits) *bits = bm.bmBits;
   return res;
 }

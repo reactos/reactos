@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.12 2001/05/02 12:33:42 jfilby Exp $
+/* $Id: brush.c,v 1.13 2001/11/02 06:10:11 rex Exp $
  */
 
 
@@ -29,8 +29,6 @@ HBRUSH STDCALL W32kCreateBrushIndirect(CONST LOGBRUSH  *lb)
   brushPtr->logbrush.lbStyle = lb->lbStyle;
   brushPtr->logbrush.lbColor = lb->lbColor;
   brushPtr->logbrush.lbHatch = lb->lbHatch;
-
-  BRUSHOBJ_UnlockBrush (hBrush);
 
   return  hBrush;
 }
@@ -117,7 +115,6 @@ HBRUSH STDCALL W32kCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
   }
   newInfo = (PBITMAPINFO) GDIOBJ_HandleToPtr ((HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE);
   memcpy(newInfo, info, size);
-  GDIOBJ_UnlockObject((HGDIOBJ)logbrush.lbHatch);
   
   return  W32kCreateBrushIndirect (&logbrush);
 }

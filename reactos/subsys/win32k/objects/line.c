@@ -92,7 +92,6 @@ W32kGetArcDirection(HDC  hDC)
   }
 
   ret = dc->w.ArcDirection;
-  DC_UnlockDC (hDC);
   
   return ret;
 }

@@ -32,13 +32,10 @@ W32kCreatePenIndirect(CONST PLOGPEN lgpn)
   penPtr = PENOBJ_AllocPen();
   hpen   = PENOBJ_PtrToHandle(penPtr);
   if (!hpen) return 0;
-  PENOBJ_LockPen(hpen);
 
   penPtr->logpen.lopnStyle = lgpn->lopnStyle;
   penPtr->logpen.lopnWidth = lgpn->lopnWidth;
   penPtr->logpen.lopnColor = lgpn->lopnColor;
-
-  PENOBJ_UnlockPen(hpen);
 
   return hpen;
 }

@@ -186,7 +186,6 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
     }
   }
   DPRINT ("\t\t%04x\n", hbmpRet);
-  DC_UnlockDC (hDC);
 
   return hbmpRet;
 }
@@ -237,7 +236,6 @@ BOOL STDCALL W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
   }
   
   *Dimension = bmp->size;
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return  TRUE;
 }
@@ -348,7 +346,6 @@ LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
         ret = Bytes;
       }
     }
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return ret;
 }
@@ -372,7 +369,6 @@ BOOL STDCALL W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
   }
   bmp->size.cx = Width;
   bmp->size.cy = Height;
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return TRUE;
 }
@@ -465,7 +461,6 @@ HBITMAP  BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
     W32kSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
     ExFreePool (buf);
   }
-  BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return  res;
 }

@@ -55,22 +55,29 @@
 
 typedef struct _GDIOBJHDR
 {
-  HANDLE  hNext;
-  WORD  wMagic;
-  DWORD  dwCount;
-  KSPIN_LOCK  Lock;
+  WORD  wTableIndex;
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef PVOID PGDIOBJ;
+
+typedef struct _GDI_HANDLE_ENTRY
+{
+  WORD  wMagic;
+  HANDLE  hProcessId;
+  PGDIOBJ  pObject;
+} GDI_HANDLE_ENTRY, *PGDI_HANDLE_ENTRY;
+
+typedef struct _GDI_HANDLE_TABLE
+{
+  WORD  wTableSize;
+  GDI_HANDLE_ENTRY  Handles [0];
+} GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic);
 BOOL  GDIOBJ_FreeObject (PGDIOBJ Obj, WORD Magic);
 HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic);
 PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic);
-BOOL  GDIOBJ_LockObject (HGDIOBJ Obj);
-BOOL  GDIOBJ_UnlockObject (HGDIOBJ Obj);
-HGDIOBJ  GDIOBJ_GetNextObject (HGDIOBJ Obj, WORD Magic);
-HGDIOBJ  GDIOBJ_SetNextObject (HGDIOBJ Obj, WORD Magic, HGDIOBJ NextObj);
+WORD  GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
 
 #endif
 

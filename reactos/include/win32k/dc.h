@@ -113,6 +113,7 @@ typedef struct _WIN_DC_INFO
 typedef struct _DC
 {
   HDC  hSelf;
+  HDC  hNext;
   DHPDEV  PDev;  
   DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
@@ -144,13 +145,14 @@ typedef struct _DC
   ((HDC) GDIOBJ_PtrToHandle ((PGDIOBJ) pDC, GO_DC_MAGIC))
 #define  DC_HandleToPtr(hDC)  \
   ((PDC) GDIOBJ_HandleToPtr ((HGDIOBJ) hDC, GO_DC_MAGIC))
-#define  DC_LockDC(hDC)  GDIOBJ_LockObject ((HGDIOBJ) hDC)
-#define  DC_UnlockDC(hDC)  GDIOBJ_UnlockObject ((HGDIOBJ) hDC)
 HDC RetrieveDisplayHDC(VOID);
 PDC  DC_AllocDC(LPCWSTR  Driver);
 void  DC_InitDC(PDC  DCToInit);
 PDC  DC_FindOpenDC(LPCWSTR  Driver);
 void  DC_FreeDC(PDC  DCToFree);
+HDC  DC_GetNextDC (PDC pDC);
+void  DC_SetNextDC (PDC pDC, HDC hNextDC);
+
 void DC_UpdateXforms(PDC  dc);
 BOOL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
