@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.56 2003/12/30 18:52:04 fireball Exp $
+/* $Id: irp.c,v 1.57 2003/12/31 14:16:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -284,42 +284,70 @@ IofCompleteRequest(PIRP Irp,
       }
    }
 
-   //Windows NT File System Internals, page 154
-   OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
-
-   if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
-   {
-      BOOLEAN bStatus;
-      
-      DPRINT("Dispatching APC\n");
-      KeInitializeApc(  &Irp->Tail.Apc,
-                        &Irp->Tail.Overlay.Thread->Tcb,
-                        OriginalApcEnvironment,
-                        IoSecondStageCompletion,//kernel routine
-                        NULL,
-                        (PKNORMAL_ROUTINE) NULL,
-                        KernelMode,
-                        OriginalFileObject);
-      
-      bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
-                                 (PVOID)Irp,
-                                 (PVOID)(ULONG)PriorityBoost,
-                                 PriorityBoost);
-
-      if (bStatus == FALSE)
-      {
-         DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
-      }
-
-      DPRINT("Finished dispatching APC\n");
-   }
+   if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
+     {
+       if (Irp->Flags & IRP_PAGING_IO)
+         {
+           /* FIXME:
+            *   The mdl must be freed by the caller! 
+	    */
+           if (Irp->MdlAddress->MappedSystemVa != NULL)
+             {	     
+	       MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
+			          Irp->MdlAddress);
+	     }
+           MmUnlockPages(Irp->MdlAddress);
+           ExFreePool(Irp->MdlAddress);
+	 }
+       if (Irp->UserIosb)
+         {
+           *Irp->UserIosb = Irp->IoStatus;
+	 }
+       if (Irp->UserEvent)
+         {
+           KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
+	 }
+       IoFreeIrp(Irp);
+     }
    else
-   {
-      DPRINT("Calling IoSecondStageCompletion routine directly\n");
-      KeRaiseIrql(APC_LEVEL, &oldIrql);
-      IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
-      KeLowerIrql(oldIrql);
-      DPRINT("Finished completition routine\n");
+     {
+       //Windows NT File System Internals, page 154
+       OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
+
+       if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
+         {
+           BOOLEAN bStatus;
+      
+           DPRINT("Dispatching APC\n");
+           KeInitializeApc(  &Irp->Tail.Apc,
+                             &Irp->Tail.Overlay.Thread->Tcb,
+                             OriginalApcEnvironment,
+                             IoSecondStageCompletion,//kernel routine
+                             NULL,
+                             (PKNORMAL_ROUTINE) NULL,
+                             KernelMode,
+                             OriginalFileObject);
+      
+           bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
+                                      (PVOID)Irp,
+                                      (PVOID)(ULONG)PriorityBoost,
+                                      PriorityBoost);
+
+           if (bStatus == FALSE)
+             {
+               DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
+             }
+
+           DPRINT("Finished dispatching APC\n");
+	 }
+       else
+         {
+           DPRINT("Calling IoSecondStageCompletion routine directly\n");
+           KeRaiseIrql(APC_LEVEL, &oldIrql);
+           IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
+           KeLowerIrql(oldIrql);
+           DPRINT("Finished completition routine\n");
+	 }
    }
 
 }
