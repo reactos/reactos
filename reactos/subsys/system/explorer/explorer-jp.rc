@@ -198,7 +198,7 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Search Program in Startmenu" //FIXME?
+CAPTION "スタートメニューからプログラムを検索" //FIXME?
 FONT 9, "MS UI Gothic", 0, 0, 0x1 //FIXME?
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8 //FIXME?
@@ -213,7 +213,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "デスクトップのプロパティ" //FIXME?
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "以下のアイコン表\示方法が利用出来ます",
+    LTEXT           "Please select your prefered icon alignment algorithm:",
                     IDC_STATIC,7,7,166,8 //FIXME?
     CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
@@ -306,13 +306,13 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Reactos Explorer"
+    IDS_TITLE               "ReactOS Explorer"
     IDS_START               "ｽﾀｰﾄ"
     IDS_LOGOFF              "ログオフ..."
     IDS_SHUTDOWN            "シャットダウン..."
     IDS_LAUNCH              "ファイル名を指定して実行..."
     IDS_START_HELP          "ヘルプ"
-    IDS_SEARCH_FILES        "検索"
+    IDS_SEARCH              "検索"
     IDS_DOCUMENTS           "マイドキュメント"
     IDS_FAVORITES           "お気に入り"
     IDS_PROGRAMS            "プログラム"
@@ -335,7 +335,7 @@ BEGIN
     IDS_BROWSE              "ファイルをブラウズ"
     IDS_SEARCH_PRG          "プログラムを検索..."
     IDS_ALL_USERS           "All Users\\" //FIXME?
-    IDS_SEARCH              "ファイルやフォルダ"
+    IDS_SEARCH_FILES        "ファイルやフォルダ..."
     IDS_ABOUT_EXPLORER      "&About Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "二つ以上のプログラムが選択されました。\n実行しますか?"
