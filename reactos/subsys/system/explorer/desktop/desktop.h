@@ -187,4 +187,9 @@ protected:
 	DesktopDropTarget* _pDropTarget;
 	HWND	_hwndListView;
 	int		_icon_algo;
+
+	IContextMenu2*	_pctxmenu2;
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	IContextMenu3*	_pctxmenu3;
+#endif
 };

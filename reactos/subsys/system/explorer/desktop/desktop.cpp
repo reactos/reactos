@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -473,6 +473,11 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
  :	super(hwnd),
 	_pShellView(pShellView)
 {
+	_pctxmenu2 = NULL;
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	_pctxmenu3 = NULL;
+#endif
+
 	_hwndListView = ::GetNextWindow(hwnd, GW_CHILD);
 
 	SetWindowStyle(_hwndListView, GetWindowStyle(_hwndListView)&~LVS_ALIGNMASK);//|LVS_ALIGNTOP|LVS_AUTOARRANGE);
@@ -541,6 +546,36 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_DISPLAY_VERSION:
 		return SendMessage(_hwndListView, nmsg, wparam, lparam);
 
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	  case WM_MENUCHAR:	// only supported by IContextMenu3
+	   if (_pctxmenu3) {
+		   LRESULT lResult = 0;
+
+		   _pctxmenu3->HandleMenuMsg2(nmsg, wparam, lparam, &lResult);
+
+		   return lResult;
+	   }
+	   break;
+#endif
+
+	  case WM_DRAWITEM:
+	  case WM_MEASUREITEM:
+		if (wparam)
+		  break; // If wParam != 0 then the message is not menu-related.
+
+		// fall through
+
+	  case WM_INITMENUPOPUP:
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+		if (_pctxmenu3)
+		   _pctxmenu3->HandleMenuMsg(nmsg, wparam, lparam);
+		else
+#endif
+		if (_pctxmenu2)
+		   _pctxmenu2->HandleMenuMsg(nmsg, wparam, lparam);
+
+		return nmsg==WM_INITMENUPOPUP? 0: TRUE;	// Inform caller that we handled WM_INITPOPUPMENU by ourself.
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -599,11 +634,29 @@ bool DesktopShellView::DoContextMenu(int x, int y)
 
 HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 {
+	IContextMenu* pcm1;
 	IContextMenu* pcm;
 
-	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm1);
 
 	if (SUCCEEDED(hr)) {
+		 // Get the higher version context menu interfaces.
+		_pctxmenu2 = NULL;
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+		_pctxmenu3 = NULL;
+
+		if (pcm1->QueryInterface(IID_IContextMenu3, (void**)&pcm) == NOERROR)
+			_pctxmenu3 = (LPCONTEXTMENU3)pcm;
+		else
+#endif
+		if (pcm1->QueryInterface (IID_IContextMenu2, (void**)&pcm) == NOERROR)
+			_pctxmenu2 = (LPCONTEXTMENU2)pcm;
+
+		if (pcm)
+			pcm1->Release();
+		else
+			pcm = pcm1;
+
 		HMENU hmenu = CreatePopupMenu();
 
 		if (hmenu) {
@@ -614,6 +667,11 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 				AppendMenu(hmenu, 0, FCIDM_SHVIEWLAST-1, ResString(IDS_ABOUT_EXPLORER));
 
 				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, _hwnd, NULL);
+
+				_pctxmenu2 = NULL;
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+				_pctxmenu3 = NULL;
+#endif
 
 				if (idCmd == FCIDM_SHVIEWLAST-1) {
 					explorer_about(_hwnd);
