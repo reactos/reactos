@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.64 2002/11/10 18:17:42 chorns Exp $
+/* $Id: npool.c,v 1.65 2003/01/11 15:48:33 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -317,6 +317,8 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
       DbgPrint("TotalBlocks %d TotalSize %d\n",
 	       TotalBlocks, TotalSize);
     }
+  DbgPrint("Freeblocks %d TotalFreeSize %d AverageFreeSize %d\n", 
+	  EiNrFreeBlocks, EiFreeNonPagedPool, EiNrFreeBlocks ? EiFreeNonPagedPool / EiNrFreeBlocks : 0);
   DbgPrint("***************** Dump Complete ***************\n");
 #endif /* TAG_STATISTICS_TRACKING */
 }
@@ -713,6 +715,10 @@ static BLOCK_HDR* lookup_block(unsigned int size)
 	     (best == NULL || current->Size < best->Size)) 
 	 {
 	    best = current;
+	    if (best->Size == size)
+	    {
+	       break;
+	    }
 	 }
          current_entry = current_entry->Flink;
       }
