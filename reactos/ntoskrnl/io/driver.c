@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.41 2004/03/28 12:03:25 navaraf Exp $
+/* $Id: driver.c,v 1.42 2004/03/28 17:01:10 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -560,7 +560,6 @@ IopInitializeDriverModule(
    Status = DriverEntry(*DriverObject, &RegistryKey);
    if (!NT_SUCCESS(Status))
    {
-      ExFreePool((*DriverObject)->DriverExtension);
       ObMakeTemporaryObject(DriverObject);
       ObDereferenceObject(DriverObject);
       return Status;
