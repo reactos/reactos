@@ -23,3 +23,4 @@ idi_tt_info_sm.ico
 idi_tt_warn_sm.ico
 idt_check.bmp
 comctl32.spec.def
+comctl32.stubs.c

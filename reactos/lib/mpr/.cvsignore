@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 mpr.spec.def
+mpr.stubs.c

@@ -851,12 +851,10 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
         int is_data = 0;
 
         if (!odp) continue;
-        if (odp->flags & FLAG_REGISTER) continue;
-        if (odp->type == TYPE_STUB) continue;
-
         if (odp->name) name = odp->name;
+        else if (odp->type == TYPE_STUB) name = make_internal_name( odp, spec, "stub" );
         else if (odp->export_name) name = odp->export_name;
-        else continue;
+        else name = make_internal_name( odp, spec, "noname_export" );
 
         fprintf(outfile, "  %s", name);
 
@@ -886,11 +884,23 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
             }
             break;
         }
+        case TYPE_STUB:
+        {
+            if (NULL != odp->name)
+            {
+                fprintf(outfile, "=%s", make_internal_name( odp, spec, "stub" ));
+            }
+            break;
+        }
         default:
             assert(0);
         }
         fprintf( outfile, " @%d", odp->ordinal );
+#if 0 /* MinGW binutils cannot handle this correctly */
         if (!odp->name) fprintf( outfile, " NONAME" );
+#else
+        if (!odp->name && (odp->type == TYPE_STUB || odp->export_name)) fprintf( outfile, " NONAME" );
+#endif
         if (is_data) fprintf( outfile, " DATA" );
 #if 0
         /* MinGW binutils cannot handle this correctly */
@@ -993,4 +1003,25 @@ void BuildDebugFile( FILE *outfile, const char *srcdir, char **argv )
              "}\n", prefix );
 
     free( prefix );
+}
+
+
+/*******************************************************************
+ *         BuildPedllFile
+ *
+ * Build a PE DLL C file from a spec file.
+ */
+void BuildPedllFile( FILE *outfile, DLLSPEC *spec )
+{
+    int nr_exports;
+
+    nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
+    output_standard_file_header( outfile );
+
+    if (nr_exports)
+    {
+        /* Output the stub functions */
+
+        output_stub_funcs( outfile, spec );
+    }
 }

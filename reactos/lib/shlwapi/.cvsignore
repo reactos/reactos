@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 shlwapi.spec.def
+shlwapi.stubs.c

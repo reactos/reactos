@@ -74,7 +74,8 @@ enum exec_mode_values
     MODE_DEF,
     MODE_DEBUG,
     MODE_RELAY16,
-    MODE_RELAY32
+    MODE_RELAY32,
+    MODE_PEDLL
 };
 
 static enum exec_mode_values exec_mode = MODE_NONE;
@@ -159,7 +160,8 @@ static const char usage_str[] =
 "       --exe=NAME           Build a .c file for the named executable\n"
 "       --debug [FILES]      Build a .c file with the debug channels declarations\n"
 "       --relay16            Build the 16-bit relay assembly routines\n"
-"       --relay32            Build the 32-bit relay assembly routines\n\n"
+"       --relay32            Build the 32-bit relay assembly routines\n"
+"       --pedll              Build a .c file for PE dll\n\n"
 "The mode options are mutually exclusive; you must specify one and only one.\n\n";
 
 enum long_options_values
@@ -171,7 +173,8 @@ enum long_options_values
     LONG_OPT_RELAY16,
     LONG_OPT_RELAY32,
     LONG_OPT_SUBSYSTEM,
-    LONG_OPT_VERSION
+    LONG_OPT_VERSION,
+    LONG_OPT_PEDLL
 };
 
 static const char short_options[] = "C:D:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:w";
@@ -186,6 +189,7 @@ static const struct option long_options[] =
     { "relay32",  0, 0, LONG_OPT_RELAY32 },
     { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
     { "version",  0, 0, LONG_OPT_VERSION },
+    { "pedll",    1, 0, LONG_OPT_PEDLL },
     /* aliases for short options */
     { "source-dir",    1, 0, 'C' },
     { "delay-lib",     1, 0, 'd' },
@@ -341,6 +345,11 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_VERSION:
             printf( "winebuild version " PACKAGE_VERSION "\n" );
             exit(0);
+        case LONG_OPT_PEDLL:
+            set_exec_mode( MODE_PEDLL );
+            spec_file_name = xstrdup( optarg );
+            set_dll_file_name( optarg, spec );
+            break;
         case '?':
             usage(1);
             break;
@@ -441,6 +450,11 @@ int main(int argc, char **argv)
         break;
     case MODE_RELAY32:
         fatal_error( "Win32 relays are not supported in ReactOS version of winebuild\n" );
+        break;
+    case MODE_PEDLL:
+        if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
+        if (!parse_input_file( spec )) break;
+        BuildPedllFile( output_file, spec );
         break;
     default:
         usage(1);

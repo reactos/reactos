@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 riched32.spec.def
+riched32.stubs.c

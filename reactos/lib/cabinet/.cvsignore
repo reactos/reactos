@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 cabinet.spec.def
+cabinet.stubs.c

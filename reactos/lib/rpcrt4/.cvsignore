@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 rpcrt4.spec.def
+rpcrt4.stubs.c

@@ -12,3 +12,4 @@ drag_link.cur
 drag_move.cur
 nodrop.cur 
 ole32.spec.def
+ole32.stubs.c

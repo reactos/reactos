@@ -10,3 +10,4 @@ Makefile.ros
 *.bmp
 *.ico
 comdlg32.spec.def
+comdlg32.stubs.c

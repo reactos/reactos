@@ -6,3 +6,4 @@ Makefile.ros
 *.sym
 *.map
 *.spec.def
+winmm.stubs.c

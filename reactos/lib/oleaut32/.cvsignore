@@ -7,3 +7,4 @@
 *.tmp
 Makefile.ros
 oleaut32.spec.def
+oleaut32.stubs.c

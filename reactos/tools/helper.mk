@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.93 2004/10/28 19:01:59 chorns Exp $
+# $Id: helper.mk,v 1.94 2004/11/02 19:47:18 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -486,6 +486,10 @@ ifeq ($(TARGET_DEFNAME),)
 else
   MK_DEFBASENAME := $(TARGET_DEFNAME)
 endif
+ifneq ($(TARGET_STUBS),no)
+  MK_STUBS_SRC := $(TARGET_NAME).stubs.c
+  MK_STUBS_OBJ := $(TARGET_NAME).stubs.o
+endif
   MK_RC_BINARIES = $(TARGET_RC_BINARIES)
 endif
 
@@ -667,7 +671,7 @@ MK_EXTRADEP += _stubs.o _hooks.o
 endif
 
 # We don't want to link header files
-MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
+MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS)) $(MK_STUBS_OBJ)
 
 # There is problems with C++ applications and ld -r. Ld can cause errors like:
 #   reloc refers to symbol `.text$_ZN9CCABCodecC2Ev' which is not being output
@@ -724,7 +728,7 @@ endif
 $(MK_BASENAME).a: $(MK_OBJECTS)
 	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
-$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
+$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_STUBS_SRC) $(MK_STUBS_OBJ)
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -946,8 +950,8 @@ MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	- $(RM) *.o $(MK_PCHNAME) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
-	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
-	  $(TARGET_CLEAN)
+	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_STUBS_SRC) \
+	  $(MK_GENERATED_MAKEFILE) $(TARGET_CLEAN)
 
 ifneq ($(TARGET_HEADERS),)
 $(TARGET_OBJECTS): $(TARGET_HEADERS)
@@ -1100,6 +1104,8 @@ endif
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
 %.drv.spec.def: %.spec
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
+%.stubs.c: %.spec
+	$(WINEBUILD) $(DEFS) -o $@ --pedll $<
 %.i: %.c
 	$(CC) $(TARGET_CFLAGS) -E $< > $@
 %.h.gch: %.h

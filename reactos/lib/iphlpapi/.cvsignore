@@ -19,3 +19,4 @@ temp.exp
 *.tmp
 Makefile.ros
 iphlpapi.spec.def
+iphlpapi.stubs.c

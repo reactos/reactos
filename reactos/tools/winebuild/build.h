@@ -185,6 +185,7 @@ extern void BuildSpec16File( FILE *outfile, DLLSPEC *spec );
 extern void BuildSpec32File( FILE *outfile, DLLSPEC *spec );
 extern void BuildDef32File( FILE *outfile, DLLSPEC *spec );
 extern void BuildDebugFile( FILE *outfile, const char *srcdir, char **argv );
+extern void BuildPedllFile( FILE *outfile, DLLSPEC *spec );
 
 extern int parse_spec_file( FILE *file, DLLSPEC *spec );
 extern int parse_def_file( FILE *file, DLLSPEC *spec );

@@ -9,3 +9,4 @@
 temp.exp
 msacm32.spec.def
 Makefile.ros
+msacm32.stubs.c

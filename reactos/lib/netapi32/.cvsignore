@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 netapi32.spec.def
+netapi32.stubs.c

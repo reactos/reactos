@@ -8,3 +8,4 @@
 *.tmp
 Makefile.ros
 setupapi.spec.def
+setupapi.stubs.c
