@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -38,18 +39,12 @@ HalMakeBeep (
 	ULONG	Frequency
 	)
 {
-   UCHAR b;
+    UCHAR b;
+    ULONG flags;
    
     /* save flags and disable interrupts */
-#if defined(__GNUC__)
-    __asm__("pushf\n\t" \
-            "cli\n\t");
-#elif defined(_MSC_VER)
-    __asm	pushfd
-    __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+    Ki386SaveFlags(flags);
+    Ki386DisableInterrupts();
 
     /* speaker off */
     b = READ_PORT_UCHAR((PUCHAR)PORT_B);
@@ -62,13 +57,7 @@ HalMakeBeep (
         if (Divider > 0x10000)
         {
             /* restore flags */
-#if defined(__GNUC__)
-            __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-            __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+            Ki386RestoreFlags(flags);
 
             return FALSE;
         }
@@ -83,13 +72,7 @@ HalMakeBeep (
     }
 
     /* restore flags */
-#if defined(__GNUC__)
-    __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-    __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+    Ki386RestoreFlags(flags);
 
     return TRUE;
 }

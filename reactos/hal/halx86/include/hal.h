@@ -76,5 +76,24 @@ HalReleaseDisplayOwnership();
 BOOLEAN STDCALL
 HalQueryDisplayOwnership();
 
+#if defined(__GNUC__)
+#define Ki386SaveFlags(x)	    __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
+#define Ki386RestoreFlags(x)	    __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
+#define Ki386DisableInterrupts()    __asm__ __volatile__("cli\n\t")
+#define Ki386EnableInterrupts()	    __asm__ __volatile__("sti\n\t")
+#define Ki386HaltProcessor()	    __asm__ __volatile__("hlt\n\t")
+#elif defined(_MSC_VER)
+#define Ki386SaveFlags(x)	    __asm pushfd  __asm pop x;
+#define Ki386RestoreFlags(x)	    __asm push x  __asm popfd;
+#define Ki386DisableInterrupts()    __asm cli
+#define Ki386EnableInterrupts()	    __asm sti
+#define Ki386HaltProcessor()	    __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+
+
+
 
 #endif /* __INTERNAL_HAL_HAL_H */

@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.14 2003/12/28 22:38:09 fireball Exp $
+/* $Id: irql.c,v 1.15 2004/07/20 21:25:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,9 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/ke.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -103,13 +103,7 @@ VOID HalpInitPICs(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
   
   /* We can now enable interrupts */
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("sti\n\t");
-#elif defined(_MSC_VER)
-    __asm	sti
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386EnableInterrupts();
 }
 
 VOID HalpEndSystemInterrupt(KIRQL Irql)
@@ -117,6 +111,7 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
  * FUNCTION: Enable all irqs with higher priority.
  */
 {
+  ULONG flags;
   const USHORT mask[] = 
   {
      0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -126,26 +121,15 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   };     
 
   /* Interrupts should be disable while enabling irqs of both pics */
-#if defined(__GNUC__)
-  __asm__("pushf\n\t");
-  __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-  __asm pushfd
-  __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386SaveFlags(flags);
+  Ki386DisableInterrupts();
 
   pic_mask_intr.both &= mask[Irql];
   WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
-#if defined(__GNUC__)
-  __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-  __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+
+  /* restore flags */
+  Ki386RestoreFlags(flags);
 }
 
 VOID STATIC

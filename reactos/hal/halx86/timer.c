@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.4 2004/05/10 11:13:15 gvg Exp $
+/* $Id: timer.c,v 1.5 2004/07/20 21:25:36 hbirr Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -33,6 +33,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
+#include <hal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -132,30 +133,18 @@ VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
 static ULONG Read8254Timer(VOID)
 {
   ULONG Count;
+  ULONG flags;
 
   /* save flags and disable interrupts */
-#if defined(__GNUC__)
-  __asm__("pushf\n\t" \
-          "cli\n\t");
-#elif defined(_MSC_VER)
-  __asm	pushfd
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386SaveFlags(flags);
+  Ki386DisableInterrupts();
 
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_LATCH);
   Count = READ_PORT_UCHAR((PUCHAR) TMR_CNT0);
   Count |= READ_PORT_UCHAR((PUCHAR) TMR_CNT0) << 8;
 
   /* restore flags */
-#if defined(__GNUC__)
-  __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-  __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386RestoreFlags(flags);
 
   return Count;
 }
@@ -274,28 +263,16 @@ VOID STDCALL
 HalCalibratePerformanceCounter(ULONG Count)
 {
    ULONG i;
+   ULONG flags;
 
    /* save flags and disable interrupts */
-#if defined(__GNUC__)
-   __asm__("pushf\n\t" \
-	   "cli\n\t");
-#elif defined(_MSC_VER)
-  __asm	pushfd
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ki386SaveFlags(flags);
+   Ki386DisableInterrupts();
 
    for (i = 0; i < Count; i++);
 
    /* restore flags */
-#if defined(__GNUC__)
-   __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-   __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+   Ki386RestoreFlags(flags);
 }
 
 

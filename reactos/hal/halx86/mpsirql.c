@@ -15,6 +15,7 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>
+#include <hal.h>
 #include <mps.h>
 
 #define NDEBUG
@@ -76,20 +77,12 @@ VOID HalpEndSystemInterrupt (KIRQL Irql)
  * FUNCTION: Enable all irqs with higher priority.
  */
 {
+  ULONG flags;
   /* Interrupts should be disabled while enabling irqs */
-#if defined(__GNUC__)
-  __asm__("pushf\n\t");
-  __asm__("cli\n\t");
+  Ki386SaveFlags(flags);
+  Ki386DisableInterrupts();
   APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
-  __asm__("popf\n\t");
-#elif defined(_MSC_VER)
-  __asm	pushfd
-  __asm	cli
-  APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
-  __asm	popfd
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386RestoreFlags(flags);
 }
 
 

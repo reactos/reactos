@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.9 2003/12/28 22:38:09 fireball Exp $
+/* $Id: mp.c,v 1.10 2004/07/20 21:25:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -724,7 +724,7 @@ static VOID IOAPICSetup(
 VOID IOAPICDump(VOID)
 {
 	ULONG apic, i;
-  ULONG reg0, reg1, reg2;
+  ULONG reg0, reg1, reg2=0;
 
  	DbgPrint("Number of MP IRQ sources: %d.\n", IRQCount);
 	for (i = 0; i < IOAPICCount; i++) {
@@ -1046,7 +1046,7 @@ static VOID APICDumpBit(ULONG base)
 
 	DbgPrint("0123456789abcdef0123456789abcdef\n");
 	for (i = 0; i < 8; i++) {
-		APICRead(base + i*0x10);
+		v = APICRead(base + i*0x10);
 		for (j = 0; j < 32; j++) {
 			if (v & (1<<j))
 				DbgPrint("1");
@@ -1292,14 +1292,9 @@ VOID APICSendIPI(
 {
    ULONG tmp, i, flags;
 
-   pushfl(flags);
-#if defined(__GNUC__)
-   __asm__ ("\n\tcli\n\t");
-#elif defined(_MSC_VER)
-   __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+   /* save flags and disable interrupts */
+   Ki386SaveFlags(flags);
+   Ki386DisableInterrupts();
 
    /* Wait up to 100ms for the APIC to become ready */
    for (i = 0; i < 10000; i++) {
@@ -1336,7 +1331,7 @@ VOID APICSendIPI(
    /* Now, fire off the IPI */
    APICWrite(APIC_ICR0, tmp);
 
-   popfl(flags);
+   Ki386RestoreFlags(flags);
 }
 
 
@@ -1395,13 +1390,7 @@ VOID MpsTimerHandler(
    * Enable interrupts
    * NOTE: Only higher priority interrupts will get through
    */
-#if defined(__GNUC__)
-  __asm__("sti\n\t");
-#elif defined(_MSC_VER)
-  __asm	sti
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386EnableInterrupts();
 
   if (KeGetCurrentProcessorNumber() == 0)
     {
@@ -1419,13 +1408,7 @@ VOID MpsTimerHandler(
   /*
    * Disable interrupts
    */
-#if defined(__GNUC__)
-  __asm__("cli\n\t");
-#elif defined(_MSC_VER)
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386DisableInterrupts();
 
   DbgPrint("MpsTimerHandler() 0 IRQL 0x%.08x\n", OldIrql);
 
@@ -1633,8 +1616,8 @@ HalInitializeProcessor (
 
    PCOMMON_AREA_INFO Common;
    ULONG StartupCount;
-   ULONG DeliveryStatus;
-   ULONG AcceptStatus;
+   ULONG DeliveryStatus = 0;
+   ULONG AcceptStatus = 0;
 	 ULONG CPU, i, j;
 	 ULONG tmp, maxlvt;
 
@@ -2279,7 +2262,7 @@ HaliScanForMPConfigTable(
 
             if (mpf->Feature2 & FEATURE2_IMCRP) {
                APICMode = amPIC;
-               DPRINT("Running in IMCR and PIC compatibility mode.\n")
+               DPRINT("Running in IMCR and PIC compatibility mode.\n");
             } else {
                APICMode = amVWIRE;
                DPRINT("Running in Virtual Wire compatibility mode.\n");
@@ -2415,13 +2398,7 @@ HalpInitMPS(
   HalpCalibrateStallExecution();
 
   /* We can now enable interrupts */
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("sti\n\t");
-#elif defined(_MSC_VER)
-  __asm	sti
-#else
-#error Unknown compiler for inline assembler
-#endif
+  Ki386EnableInterrupts();
 
   NextCPU = 0;
 }

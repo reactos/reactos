@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.14 2004/03/16 22:45:55 dwelch Exp $
+/* $Id: display.c,v 1.15 2004/07/20 21:25:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,7 +122,7 @@
  */
 
 #include <ddk/ntddk.h>
-#include <mps.h>
+#include <hal.h>
 
 #define SCREEN_SYNCHRONIZATION
 
@@ -681,17 +681,11 @@ HalDisplayString(IN PCH String)
 
   pch = String;
 
-  pushfl(Flags);
-
-#if defined(__GNUC__)
-  __asm__ ("cli\n\t");
-#elif defined(_MSC_VER)
-  __asm cli
-#else
-#error Unknown compiler for inline assembler
-#endif
-
   KiAcquireSpinLock(&Lock);
+
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
 
 #if 0  
   if (HalOwnsDisplay == FALSE)
@@ -753,8 +747,8 @@ HalDisplayString(IN PCH String)
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)((offset >> 8) & 0xff));
 #endif
+  Ki386RestoreFlags(Flags);
   KiReleaseSpinLock(&Lock);
-  popfl(Flags);
 }
 
 VOID STDCALL

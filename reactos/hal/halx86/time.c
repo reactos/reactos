@@ -10,7 +10,7 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
-#include <mps.h>
+#include <hal.h>
 #include <bus.h>
 
 #define NDEBUG
@@ -46,18 +46,17 @@ HalpQueryCMOS(UCHAR Reg)
   ULONG Flags;
 
   Reg |= 0x80;
-  pushfl(Flags);
-#if defined(__GNUC__)
-  __asm__("cli\n");  // AP unsure as to whether to do this here
-#elif defined(_MSC_VER)
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+
+  /* save flags and disable interrupts */
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
   WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
   Val = READ_PORT_UCHAR((PUCHAR)0x71);
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
-  popfl(Flags);
+  
+  /* restore flags */
+  Ki386RestoreFlags(Flags);
 
   return(Val);
 }
@@ -70,18 +69,17 @@ HalpSetCMOS(UCHAR Reg,
   ULONG Flags;
 
   Reg |= 0x80;
-  pushfl(Flags);
-#if defined(__GNUC__)
-  __asm__("cli\n");  // AP unsure as to whether to do this here
-#elif defined(_MSC_VER)
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+
+  /* save flags and disable interrupts */
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
   WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
   WRITE_PORT_UCHAR((PUCHAR)0x71, Val);
   WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
-  popfl(Flags);
+  
+  /* restore flags */
+  Ki386RestoreFlags(Flags);
 }
 
 
@@ -91,18 +89,16 @@ HalpQueryECMOS(USHORT Reg)
   UCHAR Val;
   ULONG Flags;
 
-  pushfl(Flags);
-#if defined(__GNUC__)
-  __asm__("cli\n");  // AP unsure as to whether to do this here
-#elif defined(_MSC_VER)
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  /* save flags and disable interrupts */
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
   WRITE_PORT_UCHAR((PUCHAR)0x74, (UCHAR)(Reg & 0x00FF));
   WRITE_PORT_UCHAR((PUCHAR)0x75, (UCHAR)(Reg>>8));
   Val = READ_PORT_UCHAR((PUCHAR)0x76);
-  popfl(Flags);
+  
+  /* restore flags */
+  Ki386RestoreFlags(Flags);
 
   return(Val);
 }
@@ -114,18 +110,16 @@ HalpSetECMOS(USHORT Reg,
 {
   ULONG Flags;
 
-  pushfl(Flags);
-#if defined(__GNUC__)
-  __asm__("cli\n");  // AP unsure as to whether to do this here
-#elif defined(_MSC_VER)
-  __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+  /* save flags and disable interrupts */
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
   WRITE_PORT_UCHAR((PUCHAR)0x74, (UCHAR)(Reg & 0x00FF));
   WRITE_PORT_UCHAR((PUCHAR)0x75, (UCHAR)(Reg>>8));
   WRITE_PORT_UCHAR((PUCHAR)0x76, Val);
-  popfl(Flags);
+  
+  /* restore flags */
+  Ki386RestoreFlags(Flags);
 }
 
 

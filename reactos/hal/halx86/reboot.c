@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.6 2004/03/18 19:58:35 dwelch Exp $
+/* $Id: reboot.c,v 1.7 2004/07/20 21:25:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,13 +25,7 @@ HalReboot (VOID)
     ((PUCHAR)HalpZeroPageMapping)[0x473] = 0x12;
 
     /* disable interrupts */
-#if defined(__GNUC__)
-    __asm__("cli\n");
-#elif defined(_MSC_VER)
-    __asm	cli
-#else
-#error Unknown compiler for inline assembler
-#endif
+    Ki386DisableInterrupts();
 
 
     /* disable periodic interrupt (RTC) */
@@ -52,15 +46,8 @@ HalReboot (VOID)
 
     /* stop the processor */
 #if 1
-#if defined(__GNUC__)
-    __asm__("hlt\n");
-#elif defined(_MSC_VER)
-    __asm	hlt
-#else
-#error Unknown compiler for inline assembler
-#endif
-#else
-   for(;;);
+    Ki386HaltProcessor();
+    for(;;);
 #endif   
 }
 

@@ -423,17 +423,6 @@ typedef enum {
 } APIC_MODE;
 
 
-#if defined(__GNUC__)
-#define pushfl(x) __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
-#define popfl(x) __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
-#elif defined(_MSC_VER)
-#define pushfl(x) __asm pushfd  __asm pop x;
-#define popfl(x)  __asm push x  __asm popfd;
-#else
-#error Unknown compiler for inline assembler
-#endif
-
-
 #define PIC_IRQS  16
 
 /* Prototypes */

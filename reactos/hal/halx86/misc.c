@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.4 2003/12/28 22:38:09 fireball Exp $
+/* $Id: misc.c,v 1.5 2004/07/20 21:25:36 hbirr Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -39,19 +39,8 @@ HalProcessorIdle (VOID)
 {
 #if 1
 
-#if defined(__GNUC__)
-
-	__asm__("sti\n\t" \
-	        "hlt\n\t");
-
-#elif defined(_MSC_VER)
-
-	__asm	sti
-	__asm	hlt
-
-#else
-#error Unknown compiler for inline assembler
-#endif
+    Ki386EnableInterrupts();
+    Ki386HaltProcessor();
 
 #else
    
