@@ -1637,7 +1637,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_PRINTERS:
 		CloseStartMenu(id);
-		MainFrame::Create(SpecialFolderPath(CSIDL_PRINTERS, _hwnd), OWM_PIDL);	//@todo missing: CSIDL_PRINTHOOD
+		MainFrame::Create(SpecialFolderPath(CSIDL_PRINTERS, _hwnd), OWM_PIDL);
 		break;
 
 	  case IDC_CONTROL_PANEL:
@@ -1647,7 +1647,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_ADMIN:
 		CloseStartMenu(id);
-		MainFrame::Create(SpecialFolderPath(CSIDL_ADMINTOOLS, _hwnd), OWM_PIDL);	//@todo missing: CSIDL_COMMON_ADMINTOOLS
+		MainFrame::Create(SpecialFolderPath(CSIDL_COMMON_ADMINTOOLS, _hwnd), OWM_PIDL);
 		break;
 
 	  case IDC_CONNECTIONS:
