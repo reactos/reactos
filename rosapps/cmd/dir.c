@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.11 2001/07/11 20:26:58 ekohl Exp $
+/* $Id: dir.c,v 1.12 2002/07/15 22:29:32 sedwards Exp $
  *
  *  DIR.C - dir internal command.
  *

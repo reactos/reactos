@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.4 1999/12/04 14:54:50 ekohl Exp $
+/* $Id: color.c,v 1.5 2002/07/15 22:29:32 sedwards Exp $
  *
  *  COLOR.C - color internal command.
  *
