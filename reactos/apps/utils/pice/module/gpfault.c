@@ -60,14 +60,14 @@ void HandleGPFault(FRAME* ptr)
 //
 //*************************************************************************
 __asm__ ("\n\t \
-NewGPFaultHandler:\n\t \
+		NewGPFaultHandler:\n\t \
 		pushfl\n\t \
         cli\n\t \
         cld\n\t \
         pushal\n\t \
 	    pushl %ds\n\t \
 \n\t \
-		// test for v86 mode.
+		// test for v86 mode\n\t \
  		testl $0x20000,40(%esp)\n\t \
 		jnz notv86\n\t \
 		popl %ds\n\t \
@@ -75,7 +75,7 @@ NewGPFaultHandler:\n\t \
 		popfl\n\t \
 		.byte 0x2e\n\t \
 		jmp *_OldGPFaultHandler\n\t \
-notv86:\n\t \
+		notv86:\n\t \
 		// setup default data selectors\n\t \
 	    movw %ss,%ax\n\t \
 	    movw %ax,%ds\n\t \

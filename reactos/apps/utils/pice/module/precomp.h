@@ -34,7 +34,7 @@ Copyright notice:
 #include <ddk/ntddk.h>
 #include <ntos/types.h>
 #include <ddk/types.h>
-#include <ddk/i386/tss.h>
+//#include <ddk/i386/tss.h>
 #include <internal/ob.h>
 #include <internal/i386/segment.h>
 #include <defines.h>

@@ -168,12 +168,13 @@ COMMAND_PROTOTYPE(ShowSysCallTable);
 COMMAND_PROTOTYPE(SetAltKey);
 COMMAND_PROTOTYPE(ShowContext);
 
-//ei make sure the following correspond to ntoskrnl/mm/i386/page.c
+//ei - make sure the following correspond to ntoskrnl/mm/i386/page.c
+//sedwards - Dont use them if you dont need them. Use DDK headers instead.
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
-#define PAGE_SHIFT      12
+//#define PAGE_SHIFT      12
 #define PTRS_PER_PTE    1024
-#define PAGE_SIZE       (1UL << PAGE_SHIFT)
+//#define PAGE_SIZE       (1UL << PAGE_SHIFT)
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (4 * 1024 * 1024))
 #define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))

@@ -29,10 +29,6 @@ Copyright notice:
 
 --*/
 
-// constant defines
-#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
-#define CONTAINING_RECORD(Address,Type,Field) (Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
-
 typedef struct _LOCAL_VARIABLE
 {
 	char type_name[64];
