@@ -684,7 +684,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                 (ULONG)ValueFullInformation->Name - (ULONG)ValueFullInformation +
                 ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
-                (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
+                  ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
               if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
@@ -1161,7 +1161,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 (ULONG)ValueFullInformation->Name - (ULONG)ValueFullInformation +
                 ValueFullInformation->NameLength;
               ValueFullInformation->DataOffset =
-                (ValueFullInformation->DataOffset + 3) & 0xfffffffc;
+                ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
               if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
                 {
@@ -1632,11 +1632,11 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 	  break;
 	}
 
-      BufferLength = (BufferLength + 3) & 0xfffffffc;
+      BufferLength = ROUND_UP(BufferLength, sizeof(PVOID));
 
       if (BufferLength + (ValueCell->DataSize & REG_DATA_SIZE_MASK) <= *Length)
 	{
-	  DataPtr = (PUCHAR)(((ULONG)DataPtr + 3) & 0xfffffffc);
+	  DataPtr = (PUCHAR)ROUND_UP((ULONG)DataPtr, sizeof(PVOID));
 
 	  ValueList[i].Type = ValueCell->DataType;
 	  ValueList[i].DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;

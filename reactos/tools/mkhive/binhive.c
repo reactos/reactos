@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.6 2003/10/10 21:53:47 ekohl Exp $
+/* $Id: binhive.c,v 1.7 2003/10/11 16:54:51 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -48,7 +48,7 @@
 #define  REG_EXTEND_HASH_TABLE_SIZE    4
 #define  REG_VALUE_LIST_CELL_MULTIPLE  4
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_UP(N, S) ((N) + (S) - ((N) % (S)))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
@@ -733,8 +733,8 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 static BOOL
 CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
-		 PVOID *Block,
 		 LONG BlockSize,
+		 PVOID *Block,
 		 PBLOCK_OFFSET pBlockOffset)
 {
   PCELL_HEADER NewBlock;
@@ -744,7 +744,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   *Block = NULL;
 
   /* Round to 16 bytes multiple */
-  BlockSize = (BlockSize + sizeof(ULONG) + 15) & 0xfffffff0;
+  BlockSize = ROUND_UP(BlockSize, 16);
 
   /* first search in free blocks */
   NewBlock = NULL;
@@ -813,12 +813,11 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
   ULONG NewHashSize;
   BOOL Status;
 
-  NewHashSize = ROUND_UP(sizeof(HASH_TABLE_CELL) + 
-			 (SubKeyCount - 1) * sizeof(HASH_RECORD),
-			 0x10);
+  NewHashSize = sizeof(HASH_TABLE_CELL) + 
+		(SubKeyCount * sizeof(HASH_RECORD));
   Status = CmiAllocateCell (Hive,
-			    (PVOID*) &HashCell,
 			    NewHashSize,
+			    (PVOID*) &HashCell,
 			    HBOffset);
   if ((HashCell == NULL) || (Status == FALSE))
     {
@@ -886,11 +885,11 @@ CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
   ULONG ValueListSize;
   BOOL Status;
 
-  ValueListSize = ROUND_UP (ValueCount * sizeof(BLOCK_OFFSET),
-			    0x10);
+  ValueListSize = sizeof(VALUE_LIST_CELL) +
+		  (ValueCount * sizeof(BLOCK_OFFSET));
   Status = CmiAllocateCell (Hive,
-			    (PVOID)&ValueListCell,
 			    ValueListSize,
+			    (PVOID)&ValueListCell,
 			    ValueListOffset);
   if ((ValueListCell == NULL) || (Status == FALSE))
     {
@@ -914,8 +913,8 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 
   NameSize = (ValueName == NULL) ? 0 : strlen (ValueName);
   Status = CmiAllocateCell (Hive,
-			    (PVOID*)&NewValueCell,
 			    sizeof(VALUE_CELL) + NameSize,
+			    (PVOID*)&NewValueCell,
 			    ValueCellOffset);
   if ((NewValueCell == NULL) || (Status == FALSE))
     {
@@ -1054,9 +1053,10 @@ CmiExportValue (PREGISTRY_HIVE Hive,
     }
   else
     {
+      /* Allocate data cell */
       if (!CmiAllocateCell (Hive,
+			    sizeof(CELL_HEADER) + DstDataSize,
 			    (PVOID *)&DataCell,
-			    DstDataSize,
 			    &DataCellOffset))
 	{
 	  return FALSE;
@@ -1116,7 +1116,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
 
   /* Allocate key cell */
   KeyCellSize = sizeof(KEY_CELL) + Key->NameSize - 1;
-  if (!CmiAllocateCell (Hive, (PVOID)&NewKeyCell, KeyCellSize, &NKBOffset))
+  if (!CmiAllocateCell (Hive, KeyCellSize, (PVOID)&NewKeyCell, &NKBOffset))
     {
       DPRINT1 ("CmiAllocateBlock() failed\n");
       return FALSE;

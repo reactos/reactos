@@ -50,7 +50,7 @@
 
 
 // BLOCK_OFFSET = offset in file after header block
-typedef ULONG BLOCK_OFFSET;
+typedef ULONG BLOCK_OFFSET, *PBLOCK_OFFSET;
 
 /* header for registry hive file : */
 typedef struct _HIVE_HEADER

@@ -25,7 +25,6 @@
 
 /* LOCAL MACROS *************************************************************/
 
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
@@ -2938,7 +2937,7 @@ NTSTATUS
 CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
 	OUT BLOCK_OFFSET *HBOffset,
-	IN ULONG HashTableSize)
+	IN ULONG SubKeyCount)
 {
   PHASH_TABLE_CELL NewHashBlock;
   ULONG NewHashSize;
@@ -2947,7 +2946,7 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
   Status = STATUS_SUCCESS;
   *HashBlock = NULL;
   NewHashSize = sizeof(HASH_TABLE_CELL) + 
-    (HashTableSize - 1) * sizeof(HASH_RECORD);
+		(SubKeyCount * sizeof(HASH_RECORD));
   Status = CmiAllocateCell (RegistryHive,
 			    NewHashSize,
 			    (PVOID*) &NewHashBlock,
@@ -2960,7 +2959,7 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
   else
     {
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
-      NewHashBlock->HashTableSize = HashTableSize;
+      NewHashBlock->HashTableSize = SubKeyCount;
       *HashBlock = NewHashBlock;
     }
 
@@ -3090,7 +3089,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 	}
       NewValueCell->DataType = 0;
       NewValueCell->DataSize = 0;
-      NewValueCell->DataOffset = 0xffffffff;
+      NewValueCell->DataOffset = (BLOCK_OFFSET)-1;
       *ValueCell = NewValueCell;
     }
 
@@ -3247,7 +3246,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
   Status = STATUS_SUCCESS;
 
   /* Round to 16 bytes multiple */
-  CellSize = (CellSize + sizeof(DWORD) + 15) & 0xfffffff0;
+  CellSize = ROUND_UP(CellSize, 16);
 
   /* Handle volatile hives first */
   if (IsPointerHive(RegistryHive))
@@ -3936,7 +3935,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 
 	  NewKeyCell->ClassSize = SrcKeyCell->ClassSize;
 	  Status = CmiAllocateCell (DstHive,
-				    NewKeyCell->ClassSize,
+				    sizeof(CELL_HEADER) + NewKeyCell->ClassSize,
 				    (PVOID)&NewClassNameCell,
 				    &NewClassNameOffset);
 	  if (!NT_SUCCESS(Status))
@@ -4031,7 +4030,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	      SrcValueDataCell = CmiGetCell (SrcHive, SrcValueCell->DataOffset, NULL);
 
 	      Status = CmiAllocateCell (DstHive,
-					SrcValueCell->DataSize,
+					sizeof(CELL_HEADER) + SrcValueCell->DataSize,
 					(PVOID*) &NewValueDataCell,
 					&ValueDataCellOffset);
 	      if (!NT_SUCCESS(Status))
@@ -4103,7 +4102,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 
 	      NewSubKeyCell->ClassSize = SrcSubKeyCell->ClassSize;
 	      Status = CmiAllocateCell (DstHive,
-					NewSubKeyCell->ClassSize,
+					sizeof(CELL_HEADER) + NewSubKeyCell->ClassSize,
 					(PVOID)&NewClassNameCell,
 					&NewClassNameOffset);
 	      if (!NT_SUCCESS(Status))
