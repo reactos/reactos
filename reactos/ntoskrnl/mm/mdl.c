@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.35 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: mdl.c,v 1.36 2002/04/27 19:24:45 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -161,7 +161,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    MmLockAddressSpace(MmGetKernelAddressSpace());
    (VOID)MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			  BaseAddress - Mdl->ByteOffset,
-			  Mdl->ByteCount,
+			  Mdl->ByteOffset + Mdl->ByteCount,
 			  NULL,
 			  NULL);
    Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
