@@ -35,7 +35,6 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KIRQL oldIrql;
    PETHREAD CurrentThread;
    
-   PiNrRunnableThreads--;
    
    CurrentThread = PsGetCurrentThread();
    

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.40 1999/12/13 22:04:41 dwelch Exp $
+/* $Id: thread.c,v 1.41 1999/12/14 00:54:29 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -202,6 +202,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    PETHREAD Candidate;
    
    CurrentThread->Tcb.State = NewThreadStatus;
+   PiNrRunnableThreads--;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
@@ -215,7 +216,6 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
-	     PiNrRunnableThreads--;
 	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     return;
 	  }
@@ -227,7 +227,6 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    	     
 	     CurrentThread = Candidate;
 	     
-	     PiNrRunnableThreads--;
 	     KeReleaseSpinLockFromDpcLevel( &PiThreadListLock );
 	     HalTaskSwitch(&CurrentThread->Tcb);
 	     PsReapThreads();
