@@ -2,10 +2,10 @@
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       services/fs/np/fsctrl.c
+ * FILE:       drivers/fs/np/fsctrl.c
  * PURPOSE:    Named pipe filesystem
  * PROGRAMMER: David Welch <welch@cwcom.net>
- *             Eric Kohl <ekohl@rz-online.de>
+ *             Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/

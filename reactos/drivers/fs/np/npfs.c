@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       services/fs/np/mount.c
+ * FILE:       drivers/fs/np/mount.c
  * PURPOSE:    Named pipe filesystem
  * PROGRAMMER: David Welch <welch@cwcom.net>
  */
@@ -64,7 +64,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
-	return(Status);
+	return Status;
      }
    
    /* initialize the device object */
@@ -81,7 +81,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DeviceExtension->DefaultQuota = 8 * PAGE_SIZE;
    DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

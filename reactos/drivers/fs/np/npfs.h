@@ -1,13 +1,7 @@
 /* $Id$ */
 
-#ifndef __SERVICES_FS_NP_NPFS_H
-#define __SERVICES_FS_NP_NPFS_H
-
-/*
- * Hacky support for delayed closing of pipes. We need this to support
- * reading from pipe the was closed on one end.
- */
-#define FIN_WORKAROUND_READCLOSE
+#ifndef __DRIVERS_FS_NP_NPFS_H
+#define __DRIVERS_FS_NP_NPFS_H
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {
@@ -70,8 +64,6 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
-#define CP DPRINT("\n");
-
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -89,4 +81,4 @@ NTSTATUS STDCALL NpfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS STDCALL NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-#endif /* __SERVICES_FS_NP_NPFS_H */
+#endif /* __DRIVERS_FS_NP_NPFS_H */
