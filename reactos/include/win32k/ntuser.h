@@ -1731,11 +1731,9 @@ STDCALL
 NtUserValidateHandleSecure(
   DWORD Unknown0);
 
-DWORD
-STDCALL
-NtUserValidateRect(
-  DWORD Unknown0,
-  DWORD Unknown1);
+VOID STDCALL
+NtUserValidateRect(HWND Wnd, const RECT* Rect);
+
 
 DWORD
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.17 2003/07/29 22:42:26 rcampbell Exp $
+/* $Id: winpos.c,v 1.18 2003/08/01 14:38:51 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,7 +50,15 @@
 
 #define MINMAX_NOSWP  (0x00010000)
 
+#define SWP_EX_NOCOPY 0x0001
 #define SWP_EX_PAINTSELF 0x0002
+
+#define  SWP_AGG_NOGEOMETRYCHANGE \
+    (SWP_NOSIZE | SWP_NOMOVE | SWP_NOCLIENTSIZE | SWP_NOCLIENTMOVE)
+#define  SWP_AGG_NOPOSCHANGE \
+    (SWP_AGG_NOGEOMETRYCHANGE | SWP_NOZORDER)
+#define  SWP_AGG_STATUSFLAGS \
+    (SWP_AGG_NOPOSCHANGE | SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_SHOWWINDOW)
 
 ATOM AtomInternalPos = (ATOM) NULL;
 
@@ -413,6 +421,272 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
   return(TRUE);
 }
 
+/***********************************************************************
+ *           SWP_DoSimpleFrameChanged
+ *
+ * NOTE: old and new client rect origins are identical, only
+ *	 extents may have changed. Window extents are the same.
+ */
+VOID STATIC 
+WinPosDoSimpleFrameChanged( PWINDOW_OBJECT wndPtr, RECT* pOldClientRect, WORD swpFlags, UINT uFlags )
+{
+    INT	 i = 0;
+    RECT rect;
+    HRGN hrgn = 0;
+
+    if( !(swpFlags & SWP_NOCLIENTSIZE) )
+    {
+	/* Client rect changed its position/size, most likely a scrollar
+	 * was added/removed.
+	 *
+	 * FIXME: WVR alignment flags 
+	 */
+
+	if( wndPtr->ClientRect.right >  pOldClientRect->right ) /* right edge */
+	{
+	    i++;
+	    rect.top = 0; 
+	    rect.bottom = wndPtr->ClientRect.bottom - wndPtr->ClientRect.top;
+	    rect.right = wndPtr->ClientRect.right - wndPtr->ClientRect.left;
+	    if(!(uFlags & SWP_EX_NOCOPY))
+		rect.left = pOldClientRect->right - wndPtr->ClientRect.left;
+	    else
+	    {
+		rect.left = 0;
+		goto redraw;
+	    }
+	}
+
+	if( wndPtr->ClientRect.bottom > pOldClientRect->bottom ) /* bottom edge */
+	{
+	    if( i )
+		hrgn = W32kCreateRectRgnIndirect( &rect );
+	    rect.left = 0;
+	    rect.right = wndPtr->ClientRect.right - wndPtr->ClientRect.left;
+	    rect.bottom = wndPtr->ClientRect.bottom - wndPtr->ClientRect.top;
+	    if(!(uFlags & SWP_EX_NOCOPY))
+		rect.top = pOldClientRect->bottom - wndPtr->ClientRect.top;
+	    else
+		rect.top = 0;
+	    if( i++ ) 
+	      {
+		HRGN hRectRgn = W32kCreateRectRgnIndirect(&rect);
+	        W32kCombineRgn(hrgn, hrgn, hRectRgn, RGN_OR);
+		W32kDeleteObject(hRectRgn);
+	      }
+	}
+
+	if( i == 0 && (uFlags & SWP_EX_NOCOPY) ) /* force redraw anyway */
+	{
+	    rect = wndPtr->WindowRect;
+	    W32kOffsetRect( &rect, wndPtr->WindowRect.left - wndPtr->ClientRect.left,
+			    wndPtr->WindowRect.top - wndPtr->ClientRect.top );
+	    i++;
+	}
+    }
+
+    if( i )
+    {
+redraw:
+	PaintRedrawWindow( wndPtr->Self, &rect, hrgn, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
+			    RDW_ERASENOW | RDW_ALLCHILDREN, RDW_EX_TOPFRAME | RDW_EX_USEHRGN );
+    }
+    else
+    {
+        PaintUpdateNCRegion(wndPtr, 0, UNC_UPDATE | UNC_ENTIRE);
+    }
+
+    if( hrgn > (HRGN)1 )
+	W32kDeleteObject( hrgn );
+}
+
+/***********************************************************************
+ *	     SWP_CopyValidBits
+ *
+ * Make window look nice without excessive repainting
+ *
+ * visible and update regions are in window coordinates
+ * client and window rectangles are in parent client coordinates
+ *
+ * Returns: uFlags and a dirty region in *pVisRgn.
+ */
+static UINT WinPosCopyValidBits( PWINDOW_OBJECT Wnd, HRGN* pVisRgn,
+                               LPRECT lpOldWndRect,
+                               LPRECT lpOldClientRect, UINT uFlags )
+{
+ RECT r;
+ HRGN newVisRgn, dirtyRgn;
+ INT  my = COMPLEXREGION;
+
+ if( Wnd->UpdateRegion == (HRGN)1 )
+     uFlags |= SWP_EX_NOCOPY; /* whole window is invalid, nothing to copy */
+
+ newVisRgn = DceGetVisRgn( Wnd->Self, DCX_WINDOW | DCX_CLIPSIBLINGS, 0, 0);
+ dirtyRgn = W32kCreateRectRgn( 0, 0, 0, 0 );
+
+ if( !(uFlags & SWP_EX_NOCOPY) ) /* make sure dst region covers only valid bits */
+     my = W32kCombineRgn( dirtyRgn, newVisRgn, *pVisRgn, RGN_AND );
+
+ if( (my == NULLREGION) || (uFlags & SWP_EX_NOCOPY) )
+ {
+nocopy:
+
+     /* set dirtyRgn to the sum of old and new visible regions 
+      * in parent client coordinates */
+
+     W32kOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
+     W32kOffsetRgn( *pVisRgn, lpOldWndRect->left, lpOldWndRect->top );
+
+     W32kCombineRgn(*pVisRgn, *pVisRgn, newVisRgn, RGN_OR );
+ }
+ else			/* copy valid bits to a new location */
+ {
+     INT  dx, dy, ow, oh, nw, nh, ocw, ncw, och, nch;
+     HRGN hrgnValid = dirtyRgn; /* non-empty intersection of old and new visible rgns */
+
+     /* subtract already invalid region inside Wnd from the dst region */
+
+     if( Wnd->UpdateRegion )
+         if( W32kCombineRgn( hrgnValid, hrgnValid, Wnd->UpdateRegion, RGN_DIFF) == NULLREGION )
+	     goto nocopy;
+
+     /* check if entire window can be copied */
+
+     ow = lpOldWndRect->right - lpOldWndRect->left;
+     oh = lpOldWndRect->bottom - lpOldWndRect->top;
+     nw = Wnd->WindowRect.right - Wnd->WindowRect.left;
+     nh = Wnd->WindowRect.bottom - Wnd->WindowRect.top;
+
+     ocw = lpOldClientRect->right - lpOldClientRect->left;
+     och = lpOldClientRect->bottom - lpOldClientRect->top;
+     ncw = Wnd->ClientRect.right  - Wnd->ClientRect.left;
+     nch = Wnd->ClientRect.bottom  - Wnd->ClientRect.top;
+
+     if(  (ocw != ncw) || (och != nch) ||
+	  ( ow !=  nw) || ( oh !=  nh) ||
+	  ((lpOldClientRect->top - lpOldWndRect->top)   != 
+	   (Wnd->ClientRect.top - Wnd->WindowRect.top)) ||
+          ((lpOldClientRect->left - lpOldWndRect->left) !=
+           (Wnd->ClientRect.left - Wnd->WindowRect.left)) )
+     {
+         if(uFlags & SWP_EX_PAINTSELF)
+         {
+             /* movement relative to the window itself */
+             dx = (Wnd->ClientRect.left - Wnd->WindowRect.left) -
+                 (lpOldClientRect->left - lpOldWndRect->left) ;
+             dy = (Wnd->ClientRect.top - Wnd->WindowRect.top) -
+                 (lpOldClientRect->top - lpOldWndRect->top) ;
+         }
+         else
+         {
+             /* movement relative to the parent's client area */
+             dx = Wnd->ClientRect.left - lpOldClientRect->left;
+             dy = Wnd->ClientRect.top - lpOldClientRect->top;
+         }
+
+	/* restrict valid bits to the common client rect */
+
+	r.left = Wnd->ClientRect.left - Wnd->WindowRect.left;
+        r.top = Wnd->ClientRect.top  - Wnd->WindowRect.top;
+	r.right = r.left + min( ocw, ncw );
+	r.bottom = r.top + min( och, nch );
+
+	REGION_CropRgn( hrgnValid, hrgnValid, &r, 
+			(uFlags & SWP_EX_PAINTSELF) ? NULL : (POINT*)&(Wnd->WindowRect));
+	W32kGetRgnBox( hrgnValid, &r );
+	if( W32kIsEmptyRect( &r ) )
+	    goto nocopy;
+	r = *lpOldClientRect;
+     }
+     else
+     {
+         if(uFlags & SWP_EX_PAINTSELF) {
+             /* 
+              * with SWP_EX_PAINTSELF, the window repaints itself. Since a window can't move 
+              * relative to itself, only the client area can change.
+              * if the client rect didn't change, there's nothing to do.
+              */
+             dx = 0;
+             dy = 0;
+         }
+         else
+         {
+             dx = Wnd->WindowRect.left - lpOldWndRect->left;
+             dy = Wnd->WindowRect.top -  lpOldWndRect->top;
+             W32kOffsetRgn( hrgnValid, Wnd->WindowRect.left, Wnd->WindowRect.top );
+         }
+	r = *lpOldWndRect;
+     }
+
+     if( !(uFlags & SWP_EX_PAINTSELF) )
+     {
+        /* Move remaining regions to parent coordinates */
+	W32kOffsetRgn( newVisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top );
+	W32kOffsetRgn( *pVisRgn,  lpOldWndRect->left, lpOldWndRect->top );
+     }
+     else
+	W32kOffsetRect( &r, -lpOldWndRect->left, -lpOldWndRect->top );
+
+     /* Compute combined dirty region (old + new - valid) */
+     W32kCombineRgn( *pVisRgn, *pVisRgn, newVisRgn, RGN_OR);
+     W32kCombineRgn( *pVisRgn, *pVisRgn, hrgnValid, RGN_DIFF);
+
+     /* Blt valid bits, r is the rect to copy  */
+
+     if( dx || dy )
+     {
+	 RECT rClip;
+	 HDC hDC;
+
+	 /* get DC and clip rect with drawable rect to avoid superfluous expose events
+	    from copying clipped areas */
+
+	 if( uFlags & SWP_EX_PAINTSELF )
+	 {
+	     hDC = NtUserGetDCEx( Wnd->Self, hrgnValid, DCX_WINDOW | DCX_CACHE |
+			    DCX_KEEPCLIPRGN | DCX_INTERSECTRGN | DCX_CLIPSIBLINGS );
+	     rClip.right = nw; rClip.bottom = nh;
+	 }
+	 else
+	 {
+	     hDC = NtUserGetDCEx( Wnd->Parent->Self, hrgnValid, DCX_CACHE |
+			    DCX_KEEPCLIPRGN | DCX_INTERSECTRGN | DCX_CLIPSIBLINGS );
+	     rClip.right = Wnd->Parent->ClientRect.right - Wnd->Parent->ClientRect.left;
+	     rClip.bottom = Wnd->Parent->ClientRect.bottom - Wnd->Parent->ClientRect.top;
+	 }
+	 rClip.left = rClip.top = 0;    
+
+         if( oh > nh ) r.bottom = r.top  + nh;
+         if( ow < nw ) r.right = r.left  + nw;
+
+         if( W32kIntersectRect( &r, &r, &rClip ) )
+         {
+	        W32kBitBlt(hDC, dx + r.left, dy + r.top, r.right - r.left, r.bottom - r.top, hDC, r.left, r.top, SRCCOPY);
+
+                 /* When you copy the bits without repainting, parent doesn't
+                    get validated appropriately. Therefore, we have to validate
+                    the parent with the windows' updated region when the
+                    parent's update region is not empty. */
+
+                if (Wnd->Parent->UpdateRegion != 0 && !(Wnd->Parent->Style & WS_CLIPCHILDREN))
+                {
+                  W32kOffsetRect(&r, dx, dy);
+                  NtUserValidateRect(Wnd->Parent->Self, &r);
+                }
+	 }
+         NtUserReleaseDC( (uFlags & SWP_EX_PAINTSELF) ? 
+		        Wnd->Self :  Wnd->Parent->Self, hDC); 
+     }
+ }
+
+ /* *pVisRgn now points to the invalidated region */
+
+ W32kDeleteObject(newVisRgn);
+ W32kDeleteObject(dirtyRgn);
+ return uFlags;
+}
+
+
 BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags)
@@ -424,6 +698,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   RECT NewClientRect;
   HRGN VisRgn = NULL;
   ULONG WvrFlags = 0;
+  RECT OldWindowRect, OldClientRect;
+  UINT FlagsEx = 0;
 
   /* FIXME: Get current active window from active queue. */
 
@@ -532,21 +808,58 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
   /* FIXME: Reset active DCEs */
 
+  OldWindowRect = Window->WindowRect;
+  OldClientRect = Window->ClientRect;
+
   /* FIXME: Check for redrawing the whole client rect. */
+
+  Window->WindowRect = NewWindowRect;
+  Window->ClientRect = NewClientRect;
 
   if (WinPos.flags & SWP_SHOWWINDOW)
     {
       Window->Style |= WS_VISIBLE;
-      flags |= SWP_EX_PAINTSELF;
+      FlagsEx |= SWP_EX_PAINTSELF;
+      /* Redraw entire window. */
       VisRgn = (HRGN) 1;
     }
-  else
+  else if (!(WinPos.flags & SWP_NOREDRAW))
     {
-      /* FIXME: Move the window bits */
-    }
-
-  Window->WindowRect = NewWindowRect;
-  Window->ClientRect = NewClientRect;
+      if (WinPos.flags & SWP_HIDEWINDOW)
+	{
+	  if (VisRgn > (HRGN)1)
+	    {
+	      W32kOffsetRgn(VisRgn, OldWindowRect.left, OldWindowRect.top);	     
+	    }
+	  else
+	    {
+	      VisRgn = 0;
+	    }
+	}
+      else
+	{
+	  if ((WinPos.flags & SWP_AGG_NOPOSCHANGE) != SWP_AGG_NOPOSCHANGE)
+	    {
+	      if ((WinPos.flags & SWP_AGG_NOGEOMETRYCHANGE) == SWP_AGG_NOGEOMETRYCHANGE)
+		{
+		  FlagsEx |= SWP_EX_PAINTSELF;
+		}
+	      FlagsEx = WinPosCopyValidBits(Window, &VisRgn, &OldWindowRect, &OldClientRect, FlagsEx);
+	    }
+	  else
+	    {
+	      if (WinPos.flags & SWP_FRAMECHANGED)
+		{
+		  WinPosDoSimpleFrameChanged(Window, &OldClientRect, WinPos.flags, FlagsEx);
+		}
+	      if (VisRgn != 0)
+		{
+		  W32kDeleteObject(VisRgn);
+		  VisRgn = 0;
+		}
+	    }
+	}
+    }  
 
   if (WinPos.flags & SWP_HIDEWINDOW)
     {
@@ -559,7 +872,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       if (!(WinPos.flags & SWP_NOREDRAW))
 	{
-	  if (flags & SWP_EX_PAINTSELF)
+	  if (FlagsEx & SWP_EX_PAINTSELF)
 	    {
 	      PaintRedrawWindow(Window->Self, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,

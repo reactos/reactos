@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.19 2003/07/10 00:24:04 chorns Exp $
+/* $Id: painting.c,v 1.20 2003/08/01 14:38:51 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,14 +48,6 @@
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
-
-#define UNC_DELAY_NCPAINT                      (0x00000001)
-#define UNC_IN_BEGINPAINT                      (0x00000002)
-#define UNC_CHECK                              (0x00000004)
-#define UNC_REGION                             (0x00000008)
-#define UNC_ENTIRE                             (0x00000010)
-#define UNC_UPDATE                             (0x00000020)
-
 
 /* client rect in window coordinates */
 #define GETCLIENTRECTW(wnd, r)	(r).left = (wnd)->ClientRect.left - (wnd)->WindowRect.left; \

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.20 2003/07/31 23:12:38 weiden Exp $
+/* $Id: stubs.c,v 1.21 2003/08/01 14:38:51 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1290,17 +1290,6 @@ DWORD
 STDCALL
 NtUserValidateHandleSecure(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserValidateRect(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 
