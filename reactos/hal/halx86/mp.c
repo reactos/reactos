@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.5 2002/12/09 18:42:41 robd Exp $
+/* $Id: mp.c,v 1.6 2002/12/26 17:36:12 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1393,9 +1393,12 @@ VOID MpsTimerHandler(
   /*
    * Call the dispatcher
    */
-  // TODO FIXME - What happened to definition for THREAD_STATE_RUNNABLE ???
   // TODO FIXME - What happened to definition for PsDispatchThread ???
-  //PsDispatchThread(THREAD_STATE_RUNNABLE);
+  //PsDispatchThread(THREAD_STATE_READY);
+
+  // KeGetCurrentThread is linked into hal from ntoskrnl, so can 
+  //    PsDispatchThread be exported from ntoskrnl also ???
+
 
 #if 0
   /*
