@@ -24,3 +24,10 @@ MP := 0
 # Whether to compile for ACPI compliant systems
 #
 ACPI := 0
+
+
+#
+# Which version of NDIS do we support up to?
+#
+#NDISVERSION=NDIS50
+
