@@ -222,10 +222,25 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 		 case 'w':
 		   sw = va_arg(args,short int *);
 //		   DPRINT("L %x\n",sw);
-		   while ((*sw)!=0)
+		   if (sw==NULL)
 		     {
-			*str++ = (char)(*sw++);
+//			CHECKPOINT;
+			s = "<NULL>";
+			while ((*s)!=0)
+			  {
+			     *str++ = *s++;
+			  }
+//			CHECKPOINT;
+//			DbgPrint("str %x\n",str);
 		     }
+		   else
+		     {
+			while ((*sw)!=0)
+			  {
+			     *str++ = (char)(*sw++);
+			  }
+		     }
+//		   CHECKPOINT;
 		   continue;
 		   
 		case 's':

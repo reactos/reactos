@@ -9,6 +9,7 @@ typedef struct _OBJECT_HANDLE_INFORMATION {
 
 struct _OBJECT;
 
+
 typedef struct _OBJECT_TYPE
 {   
    /*
@@ -132,15 +133,11 @@ typedef struct _OBJECT
    
 } OBJECT_HEADER, *POBJECT_HEADER;
 
-/*
- * PURPOSE: Defines an object 
- */
-typedef struct _OBJECT_ATTRIBUTES
-{
-   ULONG Length;
-   HANDLE RootDirectory;
-   PUNICODE_STRING ObjectName;
-   ULONG Attributes;
-   PVOID SecurityDescriptor;
-   PVOID SecurityQualityOfService;
+typedef struct _OBJECT_ATTRIBUTES {
+	ULONG Length;
+	HANDLE RootDirectory;
+	PUNICODE_STRING ObjectName;
+	ULONG Attributes;
+	SECURITY_DESCRIPTOR *SecurityDescriptor;       
+	SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;  
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;

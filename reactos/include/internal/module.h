@@ -8,7 +8,8 @@ typedef struct
 /*
  * 
  */
-{   
+{
+   unsigned int nsyms;
         unsigned int text_base;
         unsigned int data_base;
         unsigned int bss_base;

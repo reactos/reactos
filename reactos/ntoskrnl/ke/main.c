@@ -122,16 +122,21 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
-   memcpy(&bp,_bp,sizeof(bp));
+   memcpy(&bp,_bp,sizeof(boot_param));
       
    /*
     * Initalize the console (before printing anything)
     */
-   InitConsole(&bp);
+   HalInitConsole(&bp);
    
-   printk("Starting ReactOS "KERNEL_VERSION"\n");
-
+   DbgPrint("Starting ReactOS "KERNEL_VERSION"\n");
+   
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+   if (start <= ((int)&end))
+     {
+	DbgPrint("Kernel booted incorrectly, aborting\n");
+	for(;;);
+     }   
    DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress(start));
    DPRINT("bp.module_length[0] %x PAGE_ROUND_UP(bp.module_length[0]) %x\n",
           bp.module_length[0],PAGE_ROUND_UP(bp.module_length[0]));
@@ -147,7 +152,6 @@ asmlinkage void _main(boot_param* _bp)
     * Initalize various critical subsystems
     */
    HalInit(&bp);
-//   set_breakpoint(0,start,HBP_READWRITE,HBP_DWORD);
    MmInitalize(&bp);
    CHECKPOINT;
    KeInit();
@@ -165,12 +169,12 @@ asmlinkage void _main(boot_param* _bp)
    DPRINT("%d files loaded\n",bp.nr_files);
     
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
+//   DbgPrint("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
    for (i=1;i<bp.nr_files;i++)
      {
-	DPRINT("start %x *start %x\n",start,*((unsigned int *)start));
-	CHECKPOINT;
       	process_boot_module(start);
-	CHECKPOINT;
+//	DbgPrint("start1 %x *start1 %x\n",start1,*((unsigned int *)start1));
         start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
    

@@ -16,6 +16,13 @@
 
 #include <windows.h>
 
+typedef struct _OBJDIR_INFORMATION {
+	UNICODE_STRING ObjectName;
+	UNICODE_STRING ObjectTypeName; // Directory, Device ...
+	UCHAR          Data[0];        
+} OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
+
+
 /*
  * FUNCTION: Closes an object handle
  * ARGUMENTS:
@@ -177,6 +184,14 @@ NTSTATUS ZwOpenKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
 NTSTATUS ZwOpenSection(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
 		       POBJECT_ATTRIBUTES ObjectAttributes);
 
+NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
+				OUT POBJDIR_INFORMATION DirObjInformation, 
+				IN ULONG                BufferLength, 
+				IN BOOLEAN              GetNextIndex, 
+				IN BOOLEAN              IgnoreInputIndex, 
+				IN OUT PULONG           ObjectIndex,
+				OUT PULONG              DataWritten OPTIONAL);
+
 /*
  * FUNCTION: Returns information about an open file
  * ARGUMENTS:
@@ -196,28 +211,19 @@ NTSTATUS ZwQueryInformationFile(HANDLE FileHandle,
 
 
 
+NTSTATUS ZwReadFile(HANDLE FileHandle,
+                    HANDLE EventHandle,
+		    PIO_APC_ROUTINE ApcRoutine,
+		    PVOID ApcContext,
+		    PIO_STATUS_BLOCK IoStatusBlock,
+		    PVOID Buffer,
+		    ULONG Length,
+		    PLARGE_INTEGER ByteOffset,
+		    PULONG Key);
+
+
    
-#if KERNEL_SUPPORTS_OBJECT_ATTRIBUTES_CORRECTLY
-typedef struct _OBJECT_ATTRIBUTES {
-	ULONG Length;
-	HANDLE RootDirectory;
-	PUNICODE_STRING ObjectName;
-	ULONG Attributes;
-	SECURITY_DESCRIPTOR *SecurityDescriptor;       
-	SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;  
-} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
-#endif
 
-
-
-/*  
-#if IOTYPES_DIDNT_DECLARE_THIS
-typedef struct _IO_STATUS_BLOCK {
-	NTSTATUS Status;
-	ULONG Information;
-} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
-#endif
-*/
 
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
@@ -878,12 +884,6 @@ typedef union _FILE_SEGMENT_ELEMENT {
 }FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT; 
 
 // directory information
-
-typedef struct _OBJDIR_INFORMATION {
-	UNICODE_STRING ObjectName;
-	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-	UCHAR          Data[0];        
-} OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
 
 
 typedef struct _FILE_DIRECTORY_INFORMATION {

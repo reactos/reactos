@@ -18,16 +18,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include <in.h>
-
 int ShellChangeDir(char* args);
 int ShellListDir(char* args);
+VOID TstReadLineInit(VOID);
+VOID TstReadLine(ULONG Length, PCHAR Buffer);
 
 /* GLOBALS ******************************************************************/
 
-static HANDLE CurrentDirHandle;
-static UNICODE_STRING CurrentDirName;
-static HANDLE KeyboardHandle;
+static HANDLE CurrentDirHandle = NULL;
+static UNICODE_STRING CurrentDirName = {NULL,0,0};
 
 typedef struct
 {
@@ -50,22 +49,28 @@ int ShellChangeDir(char* args)
 
 int ShellListDir(char* args)
 {
+   OBJDIR_INFORMATION DirObj[50];
+   ULONG Idx;
+   ULONG Length;
+   ULONG i;
+   
+   ZwQueryDirectoryObject(CurrentDirHandle,
+			  &(DirObj[0]),
+			  sizeof(DirObj),
+			  TRUE,
+			  TRUE,
+			  &Idx,
+			  &Length);
+   
+   for (i=0;i<(Length/sizeof(OBJDIR_INFORMATION));i++)
+     {
+	DbgPrint("Scanning %w\n",DirObj[i].ObjectName.Buffer);
+     }
 }
 
 VOID ShellDisplayPrompt()
 {
-   printk("%w# ",CurrentDirName->Buffer);
-}
-
-VOID ShellGetCommand(char* cmd)
-{
-   do
-     {
-	ZwReadFile(hfile,NULL,NULL,NULL,NULL,cmd,1,0,0);
-	printk("%c",*cmd);
-	cmd++;
-     } while((*cmd)!='\n');
-   *cmd=0;
+   printk("%w# ",CurrentDirName.Buffer);
 }
 
 VOID ShellProcessCommand(char* cmd)
@@ -88,6 +93,7 @@ NTSTATUS TstShell(VOID)
    OBJECT_ATTRIBUTES attr;
    char cmd[255];
    
+   
    RtlInitAnsiString(&astr,"\\");
    RtlAnsiStringToUnicodeString(&CurrentDirName,&astr,TRUE);
    
@@ -95,17 +101,14 @@ NTSTATUS TstShell(VOID)
    RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
    InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
    ZwOpenDirectoryObject(&CurrentDirHandle,0,&attr);
-   
-   RtlInitAnsiString(&afilename,"\\Device\\Keyboard");
-   RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
-   InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&KeyboardHandle,0,&attr,NULL,0,0);
 
+   
+   TstReadLineInit();
    
    for(;;)
      {
 	ShellDisplayPrompt();
-	ShellGetCommand(cmd);
+	TstReadLine(255,cmd);
 	ShellProcessCommand(cmd);
      }
 }

@@ -59,12 +59,12 @@ void VirtualInit(boot_param* bp)
     * Setup the system area descriptor list
     */
    BaseAddress = KERNEL_BASE;
-   Length = ((ULONG)&etext) - KERNEL_BASE;
+   Length = PAGE_ROUND_UP(((ULONG)&etext)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
    MmCreateMemoryArea(KernelMode,MEMORY_AREA_SYSTEM,&BaseAddress,
 		      Length,0,&kernel_text_desc);
    
-   Length = ((ULONG)&end) - ((ULONG)&etext);
+   Length = PAGE_ROUND_UP(((ULONG)&end)) - PAGE_ROUND_UP(((ULONG)&etext));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
    BaseAddress = PAGE_ROUND_UP(((ULONG)&etext));
@@ -113,18 +113,26 @@ asmlinkage int page_fault_handler(unsigned int edi,
 {
    KPROCESSOR_MODE FaultMode;
    MEMORY_AREA* MemoryArea;
+   KIRQL oldlvl;
+   ULONG stat;
    
    /*
     * Get the address for the page fault
     */
    unsigned int cr2;
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-   DPRINT("Page fault at address %x with eip %x\n",cr2,eip);
-   for(;;);
+   DbgPrint("Page fault at address %x with eip %x\n",cr2,eip);
 
    cr2 = PAGE_ROUND_DOWN(cr2);
    
-   assert_irql(DISPATCH_LEVEL);
+   if (KeGetCurrentIrql()!=PASSIVE_LEVEL)
+     {
+	DbgPrint("Recursive page fault detected\n");
+	KeBugCheck(0);
+	for(;;);
+     }
+   
+   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    
    /*
     * Find the memory area for the faulting address
@@ -156,12 +164,21 @@ asmlinkage int page_fault_handler(unsigned int edi,
    switch (MemoryArea->Type)
      {
       case MEMORY_AREA_SYSTEM:
-	return(0);
+	stat = 0;
+	break;
 	
       case MEMORY_AREA_SECTION_VIEW:
-	return(MmSectionHandleFault(MemoryArea,cr2));
+	stat = MmSectionHandleFault(MemoryArea,cr2);
+	
+      default:
+	stat = 0;
+	break;
      }
-   return(0);
+   if (stat)
+     {
+	KeLowerIrql(oldlvl);
+     }
+   return(stat);
 }
 
 

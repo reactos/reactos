@@ -44,7 +44,7 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
  * range described by the MDL
  */
 {
-   PVOID base;
+   PVOID base = NULL;
    unsigned int i;
    ULONG* mdl_pages=NULL;
    MEMORY_AREA* Result;
@@ -59,6 +59,7 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 		      Mdl->ByteCount,
 		      0,
 		      &Result);
+   CHECKPOINT;
    mdl_pages = (ULONG *)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE); i++)
      {

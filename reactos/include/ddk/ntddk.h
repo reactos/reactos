@@ -37,10 +37,10 @@ extern "C"
 #include <ddk/ketypes.h>
 #include <ddk/obtypes.h>
 #include <ddk/mmtypes.h>
+#include <ddk/setypes.h>
 #include <ddk/iotypes.h>
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
-#include <ddk/setypes.h>
 #include <ddk/ioctrl.h>   
 #include <internal/hal/ddk.h>
    

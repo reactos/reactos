@@ -75,51 +75,38 @@ typedef struct _IO_TIMER
    KDPC dpc;
 } IO_TIMER, *PIO_TIMER;
 
+typedef struct _IO_SECURITY_CONTEXT
+{
+   PSECURITY_QUALITY_OF_SERVICE SecurityQos;
+   PACCESS_STATE AccessState;
+   ACCESS_MASK DesiredAccess;
+   ULONG FullCreateOptions;
+} IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
+
 /*
  * PURPOSE: IRP stack location
  */
 typedef struct _IO_STACK_LOCATION
 {
-   /*
-    * Type of request
-    */
    UCHAR MajorFunction;
-   
-   /*
-    * Further information about request type
-    */
-   UCHAR MinorFunction;
-   
-   /*
-    *
-    */
-   UCHAR Flags;
-   
-   /*
-    * FUNCTION: Various flags including for the io completion routine
-    */
+   UCHAR MinorFunction;   
+   UCHAR Flags;   
    UCHAR Control;
    
-   /*
-    * Parameters for request
-    */
    union
      {
 	struct
 	  {
-	     /*
-	      * Number of bytes to be transferrred
-	      */
+	     PIO_SECURITY_CONTEXT SecurityContext;
+	     ULONG Options;
+	     USHORT FileAttributes;
+	     USHORT ShareAccess;
+	     ULONG EaLength;
+	  } Create;
+	struct
+	  {
 	     ULONG Length;
-	     
-	     /*
-	      * Possibly used to sort incoming request (to be documented)
-	      */
 	     ULONG Key;
-	     
-	     /*
-	      * Optional starting offset for read
-	      */
 	     LARGE_INTEGER ByteOffset;
 	  } Read;
 	struct
@@ -135,26 +122,18 @@ typedef struct _IO_STACK_LOCATION
 	     ULONG IoControlCode;
 	     PVOID Type3InputBuffer;
 	  } DeviceIoControl;
-	
+	struct
+	  {
+	     struct _VPB* Vpb;
+	     struct _DEVICE_OBJECT* DeviceObject;
+	  } Mount;
      } Parameters;
    
-   /*
-    * PURPOSE: Completion routine
-    * NOTE: If this is the nth stack location (where the 1st is passed to the
-    * highest level driver) then this is the completion routine set by
-    * the (n-1)th driver
-    */
    PIO_COMPLETION_ROUTINE CompletionRoutine;
    PVOID CompletionContext;
    
-   /*
-    * Driver created device object representing the target device
-    */
    struct _DEVICE_OBJECT* DeviceObject;
    
-   /*
-    * File object (if any) associated with DeviceObject
-    */
    struct _FILE_OBJECT* FileObject;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 
@@ -295,10 +274,15 @@ typedef struct _IRP
 	KAPC Apc;
 	ULONG CompletionKey;
      } Tail;
-   ULONG CurrentLocation;
+   CHAR StackCount;
+   CHAR CurrentLocation;
    IO_STACK_LOCATION Stack[1];
 } IRP, *PIRP;
 
+#define VPB_MOUNTED                     0x00000001
+#define VPB_LOCKED                      0x00000002
+#define VPB_PERSISTENT                  0x00000004
+#define VPB_REMOVE_PENDING              0x00000008
 
 typedef struct _VPB
 {
@@ -377,9 +361,6 @@ typedef struct _DRIVER_EXTENSION
 
 typedef struct _DRIVER_OBJECT
 {
-   /*
-    * PURPOSE: Magic values for debugging
-    */
    CSHORT Type;
    CSHORT Size;
    PDEVICE_OBJECT DeviceObject;

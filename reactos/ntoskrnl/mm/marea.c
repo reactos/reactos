@@ -32,7 +32,6 @@ VOID MmDumpMemoryAreas(VOID)
    ULONG i;
    
    current_entry = ListHead->Flink;
-   i=0;
    while (current_entry!=ListHead)
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
@@ -41,14 +40,7 @@ VOID MmDumpMemoryAreas(VOID)
 	       current->BaseAddress+current->Length,current->Attributes,
 	       current->Entry.Flink);
 	current_entry = current_entry->Flink;
-	i++;
-	if (i>6)
-	  {
-	     CHECKPOINT;
-	     for(;;);
-	  }
      }
-   CHECKPOINT;
 }
 
 VOID MmLockMemoryAreaList(ULONG Address, PKIRQL oldlvl)
@@ -88,8 +80,12 @@ static PLIST_ENTRY MmGetRelatedListHead(ULONG BaseAddress)
      }
    else
      {
-	PKPROCESS CurrentProcess = KeGetCurrentProcess();
-	return(&(CurrentProcess->MemoryAreaList));
+	PEPROCESS CurrentProcess = PsGetCurrentProcess();
+	if (CurrentProcess==NULL)
+	  {
+	     return(NULL);
+	  }
+	return(&(CurrentProcess->Pcb.MemoryAreaList));
      }
 }
 
@@ -99,6 +95,16 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
    PLIST_ENTRY current_entry;
    MEMORY_AREA* current;
 
+   MmDumpMemoryAreas();
+   
+   DPRINT("MmInternalOpenMemoryAreaByAddress(ListHead %x, Address %x)\n",
+	  ListHead,Address);
+   
+   if (ListHead==NULL)
+     {
+	return(NULL);
+     }
+   
    current_entry = ListHead->Flink;
    while (current_entry!=ListHead)
      {
@@ -135,13 +141,13 @@ MEMORY_AREA* MmInternalOpenMemoryAreaByRegion(PLIST_ENTRY ListHead,
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	if (current->BaseAddress >= Address &&
-	    current->BaseAddress < (Address+Length))
+	    current->BaseAddress <= (Address+Length))
 	  {
 	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion()\n",0);
 	     return(current);
 	  }
 	Extent = current->BaseAddress + current->Length;
-	if (Extent >= Address &&
+	if (Extent > Address &&
 	    Extent < (Address+Length))
 	  {
 	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion()\n",0);
@@ -289,7 +295,7 @@ static ULONG MmFindGapWithoutLock(KPROCESSOR_MODE Mode, ULONG Length)
 	ListHead = &SystemAreaList;
      }
    else
-     {
+      {
 	ListHead = &(KeGetCurrentProcess()->MemoryAreaList);
      }
    
@@ -299,23 +305,28 @@ static ULONG MmFindGapWithoutLock(KPROCESSOR_MODE Mode, ULONG Length)
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-	DPRINT("current %x current->BaseAddress %x\n",current,
+	DPRINT("current %x current->BaseAddress %x ",current,
 	       current->BaseAddress);
 	DPRINT("current->Length %x\n",current->Length);
-	DPRINT("next %x next->BaseAddress %x\n",next,next->BaseAddress);
+	DPRINT("next %x next->BaseAddress %x ",next,next->BaseAddress);
 	Gap = (next->BaseAddress ) -(current->BaseAddress + current->Length);
-	DPRINT("Gap %x\n",Gap);
+	DPRINT("Base %x Gap %x\n",current->BaseAddress,Gap);
 	if (Gap >= Length)
 	  {
-	     return(current->BaseAddress + current->Length);
+	     return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
 	  }
 	current_entry = current_entry->Flink;
      }
    current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-   return(current->BaseAddress + current->Length);
+   //DbgPrint("current %x returning %x\n",current,current->BaseAddress+
+//	    current->Length);
+   return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
 }
 
 NTSTATUS MmInitMemoryAreas(VOID)
+/*
+ * FUNCTION: Initialize the memory area list
+ */
 {
    DPRINT("MmInitMemoryAreas()\n",0);
    InitializeListHead(&SystemAreaList);
@@ -366,11 +377,13 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
    DPRINT("MmCreateMemoryArea(Mode %x, Type %d, BaseAddress %x,"
 	  "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
           Mode,Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
-   
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));   
    MmLockMemoryAreaList(*BaseAddress,&oldlvl);
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    if ((*BaseAddress)==0)
      {
-	*BaseAddress = MmFindGapWithoutLock(Mode,Length+(PAGESIZE*2));
+	*BaseAddress = MmFindGapWithoutLock(Mode,PAGE_ROUND_UP(Length)
+					    +(PAGESIZE*2));
 	if ((*BaseAddress)==0)
 	  {
 	     MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
@@ -387,16 +400,23 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
 	  }
      }
    
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    *Result = ExAllocatePool(NonPagedPool,sizeof(MEMORY_AREA));
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    RtlZeroMemory(*Result,sizeof(MEMORY_AREA));
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    (*Result)->Type=Type;
    (*Result)->BaseAddress=*BaseAddress;
    (*Result)->Length=Length;
    (*Result)->Attributes=Attributes;
    DPRINT("&SystemAreaList %x ",&SystemAreaList);
    DPRINT("SystemAreaList.Flink %x ",SystemAreaList.Flink);
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    MmInsertMemoryAreaWithoutLock(*Result);
+//   DbgPrint("(%s:%d) Start1 %x\n",__FILE__,__LINE__,
+//	    *((unsigned int *)0xc0017000));
    MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
+//   DbgPrint("Start1 %x\n",*((unsigned int *)0xc0017000));
    DPRINT("SystemAreaList.Flink %x ",SystemAreaList.Flink);
    DPRINT("(*Result)->Entry.Flink %x\n",(*Result)->Entry.Flink);
    MmDumpMemoryAreas();

@@ -30,13 +30,20 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test
+KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test minix
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES)
 
 #
 # Device driver rules
 #
+sdisk: dummy
+	make -C services/sdisk
+	
+minix: dummy
+	make -C services/fs/minix
+
+
 ide-test: dummy
 	make -C services/ide-test
 

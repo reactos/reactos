@@ -39,7 +39,7 @@ PVOID MmAllocateSection(ULONG Length)
      {
 	return(NULL);
      }
-   CHECKPOINT;
+   DPRINT("Result %x\n",Result);
    Attributes = PA_WRITE | PA_READ | PA_EXECUTE | PA_SYSTEM;
    for (i=0;i<=(Length/PAGESIZE);i++)
      {

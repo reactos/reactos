@@ -215,6 +215,7 @@ enum
    FILE_DEVICE_WAVE_IN,
    FILE_DEVICE_WAVE_OUT,
    FILE_DEVICE_8042_PORT,
+   FILE_DEVICE_FILE_SYSTEM,
      
    /*
     * Values beyond this are reserved for ISVs
@@ -297,5 +298,10 @@ enum
      FILE_EXISTS,
      FILE_DOES_NOT_EXIST,
 };
+
+#define IRP_MN_USER_FS_REQUEST          0x00
+#define IRP_MN_MOUNT_VOLUME             0x01
+#define IRP_MN_VERIFY_VOLUME            0x02
+#define IRP_MN_LOAD_FILE_SYSTEM         0x03
 
 #endif

@@ -12,8 +12,8 @@
 
 #include <ddk/ntddk.h>
 
-#include <internal/iomgr.h>
-#include <internal/objmgr.h>
+#include <internal/io.h>
+#include <internal/ob.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -60,10 +60,31 @@ VOID IoDetachDevice(PDEVICE_OBJECT TargetDevice)
    UNIMPLEMENTED;
 }
 
+PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
+{
+   PDEVICE_OBJECT Current = DeviceObject;
+   
+   DPRINT("IoGetAttachDevice(DeviceObject %x)\n",DeviceObject);
+   
+   while (Current->AttachedDevice!=NULL)
+     {
+	Current = Current->AttachedDevice;
+	DPRINT("Current %x\n",Current);
+     }
+   return(Current);
+}
+
 PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 					   PDEVICE_OBJECT TargetDevice)
 {
-   UNIMPLEMENTED;
+   PDEVICE_OBJECT AttachedDevice = IoGetAttachedDevice(TargetDevice);
+   
+   DPRINT("IoAttachDeviceToDeviceStack(SourceDevice %x, TargetDevice %x)\n",
+	  SourceDevice,TargetDevice);
+   
+   AttachedDevice->AttachedDevice = SourceDevice;
+   SourceDevice->StackSize = AttachedDevice->StackSize + 1;
+   return(AttachedDevice);
 }
 
 VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
@@ -153,11 +174,25 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    OBJECT_ATTRIBUTES dev_attr;
    HANDLE devh;
 
-   DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
-	  DeviceName->Buffer);
-
-   InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
-   dev = ObGenericCreateObject(&devh,0,&dev_attr,OBJTYP_DEVICE);
+   if (DeviceName!=NULL)
+     {
+	DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
+	       DeviceName->Buffer);
+     }
+   else
+     {
+	DPRINT("IoCreateDevice(DriverObject %x)\n",DriverObject);
+     }
+   
+   if (DeviceName!=NULL)
+     {
+	InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
+	dev = ObGenericCreateObject(&devh,0,&dev_attr,OBJTYP_DEVICE);
+     }
+   else
+     {
+	dev = ObGenericCreateObject(&devh,0,NULL,OBJTYP_DEVICE);
+     }
 					      
    *DeviceObject=NULL;
    
@@ -191,10 +226,16 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
+   dev->AttachedDevice=NULL;
    dev->DeviceType=DeviceType;
    dev->StackSize=1;
    dev->AlignmentRequirement=1;
    KeInitializeDeviceQueue(&dev->DeviceQueue);
+   
+   if (dev->DeviceType==FILE_DEVICE_DISK)
+     {
+	IoAttachVpb(dev);
+     }
    
    *DeviceObject=dev;
    DPRINT("dev->DriverObject %x\n",dev->DriverObject);

@@ -22,6 +22,15 @@
 
 #define Aa_Difference 'A'-'a';
 
+PUNICODE_STRING RtlDuplicateUnicodeString(PUNICODE_STRING Dest, 
+					  PUNICODE_STRING Src)
+{
+   if (Dest==NULL)
+     {
+	Dest=ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));       
+     }   
+}
+
 VOID RtlUpperString(PSTRING DestinationString, PSTRING SourceString)
 {
    UNIMPLEMENTED;
@@ -44,7 +53,7 @@ NTSTATUS RtlAnsiStringToUnicodeString(IN OUT PUNICODE_STRING DestinationString,
         unsigned long i;
 
         if(AllocateDestinationString==TRUE) {
-          DestinationString->Buffer=ExAllocatePool(NonPagedPool, SourceString->Length*2+1);
+          DestinationString->Buffer=ExAllocatePool(NonPagedPool, (SourceString->Length+1)*2);
           DestinationString->MaximumLength=SourceString->Length;
         };
 

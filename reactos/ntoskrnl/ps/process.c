@@ -12,6 +12,7 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -21,10 +22,14 @@ HANDLE SystemProcessHandle = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID PsInitProcessManagment(VOID)
+{
+   InitializeListHead(&(SystemProcess.Pcb.MemoryAreaList));
+}
+
 PKPROCESS KeGetCurrentProcess(VOID)
 {
-   return(NULL);
-//   return(&(PsGetCurrentProcess()->Pcb));
+   return(&(PsGetCurrentProcess()->Pcb));
 }
 
 struct _EPROCESS* PsGetCurrentProcess(VOID)
@@ -32,6 +37,7 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
  * FUNCTION: Returns a pointer to the current process
  */
 {
+   DPRINT("PsGetCurrentProcess() = %x\n",PsGetCurrentThread()->ThreadsProcess);
    return(PsGetCurrentThread()->ThreadsProcess);
 }
 

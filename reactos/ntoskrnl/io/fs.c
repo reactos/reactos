@@ -11,7 +11,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/io.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *******************************************************************/
@@ -35,9 +37,30 @@ VOID IoInitFileSystemImplementation(VOID)
    KeInitializeSpinLock(&FileSystemListLock);
 }
 
-NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject)
+NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
+				      PDEVICE_OBJECT DeviceToMount)
 {
-   UNIMPLEMENTED;
+   PIRP Irp;
+   KEVENT Event;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
+   
+   DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
+	  DeviceObject,DeviceToMount);
+   
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   Irp = IoBuildFilesystemControlRequest(IRP_MN_MOUNT_VOLUME,
+					 DeviceObject,
+					 &Event,
+					 &IoStatusBlock,
+					 DeviceToMount);
+   Status = IoCallDriver(DeviceObject,Irp);
+   if (Status==STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	Status = IoStatusBlock.Status;
+     }
+   return(Status);
 }
 
 NTSTATUS IoAskFileSystemToLoad(PDEVICE_OBJECT DeviceObject)
@@ -58,12 +81,15 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    FILE_SYSTEM_OBJECT* current;
    NTSTATUS Status;
    
+   DPRINT("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
+   
    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
    current_entry = FileSystemListHead.Flink;
-   while (current_entry!=NULL)
+   while (current_entry!=(&FileSystemListHead))
      {
 	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
-	Status = IoAskFileSystemToMountDevice(DeviceObject);
+	Status = IoAskFileSystemToMountDevice(current->DeviceObject, 
+					      DeviceObject);
 	switch (Status)
 	  {
 	   case STATUS_FS_DRIVER_REQUIRED:
@@ -90,6 +116,8 @@ VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
    FILE_SYSTEM_OBJECT* fs;
    
+   DPRINT("IoRegisterFileSystem(DeviceObject %x)\n",DeviceObject);
+   
    fs=ExAllocatePool(NonPagedPool,sizeof(FILE_SYSTEM_OBJECT));
    assert(fs!=NULL);
    
@@ -103,10 +131,12 @@ VOID IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
    FILE_SYSTEM_OBJECT* current;
+
+   DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
    
    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
    current_entry = FileSystemListHead.Flink;
-   while (current_entry!=NULL)
+   while (current_entry!=(&FileSystemListHead))
      {
 	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
 	if (current->DeviceObject == DeviceObject)

@@ -11,7 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/objmgr.h>
+#include <internal/ob.h>
 #include <wstring.h>
 
 #define NDEBUG
@@ -41,9 +41,10 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
    PWSTR path;
    PWSTR name;
    PDIRECTORY_OBJECT parent;
+   PWSTR Ignored;
    
    DPRINT("ObGenericCreateObject(Handle %x, DesiredAccess %x,"
-	  "ObjectAttributes %x, Type %x)\n",Handle,DesiredAccess,ObjectAttributes,
+	  "ObjectAttributes %x, Type %d)\n",Handle,DesiredAccess,ObjectAttributes,
 	  Type);
    
    /*
@@ -96,8 +97,9 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 	name=name+1;
      }
    
-   hdr->Parent = ObLookupObject(ObjectAttributes->RootDirectory,path);
-   
+   ObLookupObject(ObjectAttributes->RootDirectory,path,
+		  &hdr->Parent,&Ignored);
+
    /*
     * Initialize the object header
     */
@@ -168,6 +170,9 @@ VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
 	RtlInitUnicodeString(&obj->name,name);
 	DPRINT("name %w\n",obj->name.Buffer);
      }
+   DPRINT("obj->Type %d\n",obj->Type);
+   DPRINT("obj %x\n",obj);
+   DPRINT("&(obj->Type) %x\n",&(obj->Type));
 }
 
 

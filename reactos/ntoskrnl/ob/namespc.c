@@ -13,7 +13,8 @@
 #include <windows.h>
 #include <wstring.h>
 #include <ddk/ntddk.h>
-#include <internal/objmgr.h>
+#include <internal/ob.h>
+#include <internal/io.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -64,19 +65,23 @@ NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
 {
    PVOID Object;
    NTSTATUS Status;
+   PWSTR Ignored;
    
-   Status = ObOpenObjectByName(ObjectAttributes,&Object);
+   *DirectoryHandle = 0;
+   
+   Status = ObOpenObjectByName(ObjectAttributes,&Object,&Ignored);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
        
    if (BODY_TO_HEADER(Object)->Type!=OBJTYP_DIRECTORY)
-     {
+     {	
 	return(STATUS_UNSUCCESSFUL);
      }
    
    *DirectoryHandle = ObAddHandle(Object);
+   CHECKPOINT;
    return(STATUS_SUCCESS);
 }
 
@@ -106,18 +111,23 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
  * RETURNS: Status
  */
 {
-   POBJECT_HEADER hdr = ObGetObjectByHandle(DirObjHandle);
-   PDIRECTORY_OBJECT dir = (PDIRECTORY_OBJECT)(HEADER_TO_BODY(hdr));
+   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(DirObjHandle);
+   PDIRECTORY_OBJECT dir = (PDIRECTORY_OBJECT)hdr;
    ULONG EntriesToRead;
    PLIST_ENTRY current_entry;
    POBJECT_HEADER current;
    ULONG i=0;
    ULONG EntriesToSkip;
    
+   DPRINT("ZwQueryDirectoryObject(DirObjHandle %x)\n",DirObjHandle);
+   DPRINT("dir %x namespc_root %x\n",dir,HEADER_TO_BODY(&(namespc_root.hdr)));
+   
    assert_irql(PASSIVE_LEVEL);
 
    EntriesToRead = BufferLength / sizeof(OBJDIR_INFORMATION);
    *DataWritten = 0;
+   
+   DPRINT("EntriesToRead %d\n",EntriesToRead);
    
    current_entry = dir->head.Flink;
    
@@ -126,6 +136,8 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
     */
    if (!IgnoreInputIndex)
      {
+	CHECKPOINT;
+	
 	EntriesToSkip = *ObjectIndex;
 	while ( i<EntriesToSkip && current_entry!=NULL)
 	  {
@@ -133,29 +145,40 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
 	  }
      }
    
+   DPRINT("DirObjInformation %x\n",DirObjInformation);
+   
    /*
     * Read the maximum entries possible into the buffer
     */
-   while ( i<EntriesToRead && current_entry!=NULL)
+   while ( i<EntriesToRead && current_entry!=(&(dir->head)))
      {
 	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,entry);
+	DPRINT("Scanning %w\n",current->name.Buffer);
+	DirObjInformation[i].ObjectName.Buffer = 
+	               ExAllocatePool(NonPagedPool,current->name.Length);
+	DirObjInformation[i].ObjectName.Length = current->name.Length;
+	DirObjInformation[i].ObjectName.MaximumLength = current->name.Length;
+	DPRINT("DirObjInformation[i].ObjectName.Buffer %x\n",
+	       DirObjInformation[i].ObjectName.Buffer);
 	RtlCopyUnicodeString(&DirObjInformation[i].ObjectName,
 			     &(current->name));
 	i++;
 	current_entry = current_entry->Flink;
 	(*DataWritten) = (*DataWritten) + sizeof(OBJDIR_INFORMATION);
+	CHECKPOINT;
      }
+   CHECKPOINT;
    
    /*
     * Optionally, count the number of entries in the directory
     */
-   if (!GetNextIndex)
+   if (GetNextIndex)
      {
 	*ObjectIndex=i;
      }
    else
      {
-	while ( current_entry!=NULL )
+	while ( current_entry!=(&(dir->head)) )
 	  {
 	     current_entry=current_entry->Flink;
 	     i++;
@@ -179,22 +202,22 @@ NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 }
 
 NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
-			    PVOID* Object)
+			    PVOID* Object, PWSTR* UnparsedSection)
 {
+   NTSTATUS Status;
    
    DPRINT("ObOpenObjectByName(ObjectAttributes %x, Object %x)\n",
 	  ObjectAttributes,Object);
    DPRINT("ObjectAttributes = {ObjectName %x ObjectName->Buffer %w}\n",
 	  ObjectAttributes->ObjectName,ObjectAttributes->ObjectName->Buffer);
    
-   *Object = ObLookupObject(ObjectAttributes->RootDirectory, 
-                              ObjectAttributes->ObjectName->Buffer);
+   *Object = NULL;
+   Status = ObLookupObject(ObjectAttributes->RootDirectory, 
+			   ObjectAttributes->ObjectName->Buffer, 
+			   Object,
+			   UnparsedSection);
    DPRINT("*Object %x\n",*Object);
-   if ((*Object)==NULL)
-     {
-	return(STATUS_NO_SUCH_FILE);
-     }
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 void ObInit(void)
@@ -284,30 +307,34 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
  *          NULL otherwise
  */
 {
-   LIST_ENTRY* current = ((PDIRECTORY_OBJECT)dir)->head.Flink;
+   LIST_ENTRY* current = dir->head.Flink;
    POBJECT_HEADER current_obj;
+   
    DPRINT("ObDirLookup(dir %x, name %w)\n",dir,name);
+   
    if (name[0]==0)
      {
-	return(BODY_TO_HEADER(dir));
+	return(dir);
      }
    if (name[0]=='.'&&name[1]==0)
      {
-	return(BODY_TO_HEADER(dir));
+	return(dir);
      }
    if (name[0]=='.'&&name[1]=='.'&&name[2]==0)
      {
-	return(BODY_TO_HEADER(BODY_TO_HEADER(dir)->Parent));
+	return(BODY_TO_HEADER(dir)->Parent);
      }
-   while (current!=(&((PDIRECTORY_OBJECT)dir)->head))
+   while (current!=(&(dir->head)))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,entry);
+	DPRINT("Scanning %w\n",current_obj->name.Buffer);
 	if ( wcscmp(current_obj->name.Buffer, name)==0)
 	  {
-	     return(current_obj);
+	     return(HEADER_TO_BODY(current_obj));
 	  }
 	current = current->Flink;
      }
+   DPRINT("%s() = NULL\n",__FUNCTION__);
    return(NULL);
 }
 
@@ -323,11 +350,6 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
 {
    DPRINT("ObjCreateEntry(%x,%x,%x,%w)\n",parent,Object,Object->name.Buffer,
 	  Object->name.Buffer);
-   DPRINT("root type %d\n",namespc_root.hdr.Type);
-   DPRINT("%x\n",&(namespc_root.hdr.Type));
-   DPRINT("type %x\n",&(parent->Type));
-   DPRINT("type %x\n",&(BODY_TO_HEADER(parent)->Type));
-   DPRINT("type %d\n",parent->Type);
    assert(parent->Type == OBJTYP_DIRECTORY);
    
    /*
@@ -336,7 +358,8 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
    InsertTailList(&parent->head,&Object->entry);
 }
 
-PVOID ObLookupObject(HANDLE rooth, PWSTR string)
+NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
+			 PWSTR* UnparsedSection)
 /*
  * FUNCTION: Lookup an object within the system namespc
  * ARGUMENTS:
@@ -349,17 +372,23 @@ PVOID ObLookupObject(HANDLE rooth, PWSTR string)
    PWSTR current;
    PWSTR next;
    PDIRECTORY_OBJECT current_dir = NULL;
-   POBJECT_HEADER current_hdr;
+   NTSTATUS Status;
    
-   DPRINT("root %x string %w\n",rooth,string);
+   DPRINT("ObLookupObject(rootdir %x, string %x, string %w, Object %x, "
+	  "UnparsedSection %x)\n",rootdir,string,string,Object,
+	  UnparsedSection);
+			  
    
-   if (rooth==NULL)
+   *UnparsedSection = NULL;
+   *Object = NULL;
+   
+   if (rootdir==NULL)
      {
 	current_dir = HEADER_TO_BODY(&(namespc_root.hdr));
      }
    else
      {
-	ObReferenceObjectByHandle(rooth,DIRECTORY_TRAVERSE,NULL,
+	ObReferenceObjectByHandle(rootdir,DIRECTORY_TRAVERSE,NULL,
 				  UserMode,(PVOID*)&current_dir,NULL);
      }
   
@@ -368,74 +397,90 @@ PVOID ObLookupObject(HANDLE rooth, PWSTR string)
     */
    if (string[0]==0)
    {
-      DPRINT("current_dir %x\n",current_dir);
-      DPRINT("type %d\n",current_dir->Type);
-      return(current_dir);
+      *Object=current_dir;
+      return(STATUS_SUCCESS);
    }
 
-   DPRINT("string = %w\n",string);
-   
    if (string[0]!='\\')
      {
         DbgPrint("(%s:%d) Non absolute pathname passed to %s\n",__FILE__,
                __LINE__,__FUNCTION__);
-	return(NULL);
+	return(STATUS_UNSUCCESSFUL);
      }
       
-   current = string+1;
-   DPRINT("current %w\n",current);
-   next = wcschr(string+1,'\\');
-   if (next!=NULL)
-     {
-	*next=0;
-     }
-   DPRINT("next %x\n",next);
+   next = &string[0];
+   current = next+1;
    
-   while (next!=NULL)
-     {
-        DPRINT("Scanning %w next %w current %x\n",current,next+1,
-	       current_dir);
-	
-	/*
-	 * Check the current object is a directory
-	 */
-	if (current_dir->Type!=OBJTYP_DIRECTORY)
-	  {
-             DbgPrint("(%s:%d) Bad path component\n",__FILE__,
-                    __LINE__);
-	     ExFreePool(string);
-	     return(NULL);
-	  }
-	
-	/*
-	 * Lookup the next component of the path in the directory
-	 */
-	current_hdr=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current);
-	if (current_hdr==NULL)
-	  {
-             DbgPrint("(%s:%d) Path component not found\n",__FILE__,
-                    __LINE__);
-	     ExFreePool(string);
-	     return(NULL);
-	  }
-	current_dir = HEADER_TO_BODY(current_hdr);
-	  
+   while (next!=NULL && current_dir->Type==OBJTYP_DIRECTORY)
+     {		
+	*next = '\\';
 	current = next+1;
 	next = wcschr(next+1,'\\');
 	if (next!=NULL)
 	  {
 	     *next=0;
 	  }
+
+	DPRINT("current %w current[5] %x next %x ",current,current[5],next);
+	if (next!=NULL)
+	  {
+	     DPRINT("(next+1) %w",next+1);
+	  }
+	DPRINT("\n",0);
+	
+	current_dir=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current);
+	if (current_dir==NULL)
+	  {
+             DbgPrint("(%s:%d) Path component not found\n",__FILE__,
+                    __LINE__);
+	     ExFreePool(string);
+	     return(STATUS_UNSUCCESSFUL);	   	     
+	  }
+	
+	DPRINT("current_dir %x\n",current_dir);
+	DPRINT("current_dir->Type %d OBJTYP_SYMLNK %d OBJTYP_DIRECTORY %d\n",
+	       current_dir->Type,OBJTYP_SYMLNK,OBJTYP_DIRECTORY);
+	DPRINT("&(current_dir->Type) %x\n",&(current_dir->Type));
+	if (current_dir->Type==OBJTYP_SYMLNK)
+	  {
+	     current_dir = IoOpenSymlink(current_dir);	   
+	  }
+	
      }
+   DPRINT("next %x\n",next);
+   DPRINT("current %x current %w\n",current,current);
+   if (next==NULL)
+     {
+	if (current_dir==NULL)
+	  {
+	     Status = STATUS_UNSUCCESSFUL;
+	  }
+	else
+	  {
+	     Status = STATUS_SUCCESS;
+	  }
+     }
+   else
+     {
+	CHECKPOINT;
+	*next = '\\';
+	*UnparsedSection = next;
+	switch(current_dir->Type)
+	  {
+	   case OBJTYP_DEVICE:
+	     CHECKPOINT;
+	     Status = STATUS_FS_QUERY_REQUIRED;
+	     break;
+	     
+	   default:
+	     current_dir = NULL;
+	     Status = STATUS_UNSUCCESSFUL;
+	     break;
+	  }
+     }
+   CHECKPOINT;
+   *Object = current_dir;
    
-   DPRINT("current_dir %x current %x\n",current_dir,current);
-   DPRINT("current %w\n",current);
-   current_hdr = ObDirLookup(current_dir,current);
-   if (current_hdr==NULL)
-   {
-        return(NULL);
-   }
-   DPRINT("Returning %x %x\n",current_hdr,HEADER_TO_BODY(current_hdr));
-   return(HEADER_TO_BODY(current_hdr));
+   return(Status);
 }
  

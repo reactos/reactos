@@ -521,3 +521,5 @@ IN ULONG Length,
 OUT PVOID FileInformation,
 OUT PULONG ReturnedLength
 );
+VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject);
+PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject);
