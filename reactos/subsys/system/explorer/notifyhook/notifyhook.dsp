@@ -88,14 +88,14 @@ LINK32=link.exe
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "notifyhook___Win32_Win32"
-# PROP BASE Intermediate_Dir "notifyhook___Win32_Win32"
+# PROP BASE Output_Dir "Win32"
+# PROP BASE Intermediate_Dir "Win32"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "notifyhook___Win32_Win32"
-# PROP Intermediate_Dir "notifyhook___Win32_Win32"
+# PROP Output_Dir "Win32"
+# PROP Intermediate_Dir "Win32"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_NOTIFYHOOK_IMPL" /FR /FD /GZ /c

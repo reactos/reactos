@@ -719,7 +719,7 @@ protected:
 };
 
 
- /// string class for convenience
+ /// string class for TCHAR strings
 struct String
 #ifdef UNICODE
  : public wstring

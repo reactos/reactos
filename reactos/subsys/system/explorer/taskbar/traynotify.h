@@ -149,9 +149,9 @@ protected:
 	int		Command(int id, int code);
 	int		Notify(int id, NMHDR* pnmh);
 
-	void	Refresh();
+	void	UpdateIcons();
 	void	Paint();
-	void	TimerTick();
+	void	Refresh(bool do_refresh=false);
 	void	CancelModes();
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
@@ -185,6 +185,12 @@ protected:
 	HACCEL	_haccel;
 	HIMAGELIST	_himl;
 	NotifyArea* _pNotifyArea;
+
+	typedef pair<NOTIFYICONMODE, DWORD> IconStatePair;
+	typedef map<NotifyIconIndex, IconStatePair> IconStateMap;
+
+	NotifyIconCfgList _cfg_org;
+	IconStateMap _icon_states_org;
 
 	HTREEITEM _hitemCurrent;
 	HTREEITEM _hitemCurrent_visible;

@@ -322,7 +322,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_TIMER: {
-		TimerTick();
+		Refresh();
 
 		ClockWindow* clock_window = GET_WINDOW(ClockWindow, _hwndClock);
 
@@ -331,7 +331,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 
 	  case PM_REFRESH:
-		TimerTick();
+		Refresh(true);
 		break;
 
 	  case WM_SIZE: {
@@ -414,7 +414,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					}
 				}
 				else if (_icon_map.erase(entry))	// delete icons without valid owner window
-					Refresh();
+					UpdateIcons();
 			}
 		}
 
@@ -429,7 +429,7 @@ int NotifyArea::Command(int id, int code)
 	switch(id) {
 	  case ID_SHOW_HIDDEN_ICONS:
 		_show_hidden = !_show_hidden;
-		Refresh();
+		UpdateIcons();
 		break;
 
 	  case ID_CONFIG_NOTIFYAREA:
@@ -492,7 +492,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 				entry._dwState |= NIS_HIDDEN;
 #endif
 
-			Refresh();	///@todo call only if really changes occurred
+			UpdateIcons();	///@todo call only if really changes occurred
 
 			return TRUE;
 		}
@@ -505,7 +505,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 			if (found->second._hIcon)
 				DestroyIcon(found->second._hIcon);
 			_icon_map.erase(found);
-			Refresh();
+			UpdateIcons();
 			return TRUE;
 		}
 		break;}
@@ -529,7 +529,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 	return FALSE;
 }
 
-void NotifyArea::Refresh()
+void NotifyArea::UpdateIcons()
 {
 	_sorted_icons.clear();
 
@@ -590,10 +590,8 @@ void NotifyArea::Paint()
 	}
 }
 
-void NotifyArea::TimerTick()
+void NotifyArea::Refresh(bool update)
 {
-	bool do_refresh = false;
-
 	 // Look for task icons without valid owner window.
 	 // This is an extended feature missing in MS Windows.
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
@@ -601,7 +599,7 @@ void NotifyArea::TimerTick()
 
 		if (!IsWindow(entry._hWnd))
 			if (_icon_map.erase(entry))	// delete icons without valid owner window
-				++do_refresh;
+				++update;
 	}
 
 	DWORD now = GetTickCount();
@@ -616,14 +614,14 @@ void NotifyArea::TimerTick()
 		  case NIM_HIDE:
 			if (!(entry._dwState & NIS_HIDDEN)) {
 				entry._dwState |= NIS_HIDDEN;
-				++do_refresh;
+				++update;
 			}
 			break;
 
 		  case NIM_SHOW:
 			if (entry._dwState&NIS_HIDDEN) {
 				entry._dwState &= ~NIS_HIDDEN;
-				++do_refresh;
+				++update;
 			}
 			break;
 
@@ -632,14 +630,14 @@ void NotifyArea::TimerTick()
 			if (!(entry._dwState & NIS_HIDDEN))
 				if (now-entry._lastChange > ICON_AUTOHIDE_SECONDS*1000) {
 					entry._dwState |= NIS_HIDDEN;
-					++do_refresh;
+					++update;
 				}
 			break;
 		}
 	}
 
-	if (do_refresh)
-		Refresh();
+	if (update)
+		UpdateIcons();
 }
 
  /// search for a icon at a given client coordinate position
@@ -739,6 +737,14 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 	_pNotifyArea(static_cast<NotifyArea*>(Window::get_window((HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_NOTIFYAREA, 0, 0))))
 {
 	_selectedItem = 0;
+
+	if (_pNotifyArea) {
+		 // save original icon states and configuration data
+		for(NotifyIconMap::const_iterator it=_pNotifyArea->_icon_map.begin(); it!=_pNotifyArea->_icon_map.end(); ++it)
+			_icon_states_org[it->first] = IconStatePair(it->second._mode, it->second._dwState);
+
+		_cfg_org = _pNotifyArea->_cfg;
+	}
 
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
 
@@ -870,6 +876,8 @@ void TrayNotifyDlg::Refresh()
 	TreeView_Expand(_tree_ctrl, _hitemCurrent_hidden, TVE_EXPAND);
 	TreeView_Expand(_tree_ctrl, _hitemCurrent, TVE_EXPAND);
 	TreeView_Expand(_tree_ctrl, _hitemConfig, TVE_EXPAND);
+
+	TreeView_EnsureVisible(_tree_ctrl, _hitemCurrent_visible);
 }
 
 void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo& entry, HDC hdc)
@@ -947,7 +955,25 @@ int TrayNotifyDlg::Command(int id, int code)
 			break;
 
 		  case IDOK:
+			EndDialog(_hwnd, id);
+			break;
+
 		  case IDCANCEL:
+			 // rollback changes
+			if (_pNotifyArea) {
+				 // restore original icon states and configuration data
+				_pNotifyArea->_cfg = _cfg_org;
+
+				for(IconStateMap::const_iterator it=_icon_states_org.begin(); it!=_icon_states_org.end(); ++it) {
+					NotifyInfo& info = _pNotifyArea->_icon_map[it->first];
+
+					info._mode = it->second.first;
+					info._dwState = it->second.second;
+				}
+
+				SendMessage(*_pNotifyArea, PM_REFRESH, 0, 0);
+			}
+
 			EndDialog(_hwnd, id);
 			break;
 		}
@@ -1022,7 +1048,8 @@ void TrayNotifyDlg::SetIconMode(NOTIFYICONMODE mode)
 		entry._mode = mode;
 
 		 // trigger refresh in notify area and this dialog
-		SendMessage(*_pNotifyArea, PM_REFRESH, 0, 0);
+		if (_pNotifyArea)
+			SendMessage(*_pNotifyArea, PM_REFRESH, 0, 0);
 	}
 
 	if (_pNotifyArea) {
