@@ -64,9 +64,9 @@ typedef unsigned int size_t;
 #ifndef HAVE_SSIZE_T
 typedef int ssize_t;
 #endif
-#ifndef HAVE_SOCKLEN_T
-typedef unsigned int socklen_t;
-#endif
+//#ifndef HAVE_SOCKLEN_T
+//typedef unsigned int socklen_t;
+//#endif
 
 #ifndef HAVE_STATFS
 # ifdef __BEOS__
