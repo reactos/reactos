@@ -28,6 +28,9 @@
 #        without source code) or no (to not build any map files). The variable
 #        defaults to no.
 #
+#    ROS_RBUILDFLAGS
+#        Pass parameters to rbuild.
+#
 
 .PHONY: all
 .PHONY: clean
@@ -196,7 +199,7 @@ PREAUTO := \
 
 makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) mingw
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
 
 
 $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)

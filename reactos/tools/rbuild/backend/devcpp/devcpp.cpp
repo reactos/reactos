@@ -34,15 +34,15 @@ static class DevCppFactory : public Backend::Factory
 	public:
 
 		DevCppFactory() : Factory("devcpp") {}
-		Backend *operator() (Project &project)
+		Backend *operator() (Project &project, bool verbose)
 		{
-			return new DevCppBackend(project);
+			return new DevCppBackend(project, verbose);
 		}
 		
 } factory;
 
 
-DevCppBackend::DevCppBackend(Project &project) : Backend(project)
+DevCppBackend::DevCppBackend(Project &project, bool verbose) : Backend(project, verbose)
 {
 	m_unitCount = 0;
 }
@@ -107,7 +107,7 @@ void DevCppBackend::Process()
 	
 	cout << "Creating Makefile: " << ProjectNode.makefile << endl;
 	
-	Backend *backend = Backend::Factory::Create("mingw", ProjectNode);
+	Backend *backend = Backend::Factory::Create("mingw", ProjectNode, verbose );
 	backend->Process();
 	delete backend;
 

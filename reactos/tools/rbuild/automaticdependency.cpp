@@ -65,9 +65,6 @@ SourceFile::Open ()
 		throw AccessDeniedException ( filename );
 	}
 	lastWriteTime = statbuf.st_mtime;
-/*	printf ( "lastWriteTime of %s is %s\n",
-	          filename.c_str (),
-	          ctime ( &lastWriteTime ) ); */
 
 	unsigned long len = (unsigned long) filelen ( f );
 	if ( len > MAX_BYTES_TO_READ )
@@ -219,7 +216,6 @@ SourceFile::Parse ()
 	while ( p < end )
 	{
 		string includedFilename ( "" );
-		//printf ( "Parsing '%s'\n", filename.c_str () );
 		
 		bool includeNext;
 		while ( ReadInclude ( includedFilename,
@@ -387,13 +383,12 @@ AutomaticDependency::RetrieveFromCache ( const string& filename )
 }
 
 void
-AutomaticDependency::CheckAutomaticDependencies ()
+AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 {
 	struct utimbuf timebuf;
 	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
 	{
 		const vector<File*>& files = project.modules[mi]->non_if_data.files;
-		//Module& module = *project.modules[mi];
 		for ( size_t fi = 0; fi < files.size (); fi++ )
 		{
 			File& file = *files[fi];
@@ -406,20 +401,16 @@ AutomaticDependency::CheckAutomaticDependencies ()
 				assert ( sourceFile->youngestLastWriteTime != 0 );
 				if ( sourceFile->youngestLastWriteTime > sourceFile->lastWriteTime )
 				{
-					printf ( "Marking %s for rebuild due to younger file %s\n",
-					         sourceFile->filename.c_str (),
-					         sourceFile->youngestFile->filename.c_str () );
+					if ( verbose )
+					{
+						printf ( "Marking %s for rebuild due to younger file %s\n",
+						         sourceFile->filename.c_str (),
+						         sourceFile->youngestFile->filename.c_str () );
+					}
 					timebuf.actime = sourceFile->youngestLastWriteTime;
 					timebuf.modtime = sourceFile->youngestLastWriteTime;
 					utime ( sourceFile->filename.c_str (),
 					        &timebuf );
-
-					/*printf ( "lastWriteTime of %s is %s\n",
-					         sourceFile->filename.c_str (),
-					         ctime ( &sourceFile->lastWriteTime ) );
-					printf ( "youngestLastWriteTime is %s with %s\n",
-					         sourceFile->youngestFile->filename.c_str (),
-					         ctime ( &sourceFile->youngestLastWriteTime ) );*/
 				}
 			}
 		}

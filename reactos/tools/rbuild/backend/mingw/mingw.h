@@ -15,7 +15,7 @@ class MingwModuleHandler;
 class MingwBackend : public Backend
 {
 public:
-	MingwBackend ( Project& project );
+	MingwBackend ( Project& project, bool verbose );
 	virtual ~MingwBackend ();
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory, bool out );
@@ -40,6 +40,7 @@ private:
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
+	void ProcessModules ();
 	FILE* fMakefile;
 	bool use_pch;
 	Directory *int_directories, *out_directories;

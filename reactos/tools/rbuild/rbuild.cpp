@@ -16,24 +16,72 @@
 using std::string;
 using std::vector;
 
+static string BuildSystem;
+static bool Verbose = false;
+
+bool
+ParseSwitch ( int argc, char** argv, int index )
+{
+	char switchChar = argv[index][1];
+	switch ( switchChar )
+	{
+		case 'v':
+			Verbose = true;
+			break;
+		default:
+			printf ( "Unknown switch -%c",
+			         switchChar );
+			return false;
+	}
+	return true;
+}
+
+bool
+ParseArguments ( int argc, char** argv )
+{
+	if ( argc < 2 )
+		return false;
+	
+	for ( int i = 1; i < argc; i++ )
+	{
+		if ( argv[i][0] == '-' )
+		{
+			if ( !ParseSwitch ( argc, argv, i ) )
+				return false;
+		}
+		else
+			BuildSystem = argv[i];
+	}
+	
+	return true;
+}
+
 int
 main ( int argc, char** argv )
 {
-	if ( argc != 2 )
+	if ( !ParseArguments ( argc, argv ) )
 	{
-		printf ( "syntax: rbuild {buildtarget}\n" );
+		printf ( "Generates project files for buildsystems\n\n" );
+		printf ( "  rbuild [-v] buildsystem\n\n" );
+		printf ( "Switches:\n" );
+		printf ( "  -v           Be verbose\n" );
+		printf ( "\n" );
+		printf ( "  buildsystem  Target build system. Can be one of:\n" );
+		printf ( "                 mingw   MinGW\n" );
+		printf ( "                 devcpp  DevC++\n" );
 		return 1;
 	}
-	string buildtarget ( argv[1] );
-	strlwr ( &buildtarget[0] );
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
+		printf ( "Reading build files..." );
 		Project project ( projectFilename );
+		printf ( "done\n" );
 		project.WriteConfigurationFile ();
 		project.ExecuteInvocations ();
-		Backend* backend = Backend::Factory::Create ( buildtarget,
-		                                              project );
+		Backend* backend = Backend::Factory::Create ( BuildSystem,
+		                                              project,
+		                                              Verbose );
 		backend->Process ();
 		delete backend;
 
@@ -41,8 +89,8 @@ main ( int argc, char** argv )
 	}
 	catch (Exception& ex)
 	{
-		printf ( "%s: %s\n",
-		         typeid(ex).name(), ex.Message.c_str() );
+		printf ( "%s\n",
+		         ex.Message.c_str () );
 		return 1;
 	}
 }

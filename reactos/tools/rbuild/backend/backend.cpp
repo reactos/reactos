@@ -22,7 +22,7 @@ Backend::Factory::Factory ( const std::string& name_ )
 	(*factories)[name] = this;
 }
 
-Backend::Factory::~Factory()
+Backend::Factory::~Factory ()
 {
 	if ( !--ref )
 	{
@@ -33,22 +33,26 @@ Backend::Factory::~Factory()
 
 /*static*/ Backend*
 Backend::Factory::Create ( const string& name,
-                           Project& project )
+                           Project& project,
+                           bool verbose )
 {
 	string sname ( name );
 	strlwr ( &sname[0] );
-	if ( !factories || !factories->size() )
-		throw Exception ( "internal tool error: no registered factories" );
+	if ( !factories || !factories->size () )
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "No registered factories" );
 	Backend::Factory* f = (*factories)[sname];
 	if ( !f )
 	{
 		throw UnknownBackendException ( sname );
 		return NULL;
 	}
-	return (*f) ( project );
+	return (*f) ( project, verbose );
 }
 
-Backend::Backend ( Project& project )
-	: ProjectNode ( project )
+Backend::Backend ( Project& project, bool verbose )
+	: ProjectNode ( project ),
+	  verbose ( verbose )
 {
 }

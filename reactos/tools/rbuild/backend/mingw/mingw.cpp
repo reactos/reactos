@@ -27,7 +27,8 @@ public:
 	directory_map subdirs;
 	Directory ( const string& name );
 	void Add ( const char* subdir );
-	void GenerateTree ( const string& parent );
+	void GenerateTree ( const string& parent,
+	                    bool verbose );
 private:
 	bool mkdir_p ( const char* path );
 	string ReplaceVariable ( string name,
@@ -139,7 +140,8 @@ Directory::ResolveVariablesInPath ( char* buf,
 }
 
 void
-Directory::GenerateTree ( const string& parent )
+Directory::GenerateTree ( const string& parent,
+	                      bool verbose )
 {
 	string path;
 
@@ -149,7 +151,7 @@ Directory::GenerateTree ( const string& parent )
 		
 		path = parent + SSEP + name;
 		ResolveVariablesInPath ( buf, path );
-		if ( CreateDirectory ( buf ) )
+		if ( CreateDirectory ( buf ) && verbose )
 			printf ( "Created %s\n", buf );
 	}
 	else
@@ -159,7 +161,7 @@ Directory::GenerateTree ( const string& parent )
 		i != subdirs.end();
 		++i )
 	{
-		i->second->GenerateTree ( path );
+		i->second->GenerateTree ( path, verbose );
 	}
 }
 
@@ -167,15 +169,15 @@ static class MingwFactory : public Backend::Factory
 {
 public:
 	MingwFactory() : Factory ( "mingw" ) {}
-	Backend* operator() ( Project& project )
+	Backend* operator() ( Project& project, bool verbose )
 	{
-		return new MingwBackend ( project );
+		return new MingwBackend ( project, verbose );
 	}
 } factory;
 
 
-MingwBackend::MingwBackend ( Project& project )
-	: Backend ( project ),
+MingwBackend::MingwBackend ( Project& project, bool verbose )
+	: Backend ( project, verbose ),
 	  int_directories ( new Directory("$(INTERMEDIATE)") ),
 	  out_directories ( new Directory("$(OUTPUT)") )
 {
@@ -202,20 +204,12 @@ MingwBackend::AddDirectoryTarget ( const string& directory, bool out )
 }
 
 void
-MingwBackend::Process ()
+MingwBackend::ProcessModules ()
 {
-	size_t i;
-
-	DetectPipeSupport ();
-	DetectPCHSupport ();
-
-	CreateMakefile ();
-	GenerateHeader ();
-	GenerateGlobalVariables ();
-	GenerateXmlBuildFilesMacro();
+	printf ( "Processing modules..." );
 
 	vector<MingwModuleHandler*> v;
-
+	size_t i;
 	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -255,6 +249,19 @@ MingwBackend::Process ()
 		delete v[i];
 	}
 
+	printf ( "done\n" );
+}
+	
+void
+MingwBackend::Process ()
+{
+	DetectPipeSupport ();
+	DetectPCHSupport ();
+	CreateMakefile ();
+	GenerateHeader ();
+	GenerateGlobalVariables ();
+	GenerateXmlBuildFilesMacro ();
+	ProcessModules ();
 	GenerateDirectories ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -488,9 +495,11 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 void
 MingwBackend::CheckAutomaticDependencies ()
 {
+	printf ( "Checking automatic dependencies..." );
 	AutomaticDependency automaticDependency ( ProjectNode );
 	automaticDependency.Process ();
-	automaticDependency.CheckAutomaticDependencies ();
+	automaticDependency.CheckAutomaticDependencies ( verbose );
+	printf ( "done\n" );
 }
 
 bool
@@ -505,8 +514,10 @@ MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
 void
 MingwBackend::GenerateDirectories ()
 {
-	int_directories->GenerateTree ( "" );
-	out_directories->GenerateTree ( "" );
+	printf ( "Creating directories..." );
+	int_directories->GenerateTree ( "", verbose );
+	out_directories->GenerateTree ( "", verbose );
+	printf ( "done\n" );
 }
 
 string

@@ -19,7 +19,7 @@ class DevCppBackend : public Backend
 {
 	public:
 
-		DevCppBackend(Project &project);
+		DevCppBackend(Project &project, bool verbose);
 		virtual ~DevCppBackend() {}
 
 		virtual void Process();

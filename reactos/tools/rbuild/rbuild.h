@@ -469,7 +469,7 @@ public:
 	                                       const std::string& filename,
 	                                       SourceFile* parentSourceFile );
 	SourceFile* RetrieveFromCache ( const std::string& filename );
-	void CheckAutomaticDependencies ();
+	void CheckAutomaticDependencies ( bool verbose );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
 	void ProcessModule ( Module& module );
