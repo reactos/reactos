@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.35 2003/08/19 23:41:20 weiden Exp $
+/* $Id: class.c,v 1.36 2003/09/14 09:03:53 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -229,7 +229,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject,
 	}
 	length = 0;
 	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
-    name = ExAllocatePool(PagedPool,length+1);
+        name = ExAllocatePool(PagedPool,length+sizeof(WCHAR));
 	free = TRUE;
 	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
 	if (!NT_SUCCESS(Status))
