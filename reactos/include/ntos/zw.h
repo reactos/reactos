@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.32 2004/10/24 16:49:48 weiden Exp $
+/* $Id: zw.h,v 1.33 2004/10/24 17:14:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5193,14 +5193,14 @@ NtCreatePagingFile(
 NTSTATUS 
 STDCALL
 NtCreateProfile(OUT PHANDLE ProfileHandle, 
-		IN HANDLE ProcessHandle,
+		IN HANDLE Process  OPTIONAL,
 		IN PVOID ImageBase, 
 		IN ULONG ImageSize, 
-		IN ULONG Granularity,
-		OUT PULONG Buffer, 
-		IN ULONG ProfilingSize,
-		IN KPROFILE_SOURCE Source,
-		IN ULONG ProcessorMask);
+		IN ULONG BucketSize,
+		IN PVOID Buffer,
+		IN ULONG BufferSize,
+		IN KPROFILE_SOURCE ProfileSource,
+		IN KAFFINITY Affinity);
 
 /*
  * FUNCTION: Creates a user mode thread
@@ -5423,8 +5423,8 @@ NtQueryDirectoryObject(
 NTSTATUS
 STDCALL
 NtQueryIntervalProfile(
-	OUT PULONG Interval,
-	OUT KPROFILE_SOURCE ClockSource
+	IN  KPROFILE_SOURCE ProfileSource,
+	OUT PULONG Interval
 	);
 
 /*
@@ -6124,8 +6124,8 @@ ZwQueryInformationProcess(
 NTSTATUS
 STDCALL
 ZwQueryIntervalProfile(
-	OUT PULONG Interval,
-	OUT KPROFILE_SOURCE ClockSource
+	IN  KPROFILE_SOURCE ProfileSource,
+	OUT PULONG Interval
 	);
 
 /*
@@ -6410,15 +6410,15 @@ ZwWaitForMultipleObjects (
 NTSTATUS 
 STDCALL
 ZwCreateProfile(
-	OUT PHANDLE ProfileHandle, 
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ULONG ImageBase, 
-	IN ULONG ImageSize, 
-	IN ULONG Granularity,
-	OUT PVOID Buffer, 
-	IN ULONG ProfilingSize,
-	IN ULONG ClockSource,
-	IN ULONG ProcessorMask
+	OUT PHANDLE ProfileHandle,
+	IN HANDLE Process  OPTIONAL,
+	IN PVOID ImageBase,
+	IN ULONG ImageSize,
+	IN ULONG BucketSize,
+	IN PVOID Buffer,
+	IN ULONG BufferSize,
+	IN KPROFILE_SOURCE ProfileSource,
+	IN KAFFINITY Affinity
 	);
 
 /*

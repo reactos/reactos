@@ -392,31 +392,31 @@ NtInitializeProfileImplementation(VOID)
 }
 
 NTSTATUS STDCALL 
-NtCreateProfile(OUT PHANDLE UnsafeProfileHandle, 
-		IN HANDLE ProcessHandle,
+NtCreateProfile(OUT PHANDLE ProfileHandle,
+		IN HANDLE Process  OPTIONAL,
 		IN PVOID ImageBase, 
 		IN ULONG ImageSize, 
-		IN ULONG Granularity,
-		OUT PULONG Buffer, 
+		IN ULONG BucketSize,
+		IN PVOID Buffer,
 		IN ULONG BufferSize,
-		IN KPROFILE_SOURCE Source,
-		IN ULONG ProcessorMask)
+		IN KPROFILE_SOURCE ProfileSource,
+		IN KAFFINITY Affinity)
 {
-  HANDLE ProfileHandle;
+  HANDLE SafeProfileHandle;
   NTSTATUS Status;
   PKPROFILE Profile;
-  PEPROCESS Process;
+  PEPROCESS pProcess;
 
   /*
    * Reference the associated process
    */
-  if (ProcessHandle != NULL)
+  if (Process != NULL)
     {
-      Status = ObReferenceObjectByHandle(ProcessHandle,
+      Status = ObReferenceObjectByHandle(Process,
 					 PROCESS_QUERY_INFORMATION,
 					 PsProcessType,
 					 UserMode,
-					 (PVOID*)&Process,
+					 (PVOID*)&pProcess,
 					 NULL);
       if (!NT_SUCCESS(Status))
 	{
@@ -425,27 +425,27 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
     }
   else
     {
-      Process = NULL;
+      pProcess = NULL;
       /* FIXME: Check privilege. */
     }
 
   /*
    * Check the parameters
    */
-  if ((Process == NULL && ImageBase < (PVOID)KERNEL_BASE) ||
-      (Process != NULL && ImageBase >= (PVOID)KERNEL_BASE))
+  if ((pProcess == NULL && ImageBase < (PVOID)KERNEL_BASE) ||
+      (pProcess != NULL && ImageBase >= (PVOID)KERNEL_BASE))
     {
       return(STATUS_INVALID_PARAMETER_3);
     }
-  if (((ImageSize >> Granularity) * 4) >= BufferSize)
+  if (((ImageSize >> BucketSize) * 4) >= BufferSize)
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
-  if (Source != ProfileTime)
+  if (ProfileSource != ProfileTime)
     {
       return(STATUS_INVALID_PARAMETER_9);
     }
-  if (ProcessorMask != 0)
+  if (Affinity != 0)
     {
       return(STATUS_INVALID_PARAMETER_10);
     }
@@ -472,7 +472,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
    */
   Profile->Base = ImageBase;
   Profile->Size = ImageSize;
-  Profile->BucketShift = Granularity;
+  Profile->BucketShift = BucketSize;
   Profile->BufferMdl = MmCreateMdl(NULL, Buffer, BufferSize);
   if(Profile->BufferMdl == NULL) {
 	DPRINT("MmCreateMdl: Out of memory!");
@@ -481,9 +481,9 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   MmProbeAndLockPages(Profile->BufferMdl, UserMode, IoWriteAccess);
   Profile->Buffer = MmGetSystemAddressForMdl(Profile->BufferMdl);
   Profile->BufferSize = BufferSize;
-  Profile->ProcessorMask = ProcessorMask;
+  Profile->ProcessorMask = Affinity;
   Profile->Started = FALSE;
-  Profile->Process = Process;
+  Profile->Process = pProcess;
 
   /*
    * Insert the profile into the profile list data structures
@@ -495,7 +495,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
 			   STANDARD_RIGHTS_ALL,
 			   0,
 			   NULL,
-			   &ProfileHandle);
+			   &SafeProfileHandle);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (Profile);
@@ -505,7 +505,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   /*
    * Copy the created handle back to the caller
    */
-  Status = MmCopyToCaller(UnsafeProfileHandle, &ProfileHandle, sizeof(HANDLE));
+  Status = MmCopyToCaller(ProfileHandle, &SafeProfileHandle, sizeof(HANDLE));
   if (!NT_SUCCESS(Status))
      {
        ObDereferenceObject(Profile);
@@ -519,18 +519,18 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
 }
 
 NTSTATUS STDCALL 
-NtQueryIntervalProfile(OUT PULONG UnsafeInterval,
-		       OUT KPROFILE_SOURCE Source)
+NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
+		       OUT PULONG Interval)
 {
   NTSTATUS Status;
 
-  if (Source == ProfileTime)
+  if (ProfileSource == ProfileTime)
     {
-      ULONG Interval;
+      ULONG SafeInterval;
 
       /* FIXME: What units does this use, for now nanoseconds */
-      Interval = 100;
-      Status = MmCopyToCaller(UnsafeInterval, &Interval, sizeof(ULONG));
+      SafeInterval = 100;
+      Status = MmCopyToCaller(Interval, &SafeInterval, sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
