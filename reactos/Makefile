@@ -76,6 +76,10 @@ STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
 # autochk lsass services shell winlogon
 SYS_APPS = autochk services shell winlogon
 
+# System services
+# rpcss eventlog
+SYS_SVC = rpcss eventlog
+
 # Test applications
 # alive apc args atomtest bench consume count dump_shared_data
 # event file gditest hello isotest lpc mstest mutex nptest
@@ -119,20 +123,22 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(TEST_APPS) \
+     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(TEST_APPS) \
      $(UTIL_APPS) $(WINE_MODULES)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
         $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-        $(SYS_APPS:%=%_implib) $(TEST_APPS:%=%_implib) \
-        $(UTIL_APPS:%=%_implib) $(WINE_MODULES:%=%_implib)
+        $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
+        $(TEST_APPS:%=%_implib) $(UTIL_APPS:%=%_implib) \
+        $(WINE_MODULES:%=%_implib)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(TEST_APPS:%=%_clean) $(UTIL_APPS:%=%_clean) \
-       $(NET_APPS:%=%_clean) $(WINE_MODULES:%=%_clean) clean_after tools_clean
+       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(TEST_APPS:%=%_clean) \
+       $(UTIL_APPS:%=%_clean) $(NET_APPS:%=%_clean) $(WINE_MODULES:%=%_clean) \
+       clean_after tools_clean
 
 clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
@@ -141,14 +147,15 @@ install: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
-         $(SYS_APPS:%=%_install) $(TEST_APPS:%=%_install) \
-         $(UTIL_APPS:%=%_install) $(WINE_MODULES:%=%_install)
+         $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
+         $(TEST_APPS:%=%_install) $(UTIL_APPS:%=%_install) \
+         $(WINE_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(TEST_APPS:%=%_dist) $(UTIL_APPS:%=%_dist) \
-      $(NET_APPS:%=%_dist) $(WINE_MODULES:%=%_dist)
+      $(SYS_APPS:%=%_dist) $(SYS_SVC:%=%_dist) $(TEST_APPS:%=%_dist) \
+      $(UTIL_APPS:%=%_dist) $(NET_APPS:%=%_dist) $(WINE_MODULES:%=%_dist)
 
 .PHONY: all implib clean clean_before install dist
 
@@ -172,6 +179,26 @@ $(SYS_APPS:%=%_install): %_install:
 	make -C subsys/system/$* install
 
 .PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
+
+#
+# System Services
+#
+$(SYS_SVC): %:
+	make -C services/$*
+
+$(SYS_SVC:%=%_implib): %_implib:
+	make -C services/$* implib
+
+$(SYS_SVC:%=%_clean): %_clean:
+	make -C services/$* clean
+
+$(SYS_SVC:%=%_dist): %_dist:
+	make -C services/$* dist
+
+$(SYS_SVC:%=%_install): %_install:
+	make -C services/$* install
+
+.PHONY: $(SYS_SVC) $(SYS_SVC:%=%_implib) $(SYS_SVC:%=%_clean) $(SYS_SVC:%=%_install) $(SYS_SVC:%=%_dist)
 
 
 #
