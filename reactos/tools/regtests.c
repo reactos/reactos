@@ -417,7 +417,6 @@ static char KMSTUB[] =
   "\n"
   "void AddTest(TestRoutine Routine)\n"
   "{\n"
-  "  PDEVICE_OBJECT DeviceObject;\n"
   "  UNICODE_STRING DriverName;\n"
   "  IO_STATUS_BLOCK IoStatus;\n"
   "  NTSTATUS Status;\n"
