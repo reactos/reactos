@@ -1,0 +1,16 @@
+; $Id: mmdrv.edf,v 1.1 2004/01/30 18:32:58 silverblade Exp $
+;
+; advapi32.edf
+;
+; ReactOS Operating System
+;
+; Some stack sizes are taken from Ander Norlander's .DEFs.
+;
+LIBRARY mmdrv.dll
+EXPORTS
+DriverProc=DriverProc@20
+widMessage=widMessage@20
+wodMessage=wodMessage@20
+midMessage=midMessage@20
+modMessage=modMessage@20
+auxMessage=auxMessage@20
