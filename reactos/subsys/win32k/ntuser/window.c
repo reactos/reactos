@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.130 2003/11/08 15:00:36 gvg Exp $
+/* $Id: window.c,v 1.131 2003/11/09 11:42:08 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1486,7 +1486,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
+/*
+  This is incorrect!!! -- Filip
+
   RtlFreeUnicodeString(&WindowName);
+*/
 
 
   /* Correct the window style. */
@@ -2959,44 +2963,6 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
  * @unimplemented
  */
 DWORD STDCALL
-NtUserInternalGetWindowText(HWND hWnd,
-			    LPWSTR lpString,
-			    int nMaxCount)
-{
-  DWORD res = 0;
-  PWINDOW_OBJECT WindowObject;
-  
-  IntAcquireWinLockShared(); /* ??? */
-  WindowObject = IntGetWindowObject(hWnd);
-  if(!WindowObject)
-  {
-    IntReleaseWinLock(); /* ??? */
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return 0;
-  }
-  
-  if(lpString)
-  {
-    /* FIXME - Window text is currently stored
-               in the Atom 'USER32!WindowTextAtomA' */
-    
-  }
-  else
-  {
-    /* FIXME - return length of window text */
-  }
-  
-  IntReleaseWindowObject(WindowObject);
-  
-  IntReleaseWinLock(); /* ??? */
-  return res;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
 NtUserLockWindowUpdate(DWORD Unknown0)
 {
   UNIMPLEMENTED
@@ -3694,6 +3660,85 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    IntReleaseWindowObject(DesktopWindow);
   
    return hWnd;
+}
+
+
+/*
+ * NtUserDefSetText
+ *
+ * Undocumented function that is called from DefWindowProc to set
+ * window text.
+ *
+ * FIXME: Call this from user32.dll!
+ *
+ * Status
+ *    @unimplemented
+ */
+
+BOOL STDCALL
+NtUserDefSetText(HWND WindowHandle, PANSI_STRING Text)
+{
+   PWINDOW_OBJECT WindowObject;
+   UNICODE_STRING NewWindowName;
+   BOOL Result = FALSE;
+
+   WindowObject = IntGetWindowObject(WindowHandle);
+   if (!WindowObject)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&NewWindowName, Text, TRUE)))
+   {
+      RtlFreeUnicodeString(&WindowObject->WindowName);
+      WindowObject->WindowName.Buffer = NewWindowName.Buffer;
+      WindowObject->WindowName.Length = NewWindowName.Length;
+      WindowObject->WindowName.MaximumLength = NewWindowName.MaximumLength;
+      Result = TRUE;
+   }
+
+   IntReleaseWindowObject(WindowObject);
+
+   return Result;
+}
+
+/*
+ * NtUserInternalGetWindowText
+ *
+ * FIXME: Call this from user32.dll!
+ *
+ * Status
+ *    @implemented
+ */
+
+DWORD STDCALL
+NtUserInternalGetWindowText(HWND WindowHandle, LPWSTR Text, INT MaxCount)
+{
+   PWINDOW_OBJECT WindowObject;
+   DWORD Result;
+
+   WindowObject = IntGetWindowObject(WindowHandle);
+   if (!WindowObject)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+   }
+
+   Result = WindowObject->WindowName.Length / sizeof(WCHAR);
+   if (Text)
+   {
+      /* FIXME: Shouldn't it be always NULL terminated? */
+      wcsncpy(Text, WindowObject->WindowName.Buffer, MaxCount);
+      if (MaxCount < Result)
+      {
+         Result = MaxCount;
+      }
+   }
+
+   IntReleaseWindowObject(WindowObject);
+
+   return Result;
 }
 
 /* EOF */

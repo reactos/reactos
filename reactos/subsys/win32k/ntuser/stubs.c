@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.31 2003/11/02 16:33:33 ekohl Exp $
+/* $Id: stubs.c,v 1.32 2003/11/09 11:42:08 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -259,17 +259,6 @@ NtUserDdeSetQualityOfService(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDefSetText(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

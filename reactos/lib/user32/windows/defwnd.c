@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.105 2003/11/08 15:33:51 mf Exp $
+/* $Id: defwnd.c,v 1.106 2003/11/09 11:42:08 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1347,75 +1347,56 @@ DefWindowProcA(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
-    static LPSTR WindowTextAtom = 0;
-    PSTR WindowText;
-
     switch (Msg)
     {
         case WM_NCCREATE:
         {
-            CREATESTRUCTA *Cs = (CREATESTRUCTA*)lParam;
-            if (HIWORD(Cs->lpszName))
-            {
-                if (0 == WindowTextAtom)
-                {
-                    WindowTextAtom =
-                        (LPSTR)(ULONG)GlobalAddAtomA("USER32!WindowTextAtomA");
-                }
-                WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                    (strlen(Cs->lpszName) + 1) * sizeof(CHAR));
-                strcpy(WindowText, Cs->lpszName);
-                SetPropA(hWnd, WindowTextAtom, WindowText);
-	        }
-            return (1);
+            return TRUE;
         }
 
         case WM_GETTEXTLENGTH:
         {
-            if (WindowTextAtom == 0 ||
-                (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
-            {
-                return(0);
-            }
-            return (strlen(WindowText));
+            return InternalGetWindowText(hWnd, NULL, 0);
         }
 
         case WM_GETTEXT:
         {
-            if (WindowTextAtom == 0 ||
-                (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
+            UNICODE_STRING UnicodeString;
+            LPSTR AnsiBuffer = (LPSTR)lParam;
+            BOOL Result;
+
+            if (wParam > 1)
             {
-                if (wParam > 1)
-                {
-                    *((PSTR)lParam) = '\0';
-                }
-                return (0);
+                *((PWSTR)lParam) = '\0';
             }
-            strncpy((LPSTR)lParam, WindowText, wParam);
-            return (min(wParam, strlen(WindowText)));
+            UnicodeString.Length = UnicodeString.MaximumLength =
+                wParam * sizeof(WCHAR);
+            UnicodeString.Buffer = HeapAlloc(GetProcessHeap(), 0,
+                UnicodeString.Length);
+            if (!UnicodeString.Buffer)
+                return FALSE;
+            Result = InternalGetWindowText(hWnd, UnicodeString.Buffer, wParam);
+            if (wParam > 0 &&
+                !WideCharToMultiByte(CP_ACP, 0, UnicodeString.Buffer, -1,
+                AnsiBuffer, wParam, NULL, NULL))
+            {
+                AnsiBuffer[wParam - 1] = 0;
+            }
+            HeapFree(GetProcessHeap(), 0, UnicodeString.Buffer);
+
+            return Result;
         }
 
         case WM_SETTEXT:
         {
-            if (0 == WindowTextAtom)
-            {
-                WindowTextAtom =
-                    (LPSTR)(DWORD)GlobalAddAtomA("USER32!WindowTextAtomA");
-	        }
-            if (WindowTextAtom != 0 &&
-                (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
-	        {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
-            }
-            WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                (strlen((PSTR)lParam) + 1) * sizeof(CHAR));
-            strcpy(WindowText, (PSTR)lParam);
-            SetPropA(hWnd, WindowTextAtom, WindowText);
+            ANSI_STRING AnsiString;
+            RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
+            NtUserDefSetText(hWnd, &AnsiString);
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1);
             }
-            return (1);
+            return TRUE;
         }
 
 /*
@@ -1429,16 +1410,6 @@ DefWindowProcA(HWND hWnd,
         case WM_IME_SELECT:
         case WM_IME_SETCONTEXT:
 */
-
-        case WM_NCDESTROY:
-        {
-            if (WindowTextAtom != 0 &&
-                (WindowText = RemovePropA(hWnd, WindowTextAtom)) == NULL)
-            {
-                RtlFreeHeap(GetProcessHeap(), 0, WindowText);
-            }
-            return(0);
-        }
     }
 
     return User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
@@ -1451,70 +1422,38 @@ DefWindowProcW(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
-    static LPWSTR WindowTextAtom = 0;
-    PWSTR WindowText;
-
     switch (Msg)
     {
         case WM_NCCREATE:
         {
-            CREATESTRUCTW* CreateStruct = (CREATESTRUCTW*)lParam;
-            if (HIWORD(CreateStruct->lpszName))
-            {
-                if (0 == WindowTextAtom)
-                {
-                    WindowTextAtom =
-                        (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
-                }
-                WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-			        (wcslen(CreateStruct->lpszName) + 1) * sizeof(WCHAR));
-                wcscpy(WindowText, CreateStruct->lpszName);
-                SetPropW(hWnd, WindowTextAtom, WindowText);
-            }
-            return (1);
+            return TRUE;
         }
 
         case WM_GETTEXTLENGTH:
         {
-            if (WindowTextAtom == 0 ||
-                (WindowText = GetPropW(hWnd, WindowTextAtom)) == NULL)
-            {
-                return(0);
-            }
-            return (wcslen(WindowText));
+            return InternalGetWindowText(hWnd, NULL, 0);
         }
 
         case WM_GETTEXT:
         {
-            if (WindowTextAtom == 0 ||
-                (WindowText = GetPropW(hWnd, WindowTextAtom)) == NULL)
+            DWORD Result;
+            if (wParam > 1)
             {
-                if (wParam > 1)
-                {
-                    *((PWSTR)lParam) = '\0';
-                }
-                return (0);
+                *((PWSTR)lParam) = '\0';
             }
-            wcsncpy((PWSTR)lParam, WindowText, wParam);
-            return (min(wParam, wcslen(WindowText)));
+            Result = InternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
+            return Result;
         }
 
         case WM_SETTEXT:
         {
-            if (WindowTextAtom == 0)
-            {
-                WindowTextAtom =
-                    (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
-            }
-            if (WindowTextAtom != 0 &&
-                (WindowText = GetPropW(hWnd, WindowTextAtom)) == NULL)
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
-            }
-            WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-			    (wcslen((PWSTR)lParam) + 1) * sizeof(WCHAR));
-            wcscpy(WindowText, (PWSTR)lParam);
-            SetPropW(hWnd, WindowTextAtom, WindowText);
+            UNICODE_STRING UnicodeString;
+            ANSI_STRING AnsiString;
+
+            RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
+            RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
+            NtUserDefSetText(hWnd, &AnsiString);
+            RtlFreeAnsiString(&AnsiString);
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
                 DefWndNCPaint(hWnd, (HRGN)1);
@@ -1531,16 +1470,6 @@ DefWindowProcW(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             /* FIXME */
-            return (0);
-        }
-
-        case WM_NCDESTROY:
-        {
-            if (WindowTextAtom != 0 &&
-                (WindowText = RemovePropW(hWnd, WindowTextAtom)) == NULL)
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
-            }
             return (0);
         }
     }

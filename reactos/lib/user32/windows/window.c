@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.78 2003/11/02 06:58:57 navaraf Exp $
+/* $Id: window.c,v 1.79 2003/11/09 11:42:08 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1598,29 +1598,7 @@ DWORD
 STDCALL
 InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-  DWORD res = 0;
-  LPWSTR lps = NULL;
-  if(lpString && (nMaxCount > 0))
-  {
-    lps = RtlAllocateHeap(RtlGetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
-    if(!lps)
-    {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return 0;
-    }
-  }
-  
-  res = NtUserInternalGetWindowText(hWnd, lps, nMaxCount);
-  
-  if(lps)
-  {
-    RtlCopyMemory(lpString, lps, res * sizeof(WCHAR));
-    lpString[res] = (WCHAR)"\0";  /* null-terminate the string */
-    
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lps);
-  }
-  
-  return res;
+  return NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
 }
 
 /*

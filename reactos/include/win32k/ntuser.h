@@ -350,11 +350,8 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cx,
          int cy,
 		     UINT Flags);
-DWORD
-STDCALL
-NtUserDefSetText(
-  DWORD Unknown0,
-  DWORD Unknown1);
+BOOL STDCALL
+NtUserDefSetText(HWND WindowHandle, PANSI_STRING Text);
 
 BOOL
 STDCALL
