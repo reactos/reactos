@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.52 2000/04/02 13:09:50 jfilby Exp $
+/* $Id: loader.c,v 1.53 2000/04/05 15:51:11 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -446,8 +446,6 @@ LdrGetExportAddress(PMODULE_OBJECT ModuleObject,
 }
 
 /*  ----------------------------------------------  PE Module support */
-
-typedef char *PSTR;
 
 PMODULE_OBJECT
 LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)

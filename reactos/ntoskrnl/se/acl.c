@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.3 2000/01/05 21:57:00 dwelch Exp $
+/* $Id: acl.c,v 1.4 2000/04/05 15:52:23 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,7 +17,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN RtlFirstFreeAce(PACL Acl, PACE* Ace)
+BOOLEAN
+STDCALL
+RtlFirstFreeAce(PACL Acl, PACE* Ace)
 {
    PACE Current;
    PVOID AclEnd;
@@ -100,20 +102,24 @@ NTSTATUS RtlpAddKnownAce(PACL Acl,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS RtlAddAccessAllowedAce(PACL Acl,
-				ULONG Revision,
-				ACCESS_MASK AccessMask,
-				PSID Sid)
+NTSTATUS
+STDCALL
+RtlAddAccessAllowedAce(PACL Acl,
+		       ULONG Revision,
+		       ACCESS_MASK AccessMask,
+		       PSID Sid)
 {
    return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
 }
 
-NTSTATUS RtlAddAcl(PACL Acl,
-		   ULONG AclRevision,
-		   ULONG StartingIndex,
-		   PACE AceList,
-		   ULONG AceListLength)
-{   
+NTSTATUS
+STDCALL
+RtlAddAce(PACL Acl,
+	  ULONG AclRevision,
+	  ULONG StartingIndex,
+	  PACE AceList,
+	  ULONG AceListLength)
+{
    PACE Ace;
    ULONG i;
    PACE Current;
@@ -172,9 +178,10 @@ NTSTATUS RtlAddAcl(PACL Acl,
    Acl->AclRevision = AclRevision;
    return(TRUE);
 }
-       
-       
-NTSTATUS RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision)
+
+NTSTATUS
+STDCALL
+RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision)
 {
    if (AclSize < 8)
      {
@@ -197,6 +204,5 @@ NTSTATUS RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision)
    Acl->Sbz2 = 0;
    return(STATUS_SUCCESS);
 }
-
 
 /* EOF */

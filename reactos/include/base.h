@@ -157,9 +157,7 @@ typedef enum _MEDIA_TYPE {
 #define min(a, b)  (((a) < (b)) ? (a) : (b)) 
 #endif
 
-   
-#ifndef WIN32_LEAN_AND_MEAN
-   
+
 
 #ifndef RC_INVOKED
 
@@ -575,8 +573,6 @@ typedef DWORD CCSTYLEFLAGA, *PCCSTYLEFLAGA, *LPCCSTYLEFLAGA;
 
 #endif /* ! defined (RC_INVOKED) */
 
-#endif /* WIN32_LEAN_AND_MEAN */
-   
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.1 2000/03/03 00:45:53 ekohl Exp $
+/* $Id: misc.c,v 1.2 2000/04/05 15:49:52 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -41,6 +41,26 @@ HalProcessorIdle (VOID)
 {
 	__asm__("sti\n\t" \
 	        "hlt\n\t");
+}
+
+ULONG
+FASTCALL
+HalSystemVectorDispatchEntry (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3
+	)
+{
+	return 0;
+}
+
+VOID
+STDCALL
+KeFlushWriteBuffer (
+	VOID
+	)
+{
+	return;
 }
 
 /* EOF */

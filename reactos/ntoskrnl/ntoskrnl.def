@@ -1,11 +1,10 @@
-; $Id: ntoskrnl.def,v 1.65 2000/04/02 13:32:40 ea Exp $
+; $Id: ntoskrnl.def,v 1.66 2000/04/05 15:52:45 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
 ; ReactOS Operating System
 ;
 EXPORTS
-InitializeListHead
 CcInitializeFileCache@8
 CcMdlReadComplete@8
 CcRequestCachePage@20
@@ -245,7 +244,7 @@ IoRegisterShutdownNotification@4
 IoReleaseCancelSpinLock@4
 IoReleaseVpbSpinLock@4
 IoRemoveShareAccess@8
-;IoReportHalResourceUsage
+IoReportHalResourceUsage@16
 IoReportResourceUsage@36
 IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice@8
@@ -410,8 +409,8 @@ READ_REGISTER_BUFFER_UCHAR
 READ_REGISTER_BUFFER_ULONG
 READ_REGISTER_BUFFER_USHORT
 RtlAbsoluteToSelfRelativeSD@12
-;RtlAddAccessAllowedAce
-;RtlAddAce
+RtlAddAccessAllowedAce@16
+RtlAddAce@20
 ;RtlAddAtomToAtomTable
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHeap
@@ -770,6 +769,9 @@ IoInitializeDpcRequest
 IoMarkIrpPending
 IoRequestDpc
 MmGetSystemAddressForMdl
+InitializeListHead
+InsertTailList
+RemoveEntryList
 ;
 ;
 ; exports from hal.dll
@@ -780,7 +782,7 @@ ExReleaseFastMutex
 ExTryToAcquireFastMutex
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
-;HalAllProcessorsStarted
+HalAllProcessorsStarted@0
 ;HalAllocateAdapterChannel
 ;HalAllocateCommonBuffer
 ;HalAllocateCrashDumpRegisters
@@ -801,7 +803,7 @@ HalGetBusDataByOffset@24
 HalGetInterruptVector@24
 HalHandleNMI@4
 HalInitSystem@8
-;HalInitializeProcessor
+HalInitializeProcessor@4
 HalMakeBeep@4
 HalProcessorIdle@0
 HalQueryDisplayParameters@16
@@ -818,10 +820,10 @@ HalSetDisplayParameters@8
 ;HalSetProfileInterval
 HalSetRealTimeClock@4
 ;HalSetTimeIncrement
-;HalStartNextProcessor
+HalStartNextProcessor@8
 ;HalStartProfileInterrupt
 ;HalStopProfileInterrupt
-;HalSystemVectorDispatchEntry
+HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress@24
 IoAssignDriveLetters@16
 IoFlushAdapterBuffers@24
@@ -840,18 +842,20 @@ KdPortRestore@0
 KdPortSave@0
 KeAcquireSpinLock
 ;KeAcquireSpinLockRaiseToSynch
-;KeFlushWriteBuffer
-KeGetCurrentIrql
-KeLowerIrql
+KeFlushWriteBuffer@0
+KeGetCurrentIrql@0
+KeLowerIrql@4
 ;KeQueryPerformanceCounter
-KeRaiseIrql
+KeRaiseIrql@8
 ;KeRaiseIrqlToDpcLevel
 ;KeRaiseIrqlToSynchLevel
 KeReleaseSpinLock
 KeStallExecutionProcessor
 ;KfAcquireSpinLock
-;KfLowerIrql
-;KfRaiseIrql
+;@KfLowerIrql@4
+KfLowerIrql@4
+;@KfRaiseIrql@4
+KfRaiseIrql@4
 ;KfReleaseSpinLock
 READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG@12
@@ -865,6 +869,4 @@ WRITE_PORT_BUFFER_USHORT@12
 WRITE_PORT_UCHAR@8
 WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT@8
-InsertTailList
-RemoveEntryList
 

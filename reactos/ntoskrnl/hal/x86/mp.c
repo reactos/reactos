@@ -1,4 +1,5 @@
-/*
+/* $Id: mp.c,v 1.4 2000/04/05 15:49:52 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/mp.c
@@ -23,3 +24,33 @@ ULONG KeGetCurrentProcessorNumber(VOID)
 {
    return(0);
 }
+
+VOID
+STDCALL
+HalInitializeProcessor (
+	ULONG	ProcessorNumber
+	)
+{
+	return;
+}
+
+BOOLEAN
+STDCALL
+HalAllProcessorsStarted (
+	VOID
+	)
+{
+	return TRUE;
+}
+
+BOOLEAN
+STDCALL
+HalStartNextProcessor (
+	ULONG	Unknown1,
+	ULONG	Unknown2
+	)
+{
+	return FALSE;
+}
+
+/* EOF */

@@ -96,8 +96,12 @@ VOID HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
    MmFreeContiguousMemory(VirtualAddress);
 }
 
-PADAPTER_OBJECT HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
-			      PULONG NumberOfMapRegisters)
+PADAPTER_OBJECT
+STDCALL
+HalGetAdapter (
+	PDEVICE_DESCRIPTION	DeviceDescription,
+	PULONG			NumberOfMapRegisters
+	)
 /*
  * FUNCTION: Returns a pointer to an adapter object for the DMA device 
  * defined the device description structure

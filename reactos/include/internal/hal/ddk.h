@@ -1,4 +1,4 @@
-/* $Id: ddk.h,v 1.12 2000/03/19 13:33:26 ekohl Exp $
+/* $Id: ddk.h,v 1.13 2000/04/05 15:48:12 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -85,10 +85,18 @@ HalAdjustResourceList (
 	);
 
 PVOID
-HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
-			      ULONG Length,
-			      PPHYSICAL_ADDRESS LogicalAddress,
-			      BOOLEAN CacheEnabled);
+HalAllocateCommonBuffer (
+	PADAPTER_OBJECT		AdapterObject,
+	ULONG			Length,
+	PPHYSICAL_ADDRESS	LogicalAddress,
+	BOOLEAN			CacheEnabled
+	);
+
+BOOLEAN
+STDCALL
+HalAllProcessorsStarted (
+	VOID
+	);
 
 NTSTATUS
 STDCALL
@@ -110,21 +118,27 @@ HalDisplayString (
 	);
 
 VOID
-HalExamineMBR(PDEVICE_OBJECT DeviceObject,
-		   ULONG SectorSize,
-		   ULONG MBRTypeIdentifier,
-		   PVOID Buffer);
+HalExamineMBR (
+	PDEVICE_OBJECT	DeviceObject,
+	ULONG		SectorSize,
+	ULONG		MBRTypeIdentifier,
+	PVOID		Buffer
+	);
 
 VOID
-HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
-			 ULONG Length,
-			 PHYSICAL_ADDRESS LogicalAddress,
-			 PVOID VirtualAddress,
-			 BOOLEAN CacheEnabled);
+HalFreeCommonBuffer (
+	PADAPTER_OBJECT		AdapterObject,
+	ULONG			Length,
+	PHYSICAL_ADDRESS	LogicalAddress,
+	PVOID			VirtualAddress,
+	BOOLEAN			CacheEnabled
+	);
 
 PADAPTER_OBJECT
-HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
-			      PULONG NumberOfMapRegisters);
+HalGetAdapter (
+	PDEVICE_DESCRIPTION	DeviceDescription,
+	PULONG			NumberOfMapRegisters
+	);
 
 ULONG
 STDCALL
@@ -148,7 +162,9 @@ HalGetBusDataByOffset (
 	);
 
 ULONG
-HalGetDmaAlignmentRequirement(VOID);
+HalGetDmaAlignmentRequirement (
+	VOID
+	);
 
 ULONG
 STDCALL
@@ -159,6 +175,12 @@ HalGetInterruptVector (
 	ULONG		BusInterruptVector,
 	PKIRQL		Irql,
 	PKAFFINITY	Affinity
+	);
+
+VOID
+STDCALL
+HalInitializeProcessor (
+	ULONG	ProcessorNumber
 	);
 
 BOOLEAN
@@ -233,6 +255,21 @@ VOID
 STDCALL
 HalSetRealTimeClock (
 	PTIME_FIELDS	Time
+	);
+
+BOOLEAN
+STDCALL
+HalStartNextProcessor (
+	ULONG	Unknown1,
+	ULONG	Unknown2
+	);
+
+ULONG
+FASTCALL
+HalSystemVectorDispatchEntry (
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3
 	);
 
 BOOLEAN

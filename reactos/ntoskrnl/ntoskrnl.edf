@@ -1,11 +1,10 @@
-; $Id: ntoskrnl.edf,v 1.52 2000/04/02 13:32:40 ea Exp $
+; $Id: ntoskrnl.edf,v 1.53 2000/04/05 15:52:45 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
 ; ReactOS Operating System
 ;
 EXPORTS
-InitializeListHead
 CcInitializeFileCache=CcInitializeFileCache@8
 CcMdlReadComplete=CcMdlReadComplete@8
 CcRequestCachePage=CcRequestCachePage@20
@@ -244,7 +243,7 @@ IoRegisterShutdownNotification=IoRegisterShutdownNotification@4
 IoReleaseCancelSpinLock=IoReleaseCancelSpinLock@4
 IoReleaseVpbSpinLock=IoReleaseVpbSpinLock@4
 IoRemoveShareAccess=IoRemoveShareAccess@8
-;IoReportHalResourceUsage
+IoReportHalResourceUsage=IoReportHalResourceUsage@16
 IoReportResourceUsage=IoReportResourceUsage@36
 IoSetDeviceToVerify=IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice=IoSetHardErrorOrVerifyDevice@8
@@ -409,6 +408,8 @@ READ_REGISTER_BUFFER_UCHAR
 READ_REGISTER_BUFFER_ULONG
 READ_REGISTER_BUFFER_USHORT
 RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
+RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
+RtlAddAce=RtlAddAce@20
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
@@ -696,6 +697,9 @@ IoInitializeDpcRequest
 IoMarkIrpPending
 IoRequestDpc
 MmGetSystemAddressForMdl
+InitializeListHead
+InsertTailList
+RemoveEntryList
 ;
 ;
 ; exports from hal.dll
@@ -706,7 +710,7 @@ ExReleaseFastMutex
 ExTryToAcquireFastMutex
 HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
 HalAdjustResourceList=HalAdjustResourceList@4
-;HalAllProcessorsStarted
+HalAllProcessorsStarted=HalAllProcessorsStarted@0
 ;HalAllocateAdapterChannel
 ;HalAllocateCommonBuffer
 ;HalAllocateCrashDumpRegisters
@@ -727,7 +731,7 @@ HalGetBusDataByOffset=HalGetBusDataByOffset@24
 HalGetInterruptVector=HalGetInterruptVector@24
 HalHandleNMI=HalHandleNMI@4
 HalInitSystem=HalInitSystem@8
-;HalInitializeProcessor
+HalInitializeProcessor=HalInitializeProcessor@4
 HalMakeBeep=HalMakeBeep@4
 HalProcessorIdle=HalProcessorIdle@0
 HalQueryDisplayParameters=HalQueryDisplayParameters@16
@@ -744,10 +748,11 @@ HalSetDisplayParameters=HalSetDisplayParameters@8
 ;HalSetProfileInterval
 HalSetRealTimeClock=HalSetRealTimeClock@4
 ;HalSetTimeIncrement
-;HalStartNextProcessor
+HalStartNextProcessor=HalStartNextProcessor@8
 ;HalStartProfileInterrupt
 ;HalStopProfileInterrupt
-;HalSystemVectorDispatchEntry
+;HalSystemVectorDispatchEntry=@HalSystemVectorDispatchEntry@12
+HalSystemVectorDispatchEntry=HalSystemVectorDispatchEntry@12
 HalTranslateBusAddress=HalTranslateBusAddress@24
 IoAssignDriveLetters=IoAssignDriveLetters@16
 IoFlushAdapterBuffers=IoFlushAdapterBuffers@24
@@ -766,18 +771,20 @@ KdPortRestore=KdPortRestore@0
 KdPortSave=KdPortSave@0
 KeAcquireSpinLock
 ;KeAcquireSpinLockRaiseToSynch
-;KeFlushWriteBuffer
-KeGetCurrentIrql
-KeLowerIrql
+KeFlushWriteBuffer=KeFlushWriteBuffer@0
+KeGetCurrentIrql=KeGetCurrentIrql@0
+KeLowerIrql=KeLowerIrql@4
 ;KeQueryPerformanceCounter
-KeRaiseIrql
+KeRaiseIrql=KeRaiseIrql@8
 ;KeRaiseIrqlToDpcLevel
 ;KeRaiseIrqlToSynchLevel
 KeReleaseSpinLock
 KeStallExecutionProcessor
 ;KfAcquireSpinLock
-;KfLowerIrql
-;KfRaiseIrql
+;KfLowerIrql=@KfLowerIrql@4
+KfLowerIrql=KfLowerIrql@4
+;KfRaiseIrql=@KfRaiseIrql@4
+KfRaiseIrql=KfRaiseIrql@4
 ;KfReleaseSpinLock
 READ_PORT_BUFFER_UCHAR=READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG=READ_PORT_BUFFER_ULONG@12
@@ -791,6 +798,4 @@ WRITE_PORT_BUFFER_USHORT=WRITE_PORT_BUFFER_USHORT@12
 WRITE_PORT_UCHAR=WRITE_PORT_UCHAR@8
 WRITE_PORT_ULONG=WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT=WRITE_PORT_USHORT@8
-InsertTailList
-RemoveEntryList
 

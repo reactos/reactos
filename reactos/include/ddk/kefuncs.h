@@ -44,7 +44,11 @@ BOOLEAN KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD
 				     CallbackRecord);
 VOID KeEnterCriticalRegion(VOID);
 VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
-KIRQL KeGetCurrentIrql(VOID);
+KIRQL
+STDCALL
+KeGetCurrentIrql (
+	VOID
+	);
 ULONG KeGetCurrentProcessorNumber(VOID);
 ULONG KeGetDcacheFillSize(VOID);
 PKTHREAD KeGetCurrentThread(VOID);
@@ -66,12 +70,21 @@ BOOLEAN KeInsertDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 BOOLEAN KeInsertQueueDpc(PKDPC Dpc, PVOID SystemArgument1, 
 			 PVOID SystemArgument2);
 VOID KeLeaveCriticalRegion(VOID);   
-VOID KeLowerIrql(KIRQL NewIrql);
+VOID
+STDCALL
+KeLowerIrql (
+	KIRQL	NewIrql
+	);
 LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency);
 VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime);
 VOID KeQueryTickCount(PLARGE_INTEGER TickCount);
 ULONG KeQueryTimeIncrement(VOID);
-VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql);
+VOID
+STDCALL
+KeRaiseIrql (
+	KIRQL	NewIrql,
+	PKIRQL	OldIrql
+	);
 LONG KeReadStateEvent(PKEVENT Event);
 LONG KeReadStateMutex(PKMUTEX Mutex);
 LONG KeReadStateSemaphore(PKSEMAPHORE Semaphore);
@@ -241,5 +254,26 @@ VOID KeRaiseUserException(NTSTATUS ExceptionCode);
 VOID
 STDCALL
 KeEnterKernelDebugger (VOID);
+
+
+VOID
+STDCALL
+KeFlushWriteBuffer (
+	VOID
+	);
+
+
+VOID
+FASTCALL
+KfLowerIrql (
+	IN	KIRQL	NewIrql
+	);
+
+
+KIRQL
+FASTCALL
+KfRaiseIrql (
+	IN	KIRQL	NewIrql
+	);
 
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

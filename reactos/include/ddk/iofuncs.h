@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.9 2000/03/29 13:11:51 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.10 2000/04/05 15:47:40 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -750,11 +750,14 @@ IoRemoveShareAccess (
 	PFILE_OBJECT	FileObject,
 	PSHARE_ACCESS	ShareAccess
 	);
-#if 0
+NTSTATUS
 STDCALL
 IoReportHalResourceUsage (
+	PUNICODE_STRING	HalDescription,
+	ULONG		Unknown1,
+	ULONG		Unknown2,
+	ULONG		Unknown3
 	);
-#endif
 NTSTATUS
 STDCALL
 IoReportResourceUsage (

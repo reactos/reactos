@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.3 2000/03/26 19:38:26 ea Exp $
+/* $Id: resource.c,v 1.4 2000/04/05 15:50:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+
 
 #include <internal/debug.h>
 
@@ -66,6 +67,18 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 				  PULONG PeripheralNumber,
 				  PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
 				  PVOID Context)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS
+STDCALL
+IoReportHalResourceUsage (
+	PUNICODE_STRING	HalDescription,
+	ULONG		Unknown1,
+	ULONG		Unknown2,
+	ULONG		Unknown3
+	)
 {
    UNIMPLEMENTED;
 }

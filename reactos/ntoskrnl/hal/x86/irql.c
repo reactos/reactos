@@ -116,6 +116,7 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
      }
 }
 
+
 VOID KeSetCurrentIrql(KIRQL newlvl)
 /*
  * PURPOSE: Sets the current irq level without taking any action
@@ -125,7 +126,12 @@ VOID KeSetCurrentIrql(KIRQL newlvl)
    CurrentIrql = newlvl;
 }
 
-KIRQL KeGetCurrentIrql()
+
+KIRQL
+STDCALL
+KeGetCurrentIrql (
+	VOID
+	)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
@@ -134,73 +140,149 @@ KIRQL KeGetCurrentIrql()
    return(CurrentIrql);
 }
 
-VOID KeLowerIrql(KIRQL NewIrql)
-/*
- * PURPOSE: Restores the irq level on the current processor
- * ARGUMENTS:
- *        NewIrql = Irql to lower to
- */
-{
-   KIRQL oldIrql;
-   
-//   DbgPrint(">");
-   
-   __asm__("cli\n\t");
-   
-   DPRINT("KeLowerIrql(NewIrql %d)\n", NewIrql);
-//   DbgPrint("{");
-//   KeDumpStackFrames(0,32);
-//   DbgPrint("}\n");
-   //DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
-   if (NewIrql > CurrentIrql)
-     {
-	DbgPrint("(%s:%d) NewIrql %x CurrentIrql %x\n",
-		 __FILE__, __LINE__, NewIrql,CurrentIrql);
-	KeDumpStackFrames(0,32);
-	for(;;);
-     }
-   oldIrql = CurrentIrql;
-   CurrentIrql = NewIrql;
-   HiSwitchIrql(oldIrql);
-}
 
-VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
-/*
- * FUNCTION: Raises the hardware priority (irql) 
- * ARGUMENTS:
- *         NewIrql = Irql to raise to
- *         OldIrql (OUT) = Caller supplied storage for the previous irql
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KfLowerIrql
+ *
+ * DESCRIPTION
+ *	Restores the irq level on the current processor
+ *
+ * ARGUMENTS
+ *	NewIrql = Irql to lower to
+ *
+ * RETURN VALUE
+ *	None
+ *
+ * NOTES
+ *	Uses fastcall convention
  */
+
+VOID
+FASTCALL
+KfLowerIrql (
+	KIRQL	NewIrql
+	)
 {
-   /*
-    * sanity check
-    */
-   
-//   DbgPrint("<");
-   
-//  DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
-//	 OldIrql);
-//   DbgPrint("{");
-//   KeDumpStackFrames(0,32);
-//   DbgPrint("}\n");
-   DPRINT("KeRaiseIrql(NewIrql %d, OldIrql %x, *OldIrql %d)\n",
-	    NewIrql, OldIrql, *OldIrql);
-   if (NewIrql < CurrentIrql)
-     {
-	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",
-		 __FILE__,__LINE__,CurrentIrql,NewIrql,OldIrql);
-	KeBugCheck(0);
-	for(;;);
-     }
-   
-   __asm__("cli\n\t");
-   *OldIrql = CurrentIrql;
-   CurrentIrql = NewIrql;
-//   *OldIrql = InterlockedExchange(&CurrentIrql,NewIrql);
-   DPRINT("NewIrql %x OldIrql %x CurrentIrql %x\n",NewIrql,*OldIrql,
-          CurrentIrql);
-   HiSwitchIrql(*OldIrql);
+	KIRQL OldIrql;
+
+	__asm__("cli\n\t");
+
+	DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
+
+	if (NewIrql > CurrentIrql)
+	{
+		DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
+		          __FILE__, __LINE__, NewIrql, CurrentIrql);
+		KeDumpStackFrames (0, 32);
+		for(;;);
+	}
+
+	OldIrql = CurrentIrql;
+	CurrentIrql = NewIrql;
+	HiSwitchIrql(OldIrql);
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KeLowerIrql
+ *
+ * DESCRIPTION
+ *	Restores the irq level on the current processor
+ *
+ * ARGUMENTS
+ *	NewIrql = Irql to lower to
+ *
+ * RETURN VALUE
+ *	None
+ *
+ * NOTES
+ */
 
+VOID
+STDCALL
+KeLowerIrql (
+	KIRQL	NewIrql
+	)
+{
+	KfLowerIrql (NewIrql);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KfRaiseIrql
+ *
+ * DESCRIPTION
+ *	Raises the hardware priority (irql)
+ *
+ * ARGUMENTS
+ *	NewIrql = Irql to raise to
+ *
+ * RETURN VALUE
+ *	previous irq level
+ *
+ * NOTES
+ *	Uses fastcall convention
+ */
+
+KIRQL
+FASTCALL
+KfRaiseIrql (
+	KIRQL	NewIrql
+	)
+{
+	KIRQL OldIrql;
+
+	DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
+
+	if (NewIrql < CurrentIrql)
+	{
+		DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
+		          __FILE__,__LINE__,CurrentIrql,NewIrql);
+		KeBugCheck (0);
+		for(;;);
+	}
+
+	__asm__("cli\n\t");
+	OldIrql = CurrentIrql;
+	CurrentIrql = NewIrql;
+
+	DPRINT ("NewIrql %x OldIrql %x CurrentIrql %x\n",
+	        NewIrql, OldIrql, CurrentIrql);
+	HiSwitchIrql(OldIrql);
+
+	return OldIrql;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	KeRaiseIrql
+ *
+ * DESCRIPTION
+ *	Raises the hardware priority (irql)
+ *
+ * ARGUMENTS
+ *	NewIrql = Irql to raise to
+ *	OldIrql (OUT) = Caller supplied storage for the previous irql
+ *
+ * RETURN VALUE
+ *	None
+ *
+ * NOTES
+ *	Calls KfRaiseIrql
+ */
+
+VOID
+STDCALL
+KeRaiseIrql (
+	KIRQL	NewIrql,
+	PKIRQL	OldIrql
+	)
+{
+	*OldIrql = KfRaiseIrql (NewIrql);
+}
+
+/* EOF */
