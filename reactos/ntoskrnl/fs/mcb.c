@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.8 2003/04/20 17:59:18 ea Exp $
+/* $Id: mcb.c,v 1.9 2003/04/27 16:25:25 ea Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -144,8 +144,11 @@ FsRtlLookupMcbEntry (IN PMCB     Mcb,
 ULONG STDCALL
 FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
-  UNIMPLEMENTED
-  return(0);
+  ULONG NumberOfRuns;
+  ExAcquireFastMutex (Mcb->FastMutex);
+  NumberOfRuns=Mcb->PairCount;
+  ExReleaseFastMutex (Mcb->FastMutex);
+  return(NumberOfRuns);
 }
 
 
