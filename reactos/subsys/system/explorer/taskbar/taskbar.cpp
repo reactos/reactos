@@ -388,8 +388,18 @@ void TaskBar::Refresh()
 				TaskBarEntry& entry = it->second;
 
 				 // adjust button indexes
-				if (entry._btn_idx > idx)
+				if (entry._btn_idx > idx) {
 					--entry._btn_idx;
+					--entry._bmp_idx;
+
+					TBBUTTONINFO info;
+
+					info.cbSize = sizeof(TBBUTTONINFO);
+					info.dwMask = TBIF_IMAGE;
+					info.iImage = entry._bmp_idx;
+
+					SendMessage(_htoolbar, TB_SETBUTTONINFO, entry._id, (LPARAM)&info);
+				}
 			}
 		}
 
