@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.42 2003/07/12 19:18:31 ekohl Exp $
+/* $Id: atapi.c,v 1.43 2003/08/04 08:32:48 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -909,6 +909,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   ULONG Retries;
   PUCHAR TargetAddress;
   ULONG TransferSize;
+  ULONG tmpTransferSize;
 
   DPRINT("AtapiInterrupt() called!\n");
 
@@ -979,10 +980,11 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 	  if (DevExt->DataTransferLength <= TransferSize)
 	    {
-	      if (!IsAtapi)
-	      {
-	         TransferSize = DevExt->DataTransferLength;
-	      }
+	      if (IsAtapi)
+	        {
+		  tmpTransferSize = TransferSize - DevExt->DataTransferLength;
+		}
+              TransferSize = DevExt->DataTransferLength;
 	      DevExt->DataTransferLength = 0;
 	      IsLastBlock = TRUE;
 	    }
@@ -1019,6 +1021,17 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  /* check DRQ */
 	  if (IsLastBlock)
 	    {
+	      if (IsAtapi) 
+	        {
+		  USHORT u;
+		  while (tmpTransferSize > 0)
+		    {
+                      IDEReadBlock(CommandPortBase,
+			           &u,
+				   2);
+		      tmpTransferSize -= 2;
+		    }
+		}
 	      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES &&
 		   (IDEReadStatus(CommandPortBase) & IDE_SR_BUSY);
 		   Retries++)
