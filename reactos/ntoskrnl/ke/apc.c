@@ -262,37 +262,6 @@ KeRemoveQueueApc (PKAPC Apc)
 	return(TRUE);
 }
 
-BOOLEAN
-STDCALL
-KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
-/*
- * FUNCTION: Tests whether there are any pending APCs for the current thread
- * and if so the APCs will be delivered on exit from kernel mode
- */
-{
-	KIRQL OldIrql;
-	PKTHREAD Thread = KeGetCurrentThread();
-	BOOLEAN OldState;
-   
-   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-	
-	OldIrql = KeAcquireDispatcherDatabaseLock();
-	KiAcquireSpinLock(&Thread->ApcQueueLock);
-	
-	OldState = Thread->Alerted[(int)AlertMode];
-	
-	/* If the Thread is Alerted, Clear it */
-	if (OldState) {
-		Thread->Alerted[(int)AlertMode] = FALSE;	
-	} else if ((AlertMode == UserMode) && (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))) {
-		/* If the mode is User and the Queue isn't empty, set Pending */
-		Thread->ApcState.UserApcPending = TRUE;
-	}
-	
-	KiReleaseSpinLock(&Thread->ApcQueueLock);
-	KeReleaseDispatcherDatabaseLock(OldIrql);
-	return OldState;
-}
 
 /*
  * @implemented
@@ -615,17 +584,6 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 	return Status;
 }
 
-NTSTATUS
-STDCALL
-NtTestAlert(VOID)
-{
-	/* Check and Alert Thread if needed */
-	if (KeTestAlertThread(KeGetPreviousMode())) {
-		return STATUS_ALERTED;
-	} else {
-		return STATUS_SUCCESS;
-	}
-}
 
 static inline VOID RepairList(PLIST_ENTRY Original, 
 			      PLIST_ENTRY Copy,

@@ -121,6 +121,7 @@ OBJECTS_KE = \
 	ke/spinlock.o \
 	ke/timer.o \
 	ke/wait.o \
+	ke/alert.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \

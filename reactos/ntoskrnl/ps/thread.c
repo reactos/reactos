@@ -477,6 +477,8 @@ PsDispatchThread(ULONG NewThreadStatus)
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 {
+   ASSERT(Thread->WaitBlockList == NULL);
+      
   if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
       THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
     {
@@ -965,43 +967,6 @@ KeSetAffinityThread(PKTHREAD	Thread,
 }
 
 
-NTSTATUS STDCALL
-NtAlertResumeThread(IN	HANDLE ThreadHandle,
-		    OUT PULONG	SuspendCount)
-{
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
-
-}
-
-
-NTSTATUS STDCALL
-NtAlertThread (IN HANDLE ThreadHandle)
-{
-   PETHREAD Thread;
-   NTSTATUS Status;
-   NTSTATUS ThreadStatus;
-   KIRQL oldIrql;
-
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_SUSPEND_RESUME,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-
-   ThreadStatus = STATUS_ALERTED;
-   oldIrql = KeAcquireDispatcherDatabaseLock();
-   (VOID)PsUnblockThread(Thread, &ThreadStatus);
-   KeReleaseDispatcherDatabaseLock(oldIrql);
-
-   ObDereferenceObject(Thread);
-   return(STATUS_SUCCESS);
-}
 
 /**********************************************************************
  *	NtOpenThread/4
