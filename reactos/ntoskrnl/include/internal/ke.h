@@ -29,6 +29,14 @@
 
 #include "arch/ke.h"
 
+
+
+extern LARGE_INTEGER SystemBootTime;
+extern ULONG KiKernelTime;
+extern ULONG KiUserTime;
+extern ULONG KiDpcTime;
+
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 #ifdef __USE_W32API

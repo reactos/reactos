@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.26 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: sysinfo.c,v 1.27 2004/04/14 07:10:44 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,7 @@
 #include <internal/ldr.h>
 #include <internal/safe.h>
 #include <internal/ps.h>
+#include <internal/mm.h>
 
 #include <internal/debug.h>
 
@@ -303,7 +304,7 @@ QSI_DEF(SystemBasicInformation)
 	Sbi->LowestUserAddress = 0; /* FIXME */
 	Sbi->HighestUserAddress = 0; /* FIXME */
 	Sbi->ActiveProcessors = 0x00000001; /* FIXME */
-	Sbi->NumberProcessors = 1; /* FIXME */
+	Sbi->NumberProcessors = KeNumberProcessors;
 
 	return (STATUS_SUCCESS);
 }
@@ -348,14 +349,15 @@ QSI_DEF(SystemPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	Spi->IdleTime.QuadPart = 0; /* FIXME */
+	Spi->IdleTime.QuadPart = PsInitialSystemProcess->Pcb.KernelTime * 100000;
+
 	Spi->ReadTransferCount.QuadPart = 0; /* FIXME */
 	Spi->WriteTransferCount.QuadPart = 0; /* FIXME */
 	Spi->OtherTransferCount.QuadPart = 0; /* FIXME */
 	Spi->ReadOperationCount = 0; /* FIXME */
 	Spi->WriteOperationCount = 0; /* FIXME */
 	Spi->OtherOperationCount = 0; /* FIXME */
-	Spi->AvailablePages = 0; /* FIXME */
+	Spi->AvailablePages = MiNrAvailablePages; 
 	Spi->TotalCommittedPages = 0; /* FIXME */
 	Spi->TotalCommitLimit = 0; /* FIXME */
 	Spi->PeakCommitment = 0; /* FIXME */
@@ -435,6 +437,8 @@ QSI_DEF(SystemPerformanceInformation)
 /* Class 3 - Time Of Day Information */
 QSI_DEF(SystemTimeOfDayInformation)
 {
+ LARGE_INTEGER CurrentTime;
+ 
 	PSYSTEM_TIMEOFDAY_INFORMATION Sti
 		= (PSYSTEM_TIMEOFDAY_INFORMATION) Buffer;
 
@@ -447,9 +451,11 @@ QSI_DEF(SystemTimeOfDayInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	Sti->BootTime.QuadPart = 0;	/* FIXME */
-	Sti->CurrentTime.QuadPart = 0;	/* FIXME */
-	Sti->TimeZoneBias.QuadPart = 0;	/* FIXME */
+	KeQuerySystemTime(&CurrentTime);
+
+	Sti->BootTime= SystemBootTime;
+	Sti->CurrentTime = CurrentTime;
+	Sti->TimeZoneBias.QuadPart = _SystemTimeZoneInfo.Bias;
 	Sti->TimeZoneId = 0;		/* FIXME */
 	Sti->Reserved = 0;		/* FIXME */
 
@@ -515,8 +521,11 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->NextEntryDelta = curSize+inLen; // relative offset to the beginnnig of the next structure
 		SpiCur->ThreadCount = nThreads;
 		SpiCur->CreateTime = pr->CreateTime;
-		//SpiCur->UserTime = 0; // FIXME
-		//SpiCur->KernelTime = 0; // FIXME
+/*
+ * System Clock is 18.2 psec.
+ */		
+		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000; 
+		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000;
 
 		SpiCur->ProcessName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
 		SpiCur->ProcessName.MaximumLength = inLen;
@@ -526,7 +535,7 @@ QSI_DEF(SystemProcessInformation)
 		RtlInitAnsiString(&imgName, pr->ImageFileName);
 		RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
 
-		SpiCur->BasePriority = 0; // FIXME
+		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
 		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
 		SpiCur->HandleCount = 0; // FIXME
@@ -602,8 +611,27 @@ QSI_DEF(SystemDeviceInformation)
 /* Class 8 - Processor Performance Information */
 QSI_DEF(SystemProcessorPerformanceInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+	PSYSTEM_PROCESSORTIME_INFO Spi
+		= (PSYSTEM_PROCESSORTIME_INFO) Buffer;
+
+	*ReqSize = sizeof (SYSTEM_PROCESSORTIME_INFO);
+	/*
+	 * Check user buffer's size 
+	 */
+	if (Size < sizeof (SYSTEM_PROCESSORTIME_INFO))
+	{
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+
+        Spi->TotalProcessorRunTime.QuadPart = 
+		PsInitialSystemProcess->Pcb.KernelTime * 100000; // IdleTime
+        Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000; // KernelTime
+        Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000;
+        Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000;
+        Spi->TotalInterruptTime.QuadPart = 0;
+        Spi->TotalInterrupts = 0; // Interrupt Count
+        
+	return (STATUS_SUCCESS);
 }
 
 /* Class 9 - Flags Information */
@@ -941,7 +969,7 @@ QSI_DEF(SystemCurrentTimeZoneInformation)
 	/* Copy the time zone information struct */
         memcpy (
 		Buffer,
-                & SystemTimeZoneInfo,
+                & _SystemTimeZoneInfo,
                 sizeof (TIME_ZONE_INFORMATION)
 		);
 
@@ -960,7 +988,7 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
 	}
 	/* Copy the time zone information struct */
 	memcpy (
-		& SystemTimeZoneInfo,
+		& _SystemTimeZoneInfo,
 		(TIME_ZONE_INFORMATION *) Buffer,
 		sizeof (TIME_ZONE_INFORMATION)
 		);
@@ -1140,6 +1168,8 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   PVOID SystemInformation;
   NTSTATUS Status;
   NTSTATUS FStatus;
+
+	DPRINT("NtQuerySystemInformation Start.\n");
 
   /*if (ExGetPreviousMode() == KernelMode)
     {*/

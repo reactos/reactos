@@ -10,6 +10,8 @@
 
 /* TYPES *********************************************************************/
 
+extern ULONG MiNrAvailablePages;
+
 struct _EPROCESS;
 
 struct _MM_RMAP_ENTRY;

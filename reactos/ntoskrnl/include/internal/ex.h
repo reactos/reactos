@@ -98,7 +98,7 @@ typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
 
 /* GLOBAL VARIABLES *********************************************************/
 
-TIME_ZONE_INFORMATION SystemTimeZoneInfo;
+TIME_ZONE_INFORMATION _SystemTimeZoneInfo;
 extern POBJECT_TYPE ExEventPairObjectType;
 
 

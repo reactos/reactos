@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.67 2004/01/18 22:32:47 gdalsnes Exp $
+/* $Id: timer.c,v 1.68 2004/04/14 07:10:58 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -33,10 +33,14 @@
  * Current time
  */
 #if defined(__GNUC__)
-static LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
+LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
 #else
-static LARGE_INTEGER SystemBootTime = { 0 };
+LARGE_INTEGER SystemBootTime = { 0 };
 #endif
+
+ULONG KiKernelTime;
+ULONG KiUserTime;
+ULONG KiDpcTime;
 
 /*
  * Number of timer interrupts since initialisation
@@ -596,6 +600,9 @@ KiUpdateSystemTime(KIRQL oldIrql,
  */
 {
    LARGE_INTEGER Time;
+   PKTHREAD CurrentThread;
+   PKPROCESS CurrentProcess;
+   
    assert(KeGetCurrentIrql() == PROFILE_LEVEL);
 
    KiRawTicks++;
@@ -625,6 +632,23 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.High2Part = Time.u.HighPart;
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
+
+
+   CurrentThread = KeGetCurrentThread();
+   CurrentProcess = KeGetCurrentProcess();
+
+   if (CurrentThread->PreviousMode == UserMode)
+     {
+   	++CurrentThread->UserTime;
+   	++CurrentProcess->UserTime;
+   	++KiUserTime;
+     }
+   if (CurrentThread->PreviousMode == KernelMode)
+     {
+   	++CurrentProcess->KernelTime;
+   	++CurrentThread->KernelTime;
+   	++KiKernelTime;
+     }
 
    KiReleaseSpinLock(&TimerValueLock);
 

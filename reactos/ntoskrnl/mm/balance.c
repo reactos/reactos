@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.27 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: balance.c,v 1.28 2004/04/14 07:11:08 jimtabor Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -57,7 +57,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 static MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
-static ULONG MiNrAvailablePages;
+ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
