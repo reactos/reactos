@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.12 2004/02/06 18:17:18 royce Exp $
+/* $Id: opengl32.c,v 1.13 2004/02/06 20:25:33 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -485,8 +485,8 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 	LPCWSTR subKey =
 		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
-	DWORD size;
-	WCHAR driver[256];
+	/*DWORD size;*/
+	/*WCHAR driver[256];*/
 
 	if (name == NULL)
 		return ERROR_SUCCESS; /* nothing to do */
@@ -503,7 +503,7 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 	}
 
 	/* get subkey name */
-	size = sizeof (driver) / sizeof (driver[0]);
+	/*size = sizeof (driver) / sizeof (driver[0]);*/
 	ret = RegEnumKeyW( hKey, idx, name, *cName );
 	if (ret != ERROR_SUCCESS)
 	{
