@@ -603,7 +603,7 @@ MiniQueryInformation(
           Adapter->NdisMiniportBlock.MiniportAdapterContext,
           Oid,
           Adapter->QueryBuffer,
-          Size,
+          Adapter->QueryBufferLength,
           BytesWritten,
           &BytesNeeded);
     }
