@@ -1,4 +1,4 @@
-/* $Id: rosglue.c,v 1.2 2003/04/01 17:14:36 gvg Exp $
+/* $Id: rosglue.c,v 1.3 2004/11/18 22:22:46 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS
@@ -84,7 +84,7 @@ malloc(size_t Size)
 {
   void *Object;
 
-  Object = ExAllocatePoolWithTag(NonPagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
+  Object = ExAllocatePoolWithTag(PagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
   if (NULL != Object)
     {
     *((size_t *) Object) = Size;
@@ -100,7 +100,7 @@ realloc(void *Object, size_t Size)
   void *NewObject;
   size_t CopySize;
 
-  NewObject = ExAllocatePoolWithTag(NonPagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
+  NewObject = ExAllocatePoolWithTag(PagedPool, sizeof(size_t) + Size, TAG_FREETYPE);
   if (NULL != NewObject)
     {
     *((size_t *) NewObject) = Size;
