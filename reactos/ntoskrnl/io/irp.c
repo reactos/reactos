@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.71 2004/12/26 15:55:14 gvg Exp $
+/* $Id: irp.c,v 1.72 2004/12/26 21:18:34 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -446,19 +446,6 @@ IofCompleteRequest(PIRP Irp,
     
    //Windows NT File System Internals, page 154
    OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
-
-   if (NULL != Stack->FileObject
-       && NULL != Stack->FileObject->CompletionContext
-       && Irp->PendingReturned)
-   {
-      PFILE_OBJECT FileObject = Stack->FileObject;
-      IoSetIoCompletion(FileObject->CompletionContext->Port,
-                        FileObject->CompletionContext->Key,
-                        Irp->Overlay.AsynchronousParameters.UserApcContext,
-                        Irp->IoStatus.Status,
-                        Irp->IoStatus.Information,
-                        FALSE);
-   }
 
    if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
    {

@@ -300,5 +300,19 @@ IoSecondStageCompletion(
 
    }
 
+   if (NULL != IoStack->FileObject
+       && NULL != IoStack->FileObject->CompletionContext
+       && (0 != (Irp->Flags & IRP_SYNCHRONOUS_API)
+           || 0 == (IoStack->FileObject->Flags & FO_SYNCHRONOUS_IO)))
+   {
+      PFILE_OBJECT FileObject = IoStack->FileObject;
+      IoSetIoCompletion(FileObject->CompletionContext->Port,
+                        FileObject->CompletionContext->Key,
+                        Irp->Overlay.AsynchronousParameters.UserApcContext,
+                        Irp->IoStatus.Status,
+                        Irp->IoStatus.Information,
+                        FALSE);
+   }
+
    IoFreeIrp(Irp);
 }
