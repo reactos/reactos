@@ -184,6 +184,88 @@ GetDiskFreeSpaceW(
     return TRUE;
 }
 
+WINBOOL
+STDCALL
+GetDiskFreeSpaceExA(
+    LPCSTR lpDirectoryName,
+    PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+    PULARGE_INTEGER lpTotalNumberOfBytes,
+    PULARGE_INTEGER lpTotalNumberOfFreeBytes
+    )
+{
+    WCHAR DirectoryNameW[MAX_PATH];
+    ULONG i;
+
+    i = 0;
+    while ((*lpDirectoryName)!=0 && i < MAX_PATH)
+    {
+        DirectoryNameW[i] = *lpDirectoryName;
+        lpDirectoryName++;
+        i++;
+    }
+    DirectoryNameW[i] = 0;
+    return GetDiskFreeSpaceExW(DirectoryNameW,
+                               lpFreeBytesAvailableToCaller,
+                               lpTotalNumberOfBytes,
+                               lpTotalNumberOfFreeBytes);
+}
+
+
+WINBOOL
+STDCALL
+GetDiskFreeSpaceExW(
+    LPCWSTR lpDirectoryName,
+    PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+    PULARGE_INTEGER lpTotalNumberOfBytes,
+    PULARGE_INTEGER lpTotalNumberOfFreeBytes
+    )
+{
+    FILE_FS_SIZE_INFORMATION FileFsSize;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+    NTSTATUS errCode;
+    WCHAR RootPath[4];
+    ULARGE_INTEGER BytesPerCluster;
+
+    wcsncpy (RootPath, lpDirectoryName, 3);
+	
+    hFile = CreateFileW(RootPath,
+                        FILE_READ_ATTRIBUTES,
+                        FILE_SHARE_READ,
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
+
+    errCode = NtQueryVolumeInformationFile(hFile,
+                                           &IoStatusBlock,
+                                           &FileFsSize,
+                                           sizeof(FILE_FS_SIZE_INFORMATION),
+                                           FileFsSizeInformation);
+    if (!NT_SUCCESS(errCode))
+    {
+        CloseHandle(hFile);
+        SetLastError(RtlNtStatusToDosError(errCode));
+        return FALSE;
+    }
+
+    BytesPerCluster.QuadPart =
+        FileFsSize.BytesPerSector * FileFsSize.SectorsPerAllocationUnit;
+
+    // FIXME: Use quota information
+    lpFreeBytesAvailableToCaller->QuadPart =
+        BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+
+    lpTotalNumberOfBytes->QuadPart =
+        BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.LowPart;
+    lpTotalNumberOfFreeBytes->QuadPart =
+        BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+
+    CloseHandle(hFile);
+    return TRUE;
+}
+
+
 UINT
 STDCALL
 GetDriveTypeA(

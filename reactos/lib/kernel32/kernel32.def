@@ -289,6 +289,10 @@ GetDiskFreeSpaceA@20
 GetDiskFreeSpaceA = GetDiskFreeSpaceA@20
 GetDiskFreeSpaceW@20
 GetDiskFreeSpaceW = GetDiskFreeSpaceW@20
+GetDiskFreeSpaceExA@16
+GetDiskFreeSpaceExA = GetDiskFreeSpaceExA@16
+GetDiskFreeSpaceExW@16
+GetDiskFreeSpaceExW = GetDiskFreeSpaceExW@16
 ;GetDriveTypeA@4
 ;GetDriveTypeW@4
 ;GetEnvironmentStrings@0

@@ -529,6 +529,15 @@ GetDiskFreeSpaceW(
 
 WINBOOL
 STDCALL
+GetDiskFreeSpaceExW(
+    LPCWSTR lpDirectoryName,
+    PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+    PULARGE_INTEGER lpTotalNumberOfBytes,
+    PULARGE_INTEGER lpTotalNumberOfFreeBytes
+    );
+
+WINBOOL
+STDCALL
 CreateDirectoryW(
     LPCWSTR lpPathName,
     LPSECURITY_ATTRIBUTES lpSecurityAttributes
