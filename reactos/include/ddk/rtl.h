@@ -262,6 +262,7 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS TimeFields, PLARGE_INTEGER Time);
 VOID RtlTimeToTimeFields(PLARGE_INTEGER Time, PTIME_FIELDS TimeFields);
 PWSTR RtlStrtok(PUNICODE_STRING _string, PWSTR _sep, PWSTR* temp);
 VOID RtlGetCallersAddress(PVOID* CallersAddress);
+VOID RtlZeroMemory(PVOID Destination, ULONG Length);
 
 typedef struct {
 	ULONG    	Length;

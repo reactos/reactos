@@ -3,7 +3,6 @@
  * PROJECT:         ReactOS kernel
  * FILE:            kernel/rtl/largeint.c
  * PURPOSE:         Large integer operations
- * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  *   08/30/98  RJJ  Implemented several functions
@@ -11,7 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
+#include <internal/ke.h>
 #include <internal/linkage.h>
 #include <ddk/ntddk.h>
 

@@ -37,6 +37,12 @@ all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES)
 #
 # Device driver rules
 #
+ide-test: dummy
+	make -C services/ide-test
+
+ide: dummy
+	make -C services/ide	
+
 test: dummy
 	make -C services/test
 

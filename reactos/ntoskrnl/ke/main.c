@@ -22,7 +22,7 @@
 #include <internal/hal/page.h>
 #include <internal/hal/segment.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/

@@ -266,10 +266,10 @@ _load_file:
         ;
         ; Move onto the next position in prepartion for a future read
         ;
-        movzx   eax,word [size_div_4k]
+        mov     eax,[size_div_4k]
         mov     bx,[size_mod_4k]
         cmp     bx,0
-        je     l20
+        je      l20
         inc     eax        
 l20:
         shl     eax,0ch
@@ -373,7 +373,7 @@ size_mod_4k dw 0
 ;
 ; Size of the current file divided by 4k
 ;
-size_div_4k dw 0
+size_div_4k dd 0
 
 ;
 ;

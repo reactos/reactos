@@ -32,7 +32,7 @@
 #include <internal/string.h>
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/

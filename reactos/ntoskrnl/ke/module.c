@@ -21,7 +21,7 @@
 #include <internal/mm.h>
 #include <internal/module.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS **************************************************************/

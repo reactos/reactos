@@ -16,7 +16,7 @@
 #include <internal/string.h>
 #include <internal/objmgr.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #ifndef NDEBUG
@@ -37,6 +37,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 		    PLARGE_INTEGER ByteOffset,
 		    PULONG Key)
 {
+   NTSTATUS Status;
    COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
    PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
@@ -107,13 +108,16 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    }
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
-   IoCallDriver(FileObject->DeviceObject,Irp);
-   KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   if (NT_SUCCESS(Status))
      {
-        memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+       KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+       if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+         {
+           memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+         }
      }
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 NTSTATUS ZwWriteFile(HANDLE FileHandle,
@@ -126,6 +130,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 		     PLARGE_INTEGER ByteOffset,
 		     PULONG Key)
 {
+   NTSTATUS Status;
    COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
    PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
@@ -194,7 +199,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    }
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
-   IoCallDriver(FileObject->DeviceObject,Irp);
-   return(STATUS_SUCCESS);
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   return(Status);
 }
 
