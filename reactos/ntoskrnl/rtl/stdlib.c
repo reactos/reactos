@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.7 2002/09/08 10:23:42 chorns Exp $
+/* $Id: stdlib.c,v 1.8 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,8 +31,9 @@ int atoi(const char *str)
 
 /*
  * NOTE: no error 
+ *
+ * @implemented
  */
-
 long atol(const char *str)
 {
   const char *s = str;
@@ -105,6 +106,8 @@ long atol(const char *str)
 
 /*
  * NOTE: no radix range check (valid range: 2 - 36)
+ *
+ * @implemented
  */
 
 char *_itoa (int value, char *string, int radix)
@@ -146,6 +149,9 @@ char *_itoa (int value, char *string, int radix)
 }
 
 
+/*
+ * @implemented
+ */
 int rand(void)
 {
 	next = next * 0x5deece66dLL + 11;
@@ -153,12 +159,18 @@ int rand(void)
 }
 
 
+/*
+ * @implemented
+ */
 void srand(unsigned seed)
 {
 	next = seed;
 }
 
 
+/*
+ * @implemented
+ */
 int mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
 {
 	NTSTATUS Status;
@@ -179,6 +191,9 @@ int mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
 }
 
 
+/*
+ * @implemented
+ */
 size_t mbstowcs (wchar_t *wcstr, const char *mbstr, size_t count)
 {
 	NTSTATUS Status;
@@ -208,6 +223,9 @@ size_t mbstowcs (wchar_t *wcstr, const char *mbstr, size_t count)
 }
 
 
+/*
+ * @implemented
+ */
 int wctomb (char *mbchar, wchar_t wchar)
 {
 	NTSTATUS Status;
@@ -228,6 +246,9 @@ int wctomb (char *mbchar, wchar_t wchar)
 }
 
 
+/*
+ * @implemented
+ */
 size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 {
 	NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.16 2003/06/17 10:44:16 ekohl Exp $
+/* $Id: nls.c,v 1.17 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -193,6 +193,9 @@ RtlpCreateNlsSection(VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 		      PWCHAR UnicodeString,
@@ -259,6 +262,9 @@ RtlDowncaseUnicodeChar (IN WCHAR Source)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlGetDefaultCodePage(PUSHORT AnsiCodePage,
 		      PUSHORT OemCodePage)
@@ -268,6 +274,9 @@ RtlGetDefaultCodePage(PUSHORT AnsiCodePage,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlInitCodePageTable(IN PUSHORT TableBase,
 		     OUT PCPTABLEINFO CodePageTable)
@@ -342,6 +351,9 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 		       ULONG UnicodeSize,
@@ -380,6 +392,9 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
 			  PCHAR MbString,
@@ -400,6 +415,9 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlOemToUnicodeN(PWCHAR UnicodeString,
 		 ULONG UnicodeSize,
@@ -467,6 +485,9 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 		      PCHAR CustomString,
@@ -506,6 +527,9 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteN(PCHAR MbString,
@@ -545,6 +569,9 @@ RtlUnicodeToMultiByteN(PCHAR MbString,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlUnicodeToMultiByteSize(PULONG MbSize,
 			  PWCHAR UnicodeString,
@@ -580,6 +607,9 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlUnicodeToOemN(PCHAR OemString,
 		 ULONG OemSize,
@@ -618,6 +648,9 @@ RtlUnicodeToOemN(PCHAR OemString,
 }
 
 
+/*
+ * @implemented
+ */
 WCHAR STDCALL
 RtlUpcaseUnicodeChar(IN WCHAR Source)
 {
@@ -642,6 +675,9 @@ RtlUpcaseUnicodeChar(IN WCHAR Source)
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 			    PCHAR CustomString,
@@ -683,6 +719,9 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
 			     ULONG MbSize,
@@ -723,6 +762,9 @@ RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlUpcaseUnicodeToOemN(PCHAR OemString,
 		       ULONG OemSize,
@@ -763,6 +805,9 @@ RtlUpcaseUnicodeToOemN(PCHAR OemString,
 }
 
 
+/*
+ * @unimplemented
+ */
 CHAR STDCALL
 RtlUpperChar (IN CHAR Source)
 {

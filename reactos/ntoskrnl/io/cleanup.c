@@ -126,9 +126,6 @@ VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
 }
 
 
-/*
- * @implemented
- */
 VOID STDCALL
 IoSecondStageCompletion_KernelApcRoutine(
     IN PKAPC Apc,
@@ -142,9 +139,6 @@ IoSecondStageCompletion_KernelApcRoutine(
 }
 
 
-/*
- * @implemented
- */
 VOID STDCALL
 IoSecondStageCompletion_RundownApcRoutine(
    IN PKAPC Apc
@@ -161,8 +155,6 @@ IoSecondStageCompletion_RundownApcRoutine(
  * FUNCTION: Performs the second stage of irp completion for read/write irps
  * 
  * Called as a special kernel APC or directly from IofCompleteRequest()
- *
- * @implemented
  */
 VOID STDCALL
 IoSecondStageCompletion(

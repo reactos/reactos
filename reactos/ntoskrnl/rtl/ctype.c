@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.11 2002/09/30 20:55:33 chorns Exp $
+/* $Id: ctype.c,v 1.12 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -324,6 +324,9 @@ int __iscsymf(int c)
 }
 */
 
+/*
+ * @implemented
+ */
 int isdigit(int c)
 {
    return(_isctype(c, _DIGIT));
@@ -336,11 +339,17 @@ int isgraph(int c)
 }
 */
 
+/*
+ * @implemented
+ */
 int islower(int c)
 {
    return (_isctype (c, _LOWER));
 }
 
+/*
+ * @implemented
+ */
 int isprint(int c)
 {
    return (_isctype (c, _BLANK | _PUNCT | _ALPHA | _DIGIT));
@@ -353,16 +362,25 @@ int ispunct(int c)
 }
 */
 
+/*
+ * @implemented
+ */
 int isspace(int c)
 {
    return (_isctype (c, _SPACE));
 }
 
+/*
+ * @implemented
+ */
 int isupper(int c)
 {
    return (_isctype (c, _UPPER));
 }
 
+/*
+ * @implemented
+ */
 int isxdigit(int c)
 {
    return (_isctype (c, _HEX));
@@ -412,6 +430,9 @@ int _toupper(int c)
 }
 */
 
+/*
+ * @implemented
+ */
 int tolower(int c)
 {
    if (_isctype (c, _UPPER))
@@ -419,6 +440,9 @@ int tolower(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 int toupper(int c)
 {
    if (_isctype (c, _LOWER))
@@ -426,6 +450,9 @@ int toupper(int c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 wchar_t towlower(wchar_t c)
 {
    if (iswctype (c, _UPPER))
@@ -433,6 +460,9 @@ wchar_t towlower(wchar_t c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 wchar_t towupper(wchar_t c)
 {
    if (iswctype (c, _LOWER))

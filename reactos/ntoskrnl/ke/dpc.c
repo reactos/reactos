@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.26 2003/07/10 17:44:06 royce Exp $
+/* $Id: dpc.c,v 1.27 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -227,8 +227,6 @@ VOID
 KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling
- *
- * @implemented
  */
 {
    InitializeListHead(&DpcQueueHead);

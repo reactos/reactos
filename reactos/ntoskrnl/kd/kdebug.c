@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.43 2003/07/10 15:50:09 royce Exp $
+/* $Id: kdebug.c,v 1.44 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -376,9 +376,6 @@ KeEnterKernelDebugger(VOID)
     __asm__("hlt\n\t");
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 KdSystemDebugControl(ULONG Code)
 {

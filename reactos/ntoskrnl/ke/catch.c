@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.32 2003/07/10 17:44:06 royce Exp $
+/* $Id: catch.c,v 1.33 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -194,9 +194,6 @@ ExRaiseStatus (IN NTSTATUS Status)
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
 		  IN PCONTEXT Context,

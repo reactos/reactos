@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.20 2003/04/30 21:56:22 gvg Exp $
+/* $Id: tinfo.c,v 1.21 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -329,12 +329,18 @@ VOID KeSetPreviousMode(ULONG Mode)
    PsGetCurrentThread()->Tcb.PreviousMode = Mode;
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 KeGetPreviousMode (VOID)
 {
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ExGetPreviousMode (VOID)
 {

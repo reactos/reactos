@@ -59,9 +59,6 @@ ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 }
 
 
-/*
- * @implemented
- */
 VOID STDCALL
 ExPostSystemEvent (ULONG	Unknown1,
 		   ULONG	Unknown2,

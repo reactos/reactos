@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.69 2003/07/10 21:05:03 royce Exp $
+/* $Id: npool.c,v 1.70 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1455,9 +1455,6 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 
 #endif /* not WHOLE_PAGE_ALLOCATIONS */
 
-/*
- * @implemented
- */
 VOID STDCALL ExFreeNonPagedPool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
@@ -1534,9 +1531,6 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }
 
-/*
- * @implemented
- */
 PVOID STDCALL 
 ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
@@ -1627,9 +1621,6 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 
 #ifdef WHOLE_PAGE_ALLOCATIONS
 
-/*
- * @implemented
- */
 PVOID STDCALL 
 ExAllocateWholePageBlock(ULONG UserSize)
 {
@@ -1662,9 +1653,6 @@ ExAllocateWholePageBlock(ULONG UserSize)
   return((PVOID)((ULONG)Address + (NrPages * PAGE_SIZE) - UserSize));
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 ExFreeWholePageBlock(PVOID Addr)
 {

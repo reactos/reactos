@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.31 2003/07/10 21:05:03 royce Exp $
+/* $Id: pagefile.c,v 1.32 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -560,9 +560,6 @@ MmDumpToPagingFile(ULONG BugCode,
   return(STATUS_SUCCESS);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtCreatePagingFile(IN PUNICODE_STRING FileName,
 		   IN PLARGE_INTEGER InitialSize,

@@ -1,4 +1,4 @@
-/* $Id: complete.c,v 1.8 2003/07/10 20:42:53 royce Exp $
+/* $Id: complete.c,v 1.9 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,8 +25,6 @@
  * NAME							EXPORTED
  *	NtCompleteConnectPort@4
  *
- *
- * @implemented
  */
 EXPORTED NTSTATUS STDCALL
 NtCompleteConnectPort (HANDLE PortHandle)

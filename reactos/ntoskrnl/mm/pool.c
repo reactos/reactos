@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.17 2003/07/10 21:05:04 royce Exp $
+/* $Id: pool.c,v 1.18 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,9 +23,6 @@
 
 /* FUNCTIONS ***************************************************************/
 
-/*
- * @unimplemented
- */
 PVOID STDCALL STATIC
 EiAllocatePool(POOL_TYPE PoolType,
 	       ULONG NumberOfBytes,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.6 2002/09/08 10:23:39 chorns Exp $
+/* $Id: power.c,v 1.7 2003/07/11 01:23:15 royce Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -50,6 +50,9 @@ PoCallDriver(
   return Status;
 }
 
+/*
+ * @unimplemented
+ */
 PULONG
 STDCALL
 PoRegisterDeviceForIdleDetection(
@@ -61,6 +64,9 @@ PoRegisterDeviceForIdleDetection(
   return NULL;
 }
 
+/*
+ * @unimplemented
+ */
 PVOID
 STDCALL
 PoRegisterSystemState(
@@ -70,6 +76,9 @@ PoRegisterSystemState(
   return NULL;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 PoRequestPowerIrp(
@@ -90,6 +99,9 @@ PoSetDeviceBusy(
 {
 }
 
+/*
+ * @unimplemented
+ */
 POWER_STATE
 STDCALL
 PoSetPowerState(
@@ -105,6 +117,9 @@ PoSetPowerState(
   return ps;
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 PoSetSystemState(
@@ -112,6 +127,9 @@ PoSetSystemState(
 {
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 PoStartNextPowerIrp(
@@ -119,6 +137,9 @@ PoStartNextPowerIrp(
 {
 }
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 PoUnregisterSystemState(

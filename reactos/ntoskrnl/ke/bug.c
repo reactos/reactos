@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.31 2003/07/10 17:44:06 royce Exp $
+/* $Id: bug.c,v 1.32 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -81,9 +81,6 @@ KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
   return(TRUE);
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 KeBugCheckWithTf(ULONG BugCheckCode, 	     
 		 ULONG BugCheckParameter1,

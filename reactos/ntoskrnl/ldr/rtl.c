@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.16 2003/07/10 20:34:50 royce Exp $
+/* $Id: rtl.c,v 1.17 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,9 +89,6 @@ RtlImageDirectoryEntryToData (IN PVOID	BaseAddress,
 }
 
 
-/*
- * @implemented
- */
 PIMAGE_SECTION_HEADER
 STDCALL
 RtlImageRvaToSection (
@@ -119,9 +116,6 @@ RtlImageRvaToSection (
 }
 
 
-/*
- * @implemented
- */
 ULONG
 STDCALL
 RtlImageRvaToVa (
@@ -156,9 +150,6 @@ RtlImageRvaToVa (
 
 #define RVA(m, b) ((ULONG)b + m)
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,

@@ -31,12 +31,18 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 DbgBreakPoint(VOID)
 {
    __asm__("int $3\n\t");
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL 
 DbgBreakPointWithStatus(ULONG Status)
 {

@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.14 2002/09/08 10:23:40 chorns Exp $
+/* $Id: psmgr.c,v 1.15 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -63,6 +63,8 @@ VOID PiInitProcessManager(VOID)
  * NOTES
  *	The DDK docs say something about a 'CmCSDVersionString'.
  *	How do we determine in the build is checked or free??
+ *
+ * @unimplemented
  */
 
 BOOLEAN

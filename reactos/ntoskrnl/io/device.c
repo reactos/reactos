@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.55 2003/07/10 15:47:00 royce Exp $
+/* $Id: device.c,v 1.56 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -261,9 +261,6 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
@@ -628,9 +625,6 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
@@ -778,9 +772,6 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 }
 
 
-/*
- * @unimplemented
- */
 NTSTATUS
 STDCALL
 IoOpenDeviceInstanceKey (
@@ -796,9 +787,6 @@ IoOpenDeviceInstanceKey (
 }
 
 
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 IoQueryDeviceEnumInfo (

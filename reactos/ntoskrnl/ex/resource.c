@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.22 2003/07/10 06:27:13 royce Exp $
+/* $Id: resource.c,v 1.23 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,9 +54,6 @@
 /* FUNCTIONS *****************************************************************/
 
 
-/*
- * @implemented
- */
 BOOLEAN
 STDCALL
 ExTryToAcquireResourceExclusiveLite (

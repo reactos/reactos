@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.9 2002/09/13 18:43:01 hbirr Exp $
+/* $Id: swprintf.c,v 1.10 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -509,6 +509,9 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 }
 
 
+/*
+ * @implemented
+ */
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...)
 {
 	va_list args;
@@ -521,6 +524,9 @@ int swprintf(wchar_t *buf, const wchar_t *fmt, ...)
 }
 
 
+/*
+ * @implemented
+ */
 int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
 {
 	va_list args;

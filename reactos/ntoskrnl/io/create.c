@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.66 2003/07/10 15:47:00 royce Exp $
+/* $Id: create.c,v 1.67 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,8 +61,6 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
  * RETURN VALUE
  *
  * REVISIONS
- * 
- * @implemented
  */
 NTSTATUS STDCALL
 IopCreateFile(PVOID			ObjectBody,

@@ -674,9 +674,6 @@ VOID KeInitializeDispatcher(VOID)
    KeInitializeSpinLock(&DispatcherDatabaseLock);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtWaitForMultipleObjects(IN ULONG Count,
 			 IN HANDLE Object [],
@@ -778,9 +775,6 @@ NtWaitForSingleObject(IN HANDLE Object,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
 			       IN HANDLE WaitObject,

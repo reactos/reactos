@@ -1,4 +1,4 @@
-/* $Id: receive.c,v 1.6 2003/07/10 20:42:53 royce Exp $
+/* $Id: receive.c,v 1.7 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,8 +29,6 @@
  * ARGUMENTS
  *
  * RETURN VALUE
- *
- * @unimplemented
  */
 NTSTATUS STDCALL
 NtReadRequestData (HANDLE		PortHandle,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: compress.c,v 1.1 2002/07/25 13:17:28 ekohl Exp $
+/* $Id: compress.c,v 1.2 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -77,6 +77,9 @@ RtlpWorkSpaceSizeLZNT1(USHORT Engine,
 
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
 		  IN PUCHAR UncompressedBuffer,
@@ -108,6 +111,9 @@ RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlCompressChunks(IN PUCHAR UncompressedBuffer,
 		  IN ULONG UncompressedBufferSize,
@@ -121,6 +127,9 @@ RtlCompressChunks(IN PUCHAR UncompressedBuffer,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDecompressBuffer(IN USHORT CompressionFormat,
 		    OUT PUCHAR UncompressedBuffer,
@@ -133,6 +142,9 @@ RtlDecompressBuffer(IN USHORT CompressionFormat,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
 		    IN ULONG UncompressedBufferSize,
@@ -146,6 +158,9 @@ RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDecompressFragment(IN USHORT CompressionFormat,
 		      OUT PUCHAR UncompressedFragment,
@@ -160,6 +175,9 @@ RtlDecompressFragment(IN USHORT CompressionFormat,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlDescribeChunk(IN USHORT CompressionFormat,
 		 IN OUT PUCHAR *CompressedBuffer,
@@ -171,6 +189,9 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
 			       OUT PULONG CompressBufferAndWorkSpaceSize,
@@ -192,6 +213,9 @@ RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlReserveChunk(IN USHORT CompressionFormat,
 		IN OUT PUCHAR *CompressedBuffer,

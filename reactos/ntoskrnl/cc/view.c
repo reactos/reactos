@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.65 2003/07/10 06:27:13 royce Exp $
+/* $Id: view.c,v 1.66 2003/07/11 01:23:14 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -1041,9 +1041,6 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
   ExReleaseFastMutex(&ViewLock);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL 
 CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 /*
@@ -1116,9 +1113,6 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 			 ULONG CacheSegmentSize)

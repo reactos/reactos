@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.6 2003/06/07 10:14:40 chorns Exp $
+/* $Id: exception.c,v 1.7 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,6 +26,9 @@ MsvcrtDebug(ULONG Value)
 }
 #endif
 
+/*
+ * @implemented
+ */
 int
 _abnormal_termination(void)
 {
@@ -35,6 +38,9 @@ _abnormal_termination(void)
 
 struct _CONTEXT;
 
+/*
+ * @implemented
+ */
 EXCEPTION_DISPOSITION
 _except_handler2(
    struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -46,6 +52,9 @@ _except_handler2(
 	return (EXCEPTION_DISPOSITION)0;
 }
 
+/*
+ * @implemented
+ */
 void __cdecl
 _global_unwind2(PEXCEPTION_REGISTRATION RegistrationFrame)
 {
@@ -303,6 +312,9 @@ RtlRaiseStatus(NTSTATUS Status)
   RtlRaiseException (& ExceptionRecord);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   PVOID ReturnAddress,

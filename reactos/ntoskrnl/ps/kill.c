@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.60 2003/06/05 23:36:35 gdalsnes Exp $
+/* $Id: kill.c,v 1.61 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,6 +344,9 @@ NtTerminateThread(IN	HANDLE		ThreadHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*

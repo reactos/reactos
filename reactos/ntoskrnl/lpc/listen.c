@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.6 2003/07/10 20:42:53 royce Exp $
+/* $Id: listen.c,v 1.7 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,8 +42,6 @@
  *	request message queued by NtConnectPort() in PortHandle.
  *
  * NOTE
- * 	
- * @implemented
  */
 EXPORTED NTSTATUS STDCALL
 NtListenPort (IN	HANDLE		PortHandle,

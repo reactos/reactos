@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.17 2003/07/10 06:27:13 royce Exp $
+/* $Id: time.c,v 1.18 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,9 +41,6 @@ ExInitTimeZoneInfo (VOID)
 }
 
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
 		 OUT	PLARGE_INTEGER	UnsafeOldSystemTime	OPTIONAL)
@@ -91,9 +88,6 @@ NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQuerySystemTime (OUT PLARGE_INTEGER UnsafeCurrentTime)
      /*

@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.24 2003/06/20 16:21:11 ekohl Exp $
+/* $Id: usercall.c,v 1.25 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,6 +86,9 @@ VOID KiServiceCheck (ULONG Nr)
 // This function should be used by win32k.sys to add its own user32/gdi32 services
 // TableIndex is 0 based
 // ServiceCountTable its not used at the moment
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 KeAddSystemServiceTable (
 	PSSDT	SSDT,

@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.16 2003/07/10 20:42:53 royce Exp $
+/* $Id: reply.c,v 1.17 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,8 +37,6 @@
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 EiReplyOrRequestPort (IN	PEPORT		Port, 
@@ -86,8 +84,6 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NtReplyPort (IN	HANDLE		PortHandle,
@@ -140,8 +136,6 @@ NtReplyPort (IN	HANDLE		PortHandle,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @unimplemented
  */
 NTSTATUS STDCALL
 NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
@@ -308,8 +302,6 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
@@ -334,8 +326,6 @@ NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @unimplemented
  */
 NTSTATUS STDCALL
 NtReplyWaitReplyPort (HANDLE		PortHandle,

@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.12 2003/07/10 20:42:53 royce Exp $
+/* $Id: port.c,v 1.13 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,8 +85,6 @@ NTSTATUS NiInitPort (VOID)
  * RETURN VALUE
  *	STATUS_SUCCESS if initialization succedeed. An error code
  *	otherwise.
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NiInitializePort (IN OUT	PEPORT	Port)
@@ -119,8 +117,6 @@ NiInitializePort (IN OUT	PEPORT	Port)
  *	ClientMessage
  *
  * RETURN VALUE
- * 
- * @unimplemented
  */
 NTSTATUS STDCALL
 NtImpersonateClientOfPort (HANDLE		PortHandle,

@@ -53,6 +53,9 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtQuerySecurityObject(IN HANDLE Handle,
 		      IN SECURITY_INFORMATION SecurityInformation,
@@ -97,6 +100,9 @@ NtQuerySecurityObject(IN HANDLE Handle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtSetSecurityObject(IN HANDLE Handle,
 		    IN SECURITY_INFORMATION SecurityInformation,

@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.8 2003/02/08 20:59:50 ekohl Exp $
+/* $Id: bitmap.c,v 1.9 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,9 @@
 #define MASK(Count, Shift) ((Count) == 32 ? 0xFFFFFFFF : ~(0xFFFFFFFF << (Count)) << (Shift))
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlInitializeBitMap (
@@ -29,6 +32,9 @@ RtlInitializeBitMap (
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlAreBitsClear (
@@ -68,6 +74,9 @@ RtlAreBitsClear (
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlAreBitsSet (
@@ -107,6 +116,9 @@ RtlAreBitsSet (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlClearAllBits (
@@ -119,6 +131,9 @@ RtlClearAllBits (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlClearBits (
@@ -155,6 +170,9 @@ RtlClearBits (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindClearBits (
@@ -211,6 +229,9 @@ RtlFindClearBits (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindClearBitsAndSet (
@@ -233,6 +254,9 @@ RtlFindClearBitsAndSet (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindFirstRunClear (
@@ -351,6 +375,9 @@ RtlFindFirstRunSet (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindLongestRunClear (
@@ -465,6 +492,9 @@ RtlFindLongestRunSet (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindSetBits (
@@ -521,6 +551,9 @@ RtlFindSetBits (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlFindSetBitsAndClear (
@@ -543,6 +576,9 @@ RtlFindSetBitsAndClear (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlNumberOfClearBits (
@@ -572,6 +608,9 @@ RtlNumberOfClearBits (
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlNumberOfSetBits (
@@ -601,6 +640,9 @@ RtlNumberOfSetBits (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlSetAllBits (
@@ -613,6 +655,9 @@ RtlSetAllBits (
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RtlSetBits (

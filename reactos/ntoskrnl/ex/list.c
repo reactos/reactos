@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.8 2003/07/10 06:27:13 royce Exp $
+/* $Id: list.c,v 1.9 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,9 +122,6 @@ ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 }
 
 
-/*
- * @implemented
- */
 PLIST_ENTRY
 ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)

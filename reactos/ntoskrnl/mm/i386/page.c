@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.53 2003/06/19 19:01:01 gvg Exp $
+/* $Id: page.c,v 1.54 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1221,6 +1221,9 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
      }
 }
 
+/*
+ * @implemented
+ */
 PHYSICAL_ADDRESS STDCALL 
 MmGetPhysicalAddress(PVOID vaddr)
 /*

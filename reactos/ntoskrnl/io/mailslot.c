@@ -18,9 +18,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtCreateMailslotFile(OUT PHANDLE FileHandle,
 		     IN ACCESS_MASK DesiredAccess,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.32 2003/06/11 18:38:44 gvg Exp $
+/* $Id: irq.c,v 1.33 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -558,6 +558,9 @@ KeDumpIrqList(VOID)
      }
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
@@ -623,6 +626,9 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 /*
@@ -649,6 +655,9 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS
 STDCALL
 KeInitializeInterrupt(PKINTERRUPT InterruptObject,
@@ -675,6 +684,9 @@ KeInitializeInterrupt(PKINTERRUPT InterruptObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 		   PKSERVICE_ROUTINE ServiceRoutine,
@@ -774,6 +786,9 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 /*

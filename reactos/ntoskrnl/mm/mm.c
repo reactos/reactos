@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.63 2003/07/10 21:05:03 royce Exp $
+/* $Id: mm.c,v 1.64 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -158,9 +158,6 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
-/*
- * @implemented
- */
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 		       ULONG Address,
 		       BOOLEAN FromMdl)
@@ -428,9 +425,6 @@ MmAdjustWorkingSetSize (DWORD	Unknown0,
 }
 
 
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 MmDbgTranslatePhysicalAddress (

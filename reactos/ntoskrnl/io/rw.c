@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.44 2003/07/10 15:47:00 royce Exp $
+/* $Id: rw.c,v 1.45 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -321,8 +321,6 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @unimplemented
  */
 NTSTATUS
 STDCALL
@@ -353,8 +351,6 @@ NtReadFileScatter (
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @unimplemented
  */
 NTSTATUS
 STDCALL

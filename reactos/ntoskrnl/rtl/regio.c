@@ -1,4 +1,4 @@
-/* $Id: regio.c,v 1.5 2002/09/08 10:23:42 chorns Exp $
+/* $Id: regio.c,v 1.6 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -23,6 +23,9 @@ READ_REGISTER_UCHAR (
 	return *Register;
 }
 
+/*
+ * @implemented
+ */
 USHORT
 STDCALL
 READ_REGISTER_USHORT (
@@ -32,6 +35,9 @@ READ_REGISTER_USHORT (
 	return *Register;
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 READ_REGISTER_ULONG (
@@ -41,6 +47,9 @@ READ_REGISTER_ULONG (
 	return *Register;
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 READ_REGISTER_BUFFER_UCHAR (
@@ -55,6 +64,9 @@ READ_REGISTER_BUFFER_UCHAR (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 READ_REGISTER_BUFFER_USHORT (
@@ -69,6 +81,9 @@ READ_REGISTER_BUFFER_USHORT (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 READ_REGISTER_BUFFER_ULONG (
@@ -83,6 +98,9 @@ READ_REGISTER_BUFFER_ULONG (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_UCHAR (
@@ -93,6 +111,9 @@ WRITE_REGISTER_UCHAR (
 	*Register = Value;
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_USHORT (
@@ -103,6 +124,9 @@ WRITE_REGISTER_USHORT (
 	*Register = Value;
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_ULONG (
@@ -113,6 +137,9 @@ WRITE_REGISTER_ULONG (
 	*Register = Value;
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_BUFFER_UCHAR (
@@ -127,6 +154,9 @@ WRITE_REGISTER_BUFFER_UCHAR (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_BUFFER_USHORT (
@@ -141,6 +171,9 @@ WRITE_REGISTER_BUFFER_USHORT (
 	}
 }
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 WRITE_REGISTER_BUFFER_ULONG (

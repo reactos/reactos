@@ -21,9 +21,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @unimplemented
- */
 NTSTATUS
 STDCALL
   NtLockFileCompletionRoutine(

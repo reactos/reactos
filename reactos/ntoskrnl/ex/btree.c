@@ -419,9 +419,6 @@ ExpBinaryTreeDefaultCompare(PVOID  Key1,
 /*
  * Initializes a binary tree.
  */
-/*
- * @implemented
- */
 BOOLEAN STDCALL
 ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
   IN PKEY_COMPARATOR  Compare,
@@ -485,9 +482,6 @@ ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
 /*
  * Release resources used by a binary tree.
  */
-/*
- * @implemented
- */
 VOID STDCALL
 ExDeleteBinaryTree(IN PBINARY_TREE  Tree)
 {
@@ -507,8 +501,6 @@ ExDeleteBinaryTree(IN PBINARY_TREE  Tree)
 
 /*
  * Insert a value in a binary tree.
- *
- * @unimplemented
  */
 VOID STDCALL
 ExInsertBinaryTree(IN PBINARY_TREE  Tree,
@@ -545,9 +537,6 @@ ExInsertBinaryTree(IN PBINARY_TREE  Tree,
 /*
  * Search for a value associated with a given key in a binary tree.
  */
-/*
- * @implemented
- */
 BOOLEAN STDCALL
 ExSearchBinaryTree(IN PBINARY_TREE  Tree,
   IN PVOID  Key,
@@ -575,9 +564,6 @@ ExSearchBinaryTree(IN PBINARY_TREE  Tree,
 
 /*
  * Remove a value associated with a given key from a binary tree.
- */
-/*
- * @implemented
  */
 BOOLEAN STDCALL
 ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
@@ -633,9 +619,6 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
  * Returns FALSE, if the traversal was terminated prematurely or
  * TRUE if the callback routine did not request that the traversal
  * be terminated prematurely.
- */
-/*
- * @implemented
  */
 BOOLEAN STDCALL
 ExTraverseBinaryTree(IN PBINARY_TREE  Tree,

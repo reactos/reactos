@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.62 2003/06/20 16:22:20 ekohl Exp $
+/* $Id: create.c,v 1.63 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -90,6 +90,9 @@ PsAssignImpersonationToken(PETHREAD Thread,
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 PsRevertToSelf(VOID)
 {
@@ -104,6 +107,9 @@ PsRevertToSelf(VOID)
      }
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 PsImpersonateClient(PETHREAD Thread,
 		    PACCESS_TOKEN Token,
@@ -246,6 +252,9 @@ NtOpenThreadToken(IN	HANDLE		ThreadHandle,
    return(STATUS_UNSUCCESSFUL);
 }
 
+/*
+ * @implemented
+ */
 PACCESS_TOKEN STDCALL 
 PsReferenceImpersonationToken(PETHREAD Thread,
 			      PULONG Unknown1,
@@ -647,6 +656,9 @@ NtCreateThread(PHANDLE ThreadHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsCreateSystemThread(PHANDLE ThreadHandle,
 		     ACCESS_MASK DesiredAccess,
@@ -707,6 +719,9 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {

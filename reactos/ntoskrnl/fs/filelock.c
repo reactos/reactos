@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.8 2003/07/10 06:27:13 royce Exp $
+/* $Id: filelock.c,v 1.9 2003/07/11 01:23:14 royce Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -722,8 +722,6 @@ FsRtlFastUnlockSingle (
  *	FsRtlpDumpFileLocks
  *
  *	NOTE: used for testing and debugging
- *
- * @implemented
  */
 VOID
 FASTCALL

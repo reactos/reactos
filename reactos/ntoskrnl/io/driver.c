@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.13 2003/07/10 15:47:00 royce Exp $
+/* $Id: driver.c,v 1.14 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -67,9 +67,6 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 IopCreateDriver(PVOID ObjectBody,
 		PVOID Parent,
@@ -129,8 +126,6 @@ IopInitDriverImplementation(VOID)
  * 	Status.
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
@@ -239,9 +234,6 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 }
 
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
@@ -251,9 +243,6 @@ NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 }
 
 
-/*
- * @implemented
- */
 static NTSTATUS STDCALL
 IopCreateGroupListEntry(PWSTR ValueName,
 			ULONG ValueType,
@@ -292,9 +281,6 @@ IopCreateGroupListEntry(PWSTR ValueName,
 }
 
 
-/*
- * @implemented
- */
 static NTSTATUS STDCALL
 IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 {

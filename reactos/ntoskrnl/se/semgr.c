@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.24 2003/02/15 21:05:15 ekohl Exp $
+/* $Id: semgr.c,v 1.25 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -241,6 +241,9 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtAllocateUuids(PULARGE_INTEGER Time,
 		PULONG Range,
@@ -283,6 +286,9 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    ObDereferenceObject(SubjectContext->PrimaryToken);
@@ -292,6 +298,9 @@ VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
      }   
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    PEPROCESS Process;
@@ -310,6 +319,9 @@ VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
 {
@@ -370,6 +382,9 @@ NTSTATUS SepInheritAcl(PACL Acl,
 }
 #endif
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 		 PSECURITY_DESCRIPTOR ExplicitDescriptor,
@@ -461,6 +476,9 @@ BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,

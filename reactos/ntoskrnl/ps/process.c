@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.108 2003/06/20 16:22:20 ekohl Exp $
+/* $Id: process.c,v 1.109 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -124,6 +124,9 @@ _NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
@@ -133,6 +136,9 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 }
 
 
+/*
+ * @implemented
+ */
 PACCESS_TOKEN STDCALL
 PsReferencePrimaryToken(PEPROCESS Process)
 {
@@ -407,6 +413,9 @@ KeGetCurrentProcess(VOID)
   return(&(PsGetCurrentProcess()->Pcb));
 }
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 PsGetCurrentProcessId(VOID)
 {
@@ -415,6 +424,8 @@ PsGetCurrentProcessId(VOID)
 
 /*
  * FUNCTION: Returns a pointer to the current process
+ *
+ * @implemented
  */
 PEPROCESS STDCALL
 IoGetCurrentProcess(VOID)
@@ -430,6 +441,9 @@ IoGetCurrentProcess(VOID)
      }
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsCreateSystemProcess(PHANDLE ProcessHandle,
 		      ACCESS_MASK DesiredAccess,
@@ -820,6 +834,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	      IN  ACCESS_MASK	    DesiredAccess,
@@ -903,6 +920,9 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 			  IN  CINT ProcessInformationClass,
@@ -1011,6 +1031,9 @@ PspAssignPrimaryToken(PEPROCESS Process,
    return(Status);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtSetInformationProcess(IN HANDLE ProcessHandle,
 			IN CINT ProcessInformationClass,
@@ -1295,6 +1318,9 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 #endif
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER STDCALL
 PsGetProcessExitTime(VOID)
 {
@@ -1303,6 +1329,9 @@ PsGetProcessExitTime(VOID)
   return Li;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 PsIsThreadTerminating(IN PETHREAD Thread)
 {
@@ -1310,6 +1339,9 @@ PsIsThreadTerminating(IN PETHREAD Thread)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsLookupProcessByProcessId(IN PVOID ProcessId,
 			   OUT PEPROCESS *Process)
@@ -1342,6 +1374,9 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
 				IN BOOLEAN Remove)

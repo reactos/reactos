@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.7 2003/05/31 11:10:30 ekohl Exp $
+/* $Id: luid.c,v 1.8 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -34,6 +34,9 @@ SepInitLuid(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
@@ -55,6 +58,9 @@ NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RtlCopyLuid(IN PLUID LuidDest,
 	    IN PLUID LuidSrc)
@@ -64,6 +70,9 @@ RtlCopyLuid(IN PLUID LuidDest,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlEqualLuid(IN PLUID Luid1,
 	     IN PLUID Luid2)

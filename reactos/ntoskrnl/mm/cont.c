@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.27 2003/07/10 21:05:03 royce Exp $
+/* $Id: cont.c,v 1.28 2003/07/11 01:23:15 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,9 +31,6 @@ MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     }
 }
 
-/*
- * @implemented
- */
 PVOID STDCALL
 MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,

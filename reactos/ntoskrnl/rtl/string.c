@@ -28,6 +28,9 @@ int _stricmp(const char *s1, const char *s2)
 }
 
 
+/*
+ * @implemented
+ */
 char * _strlwr(char *x)
 {
 	char  *y=x;
@@ -41,6 +44,9 @@ char * _strlwr(char *x)
 }
 
 
+/*
+ * @implemented
+ */
 int _strnicmp(const char *s1, const char *s2, size_t n)
 {
 	if (n == 0)
@@ -56,6 +62,9 @@ int _strnicmp(const char *s1, const char *s2, size_t n)
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 {
 	char *t = szToFill;
@@ -71,6 +80,9 @@ char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 }
 
 
+/*
+ * @implemented
+ */
 char * _strrev(char *s) 
 {
 	char  *e;
@@ -92,6 +104,9 @@ char * _strrev(char *s)
 }
 
 
+/*
+ * @implemented
+ */
 char* _strset(char* szToFill, int szFill)
 {
 	char *t = szToFill;
@@ -105,6 +120,9 @@ char* _strset(char* szToFill, int szFill)
 }
 
 
+/*
+ * @implemented
+ */
 char *_strupr(char *x)
 {
 	char  *y=x;
@@ -117,6 +135,9 @@ char *_strupr(char *x)
 	return x;
 }
 
+/*
+ * @implemented
+ */
 char *strstr(const char *s, const char *find)
 {
 	char c, sc;

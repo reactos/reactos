@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.59 2003/07/10 17:44:06 royce Exp $
+/* $Id: timer.c,v 1.60 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -75,9 +75,6 @@ static BOOLEAN TimerInitDone = FALSE;
 /* FUNCTIONS **************************************************************/
 
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 NtQueryTimerResolution(OUT PULONG MinimumResolution,
 		       OUT PULONG MaximumResolution,
@@ -87,9 +84,6 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
 }
 
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 NtSetTimerResolution(IN ULONG RequestedResolution,
 		     IN BOOL SetOrUnset,
@@ -99,9 +93,6 @@ NtSetTimerResolution(IN ULONG RequestedResolution,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 			  IN PLARGE_INTEGER Frequency)
@@ -121,9 +112,6 @@ NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtDelayExecution(IN ULONG Alertable,
 		 IN TIME* Interval)
@@ -208,9 +196,6 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtGetTickCount (PULONG	UpTime)
 {
@@ -412,9 +397,6 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
   TickCount->QuadPart = KeTickCount;
 }
 
-/*
- * @implemented
- */
 STATIC VOID 
 HandleExpiredTimer(PKTIMER current)
 {
@@ -444,9 +426,6 @@ HandleExpiredTimer(PKTIMER current)
      }
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 KeExpireTimers(PKDPC Dpc,
 	       PVOID Context1,

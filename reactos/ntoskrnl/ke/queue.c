@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.7 2003/07/10 17:44:06 royce Exp $
+/* $Id: queue.c,v 1.8 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -66,9 +66,6 @@ KeReadStateQueue(IN PKQUEUE Queue)
 }
 
 
-/*
- * @implemented
- */
 LONG STDCALL
 KiInsertQueue(
    IN PKQUEUE Queue,

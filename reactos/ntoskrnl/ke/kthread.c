@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.40 2003/07/10 17:44:06 royce Exp $
+/* $Id: kthread.c,v 1.41 2003/07/11 01:23:15 royce Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -240,9 +240,6 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     */
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 KeRescheduleThread()
 {

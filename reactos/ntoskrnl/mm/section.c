@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.120 2003/07/10 21:05:04 royce Exp $
+/* $Id: section.c,v 1.121 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1917,9 +1917,6 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
   return(Status);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
 		   PVOID Address,
@@ -1954,9 +1951,6 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
   return(STATUS_SUCCESS);
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 MmpDeleteSection(PVOID ObjectBody)
 {
@@ -2902,8 +2896,6 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  * RETURN VALUE
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NtOpenSection(PHANDLE			SectionHandle,
@@ -3268,8 +3260,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
  *	Status.
  *
  * REVISIONS
- *
- * @implemented
  */
 NTSTATUS STDCALL
 NtUnmapViewOfSection (HANDLE	ProcessHandle,
@@ -3304,9 +3294,6 @@ NtUnmapViewOfSection (HANDLE	ProcessHandle,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQuerySection (IN	HANDLE	SectionHandle,
 		IN	CINT	SectionInformationClass,
@@ -3404,9 +3391,6 @@ NtQuerySection (IN	HANDLE	SectionHandle,
 }
 
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL 
 NtExtendSection(IN	HANDLE	SectionHandle,
 		IN	ULONG	NewMaximumSize)
@@ -3431,8 +3415,6 @@ NtExtendSection(IN	HANDLE	SectionHandle,
  * 	Code taken from ntoskrnl/mm/special.c.
  *
  * REVISIONS
- *
- * @implemented
  */
 PVOID STDCALL 
 MmAllocateSection (IN ULONG Length)

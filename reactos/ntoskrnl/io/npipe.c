@@ -17,9 +17,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtCreateNamedPipeFile(PHANDLE FileHandle,
 		      ACCESS_MASK DesiredAccess,

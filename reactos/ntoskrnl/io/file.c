@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.25 2003/07/10 15:47:00 royce Exp $
+/* $Id: file.c,v 1.26 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -354,9 +354,6 @@ NtSetInformationFile(HANDLE FileHandle,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 		      OUT PFILE_BASIC_INFORMATION FileInformation)
@@ -394,9 +391,6 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)

@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.11 2003/02/15 21:05:15 ekohl Exp $
+/* $Id: acl.c,v 1.12 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -222,6 +222,9 @@ RtlpAddKnownAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAccessAllowedAce(PACL Acl,
 		       ULONG Revision,
@@ -232,6 +235,9 @@ RtlAddAccessAllowedAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlAddAce(PACL Acl,
 	  ULONG AclRevision,
@@ -299,6 +305,9 @@ RtlAddAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateAcl(PACL Acl,
 	     ULONG AclSize,

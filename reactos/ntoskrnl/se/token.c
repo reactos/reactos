@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.25 2003/06/17 10:42:37 ekohl Exp $
+/* $Id: token.c,v 1.26 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -313,6 +313,9 @@ NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 		       IN PSECURITY_QUALITY_OF_SERVICE Qos,
@@ -402,6 +405,9 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
 		    IN PETHREAD ServerThread OPTIONAL)
@@ -473,6 +479,9 @@ SepInitializeTokenImplementation(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQueryInformationToken(IN HANDLE TokenHandle,
 			IN TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -736,6 +745,9 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 IN ACCESS_MASK DesiredAccess,
@@ -878,6 +890,9 @@ SepAdjustPrivileges(PACCESS_TOKEN Token,
 #endif
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 			 IN BOOLEAN DisableAllPrivileges,
@@ -1384,6 +1399,9 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 }
 
 
+/*
+ * @implemented
+ */
 SECURITY_IMPERSONATION_LEVEL STDCALL
 SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 {
@@ -1391,6 +1409,9 @@ SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 }
 
 
+/*
+ * @implemented
+ */
 TOKEN_TYPE STDCALL
 SeTokenType(IN PACCESS_TOKEN Token)
 {

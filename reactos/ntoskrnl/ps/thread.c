@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.112 2003/06/05 11:51:13 chorns Exp $
+/* $Id: thread.c,v 1.113 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -61,11 +61,17 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
    return(((PIKPCR) KeGetCurrentKPCR())->CurrentThread);
 }
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
 {
    return(PsGetCurrentThread()->Cid.UniqueThread);
@@ -468,6 +474,9 @@ PsInitThreadManagment(VOID)
      }
 }
 
+/*
+ * @implemented
+ */
 LONG STDCALL
 KeSetBasePriorityThread (PKTHREAD	Thread,
 			 LONG		Increment)
@@ -487,6 +496,9 @@ KeSetBasePriorityThread (PKTHREAD	Thread,
 }
 
 
+/*
+ * @implemented
+ */
 KPRIORITY STDCALL
 KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 {
@@ -512,6 +524,9 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
    return(OldPriority);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 KeSetAffinityThread(PKTHREAD	Thread,
 					PVOID		AfMask)
@@ -596,6 +611,9 @@ NtYieldExecution(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 			   OUT PEPROCESS *Process OPTIONAL,
@@ -638,6 +656,9 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 PsLookupThreadByThreadId(IN PVOID ThreadId,
 			 OUT PETHREAD *Thread)

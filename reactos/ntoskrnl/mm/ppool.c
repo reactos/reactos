@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.12 2003/07/10 21:05:04 royce Exp $
+/* $Id: ppool.c,v 1.13 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,8 +60,6 @@ VOID MmInitializePagedPool(VOID)
  * ARGUMENTS
  *
  * RETURN VALUE
- *
- * @implemented
  */
 PVOID STDCALL
 ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
@@ -190,9 +188,6 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   return(BlockAddress);
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 ExFreePagedPool(IN PVOID Block)
 {

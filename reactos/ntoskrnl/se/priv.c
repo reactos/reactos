@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.8 2003/06/20 18:19:29 ekohl Exp $
+/* $Id: priv.c,v 1.9 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -285,6 +285,9 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 SePrivilegeCheck (PPRIVILEGE_SET Privileges,
 		  PSECURITY_SUBJECT_CONTEXT SubjectContext,
@@ -313,6 +316,9 @@ SePrivilegeCheck (PPRIVILEGE_SET Privileges,
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
 			IN KPROCESSOR_MODE PreviousMode)

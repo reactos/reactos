@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.6 2003/06/20 16:22:20 ekohl Exp $
+/* $Id: win32.c,v 1.7 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -74,6 +74,9 @@ PsCreateWin32Process(PEPROCESS Process)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
 			  PW32_THREAD_CALLBACK W32ThreadCallback,

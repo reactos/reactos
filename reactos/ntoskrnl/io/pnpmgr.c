@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.11 2003/07/10 15:47:00 royce Exp $
+/* $Id: pnpmgr.c,v 1.12 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -95,9 +95,6 @@ IoReleaseRemoveLockAndWaitEx(
 {
 }
 
-/*
- * @unimplemented
- */
 VOID
 STDCALL
 IoAdjustPagingPathCount(

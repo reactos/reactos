@@ -407,9 +407,6 @@ KeInsertQueueApc (PKAPC	Apc,
    return TRUE;
 }
 
-/*
- * @implemented
- */
 BOOLEAN STDCALL
 KeRemoveQueueApc (PKAPC Apc)
 /*
@@ -512,18 +509,12 @@ KeInitializeApc(
      }
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 NtQueueApcRundownRoutine(PKAPC Apc)
 {
    ExFreePool(Apc);
 }
 
-/*
- * @implemented
- */
 VOID STDCALL
 NtQueueApcKernelRoutine(PKAPC Apc,
 			PKNORMAL_ROUTINE* NormalRoutine,
@@ -534,9 +525,6 @@ NtQueueApcKernelRoutine(PKAPC Apc,
    ExFreePool(Apc);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtQueueApcThread(HANDLE			ThreadHandle,
 		 PKNORMAL_ROUTINE	ApcRoutine,
@@ -584,9 +572,6 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL NtTestAlert(VOID)
 {
    KiTestAlert();

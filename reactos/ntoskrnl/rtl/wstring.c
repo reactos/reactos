@@ -1,4 +1,4 @@
-/* $Id: wstring.c,v 1.19 2003/05/27 19:24:04 hbirr Exp $
+/* $Id: wstring.c,v 1.20 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,9 @@ int _wcsicmp (const wchar_t* cs, const wchar_t* ct)
 	return *cs - *ct;
 }
 
+/*
+ * @implemented
+ */
 wchar_t *_wcslwr (wchar_t *x)
 {
 	wchar_t  *y=x;
@@ -43,6 +46,9 @@ wchar_t *_wcslwr (wchar_t *x)
 }
 
 
+/*
+ * @implemented
+ */
 int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count)
 {
 	if (count == 0)
@@ -57,6 +63,9 @@ int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count)
 }
 
 
+/*
+ * @implemented
+ */
 wchar_t *_wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 {
 	wchar_t *t = wsToFill;
@@ -71,6 +80,9 @@ wchar_t *_wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 }
 
 
+/*
+ * @implemented
+ */
 wchar_t *_wcsrev(wchar_t *s)
 {
 	wchar_t  *e;
@@ -90,6 +102,9 @@ wchar_t *_wcsrev(wchar_t *s)
 }
 
 
+/*
+ * @implemented
+ */
 wchar_t *_wcsupr(wchar_t *x)
 {
 	wchar_t *y=x;
@@ -102,6 +117,9 @@ wchar_t *_wcsupr(wchar_t *x)
 	return x;
 }
 
+/*
+ * @implemented
+ */
 size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 {
 	wchar_t *s;
@@ -121,6 +139,9 @@ size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 	return s-str; /* nr of wchars */
 }
 
+/*
+ * @implemented
+ */
 size_t wcsspn(const wchar_t *str,const wchar_t *accept)
 {
 	wchar_t  *s;
@@ -143,6 +164,9 @@ size_t wcsspn(const wchar_t *str,const wchar_t *accept)
 }
 
 
+/*
+ * @implemented
+ */
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
 {
 	wchar_t *x;

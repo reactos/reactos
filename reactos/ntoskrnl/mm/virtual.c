@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.67 2003/07/10 21:05:04 royce Exp $
+/* $Id: virtual.c,v 1.68 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -39,9 +39,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL 
 NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
 		     IN	PVOID	BaseAddress,
@@ -61,9 +58,6 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
   UNIMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL 
 NtLockVirtualMemory(HANDLE	ProcessHandle,
 		    PVOID	BaseAddress,
@@ -73,9 +67,6 @@ NtLockVirtualMemory(HANDLE	ProcessHandle,
   UNIMPLEMENTED;
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL 
 NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 		      IN PVOID Address,
@@ -169,9 +160,6 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
    return(Status);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
 		       IN	PVOID	BaseAddress,
@@ -237,9 +225,6 @@ NtProtectVirtualMemory(IN	HANDLE	ProcessHandle,
    return(Status);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL 
 NtReadVirtualMemory(IN	HANDLE	ProcessHandle,
 		    IN	PVOID	BaseAddress,
@@ -294,9 +279,6 @@ NtReadVirtualMemory(IN	HANDLE	ProcessHandle,
   return(STATUS_SUCCESS);
 }
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL 
 NtUnlockVirtualMemory(HANDLE	ProcessHandle,
 		      PVOID	BaseAddress,
@@ -307,9 +289,6 @@ NtUnlockVirtualMemory(HANDLE	ProcessHandle,
 }
 
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL 
 NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
 		     IN	PVOID	BaseAddress,

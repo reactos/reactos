@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.14 2003/06/01 18:13:23 ekohl Exp $
+/* $Id: largeint.c,v 1.15 2003/07/11 01:23:15 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlConvertLongToLargeInteger (
@@ -32,6 +35,9 @@ RtlConvertLongToLargeInteger (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlConvertUlongToLargeInteger (
@@ -45,6 +51,9 @@ RtlConvertUlongToLargeInteger (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlEnlargedIntegerMultiply (
@@ -59,6 +68,9 @@ RtlEnlargedIntegerMultiply (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 ULONG
 STDCALL
 RtlEnlargedUnsignedDivide (
@@ -73,6 +85,9 @@ RtlEnlargedUnsignedDivide (
 	return (ULONG)(Dividend.QuadPart / Divisor);
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlEnlargedUnsignedMultiply (
@@ -87,6 +102,9 @@ RtlEnlargedUnsignedMultiply (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlExtendedIntegerMultiply (
@@ -101,6 +119,9 @@ RtlExtendedIntegerMultiply (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlExtendedLargeIntegerDivide (
@@ -144,6 +165,9 @@ RtlExtendedLargeIntegerDivide (
 #define LOWER_32(A) ((A) & 0xffffffff)
 #define UPPER_32(A) ((A) >> 32)
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER STDCALL
 RtlExtendedMagicDivide (LARGE_INTEGER Dividend,
 			LARGE_INTEGER MagicDivisor,
@@ -191,6 +215,9 @@ RtlExtendedMagicDivide (LARGE_INTEGER Dividend,
 }
 
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerAdd (
@@ -205,6 +232,9 @@ RtlLargeIntegerAdd (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerArithmeticShift (
@@ -231,6 +261,9 @@ RtlLargeIntegerArithmeticShift (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerDivide (
@@ -249,6 +282,9 @@ RtlLargeIntegerDivide (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerNegate (
@@ -262,6 +298,9 @@ RtlLargeIntegerNegate (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerShiftLeft (
@@ -278,6 +317,9 @@ RtlLargeIntegerShiftLeft (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerShiftRight (
@@ -294,6 +336,9 @@ RtlLargeIntegerShiftRight (
 	return RC;
 }
 
+/*
+ * @implemented
+ */
 LARGE_INTEGER
 STDCALL
 RtlLargeIntegerSubtract (

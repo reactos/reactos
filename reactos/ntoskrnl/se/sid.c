@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.13 2003/06/07 10:34:47 ekohl Exp $
+/* $Id: sid.c,v 1.14 2003/07/11 01:23:16 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -468,6 +468,9 @@ SepInitSecurityIDs(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlValidSid(PSID Sid)
 {
@@ -483,6 +486,9 @@ RtlValidSid(PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlLengthRequiredSid(UCHAR SubAuthorityCount)
 {
@@ -490,6 +496,9 @@ RtlLengthRequiredSid(UCHAR SubAuthorityCount)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlInitializeSid(PSID Sid,
 		 PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
@@ -504,6 +513,9 @@ RtlInitializeSid(PSID Sid,
 }
 
 
+/*
+ * @implemented
+ */
 PULONG STDCALL
 RtlSubAuthoritySid(PSID Sid,
 		   ULONG SubAuthority)
@@ -512,6 +524,9 @@ RtlSubAuthoritySid(PSID Sid,
 }
 
 
+/*
+ * @implemented
+ */
 PUCHAR STDCALL
 RtlSubAuthorityCountSid(PSID Sid)
 {
@@ -519,6 +534,9 @@ RtlSubAuthorityCountSid(PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 RtlEqualSid(PSID Sid1,
 	    PSID Sid2)
@@ -540,6 +558,9 @@ RtlEqualSid(PSID Sid1,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 RtlLengthSid(PSID Sid)
 {
@@ -547,6 +568,9 @@ RtlLengthSid(PSID Sid)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCopySid(ULONG BufferLength,
 	   PSID Dest,
@@ -593,6 +617,9 @@ RtlCopySidAndAttributesArray(ULONG Count,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 			     PSID Sid,

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.21 2003/05/28 18:09:10 chorns Exp $
+/* $Id: sysinfo.c,v 1.22 2003/07/11 01:23:14 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1116,6 +1116,9 @@ CallQS [] =
 };
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 			  OUT PVOID UnsafeSystemInformation,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cancel.c,v 1.10 2003/07/10 15:47:00 royce Exp $
+/* $Id: cancel.c,v 1.11 2003/07/11 01:23:14 royce Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cancel.c
@@ -39,9 +39,6 @@ static KSPIN_LOCK CancelSpinLock;
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @unimplemented
- */
 NTSTATUS STDCALL
 NtCancelIoFile (IN	HANDLE			FileHandle,
 		OUT	PIO_STATUS_BLOCK	IoStatusBlock)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.16 2003/07/10 21:05:03 royce Exp $
+/* $Id: anonmem.c,v 1.17 2003/07/11 01:23:15 royce Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -752,6 +752,9 @@ MmFreeVirtualMemory(PEPROCESS Process,
 		   (PVOID)Process);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL 
 NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 		    IN	PVOID*  PBaseAddress,	
@@ -864,9 +867,6 @@ MmProtectAnonMem(PMADDRESS_SPACE AddressSpace,
   return(Status);
 }
 
-/*
- * @implemented
- */
 NTSTATUS STDCALL
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
 	       PVOID Address,

@@ -39,7 +39,6 @@ NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
  * NOTE
  * 	Used by CcMdlReadComplete@8 and FsRtl
  *
- * @unimplemented
  */
 VOID STDCALL
 CcMdlReadCompleteDev (IN	PMDL		MdlChain,
