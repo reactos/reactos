@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.11 2000/07/01 17:07:00 ea Exp $
+/* $Id: env.c,v 1.12 2002/03/17 17:56:57 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -70,7 +70,14 @@ GetEnvironmentVariableA (
 		RtlFreeUnicodeString (&VarNameU);
 
 		SetLastErrorByStatus (Status);
-		return 0;
+		if (Status == STATUS_BUFFER_TOO_SMALL)
+		{
+			return VarNameU.Length / sizeof(WCHAR) + 1;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 
 	/* convert unicode value string to ansi */
@@ -115,7 +122,14 @@ GetEnvironmentVariableW (
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
-		return 0;
+		if (Status == STATUS_BUFFER_TOO_SMALL)
+		{
+			return (VarValue.Length / sizeof(WCHAR)) + 1;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 
 	return (VarValue.Length / sizeof(WCHAR));
@@ -134,6 +148,8 @@ SetEnvironmentVariableA (
 	UNICODE_STRING VarNameU;
 	UNICODE_STRING VarValueU;
 	NTSTATUS Status;
+
+	DPRINT("SetEnvironmentVariableA(Name '%s', Value '%s')\n", lpName, lpValue);
 
 	RtlInitAnsiString (&VarName,
 	                   (LPSTR)lpName);
@@ -174,6 +190,8 @@ SetEnvironmentVariableW (
 	UNICODE_STRING VarName;
 	UNICODE_STRING VarValue;
 	NTSTATUS Status;
+
+	DPRINT("SetEnvironmentVariableW(Name '%S', Value '%S')\n", lpName, lpValue);
 
 	RtlInitUnicodeString (&VarName,
 	                      lpName);
