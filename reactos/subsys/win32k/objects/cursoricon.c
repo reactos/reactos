@@ -7,7 +7,7 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-BOOL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor )
+BOOL FASTCALL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor )
 {
 	ASSERT( pIconCursor );
 	if( pIconCursor->ANDBitmap.bmBits )
@@ -52,7 +52,7 @@ HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
 		return 0;
 	}
 	
-	icon = ICONCURSOROBJ_HandleToPtr(hIcon);
+	icon = ICONCURSOROBJ_LockIconCursor(hIcon);
 	
 	/* Set up the basic icon stuff */
 	icon->fIcon = TRUE;
@@ -92,7 +92,7 @@ HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
 		memcpy(icon->XORBitmap.bmBits, (PVOID)XORBits, Height * icon->XORBitmap.bmWidthBytes);		
 	}
 	
-	ICONCURSOROBJ_ReleasePtr( hIcon );
+	ICONCURSOROBJ_UnlockIconCursor( hIcon );
 
 	return hIcon;
 }
@@ -109,11 +109,11 @@ NtUserGetIconInfo(
 {
   PICONCURSOROBJ icon;
 
-  icon = ICONCURSOROBJ_HandleToPtr(hIcon);
+  icon = ICONCURSOROBJ_LockIconCursor(hIcon);
   
   if (!icon)
   {
-	DbgPrint("NtUserGetIconInfo: ICONCURSOROBJ_HandleToPtr() returned 0\n");
+	DPRINT1("NtUserGetIconInfo: ICONCURSOROBJ_LockIconCursor() returned 0\n");
 	return FALSE;
   }
 
@@ -133,7 +133,7 @@ NtUserGetIconInfo(
                                icon->XORBitmap.bmBitsPixel,
                                icon->XORBitmap.bmBits);
 
-  ICONCURSOROBJ_ReleasePtr(hIcon);
+  ICONCURSOROBJ_UnlockIconCursor(hIcon);
 
   if (!*hbmMask || !*hbmColor)
     return FALSE;

@@ -79,15 +79,15 @@ typedef struct _ICONCURSOROBJ
 
 /*  Internal interfaces  */
 #define  ICONCURSOROBJ_AllocIconCursor()  \
-  ((HICON) GDIOBJ_AllocObj (sizeof (ICONCURSOROBJ), GO_ICONCURSOR_MAGIC))
+  ((HICON) GDIOBJ_AllocObj (sizeof (ICONCURSOROBJ), GDI_OBJECT_TYPE_ICONCURSOR, (GDICLEANUPPROC) IconCursor_InternalDelete))
 
-#define  ICONCURSOROBJ_HandleToPtr(hICObj)  \
-  ((PICONCURSOROBJ) GDIOBJ_LockObj ((HGDIOBJ) hICObj, GO_ICONCURSOR_MAGIC))
+#define  ICONCURSOROBJ_LockIconCursor(hICObj)  \
+  ((PICONCURSOROBJ) GDIOBJ_LockObj ((HGDIOBJ) hICObj, GDI_OBJECT_TYPE_ICONCURSOR))
   
-#define  ICONCURSOROBJ_ReleasePtr(hICObj) GDIOBJ_UnlockObj ((HGDIOBJ) hICObj, GO_ICONCURSOR_MAGIC)
+#define  ICONCURSOROBJ_UnlockIconCursor(hICObj) GDIOBJ_UnlockObj ((HGDIOBJ) hICObj, GDI_OBJECT_TYPE_ICONCURSOR)
 
 
-BOOL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor );
+BOOL FASTCALL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor );
 
 /*  User Entry Points  */
 HICON 

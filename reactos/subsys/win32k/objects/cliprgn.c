@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.21 2003/08/20 07:45:02 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -88,7 +88,7 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
 {
   HRGN copy;
   PROSRGNDATA obj, copyObj;
-  PDC dc = DC_HandleToPtr(hdc);
+  PDC dc = DC_LockDc(hdc);
 
   if (!dc) return 0;
 
@@ -97,7 +97,7 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   if(!(copy = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
     RGNDATA_UnlockRgn(dc->w.hVisRgn);
-    DC_ReleasePtr(hdc);
+    DC_UnlockDc(hdc);
     return 0;
   }
   NtGdiCombineRgn(copy, dc->w.hVisRgn, 0, RGN_COPY);
@@ -116,7 +116,7 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   if (!hrgn)
   	return ERROR;
-  if (!(dc = DC_HandleToPtr(hdc)))
+  if (!(dc = DC_LockDc(hdc)))
   	return ERROR;
 
   dc->w.flags &= ~DC_DIRTY;
@@ -128,7 +128,7 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   CLIPPING_UpdateGCRegion(dc);
-  DC_ReleasePtr( hdc );
+  DC_UnlockDc( hdc );
 
   return retval;
 }
@@ -155,7 +155,7 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
   int retval;
   DC *dc;
 
-  if (!(dc = DC_HandleToPtr(hDC)))
+  if (!(dc = DC_LockDc(hDC)))
   	return ERROR;
   retval = UnsafeIntGetRgnBox(dc->w.hGCClipRgn, rc);
   rc->left -= dc->w.DCOrgX;
@@ -163,7 +163,7 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
   rc->top -= dc->w.DCOrgY;
   rc->bottom -= dc->w.DCOrgY;
 
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   NtGdiDPtoLP(hDC, (LPPOINT)rc, 2);
   return(retval);
 }
@@ -216,7 +216,7 @@ int STDCALL NtGdiSelectClipRgn(HDC  hDC,
   PDC dc;
   HRGN Copy;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
     SetLastWin32Error(ERROR_INVALID_HANDLE);

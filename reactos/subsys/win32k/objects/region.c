@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.34 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: region.c,v 1.35 2003/08/20 07:45:02 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -338,7 +338,7 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
 {
   PROSRGNDATA objSrc, rgnDst;
   HRGN hNewDst, hRet = NULL;
-  GDIMULTILOCK Lock[2] = {{hDst, 0, GO_REGION_MAGIC}, {hSrc, 0, GO_REGION_MAGIC}};
+  GDIMULTILOCK Lock[2] = {{hDst, 0, GDI_OBJECT_TYPE_REGION}, {hSrc, 0, GDI_OBJECT_TYPE_REGION}};
 
   if( !hDst )
     {
@@ -1381,7 +1381,7 @@ BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   PROSRGNDATA srcObj = NULL;
   PROSRGNDATA destObj = NULL;
 
-  DC * dc = DC_HandleToPtr(hdc);
+  DC * dc = DC_LockDc(hdc);
   RECT tmpRect;
   BOOL ret = FALSE;
 
@@ -1429,7 +1429,7 @@ BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   RGNDATA_UnlockRgn( hDest );
 
 done:
-  DC_ReleasePtr( hdc );
+  DC_UnlockDc( hdc );
   return ret;
 }
 
@@ -1439,8 +1439,9 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   PROSRGNDATA pReg;
   BOOL bRet;
 
-  if((hReg = (HRGN)GDIOBJ_AllocObj(sizeof(ROSRGNDATA), GO_REGION_MAGIC))){
-	if( (pReg = GDIOBJ_LockObj( hReg, GO_REGION_MAGIC )) ){
+  if((hReg = (HRGN)GDIOBJ_AllocObj(sizeof(ROSRGNDATA), GDI_OBJECT_TYPE_REGION,
+                                   (GDICLEANUPPROC) RGNDATA_InternalDelete))){
+	if( (pReg = RGNDATA_LockRgn(hReg)) ){
 
       if ((pReg->Buffer = ExAllocatePool(PagedPool, n * sizeof(RECT)))){
       	EMPTY_REGION(pReg);
@@ -1448,7 +1449,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
       	pReg->rdh.nCount = n;
       	pReg->rdh.nRgnSize = n*sizeof(RECT);
 
-        bRet = GDIOBJ_UnlockObj( hReg, GO_REGION_MAGIC );
+        bRet = RGNDATA_UnlockRgn(hReg);
         ASSERT(bRet);
 
       	return hReg;
@@ -1456,7 +1457,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
 
 	}
 	else
-		GDIOBJ_FreeObj( hReg, GO_REGION_MAGIC, GDIOBJFLAG_DEFAULT );
+		RGNDATA_FreeRgn(hReg);
   }
   return NULL;
 }
@@ -1478,7 +1479,7 @@ NtGdiCombineRgn(HRGN  hDest,
                     INT  CombineMode)
 {
   INT result = ERROR;
-  GDIMULTILOCK Lock[3] = {{hDest, 0, GO_REGION_MAGIC}, {hSrc1, 0, GO_REGION_MAGIC}, {hSrc2, 0, GO_REGION_MAGIC}};
+  GDIMULTILOCK Lock[3] = {{hDest, 0, GDI_OBJECT_TYPE_REGION}, {hSrc1, 0, GDI_OBJECT_TYPE_REGION}, {hSrc2, 0, GDI_OBJECT_TYPE_REGION}};
   PROSRGNDATA destRgn, src1Rgn, src2Rgn;
 
   if ( !GDIOBJ_LockMultipleObj(Lock, sizeof(Lock)/sizeof(Lock[0])) )
@@ -1838,7 +1839,7 @@ NtGdiPaintRgn(HDC  hDC,
 {
   //RECT box;
   HRGN tmpVisRgn; //, prevVisRgn;
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
@@ -1850,7 +1851,7 @@ NtGdiPaintRgn(HDC  hDC,
 	return FALSE;
 
   if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))){
-	DC_ReleasePtr( hDC );
+	DC_UnlockDc( hDC );
   	return FALSE;
   }
 
@@ -1858,7 +1859,7 @@ NtGdiPaintRgn(HDC  hDC,
   // Transform region into device co-ords
   if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
     NtGdiDeleteObject( tmpVisRgn );
-	DC_ReleasePtr( hDC );
+	DC_UnlockDc( hDC );
     return FALSE;
   }
 */
@@ -1887,7 +1888,7 @@ NtGdiPaintRgn(HDC  hDC,
   RGNDATA_UnlockRgn( tmpVisRgn );
 
   // Fill the region
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return TRUE;
 }
 

@@ -28,18 +28,11 @@ typedef struct _BITMAPOBJ
 /*  Internal interface  */
 
 #define  BITMAPOBJ_AllocBitmap()  \
-  ((HBITMAP) GDIOBJ_AllocObj (sizeof (BITMAPOBJ), GO_BITMAP_MAGIC))
+  ((HBITMAP) GDIOBJ_AllocObj (sizeof (BITMAPOBJ), GDI_OBJECT_TYPE_BITMAP, (GDICLEANUPPROC) Bitmap_InternalDelete))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
-  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC, GDIOBJFLAG_DEFAULT)
-#define  BITMAPOBJ_HandleToPtr(hBMObj)  \
-  ((PBITMAPOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
-#define  BITMAPOBJ_ReleasePtr(hBMObj)  \
-  GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC)
-
-/*#define  BITMAPOBJ_PtrToHandle(hBMObj)  \
-  ((HBITMAP) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_BITMAP_MAGIC))*/
-#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObject ((HGDIOBJ) hBMObj)
-#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObject ((HGDIOBJ) hBMObj)
+  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP, GDIOBJFLAG_DEFAULT)
+#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
+#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);

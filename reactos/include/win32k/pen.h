@@ -13,16 +13,10 @@ typedef struct
 /*  Internal interface  */
 
 #define  PENOBJ_AllocPen()  \
-  ((HPEN) GDIOBJ_AllocObj (sizeof (PENOBJ), GO_PEN_MAGIC))
-#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_PEN_MAGIC, GDIOBJFLAG_DEFAULT)
-/*
-#define  PENOBJ_HandleToPtr(hBMObj)  \
-  ((PPENOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))
-#define  PENOBJ_PtrToHandle(hBMObj)  \
-  ((HPEN) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_PEN_MAGIC))
-*/
-#define  PENOBJ_LockPen(hBMObj) ((PPENOBJ)GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC))
-#define  PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_PEN_MAGIC)
+  ((HPEN) GDIOBJ_AllocObj (sizeof (PENOBJ), GDI_OBJECT_TYPE_PEN, NULL))
+#define  PENOBJ_FreePen(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN, GDIOBJFLAG_DEFAULT)
+#define  PENOBJ_LockPen(hBMObj) ((PPENOBJ)GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN))
+#define  PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN)
 
 HPEN STDCALL NtGdiCreatePen(INT  PenStyle,
                     INT  Width,

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.27 2003/08/19 11:48:50 weiden Exp $
+ * $Id: dib.c,v 1.28 2003/08/20 07:45:02 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -113,12 +113,12 @@ NtGdiSetDIBits(
   INT         scanDirection = 1, DIBWidth;
 
   // Check parameters
-  if (!(dc = DC_HandleToPtr(hDC)))
+  if (!(dc = DC_LockDc(hDC)))
      return 0;
 
-  if (!(bitmap = (BITMAPOBJ *)GDIOBJ_LockObj(hBitmap, GO_BITMAP_MAGIC)))
+  if (!(bitmap = BITMAPOBJ_LockBitmap(hBitmap)))
   {
-    DC_ReleasePtr(hDC);
+    DC_UnlockDc(hDC);
     return 0;
   }
 
@@ -193,9 +193,8 @@ NtGdiSetDIBits(
 //  if (ColorUse == DIB_PAL_COLORS)
 //    WinFree((LPSTR)lpRGB);
 
-//  GDI_ReleaseObj(hBitmap); unlock?
-  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
-  DC_ReleasePtr(hDC);
+  BITMAPOBJ_UnlockBitmap(hBitmap);
+  DC_UnlockDc(hDC);
 
   return result;
 }
@@ -251,7 +250,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
   DWORD *BitField;
   DWORD InfoSize;
 
-  BitmapObj = (PBITMAPOBJ) GDIOBJ_LockObj(hBitmap, GO_BITMAP_MAGIC);
+  BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
   if (NULL == BitmapObj)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -265,7 +264,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
   if (! NT_SUCCESS(Status))
     {
     SetLastNtError(Status);
-    GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+    BITMAPOBJ_UnlockBitmap(hBitmap);
     return 0;
     }
 
@@ -276,7 +275,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
        NULL != Bits))
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
       return 0;
     }
 
@@ -286,7 +285,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
   if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
       return 0;
     }
 
@@ -324,7 +323,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
       if (! NT_SUCCESS(Status))
 	{
 	  SetLastNtError(Status);
-	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  BITMAPOBJ_UnlockBitmap(hBitmap);
 	  return 0;
 	}
       Result = 1;
@@ -341,18 +340,18 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
       if (! NT_SUCCESS(Status))
 	{
 	  SetLastNtError(Status);
-	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  BITMAPOBJ_UnlockBitmap(hBitmap);
 	  return 0;
 	}
       RtlZeroMemory(&InfoWithBitFields, sizeof(InfoWithBitFields));
       RtlCopyMemory(&(InfoWithBitFields.Info), &Info, sizeof(BITMAPINFO));
       if (BI_BITFIELDS == Info.bmiHeader.biCompression)
 	{
-	  DCObj = DC_HandleToPtr(hDC);
+	  DCObj = DC_LockDc(hDC);
 	  if (NULL == DCObj)
 	    {
 	      SetLastWin32Error(ERROR_INVALID_HANDLE);
-	      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	      BITMAPOBJ_UnlockBitmap(hBitmap);
 	      return 0;
 	    }
 	  PalGdi = (PPALGDI) AccessInternalObject((ULONG) DCObj->w.hPalette);
@@ -361,7 +360,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
 	  BitField[1] = PalGdi->GreenMask;
 	  BitField[2] = PalGdi->BlueMask;
 	  InfoSize = InfoWithBitFields.Info.bmiHeader.biSize + 3 * sizeof(DWORD);
-	  DC_ReleasePtr(hDC);
+	  DC_UnlockDc(hDC);
 	}
       else
 	{
@@ -371,7 +370,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
       if (! NT_SUCCESS(Status))
 	{
 	  SetLastNtError(Status);
-	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  BITMAPOBJ_UnlockBitmap(hBitmap);
 	  return 0;
 	}
     }
@@ -380,7 +379,7 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
     UNIMPLEMENTED;
     }
 
-  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+  BITMAPOBJ_UnlockBitmap(hBitmap);
 
   return Result;
 }
@@ -409,7 +408,7 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
   PBITMAPOBJ  bmp;
   LONG  height, ret;
 
-  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  bmp = BITMAPOBJ_LockBitmap (hBitmap);
   if (!bmp)
   {
     return 0;
@@ -580,11 +579,11 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
     bDesktopDC = TRUE;
   }
 
-  if ((dc = DC_HandleToPtr(hDC)))
+  if ((dc = DC_LockDc(hDC)))
   {
     hbitmap = DIB_CreateDIBSection ( dc, (BITMAPINFO*)bmi, Usage, Bits,
       hSection, dwOffset, 0);
-    DC_ReleasePtr(hDC);
+    DC_UnlockDc(hDC);
   }
 
   if (bDesktopDC)
@@ -692,7 +691,7 @@ DIB_CreateDIBSection(
     res = NtGdiCreateDIBitmap(dc->hSelf, bi, 0, NULL, bmi, usage);
     if (res)
     {
-      bmp = BITMAPOBJ_HandleToPtr (res);
+      bmp = BITMAPOBJ_LockBitmap(res);
       if (bmp)
 	{
           bmp->dib = (DIBSECTION *) dib;
@@ -727,12 +726,12 @@ DIB_CreateDIBSection(
 
     if (dib) { ExFreePool(dib); dib = NULL; }
     if (bmp) { bmp = NULL; }
-    if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC, GDIOBJFLAG_DEFAULT); res = 0; }
+    if (res) { BITMAPOBJ_FreeBitmap(res); res = 0; }
   }
 
   if (bmp)
     {
-      BITMAPOBJ_ReleasePtr(res);
+      BITMAPOBJ_UnlockBitmap(res);
     }
 
   // Return BITMAP handle and storage location
@@ -860,7 +859,7 @@ PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should 
   // GlobalUnlock(hPackedDIB);
 
   // Retrieve the internal Pixmap from the DDB
-  pBmp = (BITMAPOBJ *)GDIOBJ_LockObj(hBmp, GO_BITMAP_MAGIC);
+  pBmp = BITMAPOBJ_LockBitmap(hBmp);
 
   return pBmp;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.16 2003/08/19 11:48:50 weiden Exp $
+/* $Id: coord.c,v 1.17 2003/08/20 07:45:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,7 +101,7 @@ NtGdiDPtoLP(HDC  hDC,
   ASSERT(Points);
   MmCopyFromCaller( Points, UnsafePoints, Count*sizeof(POINT) );
 
-  Dc = DC_HandleToPtr (hDC);
+  Dc = DC_LockDc (hDC);
   if (Dc == NULL || !Dc->w.vport2WorldValid)
     {
       return(FALSE);
@@ -111,7 +111,7 @@ NtGdiDPtoLP(HDC  hDC,
     {
       CoordDPtoLP(Dc, &Points[i]);
     }
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
 
   MmCopyToCaller(  UnsafePoints, Points, Count*sizeof(POINT) );
   return(TRUE);
@@ -129,13 +129,13 @@ int
 STDCALL
 NtGdiGetGraphicsMode ( HDC hDC )
 {
-  PDC dc = DC_HandleToPtr ( hDC );
+  PDC dc = DC_LockDc ( hDC );
   int GraphicsMode = 0; // default to failure
 
   if ( dc )
   {
     GraphicsMode = dc->w.GraphicsMode;
-    DC_ReleasePtr ( hDC );
+    DC_UnlockDc ( hDC );
   }
 
   return GraphicsMode;
@@ -148,7 +148,7 @@ NtGdiGetWorldTransform(HDC  hDC,
 {
   PDC  dc;
 
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc (hDC);
   if (!dc)
   {
     return  FALSE;
@@ -158,7 +158,7 @@ NtGdiGetWorldTransform(HDC  hDC,
     return  FALSE;
   }
   *XForm = dc->w.xformWorld2Wnd;
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  TRUE;
 }
 
@@ -196,7 +196,7 @@ IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
 BOOL STDCALL
 NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 {
-  PDC dc = DC_HandleToPtr ( hDC );
+  PDC dc = DC_LockDc ( hDC );
   LPPOINT Points;
 
   if ( !dc )
@@ -214,7 +214,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
   ExFreePool ( Points );
 
-  DC_ReleasePtr ( hDC );
+  DC_UnlockDc ( hDC );
 
   return TRUE;
 }
@@ -232,7 +232,7 @@ NtGdiModifyWorldTransform(HDC  hDC,
 
   MmCopyFromCaller( XForm, UnsafeXForm, sizeof( XFORM ) );
 
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc (hDC);
   if (!dc)
   {
 //    SetLastError( ERROR_INVALID_HANDLE );
@@ -268,11 +268,11 @@ NtGdiModifyWorldTransform(HDC  hDC,
       break;
 
     default:
-      DC_ReleasePtr( hDC );
+      DC_UnlockDc( hDC );
       return FALSE;
   }
   DC_UpdateXforms (dc);
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  TRUE;
 }
 
@@ -287,7 +287,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
   POINT Point;
   NTSTATUS Status;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
     return FALSE;
@@ -324,7 +324,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
 {
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -339,7 +339,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
   dc->wndOrgX += XOffset;
   dc->wndOrgY += YOffset;
 
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return TRUE;
 }
@@ -376,7 +376,7 @@ NtGdiSetGraphicsMode(HDC  hDC,
   INT ret;
   PDC dc;
 
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc (hDC);
   if (!dc)
   {
     return 0;
@@ -390,13 +390,13 @@ NtGdiSetGraphicsMode(HDC  hDC,
 
   if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED))
     {
-      DC_ReleasePtr( hDC );
+      DC_UnlockDc( hDC );
       return 0;
     }
 
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  ret;
 }
 
@@ -408,7 +408,7 @@ NtGdiSetMapMode(HDC  hDC,
   int PrevMapMode;
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -429,7 +429,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
 {
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -443,7 +443,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
       case MM_LOMETRIC:
       case MM_TEXT:
       case MM_TWIPS:
-	DC_ReleasePtr(hDC);
+	DC_UnlockDc(hDC);
 	return FALSE;
 
       case MM_ISOTROPIC:
@@ -461,7 +461,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
   dc->vportExtX = XExtent;
   dc->vportExtY = YExtent;
 
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return TRUE;
 }
@@ -475,7 +475,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
 {
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -490,7 +490,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   dc->vportOrgX = X;
   dc->vportOrgY = Y;
 
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return TRUE;
 }
@@ -504,7 +504,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
 {
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -518,7 +518,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
       case MM_LOMETRIC:
       case MM_TEXT:
       case MM_TWIPS:
-	DC_ReleasePtr(hDC);
+	DC_UnlockDc(hDC);
 	return FALSE;
     }
 
@@ -531,7 +531,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
   dc->wndExtX = XExtent;
   dc->wndExtY = YExtent;
 
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return TRUE;
 }
@@ -545,7 +545,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
 {
   PDC dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return FALSE;
@@ -560,7 +560,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   dc->wndOrgX = X;
   dc->wndOrgY = Y;
 
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return TRUE;
 }
@@ -572,26 +572,26 @@ NtGdiSetWorldTransform(HDC  hDC,
 {
   PDC  dc;
 
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc (hDC);
   if (!dc)
   {
     return  FALSE;
   }
   if (!XForm)
   {
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
     return  FALSE;
   }
 
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode != GM_ADVANCED)
   {
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
     return  FALSE;
   }
   dc->w.xformWorld2Wnd = *XForm;
   DC_UpdateXforms (dc);
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  TRUE;
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.22 2003/08/04 19:57:47 royce Exp $
+/* $Id: surface.c,v 1.23 2003/08/20 07:45:01 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -341,7 +341,7 @@ EngLockSurface(IN HSURF Surface)
    * FIXME - don't know if GDIOBJ_LockObj's return value is a SURFOBJ or not...
    * also, what is HSURF's correct magic #?
    */
-  GDIOBJ_LockObj ( Surface, GO_MAGIC_DONTCARE );
+  GDIOBJ_LockObj ( Surface, GDI_OBJECT_TYPE_DONTCARE );
   return (SURFOBJ*)AccessUserObject((ULONG)Surface);
 }
 
@@ -354,6 +354,6 @@ EngUnlockSurface(IN SURFOBJ *Surface)
   /*
    * FIXME what is HSURF's correct magic #?
    */
-  GDIOBJ_UnlockObj ( Surface->hsurf, GO_MAGIC_DONTCARE );
+  GDIOBJ_UnlockObj ( Surface->hsurf, GDI_OBJECT_TYPE_DONTCARE );
 }
 /* EOF */

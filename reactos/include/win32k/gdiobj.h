@@ -9,58 +9,31 @@
 
 #include <ddk/ntddk.h>
 
-/*! \defgroup GDI Magic
+/*! \defgroup GDI object types
  *
- *  GDI object magic numbers
+ *  GDI object types
  *
  */
-//@{
-#define GO_PEN_MAGIC             0x4f47
-#define GO_BRUSH_MAGIC           0x4f48
-#define GO_FONT_MAGIC            0x4f49
-#define GO_PALETTE_MAGIC         0x4f4a
-#define GO_BITMAP_MAGIC          0x4f4b
-#define GO_REGION_MAGIC          0x4f4c
-#define GO_DC_MAGIC              0x4f4d
-#define GO_DISABLED_DC_MAGIC     0x4f4e
-#define GO_META_DC_MAGIC         0x4f4f
-#define GO_METAFILE_MAGIC        0x4f50
-#define GO_METAFILE_DC_MAGIC     0x4f51
-#define GO_ENHMETAFILE_MAGIC     0x4f52
-#define GO_ENHMETAFILE_DC_MAGIC  0x4f53
-#define GO_DCE_MAGIC             0x4f54
-#define GO_ICONCURSOR_MAGIC      0x4f55
-#define GO_MAGIC_DONTCARE        0xffff
-//@}
-/* (RJJ) swiped stock handles from wine  */
-  /* First handle possible for stock objects (must be >= GDI_HEAP_SIZE) */
-#define FIRST_STOCK_HANDLE          0xffffff00
-
-/*! Stock object handles */
-//@{
-#define NB_STOCK_OBJECTS        (DEFAULT_GUI_FONT + 1)
-#define STOCK_WHITE_BRUSH       ((HBRUSH)(FIRST_STOCK_HANDLE+WHITE_BRUSH))
-#define STOCK_LTGRAY_BRUSH      ((HBRUSH)(FIRST_STOCK_HANDLE+LTGRAY_BRUSH))
-#define STOCK_GRAY_BRUSH        ((HBRUSH)(FIRST_STOCK_HANDLE+GRAY_BRUSH))
-#define STOCK_DKGRAY_BRUSH      ((HBRUSH)(FIRST_STOCK_HANDLE+DKGRAY_BRUSH))
-#define STOCK_BLACK_BRUSH       ((HBRUSH)(FIRST_STOCK_HANDLE+BLACK_BRUSH))
-#define STOCK_NULL_BRUSH        ((HBRUSH)(FIRST_STOCK_HANDLE+NULL_BRUSH))
-#define STOCK_HOLLOW_BRUSH      ((HBRUSH)(FIRST_STOCK_HANDLE+HOLLOW_BRUSH))
-#define STOCK_WHITE_PEN         ((HPEN)(FIRST_STOCK_HANDLE+WHITE_PEN))
-#define STOCK_BLACK_PEN         ((HPEN)(FIRST_STOCK_HANDLE+BLACK_PEN))
-#define STOCK_NULL_PEN          ((HPEN)(FIRST_STOCK_HANDLE+NULL_PEN))
-#define STOCK_OEM_FIXED_FONT    ((HFONT)(FIRST_STOCK_HANDLE+OEM_FIXED_FONT))
-#define STOCK_ANSI_FIXED_FONT   ((HFONT)(FIRST_STOCK_HANDLE+ANSI_FIXED_FONT))
-#define STOCK_ANSI_VAR_FONT     ((HFONT)(FIRST_STOCK_HANDLE+ANSI_VAR_FONT))
-#define STOCK_SYSTEM_FONT       ((HFONT)(FIRST_STOCK_HANDLE+SYSTEM_FONT))
-#define STOCK_DEVICE_DEFAULT_FONT ((HFONT)(FIRST_STOCK_HANDLE+DEVICE_DEFAULT_FONT))
-#define STOCK_DEFAULT_PALETTE   ((HPALETTE)(FIRST_STOCK_HANDLE+DEFAULT_PALETTE))
-#define STOCK_SYSTEM_FIXED_FONT ((HFONT)(FIRST_STOCK_HANDLE+SYSTEM_FIXED_FONT))
-#define STOCK_DEFAULT_GUI_FONT  ((HFONT)(FIRST_STOCK_HANDLE+DEFAULT_GUI_FONT))
-#define FIRST_STOCK_FONT        STOCK_OEM_FIXED_FONT
-#define LAST_STOCK_FONT         STOCK_DEFAULT_GUI_FONT
-#define LAST_STOCK_HANDLE       ((DWORD)STOCK_DEFAULT_GUI_FONT)
-//@}
+/*@{*/
+#define GDI_OBJECT_TYPE_DC          0x00010000
+#define GDI_OBJECT_TYPE_REGION      0x00040000
+#define GDI_OBJECT_TYPE_BITMAP      0x00050000
+#define GDI_OBJECT_TYPE_PALETTE     0x00080000
+#define GDI_OBJECT_TYPE_FONT        0x000a0000
+#define GDI_OBJECT_TYPE_BRUSH       0x00100000
+#define GDI_OBJECT_TYPE_EMF         0x00210000
+#define GDI_OBJECT_TYPE_PEN         0x00300000
+#define GDI_OBJECT_TYPE_EXTPEN      0x00500000
+/* Following object types made up for ROS */
+#define GDI_OBJECT_TYPE_METADC      0x00710000
+#define GDI_OBJECT_TYPE_METAFILE    0x00720000
+#define GDI_OBJECT_TYPE_ENHMETAFILE 0x00730000
+#define GDI_OBJECT_TYPE_ENHMETADC   0x00740000
+#define GDI_OBJECT_TYPE_MEMDC       0x00750000
+#define GDI_OBJECT_TYPE_ICONCURSOR  0x00760000
+#define GDI_OBJECT_TYPE_DCE         0x00770000
+#define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
+/*@}*/
 
 /*!
  * GDI object header. This is a part of any GDI object
@@ -68,16 +41,18 @@
 typedef struct _GDIOBJHDR
 {
   WORD  wTableIndex;
-  DWORD dwCount; 		/// reference count for the object
+  DWORD dwCount; 		/* reference count for the object */
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef PVOID PGDIOBJ;
 
+typedef BOOL (FASTCALL *GDICLEANUPPROC)(PGDIOBJ Obj);
+
 typedef struct _GDI_HANDLE_ENTRY
 {
-  WORD  wMagic;
-  HANDLE  hProcessId;
-  PGDIOBJ  pObject;
+  GDICLEANUPPROC CleanupProc;
+  HANDLE hProcessId;
+  PGDIOBJ pObject;
   const char* lockfile;
   int lockline;
 } GDI_HANDLE_ENTRY, *PGDI_HANDLE_ENTRY;
@@ -90,35 +65,33 @@ typedef struct _GDI_HANDLE_TABLE
 
 typedef struct _GDIMULTILOCK
 {
-	HGDIOBJ 	hObj;
-	PGDIOBJ		pObj;
-	WORD		Magic;
+  HGDIOBJ hObj;
+  PGDIOBJ pObj;
+  DWORD	ObjectType;
 } GDIMULTILOCK, *PGDIMULTILOCK;
 
-HGDIOBJ FASTCALL GDIOBJ_AllocObj(WORD Size, WORD Magic);
-BOOL    STDCALL  GDIOBJ_FreeObj (HGDIOBJ Obj, WORD Magic, DWORD Flag);
-PGDIOBJ FASTCALL GDIOBJ_LockObj (HGDIOBJ Obj, WORD Magic);
-BOOL    FASTCALL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj );
-BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
-BOOL    FASTCALL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj );
-WORD    FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
-VOID    STDCALL IntDumpGdiObjects( INT Pid );
+HGDIOBJ FASTCALL GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProcPtr);
+BOOL    STDCALL  GDIOBJ_FreeObj (HGDIOBJ Obj, DWORD ObjectType, DWORD Flag);
+PGDIOBJ FASTCALL GDIOBJ_LockObj (HGDIOBJ Obj, DWORD ObjectType);
+BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
+BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, DWORD ObjectType);
+BOOL    FASTCALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
+DWORD   FASTCALL GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle);
 
-// a couple macros for debugging GDIOBJ locking
-#define GDIOBJ_LockObj(obj,mag) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,mag)
-#define GDIOBJ_UnlockObj(obj,mag) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj,mag)
+/* a couple macros for debugging GDIOBJ locking */
+#define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_UnlockObj(obj,ty) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj,ty)
 
 #ifdef GDIOBJ_LockObj
-PGDIOBJ FASTCALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, WORD Magic);
-#endif//GDIOBJ_LockObj
+PGDIOBJ FASTCALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, DWORD ObjectType);
+#endif /* GDIOBJ_LockObj */
 
 #ifdef GDIOBJ_UnlockObj
-BOOL FASTCALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ Obj, WORD Magic);
-#endif//GDIOBJ_UnlockObj
+BOOL FASTCALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ Obj, DWORD ObjectType);
+#endif /* GDIOBJ_UnlockObj */
 
 #define GDIOBJFLAG_DEFAULT		(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
 #endif
-

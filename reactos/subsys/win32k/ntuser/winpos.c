@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.25 2003/08/19 11:48:50 weiden Exp $
+/* $Id: winpos.c,v 1.26 2003/08/20 07:45:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,7 @@
 #include <include/callback.h>
 #include <include/painting.h>
 #include <include/dce.h>
+#include <include/vis.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -696,6 +697,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   RECT NewWindowRect;
   RECT NewClientRect;
   HRGN VisRgn = NULL;
+  HRGN VisibleRgn = NULL;
   ULONG WvrFlags = 0;
   RECT OldWindowRect, OldClientRect;
   UINT FlagsEx = 0;
@@ -792,11 +794,13 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       if (Window->Style & WS_CLIPCHILDREN)
 	{
-	  VisRgn = DceGetVisRgn(Wnd, DCX_WINDOW | DCX_CLIPSIBLINGS, 0, 0);
+	  VisRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
+	                                    Window, FALSE, FALSE, TRUE);
 	}
       else
 	{
-	  VisRgn = DceGetVisRgn(Wnd, DCX_WINDOW, 0, 0);
+	  VisRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
+	                                    Window, FALSE, FALSE, FALSE);
 	}
       NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
     }
@@ -863,7 +867,11 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
   if (WinPos.flags & SWP_HIDEWINDOW)
     {
+      VisibleRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
+                                            FALSE, FALSE, FALSE);
       Window->Style &= ~WS_VISIBLE;
+      VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
+      NtGdiDeleteObject(VisibleRgn);
     }
 
   /* FIXME: Hide or show the claret */
@@ -921,6 +929,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   UINT Swp = 0;
   RECT NewPos;
   BOOLEAN ShowFlag;
+  HRGN VisibleRgn;
 
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
@@ -1024,7 +1033,11 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     {
       if (Cmd == SW_HIDE)
 	{
+	  VisibleRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
+	                                        FALSE, FALSE, FALSE);
 	  Window->Style &= ~WS_VISIBLE;
+	  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
+	  NtGdiDeleteObject(VisibleRgn);
 	}
       else
 	{
@@ -1139,8 +1152,6 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	      Point.y >= Current->ClientRect.top &&
 	      Point.y < Current->ClientRect.bottom)
 	    {
-	      Point.x -= Current->ClientRect.left;
-	      Point.y -= Current->ClientRect.top;
 
 		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      return(WinPosSearchChildren(Current, Point, Window));
@@ -1164,7 +1175,7 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
   PWINDOW_OBJECT DesktopWindow;
   POINT Point = WinPoint;
   USHORT HitTest;
-  
+
   *Window = NULL;
 
   if (ScopeWin->Style & WS_DISABLED)

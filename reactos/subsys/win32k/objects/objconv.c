@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.11 2003/08/17 17:32:58 royce Exp $ */
+/* $Id: objconv.c,v 1.12 2003/08/20 07:45:02 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -60,10 +60,10 @@ HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen )
   PENOBJ *pen;
   ASSERT ( hpen );
   ASSERT ( brush );
-  pen = (PPENOBJ)GDIOBJ_LockObj ( hpen, GO_PEN_MAGIC );
+  pen = PENOBJ_LockPen(hpen);
   ASSERT ( pen );
   PenToBrushObj ( brush, pen );
-  GDIOBJ_UnlockObj ( hpen, GO_PEN_MAGIC );
+  PENOBJ_UnlockPen(hpen);
   return brush;
 }
 

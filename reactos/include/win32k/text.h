@@ -12,10 +12,10 @@ typedef struct
 /*  Internal interface  */
 
 #define  TEXTOBJ_AllocText() \
-  ((HFONT) GDIOBJ_AllocObj (sizeof (TEXTOBJ), GO_FONT_MAGIC))
-#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GO_FONT_MAGIC, GDIOBJFLAG_DEFAULT)
-#define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GO_FONT_MAGIC))
-#define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GO_FONT_MAGIC)
+  ((HFONT) GDIOBJ_AllocObj (sizeof (TEXTOBJ), GDI_OBJECT_TYPE_FONT, NULL))
+#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT, GDIOBJFLAG_DEFAULT)
+#define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
+#define  TEXTOBJ_UnlockText(hBMObj) GDIOBJ_UnlockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
 
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);

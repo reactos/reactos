@@ -16,10 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.33 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.34 2003/08/20 07:45:02 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
+#include <win32k/gdiobj.h>
 #include <win32k/bitmaps.h>
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
@@ -40,7 +41,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
                  INT  YSrc,
                  DWORD  ROP)
 {
-  GDIMULTILOCK Lock[2] = {{hDCDest, 0, GO_DC_MAGIC}, {hDCSrc, 0, GO_DC_MAGIC}};
+  GDIMULTILOCK Lock[2] = {{hDCDest, 0, GDI_OBJECT_TYPE_DC}, {hDCSrc, 0, GDI_OBJECT_TYPE_DC}};
   PDC DCDest = NULL;
   PDC DCSrc  = NULL;
   PSURFOBJ SurfDest, SurfSrc;
@@ -171,7 +172,7 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
     return 0;
   }
 
-  bmp = BITMAPOBJ_HandleToPtr( hBitmap );
+  bmp = BITMAPOBJ_LockBitmap( hBitmap );
 
   DPRINT("NtGdiCreateBitmap:%dx%d, %d (%d BPP) colors returning %08x\n", Width, Height,
          1 << (Planes * BitsPerPel), BitsPerPel, bmp);
@@ -196,7 +197,7 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
     NtGdiSetBitmapBits(hBitmap, Height * bmp->bitmap.bmWidthBytes, Bits);
   }
 
-  BITMAPOBJ_ReleasePtr( hBitmap );
+  BITMAPOBJ_UnlockBitmap( hBitmap );
 
   return  hBitmap;
 }
@@ -237,7 +238,7 @@ HBITMAP STDCALL NtGdiCreateCompatibleBitmap(HDC hDC,
   PDC  dc;
 
   hbmpRet = 0;
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc(hDC);
 
   DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
 
@@ -262,7 +263,7 @@ HBITMAP STDCALL NtGdiCreateCompatibleBitmap(HDC hDC,
     }
   }
   DPRINT ("\t\t%04x\n", hbmpRet);
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return hbmpRet;
 }
 
@@ -305,13 +306,15 @@ BOOL STDCALL NtGdiGetBitmapDimensionEx(HBITMAP  hBitmap,
 {
   PBITMAPOBJ  bmp;
 
-  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  bmp = BITMAPOBJ_LockBitmap(hBitmap);
   if (bmp == NULL)
   {
     return FALSE;
   }
 
   *Dimension = bmp->size;
+
+  BITMAPOBJ_UnlockBitmap(hBitmap);
 
   return  TRUE;
 }
@@ -360,7 +363,7 @@ LONG STDCALL NtGdiSetBitmapBits(HBITMAP  hBitmap,
   LONG height, ret;
   PBITMAPOBJ bmp;
 
-  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  bmp = BITMAPOBJ_LockBitmap(hBitmap);
   if (bmp == NULL || Bits == NULL)
   {
     return 0;
@@ -433,7 +436,7 @@ BOOL STDCALL NtGdiSetBitmapDimensionEx(HBITMAP  hBitmap,
 {
   PBITMAPOBJ  bmp;
 
-  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  bmp = BITMAPOBJ_LockBitmap(hBitmap);
   if (bmp == NULL)
   {
     return FALSE;
@@ -522,7 +525,7 @@ HBITMAP FASTCALL BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
   HBITMAP  res;
   BITMAP  bm;
 
-  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  bmp = BITMAPOBJ_LockBitmap(hBitmap);
   if (bmp == NULL)
   {
     return 0;

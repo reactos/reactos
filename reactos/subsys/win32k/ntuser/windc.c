@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.21 2003/08/19 11:48:50 weiden Exp $
+/* $Id: windc.c,v 1.22 2003/08/20 07:45:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -170,7 +170,7 @@ VOID STATIC STDCALL
 DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	       BOOL SetClipOrigin)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   if (WindowObject == NULL)
     {
       dc->w.DCOrgX = 0;
@@ -189,7 +189,7 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	  dc->w.DCOrgY = WindowObject->ClientRect.top;
 	}
     }
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 }
 
 

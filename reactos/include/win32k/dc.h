@@ -119,15 +119,10 @@ typedef struct
 
 /*  Internal functions  */
 
-/*
-#define  DC_PtrToHandle(pDC)  \
-  ((HDC) GDIOBJ_PtrToHandle ((PGDIOBJ) pDC, GO_DC_MAGIC))
-*/
-
-#define  DC_HandleToPtr(hDC)  \
-  ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GO_DC_MAGIC))
-#define  DC_ReleasePtr(hDC)  \
-  GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GO_DC_MAGIC)
+#define  DC_LockDc(hDC)  \
+  ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
+#define  DC_UnlockDc(hDC)  \
+  GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC)
 
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(LPCWSTR  Driver);

@@ -16,14 +16,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.26 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: fillshap.c,v 1.27 2003/08/20 07:45:02 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/fillshap.h>
+#include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/pen.h>
+#include <win32k/region.h>
 #include <include/error.h>
 #include <include/object.h>
 #include <include/inteng.h>
@@ -140,7 +142,7 @@ IntPolygon(PDC          dc,
 	  Points[CurrentPoint].y += dc->w.DCOrgY;
 	}
 
-      RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+      RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
       //ei not yet implemented ASSERT(RectBounds);
 
       if (PATH_IsPathOpen(dc->w.path)) 
@@ -162,11 +164,11 @@ IntPolygon(PDC          dc,
 
 #if 1
 	/* Now fill the polygon with the current brush. */
-	FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	ASSERT(FillBrushObj);
 	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
 	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
-	GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 #endif
 
 	/* make BRUSHOBJ from current pen. */
@@ -203,15 +205,15 @@ IntPolygon(PDC          dc,
 	}
 #if 0
 	/* Now fill the polygon with the current brush. */
-	FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	ASSERT(FillBrushObj);
 	if ( FillBrushObj->logbrush.lbStyle != BS_NULL )
 	  ret = FillPolygon ( dc, SurfObj, FillBrushObj, dc->w.ROPmode, Points, Count, DestRect );
-	GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+	BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 #endif
       }
 
-      GDIOBJ_UnlockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+      RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
     }
     ExFreePool ( Points );
   }
@@ -230,14 +232,14 @@ NtGdiPolygon(HDC          hDC,
 
   //DPRINT("In NtGdiPolygon()\n");
 
-  dc = DC_HandleToPtr ( hDC );
+  dc = DC_LockDc ( hDC );
 
   if ( !dc )
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
   else
   {
     ret = IntPolygon ( dc, UnsafePoints, Count );
-    DC_ReleasePtr ( hDC );
+    DC_UnlockDc ( hDC );
   }
 
   return ret;
@@ -270,7 +272,7 @@ IntRectangle(PDC dc,
 
   ASSERT ( dc ); // caller's responsibility to set this up
 
-  RectBounds = GDIOBJ_LockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+  RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
   //ei not yet implemented ASSERT(RectBounds);
 
   if ( PATH_IsPathOpen(dc->w.path) )
@@ -284,7 +286,7 @@ IntRectangle(PDC dc,
     TopRect    += dc->w.DCOrgY;
     BottomRect += dc->w.DCOrgY - 1;
 
-    FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+    FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 
     ASSERT(FillBrushObj); // FIXME - I *think* this should always happen...
     // it would be nice to remove the following if statement if that proves to be true
@@ -310,7 +312,7 @@ IntRectangle(PDC dc,
       }
     }
 
-    GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
+    BRUSHOBJ_UnlockBrush(dc->w.hBrush);
 
     /* make BRUSHOBJ from current pen. */
     HPenToBrushObj ( &PenBrushObj, dc->w.hPen );
@@ -352,7 +354,7 @@ IntRectangle(PDC dc,
   }
 
   // FIXME: Move current position in DC?
-  GDIOBJ_UnlockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
   return TRUE;
 }
 
@@ -364,13 +366,13 @@ NtGdiRectangle(HDC  hDC,
               int  RightRect,
               int  BottomRect)
 {
-  DC   *dc = DC_HandleToPtr(hDC);
+  DC   *dc = DC_LockDc(hDC);
   BOOL  ret = FALSE; // default to failure
 
   if ( dc )
   {
     ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    DC_ReleasePtr ( hDC );
+    DC_UnlockDc ( hDC );
   }
 
   return ret;

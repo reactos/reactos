@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.24 2003/08/19 11:48:50 weiden Exp $
+/* $Id: brush.c,v 1.25 2003/08/20 07:45:02 gvg Exp $
  */
 
 
@@ -134,15 +134,15 @@ HBRUSH STDCALL NtGdiCreateDIBPatternBrushPt(CONST VOID  *PackedDIB,
   }
   size += DIB_BitmapInfoSize (info, Usage);
 
-  logbrush.lbHatch = (LONG) GDIOBJ_AllocObj(size, GO_MAGIC_DONTCARE);
+  logbrush.lbHatch = (LONG) GDIOBJ_AllocObj(size, GDI_OBJECT_TYPE_DONTCARE, NULL);
   if (logbrush.lbHatch == 0)
   {
     return 0;
   }
-  newInfo = (PBITMAPINFO) GDIOBJ_LockObj ((HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE);
+  newInfo = (PBITMAPINFO) GDIOBJ_LockObj ((HGDIOBJ) logbrush.lbHatch, GDI_OBJECT_TYPE_DONTCARE);
   ASSERT(newInfo);
   memcpy(newInfo, info, size);
-  GDIOBJ_UnlockObj( (HGDIOBJ) logbrush.lbHatch, GO_MAGIC_DONTCARE );
+  GDIOBJ_UnlockObj((HGDIOBJ) logbrush.lbHatch, GDI_OBJECT_TYPE_DONTCARE);
 
   return  NtGdiCreateBrushIndirect (&logbrush);
 }
@@ -258,7 +258,7 @@ BOOL STDCALL NtGdiPolyPatBlt(HDC hDC,
 	int i;
 	PATRECT r;
 	PBRUSHOBJ BrushObj;
-	DC *dc = DC_HandleToPtr(hDC);
+	DC *dc = DC_LockDc(hDC);
 	if (dc == NULL)
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -267,12 +267,12 @@ BOOL STDCALL NtGdiPolyPatBlt(HDC hDC,
 	for (i = 0;i<cRects;i++)
 	{
 		r = *pRects;
-		BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(r.hBrush, GO_BRUSH_MAGIC);
+		BrushObj = BRUSHOBJ_LockBrush(r.hBrush);
 		IntPatBlt(dc,r.r.left,r.r.top,r.r.right,r.r.bottom,dwRop,BrushObj);
-		GDIOBJ_UnlockObj(r.hBrush , GO_BRUSH_MAGIC );
+		BRUSHOBJ_UnlockBrush(r.hBrush);
 		pRects++;
 	}
-	DC_ReleasePtr( hDC );
+	DC_UnlockDc( hDC );
 	return TRUE;
 }
 
@@ -284,7 +284,7 @@ BOOL STDCALL NtGdiPatBlt(HDC  hDC,
 			DWORD  ROP)
 {
   PBRUSHOBJ BrushObj;
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   BOOL ret;
 
   if (dc == NULL)
@@ -293,11 +293,11 @@ BOOL STDCALL NtGdiPatBlt(HDC  hDC,
       return(FALSE);
     }
 
-  BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+  BrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ret = IntPatBlt(dc,XLeft,YLeft,Width,Height,ROP,BrushObj);
 
-  GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
-  DC_ReleasePtr( hDC );
+  BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+  DC_UnlockDc( hDC );
   return(ret);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: line.c,v 1.21 2003/08/20 07:45:02 gvg Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -62,12 +62,12 @@ NtGdiArc(HDC  hDC,
         int  XEndArc,
         int  YEndArc)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   if(!dc) return FALSE;
 
   if(PATH_IsPathOpen(dc->w.path))
   {
-    DC_ReleasePtr ( hDC );
+    DC_UnlockDc ( hDC );
     return PATH_Arc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                     XStartArc, YStartArc, XEndArc, YEndArc);
   }
@@ -76,7 +76,7 @@ NtGdiArc(HDC  hDC,
 //   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
 //          XStartArc, YStartArc, XEndArc, YEndArc);
 
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return TRUE;
 }
 
@@ -99,7 +99,7 @@ NtGdiArcTo(HDC  hDC,
   if ( !NtGdiLineTo(hDC, XRadial1, YRadial1) )
     return FALSE;
 
-  //dc = DC_HandleToPtr(hDC);
+  //dc = DC_LockDc(hDC);
 
   //if(!dc) return FALSE;
 
@@ -107,7 +107,7 @@ NtGdiArcTo(HDC  hDC,
   result = NtGdiArc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                    XRadial1, YRadial1, XRadial2, YRadial2);
 
-  //DC_ReleasePtr( hDC );
+  //DC_UnlockDc( hDC );
 
   // If no error occured, the current position is moved to the ending point of the arc.
   if(result)
@@ -128,13 +128,13 @@ INT
 STDCALL
 NtGdiGetArcDirection(HDC  hDC)
 {
-  PDC dc = DC_HandleToPtr (hDC);
+  PDC dc = DC_LockDc (hDC);
   int ret = 0; // default to failure
 
   if ( dc )
   {
     ret = IntGetArcDirection ( dc );
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
   }
 
   return ret;
@@ -146,7 +146,7 @@ NtGdiLineTo(HDC  hDC,
            int  XEnd,
            int  YEnd)
 {
-  DC      *dc = DC_HandleToPtr(hDC);
+  DC      *dc = DC_LockDc(hDC);
   SURFOBJ *SurfObj;
   BOOL     Ret;
   BRUSHOBJ PenBrushObj;
@@ -162,15 +162,15 @@ NtGdiLineTo(HDC  hDC,
 
   if (PATH_IsPathOpen(dc->w.path))
     {
-      DC_ReleasePtr(hDC);
+      DC_UnlockDc(hDC);
       Ret = PATH_LineTo(hDC, XEnd, YEnd);
       if (Ret)
 	{
 	  // FIXME - PATH_LineTo should maybe do this...
-	  dc = DC_HandleToPtr(hDC);
+	  dc = DC_LockDc(hDC);
 	  dc->w.CursPosX = XEnd;
 	  dc->w.CursPosY = YEnd;
-	  DC_ReleasePtr(hDC);
+	  DC_UnlockDc(hDC);
 	}
       return Ret;
     }
@@ -218,7 +218,7 @@ NtGdiLineTo(HDC  hDC,
       dc->w.CursPosX = XEnd;
       dc->w.CursPosY = YEnd;
     }
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   return Ret;
 }
@@ -230,7 +230,7 @@ NtGdiMoveToEx(HDC      hDC,
              int      Y,
              LPPOINT  Point)
 {
-  DC   *dc = DC_HandleToPtr( hDC );
+  DC   *dc = DC_LockDc( hDC );
   BOOL  PathIsOpen;
 
   if ( !dc ) return FALSE;
@@ -245,7 +245,7 @@ NtGdiMoveToEx(HDC      hDC,
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
 
-  DC_ReleasePtr ( hDC );
+  DC_UnlockDc ( hDC );
 
   if ( PathIsOpen )
     return PATH_MoveTo ( hDC );
@@ -259,14 +259,14 @@ NtGdiPolyBezier(HDC            hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to FAILURE
 
   if ( !dc ) return FALSE;
 
   if ( PATH_IsPathOpen(dc->w.path) )
   {
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
     return PATH_PolyBezier ( hDC, pt, Count );
   }
 
@@ -283,7 +283,7 @@ NtGdiPolyBezier(HDC            hDC,
       ExFreePool(Pts);
     }
   }
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return ret;
 }
 
@@ -293,7 +293,7 @@ NtGdiPolyBezierTo(HDC  hDC,
                  CONST LPPOINT  pt,
                  DWORD  Count)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to failure
 
   if ( !dc ) return ret;
@@ -318,7 +318,7 @@ NtGdiPolyBezierTo(HDC  hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return ret;
 }
 
@@ -351,7 +351,7 @@ IntPolyline(PDC           dc,
   if ( PATH_IsPathOpen ( dc->w.path ) )
     return PATH_Polyline ( dc, pt, Count );
 
-  reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+  reg = RGNDATA_LockRgn(dc->w.hGCClipRgn);
 
   //FIXME: Do somthing with reg...
 
@@ -385,7 +385,7 @@ IntPolyline(PDC           dc,
   }
 
   //Clean up
-  GDIOBJ_UnlockObj ( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+  RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
 
   return ret;
 }
@@ -396,14 +396,14 @@ NtGdiPolyline(HDC            hDC,
              CONST LPPOINT  pt,
              int            Count)
 {
-  DC    *dc = DC_HandleToPtr(hDC);
+  DC    *dc = DC_LockDc(hDC);
   BOOL   ret = FALSE; // default to failure
 
   if ( dc )
   {
     ret = IntPolyline ( dc, pt, Count );
 
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
   }
 
   return ret;
@@ -415,7 +415,7 @@ NtGdiPolylineTo(HDC            hDC,
                CONST LPPOINT  pt,
                DWORD          Count)
 {
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to failure
 
   if ( !dc ) return ret;
@@ -441,7 +441,7 @@ NtGdiPolylineTo(HDC            hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return ret;
 }
 
@@ -463,7 +463,7 @@ NtGdiSetArcDirection(HDC  hDC,
   PDC  dc;
   INT  nOldDirection = 0; // default to FAILURE
 
-  dc = DC_HandleToPtr (hDC);
+  dc = DC_LockDc (hDC);
   if ( !dc ) return 0;
 
   if ( ArcDirection == AD_COUNTERCLOCKWISE || ArcDirection == AD_CLOCKWISE )
@@ -472,7 +472,7 @@ NtGdiSetArcDirection(HDC  hDC,
     dc->w.ArcDirection = ArcDirection;
   }
 
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return nOldDirection;
 }
 /* EOF */

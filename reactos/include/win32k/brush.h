@@ -8,15 +8,10 @@
 #define NB_HATCH_STYLES  6
 
 #define  BRUSHOBJ_AllocBrush()  \
-  ((HBRUSH) GDIOBJ_AllocObj (sizeof (BRUSHOBJ), GO_BRUSH_MAGIC))
-#define  BRUSHOBJ_FreeBrush(hBrush)  GDIOBJ_FreeObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC, GDIOBJFLAG_DEFAULT)
-/*#define  BRUSHOBJ_HandleToPtr(hBrush)  \
-  ((PBRUSHOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBrush, GO_BRUSH_MAGIC))
-#define  BRUSHOBJ_PtrToHandle(pBrushObj)  \
-  ((HBRUSH) GDIOBJ_PtrToHandle ((PGDIOBJ) pBrushObj, GO_BRUSH_MAGIC))
-*/
-#define  BRUSHOBJ_LockBrush(hBrush) ((PBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC))
-#define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC)
+  ((HBRUSH) GDIOBJ_AllocObj (sizeof (BRUSHOBJ), GDI_OBJECT_TYPE_BRUSH, NULL))
+#define  BRUSHOBJ_FreeBrush(hBrush)  GDIOBJ_FreeObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH, GDIOBJFLAG_DEFAULT)
+#define  BRUSHOBJ_LockBrush(hBrush) ((PBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 
 HBRUSH
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.14 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: path.c,v 1.15 2003/08/20 07:45:02 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -69,13 +69,13 @@ BOOL
 STDCALL
 NtGdiCloseFigure ( HDC hDC )
 {
-  PDC dc = DC_HandleToPtr ( hDC );
+  PDC dc = DC_LockDc ( hDC );
   BOOL ret = FALSE; // default to failure
 
   if ( dc )
   {
     ret = IntCloseFigure ( dc );
-    DC_ReleasePtr ( hDC );
+    DC_UnlockDc ( hDC );
   }
 
   return ret;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.43 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: text.c,v 1.44 2003/08/20 07:45:02 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -719,7 +719,7 @@ NtGdiGetTextExtentExPoint(HDC hDC,
       return FALSE;
     }
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
       if (NULL != Dx)
@@ -731,7 +731,7 @@ NtGdiGetTextExtentExPoint(HDC hDC,
       return FALSE;
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
   Result = TextIntGetTextExtentPoint(TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
   TEXTOBJ_UnlockText(dc->w.hFont);
@@ -812,7 +812,7 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   BOOLEAN Result;
   PTEXTOBJ TextObj;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
 
   if (NULL == dc)
     {
@@ -852,7 +852,7 @@ NtGdiGetTextExtentPoint32(HDC hDC,
       return FALSE;
     }
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
       ExFreePool(String);
@@ -860,13 +860,13 @@ NtGdiGetTextExtentPoint32(HDC hDC,
       return FALSE;
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
   Result = TextIntGetTextExtentPoint (
 	  TextObj, String, Count, 0, NULL, NULL, &Size);
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   ASSERT(dc); // it succeeded earlier, it should now, too
   TEXTOBJ_UnlockText(dc->w.hFont);
-  DC_ReleasePtr(hDC);
+  DC_UnlockDc(hDC);
 
   ExFreePool(String);
   if (! Result)
@@ -906,7 +906,7 @@ NtGdiGetTextMetrics(HDC hDC,
   FT_Face Face;
   ULONG Error;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (NULL == dc || NULL == tm)
   {
     Status = STATUS_INVALID_PARAMETER;
@@ -948,7 +948,7 @@ NtGdiGetTextMetrics(HDC hDC,
       ASSERT(FALSE);
       Status = STATUS_INVALID_HANDLE;
     }
-    DC_ReleasePtr(hDC);
+    DC_UnlockDc(hDC);
   }
 
   return NT_SUCCESS(Status);
@@ -986,14 +986,14 @@ NtGdiSetTextAlign(HDC  hDC,
   UINT prevAlign;
   DC *dc;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
     {
       return  0;
     }
   prevAlign = dc->w.textAlign;
   dc->w.textAlign = Mode;
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  prevAlign;
 }
 
@@ -1003,7 +1003,7 @@ NtGdiSetTextColor(HDC hDC,
                  COLORREF color)
 {
   COLORREF  oldColor;
-  PDC  dc = DC_HandleToPtr(hDC);
+  PDC  dc = DC_LockDc(hDC);
 
   if (!dc)
   {
@@ -1012,7 +1012,7 @@ NtGdiSetTextColor(HDC hDC,
 
   oldColor = dc->w.textColor;
   dc->w.textColor = color;
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return  oldColor;
 }
 
@@ -1035,7 +1035,7 @@ NtGdiTextOut(HDC  hDC,
 {
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
-  DC *dc = DC_HandleToPtr(hDC);
+  DC *dc = DC_LockDc(hDC);
   SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
   int error, glyph_index, n, i;
   FT_Face face;
@@ -1202,7 +1202,7 @@ NtGdiTextOut(HDC  hDC,
   TEXTOBJ_UnlockText( dc->w.hFont );
   BRUSHOBJ_UnlockBrush(hBrush);
   NtGdiDeleteObject( hBrush );
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return TRUE;
 
 fail:
@@ -1211,7 +1211,7 @@ fail:
     BRUSHOBJ_UnlockBrush(hBrush);
     NtGdiDeleteObject( hBrush );
   }
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
   return FALSE;
 }
 

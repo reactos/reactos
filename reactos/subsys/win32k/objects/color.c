@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.20 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: color.c,v 1.21 2003/08/20 07:45:02 gvg Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -198,7 +198,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
   PDC dc;
   PPALOBJ palObj;
 
-  if( (dc = DC_HandleToPtr(hDC) ) )
+  if( (dc = DC_LockDc(hDC) ) )
   {
     HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : NtGdiGetStockObject(DEFAULT_PALETTE);
     palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
@@ -211,7 +211,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
                                        palObj->logpalette->palNumEntries, Color);
 	// FIXME: release hpal!!
 //    GDI_ReleaseObj( hpal );
-    DC_ReleasePtr( hDC );
+    DC_UnlockDc( hDC );
   }
 
   return nearest;
@@ -330,13 +330,13 @@ UINT STDCALL NtGdiRealizePalette(HDC  hDC)
   PSURFGDI SurfGDI;
   BOOLEAN success;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if (!dc)
   	return 0;
 
   palPtr = (PPALOBJ)AccessUserObject((ULONG)dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
-  systemPalette = NtGdiGetStockObject((INT)STOCK_DEFAULT_PALETTE);
+  systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   sysPtr = (PPALOBJ)AccessInternalObject((ULONG)systemPalette);
   palGDI = (PPALGDI)AccessInternalObject((ULONG)dc->w.hPalette);
   sysGDI = (PPALGDI)AccessInternalObject((ULONG)systemPalette);
@@ -436,11 +436,11 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
   HPALETTE oldPal;
 
   // FIXME: mark the palette as a [fore\back]ground pal
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   if( dc ){
   	oldPal = dc->w.hPalette;
   	dc->w.hPalette = hpal;
-  	DC_ReleasePtr( hDC );
+  	DC_UnlockDc( hDC );
   }
 
   return oldPal;

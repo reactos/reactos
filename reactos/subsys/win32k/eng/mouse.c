@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.28 2003/08/19 11:48:49 weiden Exp $
+/* $Id: mouse.c,v 1.29 2003/08/20 07:45:01 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -232,10 +232,10 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     return;
   }
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_LockDc(hDC);
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-  DC_ReleasePtr( hDC );
+  DC_UnlockDc( hDC );
 
   /* Compile the total mouse movement change and dispatch button events. */
   for (i = 0; i < InputCount; i++)
@@ -324,10 +324,10 @@ EnableMouse(HDC hDisplayDC)
 
   if( hDisplayDC )
   {
-    dc = DC_HandleToPtr(hDisplayDC);
+    dc = DC_LockDc(hDisplayDC);
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-    DC_ReleasePtr( hDisplayDC );
+    DC_UnlockDc( hDisplayDC );
 
     /* Create the default mouse cursor. */
     mouse_width = 32;
