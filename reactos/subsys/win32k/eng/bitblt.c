@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.29 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: bitblt.c,v 1.30 2003/12/08 11:11:11 fireball Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -471,4 +471,109 @@ IntEngBitBlt(SURFOBJ *DestObj,
 
   return ret;
 }
+
+BOOL STDCALL
+IntEngStretchBlt(SURFOBJ *DestObj,
+             SURFOBJ *SourceObj,
+             SURFOBJ *Mask,
+             CLIPOBJ *ClipRegion,
+             XLATEOBJ *ColorTranslation,
+             RECTL *DestRect,
+             RECTL *SourceRect,
+             POINTL *pMaskOrigin,
+             BRUSHOBJ *Brush,
+             POINTL *BrushOrigin,
+             ULONG Mode)
+{
+  BOOLEAN ret;
+  SURFGDI *DestGDI;
+  SURFGDI *SourceGDI;
+  RECTL OutputRect;
+  RECTL InputRect;
+  COLORADJUSTMENT ca;
+  POINT MaskOrigin;
+
+  if (pMaskOrigin != NULL)
+    {
+      MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
+    }
+
+  if (NULL != SourceRect)
+    {
+      InputRect = *SourceRect;
+    }
+
+  // FIXME: Clipping is taken from IntEngBitBlt w/o modifications!
+  
+  /* Clip against the bounds of the clipping region so we won't try to write
+   * outside the surface */
+  if (NULL != ClipRegion)
+    {
+      if (! EngIntersectRect(&OutputRect, DestRect, &ClipRegion->rclBounds))
+	{
+	  return TRUE;
+	}
+	  DPRINT("Clipping isn't handled in IntEngStretchBlt() correctly yet\n");
+      //InputPoint.x += OutputRect.left - DestRect->left;
+      //InputPoint.y += OutputRect.top - DestRect->top;
+    }
+  else
+    {
+      OutputRect = *DestRect;
+    }
+
+  if (NULL != SourceObj)
+    {
+    SourceGDI = (SURFGDI*) AccessInternalObjectFromUserObject(SourceObj);
+    MouseSafetyOnDrawStart(SourceObj, SourceGDI, InputRect.left, InputRect.top,
+                           (InputRect.left + abs(InputRect.right - InputRect.left)),
+			   (InputRect.top + abs(InputRect.bottom - InputRect.top)));
+    }
+
+  /* No success yet */
+  ret = FALSE;
+  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
+  MouseSafetyOnDrawStart(DestObj, DestGDI, OutputRect.left, OutputRect.top,
+                         OutputRect.right, OutputRect.bottom);
+
+  /* Prepare color adjustment */
+
+  /* Call the driver's DrvStretchBlt if available */
+  if (NULL != DestGDI->StretchBlt)
+    {
+      /* Drv->StretchBlt params: (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
+      SURFOBJ *psoDest
+      SURFOBJ *psoSrc
+      SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC
+      CLIPOBJ *pco
+      XLATEOBJ *pxlo
+      COLORADJUSTMENT *pca
+      POINTL *pptlHTOrg
+      RECTL *prclDest
+      RECTL *prclSrc
+      POINTL *pptlMask // is it * or not?!
+      ULONG iMode
+      */
+      //DPRINT1("Calling DrvStretchBlt(%x, %x, %x, %x, %x,  ca, %x)...\n", DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, BrushOrigin);
+      ret = DestGDI->StretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode); // FIXME: MaskOrigin is NULL !
+    }
+
+  if (! ret)
+    {
+      ret = FALSE;
+      //ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+      //                &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
+      //                Rop4);
+    }
+
+  MouseSafetyOnDrawEnd(DestObj, DestGDI);
+  if (NULL != SourceObj)
+    {
+    MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
+    }
+
+  return ret;
+}
+
 /* EOF */
