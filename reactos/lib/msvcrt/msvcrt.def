@@ -116,7 +116,7 @@ __doserrno
 __fpecode
 __getmainargs
 __initenv DATA
-__isascii
+__isascii=NTDLL.__isascii
 __iscsym
 __iscsymf
 __lc_codepage
@@ -493,10 +493,10 @@ _setmbcp
 _setmode
 ;_setsystime
 _sleep
-_snprintf
+_snprintf=msvcrt__snprintf
 ;_snscanf
 ;_snwscanf
-_snwprintf
+_snwprintf=msvcrt__snwprintf
 _sopen
 _spawnl
 _spawnle
@@ -554,8 +554,8 @@ _utime
 ;_utime64
 ;_vscprintf
 ;_vscwprintf
-_vsnprintf
-_vsnwprintf
+_vsnprintf=msvcrt__vsnprintf
+_vsnwprintf=msvcrt__vsnwprintf
 _waccess
 _wasctime
 _wchdir
@@ -706,17 +706,17 @@ getwc
 getwchar
 gmtime
 is_wctype
-isalnum
+isalnum=NTDLL.isalnum
 isalpha
-iscntrl
+iscntrl=NTDLL.iscntrl
 isdigit
-isgraph
+isgraph=NTDLL.isgraph
 isleadbyte
 islower
-isprint
-ispunct
+isprint=NTDLL.isprint
+ispunct=NTDLL.ispunct
 isspace
-isupper
+isupper=NTDLL.isupper
 iswalnum
 iswalpha
 iswascii
@@ -751,7 +751,7 @@ memset
 mktime
 modf
 perror
-pow
+pow=NTDLL.pow
 printf
 putc
 putchar
@@ -772,10 +772,10 @@ setvbuf
 signal
 sin
 sinh
-sprintf
+sprintf=msvcrt_sprintf
 sqrt
 srand
-sscanf
+sscanf=msvcrt_sscanf
 strcat
 strchr
 strcmp
@@ -797,7 +797,7 @@ strtok
 strtol
 strtoul
 strxfrm
-swprintf
+swprintf=msvcrt_swprintf
 swscanf
 system
 tan
@@ -814,7 +814,7 @@ ungetwc
 vfprintf
 vfwprintf
 vprintf
-vsprintf
+vsprintf=msvcrt_vsprintf
 vswprintf
 vwprintf
 wcscat

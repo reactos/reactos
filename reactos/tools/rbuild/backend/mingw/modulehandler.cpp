@@ -802,12 +802,14 @@ MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
 		          "\t${rm} %s\n",
 		          junk_tmp.c_str () );
 
+		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s --kill-at\n",
+		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
 		          base_tmp.c_str (),
 		          ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-		          temp_exp.c_str () );
+		          temp_exp.c_str (),
+		          killAt.c_str () );
 
 		fprintf ( fMakefile,
 		          "\t${rm} %s\n",
@@ -1209,11 +1211,13 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ( const Module& module )
 		          FixupTargetFilename( module.GetDependencyPath () ).c_str (),
 		          definitionDependencies.c_str () );
 
+		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
 		          module.GetTargetName ().c_str (),
 		          ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str (),
+		          killAt.c_str () );
 	}
 }
 
@@ -1350,11 +1354,13 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n",
 	          junk_tmp.c_str () );
+	string killAt = module.mangledSymbols ? "" : "--kill-at";
 	fprintf ( fMakefile,
-	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s --kill-at\n",
+	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s %s\n",
 	          targetName.c_str (),
 	          base_tmp.c_str (),
-	          temp_exp.c_str () );
+	          temp_exp.c_str (),
+	          killAt.c_str () );
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n",
 	          base_tmp.c_str () );
@@ -1554,12 +1560,13 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 
 	if ( module.files.size () > 0 )
 	{
-
+		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
 		          module.GetTargetName ().c_str (),
 		          (module.GetBasePath () + SSEP + module.importLibrary->definition).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str (),
+		          killAt.c_str () );
 	}
 
 	if (module.files.size () > 0)
@@ -1638,7 +1645,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	if ( module.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module );
-
+	
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
 		          objectFilenames.c_str (),

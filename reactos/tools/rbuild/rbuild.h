@@ -96,6 +96,7 @@ public:
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
+	bool mangledSymbols;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;

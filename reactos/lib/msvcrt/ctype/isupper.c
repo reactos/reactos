@@ -3,13 +3,6 @@
 
 
 #undef isupper
-/*
- * @implemented
- */
-int isupper(int c)
-{
-    return _isctype(c, _UPPER);
-}
 
 /*
  * @implemented

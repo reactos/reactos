@@ -25,10 +25,7 @@
 
 /* Read formatted input from S, according to the format string FORMAT.  */
 /* VARARGS2 */
-/*
- * @implemented
- */
-int sscanf (const char *s,const char *format, ...)
+int msvcrt_sscanf (const char *s,const char *format, ...)
 {
   va_list arg;
   int done;

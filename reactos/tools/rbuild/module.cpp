@@ -71,6 +71,12 @@ Module::Module ( const Project& project,
 		entrypoint = att->value;
 	else
 		entrypoint = GetDefaultModuleEntrypoint ();
+
+	att = moduleNode.GetAttribute ( "mangledsymbols", false );
+	if ( att != NULL )
+		mangledSymbols = att->value != "false";
+	else
+		mangledSymbols = false;
 }
 
 Module::~Module ()

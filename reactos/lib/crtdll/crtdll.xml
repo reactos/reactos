@@ -1,0 +1,151 @@
+<module name="crtdll" type="win32dll" mangledsymbols="true">
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-lgcc</linkerflag>
+	<importlibrary definition="crtdll.def" />
+	<include base="crtdll">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__USE_W32API" />
+	<define name="_WIN32_IE">0x600</define>
+	<define name="_WIN32_WINNT">0x501</define>
+	<define name="__REACTOS__" />
+	<define name="USE_MSVCRT_PREFIX" />
+	<define name="_MSVCRT_LIB_" />
+	<library>string</library>
+	<library>kernel32</library>
+	<library>ntdll</library>
+	<library>crt</library>
+	<directory name="ctype">
+		<file>isctype.c</file>
+	</directory>
+	<directory name="except">
+		<file>abnorter.c</file>
+		<file>exhand2.c</file>
+		<file>matherr.c</file>
+		<file>unwind.c</file>
+	</directory>
+	<directory name="io">
+		<file>create.c</file>
+		<file>dup.c</file>
+		<file>eof.c</file>
+		<file>find.c</file>
+		<file>fmode.c</file>
+		<file>lseek.c</file>
+		<file>open.c</file>
+		<file>pipe.c</file>
+		<file>read.c</file>
+		<file>unlink.c</file>
+		<file>write.c</file>
+	</directory>
+	<directory name="math">
+		<file>acosh.c</file>
+		<file>asinh.c</file>
+		<file>atanh.c</file>
+		<file>ceil.c</file>
+		<file>floor.c</file>
+		<file>huge_val.c</file>
+	</directory>
+	<directory name="malloc">
+		<file>expand.c</file>
+		<file>heap.c</file>
+	</directory>
+	<directory name="misc">
+		<file>amsg.c</file>
+		<file>debug.c</file>
+		<file>dllmain.c</file>
+		<file>GetArgs.c</file>
+		<file>purecall.c</file>
+		<file>setnew.c</file>
+	</directory>
+	<directory name="process">
+		<file>_cwait.c</file>
+		<file>_system.c</file>
+		<file>spawnl.c</file>
+		<file>spawnlp.c</file>
+		<file>spawnlpe.c</file>
+		<file>spawnvp.c</file>
+		<file>spawnv.c</file>
+		<file>spawnve.c</file>
+		<file>spawnle.c</file>
+		<file>execl.c</file>
+		<file>execlp.c</file>
+		<file>execlpe.c</file>
+		<file>execvpe.c</file>
+		<file>execvp.c</file>
+		<file>execv.c</file>
+		<file>execle.c</file>
+		<file>execve.c</file>
+		<file>thread.c</file>
+	</directory>
+	<directory name="signal">
+		<file>xcptfil.c</file>
+		<file>xcptinfo.c</file>
+	</directory>
+	<directory name="stdio">
+		<file>getenv.c</file>
+		<file>ferror.c</file>
+		<file>fflush.c</file>
+		<file>fgetchar.c</file>
+		<file>fgets.c</file>
+		<file>filbuf.c</file>
+		<file>fileno.c</file>
+		<file>fopen.c</file>
+		<file>fputchar.c</file>
+		<file>fputs.c</file>
+		<file>fread.c</file>
+		<file>freopen.c</file>
+		<file>fscanf.c</file>
+		<file>frlist.c</file>
+		<file>fsopen.c</file>
+		<file>ftell.c</file>
+		<file>fwrite.c</file>
+		<file>getc.c</file>
+		<file>getchar.c</file>
+		<file>gets.c</file>
+		<file>getw.c</file>
+		<file>popen.c</file>
+		<file>printf.c</file>
+		<file>putc.c</file>
+		<file>putchar.c</file>
+		<file>puts.c</file>
+		<file>remove.c</file>
+		<file>setbuffe.c</file>
+		<file>setlineb.c</file>
+		<file>stdiohk.c</file>
+	</directory>
+	<directory name="stdlib">
+		<file>errno.c</file>
+		<file>fullpath.c</file>
+		<file>itow.c</file>
+		<file>malloc.c</file>
+		<file>mbstowcs.c</file>
+		<file>putenv.c</file>
+		<file>rand.c</file>
+		<file>wcstomb.c</file>
+	</directory>
+	<directory name="string">
+		<file>lasttok.c</file>
+		<file>strerror.c</file>
+	</directory>
+	<directory name="sys_stat">
+		<file>fstat.c</file>
+		<file>ftime.c</file>
+		<file>systime.c</file>
+		<file>stat.c</file>
+	</directory>
+	<directory name="tchar">
+		<file>strdec.c</file>
+		<file>strinc.c</file>
+		<file>strninc.c</file>
+		<file>strncnt.c</file>
+		<file>strnextc.c</file>
+		<file>strspnp.c</file>
+	</directory>
+	<directory name="time">
+		<file>tz_vars.c</file>
+	</directory>
+	<directory name="wchar">
+		<file>wlasttok.c</file>
+		<file>wcscoll.c</file>
+	</directory>
+	<file>crtdll.rc</file>
+</module>

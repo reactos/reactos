@@ -9,16 +9,6 @@
  */
 #include <msvcrt/ctype.h>
 
-
-#undef isalnum
-/*
- * @implemented
- */
-int isalnum(int c)
-{
-    return _isctype(c, _ALPHA | _DIGIT);
-}
-
 #undef iswalnum
 /*
  * @implemented

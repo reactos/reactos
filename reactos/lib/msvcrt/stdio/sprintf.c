@@ -26,11 +26,9 @@ Cambridge, MA 02139, USA.  */
 
 #undef sprintf
 #undef wsprintf
-/*
- * @implemented
- */
+
 int
-sprintf(char *str, const char *fmt, ...)
+msvcrt_sprintf(char *str, const char *fmt, ...)
 {
   va_list arg;
   int done;
@@ -41,11 +39,8 @@ sprintf(char *str, const char *fmt, ...)
   return done;
 }
 
-/*
- * @implemented
- */
 int
-swprintf(wchar_t *str, const wchar_t *fmt, ...)
+msvcrt_swprintf(wchar_t *str, const wchar_t *fmt, ...)
 {
   va_list arg;
   int done;
@@ -61,11 +56,8 @@ swprintf(wchar_t *str, const wchar_t *fmt, ...)
 /* Write formatted output into S, according to the format
    string FORMAT, writing no more than MAXLEN characters.  */
 /* VARARGS3 */
-/*
- * @implemented
- */
 int
-_snprintf (char *s, size_t maxlen,const char *format, ...)
+msvcrt__snprintf (char *s, size_t maxlen,const char *format, ...)
 {
   va_list arg;
   int done;
@@ -77,11 +69,8 @@ _snprintf (char *s, size_t maxlen,const char *format, ...)
   return done;
 }
 
-/*
- * @implemented
- */
 int
-_snwprintf (wchar_t *s, size_t maxlen,const wchar_t *format, ...)
+msvcrt__snwprintf (wchar_t *s, size_t maxlen,const wchar_t *format, ...)
 {
   va_list arg;
   int done;
