@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2000/10/07 13:41:45 dwelch Exp $
+# $Id: makefile,v 1.9 2001/07/15 18:06:23 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -14,19 +14,15 @@ SVC_DB=w32ksvc.db
 SVC_MASK=0x1000
 
 # DOS and Win32 kernels handle Unix paths too.
-#ifeq ($(DOSCLI),yes)
-#SVC_SERVICE_TABLE_PATH=..\..\subsys\win32k\main
-#SVC_GDI_STUBS_PATH=..\..\lib\gdi32\misc
-#SVC_USER_STUBS_PATH=..\..\lib\user32\misc
-#else
-SVC_SERVICE_TABLE_PATH=../../subsys/win32k/main
-SVC_GDI_STUBS_PATH=../../lib/gdi32/misc
-SVC_USER_STUBS_PATH=../../lib/user32/misc
-#endif
-
-SVC_SERVICE_TABLE=$(SVC_SERVICE_TABLE_PATH)/svctab.c
-SVC_GDI_STUBS=$(SVC_GDI_STUBS_PATH)/win32k.c
-SVC_USER_STUBS=$(SVC_USER_STUBS_PATH)/win32k.c
+ifeq ($(DOSCLI),yes)
+SVC_SERVICE_TABLE=..\..\subsys\win32k\main\svctab.c
+SVC_GDI_STUBS=..\..\lib\gdi32\misc\win32k.c
+SVC_USER_STUBS=..\..\lib\user32\misc\win32k.c
+else
+SVC_SERVICE_TABLE=../../subsys/win32k/main/svctab.c
+SVC_GDI_STUBS=../../lib/gdi32/misc/win32k.c
+SVC_USER_STUBS=../../lib/user32/misc/win32k.c
+endif
 
 SVC_FILES = $(SVC_GDI_STUBS) $(SVC_USER_STUBS) $(SVC_SERVICE_TABLE)
 
