@@ -86,11 +86,13 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
     PWSTR   res = out;
     PCWSTR  cmd;
     LPVOID  pv;
-    WCHAR	tmpBuffer[1024];
-	PWSTR	tmpB = tmpBuffer;
-	WCHAR	tmpEnvBuff[MAX_PATH];
-	WCHAR*	tmpE = tmpEnvBuff;
-	DWORD	envRet;
+    WCHAR   tmpBuffer[1024];
+    PWSTR   tmpB = tmpBuffer;
+    WCHAR   tmpEnvBuff[MAX_PATH];
+    WCHAR*  tmpE = tmpEnvBuff;
+    DWORD   envRet;
+    static const WCHAR wszSPerc[] = {'%','s','%','%',0};
+    static const WCHAR wszPerc[] = {'%',0};
 
     TRACE("%p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
           debugstr_w(lpFile), pidl, args);
@@ -189,8 +191,8 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 	     * Check if this is a env-variable here...
 	     */
 
-	    // Make sure that we have at least one more %.
-	    if (strstrW(fmt, L"%"))
+	    /* Make sure that we have at least one more %.*/
+	    if (strstrW(fmt, wszPerc))
 	    {
 			while (*fmt != '%')
 				*tmpB++ = *fmt++;
@@ -202,16 +204,16 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 			if (envRet == 0 || envRet > MAX_PATH)
 			{
 				TRACE("The env. var can't be found or is bigger than MAX_PATH => useless.");
-				res += sprintfW(res, L"%s%%", tmpBuffer);
+				res += sprintfW(res, wszSPerc, tmpBuffer);
             }
 			else
 			{
 				TRACE("Found it %s. Replacing... \n", debugstr_w(tmpEnvBuff));
-				res += sprintfW(res, L"%s", tmpEnvBuff);
+				res += sprintfW(res, wszSPerc, tmpEnvBuff);
 			}
 		}
 
-	    } // switch
+	    } /* switch */
 
 
             fmt++;
