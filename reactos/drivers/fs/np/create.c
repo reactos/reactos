@@ -87,9 +87,8 @@ NpfsSignalAndRemoveListeningServerInstance(PNPFS_PIPE Pipe,
 	{
 	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
 
-	  KeSetEvent(Waiter->Irp->UserEvent, 0, FALSE);
-	  Waiter->Irp->UserIosb->Status = FILE_PIPE_CONNECTED_STATE;
-	  Waiter->Irp->UserIosb->Information = 0;
+	  Waiter->Irp->IoStatus.Status = FILE_PIPE_CONNECTED_STATE;
+	  Waiter->Irp->IoStatus.Information = 0;
 	  IoCompleteRequest(Waiter->Irp, IO_NO_INCREMENT);
 
 	  RemoveEntryList(&Waiter->Entry);
