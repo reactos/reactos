@@ -1,4 +1,4 @@
-/* $Id: RegistryKey.cpp,v 1.4 2001/01/13 23:54:40 narnaoud Exp $
+/* $Id: RegistryKey.cpp,v 1.5 2002/01/04 22:07:38 hbirr Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -385,6 +385,8 @@ LONG CRegistryKey::GetMaxValueDataSize(DWORD& rdwMaxValueDataBuferSize)
 
 LONG CRegistryKey::GetMaxValueNameLength(DWORD& rdwMaxValueNameBuferSize)
 {
+  rdwMaxValueNameBuferSize = 0;
+
   if (!m_hKey)
     return 0; // the root key abstraction has only subkeys (hives)
   
