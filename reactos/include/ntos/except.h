@@ -14,7 +14,7 @@ typedef enum {
 	ExceptionContinueSearch,
 	ExceptionNestedException,
 	ExceptionCollidedUnwind,
-  ExceptionDismiss  /* ??? */
+	ExceptionDismiss = 0 /* assuming this is the same thing as DISPOSITION_DISMISS */
 } EXCEPTION_DISPOSITION;
 
 
