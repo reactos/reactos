@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.36 2001/01/23 04:37:13 phreak Exp $
+/* $Id: utils.c,v 1.37 2001/02/06 02:03:35 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -638,73 +638,77 @@ LdrGetExportByOrdinal (
  *
  */
 static PVOID
-LdrGetExportByName (
-	PVOID  BaseAddress,
-	PUCHAR SymbolName
-	)
+LdrGetExportByName (PVOID  BaseAddress,
+		    PUCHAR SymbolName)
 {
-	PIMAGE_EXPORT_DIRECTORY	ExportDir;
-	PDWORD			* ExFunctions;
-	PDWORD			* ExNames;
-	USHORT			* ExOrdinals;
-	ULONG			i;
-	PVOID			ExName;
-	ULONG			Ordinal;
+  PIMAGE_EXPORT_DIRECTORY	ExportDir;
+  PDWORD			* ExFunctions;
+  PDWORD			* ExNames;
+  USHORT			* ExOrdinals;
+  ULONG			i;
+  PVOID			ExName;
+  ULONG			Ordinal;
+  ULONG minn, maxn;
 
-//	DPRINT(
-//		"LdrFindExport(Module %x, SymbolName %s)\n",
-//		Module,
-//		SymbolName
-//		);
+  ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+    RtlImageDirectoryEntryToData (BaseAddress,
+				  TRUE,
+				  IMAGE_DIRECTORY_ENTRY_EXPORT,
+				  NULL);
 
-	ExportDir = (PIMAGE_EXPORT_DIRECTORY)
-		RtlImageDirectoryEntryToData (BaseAddress,
-					      TRUE,
-					      IMAGE_DIRECTORY_ENTRY_EXPORT,
-					      NULL);
+  /*
+   * Get header pointers
+   */
+  ExNames = (PDWORD *)RVA(BaseAddress,
+			  ExportDir->AddressOfNames);
+  ExOrdinals = (USHORT *)RVA(BaseAddress,
+			     ExportDir->AddressOfNameOrdinals);
+  ExFunctions = (PDWORD *)RVA(BaseAddress,
+			      ExportDir->AddressOfFunctions);
 
-	/*
-	 * Get header pointers
-	 */
-	ExNames = (PDWORD *)
-		RVA(
-			BaseAddress,
-			ExportDir->AddressOfNames
-			);
-	ExOrdinals = (USHORT *)
-		RVA(
-			BaseAddress,
-			ExportDir->AddressOfNameOrdinals
-			);
-	ExFunctions = (PDWORD *)
-		RVA(
-			BaseAddress,
-			ExportDir->AddressOfFunctions
-			);
-	for (	i = 0;
-		( i < ExportDir->NumberOfFunctions);
-		i++
-		)
+  /*
+   * Try a binary search first
+   */
+  minn = 0, maxn = ExportDir->NumberOfFunctions;
+  while (minn <= maxn)
+    {
+      ULONG mid;
+      LONG res;
+
+      mid = (minn + maxn) / 2;
+
+      ExName = RVA(BaseAddress, ExNames[mid]);
+      res = strcmp(ExName, SymbolName);
+      if (res == 0)
 	{
-		ExName = RVA(
-				BaseAddress,
-				ExNames[i]
-				);
-//		DPRINT(
-//			"Comparing '%s' '%s'\n",
-//			ExName,
-//			SymbolName
-//			);
-		if (strcmp(ExName,SymbolName) == 0)
-		{
-			Ordinal = ExOrdinals[i];
-			return(RVA(BaseAddress, ExFunctions[Ordinal]));
-		}
+	  Ordinal = ExOrdinals[mid];
+	  return(RVA(BaseAddress, ExFunctions[Ordinal]));
 	}
+      else if (res > 0)
+	{
+	  maxn = mid - 1;
+	}
+      else
+	{
+	  minn = mid + 1;
+	}
+    }
+  /*
+   * Fall back on a linear search
+   */
 
-	DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
-
-	return NULL;
+  DbgPrint("LDR: Falling back on a linear search of export table\n");
+  for (i = 0; i < ExportDir->NumberOfFunctions; i++)
+    {
+      ExName = RVA(BaseAddress, ExNames[i]);
+      if (strcmp(ExName,SymbolName) == 0)
+	{
+	  Ordinal = ExOrdinals[i];
+	  return(RVA(BaseAddress, ExFunctions[Ordinal]));
+	}
+    }
+  DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
+  return NULL;
 }
 
 
@@ -1016,12 +1020,13 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
     */
    if (ImageBase != (PVOID) NTHeaders->OptionalHeader.ImageBase)
      {
-	Status = LdrPerformRelocations(NTHeaders, ImageBase);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("LdrPerformRelocations() failed\n");
-	     return NULL;
-	  }
+       DbgPrint("LDR: Performing relocations\n");
+       Status = LdrPerformRelocations(NTHeaders, ImageBase);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("LdrPerformRelocations() failed\n");
+	   return NULL;
+	 }
      }
 
    /*
