@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.22 2004/11/17 23:55:36 gdalsnes Exp $
+/* $Id: work.c,v 1.23 2004/11/21 18:38:51 gdalsnes Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -21,39 +21,16 @@
 
 /* TYPES *********************************************************************/
 
-typedef struct _WORK_QUEUE
-{
-   /*
-    * PURPOSE: Head of the list of waiting work items
-    */
-   LIST_ENTRY Head;
-   
-   /*
-    * PURPOSE: Sychronize access to the work queue
-    */
-   KSPIN_LOCK Lock;
-   
-   /*
-    * PURPOSE: Worker threads with nothing to do wait on this event
-    */
-   KSEMAPHORE Sem;
-   
-   /*
-    * PURPOSE: Thread associated with work queue
-    */
-   HANDLE Thread[NUMBER_OF_WORKER_THREADS];
-} WORK_QUEUE, *PWORK_QUEUE;
-
 /* GLOBALS *******************************************************************/
 
 /*
  * PURPOSE: Queue of items waiting to be processed at normal priority
  */
-WORK_QUEUE EiNormalWorkQueue;
+KQUEUE EiNormalWorkQueue;
 
-WORK_QUEUE EiCriticalWorkQueue;
+KQUEUE EiCriticalWorkQueue;
 
-WORK_QUEUE EiHyperCriticalWorkQueue;
+KQUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -69,52 +46,43 @@ ExWorkerThreadEntryPoint(IN PVOID context)
  * calls PsTerminateSystemThread
  */
 {
-   PWORK_QUEUE queue = (PWORK_QUEUE)context;
+
    PWORK_QUEUE_ITEM item;
    PLIST_ENTRY current;
    
-   for(;;)
-     {
-	current = ExInterlockedRemoveHeadList(&queue->Head,
-					      &queue->Lock);
-	if (current!=NULL)
-	  {
-	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,List);
-	     item->WorkerRoutine(item->Parameter);
-	  }
-	else
-	  {
-	     KeWaitForSingleObject((PVOID)&queue->Sem,
-				   Executive,
-				   KernelMode,
-				   FALSE,
-				   NULL);
-	     DPRINT("Woke from wait\n");
-	  }
-     }
+   while (TRUE) 
+   {
+      current = KeRemoveQueue( (PKQUEUE)context, KernelMode, NULL );
+      item = CONTAINING_RECORD( current, WORK_QUEUE_ITEM, List);
+      item->WorkerRoutine(item->Parameter);
+      
+      if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+      {
+         KeBugCheck(IRQL_NOT_LESS_OR_EQUAL);
+      }
+   }
+   
 }
 
-static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
+static VOID ExInitializeWorkQueue(PKQUEUE WorkQueue,
 				  KPRIORITY Priority)
 {
    ULONG i;
    PETHREAD Thread;
+   HANDLE   hThread;
    
-   InitializeListHead(&WorkQueue->Head);
-   KeInitializeSpinLock(&WorkQueue->Lock);
-   KeInitializeSemaphore(&WorkQueue->Sem,
-			 0,
-			 256);
+   
    for (i=0; i<NUMBER_OF_WORKER_THREADS; i++)
      {
-	PsCreateSystemThread(&WorkQueue->Thread[i],
+        
+   PsCreateSystemThread(&hThread,
 			     THREAD_ALL_ACCESS,
 			     NULL,
 			     NULL,
 			     NULL,
 			     ExWorkerThreadEntryPoint,
-			     WorkQueue);
-	ObReferenceObjectByHandle(WorkQueue->Thread[i],
+              WorkQueue);
+   ObReferenceObjectByHandle(hThread,
 				  THREAD_ALL_ACCESS,
 				  PsThreadType,
 				  KernelMode,
@@ -123,12 +91,17 @@ static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
 	KeSetPriorityThread(&Thread->Tcb,
 			    Priority);
 	ObDereferenceObject(Thread);
+   ZwClose(hThread);
      }
 }
 
 VOID INIT_FUNCTION
 ExInitializeWorkerThreads(VOID)
 {
+   KeInitializeQueue( &EiNormalWorkQueue, NUMBER_OF_WORKER_THREADS );
+   KeInitializeQueue( &EiCriticalWorkQueue , NUMBER_OF_WORKER_THREADS );
+   KeInitializeQueue( &EiHyperCriticalWorkQueue , NUMBER_OF_WORKER_THREADS );
+
    ExInitializeWorkQueue(&EiNormalWorkQueue,
 			 LOW_PRIORITY);
    ExInitializeWorkQueue(&EiCriticalWorkQueue,
@@ -161,40 +134,26 @@ ExQueueWorkItem (PWORK_QUEUE_ITEM	WorkItem,
     switch(QueueType)
     {
     case DelayedWorkQueue:
-	    ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
-				    &WorkItem->List,
-				    &EiNormalWorkQueue.Lock);
-	    KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
-			   IO_NO_INCREMENT,
-			   1,
-			   FALSE);
-	break;
+      KeInsertQueue (
+          &EiNormalWorkQueue,
+          &WorkItem->List
+            );
+   	break;
 	
     case CriticalWorkQueue:
-        ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
-				    &WorkItem->List,
-				    &EiCriticalWorkQueue.Lock);
-        KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
-	       	  	   IO_NO_INCREMENT,
-	       		   1,
-	       		   FALSE);
-	    break;
+            KeInsertQueue (
+              &EiCriticalWorkQueue,
+              &WorkItem->List
+              );
+   	    break;
 
     case HyperCriticalWorkQueue:
-	    ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
-				    &WorkItem->List,
-				    &EiHyperCriticalWorkQueue.Lock);
-	    KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
-			   IO_NO_INCREMENT,
-			   1,
-			   FALSE);
-    	break;
+            KeInsertQueue (
+             &EiHyperCriticalWorkQueue,
+             &WorkItem->List
+             );
+        	break;
 
-#ifdef __USE_W32API
-	case MaximumWorkQueue:
-	   // Unimplemented
-	   break;
-#endif
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.29 2004/10/22 20:18:35 ekohl Exp $
+/* $Id: resource.c,v 1.30 2004/11/21 18:38:51 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,6 +110,17 @@ ExAcquireResourceExclusiveLite (
    DPRINT("ExAcquireResourceExclusiveLite(Resource %x, Wait %d)\n",
 	  Resource, Wait);
    
+   ASSERT_IRQL_LESS(DISPATCH_LEVEL);
+   
+/* undefed for now, since cdfs must be fixed first */
+#if 0    
+   /* At least regular kmode APC's must be disabled 
+    * Note that this requirement is missing in old DDK's */
+   ASSERT(KeGetCurrentThread() == NULL || /* <-Early in the boot process the current thread is obseved to be NULL */
+          KeGetCurrentThread()->KernelApcDisable || 
+          KeGetCurrentIrql() == APC_LEVEL);
+#endif
+
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
 
    /* resource already locked */
@@ -344,7 +355,19 @@ ExAcquireResourceSharedLite (
    
    DPRINT("ExAcquireResourceSharedLite(Resource %x, Wait %d)\n",
 	  Resource, Wait);
+
+   ASSERT_IRQL_LESS(DISPATCH_LEVEL);
    
+/* undefed for now, since cdfs must be fixed first */
+#if 0    
+   /* At least regular kmode APC's must be disabled 
+    * Note that this requirement is missing in old DDK's 
+    */
+   ASSERT(KeGetCurrentThread() == NULL || /* <-Early in the boot process the current thread is obseved to be NULL */
+          KeGetCurrentThread()->KernelApcDisable || 
+          KeGetCurrentIrql() == APC_LEVEL);
+#endif
+
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
    
    /* first, resolve trivial cases */
@@ -808,6 +831,8 @@ ExReleaseResourceForThreadLite (
    
    DPRINT("ExReleaseResourceForThreadLite(Resource %x, ResourceThreadId %x)\n",
 	  Resource, ResourceThreadId);
+   
+   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
    
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
    
