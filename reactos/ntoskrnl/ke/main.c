@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.52 2000/07/04 11:11:03 dwelch Exp $
+/* $Id: main.c,v 1.53 2000/07/08 16:53:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -83,8 +83,16 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     */
    HalInitSystem (0, &KeLoaderBlock);
 
+   /*
+    * Display version number and copyright/warranty message
+    */
    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-
+   HalDisplayString("Copyright 2000 (So who owns the copyright?).\n");
+   HalDisplayString("ReactOS is free software, covered by the GNU General Public License, and you\n");
+   HalDisplayString("are welcome to change it and/or distribute copies of it under certain\n"); 
+   HalDisplayString("conditions.\n");
+   HalDisplayString("There is absolutely no warranty for ReactOS.\n");
+   
    last_kernel_address = KERNEL_BASE;
    for (i=0; i <= KeLoaderBlock.nr_files; i++)
      {

@@ -33,6 +33,7 @@ typedef struct _PHYSICAL_PAGE
    ULONG ReferenceCount;
    KEVENT Event;
    SWAPENTRY SavedSwapEntry;
+   ULONG LockCount;
 } PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 /* GLOBALS ****************************************************************/
@@ -312,6 +313,40 @@ VOID MmDereferencePage(PVOID PhysicalAddress)
 	MmPageArray[Start].Flags = PHYSICAL_PAGE_FREE;
 	InsertTailList(&FreePageListHead, &MmPageArray[Start].ListEntry);
      }
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+VOID MmLockPage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   DPRINT("MmReferencePage(PhysicalAddress %x)\n", PhysicalAddress);
+   
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].LockCount++;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+VOID MmUnlockPage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   DPRINT("MmReferencePage(PhysicalAddress %x)\n", PhysicalAddress);
+   
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].LockCount--;
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 

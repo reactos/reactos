@@ -115,10 +115,11 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 	  }
 	ExFreePool(Irp->AssociatedIrp.SystemBuffer);
      }
-   if (DeviceObject->Flags & DO_DIRECT_IO && !(Irp->Flags & IRP_PAGING_IO))
+   if (DeviceObject->Flags & DO_DIRECT_IO)
      {
+	/* FIXME: Is the MDL destroyed on a paging i/o, check all cases. */
 	DPRINT("Tearing down MDL\n");
-	if (Irp->MdlAddress->MappedSystemVa!=NULL)
+	if (Irp->MdlAddress->MappedSystemVa != NULL)
 	  {	     
 	     MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
 				Irp->MdlAddress);

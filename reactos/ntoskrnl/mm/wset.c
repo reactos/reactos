@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.3 2000/07/07 10:30:57 dwelch Exp $
+/* $Id: wset.c,v 1.4 2000/07/08 16:53:33 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -124,7 +124,7 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
 	  }
 	else
 	  {
-	     j = (j + 1) % 1020;
+	     j = (j + 1) % WSET_ADDRESSES_IN_PAGE;
 	     i++;
 	  }
 			
@@ -163,11 +163,11 @@ VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
 	       }
 	     else
 	       {
-		  AddressSpace->WorkingSetLruLast = 1020;
+		  AddressSpace->WorkingSetLruLast = WSET_ADDRESSES_IN_PAGE;
 	       }
 	     return;
 	  }
-	j = (j + 1) % 1020;
+	j = (j + 1) % WSET_ADDRESSES_IN_PAGE;
      }
    KeBugCheck(0);
 }
@@ -180,7 +180,7 @@ BOOLEAN MmAddPageToWorkingSet(PEPROCESS Process,
    
    AddressSpace = &Process->AddressSpace;
    
-   if (((AddressSpace->WorkingSetLruLast + 1) % 1020) ==
+   if (((AddressSpace->WorkingSetLruLast + 1) % WSET_ADDRESSES_IN_PAGE) ==
        AddressSpace->WorkingSetLruFirst)
      {
 	return(FALSE);
@@ -191,7 +191,7 @@ BOOLEAN MmAddPageToWorkingSet(PEPROCESS Process,
    WSet->Address[AddressSpace->WorkingSetLruLast] = Address;
    
    AddressSpace->WorkingSetLruLast =
-     (AddressSpace->WorkingSetLruLast + 1) % 1024;
+     (AddressSpace->WorkingSetLruLast + 1) % WSET_ADDRESSES_IN_PAGE;
    AddressSpace->WorkingSetSize++;
    
    return(TRUE);

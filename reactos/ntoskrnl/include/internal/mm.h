@@ -86,9 +86,11 @@ typedef struct
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
+#define WSET_ADDRESSES_IN_PAGE    (1020)
+
 typedef struct _MWORKING_SET
 {
-   PVOID Address[1020];
+   PVOID Address[WSET_ADDRESSES_IN_PAGE];
    struct _MWORKING_SET* Next;
 } MWORKING_SET, *PMWORKING_SET;
 
@@ -261,6 +263,7 @@ typedef struct
    ULONG NrUserPages;
    ULONG NrFreePages;
    ULONG NrDirtyPages;
+   ULONG NrLockedPages;
    ULONG PagingRequestsInLastMinute;
    ULONG PagingRequestsInLastFiveMinutes;
    ULONG PagingRequestsInLastFifteenMinutes;
@@ -283,6 +286,8 @@ VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
 			     SWAPENTRY SavedSwapEntry);
 SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
 VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
+VOID MmLockPage(PVOID PhysicalPage);
+VOID MmUnlockPage(PVOID PhysicalPage);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 
