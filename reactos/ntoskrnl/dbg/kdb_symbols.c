@@ -243,12 +243,12 @@ KdbSymPrintAddress(IN PVOID Address)
                                        FunctionName);
   if (NT_SUCCESS(Status))
     {
-      DbgPrint("<%ws: %x (%s:%d (%s))>",
+      DbgPrint("<%ws:%x (%s:%d (%s))>",
                Info.Name, RelativeAddress, FileName, LineNumber, FunctionName);
     }
   else
     {
-      DbgPrint("<%ws: %x>", Info.Name, RelativeAddress);
+      DbgPrint("<%ws:%x>", Info.Name, RelativeAddress);
     }
 
   return TRUE;
@@ -541,7 +541,7 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
   {
-    KeAttachProcess(&Process->Pcb);
+    KeAttachProcess(EPROCESS_TO_KPROCESS(Process));
   }
   Peb = Process->Peb;
   ASSERT(Peb);

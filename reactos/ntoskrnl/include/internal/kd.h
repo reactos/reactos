@@ -98,9 +98,6 @@ KdGdbDebugPrint (LPSTR Message);
 VOID
 KdDebugPrint (LPSTR Message);
 
-VOID
-KdbCreateThreadHook(PCONTEXT Context);
-
 KD_CONTINUE_TYPE
 KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			 PCONTEXT Context,
@@ -118,7 +115,7 @@ VOID KdPrintMda(PCH pch);
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #else
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	KdbSymLoadUserModuleSymbols(LDRMOD)
-# define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbSymFreeProcessSymbols(PROCESS)
+# define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbDeleteProcessHook(PROCESS)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	KdbSymLoadDriverSymbols(FILENAME, MODULE)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		KdbSymUnloadDriverSymbols(MODULE)
 # define KDB_LOADERINIT_HOOK(NTOS, HAL)		KdbSymInit(NTOS, HAL)
@@ -126,6 +123,9 @@ VOID KdPrintMda(PCH pch);
 /*#define KDB_CREATE_THREAD_HOOK(CONTEXT) \
         KdbCreateThreadHook(CONTEXT)
 */
+VOID
+KdbDeleteProcessHook(IN PEPROCESS Process);
+
 VOID
 KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
 
@@ -155,7 +155,7 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			  KPROCESSOR_MODE PreviousMode,
                           PCONTEXT Context,
                           PKTRAP_FRAME TrapFrame,
-			  BOOLEAN HandleAlways);
+			  BOOLEAN FirstChance);
 
 #endif /* KDBG || DBG */
 

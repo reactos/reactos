@@ -283,4 +283,3 @@ _main(ULONG MultiBootMagic,
 }
 
 /* EOF */
-

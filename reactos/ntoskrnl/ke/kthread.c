@@ -236,8 +236,8 @@ KeInitializeThread(PKPROCESS Process,
     Thread->Alerted[1] = 0;
     Thread->Iopl = 0;
     
-    /* FIXME: Think how this might work */
-    Thread->NpxState = 0;
+    /* Set up FPU/NPX Stuff */
+    Thread->NpxState = NPX_STATE_INVALID;
     Thread->NpxIrql = 0;
    
     /* Setup APC Fields */
@@ -251,7 +251,7 @@ KeInitializeThread(PKPROCESS Process,
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
     Thread->ApcQueueable = TRUE;
-    memset(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
+    RtlZeroMemory(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
     KeInitializeSpinLock(&Thread->ApcQueueLock);
     
     /* Setup Wait Fields */
@@ -263,8 +263,8 @@ KeInitializeThread(PKPROCESS Process,
     Thread->WaitListEntry.Blink = NULL;
     Thread->WaitTime = 0;
     Thread->WaitBlockList = NULL;
-    memset(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK) * 4);
-    memset(&Thread->Timer, 0, sizeof(KTIMER));
+    RtlZeroMemory(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK) * 4);
+    RtlZeroMemory(&Thread->Timer, 0, sizeof(KTIMER));
     KeInitializeTimer(&Thread->Timer);
     
     /* Setup scheduler Fields */

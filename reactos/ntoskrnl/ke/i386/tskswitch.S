@@ -45,6 +45,10 @@ _Ki386ContextSwitch:
  *	Thread = Thread to switch to
  *	OldThread = Thread to switch from
  */
+#ifdef KDBG
+	jmp	SaveTrapFrameForKDB
+SaveTrapFrameForKDB_Return:
+#endif
 	pushl	%ebp
 	movl	%esp, %ebp
 
@@ -217,4 +221,129 @@ _Ki386ContextSwitch:
 	popl	%ebp
 	ret
 .endfunc
+
+
+
+#ifdef KDBG
+
+SaveTrapFrameForKDB:
+	/*
+	 * Set up a trap frame.
+	 */
+				/* Ss - space already reserved by return EIP */
+	pushl	%esp		/* Esp */
+	pushfl			/* Eflags */
+	pushl	%cs		/* Cs */
+	pushl	12(%esp)	/* Eip */
+	movl	%ss, 16(%esp)	/* Save Ss */
+	pushl	$0		/* ErrorCode */
+	pushl	%ebp		/* Ebp */
+	pushl	%ebx		/* Ebx */
+	pushl	%esi		/* Esi */
+	pushl	%edi		/* Edi */
+	pushl	%fs		/* Fs */
+	pushl	$0		/* ExceptionList */
+	pushl	$0		/* PreviousMode */
+	pushl	%eax		/* Eax */
+	pushl	%ecx		/* Ecx */
+	pushl	%edx		/* Edx */
+	pushl	%ds		/* Ds */
+	pushl	%es		/* Es */
+	pushl	%gs		/* Gs */
+	movl	%dr7, %eax
+	pushl	%eax		/* Dr7 */
+	/* Clear breakpoint enables in dr7. */
+	andl	$~0xffff, %eax
+	movl	%eax, %dr7
+	movl	%dr6, %eax
+	pushl	%eax		/* Dr6 */
+	movl	%dr3, %eax
+	pushl	%eax		/* Dr3 */
+	movl	%dr2, %eax
+	pushl	%eax		/* Dr2 */
+	movl	%dr1, %eax
+	pushl	%eax		/* Dr1 */
+	movl	%dr0, %eax
+	pushl	%eax		/* Dr0 */
+	pushl	$0		/* TempEip */
+	pushl	$0		/* TempCs */
+	pushl	$0		/* DebugPointer */
+	pushl	$0xffffffff	/* DebugArgMark (Exception number) */
+	pushl	0x60(%esp)	/* DebugEip */
+	pushl	%ebp		/* DebugEbp */
+
+	movl	%esp, %ebp	/* Save pointer to new TrapFrame */
+
+	/* Save the old trapframe and set pointer to the new one */
+	movl	0x80(%esp), %ebx	/* Get pointer to OldThread */
+	pushl	KTHREAD_TRAP_FRAME(%ebx)
+	movl	%ebp, KTHREAD_TRAP_FRAME(%ebx)
+
+	/* Copy the arguments which were passed to Ki386ContextSwitch */
+	pushl	0x80(%ebp)		/* OldThread */
+	pushl	0x7c(%ebp)		/* NewThread */
+	pushl	$RestoreTrapFrameForKDB	/* Return address */
+
+	/* Restore clobbered registers */
+	movl	KTRAP_FRAME_EBX(%ebp), %ebx
+	movl	KTRAP_FRAME_EBP(%ebp), %ebp
+
+	/* Return */
+	jmp	SaveTrapFrameForKDB_Return
+
+
+RestoreTrapFrameForKDB:
+	addl	$8, %esp		/* Remove NewThread and OldThread arguments from the stack */
+	movl	0x84(%esp), %ebx	/* Get pointer to OldThread */
+
+	/* Restore the old trapframe */
+	popl	KTHREAD_TRAP_FRAME(%ebx)
+        
+	/*
+	 * Pop unused portions of the trap frame:
+	 *   DebugEbp
+	 *   DebugEip
+	 *   DebugArgMark
+	 *   DebugPointer
+	 *   TempCs
+	 *   TempEip
+	 *   Dr0-3
+	 *   Dr6-7
+	 */
+	addl	$(12*4), %esp
+
+	/*
+	 * Restore registers including any that might have been changed
+	 * inside the debugger.
+	 */
+	popl	%gs		/* Gs */
+	popl	%es		/* Es */
+	popl	%ds		/* Ds */
+	popl	%edx		/* Edx */
+	popl	%ecx		/* Ecx */
+	popl	%eax		/* Eax */
+	addl	$4, %esp	/* PreviousMode */
+	addl	$4, %esp	/* ExceptionList */
+	popl	%fs		/* Fs */
+	popl	%edi		/* Edi */
+	popl	%esi		/* Esi */
+	popl	%ebx		/* Ebx */
+
+        /* Remove SS:ESP from the stack */
+	movl	16(%esp), %ebp
+	movl	%ebp, 24(%esp)
+	movl	12(%esp), %ebp
+	movl	%ebp, 20(%esp)
+	movl	8(%esp), %ebp
+	movl	%ebp, 16(%esp)
+
+	popl	%ebp		/* Ebp */
+	addl	$12, %esp	/* ErrorCode and SS:ESP */
+
+	/*
+	 * Return to the caller.
+	 */
+	iret
+
+#endif /* KDBG */
 

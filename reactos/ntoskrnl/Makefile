@@ -25,14 +25,10 @@ LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
 ifeq ($(KDBG), 1)
-OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o \
-		../dk/w32/lib/libkjs.a dbg/i386/i386-dis.o
-CFLAGS_KDBG := -I../lib/kjs/include
+OBJECTS_KDBG := dbg/kdb.o dbg/kdb_cli.o dbg/kdb_expr.o dbg/kdb_keyboard.o \
+                dbg/kdb_serial.o dbg/kdb_string.o dbg/rdebug.o dbg/i386/kdb_help.o \
+                dbg/i386/i386-dis.o dbg/i386/longjmp.o dbg/i386/setjmp.o
 preall: all
-
-../dk/w32/lib/libkjs.a:
-	$(MAKE) -C ../lib/kjs
 else
 OBJECTS_KDBG :=
 endif

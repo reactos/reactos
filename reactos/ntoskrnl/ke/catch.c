@@ -112,7 +112,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                                    PreviousMode,
                                                    Context, 
                                                    Tf, 
-                                                   FALSE);
+                                                   TRUE);
 
                 /* Exit if we're continuing */
                 if (Action == kdContinue) return;
@@ -171,7 +171,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                             PreviousMode,
                                             Context, 
                                             Tf, 
-                                            TRUE);
+                                            FALSE);
 
         /* Exit if we're continuing */
         if (Action == kdContinue) return;
@@ -190,7 +190,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                                 PreviousMode,
                                                 Context, 
                                                 Tf, 
-                                                FALSE);
+                                                TRUE);
 
             /* Exit if we're continuing */
             if (Action == kdContinue) return;
@@ -211,7 +211,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                                    PreviousMode,
                                                    Context, 
                                                    Tf, 
-                                                   TRUE);
+                                                   FALSE);
 
                 /* Exit if we're continuing */
                 if (Action == kdContinue) return;

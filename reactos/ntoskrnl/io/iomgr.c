@@ -647,6 +647,7 @@ IoInit3(VOID)
 
     /* Start Profiling on a Debug Build */
 #if defined(KDBG) || defined(DBG)
+    KdbInit();
     //KdbInitProfiling2();
 #endif /* KDBG */
 
