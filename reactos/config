@@ -15,7 +15,7 @@ ARCH := i386
 # be optimze for. 
 #
 
-OARCH := i486
+OARCH := pentium2
 
 #
 # Whether to compile in the kernel debugger
@@ -30,7 +30,7 @@ DBG := 0
 #
 # Whether to compile with optimizations
 #
-OPTIMIZED := 0
+OPTIMIZED := 1
 
 #
 # Whether to compile a multiprocessor or single processor version
