@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.33 2003/11/13 14:19:23 ekohl Exp $
+/* $Id: disk.c,v 1.34 2004/01/09 20:21:31 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1009,10 +1009,6 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 					       DeviceExtension->DiskGeometry->SectorsPerTrack,
 					       DeviceExtension->DiskGeometry->TracksPerCylinder,
 					       PartitionList);
-		if (NT_SUCCESS(Status))
-		  {
-		    Information = TableSize;
-		  }
 	      }
 	  }
 	break;
