@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.12 2003/01/15 21:24:35 chorns Exp $
+/* $Id: res.c,v 1.13 2003/03/21 00:20:41 gdalsnes Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -173,6 +173,11 @@ LoadResource (
 {
 	NTSTATUS Status;
 	PVOID Data;
+
+   if (hModule == NULL)
+   {
+     hModule = GetModuleHandle(NULL);
+   }
 
 	Status = LdrAccessResource (hModule, hResInfo, &Data, NULL);
 	if (!NT_SUCCESS(Status))
