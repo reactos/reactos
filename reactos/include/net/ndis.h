@@ -39,7 +39,7 @@ extern "C"
 #endif
 
 #ifndef FASTCALL
-#define FASTCALL STDCALL
+#define FASTCALL  __attribute__((fastcall))
 #endif
 
 /* The NDIS library export functions. NDIS miniport drivers import functions */
