@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.3 1999/10/03 22:16:14 ekohl Exp $
+/* $Id: window.c,v 1.4 2002/09/24 03:43:25 sedwards Exp $
  *
  * WINDOW.C - activate & window internal commands.
  *
