@@ -19,7 +19,6 @@ typedef struct _WINSTATION_OBJECT
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
   struct _DESKTOP_OBJECT* ActiveDesktop;
-  ERESOURCE Resource;
   /* FIXME: Clipboard */
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
@@ -32,8 +31,6 @@ typedef struct _DESKTOP_OBJECT
   UNICODE_STRING Name;
   /* Pointer to the associated window station. */
   struct _WINSTATION_OBJECT *WindowStation;
-  /* Head of the list of windows in this desktop. */
-  LIST_ENTRY WindowListHead;
   /* Pointer to the active queue. */
   PVOID ActiveMessageQueue;
   /* Handle of the desktop window. */

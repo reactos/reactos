@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.24 2003/08/06 16:47:35 weiden Exp $
+/* $Id: winsta.c,v 1.25 2003/08/11 19:05:26 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,41 +68,6 @@ static HDC ScreenDeviceContext = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL FASTCALL W32kVerifyWinStaLock(WINSTA_LOCK_TYPE Type)
-{
-
-  switch (Type)
-  {
-    case None:
-      return !ExIsResourceAcquiredSharedLite(&(PsGetWin32Process()->WindowStation->Resource));
-    case Any: /* exclusive lock is subset of shared lock */
-      return ExIsResourceAcquiredSharedLite(&(PsGetWin32Process()->WindowStation->Resource));
-    case Exclusive:
-      return ExIsResourceAcquiredExclusiveLite(&(PsGetWin32Process()->WindowStation->Resource));
-  }
-
-  return FALSE;
-
-}
-
-inline VOID W32kAcquireWinStaLockShared()
-{
-  ExAcquireResourceExclusiveLite(&(PsGetWin32Process()->WindowStation->Resource),
-                              TRUE /*Wait*/
-                              );
-}
-
-inline VOID W32kAcquireWinStaLockExclusive()
-{
-  ExAcquireResourceSharedLite(&(PsGetWin32Process()->WindowStation->Resource),
-                              TRUE /*Wait*/
-                              );
-}
-
-inline VOID W32kReleaseWinStaLock()
-{
-  ExReleaseResourceLite( &(PsGetWin32Process()->WindowStation->Resource) ); 
-}
 
 PDESKTOP_OBJECT FASTCALL
 W32kGetActiveDesktop(VOID)
@@ -376,7 +341,6 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
       return (HWINSTA)0;
     }
 
-  ExInitializeResourceLite(&WinStaObject->Resource);
   WinStaObject->HandleTable = ObmCreateHandleTable();
   if (!WinStaObject->HandleTable)
     {
@@ -696,7 +660,6 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
   
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;  
-  InitializeListHead(&DesktopObject->WindowListHead);
   DesktopObject->DesktopWindow = 
     W32kCreateDesktopWindow(DesktopObject->WindowStation,
 			    DesktopWindowClass,

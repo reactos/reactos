@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.24 2003/08/06 15:27:27 dwelch Exp $
+/* $Id: painting.c,v 1.25 2003/08/11 19:05:27 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,7 @@
 
 #define NDEBUG
 #include <debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -251,7 +252,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
    */
 
   BOOL HadOne = NULL != Window->UpdateRegion && NULL != hRgn;
-  BOOL HasChildren = !IsListEmpty(&Window->ChildrenListHead) &&
+  BOOL HasChildren = Window->FirstChild &&
     !(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
     ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN));
   RECT Rect;
@@ -390,43 +391,40 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	  POINT PrevOrign = {0, 0};
 	  POINT Client;
 	  PWINDOW_OBJECT Child;
-	  PLIST_ENTRY ChildListEntry;
 
 	  Client.x = Window->ClientRect.left - Window->WindowRect.left;
 	  Client.y = Window->ClientRect.top - Window->WindowRect.top;	  
 
-	  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
-	  ChildListEntry = Window->ChildrenListHead.Flink;
-	  while (ChildListEntry != &Window->ChildrenListHead)
-	    {
-	      Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
-					SiblingListEntry);
-	      if (0 != (Child->Style & WS_VISIBLE))
-		{
-		  POINT Offset;
+    ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+    Child = Window->FirstChild;
+    while (Child)
+      {
+        if (0 != (Child->Style & WS_VISIBLE))
+    {
+      POINT Offset;
 
-		  Rect.left = Window->WindowRect.left + Client.x;
-		  Rect.right = Window->WindowRect.right + Client.x;
-		  Rect.top = Window->WindowRect.top + Client.y;
-		  Rect.bottom = Window->WindowRect.bottom + Client.y;
+      Rect.left = Window->WindowRect.left + Client.x;
+      Rect.right = Window->WindowRect.right + Client.x;
+      Rect.top = Window->WindowRect.top + Client.y;
+      Rect.bottom = Window->WindowRect.bottom + Client.y;
 
-		  Offset.x = Rect.left - PrevOrign.x;
-		  Offset.y = Rect.top - PrevOrign.y;
-		  W32kOffsetRect(&Rect, -Total.x, -Total.y);
+      Offset.x = Rect.left - PrevOrign.x;
+      Offset.y = Rect.top - PrevOrign.y;
+      W32kOffsetRect(&Rect, -Total.x, -Total.y);
 
-		  if (W32kRectInRegion(hRgn, &Rect))
-		    {
-		      W32kOffsetRgn(hRgn, -Total.x, -Total.y);
-		      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
-		      PrevOrign.x = Rect.left + Total.x;
-		      PrevOrign.y = Rect.right + Total.y;
-		      Total.x += Offset.x;
-		      Total.y += Offset.y;
-		    }
-		}
-	      ChildListEntry = ChildListEntry->Flink;
-	    }
-	  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+      if (W32kRectInRegion(hRgn, &Rect))
+        {
+          W32kOffsetRgn(hRgn, -Total.x, -Total.y);
+          PaintUpdateRgns(Child, hRgn, Flags, FALSE);
+          PrevOrign.x = Rect.left + Total.x;
+          PrevOrign.y = Rect.right + Total.y;
+          Total.x += Offset.x;
+          Total.y += Offset.y;
+        }
+    }
+        Child = Child->NextSibling;
+      }
+    ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
 
 	  W32kOffsetRgn(hRgn, Total.x, Total.y);
 	  HasChildren = FALSE;
@@ -434,24 +432,21 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
     }
 
   if (HasChildren)
-    {
-      PWINDOW_OBJECT Child;
-      PLIST_ENTRY ChildListEntry;
+  {
+    PWINDOW_OBJECT Child;
 
-      ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
-      ChildListEntry = Window->ChildrenListHead.Flink;
-      while (ChildListEntry != &Window->ChildrenListHead)
-	{
-	  Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
-				    SiblingListEntry);
-	  if (Child->Style & WS_VISIBLE)
-	    {
-	      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
-	    }
-	  ChildListEntry = ChildListEntry->Flink;
-	}
-      ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+    ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+    Child = Window->FirstChild;
+    while (Child)
+    {
+      if (Child->Style & WS_VISIBLE)
+      {
+        PaintUpdateRgns(Child, hRgn, Flags, FALSE);
+      }
+      Child = Child->NextSibling;
     }
+    ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+  }
 
   PaintUpdateInternalPaint(Window, Flags);
 }
@@ -682,22 +677,21 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
     }
 
   ExAcquireFastMutex(&BaseWindow->ChildrenListLock);
-  current_entry = BaseWindow->ChildrenListHead.Flink;
-  while (current_entry != &BaseWindow->ChildrenListHead)
+  Window = BaseWindow->FirstChild;
+  while (Window)
+  {
+    if (Window->Style & WS_VISIBLE)
     {
-      Window = CONTAINING_RECORD(current_entry, WINDOW_OBJECT,
-				 SiblingListEntry);
-      if (Window->Style & WS_VISIBLE)
-	{
-	  hFoundWnd = PaintingFindWinToRepaint(Window->Self, Thread);
-	  if (hFoundWnd != NULL)
-	    {
-	      break;
-	    }
-	}
-      current_entry = current_entry->Flink;
+      hFoundWnd = PaintingFindWinToRepaint(Window->Self, Thread);
+      if (hFoundWnd != NULL)
+      {
+        break;
+      }
     }
+    Window = Window->NextSibling;
+  }
   ExReleaseFastMutex(&BaseWindow->ChildrenListLock);
+
   W32kReleaseWindowObject(BaseWindow);
   return(hFoundWnd);
 }

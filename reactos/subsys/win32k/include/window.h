@@ -47,8 +47,6 @@ typedef struct _WINDOW_OBJECT
   LPVOID Parameters;
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
-  /* Entry in the global list of windows. */
-  LIST_ENTRY DesktopListEntry;
   /* Pointer to the extra data associated with the window. */
   PULONG ExtraData;
   /* Size of the extra data associated with the window. */
@@ -67,15 +65,10 @@ typedef struct _WINDOW_OBJECT
   HANDLE UpdateRegion;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
-  /* Head of the list of child windows. */
-  LIST_ENTRY ChildrenListHead;
   struct _WINDOW_OBJECT* FirstChild;
   struct _WINDOW_OBJECT* LastChild;
-
   /* Lock for the list of child windows. */
   FAST_MUTEX ChildrenListLock;
-  /* Entry in the parent's list of child windows. */
-  LIST_ENTRY SiblingListEntry;
   struct _WINDOW_OBJECT* NextSibling;
   struct _WINDOW_OBJECT* PrevSibling;
   /* Entry in the list of thread windows. */
@@ -95,8 +88,8 @@ typedef struct _WINDOW_OBJECT
   WNDPROC WndProcA;
   WNDPROC WndProcW;
   PETHREAD OwnerThread;
-  HWND hWndOwner; /* handle to the owner window (why not use pointer to window? wine doesn't...)*/
-  HWND hWndLastPopup; /* handle to last active popup window (why not use pointer to window? wine doesn't...)*/
+  HWND hWndOwner; /* handle to the owner window (wine doesn't use pointer, for unk. reason)*/
+  HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */
@@ -106,6 +99,10 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_NCPAINT         (0x00000008)
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
+
+inline BOOL W32kIsDesktopWindow(PWINDOW_OBJECT WindowObject);
+
+inline BOOL W32kIsBroadcastHwnd( HWND hwnd );
 
 NTSTATUS FASTCALL
 InitWindowImpl (VOID);
@@ -126,9 +123,6 @@ HWND STDCALL
 W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
 			PWNDCLASS_OBJECT DesktopClass,
 			ULONG Width, ULONG Height);
-
-BOOL FASTCALL
-W32kIsDesktopWindow (PWINDOW_OBJECT Window);
 
 HWND FASTCALL
 W32kGetActiveWindow (VOID);
@@ -168,6 +162,25 @@ W32kGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 
 PWINDOW_OBJECT FASTCALL
 W32kGetParent(PWINDOW_OBJECT Wnd);
+
+typedef enum _WINLOCK_TYPE
+{
+  None,
+  Any,
+  Shared,
+  Exclusive
+} WINLOCK_TYPE; 
+
+#define ASSERT_WINLOCK(a) assert(W32kVerifyWinLock(a))
+
+inline VOID W32kAcquireWinLockShared();
+inline VOID W32kAcquireWinLockExclusive();
+inline VOID W32kReleaseWinLock();
+BOOL FASTCALL W32kVerifyWinLock(WINLOCK_TYPE Type);
+WINLOCK_TYPE FASTCALL W32kSuspendWinLock();
+VOID FASTCALL W32kRestoreWinLock(WINLOCK_TYPE Type);
+inline BOOL W32kInitializeWinLock();
+inline VOID W32kDeleteWinLock();
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.4 2003/08/04 16:54:54 gdalsnes Exp $
+ * $Id: vis.c,v 1.5 2003/08/11 19:05:27 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -101,32 +101,32 @@ STATIC BOOL FASTCALL
 VIS_AddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End, 
 		 HRGN ClipRgn, PRECT Rect)
 {
-  PLIST_ENTRY ChildListEntry;
   PWINDOW_OBJECT Child;
   RECT Intersect;
 
   ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
-  ChildListEntry = Parent->ChildrenListHead.Flink;
-  while (ChildListEntry != &Parent->ChildrenListHead)
+  Child = Parent->FirstChild;
+  while (Child)
+  {
+    if (Child == End)
     {
-      Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
-				SiblingListEntry);
-      if (Child == End)
-	{
-	  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
-	  return TRUE;
-	}
-      if (Child->Style & WS_VISIBLE)
-	{
-	  if (W32kIntersectRect(&Intersect, &Child->WindowRect, Rect))
-	    {
-	      UnsafeW32kUnionRectWithRgn(ClipRgn, &Child->WindowRect);
-	    }
-	}
-      ChildListEntry = ChildListEntry->Flink;
+      ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
+      return TRUE;
     }
+    
+    if (Child->Style & WS_VISIBLE)
+    {
+      if (W32kIntersectRect(&Intersect, &Child->WindowRect, Rect))
+      {
+        UnsafeW32kUnionRectWithRgn(ClipRgn, &Child->WindowRect);
+      }
+    }
+    
+    Child = Child->NextSibling;
+  }
 
   ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
+
   return FALSE;
 }
 
@@ -156,8 +156,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 
 	  if (ClipRgn != NULL)
 	    {
-	      if (ClipChildren && 
-		  ! IsListEmpty(&Window->ChildrenListHead))
+	      if (ClipChildren && Window->FirstChild)
 		{
 		  VIS_AddClipRects(Window, NULL, ClipRgn, &Rect);
 		}
@@ -217,27 +216,26 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 {
   PWINDOW_OBJECT DesktopWindow;
   PWINDOW_OBJECT Child;
-  PLIST_ENTRY CurrentEntry;
   HRGN Uncovered;
   HRGN Covered;
   HRGN Repaint;
 
   DesktopWindow = W32kGetWindowObject(Desktop->DesktopWindow);
   Uncovered = UnsafeW32kCreateRectRgnIndirect(&DesktopWindow->WindowRect);
+
   ExAcquireFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
-  CurrentEntry = DesktopWindow->ChildrenListHead.Flink;
-  while (CurrentEntry != &DesktopWindow->ChildrenListHead)
+  Child = DesktopWindow->FirstChild;
+  while (Child)
+  {
+    if (0 != (Child->Style & WS_VISIBLE))
     {
-      Child = CONTAINING_RECORD(CurrentEntry, WINDOW_OBJECT, SiblingListEntry);
-      if (0 != (Child->Style & WS_VISIBLE))
-	{
-	  Covered = UnsafeW32kCreateRectRgnIndirect(&Child->WindowRect);
-	  W32kCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
-	  PaintRedrawWindow(Child, NULL, NULL, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE, 0);
-	  W32kDeleteObject(Covered);
-	}
-      CurrentEntry = CurrentEntry->Flink;
+      Covered = UnsafeW32kCreateRectRgnIndirect(&Child->WindowRect);
+      W32kCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
+      PaintRedrawWindow(Child, NULL, NULL, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE, 0);
+      W32kDeleteObject(Covered);
     }
+    Child = Child->NextSibling;
+  }
   ExReleaseFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
 
   Repaint = W32kCreateRectRgn(0, 0, 0, 0);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.21 2003/08/04 16:54:54 gdalsnes Exp $
+/* $Id: winpos.c,v 1.22 2003/08/11 19:05:26 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1112,17 +1112,12 @@ USHORT STATIC STDCALL
 WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 		     PWINDOW_OBJECT* Window)
 {
-  PLIST_ENTRY CurrentEntry;
   PWINDOW_OBJECT Current;
 
-
   ExAcquireFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-  CurrentEntry = ScopeWin->ChildrenListHead.Flink;
-  while (CurrentEntry != &ScopeWin->ChildrenListHead)
+  Current = ScopeWin->FirstChild;
+  while (Current)
     {
-      Current = 
-	CONTAINING_RECORD(CurrentEntry, WINDOW_OBJECT, SiblingListEntry);
-
       if (Current->Style & WS_VISIBLE &&
 	  ((!(Current->Style & WS_DISABLED)) ||
 	   (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
@@ -1154,7 +1149,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	  return(0);
 	}
-      CurrentEntry = CurrentEntry->Flink;
+      Current = Current->NextSibling;
     }
 		  
   ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);

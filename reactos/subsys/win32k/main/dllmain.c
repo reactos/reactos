@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.41 2003/07/31 23:11:38 weiden Exp $
+/* $Id: dllmain.c,v 1.42 2003/08/11 19:06:25 gdalsnes Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -168,6 +168,8 @@ DllMain (
 {
   NTSTATUS Status;
   BOOLEAN Result;
+
+  W32kInitializeWinLock();
 
   /*
    * Register user mode call interface

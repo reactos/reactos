@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.85 2003/08/11 10:30:19 gvg Exp $
+/* $Id: window.c,v 1.86 2003/08/11 19:05:26 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,10 +65,21 @@ static LIST_ENTRY RegisteredMessageListHead;
 #define REGISTERED_MESSAGE_MIN 0xc000
 #define REGISTERED_MESSAGE_MAX 0xffff
 
-PWINDOW_OBJECT FASTCALL
-W32kGetParent(PWINDOW_OBJECT Wnd);
 
 /* FUNCTIONS *****************************************************************/
+
+/* check if hwnd is a broadcast magic handle */
+inline BOOL W32kIsBroadcastHwnd( HWND hwnd )
+{
+    return (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST);
+}
+
+
+inline BOOL W32kIsDesktopWindow(PWINDOW_OBJECT Wnd)
+{
+  return Wnd->Parent == NULL;
+}
+
 
 PWINDOW_OBJECT FASTCALL
 W32kGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
@@ -102,7 +113,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
   PWINDOW_OBJECT Wnd, WndAncestor;
   HWND hWndAncestor = NULL;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
 
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
@@ -113,7 +124,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
   WndAncestor = W32kGetAncestor(Wnd, Type);
   if (WndAncestor) hWndAncestor = WndAncestor->Self;
 
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   return hWndAncestor;
 }
@@ -140,7 +151,7 @@ NtUserGetParent(HWND hWnd)
   PWINDOW_OBJECT Wnd, WndParent;
   HWND hWndParent = NULL;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
 
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
@@ -151,7 +162,7 @@ NtUserGetParent(HWND hWnd)
   WndParent = W32kGetParent(Wnd);
   if (WndParent) hWndParent = WndParent->Self;
 
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   return hWndParent;
 }
@@ -260,14 +271,6 @@ W32kIsWindowVisible(HWND Wnd)
   return(Result);
 }
 
-BOOL FASTCALL
-W32kIsDesktopWindow(PWINDOW_OBJECT WindowObject)
-{
-  BOOL IsDesktop;
-  ASSERT(WindowObject);
-  IsDesktop = WindowObject->Parent == NULL;
-  return(IsDesktop);
-}
 
 HWND FASTCALL W32kGetDesktopWindow(VOID)
 {
@@ -328,16 +331,16 @@ NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
   PWINDOW_OBJECT Wnd;
   RECT SafeRect;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);      
     return FALSE;
   }
   
   SafeRect = Wnd->WindowRect;
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
   {
@@ -360,16 +363,16 @@ NtUserGetClientRect(HWND hWnd, LPRECT Rect)
   PWINDOW_OBJECT WindowObject;
   RECT SafeRect;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
   if (!(WindowObject = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);      
     return FALSE;
   }
 
   W32kGetClientRect(WindowObject, &SafeRect);
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
   {
@@ -496,8 +499,11 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->WndProcA = DesktopClass->lpfnWndProcA;
   WindowObject->WndProcW = DesktopClass->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
+  WindowObject->FirstChild = NULL;
+  WindowObject->LastChild = NULL;
+  WindowObject->PrevSibling = NULL;
+  WindowObject->NextSibling = NULL;
 
-  InitializeListHead(&WindowObject->ChildrenListHead);
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
@@ -527,6 +533,49 @@ W32kInitDesktopWindow(ULONG Width, ULONG Height)
   W32kDeleteObject(DesktopRgn);
   W32kReleaseWindowObject(DesktopWindow);
 }
+
+
+/* link the window into siblings and parent. children are kept in place. */
+VOID FASTCALL
+W32kLinkWindow(
+  PWINDOW_OBJECT Wnd, 
+  PWINDOW_OBJECT WndParent,
+  PWINDOW_OBJECT WndPrevSibling /* set to NULL if top sibling */
+  )
+{
+  Wnd->Parent = WndParent; 
+
+  if ((Wnd->PrevSibling = WndPrevSibling))
+  {
+    /* link after WndPrevSibling */
+    if ((Wnd->NextSibling = WndPrevSibling->NextSibling)) Wnd->NextSibling->PrevSibling = Wnd;
+    else if (Wnd->Parent->LastChild == WndPrevSibling) Wnd->Parent->LastChild = Wnd;
+    Wnd->PrevSibling->NextSibling = Wnd;
+  }
+  else
+  {
+    /* link at top */
+    if ((Wnd->NextSibling = WndParent->FirstChild)) Wnd->NextSibling->PrevSibling = Wnd;
+    else Wnd->Parent->LastChild = Wnd;
+    WndParent->FirstChild = Wnd;
+  }
+
+}
+
+/* unlink the window from siblings and parent. children are kept in place. */
+VOID FASTCALL
+W32kUnlinkWindow(PWINDOW_OBJECT Wnd)
+{
+  PWINDOW_OBJECT WndParent = Wnd->Parent; 
+ 
+  if (Wnd->NextSibling) Wnd->NextSibling->PrevSibling = Wnd->PrevSibling;
+  else if (WndParent->LastChild == Wnd) WndParent->LastChild = Wnd->PrevSibling;
+ 
+  if (Wnd->PrevSibling) Wnd->PrevSibling->NextSibling = Wnd->NextSibling;
+  else if (WndParent->FirstChild == Wnd) WndParent->FirstChild = Wnd->NextSibling;
+  //else if (parent->first_unlinked == win) parent->first_unlinked = Wnd->NextSibling;
+}
+
 
 HWND STDCALL
 NtUserCreateWindowEx(DWORD dwExStyle,
@@ -565,6 +614,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWND)0);
     }
+
+  /* FIXME: parent must belong to the current process */
 
   if (hWndParent != NULL)
     {
@@ -646,6 +697,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
   WindowObject->WndProcW = ClassObject->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
+  WindowObject->FirstChild = NULL;
+  WindowObject->LastChild = NULL;
+  WindowObject->PrevSibling = NULL;
+  WindowObject->NextSibling = NULL;
 
   /* extra window data */
   if (ClassObject->cbWndExtra != 0)
@@ -660,12 +715,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       WindowObject->ExtraDataSize = 0;
     }
 
-  ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-  InsertHeadList(&ParentWindow->ChildrenListHead,
-		 &WindowObject->SiblingListEntry);
-  ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-
-  InitializeListHead(&WindowObject->ChildrenListHead);
   InitializeListHead(&WindowObject->PropListHead);
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
@@ -690,12 +739,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  &WindowObject->ThreadListEntry);
   ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
 
-  /*
-   * Insert the window into the list of windows associated with the thread's
-   * desktop. 
-   */
-  InsertTailList(&PsGetWin32Thread()->Desktop->WindowListHead,
-		 &WindowObject->DesktopListEntry);
   /* Allocate a DCE for this window. */
   if (dwStyle & CS_OWNDC) WindowObject->Dce = DceAllocDCE(WindowObject->Self,DCE_WINDOW_DC);
   /* FIXME:  Handle "CS_CLASSDC" */
@@ -712,6 +755,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    */
   if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
     {
+      /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
       WinPosGetMinMaxInfo(WindowObject, &MaxSize, &MaxPos, &MinTrack,
 			  &MaxTrack);
       x = min(MaxSize.x, y);
@@ -761,6 +805,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   MaxPos.x = WindowObject->WindowRect.left;
   MaxPos.y = WindowObject->WindowRect.top;
   DPRINT("NtUserCreateWindowEx(): About to get non-client size.\n");
+  /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
   Result = WinPosGetNonClientSize(WindowObject->Self, 
 				  &WindowObject->WindowRect,
 				  &WindowObject->ClientRect);
@@ -768,7 +813,22 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		 MaxPos.x - WindowObject->WindowRect.left,
 		 MaxPos.y - WindowObject->WindowRect.top);
 
-  /* Send the CREATE message. */
+
+  /* link the window into the parent's child list */
+  ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+  if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+  {
+    /* link window as bottom sibling */
+    W32kLinkWindow(WindowObject, ParentWindow, ParentWindow->LastChild /*prev sibling*/);
+  }
+  else
+  {
+    /* link window as top sibling */
+    W32kLinkWindow(WindowObject, ParentWindow, NULL /*prev sibling*/);
+  }
+  ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+
+  /* Send the WM_CREATE message. */
   DPRINT("NtUserCreateWindowEx(): about to send CREATE message.\n");
   Result = W32kSendCREATEMessage(WindowObject->Self, &Cs);
   if (Result == (LRESULT)-1)
@@ -928,41 +988,42 @@ static BOOLEAN W32kWndBelongsToThread(PWINDOW_OBJECT Window, PW32THREAD ThreadDa
 
 static BOOL BuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsigned *NumChildren)
 {
-  PLIST_ENTRY Current;
   unsigned Index;
   PWINDOW_OBJECT Child;
 
   *Children = NULL;
   *NumChildren = 0;
+
   ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
-  Current = Window->ChildrenListHead.Flink;
-  while (Current != &Window->ChildrenListHead)
-    {
-      (*NumChildren)++;
-      Current = Current->Flink;
-    }
+  Child = Window->FirstChild;
+  while (Child)
+  {
+    (*NumChildren)++;
+    Child = Child->NextSibling;
+  }
+  
   if (0 != *NumChildren)
+  {
+    *Children = ExAllocatePoolWithTag(PagedPool, *NumChildren * sizeof(HWND), TAG_WNAM);
+    if (NULL != *Children)
     {
-      *Children = ExAllocatePoolWithTag(PagedPool, *NumChildren * sizeof(HWND), TAG_WNAM);
-      if (NULL != *Children)
-	{
-	  Current = Window->ChildrenListHead.Flink;
-	  Index = 0;
-	  while (Current != &Window->ChildrenListHead)
-	    {
-	      Child = CONTAINING_RECORD(Current, WINDOW_OBJECT, SiblingListEntry);
-	      (*Children)[Index] = Child->Self;
-	      Current = Current->Flink;
-	      Index++;
-	    }
-	  assert(Index == *NumChildren);
-	}
-      else
-	{
-	  DPRINT1("Failed to allocate memory for children array\n");
-	}
+      Child = Window->FirstChild;
+      Index = 0;
+      while (Child)
+      {
+        (*Children)[Index] = Child->Self;
+        Child = Child->NextSibling;
+        Index++;
+      }
+      assert(Index == *NumChildren);
     }
+    else
+    {
+      DPRINT1("Failed to allocate memory for children array\n");
+    }
+  }
   ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+
 
   return 0 == *NumChildren || NULL != *Children;
 }
@@ -1064,10 +1125,8 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window,
 #endif
 
   ExAcquireFastMutexUnsafe(&Window->Parent->ChildrenListLock);
-  RemoveEntryList(&Window->SiblingListEntry);
+  W32kUnlinkWindow(Window);
   ExReleaseFastMutexUnsafe(&Window->Parent->ChildrenListLock);
-
-  RemoveEntryList(&Window->DesktopListEntry);
 
   ExAcquireFastMutexUnsafe (&ThreadData->WindowListLock);
   RemoveEntryList(&Window->ThreadListEntry);
@@ -1302,9 +1361,7 @@ NtUserFindWindowEx(HWND hwndParent,
 {
   NTSTATUS status;
   HWND windowHandle;
-  PWINDOW_OBJECT windowObject;
-  PWINDOW_OBJECT ParentWindow;
-  PLIST_ENTRY currentEntry;
+  PWINDOW_OBJECT ParentWindow, WndChildAfter, WndChild;
   PWNDCLASS_OBJECT classObject;
   
   // Get a pointer to the class
@@ -1328,50 +1385,48 @@ NtUserFindWindowEx(HWND hwndParent,
     }
 
   ExAcquireFastMutexUnsafe (&ParentWindow->ChildrenListLock);
-  currentEntry = ParentWindow->ChildrenListHead.Flink;
 
   if(hwndChildAfter)
+  {
+    if (!(WndChildAfter = W32kGetWindowObject(hwndChildAfter)))
     {
-      while (currentEntry != &ParentWindow->ChildrenListHead)
-	{
-	  windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, 
-					    SiblingListEntry);
-	  
-	  if(windowObject->Self == hwndChildAfter)
-	  {
-	    /* "The search begins with the _next_ child window in the Z order." */
-	    currentEntry = currentEntry->Flink;
-	    break;
-	  }
-
-	  currentEntry = currentEntry->Flink;
-	}
-
-	/* If the child hwndChildAfter was not found:
-	  currentEntry=&ParentWindow->ChildrenListHead now so the next
-	  block of code will just fall through and the function returns NULL */
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return NULL;
     }
 
-  while (currentEntry != &ParentWindow->ChildrenListHead)
+    /* must be a direct child (not a decendant child)*/
+    if (WndChildAfter->Parent != ParentWindow)
     {
-      windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, 
-					SiblingListEntry);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+    
+    WndChild = WndChildAfter->NextSibling;
+  }
+  else
+  {
+    WndChild = ParentWindow->FirstChild;
+  }
 
-      if (classObject == windowObject->Class && (ucWindowName->Buffer==NULL || 
-	  RtlCompareUnicodeString (ucWindowName, &windowObject->WindowName, TRUE) == 0))
-	{
-	  windowHandle = windowObject->Self;
+  while (WndChild)
+  {
+    if (classObject == WndChild->Class && (ucWindowName->Buffer==NULL || 
+        RtlCompareUnicodeString (ucWindowName, &WndChild->WindowName, TRUE) == 0))
+    {
+      windowHandle = WndChild->Self;
 
-	  ExReleaseFastMutexUnsafe (&ParentWindow->ChildrenListLock);
-	  W32kReleaseWindowObject(ParentWindow);
-	  ObmDereferenceObject (classObject);
+      ExReleaseFastMutexUnsafe (&ParentWindow->ChildrenListLock);
+      W32kReleaseWindowObject(ParentWindow);
+      ObmDereferenceObject (classObject);
       
-	  return  windowHandle;
-	}
-      currentEntry = currentEntry->Flink;
+      return windowHandle;
+    }
+    
+    WndChild = WndChild->NextSibling;
   }
 
   ExReleaseFastMutexUnsafe (&ParentWindow->ChildrenListLock);
+
   W32kReleaseWindowObject(ParentWindow);
   ObmDereferenceObject (classObject);
 
@@ -2064,17 +2119,17 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
    PWINDOW_OBJECT Wnd;
    DWORD tid, pid;
 
-   W32kAcquireWinStaLockShared();
+   W32kAcquireWinLockShared();
 
    if (!(Wnd = W32kGetWindowObject(hWnd)))
    {
-      W32kReleaseWinStaLock();
+      W32kReleaseWinLock();
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
    }
 
    tid = W32kGetWindowThreadProcessId(Wnd, &pid);
-   W32kReleaseWinStaLock();
+   W32kReleaseWinLock();
    
    if (UnsafePid) MmCopyToCaller(UnsafePid, &pid, sizeof(DWORD));
    
@@ -2107,7 +2162,7 @@ NtUserBuildHwndList(
   if ( hwndParent )
     {
       PWINDOW_OBJECT WindowObject = NULL;
-      PLIST_ENTRY ChildListEntry;
+      PWINDOW_OBJECT Child;
 
       WindowObject = W32kGetWindowObject ( hwndParent );
       if ( !WindowObject )
@@ -2118,16 +2173,13 @@ NtUserBuildHwndList(
 	}
 
       ExAcquireFastMutex ( &WindowObject->ChildrenListLock );
-      ChildListEntry = WindowObject->ChildrenListHead.Flink;
-      while (ChildListEntry != &WindowObject->ChildrenListHead)
+      Child = WindowObject->FirstChild;
+      while (Child)
 	{
-	  PWINDOW_OBJECT Child;
-	  Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
-				    SiblingListEntry);
 	  if ( pWnd && dwCount < nBufSize )
 	    pWnd[dwCount] = Child->Self;
 	  dwCount++;
-	  ChildListEntry = ChildListEntry->Flink;
+    Child = Child->NextSibling;
 	}
       ExReleaseFastMutex ( &WindowObject->ChildrenListLock );
       W32kReleaseWindowObject ( WindowObject );
@@ -2188,7 +2240,7 @@ NtUserBuildHwndList(
     {
       PDESKTOP_OBJECT DesktopObject = NULL;
       KIRQL OldIrql;
-      PLIST_ENTRY WindowListEntry;
+      PWINDOW_OBJECT Child, WndDesktop;
 
       if ( hDesktop )
 	DesktopObject = W32kGetDesktopObject ( hDesktop );
@@ -2202,16 +2254,15 @@ NtUserBuildHwndList(
 	}
 
       KeAcquireSpinLock ( &DesktopObject->Lock, &OldIrql );
-      WindowListEntry = DesktopObject->WindowListHead.Flink;
-      while ( WindowListEntry != &DesktopObject->WindowListHead )
+
+      WndDesktop = W32kGetWindowObject(DesktopObject->DesktopWindow);
+      Child = (WndDesktop ? WndDesktop->FirstChild : NULL);
+      while (Child)
 	{
-	  PWINDOW_OBJECT Child;
-	  Child = CONTAINING_RECORD(WindowListEntry, WINDOW_OBJECT,
-				    SiblingListEntry);
 	  if ( pWnd && dwCount < nBufSize )
 	    pWnd[dwCount] = Child->Self;
 	  dwCount++;
-	  WindowListEntry = WindowListEntry->Flink;
+    Child = Child->NextSibling;
 	}
       KeReleaseSpinLock ( &DesktopObject->Lock, OldIrql );
     }
@@ -2248,11 +2299,11 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
   PWINDOW_OBJECT Wnd;
   HWND hWndResult = NULL;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
 
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
@@ -2272,19 +2323,22 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
       }
       break;
     case GW_HWNDNEXT:
-      if (Wnd->NextSibling)
+      if (Wnd->Parent && Wnd->NextSibling)
       {
         hWndResult = Wnd->NextSibling->Self;
       }
       break;
     case GW_HWNDPREV:
-      if (Wnd->PrevSibling)
+      if (Wnd->Parent && Wnd->PrevSibling)
       {
         hWndResult = Wnd->PrevSibling->Self;
       }
       break;
     case GW_OWNER:
-      hWndResult = Wnd->hWndOwner;
+      if (Wnd->Parent)
+      {
+        hWndResult = Wnd->hWndOwner;
+      }
       break;
     case GW_CHILD:
       if (Wnd->FirstChild)
@@ -2294,7 +2348,7 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
       break;
   }
 
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   return hWndResult;
 }
@@ -2306,20 +2360,125 @@ NtUserGetLastActivePopup(HWND hWnd)
   PWINDOW_OBJECT Wnd;
   HWND hWndLastPopup;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
 
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
 
   hWndLastPopup = Wnd->hWndLastPopup;
 
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   return hWndLastPopup;
+}
+
+
+PWINDOW_OBJECT FASTCALL
+W32kSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
+{
+  PWINDOW_OBJECT WndOldParent;
+  BOOL was_visible;
+  HWND hWnd, hWndNewParent, hWndOldParent;
+
+  if (!WndNewParent) WndNewParent = W32kGetWindowObject(W32kGetDesktopWindow());
+
+  hWnd = Wnd;
+  hWndNewParent = WndNewParent;
+
+#if 0
+  if (!(full_handle = WIN_IsCurrentThread( hwnd )))
+    return (HWND)SendMessageW( hwnd, WM_WINE_SETPARENT, (WPARAM)parent, 0 );
+
+  if (USER_Driver.pSetParent)
+    return USER_Driver.pSetParent( hwnd, parent );
+#endif
+
+  /* Windows hides the window first, then shows it again
+   * including the WM_SHOWWINDOW messages and all */
+  was_visible = WinPosShowWindow( hWnd, SW_HIDE );
+
+  /* validate that window and parent still exist */
+  if (!W32kGetWindowObject(hWnd) || !W32kGetWindowObject(hWndNewParent)) return NULL;
+
+  /* window must belong to current process */
+  if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess()) return NULL;
+
+  WndOldParent = Wnd->Parent;
+  hWndOldParent =  WndOldParent->Self;
+
+  if (WndNewParent != WndOldParent)
+  {
+    W32kUnlinkWindow(Wnd);
+    W32kLinkWindow(Wnd, WndNewParent, NULL /*prev sibling*/);
+
+    if (WndNewParent->Self != W32kGetDesktopWindow()) /* a child window */
+    {
+      if (!(Wnd->Style & WS_CHILD))
+      {
+        HMENU Menu = Wnd->Menu;
+        Wnd->Menu = NULL;
+        //if (Menu) DestroyMenu( menu );
+      }
+    }
+  }
+
+  /* SetParent additionally needs to make hwnd the topmost window
+       in the x-order and send the expected WM_WINDOWPOSCHANGING and
+       WM_WINDOWPOSCHANGED notification messages.
+   */
+  WinPosSetWindowPos( hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | (was_visible ? SWP_SHOWWINDOW : 0) );
+  /* FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
+   * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE */
+  
+  /* validate that the old parent still exist, since it migth have been destroyed
+     during the last callbacks to user-mode 
+   */
+  return (W32kGetWindowObject(hWndOldParent) ? WndOldParent : NULL);
+}
+
+
+HWND
+STDCALL
+NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
+{
+  PWINDOW_OBJECT Wnd = NULL, WndParent = NULL, WndOldParent;
+  HWND hWndOldParent;
+
+  if (W32kIsBroadcastHwnd(hWndChild) || W32kIsBroadcastHwnd(hWndNewParent))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return NULL;
+  }
+  
+  W32kAcquireWinLockExclusive();
+  if (hWndNewParent)
+  {
+    if (!(WndParent = W32kGetWindowObject(hWndNewParent)))
+    {
+      W32kReleaseWinLock();
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return NULL;
+    }
+  }
+
+  if (!(Wnd = W32kGetWindowObject(hWndNewParent)))
+  {
+    W32kReleaseWinLock();
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return NULL;
+  }
+
+  WndOldParent = W32kSetParent(Wnd, WndParent);
+  if (WndOldParent) hWndOldParent = WndOldParent->Self;
+
+  W32kReleaseWinLock();
+
+  return hWndOldParent;    
 }
 
 

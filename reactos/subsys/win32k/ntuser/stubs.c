@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.24 2003/08/06 13:17:44 weiden Exp $
+/* $Id: stubs.c,v 1.25 2003/08/11 19:05:27 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1033,16 +1033,6 @@ NtUserSetImeHotKey(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserSetParent(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.18 2003/08/06 16:47:35 weiden Exp $
+/* $Id: windc.c,v 1.19 2003/08/11 19:05:26 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -81,7 +81,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
       Child = W32kGetWindowObject(hWnd);
       if (NULL != Child)
  	{
-	  if (! IsListEmpty(&Child->ChildrenListHead))
+    if (Child->FirstChild)
 	    {
 	      /* Compute the visible region of the child */
 	      VisChild = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,

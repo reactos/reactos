@@ -1406,11 +1406,11 @@ NtUserSetObjectInformation(
   PVOID pvInformation,
   DWORD nLength);
 
-DWORD
+HWND
 STDCALL
 NtUserSetParent(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWndChild,
+  HWND hWndNewParent);
 
 BOOL
 STDCALL

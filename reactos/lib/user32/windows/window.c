@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.55 2003/08/11 10:30:19 gvg Exp $
+/* $Id: window.c,v 1.56 2003/08/11 19:09:53 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1374,8 +1374,7 @@ HWND STDCALL
 SetParent(HWND hWndChild,
 	  HWND hWndNewParent)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserSetParent(hWndChild, hWndNewParent);
 }
 
 

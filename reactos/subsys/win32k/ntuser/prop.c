@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.3 2003/08/02 16:32:18 gdalsnes Exp $
+/* $Id: prop.c,v 1.4 2003/08/11 19:05:27 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -109,11 +109,11 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   PPROPERTY Prop;
   HANDLE Data = NULL;
 
-  W32kAcquireWinStaLockShared();
+  W32kAcquireWinLockShared();
 
   if (!(WindowObject = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
@@ -124,7 +124,7 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
     Data = Prop->Data;
   }
   
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
 
   return(Data);
 }
@@ -155,18 +155,18 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
   PWINDOW_OBJECT Wnd;
   BOOL ret;
 
-  W32kAcquireWinStaLockExclusive();
+  W32kAcquireWinLockExclusive();
 
   if (!(Wnd = W32kGetWindowObject(hWnd)))
   {
-    W32kReleaseWinStaLock();
+    W32kReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
 
   ret = W32kSetProp(Wnd, Atom, Data);
 
-  W32kReleaseWinStaLock();
+  W32kReleaseWinLock();
   return ret;
 }
 
