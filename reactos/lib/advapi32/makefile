@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2000/10/07 13:41:46 dwelch Exp $
+# $Id: makefile,v 1.16 2000/11/20 19:59:08 ekohl Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -90,15 +90,17 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
+
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+
 
 dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
 $(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
 	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
 
-include ../../rules.mak
 
+include ../../rules.mak

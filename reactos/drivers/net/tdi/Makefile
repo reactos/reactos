@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2000/10/07 13:41:57 dwelch Exp $
+# $Id: Makefile,v 1.10 2000/11/20 19:59:13 ekohl Exp $
 #
 # TDI.SYS build spec
 #
@@ -92,20 +92,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 #WITH_DEBUGGING = yes
 #WIN32_LEAN_AND_MEAN = yes

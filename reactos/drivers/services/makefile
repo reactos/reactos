@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2000/08/11 12:46:10 ekohl Exp $
+# $Id: makefile,v 1.3 2000/11/20 19:59:13 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -41,21 +41,13 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe $(FLOPPY_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
-endif
 
 
 dist: $(DIST_DIR)/subsys/$(TARGET).exe
 
 $(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe ..\..\$(DIST_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
-endif
 
 
 include ../../rules.mak

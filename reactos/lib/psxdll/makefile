@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2000/08/18 22:27:01 dwelch Exp $
+# $Id: makefile,v 1.9 2000/11/20 19:59:09 ekohl Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -106,20 +106,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
 $(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.43 2000/10/08 16:32:51 dwelch Exp $
+/* $Id: rtl.h,v 1.44 2000/11/20 19:59:07 ekohl Exp $
  * 
  */
 
@@ -626,6 +626,14 @@ VOID
 STDCALL
 RtlClearAllBits (
 	IN	PRTL_BITMAP	BitMapHeader
+	);
+
+VOID
+STDCALL
+RtlClearBits (
+	IN	PRTL_BITMAP	BitMapHeader,
+	IN	ULONG		StartingIndex,
+	IN	ULONG		NumberToClear
 	);
 
 UINT

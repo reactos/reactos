@@ -79,20 +79,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
 $(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 include ../../rules.mak
 

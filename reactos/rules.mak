@@ -35,7 +35,7 @@ NASM_FORMAT = win32
 PREFIX = 
 EXE_POSTFIX = .exe
 #CP = copy /B
-CP = rcopy
+CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = del
@@ -96,6 +96,7 @@ OBJCOPY = $(PREFIX)objcopy
 	- $(RM) base.tmp
 	$(CC) \
 		--verbose \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \
@@ -122,6 +123,7 @@ OBJCOPY = $(PREFIX)objcopy
 	- $(RM) base.tmp
 	$(CC) \
 		--verbose \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \

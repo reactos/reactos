@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2000/08/18 22:27:07 dwelch Exp $
+# $Id: makefile,v 1.11 2000/11/20 19:59:10 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -25,20 +25,12 @@ clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-endif
 
 dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
 ../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
-endif
 
 $(TARGET).sys: $(OBJECTS)
 	$(CC) \

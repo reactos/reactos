@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.40 2000/10/08 16:32:51 dwelch Exp $
+# $Id: makefile,v 1.41 2000/11/20 19:59:08 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -209,20 +209,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGET).dll
 
 $(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-endif
 
 include ../../rules.mak
 

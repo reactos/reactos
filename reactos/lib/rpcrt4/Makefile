@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000/08/18 22:27:01 dwelch Exp $
+# $Id: Makefile,v 1.4 2000/11/20 19:59:09 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -135,20 +135,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGET).dll
 
 $(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-endif
 
 WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

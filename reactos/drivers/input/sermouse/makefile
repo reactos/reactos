@@ -22,20 +22,12 @@ clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-endif
 
 dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
 ../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
-endif
 
 mouse.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \

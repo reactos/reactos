@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2000/10/07 13:41:55 dwelch Exp $
+# $Id: makefile,v 1.5 2000/11/20 19:59:11 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -51,20 +51,12 @@ vgamp.sys: $(MP_OBJECTS)
 install: $(FLOPPY_DIR)/drivers/vgamp.sys
 
 $(FLOPPY_DIR)/drivers/vgamp.sys: vgamp.sys
-ifeq ($(DOSCLI),yes)
-	$(CP) vgamp.sys $(FLOPPY_DIR)\drivers\vgamp.sys
-else
 	$(CP) vgamp.sys $(FLOPPY_DIR)/drivers/vgamp.sys
-endif
 
 dist: ../../../../$(DIST_DIR)/drivers/vgamp.sys
 
 ../../../../$(DIST_DIR)/drivers/vgamp.sys: vgamp.sys
-ifeq ($(DOSCLI),yes)
-	$(CP) vgamp.sys ..\..\..\..\$(DIST_DIR)\drivers\vgamp.sys
-else
 	$(CP) vgamp.sys ../../../../$(DIST_DIR)/drivers/vgamp.sys
-endif
 
 include ../../../../rules.mak
 

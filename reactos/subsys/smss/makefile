@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2000/10/07 13:41:57 dwelch Exp $
+# $Id: makefile,v 1.6 2000/11/20 19:59:14 ekohl Exp $
 #
 # Session Manager
 #
@@ -43,20 +43,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe $(FLOPPY_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
-endif
 
 
 dist: $(DIST_DIR)/subsys/$(TARGET).exe
 
 $(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe ..\..\$(DIST_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
-endif
 
 include ../../rules.mak

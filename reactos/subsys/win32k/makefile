@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2000/10/07 13:41:58 dwelch Exp $
+# $Id: makefile,v 1.27 2000/11/20 19:59:14 ekohl Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -105,20 +105,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-endif
 
 dist: $(DIST_DIR)/drivers/$(TARGET).sys
 
 $(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\$(DIST_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys ../../$(DIST_DIR)/drivers/$(TARGET).sys
-endif
 
 #WITH_DEBUGGING = yes
 #WIN32_LEAN_AND_MEAN = yes

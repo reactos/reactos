@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.22 2000/10/07 13:41:56 dwelch Exp $
+# $Id: makefile,v 1.23 2000/11/20 19:59:11 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -32,20 +32,12 @@ endif
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-endif
 
 dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
 ../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
-else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
-endif
 
 $(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)

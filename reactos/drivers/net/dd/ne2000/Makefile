@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000/10/08 23:44:46 dwelch Exp $
+# $Id: Makefile,v 1.6 2000/11/20 19:59:12 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -38,8 +38,6 @@ CLEAN_FILES = \
 		$(TARGETNAME).sys $(TARGETNAME).sym
 endif
 
-clean:
-
 $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
 	$(DLLTOOL) \
@@ -48,12 +46,12 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		--output-lib $(TARGETNAME).a \
 		--kill-at
 	$(CC) \
-        -nostdlib -nostdinc \
+		-nostdlib -nostdinc \
 		--subsystem=native \
 		-mdll \
 		--dll \
 		-e _DriverEntry@8 \
-		-o junk.tmp \
+		-o $(TARGETNAME).sys \
 		-Wl,--image-base,0x10000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -61,26 +59,30 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp \
-        $(TARGETNAME).o \
-        $(IMPORT_LIBS)
+		$(TARGETNAME).o \
+		$(IMPORT_LIBS)
+	- $(RM) base.tmp
+	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
+
+clean:
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
 
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
+install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
-dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+dist: ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 
-../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys ../../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 
-$(TARGET).sys: $(OBJECTS)
+$(TARGETNAME).sys: $(OBJECTS)
 
 WITH_DEBUGGING=yes
 include ../../../../rules.mak

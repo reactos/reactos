@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000/10/07 13:41:49 dwelch Exp $
+# $Id: Makefile,v 1.5 2000/11/20 19:59:09 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -18,7 +18,7 @@ OBJECTS = lsa.o dllmain.o $(TARGET).coff
 
 CLEAN_FILES = $(OBJECTS) \
 	      $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
+	      $(TARGET).dll $(TARGET).sym
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
@@ -65,6 +65,16 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
+
+install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
+
+$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
+
+dist: $(DIST_DIR)/dlls/$(TARGET).dll
+
+$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 
 include $(PATH_TO_TOP)/rules.mak
 

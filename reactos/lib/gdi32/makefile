@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2000/10/07 13:41:48 dwelch Exp $
+# $Id: makefile,v 1.17 2000/11/20 19:59:08 ekohl Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -77,20 +77,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGET).dll
 
 $(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
-else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-endif
 
 include ../../rules.mak
 

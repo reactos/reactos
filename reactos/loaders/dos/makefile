@@ -1,6 +1,8 @@
+# $Id: makefile,v 1.7 2000/11/20 19:59:10 ekohl Exp $
 #
+# loadros makefile
 #
-#
+PATH_TO_TOP = ../..
 
 all: loadros.com
 
@@ -15,19 +17,17 @@ clean:
 install: $(FLOPPY_DIR)/loadros.com
 
 $(FLOPPY_DIR)/loadros.com: loadros.com
-ifeq ($(DOSCLI),yes)
-	$(CP) loadros.com $(FLOPPY_DIR)\loadros.com
-else
 	$(CP) loadros.com $(FLOPPY_DIR)/loadros.com
-endif
+
+.PHONY: install
 
 dist: ../../$(DIST_DIR)/loadros.com
 
 ../../$(DIST_DIR)/loadros.com: loadros.com
-ifeq ($(DOSCLI),yes)
-	$(CP) loadros.com ..\..\$(DIST_DIR)\loadros.com
-else
 	$(CP) loadros.com ../../$(DIST_DIR)/loadros.com
-endif
+
+.PHONY: dist
+
 
 include ../../rules.mak
+#EOF

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2000/10/07 13:41:57 dwelch Exp $
+# $Id: makefile,v 1.10 2000/11/20 19:59:13 ekohl Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -51,10 +51,12 @@ install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
 	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
+
 dist: $(DIST_DIR)/subsys/$(TARGET).exe
 
 $(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
 	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
+
 
 WITH_DEBUGGING = yes
 include ../../rules.mak

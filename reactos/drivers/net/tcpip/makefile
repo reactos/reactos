@@ -113,20 +113,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 #WITH_DEBUGGING      = yes
 #WIN32_LEAN_AND_MEAN = yes

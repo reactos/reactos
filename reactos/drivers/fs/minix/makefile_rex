@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.12 2000/08/11 12:44:24 ekohl Exp $
+# $Id: makefile_rex,v 1.13 2000/11/20 19:59:11 ekohl Exp $
 #
 # Minix IFS Driver makefile
 #
@@ -87,20 +87,12 @@ minix.coff: ../../../include/reactos/buildno.h minix.rc
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 dist: ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
