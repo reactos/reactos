@@ -65,8 +65,8 @@ tstdiomisc.exe: tstdiomisc.c
 	$(CC) tstdiomisc.c -lkernel32 -o tstdiomisc.exe
 	$(NM) --numeric-sort tstdiomisc.exe > tstdiomisc.sym
 
-testfsd.exe: testfsd.c
-	$(CC) testfsd.c -lkernel32 -o testfsd.exe
+testfsd.exe: testfsd.c testsuite.c
+	$(CC) testfsd.c testsuite.c -lkernel32 -o testfsd.exe
 	$(NM) --numeric-sort testfsd.exe > testfsd.sym
 
 include ../../rules.mak
