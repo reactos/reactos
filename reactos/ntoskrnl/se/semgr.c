@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.42 2004/08/29 15:50:53 weiden Exp $
+/* $Id: semgr.c,v 1.43 2004/09/08 11:39:59 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -283,26 +283,25 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
   return STATUS_SUCCESS;
 }
 
+
 /*
  * @unimplemented
  */
-NTSTATUS
-STDCALL
-SeAssignSecurityEx(
-	IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-	IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-	OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-	IN GUID *ObjectType OPTIONAL,
-	IN BOOLEAN IsDirectoryObject,
-	IN ULONG AutoInheritFlags,
-	IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-	IN PGENERIC_MAPPING GenericMapping,
-	IN POOL_TYPE PoolType
-	)
+NTSTATUS STDCALL
+SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
+		   IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
+		   OUT PSECURITY_DESCRIPTOR *NewDescriptor,
+		   IN GUID *ObjectType OPTIONAL,
+		   IN BOOLEAN IsDirectoryObject,
+		   IN ULONG AutoInheritFlags,
+		   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+		   IN PGENERIC_MAPPING GenericMapping,
+		   IN POOL_TYPE PoolType)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /*
  * FUNCTION: Creates a security descriptor for a new object.
