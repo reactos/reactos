@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.5 1999/11/09 18:09:00 ekohl Exp $
+/* $Id: largeint.c,v 1.6 1999/11/15 16:00:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,7 +14,7 @@
 #include <ddk/ntddk.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <ntdll/ntdll.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -50,6 +50,17 @@ RtlEnlargedIntegerMultiply(LONG Multiplicand,
   return RC;
 }
 
+ULONG
+RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
+                          ULONG Divisor,
+                          PULONG Remainder)
+{
+  if (Remainder)
+    *Remainder = Dividend.QuadPart % Divisor;
+
+  return (ULONG)(Dividend.QuadPart / Divisor);
+}
+
 LARGE_INTEGER
 RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
                             ULONG Multiplier)
@@ -72,6 +83,29 @@ RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
   return RC;
 }
 
+LARGE_INTEGER
+RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
+                              ULONG Divisor,
+                              PULONG Remainder)
+{
+  LARGE_INTEGER RC;
+
+  if (Remainder)
+    *Remainder = Dividend.QuadPart % Divisor;
+
+  RC.QuadPart = Dividend.QuadPart / Divisor;
+
+  return RC;
+}
+
+LARGE_INTEGER
+RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
+                       LARGE_INTEGER MagicDivisor,
+                       CCHAR ShiftCount)
+{
+   UNIMPLEMENTED;
+}
+
 LARGE_INTEGER 
 RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
                    LARGE_INTEGER Addend2)
@@ -89,6 +123,29 @@ RtlLargeIntegerAnd(PLARGE_INTEGER Result,
                    LARGE_INTEGER Mask)
 {
   Result->QuadPart = Source.QuadPart & Mask.QuadPart;
+}
+
+LARGE_INTEGER
+RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
+                               CCHAR ShiftCount)
+{
+  LARGE_INTEGER RC;
+  CHAR Shift;
+
+  Shift = ShiftCount % 64;
+
+  if (Shift < 32)
+  {
+    RC.QuadPart = LargeInteger.QuadPart >> Shift;
+  }
+  else
+  {
+    /* copy the sign bit */
+    RC.u.HighPart |= (LargeInteger.u.HighPart & 0x80000000);
+    RC.u.LowPart = LargeInteger.u.HighPart >> Shift;
+  }
+
+  return RC;
 }
 
 LARGE_INTEGER
@@ -200,8 +257,11 @@ RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
                          CCHAR ShiftCount)
 {
   LARGE_INTEGER RC;
+  CCHAR Shift;
 
-  RC.QuadPart = LargeInteger.QuadPart << ShiftCount;
+  Shift = ShiftCount % 64;
+
+  RC.QuadPart = LargeInteger.QuadPart << Shift;
 
   return RC;
 }
@@ -211,8 +271,11 @@ RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
                           CCHAR ShiftCount)
 {
   LARGE_INTEGER RC;
+  CCHAR Shift;
 
-  RC.QuadPart = LargeInteger.QuadPart >> ShiftCount;
+  Shift = ShiftCount % 64;
+
+  RC.QuadPart = LargeInteger.QuadPart >> Shift;
 
   return RC;
 }
