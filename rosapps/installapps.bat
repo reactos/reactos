@@ -13,6 +13,7 @@ copy calc\calc.exe			%ROS_INSTALL%\bin
 copy cmdutils\tee.exe			%ROS_INSTALL%\bin
 copy cmdutils\more.exe			%ROS_INSTALL%\bin
 copy cmdutils\y.exe			%ROS_INSTALL%\bin
+copy cmdutils\mode\mode.exe		%ROS_INSTALL%\bin
 copy cmdutils\touch\touch.exe		%ROS_INSTALL%\bin
 copy control\control.exe		%ROS_INSTALL%\bin
 copy ctlpanel\roscfg\roscfg.cpl		%ROS_INSTALL%\system32

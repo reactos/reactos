@@ -16,6 +16,7 @@ include rules.mak
 APPS = 	calc \
 	cmd \
 	cmdutils \
+	cmdutils$(SEP)mode \
 	dflat32 \
 	hcalc \
 	mc \
