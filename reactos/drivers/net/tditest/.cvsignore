@@ -2,5 +2,6 @@ objects
 tditest.coff
 *.d
 *.o
+*.sys
 *.sym
 *.map
