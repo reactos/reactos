@@ -1063,7 +1063,6 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     if (strchrW( name, '\\' ) || strchrW( name, '/' ))
     {
         if (!(len = GetFullPathNameW( name, 0, NULL, NULL ))) return (HINF)INVALID_HANDLE_VALUE;
-        len++; /* Make room for terminating NUL byte */
         if (!(path = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
         {
             SetLastError( ERROR_NOT_ENOUGH_MEMORY );
