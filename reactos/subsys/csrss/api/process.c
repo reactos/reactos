@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.23 2003/01/11 15:51:48 hbirr Exp $
+/* $Id: process.c,v 1.24 2003/02/24 23:20:15 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -279,5 +279,72 @@ CSR_API(CsrSetShutdownParameters)
   return(STATUS_SUCCESS);
 }
 
+CSR_API(CsrGetInputHandle)
+{
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
 
+   if (ProcessData == NULL)
+   {
+      Reply->Data.GetInputHandleReply.InputHandle = INVALID_HANDLE_VALUE;
+      Reply->Status = STATUS_INVALID_PARAMETER;
+   }
+   else if (ProcessData->Console)
+   {
+      Reply->Status = CsrInsertObject(ProcessData,
+		                      &Reply->Data.GetInputHandleReply.InputHandle,
+		                      (Object_t *)ProcessData->Console);
+   }
+   else
+   {
+      Reply->Data.GetInputHandleReply.InputHandle = INVALID_HANDLE_VALUE;
+      Reply->Status = STATUS_SUCCESS;
+   }
+
+   return Reply->Status;
+}
+
+CSR_API(CsrGetOutputHandle)
+{
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   if (ProcessData == NULL)
+   {
+      Reply->Data.GetOutputHandleReply.OutputHandle = INVALID_HANDLE_VALUE;
+      Reply->Status = STATUS_INVALID_PARAMETER;
+   }
+   else if (ProcessData->Console)
+   {
+      RtlEnterCriticalSection( &ActiveConsoleLock );
+      Reply->Status = CsrInsertObject(ProcessData,
+                                      &Reply->Data.GetOutputHandleReply.OutputHandle,
+                                      &(ProcessData->Console->ActiveBuffer->Header));
+      RtlLeaveCriticalSection( &ActiveConsoleLock );
+   }
+   else
+   {
+      Reply->Data.GetOutputHandleReply.OutputHandle = INVALID_HANDLE_VALUE;
+      Reply->Status = STATUS_SUCCESS;
+   }
+
+   return Reply->Status;
+}
+
+CSR_API(CsrCloseHandle)
+{
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   if (ProcessData == NULL)
+   {
+      Reply->Status = STATUS_INVALID_PARAMETER;
+   }
+   else
+   {
+      Reply->Status = CsrReleaseObject(ProcessData, Request->Data.CloseHandleRequest.Handle);
+   }
+   return Reply->Status;
+}
+   
 /* EOF */

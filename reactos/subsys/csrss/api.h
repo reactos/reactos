@@ -132,6 +132,9 @@ CSR_API(CsrSetShutdownParameters);
 CSR_API(CsrPeekConsoleInput);
 CSR_API(CsrReadConsoleOutput);
 CSR_API(CsrWriteConsoleInput);
+CSR_API(CsrGetInputHandle);
+CSR_API(CsrGetOutputHandle);
+CSR_API(CsrCloseHandle);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

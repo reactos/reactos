@@ -337,6 +337,21 @@ typedef struct
   DWORD Length;
 } CSRSS_WRITE_CONSOLE_INPUT_REPLY, *PCSRSS_WRITE_CONSOLE_INPUT_REPLY;
 
+typedef struct
+{
+  HANDLE InputHandle;
+} CSRSS_GET_INPUT_HANDLE_REPLY, *PCSRSS_GET_INPUT_HANDLE_REPLY;
+
+typedef struct
+{
+  HANDLE OutputHandle;
+} CSRSS_GET_OUTPUT_HANDLE_REPLY, *PCSRSS_GET_OUTPUT_HANDLE_REPLY;
+
+typedef struct
+{
+  HANDLE Handle;
+} CSRSS_CLOSE_HANDLE_REQUEST, *PCSRSS_CLOSE_HANDLE_REQUEST;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -391,6 +406,9 @@ typedef struct
 #define CSRSS_PEEK_CONSOLE_INPUT            (0x21)
 #define CSRSS_READ_CONSOLE_OUTPUT           (0x22)
 #define CSRSS_WRITE_CONSOLE_INPUT           (0x23)
+#define CSRSS_GET_INPUT_HANDLE		    (0x24)
+#define CSRSS_GET_OUTPUT_HANDLE		    (0x25)
+#define CSRSS_CLOSE_HANDLE		    (0x26)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
@@ -434,6 +452,7 @@ typedef struct
     CSRSS_PEEK_CONSOLE_INPUT_REQUEST PeekConsoleInputRequest;
     CSRSS_READ_CONSOLE_OUTPUT_REQUEST ReadConsoleOutputRequest;
     CSRSS_WRITE_CONSOLE_INPUT_REQUEST WriteConsoleInputRequest;
+    CSRSS_CLOSE_HANDLE_REQUEST CloseHandleRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -464,6 +483,8 @@ typedef struct
     CSRSS_PEEK_CONSOLE_INPUT_REPLY PeekConsoleInputReply;
     CSRSS_READ_CONSOLE_OUTPUT_REPLY ReadConsoleOutputReply;
     CSRSS_WRITE_CONSOLE_INPUT_REPLY WriteConsoleInputReply;
+    CSRSS_GET_INPUT_HANDLE_REPLY GetInputHandleReply;
+    CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
