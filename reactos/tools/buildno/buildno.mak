@@ -50,4 +50,5 @@ buildno_clean:
 clean: buildno_clean
 
 $(BUILDNO_H): $(BUILDNO_TARGET)
-	$(BUILDNO_TARGET) $(BUILDNO_H)
+	$(ECHO_BUILDNO)
+	$(Q)$(BUILDNO_TARGET) $(BUILDNO_QUIET) $(BUILDNO_H)

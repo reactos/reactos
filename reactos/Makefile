@@ -32,17 +32,21 @@ endif
 ifeq ($(VERBOSE),no)
   Q = @
   HALFVERBOSEECHO = no
+  BUILDNO_QUIET = -q
 else
 ifeq ($(VERBOSE),yes)
   Q =
   HALFVERBOSEECHO = no
+  BUILDNO_QUIET =
 else
   Q = @
   HALFVERBOSEECHO = yes
+  BUILDNO_QUIET = -q
 endif
 endif
 ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_MKDIR  =@echo [MKDIR]   $@
+  ECHO_BUILDNO=@echo [BUILDNO] $@
   ECHO_INVOKE =@echo [INVOKE]  $<
   ECHO_PCH    =@echo [PCH]     $@
   ECHO_CC     =@echo [CC]      $<
@@ -63,6 +67,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_TEST   =@echo [TEST]    $@
 else
   ECHO_MKDIR  =
+  ECHO_BUILDNO=
   ECHO_INVOKE =
   ECHO_PCH    =
   ECHO_CC     =
@@ -143,7 +148,7 @@ EXISTS = .exists
 INTERMEDIATE_EXISTS = $(INTERMEDIATE)$(EXISTS)
 
 $(INTERMEDIATE_EXISTS):
-	${nmkdir} $(INTERMEDIATE_NO_SLASH)
+	-${nmkdir} $(INTERMEDIATE_NO_SLASH) 2>$(NUL) >$(NUL)
 	@echo . > $@
 
 NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
