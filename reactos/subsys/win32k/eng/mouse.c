@@ -178,7 +178,7 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
         if((MaskSurface = EngLockSurface(pgp->MaskSurface)))
         {
           EngBitBlt(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
-                    &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, SRCCOPY);
+                    &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
           EngUnlockSurface(MaskSurface);
         }
         EngUnlockSurface(SaveSurface);
@@ -231,7 +231,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
          DestSurface->sizlBitmap.cy - pt.y);
 
       EngBitBlt(SaveSurface, DestSurface, NULL, NULL, NULL,
-                &DestRect, &SrcPoint, NULL, NULL, NULL, SRCCOPY);
+                &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
       EngUnlockSurface(SaveSurface);
    }
 
@@ -265,17 +265,17 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
            if((ColorSurf = EngLockSurface(pgp->ColorSurface)))
            {
              EngBitBlt(DestSurface, ColorSurf, MaskSurf, NULL, pgp->XlateObject,
-                       &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, 0xAACC);
+                       &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, R4_MASK);
              EngUnlockSurface(ColorSurf);
            }
         }
         else
         {
            EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
-                     &DestRect, &SrcPoint, NULL, NULL, NULL, SRCAND);
+                     &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCAND));
            SrcPoint.y += pgp->Size.cy;
            EngBitBlt(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
-                     &DestRect, &SrcPoint, NULL, NULL, NULL, SRCINVERT);
+                     &DestRect, &SrcPoint, NULL, NULL, NULL, ROP3_TO_ROP4(SRCINVERT));
         }
         EngUnlockSurface(MaskSurf);
       }

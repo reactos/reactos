@@ -99,9 +99,6 @@ BOOLEAN DIB_32BPP_BitBltSrcCopy(PBLTINFO);
 BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ*,SURFOBJ*,RECTL*,RECTL*,POINTL*,POINTL,CLIPOBJ*,XLATEOBJ*,ULONG);
 BOOLEAN DIB_32BPP_TransparentBlt(SURFOBJ*,SURFOBJ*,RECTL*,POINTL*,XLATEOBJ*,ULONG);
 
-#define ROP_USES_SOURCE(Rop4) (((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000))
-#define ROP_USES_PATTERN(Rop4) (((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000))
-
 extern unsigned char notmask[2];
 extern unsigned char altnotmask[2];
 #define MASK1BPP(x) (1<<(7-((x)&7)))

@@ -213,7 +213,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
    BltInfo.DestRect = *OutputRect;
    BltInfo.SourcePoint = *InputPoint;
 
-   if (Rop4 == SRCCOPY)
+   if (ROP3_TO_ROP4(SRCCOPY) == Rop4)
       return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
    BltInfo.XlatePatternToDest = NULL;
@@ -222,7 +222,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
    BltInfo.Rop4 = Rop4;
 
    /* Pattern brush */
-   if (ROP_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
+   if (ROP4_USES_PATTERN(Rop4) && Brush->iSolidColor == 0xFFFFFFFF)
    {
       GdiBrush = CONTAINING_RECORD(Brush, GDIBRUSHINST, BrushObject);
       if((bmPattern = BITMAPOBJ_LockBitmap(GdiBrush->GdiBrushObject->hbmPattern)))
@@ -291,9 +291,9 @@ EngBitBlt(SURFOBJ *DestObj,
   BOOL               UsesPattern;
   POINTL             AdjustedBrushOrigin;
 
-  UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
-  UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);
-  if (ROP_NOOP == Rop4)
+  UsesSource = ROP4_USES_SOURCE(Rop4);
+  UsesPattern = ROP4_USES_PATTERN(Rop4);
+  if (R4_NOOP == Rop4)
     {
     /* Copy destination onto itself: nop */
     return TRUE;
@@ -392,20 +392,16 @@ EngBitBlt(SURFOBJ *DestObj,
     clippingType = ClipRegion->iDComplexity;
   }
 
-  if (0xaacc == Rop4)
+  if (R4_MASK == Rop4)
     {
       BltRectFunc = BltMask;
     }
-  else if (PATCOPY == Rop4)
+  else if (ROP3_TO_ROP4(PATCOPY) == Rop4)
     {
-#if 0
-      BltRectFunc = BltPatCopy;
-#else
       if (Brush->iSolidColor == 0xFFFFFFFF)
         BltRectFunc = CallDibBitBlt;
       else
         BltRectFunc = BltPatCopy;
-#endif
     }
   else
     {
@@ -515,7 +511,7 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
       InputClippedRect.top = DestRect->bottom;
       InputClippedRect.bottom = DestRect->top;
     }
-  UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
+  UsesSource = ROP4_USES_SOURCE(Rop4);
   if (UsesSource)
     {
       if (NULL == SourcePoint || NULL == SourceSurf)
@@ -833,40 +829,41 @@ AlphaBltMask(SURFOBJ* Dest,
       
       tMask = Mask->pvScan0 + (SourcePoint->y * Mask->lDelta) + SourcePoint->x;
       for (j = 0; j < dy; j++)
-	{
-	  lMask = tMask;
-	  for (i = 0; i < dx; i++)
-	    {
-	      if (*lMask > 0)
-		{
-			if(*lMask == 0xff)
-			{
-				DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
-					Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
-			}
-			else
-			{
-				Background = DIB_GetSource(Dest, DestRect->left + i, DestRect->top + j, SrcColorTranslation);
+        {
+          lMask = tMask;
+          for (i = 0; i < dx; i++)
+            {
+              if (*lMask > 0)
+                {
+                  if (*lMask == 0xff)
+                    {
+                      DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+                          Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+                    }
+                  else
+                    {
+                      Background = DIB_GetSource(Dest, DestRect->left + i, DestRect->top + j,
+                                                 SrcColorTranslation);
 
-				NewColor = 
-				     RGB((*lMask * (r - GetRValue(Background)) >> 8) + GetRValue(Background),
-				         (*lMask * (g - GetGValue(Background)) >> 8) + GetGValue(Background),
-				         (*lMask * (b - GetBValue(Background)) >> 8) + GetBValue(Background));
-				
-				Background = XLATEOBJ_iXlate(ColorTranslation, NewColor);
-				DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
-					Dest, DestRect->left + i, DestRect->top + j, Background);
-			}
-		}
-		  lMask++;
-	    }
-	  tMask += Mask->lDelta;
-	}
+                      NewColor = 
+                          RGB((*lMask * (r - GetRValue(Background)) >> 8) + GetRValue(Background),
+                              (*lMask * (g - GetGValue(Background)) >> 8) + GetGValue(Background),
+                              (*lMask * (b - GetBValue(Background)) >> 8) + GetBValue(Background));
+
+                      Background = XLATEOBJ_iXlate(ColorTranslation, NewColor);
+                      DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_PutPixel(
+                        Dest, DestRect->left + i, DestRect->top + j, Background);
+                    }
+                }
+              lMask++;
+            }
+          tMask += Mask->lDelta;
+        }
       return TRUE;
     }
   else
     {
-    return FALSE;
+      return FALSE;
     }
 }
 
@@ -918,7 +915,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
-  if (! IntEngEnter(&EnterLeaveSource, NULL, &InputRect, TRUE, &Translate, &InputObj))
+  if (! IntEngEnter(&EnterLeaveSource, DestObj, &InputRect, TRUE, &Translate, &InputObj))
     {
     return FALSE;
     }
@@ -1004,7 +1001,8 @@ EngMaskBitBlt(SURFOBJ *DestObj,
                            &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
         Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, &AdjustedBrushOrigin,
+                           R4_MASK);
       break;
     case DC_RECT:
       // Clip the blt to the clip rectangle
@@ -1020,7 +1018,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
                            &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin);
       else
         Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC);
+                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -1058,7 +1056,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	                           &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin) && Ret;
               else
                 Ret = BltMask(OutputObj, InputObj, Mask, DestColorTranslation,
-                                   &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, 0xAACC) && Ret;
+                                   &CombinedRect, &Pt, MaskOrigin, Brush, &AdjustedBrushOrigin, R4_MASK) && Ret;
 	    }
 	}
       while(EnumMore);
@@ -1069,26 +1067,20 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
 
-  /* Dummy BitBlt to let driver know that something has changed.
-     0x00AA0029 is the Rop for D (no-op) */
-  /* FIXME: Remove the typecast! */
-  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
-               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, ROP_NOOP);
-
   return Ret;
 }
 
 BOOL STDCALL
 IntEngMaskBlt(SURFOBJ *DestObj,
-             SURFOBJ *Mask,
-             CLIPOBJ *ClipRegion,
-             XLATEOBJ *DestColorTranslation,
-             XLATEOBJ *SourceColorTranslation,
-             RECTL *DestRect,
-             POINTL *SourcePoint,
-             POINTL *MaskOrigin,
-             BRUSHOBJ *Brush,
-             POINTL *BrushOrigin)
+              SURFOBJ *Mask,
+              CLIPOBJ *ClipRegion,
+              XLATEOBJ *DestColorTranslation,
+              XLATEOBJ *SourceColorTranslation,
+              RECTL *DestRect,
+              POINTL *SourcePoint,
+              POINTL *MaskOrigin,
+              BRUSHOBJ *Brush,
+              POINTL *BrushOrigin)
 {
   BOOLEAN ret;
   RECTL OutputRect;
@@ -1123,8 +1115,20 @@ IntEngMaskBlt(SURFOBJ *DestObj,
   MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
+  /* Dummy BitBlt to let driver know that it should flush its changes.
+     This should really be done using a call to DrvSynchronizeSurface,
+     but the VMware driver doesn't hook that call. */
+  /* FIXME: Remove the typecast! */
+  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
+               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
+
   ret = EngMaskBitBlt(DestObj, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                       &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
+
+  /* Dummy BitBlt to let driver know that something has changed. */
+  /* FIXME: Remove the typecast! */
+  IntEngBitBlt((BITMAPOBJ*)DestObj, NULL, (BITMAPOBJ*)Mask, ClipRegion, DestColorTranslation,
+               DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, R4_NOOP);
 
   MouseSafetyOnDrawEnd(DestObj);
 

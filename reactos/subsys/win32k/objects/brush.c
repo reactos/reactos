@@ -239,7 +239,7 @@ IntPatBlt(
          NULL,
          &BrushInst.BrushObject,
          &BrushOrigin,
-         ROP);
+         ROP3_TO_ROP4(ROP));
    }
 
    BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);

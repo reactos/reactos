@@ -18,7 +18,17 @@ typedef struct tagSPAN
   ULONG Width;
 } SPAN, *PSPAN;
 
-#define ROP_NOOP	0x00AA0029
+#define R3_OPINDEX_SRCCOPY 0xcc
+#define R3_OPINDEX_NOOP 0xaa
+#define R4_NOOP ((R3_OPINDEX_NOOP << 8) | R3_OPINDEX_NOOP)
+#define R4_MASK ((R3_OPINDEX_NOOP << 8) | R3_OPINDEX_SRCCOPY)
+
+#define ROP2_TO_MIX(Rop2) (((Rop2) << 8) | (Rop2))
+#define ROP3_USES_SOURCE(Rop3) ((((Rop3) & 0xCC0000) >> 2) != ((Rop3) & 0x330000))
+#define ROP4_USES_SOURCE(Rop4) (((((Rop4) & 0xCC) >> 2) != ((Rop4) & 0x33)) || ((((Rop4) & 0xCC00) >> 2) != ((Rop4) & 0x3300)))
+#define ROP3_USES_PATTERN(Rop3) ((((Rop3) & 0xF00000) >> 4) != ((Rop3) & 0x0F0000))
+#define ROP4_USES_PATTERN(Rop4) (((((Rop4) & 0xF0) >> 4) != ((Rop4) & 0x0F)) || ((((Rop4) & 0xF000) >> 4) != ((Rop4) & 0x0F00)))
+#define ROP3_TO_ROP4(Rop3) ((((Rop3) >> 8) & 0xff00) | (((Rop3) >> 16) & 0x00ff))
 
 /* Definitions of IntEngXxx functions */
 
@@ -32,7 +42,6 @@ VOID FASTCALL
 IntEngCleanupDriverObjs(struct _EPROCESS *Process,
                         PW32PROCESS Win32Process);
 
-#define ROP2_TO_MIX(Rop2) (((Rop2) << 8) | (Rop2))
 BOOL STDCALL
 IntEngLineTo(BITMAPOBJ *Surface,
              CLIPOBJ *Clip,

@@ -20,3 +20,10 @@
 #define BB_TARGET_ONLY   0x0002
 #define BB_SOURCE_COPY   0x0004
 #define BB_PATTERN_COPY  0x0008
+
+#define GET_OPINDEX_FROM_ROP3(Rop3) (((Rop3) >> 16) & 0xff)
+#define GET_OPINDEX_FROM_ROP4(Rop4) ((Rop4) & 0xff)
+#define ROP3_TO_ROP4(Rop3) ((((Rop3) >> 8) & 0xff00) | (((Rop3) >> 16) & 0x00ff))
+#define R3_OPINDEX_SRCCOPY 0xcc
+#define R3_OPINDEX_NOOP 0xaa
+#define R4_MASK ((R3_OPINDEX_NOOP << 8) | R3_OPINDEX_SRCCOPY)

@@ -1636,7 +1636,7 @@ NtGdiExtTextOut(
          &SourcePoint,
          &BrushBgInst.BrushObject,
          &BrushOrigin,
-         PATCOPY);
+         ROP3_TO_ROP4(PATCOPY));
       fuOptions &= ~ETO_OPAQUE;
    }
    else
@@ -1854,7 +1854,7 @@ NtGdiExtTextOut(
             &SourcePoint,
             &BrushBgInst.BrushObject,
             &BrushOrigin,
-            PATCOPY);
+            ROP3_TO_ROP4(PATCOPY));
          BackgroundLeft = DestRect.right;
       }
 

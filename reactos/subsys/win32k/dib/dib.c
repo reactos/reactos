@@ -156,25 +156,25 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   /* Optimized code for the various named rop codes. */
   switch (Rop)
     {
-    case BLACKNESS:   return(0);
-    case NOTSRCERASE: return(~(Dest | Source));
-    case NOTSRCCOPY:  return(~Source);
-    case SRCERASE:    return((~Dest) & Source);
-    case DSTINVERT:   return(~Dest);
-    case PATINVERT:   return(Dest ^ Pattern);
-    case SRCINVERT:   return(Dest ^ Source);
-    case SRCAND:      return(Dest & Source);
-    case MERGEPAINT:  return(Dest & (~Source));
-    case SRCPAINT:    return(Dest | Source);
-    case MERGECOPY:   return(Source & Pattern);
-    case SRCCOPY:     return(Source);
-    case PATCOPY:     return(Pattern);
-    case PATPAINT:    return(Dest | (~Source) | Pattern);
-    case WHITENESS:   return(0xFFFFFFFF);
+    case ROP3_TO_ROP4(BLACKNESS):   return(0);
+    case ROP3_TO_ROP4(NOTSRCERASE): return(~(Dest | Source));
+    case ROP3_TO_ROP4(NOTSRCCOPY):  return(~Source);
+    case ROP3_TO_ROP4(SRCERASE):    return((~Dest) & Source);
+    case ROP3_TO_ROP4(DSTINVERT):   return(~Dest);
+    case ROP3_TO_ROP4(PATINVERT):   return(Dest ^ Pattern);
+    case ROP3_TO_ROP4(SRCINVERT):   return(Dest ^ Source);
+    case ROP3_TO_ROP4(SRCAND):      return(Dest & Source);
+    case ROP3_TO_ROP4(MERGEPAINT):  return(Dest & (~Source));
+    case ROP3_TO_ROP4(SRCPAINT):    return(Dest | Source);
+    case ROP3_TO_ROP4(MERGECOPY):   return(Source & Pattern);
+    case ROP3_TO_ROP4(SRCCOPY):     return(Source);
+    case ROP3_TO_ROP4(PATCOPY):     return(Pattern);
+    case ROP3_TO_ROP4(PATPAINT):    return(Dest | (~Source) | Pattern);
+    case ROP3_TO_ROP4(WHITENESS):   return(0xFFFFFFFF);
     }
   /* Expand the ROP operation to all four bytes */
-  Rop &= 0x00FF0000;
-  Rop = (Rop << 8) | (Rop) | (Rop >> 8) | (Rop >> 16);
+  Rop &= 0xFF;
+  Rop |= (Rop << 24) | (Rop << 16) | (Rop << 8);
   /* Do the operation on four bits simultaneously. */
   Result = 0;
   for (i = 0; i < 8; i++)

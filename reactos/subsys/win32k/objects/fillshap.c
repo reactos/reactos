@@ -979,7 +979,7 @@ IntRectangle(PDC dc,
                            NULL,
                            &FillBrushInst.BrushObject,
                            NULL,
-                           PATCOPY);
+                           ROP3_TO_ROP4(PATCOPY));
       }
     }
 
