@@ -68,7 +68,7 @@ SYS_APPS = services shell winlogon
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
-       objdir atomtest winhello partinfo
+       objdir atomtest winhello partinfo mutex
 
 #NET_APPS = ping roshttpd telnet
 NET_APPS = ping roshttpd

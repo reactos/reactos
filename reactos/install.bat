@@ -17,6 +17,8 @@ md %ROS_INSTALL%\system32\drivers
 md %ROS_INSTALL%\media
 md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
+copy aboot.bat %ROS_INSTALL%
+copy boot.hiv %ROS_INSTALL%
 copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
 copy hal\halx86\hal.dll %ROS_INSTALL%\system32
@@ -40,6 +42,8 @@ copy services\net\dd\ne2000\ne2000.sys %ROS_INSTALL%\system32\drivers
 copy services\net\ndis\ndis.sys %ROS_INSTALL%\system32\drivers
 copy services\net\tcpip\tcpip.sys %ROS_INSTALL%\system32\drivers
 copy services\net\wshtcpip\wshtcpip.dll %ROS_INSTALL%\system32
+copy services\storage\atapi\atapi.sys %ROS_INSTALL%\system32\drivers
+copy services\storage\scsiport\scsiport.sys %ROS_INSTALL%\system32\drivers
 copy apps\system\shell\shell.exe %ROS_INSTALL%\system32
 copy apps\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy apps\system\services\services.exe %ROS_INSTALL%\system32
@@ -78,6 +82,8 @@ copy apps\nptest\npserver.exe %ROS_INSTALL%\bin
 copy apps\nptest\npclient.exe %ROS_INSTALL%\bin
 copy apps\atomtest\atomtest.exe %ROS_INSTALL%\bin
 copy apps\partinfo\partinfo.exe %ROS_INSTALL%\bin
+copy apps\objdir\objdir.exe %ROS_INSTALL%\bin
+copy apps\mutex\mutex.exe %ROS_INSTALL%\bin
 copy apps\net\ping\ping.exe %ROS_INSTALL%\bin
 copy apps\net\roshttpd\roshttpd.exe %ROS_INSTALL%\bin
 copy apps\net\telnet\telnet.exe %ROS_INSTALL%\bin
