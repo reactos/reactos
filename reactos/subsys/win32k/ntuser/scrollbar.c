@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.23 2003/12/26 22:52:11 gvg Exp $
+/* $Id: scrollbar.c,v 1.24 2003/12/28 17:06:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,7 +41,7 @@
 #include <include/rect.h>
 #include <include/scroll.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define MINTRACKTHUMB    8               /* Minimum size of the rectangle between the arrows */
@@ -52,70 +52,6 @@
 #define SBRG_SCROLLBOX     3 /* the scroll box */
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
-
-#define SA_SSI_HIDE		0x0001
-#define SA_SSI_SHOW		0x0002
-#define SA_SSI_REFRESH		0x0004
-#define SA_SSI_REPAINT_ARROWS	0x0008
-
-#define SBU_TOPRIGHT   0x10
-#define SBU_BOTTOMLEFT 0x20
-#define SBU_SCROLLBOX  0x40
-
-#ifndef SIZEOF_LONG_LONG
-  // FIXME enable this!
-  //#define SIZEOF_LONG_LONG 8
-#endif
-
-/***********************************************************************
- *           MulDiv  (copied from kernel32)
- */
-static INT IntMulDiv(
-  INT nMultiplicand,
-  INT nMultiplier,
-  INT nDivisor)
-{
-#if SIZEOF_LONG_LONG >= 8
-    long long ret;
-
-    if (!nDivisor) return -1;
-
-    /* We want to deal with a positive divisor to simplify the logic. */
-    if (nDivisor < 0)
-    {
-      nMultiplicand = - nMultiplicand;
-      nDivisor = -nDivisor;
-    }
-
-    /* If the result is positive, we "add" to round. else, we subtract to round. */
-    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
-         ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
-      ret = (((long long)nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
-    else
-      ret = (((long long)nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
-
-    if ((ret > 2147483647) || (ret < -2147483647)) return -1;
-    return ret;
-#else
-    if (!nDivisor) return -1;
-
-    /* We want to deal with a positive divisor to simplify the logic. */
-    if (nDivisor < 0)
-    {
-      nMultiplicand = - nMultiplicand;
-      nDivisor = -nDivisor;
-    }
-
-    /* If the result is positive, we "add" to round. else, we subtract to round. */
-    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
-         ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
-      return ((nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
-
-    return ((nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
-
-#endif
-}
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -213,14 +149,14 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
     {
       if(psi->nPage)
       {
-        ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
+        ThumbBox = max(EngMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
       }
       
       if(cxy > ThumbBox)
       {
         mx = psi->nMax - max(psi->nPage - 1, 0);
         if(psi->nMin < mx)
-          ThumbPos = Thumb + IntMulDiv(cxy - ThumbBox, psi->nPos - psi->nMin, mx - psi->nMin);
+          ThumbPos = Thumb + EngMulDiv(cxy - ThumbBox, psi->nPos - psi->nMin, mx - psi->nMin);
         else
           ThumbPos = Thumb + ThumbBox;
       }
@@ -302,124 +238,6 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
 DWORD FASTCALL
 IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
-#if 0
-  PSCROLLBARINFO Info = NULL;
-  LPSCROLLINFO psi;
-  BOOL Chg = FALSE;
-  UINT Mask;
-  DWORD Ret;
-  int old;
-  
-  if(((lpsi->cbSize != sizeof(SCROLLINFO)) && 
-     (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos))))
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
-  
-  switch(nBar)
-  {
-    case SB_HORZ:
-      Info = Window->pHScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_VERT:
-      Info = Window->pVScroll;
-      if(Info)
-        break;
-      /* fall through */
-    case SB_CTL:
-      /* FIXME
-         Send SBM_SETSCROLLINFO message, propably optimize it to SBM_SETPOS or SBM_SETRANGE.
-         If the window doesn't handle the message return 0
-      */
-      return 0;
-    
-      Info = Window->wExtra;
-      if(Info)
-        break;
-      /* fall through */
-    default:
-      return 0;
-  }
-  
-  psi = (LPSCROLLINFO)((PSCROLLBARINFO)(Info + 1));
-  
-  if(lpsi->fMask == SIF_ALL)
-    Mask = SIF_DISABLENOSCROLL | SIF_PAGE | SIF_POS | SIF_RANGE | SIF_TRACKPOS;
-  else
-    Mask = lpsi->fMask;
-  
-  if(Mask & SIF_DISABLENOSCROLL)
-  {
-    /* FIXME */
-  }
-  
-  if((Mask & SIF_RANGE) && ((psi->nMin != lpsi->nMin) || (psi->nMax != lpsi->nMax)))
-  {
-    /* Invalid range -> range is set to (0,0) */
-    if((lpsi->nMin > lpsi->nMax) ||
-       ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
-    {
-      psi->nMin = 0;
-      psi->nMax = 0;
-      Chg = TRUE;
-//      if(Action)
-//        *Action |= SBU_SCROLLBOX;
-    }
-    else
-    {
-      if(psi->nMin != lpsi->nMin ||
-         psi->nMax != lpsi->nMax )
-      {
-        //*action |= SA_SSI_REFRESH;
-        psi->nMin = lpsi->nMin;
-        psi->nMax = lpsi->nMax;
-        Chg = TRUE;
-//        if(Action)
-//          *Action |= SBU_SCROLLBOX;
-      }
-    }
-  }
-  
-  if((Mask & SIF_PAGE) && (psi->nPage != lpsi->nPage))
-  {
-    old = psi->nPage;
-    psi->nPage = lpsi->nPage;
-    if(psi->nPage < 0) psi->nPage = 0;
-    else if(psi->nPage > psi->nMax - psi->nMin + 1)
-      psi->nPage = psi->nMax - psi->nMin + 1;
-    
-    if(old != psi->nPage)
-    {
-      Chg = TRUE;
-//      if(Action)
-//        *Action |= SBU_SCROLLBOX;
-    }
-  }
-  
-  if((Mask & SIF_POS) && (psi->nPos != lpsi->nPos))
-  {
-    old = psi->nPos;
-    psi->nPos = lpsi->nPos;
-    if(psi->nPos < psi->nMin)
-      psi->nPos = psi->nMin;
-    else if(psi->nPos > psi->nMax - max(psi->nPage - 1, 0))
-      psi->nPos = psi->nMax - max(psi->nPage - 1, 0);
-    
-    if(old != psi->nPos)
-    {
-      Chg = TRUE;
-//      if(Action)
-//        *Action |= SBU_SCROLLBOX;
-    }
-  }
-  
-  Ret = psi->nPos;
-  
-  return Ret;
-#else
    /*
     * Update the scrollbar state and set action flags according to
     * what has to be done graphics wise.
@@ -586,7 +404,6 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
 
    /* Return current position */
    return Info->nPos;
-#endif
 }
 
 BOOL FASTCALL
