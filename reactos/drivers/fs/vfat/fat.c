@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.17 2001/02/06 00:41:19 dwelch Exp $
+ * $Id: fat.c,v 1.18 2001/02/06 20:17:35 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,7 +62,7 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
     }
 
-  CurrentCluster = *((PUSHORT)BaseAddress + (FATOffset % PAGESIZE));
+  CurrentCluster = *(PULONG)(BaseAddress + (FATOffset % PAGESIZE));
   if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
     CurrentCluster = 0xffffffff;
   CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
