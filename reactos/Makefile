@@ -748,19 +748,8 @@ install_before:
 	$(RLINE) bootdata/hivesft.inf $(INSTALL_DIR)/hivesft.inf
 	$(RLINE) bootdata/hivesys.inf $(INSTALL_DIR)/hivesys.inf
 	$(RLINE) bootdata/txtsetup.sif $(INSTALL_DIR)/txtsetup.sif
-	$(CP) system.hiv $(INSTALL_DIR)/system.hiv
-	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/helb____.ttf
-	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/timr____.ttf
-	$(CP) media/fonts/Vera.ttf $(INSTALL_DIR)/Vera.ttf
-	$(CP) media/fonts/VeraBd.ttf $(INSTALL_DIR)/VeraBd.ttf
-	$(CP) media/fonts/VeraBI.ttf $(INSTALL_DIR)/VeraBI.ttf
-	$(CP) media/fonts/VeraIt.ttf $(INSTALL_DIR)/VeraIt.ttf
-	$(CP) media/fonts/VeraMoBd.ttf $(INSTALL_DIR)/VeraMoBd.ttf
-	$(CP) media/fonts/VeraMoBI.ttf $(INSTALL_DIR)/VeraMoBI.ttf
-	$(CP) media/fonts/VeraMoIt.ttf $(INSTALL_DIR)/VeraMoIt.ttf
-	$(CP) media/fonts/VeraMono.ttf $(INSTALL_DIR)/VeraMono.ttf
-	$(CP) media/fonts/VeraSe.ttf $(INSTALL_DIR)/VeraSe.ttf
-	$(CP) media/fonts/VeraSeBd.ttf $(INSTALL_DIR)/VeraSeBd.ttf
+  $(CP) media/fonts $(INSTALL_DIR)
+	$(CP) media/nls $(INSTALL_DIR)
 
 else # BOOTCD_INSTALL
 
@@ -778,19 +767,11 @@ install_before:
 	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
 	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
 	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
-	$(CP) system.hiv $(INSTALL_DIR)/system32/config/system.hiv
-	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/media/fonts/helb____.ttf
-	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/media/fonts/timr____.ttf
-	$(CP) media/fonts/Vera.ttf $(INSTALL_DIR)/media/fonts/Vera.ttf
-	$(CP) media/fonts/VeraBd.ttf $(INSTALL_DIR)/media/fonts/VeraBd.ttf
-	$(CP) media/fonts/VeraBI.ttf $(INSTALL_DIR)/media/fonts/VeraBI.ttf
-	$(CP) media/fonts/VeraIt.ttf $(INSTALL_DIR)/media/fonts/VeraIt.ttf
-	$(CP) media/fonts/VeraMoBd.ttf $(INSTALL_DIR)/media/fonts/VeraMoBd.ttf
-	$(CP) media/fonts/VeraMoBI.ttf $(INSTALL_DIR)/media/fonts/VeraMoBI.ttf
-	$(CP) media/fonts/VeraMoIt.ttf $(INSTALL_DIR)/media/fonts/VeraMoIt.ttf
-	$(CP) media/fonts/VeraMono.ttf $(INSTALL_DIR)/media/fonts/VeraMono.ttf
-	$(CP) media/fonts/VeraSe.ttf $(INSTALL_DIR)/media/fonts/VeraSe.ttf
-	$(CP) media/fonts/VeraSeBd.ttf $(INSTALL_DIR)/media/fonts/VeraSeBd.ttf
+	$(CP) media/fonts $(INSTALL_DIR)/media/fonts
+	$(CP) media/nls $(INSTALL_DIR)/system32
+	$(CP) media/nls/c_1252.nls $(INSTALL_DIR)/system32/ansi.nls
+	$(CP) media/nls/c_437.nls $(INSTALL_DIR)/system32/oem.nls
+	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
 
 endif # BOOTCD_INSTALL
 

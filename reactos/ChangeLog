@@ -1,3 +1,8 @@
+2003-05-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: Don't install system.hiv. Install fonts and nls directory.
+	* tools/rcopy.c (copy_file, copy_directory, is_directory): New functions.
+
 2003-05-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* ntoskrnl/io/irp.c (IofCallDriver): Don't reference FileObject.
