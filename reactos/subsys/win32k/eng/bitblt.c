@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.35 2003/12/25 10:49:30 navaraf Exp $
+/* $Id: bitblt.c,v 1.36 2003/12/26 00:31:22 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1001,8 +1001,12 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   switch(clippingType)
   {
     case DC_TRIVIAL:
-      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+      if(Mask->iBitmapFormat == BMF_8BPP)
+        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
                            &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
+      else
+        Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin, 0xAACC);
       break;
     case DC_RECT:
       // Clip the blt to the clip rectangle
@@ -1013,8 +1017,12 @@ EngMaskBitBlt(SURFOBJ *DestObj,
       EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
       Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
       Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+      if(Mask->iBitmapFormat == BMF_8BPP)
+        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
                            &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin);
+      else
+        Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, 0xAACC);
       break;
     case DC_COMPLEX:
       Ret = TRUE;
@@ -1047,9 +1055,12 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
 	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
 	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-	      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
-	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin) &&
-	            Ret;
+	      if(Mask->iBitmapFormat == BMF_8BPP)
+	        Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin) && Ret;
+              else
+                Ret = BltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation,
+                                   &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, 0xAACC) && Ret;
 	    }
 	}
       while(EnumMore);

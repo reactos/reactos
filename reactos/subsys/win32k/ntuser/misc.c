@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.38 2003/12/25 21:14:24 weiden Exp $
+/* $Id: misc.c,v 1.39 2003/12/26 00:31:22 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,6 +25,7 @@
 #include <include/clipboard.h>
 #include <include/msgqueue.h>
 #include <include/desktop.h>
+#include <include/text.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -533,6 +534,33 @@ NtUserSystemParametersInfo(
     case SPI_SETGRADIENTCAPTIONS:
       {
         Status = MmCopyFromCaller(&GradientCaptions, pvParam, sizeof(BOOL));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        return TRUE;
+      }
+    case SPI_SETFONTSMOOTHING:
+      {
+        BOOL Enable;
+        
+        Status = MmCopyFromCaller(&Enable, pvParam, sizeof(BOOL));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        
+        IntEnableFontRendering(Enable);
+        
+        return TRUE;
+      }
+    case SPI_GETFONTSMOOTHING:
+      {
+        BOOL Enabled = IntIsFontRenderingEnabled();
+        
+        Status = MmCopyToCaller(pvParam, &Enabled, sizeof(BOOL));
         if(!NT_SUCCESS(Status))
         {
           SetLastNtError(Status);

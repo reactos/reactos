@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.66 2003/12/25 00:28:09 weiden Exp $ */
+/* $Id: text.c,v 1.67 2003/12/26 00:31:22 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -29,6 +29,7 @@
 #include <win32k/text.h>
 #include <win32k/kapi.h>
 #include <include/error.h>
+#include <include/desktop.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/tttables.h>
@@ -55,10 +56,37 @@ typedef struct _FONT_ENTRY {
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
 static INT FontsLoaded = 0; /* number of all fonts loaded (including private fonts */
+static BOOL RenderingEnabled = TRUE;
+
+BOOL FASTCALL
+IntIsFontRenderingEnabled(VOID)
+{
+  BOOL Ret;
+  HDC hDC;
+  PDC dc;
+  PSURFOBJ SurfObj;
+  Ret = RenderingEnabled;
+  hDC = IntGetScreenDC();
+  if(hDC)
+  {
+    dc = DC_LockDc(hDC);
+    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    if(SurfObj)
+      Ret = (SurfObj->iBitmapFormat >= BMF_8BPP);
+    DC_UnlockDc(hDC);
+  }
+  return Ret;
+}
+
+VOID FASTCALL
+IntEnableFontRendering(BOOL Enable)
+{
+  RenderingEnabled = Enable;
+}
 
 FT_Render_Mode FASTCALL
 IntGetFontRenderMode(LOGFONTW *logfont)
-{
+{  
   switch(logfont->lfQuality)
   {
     //case ANTIALIASED_QUALITY:
@@ -1497,6 +1525,8 @@ NtGdiTextOut(HDC  hDC,
   PPALGDI PalDestGDI;
   PXLATEOBJ XlateObj, XlateObj2;
   ULONG Mode;
+  FT_Render_Mode RenderMode;
+  BOOL Render;
 
   dc = DC_LockDc(hDC);
   if( !dc )
@@ -1536,7 +1566,15 @@ NtGdiTextOut(HDC  hDC,
     error = FT_Set_Charmap(face, found);
     if (error) DPRINT1("WARNING: Could not set the charmap!\n");
   }
-
+  
+  
+  Render = IntIsFontRenderingEnabled();
+  
+  if(Render)
+    RenderMode = IntGetFontRenderMode(&TextObj->logfont);
+  else
+    RenderMode = FT_RENDER_MODE_MONO;
+  
   error = FT_Set_Pixel_Sizes(face,
                              /* FIXME should set character height if neg */
                              (TextObj->logfont.lfHeight < 0 ?
@@ -1595,7 +1633,7 @@ NtGdiTextOut(HDC  hDC,
   for(i=0; i<Count; i++)
   {
     glyph_index = FT_Get_Char_Index(face, *String);
-    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
     if(error) {
       EngDeleteXlate(XlateObj);
       EngDeleteXlate(XlateObj2);
@@ -1614,7 +1652,7 @@ NtGdiTextOut(HDC  hDC,
 
     if (glyph->format == ft_glyph_format_outline)
     {
-      error = FT_Render_Glyph(glyph, IntGetFontRenderMode(&TextObj->logfont));
+      error = FT_Render_Glyph(glyph, RenderMode);
       if(error) {
         EngDeleteXlate(XlateObj);
         EngDeleteXlate(XlateObj2);
@@ -1660,7 +1698,7 @@ NtGdiTextOut(HDC  hDC,
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
-DPRINT1("glyph->bitmap.palette_mode == 0x%x (0x%x)\n", glyph->bitmap.palette_mode, glyph->bitmap.num_grays);
+    
     // Use the font data as a mask to paint onto the DCs surface using a brush
     IntEngMaskBlt (
 		SurfObj,
