@@ -120,6 +120,8 @@ int OskitTCPSocket( void *context,
 	so->so_connection = context;
 	so->so_state = SS_NBIO;
 	so->so_error = 0;
+        so->so_q = so->so_q0 = NULL;
+        so->so_qlen = 0;
 	*aso = so;
     }
     return error;
