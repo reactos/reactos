@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.122 2004/06/27 12:21:14 ekohl Exp $
+; $Id: ntdll.def,v 1.123 2004/07/03 17:13:09 hbirr Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -17,7 +17,6 @@ CsrClientCallServer@16
 CsrClientConnectToServer@0
 CsrFreeCaptureBuffer@4
 CsrIdentifyAlertableThread@0
-CsrIsCsrss@0
 CsrNewThread@0
 CsrProbeForRead@12
 CsrProbeForWrite@12
