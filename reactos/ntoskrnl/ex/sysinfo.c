@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.42 2004/07/31 00:14:39 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.43 2004/07/31 09:44:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -409,7 +409,7 @@ QSI_DEF(SystemPerformanceInformation)
 	Spi->WriteOperationCount = IoWriteOperationCount;
 	Spi->OtherOperationCount = IoOtherOperationCount;
 
-	Spi->AvailablePages = MiNrAvailablePages;
+	Spi->AvailablePages = MmStats.NrFreePages;
 /*
         Add up all the used "Commitied" memory + pagefile.
         Not sure this is right. 8^\

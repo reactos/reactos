@@ -13,7 +13,6 @@
 extern ULONG MiFreeSwapPages;
 extern ULONG MiUsedSwapPages;
 extern ULONG MmPagedPoolSize;
-extern ULONG MiNrAvailablePages;
 
 struct _EPROCESS;
 

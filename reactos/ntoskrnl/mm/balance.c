@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.29 2004/04/22 01:57:49 jimtabor Exp $
+/* $Id: balance.c,v 1.30 2004/07/31 09:44:35 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -48,7 +48,6 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
-ULONG MiNrAvailablePages;
 static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
@@ -65,10 +64,10 @@ static LONG MiBalancerWork = 0;
 
 VOID MmPrintMemoryStatistic(VOID)
 {
-   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MiNrAvailablePages %d\n",
+   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MmStats.NrFreePages %d\n",
             MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed,
             MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
-            MiNrAvailablePages);
+            MmStats.NrFreePages);
 }
 
 VOID INIT_FUNCTION
@@ -78,7 +77,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
    InitializeListHead(&AllocationListHead);
    KeInitializeSpinLock(&AllocationListLock);
 
-   MiNrAvailablePages = MiNrTotalPages = NrAvailablePages;
+   MiNrTotalPages = NrAvailablePages;
 
    /* Set up targets. */
    MiMinimumAvailablePages = 64;
@@ -104,7 +103,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
    PMM_ALLOCATION_REQUEST Request;
    PLIST_ENTRY Entry;
    KIRQL oldIrql;
-   ULONG OldAvailable;
 
 #if defined(__GNUC__)
 
@@ -113,7 +111,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
 
    if (Page.QuadPart == 0)
 #endif
-
    {
       DPRINT1("Tried to release page zero.\n");
       KEBUGCHECK(0);
@@ -123,8 +120,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
    if (MmGetReferenceCountPage(Page) == 1)
    {
       InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
-      OldAvailable = InterlockedIncrement((LONG *)&MiNrAvailablePages);
-      if (IsListEmpty(&AllocationListHead) || OldAvailable + 1 < MiMinimumAvailablePages)
+      if (IsListEmpty(&AllocationListHead) || MmStats.NrFreePages < MiMinimumAvailablePages)
       {
          KeReleaseSpinLock(&AllocationListLock, oldIrql);
          MmDereferencePage(Page);
@@ -174,7 +170,7 @@ MmRebalanceMemoryConsumers(VOID)
    ULONG NrFreedPages;
    NTSTATUS Status;
 
-   Target = (MiMinimumAvailablePages - MiNrAvailablePages) + MiPagesRequired;
+   Target = (MiMinimumAvailablePages - MmStats.NrFreePages) + MiPagesRequired;
    Target = max(Target, (LONG) MiMinimumPagesPerRun);
 
    for (i = 0; i < MC_MAXIMUM && Target > 0; i++)
@@ -203,7 +199,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             PHYSICAL_ADDRESS* AllocatedPage)
 {
    ULONG OldUsed;
-   ULONG OldAvailable;
    PHYSICAL_ADDRESS Page;
    KIRQL oldIrql;
 
@@ -222,7 +217,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       MiTrimMemoryConsumer(Consumer);
    }
 
-   OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
    /*
     * Allocate always memory for the non paged pool and for the pager thread. 
     */
@@ -241,7 +235,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
          KEBUGCHECK(0);
       }
       *AllocatedPage = Page;
-      if (OldAvailable < MiMinimumAvailablePages &&
+      if (MmStats.NrFreePages <= MiMinimumAvailablePages &&
             MiBalancerThreadHandle != NULL)
       {
          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
@@ -252,13 +246,12 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Make sure we don't exceed global targets.
     */
-   if (OldAvailable < MiMinimumAvailablePages)
+   if (MmStats.NrFreePages <= MiMinimumAvailablePages)
    {
       MM_ALLOCATION_REQUEST Request;
 
       if (!CanWait)
       {
-         InterlockedIncrement((LONG *)&MiNrAvailablePages);
          InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
          return(STATUS_NO_MEMORY);
       }
@@ -357,7 +350,7 @@ MiBalancerThread(PVOID Unused)
       {
          /* MiBalancerEvent */
          CHECKPOINT;
-         while (MiNrAvailablePages < MiMinimumAvailablePages + 5)
+         while (MmStats.NrFreePages < MiMinimumAvailablePages + 5)
          {
             for (i = 0; i < MC_MAXIMUM; i++)
             {
@@ -378,7 +371,7 @@ MiBalancerThread(PVOID Unused)
       else if (Status == STATUS_SUCCESS + 1)
       {
          /* MiBalancerTimer */
-         ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
+         ShouldRun = MmStats.NrFreePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
          for (i = 0; i < MC_MAXIMUM; i++)
          {
             if (MiMemoryConsumers[i].Trim != NULL)
