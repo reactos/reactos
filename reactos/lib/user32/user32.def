@@ -381,7 +381,7 @@ InsertMenuA@20
 InsertMenuItemA@16
 InsertMenuItemW@16
 InsertMenuW@20
-;InternalGetWindowText
+InternalGetWindowText@12
 IntersectRect@12
 InvalidateRect@12
 InvalidateRgn@12
