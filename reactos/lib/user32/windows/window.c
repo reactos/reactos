@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.41 2003/07/07 06:39:34 jimtabor Exp $
+/* $Id: window.c,v 1.42 2003/07/10 00:24:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -719,8 +719,17 @@ FindWindowExA(HWND hwndParent,
 HWND STDCALL
 FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 {
-  //FIXME: FindWindow does not search children, but FindWindowEx does.
-  //       what should we do about this?
+  /* 
+  
+  There was a FIXME here earlier, but I think it is just a documentation unclarity.
+
+  FindWindow only searches top level windows. What they mean is that child 
+  windows of other windows than the desktop can be searched. 
+  FindWindowExW never does a recursive search.
+  
+	/ Joakim
+  */
+
   return FindWindowExW (NULL, NULL, lpClassName, lpWindowName);
 }
 
@@ -730,29 +739,26 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
-	PUNICODE_STRING ucClassName;
-	PUNICODE_STRING ucWindowName;
+	UNICODE_STRING ucClassName;
+	UNICODE_STRING ucWindowName;
 
 	if (IS_ATOM(lpszClass)) 
 	{
-		RtlInitUnicodeString(ucClassName, NULL);
-		ucClassName->Buffer = (LPWSTR)lpszClass;
+		RtlInitUnicodeString(&ucClassName, NULL);
+		ucClassName.Buffer = (LPWSTR)lpszClass;
     } 
 	else 
     {
-		RtlInitUnicodeString(ucClassName, lpszClass);
-    }
-	if (IS_ATOM(lpszWindow)) 
-	{
-		RtlInitUnicodeString(ucWindowName, NULL);
-		ucClassName->Buffer = (LPWSTR)lpszWindow;
-    } 
-	else 
-    {
-		RtlInitUnicodeString(ucWindowName, lpszWindow);
+		RtlInitUnicodeString(&ucClassName, lpszClass);
     }
 
-	return NtUserFindWindowEx(hwndParent, hwndChildAfter, ucClassName, ucWindowName);
+	// Window names can't be atoms, and if lpszWindow = NULL,
+	// RtlInitUnicodeString will clear it
+	
+	RtlInitUnicodeString(&ucWindowName, lpszWindow);
+
+
+	return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
 }
 
 WINBOOL STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.12 2003/07/05 16:04:01 chorns Exp $
+/* $Id: winpos.c,v 1.13 2003/07/10 00:24:04 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -802,6 +802,8 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
   PLIST_ENTRY CurrentEntry;
   PWINDOW_OBJECT Current;
 
+
+  ExAcquireFastMutexUnsafe(&ScopeWin->ChildrenListLock);
   CurrentEntry = ScopeWin->ChildrenListHead.Flink;
   while (CurrentEntry != &ScopeWin->ChildrenListHead)
     {
@@ -816,10 +818,12 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	  *Window = Current;
 	  if (Current->Style & WS_DISABLED)
 	    {
+		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      return(HTERROR);
 	    }
 	  if (Current->Style & WS_MINIMIZE)
 	    {
+		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      return(HTCAPTION);
 	    }
 	  if (Point.x >= Current->ClientRect.left &&
@@ -830,12 +834,17 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	      Point.x -= Current->ClientRect.left;
 	      Point.y -= Current->ClientRect.top;
 
+		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      return(WinPosSearchChildren(Current, Point, Window));
 	    }
+
+	  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	  return(0);
 	}
       CurrentEntry = CurrentEntry->Flink;
     }
+		  
+  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
   return(0);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.18 2003/06/15 20:08:02 gvg Exp $
+/* $Id: painting.c,v 1.19 2003/07/10 00:24:04 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -386,6 +386,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	  Client.x = Window->ClientRect.left - Window->WindowRect.left;
 	  Client.y = Window->ClientRect.top - Window->WindowRect.top;	  
 
+	  ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
 	  ChildListEntry = Window->ChildrenListHead.Flink;
 	  while (ChildListEntry != &Window->ChildrenListHead)
 	    {
@@ -416,6 +417,8 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		}
 	      ChildListEntry = ChildListEntry->Flink;
 	    }
+	  ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+
 	  W32kOffsetRgn(hRgn, Total.x, Total.y);
 	  HasChildren = FALSE;
 	}
@@ -426,6 +429,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
       PWINDOW_OBJECT Child;
       PLIST_ENTRY ChildListEntry;
 
+      ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
       ChildListEntry = Window->ChildrenListHead.Flink;
       while (ChildListEntry != &Window->ChildrenListHead)
 	{
@@ -437,6 +441,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 	    }
 	  ChildListEntry = ChildListEntry->Flink;
 	}
+      ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
     }
 
   PaintUpdateInternalPaint(Window, Flags);
@@ -678,7 +683,7 @@ PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread)
   while (current_entry != &BaseWindow->ChildrenListHead)
     {
       Window = CONTAINING_RECORD(current_entry, WINDOW_OBJECT,
-				 ChildrenListHead);
+				 SiblingListEntry);
       if (Window->Style & WS_VISIBLE)
 	{
 	  hFoundWnd = PaintingFindWinToRepaint(Window->Self, Thread);

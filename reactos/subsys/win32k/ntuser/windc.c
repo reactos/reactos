@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.12 2003/06/15 20:08:02 gvg Exp $
+/* $Id: windc.c,v 1.13 2003/07/10 00:24:04 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -123,6 +123,8 @@ DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
   PWINDOW_OBJECT Child;
   RECT Rect1;
 
+
+  ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
   ChildListEntry = Parent->ChildrenListHead.Flink;
   while (ChildListEntry != &Parent->ChildrenListHead)
     {
@@ -130,6 +132,7 @@ DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
 				SiblingListEntry);
       if (Child == End)
 	{
+	  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
 	  return(TRUE);
 	}
       if (Child->Style & WS_VISIBLE)
@@ -146,6 +149,7 @@ DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End,
 	}
       ChildListEntry = ChildListEntry->Flink;
     }
+  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
   return(FALSE);
 }
 

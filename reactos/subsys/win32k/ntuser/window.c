@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.61 2003/07/07 06:09:45 jimtabor Exp $
+/* $Id: window.c,v 1.62 2003/07/10 00:24:04 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -490,7 +490,9 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->ClientRect = WindowObject->WindowRect;
   WindowObject->UserData = 0;
   WindowObject->WndProc = DesktopClass->Class.lpfnWndProc;
+
   InitializeListHead(&WindowObject->ChildrenListHead);
+  ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
   wcscpy(WindowName, L"DESKTOP");
@@ -608,8 +610,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->UserData = 0;
   WindowObject->WndProc = ClassObject->Class.lpfnWndProc;
+
+  ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
   InsertHeadList(&ParentWindow->ChildrenListHead,
 		 &WindowObject->SiblingListEntry);
+  ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+
   InitializeListHead(&WindowObject->ChildrenListHead);
   InitializeListHead(&WindowObject->PropListHead);
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
@@ -1032,9 +1038,17 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window,
   WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
   CLASS_RemoveWindow(Window->Class);
 #endif
+
+  ExAcquireFastMutexUnsafe(&Window->Parent->ChildrenListLock);
   RemoveEntryList(&Window->SiblingListEntry);
+  ExReleaseFastMutexUnsafe(&Window->Parent->ChildrenListLock);
+
   RemoveEntryList(&Window->DesktopListEntry);
+
+  ExAcquireFastMutexUnsafe (&ThreadData->WindowListLock);
   RemoveEntryList(&Window->ThreadListEntry);
+  ExReleaseFastMutexUnsafe (&ThreadData->WindowListLock);
+
   Window->Class = NULL;
   ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
 
@@ -1231,6 +1245,31 @@ NtUserFillWindow(DWORD Unknown0,
   return 0;
 }
 
+/*
+ * FUNCTION:
+ *   Searches a window's children for a window with the specified
+ *   class and name
+ * ARGUMENTS:
+ *   hwndParent	    = The window whose childs are to be searched. 
+ *					  NULL = desktop
+ *
+ *   hwndChildAfter = Search starts after this child window. 
+ *					  NULL = start from beginning
+ *
+ *   ucClassName    = Class name to search for
+ *					  Reguired parameter.
+ *
+ *   ucWindowName   = Window name
+ *					  ->Buffer == NULL = don't care
+ *			  
+ * RETURNS:
+ *   The HWND of the window if it was found, otherwise NULL
+ *
+ * FIXME:
+ *   Should use MmCopyFromCaller, we don't want an access violation in here
+ *	 
+ */
+
 HWND STDCALL
 NtUserFindWindowEx(HWND hwndParent,
 		   HWND hwndChildAfter,
@@ -1240,41 +1279,79 @@ NtUserFindWindowEx(HWND hwndParent,
   NTSTATUS status;
   HWND windowHandle;
   PWINDOW_OBJECT windowObject;
+  PWINDOW_OBJECT ParentWindow;
   PLIST_ENTRY currentEntry;
   PWNDCLASS_OBJECT classObject;
   
+  // Get a pointer to the class
   status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
   if (!NT_SUCCESS(status))
     {
-      return (HWND)0;
+      return NULL;
+    }
+  
+  // If hwndParent==NULL use the desktop window instead
+  if(!hwndParent)
+      hwndParent = PsGetWin32Thread()->Desktop->DesktopWindow;
+
+  // Get the object
+  ParentWindow = W32kGetWindowObject(hwndParent);
+
+  if(!ParentWindow)
+    {
+      ObmDereferenceObject(classObject);
+      return NULL;      
     }
 
-  //ExAcquireFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
-  currentEntry = W32kGetActiveDesktop()->WindowListHead.Flink;
-  while (currentEntry != &W32kGetActiveDesktop()->WindowListHead)
+  ExAcquireFastMutexUnsafe (&ParentWindow->ChildrenListLock);
+  currentEntry = ParentWindow->ChildrenListHead.Flink;
+
+  if(hwndChildAfter)
+    {
+      while (currentEntry != &ParentWindow->ChildrenListHead)
+	{
+	  windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, 
+					    SiblingListEntry);
+	  
+	  if(windowObject->Self == hwndChildAfter)
+	  {
+	    /* "The search begins with the _next_ child window in the Z order." */
+	    currentEntry = currentEntry->Flink;
+	    break;
+	  }
+
+	  currentEntry = currentEntry->Flink;
+	}
+
+	/* If the child hwndChildAfter was not found:
+	  currentEntry=&ParentWindow->ChildrenListHead now so the next
+	  block of code will just fall through and the function returns NULL */
+    }
+
+  while (currentEntry != &ParentWindow->ChildrenListHead)
     {
       windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, 
-					ListEntry);
+					SiblingListEntry);
 
-      if (classObject == windowObject->Class &&
-	  RtlCompareUnicodeString (ucWindowName, &windowObject->WindowName, 
-				   TRUE) == 0)
+      if (classObject == windowObject->Class && (ucWindowName->Buffer==NULL || 
+	  RtlCompareUnicodeString (ucWindowName, &windowObject->WindowName, TRUE) == 0))
 	{
-	  ObmCreateHandle(W32kGetActiveDesktop()->WindowStation->HandleTable,
-			  windowObject,
-			  &windowHandle);
-	  //ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
+	  windowHandle = windowObject->Self;
+
+	  ExReleaseFastMutexUnsafe (&ParentWindow->ChildrenListLock);
+	  W32kReleaseWindowObject(ParentWindow);
 	  ObmDereferenceObject (classObject);
       
 	  return  windowHandle;
 	}
       currentEntry = currentEntry->Flink;
   }
-  //ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
-  
+
+  ExReleaseFastMutexUnsafe (&ParentWindow->ChildrenListLock);
+  W32kReleaseWindowObject(ParentWindow);
   ObmDereferenceObject (classObject);
 
-  return  (HWND)0;
+  return  NULL;
 }
 
 DWORD STDCALL

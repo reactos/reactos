@@ -223,7 +223,8 @@ static INT CBGetTextAreaHeight(
 
     ReleaseDC(hwnd, hDC);
 
-    iTextItemHeight = ((13 * baseUnitY) / 8);
+#if 0 
+	iTextItemHeight = ((13 * baseUnitY) / 8);
 
     /*
      * This "formula" calculates the height of the complete control.
@@ -231,6 +232,11 @@ static INT CBGetTextAreaHeight(
      * borders.
      */
     iTextItemHeight -= 2*COMBO_YBORDERSIZE();
+#endif
+
+	/* Joakim: This seems to work better, the old formula caused the combo box
+	to be waaay to big with big font sizes */ 
+ 	iTextItemHeight = baseUnitY+2*COMBO_YBORDERSIZE();
   }
 
   /*
