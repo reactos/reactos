@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.18 2004/05/10 17:07:18 weiden Exp $
+/* $Id: guicheck.c,v 1.19 2004/05/21 10:09:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,12 +47,12 @@ static ULONG NrGuiApplicationsRunning = 0;
 static BOOL FASTCALL
 AddGuiApp(PW32PROCESS W32Data)
 {
-  W32Data->CreatedWindowOrDC = TRUE;
+  W32Data->Flags |= W32PF_CREATEDWINORDC;
   if (0 == NrGuiApplicationsRunning++)
     {
       if (! IntInitializeDesktopGraphics())
         {
-          W32Data->CreatedWindowOrDC = FALSE;
+          W32Data->Flags &= ~W32PF_CREATEDWINORDC;
           NrGuiApplicationsRunning--;
           return FALSE;
         }
@@ -64,7 +64,7 @@ AddGuiApp(PW32PROCESS W32Data)
 static void FASTCALL
 RemoveGuiApp(PW32PROCESS W32Data)
 {
-  W32Data->CreatedWindowOrDC = FALSE;
+  W32Data->Flags &= ~W32PF_CREATEDWINORDC;
   if (0 < NrGuiApplicationsRunning)
     {
       NrGuiApplicationsRunning--;
@@ -83,14 +83,14 @@ IntGraphicsCheck(BOOL Create)
   W32Data = PsGetWin32Process();
   if (Create)
     {
-      if (! W32Data->CreatedWindowOrDC && ! W32Data->ManualGuiCheck)
+      if (! (W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
         {
           return AddGuiApp(W32Data);
         }
     }
   else
     {
-      if (W32Data->CreatedWindowOrDC && ! W32Data->ManualGuiCheck)
+      if ((W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
         {
           RemoveGuiApp(W32Data);
         }
@@ -107,18 +107,18 @@ NtUserManualGuiCheck(LONG Check)
   W32Data = PsGetWin32Process();
   if (0 == Check)
     {
-      W32Data->ManualGuiCheck = TRUE;
+      W32Data->Flags |= W32PF_MANUALGUICHECK;
     }
   else if (0 < Check)
     {
-      if (! W32Data->CreatedWindowOrDC)
+      if (! (W32Data->Flags & W32PF_CREATEDWINORDC))
         {
           AddGuiApp(W32Data);
         }
     }
   else
     {
-      if (W32Data->CreatedWindowOrDC)
+      if (W32Data->Flags & W32PF_CREATEDWINORDC)
         {
           RemoveGuiApp(W32Data);
         }

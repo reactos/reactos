@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.74 2004/05/19 19:09:20 weiden Exp $
+/* $Id: misc.c,v 1.75 2004/05/21 10:09:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -286,6 +286,30 @@ NtUserCallOneParam(
       
       IntReleaseWindowObject(WindowObject);
       return Result;
+    }
+    
+    case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
+    {
+      BOOL Enable;
+      PW32PROCESS Process = PsGetWin32Process();
+      
+      if(Process != NULL)
+      {
+        Enable = (BOOL)(Param != 0);
+        
+        if(Enable)
+        {
+          Process->Flags &= ~W32PF_NOWINDOWGHOSTING;
+        }  
+        else
+        {
+          Process->Flags |= W32PF_NOWINDOWGHOSTING;
+        }
+        
+        return TRUE;
+      }
+      
+      return FALSE;
     }
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n", 

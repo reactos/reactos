@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.73 2004/05/13 19:29:47 jfilby Exp $
+/* $Id: dllmain.c,v 1.74 2004/05/21 10:09:31 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -91,9 +91,9 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 		       "process.\n");
 	    }
 	}
-
-      Win32Process->CreatedWindowOrDC = FALSE;
-      Win32Process->ManualGuiCheck = FALSE;
+      
+      /* setup process flags */
+      Win32Process->Flags = 0;
     }
   else
     {

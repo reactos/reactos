@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.117 2004/05/20 04:10:01 royce Exp $
+/* $Id: window.c,v 1.118 2004/05/21 10:09:31 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1567,6 +1567,16 @@ STDCALL
 IsWindowInDestroy(HWND hWnd)
 {
   return NtUserIsWindowInDestroy(hWnd);
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL 
+DisableProcessWindowsGhosting(VOID)
+{
+  NtUserEnableProcessWindowGhosting(FALSE);
 }
 
 /* EOF */

@@ -31,6 +31,7 @@ typedef struct _W32PROCESS
   struct _KBDTABLES* KeyboardLayout;
   struct _WINSTATION_OBJECT* WindowStation;
   HANDLE hWindowStation;
+  ULONG Flags;
   WORD GDIObjects;
   WORD UserObjects;
   BOOLEAN CreatedWindowOrDC;
