@@ -6,22 +6,23 @@
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
-#include <freetype/freetype.h>
+// #include <freetype/freetype.h>
 
 // #define NDEBUG
 #include <win32k/debug1.h>
 
-FT_Library  library;
+// FT_Library  library;
 
 BOOL InitFontSupport()
 {
-  ULONG error;
+/*  ULONG error;
 
   error = FT_Init_FreeType(&library);
   if(error)
   {
     return FALSE;
-  } else return TRUE;
+  } else return TRUE; */
+  return TRUE;
 }
 
 int
@@ -378,8 +379,9 @@ W32kTextOut(HDC  hDC,
                   LPCWSTR  String,
                   int  Count)
 {
+  UNIMPLEMENTED;
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
-
+/*
   DC *dc = DC_HandleToPtr(hDC);
   SURFOBJ *SurfObj = AccessUserObject(dc->Surface);
   UNICODE_STRING FileName;
@@ -545,7 +547,7 @@ W32kTextOut(HDC  hDC,
   }
 
 DbgPrint("BREAK\n"); for (;;) ;
-
+*/
 /*  RtlFreeAnsiString(AString);
     RtlFreeUnicodeString(UString); */
 }
