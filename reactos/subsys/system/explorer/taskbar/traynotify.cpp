@@ -31,6 +31,8 @@
 #include "../explorer.h"
 #include "../globals.h"
 
+#include "../explorer_intres.h"
+
 #include "traynotify.h"
 
 
@@ -296,8 +298,17 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_GET_WIDTH:
 		return _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
 
-	  case WM_CONTEXTMENU:
-		break;	// don't let WM_CONTEXTMENU go through to the desktop bar
+	  case WM_CONTEXTMENU: {
+		Point pt(lparam);
+		ScreenToClient(_hwnd, &pt);
+
+		if (IconHitTest(pt) == _sorted_icons.end()) { // display menu only when no icon clicked
+			PopupMenu menu(IDM_NOTIFYAREA);
+			SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
+			CheckMenuItem(menu, ID_SHOW_HIDDEN_ICONS, MF_BYCOMMAND|(_show_hidden?MF_CHECKED:MF_UNCHECKED));
+			menu.TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
+		}
+		break;}
 
 	  case WM_COPYDATA: {	// receive NotifyHook answers
 		String path;
@@ -305,7 +316,6 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		if (_hook.ModulePathCopyData(lparam, &hwnd, path))
 			_window_modules[hwnd] = path;
-
 		break;}
 
 	  default:
@@ -355,6 +365,29 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 
 		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+int NotifyArea::Command(int id, int code)
+{
+	switch(id) {
+	  case ID_SHOW_HIDDEN_ICONS:
+		_show_hidden = !_show_hidden;
+		Refresh();
+		break;
+
+	  case ID_CONFIG_NOTIFYAREA:
+		///@todo
+		break;
+
+	  case ID_CONFIG_TIME:
+		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("timedate.cpl"), SW_SHOWNORMAL);
+		break;
+
+	  default:
+		SendParent(WM_COMMAND, MAKELONG(id,code), 0);
 	}
 
 	return 0;

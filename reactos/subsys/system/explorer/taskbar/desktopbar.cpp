@@ -229,9 +229,11 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_COPYDATA:
 		return ProcessCopyData((COPYDATASTRUCT*)lparam);
 
-	  case WM_CONTEXTMENU:
-		PopupMenu(IDM_DESKTOPBAR).TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
-		break;
+	  case WM_CONTEXTMENU: {
+		PopupMenu menu(IDM_DESKTOPBAR);
+		SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
+		menu.TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
+		break;}
 
 	  case PM_GET_LAST_ACTIVE:
 		if (_hwndTaskBar)

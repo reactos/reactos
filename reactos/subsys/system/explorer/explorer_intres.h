@@ -77,6 +77,7 @@
 #define IDI_COMPUTER                    149
 #define IDM_DESKTOPBAR                  150
 #define IDM_VOLUME                      151
+#define IDM_NOTIFYAREA                  152
 #define IDD_DESKBAR_TASKBAR             153
 #define IDB_ICON_ALIGN_0                153
 #define IDD_DESKBAR_STARTMENU           154
@@ -144,6 +145,9 @@
 #define ID_BROWSE_UP                    40013
 #define ID_TRAY_VOLUME                  40014
 #define ID_VOLUME_PROPERTIES            40015
+#define ID_SHOW_HIDDEN_ICONS            40016
+#define ID_CONFIG_NOTIFYAREA            40017
+#define ID_CONFIG_TIME                  40018
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
@@ -162,7 +166,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        163
-#define _APS_NEXT_COMMAND_VALUE         40016
+#define _APS_NEXT_COMMAND_VALUE         40019
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

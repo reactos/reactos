@@ -167,8 +167,10 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER //FIXME?
         MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS //FIXME?
+        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM SEPARATOR,
+        MENUITEM "&About Explorer...",           ID_ABOUT_EXPLORER //FIXME?
     END
 END
 
