@@ -1,10 +1,10 @@
-/* $Id: job.c,v 1.1 2004/09/23 18:02:19 weiden Exp $
+/* $Id: job.c,v 1.2 2004/09/23 18:31:51 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/process/job.c
  * PURPOSE:         Job functions
- * PROGRAMMER:      Thomas Weidenmueller
+ * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
  *                  Created 9/23/2004
  */
@@ -17,6 +17,94 @@
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 LPCSTR lpName)
+{
+  HANDLE hJob;
+  ANSI_STRING AnsiName;
+  UNICODE_STRING UnicodeName;
+  
+  if(lpName != NULL)
+  {
+    NTSTATUS Status;
+    
+    RtlInitAnsiString(&AnsiName, lpName);
+    Status = RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+    }
+  }
+  
+  hJob = CreateJobObjectW(lpJobAttributes,
+                          ((lpName != NULL) ? UnicodeName.Buffer : NULL));
+
+  if(lpName != NULL)
+  {
+    RtlFreeUnicodeString(&UnicodeName);
+  }
+  return hJob;
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+STDCALL
+CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 LPCWSTR lpName)
+{
+  UNICODE_STRING JobName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PVOID SecurityDescriptor;
+  HANDLE hJob;
+  NTSTATUS Status;
+  
+  if(lpName != NULL)
+  {
+    RtlInitUnicodeString(&JobName, lpName);
+  }
+  
+  if(lpJobAttributes != NULL)
+  {
+    if(lpJobAttributes->bInheritHandle)
+    {
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+    }
+    SecurityDescriptor = lpJobAttributes->lpSecurityDescriptor;
+  }
+  else
+  {
+    SecurityDescriptor = NULL;
+  }
+  
+  InitializeObjectAttributes(&ObjectAttributes,
+                             ((lpName != NULL) ? &JobName : NULL),
+                             0,
+                             NULL,
+                             SecurityDescriptor);
+
+  Status = NtCreateJobObject(&hJob,
+                             JOB_OBJECT_ALL_ACCESS,
+                             &ObjectAttributes);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return NULL;
+  }
+  
+  return hJob;
+}
+
 
 /*
  * @implemented
@@ -236,7 +324,6 @@ TerminateJobObject(HANDLE hJob,
   NTSTATUS Status;
   
   Status = NtTerminateJobObject(hJob, uExitCode);
-  
   if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);
