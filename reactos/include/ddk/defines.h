@@ -191,9 +191,11 @@ enum
 /*
  * PURPOSE: Some drivers use these
  */
+#ifndef IN
 #define IN
 #define OUT
 #define OPTIONAL
+#endif
 
 /*
  * PURPOSE: Power IRP minor function numbers
