@@ -29,3 +29,13 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "de.rc"
 #include "en.rc"
+#include "es.rc"
+#include "fr.rc"
+#include "hu.rc"
+#include "it.rc"
+#include "nl.rc"
+#include "pt.rc"
+#include "ru.rc"
+#include "si.rc"
+#include "zh.rc"
+

@@ -1,0 +1,167 @@
+/*
+ * WineFile
+ * French Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ * Copyright 2003 Sylvain Petreolle
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+/* Menu */
+
+IDM_WINEFILE MENU FIXED IMPURE
+{
+	POPUP "&Fichier"  {
+		MENUITEM "&Ouvrir\tEntrée" ,			101
+		MENUITEM "&Déplacer...\tF7" , 			106
+		MENUITEM "&Copier...\tF8" ,			107
+		MENUITEM "P&resse-Papiers...\tF9" ,		118
+		MENUITEM "&Effacer\tDel" ,			108
+		MENUITEM "Re&nommer..." ,			109
+		MENUITEM "&Propriétés...\tAlt+Entree" , ID_EDIT_PROPERTIES
+		MENUITEM SEPARATOR
+		MENUITEM "Co&mpresser..." ,		119
+		MENUITEM "Décompre&sser..." ,		120
+		MENUITEM SEPARATOR
+		MENUITEM "E&xécuter..." ,			ID_EXECUTE
+		MENUITEM "&Imprimer..." , 			102
+		MENUITEM "&Associer..." ,		103
+		MENUITEM SEPARATOR
+		MENUITEM "Créer Réper&toire..." ,			111
+		MENUITEM "Rec&hercher..." ,			104
+		MENUITEM "Sélectionner &Fichiers..." ,			116
+		MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+		MENUITEM "&Quitter\tAlt+X" , 			ID_FILE_EXIT
+#else
+		MENUITEM "&Quitter", 				ID_FILE_EXIT
+#endif
+	}
+
+	POPUP "&Disque"  {
+		MENUITEM "&Copier Disque..." ,			201
+		MENUITEM "&Nommer Disque..." ,			202
+		MENUITEM SEPARATOR
+		MENUITEM "&Formater Disque..." ,			203
+#ifdef _WIN95
+		MENUITEM "Créer un disque *système...", -1	/*@@ */
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "Connecter un lecteur &réseau" ,			252
+		MENUITEM "&Déconnecter un lecteur réseau" ,		253
+		MENUITEM SEPARATOR
+		MENUITEM "&Partager..." ,			254
+		MENUITEM "Cesser de parta&ger" ,			255
+		MENUITEM SEPARATOR
+		MENUITEM "Choisir le &lecteur" ,			251
+	}
+
+	POPUP "&Répertoires"  {
+		MENUITEM "&Développer un niveau\t+" ,			301
+		MENUITEM "Développer une &branche\t*" ,		302
+		MENUITEM "&Tout développer\tCtrl+*" ,		303
+		MENUITEM "&Réduire une branche\t-" ,			304
+		MENUITEM SEPARATOR
+		MENUITEM "&Indiquer l'arborescence" ,				505
+	}
+
+	POPUP "&Vue"  {
+		MENUITEM "Arbre et ré&pertoire" ,			413
+		MENUITEM "&Arbre seulement" ,			411
+		MENUITEM "&Répertoire seulement" ,			412
+		MENUITEM SEPARATOR
+		MENUITEM "&Séparer" ,			414
+		MENUITEM SEPARATOR
+		MENUITEM "&Nom" ,			ID_VIEW_NAME
+		MENUITEM "Tous &les Détails" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
+		MENUITEM "&Détails..." ,			ID_VIEW_SELECTED_ATTRIBUTES
+		MENUITEM SEPARATOR
+		MENUITEM "Trier par N&om" ,		404
+		MENUITEM "Trier par &Type" ,		405
+		MENUITEM "Trier par Ta&ille" , 		406
+		MENUITEM "Trier par Dat&e" , 		407
+		MENUITEM SEPARATOR
+		MENUITEM "Trier par &..." ,			409
+	}
+
+	POPUP "&Options"  {
+		MENUITEM "&Confirmation..." ,		-1
+		MENUITEM "&Police..." ,			-1
+		MENUITEM "Personnaliser la &barre d'Outils..." , -1
+		MENUITEM SEPARATOR
+		MENUITEM "Barre d'&Outils" ,		ID_VIEW_TOOL_BAR, CHECKED
+		MENUITEM "Barre de &Lecteur" ,		ID_VIEW_DRIVE_BAR, CHECKED
+		MENUITEM "Barre d'&État" ,	ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+		MENUITEM "P&lein Écran\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "&Réduire a l'utilisation" ,		-1
+		MENUITEM "&Enregistrer la configuration en quittant" ,			511
+	}
+
+
+	POPUP "&Sécurité"  {
+		MENUITEM "&Accès..." ,		605
+		MENUITEM "&Surveillance..." ,			606
+		MENUITEM "&Propriétaire..." ,		607
+	}
+
+	POPUP "&Fenêtre"  {
+		MENUITEM "Nouvelle &fenêtre" ,			ID_WINDOW_NEW
+		MENUITEM "&En cascade\tCtrl+F5" ,		ID_WINDOW_CASCADE
+		MENUITEM "Mosaïque &horizontale" ,		ID_WINDOW_TILE_HORZ
+		MENUITEM "Mosaïque &verticale\tCtrl+F4" ,		ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+		MENUITEM "Réorganisation &Automatique" ,		ID_WINDOW_AUTOSORT
+#endif
+		MENUITEM "Réorganiser les &icônes" ,		ID_WINDOW_ARRANGE
+		MENUITEM "&Actualiser\tF5" ,		ID_REFRESH
+	}
+
+	POPUP "&Aide"  {
+		MENUITEM "&Sommaire de l'aide\tF1" ,			ID_HELP
+		MENUITEM "&Rechercher dans l'aide\tF1" ,			ID_HELP
+		MENUITEM "&Utiliser l'aide\tF1" ,			ID_HELP_USING
+		MENUITEM SEPARATOR
+		POPUP "Info..."  {
+		  MENUITEM "A propos de &Wine..." ,			ID_ABOUT_WINE
+/*
+ *		  MENUITEM "&Licence..."		ID_LICENSE
+ *		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
+ */
+		}
+	}
+}
+
+
+IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Exécuter"
+FONT 8, "MS Shell Dlg"
+{
+	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+	CONTROL 		"&Commande :" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
+	CONTROL 		"Sous forme d'icône" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
+	PUSHBUTTON		"Annuler" , 2, 158, 23, 47, 14
+	PUSHBUTTON		"&Aide" , 254, 158, 43, 47, 14
+}

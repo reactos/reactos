@@ -4,3 +4,16 @@
 *.o
 *.sym
 *.map
+Debug
+Release
+UDebug
+URelease
+winefileDebug
+winefileRelease
+winefileUDebug
+winefileURelease
+*.ncb
+*.opt
+*.aps
+*.ncb
+*.plg
