@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.101 2004/03/07 20:38:17 navaraf Exp $
+/* $Id: window.c,v 1.102 2004/03/14 11:27:33 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1046,7 +1046,7 @@ BOOL STDCALL
 IsWindow(HWND hWnd)
 {
   DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
-  return (0 != WndProc || ERROR_INVALID_HANDLE != GetLastError());
+  return (0 != WndProc || ERROR_INVALID_WINDOW_HANDLE != GetLastError());
 }
 
 
