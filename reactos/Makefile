@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.251.4.1 2004/10/24 22:51:28 ion Exp $
+# $Id: Makefile,v 1.251.4.2 2004/10/25 01:36:56 ion Exp $
 #
 # Global makefile
 #
@@ -55,7 +55,7 @@ DLLS = acledit aclui advapi32 advpack cabinet comctl32 crtdll comdlg32 d3d8thk e
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 mpr msacm msafd msgina \
 	msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
 	richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
-	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda wshtcpip \
+	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
 	dnsapi \
 	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
@@ -85,7 +85,7 @@ FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
 
 # Kernel mode networking drivers
 # afd ndis npf tcpip tdi wshtcpip
-NET_DRIVERS = afd ndis npf tcpip tdi
+NET_DRIVERS = afd ndis npf tcpip tdi wshtcpip
 
 # Kernel mode networking device drivers
 # ne2000 pcnet
@@ -104,6 +104,7 @@ SYS_APPS = autochk cmd explorer expand format services setup taskmgr userinit us
 SYS_SVC = rpcss eventlog
 
 APPS = testsets utils
+
 
 # External modules and (sub)systems for ReactOS
 # rosapps posix os2 (requires c++) java (non-existant)
