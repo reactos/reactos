@@ -100,7 +100,7 @@ KiInsertQueue(
        !IsListEmpty(&Queue->Header.WaitListHead) &&
        KeGetCurrentThread()->Queue != Queue)
    {
-      KiDispatcherObjectWake(&Queue->Header);
+      KiDispatcherObjectWake(&Queue->Header, IO_NO_INCREMENT);
    }
 
    return InitialState;
@@ -179,7 +179,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
          if (Thread->Queue->CurrentCount < Thread->Queue->MaximumCount && 
              !IsListEmpty(&Thread->Queue->EntryListHead))
          {
-            KiDispatcherObjectWake(&Thread->Queue->Header);
+            KiDispatcherObjectWake(&Thread->Queue->Header, 0);
          }
       }
 

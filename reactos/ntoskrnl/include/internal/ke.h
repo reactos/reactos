@@ -147,7 +147,7 @@ VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
-BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr);
+BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment);
 VOID STDCALL KeExpireTimers(PKDPC Apc,
 			    PVOID Arg1,
 			    PVOID Arg2,

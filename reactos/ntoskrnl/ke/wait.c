@@ -25,8 +25,8 @@
 
 static KSPIN_LOCK DispatcherDatabaseLock;
 
-#define KeDispatcherObjectWakeOne(hdr) KeDispatcherObjectWakeOneOrAll(hdr, FALSE)
-#define KeDispatcherObjectWakeAll(hdr) KeDispatcherObjectWakeOneOrAll(hdr, TRUE)
+#define KeDispatcherObjectWakeOne(hdr, increment) KeDispatcherObjectWakeOneOrAll(hdr, increment, FALSE)
+#define KeDispatcherObjectWakeAll(hdr, increment) KeDispatcherObjectWakeOneOrAll(hdr, increment, TRUE)
 
 extern POBJECT_TYPE EXPORTED ExMutantObjectType;
 extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
@@ -227,13 +227,14 @@ BOOLEAN KiAbortWaitThread(PKTHREAD Thread, NTSTATUS WaitStatus)
 
    if (WasWaiting)
    {
-	   PsUnblockThread((PETHREAD)Thread, &WaitStatus);
+	   PsUnblockThread((PETHREAD)Thread, &WaitStatus, 0);
    }
    return WasWaiting;
 }
 
 static BOOLEAN
 KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
+                               KPRIORITY increment,
                                BOOLEAN WakeAll)
 {
    PKWAIT_BLOCK Waiter;
@@ -332,7 +333,8 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
 
          WakedAny = TRUE;
          DPRINT("Waking %x status = %x\n", WaiterHead->Thread, Status);
-         PsUnblockThread(CONTAINING_RECORD(WaiterHead->Thread, ETHREAD, Tcb), &Status);
+         PsUnblockThread(CONTAINING_RECORD(WaiterHead->Thread, ETHREAD, Tcb),
+                         &Status, increment);
       }
    }
 
@@ -340,7 +342,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
 }
 
 
-BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
+BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
 /*
  * FUNCTION: Wake threads waiting on a dispatcher object
  * NOTE: The exact semantics of waking are dependant on the type of object
@@ -355,19 +357,19 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
    switch (hdr->Type)
      {
       case InternalNotificationEvent:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
       case InternalNotificationTimer:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
       case InternalSynchronizationEvent:
-	return(KeDispatcherObjectWakeOne(hdr));
+	return(KeDispatcherObjectWakeOne(hdr, increment));
 
       case InternalSynchronizationTimer:
-	return(KeDispatcherObjectWakeOne(hdr));
+	return(KeDispatcherObjectWakeOne(hdr, increment));
 
       case InternalQueueType:
-   return(KeDispatcherObjectWakeOne(hdr));      
+	return(KeDispatcherObjectWakeOne(hdr, increment));
       
       case InternalSemaphoreType:
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
@@ -376,20 +378,20 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	    do
 	      {
 		DPRINT("Waking one semaphore waiter\n");
-		Ret = KeDispatcherObjectWakeOne(hdr);
+		Ret = KeDispatcherObjectWakeOne(hdr, increment);
 	      } while(hdr->SignalState > 0 &&  Ret) ;
 	    return(Ret);
 	  }
 	else return FALSE;
 
      case InternalProcessType:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case InternalThreadType:
-       return(KeDispatcherObjectWakeAll(hdr));
+       return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case InternalMutexType:
-       return(KeDispatcherObjectWakeOne(hdr));
+       return(KeDispatcherObjectWakeOne(hdr, increment));
      }
    DbgPrint("Dispatcher object %x has unknown type %d\n", hdr, hdr->Type);
    KEBUGCHECK(0);
@@ -723,7 +725,7 @@ KeWaitForMultipleObjects(ULONG Count,
          if (CurrentThread->Queue->CurrentCount < CurrentThread->Queue->MaximumCount &&
              !IsListEmpty(&CurrentThread->Queue->EntryListHead))
          {
-            KiDispatcherObjectWake(&CurrentThread->Queue->Header);
+            KiDispatcherObjectWake(&CurrentThread->Queue->Header, IO_NO_INCREMENT);
          }
       }
 

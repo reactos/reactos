@@ -87,9 +87,9 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 
   OldIrql = KeAcquireDispatcherDatabaseLock();
 
-  ret = InterlockedExchange(&(Event->Header.SignalState),1);
+  ret = InterlockedExchange(&Event->Header.SignalState,1);
 
-  KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+  KiDispatcherObjectWake(&Event->Header, Increment);
 
   if (Wait == FALSE)
     {
@@ -117,8 +117,8 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
 
    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
    OldIrql = KeAcquireDispatcherDatabaseLock();
-   ret = InterlockedExchange(&(Event->Header.SignalState),1);
-   KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+   ret = InterlockedExchange(&Event->Header.SignalState,1);
+   KiDispatcherObjectWake(&Event->Header, Increment);
    InterlockedExchange(&(Event->Header.SignalState),0);
 
   if (Wait == FALSE)

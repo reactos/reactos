@@ -475,7 +475,7 @@ PsDispatchThread(ULONG NewThreadStatus)
 }
 
 VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
+PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment)
 {
   if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
       THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
@@ -493,6 +493,22 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
     {
       ULONG Processor;
       KAFFINITY Affinity;
+
+      /* FIXME: This propably isn't the right way to do it... */
+      if (Thread->Tcb.Priority < LOW_REALTIME_PRIORITY &&
+          Thread->Tcb.BasePriority < LOW_REALTIME_PRIORITY - 2)
+        {
+          if (!Thread->Tcb.PriorityDecrement && !Thread->Tcb.DisableBoost)
+            {
+              Thread->Tcb.Priority = Thread->Tcb.BasePriority + Increment;
+              Thread->Tcb.PriorityDecrement = Increment;
+            }
+        }
+      else
+        {
+          Thread->Tcb.Quantum = Thread->Tcb.ApcState.Process->ThreadQuantum;
+        }
+     
       if (WaitStatus != NULL)
 	{
 	  Thread->Tcb.WaitStatus = *WaitStatus;
@@ -965,6 +981,33 @@ KeSetAffinityThread(PKTHREAD	Thread,
 }
 
 
+NTSTATUS STDCALL
+NtAlertThread (IN HANDLE ThreadHandle)
+{
+   PETHREAD Thread;
+   NTSTATUS Status;
+   NTSTATUS ThreadStatus;
+   KIRQL oldIrql;
+
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+
+   ThreadStatus = STATUS_ALERTED;
+   oldIrql = KeAcquireDispatcherDatabaseLock();
+   (VOID)PsUnblockThread(Thread, &ThreadStatus, 0);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
+
+   ObDereferenceObject(Thread);
+   return(STATUS_SUCCESS);
+}
 
 /**********************************************************************
  *	NtOpenThread/4

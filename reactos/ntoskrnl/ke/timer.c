@@ -529,7 +529,7 @@ HandleExpiredTimer(PKTIMER Timer)
 
    KeAcquireDispatcherDatabaseLockAtDpcLevel();
    Timer->Header.SignalState = TRUE;
-   KiDispatcherObjectWake(&Timer->Header);
+   KiDispatcherObjectWake(&Timer->Header, 0);
    KeReleaseDispatcherDatabaseLockFromDpcLevel();
 
    if (Timer->Period != 0)

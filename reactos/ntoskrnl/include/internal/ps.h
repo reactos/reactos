@@ -528,7 +528,7 @@ VOID
 PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
 VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus);
+PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
 VOID
 PsApplicationProcessorInit(VOID);
 VOID

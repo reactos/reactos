@@ -82,7 +82,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
       Mutex->OwnerThread = NULL;
       if (Mutex->MutantListEntry.Flink && Mutex->MutantListEntry.Blink)
 	RemoveEntryList(&Mutex->MutantListEntry);
-      KiDispatcherObjectWake(&Mutex->Header);
+      KiDispatcherObjectWake(&Mutex->Header, IO_NO_INCREMENT);
     }
 
   if (Wait == FALSE)
@@ -191,7 +191,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
       Mutant->OwnerThread = NULL;
       if (Mutant->MutantListEntry.Flink && Mutant->MutantListEntry.Blink)
 	RemoveEntryList(&Mutant->MutantListEntry);
-      KiDispatcherObjectWake(&Mutant->Header);
+      KiDispatcherObjectWake(&Mutant->Header, Increment);
     }
 
   if (Wait == FALSE)

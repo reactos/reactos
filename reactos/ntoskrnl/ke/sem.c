@@ -105,7 +105,7 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
   Semaphore->Header.SignalState += Adjustment;
   if (InitialState == 0)
     {
-      KiDispatcherObjectWake(&Semaphore->Header);
+      KiDispatcherObjectWake(&Semaphore->Header, SEMAPHORE_INCREMENT);
     }
 
   if (Wait == FALSE)

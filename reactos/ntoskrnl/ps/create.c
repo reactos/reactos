@@ -748,7 +748,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   Thread->Tcb.Alerted[KernelMode] = TRUE;
 
   oldIrql = KeAcquireDispatcherDatabaseLock ();
-  PsUnblockThread(Thread, NULL);
+  PsUnblockThread(Thread, NULL, 0);
   KeReleaseDispatcherDatabaseLock(oldIrql);
 
 
@@ -814,9 +814,9 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 	*ClientId=Thread->Cid;
      }
 
-  oldIrql = KeAcquireDispatcherDatabaseLock ();
-  PsUnblockThread(Thread, NULL);
-  KeReleaseDispatcherDatabaseLock(oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock ();
+   PsUnblockThread(Thread, NULL, 0);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
    
    return(STATUS_SUCCESS);
 }
