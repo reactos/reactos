@@ -99,11 +99,16 @@ typedef struct multiboot_info
   unsigned long cmdline;
   unsigned long mods_count;
   unsigned long mods_addr;
+#if 0
+  /* reactos and loadros define this entry with a size of 12 byte but the union is 16 byte */
   union
   {
     aout_symbol_table_t aout_sym;
     elf_section_header_table_t elf_sec;
   } u;
+#else
+  char syms[12];        
+#endif
   unsigned long mmap_length;
   unsigned long mmap_addr;
 } multiboot_info_t;
@@ -137,7 +142,7 @@ char					multiboot_kernel_cmdline[255];		// Command line passed to kernel
 module_t				multiboot_modules[64];				// Array to hold boot module info loaded for the kernel
 char					multiboot_module_strings[64][256];	// Array to hold module names
 unsigned long			multiboot_memory_map_descriptor_size;
-memory_map_t			multiboot_memory_map;				// Memory map
+memory_map_t			multiboot_memory_map[32];				// Memory map
 
 
 void	boot_reactos(void);
