@@ -3,9 +3,9 @@
 #ifndef __MSVCRT_INTERNAL_TLS_H
 #define __MSVCRT_INTERNAL_TLS_H
 
+#include <windows.h>
 #include <msvcrt/crttypes.h>
 #include <msvcrt/stddef.h>
-#include <windows.h>
 
 typedef struct _ThreadData
 {
