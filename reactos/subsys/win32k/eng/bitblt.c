@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.59 2004/12/12 01:40:36 weiden Exp $
+/* $Id: bitblt.c,v 1.60 2004/12/12 21:38:25 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -754,8 +754,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   if (NULL != SourceObj)
     {
     MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
-                           (SourceRect->left + abs(SourceRect->right - SourceRect->left)),
-			   (SourceRect->top + abs(SourceRect->bottom - SourceRect->top)));
+                           SourceRect->right, SourceRect->bottom);
     }
 
   /* No success yet */
