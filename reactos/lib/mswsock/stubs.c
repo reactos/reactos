@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: stubs.c,v 1.2 2003/09/13 21:15:03 vizzini Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -186,6 +186,21 @@ GetTypeByNameW(LPWSTR ServiceName,
                LPGUID ServiceType)
 {
   OutputDebugStringW(L"w32sock GetTypeByNameW stub called\n");
+
+  return SOCKET_ERROR;
+}
+
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+MigrateWinsockConfiguration(DWORD Unknown1,
+                            DWORD Unknown2,
+                            DWORD Unknown3)
+{
+  OutputDebugStringW(L"w32sock MigrateWinsockConfiguration stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -389,6 +404,7 @@ DllMain(HINSTANCE InstDLL,
   return TRUE;
 }
 
+
 /*
  * @unimplemented
  */
@@ -400,6 +416,7 @@ GetNameByTypeA(LPGUID lpServiceType,LPSTR lpServiceName,DWORD dwNameLength)
   return TRUE;
 }
 
+
 /*
  * @unimplemented
  */
@@ -410,6 +427,7 @@ GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength)
   OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
   return TRUE;
 }
+
 
 /*
  * @unimplemented
@@ -423,6 +441,7 @@ NSPStartup(
 {
   return TRUE;
 }
+
 
 /*
  * @unimplemented
@@ -440,16 +459,67 @@ WSPStartup(
   return TRUE;
 }
 
+
 /*
  * @unimplemented
  */
 INT
 STDCALL
-NPLoadNameSpaces (
-    IN OUT LPDWORD         lpdwVersion,
-    IN OUT LPNS_ROUTINE    nsrBuffer,
-    IN OUT LPDWORD         lpdwBufferLength
+NPLoadNameSpaces(
+    IN OUT LPDWORD lpdwVersion,
+    IN OUT LPNS_ROUTINE nsrBuffer,
+    IN OUT LPDWORD lpdwBufferLength
     )
 {
+  OutputDebugStringW(L"mswsock NPLoadNameSpaces stub called\n");
+
+  *lpdwVersion = 1;
+
   return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+StartWsdpService()
+{
+  OutputDebugStringW(L"mswsock StartWsdpService stub called\n");
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+StopWsdpService()
+{
+  OutputDebugStringW(L"mswsock StopWsdpService stub called\n");
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+SvchostPushServiceGlobals(DWORD Value)
+{
+  OutputDebugStringW(L"mswsock SvchostPushServiceGlobals stub called\n");
+
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ServiceMain(DWORD Unknown1, DWORD Unknown2)
+{
+  OutputDebugStringW(L"mswsock ServiceMain stub called\n");
 }

@@ -1,4 +1,4 @@
-; $Id: mswsock.def,v 1.1 2003/09/12 17:51:47 vizzini Exp $
+; $Id: mswsock.def,v 1.2 2003/09/13 21:15:03 vizzini Exp $
 ;
 ; MSWSOCK.DLL - Windows Sockets 2 DLL
 
@@ -17,8 +17,8 @@ GetServiceA@28
 GetServiceW@28
 GetTypeByNameA@8
 GetTypeByNameW@8
-;MigrateWinsockConfiguration
-;NPLoadNameSpaces
+MigrateWinsockConfiguration@12
+NPLoadNameSpaces@12
 SetServiceA@24
 SetServiceW@24
 TransmitFile@28
@@ -34,8 +34,7 @@ sethostname@8
 NSPStartup@8
 WSPStartup@76
 NPLoadNameSpaces@12
-;MigrateWinsockConfiguration
-;ServiceMain
-;StartWsdpService
-;StopWsdpService
-;SvchostPushServiceGlobals
+ServiceMain@8
+StartWsdpService@0
+StopWsdpService@0
+SvchostPushServiceGlobals@4

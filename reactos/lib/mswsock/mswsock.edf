@@ -1,41 +1,39 @@
-; $Id: mswsock.edf,v 1.1 2003/09/12 17:51:47 vizzini Exp $
+; $Id: mswsock.edf,v 1.2 2003/09/13 21:15:03 vizzini Exp $
 ;
 ; MSWSOCK.DLL - Windows Sockets 2 DLL
 
 LIBRARY mswsock.dll
 
 EXPORTS
-AcceptEx=AcceptEx@32
-EnumProtocolsA=EnumProtocolsA@12
-EnumProtocolsW=EnumProtocolsW@12
-GetAcceptExSockaddrs=GetAcceptExSockaddrs@32
-GetAddressByNameA=GetAddressByNameA@40
-GetAddressByNameW=GetAddressByNameW@40
-GetNameByTypeA=GetNameByTypeA@12
-GetNameByTypeW=GetNameByTypeW@12
-GetServiceA=GetServiceA@28
-GetServiceW=GetServiceW@28
-GetTypeByNameA=GetTypeByNameA@8
-GetTypeByNameW=GetTypeByNameW@8
-;MigrateWinsockConfiguration
-;NPLoadNameSpaces
-SetServiceA=SetServiceA@24
-SetServiceW=SetServiceW@24
-TransmitFile=TransmitFile@28
-WSARecvEx=WSARecvEx@16
-dn_expand=dn_expand@20
-getnetbyname=getnetbyname@4
-inet_network=inet_network@4
-rcmd=rcmd@24
-rexec=rexec@24
-rresvport=rresvport@4
-s_perror=s_perror@4
-sethostname=sethostname@8
-NSPStartup=NSPStartup@8
-WSPStartup=WSPStartup@76
-NPLoadNameSpaces=NPLoadNameSpaces@12
-;MigrateWinsockConfiguration
-;ServiceMain
-;StartWsdpService
-;StopWsdpService
-;SvchostPushServiceGlobals
+ServiceMain=ServiceMain@8 @0
+SvchostPushServiceGlobals=SvchostPushServiceGlobals@4 @1
+AcceptEx=AcceptEx@32 @2
+EnumProtocolsA=EnumProtocolsA@12 @3
+EnumProtocolsW=EnumProtocolsW@12 @4
+GetAcceptExSockaddrs=GetAcceptExSockaddrs@32 @5
+GetAddressByNameA=GetAddressByNameA@40 @6
+GetAddressByNameW=GetAddressByNameW@40 @7
+GetNameByTypeA=GetNameByTypeA@12 @8
+GetNameByTypeW=GetNameByTypeW@12 @9
+GetServiceA=GetServiceA@28 @10
+GetServiceW=GetServiceW@28 @11
+GetTypeByNameA=GetTypeByNameA@8 @12
+GetTypeByNameW=GetTypeByNameW@8 @13
+MigrateWinsockConfiguration=MigrateWinsockConfiguration@12 @14
+NPLoadNameSpaces=NPLoadNameSpaces@12 @15
+NSPStartup=NSPStartup@8 @16
+SetServiceA=SetServiceA@24 @17
+SetServiceW=SetServiceW@24 @18
+StartWsdpService=StartWsdpService@0 @19
+StopWsdpService=StopWsdpService@0 @20
+TransmitFile=TransmitFile@28 @21
+WSARecvEx=WSARecvEx@16 @22
+WSPStartup=WSPStartup@76 @23
+dn_expand=dn_expand@20 @24
+getnetbyname=getnetbyname@4 @25
+inet_network=inet_network@4 @26
+rcmd=rcmd@24 @27
+rexec=rexec@24 @28
+rresvport=rresvport@4 @29
+s_perror=s_perror@4 @30
+sethostname=sethostname@8 @31
