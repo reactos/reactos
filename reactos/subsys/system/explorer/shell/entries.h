@@ -48,7 +48,7 @@ protected:
 	Entry(Entry* parent);
 
 public:
-	~Entry();
+	virtual ~Entry();
 
 	Entry*		_next;
 	Entry*		_down;
@@ -84,8 +84,9 @@ public:
 
 struct Directory {
 protected:
+	Directory() : _path(NULL) {}
 	Directory(void* path) : _path(path) {}
-	~Directory() {free(_path);}
+	virtual ~Directory() {}
 
 	void*	_path;
 };
@@ -102,4 +103,3 @@ struct Root {
 	DWORD	_drive_type;
 	DWORD	_fs_flags;
 };
-

@@ -241,7 +241,16 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
-    IDS_LOGOFF              "Logoff"
+    IDS_LOGOFF              "Log Off..."
+    IDS_SHUTDOWN            "Turn Off..."
+    IDS_LAUNCH              "Run..."
+    IDS_START_HELP          "Help"
+    IDS_SEARCH              "Search..."
+    IDS_DOCUMENTS           "Documents"
+    IDS_FAVORITES           "Favorites"
+    IDS_PROGRAMS            "Programs"
+    IDS_SETTINGS            "Settings"
+    IDS_EXPLORE             "Explore"
 END
 
 #endif    // German (Germany) resources

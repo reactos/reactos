@@ -295,6 +295,14 @@ SOURCE=.\res\images.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\logoff.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\reactos.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\resource.rc
 
 !IF  "$(CFG)" == "explorer - Win32 Release"
@@ -321,6 +329,14 @@ SOURCE=.\resource.rc
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\startmenu.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\startmenu.ico
 # End Source File
 # Begin Source File
 
@@ -367,6 +383,9 @@ SOURCE=.\doc\readme.txt
 SOURCE=.\doc\TODO.txt
 # End Source File
 # End Group
+# Begin Group "shell"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\shell\entries.cpp
@@ -377,35 +396,11 @@ SOURCE=.\shell\entries.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\explorer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\explorer.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\externals.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\filechild.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\shell\filechild.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\globals.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\icon1.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\logoff.ico
 # End Source File
 # Begin Source File
 
@@ -425,10 +420,6 @@ SOURCE=.\shell\pane.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\reactos.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\shellbrowser.cpp
 # End Source File
 # Begin Source File
@@ -442,14 +433,6 @@ SOURCE=.\shell\shellfs.cpp
 # Begin Source File
 
 SOURCE=.\shell\shellfs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\startmenu.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\startmenu.ico
 # End Source File
 # Begin Source File
 
@@ -470,6 +453,23 @@ SOURCE=.\shell\winfs.cpp
 # Begin Source File
 
 SOURCE=.\shell\winfs.h
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\explorer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\explorer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\externals.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\globals.h
 # End Source File
 # End Target
 # End Project

@@ -5,6 +5,15 @@
 #define IDS_TITLE                       1
 #define IDS_START                       2
 #define IDS_LOGOFF                      3
+#define IDS_SHUTDOWN                    4
+#define IDS_LAUNCH                      5
+#define IDS_START_HELP                  6
+#define IDS_SEARCH                      7
+#define IDS_DOCUMENTS                   8
+#define IDS_FAVORITES                   9
+#define IDS_PROGRAMS                    10
+#define IDS_SETTINGS                    11
+#define IDS_EXPLORE                     12
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102

@@ -26,7 +26,8 @@
  //
 
 
-struct ShellEntry : public Entry {
+struct ShellEntry : public Entry
+{
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent), _pidl(shell_path) {}
 	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent), _pidl(shell_path) {}
 
@@ -42,12 +43,17 @@ protected:
 	ShellEntry(const ShellPath& shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
 };
 
-struct ShellDirectory : public ShellEntry, public Directory {
+struct ShellDirectory : public ShellEntry, public Directory
+{
 	ShellDirectory(IShellFolder* shell_root, const ShellPath& shell_path, HWND hwnd)
 	 :	ShellEntry(shell_path),
-		Directory(shell_root),
+		_folder(shell_root, shell_path),
 		_hwnd(hwnd)
 	{
+		ShellFolder folder(shell_root, shell_path);
+		IShellFolder* pFolder = folder;
+		pFolder->AddRef();
+		_path = pFolder;
 	}
 
 	ShellDirectory(ShellDirectory* parent, IShellFolder* shell_root, LPITEMIDLIST shell_path, HWND hwnd)
@@ -56,6 +62,14 @@ struct ShellDirectory : public ShellEntry, public Directory {
 		_folder(shell_root),
 		_hwnd(hwnd)
 	{
+		shell_root->AddRef();
+	}
+
+	~ShellDirectory()
+	{
+		IShellFolder* pFolder = (IShellFolder*)_path;
+		_path = NULL;
+		pFolder->Release();
 	}
 
 	virtual void read_directory();
@@ -70,4 +84,3 @@ struct ShellDirectory : public ShellEntry, public Directory {
 protected:
 	bool	fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA*, BY_HANDLE_FILE_INFORMATION*);
 };
-

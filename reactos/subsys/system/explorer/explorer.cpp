@@ -80,13 +80,8 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 
 	g_Globals._prescan_nodes = false;
 
-	HMENU hMenuFrame = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(IDM_MAINFRAME));
-
 	 // create main window
-	g_Globals._hMainWnd = Window::Create(WINDOW_CREATOR(MainFrame), 0,
-					(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
-					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-					0/*hwndDesktop*/, hMenuFrame);
+	g_Globals._hMainWnd = MainFrame::Create();
 
 	ShowWindow(g_Globals._hMainWnd, cmdshow);
 
@@ -102,7 +97,7 @@ static void InitInstance(HINSTANCE hInstance)
 	setlocale(LC_COLLATE, "");	// set collating rules to local settings for compareName
 
 	 // register frame window class
-	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER).Register();
+	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER);
 
 	 // register child windows class
 	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
@@ -168,7 +163,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	if (startup_desktop)
 	{
-		hwndDesktop = create_desktop_window(hInstance);
+		hwndDesktop = create_desktop_window();
 
 		 // Initialize the explorer bar
 		HWND hwndExplorerBar = InitializeExplorerBar(hInstance);

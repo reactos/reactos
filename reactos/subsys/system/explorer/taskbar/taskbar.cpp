@@ -39,6 +39,16 @@
 
 #define	IDC_START		0x1000
 #define	IDC_LOGOFF		0x1001
+#define	IDC_SHUTDOWN	0x1002
+#define	IDC_LAUNCH		0x1003
+#define	IDC_START_HELP	0x1004
+#define	IDC_SEARCH		0x1005
+#define	IDC_SETTINGS	0x1006
+#define	IDC_DOCUMENTS	0x1007
+#define	IDC_FAVORITES	0x1008
+#define	IDC_PROGRAMS	0x1009
+#define	IDC_EXPLORE		0x100A
+
 #define	IDC_FIRST_APP	0x2000
 #define	IDC_FIRST_MENU	0x3000
 
@@ -57,7 +67,7 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 	rect.bottom = rect.top + TASKBAR_HEIGHT + 2;
 
 	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
-							(LPCTSTR)(int)BtnWindowClass(CLASSNAME_EXPLORERBAR).Register(), TITLE_EXPLORERBAR,
+							BtnWindowClass(CLASSNAME_EXPLORERBAR), TITLE_EXPLORERBAR,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
 							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 }
@@ -85,11 +95,11 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create start button
 	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START,
 							 WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
-						ResIcon(IDI_STARTMENU));
+						SmallIcon(IDI_STARTMENU));
 
 	 // create task bar
 	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
-							(LPCTSTR)(int)BtnWindowClass(CLASSNAME_TASKBAR).Register(), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
+							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
 							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
@@ -104,12 +114,7 @@ void DesktopBar::create_startmenu()
 {
 	WindowRect my_pos(_hwnd);
 
-	static BtnWindowClass wcStartMenu(CLASSNAME_STARTMENU);
-
-	_hwndStartMenu = Window::Create(WINDOW_CREATOR(StartMenu), 0,
-						(LPCTSTR)(int)wcStartMenu.Register(), TITLE_STARTMENU,
-						WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
-						my_pos.left, my_pos.top-STARTMENU_HEIGHT, STARTMENU_WIDTH, STARTMENU_HEIGHT, _hwnd);
+	_hwndStartMenu = StartMenuRoot::Create(my_pos.left, my_pos.top-4, _hwnd);
 }
 
 
@@ -475,28 +480,72 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 }
 
 
+BtnWindowClass StartMenu::s_wcStartMenu(CLASSNAME_STARTMENU);
+
 StartMenu::StartMenu(HWND hwnd)
  :	super(hwnd)
 {
+	_next_id = IDC_FIRST_MENU;
 }
 
-StartMenu::~StartMenu()
+StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
+ :	super(hwnd)
 {
+	for(StartMenuFolders::const_iterator it=info.begin(); it!=info.end(); ++it)
+		_dirs.push_back(ShellDirectory(Desktop(), *it, _hwnd));
 }
+
+
+/*
+HWND StartMenu::Create(int x, int y, HWND hwndParent)
+{
+	return Window::Create(WINDOW_CREATOR(StartMenu), NULL, s_wcStartMenu, TITLE_STARTMENU,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+}
+*/
+
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent)
+{
+	return Window::Create(WINDOW_CREATOR_INFO(StartMenu,StartMenuFolders), &folders, 0, s_wcStartMenu, NULL,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+}
+
 
 LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 {
 	if (super::Init(pcs))
 		return 1;
 
-	ClientRect clnt(_hwnd);
+	WaitCursor wait;
+	
+	for(StartMenuShellDirs::iterator it=_dirs.begin(); it!=_dirs.end(); ++it) {
+		ShellDirectory& dir = *it;
 
-	SetWindowFont(*new PictureButton(Button(_hwnd, ResString(IDS_LOGOFF), 2, clnt.bottom-STARTMENU_LINE_HEIGHT, clnt.right-2, STARTMENU_LINE_HEIGHT,
-							IDC_LOGOFF, WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
-						ResIcon(IDI_LOGOFF)),
-					GetStockFont(DEFAULT_GUI_FONT), FALSE);
+		dir.smart_scan();
+
+		AddShellEntries(dir);
+	}
 
 	return 0;
+}
+
+void StartMenu::AddShellEntries(const ShellDirectory& dir, bool subfolders)
+{
+	for(const Entry*entry=dir._down; entry; entry=entry->_next) {
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+			continue;
+
+		HICON hIcon = entry->_hicon;
+
+		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if (!subfolders)
+				continue;
+
+			hIcon = SmallIcon(IDI_EXPLORER);
+		}
+
+		AddButton(dir._folder.get_name(&*static_cast<const ShellEntry*>(entry)->_pidl).c_str(), hIcon);
+	}
 }
 
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -508,21 +557,110 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
-*/
-	return super::WndProc(nmsg, wparam, lparam);
+*/	return super::WndProc(nmsg, wparam, lparam);
 }
 
 int StartMenu::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_LOGOFF:
-		DestroyWindow(GetParent(_hwnd));
-		break;
-
 	  case IDCANCEL:
 		DestroyWindow(_hwnd);
 		break;
+
+	  default:
+		return super::Command(id, code);
 	}
 
-	return super::Command(id, code);
+	return 0;
+}
+
+void StartMenu::AddButton(LPCTSTR text, HICON hIcon, UINT id)
+{
+	if (id == (UINT)-1)
+		id = ++_next_id;
+
+	WindowRect rect(_hwnd);
+
+	rect.top -= STARTMENU_LINE_HEIGHT;
+
+	if (rect.top < 0) {
+		rect.top += STARTMENU_LINE_HEIGHT;
+		rect.bottom += STARTMENU_LINE_HEIGHT;
+	}
+
+	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
+
+	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, text, id, hIcon);
+}
+
+
+StartMenuRoot::StartMenuRoot(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+HWND StartMenuRoot::Create(int x, int y, HWND hwndParent)
+{
+	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, s_wcStartMenu, TITLE_STARTMENU,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+}
+
+LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
+{
+	if (super::Init(pcs))
+		return 1;
+
+	WaitCursor wait;
+
+	 // insert start menu entries links from "All Users\Start Menu" and "<user name>\Start Menu"
+	ShellDirectory cmn_startmenu(Desktop(), SpecialFolder(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+	cmn_startmenu.read_directory();
+	AddShellEntries(cmn_startmenu, false);
+
+	ShellDirectory usr_startmenu(Desktop(), SpecialFolder(CSIDL_STARTMENU, _hwnd), _hwnd);
+	usr_startmenu.read_directory();
+	AddShellEntries(usr_startmenu, false);
+
+	 // insert hard coded start entries
+	//AddButton(ResString(IDS_PROGRAMS),0, IDC_PROGRAMS);
+	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), IDC_EXPLORE);
+	AddButton(ResString(IDS_FAVORITES),	0, IDC_FAVORITES);
+	AddButton(ResString(IDS_DOCUMENTS),	0, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_SETTINGS),	0, IDC_SETTINGS);
+	AddButton(ResString(IDS_SEARCH),	0, IDC_SEARCH);
+	AddButton(ResString(IDS_START_HELP),0, IDC_START_HELP);
+	AddButton(ResString(IDS_LAUNCH),	0, IDC_LAUNCH);
+	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), IDC_SHUTDOWN);
+	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), IDC_LOGOFF);
+
+
+	 //TEST: open programs menu folder
+	StartMenuFolders prg_folders;
+
+	prg_folders.push_back(SpecialFolder(CSIDL_COMMON_PROGRAMS, _hwnd));
+	prg_folders.push_back(SpecialFolder(CSIDL_PROGRAMS, _hwnd));
+
+	WindowRect my_pos(_hwnd);
+	StartMenu::Create(my_pos.right, my_pos.top+STARTMENU_HEIGHT-4, prg_folders, _hwnd);
+
+
+	return 0;
+}
+
+int StartMenuRoot::Command(int id, int code)
+{
+	switch(id) {
+	  case IDC_LOGOFF:
+		DestroyWindow(GetParent(_hwnd));	//TODO: show dialog and ask for acknowledge
+		break;
+
+	  case IDC_SHUTDOWN:
+		DestroyWindow(GetParent(_hwnd));	//TODO: show dialog box and shut down system
+		break;
+
+	  default:
+		return super::Command(id, code);
+	}
+
+	return 0;
 }

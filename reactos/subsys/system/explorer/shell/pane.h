@@ -48,7 +48,8 @@ enum COLUMN_FLAGS {
 };
 
 
-struct OutputWorker {
+struct OutputWorker
+{
 	OutputWorker();
 
 	void	init_output(HWND hwnd);

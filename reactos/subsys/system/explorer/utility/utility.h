@@ -162,6 +162,16 @@ struct String
  : public string
 #endif
 {
+#ifdef UNICODE
+	typedef wstring super;
+#else
+	typedef string super;
+#endif
+
+	String() {}
+	String(LPCTSTR s) : super(s) {}
+	String(const String& other) : super(other) {}
+
 	String& operator=(LPCTSTR s) {assign(s); return *this;}
 	operator LPCTSTR() const {return c_str();}
 };

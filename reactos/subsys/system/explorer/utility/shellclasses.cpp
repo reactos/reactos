@@ -126,10 +126,11 @@ ShellFolder::ShellFolder()
 	CheckError(SHGetDesktopFolder(&desktop));
 
 	super::Attach(desktop);
+	desktop->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* p)
- : IShellFolderPtr(p)
+ :	IShellFolderPtr(p)
 {
 }
 
@@ -143,6 +144,7 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 		ptr = parent;
 
 	super::Attach(ptr);
+	ptr->AddRef();
 }
 
 ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
@@ -155,7 +157,8 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 	else
 		ptr = parent;
 
-	super::Attach(Desktop());
+	super::Attach(ptr);
+	ptr->AddRef();
 }
 
 void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
@@ -168,17 +171,7 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 		ptr = parent;
 
 	super::Attach(ptr);
-}
-
-string ShellFolder::get_name(LPITEMIDLIST pidl, SHGDNF flags)
-{
-	char buffer[MAX_PATH];
-	StrRetA strret;
-
-	CheckError(((IShellFolder*)*this)->GetDisplayNameOf(pidl, flags, &strret));
-	strret.GetString(pidl->mkid, buffer, MAX_PATH);
-
-	return buffer;
+	ptr->AddRef();
 }
 
 #else // _com_ptr not available -> use SIfacePtr
@@ -189,7 +182,7 @@ ShellFolder::ShellFolder()
 }
 
 ShellFolder::ShellFolder(IShellFolder* p)
- : SIfacePtr<IShellFolder>(p)
+ :	SIfacePtr<IShellFolder>(p)
 {
 }
 
@@ -216,6 +209,17 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 }
 
 #endif
+
+String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
+{
+	TCHAR buffer[MAX_PATH];
+	StrRet strret;
+
+	CheckError(((IShellFolder*)*const_cast<ShellFolder*>(this))->GetDisplayNameOf(pidl, flags, &strret));
+	strret.GetString(pidl->mkid, buffer, MAX_PATH);
+
+	return buffer;
+}
 
 
  // helper function for string copying

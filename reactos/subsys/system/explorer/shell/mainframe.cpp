@@ -157,6 +157,17 @@ MainFrame::~MainFrame()
 }
 
 
+HWND MainFrame::Create()
+{
+	HMENU hMenuFrame = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(IDM_MAINFRAME));
+
+	return super::Create(WINDOW_CREATOR(MainFrame), 0,
+				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+				0/*hwndDesktop*/, hMenuFrame);
+}
+
+
 LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {

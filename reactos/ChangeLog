@@ -1,3 +1,8 @@
+2003-08-16  Martin Fuchs	<martin-fuchs@gmx.net>
+
+	* subsys/system/explorer/taskbar/taskbar.cpp:
+	first draft of explorer start menu
+
 2003-08-17  James Tabor <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
 
 	* include/csrss/: csrss.h: implemented Ctrl Event handler

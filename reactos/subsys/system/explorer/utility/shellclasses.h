@@ -361,7 +361,7 @@ struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic ex
 	ShellFolder(LPCITEMIDLIST pidl);
 
 	void	attach(IShellFolder* parent, LPCITEMIDLIST pidl);
-	string	get_name(LPITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL);
+	String	get_name(LPCITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL) const;
 
 	bool	empty() const {return !operator bool();}	//NOTE: see SIfacePtr::empty()
 };
@@ -377,7 +377,8 @@ struct ShellFolder : public SIfacePtr<IShellFolder>
 	ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl);
 	ShellFolder(LPCITEMIDLIST pidl);
 
-	void attach(IShellFolder* parent, LPCITEMIDLIST pidl);
+	void	attach(IShellFolder* parent, LPCITEMIDLIST pidl);
+	String	get_name(LPCITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL) const;
 };
 
 #endif
@@ -720,7 +721,7 @@ struct SpecialFolder : public ShellPath
 {
 	SpecialFolder(int folder, HWND hwnd)
 	{
-		SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
 	}
 };
 
@@ -759,7 +760,7 @@ struct SpecialFolderPath : public FileSysShellPath
 {
 	SpecialFolderPath(int folder, HWND hwnd)
 	{
-		SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
 	}
 };
 

@@ -33,6 +33,20 @@
 typedef set<HWND> WindowSet;
 
 
+ /*
+	Classes are declared using "struct", not "class" because the default
+	access mode is "public". This way we can list the member functions in a
+	natural order without explicitly specifying any access mode at the begin
+	of the definition.
+	First are public constructors and destructor, then public member functions.
+	After that we list protected member varibables and functions. If needed,
+	private implemenation varibales and functions are positioned at the end.
+ */
+
+
+ /**
+	Class Window is the base class for several C++ window wrapper classes.
+ */
 struct Window
 {
 	Window(HWND hwnd)
@@ -150,13 +164,16 @@ struct WindowClass : public WNDCLASSEX
 		return _atomClass;
 	}
 
-	operator ATOM() const {return _atomClass;}
+	operator ATOM() {return Register();}
+
+	 // return LPCTSTR for the CreateWindowEx() parameter
+	operator LPCTSTR() {return (LPCTSTR)(int)Register();}
 
 protected:
 	ATOM	_atomClass;
 };
 
- // window class with gray background color
+ /// window class with gray background color
 struct BtnWindowClass : public WindowClass
 {
 	BtnWindowClass(LPCTSTR classname, UINT style=0, WNDPROC wndproc=Window::WindowWndProc)
@@ -166,7 +183,7 @@ struct BtnWindowClass : public WindowClass
 	}
 };
 
- // window class with gray background color
+ /// window class with specified icon from resources
 struct IconWindowClass : public WindowClass
 {
 	IconWindowClass(LPCTSTR classname, UINT nid, UINT style=0, WNDPROC wndproc=Window::WindowWndProc);
@@ -193,6 +210,10 @@ struct MenuInfo
 #define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, FRM_GET_MENUINFO, 0, 0))
 
 
+ /**
+	Class ChildWindow represents MDI child windows.
+	It is used with class MainFrame.
+ */
 struct ChildWindow : public Window
 {
 	typedef Window super;
@@ -228,6 +249,12 @@ struct PreTranslateWindow : public Window
 };
 
 
+ /**
+	The class Dialog implements modeless dialogs, which are managed by
+	Window::dispatch_dialog_msg() in Window::MessageLoop().
+	A Dialog object should be constructed by calling Window::Create()
+	and specifying the class using the WINDOW_CREATOR() macro.
+ */
 struct Dialog : public Window
 {
 	typedef Window super;
@@ -237,7 +264,11 @@ struct Dialog : public Window
 };
 
 
- // create button controls
+ /**
+	This class constructs button controls.
+	The button will remain existent when the C++ Button object is destroyed.
+	There is no conjunction between C++ object and windows control life time.
+ */
 struct Button
 {
 	Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
@@ -314,8 +345,10 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 };
 
 
- // Subclass button controls to paint colored text labels.
- // The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+ /**
+	Subclass button controls to paint colored text labels.
+	The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+ */
 struct ColorButton : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
@@ -330,18 +363,37 @@ protected:
 };
 
 
- // Subclass button controls to paint pictures left to the labels.
- // The buttons should have set the style bit BS_OWNERDRAW.
- // The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+ /**
+	Subclass button controls to paint pictures left to the labels.
+	The buttons should have set the style bit BS_OWNERDRAW.
+	The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
+ */
 struct PictureButton : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
 
-	PictureButton(HWND hwnd, HICON hicon)
-	 : super(hwnd), _hicon(hicon) {}
+	PictureButton(HWND hwnd, HICON hicon, bool flat=false)
+	 :	super(hwnd), _hicon(hicon), _flat(flat) {}
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	HICON	_hicon;
+	bool	_flat;
+};
+
+
+ /// start menu button
+struct StartmenuEntry : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	StartmenuEntry(HWND hwnd, HICON hicon, bool flat=false)
+	 :	super(hwnd), _hicon(hicon), _flat(flat) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	HICON	_hicon;
+	bool	_flat;
 };

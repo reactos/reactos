@@ -460,9 +460,9 @@ int Window::MessageLoop()
 
 
 Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
-				UINT id, DWORD flags, DWORD ex_flags)
+				UINT id, DWORD flags, DWORD exStyle)
 {
-	_hwnd = CreateWindowEx(ex_flags, TEXT("BUTTON"), text, flags, left, top, width, height,
+	_hwnd = CreateWindowEx(exStyle, TEXT("BUTTON"), text, flags, left, top, width, height,
 							parent, (HMENU)id, g_Globals._hInstance, 0);
 }
 
@@ -556,7 +556,7 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 			style |= DFCS_INACTIVE;
 
 		POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
-		RECT textRect = {dis->rcItem.left+16+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+		RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
 
 		if (dis->itemState & ODS_SELECTED) {
 			style |= DFCS_PUSHED;
@@ -565,10 +565,10 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 			++textRect.right;	++textRect.bottom;
 		}
 
-/*@@	if (_flat) {
-			if (GetWindowStyle(_hwnd) & BS_FLAT)	// Nur wenn zusätzlich BS_FLAT gesetzt ist, wird ohne Highlight ein Rahmen gezeichnet.
+		if (_flat) {
+			if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
 				DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
-		} else*/
+		} else
 			DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
 
 		DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
@@ -583,16 +583,16 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 				{
 				TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
 				RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
-				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 				}
 
 				BkMode mode(dis->hDC, TRANSPARENT);
 				TextColor lcColor(dis->hDC, gray);
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 			} else {
 				int old_r = textRect.right;
 				int old_b = textRect.bottom;
-				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_CALCRECT);
+				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/|DT_CALCRECT);
 				int x = textRect.left + (old_r-textRect.right)/2;
 				int y = textRect.top + (old_b-textRect.bottom)/2;
 				int w = textRect.right-textRect.left;
@@ -602,8 +602,9 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 				GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
 			}
 		} else {
-			//TextColor lcColor(dis->hDC, _textColor);
-			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+			//BkMode mode(dis->hDC, TRANSPARENT);
+			TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
+			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 		}
 
 		if (dis->itemState & ODS_FOCUS) {
@@ -616,6 +617,78 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 				++rect.right;	++rect.bottom;
 			}
 			DrawFocusRect(dis->hDC, &rect);
+		}
+
+		return TRUE;
+	} else
+		return super::WndProc(message, wparam, lparam);
+}
+
+
+LRESULT StartmenuEntry::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+{
+	if (message == WM_DISPATCH_DRAWITEM) {
+		LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT) lparam;
+		UINT style = DFCS_BUTTONPUSH;
+
+		if (dis->itemState & ODS_DISABLED)
+			style |= DFCS_INACTIVE;
+
+		POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
+		RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+
+		if (dis->itemState & ODS_SELECTED) {
+			style |= DFCS_PUSHED;
+			++iconPos.x;		++iconPos.y;
+			++textRect.left;	++textRect.top;
+			++textRect.right;	++textRect.bottom;
+		}
+
+		int bk_color = COLOR_BTNFACE;
+		int text_color = COLOR_BTNTEXT;
+
+		if (dis->itemState & ODS_FOCUS) {
+			bk_color = COLOR_HIGHLIGHT;
+			text_color = COLOR_HIGHLIGHTTEXT;
+		}
+
+		HBRUSH bk_brush = GetSysColorBrush(bk_color);
+
+		FillRect(dis->hDC, &dis->rcItem, bk_brush);
+		DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, bk_brush, DI_NORMAL);
+
+		TCHAR text[BUFFER_LEN];
+		GetWindowText(_hwnd, text, BUFFER_LEN);
+
+		if (dis->itemState & (ODS_DISABLED|ODS_GRAYED)) {
+			COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
+
+			if (gray) {
+				{
+				TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
+				RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
+				DrawText(dis->hDC, text, -1, &shadowRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+				}
+
+				BkMode mode(dis->hDC, TRANSPARENT);
+				TextColor lcColor(dis->hDC, gray);
+				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+			} else {
+				int old_r = textRect.right;
+				int old_b = textRect.bottom;
+				DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/|DT_CALCRECT);
+				int x = textRect.left + (old_r-textRect.right)/2;
+				int y = textRect.top + (old_b-textRect.bottom)/2;
+				int w = textRect.right-textRect.left;
+				int h = textRect.bottom-textRect.top;
+				s_MyDrawText_Rect.right = w;
+				s_MyDrawText_Rect.bottom = h;
+				GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
+			}
+		} else {
+			BkMode mode(dis->hDC, TRANSPARENT);
+			TextColor lcColor(dis->hDC, GetSysColor(text_color));
+			DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 		}
 
 		return TRUE;

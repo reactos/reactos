@@ -33,6 +33,8 @@ struct MainFrame : public PreTranslateWindow
 	MainFrame(HWND hwnd);
 	~MainFrame();
 
+	static HWND Create();
+
 protected:
 	FullScreenParameters _fullscreen;
 

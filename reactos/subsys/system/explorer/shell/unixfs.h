@@ -28,7 +28,8 @@
 
 #ifdef __linux__
 
-struct UnixEntry : public Entry {
+struct UnixEntry : public Entry
+{
 	UnixEntry(Entry* parent) : Entry(parent) {}
 
 protected:
@@ -37,7 +38,8 @@ protected:
 	virtual void get_path(PTSTR path);
 };
 
-struct UnixDirectory : public UnixEntry, public Directory {
+struct UnixDirectory : public UnixEntry, public Directory
+{
 	UnixDirectory(LPCTSTR root_path)
 	 :	UnixEntry(),
 		Directory(_tcsdup(root_path))

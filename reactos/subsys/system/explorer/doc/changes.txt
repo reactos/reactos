@@ -16,3 +16,4 @@
 						open child folders by double click in ShellBrowserChild
 13.08.2003	m. fuchs	make explorer bar look more like windows taskbar bar
 16.08.2003	m. fuchs	first draft of working task bar
+18.08.2003	m. fuchs	first draft of explorer start menu

@@ -41,7 +41,7 @@ extern int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow);
 extern void explorer_show_frame(HWND hwndDesktop, int cmdshow);
 
  // create desktop window
-extern HWND create_desktop_window(HINSTANCE hInstance);
+extern HWND create_desktop_window();
 
  // test for already running desktop instance
 extern BOOL IsAnyDesktopRunning();

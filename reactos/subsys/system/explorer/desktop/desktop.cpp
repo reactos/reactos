@@ -230,7 +230,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 }
 
 
-HWND create_desktop_window(HINSTANCE hInstance)
+HWND create_desktop_window()
 {
 	IconWindowClass wcDesktop(_T("Progman"), IDI_REACTOS, CS_DBLCLKS);
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
@@ -239,6 +239,6 @@ HWND create_desktop_window(HINSTANCE hInstance)
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
 	return Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, (LPCTSTR)(int)wcDesktop.Register(), _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 }

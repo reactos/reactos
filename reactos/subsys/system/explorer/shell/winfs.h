@@ -26,7 +26,8 @@
  //
 
 
-struct WinEntry : public Entry {
+struct WinEntry : public Entry
+{
 	WinEntry(Entry* parent) : Entry(parent) {}
 
 protected:
@@ -35,7 +36,8 @@ protected:
 	virtual void get_path(PTSTR path);
 };
 
-struct WinDirectory : public WinEntry, public Directory {
+struct WinDirectory : public WinEntry, public Directory
+{
 	WinDirectory(LPCTSTR root_path)
 	 :	WinEntry(),
 		Directory(_tcsdup(root_path))
@@ -48,8 +50,13 @@ struct WinDirectory : public WinEntry, public Directory {
 	{
 	}
 
+	~WinDirectory()
+	{
+		free(_path);
+		_path = NULL;
+	}
+
 	virtual void read_directory();
 	virtual const void* get_next_path_component(const void*);
 	virtual Entry* find_entry(const void*);
 };
-

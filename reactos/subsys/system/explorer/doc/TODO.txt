@@ -7,6 +7,7 @@
 - Drag Drop on desktop does not work.
 - implement Drag Drop from the tree view.
 - activate accelerator keys like <DEL> in shell view folders
+- short cut Ctrl+ESC to activate start menu
 - progman DDE server
 - command line parameters like "/e,/root,c:\"
 - Windows-key combos
