@@ -1922,7 +1922,11 @@ extern "C" {
 #define GMEM_DISCARDED	(16384)
 #define GMEM_INVALID_HANDLE	(32768)
 #define GMEM_LOCKCOUNT	(255)
-   
+#define GMEM_MODIFY     (128)
+#define GMEM_DISCARDED  (16384)
+#define GMEM_LOCKCOUNT  (255)
+
+
 /* ImageList_Create */
 #define ILC_COLOR	(0)
 #define ILC_COLOR4	(4)
