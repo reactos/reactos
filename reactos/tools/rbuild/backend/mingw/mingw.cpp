@@ -50,6 +50,7 @@ MingwBackend::CreateMakefile ()
 	if ( !fMakefile )
 		throw AccessDeniedException ( ProjectNode.makefile );
 	MingwModuleHandler::SetMakefile ( fMakefile );
+	MingwModuleHandler::SetUsePch ( use_pch );
 }
 
 void

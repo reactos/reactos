@@ -54,6 +54,7 @@ class Property;
 class AutomaticDependency;
 class Bootstrap;
 class CDFile;
+class PchFile;
 
 class SourceFileTest;
 
@@ -150,6 +151,7 @@ public:
 	std::vector<Dependency*> dependencies;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
+	PchFile* pch;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -496,6 +498,21 @@ public:
 	~CDFile ();
 	void ProcessXML();
 	std::string GetPath () const;
+};
+
+
+class PchFile
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::string header;
+
+	PchFile (
+		const XMLElement& node,
+		const Module& module,
+		const std::string& header );
+	void ProcessXML();
 };
 
 

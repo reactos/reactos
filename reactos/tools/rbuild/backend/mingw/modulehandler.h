@@ -5,7 +5,7 @@
 
 extern std::string
 ReplaceExtension ( const std::string& filename,
-	               const std::string& newExtension );
+                   const std::string& newExtension );
 
 
 class MingwModuleHandler
@@ -20,6 +20,7 @@ public:
 	virtual ~MingwModuleHandler();
 
 	static void SetMakefile ( FILE* f );
+	static void SetUsePch ( bool use_pch );
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
 	                                           ModuleType moduletype_ );
 	virtual void Process ( const Module& module, string_list& clean_files ) = 0;
@@ -73,6 +74,7 @@ protected:
 	std::string GetLinkingDependencies ( const Module& module ) const;
 	bool IsCPlusPlusModule ( const Module& module ) const;
 	static FILE* fMakefile;
+	static bool use_pch;
 	static std::set<std::string> directory_set;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,

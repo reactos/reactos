@@ -23,6 +23,8 @@ MingwModuleHandler::ref = 0;
 
 FILE*
 MingwModuleHandler::fMakefile = NULL;
+bool
+MingwModuleHandler::use_pch = false;
 
 string
 ReplaceExtension ( const string& filename,
@@ -65,6 +67,12 @@ void
 MingwModuleHandler::SetMakefile ( FILE* f )
 {
 	fMakefile = f;
+}
+
+void
+MingwModuleHandler::SetUsePch ( bool b )
+{
+	use_pch = b;
 }
 
 MingwModuleHandler*
@@ -710,11 +718,14 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
                                          const string& cc,
                                          const string& cflagsMacro ) const
 {
+	string deps = sourceFilename;
+	if ( module.pch && use_pch )
+		deps += " " + module.pch->header + ".gch";
 	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
-	          sourceFilename.c_str () );
+	          deps.c_str () );
 	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [CC]      $<\n" );
 	fprintf ( fMakefile,
 	         "\t%s -c %s -o %s %s\n",
@@ -1045,6 +1056,26 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& windresflagsMacro,
 	string_list& clean_files ) const
 {
+	if ( module.pch && use_pch )
+	{
+		const string& pch_file = module.pch->header;
+		string gch_file = pch_file + ".gch";
+		CLEAN_FILE(gch_file);
+		fprintf (
+			fMakefile,
+			"%s: %s\n",
+			gch_file.c_str(),
+			pch_file.c_str() );
+		fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [PCH]     $@\n" );
+		fprintf (
+			fMakefile,
+			"\t%s -c %s -o %s %s\n\n",
+			cc.c_str(),
+			pch_file.c_str(),
+			gch_file.c_str(),
+			cflagsMacro.c_str() );
+	}
+
 	GenerateObjectFileTargets ( module,
 	                            module.non_if_data,
 	                            cc,
@@ -1425,6 +1456,8 @@ MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 	return dependencies;
 }
 
+// TODO FIXME - check for C++ extensions when parsing XML, and set a
+// bool in the Module class
 bool
 MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
 {

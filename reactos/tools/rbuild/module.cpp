@@ -90,7 +90,8 @@ Module::Module ( const Project& project,
 	: project (project),
 	  node (moduleNode),
 	  importLibrary (NULL),
-	  bootstrap (NULL)
+	  bootstrap (NULL),
+	  pch (NULL)
 {
 	if ( node.name != "module" )
 		throw Exception ( "internal tool error: Module created with non-<module> node" );
@@ -141,6 +142,8 @@ Module::~Module ()
 		delete compilerFlags[i];
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		delete linkerFlags[i];
+	if ( pch )
+		delete pch;
 }
 
 void
@@ -158,6 +161,8 @@ Module::ProcessXML()
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		linkerFlags[i]->ProcessXML();
 	non_if_data.ProcessXML();
+	if ( pch )
+		pch->ProcessXML();
 }
 
 void
@@ -280,6 +285,20 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "bootstrap" )
 	{
 		bootstrap = new Bootstrap ( project, this, e );
+		subs_invalid = true;
+	}
+	else if ( e.name == "pch" )
+	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<pch> is not a valid sub-element of <if>" );
+		if ( pch )
+			throw InvalidBuildFileException (
+				e.location,
+				"Only one <pch> is valid per module" );
+		pch = new PchFile (
+			e, *this, FixSeparator ( path + CSEP + e.value ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
@@ -804,5 +823,19 @@ Property::Property ( const XMLElement& node_,
 
 void
 Property::ProcessXML()
+{
+}
+
+
+PchFile::PchFile (
+	const XMLElement& node_,
+	const Module& module_,
+	const string& header_ )
+	: node(node_), module(module_), header(header_)
+{
+}
+
+void
+PchFile::ProcessXML()
 {
 }
