@@ -1,5 +1,4 @@
-#define NTOS_MODE_USER
-#include <ntos.h>
+#include <windows.h>
 
 /* 
  * Utility to measure the length of a string resource
