@@ -11,6 +11,12 @@
 #ifndef WINERROR_H
 #define WINERROR_H
 
+#ifdef __USE_W32API
+
+#include_next <winerror.h>
+
+#else
+
 #include <errors.h> /* Current locations of reactos errors */
 
 /* Used generally */
@@ -29,5 +35,7 @@
 /* Returned by DnsValidateName to indicate that the name consisted entirely
  * of digits, and so collides with the network numbers. */
 #define DNS_ERROR_NUMERIC_NAME 9561
+
+#endif /* __USE_W32API */
 
 #endif//WINERROR_H
