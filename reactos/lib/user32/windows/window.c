@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.105 2004/04/02 23:54:26 weiden Exp $
+/* $Id: window.c,v 1.106 2004/04/07 08:25:40 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1018,6 +1018,11 @@ BOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
+   if (! IsWindow(hWndParent) || ! IsWindow(hWnd))
+   {
+       return FALSE;
+   }
+
    do 
    {
       hWnd = (HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE);
