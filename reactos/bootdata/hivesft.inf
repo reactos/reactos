@@ -43,5 +43,6 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Bitstream Vera Sans Mono"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Marlett",0x00000000,"TGMarlett"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Bitstream Vera Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Bitstream Vera Serif"
 
 ; EOF
