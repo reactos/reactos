@@ -1,4 +1,4 @@
-/* $Id: bus.c,v 1.4 2002/10/02 19:32:57 ekohl Exp $
+/* $Id: bus.c,v 1.5 2002/12/09 19:44:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -170,6 +170,8 @@ HalpInitBusHandlers(VOID)
    if (BusHandler == NULL)
      return;
 
+   BusHandler->GetInterruptVector =
+	(pGetInterruptVector)HalpGetIsaInterruptVector;
    BusHandler->TranslateBusAddress =
 	(pTranslateBusAddress)HalpTranslateIsaBusAddress;
 

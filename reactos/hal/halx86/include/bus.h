@@ -86,6 +86,14 @@ HalpTranslateSystemBusAddress(PBUS_HANDLER BusHandler,
 			      PPHYSICAL_ADDRESS TranslatedAddress);
 
 /* isa.c */
+ULONG STDCALL
+HalpGetIsaInterruptVector(PVOID BusHandler,
+			  ULONG BusNumber,
+			  ULONG BusInterruptLevel,
+			  ULONG BusInterruptVector,
+			  PKIRQL Irql,
+			  PKAFFINITY Affinity);
+
 BOOLEAN STDCALL
 HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
 			   ULONG BusNumber,

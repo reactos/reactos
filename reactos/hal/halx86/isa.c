@@ -1,4 +1,4 @@
-/* $Id: isa.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: isa.c,v 1.4 2002/12/09 19:44:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,4 +59,16 @@ HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
    return Result;
 }
 
+ULONG STDCALL
+HalpGetIsaInterruptVector(PVOID BusHandler,
+			  ULONG BusNumber,
+			  ULONG BusInterruptLevel,
+			  ULONG BusInterruptVector,
+			  PKIRQL Irql,
+			  PKAFFINITY Affinity)
+{
+  *Irql = PROFILE_LEVEL - BusInterruptVector;
+  *Affinity = 0xFFFFFFFF;
+  return BusInterruptVector;
+}
 /* EOF */
