@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.5 2001/04/04 22:21:31 dwelch Exp $
+/* $Id: resource.c,v 1.6 2001/08/31 19:30:16 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -103,7 +103,7 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 			 PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
 			 PVOID Context)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL

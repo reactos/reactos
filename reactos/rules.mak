@@ -25,7 +25,7 @@ PREFIX = /usr/mingw32-2.95.3-fc/bin/mingw32-pc-
 EXE_POSTFIX := 
 EXE_PREFIX := ./
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM = nasm
+NASM_CMD = nasm
 DOSCLI =
 FLOPPY_DIR = /mnt/floppy
 SEP := /
