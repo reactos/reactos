@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.15 2002/04/01 23:51:09 ekohl Exp $
+/* $Id: class2.c,v 1.16 2002/04/24 22:20:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -882,12 +882,14 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 
   Irp->IoStatus.Status = Status;
 #if 0
-  if (!NT_SUCCESS(Status) &&
-      IoIsErrorUserInduced(Status))
+  if (!NT_SUCCESS(Status))
     {
-      IoSetHardErrorOrVerifyDevice(Irp,
-				   DeviceObject);
       Irp->IoStatus.Information = 0;
+      if (IoIsErrorUserInduced(Status))
+	{
+	  IoSetHardErrorOrVerifyDevice(Irp,
+				       DeviceObject);
+	}
     }
 
   if (Irp->PendingReturned)
@@ -916,7 +918,97 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 			      PIRP Irp,
 			      PVOID Context)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+  PIRP MasterIrp;
+  BOOLEAN Retry;
+  LONG RequestCount;
+  NTSTATUS Status;
+
+  DPRINT("ScsiClassIoCompleteAssociated(DeviceObject %p  Irp %p  Context %p) called\n",
+	 DeviceObject, Irp, Context);
+
+  MasterIrp = Irp->AssociatedIrp.MasterIrp;
+  DeviceExtension = DeviceObject->DeviceExtension;
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+  DPRINT("Srb %p\n", Srb);
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+  if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
+    {
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      /* Get more detailed status information */
+      Retry = ScsiClassInterpretSenseInfo(DeviceObject,
+					  Srb,
+					  IrpStack->MajorFunction,
+					  0,
+					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
+					  &Status);
+
+      DPRINT1("Retry count: %lu\n", (ULONG)IrpStack->Parameters.Others.Argument4);
+
+      if ((Retry == TRUE) &&
+	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
+	{
+	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
+	  DPRINT1("Retry count: %lu\n", (ULONG)IrpStack->Parameters.Others.Argument4);
+
+	  DPRINT1("Should try again!\n");
+#ifdef ENABLE_RETRY
+	  ScsiClassRetryRequest(DeviceObject,
+				Irp,
+				Srb);
+	  return(STATUS_MORE_PROCESSING_REQUIRED);
+#else
+	  return(Status);
+#endif
+	}
+    }
+
+  /* FIXME: use lookaside list instead */
+  DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
+  ExFreePool(IrpStack->Parameters.Scsi.Srb);
+
+  Irp->IoStatus.Status = Status;
+
+  IrpStack = IoGetNextIrpStackLocation(MasterIrp);
+  if (!NT_SUCCESS(Status))
+    {
+      MasterIrp->IoStatus.Status = Status;
+      MasterIrp->IoStatus.Information = 0;
+
+      if (IoIsErrorUserInduced(Status))
+	{
+	  IoSetHardErrorOrVerifyDevice(MasterIrp,
+				       DeviceObject);
+	}
+    }
+
+  /* Decrement the request counter in the Master IRP */
+  RequestCount = InterlockedDecrement((PLONG)&IrpStack->Parameters.Others.Argument1);
+
+  if (RequestCount == 0)
+    {
+      /* Complete the Master IRP */
+      IoCompleteRequest(MasterIrp,
+			IO_DISK_INCREMENT);
+
+      if (DeviceExtension->ClassStartIo)
+	{
+	  IoStartNextPacket(DeviceObject,
+			    FALSE);
+	}
+    }
+
+  /* Free the current IRP */
+  IoFreeIrp(Irp);
+
+  return(STATUS_MORE_PROCESSING_REQUIRED);
 }
 
 
@@ -1069,7 +1161,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   ULONG RequestType;
   BOOLEAN Retry;
   ULONG RetryCount;
-  KEVENT Event;
+  PKEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
 
@@ -1116,8 +1208,9 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   Srb->DataTransferLength = BufferLength;
   Srb->DataBuffer = BufferAddress;
 
-
-  KeInitializeEvent(&Event,
+  Event = ExAllocatePool(NonPagedPool,
+			 sizeof(KEVENT));
+  KeInitializeEvent(Event,
 		    NotificationEvent,
 		    FALSE);
 
@@ -1128,12 +1221,13 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 				      BufferAddress,
 				      BufferLength,
 				      TRUE,
-				      &Event,
+				      Event,
 				      &IoStatusBlock);
   if (Irp == NULL)
     {
       DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
       ExFreePool(Srb->SenseInfoBuffer);
+      ExFreePool(Event);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -1151,7 +1245,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 			Irp);
   if (Status == STATUS_PENDING)
     {
-      KeWaitForSingleObject(&Event,
+      KeWaitForSingleObject(Event,
 			    Suspended,
 			    KernelMode,
 			    FALSE,
@@ -1179,6 +1273,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
     }
 
   ExFreePool(Srb->SenseInfoBuffer);
+  ExFreePool(Event);
 
   DPRINT("ScsiClassSendSrbSynchronous() done\n");
 
@@ -1191,7 +1286,92 @@ ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp,
 		      ULONG MaximumBytes)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION CurrentStack;
+  PIO_STACK_LOCATION NextStack;
+  PIO_STACK_LOCATION NewStack;
+  PSCSI_REQUEST_BLOCK Srb;
+  LARGE_INTEGER Offset;
+  PIRP NewIrp;
+  PVOID DataBuffer;
+  ULONG TransferLength;
+  ULONG RequestCount;
+  ULONG DataLength;
+  ULONG i;
+
+  DPRINT1("ScsiClassSplitRequest(DeviceObject %lx  Irp %lx  MaximumBytes %lu)\n",
+	 DeviceObject, Irp, MaximumBytes);
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  CurrentStack = IoGetCurrentIrpStackLocation(Irp);
+  NextStack = IoGetNextIrpStackLocation(Irp);
+  DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+
+  /* Initialize transfer data for first request */
+  Offset = CurrentStack->Parameters.Read.ByteOffset;
+  TransferLength = CurrentStack->Parameters.Read.Length;
+  DataLength = MaximumBytes;
+  RequestCount = ROUND_UP(TransferLength, MaximumBytes) / MaximumBytes;
+
+  /* Save request count in the original IRP */
+  NextStack->Parameters.Others.Argument1 = (PVOID)RequestCount;
+
+  DPRINT1("RequestCount %lu\n", RequestCount);
+
+  for (i = 0; i < RequestCount; i++)
+    {
+      /* Create a new IRP */
+      NewIrp = IoAllocateIrp(DeviceObject->StackSize,
+			     FALSE);
+      if (NewIrp == NULL)
+	{
+	  Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+	  Irp->IoStatus.Information = 0;
+
+	  if (i == 0)
+	    IoCompleteRequest(Irp,
+			      IO_NO_INCREMENT);
+	  return;
+	}
+
+      /* Initialize the new IRP */
+      NewIrp->MdlAddress = Irp->MdlAddress;
+
+      IoSetNextIrpStackLocation(NewIrp);
+      NewStack = IoGetCurrentIrpStackLocation(NewIrp);
+
+      NewStack->MajorFunction = CurrentStack->MajorFunction;
+      NewStack->Parameters.Read.ByteOffset = Offset;
+      NewStack->Parameters.Read.Length = DataLength;
+      NewStack->DeviceObject = DeviceObject;
+
+      ScsiClassBuildRequest(DeviceObject,
+			    NewIrp);
+
+      NewStack = IoGetNextIrpStackLocation(NewIrp);
+      Srb = NewStack->Parameters.Others.Argument1;
+      Srb->DataBuffer = DataBuffer;
+
+      NewIrp->AssociatedIrp.MasterIrp = Irp;
+
+      /* Initialize completion routine */
+      IoSetCompletionRoutine(NewIrp,
+			     ScsiClassIoCompleteAssociated,
+			     Srb,
+			     TRUE,
+			     TRUE,
+			     TRUE);
+
+      /* Send the new IRP down to the port driver */
+      IoCallDriver(DeviceExtension->PortDeviceObject,
+		   NewIrp);
+
+      /* Adjust transfer data for next request */
+      DataBuffer = (PCHAR)DataBuffer + MaximumBytes;
+      TransferLength -= MaximumBytes;
+      DataLength = (TransferLength > MaximumBytes) ? MaximumBytes : TransferLength;
+      Offset.QuadPart = Offset.QuadPart + MaximumBytes;
+    }
 }
 
 
@@ -1225,8 +1405,10 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
-  ULONG TransferLength;
-  ULONG TransferPages;
+  ULONG MaximumTransferLength;
+  ULONG CurrentTransferLength;
+  ULONG MaximumTransferPages;
+  ULONG CurrentTransferPages;
   NTSTATUS Status;
 
   DPRINT("ScsiClassReadWrite() called\n");
@@ -1238,7 +1420,12 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 	 IrpStack->Parameters.Read.ByteOffset.QuadPart,
 	 IrpStack->Parameters.Read.Length);
 
-  TransferLength = IrpStack->Parameters.Read.Length;
+//  MaximumTransferLength = DeviceExtension->PortCapabilities->MaximumTransferLength;
+//  MaximumTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
+  MaximumTransferLength = 0x10000; /* 64 kbytes */
+  MaximumTransferPages = MaximumTransferLength / PAGESIZE;
+
+  CurrentTransferLength = IrpStack->Parameters.Read.Length;
 
   if ((DeviceObject->Flags & DO_VERIFY_VOLUME) &&
       !(IrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME))
@@ -1270,7 +1457,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Finish a zero-byte transfer */
-  if (TransferLength == 0)
+  if (CurrentTransferLength == 0)
     {
       Irp->IoStatus.Status = STATUS_SUCCESS;
       Irp->IoStatus.Information = 0;
@@ -1298,16 +1485,34 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   IrpStack->Parameters.Read.ByteOffset.QuadPart += DeviceExtension->StartingOffset.QuadPart;
 
   /* Calculate number of pages in this transfer */
-  TransferPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Irp->MdlAddress),
-						 IrpStack->Parameters.Read.Length);
+  CurrentTransferPages =
+    ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Irp->MdlAddress),
+				   IrpStack->Parameters.Read.Length);
 
-#if 0
-  if (TransferLength > maximumTransferLength ||
-      TransferPages > DeviceExtension->PortCapabilities->MaximumPhysicalPages)
+  if (CurrentTransferLength > MaximumTransferLength ||
+      CurrentTransferPages > MaximumTransferPages)
     {
-      /* FIXME: split request */
+       DPRINT1("Split current request: MaximumTransferLength %lu  CurrentTransferLength %lu\n",
+	      MaximumTransferLength, CurrentTransferLength);
+
+      /* Adjust the maximum transfer length */
+      CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages - 1;
+
+      if (MaximumTransferLength > CurrentTransferPages * PAGESIZE)
+	  MaximumTransferLength = CurrentTransferPages * PAGESIZE;
+
+      if (MaximumTransferLength == 0)
+	  MaximumTransferLength = PAGESIZE;
+
+      IoMarkIrpPending(Irp);
+
+      /* Split current request */
+      ScsiClassSplitRequest(DeviceObject,
+			    Irp,
+			    MaximumTransferLength);
+
+      return(STATUS_PENDING);
     }
-#endif
 
   ScsiClassBuildRequest(DeviceObject,
 			Irp);
