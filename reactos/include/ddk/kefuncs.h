@@ -407,14 +407,6 @@ NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
 				    IN ULONG NumOfSelectors);
 
 /*
- * FUNCTION: Raises a user mode exception
- * ARGUMENTS:
- *	ExceptionCode = Status code of the exception
- */
-VOID KeRaiseUserException(NTSTATUS ExceptionCode);
-
-
-/*
  * FUNCTION: Enters the kernel debugger
  * ARGUMENTS:
  *	None
