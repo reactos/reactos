@@ -102,6 +102,7 @@ HalReadDmaCounter
 HalSetBusData
 HalSetBusDataByOffset
 HalTranslateBusAddress
+HalQueryRealTimeClock
 IoAcquireCancelSpinLock
 IoAllocateAdapterChannel
 IoAllocateController
