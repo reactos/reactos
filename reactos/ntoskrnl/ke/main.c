@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.156 2003/05/17 13:40:03 hbirr Exp $
+/* $Id: main.c,v 1.157 2003/05/19 14:35:48 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -457,6 +457,79 @@ ExpInitializeExecutive(VOID)
        KeLoaderModules[i].ModStart,
        KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
     }
+
+
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "ansi.nls"))
+	{
+	  DPRINT1("Process ANSI code page file at %08lx\n", start);
+	  RtlpImportAnsiCodePage((PUSHORT)start, length);
+	}
+    }
+
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "oem.nls"))
+	{
+	  DPRINT1("Process OEM code page file at %08lx\n", start);
+	  RtlpImportOemCodePage((PUSHORT)start, length);
+	}
+    }
+
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+
+      DPRINT("Module: '%s'\n", (PCHAR)KeLoaderModules[i].String);
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
+      if (!_stricmp (name, "casemap.nls"))
+	{
+	  DPRINT1("Process Unicode casemap file at %08lx\n", start);
+	  RtlpImportUnicodeCasemap((PUSHORT)start, length);
+	}
+    }
+
+  RtlpCreateNlsSection();
+
 
 
   /*  Pass 2: import system hive registry chunk  */

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.12 2003/05/16 17:38:41 ekohl Exp $
+/* $Id: nls.c,v 1.13 2003/05/19 14:39:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,6 +48,26 @@ PCHAR UnicodeToOemTable =NULL; /* size: 65536*sizeof(CHAR) */
 
 PWCHAR UnicodeUpcaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
 PWCHAR UnicodeLowercaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
+
+
+/* Experimental */
+
+PUSHORT NlsAnsiCodePageTable = NULL;
+ULONG NlsAnsiCodePageTableSize = 0;
+
+PUSHORT NlsOemCodePageTable = NULL;
+ULONG NlsOemCodePageTableSize = 0;
+
+PUSHORT NlsUnicodeCasemapTable = NULL;
+ULONG NlsUnicodeCasemapTableSize = 0;
+
+PVOID NlsSectionObject = NULL;
+PVOID NlsSectionBase = NULL;
+ULONG NlsSectionViewSize = 0;
+
+ULONG NlsAnsiTableOffset = 0;
+ULONG NlsOemTableOffset = 0;
+ULONG NlsUnicodeTableOffset = 0;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -144,6 +164,137 @@ RtlpCreateDefaultNlsTables(VOID)
 }
 
 
+VOID
+RtlpImportAnsiCodePage(PUSHORT TableBase,
+		       ULONG Size)
+{
+  DPRINT1("RtlpImportAnsiCodePage(TableBase %p  Size %lu) called\n",
+	 TableBase, Size);
+
+  NlsAnsiCodePageTable = ExAllocatePool(NonPagedPool,
+					Size);
+  if (NlsAnsiCodePageTable != NULL)
+    {
+      NlsAnsiCodePageTableSize = Size;
+      RtlCopyMemory(NlsAnsiCodePageTable,
+		    TableBase,
+		    Size);
+    }
+}
+
+
+VOID
+RtlpImportOemCodePage(PUSHORT TableBase,
+		      ULONG Size)
+{
+  DPRINT1("RtlpImportOemCodePage(TableBase %p  Size %lu) called\n",
+	 TableBase, Size);
+
+  NlsOemCodePageTable = ExAllocatePool(NonPagedPool,
+				       Size);
+  if (NlsOemCodePageTable != NULL)
+    {
+      NlsOemCodePageTableSize = Size;
+      RtlCopyMemory(NlsOemCodePageTable,
+		    TableBase,
+		    Size);
+    }
+}
+
+
+VOID
+RtlpImportUnicodeCasemap(PUSHORT TableBase,
+			 ULONG Size)
+{
+  DPRINT1("RtlpImportUnicodeCasemap(TableBase %p  Size %lu) called\n",
+	 TableBase, Size);
+
+  NlsUnicodeCasemapTable = ExAllocatePool(NonPagedPool,
+					  Size);
+  if (NlsUnicodeCasemapTable != NULL)
+    {
+      NlsUnicodeCasemapTableSize = Size;
+      RtlCopyMemory(NlsUnicodeCasemapTable,
+		    TableBase,
+		    Size);
+    }
+}
+
+
+VOID
+RtlpCreateNlsSection(VOID)
+{
+  HANDLE SectionHandle;
+  LARGE_INTEGER SectionSize;
+  NTSTATUS Status;
+
+  DPRINT("RtlpCreateNlsSection() called\n");
+
+  NlsSectionViewSize = ROUND_UP(NlsAnsiCodePageTableSize, PAGE_SIZE) +
+		       ROUND_UP(NlsOemCodePageTableSize, PAGE_SIZE) +
+		       ROUND_UP(NlsUnicodeCasemapTableSize, PAGE_SIZE);
+
+  DPRINT("NlsSectionViewSize %lx\n", NlsSectionViewSize);
+
+  SectionSize.QuadPart = (LONGLONG)NlsSectionViewSize;
+  Status = NtCreateSection(&SectionHandle,
+			   SECTION_ALL_ACCESS,
+			   NULL,
+			   &SectionSize,
+			   PAGE_READWRITE,
+			   SEC_COMMIT,
+			   NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateSection() failed\n");
+      KeBugCheckEx(0x32, Status, 1, 0, 0);
+    }
+
+  Status = ObReferenceObjectByHandle(SectionHandle,
+				     SECTION_ALL_ACCESS,
+				     MmSectionObjectType,
+				     KernelMode,
+				     &NlsSectionObject,
+				     NULL);
+  NtClose(SectionHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObReferenceObjectByHandle() failed\n");
+      KeBugCheckEx(0x32, Status, 1, 1, 0);
+    }
+
+  Status = MmMapViewInSystemSpace(NlsSectionObject,
+				  &NlsSectionBase,
+				  &NlsSectionViewSize);
+  NtClose(SectionHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("MmMapViewInSystemSpace() failed\n");
+      KeBugCheckEx(0x32, Status, 1, 2, 0);
+    }
+
+  DPRINT("NlsSection: Base %p  Size %lx\n", 
+	 NlsSectionBase,
+	 NlsSectionViewSize);
+
+  NlsAnsiTableOffset = 0;
+  RtlCopyMemory((PVOID)((ULONG)NlsSectionBase + NlsAnsiTableOffset),
+		NlsAnsiCodePageTable,
+		NlsAnsiCodePageTableSize);
+
+  NlsOemTableOffset = NlsAnsiTableOffset + ROUND_UP(NlsAnsiCodePageTableSize, PAGE_SIZE);
+  RtlCopyMemory((PVOID)((ULONG)NlsSectionBase + NlsOemTableOffset),
+		NlsOemCodePageTable,
+		NlsOemCodePageTableSize);
+
+  NlsUnicodeTableOffset = NlsOemTableOffset + ROUND_UP(NlsOemCodePageTableSize, PAGE_SIZE);
+  RtlCopyMemory((PVOID)((ULONG)NlsSectionBase + NlsUnicodeTableOffset),
+		NlsUnicodeCasemapTable,
+		NlsUnicodeCasemapTableSize);
+}
+
+
+
 NTSTATUS STDCALL
 RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 		      PWCHAR UnicodeString,
@@ -200,7 +351,7 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
   PUSHORT Ptr;
   USHORT Offset;
 
-  DPRINT1("RtlInitCodePageTable() called\n");
+  DPRINT("RtlInitCodePageTable() called\n");
 
   NlsFileHeader = (PNLS_FILE_HEADER)TableBase;
 

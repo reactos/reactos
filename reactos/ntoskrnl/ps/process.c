@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.101 2003/05/17 19:16:39 ekohl Exp $
+/* $Id: process.c,v 1.102 2003/05/19 14:36:53 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -28,6 +28,7 @@
 #include <roscfg.h>
 #include <internal/se.h>
 #include <internal/kd.h>
+#include <internal/nls.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -318,6 +319,10 @@ PsCreatePeb(HANDLE ProcessHandle,
   PPEB Peb;
   NTSTATUS Status;
 
+  LARGE_INTEGER SectionOffset;
+  ULONG ViewSize;
+  PVOID TableBase;
+
   /* Allocate the Process Environment Block (PEB) */
   Peb = (PPEB)PEB_BASE;
   PebSize = PAGE_SIZE;
@@ -334,12 +339,34 @@ PsCreatePeb(HANDLE ProcessHandle,
     }
   DPRINT("Peb %p  PebSize %lu\n", Peb, PebSize);
 
+  ViewSize = 0;
+  SectionOffset.QuadPart = 0LL;
+  Status = MmMapViewOfSection(NlsSectionObject,
+			      Process,
+			      &TableBase,
+			      0,
+			      0,
+			      &SectionOffset,
+			      &ViewSize,
+			      ViewShare,
+			      SEC_NO_CHANGE | MEM_TOP_DOWN,
+			      PAGE_READONLY);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("MmMapViewOfSection() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+  DPRINT("TableBase %p  ViewSize %lx\n", TableBase, ViewSize);
+
   KeAttachProcess(Process);
 
   /* Initialize the PEB */
   RtlZeroMemory(Peb, sizeof(PEB));
   Peb->ImageBaseAddress = ImageBase;
 
+  Peb->AnsiCodePageData = TableBase + NlsAnsiTableOffset;
+  Peb->OemCodePageData = TableBase + NlsOemTableOffset;
+  Peb->UnicodeCaseTableData = TableBase + NlsUnicodeTableOffset;
 
   Process->Peb = Peb;
   KeDetachProcess();
