@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.60 2003/12/12 14:22:37 gvg Exp $
+/* $Id: dllmain.c,v 1.61 2003/12/12 23:49:48 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -75,6 +75,9 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       
       InitializeListHead(&Win32Process->MenuListHead);
       ExInitializeFastMutex(&Win32Process->MenuListLock);      
+
+      InitializeListHead(&Win32Process->PrivateFontListHead);
+      ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
 
       Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Process->WindowStation = NULL;

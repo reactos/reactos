@@ -16,12 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.59 2003/12/12 22:57:26 weiden Exp $ */
+/* $Id: text.c,v 1.60 2003/12/12 23:49:48 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <napi/win32.h>
 #include <internal/safe.h>
 #include <win32k/brush.h>
 #include <win32k/dc.h>
@@ -48,12 +49,12 @@ typedef struct _FONT_ENTRY {
   LIST_ENTRY ListEntry;
   HFONT hFont;
   UNICODE_STRING FaceName;
-  BYTE CanEnum;
+  BYTE NotEnum;
 } FONT_ENTRY, *PFONT_ENTRY;
 
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
-static INT FontsLoaded = 0;
+static INT FontsLoaded = 0; /* number of all fonts loaded (including private fonts */
 
 int FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
@@ -163,14 +164,26 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 
   // Add this font resource to the font table
   entry->hFont = NewFont;
-
+  entry->NotEnum = (fl & FR_NOT_ENUM);
   RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
   RtlAnsiStringToUnicodeString(&entry->FaceName, &StringA, TRUE);
   
-  ExAcquireFastMutex(&FontListLock);
-  InsertTailList(&FontListHead, &entry->ListEntry);
-  FontsLoaded++;
-  ExReleaseFastMutex(&FontListLock);
+  if(fl & FR_PRIVATE)
+  {
+    PW32PROCESS Win32Process = PsGetWin32Process();
+    
+    ExAcquireFastMutex(&Win32Process->PrivateFontListLock);
+    InsertTailList(&Win32Process->PrivateFontListHead, &entry->ListEntry);
+    FontsLoaded++;
+    ExReleaseFastMutex(&Win32Process->PrivateFontListLock);
+  }
+  else
+  {
+    ExAcquireFastMutex(&FontListLock);
+    InsertTailList(&FontListHead, &entry->ListEntry);
+    FontsLoaded++;
+    ExReleaseFastMutex(&FontListLock);
+  }
 
   return 1;
 }
@@ -1361,8 +1374,10 @@ TextIntRealizeFont(HFONT FontHandle)
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
   UNICODE_STRING FaceName;
-  PLIST_ENTRY Entry;
+  PLIST_ENTRY Entry, List;
   PFONT_ENTRY CurrentEntry;
+  PW32PROCESS Win32Process;
+  BOOL Private = FALSE;
 
   TextObj = TEXTOBJ_LockText(FontHandle);
   ASSERT(TextObj);
@@ -1370,10 +1385,32 @@ TextIntRealizeFont(HFONT FontHandle)
     {
     RtlInitUnicodeString(&FaceName, TextObj->logfont.lfFaceName);
     
+    /* find font in private fonts */
+    Win32Process = PsGetWin32Process();
+    
+    ExAcquireFastMutex(&Win32Process->PrivateFontListLock);
+    
+    Entry = Win32Process->PrivateFontListHead.Flink;
+    while(Entry != &Win32Process->PrivateFontListHead)
+    {
+      CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+      
+      if (0 == RtlCompareUnicodeString(&CurrentEntry->FaceName, &FaceName, TRUE))
+      {
+	    TextObj->GDIFontHandle = CurrentEntry->hFont;
+	    Private = TRUE;
+	    goto check;
+      }
+      Entry = Entry->Flink;
+    }
+    ExReleaseFastMutex(&Win32Process->PrivateFontListLock);
+    
+    /* find font in system fonts */
     ExAcquireFastMutex(&FontListLock);
     
-    Entry = FontListHead.Flink;
-    while(Entry != &FontListHead)
+    Entry = (Private ? Win32Process->PrivateFontListHead.Flink : FontListHead.Flink);
+    List = (Private ? &Win32Process->PrivateFontListHead : &FontListHead);
+    while(Entry != List)
     {
       CurrentEntry = (PFONT_ENTRY)CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
       
@@ -1384,7 +1421,8 @@ TextIntRealizeFont(HFONT FontHandle)
       }
       Entry = Entry->Flink;
     }
-
+    
+    check:
     if (NULL == TextObj->GDIFontHandle)
     {
       Entry = FontListHead.Flink;
@@ -1404,7 +1442,7 @@ TextIntRealizeFont(HFONT FontHandle)
       
     }
     
-    ExReleaseFastMutex(&FontListLock);
+    ExReleaseFastMutex((Private ? &Win32Process->PrivateFontListLock : &FontListLock));
 
     ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
 

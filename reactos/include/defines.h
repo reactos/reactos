@@ -143,6 +143,11 @@ extern "C" {
 #define KLF_REPLACELANG	(16)
 #define KLF_SUBSTITUTE_OK	(2)
 
+/* AddFontResourceEx */
+#define FR_PRIVATE	(0x10)
+#define FR_NOT_ENUM	(0x20)
+
+
 /* AppendMenu */
 #define MF_BITMAP	(0x4L)
 #define MF_DISABLED	(0x2L)
