@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.63 2004/11/22 16:11:25 ekohl Exp $
+/* $Id: reg.c,v 1.64 2004/12/02 14:08:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2443,8 +2443,8 @@ RegQueryValueExA (HKEY hKey,
 
   if (lpData)
     {
-      ValueData.Length = *lpcbData * sizeof(WCHAR);
-      ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
+      ValueData.Length = 0;
+      ValueData.MaximumLength = (*lpcbData + 1) * sizeof(WCHAR);
       ValueData.Buffer = RtlAllocateHeap (ProcessHeap,
 					  0,
 					  ValueData.MaximumLength);
@@ -2464,16 +2464,13 @@ RegQueryValueExA (HKEY hKey,
   RtlCreateUnicodeStringFromAsciiz (&ValueName,
 				    (LPSTR)lpValueName);
 
-  if (NULL != lpcbData)
-    {
-      Length = *lpcbData * sizeof(WCHAR);
-    }
+  Length = (lpcbData == NULL) ? 0 : *lpcbData * sizeof(WCHAR);
   ErrorCode = RegQueryValueExW (hKey,
 				ValueName.Buffer,
 				lpReserved,
 				&Type,
-				(LPBYTE)ValueData.Buffer,
-				NULL == lpcbData ? NULL : &Length);
+				(lpData == NULL) ? NULL : (LPBYTE)ValueData.Buffer,
+				&Length);
   DPRINT("ErrorCode %lu\n", ErrorCode);
   RtlFreeUnicodeString(&ValueName);
 
@@ -2498,13 +2495,9 @@ RegQueryValueExA (HKEY hKey,
 	    }
 	  Length = Length / sizeof(WCHAR);
 	}
-      else if (lpcbData != NULL)
+      else if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
 	{
-	  Length = min(*lpcbData, Length);
-	  if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
-	    {
-	      RtlMoveMemory(lpData, ValueData.Buffer, Length);
-	    }
+	  RtlMoveMemory(lpData, ValueData.Buffer, Length);
 	}
 
       if (lpcbData != NULL)
