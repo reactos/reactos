@@ -12,7 +12,9 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-VOID SatisfyAccept( PIRP Irp, PFILE_OBJECT NewFileObject,
+VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
+                    PIRP Irp, 
+                    PFILE_OBJECT NewFileObject,
 		    PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
 
@@ -31,7 +33,9 @@ VOID SatisfyAccept( PIRP Irp, PFILE_OBJECT NewFileObject,
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
     MakeSocketIntoConnection( FCB );
-
+    FCB->PollState |= AFD_EVENT_SEND;
+    PollReeval( DeviceExt, NewFileObject );
+    
     SocketStateUnlock( FCB );
 }
 
@@ -131,8 +135,6 @@ NTSTATUS DDKAPI ListenComplete
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
 	FCB->PollState |= AFD_EVENT_ACCEPT;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
-    } else {
-	FCB->PollState &= ~AFD_EVENT_ACCEPT;
     }
 
     SocketStateUnlock( FCB );
@@ -214,6 +216,9 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
+        FCB->PollState &= ~AFD_EVENT_ACCEPT;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+
 	SocketStateUnlock( FCB );
 	return Status;
     } else {
@@ -227,6 +232,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_DEVICE_EXTENSION DeviceExt = 
+        (PAFD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_ACCEPT_DATA AcceptData = Irp->AssociatedIrp.SystemBuffer;
     PLIST_ENTRY PendingConn;
@@ -284,7 +291,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             ASSERT(NewFileObject->FsContext != FCB);
 
 	    /* We have a pending connection ... complete this irp right away */
-	    SatisfyAccept( Irp, NewFileObject, PendingConnObj );
+	    SatisfyAccept( DeviceExt, Irp, NewFileObject, PendingConnObj );
 	    
 	    ObDereferenceObject( NewFileObject );
 
