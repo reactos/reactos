@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.87 2003/10/06 16:25:53 gvg Exp $
+/* $Id: dc.c,v 1.88 2003/10/12 20:23:25 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1436,12 +1436,13 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   if(!hDC || !hGDIObj) return NULL;
 
   dc = DC_LockDc(hDC);
-  ASSERT ( dc );
+  if (NULL == dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return NULL;
+    }
 
   objectType = GDIOBJ_GetObjectType(hGDIObj);
-//  GdiObjHdr = hGDIObj;
-
-  // FIXME: Get object handle from GDIObj and use it instead of GDIObj below?
 
   switch (objectType)
   {
@@ -1525,11 +1526,16 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
     case GDI_OBJECT_TYPE_BITMAP:
       // must be memory dc to select bitmap
-      if (!(dc->w.flags & DC_MEMORY)) return NULL;
+      if (!(dc->w.flags & DC_MEMORY))
+        {
+          DC_UnlockDc(hDC);
+          return NULL;
+        }
       pb = BITMAPOBJ_LockBitmap(hGDIObj);
       if (NULL == pb)
 	{
 	  SetLastWin32Error(ERROR_INVALID_HANDLE);
+          DC_UnlockDc(hDC);
 	  return NULL;
 	}
       objOrg = (HGDIOBJ)dc->w.hBitmap;
