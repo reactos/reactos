@@ -76,8 +76,8 @@ SerialRead(
 		  DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant == 0 &&
 		  DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier == 0))
 	{
-		ULONG IntervalTimeout;
-		ULONG TotalTimeout;
+		ULONG IntervalTimeout = 0;
+		ULONG TotalTimeout = 0;
 		BOOLEAN UseIntervalTimeout = FALSE;
 		BOOLEAN UseTotalTimeout = FALSE;
 		ULONG ThisByteTimeout;
