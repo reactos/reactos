@@ -70,7 +70,7 @@
 
 
 #include <windows.h>
-#include <GL\gl.h>
+#include <GL/gl.h>
 #include "context.h"
 #ifdef DDRAW
 #define DIRECTDRAW_VERSION 0x0100
