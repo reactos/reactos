@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.16 2001/11/20 02:29:45 dwelch Exp $
+/* $Id: process.c,v 1.17 2002/05/07 22:46:23 hbirr Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -198,15 +198,16 @@ CSR_API(CsrCreateProcess)
 
 CSR_API(CsrTerminateProcess)
 {
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
-     - sizeof(LPC_MESSAGE_HEADER);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
-  
-   DbgPrint("CSR: %s not implemented.\n", __FUNCTION__);
+   NTSTATUS Status;
 
-   Reply->Status = STATUS_NOT_IMPLEMENTED;
-   
-   return(STATUS_NOT_IMPLEMENTED);
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) 
+      - sizeof(LPC_MESSAGE_HEADER);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
+
+   Status = CsrFreeProcessData(ProcessData->ProcessId);
+
+   Reply->Status = Status;
+   return Status;
 }
 
 CSR_API(CsrConnectProcess)
