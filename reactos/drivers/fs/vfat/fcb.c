@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.38 2004/07/03 17:31:30 hbirr Exp $
+/* $Id: fcb.c,v 1.39 2004/07/18 17:38:17 greatlrd Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -511,13 +511,13 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
 {
   NTSTATUS  status;
   PVOID Context = NULL;
-  PVOID Page;
+  PVOID Page = NULL;
   BOOLEAN First = TRUE;
   VFAT_DIRENTRY_CONTEXT DirContext;
   WCHAR LongNameBuffer[MAX_PATH];
   WCHAR ShortNameBuffer[13];
-  BOOLEAN FoundLong;
-  BOOLEAN FoundShort;
+  BOOLEAN FoundLong = FALSE;
+  BOOLEAN FoundShort = FALSE;
 
   assert (pDeviceExt);
   assert (pDirectoryFCB);
