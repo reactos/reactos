@@ -65,6 +65,12 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND ActiveWindow;
   /* Current capture window for this queue. */
   HWND CaptureWindow;
+  /* Current move/size window for this queue */
+  HWND MoveSize;
+  /* Current menu owner window for this queue */
+  HWND MenuOwner;
+  /* Identifes the menu state */
+  BYTE MenuState;
 
   /* queue state tracking */
   WORD WakeBits;

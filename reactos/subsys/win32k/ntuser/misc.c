@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.28 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: misc.c,v 1.29 2003/11/23 12:04:54 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -515,14 +515,18 @@ NtUserGetGUIThreadInfo(
   MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
   
   SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-  /* FIXME add flags GUI_16BITTASK, GUI_INMENUMODE, GUI_INMOVESIZE,
-                     GUI_POPUPMENUMODE, GUI_SYSTEMMENUMODE */
+  if(MsgQueue->MenuOwner)
+    SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
+  if(MsgQueue->MoveSize)
+    SafeGui.flags |= GUI_INMOVESIZE;
+  
+  /* FIXME add flag GUI_16BITTASK */
   
   SafeGui.hwndActive = MsgQueue->ActiveWindow;
   SafeGui.hwndFocus = MsgQueue->FocusWindow;
   SafeGui.hwndCapture = MsgQueue->CaptureWindow;
-  SafeGui.hwndMenuOwner = 0; /* FIXME */
-  SafeGui.hwndMoveSize = 0;  /* FIXME */
+  SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
+  SafeGui.hwndMoveSize = MsgQueue->MoveSize;
   SafeGui.hwndCaret = CaretInfo->hWnd;
   
   SafeGui.rcCaret.left = CaretInfo->Pos.x;
