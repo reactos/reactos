@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.55 2003/06/15 04:25:34 rcampbell Exp $
+/* $Id: window.c,v 1.56 2003/06/16 13:43:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -473,7 +473,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   W32kGuiCheck();
   W32kGraphicsCheck(TRUE);
 
-  if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
+  if (!RtlCreateUnicodeString(&WindowName,
+                              NULL == lpWindowName->Buffer ?
+                              L"" : lpWindowName->Buffer))
     {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWND)0);
