@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.4 2001/07/05 01:51:52 rex Exp $
+/* $Id: fcb.c,v 1.5 2001/07/14 18:21:23 ekohl Exp $
  *
  *
  * FILE:             fcb.c
@@ -584,7 +584,8 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
       {
         *pParentFCB = parentFCB;
         *pFCB = NULL;
-        if (vfatGetNextPathElement (vfatGetNextPathElement (currentElement) + 1) == 0)
+        currentElement = vfatGetNextPathElement(currentElement);
+        if (*currentElement == L'\0' || vfatGetNextPathElement(currentElement + 1) == 0)
         {
           return  STATUS_OBJECT_NAME_NOT_FOUND;
         }
