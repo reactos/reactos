@@ -310,6 +310,7 @@ typedef struct
 
 /* ----   End of REBAR layout constants.                      ---- */
 
+#define RB_GETBANDINFO_OLD (WM_USER+5) /* obsoleted after IE3, but we have to support it anyway */
 
 /*  The following 6 defines return the proper rcBand element       */
 /*  depending on whether CCS_VERT was set.                         */
@@ -4541,8 +4542,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case RB_GETBANDCOUNT:
 	    return REBAR_GetBandCount (infoPtr);
 
-	case RB_GETBANDINFO:	/* obsoleted after IE3, but we have to
-				   support it anyway. */
+	case RB_GETBANDINFO_OLD:
 	case RB_GETBANDINFOA:
 	    return REBAR_GetBandInfoA (infoPtr, wParam, lParam);
 

@@ -321,7 +321,7 @@ static BOOL PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
 
   if (dwFlags & PSH_USEPSTARTPAGE)
   {
-    TRACE("PSH_USEPSTARTPAGE is on");
+    TRACE("PSH_USEPSTARTPAGE is on\n");
     psInfo->active_page = 0;
   }
   else
@@ -375,7 +375,7 @@ static BOOL PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
 
   if (dwFlags & PSH_USEPSTARTPAGE)
   {
-    TRACE("PSH_USEPSTARTPAGE is on");
+    TRACE("PSH_USEPSTARTPAGE is on\n");
     psInfo->active_page = 0;
   }
   else
@@ -2773,6 +2773,9 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
     case IDHELP:
 	PROPSHEET_Help(hwnd);
 	break;
+
+    default:
+        return FALSE;
     }
 
     return TRUE;
@@ -2901,7 +2904,18 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TRUE;
 
     case WM_COMMAND:
-      return PROPSHEET_DoCommand(hwnd, LOWORD(wParam));
+      if (!PROPSHEET_DoCommand(hwnd, LOWORD(wParam)))
+      {
+          PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd, PropSheetInfoStr);
+
+          /* No default handler, forward notification to active page */
+          if (psInfo->activeValid && psInfo->active_page != -1)
+          {
+             HWND hwndPage = psInfo->proppage[psInfo->active_page].hwndPage;
+             SendMessageW(hwndPage, WM_COMMAND, wParam, lParam);
+          }
+      }
+      return TRUE;
 
     case WM_NOTIFY:
     {

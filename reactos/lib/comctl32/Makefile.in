@@ -41,8 +41,8 @@ RC_BINSRC = rsrc.rc
 RC_BINARIES = \
 	idb_hist_large.bmp \
 	idb_hist_small.bmp \
-	idb_std_small.bmp \
 	idb_std_large.bmp \
+	idb_std_small.bmp \
 	idb_view_large.bmp \
 	idb_view_small.bmp \
 	idc_divider.cur \

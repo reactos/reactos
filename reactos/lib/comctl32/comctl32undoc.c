@@ -57,10 +57,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
-
-extern HANDLE COMCTL32_hHeap; /* handle to the private heap */
-
-
 struct _DSA
 {
     INT  nItemCount;
@@ -370,15 +366,7 @@ DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
 
 LPVOID WINAPI Alloc (DWORD dwSize)
 {
-    LPVOID lpPtr;
-
-    TRACE("(0x%lx)\n", dwSize);
-
-    lpPtr = HeapAlloc (COMCTL32_hHeap, HEAP_ZERO_MEMORY, dwSize);
-
-    TRACE("-- ret=%p\n", lpPtr);
-
-    return lpPtr;
+    return LocalAlloc( LMEM_ZEROINIT, dwSize );
 }
 
 
@@ -403,18 +391,10 @@ LPVOID WINAPI Alloc (DWORD dwSize)
 
 LPVOID WINAPI ReAlloc (LPVOID lpSrc, DWORD dwSize)
 {
-    LPVOID lpDest;
-
-    TRACE("(%p 0x%08lx)\n", lpSrc, dwSize);
-
     if (lpSrc)
-	lpDest = HeapReAlloc (COMCTL32_hHeap, HEAP_ZERO_MEMORY, lpSrc, dwSize);
+        return LocalReAlloc( lpSrc, dwSize, LMEM_ZEROINIT );
     else
-	lpDest = HeapAlloc (COMCTL32_hHeap, HEAP_ZERO_MEMORY, dwSize);
-
-    TRACE("-- ret=%p\n", lpDest);
-
-    return lpDest;
+        return LocalAlloc( LMEM_ZEROINIT, dwSize);
 }
 
 
@@ -433,9 +413,7 @@ LPVOID WINAPI ReAlloc (LPVOID lpSrc, DWORD dwSize)
 
 BOOL WINAPI Free (LPVOID lpMem)
 {
-    TRACE("(%p)\n", lpMem);
-
-    return HeapFree (COMCTL32_hHeap, 0, lpMem);
+    return !LocalFree( lpMem );
 }
 
 
@@ -455,9 +433,7 @@ BOOL WINAPI Free (LPVOID lpMem)
 
 DWORD WINAPI GetSize (LPVOID lpMem)
 {
-    TRACE("(%p)\n", lpMem);
-
-    return HeapSize (COMCTL32_hHeap, 0, lpMem);
+    return LocalSize( lpMem );
 }
 
 
@@ -1656,24 +1632,6 @@ DSA_DeleteAllItems (const HDSA hdsa)
  */
 
 /**************************************************************************
- * DPA_Create [COMCTL32.328] Creates a dynamic pointer array
- *
- * PARAMS
- *     nGrow [I] number of items by which the array grows when it is filled
- *
- * RETURNS
- *     Success: handle (pointer) to the pointer array.
- *     Failure: NULL
- */
-
-HDPA WINAPI
-DPA_Create (INT nGrow)
-{
-    return DPA_CreateEx (nGrow, GetProcessHeap());
-}
-
-
-/**************************************************************************
  * DPA_Destroy [COMCTL32.329] Destroys a dynamic pointer array
  *
  * PARAMS
@@ -2238,16 +2196,33 @@ DPA_CreateEx (INT nGrow, HANDLE hHeap)
 
     if (hdpa) {
 	hdpa->nGrow = min(8, nGrow);
-	hdpa->hHeap = hHeap ? hHeap : COMCTL32_hHeap;
+	hdpa->hHeap = hHeap ? hHeap : GetProcessHeap();
 	hdpa->nMaxCount = hdpa->nGrow * 2;
-	hdpa->ptrs =
-	    (LPVOID*)HeapAlloc (hHeap, HEAP_ZERO_MEMORY,
+	hdpa->ptrs = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
 				hdpa->nMaxCount * sizeof(LPVOID));
     }
 
     TRACE("-- %p\n", hdpa);
 
     return hdpa;
+}
+
+
+/**************************************************************************
+ * DPA_Create [COMCTL32.328] Creates a dynamic pointer array
+ *
+ * PARAMS
+ *     nGrow [I] number of items by which the array grows when it is filled
+ *
+ * RETURNS
+ *     Success: handle (pointer) to the pointer array.
+ *     Failure: NULL
+ */
+
+HDPA WINAPI
+DPA_Create (INT nGrow)
+{
+    return DPA_CreateEx( nGrow, 0 );
 }
 
 
