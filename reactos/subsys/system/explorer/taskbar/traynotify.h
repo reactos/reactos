@@ -31,7 +31,7 @@
 
 #define	CLASSNAME_CLOCKWINDOW	TEXT("TrayClockWClass")
 
-#define	NOTIFYAREA_WIDTH		244
+#define	NOTIFYAREA_WIDTH		64
 
 
  /// NotifyIconIndex is used for maintaining the order of notification icons.
@@ -120,6 +120,6 @@ protected:
 	bool	FormatTime();
 	void	Paint();
 
-	TCHAR	_time[16];
+	WCHAR	_time[16];
 	ToolTip	_tooltip;
 };
