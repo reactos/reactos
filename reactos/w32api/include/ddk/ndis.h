@@ -28,6 +28,7 @@
  *          NDIS50_MINIPORT      - Building NDIS 5.0 miniport driver
  *          NDIS51_MINIPORT      - Building NDIS 5.1 miniport driver
  */
+
 #ifndef __NDIS_H
 #define __NDIS_H
 
@@ -69,6 +70,15 @@ extern "C" {
 #if defined(NDIS51) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
 #define NDIS_PROTOCOL_MAJOR_VERSION 5
 #define NDIS_PROTOCOL_MINOR_VERSION 1
+#endif
+
+#if defined(NDIS_MINIPORT_DRIVER) && !defined(BINARY_COMPATIBLE)
+#define BINARY_COMPATIBLE 1
+#endif
+
+#if !defined(_M_IX86) && BINARY_COMPATIBLE
+#undef BINARY_COMPATIBLE
+#define BINARY_COMPATIBLE 0
 #endif
 
 #if 1
@@ -549,6 +559,19 @@ typedef UCHAR NDIS_DMA_SIZE;
 #define NDIS_DMA_24BITS                         ((NDIS_DMA_SIZE)0)
 #define NDIS_DMA_32BITS                         ((NDIS_DMA_SIZE)1)
 #define NDIS_DMA_64BITS                         ((NDIS_DMA_SIZE)2)
+
+typedef enum _NDIS_PROCESSOR_TYPE {
+	NdisProcessorX86,
+	NdisProcessorMips,
+	NdisProcessorAlpha,
+	NdisProcessorPpc,
+	NdisProcessorAmd64
+} NDIS_PROCESSOR_TYPE, *PNDIS_PROCESSOR_TYPE;
+
+typedef enum _NDIS_ENVIRONMENT_TYPE {
+	NdisEnvironmentWindows,
+	NdisEnvironmentWindowsNt
+} NDIS_ENVIRONMENT_TYPE, *PNDIS_ENVIRONMENT_TYPE;
 
 /* Possible hardware architecture */
 typedef enum _NDIS_INTERFACE_TYPE {
@@ -1672,6 +1695,8 @@ DDKAPI
 NdisFreeBuffer(
   IN PNDIS_BUFFER  Buffer);
 
+#if BINARY_COMPATIBLE
+
 NDISAPI
 VOID
 DDKAPI
@@ -1705,11 +1730,7 @@ NdisQueryBufferOffset(
   OUT PUINT  Offset,
   OUT PUINT  Length);
 
-NDISAPI
-VOID
-DDKAPI
-NdisFreeBuffer(
-  IN PNDIS_BUFFER  Buffer);
+#else
 
 /*
  * VOID
@@ -1722,7 +1743,6 @@ NdisFreeBuffer(
 {                                                     \
   (*(ArraySize) = NDIS_BUFFER_TO_SPAN_PAGES(Buffer))  \
 }
-
 
 /*
  * VOID
@@ -1795,6 +1815,7 @@ NdisFreeBuffer(
   *((PUINT)Length) = MmGetMdlByteCount(Buffer);   \
 }
 
+#endif /* BINARY_COMPATIBLE */
 
 /*
  * PVOID
@@ -2208,6 +2229,24 @@ NdisFreeBuffer(
 
 /* Memory management routines */
 
+#if BINARY_COMPATIBLE
+
+NDISAPI
+VOID
+DDKAPI
+NdisCreateLookaheadBufferFromSharedMemory(
+  IN PVOID  pSharedMemory,
+  IN UINT  LookaheadLength,
+  OUT PVOID  *pLookaheadBuffer);
+
+NDISAPI
+VOID
+DDKAPI
+NdisDestroyLookaheadBufferFromSharedMemory(
+  IN PVOID  pLookaheadBuffer);
+
+#else
+
 /*
  * VOID
  * NdisCreateLookaheadBufferFromSharedMemory(
@@ -2227,17 +2266,9 @@ NdisFreeBuffer(
  */
 #define NdisDestroyLookaheadBufferFromSharedMemory(_pLookaheadBuffer)
 
-#if defined(i386)
+#endif
 
-/*
- * VOID
- * NdisMoveFromMappedMemory(
- *   OUT PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveFromMappedMemory(Destination, Source, Length) \
-  NdisMoveMappedMemory(Destination, Source, Length)
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 /*
  * VOID
@@ -2251,6 +2282,43 @@ NdisFreeBuffer(
 
 /*
  * VOID
+ * NdisZeroMappedMemory(
+ *   IN PVOID  Destination,
+ *   IN ULONG  Length);
+ */
+#define NdisZeroMappedMemory(Destination, Length) \
+  RtlZeroMemory(Destination, Length)
+
+#else
+
+#define NdisMoveMappedMemory(Destination, Source, Length) \
+{
+  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length;
+  while (_Dest < _End)
+    *_Dest++ = _Src++;
+}
+
+#define NdisZeroMappedMemory(Destination, Length) \
+{
+  PUCHAR _Dest = Destination, _End = _Dest + Length;
+  while (_Dest < _End)
+    *_Dest++ = 0;
+}
+
+#endif /* _M_IX86 or _M_AMD64 */
+
+/*
+ * VOID
+ * NdisMoveFromMappedMemory(
+ *   OUT PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveFromMappedMemory(Destination, Source, Length) \
+  NdisMoveMappedMemory(Destination, Source, Length)
+
+/*
+ * VOID
  * NdisMoveToMappedMemory(
  *   OUT PVOID  Destination,
  *   IN PVOID  Source,
@@ -2258,8 +2326,6 @@ NdisFreeBuffer(
  */
 #define NdisMoveToMappedMemory(Destination, Source, Length) \
   NdisMoveMappedMemory(Destination, Source, Length)
-
-#endif /* i386 */
 
 /*
  * VOID
@@ -2412,15 +2478,6 @@ NdisUpdateSharedMemory(
 
 /*
  * VOID
- * NdisZeroMappedMemory(
- *   IN PVOID  Destination,
- *   IN ULONG  Length);
- */
-#define NdisZeroMappedMemory(Destination, Length) \
-  RtlZeroMemory(Destination, Length)
-
-/*
- * VOID
  * NdisMoveMemory(
  *   OUT  PVOID  Destination,
  *   IN PVOID  Source,
@@ -2567,6 +2624,46 @@ NdisUnicodeStringToAnsiString(
 
 /* Spin lock reoutines */
 
+#if BINARY_COMPATIBLE
+
+NDISAPI
+VOID
+DDKAPI
+NdisAllocateSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+NDISAPI
+VOID
+DDKAPI
+NdisFreeSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+NDISAPI
+VOID
+DDKAPI
+NdisAcquireSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+NDISAPI
+VOID
+DDKAPI
+NdisReleaseSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+NDISAPI
+VOID
+DDKAPI
+NdisDprAcquireSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+NDISAPI
+VOID
+DDKAPI
+NdisDprReleaseSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+
+#else
+
 /*
  * VOID
  * NdisAllocateSpinLock(
@@ -2617,7 +2714,7 @@ NdisUnicodeStringToAnsiString(
 #define NdisDprReleaseSpinLock(_SpinLock) \
   KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
 
-
+#endif /* BINARY_COMPATIBLE */
 
 /* I/O routines */
 
@@ -2901,7 +2998,7 @@ NdisWriteConfiguration(
   OUT  PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
   IN PNDIS_STRING  Keyword,
-  IN PNDIS_CONFIGURATION_PARAMETER  *ParameterValue);
+  IN PNDIS_CONFIGURATION_PARAMETER  ParameterValue);
 
 NDISAPI
 VOID
@@ -2919,12 +3016,24 @@ NdisWriteErrorLogEntry(
  */
 #define NdisStallExecution KeStallExecutionProcessor
 
+#if BINARY_COMPATIBLE
+
+NDISAPI
+VOID
+DDKAPI
+NdisGetCurrentSystemTime(
+  IN PLARGE_INTEGER  pSystemTime);
+
+#else
+
 /*
  * VOID
  * NdisGetCurrentSystemTime(
  *   IN PLARGE_INTEGER  pSystemTime);
  */
 #define NdisGetCurrentSystemTime KeQuerySystemTime
+
+#endif
 
 NDISAPI
 VOID
