@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.7 2002/10/01 19:27:22 chorns Exp $
+/* $Id: anonmem.c,v 1.8 2002/11/05 20:31:34 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -134,6 +134,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
    PMDL Mdl;
+   ULONG flProtect;
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
 	   Address, MemoryArea->Process->UniqueProcessId);
@@ -152,8 +153,15 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Disable the virtual mapping.
     */
+#if 0
    MmDisableVirtualMapping(MemoryArea->Process, Address,
 			   &WasDirty, &PhysicalAddress);
+#else
+   flProtect = MmGetPageProtect(MemoryArea->Process, Address);
+   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
+		          &WasDirty, &PhysicalAddress);
+#endif
+
    if (PhysicalAddress.QuadPart == 0)
      {
        KeBugCheck(0);
@@ -164,7 +172,9 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (!WasDirty)
      {
+#if 0
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+#endif
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
        if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
 	 {
@@ -188,7 +198,12 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        if (SwapEntry == 0)
 	 {
 	   MmShowOutOfSpaceMessagePagingFile();
+#if 0
 	   MmEnableVirtualMapping(MemoryArea->Process, Address);
+#else
+           MmCreateVirtualMapping(MemoryArea->Process, Address, 
+		                  flProtect, PhysicalAddress, TRUE);
+#endif
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
@@ -200,13 +215,18 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Write the page to the pagefile
     */
    Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
+   MmBuildMdlFromPages(Mdl, &PhysicalAddress.u.LowPart);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
 	       Status);
+#if 0
        MmEnableVirtualMapping(MemoryArea->Process, Address);
+#else
+       MmCreateVirtualMapping(MemoryArea->Process, Address, 
+		              flProtect, PhysicalAddress, TRUE);
+#endif
        PageOp->Status = STATUS_UNSUCCESSFUL;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
@@ -217,7 +237,9 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", PhysicalAddress);
+#if 0
    MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+#endif
    MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
    MmSetSavedSwapEntryPage(PhysicalAddress, 0);
@@ -439,7 +461,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
       
-      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
+      for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
 	{
 	  LARGE_INTEGER PhysicalAddr;
 
@@ -485,7 +507,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
    
-      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
+      for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
 	{
 	  if (MmIsPagePresent(AddressSpace->Process, 
 			      BaseAddress + (i*PAGE_SIZE)))
@@ -581,7 +603,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    
    if (PBaseAddress != 0)
      {
-	MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace,
+	MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					       BaseAddress);
 	
 	if (MemoryArea != NULL &&
@@ -589,7 +611,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	    MemoryArea->Length >= RegionSize)
 	  {
 	    Status = 
-	      MmAlterRegion(&Process->AddressSpace, 
+	      MmAlterRegion(AddressSpace, 
 			    MemoryArea->BaseAddress, 
 			    &MemoryArea->Data.VirtualMemoryData.RegionListHead,
 			    PBaseAddress, RegionSize,
@@ -690,7 +712,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
    */
   if (MemoryArea->PageOpCount > 0)
     {
-      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGE_SIZE); i++)
+      for (i = 0; i < PAGE_ROUND_UP(MemoryArea->Length) / PAGE_SIZE; i++)
 	{
 	  PMM_PAGEOP PageOp;
 
