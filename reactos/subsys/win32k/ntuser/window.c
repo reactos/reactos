@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.230 2004/05/10 19:23:37 weiden Exp $
+/* $Id: window.c,v 1.231 2004/05/12 20:45:05 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2380,7 +2380,10 @@ NtUserFindWindowEx(HWND hwndParent,
     Status = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName.Buffer);
     if(!NT_SUCCESS(Status))
     {
-      DPRINT1("Window class not found\n");
+      if (IS_ATOM(ClassName.Buffer))
+        DPRINT1("Window class not found (%lx)\n", (ULONG_PTR)ClassName.Buffer);
+      else
+        DPRINT1("Window class not found (%S)\n", ClassName.Buffer);
       /* windows returns ERROR_FILE_NOT_FOUND !? */
       SetLastWin32Error(ERROR_FILE_NOT_FOUND);
       goto Cleanup;
