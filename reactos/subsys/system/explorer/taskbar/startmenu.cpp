@@ -526,10 +526,11 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	TCHAR title[BUFFER_LEN];
 	GetWindowText(_hwnd, title, BUFFER_LEN);
 
+	BkMode bk_mode(dis->hDC, TRANSPARENT);
+
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
 		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 	else {
-		BkMode mode(dis->hDC, TRANSPARENT);
 		TextColor lcColor(dis->hDC, GetSysColor(text_color));
 		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 	}

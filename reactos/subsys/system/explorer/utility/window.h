@@ -455,13 +455,16 @@ struct PictureButton : public OwnerdrawnButton
 {
 	typedef OwnerdrawnButton super;
 
-	PictureButton(HWND hwnd, HICON hIcon, bool flat=false)
-	 :	super(hwnd), _hIcon(hIcon), _flat(flat) {}
+	PictureButton(HWND hwnd, HICON hIcon, HBRUSH hbrush=GetSysColorBrush(COLOR_BTNFACE), bool flat=false)
+	 :	super(hwnd), _hIcon(hIcon), _hBrush(hbrush), _flat(flat)
+	{
+	}
 
 protected:
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
 	HICON	_hIcon;
+	HBRUSH	_hBrush;
 	bool	_flat;
 };
 

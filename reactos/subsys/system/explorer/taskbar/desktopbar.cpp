@@ -86,7 +86,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	 // create start button
 	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
-						SmallIcon(IDI_STARTMENU));
+						SmallIcon(IDI_STARTMENU)/*, GetStockBrush(WHITE_BRUSH)*/);
 
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);

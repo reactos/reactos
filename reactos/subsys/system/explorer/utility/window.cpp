@@ -591,7 +591,6 @@ void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR 
 		RECT shadowRect = {pRect->left+1, pRect->top+1, pRect->right+1, pRect->bottom+1};
 		DrawText(dis->hDC, title, -1, &shadowRect, dt_flags);
 
-		BkMode mode(dis->hDC, TRANSPARENT);
 		SetTextColor(dis->hDC, gray);
 		DrawText(dis->hDC, title, -1, pRect, dt_flags);
 	} else {
@@ -612,26 +611,38 @@ void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR 
 }
 
 
+static BOOL DrawButton(HDC hdc, LPRECT prect, UINT state, HBRUSH hbrush)
+{
+	FillRect(hdc, prect, hbrush);
+	DrawEdge(hdc, prect, EDGE_RAISED, BF_RECT|BF_SOFT);
+
+	return TRUE;
+}
+
+
 /* not yet used
 void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 {
-	UINT style = DFCS_BUTTONPUSH;
+	UINT state = DFCS_BUTTONPUSH;
 
 	if (dis->itemState & ODS_DISABLED)
-		style |= DFCS_INACTIVE;
+		state |= DFCS_INACTIVE;
 
 	RECT textRect = {dis->rcItem.left+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
 
 	if (dis->itemState & ODS_SELECTED) {
-		style |= DFCS_PUSHED;
+		state |= DFCS_PUSHED;
 		++textRect.left;	++textRect.top;
 		++textRect.right;	++textRect.bottom;
 	}
 
-	DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
+	DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
+	//DrawButton(dis->hDC, &dis->rcItem, state, GetSysColorBrush(COLOR_BTNFACE));
 
 	TCHAR title[BUFFER_LEN];
 	GetWindowText(_hwnd, title, BUFFER_LEN);
+
+	BkMode bk_mode(dis->hDC, TRANSPARENT);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
 		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
@@ -657,36 +668,40 @@ void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 {
-	UINT style = DFCS_BUTTONPUSH;
+	UINT state = DFCS_BUTTONPUSH;
 
 	if (dis->itemState & ODS_DISABLED)
-		style |= DFCS_INACTIVE;
+		state |= DFCS_INACTIVE;
 
 	POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
 	RECT textRect = {dis->rcItem.left+16+4, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
 
 	if (dis->itemState & ODS_SELECTED) {
-		style |= DFCS_PUSHED;
+		state |= DFCS_PUSHED;
 		++iconPos.x;		++iconPos.y;
 		++textRect.left;	++textRect.top;
 		++textRect.right;	++textRect.bottom;
 	}
 
 	if (_flat) {
+		FillRect(dis->hDC, &dis->rcItem, _hBrush);
+
 		if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
 			DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
 	} else
-		DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
+		//DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
+		DrawButton(dis->hDC, &dis->rcItem, state, _hBrush);
 
-	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
+	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, _hBrush, DI_NORMAL);
 
 	TCHAR title[BUFFER_LEN];
 	GetWindowText(_hwnd, title, BUFFER_LEN);
 
+	BkMode bk_mode(dis->hDC, TRANSPARENT);
+
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
 		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 	else {
-		//BkMode mode(dis->hDC, TRANSPARENT);
 		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
 		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 	}
