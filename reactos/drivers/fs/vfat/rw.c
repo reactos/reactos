@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.20 2001/01/16 15:43:42 dwelch Exp $
+/* $Id: rw.c,v 1.21 2001/03/02 15:59:16 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,6 +41,16 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
     {
       (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
       return(STATUS_SUCCESS);
+    }
+  else
+ /* CN: FIXME: Real bug here or in dirwr, where CurrentCluster isn't initialized when 0*/
+  if (FirstCluster == 0)
+    {
+      NTSTATUS Status;
+
+      Status = GetNextCluster(DeviceExt, 0, CurrentCluster,
+			      Extend);
+      return(Status);
     }
   else
     {

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.16 2001/02/14 02:53:54 dwelch Exp $
+/* $Id: create.c,v 1.17 2001/03/02 15:59:16 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,7 +93,8 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 	  if (Offset == ENTRIES_PER_SECTOR)
 	    {
 	      Offset = 0;
-	      StartingSector++;	//FIXME : nor always the next sector
+              /* FIXME: Check status */
+              GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
 	      jloop++;
 	      /* FIXME: Check status */
 	      VfatReadSectors (DeviceExt->StorageDevice,
@@ -186,8 +187,9 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
       /* not found in this sector, try next : */
 
       /* directory can be fragmented although it is best to keep them
-         unfragmented */
+         unfragmented.*/
       StartingSector++;
+
       if (DeviceExt->FatType == FAT32)
 	{
 	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
@@ -313,9 +315,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		    i++;
 		  if (i == (ENTRIES_PER_SECTOR))
 		    {
-		      /* entry is in next sector */
-		      StartingSector++;
-		      /* FIXME : treat case of next sector fragmented */
+                      /* FIXME: Check status */
+		      GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
+
 		      /* FIXME: Check status */
 		      VfatReadSectors (DeviceExt->StorageDevice,
 				       StartingSector, 1, block);
@@ -336,7 +338,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
       /* not found in this sector, try next : */
 
       /* directory can be fragmented although it is best to keep them
-         unfragmented */
+         unfragmented. Should we change this to also use GetNextSector?
+         GetNextSector was originally implemented to handle the case above */
       if (Entry)
 	*Entry = 0;
       StartingSector++;

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.19 2001/03/01 07:48:17 dwelch Exp $
+ * $Id: fat.c,v 1.20 2001/03/02 15:59:16 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -786,6 +786,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 {
   NTSTATUS Status;
 
+
 //  DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 //	  DeviceExt, CurrentCluster);
   
@@ -897,3 +898,39 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   return (Status);
 }
 
+NTSTATUS
+GetNextSector (PDEVICE_EXTENSION DeviceExt, 
+		ULONG CurrentSector,
+		PULONG NextSector,
+		BOOLEAN Extend)
+/* Some functions don't have access to the cluster they're really reading from.
+   Maybe this is a dirty solution, but it will allow them to handle fragmentation. */
+{
+  NTSTATUS Status;
+
+  DPRINT ("GetNextSector(DeviceExt %x, CurrentSector %x)\n",DeviceExt, CurrentSector);
+  if (CurrentSector<DeviceExt->dataStart || ((CurrentSector - DeviceExt->dataStart + 1) % DeviceExt -> Boot -> SectorsPerCluster))
+  /* Basically, if the next sequential sector would be on a cluster border, then we'll need to check in the FAT */
+    {
+       (*NextSector)=CurrentSector+1;
+       return (STATUS_SUCCESS);
+    }
+  else
+  {
+       CurrentSector = (CurrentSector - DeviceExt->dataStart) / DeviceExt -> Boot -> SectorsPerCluster + 2;
+
+       Status = GetNextCluster(DeviceExt, CurrentSector, NextSector, Extend);
+       if (!NT_SUCCESS(Status))
+         {
+	   return(Status);
+	 }
+       if ((*NextSector) == 0 || (*NextSector) == 0xffffffff)
+       {
+         /* The caller wants to know a sector. These FAT codes don't correspond to any sector. */
+         return (STATUS_UNSUCCESSFUL);
+       }
+
+       (*NextSector)=ClusterToSector(DeviceExt,(*NextSector));
+       return (STATUS_SUCCESS);
+  }
+}

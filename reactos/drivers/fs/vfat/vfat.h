@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.25 2001/02/10 22:51:11 dwelch Exp $ */
+/* $Id: vfat.h,v 1.26 2001/03/02 15:59:16 cnettel Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -250,6 +250,11 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	       ULONG CurrentCluster,
 	       PULONG NextCluster,
 	       BOOLEAN Extend);
+NTSTATUS
+GetNextSector (PDEVICE_EXTENSION DeviceExt, 
+		ULONG CurrentSector,
+		PULONG NextSector,
+		BOOLEAN Extend);
 NTSTATUS
 VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
 		    ULONG FirstCluster,
