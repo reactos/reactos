@@ -29,6 +29,7 @@
 #include "winreg.h"
 #include "setupapi.h"
 #include "cfgmgr32.h"
+#include "setupapi_private.h"
 
 #include "wine/debug.h"
 

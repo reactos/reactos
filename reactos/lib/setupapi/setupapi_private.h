@@ -56,4 +56,6 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, U
 
 extern OSVERSIONINFOW OsVersionInfo;
 
+DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
+
 #endif /* __SETUPAPI_PRIVATE_H */
