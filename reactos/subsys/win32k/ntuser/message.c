@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.60 2004/04/29 21:13:16 gvg Exp $
+/* $Id: message.c,v 1.61 2004/05/05 22:13:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -435,6 +435,38 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
     /* only send WM_NCHITTEST messages if we're not capturing the window! */
     *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
                               MAKELONG(Msg->pt.x, Msg->pt.y));
+    
+    if(*HitTest == (USHORT)HTTRANSPARENT)
+    {
+      PWINDOW_OBJECT DesktopWindow;
+      HWND hDesktop = IntGetDesktopWindow();
+      
+      if((DesktopWindow = IntGetWindowObject(hDesktop)))
+      {
+        PWINDOW_OBJECT Wnd;
+        
+        WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
+        if(Wnd)
+        {
+          if(Wnd != Window)
+          {
+            MSG NewMsg = *Msg;
+            /* post the message to the other window */
+            NewMsg.hwnd = Wnd->Self;
+            MsqPostMessage(Wnd->MessageQueue, &NewMsg, FALSE);
+            
+            /* eat the message */
+            IntReleaseWindowObject(Wnd);
+            IntReleaseWindowObject(Window);
+            IntReleaseWindowObject(DesktopWindow);
+            return TRUE;
+          }
+	  IntReleaseWindowObject(Wnd); 
+        }
+        
+        IntReleaseWindowObject(DesktopWindow);
+      }
+    }
   }
   else
   {
@@ -468,12 +500,13 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
       {
         Msg->wParam = *HitTest;
       }
+      Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
     }
     else if(ThreadQueue->MoveSize == NULL &&
             ThreadQueue->MenuOwner == NULL)
     {
-      Msg->pt.x -= Window->ClientRect.left;
-      Msg->pt.y -= Window->ClientRect.top;
+      Msg->pt.x -= (WORD)Window->ClientRect.left;
+      Msg->pt.y -= (WORD)Window->ClientRect.top;
       Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
     }
   }
