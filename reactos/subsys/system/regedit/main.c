@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#define REGEDIT_DECLARE_FUNCTIONS
 #include "main.h"
 
 
@@ -46,120 +45,11 @@ UINT nClipboardFormat;
 LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
 
 
+#define MAX_LOADSTRING  100
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szFrameClass[MAX_LOADSTRING];
 TCHAR szChildClass[MAX_LOADSTRING];
 
-
-/*******************************************************************************
- *
- *   FUNCTION: DynamicBind( void )
- *
- *   PURPOSE: Binds all functions dependent on user32.dll
- */
-static BOOL DynamicBind( void )
-{
-    HMODULE dll;
-
-#define d(x)                                                             \
-    p##x = (typeof (x) ) GetProcAddress( dll, #x );                      \
-    if( ! p##x )                                                         \
-    {                                                                    \
-        fprintf(stderr,"failed to bind function at line %d\n",__LINE__); \
-        return FALSE;                                                    \
-    }                                                                    \
-
-
-    dll = LoadLibrary("user32");
-    if( !dll )
-        return FALSE;
-
-    d(BeginDeferWindowPos)
-    d(BeginPaint)
-    d(CallWindowProcA)
-    d(CheckMenuItem)
-    d(CloseClipboard)
-    d(CreateWindowExA)
-    d(DefWindowProcA)
-    d(DeferWindowPos)
-    d(DestroyMenu)
-    d(DestroyWindow)
-    d(DialogBoxParamA)
-    d(DispatchMessageA)
-    d(EmptyClipboard)
-    d(EndDeferWindowPos)
-    d(EndDialog)
-    d(EndPaint)
-    d(FillRect)
-    d(GetCapture)
-    d(GetClientRect)
-    d(GetCursorPos)
-    d(GetDC)
-    d(GetDlgItem)
-    d(GetMenu)
-    d(GetMessageA)
-    d(GetSubMenu)
-    d(GetSystemMetrics)
-    d(InvertRect)
-    d(IsWindowVisible)
-    d(LoadAcceleratorsA)
-    d(LoadBitmapA)
-    d(LoadCursorA)
-    d(LoadIconA)
-    d(LoadImageA)
-    d(LoadMenuA)
-    d(LoadStringA)
-    d(MessageBeep)
-    d(MoveWindow)
-    d(OpenClipboard)
-    d(PostQuitMessage)
-    d(RegisterClassExA)
-    d(RegisterClipboardFormatA)
-    d(ReleaseCapture)
-    d(ReleaseDC)
-    d(ScreenToClient)
-    d(SendMessageA)
-    d(SetCapture)
-    d(SetCursor)
-    d(SetFocus)
-    d(SetWindowLongA)
-    d(SetWindowTextA)
-    d(ShowWindow)
-    d(TranslateAccelerator)
-    d(TranslateMessage)
-    d(UpdateWindow)
-    d(WinHelpA)
-    d(wsprintfA)
-
-    dll = LoadLibrary("gdi32");
-    if( !dll )
-        return FALSE;
-
-    d(DeleteDC)
-    d(DeleteObject)
-    d(GetStockObject)
-
-    dll = LoadLibrary("comctl32");
-    if( !dll )
-        return FALSE;
-
-    d(CreateStatusWindowA)
-    d(ImageList_Add)
-    d(ImageList_Create)
-    d(ImageList_GetImageCount)
-    d(InitCommonControls)
-
-    dll = LoadLibrary("comdlg32");
-    if( !dll )
-        return FALSE;
-
-    d(CommDlgExtendedError)
-    d(GetOpenFileNameA)
-    d(GetSaveFileNameA)
-    d(PrintDlgA)
-
-    return TRUE;
-}
 
 /*******************************************************************************
  *
@@ -177,42 +67,42 @@ static BOOL DynamicBind( void )
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     WNDCLASSEX wcFrame = {
-        sizeof(WNDCLASSEX),
-        CS_HREDRAW | CS_VREDRAW/*style*/,
-        FrameWndProc,
-        0/*cbClsExtra*/,
-        0/*cbWndExtra*/,
-        hInstance,
-        LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
-        LoadCursor(0, IDC_ARROW),
-        0/*hbrBackground*/,
-        0/*lpszMenuName*/,
-        szFrameClass,
-        (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
-    };
+                             sizeof(WNDCLASSEX),
+                             CS_HREDRAW | CS_VREDRAW/*style*/,
+                             FrameWndProc,
+                             0/*cbClsExtra*/,
+                             0/*cbWndExtra*/,
+                             hInstance,
+                             LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
+                             LoadCursor(0, IDC_ARROW),
+                             0/*hbrBackground*/,
+                             0/*lpszMenuName*/,
+                             szFrameClass,
+                             (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
+                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
+                         };
     ATOM hFrameWndClass = RegisterClassEx(&wcFrame); /* register frame window class */
 
     WNDCLASSEX wcChild = {
-        sizeof(WNDCLASSEX),
-        CS_HREDRAW | CS_VREDRAW/*style*/,
-        ChildWndProc,
-        0/*cbClsExtra*/,
-        sizeof(HANDLE)/*cbWndExtra*/,
-        hInstance,
-        LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
-        LoadCursor(0, IDC_ARROW),
-        0/*hbrBackground*/,
-        0/*lpszMenuName*/,
-        szChildClass,
-        (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
+                             sizeof(WNDCLASSEX),
+                             CS_HREDRAW | CS_VREDRAW/*style*/,
+                             ChildWndProc,
+                             0/*cbClsExtra*/,
+                             sizeof(HANDLE)/*cbWndExtra*/,
+                             hInstance,
+                             LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
+                             LoadCursor(0, IDC_ARROW),
+                             0/*hbrBackground*/,
+                             0/*lpszMenuName*/,
+                             szChildClass,
+                             (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
+                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
 
-    };
+                         };
     ATOM hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
     hChildWndClass = hChildWndClass; /* warning eater */
 
-	hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
+    hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
 
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
@@ -222,10 +112,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         DWORD dwError = GetLastError();
     } */
 
-    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
-                    WS_OVERLAPPEDWINDOW,
-                    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                    NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
+    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(int)hFrameWndClass, szTitle,
+                               WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                               CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                               NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
     if (!hFrameWnd) {
         return FALSE;
@@ -258,26 +148,22 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 {
     MSG msg;
     HACCEL hAccel;
-/*
-    int hCrt;
-    FILE *hf;
-    AllocConsole();
-    hCrt = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-    hf = _fdopen(hCrt, "w");
-    *stdout = *hf;
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-	wprintf(L"command line exit, hInstance = %d\n", hInstance);
-	getch();
-	FreeConsole();
-    return 0;
- */
+    /*
+        int hCrt;
+        FILE *hf;
+        AllocConsole();
+        hCrt = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+        hf = _fdopen(hCrt, "w");
+        *stdout = *hf;
+        setvbuf(stdout, NULL, _IONBF, 0);
+     
+    	wprintf(L"command line exit, hInstance = %d\n", hInstance);
+    	getch();
+    	FreeConsole();
+        return 0;
+     */
 
     if (ProcessCmdLine(lpCmdLine)) {
-        return 0;
-    }
-
-    if (!DynamicBind()) {
         return 0;
     }
 

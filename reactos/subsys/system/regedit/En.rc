@@ -19,7 +19,6 @@
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(850)
 
 /*
  * Menu
@@ -86,11 +85,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
     END
-    POPUP "&Favourites"
+    POPUP "&Favorites"
     BEGIN
-        MENUITEM "&Add to Favourites",          ID_FAVOURITES_ADDTOFAVOURITES
+        MENUITEM "&Add to Favorites",          ID_FAVOURITES_ADDTOFAVOURITES
         , GRAYED
-        MENUITEM "&Remove Favourite",           ID_FAVOURITES_REMOVEFAVOURITE
+        MENUITEM "&Remove Favorite",           ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
     POPUP "&Help"
@@ -108,17 +107,20 @@ END
  * Dialog
  */
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 230, 75
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
-FONT 8, "System"
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit String"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_REGEDIT,IDI_REGEDIT,14,9,16,16
-    LTEXT           "ReactOS regedit Version 1.0",IDC_STATIC,49,10,119,8,
-                    SS_NOPREFIX
-    LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
-    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,64,50,14
 END
+
 
 /*
  * String Table
@@ -180,6 +182,14 @@ BEGIN
     ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
     ID_EDIT_FIND            "Finds a text string in a key, value or data"
     ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Error"
+    IDS_BAD_VALUE           "Can't query value '%s'"
+    IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
+    IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
 END
 
 /*****************************************************************/

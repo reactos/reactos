@@ -38,37 +38,35 @@
 
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
 
-static HWND hChildWnd;
-
 /*******************************************************************************
  * Local module support methods
  */
 
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
-	RECT rt;
-/*
-	if (IsWindowVisible(hToolBar)) {
-		SendMessage(hToolBar, WM_SIZE, 0, 0);
-		GetClientRect(hToolBar, &rt);
-		prect->top = rt.bottom+3;
-		prect->bottom -= rt.bottom+3;
-	}
- */
-	if (IsWindowVisible(hStatusBar)) {
-		SetupStatusBar(hWnd, TRUE);
-		GetClientRect(hStatusBar, &rt);
-		prect->bottom -= rt.bottom;
-	}
-    MoveWindow(hChildWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
+    RECT rt;
+    /*
+    	if (IsWindowVisible(hToolBar)) {
+    		SendMessage(hToolBar, WM_SIZE, 0, 0);
+    		GetClientRect(hToolBar, &rt);
+    		prect->top = rt.bottom+3;
+    		prect->bottom -= rt.bottom+3;
+    	}
+     */
+    if (IsWindowVisible(hStatusBar)) {
+        SetupStatusBar(hWnd, TRUE);
+        GetClientRect(hStatusBar, &rt);
+        prect->bottom -= rt.bottom;
+    }
+    MoveWindow(g_pChildWnd->hWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }
 
 void resize_frame_client(HWND hWnd)
 {
-	RECT rect;
+    RECT rect;
 
-	GetClientRect(hWnd, &rect);
-	resize_frame_rect(hWnd, &rect);
+    GetClientRect(hWnd, &rect);
+    resize_frame_rect(hWnd, &rect);
 }
 
 /********************************************************************************/
@@ -88,8 +86,8 @@ static void OnExitMenuLoop(HWND hWnd)
 {
     bInMenuLoop = FALSE;
     /* Update the status bar pane sizes*/
-	SetupStatusBar(hWnd, TRUE);
-	UpdateStatusBar();
+    SetupStatusBar(hWnd, TRUE);
+    UpdateStatusBar();
 }
 
 static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
@@ -119,70 +117,70 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
     int nParts;
     GetClientRect(hWnd, &rc);
     nParts = rc.right;
-/*    nParts = -1;*/
-	if (bResize)
-		SendMessage(hStatusBar, WM_SIZE, 0, 0);
-	SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
+    /*    nParts = -1;*/
+    if (bResize)
+        SendMessage(hStatusBar, WM_SIZE, 0, 0);
+    SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
 }
 
 void UpdateStatusBar(void)
 {
     TCHAR text[260];
-	DWORD size;
+    DWORD size;
 
-	size = sizeof(text)/sizeof(TCHAR);
-	GetComputerName(text, &size);
+    size = sizeof(text)/sizeof(TCHAR);
+    GetComputerName(text, &size);
     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 {
-	BOOL vis = IsWindowVisible(hchild);
-	HMENU hMenuView = GetSubMenu(hMenuFrame, ID_VIEW_MENU);
+    BOOL vis = IsWindowVisible(hchild);
+    HMENU hMenuView = GetSubMenu(hMenuFrame, ID_VIEW_MENU);
 
-	CheckMenuItem(hMenuView, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
-	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
-	resize_frame_client(hWnd);
+    CheckMenuItem(hMenuView, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
+    ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
+    resize_frame_client(hWnd);
 }
 
 static BOOL CheckCommDlgError(HWND hWnd)
 {
-        DWORD dwErrorCode = CommDlgExtendedError();
-        switch (dwErrorCode) {
-        case CDERR_DIALOGFAILURE:
-            break;
-        case CDERR_FINDRESFAILURE:
-            break;
-        case CDERR_NOHINSTANCE:
-            break;
-        case CDERR_INITIALIZATION:
-            break;
-        case CDERR_NOHOOK:
-            break;
-        case CDERR_LOCKRESFAILURE:
-            break;
-        case CDERR_NOTEMPLATE:
-            break;
-        case CDERR_LOADRESFAILURE:
-            break;
-        case CDERR_STRUCTSIZE:
-            break;
-        case CDERR_LOADSTRFAILURE:
-            break;
-        case FNERR_BUFFERTOOSMALL:
-            break;
-        case CDERR_MEMALLOCFAILURE:
-            break;
-        case FNERR_INVALIDFILENAME:
-            break;
-        case CDERR_MEMLOCKFAILURE:
-            break;
-        case FNERR_SUBCLASSFAILURE:
-            break;
-        default:
-            break;
-        }
-	return TRUE;
+    DWORD dwErrorCode = CommDlgExtendedError();
+    switch (dwErrorCode) {
+    case CDERR_DIALOGFAILURE:
+        break;
+    case CDERR_FINDRESFAILURE:
+        break;
+    case CDERR_NOHINSTANCE:
+        break;
+    case CDERR_INITIALIZATION:
+        break;
+    case CDERR_NOHOOK:
+        break;
+    case CDERR_LOCKRESFAILURE:
+        break;
+    case CDERR_NOTEMPLATE:
+        break;
+    case CDERR_LOADRESFAILURE:
+        break;
+    case CDERR_STRUCTSIZE:
+        break;
+    case CDERR_LOADSTRFAILURE:
+        break;
+    case FNERR_BUFFERTOOSMALL:
+        break;
+    case CDERR_MEMALLOCFAILURE:
+        break;
+    case FNERR_INVALIDFILENAME:
+        break;
+    case CDERR_MEMLOCKFAILURE:
+        break;
+    case FNERR_SUBCLASSFAILURE:
+        break;
+    default:
+        break;
+    }
+    return TRUE;
 }
 
 UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -196,8 +194,7 @@ UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM w
         break;
     case WM_NOTIFY:
         pOfNotify = (OFNOTIFY*)lParam;
-        if (pOfNotify->hdr.code == CDN_INITDONE) {
-        }
+    if (pOfNotify->hdr.code == CDN_INITDONE) {}
         break;
     default:
         break;
@@ -225,19 +222,19 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     pofn->nMaxFile = _MAX_PATH;
     pofn->lpstrFileTitle = FileTitleBuffer;
     pofn->nMaxFileTitle = _MAX_PATH;
-/*    pofn->lpstrInitialDir = _T("");*/
-/*    pofn->lpstrTitle = _T("Import Registry File");*/
-/*    pofn->Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER + OFN_ENABLESIZING;*/
+    /*    pofn->lpstrInitialDir = _T("");*/
+    /*    pofn->lpstrTitle = _T("Import Registry File");*/
+    /*    pofn->Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER + OFN_ENABLESIZING;*/
     pofn->Flags = OFN_HIDEREADONLY;
-/*    pofn->nFileOffset = ;*/
-/*    pofn->nFileExtension = ;*/
-/*    pofn->lpstrDefExt = _T("");*/
-/*    pofn->lCustData = ;*/
-/*    pofn->lpfnHook = ImportRegistryFile_OFNHookProc;*/
-/*    pofn->lpTemplateName = _T("ID_DLG_IMPORT_REGFILE");*/
-/*    pofn->lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);*/
-/*    pofn->FlagsEx = ;*/
-	return TRUE;
+    /*    pofn->nFileOffset = ;*/
+    /*    pofn->nFileExtension = ;*/
+    /*    pofn->lpstrDefExt = _T("");*/
+    /*    pofn->lCustData = ;*/
+    /*    pofn->lpfnHook = ImportRegistryFile_OFNHookProc;*/
+    /*    pofn->lpTemplateName = _T("ID_DLG_IMPORT_REGFILE");*/
+    /*    pofn->lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);*/
+    /*    pofn->FlagsEx = ;*/
+    return TRUE;
 }
 
 static BOOL ImportRegistryFile(HWND hWnd)
@@ -246,7 +243,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
 
     InitOpenFileName(hWnd, &ofn);
     ofn.lpstrTitle = _T("Import Registry File");
-/*    ofn.lCustData = ;*/
+    /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn)) {
         if (!import_registry_file(ofn.lpstrFile)) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
@@ -269,10 +266,11 @@ static BOOL ImportRegistryFile(HWND hWnd)
             get_file_name(&s, filename, MAX_PATH);
         }
 #endif
+
     } else {
         CheckCommDlgError(hWnd);
     }
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -284,7 +282,7 @@ static BOOL ExportRegistryFile(HWND hWnd)
     ExportKeyPath[0] = _T('\0');
     InitOpenFileName(hWnd, &ofn);
     ofn.lpstrTitle = _T("Export Registry File");
-/*    ofn.lCustData = ;*/
+    /*    ofn.lCustData = ;*/
     ofn.Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER;
     ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
@@ -314,10 +312,11 @@ static BOOL ExportRegistryFile(HWND hWnd)
             export_registry_key(filename, NULL);
         }
 #endif
+
     } else {
         CheckCommDlgError(hWnd);
     }
-	return TRUE;
+    return TRUE;
 }
 
 BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
@@ -436,8 +435,20 @@ BOOL RefreshView(HWND hWnd)
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (LOWORD(wParam)) {
-    /* Parse the menu selections:*/
+    HKEY hKeyRoot = 0, hKey = 0;
+    LPCTSTR keyPath;
+    LPCTSTR valueName;
+    BOOL result = TRUE;
+    LONG lRet;
+
+    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    valueName = GetValueName(g_pChildWnd->hListWnd);
+    if (keyPath) {
+        lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ, &hKey);
+        if (lRet != ERROR_SUCCESS) hKey = 0;
+    }
+
+    switch (LOWORD(wParam)) {
     case ID_REGISTRY_IMPORTREGISTRYFILE:
         ImportRegistryFile(hWnd);
         break;
@@ -450,6 +461,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_REGISTRY_PRINT:
         PrintRegistryHive(hWnd, _T(""));
+        break;
+    case ID_EDIT_MODIFY:
+        if (ModifyValue(hWnd, hKey, valueName))
+            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, _T(""));
@@ -468,27 +483,24 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_REFRESH:
         RefreshView(hWnd);
         break;
-/*	case ID_OPTIONS_TOOLBAR:*/
-/*		toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
-/*      break;*/
-	case ID_VIEW_STATUSBAR:
-		toggle_child(hWnd, LOWORD(wParam), hStatusBar);
+   /*case ID_OPTIONS_TOOLBAR:*/
+   /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
+   /*    break;*/
+    case ID_VIEW_STATUSBAR:
+        toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         break;
     case ID_HELP_HELPTOPICS:
-/*		WinHelp(hWnd, _T("regedit"), HELP_CONTENTS, 0);*/
-		WinHelp(hWnd, _T("regedit"), HELP_FINDER, 0);
+        WinHelp(hWnd, _T("regedit"), HELP_FINDER, 0);
         break;
     case ID_HELP_ABOUT:
-#ifdef WINSHELLAPI
-/*        ShellAbout(hWnd, szTitle, _T(""), LoadIcon(hInst, (LPCTSTR)IDI_REGEDIT));*/
-#else
         ShowAboutBox(hWnd);
-#endif
         break;
     default:
-        return FALSE;
+        result = FALSE;
     }
-	return TRUE;
+
+    RegCloseKey(hKey);
+    return result;
 }
 
 /********************************************************************************
@@ -504,24 +516,15 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static ChildWnd* pChildWnd = NULL;
-
     switch (message) {
     case WM_CREATE:
-        {
-        pChildWnd = HeapAlloc(GetProcessHeap(), 0, sizeof(ChildWnd));
-        _tcsncpy(pChildWnd->szPath, _T("My Computer"), MAX_PATH);
-        hChildWnd = CreateWindowEx(0, szChildClass, _T("regedit child window"),
-/*                    WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE|WS_BORDER,*/
-                    WS_CHILD|WS_VISIBLE,
-                    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                    hWnd, (HMENU)0, hInst, pChildWnd);
-        }
+        CreateWindowEx(0, szChildClass, _T("regedit child window"), WS_CHILD | WS_VISIBLE,
+                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                       hWnd, (HMENU)0, hInst, 0);
         break;
     case WM_COMMAND:
-        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
+        if (!_CmdWndProc(hWnd, message, wParam, lParam))
             return DefWindowProc(hWnd, message, wParam, lParam);
-        }
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
@@ -538,14 +541,10 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
     case WM_DESTROY:
-        if (pChildWnd) {
-            HeapFree(GetProcessHeap(), 0, pChildWnd);
-            pChildWnd = NULL;
-        }
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
         PostQuitMessage(0);
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
-   }
-   return 0;
+    }
+    return 0;
 }

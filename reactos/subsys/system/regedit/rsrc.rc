@@ -25,9 +25,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#include "resource.rc"
-
 /* include localised resources */
 
 #include "En.rc"
-#include "Pt.rc"
+

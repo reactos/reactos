@@ -18,9 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
+#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <stdlib.h>
 #include <tchar.h>
 #include <process.h>
@@ -28,30 +29,7 @@
 
 #include "main.h"
 
-extern HINSTANCE hInst;
-
-static INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HWND    hLicenseEditWnd;
-    TCHAR   strLicense[0x1000];
-
-    switch (message) {
-    case WM_INITDIALOG:
-        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
-        LoadString(hInst, IDS_LICENSE, strLicense, 0x1000);
-        SetWindowText(hLicenseEditWnd, strLicense);
-        return TRUE;
-    case WM_COMMAND:
-        if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL)) {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
-        }
-        break;
-    }
-    return 0;
-}
-
 void ShowAboutBox(HWND hWnd)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDialogWndProc);
+    ShellAbout(hWnd, _T("Registry Explorer"), _T(""), LoadIcon(hInst, MAKEINTRESOURCE(IDI_REGEDIT)));
 }

@@ -29,18 +29,19 @@
 #define IDS_LIST_COLUMN_TYPE            92
 #define IDS_LIST_COLUMN_DATA            93
 #define IDS_LIST_COLUMN_LAST            93
-#define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
-#define IDI_REGEDIT                     107
+#define IDI_REGEDIT                     100
 #define IDI_SMALL                       108
 #define IDC_REGEDIT                     109
 #define IDC_REGEDIT_FRAME               110
 #define IDR_REGEDIT_MENU                130
 #define IDD_DIALOG1                     131
-#define IDB_OPEN_FILE                   132
+#define IDI_OPEN_FILE                   132
 #define IDD_DIALOG2                     132
-#define IDB_CLOSED_FILE                 133
-#define IDB_ROOT                        134
+#define IDI_CLOSED_FILE                 133
+#define IDI_ROOT                        134
+#define IDI_STRING                      135
+#define IDI_BIN                         136
 #define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
@@ -102,4 +103,13 @@
 #define ID_REGISTRY_PRINTERSETUP        32833
 #define ID_REGISTRY_SAVESUBTREEAS       32834
 #define IDS_LICENSE                     32835
+#define IDS_ERROR                       32836
+#define IDS_BAD_VALUE			32837
+#define IDS_UNSUPPORTED_TYPE		32838
+#define IDS_TOO_BIG_VALUE		32839
+
+#define IDD_EDIT_STRING			2000
+#define IDC_VALUE_NAME			2001
+#define IDC_VALUE_DATA			2002
+
 #define IDC_STATIC                      -1
