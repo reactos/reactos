@@ -14,6 +14,9 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <debug.h>
+
 #define DEFAULT_PORT    0x220
 #define DEFAULT_IRQ     5
 #define DEFAULT_DMA     1

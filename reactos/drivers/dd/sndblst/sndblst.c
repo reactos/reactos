@@ -12,12 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-//#include <ddk/ntddbeep.h>
-
-//#define NDEBUG
-#include <debug.h>
 #include <rosrtl/string.h>
-
 #include "sndblst.h"
 
 

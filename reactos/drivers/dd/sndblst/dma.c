@@ -3,9 +3,6 @@
 */
 
 #include <ddk/ntddk.h>
-
-#include <debug.h>
-
 #include "sndblst.h"
 
 
@@ -46,7 +43,7 @@ IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
     UINT zzz;
     PUCHAR VirtualAddress = (PUCHAR) MmGetMdlVirtualAddress(Device->Mdl);
 
-    DbgPrint("IoMapTransfer\n");
+    DPRINT("IoMapTransfer\n");
     IoMapTransfer(Device->Adapter,
                     Device->Mdl,
                     MapRegisterBase,
@@ -54,14 +51,14 @@ IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
                     &Device->BufferSize,    // is this right?
                     TRUE);
 
-    DbgPrint("VBuffer == 0x%x (really 0x%x?) Bufsize == %u\n", Device->VirtualBuffer, MmGetPhysicalAddress(Device->VirtualBuffer), Device->BufferSize);
+    DPRINT("VBuffer == 0x%x (really 0x%x?) Bufsize == %u\n", Device->VirtualBuffer, MmGetPhysicalAddress(Device->VirtualBuffer), Device->BufferSize);
 
-    DbgPrint("Writing %u bytes of garbage...\n", Device->BufferSize);
+    DPRINT("Writing %u bytes of garbage...\n", Device->BufferSize);
     // Write some garbage:
     for (zzz = 0; zzz < Device->BufferSize; zzz ++)
         *(VirtualAddress + zzz) = (UCHAR) zzz % 200;
 
-    DbgPrint("done\n");
+    DPRINT("done\n");
 
     KeSetEvent(Context, 0, FALSE);
 
@@ -79,7 +76,7 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
 
     // Buffersize should already be set but it isn't yet !
     Device->BufferSize = SB_BUFSIZE;
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+    DPRINT("Bufsize == %u\n", Device->BufferSize);
 
     RtlZeroMemory(&Desc, sizeof(DEVICE_DESCRIPTION));
 
@@ -102,74 +99,74 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
 //    Desc.MinimumLength = 0;
     Desc.DmaPort = 0;
 
-    DbgPrint("Calling HalGetAdapter(), asking for %d mapped regs\n", MappedRegs);
+    DPRINT("Calling HalGetAdapter(), asking for %d mapped regs\n", MappedRegs);
 
     Device->Adapter = HalGetAdapter(&Desc, &MappedRegs);
 
-    DbgPrint("Called\n");
+    DPRINT("Called\n");
 
     if (! Device->Adapter)
     {
-        DbgPrint("HalGetAdapter() FAILED\n");
+        DPRINT("HalGetAdapter() FAILED\n");
         return FALSE;
     }
 
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+    DPRINT("Bufsize == %u\n", Device->BufferSize);
 
     if (MappedRegs < BYTES_TO_PAGES(Device->BufferSize))
     {
-        DbgPrint("Could only allocate %u mapping registers\n", MappedRegs);
+        DPRINT("Could only allocate %u mapping registers\n", MappedRegs);
 
         if (MappedRegs == 0)
             return FALSE;
 
         Device->BufferSize = MappedRegs * PAGE_SIZE;
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+        DPRINT("Bufsize == %u\n", Device->BufferSize);
     }
 
-    DbgPrint("Allocated %u mapping registers\n", MappedRegs);
+    DPRINT("Allocated %u mapping registers\n", MappedRegs);
 
     // Check if we already have memory here...
 
     // Check to make sure we're >= minimum
 
-    DbgPrint("Allocating buffer\n");
+    DPRINT("Allocating buffer\n");
 
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+    DPRINT("Bufsize == %u\n", Device->BufferSize);
 
     Device->VirtualBuffer = HalAllocateCommonBuffer(Device->Adapter, Device->BufferSize,
                                                 &Device->Buffer, FALSE);
 
     // For some reason BufferSize == 0 here?!
-    DbgPrint("Buffer == 0x%x Bufsize == %u\n", Device->Buffer, Device->BufferSize);
+    DPRINT("Buffer == 0x%x Bufsize == %u\n", Device->Buffer, Device->BufferSize);
 
     if (! Device->VirtualBuffer)
     {
-        DbgPrint("Could not allocate buffer :(\n");
+        DPRINT("Could not allocate buffer :(\n");
         // should try again with smaller buffer...
         return FALSE;
     }
 
-    DbgPrint("Buffer == 0x%x Bufsize == %u\n", Device->Buffer, Device->BufferSize);
+    DPRINT("Buffer == 0x%x Bufsize == %u\n", Device->Buffer, Device->BufferSize);
 
-    DbgPrint("Calling IoAllocateMdl()\n");
+    DPRINT("Calling IoAllocateMdl()\n");
     Device->Mdl = IoAllocateMdl(Device->VirtualBuffer, Device->BufferSize, FALSE, FALSE, NULL);
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+    DPRINT("Bufsize == %u\n", Device->BufferSize);
 
     // IS THIS RIGHT:
     if (! Device->VirtualBuffer)
     {
-        DbgPrint("IoAllocateMdl() FAILED\n");
+        DPRINT("IoAllocateMdl() FAILED\n");
         // Free the HAL buffer
         return FALSE;
     }
 
-    DbgPrint("VBuffer == 0x%x Mdl == %u Bufsize == %u\n", Device->VirtualBuffer, Device->Mdl, Device->BufferSize);
+    DPRINT("VBuffer == 0x%x Mdl == %u Bufsize == %u\n", Device->VirtualBuffer, Device->Mdl, Device->BufferSize);
 
-    DbgPrint("Calling MmBuildMdlForNonPagedPool\n");
+    DPRINT("Calling MmBuildMdlForNonPagedPool\n");
     MmBuildMdlForNonPagedPool(Device->Mdl);
 
-    DbgPrint("Bufsize == %u\n", Device->BufferSize);
+    DPRINT("Bufsize == %u\n", Device->BufferSize);
 
     // part II:
     KeInitializeEvent(&DMAEvent, SynchronizationEvent, FALSE);
@@ -177,7 +174,7 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
     IoAllocateAdapterChannel(Device->Adapter, DeviceObject,
                             BYTES_TO_PAGES(Device->BufferSize),
                             SoundProgramDMA, &DMAEvent);
-    DbgPrint("VBuffer == 0x%x Bufsize == %u\n", Device->VirtualBuffer, Device->BufferSize);
+    DPRINT("VBuffer == 0x%x Bufsize == %u\n", Device->VirtualBuffer, Device->BufferSize);
     // Lower IRQL
     KeWaitForSingleObject(&DMAEvent, Executive, KernelMode, FALSE, NULL);
 

@@ -11,11 +11,7 @@
 
 #include <ntddk.h>
 #include <windows.h>
-
 #include "sndblst.h"
-
-// #define NDEBUG
-#include <debug.h>
 #include "sbdebug.h"  // our own debug helper
 
 

@@ -13,12 +13,11 @@
 #include <ddk/ntddk.h>
 #include "sndblst.h"
 
-
 BOOLEAN WaitToSend(UINT BasePort)
 {
     int TimeOut;
     
-    DbgPrint("WaitToSend ");
+    DPRINT("WaitToSend ");
 
     // Check if it's OK to send
     for (TimeOut = SB_TIMEOUT;
@@ -28,11 +27,11 @@ BOOLEAN WaitToSend(UINT BasePort)
     // If a time-out occurs, we report failure
     if (! TimeOut)
     {
-        DbgPrint("FAILED\n");
+        DPRINT("FAILED\n");
         return FALSE;
     }
     
-    DbgPrint("SUCCEEDED\n");
+    DPRINT("SUCCEEDED\n");
 
     return TRUE;
 }
@@ -41,7 +40,7 @@ BOOLEAN WaitToReceive(UINT BasePort)
 {
     int TimeOut;
 
-    DbgPrint("WaitToReceive ");
+    DPRINT("WaitToReceive ");
 
     // Check if it's OK to receive
     for (TimeOut = SB_TIMEOUT;
@@ -51,11 +50,11 @@ BOOLEAN WaitToReceive(UINT BasePort)
     // If a time-out occurs, we report failure
     if (! TimeOut)
     {
-        DbgPrint("FAILED\n");
+        DPRINT("FAILED\n");
         return FALSE;
     }
     
-    DbgPrint("SUCCEEDED\n");
+    DPRINT("SUCCEEDED\n");
 
     return TRUE;
 }
@@ -67,9 +66,9 @@ WORD InitSoundCard(UINT BasePort)
     BOOLEAN Status;
     UCHAR DSP_Major, DSP_Minor;
 
-    DbgPrint("InitSoundCard() called\n");
+    DPRINT("InitSoundCard() called\n");
 
-    DbgPrint("Resetting sound card\n");
+    DPRINT("Resetting sound card\n");
 //    if (!WaitToSend(BasePort))
 //        return FALSE;
 
@@ -79,7 +78,7 @@ WORD InitSoundCard(UINT BasePort)
 
     // Check if it's OK to receive (some cards will ignore the above reset
     // command and so will not issue an ACK, so time out is NOT an error)
-    DbgPrint("Waiting for an ACK\n");
+    DPRINT("Waiting for an ACK\n");
     if (WaitToReceive(BasePort))
     {
         // Check to make sure the reset was acknowledged:
@@ -88,7 +87,7 @@ WORD InitSoundCard(UINT BasePort)
              TimeOut --);
     }
 
-    DbgPrint("Querying DSP version\n");
+    DPRINT("Querying DSP version\n");
     if (! WaitToSend(BasePort))
         return FALSE;
 
@@ -100,9 +99,9 @@ WORD InitSoundCard(UINT BasePort)
     DSP_Major = SB_READ_DATA(BasePort);
     DSP_Minor = SB_READ_DATA(BasePort);
 
-    DbgPrint("DSP v%d.%d\n", DSP_Major, DSP_Minor);
+    DPRINT("DSP v%d.%d\n", DSP_Major, DSP_Minor);
 
-    DbgPrint("Sound card initialized!\n");
+    DPRINT("Sound card initialized!\n");
     
     return (DSP_Major * 256) + DSP_Minor;
 }
