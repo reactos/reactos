@@ -479,7 +479,6 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
         /* unlock and dereference the process so the threads can kill themselves */
         PsUnlockProcess(Process);
         ObDereferenceObject(Process);
-        DPRINT1("Terminated foreign process 0x%x\n", Process);
     }
     
     return(STATUS_SUCCESS);
