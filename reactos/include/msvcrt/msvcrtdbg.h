@@ -50,7 +50,7 @@
 #endif /* NDEBUG */
 
 /* ULONG CDECL DbgPrint(PCH Format, ...); */
-/* ULONG DbgPrint(PCH Format,...); */
+ULONG DbgPrint(PCH Format,...);
 /* unsigned long DbgPrint(const char* Format, ...); */
 
 
