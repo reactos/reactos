@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.53 2004/03/09 14:03:18 gvg Exp $
+/* $Id: menu.c,v 1.54 2004/03/10 20:36:19 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -4301,7 +4301,7 @@ MenuWindowProcW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4312,12 +4312,34 @@ ChangeMenuW(
     UINT cmdInsert,
     UINT flags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    /*
+        FIXME: Word passes the item id in 'cmd' and 0 or 0xffff as cmdInsert
+        for MF_DELETE. We should check the parameters for all others
+        MF_* actions also (anybody got a doc on ChangeMenu?).
+    */
+
+    switch(flags & (MF_APPEND | MF_DELETE | MF_CHANGE | MF_REMOVE | MF_INSERT))
+    {
+        case MF_APPEND :
+            return AppendMenuW(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
+        
+        case MF_DELETE :
+            return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
+
+        case MF_CHANGE :
+            return ModifyMenuW(hMenu, cmd, flags &~ MF_CHANGE, cmdInsert, lpszNewItem);
+
+        case MF_REMOVE :
+            return RemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
+                                flags &~ MF_REMOVE);
+
+        default :   /* MF_INSERT */
+            return InsertMenuW(hMenu, cmd, flags, cmdInsert, lpszNewItem);
+    };
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4328,6 +4350,28 @@ ChangeMenuA(
     UINT cmdInsert,
     UINT flags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    /*
+        FIXME: Word passes the item id in 'cmd' and 0 or 0xffff as cmdInsert
+        for MF_DELETE. We should check the parameters for all others
+        MF_* actions also (anybody got a doc on ChangeMenu?).
+    */
+
+    switch(flags & (MF_APPEND | MF_DELETE | MF_CHANGE | MF_REMOVE | MF_INSERT))
+    {
+        case MF_APPEND :
+            return AppendMenuA(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
+        
+        case MF_DELETE :
+            return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
+
+        case MF_CHANGE :
+            return ModifyMenuA(hMenu, cmd, flags &~ MF_CHANGE, cmdInsert, lpszNewItem);
+
+        case MF_REMOVE :
+            return RemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
+                                flags &~ MF_REMOVE);
+
+        default :   /* MF_INSERT */
+            return InsertMenuA(hMenu, cmd, flags, cmdInsert, lpszNewItem);
+    };
 }
