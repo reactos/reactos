@@ -20,8 +20,10 @@
  */
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "wine/debug.h"
 
 #include "windef.h"

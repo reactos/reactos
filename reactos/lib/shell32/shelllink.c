@@ -38,6 +38,9 @@
 #ifdef HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
+
+#define COBJMACROS
+
 #include "wine/debug.h"
 #include "winerror.h"
 #include "windef.h"

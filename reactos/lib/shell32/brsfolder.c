@@ -23,8 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "wine/debug.h"
 #include "undocshell.h"
 #include "shlguid.h"

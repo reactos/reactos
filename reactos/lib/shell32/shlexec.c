@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
