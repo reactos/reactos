@@ -37,7 +37,7 @@
 #define _ENUMS_H_
 
 
-#if _HAVE_FULL_GL
+#ifdef _HAVE_FULL_GL
 
 extern const char *_mesa_lookup_enum_by_nr( int nr );
 extern int _mesa_lookup_enum_by_name( const char *symbol );

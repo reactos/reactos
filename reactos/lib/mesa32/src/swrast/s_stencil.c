@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1183,7 +1182,7 @@ clear_software_stencil_buffer( GLcontext *ctx )
 #else
             GLint i;
             for (i = 0; i < width; i++)
-               stencil[x] = ctx->Stencil.Clear;
+               stencil[i] = ctx->Stencil.Clear;
 #endif
          }
       }

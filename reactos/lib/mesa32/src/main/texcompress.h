@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -48,11 +47,13 @@ _mesa_compressed_image_address(GLint col, GLint row, GLint img,
 
 
 extern void
-_mesa_compress_teximage( GLcontext *ctx, GLsizei width, GLsizei height,
-                         GLenum srcFormat, const GLchan *source,
-                         GLint srcRowStride,
-                         const struct gl_texture_format *dstFormat,
-                         GLubyte *dest, GLint dstRowStride );
+_mesa_init_texture_s3tc( GLcontext *ctx );
+
+extern void
+_mesa_init_texture_fxt1( GLcontext *ctx );
+
+
+
 #else
 #define _mesa_get_compressed_formats( c, f ) 0
 #define _mesa_compressed_texture_size( c, w, h, d, f ) 0

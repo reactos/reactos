@@ -77,7 +77,7 @@ GLAPI GLint GLAPIENTRY fxMesaSelectCurrentBoard(int n);
 
 GLAPI void GLAPIENTRY fxMesaMakeCurrent(fxMesaContext ctx);
 
-GLAPI void * GLAPIENTRY fxMesaGetCurrentContext(void);
+GLAPI fxMesaContext GLAPIENTRY fxMesaGetCurrentContext(void);
 
 GLAPI void GLAPIENTRY fxMesaSwapBuffers(void);
 

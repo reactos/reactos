@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,6 +22,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/** 
+ * \file texstate.c
+ *
+ * Texture state handling.
+ */
 
 #include "glheader.h"
 #include "colormac.h"
@@ -50,6 +55,20 @@
 #define ENUM_TO_DOUBLE(X) ((GLdouble)(X))
 #endif
 
+/**
+ * Default texture combine environment state.  This is used to initialize
+ * a context's texture units and as the basis for converting "classic"
+ * texture environmnets to ARB_texture_env_combine style values.
+ */
+static const struct gl_tex_env_combine_state default_combine_state = {
+   GL_MODULATE, GL_MODULATE,
+   { GL_TEXTURE, GL_PREVIOUS, GL_CONSTANT },
+   { GL_TEXTURE, GL_PREVIOUS, GL_CONSTANT },
+   { GL_SRC_COLOR, GL_SRC_COLOR, GL_SRC_ALPHA },
+   { GL_SRC_ALPHA, GL_SRC_ALPHA, GL_SRC_ALPHA },
+   0, 0,
+   2, 2
+};
 
 
 void
@@ -92,14 +111,14 @@ _mesa_copy_texture_state( const GLcontext *src, GLcontext *dst )
       dst->Texture.Unit[i].LodBias = src->Texture.Unit[i].LodBias;
 
       /* GL_EXT_texture_env_combine */
-      dst->Texture.Unit[i].CombineModeRGB = src->Texture.Unit[i].CombineModeRGB;
-      dst->Texture.Unit[i].CombineModeA = src->Texture.Unit[i].CombineModeA;
-      COPY_3V(dst->Texture.Unit[i].CombineSourceRGB, src->Texture.Unit[i].CombineSourceRGB);
-      COPY_3V(dst->Texture.Unit[i].CombineSourceA, src->Texture.Unit[i].CombineSourceA);
-      COPY_3V(dst->Texture.Unit[i].CombineOperandRGB, src->Texture.Unit[i].CombineOperandRGB);
-      COPY_3V(dst->Texture.Unit[i].CombineOperandA, src->Texture.Unit[i].CombineOperandA);
-      dst->Texture.Unit[i].CombineScaleShiftRGB = src->Texture.Unit[i].CombineScaleShiftRGB;
-      dst->Texture.Unit[i].CombineScaleShiftA = src->Texture.Unit[i].CombineScaleShiftA;
+      dst->Texture.Unit[i].Combine.ModeRGB = src->Texture.Unit[i].Combine.ModeRGB;
+      dst->Texture.Unit[i].Combine.ModeA = src->Texture.Unit[i].Combine.ModeA;
+      COPY_3V(dst->Texture.Unit[i].Combine.SourceRGB, src->Texture.Unit[i].Combine.SourceRGB);
+      COPY_3V(dst->Texture.Unit[i].Combine.SourceA, src->Texture.Unit[i].Combine.SourceA);
+      COPY_3V(dst->Texture.Unit[i].Combine.OperandRGB, src->Texture.Unit[i].Combine.OperandRGB);
+      COPY_3V(dst->Texture.Unit[i].Combine.OperandA, src->Texture.Unit[i].Combine.OperandA);
+      dst->Texture.Unit[i].Combine.ScaleShiftRGB = src->Texture.Unit[i].Combine.ScaleShiftRGB;
+      dst->Texture.Unit[i].Combine.ScaleShiftA = src->Texture.Unit[i].Combine.ScaleShiftA;
 
       /* texture object state */
       _mesa_copy_texture_object(dst->Texture.Unit[i].Current1D,
@@ -125,22 +144,22 @@ _mesa_print_texunit_state( GLcontext *ctx, GLuint unit )
    const struct gl_texture_unit *texUnit = ctx->Texture.Unit + unit;
    _mesa_printf("Texture Unit %d\n", unit);
    _mesa_printf("  GL_TEXTURE_ENV_MODE = %s\n", _mesa_lookup_enum_by_nr(texUnit->EnvMode));
-   _mesa_printf("  GL_COMBINE_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineModeRGB));
-   _mesa_printf("  GL_COMBINE_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineModeA));
-   _mesa_printf("  GL_SOURCE0_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceRGB[0]));
-   _mesa_printf("  GL_SOURCE1_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceRGB[1]));
-   _mesa_printf("  GL_SOURCE2_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceRGB[2]));
-   _mesa_printf("  GL_SOURCE0_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceA[0]));
-   _mesa_printf("  GL_SOURCE1_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceA[1]));
-   _mesa_printf("  GL_SOURCE2_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineSourceA[2]));
-   _mesa_printf("  GL_OPERAND0_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandRGB[0]));
-   _mesa_printf("  GL_OPERAND1_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandRGB[1]));
-   _mesa_printf("  GL_OPERAND2_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandRGB[2]));
-   _mesa_printf("  GL_OPERAND0_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandA[0]));
-   _mesa_printf("  GL_OPERAND1_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandA[1]));
-   _mesa_printf("  GL_OPERAND2_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->CombineOperandA[2]));
-   _mesa_printf("  GL_RGB_SCALE = %d\n", 1 << texUnit->CombineScaleShiftRGB);
-   _mesa_printf("  GL_ALPHA_SCALE = %d\n", 1 << texUnit->CombineScaleShiftA);
+   _mesa_printf("  GL_COMBINE_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.ModeRGB));
+   _mesa_printf("  GL_COMBINE_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.ModeA));
+   _mesa_printf("  GL_SOURCE0_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceRGB[0]));
+   _mesa_printf("  GL_SOURCE1_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceRGB[1]));
+   _mesa_printf("  GL_SOURCE2_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceRGB[2]));
+   _mesa_printf("  GL_SOURCE0_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceA[0]));
+   _mesa_printf("  GL_SOURCE1_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceA[1]));
+   _mesa_printf("  GL_SOURCE2_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.SourceA[2]));
+   _mesa_printf("  GL_OPERAND0_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandRGB[0]));
+   _mesa_printf("  GL_OPERAND1_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandRGB[1]));
+   _mesa_printf("  GL_OPERAND2_RGB = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandRGB[2]));
+   _mesa_printf("  GL_OPERAND0_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandA[0]));
+   _mesa_printf("  GL_OPERAND1_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandA[1]));
+   _mesa_printf("  GL_OPERAND2_ALPHA = %s\n", _mesa_lookup_enum_by_nr(texUnit->Combine.OperandA[2]));
+   _mesa_printf("  GL_RGB_SCALE = %d\n", 1 << texUnit->Combine.ScaleShiftRGB);
+   _mesa_printf("  GL_ALPHA_SCALE = %d\n", 1 << texUnit->Combine.ScaleShiftA);
    _mesa_printf("  GL_TEXTURE_ENV_COLOR = (%f, %f, %f, %f)\n", texUnit->EnvColor[0], texUnit->EnvColor[1], texUnit->EnvColor[2], texUnit->EnvColor[3]);
 }
 
@@ -149,6 +168,123 @@ _mesa_print_texunit_state( GLcontext *ctx, GLuint unit )
 /**********************************************************************/
 /*                       Texture Environment                          */
 /**********************************************************************/
+
+/**
+ * Convert "classic" texture environment to ARB_texture_env_combine style
+ * environments.
+ * 
+ * \param state  texture_env_combine state vector to be filled-in.
+ * \param mode   Classic texture environment mode (i.e., \c GL_REPLACE,
+ *               \c GL_BLEND, \c GL_DECAL, etc.).
+ * \param texBaseFormat  Base format of the texture associated with the
+ *               texture unit.
+ */
+static void
+calculate_derived_texenv( struct gl_tex_env_combine_state *state,
+			  GLenum mode, GLenum texBaseFormat )
+{
+   GLenum mode_rgb;
+   GLenum mode_a;
+
+   *state = default_combine_state;
+
+   switch (texBaseFormat) {
+   case GL_ALPHA:
+      state->SourceRGB[0] = GL_PREVIOUS;
+      break;
+
+   case GL_LUMINANCE_ALPHA:
+   case GL_INTENSITY:
+   case GL_RGBA:
+      break;
+
+   case GL_LUMINANCE:
+   case GL_RGB:
+   case GL_YCBCR_MESA:
+      state->SourceA[0] = GL_PREVIOUS;
+      break;
+      
+   default:
+      _mesa_problem(NULL, "Invalid texBaseFormat in calculate_derived_texenv");
+      return;
+   }
+
+   switch (mode) {
+   case GL_REPLACE:
+   case GL_MODULATE:
+      mode_rgb = (texBaseFormat == GL_ALPHA) ? GL_REPLACE : mode;
+      mode_a   = mode;
+      break;
+   
+   case GL_DECAL:
+      mode_rgb = GL_INTERPOLATE;
+      mode_a   = GL_REPLACE;
+
+      state->SourceA[0] = GL_PREVIOUS;
+
+      /* Having alpha / luminance / intensity textures replace using the
+       * incoming fragment color matches the definition in NV_texture_shader.
+       * The 1.5 spec simply marks these as "undefined".
+       */
+      switch (texBaseFormat) {
+      case GL_ALPHA:
+      case GL_LUMINANCE:
+      case GL_LUMINANCE_ALPHA:
+      case GL_INTENSITY:
+	 state->SourceRGB[0] = GL_PREVIOUS;
+	 break;
+      case GL_RGB:
+      case GL_YCBCR_MESA:
+	 mode_rgb = GL_REPLACE;
+	 break;
+      case GL_RGBA:
+	 state->SourceRGB[2] = GL_TEXTURE;
+	 break;
+      }
+      break;
+
+   case GL_BLEND:
+      mode_rgb = GL_INTERPOLATE;
+      mode_a   = GL_MODULATE;
+
+      switch (texBaseFormat) {
+      case GL_ALPHA:
+	 mode_rgb = GL_REPLACE;
+	 break;
+      case GL_INTENSITY:
+	 mode_a = GL_INTERPOLATE;
+	 state->SourceA[0] = GL_CONSTANT;
+	 state->OperandA[2] = GL_SRC_ALPHA;
+	 /* FALLTHROUGH */
+      case GL_LUMINANCE:
+      case GL_RGB:
+      case GL_LUMINANCE_ALPHA:
+      case GL_RGBA:
+      case GL_YCBCR_MESA:
+	 state->SourceRGB[2] = GL_TEXTURE;
+	 state->SourceA[2]   = GL_TEXTURE;
+	 state->SourceRGB[0] = GL_CONSTANT;
+	 state->OperandRGB[2] = GL_SRC_COLOR;
+	 break;
+      }
+      break;
+
+   case GL_ADD:
+      mode_rgb = (texBaseFormat == GL_ALPHA) ? GL_REPLACE : GL_ADD;
+      mode_a   = (texBaseFormat == GL_INTENSITY) ? GL_ADD : GL_MODULATE;
+      break;
+
+   default:
+      _mesa_problem(NULL,
+                    "Invalid texture env mode in calculate_derived_texenv");
+      return;
+   }
+   
+   state->ModeRGB = (state->SourceRGB[0] != GL_PREVIOUS)
+       ? mode_rgb : GL_REPLACE;
+   state->ModeA   = (state->SourceA[0]   != GL_PREVIOUS)
+       ? mode_a   : GL_REPLACE;
+}
 
 
 void GLAPIENTRY
@@ -166,6 +302,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
       case GL_TEXTURE_ENV_MODE:
          {
             const GLenum mode = (GLenum) (GLint) *param;
+	    if (texUnit->EnvMode == mode)
+	       return;
             if (mode == GL_MODULATE ||
                 mode == GL_BLEND ||
                 mode == GL_DECAL ||
@@ -175,8 +313,6 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
                  (ctx->Extensions.EXT_texture_env_combine ||
                   ctx->Extensions.ARB_texture_env_combine))) {
                /* legal */
-               if (texUnit->EnvMode == mode)
-                  return;
                FLUSH_VERTICES(ctx, _NEW_TEXTURE);
                texUnit->EnvMode = mode;
             }
@@ -203,6 +339,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 if (ctx->Extensions.EXT_texture_env_combine ||
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum mode = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.ModeRGB == mode)
+	       return;
 	    switch (mode) {
 	    case GL_REPLACE:
 	    case GL_MODULATE:
@@ -243,10 +381,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", mode);
 	       return;
 	    }
-	    if (texUnit->CombineModeRGB == mode)
-	       return;
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    texUnit->CombineModeRGB = mode;
+	    texUnit->Combine.ModeRGB = mode;
 	 }
 	 else {
             TE_ERROR(GL_INVALID_ENUM, "glTexEnv(pname=%s)", pname);
@@ -257,6 +393,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 if (ctx->Extensions.EXT_texture_env_combine ||
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum mode = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.ModeA == mode)
+	       return;
             switch (mode) {
 	    case GL_REPLACE:
 	    case GL_MODULATE:
@@ -283,11 +421,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	       TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", mode);
 	       return;
 	    }
-
-	    if (texUnit->CombineModeA == mode)
-		return;
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    texUnit->CombineModeA = mode;
+	    texUnit->Combine.ModeA = mode;
 	 }
 	 else {
             TE_ERROR(GL_INVALID_ENUM, "glTexEnv(pname=%s)", pname);
@@ -301,6 +436,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	     ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum source = (GLenum) (GLint) *param;
 	    const GLuint s = pname - GL_SOURCE0_RGB;
+	    if (texUnit->Combine.SourceRGB[s] == source)
+	       return;
             if (source == GL_TEXTURE ||
                 source == GL_CONSTANT ||
                 source == GL_PRIMARY_COLOR ||
@@ -311,10 +448,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
                 (ctx->Extensions.ATI_texture_env_combine3 &&
                  (source == GL_ZERO || source == GL_ONE))) {
                /* legal */
-               if (texUnit->CombineSourceRGB[s] == source)
-                  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineSourceRGB[s] = source;
+	       texUnit->Combine.SourceRGB[s] = source;
             }
             else {
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", source);
@@ -333,6 +468,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum source = (GLenum) (GLint) *param;
 	    const GLuint s = pname - GL_SOURCE0_ALPHA;
+	    if (texUnit->Combine.SourceA[s] == source)
+	       return;
             if (source == GL_TEXTURE ||
                 source == GL_CONSTANT ||
                 source == GL_PRIMARY_COLOR ||
@@ -343,10 +480,8 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 		(ctx->Extensions.ATI_texture_env_combine3 &&
                  (source == GL_ZERO || source == GL_ONE))) {
                /* legal */
-	       if (texUnit->CombineSourceA[s] == source)
-                  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineSourceA[s] = source;
+	       texUnit->Combine.SourceA[s] = source;
             }
             else {
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", source);
@@ -364,15 +499,15 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	     ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
 	    const GLuint s = pname - GL_OPERAND0_RGB;
+	    if (texUnit->Combine.OperandRGB[s] == operand)
+	       return;
 	    switch (operand) {
 	    case GL_SRC_COLOR:
 	    case GL_ONE_MINUS_SRC_COLOR:
 	    case GL_SRC_ALPHA:
 	    case GL_ONE_MINUS_SRC_ALPHA:
-	       if (texUnit->CombineOperandRGB[s] == operand)
-		  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineOperandRGB[s] = operand;
+	       texUnit->Combine.OperandRGB[s] = operand;
 	       break;
 	    default:
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
@@ -389,14 +524,13 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 if (ctx->Extensions.EXT_texture_env_combine ||
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.OperandA[pname-GL_OPERAND0_ALPHA] == operand)
+	       return;
 	    switch (operand) {
 	    case GL_SRC_ALPHA:
 	    case GL_ONE_MINUS_SRC_ALPHA:
-	       if (texUnit->CombineOperandA[pname-GL_OPERAND0_ALPHA] ==
-		   operand)
-		  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineOperandA[pname-GL_OPERAND0_ALPHA] = operand;
+	       texUnit->Combine.OperandA[pname-GL_OPERAND0_ALPHA] = operand;
 	       break;
 	    default:
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
@@ -412,15 +546,15 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 if (ctx->Extensions.EXT_texture_env_combine ||
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.OperandRGB[2] == operand)
+	       return;
 	    switch (operand) {
 	    case GL_SRC_COLOR:           /* ARB combine only */
 	    case GL_ONE_MINUS_SRC_COLOR: /* ARB combine only */
 	    case GL_SRC_ALPHA:
 	    case GL_ONE_MINUS_SRC_ALPHA: /* ARB combine only */
-	       if (texUnit->CombineOperandRGB[2] == operand)
-		  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineOperandRGB[2] = operand;
+	       texUnit->Combine.OperandRGB[2] = operand;
                break;
 	    default:
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
@@ -436,13 +570,13 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 if (ctx->Extensions.EXT_texture_env_combine ||
              ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.OperandA[2] == operand)
+	       return;
 	    switch (operand) {
 	    case GL_SRC_ALPHA:
 	    case GL_ONE_MINUS_SRC_ALPHA: /* ARB combine only */
-	       if (texUnit->CombineOperandA[2] == operand)
-		  return;
 	       FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	       texUnit->CombineOperandA[2] = operand;
+	       texUnit->Combine.OperandA[2] = operand;
 	       break;
 	    default:
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
@@ -472,10 +606,10 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
                             "glTexEnv(GL_RGB_SCALE not 1, 2 or 4)" );
 	       return;
 	    }
-	    if (texUnit->CombineScaleShiftRGB == newshift)
+	    if (texUnit->Combine.ScaleShiftRGB == newshift)
 	       return;
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    texUnit->CombineScaleShiftRGB = newshift;
+	    texUnit->Combine.ScaleShiftRGB = newshift;
 	 }
 	 else {
             TE_ERROR(GL_INVALID_ENUM, "glTexEnv(pname=%s)", pname);
@@ -500,10 +634,10 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
                             "glTexEnv(GL_ALPHA_SCALE not 1, 2 or 4)" );
 	       return;
 	    }
-	    if (texUnit->CombineScaleShiftA == newshift)
+	    if (texUnit->Combine.ScaleShiftA == newshift)
 	       return;
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    texUnit->CombineScaleShiftA = newshift;
+	    texUnit->Combine.ScaleShiftA = newshift;
 	 }
 	 else {
             TE_ERROR(GL_INVALID_ENUM, "glTexEnv(pname=%s)", pname);
@@ -634,7 +768,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_COMBINE_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineModeRGB;
+               *params = (GLfloat) texUnit->Combine.ModeRGB;
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -643,7 +777,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_COMBINE_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineModeA;
+               *params = (GLfloat) texUnit->Combine.ModeA;
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -652,7 +786,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE0_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceRGB[0];
+               *params = (GLfloat) texUnit->Combine.SourceRGB[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -661,7 +795,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE1_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceRGB[1];
+               *params = (GLfloat) texUnit->Combine.SourceRGB[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -670,7 +804,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE2_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceRGB[2];
+               *params = (GLfloat) texUnit->Combine.SourceRGB[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -679,7 +813,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE0_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceA[0];
+               *params = (GLfloat) texUnit->Combine.SourceA[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -688,7 +822,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE1_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceA[1];
+               *params = (GLfloat) texUnit->Combine.SourceA[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -697,7 +831,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_SOURCE2_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineSourceA[2];
+               *params = (GLfloat) texUnit->Combine.SourceA[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -706,7 +840,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND0_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandRGB[0];
+               *params = (GLfloat) texUnit->Combine.OperandRGB[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -715,7 +849,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND1_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandRGB[1];
+               *params = (GLfloat) texUnit->Combine.OperandRGB[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -724,7 +858,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND2_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandRGB[2];
+               *params = (GLfloat) texUnit->Combine.OperandRGB[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -733,7 +867,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND0_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandA[0];
+               *params = (GLfloat) texUnit->Combine.OperandA[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -742,7 +876,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND1_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandA[1];
+               *params = (GLfloat) texUnit->Combine.OperandA[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -751,7 +885,7 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_OPERAND2_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLfloat) texUnit->CombineOperandA[2];
+               *params = (GLfloat) texUnit->Combine.OperandA[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnvfv(pname)");
@@ -760,9 +894,9 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_RGB_SCALE:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               if (texUnit->CombineScaleShiftRGB == 0)
+               if (texUnit->Combine.ScaleShiftRGB == 0)
                   *params = 1.0;
-               else if (texUnit->CombineScaleShiftRGB == 1)
+               else if (texUnit->Combine.ScaleShiftRGB == 1)
                   *params = 2.0;
                else
                   *params = 4.0;
@@ -775,9 +909,9 @@ _mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params )
          case GL_ALPHA_SCALE:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               if (texUnit->CombineScaleShiftA == 0)
+               if (texUnit->Combine.ScaleShiftA == 0)
                   *params = 1.0;
-               else if (texUnit->CombineScaleShiftA == 1)
+               else if (texUnit->Combine.ScaleShiftA == 1)
                   *params = 2.0;
                else
                   *params = 4.0;
@@ -848,7 +982,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_COMBINE_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineModeRGB;
+               *params = (GLint) texUnit->Combine.ModeRGB;
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -857,7 +991,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_COMBINE_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineModeA;
+               *params = (GLint) texUnit->Combine.ModeA;
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -866,7 +1000,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE0_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceRGB[0];
+               *params = (GLint) texUnit->Combine.SourceRGB[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -875,7 +1009,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE1_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceRGB[1];
+               *params = (GLint) texUnit->Combine.SourceRGB[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -884,7 +1018,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE2_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceRGB[2];
+               *params = (GLint) texUnit->Combine.SourceRGB[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -893,7 +1027,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE0_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceA[0];
+               *params = (GLint) texUnit->Combine.SourceA[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -902,7 +1036,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE1_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceA[1];
+               *params = (GLint) texUnit->Combine.SourceA[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -911,7 +1045,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_SOURCE2_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineSourceA[2];
+               *params = (GLint) texUnit->Combine.SourceA[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -920,7 +1054,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND0_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandRGB[0];
+               *params = (GLint) texUnit->Combine.OperandRGB[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -929,7 +1063,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND1_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandRGB[1];
+               *params = (GLint) texUnit->Combine.OperandRGB[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -938,7 +1072,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND2_RGB:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandRGB[2];
+               *params = (GLint) texUnit->Combine.OperandRGB[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -947,7 +1081,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND0_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandA[0];
+               *params = (GLint) texUnit->Combine.OperandA[0];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -956,7 +1090,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND1_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandA[1];
+               *params = (GLint) texUnit->Combine.OperandA[1];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -965,7 +1099,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_OPERAND2_ALPHA:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               *params = (GLint) texUnit->CombineOperandA[2];
+               *params = (GLint) texUnit->Combine.OperandA[2];
             }
             else {
                _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexEnviv(pname)");
@@ -974,9 +1108,9 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_RGB_SCALE:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               if (texUnit->CombineScaleShiftRGB == 0)
+               if (texUnit->Combine.ScaleShiftRGB == 0)
                   *params = 1;
-               else if (texUnit->CombineScaleShiftRGB == 1)
+               else if (texUnit->Combine.ScaleShiftRGB == 1)
                   *params = 2;
                else
                   *params = 4;
@@ -989,9 +1123,9 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
          case GL_ALPHA_SCALE:
             if (ctx->Extensions.EXT_texture_env_combine ||
                 ctx->Extensions.ARB_texture_env_combine) {
-               if (texUnit->CombineScaleShiftA == 0)
+               if (texUnit->Combine.ScaleShiftA == 0)
                   *params = 1;
-               else if (texUnit->CombineScaleShiftA == 1)
+               else if (texUnit->Combine.ScaleShiftA == 1)
                   *params = 2;
                else
                   *params = 4;
@@ -1648,6 +1782,70 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
          }
          return;
 
+      /* GL_ARB_texture_float */
+      case GL_TEXTURE_RED_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->RedBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_GREEN_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->GreenBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_BLUE_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->BlueBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_ALPHA_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->AlphaBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_LUMINANCE_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->LuminanceBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_INTENSITY_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->IntensityBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
+      case GL_TEXTURE_DEPTH_TYPE_ARB:
+         if (ctx->Extensions.ARB_texture_float) {
+            *params = img->TexFormat->DepthBits ? img->TexFormat->DataType : GL_NONE;
+         }
+         else {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetTexLevelParameter[if]v(pname)");
+         }
+         return;
       default:
          _mesa_error(ctx, GL_INVALID_ENUM,
                      "glGetTexLevelParameter[if]v(pname)");
@@ -1768,7 +1966,7 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
       case GL_TEXTURE_LOD_BIAS:
          if (ctx->Extensions.EXT_texture_lod_bias) {
             *params = obj->LodBias;
-            break;
+            return;
          }
          break;
       default:
@@ -1797,12 +1995,6 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
    switch (pname) {
       case GL_TEXTURE_MAG_FILTER:
          *params = (GLint) obj->MagFilter;
-      case GL_TEXTURE_LOD_BIAS:
-         if (ctx->Extensions.EXT_texture_lod_bias) {
-            *params = (GLint) obj->LodBias;
-            break;
-         }
-         break;
          return;
       case GL_TEXTURE_MIN_FILTER:
          *params = (GLint) obj->MinFilter;
@@ -1899,6 +2091,12 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
       case GL_DEPTH_TEXTURE_MODE_ARB:
          if (ctx->Extensions.ARB_depth_texture) {
             *params = (GLint) obj->DepthMode;
+            return;
+         }
+         break;
+      case GL_TEXTURE_LOD_BIAS:
+         if (ctx->Extensions.EXT_texture_lod_bias) {
+            *params = (GLint) obj->LodBias;
             return;
          }
          break;
@@ -2703,6 +2901,10 @@ update_texture_state( GLcontext *ctx )
 {
    GLuint unit;
 
+   ctx->NewState |= _NEW_TEXTURE; /* TODO: only set this if there are 
+				   * actual changes. 
+				   */
+
    ctx->Texture._EnabledUnits = 0;
    ctx->Texture._GenFlags = 0;
    ctx->Texture._TexMatEnabled = 0;
@@ -2721,7 +2923,7 @@ update_texture_state( GLcontext *ctx )
       texUnit->_GenFlags = 0;
 
       /* Get the bitmask of texture enables */
-      if (ctx->FragmentProgram.Enabled && ctx->FragmentProgram.Current) {
+      if (ctx->FragmentProgram._Enabled) {
          enableBits = ctx->FragmentProgram.Current->TexturesUsed[unit];
       }
       else {
@@ -2796,6 +2998,69 @@ update_texture_state( GLcontext *ctx )
       if (texUnit->_ReallyEnabled)
          ctx->Texture._EnabledUnits |= (1 << unit);
 
+      if (texUnit->EnvMode == GL_COMBINE) {
+	 texUnit->_CurrentCombine = & texUnit->Combine;
+      }
+      else {
+         GLenum format = texUnit->_Current->Image[0][0]->Format;
+         if (format == GL_COLOR_INDEX) {
+            format = GL_RGBA;  /* a bit of a hack */
+         }
+         else if (format == GL_DEPTH_COMPONENT) {
+            format = texUnit->_Current->DepthMode;
+         }
+	 calculate_derived_texenv(&texUnit->_EnvMode, texUnit->EnvMode, format);
+	 texUnit->_CurrentCombine = & texUnit->_EnvMode;
+      }
+
+      switch (texUnit->_CurrentCombine->ModeRGB) {
+      case GL_REPLACE:
+	 texUnit->_CurrentCombine->_NumArgsRGB = 1;
+	 break;
+      case GL_MODULATE:
+      case GL_ADD:
+      case GL_ADD_SIGNED:
+      case GL_SUBTRACT:
+      case GL_DOT3_RGB:
+      case GL_DOT3_RGBA:
+      case GL_DOT3_RGB_EXT:
+      case GL_DOT3_RGBA_EXT:
+	 texUnit->_CurrentCombine->_NumArgsRGB = 2;
+	 break;
+      case GL_INTERPOLATE:
+      case GL_MODULATE_ADD_ATI:
+      case GL_MODULATE_SIGNED_ADD_ATI:
+      case GL_MODULATE_SUBTRACT_ATI:
+	 texUnit->_CurrentCombine->_NumArgsRGB = 3;
+	 break;
+      default:
+	 texUnit->_CurrentCombine->_NumArgsRGB = 0;
+         _mesa_problem(ctx, "invalid RGB combine mode in update_texture_state");
+         return;
+      }
+
+      switch (texUnit->_CurrentCombine->ModeA) {
+      case GL_REPLACE:
+	 texUnit->_CurrentCombine->_NumArgsA = 1;
+	 break;
+      case GL_MODULATE:
+      case GL_ADD:
+      case GL_ADD_SIGNED:
+      case GL_SUBTRACT:
+	 texUnit->_CurrentCombine->_NumArgsA = 2;
+	 break;
+      case GL_INTERPOLATE:
+      case GL_MODULATE_ADD_ATI:
+      case GL_MODULATE_SIGNED_ADD_ATI:
+      case GL_MODULATE_SUBTRACT_ATI:
+	 texUnit->_CurrentCombine->_NumArgsA = 3;
+	 break;
+      default:
+	 texUnit->_CurrentCombine->_NumArgsA = 0;
+         _mesa_problem(ctx, "invalid Alpha combine mode in update_texture_state");
+	 break;
+      }
+
       if (texUnit->TexGenEnabled) {
 	 if (texUnit->TexGenEnabled & S_BIT) {
 	    texUnit->_GenFlags |= texUnit->_GenBitS;
@@ -2822,7 +3087,7 @@ update_texture_state( GLcontext *ctx )
    /* Fragment programs may need texture coordinates but not the
     * corresponding texture images.
     */
-   if (ctx->FragmentProgram.Enabled && ctx->FragmentProgram.Current) {
+   if (ctx->FragmentProgram._Enabled) {
       ctx->Texture._EnabledCoordUnits |=
          (ctx->FragmentProgram.Current->InputsRead >> FRAG_ATTRIB_TEX0);
    }
@@ -2906,22 +3171,9 @@ init_texture_unit( GLcontext *ctx, GLuint unit )
    texUnit->EnvMode = GL_MODULATE;
    ASSIGN_4V( texUnit->EnvColor, 0.0, 0.0, 0.0, 0.0 );
 
-   texUnit->CombineModeRGB = GL_MODULATE;
-   texUnit->CombineModeA = GL_MODULATE;
-   texUnit->CombineSourceRGB[0] = GL_TEXTURE;
-   texUnit->CombineSourceRGB[1] = GL_PREVIOUS_EXT;
-   texUnit->CombineSourceRGB[2] = GL_CONSTANT_EXT;
-   texUnit->CombineSourceA[0] = GL_TEXTURE;
-   texUnit->CombineSourceA[1] = GL_PREVIOUS_EXT;
-   texUnit->CombineSourceA[2] = GL_CONSTANT_EXT;
-   texUnit->CombineOperandRGB[0] = GL_SRC_COLOR;
-   texUnit->CombineOperandRGB[1] = GL_SRC_COLOR;
-   texUnit->CombineOperandRGB[2] = GL_SRC_ALPHA;
-   texUnit->CombineOperandA[0] = GL_SRC_ALPHA;
-   texUnit->CombineOperandA[1] = GL_SRC_ALPHA;
-   texUnit->CombineOperandA[2] = GL_SRC_ALPHA;
-   texUnit->CombineScaleShiftRGB = 0;
-   texUnit->CombineScaleShiftA = 0;
+   texUnit->Combine = default_combine_state;
+   texUnit->_EnvMode = default_combine_state;
+   texUnit->_CurrentCombine = & texUnit->_EnvMode;
 
    texUnit->TexGenEnabled = 0;
    texUnit->GenModeS = GL_EYE_LINEAR;

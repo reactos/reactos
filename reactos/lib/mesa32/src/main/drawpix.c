@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,7 @@
 #include "state.h"
 #include "mtypes.h"
 
+
 #if _HAVE_FULL_GL
 
 /*
@@ -44,8 +45,7 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   if (ctx->FragmentProgram.Enabled
-       && !ctx->FragmentProgram.Current->Instructions) {
+   if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glDrawPixels (invalid fragment program)");
       return;
@@ -58,7 +58,7 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
 
    if (ctx->RenderMode==GL_RENDER) {
       GLint x, y;
-      if (!pixels || !ctx->Current.RasterPosValid) {
+      if (!ctx->Current.RasterPosValid) {
 	 return;
       }
 
@@ -93,6 +93,7 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
    }
 }
 
+
 void GLAPIENTRY
 _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
                   GLenum type )
@@ -101,8 +102,7 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
    GLint destx, desty;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   if (ctx->FragmentProgram.Enabled
-       && !ctx->FragmentProgram.Current->Instructions) {
+   if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glCopyPixels (invalid fragment program)");
       return;
@@ -148,7 +148,7 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
    }
 }
 
-#endif
+#endif /* _HAVE_FULL_GL */
 
 
 
@@ -165,19 +165,12 @@ _mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
       return;
    }
 
-   if (!pixels) {
-      _mesa_error( ctx, GL_INVALID_VALUE, "glReadPixels(pixels)" );
-      return;
-   }
-
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
    ctx->Driver.ReadPixels(ctx, x, y, width, height,
 			  format, type, &ctx->Pack, pixels);
 }
-
-
 
 
 
@@ -189,8 +182,7 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   if (ctx->FragmentProgram.Enabled
-       && !ctx->FragmentProgram.Current->Instructions) {
+   if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glBitmap (invalid fragment program)");
       return;
@@ -206,18 +198,16 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
    }
 
    if (ctx->RenderMode==GL_RENDER) {
-      if (bitmap) {
-         /* Truncate, to satisfy conformance tests (matches SGI's OpenGL). */
-         GLint x = IFLOOR(ctx->Current.RasterPos[0] - xorig);
-         GLint y = IFLOOR(ctx->Current.RasterPos[1] - yorig);
+      /* Truncate, to satisfy conformance tests (matches SGI's OpenGL). */
+      GLint x = IFLOOR(ctx->Current.RasterPos[0] - xorig);
+      GLint y = IFLOOR(ctx->Current.RasterPos[1] - yorig);
 
-         if (ctx->NewState) {
-            _mesa_update_state(ctx);
-         }
-
-         ctx->OcclusionResult = GL_TRUE;
-	 ctx->Driver.Bitmap( ctx, x, y, width, height, &ctx->Unpack, bitmap );
+      if (ctx->NewState) {
+         _mesa_update_state(ctx);
       }
+
+      ctx->OcclusionResult = GL_TRUE;
+      ctx->Driver.Bitmap( ctx, x, y, width, height, &ctx->Unpack, bitmap );
    }
 #if _HAVE_FULL_GL
    else if (ctx->RenderMode==GL_FEEDBACK) {

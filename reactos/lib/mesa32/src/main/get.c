@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -212,7 +212,7 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          *params = ctx->Eval.AutoNormal;
          break;
       case GL_AUX_BUFFERS:
-         *params = (ctx->Const.NumAuxBuffers) ? GL_TRUE : GL_FALSE;
+         *params = (ctx->Visual.numAuxBuffers) ? GL_TRUE : GL_FALSE;
          break;
       case GL_BLEND:
          *params = ctx->Color.BlendEnabled;
@@ -235,8 +235,11 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
       case GL_BLEND_DST_ALPHA_EXT:
          *params = ENUM_TO_BOOL(ctx->Color.BlendDstA);
          break;
-      case GL_BLEND_EQUATION_EXT:
-	 *params = ENUM_TO_BOOL( ctx->Color.BlendEquation );
+      case GL_BLEND_EQUATION:
+	 *params = ENUM_TO_BOOL( ctx->Color.BlendEquationRGB );
+	 break;
+      case GL_BLEND_EQUATION_ALPHA_EXT:
+	 *params = ENUM_TO_BOOL( ctx->Color.BlendEquationA );
 	 break;
       case GL_BLEND_COLOR_EXT:
 	 params[0] = FLOAT_TO_BOOL( ctx->Color.BlendColor[0] );
@@ -1606,6 +1609,16 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          *params = INT_TO_BOOL(ctx->Array.ElementArrayBufferObj->Name);
          break;
 #endif
+#if FEATURE_EXT_pixel_buffer_object
+      case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_B(EXT_pixel_buffer_object, pname);
+         *params = INT_TO_BOOL(ctx->Pack.BufferObj->Name);
+         break;
+      case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_B(EXT_pixel_buffer_object, pname);
+         *params = INT_TO_BOOL(ctx->Unpack.BufferObj->Name);
+         break;
+#endif
 
 #if FEATURE_ARB_fragment_program
       case GL_FRAGMENT_PROGRAM_ARB:
@@ -1754,7 +1767,7 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
          *params = (GLdouble) ctx->Eval.AutoNormal;
          break;
       case GL_AUX_BUFFERS:
-         *params = (GLdouble) ctx->Const.NumAuxBuffers;
+         *params = (GLdouble) ctx->Visual.numAuxBuffers;
          break;
       case GL_BLEND:
          *params = (GLdouble) ctx->Color.BlendEnabled;
@@ -1777,8 +1790,11 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
       case GL_BLEND_DST_ALPHA_EXT:
          *params = ENUM_TO_DOUBLE(ctx->Color.BlendDstA);
          break;
-      case GL_BLEND_EQUATION_EXT:
-	 *params = ENUM_TO_DOUBLE(ctx->Color.BlendEquation);
+      case GL_BLEND_EQUATION:
+	 *params = ENUM_TO_DOUBLE(ctx->Color.BlendEquationRGB);
+	 break;
+      case GL_BLEND_EQUATION_ALPHA_EXT:
+	 *params = ENUM_TO_DOUBLE(ctx->Color.BlendEquationA);
 	 break;
       case GL_BLEND_COLOR_EXT:
 	 params[0] = (GLdouble) ctx->Color.BlendColor[0];
@@ -3143,6 +3159,16 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
          *params = (GLdouble) ctx->Array.ElementArrayBufferObj->Name;
          break;
 #endif
+#if FEATURE_EXT_pixel_buffer_object
+      case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_D(EXT_pixel_buffer_object, pname);
+         *params = (GLdouble) ctx->Pack.BufferObj->Name;
+         break;
+      case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_D(EXT_pixel_buffer_object, pname);
+         *params = (GLdouble) ctx->Unpack.BufferObj->Name;
+         break;
+#endif
 
 #if FEATURE_ARB_fragment_program
       case GL_FRAGMENT_PROGRAM_ARB:
@@ -3291,7 +3317,7 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          *params = (GLfloat) ctx->Eval.AutoNormal;
          break;
       case GL_AUX_BUFFERS:
-         *params = (GLfloat) ctx->Const.NumAuxBuffers;
+         *params = (GLfloat) ctx->Visual.numAuxBuffers;
          break;
       case GL_BLEND:
          *params = (GLfloat) ctx->Color.BlendEnabled;
@@ -3314,8 +3340,11 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
       case GL_BLEND_DST_ALPHA_EXT:
          *params = ENUM_TO_FLOAT(ctx->Color.BlendDstA);
          break;
-      case GL_BLEND_EQUATION_EXT:
-	 *params = ENUM_TO_FLOAT(ctx->Color.BlendEquation);
+      case GL_BLEND_EQUATION:
+	 *params = ENUM_TO_FLOAT(ctx->Color.BlendEquationRGB);
+	 break;
+      case GL_BLEND_EQUATION_ALPHA_EXT:
+	 *params = ENUM_TO_FLOAT(ctx->Color.BlendEquationA);
 	 break;
       case GL_BLEND_COLOR_EXT:
 	 params[0] = ctx->Color.BlendColor[0];
@@ -4656,6 +4685,16 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          *params = (GLfloat) ctx->Array.ElementArrayBufferObj->Name;
          break;
 #endif
+#if FEATURE_EXT_pixel_buffer_object
+      case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_F(EXT_pixel_buffer_object, pname);
+         *params = (GLfloat) ctx->Pack.BufferObj->Name;
+         break;
+      case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_F(EXT_pixel_buffer_object, pname);
+         *params = (GLfloat) ctx->Unpack.BufferObj->Name;
+         break;
+#endif
 
 #if FEATURE_ARB_fragment_program
       case GL_FRAGMENT_PROGRAM_ARB:
@@ -4805,7 +4844,7 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          *params = (GLint) ctx->Eval.AutoNormal;
          break;
       case GL_AUX_BUFFERS:
-         *params = (GLint) ctx->Const.NumAuxBuffers;
+         *params = (GLint) ctx->Visual.numAuxBuffers;
          break;
       case GL_BLEND:
          *params = (GLint) ctx->Color.BlendEnabled;
@@ -4828,8 +4867,11 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
       case GL_BLEND_DST_ALPHA_EXT:
          *params = (GLint) ctx->Color.BlendDstA;
          break;
-      case GL_BLEND_EQUATION_EXT:
-	 *params = (GLint) ctx->Color.BlendEquation;
+      case GL_BLEND_EQUATION:
+	 *params = (GLint) ctx->Color.BlendEquationRGB;
+	 break;
+      case GL_BLEND_EQUATION_ALPHA_EXT:
+	 *params = (GLint) ctx->Color.BlendEquationA;
 	 break;
       case GL_BLEND_COLOR_EXT:
 	 params[0] = FLOAT_TO_INT( ctx->Color.BlendColor[0] );
@@ -6207,6 +6249,16 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          *params = (GLint) ctx->Array.ElementArrayBufferObj->Name;
          break;
 #endif
+#if FEATURE_EXT_pixel_buffer_object
+      case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_I(EXT_pixel_buffer_object, pname);
+         *params = (GLint) ctx->Pack.BufferObj->Name;
+         break;
+      case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
+         CHECK_EXTENSION_I(EXT_pixel_buffer_object, pname);
+         *params = (GLint) ctx->Unpack.BufferObj->Name;
+         break;
+#endif
 
 #if FEATURE_ARB_fragment_program
       case GL_FRAGMENT_PROGRAM_ARB:
@@ -6338,7 +6390,7 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
             _mesa_error(ctx, GL_INVALID_ENUM, "glGetPointerv");
             return;
          }
-         *params = (GLvoid *) ctx->FragmentProgram.Callback;
+         *params = *(GLvoid **) &ctx->FragmentProgram.Callback;
          break;
       case GL_FRAGMENT_PROGRAM_CALLBACK_DATA_MESA:
          if (!ctx->Extensions.MESA_program_debug) {
@@ -6352,7 +6404,7 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
             _mesa_error(ctx, GL_INVALID_ENUM, "glGetPointerv");
             return;
          }
-         *params = (GLvoid *) ctx->VertexProgram.Callback;
+         *params = *(GLvoid **) &ctx->VertexProgram.Callback;
          break;
       case GL_VERTEX_PROGRAM_CALLBACK_DATA_MESA:
          if (!ctx->Extensions.MESA_program_debug) {

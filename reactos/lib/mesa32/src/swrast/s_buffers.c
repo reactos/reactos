@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,16 +30,17 @@
 
 #include "s_accum.h"
 #include "s_alphabuf.h"
+#include "s_auxbuffer.h"
 #include "s_context.h"
 #include "s_depth.h"
 #include "s_masking.h"
 #include "s_stencil.h"
 
 
-
-
-/*
+/**
  * Clear the color buffer when glColorMask or glIndexMask is in effect.
+ * We'll have specified which color buffer to clear by previously
+ * calling Driver.SetBuffer().
  */
 static void
 clear_color_buffer_with_masking( GLcontext *ctx )
@@ -87,9 +87,10 @@ clear_color_buffer_with_masking( GLcontext *ctx )
 }
 
 
-
-/*
+/**
  * Clear a color buffer without index/channel masking.
+ * We'll have specified which color buffer to clear by previously
+ * calling Driver.SetBuffer().
  */
 static void
 clear_color_buffer(GLcontext *ctx)
@@ -132,11 +133,10 @@ clear_color_buffer(GLcontext *ctx)
 }
 
 
-
-/*
- * Clear the front/back/left/right color buffers.
- * This function is usually only called if we need to clear the
- * buffers with masking.
+/**
+ * Clear the front/back/left/right/aux color buffers.
+ * This function is usually only called if the device driver can't
+ * clear its own color buffers for some reason (such as with masking).
  */
 static void
 clear_color_buffers(GLcontext *ctx)
@@ -146,7 +146,7 @@ clear_color_buffers(GLcontext *ctx)
    GLuint bufferBit;
 
    /* loop over four possible dest color buffers */
-   for (bufferBit = 1; bufferBit <= 8; bufferBit = bufferBit << 1) {
+   for (bufferBit = 1; bufferBit <= DD_AUX3_BIT; bufferBit <<= 1) {
       if (bufferBit & ctx->Color._DrawDestMask) {
          (*swrast->Driver.SetBuffer)(ctx, ctx->DrawBuffer, bufferBit);
 
@@ -164,22 +164,33 @@ clear_color_buffers(GLcontext *ctx)
 }
 
 
-
+/**
+ * Called via the device driver's ctx->Driver.Clear() function if the
+ * device driver can't clear one or more of the buffers itself.
+ * \param mask  bitwise-OR of DD_*_BIT flags.
+ * \param all  if GL_TRUE, clear whole buffer, else clear specified region.
+ */
 void
 _swrast_Clear( GLcontext *ctx, GLbitfield mask,
 	       GLboolean all,
 	       GLint x, GLint y, GLint width, GLint height )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   (void) all; (void) x; (void) y; (void) width; (void) height;
 #ifdef DEBUG
    {
-      GLbitfield legalBits = DD_FRONT_LEFT_BIT |
+      const GLbitfield legalBits =
+         DD_FRONT_LEFT_BIT |
 	 DD_FRONT_RIGHT_BIT |
 	 DD_BACK_LEFT_BIT |
 	 DD_BACK_RIGHT_BIT |
 	 DD_DEPTH_BIT |
 	 DD_STENCIL_BIT |
-	 DD_ACCUM_BIT;
+	 DD_ACCUM_BIT |
+         DD_AUX0_BIT |
+         DD_AUX1_BIT |
+         DD_AUX2_BIT |
+         DD_AUX3_BIT;
       assert((mask & (~legalBits)) == 0);
    }
 #endif
@@ -188,23 +199,34 @@ _swrast_Clear( GLcontext *ctx, GLbitfield mask,
 
    /* do software clearing here */
    if (mask) {
-      if (mask & ctx->Color._DrawDestMask)   clear_color_buffers(ctx);
-      if (mask & GL_DEPTH_BUFFER_BIT)    _swrast_clear_depth_buffer(ctx);
-      if (mask & GL_ACCUM_BUFFER_BIT)    _swarst_clear_accum_buffer(ctx);
-      if (mask & GL_STENCIL_BUFFER_BIT)  _swrast_clear_stencil_buffer(ctx);
-   }
-
-   /* clear software-based alpha buffer(s) */
-   if ( (mask & GL_COLOR_BUFFER_BIT)
-	&& ctx->DrawBuffer->UseSoftwareAlphaBuffers
-	&& ctx->Color.ColorMask[ACOMP]) {
-      _swrast_clear_alpha_buffers( ctx );
+      if (mask & ctx->Color._DrawDestMask) {
+         clear_color_buffers(ctx);
+         /* clear software-based alpha buffer(s) */
+         if (ctx->DrawBuffer->UseSoftwareAlphaBuffers
+             && ctx->Color.ColorMask[ACOMP]) {
+            _swrast_clear_alpha_buffers( ctx );
+         }
+      }
+      if (mask & DD_DEPTH_BIT) {
+         _swrast_clear_depth_buffer(ctx);
+      }
+      if (mask & DD_ACCUM_BIT) {
+         _swrast_clear_accum_buffer(ctx);
+      }
+      if (mask & DD_STENCIL_BIT) {
+         _swrast_clear_stencil_buffer(ctx);
+      }
    }
 
    RENDER_FINISH(swrast,ctx);
 }
 
 
+/**
+ * Typically called via ctx->Driver.ResizeBuffers().
+ * Reallocate all software-based depth/stencil/accum/etc buffers
+ * to match current window dimensions.
+ */
 void
 _swrast_alloc_buffers( GLframebuffer *buffer )
 {
@@ -221,6 +243,9 @@ _swrast_alloc_buffers( GLframebuffer *buffer )
    if (buffer->UseSoftwareAlphaBuffers) {
       _swrast_alloc_alpha_buffers( buffer );
    }
+   if (buffer->UseSoftwareAuxBuffers) {
+      _swrast_alloc_aux_buffers( buffer );
+   }
 }
 
 
@@ -230,6 +255,7 @@ _swrast_alloc_buffers( GLframebuffer *buffer )
 void
 _swrast_DrawBuffer( GLcontext *ctx, GLenum mode )
 {
+   (void) mode;
    _swrast_use_draw_buffer(ctx);
 }
 
@@ -245,9 +271,9 @@ _swrast_use_read_buffer( GLcontext *ctx )
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
 
    /* Do this so the software-emulated alpha plane span functions work! */
-   swrast->CurrentBuffer = ctx->Pixel._ReadSrcMask;
+   swrast->CurrentBufferBit = ctx->Pixel._ReadSrcMask;
    /* Tell the device driver where to read/write spans */
-   (*swrast->Driver.SetBuffer)( ctx, ctx->ReadBuffer, swrast->CurrentBuffer );
+   swrast->Driver.SetBuffer(ctx, ctx->ReadBuffer, swrast->CurrentBufferBit);
 }
 
 
@@ -271,17 +297,25 @@ _swrast_use_draw_buffer( GLcontext *ctx )
     * we loop over multiple color buffers when needed.
     */
 
-   if (ctx->Color._DrawDestMask & FRONT_LEFT_BIT)
-      swrast->CurrentBuffer = FRONT_LEFT_BIT;
-   else if (ctx->Color._DrawDestMask & BACK_LEFT_BIT)
-      swrast->CurrentBuffer = BACK_LEFT_BIT;
-   else if (ctx->Color._DrawDestMask & FRONT_RIGHT_BIT)
-      swrast->CurrentBuffer = FRONT_RIGHT_BIT;
-   else if (ctx->Color._DrawDestMask & BACK_RIGHT_BIT)
-      swrast->CurrentBuffer = BACK_RIGHT_BIT;
+   if (ctx->Color._DrawDestMask & DD_FRONT_LEFT_BIT)
+      swrast->CurrentBufferBit = DD_FRONT_LEFT_BIT;
+   else if (ctx->Color._DrawDestMask & DD_BACK_LEFT_BIT)
+      swrast->CurrentBufferBit = DD_BACK_LEFT_BIT;
+   else if (ctx->Color._DrawDestMask & DD_FRONT_RIGHT_BIT)
+      swrast->CurrentBufferBit = DD_FRONT_RIGHT_BIT;
+   else if (ctx->Color._DrawDestMask & DD_BACK_RIGHT_BIT)
+      swrast->CurrentBufferBit = DD_BACK_RIGHT_BIT;
+   else if (ctx->Color._DrawDestMask & DD_AUX0_BIT)
+      swrast->CurrentBufferBit = DD_AUX0_BIT;
+   else if (ctx->Color._DrawDestMask & DD_AUX1_BIT)
+      swrast->CurrentBufferBit = DD_AUX1_BIT;
+   else if (ctx->Color._DrawDestMask & DD_AUX2_BIT)
+      swrast->CurrentBufferBit = DD_AUX2_BIT;
+   else if (ctx->Color._DrawDestMask & DD_AUX3_BIT)
+      swrast->CurrentBufferBit = DD_AUX3_BIT;
    else
       /* glDrawBuffer(GL_NONE) */
-      swrast->CurrentBuffer = FRONT_LEFT_BIT; /* we always have this buffer */
+      swrast->CurrentBufferBit = DD_FRONT_LEFT_BIT; /* we always have this buffer */
 
-   (*swrast->Driver.SetBuffer)( ctx, ctx->DrawBuffer, swrast->CurrentBuffer );
+   swrast->Driver.SetBuffer(ctx, ctx->DrawBuffer, swrast->CurrentBufferBit);
 }

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,11 @@
  */
 
 #include "imports.h"
+#include "bufferobj.h"
 #include "context.h"
+#include "colormac.h"
 #include "mtypes.h"
+#include "program.h"
 #include "texobj.h"
 #include "nvfragprog.h"
 
@@ -42,74 +45,79 @@
 #include "s_texture.h"
 
 
-/*
+/**
  * Recompute the value of swrast->_RasterMask, etc. according to
- * the current context.
+ * the current context.  The _RasterMask field can be easily tested by
+ * drivers to determine certain basic GL state (does the primitive need
+ * stenciling, logic-op, fog, etc?).
  */
 static void
 _swrast_update_rasterflags( GLcontext *ctx )
 {
-   GLuint RasterMask = 0;
+   GLuint rasterMask = 0;
 
-   if (ctx->Color.AlphaEnabled)           RasterMask |= ALPHATEST_BIT;
-   if (ctx->Color.BlendEnabled)           RasterMask |= BLEND_BIT;
-   if (ctx->Depth.Test)                   RasterMask |= DEPTH_BIT;
-   if (ctx->Fog.Enabled)                  RasterMask |= FOG_BIT;
-   if (ctx->Scissor.Enabled)              RasterMask |= CLIP_BIT;
-   if (ctx->Stencil.Enabled)              RasterMask |= STENCIL_BIT;
+   if (ctx->Color.AlphaEnabled)           rasterMask |= ALPHATEST_BIT;
+   if (ctx->Color.BlendEnabled)           rasterMask |= BLEND_BIT;
+   if (ctx->Depth.Test)                   rasterMask |= DEPTH_BIT;
+   if (ctx->Fog.Enabled)                  rasterMask |= FOG_BIT;
+   if (ctx->Scissor.Enabled)              rasterMask |= CLIP_BIT;
+   if (ctx->Stencil.Enabled)              rasterMask |= STENCIL_BIT;
    if (ctx->Visual.rgbMode) {
       const GLuint colorMask = *((GLuint *) &ctx->Color.ColorMask);
-      if (colorMask != 0xffffffff)        RasterMask |= MASKING_BIT;
-      if (ctx->Color._LogicOpEnabled)     RasterMask |= LOGIC_OP_BIT;
-      if (ctx->Texture._EnabledUnits)     RasterMask |= TEXTURE_BIT;
+      if (colorMask != 0xffffffff)        rasterMask |= MASKING_BIT;
+      if (ctx->Color._LogicOpEnabled)     rasterMask |= LOGIC_OP_BIT;
+      if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
    }
    else {
-      if (ctx->Color.IndexMask != 0xffffffff) RasterMask |= MASKING_BIT;
-      if (ctx->Color.IndexLogicOpEnabled)     RasterMask |= LOGIC_OP_BIT;
+      if (ctx->Color.IndexMask != 0xffffffff) rasterMask |= MASKING_BIT;
+      if (ctx->Color.IndexLogicOpEnabled)     rasterMask |= LOGIC_OP_BIT;
    }
 
    if (ctx->DrawBuffer->UseSoftwareAlphaBuffers
        && ctx->Color.ColorMask[ACOMP]
        && ctx->Color.DrawBuffer != GL_NONE)
-      RasterMask |= ALPHABUF_BIT;
+      rasterMask |= ALPHABUF_BIT;
 
    if (   ctx->Viewport.X < 0
        || ctx->Viewport.X + ctx->Viewport.Width > (GLint) ctx->DrawBuffer->Width
        || ctx->Viewport.Y < 0
        || ctx->Viewport.Y + ctx->Viewport.Height > (GLint) ctx->DrawBuffer->Height) {
-      RasterMask |= CLIP_BIT;
+      rasterMask |= CLIP_BIT;
    }
 
    if (ctx->Depth.OcclusionTest || ctx->Occlusion.Active)
-      RasterMask |= OCCLUSION_BIT;
+      rasterMask |= OCCLUSION_BIT;
 
 
    /* If we're not drawing to exactly one color buffer set the
     * MULTI_DRAW_BIT flag.  Also set it if we're drawing to no
     * buffers or the RGBA or CI mask disables all writes.
     */
-   if (ctx->Color._DrawDestMask != FRONT_LEFT_BIT &&
-       ctx->Color._DrawDestMask != BACK_LEFT_BIT &&
-       ctx->Color._DrawDestMask != FRONT_RIGHT_BIT &&
-       ctx->Color._DrawDestMask != BACK_RIGHT_BIT) {
+   if (_mesa_bitcount(ctx->Color._DrawDestMask) != 1) {
       /* more than one color buffer designated for writing (or zero buffers) */
-      RasterMask |= MULTI_DRAW_BIT;
+      rasterMask |= MULTI_DRAW_BIT;
    }
    else if (ctx->Visual.rgbMode && *((GLuint *) ctx->Color.ColorMask) == 0) {
-      RasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
+      rasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
    }
    else if (!ctx->Visual.rgbMode && ctx->Color.IndexMask==0) {
-      RasterMask |= MULTI_DRAW_BIT; /* all color index bits disabled */
+      rasterMask |= MULTI_DRAW_BIT; /* all color index bits disabled */
    }
 
-   if (ctx->FragmentProgram.Enabled) {
-      RasterMask |= FRAGPROG_BIT;
+   if (ctx->FragmentProgram._Enabled) {
+      rasterMask |= FRAGPROG_BIT;
    }
 
-   SWRAST_CONTEXT(ctx)->_RasterMask = RasterMask;
+   SWRAST_CONTEXT(ctx)->_RasterMask = rasterMask;
 }
 
 
+/**
+ * Examine polycon culls tate to compute the _BackfaceSign field.
+ * _BackfaceSign will be 0 if no culling, -1 if culling back-faces,
+ * and 1 if culling front-faces.  The Polygon FrontFace state also
+ * factors in.
+ */
 static void
 _swrast_update_polygon( GLcontext *ctx )
 {
@@ -140,17 +148,23 @@ _swrast_update_polygon( GLcontext *ctx )
 }
 
 
+/**
+ * Update the _PreferPixelFog field to indicate if we need to compute
+ * fog factors per-fragment.
+ */
 static void
-_swrast_update_hint( GLcontext *ctx )
+_swrast_update_fog_hint( GLcontext *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    swrast->_PreferPixelFog = (!swrast->AllowVertexFog ||
+                              ctx->FragmentProgram._Enabled ||
 			      (ctx->Hint.Fog == GL_NICEST &&
 			       swrast->AllowPixelFog));
 }
 
 
-/*
+
+/**
  * Update the swrast->_AnyTextureCombine flag.
  */
 static void
@@ -167,6 +181,50 @@ _swrast_update_texture_env( GLcontext *ctx )
       }
    }
 }
+
+
+/**
+ * Update swrast->_FogColor and swrast->_FogEnable values.
+ */
+static void
+_swrast_update_fog_state( GLcontext *ctx )
+{
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+
+   /* convert fog color to GLchan values */
+   CLAMPED_FLOAT_TO_CHAN(swrast->_FogColor[RCOMP], ctx->Fog.Color[RCOMP]);
+   CLAMPED_FLOAT_TO_CHAN(swrast->_FogColor[GCOMP], ctx->Fog.Color[GCOMP]);
+   CLAMPED_FLOAT_TO_CHAN(swrast->_FogColor[BCOMP], ctx->Fog.Color[BCOMP]);
+
+   /* determine if fog is needed */
+   swrast->_FogEnabled = GL_FALSE;
+   if (ctx->Fog.Enabled) {
+      swrast->_FogEnabled = GL_TRUE;
+   }
+   else if (ctx->FragmentProgram._Enabled &&
+        ctx->FragmentProgram.Current->Base.Target == GL_FRAGMENT_PROGRAM_ARB) {
+      const struct fragment_program *p;
+      p = (struct fragment_program *) ctx->FragmentProgram.Current;
+      if (p->FogOption != GL_NONE) {
+         swrast->_FogEnabled = GL_TRUE;
+      }
+   }
+}
+
+
+/**
+ * Update state for running fragment programs.  Basically, load the
+ * program parameters with current state values.
+ */
+static void
+_swrast_update_fragment_program( GLcontext *ctx )
+{
+   if (ctx->FragmentProgram._Enabled) {
+      struct fragment_program *program = ctx->FragmentProgram.Current;
+      _mesa_load_state_parameters(ctx, program->Parameters);
+   }
+}
+
 
 
 #define _SWRAST_NEW_DERIVED (_SWRAST_NEW_RASTERMASK |	\
@@ -213,7 +271,8 @@ _swrast_update_texture_env( GLcontext *ctx )
 
 
 
-/* Stub for swrast->Triangle to select a true triangle function
+/**
+ * Stub for swrast->Triangle to select a true triangle function
  * after a state change.
  */
 static void
@@ -229,7 +288,7 @@ _swrast_validate_triangle( GLcontext *ctx,
 
    if (ctx->Texture._EnabledUnits == 0
        && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram.Enabled) {
+       && !ctx->FragmentProgram._Enabled) {
       /* separate specular color, but no texture */
       swrast->SpecTriangle = swrast->Triangle;
       swrast->Triangle = _swrast_add_spec_terms_triangle;
@@ -238,6 +297,10 @@ _swrast_validate_triangle( GLcontext *ctx,
    swrast->Triangle( ctx, v0, v1, v2 );
 }
 
+/**
+ * Called via swrast->Line.  Examine current GL state and choose a software
+ * line routine.  Then call it.
+ */
 static void
 _swrast_validate_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1 )
 {
@@ -248,7 +311,7 @@ _swrast_validate_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1 )
 
    if (ctx->Texture._EnabledUnits == 0
        && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram.Enabled) {
+       && !ctx->FragmentProgram._Enabled) {
       swrast->SpecLine = swrast->Line;
       swrast->Line = _swrast_add_spec_terms_line;
    }
@@ -257,6 +320,10 @@ _swrast_validate_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1 )
    swrast->Line( ctx, v0, v1 );
 }
 
+/**
+ * Called via swrast->Point.  Examine current GL state and choose a software
+ * point routine.  Then call it.
+ */
 static void
 _swrast_validate_point( GLcontext *ctx, const SWvertex *v0 )
 {
@@ -267,7 +334,7 @@ _swrast_validate_point( GLcontext *ctx, const SWvertex *v0 )
 
    if (ctx->Texture._EnabledUnits == 0
        && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram.Enabled) {
+       && !ctx->FragmentProgram._Enabled) {
       swrast->SpecPoint = swrast->Point;
       swrast->Point = _swrast_add_spec_terms_point;
    }
@@ -276,6 +343,10 @@ _swrast_validate_point( GLcontext *ctx, const SWvertex *v0 )
 }
 
 
+/**
+ * Called via swrast->BlendFunc.  Examine GL state to choose a blending
+ * function, then call it.
+ */
 static void _ASMAPI
 _swrast_validate_blend_func( GLcontext *ctx, GLuint n,
 			     const GLubyte mask[],
@@ -291,6 +362,14 @@ _swrast_validate_blend_func( GLcontext *ctx, GLuint n,
 }
 
 
+/**
+ * Called via the swrast->TextureSample[i] function pointer.
+ * Basically, given a texture object, an array of texture coords
+ * and an array of level-of-detail values, return an array of colors.
+ * In this case, determine the correct texture sampling routine
+ * (depending on filter mode, texture dimensions, etc) then call the
+ * sampler routine.
+ */
 static void
 _swrast_validate_texture_sample( GLcontext *ctx, GLuint texUnit,
 				 const struct gl_texture_object *tObj,
@@ -302,7 +381,7 @@ _swrast_validate_texture_sample( GLcontext *ctx, GLuint texUnit,
    _swrast_validate_derived( ctx );
 
    /* Compute min/mag filter threshold */
-   if (tObj->MinFilter != tObj->MagFilter) {
+   if (tObj && tObj->MinFilter != tObj->MagFilter) {
       if (tObj->MagFilter == GL_LINEAR
           && (tObj->MinFilter == GL_NEAREST_MIPMAP_NEAREST ||
               tObj->MinFilter == GL_NEAREST_MIPMAP_LINEAR)) {
@@ -324,6 +403,7 @@ _swrast_validate_texture_sample( GLcontext *ctx, GLuint texUnit,
 static void
 _swrast_sleep( GLcontext *ctx, GLuint new_state )
 {
+   (void) ctx; (void) new_state;
 }
 
 
@@ -360,6 +440,7 @@ _swrast_invalidate_state( GLcontext *ctx, GLuint new_state )
       for (i = 0 ; i < ctx->Const.MaxTextureUnits ; i++)
 	 swrast->TextureSample[i] = _swrast_validate_texture_sample;
 
+   /* Debug checks */
    if (ctx->Visual.rgbMode) {
       ASSERT(swrast->Driver.WriteRGBASpan);
       ASSERT(swrast->Driver.WriteRGBSpan);
@@ -393,11 +474,17 @@ _swrast_validate_derived( GLcontext *ctx )
       if (swrast->NewState & _NEW_POLYGON)
 	 _swrast_update_polygon( ctx );
 
-      if (swrast->NewState & _NEW_HINT)
-	 _swrast_update_hint( ctx );
+      if (swrast->NewState & (_NEW_HINT | _NEW_PROGRAM))
+	 _swrast_update_fog_hint( ctx );
 
       if (swrast->NewState & _SWRAST_NEW_TEXTURE_ENV_MODE)
 	 _swrast_update_texture_env( ctx );
+
+      if (swrast->NewState & _NEW_FOG)
+         _swrast_update_fog_state( ctx );
+
+      if (swrast->NewState & _NEW_PROGRAM)
+	 _swrast_update_fragment_program( ctx );
 
       swrast->NewState = 0;
       swrast->StateChanges = 0;
@@ -531,9 +618,9 @@ _swrast_CreateContext( GLcontext *ctx )
    swrast->AllowPixelFog = GL_TRUE;
 
    if (ctx->Visual.doubleBufferMode)
-      swrast->CurrentBuffer = BACK_LEFT_BIT;
+      swrast->CurrentBufferBit = DD_BACK_LEFT_BIT;
    else
-      swrast->CurrentBuffer = FRONT_LEFT_BIT;
+      swrast->CurrentBufferBit = DD_FRONT_LEFT_BIT;
 
    /* Optimized Accum buffer */
    swrast->_IntegerAccumMode = GL_TRUE;
@@ -680,4 +767,26 @@ _swrast_print_vertex( GLcontext *ctx, const SWvertex *v )
       _mesa_debug(ctx, "pointsize %f\n", v->pointSize);
       _mesa_debug(ctx, "\n");
    }
+}
+
+
+/**
+ * Validate access to a PBO to be sure we're not going to read/write
+ * out of buffer bounds.
+ */
+GLvoid *
+_swrast_validate_pbo_access(const struct gl_pixelstore_attrib *pack,
+                            GLsizei width, GLsizei height, GLsizei depth,
+                            GLenum format, GLenum type, GLvoid *ptr)
+{
+   if (pack->BufferObj->Name == 0) {
+      /* no PBO */
+      return ptr;
+   }
+   else if (_mesa_validate_pbo_access(pack, width, height, depth, format,
+                                      type, ptr)) {
+      return ADD_POINTERS(pack->BufferObj->Data, ptr);
+   }
+   /* bad access! */
+   return NULL;
 }

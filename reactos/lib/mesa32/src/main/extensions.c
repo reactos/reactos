@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -36,6 +36,9 @@
 #define OFF GL_FALSE
 
 
+/*
+ * Note: The GL_MESAX_* extensions are placeholders for future ARB extensions.
+ */
 static const struct {
    GLboolean enabled;
    const char *name;
@@ -43,6 +46,7 @@ static const struct {
 } default_extensions[] = {
    { OFF, "GL_ARB_depth_texture",              F(ARB_depth_texture) },
    { OFF, "GL_ARB_fragment_program",           F(ARB_fragment_program) },
+   { OFF, "GL_MESAX_half_float_pixel",         F(ARB_half_float_pixel) },
    { OFF, "GL_ARB_imaging",                    F(ARB_imaging) },
    { OFF, "GL_ARB_multisample",                F(ARB_multisample) },
    { OFF, "GL_ARB_multitexture",               F(ARB_multitexture) },
@@ -58,6 +62,7 @@ static const struct {
    { OFF, "GL_ARB_texture_env_combine",        F(ARB_texture_env_combine) },
    { OFF, "GL_ARB_texture_env_crossbar",       F(ARB_texture_env_crossbar) },
    { OFF, "GL_ARB_texture_env_dot3",           F(ARB_texture_env_dot3) },
+   { OFF, "GL_MESAX_texture_float",            F(ARB_texture_float) },
    { OFF, "GL_ARB_texture_mirrored_repeat",    F(ARB_texture_mirrored_repeat)},
    { OFF, "GL_ARB_texture_non_power_of_two",   F(ARB_texture_non_power_of_two)},
    { ON,  "GL_ARB_transpose_matrix",           F(ARB_transpose_matrix) },
@@ -73,6 +78,7 @@ static const struct {
    { OFF, "GL_EXT_blend_minmax",               F(EXT_blend_minmax) },
    { OFF, "GL_EXT_blend_subtract",             F(EXT_blend_subtract) },
    { ON,  "GL_EXT_clip_volume_hint",           F(EXT_clip_volume_hint) },
+   { OFF, "GL_EXT_cull_vertex",                F(EXT_cull_vertex) },
    { ON,  "GL_EXT_compiled_vertex_array",      F(EXT_compiled_vertex_array) },
    { OFF, "GL_EXT_convolution",                F(EXT_convolution) },
    { ON,  "GL_EXT_copy_texture",               F(EXT_copy_texture) },
@@ -83,6 +89,7 @@ static const struct {
    { OFF, "GL_EXT_multi_draw_arrays",          F(EXT_multi_draw_arrays) },
    { ON,  "GL_EXT_packed_pixels",              F(EXT_packed_pixels) },
    { OFF, "GL_EXT_paletted_texture",           F(EXT_paletted_texture) },
+   { OFF, "GL_EXT_pixel_buffer_object",        F(EXT_pixel_buffer_object) },
    { OFF, "GL_EXT_point_parameters",           F(EXT_point_parameters) },
    { ON,  "GL_EXT_polygon_offset",             F(EXT_polygon_offset) },
    { ON,  "GL_EXT_rescale_normal",             F(EXT_rescale_normal) },
@@ -159,8 +166,9 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
 {
    ctx->Extensions.ARB_depth_texture = GL_TRUE;
 #if FEATURE_ARB_fragment_program
-   /*ctx->Extensions.ARB_fragment_program = GL_TRUE;*/
+   ctx->Extensions.ARB_fragment_program = GL_TRUE;
 #endif
+   /*ctx->Extensions.ARB_half_float_pixel = GL_TRUE;*/
    ctx->Extensions.ARB_imaging = GL_TRUE;
    ctx->Extensions.ARB_multitexture = GL_TRUE;
 #if FEATURE_ARB_occlusion_query
@@ -173,10 +181,11 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.ARB_texture_env_combine = GL_TRUE;
    ctx->Extensions.ARB_texture_env_crossbar = GL_TRUE;
    ctx->Extensions.ARB_texture_env_dot3 = GL_TRUE;
+   /*ctx->Extensions.ARB_texture_float = GL_TRUE;*/
    ctx->Extensions.ARB_texture_mirrored_repeat = GL_TRUE;
    ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
 #if FEATURE_ARB_vertex_program
-   /*ctx->Extensions.ARB_vertex_program = GL_TRUE;*/
+   ctx->Extensions.ARB_vertex_program = GL_TRUE;
 #endif
 #if FEATURE_ARB_vertex_buffer_object
    ctx->Extensions.ARB_vertex_buffer_object = GL_TRUE;
@@ -184,6 +193,7 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.ATI_texture_env_combine3 = GL_TRUE;
    ctx->Extensions.ATI_texture_mirror_once = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
+   ctx->Extensions.EXT_blend_equation_separate = GL_TRUE;
    ctx->Extensions.EXT_blend_func_separate = GL_TRUE;
    ctx->Extensions.EXT_blend_logic_op = GL_TRUE;
    ctx->Extensions.EXT_blend_minmax = GL_TRUE;
@@ -194,6 +204,9 @@ _mesa_enable_sw_extensions(GLcontext *ctx)
    ctx->Extensions.EXT_histogram = GL_TRUE;
    ctx->Extensions.EXT_multi_draw_arrays = GL_TRUE;
    ctx->Extensions.EXT_paletted_texture = GL_TRUE;
+#if FEATURE_EXT_pixel_buffer_object
+   ctx->Extensions.EXT_pixel_buffer_object = GL_TRUE;
+#endif
    ctx->Extensions.EXT_point_parameters = GL_TRUE;
    ctx->Extensions.EXT_shadow_funcs = GL_TRUE;
    ctx->Extensions.EXT_secondary_color = GL_TRUE;
@@ -284,11 +297,9 @@ void
 _mesa_enable_1_4_extensions(GLcontext *ctx)
 {
    ctx->Extensions.ARB_depth_texture = GL_TRUE;
-   ctx->Extensions.ARB_fragment_program = GL_TRUE;
    ctx->Extensions.ARB_shadow = GL_TRUE;
    ctx->Extensions.ARB_texture_env_crossbar = GL_TRUE;
    ctx->Extensions.ARB_texture_mirrored_repeat = GL_TRUE;
-   ctx->Extensions.ARB_vertex_program = GL_TRUE;
    ctx->Extensions.ARB_window_pos = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
    ctx->Extensions.EXT_blend_func_separate = GL_TRUE;

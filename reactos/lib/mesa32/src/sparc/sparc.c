@@ -88,9 +88,9 @@ extern GLvector4f  *_mesa_sparc_cliptest_points4_np(GLvector4f *clip_vec,
 
 #define NORM_ARGS	const GLmatrix *mat,				\
 			GLfloat scale,					\
-			const GLvector3f *in,				\
+			const GLvector4f *in,				\
 			const GLfloat *lengths,				\
-			GLvector3f *dest
+			GLvector4f *dest
 
 extern void _mesa_sparc_transform_normalize_normals(NORM_ARGS);
 extern void _mesa_sparc_transform_normalize_normals_no_rot(NORM_ARGS);
@@ -182,6 +182,3 @@ void _mesa_init_sparc_glapi_relocs(void)
 	}
 #endif /* USE_SPARC_ASM */
 }
-
-
-

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,9 +23,6 @@
  */
 
 
-
-
-
 #ifndef _M_XFORM_H
 #define _M_XFORM_H
 
@@ -44,41 +40,13 @@
 #define _XFORMAPIP *
 #endif
 
-/*
- * Transform a point (column vector) by a matrix:   Q = M * P
- */
-#define TRANSFORM_POINT( Q, M, P )					\
-   Q[0] = M[0] * P[0] + M[4] * P[1] + M[8] *  P[2] + M[12] * P[3];	\
-   Q[1] = M[1] * P[0] + M[5] * P[1] + M[9] *  P[2] + M[13] * P[3];	\
-   Q[2] = M[2] * P[0] + M[6] * P[1] + M[10] * P[2] + M[14] * P[3];	\
-   Q[3] = M[3] * P[0] + M[7] * P[1] + M[11] * P[2] + M[15] * P[3];
 
-
-#define TRANSFORM_POINT3( Q, M, P )				\
-   Q[0] = M[0] * P[0] + M[4] * P[1] + M[8] *  P[2] + M[12];	\
-   Q[1] = M[1] * P[0] + M[5] * P[1] + M[9] *  P[2] + M[13];	\
-   Q[2] = M[2] * P[0] + M[6] * P[1] + M[10] * P[2] + M[14];	\
-   Q[3] = M[3] * P[0] + M[7] * P[1] + M[11] * P[2] + M[15];
-
-
-/*
- * Transform a normal (row vector) by a matrix:  [NX NY NZ] = N * MAT
- */
-#define TRANSFORM_NORMAL( TO, N, MAT )				\
-do {								\
-   TO[0] = N[0] * MAT[0] + N[1] * MAT[1] + N[2] * MAT[2];	\
-   TO[1] = N[0] * MAT[4] + N[1] * MAT[5] + N[2] * MAT[6];	\
-   TO[2] = N[0] * MAT[8] + N[1] * MAT[9] + N[2] * MAT[10];	\
-} while (0)
-
-
-extern void _mesa_transform_vector( GLfloat u[4],
-				 CONST GLfloat v[4],
-                                 CONST GLfloat m[16] );
+extern void
+_mesa_transform_vector(GLfloat u[4], CONST GLfloat v[4], CONST GLfloat m[16]);
 
 
 extern void
-_math_init_transformation( void );
+_math_init_transformation(void);
 
 
 /* KW: Clip functions now do projective divide as well.  The projected
@@ -130,6 +98,7 @@ _math_init_transformation( void );
 #define CLIP_NEAR_BIT    0x10
 #define CLIP_FAR_BIT     0x20
 #define CLIP_USER_BIT    0x40
+#define CLIP_CULL_BIT    0x80
 #define CLIP_ALL_BITS    0x3f
 
 

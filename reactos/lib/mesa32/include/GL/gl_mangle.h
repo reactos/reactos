@@ -87,6 +87,7 @@
 #define glBlendColor		MANGLE(BlendColor)
 #define glBlendEquationEXT		MANGLE(BlendEquationEXT)
 #define glBlendEquation		MANGLE(BlendEquation)
+#define glBlendEquationSeparateATI		MANGLE(BlendEquationSeparateATI)
 #define glBlendEquationSeparateEXT		MANGLE(BlendEquationSeparateEXT)
 #define glBlendFunc		MANGLE(BlendFunc)
 #define glBlendFuncSeparateEXT		MANGLE(BlendFuncSeparateEXT)

@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -25,6 +25,7 @@
 
 #include "glheader.h"
 #include "imports.h"
+#include "bufferobj.h"
 #include "context.h"
 #include "enable.h"
 #include "enums.h"
@@ -58,7 +59,10 @@ update_array(GLcontext *ctx, struct gl_client_array *array,
    array->Ptr = (const GLubyte *) ptr;
 #if FEATURE_ARB_vertex_buffer_object
    array->BufferObj->RefCount--;
-   /* XXX free buffer object if RefCount == 0 ? */
+   if (array->BufferObj->RefCount <= 0) {
+      _mesa_remove_buffer_object( ctx, array->BufferObj );
+      (*ctx->Driver.DeleteBuffer)( ctx, array->BufferObj );
+   }
    array->BufferObj = ctx->Array.ArrayBufferObj;
    array->BufferObj->RefCount++;
    /* Compute the index of the last array element that's inside the buffer.

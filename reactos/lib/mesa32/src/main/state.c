@@ -1,16 +1,8 @@
-/**
- * \file state.c
- * State management.
- * 
- * This file manages recalculation of derived values in the __GLcontextRec.
- * Also, this is where we initialize the API dispatch table.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,6 +22,14 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
+/**
+ * \file state.c
+ * State management.
+ * 
+ * This file manages recalculation of derived values in the __GLcontextRec.
+ * Also, this is where we initialize the API dispatch table.
+ */
 
 #include "glheader.h"
 #include "accum.h"
@@ -119,10 +119,11 @@ generic_noop(void)
 void
 _mesa_init_no_op_table(struct _glapi_table *table, GLuint tableSize)
 {
+   typedef void (*func_ptr_t)();
    GLuint i;
-   void **dispatch = (void **) table;
+   func_ptr_t *dispatch = (func_ptr_t *) table;
    for (i = 0; i < tableSize; i++) {
-      dispatch[i] = (void *) generic_noop;
+      dispatch[i] = (func_ptr_t)generic_noop;
    }
 }
 
@@ -211,6 +212,8 @@ _mesa_init_exec_table(struct _glapi_table *exec, GLuint tableSize)
    exec->ClipPlane = _mesa_ClipPlane;
    exec->ColorMaterial = _mesa_ColorMaterial;
    exec->CopyPixels = _mesa_CopyPixels;
+   exec->CullParameterfvEXT = _mesa_CullParameterfvEXT;
+   exec->CullParameterdvEXT = _mesa_CullParameterdvEXT;
    exec->DeleteLists = _mesa_DeleteLists;
    exec->DepthFunc = _mesa_DepthFunc;
    exec->DepthMask = _mesa_DepthMask;
@@ -368,6 +371,7 @@ _mesa_init_exec_table(struct _glapi_table *exec, GLuint tableSize)
 #if _HAVE_FULL_GL
    exec->BlendColor = _mesa_BlendColor;
    exec->BlendEquation = _mesa_BlendEquation;
+   exec->BlendEquationSeparateEXT = _mesa_BlendEquationSeparateEXT;
    exec->ColorSubTable = _mesa_ColorSubTable;
    exec->ColorTable = _mesa_ColorTable;
    exec->ColorTableParameterfv = _mesa_ColorTableParameterfv;
@@ -740,16 +744,13 @@ _mesa_init_exec_table(struct _glapi_table *exec, GLuint tableSize)
 /*@{*/
 
 
-/*
- * Update items which depend on vertex/fragment programs.
- */
 static void
-update_program( GLcontext *ctx )
+update_separate_specular( GLcontext *ctx )
 {
-   if (ctx->FragmentProgram.Enabled && ctx->FragmentProgram.Current) {
-      if (ctx->FragmentProgram.Current->InputsRead & (1 << FRAG_ATTRIB_COL1))
-         ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-   }
+   if (NEED_SECONDARY_COLOR(ctx))
+      ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
+   else
+      ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
 }
 
 
@@ -764,7 +765,7 @@ update_arrays( GLcontext *ctx )
    /* find min of _MaxElement values for all enabled arrays */
 
    /* 0 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_POS].Enabled) {
       min = ctx->Array.VertexAttrib[VERT_ATTRIB_POS]._MaxElement;
    }
@@ -777,14 +778,14 @@ update_arrays( GLcontext *ctx )
    }
 
    /* 1 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_WEIGHT].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_WEIGHT]._MaxElement);
    }
    /* no conventional vertex weight array */
 
    /* 2 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_NORMAL].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_NORMAL]._MaxElement);
    }
@@ -793,7 +794,7 @@ update_arrays( GLcontext *ctx )
    }
 
    /* 3 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0]._MaxElement);
    }
@@ -802,7 +803,7 @@ update_arrays( GLcontext *ctx )
    }
 
    /* 4 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1]._MaxElement);
    }
@@ -811,7 +812,7 @@ update_arrays( GLcontext *ctx )
    }
 
    /* 5 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_FOG].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_FOG]._MaxElement);
    }
@@ -820,20 +821,20 @@ update_arrays( GLcontext *ctx )
    }
 
    /* 6 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_SIX].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_SIX]._MaxElement);
    }
 
    /* 7 */
-   if (ctx->VertexProgram.Enabled
+   if (ctx->VertexProgram._Enabled
        && ctx->Array.VertexAttrib[VERT_ATTRIB_SEVEN].Enabled) {
       min = MIN2(min, ctx->Array.VertexAttrib[VERT_ATTRIB_SEVEN]._MaxElement);
    }
 
    /* 8..15 */
    for (i = VERT_ATTRIB_TEX0; i < VERT_ATTRIB_MAX; i++) {
-      if (ctx->VertexProgram.Enabled
+      if (ctx->VertexProgram._Enabled
           && ctx->Array.VertexAttrib[i].Enabled) {
          min = MIN2(min, ctx->Array.VertexAttrib[i]._MaxElement);
       }
@@ -856,6 +857,22 @@ update_arrays( GLcontext *ctx )
 }
 
 
+/**
+ * Update derived vertex/fragment program state.
+ */
+static void
+update_program(GLcontext *ctx)
+{
+   /* For now, just set the _Enabled (really enabled) flags.
+    * In the future we may have to check other state to be sure we really
+    * have a runable program or shader.
+    */
+   ctx->VertexProgram._Enabled = ctx->VertexProgram.Enabled
+      && ctx->VertexProgram.Current->Instructions;
+   ctx->FragmentProgram._Enabled = ctx->FragmentProgram.Enabled
+      && ctx->FragmentProgram.Current->Instructions;
+}
+
 
 /*
  * If __GLcontextRec::NewState is non-zero then this function \b must be called
@@ -872,10 +889,13 @@ update_arrays( GLcontext *ctx )
  */
 void _mesa_update_state( GLcontext *ctx )
 {
-   const GLuint new_state = ctx->NewState;
+   GLuint new_state = ctx->NewState;
 
    if (MESA_VERBOSE & VERBOSE_STATE)
       _mesa_print_state("_mesa_update_state", new_state);
+
+   if (new_state & _NEW_PROGRAM)
+      update_program( ctx );
 
    if (new_state & (_NEW_MODELVIEW|_NEW_PROJECTION))
       _mesa_update_modelview_project( ctx, new_state );
@@ -895,8 +915,8 @@ void _mesa_update_state( GLcontext *ctx )
    if (new_state & _IMAGE_NEW_TRANSFER_STATE)
       _mesa_update_pixel( ctx, new_state );
 
-   if (new_state & _NEW_PROGRAM)
-      update_program( ctx );
+   if (new_state & _DD_NEW_SEPARATE_SPECULAR)
+      update_separate_specular( ctx );
 
    if (new_state & (_NEW_ARRAY | _NEW_PROGRAM))
       update_arrays( ctx );
@@ -914,22 +934,18 @@ void _mesa_update_state( GLcontext *ctx )
       _mesa_update_tnl_spaces( ctx, new_state );
 
    /*
-    * Here the driver sets up all the ctx->Driver function pointers
-    * to it's specific, private functions, and performs any
-    * internal state management necessary, including invalidating
-    * state of active modules.
+    * Give the driver a chance to act upon the new_state flags.
+    * The driver might plug in different span functions, for example.
+    * Also, this is where the driver can invalidate the state of any
+    * active modules (such as swrast_setup, swrast, tnl, etc).
     *
     * Set ctx->NewState to zero to avoid recursion if
     * Driver.UpdateState() has to call FLUSH_VERTICES().  (fixed?)
     */
+   new_state = ctx->NewState;
    ctx->NewState = 0;
    ctx->Driver.UpdateState(ctx, new_state);
    ctx->Array.NewState = 0;
-
-   /* At this point we can do some assertions to be sure the required
-    * device driver function pointers are all initialized.
-    */
-   _mesa_check_driver_hooks( ctx );
 }
 
 /*@}*/

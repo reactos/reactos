@@ -102,6 +102,8 @@ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
 #define CLAMPED_FLOAT_TO_USHORT(us, f)  \
         us = ( (GLushort) IROUND( (f) * 65535.0F) )
 
+/*@}*/
+
 
 /** Stepping a GLfloat pointer by a byte stride */
 #define STRIDE_F(p, i)  (p = (GLfloat *)((GLubyte *)p + i))

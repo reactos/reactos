@@ -1,4 +1,4 @@
-/* $Id: sparc.h,v 1.1 2004/07/16 22:12:38 blight Exp $ */
+/* $Id: sparc.h,v 1.2 2004/08/25 12:35:15 blight Exp $ */
 
 /*
  * Mesa 3-D graphics library

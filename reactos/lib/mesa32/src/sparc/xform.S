@@ -1,4 +1,4 @@
-/* $Id: xform.S,v 1.1 2004/07/16 22:12:38 blight Exp $ */
+/* $Id: xform.S,v 1.2 2004/08/25 12:35:15 blight Exp $ */
 
 	/* TODO
 	 *
@@ -17,6 +17,12 @@
 	 */
 
 #include "sparc_matrix.h"
+
+#ifdef SVR4
+	/* Solaris requires this for 64-bit. */
+        .register %g2, #scratch
+        .register %g3, #scratch
+#endif
 
 	.text
 	.align	64

@@ -139,6 +139,33 @@ typedef struct __GLcontextModesRec {
     GLint screen;
 } __GLcontextModes;
 
+/* Several fields of __GLcontextModes can take these as values.  Since
+ * GLX header files may not be available everywhere they need to be used,
+ * redefine them here.
+ */
+#define GLX_NONE                           0x8000
+#define GLX_SLOW_CONFIG                    0x8001
+#define GLX_TRUE_COLOR                     0x8002
+#define GLX_DIRECT_COLOR                   0x8003
+#define GLX_PSEUDO_COLOR                   0x8004
+#define GLX_STATIC_COLOR                   0x8005
+#define GLX_GRAY_SCALE                     0x8006
+#define GLX_STATIC_GRAY                    0x8007
+#define GLX_TRANSPARENT_RGB                0x8008
+#define GLX_TRANSPARENT_INDEX              0x8009
+#define GLX_NON_CONFORMANT_CONFIG          0x800D
+#define GLX_SWAP_EXCHANGE_OML              0x8061
+#define GLX_SWAP_COPY_OML                  0x8062
+#define GLX_SWAP_UNDEFINED_OML             0x8063
+
+#define GLX_DONT_CARE                      0xFFFFFFFF
+
+#define GLX_RGBA_BIT                       0x00000001
+#define GLX_COLOR_INDEX_BIT                0x00000002
+#define GLX_WINDOW_BIT                     0x00000001
+#define GLX_PIXMAP_BIT                     0x00000002
+#define GLX_PBUFFER_BIT                    0x00000004
+
 /************************************************************************/
 
 /*

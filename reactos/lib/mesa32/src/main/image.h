@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,9 +35,6 @@
 #include "mtypes.h"
 
 
-extern const struct gl_pixelstore_attrib _mesa_native_packing;
-
-
 extern void
 _mesa_swap2( GLushort *p, GLuint n );
 
@@ -57,7 +54,7 @@ extern GLint
 _mesa_bytes_per_pixel( GLenum format, GLenum type );
 
 extern GLboolean
-_mesa_is_legal_format_and_type( GLenum format, GLenum type );
+_mesa_is_legal_format_and_type( GLcontext *ctx, GLenum format, GLenum type );
 
 
 extern GLvoid *
@@ -97,7 +94,11 @@ _mesa_pack_bitmap( GLint width, GLint height, const GLubyte *source,
 
 
 extern void
-_mesa_pack_float_rgba_span( GLcontext *ctx,
+_mesa_apply_rgba_transfer_ops(GLcontext *ctx, GLuint transferOps,
+                              GLuint n, GLfloat rgba[][4]);
+
+extern void
+_mesa_pack_rgba_span_float( GLcontext *ctx,
                             GLuint n, CONST GLfloat rgba[][4],
                             GLenum dstFormat, GLenum dstType, GLvoid *dstAddr,
                             const struct gl_pixelstore_attrib *dstPacking,
@@ -105,15 +106,15 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
 
 
 extern void
-_mesa_pack_rgba_span( GLcontext *ctx,
-                      GLuint n, CONST GLchan rgba[][4],
-                      GLenum dstFormat, GLenum dstType, GLvoid *dstAddr,
-                      const struct gl_pixelstore_attrib *dstPacking,
-                      GLuint transferOps );
+_mesa_pack_rgba_span_chan( GLcontext *ctx,
+                           GLuint n, CONST GLchan rgba[][4],
+                           GLenum dstFormat, GLenum dstType, GLvoid *dstAddr,
+                           const struct gl_pixelstore_attrib *dstPacking,
+                           GLuint transferOps );
 
 
 extern void
-_mesa_unpack_chan_color_span( GLcontext *ctx,
+_mesa_unpack_color_span_chan( GLcontext *ctx,
                               GLuint n, GLenum dstFormat, GLchan dest[],
                               GLenum srcFormat, GLenum srcType,
                               const GLvoid *source,
@@ -122,12 +123,12 @@ _mesa_unpack_chan_color_span( GLcontext *ctx,
 
 
 extern void
-_mesa_unpack_float_color_span( GLcontext *ctx,
+_mesa_unpack_color_span_float( GLcontext *ctx,
                                GLuint n, GLenum dstFormat, GLfloat dest[],
                                GLenum srcFormat, GLenum srcType,
                                const GLvoid *source,
                                const struct gl_pixelstore_attrib *srcPacking,
-                               GLuint transferOps, GLboolean clamp );
+                               GLuint transferOps );
 
 
 extern void

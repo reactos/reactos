@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.0
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -135,7 +134,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
 
-   ASSERT(!ctx->VertexProgram.Enabled);
+   ASSERT(!ctx->VertexProgram._Enabled);
 
    if (stage->changed_inputs) {
 
@@ -149,6 +148,18 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
 	    VB->EyePtr = TransformRaw( &store->eye,
                                        ctx->ModelviewMatrixStack.Top,
 				       VB->ObjPtr);
+#if 0
+         /* examine some eye coordinates */
+         {
+            GLuint i;
+            GLfloat *v = VB->EyePtr->start;
+            for (i = 0; i < 4; i++) {
+               _mesa_printf("eye[%d] = %g, %g, %g, %g\n",
+                            i, v[0], v[1], v[2], v[3]);
+               v += 4;
+            }
+         }
+#endif
       }
 
       VB->ClipPtr = TransformRaw( &store->clip,
@@ -162,11 +173,26 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
 	 /* impossible */
       case 2:
 	 _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 2 );
+         /* fall-through */
       case 3:
 	 _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 3 );
+         /* fall-through */
       case 4:
 	 break;
       }
+
+#if 0
+      /* examine some clip coordinates */
+      {
+         GLuint i;
+         GLfloat *v = VB->ClipPtr->start;
+         for (i = 0; i < 4; i++) {
+            _mesa_printf("clip[%d] = %g, %g, %g, %g\n",
+                         i, v[0], v[1], v[2], v[3]);
+            v += 4;
+         }
+      }
+#endif
 
       /* Cliptest and perspective divide.  Clip functions must clear
        * the clipmask.
@@ -209,6 +235,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
 	    return GL_FALSE;
       }
 
+      VB->ClipAndMask = store->andmask;
       VB->ClipOrMask = store->ormask;
       VB->ClipMask = store->clipmask;
 
@@ -223,6 +250,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
       VB->ClipPtr = store->save_clipptr;
       VB->NdcPtr = store->save_ndcptr;
       VB->ClipMask = store->clipmask;
+      VB->ClipAndMask = store->andmask;
       VB->ClipOrMask = store->ormask;
       if (store->andmask)
 	 return GL_FALSE;
@@ -234,7 +262,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
 
 static void check_vertex( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 {
-   stage->active = !ctx->VertexProgram.Enabled;
+   stage->active = !ctx->VertexProgram._Enabled;
 }
 
 static GLboolean init_vertex_stage( GLcontext *ctx,

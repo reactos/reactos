@@ -37,11 +37,22 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "t_context.h"
 
+#define ERROR_ATTRIB 16
+
+
+
+/* t_vtx_api.c:
+ */
 extern void _tnl_vtx_init( GLcontext *ctx );
 extern void _tnl_vtx_destroy( GLcontext *ctx );
 
 extern void _tnl_FlushVertices( GLcontext *ctx, GLuint flags );
 extern void _tnl_flush_vtx( GLcontext *ctx );
+
+extern void GLAPIENTRY _tnl_wrap_filled_vertex( GLcontext *ctx );
+
+/* t_vtx_exec.c:
+ */
 
 extern void _tnl_do_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v );
 extern void _tnl_do_EvalCoord1f(GLcontext* ctx, GLfloat u);
@@ -54,5 +65,26 @@ extern GLboolean *_tnl_translate_edgeflag( GLcontext *ctx,
 
 extern GLboolean *_tnl_import_current_edgeflag( GLcontext *ctx,
 						GLuint count );
+
+
+
+/* t_vtx_generic.c:
+ */
+extern void _tnl_generic_exec_vtxfmt_init( GLcontext *ctx );
+
+extern void _tnl_generic_attr_table_init( tnl_attrfv_func (*tab)[4] );
+
+/* t_vtx_x86.c:
+ */
+extern void _tnl_InitX86Codegen( struct _tnl_dynfn_generators *gen );
+
+extern void _tnl_x86_exec_vtxfmt_init( GLcontext *ctx );
+
+extern void _tnl_x86choosers( tnl_attrfv_func (*choose)[4],
+			      tnl_attrfv_func (*do_choose)( GLuint attr,
+							GLuint sz ));
+
+
+
 
 #endif

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -108,44 +107,6 @@ _mesa_print_tri_caps( const char *name, GLuint flags )
 }
 
 
-void
-_mesa_check_driver_hooks( GLcontext *ctx )
-{
-   ASSERT(ctx->Driver.GetString);
-   ASSERT(ctx->Driver.UpdateState);
-   ASSERT(ctx->Driver.Clear);
-   ASSERT(ctx->Driver.GetBufferSize);
-   if (ctx->Visual.accumRedBits > 0) {
-      ASSERT(ctx->Driver.Accum);
-   }
-   ASSERT(ctx->Driver.DrawPixels);
-   ASSERT(ctx->Driver.ReadPixels);
-   ASSERT(ctx->Driver.CopyPixels);
-   ASSERT(ctx->Driver.Bitmap);
-   ASSERT(ctx->Driver.ResizeBuffers);
-   ASSERT(ctx->Driver.TexImage1D);
-   ASSERT(ctx->Driver.TexImage2D);
-   ASSERT(ctx->Driver.TexImage3D);
-   ASSERT(ctx->Driver.TexSubImage1D);
-   ASSERT(ctx->Driver.TexSubImage2D);
-   ASSERT(ctx->Driver.TexSubImage3D);
-   ASSERT(ctx->Driver.CopyTexImage1D);
-   ASSERT(ctx->Driver.CopyTexImage2D);
-   ASSERT(ctx->Driver.CopyTexSubImage1D);
-   ASSERT(ctx->Driver.CopyTexSubImage2D);
-   ASSERT(ctx->Driver.CopyTexSubImage3D);
-   if (ctx->Extensions.ARB_texture_compression) {
-#if 0  /* HW drivers need these, but not SW rasterizers */
-      ASSERT(ctx->Driver.CompressedTexImage1D);
-      ASSERT(ctx->Driver.CompressedTexImage2D);
-      ASSERT(ctx->Driver.CompressedTexImage3D);
-      ASSERT(ctx->Driver.CompressedTexSubImage1D);
-      ASSERT(ctx->Driver.CompressedTexSubImage2D);
-      ASSERT(ctx->Driver.CompressedTexSubImage3D);
-#endif
-   }
-}
-
 /**
  * Print information about this Mesa version and build options.
  */
@@ -219,6 +180,8 @@ static void add_debug_flags( const char *debug )
     */
    if (_mesa_strstr(debug, "flush")) 
       MESA_DEBUG_FLAGS |= DEBUG_ALWAYS_FLUSH;
+#else
+   (void) debug;
 #endif
 }
 

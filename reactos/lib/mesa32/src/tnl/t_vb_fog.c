@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -72,7 +71,11 @@ do {								\
 #endif
 
 
-static void init_static_data( void )
+/**
+ * Initialize the exp_table[] lookup table for approximating exp().
+ */
+static void
+init_static_data( void )
 {
    GLfloat f = 0.0F;
    GLint i = 0;
@@ -83,8 +86,16 @@ static void init_static_data( void )
 }
 
 
-static void make_win_fog_coords( GLcontext *ctx, GLvector4f *out,
-				 const GLvector4f *in )
+/**
+ * Compute per-vertex fog blend factors from fog coordinates by
+ * evaluating the GL_LINEAR, GL_EXP or GL_EXP2 fog function.
+ * Fog coordinates are distances from the eye (typically between the
+ * near and far clip plane distances).
+ * Note the fog (eye Z) coords may be negative so we use ABS(z) below.
+ * Fog blend factors are in the range [0,1].
+ */
+static void
+compute_fog_blend_factors(GLcontext *ctx, GLvector4f *out, const GLvector4f *in)
 {
    GLfloat end  = ctx->Fog.End;
    GLfloat *v = in->start;
@@ -103,19 +114,22 @@ static void make_win_fog_coords( GLcontext *ctx, GLvector4f *out,
       else
          d = 1.0F / (ctx->Fog.End - ctx->Fog.Start);
       for ( i = 0 ; i < n ; i++, STRIDE_F(v, stride)) {
-         GLfloat f = (end - FABSF(*v)) * d;
+         const GLfloat z = FABSF(*v);
+         GLfloat f = (end - z) * d;
 	 data[i][0] = CLAMP(f, 0.0F, 1.0F);
       }
       break;
    case GL_EXP:
       d = ctx->Fog.Density;
-      for ( i = 0 ; i < n ; i++, STRIDE_F(v,stride))
-         NEG_EXP( data[i][0], d * FABSF(*v) );
+      for ( i = 0 ; i < n ; i++, STRIDE_F(v,stride)) {
+         const GLfloat z = FABSF(*v);
+         NEG_EXP( data[i][0], d * z );
+      }
       break;
    case GL_EXP2:
       d = ctx->Fog.Density*ctx->Fog.Density;
       for ( i = 0 ; i < n ; i++, STRIDE_F(v, stride)) {
-         GLfloat z = *v;
+         const GLfloat z = FABSF(*v);
          NEG_EXP( data[i][0], d * z * z );
       }
       break;
@@ -126,10 +140,11 @@ static void make_win_fog_coords( GLcontext *ctx, GLvector4f *out,
 }
 
 
-static GLboolean run_fog_stage( GLcontext *ctx,
-				struct tnl_pipeline_stage *stage )
+static GLboolean
+run_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 {
-   struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   struct vertex_buffer *VB = &tnl->vb;
    struct fog_stage_data *store = FOG_STAGE_DATA(stage);
    GLvector4f *input;
 
@@ -137,12 +152,13 @@ static GLboolean run_fog_stage( GLcontext *ctx,
       return GL_TRUE;
 
    if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT) {
-      /* fog computed from Z depth */
+      /* Fog is computed from vertex or fragment Z values */
       /* source = VB->ObjPtr or VB->EyePtr coords */
       /* dest = VB->FogCoordPtr = fog stage private storage */
       VB->FogCoordPtr = &store->fogcoord;
 
       if (!ctx->_NeedEyeCoords) {
+         /* compute fog coords from object coords */
 	 const GLfloat *m = ctx->ModelviewMatrixStack.Top->m;
 	 GLfloat plane[4];
 
@@ -150,11 +166,11 @@ static GLboolean run_fog_stage( GLcontext *ctx,
 	  */
 	 input = &store->fogcoord;
 
-	 plane[0] = m[2];
-	 plane[1] = m[6];
-	 plane[2] = m[10];
-	 plane[3] = m[14];
-
+         /* NOTE: negate plane here so we get positive fog coords! */
+	 plane[0] = -m[2];
+	 plane[1] = -m[6];
+	 plane[2] = -m[10];
+	 plane[3] = -m[14];
 	 /* Full eye coords weren't required, just calculate the
 	  * eye Z values.
 	  */
@@ -165,6 +181,7 @@ static GLboolean run_fog_stage( GLcontext *ctx,
 	 input->count = VB->ObjPtr->count;
       }
       else {
+         /* fog coordinates = eye Z coordinates (use ABS later) */
 	 input = &store->input;
 
 	 if (VB->EyePtr->size < 2)
@@ -178,22 +195,28 @@ static GLboolean run_fog_stage( GLcontext *ctx,
    }
    else {
       /* use glFogCoord() coordinates */
-      /* source = VB->FogCoordPtr */
-      input = VB->FogCoordPtr;
-      /* dest = fog stage private storage */
-      VB->FogCoordPtr = &store->fogcoord;
+      input = VB->FogCoordPtr;  /* source data */
+      VB->FogCoordPtr = &store->fogcoord;  /* dest data */
    }
 
-   make_win_fog_coords( ctx, VB->FogCoordPtr, input );
+   if (tnl->_DoVertexFog) {
+      /* compute blend factors from fog coordinates */
+      compute_fog_blend_factors( ctx, VB->FogCoordPtr, input );
+   }
+   else {
+      /* results = incoming fog coords (compute fog per-fragment later) */
+      VB->FogCoordPtr = input;
+   }
 
    VB->AttribPtr[_TNL_ATTRIB_FOG] = VB->FogCoordPtr;
    return GL_TRUE;
 }
 
 
-static void check_fog_stage( GLcontext *ctx, struct tnl_pipeline_stage *stage )
+static void
+check_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 {
-   stage->active = ctx->Fog.Enabled && !ctx->VertexProgram.Enabled;
+   stage->active = ctx->Fog.Enabled && !ctx->VertexProgram._Enabled;
 
    if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT)
       stage->inputs = _TNL_BIT_POS;
@@ -204,8 +227,8 @@ static void check_fog_stage( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 
 /* Called the first time stage->run() is invoked.
  */
-static GLboolean alloc_fog_data( GLcontext *ctx,
-				 struct tnl_pipeline_stage *stage )
+static GLboolean
+alloc_fog_data(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct fog_stage_data *store;
@@ -227,7 +250,8 @@ static GLboolean alloc_fog_data( GLcontext *ctx,
 }
 
 
-static void free_fog_data( struct tnl_pipeline_stage *stage )
+static void
+free_fog_data(struct tnl_pipeline_stage *stage)
 {
    struct fog_stage_data *store = FOG_STAGE_DATA(stage);
    if (store) {

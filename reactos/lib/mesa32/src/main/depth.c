@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -177,10 +177,4 @@ void _mesa_init_depth( GLcontext * ctx )
       ctx->DepthMaxF = (GLfloat) ctx->DepthMax;
    }
    ctx->MRD = 1.0;  /* Minimum resolvable depth value, for polygon offset */
-
-#if FEATURE_ARB_occlusion_query
-   ctx->Occlusion.QueryObjects = _mesa_NewHashTable();
-#endif
-   ctx->OcclusionResult = GL_FALSE;
-   ctx->OcclusionResultSaved = GL_FALSE;
 }

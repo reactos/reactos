@@ -1,9 +1,11 @@
+
 /*
  * Written by José Fonseca <j_r_fonseca@yahoo.co.uk>
  */
 
-#include "matypes.h"
 
+#ifdef USE_MMX_ASM
+#include "matypes.h"
 
 /* integer multiplication - alpha plus one
  *
@@ -361,3 +363,4 @@ TWO(MOVQ       ( MM1, REGIND(rgba) ))
 
 #include "mmx_blendtmp.h"
 
+#endif

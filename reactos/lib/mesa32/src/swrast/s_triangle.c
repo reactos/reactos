@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,10 +49,11 @@
 /*
  * Just used for feedback mode.
  */
-GLboolean _swrast_culltriangle( GLcontext *ctx,
-			    const SWvertex *v0,
-			    const SWvertex *v1,
-			    const SWvertex *v2 )
+GLboolean
+_swrast_culltriangle( GLcontext *ctx,
+                      const SWvertex *v0,
+                      const SWvertex *v1,
+                      const SWvertex *v2 )
 {
    GLfloat ex = v1->win[0] - v0->win[0];
    GLfloat ey = v1->win[1] - v0->win[1];
@@ -101,7 +102,6 @@ GLboolean _swrast_culltriangle( GLcontext *ctx,
 #define NAME flat_rgba_triangle
 #define INTERP_Z 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define SETUP_CODE				\
    ASSERT(ctx->Texture._EnabledCoordUnits == 0);\
    ASSERT(ctx->Light.ShadeModel==GL_FLAT);	\
@@ -125,7 +125,6 @@ GLboolean _swrast_culltriangle( GLcontext *ctx,
 #define NAME smooth_rgba_triangle
 #define INTERP_Z 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define INTERP_ALPHA 1
 #define SETUP_CODE				\
@@ -154,12 +153,12 @@ GLboolean _swrast_culltriangle( GLcontext *ctx,
    SWcontext *swrast = SWRAST_CONTEXT(ctx);                             \
    struct gl_texture_object *obj = ctx->Texture.Unit[0].Current2D;	\
    const GLint b = obj->BaseLevel;					\
-   const GLfloat twidth = (GLfloat) obj->Image[b]->Width;		\
-   const GLfloat theight = (GLfloat) obj->Image[b]->Height;		\
-   const GLint twidth_log2 = obj->Image[b]->WidthLog2;			\
-   const GLchan *texture = (const GLchan *) obj->Image[b]->Data;	\
-   const GLint smask = obj->Image[b]->Width - 1;			\
-   const GLint tmask = obj->Image[b]->Height - 1;			\
+   const GLfloat twidth = (GLfloat) obj->Image[0][b]->Width;		\
+   const GLfloat theight = (GLfloat) obj->Image[0][b]->Height;		\
+   const GLint twidth_log2 = obj->Image[0][b]->WidthLog2;		\
+   const GLchan *texture = (const GLchan *) obj->Image[0][b]->Data;	\
+   const GLint smask = obj->Image[0][b]->Width - 1;			\
+   const GLint tmask = obj->Image[0][b]->Height - 1;			\
    if (!texture) {							\
       /* this shouldn't happen */					\
       return;								\
@@ -191,6 +190,7 @@ GLboolean _swrast_culltriangle( GLcontext *ctx,
  * Render an RGB, GL_DECAL, textured triangle.
  * Interpolate S,T, GL_LESS depth test, w/out mipmapping or
  * perspective correction.
+ * Depth buffer bits must be <= sizeof(DEFAULT_SOFTWARE_DEPTH_TYPE)
  *
  * No fog.
  */
@@ -205,12 +205,12 @@ GLboolean _swrast_culltriangle( GLcontext *ctx,
    SWcontext *swrast = SWRAST_CONTEXT(ctx);                             \
    struct gl_texture_object *obj = ctx->Texture.Unit[0].Current2D;	\
    const GLint b = obj->BaseLevel;					\
-   const GLfloat twidth = (GLfloat) obj->Image[b]->Width;		\
-   const GLfloat theight = (GLfloat) obj->Image[b]->Height;		\
-   const GLint twidth_log2 = obj->Image[b]->WidthLog2;			\
-   const GLchan *texture = (const GLchan *) obj->Image[b]->Data;	\
-   const GLint smask = obj->Image[b]->Width - 1;			\
-   const GLint tmask = obj->Image[b]->Height - 1;			\
+   const GLfloat twidth = (GLfloat) obj->Image[0][b]->Width;		\
+   const GLfloat theight = (GLfloat) obj->Image[0][b]->Height;		\
+   const GLint twidth_log2 = obj->Image[0][b]->WidthLog2;		\
+   const GLchan *texture = (const GLchan *) obj->Image[0][b]->Data;	\
+   const GLint smask = obj->Image[0][b]->Width - 1;			\
+   const GLint tmask = obj->Image[0][b]->Height - 1;			\
    if (!texture) {							\
       /* this shouldn't happen */					\
       return;								\
@@ -526,7 +526,6 @@ affine_span(GLcontext *ctx, struct sw_span *span,
 #define NAME affine_textured_triangle
 #define INTERP_Z 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define INTERP_ALPHA 1
 #define INTERP_INT_TEX 1
@@ -538,13 +537,13 @@ affine_span(GLcontext *ctx, struct sw_span *span,
    struct gl_texture_unit *unit = ctx->Texture.Unit+0;			\
    struct gl_texture_object *obj = unit->Current2D;			\
    const GLint b = obj->BaseLevel;					\
-   const GLfloat twidth = (GLfloat) obj->Image[b]->Width;		\
-   const GLfloat theight = (GLfloat) obj->Image[b]->Height;		\
-   info.texture = (const GLchan *) obj->Image[b]->Data;			\
-   info.twidth_log2 = obj->Image[b]->WidthLog2;				\
-   info.smask = obj->Image[b]->Width - 1;				\
-   info.tmask = obj->Image[b]->Height - 1;				\
-   info.format = obj->Image[b]->Format;					\
+   const GLfloat twidth = (GLfloat) obj->Image[0][b]->Width;		\
+   const GLfloat theight = (GLfloat) obj->Image[0][b]->Height;		\
+   info.texture = (const GLchan *) obj->Image[0][b]->Data;		\
+   info.twidth_log2 = obj->Image[0][b]->WidthLog2;			\
+   info.smask = obj->Image[0][b]->Width - 1;				\
+   info.tmask = obj->Image[0][b]->Height - 1;				\
+   info.format = obj->Image[0][b]->Format;				\
    info.filter = obj->MinFilter;					\
    info.envmode = unit->EnvMode;					\
    span.arrayMask |= SPAN_RGBA;						\
@@ -565,22 +564,22 @@ affine_span(GLcontext *ctx, struct sw_span *span,
    case GL_ALPHA:							\
    case GL_LUMINANCE:							\
    case GL_INTENSITY:							\
-      info.tbytesline = obj->Image[b]->Width;				\
+      info.tbytesline = obj->Image[0][b]->Width;			\
       break;								\
    case GL_LUMINANCE_ALPHA:						\
-      info.tbytesline = obj->Image[b]->Width * 2;			\
+      info.tbytesline = obj->Image[0][b]->Width * 2;			\
       break;								\
    case GL_RGB:								\
-      info.tbytesline = obj->Image[b]->Width * 3;			\
+      info.tbytesline = obj->Image[0][b]->Width * 3;			\
       break;								\
    case GL_RGBA:							\
-      info.tbytesline = obj->Image[b]->Width * 4;			\
+      info.tbytesline = obj->Image[0][b]->Width * 4;			\
       break;								\
    default:								\
       _mesa_problem(NULL, "Bad texture format in affine_texture_triangle");\
       return;								\
    }									\
-   info.tsize = obj->Image[b]->Height * info.tbytesline;
+   info.tsize = obj->Image[0][b]->Height * info.tbytesline;
 
 #define RENDER_SPAN( span )   affine_span(ctx, &span, &info);
 
@@ -797,8 +796,8 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
  */
 #define NAME persp_textured_triangle
 #define INTERP_Z 1
+#define INTERP_W 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define INTERP_ALPHA 1
 #define INTERP_TEX 1
@@ -808,11 +807,11 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
    const struct gl_texture_unit *unit = ctx->Texture.Unit+0;		\
    const struct gl_texture_object *obj = unit->Current2D;		\
    const GLint b = obj->BaseLevel;					\
-   info.texture = (const GLchan *) obj->Image[b]->Data;			\
-   info.twidth_log2 = obj->Image[b]->WidthLog2;				\
-   info.smask = obj->Image[b]->Width - 1;				\
-   info.tmask = obj->Image[b]->Height - 1;				\
-   info.format = obj->Image[b]->Format;					\
+   info.texture = (const GLchan *) obj->Image[0][b]->Data;		\
+   info.twidth_log2 = obj->Image[0][b]->WidthLog2;			\
+   info.smask = obj->Image[0][b]->Width - 1;				\
+   info.tmask = obj->Image[0][b]->Height - 1;				\
+   info.format = obj->Image[0][b]->Format;				\
    info.filter = obj->MinFilter;					\
    info.envmode = unit->EnvMode;					\
 									\
@@ -832,22 +831,22 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
    case GL_ALPHA:							\
    case GL_LUMINANCE:							\
    case GL_INTENSITY:							\
-      info.tbytesline = obj->Image[b]->Width;				\
+      info.tbytesline = obj->Image[0][b]->Width;			\
       break;								\
    case GL_LUMINANCE_ALPHA:						\
-      info.tbytesline = obj->Image[b]->Width * 2;			\
+      info.tbytesline = obj->Image[0][b]->Width * 2;			\
       break;								\
    case GL_RGB:								\
-      info.tbytesline = obj->Image[b]->Width * 3;			\
+      info.tbytesline = obj->Image[0][b]->Width * 3;			\
       break;								\
    case GL_RGBA:							\
-      info.tbytesline = obj->Image[b]->Width * 4;			\
+      info.tbytesline = obj->Image[0][b]->Width * 4;			\
       break;								\
    default:								\
       _mesa_problem(NULL, "Bad texture format in persp_textured_triangle");\
       return;								\
    }									\
-   info.tsize = obj->Image[b]->Height * info.tbytesline;
+   info.tsize = obj->Image[0][b]->Height * info.tbytesline;
 
 #define RENDER_SPAN( span )			\
    span.interpMask &= ~SPAN_RGBA;		\
@@ -870,7 +869,6 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 #define INTERP_Z 1
 #define INTERP_W 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define INTERP_SPEC 1
 #define INTERP_ALPHA 1
@@ -889,7 +887,6 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 #define INTERP_Z 1
 #define INTERP_W 1
 #define INTERP_FOG 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define INTERP_ALPHA 1
 #define INTERP_SPEC 1
@@ -903,22 +900,39 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
  * Special tri function for occlusion testing
  */
 #define NAME occlusion_zless_triangle
-#define DO_OCCLUSION_TEST
 #define INTERP_Z 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define SETUP_CODE						\
+   ASSERT(ctx->Depth.Test);					\
+   ASSERT(!ctx->Depth.Mask);					\
+   ASSERT(ctx->Depth.Func == GL_LESS);				\
    if (ctx->OcclusionResult && !ctx->Occlusion.Active) {	\
       return;							\
    }
-#define RENDER_SPAN( span )				\
-   GLuint i;						\
-   for (i = 0; i < span.end; i++) {			\
-      GLdepth z = FixedToDepth(span.z);			\
-      if (z < zRow[i]) {				\
-         ctx->OcclusionResult = GL_TRUE;		\
-         ctx->Occlusion.PassedCounter++;		\
-      }							\
-      span.z += span.zStep;				\
+#define RENDER_SPAN( span )						\
+   if (ctx->Visual.depthBits <= 16) {					\
+      GLuint i;								\
+      const GLushort *zRow = (const GLushort *)				\
+         _swrast_zbuffer_address(ctx, span.x, span.y);			\
+      for (i = 0; i < span.end; i++) {					\
+         GLdepth z = FixedToDepth(span.z);				\
+         if (z < zRow[i]) {						\
+            ctx->OcclusionResult = GL_TRUE;				\
+            ctx->Occlusion.PassedCounter++;				\
+         }								\
+         span.z += span.zStep;						\
+      }									\
+   }									\
+   else {								\
+      GLuint i;								\
+      const GLuint *zRow = (const GLuint *)				\
+         _swrast_zbuffer_address(ctx, span.x, span.y);			\
+      for (i = 0; i < span.end; i++) {					\
+         if ((GLuint)span.z < zRow[i]) {				\
+            ctx->OcclusionResult = GL_TRUE;				\
+            ctx->Occlusion.PassedCounter++;				\
+         }								\
+         span.z += span.zStep;						\
+      }									\
    }
 #include "s_tritemp.h"
 
@@ -1055,27 +1069,27 @@ _swrast_choose_triangle( GLcontext *ctx )
          }
       }
 
-      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram.Enabled) {
+      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Enabled) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
 	 const struct gl_texture_object *texObj2D;
          const struct gl_texture_image *texImg;
          GLenum minFilter, magFilter, envMode;
          GLint format;
          texObj2D = ctx->Texture.Unit[0].Current2D;
-         texImg = texObj2D ? texObj2D->Image[texObj2D->BaseLevel] : NULL;
+         texImg = texObj2D ? texObj2D->Image[0][texObj2D->BaseLevel] : NULL;
          format = texImg ? texImg->TexFormat->MesaFormat : -1;
          minFilter = texObj2D ? texObj2D->MinFilter : (GLenum) 0;
          magFilter = texObj2D ? texObj2D->MagFilter : (GLenum) 0;
          envMode = ctx->Texture.Unit[0].EnvMode;
 
          /* First see if we can use an optimized 2-D texture function */
-         if (ctx->Texture._EnabledCoordUnits == 1
-             && !ctx->FragmentProgram.Enabled
+         if (ctx->Texture._EnabledCoordUnits == 0x1
+             && !ctx->FragmentProgram._Enabled
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
-             && texObj2D->WrapS==GL_REPEAT
-	     && texObj2D->WrapT==GL_REPEAT
+             && texObj2D->WrapS == GL_REPEAT
+	     && texObj2D->WrapT == GL_REPEAT
              && texObj2D->_IsPowerOfTwo
-             && texImg->Border==0
+             && texImg->Border == 0
              && texImg->Width == texImg->RowStride
              && (format == MESA_FORMAT_RGB || format == MESA_FORMAT_RGBA)
 	     && minFilter == magFilter
@@ -1089,7 +1103,8 @@ _swrast_choose_triangle( GLcontext *ctx )
 			&& ctx->Depth.Func == GL_LESS
 			&& ctx->Depth.Mask == GL_TRUE)
 		       || swrast->_RasterMask == TEXTURE_BIT)
-		   && ctx->Polygon.StippleFlag == GL_FALSE) {
+		   && ctx->Polygon.StippleFlag == GL_FALSE
+                   && ctx->Visual.depthBits <= 16) {
 		  if (swrast->_RasterMask == (DEPTH_BIT | TEXTURE_BIT)) {
 		     USE(simple_z_textured_triangle);
 		  }

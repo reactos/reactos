@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,10 @@
 
 #include "glheader.h"
 #include "context.h"
+#include "colormac.h"
 #include "convolve.h"
 #include "histogram.h"
+#include "image.h"
 #include "macros.h"
 #include "imports.h"
 #include "pixel.h"
@@ -82,6 +84,40 @@ regions_overlap(GLint srcx, GLint srcy,
       else {
          return GL_TRUE;
       }
+   }
+}
+
+
+/**
+ * Convert GLfloat[n][4] colors to GLchan[n][4].
+ * XXX maybe move into image.c
+ */
+static void
+float_span_to_chan(GLuint n, CONST GLfloat in[][4], GLchan out[][4])
+{
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      UNCLAMPED_FLOAT_TO_CHAN(out[i][RCOMP], in[i][RCOMP]);
+      UNCLAMPED_FLOAT_TO_CHAN(out[i][GCOMP], in[i][GCOMP]);
+      UNCLAMPED_FLOAT_TO_CHAN(out[i][BCOMP], in[i][BCOMP]);
+      UNCLAMPED_FLOAT_TO_CHAN(out[i][ACOMP], in[i][ACOMP]);
+   }
+}
+
+
+/**
+ * Convert GLchan[n][4] colors to GLfloat[n][4].
+ * XXX maybe move into image.c
+ */
+static void
+chan_span_to_float(GLuint n, CONST GLchan in[][4], GLfloat out[][4])
+{
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      out[i][RCOMP] = CHAN_TO_FLOAT(in[i][RCOMP]);
+      out[i][GCOMP] = CHAN_TO_FLOAT(in[i][GCOMP]);
+      out[i][BCOMP] = CHAN_TO_FLOAT(in[i][BCOMP]);
+      out[i][ACOMP] = CHAN_TO_FLOAT(in[i][ACOMP]);
    }
 }
 
@@ -150,15 +186,11 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
    dest = tmpImage;
    for (row = 0; row < height; row++) {
       GLchan rgba[MAX_WIDTH][4];
-      GLint i;
-      _swrast_read_rgba_span(ctx, ctx->ReadBuffer, width, srcx, srcy + row, rgba);
-      /* convert GLchan to GLfloat */
-      for (i = 0; i < width; i++) {
-         *dest++ = (GLfloat) rgba[i][RCOMP] * (1.0F / CHAN_MAXF);
-         *dest++ = (GLfloat) rgba[i][GCOMP] * (1.0F / CHAN_MAXF);
-         *dest++ = (GLfloat) rgba[i][BCOMP] * (1.0F / CHAN_MAXF);
-         *dest++ = (GLfloat) rgba[i][ACOMP] * (1.0F / CHAN_MAXF);
-      }
+      /* Read GLchan and convert to GLfloat */
+      _swrast_read_rgba_span(ctx, ctx->ReadBuffer, width, srcx,
+                             srcy + row, rgba);
+      chan_span_to_float(width, (CONST GLchan (*)[4]) rgba,
+                         (GLfloat (*)[4]) dest);
    }
 
    if (changeBuffer) {
@@ -166,26 +198,12 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
       _swrast_use_draw_buffer(ctx);
    }
 
-   /* do image transfer ops up until convolution */
+   /* do the image transfer ops which preceed convolution */
    for (row = 0; row < height; row++) {
       GLfloat (*rgba)[4] = (GLfloat (*)[4]) (tmpImage + row * width * 4);
-
-      /* scale & bias */
-      if (transferOps & IMAGE_SCALE_BIAS_BIT) {
-         _mesa_scale_and_bias_rgba(ctx, width, rgba,
-                                   ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
-                                   ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
-                                   ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
-                                   ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
-      }
-      /* color map lookup */
-      if (transferOps & IMAGE_MAP_COLOR_BIT) {
-         _mesa_map_rgba(ctx, width, rgba);
-      }
-      /* GL_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->ColorTable, width, rgba);
-      }
+      _mesa_apply_rgba_transfer_ops(ctx,
+                                    transferOps & IMAGE_PRE_CONVOLUTION_BITS,
+                                    width, rgba);
    }
 
    /* do convolution */
@@ -198,47 +216,21 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
    }
    FREE(tmpImage);
 
-   /* do remaining image transfer ops */
+   /* do remaining post-convolution image transfer ops */
    for (row = 0; row < height; row++) {
       GLfloat (*rgba)[4] = (GLfloat (*)[4]) (convImage + row * width * 4);
-
-      /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->PostConvolutionColorTable, width, rgba);
-      }
-      /* color matrix */
-      if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
-         _mesa_transform_rgba(ctx, width, rgba);
-      }
-      /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->PostColorMatrixColorTable, width, rgba);
-      }
-      /* update histogram count */
-      if (transferOps & IMAGE_HISTOGRAM_BIT) {
-         _mesa_update_histogram(ctx, width, (CONST GLfloat (*)[4]) rgba);
-      }
-      /* update min/max */
-      if (transferOps & IMAGE_MIN_MAX_BIT) {
-         _mesa_update_minmax(ctx, width, (CONST GLfloat (*)[4]) rgba);
-      }
+      _mesa_apply_rgba_transfer_ops(ctx,
+                                    transferOps & IMAGE_POST_CONVOLUTION_BITS,
+                                    width, rgba);
    }
 
+   /* write the new image */
    for (row = 0; row < height; row++) {
       const GLfloat *src = convImage + row * width * 4;
-      GLint i, dy;
+      GLint dy;
 
-      /* clamp to [0,1] and convert float back to chan */
-      for (i = 0; i < width; i++) {
-         GLint r = (GLint) (src[i * 4 + RCOMP] * CHAN_MAXF);
-         GLint g = (GLint) (src[i * 4 + GCOMP] * CHAN_MAXF);
-         GLint b = (GLint) (src[i * 4 + BCOMP] * CHAN_MAXF);
-         GLint a = (GLint) (src[i * 4 + ACOMP] * CHAN_MAXF);
-         span.array->rgba[i][RCOMP] = (GLchan) CLAMP(r, 0, CHAN_MAX);
-         span.array->rgba[i][GCOMP] = (GLchan) CLAMP(g, 0, CHAN_MAX);
-         span.array->rgba[i][BCOMP] = (GLchan) CLAMP(b, 0, CHAN_MAX);
-         span.array->rgba[i][ACOMP] = (GLchan) CLAMP(a, 0, CHAN_MAX);
-      }
+      /* convert floats back to chan */
+      float_span_to_chan(width, (const GLfloat (*)[4]) src, span.array->rgba);
 
       if (ctx->Pixel.PixelTextureEnabled && ctx->Texture._EnabledUnits) {
          span.end = width;
@@ -386,82 +378,16 @@ copy_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
       }
 
       if (transferOps) {
-         const GLfloat scale = (1.0F / CHAN_MAXF);
-         GLint k;
          DEFMARRAY(GLfloat, rgbaFloat, MAX_WIDTH, 4);  /* mac 32k limitation */
          CHECKARRAY(rgbaFloat, return);
 
-         /* convert chan to float */
-         for (k = 0; k < width; k++) {
-            rgbaFloat[k][RCOMP] = (GLfloat) span.array->rgba[k][RCOMP] * scale;
-            rgbaFloat[k][GCOMP] = (GLfloat) span.array->rgba[k][GCOMP] * scale;
-            rgbaFloat[k][BCOMP] = (GLfloat) span.array->rgba[k][BCOMP] * scale;
-            rgbaFloat[k][ACOMP] = (GLfloat) span.array->rgba[k][ACOMP] * scale;
-         }
-         /* scale & bias */
-         if (transferOps & IMAGE_SCALE_BIAS_BIT) {
-            _mesa_scale_and_bias_rgba(ctx, width, rgbaFloat,
-                                   ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
-                                   ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
-                                   ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
-                                   ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
-         }
-         /* color map lookup */
-         if (transferOps & IMAGE_MAP_COLOR_BIT) {
-            _mesa_map_rgba(ctx, width, rgbaFloat);
-         }
-         /* GL_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->ColorTable, width, rgbaFloat);
-         }
-         /* convolution */
-         if (transferOps & IMAGE_CONVOLUTION_BIT) {
-            _mesa_problem(ctx, "Convolution should not be enabled in copy_rgba_pixels()");
-            return;
-         }
-         /* GL_POST_CONVOLUTION_RED/GREEN/BLUE/ALPHA_SCALE/BIAS */
-         if (transferOps & IMAGE_POST_CONVOLUTION_SCALE_BIAS) {
-            _mesa_scale_and_bias_rgba(ctx, width, rgbaFloat,
-                                      ctx->Pixel.PostConvolutionScale[RCOMP],
-                                      ctx->Pixel.PostConvolutionScale[GCOMP],
-                                      ctx->Pixel.PostConvolutionScale[BCOMP],
-                                      ctx->Pixel.PostConvolutionScale[ACOMP],
-                                      ctx->Pixel.PostConvolutionBias[RCOMP],
-                                      ctx->Pixel.PostConvolutionBias[GCOMP],
-                                      ctx->Pixel.PostConvolutionBias[BCOMP],
-                                      ctx->Pixel.PostConvolutionBias[ACOMP]);
-         }
-         /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostConvolutionColorTable, width, rgbaFloat);
-         }
-         /* color matrix */
-         if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
-            _mesa_transform_rgba(ctx, width, rgbaFloat);
-         }
-         /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostColorMatrixColorTable, width, rgbaFloat);
-         }
-         /* update histogram count */
-         if (transferOps & IMAGE_HISTOGRAM_BIT) {
-            _mesa_update_histogram(ctx, width, (CONST GLfloat (*)[4]) rgbaFloat);
-         }
-         /* update min/max */
-         if (transferOps & IMAGE_MIN_MAX_BIT) {
-            _mesa_update_minmax(ctx, width, (CONST GLfloat (*)[4]) rgbaFloat);
-         }
-         /* clamp to [0,1] and convert float back to chan */
-         for (k = 0; k < width; k++) {
-            GLint r = (GLint) (rgbaFloat[k][RCOMP] * CHAN_MAXF);
-            GLint g = (GLint) (rgbaFloat[k][GCOMP] * CHAN_MAXF);
-            GLint b = (GLint) (rgbaFloat[k][BCOMP] * CHAN_MAXF);
-            GLint a = (GLint) (rgbaFloat[k][ACOMP] * CHAN_MAXF);
-            span.array->rgba[k][RCOMP] = (GLchan) CLAMP(r, 0, CHAN_MAX);
-            span.array->rgba[k][GCOMP] = (GLchan) CLAMP(g, 0, CHAN_MAX);
-            span.array->rgba[k][BCOMP] = (GLchan) CLAMP(b, 0, CHAN_MAX);
-            span.array->rgba[k][ACOMP] = (GLchan) CLAMP(a, 0, CHAN_MAX);
-         }
+         /* convert to float, transfer, convert back to chan */
+         chan_span_to_float(width, (CONST GLchan (*)[4]) span.array->rgba,
+                            rgbaFloat);
+         _mesa_apply_rgba_transfer_ops(ctx, transferOps, width, rgbaFloat);
+         float_span_to_chan(width, (CONST GLfloat (*)[4]) rgbaFloat,
+                            span.array->rgba);
+
          UNDEFARRAY(rgbaFloat);  /* mac 32k limitation */
       }
 

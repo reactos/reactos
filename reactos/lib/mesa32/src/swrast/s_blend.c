@@ -60,7 +60,8 @@ blend_noop( GLcontext *ctx, GLuint n, const GLubyte mask[],
             GLchan rgba[][4], CONST GLchan dest[][4] )
 {
    GLuint i;
-   ASSERT(ctx->Color.BlendEquation==GL_FUNC_ADD_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_FUNC_ADD);
+   ASSERT(ctx->Color.BlendEquationA==GL_FUNC_ADD);
    ASSERT(ctx->Color.BlendSrcRGB==GL_ZERO);
    ASSERT(ctx->Color.BlendDstRGB==GL_ONE);
    (void) ctx;
@@ -80,7 +81,8 @@ static void _BLENDAPI
 blend_replace( GLcontext *ctx, GLuint n, const GLubyte mask[],
                GLchan rgba[][4], CONST GLchan dest[][4] )
 {
-   ASSERT(ctx->Color.BlendEquation==GL_FUNC_ADD_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_FUNC_ADD);
+   ASSERT(ctx->Color.BlendEquationA==GL_FUNC_ADD);
    ASSERT(ctx->Color.BlendSrcRGB==GL_ONE);
    ASSERT(ctx->Color.BlendDstRGB==GL_ZERO);
    (void) ctx;
@@ -99,7 +101,8 @@ blend_transparency( GLcontext *ctx, GLuint n, const GLubyte mask[],
                     GLchan rgba[][4], CONST GLchan dest[][4] )
 {
    GLuint i;
-   ASSERT(ctx->Color.BlendEquation==GL_FUNC_ADD_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_FUNC_ADD);
+   ASSERT(ctx->Color.BlendEquationA==GL_FUNC_ADD);
    ASSERT(ctx->Color.BlendSrcRGB==GL_SRC_ALPHA);
    ASSERT(ctx->Color.BlendDstRGB==GL_ONE_MINUS_SRC_ALPHA);
    (void) ctx;
@@ -186,7 +189,8 @@ blend_add( GLcontext *ctx, GLuint n, const GLubyte mask[],
            GLchan rgba[][4], CONST GLchan dest[][4] )
 {
    GLuint i;
-   ASSERT(ctx->Color.BlendEquation==GL_FUNC_ADD_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_FUNC_ADD);
+   ASSERT(ctx->Color.BlendEquationA==GL_FUNC_ADD);
    ASSERT(ctx->Color.BlendSrcRGB==GL_ONE);
    ASSERT(ctx->Color.BlendDstRGB==GL_ONE);
    (void) ctx;
@@ -224,7 +228,8 @@ blend_min( GLcontext *ctx, GLuint n, const GLubyte mask[],
            GLchan rgba[][4], CONST GLchan dest[][4] )
 {
    GLuint i;
-   ASSERT(ctx->Color.BlendEquation==GL_MIN_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_MIN);
+   ASSERT(ctx->Color.BlendEquationA==GL_MIN);
    (void) ctx;
 
    for (i=0;i<n;i++) {
@@ -252,7 +257,8 @@ blend_max( GLcontext *ctx, GLuint n, const GLubyte mask[],
            GLchan rgba[][4], CONST GLchan dest[][4] )
 {
    GLuint i;
-   ASSERT(ctx->Color.BlendEquation==GL_MAX_EXT);
+   ASSERT(ctx->Color.BlendEquationRGB==GL_MAX);
+   ASSERT(ctx->Color.BlendEquationA==GL_MAX);
    (void) ctx;
 
    for (i=0;i<n;i++) {
@@ -628,27 +634,58 @@ blend_general( GLcontext *ctx, GLuint n, const GLubyte mask[],
 
          /* compute blended color */
 #if CHAN_TYPE == GL_FLOAT
-         if (ctx->Color.BlendEquation==GL_FUNC_ADD_EXT) {
+         if (ctx->Color.BlendEquationRGB==GL_FUNC_ADD) {
             r = Rs * sR + Rd * dR;
             g = Gs * sG + Gd * dG;
             b = Bs * sB + Bd * dB;
             a = As * sA + Ad * dA;
          }
-         else if (ctx->Color.BlendEquation==GL_FUNC_SUBTRACT_EXT) {
+         else if (ctx->Color.BlendEquationRGB==GL_FUNC_SUBTRACT) {
             r = Rs * sR - Rd * dR;
             g = Gs * sG - Gd * dG;
             b = Bs * sB - Bd * dB;
             a = As * sA - Ad * dA;
          }
-         else if (ctx->Color.BlendEquation==GL_FUNC_REVERSE_SUBTRACT_EXT) {
+         else if (ctx->Color.BlendEquationRGB==GL_FUNC_REVERSE_SUBTRACT) {
             r = Rd * dR - Rs * sR;
             g = Gd * dG - Gs * sG;
             b = Bd * dB - Bs * sB;
             a = Ad * dA - As * sA;
          }
+         else if (ctx->Color.BlendEquationRGB==GL_MIN) {
+	    r = MIN2( Rd, Rs );
+	    g = MIN2( Gd, Gs );
+	    b = MIN2( Bd, Bs );
+	 }
+         else if (ctx->Color.BlendEquationRGB==GL_MAX) {
+	    r = MAX2( Rd, Rs );
+	    g = MAX2( Gd, Gs );
+	    b = MAX2( Bd, Bs );
+	 }
          else {
             /* should never get here */
-            r = g = b = a = 0.0F;  /* silence uninitialized var warning */
+            r = g = b = 0.0F;  /* silence uninitialized var warning */
+            _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
+         }
+
+         if (ctx->Color.BlendEquationA==GL_FUNC_ADD) {
+            a = As * sA + Ad * dA;
+         }
+         else if (ctx->Color.BlendEquationA==GL_FUNC_SUBTRACT) {
+            a = As * sA - Ad * dA;
+         }
+         else if (ctx->Color.BlendEquationA==GL_FUNC_REVERSE_SUBTRACT) {
+            a = Ad * dA - As * sA;
+         }
+         else if (ctx->Color.BlendEquationA==GL_MIN) {
+	    a = MIN2( Ad, As );
+	 }
+         else if (ctx->Color.BlendEquationA==GL_MAX) {
+	    a = MAX2( Ad, As );
+	 }
+         else {
+            /* should never get here */
+            a = 0.0F;  /* silence uninitialized var warning */
             _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
          }
 
@@ -658,27 +695,55 @@ blend_general( GLcontext *ctx, GLuint n, const GLubyte mask[],
          rgba[i][BCOMP] = MAX2( b, 0.0F );
          rgba[i][ACOMP] = CLAMP( a, 0.0F, CHAN_MAXF );
 #else
-         if (ctx->Color.BlendEquation==GL_FUNC_ADD_EXT) {
+         if (ctx->Color.BlendEquationRGB==GL_FUNC_ADD) {
             r = Rs * sR + Rd * dR + 0.5F;
             g = Gs * sG + Gd * dG + 0.5F;
             b = Bs * sB + Bd * dB + 0.5F;
-            a = As * sA + Ad * dA + 0.5F;
          }
-         else if (ctx->Color.BlendEquation==GL_FUNC_SUBTRACT_EXT) {
+         else if (ctx->Color.BlendEquationRGB==GL_FUNC_SUBTRACT) {
             r = Rs * sR - Rd * dR + 0.5F;
             g = Gs * sG - Gd * dG + 0.5F;
             b = Bs * sB - Bd * dB + 0.5F;
-            a = As * sA - Ad * dA + 0.5F;
          }
-         else if (ctx->Color.BlendEquation==GL_FUNC_REVERSE_SUBTRACT_EXT) {
+         else if (ctx->Color.BlendEquationRGB==GL_FUNC_REVERSE_SUBTRACT) {
             r = Rd * dR - Rs * sR + 0.5F;
             g = Gd * dG - Gs * sG + 0.5F;
             b = Bd * dB - Bs * sB + 0.5F;
-            a = Ad * dA - As * sA + 0.5F;
          }
+         else if (ctx->Color.BlendEquationRGB==GL_MIN) {
+	    r = MIN2( Rd, Rs );
+	    g = MIN2( Gd, Gs );
+	    b = MIN2( Bd, Bs );
+	 }
+         else if (ctx->Color.BlendEquationRGB==GL_MAX) {
+	    r = MAX2( Rd, Rs );
+	    g = MAX2( Gd, Gs );
+	    b = MAX2( Bd, Bs );
+	 }
          else {
             /* should never get here */
-            r = g = b = a = 0.0F;  /* silence uninitialized var warning */
+            r = g = b = 0.0F;  /* silence uninitialized var warning */
+            _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
+         }
+
+         if (ctx->Color.BlendEquationA==GL_FUNC_ADD) {
+            a = As * sA + Ad * dA + 0.5F;
+         }
+         else if (ctx->Color.BlendEquationA==GL_FUNC_SUBTRACT) {
+            a = As * sA - Ad * dA + 0.5F;
+         }
+         else if (ctx->Color.BlendEquationA==GL_FUNC_REVERSE_SUBTRACT) {
+            a = Ad * dA - As * sA + 0.5F;
+         }
+         else if (ctx->Color.BlendEquationA==GL_MIN) {
+	    a = MIN2( Ad, As );
+	 }
+         else if (ctx->Color.BlendEquationA==GL_MAX) {
+	    a = MAX2( Ad, As );
+	 }
+         else {
+            /* should never get here */
+            a = 0.0F;  /* silence uninitialized var warning */
             _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
          }
 
@@ -699,13 +764,16 @@ blend_general( GLcontext *ctx, GLuint n, const GLubyte mask[],
  */
 void _swrast_choose_blend_func( GLcontext *ctx )
 {
-   const GLenum eq = ctx->Color.BlendEquation;
+   const GLenum eq = ctx->Color.BlendEquationRGB;
    const GLenum srcRGB = ctx->Color.BlendSrcRGB;
    const GLenum dstRGB = ctx->Color.BlendDstRGB;
    const GLenum srcA = ctx->Color.BlendSrcA;
    const GLenum dstA = ctx->Color.BlendDstA;
 
-   if (eq==GL_MIN_EXT) {
+   if (ctx->Color.BlendEquationRGB != ctx->Color.BlendEquationA) {
+      SWRAST_CONTEXT(ctx)->BlendFunc = blend_general;
+   }
+   else if (eq==GL_MIN) {
       /* Note: GL_MIN ignores the blending weight factors */
 #if defined(USE_MMX_ASM)
       if ( cpu_has_mmx ) {
@@ -715,7 +783,7 @@ void _swrast_choose_blend_func( GLcontext *ctx )
 #endif
          SWRAST_CONTEXT(ctx)->BlendFunc = blend_min;
    }
-   else if (eq==GL_MAX_EXT) {
+   else if (eq==GL_MAX) {
       /* Note: GL_MAX ignores the blending weight factors */
 #if defined(USE_MMX_ASM)
       if ( cpu_has_mmx ) {
@@ -728,7 +796,7 @@ void _swrast_choose_blend_func( GLcontext *ctx )
    else if (srcRGB != srcA || dstRGB != dstA) {
       SWRAST_CONTEXT(ctx)->BlendFunc = blend_general;
    }
-   else if (eq==GL_FUNC_ADD_EXT && srcRGB==GL_SRC_ALPHA
+   else if (eq==GL_FUNC_ADD && srcRGB==GL_SRC_ALPHA
             && dstRGB==GL_ONE_MINUS_SRC_ALPHA) {
 #if defined(USE_MMX_ASM)
       if ( cpu_has_mmx ) {
@@ -738,7 +806,7 @@ void _swrast_choose_blend_func( GLcontext *ctx )
 #endif
 	 SWRAST_CONTEXT(ctx)->BlendFunc = blend_transparency;
    }
-   else if (eq==GL_FUNC_ADD_EXT && srcRGB==GL_ONE && dstRGB==GL_ONE) {
+   else if (eq==GL_FUNC_ADD && srcRGB==GL_ONE && dstRGB==GL_ONE) {
 #if defined(USE_MMX_ASM)
       if ( cpu_has_mmx ) {
          SWRAST_CONTEXT(ctx)->BlendFunc = _mesa_mmx_blend_add;
@@ -747,10 +815,10 @@ void _swrast_choose_blend_func( GLcontext *ctx )
 #endif
          SWRAST_CONTEXT(ctx)->BlendFunc = blend_add;
    }
-   else if (((eq==GL_FUNC_ADD_EXT || eq==GL_FUNC_REVERSE_SUBTRACT_EXT)
+   else if (((eq==GL_FUNC_ADD || eq==GL_FUNC_REVERSE_SUBTRACT)
 	     && (srcRGB==GL_ZERO && dstRGB==GL_SRC_COLOR))
 	    ||
-	    ((eq==GL_FUNC_ADD_EXT || eq==GL_FUNC_SUBTRACT_EXT)
+	    ((eq==GL_FUNC_ADD || eq==GL_FUNC_SUBTRACT)
 	     && (srcRGB==GL_DST_COLOR && dstRGB==GL_ZERO))) {
 #if defined(USE_MMX_ASM)
       if ( cpu_has_mmx ) {
@@ -760,10 +828,10 @@ void _swrast_choose_blend_func( GLcontext *ctx )
 #endif
          SWRAST_CONTEXT(ctx)->BlendFunc = blend_modulate;
    }
-   else if (eq==GL_FUNC_ADD_EXT && srcRGB == GL_ZERO && dstRGB == GL_ONE) {
+   else if (eq==GL_FUNC_ADD && srcRGB == GL_ZERO && dstRGB == GL_ONE) {
       SWRAST_CONTEXT(ctx)->BlendFunc = blend_noop;
    }
-   else if (eq==GL_FUNC_ADD_EXT && srcRGB == GL_ONE && dstRGB == GL_ZERO) {
+   else if (eq==GL_FUNC_ADD && srcRGB == GL_ONE && dstRGB == GL_ZERO) {
       SWRAST_CONTEXT(ctx)->BlendFunc = blend_replace;
    }
    else {

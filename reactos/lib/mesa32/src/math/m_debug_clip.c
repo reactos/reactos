@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.0
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,6 +35,11 @@
 
 #include "m_debug.h"
 #include "m_debug_util.h"
+
+#ifdef __UNIXOS2__
+/* The linker doesn't like empty files */
+static char dummy;
+#endif
 
 #ifdef DEBUG  /* This code only used for debugging */
 
@@ -189,9 +193,10 @@ static clip_func ref_cliptest[5] = {
  * Cliptest tests
  */
 
-static GLfloat s[TEST_COUNT][4] ALIGN16;
-static GLfloat d[TEST_COUNT][4] ALIGN16;
-static GLfloat r[TEST_COUNT][4] ALIGN16;
+ALIGN16(static GLfloat, s[TEST_COUNT][4]);
+ALIGN16(static GLfloat, d[TEST_COUNT][4]);
+ALIGN16(static GLfloat, r[TEST_COUNT][4]);
+
 
 static int test_cliptest_function( clip_func func, int np,
 				   int psize, long *cycles )

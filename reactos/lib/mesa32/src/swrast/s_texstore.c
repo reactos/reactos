@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -68,7 +67,7 @@ read_color_image( GLcontext *ctx, GLint x, GLint y,
    GLint stride, i;
    GLchan *image, *dst;
 
-   image = (GLchan *) MALLOC(width * height * 4 * sizeof(GLchan));
+   image = (GLchan *) _mesa_malloc(width * height * 4 * sizeof(GLchan));
    if (!image)
       return NULL;
 
@@ -105,7 +104,7 @@ read_depth_image( GLcontext *ctx, GLint x, GLint y,
    GLfloat *image, *dst;
    GLint i;
 
-   image = (GLfloat *) MALLOC(width * height * sizeof(GLfloat));
+   image = (GLfloat *) _mesa_malloc(width * height * sizeof(GLfloat));
    if (!image)
       return NULL;
 
@@ -171,8 +170,8 @@ _swrast_copy_teximage1d( GLcontext *ctx, GLenum target, GLint level,
       (*ctx->Driver.TexImage1D)(ctx, target, level, internalFormat,
                                 width, border,
                                 GL_DEPTH_COMPONENT, GL_FLOAT, image,
-                                &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
    else {
       /* read RGBA image from framebuffer */
@@ -186,8 +185,8 @@ _swrast_copy_teximage1d( GLcontext *ctx, GLenum target, GLint level,
       (*ctx->Driver.TexImage1D)(ctx, target, level, internalFormat,
                                 width, border,
                                 GL_RGBA, CHAN_TYPE, image,
-                                &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
 
    /* GL_SGIS_generate_mipmap */
@@ -230,8 +229,8 @@ _swrast_copy_teximage2d( GLcontext *ctx, GLenum target, GLint level,
       (*ctx->Driver.TexImage2D)(ctx, target, level, internalFormat,
                                 width, height, border,
                                 GL_DEPTH_COMPONENT, GL_FLOAT, image,
-                                &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
    else {
       /* read RGBA image from framebuffer */
@@ -245,8 +244,8 @@ _swrast_copy_teximage2d( GLcontext *ctx, GLenum target, GLint level,
       (*ctx->Driver.TexImage2D)(ctx, target, level, internalFormat,
                                 width, height, border,
                                 GL_RGBA, CHAN_TYPE, image,
-                                &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
 
    /* GL_SGIS_generate_mipmap */
@@ -286,8 +285,8 @@ _swrast_copy_texsubimage1d( GLcontext *ctx, GLenum target, GLint level,
       /* call glTexSubImage1D to redefine the texture */
       (*ctx->Driver.TexSubImage1D)(ctx, target, level, xoffset, width,
                                    GL_DEPTH_COMPONENT, GL_FLOAT, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
    else {
       /* read RGBA image from framebuffer */
@@ -300,8 +299,8 @@ _swrast_copy_texsubimage1d( GLcontext *ctx, GLenum target, GLint level,
       /* now call glTexSubImage1D to do the real work */
       (*ctx->Driver.TexSubImage1D)(ctx, target, level, xoffset, width,
                                    GL_RGBA, CHAN_TYPE, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
 
    /* GL_SGIS_generate_mipmap */
@@ -344,8 +343,8 @@ _swrast_copy_texsubimage2d( GLcontext *ctx,
       (*ctx->Driver.TexSubImage2D)(ctx, target, level,
                                    xoffset, yoffset, width, height,
                                    GL_DEPTH_COMPONENT, GL_FLOAT, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
    else {
       /* read RGBA image from framebuffer */
@@ -359,8 +358,8 @@ _swrast_copy_texsubimage2d( GLcontext *ctx,
       (*ctx->Driver.TexSubImage2D)(ctx, target, level,
                                    xoffset, yoffset, width, height,
                                    GL_RGBA, CHAN_TYPE, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
 
    /* GL_SGIS_generate_mipmap */
@@ -403,8 +402,8 @@ _swrast_copy_texsubimage3d( GLcontext *ctx,
       (*ctx->Driver.TexSubImage3D)(ctx, target, level,
                                    xoffset, yoffset, zoffset, width, height, 1,
                                    GL_DEPTH_COMPONENT, GL_FLOAT, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
    else {
       /* read RGBA image from framebuffer */
@@ -418,8 +417,8 @@ _swrast_copy_texsubimage3d( GLcontext *ctx,
       (*ctx->Driver.TexSubImage3D)(ctx, target, level,
                                    xoffset, yoffset, zoffset, width, height, 1,
                                    GL_RGBA, CHAN_TYPE, image,
-                                   &_mesa_native_packing, texObj, texImage);
-      FREE(image);
+                                   &ctx->DefaultPacking, texObj, texImage);
+      _mesa_free(image);
    }
 
    /* GL_SGIS_generate_mipmap */

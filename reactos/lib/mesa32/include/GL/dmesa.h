@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.0
+ * Version:  6.1
  * 
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
  */
 
 /*
- * DOS/DJGPP device driver v1.5 for Mesa
+ * DOS/DJGPP device driver v1.6 for Mesa
  *
  *  Copyright (C) 2002 - Borca Daniel
  *  Email : dborca@users.sourceforge.net
@@ -34,8 +34,8 @@
 #ifndef DMESA_H_included
 #define DMESA_H_included
 
-#define DMESA_MAJOR_VERSION 5
-#define DMESA_MINOR_VERSION 0
+#define DMESA_MAJOR_VERSION 6
+#define DMESA_MINOR_VERSION 1
 
 /* Sample Usage:
  *
@@ -90,7 +90,7 @@ void DMesaDestroyContext (DMesaContext c);
 /*
  * Return a handle to the current context.
  */
-void *DMesaGetCurrentContext (void);
+DMesaContext DMesaGetCurrentContext (void);
 
 
 
@@ -105,6 +105,11 @@ DMesaBuffer DMesaCreateBuffer (DMesaVisual visual,
  * Destroy Buffer.
  */
 void DMesaDestroyBuffer (DMesaBuffer b);
+
+/*
+ * Return a handle to the current buffer.
+ */
+DMesaBuffer DMesaGetCurrentBuffer (void);
 
 /*
  * Swap the front and back buffers for the given Buffer.
@@ -131,11 +136,17 @@ GLboolean DMesaResizeBuffer (GLint width, GLint height);
 void DMesaSetCI (int ndx, GLfloat red, GLfloat green, GLfloat blue);
 
 /*
+ * DMesa functions
+ */
+void *DMesaGetProcAddress (const char *name);
+
+/*
  * DMesa state retrieval.
  */
 #define DMESA_GET_SCREEN_SIZE 0x0100
 #define DMESA_GET_DRIVER_CAPS 0x0200
 #define DMESA_GET_VIDEO_MODES 0x0300
+#define DMESA_GET_BUFFER_ADDR 0x0400
 
 #define DMESA_DRIVER_SWDB_BIT 0x1 /* software double-buffered */
 #define DMESA_DRIVER_LLWO_BIT 0x2 /* lower-left window origin */

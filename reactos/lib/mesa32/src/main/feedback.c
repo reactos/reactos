@@ -126,8 +126,20 @@ void _mesa_feedback_vertex( GLcontext *ctx,
                             GLfloat index,
                             const GLfloat texcoord[4] )
 {
+#if 0
+   {
+      /* snap window x, y to fractional pixel position */
+      const GLint snapMask = ~((FIXED_ONE / (1 << SUB_PIXEL_BITS)) - 1);
+      GLfixed x, y;
+      x = FloatToFixed(win[0]) & snapMask;
+      y = FloatToFixed(win[1]) & snapMask;
+      FEEDBACK_TOKEN(ctx, FixedToFloat(x));
+      FEEDBACK_TOKEN(ctx, FixedToFloat(y) );
+   }
+#else
    FEEDBACK_TOKEN( ctx, win[0] );
    FEEDBACK_TOKEN( ctx, win[1] );
+#endif
    if (ctx->Feedback._Mask & FB_3D) {
       FEEDBACK_TOKEN( ctx, win[2] );
    }

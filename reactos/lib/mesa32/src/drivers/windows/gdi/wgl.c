@@ -1,4 +1,4 @@
-/* $Id: wgl.c,v 1.1 2004/07/16 22:12:32 blight Exp $ */
+/* $Id: wgl.c,v 1.2 2004/08/25 12:35:11 blight Exp $ */
 
 /*
 * This library is free software; you can redistribute it and/or
@@ -102,11 +102,12 @@ typedef struct {
 static MesaWglCtx wgl_ctx[MESAWGL_CTX_MAX_COUNT];
 
 static unsigned ctx_count = 0;
-static unsigned ctx_current = -1;
+static int ctx_current = -1;
 static unsigned curPFD = 0;
 
 WGLAPI BOOL GLAPIENTRY wglCopyContext(HGLRC hglrcSrc,HGLRC hglrcDst,UINT mask)
 {
+    (void) hglrcSrc; (void) hglrcDst; (void) mask;
     return(FALSE);
 }
 
@@ -166,6 +167,7 @@ WGLAPI BOOL GLAPIENTRY wglDeleteContext(HGLRC hglrc)
 
 WGLAPI HGLRC GLAPIENTRY wglCreateLayerContext(HDC hdc,int iLayerPlane)
 {
+    (void) hdc; (void) iLayerPlane;
     SetLastError(0);
     return(NULL);
 }
@@ -212,6 +214,7 @@ WGLAPI BOOL GLAPIENTRY wglMakeCurrent(HDC hdc,HGLRC hglrc)
 
 WGLAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,HGLRC hglrc2)
 {
+    (void) hglrc1; (void) hglrc2;
     return(TRUE);
 }
 
@@ -219,7 +222,7 @@ WGLAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,HGLRC hglrc2)
 static FIXED FixedFromDouble(double d)
 {
    long l = (long) (d * 65536L);
-   return *(FIXED *)&l;
+   return *(FIXED *) (void *) &l;
 }
 
 
@@ -258,9 +261,9 @@ static BOOL wglUseFontBitmaps_FX(HDC fontDevice, DWORD firstChar,
   SetTextColor(bitDevice, tempColor);
 
   // Place chars based on base line
-  VERIFY(SetTextAlign(bitDevice, TA_BASELINE) >= 0 ? 1 : 0);
+  VERIFY(SetTextAlign(bitDevice, TA_BASELINE) != GDI_ERROR ? 1 : 0);
 
-  for(i = 0; i < numChars; i++) {
+  for(i = 0; i < (int)numChars; i++) {
     SIZE size;
     char curChar;
     int charWidth,charHeight,bmapWidth,bmapHeight,numBytes,res;
@@ -285,7 +288,7 @@ static BOOL wglUseFontBitmaps_FX(HDC fontDevice, DWORD firstChar,
 
     // Assign the output bitmap to the device
     origBmap = SelectObject(bitDevice, bitObject);
-    VERIFY(origBmap);
+    (void) VERIFY(origBmap);
 
     VERIFY( PatBlt( bitDevice, 0, 0, bmapWidth, bmapHeight,BLACKNESS ) );
 
@@ -344,11 +347,7 @@ WGLAPI BOOL GLAPIENTRY wglUseFontBitmapsA(HDC hdc, DWORD first,
    MAT2 mat;
    int  success = TRUE;
 
-   if (first<0)
-      return FALSE;
-   if (count<0)
-      return FALSE;
-   if (listBase<0)
+   if (count == 0)
       return FALSE;
 
    font_list = listBase;
@@ -373,7 +372,7 @@ WGLAPI BOOL GLAPIENTRY wglUseFontBitmapsA(HDC hdc, DWORD first,
    /*
    ** Otherwise process all desired characters.
    */
-   for (i = 0; i < count; i++)
+   for (i = 0; i < (int)count; i++)
    {
        DWORD err;
        
@@ -432,6 +431,7 @@ WGLAPI BOOL GLAPIENTRY wglUseFontBitmapsA(HDC hdc, DWORD first,
 
 WGLAPI BOOL GLAPIENTRY wglUseFontBitmapsW(HDC hdc,DWORD first,DWORD count,DWORD listBase)
 {
+    (void) hdc; (void) first; (void) count; (void) listBase;
     return FALSE;
 }
 
@@ -440,6 +440,9 @@ WGLAPI BOOL GLAPIENTRY wglUseFontOutlinesA(HDC hdc,DWORD first,DWORD count,
                                   FLOAT extrusion,int format,
                                   LPGLYPHMETRICSFLOAT lpgmf)
 {
+    (void) hdc; (void) first; (void) count;
+    (void) listBase; (void) deviation; (void) extrusion; (void) format;
+    (void) lpgmf;
     SetLastError(0);
     return(FALSE);
 }
@@ -449,6 +452,9 @@ WGLAPI BOOL GLAPIENTRY wglUseFontOutlinesW(HDC hdc,DWORD first,DWORD count,
                                   FLOAT extrusion,int format,
                                   LPGLYPHMETRICSFLOAT lpgmf)
 {
+    (void) hdc; (void) first; (void) count;
+    (void) listBase; (void) deviation; (void) extrusion; (void) format;
+    (void) lpgmf;
     SetLastError(0);
     return(FALSE);
 }
@@ -457,6 +463,7 @@ WGLAPI BOOL GLAPIENTRY wglDescribeLayerPlane(HDC hdc,int iPixelFormat,
                                     int iLayerPlane,UINT nBytes,
                                     LPLAYERPLANEDESCRIPTOR plpd)
 {
+    (void) hdc; (void) iPixelFormat; (void) iLayerPlane; (void) nBytes; (void) plpd;
     SetLastError(0);
     return(FALSE);
 }
@@ -465,6 +472,7 @@ WGLAPI int GLAPIENTRY wglSetLayerPaletteEntries(HDC hdc,int iLayerPlane,
                                        int iStart,int cEntries,
                                        CONST COLORREF *pcr)
 {
+    (void) hdc; (void) iLayerPlane; (void) iStart; (void) cEntries; (void) pcr;
     SetLastError(0);
     return(0);
 }
@@ -473,18 +481,21 @@ WGLAPI int GLAPIENTRY wglGetLayerPaletteEntries(HDC hdc,int iLayerPlane,
                                        int iStart,int cEntries,
                                        COLORREF *pcr)
 {
+    (void) hdc; (void) iLayerPlane; (void) iStart; (void) cEntries; (void) pcr;
     SetLastError(0);
     return(0);
 }
 
 WGLAPI BOOL GLAPIENTRY wglRealizeLayerPalette(HDC hdc,int iLayerPlane,BOOL bRealize)
 {
+    (void) hdc; (void) iLayerPlane; (void) bRealize;
     SetLastError(0);
     return(FALSE);
 }
 
 WGLAPI BOOL GLAPIENTRY wglSwapLayerBuffers(HDC hdc,UINT fuPlanes)
 {
+    (void) fuPlanes;
     if( !hdc )
     {
         WMesaSwapBuffers();
@@ -498,6 +509,7 @@ WGLAPI int GLAPIENTRY wglChoosePixelFormat(HDC hdc,
                                   CONST PIXELFORMATDESCRIPTOR *ppfd)
 {
     int		i,best = -1,bestdelta = 0x7FFFFFFF,delta,qt_valid_pix;
+    (void) hdc;
 
     qt_valid_pix = qt_pix;
     if(ppfd->nSize != sizeof(PIXELFORMATDESCRIPTOR) || ppfd->nVersion != 1)
@@ -556,6 +568,7 @@ WGLAPI int GLAPIENTRY wglDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nByte
                                     LPPIXELFORMATDESCRIPTOR ppfd)
 {
     int		qt_valid_pix;
+    (void) hdc;
 
     qt_valid_pix = qt_pix;
     if(ppfd == NULL)
@@ -574,7 +587,7 @@ WGLAPI int GLAPIENTRY wglDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nByte
 */
 WGLAPI PROC GLAPIENTRY wglGetProcAddress(LPCSTR lpszProc)
 {
-   PROC p = (PROC) _glapi_get_proc_address((const char *) lpszProc);
+   PROC p = (PROC) (int) _glapi_get_proc_address((const char *) lpszProc);
    if (p)
       return p;
 
@@ -584,6 +597,7 @@ WGLAPI PROC GLAPIENTRY wglGetProcAddress(LPCSTR lpszProc)
 
 WGLAPI int GLAPIENTRY wglGetPixelFormat(HDC hdc)
 {
+    (void) hdc;
     if(curPFD == 0)
     {
         SetLastError(0);
@@ -596,6 +610,7 @@ WGLAPI BOOL GLAPIENTRY wglSetPixelFormat(HDC hdc,int iPixelFormat,
                                 PIXELFORMATDESCRIPTOR *ppfd)
 {
     int		qt_valid_pix;
+    (void) hdc;
 
     qt_valid_pix = qt_pix;
     if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix || ppfd->nSize != sizeof(PIXELFORMATDESCRIPTOR))
@@ -609,6 +624,7 @@ WGLAPI BOOL GLAPIENTRY wglSetPixelFormat(HDC hdc,int iPixelFormat,
 
 WGLAPI BOOL GLAPIENTRY wglSwapBuffers(HDC hdc)
 {
+   (void) hdc;
    if (ctx_current < 0)
       return FALSE;
 

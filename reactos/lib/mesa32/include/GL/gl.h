@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -60,6 +60,9 @@
 #  else /* for use with static link lib build of Win32 edition only */
 #    define GLAPI extern
 #  endif /* _STATIC_MESA support */
+#  define GLAPIENTRY __stdcall
+#elif defined(__CYGWIN__) && defined(USE_OPENGL32) /* use native windows opengl32 */
+#  define GLAPI extern
 #  define GLAPIENTRY __stdcall
 #else
 /* non-Windows compilation */
@@ -165,10 +168,10 @@ typedef double		GLclampd;	/* double precision float in [0,1] */
 #define GL_INT					0x1404
 #define GL_UNSIGNED_INT				0x1405
 #define GL_FLOAT				0x1406
-#define GL_DOUBLE				0x140A
 #define GL_2_BYTES				0x1407
 #define GL_3_BYTES				0x1408
 #define GL_4_BYTES				0x1409
+#define GL_DOUBLE				0x140A
 
 /* Primitives */
 #define GL_POINTS				0x0000
@@ -2210,6 +2213,17 @@ glGetProgramRegisterfvMESA(GLenum target, GLsizei len, const GLubyte *name,
                            GLfloat *v);
 
 #endif /* GL_MESA_program_debug */
+
+
+#ifndef GL_ATI_blend_equation_separate
+#define GL_ATI_blend_equation_separate 1
+
+#define GL_ALPHA_BLEND_EQUATION_ATI	        0x883D
+
+GLAPI void GLAPIENTRY glBlendEquationSeparateATI( GLenum modeRGB, GLenum modeA );
+typedef void (APIENTRYP PFNGLBLENDEQUATIONSEPARATEATIPROC) (GLenum modeRGB, GLenum modeA);
+
+#endif /* GL_ATI_blend_equation_separate */
 
 
 /**

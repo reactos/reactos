@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -47,7 +47,6 @@
  *
  * Notes: LARGE and ATTENUATE are exclusive of each other.
  *        TEXTURE requires RGBA
- *        SPECULAR requires TEXTURE
  */
 
 
@@ -86,7 +85,7 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
    const GLchan specBlue  = vert->specular[2];
 #endif
 #if FLAGS & INDEX
-   const GLuint colorIndex = (GLuint) vert->index;
+   const GLuint colorIndex = (GLuint) vert->index; /* XXX round? */
 #endif
 #if FLAGS & TEXTURE
    GLfloat texcoord[MAX_TEXTURE_COORD_UNITS][4];

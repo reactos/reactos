@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,6 +36,11 @@
 
 #include "m_debug.h"
 #include "m_debug_util.h"
+
+#ifdef __UNIXOS2__
+/* The linker doesn't like empty files */
+static char dummy;
+#endif
 
 #ifdef DEBUG  /* This code only used for debugging */
 
@@ -157,9 +161,9 @@ static void init_matrix( GLfloat *m )
    m[3] = 11.0; m[7] = 23.0; m[11] = 91.0; m[15] =  9.0;
 }
 
-static GLfloat s[TEST_COUNT][4] ALIGN16;
-static GLfloat d[TEST_COUNT][4] ALIGN16;
-static GLfloat r[TEST_COUNT][4] ALIGN16;
+ALIGN16(static GLfloat, s[TEST_COUNT][4]);
+ALIGN16(static GLfloat, d[TEST_COUNT][4]);
+ALIGN16(static GLfloat, r[TEST_COUNT][4]);
 
 static int test_transform_function( transform_func func, int psize,
 				    int mtype, long *cycles )

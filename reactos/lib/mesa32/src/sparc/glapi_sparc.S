@@ -19235,6 +19235,48 @@ glGetQueryObjectuiv:
 #endif
 	jmpl	%g3, %g0
 	nop
+
+.globl glBlendEquationSeparateEXT
+.type glBlendEquationSeparateEXT,#function
+glBlendEquationSeparateEXT:
+#if defined(__sparc_v9__) && !defined(__linux__)
+	sethi	%hi(0x00000000), %g2
+	sethi	%hi(0x00000000), %g1
+	or	%g2, %lo(0x00000000), %g2
+	or	%g1, %lo(0x00000000), %g1
+	sllx	%g2, 32, %g2
+	ldx	[%g1 + %g2], %g1
+	sethi	%hi(8 * _gloffset_BlendEquationSeparateEXT), %g2
+	or	%g2, %lo(8 * _gloffset_BlendEquationSeparateEXT), %g2
+	ldx	[%g1 + %g2], %g3
+#else
+	sethi	%hi(0x00000000), %g1
+	ld	[%g1 + %lo(0x00000000)], %g1
+	ld	[%g1 + (4 * _gloffset_BlendEquationSeparateEXT)], %g3
+#endif
+	jmpl	%g3, %g0
+	nop
+
+.globl glBlendEquationSeparateATI
+.type glBlendEquationSeparateATI,#function
+glBlendEquationSeparateATI:
+#if defined(__sparc_v9__) && !defined(__linux__)
+	sethi	%hi(0x00000000), %g2
+	sethi	%hi(0x00000000), %g1
+	or	%g2, %lo(0x00000000), %g2
+	or	%g1, %lo(0x00000000), %g1
+	sllx	%g2, 32, %g2
+	ldx	[%g1 + %g2], %g1
+	sethi	%hi(8 * _gloffset_BlendEquationSeparateEXT), %g2
+	or	%g2, %lo(8 * _gloffset_BlendEquationSeparateEXT), %g2
+	ldx	[%g1 + %g2], %g3
+#else
+	sethi	%hi(0x00000000), %g1
+	ld	[%g1 + %lo(0x00000000)], %g1
+	ld	[%g1 + (4 * _gloffset_BlendEquationSeparateEXT)], %g3
+#endif
+	jmpl	%g3, %g0
+	nop
 	 nop
 
 .globl _mesa_sparc_glapi_end

@@ -24,11 +24,8 @@
 
 /*
  * $Log: colors.h,v $
- * Revision 1.2  2004/07/16 23:48:24  blight
- * Fixed more warnings, compiles with -Werror now.
- *
- * Revision 1.1  2004/07/16 22:12:32  blight
- * Import Mesa-6.0.1 for use as software OpenGL renderer.
+ * Revision 1.3  2004/08/25 12:35:11  blight
+ * Mesa version 6.1 import.
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.
@@ -55,11 +52,8 @@
 
 /*
  * $Log: colors.h,v $
- * Revision 1.2  2004/07/16 23:48:24  blight
- * Fixed more warnings, compiles with -Werror now.
- *
- * Revision 1.1  2004/07/16 22:12:32  blight
- * Import Mesa-6.0.1 for use as software OpenGL renderer.
+ * Revision 1.3  2004/08/25 12:35:11  blight
+ * Mesa version 6.1 import.
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.
@@ -86,11 +80,8 @@
  
 /*
  * $Log: colors.h,v $
- * Revision 1.2  2004/07/16 23:48:24  blight
- * Fixed more warnings, compiles with -Werror now.
- *
- * Revision 1.1  2004/07/16 22:12:32  blight
- * Import Mesa-6.0.1 for use as software OpenGL renderer.
+ * Revision 1.3  2004/08/25 12:35:11  blight
+ * Mesa version 6.1 import.
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.

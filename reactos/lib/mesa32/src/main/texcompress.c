@@ -1,13 +1,8 @@
-/**
- * \file texcompress.c
- * Compressed textures functions.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,17 +23,24 @@
  */
 
 
+/**
+ * \file texcompress.c
+ * Helper functions for texture compression.
+ */
+
+
 #include "glheader.h"
 #include "imports.h"
+#include "colormac.h"
 #include "context.h"
 #include "image.h"
 #include "texcompress.h"
 #include "texformat.h"
-
+#include "texstore.h"
 
 /**
  * Get the list of supported internal compression formats.
- * 
+ *
  * \param ctx GL context.
  * \param formats the resulting format list (may be NULL).
  *
@@ -89,16 +91,19 @@ _mesa_get_compressed_formats( GLcontext *ctx, GLint *formats )
 }
 
 
+
 /**
- * Return bytes of storage needed for the given texture size and
- * compressed format.
- * 
+ * Return number of bytes needed to store a texture of the given size
+ * using the specified compressed format.
+ * This is called via the ctx->Driver.CompressedTextureSize function,
+ * unless a device driver overrides it.
+ *
  * \param width texture width in texels.
  * \param height texture height in texels.
  * \param depth texture depth in texels.
- * \param texFormat one of the compressed format enums
- * 
- * \return size in bytes, or zero if bad \p texFormat.
+ * \param format - one of the specific compressed texture formats
+ *
+ * \return size in bytes, or zero if bad format
  */
 GLuint
 _mesa_compressed_texture_size( GLcontext *ctx,
@@ -107,11 +112,8 @@ _mesa_compressed_texture_size( GLcontext *ctx,
 {
    GLuint size;
 
-   if (ctx->Driver.CompressedTextureSize) {
-      return ctx->Driver.CompressedTextureSize(ctx, width, height, depth, format);
-   }
-
    ASSERT(depth == 1);
+   (void) depth;
 
    switch (format) {
    case GL_COMPRESSED_RGB_FXT1_3DFX:
@@ -164,7 +166,7 @@ _mesa_compressed_texture_size( GLcontext *ctx,
 }
 
 
-/**
+/*
  * Compute the bytes per row in a compressed texture image.
  * We use this for computing the destination address for sub-texture updates.
  * \param format  one of the specific texture compression formats
@@ -201,18 +203,14 @@ _mesa_compressed_row_stride(GLenum format, GLsizei width)
 }
 
 
-/**
+/*
  * Return the address of the pixel at (col, row, img) in a
  * compressed texture image.
- * 
- * \param col image position.
- * \param row image position.
- * \param img image position.
- * \param format compressed image format.
- * \param width image width.
- * \param image the image address.
- * 
- * \return address of pixel at (row, col).
+ * \param col, row, img - image position (3D)
+ * \param format - compressed image format
+ * \param width - image width
+ * \param image - the image address
+ * \return address of pixel at (row, col)
  */
 GLubyte *
 _mesa_compressed_image_address(GLint col, GLint row, GLint img,
@@ -253,22 +251,4 @@ _mesa_compressed_image_address(GLint col, GLint row, GLint img,
    }
 
    return addr;
-}
-
-
-/**
- * \param srcRowStride source stride, in pixels
- */
-void
-_mesa_compress_teximage( GLcontext *ctx, GLsizei width, GLsizei height,
-                         GLenum srcFormat, const GLchan *source,
-                         GLint srcRowStride,
-                         const struct gl_texture_format *dstFormat,
-                         GLubyte *dest, GLint dstRowStride )
-{
-   switch (dstFormat->MesaFormat) {
-   default:
-      _mesa_problem(ctx, "Bad dstFormat in _mesa_compress_teximage()");
-      return;
-   }
 }

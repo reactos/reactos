@@ -38,6 +38,11 @@
 #include "m_debug_util.h"
 
 
+#ifdef __UNIXOS2__
+/* The linker doesn't like empty files */
+static char dummy;
+#endif
+
 #ifdef DEBUG  /* This code only used for debugging */
 
 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -47,15 +47,16 @@
 #define SPAN_SPEC         0x002
 #define SPAN_INDEX        0x004
 #define SPAN_Z            0x008
-#define SPAN_FOG          0x010
-#define SPAN_TEXTURE      0x020
-#define SPAN_INT_TEXTURE  0x040
-#define SPAN_LAMBDA       0x080
-#define SPAN_COVERAGE     0x100
-#define SPAN_FLAT         0x200  /**< flat shading? */
+#define SPAN_W            0x010
+#define SPAN_FOG          0x020
+#define SPAN_TEXTURE      0x040
+#define SPAN_INT_TEXTURE  0x080
+#define SPAN_LAMBDA       0x100
+#define SPAN_COVERAGE     0x200
+#define SPAN_FLAT         0x400  /**< flat shading? */
 /** sw_span::arrayMask only - for span_arrays::x, span_arrays::y */
-#define SPAN_XY           0x400
-#define SPAN_MASK         0x800  /**< sw_span::arrayMask only */
+#define SPAN_XY           0x800
+#define SPAN_MASK        0x1000  /**< sw_span::arrayMask only */
 /*@}*/
 
 
@@ -270,14 +271,17 @@ typedef struct
    GLuint _RasterMask;
    GLfloat _MinMagThresh[MAX_TEXTURE_IMAGE_UNITS];
    GLfloat _BackfaceSign;
-   GLboolean _PreferPixelFog;
+   GLboolean _PreferPixelFog;    /* Compute fog blend factor per fragment? */
    GLboolean _AnyTextureCombine;
+   GLchan _FogColor[3];
+   GLboolean _FogEnabled;
 
    /* Accum buffer temporaries.
     */
    GLboolean _IntegerAccumMode;	/**< Storing unscaled integers? */
    GLfloat _IntegerAccumScaler;	/**< Implicit scale factor */
 
+   GLchan *CurAuxBuffer;
 
    /* Working values:
     */
@@ -285,7 +289,7 @@ typedef struct
    GLuint NewState;
    GLuint StateChanges;
    GLenum Primitive;    /* current primitive being drawn (ala glBegin) */
-   GLuint CurrentBuffer; /* exactly one of FRONT_LEFT_BIT, BACK_LEFT_BIT, etc*/
+   GLbitfield CurrentBufferBit; /* exactly one the of DD_*_BIT buffer bits */
 
    /** Mechanism to allow driver (like X11) to register further
     * software rasterization routines.
@@ -379,5 +383,19 @@ _swrast_validate_derived( GLcontext *ctx );
 #define ChanToFixed(X)  IntToFixed(X)
 #define FixedToChan(X)  FixedToInt(X)
 #endif
+
+
+
+extern void 
+_swrast_translate_program( GLcontext *ctx );
+
+extern GLboolean 
+_swrast_execute_codegen_program(GLcontext *ctx,
+				const struct fragment_program *program, 
+				GLuint maxInst,
+				struct fp_machine *machine, 
+				const struct sw_span *span,
+				GLuint column );
+
 
 #endif

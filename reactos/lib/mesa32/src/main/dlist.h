@@ -68,10 +68,10 @@ extern void _mesa_compile_error( GLcontext *ctx, GLenum error, const char *s );
 
 extern void *_mesa_alloc_instruction( GLcontext *ctx, int opcode, GLint sz );
 
-extern int _mesa_alloc_opcode( GLcontext *ctx, GLuint sz,
-                               void (*execute)( GLcontext *, void * ),
-                               void (*destroy)( GLcontext *, void * ),
-                               void (*print)( GLcontext *, void * ) );
+extern GLint _mesa_alloc_opcode( GLcontext *ctx, GLuint sz,
+                                 void (*execute)( GLcontext *, void * ),
+                                 void (*destroy)( GLcontext *, void * ),
+                                 void (*print)( GLcontext *, void * ) );
 
 extern void GLAPIENTRY _mesa_save_EvalMesh2(GLenum mode, GLint i1, GLint i2,
 				 GLint j1, GLint j2 );

@@ -1,14 +1,6 @@
-/**
- * \file imports.h
- * Standard C library function wrappers.
- *
- * This file provides wrappers for all the standard C library functions
- * like malloc(), free(), printf(), getenv(), etc.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -28,6 +20,15 @@
  * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+/**
+ * \file imports.h
+ * Standard C library function wrappers.
+ *
+ * This file provides wrappers for all the standard C library functions
+ * like malloc(), free(), printf(), getenv(), etc.
  */
 
 
@@ -223,7 +224,9 @@ extern void _ext_mesa_free_pixelbuffer( void *pb );
  ***/
 #if defined(__i386__) || defined(__386__) || defined(__sparc__) || \
     defined(__s390x__) || defined(__powerpc__) || \
-    ( defined(__alpha__) && ( defined(__IEEE_FLOAT) || !defined(VMS) ) )
+    defined(__AMD64__) || \
+    defined(ia64) || defined(__ia64__) || \
+    (defined(__alpha__) && (defined(__IEEE_FLOAT) || !defined(VMS)))
 #define USE_IEEE
 #define IEEE_ONE 0x3f800000
 #endif
@@ -307,7 +310,7 @@ static INLINE int IS_INF_OR_NAN( float x )
 #define IS_INF_OR_NAN(x)        (!isfinite(x))
 #elif defined(finite)
 #define IS_INF_OR_NAN(x)        (!finite(x))
-#elif __VMS
+#elif defined(__VMS)
 #define IS_INF_OR_NAN(x)        (!finite(x))
 #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define IS_INF_OR_NAN(x)        (!isfinite(x))
@@ -550,7 +553,7 @@ static INLINE int iceil(float f)
  ***/
 #if defined(USE_IEEE) && !defined(DEBUG)
 #define COPY_FLOAT( dst, src )					\
-	((fi_type *) &(dst))->i = ((fi_type *) &(src))->i
+	((fi_type *) &(dst))->i = ((fi_type *) (void *)&(src))->i
 #else
 #define COPY_FLOAT( dst, src )		(dst) = (src)
 #endif
@@ -704,11 +707,11 @@ _mesa_log2(float x);
 extern unsigned int
 _mesa_bitcount(unsigned int n);
 
-extern GLhalfNV
+extern GLhalfARB
 _mesa_float_to_half(float f);
 
 extern float
-_mesa_half_to_float(GLhalfNV h);
+_mesa_half_to_float(GLhalfARB h);
 
 
 extern char *

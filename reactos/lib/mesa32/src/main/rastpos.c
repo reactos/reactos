@@ -1,13 +1,8 @@
-/**
- * \file rastpos.c
- * Raster position operations.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,8 +23,12 @@
  */
 
 
+/**
+ * \file rastpos.c
+ * Raster position operations.
+ */
+
 #include "glheader.h"
-/*#include "clip.h"*/
 #include "colormac.h"
 #include "context.h"
 #include "feedback.h"
@@ -280,6 +279,118 @@ shade_rastpos(GLcontext *ctx,
 
 
 /**
+ * Do texgen needed for glRasterPos.
+ * \param ctx  rendering context
+ * \param vObj  object-space vertex coordinate
+ * \param vEye  eye-space vertex coordinate
+ * \param normal  vertex normal
+ * \param unit  texture unit number
+ * \param texcoord  incoming texcoord and resulting texcoord
+ */
+static void
+compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
+               const GLfloat normal[3], GLuint unit, GLfloat texcoord[4])
+{
+   const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
+
+   /* always compute sphere map terms, just in case */
+   GLfloat u[3], two_nu, rx, ry, rz, m, mInv;
+   COPY_3V(u, vEye);
+   NORMALIZE_3FV(u);
+   two_nu = 2.0F * DOT3(normal, u);
+   rx = u[0] - normal[0] * two_nu;
+   ry = u[1] - normal[1] * two_nu;
+   rz = u[2] - normal[2] * two_nu;
+   m = rx * rx + ry * ry + (rz + 1.0F) * (rz + 1.0F);
+   if (m > 0.0F)
+      mInv = 0.5F * _mesa_inv_sqrtf(m);
+   else
+      mInv = 0.0F;
+
+   if (texUnit->TexGenEnabled & S_BIT) {
+      switch (texUnit->GenModeS) {
+         case GL_OBJECT_LINEAR:
+            texcoord[0] = DOT4(vObj, texUnit->ObjectPlaneS);
+            break;
+         case GL_EYE_LINEAR:
+            texcoord[0] = DOT4(vEye, texUnit->EyePlaneS);
+            break;
+         case GL_SPHERE_MAP:
+            texcoord[0] = rx * mInv + 0.5F;
+            break;
+         case GL_REFLECTION_MAP:
+            texcoord[0] = rx;
+            break;
+         case GL_NORMAL_MAP:
+            texcoord[0] = normal[0];
+            break;
+         default:
+            _mesa_problem(ctx, "Bad S texgen in compute_texgen()");
+            return;
+      }
+   }
+
+   if (texUnit->TexGenEnabled & T_BIT) {
+      switch (texUnit->GenModeT) {
+         case GL_OBJECT_LINEAR:
+            texcoord[1] = DOT4(vObj, texUnit->ObjectPlaneT);
+            break;
+         case GL_EYE_LINEAR:
+            texcoord[1] = DOT4(vEye, texUnit->EyePlaneT);
+            break;
+         case GL_SPHERE_MAP:
+            texcoord[1] = ry * mInv + 0.5F;
+            break;
+         case GL_REFLECTION_MAP:
+            texcoord[1] = ry;
+            break;
+         case GL_NORMAL_MAP:
+            texcoord[1] = normal[1];
+            break;
+         default:
+            _mesa_problem(ctx, "Bad T texgen in compute_texgen()");
+            return;
+      }
+   }
+
+   if (texUnit->TexGenEnabled & R_BIT) {
+      switch (texUnit->GenModeR) {
+         case GL_OBJECT_LINEAR:
+            texcoord[2] = DOT4(vObj, texUnit->ObjectPlaneR);
+            break;
+         case GL_EYE_LINEAR:
+            texcoord[2] = DOT4(vEye, texUnit->EyePlaneR);
+            break;
+         case GL_REFLECTION_MAP:
+            texcoord[2] = rz;
+            break;
+         case GL_NORMAL_MAP:
+            texcoord[2] = normal[2];
+            break;
+         default:
+            _mesa_problem(ctx, "Bad R texgen in compute_texgen()");
+            return;
+      }
+   }
+
+   if (texUnit->TexGenEnabled & Q_BIT) {
+      switch (texUnit->GenModeQ) {
+         case GL_OBJECT_LINEAR:
+            texcoord[3] = DOT4(vObj, texUnit->ObjectPlaneQ);
+            break;
+         case GL_EYE_LINEAR:
+            texcoord[3] = DOT4(vEye, texUnit->EyePlaneQ);
+            break;
+         default:
+            _mesa_problem(ctx, "Bad Q texgen in compute_texgen()");
+            return;
+      }
+   }
+}
+
+
+
+/**
  * Set the raster position for pixel operations.
  *
  * All glRasterPos command call this function to update the current
@@ -301,61 +412,25 @@ shade_rastpos(GLcontext *ctx,
 static void
 raster_pos4f(GLcontext *ctx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-   GLfloat v[4], eye[4], clip[4], ndc[3], d;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
    FLUSH_CURRENT(ctx, 0);
 
    if (ctx->NewState)
       _mesa_update_state( ctx );
 
-   if (ctx->VertexProgram.Enabled) {
+   if (ctx->VertexProgram._Enabled) {
       /* XXX implement this */
       _mesa_problem(ctx, "Vertex programs not implemented for glRasterPos");
       return;
    }
    else {
-      ASSIGN_4V( v, x, y, z, w );
-      TRANSFORM_POINT( eye, ctx->ModelviewMatrixStack.Top->m, v );
+      GLfloat obj[4], eye[4], clip[4], ndc[3], d;
+      GLfloat *norm, eyenorm[3];
+      GLfloat *objnorm = ctx->Current.Attrib[VERT_ATTRIB_NORMAL];
 
-      /* raster color */
-      if (ctx->Light.Enabled) {
-         GLfloat *norm, eyenorm[3];
-         GLfloat *objnorm = ctx->Current.Attrib[VERT_ATTRIB_NORMAL];
-
-         if (ctx->_NeedEyeCoords) {
-            GLfloat *inv = ctx->ModelviewMatrixStack.Top->inv;
-            TRANSFORM_NORMAL( eyenorm, objnorm, inv );
-            norm = eyenorm;
-         }
-         else {
-            norm = objnorm;
-         }
-
-         shade_rastpos( ctx, v, norm,
-                        ctx->Current.RasterColor,
-                        ctx->Current.RasterSecondaryColor,
-                        &ctx->Current.RasterIndex );
-      }
-      else {
-         /* use current color or index */
-         if (ctx->Visual.rgbMode) {
-            COPY_4FV(ctx->Current.RasterColor,
-                     ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
-            COPY_4FV(ctx->Current.RasterSecondaryColor,
-                     ctx->Current.Attrib[VERT_ATTRIB_COLOR1]);
-         }
-         else {
-            ctx->Current.RasterIndex = ctx->Current.Index;
-         }
-      }
-
-      /* compute raster distance */
-      if (ctx->Fog.FogCoordinateSource == GL_FOG_COORDINATE_EXT)
-         ctx->Current.RasterDistance = ctx->Current.Attrib[VERT_ATTRIB_FOG][0];
-      else
-         ctx->Current.RasterDistance =
-                         SQRTF( eye[0]*eye[0] + eye[1]*eye[1] + eye[2]*eye[2] );
-
+      ASSIGN_4V( obj, x, y, z, w );
+      /* apply modelview matrix:  eye = MV * obj */
+      TRANSFORM_POINT( eye, ctx->ModelviewMatrixStack.Top->m, obj );
       /* apply projection matrix:  clip = Proj * eye */
       TRANSFORM_POINT( clip, ctx->ProjectionMatrixStack.Top->m, eye );
 
@@ -384,27 +459,72 @@ raster_pos4f(GLcontext *ctx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
       ndc[0] = clip[0] * d;
       ndc[1] = clip[1] * d;
       ndc[2] = clip[2] * d;
-
-      ctx->Current.RasterPos[0] = (ndc[0] * ctx->Viewport._WindowMap.m[MAT_SX] +
-                                   ctx->Viewport._WindowMap.m[MAT_TX]);
-      ctx->Current.RasterPos[1] = (ndc[1] * ctx->Viewport._WindowMap.m[MAT_SY] +
-                                   ctx->Viewport._WindowMap.m[MAT_TY]);
-      ctx->Current.RasterPos[2] = (ndc[2] * ctx->Viewport._WindowMap.m[MAT_SZ] +
-                                   ctx->Viewport._WindowMap.m[MAT_TZ]) / ctx->DepthMaxF;
+      /* wincoord = viewport_mapping(ndc) */
+      ctx->Current.RasterPos[0] = (ndc[0] * ctx->Viewport._WindowMap.m[MAT_SX]
+                                   + ctx->Viewport._WindowMap.m[MAT_TX]);
+      ctx->Current.RasterPos[1] = (ndc[1] * ctx->Viewport._WindowMap.m[MAT_SY]
+                                   + ctx->Viewport._WindowMap.m[MAT_TY]);
+      ctx->Current.RasterPos[2] = (ndc[2] * ctx->Viewport._WindowMap.m[MAT_SZ]
+                                   + ctx->Viewport._WindowMap.m[MAT_TZ])
+                                  / ctx->DepthMaxF;
       ctx->Current.RasterPos[3] = clip[3];
-      ctx->Current.RasterPosValid = GL_TRUE;
 
-      {
-         GLuint texSet;
-         for (texSet = 0; texSet < ctx->Const.MaxTextureCoordUnits; texSet++) {
-            COPY_4FV( ctx->Current.RasterTexCoords[texSet],
-                     ctx->Current.Attrib[VERT_ATTRIB_TEX0 + texSet] );
+      /* compute raster distance */
+      if (ctx->Fog.FogCoordinateSource == GL_FOG_COORDINATE_EXT)
+         ctx->Current.RasterDistance = ctx->Current.Attrib[VERT_ATTRIB_FOG][0];
+      else
+         ctx->Current.RasterDistance =
+                        SQRTF( eye[0]*eye[0] + eye[1]*eye[1] + eye[2]*eye[2] );
+
+      /* compute transformed normal vector (for lighting or texgen) */
+      if (ctx->_NeedEyeCoords) {
+         const GLfloat *inv = ctx->ModelviewMatrixStack.Top->inv;
+         TRANSFORM_NORMAL( eyenorm, objnorm, inv );
+         norm = eyenorm;
+      }
+      else {
+         norm = objnorm;
+      }
+
+      /* update raster color */
+      if (ctx->Light.Enabled) {
+         /* lighting */
+         shade_rastpos( ctx, obj, norm,
+                        ctx->Current.RasterColor,
+                        ctx->Current.RasterSecondaryColor,
+                        &ctx->Current.RasterIndex );
+      }
+      else {
+         /* use current color or index */
+         if (ctx->Visual.rgbMode) {
+            COPY_4FV(ctx->Current.RasterColor,
+                     ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
+            COPY_4FV(ctx->Current.RasterSecondaryColor,
+                     ctx->Current.Attrib[VERT_ATTRIB_COLOR1]);
+         }
+         else {
+            ctx->Current.RasterIndex = ctx->Current.Index;
          }
       }
 
+      /* texture coords */
+      {
+         GLuint u;
+         for (u = 0; u < ctx->Const.MaxTextureCoordUnits; u++) {
+            GLfloat tc[4];
+            COPY_4V(tc, ctx->Current.Attrib[VERT_ATTRIB_TEX0 + u]);
+            if (ctx->Texture.Unit[u].TexGenEnabled) {
+               compute_texgen(ctx, obj, eye, norm, u, tc);
+            }
+            TRANSFORM_POINT(ctx->Current.RasterTexCoords[u],
+                            ctx->TextureMatrixStack[u].Top->m, tc);
+         }
+      }
+
+      ctx->Current.RasterPosValid = GL_TRUE;
    }
 
-   if (ctx->RenderMode==GL_SELECT) {
+   if (ctx->RenderMode == GL_SELECT) {
       _mesa_update_hitflag( ctx, ctx->Current.RasterPos[2] );
    }
 }

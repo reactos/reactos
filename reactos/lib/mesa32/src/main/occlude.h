@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.0.2
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,9 @@
 
 extern void
 _mesa_init_occlude(GLcontext *ctx);
+
+extern void
+_mesa_free_occlude_data(GLcontext *ctx);
 
 extern void GLAPIENTRY
 _mesa_GenQueriesARB(GLsizei n, GLuint *ids);

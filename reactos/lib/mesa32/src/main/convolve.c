@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -123,7 +123,7 @@ _mesa_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width, G
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glConvolutionFilter1D(format or type)");
       return;
    }
@@ -143,10 +143,10 @@ _mesa_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width, G
    ctx->Convolution1D.Height = 1;
 
    /* unpack filter image */
-   _mesa_unpack_float_color_span(ctx, width, GL_RGBA,
+   _mesa_unpack_color_span_float(ctx, width, GL_RGBA,
                                  ctx->Convolution1D.Filter,
                                  format, type, image, &ctx->Unpack,
-                                 0, GL_FALSE);
+                                 0); /* transferOps */
 
    /* apply scale and bias */
    {
@@ -201,7 +201,7 @@ _mesa_ConvolutionFilter2D(GLenum target, GLenum internalFormat, GLsizei width, G
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glConvolutionFilter2D(format or type)");
       return;
    }
@@ -227,9 +227,9 @@ _mesa_ConvolutionFilter2D(GLenum target, GLenum internalFormat, GLsizei width, G
       const GLvoid *src = _mesa_image_address(&ctx->Unpack, image, width,
                                               height, format, type, 0, i, 0);
       GLfloat *dst = ctx->Convolution2D.Filter + i * width * 4;
-      _mesa_unpack_float_color_span(ctx, width, GL_RGBA, dst,
+      _mesa_unpack_color_span_float(ctx, width, GL_RGBA, dst,
                                     format, type, src, &ctx->Unpack,
-                                    0, GL_FALSE);
+                                    0); /* transferOps */
    }
 
    /* apply scale and bias */
@@ -532,7 +532,7 @@ _mesa_GetConvolutionFilter(GLenum target, GLenum format, GLenum type, GLvoid *im
       _mesa_update_state(ctx);
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetConvolutionFilter(format or type)");
       return;
    }
@@ -563,7 +563,7 @@ _mesa_GetConvolutionFilter(GLenum target, GLenum format, GLenum type, GLvoid *im
                                          filter->Height, format, type,
                                          0, row, 0);
       const GLfloat *src = filter->Filter + row * filter->Width * 4;
-      _mesa_pack_float_rgba_span(ctx, filter->Width,
+      _mesa_pack_rgba_span_float(ctx, filter->Width,
                                  (const GLfloat (*)[4]) src,
                                  format, type, dst, &ctx->Pack, 0);
    }
@@ -718,7 +718,7 @@ _mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type, GLvoid *row,
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetConvolutionFilter(format or type)");
       return;
    }
@@ -739,7 +739,7 @@ _mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type, GLvoid *row,
       GLvoid *dst = _mesa_image_address( &ctx->Pack, row, filter->Width,
                                          filter->Height, format, type,
                                          0, 0, 0);
-      _mesa_pack_float_rgba_span(ctx, filter->Width,
+      _mesa_pack_rgba_span_float(ctx, filter->Width,
                                  (const GLfloat (*)[4]) filter->Filter,
                                  format, type, dst, &ctx->Pack, 0);
    }
@@ -750,7 +750,7 @@ _mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type, GLvoid *row,
                                          1, format, type,
                                          0, 0, 0);
       const GLfloat *src = filter->Filter + colStart;
-      _mesa_pack_float_rgba_span(ctx, filter->Height,
+      _mesa_pack_rgba_span_float(ctx, filter->Height,
                                  (const GLfloat (*)[4]) src,
                                  format, type, dst, &ctx->Pack, 0);
    }
@@ -787,7 +787,7 @@ _mesa_SeparableFilter2D(GLenum target, GLenum internalFormat, GLsizei width, GLs
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glSeparableFilter2D(format or type)");
       return;
    }
@@ -807,10 +807,10 @@ _mesa_SeparableFilter2D(GLenum target, GLenum internalFormat, GLsizei width, GLs
    ctx->Separable2D.Height = height;
 
    /* unpack row filter */
-   _mesa_unpack_float_color_span(ctx, width, GL_RGBA,
+   _mesa_unpack_color_span_float(ctx, width, GL_RGBA,
                                  ctx->Separable2D.Filter,
                                  format, type, row, &ctx->Unpack,
-                                 0, GL_FALSE);
+                                 0);  /* transferOps */
 
    /* apply scale and bias */
    {
@@ -834,10 +834,10 @@ _mesa_SeparableFilter2D(GLenum target, GLenum internalFormat, GLsizei width, GLs
    }
 
    /* unpack column filter */
-   _mesa_unpack_float_color_span(ctx, width, GL_RGBA,
+   _mesa_unpack_color_span_float(ctx, width, GL_RGBA,
                                  &ctx->Separable2D.Filter[colStart],
                                  format, type, column, &ctx->Unpack,
-                                 0, GL_FALSE);
+                                 0); /* transferOps */
 
    /* apply scale and bias */
    {

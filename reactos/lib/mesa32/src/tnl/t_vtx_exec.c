@@ -93,7 +93,7 @@ GLboolean *_tnl_import_current_edgeflag( GLcontext *ctx,
    return ef;
 }
 
-static GLint get_size( const GLfloat *f )
+static INLINE GLint get_size( const GLfloat *f )
 {
    if (f[3] != 1.0) return 4;
    if (f[2] != 0.0) return 3;

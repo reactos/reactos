@@ -50,6 +50,10 @@ _mesa_BlendEquation( GLenum mode );
 
 
 extern void GLAPIENTRY
+_mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA );
+
+
+extern void GLAPIENTRY
 _mesa_BlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 
 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -197,6 +197,11 @@ extern void
 _swrast_print_vertex( GLcontext *ctx, const SWvertex *v );
 
 
+extern GLvoid *
+_swrast_validate_pbo_access(const struct gl_pixelstore_attrib *pack,
+                            GLsizei width, GLsizei height, GLsizei depth,
+                            GLenum format, GLenum type, GLvoid *ptr);
+
 /*
  * Imaging fallbacks (a better solution should be found, perhaps
  * moving all the imaging fallback code to a new module) 
@@ -252,24 +257,23 @@ _swrast_copy_texsubimage3d(GLcontext *ctx,
                            GLint x, GLint y, GLsizei width, GLsizei height);
 
 
-
 /* The driver interface for the software rasterizer.
  * Unless otherwise noted, all functions are mandatory.  
  */
 struct swrast_device_driver {
 
-   void (*SetBuffer)( GLcontext *ctx, GLframebuffer *buffer, GLuint bufferBit);
+   void (*SetBuffer)(GLcontext *ctx, GLframebuffer *buffer, GLuint bufferBit);
    /*
-    * Specifies the current buffer for span/pixel writing/reading.
+    * Specifies the current color buffer for span/pixel writing/reading.
     * buffer indicates which window to write to / read from.  Normally,
     * this'll be the buffer currently bound to the context, but it doesn't
     * have to be!
-    * bufferBit indicates which color buffer, one of:
-    *    FRONT_LEFT_BIT - this buffer always exists
-    *    BACK_LEFT_BIT - when double buffering
-    *    FRONT_RIGHT_BIT - when using stereo
-    *    BACK_RIGHT_BIT - when using stereo and double buffering
-    *    AUXn_BIT - if aux buffers are implemented
+    * bufferBit indicates which color buffer, exactly one of:
+    *    DD_FRONT_LEFT_BIT - this buffer always exists
+    *    DD_BACK_LEFT_BIT - when double buffering
+    *    DD_FRONT_RIGHT_BIT - when using stereo
+    *    DD_BACK_RIGHT_BIT - when using stereo and double buffering
+    *    DD_AUXn_BIT - if aux buffers are implemented
     */
 
 

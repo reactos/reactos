@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -44,93 +44,22 @@
  * \param sfactor source factor operator.
  * \param dfactor destination factor operator.
  *
- * \sa glBlendFunc().
- * 
- * Verifies the parameters and updates gl_colorbuffer_attrib.  On a change,
- * flushes the vertices and notifies the driver via
- * dd_function_table::BlendFunc callback.
+ * \sa glBlendFunc, glBlendFuncSeparateEXT
+ *
+ * Swizzles the inputs and calls \c glBlendFuncSeparateEXT.  This is done
+ * using the \c CurrentDispatch table in the context, so this same function
+ * can be used while compiling display lists.  Therefore, there is no need
+ * for the display list code to save and restore this function.
  */
 void GLAPIENTRY
 _mesa_BlendFunc( GLenum sfactor, GLenum dfactor )
 {
-
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE))
-      _mesa_debug(ctx, "glBlendFunc %s %s\n",
-                  _mesa_lookup_enum_by_nr(sfactor),
-                  _mesa_lookup_enum_by_nr(dfactor));
-
-   switch (sfactor) {
-      case GL_SRC_COLOR:
-      case GL_ONE_MINUS_SRC_COLOR:
-         if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFunc(sfactor)" );
-            return;
-         }
-         /* fall-through */
-      case GL_ZERO:
-      case GL_ONE:
-      case GL_DST_COLOR:
-      case GL_ONE_MINUS_DST_COLOR:
-      case GL_SRC_ALPHA:
-      case GL_ONE_MINUS_SRC_ALPHA:
-      case GL_DST_ALPHA:
-      case GL_ONE_MINUS_DST_ALPHA:
-      case GL_SRC_ALPHA_SATURATE:
-      case GL_CONSTANT_COLOR:
-      case GL_ONE_MINUS_CONSTANT_COLOR:
-      case GL_CONSTANT_ALPHA:
-      case GL_ONE_MINUS_CONSTANT_ALPHA:
-         break;
-      default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFunc(sfactor)" );
-         return;
-   }
-
-   switch (dfactor) {
-      case GL_DST_COLOR:
-      case GL_ONE_MINUS_DST_COLOR:
-         if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFunc(dfactor)" );
-            return;
-         }
-         /* fall-through */
-      case GL_ZERO:
-      case GL_ONE:
-      case GL_SRC_COLOR:
-      case GL_ONE_MINUS_SRC_COLOR:
-      case GL_SRC_ALPHA:
-      case GL_ONE_MINUS_SRC_ALPHA:
-      case GL_DST_ALPHA:
-      case GL_ONE_MINUS_DST_ALPHA:
-      case GL_CONSTANT_COLOR:
-      case GL_ONE_MINUS_CONSTANT_COLOR:
-      case GL_CONSTANT_ALPHA:
-      case GL_ONE_MINUS_CONSTANT_ALPHA:
-         break;
-      default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFunc(dfactor)" );
-         return;
-   }
-
-   if (ctx->Color.BlendDstRGB == dfactor &&
-       ctx->Color.BlendSrcRGB == sfactor &&
-       ctx->Color.BlendDstA == dfactor &&
-       ctx->Color.BlendSrcA == sfactor)
-      return;
-
-   FLUSH_VERTICES(ctx, _NEW_COLOR);
-   ctx->Color.BlendDstRGB = ctx->Color.BlendDstA = dfactor;
-   ctx->Color.BlendSrcRGB = ctx->Color.BlendSrcA = sfactor;
-
-   if (ctx->Driver.BlendFunc)
-      ctx->Driver.BlendFunc( ctx, sfactor, dfactor );
+   (*ctx->CurrentDispatch->BlendFuncSeparateEXT)( sfactor, dfactor,
+						  sfactor, dfactor );
 }
 
-
-#if _HAVE_FULL_GL
 
 /**
  * Process GL_EXT_blend_func_separate().
@@ -162,7 +91,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_SRC_COLOR:
       case GL_ONE_MINUS_SRC_COLOR:
          if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(sfactorRGB)");
+            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (sfactorRGB)");
             return;
          }
          /* fall-through */
@@ -181,7 +110,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_ONE_MINUS_CONSTANT_ALPHA:
          break;
       default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(sfactorRGB)");
+         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (sfactorRGB)");
          return;
    }
 
@@ -189,7 +118,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_DST_COLOR:
       case GL_ONE_MINUS_DST_COLOR:
          if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(dfactorRGB)");
+            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (dfactorRGB)");
             return;
          }
          /* fall-through */
@@ -207,7 +136,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_ONE_MINUS_CONSTANT_ALPHA:
          break;
       default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(dfactorRGB)");
+         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (dfactorRGB)");
          return;
    }
 
@@ -215,7 +144,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_SRC_COLOR:
       case GL_ONE_MINUS_SRC_COLOR:
          if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(sfactorA)");
+            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (sfactorA)");
             return;
          }
          /* fall-through */
@@ -234,7 +163,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_ONE_MINUS_CONSTANT_ALPHA:
          break;
       default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(sfactorA)");
+         _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (sfactorA)");
          return;
    }
 
@@ -242,7 +171,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_DST_COLOR:
       case GL_ONE_MINUS_DST_COLOR:
          if (!ctx->Extensions.NV_blend_square) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(dfactorA)");
+            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (dfactorA)");
             return;
          }
          /* fall-through */
@@ -260,7 +189,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       case GL_ONE_MINUS_CONSTANT_ALPHA:
          break;
       default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFuncSeparate(dfactorA)" );
+         _mesa_error( ctx, GL_INVALID_ENUM, "glBlendFunc or glBlendFuncSeparate (dfactorA)" );
          return;
    }
 
@@ -284,6 +213,44 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
 }
 
 
+#if _HAVE_FULL_GL
+
+static GLboolean
+_mesa_validate_blend_equation( GLcontext *ctx,
+			       GLenum mode, GLboolean is_separate )
+{
+       switch (mode) {
+      case GL_FUNC_ADD:
+         break;
+      case GL_MIN:
+      case GL_MAX:
+         if (!ctx->Extensions.EXT_blend_minmax &&
+             !ctx->Extensions.ARB_imaging) {
+            return GL_FALSE;
+         }
+         break;
+      /* glBlendEquationSeparate cannot take GL_LOGIC_OP as a parameter.
+       */
+      case GL_LOGIC_OP:
+         if (!ctx->Extensions.EXT_blend_logic_op || is_separate) {
+            return GL_FALSE;
+         }
+         break;
+      case GL_FUNC_SUBTRACT:
+      case GL_FUNC_REVERSE_SUBTRACT:
+         if (!ctx->Extensions.EXT_blend_subtract &&
+             !ctx->Extensions.ARB_imaging) {
+            return GL_FALSE;
+         }
+         break;
+      default:
+         return GL_FALSE;
+   }
+
+   return GL_TRUE;
+}
+
+
 /* This is really an extension function! */
 void GLAPIENTRY
 _mesa_BlendEquation( GLenum mode )
@@ -295,41 +262,18 @@ _mesa_BlendEquation( GLenum mode )
       _mesa_debug(ctx, "glBlendEquation %s\n",
                   _mesa_lookup_enum_by_nr(mode));
 
-   switch (mode) {
-      case GL_FUNC_ADD_EXT:
-         break;
-      case GL_MIN_EXT:
-      case GL_MAX_EXT:
-         if (!ctx->Extensions.EXT_blend_minmax &&
-             !ctx->Extensions.ARB_imaging) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
-            return;
-         }
-         break;
-      case GL_LOGIC_OP:
-         if (!ctx->Extensions.EXT_blend_logic_op) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
-            return;
-         }
-         break;
-      case GL_FUNC_SUBTRACT_EXT:
-      case GL_FUNC_REVERSE_SUBTRACT_EXT:
-         if (!ctx->Extensions.EXT_blend_subtract &&
-             !ctx->Extensions.ARB_imaging) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
-            return;
-         }
-         break;
-      default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glBlendEquation" );
-         return;
+   if ( ! _mesa_validate_blend_equation( ctx, mode, GL_FALSE ) ) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
+      return;
    }
 
-   if (ctx->Color.BlendEquation == mode)
+   if ( (ctx->Color.BlendEquationRGB == mode) &&
+	(ctx->Color.BlendEquationA == mode) )
       return;
 
    FLUSH_VERTICES(ctx, _NEW_COLOR);
-   ctx->Color.BlendEquation = mode;
+   ctx->Color.BlendEquationRGB = mode;
+   ctx->Color.BlendEquationA = mode;
 
    /* This is needed to support 1.1's RGB logic ops AND
     * 1.0's blending logicops.
@@ -338,10 +282,55 @@ _mesa_BlendEquation( GLenum mode )
                                  (ctx->Color.BlendEnabled &&
                                   mode == GL_LOGIC_OP));
 
-   if (ctx->Driver.BlendEquation)
-      (*ctx->Driver.BlendEquation)( ctx, mode );
+   if (ctx->Driver.BlendEquationSeparate)
+      (*ctx->Driver.BlendEquationSeparate)( ctx, mode, mode );
 }
 
+void GLAPIENTRY
+_mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA )
+{
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
+   if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE))
+      _mesa_debug(ctx, "glBlendEquationSeparateEXT %s %s\n",
+                  _mesa_lookup_enum_by_nr(modeRGB),
+                  _mesa_lookup_enum_by_nr(modeA));
+
+   if ( (modeRGB != modeA) && !ctx->Extensions.EXT_blend_equation_separate ) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+		  "glBlendEquationSeparateEXT not supported by driver");
+      return;
+   }
+
+   if ( ! _mesa_validate_blend_equation( ctx, modeRGB, GL_TRUE ) ) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeRGB)");
+      return;
+   }
+
+   if ( ! _mesa_validate_blend_equation( ctx, modeA, GL_TRUE ) ) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeA)");
+      return;
+   }
+
+
+   if ( (ctx->Color.BlendEquationRGB == modeRGB) &&
+	(ctx->Color.BlendEquationA == modeA) )
+      return;
+
+   FLUSH_VERTICES(ctx, _NEW_COLOR);
+   ctx->Color.BlendEquationRGB = modeRGB;
+   ctx->Color.BlendEquationA = modeA;
+
+   /* This is needed to support 1.1's RGB logic ops AND
+    * 1.0's blending logicops.  This test is simplified over glBlendEquation
+    * because modeRGB cannot be GL_LOGIC_OP.
+    */
+   ctx->Color._LogicOpEnabled = (ctx->Color.ColorLogicOpEnabled);
+
+   if (ctx->Driver.BlendEquationSeparate)
+      (*ctx->Driver.BlendEquationSeparate)( ctx, modeRGB, modeA );
+}
 #endif
 
 
@@ -543,7 +532,7 @@ _mesa_ColorMask( GLboolean red, GLboolean green,
 /*@{*/
 
 /**
- * Initialization of the context color data.
+ * Initialization of the context's Color attribute group.
  *
  * \param ctx GL context.
  *
@@ -569,7 +558,8 @@ void _mesa_init_color( GLcontext * ctx )
    ctx->Color.BlendDstRGB = GL_ZERO;
    ctx->Color.BlendSrcA = GL_ONE;
    ctx->Color.BlendDstA = GL_ZERO;
-   ctx->Color.BlendEquation = GL_FUNC_ADD_EXT;
+   ctx->Color.BlendEquationRGB = GL_FUNC_ADD;
+   ctx->Color.BlendEquationA = GL_FUNC_ADD;
    ASSIGN_4V( ctx->Color.BlendColor, 0.0, 0.0, 0.0, 0.0 );
    ctx->Color.IndexLogicOpEnabled = GL_FALSE;
    ctx->Color.ColorLogicOpEnabled = GL_FALSE;
@@ -579,11 +569,11 @@ void _mesa_init_color( GLcontext * ctx )
 
    if (ctx->Visual.doubleBufferMode) {
       ctx->Color.DrawBuffer = GL_BACK;
-      ctx->Color._DrawDestMask = BACK_LEFT_BIT;
+      ctx->Color._DrawDestMask = DD_BACK_LEFT_BIT;
    }
    else {
       ctx->Color.DrawBuffer = GL_FRONT;
-      ctx->Color._DrawDestMask = FRONT_LEFT_BIT;
+      ctx->Color._DrawDestMask = DD_FRONT_LEFT_BIT;
    }
 }
 

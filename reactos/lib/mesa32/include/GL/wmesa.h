@@ -50,9 +50,9 @@ extern "C" {
 #endif
 
 
-#include "GL/gl.h"
+#include "gl\gl.h"
 
-#if !defined(__GNUC__)
+#if defined(_MSV_VER) && !defined(__GNUC__)
 #  pragma warning (disable:4273)
 #  pragma warning( disable : 4244 ) /* '=' : conversion from 'const double ' to 'float ', possible loss of data */
 #  pragma warning( disable : 4018 ) /* '<' : signed/unsigned mismatch */
@@ -61,7 +61,7 @@ extern "C" {
 #  pragma warning( disable : 4761 ) /* integral size mismatch in argument; conversion supplied */
 #  pragma warning( disable : 4273 ) /* 'identifier' : inconsistent DLL linkage. dllexport assumed */
 #  if (MESA_WARNQUIET>1)
-#	pragma warning( disable : 4146 ) /* unary minus operator applied to unsigned type, result still unsigned */
+#    pragma warning( disable : 4146 ) /* unary minus operator applied to unsigned type, result still unsigned */
 #  endif
 #endif
 

@@ -21,9 +21,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -133,15 +133,15 @@ _mesa_destroy_framebuffer( GLframebuffer *buffer );
 extern GLcontext *
 _mesa_create_context( const GLvisual *visual,
                       GLcontext *share_list,
-                      void *driver_ctx,
-                      GLboolean direct );
+                      const struct dd_function_table *driverFunctions,
+                      void *driverContext );
 
 extern GLboolean
 _mesa_initialize_context( GLcontext *ctx,
                           const GLvisual *visual,
                           GLcontext *share_list,
-                          void *driver_ctx,
-                          GLboolean direct );
+                          const struct dd_function_table *driverFunctions,
+                          void *driverContext );
 
 extern void
 _mesa_free_context_data( GLcontext *ctx );
@@ -375,9 +375,9 @@ do {									\
    (((CTX)->Light.Enabled &&						\
      (CTX)->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)	\
     || (CTX)->Fog.ColorSumEnabled					\
-    || ((CTX)->VertexProgram.Enabled &&					\
+    || ((CTX)->VertexProgram._Enabled &&				\
         ((CTX)->VertexProgram.Current->InputsRead & VERT_BIT_COLOR1))	\
-    || ((CTX)->FragmentProgram.Enabled &&				\
+    || ((CTX)->FragmentProgram._Enabled &&				\
         ((CTX)->FragmentProgram.Current->InputsRead & FRAG_BIT_COL1))	\
    )
 

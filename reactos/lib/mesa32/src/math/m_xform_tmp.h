@@ -106,6 +106,7 @@ TAG(transform_points1_identity)( GLvector4f *to_vec,
    GLuint count = from_vec->count;
    GLfloat (*to)[4] = (GLfloat (*)[4])to_vec->start;
    GLuint i;
+   (void) m;
    if (to_vec == from_vec) return;
    STRIDE_LOOP {
       to[i][0] = from[0];
@@ -271,6 +272,7 @@ TAG(transform_points2_identity)( GLvector4f *to_vec,
    GLfloat (*to)[4] = (GLfloat (*)[4])to_vec->start;
    GLuint count = from_vec->count;
    GLuint i;
+   (void) m;
    if (to_vec == from_vec) return;
    STRIDE_LOOP {
       to[i][0] = from[0];
@@ -441,6 +443,7 @@ TAG(transform_points3_identity)( GLvector4f *to_vec,
    GLfloat (*to)[4] = (GLfloat (*)[4])to_vec->start;
    GLuint count = from_vec->count;
    GLuint i;
+   (void) m;
    if (to_vec == from_vec) return;
    STRIDE_LOOP {
       to[i][0] = from[0];
@@ -608,6 +611,7 @@ TAG(transform_points4_identity)( GLvector4f *to_vec,
    GLfloat (*to)[4] = (GLfloat (*)[4])to_vec->start;
    GLuint count = from_vec->count;
    GLuint i;
+   (void) m;
    if (to_vec == from_vec) return;
    STRIDE_LOOP {
       to[i][0] = from[0];
@@ -740,10 +744,10 @@ TAG(transform_points4_perspective)( GLvector4f *to_vec,
    to_vec->count = from_vec->count;
 }
 
-static transform_func _XFORMAPI TAG(transform_tab_1)[7];
-static transform_func _XFORMAPI TAG(transform_tab_2)[7];
-static transform_func _XFORMAPI TAG(transform_tab_3)[7];
-static transform_func _XFORMAPI TAG(transform_tab_4)[7];
+static transform_func TAG(transform_tab_1)[7];
+static transform_func TAG(transform_tab_2)[7];
+static transform_func TAG(transform_tab_3)[7];
+static transform_func TAG(transform_tab_4)[7];
 
 /* Similar functions could be called several times, with more highly
  * optimized routines overwriting the arrays.  This only occurs during

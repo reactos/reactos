@@ -1,4 +1,4 @@
-/* $Id: 3dnow_xform2.S,v 1.1 2004/07/16 22:12:42 blight Exp $ */
+/* $Id: 3dnow_xform2.S,v 1.2 2004/08/25 12:35:19 blight Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -24,6 +24,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef USE_3DNOW_ASM
 #include "matypes.h"
 #include "xform_args.h"
 
@@ -462,3 +463,4 @@ LLBL( G3TPIR_4 ):
     POP_L     ( EDI )
     POP_L     ( ESI )
     RET
+#endif

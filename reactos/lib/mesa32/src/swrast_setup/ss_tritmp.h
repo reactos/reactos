@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.0
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,7 +37,7 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
    GLuint facing = 0;
    GLchan saved_color[3][4];
    GLchan saved_spec[3][4];
-   GLuint saved_index[3];
+   GLfloat saved_index[3];
 
    v[0] = &verts[e0];
    v[1] = &verts[e1];
@@ -102,24 +101,24 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 
       if (IND & SS_OFFSET_BIT)
       {
-	 offset = ctx->Polygon.OffsetUnits;
+	 offset = ctx->Polygon.OffsetUnits * ctx->MRD;
 	 z[0] = v[0]->win[2];
 	 z[1] = v[1]->win[2];
 	 z[2] = v[2]->win[2];
 	 if (cc * cc > 1e-16) {
-	    GLfloat ez = z[0] - z[2];
-	    GLfloat fz = z[1] - z[2];
-	    GLfloat a = ey*fz - ez*fy;
-	    GLfloat b = ez*fx - ex*fz;
-	    GLfloat ic = 1.0F / cc;
-	    GLfloat ac = a * ic;
-	    GLfloat bc = b * ic;
-	    if (ac < 0.0F) ac = -ac;
-	    if (bc < 0.0F) bc = -bc;
-	    offset += MAX2(ac, bc) * ctx->Polygon.OffsetFactor;
+	    const GLfloat ez = z[0] - z[2];
+	    const GLfloat fz = z[1] - z[2];
+	    const GLfloat oneOverArea = 1.0F / cc;
+	    const GLfloat dzdx = FABSF((ey * fz - ez * fy) * oneOverArea);
+	    const GLfloat dzdy = FABSF((ez * fx - ex * fz) * oneOverArea);
+	    offset += MAX2(dzdx, dzdy) * ctx->Polygon.OffsetFactor;
+            /* Unfortunately, we need to clamp to prevent negative Zs below.
+             * Technically, we should do the clamping per-fragment.
+             */
+            offset = MAX2(offset, -v[0]->win[2]);
+            offset = MAX2(offset, -v[1]->win[2]);
+            offset = MAX2(offset, -v[2]->win[2]);
 	 }
-         offset *= ctx->MRD;
-         /*printf("offset %g\n", offset);*/
       }
    }
 

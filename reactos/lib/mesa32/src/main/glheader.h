@@ -85,7 +85,7 @@
 #endif
 
 #if !defined(OPENSTEP) && (defined(__WIN32__) && !defined(__CYGWIN__)) && !defined(BUILD_FOR_SNAP)
-#  if !defined(__GNUC__)
+#  if !defined(__GNUC__) /* mingw environment */
 #    pragma warning( disable : 4068 ) /* unknown pragma */
 #    pragma warning( disable : 4710 ) /* function 'foo' not inlined */
 #    pragma warning( disable : 4711 ) /* function 'foo' selected for automatic inline expansion */
@@ -213,6 +213,50 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 #include <GL/internal/glcore.h>
 
 
+/* XXX temporary hack */
+#ifndef GL_PIXEL_PACK_BUFFER_EXT
+#define GL_PIXEL_PACK_BUFFER_EXT                        0x88EB
+#define GL_PIXEL_UNPACK_BUFFER_EXT                      0x88EC
+#define GL_PIXEL_PACK_BUFFER_BINDING_EXT                0x88ED
+#define GL_PIXEL_UNPACK_BUFFER_BINDING_EXT              0x88EF
+#endif
+
+
+/* XXX temporary hack */
+#ifndef GL_ARB_half_float_pixel
+#define GL_ARB_half_float_pixel 1
+#define GL_HALF_FLOAT_ARB 0x140B
+typedef GLushort GLhalfARB;
+#endif
+
+
+/* XXX temporary hack */
+#ifndef GL_ARB_texture_float
+#define GL_ARB_texture_float 1
+#define GL_TEXTURE_RED_TYPE_ARB             0x9000
+#define GL_TEXTURE_GREEN_TYPE_ARB           0x9001
+#define GL_TEXTURE_BLUE_TYPE_ARB            0x9002
+#define GL_TEXTURE_ALPHA_TYPE_ARB           0x9003
+#define GL_TEXTURE_LUMINANCE_TYPE_ARB       0x9004
+#define GL_TEXTURE_INTENSITY_TYPE_ARB       0x9005
+#define GL_TEXTURE_DEPTH_TYPE_ARB           0x9006
+#define GL_UNSIGNED_NORMALIZED_ARB          0x9007
+#define GL_RGBA32F_ARB                      0x8814
+#define GL_RGB32F_ARB                       0x8815
+#define GL_ALPHA32F_ARB                     0x8816
+#define GL_INTENSITY32F_ARB                 0x8817
+#define GL_LUMINANCE32F_ARB                 0x8818
+#define GL_LUMINANCE_ALPHA32F_ARB           0x8819
+#define GL_RGBA16F_ARB                      0x881A
+#define GL_RGB16F_ARB                       0x881B
+#define GL_ALPHA16F_ARB                     0x881C
+#define GL_INTENSITY16F_ARB                 0x881D
+#define GL_LUMINANCE16F_ARB                 0x881E
+#define GL_LUMINANCE_ALPHA16F_ARB           0x881F
+#endif
+
+
+
 
 /* Disable unreachable code warnings for Watcom C++ */
 #ifdef	__WATCOMC__
@@ -284,6 +328,12 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 #else
 #  define ASSERT(X)
 #endif
+
+
+#if !defined __GNUC__ || __GNUC__ < 3
+# define __builtin_expect(x, y) x
+#endif
+
 
 
 /**

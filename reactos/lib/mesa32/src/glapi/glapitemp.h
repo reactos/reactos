@@ -26,16 +26,13 @@
  */
 
 
+#if defined( NAME )
 #ifndef KEYWORD1
 #define KEYWORD1
 #endif
 
 #ifndef KEYWORD2
 #define KEYWORD2
-#endif
-
-#ifndef NAME
-#error NAME must be defined
 #endif
 
 #ifndef DISPATCH
@@ -46,7 +43,11 @@
 #error RETURN_DISPATCH must be defined
 #endif
 
+#ifdef USE_MGL_NAMESPACE
+GLAPI void GLAPIENTRY mgl__unused413(void);  /* silence warning */
+#else
 GLAPI void GLAPIENTRY gl__unused413(void);  /* silence warning */
+#endif
 
 KEYWORD1 void KEYWORD2 NAME(NewList)(GLuint list, GLenum mode)
 {
@@ -4767,7 +4768,18 @@ KEYWORD1 void KEYWORD2 NAME(GetQueryObjectuiv)(GLuint id, GLenum pname, GLuint *
    DISPATCH(GetQueryObjectuivARB, (id, pname, params), (F, "glGetQueryObjectuiv(%d, 0x%x, %p);\n", id, pname, (const void *) params));
 }
 
+KEYWORD1 void KEYWORD2 NAME(BlendEquationSeparateEXT)(GLenum modeRGB, GLenum modeA)
+{
+   DISPATCH(BlendEquationSeparateEXT, (modeRGB, modeA), (F, "glBlendEquationSeparateEXT(0x%x, 0x%x);\n", modeRGB, modeA));
+}
 
+KEYWORD1 void KEYWORD2 NAME(BlendEquationSeparateATI)(GLenum modeRGB, GLenum modeA)
+{
+   DISPATCH(BlendEquationSeparateEXT, (modeRGB, modeA), (F, "glBlendEquationSeparateATI(0x%x, 0x%x);\n", modeRGB, modeA));
+}
+
+
+#endif /* defined( NAME ) */
 
 /*
  * This is how a dispatch table can be initialized with all the functions
@@ -5490,6 +5502,7 @@ void *DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(GetQueryObjectuivARB),
    TABLE_ENTRY(MultiModeDrawArraysIBM),
    TABLE_ENTRY(MultiModeDrawElementsIBM),
+   TABLE_ENTRY(BlendEquationSeparateEXT),
    /* A whole bunch of no-op functions.  These might be called
     * when someone tries to call a dynamically-registered
     * extension function without a current rendering context.
@@ -5808,6 +5821,7 @@ void *UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(GetQueryiv),
    TABLE_ENTRY(GetQueryObjectiv),
    TABLE_ENTRY(GetQueryObjectuiv),
+   TABLE_ENTRY(BlendEquationSeparateATI),
 };
 #endif /*UNUSED_TABLE_NAME*/
 

@@ -57,25 +57,24 @@
 #define NAME(func)  gl##func
 #endif
 
-
 #if 0  /* Use this to log GL calls to stdout (for DEBUG only!) */
 
 #define F stdout
 #define DISPATCH(FUNC, ARGS, MESSAGE)		\
    fprintf MESSAGE;				\
-   (_glapi_Dispatch->FUNC) ARGS;
+   GL_CALL(FUNC) ARGS;
 
 #define RETURN_DISPATCH(FUNC, ARGS, MESSAGE) 	\
    fprintf MESSAGE;				\
-   return (_glapi_Dispatch->FUNC) ARGS
+   return GL_CALL(FUNC) ARGS;
 
 #else
 
 #define DISPATCH(FUNC, ARGS, MESSAGE)		\
-   (_glapi_Dispatch->FUNC) ARGS;
+   GL_CALL(FUNC) ARGS;
 
 #define RETURN_DISPATCH(FUNC, ARGS, MESSAGE) 	\
-   return (_glapi_Dispatch->FUNC) ARGS
+   return GL_CALL(FUNC) ARGS;
 
 #endif /* logging */
 

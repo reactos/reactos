@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,6 +29,9 @@
 
 #include "s_context.h"
 #include "s_span.h"
+#include "colortab.h"
+#include "convolve.h"
+
 
 void
 _swrast_CopyColorTable( GLcontext *ctx, 
@@ -50,8 +52,9 @@ _swrast_CopyColorTable( GLcontext *ctx,
    /* Restore reading from draw buffer (the default) */
    _swrast_use_draw_buffer(ctx);
 
-   glColorTable(target, internalformat, width, GL_RGBA, CHAN_TYPE, data);
+   _mesa_ColorTable(target, internalformat, width, GL_RGBA, CHAN_TYPE, data);
 }
+
 
 void
 _swrast_CopyColorSubTable( GLcontext *ctx,GLenum target, GLsizei start,
@@ -71,7 +74,7 @@ _swrast_CopyColorSubTable( GLcontext *ctx,GLenum target, GLsizei start,
    /* Restore reading from draw buffer (the default) */
    _swrast_use_draw_buffer(ctx);
 
-   glColorSubTable(target, start, width, GL_RGBA, CHAN_TYPE, data);
+   _mesa_ColorSubTable(target, start, width, GL_RGBA, CHAN_TYPE, data);
 }
 
 
@@ -98,8 +101,8 @@ _swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target,
    _swrast_use_draw_buffer(ctx);
 
    /* store as convolution filter */
-   glConvolutionFilter1D(target, internalFormat, width,
-			 GL_RGBA, CHAN_TYPE, rgba);
+   _mesa_ConvolutionFilter1D(target, internalFormat, width,
+                             GL_RGBA, CHAN_TYPE, rgba);
 }
 
 
@@ -145,10 +148,11 @@ _swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target,
    ctx->Unpack.SkipImages = 0;
    ctx->Unpack.SwapBytes = GL_FALSE;
    ctx->Unpack.LsbFirst = GL_FALSE;
+   ctx->Unpack.BufferObj = ctx->Array.NullBufferObj;
    ctx->NewState |= _NEW_PACKUNPACK;
 
-   glConvolutionFilter2D(target, internalFormat, width, height,
-			 GL_RGBA, CHAN_TYPE, rgba);
+   _mesa_ConvolutionFilter2D(target, internalFormat, width, height,
+                             GL_RGBA, CHAN_TYPE, rgba);
 
    ctx->Unpack = packSave;  /* restore pixel packing params */
    ctx->NewState |= _NEW_PACKUNPACK; 

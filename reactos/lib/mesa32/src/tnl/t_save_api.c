@@ -179,6 +179,7 @@ build_normal_lengths( struct tnl_vertex_list *node )
 static struct tnl_vertex_store *alloc_vertex_store( GLcontext *ctx )
 {
    struct tnl_vertex_store *store = MALLOC_STRUCT(tnl_vertex_store);
+   (void) ctx;
    store->used = 0;
    store->refcount = 1;
    return store;
@@ -187,6 +188,7 @@ static struct tnl_vertex_store *alloc_vertex_store( GLcontext *ctx )
 static struct tnl_primitive_store *alloc_prim_store( GLcontext *ctx )
 {
    struct tnl_primitive_store *store = MALLOC_STRUCT(tnl_primitive_store);
+   (void) ctx;
    store->used = 0;
    store->refcount = 1;
    return store;
@@ -444,7 +446,6 @@ static void _save_upgrade_vertex( GLcontext *ctx,
       tnl->save.counter = ctx->Const.MaxArrayLockSize;
    tnl->save.initial_counter = tnl->save.counter;
 
-
    /* Recalculate all the attrptr[] values:
     */
    for (i = 0, tmp = tnl->save.vertex ; i < _TNL_ATTRIB_MAX ; i++) {
@@ -460,7 +461,6 @@ static void _save_upgrade_vertex( GLcontext *ctx,
     */
    _save_copy_from_current( ctx );
 
-
    /* Replay stored vertices to translate them to new format here.
     *
     * If there are copied vertices and the new (upgraded) attribute
@@ -475,7 +475,7 @@ static void _save_upgrade_vertex( GLcontext *ctx,
 
       /* Need to note this and fix up at runtime (or loopback):
        */
-      if (tnl->save.currentsz[attr] == 0) {
+      if (tnl->save.currentsz[attr][0] == 0) {
 	 assert(oldsz == 0);
 	 tnl->save.dangling_attr_ref = GL_TRUE;
 	 _mesa_debug(0, "_save_upgrade_vertex: dangling reference attr %d\n", 
@@ -498,10 +498,16 @@ static void _save_upgrade_vertex( GLcontext *ctx,
 	 for (j = 0 ; j < _TNL_ATTRIB_MAX ; j++) {
 	    if (tnl->save.attrsz[j]) {
 	       if (j == attr) {
-		  ASSIGN_4V( dest, 0, 0, 0, 1 );
-		  COPY_SZ_4V( dest, oldsz, data );
-		  data += oldsz;
-		  dest += newsz;
+		  if (oldsz) {
+		     ASSIGN_4V( dest, 0, 0, 0, 1 );
+		     COPY_SZ_4V( dest, oldsz, data );
+		     data += oldsz;
+		     dest += newsz;
+		  }
+		  else {
+		     COPY_SZ_4V( dest, newsz, tnl->save.current[attr] );
+		     dest += newsz;
+		  }
 	       }
 	       else {
 		  GLint sz = tnl->save.attrsz[j];
@@ -712,6 +718,15 @@ do {						\
 
 #define DISPATCH_ATTR1F( ATTR, S ) DISPATCH_ATTRFV( ATTR, 1, &(S) )
 
+#if defined(USE_X86_ASM) && 0 /* will break register calling convention */
+/* Naughty cheat:
+ */
+#define DISPATCH_ATTR2F( ATTR, S,T ) DISPATCH_ATTRFV( ATTR, 2, &(S) )
+#define DISPATCH_ATTR3F( ATTR, S,T,R ) DISPATCH_ATTRFV( ATTR, 3, &(S) )
+#define DISPATCH_ATTR4F( ATTR, S,T,R,Q ) DISPATCH_ATTRFV( ATTR, 4, &(S) )
+#else
+/* Safe:
+ */
 #define DISPATCH_ATTR2F( ATTR, S,T ) 		\
 do { 						\
    GLfloat v[2]; 				\
@@ -730,6 +745,7 @@ do { 						\
    v[0] = S; v[1] = T; v[2] = R; v[3] = Q;	\
    DISPATCH_ATTR4FV( ATTR, v );			\
 } while (0)
+#endif
 
 
 static void enum_error( void )
@@ -1227,6 +1243,7 @@ static void GLAPIENTRY _save_DrawElements(GLenum mode, GLsizei count, GLenum typ
 			       const GLvoid *indices)
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) count; (void) type; (void) indices;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawElements" );
 }
 
@@ -1237,24 +1254,28 @@ static void GLAPIENTRY _save_DrawRangeElements(GLenum mode,
 				    const GLvoid *indices)
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) start; (void) end; (void) count; (void) type; (void) indices;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawRangeElements" );
 }
 
 static void GLAPIENTRY _save_DrawArrays(GLenum mode, GLint start, GLsizei count)
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) start; (void) count;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawArrays" );
 }
 
 static void GLAPIENTRY _save_Rectf( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2 )
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) x1; (void) y1; (void) x2; (void) y2;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glRectf" );
 }
 
 static void GLAPIENTRY _save_EvalMesh1( GLenum mode, GLint i1, GLint i2 )
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) i1; (void) i2;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glEvalMesh1" );
 }
 
@@ -1262,12 +1283,14 @@ static void GLAPIENTRY _save_EvalMesh2( GLenum mode, GLint i1, GLint i2,
 				  GLint j1, GLint j2 )
 {
    GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) i1; (void) i2; (void) j1; (void) j2;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glEvalMesh2" );
 }
 
 static void GLAPIENTRY _save_Begin( GLenum mode )
 {
    GET_CURRENT_CONTEXT( ctx );
+   (void) mode;
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "Recursive glBegin" );
 }
 
@@ -1280,11 +1303,11 @@ static void GLAPIENTRY _save_OBE_Rectf( GLfloat x1, GLfloat y1, GLfloat x2, GLfl
 {
    GET_CURRENT_CONTEXT(ctx);
    _save_NotifyBegin( ctx, GL_QUADS | PRIM_WEAK );
-   _glapi_Dispatch->Vertex2f( x1, y1 );
-   _glapi_Dispatch->Vertex2f( x2, y1 );
-   _glapi_Dispatch->Vertex2f( x2, y2 );
-   _glapi_Dispatch->Vertex2f( x1, y2 );
-   _glapi_Dispatch->End();
+   GL_CALL(Vertex2f)( x1, y1 );
+   GL_CALL(Vertex2f)( x2, y1 );
+   GL_CALL(Vertex2f)( x2, y2 );
+   GL_CALL(Vertex2f)( x1, y2 );
+   GL_CALL(End)();
 }
 
 
@@ -1298,8 +1321,8 @@ static void GLAPIENTRY _save_OBE_DrawArrays(GLenum mode, GLint start, GLsizei co
 
    _save_NotifyBegin( ctx, mode | PRIM_WEAK );
    for (i = 0; i < count; i++)
-      _glapi_Dispatch->ArrayElement(start + i);
-   _glapi_Dispatch->End();
+       GL_CALL(ArrayElement)(start + i);
+   GL_CALL(End)();
 }
 
 
@@ -1317,22 +1340,22 @@ static void GLAPIENTRY _save_OBE_DrawElements(GLenum mode, GLsizei count, GLenum
    switch (type) {
    case GL_UNSIGNED_BYTE:
       for (i = 0 ; i < count ; i++)
-	 _glapi_Dispatch->ArrayElement( ((GLubyte *)indices)[i] );
+	  GL_CALL(ArrayElement)( ((GLubyte *)indices)[i] );
       break;
    case GL_UNSIGNED_SHORT:
       for (i = 0 ; i < count ; i++)
-	 _glapi_Dispatch->ArrayElement( ((GLushort *)indices)[i] );
+	  GL_CALL(ArrayElement)( ((GLushort *)indices)[i] );
       break;
    case GL_UNSIGNED_INT:
       for (i = 0 ; i < count ; i++)
-	 _glapi_Dispatch->ArrayElement( ((GLuint *)indices)[i] );
+	  GL_CALL(ArrayElement)( ((GLuint *)indices)[i] );
       break;
    default:
       _mesa_error( ctx, GL_INVALID_ENUM, "glDrawElements(type)" );
       break;
    }
 
-   _glapi_Dispatch->End();
+   GL_CALL(End)();
 }
 
 static void GLAPIENTRY _save_OBE_DrawRangeElements(GLenum mode,
@@ -1453,6 +1476,8 @@ void _tnl_NewList( GLcontext *ctx, GLuint list, GLenum mode )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
+   (void) list; (void) mode;
+
    if (!tnl->save.prim_store)
       tnl->save.prim_store = alloc_prim_store( ctx );
 
@@ -1467,22 +1492,25 @@ void _tnl_NewList( GLcontext *ctx, GLuint list, GLenum mode )
 
 void _tnl_EndList( GLcontext *ctx )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx);
-   assert(tnl->save.vertex_size == 0);
+   (void) ctx;
+   assert(TNL_CONTEXT(ctx)->save.vertex_size == 0);
 }
  
 void _tnl_BeginCallList( GLcontext *ctx, GLuint list )
 {
+   (void) ctx; (void) list;
 }
 
 void _tnl_EndCallList( GLcontext *ctx )
 {
+   (void) ctx;
 }
 
 
 static void _tnl_destroy_vertex_list( GLcontext *ctx, void *data )
 {
    struct tnl_vertex_list *node = (struct tnl_vertex_list *)data;
+   (void) ctx;
 
    if ( --node->vertex_store->refcount == 0 )
       FREE( node->vertex_store );
@@ -1499,6 +1527,7 @@ static void _tnl_print_vertex_list( GLcontext *ctx, void *data )
 {
    struct tnl_vertex_list *node = (struct tnl_vertex_list *)data;
    GLuint i;
+   (void) ctx;
 
    _mesa_debug(0, "TNL-VERTEX-LIST, %u vertices %d primitives, %d vertsize\n",
                node->count,
@@ -1584,4 +1613,5 @@ void _tnl_save_init( GLcontext *ctx )
  */
 void _tnl_save_destroy( GLcontext *ctx )
 {
+   (void) ctx;
 }

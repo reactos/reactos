@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +28,7 @@
 #include "attrib.h"
 #include "blend.h"
 #include "buffers.h"
+#include "bufferobj.h"
 #include "colormac.h"
 #include "colortab.h"
 #include "context.h"
@@ -652,38 +652,38 @@ pop_texture_group(GLcontext *ctx, const struct gl_texture_attrib *texAttrib)
       }
       if (ctx->Extensions.EXT_texture_env_combine ||
           ctx->Extensions.ARB_texture_env_combine) {
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT,
-                       unit->CombineModeRGB);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_EXT,
-                       unit->CombineModeA);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT,
-                       unit->CombineSourceRGB[0]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT,
-                       unit->CombineSourceRGB[1]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB_EXT,
-                       unit->CombineSourceRGB[2]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_EXT,
-                       unit->CombineSourceA[0]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_EXT,
-                       unit->CombineSourceA[1]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_ALPHA_EXT,
-                       unit->CombineSourceA[2]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT,
-                       unit->CombineOperandRGB[0]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT,
-                       unit->CombineOperandRGB[1]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB_EXT,
-                       unit->CombineOperandRGB[2]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_EXT,
-                       unit->CombineOperandA[0]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA_EXT,
-                       unit->CombineOperandA[1]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA_EXT,
-                       unit->CombineOperandA[2]);
-         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT,
-                       1 << unit->CombineScaleShiftRGB);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB,
+                       unit->Combine.ModeRGB);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA,
+                       unit->Combine.ModeA);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB,
+                       unit->Combine.SourceRGB[0]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB,
+                       unit->Combine.SourceRGB[1]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB,
+                       unit->Combine.SourceRGB[2]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA,
+                       unit->Combine.SourceA[0]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA,
+                       unit->Combine.SourceA[1]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_ALPHA,
+                       unit->Combine.SourceA[2]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB,
+                       unit->Combine.OperandRGB[0]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB,
+                       unit->Combine.OperandRGB[1]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB,
+                       unit->Combine.OperandRGB[2]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA,
+                       unit->Combine.OperandA[0]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA,
+                       unit->Combine.OperandA[1]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA,
+                       unit->Combine.OperandA[2]);
+         _mesa_TexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE,
+                       1 << unit->Combine.ScaleShiftRGB);
          _mesa_TexEnvi(GL_TEXTURE_ENV, GL_ALPHA_SCALE,
-                       1 << unit->CombineScaleShiftA);
+                       1 << unit->Combine.ScaleShiftA);
       }
 
       /* Restore texture object state */
@@ -838,7 +838,16 @@ _mesa_PopAttrib(void)
                                           color->BlendDstRGB,
                                           color->BlendSrcA,
                                           color->BlendDstA);
-               _mesa_BlendEquation(color->BlendEquation);
+	       /* This special case is because glBlendEquationSeparateEXT
+		* cannot take GL_LOGIC_OP as a parameter.
+		*/
+	       if ( color->BlendEquationRGB == color->BlendEquationA ) {
+		  _mesa_BlendEquation(color->BlendEquationRGB);
+	       }
+	       else {
+		  _mesa_BlendEquationSeparateEXT(color->BlendEquationRGB,
+						 color->BlendEquationA);
+	       }
                _mesa_BlendColor(color->BlendColor[0],
                                 color->BlendColor[1],
                                 color->BlendColor[2],
@@ -1134,6 +1143,31 @@ _mesa_PopAttrib(void)
 }
 
 
+/**
+ * Helper for incrementing/decrementing vertex buffer object reference
+ * counts when pushing/popping the GL_CLIENT_VERTEX_ARRAY_BIT attribute group.
+ */
+static void
+adjust_buffer_object_ref_counts(struct gl_array_attrib *array, GLint step)
+{
+   GLuint i;
+   array->Vertex.BufferObj->RefCount += step;
+   array->Normal.BufferObj->RefCount += step;
+   array->Color.BufferObj->RefCount += step;
+   array->SecondaryColor.BufferObj->RefCount += step;
+   array->FogCoord.BufferObj->RefCount += step;
+   array->Index.BufferObj->RefCount += step;
+   array->EdgeFlag.BufferObj->RefCount += step;
+   for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++)
+      array->TexCoord[i].BufferObj->RefCount += step;
+   for (i = 0; i < VERT_ATTRIB_MAX; i++)
+      array->VertexAttrib[i].BufferObj->RefCount += step;
+
+   array->ArrayBufferObj->RefCount += step;
+   array->ElementArrayBufferObj->RefCount += step;
+}
+
+
 #define GL_CLIENT_PACK_BIT (1<<20)
 #define GL_CLIENT_UNPACK_BIT (1<<21)
 
@@ -1158,6 +1192,10 @@ _mesa_PushClientAttrib(GLbitfield mask)
 
    if (mask & GL_CLIENT_PIXEL_STORE_BIT) {
       struct gl_pixelstore_attrib *attr;
+#if FEATURE_EXT_pixel_buffer_object
+      ctx->Pack.BufferObj->RefCount++;
+      ctx->Unpack.BufferObj->RefCount++;
+#endif
       /* packing attribs */
       attr = MALLOC_STRUCT( gl_pixelstore_attrib );
       MEMCPY( attr, &ctx->Pack, sizeof(struct gl_pixelstore_attrib) );
@@ -1181,6 +1219,8 @@ _mesa_PushClientAttrib(GLbitfield mask)
       newnode->data = attr;
       newnode->next = head;
       head = newnode;
+      /* bump reference counts on buffer objects */
+      adjust_buffer_object_ref_counts(&ctx->Array, 1);
    }
 
    ctx->ClientAttribStack[ctx->ClientAttribStackDepth] = head;
@@ -1209,18 +1249,34 @@ _mesa_PopClientAttrib(void)
    while (attr) {
       switch (attr->kind) {
          case GL_CLIENT_PACK_BIT:
+#if FEATURE_EXT_pixel_buffer_object
+            ctx->Pack.BufferObj->RefCount--;
+            if (ctx->Pack.BufferObj->RefCount <= 0) {
+               _mesa_remove_buffer_object( ctx, ctx->Pack.BufferObj );
+               (*ctx->Driver.DeleteBuffer)( ctx, ctx->Pack.BufferObj );
+            }
+#endif
             MEMCPY( &ctx->Pack, attr->data,
                     sizeof(struct gl_pixelstore_attrib) );
 	    ctx->NewState |= _NEW_PACKUNPACK;
             break;
          case GL_CLIENT_UNPACK_BIT:
+#if FEATURE_EXT_pixel_buffer_object
+            ctx->Unpack.BufferObj->RefCount--;
+            if (ctx->Unpack.BufferObj->RefCount <= 0) {
+               _mesa_remove_buffer_object( ctx, ctx->Unpack.BufferObj );
+               (*ctx->Driver.DeleteBuffer)( ctx, ctx->Unpack.BufferObj );
+            }
+#endif
             MEMCPY( &ctx->Unpack, attr->data,
                     sizeof(struct gl_pixelstore_attrib) );
 	    ctx->NewState |= _NEW_PACKUNPACK;
             break;
          case GL_CLIENT_VERTEX_ARRAY_BIT:
+            adjust_buffer_object_ref_counts(&ctx->Array, -1);
             MEMCPY( &ctx->Array, attr->data,
 		    sizeof(struct gl_array_attrib) );
+            /* decrement reference counts on buffer objects */
 	    ctx->NewState |= _NEW_ARRAY;
             break;
          default:

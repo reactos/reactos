@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,8 +41,8 @@
 #define SS_UNFILLED_BIT	    0x8
 #define SS_MAX_TRIFUNC      0x10
 
-static triangle_func tri_tab[SS_MAX_TRIFUNC];
-static quad_func     quad_tab[SS_MAX_TRIFUNC];
+static tnl_triangle_func tri_tab[SS_MAX_TRIFUNC];
+static tnl_quad_func     quad_tab[SS_MAX_TRIFUNC];
 
 
 static void _swsetup_render_line_tri( GLcontext *ctx,
@@ -58,7 +58,7 @@ static void _swsetup_render_line_tri( GLcontext *ctx,
    SWvertex *v2 = &verts[e2];
    GLchan c[2][4];
    GLchan s[2][4];
-   GLuint i[2];
+   GLfloat i[2];
 
    /* cull testing */
    if (ctx->Polygon.CullFlag) {
@@ -117,7 +117,7 @@ static void _swsetup_render_point_tri( GLcontext *ctx,
    SWvertex *v2 = &verts[e2];
    GLchan c[2][4];
    GLchan s[2][4];
-   GLuint i[2];
+   GLfloat i[2];
 
    /* cull testing */
    if (ctx->Polygon.CullFlag) {
@@ -291,7 +291,7 @@ void _swsetup_choose_trifuncs( GLcontext *ctx )
       ind |= SS_OFFSET_BIT;
 
    if ((ctx->Light.Enabled && ctx->Light.Model.TwoSide) ||
-       (ctx->VertexProgram.Enabled && ctx->VertexProgram.TwoSideEnabled))
+       (ctx->VertexProgram._Enabled && ctx->VertexProgram.TwoSideEnabled))
       ind |= SS_TWOSIDE_BIT;
 
    /* We piggyback the two-sided stencil front/back determination on the

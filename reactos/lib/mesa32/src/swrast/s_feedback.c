@@ -51,7 +51,6 @@ static void feedback_vertex( GLcontext *ctx,
    GLfloat win[4];
    GLfloat color[4];
    GLfloat tc[4];
-   GLuint index;
 
    win[0] = v->win[0];
    win[1] = v->win[1];
@@ -75,9 +74,7 @@ static void feedback_vertex( GLcontext *ctx,
       COPY_4V(tc, v->texcoord[texUnit]);
    }
 
-   index = v->index;
-
-   _mesa_feedback_vertex( ctx, win, color, (GLfloat)index, tc );
+   _mesa_feedback_vertex( ctx, win, color, (GLfloat) v->index, tc );
 }
 
 

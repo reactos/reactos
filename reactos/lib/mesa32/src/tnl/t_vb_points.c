@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -76,7 +75,7 @@ static GLboolean run_point_stage( GLcontext *ctx,
  */
 static void check_point_size( GLcontext *ctx, struct tnl_pipeline_stage *d )
 {
-   d->active = ctx->Point._Attenuated && !ctx->VertexProgram.Enabled;
+   d->active = ctx->Point._Attenuated && !ctx->VertexProgram._Enabled;
 }
 
 static GLboolean alloc_point_data( GLcontext *ctx,

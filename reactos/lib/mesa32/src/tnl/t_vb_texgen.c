@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -593,7 +593,7 @@ static void check_texgen( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    GLuint i;
    stage->active = 0;
 
-   if (ctx->Texture._TexGenEnabled && !ctx->VertexProgram.Enabled) {
+   if (ctx->Texture._TexGenEnabled && !ctx->VertexProgram._Enabled) {
       GLuint inputs = 0;
       GLuint outputs = 0;
 

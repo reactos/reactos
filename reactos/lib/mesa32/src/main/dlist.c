@@ -1,11 +1,6 @@
-/**
- * \file dlist.c
- * Display lists management functions.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -27,6 +22,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
+/**
+ * \file dlist.c
+ * Display lists management functions.
+ */
 
 #include "glheader.h"
 #include "imports.h"
@@ -65,6 +65,7 @@
 #include "dlist.h"
 #include "macros.h"
 #include "matrix.h"
+#include "occlude.h"
 #include "pixel.h"
 #include "points.h"
 #include "polygon.h"
@@ -164,13 +165,14 @@ do {									\
  * integer values starting at 0 is very important, see InstSize array usage)
  */
 typedef enum {
+	OPCODE_INVALID = -1,			/* Force signed enum */
 	OPCODE_ACCUM,
 	OPCODE_ALPHA_FUNC,
         OPCODE_BIND_TEXTURE,
 	OPCODE_BITMAP,
 	OPCODE_BLEND_COLOR,
 	OPCODE_BLEND_EQUATION,
-	OPCODE_BLEND_FUNC,
+	OPCODE_BLEND_EQUATION_SEPARATE,
 	OPCODE_BLEND_FUNC_SEPARATE,
         OPCODE_CALL_LIST,
         OPCODE_CALL_LIST_OFFSET,
@@ -309,7 +311,9 @@ typedef enum {
         /* GL_ARB_vertex/fragment_program */
         OPCODE_PROGRAM_STRING_ARB,
         OPCODE_PROGRAM_ENV_PARAMETER_ARB,
-
+        /* GL_ARB_occlusion_query */
+        OPCODE_BEGIN_QUERY_ARB,
+        OPCODE_END_QUERY_ARB,
 
 	/* Vertex attributes -- fallback for when optimized display
 	 * list build isn't active.
@@ -334,7 +338,7 @@ typedef enum {
 	OPCODE_ERROR,	        /* raise compiled-in error */
 	OPCODE_CONTINUE,
 	OPCODE_END_OF_LIST,
-	OPCODE_DRV_0
+	OPCODE_EXT_0
 } OpCode;
 
 
@@ -421,10 +425,10 @@ void _mesa_destroy_list( GLcontext *ctx, GLuint list )
 
       /* check for extension opcodes first */
 
-      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_DRV_0;
-      if (i >= 0 && i < (GLint) ctx->listext.nr_opcodes) {
-	 ctx->listext.opcode[i].destroy(ctx, &n[1]);
-	 n += ctx->listext.opcode[i].size;
+      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_EXT_0;
+      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
+	 ctx->ListExt.Opcode[i].Destroy(ctx, &n[1]);
+	 n += ctx->ListExt.Opcode[i].Size;
       }
       else {
 	 switch (n[0].opcode) {
@@ -618,7 +622,11 @@ static GLuint translate_id( GLsizei n, GLenum type, const GLvoid *list )
 /*****                        Public                              *****/
 /**********************************************************************/
 
-void _mesa_init_lists( void )
+/**
+ * Do one-time initialiazations for display lists.
+ */
+void
+_mesa_init_lists( void )
 {
    static int init_flag = 0;
 
@@ -629,7 +637,7 @@ void _mesa_init_lists( void )
       InstSize[OPCODE_BITMAP] = 8;
       InstSize[OPCODE_BLEND_COLOR] = 5;
       InstSize[OPCODE_BLEND_EQUATION] = 2;
-      InstSize[OPCODE_BLEND_FUNC] = 3;
+      InstSize[OPCODE_BLEND_EQUATION_SEPARATE] = 3;
       InstSize[OPCODE_BLEND_FUNC_SEPARATE] = 5;
       InstSize[OPCODE_CALL_LIST] = 2;
       InstSize[OPCODE_CALL_LIST_OFFSET] = 3;
@@ -770,6 +778,10 @@ void _mesa_init_lists( void )
       InstSize[OPCODE_PROGRAM_STRING_ARB] = 5;
       InstSize[OPCODE_PROGRAM_ENV_PARAMETER_ARB] = 7;
 #endif
+#if FEATURE_ARB_occlusion_query
+      InstSize[OPCODE_BEGIN_QUERY_ARB] = 3;
+      InstSize[OPCODE_END_QUERY_ARB] = 2;
+#endif
       InstSize[OPCODE_ATTR_1F] = 3;
       InstSize[OPCODE_ATTR_2F] = 4;
       InstSize[OPCODE_ATTR_3F] = 5;
@@ -789,6 +801,32 @@ void _mesa_init_lists( void )
 }
 
 
+
+/**
+ * Wrapper for _mesa_unpack_image() that handles pixel buffer objects.
+ * \todo This won't suffice when the PBO is really in VRAM/GPU memory.
+ */
+static GLvoid *
+unpack_image( GLsizei width, GLsizei height, GLsizei depth,
+              GLenum format, GLenum type, const GLvoid *pixels,
+              const struct gl_pixelstore_attrib *unpack )
+{
+   if (unpack->BufferObj->Name == 0) {
+      /* no PBO */
+      return _mesa_unpack_image(width, height, depth, format, type,
+                                pixels, unpack);
+   }
+   else if (_mesa_validate_pbo_access(unpack, width, height, depth, format,
+                                      type, pixels)) {
+      const GLubyte *src = ADD_POINTERS(unpack->BufferObj->Data, pixels);
+      return _mesa_unpack_image(width, height, depth, format, type,
+                                src, unpack);
+   }
+   /* bad access! */
+   return NULL;
+}
+
+
 /*
  * Allocate space for a display list instruction.
  * \param opcode - type of instruction
@@ -803,7 +841,7 @@ _mesa_alloc_instruction( GLcontext *ctx, int opcode, GLint sz )
    GLuint count = 1 + (sz + sizeof(Node) - 1) / sizeof(Node);
 
 #ifdef DEBUG
-   if (opcode < (int) OPCODE_DRV_0) {
+   if (opcode < (int) OPCODE_EXT_0) {
       assert( count == InstSize[opcode] );
    }
 #endif
@@ -831,22 +869,30 @@ _mesa_alloc_instruction( GLcontext *ctx, int opcode, GLint sz )
 }
 
 
-/* Allow modules and drivers to get their own opcodes.
+/**
+ * This function allows modules and drivers to get their own opcodes
+ * for extending display list functionality.
+ * \param ctx  the rendering context
+ * \param size  number of bytes for storing the new display list command
+ * \param execute  function to execute the new display list command
+ * \param destroy  function to destroy the new display list command
+ * \param print  function to print the new display list command
+ * \return  the new opcode number or -1 if error
  */
-int
+GLint
 _mesa_alloc_opcode( GLcontext *ctx,
-		    GLuint sz,
+		    GLuint size,
 		    void (*execute)( GLcontext *, void * ),
 		    void (*destroy)( GLcontext *, void * ),
 		    void (*print)( GLcontext *, void * ) )
 {
-   if (ctx->listext.nr_opcodes < GL_MAX_EXT_OPCODES) {
-      GLuint i = ctx->listext.nr_opcodes++;
-      ctx->listext.opcode[i].size = 1 + (sz + sizeof(Node) - 1)/sizeof(Node);
-      ctx->listext.opcode[i].execute = execute;
-      ctx->listext.opcode[i].destroy = destroy;
-      ctx->listext.opcode[i].print = print;
-      return i + OPCODE_DRV_0;
+   if (ctx->ListExt.NumOpcodes < MAX_DLIST_EXT_OPCODES) {
+      const GLuint i = ctx->ListExt.NumOpcodes++;
+      ctx->ListExt.Opcode[i].Size = 1 + (size + sizeof(Node) - 1)/sizeof(Node);
+      ctx->ListExt.Opcode[i].Execute = execute;
+      ctx->ListExt.Opcode[i].Destroy = destroy;
+      ctx->ListExt.Opcode[i].Print = print;
+      return i + OPCODE_EXT_0;
    }
    return -1;
 }
@@ -958,18 +1004,19 @@ static void GLAPIENTRY save_BlendEquation( GLenum mode )
 }
 
 
-static void GLAPIENTRY save_BlendFunc( GLenum sfactor, GLenum dfactor )
+static void GLAPIENTRY save_BlendEquationSeparateEXT( GLenum modeRGB,
+						      GLenum modeA )
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION( ctx, OPCODE_BLEND_FUNC, 2 );
+   n = ALLOC_INSTRUCTION( ctx, OPCODE_BLEND_EQUATION_SEPARATE, 2 );
    if (n) {
-      n[1].e = sfactor;
-      n[2].e = dfactor;
+      n[1].e = modeRGB;
+      n[2].e = modeA;
    }
    if (ctx->ExecuteFlag) {
-      (*ctx->Exec->BlendFunc)( sfactor, dfactor );
+      (*ctx->Exec->BlendEquationSeparateEXT)( modeRGB, modeA );
    }
 }
 
@@ -1246,8 +1293,8 @@ static void GLAPIENTRY save_ColorTable( GLenum target, GLenum internalFormat,
                                 format, type, table );
    }
    else {
-      GLvoid *image = _mesa_unpack_image(width, 1, 1, format, type, table,
-                                         &ctx->Unpack);
+      GLvoid *image = unpack_image(width, 1, 1, format, type, table,
+                                   &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       n = ALLOC_INSTRUCTION( ctx, OPCODE_COLOR_TABLE, 6 );
@@ -1335,8 +1382,8 @@ static void GLAPIENTRY save_ColorSubTable( GLenum target, GLsizei start, GLsizei
                                 const GLvoid *table)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = _mesa_unpack_image(count, 1, 1, format, type, table,
-                                      &ctx->Unpack);
+   GLvoid *image = unpack_image(count, 1, 1, format, type, table,
+                                &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_COLOR_SUB_TABLE, 6 );
@@ -1406,8 +1453,8 @@ save_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width,
                          GLenum format, GLenum type, const GLvoid *filter)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = _mesa_unpack_image(width, 1, 1, format, type, filter,
-                                      &ctx->Unpack);
+   GLvoid *image = unpack_image(width, 1, 1, format, type, filter,
+                                &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_CONVOLUTION_FILTER_1D, 6 );
@@ -1435,8 +1482,8 @@ save_ConvolutionFilter2D(GLenum target, GLenum internalFormat,
                          GLenum type, const GLvoid *filter)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = _mesa_unpack_image(width, height, 1, format, type, filter,
-                                      &ctx->Unpack);
+   GLvoid *image = unpack_image(width, height, 1, format, type, filter,
+                                &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_CONVOLUTION_FILTER_2D, 7 );
@@ -1800,8 +1847,8 @@ static void GLAPIENTRY save_DrawPixels( GLsizei width, GLsizei height,
                              const GLvoid *pixels )
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = _mesa_unpack_image(width, height, 1, format, type,
-                                      pixels, &ctx->Unpack);
+   GLvoid *image = unpack_image(width, height, 1, format, type,
+                                pixels, &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_DRAW_PIXELS, 5 );
@@ -3200,10 +3247,16 @@ static void GLAPIENTRY save_TexEnvfv( GLenum target, GLenum pname, const GLfloat
    if (n) {
       n[1].e = target;
       n[2].e = pname;
-      n[3].f = params[0];
-      n[4].f = params[1];
-      n[5].f = params[2];
-      n[6].f = params[3];
+      if (pname == GL_TEXTURE_ENV_COLOR) {
+         n[3].f = params[0];
+         n[4].f = params[1];
+         n[5].f = params[2];
+         n[6].f = params[3];
+      }
+      else {
+         n[3].f = params[0];
+         n[4].f = n[5].f = n[6].f = 0.0F;
+      }
    }
    if (ctx->ExecuteFlag) {
       (*ctx->Exec->TexEnvfv)( target, pname, params );
@@ -3229,10 +3282,16 @@ static void GLAPIENTRY save_TexEnvi( GLenum target, GLenum pname, GLint param )
 static void GLAPIENTRY save_TexEnviv( GLenum target, GLenum pname, const GLint *param )
 {
    GLfloat p[4];
-   p[0] = INT_TO_FLOAT( param[0] );
-   p[1] = INT_TO_FLOAT( param[1] );
-   p[2] = INT_TO_FLOAT( param[2] );
-   p[3] = INT_TO_FLOAT( param[3] );
+   if (pname == GL_TEXTURE_ENV_COLOR) {
+      p[0] = INT_TO_FLOAT( param[0] );
+      p[1] = INT_TO_FLOAT( param[1] );
+      p[2] = INT_TO_FLOAT( param[2] );
+      p[3] = INT_TO_FLOAT( param[3] );
+   }
+   else {
+      p[0] = (GLfloat) param[0];
+      p[1] = p[2] = p[3] = 0.0F;
+   }
    save_TexEnvfv( target, pname, p );
 }
 
@@ -3356,8 +3415,8 @@ static void GLAPIENTRY save_TexImage1D( GLenum target,
                                border, format, type, pixels );
    }
    else {
-      GLvoid *image = _mesa_unpack_image(width, 1, 1, format, type,
-                                         pixels, &ctx->Unpack);
+      GLvoid *image = unpack_image(width, 1, 1, format, type,
+                                   pixels, &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_IMAGE1D, 8 );
@@ -3395,8 +3454,8 @@ static void GLAPIENTRY save_TexImage2D( GLenum target,
                                height, border, format, type, pixels );
    }
    else {
-      GLvoid *image = _mesa_unpack_image(width, height, 1, format, type,
-                                         pixels, &ctx->Unpack);
+      GLvoid *image = unpack_image(width, height, 1, format, type,
+                                   pixels, &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_IMAGE2D, 9 );
@@ -3437,8 +3496,8 @@ static void GLAPIENTRY save_TexImage3D( GLenum target,
    }
    else {
       Node *n;
-      GLvoid *image = _mesa_unpack_image(width, height, depth, format, type,
-                                         pixels, &ctx->Unpack);
+      GLvoid *image = unpack_image(width, height, depth, format, type,
+                                   pixels, &ctx->Unpack);
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_IMAGE3D, 10 );
       if (n) {
@@ -3470,8 +3529,8 @@ static void GLAPIENTRY save_TexSubImage1D( GLenum target, GLint level, GLint xof
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = _mesa_unpack_image(width, 1, 1, format, type,
-                                      pixels, &ctx->Unpack);
+   GLvoid *image = unpack_image(width, 1, 1, format, type,
+                                pixels, &ctx->Unpack);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_SUB_IMAGE1D, 7 );
    if (n) {
@@ -3501,8 +3560,8 @@ static void GLAPIENTRY save_TexSubImage2D( GLenum target, GLint level,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = _mesa_unpack_image(width, height, 1, format, type,
-                                      pixels, &ctx->Unpack);
+   GLvoid *image = unpack_image(width, height, 1, format, type,
+                                pixels, &ctx->Unpack);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_SUB_IMAGE2D, 9 );
    if (n) {
@@ -3534,8 +3593,8 @@ static void GLAPIENTRY save_TexSubImage3D( GLenum target, GLint level,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = _mesa_unpack_image(width, height, depth, format, type,
-                                      pixels, &ctx->Unpack);
+   GLvoid *image = unpack_image(width, height, depth, format, type,
+                                pixels, &ctx->Unpack);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    n = ALLOC_INSTRUCTION( ctx, OPCODE_TEX_SUB_IMAGE3D, 11 );
    if (n) {
@@ -4587,6 +4646,42 @@ save_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
 #endif /* FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program */
 
 
+#ifdef FEATURE_ARB_occlusion_query
+
+static void GLAPIENTRY
+save_BeginQueryARB(GLenum target, GLuint id)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = ALLOC_INSTRUCTION( ctx, OPCODE_BEGIN_QUERY_ARB, 2 );
+   if (n) {
+      n[1].e = target;
+      n[2].ui = id;
+   }
+   if (ctx->ExecuteFlag) {
+      (*ctx->Exec->BeginQueryARB)( target, id );
+   }
+}
+
+
+static void GLAPIENTRY
+save_EndQueryARB(GLenum target)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = ALLOC_INSTRUCTION( ctx, OPCODE_END_QUERY_ARB, 1 );
+   if (n) {
+      n[1].e = target;
+   }
+   if (ctx->ExecuteFlag) {
+      (*ctx->Exec->EndQueryARB)( target );
+   }
+}
+
+#endif /* FEATURE_ARB_occlusion_query */
+
 
 
 static void save_Attr1f( GLenum attr, GLfloat x )
@@ -4600,6 +4695,7 @@ static void save_Attr1f( GLenum attr, GLfloat x )
       n[2].f = x;
    }
 
+   ASSERT(attr < VERT_ATTRIB_MAX);
    ctx->ListState.ActiveAttribSize[attr] = 1;
    ASSIGN_4V( ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
 
@@ -4620,6 +4716,7 @@ static void save_Attr2f( GLenum attr, GLfloat x, GLfloat y )
       n[3].f = y;
    }
 
+   ASSERT(attr < VERT_ATTRIB_MAX);
    ctx->ListState.ActiveAttribSize[attr] = 2;
    ASSIGN_4V( ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
 
@@ -4641,6 +4738,7 @@ static void save_Attr3f( GLenum attr, GLfloat x, GLfloat y, GLfloat z )
       n[4].f = z;
    }
 
+   ASSERT(attr < VERT_ATTRIB_MAX);
    ctx->ListState.ActiveAttribSize[attr] = 3;
    ASSIGN_4V( ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
 
@@ -4664,6 +4762,7 @@ static void save_Attr4f( GLenum attr, GLfloat x, GLfloat y, GLfloat z,
       n[5].f = w;
    }
 
+   ASSERT(attr < VERT_ATTRIB_MAX);
    ctx->ListState.ActiveAttribSize[attr] = 4;
    ASSIGN_4V( ctx->ListState.CurrentAttrib[attr], x, y, z, w);
 
@@ -5095,7 +5194,7 @@ static void GLAPIENTRY save_MultiTexCoord4fv( GLenum target, const GLfloat *v )
 }
 
 
-static void enum_error() 
+static void enum_error( void )
 {
    GET_CURRENT_CONTEXT( ctx );
    _mesa_error( ctx, GL_INVALID_ENUM, "VertexAttribfNV" );
@@ -5251,11 +5350,12 @@ execute_list( GLcontext *ctx, GLuint list )
    done = GL_FALSE;
    while (!done) {
       OpCode opcode = n[0].opcode;
-      int i = (int)n[0].opcode - (int)OPCODE_DRV_0;
+      int i = (int)n[0].opcode - (int)OPCODE_EXT_0;
 
-      if (i >= 0 && i < (GLint) ctx->listext.nr_opcodes) {
-	 ctx->listext.opcode[i].execute(ctx, &n[1]);
-	 n += ctx->listext.opcode[i].size;
+      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
+         /* this is a driver-extended opcode */
+	 ctx->ListExt.Opcode[i].Execute(ctx, &n[1]);
+	 n += ctx->ListExt.Opcode[i].Size;
       }
       else {
 	 switch (opcode) {
@@ -5273,8 +5373,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
 	 case OPCODE_BITMAP:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->Bitmap)( (GLsizei) n[1].i, (GLsizei) n[2].i,
                  n[3].f, n[4].f, n[5].f, n[6].f, (const GLubyte *) n[7].data );
                ctx->Unpack = save;  /* restore */
@@ -5286,8 +5386,8 @@ execute_list( GLcontext *ctx, GLuint list )
 	 case OPCODE_BLEND_EQUATION:
 	    (*ctx->Exec->BlendEquation)( n[1].e );
 	    break;
-	 case OPCODE_BLEND_FUNC:
-	    (*ctx->Exec->BlendFunc)( n[1].e, n[2].e );
+	 case OPCODE_BLEND_EQUATION_SEPARATE:
+	    (*ctx->Exec->BlendEquationSeparateEXT)( n[1].e, n[2].e );
 	    break;
 	 case OPCODE_BLEND_FUNC_SEPARATE:
 	    (*ctx->Exec->BlendFuncSeparateEXT)(n[1].e, n[2].e, n[3].e, n[4].e);
@@ -5344,8 +5444,8 @@ execute_list( GLcontext *ctx, GLuint list )
 	    break;
          case OPCODE_COLOR_TABLE:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->ColorTable)( n[1].e, n[2].e, n[3].i, n[4].e,
                                          n[5].e, n[6].data );
                ctx->Unpack = save;  /* restore */
@@ -5373,8 +5473,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_COLOR_SUB_TABLE:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->ColorSubTable)( n[1].e, n[2].i, n[3].i,
                                             n[4].e, n[5].e, n[6].data );
                ctx->Unpack = save;  /* restore */
@@ -5382,8 +5482,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_CONVOLUTION_FILTER_1D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->ConvolutionFilter1D)( n[1].e, n[2].i, n[3].i,
                                                   n[4].e, n[5].e, n[6].data );
                ctx->Unpack = save;  /* restore */
@@ -5391,8 +5491,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_CONVOLUTION_FILTER_2D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->ConvolutionFilter2D)( n[1].e, n[2].i, n[3].i,
                                        n[4].i, n[5].e, n[6].e, n[7].data );
                ctx->Unpack = save;  /* restore */
@@ -5476,8 +5576,8 @@ execute_list( GLcontext *ctx, GLuint list )
 	    break;
 	 case OPCODE_DRAW_PIXELS:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->DrawPixels)( n[1].i, n[2].i, n[3].e, n[4].e,
                                         n[5].data );
                ctx->Unpack = save;  /* restore */
@@ -5745,8 +5845,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
 	 case OPCODE_TEX_IMAGE1D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexImage1D)(
                                         n[1].e, /* target */
                                         n[2].i, /* level */
@@ -5761,8 +5861,8 @@ execute_list( GLcontext *ctx, GLuint list )
 	    break;
 	 case OPCODE_TEX_IMAGE2D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexImage2D)(
                                         n[1].e, /* target */
                                         n[2].i, /* level */
@@ -5778,8 +5878,8 @@ execute_list( GLcontext *ctx, GLuint list )
 	    break;
          case OPCODE_TEX_IMAGE3D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexImage3D)(
                                         n[1].e, /* target */
                                         n[2].i, /* level */
@@ -5796,8 +5896,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_TEX_SUB_IMAGE1D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexSubImage1D)( n[1].e, n[2].i, n[3].i,
                                            n[4].i, n[5].e,
                                            n[6].e, n[7].data );
@@ -5806,8 +5906,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_TEX_SUB_IMAGE2D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexSubImage2D)( n[1].e, n[2].i, n[3].i,
                                            n[4].i, n[5].e,
                                            n[6].i, n[7].e, n[8].e, n[9].data );
@@ -5816,8 +5916,8 @@ execute_list( GLcontext *ctx, GLuint list )
             break;
          case OPCODE_TEX_SUB_IMAGE3D:
             {
-               struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = _mesa_native_packing;
+               const struct gl_pixelstore_attrib save = ctx->Unpack;
+               ctx->Unpack = ctx->DefaultPacking;
                (*ctx->Exec->TexSubImage3D)( n[1].e, n[2].i, n[3].i,
                                            n[4].i, n[5].i, n[6].i, n[7].i,
                                            n[8].i, n[9].e, n[10].e,
@@ -5935,21 +6035,54 @@ execute_list( GLcontext *ctx, GLuint list )
                                                    n[4].f, n[5].f, n[6].f);
             break;
 #endif
-
+#if FEATURE_ARB_occlusion_query
+         case OPCODE_BEGIN_QUERY_ARB:
+            ctx->Exec->BeginQueryARB(n[1].e, n[2].ui);
+            break;
+         case OPCODE_END_QUERY_ARB:
+            ctx->Exec->EndQueryARB(n[1].e);
+            break;
+#endif
 	 case OPCODE_ATTR_1F:
 	    (*ctx->Exec->VertexAttrib1fNV)(n[1].e, n[2].f);
 	    break;
 	 case OPCODE_ATTR_2F:
-	    (*ctx->Exec->VertexAttrib2fvNV)(n[1].e, &n[2].f);
+	    /* Really shouldn't have to do this - the Node structure
+	     * is convenient, but it would be better to store the data
+	     * packed appropriately so that it can be sent directly
+	     * on.  With x86_64 becoming common, this will start to
+	     * matter more.
+	     */
+	    if (sizeof(Node)==sizeof(GLfloat)) 
+	       (*ctx->Exec->VertexAttrib2fvNV)(n[1].e, &n[2].f);
+	    else
+	       (*ctx->Exec->VertexAttrib2fNV)(n[1].e, n[2].f, n[3].f);
 	    break;
 	 case OPCODE_ATTR_3F:
-	    (*ctx->Exec->VertexAttrib3fvNV)(n[1].e, &n[2].f);
+	    if (sizeof(Node)==sizeof(GLfloat)) 
+	       (*ctx->Exec->VertexAttrib3fvNV)(n[1].e, &n[2].f);
+	    else
+	       (*ctx->Exec->VertexAttrib3fNV)(n[1].e, n[2].f, n[3].f,
+					      n[4].f);
 	    break;
 	 case OPCODE_ATTR_4F:
-	    (*ctx->Exec->VertexAttrib4fvNV)(n[1].e, &n[2].f);
+	    if (sizeof(Node)==sizeof(GLfloat)) 
+	       (*ctx->Exec->VertexAttrib4fvNV)(n[1].e, &n[2].f);
+	    else
+	       (*ctx->Exec->VertexAttrib4fNV)(n[1].e, n[2].f, n[3].f,
+					      n[4].f, n[5].f);
 	    break;
 	 case OPCODE_MATERIAL:
-	    (*ctx->Exec->Materialfv)(n[1].e, n[2].e, &n[3].f);
+	    if (sizeof(Node)==sizeof(GLfloat)) 
+	       (*ctx->Exec->Materialfv)(n[1].e, n[2].e, &n[3].f);
+	    else {
+	       GLfloat f[4];
+	       f[0] = n[3].f;
+	       f[1] = n[4].f;
+	       f[2] = n[5].f;
+	       f[3] = n[6].f;
+	       (*ctx->Exec->Materialfv)(n[1].e, n[2].e, f);
+	    }
 	    break;
 	 case OPCODE_INDEX:
 	    (*ctx->Exec->Indexi)(n[1].i);
@@ -5970,7 +6103,7 @@ execute_list( GLcontext *ctx, GLuint list )
 	    (*ctx->Exec->EvalCoord1f)(n[1].f);
 	    break;
 	 case OPCODE_EVAL_C2:
-	    (*ctx->Exec->EvalCoord2fv)(&n[1].f);
+	    (*ctx->Exec->EvalCoord2f)(n[1].f, n[2].f);
 	    break;
 	 case OPCODE_EVAL_P1:
 	    (*ctx->Exec->EvalPoint1)(n[1].i);
@@ -6998,7 +7131,7 @@ _mesa_init_dlist_table( struct _glapi_table *table, GLuint tableSize )
    table->Accum = save_Accum;
    table->AlphaFunc = save_AlphaFunc;
    table->Bitmap = save_Bitmap;
-   table->BlendFunc = save_BlendFunc;
+   table->BlendFunc = _mesa_BlendFunc; /* loops-back to BlendFuncSeparate */
    table->CallList = _mesa_save_CallList;
    table->CallLists = _mesa_save_CallLists;
    table->Clear = save_Clear;
@@ -7491,6 +7624,20 @@ _mesa_init_dlist_table( struct _glapi_table *table, GLuint tableSize )
    table->MapBufferARB = _mesa_MapBufferARB;
    table->UnmapBufferARB = _mesa_UnmapBufferARB;
 #endif
+
+#if FEATURE_ARB_occlusion_query
+   table->BeginQueryARB = save_BeginQueryARB;
+   table->EndQueryARB = save_EndQueryARB;
+   table->GenQueriesARB = _mesa_GenQueriesARB;
+   table->DeleteQueriesARB = _mesa_DeleteQueriesARB;
+   table->IsQueryARB = _mesa_IsQueryARB;
+   table->GetQueryivARB = _mesa_GetQueryivARB;
+   table->GetQueryObjectivARB = _mesa_GetQueryObjectivARB;
+   table->GetQueryObjectuivARB = _mesa_GetQueryObjectuivARB;
+#endif
+
+   /* 299. GL_EXT_blend_equation_separate */
+   table->BlendEquationSeparateEXT = save_BlendEquationSeparateEXT;
 }
 
 
@@ -7525,11 +7672,12 @@ static void GLAPIENTRY print_list( GLcontext *ctx, GLuint list )
    done = n ? GL_FALSE : GL_TRUE;
    while (!done) {
       OpCode opcode = n[0].opcode;
-      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_DRV_0;
+      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_EXT_0;
 
-      if (i >= 0 && i < (GLint) ctx->listext.nr_opcodes) {
-	 ctx->listext.opcode[i].print(ctx, &n[1]);
-	 n += ctx->listext.opcode[i].size;
+      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
+         /* this is a driver-extended opcode */
+	 ctx->ListExt.Opcode[i].Print(ctx, &n[1]);
+	 n += ctx->ListExt.Opcode[i].Size;
       }
       else {
 	 switch (opcode) {
@@ -7666,6 +7814,58 @@ static void GLAPIENTRY print_list( GLcontext *ctx, GLuint list )
 	    _mesa_printf("EvalMesh2 %d %d %d %d\n",
                          n[1].i, n[2].i, n[3].i, n[4].i);
 	    break;
+
+
+
+	 case OPCODE_ATTR_1F:
+	    _mesa_printf("ATTR_1F attr %d: %f\n",
+			 n[1].i, n[2].f);
+	    break;
+	 case OPCODE_ATTR_2F:
+	    _mesa_printf("ATTR_2F attr %d: %f %f\n",
+			 n[1].i, n[2].f, n[3].f);
+	    break;
+	 case OPCODE_ATTR_3F:
+	    _mesa_printf("ATTR_3F attr %d: %f %f %f\n",
+			 n[1].i, n[2].f, n[3].f, n[4].f);
+	    break;
+	 case OPCODE_ATTR_4F:
+	    _mesa_printf("ATTR_4F attr %d: %f %f %f %f\n",
+			 n[1].i, n[2].f, n[3].f, n[4].f, n[5].f);
+	    break;
+	 case OPCODE_MATERIAL:
+	    _mesa_printf("MATERIAL %x %x: %f %f %f %f\n",
+			 n[1].i, n[2].i, n[3].f, n[4].f, n[5].f, n[6].f);
+	    break;
+	 case OPCODE_INDEX:
+	    _mesa_printf("INDEX: %f\n", n[1].f);
+	    break;
+	 case OPCODE_EDGEFLAG:
+	    _mesa_printf("EDGEFLAG: %d\n", n[1].i);
+	    break;
+	 case OPCODE_BEGIN:
+	    _mesa_printf("BEGIN %x\n", n[1].i);
+	    break;
+	 case OPCODE_END:
+	    _mesa_printf("END\n");
+	    break;
+	 case OPCODE_RECTF:
+	    _mesa_printf("RECTF %f %f %f %f\n", n[1].f, n[2].f, n[3].f, n[4].f);
+	    break;
+	 case OPCODE_EVAL_C1:
+	    _mesa_printf("EVAL_C1 %f\n", n[1].f);
+	    break;
+	 case OPCODE_EVAL_C2:
+	    _mesa_printf("EVAL_C2 %f %f\n", n[1].f, n[2].f);
+	    break;
+	 case OPCODE_EVAL_P1:
+	    _mesa_printf("EVAL_P1 %d\n", n[1].i);
+	    break;
+	 case OPCODE_EVAL_P2:
+	    _mesa_printf("EVAL_P2 %d %d\n", n[1].i, n[2].i);
+	    break;
+
+
 
 	 /*
 	  * meta opcodes/commands

@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -71,8 +71,8 @@
 /** Maximum pixel map lookup table size */
 #define MAX_PIXEL_MAP_TABLE 256
 
-/** Number of auxillary color buffers */
-#define NUM_AUX_BUFFERS 0
+/** Maximum Number of auxillary color buffers */
+#define MAX_AUX_BUFFERS 4
 
 /** Maximum order (degree) of curves */
 #ifdef AMIGA
@@ -116,6 +116,9 @@
 /** Number of texture units - GL_ARB_multitexture */
 #define MAX_TEXTURE_UNITS 8
 
+/*@}*/
+
+
 /**
  * \name Separate numbers of texture coordinates and texture image units.
  *
@@ -149,44 +152,54 @@
 /** Max convolution filter height */
 #define MAX_CONVOLUTION_HEIGHT 9
 
-/** GL_ARB_texture_compression */
+/** For GL_ARB_texture_compression */
 #define MAX_COMPRESSED_TEXTURE_FORMATS 25
 
-/** GL_EXT_texture_filter_anisotropic */
+/** For GL_EXT_texture_filter_anisotropic */
 #define MAX_TEXTURE_MAX_ANISOTROPY 16.0
 
-/** GL_EXT_texture_lod_bias */
-#define MAX_TEXTURE_LOD_BIAS 4.0
+/** For GL_EXT_texture_lod_bias (typically MAX_TEXTURE_LEVELS - 1) */
+#define MAX_TEXTURE_LOD_BIAS 11.0
 
-/* GL_NV_vertex_program */
+/** For GL_NV_vertex_program */
+/*@{*/
 #define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
 #define MAX_NV_VERTEX_PROGRAM_TEMPS         12
 #define MAX_NV_VERTEX_PROGRAM_PARAMS        96
 #define MAX_NV_VERTEX_PROGRAM_INPUTS        16
 #define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
+/*@}*/
 
-/* GL_NV_fragment_program */
+/** For GL_NV_fragment_program */
+/*@{*/
 #define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 128
 #define MAX_NV_FRAGMENT_PROGRAM_TEMPS         96
 #define MAX_NV_FRAGMENT_PROGRAM_PARAMS        64
 #define MAX_NV_FRAGMENT_PROGRAM_INPUTS        12
 #define MAX_NV_FRAGMENT_PROGRAM_OUTPUTS        3
 #define MAX_NV_FRAGMENT_PROGRAM_WRITE_ONLYS    2
+/*@}*/
 
-/* GL_ARB_vertex_program */
+/** For GL_ARB_vertex_program */
+/*@{*/
 #define MAX_VERTEX_PROGRAM_ADDRESS_REGS 1
 #define MAX_VERTEX_PROGRAM_ATTRIBS     16
+/*@}*/
 
-/* GL_ARB_fragment_program */
+/** For GL_ARB_fragment_program */
+/*@{*/
 #define MAX_FRAGMENT_PROGRAM_ADDRESS_REGS 1
 #define MAX_FRAGMENT_PROGRAM_ALU_INSTRUCTIONS 48
 #define MAX_FRAGMENT_PROGRAM_TEX_INSTRUCTIONS 24
 #define MAX_FRAGMENT_PROGRAM_TEX_INDIRECTIONS  4
+/*@}*/
 
-/* Any program target/extension */
+/** For any program target/extension */
+/*@{*/
 #define MAX_PROGRAM_LOCAL_PARAMS 96
 #define MAX_PROGRAM_MATRICES 8
 #define MAX_PROGRAM_MATRIX_STACK_DEPTH 4
+/*@}*/
 
 /*@}*/
 
@@ -196,6 +209,11 @@
  */
 /*@{*/
 
+
+/**
+ * If non-zero use GLdouble for walking triangle edges, for better accuracy.
+ */
+#define TRIANGLE_WALK_DOUBLE 0
 
 /**
  * Bits per accumulation buffer color component:  8, 16 or 32
@@ -255,6 +273,7 @@
 #define FEATURE_ARB_vertex_program  _HAVE_FULL_GL
 #define FEATURE_ARB_fragment_program  _HAVE_FULL_GL
 #define FEATURE_ARB_occlusion_query  _HAVE_FULL_GL
+#define FEATURE_EXT_pixel_buffer_object  _HAVE_FULL_GL
 #define FEATURE_MESA_program_debug  _HAVE_FULL_GL
 #define FEATURE_NV_fence  _HAVE_FULL_GL
 #define FEATURE_NV_fragment_program  _HAVE_FULL_GL

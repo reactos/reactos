@@ -1,13 +1,8 @@
-/**
- * \file colormac.h
- * Color-related macros
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +22,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
+/**
+ * \file colormac.h
+ * Color-related macros
+ */
 
 
 #ifndef COLORMAC_H
@@ -174,66 +174,52 @@ do {						\
 
 
 /**
- * \name Generic color packing macros
+ * \name Generic color packing macros.  All inputs should be GLubytes.
  *
- * \todo We may move these into texutil.h at some point.
+ * \todo We may move these into texstore.h at some point.
  */
 /*@{*/
 
-#define PACK_COLOR_8888( a, b, c, d )					\
-   (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
+#define PACK_COLOR_8888( R, G, B, A )					\
+   (((R) << 24) | ((G) << 16) | ((B) << 8) | (A))
 
-#define PACK_COLOR_888( a, b, c )					\
-   (((a) << 16) | ((b) << 8) | (c))
+#define PACK_COLOR_8888_REV( R, G, B, A )				\
+   (((A) << 24) | ((B) << 16) | ((G) << 8) | (R))
 
-#define PACK_COLOR_565( a, b, c )					\
-   ((((a) & 0xf8) << 8) | (((b) & 0xfc) << 3) | (((c) & 0xf8) >> 3))
+#define PACK_COLOR_888( R, G, B )					\
+   (((R) << 16) | ((G) << 8) | (B))
 
-#define PACK_COLOR_1555( a, b, c, d )					\
-   ((((b) & 0xf8) << 7) | (((c) & 0xf8) << 2) | (((d) & 0xf8) >> 3) |	\
-    ((a) ? 0x8000 : 0))
+#define PACK_COLOR_565( R, G, B )					\
+   ((((R) & 0xf8) << 8) | (((G) & 0xfc) << 3) | (((B) & 0xf8) >> 3))
 
-#define PACK_COLOR_4444( a, b, c, d )					\
-   ((((a) & 0xf0) << 8) | (((b) & 0xf0) << 4) | ((c) & 0xf0) | ((d) >> 4))
+#define PACK_COLOR_565_REV( R, G, B )					\
+   (((R) & 0xf8) | ((G) & 0xe0) >> 5 | (((G) & 0x1c) << 11) | (((B) & 0xf8) << 5))
 
-#define PACK_COLOR_88( a, b )						\
-   (((a) << 8) | (b))
+#define PACK_COLOR_1555( A, B, G, R )					\
+   ((((B) & 0xf8) << 7) | (((G) & 0xf8) << 2) | (((R) & 0xf8) >> 3) |	\
+    ((A) ? 0x8000 : 0))
 
-#define PACK_COLOR_332( a, b, c )					\
-   (((a) & 0xe0) | (((b) & 0xe0) >> 3) | (((c) & 0xc0) >> 6))
+#define PACK_COLOR_1555_REV( A, B, G, R )					\
+   ((((B) & 0xf8) >> 1) | (((G) & 0xc0) >> 6) | (((G) & 0x38) << 10) | (((R) & 0xf8) << 5) |	\
+    ((A) ? 0x80 : 0))
 
+#define PACK_COLOR_4444( R, G, B, A )					\
+   ((((R) & 0xf0) << 8) | (((G) & 0xf0) << 4) | ((B) & 0xf0) | ((A) >> 4))
 
-#ifdef MESA_BIG_ENDIAN
+#define PACK_COLOR_4444_REV( R, G, B, A )				\
+   ((((B) & 0xf0) << 8) | (((A) & 0xf0) << 4) | ((R) & 0xf0) | ((G) >> 4))
 
-#define PACK_COLOR_8888_LE( a, b, c, d )	PACK_COLOR_8888( d, c, b, a )
+#define PACK_COLOR_88( L, A )						\
+   (((L) << 8) | (A))
 
-#define PACK_COLOR_565_LE( a, b, c )					\
-   (((a) & 0xf8) | (((b) & 0xe0) >> 5) | (((b) & 0x1c) << 11) |		\
-   (((c) & 0xf8) << 5))
+#define PACK_COLOR_88_REV( L, A )					\
+   (((A) << 8) | (L))
 
-#define PACK_COLOR_1555_LE( a, b, c, d )				\
-   ((((b) & 0xf8) >> 1) | (((c) & 0xc0) >> 6) | (((c) & 0x38) << 10) |	\
-    (((d) & 0xf8) << 5) | ((a) ? 0x80 : 0))
+#define PACK_COLOR_332( R, G, B )					\
+   (((R) & 0xe0) | (((G) & 0xe0) >> 3) | (((B) & 0xc0) >> 6))
 
-#define PACK_COLOR_4444_LE( a, b, c, d )	PACK_COLOR_4444( c, d, a, b )
-
-#define PACK_COLOR_88_LE( a, b )		PACK_COLOR_88( b, a )
-
-#else	/* little endian */
-
-#define PACK_COLOR_8888_LE( a, b, c, d )	PACK_COLOR_8888( a, b, c, d )
-
-#define PACK_COLOR_565_LE( a, b, c )		PACK_COLOR_565( a, b, c )
-
-#define PACK_COLOR_1555_LE( a, b, c, d )	PACK_COLOR_1555( a, b, c, d )
-
-#define PACK_COLOR_4444_LE( a, b, c, d )	PACK_COLOR_4444( a, b, c, d )
-
-#define PACK_COLOR_88_LE( a, b )		PACK_COLOR_88( a, b )
-
-#endif	/* endianness */
-
-/*@}*/
+#define PACK_COLOR_233( B, G, R )					\
+   (((B) & 0xc0) | (((G) & 0xe0) >> 2) | (((R) & 0xe0) >> 5))
 
 
 #endif /* COLORMAC_H */

@@ -248,7 +248,27 @@ struct tnl_copied_vtx {
 
 #define VERT_BUFFER_SIZE 2048	/* 8kbytes */
 
-typedef void (*attrfv_func)( const GLfloat * );
+
+typedef void (*tnl_attrfv_func)( const GLfloat * );
+
+struct _tnl_dynfn {
+   struct _tnl_dynfn *next, *prev;
+   GLuint key;
+   char *code;
+};
+
+struct _tnl_dynfn_lists {
+   struct _tnl_dynfn Vertex[4];
+   struct _tnl_dynfn Attribute[4];
+};
+
+struct _tnl_dynfn_generators {
+   struct _tnl_dynfn *(*Vertex[4])( GLcontext *ctx, int key );
+   struct _tnl_dynfn *(*Attribute[4])( GLcontext *ctx, int key );
+};
+
+#define _TNL_MAX_ATTR_CODEGEN 16 
+
 
 /* The assembly of vertices in immediate mode is separated from
  * display list compilation.  This allows a simpler immediate mode
@@ -267,7 +287,12 @@ struct tnl_vtx {
    GLfloat *current[_TNL_ATTRIB_MAX]; /* points into ctx->Current, etc */
    GLuint counter, initial_counter;
    struct tnl_copied_vtx copied;
-   attrfv_func tabfv[_TNL_ATTRIB_MAX][4];
+
+   tnl_attrfv_func tabfv[_TNL_MAX_ATTR_CODEGEN+1][4]; /* plus 1 for ERROR_ATTRIB */
+
+   struct _tnl_dynfn_lists cache;
+   struct _tnl_dynfn_generators gen;
+
    struct tnl_eval eval;
    GLboolean *edgeflag_tmp;
    GLboolean have_materials;
@@ -364,11 +389,6 @@ struct tnl_save {
 };
 
 
-
-
-
-
-
 struct tnl_vertex_arrays
 {
    /* Conventional vertex attribute arrays */
@@ -412,6 +432,7 @@ struct vertex_buffer
    GLvector4f  *ClipPtr;	                /* _TNL_BIT_POS */
    GLvector4f  *NdcPtr;                         /* _TNL_BIT_POS */
    GLubyte     ClipOrMask;	                /* _TNL_BIT_POS */
+   GLubyte     ClipAndMask;	                /* _TNL_BIT_POS */
    GLubyte     *ClipMask;		        /* _TNL_BIT_POS */
    GLvector4f  *NormalPtr;	                /* _TNL_BIT_NORMAL */
    GLfloat     *NormalLengthPtr;	        /* _TNL_BIT_NORMAL */
@@ -433,14 +454,13 @@ struct vertex_buffer
    /* Private data from _tnl_render_stage that has no business being
     * in this struct.
     */
-
 };
-
 
 
 /** Describes an individual operation on the pipeline.
  */
-struct tnl_pipeline_stage {
+struct tnl_pipeline_stage
+{
    const char *name;
    GLuint check_state;		/* All state referenced in check() --
 				 * When is the pipeline_stage struct
@@ -504,49 +524,99 @@ struct tnl_pipeline {
    GLuint nr_stages;
 };
 
+struct tnl_clipspace;
 struct tnl_clipspace_attr;
 
-typedef void (*extract_func)( const struct tnl_clipspace_attr *a, GLfloat *out, 
-			      const GLubyte *v );
+typedef void (*tnl_extract_func)( const struct tnl_clipspace_attr *a, 
+				  GLfloat *out, 
+				  const GLubyte *v );
 
-typedef void (*insert_func)( const struct tnl_clipspace_attr *a, GLubyte *v, 
-			     const GLfloat *in );
+typedef void (*tnl_insert_func)( const struct tnl_clipspace_attr *a, 
+				 GLubyte *v, 
+				 const GLfloat *in );
+
+typedef void (*tnl_emit_func)( GLcontext *ctx, 
+			       GLuint start, 
+			       GLuint end, void *dest );
 
 
-struct tnl_clipspace_attr {
-   int attrib;
-   int vertoffset;
-   int vertattrsize;
+/**
+ * Describes how to convert/move a vertex attribute from a vertex array
+ * to a vertex structure.
+ */
+struct tnl_clipspace_attr
+{
+   GLuint attrib;          /* which vertex attrib (0=position, etc) */
+   GLuint format;
+   GLuint vertoffset;      /* position of the attrib in the vertex struct */
+   GLuint vertattrsize;    /* size of the attribute in bytes */
    GLubyte *inputptr;
-   int inputstride;
-   insert_func *insert;
-   insert_func emit;
-   extract_func extract;
-   const GLfloat *vp;
+   GLuint inputstride;
+   tnl_insert_func *insert;
+   tnl_insert_func emit;
+   tnl_extract_func extract;
+   const GLfloat *vp;   /* NDC->Viewport mapping matrix */
+};
+
+
+struct tnl_clipspace_codegen {
+   GLboolean (*emit_header)( struct tnl_clipspace_codegen *,
+			     struct tnl_clipspace *);
+   GLboolean (*emit_footer)( struct tnl_clipspace_codegen * );
+   GLboolean (*emit_attr_header)( struct tnl_clipspace_codegen *,
+				  struct tnl_clipspace_attr *,
+				  GLint j, GLenum out_type, 
+				  GLboolean need_vp );
+   GLboolean (*emit_attr_footer)( struct tnl_clipspace_codegen * );
+   GLboolean (*emit_mov)( struct tnl_clipspace_codegen *, 
+			  GLint, GLint );
+   GLboolean (*emit_const)( struct tnl_clipspace_codegen *, 
+			    GLint, GLfloat );
+   GLboolean (*emit_mad)( struct tnl_clipspace_codegen *,
+			  GLint, GLint, GLint, GLint );
+   GLboolean (*emit_float_to_chan)( struct tnl_clipspace_codegen *, 
+				    GLint, GLint );
+   GLboolean (*emit_const_chan)( struct tnl_clipspace_codegen *, 
+				 GLint, GLchan );
+   GLboolean (*emit_float_to_ubyte)( struct tnl_clipspace_codegen *, 
+				     GLint, GLint );
+   GLboolean (*emit_const_ubyte)( struct tnl_clipspace_codegen *, 
+				  GLint, GLubyte );
+   tnl_emit_func (*emit_store_func)( struct tnl_clipspace_codegen * );
+   
+   struct _tnl_dynfn codegen_list;
+   
+   char *buf;
+   int buf_size;
+   int buf_used;
+   int out_offset;
 };
 
 
 
-typedef void (*points_func)( GLcontext *ctx, GLuint first, GLuint last );
-typedef void (*line_func)( GLcontext *ctx, GLuint v1, GLuint v2 );
-typedef void (*triangle_func)( GLcontext *ctx,
-                               GLuint v1, GLuint v2, GLuint v3 );
-typedef void (*quad_func)( GLcontext *ctx, GLuint v1, GLuint v2,
-                           GLuint v3, GLuint v4 );
-typedef void (*render_func)( GLcontext *ctx, GLuint start, GLuint count,
-			     GLuint flags );
-typedef void (*interp_func)( GLcontext *ctx,
-			     GLfloat t, GLuint dst, GLuint out, GLuint in,
-			     GLboolean force_boundary );
-typedef void (*copy_pv_func)( GLcontext *ctx, GLuint dst, GLuint src );
-typedef void (*setup_func)( GLcontext *ctx,
-			    GLuint start, GLuint end,
-			    GLuint new_inputs);
+typedef void (*tnl_points_func)( GLcontext *ctx, GLuint first, GLuint last );
+typedef void (*tnl_line_func)( GLcontext *ctx, GLuint v1, GLuint v2 );
+typedef void (*tnl_triangle_func)( GLcontext *ctx,
+				   GLuint v1, GLuint v2, GLuint v3 );
+typedef void (*tnl_quad_func)( GLcontext *ctx, GLuint v1, GLuint v2,
+			       GLuint v3, GLuint v4 );
+typedef void (*tnl_render_func)( GLcontext *ctx, GLuint start, GLuint count,
+				 GLuint flags );
+typedef void (*tnl_interp_func)( GLcontext *ctx,
+				 GLfloat t, GLuint dst, GLuint out, GLuint in,
+				 GLboolean force_boundary );
+typedef void (*tnl_copy_pv_func)( GLcontext *ctx, GLuint dst, GLuint src );
+typedef void (*tnl_setup_func)( GLcontext *ctx,
+				GLuint start, GLuint end,
+				GLuint new_inputs);
 
 
-
-
-struct tnl_clipspace {
+/**
+ * Used to describe conversion of vertex arrays to vertex structures.
+ * I.e. Structure of arrays to arrays of structs.
+ */
+struct tnl_clipspace
+{
    GLboolean need_extras;
    
    GLuint new_inputs;
@@ -558,13 +628,16 @@ struct tnl_clipspace {
    struct tnl_clipspace_attr attr[_TNL_ATTRIB_MAX];
    GLuint attr_count;
 
-   void (*emit)( GLcontext *ctx, GLuint start, GLuint end, void *dest );
-   interp_func interp;
-   copy_pv_func copy_pv;
+   tnl_emit_func emit;
+   tnl_interp_func interp;
+   tnl_copy_pv_func copy_pv;
+
+   struct tnl_clipspace_codegen codegen;
 };
 
 
-struct tnl_device_driver {
+struct tnl_device_driver
+{
    /***
     *** TNL Pipeline
     ***/
@@ -588,7 +661,8 @@ struct tnl_device_driver {
    /***
     *** Rendering -- These functions called only from t_vb_render.c
     ***/
-   struct {
+   struct
+   {
       void (*Start)(GLcontext *ctx);
       void (*Finish)(GLcontext *ctx);
       /* Called before and after all rendering operations, including DrawPixels,
@@ -602,14 +676,14 @@ struct tnl_device_driver {
        * modes accepted by glBegin().
        */
 
-      interp_func Interp;
+      tnl_interp_func Interp;
       /* The interp function is called by the clipping routines when we need
        * to generate an interpolated vertex.  All pertinant vertex ancilliary
        * data should be computed by interpolating between the 'in' and 'out'
        * vertices.
        */
 
-      copy_pv_func CopyPV;
+      tnl_copy_pv_func CopyPV;
       /* The copy function is used to make a copy of a vertex.  All pertinant
        * vertex attributes should be copied.
        */
@@ -622,16 +696,16 @@ struct tnl_device_driver {
       void (*ClippedLine)( GLcontext *ctx, GLuint v0, GLuint v1 );
       /* Render a line between the two vertices given by indexes v0 and v1. */
 
-      points_func           Points; /* must now respect vb->elts */
-      line_func             Line;
-      triangle_func         Triangle;
-      quad_func             Quad;
+      tnl_points_func           Points; /* must now respect vb->elts */
+      tnl_line_func             Line;
+      tnl_triangle_func         Triangle;
+      tnl_quad_func             Quad;
       /* These functions are called in order to render points, lines,
        * triangles and quads.  These are only called via the T&L module.
        */
 
-      render_func          *PrimTabVerts;
-      render_func          *PrimTabElts;
+      tnl_render_func          *PrimTabVerts;
+      tnl_render_func          *PrimTabElts;
       /* Render whole unclipped primitives (points, lines, linestrips,
        * lineloops, etc).  The tables are indexed by the GL enum of the
        * primitive to be rendered.  RenderTabVerts is used for non-indexed
@@ -643,7 +717,7 @@ struct tnl_device_driver {
       /* Reset the hardware's line stipple counter.
        */
 
-      setup_func BuildVertices;
+      tnl_setup_func BuildVertices;
       /* This function is called whenever new vertices are required for
        * rendering.  The vertices in question are those n such that start
        * <= n < end.  The new_inputs parameter indicates those fields of
@@ -667,8 +741,11 @@ struct tnl_device_driver {
 };
    
 
-typedef struct {
-
+/**
+ * Context state for T&L context.
+ */
+typedef struct
+{
    /* Driver interface.
     */
    struct tnl_device_driver Driver;
@@ -693,11 +770,9 @@ typedef struct {
    struct tnl_vertex_arrays current;
    struct tnl_vertex_arrays array_inputs;
 
-
    /* Clipspace/ndc/window vertex managment:
     */
    struct tnl_clipspace clipspace;
-
 
    /* Probably need a better configuration mechanism:
     */
@@ -705,11 +780,13 @@ typedef struct {
    GLboolean LoopbackDListCassettes;
    GLboolean CalcDListNormalLengths;
    GLboolean IsolateMaterials;
+   GLboolean AllowVertexFog;
+   GLboolean AllowPixelFog;
+   GLboolean AllowCodegen;
 
-   /* 
-    */
+   GLboolean _DoVertexFog;  /* eval fog function at each vertex? */
+
    GLuint render_inputs;
-
 
    GLvertexformat exec_vtxfmt;
    GLvertexformat save_vtxfmt;

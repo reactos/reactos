@@ -1,7 +1,6 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  *
@@ -62,7 +61,7 @@ _mesa_validate_DrawElements(GLcontext *ctx,
 
    /* Always need vertex positions */
    if (!ctx->Array.Vertex.Enabled
-       && !(ctx->VertexProgram.Enabled && ctx->Array.VertexAttrib[0].Enabled))
+       && !(ctx->VertexProgram._Enabled && ctx->Array.VertexAttrib[0].Enabled))
       return GL_FALSE;
 
    /* Vertex buffer object tests */
@@ -168,7 +167,7 @@ _mesa_validate_DrawRangeElements(GLcontext *ctx, GLenum mode,
 
    /* Always need vertex positions */
    if (!ctx->Array.Vertex.Enabled
-       && !(ctx->VertexProgram.Enabled && ctx->Array.VertexAttrib[0].Enabled))
+       && !(ctx->VertexProgram._Enabled && ctx->Array.VertexAttrib[0].Enabled))
       return GL_FALSE;
 
    if (ctx->Const.CheckArrayBounds) {

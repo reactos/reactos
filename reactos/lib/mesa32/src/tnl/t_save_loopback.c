@@ -164,11 +164,13 @@ static attr_func mat_attrfunc[4] = {
 
 static void index_attr1fv(GLcontext *ctx, GLint target, const GLfloat *v)
 {
+   (void) target;
    ctx->Exec->Indexf(v[0]);
 }
 
 static void edgeflag_attr1fv(GLcontext *ctx, GLint target, const GLfloat *v)
 {
+   (void) target;
    ctx->Exec->EdgeFlag((GLboolean)(v[0] == 1.0));
 }
 

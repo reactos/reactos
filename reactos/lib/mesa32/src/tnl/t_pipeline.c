@@ -208,7 +208,7 @@ const struct tnl_pipeline_stage *_tnl_default_pipeline[] = {
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
-#if FEATURE_NV_vertex_program
+#if defined(FEATURE_NV_vertex_program) || defined(FEATURE_ARB_vertex_program)
    &_tnl_vertex_program_stage,
 #endif
    &_tnl_render_stage,

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,7 +91,8 @@ struct vp_stage_data {
 /**
  * This function executes vertex programs
  */
-static GLboolean run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
+static GLboolean
+run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vp_stage_data *store = VP_STAGE_DATA(stage);
@@ -99,11 +100,13 @@ static GLboolean run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    struct vertex_program *program = ctx->VertexProgram.Current;
    GLuint i;
 
-   _mesa_init_tracked_matrices(ctx); /* load registers with matrices */
-   _mesa_init_vp_registers(ctx);     /* init temp and result regs */
+   /* load program parameter registers (they're read-only) */
+   _mesa_init_vp_per_primitive_registers(ctx);
 
    for (i = 0; i < VB->Count; i++) {
       GLuint attr;
+
+      _mesa_init_vp_per_vertex_registers(ctx);
 
 #if 0
       printf("Input  %d: %f, %f, %f, %f\n", i,
@@ -312,7 +315,7 @@ static GLboolean run_init_vp( GLcontext *ctx,
  */
 static void check_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 {
-   stage->active = ctx->VertexProgram.Enabled;
+   stage->active = ctx->VertexProgram._Enabled;
 
    if (stage->active) {
       /* Set stage->inputs equal to the bitmask of vertex attributes

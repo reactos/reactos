@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -37,7 +37,7 @@
 #include "t_save_api.h"
 #include "t_vtx_api.h"
 
-static GLint get_size( const GLfloat *f )
+static INLINE GLint get_size( const GLfloat *f )
 {
    if (f[3] != 1.0) return 4;
    if (f[2] != 0.0) return 3;
@@ -198,6 +198,13 @@ void _tnl_playback_vertex_list( GLcontext *ctx, void *data )
       
       if (ctx->NewState)
 	 _mesa_update_state( ctx );
+
+      if ((ctx->VertexProgram.Enabled && !ctx->VertexProgram._Enabled) ||
+          (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glBegin (invalid vertex/fragment program)");
+         return;
+      }
 
       if (tnl->pipeline.build_state_changes)
 	 _tnl_validate_pipeline( ctx );

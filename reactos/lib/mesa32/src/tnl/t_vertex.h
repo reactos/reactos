@@ -28,6 +28,9 @@
 #ifndef _TNL_VERTEX_H
 #define _TNL_VERTEX_H
 
+#include "mtypes.h"
+#include "t_context.h"
+
 /* New mechanism to specify hardware vertices so that tnl can build
  * and manipulate them directly.  
  */
@@ -46,11 +49,12 @@ enum tnl_attr_format {
    EMIT_4F_VIEWPORT,		/* do viewport transform and emit */
    EMIT_3F_XYW,			/* for projective texture */
    EMIT_1UB_1F,			/* for fog coordinate */
-   EMIT_3UB_3F_BGR,		/* for specular color */
    EMIT_3UB_3F_RGB,		/* for specular color */
-   EMIT_4UB_4F_BGRA,		/* for color */
+   EMIT_3UB_3F_BGR,		/* for specular color */
    EMIT_4UB_4F_RGBA,		/* for color */
+   EMIT_4UB_4F_BGRA,		/* for color */
    EMIT_4CHAN_4F_RGBA,		/* for swrast color */
+   EMIT_PAD,			/* leave a hole of 'offset' bytes */
    EMIT_MAX
 };
 
@@ -81,6 +85,12 @@ extern void _tnl_copy_pv(  GLcontext *ctx, GLuint edst, GLuint esrc );
 extern void _tnl_get_attr( GLcontext *ctx, const void *vertex, GLenum attrib,
 			   GLfloat *dest );
 
+/* Complementary to the above.
+ */
+extern void _tnl_set_attr( GLcontext *ctx, void *vout, GLenum attrib, 
+			   const GLfloat *src );
+
+
 extern void *_tnl_get_vertex( GLcontext *ctx, GLuint nr );
 
 
@@ -103,17 +113,36 @@ extern void _tnl_init_vertices( GLcontext *ctx,
 
 extern void *_tnl_emit_vertices_to_buffer( GLcontext *ctx,
 					   GLuint start,
-					   GLuint count,
+					   GLuint end,
 					   void *dest );
 
 extern void _tnl_build_vertices( GLcontext *ctx,
 				 GLuint start,
-				 GLuint count,
+				 GLuint end,
 				 GLuint newinputs );
 
 extern void _tnl_invalidate_vertices( GLcontext *ctx, GLuint newinputs );
 
 extern void _tnl_invalidate_vertex_state( GLcontext *ctx, GLuint new_state );
 
+extern tnl_emit_func _tnl_codegen_emit( GLcontext *ctx );
+
+#define REG_IN   (0<<16)
+#define REG_OUT  (1<<16)
+#define REG_VP   (2<<16)
+#define REG_TMP  (3<<16)
+#define REG_MASK (3<<16)
+
+#define REG_OFFSET_MASK  0xffff
+
+#define in( offset )  (REG_IN  | (offset))
+#define out( offset ) (REG_OUT | (offset))
+#define vp( offset )  (REG_VP  | (offset))
+#define tmp( offset ) (REG_TMP | (offset))
+
+
+extern void _tnl_init_c_codegen( struct tnl_clipspace_codegen *p );
+
+#define GET_VERTEX_STATE(ctx)  &(TNL_CONTEXT(ctx)->clipspace)
 
 #endif

@@ -129,6 +129,7 @@ static GLvector4f * _XFORMAPI TAG(cliptest_np_points4)( GLvector4f *clip_vec,
    GLubyte tmpAndMask = *andMask;
    GLubyte tmpOrMask = *orMask;
    GLuint i;
+   (void) proj_vec;
    STRIDE_LOOP {
       const GLfloat cx = from[0];
       const GLfloat cy = from[1];
@@ -176,6 +177,7 @@ static GLvector4f * _XFORMAPI TAG(cliptest_points3)( GLvector4f *clip_vec,
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
    const GLfloat *from = (GLfloat *)clip_vec->start;
+   (void) proj_vec;
 
    GLubyte tmpOrMask = *orMask;
    GLubyte tmpAndMask = *andMask;
@@ -209,6 +211,7 @@ static GLvector4f * _XFORMAPI TAG(cliptest_points2)( GLvector4f *clip_vec,
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
    const GLfloat *from = (GLfloat *)clip_vec->start;
+   (void) proj_vec;
 
    GLubyte tmpOrMask = *orMask;
    GLubyte tmpAndMask = *andMask;

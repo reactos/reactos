@@ -54,6 +54,7 @@
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
+#include "drivers/common/driverfuncs.h"
 
 /* Dither not tested for Mesa 4.0 */ 
 #ifdef DITHER
@@ -165,7 +166,6 @@ static BOOL DDCreateOffScreen(WMesaContext wc);
 #define USE_GDI_TO_CLEAR 1
 #endif
 
-//static void FlushToFile(PWMC pwc, PSTR  szFile);
 BOOL wmCreateBackingStore(PWMC pwc, long lxSize, long lySize);
 BOOL wmDeleteBackingStore(PWMC pwc);
 void wmCreatePalette( PWMC pwdc );
@@ -347,16 +347,20 @@ BOOL wmSetDIBits(PWMC pwc, UINT uiScanWidth, UINT uiNumScans,
 
 BYTE DITHER_RGB_2_8BIT( int r, int g, int b, int x, int y);
 
+#if 0 /* unused */
+
 /* Finish all pending operations and synchronize. */
-#if 0
 static void finish(GLcontext* ctx)
 {
   /* No op */
+  (void) ctx;
 }
-#endif
+
+#endif /* unused */
 
 static void flush(GLcontext* ctx)
 {
+  (void) ctx;
   if((Current->rgb_flag &&!(Current->db_flag))
      ||(!Current->rgb_flag))
     {
@@ -372,6 +376,7 @@ static void flush(GLcontext* ctx)
  */
 static void clear_index(GLcontext* ctx, GLuint index)
 {
+  (void) ctx;
   Current->clearpixel = index;
 }
 
@@ -383,6 +388,7 @@ static void clear_index(GLcontext* ctx, GLuint index)
 static void clear_color( GLcontext* ctx, const GLfloat color[4] )
 {
   GLubyte col[4];
+  (void) ctx;
   CLAMPED_FLOAT_TO_UBYTE(col[0], color[0]);
   CLAMPED_FLOAT_TO_UBYTE(col[1], color[1]);
   CLAMPED_FLOAT_TO_UBYTE(col[2], color[2]);
@@ -468,7 +474,7 @@ static void clear(GLcontext* ctx, GLbitfield mask,
    WORD    wColor; 
    BYTE    bColor; 
    LPDWORD lpdw = (LPDWORD)Current->pbPixels; 
-   //LPWORD  lpw = (LPWORD)Current->pbPixels; 
+   /*LPWORD  lpw = (LPWORD)Current->pbPixels; */
    LPBYTE  lpb = Current->pbPixels; 
    int     lines; 
    /* Double-buffering - clear back buffer */ 
@@ -514,7 +520,9 @@ static void clear(GLcontext* ctx, GLbitfield mask,
        dwColor = BGR32(GetRValue(Current->clearpixel), 
          GetGValue(Current->clearpixel), 
          GetBValue(Current->clearpixel)); 
-   } 
+   }
+   else
+       dwColor = 0;
 
    if (nBypp != 3) 
    { 
@@ -568,6 +576,7 @@ static void clear(GLcontext* ctx, GLbitfield mask,
 
 static void enable( GLcontext* ctx, GLenum pname, GLboolean enable )
 {
+  (void) ctx;
   if (!Current)
     return;
   
@@ -593,6 +602,7 @@ static void enable( GLcontext* ctx, GLenum pname, GLboolean enable )
 static void set_buffer(GLcontext *ctx, GLframebuffer *colorBuffer,
                        GLuint bufferBit )
 {
+  (void) ctx; (void) colorBuffer; (void) bufferBit;
   /* XXX todo - examine bufferBit and set read/write pointers */
   return;
 }
@@ -602,9 +612,10 @@ static void set_buffer(GLcontext *ctx, GLframebuffer *colorBuffer,
 /* Return characteristics of the output buffer. */
 static void buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *height )
 {
-//  GET_CURRENT_CONTEXT(ctx);
+  /*GET_CURRENT_CONTEXT(ctx);*/
   int New_Size;
   RECT CR;
+  (void) buffer;
   
   GetClientRect(Current->Window,&CR);
   
@@ -649,28 +660,37 @@ static void buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *height )
 /**********************************************************************/
 
 /* Accelerated routines are not implemented in 4.0. See OSMesa for ideas. */
-#if 0
+
+#if 0 /* unused */
+
 static void fast_rgb_points( GLcontext* ctx, GLuint first, GLuint last )
 {
+  (void) ctx; (void) first; (void) last;
 }
 
+#endif /* unused */
+
 /* Return pointer to accelerated points function */
-extern points_func choose_points_function( GLcontext* ctx )
+extern tnl_points_func choose_points_function( GLcontext* ctx )
 {
+  (void) ctx;
   return NULL;
 }
+
+#if 0 /* unused */
 
 static void fast_flat_rgb_line( GLcontext* ctx, GLuint v0, 
 				GLuint v1, GLuint pv )
 {
+  (void) ctx; (void) v0; (void) v1; (void) pv;
 }
 
-static line_func choose_line_function( GLcontext* ctx )
+static tnl_line_func choose_line_function( GLcontext* ctx )
 {
-  return NULL;
+  (void) ctx;
 }
-#endif
 
+#endif /* unused */
 
 /**********************************************************************/
 /*****                 Span-based pixel drawing                   *****/
@@ -685,6 +705,7 @@ static void write_ci32_span( const GLcontext* ctx,
 {
   GLuint i;
   PBYTE Mem=Current->ScreenMem+FLIP(y)*Current->ScanWidth+x;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++)
     if (mask[i])
@@ -700,6 +721,7 @@ static void write_ci8_span( const GLcontext* ctx,
 {
   GLuint i;
   PBYTE Mem=Current->ScreenMem+FLIP(y)*Current->ScanWidth+x;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++)
     if (mask[i])
@@ -718,6 +740,7 @@ static void write_mono_ci_span(const GLcontext* ctx,
 {
   GLuint i;
   BYTE *Mem=Current->ScreenMem+FLIP(y)*Current->ScanWidth+x;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++)
     if (mask[i])
@@ -734,11 +757,12 @@ static void write_rgba_span( const GLcontext* ctx, GLuint n, GLint x, GLint y,
                              const GLubyte rgba[][4], const GLubyte mask[] )
 {
   PWMC    pwc = Current;
+  (void) ctx;
   
   if (pwc->rgb_flag==GL_TRUE)
     {
       GLuint i;
-      //HDC DC=DD_GETDC;
+      /*HDC DC=DD_GETDC;*/
       y=FLIP(y);
       if (mask) {
 	for (i=0; i<n; i++)
@@ -782,11 +806,12 @@ static void write_rgb_span( const GLcontext* ctx,
                             const GLubyte rgb[][3], const GLubyte mask[] )
 {
   PWMC    pwc = Current;
-  
+  (void) ctx;
+
   if (pwc->rgb_flag==GL_TRUE)
     {
       GLuint i;
-      //HDC DC=DD_GETDC;
+      /*HDC DC=DD_GETDC;*/
       y=FLIP(y);
       if (mask) {
 	for (i=0; i<n; i++)
@@ -834,6 +859,7 @@ static void write_mono_rgba_span( const GLcontext* ctx,
 {
   GLuint i;
   PWMC pwc = Current;
+  (void) ctx;
   assert(Current->rgb_flag==GL_TRUE);
   y=FLIP(y);
   if(Current->rgb_flag==GL_TRUE)
@@ -866,6 +892,7 @@ static void write_ci32_pixels( const GLcontext* ctx,
                                const GLuint index[], const GLubyte mask[] )
 {
   GLuint i;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++) {
     if (mask[i]) {
@@ -887,6 +914,7 @@ static void write_mono_ci_pixels( const GLcontext* ctx,
                                   GLuint colorIndex, const GLubyte mask[] )
 {
   GLuint i;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++) {
     if (mask[i]) {
@@ -905,7 +933,8 @@ static void write_rgba_pixels( const GLcontext* ctx,
 {
   GLuint i;
   PWMC    pwc = Current;
-  //HDC DC=DD_GETDC;
+  /*HDC DC=DD_GETDC;*/
+  (void) ctx;
   assert(Current->rgb_flag==GL_TRUE);
   for (i=0; i<n; i++)
     if (mask[i])
@@ -928,7 +957,8 @@ static void write_mono_rgba_pixels( const GLcontext* ctx,
 {
   GLuint i;
   PWMC    pwc = Current;
-  //HDC DC=DD_GETDC;
+  /*HDC DC=DD_GETDC;*/
+  (void) ctx;
   assert(Current->rgb_flag==GL_TRUE);
   for (i=0; i<n; i++)
     if (mask[i])
@@ -949,6 +979,7 @@ static void read_ci32_span( const GLcontext* ctx, GLuint n, GLint x, GLint y,
                             GLuint index[])
 {
   GLuint i;
+  (void) ctx;
   BYTE *Mem=Current->ScreenMem+FLIP(y)*Current->ScanWidth+x;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++)
@@ -964,6 +995,7 @@ static void read_ci32_pixels( const GLcontext* ctx,
                               GLuint indx[], const GLubyte mask[] )
 {
   GLuint i;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++) {
     if (mask[i]) {
@@ -982,6 +1014,7 @@ static void read_rgba_span( const GLcontext* ctx,
   UINT i;
   COLORREF Color;
   HDC DC=DD_GETDC;
+  (void) ctx;
   assert(Current->rgb_flag==GL_TRUE);
   y = Current->height - y - 1;
   for (i=0; i<n; i++) {
@@ -1003,6 +1036,7 @@ static void read_rgba_pixels( const GLcontext* ctx,
   GLuint i;
   COLORREF Color;
   HDC DC=DD_GETDC;
+  (void) ctx;
   assert(Current->rgb_flag==GL_TRUE);
   for (i=0; i<n; i++) {
     if (mask[i]) {
@@ -1025,6 +1059,7 @@ static void read_rgba_pixels( const GLcontext* ctx,
 
 static const GLubyte *get_string(GLcontext *ctx, GLenum name)
 {
+  (void) ctx;
   if (name == GL_RENDERER) {
     return (GLubyte *) "Mesa Windows";
   }
@@ -1035,54 +1070,25 @@ static const GLubyte *get_string(GLcontext *ctx, GLenum name)
 
 static void wmesa_update_state( GLcontext *ctx, GLuint new_state );
 
-static void SetFunctionPointers(GLcontext *ctx)
+static void SetFunctionPointers( struct dd_function_table *functions )
+{
+  functions->GetString = get_string;
+  functions->UpdateState = wmesa_update_state;
+  functions->ResizeBuffers = _swrast_alloc_buffers;
+  functions->GetBufferSize = buffer_size;
+  
+  functions->Clear = clear;
+  
+  functions->Flush = flush;
+  functions->ClearIndex = clear_index;
+  functions->ClearColor = clear_color;
+  functions->Enable = enable;
+}
+
+
+static void SetSWrastPointers(GLcontext *ctx)
 {
   struct swrast_device_driver *swdd = _swrast_GetDeviceDriverReference( ctx );
-  ctx->Driver.GetString = get_string;
-  ctx->Driver.UpdateState = wmesa_update_state;
-  ctx->Driver.ResizeBuffers = _swrast_alloc_buffers;
-  ctx->Driver.GetBufferSize = buffer_size;
-  
-  ctx->Driver.Accum = _swrast_Accum;
-  ctx->Driver.Bitmap = _swrast_Bitmap;
-  ctx->Driver.Clear = clear;
-  
-  ctx->Driver.Flush = flush;
-  ctx->Driver.ClearIndex = clear_index;
-  ctx->Driver.ClearColor = clear_color;
-  ctx->Driver.Enable = enable;
-  
-  ctx->Driver.CopyPixels = _swrast_CopyPixels;
-  ctx->Driver.DrawPixels = _swrast_DrawPixels;
-  ctx->Driver.ReadPixels = _swrast_ReadPixels;
-  ctx->Driver.DrawBuffer = _swrast_DrawBuffer;
-  
-  ctx->Driver.ChooseTextureFormat = _mesa_choose_tex_format;
-  ctx->Driver.TexImage1D = _mesa_store_teximage1d;
-  ctx->Driver.TexImage2D = _mesa_store_teximage2d;
-  ctx->Driver.TexImage3D = _mesa_store_teximage3d;
-  ctx->Driver.TexSubImage1D = _mesa_store_texsubimage1d;
-  ctx->Driver.TexSubImage2D = _mesa_store_texsubimage2d;
-  ctx->Driver.TexSubImage3D = _mesa_store_texsubimage3d;
-  ctx->Driver.TestProxyTexImage = _mesa_test_proxy_teximage;
-  
-  ctx->Driver.CompressedTexImage1D = _mesa_store_compressed_teximage1d;
-  ctx->Driver.CompressedTexImage2D = _mesa_store_compressed_teximage2d;
-  ctx->Driver.CompressedTexImage3D = _mesa_store_compressed_teximage3d;
-  ctx->Driver.CompressedTexSubImage1D = _mesa_store_compressed_texsubimage1d;
-  ctx->Driver.CompressedTexSubImage2D = _mesa_store_compressed_texsubimage2d;
-  ctx->Driver.CompressedTexSubImage3D = _mesa_store_compressed_texsubimage3d;
-
-  ctx->Driver.CopyTexImage1D = _swrast_copy_teximage1d;
-  ctx->Driver.CopyTexImage2D = _swrast_copy_teximage2d;
-  ctx->Driver.CopyTexSubImage1D = _swrast_copy_texsubimage1d;
-  ctx->Driver.CopyTexSubImage2D = _swrast_copy_texsubimage2d;
-  ctx->Driver.CopyTexSubImage3D = _swrast_copy_texsubimage3d;
-  ctx->Driver.CopyColorTable = _swrast_CopyColorTable;
-  ctx->Driver.CopyColorSubTable = _swrast_CopyColorSubTable;
-  ctx->Driver.CopyConvolutionFilter1D = _swrast_CopyConvolutionFilter1D;
-  ctx->Driver.CopyConvolutionFilter2D = _swrast_CopyConvolutionFilter2D;
-
   swdd->SetBuffer = set_buffer;
 
   /* Pixel/span writing functions: */
@@ -1101,12 +1107,12 @@ static void SetFunctionPointers(GLcontext *ctx)
   swdd->ReadRGBASpan        = read_rgba_span;
   swdd->ReadCI32Pixels      = read_ci32_pixels;
   swdd->ReadRGBAPixels      = read_rgba_pixels;
- 
 }
+ 
 
 static void wmesa_update_state( GLcontext *ctx, GLuint new_state )
 {
-//  struct swrast_device_driver *swdd = _swrast_GetDeviceDriverReference( ctx );
+  /*struct swrast_device_driver *swdd = _swrast_GetDeviceDriverReference( ctx );*/
   TNLcontext *tnl = TNL_CONTEXT(ctx);
   
   /*
@@ -1116,7 +1122,8 @@ static void wmesa_update_state( GLcontext *ctx, GLuint new_state )
    * would be good to minimize setting all this when not needed.
    */
 #ifndef SET_FPOINTERS_ONCE  
-  SetFunctionPointers(ctx);
+  SetFunctionPointers(&ctx->Driver);
+  SetSWrastPointers(ctx);
 #if 0
   ctx->Driver.GetString = get_string;
   ctx->Driver.UpdateState = wmesa_update_state;
@@ -1197,8 +1204,8 @@ static void wmesa_update_state( GLcontext *ctx, GLuint new_state )
 /*****                  WMesa API Functions                       *****/
 /**********************************************************************/
 
-
 #if 0 /* unused */
+
 #define PAL_SIZE 256
 static void GetPalette(HPALETTE Pal,RGBQUAD *aRGB)
 {
@@ -1209,11 +1216,9 @@ static void GetPalette(HPALETTE Pal,RGBQUAD *aRGB)
     WORD Version;
     WORD NumberOfEntries;
     PALETTEENTRY aEntries[PAL_SIZE];
-  } Palette =
-    {
-      0x300,
-      PAL_SIZE
-    };
+  } Palette;
+  Palette.Version = 0x300;
+  Palette.NumberOfEntries = PAL_SIZE;
   hdc=GetDC(NULL);
   if (Pal!=NULL)
     GetPaletteEntries(Pal,0,PAL_SIZE,Palette.aEntries);
@@ -1256,8 +1261,8 @@ static void GetPalette(HPALETTE Pal,RGBQUAD *aRGB)
       aRGB[i].rgbReserved=Palette.aEntries[i].peFlags;
     }
 }
-#endif /* 0 -- unused */
 
+#endif /* unused */
 
 WMesaContext WMesaCreateContext( HWND hWnd, HPALETTE* Pal,
 				 GLboolean rgb_flag,
@@ -1267,6 +1272,8 @@ WMesaContext WMesaCreateContext( HWND hWnd, HPALETTE* Pal,
   RECT CR;
   WMesaContext c;
   GLboolean true_color_flag;
+  struct dd_function_table functions;
+  (void) Pal;
 
   c = (struct wmesa_context * ) calloc(1,sizeof(struct wmesa_context));
   if (!c)
@@ -1353,9 +1360,13 @@ WMesaContext WMesaCreateContext( HWND hWnd, HPALETTE* Pal,
   if (!c->gl_visual) {
     return NULL;
   }
+
+  _mesa_init_driver_functions(&functions);
+  SetFunctionPointers(&functions);
   
   /* allocate a new Mesa context */
-  c->gl_ctx = _mesa_create_context( c->gl_visual, NULL, (void *) c, GL_FALSE );
+  c->gl_ctx = _mesa_create_context( c->gl_visual, NULL,
+                                    &functions, (void *) c );
   
   if (!c->gl_ctx) {
     _mesa_destroy_visual( c->gl_visual );
@@ -1389,7 +1400,8 @@ WMesaContext WMesaCreateContext( HWND hWnd, HPALETTE* Pal,
     _swsetup_CreateContext( ctx );
     
 #ifdef SET_FPOINTERS_ONCE
-    SetFunctionPointers(ctx);
+    /*SetFunctionPointers(ctx);*/
+    SetSWrastPointers(ctx);
 #endif // SET_FPOINTERS_ONCE
     _swsetup_Wakeup( ctx );
   }
@@ -1462,7 +1474,7 @@ void WMesaMakeCurrent( WMesaContext c )
 
 void WMesaSwapBuffers( void )
 {
-//  HDC DC = Current->hDC;
+/*  HDC DC = Current->hDC;*/
   GET_CURRENT_CONTEXT(ctx);
   
   /* If we're swapping the buffer associated with the current context
@@ -1725,6 +1737,8 @@ void  wmCreateDIBSection(
   DWORD   dwScanWidth;
   UINT    nBypp = pwc->cColorBits / 8;
   HDC     hic;
+  (void) hDC;
+  (void) pbmi;
   
   dwScanWidth = (((pwc->ScanWidth * nBypp)+ 3) & ~3);
   
@@ -1794,7 +1808,7 @@ void  wmCreateDIBSection(
 BOOL wmFlush(PWMC pwc)
 {
   BOOL    bRet = 0;
-//  DWORD   dwErr = 0;
+/*  DWORD   dwErr = 0;*/
 #ifdef DDRAW
   HRESULT             ddrval;
 #endif
@@ -3208,9 +3222,12 @@ static void flat_DITHER8_triangle( GLcontext *ctx, GLuint v0, GLuint v1,
 #endif
 /************** END DEAD TRIANGLE CODE ***********************/
 
-#if 0
-static triangle_func choose_triangle_function( GLcontext *ctx )
+#if 0 /* unused */
+
+static tnl_triangle_func choose_triangle_function( GLcontext *ctx )
 {
+    (void) ctx;
+#if 0
     WMesaContext wmesa = (WMesaContext) ctx->DriverCtx;
     int depth = wmesa->cColorBits;
 
@@ -3300,8 +3317,10 @@ static triangle_func choose_triangle_function( GLcontext *ctx )
 
     return NULL;
     }
-}
 #endif
+}
+
+#endif /* unused */
 
 /*
  * Define a new viewport and reallocate auxillary buffers if the size of
@@ -3310,6 +3329,7 @@ static triangle_func choose_triangle_function( GLcontext *ctx )
 void WMesaViewport( GLcontext *ctx,
 		    GLint x, GLint y, GLsizei width, GLsizei height )
 {
+  (void) ctx; (void) x; (void) y; (void) width; (void) height;
   assert(0);  /* I don't think that this is being used. */
 #if 0
   /* Save viewport */

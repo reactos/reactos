@@ -10,9 +10,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -112,7 +112,7 @@ _mesa_Ortho( GLdouble left, GLdouble right,
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glFrustum(%f, %f, %f, %f, %f, %f)\n",
+      _mesa_debug(ctx, "glOrtho(%f, %f, %f, %f, %f, %f)\n",
                   left, right, bottom, top, nearval, farval);
 
    if (left == right ||
@@ -234,7 +234,15 @@ _mesa_PushMatrix( void )
                   _mesa_lookup_enum_by_nr(ctx->Transform.MatrixMode));
 
    if (stack->Depth + 1 >= stack->MaxDepth) {
-      _mesa_error( ctx,  GL_STACK_OVERFLOW, "glPushMatrix" );
+      if (ctx->Transform.MatrixMode == GL_TEXTURE) {
+         _mesa_error(ctx,  GL_STACK_OVERFLOW,
+                     "glPushMatrix(mode=GL_TEXTURE, unit=%d)",
+                      ctx->Texture.CurrentUnit);
+      }
+      else {
+         _mesa_error(ctx,  GL_STACK_OVERFLOW, "glPushMatrix(mode=%s)",
+                     _mesa_lookup_enum_by_nr(ctx->Transform.MatrixMode));
+      }
       return;
    }
    _math_matrix_copy( &stack->Stack[stack->Depth + 1],
@@ -266,7 +274,15 @@ _mesa_PopMatrix( void )
                   _mesa_lookup_enum_by_nr(ctx->Transform.MatrixMode));
 
    if (stack->Depth == 0) {
-      _mesa_error( ctx,  GL_STACK_UNDERFLOW, "glPopMatrix" );
+      if (ctx->Transform.MatrixMode == GL_TEXTURE) {
+         _mesa_error(ctx,  GL_STACK_UNDERFLOW,
+                     "glPopMatrix(mode=GL_TEXTURE, unit=%d)",
+                      ctx->Texture.CurrentUnit);
+      }
+      else {
+         _mesa_error(ctx,  GL_STACK_UNDERFLOW, "glPopMatrix(mode=%s)",
+                     _mesa_lookup_enum_by_nr(ctx->Transform.MatrixMode));
+      }
       return;
    }
    stack->Depth--;
@@ -581,15 +597,7 @@ _mesa_set_viewport( GLcontext *ctx, GLint x, GLint y,
    ctx->Viewport.Y = y;
    ctx->Viewport.Height = height;
 
-   /* Check if window/buffer has been resized and if so, reallocate the
-    * ancillary buffers.
-    */
-/*    _mesa_ResizeBuffersMESA(); */
-
-   if (ctx->Driver.Viewport) {
-      (*ctx->Driver.Viewport)( ctx, x, y, width, height );
-   }
-
+   /* XXX send transposed width/height to Driver.Viewport() below??? */
    if (ctx->_RotateMode) {
       GLint tmp, tmps;
       tmp = x; x = y; y = tmp;
@@ -737,8 +745,16 @@ calculate_model_project_matrix( GLcontext *ctx )
  */
 void _mesa_update_modelview_project( GLcontext *ctx, GLuint new_state )
 {
-   if (new_state & _NEW_MODELVIEW)
+   if (new_state & _NEW_MODELVIEW) {
       _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
+    
+      /* Bring cull position uptodate.
+       */
+      TRANSFORM_POINT3( ctx->Transform.CullObjPos, 
+			ctx->ModelviewMatrixStack.Top->inv,
+			ctx->Transform.CullEyePos );
+   }
+
 
    if (new_state & _NEW_PROJECTION)
       update_projection( ctx );
@@ -890,6 +906,9 @@ void _mesa_init_transform( GLcontext *ctx )
       ASSIGN_4V( ctx->Transform.EyeUserPlane[i], 0.0, 0.0, 0.0, 0.0 );
    }
    ctx->Transform.ClipPlanesEnabled = 0;
+
+   ASSIGN_4V( ctx->Transform.CullObjPos, 0.0, 0.0, 1.0, 0.0 );
+   ASSIGN_4V( ctx->Transform.CullEyePos, 0.0, 0.0, 1.0, 0.0 );
 }
 
 

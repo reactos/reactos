@@ -1,4 +1,4 @@
-/* $Id: sse_xform4.S,v 1.1 2004/07/16 22:12:43 blight Exp $ */
+/* $Id: sse_xform4.S,v 1.2 2004/08/25 12:35:19 blight Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -24,6 +24,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef USE_SSE_ASM
 #include "matypes.h"
 #include "xform_args.h"
 
@@ -224,3 +225,4 @@ LLBL( sse_identity_done ):
 	POP_L( EDI )
 	POP_L( ESI )
 	RET
+#endif

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -50,6 +49,7 @@
 {									\
    GET_CURRENT_CONTEXT(ctx);						\
    struct gl_tnl_module *tnl = &(ctx->TnlModule);			\
+   typedef void (*func_ptr_t)();					\
 									\
    ASSERT( tnl->Current );						\
    ASSERT( tnl->SwapCount < NUM_VERTEX_FORMAT_ENTRIES );		\
@@ -57,7 +57,7 @@
    /* Save the swapped function's dispatch entry so it can be */	\
    /* restored later. */						\
    tnl->Swapped[tnl->SwapCount][0] = (void *)&(ctx->Exec->FUNC);	\
-   tnl->Swapped[tnl->SwapCount][1] = (void *)TAG(FUNC);			\
+   *(func_ptr_t *)(tnl->Swapped[tnl->SwapCount]+1) = (func_ptr_t)TAG(FUNC);	\
    tnl->SwapCount++;							\
 									\
    if ( 0 )								\
@@ -72,7 +72,8 @@
 
 
 
-static void install_vtxfmt( struct _glapi_table *tab, GLvertexformat *vfmt )
+static void
+install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
 {
    tab->ArrayElement = vfmt->ArrayElement;
    tab->Color3f = vfmt->Color3f;
@@ -136,7 +137,7 @@ static void install_vtxfmt( struct _glapi_table *tab, GLvertexformat *vfmt )
    tab->DrawRangeElements = vfmt->DrawRangeElements;
    tab->EvalMesh1 = vfmt->EvalMesh1;
    tab->EvalMesh2 = vfmt->EvalMesh2;
-   assert(tab->EvalMesh2);
+   ASSERT(tab->EvalMesh2);
 }
 
 
@@ -147,13 +148,14 @@ void _mesa_init_exec_vtxfmt( GLcontext *ctx )
 }
 
 
-void _mesa_install_exec_vtxfmt( GLcontext *ctx, GLvertexformat *vfmt )
+void _mesa_install_exec_vtxfmt( GLcontext *ctx, const GLvertexformat *vfmt )
 {
    ctx->TnlModule.Current = vfmt;
    _mesa_restore_exec_vtxfmt( ctx );
 }
 
-void _mesa_install_save_vtxfmt( GLcontext *ctx, GLvertexformat *vfmt )
+
+void _mesa_install_save_vtxfmt( GLcontext *ctx, const GLvertexformat *vfmt )
 {
    install_vtxfmt( ctx->Save, vfmt );
 }

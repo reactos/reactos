@@ -77,6 +77,9 @@
 #define EDGEFLAG_SET(idx, val) VB->EdgeFlag[idx] = val
 
 
+#define CLIPMASK (CLIP_ALL_BITS|CLIP_CULL_BIT)
+
+
 /* Vertices, with the possibility of clipping.
  */
 #define RENDER_POINTS( start, count ) \
@@ -88,7 +91,7 @@ do {						\
    GLubyte ormask = c1|c2;			\
    if (!ormask)					\
       LineFunc( ctx, v1, v2 );			\
-   else if (!(c1 & c2 & 0x3f))			\
+   else if (!(c1 & c2 & CLIPMASK))			\
       clip_line_4( ctx, v1, v2, ormask );	\
 } while (0)
 
@@ -98,7 +101,7 @@ do {							\
    GLubyte ormask = c1|c2|c3;				\
    if (!ormask)						\
       TriangleFunc( ctx, v1, v2, v3 );			\
-   else if (!(c1 & c2 & c3 & 0x3f)) 			\
+   else if (!(c1 & c2 & c3 & CLIPMASK)) 			\
       clip_tri_4( ctx, v1, v2, v3, ormask );    	\
 } while (0)
 
@@ -109,7 +112,7 @@ do {							\
    GLubyte ormask = c1|c2|c3|c4;			\
    if (!ormask)						\
       QuadFunc( ctx, v1, v2, v3, v4 );			\
-   else if (!(c1 & c2 & c3 & c4 & 0x3f)) 		\
+   else if (!(c1 & c2 & c3 & c4 & CLIPMASK)) 		\
       clip_quad_4( ctx, v1, v2, v3, v4, ormask );	\
 } while (0)
 
@@ -120,9 +123,9 @@ do {							\
    const GLuint * const elt = VB->Elts;				\
    const GLubyte *mask = VB->ClipMask;				\
    const GLuint sz = VB->ClipPtr->size;				\
-   const line_func LineFunc = tnl->Driver.Render.Line;		\
-   const triangle_func TriangleFunc = tnl->Driver.Render.Triangle;	\
-   const quad_func QuadFunc = tnl->Driver.Render.Quad;		\
+   const tnl_line_func LineFunc = tnl->Driver.Render.Line;		\
+   const tnl_triangle_func TriangleFunc = tnl->Driver.Render.Triangle;	\
+   const tnl_quad_func QuadFunc = tnl->Driver.Render.Quad;		\
    const GLboolean stipple = ctx->Line.StippleFlag;		\
    (void) (LineFunc && TriangleFunc && QuadFunc);		\
    (void) elt; (void) mask; (void) sz; (void) stipple;
@@ -152,7 +155,7 @@ static void clip_elt_triangles( GLcontext *ctx,
 				GLuint flags )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   render_func render_tris = tnl->Driver.Render.PrimTabElts[GL_TRIANGLES];
+   tnl_render_func render_tris = tnl->Driver.Render.PrimTabElts[GL_TRIANGLES];
    struct vertex_buffer *VB = &tnl->vb;
    const GLuint * const elt = VB->Elts;
    GLubyte *mask = VB->ClipMask;
@@ -170,7 +173,7 @@ static void clip_elt_triangles( GLcontext *ctx,
       if (ormask) {
 	 if (start < j)
 	    render_tris( ctx, start, j, 0 );
-	 if (!(c1&c2&c3&0x3f))
+	 if (!(c1&c2&c3&CLIPMASK))
 	    clip_tri_4( ctx, elt[j], elt[j+1], elt[j+2], ormask );
 	 start = j+3;
       }
@@ -209,9 +212,9 @@ static void clip_elt_triangles( GLcontext *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);				\
    struct vertex_buffer *VB = &tnl->vb;				\
    const GLuint * const elt = VB->Elts;				\
-   const line_func LineFunc = tnl->Driver.Render.Line;		\
-   const triangle_func TriangleFunc = tnl->Driver.Render.Triangle;	\
-   const quad_func QuadFunc = tnl->Driver.Render.Quad;		\
+   const tnl_line_func LineFunc = tnl->Driver.Render.Line;		\
+   const tnl_triangle_func TriangleFunc = tnl->Driver.Render.Triangle;	\
+   const tnl_quad_func QuadFunc = tnl->Driver.Render.Quad;		\
    const GLboolean stipple = ctx->Line.StippleFlag;		\
    (void) (LineFunc && TriangleFunc && QuadFunc);		\
    (void) elt; (void) stipple
@@ -266,7 +269,7 @@ static GLboolean run_render( GLcontext *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
    GLuint new_inputs = stage->changed_inputs;
-   render_func *tab;
+   tnl_render_func *tab;
    GLint pass = 0;
 
    /* Allow the drivers to lock before projected verts are built so
@@ -350,6 +353,7 @@ static void check_render( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 
 static void dtr( struct tnl_pipeline_stage *stage )
 {
+   (void) stage;
 }
 
 

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -244,6 +243,23 @@ pack_histogram( GLcontext *ctx,
             PACK_MACRO(GLfloat);
             if (packing->SwapBytes) {
                _mesa_swap4((GLuint *) dst, n * comps);
+            }
+         }
+         break;
+      case GL_HALF_FLOAT_ARB:
+         {
+            /* temporarily store as GLuints */
+            GLuint temp[4*HISTOGRAM_TABLE_SIZE];
+            GLhalfARB *dst = (GLhalfARB *) destination;
+            GLuint i;
+            /* get GLuint values */
+            PACK_MACRO(GLuint);
+            /* convert to GLhalf */
+            for (i = 0; i < n * comps; i++) {
+               dst[i] = _mesa_float_to_half((GLfloat) temp[i]);
+            }
+            if (packing->SwapBytes) {
+               _mesa_swap2((GLushort *) dst, n * comps);
             }
          }
          break;
@@ -678,31 +694,22 @@ _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvo
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetMinmax(format or type)");
-      return;
+   if (format != GL_RED &&
+       format != GL_GREEN &&
+       format != GL_BLUE &&
+       format != GL_ALPHA &&
+       format != GL_RGB &&
+       format != GL_BGR &&
+       format != GL_RGBA &&
+       format != GL_BGRA &&
+       format != GL_ABGR_EXT &&
+       format != GL_LUMINANCE &&
+       format != GL_LUMINANCE_ALPHA) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetHistogram(format)");
    }
 
-   if (type != GL_UNSIGNED_BYTE &&
-       type != GL_BYTE &&
-       type != GL_UNSIGNED_SHORT &&
-       type != GL_SHORT &&
-       type != GL_UNSIGNED_INT &&
-       type != GL_INT &&
-       type != GL_FLOAT &&
-       type != GL_UNSIGNED_BYTE_3_3_2 &&
-       type != GL_UNSIGNED_BYTE_2_3_3_REV &&
-       type != GL_UNSIGNED_SHORT_5_6_5 &&
-       type != GL_UNSIGNED_SHORT_5_6_5_REV &&
-       type != GL_UNSIGNED_SHORT_4_4_4_4 &&
-       type != GL_UNSIGNED_SHORT_4_4_4_4_REV &&
-       type != GL_UNSIGNED_SHORT_5_5_5_1 &&
-       type != GL_UNSIGNED_SHORT_1_5_5_5_REV &&
-       type != GL_UNSIGNED_INT_8_8_8_8 &&
-       type != GL_UNSIGNED_INT_8_8_8_8_REV &&
-       type != GL_UNSIGNED_INT_10_10_10_2 &&
-       type != GL_UNSIGNED_INT_2_10_10_10_REV) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetMinmax(type)");
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetMinmax(format or type)");
       return;
    }
 
@@ -719,7 +726,7 @@ _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvo
       minmax[1][GCOMP] = CLAMP(ctx->MinMax.Max[GCOMP], 0.0F, 1.0F);
       minmax[1][BCOMP] = CLAMP(ctx->MinMax.Max[BCOMP], 0.0F, 1.0F);
       minmax[1][ACOMP] = CLAMP(ctx->MinMax.Max[ACOMP], 0.0F, 1.0F);
-      _mesa_pack_float_rgba_span(ctx, 2, (CONST GLfloat (*)[4]) minmax,
+      _mesa_pack_rgba_span_float(ctx, 2, (CONST GLfloat (*)[4]) minmax,
                                  format, type, values, &ctx->Pack, 0);
    }
 
@@ -745,31 +752,22 @@ _mesa_GetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, G
       return;
    }
 
-   if (!_mesa_is_legal_format_and_type(format, type)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetHistogram(format or type)");
-      return;
+   if (format != GL_RED &&
+       format != GL_GREEN &&
+       format != GL_BLUE &&
+       format != GL_ALPHA &&
+       format != GL_RGB &&
+       format != GL_BGR &&
+       format != GL_RGBA &&
+       format != GL_BGRA &&
+       format != GL_ABGR_EXT &&
+       format != GL_LUMINANCE &&
+       format != GL_LUMINANCE_ALPHA) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetHistogram(format)");
    }
 
-   if (type != GL_UNSIGNED_BYTE &&
-       type != GL_BYTE &&
-       type != GL_UNSIGNED_SHORT &&
-       type != GL_SHORT &&
-       type != GL_UNSIGNED_INT &&
-       type != GL_INT &&
-       type != GL_FLOAT &&
-       type != GL_UNSIGNED_BYTE_3_3_2 &&
-       type != GL_UNSIGNED_BYTE_2_3_3_REV &&
-       type != GL_UNSIGNED_SHORT_5_6_5 &&
-       type != GL_UNSIGNED_SHORT_5_6_5_REV &&
-       type != GL_UNSIGNED_SHORT_4_4_4_4 &&
-       type != GL_UNSIGNED_SHORT_4_4_4_4_REV &&
-       type != GL_UNSIGNED_SHORT_5_5_5_1 &&
-       type != GL_UNSIGNED_SHORT_1_5_5_5_REV &&
-       type != GL_UNSIGNED_INT_8_8_8_8 &&
-       type != GL_UNSIGNED_INT_8_8_8_8_REV &&
-       type != GL_UNSIGNED_INT_10_10_10_2 &&
-       type != GL_UNSIGNED_INT_2_10_10_10_REV) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetHistogram(type)");
+   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetHistogram(format or type)");
       return;
    }
 

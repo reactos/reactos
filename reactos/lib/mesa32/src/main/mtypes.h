@@ -7,9 +7,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -108,22 +108,20 @@ typedef int GLfixed;
 /*
  * Fixed point arithmetic macros
  */
-#ifdef FIXED_14
-#define FIXED_ONE       0x00004000
-#define FIXED_HALF      0x00002000
-#define FIXED_FRAC_MASK 0x00003FFF
-#define FIXED_SCALE     16384.0f
-#define FIXED_SHIFT     14
-#else
-#define FIXED_ONE       0x00000800
-#define FIXED_HALF      0x00000400
-#define FIXED_FRAC_MASK 0x000007FF
-#define FIXED_SCALE     2048.0f
-#define FIXED_SHIFT     11
+#ifndef FIXED_FRAC_BITS
+#define FIXED_FRAC_BITS 11
 #endif
+
+#define FIXED_SHIFT     FIXED_FRAC_BITS
+#define FIXED_ONE       (1 << FIXED_SHIFT)
+#define FIXED_HALF      (1 << (FIXED_SHIFT-1))
+#define FIXED_FRAC_MASK (FIXED_ONE - 1)
 #define FIXED_INT_MASK  (~FIXED_FRAC_MASK)
 #define FIXED_EPSILON   1
+#define FIXED_SCALE     ((float) FIXED_ONE)
+#define FIXED_DBL_SCALE ((double) FIXED_ONE)
 #define FloatToFixed(X) (IROUND((X) * FIXED_SCALE))
+#define FixedToDouble(X) ((X) * (1.0 / FIXED_DBL_SCALE))
 #define IntToFixed(I)   ((I) << FIXED_SHIFT)
 #define FixedToInt(X)   ((X) >> FIXED_SHIFT)
 #define FixedToUns(X)   (((unsigned int)(X)) >> FIXED_SHIFT)
@@ -145,6 +143,8 @@ struct gl_texture_object;
 typedef struct __GLcontextRec GLcontext;
 typedef struct __GLcontextModesRec GLvisual;
 typedef struct gl_frame_buffer GLframebuffer;
+struct gl_pixelstore_attrib;
+struct gl_texture_format;
 /*@}*/
 
 
@@ -197,6 +197,68 @@ enum {
 #define VERT_BIT_TEX(u)  (1 << (VERT_ATTRIB_TEX0 + (u)))
 
 
+/* Fragment programs use a different but related set of attributes:
+ */
+
+/* Fragment input registers / attributes */
+#define FRAG_ATTRIB_WPOS  0
+#define FRAG_ATTRIB_COL0  1
+#define FRAG_ATTRIB_COL1  2
+#define FRAG_ATTRIB_FOGC  3
+#define FRAG_ATTRIB_TEX0  4
+#define FRAG_ATTRIB_TEX1  5
+#define FRAG_ATTRIB_TEX2  6
+#define FRAG_ATTRIB_TEX3  7
+#define FRAG_ATTRIB_TEX4  8
+#define FRAG_ATTRIB_TEX5  9
+#define FRAG_ATTRIB_TEX6  10
+#define FRAG_ATTRIB_TEX7  11
+
+/* Bitmasks for the above */
+#define FRAG_BIT_WPOS  (1 << FRAG_ATTRIB_WPOS)
+#define FRAG_BIT_COL0  (1 << FRAG_ATTRIB_COL0)
+#define FRAG_BIT_COL1  (1 << FRAG_ATTRIB_COL1)
+#define FRAG_BIT_FOGC  (1 << FRAG_ATTRIB_FOGC)
+#define FRAG_BIT_TEX0  (1 << FRAG_ATTRIB_TEX0)
+#define FRAG_BIT_TEX1  (1 << FRAG_ATTRIB_TEX1)
+#define FRAG_BIT_TEX2  (1 << FRAG_ATTRIB_TEX2)
+#define FRAG_BIT_TEX3  (1 << FRAG_ATTRIB_TEX3)
+#define FRAG_BIT_TEX4  (1 << FRAG_ATTRIB_TEX4)
+#define FRAG_BIT_TEX5  (1 << FRAG_ATTRIB_TEX5)
+#define FRAG_BIT_TEX6  (1 << FRAG_ATTRIB_TEX6)
+#define FRAG_BIT_TEX7  (1 << FRAG_ATTRIB_TEX7)
+
+#define FRAG_BITS_TEX_ANY (FRAG_BIT_TEX0|	\
+			   FRAG_BIT_TEX1|	\
+			   FRAG_BIT_TEX2|	\
+			   FRAG_BIT_TEX3|	\
+			   FRAG_BIT_TEX4|	\
+			   FRAG_BIT_TEX5|	\
+			   FRAG_BIT_TEX6|	\
+			   FRAG_BIT_TEX7)
+
+
+/**
+ * Bits for each basic buffer in a complete framebuffer.
+ * When glDrawBuffer(GL_FRONT_AND_BACK) is called (non-stereo),
+ * _DrawDestMask will be set to (DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT),
+ * for example.  Also passed to ctx->Driver.Clear() to indicate which
+ * buffers to clear.
+ */
+/*@{*/
+#define DD_FRONT_LEFT_BIT  0x1
+#define DD_FRONT_RIGHT_BIT 0x2
+#define DD_BACK_LEFT_BIT   0x4
+#define DD_BACK_RIGHT_BIT  0x8
+#define DD_AUX0_BIT        0x10
+#define DD_AUX1_BIT        0x20
+#define DD_AUX2_BIT        0x40
+#define DD_AUX3_BIT        0x80
+#define DD_DEPTH_BIT       GL_DEPTH_BUFFER_BIT    /* 0x00000100 */
+#define DD_ACCUM_BIT       GL_ACCUM_BUFFER_BIT    /* 0x00000200 */
+#define DD_STENCIL_BIT     GL_STENCIL_BUFFER_BIT  /* 0x00000400 */
+/*@}*/
+
 
 /**
  * Maximum number of temporary vertices required for clipping.  
@@ -213,8 +275,8 @@ struct gl_color_table {
    GLenum Format;         /**< GL_ALPHA, GL_RGB, GL_RGB, etc */
    GLenum IntFormat;
    GLuint Size;           /**< number of entries (rows) in table */
-   GLvoid *Table;         /**< either GLfloat * or GLchan * */
-   GLboolean FloatTable;  /**< are entries stored as floats? */
+   GLvoid *Table;         /**< points to data of <Type> */
+   GLenum Type;           /**< GL_UNSIGNED_BYTE or GL_FLOAT */
    GLubyte RedSize;
    GLubyte GreenSize;
    GLubyte BlueSize;
@@ -371,24 +433,6 @@ struct gl_accum_attrib {
 
 
 /**
- * \name Clipping planes bits
- * 
- * Used in gl_colorbuffer_attrib::_DrawDestMask and
- * gl_colorbuffer_attrib::_ReadSrcMask below to identify color buffers.
- */
-/*@{*/
-#define FRONT_LEFT_BIT  0x1
-#define FRONT_RIGHT_BIT 0x2
-#define BACK_LEFT_BIT   0x4
-#define BACK_RIGHT_BIT  0x8
-#define AUX0_BIT        0x10
-#define AUX1_BIT        0x20
-#define AUX2_BIT        0x40
-#define AUX3_BIT        0x80
-/*@}*/
-
-
-/**
  * Color buffers attributes.
  */
 struct gl_colorbuffer_attrib {
@@ -399,7 +443,7 @@ struct gl_colorbuffer_attrib {
    GLubyte ColorMask[4];		/**< Each flag is 0xff or 0x0 */
 
    GLenum DrawBuffer;			/**< Which buffer to draw into */
-   GLubyte _DrawDestMask;		/**< bitwise-OR of FRONT/BACK_LEFT/RIGHT_BITs */
+   GLbitfield _DrawDestMask;		/**< bitmask of DD_*_BIT bits */
 
    /** 
     * \name alpha testing
@@ -419,7 +463,8 @@ struct gl_colorbuffer_attrib {
    GLenum BlendDstRGB;			/**< Blending destination operator */
    GLenum BlendSrcA;			/**< GL_INGR_blend_func_separate */
    GLenum BlendDstA;			/**< GL_INGR_blend_func_separate */
-   GLenum BlendEquation;		/**< Blending equation */
+   GLenum BlendEquationRGB;		/**< Blending equation */
+   GLenum BlendEquationA;		/**< GL_EXT_blend_equation_separate */
    GLfloat BlendColor[4];		/**< Blending color */
    /*@}*/
 
@@ -727,18 +772,18 @@ struct gl_list_attrib {
 };
 
 
-struct gl_list_opcode {
-   GLuint size;
-   void (*execute)( GLcontext *ctx, void *data );
-   void (*destroy)( GLcontext *ctx, void *data );
-   void (*print)( GLcontext *ctx, void *data );
+struct gl_list_instruction {
+   GLuint Size;
+   void (*Execute)( GLcontext *ctx, void *data );
+   void (*Destroy)( GLcontext *ctx, void *data );
+   void (*Print)( GLcontext *ctx, void *data );
 };
 
-#define GL_MAX_EXT_OPCODES 16
+#define MAX_DLIST_EXT_OPCODES 16
 
 struct gl_list_extensions {
-   struct gl_list_opcode opcode[GL_MAX_EXT_OPCODES];
-   GLuint nr_opcodes;
+   struct gl_list_instruction Opcode[MAX_DLIST_EXT_OPCODES];
+   GLuint NumOpcodes;
 };
 
 
@@ -955,20 +1000,50 @@ struct gl_stencil_attrib {
 #define ENABLE_TEXGEN(i) (ENABLE_TEXGEN0 << (i))
 #define ENABLE_TEXMAT(i) (ENABLE_TEXMAT0 << (i))
 
+
 /**
- * Texel fetch function prototype.
+ * Texel fetch function prototype.  We use texel fetch functions to
+ * extract RGBA, color indexes and depth components out of 1D, 2D and 3D
+ * texture images.  These functions help to isolate us from the gritty
+ * details of all the various texture image encodings.
  * 
  * \param texImage texture image.
  * \param col texel column.
  * \param row texel row.
- * \param img texel level.
- * \param texelOut output texel. If \p texImage is color-index, \p texelOut
- * returns <tt>GLchan[1]</tt>.  If \p texImage is depth, \p texelOut returns
- * <tt>GLfloat[1]</tt>.  Otherwise, \p texelOut returns <tt>GLchan[4]</tt>.
+ * \param img texel image level/layer.
+ * \param texelOut output texel (up to 4 GLchans)
  */
-typedef void (*FetchTexelFunc)( const struct gl_texture_image *texImage,
-                                GLint col, GLint row, GLint img,
-                                GLvoid *texelOut );
+typedef void (*FetchTexelFuncC)( const struct gl_texture_image *texImage,
+                                 GLint col, GLint row, GLint img,
+                                 GLchan *texelOut );
+
+/**
+ * As above, but returns floats.
+ * Used for depth component images and for upcoming signed/float
+ * texture images.
+ */
+typedef void (*FetchTexelFuncF)( const struct gl_texture_image *texImage,
+                                 GLint col, GLint row, GLint img,
+                                 GLfloat *texelOut );
+
+
+/**
+ * TexImage store function.  This is called by the glTex[Sub]Image
+ * functions and is responsible for converting the user-specified texture
+ * image into a specific (hardware) image format.
+ */
+typedef GLboolean (*StoreTexImageFunc)(GLcontext *ctx, GLuint dims,
+                          GLenum baseInternalFormat,
+                          const struct gl_texture_format *dstFormat,
+                          GLvoid *dstAddr,
+                          GLint dstXoffset, GLint dstYoffset, GLint dstZoffset,
+                          GLint dstRowStride, GLint dstImageStride,
+                          GLint srcWidth, GLint srcHeight, GLint srcDepth,
+                          GLenum srcFormat, GLenum srcType,
+                          const GLvoid *srcAddr,
+                          const struct gl_pixelstore_attrib *srcPacking);
+
+
 
 /**
  * Texture format record 
@@ -976,10 +1051,12 @@ typedef void (*FetchTexelFunc)( const struct gl_texture_image *texImage,
 struct gl_texture_format {
    GLint MesaFormat;		/**< One of the MESA_FORMAT_* values */
 
-   GLenum BaseFormat;		/**< Either GL_ALPHA, GL_INTENSITY, GL_LUMINANCE,
-                                 *   GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA,
-                                 *   GL_COLOR_INDEX or GL_DEPTH_COMPONENT.
-                                 */
+   GLenum BaseFormat;		/**< Either GL_RGB, GL_RGBA, GL_ALPHA,
+				 *   GL_LUMINANCE, GL_LUMINANCE_ALPHA,
+				 *   GL_INTENSITY, GL_COLOR_INDEX or
+				 *   GL_DEPTH_COMPONENT.
+				 */
+   GLenum DataType;		/**< GL_FLOAT or GL_UNSIGNED_NORMALIZED_ARB */
    GLubyte RedBits;		/**< Bits per texel component */
    GLubyte GreenBits;		/**< These are just rough approximations for */
    GLubyte BlueBits;		/**< compressed texture formats. */
@@ -989,15 +1066,20 @@ struct gl_texture_format {
    GLubyte IndexBits;
    GLubyte DepthBits;
 
-   GLint TexelBytes;		/**< Bytes per texel (0 for compressed formats */
+   GLuint TexelBytes;		/**< Bytes per texel, 0 if compressed format */
+
+   StoreTexImageFunc StoreImage;
 
    /**
     * \name Texel fetch function pointers
     */
    /*@{*/
-   FetchTexelFunc FetchTexel1D;
-   FetchTexelFunc FetchTexel2D;
-   FetchTexelFunc FetchTexel3D;
+   FetchTexelFuncC FetchTexel1D;
+   FetchTexelFuncC FetchTexel2D;
+   FetchTexelFuncC FetchTexel3D;
+   FetchTexelFuncF FetchTexel1Df;
+   FetchTexelFuncF FetchTexel2Df;
+   FetchTexelFuncF FetchTexel3Df;
    /*@}*/
 };
 
@@ -1006,10 +1088,11 @@ struct gl_texture_format {
  * Texture image record 
  */
 struct gl_texture_image {
-   GLenum Format;		/**< GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA,
-				 *    GL_INTENSITY, GL_RGB, GL_RGBA,
-                                 *    GL_COLOR_INDEX or GL_DEPTH_COMPONENT only.
-                                 *    Used for choosing TexEnv arithmetic.
+   GLenum Format;		/**< Either GL_RGB, GL_RGBA, GL_ALPHA,
+				 *   GL_LUMINANCE, GL_LUMINANCE_ALPHA,
+				 *   GL_INTENSITY, GL_COLOR_INDEX or
+				 *   GL_DEPTH_COMPONENT only.
+				 *   Used for choosing TexEnv arithmetic.
 				 */
    GLint IntFormat;		/**< Internal format as given by the user */
    GLuint Border;		/**< 0 or 1 */
@@ -1033,7 +1116,10 @@ struct gl_texture_image {
 
    const struct gl_texture_format *TexFormat;
 
-   FetchTexelFunc FetchTexel;	/**< Texel fetch function pointer */
+   struct gl_texture_object *TexObject;  /**< Pointer back to parent object */
+
+   FetchTexelFuncC FetchTexelc;	/**< GLchan texel fetch function pointer */
+   FetchTexelFuncF FetchTexelf;	/**< Float texel fetch function pointer */
 
    GLboolean IsCompressed;	/**< GL_ARB_texture_compression */
    GLuint CompressedSize;	/**< GL_ARB_texture_compression */
@@ -1046,6 +1132,13 @@ struct gl_texture_image {
    /*@}*/
 };
 
+#define FACE_POS_X   0
+#define FACE_NEG_X   1
+#define FACE_POS_Y   2
+#define FACE_NEG_Y   3
+#define FACE_POS_Z   4
+#define FACE_NEG_Z   5
+#define MAX_FACES  6
 
 /**
  * Texture object record
@@ -1084,20 +1177,7 @@ struct gl_texture_object {
    GLboolean GenerateMipmap;    /**< GL_SGIS_generate_mipmap */
    GLboolean _IsPowerOfTwo;	/**< Are all image dimensions powers of two? */
 
-   struct gl_texture_image *Image[MAX_TEXTURE_LEVELS];
-
-   /**
-    * \name Texture cube faces 
-    * 
-    * Image[] is alias for *PosX[MAX_TEXTURE_LEVELS];
-    */
-   /*@{*/
-   struct gl_texture_image *NegX[MAX_TEXTURE_LEVELS];
-   struct gl_texture_image *PosY[MAX_TEXTURE_LEVELS];
-   struct gl_texture_image *NegY[MAX_TEXTURE_LEVELS];
-   struct gl_texture_image *PosZ[MAX_TEXTURE_LEVELS];
-   struct gl_texture_image *NegZ[MAX_TEXTURE_LEVELS];
-   /*@}*/
+   struct gl_texture_image *Image[MAX_FACES][MAX_TEXTURE_LEVELS];
 
    /** GL_EXT_paletted_texture */
    struct gl_color_table Palette;
@@ -1113,6 +1193,25 @@ struct gl_texture_object {
    /*@}*/
 };
 
+/**
+ * Texture combine environment state.
+ * 
+ * \todo
+ * If GL_NV_texture_env_combine4 is ever supported, the arrays in this
+ * structure will need to be expanded for 4 elements.
+ */
+struct gl_tex_env_combine_state {
+   GLenum ModeRGB;       /**< GL_REPLACE, GL_DECAL, GL_ADD, etc. */
+   GLenum ModeA;         /**< GL_REPLACE, GL_DECAL, GL_ADD, etc. */
+   GLenum SourceRGB[3];  /**< GL_PRIMARY_COLOR, GL_TEXTURE, etc. */
+   GLenum SourceA[3];    /**< GL_PRIMARY_COLOR, GL_TEXTURE, etc. */
+   GLenum OperandRGB[3]; /**< SRC_COLOR, ONE_MINUS_SRC_COLOR, etc */
+   GLenum OperandA[3];   /**< SRC_ALPHA, ONE_MINUS_SRC_ALPHA, etc */
+   GLuint ScaleShiftRGB; /**< 0, 1 or 2 */
+   GLuint ScaleShiftA;   /**< 0, 1 or 2 */
+   GLuint _NumArgsRGB;   /**< Number of inputs used for the combine mode. */
+   GLuint _NumArgsA;     /**< Number of inputs used for the combine mode. */
+};
 
 /**
  * Texture unit record 
@@ -1150,16 +1249,19 @@ struct gl_texture_unit {
    /** 
     * \name GL_EXT_texture_env_combine 
     */
-   /*@{*/
-   GLenum CombineModeRGB;       /**< GL_REPLACE, GL_DECAL, GL_ADD, etc. */
-   GLenum CombineModeA;         /**< GL_REPLACE, GL_DECAL, GL_ADD, etc. */
-   GLenum CombineSourceRGB[3];  /**< GL_PRIMARY_COLOR, GL_TEXTURE, etc. */
-   GLenum CombineSourceA[3];    /**< GL_PRIMARY_COLOR, GL_TEXTURE, etc. */
-   GLenum CombineOperandRGB[3]; /**< SRC_COLOR, ONE_MINUS_SRC_COLOR, etc */
-   GLenum CombineOperandA[3];   /**< SRC_ALPHA, ONE_MINUS_SRC_ALPHA, etc */
-   GLuint CombineScaleShiftRGB; /**< 0, 1 or 2 */
-   GLuint CombineScaleShiftA;   /**< 0, 1 or 2 */
-   /*@}*/
+   struct gl_tex_env_combine_state Combine;
+
+   /**
+    * Derived state based on \c EnvMode and the \c BaseFormat of the
+    * currently enabled texture.
+    */
+   struct gl_tex_env_combine_state _EnvMode;
+
+   /**
+    * Currently enabled combiner state.  This will point to either
+    * \c Combine or \c _EnvMode.
+    */
+   struct gl_tex_env_combine_state *_CurrentCombine;
 
    struct gl_texture_object *Current1D;
    struct gl_texture_object *Current2D;
@@ -1223,6 +1325,10 @@ struct gl_transform_attrib {
    GLboolean Normalize;				/**< Normalize all normals? */
    GLboolean RescaleNormals;			/**< GL_EXT_rescale_normal */
    GLboolean RasterPositionUnclipped;           /**< GL_IBM_rasterpos_clip */
+
+   GLboolean CullVertexFlag;	/**< True if GL_CULL_VERTEX_EXT is enabled */
+   GLfloat CullEyePos[4];
+   GLfloat CullObjPos[4];
 };
 
 
@@ -1248,16 +1354,18 @@ struct gl_attrib_node {
 
 
 /**
- * GL_ARB_vertex_buffer_object buffer object
+ * GL_ARB_vertex/pixel_buffer_object buffer object
  */
 struct gl_buffer_object {
    GLint RefCount;
    GLuint Name;
    GLenum Usage;
    GLenum Access;
-   GLvoid *Pointer;   /**< Only valid while buffer is mapped */
-   GLuint Size;       /**< Size of data array in bytes */
-   GLubyte *Data;     /**< The storage */
+   GLvoid *Pointer;          /**< Only valid while buffer is mapped */
+   GLuint Size;              /**< Size of storage in bytes */
+   GLubyte *Data;            /**< Location of storage either in RAM or VRAM. */
+   GLboolean OnCard;         /**< Is buffer in VRAM? (hardware drivers) */
+   GLboolean DeletePending;  /**< Deleted by user but RefCount > 0? */
 };
 
 
@@ -1276,6 +1384,7 @@ struct gl_pixelstore_attrib {
    GLboolean LsbFirst;
    GLboolean ClientStorage; /**< GL_APPLE_client_storage */
    GLboolean Invert;        /**< GL_MESA_pack_invert */
+   struct gl_buffer_object *BufferObj; /**< GL_ARB_pixel_buffer_object */
 };
 
 
@@ -1286,11 +1395,11 @@ struct gl_pixelstore_attrib {
  * Client vertex array attributes
  */
 struct gl_client_array {
-   GLint Size;
-   GLenum Type;
+   GLint Size;                  /**< components per element (1,2,3,4) */
+   GLenum Type;                 /**< datatype: GL_FLOAT, GL_INT, etc */
    GLsizei Stride;		/**< user-specified stride */
    GLsizei StrideB;		/**< actual stride in bytes */
-   const GLubyte *Ptr;
+   const GLubyte *Ptr;          /**< Points to array data */
    GLuint Enabled;		/**< one of the _NEW_ARRAY_ bits */
    GLboolean Normalized;        /**< GL_ARB_vertex_program */
 
@@ -1446,7 +1555,7 @@ enum register_file
    PROGRAM_NAMED_PARAM,
    PROGRAM_STATE_VAR,
    PROGRAM_WRITE_ONLY,
-	PROGRAM_ADDRESS
+   PROGRAM_ADDRESS
 };
 
 
@@ -1482,6 +1591,7 @@ struct vertex_program
 {
    struct program Base;   /* base class */
    struct vp_instruction *Instructions;  /* Compiled instructions */
+   GLboolean IsNVProgram; /* GL_NV_vertex_program ? */
    GLboolean IsPositionInvariant;  /* GL_NV_vertex_program1_1 */
    GLuint InputsRead;     /* Bitmask of which input regs are read */
    GLuint OutputsWritten; /* Bitmask of which output regs are written to */
@@ -1500,7 +1610,13 @@ struct fragment_program
    GLuint NumAluInstructions; /**< GL_ARB_fragment_program */
    GLuint NumTexInstructions;
    GLuint NumTexIndirections;
+   GLenum FogOption;
    struct program_parameter_list *Parameters; /**< array [NumParameters] */
+
+#ifdef USE_TCC
+   char c_str[4096];		/* experimental... */
+   int c_strlen;
+#endif
 };
 
 
@@ -1518,10 +1634,11 @@ struct program_state {
  */
 struct vertex_program_state
 {
-   GLboolean Enabled;                    /**< GL_VERTEX_PROGRAM_NV */
-   GLboolean PointSizeEnabled;           /**< GL_VERTEX_PROGRAM_POINT_SIZE_NV */
-   GLboolean TwoSideEnabled;             /**< GL_VERTEX_PROGRAM_TWO_SIDE_NV */
-   struct vertex_program *Current;       /**< ptr to currently bound program */
+   GLboolean Enabled;                  /**< GL_VERTEX_PROGRAM_NV */
+   GLboolean _Enabled;                 /**< Really enabled? */
+   GLboolean PointSizeEnabled;         /**< GL_VERTEX_PROGRAM_POINT_SIZE_NV */
+   GLboolean TwoSideEnabled;           /**< GL_VERTEX_PROGRAM_TWO_SIDE_NV */
+   struct vertex_program *Current;     /**< ptr to currently bound program */
 
    GLenum TrackMatrix[MAX_NV_VERTEX_PROGRAM_PARAMS / 4];
    GLenum TrackMatrixTransform[MAX_NV_VERTEX_PROGRAM_PARAMS / 4];
@@ -1548,6 +1665,7 @@ struct vertex_program_state
 struct fragment_program_state
 {
    GLboolean Enabled;                    /* GL_VERTEX_PROGRAM_NV */
+   GLboolean _Enabled;                   /* Really enabled? */
    struct fragment_program *Current;     /* ptr to currently bound program */
    struct fp_machine Machine;            /* machine state */
    GLfloat Parameters[MAX_NV_FRAGMENT_PROGRAM_PARAMS][4]; /* Env params */
@@ -1634,6 +1752,7 @@ struct gl_frame_buffer
    GLboolean UseSoftwareAccumBuffer;
    GLboolean UseSoftwareStencilBuffer;
    GLboolean UseSoftwareAlphaBuffers;
+   GLboolean UseSoftwareAuxBuffers;
 
    /** \name Software depth (aka Z) buffer */
    /*@{*/
@@ -1652,11 +1771,13 @@ struct gl_frame_buffer
 
    /** \name Software alpha planes */
    /*@{*/
-   GLvoid *FrontLeftAlpha;	/**< array [Width*Height] of GLubyte */
-   GLvoid *BackLeftAlpha;	/**< array [Width*Height] of GLubyte */
-   GLvoid *FrontRightAlpha;	/**< array [Width*Height] of GLubyte */
-   GLvoid *BackRightAlpha;	/**< array [Width*Height] of GLubyte */
+   GLchan *FrontLeftAlpha;	/**< array [Width*Height] of GLchan */
+   GLchan *BackLeftAlpha;	/**< array [Width*Height] of GLchan */
+   GLchan *FrontRightAlpha;	/**< array [Width*Height] of GLchan */
+   GLchan *BackRightAlpha;	/**< array [Width*Height] of GLchan */
    /*@}*/
+
+   GLchan *AuxBuffers[MAX_AUX_BUFFERS];
 
    /** 
     * \name Drawing bounds
@@ -1695,7 +1816,6 @@ struct gl_constants
    GLfloat MinLineWidth, MaxLineWidth;		/* aliased */
    GLfloat MinLineWidthAA, MaxLineWidthAA;	/* antialiased */
    GLfloat LineWidthGranularity;
-   GLuint NumAuxBuffers;
    GLuint MaxColorTableSize;
    GLuint MaxConvolutionWidth;
    GLuint MaxConvolutionHeight;
@@ -1742,6 +1862,7 @@ struct gl_extensions
    GLboolean dummy;  /* don't remove this! */
    GLboolean ARB_depth_texture;
    GLboolean ARB_fragment_program;
+   GLboolean ARB_half_float_pixel;
    GLboolean ARB_imaging;
    GLboolean ARB_multisample;
    GLboolean ARB_multitexture;
@@ -1754,6 +1875,7 @@ struct gl_extensions
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
    GLboolean ARB_texture_env_dot3;
+   GLboolean ARB_texture_float;
    GLboolean ARB_texture_mirrored_repeat;
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_transpose_matrix;
@@ -1769,6 +1891,7 @@ struct gl_extensions
    GLboolean EXT_blend_minmax;
    GLboolean EXT_blend_subtract;
    GLboolean EXT_clip_volume_hint;
+   GLboolean EXT_cull_vertex;
    GLboolean EXT_convolution;
    GLboolean EXT_compiled_vertex_array;
    GLboolean EXT_copy_texture;
@@ -1779,6 +1902,7 @@ struct gl_extensions
    GLboolean EXT_multi_draw_arrays;
    GLboolean EXT_paletted_texture;
    GLboolean EXT_packed_pixels;
+   GLboolean EXT_pixel_buffer_object;
    GLboolean EXT_point_parameters;
    GLboolean EXT_polygon_offset;
    GLboolean EXT_rescale_normal;
@@ -1871,6 +1995,8 @@ struct matrix_stack
 #define IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT   0x100
 #define IMAGE_HISTOGRAM_BIT                       0x200
 #define IMAGE_MIN_MAX_BIT                         0x400
+#define IMAGE_CLAMP_BIT                           0x800 /* extra */
+
 
 /** Transfer ops up to convolution */
 #define IMAGE_PRE_CONVOLUTION_BITS (IMAGE_SCALE_BIAS_BIT |     \
@@ -1985,7 +2111,7 @@ struct matrix_stack
  */
 /*@{*/
 #define _DD_NEW_FLATSHADE                _NEW_LIGHT
-#define _DD_NEW_SEPARATE_SPECULAR        (_NEW_LIGHT | _NEW_FOG)
+#define _DD_NEW_SEPARATE_SPECULAR        (_NEW_LIGHT | _NEW_FOG | _NEW_PROGRAM)
 #define _DD_NEW_TRI_CULL_FRONT_BACK      _NEW_POLYGON
 #define _DD_NEW_TRI_LIGHT_TWOSIDE        _NEW_LIGHT
 #define _DD_NEW_TRI_UNFILLED             _NEW_POLYGON
@@ -2034,7 +2160,7 @@ struct gl_tnl_module {
    /**
     * Vertex format to be lazily swapped into current dispatch.
     */
-   GLvertexformat *Current;
+   const GLvertexformat *Current;
 
    /**
     * \name Record of functions swapped out.  
@@ -2189,6 +2315,7 @@ struct __GLcontextRec {
    struct gl_array_attrib	Array;	/**< Vertex arrays */
    struct gl_pixelstore_attrib	Pack;	/**< Pixel packing */
    struct gl_pixelstore_attrib	Unpack;	/**< Pixel unpacking */
+   struct gl_pixelstore_attrib	DefaultPacking;	/**< Default params */
 
    struct gl_evaluators EvalMap;   /**< All evaluators */
    struct gl_feedback   Feedback;  /**< Feedback */
@@ -2227,7 +2354,7 @@ struct __GLcontextRec {
    struct gl_shine_tab *_ShineTabList;  /**< MRU list of inactive shine tables */
    /**@}*/
 
-   struct gl_list_extensions listext; /**< driver dlist extensions */
+   struct gl_list_extensions ListExt; /**< driver dlist extensions */
 
 
    GLboolean OcclusionResult;       /**< for GL_HP_occlusion_test */
@@ -2245,8 +2372,11 @@ struct __GLcontextRec {
    GLfloat MRD;		/**< minimum resolvable difference in Z values */
    /*@}*/
 
-   /** Should 3Dfx Glide driver catch signals? */
-   GLboolean CatchSignals;
+   /** \name Color clamping (tentative part of GL_ARB_color_clamp_control) */
+   /*@{*/
+   GLboolean ClampFragmentColors;
+   GLboolean ClampVertexColors;
+   /*@}*/
 
    /** \name For debugging/development only */
    /*@{*/

@@ -1,4 +1,4 @@
-/* $Id: sse_xform2.S,v 1.1 2004/07/16 22:12:43 blight Exp $ */
+/* $Id: sse_xform2.S,v 1.2 2004/08/25 12:35:19 blight Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -31,6 +31,7 @@
   *   data (trans-matrix, src_vert, dst_vert) needs to be 16byte aligned !
   */
 
+#ifdef USE_SSE_ASM
 #include "matypes.h"
 #include "xform_args.h"
 
@@ -450,3 +451,4 @@ LLBL(K_GTP23P3DR_finish):
 	POP_L( ESI )
 	RET
 #undef FRAME_OFFSET
+#endif

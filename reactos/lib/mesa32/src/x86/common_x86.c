@@ -28,7 +28,7 @@
  *
  * Written by Holger Waechtler <holger@akaflieg.extern.tu-berlin.de>
  * Changed by Andre Werthmann <wertmann@cs.uni-potsdam.de> for using the
- * new Katmai functions.
+ * new SSE functions.
  */
 
 /* XXX these includes should probably go into imports.h or glheader.h */

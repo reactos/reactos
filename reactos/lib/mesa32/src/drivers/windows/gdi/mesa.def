@@ -976,7 +976,6 @@ EXPORTS
 	_ac_InvalidateState
 	_glapi_get_context
 	_glapi_get_proc_address
-	_mesa_base_compressed_texformat
 	_mesa_buffer_data
 	_mesa_buffer_map
 	_mesa_buffer_subdata
@@ -999,6 +998,7 @@ EXPORTS
 	_mesa_free_context_data
 	_mesa_get_current_context
 	_mesa_init_default_imports
+	_mesa_init_driver_functions
 	_mesa_initialize_context
 	_mesa_make_current
 	_mesa_memcpy

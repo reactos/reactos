@@ -65,7 +65,8 @@
 #define GLTHREAD_H
 
 
-#if defined(PTHREADS) || defined(SOLARIS_THREADS) || defined(WIN32_THREADS) || defined(XTHREADS)
+#if defined(PTHREADS) || defined(SOLARIS_THREADS) || defined(WIN32_THREADS) || \
+	defined(XTHREADS) || defined(BEOS_THREADS)
 #define THREADS
 #endif
 
@@ -108,6 +109,20 @@ typedef pthread_mutex_t _glthread_Mutex;
 
 #define _glthread_UNLOCK_MUTEX(name) \
    (void) pthread_mutex_unlock(&(name))
+
+/* This is temporarilly removed because driver binaries cannot count on
+ * the existance of _gl_DispatchTSD in libGL.  It only exists in "new"
+ * libGL.  We may be able to ressurect this optimization at some point
+ * for DRI driver or for software Mesa.
+ */
+#if 0
+extern struct _glapi_table * _glapi_DispatchTSD;
+extern _glthread_TSD _gl_DispatchTSD;
+
+#define GL_CALL(name) \
+   (((__builtin_expect( _glapi_DispatchTSD != NULL, 1 )) \
+	? _glapi_DispatchTSD : (struct _glapi_table *) pthread_getspecific(_gl_DispatchTSD.key))-> name)
+#endif
 
 #endif /* PTHREADS */
 
@@ -218,6 +233,7 @@ typedef xmutex_rec _glthread_Mutex;
  * BeOS threads. R5.x required.
  */
 #ifdef BEOS_THREADS
+
 #include <kernel/OS.h>
 #include <support/TLS.h>
 
@@ -235,11 +251,12 @@ typedef struct {
 } benaphore;
 typedef benaphore _glthread_Mutex;
 
-#define _glthread_DECLARE_STATIC_MUTEX(name)  static _glthread_Mutex name = { 0,
-create_sem(0, #name"_benaphore") }
-#define _glthread_INIT_MUTEX(name)    name.sem = create_sem(0, #name"_benaphore"), name.lock = 0
-#define _glthread_LOCK_MUTEX(name)    if((atomic_add(&(name.lock), 1)) >= 1) acquire_sem(name.sem)
-#define _glthread_UNLOCK_MUTEX(name)  if((atomic_add(&(name.lock), -1)) > 1) release_sem(name.sem)
+#define _glthread_DECLARE_STATIC_MUTEX(name)  static _glthread_Mutex name = { 0, 0 }
+#define _glthread_INIT_MUTEX(name)    	name.sem = create_sem(0, #name"_benaphore"), name.lock = 0
+#define _glthread_DESTROY_MUTEX(name) 	delete_sem(name.sem), name.lock = 0
+#define _glthread_LOCK_MUTEX(name)    	if (name.sem == 0) _glthread_INIT_MUTEX(name); \
+									  	if (atomic_add(&(name.lock), 1) >= 1) acquire_sem(name.sem)
+#define _glthread_UNLOCK_MUTEX(name)  	if (atomic_add(&(name.lock), -1) > 1) release_sem(name.sem)
 
 #endif /* BEOS_THREADS */
 
@@ -290,6 +307,16 @@ _glthread_GetTSD(_glthread_TSD *);
 extern void
 _glthread_SetTSD(_glthread_TSD *, void *);
 
+#ifndef GL_CALL
+# if defined(THREADS)
+extern struct _glapi_table * _glapi_DispatchTSD;
+#  define GL_CALL(name) \
+   (((__builtin_expect( _glapi_DispatchTSD != NULL, 1 )) \
+	? _glapi_DispatchTSD : _glapi_get_dispatch())-> name)
+# else
+#  define GL_CALL(name) (*(_glapi_Dispatch-> name))
+# endif /* defined(THREADS) */
+#endif  /* ndef GL_CALL */
 
 
 #endif /* THREADS_H */

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -633,7 +632,7 @@ static void TAG(render_noop)( GLcontext *ctx,
 
 
 
-static render_func TAG(render_tab_verts)[GL_POLYGON+2] =
+static tnl_render_func TAG(render_tab_verts)[GL_POLYGON+2] =
 {
    TAG(render_points_verts),
    TAG(render_lines_verts),
@@ -1121,7 +1120,7 @@ static void TAG(render_quads_elts)( GLcontext *ctx,
 
 
 
-static render_func TAG(render_tab_elts)[GL_POLYGON+2] =
+static tnl_render_func TAG(render_tab_elts)[GL_POLYGON+2] =
 {
    TAG(render_points_elts),
    TAG(render_lines_elts),
@@ -1152,7 +1151,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 {
    GLint i;
 
-   if (VB->ClipOrMask)
+   if (VB->ClipOrMask & ~CLIP_CULL_BIT)
       return GL_FALSE;
 
    if (VB->Elts && !HAVE_ELTS)
@@ -1203,7 +1202,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	    ok = GL_TRUE;
 	 } else if (HAVE_TRI_STRIPS && (ctx->_TriangleCaps & DD_FLATSHADE)) {
 	    if (HAVE_ELTS) {
-	       ok = count < GET_SUBSEQUENT_VB_MAX_ELTS();
+	       ok = (GLint) count < GET_SUBSEQUENT_VB_MAX_ELTS();
 	    }
 	    else {
 	       ok = GL_FALSE;
@@ -1216,7 +1215,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	 if (HAVE_QUADS) {
 	    ok = GL_TRUE;
 	 } else if (HAVE_ELTS) {
-	    ok = count < GET_SUBSEQUENT_VB_MAX_ELTS();
+	    ok = (GLint) count < GET_SUBSEQUENT_VB_MAX_ELTS();
 	 }
 	 else {
 	    ok = GL_FALSE;

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -51,6 +51,7 @@ _tnl_MakeCurrent( GLcontext *ctx,
 		  GLframebuffer *drawBuffer,
 		  GLframebuffer *readBuffer )
 {
+   (void) ctx; (void) drawBuffer; (void) readBuffer;
 }
 
 
@@ -81,6 +82,9 @@ _tnl_CreateContext( GLcontext *ctx )
       return GL_FALSE;
    }
 
+   if (getenv("MESA_CODEGEN"))
+      tnl->AllowCodegen = GL_TRUE;
+
    /* Initialize the VB.
     */
    tnl->vb.Size = ctx->Const.MaxArrayLockSize + MAX_CLIPPED_VERTICES;
@@ -102,6 +106,8 @@ _tnl_CreateContext( GLcontext *ctx )
    tnl->NeedNdcCoords = GL_TRUE;
    tnl->LoopbackDListCassettes = GL_FALSE;
    tnl->CalcDListNormalLengths = GL_TRUE;
+   tnl->AllowVertexFog = GL_TRUE;
+   tnl->AllowPixelFog = GL_TRUE;
 
    /* Hook our functions into exec and compile dispatch tables.
     */
@@ -144,6 +150,12 @@ _tnl_InvalidateState( GLcontext *ctx, GLuint new_state )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
+   if (new_state & (_NEW_HINT)) {
+      ASSERT(tnl->AllowVertexFog || tnl->AllowPixelFog);
+      tnl->_DoVertexFog = (tnl->AllowVertexFog && (ctx->Hint.Fog != GL_NICEST))
+         || !tnl->AllowPixelFog;
+   }
+
    if (new_state & _NEW_ARRAY) {
       tnl->pipeline.run_input_changes |= ctx->Array.NewState; /* overkill */
    }
@@ -181,7 +193,7 @@ _tnl_InvalidateState( GLcontext *ctx, GLuint new_state )
       tnl->render_inputs |= _TNL_BIT_TEX0;
 
    if (ctx->Point._Attenuated ||
-       (ctx->VertexProgram.Enabled && ctx->VertexProgram.PointSizeEnabled))
+       (ctx->VertexProgram._Enabled && ctx->VertexProgram.PointSizeEnabled))
       tnl->render_inputs |= _TNL_BIT_POINTSIZE;
 }
 
@@ -259,3 +271,18 @@ _tnl_isolate_materials( GLcontext *ctx, GLboolean mode )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    tnl->IsolateMaterials = mode;
 }
+
+void
+_tnl_allow_vertex_fog( GLcontext *ctx, GLboolean value )
+{
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   tnl->AllowVertexFog = value;
+}
+
+void
+_tnl_allow_pixel_fog( GLcontext *ctx, GLboolean value )
+{
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   tnl->AllowPixelFog = value;
+}
+

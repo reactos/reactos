@@ -28,7 +28,7 @@
  */
 
 
-#if (IDX & LIGHT_TWOSIDE)
+#if IDX & LIGHT_TWOSIDE
 #  define NR_SIDES 2
 #else
 #  define NR_SIDES 1
@@ -283,18 +283,19 @@ static void TAG(light_rgba)( GLcontext *ctx,
       GLfloat sum[2][3];
       struct gl_light *light;
 
-      if ( IDX & LIGHT_MATERIAL ) {
-	 update_materials( ctx, store );
-	 sumA[0] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
+#if IDX & LIGHT_MATERIAL
+      update_materials( ctx, store );
+      sumA[0] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
 #if IDX & LIGHT_TWOSIDE
-         sumA[1] = ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_DIFFUSE][3];
+      sumA[1] = ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_DIFFUSE][3];
 #endif
-      }
+#endif
 
       COPY_3V(sum[0], base[0]);
 
-      if ( IDX & LIGHT_TWOSIDE )
-	 COPY_3V(sum[1], base[1]);
+#if IDX & LIGHT_TWOSIDE
+      COPY_3V(sum[1], base[1]);
+#endif
 
       /* Add contribution from each enabled light source */
       foreach (light, &ctx->Light.EnabledList) {
@@ -467,12 +468,16 @@ static void TAG(light_fast_rgba_single)( GLcontext *ctx,
 
       GLfloat n_dot_VP;
 
-      if ( IDX & LIGHT_MATERIAL )
-	 update_materials( ctx, store );
+#if IDX & LIGHT_MATERIAL
+      update_materials( ctx, store );
+#endif
 
       /* No attenuation, so incoporate _MatAmbient into base color.
        */
-      if ( j == 0 || (IDX & LIGHT_MATERIAL) ) {
+#if !(IDX & LIGHT_MATERIAL)
+      if ( j == 0 )
+#endif
+      {
 	 COPY_3V(base[0], light->_MatAmbient[0]);
 	 ACC_3V(base[0], ctx->Light._BaseColor[0] );
 	 base[0][3] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
@@ -565,14 +570,14 @@ static void TAG(light_fast_rgba)( GLcontext *ctx,
 
       GLfloat sum[2][3];
 
-      if ( IDX & LIGHT_MATERIAL ) {
-	 update_materials( ctx, store );
+#if IDX & LIGHT_MATERIAL
+      update_materials( ctx, store );
 
-	 sumA[0] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
+      sumA[0] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
 #if IDX & LIGHT_TWOSIDE
-         sumA[1] = ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_DIFFUSE][3];
+      sumA[1] = ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_DIFFUSE][3];
 #endif
-      }
+#endif
 
 
       COPY_3V(sum[0], ctx->Light._BaseColor[0]);
@@ -675,14 +680,15 @@ static void TAG(light_ci)( GLcontext *ctx,
       GLuint side = 0;
       struct gl_light *light;
 
-      if ( IDX & LIGHT_MATERIAL )
-	 update_materials( ctx, store );
+#if IDX & LIGHT_MATERIAL
+      update_materials( ctx, store );
+#endif
 
       diffuse[0] = specular[0] = 0.0F;
 
-      if ( IDX & LIGHT_TWOSIDE ) {
+#if IDX & LIGHT_TWOSIDE
 	 diffuse[1] = specular[1] = 0.0F;
-      }
+#endif
 
       /* Accumulate diffuse and specular from each light source */
       foreach (light, &ctx->Light.EnabledList) {

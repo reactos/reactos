@@ -1,13 +1,8 @@
-/**
- * \file image.c
- * Image handling.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,7 +23,14 @@
  */
 
 
+/**
+ * \file image.c
+ * Image handling.
+ */
+
+
 #include "glheader.h"
+#include "bufferobj.h"
 #include "colormac.h"
 #include "context.h"
 #include "image.h"
@@ -41,27 +43,6 @@
 
 /** Compute ceiling of integer quotient of A divided by B. */
 #define CEILING( A, B )  ( (A) % (B) == 0 ? (A)/(B) : (A)/(B)+1 )
-
-
-/**
- * Image packing parameters for Mesa's internal images.
- * 
- * _mesa_unpack_image() returns image data in this format.  When we execute
- * image commands (glDrawPixels(), glTexImage(), etc) from within display lists
- * we have to be sure to set the current unpacking parameters to these values!
- */
-const struct gl_pixelstore_attrib _mesa_native_packing = {
-   1,            /* Alignment */
-   0,            /* RowLength */
-   0,            /* SkipPixels */
-   0,            /* SkipRows */
-   0,            /* ImageHeight */
-   0,            /* SkipImages */
-   GL_FALSE,     /* SwapBytes */
-   GL_FALSE,     /* LsbFirst */
-   GL_FALSE,     /* ClientStorage */
-   GL_FALSE      /* Invert */
-};
 
 
 /**
@@ -161,8 +142,8 @@ GLint _mesa_sizeof_type( GLenum type )
 	 return sizeof(GLint);
       case GL_FLOAT:
 	 return sizeof(GLfloat);
-      case GL_HALF_FLOAT_NV:
-	 return sizeof(GLhalfNV);
+      case GL_HALF_FLOAT_ARB:
+	 return sizeof(GLhalfARB);
       default:
          return -1;
    }
@@ -190,8 +171,8 @@ GLint _mesa_sizeof_packed_type( GLenum type )
 	 return sizeof(GLuint);
       case GL_INT:
 	 return sizeof(GLint);
-      case GL_HALF_FLOAT_NV:
-	 return sizeof(GLhalfNV);
+      case GL_HALF_FLOAT_ARB:
+	 return sizeof(GLhalfARB);
       case GL_FLOAT:
 	 return sizeof(GLfloat);
       case GL_UNSIGNED_BYTE_3_3_2:
@@ -301,8 +282,8 @@ GLint _mesa_bytes_per_pixel( GLenum format, GLenum type )
          return comps * sizeof(GLint);
       case GL_FLOAT:
          return comps * sizeof(GLfloat);
-      case GL_HALF_FLOAT_NV:
-         return comps * sizeof(GLhalfNV);
+      case GL_HALF_FLOAT_ARB:
+         return comps * sizeof(GLhalfARB);
       case GL_UNSIGNED_BYTE_3_3_2:
       case GL_UNSIGNED_BYTE_2_3_3_REV:
          if (format == GL_RGB || format == GL_BGR)
@@ -353,7 +334,7 @@ GLint _mesa_bytes_per_pixel( GLenum format, GLenum type )
  * otherwise.
  */
 GLboolean
-_mesa_is_legal_format_and_type( GLenum format, GLenum type )
+_mesa_is_legal_format_and_type( GLcontext *ctx, GLenum format, GLenum type )
 {
    switch (format) {
       case GL_COLOR_INDEX:
@@ -367,8 +348,9 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
             case GL_INT:
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
-            case GL_HALF_FLOAT_NV:
                return GL_TRUE;
+            case GL_HALF_FLOAT_ARB:
+               return ctx->Extensions.ARB_half_float_pixel;
             default:
                return GL_FALSE;
          }
@@ -376,7 +358,9 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
       case GL_GREEN:
       case GL_BLUE:
       case GL_ALPHA:
+#if 0 /* not legal!  see table 3.6 of the 1.5 spec */
       case GL_INTENSITY:
+#endif
       case GL_LUMINANCE:
       case GL_LUMINANCE_ALPHA:
       case GL_DEPTH_COMPONENT:
@@ -388,12 +372,31 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
             case GL_INT:
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
-            case GL_HALF_FLOAT_NV:
                return GL_TRUE;
+            case GL_HALF_FLOAT_ARB:
+               return ctx->Extensions.ARB_half_float_pixel;
             default:
                return GL_FALSE;
          }
       case GL_RGB:
+         switch (type) {
+            case GL_BYTE:
+            case GL_UNSIGNED_BYTE:
+            case GL_SHORT:
+            case GL_UNSIGNED_SHORT:
+            case GL_INT:
+            case GL_UNSIGNED_INT:
+            case GL_FLOAT:
+            case GL_UNSIGNED_BYTE_3_3_2:
+            case GL_UNSIGNED_BYTE_2_3_3_REV:
+            case GL_UNSIGNED_SHORT_5_6_5:
+            case GL_UNSIGNED_SHORT_5_6_5_REV:
+               return GL_TRUE;
+            case GL_HALF_FLOAT_ARB:
+               return ctx->Extensions.ARB_half_float_pixel;
+            default:
+               return GL_FALSE;
+         }
       case GL_BGR:
          switch (type) {
             case GL_BYTE:
@@ -403,12 +406,9 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
             case GL_INT:
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
-            case GL_HALF_FLOAT_NV:
-            case GL_UNSIGNED_BYTE_3_3_2:
-            case GL_UNSIGNED_BYTE_2_3_3_REV:
-            case GL_UNSIGNED_SHORT_5_6_5:
-            case GL_UNSIGNED_SHORT_5_6_5_REV:
                return GL_TRUE;
+            case GL_HALF_FLOAT_ARB:
+               return ctx->Extensions.ARB_half_float_pixel;
             default:
                return GL_FALSE;
          }
@@ -423,7 +423,6 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
             case GL_INT:
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
-            case GL_HALF_FLOAT_NV:
             case GL_UNSIGNED_SHORT_4_4_4_4:
             case GL_UNSIGNED_SHORT_4_4_4_4_REV:
             case GL_UNSIGNED_SHORT_5_5_5_1:
@@ -433,6 +432,8 @@ _mesa_is_legal_format_and_type( GLenum format, GLenum type )
             case GL_UNSIGNED_INT_10_10_10_2:
             case GL_UNSIGNED_INT_2_10_10_10_REV:
                return GL_TRUE;
+            case GL_HALF_FLOAT_ARB:
+               return ctx->Extensions.ARB_half_float_pixel;
             default:
                return GL_FALSE;
          }
@@ -911,13 +912,88 @@ _mesa_pack_bitmap( GLint width, GLint height, const GLubyte *source,
 }
 
 
+/**
+ * Apply various pixel transfer operations to an array of RGBA pixels
+ * as indicated by the transferOps bitmask
+ */
+void
+_mesa_apply_rgba_transfer_ops(GLcontext *ctx, GLuint transferOps,
+                              GLuint n, GLfloat rgba[][4])
+{
+   /* scale & bias */
+   if (transferOps & IMAGE_SCALE_BIAS_BIT) {
+      _mesa_scale_and_bias_rgba(ctx, n, rgba,
+                                ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
+                                ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
+                                ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
+                                ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
+   }
+   /* color map lookup */
+   if (transferOps & IMAGE_MAP_COLOR_BIT) {
+      _mesa_map_rgba( ctx, n, rgba );
+   }
+   /* GL_COLOR_TABLE lookup */
+   if (transferOps & IMAGE_COLOR_TABLE_BIT) {
+      _mesa_lookup_rgba_float(&ctx->ColorTable, n, rgba);
+   }
+   /* convolution */
+   if (transferOps & IMAGE_CONVOLUTION_BIT) {
+      /* this has to be done in the calling code */
+      _mesa_problem(ctx, "IMAGE_CONVOLUTION_BIT set in _mesa_apply_transfer_ops");
+   }
+   /* GL_POST_CONVOLUTION_RED/GREEN/BLUE/ALPHA_SCALE/BIAS */
+   if (transferOps & IMAGE_POST_CONVOLUTION_SCALE_BIAS) {
+      _mesa_scale_and_bias_rgba(ctx, n, rgba,
+                                ctx->Pixel.PostConvolutionScale[RCOMP],
+                                ctx->Pixel.PostConvolutionScale[GCOMP],
+                                ctx->Pixel.PostConvolutionScale[BCOMP],
+                                ctx->Pixel.PostConvolutionScale[ACOMP],
+                                ctx->Pixel.PostConvolutionBias[RCOMP],
+                                ctx->Pixel.PostConvolutionBias[GCOMP],
+                                ctx->Pixel.PostConvolutionBias[BCOMP],
+                                ctx->Pixel.PostConvolutionBias[ACOMP]);
+   }
+   /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
+   if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
+      _mesa_lookup_rgba_float(&ctx->PostConvolutionColorTable, n, rgba);
+   }
+   /* color matrix transform */
+   if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
+      _mesa_transform_rgba(ctx, n, rgba);
+   }
+   /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
+   if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
+      _mesa_lookup_rgba_float(&ctx->PostColorMatrixColorTable, n, rgba);
+   }
+   /* update histogram count */
+   if (transferOps & IMAGE_HISTOGRAM_BIT) {
+      _mesa_update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
+   }
+   /* update min/max values */
+   if (transferOps & IMAGE_MIN_MAX_BIT) {
+      _mesa_update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
+   }
+   /* clamping to [0,1] */
+   if (transferOps & IMAGE_CLAMP_BIT) {
+      GLuint i;
+      for (i = 0; i < n; i++) {
+         rgba[i][RCOMP] = CLAMP(rgba[i][RCOMP], 0.0F, 1.0F);
+         rgba[i][GCOMP] = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
+         rgba[i][BCOMP] = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
+         rgba[i][ACOMP] = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
+      }
+   }
+}
+
+
+
 /*
  * Used to pack an array [][4] of RGBA GLchan colors as specified
  * by the dstFormat, dstType and dstPacking.  Used by glReadPixels,
  * glGetConvolutionFilter(), etc.
  */
 void
-_mesa_pack_float_rgba_span( GLcontext *ctx,
+_mesa_pack_rgba_span_float( GLcontext *ctx,
                             GLuint n, CONST GLfloat rgbaIn[][4],
                             GLenum dstFormat, GLenum dstType,
                             GLvoid *dstAddr,
@@ -926,7 +1002,7 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
 {
    const GLint comps = _mesa_components_in_format(dstFormat);
    GLfloat luminance[MAX_WIDTH];
-   GLfloat (*rgba)[4];
+   const GLfloat (*rgba)[4];
    GLuint i;
 
    if (transferOps) {
@@ -934,89 +1010,33 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
       DEFMARRAY(GLfloat, rgbaCopy, MAX_WIDTH, 4);  /* mac 32k limitation */
       CHECKARRAY(rgbaCopy, return);  /* mac 32k limitation */
 
-      for (i = 0; i < n; i++) {
-         rgbaCopy[i][0] = rgbaIn[i][0];
-         rgbaCopy[i][1] = rgbaIn[i][1];
-         rgbaCopy[i][2] = rgbaIn[i][2];
-         rgbaCopy[i][3] = rgbaIn[i][3];
-      }
+      _mesa_memcpy(rgbaCopy, rgbaIn, n * 4 * sizeof(GLfloat));
+      _mesa_apply_rgba_transfer_ops(ctx, transferOps, n, rgbaCopy);
+      rgba = (const GLfloat (*)[4]) rgbaCopy;
 
-      rgba = (GLfloat (*)[4]) rgbaCopy;
-
-      /* scale & bias */
-      if (transferOps & IMAGE_SCALE_BIAS_BIT) {
-         _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                   ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
-                                   ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
-                                   ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
-                                   ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
-      }
-      /* color map lookup */
-      if (transferOps & IMAGE_MAP_COLOR_BIT) {
-         _mesa_map_rgba( ctx, n, rgba );
-      }
-      /* GL_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->ColorTable, n, rgba);
-      }
-      /* convolution */
-      if (transferOps & IMAGE_CONVOLUTION_BIT) {
-         /* this has to be done in the calling code */
-      }
-      /* GL_POST_CONVOLUTION_RED/GREEN/BLUE/ALPHA_SCALE/BIAS */
-      if (transferOps & IMAGE_POST_CONVOLUTION_SCALE_BIAS) {
-         _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                   ctx->Pixel.PostConvolutionScale[RCOMP],
-                                   ctx->Pixel.PostConvolutionScale[GCOMP],
-                                   ctx->Pixel.PostConvolutionScale[BCOMP],
-                                   ctx->Pixel.PostConvolutionScale[ACOMP],
-                                   ctx->Pixel.PostConvolutionBias[RCOMP],
-                                   ctx->Pixel.PostConvolutionBias[GCOMP],
-                                   ctx->Pixel.PostConvolutionBias[BCOMP],
-                                   ctx->Pixel.PostConvolutionBias[ACOMP]);
-      }
-      /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->PostConvolutionColorTable, n, rgba);
-      }
-      /* color matrix transform */
-      if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
-         _mesa_transform_rgba(ctx, n, rgba);
-      }
-      /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
-      if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
-         _mesa_lookup_rgba(&ctx->PostColorMatrixColorTable, n, rgba);
-      }
-      /* update histogram count */
-      if (transferOps & IMAGE_HISTOGRAM_BIT) {
-         _mesa_update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
-      }
-      /* min/max here */
-      if (transferOps & IMAGE_MIN_MAX_BIT) {
-         _mesa_update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
-         if (ctx->MinMax.Sink) {
-            UNDEFARRAY(rgbaCopy);  /* mac 32k limitation */
-            return;
-         }
+      if ((transferOps & IMAGE_MIN_MAX_BIT) && ctx->MinMax.Sink) {
+         UNDEFARRAY(rgbaCopy);  /* mac 32k limitation */
+         return;
       }
       UNDEFARRAY(rgbaCopy);  /* mac 32k limitation */
    }
    else {
       /* use incoming data, not a copy */
-      rgba = (GLfloat (*)[4]) rgbaIn;
+      rgba = (const GLfloat (*)[4]) rgbaIn;
    }
 
-   /* XXX clamp rgba to [0,1]? */
-
-
    if (dstFormat == GL_LUMINANCE || dstFormat == GL_LUMINANCE_ALPHA) {
-      for (i = 0; i < n; i++) {
-         GLfloat sum = rgba[i][RCOMP] + rgba[i][GCOMP] + rgba[i][BCOMP];
-#if CHAN_TYPE == GL_FLOAT
-         luminance[i] = sum;
-#else
-         luminance[i] = CLAMP(sum, 0.0F, 1.0F);
-#endif
+      /* compute luminance values */
+      if (ctx->ClampFragmentColors) {
+         for (i = 0; i < n; i++) {
+            GLfloat sum = rgba[i][RCOMP] + rgba[i][GCOMP] + rgba[i][BCOMP];
+            luminance[i] = CLAMP(sum, 0.0F, 1.0F);
+         }
+      }
+      else {
+         for (i = 0; i < n; i++) {
+            luminance[i] = rgba[i][RCOMP] + rgba[i][GCOMP] + rgba[i][BCOMP];
+         }
       }
    }
 
@@ -1548,9 +1568,9 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
             }
          }
          break;
-      case GL_HALF_FLOAT_NV:
+      case GL_HALF_FLOAT_ARB:
          {
-            GLhalfNV *dst = (GLhalfNV *) dstAddr;
+            GLhalfARB *dst = (GLhalfARB *) dstAddr;
             switch (dstFormat) {
                case GL_RED:
                   for (i=0;i<n;i++)
@@ -1897,7 +1917,7 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
          }
          break;
       default:
-         _mesa_problem(ctx, "bad type in _mesa_pack_float_rgba_span");
+         _mesa_problem(ctx, "bad type in _mesa_pack_rgba_span_float");
    }
 }
 
@@ -1918,12 +1938,12 @@ _mesa_pack_float_rgba_span( GLcontext *ctx,
  *         transferOps - bitmask of IMAGE_*_BIT operations to apply
  */
 void
-_mesa_pack_rgba_span( GLcontext *ctx,
-                      GLuint n, CONST GLchan srcRgba[][4],
-                      GLenum dstFormat, GLenum dstType,
-                      GLvoid *dstAddr,
-                      const struct gl_pixelstore_attrib *dstPacking,
-                      GLuint transferOps)
+_mesa_pack_rgba_span_chan( GLcontext *ctx,
+                           GLuint n, CONST GLchan srcRgba[][4],
+                           GLenum dstFormat, GLenum dstType,
+                           GLvoid *dstAddr,
+                           const struct gl_pixelstore_attrib *dstPacking,
+                           GLuint transferOps)
 {
    ASSERT((ctx->NewState & _NEW_PIXEL) == 0 || transferOps == 0);
 
@@ -1963,13 +1983,13 @@ _mesa_pack_rgba_span( GLcontext *ctx,
 
       assert(n <= MAX_WIDTH);
       /* convert color components to floating point */
-      for (i=0;i<n;i++) {
+      for (i = 0; i < n; i++) {
          rgba[i][RCOMP] = CHAN_TO_FLOAT(srcRgba[i][RCOMP]);
          rgba[i][GCOMP] = CHAN_TO_FLOAT(srcRgba[i][GCOMP]);
          rgba[i][BCOMP] = CHAN_TO_FLOAT(srcRgba[i][BCOMP]);
          rgba[i][ACOMP] = CHAN_TO_FLOAT(srcRgba[i][ACOMP]);
       }
-      _mesa_pack_float_rgba_span(ctx, n, (const GLfloat (*)[4]) rgba,
+      _mesa_pack_rgba_span_float(ctx, n, (const GLfloat (*)[4]) rgba,
                                  dstFormat, dstType, dstAddr,
                                  dstPacking, transferOps);
       UNDEFARRAY(rgba);  /* mac 32k limitation */
@@ -2011,7 +2031,7 @@ extract_uint_indexes(GLuint n, GLuint indexes[],
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT);
 
    switch (srcType) {
@@ -2149,13 +2169,13 @@ extract_uint_indexes(GLuint n, GLuint indexes[],
             }
          }
          break;
-      case GL_HALF_FLOAT_NV:
+      case GL_HALF_FLOAT_ARB:
          {
             GLuint i;
-            const GLhalfNV *s = (const GLhalfNV *) src;
+            const GLhalfARB *s = (const GLhalfARB *) src;
             if (unpack->SwapBytes) {
                for (i = 0; i < n; i++) {
-                  GLhalfNV value = s[i];
+                  GLhalfARB value = s[i];
                   SWAP2BYTE(value);
                   indexes[i] = (GLuint) _mesa_half_to_float(value);
                }
@@ -2217,7 +2237,7 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT ||
           srcType == GL_UNSIGNED_BYTE_3_3_2 ||
           srcType == GL_UNSIGNED_BYTE_2_3_3_REV ||
@@ -2274,6 +2294,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
          greenIndex = 1;
          blueIndex = 2;
          alphaIndex = -1;
+         rComp = 0;
+         gComp = 1;
+         bComp = 2;
+         aComp = 3;
          stride = 3;
          break;
       case GL_BGR:
@@ -2281,6 +2305,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
          greenIndex = 1;
          blueIndex = 0;
          alphaIndex = -1;
+         rComp = 2;
+         gComp = 1;
+         bComp = 0;
+         aComp = 3;
          stride = 3;
          break;
       case GL_RGBA:
@@ -2396,11 +2424,11 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
          PROCESS(blueIndex,  BCOMP, 0.0F, GLfloat, (GLfloat));
          PROCESS(alphaIndex, ACOMP, 1.0F, GLfloat, (GLfloat));
          break;
-      case GL_HALF_FLOAT_NV:
-         PROCESS(redIndex,   RCOMP, 0.0F, GLhalfNV, _mesa_half_to_float);
-         PROCESS(greenIndex, GCOMP, 0.0F, GLhalfNV, _mesa_half_to_float);
-         PROCESS(blueIndex,  BCOMP, 0.0F, GLhalfNV, _mesa_half_to_float);
-         PROCESS(alphaIndex, ACOMP, 1.0F, GLhalfNV, _mesa_half_to_float);
+      case GL_HALF_FLOAT_ARB:
+         PROCESS(redIndex,   RCOMP, 0.0F, GLhalfARB, _mesa_half_to_float);
+         PROCESS(greenIndex, GCOMP, 0.0F, GLhalfARB, _mesa_half_to_float);
+         PROCESS(blueIndex,  BCOMP, 0.0F, GLhalfARB, _mesa_half_to_float);
+         PROCESS(alphaIndex, ACOMP, 1.0F, GLhalfARB, _mesa_half_to_float);
          break;
       case GL_UNSIGNED_BYTE_3_3_2:
          {
@@ -2408,10 +2436,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             GLuint i;
             for (i = 0; i < n; i ++) {
                GLubyte p = ubsrc[i];
-               rgba[i][RCOMP] = ((p >> 5)      ) * (1.0F / 7.0F);
-               rgba[i][GCOMP] = ((p >> 2) & 0x7) * (1.0F / 7.0F);
-               rgba[i][BCOMP] = ((p     ) & 0x3) * (1.0F / 3.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p >> 5)      ) * (1.0F / 7.0F);
+               rgba[i][gComp] = ((p >> 2) & 0x7) * (1.0F / 7.0F);
+               rgba[i][bComp] = ((p     ) & 0x3) * (1.0F / 3.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          break;
@@ -2421,10 +2449,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             GLuint i;
             for (i = 0; i < n; i ++) {
                GLubyte p = ubsrc[i];
-               rgba[i][RCOMP] = ((p     ) & 0x7) * (1.0F / 7.0F);
-               rgba[i][GCOMP] = ((p >> 3) & 0x7) * (1.0F / 7.0F);
-               rgba[i][BCOMP] = ((p >> 6)      ) * (1.0F / 3.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p     ) & 0x7) * (1.0F / 7.0F);
+               rgba[i][gComp] = ((p >> 3) & 0x7) * (1.0F / 7.0F);
+               rgba[i][bComp] = ((p >> 6)      ) * (1.0F / 3.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          break;
@@ -2435,10 +2463,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             for (i = 0; i < n; i ++) {
                GLushort p = ussrc[i];
                SWAP2BYTE(p);
-               rgba[i][RCOMP] = ((p >> 11)       ) * (1.0F / 31.0F);
-               rgba[i][GCOMP] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
-               rgba[i][BCOMP] = ((p      ) & 0x1f) * (1.0F / 31.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p >> 11)       ) * (1.0F / 31.0F);
+               rgba[i][gComp] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
+               rgba[i][bComp] = ((p      ) & 0x1f) * (1.0F / 31.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          else {
@@ -2446,10 +2474,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             GLuint i;
             for (i = 0; i < n; i ++) {
                GLushort p = ussrc[i];
-               rgba[i][RCOMP] = ((p >> 11)       ) * (1.0F / 31.0F);
-               rgba[i][GCOMP] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
-               rgba[i][BCOMP] = ((p      ) & 0x1f) * (1.0F / 31.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p >> 11)       ) * (1.0F / 31.0F);
+               rgba[i][gComp] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
+               rgba[i][bComp] = ((p      ) & 0x1f) * (1.0F / 31.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          break;
@@ -2460,10 +2488,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             for (i = 0; i < n; i ++) {
                GLushort p = ussrc[i];
                SWAP2BYTE(p);
-               rgba[i][RCOMP] = ((p      ) & 0x1f) * (1.0F / 31.0F);
-               rgba[i][GCOMP] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
-               rgba[i][BCOMP] = ((p >> 11)       ) * (1.0F / 31.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p      ) & 0x1f) * (1.0F / 31.0F);
+               rgba[i][gComp] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
+               rgba[i][bComp] = ((p >> 11)       ) * (1.0F / 31.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          else {
@@ -2471,10 +2499,10 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
             GLuint i;
             for (i = 0; i < n; i ++) {
                GLushort p = ussrc[i];
-               rgba[i][RCOMP] = ((p      ) & 0x1f) * (1.0F / 31.0F);
-               rgba[i][GCOMP] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
-               rgba[i][BCOMP] = ((p >> 11)       ) * (1.0F / 31.0F);
-               rgba[i][ACOMP] = 1.0F;
+               rgba[i][rComp] = ((p      ) & 0x1f) * (1.0F / 31.0F);
+               rgba[i][gComp] = ((p >>  5) & 0x3f) * (1.0F / 63.0F);
+               rgba[i][bComp] = ((p >> 11)       ) * (1.0F / 31.0F);
+               rgba[i][aComp] = 1.0F;
             }
          }
          break;
@@ -2686,8 +2714,8 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
 /*
  * Unpack a row of color image data from a client buffer according to
  * the pixel unpacking parameters.
- * Return GLubyte values in the specified dest image format.
- * This is (or will be) used by glDrawPixels and glTexImage?D().
+ * Return GLchan values in the specified dest image format.
+ * This is used by glDrawPixels and glTexImage?D().
  * \param ctx - the context
  *         n - number of pixels in the span
  *         dstFormat - format of destination color array
@@ -2701,7 +2729,7 @@ extract_float_rgba(GLuint n, GLfloat rgba[][4],
  * XXX perhaps expand this to process whole images someday.
  */
 void
-_mesa_unpack_chan_color_span( GLcontext *ctx,
+_mesa_unpack_color_span_chan( GLcontext *ctx,
                               GLuint n, GLenum dstFormat, GLchan dest[],
                               GLenum srcFormat, GLenum srcType,
                               const GLvoid *source,
@@ -2737,7 +2765,7 @@ _mesa_unpack_chan_color_span( GLcontext *ctx,
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT ||
           srcType == GL_UNSIGNED_BYTE_3_3_2 ||
           srcType == GL_UNSIGNED_BYTE_2_3_3_REV ||
@@ -2753,7 +2781,7 @@ _mesa_unpack_chan_color_span( GLcontext *ctx,
           srcType == GL_UNSIGNED_INT_2_10_10_10_REV);
 
    /* Try simple cases first */
-   if (transferOps == 0 ){
+   if (transferOps == 0) {
       if (srcType == CHAN_TYPE) {
          if (dstFormat == GL_RGBA) {
             if (srcFormat == GL_RGBA) {
@@ -2910,80 +2938,26 @@ _mesa_unpack_chan_color_span( GLcontext *ctx,
             /* Convert indexes to RGBA */
             _mesa_map_ci_to_rgba(ctx, n, indexes, rgba);
          }
+
+         /* Don't do RGBA scale/bias or RGBA->RGBA mapping if starting
+          * with color indexes.
+          */
+         transferOps &= ~(IMAGE_SCALE_BIAS_BIT | IMAGE_MAP_COLOR_BIT);
       }
       else {
+         /* non-color index data */
          extract_float_rgba(n, rgba, srcFormat, srcType, source,
                             srcPacking->SwapBytes);
-
-         /* scale and bias colors */
-         if (transferOps & IMAGE_SCALE_BIAS_BIT) {
-            _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                   ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
-                                   ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
-                                   ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
-                                   ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
-         }
-         /* color map lookup */
-         if (transferOps & IMAGE_MAP_COLOR_BIT) {
-            _mesa_map_rgba(ctx, n, rgba);
-         }
       }
+
+      /* Need to clamp if returning GLubytes or GLushorts */
+#if CHAN_TYPE != GL_FLOAT
+      transferOps |= IMAGE_CLAMP_BIT;
+#endif
 
       if (transferOps) {
-         /* GL_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->ColorTable, n, rgba);
-         }
-         /* convolution */
-         if (transferOps & IMAGE_CONVOLUTION_BIT) {
-            /* this has to be done in the calling code */
-         }
-         /* GL_POST_CONVOLUTION_RED/GREEN/BLUE/ALPHA_SCALE/BIAS */
-         if (transferOps & IMAGE_POST_CONVOLUTION_SCALE_BIAS) {
-            _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                      ctx->Pixel.PostConvolutionScale[RCOMP],
-                                      ctx->Pixel.PostConvolutionScale[GCOMP],
-                                      ctx->Pixel.PostConvolutionScale[BCOMP],
-                                      ctx->Pixel.PostConvolutionScale[ACOMP],
-                                      ctx->Pixel.PostConvolutionBias[RCOMP],
-                                      ctx->Pixel.PostConvolutionBias[GCOMP],
-                                      ctx->Pixel.PostConvolutionBias[BCOMP],
-                                      ctx->Pixel.PostConvolutionBias[ACOMP]);
-         }
-         /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostConvolutionColorTable, n, rgba);
-         }
-         /* color matrix transform */
-         if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
-            _mesa_transform_rgba(ctx, n, rgba);
-         }
-         /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostColorMatrixColorTable, n, rgba);
-         }
-         /* update histogram count */
-         if (transferOps & IMAGE_HISTOGRAM_BIT) {
-            _mesa_update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
-         }
-         /* min/max here */
-         if (transferOps & IMAGE_MIN_MAX_BIT) {
-            _mesa_update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
-         }
+         _mesa_apply_rgba_transfer_ops(ctx, transferOps, n, rgba);
       }
-
-      /* clamp to [0,1] */
-#if CHAN_TYPE != GL_FLOAT
-      {
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            rgba[i][RCOMP] = CLAMP(rgba[i][RCOMP], 0.0F, 1.0F);
-            rgba[i][GCOMP] = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
-            rgba[i][BCOMP] = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
-            rgba[i][ACOMP] = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
-         }
-      }
-#endif
 
       /* Now determine which color channels we need to produce.
        * And determine the dest index (offset) within each color tuple.
@@ -3094,13 +3068,17 @@ _mesa_unpack_chan_color_span( GLcontext *ctx,
 }
 
 
+/**
+ * Same as _mesa_unpack_color_span_chan(), but return GLfloat data
+ * instead of GLchan.
+ */
 void
-_mesa_unpack_float_color_span( GLcontext *ctx,
+_mesa_unpack_color_span_float( GLcontext *ctx,
                                GLuint n, GLenum dstFormat, GLfloat dest[],
                                GLenum srcFormat, GLenum srcType,
                                const GLvoid *source,
                                const struct gl_pixelstore_attrib *srcPacking,
-                               GLuint transferOps, GLboolean clamp )
+                               GLuint transferOps )
 {
    ASSERT(dstFormat == GL_ALPHA ||
           dstFormat == GL_LUMINANCE ||
@@ -3131,7 +3109,7 @@ _mesa_unpack_float_color_span( GLcontext *ctx,
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT ||
           srcType == GL_UNSIGNED_BYTE_3_3_2 ||
           srcType == GL_UNSIGNED_BYTE_2_3_3_REV ||
@@ -3188,80 +3166,21 @@ _mesa_unpack_float_color_span( GLcontext *ctx,
             /* Convert indexes to RGBA */
             _mesa_map_ci_to_rgba(ctx, n, indexes, rgba);
          }
+
+         /* Don't do RGBA scale/bias or RGBA->RGBA mapping if starting
+          * with color indexes.
+          */
+         transferOps &= ~(IMAGE_SCALE_BIAS_BIT | IMAGE_MAP_COLOR_BIT);
       }
       else {
+         /* non-color index data */
          extract_float_rgba(n, rgba, srcFormat, srcType, source,
                             srcPacking->SwapBytes);
-
-         /* scale and bias colors */
-         if (transferOps & IMAGE_SCALE_BIAS_BIT) {
-            _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                   ctx->Pixel.RedScale, ctx->Pixel.GreenScale,
-                                   ctx->Pixel.BlueScale, ctx->Pixel.AlphaScale,
-                                   ctx->Pixel.RedBias, ctx->Pixel.GreenBias,
-                                   ctx->Pixel.BlueBias, ctx->Pixel.AlphaBias);
-         }
-         /* color map lookup */
-         if (transferOps & IMAGE_MAP_COLOR_BIT) {
-            _mesa_map_rgba(ctx, n, rgba);
-         }
       }
 
       if (transferOps) {
-         /* GL_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->ColorTable, n, rgba);
-         }
-         /* convolution */
-         if (transferOps & IMAGE_CONVOLUTION_BIT) {
-            /* XXX to do */
-         }
-         /* GL_POST_CONVOLUTION_RED/GREEN/BLUE/ALPHA_SCALE/BIAS */
-         if (transferOps & IMAGE_POST_CONVOLUTION_SCALE_BIAS) {
-            _mesa_scale_and_bias_rgba(ctx, n, rgba,
-                                      ctx->Pixel.PostConvolutionScale[RCOMP],
-                                      ctx->Pixel.PostConvolutionScale[GCOMP],
-                                      ctx->Pixel.PostConvolutionScale[BCOMP],
-                                      ctx->Pixel.PostConvolutionScale[ACOMP],
-                                      ctx->Pixel.PostConvolutionBias[RCOMP],
-                                      ctx->Pixel.PostConvolutionBias[GCOMP],
-                                      ctx->Pixel.PostConvolutionBias[BCOMP],
-                                      ctx->Pixel.PostConvolutionBias[ACOMP]);
-         }
-         /* GL_POST_CONVOLUTION_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_CONVOLUTION_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostConvolutionColorTable, n, rgba);
-         }
-         /* color matrix transform */
-         if (transferOps & IMAGE_COLOR_MATRIX_BIT) {
-            _mesa_transform_rgba(ctx, n, rgba);
-         }
-         /* GL_POST_COLOR_MATRIX_COLOR_TABLE lookup */
-         if (transferOps & IMAGE_POST_COLOR_MATRIX_COLOR_TABLE_BIT) {
-            _mesa_lookup_rgba(&ctx->PostColorMatrixColorTable, n, rgba);
-         }
-         /* update histogram count */
-         if (transferOps & IMAGE_HISTOGRAM_BIT) {
-            _mesa_update_histogram(ctx, n, (CONST GLfloat (*)[4]) rgba);
-         }
-         /* min/max here */
-         if (transferOps & IMAGE_MIN_MAX_BIT) {
-            _mesa_update_minmax(ctx, n, (CONST GLfloat (*)[4]) rgba);
-         }
+         _mesa_apply_rgba_transfer_ops(ctx, transferOps, n, rgba);
       }
-
-      /* clamp to [0,1] */
-#if CHAN_TYPE != GL_FLOAT
-      if (clamp) {
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            rgba[i][RCOMP] = CLAMP(rgba[i][RCOMP], 0.0F, 1.0F);
-            rgba[i][GCOMP] = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
-            rgba[i][BCOMP] = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
-            rgba[i][ACOMP] = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
-         }
-      }
-#endif
 
       /* Now determine which color channels we need to produce.
        * And determine the dest index (offset) within each color tuple.
@@ -3302,7 +3221,7 @@ _mesa_unpack_float_color_span( GLcontext *ctx,
             dstLuminanceIndex = dstIntensityIndex = -1;
             break;
          default:
-            _mesa_problem(ctx, "bad dstFormat in _mesa_unpack_float_color_span()");
+            _mesa_problem(ctx, "bad dstFormat in _mesa_unpack_color_span_float()");
             UNDEFARRAY(rgba);  /* mac 32k limitation */
             return;
       }
@@ -3398,7 +3317,7 @@ _mesa_unpack_index_span( const GLcontext *ctx, GLuint n,
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT);
 
    ASSERT(dstType == GL_UNSIGNED_BYTE ||
@@ -3571,9 +3490,9 @@ _mesa_pack_index_span( const GLcontext *ctx, GLuint n,
          }
       }
       break;
-   case GL_HALF_FLOAT_NV:
+   case GL_HALF_FLOAT_ARB:
       {
-         GLhalfNV *dst = (GLhalfNV *) dest;
+         GLhalfARB *dst = (GLhalfARB *) dest;
          GLuint i;
          for (i = 0; i < n; i++) {
             dst[i] = _mesa_float_to_half((GLfloat) source[i]);
@@ -3617,7 +3536,7 @@ _mesa_unpack_stencil_span( const GLcontext *ctx, GLuint n,
           srcType == GL_SHORT ||
           srcType == GL_UNSIGNED_INT ||
           srcType == GL_INT ||
-          srcType == GL_HALF_FLOAT_NV ||
+          srcType == GL_HALF_FLOAT_ARB ||
           srcType == GL_FLOAT);
 
    ASSERT(dstType == GL_UNSIGNED_BYTE ||
@@ -3804,9 +3723,9 @@ _mesa_pack_stencil_span( const GLcontext *ctx, GLuint n,
          }
       }
       break;
-   case GL_HALF_FLOAT_NV:
+   case GL_HALF_FLOAT_ARB:
       {
-         GLhalfNV *dst = (GLhalfNV *) dest;
+         GLhalfARB *dst = (GLhalfARB *) dest;
          GLuint i;
          for (i=0;i<n;i++) {
             dst[i] = _mesa_float_to_half( (float) source[i] );
@@ -3859,6 +3778,8 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n, GLfloat *dest,
                          GLenum srcType, const GLvoid *source,
                          const struct gl_pixelstore_attrib *srcPacking )
 {
+   (void) srcPacking;
+
    switch (srcType) {
       case GL_BYTE:
          {
@@ -3917,10 +3838,10 @@ _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n, GLfloat *dest,
       case GL_FLOAT:
          MEMCPY(dest, source, n * sizeof(GLfloat));
          break;
-      case GL_HALF_FLOAT_NV:
+      case GL_HALF_FLOAT_ARB:
          {
             GLuint i;
-            const GLhalfNV *src = (const GLhalfNV *) source;
+            const GLhalfARB *src = (const GLhalfARB *) source;
             for (i = 0; i < n; i++) {
                dest[i] = _mesa_half_to_float(src[i]);
             }
@@ -4046,9 +3967,9 @@ _mesa_pack_depth_span( const GLcontext *ctx, GLuint n, GLvoid *dest,
          }
       }
       break;
-   case GL_HALF_FLOAT_NV:
+   case GL_HALF_FLOAT_ARB:
       {
-         GLhalfNV *dst = (GLhalfNV *) dest;
+         GLhalfARB *dst = (GLhalfARB *) dest;
          GLuint i;
          for (i = 0; i < n; i++) {
             dst[i] = _mesa_float_to_half(depthSpan[i]);
@@ -4064,9 +3985,11 @@ _mesa_pack_depth_span( const GLcontext *ctx, GLuint n, GLvoid *dest,
 }
 
 
-/*
- * Unpack image data.  Apply byteswapping, byte flipping (bitmap).
- * Return all image data in a contiguous block.
+/**
+ * Unpack image data.  Apply byte swapping, byte flipping (bitmap).
+ * Return all image data in a contiguous block.  This is used when we
+ * compile glDrawPixels, glTexImage, etc into a display list.  We
+ * need a copy of the data in a standard format.
  */
 void *
 _mesa_unpack_image( GLsizei width, GLsizei height, GLsizei depth,

@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.1
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -43,13 +43,6 @@
 
 #define CHECK_EXTENSION(EXTNAME, CAP)					\
    if (!ctx->Extensions.EXTNAME) {					\
-      _mesa_error(ctx, GL_INVALID_ENUM, "gl%sClientState(0x%x)",	\
-                  state ? "Enable" : "Disable", CAP);			\
-      return;								\
-   }
-
-#define CHECK_EXTENSION2(EXT1, EXT2, CAP)				\
-   if (!ctx->Extensions.EXT1 && !ctx->Extensions.EXT2) {		\
       _mesa_error(ctx, GL_INVALID_ENUM, "gl%sClientState(0x%x)",	\
                   state ? "Enable" : "Disable", CAP);			\
       return;								\
@@ -192,6 +185,14 @@ _mesa_DisableClientState( GLenum cap )
       return;								\
    }
 
+#define CHECK_EXTENSION2(EXT1, EXT2, CAP)				\
+   if (!ctx->Extensions.EXT1 && !ctx->Extensions.EXT2) {		\
+      _mesa_error(ctx, GL_INVALID_ENUM, "gl%s(0x%x)",			\
+                  state ? "Enable" : "Disable", CAP);			\
+      return;								\
+   }
+
+
 
 /**
  * Perform glEnable() and glDisable() calls.
@@ -236,7 +237,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
           */
          ctx->Color._LogicOpEnabled =
             (ctx->Color.ColorLogicOpEnabled ||
-             (state && ctx->Color.BlendEquation == GL_LOGIC_OP));
+             (state && ctx->Color.BlendEquationRGB == GL_LOGIC_OP));
          break;
 #if FEATURE_userclip
       case GL_CLIP_PLANE0:
@@ -290,6 +291,15 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          FLUSH_VERTICES(ctx, _NEW_POLYGON);
          ctx->Polygon.CullFlag = state;
          break;
+
+      case GL_CULL_VERTEX_EXT:
+         CHECK_EXTENSION(EXT_cull_vertex, cap);
+         if (ctx->Transform.CullVertexFlag == state)
+            return;
+         FLUSH_VERTICES(ctx, _NEW_TRANSFORM);
+         ctx->Transform.CullVertexFlag = state;
+         break;
+
       case GL_DEPTH_TEST:
          if (state && ctx->Visual.depthBits==0) {
             _mesa_warning(ctx,"glEnable(GL_DEPTH_TEST) but no depth buffer");
@@ -353,13 +363,6 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          else
  	   ctx->_TriangleCaps &= ~DD_TRI_LIGHT_TWOSIDE;
  
-         if ((ctx->Light.Enabled &&
-              ctx->Light.Model.ColorControl==GL_SEPARATE_SPECULAR_COLOR)
-             || ctx->Fog.ColorSumEnabled)
-            ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-         else
-            ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
-
          break;
       case GL_LINE_SMOOTH:
          if (ctx->Line.SmoothFlag == state)
@@ -391,7 +394,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
           */
          ctx->Color._LogicOpEnabled =
             (state || (ctx->Color.BlendEnabled &&
-                       ctx->Color.BlendEquation == GL_LOGIC_OP));
+                       ctx->Color.BlendEquationRGB == GL_LOGIC_OP));
          break;
       case GL_MAP1_COLOR_4:
          if (ctx->Eval.Map1Color4 == state)
@@ -791,14 +794,6 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             return;
          FLUSH_VERTICES(ctx, _NEW_FOG);
          ctx->Fog.ColorSumEnabled = state;
-
-         if ((ctx->Light.Enabled &&
-              ctx->Light.Model.ColorControl==GL_SEPARATE_SPECULAR_COLOR)
-             || ctx->Fog.ColorSumEnabled)
-            ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-         else
-            ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
-
          break;
 
       /* GL_ARB_multisample */
@@ -858,24 +853,24 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
 
 #if FEATURE_NV_vertex_program
       case GL_VERTEX_PROGRAM_NV:
-         CHECK_EXTENSION(NV_vertex_program, cap);
+         CHECK_EXTENSION2(NV_vertex_program, ARB_vertex_program, cap);
          if (ctx->VertexProgram.Enabled == state)
             return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
+         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
          ctx->VertexProgram.Enabled = state;
          break;
       case GL_VERTEX_PROGRAM_POINT_SIZE_NV:
-         CHECK_EXTENSION(NV_vertex_program, cap);
+         CHECK_EXTENSION2(NV_vertex_program, ARB_vertex_program, cap);
          if (ctx->VertexProgram.PointSizeEnabled == state)
             return;
          FLUSH_VERTICES(ctx, _NEW_PROGRAM);
          ctx->VertexProgram.PointSizeEnabled = state;
          break;
       case GL_VERTEX_PROGRAM_TWO_SIDE_NV:
-         CHECK_EXTENSION(NV_vertex_program, cap);
+         CHECK_EXTENSION2(NV_vertex_program, ARB_vertex_program, cap);
          if (ctx->VertexProgram.TwoSideEnabled == state)
             return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
+         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
          ctx->VertexProgram.TwoSideEnabled = state;
          break;
       case GL_MAP1_VERTEX_ATTRIB0_4_NV:

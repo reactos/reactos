@@ -1,34 +1,6 @@
-; DO NOT EDIT - This file generated automatically by mesadef.py script
-DESCRIPTION 'Mesa (OpenGL work-alike) for Win32'
-VERSION 6.0
-;
-; Module definition file for Mesa (OPENGL32.DLL)
-;
-; Note: The OpenGL functions use the STDCALL
-; function calling convention.  Microsoft's
-; OPENGL32 uses this convention and so must the
-; Mesa OPENGL32 so that the Mesa DLL can be used
-; as a drop-in replacement.
-;
-; The linker exports STDCALL entry points with
-; 'decorated' names; e.g., _glBegin@0, where the
-; trailing number is the number of bytes of 
-; parameter data pushed onto the stack.  The
-; callee is responsible for popping this data
-; off the stack, usually via a RETF n instruction.
-;
-; However, the Microsoft OPENGL32.DLL does not export
-; the decorated names, even though the calling convention
-; is STDCALL.  So, this module definition file is
-; needed to force the Mesa OPENGL32.DLL to export the
-; symbols in the same manner as the Microsoft DLL.
-; Were it not for this problem, this file would not
-; be needed (for the gl* functions) since the entry
-; points are compiled with dllexport declspec.
-;
-; However, this file is still needed to export "internal"
-; Mesa symbols for the benefit of the OSMESA32.DLL.
-;
+DESCRIPTION 'Mesa (OpenGL driver) for Win32'
+VERSION 6.1
+
 EXPORTS
 ;
 ; ICD API
@@ -57,7 +29,6 @@ EXPORTS
 	_ac_InvalidateState
 	_glapi_get_context
 	_glapi_get_proc_address
-	_mesa_base_compressed_texformat
 	_mesa_buffer_data
 	_mesa_buffer_map
 	_mesa_buffer_subdata
@@ -80,6 +51,7 @@ EXPORTS
 	_mesa_free_context_data
 	_mesa_get_current_context
 	_mesa_init_default_imports
+	_mesa_init_driver_functions
 	_mesa_initialize_context
 	_mesa_make_current
 	_mesa_memcpy

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -73,7 +73,7 @@ void _tnl_update_eval( GLcontext *ctx )
       clear_active_eval2( tnl, attr );
    }
 
-   if (ctx->VertexProgram.Enabled) {
+   if (ctx->VertexProgram._Enabled) {
       for (attr = 0; attr < VERT_ATTRIB_MAX; attr++) {
 	 if (ctx->Eval.Map1Attrib[attr]) 
 	    set_active_eval1( tnl, attr, 4, &ctx->EvalMap.Map1Attrib[attr] );

@@ -6,9 +6,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,6 +35,7 @@
 #include "macros.h"
 #include "colormac.h"
 #include "api_loopback.h"
+#include "glthread.h"
 
 /* KW: A set of functions to convert unusual Color/Normal/Vertex/etc
  * calls to a smaller set of driver-provided formats.  Currently just
@@ -45,34 +46,34 @@
  * listed in dd.h.  The easiest way for a driver to do this is to
  * install the supplied software t&l module.
  */
-#define COLORF(r,g,b,a)             glColor4f(r,g,b,a)
-#define VERTEX2(x,y)	            glVertex2f(x,y)
-#define VERTEX3(x,y,z)	            glVertex3f(x,y,z)
-#define VERTEX4(x,y,z,w)            glVertex4f(x,y,z,w)
-#define NORMAL(x,y,z)               glNormal3f(x,y,z)
-#define TEXCOORD1(s)                glTexCoord1f(s)
-#define TEXCOORD2(s,t)              glTexCoord2f(s,t)
-#define TEXCOORD3(s,t,u)            glTexCoord3f(s,t,u)
-#define TEXCOORD4(s,t,u,v)          glTexCoord4f(s,t,u,v)
-#define INDEX(c)		    glIndexf(c)
-#define MULTI_TEXCOORD1(z,s)	    glMultiTexCoord1fARB(z,s)
-#define MULTI_TEXCOORD2(z,s,t)	    glMultiTexCoord2fARB(z,s,t)
-#define MULTI_TEXCOORD3(z,s,t,u)    glMultiTexCoord3fARB(z,s,t,u)
-#define MULTI_TEXCOORD4(z,s,t,u,v)  glMultiTexCoord4fARB(z,s,t,u,v)
-#define EVALCOORD1(x)               glEvalCoord1f(x)
-#define EVALCOORD2(x,y)             glEvalCoord2f(x,y)
-#define MATERIALFV(a,b,c)           glMaterialfv(a,b,c)
-#define RECTF(a,b,c,d)              glRectf(a,b,c,d)
+#define COLORF(r,g,b,a)             GL_CALL(Color4f)(r,g,b,a)
+#define VERTEX2(x,y)	            GL_CALL(Vertex2f)(x,y)
+#define VERTEX3(x,y,z)	            GL_CALL(Vertex3f)(x,y,z)
+#define VERTEX4(x,y,z,w)            GL_CALL(Vertex4f)(x,y,z,w)
+#define NORMAL(x,y,z)               GL_CALL(Normal3f)(x,y,z)
+#define TEXCOORD1(s)                GL_CALL(TexCoord1f)(s)
+#define TEXCOORD2(s,t)              GL_CALL(TexCoord2f)(s,t)
+#define TEXCOORD3(s,t,u)            GL_CALL(TexCoord3f)(s,t,u)
+#define TEXCOORD4(s,t,u,v)          GL_CALL(TexCoord4f)(s,t,u,v)
+#define INDEX(c)		    GL_CALL(Indexf)(c)
+#define MULTI_TEXCOORD1(z,s)	    GL_CALL(MultiTexCoord1fARB)(z,s)
+#define MULTI_TEXCOORD2(z,s,t)	    GL_CALL(MultiTexCoord2fARB)(z,s,t)
+#define MULTI_TEXCOORD3(z,s,t,u)    GL_CALL(MultiTexCoord3fARB)(z,s,t,u)
+#define MULTI_TEXCOORD4(z,s,t,u,v)  GL_CALL(MultiTexCoord4fARB)(z,s,t,u,v)
+#define EVALCOORD1(x)               GL_CALL(EvalCoord1f)(x)
+#define EVALCOORD2(x,y)             GL_CALL(EvalCoord2f)(x,y)
+#define MATERIALFV(a,b,c)           GL_CALL(Materialfv)(a,b,c)
+#define RECTF(a,b,c,d)              GL_CALL(Rectf)(a,b,c,d)
 
 /* Extension functions must be dereferenced through _glapi_Dispatch as
  * not all libGL.so's will have all the uptodate entrypoints.
  */
-#define ATTRIB1(index,x)        _glapi_Dispatch->VertexAttrib1fNV(index,x)
-#define ATTRIB2(index,x,y)      _glapi_Dispatch->VertexAttrib2fNV(index,x,y)
-#define ATTRIB3(index,x,y,z)    _glapi_Dispatch->VertexAttrib3fNV(index,x,y,z)
-#define ATTRIB4(index,x,y,z,w)  _glapi_Dispatch->VertexAttrib4fNV(index,x,y,z,w)
-#define FOGCOORDF(x)            _glapi_Dispatch->FogCoordfEXT(x)
-#define SECONDARYCOLORF(a,b,c)  _glapi_Dispatch->SecondaryColor3fEXT(a,b,c)
+#define ATTRIB1(index,x)        GL_CALL(VertexAttrib1fNV)(index,x)
+#define ATTRIB2(index,x,y)      GL_CALL(VertexAttrib2fNV)(index,x,y)
+#define ATTRIB3(index,x,y,z)    GL_CALL(VertexAttrib3fNV)(index,x,y,z)
+#define ATTRIB4(index,x,y,z,w)  GL_CALL(VertexAttrib4fNV)(index,x,y,z,w)
+#define FOGCOORDF(x)            GL_CALL(FogCoordfEXT)(x)
+#define SECONDARYCOLORF(a,b,c)  GL_CALL(SecondaryColor3fEXT)(a,b,c)
 
 static void GLAPIENTRY
 loopback_Color3b_f( GLbyte red, GLbyte green, GLbyte blue )

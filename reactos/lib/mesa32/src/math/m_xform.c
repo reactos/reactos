@@ -185,7 +185,7 @@ void _mesa_transform_point_sz( GLfloat Q[4], const GLfloat M[16],
 /*
  * This is called only once.  It initializes several tables with pointers
  * to optimized transformation functions.  This is where we can test for
- * AMD 3Dnow! capability, Intel Katmai, etc. and hook in the right code.
+ * AMD 3Dnow! capability, Intel SSE, etc. and hook in the right code.
  */
 void
 _math_init_transformation( void )

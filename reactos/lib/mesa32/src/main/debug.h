@@ -1,18 +1,8 @@
-/**
- * \file debug.h
- * Debugging functions.
- * 
- * \if subset
- * (No-op)
- *
- * \endif
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.1
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,6 +22,16 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * \file debug.h
+ * Debugging functions.
+ * 
+ * \if subset
+ * (No-op)
+ *
+ * \endif
+ */
+
 
 #ifndef _DEBUG_H
 #define _DEBUG_H
@@ -43,7 +43,6 @@ extern void _mesa_print_enable_flags( const char *msg, GLuint flags );
 extern void _mesa_print_state( const char *msg, GLuint state );
 extern void _mesa_print_info( void );
 extern void _mesa_init_debug( GLcontext *ctx );
-extern void _mesa_check_driver_hooks( GLcontext *ctx );
 
 #else
 
@@ -55,9 +54,6 @@ extern void _mesa_check_driver_hooks( GLcontext *ctx );
 
 /** No-op */
 #define _mesa_init_debug( c ) ((void)0)
-
-/** No-op */
-#define _mesa_check_driver_hooks( c ) ((void)0)
 
 #endif
 

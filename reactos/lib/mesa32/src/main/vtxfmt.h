@@ -7,9 +7,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,8 +35,8 @@
 
 extern void _mesa_init_exec_vtxfmt( GLcontext *ctx );
 
-extern void _mesa_install_exec_vtxfmt( GLcontext *ctx, GLvertexformat *vfmt );
-extern void _mesa_install_save_vtxfmt( GLcontext *ctx, GLvertexformat *vfmt );
+extern void _mesa_install_exec_vtxfmt( GLcontext *ctx, const GLvertexformat *vfmt );
+extern void _mesa_install_save_vtxfmt( GLcontext *ctx, const GLvertexformat *vfmt );
 
 extern void _mesa_restore_exec_vtxfmt( GLcontext *ctx );
 
