@@ -6,3 +6,11 @@
  */
 #include <windows.h>
 #include <win32k/win32k.h>
+
+typedef struct _USER32_THREAD_DATA
+{
+  MSG LastMessage;
+} USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
+
+PUSER32_THREAD_DATA
+User32GetThreadData();

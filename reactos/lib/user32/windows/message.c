@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.20 2003/07/30 19:36:36 hbirr Exp $
+/* $Id: message.c,v 1.21 2003/08/01 18:45:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,9 +13,8 @@
 #include <string.h>
 #include <debug.h>
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 LPARAM
 STDCALL
@@ -27,26 +26,25 @@ GetMessageExtraInfo(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 GetMessagePos(VOID)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+  return(MAKELONG(ThreadData->LastMessage.pt.x, ThreadData->LastMessage.pt.y));
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-LONG
-STDCALL
+LONG STDCALL
 GetMessageTime(VOID)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+  return(ThreadData->LastMessage.time);
 }
 
 
@@ -351,46 +349,64 @@ DispatchMessageW(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-GetMessageA(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax)
+WINBOOL STDCALL
+GetMessageA(LPMSG lpMsg,
+	    HWND hWnd,
+	    UINT wMsgFilterMin,
+	    UINT wMsgFilterMax)
 {
-  return NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
+  BOOL Res;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+
+  Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
+  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
+    {
+      ThreadData->LastMessage = *lpMsg;
+    }
+  return(Res);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-GetMessageW(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax)
+WINBOOL STDCALL
+GetMessageW(LPMSG lpMsg,
+	    HWND hWnd,
+	    UINT wMsgFilterMin,
+	    UINT wMsgFilterMax)
 {
-  return NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
+  BOOL Res;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+
+  Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
+  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
+    {
+      ThreadData->LastMessage = *lpMsg;
+    }
+  return(Res);
 }
 
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-PeekMessageA(
-  LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg)
+WINBOOL STDCALL
+PeekMessageA(LPMSG lpMsg,
+	     HWND hWnd,
+	     UINT wMsgFilterMin,
+	     UINT wMsgFilterMax,
+	     UINT wRemoveMsg)
 {
-  return NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  BOOL Res;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+
+  Res =  NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
+    {
+      ThreadData->LastMessage = *lpMsg;
+    }
+  return(Res);
 }
 
 
@@ -406,7 +422,15 @@ PeekMessageW(
   UINT wMsgFilterMax,
   UINT wRemoveMsg)
 {
-  return NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  BOOL Res;
+  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+  
+  Res = NtUserPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
+    {
+      ThreadData->LastMessage = *lpMsg;
+    }
+  return(Res);
 }
 
 
