@@ -685,7 +685,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    
    if (UserHasWindowEdge(Style, ExStyle))
    {
-      DWORD XSize, YSize; 
+      LONG XSize, YSize; 
 
       UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
       InflateRect(&WindowRect, -WindowBorders.cx, -WindowBorders.cy);
