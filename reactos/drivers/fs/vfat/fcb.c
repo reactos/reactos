@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.9 2001/08/14 20:47:30 hbirr Exp $
+/* $Id: fcb.c,v 1.10 2001/10/10 22:17:42 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -24,6 +24,8 @@
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_FCB TAG('V', 'F', 'C', 'B')
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 /*  --------------------------------------------------------  PUBLICS  */
 
@@ -73,7 +75,7 @@ vfatGrabFCB(PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
 
-  DPRINT ("grabbing FCB at %x: %S, refCount:%d\n", 
+  DPRINT ("grabbing FCB at %x: %S, refCount:%d\n",
           pFCB,
           pFCB->PathName,
           pFCB->RefCount);
@@ -88,7 +90,7 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
 
-  DPRINT ("releasing FCB at %x: %S, refCount:%d\n", 
+  DPRINT ("releasing FCB at %x: %S, refCount:%d\n",
           pFCB,
           pFCB->PathName,
           pFCB->RefCount);
@@ -169,11 +171,14 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
   fileObject->FsContext2 = newCCB;
   newCCB->pFcb = fcb;
   newCCB->PtrFileObject = fileObject;
+  fcb->FileObject = fileObject;
   fcb->pDevExt = vcb;
+
 
   bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
   fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ?
       bytesPerCluster : PAGESIZE;
+
   status = CcRosInitializeFileCache (fileObject,
                                      &fcb->RFCB.Bcb,
                                      fileCacheQuantum);
@@ -182,123 +187,47 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
     DbgPrint ("CcRosInitializeFileCache failed\n");
     KeBugCheck (0);
   }
+
   ObDereferenceObject (fileObject);
   fcb->Flags |= FCB_CACHE_INITIALIZED;
 
   return  status;
 }
 
-NTSTATUS
-vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
-			     PVFATFCB pFCB,
-			     ULONG  pOffset,
-			     PVOID * pBuffer,
-			     PCACHE_SEGMENT * pCacheSegment,
-			     BOOL pExtend)
-{
-  NTSTATUS  status;
-  BOOLEAN  valid;
-  BOOLEAN  isRoot;
-  ULONG  currentCluster;
-  ULONG  i;
-
-  status = CcRosRequestCacheSegment(pFCB->RFCB.Bcb,
-                                    pOffset,
-                                    pBuffer,
-                                    &valid,
-                                    pCacheSegment);
-  if (!NT_SUCCESS (status))
-  {
-    return  status;
-  }
-
-  isRoot = vfatFCBIsRoot (pFCB);
-  if (!valid)
-  {
-    currentCluster = vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry);
-    status = OffsetToCluster (pDeviceExt,
-                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
-                              pOffset,
-                              &currentCluster,
-                              pExtend);
-    if (!NT_SUCCESS (status))
-    {
-      return  status;
-    }
-
-    if (PAGESIZE > pDeviceExt->BytesPerCluster)
-    {
-      for (i = 0; i < (PAGESIZE / pDeviceExt->BytesPerCluster); i++)
-      {
-        status = VfatRawReadCluster (pDeviceExt,
-                                     vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
-                                     ((PCHAR)*pBuffer) +
-                                     (i * pDeviceExt->BytesPerCluster),
-                                     currentCluster);
-        if (!NT_SUCCESS (status))
-        {
-          CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
-          return  status;
-        }
-        status = NextCluster (pDeviceExt,
-                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
-                              &currentCluster,
-                              pExtend);
-        if (!NT_SUCCESS (status))
-        {
-          CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
-          return  status;
-        }
-        if ((currentCluster) == 0xFFFFFFFF)
-        {
-          break;
-        }
-      }
-    }
-    else
-    {
-      status = VfatRawReadCluster (pDeviceExt,
-                                   vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
-                                   *pBuffer,
-                                   currentCluster);
-      if (!NT_SUCCESS (status))
-      {
-        CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
-        return  status;
-      }
-    }
-  }
-
-  return  STATUS_SUCCESS;
-}
-
-NTSTATUS
-vfatReleaseRegion (PDEVICE_EXTENSION  pDeviceExt,
-                   PVFATFCB  pFCB,
-                   PCACHE_SEGMENT  pCacheSegment)
-{
-  return  CcRosReleaseCacheSegment (pFCB->RFCB.Bcb, pCacheSegment, TRUE);
-}
-
 PVFATFCB
 vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
+  ULONG FirstCluster, CurrentCluster, Size;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   FCB = vfatNewFCB(L"\\");
   memset(FCB->entry.Filename, ' ', 11);
   FCB->entry.FileSize = pVCB->rootDirectorySectors * BLOCKSIZE;
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
   if (pVCB->FatType == FAT32)
+  {
+    CurrentCluster = FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster;
+    FCB->entry.FirstCluster = FirstCluster & 0xffff;
+    FCB->entry.FirstClusterHigh = FirstCluster >> 16;
+    CurrentCluster = FirstCluster;
+
+    while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
-      FCB->entry.FirstCluster = ((struct _BootSector32*)(pVCB->Boot))->RootCluster & 0xffff;
-      FCB->entry.FirstClusterHigh = ((struct _BootSector32*)(pVCB->Boot))->RootCluster >> 16;
+      Size += pVCB->BytesPerCluster;
+      Status = NextCluster (pVCB, FirstCluster, &CurrentCluster, FALSE);
     }
+  }
   else
-    {
-      FCB->entry.FirstCluster = 1;
-    }
+  {
+    FCB->entry.FirstCluster = 1;
+    Size = pVCB->rootDirectorySectors * BLOCKSIZE;
+  }
   FCB->RefCount = 1;
+  FCB->dirIndex = 0;
+  FCB->RFCB.FileSize.QuadPart = Size;
+  FCB->RFCB.ValidDataLength.QuadPart = Size;
+  FCB->RFCB.AllocationSize.QuadPart = Size;
 
   vfatFCBInitializeCache(pVCB, FCB);
   vfatAddFCBToTable(pVCB, FCB);
@@ -326,11 +255,12 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
 			PVFATFCB  directoryFCB,
 			PWSTR  longName,
 			PFAT_DIR_ENTRY  dirEntry,
+            ULONG dirIndex,
 			PVFATFCB * fileFCB)
 {
   PVFATFCB  rcFCB;
   WCHAR  pathName [MAX_PATH];
-
+  ULONG Size;
   if (longName [0] != 0 && wcslen (directoryFCB->PathName) +
         sizeof(WCHAR) + wcslen (longName) > MAX_PATH)
   {
@@ -355,10 +285,38 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   rcFCB = vfatNewFCB (pathName);
   memcpy (&rcFCB->entry, dirEntry, sizeof (FAT_DIR_ENTRY));
 
+  if (vfatFCBIsDirectory(vcb, rcFCB))
+  {
+    ULONG FirstCluster, CurrentCluster;
+    NTSTATUS Status;
+    Size = 0;
+    FirstCluster = vfatDirEntryGetFirstCluster (vcb, &rcFCB->entry);
+    if (FirstCluster == 1)
+    {
+      Size = vcb->rootDirectorySectors * BLOCKSIZE;
+    }
+    else
+    {
+      CurrentCluster = FirstCluster;
+      while (CurrentCluster != 0xffffffff)
+      {
+         Size += vcb->BytesPerCluster;
+         Status = NextCluster (vcb, FirstCluster, &CurrentCluster, FALSE);
+      }
+    }
+  }
+  else
+  {
+    Size = rcFCB->entry.FileSize;
+  }
+  rcFCB->dirIndex = dirIndex;
+  rcFCB->RFCB.FileSize.QuadPart = Size;
+  rcFCB->RFCB.ValidDataLength.QuadPart = Size;
+  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->BytesPerCluster);
+//  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
   vfatFCBInitializeCache (vcb, rcFCB);
   rcFCB->RefCount++;
   vfatAddFCBToTable (vcb, rcFCB);
-//  vfatGrabFCB (vcb, rcFCB);
   *fileFCB = rcFCB;
 
   return  STATUS_SUCCESS;
@@ -394,8 +352,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
     ULONG  fileCacheQuantum;
 
     bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
-    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster :
-        PAGESIZE;
+    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster : PAGESIZE;
     status = CcRosInitializeFileCache (fileObject,
                                        &fcb->RFCB.Bcb,
                                        fileCacheQuantum);
@@ -477,6 +434,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
                                           pDirectoryFCB,
                                           currentLongName,
                                           &currentDirEntry,
+                                          directoryIndex - 1,
                                           pFoundFCB);
         return  status;
       }
@@ -492,6 +450,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
                                             pDirectoryFCB,
                                             currentLongName,
                                             &currentDirEntry,
+                                            directoryIndex - 1,
                                             pFoundFCB);
           return  status;
         }
@@ -505,7 +464,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
 NTSTATUS
 vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                    PVFATFCB  *pParentFCB,
-                   PVFATFCB  *pFCB, 
+                   PVFATFCB  *pFCB,
                    const PWSTR  pFileName)
 {
   NTSTATUS  status;
