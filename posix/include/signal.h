@@ -1,4 +1,4 @@
-/* $Id: signal.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+/* $Id: signal.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
  */
 /*
  * signal.h
@@ -38,13 +38,10 @@ struct timespec;
 
 typedef int sig_atomic_t; /* Integral type of an object that can be
                       			     accessed as an atomic entity, even in the
-                              presence of asynchronous interrupts */ /* FIXME? */
+                              presence of asynchronous interrupts */
 
-typedef struct __tagsigset_t
-{
- int _dummy;
-} sigset_t; /* Integral or structure type of an object used to represent
-               sets of signals. */ /* TODO */
+typedef unsigned long int sigset_t; /* Integral or structure type of an object
+                                          used to represent sets of signals. */
 
 union sigval
 {
@@ -80,8 +77,7 @@ struct sigaction
 {
  void     (* sa_handler)(int); /* what to do on receipt of signal */
  sigset_t   sa_mask;           /* set of signals to be blocked during
-                                  execution of the signal handling
-				  function */
+                                  execution of the signal handling function */
  int        sa_flags;          /* special flags */
  void (* sa_sigaction)(int, siginfo_t *, void *);
                                /* pointer to signal handler function
@@ -102,84 +98,51 @@ struct sigstack
 };
 
 /* CONSTANTS */
-/* Request for default signal handling. */
-#define SIG_DFL  ((void (*)(int))(0))
-/* Return value from signal() in case of error. */
-#define SIG_ERR  ((void (*)(int))(1))
-/* Request that signal be held. */
-#define SIG_HOLD ((void (*)(int))(2))
-/* Request that signal be ignored. */
-#define SIG_IGN  ((void (*)(int))(3))
+#define SIG_DFL  ((void (*)(int))(0xFFFFFFFF)) /* Request for default signal handling. */
+#define SIG_ERR  ((void (*)(int))(0x00000000)) /* Return value from signal() in case of error. */
+#define SIG_IGN  ((void (*)(int))(0x00000001)) /* Request that signal be ignored. */
+#define SIG_HOLD ((void (*)(int))(0x00000002)) /* Request that signal be held. */
 
-/* No asynchronous notification will be delivered when the event of
-   interest occurs. */
-#define SIGEV_NONE   (0)
-/* A queued signal, with an application-defined value, will be generated
-   when the event of interest occurs. */
-#define SIGEV_SIGNAL (1)
-/* A notification function will be called to perform notification. */
-#define SIGEV_THREAD (2)
+#define SIGEV_NONE   (0) /* No asynchronous notification will be delivered \
+                            when the event of interest occurs. */
+#define SIGEV_SIGNAL (1) /* A queued signal, with an application-defined \
+                            value, will be generated when the event of \
+                            interest occurs. */
+#define SIGEV_THREAD (2) /* A notification function will be called to perform \
+                            notification. */
 
 /* TODO: realtime features not supported yet */
 #define SIGRTMIN (-1)
 #define SIGRTMAX (-1)
 
-/* Process abort signal. */
-#define SIGABRT   ( 1)
-/* Alarm clock. */
-#define SIGALRM   ( 2)
-/* Erroneous arithmetic operation. */
-#define SIGFPE    ( 3)
-/* Hangup. */
-#define SIGHUP    ( 4)
-/* Illegal instruction. */
-#define SIGILL    ( 5)
-/* Terminal interrupt signal. */
-#define SIGINT    ( 6)
-/* Kill (cannot be caught or ignored). */
-#define SIGKILL   ( 7)
-/* Write on a pipe with no one to read it. */
-#define SIGPIPE   ( 8)
-/* Terminal quit signal. */
-#define SIGQUIT   ( 9)
-/* Invalid memory reference. */
-#define SIGSEGV   (10)
-/* Termination signal. */
-#define SIGTERM   (11)
-/* User-defined signal 1. */
-#define SIGUSR1   (12)
-/* User-defined signal 2. */
-#define SIGUSR2   (13)
-/* Child process terminated or stopped. */
-#define SIGCHLD   (14)
-/* Continue executing, if stopped. */
-#define SIGCONT   (15)
-/* Stop executing (cannot be caught or ignored). */
-#define SIGSTOP   (16)
-/* Terminal stop signal. */
-#define SIGTSTP   (17)
-/* Background process attempting read. */
-#define SIGTTIN   (18)
-/* Background process attempting write. */
-#define SIGTTOU   (19)
-/* Access to an undefined portion of a memory object. */
-#define SIGBUS    (20)
-/* Pollable event. */
-#define SIGPOLL   (21)
-/* Profiling timer expired. */
-#define SIGPROF   (22)
-/* Bad system call. */
-#define SIGSYS    (23)
-/* Trace/breakpoint trap. */
-#define SIGTRAP   (24)
-/* High bandwidth data is available at a socket. */
-#define SIGURG    (25)
-/* Virtual timer expired. */
-#define SIGVTALRM (26)
-/* CPU time limit exceeded. */
-#define SIGXCPU   (27)
-/* File size limit exceeded. */
-#define SIGXFSZ   (28)
+#define SIGABRT   ( 1) /* Process abort signal. */
+#define SIGALRM   ( 2) /* Alarm clock. */
+#define SIGFPE    ( 3) /* Erroneous arithmetic operation. */
+#define SIGHUP    ( 4) /* Hangup. */
+#define SIGILL    ( 5) /* Illegal instruction. */
+#define SIGINT    ( 6) /* Terminal interrupt signal. */
+#define SIGKILL   ( 7) /* Kill (cannot be caught or ignored). */
+#define SIGPIPE   ( 8) /* Write on a pipe with no one to read it. */
+#define SIGQUIT   ( 9) /* Terminal quit signal. */
+#define SIGSEGV   (10) /* Invalid memory reference. */
+#define SIGTERM   (11) /* Termination signal. */
+#define SIGUSR1   (12) /* User-defined signal 1. */
+#define SIGUSR2   (13) /* User-defined signal 2. */
+#define SIGCHLD   (14) /* Child process terminated or stopped. */
+#define SIGCONT   (15) /* Continue executing, if stopped. */
+#define SIGSTOP   (16) /* Stop executing (cannot be caught or ignored). */
+#define SIGTSTP   (17) /* Terminal stop signal. */
+#define SIGTTIN   (18) /* Background process attempting read. */
+#define SIGTTOU   (19) /* Background process attempting write. */
+#define SIGBUS    (20) /* Access to an undefined portion of a memory object. */
+#define SIGPOLL   (21) /* Pollable event. */
+#define SIGPROF   (22) /* Profiling timer expired. */
+#define SIGSYS    (23) /* Bad system call. */
+#define SIGTRAP   (24) /* Trace/breakpoint trap. */
+#define SIGURG    (25) /* High bandwidth data is available at a socket. */
+#define SIGVTALRM (26) /* Virtual timer expired. */
+#define SIGXCPU   (27) /* CPU time limit exceeded. */
+#define SIGXFSZ   (28) /* File size limit exceeded. */
 
 /* FIXME: the following constants need to be reviewed */
 /* Do not generate SIGCHLD when children stop. */

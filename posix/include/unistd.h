@@ -1,4 +1,4 @@
-/* $Id: unistd.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+/* $Id: unistd.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
  */
 /*
  * unistd.h
@@ -250,14 +250,10 @@ extern int    optind, opterr, optopt;
    constants for the access() function
  */
 
-/* Test for read permission. */
-#define R_OK (0x00000001)
-/*  Test for write permission. */
-#define W_OK (0x00000002)
-/* Test for execute (search) permission. */
-#define X_OK (0x00000004)
-/* Test for existence of file. */
-#define F_OK (0)
+#define R_OK (0x00000004) /* Test for read permission. */
+#define W_OK (0x00000002) /*  Test for write permission. */
+#define X_OK (0x00000001) /* Test for execute (search) permission. */
+#define F_OK (0) /* Test for existence of file. */
 
 /*
   constants for the confstr() function
@@ -284,117 +280,137 @@ extern int    optind, opterr, optopt;
  constants for the lseek() and fcntl() functions
  */
 
-#define SEEK_SET (1) /* Set file offset to offset. */
-#define SEEK_CUR (2) /* Set file offset to current plus offset. */
-#define SEEK_END (3) /* Set file offset to EOF plus offset. */
+#define SEEK_SET (0) /* Set file offset to offset. */
+#define SEEK_CUR (1) /* Set file offset to current plus offset. */
+#define SEEK_END (2) /* Set file offset to EOF plus offset. */
+
+/*
+  constants for pathconf()
+ */
+/* constants 1 to 9 are the same as in Microsoft POSIX */
+#define _PC_LINK_MAX		         (  1)
+#define _PC_MAX_CANON 		       (  2)
+#define _PC_MAX_INPUT		        (  3)
+#define _PC_NAME_MAX		         (  4)
+#define _PC_PATH_MAX		         (  5)
+#define _PC_PIPE_BUF		         (  6)
+#define _PC_CHOWN_RESTRICTED 	 (  7)
+#define _PC_NO_TRUNC		         (  8)
+#define _PC_VDISABLE		         (  9)
+/* from this point, constants are in no particular order */
+#define _PC_ALLOC_SIZE_MIN     ( 10)
+#define _PC_ASYNC_IO           ( 11)
+#define _PC_FILESIZEBITS       ( 12)
+#define _PC_PRIO_IO            ( 13)
+#define _PC_REC_INCR_XFER_SIZE ( 14)
+#define _PC_REC_MAX_XFER_SIZE  ( 15)
+#define _PC_REC_MIN_XFER_SIZE  ( 16)
+#define _PC_REC_XFER_ALIGN     ( 17)
+#define _PC_SYNC_IO            ( 18)
 
 /*
   constants for sysconf()
  */
-#define _SC_2_C_BIND                     (1)
-#define _SC_2_C_DEV                      (2)
-#define _SC_2_C_VERSION                  (3)
-#define _SC_2_FORT_DEV                   (4)
-#define _SC_2_FORT_RUN                   (5)
-#define _SC_2_LOCALEDEF                  (6)
-#define _SC_2_SW_DEV                     (7)
-#define _SC_2_UPE                        (8)
-#define _SC_2_VERSION                    (9)
-#define _SC_ARG_MAX                      (10)
-#define _SC_AIO_LISTIO_MAX               (11)
-#define _SC_AIO_MAX                      (12)
-#define _SC_AIO_PRIO_DELTA_MAX           (13)
-#define _SC_ASYNCHRONOUS_IO              (14)
-#define _SC_ATEXIT_MAX                   (15)
-#define _SC_BC_BASE_MAX                  (16)
-#define _SC_BC_DIM_MAX                   (17)
-#define _SC_BC_SCALE_MAX                 (18)
-#define _SC_BC_STRING_MAX                (19)
-#define _SC_CHILD_MAX                    (20)
-#define _SC_CLK_TCK                      (21)
-#define _SC_COLL_WEIGHTS_MAX             (22)
-#define _SC_DELAYTIMER_MAX               (23)
-#define _SC_EXPR_NEST_MAX                (24)
-#define _SC_FSYNC                        (25)
-#define _SC_GETGR_R_SIZE_MAX             (26)
-#define _SC_GETPW_R_SIZE_MAX             (27)
-#define _SC_IOV_MAX                      (28)
-#define _SC_JOB_CONTROL                  (29)
-#define _SC_LINE_MAX                     (30)
-#define _SC_LOGIN_NAME_MAX               (31)
-#define _SC_MAPPED_FILES                 (32)
-#define _SC_MEMLOCK                      (33)
-#define _SC_MEMLOCK_RANGE                (34)
-#define _SC_MEMORY_PROTECTION            (35)
-#define _SC_MESSAGE_PASSING              (36)
-#define _SC_MQ_OPEN_MAX                  (37)
-#define _SC_MQ_PRIO_MAX                  (38)
-#define _SC_NGROUPS_MAX                  (39)
-#define _SC_OPEN_MAX                     (40)
-#define _SC_PAGE_SIZE                    (41)
-#define _SC_PASS_MAX                     (42) /* LEGACY */
-#define _SC_PRIORITIZED_IO               (43)
-#define _SC_PRIORITY_SCHEDULING          (44)
-#define _SC_RE_DUP_MAX                   (45)
-#define _SC_REALTIME_SIGNALS             (46)
-#define _SC_RTSIG_MAX                    (47)
-#define _SC_SAVED_IDS                    (48)
-#define _SC_SEMAPHORES                   (49)
-#define _SC_SEM_NSEMS_MAX                (50)
-#define _SC_SEM_VALUE_MAX                (51)
-#define _SC_SHARED_MEMORY_OBJECTS        (52)
-#define _SC_SIGQUEUE_MAX                 (53)
-#define _SC_STREAM_MAX                   (54)
-#define _SC_SYNCHRONIZED_IO              (55)
-#define _SC_THREADS                      (56)
-#define _SC_THREAD_ATTR_STACKADDR        (57)
-#define _SC_THREAD_ATTR_STACKSIZE        (58)
-#define _SC_THREAD_DESTRUCTOR_ITERATIONS (59)
-#define _SC_THREAD_KEYS_MAX              (60)
-#define _SC_THREAD_PRIORITY_SCHEDULING   (61)
-#define _SC_THREAD_PRIO_INHERIT          (62)
-#define _SC_THREAD_PRIO_PROTECT          (63)
-#define _SC_THREAD_PROCESS_SHARED        (64)
-#define _SC_THREAD_SAFE_FUNCTIONS        (65)
-#define _SC_THREAD_STACK_MIN             (66)
-#define _SC_THREAD_THREADS_MAX           (67)
-#define _SC_TIMERS                       (68)
-#define _SC_TIMER_MAX                    (69)
-#define _SC_TTY_NAME_MAX                 (70)
-#define _SC_TZNAME_MAX                   (71)
-#define _SC_VERSION                      (72)
-#define _SC_XOPEN_VERSION                (73)
-#define _SC_XOPEN_CRYPT                  (74)
-#define _SC_XOPEN_ENH_I18N               (75)
-#define _SC_XOPEN_SHM                    (76)
-#define _SC_XOPEN_UNIX                   (77)
-#define _SC_XOPEN_XCU_VERSION            (78)
-#define _SC_XOPEN_LEGACY                 (79)
-#define _SC_XOPEN_REALTIME               (80)
-#define _SC_XOPEN_REALTIME_THREADS       (81)
-#define _SC_XBS5_ILP32_OFF32             (82)
-#define _SC_XBS5_ILP32_OFFBIG            (83)
-#define _SC_XBS5_LP64_OFF64              (84)
-#define _SC_XBS5_LPBIG_OFFBIG            (85)
+/* constants 1 to 10 are the same as in Microsoft POSIX */
+#define _SC_ARG_MAX                      (  1)
+#define _SC_CHILD_MAX                    (  2)
+#define _SC_CLK_TCK                      (  3)
+#define _SC_NGROUPS_MAX                  (  4)
+#define _SC_OPEN_MAX                     (  5)
+#define _SC_JOB_CONTROL                  (  6)
+#define _SC_SAVED_IDS                    (  7)
+#define _SC_STREAM_MAX                   (  8)
+#define _SC_TZNAME_MAX                   (  9)
+#define _SC_VERSION                      ( 10)
+/* from this point, constants are in no particular order */
+#define _SC_2_C_BIND                     ( 11)
+#define _SC_2_C_DEV                      ( 12)
+#define _SC_2_C_VERSION                  ( 13)
+#define _SC_2_FORT_DEV                   ( 14)
+#define _SC_2_FORT_RUN                   ( 15)
+#define _SC_2_LOCALEDEF                  ( 16)
+#define _SC_2_SW_DEV                     ( 17)
+#define _SC_2_UPE                        ( 18)
+#define _SC_2_VERSION                    ( 19)
+#define _SC_AIO_LISTIO_MAX               ( 20)
+#define _SC_AIO_MAX                      ( 21)
+#define _SC_AIO_PRIO_DELTA_MAX           ( 22)
+#define _SC_ASYNCHRONOUS_IO              ( 23)
+#define _SC_ATEXIT_MAX                   ( 24)
+#define _SC_BC_BASE_MAX                  ( 25)
+#define _SC_BC_DIM_MAX                   ( 26)
+#define _SC_BC_SCALE_MAX                 ( 27)
+#define _SC_BC_STRING_MAX                ( 28)
+#define _SC_COLL_WEIGHTS_MAX             ( 29)
+#define _SC_DELAYTIMER_MAX               ( 30)
+#define _SC_EXPR_NEST_MAX                ( 31)
+#define _SC_FSYNC                        ( 32)
+#define _SC_GETGR_R_SIZE_MAX             ( 33)
+#define _SC_GETPW_R_SIZE_MAX             ( 34)
+#define _SC_IOV_MAX                      ( 35)
+#define _SC_LINE_MAX                     ( 36)
+#define _SC_LOGIN_NAME_MAX               ( 37)
+#define _SC_MAPPED_FILES                 ( 38)
+#define _SC_MEMLOCK                      ( 39)
+#define _SC_MEMLOCK_RANGE                ( 40)
+#define _SC_MEMORY_PROTECTION            ( 41)
+#define _SC_MESSAGE_PASSING              ( 42)
+#define _SC_MQ_OPEN_MAX                  ( 43)
+#define _SC_MQ_PRIO_MAX                  ( 44)
+#define _SC_PAGE_SIZE                    ( 45)
+#define _SC_PASS_MAX                     ( 46) /* LEGACY */
+#define _SC_PRIORITIZED_IO               ( 47)
+#define _SC_PRIORITY_SCHEDULING          ( 48)
+#define _SC_RE_DUP_MAX                   ( 49)
+#define _SC_REALTIME_SIGNALS             ( 50)
+#define _SC_RTSIG_MAX                    ( 51)
+#define _SC_SEMAPHORES                   ( 52)
+#define _SC_SEM_NSEMS_MAX                ( 53)
+#define _SC_SEM_VALUE_MAX                ( 54)
+#define _SC_SHARED_MEMORY_OBJECTS        ( 55)
+#define _SC_SIGQUEUE_MAX                 ( 56)
+#define _SC_SYNCHRONIZED_IO              ( 57)
+#define _SC_THREADS                      ( 58)
+#define _SC_THREAD_ATTR_STACKADDR        ( 59)
+#define _SC_THREAD_ATTR_STACKSIZE        ( 60)
+#define _SC_THREAD_DESTRUCTOR_ITERATIONS ( 61)
+#define _SC_THREAD_KEYS_MAX              ( 62)
+#define _SC_THREAD_PRIORITY_SCHEDULING   ( 63)
+#define _SC_THREAD_PRIO_INHERIT          ( 64)
+#define _SC_THREAD_PRIO_PROTECT          ( 65)
+#define _SC_THREAD_PROCESS_SHARED        ( 66)
+#define _SC_THREAD_SAFE_FUNCTIONS        ( 67)
+#define _SC_THREAD_STACK_MIN             ( 68)
+#define _SC_THREAD_THREADS_MAX           ( 69)
+#define _SC_TIMERS                       ( 70)
+#define _SC_TIMER_MAX                    ( 71)
+#define _SC_TTY_NAME_MAX                 ( 72)
+#define _SC_XOPEN_VERSION                ( 73)
+#define _SC_XOPEN_CRYPT                  ( 74)
+#define _SC_XOPEN_ENH_I18N               ( 75)
+#define _SC_XOPEN_SHM                    ( 76)
+#define _SC_XOPEN_UNIX                   ( 77)
+#define _SC_XOPEN_XCU_VERSION            ( 78)
+#define _SC_XOPEN_LEGACY                 ( 79)
+#define _SC_XOPEN_REALTIME               ( 80)
+#define _SC_XOPEN_REALTIME_THREADS       ( 81)
+#define _SC_XBS5_ILP32_OFF32             ( 82)
+#define _SC_XBS5_ILP32_OFFBIG            ( 83)
+#define _SC_XBS5_LP64_OFF64              ( 84)
+#define _SC_XBS5_LPBIG_OFFBIG            ( 85)
+
 
 #define _SC_PAGESIZE _SC_PAGE_SIZE
 
 /* possible values for the function argument to the lockf() function */
-/* Lock a section for exclusive use. */
-#define F_LOCK  (1)
-/* Unlock locked sections. */
-#define F_ULOCK (2)
-/* Test section for locks by other processes. */
-#define F_TEST  (3)
-/* Test and lock a section for exclusive use. */
-#define F_TLOCK (4)
+#define F_LOCK  (1) /* Lock a section for exclusive use. */
+#define F_ULOCK (2) /* Unlock locked sections. */
+#define F_TEST  (3) /* Test section for locks by other processes. */
+#define F_TLOCK (4) /* Test and lock a section for exclusive use. */
 
-/* File number of stdin. It is 0. */
-#define STDIN_FILENO  (0)
-/* File number of stdout. It is 1. */
-#define STDOUT_FILENO (1)
-/* File number of stderr. It is 2. */
-#define STDERR_FILENO (2)
+#define STDIN_FILENO  (0) /* File number of stdin. */
+#define STDOUT_FILENO (1) /* File number of stdout. */
+#define STDERR_FILENO (2) /* File number of stderr. */
 
 /* PROTOTYPES */
 int          access(const char *, int);

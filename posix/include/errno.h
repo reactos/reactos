@@ -1,4 +1,4 @@
-/* $Id: errno.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+/* $Id: errno.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
  */
 /*
  * errno.h
@@ -32,84 +32,92 @@
 /* TYPES */
 
 /* CONSTANTS */
-#define E2BIG           ( 1) /* Argument list too long. */
-#define EACCES          ( 2) /* Permission denied. */
-#define EADDRINUSE      ( 3) /* Address in use. */
-#define EADDRNOTAVAIL   ( 4) /* Address not available. */
-#define EAFNOSUPPORT    ( 5) /* Address family not supported. */
-#define EAGAIN          ( 6) /* Resource unavailable, try again */
-#define EALREADY        ( 7) /* Connection already in progress. */
-#define EBADF           ( 8) /* Bad file descriptor. */
-#define EBADMSG         ( 9) /* Bad message. */
-#define EBUSY           (10) /* Device or resource busy. */
-#define ECANCELED       (11) /* Operation canceled. */
-#define ECHILD          (12) /* No child processes. */
-#define ECONNABORTED    (13) /* Connection aborted. */
-#define ECONNREFUSED    (14) /* Connection refused. */
-#define ECONNRESET      (15) /* Connection reset. */
-#define EDEADLK         (16) /* Resource deadlock would occur. */
-#define EDESTADDRREQ    (17) /* Destination address required. */
-#define EDOM            (18) /* Mathematics argument out of domain of function. */
-#define EDQUOT          (19) /* Reserved. */
-#define EEXIST          (20) /* File exists. */
-#define EFAULT          (21) /* Bad address. */
-#define EFBIG           (22) /* File too large. */
-#define EHOSTUNREACH    (23) /* Host is unreachable. */
-#define EIDRM           (24) /* Identifier removed. */
-#define EILSEQ          (25) /* Illegal byte sequence. */
-#define EINPROGRESS     (26) /* Operation in progress. */
-#define EINTR           (27) /* Interrupted function. */
-#define EINVAL          (28) /* Invalid argument. */
-#define EIO             (29) /* I/O error. */
-#define EISCONN         (30) /* Socket is connected. */
-#define EISDIR          (31) /* Is a directory. */
-#define ELOOP           (32) /* Too many levels of symbolic links. */
-#define EMFILE          (33) /* Too many open files. */
-#define EMLINK          (34) /* Too many links. */
-#define EMSGSIZE        (35) /* Message too large. */
-#define EMULTIHOP       (36) /* Reserved. */
-#define ENAMETOOLONG    (37) /* Filename too long. */
-#define ENETDOWN        (38) /* Network is down. */
-#define ENETUNREACH     (39) /* Network unreachable. */
-#define ENFILE          (40) /* Too many files open in system. */
-#define ENOBUFS         (41) /* No buffer space available. */
-#define ENODATA         (42) /* No message is available on the STREAM head read queue. */
-#define ENODEV          (43) /* No such device. */
-#define ENOENT          (44) /* No such file or directory. */
-#define ENOEXEC         (45) /* Executable file format error. */
-#define ENOLCK          (46) /* No locks available. */
-#define ENOLINK         (47) /* Reserved. */
-#define ENOMEM          (48) /* Not enough space. */
-#define ENOMSG          (49) /* No message of the desired type. */
-#define ENOPROTOOPT     (50) /* Protocol not available. */
-#define ENOSPC          (51) /* No space left on device. */
-#define ENOSR           (52) /* No STREAM resources. */
-#define ENOSTR          (53) /* Not a STREAM. */
-#define ENOSYS          (54) /* Function not supported. */
-#define ENOTCONN        (55) /* The socket is not connected. */
-#define ENOTDIR         (56) /* Not a directory. */
-#define ENOTEMPTY       (57) /* Directory not empty. */
-#define ENOTSOCK        (58) /* Not a socket. */
-#define ENOTSUP         (59) /* Not supported. */
-#define ENOTTY          (60) /* Inappropriate I/O control operation. */
-#define ENXIO           (61) /* No such device or address. */
-#define EOPNOTSUPP      (62) /* Operation not supported on socket. */
-#define EOVERFLOW       (63) /* Value too large to be stored in data type. */
-#define EPERM           (64) /* Operation not permitted. */
-#define EPIPE           (65) /* Broken pipe. */
-#define EPROTO          (66) /* Protocol error. */
-#define EPROTONOSUPPORT (67) /* Protocol not supported. */
-#define EPROTOTYPE      (68) /* Socket type not supported. */
-#define ERANGE          (69) /* Result too large. */
-#define EROFS           (70) /* Read-only file system. */
-#define ESPIPE          (71) /* Invalid seek. */
-#define ESRCH           (72) /* No such process. */
-#define ESTALE          (73) /* Reserved. */
-#define ETIME           (74) /* Streamioctl()timeout. */
-#define ETIMEDOUT       (75) /* Connection timed out. */
-#define ETXTBSY         (76) /* Text file busy. */
-#define EWOULDBLOCK     (77) /* Operation would block */
-#define EXDEV           (78) /* Cross-device link. */
+/* errors from 0 to 42 are the same as in Microsoft POSIX */
+#define EZERO           (  0) /* No error. */
+#define EPERM           (  1) /* Operation not permitted. */
+#define ENOENT          (  2) /* No such file or directory. */
+#define ESRCH           (  3) /* No such process. */
+#define EINTR           (  4) /* Interrupted function. */
+#define EIO             (  5) /* I/O error. */
+#define ENXIO           (  6) /* No such device or address. */
+#define E2BIG           (  7) /* Argument list too long. */
+#define ENOEXEC         (  8) /* Executable file format error. */
+#define EBADF           (  9) /* Bad file descriptor. */
+#define ECHILD          ( 10) /* No child processes. */
+#define EAGAIN          ( 11) /* Resource unavailable, try again */
+#define ENOMEM          ( 12) /* Not enough space. */
+#define EACCES          ( 13) /* Permission denied. */
+#define EFAULT          ( 14) /* Bad address. */
+#define ENOTBLK         ( 15) /* Reserved.	*/
+#define EBUSY           ( 16) /* Device or resource busy. */
+#define EEXIST          ( 17) /* File exists. */
+#define EXDEV           ( 18) /* Cross-device link. */
+#define ENODEV          ( 19) /* No such device. */
+#define ENOTDIR         ( 20) /* Not a directory. */
+#define EISDIR          ( 21) /* Is a directory. */
+#define EINVAL          ( 22) /* Invalid argument. */
+#define ENFILE          ( 23) /* Too many files open in system. */
+#define EMFILE          ( 24) /* Too many open files. */
+#define ENOTTY          ( 25) /* Inappropriate I/O control operation. */
+#define ETXTBSY         ( 26) /* Text file busy. */
+#define EFBIG           ( 27) /* File too large. */
+#define ENOSPC          ( 28) /* No space left on device. */
+#define ESPIPE          ( 29) /* Invalid seek. */
+#define EROFS           ( 30) /* Read-only file system. */
+#define EMLINK          ( 31) /* Too many links. */
+#define EPIPE           ( 32) /* Broken pipe. */
+#define EDOM            ( 33) /* Mathematics argument out of domain of function. */
+#define ERANGE          ( 34) /* Result too large. */
+#define EUCLEAN	        ( 35) /* Reserved. */
+#define EDEADLK         ( 36) /* Resource deadlock would occur. */
+#define UNKNOWN         ( 37) /* Reserved. */
+#define ENAMETOOLONG    ( 38) /* Filename too long. */
+#define ENOLCK          ( 39) /* No locks available. */
+#define ENOSYS          ( 40) /* Function not supported. */
+#define ENOTEMPTY       ( 41) /* Directory not empty. */
+#define EILSEQ          ( 42) /* Illegal byte sequence. */
+/* from this point, constants are in no particular order */
+#define ENODATA         ( 44) /* No message is available on the STREAM head read queue. */
+#define ENOSR           ( 45) /* No STREAM resources. */
+#define ENOSTR          ( 46) /* Not a STREAM. */
+#define ECANCELED       ( 47) /* Operation canceled. */
+#define ENOBUFS         ( 48) /* No buffer space available. */
+#define EOVERFLOW       ( 49) /* Value too large to be stored in data type. */
+#define ENOTSUP         ( 50) /* Not supported. */
+#define EADDRINUSE      ( 51) /* Address in use. */
+#define EADDRNOTAVAIL   ( 52) /* Address not available. */
+#define EAFNOSUPPORT    ( 53) /* Address family not supported. */
+#define ECONNABORTED    ( 54) /* Connection aborted. */
+#define ECONNREFUSED    ( 55) /* Connection refused. */
+#define ECONNRESET      ( 56) /* Connection reset. */
+#define EALREADY        ( 57) /* Connection already in progress. */
+#define EDESTADDRREQ    ( 58) /* Destination address required. */
+#define EHOSTUNREACH    ( 59) /* Host is unreachable. */
+#define EISCONN         ( 60) /* Socket is connected. */
+#define ENETDOWN        ( 61) /* Network is down. */
+#define ENETUNREACH     ( 62) /* Network unreachable. */
+#define ENOPROTOOPT     ( 63) /* Protocol not available. */
+#define ENOTCONN        ( 64) /* The socket is not connected. */
+#define ENOTSOCK        ( 65) /* Not a socket. */
+#define EPROTO          ( 66) /* Protocol error. */
+#define EPROTONOSUPPORT ( 67) /* Protocol not supported. */
+#define EPROTOTYPE      ( 68) /* Socket type not supported. */
+#define EOPNOTSUPP      ( 69) /* Operation not supported on socket. */
+#define ETIMEDOUT       ( 70) /* Connection timed out. */
+#define EINPROGRESS     ( 71) /* Operation in progress. */
+#define EBADMSG         ( 72) /* Bad message. */
+#define EMSGSIZE        ( 73) /* Message too large. */
+#define ENOMSG          ( 74) /* No message of the desired type. */
+#define EDQUOT          ( 75) /* Reserved. */
+#define EIDRM           ( 76) /* Identifier removed. */
+#define ELOOP           ( 77) /* Too many levels of symbolic links. */
+#define EMULTIHOP       ( 78) /* Reserved. */
+#define ENOLINK         ( 79) /* Reserved. */
+#define ESTALE          ( 80) /* Reserved. */
+#define ETIME           ( 81) /* Streamioctl() timeout. */
+#define EWOULDBLOCK     ( 82) /* Operation would block */
+
+#define EDEADLOCK	EDEADLK /* Resource deadlock avoided		*/
 
 /* PROTOTYPES */
 int * __PdxGetThreadErrNum(void); /* returns a pointer to the current thread's errno */

@@ -1,4 +1,4 @@
-/* $Id: types.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: types.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
  */
 /*
  * sys/types.h
@@ -26,7 +26,6 @@
 #define __SYS_TYPES_H_INCLUDED__
 
 /* INCLUDES */
-#include <inttypes.h>
 
 /* OBJECTS */
 
@@ -36,18 +35,18 @@ typedef unsigned long int blkcnt_t; /* Used for file block counts */
 typedef unsigned long int blksize_t; /* Used for block sizes */
 typedef long long clock_t; /* Used for system times in clock ticks or CLOCKS_PER_SEC */
 typedef int clockid_t; /* Used for clock ID type in the clock and timer functions. */
-typedef int dev_t; /* Used for device IDs. */
-typedef long long fsblkcnt_t; /* Used for file system block counts */
-typedef long long fsfilcnt_t; /* Used for file system file counts */
-typedef int gid_t; /* Used for group IDs. */
+typedef unsigned long int dev_t; /* Used for device IDs. */
+typedef unsigned long int fsblkcnt_t; /* Used for file system block counts */
+typedef unsigned long int fsfilcnt_t; /* Used for file system file counts */
+typedef unsigned long int gid_t; /* Used for group IDs. */
 typedef int id_t; /* Used as a general identifier; can be used to contain at least a
                         pid_t, uid_t or a gid_t. */
-typedef uint64_t ino_t; /* Used for file serial numbers. */
+typedef unsigned long int ino_t; /* Used for file serial numbers. */
 typedef int key_t; /* Used for interprocess communication. */
-typedef int mode_t; /* Used for some file attributes. */
-typedef int nlink_t; /* Used for link counts. */
-typedef int64_t off_t; /* Used for file sizes. */
-typedef unsigned long int pid_t; /* Used for process IDs and process group IDs. */
+typedef unsigned long int mode_t; /* Used for some file attributes. */
+typedef unsigned long int nlink_t; /* Used for link counts. */
+typedef long off_t; /* Used for file sizes. */
+typedef long int pid_t; /* Used for process IDs and process group IDs. */
 
 /* pthread types */
 typedef void * pthread_cond_t; /* Used for condition variables. */
@@ -63,19 +62,38 @@ typedef void * pthread_rwlock_t; /* Used for read-write locks. */
 typedef void * pthread_rwlockattr_t; /* Used for read-write lock attributes. */
 typedef unsigned long int pthread_t; /* Used to identify a thread. */
 
-typedef unsigned long int size_t; /* Used for sizes of objects. */
-typedef long int ssize_t; /* Used for a count of bytes or an error indication. */
+typedef unsigned int size_t; /* Used for sizes of objects. */
+typedef signed int ssize_t; /* Used for a count of bytes or an error indication. */
 typedef long long suseconds_t; /* Used for time in microseconds */
-typedef unsigned long int time_t; /* Used for time in seconds. */
+typedef long int time_t; /* Used for time in seconds. */
 typedef void * timer_t; /* Used for timer ID returned by timer_create(). */
 typedef int uid_t; /* Used for user IDs. */
 typedef unsigned long long useconds_t; /* Used for time in microseconds. */
+
+/*
+  additional types for sockets and streams - for compatibility with Microsoft POSIX
+ */
+typedef unsigned char	u_char;
+typedef unsigned short int	u_short;
+typedef unsigned short	int ushort;
+typedef unsigned int	u_int;
+typedef unsigned long	int u_long;
+
+typedef unsigned int uint;
+typedef unsigned long ulong;
+typedef unsigned char unchar;
+
+typedef char *caddr_t;
+typedef int key_t;
 
 /* CONSTANTS */
 
 /* PROTOTYPES */
 
 /* MACROS */
+/* for compatibility with Microsoft POSIX */
+#define _CRTAPI1 __cdecl
+#define _CRTAPI2 __cdecl
 
 #endif /* __SYS_TYPES_H_INCLUDED__ */
 
