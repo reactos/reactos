@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: capture.c,v 1.1 2001/09/02 17:31:00 dwelch Exp $
+/* $Id: capture.c,v 1.2 2001/09/02 19:48:19 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/capture.c
@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -39,9 +40,9 @@ NTSTATUS
 RtlCaptureUnicodeString(PUNICODE_STRING Dest,
 			PUNICODE_STRING UnsafeSrc)
 {
-  PUNICODE_STRING Src; 
+  PUNICODE_STRING Src;
   NTSTATUS Status;
-  
+
   /*
    * Copy the source string structure to kernel space.
    */
@@ -59,7 +60,7 @@ RtlCaptureUnicodeString(PUNICODE_STRING Dest,
   Dest->Buffer = ExAllocatePool(NonPagedPool, Dest->MaximumLength);
   if (Dest->Buffer == NULL)
     {
-      return(Status);
+      return(STATUS_NO_MEMORY);
     }
 
   /*
