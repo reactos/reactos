@@ -448,6 +448,7 @@ enum
 /*
  * special ByteOffset values
  */
+#define FILE_WRITE_TO_END_OF_FILE               0xffffffff
 #define FILE_USE_FILE_POINTER_POSITION          0xfffffffe
 
 typedef ULONG FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
