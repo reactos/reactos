@@ -53,28 +53,8 @@ tm_dump (const char *tag, struct tm * t)
 }
 #endif
 
-
-int
-elapsed_days (
-	time_t	t_today,
-	time_t	t_release_day
-	)
-{
-	double	seconds = difftime (t_today, t_release_day);
-	double	days = seconds / (double) 86400.0;
-	char	buf [32];
-	char	* dot = buf;
-
-	sprintf (buf, "%f", days );
-
-	while ( *dot && *dot != '.') ++dot;
-	*dot = '\0';
-	
-	return atol (buf);
-}
-
 void
-write_h (int build)
+write_h (int build, char *buildstr)
 {
   FILE	*h = NULL;
   char* s;
@@ -90,8 +70,8 @@ write_h (int build)
   s = s + sprintf (s, "#define _INC_REACTOS_BUILDNO\n" );
   
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
-  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%d\"\n", build);
-  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_RC\t\"%d\\0\"\n", build);
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%s\"\n", buildstr);
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_RC\t\"%s\\0\"\n", buildstr);
   s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR);
   if (0 != KERNEL_VERSION_PATCH_LEVEL)
@@ -191,6 +171,48 @@ write_h (int build)
   fclose (h);
 }
 
+char *
+GetRev(void)
+{
+  static char Unknown[] = "UNKNOWN";
+  static char Rev[10]; /* 999999999 revisions should be enough for everyone... */
+  FILE *SvnCmd;
+  char Line[256];
+  char *p;
+
+  SvnCmd = popen("svn info", "r");
+  if (NULL == SvnCmd)
+    {
+      fprintf(stderr, "Failed to run \"svn info\" command\n");
+      return Unknown;
+    }
+  while (! feof(SvnCmd) && ! ferror(SvnCmd))
+    {
+      if (NULL == fgets(Line, sizeof(Line), SvnCmd))
+        {
+          break;
+        }
+      if (0 == strncmp(Line, "Revision: ", 10))
+        {
+          pclose(SvnCmd);
+          p = Line + 10;
+          if (sizeof(Rev) < strlen(p))
+            {
+              fprintf(stderr, "Weird SVN revision number %s", p);
+              return Unknown;
+            }
+          strncpy(Rev, p, strlen(p) - 1);
+          Rev[strlen(p) - 1] = '\0';
+          return Rev;
+        }
+    }
+
+  pclose(SvnCmd);
+
+  return Unknown;
+}
+
+
 void
 usage (void)
 {
@@ -210,6 +232,7 @@ main (int argc, char * argv [])
 	int		quiet = FALSE;
 
 	int		build = 0;
+	char		buildstr[64];
 
 	time_t		t1 = 0;
 	struct tm	* t1_tm = NULL;
@@ -251,7 +274,7 @@ main (int argc, char * argv [])
 	/*
 	 * We are building TODAY!
 	 */
-	if (FALSE == quiet)
+	if (! quiet)
 	{
 		printf ( "\nReactOS Build Number Generator\n\n");
 	}
@@ -266,7 +289,7 @@ main (int argc, char * argv [])
 #ifdef DBG
 	tm_dump ("t1", t1_tm);
 #endif
-	if (FALSE == quiet)
+	if (! quiet)
 	{
 		printf ( 
 			"Current date: %4d-%02d-%02d\n\n",
@@ -280,7 +303,9 @@ main (int argc, char * argv [])
 	 */
 	build =	t1_tm->tm_year * 10000 + (t1_tm->tm_mon + 1) * 100 + t1_tm->tm_mday;
 
-	if (FALSE == quiet)
+	sprintf(buildstr, "%d-r%s", build, GetRev());
+
+	if (! quiet)
 	{
 		printf (
 			"ROS Version : %d.%d",
@@ -291,15 +316,15 @@ main (int argc, char * argv [])
 		{
 			printf(".%d", KERNEL_VERSION_PATCH_LEVEL);
 		}
-		printf("-%S (Build %d)\n\n", KERNEL_VERSION_BUILD_TYPE, build);
+		printf("-%S (Build %s)\n\n", KERNEL_VERSION_BUILD_TYPE, buildstr);
 	}
 	/*
 	 * (Over)write the include file, unless
 	 * the user switched on -p.
 	 */
-	if (FALSE == print_only)
+	if (! print_only)
 	{
-		write_h (build);
+		write_h (build, buildstr);
 	}
 	else
 	{
