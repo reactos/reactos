@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.37 2003/07/24 19:50:40 sedwards Exp $
+/* $Id: curdir.c,v 1.38 2003/07/28 18:39:41 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -408,7 +408,7 @@ GetWindowsDirectoryW (
 UINT
 STDCALL
 GetSystemWindowsDirectoryA(
-	LPWSTR	lpBuffer,
+	LPSTR	lpBuffer,
 	UINT	uSize
 	)
 {
