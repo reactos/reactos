@@ -86,17 +86,12 @@ private:
 	std::string GenerateLinkerParameters ( const Module& module ) const;
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
-	                     const std::vector<Include*>& includes,
-	                     const std::vector<Define*>& defines,
+	                     const IfableData& data,
 	                     const std::vector<CompilerFlag*>* compilerFlags ) const;
 	void GenerateMacros ( const char* op,
-	                      const std::vector<File*>& files,
-	                      const std::vector<Include*>& includes,
-	                      const std::vector<Define*>& defines,
-	                      const std::vector<Library*>& libraries,
+	                      const IfableData& data,
 	                      const std::vector<CompilerFlag*>* compilerFlags,
 	                      const std::vector<LinkerFlag*>* linkerFlags,
-	                      const std::vector<If*>& ifs,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
 	                      const std::string& windresflags_macro,
@@ -141,8 +136,7 @@ private:
 	                        const std::string& windresflagsMacro,
 	                        string_list& clean_files ) const;
 	void GenerateObjectFileTargets ( const Module& module,
-	                                 const std::vector<File*>& files,
-	                                 const std::vector<If*>& ifs,
+	                                 const IfableData& data,
 	                                 const std::string& cc,
 	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
@@ -157,8 +151,7 @@ private:
 	                                 const std::string& windresflagsMacro,
 	                                 string_list& clean_files ) const;
 	void GetCleanTargets ( string_list& out,
-	                       const std::vector<File*>& files,
-	                       const std::vector<If*>& ifs ) const;
+	                       const IfableData& data ) const;
 	std::string GenerateArchiveTarget ( const Module& module,
 	                                    const std::string& ar,
 	                                    const std::string& objs_macro ) const;

@@ -50,6 +50,40 @@ NormalizeFilename ( const string& filename )
 	return FixSeparator ( relativeNormalizedPath );
 }
 
+IfableData::~IfableData()
+{
+	size_t i;
+	for ( i = 0; i < files.size(); i++ )
+		delete files[i];
+	for ( i = 0; i < includes.size(); i++ )
+		delete includes[i];
+	for ( i = 0; i < defines.size(); i++ )
+		delete defines[i];
+	for ( i = 0; i < libraries.size(); i++ )
+		delete libraries[i];
+	for ( i = 0; i < properties.size(); i++ )
+		delete properties[i];
+	for ( i = 0; i < ifs.size(); i++ )
+		delete ifs[i];
+}
+
+void IfableData::ProcessXML ()
+{
+	size_t i;
+	for ( i = 0; i < files.size (); i++ )
+		files[i]->ProcessXML ();
+	for ( i = 0; i < includes.size (); i++ )
+		includes[i]->ProcessXML ();
+	for ( i = 0; i < defines.size (); i++ )
+		defines[i]->ProcessXML ();
+	for ( i = 0; i < libraries.size (); i++ )
+		libraries[i]->ProcessXML ();
+	for ( i = 0; i < properties.size(); i++ )
+		properties[i]->ProcessXML ();
+	for ( i = 0; i < ifs.size (); i++ )
+		ifs[i]->ProcessXML ();
+}
+
 Module::Module ( const Project& project,
                  const XMLElement& moduleNode,
                  const string& modulePath )
@@ -99,20 +133,10 @@ Module::Module ( const Project& project,
 Module::~Module ()
 {
 	size_t i;
-	for ( i = 0; i < files.size(); i++ )
-		delete files[i];
-	for ( i = 0; i < libraries.size(); i++ )
-		delete libraries[i];
-	for ( i = 0; i < includes.size(); i++ )
-		delete includes[i];
-	for ( i = 0; i < defines.size(); i++ )
-		delete defines[i];
 	for ( i = 0; i < invocations.size(); i++ )
 		delete invocations[i];
 	for ( i = 0; i < dependencies.size(); i++ )
 		delete dependencies[i];
-	for ( i = 0; i < ifs.size(); i++ )
-		delete ifs[i];
 	for ( i = 0; i < compilerFlags.size(); i++ )
 		delete compilerFlags[i];
 	for ( i = 0; i < linkerFlags.size(); i++ )
@@ -125,24 +149,15 @@ Module::ProcessXML()
 	size_t i;
 	for ( i = 0; i < node.subElements.size(); i++ )
 		ProcessXMLSubElement ( *node.subElements[i], path );
-	for ( i = 0; i < files.size (); i++ )
-		files[i]->ProcessXML ();
-	for ( i = 0; i < libraries.size(); i++ )
-		libraries[i]->ProcessXML ();
-	for ( i = 0; i < includes.size(); i++ )
-		includes[i]->ProcessXML ();
-	for ( i = 0; i < defines.size(); i++ )
-		defines[i]->ProcessXML ();
 	for ( i = 0; i < invocations.size(); i++ )
 		invocations[i]->ProcessXML ();
 	for ( i = 0; i < dependencies.size(); i++ )
 		dependencies[i]->ProcessXML ();
-	for ( i = 0; i < ifs.size(); i++ )
-		ifs[i]->ProcessXML();
 	for ( i = 0; i < compilerFlags.size(); i++ )
 		compilerFlags[i]->ProcessXML();
 	for ( i = 0; i < linkerFlags.size(); i++ )
 		linkerFlags[i]->ProcessXML();
+	non_if_data.ProcessXML();
 }
 
 void
@@ -167,18 +182,18 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		}
 		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ), first );
 		if ( pIf )
-			pIf->files.push_back ( pFile );
+			pIf->data.files.push_back ( pFile );
 		else
-			files.push_back ( pFile );
+			non_if_data.files.push_back ( pFile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
-		/*if ( pIf )
-			throw InvalidBuildFileException (
-				e.location,
-				"<library> is not a valid sub-element of <if>" );*/
-		libraries.push_back ( new Library ( e, *this, e.value ) );
+		Library* pLibrary = new Library ( e, *this, e.value );
+		if ( pIf )
+			pIf->data.libraries.push_back ( pLibrary );
+		else
+			non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )
@@ -191,18 +206,18 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		Include* include = new Include ( project, this, e );
 		if ( pIf )
-			pIf->includes.push_back ( include );
+			pIf->data.includes.push_back ( include );
 		else
-			includes.push_back ( include );
+			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
 		Define* pDefine = new Define ( project, this, e );
 		if ( pIf )
-			pIf->defines.push_back ( pDefine );
+			pIf->data.defines.push_back ( pDefine );
 		else
-			defines.push_back ( pDefine );
+			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
 	else if ( e.name == "invoke" )
@@ -241,9 +256,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		If* pOldIf = pIf;
 		pIf = new If ( e, project, this );
 		if ( pOldIf )
-			pOldIf->ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( pIf );
 		else
-			ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
 	else if ( e.name == "compilerflag" )
@@ -483,14 +498,21 @@ Module::GetInvocationTarget ( const int index ) const
 }
 
 bool
-Module::HasFileWithExtensions ( const std::string& extension1,
-	                            const std::string& extension2 ) const
+Module::HasFileWithExtension (
+	const IfableData& data,
+	const std::string& extension ) const
 {
-	for ( size_t i = 0; i < files.size (); i++ )
+	size_t i;
+	for ( i = 0; i < data.files.size (); i++ )
 	{
-		File& file = *files[i];
-		string extension = GetExtension ( file.name );
-		if ( extension == extension1 || extension == extension2 )
+		File& file = *data.files[i];
+		string file_ext = GetExtension ( file.name );
+		if ( !stricmp ( file_ext.c_str (), extension.c_str () ) )
+			return true;
+	}
+	for ( i = 0; i < data.ifs.size (); i++ )
+	{
+		if ( HasFileWithExtension ( data.ifs[i]->data, extension ) )
 			return true;
 	}
 	return false;
@@ -756,15 +778,6 @@ If::If ( const XMLElement& node_,
 
 If::~If ()
 {
-	size_t i;
-	for ( i = 0; i < files.size(); i++ )
-		delete files[i];
-	for ( i = 0; i < includes.size(); i++ )
-		delete includes[i];
-	for ( i = 0; i < defines.size(); i++ )
-		delete defines[i];
-	for ( i = 0; i < ifs.size(); i++ )
-		delete ifs[i];
 }
 
 void

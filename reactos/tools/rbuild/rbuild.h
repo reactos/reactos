@@ -37,6 +37,7 @@
 #endif
 
 class Project;
+class IfableData;
 class Module;
 class Include;
 class Define;
@@ -56,6 +57,20 @@ class CDFile;
 
 class SourceFileTest;
 
+class IfableData
+{
+public:
+	std::vector<File*> files;
+	std::vector<Include*> includes;
+	std::vector<Define*> defines;
+	std::vector<Library*> libraries;
+	std::vector<Property*> properties;
+	std::vector<If*> ifs;
+
+	~IfableData();
+	void ProcessXML();
+};
+
 class Project
 {
 	std::string xmlfile;
@@ -65,12 +80,9 @@ public:
 	std::string makefile;
 	XMLIncludes xmlbuildfiles;
 	std::vector<Module*> modules;
-	std::vector<Include*> includes;
-	std::vector<Define*> defines;
 	std::vector<LinkerFlag*> linkerFlags;
-	std::vector<Property*> properties;
-	std::vector<If*> ifs;
 	std::vector<CDFile*> cdfiles;
+	IfableData non_if_data;
 
 	Project ( const std::string& filename );
 	~Project ();
@@ -133,13 +145,9 @@ public:
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
 	Bootstrap* bootstrap;
-	std::vector<File*> files;
-	std::vector<Library*> libraries;
-	std::vector<Include*> includes;
-	std::vector<Define*> defines;
+	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
-	std::vector<If*> ifs;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 
@@ -157,8 +165,7 @@ public:
 	std::string GetPathWithPrefix ( const std::string& prefix ) const;
 	std::string GetTargets () const;
 	std::string GetInvocationTarget ( const int index ) const;
-	bool HasFileWithExtensions ( const std::string& extension1,
-	                             const std::string& extension2 ) const;
+	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
 	void ProcessXML ();
 private:
@@ -313,12 +320,7 @@ public:
 	const Project& project;
 	const Module* module;
 	std::string property, value;
-	std::vector<File*> files;
-	std::vector<Include*> includes;
-	std::vector<Define*> defines;
-	std::vector<Property*> properties;
-	std::vector<If*> ifs;
-	std::vector<Library*> libraries;
+	IfableData data;
 
 	If ( const XMLElement& node_,
 	     const Project& project_,

@@ -179,22 +179,29 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module,
 	size_t i;
 
 	string sourceFilenames ( "" );
-	for ( i = 0; i < module.files.size (); i++ )
+	const vector<File*>& files = module.non_if_data.files;
+	for ( i = 0; i < files.size (); i++ )
 	{
-		if ( includeGeneratedFiles || !IsGeneratedFile ( *module.files[i] ) )
-			sourceFilenames += " " + GetActualSourceFilename ( module.files[i]->name );
+		if ( includeGeneratedFiles || !IsGeneratedFile ( *files[i] ) )
+			sourceFilenames += " " + GetActualSourceFilename ( files[i]->name );
 	}
-	vector<If*> ifs = module.ifs;
-	for ( i = 0; i < ifs.size (); i++ )
+	// intentionally make a copy so that we can append more work in
+	// the middle of processing without having to go recursive
+	vector<If*> v = module.non_if_data.ifs;
+	for ( i = 0; i < v.size (); i++ )
 	{
 		size_t j;
-		If& rIf = *ifs[i];
-		for ( j = 0; j < rIf.ifs.size (); j++ )
-			ifs.push_back ( rIf.ifs[j] );
-		for ( j = 0; j < rIf.files.size (); j++ )
+		If& rIf = *v[i];
+		// check for sub-ifs to add to list
+		const vector<If*>& ifs = rIf.data.ifs;
+		for ( j = 0; j < ifs.size (); j++ )
+			v.push_back ( ifs[j] );
+		const vector<File*>& files = rIf.data.files;
+		for ( j = 0; j < files.size (); j++ )
 		{
-			if ( includeGeneratedFiles || !IsGeneratedFile ( *rIf.files[j] ) )
-				sourceFilenames += " " + GetActualSourceFilename ( rIf.files[j]->name );
+			File& file = *files[j];
+			if ( includeGeneratedFiles || !IsGeneratedFile ( file ) )
+				sourceFilenames += " " + GetActualSourceFilename ( file.name );
 		}
 	}
 	return sourceFilenames;
@@ -250,15 +257,16 @@ MingwModuleHandler::GenerateCleanTarget (
 string
 MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 {
-	if ( module.files.size () == 0 )
+	const vector<File*>& files = module.non_if_data.files;
+	if ( files.size () == 0 )
 		return "";
 	
 	string objectFilenames ( "" );
-	for ( size_t i = 0; i < module.files.size (); i++ )
+	for ( size_t i = 0; i < files.size (); i++ )
 	{
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
-		objectFilenames += PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( module.files[i]->name ) );
+		objectFilenames += PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) );
 	}
 	return objectFilenames;
 }
@@ -342,8 +350,8 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector ( const vector<Define*
 string
 MingwModuleHandler::GenerateGccDefineParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccDefineParametersFromVector ( module.project.defines );
-	string s = GenerateGccDefineParametersFromVector ( module.defines );
+	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines );
+	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines );
 	if ( s.length () > 0 )
 	{
 		parameters += " ";
@@ -381,8 +389,8 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccIncludeParametersFromVector ( module.includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.project.includes );
+	string parameters = GenerateGccIncludeParametersFromVector ( module.non_if_data.includes );
+	string s = GenerateGccIncludeParametersFromVector ( module.project.non_if_data.includes );
 	if ( s.length () > 0 )
 	{
 		parameters += " ";
@@ -444,11 +452,11 @@ MingwModuleHandler::GenerateLinkerParameters ( const Module& module ) const
 }
 
 void
-MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
-                                    const string& macro,
-                                    const vector<Include*>& includes,
-                                    const vector<Define*>& defines,
-                                    const vector<CompilerFlag*>* compilerFlags ) const
+MingwModuleHandler::GenerateMacro (
+	const char* assignmentOperation,
+	const string& macro,
+	const IfableData& data,
+	const vector<CompilerFlag*>* compilerFlags ) const
 {
 	size_t i;
 
@@ -470,16 +478,16 @@ MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
 		}
 	}
 
-	for ( i = 0; i < includes.size(); i++ )
+	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		fprintf (
 			fMakefile,
 			" -I%s",
-			includes[i]->directory.c_str() );
+			data.includes[i]->directory.c_str() );
 	}
-	for ( i = 0; i < defines.size(); i++ )
+	for ( i = 0; i < data.defines.size(); i++ )
 	{
-		Define& d = *defines[i];
+		Define& d = *data.defines[i];
 		fprintf (
 			fMakefile,
 			" -D%s",
@@ -496,13 +504,9 @@ MingwModuleHandler::GenerateMacro ( const char* assignmentOperation,
 void
 MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
-	const vector<File*>& files,
-	const vector<Include*>& includes,
-	const vector<Define*>& defines,
-	const vector<Library*>& libraries,
+	const IfableData& data,
 	const vector<CompilerFlag*>* compilerFlags,
 	const vector<LinkerFlag*>* linkerFlags,
-	const vector<If*>& ifs,
 	const string& cflags_macro,
 	const string& nasmflags_macro,
 	const string& windresflags_macro,
@@ -513,17 +517,15 @@ MingwModuleHandler::GenerateMacros (
 {
 	size_t i;
 
-	if ( includes.size () > 0 || defines.size () > 0 )
+	if ( data.includes.size () > 0 || data.defines.size () > 0 )
 	{
 		GenerateMacro ( assignmentOperation,
 		                cflags_macro,
-		                includes,
-		                defines,
+		                data,
 		                compilerFlags );
 		GenerateMacro ( assignmentOperation,
 		                windresflags_macro,
-		                includes,
-		                defines,
+		                data,
 		                compilerFlags );
 	}
 	
@@ -541,9 +543,9 @@ MingwModuleHandler::GenerateMacros (
 		}
 	}
 
-	if ( libraries.size () > 0 )
+	if ( data.libraries.size () > 0 )
 	{
-		string deps = GenerateImportLibraryDependenciesFromVector ( libraries );
+		string deps = GenerateImportLibraryDependenciesFromVector ( data.libraries );
 		if ( deps.size () > 0 )
 		{
 			fprintf (
@@ -555,16 +557,19 @@ MingwModuleHandler::GenerateMacros (
 		}
 	}
 
+	const vector<File*>& files = data.files;
 	if ( files.size () > 0 )
 	{
 		for ( i = 0; i < files.size (); i++ )
 		{
-			if ( files[i]->first )
+			File& file = *files[i];
+			if ( file.first )
 			{
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objs_macro.c_str(),
-					PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ).c_str (),
+					PassThruCacheDirectory (
+						MingwModuleHandler::GetObjectFilename ( file.name ) ).c_str (),
 					objs_macro.c_str() );
 			}
 		}
@@ -575,26 +580,29 @@ MingwModuleHandler::GenerateMacros (
 			assignmentOperation );
 		for ( i = 0; i < files.size(); i++ )
 		{
-			if ( !files[i]->first )
+			File& file = *files[i];
+			if ( !file.first )
 			{
 				fprintf (
 					fMakefile,
 					"%s%s",
 					( i%10 == 9 ? "\\\n\t" : " " ),
-					PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ).c_str () );
+					PassThruCacheDirectory (
+						MingwModuleHandler::GetObjectFilename ( file.name ) ).c_str () );
 			}
 		}
 		fprintf ( fMakefile, "\n" );
 	}
 
+	const vector<If*>& ifs = data.ifs;
 	for ( i = 0; i < ifs.size(); i++ )
 	{
 		If& rIf = *ifs[i];
-		if ( rIf.defines.size()
-			|| rIf.includes.size()
-			|| rIf.libraries.size()
-			|| rIf.files.size()
-			|| rIf.ifs.size() )
+		if ( rIf.data.defines.size()
+			|| rIf.data.includes.size()
+			|| rIf.data.libraries.size()
+			|| rIf.data.files.size()
+			|| rIf.data.ifs.size() )
 		{
 			fprintf (
 				fMakefile,
@@ -603,13 +611,9 @@ MingwModuleHandler::GenerateMacros (
 				rIf.value.c_str() );
 			GenerateMacros (
 				"+=",
-				rIf.files,
-				rIf.includes,
-				rIf.defines,
-				rIf.libraries,
+				rIf.data,
 				NULL,
 				NULL,
-				rIf.ifs,
 				cflags_macro,
 				nasmflags_macro,
 				windresflags_macro,
@@ -637,13 +641,9 @@ MingwModuleHandler::GenerateMacros (
 {
 	GenerateMacros (
 		"=",
-		module.files,
-		module.includes,
-		module.defines,
-		module.libraries,
+		module.non_if_data,
 		&module.compilerFlags,
 		&module.linkerFlags,
-		module.ifs,
 		cflags_macro,
 		nasmflags_macro,
 		windresflags_macro,
@@ -655,9 +655,10 @@ MingwModuleHandler::GenerateMacros (
 	if ( module.importLibrary )
 	{
 		string s;
-		for ( size_t i = 0; i < module.files.size (); i++ )
+		const vector<File*>& files = module.non_if_data.files;
+		for ( size_t i = 0; i < files.size (); i++ )
 		{
-			File& file = *module.files[i];
+			File& file = *files[i];
 			string extension = GetExtension ( file.name );
 			if ( extension == ".spec" || extension == ".SPEC" )
 			{
@@ -991,8 +992,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 void
 MingwModuleHandler::GenerateObjectFileTargets (
 	const Module& module,
-	const vector<File*>& files,
-	const vector<If*>& ifs,
+	const IfableData& data,
 	const string& cc,
 	const string& cppc,
 	const string& cflagsMacro,
@@ -1002,6 +1002,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 {
 	size_t i;
 
+	const vector<File*>& files = data.files;
 	for ( i = 0; i < files.size (); i++ )
 	{
 		string sourceFilename = files[i]->name;
@@ -1017,11 +1018,11 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		          "\n" );
 	}
 
+	const vector<If*>& ifs = data.ifs;
 	for ( i = 0; i < ifs.size(); i++ )
 	{
 		GenerateObjectFileTargets ( module,
-		                            ifs[i]->files,
-		                            ifs[i]->ifs,
+		                            ifs[i]->data,
 		                            cc,
 		                            cppc,
 		                            cflagsMacro,
@@ -1042,8 +1043,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	string_list& clean_files ) const
 {
 	GenerateObjectFileTargets ( module,
-	                            module.files,
-	                            module.ifs,
+	                            module.non_if_data,
 	                            cc,
 	                            cppc,
 	                            cflagsMacro,
@@ -1054,17 +1054,19 @@ MingwModuleHandler::GenerateObjectFileTargets (
 }
 
 void
-MingwModuleHandler::GetCleanTargets ( string_list& out,
-                                      const vector<File*>& files,
-                                      const vector<If*>& ifs ) const
+MingwModuleHandler::GetCleanTargets (
+	string_list& out,
+	const IfableData& data ) const
 {
 	size_t i;
 
+	const vector<File*>& files = data.files;
 	for ( i = 0; i < files.size(); i++ )
 		out.push_back ( PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ) );
 
+	const vector<If*>& ifs = data.ifs;
 	for ( i = 0; i < ifs.size(); i++ )
-		GetCleanTargets ( out, ifs[i]->files, ifs[i]->ifs );
+		GetCleanTargets ( out, ifs[i]->data );
 }
 
 string
@@ -1405,9 +1407,10 @@ MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 	string dkNkmLibNoFixup = "dk/nkm/lib";
 	dependencies += FixupTargetFilename ( dkNkmLibNoFixup );
 	PassThruCacheDirectory ( dkNkmLibNoFixup + SSEP );
-	for ( size_t i = 0; i < module.files.size (); i++ )
+	const vector<File*>& files = module.non_if_data.files;
+	for ( size_t i = 0; i < files.size (); i++ )
 	{
-		File& file = *module.files[i];
+		File& file = *files[i];
 		string extension = GetExtension ( file.name );
 		if ( extension == ".spec" || extension == ".SPEC" )
 		{
@@ -1419,27 +1422,14 @@ MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 	return dependencies;
 }
 
-/*string
-MingwModuleHandler::GetLinkingDependencies ( const Module& module ) const
-{
-	string dependencies = GetImportLibraryDependencies ( module );
-	string s = GetDefinitionDependencies ( module );
-	if ( s.length () > 0 )
-	{
-		dependencies += " ";
-		dependencies += s;
-	}
-	return dependencies;
-}*/
-
 bool
 MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
 {
-	if ( module.HasFileWithExtensions ( ".cc", ".CC" ) )
+	if ( module.HasFileWithExtension ( module.non_if_data, ".cc" ) )
 		return true;
-	if ( module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
+	if ( module.HasFileWithExtension ( module.non_if_data, ".cxx" ) )
 		return true;
-	if ( module.HasFileWithExtensions ( ".cpp", ".CPP" ) )
+	if ( module.HasFileWithExtension ( module.non_if_data, ".cpp" ) )
 		return true;
 	return false;
 }
@@ -1636,7 +1626,9 @@ MingwKernelModeDLLModuleHandler::Process ( const Module& module, string_list& cl
 }
 
 void
-MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Module& module, string_list& clean_files )
+MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget (
+	const Module& module,
+	string_list& clean_files )
 {
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
@@ -1647,7 +1639,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module, clean_files );
 
@@ -1706,7 +1698,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget (
 
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		string cflags ( "-D__NTDRIVER__" );
 		GenerateMacrosAndTargetsTarget ( module,
@@ -1766,7 +1758,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module, clean_files );
 
@@ -1822,7 +1814,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 	
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		string cflags ( "-D__NTAPP__" );
 		GenerateMacrosAndTargetsTarget ( module,
@@ -1878,9 +1870,10 @@ MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ( const Module
 	          module.name.c_str () );
 	fprintf ( fMakefile, "%s_extractresources: bin2res\n",
 	          module.name.c_str () );
-	for ( size_t i = 0; i < module.files.size (); i++ )
+	const vector<File*>& files = module.non_if_data.files;
+	for ( size_t i = 0; i < files.size (); i++ )
 	{
-		File& file = *module.files[i];
+		File& file = *files[i];
 		string extension = GetExtension ( file.name );
 		if ( extension == ".rc" || extension == ".RC" )
 		{
@@ -1905,7 +1898,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module,
 
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module, clean_files );
 
@@ -1967,7 +1960,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module,
 
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module, clean_files );
 
@@ -2029,7 +2022,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module,
 
 	GenerateImportLibraryTargetIfNeeded ( module, clean_files );
 
-	if ( module.files.size () > 0 )
+	if ( module.non_if_data.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module, clean_files );
 

@@ -67,8 +67,7 @@ MingwBackend::GenerateHeader () const
 
 void
 MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
-                                           const vector<Include*>& includes,
-                                           const vector<Define*>& defines ) const
+                                           IfableData& data ) const
 {
 	size_t i;
 
@@ -76,17 +75,17 @@ MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
 		fMakefile,
 		"PROJECT_CFLAGS %s",
 		assignmentOperation );
-	for ( i = 0; i < includes.size(); i++ )
+	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		fprintf (
 			fMakefile,
 			" -I%s",
-			includes[i]->directory.c_str() );
+			data.includes[i]->directory.c_str() );
 	}
 
-	for ( i = 0; i < defines.size(); i++ )
+	for ( i = 0; i < data.defines.size(); i++ )
 	{
-		Define& d = *defines[i];
+		Define& d = *data.defines[i];
 		fprintf (
 			fMakefile,
 			" -D%s",
@@ -103,32 +102,30 @@ MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
 void
 MingwBackend::GenerateGlobalCFlagsAndProperties (
 	const char* assignmentOperation,
-	const vector<Property*>& properties,
-	const vector<Include*>& includes,
-	const vector<Define*>& defines,
-	const vector<If*>& ifs ) const
+	IfableData& data ) const
 {
 	size_t i;
 
-	for ( i = 0; i < properties.size(); i++ )
+	for ( i = 0; i < data.properties.size(); i++ )
 	{
-		Property& prop = *properties[i];
+		Property& prop = *data.properties[i];
 		fprintf ( fMakefile, "%s := %s\n",
 			prop.name.c_str(),
 			prop.value.c_str() );
 	}
 
-	if ( includes.size() || defines.size() )
+	if ( data.includes.size() || data.defines.size() )
 	{
 		GenerateProjectCFlagsMacro ( assignmentOperation,
-                                     includes,
-                                     defines );
+                                     data );
 	}
 
-	for ( i = 0; i < ifs.size(); i++ )
+	for ( i = 0; i < data.ifs.size(); i++ )
 	{
-		If& rIf = *ifs[i];
-		if ( rIf.defines.size() || rIf.includes.size() || rIf.ifs.size() )
+		If& rIf = *data.ifs[i];
+		if ( rIf.data.defines.size()
+			|| rIf.data.includes.size()
+			|| rIf.data.ifs.size() )
 		{
 			fprintf (
 				fMakefile,
@@ -137,10 +134,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 				rIf.value.c_str() );
 			GenerateGlobalCFlagsAndProperties (
 				"+=",
-				rIf.properties,
-				rIf.includes,
-				rIf.defines,
-				rIf.ifs );
+				rIf.data );
 			fprintf (
 				fMakefile,
 				"endif\n\n" );
@@ -175,10 +169,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
-		ProjectNode.properties,
-		ProjectNode.includes,
-		ProjectNode.defines,
-		ProjectNode.ifs );
+		ProjectNode.non_if_data );
 	fprintf ( fMakefile, "PROJECT_RCFLAGS = $(PROJECT_CFLAGS)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n",
 	          GenerateProjectLFLAGS ().c_str () );

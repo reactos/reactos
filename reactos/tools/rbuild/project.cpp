@@ -20,16 +20,8 @@ Project::~Project ()
 	size_t i;
 	for ( i = 0; i < modules.size (); i++ )
 		delete modules[i];
-	for ( i = 0; i < includes.size (); i++ )
-		delete includes[i];
-	for ( i = 0; i < defines.size (); i++ )
-		delete defines[i];
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		delete linkerFlags[i];
-	for ( i = 0; i < properties.size (); i++ )
-		delete properties[i];
-	for ( i = 0; i < ifs.size (); i++ )
-		delete ifs[i];
 	for ( i = 0; i < cdfiles.size (); i++ )
 		delete cdfiles[i];
 	delete head;
@@ -38,9 +30,9 @@ Project::~Project ()
 const Property*
 Project::LookupProperty ( const string& name ) const
 {
-	for ( size_t i = 0; i < properties.size (); i++ )
+	for ( size_t i = 0; i < non_if_data.properties.size (); i++ )
 	{
-		const Property* property = properties[i];
+		const Property* property = non_if_data.properties[i];
 		if ( property->name == name )
 			return property;
 	}
@@ -222,18 +214,11 @@ Project::ProcessXML ( const string& path )
 		ProcessXMLSubElement ( *node->subElements[i], path );
 	for ( i = 0; i < modules.size (); i++ )
 		modules[i]->ProcessXML ();
-	for ( i = 0; i < includes.size (); i++ )
-		includes[i]->ProcessXML ();
-	for ( i = 0; i < defines.size (); i++ )
-		defines[i]->ProcessXML ();
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		linkerFlags[i]->ProcessXML ();
-	for ( i = 0; i < properties.size(); i++ )
-		properties[i]->ProcessXML ();
-	for ( i = 0; i < ifs.size (); i++ )
-		ifs[i]->ProcessXML ();
+	non_if_data.ProcessXML ();
 	for ( i = 0; i < cdfiles.size (); i++ )
-		ifs[i]->ProcessXML ();
+		cdfiles[i]->ProcessXML ();
 }
 
 void
@@ -275,18 +260,18 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		Include* include = new Include ( *this, e );
 		if ( pIf )
-			pIf->includes.push_back ( include );
+			pIf->data.includes.push_back ( include );
 		else
-			includes.push_back ( include );
+			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
 		Define* define = new Define ( *this, e );
 		if ( pIf )
-			pIf->defines.push_back ( define );
+			pIf->data.defines.push_back ( define );
 		else
-			defines.push_back ( define );
+			non_if_data.defines.push_back ( define );
 		subs_invalid = true;
 	}
 	else if ( e.name == "linkerflag" )
@@ -299,18 +284,18 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		If* pOldIf = pIf;
 		pIf = new If ( e, *this, NULL );
 		if ( pOldIf )
-			pOldIf->ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( pIf );
 		else
-			ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
 	else if ( e.name == "property" )
 	{
 		Property* property = new Property ( e, *this, NULL );
 		if ( pIf )
-			pIf->properties.push_back ( property );
+			pIf->data.properties.push_back ( property );
 		else
-			properties.push_back ( property );
+			non_if_data.properties.push_back ( property );
 	}
 	if ( subs_invalid && e.subElements.size() )
 		throw InvalidBuildFileException (

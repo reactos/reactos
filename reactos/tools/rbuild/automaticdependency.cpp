@@ -281,8 +281,9 @@ AutomaticDependency::Process ()
 void
 AutomaticDependency::ProcessModule ( Module& module )
 {
-	for ( size_t i = 0; i < module.files.size (); i++ )
-		ProcessFile ( module, *module.files[i] );
+	const vector<File*>& files = module.non_if_data.files;
+	for ( size_t i = 0; i < files.size (); i++ )
+		ProcessFile ( module, *files[i] );
 }
 
 void
@@ -330,34 +331,27 @@ AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
 	                                      bool includeNext,
 	                                      string& resolvedFilename )
 {
-	size_t i;
-	for ( i = 0; i < module.includes.size (); i++ )
+	size_t i, j;
+	const vector<Include*>* pincludes;
+	for ( i = 0; i < 2; i++ )
 	{
-		Include* include = module.includes[i];
-		if ( LocateIncludedFile ( include->directory,
-		                          includedFilename,
-		                          resolvedFilename ) )
+		if ( !i )
+			pincludes = &module.non_if_data.includes;
+		else
+			pincludes = &module.project.non_if_data.includes;
+		const vector<Include*>& includes = *pincludes;
+		for ( j = 0; j < includes.size (); j++ )
 		{
-			if ( includeNext && stricmp ( resolvedFilename.c_str (),
-			                              sourceFile->filename.c_str () ) == 0 )
-				continue;
-			return true;
-		}
-	}
-
-	/* FIXME: Ifs */
-
-	for ( i = 0; i < module.project.includes.size (); i++ )
-	{
-		Include* include = module.project.includes[i];
-		if ( LocateIncludedFile ( include->directory,
-		                          includedFilename,
-		                          resolvedFilename ) )
-		{
-			if ( includeNext && stricmp ( resolvedFilename.c_str (),
-			                              sourceFile->filename.c_str () ) == 0 )
-				continue;
-			return true;
+			Include& include = *includes[j];
+			if ( LocateIncludedFile ( include.directory,
+									  includedFilename,
+									  resolvedFilename ) )
+			{
+				if ( includeNext && stricmp ( resolvedFilename.c_str (),
+											  sourceFile->filename.c_str () ) == 0 )
+					continue;
+				return true;
+			}
 		}
 	}
 
@@ -398,10 +392,11 @@ AutomaticDependency::CheckAutomaticDependencies ()
 	struct utimbuf timebuf;
 	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
 	{
-		Module& module = *project.modules[mi];
-		for ( size_t fi = 0; fi < module.files.size (); fi++ )
+		const vector<File*>& files = project.modules[mi]->non_if_data.files;
+		//Module& module = *project.modules[mi];
+		for ( size_t fi = 0; fi < files.size (); fi++ )
 		{
-			File& file = *module.files[fi];
+			File& file = *files[fi];
 			string normalizedFilename = NormalizeFilename ( file.name );
 
 			SourceFile* sourceFile = RetrieveFromCache ( normalizedFilename );

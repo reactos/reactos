@@ -17,6 +17,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#ifdef _MSC_VER
+#pragma warning ( disable : 4786 )
+#endif//_MSC_VER
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -122,9 +126,9 @@ void DevCppBackend::ProcessModules()
 	{
 		Module &module = *ProjectNode.modules[i];
 
-		for(size_t k = 0; k < module.files.size(); k++)
+		for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{
-			File &file = *module.files[k];
+			File &file = *module.non_if_data.files[k];
 			
 			ProcessFile(file.name);
 		}
