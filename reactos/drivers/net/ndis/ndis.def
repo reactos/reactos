@@ -10,8 +10,8 @@ EthCreateFilter@28
 EthDeleteFilter@4
 EthDeleteFilterOpenAdapter@12
 EthFilterAdjust@20
-;EthFilterDprIndicateReceive@32 ?
-;EthFilterDprIndicateReceiveComplete@4 ?
+EthFilterDprIndicateReceive@32
+EthFilterDprIndicateReceiveComplete@4
 EthFilterIndicateReceive@32
 EthFilterIndicateReceiveComplete@4
 EthNoteFilterOpenAdapter@16
