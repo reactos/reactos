@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.22 2003/09/10 06:12:22 vizzini Exp $
+/* $Id: tinfo.c,v 1.23 2003/09/14 10:53:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,15 +75,22 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	  }
 	
       case ThreadBasePriority:
-	if (ThreadInformationLength != sizeof(ULONG))
 	  {
-	    Status = STATUS_INFO_LENGTH_MISMATCH;
-	    break;
+	    LONG Increment;
+	    if (ThreadInformationLength != sizeof(LONG))
+	      {
+	        Status = STATUS_INFO_LENGTH_MISMATCH;
+	        break;
+	      }
+            Status = MmCopyFromCaller(&Increment,
+                                      ThreadInformation,
+                                      sizeof(ULONG));
+            if (NT_SUCCESS(Status))
+              {
+	        KeSetBasePriorityThread (&Thread->Tcb, Increment); 
+	      }
 	  }
-        Status = MmCopyFromCaller(&(Thread->Tcb.BasePriority),
-                                  ThreadInformation,
-                                  sizeof(ULONG));
-	break;
+        break;
 	
       case ThreadAffinityMask:
 	Thread->Tcb.UserAffinity = *((PULONG)ThreadInformation);
