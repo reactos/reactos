@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.29 2003/01/02 16:03:04 hbirr Exp $
+/* $Id: class2.c,v 1.30 2003/01/25 16:19:06 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,7 +69,7 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp);
+		      PIRP Irp, PSCSI_REQUEST_BLOCK Srb, BOOLEAN Associated);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -167,6 +167,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   Srb->TargetId = DeviceExtension->TargetId;
   Srb->Lun = DeviceExtension->Lun;
   Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  //FIXME: NT4 DDK sample uses MmGetMdlVirtualAddress! Why shouldn't we?
   Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
   Srb->DataTransferLength = CurrentIrpStack->Parameters.Read.Length;
   Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
@@ -236,10 +237,9 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   /* Initialize next stack location */
   NextIrpStack->MajorFunction = IRP_MJ_SCSI;
   NextIrpStack->Parameters.Scsi.Srb = Srb;
-  NextIrpStack->DeviceObject = DeviceObject;
 
   /* Set retry count */
-  NextIrpStack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
+  CurrentIrpStack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
 
   DPRINT("IoSetCompletionRoutine (Irp %p  Srb %p)\n", Irp, Srb);
   IoSetCompletionRoutine(Irp,
@@ -897,7 +897,13 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  Srb = IrpStack->Parameters.Scsi.Srb;
+  
+  //BUGBUG -> Srb = IrpStack->Parameters.Scsi.Srb;
+  //Must pass Srb as Context arg!! See comment about Completion routines in 
+  //IofCallDriver for more info.
+  
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+
   DPRINT("Srb %p\n", Srb);
 
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
@@ -912,13 +918,17 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 					  0,
 					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
 					  &Status);
-      if ((Retry == TRUE) &&
+      if ((Retry) &&
 	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
 	{
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
-	  ScsiClassRetryRequest(DeviceObject,
-				Irp);
+	  ScsiClassRetryRequest(
+                  DeviceObject,
+		  Irp, 
+		  Srb,
+		  FALSE);
+
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
     }
@@ -973,7 +983,13 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  Srb = IrpStack->Parameters.Scsi.Srb;
+
+  //BUGBUG -> Srb = Srb = IrpStack->Parameters.Scsi.Srb;
+  //Must pass Srb as Context arg!! See comment about Completion routines in 
+  //IofCallDriver for more info.
+
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+  
   DPRINT("Srb %p\n", Srb);
 
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
@@ -990,15 +1006,17 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
 					  &Status);
 
-      DPRINT1("Retry count: %lu\n", (ULONG)IrpStack->Parameters.Others.Argument4);
-
-      if ((Retry == TRUE) &&
+      if ((Retry) &&
 	  ((ULONG)IrpStack->Parameters.Others.Argument4 > 0))
 	{
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
-	  ScsiClassRetryRequest(DeviceObject,
-				Irp);
+	  ScsiClassRetryRequest(
+                  DeviceObject,
+		  Irp, 
+		  Srb,
+                  TRUE);
+
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
     }
@@ -1610,25 +1628,37 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 
 static VOID
-ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp)
+ScsiClassRetryRequest(
+   PDEVICE_OBJECT DeviceObject,
+   PIRP Irp, 
+   PSCSI_REQUEST_BLOCK Srb,
+   BOOLEAN Associated
+   )
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentIrpStack;
-  PSCSI_REQUEST_BLOCK Srb;
+  PIO_STACK_LOCATION CurrentMasterIrpStack;
+  PIO_STACK_LOCATION NextIrpStack;
 
   ULONG TransferLength;
+  ULONG TransferOffset = 0;
 
   DPRINT("ScsiPortRetryRequest() called\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   CurrentIrpStack = IoGetCurrentIrpStackLocation(Irp);
-  Srb = CurrentIrpStack->Parameters.Scsi.Srb;
+  NextIrpStack = IoGetNextIrpStackLocation(Irp);
 
   if (CurrentIrpStack->MajorFunction == IRP_MJ_READ ||
       CurrentIrpStack->MajorFunction == IRP_MJ_WRITE)
     {
       TransferLength = CurrentIrpStack->Parameters.Read.Length;
+      if (Associated)
+      {
+        CurrentMasterIrpStack = IoGetCurrentIrpStackLocation(Irp->AssociatedIrp.MasterIrp);
+        TransferOffset = CurrentIrpStack->Parameters.Read.ByteOffset.QuadPart-
+	                   CurrentMasterIrpStack->Parameters.Read.ByteOffset.QuadPart;
+      }
     }
   else if (Irp->MdlAddress != NULL)
     {
@@ -1639,7 +1669,7 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
       TransferLength = 0;
     }
 
-  Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+  Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress) + TransferOffset;
   Srb->DataTransferLength = TransferLength;
   Srb->SrbStatus = 0;
   Srb->ScsiStatus = 0;
@@ -1648,12 +1678,28 @@ ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
 //  Srb->Flags = 
 //  Srb->QueueTag = SP_UNTAGGED;
 
-  /* 
-   * Our function is called from a completion routine. We must 
-   * recall the driver with the same stack location. IoCallDriver 
-   * goes to the next location. So we go one step back. 
-   */
-  IoSkipCurrentIrpStackLocation(Irp);
+  NextIrpStack->MajorFunction = IRP_MJ_SCSI;
+  NextIrpStack->Parameters.Scsi.Srb = Srb;
+
+  if (Associated == FALSE)
+  {
+     IoSetCompletionRoutine(Irp,
+                            ScsiClassIoComplete,   
+                            Srb,   
+                            TRUE,   
+                            TRUE,   
+                            TRUE);   
+  }   
+  else   
+  {   
+     IoSetCompletionRoutine(Irp,   
+                            ScsiClassIoCompleteAssociated,   
+                            Srb,   
+                            TRUE,   
+                            TRUE,   
+                            TRUE);   
+  } 
+
 
   IoCallDriver(DeviceExtension->PortDeviceObject,
 	       Irp);
