@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.109 2004/08/21 02:22:45 navaraf Exp $ */
+/* $Id: text.c,v 1.110 2004/08/24 17:29:00 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -213,9 +213,8 @@ IntLoadSystemFonts(VOID)
             break;
          }
 
-         for (DirInfo = (PFILE_DIRECTORY_INFORMATION)DirInfoBuffer;
-              DirInfo->NextEntryOffset != 0;
-              DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset))
+         DirInfo = (PFILE_DIRECTORY_INFORMATION)DirInfoBuffer;
+         while (1)
          {
             TempString.Buffer = DirInfo->FileName;
             TempString.Length =
@@ -223,6 +222,9 @@ IntLoadSystemFonts(VOID)
             RtlCopyUnicodeString(&FileName, &Directory);
             RtlAppendUnicodeStringToString(&FileName, &TempString);
             IntGdiAddFontResource(&FileName, 0);
+            if (DirInfo->NextEntryOffset == 0)
+               break;
+            DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset);
          }
 
          bRestartScan = FALSE;
@@ -380,7 +382,8 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    /* FIXME: Complete text metrics */
    FontGDI->TextMetric.tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
-   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
+   FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender -
+                                   Face->size->metrics.descender) >> 6;
 
    DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
@@ -815,7 +818,6 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
     }
 
   pPost = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_post); /* we can live with this failing */
-  IntUnLockFreeType;
 
   Otm->otmSize = Needed;
 
@@ -962,6 +964,8 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
       Otm->otmsUnderscoreSize = (FT_MulFix(pPost->underlineThickness, YScale) + 32) >> 6;
       Otm->otmsUnderscorePosition = (FT_MulFix(pPost->underlinePosition, YScale) + 32) >> 6;
     }
+
+  IntUnLockFreeType;
 
   /* otmp* members should clearly have type ptrdiff_t, but M$ knows best */
   Cp = (char*) Otm + sizeof(OUTLINETEXTMETRICW);
@@ -1893,11 +1897,11 @@ NtGdiExtTextOut(
 
       if (NULL == Dx)
       {
-        TextLeft += glyph->advance.x;
+         TextLeft += glyph->advance.x;
       }
       else
       {
-        TextLeft += Dx[i] << 6;
+         TextLeft += Dx[i] << 6;
       }
       previous = glyph_index;
 
@@ -2860,7 +2864,7 @@ FindBestFontFromList(HFONT *Font, UINT *MatchScore, LOGFONTW *LogFont,
           continue;
         }
       Score = GetFontScore(LogFont, FaceName, FontGDI);
-      if (*MatchScore < Score)
+      if (*MatchScore == 0 || *MatchScore < Score)
         {
           *Font = CurrentEntry->hFont;
           *MatchScore = Score;
