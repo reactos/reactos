@@ -108,6 +108,12 @@ inline static const char *debugres_w( const WCHAR *s ) { return wine_dbgstr_wn( 
 #define DEFAULT_DEBUG_CHANNEL(ch) \
     char __wine_dbch_##ch[1]; static char * const __wine_dbch___default = __wine_dbch_##ch
 
+#define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
+
+#define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
+
+#define WINE_DEFAULT_DEBUG_CHANNEL(ch) DEFAULT_DEBUG_CHANNEL(ch)
+
 #define DPRINTF wine_dbg_printf
 #define MESSAGE wine_dbg_printf
 

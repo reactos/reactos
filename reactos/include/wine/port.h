@@ -6,36 +6,14 @@
 #ifndef _ROS_WINE_PORT
 #define _ROS_WINE_PORT
 
+typedef short     INT16;
 #define HFILE_ERROR ((HFILE)-1) /* Already in winbase.h - ros is fubar */
 
+#define strncasecmp strncmp
+#define snprintf _snprintf
+#define strcasecmp _stricmp
 
 /* Wine debugging porting */
-
-#define TRACE        DbgPrint
-#define TRACE_(ch)   DbgPrint
-#define TRACE_ON(ch) DbgPrint
-
-#define WARN         DbgPrint
-#define WARN_(ch)    DbgPrint
-#define WARN_ON(ch)  DbgPrint
-
-#define FIXME        DbgPrint
-#define FIXME_(ch)   DbgPrint
-#define FIXME_ON(ch) DbgPrint
-
-#undef ERR  /* Solaris got an 'ERR' define in <sys/reg.h> */
-#define ERR          DbgPrint
-#define ERR_(ch)     DbgPrint
-#define ERR_ON(ch)   DbgPrint
-
-
-/* some useful string manipulation routines */
-
-static inline unsigned int strlenW( const WCHAR *str )
-{
-    const WCHAR *s = str;
-    while (*s) s++;
-    return s - str;
-}
+#include "debugtools.h"
 
 #endif /* _ROS_WINE_PORT */
