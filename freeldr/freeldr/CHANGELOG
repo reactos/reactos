@@ -1,3 +1,8 @@
+Changes in v1.8.16 (12/10/2003) (ekohl)
+
+- Renamed a lot of variables and functions in the registry
+- Fixed buggy cell size calculation
+
 Changes in v1.8.15 (29/08/2003) (chorns)
 
 - Add top-level makefile
