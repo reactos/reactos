@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2003  Casper S. Hornstrup  <chorns@users.sourceforge.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +21,8 @@
 
 #ifndef __HWDETECT_H
 #define __HWDETECT_H
+
+typedef U64 PHYSICAL_ADDRESS;
 
 typedef enum _INTERFACE_TYPE
 {
@@ -66,6 +69,57 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   U16 MaxHeads;
   U16 NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA {
+  U32 BytesPerSector;
+  U32 NumberOfCylinders;
+  U32 SectorsPerTrack;
+  U32 NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
+
+typedef struct {
+  U8 Type;
+  U8 ShareDisposition;
+  U16 Flags;
+  union {
+    struct {
+      PHYSICAL_ADDRESS Start;
+      U32 Length;
+    } __attribute__((packed)) Port;
+    struct {
+      U32 Level;
+      U32 Vector;
+      U32 Affinity;
+    } __attribute__((packed)) Interrupt;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      U32 Length;
+    } __attribute__((packed)) Memory;
+    struct {
+      U32 Channel;
+      U32 Port;
+      U32 Reserved1;
+    } __attribute__((packed)) Dma;
+    struct {
+      U32 DataSize;
+      U32 Reserved1;
+      U32 Reserved2;
+    } __attribute__((packed)) DeviceSpecificData;
+  } __attribute__((packed)) u;
+} __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+
+typedef struct {
+  U16 Version;
+  U16 Revision;
+  U32 Count;
+  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
+
+typedef struct {
+  INTERFACE_TYPE InterfaceType;
+  U32 BusNumber;
+  CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
 
 /* PCI bus definitions */
 
@@ -388,7 +442,7 @@ typedef struct _DETECTED_BUSSES
   LIST_ENTRY Busses; /* DETECTED_BUS */
 } DETECTED_BUSSES, *PDETECTED_BUSSES;
 
-
+#if 0
 typedef struct _DETECTED_STORAGE_CONTROLLER
 {
   LIST_ENTRY ListEntry;
@@ -397,10 +451,20 @@ typedef struct _DETECTED_STORAGE_CONTROLLER
   U32 DriveCount;
   IDE_DRIVE_IDENTIFY IdeDriveIdentify[2];
 } DETECTED_STORAGE_CONTROLLER, *PDETECTED_STORAGE_CONTROLLER;
+#endif
+
+typedef struct _DETECTED_DISK
+{
+  LIST_ENTRY ListEntry;
+  INTERFACE_TYPE BusType;
+  U32 BusNumber;
+  CM_INT13_DRIVE_PARAMETER Int13DriveParameter;
+  CM_DISK_GEOMETRY_DEVICE_DATA DiskGeometryDeviceData;
+} DETECTED_DISK, *PDETECTED_DISK;
 
 typedef struct _DETECTED_STORAGE
 {
-  LIST_ENTRY StorageControllers; /* DETECTED_STORAGE_CONTROLLER */
+  LIST_ENTRY Disks; /* DETECTED_DISK */
 } DETECTED_STORAGE, *PDETECTED_STORAGE;
 
 

@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2001  Eric Kohl
+ *  Copyright (C) 2003  Casper S. Hornstrup
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@
 #include <freeldr.h>
 #include <rtl.h>
 #include <mm.h>
+#include <arch.h>
 #include <portio.h>
 #include "registry.h"
 #include "hwdetect.h"
@@ -444,7 +446,7 @@ RegisterBusKey(HKEY Key, INTERFACE_TYPE BusType, U32 BusNumber)
   InsertTailList(&BusKeyListHead, &BusKey->ListEntry);
 }
 
-
+#if 0
 static HKEY
 GetBusKey(INTERFACE_TYPE BusType, U32 BusNumber)
 {
@@ -470,7 +472,7 @@ GetBusKey(INTERFACE_TYPE BusType, U32 BusNumber)
     BusType, BusNumber));
   return NULL;
 }
-
+#endif
 
 static HKEY
 CreateOrOpenKey(HKEY RelativeKey, PCHAR KeyName)
@@ -501,7 +503,7 @@ CreateOrOpenKey(HKEY RelativeKey, PCHAR KeyName)
 /* ***** END Helper functions ***** */
 
 
-
+#if 0
 /* ***** BEGIN ATA ***** */
 
 typedef struct _PCI_NATIVE_CONTROLLER 
@@ -1285,6 +1287,7 @@ AtapiFindIsaBusController(U32 SystemIoBusNumber,
   return(FALSE);
 }
 
+#if 0
 static VOID
 FindIDEControllers(PDETECTED_STORAGE DetectedStorage)
 {
@@ -1442,31 +1445,178 @@ FindIDEControllers(PDETECTED_STORAGE DetectedStorage)
         }
     }
 }
+#endif
 
 /* ***** END ATA ***** */
+#endif
 
-VOID
+static VOID
+QueryBiosForDisks(PDETECTED_STORAGE DetectedStorage)
+{
+	REGS RegsIn;
+	REGS RegsOut;
+	U32 Count;
+  U32 DriveCount;
+  U32 BiosDriveNumber;
+  PDETECTED_DISK DetectedDisk;
+
+  DriveCount = 1; /* Will set this on first successful query */
+	for (Count = 0; Count < DriveCount; Count++)
+    {
+    	// BIOS int 0x13, function 08h - Get Drive Parameters
+      BiosDriveNumber = 0x80 + Count;
+    	RegsIn.b.ah = 0x08;					    // Subfunction 08h
+    	RegsIn.b.dl = BiosDriveNumber;  // Drive number in DL (0 - floppy, 0x80 - harddisk)
+    	RegsIn.x.es = 0;	              // ES:DI -> 0000h:0000h to guard against BIOS bugs
+    	RegsIn.w.di = 0;
+
+    	// BIOS int 0x13, function 08h - Get Drive Parameters
+    	// AH = 08h
+    	// DL = drive (bit 7 set for hard disk)
+    	// ES:DI = 0000h:0000h to guard against BIOS bugs
+    	// Return:
+    	// CF clear if successful
+    	// AH = 00h
+    	// AL = 00h (on at least some BIOSes)
+    	// BL = drive type (AT/PS2 floppies only)
+    	// CH = low eight bits of maximum cylinder number
+    	// CL = maximum sector number (bits 5-0)
+      //      high two bits of maximum cylinder number (bits 7-6)
+    	// DH = maximum head number
+    	// DL = number of drives
+      // ES:DI -> drive parameter table (floppies only)
+    	// CF set on error
+    	// AH = error code
+      // See http://www.ctyme.com/intr/rb-0621.htm for notes about how to deal with
+      // different hardware.
+
+      Int386(0x13, &RegsIn, &RegsOut);
+      if (!INT386_SUCCESS(RegsOut))
+        {
+          // Failed - assume no more disks
+      	  return;
+        }
+
+      // Success
+      DriveCount = RegsOut.b.dl;
+      if (Count == 0)
+      {
+        DbgPrint((DPRINT_HWDETECT, "BIOS reports %d drives\n", (int) DriveCount));
+      }
+
+      DbgPrint((DPRINT_HWDETECT, "Checking BIOS drive 0x%x\n", (int) BiosDriveNumber));
+      DbgPrint((DPRINT_HWDETECT, "Max. cylinder = %d\n", (int) (((RegsOut.b.cl & 0xc0) << 2) + RegsOut.b.ch)));
+      DbgPrint((DPRINT_HWDETECT, "Max. sector number = %d\n", (int) RegsOut.b.cl & 0x3f));
+      DbgPrint((DPRINT_HWDETECT, "Max. head number = %d\n", (int) RegsOut.b.dh));
+
+      DetectedDisk = MmAllocateMemory(sizeof(DETECTED_DISK));
+      DetectedDisk->BusType = Isa;
+      DetectedDisk->BusNumber = 0;
+      DetectedDisk->Int13DriveParameter.DriveSelect = BiosDriveNumber;
+      DetectedDisk->Int13DriveParameter.MaxCylinders = ((RegsOut.b.cl & 0xc0) << 2) + RegsOut.b.ch;
+      DetectedDisk->Int13DriveParameter.SectorsPerTrack = RegsOut.b.cl & 0x3f;
+      DetectedDisk->Int13DriveParameter.MaxHeads = RegsOut.b.dh;
+      DetectedDisk->Int13DriveParameter.NumberDrives = 0; /* Fill in later */
+
+      InsertTailList(&DetectedStorage->Disks,
+        &DetectedDisk->ListEntry);
+    }
+}
+
+
+static VOID
 DetectStorage(VOID)
 {
   DETECTED_STORAGE DetectedStorage;
-  PDETECTED_STORAGE_CONTROLLER Controller;
+  PDETECTED_DISK DetectedDisk;
   PLIST_ENTRY ListEntry;
-  CHAR buf[200];
+//  CHAR buf[200];
   S32 Error;
-  U32 ScsiPortNumber;
-  HKEY ScsiPortKey;
+  HKEY SystemKey;
 
-  U32 i;
+/*  U32 i;
   HKEY BusKey;
   HKEY DiskControllerKey;
   HKEY DiskPeripheralKey;
-  HKEY DriveKey;
-  CM_INT13_DRIVE_PARAMETER Int13;
+  HKEY DriveKey;*/
+  U32 Size;
+  U32 Count;
+  U32 DriveCount;
+  PCM_INT13_DRIVE_PARAMETER Int13Array;
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
 
-  InitializeListHead(&DetectedStorage.StorageControllers);
+  InitializeListHead(&DetectedStorage.Disks);
 
-  FindIDEControllers(&DetectedStorage);
+  QueryBiosForDisks(&DetectedStorage);
 
+  /* Calculate number of drives */
+  DriveCount = 0;
+  ListEntry = DetectedStorage.Disks.Flink;
+  while (ListEntry != &DetectedStorage.Disks)
+    {
+  	  DetectedDisk = CONTAINING_RECORD(ListEntry,
+        DETECTED_DISK,
+        ListEntry);
+      DriveCount++;
+  	  ListEntry = ListEntry->Flink;
+  	}
+
+  if (DriveCount > 0)
+    {
+      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + sizeof(CM_INT13_DRIVE_PARAMETER) * DriveCount;
+      FullResourceDescriptor = MmAllocateMemory(Size);
+      if (FullResourceDescriptor == NULL)
+        {
+          return;
+        }
+      memset(FullResourceDescriptor, 0, Size);
+      FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
+      FullResourceDescriptor->BusNumber = -1;
+      FullResourceDescriptor->PartialResourceList.Count = 1;
+      FullResourceDescriptor->PartialResourceList.PartialDescriptors[0]
+        .u.DeviceSpecificData.DataSize = sizeof(CM_INT13_DRIVE_PARAMETER) * DriveCount;
+      Int13Array = ((PVOID) FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+      Count = 0;
+      ListEntry = DetectedStorage.Disks.Flink;
+      while (ListEntry != &DetectedStorage.Disks)
+        {
+      	  DetectedDisk = CONTAINING_RECORD(ListEntry,
+            DETECTED_DISK,
+            ListEntry);
+          DetectedDisk->Int13DriveParameter.NumberDrives = DriveCount;
+          memcpy(&Int13Array[Count], &DetectedDisk->Int13DriveParameter, sizeof(CM_INT13_DRIVE_PARAMETER));
+
+          Count++;
+      	  ListEntry = ListEntry->Flink;
+      	}
+
+      /* Create or open System key */
+      SystemKey = CreateOrOpenKey(NULL,
+        "\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System");
+      if (SystemKey == NULL)
+        {
+          DbgPrint((DPRINT_HWDETECT, "CreateOrOpenKey(System) failed\n"));
+          MmFreeMemory(FullResourceDescriptor);
+          return;
+        }
+
+      Error = RegSetValue(SystemKey,
+        "Configuration Data",
+        REG_FULL_RESOURCE_DESCRIPTOR,
+        (PU8) FullResourceDescriptor,
+        Size);
+      if (Error != ERROR_SUCCESS)
+        {
+          DbgPrint((DPRINT_HWDETECT, "RegSetValue(Configuration Data) failed (Error %u)\n", (int)Error));
+          MmFreeMemory(FullResourceDescriptor);
+          return;
+        }
+      MmFreeMemory(FullResourceDescriptor);
+    }
+
+
+#if 0
+  /* Write information to registry */
   ScsiPortNumber = 0;
   ListEntry = DetectedStorage.StorageControllers.Flink;
   while (ListEntry != &DetectedStorage.StorageControllers)
@@ -1476,7 +1626,7 @@ DetectStorage(VOID)
         ListEntry);
 
       BusKey = GetBusKey(Controller->BusType, Controller->BusNumber);
-    
+
       /* Create or open DiskController key */
       DiskControllerKey = CreateOrOpenKey(BusKey,
         "DiskController");
@@ -1549,9 +1699,10 @@ DetectStorage(VOID)
   	}
 
   DbgPrint((DPRINT_HWDETECT, "%d controllers found\n", ScsiPortNumber));
+#endif
 }
 
-VOID
+static VOID
 PrepareRegistry()
 {
   HKEY HardwareKey;
@@ -1611,7 +1762,7 @@ PrepareRegistry()
     }
 }
 
-VOID
+static VOID
 FindPciBusses(PDETECTED_BUSSES DetectedBusses)
 {
   PDETECTED_BUS DetectedBus;
@@ -1663,7 +1814,7 @@ FindPciBusses(PDETECTED_BUSSES DetectedBusses)
     }
 }
 
-VOID
+static VOID
 FindIsaBus(PDETECTED_BUSSES DetectedBusses)
 {
   PDETECTED_BUS DetectedBus;
@@ -1681,7 +1832,33 @@ FindIsaBus(PDETECTED_BUSSES DetectedBusses)
   InsertHeadList(&DetectedBusses->Busses, &DetectedBus->ListEntry);
 }
 
-VOID
+#define APM_BUSKEY        0
+#define PNPBIOS_BUSKEY    1
+#define PCIBIOS_BUSKEY    2
+#define ACPIBIOS_BUSKEY   3
+#define ISA_BUSKEY        4
+#define FIRST_PCI_BUSKEY  5
+
+static int
+GetBusKeyName(INTERFACE_TYPE BusType, U32 BusNumber)
+{
+  if (BusType == Isa)
+  {
+    return ISA_BUSKEY;
+  }
+  else if (BusType == PCIBus)
+  {
+    return FIRST_PCI_BUSKEY + BusNumber;
+  }
+  else
+  {
+    DbgPrint((DPRINT_WARNING, "GetBusKeyName(). Unknown BusType %u\n", (int)BusType));
+    return -1;
+  }
+}
+
+
+static VOID
 DetectBusses()
 {
   CHAR buf[200];
@@ -1726,7 +1903,7 @@ DetectBusses()
         ListEntry);
 
       /* Create DESCRIPTION/System/MultifunctionAdapter/X key */
-      sprintf(buf, "%d", (int) BusNumber);
+      sprintf(buf, "%d", GetBusKeyName(Bus->BusType, Bus->BusNumber));
       Error = RegCreateKey(MultifunctionAdapterKey,
         buf,
         &BusKey);
@@ -1759,7 +1936,7 @@ DetectBusses()
 VOID
 DetectHardware(VOID)
 {
-  DbgPrint((DPRINT_REACTOS, "DetectHardware()\n"));
+  DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 
   InitializeListHead(&BusKeyListHead);
 

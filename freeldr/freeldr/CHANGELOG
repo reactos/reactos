@@ -1,3 +1,7 @@
+Changes in v1.8.10 (4/27/2003) (chorns)
+
+- Query BIOS for supported disk drives
+
 Changes in v1.8.9 (4/25/2003) (chorns)
 
 - Detect PCI busses
