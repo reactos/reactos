@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.h,v 1.3 2003/01/16 11:58:15 ekohl Exp $
+/* $Id: fs_rec.h,v 1.4 2004/05/02 20:12:38 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,24 @@ typedef struct _DEVICE_EXTENSION
   ULONG FsType;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+struct _BootSector
+{
+  unsigned char  magic0, res0, magic1;
+  unsigned char  OEMName[8];
+  unsigned short BytesPerSector;
+  unsigned char  SectorsPerCluster;
+  unsigned short ReservedSectors;
+  unsigned char  FATCount;
+  unsigned short RootEntries, Sectors;
+  unsigned char  Media;
+  unsigned short FATSectors, SectorsPerTrack, Heads;
+  unsigned long  HiddenSectors, SectorsHuge;
+  unsigned char  Drive, Res1, Sig;
+  unsigned long  VolumeID;
+  unsigned char  VolumeLabel[11], SysType[8];
+  unsigned char  Res2[448];
+  unsigned short Signatur1;
+} __attribute__((packed));
 
 /* blockdev.c */
 
