@@ -129,6 +129,7 @@ typedef struct
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 
 
+extern PVfatFCB pFirstFcb;
 
 // functions called by i/o manager :
 NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
@@ -153,8 +154,25 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 			 IN UCHAR*	Buffer);
 
 //internal functions in iface.c :
-NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
-                                   PFILE_STANDARD_INFORMATION StandardInfo);
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
           PVfatFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
+NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject);
+NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
+                                   PFILE_STANDARD_INFORMATION StandardInfo);
+NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
+             PWSTR FileName);
+NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+		     PVOID Buffer, ULONG Length, ULONG ReadOffset,
+             PULONG LengthRead);
+NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+              PVOID Buffer, ULONG Length, ULONG WriteOffset);
+ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster);
+BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset);
+BOOLEAN IsLastEntry(PVOID Block, ULONG Offset);
 wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
+void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
+
+//internal functions in dirwr.c
+NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
+                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions);
+NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
