@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.169 2003/11/09 23:20:27 gvg Exp $
+; $Id: ntoskrnl.def,v 1.170 2003/11/22 11:56:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -241,6 +241,7 @@ IoAllocateController@16
 IoAllocateErrorLogEntry@8
 IoAllocateIrp@8
 IoAllocateMdl@20
+IoAllocateWorkItem@4
 IoAssignResources@24
 IoAttachDevice@12
 IoAttachDeviceByPointer@8
@@ -280,12 +281,14 @@ IoFileObjectType DATA
 IoFreeController@4
 IoFreeIrp@4
 IoFreeMdl@4
+IoFreeWorkItem@4
 IoGetAttachedDevice@4
 IoGetAttachedDeviceReference@4
 IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation@0
 IoGetCurrentProcess@0
 IoGetDeviceObjectPointer@16
+IoGetDeviceProperty@20
 IoGetDeviceToVerify@4
 IoGetFileObjectGenericMapping@0
 IoGetInitialStack@0
@@ -294,33 +297,27 @@ IoGetRequestorProcess@4
 IoGetStackLimits@8
 IoGetTopLevelIrp@0
 IoInitializeIrp@12
+IoInvalidateDeviceRelations@8
 IoInvalidateDeviceState@4
 IoInitializeRemoveLockEx@20
 IoInitializeTimer@12
 IoIsOperationSynchronous@4
 IoMakeAssociatedIrp@8
 IoOpenDeviceInstanceKey@20
+IoOpenDeviceRegistryKey@16
 IoPageRead@20
 IoQueryDeviceDescription@32
 IoQueryDeviceEnumInfo@8
 IoQueryFileInformation@20
 IoQueryVolumeInformation@20
 IoQueueThreadIrp@4
+IoQueueWorkItem@16
 IoRaiseHardError@12
 IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
 IoReadPartitionTable@16
 IoReadTransferCount DATA
-
-IoFreeWorkItem@4
-IoAllocateWorkItem@4
-IoQueueWorkItem@16
 IoRegisterDeviceInterface@16
-IoSetDeviceInterfaceState@8
-IoGetDeviceProperty@20
-IoOpenDeviceRegistryKey@16
-IoInvalidateDeviceRelations@8
-
 IoRegisterDriverReinitialization@12
 IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange@8
@@ -332,6 +329,7 @@ IoReleaseVpbSpinLock@4
 IoRemoveShareAccess@8
 IoReportHalResourceUsage@16
 IoReportResourceUsage@36
+IoSetDeviceInterfaceState@8
 IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice@8
 IoSetInformation@16

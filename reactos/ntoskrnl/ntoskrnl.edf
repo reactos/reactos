@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.156 2003/11/09 23:20:27 gvg Exp $
+; $Id: ntoskrnl.edf,v 1.157 2003/11/22 11:56:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -240,6 +240,7 @@ IoAllocateIrp=IoAllocateIrp@8
 IoAllocateMdl=IoAllocateMdl@20
 IoAllocateController=IoAllocateController@16
 IoAllocateErrorLogEntry=IoAllocateErrorLogEntry@8
+IoAllocateWorkItem=IoAllocateWorkItem@4
 IoAssignResources=IoAssignResources@24
 IoAttachDevice=IoAttachDevice@12
 IoAttachDeviceByPointer=IoAttachDeviceByPointer@8
@@ -279,12 +280,14 @@ IoFileObjectType DATA
 IoFreeController=IoFreeController@4
 IoFreeIrp=IoFreeIrp@4
 IoFreeMdl=IoFreeMdl@4
+IoFreeWorkItem=IoFreeWorkItem@4
 IoGetAttachedDevice=IoGetAttachedDevice@4
 IoGetAttachedDeviceReference=IoGetAttachedDeviceReference@4
 IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation=IoGetConfigurationInformation@0
 IoGetCurrentProcess=IoGetCurrentProcess@0
 IoGetDeviceObjectPointer=IoGetDeviceObjectPointer@16
+IoGetDeviceProperty=IoGetDeviceProperty@20
 IoGetDeviceToVerify=IoGetDeviceToVerify@4
 IoGetDmaAdapter=IoGetDmaAdapter@12
 IoGetFileObjectGenericMapping=IoGetFileObjectGenericMapping@0
@@ -294,33 +297,27 @@ IoGetRequestorProcess=IoGetRequestorProcess@4
 IoGetStackLimits=IoGetStackLimits@8
 IoGetTopLevelIrp=IoGetTopLevelIrp@0
 IoInitializeIrp=IoInitializeIrp@12
+IoInvalidateDeviceRelations=IoInvalidateDeviceRelations@8
 IoInvalidateDeviceState=IoInvalidateDeviceState@4
 IoInitializeRemoveLockEx=IoInitializeRemoveLockEx@20
 IoInitializeTimer=IoInitializeTimer@12
 IoIsOperationSynchronous=IoIsOperationSynchronous@4
 IoMakeAssociatedIrp=IoMakeAssociatedIrp@8
 IoOpenDeviceInstanceKey=IoOpenDeviceInstanceKey@20
+IoOpenDeviceRegistryKey=IoOpenDeviceRegistryKey@16
 IoPageRead=IoPageRead@20
 IoQueryDeviceDescription=IoQueryDeviceDescription@32
 IoQueryDeviceEnumInfo=IoQueryDeviceEnumInfo@8
 IoQueryFileInformation=IoQueryFileInformation@20
 IoQueryVolumeInformation=IoQueryVolumeInformation@20
 IoQueueThreadIrp=IoQueueThreadIrp@4
+IoQueueWorkItem=IoQueueWorkItem@16
 IoRaiseHardError=IoRaiseHardError@12
 IoRaiseInformationalHardError=IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
 IoReadPartitionTable=IoReadPartitionTable@16
 IoReadTransferCount DATA
-
-IoFreeWorkItem=IoFreeWorkItem@4
-IoAllocateWorkItem=IoAllocateWorkItem@4
-IoQueueWorkItem=IoQueueWorkItem@16
 IoRegisterDeviceInterface=IoRegisterDeviceInterface@16
-IoSetDeviceInterfaceState=IoSetDeviceInterfaceState@8
-IoGetDeviceProperty=IoGetDeviceProperty@20
-IoOpenDeviceRegistryKey=IoOpenDeviceRegistryKey@16
-IoInvalidateDeviceRelations=IoInvalidateDeviceRelations@8
-
 IoRegisterDriverReinitialization=IoRegisterDriverReinitialization@12
 IoRegisterFileSystem=IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange=IoRegisterFsRegistrationChange@8
@@ -332,6 +329,7 @@ IoReleaseVpbSpinLock=IoReleaseVpbSpinLock@4
 IoRemoveShareAccess=IoRemoveShareAccess@8
 IoReportHalResourceUsage=IoReportHalResourceUsage@16
 IoReportResourceUsage=IoReportResourceUsage@36
+IoSetDeviceInterfaceState=IoSetDeviceInterfaceState@8
 IoSetDeviceToVerify=IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice=IoSetHardErrorOrVerifyDevice@8
 IoSetInformation=IoSetInformation@16
