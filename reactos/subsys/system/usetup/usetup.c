@@ -56,6 +56,7 @@ typedef enum _PAGE_NUMBER
 {
   START_PAGE,
   INTRO_PAGE,
+  LICENSE_PAGE,
   INSTALL_INTRO_PAGE,
 
 //  SCSI_CONTROLLER_PAGE,
@@ -707,9 +708,10 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
   SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
-  SetTextXY(8, 17, "\x07  Press E to start the emergency console.");
-  SetTextXY(8, 19, "\x07  Press R to repair ReactOS.");
-  SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 17, "\x07  Press L to view the licensing terms for ReactOS.");
+  SetTextXY(8, 19, "\x07  Press E to start the emergency console.");
+  SetTextXY(8, 21, "\x07  Press R to repair ReactOS.");
+  SetTextXY(8, 23, "\x07  Press F3 to quit without installing ReactOS.");
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -733,6 +735,10 @@ IntroPage(PINPUT_RECORD Ir)
 	{
 	  return INSTALL_INTRO_PAGE;
 	}
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* L */
+	{
+	  return LICENSE_PAGE;
+	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
 	{
 	  return EMERGENCY_INTRO_PAGE;
@@ -746,6 +752,52 @@ IntroPage(PINPUT_RECORD Ir)
   return INTRO_PAGE;
 }
 
+/*
+ * License Page
+ * RETURNS
+ *	Back to main setup page.
+ */
+static PAGE_NUMBER
+LicensePage(PINPUT_RECORD Ir)
+{
+  SetHighlightedTextXY(6, 8, "Licensing:");
+
+  SetTextXY(8, 11, "The ReactOS System is licensed under the terms of the");
+  SetTextXY(8, 12, "GNU GPL with parts containing code from other compatible");
+  SetTextXY(8, 13, "licenses such as the X11 or BSD and GNU LGPL licenses.");
+  SetTextXY(8, 14, "All software that is part of the ReactOS system is");
+  SetTextXY(8, 15, "therefore released under the GNU GPL as well as maintaining");
+  SetTextXY(8, 16, "the original license.");
+
+  SetTextXY(8, 18, "This software comes with NO WARRANTY or restrictions on usage");
+  SetTextXY(8, 19, "save applicable local and international law. The licensing of");
+  SetTextXY(8, 20, "ReactOS only covers distribution to third parties.");
+
+  SetTextXY(8, 22, "If for some resion you did not receive a copy of the");
+  SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
+  SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
+  
+  SetStatusText("ENTER = Continue   F3 = Quit");
+
+  while (TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+	  return INTRO_PAGE;
+	}
+    }
+
+  return LICENSE_PAGE;
+}
 
 static PAGE_NUMBER
 EmergencyIntroPage(PINPUT_RECORD Ir)
@@ -3684,6 +3736,11 @@ NtProcessStartup(PPEB Peb)
 	  /* Start page */
 	  case START_PAGE:
 	    Page = StartPage(&Ir);
+	    break;
+
+	  /* License page */
+	  case LICENSE_PAGE:
+	    Page = LicensePage(&Ir);
 	    break;
 
 	  /* Intro page */
