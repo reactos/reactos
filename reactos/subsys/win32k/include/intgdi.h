@@ -179,5 +179,18 @@ IntGetSysColorPens(HPEN *Pens, UINT nPens);
 BOOL FASTCALL
 IntGetSysColors(COLORREF *Colors, UINT nColors);
 
+/* Other Stuff */
+
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index);
+
+INT
+FASTCALL
+IntGdiEscape(PDC    dc,
+             INT    Escape,
+             INT    InSize,
+             LPCSTR InData,
+             LPVOID OutData);
+
 #endif /* _WIN32K_INTGDI_H */
 

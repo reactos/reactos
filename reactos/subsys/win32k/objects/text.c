@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.113 2004/12/12 01:40:38 weiden Exp $ */
+/* $Id: text.c,v 1.114 2004/12/12 21:58:42 royce Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2131,7 +2131,7 @@ NtGdiGetTextCharsetInfo(HDC  hDC,
 
 static BOOL
 FASTCALL
-TextIntGetTextExtentPoint(HDC hDC,
+TextIntGetTextExtentPoint(PDC dc,
                           PTEXTOBJ TextObj,
                           LPCWSTR String,
                           int Count,
@@ -2241,7 +2241,7 @@ TextIntGetTextExtentPoint(HDC hDC,
 
   Size->cx = (TotalWidth + 32) >> 6;
   Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
-  Size->cy = EngMulDiv(Size->cy, NtGdiGetDeviceCaps(hDC, LOGPIXELSY), 72);
+  Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
 
   return TRUE;
 }
@@ -2329,11 +2329,15 @@ NtGdiGetTextExtentExPoint(HDC hDC,
       return FALSE;
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
-  /* FIXME - TextObj can be NULL!!!! Handle this case!!! */
-  DC_UnlockDc(hDC);
-  Result = TextIntGetTextExtentPoint(hDC, TextObj, String, Count, MaxExtent,
+  if ( TextObj )
+  {
+    Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
+  }
+  else
+    Result = FALSE;
   TEXTOBJ_UnlockText(dc->w.hFont);
+  DC_UnlockDc(hDC);
 
   ExFreePool(String);
   if (! Result)
@@ -2452,13 +2456,14 @@ NtGdiGetTextExtentPoint32(HDC hDC,
       return FALSE;
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
-  /* FIXME - TextObj can be NULL!!! Handle this case!!! */
-  DC_UnlockDc(hDC);
-  Result = TextIntGetTextExtentPoint (
-	  hDC, TextObj, String, Count, 0, NULL, NULL, &Size);
-  dc = DC_LockDc(hDC);
-  ASSERT(dc); // it succeeded earlier, it should now, too
-  TEXTOBJ_UnlockText(dc->w.hFont);
+  if ( TextObj != NULL )
+  {
+    Result = TextIntGetTextExtentPoint (
+      dc, TextObj, String, Count, 0, NULL, NULL, &Size);
+    TEXTOBJ_UnlockText(dc->w.hFont);
+  }
+  else
+    Result = FALSE;
   DC_UnlockDc(hDC);
 
   ExFreePool(String);

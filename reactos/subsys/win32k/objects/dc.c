@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.151 2004/12/12 21:25:05 weiden Exp $
+/* $Id: dc.c,v 1.152 2004/12/12 21:58:42 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -1269,20 +1269,11 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
     SetLastWin32Error(ERROR_INVALID_HANDLE);
 }
 
-INT STDCALL
-NtGdiGetDeviceCaps(HDC  hDC,
-                  INT  Index)
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index)
 {
-  PDC  dc;
-  INT  ret;
+  INT ret;
   POINT  pt;
-
-  dc = DC_LockDc(hDC);
-  if (dc == NULL)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
 
   /* Retrieve capability */
   switch (Index)
@@ -1376,7 +1367,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALWIDTH:
-      if(NtGdiEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1387,7 +1378,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALHEIGHT:
-      if(NtGdiEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1398,7 +1389,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALOFFSETX:
-      if(NtGdiEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1409,7 +1400,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case PHYSICALOFFSETY:
-      if(NtGdiEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1424,7 +1415,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case SCALINGFACTORX:
-      if(NtGdiEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.x;
       }
@@ -1435,7 +1426,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
       break;
 
     case SCALINGFACTORY:
-      if(NtGdiEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
+      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
         ret = pt.y;
       }
@@ -1469,6 +1460,25 @@ NtGdiGetDeviceCaps(HDC  hDC,
       ret = 0;
       break;
   }
+
+  return ret;
+}
+
+INT STDCALL
+NtGdiGetDeviceCaps(HDC  hDC,
+                  INT  Index)
+{
+  PDC  dc;
+  INT  ret;
+
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return 0;
+  }
+
+  ret = IntGdiGetDeviceCaps(dc, Index);
 
   DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
 
