@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.6 2000/02/14 14:13:34 dwelch Exp $
+/* $Id: smss.c,v 1.7 2000/02/27 15:47:17 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -69,10 +69,8 @@ PrintString (char* fmt,...)
 void NtProcessStartup (PPEB Peb)
 {
    HANDLE Children[2]; /* csrss, winlogon */
-	
-   DisplayString( L"Session Manager\n" );
 
-   PrintString ("Peb %x\n", Peb);
+   DisplayString( L"Session Manager\n" );
 
    if (TRUE == InitSessionManager(Children))
      {

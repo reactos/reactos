@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.14 2000/02/25 23:58:57 ekohl Exp $
+/* $Id: init.c,v 1.15 2000/02/27 15:47:17 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -72,6 +72,9 @@ SmSetEnvironmentVariables (VOID)
 {
 	UNICODE_STRING EnvVariable;
 	UNICODE_STRING EnvValue;
+	UNICODE_STRING EnvExpandedValue;
+	ULONG ExpandedLength;
+	WCHAR ExpandBuffer[512];
 
 	/*
 	 * The following environment variables are read from the registry.
@@ -114,6 +117,41 @@ SmSetEnvironmentVariables (VOID)
 	RtlSetEnvironmentVariable (&SmSystemEnvironment,
 	                           &EnvVariable,
 	                           &EnvValue);
+
+
+	/* Set "Path = %SystemRoot%\system32;%SystemRoot%" */
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"Path");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"%SystemRoot%\\system32;%SystemRoot%");
+	EnvExpandedValue.Length = 0;
+	EnvExpandedValue.MaximumLength = 512 * sizeof(WCHAR);
+	EnvExpandedValue.Buffer = ExpandBuffer;
+	*ExpandBuffer = 0;
+	RtlExpandEnvironmentStrings_U (SmSystemEnvironment,
+	                               &EnvValue,
+	                               &EnvExpandedValue,
+	                               &ExpandedLength);
+	RtlSetEnvironmentVariable (&SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvExpandedValue);
+
+	/* Set "windir = %SystemRoot%" */
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"windir");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"%SystemRoot%");
+	EnvExpandedValue.Length = 0;
+	EnvExpandedValue.MaximumLength = 512 * sizeof(WCHAR);
+	EnvExpandedValue.Buffer = ExpandBuffer;
+	*ExpandBuffer = 0;
+	RtlExpandEnvironmentStrings_U (SmSystemEnvironment,
+	                               &EnvValue,
+	                               &EnvExpandedValue,
+	                               &ExpandedLength);
+	RtlSetEnvironmentVariable (&SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvExpandedValue);
 }
 
 
