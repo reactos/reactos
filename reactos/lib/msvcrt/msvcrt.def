@@ -108,7 +108,7 @@ __RTtypeid=MSVCRT___RTtypeid
 __argc DATA
 __argv DATA
 __badioinfo DATA
-__crtCompareStringA ;=NTDLL.RtlCompareString
+;__crtCompareStringA ;=NTDLL.RtlCompareString
 ;__crtGetLocaleInfoW
 __crtLCMapStringA
 __dllonexit
@@ -126,7 +126,7 @@ __lc_handle
 __mb_cur_max DATA
 __p___argc
 __p___argv
-__p___wargv
+;__p___wargv
 __p___initenv
 __p___mb_cur_max
 __p___winitenv
@@ -154,14 +154,14 @@ __p__winminor
 __p__winver
 ;__p__wpgmptr
 __pioinfo
-;__pxcptinfoptrs
+__pxcptinfoptrs
 __set_app_type
 __setlc_active DATA
 __setusermatherr
 __threadhandle
 __threadid
 __toascii
-__unDName
+;__unDName
 ;__unDNameEx
 __unguarded_readlc_active DATA
 __wargv
@@ -281,7 +281,7 @@ _findnexti64
 _finite
 _flsbuf
 _flushall
-_fmode DATA
+_fmode=__fmode DATA
 _fpclass
 _fpieee_flt
 _fpreset
@@ -311,7 +311,7 @@ _getdrives
 ;_getmaxstdio
 ;_getmbcp
 _getpid
-;_getsystime
+_getsystime
 _getw
 ;_getwch
 ;_getwche
@@ -481,7 +481,7 @@ _scalb
 ;_scprintf
 ;_scwprintf
 _searchenv
-_seh_longjmp_unwind
+_seh_longjmp_unwind@4
 ;_set_error_mode
 ;_set_SSE2_enable
 ;_set_sbh_threshold
@@ -491,7 +491,7 @@ _setjmp3
 ;_setmaxstdio
 _setmbcp
 _setmode
-;_setsystime
+_setsystime
 _sleep
 _snprintf
 ;_snscanf
