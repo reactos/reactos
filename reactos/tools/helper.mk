@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.87 2004/10/18 19:11:09 chorns Exp $
+# $Id: helper.mk,v 1.87.2.1 2004/10/25 03:48:25 ion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -19,6 +19,7 @@
 #                        kmdll = Kernel mode DLL
 #                        winedll = DLL imported from wine
 #                        kernel = ReactOS kernel
+#                        test = ReactOS test
 #   $TARGET_APPTYPE    = Application type (windows,native,console).
 #                        Required only for TARGET_TYPEs program and proglib
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
@@ -50,7 +51,6 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
-#   $TARGET_BUILDENV_TEST = Build this test to be run in the build environment (no,yes) (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
@@ -270,7 +270,7 @@ ifeq ($(TARGET_TYPE),hal)
   MK_CPPFLAGS := -D__NTHAL__ -I.
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
-  MK_IMPLIBDEFPATH :=
+  MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := .
@@ -351,6 +351,27 @@ ifeq ($(TARGET_TYPE),kernel)
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := .
   MK_RES_BASE := $(TARGET_NAME)
+endif
+
+ifeq ($(TARGET_TYPE),test)
+  TARGET_NORC := yes
+  MK_MODE := static
+  MK_EXETYPE :=
+  MK_DEFEXT := .a
+  MK_DEFENTRY :=
+  MK_DDKLIBS :=
+  MK_SDKLIBS :=
+  MK_CFLAGS := -I.
+  MK_CPPFLAGS := -I.
+  MK_IMPLIB := no
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT :=
+  MK_INSTALLDIR := # none
+  MK_BOOTCDDIR := system32
+  MK_DISTDIR := # none
+  MK_RES_BASE :=
+  TARGET_OBJECTS := _rtstub.o _regtests.o $(TARGET_OBJECTS)
 endif
 
 
@@ -448,8 +469,8 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
-  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -478,8 +499,8 @@ ifeq ($(TARGET_TYPE),winedrv)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include/wine
-  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -641,6 +662,10 @@ MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 MK_EXTRADEP := $(filter %.h,$(TARGET_OBJECTS))
 
+ifeq ($(TARGET_TYPE),test)
+MK_EXTRADEP += _stubs.o _hooks.o
+endif
+
 # We don't want to link header files
 MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
 
@@ -653,18 +678,8 @@ else
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
   REGTEST_TARGETS := tests/_hooks.c tests/_regtests.c tests/_stubs.S tests/Makefile.tests tests/_rtstub.c
   MK_REGTESTS_CLEAN := clean_regtests
-else
-  REGTEST_TARGETS := tests/_regtests.c tests/Makefile.tests tests/_rtstub.c 
-ifeq ($(MK_MODE),user)
-  MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
-endif
-  MK_REGTESTS_CLEAN := clean_regtests
-  MK_OBJECTS += tests/_rtstub.o tests/regtests.a
-  TARGET_CFLAGS += -I$(REGTESTS_PATH_INC)
-endif
 else
   REGTEST_TARGETS :=
   MK_REGTESTS_CLEAN :=
@@ -707,7 +722,7 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
-	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
@@ -800,7 +815,7 @@ else
 endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
-	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 	$(LD_CC) -Wl,--base-file,base.tmp \
@@ -866,9 +881,11 @@ endif # MK_MODE
 # Static library target
 ifeq ($(MK_MODE),static)
 
-$(MK_FULLNAME): $(TARGET_OBJECTS)
-	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
-	@echo $(MK_BASENAME)$(MK_EXT) was successfully built.
+$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_OBJECTS)
+	$(AR) -rc $(MK_FULLNAME) $(MK_OBJECTS)
+ifneq ($(TARGET_TYPE),test)
+	@echo $(MK_FULLNAME) was successfully built.
+endif
 
 # Static libraries dont have a nostrip version
 $(MK_NOSTRIPNAME):
@@ -1007,30 +1024,13 @@ endif
 
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
-$(REGTEST_TARGETS): $(REGTEST_TESTS)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
+$(REGTEST_TARGETS): $(REGTEST_TESTS) ./tests/stubs.tst
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
 	$(REGTESTS) -s ./tests/stubs.tst ./tests/_stubs.S ./tests/_hooks.c
-else
-ifeq ($(MK_MODE),user)
-	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
-	$(MAKE) -C tests TARGET_REGTESTS=no all
-else
-ifeq ($(MK_MODE),kernel)
-	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -k ./tests/_rtstub.c
-	$(MAKE) -C tests TARGET_REGTESTS=no all
-endif
-endif
-endif
 
 clean_regtests:
-ifeq ($(TARGET_BUILDENV_TEST),yes)
 	- $(MAKE) -C tests TARGET_REGTESTS=no clean
 	- $(RM) ./tests/_rtstub.c ./tests/_hooks.c ./tests/_regtests.c ./tests/_stubs.S ./tests/Makefile.tests
-else
-	$(MAKE) -C tests TARGET_REGTESTS=no clean
-	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/_hooks.c ./tests/_stubs.S ./tests/Makefile.tests
-endif
 
 .PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
 
@@ -1062,16 +1062,21 @@ $(SUBDIRS:%=%_bootcd): %_bootcd:
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
 test: all
 	$(MAKE) -C tests run
 else
 test:
 	-
 endif
-else
-test:
-	-
+
+ifeq ($(TARGET_TYPE),test)
+run: all
+	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
+	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a _hooks.o -lmsvcrt -lntdll
+	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
+	@_runtest.exe
+	@$(RM) regtests.dll
+	@$(RM) _runtest.exe
 endif
 
 

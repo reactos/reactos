@@ -25,10 +25,6 @@ ifeq ($(ACPI), 1)
 CONFIG += ACPI
 endif
 
-ifeq ($(REGRESSIONTESTS), 1)
-CONFIG += REGTESTS
-endif
-
 ifeq ($(SEH), 1)
 CONFIG += SEH
 endif
