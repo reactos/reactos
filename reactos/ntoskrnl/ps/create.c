@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.72 2004/03/19 12:45:07 ekohl Exp $
+/* $Id: create.c,v 1.73 2004/03/24 22:00:39 ea Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,6 +20,8 @@
  */
 
 /* INCLUDES ****************************************************************/
+
+#include <limits.h>
 
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
@@ -445,7 +447,17 @@ PsInitializeThread(HANDLE ProcessHandle,
    Thread->Tcb.BasePriority = (CHAR)Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
 
-  return(STATUS_SUCCESS);
+   /*
+    * Local Procedure Call facility (LPC)
+    */
+   KeInitializeSemaphore  (& Thread->LpcReplySemaphore, 0, LONG_MAX);
+   Thread->LpcReplyMessage = NULL;
+   Thread->LpcReplyMessageId = 0; /* not valid */
+   /* Thread->LpcReceiveMessageId = 0; */
+   Thread->LpcExitThreadCalled = FALSE;
+   Thread->LpcReceivedMsgIdValid = FALSE;
+
+   return(STATUS_SUCCESS);
 }
 
 
