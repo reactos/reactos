@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.83 2003/09/26 20:58:06 gvg Exp $
+/* $Id: dc.c,v 1.84 2003/10/03 18:04:37 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -884,7 +884,9 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	  dc->w.hClipRgn = 0;
 	}
 	CLIPPING_UpdateGCRegion( dc );
+	DC_UnlockDc ( hDC );
 #else
+	DC_UnlockDc ( hDC );
 	NtGdiSelectClipRgn(hDC, dcs->w.hClipRgn);
 #endif
 
@@ -898,11 +900,13 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 #if 0
 	GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );
 #endif
+      } else {
+	DC_UnlockDc(hDC);      
       }
-
       DC_UnlockDc ( hDCSave );
+    } else {
+      DC_UnlockDc ( hDC );
     }
-    DC_UnlockDc ( hDC );
   }
 }
 

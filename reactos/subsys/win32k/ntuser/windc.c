@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.25 2003/09/26 20:58:05 gvg Exp $
+/* $Id: windc.c,v 1.26 2003/10/03 18:04:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -227,7 +227,6 @@ DceReleaseDC(DCE* dce)
       return 0;
     }
 
-#if 0
   /* restore previous visible region */
 
   if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
@@ -252,7 +251,6 @@ DceReleaseDC(DCE* dce)
 	  dce->DCXFlags |= DCX_DCEEMPTY;
 	}
     }
-#endif
 
   return 1;
 }
@@ -362,7 +360,9 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	      else if (Dce->hwndCurrent == hWnd &&
 		       ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
 		{
+#if 0 /* FIXME */
 		  UpdateVisRgn = FALSE;
+#endif
 		  UpdateClipOrigin = TRUE;
 		  break;
 		}
