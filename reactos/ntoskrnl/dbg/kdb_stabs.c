@@ -84,7 +84,7 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
     for (; (ULONG_PTR)StabEntry < (ULONG_PTR)StabsEnd; StabEntry++)
     {
       ULONG_PTR SymbolRelativeAddress;
-    
+
       if (StabEntry->n_type != Type)
         continue;
 
@@ -92,9 +92,6 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
       {
         if (StabEntry->n_value >= SymbolInfo->ImageSize)
           continue;
-
-        if (StabEntry->n_value > (ULONG_PTR)RelativeAddress )
-          break;
 
         SymbolRelativeAddress = StabEntry->n_value;
         if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
