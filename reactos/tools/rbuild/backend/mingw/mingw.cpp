@@ -221,7 +221,7 @@ MingwBackend::ProcessModule ( Module& module )
 		module.node.location,
 		module.type );
 	h->Process ( module );
-        h->GenerateDirectoryTargets ();
+	h->GenerateDirectoryTargets ();
 }
 
 string

@@ -946,7 +946,7 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 		module.name.c_str () );
 	fprintf ( fMakefile, "%s: %s\n\n",
 		module.name.c_str (),
-		module.GetPath ().c_str () );
+		FixupTargetFilename ( module.GetPath () ).c_str () );
 
 	// future references to the macros will be to get their values
 	cflagsMacro = ssprintf ("$(%s)", cflagsMacro.c_str ());
