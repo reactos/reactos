@@ -1,0 +1,105 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_INIT(SWrite.c)
+
+AC_CONFIG_HEADER(config.h)
+
+no_signals=yes
+AC_ARG_ENABLE(signals,[  --enable-signals       allow use of signal handling],[no_signals=no])
+
+wi_OS_VAR
+
+SFLAG='-s'
+
+case "$OS" in
+	macosx*)
+		SFLAG='-Wl,-x'
+		;;
+esac
+
+AC_PROG_CC
+wi_CFLAGS
+AC_PROG_RANLIB
+
+dnl Needed to build the samples.
+wi_NET_LIBS
+
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(LIBS)
+AC_SUBST(DEFS)
+AC_SUBST(SFLAG)
+
+AC_C_CONST
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h sys/un.h)
+wi_HEADER_SYS_SELECT_H
+AC_FUNC_SELECT_ARGTYPES
+wi_STRUCT_CMSGHDR
+wi_MSGHDR_CONTROL
+wi_MSGHDR_ACCRIGHTS
+wi_SOCKADDR_UN_SUN_LEN
+AC_TYPE_SIZE_T
+
+
+AC_CHECK_FUNCS(sigaction)
+wi_FUNC_SIGSETJMP
+
+changequote(<<, >>)dnl
+
+if test "$no_signals" = no ; then
+	dv1='#	if 0'
+	dv2='#if 0'
+else
+	dv1='#	if 1'
+	dv2='#if 1'
+fi
+
+if sed "s!^.*/. %config1!${dv1} /* %config1!;s!^.*/. %config2!${dv2} /* %config2!" sio.h > temp.h ; then
+	mv temp.h sio.h
+	chmod a+r sio.h
+fi
+
+if sed "s!^.*/. %config1!${dv1} /* %config1!;s!^.*/. %config2!${dv2} /* %config2!" usio.h > temp.h ; then
+	mv temp.h usio.h
+	chmod a+r usio.h
+fi
+
+patterns1=""
+if [ "$SYS" = solaris ] ; then
+	patterns1='s!/. %configure%.*!#define SAccept SAcceptS!'
+	patterns2='s!/. %configure%.*!#define UAccept UAcceptS!'
+fi
+
+if [ "$patterns1" != "" ] ; then
+	sed "$patterns1" < sio.h > tmpfile
+	if [ $? -eq 0 ] ; then
+		mv tmpfile sio.h
+		chmod 644 sio.h
+	else
+		/bin/rm tmpfile
+	fi
+fi
+
+if [ "$patterns2" != "" ] ; then
+	sed "$patterns2" < usio.h > tmpfile
+	if [ $? -eq 0 ] ; then
+		mv tmpfile usio.h
+		chmod 644 usio.h
+	else
+		/bin/rm tmpfile
+	fi
+fi
+
+changequote([, ])dnl
+
+LIBS=`echo "$LIBS" | sed 's/^ *//;s/ *$//;s/  */ /g'`
+LDFLAGS=`echo "$LDFLAGS" | sed 's/^ *//;s/ *$//;s/  */ /g'`
+CPPFLAGS=`echo "$CPPFLAGS" | sed 's/^ *//;s/ *$//;s/  */ /g'`
+CFLAGS=`echo "$CFLAGS" | sed 's/^ *//;s/ *$//;s/  */ /g'`
+DEFS=`echo "$DEFS" | sed 's/^ *//;s/ *$//;s/  */ /g'`
+
+AC_OUTPUT([Makefile ucase_c/Makefile ucase_s/Makefile time_c/Makefile time_s/Makefile srltest/Makefile sendmessage/Makefile])
