@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2003/01/15 19:53:01 robd Exp $
+# $Id: makefile,v 1.14 2003/06/27 21:17:35 gvg Exp $
 #
 # ReactOS System Utilities
 #
@@ -25,7 +25,7 @@
 PATH_TO_TOP=..
 PATH_TO_CVSROOT=../$(PATH_TO_TOP)
 
-BASE_CFLAGS = -I$(PATH_TO_CVSROOT)/reactos/include
+BASE_CFLAGS = -I$(PATH_TO_CVSROOT)/reactos/include -D_M_IX86
 
 
 ROS_DIR=$(PATH_TO_CVSROOT)/reactos
