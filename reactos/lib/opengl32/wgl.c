@@ -127,7 +127,7 @@ WGL_ContainsContext( GLRC *glrc )
  *           be multiple times for one DrvSetContext call.
  * ARGUMENTS: [IN] table  Function pointer table (first DWORD is number of
  *                        functions)
- * RETURNS: unkown
+ * RETURNS: unkown (maybe void?)
  */
 DWORD
 CALLBACK
@@ -136,18 +136,27 @@ WGL_SetContextCallBack( const ICDTable *table )
 /*	UINT i;*/
 	TEB *teb;
 	PROC *tebTable, *tebDispatchTable;
+	INT size;
 
 	teb = NtCurrentTeb();
 	tebTable = (PROC *)teb->glTable;
 	tebDispatchTable = (PROC *)teb->glDispatchTable;
 
-	DBGPRINT( "Function count: %d\n", table->num_funcs );
+	if (table != NULL)
+	{
+		DBGPRINT( "Function count: %d\n", table->num_funcs );
 
-	/* save table */
-	memcpy( tebTable, table->dispatch_table,
-	        sizeof (PROC) * table->num_funcs );
-	memset( tebTable + sizeof (PROC) * table->num_funcs, 0,
-	        sizeof (table->dispatch_table) - (sizeof (PROC) * table->num_funcs) );
+		/* save table */
+		size = sizeof (PROC) * table->num_funcs;
+		memcpy( tebTable, table->dispatch_table, size );
+		memset( tebTable + table->num_funcs, 0,
+				sizeof (table->dispatch_table) - size );
+	}
+	else
+	{
+		DBGPRINT( "Unsetting current context" );
+		memset( tebTable, 0, sizeof (table->dispatch_table) );
+	}
 
 	/* FIXME: pull in software fallbacks -- need mesa */
 #if 0 /* unused atm */
@@ -165,7 +174,8 @@ WGL_SetContextCallBack( const ICDTable *table )
 	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
 		if (tebTable[icdidx] == NULL)                                      \
 		{                                                                  \
-			DBGPRINT( "Warning: GL proc '%s' is NULL", #func );            \
+			if (table != NULL)                                             \
+				DBGPRINT( "Warning: GL proc '%s' is NULL", #func );        \
 			tebTable[icdidx] = (PROC)glEmptyFunc##stack;                   \
 		}
 	GLFUNCS_MACRO
@@ -209,6 +219,7 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	/* check input */
 	if (pfd->nSize != sizeof (PIXELFORMATDESCRIPTOR) || pfd->nVersion != 1)
 	{
+		OPENGL32_UnloadICD( icd );
 		SetLastError( 0 ); /* FIXME: use appropriate errorcode */
 		return 0;
 	}
@@ -219,6 +230,7 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	if (icdNumFormats == 0)
 	{
 		DBGPRINT( "Error: DrvDescribePixelFormat failed (%d)", GetLastError() );
+		OPENGL32_UnloadICD( icd );
 		return 0;
 	}
 	DBGPRINT( "Info: Enumerating %d pixelformats", icdNumFormats );
@@ -269,6 +281,7 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 
 	if (best == 0)
 		SetLastError( 0 ); /* FIXME: set appropriate error */
+	OPENGL32_UnloadICD( icd );
 
 	DBGPRINT( "Info: Suggesting pixelformat %d", best );
 	return best;
@@ -503,6 +516,7 @@ rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
 		ret = icd->DrvDescribePixelFormat( hdc, iFormat, nBytes, pfd );
 		if (ret == 0)
 			DBGPRINT( "Error: DrvDescribePixelFormat(format=%d) failed (%d)", iFormat, GetLastError() );
+		OPENGL32_UnloadICD( icd );
 	}
 
 	/* FIXME: implement own functionality? */
@@ -576,7 +590,9 @@ rosglGetProcAddress( LPCSTR proc )
 
 	if (proc[0] == 'g' && proc[1] == 'l') /* glXXX */
 	{
-		PROC glXXX = OPENGL32_threaddata->glrc->icd->DrvGetProcAddress( proc );
+		PROC glXXX = NULL;
+		GLDRIVERDATA *icd = OPENGL32_threaddata->glrc->icd;
+		glXXX = icd->DrvGetProcAddress( proc );
 		if (glXXX)
 		{
 			DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
@@ -619,47 +635,61 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		glFlush();
 	}
 
-	/* check hdc */
-	if (GetObjectType( hdc ) != OBJ_DC)
+	/* check if current context is unset */
+	if (glrc == NULL)
 	{
-		DBGPRINT( "Error: hdc is not a DC handle!" );
-		return FALSE;
-	}
-
-	/* check if we know about this glrc */
-	if (!WGL_ContainsContext( glrc ))
-	{
-		DBGPRINT( "Error: hglrc not found!" );
-		return FALSE; /* FIXME: SetLastError() */
-	}
-
-	/* check if it is available */
-	if (glrc->is_current) /* used by another thread */
-	{
-		DBGPRINT( "Error: hglrc is current for thread 0x%08x", glrc->thread_id );
-		return FALSE; /* FIXME: SetLastError() */
-	}
-
-	/* call the ICD */
-	if (glrc->hglrc != NULL)
-	{
-		icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
-		                                     WGL_SetContextCallBack );
-		if (icdTable == NULL)
+		if (OPENGL32_threaddata->glrc != NULL)
 		{
-			DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
+			OPENGL32_threaddata->glrc->is_current = FALSE;
+			OPENGL32_threaddata->glrc = NULL;
+		}
+	}
+	else
+	{
+		/* check hdc */
+		if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
+		{
+			DBGPRINT( "Error: hdc is not a DC handle!" );
 			return FALSE;
 		}
-		DBGPRINT( "Info: DrvSetContext succeeded!" );
+
+		/* check if we know about this glrc */
+		if (!WGL_ContainsContext( glrc ))
+		{
+			DBGPRINT( "Error: hglrc not found!" );
+			return FALSE; /* FIXME: SetLastError() */
+		}
+
+		/* check if it is available */
+		if (glrc->is_current && glrc->thread_id != GetCurrentThreadId()) /* used by another thread */
+		{
+			DBGPRINT( "Error: hglrc is current for thread 0x%08x", glrc->thread_id );
+			return FALSE; /* FIXME: SetLastError() */
+		}
+
+		/* call the ICD */
+		if (glrc->hglrc != NULL)
+		{
+			icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
+												 WGL_SetContextCallBack );
+			if (icdTable == NULL)
+			{
+				DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
+				return FALSE;
+			}
+			DBGPRINT( "Info: DrvSetContext succeeded!" );
+		}
+
+		/* make it current */
+		if (OPENGL32_threaddata->glrc != NULL)
+			OPENGL32_threaddata->glrc->is_current = FALSE;
+		glrc->is_current = TRUE;
+		glrc->thread_id = GetCurrentThreadId();
+		glrc->hdc = hdc;
+		OPENGL32_threaddata->glrc = glrc;
 	}
 
-	/* make it current */
-	if (OPENGL32_threaddata->glrc != NULL)
-		OPENGL32_threaddata->glrc->is_current = FALSE;
-	glrc->is_current = TRUE;
-	glrc->thread_id = GetCurrentThreadId();
-	glrc->hdc = hdc;
-	OPENGL32_threaddata->glrc = glrc;
+	WGL_SetContextCallBack( icdTable );
 
 	if (icdTable != NULL)
 		if (WGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS)
@@ -704,11 +734,13 @@ rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 	{
 		DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
 		          iFormat, GetLastError() );
+		OPENGL32_UnloadICD( icd );
 		return FALSE;
 	}
 
 	OPENGL32_processdata.cachedHdc = hdc;
 	OPENGL32_processdata.cachedFormat = iFormat;
+	OPENGL32_UnloadICD( icd );
 
 	return TRUE;
 }
@@ -764,8 +796,10 @@ rosglSwapBuffers( HDC hdc )
 		if (!icd->DrvSwapBuffers( hdc ))
 		{
 			DBGPRINT( "Error: DrvSwapBuffers failed (%d)", GetLastError() );
+			OPENGL32_UnloadICD( icd );
 			return FALSE;
 		}
+		OPENGL32_UnloadICD( icd );
 		return TRUE;
 	}
 

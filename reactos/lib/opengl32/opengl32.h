@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.13 2004/02/11 17:39:24 vizzini Exp $
+/* $Id: opengl32.h,v 1.14 2004/02/12 23:56:15 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -115,7 +115,7 @@ typedef struct tagGLDRIVERDATA
 	BOOL      APIENTRY (*DrvDescribeLayerPlane)( HDC, int, int, UINT, LPLAYERPLANEDESCRIPTOR );
 	int       APIENTRY (*DrvDescribePixelFormat)( IN HDC, IN int, IN UINT, OUT LPPIXELFORMATDESCRIPTOR );
 	int       APIENTRY (*DrvGetLayerPaletteEntries)( HDC, int, int, int, COLORREF * );
-	FARPROC   APIENTRY (*DrvGetProcAddress)( LPCSTR lpProcName );
+	PROC      APIENTRY (*DrvGetProcAddress)( LPCSTR lpProcName );
 	void      APIENTRY (*DrvReleaseContext)();
 	BOOL      APIENTRY (*DrvRealizeLayerPalette)( HDC, int, BOOL );
 	PICDTable APIENTRY (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );

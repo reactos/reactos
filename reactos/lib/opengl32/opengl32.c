@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.14 2004/02/09 08:00:15 vizzini Exp $
+/* $Id: opengl32.c,v 1.15 2004/02/12 23:56:15 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -34,13 +34,6 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd );
 static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd );
 
 /* global vars */
-/*const char* OPENGL32_funcnames[GLIDX_COUNT] SHARED =
-{
-#define X(func, ret, typeargs, args) #func,
-	GLFUNCS_MACRO
-#undef X
-};*/
-
 DWORD OPENGL32_tls;
 GLPROCESSDATA OPENGL32_processdata;
 
@@ -51,11 +44,23 @@ OPENGL32_ThreadDetach()
 {
 	/* FIXME - do we need to release some HDC or something? */
 	GLTHREADDATA* lpData = NULL;
+	PROC *dispatchTable = NULL;
+
 	lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
 	if (lpData != NULL)
 	{
 		if (!HeapFree( GetProcessHeap(), 0, lpData ))
 			DBGPRINT( "Warning: HeapFree() on GLTHREADDATA failed (%d)",
+			          GetLastError() );
+	}
+
+
+	dispatchTable = NtCurrentTeb()->glTable;
+
+	if (dispatchTable != NULL)
+	{
+		if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
+			DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
 			          GetLastError() );
 	}
 }
@@ -66,7 +71,7 @@ WINAPI
 DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
 	GLTHREADDATA* lpData = NULL;
-	ICDTable *dispatchTable = NULL;
+	PROC *dispatchTable = NULL;
 	TEB *teb = NULL;
 	SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
 	                               NULL, /* lpSecurityDescriptor */
@@ -106,9 +111,9 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 	/* The attached process creates a new thread. */
 	case DLL_THREAD_ATTACH:
-		dispatchTable = (ICDTable*)HeapAlloc( GetProcessHeap(),
+		dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
 		                            HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-		                            sizeof (ICDTable) );
+		                            sizeof (((ICDTable *)(0))->dispatch_table) );
 		if (dispatchTable == NULL)
 		{
 			DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
@@ -129,13 +134,13 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		/* initialize dispatch table with empty functions */
 		#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
-			dispatchTable->dispatch_table[icdidx] = (PROC)glEmptyFunc##stack;  \
+			dispatchTable[icdidx] = (PROC)glEmptyFunc##stack;                  \
 			if (tebidx >= 0)                                                   \
 				teb->glDispatchTable[tebidx] = (PVOID)glEmptyFunc##stack;
 		GLFUNCS_MACRO
 		#undef X
 
-		teb->glTable = dispatchTable->dispatch_table;
+		teb->glTable = dispatchTable;
 		TlsSetValue( OPENGL32_tls, lpData );
 		break;
 
@@ -332,7 +337,7 @@ OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 	LOAD_DRV_PROC(icd, DrvSwapLayerBuffers, TRUE);
 
 	/* we require at least one of DrvCreateContext and DrvCreateLayerContext */
-	if (icd->DrvCreateContext == NULL || icd->DrvCreateLayerContext == NULL)
+	if (icd->DrvCreateContext == NULL && icd->DrvCreateLayerContext == NULL)
 	{
 		DBGPRINT( "Error: One of DrvCreateContext/DrvCreateLayerContext is required!" );
 		FreeLibrary( icd->handle );
@@ -464,8 +469,10 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 	}
 
 	icd->refcount--;
-	if (icd->refcount == 0)
+	//if (icd->refcount == 0)
+	if (0)
 		ret = OPENGL32_UnloadDriver( icd );
+	/* FIXME: InitializeICD crashes when called a second time */
 
 	/* release mutex */
 	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
