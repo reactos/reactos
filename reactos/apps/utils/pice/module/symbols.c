@@ -43,6 +43,16 @@ Copyright notice:
 #include <asm/delay.h>
 #include <linux/ctype.h>
 
+#include <ntdll/ldr.h>
+#include <ntdll/rtl.h>
+#include <internal/ps.h>
+#include <internal/ob.h>
+#include <internal/module.h>
+
+#define NDEBUG
+#include <debug.h>
+
+
 PVOID pExports=0;
 ULONG ulExportLen=0;
 
@@ -83,42 +93,193 @@ ULONG ulNumStructMembers;
 
 BOOLEAN Expression(PVRET pvr);
 
-//*************************************************************************
-// InitFakeKernelModule()
-//
-//*************************************************************************
-BOOLEAN InitFakeKernelModule(void)
+extern PDIRECTORY_OBJECT *pNameSpaceRoot;
+extern PDEBUG_MODULE pdebug_module_tail;
+extern PDEBUG_MODULE pdebug_module_head;
+
+
+PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
 {
-    struct module* pMod;
-
-    ENTER_FUNC();
-
-    if(pmodule_list)
-    {
-
-	    DPRINT((0,"InitFakeKernelModule(): *pmodule_list = %x\n",(ULONG)*pmodule_list));
-		if(IsAddressValid((ULONG)*pmodule_list) )
-		{
-			pMod = *pmodule_list;
-			DPRINT((0,"InitFakeKernelModule(): start pMod = %x\n",(ULONG)pMod));
-			do
-			{
-				if(!pMod->size)
-				{
-					DPRINT((0,"InitFakeKernelModule(): pMod = %x\n",(ULONG)pMod));
-					fake_kernel_module = * pMod;
-					PICE_strcpy((LPSTR)(fake_kernel_module.name),"vmlinux");
-					fake_kernel_module.size = kernel_end - KERNEL_START;
-				    DPRINT((0,"InitFakeKernelModule(): SUCCESS\n"));
-                    LEAVE_FUNC();
-					return TRUE;
-				}
-			}while((pMod = pMod->next));
-		}
-    }
-    LEAVE_FUNC();
-	return FALSE;
+   return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
 }
+
+POBJECT_HEADER BODY_TO_HEADER(PVOID body)
+{
+   PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
+   return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
+}
+
+/*-----------------12/26/2001 7:59PM----------------
+ * FreeModuleList - free list allocated with InitModuleList. Must
+ * be called at passive irql.
+ * --------------------------------------------------*/
+VOID FreeModuleList( PDEBUG_MODULE pm )
+{
+	PDEBUG_MODULE pNext = pm;
+
+	ENTER_FUNC();
+
+	while( pNext ){
+		pNext = pm->next;
+		RtlFreeUnicodeString( &(pm->name) );
+		ExFreePool( pm );
+	}
+	LEAVE_FUNC();
+}
+
+/*-----------------12/26/2001 7:58PM----------------
+ * InitModuleList - creates linked list of length len for debugger. Can't be
+ * called at elevated IRQL
+ * --------------------------------------------------*/
+BOOLEAN InitModuleList( PDEBUG_MODULE *ppmodule, ULONG len )
+{
+	ULONG i;
+	PDEBUG_MODULE pNext = NULL, pm = *ppmodule;
+
+	ENTER_FUNC();
+
+	assert(pm==NULL);
+
+	for(i=1;i<=len;i++){
+		pm = (PDEBUG_MODULE)ExAllocatePool( NonPagedPool, sizeof( DEBUG_MODULE ) );
+		if( !pm ){
+			FreeModuleList(pNext);
+			return FALSE;
+		}
+		pm->next = pNext;
+		pm->size = 0;
+		pm->BaseAddress = NULL;
+		RtlCreateUnicodeString(&(pm->name), L"                   \0");
+		//DbgPrint("len1: %d\n", pm->name.Length);
+		pNext = pm;
+	}
+	*ppmodule = pm;
+
+	LEAVE_FUNC();
+
+	return TRUE;
+}
+
+BOOLEAN ListUserModules( PPEB peb )
+{
+	PLIST_ENTRY ModuleListHead;
+	PLIST_ENTRY Entry;
+	PLDR_MODULE Module;
+
+	ENTER_FUNC();
+
+	ModuleListHead = &peb->Ldr->InLoadOrderModuleList;
+	Entry = ModuleListHead->Flink;
+	while (Entry != ModuleListHead)
+	{
+		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+		//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
+
+		DPRINT("FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,
+				Module->BaseDllName.Buffer, Module->SizeOfImage, Module->EntryPoint, Module->BaseAddress );
+
+		pdebug_module_tail->size = Module->SizeOfImage;
+		pdebug_module_tail->BaseAddress = Module->BaseAddress;
+		pdebug_module_tail->EntryPoint = Module->EntryPoint;
+		RtlCopyUnicodeString( &(pdebug_module_tail->name), &(Module->BaseDllName));
+		pdebug_module_tail = pdebug_module_tail->next;
+
+		Entry = Entry->Flink;
+	}
+
+	LEAVE_FUNC();
+	return TRUE;
+}
+
+POBJECT FindDriverObjectDirectory( void )
+{
+    PLIST_ENTRY current;
+    POBJECT_HEADER current_obj;
+	PDIRECTORY_OBJECT pd;
+
+	ENTER_FUNC();
+
+	if( pNameSpaceRoot && *pNameSpaceRoot ){
+		current = (*pNameSpaceRoot)->head.Flink;
+		while (current!=(&((*pNameSpaceRoot)->head)))
+		{
+			current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
+	   	 	DPRINT("Scanning %S\n",current_obj->Name.Buffer);
+			if (_wcsicmp(current_obj->Name.Buffer, L"Modules")==0)
+			{
+				DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
+				pd=HEADER_TO_BODY(current_obj);
+				return pd;
+			}
+		  	current = current->Flink;
+		}
+	}
+	LEAVE_FUNC();
+	return NULL;
+}
+
+BOOLEAN ListDriverModules( void )
+{
+    PLIST_ENTRY current;
+    POBJECT_HEADER current_obj;
+	PDIRECTORY_OBJECT pd;
+	PMODULE pm;
+
+	ENTER_FUNC();
+
+	if( pd = (PDIRECTORY_OBJECT) FindDriverObjectDirectory() ){
+		current = pd->head.Flink;
+		while (current!=(&(pd->head)))
+		{
+			current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
+	   	 	DPRINT("Modules %S\n",current_obj->Name.Buffer);
+			pm = HEADER_TO_BODY(current_obj);
+			DPRINT("FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x\n", pm->FullName.Buffer,
+					pm->BaseName.Buffer, pm->Length, pm->EntryPoint );
+
+			pdebug_module_tail->size = pm->Length;
+			pdebug_module_tail->BaseAddress = pm->Base;
+			pdebug_module_tail->EntryPoint = pm->EntryPoint;
+			RtlCopyUnicodeString( &(pdebug_module_tail->name), &(pm->BaseName));
+			pdebug_module_tail = pdebug_module_tail->next;
+
+			/*
+			if (_wcsicmp(current_obj->Name.Buffer, "Modules")==0)
+			{
+			 DbgPrint("Found it %x\n",HEADER_TO_BODY(current_obj));
+			 pd=HEADER_TO_BODY(current_obj);
+		   }
+			 */
+		  	current = current->Flink;
+		}
+	}
+
+	LEAVE_FUNC();
+	return TRUE;
+}
+
+BOOLEAN BuildModuleList( void )
+{
+ 	PPEB peb;
+	ENTER_FUNC();
+
+	pdebug_module_tail = pdebug_module_head;
+
+	peb = IoGetCurrentProcess()->Peb;
+	if( peb ){
+		if( !ListUserModules( peb ) ){
+			LEAVE_FUNC();
+			return FALSE;
+		}
+	}
+	if( !ListDriverModules() ){
+		LEAVE_FUNC();
+		return FALSE;
+	}
+	LEAVE_FUNC();
+	return TRUE;
+}
+
 
 //*************************************************************************
 // ScanExports()
@@ -260,27 +421,27 @@ BOOLEAN ValidityCheckSymbols(PICE_SYMBOLFILE_HEADER* pSymbols)
 //*************************************************************************
 PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
 {
-    struct module* pMod;
     ULONG start,end,i;
+	PDEBUG_MODULE pd = pdebug_module_head;
 
     DPRINT((0,"FindModuleSymbols(%x)\n",addr));
-    if(pmodule_list)
+    if(BuildModuleList())
     {
         i=0;
-        pMod = *pmodule_list;
+        pd = pdebug_module_head;
         do
         {
-            if(pMod->size)
+            if(pd->size)
 			{
-                start = (ULONG)pMod+sizeof(struct module);
-                end = start + pMod->size-sizeof(struct module);
-                DPRINT((0,"FindModuleSymbols(): %s %x-%x\n",pMod->name,start,end));
+                start = (ULONG)pd->BaseAddress;
+                end = start + pd->size;
+                DPRINT((0,"FindModuleSymbols(): %S %x-%x\n",pd->name,start,end));
                 if(addr>=start && addr<end)
                 {
-                    DPRINT((0,"FindModuleSymbols(): address matches %s %x-%x\n",pMod->name,start,end));
+                    DPRINT((0,"FindModuleSymbols(): address matches %S %x-%x\n",pd->name,start,end));
                     for(i=0;i<ulNumSymbolsLoaded;i++)
                     {
-                        if(PICE_strcmpi((LPSTR)pMod->name,apSymbols[i]->name) == 0)
+                        if(PICE_wcsicmp(pd->name.Buffer,apSymbols[i]->name) == 0)
 						{
 							if(ValidityCheckSymbols(apSymbols[i]))
 	                            return apSymbols[i];
@@ -290,27 +451,7 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
                     }
                 }
             }
-            else
-            {
-                start = (ULONG)KERNEL_START + sizeof(struct module);
-                end = start + fake_kernel_module.size-sizeof(struct module);
-                DPRINT((0,"FindModuleSymbols(): %s %x-%x\n",fake_kernel_module.name,start,end));
-                if(addr>=start && addr<end)
-                {
-                    DPRINT((0,"FindModuleSymbols(): address matches %s %x-%x\n",fake_kernel_module.name,start,end));
-                    for(i=0;i<ulNumSymbolsLoaded;i++)
-                    {
-                        if(PICE_strcmpi((LPSTR)fake_kernel_module.name,apSymbols[i]->name) == 0)
-						{
-							if(ValidityCheckSymbols(apSymbols[i]))
-	                            return apSymbols[i];
-							else
-								return NULL;
-						}
-                    }
-                }
-            }
-        }while((pMod = pMod->next));
+        }while((pd = pd->next) != pdebug_module_tail);
     }
 
     return NULL;
@@ -320,41 +461,29 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
 // FindModuleFromAddress()
 //
 //*************************************************************************
-struct module* FindModuleFromAddress(ULONG addr)
+PDEBUG_MODULE FindModuleFromAddress(ULONG addr)
 {
-    struct module* pMod;
+    PDEBUG_MODULE pd;
     ULONG start,end;
 
     DPRINT((0,"FindModuleFromAddress()\n"));
-    if(pmodule_list)
+    if(BuildModuleList())
     {
-        pMod = *pmodule_list;
+        pd = pdebug_module_head;
         do
         {
-			if(pMod->size)
+			if(pd->size)
 			{
-                start = (ULONG)pMod+sizeof(struct module);
-                end = start + pMod->size-sizeof(struct module);
-                DPRINT((0,"FindModuleFromAddress(): %s %x-%x\n",pMod->name,start,end));
+                start = (ULONG)pd->BaseAddress;
+                end = start + pMod->size;
+                DPRINT((0,"FindModuleFromAddress(): %S %x-%x\n",pd->name,start,end));
                 if(addr>=start && addr<end)
                 {
-                    DPRINT((0,"FindModuleFromAddress(): found %s\n",pMod->name));
-                    return pMod;
+                    DPRINT((0,"FindModuleFromAddress(): found %S\n",pd->name));
+                    return pd;
                 }
             }
-            // must be the kernel
-            else
-            {
-                start = (ULONG)KERNEL_START + sizeof(struct module);
-                end = start + fake_kernel_module.size-sizeof(struct module);
-                DPRINT((0,"FindModuleFromAddress(): %s %x-%x\n",fake_kernel_module.name,start,end));
-                if(addr>=start && addr<end)
-                {
-                    DPRINT((0,"FindModuleFromAddress(): found %s\n",fake_kernel_module.name));
-                    return &fake_kernel_module;
-                }
-            }
-        }while((pMod = pMod->next));
+        }while((pd = pd->next)!=pdebug_module_tail);
     }
 
     return NULL;
@@ -364,33 +493,32 @@ struct module* FindModuleFromAddress(ULONG addr)
 // FindModuleByName()
 //
 //*************************************************************************
-struct module* FindModuleByName(LPSTR modname)
+PDEBUG_MODULE FindModuleByName(LPSTR modname)
 {
-    struct module* pMod;
+    PDEBUG_MODULE pd;
+	WCHAR tempstr[64];
 
     DPRINT((0,"FindModuleFromAddress()\n"));
-    if(pmodule_list)
+	if( !MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, 64 ) )
+	{
+		DPRINT((0,"Can't convert module name.\n"));
+		return NULL;
+	}
+
+    if(BuildModuleList())
     {
-        pMod = *pmodule_list;
+        pd = pdebug_module_head;
         do
         {
-			if(pMod->size)
+			if(pd->size)
 			{
-				if(PICE_strcmpi(modname,(LPSTR)pMod->name) == 0)
+				if(PICE_wcsicmp(tempstr,pMod->name) == 0)
                 {
-                    DPRINT((0,"FindModuleByName(): found %s\n",pMod->name));
-                    return pMod;
+                    DPRINT((0,"FindModuleByName(): found %S\n",pd->name));
+                    return pd;
                 }
             }
-			else
-			{
-				if(PICE_strcmpi(modname,(LPSTR)fake_kernel_module.name) == 0)
-                {
-                    DPRINT((0,"FindModuleByName(): found %s\n",fake_kernel_module.name));
-                    return &fake_kernel_module;
-                }
-            }
-        }while((pMod = pMod->next));
+        }while((pd = pd->next) != pdebug_module_tail);
     }
 
     return NULL;
@@ -403,11 +531,18 @@ struct module* FindModuleByName(LPSTR modname)
 PICE_SYMBOLFILE_HEADER* FindModuleSymbolsByModuleName(LPSTR modname)
 {
     ULONG i;
+	WCHAR tempstr[64];
 
     DPRINT((0,"FindModuleSymbols()\n"));
+	if( !MultiByteToWideChar(CP_ACP, NULL, modname, -1, tempstr, 64 ) )
+	{
+		DPRINT((0,"Can't convert module name in FindModuleSymbols.\n"));
+		return NULL;
+	}
+
     for(i=0;i<ulNumSymbolsLoaded;i++)
     {
-        if(PICE_strcmpi(modname,apSymbols[i]->name) == 0)
+        if(PICE_wcsicmp(tempstr,apSymbols[i]->name) == 0)
             return apSymbols[i];
     }
 
@@ -425,141 +560,118 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
     LPSTR p,pStartOfLine,pSymbolName=NULL;
     ULONG ulCurrentValue=0,i;
     BOOLEAN bResult = FALSE;
-	struct module *pMod;
+	PDEBUG_MODULE pd;
     ULONG ulMinValue = -1;
-	Elf32_Sym* pElfSym;
-	LPSTR pElfStr;
-	Elf32_Shdr* pElfShdr;
+	PIMAGE_SYMBOL pSym,pSymEnd;			  		//running pointer to symbols and end of sym talbe
+	PIMAGE_SYMBOL pFoundSym = NULL;    	  		//current best symbol match
+	ULONG ulAddr = 0x0;		  					//address of the best match
+	LPSTR pStr;
+	PIMAGE_SECTION_HEADER pShdr;
     PICE_SYMBOLFILE_HEADER* pSymbols;
+	ULONG   ulSectionSize;
+	LPSTR pName;
 
 	ENTER_FUNC();
 
-    if(ulValue < TASK_SIZE)
-    {
-    	LEAVE_FUNC();
-        return FALSE;
-    }
-
     pSymbols = FindModuleSymbols(ulValue);
-	if(pSymbols && pmodule_list)
+	if(pSymbols && pdebug_module_head)
 	{
-        struct module* pModTemp;
+        PDEBUG_MODULE pdTemp;
 
 		DPRINT((0,"looking up symbols\n"));
-        pMod = *pmodule_list;
+        pd = pdebug_module_head;
         do
         {
-            if(!pMod->size)
-                pModTemp = &fake_kernel_module;
-            else
-                pModTemp = pMod;
+            assert(pd->size);
 
-			if(ulValue>=((ULONG)pModTemp+sizeof(struct module)) && ulValue<((ULONG)pModTemp+pModTemp->size-sizeof(struct module)))
+			pdTemp = pd;
+
+			if(ulValue>=((ULONG)pdTemp->BaseAddress) && ulValue<((ULONG)pdTemp+pdTemp->size))
 			{
-				if(PICE_strcmpi((LPSTR)pModTemp->name,pSymbols->name) == 0)
+				if(PICE_wcsicmp(pdTemp->name,pSymbols->name) == 0)
 				{
-					DPRINT((0,"ScanExportsByAddress(): found symbols for module %s @ \n",pModTemp->name,(ULONG)pSymbols));
+					DPRINT((0,"ScanExportsByAddress(): found symbols for module %S @ %x \n",pdTemp->name,(ULONG)pSymbols));
 
-					pElfSym = (Elf32_Sym*)((ULONG)pSymbols+pSymbols->ulOffsetToGlobals);
-					pElfStr = (LPSTR)((ULONG)pSymbols+pSymbols->ulOffsetToGlobalsStrings);
-					pElfShdr = (Elf32_Shdr*)((ULONG)pSymbols+pSymbols->ulOffsetToHeaders);
+					pSym = (PIMAGE_SYMBOL)((ULONG)pSymbols+pSymbols->ulOffsetToGlobals);
+					pSymEnd = (PIMAGE_SYMBOL)((ULONG)pSym+pSymbols->ulSizeOfGlobals);
+					pStr = (LPSTR)((ULONG)pSymbols+pSymbols->ulOffsetToGlobalsStrings);
+					pShdr = (PIMAGE_SECTION_HEADER)((ULONG)pSymbols+pSymbols->ulOffsetToHeaders);
 
-					DPRINT((0,"ScanExportsByAddress(): pElfSym = %x\n",pElfSym));
-					DPRINT((0,"ScanExportsByAddress(): pElfStr = %x\n",pElfStr));
-					DPRINT((0,"ScanExportsByAddress(): pElfShdr = %x\n",pElfShdr));
-
-					DPRINT((0,"ScanExportsByAddress(): %s has %u symbols\n",pSymbols->name,pSymbols->ulSizeOfGlobals/sizeof(Elf32_Sym)));
-
-					for(i=0;i<(pSymbols->ulSizeOfGlobals/sizeof(Elf32_Sym));i++)
+					if(!IsRangeValid((ULONG)pSym,sizeof(IMAGE_SYMBOL) ) ) //should we actually check all the symbols here?
 					{
-						if((ELF32_ST_BIND(pElfSym->st_info)==STB_GLOBAL || ELF32_ST_BIND(pElfSym->st_info)==STB_LOCAL || ELF32_ST_BIND(pElfSym->st_info)==STB_WEAK)  &&
-						   (ELF32_ST_TYPE(pElfSym->st_info)==STT_OBJECT || ELF32_ST_TYPE(pElfSym->st_info)==STT_FUNC) &&
-						   (pElfSym->st_shndx<SHN_LORESERVE || pElfSym->st_shndx==SHN_ABS || pElfSym->st_shndx==SHN_COMMON))
-						{
-							LPSTR pName = &pElfStr[pElfSym->st_name];
-							ULONG start,end;
-
-							DPRINT((0,"ScanExportsByAddress(): pName = %x\n",(ULONG)pName));
-
-							if(!IsAddressValid((ULONG)pName) )
-							{
-								DPRINT((0,"ScanExportsByAddress(): pName is not a valid pointer\n"));
-								return FALSE;
-							}
-
-							DPRINT((0,"ScanExportsByAddress(): pName = %s\n",pName));
-
-							if(!IsRangeValid((ULONG)pElfSym,sizeof(Elf32_Sym) ) )
-							{
-								DPRINT((0,"ScanExportsByAddress(): pElfSym = %x is not a valid pointer\n",(ULONG)pElfSym));
-								return FALSE;
-							}
-
-							DPRINT((0,"ScanExportsByAddress(): pModTemp = %x\n",(ULONG)pModTemp));
-                            if(pModTemp != &fake_kernel_module)
-                            {
-								Elf32_Shdr* pElfShdrThis = (Elf32_Shdr*)pElfShdr + pElfSym->st_shndx;
-
-								DPRINT((0,"ScanExportsByAddress(): module is not kernel\n"));
-
-								DPRINT((0,"ScanExportsByAddress(): pElfShdr[%x] = %x\n",pElfSym->st_shndx,(ULONG)pElfShdrThis));
-
-								if(!IsRangeValid((ULONG)pElfShdrThis,sizeof(Elf32_Shdr)) )
-								{
-									DPRINT((0,"ScanExportsByAddress(): pElfShdr[%x] = %x is not a valid pointer\n",pElfSym->st_shndx,pElfShdrThis));
-									return FALSE;
-								}
-
-							    start = ((ULONG)pModTemp+pElfShdrThis->sh_offset);
-								DPRINT((0,"ScanExportsByAddress(): start [1] = %x\n",start));
-
-							    start = (start+pElfShdrThis->sh_addralign)&~(pElfShdrThis->sh_addralign-1);
-								DPRINT((0,"ScanExportsByAddress(): start [2] = %x\n",start));
-
-							    start += pElfSym->st_value;
-								DPRINT((0,"ScanExportsByAddress(): start [3] = %x\n",start));
-                            }
-                            else
-                            {
-								DPRINT((0,"ScanExportsByAddress(): module is kernel\n"));
-                                start = pElfSym->st_value;
-								DPRINT((0,"ScanExportsByAddress(): start [1] = %x\n",start));
-                            }
-
-							end = start+pElfSym->st_size;
-							DPRINT((0,"ScanExportsByAddress(): end = %x\n",end));
-
-							if(ulValue>=start && ulValue<end)
-							{
-							    DPRINT((0,"[%u] %.8X %.8X %.8X %.8X %.8X %.8X %.8X\n",
-										pElfSym->st_shndx,
-										((ULONG)pModTemp+pElfShdr[pElfSym->st_shndx].sh_offset),
-										pElfShdr[pElfSym->st_shndx].sh_addr,
-										pElfShdr[pElfSym->st_shndx].sh_offset,
-										pElfShdr[pElfSym->st_shndx].sh_size,
-										pElfShdr[pElfSym->st_shndx].sh_type,
-										pElfShdr[pElfSym->st_shndx].sh_link,
-										pElfShdr[pElfSym->st_shndx].sh_addralign));
-								DPRINT((0,"in section [%u] %8x value = %x module struct %x (%x)\n",pElfSym->st_shndx,pElfShdr[pElfSym->st_shndx].sh_offset,ulValue,sizeof(struct module),((sizeof(struct module)+0x10)&~0x0F)));
-								DPRINT((0,"[%u] %32s %.8X %.8X %.8X %.8X %.8X %.8X\n",i,pName,pElfSym->st_name,pElfSym->st_value,pElfSym->st_info,pElfSym->st_other,pElfSym->st_size,pElfSym->st_shndx));
-								DPRINT((0,"start %x end %x\n",start,end));
-								*pFind = temp3;
-								if(ulValue-start)
-									PICE_sprintf(temp3,"%s!%s+%x",pModTemp->name,pName,ulValue-start);
-								else
-									PICE_sprintf(temp3,"%s!%s",pModTemp->name,pName);
-								return TRUE;
-							}
-
-						}
-						pElfSym++;
+						DPRINT((0,"ScanExportsByAddress(): pSym = %x is not a valid pointer\n",(ULONG)pSym));
+						return FALSE;
 					}
+
+					DPRINT((0,"ScanExportsByAddress(): pSym = %x\n",pSym));
+					DPRINT((0,"ScanExportsByAddress(): pStr = %x\n",pStr));
+					DPRINT((0,"ScanExportsByAddress(): pShdr = %x\n",pShdr));
+
+					DPRINT((0,"ScanExportsByAddress(): %s has %u symbols\n",pSymbols->name,pSymbols->ulSizeOfGlobals/sizeof(IMAGE_SYMBOL)));
+
+					/* go through all the global symbols and find the one with
+					   the largest address which is less than ulValue */
+					while(pSym < pSymEnd)
+					{   //it seems only 0x0 and 0x20 are used for type and External or Static storage classes
+						if(((pSym->Type == 0x0) || (pSym->Type == 0x20) )  &&
+						   ((pSym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL) || (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC)) &&
+						   (pSym->SectionNumber > 0 ))
+						{
+							ULONG ulCurrAddr;
+							PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pSym->SectionNumber;
+
+
+							DPRINT((0,"ScanExportsByAddress(): pShdr[%x] = %x\n",pSym->SectionNumber,(ULONG)pShdrThis));
+
+							if(!IsRangeValid((ULONG)pShdrThis,sizeof(IMAGE_SECTION_HEADER)) )
+							{
+								DPRINT((0,"ScanExportsByAddress(): pElfShdr[%x] = %x is not a valid pointer\n",pSym->SectionNumber,(ULONG)pShdrThis));
+								return FALSE;
+							}
+							//to get address in the memory we base address of the module and
+							//add offset of the section and then add offset of the symbol from
+							//the begining of the section
+							ulCurrAddr = ((ULONG)pdTemp->BaseAddress+pShdrThis->VirtualAddress+pSym->Value);
+							DPRINT((0,"ScanExportsByAddress(): CurrAddr [1] = %x\n",ulCurrAddr));
+
+							if(ulCurrAddr<=ulValue && ulCurrAddr>ulAddr)
+							{
+								ulAddr = ulCurrAddr;
+								pFoundSym = pSym;
+							}
+						}
+						//skip the auxiliary symbols and get the next symbol
+						pSym += pSym->NumberOfAuxSymbols + 1;
+					}
+					*pFind = temp3;
+					{
+						PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + pFoundSym->SectionNumber;
+						//check that ulValue is below the limit for the section where best match is found
+						assert(ulValue < ((ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
+					}
+					if( !(pFoundSym->Name.Short) ){
+						pName = pFoundSym->ShortName;  //name is in the header
+						PICE_sprintf(temp3,"%s!%.8s",pdTemp->name,pName); //if name is in the header it may be nonzero terminated
+					}
+					else{
+						assert(pFoundSym->Name.Long<=pSymbols->ulSizeOfGlobalsStrings); //sanity check
+						pName = pStr[pFoundSym->Name.Long];
+						if(!IsAddressValid((ULONG)pName))
+						{
+							DPRINT((0,"ScanExportsByAddress(): pName = %x is not a valid pointer\n",pName));
+							return FALSE;
+						}
+						PICE_sprintf(temp3,"%s!%s",pdTemp->name,pName);
+					}
+					DPRINT((0,"ScanExportsByAddress(): pName = %x\n",(ULONG)pName));
+					return TRUE;
 				}
 			}
         }while((pMod = pMod->next));
 	}
-
-    if(pExports && ulValue >= TASK_SIZE && ulValue < kernel_end)
+	// if haven't found in the symbols try ntoskrnl exports. (note: check that this is needed since we
+	// already checked ntoskrnl coff symbol table)
+    if(pExports && ulValue >= TASK_SIZE /*&& ulValue < kernel_end*/)
     {
         p = pExports;
         // while we bound in System.map
@@ -594,82 +706,13 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
             temp[i] = 0;
             // decide if we need to append an offset
             if(ulMinValue)
-                PICE_sprintf(temp3,"vmlinux!%s+%.8X",temp,ulMinValue);
+                PICE_sprintf(temp3,"ntoskrnl!%s+%.8X",temp,ulMinValue);
             else
-                PICE_sprintf(temp3,"vmlinux!%s",temp);
+                PICE_sprintf(temp3,"ntoskrnl!%s",temp);
         }
     }
 
-    if(pmodule_list && ulMinValue!=0)
-    {
-        pMod = *pmodule_list;
-        do
-        {
-			if(ulValue>=((ULONG)pMod+sizeof(struct module)) && ulValue<((ULONG)pMod+pMod->size-sizeof(struct module)))
-            {
-			    if(pMod->syms)
-			    {
-				    for(i=0;i<pMod->nsyms;i++)
-				    {
-					    ulCurrentValue = pMod->syms[i].value;
-					    if(ulValue>=ulCurrentValue && (LONG)(ulValue-ulCurrentValue)<ulMinValue)
-					    {
-						    ulMinValue = ulValue-ulCurrentValue;
-
-						    if(ulValue-ulCurrentValue)
-							    PICE_sprintf(temp3,"%s!%s+%.8X",pMod->name,pMod->syms[i].name,ulValue-ulCurrentValue);
-						    else
-							    PICE_sprintf(temp3,"%s!%s",pMod->name,pMod->syms[i].name);
-						    bResult = TRUE;
-						    *pFind = temp3;
-						    if(ulMinValue == 0)
-							    break;
-					    }
-				    }
-			    }
-
-			    // this could be near entry and cleanup of a module
-			    ulCurrentValue = (ULONG)pMod->init;
-                if(ulCurrentValue)
-                {
-			        if(ulValue>=ulCurrentValue && (LONG)(ulValue-ulCurrentValue)<ulMinValue)
-			        {
-				        ulMinValue = ulValue-ulCurrentValue;
-
-				        if(ulValue-ulCurrentValue)
-					        PICE_sprintf(temp3,"%s!init_module+%.8X",pMod->name,ulValue-ulCurrentValue);
-				        else
-					        PICE_sprintf(temp3,"%s!init_module",pMod->name);
-				        bResult = TRUE;
-				        *pFind = temp3;
-				        if(ulMinValue == 0)
-					        break;
-			        }
-                }
-
-                ulCurrentValue = (ULONG)pMod->cleanup;
-                if(ulCurrentValue)
-                {
-			        if(ulValue>=ulCurrentValue && (LONG)(ulValue-ulCurrentValue)<ulMinValue)
-			        {
-				        ulMinValue = ulValue-ulCurrentValue;
-
-				        if(ulValue-ulCurrentValue)
-					        PICE_sprintf(temp3,"%s!cleanup_module+%.8X",pMod->name,ulValue-ulCurrentValue);
-				        else
-					        PICE_sprintf(temp3,"%s!cleanup_module",pMod->name);
-				        bResult = TRUE;
-				        *pFind = temp3;
-				        if(ulMinValue == 0)
-					        break;
-			        }
-                }
-            }
-        }while((pMod = pMod->next));
-    }
-
 	LEAVE_FUNC();
-
 	return bResult;
 }
 
@@ -1829,7 +1872,7 @@ BOOLEAN LoadExports(void)
 
     if(hf)
 	{
-		mm_segment_t oldfs;
+		//mm_segment_t oldfs;
 		size_t len;
 
 		len = PICE_len(hf);

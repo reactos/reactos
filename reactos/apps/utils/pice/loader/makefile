@@ -1,15 +1,37 @@
-CC = gcc
-CFLAGS := -Wall -fomit-frame-pointer -O2  -DLINUX
-LDFLAGS := -dynamic
+#CC = gcc
+#CFLAGS := -g -Wall -fomit-frame-pointer -O2
+#LDFLAGS := -dynamic
 #-lncurses
 
-OBJS = main.o terminal.o
+#OBJS = main.o terminal.o
+#
+
+#loader: 	$(OBJS)
+#		$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+
+#clean:
+#		@echo deleting all intermediate files
+#		@rm $(OBJS) loader -f
+#		make
 
 
-loader: 	$(OBJS)
-		$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+PATH_TO_TOP = ../../..
 
-clean:
-		@echo deleting all intermediate files
-		@rm $(OBJS) loader -f
-		make
+TARGET_NORC = yes
+
+TARGET_TYPE = program
+
+TARGET_APPTYPE = console
+
+TARGET_NAME = loader
+
+TARGET_CFLAGS = -g -fomit-frame-pointer
+
+TARGET_SDKLIBS =
+
+TARGET_OBJECTS = main.o terminal.o
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+

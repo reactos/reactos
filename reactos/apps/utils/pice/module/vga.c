@@ -7,7 +7,7 @@ Module Name:
     vga.c
 
 Abstract:
-	
+
     VGA HW dependent draw routines
 
 Environment:
@@ -22,7 +22,7 @@ Revision History:
 
     04-Aug-1998:	created
     15-Nov-2000:    general cleanup of source files
-    
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
@@ -36,7 +36,7 @@ Copyright notice:
 #include "precomp.h"
 
 //#include <asm/io.h>
-#include <linux/ctype.h>
+//#include <linux/ctype.h>
 
 
 ////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ WINDOW wWindowVga[4]=
 UCHAR MGATable25[]={97,80,82,15,25, 6,25,25, 2,13,11,12, 0, 0, 0, 0};
 
 PUCHAR pScreenBufferVga;
-PUCHAR pScreenBufferSaveVga = NULL; 
+PUCHAR pScreenBufferSaveVga = NULL;
 PUCHAR pScreenBufferTempVga;
 PUCHAR pScreenBufferHardwareVga;
 
@@ -78,7 +78,7 @@ struct _attr
     {
         struct
         {
-    
+
             UCHAR fgcol : 4;
             UCHAR bkcol : 3;
             UCHAR blink : 1;
@@ -124,9 +124,9 @@ void PrintGrafVga(ULONG x,ULONG y,UCHAR c)
 void ShowCursorVga(void)
 {
     ENTER_FUNC();
-	
+
     bCursorEnabled=TRUE;
-    
+
 #ifdef LOCAL_CONSOLE
 	outb_p(0x0a,0x3d4);
 	outb_p(inb_p(0x3d5)&~0x20,0x3d5);
@@ -147,7 +147,7 @@ void HideCursorVga(void)
 {
     ENTER_FUNC();
 	bCursorEnabled=FALSE;
-    
+
 #ifdef LOCAL_CONSOLE
 	outb_p(0x0a,0x3d4);
 	outb_p(inb_p(0x3d5)|0x20,0x3d5);
@@ -155,7 +155,7 @@ void HideCursorVga(void)
 	outb_p(0x0a,0x3b4);
 	outb_p(inb_p(0x3b5)|0x20,0x3b5);
 #endif
-    
+
     LEAVE_FUNC();
 }
 
@@ -263,24 +263,24 @@ void PrintCursorVga(BOOLEAN bForce)
 	if( count++>250 )
 	{
         count=0;
-        
+
         charoffset = (y* GLOBAL_SCREEN_WIDTH + x);
 
 #ifndef LOCAL_CONSOLE
 		outb_p(0x0e,0x3b4);
-		data=(UCHAR)((charoffset>>8)&0xFF); 
+		data=(UCHAR)((charoffset>>8)&0xFF);
 		outb_p(data,0x3b5);
 
 		outb_p(0x0d,0x3b4);
-		data=(UCHAR)(charoffset & 0xFF); 
+		data=(UCHAR)(charoffset & 0xFF);
 		outb_p(data,0x3b5);
 #else
 		outb_p(0x0e,0x3d4);
-		data=(UCHAR)((charoffset>>8)&0xFF); 
+		data=(UCHAR)((charoffset>>8)&0xFF);
 		outb_p(data,0x3d5);
 
         outb_p(0x0f,0x3d4);
-		data=(UCHAR)(charoffset & 0xFF); 
+		data=(UCHAR)(charoffset & 0xFF);
 		outb_p(data,0x3d5);
 #endif
     }
@@ -356,7 +356,7 @@ void RestoreGraphicsStateVga(void)
 //
 // init terminal screen
 //*************************************************************************
-BOOLEAN ConsoleInitVga(void) 
+BOOLEAN ConsoleInitVga(void)
 {
 	BOOLEAN bResult = FALSE;
 #ifndef LOCAL_CONSOLE
@@ -393,40 +393,40 @@ BOOLEAN ConsoleInitVga(void)
 
 #ifdef LOCAL_CONSOLE
     // the real framebuffer
-	pScreenBufferHardwareVga = MmMapIoSpace(0xB8000,FRAMEBUFFER_SIZE,MmWriteCombined); 
+	pScreenBufferHardwareVga = MmMapIoSpace(0xB8000,FRAMEBUFFER_SIZE,MmWriteCombined);
     // the console
-	pScreenBufferVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL); 
+	pScreenBufferVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL);
     // the save area
-	pScreenBufferTempVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL); 
+	pScreenBufferTempVga = PICE_malloc(FRAMEBUFFER_SIZE,NONPAGEDPOOL);
 #else
 	outb_p(0,0x3b8);
 	outb_p(0,0x3bf);
-	for(i=0;i<sizeof(MGATable25);i++) 
-	{ 
-		reg=i; 
+	for(i=0;i<sizeof(MGATable25);i++)
+	{
+		reg=i;
 		outb_p(reg,0x3b4);
-		data=pMGATable[i]; 
+		data=pMGATable[i];
 		outb_p(data,0x3b5);
 	}
 	outb_p(0x08,0x3b8);
 
-	pScreenBufferVga=MmMapIoSpace(0xB0000,FRAMEBUFFER_SIZE,MmWriteCombined); 
-#endif 
+	pScreenBufferVga=MmMapIoSpace(0xB0000,FRAMEBUFFER_SIZE,MmWriteCombined);
+#endif
 	if(pScreenBufferVga)
 	{
-        DPRINT((0,"VGA memory phys. 0x000b0000 mapped to virt. 0x%x\n",pScreenBufferVga)); 
+        DPRINT((0,"VGA memory phys. 0x000b0000 mapped to virt. 0x%x\n",pScreenBufferVga));
 
         bResult = TRUE;
 
         p = (PUSHORT)pScreenBufferVga;
-        
+
 		PICE_memset(pScreenBufferVga,0x0,FRAMEBUFFER_SIZE);
 
-        DPRINT((0,"VGA memory cleared!\n")); 
+        DPRINT((0,"VGA memory cleared!\n"));
 
         EmptyRingBuffer();
-    
-        DPRINT((0,"ConsoleInitVga() SUCCESS!\n")); 
+
+        DPRINT((0,"ConsoleInitVga() SUCCESS!\n"));
 	}
 
     LEAVE_FUNC();
@@ -439,24 +439,24 @@ BOOLEAN ConsoleInitVga(void)
 //
 // exit terminal screen
 //*************************************************************************
-void ConsoleShutdownVga(void) 
-{ 
+void ConsoleShutdownVga(void)
+{
     ENTER_FUNC();
- 
+
 #ifdef LOCAL_CONSOLE
 	if(pScreenBufferVga)
     {
         PICE_free(pScreenBufferVga);
         PICE_free(pScreenBufferTempVga);
-		MmUnmapIoSpace(pScreenBufferHardwareVga,FRAMEBUFFER_SIZE); 
+		MmUnmapIoSpace(pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
     }
 #else
-	// HERC video off 
+	// HERC video off
 	outb_p(0,0x3b8);
 	outb_p(0,0x3bf);
 
 	if(pScreenBufferVga)
-		MmUnmapIoSpace(pScreenBufferVga,FRAMEBUFFER_SIZE); 
+		MmUnmapIoSpace(pScreenBufferVga,FRAMEBUFFER_SIZE);
 #endif
 
     LEAVE_FUNC();

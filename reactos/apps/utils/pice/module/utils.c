@@ -291,6 +291,25 @@ ULONG result=1;
     return result;
 }
 
+ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
+{
+ULONG result=1;
+
+    while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
+          IsAddressValid((ULONG)s2) && *s2 && // not end of string
+          towlower(*s1)==towlower(*s2) ) // char are the same except case
+    {
+        s1++;
+        s2++;
+    }
+	// strings same length
+    if(*s1==0 && *s2==0)
+        result=0;
+
+    return result;
+}
+
+}
 //*************************************************************************
 // PICE_strrev()
 //

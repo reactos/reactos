@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -30,6 +30,8 @@ Copyright notice:
 --*/
 
 // constant defines
+#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
+#define CONTAINING_RECORD(Address,Type,Field) (Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
 
 typedef struct _LOCAL_VARIABLE
 {
@@ -38,6 +40,22 @@ typedef struct _LOCAL_VARIABLE
 	ULONG value,offset,line;
     BOOLEAN bRegister;
 }LOCAL_VARIABLE,*PLOCAL_VARIABLE;
+
+struct _DEBUG_MODULE_SYMBOL_
+{
+	ULONG value;
+	char* name;
+};
+
+typedef struct _DEBUG_MODULE_
+{
+	struct _DEBUG_MODULE_ *next;
+	ULONG size;
+	PVOID BaseAddress;
+	PVOID EntryPoint;
+	UNICODE_STRING name;
+	struct _DEBUG_MODULE_SYMBOL_ syms;
+}DEBUG_MODULE, *PDEBUG_MODULE;
 
 BOOLEAN InitFakeKernelModule(void);
 BOOLEAN LoadExports(void);
@@ -64,8 +82,9 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p);
 LONG ExtractNumber(LPSTR p);
 LPSTR ExtractTypeName(LPSTR p);
 
-extern ULONG kernel_end;
+//extern ULONG kernel_end;
 extern PICE_SYMBOLFILE_HEADER* apSymbols[32];
 
-extern struct module fake_kernel_module;
-#define KERNEL_START (0xc0100000)
+//extern struct module fake_kernel_module;
+#define KERNEL_START (0xc0000000)
+

@@ -37,7 +37,7 @@ Copyright notice:
 #include "remods.h"
 #include "precomp.h"
 
-#include <asm/system.h>
+//#include <asm/system.h>
 
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
@@ -59,7 +59,7 @@ UCHAR ucBreakKey = 'D'; // key that will break into debugger in combination with
 ////
 
 //***********************************************************************************
-//	PiceKbdIsr - keyboard isr hook routine. 
+//	PiceKbdIsr - keyboard isr hook routine.
 //	IsrContext - context that we passed to keyboard driver in  internal iocontrol
 //	pCurrentInput, pCurrentOutput - not implemented yet
 //	StatusByte -  keyboard status register
@@ -85,7 +85,7 @@ BOOLEAN PiceKbdIsr (
 	// BUG!! should protect with spinlock since bControl is static.
     DPRINT((0,"PiceKbdIsr(%x,%u)\n",pByte,isDown));
     DPRINT((0,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
-	
+
 	if(isDown)
 	{
         // CTRL pressed
@@ -121,7 +121,7 @@ BOOLEAN PiceKbdIsr (
 	*ContinueProcessing = bForward;
     LEAVE_FUNC();
 	return TRUE;
-}	
+}
 
 //***********************************************************************************
 //	PiceSendIoctl - send internal_io_control to the driver
@@ -145,9 +145,9 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
 
     if (NULL == (irp = IoBuildDeviceIoControlRequest(Ioctl,
                                                      Target,
-                                                     InputBuffer,       
+                                                     InputBuffer,
                                                      InputBufferLength,
-                                                     0, 
+                                                     0,
                                                      0,
                                                      TRUE,
                                                      &event,
@@ -158,12 +158,12 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
     status = IoCallDriver(Target, irp);
 
     if (STATUS_PENDING == status) {
-        
+
 		status = KeWaitForSingleObject(&event,
                                        Executive,
                                        KernelMode,
-                                       FALSE, 
-                                       NULL); 
+                                       FALSE,
+                                       NULL);
 
         assert(STATUS_SUCCESS == status);
         status = iosb.Status;
@@ -174,7 +174,7 @@ NTSTATUS PiceSendIoctl(PDEVICE_OBJECT Target, ULONG Ioctl,
 
 //**************************************************
 // PatchKeyboardDriver - set keyboard driver hook.
-// We use interface supported by standard keyboard drivers. 
+// We use interface supported by standard keyboard drivers.
 //**************************************************
 BOOLEAN PatchKeyboardDriver(void)
 {
@@ -191,21 +191,21 @@ BOOLEAN PatchKeyboardDriver(void)
 	//Get pointer to keyboard device
     if( !NT_SUCCESS( IoGetDeviceObjectPointer( &DevName, FILE_READ_ACCESS, &FO, &kbdDevice ) ) )
 		return FALSE;
-			
+
 	phkData = ExAllocatePool( PagedPool, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
 	RtlZeroMemory( phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
-	
+
 	phkData->IsrRoutine = (PI8042_KEYBOARD_ISR) PiceKbdIsr;
 	phkData->Context = (PVOID) NULL; //DeviceObject;
 
 	//call keyboard device internal io control to hook keyboard input stream
-	status = PiceSendIoctl( kbdDevice, IOCTL_INTERNAL_I8042_HOOK_KEYBOARD, 
+	status = PiceSendIoctl( kbdDevice, IOCTL_INTERNAL_I8042_HOOK_KEYBOARD,
 			phkData, sizeof( INTERNAL_I8042_HOOK_KEYBOARD ) );
 
-		
+
 	ObDereferenceObject(FO);
 	ExFreePool(phkData);
-    
+
 	LEAVE_FUNC();
 
     return NT_SUCCESS(status);
@@ -216,4 +216,4 @@ void RestoreKeyboardDriver(void)
     ENTER_FUNC();
     DbgPrint("RestoreKeyboardDriver: Not Implemented yet!!!\n");
 	LEAVE_FUNC();
-} 
+}

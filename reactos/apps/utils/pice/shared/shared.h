@@ -36,7 +36,7 @@ Copyright notice:
 --*/
 
 //#include <ddk/ntddk.h>
-#include <winnt.h>
+//#include <winnt.h>
 
 
 //temporary
@@ -80,7 +80,7 @@ typedef struct _DEBUGGER_STATUS_BLOCK
 typedef struct _PICE_SYMBOLFILE_HEADER
 {
 	ULONG magic;
-	char name[32];
+	WCHAR name[64];
 	ULONG ulOffsetToHeaders,ulSizeOfHeader;
 	ULONG ulOffsetToGlobals,ulSizeOfGlobals;
 	ULONG ulOffsetToGlobalsStrings,ulSizeOfGlobalsStrings;

@@ -1,28 +1,28 @@
 /*++
 
 Copyright (c) 1998-2001 Klaus P. Gerlicher
- 
+
 Module Name:
-  
+
     init.c
-   
+
 Abstract:
 
     initialisation and cleanup of debugger kernel module
-    
+
 Environment:
-     
+
     Kernel mode only
-      
-Author: 
-       
+
+Author:
+
     Klaus P. Gerlicher
-        
+
 Revision History:
-         
+
     25-Jan-1999:	created
     15-Nov-2000:    general cleanup of source files
-          
+
 Copyright notice:
 
   This file may be distributed under the terms of the GNU Public License.
@@ -46,12 +46,16 @@ ULONG ulDoInitialBreak=1;
 char szBootParams[1024]="";
 char tempInit[256];
 
-//************************************************************************* 
-// InitPICE() 
-// 
-//************************************************************************* 
-BOOLEAN InitPICE(void) 
-{ 
+PDIRECTORY_OBJECT *pNameSpaceRoot = NULL;
+PDEBUG_MODULE pdebug_module_tail = NULL;
+PDEBUG_MODULE pdebug_module_head = NULL;
+
+//*************************************************************************
+// InitPICE()
+//
+//*************************************************************************
+BOOLEAN InitPICE(void)
+{
     ULONG ulHandleScancode=0,ulHandleKbdEvent=0;
 	ARGS Args;
 
@@ -67,25 +71,25 @@ BOOLEAN InitPICE(void)
     {
         DPRINT((0,"InitPICE: LoadSymbolsFromConfig() failed\n"));
         LEAVE_FUNC();
-        return FALSE; 
+        return FALSE;
     }
 
     DPRINT((0,"InitPICE(): trace step 3\n"));
-    // init the output console 
+    // init the output console
 	// this might be one of the following depending setup
 	// a) monochrome card
 	// b) serial terminal (TODO)
-    if(!ConsoleInit()) 
-    { 
+    if(!ConsoleInit())
+    {
         DPRINT((0,"InitPICE: ConsoleInit() failed\n"));
         UnloadSymbols();
         LEAVE_FUNC();
-        return FALSE; 
-    } 
+        return FALSE;
+    }
 
     DPRINT((0,"InitPICE(): trace step 4\n"));
     // print the initial screen template
-    PrintTemplate(); 
+    PrintTemplate();
 
     DPRINT((0,"InitPICE(): trace step 5\n"));
 	// ask the user if he wants to abort the debugger load
@@ -143,11 +147,12 @@ BOOLEAN InitPICE(void)
 	}
 
     DPRINT((0,"InitPICE(): trace step 9\n"));
-    // the loaded module list
-    ScanExports("module_list",(PULONG)&pmodule_list);
-    if(!pmodule_list)
+
+	// the loaded module list
+	ScanExports("_NameSpaceRoot", (PULONG)pNameSpaceRoot);
+    if(!pNameSpaceRoot)
 	{
-		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't retreive kernel module list)\n");
+		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't retreive name space root)\n");
 		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
         while(!GetKeyPolled());
 		UnloadExports();
@@ -158,11 +163,12 @@ BOOLEAN InitPICE(void)
 	}
 
     DPRINT((0,"InitPICE(): trace step 10\n"));
-    // setup a fake module struct for use by symbol routines
-    if(!InitFakeKernelModule())
+    // setup a linked list for use in module parsing routines.
+	if(!InitModuleList(&pdebug_module_head, 100))
 	{
-		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't initialize kernel module)\n");
+		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't initialize kernel module list)\n");
 		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
+		FreeModuleList( pdebug_module_head );
         while(!GetKeyPolled());
 		UnloadExports();
         UnloadSymbols();
@@ -170,6 +176,7 @@ BOOLEAN InitPICE(void)
         LEAVE_FUNC();
 		return FALSE;
 	}
+	pdebug_module_tail = pdebug_module_head;
 
     DPRINT((0,"InitPICE(): trace step 11\n"));
     // do a sanity check on exports
@@ -186,11 +193,11 @@ BOOLEAN InitPICE(void)
     }
 
     DPRINT((0,"InitPICE(): trace step 12\n"));
-    
+
 
     DPRINT((0,"InitPICE(): trace step 13\n"));
     // patch the keyboard driver
-    
+
 	if(PatchKeyboardDriver())
 	{
 		Print(OUTPUT_WINDOW,"pICE: ABORT (couldn't patch keyboard driver)\n");
@@ -205,30 +212,30 @@ BOOLEAN InitPICE(void)
 
     DPRINT((0,"InitPICE(): trace step 14\n"));
     // partial init of shadow registers
-    CurrentCS = GLOBAL_CODE_SEGMENT; 
-    CurrentEIP = (ULONG)RealIsr; 
-    
-    CurrentDS = CurrentSS = GLOBAL_DATA_SEGMENT; 
+    CurrentCS = GLOBAL_CODE_SEGMENT;
+    CurrentEIP = (ULONG)RealIsr;
+
+    CurrentDS = CurrentSS = GLOBAL_DATA_SEGMENT;
     __asm__("
             mov %%esp,%%eax
             mov %%eax,CurrentESP
             ":::"eax");
-        
-   
+
+
     // display version and symbol information
     Ver(NULL);
-    
+
     // disable HW breakpoints
-	__asm__(" 
+	__asm__("
 		xorl %%eax,%%eax
-		mov %%eax,%%dr6 
+		mov %%eax,%%dr6
 		mov %%eax,%%dr7
         mov %%dr0,%%eax
         mov %%dr1,%%eax
         mov %%dr2,%%eax
         mov %%dr3,%%eax"
 		:::"eax"
-		); 
+		);
 
     DPRINT((0,"InitPICE(): trace step 15\n"));
     TakeIdtSnapshot();
@@ -238,7 +245,7 @@ BOOLEAN InitPICE(void)
     InstallTraceHook();
     InstallGlobalKeyboardHook();
     InstallSyscallHook();
-    InstallInt3Hook();    
+    InstallInt3Hook();
     InstallPrintkHook();
     InstallDblFltHook();
     InstallGPFaultHook();
@@ -247,48 +254,48 @@ BOOLEAN InitPICE(void)
     DPRINT((0,"InitPICE(): trace step 16\n"));
     if(ulDoInitialBreak)
     {
-        DPRINT((0,"about to do initial break...\n")); 
-        
-        // simulate an initial break 
-        __asm__(" 
-            pushfl 
-            pushl %cs 
-            pushl $initialreturnpoint 
+        DPRINT((0,"about to do initial break...\n"));
+
+        // simulate an initial break
+        __asm__("
+            pushfl
+            pushl %cs
+            pushl $initialreturnpoint
             pushl $" STR(REASON_CTRLF) "
-            jmp NewInt31Handler 
+            jmp NewInt31Handler
 initialreturnpoint:");
     }
     else
     {
-        // display register contents 
-        DisplayRegs(); 
-    
-        // display data window 
-        Args.Value[0]=CurrentDS; 
-        Args.Value[1]=CurrentEIP; 
-        Args.Count=2; 
-        DisplayMemory(&Args); 
-    
-        // disassembly from current address 
-        Args.Value[0]=CurrentCS; 
-        Args.Value[1]=CurrentEIP; 
-        Args.Count=2; 
-        Unassemble(&Args); 
+        // display register contents
+        DisplayRegs();
+
+        // display data window
+        Args.Value[0]=CurrentDS;
+        Args.Value[1]=CurrentEIP;
+        Args.Count=2;
+        DisplayMemory(&Args);
+
+        // disassembly from current address
+        Args.Value[0]=CurrentCS;
+        Args.Value[1]=CurrentEIP;
+        Args.Count=2;
+        Unassemble(&Args);
     }
 
     DPRINT((0,"InitPICE(): trace step 17\n"));
 	InitPiceRunningTimer();
 
     LEAVE_FUNC();
-    return TRUE; 
-} 
+    return TRUE;
+}
 
-//************************************************************************* 
-// CleanUpPICE() 
-// 
-//************************************************************************* 
-void CleanUpPICE(void) 
-{ 
+//*************************************************************************
+// CleanUpPICE()
+//
+//*************************************************************************
+void CleanUpPICE(void)
+{
     DPRINT((0,"CleanUpPICE(): trace step 1\n"));
 	RemovePiceRunningTimer();
 
@@ -308,7 +315,7 @@ void CleanUpPICE(void)
 
     DPRINT((0,"CleanUpPICE(): trace step 4\n"));
     UnloadExports(); // don't use ScanExports() after this
-    UnloadSymbols(); 
+    UnloadSymbols();
 
     DPRINT((0,"CleanUpPICE(): trace step 5\n"));
     // restore patch of keyboard driver
@@ -319,5 +326,5 @@ void CleanUpPICE(void)
 
     DPRINT((0,"CleanUpPICE(): trace step 7\n"));
     // cleanup the console
-	ConsoleShutdown(); 
+	ConsoleShutdown();
 }

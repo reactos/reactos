@@ -32,6 +32,7 @@ Copyright notice:
 ///////////////////////////////////////////////////////////////////////////////////
 // includes
 #include "stdinc.h"
+#include <wchar.h>
 
 ///////////////////////////////////////////////////////////////////////////////////
 // constant defines
@@ -53,7 +54,7 @@ ULONG ulGlobalVerbose = 0;
 ///////////////////////////////////////////////////////////////////////////////////
 void process_stabs(
 	char* pExeName,	// name of exe
-	int fileout,	// symbol file handle
+	HANDLE fileout,	// symbol file handle
 	PIMAGE_SECTION_HEADER section, //Elf32_Shdr* pSHdr,
 	int sectionHeadersSize, //int	nSHdrSize,
 	void* p,		// ptr to memory where whole exe was read
@@ -74,6 +75,8 @@ void process_stabs(
 	LPSTR pSlash,pDot;
 	char temp[2048];
 	char* pCopyExeName = temp;
+	WCHAR tempstr[64];
+	DWORD wrote;
 
     //printf("LOADER: enter process_stabs()\n");
 
@@ -91,7 +94,10 @@ void process_stabs(
 	{
 		pCopyExeName = pSlash+1;
 	}
-	strcpy(SymbolFileHeader.name,pCopyExeName);
+	strLen = MultiByteToWideChar(CP_ACP, NULL, pCopyExeName, -1, tempstr, 64 );
+	if( !strLen )
+		printf("Cannot convert string to multibyte: %s\n", pCopyExeName );
+	wcscpy(SymbolFileHeader.name,tempstr);
 
     for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
     {
@@ -219,22 +225,25 @@ void process_stabs(
     SymbolFileHeader.ulOffsetToSrcFiles = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen+nGlobalStrLen+nStabLen+nStrLen;
     SymbolFileHeader.ulNumberOfSrcFiles = ulCurrentSrcFile;
 
-	write(fileout,&SymbolFileHeader,sizeof(SymbolFileHeader));
-	write(fileout,section,sectionHeadersSize);
-	write(fileout,pGlobals,nGlobalLen);
-	write(fileout,pGlobalsStr,nGlobalStrLen);
-	write(fileout,pStab,nStabLen);
-	write(fileout,pStr,nStrLen);
+	printf("sectionHeaderSize: %ld, nGlobalLen: %ld, nGlobalStrLen: %ld, nStabLen: %ld,
+			nStrLen: %ld, ulCurrentSrcFile: %ld, ulOffsetToStabs: %ld \n", sectionHeadersSize, nGlobalLen, nGlobalStrLen,
+			nStabLen, nStrLen, ulCurrentSrcFile, SymbolFileHeader.ulOffsetToStabs);
+	WriteFile(fileout,&SymbolFileHeader,sizeof(PICE_SYMBOLFILE_HEADER),&wrote, NULL);
+	WriteFile(fileout,section,sectionHeadersSize,&wrote, NULL);
+	WriteFile(fileout,pGlobals,nGlobalLen,&wrote, NULL);
+	WriteFile(fileout,pGlobalsStr,nGlobalStrLen,&wrote, NULL);
+	WriteFile(fileout,pStab,nStabLen,&wrote, NULL);
+	WriteFile(fileout,pStr,nStrLen,&wrote, NULL);
 
     for(i=0;i<ulCurrentSrcFile;i++)
     {
-        int file;
+        HANDLE file;
         int len;
         PVOID pFile;
         PICE_SYMBOLFILE_SOURCE pss;
 
-        file = _open(SrcFileNames[i],O_RDONLY);
-		if( file <= 0 ){
+        file = CreateFile(SrcFileNames[i],O_RDONLY, 0, NULL, OPEN_EXISTING, 0, 0);
+		if( file == INVALID_HANDLE_VALUE ){
 			//let's try win format drive:/file
 			char srctmp[2048];
 			strcpy(srctmp, SrcFileNames[i] );
@@ -242,19 +251,19 @@ void process_stabs(
 				*(srctmp) = *(srctmp+2);
 				*(srctmp+1) = ':';
 				*(srctmp+2) = '/';
-				file = _open(srctmp,O_RDONLY);
-				if( file <= 0 )
+				file = CreateFile(srctmp,O_RDONLY, 0, NULL, OPEN_EXISTING, 0, 0);
+				if( file == INVALID_HANDLE_VALUE )
 					printf("Can't open file: %s\n", srctmp );
 			}
 		}
-        if(file>0)
+        if(file != INVALID_HANDLE_VALUE)
         {
             //printf("LOADER: [%u] opened %s as FD %x\n",i,SrcFileNames[i],file);
 
-            len = _lseek(file,0,SEEK_END);
+            len = SetFilePointer(file,0,NULL,FILE_END);
             //printf("LOADER: length = %x\n",(int)len);
 
-            _lseek(file,0,SEEK_SET);
+            SetFilePointer(file,0,NULL,FILE_BEGIN);
 
             strcpy(pss.filename,SrcFileNames[i]);
             pss.ulOffsetToNext = len+sizeof(PICE_SYMBOLFILE_SOURCE);
@@ -264,15 +273,15 @@ void process_stabs(
             if(pFile)
             {
                 //printf("LOADER: reading file...\n");
-                _read(file,pFile,len);
+                ReadFile(file,pFile,len,&wrote,NULL);
 
-                _write(fileout,&pss,sizeof(PICE_SYMBOLFILE_SOURCE));
+                WriteFile(fileout,&pss,sizeof(PICE_SYMBOLFILE_SOURCE),&wrote, NULL);
                 //printf("LOADER: writing file...\n");
-                _write(fileout,pFile,len);
+                WriteFile(fileout,pFile,len,&wrote, NULL);
                 free(pFile);
             }
 
-            _close(file);
+            CloseHandle(file);
         }
 
     }
@@ -329,7 +338,7 @@ int process_pe(char* filename,int file,void* p,int len)
 	char* pSymTab;
 
 	char szSymName[2048];
-	int fileout;
+	HANDLE fileout;
 	int nSymStrLen,nStabStrLen;
     int iRetVal = 0;
 
@@ -346,9 +355,8 @@ int process_pe(char* filename,int file,void* p,int len)
 			nSym = pNTHeaders->FileHeader.NumberOfSymbols;
 			//string table follows immediately after symbol table. first 4 bytes give the length of the table
 			//references to string table include the first 4 bytes.
-			pStrTab = (PIMAGE_SYMBOL)pSymTab + nSym;
+			pStrTab = (char*)((PIMAGE_SYMBOL)pSymTab + nSym);
 			nSymStrLen = *((DWORD*)pStrTab);
-
 			find_stab_sections(p,IMAGE_FIRST_SECTION(pNTHeaders),pNTHeaders->FileHeader.NumberOfSections,
 					&pStab,&nStabLen,&pStr,&nStabStrLen);
 
@@ -370,24 +378,32 @@ int process_pe(char* filename,int file,void* p,int len)
 				//printf("LOADER: symbol file name = %s\n",szSymName);
 	            printf("LOADER: creating symbol file %s for %s\n",szSymName,filename);
 
-	            fileout = _creat(szSymName, _S_IREAD | _S_IWRITE );     // make r/w
-	            if(fileout != -1)
+				fileout = CreateFile(szSymName,
+								     GENERIC_READ | GENERIC_WRITE,
+								     0,
+								     NULL,
+								     CREATE_ALWAYS,
+								     0,
+								     0);
+
+	            if(fileout != INVALID_HANDLE_VALUE)
 				{
+					printf("NumberOfSections: %d, size: %d\n", pNTHeaders->FileHeader.NumberOfSections,sizeof(IMAGE_SECTION_HEADER));
 					process_stabs(szSymName,
 								  fileout,
 								  IMAGE_FIRST_SECTION(pNTHeaders),
-								  pNTHeaders->FileHeader.NumberOfSections*sizeof(PIMAGE_SECTION_HEADER),
+								  pNTHeaders->FileHeader.NumberOfSections*sizeof(IMAGE_SECTION_HEADER),
 								  p,
 								  pStab,
 								  nStabLen,
 								  pStr,
 								  nStabStrLen,
 								  (char*)pSymTab,
-								  nSym,
+								  nSym*sizeof(IMAGE_SYMBOL),
 								  pStrTab,
 								  nSymStrLen);
 
-					close(fileout);
+					CloseHandle(fileout);
 				}
 	            else
 	            {
