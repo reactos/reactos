@@ -36,6 +36,14 @@
 
 #define NDEBUG
 
+#define IsRecognizedPartition(P)  \
+    ((P) == PARTITION_FAT_12       || \
+     (P) == PARTITION_FAT_16       || \
+     (P) == PARTITION_HUGE         || \
+     (P) == PARTITION_IFS          || \
+     (P) == PARTITION_FAT32        || \
+     (P) == PARTITION_FAT32_XINT13 || \
+     (P) == PARTITION_XINT13)
 
 static BOOL
 LoadKernel(PCHAR szFileName, int nPos)
@@ -442,6 +450,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	char* Base;
 	U32 Size;
 
+        PARTITION_TABLE_ENTRY PartitionTableEntry;
+        U32 rosPartition;
 
 	//
 	// Open the operating system section
@@ -506,6 +516,32 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
 
+        /* recalculate the boot partition for freeldr */
+	i = 0;
+        rosPartition = 0;
+        while (1)
+	{
+           if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
+	   {
+	      BootPartition = 0;
+	      break;
+	   }
+           if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
+	   {
+	      if (++rosPartition == BootPartition)
+	      {
+	         BootPartition = i;
+		 break;
+	      }
+	   }
+	}
+	if (BootPartition == 0)
+	{
+		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+		UiMessageBox(MsgBuffer);
+		return;
+	}
+	   
 	/* copy ARC path into kernel command line */
 	strcpy(multiboot_kernel_cmdline, value);
 
