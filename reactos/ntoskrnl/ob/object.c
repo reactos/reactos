@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.79 2004/07/18 13:03:43 ekohl Exp $
+/* $Id: object.c,v 1.80 2004/07/19 12:48:59 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -348,6 +348,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   BOOLEAN ObjectAttached = FALSE;
   PWCHAR NamePtr;
   PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
+  SECURITY_SUBJECT_CONTEXT SubjectContext;
 
   assert_irql(APC_LEVEL);
 
@@ -457,12 +458,14 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     }
   RtlFreeUnicodeString(&RemainingPath);
 
+  SeCaptureSubjectContext(&SubjectContext);
+
   /* Build the new security descriptor */
   Status = SeAssignSecurity((ParentHeader != NULL) ? ParentHeader->SecurityDescriptor : NULL,
 			    (ObjectAttributes != NULL) ? ObjectAttributes->SecurityDescriptor : NULL,
 			    &NewSecurityDescriptor,
 			    (Header->ObjectType == ObDirectoryType),
-			    NULL, //SubjectContext,
+			    &SubjectContext,
 			    Header->ObjectType->Mapping,
 			    PagedPool);
   if (NT_SUCCESS(Status))
@@ -485,6 +488,8 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       /* Release the new security descriptor */
       SeDeassignSecurity(&NewSecurityDescriptor);
     }
+
+  SeReleaseSubjectContext(&SubjectContext);
 
   if (Object != NULL)
     {

@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.21 2004/07/17 12:08:21 ekohl Exp $
+/* $Id: ntobj.c,v 1.22 2004/07/19 12:48:59 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -283,6 +283,8 @@ NtMakeTemporaryObject(IN HANDLE Handle)
  * RETURN VALUE
  *
  * REVISIONS
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 NtMakePermanentObject(IN HANDLE Handle)
