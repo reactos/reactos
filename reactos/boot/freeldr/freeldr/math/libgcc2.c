@@ -38,6 +38,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 #ifdef __i386__
 #include "i386.h"
+#elif defined(_M_PPC)
+#include "powerpc.h"
 #endif
 #define L_clz
 #define L_udivdi3
