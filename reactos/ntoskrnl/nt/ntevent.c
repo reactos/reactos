@@ -220,8 +220,8 @@ NtPulseEvent(IN HANDLE EventHandle,
    PKEVENT Event;
    NTSTATUS Status;
 
-   DPRINT("NtPulseEvent(EventHandle %x UnsafePulseCount %x)\n",
-	  EventHandle, UnsafePulseCount);
+   DPRINT("NtPulseEvent(EventHandle %x PreviousState %x)\n",
+	  EventHandle, PreviousState);
 
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,

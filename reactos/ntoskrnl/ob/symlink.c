@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.11 2004/10/24 20:37:26 weiden Exp $
+/* $Id: symlink.c,v 1.12 2004/10/25 14:22:21 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -212,11 +212,11 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
-  DPRINT("NtCreateSymbolicLinkObject(SymbolicLinkHandle %p, DesiredAccess %ul, ObjectAttributes %p, DeviceName %wZ)\n",
-	 SymbolicLinkHandle,
+  DPRINT("NtCreateSymbolicLinkObject(LinkHandle %p, DesiredAccess %ul, ObjectAttributes %p, LinkTarget %wZ)\n",
+	 LinkHandle,
 	 DesiredAccess,
 	 ObjectAttributes,
-	 DeviceName);
+	 LinkTarget);
 
   Status = ObCreateObject(ExGetPreviousMode(),
 			  ObSymbolicLinkType,
