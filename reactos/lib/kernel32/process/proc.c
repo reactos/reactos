@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.31 2000/03/16 01:14:37 ekohl Exp $
+/* $Id: proc.c,v 1.32 2000/04/25 23:22:54 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,10 +16,13 @@
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
+#include <kernel32/error.h>
 #include <wchar.h>
 #include <string.h>
 #include <internal/i386/segment.h>
 #include <internal/teb.h>
+#include <ntdll/csr.h>
+
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -61,8 +64,35 @@ GetProcessTimes (
 	LPFILETIME	lpUserTime
 	)
 {
-	DPRINT("GetProcessTimes is unimplemented\n");
-	return FALSE;
+	NTSTATUS		Status;
+	KERNEL_USER_TIMES	Kut;
+
+	Status = NtQueryInformationProcess (
+			hProcess,
+			ProcessTimes,
+			& Kut,
+			sizeof Kut,
+			NULL
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return (FALSE);
+	}
+
+	lpCreationTime->dwLowDateTime	= Kut.CreateTime.u.LowPart;
+	lpCreationTime->dwHighDateTime	= Kut.CreateTime.u.HighPart;
+	
+	lpExitTime->dwLowDateTime	= Kut.ExitTime.u.LowPart;
+	lpExitTime->dwHighDateTime	= Kut.ExitTime.u.HighPart;
+	
+	lpKernelTime->dwLowDateTime	= Kut.KernelTime.u.LowPart;
+	lpKernelTime->dwHighDateTime	= Kut.KernelTime.u.HighPart;
+
+	lpUserTime->dwLowDateTime	= Kut.UserTime.u.LowPart;
+	lpUserTime->dwHighDateTime	= Kut.UserTime.u.HighPart;
+
+	return (TRUE);
 }
 
 
@@ -102,7 +132,7 @@ GetExitCodeProcess (
 				       &BytesWritten);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    memcpy(lpExitCode, &ProcessBasic.ExitStatus, sizeof(DWORD));
@@ -128,7 +158,7 @@ GetProcessId (
 				       &BytesWritten);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
@@ -169,7 +199,7 @@ OpenProcess (
 			   &ClientId);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return NULL;
      }
    return ProcessHandle;
@@ -207,10 +237,15 @@ WinExec (
 	dosErr = GetLastError();
 	return dosErr;
      }
-   if ( lpfnGlobalRegisterWaitForInputIdle != NULL )
-     lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess,10000);
-   NtClose(ProcessInformation.hProcess);
-   NtClose(ProcessInformation.hThread);
+   if (NULL != lpfnGlobalRegisterWaitForInputIdle)
+   {
+     lpfnGlobalRegisterWaitForInputIdle (
+	ProcessInformation.hProcess,
+	10000
+	);
+   }
+   NtClose (ProcessInformation.hProcess);
+   NtClose (ProcessInformation.hThread);
    return 0;	
 }
 
@@ -260,10 +295,10 @@ SleepEx (
 
    Interval.QuadPart = dwMilliseconds * 1000;
 
-   errCode = NtDelayExecution(bAlertable,&Interval);
+   errCode = NtDelayExecution (bAlertable, & Interval);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return -1;
      }
    return 0;
@@ -390,13 +425,13 @@ FlushInstructionCache (
 {
 	NTSTATUS	errCode;
 
-	errCode = NtFlushInstructionCache(
+	errCode = NtFlushInstructionCache (
 			hProcess,
 			(PVOID) lpBaseAddress,
 			dwSize);
 	if (!NT_SUCCESS(errCode))
 	{
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;
@@ -423,10 +458,10 @@ TerminateProcess (
 {
 	NTSTATUS errCode;
 
-	errCode = NtTerminateProcess(hProcess, uExitCode);
+	errCode = NtTerminateProcess (hProcess, uExitCode);
 	if (!NT_SUCCESS(errCode))
 	{
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;
@@ -443,11 +478,11 @@ FatalAppExitA (
 	UNICODE_STRING MessageTextU;
 	ANSI_STRING MessageText;
 
-	RtlInitAnsiString (&MessageText,
-	                   (LPSTR)lpMessageText);
+	RtlInitAnsiString (& MessageText,
+	                   (LPSTR) lpMessageText);
 
-	RtlAnsiStringToUnicodeString (&MessageTextU,
-	                              &MessageText,
+	RtlAnsiStringToUnicodeString (& MessageTextU,
+	                              & MessageText,
 	                              TRUE);
 
 	FatalAppExitW (uAction,
@@ -466,5 +501,112 @@ FatalAppExitW (
 {
 	return;
 }
+
+
+DWORD
+STDCALL
+GetPriorityClass (
+	HANDLE	hProcess
+	)
+{
+	HANDLE		hProcessTmp;
+	DWORD		CsrPriorityClass;
+	NTSTATUS	Status;
+	
+	Status = NtDuplicateObject (
+			GetCurrentProcess(),
+			hProcess,
+			GetCurrentProcess(),
+			& hProcessTmp,
+			(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
+			FALSE,
+			0
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return (0); /* ERROR */
+	}
+	/* Ask CSRSS to set it */
+	CsrSetPriorityClass (
+		hProcessTmp,
+		& CsrPriorityClass
+		);
+	NtClose (hProcessTmp);
+	/* Translate CSR->W32 priorities */
+	switch (CsrPriorityClass)
+	{
+		case CSR_PRIORITY_CLASS_NORMAL:
+			return (NORMAL_PRIORITY_CLASS);	/* 32 */
+		case CSR_PRIORITY_CLASS_IDLE:
+			return (IDLE_PRIORITY_CLASS);	/* 64 */
+		case CSR_PRIORITY_CLASS_HIGH:
+			return (HIGH_PRIORITY_CLASS);	/* 128 */
+		case CSR_PRIORITY_CLASS_REALTIME:
+			return (REALTIME_PRIORITY_CLASS);	/* 256 */
+	}
+	SetLastError (ERROR_ACCESS_DENIED);
+	return (0); /* ERROR */
+}
+
+
+
+WINBOOL
+STDCALL
+SetPriorityClass (
+	HANDLE	hProcess,
+	DWORD	dwPriorityClass
+	)
+{
+	HANDLE		hProcessTmp;
+	DWORD		CsrPriorityClass;
+	NTSTATUS	Status;
+
+	switch (dwPriorityClass)
+	{
+		case NORMAL_PRIORITY_CLASS:	/* 32 */
+			CsrPriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+			break;
+		case IDLE_PRIORITY_CLASS:	/* 64 */
+			CsrPriorityClass = CSR_PRIORITY_CLASS_IDLE;
+			break;
+		case HIGH_PRIORITY_CLASS:	/* 128 */
+			CsrPriorityClass = CSR_PRIORITY_CLASS_HIGH;
+			break;
+		case REALTIME_PRIORITY_CLASS:	/* 256 */
+			CsrPriorityClass = CSR_PRIORITY_CLASS_REALTIME;
+			break;
+		default:
+			SetLastError (ERROR_INVALID_PARAMETER);
+			return (FALSE);
+	}
+	Status = NtDuplicateObject (
+			GetCurrentProcess(),
+			hProcess,
+			GetCurrentProcess(),
+			& hProcessTmp,
+			(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION),
+			FALSE,
+			0
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return (FALSE); /* ERROR */
+	}
+	/* Ask CSRSS to set it */
+	Status = CsrSetPriorityClass (
+			hProcessTmp,
+			& CsrPriorityClass
+			);
+	NtClose (hProcessTmp);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return (FALSE);
+	}
+	return (TRUE);
+}
+
 
 /* EOF */

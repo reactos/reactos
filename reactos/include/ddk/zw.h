@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.28 2000/04/03 21:54:34 dwelch Exp $
+/* $Id: zw.h,v 1.29 2000/04/25 23:22:49 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3379,19 +3379,19 @@ ZwQuerySystemEnvironmentValue(
 NTSTATUS
 STDCALL
 NtQuerySystemInformation(
-	IN CINT SystemInformationClass,
-	OUT PVOID SystemInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
+	OUT	PVOID				SystemInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ResultLength
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySystemInformation(
-	IN CINT SystemInformationClass,
-	OUT PVOID SystemInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
+	OUT	PVOID				SystemInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ResultLength
 	);
 
 /*
@@ -4450,17 +4450,17 @@ ZwSetSystemEnvironmentValue(
 NTSTATUS
 STDCALL
 NtSetSystemInformation(
-	IN CINT SystemInformationClass,
-	IN PVOID SystemInformation,
-	IN ULONG SystemInformationLength
+	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
+	IN	PVOID				SystemInformation,
+	IN	ULONG				SystemInformationLength
 	);
 
 NTSTATUS
 STDCALL
 ZwSetSystemInformation(
-	IN CINT SystemInformationClass,
-	IN PVOID SystemInformation,
-	IN ULONG SystemInformationLength
+	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
+	IN	PVOID				SystemInformation,
+	IN	ULONG				SystemInformationLength
 	);
 
 /*

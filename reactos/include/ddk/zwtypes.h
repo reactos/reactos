@@ -85,19 +85,590 @@
 #define EventBasicInformation			0
 
 // system information
+// {Nt|Zw}{Query|Set}SystemInformation
 
-#define SystemInformation0			0
-#define SystemInformation1			1
-#define SystemPerformanceInformation		2
-#define SystemTimeInformation			3
-#define SystemProcessInformation		5
-#define	SystemGlobalFlagInformation		9
-#define SystemDriverInformation			11
-#define SystemPageFileInformation		18
-#define SystemCacheInformation			21
-#define	SystemPoolTagStatsInformation		22
-#define SystemTimeAdjustmentInformation		28
-#define SystemTimeZoneInformation		44
+typedef
+enum _SYSTEM_INFORMATION_CLASS
+{
+	SystemInformationClassMin		= 0,
+	SystemBasicInformation			= 0,	/* Q */
+	SystemProcessorInformation		= 1,	/* Q */
+	SystemPerformanceInformation		= 2,	/* Q */
+	SystemTimeInformation			= 3,	/* Q */
+	SystemPathInformation			= 4,
+	SystemProcessInformation		= 5,	/* Q */
+	SystemServiceDescriptorTableInfo	= 6,	/* Q */
+	SystemIoConfigInformation		= 7,	/* Q */
+	SystemProcessorTimeInformation		= 8,	/* Q */
+	SystemNtGlobalFlagInformation		= 9,	/* QS */
+	SystemInformation10			= 10,
+	SystemModuleInformation			= 11,	/* Q */
+	SystemResourceLockInformation		= 12,	/* Q */
+	SystemInformation13			= 13,
+	SystemInformation14			= 14,
+	SystemInformation15			= 15,
+	SystemHandleInformation			= 16,	/* Q */
+	SystemObjectInformation			= 17,	/* Q */
+	SystemPageFileInformation		= 18,	/* Q */
+	SystemInstructionEmulationInfo		= 19,	/* Q */
+	SystemInformation20			= 20,
+	SystemCacheInformation			= 21,	/* QS */
+	SystemPoolTagInformation		= 22,	/* Q (checked build only) */
+	SystemProcessorScheduleInfo		= 23,	/* Q */
+	SystemDpcInformation			= 24,	/* QS */
+	SystemInformation25			= 25,
+	SystemLoadImage				= 26,	/* S (callable) */
+	SystemUnloadImage			= 27,	/* S (callable) */
+	SystemTimeAdjustmentInformation		= 28,	/* QS */
+	SystemInformation29			= 29,
+	SystemInformation30			= 30,
+	SystemInformation31			= 31,
+	SystemCrashDumpSectionInfo		= 32,	/* Q */
+	SystemProcessorFaultCountInfo		= 33,	/* Q */
+	SystemCrashDumpStateInfo		= 34,	/* Q */
+	SystemDebuggerInformation		= 35,	/* Q */
+	SystemThreadSwitchCountersInfo		= 36,	/* Q */
+	SystemQuotaInformation			= 37,	/* QS */
+	SystemLoadDriver			= 38,	/* S */
+	SystemPrioritySeparationInfo		= 39,	/* S */
+	SystemInformation40			= 40,
+	SystemInformation41			= 41,
+	SystemInformation42			= 42,
+	SystemInformation43			= 43,
+	SystemTimeZoneInformation		= 44,	/* QS */
+	SystemLookasideInformation		= 45,	/* Q */
+	SystemInformationClassMax
+
+} SYSTEM_INFORMATION_CLASS;
+
+// SystemBasicInformation (0)
+typedef
+struct _SYSTEM_BASIC_INFORMATION
+{
+	DWORD	AlwaysZero;
+	ULONG	KeMaximumIncrement;
+	ULONG	MmPageSize;
+	ULONG	MmNumberOfPhysicalPages;
+	ULONG	MmLowestPhysicalPage;
+	ULONG	MmHighestPhysicalPage;
+	PVOID	MmLowestUserAddress;
+	PVOID	MmLowestUserAddress1;
+	PVOID	MmHighestUserAddress;
+	DWORD	KeActiveProcessors;
+	USHORT	KeNumberProcessors;
+	
+} SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
+
+// SystemProcessorInformation (1)
+typedef
+struct _SYSTEM_PROCESSOR_INFORMATION
+{
+	USHORT	KeProcessorArchitecture;
+	USHORT	KeProcessorLevel;
+	USHORT	KeProcessorRevision;
+	USHORT	AlwaysZero;
+	DWORD	KeFeatureBits;
+
+} SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
+
+// SystemPerformanceInfo (2)
+typedef
+struct _SYSTEM_PERFORMANCE_INFO
+{
+	LARGE_INTEGER	TotalProcessorTime;
+	LARGE_INTEGER	IoReadTransferCount;
+	LARGE_INTEGER	IoWriteTransferCount;
+	LARGE_INTEGER	IoOtherTransferCount;
+	ULONG		IoReadOperationCount;
+	ULONG		IoWriteOperationCount;
+	ULONG		IoOtherOperationCount;
+	ULONG		MmAvailablePages;
+	ULONG		MmTotalCommitedPages;
+	ULONG		MmTotalCommitLimit;
+	ULONG		MmPeakLimit;
+	ULONG		PageFaults;
+	ULONG		WriteCopies;
+	ULONG		TransitionFaults;
+	ULONG		Unknown1;
+	ULONG		DemandZeroFaults;
+	ULONG		PagesInput;
+	ULONG		PagesRead;
+	ULONG		Unknown2;
+	ULONG		Unknown3;
+	ULONG		PagesOutput;
+	ULONG		PageWrites;
+	ULONG		Unknown4;
+	ULONG		Unknown5;
+	ULONG		PoolPagedBytes;
+	ULONG		PoolNonPagedBytes;
+	ULONG		Unknown6;
+	ULONG		Unknown7;
+	ULONG		Unknown8;
+	ULONG		Unknown9;
+	ULONG		MmTotalSystemFreePtes;
+	ULONG		MmSystemCodepage;
+	ULONG		MmTotalSystemDriverPages;
+	ULONG		MmTotalSystemCodePages;
+	ULONG		Unknown10;
+	ULONG		Unknown11;
+	ULONG		Unknown12;
+	ULONG		MmSystemCachePage;
+	ULONG		MmPagedPoolPage;
+	ULONG		MmSystemDriverPage;
+	ULONG		CcFastReadNoWait;
+	ULONG		CcFastReadWait;
+	ULONG		CcFastReadResourceMiss;
+	ULONG		CcFastReadNotPossible;
+	ULONG		CcFastMdlReadNoWait;
+	ULONG		CcFastMdlReadWait;
+	ULONG		CcFastMdlReadResourceMiss;
+	ULONG		CcFastMdlReadNotPossible;
+	ULONG		CcMapDataNoWait;
+	ULONG		CcMapDataWait;
+	ULONG		CcMapDataNoWaitMiss;
+	ULONG		CcMapDataWaitMiss;
+	ULONG		CcPinMappedDataCount;
+	ULONG		CcPinReadNoWait;
+	ULONG		CcPinReadWait;
+	ULONG		CcPinReadNoWaitMiss;
+	ULONG		CcPinReadWaitMiss;
+	ULONG		CcCopyReadNoWait;
+	ULONG		CcCopyReadWait;
+	ULONG		CcCopyReadNoWaitMiss;
+	ULONG		CcCopyReadWaitMiss;
+	ULONG		CcMdlReadNoWait;
+	ULONG		CcMdlReadWait;
+	ULONG		CcMdlReadNoWaitMiss;
+	ULONG		CcMdlReadWaitMiss;
+	ULONG		CcReadaheadIos;
+	ULONG		CcLazyWriteIos;
+	ULONG		CcLazyWritePages;
+	ULONG		CcDataFlushes;
+	ULONG		CcDataPages;
+	ULONG		ContextSwitches;
+	ULONG		Unknown13;
+	ULONG		Unknown14;
+	ULONG		SystemCalls;
+
+} SYSTEM_PERFORMANCE_INFO, *PSYSTEM_PERFORMANCE_INFO;
+
+// SystemTimeInformation (3)
+typedef
+struct _SYSTEM_TIME_INFORMATION
+{
+	TIME	KeBootTime;
+	TIME	KeSystemTime;
+	TIME	ExpTimeZoneBias;
+	ULONG	ExpTimeZoneId;
+	ULONG	Unused;
+	
+} SYSTEM_TIME_INFORMATION, *PSYSTEM_TIME_INFORMATION;
+
+// SystemPathInformation (4)
+// IT DOES NOT WORK
+typedef
+struct _SYSTEM_PATH_INFORMATION
+{
+	PVOID	Dummy;
+
+} SYSTEM_PATH_INFORMATION, * PSYSTEM_PATH_INFORMATION;
+
+// SystemProcessThreadInfo (5)
+typedef
+struct _SYSTEM_THREAD_INFORMATION
+{
+	TIME		KernelTime;
+	TIME		UserTime;
+	TIME		CreateTime;
+	ULONG		TickCount;
+	ULONG		StartEIP;
+	CLIENT_ID	ClientId;
+	ULONG		DynamicPriority;
+	ULONG		BasePriority;
+	ULONG		nSwitches;
+	DWORD		State;
+	KWAIT_REASON	WaitReason;
+	
+} SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+
+typedef
+struct SYSTEM_PROCESS_INFORMATION
+{
+	ULONG				RelativeOffset;
+	ULONG				ThreadCount;
+	ULONG				Unused1 [6];
+	TIME				CreateTime;
+	TIME				UserTime;
+	TIME				KernelTime;
+	UNICODE_STRING			Name;
+	ULONG				BasePriority;
+	ULONG				ProcessId;
+	ULONG				ParentProcessId;
+	ULONG				HandleCount;
+	ULONG				Unused2[2];
+	ULONG				PeakVirtualSizeBytes;
+	ULONG				TotalVirtualSizeBytes;
+	ULONG				PageFaultCount;
+	ULONG				PeakWorkingSetSizeBytes;
+	ULONG				TotalWorkingSetSizeBytes;
+	ULONG				PeakPagedPoolUsagePages;
+	ULONG				TotalPagedPoolUsagePages;
+	ULONG				PeakNonPagedPoolUsagePages;
+	ULONG				TotalNonPagedPoolUsagePages;
+	ULONG				TotalPageFileUsageBytes;
+	ULONG				PeakPageFileUsageBytes;
+	ULONG				TotalPrivateBytes;
+	SYSTEM_THREAD_INFORMATION	ThreadSysInfo [1];
+	
+} SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+
+// SystemServiceDescriptorTableInfo (6)
+typedef
+struct _SYSTEM_SDT_INFORMATION
+{
+	ULONG	BufferLength;
+	ULONG	NumberOfSystemServiceTables;
+	ULONG	NumberOfServices [1];
+	ULONG	ServiceCounters [1];
+
+} SYSTEM_SDT_INFORMATION, *PSYSTEM_SDT_INFORMATION;
+
+// SystemIoConfigInformation (7)
+typedef
+struct _SYSTEM_IOCONFIG_INFORMATION
+{
+	ULONG	DiskCount;
+	ULONG	FloppyCount;
+	ULONG	CdRomCount;
+	ULONG	TapeCount;
+	ULONG	SerialCount;
+	ULONG	ParallelCount;
+	
+} SYSTEM_IOCONFIG_INFORMATION, *PSYSTEM_IOCONFIG_INFORMATION;
+
+// SystemProcessorTimeInformation (8)
+typedef
+struct _SYSTEM_PROCESSORTIME_INFO
+{
+	TIME	TotalProcessorRunTime;
+	TIME	TotalProcessorTime;
+	TIME	TotalProcessorUserTime;
+	TIME	TotalDPCTime;
+	TIME	TotalInterruptTime;
+	ULONG	TotalInterrupts;
+	ULONG	Unused;
+	
+} SYSTEM_PROCESSORTIME_INFO, *PSYSTEM_PROCESSORTIME_INFO;
+
+// SystemNtGlobalFlagInformation (9)
+typedef
+struct _SYSTEM_GLOBAL_FLAG_INFO
+{
+	ULONG	NtGlobalFlag;
+
+} SYSTEM_GLOBAL_FLAG_INFO, * PSYSTEM_GLOBAL_FLAG_INFO;
+
+// SystemInformation10 (10)
+// UNKNOWN
+
+// SystemModuleInformation (11)
+typedef
+struct _SYSTEM_MODULE_ENTRY
+{
+	ULONG	Unused;
+	ULONG	Always0;
+	ULONG	ModuleBaseAddress;
+	ULONG	ModuleSize;
+	ULONG	Unknown;
+	ULONG	ModuleEntryIndex;
+	USHORT	ModuleNameLength; /* Length of module name not including the path, this field contains valid value only for NTOSKRNL module*/
+	USHORT	ModulePathLength; /* Length of 'directory path' part of modulename*/
+	CHAR	ModuleName [256];
+
+} SYSTEM_MODULE_ENTRY, * PSYSTEM_MODULE_ENTRY;
+
+typedef
+struct _SYSTEM_MODULE_INFORMATION
+{
+	ULONG			Count;
+	SYSTEM_MODULE_ENTRY	Module [1];
+	
+} SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
+
+// SystemResourceLockInformation (12)
+typedef
+struct _SYSTEM_RESOURCE_LOCK_ENTRY
+{
+	ULONG	ResourceAddress;
+	ULONG	Always1;
+	ULONG	Unknown;
+	ULONG	ActiveCount;
+	ULONG	ContentionCount;
+	ULONG	Unused[2];
+	ULONG	NumberOfSharedWaiters;
+	ULONG	NumberOfExclusiveWaiters;
+	
+} SYSTEM_RESOURCE_LOCK_ENTRY, *PSYSTEM_RESOURCE_LOCK_ENTRY;
+
+typedef
+struct _SYSTEM_RESOURCE_LOCK_INFO
+{
+	ULONG				Count;
+	SYSTEM_RESOURCE_LOCK_ENTRY	Lock [1];
+	
+} SYSTEM_RESOURCE_LOCK_INFO, *PSYSTEM_RESOURCE_LOCK_INFO;
+
+// SystemInformation13 (13)
+// UNKNOWN
+
+// SystemInformation14 (14)
+// UNKNOWN
+
+// SystemInformation15 (15)
+// UNKNOWN
+
+// SystemHandleInformation (16)
+typedef
+struct _SYSTEM_HANDLE_ENTRY
+{
+	ULONG	OwnerPid;
+	USHORT	ObjectType;
+	USHORT	HandleValue;
+	PVOID	ObjectPointer;
+	ULONG	AccessMask;
+	
+} SYSTEM_HANDLE_ENTRY, *PSYSTEM_HANDLE_ENTRY;
+
+typedef
+struct _SYSTEM_HANDLE_INFORMATION
+{
+	ULONG			Count;
+	SYSTEM_HANDLE_ENTRY	Handle [1];
+	
+} SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
+
+// SystemObjectInformation (17)
+// UNKNOWN
+typedef
+struct _SYSTEM_OBJECT_INFORMATION
+{
+	DWORD	Unknown;
+	/* FIXME */
+} SYSTEM_OBJECT_INFORMATION, *PSYSTEM_OBJECT_INFORMATION;
+
+// SystemPageFileInformation (18)
+typedef
+struct _SYSTEM_PAGEFILE_INFORMATION
+{
+	ULONG		RelativeOffset;
+	ULONG		CurrentSizePages;
+	ULONG		TotalUsedPages;
+	ULONG		PeakUsedPages;
+	UNICODE_STRING	PagefileFileName;
+	
+} SYSTEM_PAGEFILE_INFORMATION, *PSYSTEM_PAGEFILE_INFORMATION;
+
+// SystemInstructionEmulationInfo (19)
+typedef
+struct _SYSTEM_VDM_INFORMATION
+{
+	ULONG VdmSegmentNotPresentCount;
+	ULONG VdmINSWCount;
+	ULONG VdmESPREFIXCount;
+	ULONG VdmCSPREFIXCount;
+	ULONG VdmSSPREFIXCount;
+	ULONG VdmDSPREFIXCount;
+	ULONG VdmFSPREFIXCount;
+	ULONG VdmGSPREFIXCount;
+	ULONG VdmOPER32PREFIXCount;
+	ULONG VdmADDR32PREFIXCount;
+	ULONG VdmINSBCount;
+	ULONG VdmINSWV86Count;
+	ULONG VdmOUTSBCount;
+	ULONG VdmOUTSWCount;
+	ULONG VdmPUSHFCount;
+	ULONG VdmPOPFCount;
+	ULONG VdmINTNNCount;
+	ULONG VdmINTOCount;
+	ULONG VdmIRETCount;
+	ULONG VdmINBIMMCount;
+	ULONG VdmINWIMMCount;
+	ULONG VdmOUTBIMMCount;
+	ULONG VdmOUTWIMMCount;
+	ULONG VdmINBCount;
+	ULONG VdmINWCount;
+	ULONG VdmOUTBCount;
+	ULONG VdmOUTWCount;
+	ULONG VdmLOCKPREFIXCount;
+	ULONG VdmREPNEPREFIXCount;
+	ULONG VdmREPPREFIXCount;
+	ULONG VdmHLTCount;
+	ULONG VdmCLICount;
+	ULONG VdmSTICount;
+	ULONG VdmBopCount;
+
+} SYSTEM_VDM_INFORMATION, *PSYSTEM_VDM_INFORMATION;
+
+// SystemInformation20 (20)
+// UNKNOWN
+
+// SystemCacheInformation (21)
+typedef
+struct _SYSTEM_CACHE_INFORMATION
+{
+	ULONG	CurrentSize;
+	ULONG	PeakSize;
+	ULONG	PageFaultCount;
+	ULONG	MinimumWorkingSet;
+	ULONG	MaximumWorkingSet;
+	ULONG	Unused[4];
+
+} SYSTEM_CACHE_INFORMATION;
+
+// SystemPoolTagInformation (22)
+// found by Klaus P. Gerlicher
+// (implemented only in checked builds)
+typedef
+struct _POOL_TAG_STATS
+{
+	ULONG AllocationCount;
+	ULONG FreeCount;
+	ULONG SizeBytes;
+	
+} POOL_TAG_STATS;
+
+typedef
+struct _SYSTEM_POOL_TAG_ENTRY
+{
+	ULONG		Tag;
+	POOL_TAG_STATS	Paged;
+	POOL_TAG_STATS	NonPaged;
+
+} SYSTEM_POOL_TAG_ENTRY, * PSYSTEM_POOL_TAG_ENTRY;
+
+typedef
+struct _SYSTEM_POOL_TAG_INFO
+{
+	ULONG			Count;
+	SYSTEM_POOL_TAG_ENTRY	PoolEntry [1];
+    
+} SYSTEM_POOL_TAG_INFO, *PSYSTEM_POOL_TAG_INFO;
+
+// SystemProcessorScheduleInfo (23)
+typedef
+struct _SYSTEM_PROCESSOR_SCHEDULE_INFO
+{
+	ULONG nContextSwitches;
+	ULONG nDPCQueued;
+	ULONG nDPCRate;
+	ULONG TimerResolution;
+	ULONG nDPCBypasses;
+	ULONG nAPCBypasses;
+	
+} SYSTEM_PROCESSOR_SCHEDULE_INFO, *PSYSTEM_PROCESSOR_SCHEDULE_INFO;
+
+// SystemDpcInformation (24)
+typedef
+struct _SYSTEM_DPC_INFORMATION
+{
+	ULONG	Unused;
+	ULONG	KiMaximumDpcQueueDepth;
+	ULONG	KiMinimumDpcRate;
+	ULONG	KiAdjustDpcThreshold;
+	ULONG	KiIdealDpcRate;
+
+} SYSTEM_DPC_INFORMATION, *PSYSTEM_DPC_INFORMATION;
+
+// SystemInformation25 (25)
+// UNKNOWN
+
+// SystemLoadImage (26)
+typedef
+struct _SYSTEM_IMAGE_LOAD
+{
+	UNICODE_STRING	ModuleFileName		IN;
+	PVOID		BaseAddress		OUT;
+	PVOID		Section			OUT;
+	PVOID		EntryPoint		OUT;
+	PVOID		ExportDirectory		OUT;
+	
+} SYSTEM_IMAGE_LOAD, *PSYSTEM_IMAGE_LOAD;
+
+// SystemUnloadImage (27)
+typedef
+struct _SYSTEM_IMAGE_UNLOAD
+{
+	PVOID	Section	IN; /* see SYSTEM_IMAGE_LOAD.ModuleSection */
+
+} SYSTEM_IMAGE_UNLOAD, *PSYSTEM_IMAGE_UNLOAD;
+
+
+// SystemTimeAdjustmentInformation (28)
+// (what is the right one?)
+#if 0
+typedef
+struct _SYSTEM_TIME_ADJUSTMENT_INFO
+{
+	TIME	TimeAdjustment;
+	BOOL	TimeAdjustmentDisabled;
+
+} SYSTEM_TIME_ADJUSTMENT_INFO, *PSYSTEM_TIME_ADJUSTMENT_INFO;
+#else
+typedef
+struct _SYSTEM_TIME_ADJUSTMENT_INFO
+{
+	ULONG	KeTimeAdjustment;
+	ULONG	KeMaximumIncrement;
+	BOOLEAN	KeTimeSynchronization;
+	
+} SYSTEM_TIME_ADJUSTMENT_INFO, *PSYSTEM_TIME_ADJUSTMENT_INFO;
+#endif
+
+// SystemProcessorFaultCountInfo (33)
+typedef
+struct _SYSTEM_PROCESSOR_FAULT_INFO
+{
+	ULONG	nAlignmentFixup;
+	ULONG	nExceptionDispatches;
+	ULONG	nFloatingEmulation;
+	ULONG	Unknown;
+	
+} SYSTEM_PROCESSOR_FAULT_INFO, *PSYSTEM_PROCESSOR_FAULT_INFO;
+
+// SystemCrashDumpStateInfo (34)
+//
+
+// SystemDebuggerInformation (35)
+typedef
+struct _SYSTEM_DEBUGGER_INFO
+{
+	BOOLEAN	KdDebuggerEnabled;
+	BOOLEAN	KdDebuggerPresent;
+	
+} SYSTEM_DEBUGGER_INFO, *PSYSTEM_DEBUGGER_INFO;
+
+// SystemInformation36 (36)
+// UNKNOWN
+
+// SystemQuotaInformation (37)
+typedef
+struct _SYSTEM_QUOTA_INFORMATION
+{
+	ULONG	CmpGlobalQuota;
+	ULONG	CmpGlobalQuotaUsed;
+	ULONG	MmSizeofPagedPoolInBytes;
+	
+} SYSTEM_QUOTA_INFORMATION, *PSYSTEM_QUOTA_INFORMATION;
+
+// SystemLoadDriver (38)
+typedef
+struct _SYSTEM_DRIVER_LOAD
+{
+	UNICODE_STRING	DriverRegistryEntry;
+	
+} SYSTEM_DRIVER_LOAD, *PSYSTEM_DRIVER_LOAD;
+
+
 
 // memory information
 
@@ -263,168 +834,6 @@ typedef struct _OBJECT_TYPE_INFORMATION
 	ULONG TotalHandles;
 	ULONG ReferenceCount;
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
-
-// system information
-
-#if 0
-#pragma pack(2)
-typedef struct _SYSTEM_THREAD_INFORMATION
-{
-	FILETIME	ftCreationTime;
-	DWORD		dwUnknown1;
-	PVOID		dwStartAddress;
-	DWORD		dwOwningPID;
-	DWORD		dwThreadID;
-	DWORD		dwCurrentPriority;
-	DWORD		dwBasePriority;
-	DWORD		dwContextSwitches;
-	DWORD		dwThreadState;
-	DWORD		dwWaitReason;
-	DWORD		dwUnknown2 [ 5 ];
-	
-	
-} SYSTEM_THREAD_INFORMATION, * PSYSTEM_THREAD_INFORMATION;
-
-
-typedef struct _SYSTEM_PROCESS_INFORMATION
-{
-	DWORD				dwOffset;
-	DWORD				dwThreadCount;
-	DWORD 				dwUnknown1 [6];
-	FILETIME			ftCreationTime;
-	DWORD				dwUnknown2 [5];
-	WCHAR				* pszProcessName;
-	DWORD				dwBasePriority;
-	DWORD				dwProcessID;
-	DWORD				dwParentProcessID;
-	DWORD				dwHandleCount;
-	DWORD				dwUnknown3;
-	DWORD				dwUnknown4;
-	DWORD				dwVirtualBytesPeak;
-	DWORD				dwVirtualBytes;
-	DWORD				dwPageFaults;
-	DWORD				dwWorkingSetPeak;
-	DWORD				dwWorkingSet;
-	DWORD				dwUnknown5;
-	DWORD				dwPagedPool;
-	DWORD				dwUnknown6;
-	DWORD				dwNonPagedPool;
-	DWORD				dwPageFileBytesPeak;
-	DWORD				dwPrivateBytes;
-	DWORD				dwPageFileBytes;
-	DWORD				dwUnknown7 [4];
-	SYSTEM_THREAD_INFORMATION	Threads [1];
-
-} SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
-#endif
-
-typedef struct _SYSTEM_TIME_INFORMATION
-{
-	LARGE_INTEGER	BootTime;
-	LARGE_INTEGER	SystemTime;
-	LARGE_INTEGER	TimeZoneBias;
-	ULONG		TimeZoneId;
-	ULONG		Unknown;
-} SYSTEM_TIME_INFORMATION, *PSYSTEM_TIME_INFORMATION;
-
-typedef struct _SYSTEM_GLOBAL_FLAGS_INFO
-{
-	DWORD	GlobalFlags;
-
-} SYSTEM_GLOBAL_FLAGS_INFO, * PSYSTEM_GLOBAL_FLAGS_INFO;
-
-#if 0
-#pragma pack(4)
-typedef struct _SYSTEM_DRIVER_INFO
-{
-	PVOID BaseAddress;
-	DWORD Unknown1;
-	DWORD Unknown2;
-	DWORD EntryIndex;
-	DWORD Unknown4;
-	CHAR  DriverName [256];
-
-} SYSTEM_DRIVER_INFO, * PSYSTEM_DRIVER_INFO;
-
-
-typedef struct _SYSTEM_DRIVERS_INFO
-{
-	DWORD DriverCount;
-	SYSTEM_DRIVER_INFO DriverInfo[1];
-} SYSTEM_DRIVERS_INFO, *PSYSTEM_DRIVERS_INFO;
-
-#pragma pack(4)
-typedef struct _SYSTEM_TIME_ADJUSTMENT
-{
-	TIME	TimeAdjustment;
-	BOOL	TimeAdjustmentDisabled;
-
-} SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
-
-typedef struct _SYSTEM_CONFIGURATION_INFO {
-	union {
-		ULONG  	OemId; 
-		struct { 
-			WORD ProcessorArchitecture; 
-			WORD Reserved; 
-		} tag1; 
-	} tag2; 
-	ULONG  PageSize; 
-	PVOID  MinimumApplicationAddress; 
-	PVOID  MaximumApplicationAddress; 
-	ULONG  ActiveProcessorMask; 
-	ULONG  NumberOfProcessors; 
-	ULONG  ProcessorType; 
-	ULONG  AllocationGranularity; 
-	WORD   ProcessorLevel; 
-	WORD   ProcessorRevision; 
-} SYSTEM_CONFIGURATION_INFO, *PSYSTEM_CONFIGURATION_INFO; 
-
-
-typedef struct _SYSTEM_PAGEFILE_INFORMATION
-{
-	DWORD	Unknown [6];
-	WCHAR	PagefileName [16];
-
-} SYSTEM_PAGEFILE_INFORMATION, * PSYSTEM_PAGEFILE_INFORMATION;
-
-
-typedef struct _SYSTEM_CACHE_INFORMATION
-{
-	ULONG	CurrentSize;
-	ULONG	PeakSize;
-	ULONG	PageFaultCount;
-	ULONG	MinimumWorkingSet;
-	ULONG	MaximumWorkingSet;
-	ULONG	Unused[4];
-} SYSTEM_CACHE_INFORMATION;
-
-
-/* SYSTEM_POOL_ENTRY_INFO, SYSTEM_POOL_INFORMATION
- * found by Klaus P. Gerlicher */
-typedef
-struct _SYSTEM_POOL_ENTRY_INFO
-{
-	ULONG	Tag;
-	ULONG	NP_Allocs;
-	ULONG	NP_Frees;
-	ULONG	NP_Used;
-	ULONG	P_Allocs;
-	ULONG	P_Frees;
-	ULONG	P_Used;
-
-} SYSTEM_POOL_ENTRY_INFO, * PSYSTEM_POOL_ENTRY_INFO;
-
-
-typedef
-struct _SYSTEM_POOL_INFORMATION
-{
-	ULONG			Count;
-	SYSTEM_POOL_ENTRY_INFO	PoolEntry [1];
-    
-} SYSTEM_POOL_INFORMATION, *PSYSTEM_POOL_INFORMATION;
-
-#endif
 
 // file information
 

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+/* $Id: shutdown.c,v 1.2 2000/04/25 23:22:57 ea Exp $
  * 
  * EAU shutdown.c 1.4.1
  * 
@@ -33,6 +33,11 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include "win32err.h"
+
+#ifndef SE_PRIVILEGE_ENABLED
+#define NTOS_MODE_USER
+#include <ntos.h>
+#endif
 
 
 struct _EWX 

@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.8 2000/04/20 05:28:31 phreak Exp $
+/* $Id: critical.c,v 1.9 2000/04/25 23:22:55 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,6 +13,9 @@
 #include <windows.h>
 
 #include <kernel32/kernel32.h>
+
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 /* FUNCTIONS *****************************************************************/
 

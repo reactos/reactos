@@ -1,6 +1,6 @@
 //======================================================================
 //
-// $Id: chkdsk.c,v 1.2 2000/02/29 23:57:46 ea Exp $
+// $Id: chkdsk.c,v 1.3 2000/04/25 23:22:57 ea Exp $
 //
 // Chkdskx
 //
@@ -63,7 +63,7 @@ WCHAR	CurrentDirectory[1024];
 //
 // FMIFS function
 //
-//PCHKDSK   ChkDsk;
+//PCHKDSK   Chkdsk;
 #endif /* ndef FMIFS_IMPORT_DLL */
 
 
@@ -306,7 +306,7 @@ LoadFMIFSEntryPoints(VOID)
 {
 	LoadLibraryW( L"fmifs.dll" );
 
-	if( !(ChkDsk =
+	if( !(Chkdsk =
 		(void *) GetProcAddress(
 			GetModuleHandleW(L"fmifs.dll"),
 			"Chkdsk" ))
@@ -459,7 +459,7 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 		L"The type of file system is %s.\n",
 		fileSystem
 		);
-	ChkDsk(
+	Chkdsk(
 		Drive,
 		fileSystem,
 		FixErrors,

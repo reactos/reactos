@@ -64,6 +64,7 @@ endif
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
 CFLAGS = \
+	$(BASE_CFLAGS) \
 	-pipe \
 	-O2 \
 	-Wall \

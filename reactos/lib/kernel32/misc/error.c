@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.12 1999/10/07 23:45:07 ekohl Exp $
+/* $Id: error.c,v 1.13 2000/04/25 23:22:53 ea Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -8,9 +8,20 @@
 
 // #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
-static DWORD LastError=0;
+/* INTERNAL */
+DWORD
+STDCALL
+SetLastErrorByStatus (
+	NTSTATUS	Status
+	)
+{
+	DWORD	Error =	RtlNtStatusToDosError (Status);
+	SetLastError (Error);
+	return (Error);
+}
 
 
 VOID
@@ -19,16 +30,14 @@ SetLastError (
 	DWORD	dwErrorCode
 	)
 {
-	/* FIXME: it is per thread */
-	LastError = dwErrorCode;
+	NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrorCode;
 }
 
 DWORD
 STDCALL
 GetLastError (VOID)
 {
-	/* FIXME: it is per thread */
-	return LastError;
+	return (DWORD) (NtCurrentTeb ()->LastErrorValue);
 }
 
 

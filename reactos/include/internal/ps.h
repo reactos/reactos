@@ -55,7 +55,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 #define PROCESS_PRIO_NORMAL			8
 #define PROCESS_PRIO_HIGH			13
 #define PROCESS_PRIO_RT				18
-     
+
 /*
  * Functions the HAL must provide
  */

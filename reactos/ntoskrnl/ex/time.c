@@ -1,4 +1,5 @@
-/*
+/* $Id: time.c,v 1.9 2000/04/25 23:22:56 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            kernel/excutive/time.c
@@ -22,7 +23,7 @@
 /* GLOBALS ******************************************************************/
 
 /* Note: Bias[minutes] = UTC - local time */
-TIME_ZONE_INFORMATION SystemTimeZoneInfo;
+TIME_ZONE_INFORMATION _SystemTimeZoneInfo;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -31,7 +32,7 @@ VOID
 ExInitTimeZoneInfo (VOID)
 {
   /* Initialize system time zone information */
-  memset (&SystemTimeZoneInfo, 0, sizeof(TIME_ZONE_INFORMATION));
+  memset (& _SystemTimeZoneInfo, 0, sizeof(TIME_ZONE_INFORMATION));
 
   /* FIXME: Read time zone information from the registry */
 
@@ -69,7 +70,7 @@ ExLocalTimeToSystemTime (
 	)
 {
    SystemTime->QuadPart = LocalTime->QuadPart +
-                          SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
+                          _SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
 }
 
 
@@ -80,7 +81,7 @@ ExSystemTimeToLocalTime (
 	)
 {
    LocalTime->QuadPart = SystemTime->QuadPart -
-                         SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
+                         _SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
 }
 
 /* EOF */

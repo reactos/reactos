@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.5 2000/04/03 21:54:36 dwelch Exp $
+/* $Id: api.c,v 1.6 2000/04/25 23:22:55 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
 #include <string.h>
+#include <internal/ps.h>
 
 #include <csrss/csrss.h>
 
@@ -83,3 +84,19 @@ NTSTATUS STDCALL CsrClientConnectToServer(VOID)
      }
    return(STATUS_SUCCESS);
 }
+
+
+NTSTATUS
+STDCALL
+CsrSetPriorityClass (
+	HANDLE	hProcess,
+	DWORD	* PriorityClass
+	)
+{
+	/* FIXME: call csrss to get hProcess' priority */
+	*PriorityClass = PS_PRIORITY_CLASS_NORMAL;
+
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+/* EOF */

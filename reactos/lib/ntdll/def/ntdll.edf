@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.41 2000/04/15 23:10:02 ekohl Exp $
+; $Id: ntdll.edf,v 1.42 2000/04/25 23:22:56 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -7,6 +7,7 @@ LIBRARY ntdll.dll
 EXPORTS
 CsrClientCallServer=CsrClientCallServer@16
 ;CsrClientConnectToServer=CsrClientConnectToServer@24
+CsrSetPriorityClass=CsrSetPriorityClass@8
 DbgBreakPoint=DbgBreakPoint@0
 DbgPrint
 ;DbgPrompt

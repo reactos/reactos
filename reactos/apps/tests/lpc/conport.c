@@ -1,4 +1,4 @@
-/* $Id: conport.c,v 1.5 1999/07/17 23:10:12 ea Exp $
+/* $Id: conport.c,v 1.6 2000/04/25 23:22:46 ea Exp $
  *
  * reactos/apps/lpc/conport.c
  *
@@ -107,14 +107,14 @@ TryConnectPort(char *port_name)
 	 */
 	Port = 0;
 	Status = ConnectPort(
-			& Port,
-			& PortName,
-			& ObjectAttributes,
-			0,
-			0,
-			0,
-			0,
-			LPC_CONNECT_FLAG5
+			& Port,			/* & PortHandle */
+			& PortName,		/* & PortName */
+			& ObjectAttributes,	/* & PortAttributes */
+			NULL,			/* & SecurityQos */
+			NULL,			/* & SectionInfo */
+			NULL,			/* & MapInfo */
+			NULL,			/* & MaxMessageSize */
+			LPC_CONNECT_FLAG5	/* & ConnectInfoLength */
 			);
 	if (Status == STATUS_SUCCESS)
 	{

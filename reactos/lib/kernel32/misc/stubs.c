@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.14 2000/04/14 01:49:40 ekohl Exp $
+/* $Id: stubs.c,v 1.15 2000/04/25 23:22:54 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1691,18 +1691,6 @@ GetOEMCP (VOID)
 }
 
 
-DWORD
-STDCALL
-GetPriorityClass (
-	HANDLE	hProcess
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return NORMAL_PRIORITY_CLASS; /* FIXME: call NTOSKRNL.Ps */
-}
-
-
-
 UINT
 STDCALL
 GetPrivateProfileIntW (
@@ -2070,40 +2058,6 @@ GetSystemDefaultLangID (VOID)
 		LANG_ENGLISH,
 		SUBLANG_ENGLISH_US
 		);
-}
-
-
-VOID
-STDCALL
-GetSystemInfo (
-	LPSYSTEM_INFO	lpSystemInfo
-	)
-{
-	/* FIXME: ??? */
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-	lpSystemInfo->u.s.wProcessorArchitecture = 
-		PROCESSOR_ARCHITECTURE_INTEL;
-	lpSystemInfo->u.s.wReserved = 
-		0;
-	lpSystemInfo->dwPageSize = 
-		4096; /* FIXME: x86 default; may be 4Mb  */
-	lpSystemInfo->lpMinimumApplicationAddress = 
-		(PVOID) 0x00010000; /* ? */
-	lpSystemInfo->lpMaximumApplicationAddress = 
-		(PVOID) 0x00010000; /* ? */
-	lpSystemInfo->dwActiveProcessorMask = 
-		0x00000001;
-	lpSystemInfo->dwNumberOfProcessors = 
-		1; /* ReactOS is UP for now! */
-	lpSystemInfo->dwProcessorType = 
-		PROCESSOR_INTEL_PENTIUM;
-	lpSystemInfo->dwAllocationGranularity = 
-		65536; /* hard coded on Intel? */
-	lpSystemInfo->wProcessorLevel = 
-		5; /* from cpuid on Intel? */
-	lpSystemInfo->wProcessorRevision = 
-		0x0000; /* from cpuid on Intel? */
 }
 
 
@@ -3501,18 +3455,6 @@ SetNamedPipeHandleState (
 	LPDWORD	lpMode,
 	LPDWORD	lpMaxCollectionCount,
 	LPDWORD	lpCollectDataTimeout
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetPriorityClass (
-	HANDLE	hProcess,
-	DWORD	dwPriorityClass
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -1,9 +1,9 @@
-/* $Id: dllmain.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: dllmain.c,v 1.2 2000/04/25 23:22:53 ea Exp $
  * 
  * ReactOS FMIFS.DLL
  */
 #include <windows.h>
-INT
+BOOLEAN
 __stdcall
 DllMain(
 	PVOID	hinstDll,
@@ -22,6 +22,6 @@ DllMain(
 		case DLL_PROCESS_DETACH:
 			break;
 	}
-	return(1);
+	return (TRUE);
 }
 /* EOF */

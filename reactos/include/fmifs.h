@@ -1,6 +1,6 @@
 #ifndef _FMIFS_H
 #define _FMIFS_H
-/* $Id: fmifs.h,v 1.1 1999/05/11 21:16:01 ea Exp $
+/* $Id: fmifs.h,v 1.2 2000/04/25 23:22:48 ea Exp $
  *
  * fmifs.h
  *
@@ -67,7 +67,7 @@ BOOL
 /* Chkdsk command in FMIFS */
 VOID
 STDCALL
-ChkDsk(
+Chkdsk(
 	PWCHAR		DriveRoot, 
 	PWCHAR		Format,
 	BOOL		CorrectErrors, 
