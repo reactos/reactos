@@ -723,7 +723,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       /* Read is complete; flush & free adapter channel */
       IoFlushAdapterBuffers(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress, 
 			    DriveInfo->ControllerInfo->MapRegisterBase, 
-			    MmGetMdlVirtualAddress(Irp->MdlAddress),
+			    (PVOID)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset),
 			    CurrentTransferBytes, WriteToDevice);
 
       /* Read the results from the drive */
