@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.84 2004/09/21 19:17:26 weiden Exp $
+/* $Id: stubs.c,v 1.85 2004/09/21 21:53:45 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -808,20 +808,6 @@ STDCALL
 GetNumaProcessorNode(
     UCHAR Processor,
     PUCHAR NodeNumber
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetProcessHandleCount(
-    HANDLE hProcess,
-    PDWORD pdwHandleCount
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

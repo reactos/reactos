@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.66 2004/09/19 14:36:47 weiden Exp $
+/* $Id: proc.c,v 1.67 2004/09/21 21:53:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -938,6 +938,33 @@ SetProcessPriorityBoost(HANDLE hProcess,
     }
 
   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetProcessHandleCount(HANDLE hProcess,
+                      PDWORD pdwHandleCount)
+{
+    ULONG phc, BytesWritten;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessHandleCount,
+                                       &phc,
+                                       sizeof(ULONG),
+                                       &BytesWritten);
+    if(NT_SUCCESS(Status))
+    {
+      *pdwHandleCount = ProcessHandleCount;
+      return TRUE;
+    }
+
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /* EOF */
