@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.147 2004/04/10 22:35:26 gdalsnes Exp $
+/* $Id: section.c,v 1.148 2004/05/01 00:25:41 tamlin Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2041,6 +2041,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
       Info->Type = MEM_MAPPED;
    }
 
+   *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
    return(STATUS_SUCCESS);
 }
 
