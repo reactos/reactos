@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.24 2004/03/14 17:10:48 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.25 2004/03/18 16:43:56 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -165,7 +165,7 @@ IoGetDeviceProperty(
     return STATUS_BUFFER_TOO_SMALL;
   RtlCopyMemory(PropertyBuffer, Data, Length);
 
-  return STATUS_NOT_IMPLEMENTED;
+  return STATUS_SUCCESS;
 }
 
 /*
