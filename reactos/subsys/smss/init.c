@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.36 2002/05/24 18:07:56 ekohl Exp $
+/* $Id: init.c,v 1.37 2002/05/27 18:24:44 hbirr Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -397,15 +397,20 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
       return(STATUS_SUCCESS);
     }
 
-  RtlInitUnicodeString(&FileName,
-		       (PWSTR)ValueData);
-
   /*
    * FIXME:
    *  read initial and maximum size from the registry or use default values
    *
    * Format: "<path>[ <initial_size>[ <maximum_size>]]"
    */
+
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData, 
+	                                 &FileName,
+									 NULL,
+									 NULL))
+  {
+	  return (STATUS_SUCCESS);
+  }
 
   InitialSize.QuadPart = 50 * 4096;
   MaximumSize.QuadPart = 80 * 4096;
@@ -414,6 +419,8 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
 			      &InitialSize,
 			      &MaximumSize,
 			      0);
+
+  RtlFreeUnicodeString(&FileName);
 
   return(STATUS_SUCCESS);
 }
