@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.3 2002/09/08 10:23:12 chorns Exp $
+/* $Id: messagebox.c,v 1.4 2003/03/16 17:01:45 ea Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -42,7 +42,7 @@ MessageBoxA(
   LPCSTR lpCaption,
   UINT uType)
 {
-  return 0;
+  return MessageBoxExA(hWnd, lpText, lpCaption, uType, 0);
 }
 
 int
@@ -93,5 +93,6 @@ MessageBoxW(
   LPCWSTR lpCaption,
   UINT uType)
 {
-  return 0;
+  return MessageBoxExW(hWnd, lpText, lpCaption, uType, 0);
 }
+/* EOF */
