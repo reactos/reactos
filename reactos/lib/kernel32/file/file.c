@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.24 2000/10/01 19:54:57 ekohl Exp $
+/* $Id: file.c,v 1.25 2001/03/02 15:45:31 cnettel Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -691,9 +691,9 @@ WINBOOL STDCALL GetFileTime(HANDLE hFile,
 	return FALSE;
      }
 
-   memcpy(lpCreationTime,&FileBasic.CreationTime,sizeof(FILETIME));
-   memcpy(lpLastAccessTime,&FileBasic.LastAccessTime,sizeof(FILETIME));
-   memcpy(lpLastWriteTime,&FileBasic.LastWriteTime,sizeof(FILETIME));
+   if (lpCreationTime) memcpy(lpCreationTime,&FileBasic.CreationTime,sizeof(FILETIME));
+   if (lpLastAccessTime) memcpy(lpLastAccessTime,&FileBasic.LastAccessTime,sizeof(FILETIME));
+   if (lpLastWriteTime) memcpy(lpLastWriteTime,&FileBasic.LastWriteTime,sizeof(FILETIME));
 
    return TRUE;
 }
