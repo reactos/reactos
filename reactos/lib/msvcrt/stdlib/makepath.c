@@ -41,7 +41,7 @@ void _wmakepath(wchar_t *path, const wchar_t *drive, const wchar_t *dir, const w
   if ((drive != NULL) && (*drive))
     {
       wcscpy(path, drive);
-      wcscat(path, ":");
+      wcscat(path, L":");
     }
   else
     (*path)=0;
@@ -50,8 +50,8 @@ void _wmakepath(wchar_t *path, const wchar_t *drive, const wchar_t *dir, const w
     {
       wcscat(path, dir);
       dir_len = wcslen(dir);
-      if (dir_len && *(dir + dir_len - 1) != '\\')
-	wcscat(path, "\\");
+      if (dir_len && *(dir + dir_len - 1) != L'\\')
+	wcscat(path, L"\\");
     }
 
   if (fname != NULL)
@@ -59,8 +59,8 @@ void _wmakepath(wchar_t *path, const wchar_t *drive, const wchar_t *dir, const w
       wcscat(path, fname);
       if (ext != NULL)
 	{
-	  if (*ext != '.')
-	    wcscat(path, ".");
+	  if (*ext != L'.')
+	    wcscat(path, L".");
 	  wcscat(path, ext);
 	}
     }
