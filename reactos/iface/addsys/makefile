@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2000/06/04 17:14:25 ekohl Exp $
+# $Id: makefile,v 1.5 2000/06/17 23:58:53 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -12,9 +12,9 @@ SVC_DB=w32ksvc.db
 SVC_MASK=0x1000
 
 ifeq ($(DOSCLI),yes)
-SVC_SERVICE_TABLE_PATH=..\..\subsys\win32k\main\
-SVC_GDI_STUBS_PATH=..\..\lib\gdi32\misc\
-SVC_USER_STUBS_PATH=..\..\lib\user32\misc\
+SVC_SERVICE_TABLE_PATH=..\..\subsys\win32k\main\\
+SVC_GDI_STUBS_PATH=..\..\lib\gdi32\misc\\
+SVC_USER_STUBS_PATH=..\..\lib\user32\misc\\
 else
 SVC_SERVICE_TABLE_PATH=../../subsys/win32k/main/
 SVC_GDI_STUBS_PATH=../../lib/gdi32/misc/
@@ -45,7 +45,7 @@ $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c
 #		$(SVC_CLIENT_STUBS) \
 #		$(SVC_SERVICE_TABLE)
 
-$(SVC_FILES): $(SVC_DB) $(TARGETNAME)$(EXE_POSTFIX) 
+$(SVC_FILES): $(SVC_DB) $(TARGETNAME)$(EXE_POSTFIX)
 	./$(TARGETNAME)$(EXE_POSTFIX) \
 		$(SVC_DB) \
 		$(SVC_SERVICE_TABLE) \

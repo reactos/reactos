@@ -111,5 +111,6 @@ ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);
 VOID ObCloseAllHandles(PEPROCESS Process);
 VOID ObDeleteHandleTable(PEPROCESS Process);
+PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
