@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resources.h,v 1.1 2004/10/08 11:52:30 ekohl Exp $ 
+/* $Id: resources.h,v 1.2 2004/10/13 18:14:07 gvg Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -48,5 +48,6 @@
 #define IDS_CACHE          21
 #define IDS_HISTORY        22
 #define IDS_COOKIES        23
+#define IDS_PROGRAMFILES   24
 
 /* EOF */

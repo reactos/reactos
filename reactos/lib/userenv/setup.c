@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.11 2004/10/10 18:28:05 ekohl Exp $ 
+/* $Id: setup.c,v 1.12 2004/10/13 18:14:07 gvg Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -539,6 +539,62 @@ InitializeProfiles (VOID)
     }
 
   RegCloseKey(hKey);
+
+  /* Load 'Program Files' location */
+  if (!LoadString(hInstance,
+		  IDS_PROGRAMFILES,
+		  szBuffer,
+		  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szBuffer,
+				  szProfilesPath,
+				  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Store it */
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  dwLength = (wcslen (szProfilesPath) + 1) * sizeof(WCHAR);
+  if (RegSetValueExW (hKey,
+		      L"ProgramFilesDir",
+		      0,
+		      REG_SZ,
+		      (LPBYTE)szProfilesPath,
+		      dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  /* Create directory */
+  if (!CreateDirectoryW (szProfilesPath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DPRINT1("Error: %lu\n", GetLastError());
+	  return FALSE;
+	}
+    }
 
 
   DPRINT("Success\n");
