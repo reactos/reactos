@@ -1,7 +1,8 @@
-; $Id: scsiport.def,v 1.1 2001/07/21 07:30:26 ekohl Exp $
+; $Id: scsiport.def,v 1.2 2001/07/23 06:13:48 ekohl Exp $
 ;
 ; scsiport.def - export definition file for scsiport driver
 ;
+LIBRARY SCSIPORT.SYS
 EXPORTS
 ScsiDebugPrint
 ScsiPortCompleteRequest@20

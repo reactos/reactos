@@ -1,0 +1,29 @@
+; $Id: class2.edf,v 1.1 2001/07/23 06:12:07 ekohl Exp $
+;
+; class2.edf - export definition file for scsi class driver
+;
+LIBRARY CLASS2.SYS
+EXPORTS
+ScsiClassAsynchronousCompletion=ScsiClassAsynchronousCompletion@12
+ScsiClassBuildRequest=ScsiClassBuildRequest@8
+ScsiClassClaimDevice=ScsiClassClaimDevice@16
+ScsiClassCreateDeviceObject=ScsiClassCreateDeviceObject@20
+ScsiClassDeviceControl=ScsiClassDeviceControl@8
+ScsiClassFindModePage=ScsiClassFindModePage@16
+ScsiClassFindUnclaimedDevices=ScsiClassFindUnclaimedDevices@8
+ScsiClassGetCapabilities=ScsiClassGetCapabilities@8
+ScsiClassGetInquiryData=ScsiClassGetInquiryData@8
+ScsiClassInitialize=ScsiClassInitialize@12
+ScsiClassInitializeSrbLookasideList=ScsiClassInitializeSrbLookasideList@8
+ScsiClassInternalIoControl=ScsiClassInternalIoControl@8
+ScsiClassInterpretSenseInfo=ScsiClassInterpretSenseInfo@24
+ScsiClassIoComplete=ScsiClassIoComplete@12
+ScsiClassIoCompleteAssociated=ScsiClassIoCompleteAssociated@12
+ScsiClassModeSense=ScsiClassModeSense@16
+ScsiClassQueryTimeOutRegistryValue=ScsiClassQueryTimeOutRegistryValue@4
+ScsiClassReadDriveCapacity=ScsiClassReadDriveCapacity@4
+ScsiClassReleaseQueue=ScsiClassReleaseQueue@4
+ScsiClassSendSrbAsynchronous=ScsiClassSendSrbAsynchronous@24
+ScsiClassSendSrbSynchronous=ScsiClassSendSrbSynchronous@20
+ScsiClassSplitRequest=ScsiClassSplitRequest@12
+;EOF

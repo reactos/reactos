@@ -1,9 +1,9 @@
-# $Id: makefile,v 1.2 2001/07/23 06:13:48 ekohl Exp $
+# $Id: makefile,v 1.1 2001/07/23 06:12:07 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
-TARGET=scsiport
+TARGET=class2
 
 OBJECTS = $(TARGET).o $(TARGET).coff
 
