@@ -33,6 +33,8 @@
 #include <bootmgr.h>
 #include <drivemap.h>
 
+BOOL IsSetupLdr = FALSE;
+
 VOID RunLoader(VOID)
 {
 	UCHAR	SettingName[80];

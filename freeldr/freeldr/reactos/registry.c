@@ -39,6 +39,7 @@ static HKEY RootKey;
 VOID
 RegInitializeRegistry(VOID)
 {
+  /* Create root key */
   RootKey = (HKEY)MmAllocateMemory(sizeof(KEY));
 
   InitializeListHead(&RootKey->SubKeyList);
@@ -52,6 +53,16 @@ RegInitializeRegistry(VOID)
   RootKey->DataType = 0;
   RootKey->DataSize = 0;
   RootKey->Data = NULL;
+
+  /* Create SYSTEM key */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SYSTEM",
+	       NULL);
+
+  /* Create HARDWARE key */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\HARDWARE",
+	       NULL);
 }
 
 

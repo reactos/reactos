@@ -18,13 +18,17 @@
 #
 
 RM			= cmd /C del
+CP			= copy /Y 
+MKDIR		= md
 NASM_CMD	= nasm
 BIN2C		= ../tools/bin2c
 TOOLSDIR	= ../tools
+BOOTCD_DIR	= ..\..\bootcd
 
-.PHONY : clean
+.PHONY : clean bootcd
 
 all: $(BIN2C) fat.bin fat32.bin isoboot.bin ext2.bin
+
 
 $(BIN2C) :
 	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
@@ -48,6 +52,19 @@ ext2.bin : ext2.asm
 	@echo ===================================================== Assembling ext2
 	@$(NASM_CMD) -o ext2.bin -f bin ext2.asm
 	@$(BIN2C) ext2.bin ext2.h ext2_data
+
+
+.PHONY : bootcd
+bootcd: bootcd_dirs isoboot.bin
+	$(CP) isoboot.bin $(BOOTCD_DIR)
+
+.PHONY : bootcd_dirs
+bootcd_dirs:
+	$(MKDIR) $(BOOTCD_DIR)
+	$(MKDIR) $(BOOTCD_DIR)\disk
+	$(MKDIR) $(BOOTCD_DIR)\disk\reactos
+	$(MKDIR) $(BOOTCD_DIR)\disk\install
+	$(MKDIR) $(BOOTCD_DIR)\disk\bootdisk
 
 clean:
 	@-$(RM) *.bin

@@ -31,7 +31,7 @@
 ; ****************************************************************************
 
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
-%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
+;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
 
 
@@ -341,14 +341,6 @@ get_fs_structures:
 	call	writehex8
 	call	crlf
 %endif
-
-	mov eax, [di+file_sector]
-	call	writehex8
-	call	crlf
-
-	mov eax, [di+file_left]
-	call	writehex8
-	call	crlf
 
 	mov	bx, 0x8000			; bx = load address
 	mov	si, di				; restore file pointer

@@ -30,6 +30,8 @@ DEBUG		=	yes
 OBJDIR		=	obj
 OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
 
+BOOTCD_DIR	=	../../bootcd
+
 #############################################
 # COMPILER AND LINKER PROGRAMS
 #
@@ -101,6 +103,22 @@ clean:
 	@-$(RMDIR) $(OBJDIR)/$(TARGET)
 	@-$(RMDIR) $(OBJDIR)
 	@echo Clean ALL done.
+
+#############################################
+
+.PHONY : bootcd
+bootcd : bootcd_dirs $(OBJDIR)/$(TARGET)/setupldr.sys
+	$(CP) $(OBJDIR)/$(TARGET)/setupldr.sys $(BOOTCD_DIR)/disk/reactos/setupldr.sys
+
+
+.PHONY : bootcd_dirs
+bootcd_dirs:
+	$(MKDIR) $(BOOTCD_DIR)
+	$(MKDIR) $(BOOTCD_DIR)/disk
+	$(MKDIR) $(BOOTCD_DIR)/disk/reactos
+	$(MKDIR) $(BOOTCD_DIR)/disk/install
+	$(MKDIR) $(BOOTCD_DIR)/disk/bootdisk
+
 
 #############################################
 

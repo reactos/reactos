@@ -44,29 +44,25 @@ BOOL DiskIsDriveRemovable(U32 DriveNumber)
 BOOL DiskIsDriveCdRom(U32 DriveNumber)
 {
 	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
-	BOOL Result;
 
 	// Hard disks use drive numbers >= 0x80
 	// So if the drive number indicates a hard disk
 	// then return FALSE
-	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
+	if ((DriveNumber >= 0x80) && (IsSetupLdr || BiosInt13ExtensionsSupported(DriveNumber)))
 	{
 
 		if (!BiosInt13ReadExtended(DriveNumber, 16, 1, Sector))
 		{
 			DiskError("Disk read error.");
-			MmFreeMemory(Sector);
 			return FALSE;
 		}
 
-		Result = (Sector[0] == 1 &&
-			  Sector[1] == 'C' &&
-			  Sector[2] == 'D' &&
-			  Sector[3] == '0' &&
-			  Sector[4] == '0' &&
-			  Sector[5] == '1');
-
-		return Result;
+		return (Sector[0] == 1 &&
+			Sector[1] == 'C' &&
+			Sector[2] == 'D' &&
+			Sector[3] == '0' &&
+			Sector[4] == '0' &&
+			Sector[5] == '1');
 	}
 
 	// Drive is not CdRom so return FALSE

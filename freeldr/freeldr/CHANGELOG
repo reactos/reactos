@@ -1,3 +1,12 @@
+Changes in v1.7.8 (9/7/2002) (ekohl)
+
+- Added new 'bootcd' target.
+- Removed/disabled debugging code.
+- SetupLdr must not call BiosInt13ExtensionsSupported to check
+  extended int13 capabilities because they are already used to
+  boot a CD and some BIOSes return incorrect results when a CD-ROM
+  drive is checked.
+
 Changes in v1.7.7 (9/5/2002) (ekohl)
 
 - fs/iso.c: Got iso-fs working again.

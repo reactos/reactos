@@ -30,6 +30,7 @@
 #include "registry.h"
 #include "hwdetect.h"
 
+BOOL IsSetupLdr = TRUE;
 
 static BOOL
 LoadKernel(PCHAR szFileName)
@@ -98,7 +99,6 @@ LoadDriver(PCHAR szFileName)
 
 VOID RunLoader(VOID)
 {
-  printf("RunLoader() called!\n");
 
   /* Setup multiboot information structure */
   mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
@@ -124,16 +124,16 @@ VOID RunLoader(VOID)
 #endif
     }
 #if 0
-	//printf("low_mem = %d\n", mb_info.mem_lower);
-	//printf("high_mem = %d\n", mb_info.mem_upper);
-	//getch();
+//  printf("low_mem = %d\n", mb_info.mem_lower);
+//  printf("high_mem = %d\n", mb_info.mem_upper);
+//  getch();
 #endif
 
   /* Initialize registry */
   RegInitializeRegistry();
 
   /* Detect hardware */
-  printf("Detecting hardware...");
+  printf("Detecting hardware...\n\n");
   DetectHardware();
 
   /* set boot drive and partition */
@@ -142,7 +142,7 @@ VOID RunLoader(VOID)
 
   /* Copy ARC path into kernel command line */
   sprintf(multiboot_kernel_cmdline,
-	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=SCREEN",
+	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=COM1",
 	  (unsigned int)BootDrive);
 
   /* Open boot drive */
@@ -162,29 +162,25 @@ VOID RunLoader(VOID)
     return;
 
 
-	/*
-	 * Export the system and hardware hives
-	 */
-//	Base = MultiBootCreateModule(SYSTEM.HIV);
-//	RegExportHive("\\Registry\\Machine\\SYSTEM", Base, &Size);
-//	MultiBootCloseModule(Base, Size);
+  /* Export the system and hardware hives */
+//  Base = MultiBootCreateModule(SYSTEM.HIV);
+//  RegExportHive("\\Registry\\Machine\\SYSTEM", Base, &Size);
+//  MultiBootCloseModule(Base, Size);
 
-//	Base = MultiBootCreateModule(HARDWARE.HIV);
-//	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
-//	MultiBootCloseModule(Base, Size);
+//  Base = MultiBootCreateModule(HARDWARE.HIV);
+//  RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
+//  MultiBootCloseModule(Base, Size);
 
 
 
 
-	/*
-	 * Load NLS files
-	 */
+  /* Load NLS files */
 #if 0
-	if (!LoadNlsFiles(szBootPath))
-	{
-		MessageBox("Failed to load NLS files\n");
-		return;
-	}
+  if (!LoadNlsFiles(szBootPath))
+    {
+      MessageBox("Failed to load NLS files\n");
+      return;
+    }
 #endif
 
 

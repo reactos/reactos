@@ -56,7 +56,7 @@ BOOL DiskReadLogicalSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, 
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
+	if ((DriveNumber >= 0x80) && (IsSetupLdr || BiosInt13ExtensionsSupported(DriveNumber)))
 	{
 		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. BiosInt13ExtensionsSupported(%d) = %s\n", DriveNumber, BiosInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
 
