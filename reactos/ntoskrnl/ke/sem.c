@@ -24,7 +24,7 @@ VOID KeInitializeSemaphore(PKSEMAPHORE Semaphore,
    KeInitializeDispatcherHeader(&Semaphore->Header,SemaphoreType,
 				sizeof(KSEMAPHORE)/sizeof(ULONG),
 				Count);
-   Semaphore->Limit = Limit;
+   Semaphore->Limit=Limit;
 }
 
 LONG KeReadStateSemaphore(PKSEMAPHORE Semaphore)
@@ -37,26 +37,18 @@ LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 			LONG Adjustment,
 			BOOLEAN Wait)
 {
-   ULONG initState = Semaphore->Header.SignalState;
-   
-   KeAcquireDispatcherDatabaseLock(Wait);
-   
-   if(Semaphore->Limit < initState+Adjustment
+ ULONG initState = Semaphore->Header.SignalState;
+  KeAcquireDispatcherDatabaseLock(Wait);
+  if(Semaphore->Limit < initState+Adjustment
       || initState > initState+Adjustment)
-     {
-	ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
-     }
-   
-   Semaphore->Header.SignalState += Adjustment;
-   if (initState == 0)
-     {
-	//  wake up SignalState waiters
-	while(Semaphore->Header.SignalState > 0
-	      && KeDispatcherObjectWake(&Semaphore->Header)) ;
-     }
-   
-   KeReleaseDispatcherDatabaseLock(Wait);
-   
-   return initState;
+     ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+  Semaphore->Header.SignalState+=Adjustment;
+  if(initState == 0)
+  {
+    //  wake up SignalState waiters
+    KeDispatcherObjectWake(&Semaphore->Header)  ;
+  }
+  KeReleaseDispatcherDatabaseLock(Wait);
+  return initState;
 }
 
