@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.26 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: psfuncs.h,v 1.27 2003/10/04 18:19:17 navaraf Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -6,7 +6,12 @@
 NTSTATUS STDCALL PsAssignImpersonationToken (struct _ETHREAD* Thread,
 					     HANDLE TokenHandle);
 
+/*
+ * Warning: Even though it returns HANDLE, it's not a real HANDLE but really a
+ * ULONG ProcessId! (Skywing)
+ */
 HANDLE STDCALL PsGetCurrentProcessId(VOID);
+
 HANDLE STDCALL PsGetCurrentThreadId(VOID);
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.116 2003/09/25 20:08:36 ekohl Exp $
+/* $Id: process.c,v 1.117 2003/10/04 18:19:17 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -491,6 +491,10 @@ KeGetCurrentProcess(VOID)
   return(&(PsGetCurrentProcess()->Pcb));
 }
 
+/*
+ * Warning: Even though it returns HANDLE, it's not a real HANDLE but really a
+ * ULONG ProcessId! (Skywing)
+ */
 /*
  * @implemented
  */
