@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.17 2003/07/10 15:05:55 chorns Exp $
+/* $Id: scm.c,v 1.18 2003/07/21 03:40:58 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -643,44 +643,6 @@ OpenServiceW(
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return NULL;
-}
-
-
-/**********************************************************************
- *  PrivilegedServiceAuditAlarmA
- *
- * @unimplemented
- */
-BOOL
-STDCALL
-PrivilegedServiceAuditAlarmA(
-    LPCSTR      SubsystemName,
-    LPCSTR      ServiceName,
-    HANDLE      ClientToken,
-    PPRIVILEGE_SET  Privileges,
-    BOOL        AccessGranted)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/**********************************************************************
- *  PrivilegedServiceAuditAlarmW
- *
- * @unimplemented
- */
-BOOL
-STDCALL
-PrivilegedServiceAuditAlarmW(
-    LPCWSTR     SubsystemName,
-    LPCWSTR     ServiceName,
-    HANDLE      ClientToken,
-    PPRIVILEGE_SET  Privileges,
-    BOOL        AccessGranted)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 1;
 }
 
 
