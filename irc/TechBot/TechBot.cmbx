@@ -1,0 +1,36 @@
+<Combine fileversion="1.0" name="TechBot" description="">
+  <StartMode startupentry="TechBot" single="True">
+    <Execute entry="TechBot" type="None" />
+    <Execute entry="TechBot.Library" type="None" />
+    <Execute entry="CHMLibrary" type="None" />
+    <Execute entry="Compression" type="None" />
+    <Execute entry="TechBot.Console" type="None" />
+    <Execute entry="TechBot.IRCLibrary" type="None" />
+  </StartMode>
+  <Entries>
+    <Entry filename=".\TechBot\TechBot.prjx" />
+    <Entry filename=".\TechBot.Library\TechBot.Library.prjx" />
+    <Entry filename=".\CHMLibrary\CHMLibrary.prjx" />
+    <Entry filename=".\Compression\Compression.prjx" />
+    <Entry filename=".\TechBot.Console\TechBot.Console.prjx" />
+    <Entry filename=".\TechBot.IRCLibrary\TechBot.IRCLibrary.prjx" />
+  </Entries>
+  <Configurations active="Debug">
+    <Configuration name="Release">
+      <Entry name="TechBot" configurationname="Debug" build="False" />
+      <Entry name="TechBot.Library" configurationname="Debug" build="False" />
+      <Entry name="CHMLibrary" configurationname="Debug" build="False" />
+      <Entry name="Compression" configurationname="Debug" build="False" />
+      <Entry name="TechBot.Console" configurationname="Debug" build="False" />
+      <Entry name="TechBot.IRCLibrary" configurationname="Debug" build="False" />
+    </Configuration>
+    <Configuration name="Debug">
+      <Entry name="TechBot" configurationname="Debug" build="False" />
+      <Entry name="TechBot.Library" configurationname="Debug" build="False" />
+      <Entry name="CHMLibrary" configurationname="Debug" build="False" />
+      <Entry name="Compression" configurationname="Debug" build="False" />
+      <Entry name="TechBot.Console" configurationname="Debug" build="False" />
+      <Entry name="TechBot.IRCLibrary" configurationname="Debug" build="False" />
+    </Configuration>
+  </Configurations>
+</Combine>
