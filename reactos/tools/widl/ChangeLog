@@ -1,5 +1,15 @@
 ChangeLog
 
+2005-03-20 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+Improve error messages.
+Don't start counting the type_offset for each new fuction. It is a global offset.
+Use only basic types in type- and proc-strings (e.g. unsigned long -> long).
+
+
 2005-03-13 ekohl
 
    tools/widl/server.c
@@ -21,7 +31,6 @@ Fixup *nix port, added include fcntl.h and unistd.h.
    tools/widl/write_msft.c
 
 -Wall -Werror and fix warnings
-
 
 
 2005-03-13 ekohl
