@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.29 2004/04/07 15:37:50 weiden Exp $ */
+/* $Id: dib4bpp.c,v 1.30 2004/04/07 20:04:22 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -321,8 +321,8 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       sx = SourcePoint->x;
       i = DestRect->left;
 
-      if(UsesPattern)
-        PatternY = j % PatternHeight;
+      if (UsesPattern)
+         PatternY = j % PatternHeight;
 
       if (i & 0x1)
       {
@@ -342,7 +342,7 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
          i++;
          sx++;
-         DestBits++;
+         DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
       }
 
       for (; i < RoundedRight; i += 8, sx += 8, DestBits++)
