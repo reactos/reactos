@@ -30,7 +30,14 @@ PULONG MmGetPageEntry(PVOID Address);
 
 #define KERNEL_BASE        (0xc0000000)
 
-#define FLUSH_TLB    __asm__("movl %cr3,%eax\n\tmovl %eax,%cr3\n\t")
+#define FLUSH_TLB   {				\
+			unsigned int tmp;	\
+			__asm__ __volatile__(	\
+			    "movl %%cr3,%0\n\t"	\
+			    "movl %0,%%cr3\n\t"	\
+			    : "=r" (tmp)	\
+			    :: "memory");	\
+		    }
 
 PULONG MmGetPageDirectory(VOID);
 
