@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.9 2004/11/20 15:51:14 ekohl Exp $
+/* $Id: misc.c,v 1.10 2004/12/06 02:23:05 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -106,12 +106,12 @@ SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
-UpdatePerUserSystemParameters(DWORD dwUnknown,
-                              BOOL bEnable)
+UpdatePerUserSystemParameters(
+   DWORD dwReserved,
+   BOOL bEnable)
 {
-
-  return TRUE;
+   return NtUserUpdatePerUserSystemParameters(dwUnknown, dwReserved);
 }

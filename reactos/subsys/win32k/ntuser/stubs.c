@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47 2004/11/16 16:27:49 blight Exp $
+/* $Id: stubs.c,v 1.48 2004/12/06 02:23:05 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -682,17 +682,6 @@ NtUserUpdateInstance(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUpdatePerUserSystemParameters(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

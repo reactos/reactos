@@ -1677,11 +1677,11 @@ NtUserUpdateLayeredWindow(
   DWORD Unknown7,
   DWORD Unknown8);
 
-DWORD
+BOOL
 STDCALL
 NtUserUpdatePerUserSystemParameters(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  DWORD dwReserved,
+  BOOL bEnable);
 
 DWORD
 STDCALL

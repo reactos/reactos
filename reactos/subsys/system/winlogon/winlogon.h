@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winlogon.h,v 1.4 2004/07/12 20:09:35 gvg Exp $
+/* $Id: winlogon.h,v 1.5 2004/12/06 02:23:05 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/winlogon.h
@@ -162,6 +162,11 @@ DispatchSAS(PWLSESSION Session, DWORD dwSasType);
   Session->MsGina.Functions.WlxRemoveStatusMessage(Session->MsGina.Context);
 #define DisplaySASNotice(Session) \
   Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+
+/* user32 */
+BOOL WINAPI
+UpdatePerUserSystemParameters(DWORD dwUnknown,
+                              DWORD dwReserved);
 
 #endif /* __WINLOGON_MAIN_H__ */
 

@@ -3841,7 +3841,6 @@ BOOL WINAPI UnloadKeyboardLayout(HKL);
 BOOL WINAPI UnregisterClassA(LPCSTR,HINSTANCE);
 BOOL WINAPI UnregisterClassW(LPCWSTR,HINSTANCE);
 BOOL WINAPI UnregisterHotKey(HWND,int);
-BOOL WINAPI UpdatePerUserSystemParameters(DWORD,BOOL);
 BOOL WINAPI UpdateWindow(HWND);
 #if (_WIN32_WINNT >= 0x0500)
 BOOL WINAPI UserHandleGrantAccess(HANDLE,HANDLE,BOOL);

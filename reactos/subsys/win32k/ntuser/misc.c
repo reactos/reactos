@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.88 2004/11/20 16:46:06 weiden Exp $
+/* $Id: misc.c,v 1.89 2004/12/06 02:23:05 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1328,6 +1328,46 @@ IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING Uni
     {
       ExFreePool(NullTerminated);
     }
+}
+
+
+BOOL STDCALL
+NtUserUpdatePerUserSystemParameters(
+   DWORD dwUnknown,
+   BOOL bEnable)
+{
+   if (bEnable)
+   {
+      RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+      NTSTATUS Status;
+
+      RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+      QueryTable[0].Name = L"PaintDesktopVersion";
+      QueryTable[0].EntryContext = &g_PaintDesktopVersion;
+
+      /* Query the "PaintDesktopVersion" flag in the "Control Panel\Desktop" key */
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_USER, 
+                                      L"Control Panel\\Desktop",
+                                      QueryTable, NULL, NULL);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
+                 Status);
+         g_PaintDesktopVersion = FALSE;
+         return FALSE;
+      }
+    
+      DPRINT1("PaintDesktopVersion = %d\n", g_PaintDesktopVersion);
+
+      return TRUE;
+   }
+   else
+   {
+      g_PaintDesktopVersion = FALSE;
+      return TRUE;
+   }
 }
 
 /* EOF */
