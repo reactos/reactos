@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.60 2004/06/10 08:14:57 hbirr Exp $
+/* $Id: scsiport.c,v 1.61 2004/06/15 09:29:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
+#include <ntos/minmax.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -2041,13 +2042,13 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      if (NT_SUCCESS(ScanData->Status) &&
 		  (Srb->SrbStatus == SRB_STATUS_SUCCESS || 
 		   (Srb->SrbStatus == SRB_STATUS_DATA_OVERRUN && 
-		    Srb->DataTransferLength >= sizeof(INQUIRYDATA))) &&
+		    Srb->DataTransferLength >= INQUIRYDATABUFFERSIZE)) &&
 		  ((PINQUIRYDATA)Srb->DataBuffer)->DeviceTypeQualifier == 0)
 		{
 		  /* Copy inquiry data */
 		  RtlCopyMemory (&ScanData->LunExtension->InquiryData,
 				 Srb->DataBuffer,
-				 sizeof(INQUIRYDATA));
+				 min(sizeof(INQUIRYDATA), Srb->DataTransferLength));
 	          ScanData->Lun++;
 		}
 	      else
