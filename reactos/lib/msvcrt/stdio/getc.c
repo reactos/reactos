@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.6 2002/12/05 15:30:44 robd Exp $
+/* $Id: getc.c,v 1.7 2002/12/08 16:11:59 robd Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -80,6 +80,9 @@ wint_t getwc(FILE *fp)
             c = (wint_t)*((wchar_t*)(fp->_ptr))++;
         } else {
             c = _filwbuf(fp);
+            // need to fix by one values of  fp->_ptr and fp->_cnt
+            fp->_ptr++;
+            fp->_cnt--;
         }
     } else {
 #if 0

@@ -1,4 +1,4 @@
-/* $Id: putc.c,v 1.6 2002/12/05 15:30:44 robd Exp $
+/* $Id: putc.c,v 1.7 2002/12/08 16:14:28 robd Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -88,10 +88,10 @@ int putwc(wint_t c, FILE* fp)
         } else {
 #if 1
             wint_t result;
-            result = _flsbuf((int)(c >> 8), fp);
+            result = _flsbuf(c, fp);
             if (result == EOF)
                 return WEOF;
-            result = _flsbuf(c, fp);
+            result = _flsbuf((int)(c >> 8), fp);
             if (result == EOF)
                 return WEOF;
             return result;
