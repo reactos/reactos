@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.194 2004/02/26 22:23:54 weiden Exp $
+/* $Id: window.c,v 1.195 2004/02/27 00:11:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -496,8 +496,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   PLIST_ENTRY Current;
   PW32PROCESS Win32Process;
   PW32THREAD Win32Thread;
-  PWINDOW_OBJECT Window;
-  HWND *List, *phWnd;
+  PWINDOW_OBJECT *List, *pWnd;
   ULONG Cnt = 0;
 
   Win32Thread = Thread->Win32Thread;
@@ -513,32 +512,29 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   
   if(Cnt > 0)
   {
-    List = ExAllocatePool(PagedPool, (Cnt + 1) * sizeof(HANDLE));
+    List = ExAllocatePool(PagedPool, (Cnt + 1) * sizeof(PWINDOW_OBJECT));
     if(!List)
     {
       DPRINT("Not enough memory to allocate window handle list\n");
       IntUnLockThreadWindows(Win32Thread);
       return;
     }
-    phWnd = List;
+    pWnd = List;
     Current = Win32Thread->WindowListHead.Flink;
     while (Current != &(Win32Thread->WindowListHead))
     {
-      Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
-      *phWnd = Window->Self;
-      phWnd++;
+      *pWnd = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
+      IntReferenceWindowObject(*pWnd);
+      pWnd++;
       Current = Current->Flink;
     }
     IntUnLockThreadWindows(Win32Thread);
-    *phWnd = NULL;
+    *pWnd = NULL;
     
-    for(phWnd = List; *phWnd; phWnd++)
+    for(pWnd = List; *pWnd; pWnd++)
     {
-      if((Window = IntGetWindowObject(*phWnd)))
-      {
-        IntDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
-        IntReleaseWindowObject(Window);
-      }
+      IntDestroyWindow(*pWnd, Win32Process, Win32Thread, FALSE);
+      IntReleaseWindowObject(*pWnd);
     }
     ExFreePool(List);
     return;
@@ -700,8 +696,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 BOOL FASTCALL
 IntIsChildWindow(HWND Parent, HWND Child)
 {
-  PWINDOW_OBJECT Window;
-  PWINDOW_OBJECT BaseWindow;
+  PWINDOW_OBJECT BaseWindow, Window, Old;
   
   if(!(BaseWindow = IntGetWindowObject(Child)))
   {
@@ -724,9 +719,10 @@ IntIsChildWindow(HWND Parent, HWND Child)
       IntReleaseWindowObject(BaseWindow);
       return(TRUE);
     }
-    if(Window != BaseWindow)
-      IntReleaseWindowObject(Window);
+    Old = Window;
     Window = IntGetParentObject(Window);
+    if(Old != BaseWindow)
+      IntReleaseWindowObject(Old);
   }
   
   IntReleaseWindowObject(BaseWindow);
@@ -736,29 +732,47 @@ IntIsChildWindow(HWND Parent, HWND Child)
 BOOL FASTCALL
 IntIsWindowVisible(HWND hWnd)
 {
-  PWINDOW_OBJECT BaseWindow = IntGetWindowObject(hWnd);
-  PWINDOW_OBJECT Window = BaseWindow;
-  BOOLEAN Result = FALSE;
+  PWINDOW_OBJECT BaseWindow, Window, Old;
   
-  while (Window != NULL && Window->Style & WS_CHILD)
+  if(!(BaseWindow = IntGetWindowObject(hWnd)))
   {
-    if (!(Window->Style & WS_VISIBLE))
-	{
+    return FALSE;
+  }
+  
+  Window = BaseWindow;
+  while(Window)
+  {
+    if(!(Window->Style & WS_CHILD))
+    {
+      break;
+    }
+    if(!(Window->Style & WS_VISIBLE))
+    {
       if(Window != BaseWindow)
         IntReleaseWindowObject(Window);
-	  IntReleaseWindowObject(BaseWindow);
-	  return(FALSE);
-	}
+      IntReleaseWindowObject(BaseWindow);
+      return FALSE;
+    }
+    Old = Window;
+    Window = IntGetParentObject(Window);
+    if(Old != BaseWindow)
+      IntReleaseWindowObject(Old);
+  }
+  
+  if(Window)
+  {
+    if(Window->Style & WS_VISIBLE)
+    {
+      if(Window != BaseWindow)
+        IntReleaseWindowObject(Window);
+      IntReleaseWindowObject(BaseWindow);
+      return TRUE;
+    }
     if(Window != BaseWindow)
       IntReleaseWindowObject(Window);
-    Window = IntGetParentObject(Window);
-  }
-  if (Window != NULL && Window->Style & WS_VISIBLE)
-  {
-    Result = TRUE;
   }
   IntReleaseWindowObject(BaseWindow);
-  return(Result);
+  return FALSE;
 }
 
 
@@ -960,7 +974,7 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
  
   if (Wnd->PrevSibling) Wnd->PrevSibling->NextSibling = Wnd->NextSibling;
   else if (WndParent && WndParent->FirstChild == Wnd) WndParent->FirstChild = Wnd->NextSibling;
-  //else if (parent->first_unlinked == win) parent->first_unlinked = Wnd->NextSibling;
+  
   if(WndParent)
   {
     IntUnLockRelatives(WndParent);
@@ -2129,20 +2143,20 @@ NtUserGetClientRect(HWND hWnd, LPRECT Rect)
   PWINDOW_OBJECT WindowObject;
   RECT SafeRect;
 
-  if (!(WindowObject = IntGetWindowObject(hWnd)))
+  if(!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);      
     return FALSE;
   }
 
   IntGetClientRect(WindowObject, &SafeRect);
-
-  if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
+  IntReleaseWindowObject(WindowObject);
+  
+  if(!NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
   {
-    return(FALSE);
+    return FALSE;
   }
-
-  return(TRUE);
+  return TRUE;
 }
 
 
