@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: time.c,v 1.2 2004/12/16 23:46:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,76 +75,69 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 BOOLEAN
 STDCALL
 RtlTimeFieldsToTime(
-   PTIME_FIELDS tfTimeFields,
+   PTIME_FIELDS TimeFields,
    PLARGE_INTEGER Time)
 {
    int CurYear;
    int CurMonth;
-#if defined(__GNUC__)
+   TIME_FIELDS IntTimeFields;
 
-   long long int rcTime;
-#else
+   Time->QuadPart = 0;
+   memcpy(&IntTimeFields,
+          TimeFields,
+          sizeof(TIME_FIELDS));
 
-   __int64 rcTime;
-#endif
-
-   TIME_FIELDS TimeFields = *tfTimeFields;
-
-   rcTime = 0;
-
-   /* FIXME: normalize the TIME_FIELDS structure here */
-   while (TimeFields.Second >= SECSPERMIN)
+   /* Normalize the TIME_FIELDS structure here */
+   while (IntTimeFields.Second >= SECSPERMIN)
    {
-      NormalizeTimeFields(&TimeFields.Second,
-                          &TimeFields.Minute,
+      NormalizeTimeFields(&IntTimeFields.Second,
+                          &IntTimeFields.Minute,
                           SECSPERMIN);
    }
-   while (TimeFields.Minute >= MINSPERHOUR)
+   while (IntTimeFields.Minute >= MINSPERHOUR)
    {
-      NormalizeTimeFields(&TimeFields.Minute,
-                          &TimeFields.Hour,
+      NormalizeTimeFields(&IntTimeFields.Minute,
+                          &IntTimeFields.Hour,
                           MINSPERHOUR);
    }
-   while (TimeFields.Hour >= HOURSPERDAY)
+   while (IntTimeFields.Hour >= HOURSPERDAY)
    {
-      NormalizeTimeFields(&TimeFields.Hour,
-                          &TimeFields.Day,
+      NormalizeTimeFields(&IntTimeFields.Hour,
+                          &IntTimeFields.Day,
                           HOURSPERDAY);
    }
-   while (TimeFields.Day >
-          MonthLengths[IsLeapYear(TimeFields.Year)][TimeFields.Month - 1])
+   while (IntTimeFields.Day >
+          MonthLengths[IsLeapYear(IntTimeFields.Year)][IntTimeFields.Month - 1])
    {
-      NormalizeTimeFields(&TimeFields.Day,
-                          &TimeFields.Month,
+      NormalizeTimeFields(&IntTimeFields.Day,
+                          &IntTimeFields.Month,
                           SECSPERMIN);
    }
-   while (TimeFields.Month > MONSPERYEAR)
+   while (IntTimeFields.Month > MONSPERYEAR)
    {
-      NormalizeTimeFields(&TimeFields.Month,
-                          &TimeFields.Year,
+      NormalizeTimeFields(&IntTimeFields.Month,
+                          &IntTimeFields.Year,
                           MONSPERYEAR);
    }
 
-   /* FIXME: handle calendar corrections here */
-   for (CurYear = EPOCHYEAR; CurYear < TimeFields.Year; CurYear++)
+   /* Compute the time */
+   for (CurYear = EPOCHYEAR; CurYear < IntTimeFields.Year; CurYear++)
    {
-      rcTime += YearLengths[IsLeapYear(CurYear)];
+      Time->QuadPart += YearLengths[IsLeapYear(CurYear)];
    }
-   for (CurMonth = 1; CurMonth < TimeFields.Month; CurMonth++)
+   for (CurMonth = 1; CurMonth < IntTimeFields.Month; CurMonth++)
    {
-      rcTime += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
+      Time->QuadPart += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
    }
-   rcTime += TimeFields.Day - 1;
-   rcTime *= SECSPERDAY;
-   rcTime += TimeFields.Hour * SECSPERHOUR + TimeFields.Minute * SECSPERMIN +
-             TimeFields.Second;
-   rcTime *= TICKSPERSEC;
-   rcTime += TimeFields.Milliseconds * TICKSPERMSEC;
-   *Time = *(LARGE_INTEGER *)&rcTime;
+   Time->QuadPart += IntTimeFields.Day - 1;
+   Time->QuadPart *= SECSPERDAY;
+   Time->QuadPart += IntTimeFields.Hour * SECSPERHOUR + IntTimeFields.Minute * SECSPERMIN +
+                     IntTimeFields.Second;
+   Time->QuadPart *= TICKSPERSEC;
+   Time->QuadPart += IntTimeFields.Milliseconds * TICKSPERMSEC;
 
    return TRUE;
 }
-
 
 
 /*
@@ -185,44 +178,30 @@ RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
 }
 
 
-
 /*
  * @unimplemented
  */
 VOID
 STDCALL
 RtlTimeToTimeFields(
-   PLARGE_INTEGER liTime,
+   PLARGE_INTEGER Time,
    PTIME_FIELDS TimeFields)
 {
    const int *Months;
-   int LeapSecondCorrections, SecondsInDay, CurYear;
-   int LeapYear, CurMonth, GMTOffset;
+   int SecondsInDay, CurYear;
+   int LeapYear, CurMonth;
    long int Days;
-#if defined(__GNUC__)
-
-   long long int Time = (long long int)liTime->QuadPart;
-#else
-
-   __int64 Time = (__int64)liTime->QuadPart;
-#endif
+   LONGLONG IntTime = (LONGLONG)Time->QuadPart;
 
    /* Extract millisecond from time and convert time into seconds */
-   TimeFields->Milliseconds = (CSHORT) ((Time % TICKSPERSEC) / TICKSPERMSEC);
-   Time = Time / TICKSPERSEC;
-
-   /* FIXME: Compute the number of leap second corrections here */
-   LeapSecondCorrections = 0;
-
-   /* FIXME: get the GMT offset here */
-   GMTOffset = 0;
+   TimeFields->Milliseconds = (CSHORT) ((IntTime % TICKSPERSEC) / TICKSPERMSEC);
+   IntTime = IntTime / TICKSPERSEC;
 
    /* Split the time into days and seconds within the day */
-   Days = Time / SECSPERDAY;
-   SecondsInDay = Time % SECSPERDAY;
+   Days = IntTime / SECSPERDAY;
+   SecondsInDay = IntTime % SECSPERDAY;
 
-   /* Adjust the values for GMT and leap seconds */
-   SecondsInDay += (GMTOffset - LeapSecondCorrections);
+   /* Adjust the values for days and seconds in day */
    while (SecondsInDay < 0)
    {
       SecondsInDay += SECSPERDAY;
@@ -239,8 +218,6 @@ RtlTimeToTimeFields(
    SecondsInDay = SecondsInDay % SECSPERHOUR;
    TimeFields->Minute = (CSHORT) (SecondsInDay / SECSPERMIN);
    TimeFields->Second = (CSHORT) (SecondsInDay % SECSPERMIN);
-
-   /* FIXME: handle the possibility that we are on a leap second (i.e. Second = 60) */
 
    /* compute day of week */
    TimeFields->Weekday = (CSHORT) ((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
@@ -285,15 +262,15 @@ RtlTimeToSecondsSince1970(
    PLARGE_INTEGER Time,
    PULONG SecondsSince1970)
 {
-   LARGE_INTEGER liTime;
+   LARGE_INTEGER IntTime;
 
-   liTime.QuadPart = Time->QuadPart - TICKSTO1970;
-   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+   IntTime.QuadPart = Time->QuadPart - TICKSTO1970;
+   IntTime.QuadPart = IntTime.QuadPart / TICKSPERSEC;
 
-   if (liTime.u.HighPart != 0)
+   if (IntTime.u.HighPart != 0)
       return FALSE;
 
-   *SecondsSince1970 = liTime.u.LowPart;
+   *SecondsSince1970 = IntTime.u.LowPart;
 
    return TRUE;
 }
@@ -308,15 +285,15 @@ RtlTimeToSecondsSince1980(
    PLARGE_INTEGER Time,
    PULONG SecondsSince1980)
 {
-   LARGE_INTEGER liTime;
+   LARGE_INTEGER IntTime;
 
-   liTime.QuadPart = Time->QuadPart - TICKSTO1980;
-   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
+   IntTime.QuadPart = Time->QuadPart - TICKSTO1980;
+   IntTime.QuadPart = IntTime.QuadPart / TICKSPERSEC;
 
-   if (liTime.u.HighPart != 0)
+   if (IntTime.u.HighPart != 0)
       return FALSE;
 
-   *SecondsSince1980 = liTime.u.LowPart;
+   *SecondsSince1980 = IntTime.u.LowPart;
 
    return TRUE;
 }
@@ -345,8 +322,6 @@ RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
 
    return(STATUS_SUCCESS);
 }
-
-
 
 
 /*
@@ -383,11 +358,7 @@ RtlSecondsSince1970ToTime(
    ULONG SecondsSince1970,
    PLARGE_INTEGER Time)
 {
-   LONGLONG llTime;
-
-   llTime = (SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
-
-   *Time = *(LARGE_INTEGER *)&llTime;
+   Time->QuadPart = ((LONGLONG)SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
 }
 
 
@@ -400,13 +371,7 @@ RtlSecondsSince1980ToTime(
    ULONG SecondsSince1980,
    PLARGE_INTEGER Time)
 {
-   LONGLONG llTime;
-
-   llTime = (SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
-
-   *Time = *(LARGE_INTEGER *)&llTime;
+   Time->QuadPart = ((LONGLONG)SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
 }
-
-
 
 /* EOF */
