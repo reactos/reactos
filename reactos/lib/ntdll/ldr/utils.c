@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.79 2004/01/24 23:44:26 navaraf Exp $
+/* $Id: utils.c,v 1.80 2004/01/25 08:32:49 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1056,7 +1056,7 @@ LdrGetExportByName(PVOID BaseAddress,
    PVOID                        ExName;
    ULONG                        Ordinal;
    PVOID                        Function;
-   ULONG minn, maxn;
+   LONG minn, maxn;
    ULONG ExportDirSize;
    
    DPRINT("LdrGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
@@ -1123,7 +1123,7 @@ LdrGetExportByName(PVOID BaseAddress,
    maxn = ExportDir->NumberOfNames - 1;
    while (minn <= maxn)
      {
-        ULONG mid;
+        LONG mid;
         LONG res;
 
         mid = (minn + maxn) / 2;
