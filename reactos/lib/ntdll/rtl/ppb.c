@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.11 2002/03/14 16:32:49 hbirr Exp $
+/* $Id: ppb.c,v 1.12 2002/04/01 22:11:52 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -132,8 +132,8 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 
    /* add string lengths */
    Length += ALIGN(DllPath->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(ImagePathName->Length, sizeof(ULONG));
-   Length += ALIGN(CommandLine->Length, sizeof(ULONG));
+   Length += ALIGN(ImagePathName->Length + sizeof(WCHAR), sizeof(ULONG));
+   Length += ALIGN(CommandLine->Length + sizeof(WCHAR), sizeof(ULONG));
    Length += ALIGN(WindowTitle->MaximumLength, sizeof(ULONG));
    Length += ALIGN(DesktopInfo->MaximumLength, sizeof(ULONG));
    Length += ALIGN(ShellInfo->MaximumLength, sizeof(ULONG));
