@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.47 2003/12/07 11:34:41 chorns Exp $
+# $Id: helper.mk,v 1.48 2003/12/08 19:10:44 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -744,7 +744,7 @@ $(MK_FULLNAME): $(TARGET_OBJECTS)
 $(MK_NOSTRIPNAME):
 	-
 
-.phony: $(MK_NOSTRIPNAME)
+.PHONY: $(MK_NOSTRIPNAME)
 
 endif # MK_MODE
 
@@ -845,7 +845,7 @@ endif # MK_MODE
 endif # MK_IMPLIBONLY
 
 
-.phony: all depends implib clean install dist bootcd depends
+.PHONY: all depends implib clean install dist bootcd depends
 
 ifneq ($(SUBDIRS),)
 $(SUBDIRS:%=%_all): %_all:
@@ -866,7 +866,7 @@ $(SUBDIRS:%=%_dist): %_dist:
 $(SUBDIRS:%=%_bootcd): %_bootcd:
 	$(MAKE) -C $* SUBDIRS= bootcd
 
-.phony: $(SUBDIRS:%=%_all) $(SUBDIRS:%=%_implib) $(SUBDIRS:%=%_clean) \
+.PHONY: $(SUBDIRS:%=%_all) $(SUBDIRS:%=%_implib) $(SUBDIRS:%=%_clean) \
         $(SUBDIRS:%=%_install) $(SUBDIRS:%=%_dist) $(SUBDIRS:%=%_bootcd)
 endif
 
