@@ -1,4 +1,4 @@
-/* $Id: tuiconsole.h,v 1.1 2004/01/11 17:31:16 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

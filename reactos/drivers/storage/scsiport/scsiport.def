@@ -1,4 +1,4 @@
-; $Id: scsiport.def,v 1.3 2004/09/16 10:25:11 gvg Exp $
+; $Id$
 ;
 ; scsiport.def - export definition file for scsiport driver
 ;

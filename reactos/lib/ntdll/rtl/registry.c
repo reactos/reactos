@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.28 2004/03/20 15:56:00 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

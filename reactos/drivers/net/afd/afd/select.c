@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.10 2004/12/27 11:00:01 gvg Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c

@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/vmswt0.c,v $
- * $Id: vmswt0.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 #include "jsint.h"

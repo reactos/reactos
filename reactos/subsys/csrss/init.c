@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.30 2004/11/14 18:47:10 hbirr Exp $
+/* $Id$
  * 
  * reactos/subsys/csrss/init.c
  *

@@ -1,4 +1,4 @@
-/* $Id: lzexpand_main.c,v 1.4 2004/12/25 11:18:50 navaraf Exp $
+/* $Id$
  *
  * LZ Decompression functions
  *

@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.17 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/mcb.c
  *

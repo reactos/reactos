@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.17 2004/06/28 21:02:49 navaraf Exp $
+/* $Id$
  *
  */
 

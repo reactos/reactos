@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.1 2004/09/06 21:15:45 weiden Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/misc/misc.c

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.3 2004/11/08 02:16:06 weiden Exp $
+/* $Id$
  *
  * WINDOW.C - activate & window internal commands.
  *

@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.22 2004/12/24 17:06:59 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel

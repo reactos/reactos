@@ -1,4 +1,4 @@
-/* $Id: ping.c,v 1.7 2004/11/21 22:26:14 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility

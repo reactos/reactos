@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsdas/bc.js,v $
- * $Id: bc.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 function ByteCode$SymtabEntry (name, offset)

@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.19 2004/08/31 20:07:06 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

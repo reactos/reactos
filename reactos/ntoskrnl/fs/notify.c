@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.13 2004/08/21 20:38:53 tamlin Exp $
+/* $Id$
  *
  * reactos/ntoskrnl/fs/notify.c
  *

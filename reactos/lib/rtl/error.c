@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.3 2004/12/16 23:06:07 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

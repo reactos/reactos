@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.23 2004/12/18 13:35:15 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries

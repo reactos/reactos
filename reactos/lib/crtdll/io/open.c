@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.15 2004/08/15 17:34:26 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.6 2004/12/12 21:25:04 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

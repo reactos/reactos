@@ -1,4 +1,4 @@
-/* $Id: iprtprio.rc,v 1.2 2004/10/16 20:27:34 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS IP Route Priority API DLL\0"

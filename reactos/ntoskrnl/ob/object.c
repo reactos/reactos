@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.85 2004/11/21 21:53:07 ion Exp $
+/* $Id$
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

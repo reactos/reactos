@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.45 2004/08/21 20:42:10 tamlin Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

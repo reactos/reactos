@@ -1,4 +1,4 @@
-/* $Id: conio.h,v 1.5 2004/09/10 22:14:52 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

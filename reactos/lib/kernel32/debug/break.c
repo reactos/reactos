@@ -1,4 +1,4 @@
-/* $Id: break.c,v 1.2 2003/07/10 18:50:50 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

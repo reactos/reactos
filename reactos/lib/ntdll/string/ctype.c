@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.14 2004/02/01 20:48:06 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

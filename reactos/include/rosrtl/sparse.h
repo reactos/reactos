@@ -1,4 +1,4 @@
-/* $Id: sparse.h,v 1.2 2004/09/15 19:01:23 weiden Exp $
+/* $Id$
  */
 
 #ifndef ROSRTL_SPARSE_H__

@@ -1,4 +1,4 @@
-/* $Id: debugout.c,v 1.3 2004/02/10 16:22:55 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

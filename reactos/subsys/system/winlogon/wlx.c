@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.6 2004/10/11 21:08:05 weiden Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

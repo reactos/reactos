@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsas/process.js,v $
- * $Id: process.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 function process_file (name)

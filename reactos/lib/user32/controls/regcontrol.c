@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.22 2004/12/24 17:45:58 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32

@@ -1,4 +1,4 @@
-/* $Id: patchnv4.c,v 1.1 2003/11/07 20:10:13 gvg Exp $
+/* $Id$
  *
  * Patch the NVidia miniport driver to work with ReactOS
  *

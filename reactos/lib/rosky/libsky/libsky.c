@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libsky.c,v 1.5 2004/08/14 00:44:06 weiden Exp $
+/* $Id$
  *
  * PROJECT:         SkyOS library
  * FILE:            lib/libsky/libsky.c

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2004/08/09 16:02:43 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Hid User Library

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hardware.c,v 1.3 2004/10/11 21:08:04 weiden Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/hardware.c

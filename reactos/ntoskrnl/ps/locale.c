@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.13 2004/11/15 14:38:37 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

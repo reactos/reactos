@@ -1,4 +1,4 @@
-/* $Id: sec.c,v 1.22 2004/08/15 17:03:15 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -10,8 +10,8 @@
  * Peters <colin@fu.is.saga-u.ac.jp>
  *
  * $Revision: 1.3 $
- * $Author: robd $
- * $Date: 2002/11/24 18:42:13 $
+ * $Author$
+ * $Date$
  *
  */
 

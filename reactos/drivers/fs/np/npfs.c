@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.10 2004/04/12 13:03:29 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel

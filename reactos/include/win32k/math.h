@@ -19,8 +19,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.4 $
- * $Author: sedwards $
- * $Date: 2003/08/25 01:37:48 $
+ * $Author$
+ * $Date$
  *
  */
 /* added modfl */

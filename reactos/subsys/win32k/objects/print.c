@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.25 2004/12/12 21:58:42 royce Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 INT

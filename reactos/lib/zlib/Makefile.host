@@ -1,4 +1,4 @@
-# $Id: Makefile.host,v 1.2 2003/10/15 02:56:02 vizzini Exp $
+# $Id$
 PATH_TO_TOP = ../..
 
 TARGET = zlib.host.a

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ms2ps.cpp,v 1.5 2004/09/12 10:22:31 navaraf Exp $
+/* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS seh conversion tool
  * FILE:            tools/ms2ps/ms2ps.cpp

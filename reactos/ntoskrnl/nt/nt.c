@@ -1,4 +1,4 @@
-/* $Id: nt.c,v 1.12 2004/08/15 16:39:09 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

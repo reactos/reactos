@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.60 2004/12/30 02:32:19 navaraf Exp $
+ * $Id$
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team

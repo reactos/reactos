@@ -1,4 +1,4 @@
-/* $Id: seh.s,v 1.4 2003/04/30 22:07:30 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS MSVCRT Runtime Library

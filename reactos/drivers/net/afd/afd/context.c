@@ -1,4 +1,4 @@
-/* $Id: context.c,v 1.3 2004/07/18 22:53:59 arty Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/context.c

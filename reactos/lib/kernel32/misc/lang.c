@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.25 2004/12/04 13:59:14 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries

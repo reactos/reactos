@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/07/21 18:17:50 chorns Exp $
+# $Id$
 #
 # ReactOS Operating System
 #

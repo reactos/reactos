@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.56 2004/10/24 15:26:14 weiden Exp $
+/* $Id$
  *
  * init.c - Session Manager initialization
  * 

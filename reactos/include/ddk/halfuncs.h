@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.12 2003/10/20 06:03:29 vizzini Exp $ */
+/* $Id$ */
 
 #include <ntos/haltypes.h>
 #include <ddk/iotypes.h>

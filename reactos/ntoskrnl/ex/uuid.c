@@ -1,4 +1,4 @@
-/* $Id: uuid.c,v 1.4 2004/12/20 14:07:34 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

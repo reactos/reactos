@@ -1,4 +1,4 @@
-/* $Id: sndvol32.rc,v 1.1 2004/12/29 22:37:13 weiden Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "resources.h"

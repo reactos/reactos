@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2 2004/12/16 18:37:28 sedwards Exp $
+# $Id$
 
 TARGET_NAME = dbghelp
 

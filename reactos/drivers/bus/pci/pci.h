@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.8 2004/08/16 09:13:00 ekohl Exp $ */
+/* $Id$ */
 
 #ifndef __PCI_H
 #define __PCI_H

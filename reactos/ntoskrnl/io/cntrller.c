@@ -1,4 +1,4 @@
-/* $Id: cntrller.c,v 1.12 2004/10/22 20:25:52 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

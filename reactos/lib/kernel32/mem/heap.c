@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.28 2004/12/16 15:10:00 gdalsnes Exp $
+/* $Id$
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved

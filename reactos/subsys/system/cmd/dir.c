@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.13 2004/12/25 11:22:37 navaraf Exp $
+/* $Id$
  *
  *  DIR.C - dir internal command.
  *

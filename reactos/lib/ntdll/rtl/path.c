@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.31 2004/11/29 01:42:03 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

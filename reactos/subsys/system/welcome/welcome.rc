@@ -1,4 +1,4 @@
-/* $Id: welcome.rc,v 1.7 2004/12/24 17:19:44 ekohl Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "resource.h"

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.7 2004/03/28 12:19:07 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll

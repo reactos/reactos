@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.24 2004/11/11 22:23:52 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel

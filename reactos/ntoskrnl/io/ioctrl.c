@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.25 2004/10/10 14:01:50 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

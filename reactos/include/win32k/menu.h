@@ -1,4 +1,4 @@
-/* $Id: menu.h,v 1.1 2004/02/15 07:39:12 gvg Exp $ */
+/* $Id$ */
 
 #ifndef WIN32K_MENU_H_INCLUDED
 #define WIN32K_MENU_H_INCLUDED

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/12/03 23:37:39 blight Exp $
+# $Id$
 
 PATH_TO_TOP = ../../..
 

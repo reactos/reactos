@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2004/01/28 20:55:36 ekohl Exp $
+/* $Id$
  *
  * DESCRIPTION: Entry point for TDI.SYS
  */

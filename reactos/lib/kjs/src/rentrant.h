@@ -25,7 +25,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/rentrant.h,v $
- * $Id: rentrant.h,v 1.1 2004/01/10 20:38:18 arty Exp $
+ * $Id$
  */
 
 #ifndef RENTRANT_H

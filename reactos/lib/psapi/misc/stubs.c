@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.11 2004/11/06 11:45:47 weiden Exp $ */
+/* $Id$ */
 #include "precomp.h"
 
 #define NDEBUG

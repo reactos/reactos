@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.32 2004/11/21 18:42:58 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

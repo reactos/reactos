@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.16 2004/11/06 11:45:47 weiden Exp $
+/* $Id$
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory

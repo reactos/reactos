@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.11 2004/09/14 14:01:25 weiden Exp $
+/* $Id$
  *
  * lib/kernel32/mem/isbad.c
  *

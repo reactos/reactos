@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.2 2004/12/04 22:52:59 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

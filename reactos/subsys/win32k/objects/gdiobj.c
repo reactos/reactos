@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.83 2004/12/21 04:05:18 royce Exp $
+ * $Id$
  */
 #include <w32k.h>
 #include <ddk/ntddk.h>

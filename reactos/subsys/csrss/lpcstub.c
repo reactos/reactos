@@ -1,4 +1,4 @@
-/* $Id: lpcstub.c,v 1.2 1999/07/17 23:10:30 ea Exp $
+/* $Id$
  *
  * lpcstub.c
  *

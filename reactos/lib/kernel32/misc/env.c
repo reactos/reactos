@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.27 2004/12/27 16:40:14 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

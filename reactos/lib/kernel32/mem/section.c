@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.27 2004/10/24 12:55:19 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel

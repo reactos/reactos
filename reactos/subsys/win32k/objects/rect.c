@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.8 2004/11/15 23:10:42 gvg Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 /* FUNCTIONS *****************************************************************/

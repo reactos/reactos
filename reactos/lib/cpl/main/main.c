@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.1 2004/10/30 12:35:16 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS Sample Control Panel
  * FILE:            lib/cpl/main/main.c

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2003/11/16 22:41:10 sedwards Exp $
+# $Id$
 
 PATH_TO_TOP = ../../..
 

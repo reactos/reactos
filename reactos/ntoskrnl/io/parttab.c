@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.9 2004/11/27 13:04:06 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

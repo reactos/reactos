@@ -1,4 +1,4 @@
-/* $Id: samlib.h,v 1.1 2004/01/23 10:32:26 ekohl Exp $
+/* $Id$
 */
 /*
  * samlib.h

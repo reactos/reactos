@@ -1,4 +1,4 @@
-/* $Id: acpienum.c,v 1.5 2004/12/27 14:24:00 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c

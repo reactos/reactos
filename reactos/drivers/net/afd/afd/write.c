@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.14 2004/12/28 17:05:19 navaraf Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c

@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.8 2004/10/08 21:37:16 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.51 2004/12/09 17:28:10 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,4 +1,4 @@
-/* $Id: vgaddi.rc,v 1.2 2004/10/16 20:27:28 gvg Exp $ */
+/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"VGA Display Driver\0"

@@ -19,8 +19,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.7 $
- * $Author: royce $
- * $Date: 2003/08/11 02:59:57 $
+ * $Author$
+ * $Date$
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */

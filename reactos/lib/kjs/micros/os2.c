@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/micros/os2.c,v $
- * $Id: os2.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 #include "jsint.h"

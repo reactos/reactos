@@ -1,4 +1,4 @@
-/* $Id: ps.c,v 1.3 2004/07/29 22:31:55 jimtabor Exp $
+/* $Id$
  *
  *  ReactOS ps - process list console viewer
  *

@@ -1,4 +1,4 @@
-/* $Id: tape.c,v 1.8 2004/04/10 23:20:17 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

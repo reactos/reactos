@@ -1,4 +1,4 @@
-/* $Id: shlwapi.h,v 1.9 2004/10/20 20:31:36 gvg Exp $
+/* $Id$
  *
  * Compatibility header
  *

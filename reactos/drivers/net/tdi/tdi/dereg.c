@@ -1,4 +1,4 @@
-/* $Id: dereg.c,v 1.8 2004/03/02 18:18:14 navaraf Exp $
+/* $Id$
  *
  */
 #include <ddk/ntddk.h>

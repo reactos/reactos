@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: perfcnt.c,v 1.4 2004/01/23 21:16:03 ekohl Exp $ */
+/* $Id$ */
 /*
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/perfcnt.c

@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.11 2004/11/15 11:49:37 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c

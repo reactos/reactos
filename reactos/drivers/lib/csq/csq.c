@@ -23,7 +23,7 @@
  * all happen at DISPATCH_LEVEL all of the time, so thread switching on a single
  * processor can create races too.
  */
-/* $Id: csq.c,v 1.4 2004/07/04 08:30:28 hbirr Exp $ */
+/* $Id$ */
 
 #define __NTDRIVER__
 #include <ddk/ntddk.h>

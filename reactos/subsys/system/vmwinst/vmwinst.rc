@@ -1,4 +1,4 @@
-/* $Id: vmwinst.rc,v 1.7 2004/10/16 20:27:41 gvg Exp $ */
+/* $Id$ */
 
 #include <defines.h>
 #include "vmwinst.h"

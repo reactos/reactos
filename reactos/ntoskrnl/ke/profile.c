@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.2 2004/08/15 16:39:05 chorns Exp $
+/* $Id$
  *
  * FILE:            ntoskrnl/ke/profile.c
  * PURPOSE:         Kernel Profiling

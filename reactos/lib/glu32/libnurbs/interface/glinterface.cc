@@ -31,7 +31,7 @@
 ** published by SGI, but has not been independently verified as being
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 **
-** $Date: 2004/02/02 16:39:08 $ $Revision: 1.1 $
+** $Date$ $Revision: 1.1 $
 */
 /*
 ** $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/glu32/libnurbs/interface/glinterface.cc,v 1.1 2004/02/02 16:39:08 navaraf Exp $

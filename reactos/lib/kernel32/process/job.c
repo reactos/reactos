@@ -1,4 +1,4 @@
-/* $Id: job.c,v 1.4 2004/09/23 18:55:18 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

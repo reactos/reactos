@@ -1,4 +1,4 @@
-/* $Id: minmax.h,v 1.1 2003/11/17 02:12:52 hyperion Exp $
+/* $Id$
  */
 
 #ifndef ROSRTL_MINMAX_H__

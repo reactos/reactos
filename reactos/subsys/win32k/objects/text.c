@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.124 2004/12/30 15:15:01 gvg Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 #include <ft2build.h>

@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.5 2004/12/23 12:37:04 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel

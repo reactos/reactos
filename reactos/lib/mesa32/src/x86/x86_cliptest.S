@@ -1,4 +1,4 @@
-/* $Id: x86_cliptest.S,v 1.3 2004/10/05 14:19:12 blight Exp $ */
+/* $Id$ */
 
 /*
  * Mesa 3-D graphics library

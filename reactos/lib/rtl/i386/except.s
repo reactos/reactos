@@ -1,4 +1,4 @@
-/* $Id: except.s,v 1.1 2004/06/25 01:41:19 hyperion Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

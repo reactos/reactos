@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.45 2004/08/29 12:12:34 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

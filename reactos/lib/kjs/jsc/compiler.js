@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*
@@ -202,7 +202,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*
@@ -1026,7 +1026,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*
@@ -2721,7 +2721,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /* General helpers. */
@@ -5418,7 +5418,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*
@@ -5579,7 +5579,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*
@@ -5752,7 +5752,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /* Byte-code file definitions. */
@@ -8039,7 +8039,7 @@ End:
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/jsc/compiler.js,v $
- * $Id: compiler.js,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 /*

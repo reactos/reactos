@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.4 2004/12/27 14:24:00 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/fdo.c

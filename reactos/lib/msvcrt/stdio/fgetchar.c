@@ -1,4 +1,4 @@
-/* $Id: fgetchar.c,v 1.6 2003/07/11 21:58:09 royce Exp $
+/* $Id$
  *
  *  ReactOS msvcrt library
  *

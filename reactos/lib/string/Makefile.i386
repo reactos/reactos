@@ -1,4 +1,4 @@
-# $Id: Makefile.i386,v 1.3 2003/07/06 23:04:19 hyperion Exp $
+# $Id$
 
 
 EXCLUDE_FILTER = \

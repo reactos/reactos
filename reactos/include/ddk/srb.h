@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.5 2003/10/19 10:36:41 robd Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

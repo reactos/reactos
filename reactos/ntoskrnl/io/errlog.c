@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.20 2004/09/28 12:51:14 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

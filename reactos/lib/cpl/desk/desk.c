@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: desk.c,v 1.3 2004/10/13 10:17:41 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/desk.c

@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.11 2004/08/27 03:08:23 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

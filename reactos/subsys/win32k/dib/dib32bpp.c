@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.31 2004/07/15 18:13:22 navaraf Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 VOID

@@ -1,4 +1,4 @@
-/* $Id: shellapi.h,v 1.4 2004/10/19 10:17:05 gvg Exp $
+/* $Id$
  *
  * Compatibility header
  *

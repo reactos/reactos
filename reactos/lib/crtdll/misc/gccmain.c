@@ -12,8 +12,8 @@
  *  Code supplied by Stan Cox <scox@cygnus.com>
  *
  * $Revision: 1.3 $
- * $Author: robd $
- * $Date: 2002/11/29 12:27:48 $
+ * $Author$
+ * $Date$
  *
  */
 

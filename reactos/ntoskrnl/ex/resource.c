@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.31 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

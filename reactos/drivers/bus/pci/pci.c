@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.9 2004/08/20 13:33:51 ekohl Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c

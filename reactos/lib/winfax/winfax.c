@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: winfax.c,v 1.1 2004/10/02 16:43:05 weiden Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS FAX API Support
  * FILE:            lib/winfax/winfax.c

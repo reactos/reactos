@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.2 2004/09/16 12:46:43 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS shutdown/logoff utility

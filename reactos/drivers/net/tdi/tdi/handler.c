@@ -1,4 +1,4 @@
-/* $Id: handler.c,v 1.7 2004/03/02 18:18:14 navaraf Exp $
+/* $Id$
  *
  * DESCRIPTION: Default TDI event handlers.
  */

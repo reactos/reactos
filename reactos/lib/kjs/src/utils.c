@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/utils.c,v $
- * $Id: utils.c,v 1.2 2004/12/24 23:01:35 navaraf Exp $
+ * $Id$
  */
 
 #include "jsint.h"

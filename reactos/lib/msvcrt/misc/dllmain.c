@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.24 2004/08/27 03:08:23 navaraf Exp $
+/* $Id$
  *
  * dllmain.c
  *
@@ -15,8 +15,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.24 $
- * $Author: navaraf $
- * $Date: 2004/08/27 03:08:23 $
+ * $Author$
+ * $Date$
  *
  */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trace.c,v 1.3 2002/09/08 10:23:07 chorns Exp $
+/* $Id$
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Tracing library calls

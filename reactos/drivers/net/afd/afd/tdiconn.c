@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c,v 1.6 2004/12/11 14:59:31 navaraf Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c

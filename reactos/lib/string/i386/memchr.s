@@ -1,4 +1,4 @@
-/* $Id: memchr.s,v 1.1 2003/05/27 18:58:15 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: wgl.c,v 1.3 2004/10/05 14:19:00 blight Exp $ */
+/* $Id$ */
 
 /*
 * This library is free software; you can redistribute it and/or

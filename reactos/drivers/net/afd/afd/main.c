@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2004/12/29 21:44:44 gvg Exp $
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c

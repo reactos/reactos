@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.27 2004/12/19 11:05:48 tamlin Exp $
+ * $Id$
  */
 
 #include <w32k.h>

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.36 2004/12/13 15:39:52 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

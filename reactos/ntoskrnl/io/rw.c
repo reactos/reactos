@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.56 2004/10/10 18:23:09 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

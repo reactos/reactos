@@ -1,4 +1,4 @@
-/* $Id: pci_xbox.c,v 1.3 2004/12/11 14:45:00 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

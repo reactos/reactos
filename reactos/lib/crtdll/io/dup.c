@@ -1,4 +1,4 @@
-/* $Id: dup.c,v 1.9 2004/08/15 17:34:26 chorns Exp $ */
+/* $Id$ */
 #include "precomp.h"
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>

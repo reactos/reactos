@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.5 2003/07/11 13:50:23 royce Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

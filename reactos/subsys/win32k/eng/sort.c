@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sort.c,v 1.3 2004/05/10 17:07:17 weiden Exp $ */
+/* $Id$ */
 #include <w32k.h>
 
 /*

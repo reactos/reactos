@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/examples/ieval.c,v $
- * $Id: ieval.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id$
  */
 
 #include <stdio.h>

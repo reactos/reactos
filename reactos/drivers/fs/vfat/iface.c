@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iface.c,v 1.74 2004/02/10 16:22:56 navaraf Exp $
+/* $Id$
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/iface.c

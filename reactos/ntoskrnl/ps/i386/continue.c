@@ -1,4 +1,4 @@
-/* $Id: continue.c,v 1.6 2004/11/20 23:46:37 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel

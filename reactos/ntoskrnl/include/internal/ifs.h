@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
-/* $Id: ifs.h,v 1.7 2004/12/30 02:30:40 gdalsnes Exp $ */
+/* $Id$ */
 
 #include <ddk/ntifs.h>
 #include <ntos.h>

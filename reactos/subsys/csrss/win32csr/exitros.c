@@ -1,4 +1,4 @@
-/* $Id: exitros.c,v 1.1 2004/07/12 20:09:34 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSRSS subsystem

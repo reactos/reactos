@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.10 2004/11/21 11:37:22 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

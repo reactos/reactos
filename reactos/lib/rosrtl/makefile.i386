@@ -1,4 +1,4 @@
-# $Id: makefile.i386,v 1.2 2003/12/30 05:10:32 hyperion Exp $
+# $Id$
 
 THREAD_OBJECTS := \
  $(THREAD_OBJECTS) \

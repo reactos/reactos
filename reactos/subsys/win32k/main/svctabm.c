@@ -34,7 +34,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: svctabm.c,v 1.6 2004/05/10 17:07:18 weiden Exp $
+/* $Id$
  * 
  *  Entry Point for win32k.sys
  */

@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.20 2004/10/24 15:26:14 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

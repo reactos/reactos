@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.1 2004/12/04 21:43:37 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL

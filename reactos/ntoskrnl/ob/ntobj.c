@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.24 2004/10/24 20:37:26 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

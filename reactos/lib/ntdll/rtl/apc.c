@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: apc.c,v 1.7 2002/09/08 10:23:04 chorns Exp $
+/* $Id$
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           User-mode APC support

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.21 2004/08/03 19:20:38 ion Exp $ */
+/* $Id$ */
 
 #ifdef __NTOSKRNL__
 extern PACL EXPORTED SePublicDefaultDacl;

@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.29 2004/12/25 21:30:18 arty Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

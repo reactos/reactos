@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.12 2004/10/30 14:02:04 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id: drivers.c,v 1.4 2004/11/08 00:34:45 weiden Exp $
+/* $Id$
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory

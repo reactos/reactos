@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.33 2004/09/22 14:53:26 weiden Exp $
+/* $Id$
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H

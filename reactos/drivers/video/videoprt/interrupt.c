@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.2 2004/03/19 20:58:31 navaraf Exp $
+ * $Id$
  */
 
 #include "videoprt.h"

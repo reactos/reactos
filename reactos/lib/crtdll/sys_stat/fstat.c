@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.14 2004/08/15 17:34:27 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

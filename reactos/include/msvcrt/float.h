@@ -28,8 +28,8 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.5 $
- * $Author: sedwards $
- * $Date: 2003/08/25 01:37:47 $
+ * $Author$
+ * $Date$
  *
  */
 

@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.2 2004/12/11 15:23:51 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

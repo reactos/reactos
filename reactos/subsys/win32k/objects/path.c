@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.24 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id$ */
 #include <w32k.h>
 #include <win32k/float.h>
 

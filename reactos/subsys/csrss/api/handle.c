@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.17 2004/04/09 20:03:15 navaraf Exp $
+/* $Id$
  *
  * reactos/subsys/csrss/api/handle.c
  *

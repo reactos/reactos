@@ -25,7 +25,7 @@
 #
 #
 # $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/make-op-def.pl,v $
-# $Id: make-op-def.pl,v 1.1 2004/01/10 20:38:18 arty Exp $
+# $Id$
 #
 
 $opcount = 0;

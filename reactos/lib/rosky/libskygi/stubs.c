@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.9 2004/08/14 10:47:19 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library

@@ -1,4 +1,4 @@
-/* $Id: consw.c,v 1.2 2003/11/14 17:13:22 weiden Exp $
+/* $Id$
  *
  * DESCRIPTION: Console mode switcher
  * PROGRAMMER:  Art Yerkes

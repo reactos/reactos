@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.13 2004/10/20 19:19:12 weiden Exp $
+/* $Id$
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c

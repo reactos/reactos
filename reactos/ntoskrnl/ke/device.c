@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.5 2004/10/22 20:07:13 navaraf Exp $
+/* $Id$
  *
  * FILE:            ntoskrnl/ke/profile.c
  * PURPOSE:         Kernel Device/Settings Functions

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.7 2004/07/19 17:55:33 weiden Exp $
+ * $Id$
  */
 
 #include "videoprt.h"

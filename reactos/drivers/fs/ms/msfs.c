@@ -1,4 +1,4 @@
-/* $Id: msfs.c,v 1.8 2004/03/07 20:33:25 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel

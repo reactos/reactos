@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/src/r_pthrs.c,v $
- * $Id: r_pthrs.c,v 1.1 2004/01/10 20:38:18 arty Exp $
+ * $Id$
  */
 
 #include "jsint.h"
