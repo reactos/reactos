@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.58 2004/06/28 21:03:08 navaraf Exp $ */
+/* $Id: region.c,v 1.59 2004/06/29 06:08:54 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -1736,96 +1736,90 @@ void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
     REGION_UnionRegion(rgn, rgn, &region);
 }
 
-
 BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
 {
-  PROSRGNDATA srcObj, destObj;
-  PRECT rc;
-  INT dx, dy;
-  ULONG i;
+   PROSRGNDATA srcObj, destObj;
+   PRECT rc;
+   ULONG i;
   
-  if(!(srcObj = (PROSRGNDATA)RGNDATA_LockRgn(hSrc)))
-  {
-    return FALSE;
-  }
-  if(!REGION_NOT_EMPTY(srcObj))
-  {
-    RGNDATA_UnlockRgn(hSrc);
-    return FALSE;
-  }
-  if(!(destObj = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
-  {
-    RGNDATA_UnlockRgn(hSrc);
-    return FALSE;
-  }
+   if (!(srcObj = (PROSRGNDATA)RGNDATA_LockRgn(hSrc)))
+   {
+      return FALSE;
+   }
+   if (!REGION_NOT_EMPTY(srcObj))
+   {
+      RGNDATA_UnlockRgn(hSrc);
+      return FALSE;
+   }
+   if (!(destObj = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
+   {
+      RGNDATA_UnlockRgn(hSrc);
+      return FALSE;
+   }
   
-  EMPTY_REGION(destObj);
-  if(!REGION_CopyRegion(destObj, srcObj))
-  {
-    RGNDATA_UnlockRgn(hDest);
-    RGNDATA_UnlockRgn(hSrc);
-    return FALSE;
-  }
+   EMPTY_REGION(destObj);
+   if (!REGION_CopyRegion(destObj, srcObj))
+   {
+      RGNDATA_UnlockRgn(hDest);
+      RGNDATA_UnlockRgn(hSrc);
+      return FALSE;
+   }
   
-  /* left-top */
-  dx = x * 2;
-  dy = y * 2;
-  rc = (PRECT)srcObj->Buffer;
-  for(i = 0; i < srcObj->rdh.nCount; i++)
-  {
-    rc->left += x;
-    rc->top += y;
-    rc->right += x;
-    rc->bottom += y;
-    rc++;
-  }
-  REGION_IntersectRegion(destObj, destObj, srcObj);
+   /* Original region moved to right */
+   rc = (PRECT)srcObj->Buffer;
+   for (i = 0; i < srcObj->rdh.nCount; i++)
+   {
+      rc->left += x;
+      rc->right += x;
+      rc++;
+   }
+   REGION_IntersectRegion(destObj, destObj, srcObj);
   
-  /* right-top */
-  rc = (PRECT)srcObj->Buffer;
-  for(i = 0; i < srcObj->rdh.nCount; i++)
-  {
-    rc->left -= dx;
-    rc->right -= dx;
-    rc++;
-  }
-  REGION_IntersectRegion(destObj, destObj, srcObj);
+   /* Original region moved to left */
+   rc = (PRECT)srcObj->Buffer;
+   for (i = 0; i < srcObj->rdh.nCount; i++)
+   {
+      rc->left -= 2 * x;
+      rc->right -= 2 * x;
+      rc++;
+   }
+   REGION_IntersectRegion(destObj, destObj, srcObj);
   
-  /* right-bottom */
-  rc = (PRECT)srcObj->Buffer;
-  for(i = 0; i < srcObj->rdh.nCount; i++)
-  {
-    rc->top -= dy;
-    rc->bottom -= dy;
-    rc++;
-  }
-  REGION_IntersectRegion(destObj, destObj, srcObj);
+   /* Original region moved down */
+   rc = (PRECT)srcObj->Buffer;
+   for (i = 0; i < srcObj->rdh.nCount; i++)
+   {
+      rc->left += x;
+      rc->right += x;
+      rc->top += y;
+      rc->bottom += y;
+      rc++;
+   }
+   REGION_IntersectRegion(destObj, destObj, srcObj);
   
-  /* left-bottom */
-  rc = (PRECT)srcObj->Buffer;
-  for(i = 0; i < srcObj->rdh.nCount; i++)
-  {
-    rc->left += dx;
-    rc->right += dx;
-    rc++;
-  }
-  REGION_IntersectRegion(destObj, destObj, srcObj);
+   /* Original region moved up */
+   rc = (PRECT)srcObj->Buffer;
+   for (i = 0; i < srcObj->rdh.nCount; i++)
+   {
+      rc->top -= 2 * y;
+      rc->bottom -= 2 * y;
+      rc++;
+   }
+   REGION_IntersectRegion(destObj, destObj, srcObj);
   
+   /* Restore the original region */
+   rc = (PRECT)srcObj->Buffer;
+   for (i = 0; i < srcObj->rdh.nCount; i++)
+   {
+      rc->top += y;
+      rc->bottom += y;
+      rc++;
+   }
+   REGION_SubtractRegion(destObj, srcObj, destObj);
   
-  rc = (PRECT)srcObj->Buffer;
-  for(i = 0; i < srcObj->rdh.nCount; i++)
-  {
-    rc->left -= x;
-    rc->top += y;
-    rc->right -= x;
-    rc->bottom += y;
-    rc++;
-  }
-  REGION_SubtractRegion(destObj, srcObj, destObj);
-  
-  RGNDATA_UnlockRgn(hDest);
-  RGNDATA_UnlockRgn(hSrc);
-  return TRUE;
+   RGNDATA_UnlockRgn(hDest);
+   RGNDATA_UnlockRgn(hSrc);
+   return TRUE;
 }
 
 
