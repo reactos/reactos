@@ -735,16 +735,16 @@ NTOSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING  Name,
-	OUT PVOID  Value,
-	IN ULONG  ValueLength,
-	OUT PULONG  ReturnLength  OPTIONAL);
+	IN PUNICODE_STRING VariableName,
+	OUT PWSTR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemEnvironmentValue(
-	IN PUNICODE_STRING  Name,
+	IN PUNICODE_STRING  VariableName,
 	IN PUNICODE_STRING  Value);
 
 typedef enum _SHUTDOWN_ACTION {

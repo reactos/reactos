@@ -90,10 +90,10 @@ ExGetCurrentProcessorCounts (
 }
 
 NTSTATUS STDCALL
-NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
-			       OUT	PVOID		UnsafeValue,
-			       IN	ULONG		Length,
-			       IN OUT	PULONG		UnsafeReturnLength)
+NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
+			       OUT	PWCHAR		ValueBuffer,
+			       IN	ULONG		ValueBufferLength,
+			       IN OUT	PULONG		ReturnLength  OPTIONAL)
 {
   NTSTATUS Status;
   ANSI_STRING AName;
@@ -102,225 +102,197 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
   PCH Value;
   ANSI_STRING AValue;
   UNICODE_STRING WValue;
-  ULONG ReturnLength;
+  KPROCESSOR_MODE PreviousMode;
+  
+  PreviousMode = ExGetPreviousMode();
 
   /*
    * Copy the name to kernel space if necessary and convert it to ANSI.
    */
-  if (ExGetPreviousMode() != KernelMode)
+  Status = RtlCaptureUnicodeString(&WName,
+                                   PreviousMode,
+                                   NonPagedPool,
+                                   FALSE,
+                                   VariableName);
+  if(NT_SUCCESS(Status))
+  {
+    if(PreviousMode != KernelMode)
     {
-      Status = RtlCaptureUnicodeString(&WName, UnsafeName);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+      ProbeForWrite(ValueBuffer,
+                    ValueBufferLength,
+                    sizeof(WCHAR));
+      if(ReturnLength != NULL)
+      {
+        ProbeForWrite(ReturnLength,
+                      sizeof(ULONG),
+                      sizeof(ULONG));
+      }
     }
-  else
+    
+    /*
+     * according to ntinternals the SeSystemEnvironmentName privilege is required!
+     */
+    if(!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege,
+                               PreviousMode))
     {
-      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+      RtlRelaseCapturedUnicodeString(&WName,
+                                     PreviousMode,
+                                     FALSE);
+      return STATUS_PRIVILEGE_NOT_HELD;
     }
-
+    
+    /*
+     * convert the value name to ansi
+     */
+    Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
+    RtlRelaseCapturedUnicodeString(&WName,
+                                   PreviousMode,
+                                   FALSE);
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+    
   /*
    * Create a temporary buffer for the value
    */
-  Value = ExAllocatePool(NonPagedPool, Length);
-  if (Value == NULL)
+    Value = ExAllocatePool(NonPagedPool, ValueBufferLength);
+    if (Value == NULL)
     {
       RtlFreeAnsiString(&AName);
-      if (ExGetPreviousMode() != KernelMode)
-	{
-	  RtlFreeUnicodeString(&WName);
-	}
-      return(STATUS_NO_MEMORY);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-  /*
-   * Get the environment variable
-   */
-  Result = HalGetEnvironmentVariable(AName.Buffer, Value, Length);
-  if (!Result)
+    
+    /*
+     * Get the environment variable
+     */
+    Result = HalGetEnvironmentVariable(AName.Buffer, Value, ValueBufferLength);
+    if(!Result)
     {
       RtlFreeAnsiString(&AName);
-      if (ExGetPreviousMode() != KernelMode)
-	{
-	  RtlFreeUnicodeString(&WName);
-	}
       ExFreePool(Value);
-      return(STATUS_UNSUCCESSFUL);
+      return STATUS_UNSUCCESSFUL;
     }
-
-  /*
-   * Convert the result to UNICODE.
-   */
-  RtlInitAnsiString(&AValue, Value);
-  Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
-  if (!NT_SUCCESS(Status))
+    
+    /*
+     * Convert the result to UNICODE, protect with SEH in case the value buffer
+     * isn't NULL-terminated!
+     */
+    _SEH_TRY
     {
-      RtlFreeAnsiString(&AName);
-      if (ExGetPreviousMode() != KernelMode)
-	{
-	  RtlFreeUnicodeString(&WName);
-	}
-      ExFreePool(Value);
-      return(Status);
+      RtlInitAnsiString(&AValue, Value);
+      Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
     }
-  ReturnLength = WValue.Length;
-
-  /*
-   * Copy the result back to the caller.
-   */
-  if (ExGetPreviousMode() != KernelMode)
+    _SEH_HANDLE
     {
-      Status = MmCopyToCaller(UnsafeValue, WValue.Buffer, ReturnLength);
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeAnsiString(&AName);
-	  if (ExGetPreviousMode() != KernelMode)
-	    {
-	      RtlFreeUnicodeString(&WName);
-	    }
-	  ExFreePool(Value);
-	  RtlFreeUnicodeString(&WValue);
-	  return(Status);
-	}
-
-      Status = MmCopyToCaller(UnsafeReturnLength, &ReturnLength, 
-			      sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeAnsiString(&AName);
-	  if (ExGetPreviousMode() != KernelMode)
-	    {
-	      RtlFreeUnicodeString(&WName);
-	    }
-	  ExFreePool(Value);
-	  RtlFreeUnicodeString(&WValue);
-	  return(Status);
-	}
+      Status = _SEH_GetExceptionCode();
     }
-  else
+    _SEH_END;
+
+    if(NT_SUCCESS(Status))
     {
-      memcpy(UnsafeValue, WValue.Buffer, ReturnLength);
-      memcpy(UnsafeReturnLength, &ReturnLength, sizeof(ULONG));
-    }
+      /*
+       * Copy the result back to the caller.
+       */
+      _SEH_TRY
+      {
+        RtlCopyMemory(ValueBuffer, WValue.Buffer, WValue.Length);
+        ValueBuffer[WValue.Length / sizeof(WCHAR)] = L'\0';
+        if(ReturnLength != NULL)
+        {
+          *ReturnLength = WValue.Length + sizeof(WCHAR);
+        }
 
-  /*
-   * Free temporary buffers.
-   */
-  RtlFreeAnsiString(&AName);
-  if (ExGetPreviousMode() != KernelMode)
-    {
-      RtlFreeUnicodeString(&WName);
+        Status = STATUS_SUCCESS;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
-  ExFreePool(Value);
-  RtlFreeUnicodeString(&WValue);
+    
+    /*
+     * Cleanup allocated resources.
+     */
+    RtlFreeAnsiString(&AName);
+    ExFreePool(Value);
+  }
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
 NTSTATUS STDCALL
-NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
-			     IN	PUNICODE_STRING	UnsafeValue)
+NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
+			     IN	PUNICODE_STRING	Value)
 {
-  UNICODE_STRING WName;
-  ANSI_STRING AName;
-  UNICODE_STRING WValue;
-  ANSI_STRING AValue;
-  BOOLEAN Result;
+  UNICODE_STRING CapturedName, CapturedValue;
+  ANSI_STRING AName, AValue;
+  KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
 
+  PreviousMode = ExGetPreviousMode();
+  
   /*
-   * Check for required privilege.
+   * Copy the strings to kernel space if necessary
    */
-  /* FIXME: Not implemented. */
+  Status = RtlCaptureUnicodeString(&CapturedName,
+                                   PreviousMode,
+                                   NonPagedPool,
+                                   FALSE,
+                                   VariableName);
+  if(NT_SUCCESS(Status))
+  {
+    Status = RtlCaptureUnicodeString(&CapturedValue,
+                                     PreviousMode,
+                                     NonPagedPool,
+                                     FALSE,
+                                     Value);
+    if(NT_SUCCESS(Status))
+    {
+      /*
+       * according to ntinternals the SeSystemEnvironmentName privilege is required!
+       */
+      if(SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege,
+                                PreviousMode))
+      {
+        /*
+         * convert the strings to ANSI
+         */
+        Status = RtlUnicodeStringToAnsiString(&AName,
+                                              &CapturedName,
+                                              TRUE);
+        if(NT_SUCCESS(Status))
+        {
+          Status = RtlUnicodeStringToAnsiString(&AValue,
+                                                &CapturedValue,
+                                                TRUE);
+          if(NT_SUCCESS(Status))
+          {
+            BOOLEAN Result = HalSetEnvironmentVariable(AName.Buffer,
+                                                       AValue.Buffer);
 
-  /*
-   * Copy the name to kernel space if necessary and convert it to ANSI.
-   */
-  if (ExGetPreviousMode() != KernelMode)
-    {
-      Status = RtlCaptureUnicodeString(&WName, UnsafeName);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}      
-    }
-  else
-    {
-      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-    }
-
-  /*
-   * Copy the value to kernel space and convert to ANSI.
-   */
-  if (ExGetPreviousMode() != KernelMode)
-    {
-      Status = RtlCaptureUnicodeString(&WValue, UnsafeValue);
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeUnicodeString(&WName);
-	  RtlFreeAnsiString(&AName);
-	  return(Status);
-	}
-      Status = RtlUnicodeStringToAnsiString(&AValue, UnsafeValue, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeUnicodeString(&WName);
-	  RtlFreeAnsiString(&AName);
-	  RtlFreeUnicodeString(&WValue);
-	  return(Status);
-	}      
-    }
-  else
-    {
-      Status = RtlUnicodeStringToAnsiString(&AValue, UnsafeValue, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeAnsiString(&AName);
-	  return(Status);
-	}
+            Status = (Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+          }
+        }
+      }
+      else
+      {
+        Status = STATUS_PRIVILEGE_NOT_HELD;
+      }
+      
+      RtlRelaseCapturedUnicodeString(&CapturedValue,
+                                     PreviousMode,
+                                     FALSE);
     }
 
-  /*
-   * Set the environment variable
-   */
-  Result = HalSetEnvironmentVariable(AName.Buffer, AValue.Buffer);
-
-  /*
-   * Free everything and return status.
-   */
-  RtlFreeAnsiString(&AName);
-  RtlFreeAnsiString(&AValue);
-  if (ExGetPreviousMode() != KernelMode)
-    {
-      RtlFreeUnicodeString(&WName);
-      RtlFreeUnicodeString(&WValue);
-    }
-
-  if (!Result)
-    {
-      return(STATUS_UNSUCCESSFUL);
-    }
-  return(STATUS_SUCCESS);
+    RtlRelaseCapturedUnicodeString(&CapturedName,
+                                   PreviousMode,
+                                   FALSE);
+  }
+  
+  return Status;
 }
 
 

@@ -34,7 +34,7 @@ IoCreateNotificationEvent(PUNICODE_STRING EventName,
 			      NULL,
 			      NULL);
 
-   Status = NtCreateEvent(&Handle,
+   Status = ZwCreateEvent(&Handle,
 			  EVENT_ALL_ACCESS,
 			  &ObjectAttributes,
 			  NotificationEvent,
@@ -65,21 +65,40 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			     PHANDLE EventHandle)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING CapturedEventName;
+   KPROCESSOR_MODE PreviousMode;
    PKEVENT Event;
    HANDLE Handle;
    NTSTATUS Status;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   Status = RtlCaptureUnicodeString(&CapturedEventName,
+                                    PreviousMode,
+                                    NonPagedPool,
+                                    FALSE,
+                                    EventName);
+   if (!NT_SUCCESS(Status))
+     {
+	return NULL;
+     }
 
    InitializeObjectAttributes(&ObjectAttributes,
-			      EventName,
+			      &CapturedEventName,
 			      OBJ_OPENIF,
 			      NULL,
 			      NULL);
 
-   Status = NtCreateEvent(&Handle,
+   Status = ZwCreateEvent(&Handle,
 			  EVENT_ALL_ACCESS,
 			  &ObjectAttributes,
 			  SynchronizationEvent,
 			  TRUE);
+
+   RtlRelaseCapturedUnicodeString(&CapturedEventName,
+                                  PreviousMode,
+                                  FALSE);
+
    if (!NT_SUCCESS(Status))
      {
 	return NULL;

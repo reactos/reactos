@@ -748,7 +748,7 @@ ExpInitializeExecutive(VOID)
     0,
     NULL,
     NULL);
-  Status = NtCreateEvent(&InitDoneEventHandle,
+  Status = ZwCreateEvent(&InitDoneEventHandle,
     EVENT_ALL_ACCESS,
     &ObjectAttributes,
     SynchronizationEvent,
@@ -778,7 +778,7 @@ ExpInitializeExecutive(VOID)
 
       /* Wait for the system to be initialized */
       Timeout.QuadPart = (LONGLONG)-1200000000;  /* 120 second timeout */
-      Status = NtWaitForMultipleObjects(((LONG) sizeof(Handles) / sizeof(HANDLE)),
+      Status = ZwWaitForMultipleObjects(((LONG) sizeof(Handles) / sizeof(HANDLE)),
         Handles,
         WaitAny,
         FALSE,    /* Non-alertable */
@@ -804,9 +804,9 @@ ExpInitializeExecutive(VOID)
           InbvEnableBootDriver(FALSE);
         }
 
-      NtSetEvent(InitDoneEventHandle, NULL);
+      ZwSetEvent(InitDoneEventHandle, NULL);
 
-      NtClose(InitDoneEventHandle);
+      ZwClose(InitDoneEventHandle);
     }
   else
     {
@@ -820,7 +820,7 @@ ExpInitializeExecutive(VOID)
        * Crash the system if the initial process terminates within 5 seconds.
        */
       Timeout.QuadPart = (LONGLONG)-50000000;  /* 5 second timeout */
-      Status = NtWaitForSingleObject(ProcessHandle,
+      Status = ZwWaitForSingleObject(ProcessHandle,
     				 FALSE,
     				 &Timeout);
       if (Status != STATUS_TIMEOUT)
@@ -834,8 +834,8 @@ ExpInitializeExecutive(VOID)
 
   KiTimerSystemAuditing = 1;
 
-  NtClose(ThreadHandle);
-  NtClose(ProcessHandle);
+  ZwClose(ThreadHandle);
+  ZwClose(ProcessHandle);
 }
 
 VOID __attribute((noinline))

@@ -35,43 +35,95 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-RtlCaptureUnicodeString(PUNICODE_STRING Dest,
-			PUNICODE_STRING UnsafeSrc)
+RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
+	                IN KPROCESSOR_MODE CurrentMode,
+	                IN POOL_TYPE PoolType,
+	                IN BOOLEAN CaptureIfKernel,
+			IN PUNICODE_STRING UnsafeSrc)
 {
-  PUNICODE_STRING Src;
-  NTSTATUS Status;
-
+  UNICODE_STRING Src;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  ASSERT(Dest != NULL);
+  
   /*
    * Copy the source string structure to kernel space.
    */
-  Status = MmCopyFromCaller(&Src, UnsafeSrc, sizeof(UNICODE_STRING));
-  if (!NT_SUCCESS(Status))
+  
+  if(CurrentMode == UserMode)
+  {
+    _SEH_TRY
     {
-      return(Status);
+      ProbeForRead(UnsafeSrc,
+                   sizeof(UNICODE_STRING),
+                   sizeof(ULONG));
+      Src = *UnsafeSrc;
     }
-
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+  else if(!CaptureIfKernel)
+  {
+    /* just copy the UNICODE_STRING structure, the pointers are considered valid */
+    *Dest = *UnsafeSrc;
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    /* capture the string even though it is considered to be valid */
+    Src = *UnsafeSrc;
+  }
+  
   /*
    * Initialize the destination string.
    */
-  Dest->Length = Src->Length;
-  Dest->MaximumLength = Src->MaximumLength;
-  Dest->Buffer = ExAllocatePool(NonPagedPool, Dest->MaximumLength);
+  Dest->Length = Src.Length;
+  Dest->MaximumLength = Src.Length + sizeof(WCHAR);
+  Dest->Buffer = ExAllocatePool(PoolType, Dest->MaximumLength);
   if (Dest->Buffer == NULL)
-    {
-      return(STATUS_NO_MEMORY);
-    }
+  {
+    Dest->Length = Dest->MaximumLength = 0;
+    Dest->Buffer = NULL;
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   /*
    * Copy the source string to kernel space.
    */
-  Status = MmCopyFromCaller(Dest->Buffer, Src->Buffer, Dest->Length);
-  if (!NT_SUCCESS(Status))
+  if(Src.Length > 0)
+  {
+    _SEH_TRY
     {
-      ExFreePool(Dest->Buffer);
-      return(Status);
+      RtlCopyMemory(Dest->Buffer, Src.Buffer, Src.Length);
+      Dest->Buffer[Src.Length / sizeof(WCHAR)] = L'\0';
     }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+  
+  return Status;
+}
 
-  return(STATUS_SUCCESS);
+VOID
+RtlRelaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
+	                       IN KPROCESSOR_MODE CurrentMode,
+	                       IN BOOLEAN CaptureIfKernel)
+{
+  if(CurrentMode != KernelMode || CaptureIfKernel )
+  {
+    RtlFreeUnicodeString(CapturedString);
+  }
 }
 
 NTSTATUS

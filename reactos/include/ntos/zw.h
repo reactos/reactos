@@ -3107,19 +3107,19 @@ ZwQuerySymbolicLinkObject(
 NTSTATUS
 STDCALL
 NtQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING Name,
-	OUT PVOID Value,
-	ULONG Length,
-	PULONG ReturnLength
+	IN PUNICODE_STRING VariableName,
+	OUT PWSTR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING Name,
-	OUT PVOID Value,
-	ULONG Length,
-	PULONG ReturnLength
+	IN PUNICODE_STRING VariableName,
+	OUT PWSTR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 

@@ -84,7 +84,7 @@ SeInitSRM(VOID)
 			     OBJ_PERMANENT,
 			     0,
 			     NULL);
-  Status = NtCreateDirectoryObject(&DirectoryHandle,
+  Status = ZwCreateDirectoryObject(&DirectoryHandle,
 				   DIRECTORY_ALL_ACCESS,
 				   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -101,7 +101,7 @@ SeInitSRM(VOID)
 			     OBJ_PERMANENT,
 			     DirectoryHandle,
 			     SePublicDefaultSd);
-  Status = NtCreateEvent(&EventHandle,
+  Status = ZwCreateEvent(&EventHandle,
 			 EVENT_ALL_ACCESS,
 			 &ObjectAttributes,
 			 SynchronizationEvent,
@@ -113,8 +113,8 @@ SeInitSRM(VOID)
       return FALSE;
     }
 
-  NtClose(EventHandle);
-  NtClose(DirectoryHandle);
+  ZwClose(EventHandle);
+  ZwClose(DirectoryHandle);
 
   /* FIXME: Create SRM port and listener thread */
 
