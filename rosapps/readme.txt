@@ -1,22 +1,19 @@
-$Id: readme.txt,v 1.4 2001/12/30 20:29:54 sedwards Exp $
+$Id: readme.txt,v 1.5 2004/04/06 21:04:42 sedwards Exp $
 
-This directory contains core applications that support the
-ReactOS kernel.
+This directory contains extra applicatons for ReactOS.
+Make sure you also have a copy of the rest of the ReactOS
+source before you attempt to build anything in this module.
 
-Before you start to compile applications check the HOST
-variable in 'rules.mak'.
-
-The following is a short decription of each.  Check the
+The following is a short decription of each.  Check for a
 readme.txt under each application for more details.
 
-CMD     : This is Eric Kohl's port of COMMAND for ReactOS.
+CALC	: A clone of calc
 CMDUTILS: External commands for CMD.
-DEVUTILS: 
-DFLAT32 : 
+DEVUTILS: Extra developer tools.
+DFLAT32 : Console text editor
+GAMES	: The start of the ReactOS games collection
 MC	: Midnight Commander
-NET	: Ping, Ncftp, Telnet
+NET	: Network tools: Arp, finger, Ping, Ncftp, Telnet, etc...
+NOTEPAD	: Notepad clone.
 NOTEVIL : ReactOS Coders Console Parade.
-SYSUTILS: ReactOS System Utilities.
-TASKMGR : Brian Palmer's Taskmanager
-
-
+SYSUTILS: System Utilities.
