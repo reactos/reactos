@@ -65,6 +65,8 @@ KdPortPollByte@4
 KdPortPutByte@4
 KdPortRestore@0
 KdPortSave@0
+KdPortDisableInterrupts@0
+KdPortEnableInterrupts@0
 KeAcquireSpinLock@8
 @KeAcquireSpinLockRaiseToSynch@4
 KeFlushWriteBuffer@0

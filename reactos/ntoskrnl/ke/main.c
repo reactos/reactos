@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.111 2002/01/15 02:51:32 dwelch Exp $
+/* $Id: main.c,v 1.112 2002/01/23 23:39:25 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -88,7 +88,7 @@ SERVICE Services[] = {
   {L"pci", L"PCI Bus Driver", L"Boot Bus Extender", 0, 1},
   {L"keyboard", L"Standard Keyboard Driver", L"Base", 0, 1},
   {L"blue", L"Bluescreen Driver", L"Base", 0, 1},
-/*  {L"vidport", L"Video Port Driver", L"Base", 0, 1},
+  {L"vidport", L"Video Port Driver", L"Base", 0, 1},
   {L"vgamp", L"VGA Miniport", L"Base", 0, 1},
   {L"minixfs", L"Minix File System", L"File system", 0, 1},
   {L"msfs", L"Mail Slot File System", L"File system", 0, 1},
@@ -97,13 +97,13 @@ SERVICE Services[] = {
   {L"mouclass", L"Mouse Class Driver", L"Pointer Class", 0, 1},
   {L"ndis", L"NDIS System Driver", L"NDIS Wrapper", 0, 1},
   {L"ne2000", L"Novell Eagle 2000 Driver", L"NDIS", 0, 1},
-  {L"afd", L"AFD Networking Support Environment", L"TDI", 0, 1},*/
+  {L"afd", L"AFD Networking Support Environment", L"TDI", 0, 1},
   {NULL,}
 };
 
 /* FUNCTIONS ****************************************************************/
 
-//#define FULLREG
+#define FULLREG
 
 VOID CreateDefaultRegistryForLegacyDriver(
   PSERVICE Service)
@@ -312,7 +312,7 @@ VOID CreateDefaultRegistryForLegacyDriver(
 	NtClose(KeyHandle);
 	return;
     }
-#if FULLREG
+#ifdef FULLREG
   DwordData = Service->Start;
   Length = sizeof(DWORD);
   Status = RtlWriteRegistryValue(
@@ -953,11 +953,7 @@ ExpInitializeExecutive(VOID)
    * Initialize the kernel debugger
    */
   KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-  if (KdPollBreakIn ())
-    {
-      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-    }
-  
+
   MmInit2();
   KeInit2();
   
@@ -965,7 +961,14 @@ ExpInitializeExecutive(VOID)
 
   ObInit();
   PiInitProcessManager();
-  
+
+  KdInit1();
+
+  if (KdPollBreakIn ())
+    {
+      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+    }
+
   /*
    * Display version number and copyright/warranty message
    */
@@ -1029,6 +1032,7 @@ ExpInitializeExecutive(VOID)
   NtInit();
   MmInit3();
   CcInit();
+  KdInit2();
   
   /* Report all resources used by hal */
   HalReportResourceUsage();

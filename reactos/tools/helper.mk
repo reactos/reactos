@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.10 2002/01/08 00:49:02 dwelch Exp $
+# $Id: helper.mk,v 1.11 2002/01/23 23:39:26 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -6,7 +6,7 @@
 #                        program = User mode program
 #                        proglib = Executable program that have exported functions
 #                        dynlink = Dynamic Link Library (DLL)
-#                        library = Import library that will be linked with other code
+#                        library = Library that will be linked with other code
 #                        driver_library = Import library for a driver
 #                        driver = Kernel mode driver
 #                        export_driver = Kernel mode driver that have exported functions
@@ -125,8 +125,8 @@ endif
 endif
 
 ifeq ($(TARGET_TYPE),library)
-  MK_MODE := user
-  MK_EXETYPE := dll
+  MK_MODE := static
+  MK_EXETYPE :=
   MK_DEFEXT := .a
   MK_DEFENTRY :=
   MK_DDKLIBS :=
@@ -135,12 +135,12 @@ ifeq ($(TARGET_TYPE),library)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
   MK_IMPLIB := no
-  MK_IMPLIBONLY := yes
-  MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
-  MK_IMPLIB_EXT := .a
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT :=
   MK_INSTALLDIR := $(SDK_PATH_INC)
   MK_DISTDIR := # FIXME
-  MK_RES_BASE := 
+  MK_RES_BASE :=
 endif
 
 ifeq ($(TARGET_TYPE),driver_library)
@@ -520,6 +520,14 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		-o $(MK_FULLNAME) \
 	  $(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
+
+endif # MK_MODE
+
+# Static library target
+ifeq ($(MK_MODE),static)
+
+$(MK_FULLNAME): $(TARGET_OBJECTS)
+	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
 
 endif # MK_MODE
 

@@ -28,7 +28,7 @@ struct _EXCEPTION_REGISTRATION;
 typedef EXCEPTION_DISPOSITION CDECL (*PEXCEPTION_HANDLER)(
   struct _EXCEPTION_RECORD* ExceptionRecord,
   struct _EXCEPTION_REGISTRATION* ExceptionRegistration,
-  struct _CONTEXT* Context,
+  PCONTEXT Context,
   PVOID DispatcherContext);
 
 

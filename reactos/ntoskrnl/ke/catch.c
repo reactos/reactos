@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.16 2001/09/24 00:51:16 chorns Exp $
+/* $Id: catch.c,v 1.17 2002/01/23 23:39:25 chorns Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -27,9 +27,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <roscfg.h>
 #include <internal/ke.h>
 #include <internal/ldr.h>
 #include <internal/ps.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -197,7 +199,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
   EXCEPTION_DISPOSITION Value;
   CONTEXT TContext;
 
-  DPRINT("KiDispatchException() called \n");
+  DPRINT("KiDispatchException() called\n");
   /* PCR->KeExceptionDispatchCount++; */
 
   if (Context == NULL)
@@ -212,12 +214,12 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
       Context = &TContext;
     }
-
+#if 0
   if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) 
     {
       Context->Eip--;
     }
-
+#endif
   if (PreviousMode == UserMode)
     {
       if (SearchFrames)
@@ -265,15 +267,31 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
+      KD_CONTINUE_TYPE Action;
+
       /* PreviousMode == KernelMode */
-      Value = RtlpDispatchException(ExceptionRecord, Context);
 
-      DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
+#ifndef KDBG
 
-      /* If RtlpDispatchException() does not handle the exception then bugcheck */
-      if (Value != ExceptionContinueExecution)
+      KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
+
+#endif /* KDBG */
+
+      Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
+      if (Action != kdHandleException)
+	      {
+		      Value = RtlpDispatchException (ExceptionRecord, Context);
+
+		      DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
+		      /* If RtlpDispatchException() does not handle the exception then bugcheck */
+		      if (Value != ExceptionContinueExecution)
+		        {
+		          KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
+		        }
+	      }
+      else
         {
-          KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
+          KeContextToTrapFrame (Context, KeGetCurrentThread()->TrapFrame);
         }
     }
 }

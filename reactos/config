@@ -11,6 +11,13 @@ ARCH := i386
 KDBG := 0
 
 #
+# Whether to dump debug prints to the serial port
+# If this is disabled and KDBG is enabled the GDB
+# stub is used
+#
+SERDUMP := 0
+
+#
 # Whether to compile for debugging
 #
 DBG := 1

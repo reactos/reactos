@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_KDFUNCS_H
 #define __INCLUDE_DDK_KDFUNCS_H
-/* $Id: kdfuncs.h,v 1.4 2001/08/21 20:13:05 chorns Exp $ */
+/* $Id: kdfuncs.h,v 1.5 2002/01/23 23:39:24 chorns Exp $ */
 
 /* --- NTOSKRNL.EXE --- */
 #if defined(__NTOSKRNL__)
@@ -49,5 +49,17 @@ STDCALL
 KdPortSave (
 	VOID
 	);
+
+BOOLEAN
+STDCALL
+KdPortDisableInterrupts(
+  VOID
+  );
+
+BOOLEAN
+STDCALL
+KdPortEnableInterrupts(
+  VOID
+  );
 
 #endif /* __INCLUDE_DDK_KDFUNCS_H */

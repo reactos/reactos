@@ -739,7 +739,6 @@ CmiAddValueToKey(IN PREGISTRY_FILE  RegistryFile,
 		>= ((LONG)(ValueListBlock->SubBlockSize-4))/(LONG)sizeof(BLOCK_OFFSET))
 //		>= -(ValueListBlock->SubBlockSize-4)/sizeof(BLOCK_OFFSET))
     {
-  DPRINT1("\n");
       Status = CmiAllocateBlock(RegistryFile,
                                 (PVOID) &NewValueListBlock,
                                 sizeof(BLOCK_OFFSET) *
@@ -760,7 +759,7 @@ CmiAddValueToKey(IN PREGISTRY_FILE  RegistryFile,
       KeyBlock->ValuesOffset = VLBOffset;
       ValueListBlock = NewValueListBlock;
     }
-  DPRINT1("KeyBlock->NumberOfValues %d, ValueListBlock->SubBlockSize %d (%d %x)\n",
+  DPRINT("KeyBlock->NumberOfValues %d, ValueListBlock->SubBlockSize %d (%d %x)\n",
 	      KeyBlock->NumberOfValues, ValueListBlock->SubBlockSize,
 		  -(ValueListBlock->SubBlockSize-4)/sizeof(BLOCK_OFFSET),
 		  -(ValueListBlock->SubBlockSize-4)/sizeof(BLOCK_OFFSET));

@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.30 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: kdebug.c,v 1.31 2002/01/23 23:39:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,9 @@
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2	/* COM2 */
-#define DEFAULT_DEBUG_BAUD_RATE 19200	/* 19200 Baud */
+#define DEFAULT_DEBUG_COM1_IRQ  4	/* COM1 IRQ */
+#define DEFAULT_DEBUG_COM2_IRQ  3	/* COM2 IRQ */
+#define DEFAULT_DEBUG_BAUD_RATE 115200	/* 115200 Baud */
 
 /* bochs debug output */
 #define BOCHS_LOGGER_PORT (0xe9)
@@ -43,8 +45,8 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 
 static BOOLEAN KdpBreakPending = FALSE;
-static BOOLEAN KdpBreakRecieved = FALSE;
 static ULONG KdpDebugType = ScreenDebug | BochsDebug;
+ULONG KdpPortIrq = 0;
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
@@ -75,12 +77,12 @@ KdInitSystem (
 #ifdef KDBG
   /* Initialize runtime debugging if available */
   DbgRDebugInit();
-
 #endif
 
 	/* set debug port default values */
 	PortInfo.ComPort  = DEFAULT_DEBUG_PORT;
 	PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+  KdpPortIrq        = DEFAULT_DEBUG_COM2_IRQ;
 
 	/*
 	 * parse kernel command line
@@ -157,6 +159,21 @@ KdInitSystem (
 					PortInfo.BaudRate = Value;
 				}
 			}
+		else if (!_strnicmp (p2, "IRQ", 3))
+			{
+				p2 += 3;
+				if (*p2 != '=')
+				{
+					p2++;
+					Value = (ULONG)atol (p2);
+					if (Value > 0)
+					{
+						KdDebuggerEnabled = TRUE;
+						KdpDebugType = KdpDebugType | SerialDebug;
+						KdpPortIrq = Value;
+					}
+        }
+			}
 		}
 		p1 = p2;
 	}
@@ -200,6 +217,31 @@ KdInitSystem (
 	}
 }
 
+VOID KdInit1()
+{
+#ifndef SERDUMP
+
+	/* Initialize kernel debugger */
+	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
+	{
+    KdGdbStubInit(0);
+	}
+
+#endif /* !SERDUMP */
+}
+
+VOID KdInit2()
+{
+#ifndef SERDUMP
+
+	/* Initialize kernel debugger */
+	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
+	{
+    KdGdbStubInit(1);
+	}
+
+#endif /* !SERDUMP */
+}
 
 ULONG KdpPrintString (PANSI_STRING String)
 {
@@ -210,17 +252,7 @@ ULONG KdpPrintString (PANSI_STRING String)
 	HalDisplayString (String->Buffer);
      }
    if (KdpDebugType & SerialDebug)
-     {
-	while (*pch != 0)
-	  {
-	     if (*pch == '\n')
-	       {
-		  KdPortPutByte ('\r');
-	       }
-	     KdPortPutByte (*pch);
-	     pch++;
-	  }
-	}
+     KdDebugPrint (pch);
    if (KdpDebugType & BochsDebug)
      {
 	pch = String->Buffer;
@@ -253,37 +285,18 @@ KdPollBreakIn (
 	VOID
 	)
 {
-	BOOLEAN Result = FALSE;
-	UCHAR ByteRead;
+#ifndef SERDUMP
 
-	if (KdDebuggerEnabled == FALSE || KdpDebugType != SerialDebug)
-		return Result;
+	if (!KdDebuggerEnabled || !(KdpDebugType & SerialDebug))
+		return FALSE;
 
-//	Flags = KiDisableInterrupts();
+  return TRUE;
 
-	HalDisplayString ("Waiting for kernel debugger connection...\n");
+#else /* SERDUMP */
 
-	if (KdPortPollByte (&ByteRead))
-	{
-		if (ByteRead == 0x62)
-		{
-			if (KdpBreakPending == TRUE)
-			{
-				KdpBreakPending = FALSE;
-				KdpBreakRecieved = TRUE;
-				Result = TRUE;
-			}
-			HalDisplayString ("   Kernel debugger connected\n");
-		}
-		else
-		{
-			HalDisplayString ("   Kernel debugger connection failed\n");
-		}
-	}
+  return FALSE;
 
-//	KiRestoreInterrupts (Flags);
-
-	return Result;
+#endif /* !SERDUMP */
 }
 
 VOID STDCALL
@@ -366,6 +379,26 @@ KdSystemDebugControl(ULONG Code)
       DbgPrint("No local kernel debugger\n");
 #endif /* not KDBG */
     }
+}
+
+
+/* Support routines for the GDB stubs */
+
+VOID
+KdPutChar(UCHAR Value)
+{
+  KdPortPutByte (Value);
+}
+
+
+UCHAR
+KdGetChar()
+{
+  UCHAR Value;
+
+  while (!KdPortGetByte (&Value));
+
+  return Value;
 }
 
 /* EOF */

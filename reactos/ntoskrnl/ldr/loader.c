@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.94 2002/01/02 21:00:55 chorns Exp $
+/* $Id: loader.c,v 1.95 2002/01/23 23:39:25 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -321,6 +321,24 @@ VOID LdrInitModuleManagement(VOID)
    ModuleObject->Length = ModuleObject->Image.PE.OptionalHeader->SizeOfImage;
    ModuleObject->TextSection = &LdrHalTextSection;
 }
+
+
+NTSTATUS
+LdrpOpenModuleDirectory(PHANDLE Handle)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ModuleDirectory;
+
+  RtlInitUnicodeString (&ModuleDirectory, MODULE_ROOT_NAME);
+  InitializeObjectAttributes(&ObjectAttributes,
+    &ModuleDirectory, 
+    OBJ_CASE_INSENSITIVE,
+    NULL,
+    NULL);
+
+  return NtOpenDirectoryObject(Handle, GENERIC_ALL, &ObjectAttributes);
+}
+
 
 /*
  * load the auto config drivers.

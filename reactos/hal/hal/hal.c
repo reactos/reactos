@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.1 2001/08/21 20:18:26 chorns Exp $
+/* $Id: hal.c,v 1.2 2002/01/23 23:39:24 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -640,6 +640,22 @@ KdPortRestore(VOID)
 VOID
 STDCALL
 KdPortSave(VOID)
+{
+  UNIMPLEMENTED;
+}
+
+
+BOOLEAN
+STDCALL
+KdPortDisableInterrupts()
+{
+  UNIMPLEMENTED;
+}
+
+
+BOOLEAN
+STDCALL
+KdPortEnableInterrupts()
 {
   UNIMPLEMENTED;
 }

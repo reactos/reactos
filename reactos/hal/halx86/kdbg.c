@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.2 2001/08/27 01:23:50 ekohl Exp $
+/* $Id: kdbg.c,v 1.3 2002/01/23 23:39:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,11 @@
 #define   SER_THR(x)   ((x)+0)
 #define   SER_DLL(x)   ((x)+0)
 #define   SER_IER(x)   ((x)+1)
+#define     SR_IER_ERDA   0x01
+#define     SR_IER_ETHRE  0x02
+#define     SR_IER_ERLSI  0x04
+#define     SR_IER_EMS    0x08
+#define     SR_IER_ALL    0x0F
 #define   SER_DLM(x)   ((x)+1)
 #define   SER_IIR(x)   ((x)+2)
 #define   SER_LCR(x)   ((x)+3)
@@ -46,6 +51,9 @@
 #define   SER_MCR(x)   ((x)+4)
 #define     SR_MCR_DTR 0x01
 #define     SR_MCR_RTS 0x02
+#define     SR_MCR_OUT1 0x04
+#define     SR_MCR_OUT2 0x08
+#define     SR_MCR_LOOP 0x10
 #define   SER_LSR(x)   ((x)+5)
 #define     SR_LSR_DR  0x01
 #define     SR_LSR_TBE 0x20
@@ -330,5 +338,50 @@ KdPortSave (
 {
 }
 
+
+/* HAL.KdPortDisableInterrupts */
+BOOLEAN
+STDCALL
+KdPortDisableInterrupts()
+{
+  UCHAR ch;
+
+	if (PortInitialized == FALSE)
+		return FALSE;
+
+	ch = READ_PORT_UCHAR (SER_MCR (PortBase));
+  ch &= (~(SR_MCR_OUT1 | SR_MCR_OUT2));
+	WRITE_PORT_UCHAR (SER_MCR (PortBase), ch);
+
+	ch = READ_PORT_UCHAR (SER_IER (PortBase));
+  ch &= (~SR_IER_ALL);
+	WRITE_PORT_UCHAR (SER_IER (PortBase), ch);
+
+	return TRUE;
+}
+
+
+/* HAL.KdPortEnableInterrupts */
+BOOLEAN
+STDCALL
+KdPortEnableInterrupts()
+{
+  UCHAR ch;
+
+	if (PortInitialized == FALSE)
+		return FALSE;
+
+	ch = READ_PORT_UCHAR (SER_IER (PortBase));
+  ch &= (~SR_IER_ALL);
+  ch |= SR_IER_ERDA;
+	WRITE_PORT_UCHAR (SER_IER (PortBase), ch);
+
+	ch = READ_PORT_UCHAR (SER_MCR (PortBase));
+  ch &= (~SR_MCR_LOOP);
+  ch |= (SR_MCR_OUT1 | SR_MCR_OUT2);
+	WRITE_PORT_UCHAR (SER_MCR (PortBase), ch);
+
+	return TRUE;
+}
 
 /* EOF */

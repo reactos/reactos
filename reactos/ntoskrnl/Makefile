@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.64 2002/01/21 22:34:36 hbirr Exp $
+# $Id: Makefile,v 1.65 2002/01/23 23:39:24 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -321,7 +321,8 @@ OBJECTS_CC = \
 OBJECTS_KD = \
 	kd/kdebug.o \
 	kd/service.o \
-	kd/dlog.o
+	kd/dlog.o \
+  kd/gdbstub.o
 
 DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \

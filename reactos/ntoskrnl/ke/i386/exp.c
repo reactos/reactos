@@ -95,6 +95,29 @@ static char *ExceptionTypeStrings[] =
     "Machine Check"
   };
 
+static NTSTATUS ExceptionToNtStatus[] = 
+  {
+    STATUS_INTEGER_DIVIDE_BY_ZERO,
+    STATUS_SINGLE_STEP,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_BREAKPOINT,
+    STATUS_INTEGER_OVERFLOW,
+    STATUS_ARRAY_BOUNDS_EXCEEDED,
+    STATUS_ILLEGAL_INSTRUCTION,
+    STATUS_ACCESS_VIOLATION, /* STATUS_FLT_INVALID_OPERATION */
+    STATUS_ACCESS_VIOLATION,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_STACK_OVERFLOW,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_ACCESS_VIOLATION,
+    STATUS_ACCESS_VIOLATION, /* STATUS_FLT_INVALID_OPERATION */
+    STATUS_DATATYPE_MISALIGNMENT,
+    STATUS_ACCESS_VIOLATION
+  };
+
+
 /* FUNCTIONS ****************************************************************/
 
 extern unsigned int _text_start__, _text_end__;
@@ -168,37 +191,10 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 {
   EXCEPTION_RECORD Er;
 
-  if (ExceptionNr == 0)
-    {
-      Er.ExceptionCode = STATUS_INTEGER_DIVIDE_BY_ZERO;
-    }
-  else if (ExceptionNr == 1)
-    {
-      Er.ExceptionCode = STATUS_SINGLE_STEP;
-    }
-  else if (ExceptionNr == 3)
-    {
-      Er.ExceptionCode = STATUS_BREAKPOINT;
-    }
-  else if (ExceptionNr == 4)
-    {
-      Er.ExceptionCode = STATUS_INTEGER_OVERFLOW;
-    }
-  else if (ExceptionNr == 5)
-    {
-      Er.ExceptionCode = STATUS_ARRAY_BOUNDS_EXCEEDED;
-    }
-  else if (ExceptionNr == 6)
-    {
-      Er.ExceptionCode = STATUS_ILLEGAL_INSTRUCTION;
-    }
-  else
-    {
-      Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
-    }
   Er.ExceptionFlags = 0;
   Er.ExceptionRecord = NULL;
   Er.ExceptionAddress = (PVOID)Tf->Eip;
+
   if (ExceptionNr == 14)
     {
       Er.NumberParameters = 2;
@@ -207,6 +203,14 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     }
   else
     {
+		  if (ExceptionNr < 16)
+		  {
+		    Er.ExceptionCode = ExceptionToNtStatus[ExceptionNr];
+		  }
+			else
+			{
+		    Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
+			}
       Er.NumberParameters = 0;
     }
 
@@ -406,7 +410,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  *        Complete CPU context
  */
 {
-//#define SEH
+#define SEH
    unsigned int cr2;
 #ifndef SEH
    unsigned int cr3;

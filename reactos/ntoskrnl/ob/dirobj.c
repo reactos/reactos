@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.12 2001/06/16 14:10:55 ekohl Exp $
+/* $Id: dirobj.c,v 1.13 2002/01/23 23:39:26 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -183,10 +183,10 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
     }
     else
     {
-	DirectorySize = 1;
+	DirectoryCount = 1;
     }
-    DirectorySize = (DirectoryCount + 1) * sizeof (OBJDIR_INFORMATION);
-    if (DirectorySize >= SpaceLeft)
+    DirectorySize = DirectoryCount * sizeof (OBJDIR_INFORMATION);
+    if (DirectorySize > SpaceLeft)
     {
 	return (STATUS_BUFFER_TOO_SMALL);
     }
@@ -208,7 +208,7 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
 		);
 	if ((EntriesToSkip) && (current_entry == & dir->head))
 	  {
-            return (STATUS_INVALID_PARAMETER);
+            return (STATUS_NO_MORE_ENTRIES);
 	  }
       }
     /*
@@ -225,44 +225,44 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
      */
     SpaceLeft -= DirectorySize;
     /* Scan the directory */
-    do { 
+    do
+    { 
         /*
          * Check if we reached the end of the directory.
          */
         if (current_entry == & dir->head)
           {
-            /* Any data? */
+      /* Any data? */
 	    if (i) break; /* DONE */
 	    /* FIXME: better error handling here! */
 	    return (STATUS_NO_MORE_ENTRIES);
           }
-        /*
+  /*
 	 * Compute the current OBJECT_HEADER memory
 	 * object's address.
 	 */
-        current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
-        /*
-         * Compute the space required in the user buffer to copy
-         * the data from the current object:
+   current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
+  /*
+   * Compute the space required in the user buffer to copy
+   * the data from the current object:
 	 *
 	 * Name (WCHAR) 0 TypeName (WCHAR) 0
-         */
+   */
 	NameLength = (wcslen (current->Name.Buffer) * sizeof (WCHAR));
 	TypeNameLength = (wcslen (current->ObjectType->TypeName.Buffer) * sizeof (WCHAR));
-        SpaceRequired =
-            (NameLength + sizeof (WCHAR))
-            + (TypeNameLength + sizeof (WCHAR));
+  SpaceRequired = (NameLength + 1) * sizeof (WCHAR)
+    + (TypeNameLength + 1) * sizeof (WCHAR);
 	/*
 	 * Check for free space in the user buffer.
 	 */
-	if (SpaceRequired >= SpaceLeft)
+	if (SpaceRequired > SpaceLeft)
 	{
 		return (STATUS_BUFFER_TOO_SMALL);
 	}
-        /*
-         * Copy the current directory entry's data into the buffer
+  /*
+   * Copy the current directory entry's data into the buffer
 	 * and update the OBJDIR_INFORMATION entry in the array.
-         */
+   */
 	/* --- Object's name --- */
 	current_odi->ObjectName.Length        = NameLength;
 	current_odi->ObjectName.MaximumLength = (NameLength + sizeof (WCHAR));

@@ -111,7 +111,7 @@ typedef struct _DISPATCHER_HEADER
    UCHAR      Inserted;
    LONG       SignalState;
    LIST_ENTRY WaitListHead;
-} __attribute__((packed)) DISPATCHER_HEADER;
+} __attribute__((packed)) DISPATCHER_HEADER, *PDISPATCHER_HEADER;
 
 
 typedef struct _KQUEUE

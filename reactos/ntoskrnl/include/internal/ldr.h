@@ -100,6 +100,8 @@ NTSTATUS LdrFindModuleObject(
   PUNICODE_STRING ModuleName,
   PMODULE_OBJECT *ModuleObject);
 
+NTSTATUS LdrpOpenModuleDirectory(PHANDLE Handle);
+
 extern ULONG_PTR LdrHalBase;
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

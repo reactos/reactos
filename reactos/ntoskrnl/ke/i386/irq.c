@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.15 2001/08/30 20:38:19 dwelch Exp $
+/* $Id: irq.c,v 1.16 2002/01/23 23:39:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -240,6 +240,30 @@ typedef struct _KIRQ_TRAPFRAME
    ULONG Eflags;
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
+#ifdef DBG
+
+VOID
+KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
+  PKTRAP_FRAME TrapFrame)
+{
+   TrapFrame->Fs     = IrqTrapFrame->Fs;
+   TrapFrame->Fs     = IrqTrapFrame->Es;
+   TrapFrame->Ds     = IrqTrapFrame->Ds;
+   TrapFrame->Eax    = IrqTrapFrame->Eax;
+   TrapFrame->Ecx    = IrqTrapFrame->Ecx;
+   TrapFrame->Edx    = IrqTrapFrame->Edx;
+   TrapFrame->Ebx    = IrqTrapFrame->Ebx;
+   TrapFrame->Esp    = IrqTrapFrame->Esp;
+   TrapFrame->Ebp    = IrqTrapFrame->Ebp;
+   TrapFrame->Esi    = IrqTrapFrame->Esi;
+   TrapFrame->Edi    = IrqTrapFrame->Edi;
+   TrapFrame->Eip    = IrqTrapFrame->Eip;
+   TrapFrame->Cs     = IrqTrapFrame->Cs;
+   TrapFrame->Eflags = IrqTrapFrame->Eflags;
+}
+
+#endif
+
 #ifdef MP
 
 VOID
@@ -255,6 +279,15 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    PKINTERRUPT isr;
    PLIST_ENTRY current;
    ULONG irq;
+
+#ifdef DBG
+
+   KTRAP_FRAME KernelTrapFrame;
+
+   KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+   KeGetCurrentThread()->TrapFrame = &KernelTrapFrame;
+
+#endif /* DBG */
 
    DPRINT("I(%d) ", Vector);
 
@@ -347,6 +380,15 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    KIRQL old_level;
    PKINTERRUPT isr;
    PLIST_ENTRY current;
+
+#ifdef DBG
+
+   KTRAP_FRAME KernelTrapFrame;
+
+   KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+   KeGetCurrentThread()->TrapFrame = &KernelTrapFrame;
+
+#endif /* DBG */
 
    /*
     * Notify the rest of the kernel of the raised irq level

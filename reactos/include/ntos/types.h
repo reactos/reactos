@@ -226,8 +226,6 @@ typedef unsigned short *PWCHAR;
 
 #endif
 
-#ifdef __i386__
-
 typedef struct _FLOATING_SAVE_AREA {
     DWORD   ControlWord;
     DWORD   StatusWord;
@@ -240,7 +238,7 @@ typedef struct _FLOATING_SAVE_AREA {
     DWORD   Cr0NpxState;
 } FLOATING_SAVE_AREA;
 
-typedef struct _CONTEXT {
+typedef struct _CONTEXT_X86 {
     DWORD ContextFlags;
 
     DWORD   Dr0;
@@ -270,11 +268,9 @@ typedef struct _CONTEXT {
     DWORD   EFlags;
     DWORD   Esp;
     DWORD   SegSs;
-} CONTEXT, *PCONTEXT, *LPCONTEXT;
+} CONTEXT_X86, *PCONTEXT_X86, *LPCONTEXT_X86;
 
-#else /* __ppc__ */
-
-typedef struct
+typedef struct _CONTEXT_PPC
   {
     /* Floating point registers returned when CONTEXT_FLOATING_POINT is set */
     double Fpr0;
@@ -367,7 +363,20 @@ typedef struct
     DWORD Dr5;                          /* Breakpoint Register 6 */
     DWORD Dr6;                          /* Debug Status Register */
     DWORD Dr7;                          /* Debug Control Register */
-} CONTEXT, *PCONTEXT, *LPCONTEXT;
+} CONTEXT_PPC, *PCONTEXT_PPC, *LPCONTEXT_PPC;
+
+#ifdef __i386__
+
+typedef CONTEXT_X86 CONTEXT;
+typedef PCONTEXT_X86 PCONTEXT;
+typedef LPCONTEXT_X86 LPCONTEXT;
+
+#else /* __ppc__ */
+
+typedef CONTEXT_PPC CONTEXT;
+typedef PCONTEXT_PPC PCONTEXT;
+typedef LPCONTEXT_PPC LPCONTEXT;
+
 #endif
 
 typedef HANDLE *PHANDLE;

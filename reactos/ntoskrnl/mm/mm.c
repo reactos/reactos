@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.53 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: mm.c,v 1.54 2002/01/23 23:39:26 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -328,7 +328,6 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
        MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
        if (MemoryArea == NULL)
 	 {
-	   DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	   if (!FromMdl)
 	     {
 	       MmUnlockAddressSpace(AddressSpace);
