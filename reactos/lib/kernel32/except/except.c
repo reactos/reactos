@@ -15,9 +15,28 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-UINT GlobalErrorMode = 0;
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
 
+UINT
+STDCALL
+GetErrorMode(VOID)
+{
+  NTSTATUS Status;
+  UINT ErrMode;
+  
+  Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                     ProcessDefaultHardErrorMode,
+                                     (PVOID)&ErrMode,
+                                     sizeof(ErrMode),
+                                     NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return 0;
+  }
+  
+  return ErrMode;
+}
 
 /*
  * @implemented
@@ -26,7 +45,22 @@ UINT
 STDCALL
 SetErrorMode(UINT uMode)
 {
-   return (UINT)InterlockedExchange((LONG*)&GlobalErrorMode, (LONG)uMode);
+   UINT PrevErrMode;
+   NTSTATUS Status;
+   
+   PrevErrMode = GetErrorMode();
+   
+   Status = NtSetInformationProcess(NtCurrentProcess(),
+                                    ProcessDefaultHardErrorMode,
+                                    (PVOID)&uMode,
+                                    sizeof(uMode));
+   if(!NT_SUCCESS(Status))
+   {
+     SetLastErrorByStatus(Status);
+     return 0;
+   }
+
+   return PrevErrMode;
 }
 
 
@@ -114,7 +148,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
-   if ((GlobalErrorMode & SEM_NOGPFAULTERRORBOX) == 0)
+   if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
    {
 #ifdef _X86_
       PULONG Frame;

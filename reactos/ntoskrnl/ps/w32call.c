@@ -25,7 +25,7 @@
 #include <internal/debug.h>
 
 #if defined(__GNUC__)
-void * alloca(size_t size);
+/* void * alloca(size_t size); */
 #elif defined(_MSC_VER)
 void* _alloca(size_t size);
 #else

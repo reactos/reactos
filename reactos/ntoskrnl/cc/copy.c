@@ -25,7 +25,7 @@ static PFN_TYPE CcZeroPage = 0;
 #define MAX_RW_LENGTH	(256 * 1024)
 
 #if defined(__GNUC__)
-void * alloca(size_t size);
+/* void * alloca(size_t size); */
 #elif defined(_MSC_VER)
 void* _alloca(size_t size);
 #else

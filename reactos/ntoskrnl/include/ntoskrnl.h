@@ -62,4 +62,6 @@
 #include <napi/teb.h>
 #include <napi/win32.h>
 
+#include <pseh.h>
+
 #endif /* INCLUDE_NTOSKRNL_H */

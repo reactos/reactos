@@ -1139,7 +1139,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
     */
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_SET_INFORMATION,
+				      PROCESS_QUERY_INFORMATION,
 				      PsProcessType,
 				      UserMode,
 				      (PVOID*)&Process,
@@ -1272,12 +1272,21 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	else
 	{
 	  PULONG HardErrMode = (PULONG)ProcessInformation;
-	  *HardErrMode = Process->DefaultHardErrorProcessing;
-
-	  if (ReturnLength)
+	  _SEH_TRY
 	  {
-	    *ReturnLength = sizeof(ULONG);
+	    *HardErrMode = Process->DefaultHardErrorProcessing;
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(ULONG);
+	    }
+
+            Status = STATUS_SUCCESS;
 	  }
+	  _SEH_HANDLE
+	  {
+            Status = _SEH_GetExceptionCode();
+	  }
+	  _SEH_END;
 	}
 	break;
 
@@ -1445,10 +1454,32 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 	ProcessAccessTokenP = (PHANDLE)ProcessInformation;
 	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
 	break;
+
+      case ProcessDefaultHardErrorMode:
+      {
+        if(ProcessInformationLength != sizeof(UINT))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          _SEH_TRY
+          {
+            InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
+                                *(PLONG)ProcessInformation);
+            Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+        }
+        break;
+      }
 	
       case ProcessLdtInformation:
       case ProcessLdtSize:
-      case ProcessDefaultHardErrorMode:
       case ProcessIoPortHandlers:
       case ProcessWorkingSetWatch:
       case ProcessUserModeIOPL:

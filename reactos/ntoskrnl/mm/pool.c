@@ -10,7 +10,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include <pseh.h>
 
 #define NDEBUG
 #include <internal/debug.h>
