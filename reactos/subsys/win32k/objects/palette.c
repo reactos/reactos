@@ -146,7 +146,7 @@ int PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
         {
           if(PALETTE_firstFree > 0 /* && !(PALETTE_PaletteFlags & PALETTE_FIXED) FIXME */ )
           {
-            DgPrint("Win32k: Unimplemented Palette Operation: PC_NOCOLLAPSE [objects/palette.c]\n");
+            DbgPrint("Win32k: Unimplemented Palette Operation: PC_NOCOLLAPSE [objects/palette.c]\n");
 /*            XColor color;
             index = PALETTE_firstFree;  // ought to be available
             PALETTE_firstFree = PALETTE_freeList[index];
