@@ -1,4 +1,4 @@
-/* $Id: fiber.S,v 1.3 2004/03/07 04:00:39 hyperion Exp $
+/* $Id: fiber.S,v 1.4 2004/03/07 20:07:05 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -25,7 +25,7 @@ _SwitchToFiber@4:
  movl %fs:0x18, %ecx           /* Teb = NtCurrentTeb() */
 
  /* get the current fiber */
- movl 0x10(%ecx), %eax         /* Fiber = Teb->Tib.Fib.FiberData */
+ movl 0x10(%ecx), %eax         /* Fiber = Teb->Tib.FiberData */
 
  /* store the volatile context of the current fiber */
  movl 0x0(%ecx),   %edx

@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.9 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: fiber.c,v 1.10 2004/03/07 20:07:05 hyperion Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -60,8 +60,8 @@ BOOL WINAPI ConvertFiberToThread(void)
  pTeb->IsFiber = FALSE;
 
  /* free the fiber */
- if(pTeb->Tib.Fib.FiberData != NULL)
-  RtlFreeHeap(pTeb->Peb->ProcessHeap, 0, pTeb->Tib.Fib.FiberData);
+ if(pTeb->Tib.FiberData != NULL)
+  RtlFreeHeap(pTeb->Peb->ProcessHeap, 0, pTeb->Tib.FiberData);
 
  /* success */
  return TRUE;
@@ -86,7 +86,7 @@ LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
  PFIBER pfCurFiber;
 
  /* the current thread is already a fiber */
- if(pTeb->IsFiber && pTeb->Tib.Fib.FiberData) return pTeb->Tib.Fib.FiberData;
+ if(pTeb->IsFiber && pTeb->Tib.FiberData) return pTeb->Tib.FiberData;
 
  /* allocate the fiber */
  pfCurFiber = (PFIBER)RtlAllocateHeap(pTeb->Peb->ProcessHeap, 0, sizeof(FIBER));
@@ -108,7 +108,7 @@ LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
  pfCurFiber->DeallocationStack = pTeb->DeallocationStack;
 
  /* associate the fiber to the current thread */
- pTeb->Tib.Fib.FiberData = pfCurFiber;
+ pTeb->Tib.FiberData = pfCurFiber;
  pTeb->IsFiber = TRUE;
 
  /* success */
@@ -265,7 +265,7 @@ void WINAPI DeleteFiber(LPVOID lpFiber)
  RtlFreeHeap(pTeb->Peb->ProcessHeap, 0, lpFiber);
 
  /* the fiber is deleting itself: let the system deallocate the stack */
- if(pTeb->Tib.Fib.FiberData == lpFiber) ExitThread(1);
+ if(pTeb->Tib.FiberData == lpFiber) ExitThread(1);
 
  /* deallocate the stack */
  NtFreeVirtualMemory
@@ -288,7 +288,7 @@ __declspec(noreturn) extern void WINAPI ThreadStartup
 __declspec(noreturn) void WINAPI FiberStartup(PVOID lpStartAddress)
 {
  /* FIXME? this should be pretty accurate */
- ThreadStartup(lpStartAddress, NtCurrentTeb()->Tib.Fib.FiberData);
+ ThreadStartup(lpStartAddress, GetFiberData());
 }
 
 /* EOF */

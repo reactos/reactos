@@ -11485,7 +11485,7 @@ void STDCALL DeleteFiber(LPVOID lpFiber);
 
 void STDCALL SwitchToFiber(LPVOID lpFiber);
 
-#define GetFiberData() *(LPVOID *)(((PNT_TIB)NtCurrentTeb())->Fib.FiberData)
+#define GetFiberData() *(LPVOID *)(((PNT_TIB)NtCurrentTeb())->FiberData)
 
 WINBOOL STDCALL
 RegisterServicesProcess(DWORD ServicesProcessId);

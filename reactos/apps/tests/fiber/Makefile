@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/03/07 03:15:20 hyperion Exp $
+# $Id: Makefile,v 1.2 2004/03/07 20:07:04 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,8 +9,6 @@ TARGET_TYPE = program
 TARGET_APPTYPE = console
 
 TARGET_NAME = fiber
-
-TARGET_SDKLIBS = kernel32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

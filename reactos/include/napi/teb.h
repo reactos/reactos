@@ -56,7 +56,7 @@ typedef struct _NT_TIB {
     union {
         PVOID FiberData;                                   /* 10h */
         ULONG Version;                                     /* 10h */
-    } Fib;
+    };
     PVOID ArbitraryUserPointer;                            /* 14h */
     struct _NT_TIB *Self;                                  /* 18h */
 } NT_TIB, *PNT_TIB;

@@ -1,10 +1,12 @@
-/* $Id: fiber.c,v 1.1 2004/03/07 03:15:20 hyperion Exp $
+/* $Id: fiber.c,v 1.2 2004/03/07 20:07:04 hyperion Exp $
 */
 
 #include <assert.h>
-#include <stdlib.h>
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+
 #include <tchar.h>
 #include <windows.h>
 
@@ -62,14 +64,14 @@ struct FiberData
  unsigned nRealPrio;
  PVOID pFiber;
  LIST_ENTRY leQueue;
- int nTickQueued;
+ int nQuantumQueued;
  int nBoost;
  struct FiberData * pfdPrev;
  int bExitPrev;
 };
 
 static LIST_ENTRY a_leQueues[32];
-static unsigned nTick = 0;
+static unsigned nQuantum = 0;
 static struct FiberData * pfdLastStarveScan = NULL;
 
 void Fbt_Create(int);
@@ -100,7 +102,7 @@ void Fbt_Yield(VOID)
 
  pfdCur = Fbt_GetCurrent();
 
- if(pfdCur->nBoost > 1)
+ if(pfdCur->nBoost)
  {
   -- pfdCur->nBoost;
 
@@ -117,8 +119,10 @@ void Fbt_AfterSwitch(struct FiberData * pfdCur)
 
  pfdPrev = pfdCur->pfdPrev;
 
+ /* The previous fiber left some homework for us */
  if(pfdPrev)
  {
+  /* Kill the predecessor */
   if(pfdCur->bExitPrev)
   {
    if(pfdLastStarveScan == pfdPrev)
@@ -127,16 +131,20 @@ void Fbt_AfterSwitch(struct FiberData * pfdCur)
    DeleteFiber(pfdPrev->pFiber);
    free(pfdPrev);
   }
+  /* Enqueue the previous fiber in the correct ready queue */
   else
   {
-   pfdPrev->nTickQueued = nTick;
+   /* Remember the quantum in which the previous fiber was queued */
+   pfdPrev->nQuantumQueued = nQuantum;
 
+   /* Disable the anti-starvation boost */
    if(pfdPrev->nBoost)
    {
     pfdPrev->nBoost = 0;
     pfdPrev->nPrio = pfdPrev->nRealPrio;
    }
 
+   /* Enqueue the previous fiber */
    InsertTailList
    (
     &a_leQueues[pfdPrev->nPrio],
@@ -162,9 +170,11 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
 
  assert(pfdCur == GetFiberData());
 
- ++ nTick;
+ ++ nQuantum;
 
- if(nTick % 10 == 0)
+ /* Every ten quantums check for starving threads */
+ /* FIXME: this implementation of starvation prevention isn't that great */
+ if(nQuantum % 10 == 0)
  {
   int j;
   int k;
@@ -175,34 +185,53 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
   bResume = 0;
   i = 0;
 
+  /* Pick up from where we left last time */
   if(pfdLastStarveScan)
   {
    unsigned nPrio;
 
    nPrio = pfdLastStarveScan->nPrio;
 
+   /* The last fiber we scanned for starvation isn't queued anymore */
    if(IsListEmpty(&pfdLastStarveScan->leQueue))
+    /* Scan the ready queue for its priority */
     i = nPrio;
+   /* Last fiber for its priority level */
    else if(pfdLastStarveScan->leQueue.Flink == &a_leQueues[nPrio])
+    /* Scan the ready queue for the next priority level */
     i = nPrio + 1;
+   /* Scan the next fiber in the ready queue */
    else
    {
+    i = nPrio;
     ple = pfdLastStarveScan->leQueue.Flink;
     bResume = 1;
    }
 
+   /* Priority levels 15-31 are never checked for starvation */
    if(i >= 15)
+   {
+    if(bResume)
+     bResume = 0;
+
     i = 0;
+   }
   }
 
+  /*
+   Scan at most 16 threads, in the priority range 0-14, applying in total at
+   most 10 boosts. This loop scales O(1)
+  */
   for(j = 0, k = 0, b = 0; j < 16 && k < 15 && b < 10; ++ j)
   {
    unsigned nDiff;
 
+   /* No previous state to resume from */
    if(!bResume)
    {
     int nQueue;
-    
+
+    /* Get the first element in the current queue */
     nQueue = (k + i) % 15;
 
     if(IsListEmpty(&a_leQueues[nQueue]))
@@ -216,23 +245,29 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
    else
     bResume = 0;
 
+   /* Get the current fiber */
    pfdLastStarveScan = CONTAINING_RECORD(ple, struct FiberData, leQueue);
    assert(pfdLastStarveScan->nMagic == 0x12345678);
    assert(pfdLastStarveScan != pfdCur);
 
-   if(nTick > pfdLastStarveScan->nTickQueued)
-    nDiff = nTick - pfdLastStarveScan->nTickQueued;
+   /* Calculate the number of quantums the fiber has been in the queue */
+   if(nQuantum > pfdLastStarveScan->nQuantumQueued)
+    nDiff = nQuantum - pfdLastStarveScan->nQuantumQueued;
    else
-    nDiff = pfdLastStarveScan->nTickQueued - nTick;
+    nDiff = UINT_MAX - pfdLastStarveScan->nQuantumQueued + nQuantum;
 
+   /* The fiber has been ready for more than 30 quantums: it's starving */
    if(nDiff > 30)
    {
+    /* Plus one boost applied */
     ++ b;
 
-    pfdLastStarveScan->nBoost = 2;
+    /* Apply the boost */
+    pfdLastStarveScan->nBoost = 1;
     pfdLastStarveScan->nRealPrio = pfdLastStarveScan->nPrio;
     pfdLastStarveScan->nPrio = 15;
 
+    /* Re-enqueue the fiber in the correct priority queue */
     RemoveEntryList(&pfdLastStarveScan->leQueue);
     InsertTailList(&a_leQueues[15], &pfdLastStarveScan->leQueue);
    }
@@ -241,40 +276,53 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
 
  pfdNext = NULL;
 
+ /* This fiber is going to die: scan all ready queues */
  if(bExit)
   n = 1;
+ /*
+  Scan only ready queues for priorities greater than or equal to the priority of
+  the current thread (round-robin)
+ */
  else
   n = pfdCur->nPrio + 1;
 
+ /* This loop scales O(1) */
  for(i = 32; i >= n; -- i)
  {
   PLIST_ENTRY pleNext;
 
+  /* No fiber ready for this priority level */
   if(IsListEmpty(&a_leQueues[i - 1]))
    continue;
 
+  /* Get the next ready fiber */
   pleNext = RemoveHeadList(&a_leQueues[i - 1]);
   InitializeListHead(pleNext);
-
   pfdNext = CONTAINING_RECORD(pleNext, struct FiberData, leQueue);
   assert(pfdNext->pFiber != GetCurrentFiber());
   assert(pfdNext->nMagic == 0x12345678);
   break;
  }
 
+ /* Next fiber chosen */
  if(pfdNext)
  {
+  /* Give some homework to the next fiber */
   pfdNext->pfdPrev = pfdCur;
   pfdNext->bExitPrev = bExit;
- 
+
+  /* Switch to the next fiber */
   SwitchToFiber(pfdNext->pFiber);
- 
+
+  /* Complete the switch back to this fiber */
   Fbt_AfterSwitch(pfdCur);
  }
+ /* No next fiber, and current fiber exiting */
  else if(bExit)
  {
   PVOID pCurFiber;
 
+  /* Delete the current fiber. This kills the thread and stops the simulation */
   if(pfdLastStarveScan == pfdCur)
    pfdLastStarveScan = NULL;
 
@@ -282,6 +330,7 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
   free(pfdCur);
   DeleteFiber(pCurFiber);
  }
+ /* No next fiber: continue running the current one */
 }
 
 void Fbt_Exit(VOID)
@@ -322,7 +371,7 @@ void Fbt_CreateFiber(int bInitial)
  pData->nId = InterlockedIncrement(&s_nFiberIdSeed);
  pData->nPrio = rand() % 32;
  pData->pFiber = pFiber;
- pData->nTickQueued = 0;
+ pData->nQuantumQueued = 0;
  pData->nBoost = 0;
  pData->nRealPrio = pData->nPrio;
  pData->pfdPrev = NULL;
