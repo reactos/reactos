@@ -309,7 +309,6 @@ MiniportQueryInformation(
   return Status;
 }
 
-
 NDIS_STATUS
 STDCALL
 MiniportSetInformation(

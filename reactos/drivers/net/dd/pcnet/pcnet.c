@@ -35,7 +35,6 @@
 #include "pcnethw.h"
 #include "pcnet.h"
 
-
 VOID
 STDCALL
 MiniportHandleInterrupt(
@@ -174,7 +173,6 @@ MiniportHandleInterrupt(
   PCNET_DbgPrint(("CSR0 is now 0x%x\n", Data));
 }
 
-
 NDIS_STATUS 
 MiQueryCard(
     IN PADAPTER Adapter)
@@ -270,7 +268,6 @@ MiQueryCard(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 NDIS_STATUS
 MiGetConfig(
     PADAPTER Adapter, 
@@ -313,7 +310,6 @@ MiGetConfig(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 NDIS_STATUS
 MiAllocateSharedMemory(
     PADAPTER Adapter)
@@ -461,7 +457,6 @@ MiAllocateSharedMemory(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 VOID
 MiPrepareInitializationBlock(
     PADAPTER Adapter)
@@ -488,7 +483,6 @@ MiPrepareInitializationBlock(
   Adapter->InitializationBlockVirt->TLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 }
 
-
 VOID
 MiFreeSharedMemory(
     PADAPTER Adapter)
@@ -538,7 +532,6 @@ MiFreeSharedMemory(
     }
 }
 
-
 VOID
 STDCALL
 MiniportHalt(
@@ -576,7 +569,6 @@ MiniportHalt(
   NdisFreeMemory(Adapter, 0, 0);
 }
 
-
 VOID
 MiInitChip(
     PADAPTER Adapter)
@@ -654,7 +646,6 @@ MiInitChip(
   Adapter->Flags &= ~RESET_IN_PROGRESS;
 }
 
-
 BOOLEAN
 MiTestCard(
     PADAPTER Adapter)
@@ -712,7 +703,6 @@ MiTestCard(
   return TRUE;
 }
 
-
 NDIS_STATUS
 STDCALL
 MiniportInitialize(
@@ -886,7 +876,6 @@ MiniportInitialize(
   return Status;
 }
 
-
 VOID
 STDCALL
 MiniportISR(
@@ -940,7 +929,6 @@ MiniportISR(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, Rap);
 }
 
-
 NDIS_STATUS
 STDCALL
 MiniportReset(
@@ -966,7 +954,6 @@ MiniportReset(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 NDIS_STATUS
 STDCALL
 MiniportSend(
@@ -989,7 +976,6 @@ MiniportSend(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 STDCALL
 DriverEntry(
