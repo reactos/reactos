@@ -34,7 +34,7 @@ LPSTR STDCALL GetCommandLineA(VOID)
      {
 	CommandLineA[i] = (CHAR)CommandLineW[i];
      }
-   CommandLineW[i] = 0;
+   CommandLineA[i] = 0;
    return(CommandLineA);
 }
 
