@@ -15,9 +15,11 @@ WPP_OBJECTS = \
 WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine -g
 
 $(WPP_TARGET): $(WPP_OBJECTS)
+	$(HALFVERBOSEECHO) [AR]      $@
 	${host_ar} -rc $(WPP_TARGET) $(WPP_OBJECTS)
 
 $(WPP_OBJECTS): %.o : %.c
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: wpp_clean

@@ -165,13 +165,13 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-	fprintf ( fMakefile, "mkdir = tools" SSEP "rmkdir" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cdmake = tools" SSEP "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "rsym = tools" SSEP "rsym" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "wrc = tools" SSEP "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "mkdir = $(Q)tools" SSEP "rmkdir" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "winebuild = $(Q)tools" SSEP "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "bin2res = $(Q)tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cabman = $(Q)tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cdmake = $(Q)tools" SSEP "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "rsym = $(Q)tools" SSEP "rsym" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "wrc = $(Q)tools" SSEP "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
@@ -201,11 +201,14 @@ void
 MingwBackend::GenerateAllTarget () const
 {
 	fprintf ( fMakefile, "all:" );
+	int wrap_count = 0;
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
 		if ( IncludeInAllTarget ( module ) )
 		{
+			if ( wrap_count++ == 5 )
+				fprintf ( fMakefile, " \\\n\t\t" ), wrap_count = 0;
 			fprintf ( fMakefile,
 			          " %s",
 			          FixupTargetFilename ( module.GetPath () ).c_str () );
@@ -316,7 +319,9 @@ MingwBackend::ProcessModule ( Module& module ) const
 	MingwModuleHandler* h = MingwModuleHandler::LookupHandler (
 		module.node.location,
 		module.type );
-	h->Process ( module );
+	MingwModuleHandler::string_list clean_files;
+	h->Process ( module, clean_files );
+	h->GenerateCleanTarget ( module, clean_files );
 	h->GenerateDirectoryTargets ();
 }
 

@@ -17,9 +17,11 @@ BUILDNO_HOST_CFLAGS = -Iinclude/reactos -g -Werror -Wall
 BUILDNO_HOST_LFLAGS = -g
 
 $(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_CFLAGS) -o $(BUILDNO_TARGET)
 
 $(BUILDNO_OBJECTS): %.o : %.cpp include$(SEP)reactos$(SEP)version.h
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: buildno_clean

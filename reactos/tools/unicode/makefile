@@ -84,9 +84,11 @@ UNICODE_HOST_CFLAGS = \
 	-I$(UNICODE_BASE) -Iinclude/wine -Iw32api/include
 
 $(UNICODE_TARGET): $(UNICODE_OBJECTS)
+	$(HALFVERBOSEECHO) [AR]      $@
 	${host_ar} -rc $(UNICODE_TARGET) $(UNICODE_OBJECTS)
 
 $(UNICODE_OBJECTS): %.o : %.c
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gcc} $(UNICODE_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: unicode_clean

@@ -14,9 +14,11 @@ RMKDIR_HOST_CFLAGS = -g -Werror -Wall
 RMKDIR_HOST_LFLAGS = -g
 
 $(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gcc} $(RMKDIR_OBJECTS) $(RMKDIR_HOST_LFLAGS) -o $(RMKDIR_TARGET)
 
 $(RMKDIR_OBJECTS): %.o : %.c
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: rmkdir_clean
@@ -41,9 +43,11 @@ RSYM_HOST_CFLAGS = -g -Werror -Wall
 RSYM_HOST_LFLAGS = -g
 
 $(RSYM_TARGET): $(RSYM_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gcc} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $(RSYM_TARGET)
 
 $(RSYM_OBJECTS): %.o : %.c
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: rsym_clean

@@ -231,6 +231,7 @@ public:
 	const XMLElement& node;
 	const Module& module;
 	std::string name;
+	const Module* imported_module;
 
 	Library ( const XMLElement& _node,
 	          const Module& _module,
@@ -317,6 +318,7 @@ public:
 	std::vector<Define*> defines;
 	std::vector<Property*> properties;
 	std::vector<If*> ifs;
+	std::vector<Library*> libraries;
 
 	If ( const XMLElement& node_,
 	     const Project& project_,

@@ -1,37 +1,52 @@
-host_gcc = gcc
-host_gpp = g++
-host_ld = ld
-host_ar = ar
-host_objcopy = objcopy
+# Default to half-verbose mode
+ifeq ($(VERBOSE),no)
+  Q = @
+  HALFVERBOSEECHO = @:
+else
+ifeq ($(VERBOSE),yes)
+  Q =
+  HALFVERBOSEECHO = @:
+else
+  Q = @
+  HALFVERBOSEECHO = @echo
+endif
+endif
+
+
+host_gcc = $(Q)gcc
+host_gpp = $(Q)g++
+host_ld = $(Q)ld
+host_ar = $(Q)ar
+host_objcopy = $(Q)objcopy
 ifeq ($(HOST),mingw32-linux)
 	EXEPREFIX = ./
 	EXEPOSTFIX =
 	SEP = /
-	nmkdir = mkdir -p
-	gcc = mingw32-gcc
-	gpp = mingw32-g++
-	ld = mingw32-ld
-	ar = mingw32-ar
-	objcopy = mingw32-objcopy
-	dlltool = mingw32-dlltool
-	windres = mingw32-windres
+	nmkdir = $(Q)mkdir -p
+	gcc = $(Q)mingw32-gcc
+	gpp = $(Q)mingw32-g++
+	ld = $(Q)mingw32-ld
+	ar = $(Q)mingw32-ar
+	objcopy = $(Q)mingw32-objcopy
+	dlltool = $(Q)mingw32-dlltool
+	windres = $(Q)mingw32-windres
 	rm = rm -f
-	cp = cp
+	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
 	EXEPREFIX =
 	EXEPOSTFIX = .exe
 	SEP = \$(EMPTY_VAR)
-	nmkdir = mkdir
-	gcc = gcc
-	gpp = g++
-	ld = ld
-	ar = ar
-	objcopy = objcopy
-	dlltool = dlltool
-	windres = windres
+	nmkdir = $(Q)mkdir
+	gcc = $(Q)gcc
+	gpp = $(Q)g++
+	ld = $(Q)ld
+	ar = $(Q)ar
+	objcopy = $(Q)objcopy
+	dlltool = $(Q)dlltool
+	windres = $(Q)windres
 	rm = del /f /q
-	cp = copy /y
+	cp = $(Q)copy /y
 	NUL = NUL
 endif
 
@@ -62,7 +77,8 @@ PREAUTO := \
 
 Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
                $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
-	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
+	$(HALFVERBOSEECHO) [RBUILD]  makefile.auto
+	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 
 
 include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) ntoskrnl$(SEP)ntoskrnl.mc

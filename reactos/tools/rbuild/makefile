@@ -85,24 +85,30 @@ RBUILD_HOST_CXXFLAGS = -g -I$(RBUILD_BASE) -Werror -Wall
 RBUILD_HOST_LFLAGS = -g
 
 $(RBUILD_TARGET): $(RBUILD_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TARGET)
 
 $(RBUILD_COMMON_OBJECTS): %.o: %.cpp
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TEST_TARGET)
 
 $(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 .PHONY: rbuild_test
 
 rbuild_test: $(RBUILD_TEST_TARGET)
-	$(RBUILD_TEST_TARGET)
+	$(HALFVERBOSEECHO) [TEST]    $@
+	$(Q)$(RBUILD_TEST_TARGET)
 
 .PHONY: rbuild_clean
 rbuild_clean:

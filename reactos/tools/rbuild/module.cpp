@@ -174,10 +174,10 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
-		if ( pIf )
+		/*if ( pIf )
 			throw InvalidBuildFileException (
 				e.location,
-				"<library> is not a valid sub-element of <if>" );
+				"<library> is not a valid sub-element of <if>" );*/
 		libraries.push_back ( new Library ( e, *this, e.value ) );
 		subs_invalid = true;
 	}
@@ -528,12 +528,19 @@ Library::Library ( const XMLElement& _node,
                    const string& _name )
 	: node(_node),
 	  module(_module),
-	  name(_name)
+	  name(_name),
+	  imported_module(_module.project.LocateModule(_name))
 {
 	if ( module.name == name )
 		throw InvalidBuildFileException (
 			node.location,
 			"module '%s' cannot link against itself",
+			name.c_str() );
+	if ( !imported_module )
+		throw InvalidBuildFileException (
+			node.location,
+			"module '%s' trying to import non-existant module '%s'",
+			module.name.c_str(),
 			name.c_str() );
 }
 

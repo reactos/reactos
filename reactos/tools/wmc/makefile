@@ -21,9 +21,11 @@ WMC_HOST_CXXFLAGS = -I$(WMC_BASE) -g -Werror -Wall
 WMC_HOST_LFLAGS = -g
 
 $(WMC_TARGET): $(WMC_OBJECTS)
+	$(HALFVERBOSEECHO) [LD]      $@
 	${host_gcc} $(WMC_OBJECTS) $(WMC_HOST_LFLAGS) -o $(WMC_TARGET)
 
 $(WMC_OBJECTS): %.o : %.c
+	$(HALFVERBOSEECHO) [CC]      $<
 	${host_gcc} $(WMC_HOST_CXXFLAGS) -c $< -o $@
 
 .PHONY: wmc_clean
