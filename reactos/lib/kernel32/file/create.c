@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.39 2004/09/25 21:44:02 gvg Exp $
+/* $Id: create.c,v 1.40 2004/10/12 22:04:51 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -281,10 +281,13 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
   create with OPEN_ALWAYS (FILE_OPEN_IF) returns info = FILE_OPENED or FILE_CREATED
   create with CREATE_ALWAYS (FILE_OVERWRITE_IF) returns info = FILE_OVERWRITTEN or FILE_CREATED
   */    
-  if ((dwCreationDisposition == FILE_OPEN_IF && IoStatusBlock.Information == FILE_OPENED) ||
-      (dwCreationDisposition == FILE_OVERWRITE_IF && IoStatusBlock.Information == FILE_OVERWRITTEN))
+  if (dwCreationDisposition == FILE_OPEN_IF)
   {
-    SetLastError(ERROR_ALREADY_EXISTS);
+    SetLastError(IoStatusBlock.Information == FILE_OPENED ? ERROR_ALREADY_EXISTS : 0);
+  }
+  else if (dwCreationDisposition == FILE_OVERWRITE_IF)
+  {
+    SetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
   }
 
   return FileHandle;
