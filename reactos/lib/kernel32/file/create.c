@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.17 2000/01/21 23:17:47 phreak Exp $
+/* $Id: create.c,v 1.18 2000/01/21 23:27:47 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -94,7 +94,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	dwCreationDisposition = FILE_OVERWRITE;
      }
 
-   DPRINT1("CreateFileW(lpFileName %S)\n",lpFileName);
+   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
 
    if (dwDesiredAccess & GENERIC_READ)
         dwDesiredAccess |= FILE_GENERIC_READ;
