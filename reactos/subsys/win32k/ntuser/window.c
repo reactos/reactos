@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.161 2003/12/14 12:39:32 navaraf Exp $
+/* $Id: window.c,v 1.162 2003/12/14 14:26:50 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -919,6 +919,8 @@ NtUserBuildHwndList(
       ASSERT(WindowStation);
       HandleTable = (PUSER_HANDLE_TABLE)(WindowStation->HandleTable);
       ASSERT(HandleTable);
+
+      ObDereferenceObject(Thread);
 
       ExAcquireFastMutex(&HandleTable->ListLock);
 
