@@ -44,8 +44,9 @@
 
 VOID
 KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		BOOLEAN Dirty)
+		SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
+  assert(SwapEntry == 0);
   if (PhysAddr != 0)
     {
       MmDereferencePage((PVOID)PhysAddr);

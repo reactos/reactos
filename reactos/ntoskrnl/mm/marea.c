@@ -295,7 +295,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
 		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-				  ULONG PhysAddr, BOOLEAN Dirty),
+				  ULONG PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty),
 		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
@@ -315,14 +315,25 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      {
        ULONG PhysAddr;
        BOOL Dirty;
+       SWAPENTRY SwapEntry = 0;
 
-       MmDeleteVirtualMapping(AddressSpace->Process, 
-			      MemoryArea->BaseAddress + (i*PAGESIZE),
-			      FALSE, &Dirty, &PhysAddr);
+       if (MmIsPageSwapEntry(AddressSpace->Process,
+			     MemoryArea->BaseAddress + (i * PAGESIZE)))
+	 {
+	   MmDeletePageFileMapping(AddressSpace->Process,
+				   MemoryArea->BaseAddress + (i * PAGESIZE),
+				   &SwapEntry);
+	 }
+       else
+	 {
+	   MmDeleteVirtualMapping(AddressSpace->Process, 
+				  MemoryArea->BaseAddress + (i*PAGESIZE),
+				  FALSE, &Dirty, &PhysAddr);
+	 }
        if (FreePage != NULL)
 	 {
 	   FreePage(FreePageContext, MemoryArea,
-		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, Dirty);
+		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, SwapEntry, Dirty);
 	 }
      }
    

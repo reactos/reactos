@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.51 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: virtual.c,v 1.52 2001/12/31 19:06:48 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -156,7 +156,6 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        SwapEntry = MmAllocSwapPage();
        if (SwapEntry == 0)
 	 {
-	   DPRINT("MM: Out of swap space.\n");
 	   MmEnableVirtualMapping(MemoryArea->Process, Address);
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -173,7 +172,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("MM: Failed to write to swap page\n");
+       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
        MmEnableVirtualMapping(MemoryArea->Process, Address);
        PageOp->Status = STATUS_UNSUCCESSFUL;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -184,7 +183,9 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Otherwise we have succeeded, free the page
     */
+   DPRINT1("MM: Swapped out virtual memory swap!\n");
    MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
+   MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
    MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
    PageOp->Status = STATUS_SUCCESS;
@@ -313,6 +314,24 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
        MmLockAddressSpace(AddressSpace);
      }
+
+   /*
+    * Handle swapped out pages.
+    */
+   if (MmIsPageSwapEntry(NULL, Address))
+     {
+       SWAPENTRY SwapEntry;
+       PMDL Mdl;
+
+       MmDeletePageFileMapping(NULL, Address, &SwapEntry);
+       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+       MmBuildMdlFromPages(Mdl, (PULONG)&Page);
+       Status = MmReadFromSwapPage(SwapEntry, Mdl);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+     }
    
    /*
     * Set the page. If we fail because we are out of memory then
@@ -380,16 +399,29 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
       for (i=0; i <= (RegionSize/PAGESIZE); i++)
 	{
 	  LARGE_INTEGER PhysicalAddr;
-	  
-	  PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
-	  MmDeleteVirtualMapping(AddressSpace->Process,
-				 BaseAddress + (i*PAGESIZE),
-				 FALSE, NULL, NULL);
-	  if (PhysicalAddr.u.LowPart != 0)
+
+	  if (MmIsPageSwapEntry(AddressSpace->Process,
+				BaseAddress + (i * PAGESIZE)))
 	    {
-	      MmDeleteRmap((PVOID)PhysicalAddr.u.LowPart, AddressSpace->Process,
-			   BaseAddress + (i * PAGESIZE));
-	      MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+	      SWAPENTRY SwapEntry;
+	      
+	      MmDeletePageFileMapping(AddressSpace->Process,
+				      BaseAddress + (i * PAGESIZE),
+				      &SwapEntry);
+	      MmFreeSwapPage(SwapEntry);
+	    }
+	  else
+	    {
+	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
+	      MmDeleteVirtualMapping(AddressSpace->Process,
+				     BaseAddress + (i*PAGESIZE),
+				     FALSE, NULL, NULL);
+	      if (PhysicalAddr.u.LowPart != 0)
+		{
+		  MmDeleteRmap((PVOID)PhysicalAddr.u.LowPart, AddressSpace->Process,
+			       BaseAddress + (i * PAGESIZE));
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+		}
 	    }
 	}
     }
@@ -1006,6 +1038,7 @@ MmFreeVirtualMemoryPage(PVOID Context,
 			MEMORY_AREA* MemoryArea,
 			PVOID Address,
 			ULONG PhysicalAddr,
+			SWAPENTRY SwapEntry,
 			BOOLEAN Dirty)
 {
   PEPROCESS Process = (PEPROCESS)Context;
@@ -1014,6 +1047,10 @@ MmFreeVirtualMemoryPage(PVOID Context,
     {
       MmDeleteRmap((PVOID)PhysicalAddr, Process, Address);
       MmDereferencePage((PVOID)PhysicalAddr);
+    }
+  else if (SwapEntry != 0)
+    {
+      MmFreeSwapPage(SwapEntry);
     }
 }
 

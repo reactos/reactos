@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.13 2001/12/06 00:54:54 dwelch Exp $
+/* $Id: pagefile.c,v 1.14 2001/12/31 19:06:47 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -96,7 +96,7 @@ static BYTE MmCoreDumpHeader[PAGESIZE];
  */
 #define FILE_FROM_ENTRY(i) ((i) >> 24)
 #define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
-#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) || ((j) + 1))
+#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) | ((j) + 1))
 
 /* FUNCTIONS *****************************************************************/
 
@@ -122,7 +122,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 			Mdl,
 			&file_offset,
 			&Iosb,
-			FALSE);
+			TRUE);
    return(Status);
 }
 
@@ -204,6 +204,7 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 {
    KIRQL oldIrql;
    ULONG i, j;
+   static BOOLEAN SwapSpaceMessage = FALSE;
    
    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
    
@@ -221,14 +222,19 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 	   continue;
 	 }
        PagingFile->AllocMap[i] |= (1 << j);
-       PagingFile->UsedPages--;
-       PagingFile->FreePages++;
+       PagingFile->UsedPages++;
+       PagingFile->FreePages--;
        KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
        return((i * 32) + j);
      }
    
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-   return(0);
+   if (!SwapSpaceMessage)
+     {
+       DPRINT1("MM: Out of swap space.\n");
+       SwapSpaceMessage = TRUE;
+     }
+   return(0xFFFFFFFF);
 }
 
 VOID 
@@ -242,9 +248,13 @@ MmFreeSwapPage(SWAPENTRY Entry)
    off = OFFSET_FROM_ENTRY(Entry);
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
+   if (PagingFileList[i] == NULL)
+     {
+       KeBugCheck(0);
+     }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
    
-   PagingFileList[i]->AllocMap[off / 32] |= (1 << (off % 32));
+   PagingFileList[i]->AllocMap[off / 32] &= (~(1 << (off % 32)));
    
    PagingFileList[i]->FreePages++;
    PagingFileList[i]->UsedPages--;
@@ -278,7 +288,7 @@ MmAllocSwapPage(VOID)
 	    PagingFileList[i]->FreePages >= 1)
 	  {	     
 	     off = MiAllocPageFromPagingFile(PagingFileList[i]);
-	     if (off != 0)
+	     if (off == 0xFFFFFFFF)
 	       {
 		  KeBugCheck(0);
 		  KeReleaseSpinLock(&PagingFileListLock, oldIrql);
@@ -334,6 +344,11 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
    KIRQL oldIrql;
    ULONG AllocMapSize;
    ULONG i;
+   PVOID Buffer;
+   LARGE_INTEGER ByteOffset;
+
+   DPRINT1("NtCreatePagingFile(PageFileName %wZ, MinimumSize %d)\n",
+	   PageFileName, MinimumSize);
    
    InitializeObjectAttributes(&ObjectAttributes,
 			      PageFileName,
@@ -347,7 +362,7 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 			 NULL,
 			 0,
 			 0,
-			 FILE_OPEN,
+			 FILE_OPEN_IF,
 			 FILE_SYNCHRONOUS_IO_NONALERT,
 			 NULL,
 			 0);
@@ -355,7 +370,25 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
      {
 	return(Status);
      }
-   
+
+   Buffer = ExAllocatePool(NonPagedPool, 4096);
+   memset(Buffer, 0, 4096);
+   ByteOffset.QuadPart = MinimumSize * 4096;
+   Status = NtWriteFile(FileHandle,
+			NULL,
+			NULL,
+			NULL,
+			&IoStatus,
+			Buffer,
+			4096,
+			&ByteOffset,
+			NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       NtClose(FileHandle);
+       return(Status);
+     }
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_ALL_ACCESS,
 				      IoFileObjectType,

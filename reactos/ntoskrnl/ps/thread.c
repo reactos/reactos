@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.80 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: thread.c,v 1.81 2001/12/31 19:06:48 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -83,36 +83,55 @@ PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
    PiNrRunnableThreads++;
 }
 
-VOID PsDumpThreads(VOID)
+VOID PsDumpThreads(BOOLEAN IncludeSystem)
 {
    PLIST_ENTRY current_entry;
    PETHREAD current;
    ULONG t;
-   
-//   return;
+   ULONG i;
    
    current_entry = PiThreadListHead.Flink;
    t = 0;
    
    while (current_entry != &PiThreadListHead)
      {
-	current = CONTAINING_RECORD(current_entry, ETHREAD, 
-				    Tcb.ThreadListEntry);
-	t++;
-	if (t > PiNrThreads)
-	  {
-	     DbgPrint("Too many threads on list\n");
-	     return;
-	  }
-	DbgPrint("current %x current->Tcb.State %d eip %x/%x ",
-		current, current->Tcb.State,
-		0, current->Tcb.LastEip);
-	//	KeDumpStackFrames((PVOID)current->Tcb.KernelStack, 
-	//	  16);
-	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
-	DbgPrint("\n");
-	
-	current_entry = current_entry->Flink;
+       PULONG Ebp;
+       PULONG Esp;
+
+       current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				   Tcb.ThreadListEntry);
+       t++;
+       if (t > PiNrThreads)
+	 {
+	   DbgPrint("Too many threads on list\n");
+	   return;
+	 }
+       if (IncludeSystem || current->ThreadsProcess->UniqueProcessId >= 6)
+	 {
+	   DbgPrint("current->Tcb.State %d PID.TID %d.%d Name %.8s\n",
+		    current->Tcb.State, current->ThreadsProcess->UniqueProcessId,
+		    current->Cid.UniqueThread, current->ThreadsProcess->ImageFileName);
+	   if (current->Tcb.State == THREAD_STATE_RUNNABLE ||
+	       current->Tcb.State == THREAD_STATE_SUSPENDED ||
+	       current->Tcb.State == THREAD_STATE_BLOCKED)
+	     {
+	       Esp = (PULONG)current->Tcb.KernelStack;
+	       Ebp = (PULONG)Esp[3];
+	       DbgPrint("Ebp 0x%.8X\n", Ebp);
+	       i = 0;
+	       while (Ebp != 0 && Ebp >= (PULONG)current->Tcb.StackLimit)
+		 {
+		   DbgPrint("Frame: 0x%.8X Eip: 0x%.8X%s", Ebp[0], Ebp[1],
+			    (i % 2) == 1 ? "\n" : "");
+		   Ebp = (PULONG)Ebp[0];
+		 }
+	       if ((i % 2) == 0)
+		 {
+		   DbgPrint("\n");
+		 }
+	     }
+	 }
+       current_entry = current_entry->Flink;
      }
 }
 

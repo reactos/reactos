@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.70 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: section.c,v 1.71 2001/12/31 19:06:48 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -65,8 +65,13 @@ static GENERIC_MAPPING MmpSectionMapping = {
 #define TAG_MM_SECTION_SEGMENT   TAG('M', 'M', 'S', 'S')
 #define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
 
-#define SHARE_COUNT(E)           ((E) & 0xFFF)
-#define MAX_SHARE_COUNT          0xFFF
+#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
+#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFE) >> 1)
+#define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
+#define MAX_SHARE_COUNT          0x7FF
+#define MAKE_SSE(P, C)           ((P) | ((C) << 1))
+#define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
+#define MAKE_SWAP_SSE(S)         (((S) << 1) | 0x1)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -189,7 +194,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 	DPRINT("Table %x\n", Table);
      }
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
-   Table->Pages[TableOffset] = Entry;
+   Table->Entry[TableOffset] = Entry;
 }
 
 
@@ -212,7 +217,7 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 	return(0);
      }
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
-   Entry = Table->Pages[TableOffset];
+   Entry = Table->Entry[TableOffset];
    return(Entry);
 }
 
@@ -228,12 +233,16 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
       DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
       KeBugCheck(0);
     }
-  if (SHARE_COUNT(Entry) == MAX_SHARE_COUNT)
+  if (SHARE_COUNT_FROM_SSE(Entry) == MAX_SHARE_COUNT)
     {
       DPRINT1("Maximum share count reached\n");
       KeBugCheck(0);
     }
-  Entry = (Entry & 0xFFFFF000) | (SHARE_COUNT(Entry) + 1);
+  if (IS_SWAP_FROM_SSE(Entry))
+    {
+      KeBugCheck(0);
+    }
+  Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
   MmSetPageEntrySectionSegment(Segment, Offset, Entry);
 }
 
@@ -251,17 +260,21 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
       KeBugCheck(0);
     }
-  if (SHARE_COUNT(Entry) == 0)
+  if (SHARE_COUNT_FROM_SSE(Entry) == 0)
     {
       DPRINT1("Zero share count for unshare\n");
       KeBugCheck(0);
     }
-  Entry = (Entry & 0xFFFFF000) | (SHARE_COUNT(Entry) - 1);
+  if (IS_SWAP_FROM_SSE(Entry))
+    {
+      KeBugCheck(0);
+    }
+  Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) - 1);
   /*
    * If we reducing the share count of this entry to zero then set the entry to zero and
    * tell the cache the page is no longer mapped.
    */
-  if (SHARE_COUNT(Entry) == 0)
+  if (SHARE_COUNT_FROM_SSE(Entry) == 0)
     {
       PFILE_OBJECT FileObject;
       PREACTOS_COMMON_FCB_HEADER Fcb;
@@ -288,7 +301,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
     {
       MmSetPageEntrySectionSegment(Segment, Offset, Entry);
     }
-  return(SHARE_COUNT(Entry) > 1);
+  return(SHARE_COUNT_FROM_SSE(Entry) > 1);
 }
 
 NTSTATUS
@@ -508,7 +521,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
 
-	   Page = (PVOID)(Entry & 0xFFFFF000);
+	   Page = (PVOID)(PAGE_FROM_SSE(Entry));
 	   MmReferencePage(Page);	
 	   MmSharePageEntrySectionSegment(Segment, Offset.u.LowPart);
 
@@ -529,6 +542,70 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 }
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
+       MmReleasePageOp(PageOp);
+       return(STATUS_SUCCESS);
+     }
+
+   /*
+    * Must be private page we have swapped out.
+    */
+   if (MmIsPageSwapEntry(NULL, (PVOID)PAddress))
+     {
+       SWAPENTRY SwapEntry;
+       PMDL Mdl;
+
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+
+       Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+
+       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+       MmBuildMdlFromPages(Mdl, (PULONG)&Page);
+       Status = MmReadFromSwapPage(SwapEntry, Mdl);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+       
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
+				       Address,
+				       MemoryArea->Attributes,
+				       (ULONG)Page);
+       while (Status == STATUS_NO_MEMORY)
+	 {
+	   MmUnlockAddressSpace(AddressSpace);
+	   KeBugCheck(0);
+	   MmLockAddressSpace(AddressSpace);
+	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+					   Address,
+					   MemoryArea->Attributes,
+					   (ULONG)Page);
+	 }  
+       if (!NT_SUCCESS(Status))
+	 {
+	   DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
+	   KeBugCheck(0);
+	   return(Status);
+	 }
+       
+       /*
+	* Add the page to the process's working set
+	*/
+       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+       
+       /*
+	* Finish the operation
+	*/
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
        return(STATUS_SUCCESS);
      }
@@ -615,83 +692,159 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get the entry corresponding to the offset within the section
     */
-   Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart) & 0xFFFFF000;
+   Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
    
    if (Entry == 0)
      {   
-	/*
-	 * If the entry is zero (and it can't change because we have
-	 * locked the segment) then we need to load the page.
-	 */
-
-	/*
-	 * Release all our locks and read in the page from disk
-	 */
-	MmUnlockSectionSegment(Segment);
-	MmUnlockSection(Section);
-	MmUnlockAddressSpace(AddressSpace);
-
-	if (Segment->Flags & MM_PAGEFILE_SECTION)
-	  {
+       /*
+	* If the entry is zero (and it can't change because we have
+	* locked the segment) then we need to load the page.
+	*/
+       
+       /*
+	* Release all our locks and read in the page from disk
+	*/
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       MmUnlockAddressSpace(AddressSpace);
+	
+       if (Segment->Flags & MM_PAGEFILE_SECTION)
+	 {
 	    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-	  }
-	else
-	  {
-	    Status = MiReadPage(MemoryArea, &Offset, &Page);
-	  }
-	if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
-	  {
-	     /*
-	      * FIXME: What do we know in this case?
-	      */
-	    DPRINT1("IoPageRead failed (Status %x)\n", Status);
+	 }
+       else
+	 {
+	   Status = MiReadPage(MemoryArea, &Offset, &Page);
+	 }
+       if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+	 {
+	   /*
+	    * FIXME: What do we know in this case?
+	    */
+	   DPRINT1("IoPageRead failed (Status %x)\n", Status);
+	   
+	   /*
+	    * Cleanup and release locks
+	    */
+	   PageOp->Status = Status;
+	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	   MmReleasePageOp(PageOp);
+	   MmLockAddressSpace(AddressSpace);
+	   return(Status);
+	 }
+       
+       /*
+	* Relock the address space, section and segment
+	*/
+       MmLockAddressSpace(AddressSpace);
+       MmLockSection(Section);
+       MmLockSectionSegment(Segment);
+       
+       /*
+	* Check the entry. No one should change the status of a page
+	* that has a pending page-in.
+	*/
+       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset.QuadPart);
+       if (Entry != Entry1)
+	 {
+	   DbgPrint("Someone changed ppte entry while we slept\n");
+	   KeBugCheck(0);
+	 }
+       
+       /*
+	* Mark the offset within the section as having valid, in-memory
+	* data
+	*/
+       Entry = (ULONG)Page;
+       MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
+       MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
+       
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+				       Address,
+				       Attributes,
+				       (ULONG)Page);
+       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("Unable to create virtual mapping\n");
+	   KeBugCheck(0);
+	 }
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }  
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       DPRINT("MmNotPresentFaultSectionView succeeded\n");
+       return(STATUS_SUCCESS);
+     }
+   else if (IS_SWAP_FROM_SSE(Entry))
+     {
+       SWAPENTRY SwapEntry;
+       PMDL Mdl;
 
-	    /*
-	     * Cleanup and release locks
-	     */
-	    PageOp->Status = Status;
-	    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	    MmReleasePageOp(PageOp);
-	    MmLockAddressSpace(AddressSpace);
-	    return(Status);
-	  }
-     
-	/*
-	 * Relock the address space, section and segment
-	 */
-	MmLockAddressSpace(AddressSpace);
-	MmLockSection(Section);
-	MmLockSectionSegment(Segment);
+       SwapEntry = SWAPENTRY_FROM_SSE(Entry);
+
+       /*
+	* Release all our locks and read in the page from disk
+	*/
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       MmUnlockAddressSpace(AddressSpace);
 	
-	/*
-	 * Check the entry. No one should change the status of a page
-	 * that has a pending page-in.
-	 */
-	Entry1 = MmGetPageEntrySectionSegment(Segment, Offset.QuadPart) & 0xFFFFF000;
-	if (Entry != Entry1)
-	  {
-	     DbgPrint("Someone changed ppte entry while we slept\n");
-	     KeBugCheck(0);
-	  }
-	
-	/*
-	 * Mark the offset within the section as having valid, in-memory
-	 * data
-	 */
-	Entry = (ULONG)Page;
-	MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
-	MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
-	
-	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
-					Address,
-					Attributes,
-					(ULONG)Page);
-	MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
-	  }
+       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+
+       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+       MmBuildMdlFromPages(Mdl, (PULONG)&Page);
+       Status = MmReadFromSwapPage(SwapEntry, Mdl);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+
+       /*
+	* Relock the address space, section and segment
+	*/
+       MmLockAddressSpace(AddressSpace);
+       MmLockSection(Section);
+       MmLockSectionSegment(Segment);
+       
+       /*
+	* Check the entry. No one should change the status of a page
+	* that has a pending page-in.
+	*/
+       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset.QuadPart);
+       if (Entry != Entry1)
+	 {
+	   DbgPrint("Someone changed ppte entry while we slept\n");
+	   KeBugCheck(0);
+	 }
+       
+       /*
+	* Mark the offset within the section as having valid, in-memory
+	* data
+	*/
+       Entry = (ULONG)Page;
+       MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
+       MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
+       
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+				       Address,
+				       Attributes,
+				       (ULONG)Page);
+       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint("Unable to create virtual mapping\n");
+	   KeBugCheck(0);
+	 }
        if (Locked)
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
@@ -711,7 +864,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 * take another reference to the page 
 	 */
 	
-	Page = (PVOID)Entry;
+	Page = (PVOID)PAGE_FROM_SSE(Entry);
 	MmReferencePage(Page);	
 	MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	
@@ -855,6 +1008,11 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ExUnmapPage(NewAddress);
 
    /*
+    * Delete the old entry.
+    */
+   MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE, NULL, NULL);
+
+   /*
     * Set the PTE to point to the new page
     */
    MmLockAddressSpace(AddressSpace);
@@ -891,13 +1049,14 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 {
   MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
   BOOL WasDirty;
+  PVOID PhysicalAddress;
 
   PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
   MmDeleteVirtualMapping(Process,
 			 Address,
 			 FALSE,
 			 &WasDirty,
-			 NULL);
+			 (PULONG)&PhysicalAddress);
   PageOutContext->WasDirty = PageOutContext->WasDirty || WasDirty;
   if (!PageOutContext->Private)
     {
@@ -906,6 +1065,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 				       PageOutContext->Offset.u.LowPart,
 				       PageOutContext->WasDirty);
     }
+  MmDereferencePage(PhysicalAddress);
 }
 
 NTSTATUS
@@ -986,6 +1146,10 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   Context.WasDirty = FALSE;
   Context.Private = Private = ((PVOID)(Entry & 0xFFFFF000) != PhysicalAddress);
 
+  /*
+   * Take an additional reference to the page.
+   */
+  MmReferencePage(PhysicalAddress);
 
   /*
    * Paging only data mapped read-only is easy.
@@ -1042,7 +1206,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	{
 	  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
 	}
-
+      
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -1055,6 +1219,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    */
   if (DirectMapped)
     {
+      MmDereferencePage((PVOID)PhysicalAddress);
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -1090,13 +1255,13 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	       * set it back into section segment entry so we don't loose our
 	       * copy. Otherwise it will be handled by the cache manager.
 	       */
-	      if (!DirectMapped)
-		{
-		  MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, (ULONG)PhysicalAddress);
-		  MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
-		}
+	      Status = MmCreateVirtualMapping(MemoryArea->Process,   
+					      Address,
+					      MemoryArea->Attributes,
+					      (ULONG)PhysicalAddress);
+	      MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, (ULONG)PhysicalAddress);
+	      MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	    }
-	   
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
@@ -1112,7 +1277,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   Status = MmWriteToSwapPage(SwapEntry, Mdl);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("MM: Failed to write to swap page\n");
+      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
       /*
        * As above: undo our actions.
        * FIXME: Also free the swap page.
@@ -1129,13 +1294,13 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	}
       else
 	{
-	  if (!DirectMapped)
-	    {
-	      MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, (ULONG)PhysicalAddress);
-	      MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
-	    }
+	  Status = MmCreateVirtualMapping(MemoryArea->Process,   
+					  Address,
+					  MemoryArea->Attributes,
+					  (ULONG)PhysicalAddress);
+	  MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, (ULONG)PhysicalAddress);
+	  MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	}
-
       PageOp->Status = STATUS_UNSUCCESSFUL;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -1145,9 +1310,23 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * Otherwise we have succeeded.
    */
-  if (!DirectMapped)
+  DPRINT1("MM: Wrote section page to swap!\n");
+  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+
+  if (Private)
     {
-      MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
+      Status = MmCreatePageFileMapping(MemoryArea->Process,   
+				       Address,
+				       SwapEntry);
+      if (!NT_SUCCESS(Status))
+	{
+	  KeBugCheck(0);
+	}
+    }
+  else
+    {
+      Entry = MAKE_SWAP_SSE(SwapEntry);
+      MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
     }
 
   PageOp->Status = STATUS_SUCCESS;
@@ -2166,14 +2345,18 @@ NtMapViewOfSection(HANDLE SectionHandle,
 
 VOID STATIC
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		  BOOLEAN Dirty)
+		  SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   PMEMORY_AREA MArea;
   ULONG Entry;
 
   MArea = (PMEMORY_AREA)Context;
 
-  if (PhysAddr != 0)
+  if (SwapEntry != 0)
+    {
+      MmFreeSwapPage(SwapEntry);
+    }
+  else if (PhysAddr != 0)
     {
       ULONG Offset;
       

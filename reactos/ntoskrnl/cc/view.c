@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.32 2001/12/31 01:53:44 dwelch Exp $
+/* $Id: view.c,v 1.33 2001/12/31 19:06:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -357,8 +357,9 @@ CcRosRequestCacheSegment(PBCB Bcb,
 
 STATIC VOID 
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		BOOLEAN Dirty)
+		SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
+  assert(SwapEntry == 0);
   if (PhysAddr != 0)
     {
       MmReleasePageMemoryConsumer(MC_CACHE, (PVOID)PhysAddr);

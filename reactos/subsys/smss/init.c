@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.28 2001/12/02 23:37:25 dwelch Exp $
+/* $Id: init.c,v 1.29 2001/12/31 19:06:49 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -58,6 +58,7 @@ PWSTR SmSystemEnvironment = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
+#if 0
 static VOID
 SmCreatePagingFiles (VOID)
 {
@@ -126,26 +127,37 @@ SmCreatePagingFiles (VOID)
 	}
     }
 }
+#endif
 
-#if 0
+#if 1
 static VOID
 SmCreatePagingFiles (VOID)
 {
-	UNICODE_STRING FileName;
-	ULONG ulCurrentSize;
+  UNICODE_STRING FileName;
+  ULONG ulCurrentSize;
+  NTSTATUS Status;
 
-	/* FIXME: Read file names from registry */
-
-	RtlInitUnicodeString (&FileName,
-	                      L"\\SystemRoot\\pagefile.sys");
-
-	NtCreatePagingFile (&FileName,
-	                    50,
-	                    80,
-	                    &ulCurrentSize);
+  /* FIXME: Read file names from registry */
+  
+  RtlInitUnicodeString (&FileName,
+			L"\\SystemRoot\\pagefile.sys");
+  
+  Status = NtCreatePagingFile (&FileName,
+			       50,
+			       80,
+			       &ulCurrentSize);
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to create paging file (Status was 0x%.8X)\n", Status);
+    }
+}
+#else
+static VOID
+SmCreatePagingFiles (VOID)
+{
+  /* Nothing. */
 }
 #endif
-
 
 static VOID
 SmInitDosDevices(VOID)
@@ -437,7 +449,7 @@ BOOL InitSessionManager (HANDLE	Children[])
    /* FIXME: Load the well known DLLs */
    
    /* Create paging files */
-   //   SmCreatePagingFiles ();
+   SmCreatePagingFiles ();
    
    /* Load remaining registry hives */
    NtInitializeRegistry (FALSE);

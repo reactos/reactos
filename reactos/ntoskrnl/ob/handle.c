@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.33 2001/11/20 02:29:45 dwelch Exp $
+/* $Id: handle.c,v 1.34 2001/12/31 19:06:48 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -136,19 +136,27 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    
    ASSERT_IRQL(PASSIVE_LEVEL);
    
-   ObReferenceObjectByHandle(SourceProcessHandle,
-			     PROCESS_DUP_HANDLE,
-			     NULL,
-			     UserMode,
-			     (PVOID*)&SourceProcess,
-			     NULL);
-   ObReferenceObjectByHandle(TargetProcessHandle,
-			     PROCESS_DUP_HANDLE,
-			     NULL,
-			     UserMode,
-			     (PVOID*)&TargetProcess,
-			     NULL);
-   
+   Status = ObReferenceObjectByHandle(SourceProcessHandle,
+				      PROCESS_DUP_HANDLE,
+				      NULL,
+				      UserMode,
+				      (PVOID*)&SourceProcess,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
+   Status = ObReferenceObjectByHandle(TargetProcessHandle,
+				      PROCESS_DUP_HANDLE,
+				      NULL,
+				      UserMode,
+				      (PVOID*)&TargetProcess,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       ObDereferenceObject(SourceProcess);
+       return(Status);
+     }
    KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
    SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
 					  SourceHandle);

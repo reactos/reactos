@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.60 2001/12/31 01:53:44 dwelch Exp $
+# $Id: Makefile,v 1.61 2001/12/31 19:06:46 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -151,7 +151,8 @@ OBJECTS_MM = \
 	mm/mpw.o \
 	mm/pageop.o \
 	mm/balance.o \
-	mm/rmap.o
+	mm/rmap.o \
+	mm/slab.o
 
 # I/O Subsystem (Io)
 OBJECTS_IO = \

@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.52 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: npool.c,v 1.53 2001/12/31 19:06:47 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1013,7 +1013,7 @@ ExAllocateWholePageBlock(ULONG UserSize)
 
   for (i = 0; i < NrPages; i++)
     {
-      Page = MmAllocPage(0);
+      Page = MmAllocPage(MC_NPPOOL, 0);
       if (Page == NULL)
 	{
 	  KeBugCheck(0);

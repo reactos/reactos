@@ -62,7 +62,7 @@ typedef ULONG SWAPENTRY;
 
 typedef struct
 {
-   ULONG Pages[NR_SECTION_PAGE_ENTRIES];
+  ULONG Entry[NR_SECTION_PAGE_ENTRIES];
 } SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
 
 typedef struct
@@ -141,23 +141,12 @@ typedef struct
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct _KCIRCULAR_QUEUE
-{
-  ULONG First;
-  ULONG Last;
-  ULONG CurrentSize;
-  ULONG MaximumSize;  
-  PVOID* Mem;
-} KCIRCULAR_QUEUE, *PKCIRCULAR_QUEUE;
-
 typedef struct _MADDRESS_SPACE
 {
   LIST_ENTRY MAreaListHead;
   KMUTEX Lock;
   ULONG LowestAddress;
   struct _EPROCESS* Process;
-  PMEMORY_AREA WorkingSetArea;
-  KCIRCULAR_QUEUE WSQueue;
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
@@ -189,7 +178,8 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
 			  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
-					   PVOID Address, ULONG PhysAddr, BOOLEAN Dirty),
+					   PVOID Address, ULONG PhysAddr, SWAPENTRY SwapEntry,
+					   BOOLEAN Dirty),
 			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
@@ -507,5 +497,12 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 VOID
 MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, ULONG* PhysicalAddr);
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address);
+VOID
+MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, SWAPENTRY* SwapEntry);
+NTSTATUS 
+MmCreatePageFileMapping(PEPROCESS Process,
+			PVOID Address,
+			SWAPENTRY SwapEntry);
+BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address);
 
 #endif

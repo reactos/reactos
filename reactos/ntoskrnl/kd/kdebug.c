@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.29 2001/09/09 09:47:18 hbirr Exp $
+/* $Id: kdebug.c,v 1.30 2001/12/31 19:06:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -302,6 +302,8 @@ KeEnterKernelDebugger (VOID)
 VOID STDCALL
 KdSystemDebugControl(ULONG Code)
 {
+  extern VOID PsDumpThreads(BOOLEAN IncludeSystem);
+
   /* A - Dump the entire contents of the non-paged pool. */
   if (Code == 0)
     {
@@ -336,10 +338,12 @@ KdSystemDebugControl(ULONG Code)
   /* F */
   else if (Code == 5)
     {
+      PsDumpThreads(TRUE);
     }
   /* G */
   else if (Code == 6)
     {
+      PsDumpThreads(FALSE);
     }
   /* H */
   else if (Code == 7)
