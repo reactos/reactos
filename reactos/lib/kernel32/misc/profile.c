@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.10 2004/01/30 22:12:47 gvg Exp $
+/* $Id: profile.c,v 1.11 2004/01/31 23:52:42 gvg Exp $
  *
  * Imported from Wine
  * Copyright 1993 Miguel de Icaza
@@ -819,6 +819,133 @@ PROFILE_GetString(LPCWSTR Section, LPCWSTR KeyName,
   return 0;
 }
 
+
+/***********************************************************************
+ *           PROFILE_DeleteSection
+ *
+ * Delete a section from a profile tree.
+ */
+STATIC BOOL FASTCALL
+PROFILE_DeleteSection(PROFILESECTION **Section, LPCWSTR Name)
+{
+  while (NULL != *Section)
+    {
+      if (L'\0' != (*Section)->Name[0] && 0 == _wcsicmp((*Section)->Name, Name))
+        {
+          PROFILESECTION *ToDel = *Section;
+          *Section = ToDel->Next;
+          ToDel->Next = NULL;
+          PROFILE_Free(ToDel);
+          return TRUE;
+        }
+      Section = &(*Section)->Next;
+    }
+
+  return FALSE;
+}
+
+
+/***********************************************************************
+ *           PROFILE_DeleteKey
+ *
+ * Delete a key from a profile tree.
+ */
+STATIC BOOL FASTCALL
+PROFILE_DeleteKey(PROFILESECTION **Section,
+                  LPCWSTR SectionName, LPCWSTR KeyName)
+{
+  while (*Section)
+    {
+      if (L'\0' != (*Section)->Name[0] && 0 == _wcsicmp((*Section)->Name, SectionName))
+        {
+          PROFILEKEY **Key = &(*Section)->Key;
+          while (NULL != *Key)
+            {
+              if (0 == _wcsicmp((*Key)->Name, KeyName))
+                {
+                  PROFILEKEY *ToDel = *Key;
+                  *Key = ToDel->Next;
+                  if (NULL != ToDel->Value)
+                    {
+                      HeapFree(GetProcessHeap(), 0, ToDel->Value);
+                    }
+                  HeapFree(GetProcessHeap(), 0, ToDel);
+                  return TRUE;
+                }
+              Key = &(*Key)->Next;
+            }
+        }
+      Section = &(*Section)->Next;
+    }
+
+  return FALSE;
+}
+
+
+/***********************************************************************
+ *           PROFILE_SetString
+ *
+ * Set a profile string.
+ */
+STATIC BOOL FASTCALL
+PROFILE_SetString(LPCWSTR SectionName, LPCWSTR KeyName,
+                  LPCWSTR Value, BOOL CreateAlways )
+{
+  PROFILEKEY *Key;
+
+  if (NULL == KeyName)  /* Delete a whole section */
+    {
+      DPRINT("(%S)\n", SectionName);
+      CurProfile->Changed |= PROFILE_DeleteSection(&CurProfile->Section,
+                                                   SectionName);
+      return TRUE;         /* Even if PROFILE_DeleteSection() has failed,
+                              this is not an error on application's level.*/
+    }
+
+  if (NULL == Value)  /* Delete a key */
+    {
+      DPRINT("(%S,%S)\n", SectionName, KeyName);
+      CurProfile->Changed |= PROFILE_DeleteKey(&CurProfile->Section,
+                                               SectionName, KeyName);
+      return TRUE;          /* same error handling as above */
+    }
+
+  /* Set the key value */
+  Key = PROFILE_Find(&CurProfile->Section, SectionName,
+                     KeyName, TRUE, CreateAlways);
+  DPRINT("(%S,%S,%S):\n", SectionName, KeyName, Value);
+  if (NULL == Key)
+    {
+      return FALSE;
+    }
+  if (NULL != Key->Value)
+    {
+      /* strip the leading spaces. We can safely strip \n\r and
+       * friends too, they should not happen here anyway. */
+      while (PROFILE_isspace(*Value))
+        {
+          Value++;
+        }
+
+      if (0 == wcscmp(Key->Value, Value))
+        {
+          DPRINT("  no change needed\n");
+          return TRUE;  /* No change needed */
+        }
+      DPRINT("  replacing %S\n", Key->Value);
+      HeapFree(GetProcessHeap(), 0, Key->Value);
+    }
+  else
+    {
+      DPRINT("  creating key\n" );
+    }
+  Key->Value = HeapAlloc(GetProcessHeap(), 0, (wcslen(Value) + 1) * sizeof(WCHAR));
+  wcscpy(Key->Value, Value);
+  CurProfile->Changed = TRUE;
+
+  return TRUE;
+}
+
 /*
  * if AllowSectionNameCopy is TRUE, allow the copying :
  *   - of Section names if 'section' is NULL
@@ -1444,30 +1571,99 @@ WritePrivateProfileSectionW (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-WritePrivateProfileStringA(LPCSTR lpAppName,
-			   LPCSTR lpKeyName,
-			   LPCSTR lpString,
-			   LPCSTR lpFileName)
+WritePrivateProfileStringA(LPCSTR AppName,
+			   LPCSTR KeyName,
+			   LPCSTR String,
+			   LPCSTR FileName)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  UNICODE_STRING AppNameW, KeyNameW, StringW, FileNameW;
+  BOOL Ret;
+
+  if (NULL != AppName)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&AppNameW, (PCSZ) AppName);
+    }
+  else
+    {
+      AppNameW.Buffer = NULL;
+    }
+  if (NULL != KeyName)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&KeyNameW, (PCSZ) KeyName);
+    }
+  else
+    {
+      KeyNameW.Buffer = NULL;
+    }
+  if (NULL != String)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&StringW, (PCSZ) String);
+    }
+  else
+    {
+      StringW.Buffer = NULL;
+    }
+  if (NULL != FileName)
+    {
+      RtlCreateUnicodeStringFromAsciiz(&FileNameW, (PCSZ) FileName);
+    }
+  else
+    {
+      FileNameW.Buffer = NULL;
+    }
+
+  Ret = WritePrivateProfileStringW(AppNameW.Buffer, KeyNameW.Buffer,
+                                   StringW.Buffer, FileNameW.Buffer);
+
+  RtlFreeUnicodeString(&AppNameW);
+  RtlFreeUnicodeString(&KeyNameW);
+  RtlFreeUnicodeString(&StringW);
+  RtlFreeUnicodeString(&FileNameW);
+
+  return Ret;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-WritePrivateProfileStringW(LPCWSTR lpAppName,
-			   LPCWSTR lpKeyName,
-			   LPCWSTR lpString,
-			   LPCWSTR lpFileName)
+WritePrivateProfileStringW(LPCWSTR AppName,
+			   LPCWSTR KeyName,
+			   LPCWSTR String,
+			   LPCWSTR FileName)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  BOOL Ret = FALSE;
+
+  RtlEnterCriticalSection(&ProfileLock);
+
+  if (PROFILE_Open(FileName))
+    {
+      if (NULL == AppName && NULL == KeyName && NULL == String) /* documented "file flush" case */
+        {
+          PROFILE_FlushFile();
+          PROFILE_ReleaseFile();  /* always return FALSE in this case */
+        }
+      else
+        {
+          if (NULL == AppName)
+            {
+              DPRINT1("(NULL?,%s,%s,%s)?\n", KeyName, String, FileName);
+            }
+          else
+            {
+              Ret = PROFILE_SetString(AppName, KeyName, String, FALSE);
+              PROFILE_FlushFile();
+            }
+        }
+    }
+
+  RtlLeaveCriticalSection(&ProfileLock);
+
+  return Ret;
 }
 
 
@@ -1532,31 +1728,31 @@ WriteProfileSectionW(LPCWSTR lpAppName,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-WriteProfileStringA(LPCSTR lpAppName,
-		    LPCSTR lpKeyName,
-		    LPCSTR lpString)
+WriteProfileStringA(LPCSTR AppName,
+		    LPCSTR KeyName,
+		    LPCSTR String)
 {
-   return WritePrivateProfileStringA(lpAppName,
-				     lpKeyName,
-				     lpString,
+   return WritePrivateProfileStringA(AppName,
+				     KeyName,
+				     String,
 				     NULL);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-WriteProfileStringW(LPCWSTR lpAppName,
-		    LPCWSTR lpKeyName,
-		    LPCWSTR lpString)
+WriteProfileStringW(LPCWSTR AppName,
+		    LPCWSTR KeyName,
+		    LPCWSTR String)
 {
-   return WritePrivateProfileStringW(lpAppName,
-				     lpKeyName,
-				     lpString,
+   return WritePrivateProfileStringW(AppName,
+				     KeyName,
+				     String,
 				     NULL);
 }
 
