@@ -17,22 +17,24 @@ else
 DEPENDS_PATH := $(PATH_TO_TOP)/tools
 endif
 
-.%.d: %.c $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+MAKEDEP := $(DEPENDS_PATH)$(SEP)makedep$(EXE_POSTFIX)
+
+.%.d: %.c $(MAKEDEP) $(GENERATED_HEADER_FILES)
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 .%.d: %.cc $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 .%.d: %.cpp $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 .%.d: %.s  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 .%.d: %.S  $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(CC) $(CFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 .%.d: %.asm $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
-	$(NASM_CMD) $(NFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
+	$(MAKEDEP) $(filter -I%, $(CFLAGS)) -f$@ $<
 
 endif

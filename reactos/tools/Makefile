@@ -6,7 +6,6 @@ CFLAGS += -Wall -Werror
 
 TOOLS = \
 	buildno$(EXE_POSTFIX) \
-	depends$(EXE_POSTFIX) \
 	regtests$(EXE_POSTFIX) \
 	rcopy$(EXE_POSTFIX) \
 	rdel$(EXE_POSTFIX) \
@@ -15,7 +14,8 @@ TOOLS = \
 	rrmdir$(EXE_POSTFIX) \
 	rsym$(EXE_POSTFIX) \
 	rtouch$(EXE_POSTFIX) \
-	mkflpimg$(EXE_POSTFIX)
+	mkflpimg$(EXE_POSTFIX) \
+	makedep$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
 
@@ -25,9 +25,6 @@ all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target r
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
 	$(EXE_PREFIX)buildno$(EXE_POSTFIX)
-
-depends$(EXE_POSTFIX): depends.c
-	$(HOST_CC) $(CFLAGS) -o depends$(EXE_POSTFIX) depends.c
 
 regtests$(EXE_POSTFIX): regtests.c
 	$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
@@ -98,6 +95,8 @@ mkflpimg$(EXE_POSTFIX): mkflpimg.c
 	$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
 endif
 
+makedep$(EXE_POSTFIX): makedep.c
+	$(HOST_CC) $(CFLAGS) -D__REACTOS__ makedep.c -o makedep$(EXE_POSTFIX)
 
 zlib_target:
 	$(MAKE) -C ../lib/zlib -f Makefile.host
