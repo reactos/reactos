@@ -32,32 +32,6 @@
 extern "C" {
 #endif
 
-#define GetWindowWord GetWindowLongA
-
-/* Macros to map Winelib names to the correct implementation name */
-/* depending on __WINE__ and UNICODE macros.                      */
-/* Note that Winelib is purely Win32.                             */
-
-#ifdef __WINE__
-# define WINELIB_NAME_AW(func) \
-    func##_must_be_suffixed_with_W_or_A_in_this_context \
-    func##_must_be_suffixed_with_W_or_A_in_this_context
-#else  /* __WINE__ */
-# ifdef UNICODE
-#  define WINELIB_NAME_AW(func) func##W
-# else
-#  define WINELIB_NAME_AW(func) func##A
-# endif  /* UNICODE */
-#endif  /* __WINE__ */
-
-#ifdef __WINE__
-# define DECL_WINELIB_TYPE_AW(type)  /* nothing */
-#else   /* __WINE__ */
-# define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
-#endif  /* __WINE__ */
-
-
-
 BOOL WINAPI ShowHideMenuCtl (HWND, UINT, LPINT);
 VOID WINAPI GetEffectiveClientRect (HWND, LPRECT, LPINT);
 VOID WINAPI InitCommonControls (VOID);
@@ -254,24 +228,24 @@ typedef struct tagNMCHAR
 #define CDDS_PREERASE           3
 #define CDDS_POSTERASE          4
 
-#define CDDS_ITEM				0x00010000
-#define CDDS_ITEMPREPAINT		(CDDS_ITEM | CDDS_PREPAINT)
-#define CDDS_ITEMPOSTPAINT		(CDDS_ITEM | CDDS_POSTPAINT)
-#define CDDS_ITEMPREERASE		(CDDS_ITEM | CDDS_PREERASE)
-#define CDDS_ITEMPOSTERASE		(CDDS_ITEM | CDDS_POSTERASE)
+#define CDDS_ITEM		0x00010000
+#define CDDS_ITEMPREPAINT	(CDDS_ITEM | CDDS_PREPAINT)
+#define CDDS_ITEMPOSTPAINT	(CDDS_ITEM | CDDS_POSTPAINT)
+#define CDDS_ITEMPREERASE	(CDDS_ITEM | CDDS_PREERASE)
+#define CDDS_ITEMPOSTERASE	(CDDS_ITEM | CDDS_POSTERASE)
 #define CDDS_SUBITEM            0x00020000
 
 /* itemState flags */
 
 #define CDIS_SELECTED	 	0x0001
-#define CDIS_GRAYED			0x0002
+#define CDIS_GRAYED		0x0002
 #define CDIS_DISABLED		0x0004
 #define CDIS_CHECKED		0x0008
-#define CDIS_FOCUS			0x0010
+#define CDIS_FOCUS		0x0010
 #define CDIS_DEFAULT		0x0020
-#define CDIS_HOT			0x0040
-#define CDIS_MARKED         0x0080
-#define CDIS_INDETERMINATE  0x0100
+#define CDIS_HOT		0x0040
+#define CDIS_MARKED         	0x0080
+#define CDIS_INDETERMINATE  	0x0100
 
 
 typedef struct tagNMCUSTOMDRAWINFO
@@ -335,11 +309,11 @@ static const WCHAR STATUSCLASSNAMEW[] = { 'm','s','c','t','l','s','_',
 #define SB_GETRECT		(WM_USER+10)
 #define SB_ISSIMPLE		(WM_USER+14)
 #define SB_SETICON		(WM_USER+15)
-#define SB_SETTIPTEXTA	(WM_USER+16)
-#define SB_SETTIPTEXTW	(WM_USER+17)
+#define SB_SETTIPTEXTA		(WM_USER+16)
+#define SB_SETTIPTEXTW		(WM_USER+17)
 #define SB_SETTIPTEXT		WINELIB_NAME_AW(SB_SETTIPTEXT)
-#define SB_GETTIPTEXTA	(WM_USER+18)
-#define SB_GETTIPTEXTW	(WM_USER+19)
+#define SB_GETTIPTEXTA		(WM_USER+18)
+#define SB_GETTIPTEXTW		(WM_USER+19)
 #define SB_GETTIPTEXT		WINELIB_NAME_AW(SB_GETTIPTEXT)
 #define SB_GETICON		(WM_USER+20)
 #define SB_SETBKCOLOR		CCM_SETBKCOLOR   /* lParam = bkColor */
@@ -505,14 +479,8 @@ typedef struct
 struct _IMAGELIST;
 typedef struct _IMAGELIST *HIMAGELIST;
 
-#ifndef CLR_NONE
 #define CLR_NONE         0xFFFFFFFF
-#endif
-
-#ifndef CLR_DEFAULT
 #define CLR_DEFAULT      0xFF000000
-#endif
-
 #define CLR_HILIGHT      CLR_DEFAULT
 
 #define ILC_MASK         0x0001
@@ -586,7 +554,6 @@ typedef struct _IMAGELISTDRAWPARAMS
 
 
 INT      WINAPI ImageList_Add(HIMAGELIST,HBITMAP,HBITMAP);
-INT      WINAPI ImageList_AddIcon (HIMAGELIST, HICON);
 INT      WINAPI ImageList_AddMasked(HIMAGELIST,HBITMAP,COLORREF);
 BOOL     WINAPI ImageList_BeginDrag(HIMAGELIST,INT,INT,INT);
 BOOL     WINAPI ImageList_Copy(HIMAGELIST,INT,HIMAGELIST,INT,INT);
@@ -615,7 +582,7 @@ HIMAGELIST WINAPI ImageList_LoadImageW(HINSTANCE,LPCWSTR,INT,INT,
                                          COLORREF,UINT,UINT);
 #define    ImageList_LoadImage WINELIB_NAME_AW(ImageList_LoadImage)
 HIMAGELIST WINAPI ImageList_Merge(HIMAGELIST,INT,HIMAGELIST,INT,INT,INT);
-#ifdef IStream_IMETHODS
+#ifdef IStream_METHODS
 HIMAGELIST WINAPI ImageList_Read(LPSTREAM);
 #endif
 BOOL     WINAPI ImageList_Remove(HIMAGELIST,INT);
@@ -627,13 +594,11 @@ BOOL     WINAPI ImageList_SetDragCursorImage(HIMAGELIST,INT,INT,INT);
 BOOL     WINAPI ImageList_SetIconSize(HIMAGELIST,INT,INT);
 BOOL     WINAPI ImageList_SetImageCount(HIMAGELIST,INT);
 BOOL     WINAPI ImageList_SetOverlayImage(HIMAGELIST,INT,INT);
-#ifdef IStream_IMETHODS
+#ifdef IStream_METHODS
 BOOL     WINAPI ImageList_Write(HIMAGELIST, LPSTREAM);
 #endif
 
-#ifndef __WINE__
 #define ImageList_AddIcon(himl,hicon) ImageList_ReplaceIcon(himl,-1,hicon)
-#endif
 #define ImageList_ExtractIcon(hi,himl,i) ImageList_GetIcon(himl,i,0)
 #define ImageList_LoadBitmap(hi,lpbmp,cx,cGrow,crMask) \
   ImageList_LoadImage(hi,lpbmp,cx,cGrow,crMask,IMAGE_BITMAP,0)
@@ -776,15 +741,15 @@ static const WCHAR WC_HEADERW[] = { 'S','y','s','H','e','a','d','e','r','3','2',
 
 #define HDM_FIRST               0x1200
 #define HDM_GETITEMCOUNT        (HDM_FIRST+0)
-#define HDM_INSERTITEMA       (HDM_FIRST+1)
-#define HDM_INSERTITEMW       (HDM_FIRST+10)
+#define HDM_INSERTITEMA         (HDM_FIRST+1)
+#define HDM_INSERTITEMW         (HDM_FIRST+10)
 #define HDM_INSERTITEM		WINELIB_NAME_AW(HDM_INSERTITEM)
 #define HDM_DELETEITEM          (HDM_FIRST+2)
-#define HDM_GETITEMA          (HDM_FIRST+3)
-#define HDM_GETITEMW          (HDM_FIRST+11)
+#define HDM_GETITEMA            (HDM_FIRST+3)
+#define HDM_GETITEMW            (HDM_FIRST+11)
 #define HDM_GETITEM		WINELIB_NAME_AW(HDM_GETITEM)
-#define HDM_SETITEMA          (HDM_FIRST+4)
-#define HDM_SETITEMW          (HDM_FIRST+12)
+#define HDM_SETITEMA            (HDM_FIRST+4)
+#define HDM_SETITEMW            (HDM_FIRST+12)
 #define HDM_SETITEM		WINELIB_NAME_AW(HDM_SETITEM)
 #define HDM_LAYOUT              (HDM_FIRST+5)
 #define HDM_HITTEST             (HDM_FIRST+6)
@@ -802,35 +767,35 @@ static const WCHAR WC_HEADERW[] = { 'S','y','s','H','e','a','d','e','r','3','2',
 
 #define HDN_FIRST               (0U-300U)
 #define HDN_LAST                (0U-399U)
-#define HDN_ITEMCHANGINGA     (HDN_FIRST-0)
-#define HDN_ITEMCHANGINGW     (HDN_FIRST-20)
-#define HDN_ITEMCHANGING WINELIB_NAME_AW(HDN_ITEMCHANGING)
-#define HDN_ITEMCHANGEDA      (HDN_FIRST-1)
-#define HDN_ITEMCHANGEDW      (HDN_FIRST-21)
-#define HDN_ITEMCHANGED WINELIB_NAME_AW(HDN_ITEMCHANGED)
-#define HDN_ITEMCLICKA        (HDN_FIRST-2)
-#define HDN_ITEMCLICKW        (HDN_FIRST-22)
-#define HDN_ITEMCLICK WINELIB_NAME_AW(HDN_ITEMCLICK)
-#define HDN_ITEMDBLCLICKA     (HDN_FIRST-3)
-#define HDN_ITEMDBLCLICKW     (HDN_FIRST-23)
-#define HDN_ITEMDBLCLICK WINELIB_NAME_AW(HDN_ITEMDBLCLICK)
-#define HDN_DIVIDERDBLCLICKA  (HDN_FIRST-5)
-#define HDN_DIVIDERDBLCLICKW  (HDN_FIRST-25)
-#define HDN_DIVIDERDBLCLICK WINELIB_NAME_AW(HDN_DIVIDERDBLCLICK)
-#define HDN_BEGINTRACKA       (HDN_FIRST-6)
-#define HDN_BEGINTRACKW       (HDN_FIRST-26)
-#define HDN_BEGINTRACK WINELIB_NAME_AW(HDN_BEGINTRACK)
-#define HDN_ENDTRACKA         (HDN_FIRST-7)
-#define HDN_ENDTRACKW         (HDN_FIRST-27)
-#define HDN_ENDTRACK WINELIB_NAME_AW(HDN_ENDTRACK)
-#define HDN_TRACKA            (HDN_FIRST-8)
-#define HDN_TRACKW            (HDN_FIRST-28)
-#define HDN_TRACK WINELIB_NAME_AW(HDN_TRACK)
-#define HDN_GETDISPINFOA      (HDN_FIRST-9)
-#define HDN_GETDISPINFOW      (HDN_FIRST-29)
-#define HDN_GETDISPINFO WINELIB_NAME_AW(HDN_GETDISPINFO)
-#define HDN_BEGINDRAG         (HDN_FIRST-10)
-#define HDN_ENDDRAG           (HDN_FIRST-11)
+#define HDN_ITEMCHANGINGA       (HDN_FIRST-0)
+#define HDN_ITEMCHANGINGW       (HDN_FIRST-20)
+#define HDN_ITEMCHANGING        WINELIB_NAME_AW(HDN_ITEMCHANGING)
+#define HDN_ITEMCHANGEDA        (HDN_FIRST-1)
+#define HDN_ITEMCHANGEDW        (HDN_FIRST-21)
+#define HDN_ITEMCHANGED         WINELIB_NAME_AW(HDN_ITEMCHANGED)
+#define HDN_ITEMCLICKA          (HDN_FIRST-2)
+#define HDN_ITEMCLICKW          (HDN_FIRST-22)
+#define HDN_ITEMCLICK           WINELIB_NAME_AW(HDN_ITEMCLICK)
+#define HDN_ITEMDBLCLICKA       (HDN_FIRST-3)
+#define HDN_ITEMDBLCLICKW       (HDN_FIRST-23)
+#define HDN_ITEMDBLCLICK        WINELIB_NAME_AW(HDN_ITEMDBLCLICK)
+#define HDN_DIVIDERDBLCLICKA    (HDN_FIRST-5)
+#define HDN_DIVIDERDBLCLICKW    (HDN_FIRST-25)
+#define HDN_DIVIDERDBLCLICK     WINELIB_NAME_AW(HDN_DIVIDERDBLCLICK)
+#define HDN_BEGINTRACKA         (HDN_FIRST-6)
+#define HDN_BEGINTRACKW         (HDN_FIRST-26)
+#define HDN_BEGINTRACK          WINELIB_NAME_AW(HDN_BEGINTRACK)
+#define HDN_ENDTRACKA           (HDN_FIRST-7)
+#define HDN_ENDTRACKW           (HDN_FIRST-27)
+#define HDN_ENDTRACK            WINELIB_NAME_AW(HDN_ENDTRACK)
+#define HDN_TRACKA              (HDN_FIRST-8)
+#define HDN_TRACKW              (HDN_FIRST-28)
+#define HDN_TRACK               WINELIB_NAME_AW(HDN_TRACK)
+#define HDN_GETDISPINFOA        (HDN_FIRST-9)
+#define HDN_GETDISPINFOW        (HDN_FIRST-29)
+#define HDN_GETDISPINFO         WINELIB_NAME_AW(HDN_GETDISPINFO)
+#define HDN_BEGINDRAG           (HDN_FIRST-10)
+#define HDN_ENDDRAG             (HDN_FIRST-11)
 
 typedef struct _HD_LAYOUT
 {
@@ -1063,24 +1028,24 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TB_SETSTATE              (WM_USER+17)
 #define TB_GETSTATE              (WM_USER+18)
 #define TB_ADDBITMAP             (WM_USER+19)
-#define TB_ADDBUTTONSA         (WM_USER+20)
-#define TB_ADDBUTTONSW         (WM_USER+68)
-#define TB_ADDBUTTONS WINELIB_NAME_AW(TB_ADDBUTTONS)
+#define TB_ADDBUTTONSA           (WM_USER+20)
+#define TB_ADDBUTTONSW           (WM_USER+68)
+#define TB_ADDBUTTONS            WINELIB_NAME_AW(TB_ADDBUTTONS)
 #define TB_HITTEST               (WM_USER+69)
-#define TB_INSERTBUTTONA       (WM_USER+21)
-#define TB_INSERTBUTTONW       (WM_USER+67)
-#define TB_INSERTBUTTON WINELIB_NAME_AW(TB_INSERTBUTTON)
+#define TB_INSERTBUTTONA         (WM_USER+21)
+#define TB_INSERTBUTTONW         (WM_USER+67)
+#define TB_INSERTBUTTON          WINELIB_NAME_AW(TB_INSERTBUTTON)
 #define TB_DELETEBUTTON          (WM_USER+22)
 #define TB_GETBUTTON             (WM_USER+23)
 #define TB_BUTTONCOUNT           (WM_USER+24)
 #define TB_COMMANDTOINDEX        (WM_USER+25)
-#define TB_SAVERESTOREA        (WM_USER+26)
-#define TB_SAVERESTOREW        (WM_USER+76)
-#define TB_SAVERESTORE WINELIB_NAME_AW(TB_SAVERESTORE)
+#define TB_SAVERESTOREA          (WM_USER+26)
+#define TB_SAVERESTOREW          (WM_USER+76)
+#define TB_SAVERESTORE           WINELIB_NAME_AW(TB_SAVERESTORE)
 #define TB_CUSTOMIZE             (WM_USER+27)
-#define TB_ADDSTRINGA          (WM_USER+28)
-#define TB_ADDSTRINGW          (WM_USER+77)
-#define TB_ADDSTRING WINELIB_NAME_AW(TB_ADDSTRING)
+#define TB_ADDSTRINGA            (WM_USER+28)
+#define TB_ADDSTRINGW            (WM_USER+77)
+#define TB_ADDSTRING             WINELIB_NAME_AW(TB_ADDSTRING)
 #define TB_GETITEMRECT           (WM_USER+29)
 #define TB_BUTTONSTRUCTSIZE      (WM_USER+30)
 #define TB_SETBUTTONSIZE         (WM_USER+31)
@@ -1095,9 +1060,9 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TB_SETCMDID              (WM_USER+42)
 #define TB_CHANGEBITMAP          (WM_USER+43)
 #define TB_GETBITMAP             (WM_USER+44)
-#define TB_GETBUTTONTEXTA      (WM_USER+45)
-#define TB_GETBUTTONTEXTW      (WM_USER+75)
-#define TB_GETBUTTONTEXT WINELIB_NAME_AW(TB_GETBUTTONTEXT)
+#define TB_GETBUTTONTEXTA        (WM_USER+45)
+#define TB_GETBUTTONTEXTW        (WM_USER+75)
+#define TB_GETBUTTONTEXT         WINELIB_NAME_AW(TB_GETBUTTONTEXT)
 #define TB_REPLACEBITMAP         (WM_USER+46)
 #define TB_SETINDENT             (WM_USER+47)
 #define TB_SETIMAGELIST          (WM_USER+48)
@@ -1115,20 +1080,20 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TB_SETMAXTEXTROWS        (WM_USER+60)
 #define TB_GETTEXTROWS           (WM_USER+61)
 #define TB_GETOBJECT             (WM_USER+62)
-#define TB_GETBUTTONINFOW      (WM_USER+63)
-#define TB_GETBUTTONINFOA      (WM_USER+65)
-#define TB_GETBUTTONINFO WINELIB_NAME_AW(TB_GETBUTTONINFO)
-#define TB_SETBUTTONINFOW      (WM_USER+64)
-#define TB_SETBUTTONINFOA      (WM_USER+66)
-#define TB_SETBUTTONINFO WINELIB_NAME_AW(TB_SETBUTTONINFO)
+#define TB_GETBUTTONINFOW        (WM_USER+63)
+#define TB_GETBUTTONINFOA        (WM_USER+65)
+#define TB_GETBUTTONINFO         WINELIB_NAME_AW(TB_GETBUTTONINFO)
+#define TB_SETBUTTONINFOW        (WM_USER+64)
+#define TB_SETBUTTONINFOA        (WM_USER+66)
+#define TB_SETBUTTONINFO         WINELIB_NAME_AW(TB_SETBUTTONINFO)
 #define TB_SETDRAWTEXTFLAGS      (WM_USER+70)
 #define TB_GETHOTITEM            (WM_USER+71)
 #define TB_SETHOTITEM            (WM_USER+72)
 #define TB_SETANCHORHIGHLIGHT    (WM_USER+73)
 #define TB_GETANCHORHIGHLIGHT    (WM_USER+74)
-#define TB_MAPACCELERATORA     (WM_USER+78)
-#define TB_MAPACCELERATORW     (WM_USER+90)
-#define TB_MAPACCELERATOR WINELIB_NAME_AW(TB_MAPACCELERATOR)
+#define TB_MAPACCELERATORA       (WM_USER+78)
+#define TB_MAPACCELERATORW       (WM_USER+90)
+#define TB_MAPACCELERATOR        WINELIB_NAME_AW(TB_MAPACCELERATOR)
 #define TB_GETINSERTMARK         (WM_USER+79)
 #define TB_SETINSERTMARK         (WM_USER+80)
 #define TB_INSERTMARKHITTEST     (WM_USER+81)
@@ -1146,7 +1111,7 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TB_GETUNICODEFORMAT      CCM_GETUNICODEFORMAT
 #define TB_GETSTRINGW            (WM_USER+91)
 #define TB_GETSTRINGA            (WM_USER+92)
-#define TB_GETSTRING  WINELIB_NAME_AW(TB_GETSTRING)
+#define TB_GETSTRING             WINELIB_NAME_AW(TB_GETSTRING)
 
 /* undocumented messages in Toolbar */
 #define TB_UNKWN45D              (WM_USER+93)
@@ -1158,9 +1123,9 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 
 #define TBN_FIRST               (0U-700U)
 #define TBN_LAST                (0U-720U)
-#define TBN_GETBUTTONINFOA    (TBN_FIRST-0)
-#define TBN_GETBUTTONINFOW    (TBN_FIRST-20)
-#define TBN_GETBUTTONINFO WINELIB_NAME_AW(TBN_GETBUTTONINFO)
+#define TBN_GETBUTTONINFOA      (TBN_FIRST-0)
+#define TBN_GETBUTTONINFOW      (TBN_FIRST-20)
+#define TBN_GETBUTTONINFO       WINELIB_NAME_AW(TBN_GETBUTTONINFO)
 #define TBN_BEGINDRAG		(TBN_FIRST-1)
 #define TBN_ENDDRAG		(TBN_FIRST-2)
 #define TBN_BEGINADJUST		(TBN_FIRST-3)
@@ -1178,9 +1143,9 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TBN_GETDISPINFOA	(TBN_FIRST-16)
 #define TBN_GETDISPINFOW	(TBN_FIRST-17)
 #define TBN_GETDISPINFO		WINELIB_NAME_AW(TBN_GETDISPINFO)
-#define TBN_GETINFOTIPA       (TBN_FIRST-18)
-#define TBN_GETINFOTIPW       (TBN_FIRST-19)
-#define TBN_GETINFOTIP WINELIB_NAME_AW(TBN_GETINFOTIP)
+#define TBN_GETINFOTIPA         (TBN_FIRST-18)
+#define TBN_GETINFOTIPW         (TBN_FIRST-19)
+#define TBN_GETINFOTIP          WINELIB_NAME_AW(TBN_GETINFOTIP)
 #define TBN_INITCUSTOMIZE	(TBN_FIRST-23)
 #define TBNRF_HIDEHELP		0x00000001
 
@@ -1512,36 +1477,36 @@ static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
 #define TTM_SETDELAYTIME        (WM_USER+3)
 #define TTM_ADDTOOLA            (WM_USER+4)
 #define TTM_ADDTOOLW            (WM_USER+50)
-#define TTM_ADDTOOL WINELIB_NAME_AW(TTM_ADDTOOL)
+#define TTM_ADDTOOL             WINELIB_NAME_AW(TTM_ADDTOOL)
 #define TTM_DELTOOLA            (WM_USER+5)
 #define TTM_DELTOOLW            (WM_USER+51)
-#define TTM_DELTOOL WINELIB_NAME_AW(TTM_DELTOOL)
+#define TTM_DELTOOL             WINELIB_NAME_AW(TTM_DELTOOL)
 #define TTM_NEWTOOLRECTA        (WM_USER+6)
 #define TTM_NEWTOOLRECTW        (WM_USER+52)
-#define TTM_NEWTOOLRECT WINELIB_NAME_AW(TTM_NEWTOOLRECT)
+#define TTM_NEWTOOLRECT         WINELIB_NAME_AW(TTM_NEWTOOLRECT)
 #define TTM_RELAYEVENT          (WM_USER+7)
 #define TTM_GETTOOLINFOA        (WM_USER+8)
 #define TTM_GETTOOLINFOW        (WM_USER+53)
-#define TTM_GETTOOLINFO WINELIB_NAME_AW(TTM_GETTOOLINFO)
+#define TTM_GETTOOLINFO         WINELIB_NAME_AW(TTM_GETTOOLINFO)
 #define TTM_SETTOOLINFOA        (WM_USER+9)
 #define TTM_SETTOOLINFOW        (WM_USER+54)
-#define TTM_SETTOOLINFO WINELIB_NAME_AW(TTM_SETTOOLINFO)
+#define TTM_SETTOOLINFO         WINELIB_NAME_AW(TTM_SETTOOLINFO)
 #define TTM_HITTESTA            (WM_USER+10)
 #define TTM_HITTESTW            (WM_USER+55)
-#define TTM_HITTEST WINELIB_NAME_AW(TTM_HITTEST)
+#define TTM_HITTEST             WINELIB_NAME_AW(TTM_HITTEST)
 #define TTM_GETTEXTA            (WM_USER+11)
 #define TTM_GETTEXTW            (WM_USER+56)
-#define TTM_GETTEXT WINELIB_NAME_AW(TTM_GETTEXT)
+#define TTM_GETTEXT             WINELIB_NAME_AW(TTM_GETTEXT)
 #define TTM_UPDATETIPTEXTA      (WM_USER+12)
 #define TTM_UPDATETIPTEXTW      (WM_USER+57)
-#define TTM_UPDATETIPTEXT WINELIB_NAME_AW(TTM_UPDATETIPTEXT)
+#define TTM_UPDATETIPTEXT       WINELIB_NAME_AW(TTM_UPDATETIPTEXT)
 #define TTM_GETTOOLCOUNT        (WM_USER+13)
 #define TTM_ENUMTOOLSA          (WM_USER+14)
 #define TTM_ENUMTOOLSW          (WM_USER+58)
-#define TTM_ENUMTOOLS WINELIB_NAME_AW(TTM_ENUMTOOLS)
+#define TTM_ENUMTOOLS           WINELIB_NAME_AW(TTM_ENUMTOOLS)
 #define TTM_GETCURRENTTOOLA     (WM_USER+15)
 #define TTM_GETCURRENTTOOLW     (WM_USER+59)
-#define TTM_GETCURRENTTOOL WINELIB_NAME_AW(TTM_GETCURRENTTOOL)
+#define TTM_GETCURRENTTOOL      WINELIB_NAME_AW(TTM_GETCURRENTTOOL)
 #define TTM_WINDOWFROMPOINT     (WM_USER+16)
 #define TTM_TRACKACTIVATE       (WM_USER+17)
 #define TTM_TRACKPOSITION       (WM_USER+18)
@@ -1563,13 +1528,13 @@ static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
 #define TTN_LAST                (0U-549U)
 #define TTN_GETDISPINFOA        (TTN_FIRST-0)
 #define TTN_GETDISPINFOW        (TTN_FIRST-10)
-#define TTN_GETDISPINFO WINELIB_NAME_AW(TTN_GETDISPINFO)
+#define TTN_GETDISPINFO         WINELIB_NAME_AW(TTN_GETDISPINFO)
 #define TTN_SHOW                (TTN_FIRST-1)
 #define TTN_POP                 (TTN_FIRST-2)
 
-#define TTN_NEEDTEXT TTN_GETDISPINFO
-#define TTN_NEEDTEXTA TTN_GETDISPINFOA
-#define TTN_NEEDTEXTW TTN_GETDISPINFOW
+#define TTN_NEEDTEXT		TTN_GETDISPINFO
+#define TTN_NEEDTEXTA 		TTN_GETDISPINFOA
+#define TTN_NEEDTEXTW 		TTN_GETDISPINFOW
 
 typedef struct tagTOOLINFOA {
     UINT cbSize;
@@ -1716,15 +1681,15 @@ static const WCHAR REBARCLASSNAMEW[] = { 'R','e','B','a','r',
 #define RBHT_CLIENT             0x0003
 #define RBHT_GRABBER            0x0004
 
-#define RB_INSERTBANDA        (WM_USER+1)
-#define RB_INSERTBANDW        (WM_USER+10)
+#define RB_INSERTBANDA          (WM_USER+1)
+#define RB_INSERTBANDW          (WM_USER+10)
 #define RB_INSERTBAND           WINELIB_NAME_AW(RB_INSERTBAND)
 #define RB_DELETEBAND           (WM_USER+2)
 #define RB_GETBARINFO           (WM_USER+3)
 #define RB_SETBARINFO           (WM_USER+4)
-#define RB_GETBANDINFO        (WM_USER+5)   /* just for compatibility */
-#define RB_SETBANDINFOA       (WM_USER+6)
-#define RB_SETBANDINFOW       (WM_USER+11)
+#define RB_GETBANDINFO          (WM_USER+5)   /* just for compatibility */
+#define RB_SETBANDINFOA         (WM_USER+6)
+#define RB_SETBANDINFOW         (WM_USER+11)
 #define RB_SETBANDINFO          WINELIB_NAME_AW(RB_SETBANDINFO)
 #define RB_SETPARENT            (WM_USER+7)
 #define RB_HITTEST              (WM_USER+8)
@@ -1744,9 +1709,9 @@ static const WCHAR REBARCLASSNAMEW[] = { 'R','e','B','a','r',
 #define RB_ENDDRAG              (WM_USER+25)
 #define RB_DRAGMOVE             (WM_USER+26)
 #define RB_GETBARHEIGHT         (WM_USER+27)
-#define RB_GETBANDINFOW       (WM_USER+28)
-#define RB_GETBANDINFOA       (WM_USER+29)
-#define RB_GETBANDINFO16          WINELIB_NAME_AW(RB_GETBANDINFO16)
+#define RB_GETBANDINFOW         (WM_USER+28)
+#define RB_GETBANDINFOA         (WM_USER+29)
+#define RB_GETBANDINFO16        WINELIB_NAME_AW(RB_GETBANDINFO16)
 #define RB_MINIMIZEBAND         (WM_USER+30)
 #define RB_MAXIMIZEBAND         (WM_USER+31)
 #define RB_GETBANDBORDERS       (WM_USER+34)
@@ -2063,8 +2028,8 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVSIL_STATE             2
 
 #define TV_FIRST                0x1100
-#define TVM_INSERTITEMA       (TV_FIRST+0)
-#define TVM_INSERTITEMW       (TV_FIRST+50)
+#define TVM_INSERTITEMA         (TV_FIRST+0)
+#define TVM_INSERTITEMW         (TV_FIRST+50)
 #define TVM_INSERTITEM          WINELIB_NAME_AW(TVM_INSERTITEM)
 #define TVM_DELETEITEM          (TV_FIRST+1)
 #define TVM_EXPAND              (TV_FIRST+2)
@@ -2076,14 +2041,14 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVM_SETIMAGELIST        (TV_FIRST+9)
 #define TVM_GETNEXTITEM         (TV_FIRST+10)
 #define TVM_SELECTITEM          (TV_FIRST+11)
-#define TVM_GETITEMA          (TV_FIRST+12)
-#define TVM_GETITEMW          (TV_FIRST+62)
+#define TVM_GETITEMA            (TV_FIRST+12)
+#define TVM_GETITEMW            (TV_FIRST+62)
 #define TVM_GETITEM             WINELIB_NAME_AW(TVM_GETITEM)
-#define TVM_SETITEMA          (TV_FIRST+13)
-#define TVM_SETITEMW          (TV_FIRST+63)
+#define TVM_SETITEMA            (TV_FIRST+13)
+#define TVM_SETITEMW            (TV_FIRST+63)
 #define TVM_SETITEM             WINELIB_NAME_AW(TVM_SETITEM)
-#define TVM_EDITLABELA        (TV_FIRST+14)
-#define TVM_EDITLABELW        (TV_FIRST+65)
+#define TVM_EDITLABELA          (TV_FIRST+14)
+#define TVM_EDITLABELW          (TV_FIRST+65)
 #define TVM_EDITLABEL           WINELIB_NAME_AW(TVM_EDITLABEL)
 #define TVM_GETEDITCONTROL      (TV_FIRST+15)
 #define TVM_GETVISIBLECOUNT     (TV_FIRST+16)
@@ -2093,8 +2058,8 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVM_ENSUREVISIBLE       (TV_FIRST+20)
 #define TVM_SORTCHILDRENCB      (TV_FIRST+21)
 #define TVM_ENDEDITLABELNOW     (TV_FIRST+22)
-#define TVM_GETISEARCHSTRINGA (TV_FIRST+23)
-#define TVM_GETISEARCHSTRINGW (TV_FIRST+64)
+#define TVM_GETISEARCHSTRINGA   (TV_FIRST+23)
+#define TVM_GETISEARCHSTRINGW   (TV_FIRST+64)
 #define TVM_GETISEARCHSTRING    WINELIB_NAME_AW(TVM_GETISEARCHSTRING)
 #define TVM_SETTOOLTIPS         (TV_FIRST+24)
 #define TVM_GETTOOLTIPS         (TV_FIRST+25)
@@ -2186,7 +2151,7 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVIF_SELECTEDIMAGE    0x0020
 #define TVIF_CHILDREN         0x0040
 #define TVIF_INTEGRAL         0x0080
-#define TVIF_DI_SETITEM		  0x1000
+#define TVIF_DI_SETITEM	      0x1000
 
 #define TVI_ROOT              ((HTREEITEM)0xffff0000)     /* -65536 */
 #define TVI_FIRST             ((HTREEITEM)0xffff0001)     /* -65535 */
@@ -2228,11 +2193,11 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVS_NOTOOLTIPS        0x0080
 #define TVS_CHECKBOXES        0x0100
 #define TVS_TRACKSELECT       0x0200
-#define TVS_SINGLEEXPAND 	  0x0400
-#define TVS_INFOTIP      	  0x0800
-#define TVS_FULLROWSELECT	  0x1000
-#define TVS_NOSCROLL     	  0x2000
-#define TVS_NONEVENHEIGHT	  0x4000
+#define TVS_SINGLEEXPAND      0x0400
+#define TVS_INFOTIP           0x0800
+#define TVS_FULLROWSELECT     0x1000
+#define TVS_NOSCROLL          0x2000
+#define TVS_NONEVENHEIGHT     0x4000
 #define TVS_NOHSCROLL         0x8000
 
 #define TVS_SHAREDIMAGELISTS  0x0000
@@ -2383,9 +2348,13 @@ typedef struct tagNMTREEVIEWW {
 
 #define NMTREEVIEW     WINELIB_NAME_AW(NMTREEVIEW)
 #define NM_TREEVIEW    WINELIB_NAME_AW(NMTREEVIEW)
+#define NM_TREEVIEWA   NMTREEVIEWA
+#define NM_TREEVIEWW   NMTREEVIEWW
 #define LPNMTREEVIEW   WINELIB_NAME_AW(LPNMTREEVIEW)
 
-#define LPNM_TREEVIEW           LPNMTREEVIEW
+#define LPNM_TREEVIEW  LPNMTREEVIEW
+#define LPNM_TREEVIEWA LPNMTREEVIEWA
+#define LPNM_TREEVIEWW LPNMTREEVIEWW
 
 typedef struct tagTVDISPINFOA {
 	NMHDR	hdr;
@@ -2747,6 +2716,8 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVIF_PARAM              0x0004
 #define LVIF_STATE              0x0008
 #define LVIF_INDENT             0x0010
+#define LVIF_GROUPID            0x0100
+#define LVIF_COLUMNS            0x0200
 #define LVIF_NORECOMPUTE        0x0800
 #define LVIF_DI_SETITEM         0x1000
 
@@ -2792,46 +2763,46 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVM_GETIMAGELIST        (LVM_FIRST+2)
 #define LVM_SETIMAGELIST        (LVM_FIRST+3)
 #define LVM_GETITEMCOUNT        (LVM_FIRST+4)
-#define LVM_GETITEMA          (LVM_FIRST+5)
-#define LVM_GETITEMW          (LVM_FIRST+75)
+#define LVM_GETITEMA            (LVM_FIRST+5)
+#define LVM_GETITEMW            (LVM_FIRST+75)
 #define LVM_GETITEM             WINELIB_NAME_AW(LVM_GETITEM)
-#define LVM_SETITEMA          (LVM_FIRST+6)
-#define LVM_SETITEMW          (LVM_FIRST+76)
+#define LVM_SETITEMA            (LVM_FIRST+6)
+#define LVM_SETITEMW            (LVM_FIRST+76)
 #define LVM_SETITEM             WINELIB_NAME_AW(LVM_SETITEM)
-#define LVM_INSERTITEMA       (LVM_FIRST+7)
-#define LVM_INSERTITEMW       (LVM_FIRST+77)
+#define LVM_INSERTITEMA         (LVM_FIRST+7)
+#define LVM_INSERTITEMW         (LVM_FIRST+77)
 #define LVM_INSERTITEM          WINELIB_NAME_AW(LVM_INSERTITEM)
 #define LVM_DELETEITEM          (LVM_FIRST+8)
 #define LVM_DELETEALLITEMS      (LVM_FIRST+9)
 #define LVM_GETCALLBACKMASK     (LVM_FIRST+10)
 #define LVM_SETCALLBACKMASK     (LVM_FIRST+11)
 #define LVM_GETNEXTITEM         (LVM_FIRST+12)
-#define LVM_FINDITEMA         (LVM_FIRST+13)
-#define LVM_FINDITEMW         (LVM_FIRST+83)
+#define LVM_FINDITEMA           (LVM_FIRST+13)
+#define LVM_FINDITEMW           (LVM_FIRST+83)
 #define LVM_FINDITEM            WINELIB_NAME_AW(LVM_FINDITEM)
 #define LVM_GETITEMRECT         (LVM_FIRST+14)
 #define LVM_SETITEMPOSITION     (LVM_FIRST+15)
 #define LVM_GETITEMPOSITION     (LVM_FIRST+16)
-#define LVM_GETSTRINGWIDTHA   (LVM_FIRST+17)
-#define LVM_GETSTRINGWIDTHW   (LVM_FIRST+87)
+#define LVM_GETSTRINGWIDTHA     (LVM_FIRST+17)
+#define LVM_GETSTRINGWIDTHW     (LVM_FIRST+87)
 #define LVM_GETSTRINGWIDTH      WINELIB_NAME_AW(LVM_GETSTRINGWIDTH)
 #define LVM_HITTEST             (LVM_FIRST+18)
 #define LVM_ENSUREVISIBLE       (LVM_FIRST+19)
 #define LVM_SCROLL              (LVM_FIRST+20)
 #define LVM_REDRAWITEMS         (LVM_FIRST+21)
 #define LVM_ARRANGE             (LVM_FIRST+22)
-#define LVM_EDITLABELA        (LVM_FIRST+23)
-#define LVM_EDITLABELW        (LVM_FIRST+118)
+#define LVM_EDITLABELA          (LVM_FIRST+23)
+#define LVM_EDITLABELW          (LVM_FIRST+118)
 #define LVM_EDITLABEL           WINELIB_NAME_AW(LVM_EDITLABEL)
 #define LVM_GETEDITCONTROL      (LVM_FIRST+24)
-#define LVM_GETCOLUMNA        (LVM_FIRST+25)
-#define LVM_GETCOLUMNW        (LVM_FIRST+95)
+#define LVM_GETCOLUMNA          (LVM_FIRST+25)
+#define LVM_GETCOLUMNW          (LVM_FIRST+95)
 #define LVM_GETCOLUMN           WINELIB_NAME_AW(LVM_GETCOLUMN)
-#define LVM_SETCOLUMNA        (LVM_FIRST+26)
-#define LVM_SETCOLUMNW        (LVM_FIRST+96)
+#define LVM_SETCOLUMNA          (LVM_FIRST+26)
+#define LVM_SETCOLUMNW          (LVM_FIRST+96)
 #define LVM_SETCOLUMN           WINELIB_NAME_AW(LVM_SETCOLUMN)
-#define LVM_INSERTCOLUMNA     (LVM_FIRST+27)
-#define LVM_INSERTCOLUMNW     (LVM_FIRST+97)
+#define LVM_INSERTCOLUMNA       (LVM_FIRST+27)
+#define LVM_INSERTCOLUMNW       (LVM_FIRST+97)
 #define LVM_INSERTCOLUMN        WINELIB_NAME_AW(LVM_INSERTCOLUMN)
 #define LVM_DELETECOLUMN        (LVM_FIRST+28)
 #define LVM_GETCOLUMNWIDTH      (LVM_FIRST+29)
@@ -2850,19 +2821,19 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVM_UPDATE              (LVM_FIRST+42)
 #define LVM_SETITEMSTATE        (LVM_FIRST+43)
 #define LVM_GETITEMSTATE        (LVM_FIRST+44)
-#define LVM_GETITEMTEXTA      (LVM_FIRST+45)
-#define LVM_GETITEMTEXTW      (LVM_FIRST+115)
+#define LVM_GETITEMTEXTA        (LVM_FIRST+45)
+#define LVM_GETITEMTEXTW        (LVM_FIRST+115)
 #define LVM_GETITEMTEXT         WINELIB_NAME_AW(LVM_GETITEMTEXT)
-#define LVM_SETITEMTEXTA      (LVM_FIRST+46)
-#define LVM_SETITEMTEXTW      (LVM_FIRST+116)
+#define LVM_SETITEMTEXTA        (LVM_FIRST+46)
+#define LVM_SETITEMTEXTW        (LVM_FIRST+116)
 #define LVM_SETITEMTEXT         WINELIB_NAME_AW(LVM_SETITEMTEXT)
 #define LVM_SETITEMCOUNT        (LVM_FIRST+47)
 #define LVM_SORTITEMS           (LVM_FIRST+48)
 #define LVM_SETITEMPOSITION32   (LVM_FIRST+49)
 #define LVM_GETSELECTEDCOUNT    (LVM_FIRST+50)
 #define LVM_GETITEMSPACING      (LVM_FIRST+51)
-#define LVM_GETISEARCHSTRINGA (LVM_FIRST+52)
-#define LVM_GETISEARCHSTRINGW (LVM_FIRST+117)
+#define LVM_GETISEARCHSTRINGA   (LVM_FIRST+52)
+#define LVM_GETISEARCHSTRINGW   (LVM_FIRST+117)
 #define LVM_GETISEARCHSTRING    WINELIB_NAME_AW(LVM_GETISEARCHSTRING)
 #define LVM_SETICONSPACING      (LVM_FIRST+53)
 #define LVM_SETEXTENDEDLISTVIEWSTYLE (LVM_FIRST+54)
@@ -2879,11 +2850,11 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVM_SETWORKAREAS        (LVM_FIRST+65)
 #define LVM_GETSELECTIONMARK    (LVM_FIRST+66)
 #define LVM_SETSELECTIONMARK    (LVM_FIRST+67)
-#define LVM_SETBKIMAGEA       (LVM_FIRST+68)
-#define LVM_SETBKIMAGEW       (LVM_FIRST+138)
+#define LVM_SETBKIMAGEA         (LVM_FIRST+68)
+#define LVM_SETBKIMAGEW         (LVM_FIRST+138)
 #define LVM_SETBKIMAGE          WINELIB_NAME_AW(LVM_SETBKIMAGE)
-#define LVM_GETBKIMAGEA       (LVM_FIRST+69)
-#define LVM_GETBKIMAGEW       (LVM_FIRST+139)
+#define LVM_GETBKIMAGEA         (LVM_FIRST+69)
+#define LVM_GETBKIMAGEW         (LVM_FIRST+139)
 #define LVM_GETBKIMAGE          WINELIB_NAME_AW(LVM_GETBKIMAGE)
 #define LVM_GETWORKAREAS        (LVM_FIRST+70)
 #define LVM_SETHOVERTIME        (LVM_FIRST+71)
@@ -2901,12 +2872,12 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVN_INSERTITEM          (LVN_FIRST-2)
 #define LVN_DELETEITEM          (LVN_FIRST-3)
 #define LVN_DELETEALLITEMS      (LVN_FIRST-4)
-#define LVN_BEGINLABELEDITA   (LVN_FIRST-5)
-#define LVN_BEGINLABELEDITW   (LVN_FIRST-75)
-#define LVN_BEGINLABELEDIT WINELIB_NAME_AW(LVN_BEGINLABELEDIT)
-#define LVN_ENDLABELEDITA     (LVN_FIRST-6)
-#define LVN_ENDLABELEDITW     (LVN_FIRST-76)
-#define LVN_ENDLABELEDIT WINELIB_NAME_AW(LVN_ENDLABELEDIT)
+#define LVN_BEGINLABELEDITA     (LVN_FIRST-5)
+#define LVN_BEGINLABELEDITW     (LVN_FIRST-75)
+#define LVN_BEGINLABELEDIT      WINELIB_NAME_AW(LVN_BEGINLABELEDIT)
+#define LVN_ENDLABELEDITA       (LVN_FIRST-6)
+#define LVN_ENDLABELEDITW       (LVN_FIRST-76)
+#define LVN_ENDLABELEDIT        WINELIB_NAME_AW(LVN_ENDLABELEDIT)
 #define LVN_COLUMNCLICK         (LVN_FIRST-8)
 #define LVN_BEGINDRAG           (LVN_FIRST-9)
 #define LVN_BEGINRDRAG          (LVN_FIRST-11)
@@ -2916,18 +2887,18 @@ static const WCHAR WC_LISTVIEWW[] = { 'S','y','s',
 #define LVN_HOTTRACK            (LVN_FIRST-21)
 #define LVN_ODFINDITEMA         (LVN_FIRST-52)
 #define LVN_ODFINDITEMW         (LVN_FIRST-79)
-#define LVN_ODFINDITEM WINELIB_NAME_AW(LVN_ODFINDITEM)
-#define LVN_GETDISPINFOA      (LVN_FIRST-50)
-#define LVN_GETDISPINFOW      (LVN_FIRST-77)
-#define LVN_GETDISPINFO WINELIB_NAME_AW(LVN_GETDISPINFO)
-#define LVN_SETDISPINFOA      (LVN_FIRST-51)
-#define LVN_SETDISPINFOW      (LVN_FIRST-78)
-#define LVN_SETDISPINFO WINELIB_NAME_AW(LVN_SETDISPINFO)
+#define LVN_ODFINDITEM          WINELIB_NAME_AW(LVN_ODFINDITEM)
+#define LVN_GETDISPINFOA        (LVN_FIRST-50)
+#define LVN_GETDISPINFOW        (LVN_FIRST-77)
+#define LVN_GETDISPINFO         WINELIB_NAME_AW(LVN_GETDISPINFO)
+#define LVN_SETDISPINFOA        (LVN_FIRST-51)
+#define LVN_SETDISPINFOW        (LVN_FIRST-78)
+#define LVN_SETDISPINFO         WINELIB_NAME_AW(LVN_SETDISPINFO)
 #define LVN_KEYDOWN             (LVN_FIRST-55)
 #define LVN_MARQUEEBEGIN        (LVN_FIRST-56)
 #define LVN_GETINFOTIPA         (LVN_FIRST-57)
 #define LVN_GETINFOTIPW         (LVN_FIRST-58)
-#define LVN_GETINFOTIP WINELIB_NAME_AW(LVN_GETINFOTIP)
+#define LVN_GETINFOTIP          WINELIB_NAME_AW(LVN_GETINFOTIP)
 
 #define LVA_ALIGNLEFT           0x0000
 #define LVA_DEFAULT             0x0001
@@ -2975,7 +2946,9 @@ typedef struct tagLVITEMW
 #define LVITEM_V1_SIZEW CCSIZEOF_STRUCT(LVITEMW, lParam)
 #define LVITEM_V1_SIZE WINELIB_NAME_AW(LVITEM_V1_SIZE)
 
-#define LV_ITEM LVITEM
+#define LV_ITEM  LVITEM
+#define LV_ITEMA LVITEMA
+#define LV_ITEMW LVITEMW
 
 typedef struct LVSETINFOTIPA
 {
@@ -3100,7 +3073,7 @@ typedef struct tagNMITEMACTIVATE
     UINT uKeyFlags;
 } NMITEMACTIVATE, *LPNMITEMACTIVATE;
 
-typedef struct tagLVDISPINFOA
+typedef struct tagLVDISPINFO
 {
     NMHDR hdr;
     LVITEMA item;
@@ -3115,7 +3088,9 @@ typedef struct tagLVDISPINFOW
 #define NMLVDISPINFO   WINELIB_NAME_AW(NMLVDISPINFO)
 #define LPNMLVDISPINFO WINELIB_NAME_AW(LPNMLVDISPINFO)
 
-#define LV_DISPINFO     NMLVDISPINFO
+#define LV_DISPINFO	NMLVDISPINFO
+#define LV_DISPINFOA	NMLVDISPINFOA
+#define LV_DISPINFOW	NMLVDISPINFOW
 
 #include "pshpack1.h"
 typedef struct tagLVKEYDOWN
@@ -3185,6 +3160,10 @@ typedef struct tagLVFINDINFOW
 
 #define LVFINDINFO WINELIB_NAME_AW(LVFINDINFO)
 #define LPLVFINDINFO WINELIB_NAME_AW(LPLVFINDINFO)
+
+#define LV_FINDINFO	LVFINDINFO
+#define LV_FINDINFOA	LVFINDINFOA
+#define LV_FINDINFOW	LVFINDINFOW
 
 /* Groups relates structures */
 
@@ -3357,6 +3336,8 @@ typedef struct NMLVSCROLL
     int dy;
 } NMLVSCROLL, *LPNMLVSCROLL;
 
+#define ListView_SetItemCount(hwnd,count) \
+    (BOOL)SNDMSGA((hwnd),LVM_SETITEMCOUNT,(WPARAM)(INT)(count),0)
 #define ListView_SetTextBkColor(hwnd,clrBk) \
     (BOOL)SNDMSGA((hwnd),LVM_SETTEXTBKCOLOR,0,(LPARAM)(COLORREF)(clrBk))
 #define ListView_SetTextColor(hwnd,clrBk) \
@@ -3396,8 +3377,9 @@ typedef struct NMLVSCROLL
 #define ListView_SetItemW(hwnd,pitem) \
     (INT)SNDMSGW((hwnd),LVM_SETITEMW,0,(LPARAM)(const LVITEMW *)(pitem))
 #define ListView_SetItem WINELIB_NAME_AW(ListView_SetItem)
-#define ListView_SetItemState(hwnd,i,pitem) \
-    (BOOL)SNDMSGA((hwnd),LVM_SETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(LPLVITEMA)(pitem))
+#define ListView_SetItemState(hwnd,i,data,dataMask) \
+{ LVITEMA _LVi; _LVi.state = data; _LVi.stateMask = dataMask;\
+  SNDMSGA(hwnd, LVM_SETITEMSTATE, (WPARAM)(UINT)i, (LPARAM) (LPLVITEMA)&_LVi);}
 #define ListView_GetItemState(hwnd,i,mask) \
     (BOOL)SNDMSGA((hwnd),LVM_GETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(UINT)(mask))
 #define ListView_GetCountPerPage(hwnd) \
@@ -3458,6 +3440,24 @@ typedef struct NMLVSCROLL
 #define ListView_EditLabelW(hwndLV, i) \
     (HWND)SNDMSGW((hwndLV),LVM_EDITLABELW,(WPARAM)(int)(i), 0L)
 #define ListView_EditLabel WINELIB_NAME_AW(ListView_EditLabel)
+
+#define ListView_GetItemTextA(hwndLV, i, _iSubItem, _pszText, _cchTextMax) \
+{ \
+    LVITEMA _LVi;\
+    _LVi.iSubItem = _iSubItem;\
+    _LVi.cchTextMax = _cchTextMax;\
+    _LVi.pszText = _pszText;\
+    SNDMSGA(hwndLV, LVM_GETITEMTEXTA, (WPARAM)(i), (LPARAM)&_LVi);\
+}
+#define ListView_GetItemTextW(hwndLV, i, _iSubItem, _pszText, _cchTextMax) \
+{ \
+    LVITEMW _LVi;\
+    _LVi.iSubItem = _iSubItem;\
+    _LVi.cchTextMax = _cchTextMax;\
+    _LVi.pszText = _pszText;\
+    SNDMSGW(hwndLV, LVM_GETITEMTEXTW, (WPARAM)(i), (LPARAM)&_LVi);\
+}
+#define ListView_GetItemText WINELIB_NAME_AW(ListView_GetItemText)
 
 #define ListView_SetItemTextA(hwndLV, i, _iSubItem, _pszText) \
 { LVITEMA _LVi; _LVi.iSubItem = _iSubItem; _LVi.pszText = _pszText;\
@@ -3549,15 +3549,15 @@ static const WCHAR WC_TABCONTROLW[] = { 'S','y','s',
 #define TCM_GETIMAGELIST        (TCM_FIRST + 2)
 #define TCM_SETIMAGELIST        (TCM_FIRST + 3)
 #define TCM_GETITEMCOUNT	(TCM_FIRST + 4)
-#define TCM_GETITEM				WINELIB_NAME_AW(TCM_GETITEM)
-#define TCM_GETITEMA			(TCM_FIRST + 5)
-#define TCM_GETITEMW			(TCM_FIRST + 60)
-#define TCM_SETITEMA			(TCM_FIRST + 6)
-#define TCM_SETITEMW			(TCM_FIRST + 61)
-#define TCM_SETITEM				WINELIB_NAME_AW(TCM_SETITEM)
+#define TCM_GETITEM		WINELIB_NAME_AW(TCM_GETITEM)
+#define TCM_GETITEMA		(TCM_FIRST + 5)
+#define TCM_GETITEMW		(TCM_FIRST + 60)
+#define TCM_SETITEMA		(TCM_FIRST + 6)
+#define TCM_SETITEMW		(TCM_FIRST + 61)
+#define TCM_SETITEM		WINELIB_NAME_AW(TCM_SETITEM)
 #define TCM_INSERTITEMA		(TCM_FIRST + 7)
 #define TCM_INSERTITEMW		(TCM_FIRST + 62)
-#define TCM_INSERTITEM			WINELIB_NAME_AW(TCM_INSERTITEM)
+#define TCM_INSERTITEM		WINELIB_NAME_AW(TCM_INSERTITEM)
 #define TCM_DELETEITEM          (TCM_FIRST + 8)
 #define TCM_DELETEALLITEMS      (TCM_FIRST + 9)
 #define TCM_GETITEMRECT         (TCM_FIRST + 10)
@@ -3590,7 +3590,7 @@ static const WCHAR WC_TABCONTROLW[] = { 'S','y','s',
 #define TCIF_STATE		0x0010
 
 #define TCIS_BUTTONPRESSED      0x0001
-#define TCIS_HIGHLIGHTED 0x0002
+#define TCIS_HIGHLIGHTED        0x0002
 
 /* TabCtrl Macros */
 #define TabCtrl_GetImageList(hwnd) \
@@ -3690,7 +3690,7 @@ typedef struct tagTCITEMW
 #define TCN_KEYDOWN             (TCN_FIRST - 0)
 #define TCN_SELCHANGE		(TCN_FIRST - 1)
 #define TCN_SELCHANGING         (TCN_FIRST - 2)
-#define TCN_GETOBJECT      (TCN_FIRST - 3)
+#define TCN_GETOBJECT           (TCN_FIRST - 3)
 
 #include "pshpack1.h"
 typedef struct tagTCKEYDOWN
@@ -3725,16 +3725,16 @@ static const WCHAR WC_COMBOBOXEXW[] = { 'C','o','m','b','o',
 #define CBEIF_LPARAM            0x00000020
 #define CBEIF_DI_SETITEM        0x10000000
 
-#define CBEM_INSERTITEMA      (WM_USER+1)
-#define CBEM_INSERTITEMW      (WM_USER+11)
+#define CBEM_INSERTITEMA        (WM_USER+1)
+#define CBEM_INSERTITEMW        (WM_USER+11)
 #define CBEM_INSERTITEM         WINELIB_NAME_AW(CBEM_INSERTITEM)
 #define CBEM_SETIMAGELIST       (WM_USER+2)
 #define CBEM_GETIMAGELIST       (WM_USER+3)
-#define CBEM_GETITEMA         (WM_USER+4)
-#define CBEM_GETITEMW         (WM_USER+13)
+#define CBEM_GETITEMA           (WM_USER+4)
+#define CBEM_GETITEMW           (WM_USER+13)
 #define CBEM_GETITEM            WINELIB_NAME_AW(CBEM_GETITEM)
-#define CBEM_SETITEMA         (WM_USER+5)
-#define CBEM_SETITEMW         (WM_USER+12)
+#define CBEM_SETITEMA           (WM_USER+5)
+#define CBEM_SETITEMW           (WM_USER+12)
 #define CBEM_SETITEM            WINELIB_NAME_AW(CBEM_SETITEM)
 #define CBEM_DELETEITEM         CB_DELETESTRING
 #define CBEM_GETCOMBOCONTROL    (WM_USER+6)
@@ -3926,8 +3926,8 @@ static const WCHAR ANIMATE_CLASSW[] = { 'S','y','s',
 #define ACS_AUTOPLAY            0x0004
 #define ACS_TIMER               0x0008  /* no threads, just timers */
 
-#define ACM_OPENA             (WM_USER+100)
-#define ACM_OPENW             (WM_USER+103)
+#define ACM_OPENA               (WM_USER+100)
+#define ACM_OPENW               (WM_USER+103)
 #define ACM_OPEN                WINELIB_NAME_AW(ACM_OPEN)
 #define ACM_PLAY                (WM_USER+101)
 #define ACM_STOP                (WM_USER+102)
@@ -3985,7 +3985,7 @@ static const WCHAR WC_IPADDRESSW[] = { 'S','y','s',
 
 #define IPN_FIRST               (0U-860U)
 #define IPN_LAST                (0U-879U)
-#define IPN_FIELDCHANGED    (IPN_FIRST-0)
+#define IPN_FIELDCHANGED        (IPN_FIRST-0)
 
 typedef struct tagNMIPADDRESS
 {
@@ -4071,8 +4071,8 @@ static const WCHAR MONTHCAL_CLASSW[] = { 'S','y','s',
 #define MCM_GETMONTHDELTA     (MCM_FIRST + 19)
 #define MCM_SETMONTHDELTA     (MCM_FIRST + 20)
 #define MCM_GETMAXTODAYWIDTH  (MCM_FIRST + 21)
-#define MCM_GETUNICODEFORMAT   CCM_GETUNICODEFORMAT
-#define MCM_SETUNICODEFORMAT   CCM_SETUNICODEFORMAT
+#define MCM_GETUNICODEFORMAT  CCM_GETUNICODEFORMAT
+#define MCM_SETUNICODEFORMAT  CCM_SETUNICODEFORMAT
 
 
 /* Notifications */
@@ -4224,8 +4224,8 @@ static const WCHAR DATETIMEPICK_CLASSW[] = { 'S','y','s',
 #define DTM_SETSYSTEMTIME	(DTM_FIRST+2)
 #define DTM_GETRANGE		(DTM_FIRST+3)
 #define DTM_SETRANGE		(DTM_FIRST+4)
-#define DTM_SETFORMATA	    (DTM_FIRST+5)
-#define DTM_SETFORMATW	    (DTM_FIRST + 50)
+#define DTM_SETFORMATA	        (DTM_FIRST+5)
+#define DTM_SETFORMATW	        (DTM_FIRST + 50)
 #define DTM_SETFORMAT		WINELIB_NAME_AW(DTM_SETFORMAT)
 #define DTM_SETMCCOLOR		(DTM_FIRST+6)
 #define DTM_GETMCCOLOR		(DTM_FIRST+7)
