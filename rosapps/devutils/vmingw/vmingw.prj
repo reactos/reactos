@@ -1,0 +1,91 @@
+[Project]
+Signature = 40
+NumFiles = 15
+Compiler = mingw
+BuildMakefile = 0
+
+[Archives]
+Directory = .\zip
+Flags = *.prj .\bin\*.dll .\src\*.* .\include\*.h -x *.o
+
+[Makefile]
+MAKE = make
+CC = g++
+WRES = windres
+TEST = gcc -v
+Makefile = makefile
+MakefileDir = .\src
+Target = visual-mingw.exe
+TargetDir = ..\bin
+Build = 3
+Debug = 0
+Lang = 1
+CppFlags = -D_WIN32_IE=0x0400
+CcWarning = -W -Wall -pedantic
+CcOptimize = -O2
+CcFlags = -fvtable-thunks -fno-rtti
+IncDirs = -I ../include
+LdStrip = -s
+LdOptions = 
+LdLibraries = -lcomctl32 -lole32
+LdLibDirs = 
+
+[File1]
+Name = .\src\ChangeLog
+Show = 0
+
+[File2]
+Name = .\src\CList.cpp
+Show = 0
+
+[File3]
+Name = .\src\CList.h
+Show = 0
+
+[File4]
+Name = .\src\editor.cpp
+Show = 0
+
+[File5]
+Name = .\src\editor.h
+Show = 0
+
+[File6]
+Name = .\src\main.cpp
+Show = 0
+
+[File7]
+Name = .\src\main.h
+Show = 0
+
+[File8]
+Name = .\src\process.cpp
+Show = 0
+
+[File9]
+Name = .\src\process.h
+Show = 0
+
+[File10]
+Name = .\src\project.cpp
+Show = 0
+
+[File11]
+Name = .\src\project.h
+Show = 0
+
+[File12]
+Name = .\src\rsrc.h
+Show = 0
+
+[File13]
+Name = .\src\rsrc.rc
+Show = 0
+
+[File14]
+Name = .\src\winui.cpp
+Show = 0
+
+[File15]
+Name = .\src\winui.h
+Show = 0

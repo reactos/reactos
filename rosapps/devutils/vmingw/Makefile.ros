@@ -1,0 +1,29 @@
+# $Id: Makefile.ros,v 1.1 2003/01/07 17:59:20 robd Exp $
+#
+
+PATH_TO_TOP = ../../../reactos
+
+TARGET_TYPE = program
+
+TARGET_APPTYPE = console
+
+TARGET_NAME = vmingw
+
+TARGET_CFLAGS = -D_WIN32_IE=0x0400
+
+TARGET_SDKLIBS = user32.a comctl32.a ole32.a
+
+TARGET_OBJECTS = \
+	CList.o\
+	editor.o\
+	main.o\
+	process.o\
+	project.o\
+	rsrc.o\
+	winui.o
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF
