@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.177 2003/10/19 17:33:11 ekohl Exp $
+/* $Id: main.c,v 1.178 2003/11/16 15:17:46 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -453,7 +453,7 @@ ExpInitializeExecutive(VOID)
     KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
   ObInit();
-
+  ExInit2();
   MmInit2();
 
   if (!SeInit2())
@@ -493,7 +493,7 @@ ExpInitializeExecutive(VOID)
    */
   HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
-  ExInit();
+  ExInit3();
   KdInit1();
   IoInit();
   PoInit();

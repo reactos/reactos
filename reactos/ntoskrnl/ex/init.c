@@ -37,11 +37,16 @@
 /* FUNCTIONS ****************************************************************/
 
 VOID INIT_FUNCTION
-ExInit (VOID)
+ExInit2(VOID)
+{
+  ExpInitLookasideLists();
+}
+
+VOID INIT_FUNCTION
+ExInit3 (VOID)
 {
   ExInitTimeZoneInfo();
   ExInitializeWorkerThreads();
-  ExpInitLookasideLists();
   ExpWin32kInit();
 }
 

@@ -102,7 +102,9 @@ VOID
 ExpWin32kInit(VOID);
 
 VOID 
-ExInit (VOID);
+ExInit2 (VOID);
+VOID
+ExInit3 (VOID);
 VOID 
 ExInitTimeZoneInfo (VOID);
 VOID 
