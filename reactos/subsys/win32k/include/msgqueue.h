@@ -102,16 +102,13 @@ NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
-VOID FASTCALL
-MsqInitializeMessage(PUSER_MESSAGE Message,
-		     LPMSG Msg);
 PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       PUSER_MESSAGE Message);
+	       MSG* Msg);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN STDCALL
