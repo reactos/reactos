@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.27 2004/05/28 21:33:41 gvg Exp $
+/* $Id: init.c,v 1.28 2004/07/03 17:15:02 hbirr Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -249,7 +249,6 @@ CsrServerInitialization (
       return FALSE;
     }
 
-  CsrIsCsrss( );
   CsrInitVideo();
 
   CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -268,13 +267,6 @@ CsrServerInitialization (
   if (! NT_SUCCESS(Status))
     {
       return Status;
-    }
-
-  Status = InitWin32Csr();
-  if (! NT_SUCCESS(Status))
-    {
-      DPRINT1("CSR: Unable to load usermode dll (Status %x)\n", Status);
-      return FALSE;
     }
 
   /* NEW NAMED PORT: \ApiPort */
@@ -300,7 +292,7 @@ CsrServerInitialization (
                                0,
                                NULL,
                                NULL,
-                               (PTHREAD_START_ROUTINE)Thread_Api,
+                               (PTHREAD_START_ROUTINE)ServerApiPortThead,
                                ApiPortHandle,
                                NULL,
                                NULL);
@@ -308,6 +300,18 @@ CsrServerInitialization (
     {
       DPRINT1("CSR: Unable to create server thread\n");
       NtClose(ApiPortHandle);
+      return FALSE;
+    }
+  Status = CsrClientConnectToServer();
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("CsrClientConnectToServer() failed (Status %x)\n", Status);
+      return FALSE;
+    }
+  Status = InitWin32Csr();
+  if (! NT_SUCCESS(Status))
+    {
+      DPRINT1("CSR: Unable to load usermode dll (Status %x)\n", Status);
       return FALSE;
     }
 

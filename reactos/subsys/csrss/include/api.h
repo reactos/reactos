@@ -1,4 +1,4 @@
-/* $Id: api.h,v 1.4 2004/01/11 17:31:15 gvg Exp $
+/* $Id: api.h,v 1.5 2004/07/03 17:15:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -96,7 +96,7 @@ NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSRSS_API_REQUEST Request,
                                 PCSRSS_API_REPLY Reply);
-VOID Thread_Api(PVOID PortHandle);
+VOID STDCALL ServerApiPortThead(PVOID PortHandle);
 VOID Console_Api( DWORD Ignored );
 
 extern HANDLE CsrssApiHeap;
@@ -107,6 +107,7 @@ VOID STDCALL CsrInitConsoleSupport(VOID);
 /* api/process.c */
 VOID STDCALL CsrInitProcessData(VOID);
 PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId);
+PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId);
 NTSTATUS STDCALL CsrFreeProcessData( ULONG Pid );
 
 /* api/handle.c */
