@@ -35,6 +35,8 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
+   KIRQL OldIrql;
+
    if (Action > ShutdownPowerOff)
      return STATUS_INVALID_PARAMETER;
 
@@ -42,6 +44,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    CmShutdownRegistry();
    IoShutdownRegisteredFileSystems();
 
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
    PiShutdownProcessManager();
    MiShutdownMemoryManager();
    
