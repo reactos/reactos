@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.39 2003/11/18 20:49:39 navaraf Exp $ */
+/* $Id: region.c,v 1.40 2003/12/13 11:15:06 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1583,8 +1583,18 @@ HRGN
 STDCALL
 NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
 {
-   return NtGdiCreateRoundRectRgn(Rect->left, Rect->top, Rect->right, Rect->bottom,
-      Rect->right - Rect->left, Rect->bottom - Rect->top );
+  RECT SafeRect;
+  NTSTATUS Status;
+  
+  Status = MmCopyFromCaller(&SafeRect, Rect, sizeof(RECT));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return NULL;
+  }
+  
+  return NtGdiCreateRoundRectRgn(SafeRect.left, SafeRect.top, SafeRect.right, SafeRect.bottom,
+                                 SafeRect.right - SafeRect.left, SafeRect.bottom - SafeRect.top);
 }
 
 HRGN
