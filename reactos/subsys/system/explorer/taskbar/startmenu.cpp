@@ -153,7 +153,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 }
 
 
-LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
+LRESULT StartMenu::Init(LPCREATESTRUCT pcs)
 {
 	try {
 		AddEntries();
