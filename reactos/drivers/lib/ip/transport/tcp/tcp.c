@@ -36,9 +36,6 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
     
-    /* Initialize received segments queue */
-    InitializeListHead(&Connection->ReceivedSegments);
-    
     return Connection;
 }
 
@@ -244,7 +241,7 @@ NTSTATUS TCPConnect
   PVOID Context ) {
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
-    PIP_ADDRESS RemoteAddress;
+    IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     PTDI_BUCKET Bucket;
 
@@ -267,7 +264,7 @@ NTSTATUS TCPConnect
 	 &RemotePort);
 
     DbgPrint("Connecting to address %x:%x\n",
-	     RemoteAddress->Address.IPv4Address,
+	     RemoteAddress.Address.IPv4Address,
 	     RemotePort);
 
     if (!NT_SUCCESS(Status)) {
@@ -284,7 +281,7 @@ NTSTATUS TCPConnect
 		  sizeof(AddressToBind) );
 
     memcpy( &AddressToConnect.sin_addr, 
-	    &RemoteAddress->Address.IPv4Address,
+	    &RemoteAddress.Address.IPv4Address,
 	    sizeof(AddressToConnect.sin_addr) );
     AddressToConnect.sin_port = RemotePort;
 

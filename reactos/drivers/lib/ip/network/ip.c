@@ -18,6 +18,7 @@ KSPIN_LOCK NetTableListLock;
 UINT MaxLLHeaderSize; /* Largest maximum header size */
 UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
+BOOLEAN IpWorkItemQueued = FALSE;
 NPAGED_LOOKASIDE_LIST IPPacketList;
 /* Work around calling timer at Dpc level */
 
@@ -109,6 +110,8 @@ PIP_PACKET IPInitializePacket(
 
 
 void STDCALL IPTimeout( PVOID Context ) {
+    IpWorkItemQueued = FALSE;
+
     /* Check if datagram fragments have taken too long to assemble */
     IPDatagramReassemblyTimeout();
     
@@ -238,7 +241,6 @@ BOOLEAN IPRegisterInterface(
 {
     KIRQL OldIrql;
     IP_ADDRESS NetworkAddress;
-    PROUTE_CACHE_NODE RCN;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(MID_TRACE, ("Called. IF (0x%X).\n", IF));
@@ -261,12 +263,6 @@ BOOLEAN IPRegisterInterface(
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
     }
     
-    RCN = RouteAddRouteToDestination(&NetworkAddress, IF, NCE);
-    if (!RCN) {
-	TI_DbgPrint(MIN_TRACE, ("Could not create RCN.\n"));
-	TcpipReleaseSpinLock(&IF->Lock, OldIrql);
-    }
-
     /* Add interface to the global interface list */
     ASSERT(&IF->ListEntry);
     TcpipInterlockedInsertTailList(&InterfaceListHead, 
@@ -301,8 +297,6 @@ VOID IPUnregisterInterface(
 	NBRemoveNeighbor(NCE);
     
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql3);
-    /* Ouch...three spinlocks acquired! Fortunately
-       we don't unregister interfaces very often */
     RemoveEntryList(&IF->ListEntry);
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql3);
 }
@@ -400,9 +394,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
     /* Start routing subsystem */
     RouterStartup();
 
-    /* Start route cache subsystem */
-    RouteStartup();
-
     /* Start neighbor cache subsystem */
     NBStartup();
 
@@ -443,9 +434,6 @@ NTSTATUS IPShutdown(
 
     /* Shutdown neighbor cache subsystem */
     NBShutdown();
-
-    /* Shutdown route cache subsystem */
-    RouteShutdown();
 
     /* Shutdown routing subsystem */
     RouterShutdown();

@@ -40,7 +40,7 @@ NTSTATUS AddrGetAddress(
 
 NTSTATUS AddrBuildAddress(
     PTRANSPORT_ADDRESS TdiAddress,
-    PIP_ADDRESS *Address,
+    PIP_ADDRESS Address,
     PUSHORT Port);
 
 BOOLEAN AddrIsEqual(

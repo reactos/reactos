@@ -180,7 +180,7 @@ VOID ICMPTransmit(
  *     IPPacket = Pointer to IP packet to transmit
  */
 {
-    PROUTE_CACHE_NODE RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
@@ -189,15 +189,13 @@ VOID ICMPTransmit(
         IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0);
 
     /* Get a route to the destination address */
-    if (RouteGetRouteToDestination(&IPPacket->DstAddr, &RCN) == IP_SUCCESS) {
+    if ((NCE = RouteGetRouteToDestination(&IPPacket->DstAddr))) {
         /* Send the packet */
-	IPSendDatagram(IPPacket, RCN, Complete, Context);
+	IPSendDatagram(IPPacket, NCE, Complete, Context);
     } else {
-        TI_DbgPrint(MIN_TRACE, ("RCN at (0x%X).\n", RCN));
-
         /* No route to destination (or no free resources) */
         TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",
-            IPPacket->DstAddr.Address.IPv4Address));
+				 IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
 	Complete( Context, IPPacket->NdisPacket, NDIS_STATUS_NOT_ACCEPTED );
     }

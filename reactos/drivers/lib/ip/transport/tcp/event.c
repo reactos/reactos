@@ -156,9 +156,8 @@ void TCPPacketSendComplete( PVOID Context,
 #define STRINGIFY(x) #x
 
 int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
-    NTSTATUS Status;
     NDIS_STATUS NdisStatus;
-    ROUTE_CACHE_NODE *RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
@@ -180,9 +179,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	     LocalAddress.Address.IPv4Address,
 	     RemoteAddress.Address.IPv4Address);
     
-    Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
-    
-    if( !NT_SUCCESS(Status) || !RCN ) return OSK_EADDRNOTAVAIL;
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return OSK_EADDRNOTAVAIL;
 
     NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, 
 					   MaxLLHeaderSize + len );
@@ -202,7 +200,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
 
-    IPSendDatagram( &Packet, RCN, TCPPacketSendComplete, NULL );
+    IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL );
 
     if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;

@@ -181,12 +181,11 @@ NTSTATUS AddrGetAddress(
  */
 NTSTATUS AddrBuildAddress(
     PTRANSPORT_ADDRESS TaAddress,
-    PIP_ADDRESS *Address,
+    PIP_ADDRESS Address,
     PUSHORT Port)
 {
   PTDI_ADDRESS_IP ValidAddr;
   PTA_ADDRESS TdiAddress = &TaAddress->Address[0];
-  PIP_ADDRESS IPAddress;
 
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
       TI_DbgPrint
@@ -203,12 +202,7 @@ NTSTATUS AddrBuildAddress(
 
   ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;
 
-  IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
-  if (!IPAddress)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  AddrInitIPv4(IPAddress, ValidAddr->in_addr);
-  *Address = IPAddress;
+  AddrInitIPv4(Address, ValidAddr->in_addr);
   *Port = ValidAddr->sin_port;
 
   return STATUS_SUCCESS;

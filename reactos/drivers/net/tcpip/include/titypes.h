@@ -321,9 +321,6 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
-    
-    /* Queues */
-    LIST_ENTRY ReceivedSegments;/* Segments that are received */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

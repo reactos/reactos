@@ -107,11 +107,6 @@ VOID NCETimeout(
             /* Flush packet queue */
 	    NBFlushPacketQueue( NCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
             NCE->EventCount = 0;
-	    
-            /* Remove route cache entries with references to this NCE.
-	       Remember that neighbor cache lock is acquired before the
-	       route cache lock */
-            RouteInvalidateNCE(NCE);
 	}
         else
 	{
@@ -204,9 +199,6 @@ VOID NBShutdown(VOID)
       CurNCE = NeighborCache[i].Cache;
       while (CurNCE) {
           NextNCE = CurNCE->Next;
-	  
-          /* Remove all references from route cache */
-          RouteInvalidateNCE(CurNCE);
 
           /* Flush wait queue */
 	  NBFlushPacketQueue( CurNCE, FALSE, STATUS_SUCCESS );
@@ -501,9 +493,6 @@ VOID NBRemoveNeighbor(
           *PrevNCE = CurNCE->Next;
 
 	  NBFlushPacketQueue( CurNCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
-
-          /* Remove all references from route cache */
-          RouteInvalidateNCE(CurNCE);
           ExFreePool(CurNCE);
 
 	  break;

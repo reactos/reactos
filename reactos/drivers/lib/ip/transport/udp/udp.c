@@ -197,7 +197,7 @@ NTSTATUS UDPSendDatagram(
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     NTSTATUS Status;
-    PROUTE_CACHE_NODE RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -226,12 +226,10 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) ) 
 	return Status;
 
-    Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_UNSUCCESSFUL;
 
-    if( !NT_SUCCESS(Status) )
-	return Status;
-
-    IPSendDatagram( &Packet, RCN, UDPSendPacketComplete, NULL );
+    IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL );
 
     return STATUS_SUCCESS;
 }

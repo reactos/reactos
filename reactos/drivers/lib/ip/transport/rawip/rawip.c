@@ -98,7 +98,7 @@ NTSTATUS RawIPSendDatagram(
 {
     NDIS_STATUS Status;
     IP_PACKET Packet;
-    PROUTE_CACHE_NODE RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS RemoteAddress;
 
     Status = AllocatePacketWithBuffer( &Packet.NdisPacket,
@@ -121,14 +121,12 @@ NTSTATUS RawIPSendDatagram(
 		       BufferData + FIELD_OFFSET(IPv4_HEADER, DstAddr),
 		       sizeof(IPv4_RAW_ADDRESS) );
 
-	Status = RouteGetRouteToDestination( &RemoteAddress, &RCN );
-	
-	if( !NT_SUCCESS(Status) ) {
+	if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
 	    FreeNdisPacket( Packet.NdisPacket );
-	    return Status;
+	    return STATUS_NO_SUCH_DEVICE;
 	}
 	
-	IPSendDatagram( &Packet, RCN, RawIPSendComplete, NULL );
+	IPSendDatagram( &Packet, NCE, RawIPSendComplete, NULL );
     } else
 	FreeNdisPacket( Packet.NdisPacket );
 

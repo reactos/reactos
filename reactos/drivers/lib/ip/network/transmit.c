@@ -212,7 +212,7 @@ NTSTATUS SendFragments(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PROUTE_CACHE_NODE RCN,
+NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
 			PIP_TRANSMIT_COMPLETE Complete, PVOID Context)
 /*
  * FUNCTION: Sends an IP datagram to a remote address
@@ -227,17 +227,13 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PROUTE_CACHE_NODE RCN,
  *     send routine (IPSendFragment)
  */
 {
-    PNEIGHBOR_CACHE_ENTRY NCE;
-
-    TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
+    TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)\n", IPPacket, NCE));
 
     DISPLAY_IP_PACKET(IPPacket);
     /*OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );*/
 
-    NCE = RCN->NCE;
-
     /* Fetch path MTU now, because it may change */
-    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", RCN->PathMTU));
+    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", NCE->Interface->MTU));
     
     if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
 	/* Calculate checksum of IP header */
@@ -255,7 +251,8 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PROUTE_CACHE_NODE RCN,
 				IPPacket->Flags));
     }
     
-    return SendFragments(IPPacket, NCE, RCN->PathMTU, Complete, Context);
+    return SendFragments(IPPacket, NCE, NCE->Interface->MTU, 
+			 Complete, Context);
 }
 
 /* EOF */

@@ -380,14 +380,6 @@ NTSTATUS FileOpenConnection(
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
   DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
 
-  /* Initialize received segments queue */
-  InitializeListHead(&Connection->ReceivedSegments);
-
-TI_DbgPrint(MIN_TRACE, ("X1 cur 0x%x\n", &Connection->ReceivedSegments));
-TI_DbgPrint(MIN_TRACE, ("X1 Flink 0x%x\n", Connection->ReceivedSegments.Flink));
-TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
-
-
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
 
@@ -417,7 +409,7 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
     KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection = NULL;
 
-    KeAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
+    TcpipAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
 
     for( Entry = ConnectionEndpointListHead.Flink; 
 	 Entry != &ConnectionEndpointListHead;
@@ -428,7 +420,7 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
 	else Connection = NULL;
     }
 
-    KeReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
+    TcpipReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
 
     return Connection;
 }

@@ -734,6 +734,7 @@ VOID BindAdapter(
     PIP_INTERFACE IF;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
+    IP_ADDRESS DefaultGateway, DefaultMask = { 0 };
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
     HANDLE RegHandle = 0;
@@ -780,6 +781,14 @@ VOID BindAdapter(
     Status = OpenRegistryKey( RegistryPath, &RegHandle );
 	    
     if(NT_SUCCESS(Status))
+	Status = ReadIPAddressFromRegistry( RegHandle, L"DefaultGateway",
+					    &DefaultGateway );
+    if(!NT_SUCCESS(Status)) {
+	Status = STATUS_SUCCESS;
+	RtlZeroMemory( &DefaultGateway, sizeof(DefaultGateway) );
+    }
+
+    if(NT_SUCCESS(Status))
 	Status = ReadIPAddressFromRegistry( RegHandle, L"IPAddress",
 					    &IF->Unicast );
     if(NT_SUCCESS(Status)) 
@@ -819,6 +828,20 @@ VOID BindAdapter(
 	(MID_TRACE, 
 	 ("--> Our net mask on this interface: '%s'\n", 
 	  A2S(&IF->Netmask)));
+
+    if( DefaultGateway.Address.IPv4Address ) {
+	TI_DbgPrint
+	    (MID_TRACE, 
+	     ("--> Our gateway is: '%s'\n", 
+	      A2S(&DefaultGateway)));
+
+	/* Create a default route */
+	RouterCreateRoute( &DefaultMask, /* Zero */
+			   &DefaultMask, /* Zero */
+			   &DefaultGateway,
+			   IF,
+			   1 );
+    }
 
     /* Register interface with IP layer */
     IPRegisterInterface(IF);

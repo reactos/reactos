@@ -188,6 +188,7 @@ extern LIST_ENTRY NetTableListHead;
 extern KSPIN_LOCK NetTableListLock;
 extern UINT MaxLLHeaderSize;
 extern UINT MinLLFrameSize;
+extern BOOLEAN IpWorkItemQueued;
 
 PIP_PACKET IPCreatePacket(
   ULONG Type);

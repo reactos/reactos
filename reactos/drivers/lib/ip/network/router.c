@@ -272,6 +272,46 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
     return BestNCE;
 }
 
+PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
+/*
+ * FUNCTION: Locates an RCN describing a route to a destination address
+ * ARGUMENTS:
+ *     Destination = Pointer to destination address to find route to
+ *     RCN         = Address of pointer to an RCN
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     The RCN is referenced for the caller. The caller is responsible
+ *     for dereferencing it after use
+ */
+{
+    PNEIGHBOR_CACHE_ENTRY NCE = NULL;
+    PIP_INTERFACE Interface;
+
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)\n", Destination));
+
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)\n", A2S(Destination)));
+
+#if 0
+    TI_DbgPrint(MIN_TRACE, ("Displaying tree (before).\n"));
+    PrintTree(RouteCache);
+#endif
+
+    /* Check if the destination is on-link */
+    Interface = FindOnLinkInterface(Destination);
+    if (Interface) {
+	/* The destination address is on-link. Check our neighbor cache */
+	NCE = NBFindOrCreateNeighbor(Interface, Destination);
+    } else {
+	/* Destination is not on any subnets we're on. Find a router to use */
+	NCE = RouterGetRoute(Destination);
+    }
+    
+    if( NCE ) 
+	TI_DbgPrint(MID_TRACE,("Interface->MTU: %d\n", NCE->Interface->MTU));
+
+    return NCE;
+}
 
 NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 /*
