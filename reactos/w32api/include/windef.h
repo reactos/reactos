@@ -169,6 +169,7 @@ extern "C" {
 #define _ANONYMOUS_UNION
 #define _UNION_NAME(x) x
 #define DUMMYUNIONNAME	u
+#define DUMMYUNIONNAME	u1
 #define DUMMYUNIONNAME2	u2
 #define DUMMYUNIONNAME3	u3
 #define DUMMYUNIONNAME4	u4
@@ -179,6 +180,7 @@ extern "C" {
 #else
 #define _UNION_NAME(x)
 #define DUMMYUNIONNAME
+#define DUMMYUNIONNAME1
 #define DUMMYUNIONNAME2
 #define DUMMYUNIONNAME3
 #define DUMMYUNIONNAME4
@@ -191,11 +193,13 @@ extern "C" {
 #define _ANONYMOUS_STRUCT
 #define _STRUCT_NAME(x) x
 #define DUMMYSTRUCTNAME	s
+#define DUMMYSTRUCTNAME	s1
 #define DUMMYSTRUCTNAME2 s2
 #define DUMMYSTRUCTNAME3 s3
 #else
 #define _STRUCT_NAME(x)
 #define DUMMYSTRUCTNAME
+#define DUMMYSTRUCTNAME1
 #define DUMMYSTRUCTNAME2
 #define DUMMYSTRUCTNAME3
 #endif
