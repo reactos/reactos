@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.4 2003/12/18 09:51:08 gvg Exp $
+/* $Id: guiconsole.c,v 1.5 2003/12/27 18:25:31 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -168,7 +168,7 @@ GuiConsoleHandlePaint(HWND hWnd)
   unsigned TopLine, BottomLine, LeftChar, RightChar;
   unsigned Line, Char, Start;
   HFONT OldFont;
-  PCHAR From;
+  PBYTE From;
   PWCHAR To;
   BYTE LastAttribute, Attribute;
   ULONG CursorX, CursorY, CursorHeight;
@@ -216,6 +216,7 @@ GuiConsoleHandlePaint(HWND hWnd)
                   TextOutW(Dc, Start * GuiData->CharWidth, Line * GuiData->CharHeight,
                            GuiData->LineBuffer, Char - Start);
                   Start = Char;
+                  To = GuiData->LineBuffer;
                   Attribute = *(From + 1);
                   if (Attribute != LastAttribute)
                     {
