@@ -1,0 +1,64 @@
+; $Id: winedbgc.edf,v 1.1 2003/01/08 19:52:22 robd Exp $
+;
+; ReactOS Operating System
+;
+LIBRARY winedbgc.dll
+
+EXPORTS
+
+;wine_dbgstr_an
+;wine_dbgstr_wn
+;wine_dbgstr_guid
+;wine_dbg_vprintf
+;wine_dbg_printf
+;wine_dbg_log
+
+wine_dbg_log @ 1 ; 
+__wine_dbg_register @ 2 ; 
+__wine_dbg_unregister @ 3 ; 
+__wine_dbg_vlog @ 4 DATA ; 
+__wine_dbg_vprintf @ 5 DATA ; 
+__wine_dbgstr_an @ 6 DATA ; 
+__wine_dbgstr_guid @ 7 DATA ; 
+__wine_dbgstr_wn @ 8 DATA ; 
+;__wine_dll_register @ 9 ; 
+;__wine_main_argc @ 10 DATA ; 
+;__wine_main_argv @ 11 DATA ; 
+;__wine_main_wargv @ 12 DATA ; 
+;interlocked_cmpxchg @ 20 ; 
+;interlocked_cmpxchg_ptr @ 21 ; 
+;interlocked_xchg @ 22 ; 
+;interlocked_xchg_add @ 23 ; 
+;interlocked_xchg_ptr @ 24 ; 
+;wine_anon_mmap @ 30 ; 
+;wine_dbg_add_option @ 31 ; 
+;wine_dbg_parse_options @ 33 ; 
+wine_dbg_printf @ 34 ; 
+;wine_dbgstr_a @ 35 ; 
+wine_dbgstr_an @ 36 ; 
+wine_dbgstr_guid @ 37 ; 
+;wine_dbgstr_w @ 38 ; 
+wine_dbgstr_wn @ 39 ; 
+;wine_dlclose @ 40 ; 
+;wine_dll_load @ 41 ; 
+;wine_dll_load_main_exe @ 42 ; 
+;wine_dll_set_callback @ 43 ; 
+;wine_dll_unload @ 44 ; 
+;wine_dlopen @ 45 ; 
+;wine_dlsym @ 46 ; 
+;wine_errno_location @ 47 DATA ; 
+;wine_get_config_dir @ 48 ; 
+;wine_get_cs @ 49 ; 
+;wine_get_ds @ 50 ; 
+;wine_get_es @ 51 ; 
+;wine_get_fs @ 52 ; 
+;wine_get_gs @ 53 ; 
+;wine_get_server_dir @ 54 ; 
+;wine_get_ss @ 55 ; 
+;wine_h_errno_location @ 56 DATA ; 
+;wine_ldt_copy @ 57 DATA ; 
+;wine_ldt_get_entry @ 58 ; 
+;wine_ldt_set_entry @ 59 ; 
+;wine_rewrite_s4tos2 @ 60 ; 
+;wine_set_fs @ 61 ; 
+;wine_set_gs @ 62 ; 

@@ -1,0 +1,4 @@
+*.sym
+*.coff
+*.dll
+*.o
