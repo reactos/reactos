@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.220 2004/04/24 14:21:36 weiden Exp $
+/* $Id: window.c,v 1.221 2004/04/29 21:17:36 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -206,25 +206,23 @@ IntWinListChildren(PWINDOW_OBJECT Window)
    for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       ++NumChildren;
   
-   if (NumChildren != 0)
+   List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), TAG_WINLIST);
+   if(!List)
    {
-      List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), TAG_WINLIST);
-      if(!List)
-      {
-        DPRINT1("Failed to allocate memory for children array\n");
-        IntUnLockRelatives(Window);
-        return NULL;
-      }
-      for (Child = Window->FirstChild, Index = 0;
-           Child != NULL;
-           Child = Child->NextSibling, ++Index)
-         List[Index] = Child->Self;
-      List[Index] = NULL;
+     DPRINT1("Failed to allocate memory for children array\n");
+     IntUnLockRelatives(Window);
+     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+     return NULL;
    }
+   for (Child = Window->FirstChild, Index = 0;
+        Child != NULL;
+        Child = Child->NextSibling, ++Index)
+      List[Index] = Child->Self;
+   List[Index] = NULL;
 
    IntUnLockRelatives(Window);
 
-   return (NumChildren > 0) ? List : NULL;
+   return List;
 }
 
 /***********************************************************************
