@@ -209,8 +209,9 @@ PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus)
      {
 	return(STATUS_SUCCESS);
      }
-   
+   KeAttachProcess( Process );
    ObCloseAllHandles(Process);
+   KeDetachProcess();
    KeAcquireDispatcherDatabaseLock(FALSE);
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
