@@ -105,7 +105,8 @@ explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	$(RC) $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
 
 clean:
-	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) \
+	desktop/*.o dialogs/*.o shell/*.o taskbar/*.o utility/*.o
 
 # Use environment var ROS_INSTALL to override default install dir
 ifneq ($(ROS_INSTALL),)
