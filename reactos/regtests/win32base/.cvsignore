@@ -5,3 +5,4 @@
 *.sym
 *.map
 _regtests.c
+Makefile.tests

@@ -7,3 +7,4 @@
 *.map
 _regtests.c
 *.sys
+Makefile.tests

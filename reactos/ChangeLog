@@ -1,3 +1,20 @@
+2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* regtests/Makefile: Generate regression test registrations.
+	* regtests/kmregtests/.cvsignore: Ignore Makefile.tests.
+	* regtests/win32base/.cvsignore: Ditto.
+	* regtests/kmregtests/Makefile: Include Makefile.tests.
+	* regtests/win32base/Makefile: Ditto.
+	* regtests/kmregtests/tests: New directory.
+	* regtests/win32base/tests: Ditto.
+	* regtests/kmregtests/tests/.cvsignore: New file.
+	* regtests/win32base/tests/.cvsignore: Ditto.
+	* tools/helper.mk: Remove TARGET_GENREGTESTS.
+	* tools/regtests.c: Generate makefile for regression tests.
+	(change_extension): New function.
+	* regtests/win32base/file-1.c: Move ...
+	* regtests/win32base/tests/file-1.c: ... here.
+
 2003-12-06	Martin Fuchs  <martin-fuchs@gmx.net>
 	* Doxyfile, Makefile: initial doxygen configuration
 	* drivers/Doxyfile, drivers/Makefile: Ditto.

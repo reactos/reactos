@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.46 2003/12/02 11:38:47 gvg Exp $
+# $Id: helper.mk,v 1.47 2003/12/07 11:34:41 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -45,7 +45,6 @@
 #   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
-#   $TARGET_GENREGTESTS = Generate regression test registrations (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
@@ -557,21 +556,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
 else # MK_IMPLIBONLY
 
 
-all: $(MK_GENREGTESTS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
-
-
-ifeq ($(TARGET_GENREGTESTS),yes)
-_regtests_phony:
-	$(RM) _regtests.c
-.PHONY: _regtests_phony
-_regtests.c: _regtests_phony
-	$(REGTESTS) . _regtests.c
-  MK_GENREGTESTS := _regtests_phony
-  MK_GENREGTESTS_CLEAN := _regtests.c _regtests.o
-else
-  MK_GENREGTESTS := 
-  MK_GENREGTESTS_CLEAN :=
-endif
+all: $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
 ifeq ($(MK_IMPLIB),yes)
@@ -793,7 +778,7 @@ MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_
 
 clean: $(SUBDIRS:%=%_clean)
 	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
-	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_GENREGTESTS_CLEAN) $(MK_BASENAME).map \
+	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
 

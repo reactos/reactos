@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/11/19 05:53:38 vizzini Exp $
+# $Id: Makefile,v 1.3 2003/12/07 11:34:41 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,12 +14,12 @@ TARGET_CFLAGS = -I../shared -Wall -Werror
 
 TARGET_BASE = 0x60000000
 
-TARGET_GENREGTESTS = yes
+include Makefile.tests
 
 TARGET_OBJECTS = \
   _regtests.o \
   driver.o \
-  file-1.o
+  $(addprefix tests/, $(TESTS))
 
 include $(PATH_TO_TOP)/rules.mak
 

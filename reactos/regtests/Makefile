@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.1 2003/07/11 18:13:57 chorns Exp $
+# $Id: Makefile,v 1.2 2003/12/07 11:34:41 chorns Exp $
 
-all:
+PATH_TO_TOP = ..
+
+all: registrations
 	$(MAKE) -C shared all
 	$(MAKE) -C win32base all
 	$(MAKE) -C kmregtests all
@@ -8,11 +10,13 @@ all:
 	$(MAKE) -C regtests all
 
 clean:
-	$(MAKE) -C shared clean
-	$(MAKE) -C win32base clean
-	$(MAKE) -C kmregtests clean
-	$(MAKE) -C kmrtint clean
-	$(MAKE) -C regtests clean
+	- $(MAKE) -C shared clean
+	- $(MAKE) -C win32base clean
+	- $(MAKE) -C kmregtests clean
+	- $(MAKE) -C kmrtint clean
+	- $(MAKE) -C regtests clean
+	- $(RM) ./kmregtests/_regtests.c ./kmregtests/Makefile.tests
+	- $(RM) ./win32base/_regtests.c ./win32base/Makefile.tests
 
 install:
 	$(MAKE) -C shared install
@@ -21,5 +25,10 @@ install:
 	$(MAKE) -C kmrtint install
 	$(MAKE) -C regtests install
 
-.PHONY: all clean install
-	
+registrations:
+	$(REGTESTS) ./kmregtests/tests ./kmregtests/_regtests.c ./kmregtests/Makefile.tests
+	$(REGTESTS) ./win32base/tests ./win32base/_regtests.c ./win32base/Makefile.tests
+
+.PHONY: all clean install registrations
+
+include $(PATH_TO_TOP)/rules.mak

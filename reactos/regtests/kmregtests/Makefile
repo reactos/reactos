@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/11/19 05:53:37 vizzini Exp $
+# $Id: Makefile,v 1.3 2003/12/07 11:34:41 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,14 +12,13 @@ TARGET_LIBS = $(SDK_PATH_LIB)/rtshared.a
 
 TARGET_CFLAGS = -I../shared -Werror -Wall
 
-TARGET_GENREGTESTS = yes
+include Makefile.tests
 
 TARGET_OBJECTS = \
   _regtests.o \
-  driver.o
+  driver.o \
+  $(addprefix tests/, $(TESTS))
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-# EOF
