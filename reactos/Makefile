@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.259 2004/11/09 15:02:34 ion Exp $
+# $Id: Makefile,v 1.260 2004/11/20 18:30:52 sedwards Exp $
 #
 # Global makefile
 #
@@ -54,7 +54,7 @@ DLLS_SHELLEXT = shellext
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
-	richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
+	riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
 	dnsapi \
 	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
