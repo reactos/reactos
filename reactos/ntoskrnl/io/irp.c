@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.44 2002/09/30 20:53:38 hbirr Exp $
+/* $Id: irp.c,v 1.45 2002/10/03 19:39:56 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,7 @@
 /* GLOBALS *******************************************************************/
 
 #define TAG_IRP     TAG('I', 'R', 'P', ' ')
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -359,4 +360,38 @@ IoQueueThreadIrp(IN PIRP Irp)
   UNIMPLEMENTED;
 }
 
+/*
+NTSTATUS
+STDCALL
+IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName, IN BOOLEAN Enable)
+{
+  UNIMPLEMENTED;
+	return 0;
+}
+
+NTSTATUS
+STDCALL
+IoGetDeviceProperty(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
+  IN ULONG BufferLength,
+  OUT PVOID PropertyBuffer,
+  OUT PULONG ResultLength)
+{
+  UNIMPLEMENTED;
+	return 0;
+}
+
+NTSTATUS
+STDCALL
+IoOpenDeviceRegistryKey(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG DevInstKeyType,
+  IN ACCESS_MASK DesiredAccess,
+  OUT PHANDLE DevInstRegKey)
+{
+  UNIMPLEMENTED;
+	return 0;
+}
+ */
 /* EOF */

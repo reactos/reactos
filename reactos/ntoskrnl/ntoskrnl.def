@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.144 2002/10/02 19:25:19 hbirr Exp $
+; $Id: ntoskrnl.def,v 1.145 2002/10/03 19:39:56 robd Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -281,6 +281,7 @@ IoGetRequestorProcess@4
 IoGetStackLimits@8
 IoGetTopLevelIrp@0
 IoInitializeIrp@12
+IoInvalidateDeviceState@4
 IoInitializeRemoveLockEx@20
 IoInitializeTimer@12
 IoIsOperationSynchronous@4
@@ -297,6 +298,16 @@ IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
 IoReadPartitionTable@16
 IoReadTransferCount DATA
+
+IoFreeWorkItem@4
+IoAllocateWorkItem@4
+IoQueueWorkItem@16
+IoRegisterDeviceInterface@16
+IoSetDeviceInterfaceState@8
+IoGetDeviceProperty@20
+IoOpenDeviceRegistryKey@16
+IoInvalidateDeviceRelations@8
+
 IoRegisterDriverReinitialization@12
 IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange@8

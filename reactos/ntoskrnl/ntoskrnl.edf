@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.130 2002/10/02 19:25:19 hbirr Exp $
+; $Id: ntoskrnl.edf,v 1.131 2002/10/03 19:39:56 robd Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -280,6 +280,7 @@ IoGetRequestorProcess=IoGetRequestorProcess@4
 IoGetStackLimits=IoGetStackLimits@8
 IoGetTopLevelIrp=IoGetTopLevelIrp@0
 IoInitializeIrp=IoInitializeIrp@12
+IoInvalidateDeviceState=IoInvalidateDeviceState@4
 IoInitializeRemoveLockEx=IoInitializeRemoveLockEx@20
 IoInitializeTimer=IoInitializeTimer@12
 IoIsOperationSynchronous=IoIsOperationSynchronous@4
@@ -296,6 +297,16 @@ IoRaiseInformationalHardError=IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
 IoReadPartitionTable=IoReadPartitionTable@16
 IoReadTransferCount DATA
+
+IoFreeWorkItem=IoFreeWorkItem@4
+IoAllocateWorkItem=IoAllocateWorkItem@4
+IoQueueWorkItem=IoQueueWorkItem@16
+IoRegisterDeviceInterface=IoRegisterDeviceInterface@16
+IoSetDeviceInterfaceState=IoSetDeviceInterfaceState@8
+IoGetDeviceProperty=IoGetDeviceProperty@20
+IoOpenDeviceRegistryKey=IoOpenDeviceRegistryKey@16
+IoInvalidateDeviceRelations=IoInvalidateDeviceRelations@8
+
 IoRegisterDriverReinitialization=IoRegisterDriverReinitialization@12
 IoRegisterFileSystem=IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange=IoRegisterFsRegistrationChange@8

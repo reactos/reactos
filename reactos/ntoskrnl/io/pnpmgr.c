@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.8 2002/09/08 10:23:25 chorns Exp $
+/* $Id: pnpmgr.c,v 1.9 2002/10/03 19:39:56 robd Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,8 +18,17 @@
 #include <internal/registry.h>
 #include <internal/module.h>
 
+#include <ole32/guiddef.h>
+//#include <ddk/pnpfuncs.h>
+#ifdef DEFINE_GUID
+DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
+DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
+#endif // DEFINE_GUID
+
+
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -158,7 +167,14 @@ IoRegisterDeviceInterface(
   IN PUNICODE_STRING ReferenceString  OPTIONAL,
   OUT PUNICODE_STRING SymbolicLinkName)
 {
-  return STATUS_NOT_IMPLEMENTED;
+	PWCHAR KeyNameString = L"\\Device\\Serenum";
+
+	if (IsEqualGUID(InterfaceClassGuid, (LPGUID)&GUID_SERENUM_BUS_ENUMERATOR)) {
+        RtlInitUnicodeString(SymbolicLinkName, KeyNameString);
+		return STATUS_SUCCESS;
+	}
+	return STATUS_INVALID_DEVICE_REQUEST;
+//    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -237,7 +253,11 @@ IoSetDeviceInterfaceState(
   IN PUNICODE_STRING SymbolicLinkName,
   IN BOOLEAN Enable)
 {
-  return STATUS_NOT_IMPLEMENTED;
+	return STATUS_SUCCESS;
+
+//	return STATUS_OBJECT_NAME_EXISTS;
+//	return STATUS_OBJECT_NAME_NOT_FOUND;
+//    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
