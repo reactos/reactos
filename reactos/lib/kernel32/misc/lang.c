@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.16 2004/05/02 15:47:34 weiden Exp $
+/* $Id: lang.c,v 1.17 2004/05/03 16:59:59 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -463,11 +463,11 @@ GetCPInfo (
     CodePageInfo->DefaultChar[0] = '?';
     for (i = 1; i < MAX_DEFAULTCHAR; i++)
 	{
-	CodePageInfo->DefaultChar[i] = '\0';
+	CodePageInfo->DefaultChar[i] = 0;
 	}
     for (i = 0; i < MAX_LEADBYTES; i++)
 	{
-	CodePageInfo->LeadByte[i] = '\0';
+	CodePageInfo->LeadByte[i] = 0;
 	}
 
     return TRUE;
@@ -621,96 +621,57 @@ GetGeoInfoA(
 
 const WCHAR *RosGetLocaleValueName( DWORD lctype )
 {
-    static const WCHAR iCalendarTypeW[] = {'i','C','a','l','e','n','d','a','r','T','y','p','e',0};
-    static const WCHAR iCountryW[] = {'i','C','o','u','n','t','r','y',0};
-    static const WCHAR iCurrDigitsW[] = {'i','C','u','r','r','D','i','g','i','t','s',0};
-    static const WCHAR iCurrencyW[] = {'i','C','u','r','r','e','n','c','y',0};
-    static const WCHAR iDateW[] = {'i','D','a','t','e',0};
-    static const WCHAR iDigitsW[] = {'i','D','i','g','i','t','s',0};
-    static const WCHAR iFirstDayOfWeekW[] = {'i','F','i','r','s','t','D','a','y','O','f','W','e','e','k',0};
-    static const WCHAR iFirstWeekOfYearW[] = {'i','F','i','r','s','t','W','e','e','k','O','f','Y','e','a','r',0};
-    static const WCHAR iLDateW[] = {'i','L','D','a','t','e',0};
-    static const WCHAR iLZeroW[] = {'i','L','Z','e','r','o',0};
-    static const WCHAR iMeasureW[] = {'i','M','e','a','s','u','r','e',0};
-    static const WCHAR iNegCurrW[] = {'i','N','e','g','C','u','r','r',0};
-    static const WCHAR iNegNumberW[] = {'i','N','e','g','N','u','m','b','e','r',0};
-    static const WCHAR iPaperSizeW[] = {'i','P','a','p','e','r','S','i','z','e',0};
-    static const WCHAR iTLZeroW[] = {'i','T','L','Z','e','r','o',0};
-    static const WCHAR iTimeW[] = {'i','T','i','m','e',0};
-    static const WCHAR s1159W[] = {'s','1','1','5','9',0};
-    static const WCHAR s2359W[] = {'s','2','3','5','9',0};
-    static const WCHAR sCountryW[] = {'s','C','o','u','n','t','r','y',0};
-    static const WCHAR sCurrencyW[] = {'s','C','u','r','r','e','n','c','y',0};
-    static const WCHAR sDateW[] = {'s','D','a','t','e',0};
-    static const WCHAR sDecimalW[] = {'s','D','e','c','i','m','a','l',0};
-    static const WCHAR sGroupingW[] = {'s','G','r','o','u','p','i','n','g',0};
-    static const WCHAR sLanguageW[] = {'s','L','a','n','g','u','a','g','e',0};
-    static const WCHAR sListW[] = {'s','L','i','s','t',0};
-    static const WCHAR sLongDateW[] = {'s','L','o','n','g','D','a','t','e',0};
-    static const WCHAR sMonDecimalSepW[] = {'s','M','o','n','D','e','c','i','m','a','l','S','e','p',0};
-    static const WCHAR sMonGroupingW[] = {'s','M','o','n','G','r','o','u','p','i','n','g',0};
-    static const WCHAR sMonThousandSepW[] = {'s','M','o','n','T','h','o','u','s','a','n','d','S','e','p',0};
-    static const WCHAR sNegativeSignW[] = {'s','N','e','g','a','t','i','v','e','S','i','g','n',0};
-    static const WCHAR sPositiveSignW[] = {'s','P','o','s','i','t','i','v','e','S','i','g','n',0};
-    static const WCHAR sShortDateW[] = {'s','S','h','o','r','t','D','a','t','e',0};
-    static const WCHAR sThousandW[] = {'s','T','h','o','u','s','a','n','d',0};
-    static const WCHAR sTimeFormatW[] = {'s','T','i','m','e','F','o','r','m','a','t',0};
-    static const WCHAR sTimeW[] = {'s','T','i','m','e',0};
-    static const WCHAR sYearMonthW[] = {'s','Y','e','a','r','M','o','n','t','h',0};
-
     switch (lctype & ~LOCALE_LOCALEINFOFLAGSMASK)
     {
     /* These values are used by SetLocaleInfo and GetLocaleInfo, and
      * the values are stored in the registry, confirmed under Windows.
      */
-    case LOCALE_ICALENDARTYPE:    return iCalendarTypeW;
-    case LOCALE_ICURRDIGITS:      return iCurrDigitsW;
-    case LOCALE_ICURRENCY:        return iCurrencyW;
-    case LOCALE_IDIGITS:          return iDigitsW;
-    case LOCALE_IFIRSTDAYOFWEEK:  return iFirstDayOfWeekW;
-    case LOCALE_IFIRSTWEEKOFYEAR: return iFirstWeekOfYearW;
-    case LOCALE_ILZERO:           return iLZeroW;
-    case LOCALE_IMEASURE:         return iMeasureW;
-    case LOCALE_INEGCURR:         return iNegCurrW;
-    case LOCALE_INEGNUMBER:       return iNegNumberW;
-    case LOCALE_IPAPERSIZE:       return iPaperSizeW;
-    case LOCALE_ITIME:            return iTimeW;
-    case LOCALE_S1159:            return s1159W;
-    case LOCALE_S2359:            return s2359W;
-    case LOCALE_SCURRENCY:        return sCurrencyW;
-    case LOCALE_SDATE:            return sDateW;
-    case LOCALE_SDECIMAL:         return sDecimalW;
-    case LOCALE_SGROUPING:        return sGroupingW;
-    case LOCALE_SLIST:            return sListW;
-    case LOCALE_SLONGDATE:        return sLongDateW;
-    case LOCALE_SMONDECIMALSEP:   return sMonDecimalSepW;
-    case LOCALE_SMONGROUPING:     return sMonGroupingW;
-    case LOCALE_SMONTHOUSANDSEP:  return sMonThousandSepW;
-    case LOCALE_SNEGATIVESIGN:    return sNegativeSignW;
-    case LOCALE_SPOSITIVESIGN:    return sPositiveSignW;
-    case LOCALE_SSHORTDATE:       return sShortDateW;
-    case LOCALE_STHOUSAND:        return sThousandW;
-    case LOCALE_STIME:            return sTimeW;
-    case LOCALE_STIMEFORMAT:      return sTimeFormatW;
-    case LOCALE_SYEARMONTH:       return sYearMonthW;
+    case LOCALE_ICALENDARTYPE:    return L"iCalendarType";
+    case LOCALE_ICURRDIGITS:      return L"iCurrDigits";
+    case LOCALE_ICURRENCY:        return L"iCurrency";
+    case LOCALE_IDIGITS:          return L"iDigits";
+    case LOCALE_IFIRSTDAYOFWEEK:  return L"iFirstDayOfWeek";
+    case LOCALE_IFIRSTWEEKOFYEAR: return L"iFirstWeekOfYear";
+    case LOCALE_ILZERO:           return L"iLZero";
+    case LOCALE_IMEASURE:         return L"iMeasure";
+    case LOCALE_INEGCURR:         return L"iNegCurr";
+    case LOCALE_INEGNUMBER:       return L"iNegNumber";
+    case LOCALE_IPAPERSIZE:       return L"iPaperSize";
+    case LOCALE_ITIME:            return L"iTime";
+    case LOCALE_S1159:            return L"s1159";
+    case LOCALE_S2359:            return L"s2359";
+    case LOCALE_SCURRENCY:        return L"sCurrency";
+    case LOCALE_SDATE:            return L"sDate";
+    case LOCALE_SDECIMAL:         return L"sDecimal";
+    case LOCALE_SGROUPING:        return L"sGrouping";
+    case LOCALE_SLIST:            return L"sList";
+    case LOCALE_SLONGDATE:        return L"sLongDate";
+    case LOCALE_SMONDECIMALSEP:   return L"sMonDecimalSep";
+    case LOCALE_SMONGROUPING:     return L"sMonGrouping";
+    case LOCALE_SMONTHOUSANDSEP:  return L"sMonThousandSep";
+    case LOCALE_SNEGATIVESIGN:    return L"sNegativeSign";
+    case LOCALE_SPOSITIVESIGN:    return L"sPositiveSign";
+    case LOCALE_SSHORTDATE:       return L"sShortDate";
+    case LOCALE_STHOUSAND:        return L"sThousand";
+    case LOCALE_STIME:            return L"sTime";
+    case LOCALE_STIMEFORMAT:      return L"sTimeFormat";
+    case LOCALE_SYEARMONTH:       return L"sYearMonth";
 
     /* The following are not listed under MSDN as supported,
      * but seem to be used and also stored in the registry.
      */
-    case LOCALE_ICOUNTRY:         return iCountryW;
-    case LOCALE_IDATE:            return iDateW;
-    case LOCALE_ILDATE:           return iLDateW;
-    case LOCALE_ITLZERO:          return iTLZeroW;
-    case LOCALE_SCOUNTRY:         return sCountryW;
-    case LOCALE_SLANGUAGE:        return sLanguageW;
+    case LOCALE_ICOUNTRY:         return L"iCountry";
+    case LOCALE_IDATE:            return L"iDate";
+    case LOCALE_ILDATE:           return L"iLDate";
+    case LOCALE_ITLZERO:          return L"iTLZero";
+    case LOCALE_SCOUNTRY:         return L"sCountry";
+    case LOCALE_SLANGUAGE:        return L"sLanguage";
     }
     return NULL;
 }
 
 HKEY RosCreateRegistryKey(void)
 {
-    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
-                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
     OBJECT_ATTRIBUTES objAttr;
     UNICODE_STRING nameW;
     HKEY hKey;
@@ -723,7 +684,7 @@ HKEY RosCreateRegistryKey(void)
     objAttr.Attributes = 0;
     objAttr.SecurityDescriptor = NULL;
     objAttr.SecurityQualityOfService = NULL;
-    RtlInitUnicodeString( &nameW, intlW );
+    RtlInitUnicodeString( &nameW, L"Control Panel\\International");
 
     if (NtCreateKey( &hKey, KEY_ALL_ACCESS, &objAttr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hKey = 0;
     NtClose( objAttr.RootDirectory );
@@ -834,7 +795,7 @@ GetLocaleInfoW (
     if (SUBLANGID(liLangID) == SUBLANG_NEUTRAL)
         liLangID = MAKELANGID(PRIMARYLANGID(liLangID), SUBLANG_DEFAULT);
 
-    hModule = GetModuleHandleA( "kernel32.dll" );
+    hModule = GetModuleHandleW( L"kernel32.dll" );
     if (!(hRsrc = FindResourceExW( hModule, RT_STRINGW, (LPCWSTR)((LCType >> 4) + 1), liLangID )))
     {
         SetLastError( ERROR_INVALID_FLAGS );
@@ -866,7 +827,7 @@ GetLocaleInfoW (
 			return 0;
 
         memcpy( chTmp, ch + 1, *ch * sizeof(WCHAR) );
-        chTmp[*ch] = 0;
+        chTmp[*ch] = L'\0';
         uiNum = wcstol( chTmp, &chEnd, 10 );
 
         if (!*chEnd)
@@ -1086,16 +1047,16 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 
 	while( *lpFormat )
 	{
-		if (*lpFormat == (WCHAR) '\'')
+		if (*lpFormat == L'\'')
 		{
 			lpFormat++;
 
 			while(*lpFormat)
 			{
-				if (*lpFormat == (WCHAR) '\'')
+				if (*lpFormat == L'\'')
 				{
 					lpFormat++;
-					if(*lpFormat != (WCHAR) '\'')
+					if(*lpFormat != L'\'')
 						break;
 				}
 				if (!cchTime)
@@ -1116,12 +1077,11 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 				*lpFormat++;
 			}
 		}
-		else if(*lpFormat=='H' || *lpFormat=='h' || *lpFormat=='m' || *lpFormat=='s' || *lpFormat=='t' )
+		else if(*lpFormat==L'H' || *lpFormat==L'h' || *lpFormat==L'm' || *lpFormat==L's' || *lpFormat==L't' )
 		{
 			int nCount, nBufLen;
-			int nType = *lpFormat;
+			WCHAR nType = *lpFormat;
 			WCHAR Buffer[40];
-			char ch[16];
 
 			bDrop = FALSE;
 
@@ -1132,50 +1092,43 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 
 			switch(nType)
 			{
-			case 'h':
+			case L'h':
 				{
 					if(!(dwFlags & TIME_FORCE24HOURFORMAT))
 					{
-						sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount,
+						swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount,
 							lpTime->wHour == 0 ? 12 : (lpTime->wHour - 1) % 12 + 1);
-						
-		                MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );
-
 						break;
 					}
 				}
-			case 'H':
+			case L'H':
 				{
-					sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wHour );
-					MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer)/sizeof(WCHAR) );
-					
+					swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wHour );
 					break;
 				}
-			case 'm':
+			case L'm':
 				{
 					if(!(dwFlags & TIME_NOMINUTESORSECONDS))
 					{
-						sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wMinute );
-						MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );
+						swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wMinute );
 					}
 					else
 						nPos = nLastFormatPos;
 
 					break;
 				}
-			case 's':
+			case L's':
 				{
 					if(!(dwFlags & (TIME_NOSECONDS|TIME_NOMINUTESORSECONDS)))
 					{
-					    sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wSecond );
-						MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );				
+					    swprintf( Buffer, L"%.*d", nCount > 2 ? 2 : nCount, lpTime->wSecond );				
 					}
 					else
 						nPos = nLastFormatPos;
 
 					break;
 				}
-			case 't':
+			case L't':
 				{
 					if(!(dwFlags & TIME_NOTIMEMARKER))
 					{
@@ -1239,7 +1192,7 @@ INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWS
 			return 0;
 		}
 		else
-			lpTimeStr[nPos] = '\0';
+			lpTimeStr[nPos] = L'\0';
 	}
 
 	nPos++;
@@ -1293,8 +1246,10 @@ GetTimeFormatW (
 		SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-
-	return RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
+	INT x;
+	x = RosGetTimeFormat(Locale, dwFlags, lpTime, lpFormat, lpTimeStr, cchTime);
+	DbgPrint("lpTimeStr: %ws ; format: %ws\n", lpTimeStr, lpFormat);
+	return x;
 }
 
 
