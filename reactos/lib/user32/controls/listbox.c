@@ -2878,7 +2878,7 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             HeapFree(GetProcessHeap(), 0, textW);
         if (index != LB_ERR)
 	{
-            LISTBOX_SetCaretIndex( hwnd, descr, index, TRUE );
+            LISTBOX_MoveCaret( hwnd, descr, index, TRUE );
             LISTBOX_SetSelection( hwnd, descr, index, TRUE, FALSE );
 	}
         return index;
