@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.45 2004/08/15 18:16:35 chorns Exp $
+# $Id: Makefile,v 1.46 2004/08/22 20:37:05 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,7 +18,7 @@ TARGET_SDKLIBS = libwine.a string.a kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_CFLAGS = -D__USE_W32API -D_MSVCRT_LIB_ -Wall
+TARGET_CFLAGS = -D__USE_W32API -D_MSVCRT_LIB_ -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += \
