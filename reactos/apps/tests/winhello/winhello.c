@@ -63,11 +63,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   PAINTSTRUCT ps;
   HDC hDC;
+  HFONT tf;
    
   switch(msg)
   {
     case WM_PAINT:
       hDC = BeginPaint(hWnd, &ps);
+      tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
+		       ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		       DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
+      SelectObject(hDC, tf);
       TextOut(hDC, 10, 10, "Hello World from ReactOS!", 
 	      strlen("Hello World from ReactOS!"));
       EndPaint(hWnd, &ps);
