@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.16 2003/03/20 19:21:01 rcampbell Exp $
+/* $Id: winlogon.c,v 1.17 2003/03/20 20:56:52 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 
 #include <wchar.h>
 
-#define DBG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -381,7 +381,7 @@ WinMain(HINSTANCE hInstance,
      {
        DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
      }
-   
+
    AllocConsole();
    SetConsoleTitle( "Winlogon" );
    /* start system processes (services.exe & lsass.exe) */
@@ -420,50 +420,49 @@ WinMain(HINSTANCE hInstance,
     */
    
    /* Main loop */
-   for (;;)
-     {
 #if 0
-       /* Display login prompt */
-       WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-                    LoginPrompt,
-                    strlen(LoginPrompt),  // wcslen(LoginPrompt),
-                    &Result,
-                    NULL);
-       i = 0;
-       do
-         {
-           ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-                       &LoginName[i],
-                       1,
-                       &Result,
-                       NULL);
-           i++;
-         } while (LoginName[i - 1] != '\n');
-       LoginName[i - 1] = 0;
+   /* Display login prompt */
+   WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+                LoginPrompt,
+                strlen(LoginPrompt),  // wcslen(LoginPrompt),
+                &Result,
+                NULL);
+   i = 0;
+   do
+     {
+       ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+                   &LoginName[i],
+                   1,
+                   &Result,
+                   NULL);
+       i++;
+     } while (LoginName[i - 1] != '\n');
+   LoginName[i - 1] = 0;
        
-        /* Display password prompt */
-       WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
-                    PasswordPrompt,
-                    strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
-                    &Result,
-                    NULL);
-       i = 0;
-       do
-         {
-           ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
-                       &Password[i],
-                       1,
-                       &Result,
-                       NULL);
-           i++;
-         } while (Password[i - 1] != '\n');
-       Password[i - 1] =0;
+   /* Display password prompt */
+   WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
+                PasswordPrompt,
+                strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
+                &Result,
+                NULL);
+   i = 0;
+   do
+     {
+       ReadConsole(GetStdHandle(STD_INPUT_HANDLE),
+                   &Password[i],
+                   1,
+                   &Result,
+                   NULL);
+       i++;
+     } while (Password[i - 1] != '\n');
+   Password[i - 1] =0;
 #endif
-       if (! DoLoginUser(LoginName, Password))
-         {
-           break;
-         }
+
+   if (! DoLoginUser(LoginName, Password))
+     {
      }
+
+   NtShutdownSystem(ShutdownNoReboot);
    
    ExitProcess(0);
    
