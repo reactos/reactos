@@ -4623,12 +4623,12 @@ InterlockedExchange(
 		    LONG Value
 		    );
 
-PVOID
+LONG
 STDCALL
 InterlockedCompareExchange(
-	    PVOID *Destination,
-	    PVOID Exchange,
-	    PVOID Comperand
+	    PLONG Destination,
+	    LONG Exchange,
+	    LONG Comperand
 	    );
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.53 2004/11/29 00:05:31 gdalsnes Exp $
+/* $Id$
  *
  */
 
@@ -100,7 +100,7 @@ typedef struct _CRITICAL_SECTION_DEBUG
   ULONG EntryCount;
   ULONG ContentionCount;
   ULONG Depth;
-  PVOID OwnerBackTrace[ 5 ];
+  PVOID Spare[ 2 ];
 } CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
 
 
@@ -190,13 +190,13 @@ RtlAddAuditAccessAceEx(IN OUT PACL Acl,
                        IN BOOLEAN Success,
                        IN BOOLEAN Failure);
 
-VOID STDCALL
+NTSTATUS STDCALL
 RtlDeleteCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 WCHAR STDCALL
 RtlDowncaseUnicodeChar(IN WCHAR Source);
 
-VOID STDCALL
+NTSTATUS STDCALL
 RtlEnterCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 NTSTATUS STDCALL
@@ -211,7 +211,7 @@ RtlInt64ToUnicodeString (IN ULONGLONG Value,
 			 IN ULONG Base,
 			 PUNICODE_STRING String);
 
-VOID STDCALL
+NTSTATUS STDCALL
 RtlLeaveCriticalSection (PCRITICAL_SECTION CriticalSection);
 
 BOOLEAN STDCALL
@@ -744,12 +744,12 @@ InterlockedExchange (
 	LONG Value
 	);
 
-PVOID
+LONG
 STDCALL
 InterlockedCompareExchange (
-	PVOID *Destination,
-	PVOID Exchange,
-	PVOID Comperand
+	PLONG Destination,
+	LONG Exchange,
+	LONG Comperand
 	);
 
 LONG
@@ -758,6 +758,26 @@ InterlockedExchangeAdd (
 	PLONG Addend,
 	LONG Increment
 	);
+
+#ifndef InterlockedExchangePointer
+   #ifdef _WIN64
+      #define InterlockedExchangePointer(Target, Value) \
+             (PVOID)InterlockedExchange64((PLONGLONG)(Target), (LONGLONG)(Value))
+   #else
+      #define InterlockedExchangePointer(Target, Value) \
+             (PVOID)InterlockedExchange((PLONG)(Target), (LONG)(Value))
+   #endif
+#endif
+
+#ifndef InterlockedCompareExchangePointer
+   #ifdef _WIN64
+      #define InterlockedCompareExchangePointer(Target, Exchange, Comperand) \
+             (PVOID)InterlockedCompareExchange64((PLONGLONG)(Target), (LONGLONG)(Exchange), (LONGLONG)(Comperand))
+   #else
+      #define InterlockedCompareExchangePointer(Target, Exchange, Comperand) \
+             (PVOID)InterlockedCompareExchange((PLONG)Target, (LONG)Exchange, (LONG)Comperand)
+   #endif
+#endif
 
 #endif /* __INTERLOCKED_DECLARED */
 
