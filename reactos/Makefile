@@ -1,3 +1,4 @@
+# $Id$
 #
 # Global makefile
 #
@@ -773,7 +774,7 @@ hallib_bootcd:
 #
 # Hardware Abstraction Layers
 #
-ifeq ($(MP),1)
+ifeq ($(CONFIG_SMP),1)
 halx86: halx86/mp
 else
 halx86: halx86/up
