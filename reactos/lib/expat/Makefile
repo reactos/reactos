@@ -1,48 +1,29 @@
-#
-# MinGW Makefile for expat
-#
-# Martin Fuchs, 24.03.2003
-#
+# $Id: Makefile,v 1.2 2004/03/24 09:39:37 mf Exp $
 
 PATH_TO_TOP = ../..
-TOOLS_PATH = $(PATH_TO_TOP)/tools
 
-CC = gcc
-LINK = gcc
+TARGET_NAME = libexpat
 
-CFLAGS	= -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions -DWIN32 -DHAVE_EXPAT_CONFIG_H
-LFLAGS	= -shared
+TARGET_TYPE = dynlink
+TARGET_BASE = 0x79000000
+TARGET_NORC = yes
+TARGET_DEFONLY = yes
+TARGET_DEFNAME = lib/libexpat
 
-ifdef DEBUG
-CFLAGS	+= -g
-LFLAGS	+= -g
-else
-CFLAGS	+= -Os
-LFLAGS	+= -s
-endif
+TARGET_CFLAGS = -D__USE_W32API -DHAVE_EXPAT_CONFIG_H -O2 -Wall -Wmissing-prototypes -Wstrict-prototypes -fexceptions
+TARGET_LFLAGS = -nostartfiles
 
-VPATH = lib
+LIB_OBJECTS = \
+	lib/xmlparse.o \
+	lib/xmlrole.o \
+	lib/xmltok.o
 
-DLL_SUFIX = .dll
+TARGET_OBJECTS = $(LIB_OBJECTS)
 
-LIBRARY = libexpat$(DLL_SUFIX)
+DEP_OBJECTS = $(TARGET_OBJECTS)
 
-LIB_OBJS = \
-	xmlparse.o \
-	xmlrole.o \
-	xmltok.o
+include $(PATH_TO_TOP)/rules.mak
 
-all: $(LIBRARY)
+include $(TOOLS_PATH)/helper.mk
 
-$(LIBRARY): $(LIB_OBJS) libexpat.def
-	$(LINK) $(LFLAGS) -o $@ $^
-
-clean:
-	$(TOOLS_PATH)/rdel $(LIBRARY) $(LIB_OBJS)
-
-implib:
-
-install:
-	-$(TOOLS_PATH)/rcopy $(LIBRARY) $(INSTALL_DIR)/system32/$(LIBRARY)
-
-bootcd:
+include $(TOOLS_PATH)/depend.mk
