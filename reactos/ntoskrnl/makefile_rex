@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.61 2000/03/18 15:12:18 ea Exp $
+# $Id: makefile_rex,v 1.62 2000/03/19 09:14:49 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -35,8 +35,10 @@ KE_OBJECTS = ke/head.o ke/main.o ke/timer.o ke/error.o ke/catch.o \
 KE_I386_OBJECTS = ke/i386/thread.o ke/i386/usercall.o ke/i386/exp.o
  
 MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/virtual.o \
-             mm/mdl.o mm/zone.o mm/special.o mm/paging.o \
-	     mm/section.o mm/marea.o mm/ppool.o mm/npool.o mm/pagefile.o
+             mm/mdl.o mm/zone.o mm/paging.o mm/section.o \
+	     mm/marea.o mm/ppool.o mm/npool.o mm/pagefile.o \
+	     mm/cont.o mm/iospace.o mm/ncache.o
+
 
 MM_I386_OBJECTS = mm/i386/page.o mm/i386/memsafe.o
 
@@ -192,7 +194,8 @@ $(TARGET).exe: $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).exe \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).edf
+		--def $(TARGET).edf \
+		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
 		$(TARGET).o \

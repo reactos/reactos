@@ -63,28 +63,17 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  */
 #define BYTES_TO_PAGES(size) (?)
 
-/*
- * FUNCTION: Allocates a range of physically contiguous cache aligned 
- * memory from the non-paged pool
- * ARGUMENTS:
- *          NumberOfBytes = Size of the memory block to allocate
- *          HighestAcceptableAddress = Highest address valid for the caller
- * RETURNS: The virtual address of the memory block on success
- *          NULL on error
- */
-PVOID MmAllocateContiguousMemory(ULONG NumberOfBytes,
-				 PHYSICAL_ADDRESS HighestAcceptableAddress);
-
-/*
- * FUNCTION: Allocates a virtual address range of noncached and cache
- * aligned memory
- * ARGUMENTS:
- *         NumberOfBytes = Size of region to allocate
- * RETURNS: The base address of the range on success
- *          NULL on failure
- */
-PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes);
-
+PVOID
+STDCALL
+MmAllocateContiguousMemory (
+	IN	ULONG			NumberOfBytes,
+	IN	PHYSICAL_ADDRESS	HighestAcceptableAddress
+	);
+PVOID
+STDCALL
+MmAllocateNonCachedMemory (
+	IN	ULONG	NumberOfBytes
+	);
 /*
  * FUNCTION: Fills in the corresponding physical page array for a given MDL
  * for a buffer in nonpaged system space
@@ -102,24 +91,17 @@ VOID MmBuildMdlForNonPagedPool(PMDL MemoryDescriptorList);
  * RETURNS: A pointer to the initalized MDL
  */
 PMDL MmCreateMdl(PMDL MemoryDescriptorList, PVOID Base, ULONG Length);
-
-/*
- * FUNCTION: Releases a range of physically contiguous memory allocated
- * with MmAllocateContiguousMemory
- * ARGUMENTS:
- *         BaseAddress = Vritual address of the memory to be freed
- */
-VOID MmFreeContiguousMemory(PVOID BaseAddress);
-
-/*
- * FUNCTION: Releases a range of noncached memory allocated with 
- * MmAllocateNonCachedMemory
- * ARGUMENTS:
- *         BaseAddress = Virtual address to be freed
- *         NumberOfBytes = size of the region to be freed
- */
-VOID MmFreeNonCachedMemory(PVOID BaseAddress, ULONG NumberOfBytes);
-
+VOID
+STDCALL
+MmFreeContiguousMemory (
+	IN OUT	PVOID	BaseAddress
+	);
+VOID
+STDCALL
+MmFreeNonCachedMemory (
+	IN	PVOID	BaseAddress,
+	IN	ULONG	NumberOfBytes
+	);
 /*
  * FUNCTION: Returns the length in bytes of a buffer described by an MDL
  * ARGUMENTS:
@@ -212,17 +194,19 @@ PVOID MmLockPagableDataSection(PVOID AddressWithinSection);
  */
 VOID MmLockPagableSectionByHandle(PVOID ImageSectionHandle);
    
-/*
- * FUNCTION: Maps a physical memory range into system space
- * ARGUMENTS:
- *         PhysicalAddress = First physical address to map
- *         NumberOfBytes = Number of bytes to map
- *         CacheEnable = TRUE if the range can be cached
- * RETURNS: The base virtual address which maps the region
- */
-PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress, ULONG NumberOfBytes,
-		   BOOLEAN CacheEnable);
-
+PVOID
+STDCALL
+MmMapIoSpace (
+	PHYSICAL_ADDRESS	PhysicalAddress,
+	ULONG			NumberOfBytes,
+	BOOLEAN			CacheEnable
+	);
+VOID
+STDCALL
+MmUnmapIoSpace (
+	PVOID	BaseAddress,
+	ULONG	NumberOfBytes
+	);
 /*
  * FUNCTION: Maps the pages described by a given MDL
  * ARGUMENTS:
@@ -299,6 +283,5 @@ VOID MmUnlockPages(PMDL Mdl);
  */
 VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle);
 
-VOID MmUnmapIoSpace(PVOID BaseAddress, ULONG NumberOfBytes);
 VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList);
-PVOID MmAllocateSection(ULONG Length);
+

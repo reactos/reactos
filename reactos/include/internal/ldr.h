@@ -35,11 +35,6 @@ LdrpMapSystemDll (
 	HANDLE	ProcessHandle,
 	PVOID	* LdrStartupAddress
 	);
-PIMAGE_NT_HEADERS
-STDCALL
-RtlImageNtHeader (
-	IN	PVOID	BaseAddress
-	);
 PVOID
 LdrpGetSystemDllEntryPoint (
 	VOID

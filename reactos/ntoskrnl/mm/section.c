@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.23 2000/02/13 16:05:18 dwelch Exp $
+/* $Id: section.c,v 1.24 2000/03/19 09:14:51 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -537,6 +537,67 @@ NTSTATUS STDCALL NtExtendSection(IN	HANDLE	SectionHandle,
 				 IN	ULONG	NewMaximumSize)
 {
    UNIMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	MmAllocateSection@4
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ * 	Length
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ * 	Code taken from ntoskrnl/mm/special.c.
+ *
+ * REVISIONS
+ *
+ */
+PVOID
+STDCALL
+MmAllocateSection (
+	IN	ULONG	Length
+	)
+{
+	PVOID		Result;
+	MEMORY_AREA	* marea;
+	NTSTATUS	Status;
+	ULONG		i;
+   
+	DPRINT("MmAllocateSection(Length %x)\n",Length);
+   
+	Result = NULL;
+	Status = MmCreateMemoryArea (
+			KernelMode,
+			PsGetCurrentProcess (),
+			MEMORY_AREA_SYSTEM,
+			& Result,
+			Length,
+			0,
+			& marea
+			);
+	if (STATUS_SUCCESS != Status)
+	{
+		return (NULL);
+	}
+	DPRINT("Result %p\n",Result);
+	for (	i = 0;
+		(i <= (Length / PAGESIZE));
+		i ++
+		)
+	{
+		MmSetPage (
+			NULL,
+			(Result + (i * PAGESIZE)),
+			PAGE_READWRITE,
+			(ULONG) MmAllocPage ()
+			);
+	}
+	return ((PVOID) Result);
 }
 
 

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.47 2000/03/18 15:12:18 ea Exp $
+; $Id: ntoskrnl.edf,v 1.48 2000/03/19 09:14:50 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -227,8 +227,13 @@ KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
 KeWaitForSingleObject
+MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
+MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
+MmFreeContiguousMemory=MmFreeContiguousMemory@4
+MmFreeNonCachedMemory=MmFreeNonCachedMemory@8
 MmGetSystemAddressForMdl
-MmMapIoSpace
+MmMapIoSpace=MmMapIoSpace@16
+MmUnmapIoSpace=MmUnmapIoSpace@8
 NlsAnsiCodePage	DATA
 NlsLeadByteInfo	DATA
 NlsMbCodePageTag	DATA

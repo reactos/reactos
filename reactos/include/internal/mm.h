@@ -59,6 +59,13 @@ typedef struct
 } MEMORY_AREA, *PMEMORY_AREA;
 
 
+/* FUNCTIONS */
+
+PVOID
+STDCALL
+MmAllocateSection (
+	IN	ULONG	Length
+	);
 NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
 			    PEPROCESS Process,
 			    ULONG Type,
@@ -78,7 +85,7 @@ NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmInitSectionImplementation(VOID);
 
-void VirtualInit(boot_param* bp);
+/*void VirtualInit(boot_param* bp);*/
 
 #define MM_LOWEST_USER_ADDRESS (4096)
 
