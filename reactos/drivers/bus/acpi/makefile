@@ -1,12 +1,30 @@
+# $Id: makefile,v 1.6 2001/08/21 20:13:10 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET=acpi
+TARGET_TYPE = driver
 
-CFLAGS = -D__NTDRIVER__ -I./include -I./ospm/include
+TARGET_NAME = acpi
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+TARGET_CFLAGS = -I./include -I./ospm/include
 
 OBJECTS_PATH = objects
+
+TARGET_OBJECTS = $(OBJECTS_PATH)/$(TARGET_NAME).o
+
+TARGET_CLEAN = \
+  $(OBJECTS_PATH)/*.o \
+  dispatcher/*.o \
+  events/*.o \
+  executer/*.o \
+  hardware/*.o \
+  namespace/*.o \
+  ospm/*.o \
+  ospm/busmgr/*.o \
+  parser/*.o \
+  resource/*.o \
+  tables/*.o \
+  utils/*.o
 
 
 OBJECTS_OSPM_BUSMGR = \
@@ -138,80 +156,76 @@ OBJECTS_UTILS = \
   utils/cmxface.o
 
 
-all: $(TARGET).sys
+include $(PATH_TO_TOP)/rules.mak
 
-.phony: all
-
-
-$(OBJECTS_PATH):
-	mkdir $(OBJECTS_PATH)
+include $(TOOLS_PATH)/helper.mk
 
 
 #
 # Build intermediate objects
 #
-$(OBJECTS_PATH)/ospm.o: $(OBJECTS_PATH) $(OBJECTS_OSPM)
+$(OBJECTS_PATH)/ospm.o: $(OBJECTS_OSPM)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/ospm.o \
 		$(OBJECTS_OSPM)
 
-$(OBJECTS_PATH)/dispatcher.o: $(OBJECTS_PATH) $(OBJECTS_DISPATCHER)
+$(OBJECTS_PATH)/dispatcher.o: $(OBJECTS_DISPATCHER)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/dispatcher.o \
 		$(OBJECTS_DISPATCHER)
 
-$(OBJECTS_PATH)/events.o: $(OBJECTS_PATH) $(OBJECTS_EVENTS)
+$(OBJECTS_PATH)/events.o: $(OBJECTS_EVENTS)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/events.o \
 		$(OBJECTS_EVENTS)
 
-$(OBJECTS_PATH)/executer.o: $(OBJECTS_PATH) $(OBJECTS_EXECUTER)
+$(OBJECTS_PATH)/executer.o: $(OBJECTS_EXECUTER)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/executer.o \
 		$(OBJECTS_EXECUTER)
 
-$(OBJECTS_PATH)/hardware.o: $(OBJECTS_PATH) $(OBJECTS_HARDWARE)
+$(OBJECTS_PATH)/hardware.o: $(OBJECTS_HARDWARE)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/hardware.o \
 		$(OBJECTS_HARDWARE)
 
-$(OBJECTS_PATH)/namespace.o: $(OBJECTS_PATH) $(OBJECTS_NAMESPACE)
+$(OBJECTS_PATH)/namespace.o: $(OBJECTS_NAMESPACE)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/namespace.o \
 		$(OBJECTS_NAMESPACE)
 
-$(OBJECTS_PATH)/parser.o: $(OBJECTS_PATH) $(OBJECTS_PARSER)
+$(OBJECTS_PATH)/parser.o: $(OBJECTS_PARSER)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/parser.o \
 		$(OBJECTS_PARSER)
 
-$(OBJECTS_PATH)/resource.o: $(OBJECTS_PATH) $(OBJECTS_RESOURCE)
+$(OBJECTS_PATH)/resource.o: $(OBJECTS_RESOURCE)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/resource.o \
 		$(OBJECTS_RESOURCE)
 
-$(OBJECTS_PATH)/tables.o: $(OBJECTS_PATH) $(OBJECTS_TABLES)
+$(OBJECTS_PATH)/tables.o: $(OBJECTS_TABLES)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/tables.o \
 		$(OBJECTS_TABLES)
 
-$(OBJECTS_PATH)/utils.o: $(OBJECTS_PATH) $(OBJECTS_UTILS)
+$(OBJECTS_PATH)/utils.o: $(OBJECTS_UTILS)
 	$(LD) \
 		-r \
 		-o $(OBJECTS_PATH)/utils.o \
 		$(OBJECTS_UTILS)
 
 
-OBJECTS := \
+OBJECTS = \
   $(OBJECTS_PATH)/ospm.o \
 	$(OBJECTS_PATH)/dispatcher.o \
 	$(OBJECTS_PATH)/events.o \
@@ -221,70 +235,10 @@ OBJECTS := \
 	$(OBJECTS_PATH)/parser.o \
 	$(OBJECTS_PATH)/resource.o \
 	$(OBJECTS_PATH)/tables.o \
-	$(OBJECTS_PATH)/utils.o \
-	$(TARGET).coff
+	$(OBJECTS_PATH)/utils.o
 
+$(OBJECTS_PATH)/$(TARGET_NAME).o: $(OBJECTS_PATH) $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(OBJECTS_PATH)/$(TARGET_NAME).o
 
-$(TARGET).coff: $(TARGET).rc $(PATH_TO_TOP)/include/reactos/resource.h
-
-$(TARGET).sys: $(OBJECTS_PATH) $(OBJECTS) $(LIBS)
-	$(CC) \
-		-nostartfiles -nostdlib \
-		--subsystem=native \
-		-mdll \
-		--dll \
-    -Wl,-e,_DriverEntry@8 \
-    -Wl,--base-file,base.tmp \
-    -Wl,--defsym,_end=end \
-    -Wl,--defsym,_edata=__data_end__ \
-    -Wl,--defsym,_etext=etext \
-    $(OBJECTS) $(LIBS) \
-    -o junk.tmp
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-    --dllname $(TARGET).sys \
-    --base-file base.tmp \
-    --output-exp temp.exp \
-    --kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles -nostdlib \
-		--subsystem=native \
-		-mdll \
-		--dll \
-    -Wl,--image-base,0x10000 \
-    -Wl,-e,_DriverEntry@8 \
-    -Wl,temp.exp \
-    -o $(TARGET).sys \
-    $(OBJECTS) $(LIBS)
-	- $(RM) temp.exp
-	- $(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym
-
-#	$(STRIP) --strip-debug $(TARGET).sys
-
-
-CLEAN_FILES = $(OBJECTS_PATH)/*.o dispatcher/*.o events/*.o executer/*.o hardware/*.o \
-              namespace/*.o ospm/*.o ospm/busmgr/*.o parser/*.o resource/*.o tables/*.o \
-              utils/*.o \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-              $(TARGET).sys $(TARGET).sym $(TARGET).coff
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-WITH_DEBUGGING=yes
-WARNINGS_ARE_ERRORS = yes
-
-include $(PATH_TO_TOP)/rules.mak
+$(OBJECTS_PATH):
+	mkdir $(OBJECTS_PATH)

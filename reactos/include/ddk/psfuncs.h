@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.13 2001/04/21 12:38:28 ekohl Exp $
+/* $Id: psfuncs.h,v 1.14 2001/08/21 20:13:05 chorns Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -60,6 +60,8 @@ BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 			      PULONG		MinorVersion	OPTIONAL,
 			      PULONG		BuildNumber	OPTIONAL,
 			      PUNICODE_STRING	CSDVersion	OPTIONAL);
+
+VOID STDCALL PsDispatchThread(ULONG NewThreadStatus);
 
 #endif
 

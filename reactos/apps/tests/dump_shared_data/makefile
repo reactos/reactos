@@ -1,32 +1,20 @@
-#
-#
-#
+# $Id: makefile,v 1.5 2001/08/21 20:13:01 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = dump_shared_data.o
-PROGS = dump_shared_data.exe
-LIBS = 
-CLEAN_FILES = dump_shared_data.o dump_shared_data.exe
+TARGET_NORC = yes
 
-all: dump_shared_data.exe
+TARGET_TYPE = program
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_APPTYPE = console
 
-.phony: clean 
+TARGET_NAME = dump_shared_data
 
-floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
+# EOF
 
-dump_shared_data.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -o dump_shared_data.exe
-
-BASE_CFLAGS = -I../../include
-include ../../rules.mak

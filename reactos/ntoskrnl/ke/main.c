@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.101 2001/07/14 21:10:31 chorns Exp $
+/* $Id: main.c,v 1.102 2001/08/21 20:13:09 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -46,6 +46,12 @@
 #include <internal/trap.h>
 #include "../dbg/kdb.h"
 
+#ifdef HALDBG
+#include <internal/ntosdbg.h>
+#else
+#define ps(args...)
+#endif
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -64,6 +70,8 @@ static ULONG FirstKrnlPhysAddr;
 static ULONG LastKrnlPhysAddr;
 static ULONG LastKernelAddress;
 volatile BOOLEAN Initialized = FALSE;
+
+extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS ****************************************************************/
 
@@ -459,9 +467,9 @@ ExpInitializeExecutive(VOID)
   assert(FIELD_OFFSET(KPCR, ExceptionList) == KPCR_EXCEPTION_LIST);
   assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
   assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
-  
+
   LdrInit1();
-  
+
   KeLowerIrql(DISPATCH_LEVEL);
   
   NtEarlyInitVdm();
@@ -507,12 +515,18 @@ ExpInitializeExecutive(VOID)
 
   while (!HalAllProcessorsStarted())
     {
+      PVOID ProcessorStack;
+
       if (KeNumberProcessors != 0)
 	{
 	  KePrepareForApplicationProcessorInit(KeNumberProcessors);
 	  PsPrepareForApplicationProcessorInit(KeNumberProcessors);
 	}
-      HalInitializeProcessor(KeNumberProcessors);
+      /* Allocate a stack for use when booting the processor */
+      /* FIXME: The nonpaged memory for the stack is not released after use */
+      ProcessorStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
+      Ki386InitialStackArray[((int)KeNumberProcessors)] = (PVOID)(ProcessorStack - MM_STACK_SIZE);
+      HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
       KeNumberProcessors++;
     }
 
@@ -670,7 +684,7 @@ ExpInitializeExecutive(VOID)
 			NULL,
 			NULL,
 			NULL);
-  
+
   /*
    * Initialize shared user page:
    *  - set dos system path, dos device map, etc.
@@ -681,14 +695,16 @@ ExpInitializeExecutive(VOID)
    *  Launch initial process
    */
   LdrLoadInitialProcess();
-  
+
   PsTerminateSystemThread(STATUS_SUCCESS);
 }
+
 
 VOID
 KiSystemStartup(BOOLEAN BootProcessor)
 {
   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
   if (BootProcessor)
     {
       /* Never returns */
@@ -719,7 +735,13 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   ULONG size;
   ULONG last_kernel_address;
   extern ULONG _bss_end__;
-  
+  ULONG HalBase;
+  ULONG DriverBase;
+  ULONG DriverSize;
+
+  /* Low level architecture specific initialization */
+  KeInit1();
+
   /*
    * Copy the parameters to a local buffer because lowmem will go away
    */
@@ -751,9 +773,27 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       KeLoaderModules[i].ModEnd += 0xc0000000;
       KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
-  
-  last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
-  
+
+#ifdef HAL_DBG
+  HalnInitializeDisplay((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+#endif
+
+  HalBase = KeLoaderModules[1].ModStart;
+  DriverBase = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
+
+  /*
+   * Process hal.dll
+   */
+  LdrSafePEProcessModule((PVOID)HalBase, (PVOID)DriverBase, (PVOID)0xC0000000, &DriverSize);
+
+  LdrHalBase = (ULONG_PTR)DriverBase;
+  last_kernel_address = DriverBase + DriverSize;
+
+  /*
+   * Process ntoskrnl.exe
+   */
+  LdrSafePEProcessModule((PVOID)0xC0000000, (PVOID)0xC0000000, (PVOID)DriverBase, &DriverSize);
+
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
   LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
   LastKernelAddress = last_kernel_address;
@@ -778,8 +818,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
           i += size;
         }
     }
-
-  KeInit1();
   
   KiSystemStartup(1);
 }

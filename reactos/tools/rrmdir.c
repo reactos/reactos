@@ -1,7 +1,8 @@
-/*  $Id: rdel.c,v 1.2 2001/07/28 15:24:04 phreak Exp $  
+/*  $Id: rrmdir.c,v 1.1 2001/08/21 20:13:17 chorns Exp $  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
- * PURPOSE:               Platform independant delete command
+ *                        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PURPOSE:               Platform independant remove directory command
  */
 
 #include <dirent.h>
@@ -67,17 +68,20 @@ main (int argc, char* argv[])
 
     if (justPrint)
     {
-      printf ("delete %s\n", argv [idx]);
+      printf ("remove %s\n", argv [idx]);
     }
     else
     {
-      returnCode = remove (argv [idx]);
+      returnCode = rmdir (argv [idx]);
       if (returnCode != 0 && errno != ENOENT)
       {
-        printf ("Unlink of %s failed.  Unlink returned %d.\n", 
+      /* Continue even if there is errors */
+#if 0
+        printf ("Rmdir of %s failed.  Rmdir returned %d.\n", 
                 argv [idx],
                 returnCode);
         return  returnCode;
+#endif
       }
     }
   }

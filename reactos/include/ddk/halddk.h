@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.9 2001/03/31 16:01:03 phreak Exp $
+/* $Id: halddk.h,v 1.10 2001/08/21 20:13:05 chorns Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -465,7 +465,8 @@ HalGetInterruptVector (
 VOID
 STDCALL
 HalInitializeProcessor (
-	ULONG	ProcessorNumber
+	ULONG	ProcessorNumber,
+  PVOID ProcessorStack
 	);
 
 BOOLEAN
@@ -623,9 +624,11 @@ typedef struct _KD_PORT_INFORMATION
 } KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
 
 
-#if defined(__HAL__) || defined(__NTOSKRNL__)
+#if defined(__NTOSKRNL__)
 extern ULONG KdComPortInUse __declspec(dllexport);
-#else
+#endif
+
+#if defined(__HAL__)
 extern ULONG KdComPortInUse __declspec(dllimport);
 #endif
 

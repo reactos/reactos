@@ -1,43 +1,21 @@
-# $Id: makefile,v 1.4 2001/07/15 21:18:53 rex Exp $
-#
-# Shell: Simple shell application
-#
-# ReactOS Operating System
-#
-TARGET = shell
-PROGS = shell.exe
+# $Id: makefile,v 1.5 2001/08/21 20:13:04 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
-OBJECTS= shell.o shell.coff
-LIBS= ../../../lib/kernel32/kernel32.a ../../../lib/ntdll/ntdll.a
-CLEAN_FILES= shell.o shell.coff shell.exe shell.sym
+TARGET_TYPE = program
 
-BASE_CFLAGS = -I../../../include
+TARGET_APPTYPE = console
 
-all: shell.exe
+TARGET_NAME = shell
 
-shell.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o shell.exe
-	$(NM) --numeric-sort shell.exe > shell.sym
+TARGET_INSTALLDIR = system32
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
-.phony: clean 
-
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
-
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=../../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../../$(DIST_DIR)/apps/%): ../../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../../$(DIST_DIR)/apps/$*
-
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
 
+include $(TOOLS_PATH)/helper.mk
 
-
+# EOF

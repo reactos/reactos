@@ -1,42 +1,16 @@
-# $Id: Makefile,v 1.9 2001/07/25 06:19:49 ekohl Exp $
-#
-#
+# $Id: Makefile,v 1.10 2001/08/21 20:13:10 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET=floppy
+TARGET_TYPE = driver
 
-OBJECTS = floppy.o isr.o dpc.o $(TARGET).coff
+TARGET_NAME = floppy
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+TARGET_OBJECTS = \
+  dpc.o \
+  floppy.o \
+  isr.o
 
-CFLAGS = -D__NTDRIVER__ -I.
-
-all: $(TARGET).sys
-
-floppy.o: floppy.h
-
-isr.o: floppy.h
-
-dpc.o: floppy.h
-
-.phony: all
-
-clean:
-	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
-
-WITH_DEBUGGING=yes
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

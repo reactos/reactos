@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.49 2001/07/21 20:16:09 ea Exp $
+# $Id: Makefile,v 1.50 2001/08/21 20:13:08 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -9,19 +9,14 @@
 PATH_TO_TOP := ..
 
 #
-# Include details of the kernel configuration
+# Include details of the host OS configuration
 #
+include $(PATH_TO_TOP)/config
 
-include config
-
-#
-#
-#
 CONFIG :=
 
 ifeq ($(DBG), 1)
 CFLAGS_DBG := -g
-CONFIG += DBG
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 else
@@ -33,40 +28,29 @@ endif
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_keyboard.o dbg/rdebug.o \
                 dbg/i386/kdb_help.o
-CONFIG += KDBG
 else
 OBJECTS_KDBG :=
 endif
 
-ifeq ($(MP), 1)
-CONFIG += MP
-else
-CONFIG += UP
-endif
 
-ifeq ($(ACPI), 1)
-CONFIG += ACPI
-else
-CONFIG +=
-endif
+ASFLAGS += -I./include -I$(SDK_PATH_INC)
+CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+
+#
+# Build configuration
+#
+include $(PATH_TO_TOP)/rules.mak
+
 
 TARGETNAME := ntoskrnl
 
 OBJECTS_PATH = objects
 
-ASFLAGS = -Iinclude
-CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
-
-include $(PATH_TO_TOP)/rules.mak
-
-all: $(EXE_PREFIX)depends$(EXE_POSTFIX) include/internal/config.h \
+all: \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
 	$(TARGETNAME).sym 
-
-$(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
-	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
 
 #
 # Architecture specific Makefile
@@ -187,6 +171,7 @@ OBJECTS_IO = \
 	io/mdl.o \
 	io/npipe.o \
 	io/page.o \
+	io/parttab.o \
 	io/pnpmgr.o \
 	io/pnproot.o \
 	io/process.o \
@@ -321,14 +306,18 @@ OBJECTS_KD = \
 	kd/service.o \
 	kd/dlog.o
 
-C_OBJECTS := $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_ARCH) \
+DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL)
 
-D_FILES := $(filter-out ex/napi.%, $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d)))
-D1_FILES := $(join $(dir $(D_FILES)), $(addprefix ., $(notdir $(D_FILES))))
+
+#
+# Include automatic dependancy tracking
+#
+include $(PATH_TO_TOP)/tools/depend.mk
+
 
 # Resources
 OBJECTS_RESOURCE = \
@@ -342,15 +331,11 @@ IE_DATA = \
 $(OBJECTS_PATH):
 	mkdir $(OBJECTS_PATH)
 
+$(OBJECTS_RESOURCE): $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
+
 #
 # Build subsystem intermediate objects
 #
-$(OBJECTS_PATH)/hal.o: $(OBJECTS_HAL)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/hal.o \
-		$(OBJECTS_HAL)
-
 $(OBJECTS_PATH)/arch.o: $(OBJECTS_ARCH)
 	$(LD) -r -o $(OBJECTS_PATH)/arch.o $(OBJECTS_ARCH)
 
@@ -462,14 +447,10 @@ $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 		-o $(OBJECTS_PATH)/kd.o \
 		$(OBJECTS_KD) 
 
-$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
-
-
 # Note: arch.o MUST be the first file!!!
 OBJECTS := \
 	$(OBJECTS_PATH)/arch.o \
 	$(OBJECTS_PATH)/ke.o \
-	$(OBJECTS_PATH)/hal.o \
 	$(OBJECTS_PATH)/cc.o \
 	$(OBJECTS_PATH)/cm.o \
 	$(OBJECTS_PATH)/dbg.o \
@@ -489,15 +470,14 @@ OBJECTS := \
 	$(OBJECTS_PATH)/se.o \
 	$(OBJECTS_RESOURCE)
 
-
-CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o hal/x86/*.o io/*.o \
-              ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
-              ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
-              kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
+CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
+              ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
+              rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym \
-	      $(TARGETNAME).coff $(D1_FILES)
+	            $(TARGETNAME).coff $(DEP_FILES)
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(DDK_PATH_LIB)/$(TARGETNAME).a $(IE_DATA)
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -509,7 +489,8 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).o -lgcc
+		$(TARGETNAME).o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
@@ -529,11 +510,12 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp \
-		$(TARGETNAME).o -lgcc
+		$(TARGETNAME).o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
-	$(CC) \
+$(TARGETNAME).exe: $(TARGETNAME).o $(DDK_PATH_LIB)/$(TARGETNAME).a $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
+	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
 		-nostdlib \
@@ -544,7 +526,8 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).o -lgcc
+		$(TARGETNAME).o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
@@ -564,7 +547,8 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp \
-		$(TARGETNAME).o -lgcc
+		$(TARGETNAME).o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
 $(TARGETNAME).dbg.o: $(TARGETNAME).o
@@ -582,7 +566,8 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).dbg.o -lgcc
+		$(TARGETNAME).dbg.o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).dbg \
@@ -602,7 +587,8 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp \
-		$(TARGETNAME).dbg.o -lgcc
+		$(TARGETNAME).dbg.o -lgcc \
+		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
@@ -614,11 +600,11 @@ $(TARGETNAME).o: $(OBJECTS)
 		-o $(TARGETNAME).o \
 		$(OBJECTS)
 
-$(TARGETNAME).a: $(TARGETNAME).def
+$(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
 		--def $(TARGETNAME).def \
-		--output-lib $(TARGETNAME).a \
+		--output-lib $(DDK_PATH_LIB)/$(TARGETNAME).a \
 		--kill-at
 
 clean: 
@@ -626,17 +612,17 @@ clean:
 
 .PHONY: clean 
 
-install: $(FLOPPY_DIR)/$(TARGETNAME).exe
+install: $(INSTALL_DIR)/system32/$(TARGETNAME).exe
 
-$(FLOPPY_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(FLOPPY_DIR)/$(TARGETNAME).exe
+$(INSTALL_DIR)/system32/$(TARGETNAME).exe: $(TARGETNAME).exe
+	$(CP) $(TARGETNAME).exe $(INSTALL_DIR)/system32/$(TARGETNAME).exe
 
 .PHONY: install
 
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe
+dist: $(DIST_DIR)/$(TARGETNAME).exe
 
-$(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe $(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe
+$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
+	$(CP) $(TARGETNAME).exe $(DIST_DIR)/$(TARGETNAME).exe
 
 .PHONY: dist
 
@@ -644,29 +630,17 @@ ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
-mkconfig$(EXE_SUFFIX): mkconfig.c
-	$(HOST_CC) -g -o mkconfig$(EXE_SUFFIX) mkconfig.c
-
-config:
-	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h $(CONFIG)
-
-include/internal/config.h: config mkconfig$(EXE_SUFFIX)
-	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h$(CONFIG)
-
-ifneq ($(MAKECMDGOALS),clean)
-include $(D1_FILES)
-endif
-
-.%.d: %.c $(EXE_PREFIX)depends$(EXE_POSTFIX)
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
-
-.%.d: %.s
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@ 
-
-.%.d: %.S
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
-
-.%.d: %.asm
-	$(NASM_CMD) $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
+%.o: %.cc
+	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.S
+	$(AS) $(ASFLAGS) -c $< -o $@
+%.o: %.s
+	$(AS) $(ASFLAGS) -c $< -o $@	
+%.o: %.asm
+	$(NASM_CMD) $(NFLAGS) $< -o $@
+%.coff: %.rc
+	$(RC) $(RCINC) $< -o $@
 
 # EOF

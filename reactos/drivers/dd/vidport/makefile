@@ -1,98 +1,15 @@
-# $Id: makefile,v 1.14 2001/07/26 11:40:59 ekohl Exp $
-#
-#
+# $Id: makefile,v 1.15 2001/08/21 20:13:12 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET = vidport
+TARGET_TYPE = export_driver
 
-OBJECTS = $(TARGET).o $(TARGET).coff
+TARGET_NAME = vidport
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+TARGET_CFLAGS = 
 
-CFLAGS = -D__NTDRIVER__
-
-all: $(TARGET).sys $(TARGET).sys.unstripped vidport.a
-
-.phony: all
-
-clean:
-	- $(RM) *.o *.a *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(TARGET).a: $(TARGET).def
-	$(DLLTOOL) \
-		--dllname $(TARGET).sys \
-		--def $(TARGET).def \
-		--kill-at \
-		--output-lib $(TARGET).a
-
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
-	$(CC) \
-		-nostartfiles -nostdlib -e _DriverEntry@8\
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $^
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $@ \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).edf \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o $@.unstripped \
-		$^
-	- $(RM) temp.exp
-	- $(NM) --numeric-sort $@.unstripped > $@.sym
-	$(STRIP) --strip-debug $<
-	$(CC) \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $^
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $@ \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).edf \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o $@ \
-		$^
-	- $(RM) temp.exp
+TARGET_OBJECTS = vidport.o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

@@ -1,79 +1,19 @@
-# $Id: Makefile,v 1.10 2001/07/15 21:19:01 rex Exp $
-#
-#
+# $Id: Makefile,v 1.11 2001/08/21 20:13:15 chorns Exp $
+
 PATH_TO_TOP = ../../../..
 
-CFLAGS = -D__NTDRIVER__ -Iinclude
+TARGET_TYPE = driver
 
-TARGETNAME = ne2000
+TARGET_NAME = ne2000
 
-RESOURCE_OBJECT  = $(TARGETNAME).coff
-NE2000_OBJECTS   = ne2000/main.o ne2000/8390.o $(RESOURCE_OBJECT)
-IMPORT_LIBS      = $(PATH_TO_TOP)/services/net/ndis/ndis.a \
-                   $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+TARGET_CFLAGS = -I./include
 
-OBJECTS = $(NE2000_OBJECTS) $(IMPORT_LIBS)
+TARGET_OBJECTS = \
+  ne2000/8390.o \
+  ne2000/main.o
 
-all: $(TARGETNAME).sys
+TARGET_DDKLIBS = ndis.a
 
-$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
-
-CLEAN_FILES = \
-		ne2000/*.o $(TARGETNAME).coff \
-        $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
-
-$(TARGETNAME).sys: $(OBJECTS)
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).sys \
-		--def $(TARGETNAME).def \
-		--kill-at \
-		--output-lib $(TARGETNAME).a
-	$(CC) \
-        $(OBJECTS) \
-        -mdll \
-        -o junk.tmp \
-        -Wl,--image-base,0x10000 \
-        -Wl,--defsym,_end=end \
-	    -Wl,--defsym,_edata=__data_end__ \
-        -Wl,--defsym,_etext=etext \
-	    -Wl,--base-file,base.tmp
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-        --dllname $(TARGETNAME).sys \
-        --base-file base.tmp \
-		--output-exp temp.exp \
-        --def $(TARGETNAME).edf
-	- $(RM) base.tmp
-	$(CC) \
-        $(OBJECTS) \
-        -mdll \
-        -o $(TARGETNAME).sys \
-        -Wl,--image-base,0x10000 \
-        -Wl,-e,_DriverEntry@8 \
-        -Wl,--defsym,_end=end \
-	    -Wl,--defsym,_edata=__data_end__ \
-        -Wl,--defsym,_etext=etext \
-        -Wl,temp.exp 
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-	$(CP) $(TARGETNAME).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
-
-$(TARGETNAME).sys: $(OBJECTS)
-
-WITH_DEBUGGING=yes
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

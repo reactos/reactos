@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.14 2001/07/04 16:42:37 rex Exp $
+/* $Id: xhaldrv.c,v 1.15 2001/08/21 20:13:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -638,8 +638,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		    PartitionTable->Partition[i].BootFlags,
 		    PartitionTable->Partition[i].PartitionType,
 		    PartitionTable->Partition[i].StartingHead,
-		    PartitionTable->Partition[i].StartingSector,
-		    PartitionTable->Partition[i].StartingCylinder,
+		    PartitionTable->Partition[i].StartingSector & 0x3f,
+		    (((PartitionTable->Partition[i].StartingSector) & 0xc0) << 2) +
+          PartitionTable->Partition[i].StartingCylinder,
 		    PartitionTable->Partition[i].EndingHead,
 		    PartitionTable->Partition[i].EndingSector,
 		    PartitionTable->Partition[i].EndingCylinder,

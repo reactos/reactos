@@ -1,35 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.7 2001/08/21 20:13:02 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-PROGS = gditest
+TARGET_NORC = yes
 
-OBJECTS = 
-LIBS= ../../lib/kernel32/kernel32.a ../../lib/gdi32/gdi32.a
-CFLAGS = -I../../include
+TARGET_TYPE = program
 
-all: $(PROGS:%=%.exe)
+TARGET_APPTYPE = console
 
-.phony: all
+TARGET_NAME = gditest
 
-clean:
-	- $(RM) *.o *.exe *.sym
+TARGET_SDKLIBS = kernel32.a gdi32.a
 
-.phony: clean
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+include $(TOOLS_PATH)/helper.mk
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
-
-gditest.exe: gditest.c
-	$(CC) $(CFLAGS) gditest.c $(LIBS) -o gditest.exe
-	$(NM) --numeric-sort gditest.exe > gditest.sym
-
-include ../../rules.mak
+# EOF

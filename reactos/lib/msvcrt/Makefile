@@ -1,15 +1,35 @@
-# $Id: Makefile,v 1.19 2001/07/18 09:23:02 ekohl Exp $
-#
-# ReactOS Operating System
-#
+# $Id: Makefile,v 1.20 2001/08/21 20:13:06 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET_NAME=msvcrt
-TARGET_DLL=$(TARGET_NAME).dll
+TARGET_DEFONLY = yes
 
-CFLAGS = -I../../include -D__MSVCRT__
+TARGET_TYPE = dynlink
 
-all: $(TARGET_DLL)
+TARGET_NAME = msvcrt
+
+TARGET_LFLAGS = -nostartfiles
+
+TARGET_SDKLIBS = kernel32.a
+
+TARGET_GCCLIBS = gcc
+
+TARGET_BASE = 0x78000000
+
+TARGET_CFLAGS = -D__MSVCRT__
+
+TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CLEAN = \
+  conio/*.o ctype/*.o direct/*.o except/*.o float/*.o io/*.o \
+	locale/*.o math/*.o mbstring/*.o misc/*.o process/*.o search/*.o \
+	setjmp/*.o signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o \
+	time/*.o wstring/*.o
+
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
 
 
 OBJECTS_CONIO = \
@@ -435,69 +455,9 @@ OBJECTS = \
 	$(OBJECTS_STRING) \
 	$(OBJECTS_SYS_STAT) \
 	$(OBJECTS_TIME) \
-	$(OBJECTS_WSTRING) \
-	msvcrt.coff
+	$(OBJECTS_WSTRING)
 
-CLEAN_FILES = conio/*.o ctype/*.o direct/*.o except/*.o float/*.o io/*.o \
-	locale/*.o math/*.o mbstring/*.o misc/*.o process/*.o search/*.o \
-	setjmp/*.o signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o \
-	time/*.o wstring/*.o $(TARGET_NAME).a $(TARGET_NAME).coff \
-	$(TARGET_NAME).o $(TARGET_NAME).dll $(TARGET_NAME).sym
-
-$(TARGET_NAME).coff: $(TARGET_NAME).rc ../../include/reactos/resource.h
-
-$(TARGET_NAME).a: $(OBJECTS)
-	$(LD)  -r $(OBJECTS) -o $(TARGET_NAME).a
-
-$(TARGET_NAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGET_NAME).def
+$(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
-	$(DLLTOOL) \
-		--dllname $(TARGET_NAME).dll \
-		--def $(TARGET_NAME).def \
-		--output-lib $(TARGET_NAME).a
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--base-file,base.tmp \
-		-Wl,--entry=_DllMain@12 \
-		$(TARGET_NAME).o \
-		../kernel32/kernel32.a -lgcc
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET_NAME).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET_NAME).def
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o $(TARGET_NAME).dll \
-		$(TARGET_NAME).o  \
-		../kernel32/kernel32.a -lgcc \
-		-Wl,--image-base,0x78000000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp \
-		-Wl,--entry=_DllMain@12
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET_NAME).dll > $(TARGET_NAME).sym
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET_NAME).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET_NAME).dll: $(TARGET_NAME).dll
-	$(CP) $(TARGET_NAME).dll $(FLOPPY_DIR)/dlls/$(TARGET_NAME).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET_NAME).dll
-
-$(DIST_DIR)/dlls/$(TARGET_NAME).dll: $(TARGET_NAME).dll
-	$(CP) $(TARGET_NAME).dll ../../$(DIST_DIR)/dlls/$(TARGET_NAME).dll
-
-include ../../rules.mak
-
+# EOF

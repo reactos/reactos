@@ -487,7 +487,6 @@ VOID PiShutdownProcessManager(VOID);
 VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
-VOID PsDispatchThread(ULONG NewThreadStatus);
 VOID PsDispatchThreadNoLock(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);

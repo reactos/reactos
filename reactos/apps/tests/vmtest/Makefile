@@ -1,31 +1,21 @@
-#
-#
-#
+# $Id: Makefile,v 1.4 2001/08/21 20:13:05 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = vmtest.o
-PROGS = vmtest.exe
-LIBS = 
-CLEAN_FILES = vmtest.o vmtest.exe
+TARGET_NORC = yes
 
-all: vmtest.exe
+TARGET_TYPE = program
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_APPTYPE = console
 
-.phony: clean 
+TARGET_NAME = vmtest
 
-floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_SDKLIBS = ntdll.a kernel32.a crtdll.a
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
+include $(TOOLS_PATH)/helper.mk
 
-vmtest.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -o vmtest.exe
-
-include ../../rules.mak
+# EOF

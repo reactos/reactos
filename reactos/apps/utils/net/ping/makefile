@@ -1,37 +1,19 @@
-#
-# ReactOS Ping Utility
-#
+# $Id: makefile,v 1.7 2001/08/21 20:13:03 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGETNAME=ping
-CFLAGS = -I../../../include
+TARGET_TYPE = program
 
-OBJECTS = $(TARGETNAME).o $(TARGETNAME).coff
-PROGS = $(TARGETNAME).exe
-LIBS = ../../../lib/ntdll/ntdll.a \
-       ../../../lib/ws2_32/ws2_32.a
+TARGET_APPTYPE = console
 
-CLEAN_FILES = $(TARGETNAME).o $(TARGETNAME).exe $(TARGETNAME).sym
+TARGET_NAME = ping
 
-all: $(TARGETNAME).exe
+TARGET_SDKLIBS = ntdll.a ws2_32.a
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-.phony: clean 
+include $(PATH_TO_TOP)/rules.mak
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-$(TARGETNAME).exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o $(TARGETNAME).exe
-	$(NM) --numeric-sort $(TARGETNAME).exe > $(TARGETNAME).sym
-
-include ../../../rules.mak
+# EOF

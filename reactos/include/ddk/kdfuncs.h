@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_KDFUNCS_H
 #define __INCLUDE_DDK_KDFUNCS_H
-/* $Id: kdfuncs.h,v 1.3 2000/03/04 21:58:49 ekohl Exp $ */
+/* $Id: kdfuncs.h,v 1.4 2001/08/21 20:13:05 chorns Exp $ */
 
 /* --- NTOSKRNL.EXE --- */
 #if defined(__NTOSKRNL__)
@@ -16,13 +16,6 @@ STDCALL
 KdPollBreakIn (
 	VOID
 	);
-
-/* --- HAL.DLL --- */
-#if defined(__NTOSKRNL__)
-extern ULONG KdComPortInUse __declspec(dllexport);
-#else
-extern ULONG KdComPortInUse __declspec(dllimport);
-#endif
 
 BOOLEAN
 STDCALL

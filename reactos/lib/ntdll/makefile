@@ -1,19 +1,23 @@
-# $Id: makefile,v 1.64 2001/08/02 20:25:17 phreak Exp $
-#
-# ReactOS Operating System
-#
+# $Id: makefile,v 1.65 2001/08/21 20:13:06 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET = ntdll
+TARGET_TYPE = dynlink
 
-CFLAGS = -D__NTDLL__ -g
+TARGET_NAME = ntdll
 
-IMAGE_BASE = 0x77f60000
+TARGET_CFLAGS = -D__NTDLL__
 
-DLLTARGET=$(TARGET).dll
-DLLMAIN=main/dllmain.o
+TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
+  -Wl,--section-alignment,0x1000
 
-all: $(DLLTARGET)
+TARGET_GCCLIBS = gcc
+
+TARGET_BASE = 0x77f60000
+
+TARGET_PATH = def
+
+TARGET_ENTRY = _LdrInitializeThunk@16
 
 CSR_OBJECTS = csr/lpc.o csr/capture.o csr/probe.o csr/thread.o
 
@@ -26,7 +30,7 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/access.o rtl/apc.o rtl/callback.o rtl/luid.o rtl/misc.o \
               rtl/registry.o rtl/exception.o rtl/intrlck.o rtl/resource.o \
               rtl/handle.o rtl/atom.o rtl/message.o rtl/timezone.o \
-	      rtl/propvar.o
+      	      rtl/propvar.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 
@@ -46,75 +50,24 @@ STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/strpbrk.o string/strrchr.o string/strspn.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
-OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
-          $(STDIO_OBJECTS) $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
-          stubs/stubs.o ldr/utils.o $(CSR_OBJECTS) $(TARGET).coff
+TARGET_OBJECTS = \
+  napi.o \
+  ldr/startup.o \
+  $(DBG_OBJECTS) \
+  $(RTL_OBJECTS) \
+  $(STDIO_OBJECTS) \
+  $(STDLIB_OBJECTS) \
+  $(STRING_OBJECTS) \
+  stubs/stubs.o \
+  ldr/utils.o \
+  $(CSR_OBJECTS)
 
-CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o csr/*.o dbg/*.o \
-              $(TARGET).a main/dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
-              base.tmp temp.exp $(TARGET).sym $(TARGET).coff
+include $(PATH_TO_TOP)/rules.mak
 
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-
-$(TARGET).a: $(OBJECTS)
-	$(AR) csr $(TARGET).a $(OBJECTS)
-
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
-	$(LD) \
-		-r $(DLLMAIN) \
-		$(OBJECTS) \
-		-o $(TARGET).o
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def def/$(TARGET).def \
-		--kill-at \
-		--output-lib $(TARGET).a
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--base-file,base.tmp \
-		$(TARGET).o -lgcc
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def def/$(TARGET).edf
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o $(TARGET).dll \
-		$(TARGET).o -lgcc \
-		-Wl,--entry=_LdrInitializeThunk@16 \
-		-Wl,--image-base,$(IMAGE_BASE) \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
-
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-
-include ../../rules.mak
+include $(TOOLS_PATH)/helper.mk
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c
 
 etags: csr/TAGS dbg/TAGS ldr/TAGS main/TAGS rtl/TAGS stdio/TAGS stdlib/TAGS string/TAGS stubs/TAGS
-	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS
+	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS>>>>>>> 1.64

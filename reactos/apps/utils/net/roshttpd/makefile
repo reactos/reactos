@@ -1,49 +1,29 @@
-#
-# ReactOS HTTP Daemon
-#
+# $Id: makefile,v 1.5 2001/08/21 20:13:03 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGETNAME=roshttpd
+TARGET_PATH = common
 
-CFLAGS = -Iinclude -DUNICODE -D_UNICODE -DDBG
+TARGET_TYPE = program
 
-MAIN_OBJECTS = $(TARGETNAME).o config.o error.o http.o httpd.o
-COMMON_OBJECTS = common/list.o common/socket.o common/thread.o common/$(TARGETNAME).coff
+TARGET_APPTYPE = console
 
-OBJECTS = $(MAIN_OBJECTS) $(COMMON_OBJECTS)
-PROGS = $(TARGETNAME).exe
-LIBS = ../../../lib/kernel32/kernel32.a \
-       ../../../lib/ws2_32/ws2_32.a \
-	../../../lib/user32/user32.a
+TARGET_NAME = roshttpd
 
-CLEAN_FILES = *.o $(TARGETNAME).exe $(TARGETNAME).sym common/*.o
+TARGET_CPPFLAGS = -I./include -DUNICODE -D_UNICODE -DDBG
 
-all: $(TARGETNAME).exe
+TARGET_SDKLIBS = kernel32.a ws2_32.a user32.a
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+MAIN_OBJECTS = roshttpd.o config.o error.o http.o httpd.o
 
-.phony: clean 
+COMMON_OBJECTS = common/list.o common/socket.o common/thread.o
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_OBJECTS = $(MAIN_OBJECTS) $(COMMON_OBJECTS)
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* $(FLOPPY_DIR)\apps\$*
-else
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-endif
+TARGET_CLEAN = common/*.o
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
-else
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-endif
+include $(TOOLS_PATH)/helper.mk
 
-$(TARGETNAME).exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o $(TARGETNAME).exe
-
-include ../../../rules.mak
+# EOF

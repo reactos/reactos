@@ -1,93 +1,33 @@
-# $Id: makefile,v 1.4 2001/07/21 08:36:33 ea Exp $
-#
-# Makefile for ReactOS shell32.dll
-#
+# $Id: makefile,v 1.5 2001/08/21 20:13:07 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-BASE_CFLAGS = -I../../include
+TARGET_DEFONLY = yes
 
-TARGETNAME=shell32
+TARGET_TYPE = dynlink
 
-IMAGE_BASE = 0x77260000
+TARGET_NAME = shell32
 
-DLLTARGET=$(TARGETNAME).dll
+TARGET_BASE = 0x77260000
 
-MISC_OBJECTS=\
-	misc/dllmain.o	\
+TARGET_SDKLIBS = ntdll.a kernel32.a
+
+TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CLEAN = misc/*.o
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+MISC_OBJECTS = \
+	misc/dllmain.o \
 	misc/stubs.o 
 
-OBJECTS=\
-	$(MISC_OBJECTS) \
-	$(TARGETNAME).coff
+OBJECTS = \
+  $(MISC_OBJECTS)
 
-CLEAN_FILES = misc/*.o  \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
+$(TARGET_NAME).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
-all: $(DLLTARGET)
-
-$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
-
-$(TARGETNAME).a: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
-
-$(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--def $(TARGETNAME).def \
-		--kill-at \
-		--output-lib $(TARGETNAME).a
-	$(CC) \
-		$(TARGETNAME).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--base-file,base.tmp 
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).def
-	- $(RM) base.tmp
-	$(CC) \
-		$(TARGETNAME).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o $(TARGETNAME).dll \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--image-base,$(IMAGE_BASE) \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
-
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-
-
-dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
-
-$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-
-
-include ../../rules.mak
-
+# EOF

@@ -1,39 +1,74 @@
 1. Build environment
 
-To build the system you need either mingw32 installed on Windows or a
-mingw32 cross compiler running on unix.
+To build the system you need either mingw32 installed on Windows or a mingw32
+cross compiler running on unix.
 
-2. Building
 
-To build from Windows run make. To build from unix, edit rules.mak and change 
-the PREFIX variable to the correct value for your cross-compiler, then run 
-'make'.
+2. Building ReactOS
+
+To build from Windows run 'make' (wihout the quotes) from the top directory.
+To build from unix, edit rules.mak and change the PREFIX variable to the
+correct value for your cross-compiler, then run 'make'.
+
 
 3. Installation
 
-Installation isn't yet automated, sorry. The system can only be installed on
-the first partition which must be formatted for DOS. Set up a directory
-structure like the following
+The system can only be installed on the first partition on the first harddisk.
+The partition must be formatted as FAT16 or FAT32. The system can only be
+started from DOS and not from a Windows DOS-prompt.
 
-make directories C:\reactos,C:\reactos\system32,C:\reactos\system32\drivers
+ReactOS can be installed from the source distribution or from the binary
+distribution. The two ways to install ReactOS are explained below.
 
-Copy apps/system/shell/shell.exe to C:\reactos\system32
-Copy subsys/smss/smss.exe to C:\reactos\system32
-Copy apps/system/winlogon/winlogon.exe to C:\reactos\system32
-Copy apps/system/services/services.exe to C:\reactos\system32
-Copy services/input/keyboard/keyboard.sys to C:\reactos\system32\drivers
-Copy services/dd/blue/blue.sys to C:\reactos\system32\drivers
-Copy lib/ntdll/ntdll.dll to C:\reactos\system32
-Copy lib/kernel32/kernel32.dll to C:\reactos\system32
-Copy lib/crtdll/crtdll.dll to C:\reactos\system32
 
-The system can only be started from DOS. Copy the following files,
-services/dd/ide/ide.sys, services/fs/vfat/vfatfsd.sys
-ntoskrnl/ntoskrnl.exe and loaders/dos/loadros.com, to a suitable
-directory, such as C:\. The system can then be booted with the
-command 'loadros.com ntoskrnl.exe ide.sys vfatfs.sys'.
+3.1 Installation from sources
 
+To install ReactOS after building it, type 'make install'. This will create
+the directory 'reactos' in the top directory. Copy this directory to the root
+of your first partition on your first harddisk. This is usually c:\ on a
+Windows machine.
+
+If you don't want to copy the files manually every time you run a 'make install',
+you can specify the directory where the files are to be copied to during
+installation.
+
+In rules.mak find the variable INSTALL_DIR and change the assigned value to the
+name of the directory where the files are to be copied to. If you are using
+Windows this could be:
+
+    INSTALL_DIR = c:\reactos
+
+If you are on linux this could be:
+
+    INSTALL_DIR = /mnt/windows/reactos
+
+Save the changes to rules.mak and run 'make install' to install the files to
+the new location.
+
+
+3.2 Installation from binany distribution
+
+To install ReactOS from the binary distribution, extract the archive contents
+to c:\reactos. Remember to extract the files with full paths.
+
+
+4. Booting ReactOS
+
+Startup in DOS mode. 'cd' to c:\reactos and type 'boot' and press <enter>.
+ReactOS will now boot and when it has booted, you are asked for a username and
+password. Just press <enter> twice as ReactOS does not currently have user
+validation. A simple shell is started where you can use simple commands like
+'cd' and 'dir'.
 
 You may also want to try running the enhanced shell, cmd.exe, found in
-the rosapps CVS module.  For more information see the doc directory
+the rosapps CVS module.
 
+
+5. Help
+
+If you run into problems or have suggestions for making ReactOS better, please
+surf to the address below and subscribe to one or more of the mailing lists.
+
+http://www.reactos.com/home/mailing.html
+
+ReactOS Development Team

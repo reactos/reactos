@@ -2,23 +2,18 @@
 # Global makefile
 #
 
-#
-# Select your host
-#
-#HOST = mingw32-linux
-#HOST = mingw32-windows
-
 PATH_TO_TOP = .
 
-include rules.mak
+include $(PATH_TO_TOP)/rules.mak
 
 #
 # Required to run the system
 #
-COMPONENTS = iface_native iface_additional ntoskrnl
+COMPONENTS = iface_native iface_additional hallib ntoskrnl
+HALS = halx86
 BUS = acpi isapnp
 DLLS = ntdll kernel32 advapi32 crtdll msvcrt fmifs gdi32 msafd \
-	ole32 oleaut32 secur32 shell32 user32 ws2_32 
+	ole32 oleaut32 secur32 shell32 user32 ws2_32 version
 SUBSYS = smss win32k csrss
 
 #
@@ -46,7 +41,7 @@ INPUT_DRIVERS = keyboard mouclass psaux
 FS_DRIVERS = vfat ms np
 
 #NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
-NET_DRIVERS = ndis tcpip tditest wshtcpip afd
+NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
 
 #NET_DEVICE_DRIVERS = ne2000
 NET_DEVICE_DRIVERS = ne2000
@@ -59,63 +54,43 @@ STORAGE_DRIVERS = class2 scsiport disk
 #
 # system applications (required for startup)
 #
-#SYS_APPS = shell winlogon services
-SYS_APPS = shell winlogon services
+#SYS_APPS = lsass services shell winlogon
+SYS_APPS = services shell winlogon
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
        objdir atomtest
 
 #NET_APPS = ping roshttpd telnet
-NET_APPS = ping
+NET_APPS = ping roshttpd
 
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)  \
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
-all: rdel$(EXE_POSTFIX) buildno $(COMPONENTS) $(BUS) $(DLLS)  \
-	$(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
+all: tools buildno dk $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
+     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
 
-.PHONY: all
-
-clean: rdel$(EXE_POSTFIX) buildno_clean $(COMPONENTS:%=%_clean) \
-       $(BUS:%=%_clean) $(DLLS:%=%_clean) \
+clean: buildno_clean dk_clean $(HALS:%=%_clean) \
+       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean)
+       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean) clean_after tools_clean
 
-.PHONY: clean
+clean_after:
+	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
-ifeq ($(HOST),mingw32-linux)
-rcopy$(EXE_POSTFIX): rcopy.c
-	$(HOST_CC) -g -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rcopy$(EXE_POSTFIX): rcopy.c
-	$(HOST_CC) -g -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
+install: tools buildno install_dirs install_before \
+	       $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
+         $(DLLS:%=%_install) $(LOADERS:%=%_install) \
+         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
+         $(SYS_APPS:%=%_install) $(APPS:%=%_install)
 
-ifeq ($(HOST),mingw32-linux)
-rmkdir$(EXE_POSTFIX): rmkdir.c
-	$(HOST_CC) -g -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rmkdir$(EXE_POSTFIX): rmkdir.c
-	$(HOST_CC) -g -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
-
-rdel$(EXE_POSTFIX): rdel.c
-	$(HOST_CC) -g rdel.c -liberty -o rdel$(EXE_POSTFIX)
-
-install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install \
-        $(COMPONENTS:%=%_install) $(BUS:%=%_install) \
-        $(DLLS:%=%_install) $(LOADERS:%=%_install) \
-        $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
-        $(SYS_APPS:%=%_install) $(APPS:%=%_install)
-
-dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) \
-      $(BUS:%=%_dist) $(DLLS:%=%_dist) \
+dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
+      $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
       $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist)
+
+.PHONY: all clean clean_before install dist
 
 #
 # Build number generator
@@ -182,6 +157,61 @@ $(NET_APPS:%=%_install): %_install:
 	make -C apps/net/$* install
 
 .PHONY: $(NET_APPS) $(NET_APPS:%=%_clean) $(NET_APPS:%=%_install) $(NET_APPS:%=%_dist)
+
+
+#
+# Tools
+#
+tools:
+	make -C tools
+
+tools_clean:
+	make -C tools clean
+
+tools_install:
+
+tools_dist:
+
+.PHONY: tools tools_clean tools_install tools_dist
+
+
+#
+# Developer Kits
+#
+dk:
+	$(RMKDIR) $(DK_PATH)
+	$(RMKDIR) $(DDK_PATH)
+	$(RMKDIR) $(DDK_PATH_LIB)
+	$(RMKDIR) $(DDK_PATH_INC)
+	$(RMKDIR) $(SDK_PATH)
+	$(RMKDIR) $(SDK_PATH_LIB)
+	$(RMKDIR) $(SDK_PATH_INC)
+	$(RMKDIR) $(XDK_PATH)
+	$(RMKDIR) $(XDK_PATH_LIB)
+	$(RMKDIR) $(XDK_PATH_INC)
+
+# WARNING! Be very sure that there are no important files
+#          in these directories before cleaning them!!!
+dk_clean:
+	$(RM) $(DDK_PATH_LIB)/*.a
+# $(RM) $(DDK_PATH_INC)/*.h
+	$(RMDIR) $(DDK_PATH_LIB)
+#	$(RMDIR) $(DDK_PATH_INC)
+	$(RM) $(SDK_PATH_LIB)/*.a
+# $(RM) $(SDK_PATH_INC)/*.h
+	$(RMDIR) $(SDK_PATH_LIB)
+#	$(RMDIR) $(SDK_PATH_INC)
+	$(RM) $(XDK_PATH_LIB)/*.a
+#	$(RM) $(XDK_PATH_INC)/*.h
+	$(RMDIR) $(XDK_PATH_LIB)
+#	$(RMDIR) $(XDK_PATH_INC)
+
+dk_install:
+
+dk_dist:
+
+.PHONY: dk dk_clean dk_install dk_dist
+
 
 #
 # Interfaces
@@ -369,6 +399,42 @@ ntoskrnl_dist:
 .PHONY: ntoskrnl ntoskrnl_clean ntoskrnl_install ntoskrnl_dist
 
 #
+# Hardware Abstraction Layer import library
+#
+
+hallib:
+	make -C hal/hal
+
+hallib_clean:
+	make -C hal/hal clean
+
+hallib_install:
+	make -C hal/hal install
+
+hallib_dist:
+	make -C hal/hal dist
+
+.PHONY: hallib hallib_clean hallib_install hallib_dist
+
+#
+# Hardware Abstraction Layers
+#
+
+$(HALS): %:
+	make -C hal/$*
+
+$(HALS:%=%_clean): %_clean:
+	make -C hal/$* clean
+
+$(HALS:%=%_install): %_install:
+	make -C hal/$* install
+
+$(HALS:%=%_dist): %_dist:
+	make -C hal/$* dist
+
+.PHONY: $(HALS) $(HALS:%=%_clean) $(HALS:%=%_install) $(HALS:%=%_dist)
+
+#
 # Required DLLs
 #
 
@@ -406,54 +472,75 @@ $(SUBSYS:%=%_dist): %_dist:
         $(SUBSYS:%=%_dist)
 
 #
-# Make an install floppy
+# Create an installation
 #
-make_install_dirs:
-	./rmkdir $(FLOPPY_DIR)/dlls
-	./rmkdir $(FLOPPY_DIR)/apps
-	./rmkdir $(FLOPPY_DIR)/drivers
-	./rmkdir $(FLOPPY_DIR)/subsys
 
+install_clean:
+	$(RM) $(INSTALL_DIR)/system32/drivers/*.*
+	$(RM) $(INSTALL_DIR)/system32/config/*.*
+	$(RM) $(INSTALL_DIR)/system32/*.*
+	$(RM) $(INSTALL_DIR)/symbols/*.*
+	$(RM) $(INSTALL_DIR)/media/fonts/*.*
+	$(RM) $(INSTALL_DIR)/media/*.*
+	$(RM) $(INSTALL_DIR)/bin/*.*
+	$(RM) $(INSTALL_DIR)/*.com
+	$(RM) $(INSTALL_DIR)/*.bat
+	$(RMDIR) $(INSTALL_DIR)/system32/drivers
+	$(RMDIR) $(INSTALL_DIR)/system32/config
+	$(RMDIR) $(INSTALL_DIR)/system32
+	$(RMDIR) $(INSTALL_DIR)/symbols
+	$(RMDIR) $(INSTALL_DIR)/media/fonts
+	$(RMDIR) $(INSTALL_DIR)/media
+	$(RMDIR) $(INSTALL_DIR)/bin
+	$(RMDIR) $(INSTALL_DIR)
 
-.PHONY: make_install_dirs
+install_dirs:
+	$(RMKDIR) $(INSTALL_DIR)
+	$(RMKDIR) $(INSTALL_DIR)/bin
+	$(RMKDIR) $(INSTALL_DIR)/media
+	$(RMKDIR) $(INSTALL_DIR)/media/fonts
+	$(RMKDIR) $(INSTALL_DIR)/symbols
+	$(RMKDIR) $(INSTALL_DIR)/system32
+	$(RMKDIR) $(INSTALL_DIR)/system32/config
+	$(RMKDIR) $(INSTALL_DIR)/system32/drivers
 
-autoexec_install: $(FLOPPY_DIR)/autoexec.bat
+install_before:
+	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
+	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/media/fonts/helb____.ttf
+	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/media/fonts/timr____.ttf
 
-$(FLOPPY_DIR)/autoexec.bat: bootflop.bat
-	$(CP) bootflop.bat $(FLOPPY_DIR)/autoexec.bat
+.PHONY: install_clean install_dirs install_before
+
 
 #
 # Make a distribution saveset
 #
 
-clean_dist_dir:
-ifeq ($(DOSCLI),yes)
-	- $(RM) $(DIST_DIR)\dlls\*.dll
-	- $(RM) $(DIST_DIR)\apps\*.exe
-	- $(RM) $(DIST_DIR)\drivers\*.sys
-	- $(RM) $(DIST_DIR)\subsys\*.exe
-	- $(RMDIR) $(DIST_DIR)\dlls
-	- $(RMDIR) $(DIST_DIR)\apps
-	- $(RMDIR) $(DIST_DIR)\drivers
-	- $(RMDIR) $(DIST_DIR)\subsys
-	- $(RMDIR) $(DIST_DIR)
-else
-	$(RM) -r $(DIST_DIR)
-endif
+dist_clean:
+	$(RM) $(DIST_DIR)/symbols/*.sym
+	$(RM) $(DIST_DIR)/drivers/*.sys
+	$(RM) $(DIST_DIR)/subsys/*.exe
+	$(RM) $(DIST_DIR)/dlls/*.dll
+	$(RM) $(DIST_DIR)/apps/*.exe
+	$(RM) $(DIST_DIR)/*.exe
+	$(RMDIR) $(DIST_DIR)/symbols
+	$(RMDIR) $(DIST_DIR)/subsys
+	$(RMDIR) $(DIST_DIR)/drivers
+	$(RMDIR) $(DIST_DIR)/dlls
+	$(RMDIR) $(DIST_DIR)/apps
+	$(RMDIR) $(DIST_DIR)
 
-make_dist_dirs: ./rmkdir
-	./rmkdir $(DIST_DIR)
-	./rmkdir $(DIST_DIR)/dlls
-	./rmkdir $(DIST_DIR)/apps
-	./rmkdir $(DIST_DIR)/drivers
-	./rmkdir $(DIST_DIR)/dlls
-	./rmkdir $(DIST_DIR)/subsys
+dist_dirs:
+	$(RMKDIR) $(DIST_DIR)
+	$(RMKDIR) $(DIST_DIR)/apps
+	$(RMKDIR) $(DIST_DIR)/dlls
+	$(RMKDIR) $(DIST_DIR)/drivers
+	$(RMKDIR) $(DIST_DIR)/subsys
+	$(RMKDIR) $(DIST_DIR)/symbols
 
-.PHONY: clean_dist_dir make_dist_dirs
+.PHONY: dist_clean dist_dirs
 
-#
-#
-#
+
 etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 

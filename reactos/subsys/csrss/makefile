@@ -1,61 +1,35 @@
-# $Id: makefile,v 1.14 2001/07/15 21:19:02 rex Exp $
-#
-# CSRSS: Client/server runtime subsystem
-#
-# ReactOS Operating System
-#
+# $Id: makefile,v 1.15 2001/08/21 20:13:16 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET=csrss
+TARGET_TYPE = program
 
-CFLAGS = -D__NTAPP__ -I.
+TARGET_APPTYPE = native
 
-OBJECTS_API = api/process.o api/wapi.o api/conio.o api/handle.o
+TARGET_NAME = csrss
 
-OBJECTS_SBAPI =
+TARGET_INSTALLDIR = system32
 
-OBJECTS_MISC = $(TARGET).o init.o print.o video.o $(TARGET).coff 
+TARGET_CFLAGS = -D__NTAPP__
 
-OBJECTS = $(OBJECTS_API) $(OBJECTS_SBAPI) $(OBJECTS_MISC)
+OBJECTS_API = \
+  api/process.o \
+  api/wapi.o \
+  api/conio.o \
+  api/handle.o
 
-CLEAN_FILES = $(OBJECTS) $(TARGET).exe
+OBJECTS_MISC = \
+  $(TARGET_NAME).o \
+  init.o \
+  print.o \
+  video.o
 
-LIBS = ../../lib/ntdll/ntdll.a
+TARGET_OBJECTS = \
+  $(OBJECTS_API) \
+  $(OBJECTS_MISC)
 
-all: $(TARGET).exe
+include $(PATH_TO_TOP)/rules.mak
 
-.phony: all
-
-clean:
-	- $(RM) $(CLEAN_FILES)
-
-.phony: clean
-
-$(TARGET).coff: $(TARGET).rc
-	$(RC) $(TARGET).rc $(TARGET).coff
-
-$(TARGET).exe: $(OBJECTS) $(LIBS)
-	$(LD) \
-		$(OBJECTS) \
-		$(LIBS) \
-		-o $(TARGET).exe \
-		--subsystem native
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-
-install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
-
-$(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
-
-
-dist: $(DIST_DIR)/subsys/$(TARGET).exe
-
-$(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
-
-
-WITH_DEBUGGING = yes
-include ../../rules.mak
+include $(TOOLS_PATH)/helper.mk
 
 # EOF

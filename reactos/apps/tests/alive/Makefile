@@ -1,47 +1,21 @@
-#
-#
-#
-PATH_TO_TOP=../..
+# $Id: Makefile,v 1.4 2001/08/21 20:12:59 chorns Exp $
 
-TARGET_NAME=alive
+PATH_TO_TOP = ../..
 
-OBJECTS=\
-	$(TARGET_NAME).o
+TARGET_NORC = yes
 
-LIBRARIES=\
-	$(PATH_TO_TOP)/lib/kernel32/kernel32.a\
-	$(PATH_TO_TOP)/lib/crtdll/crtdll.a\
-	$(PATH_TO_TOP)/lib/user32/user32.a
+TARGET_TYPE = program
 
-PROGS=\
-	$(TARGET_NAME).exe
+TARGET_APPTYPE = console
 
-BASE_CFLAGS = -I$(PATH_TO_TOP)/include
+TARGET_NAME = alive
 
-all: $(PROGS)
+TARGET_SDKLIBS = kernel32.a crtdll.a user32.a
 
-.phony: all
-
-clean:
-	- $(RM) $(TARGET_NAME).o $(TARGET_NAME).exe $(TARGET_NAME).sym
-
-.phony: clean
-
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
-
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%)
-
-$(PROGS:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%: %
-	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps/$*
-
-$(TARGET_NAME).exe: $(OBJECTS)
-	$(CC)\
-		$(OBJECTS)\
-		$(LIBRARIES)\
-		-o $(TARGET_NAME).exe
-	$(NM) --numeric-sort $(TARGET_NAME).exe > $(TARGET_NAME).sym
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

@@ -1,54 +1,21 @@
-# $Id: makefile,v 1.4 2001/07/15 21:18:53 rex Exp $
-#
-# Logon/login Application
-#
-# ReactOS Operating System
-#
-TARGET = winlogon
-PROGS = winlogon.exe
+# $Id: makefile,v 1.5 2001/08/21 20:13:05 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
-BASE_CFLAGS = -I../../include
+TARGET_TYPE = program
 
-OBJECTS = winlogon.o $(TARGET).coff
+TARGET_APPTYPE = console
 
-LIBS = $(PATH_TO_TOP)/lib/kernel32/kernel32.a \
-       $(PATH_TO_TOP)/lib/ntdll/ntdll.a \
-       $(PATH_TO_TOP)/lib/user32/user32.a
+TARGET_NAME = winlogon
 
-all: $(TARGET).exe
+TARGET_INSTALLDIR = system32
 
-.phony: all
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a
 
-clean:
-	- $(RM) *.o $(TARGET).exe $(TARGET).sym $(TARGET).coff
-
-.phony: clean
-
-$(TARGET).exe: $(OBJECTS)
-	$(CC) \
-		$(OBJECTS) \
-		$(LIBS) \
-		-o $(TARGET).exe 
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-clean: $(CLEAN_FILES:%=%_clean)
-
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
-
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
-
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=../../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../../$(DIST_DIR)/apps/%): ../../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../../$(DIST_DIR)/apps/$*
-
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

@@ -1,37 +1,13 @@
-# $Id: makefile,v 1.14 2001/07/24 16:27:41 ekohl Exp $
-#
-#
+# $Id: makefile,v 1.15 2001/08/21 20:13:11 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET = parallel
+TARGET_TYPE = driver
 
-OBJECTS = $(TARGET).o $(TARGET).coff
+TARGET_NAME = parallel
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
-
-CFLAGS = -D__NTDRIVER__
-
-all: $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: all
-
-clean:
-	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
-
-$(TARGET).coff: $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET).rc
+TARGET_OBJECTS = parallel.o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

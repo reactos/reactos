@@ -1,2 +1,8 @@
 dist
-errors
+reactos
+*.sys
+*.exe
+*.dll
+*.a
+*.o
+*.coff

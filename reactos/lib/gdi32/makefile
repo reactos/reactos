@@ -1,83 +1,32 @@
-# $Id: makefile,v 1.18 2001/07/15 21:18:54 rex Exp $
-#
-# Makefile for ReactOS gdi32.dll
-#
+# $Id: makefile,v 1.19 2001/08/21 20:13:06 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET=gdi32
+TARGET_TYPE = dynlink
 
-BASE_CFLAGS = -I../../include
+TARGET_NAME = gdi32
 
-DLLTARGET=$(TARGET).dll
+TARGET_BASE = 0x77ed0000
 
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
-all: $(DLLTARGET)
+TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CLEAN = main/*.o misc/*.o objects/*.o
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
 
 MAIN_OBJECTS = main/dllmain.o
+
 MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
-RESOURCE_OBJECTS = $(TARGET).coff
+
 OBJECTS_OBJECTS = objects/dc.o objects/line.o objects/pen.o objects/bitblt.o objects/text.o
 
-OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(RESOURCE_OBJECTS) $(OBJECTS_OBJECTS)
+OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
 
-$(TARGET).a: $(OBJECTS)
-	$(AR) csr $(TARGET).a $(OBJECTS)
-
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
-	$(LD) -r $(OBJECTS) -o $(TARGET).o
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def $(TARGET).def \
-		--kill-at \
-		--output-lib $(TARGET).a
-	$(CC) $(TARGET).o \
-		../kernel32/kernel32.a \
-		../ntdll/ntdll.a \
-		-specs=$(TARGET)_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--entry,_DllMain@12 \
-		-Wl,--base-file,base.tmp 
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).edf
-	- $(RM) base.tmp
-	$(CC) $(TARGET).o \
-		../kernel32/kernel32.a \
-		../ntdll/ntdll.a \
-		-specs=$(TARGET)_specs \
-		-mdll \
-		-o $(TARGET).dll \
-		-Wl,--entry,_DllMain@12 \
-		-Wl,--image-base,0x77ed0000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-CLEAN_FILES = *.a *.o *.coff *.sym *.tmp *.dll main/*.o misc/*.o objects/*.o
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
-
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-
-include ../../rules.mak
+$(TARGET_NAME).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
 # EOF

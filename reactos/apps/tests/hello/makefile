@@ -1,31 +1,19 @@
-#
-#
-#
+# $Id: makefile,v 1.15 2001/08/21 20:13:03 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = hello.o
-PROGS = hello.exe
-LIBS = 
-CLEAN_FILES = hello.o hello.exe
+TARGET_NORC = yes
 
-all: hello.exe
+TARGET_TYPE = program
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_APPTYPE = console
 
-.phony: clean 
+TARGET_NAME = hello
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-hello.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -o hello.exe
-
-include ../../rules.mak
+# EOF

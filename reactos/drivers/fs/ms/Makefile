@@ -1,38 +1,18 @@
-# $Id: Makefile,v 1.6 2001/07/29 16:39:12 ekohl Exp $
-#
-# Mailslot File System
-#
+# $Id: Makefile,v 1.7 2001/08/21 20:13:12 chorns Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET = msfs
+TARGET_TYPE = driver
 
-OBJECTS = create.o finfo.o fsctrl.o msfs.o rw.o msfs.coff
+TARGET_NAME = msfs
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
-
-CFLAGS = -D__NTDRIVER__
-
-all: $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: all
-
-clean:
-	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
-
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
-
-msfs.coff: $(PATH_TO_TOP)/include/reactos/buildno.h msfs.rc
+TARGET_OBJECTS = \
+  create.o \
+  finfo.o \
+  fsctrl.o \
+  msfs.o \
+  rw.o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk

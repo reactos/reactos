@@ -1,86 +1,30 @@
-# $Id: makefile,v 1.13 2001/07/15 21:18:54 rex Exp $
-#
-# Makefile for fmifs.dll
-#
+# $Id: makefile,v 1.14 2001/08/21 20:13:06 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET=fmifs
-DLLTARGET=$(TARGET).dll
+TARGET_TYPE = dynlink
 
+TARGET_NAME = fmifs
 
-BASE_CFLAGS = -I../../include
+TARGET_BASE = 0x76df0000
 
-all: $(DLLTARGET)
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
-IFS_OBJECTS = chkdsk.o compress.o diskcopy.o extend.o \
-	format.o init.o label.o media.o 
+TARGET_OBJECTS = \
+  chkdsk.o \
+  compress.o \
+  diskcopy.o \
+  dllmain.o \
+  extend.o \
+	format.o \
+	init.o \
+	label.o \
+	media.o 
 	
-MISC_OBJECTS = dllmain.o $(TARGET).coff
+include $(PATH_TO_TOP)/rules.mak
 
-OBJECTS = $(IFS_OBJECTS) $(MISC_OBJECTS)
+include $(TOOLS_PATH)/helper.mk
 
-CLEAN_FILES = *.o *.a *.tmp *.dll *.sym *.coff
-
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-
-$(TARGET).a: $(OBJECTS)
-	$(AR) csr $(TARGET).a $(OBJECTS)
-
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
-	$(LD) -r $(OBJECTS) -o $(TARGET).o
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def $(TARGET).def \
-		--kill-at \
-		--output-lib $(TARGET).a
-	$(CC) \
-		$(TARGET).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--base-file,base.tmp 
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).edf
-	- $(RM) base.tmp
-	$(CC) \
-		$(TARGET).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o $(TARGET).dll \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--image-base,0x76df0000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
-
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-
-include ../../rules.mak
+TARGET_FILES = misc/*.o
 
 # EOF

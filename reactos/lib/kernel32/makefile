@@ -1,18 +1,31 @@
-# $Id: makefile,v 1.49 2001/08/02 20:25:16 phreak Exp $
-#
-# ReactOS Operating System
-#
+# $Id: makefile,v 1.50 2001/08/21 20:13:06 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET = kernel32
+TARGET_TYPE = dynlink
 
-KERNEL32_BASE = 0x77f00000
+TARGET_NAME = kernel32
 
-CFLAGS := -DKERNEL32_BASE=$(KERNEL32_BASE) -g
+TARGET_BASE = 0x77f00000
 
-DLLTARGET=$(TARGET).dll
+TARGET_CFLAGS = -DKERNEL32_BASE=$(TARGET_DLLBASE)
 
-all: $(DLLTARGET)
+TARGET_LFLAGS = -nostartfiles
+
+TARGET_SDKLIBS = ntdll.a
+
+TARGET_GCCLIBS = gcc
+
+TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CLEAN = except/*.o file/*.o mem/*.o misc/*.o nls/*.o \
+             process/*.o string/*.o synch/*.o thread/*.o
+
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
 
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
@@ -67,80 +80,12 @@ STRING_OBJECTS = string/lstring.o
 
 EXCEPT_OBJECTS = except/except.o
 
-RESOURCE_OBJECT = $(TARGET).coff
-
-
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(RESOURCE_OBJECT)
+          $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
 
-CLEAN_FILES = except/*.o file/*.o mem/*.o misc/*.o nls/*.o  \
-              process/*.o string/*.o synch/*.o thread/*.o  \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
-
-nls/ole2nls.o: nls/ole2nls.c
-	$(CC) $(CFLAGS) -I. nls/ole2nls.c
-
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-
-$(TARGET).a: $(OBJECTS)
-	$(AR) csr $(TARGET).a $(OBJECTS)
-
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
-	$(LD) \
-		-r $(OBJECTS) \
-		-o $(TARGET).o
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def $(TARGET).def \
-		--kill-at \
-		--output-lib $(TARGET).a
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--base-file,base.tmp \
-		$(TARGET).o \
-		../ntdll/ntdll.a -lgcc
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).edf
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o $(TARGET).dll \
-		$(TARGET).o \
-		../ntdll/ntdll.a -lgcc \
-		-Wl,--image-base,$(KERNEL32_BASE) \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
-
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-
-WITH_DEBUGGING=yes
-#WARNINGS_ARE_ERRORS = yes
-include ../../rules.mak
+$(TARGET_NAME).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
 %/TAGS:
 	etags -o $(@D)/TAGS $(@D)/\*.c

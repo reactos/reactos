@@ -1,43 +1,19 @@
-#
-#
-#
+# $Id: Makefile,v 1.7 2001/08/21 20:13:02 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS= file.o
-PROGS= file.exe
+TARGET_NORC = yes
 
-BASE_CFLAGS = -I../../include
+TARGET_TYPE = program
 
-all: $(PROGS)
+TARGET_APPTYPE = console
 
-.phony: all
+TARGET_NAME = file
 
-clean:
-	- $(RM) file.o file.exe file.sym
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-.phony: clean
+include $(PATH_TO_TOP)/rules.mak
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-file.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) $(BASE_CFLAGS) -o file.exe
-	$(NM) --numeric-sort file.exe > file.sym
-
-include ../../rules.mak
-
-
-
-
-
-
-
-
-
+# EOF

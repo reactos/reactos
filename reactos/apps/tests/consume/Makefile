@@ -1,31 +1,19 @@
-#
-#
-#
+# $Id: Makefile,v 1.6 2001/08/21 20:13:00 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = consume.o
-PROGS = consume.exe
-LIBS = 
-CLEAN_FILES = consume.o consume.exe
+TARGET_NORC = yes
 
-all: consume.exe
+TARGET_TYPE = program
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_APPTYPE = console
 
-.phony: clean 
+TARGET_NAME = consume
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-consume.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -o consume.exe
-
-include ../../rules.mak
+# EOF

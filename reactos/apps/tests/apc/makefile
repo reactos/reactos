@@ -1,38 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.8 2001/08/21 20:12:59 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-CFLAGS = -g
+TARGET_NORC = yes
 
-OBJECTS= apc.o
-PROGS= apc.exe
+TARGET_TYPE = program
 
-BASE_CFLAGS = -I../../include
-LIBS = ../../lib/crtdll/crtdll.a ../../lib/kernel32/kernel32.a \
-       ../../lib/ntdll/ntdll.a
+TARGET_APPTYPE = console
 
-all: $(PROGS)
+TARGET_NAME = apc
 
-.phony: all
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
-clean:
-	- $(RM) apc.o apc.exe apc.sym
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-.phony: clean
+include $(PATH_TO_TOP)/rules.mak
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-apc.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o apc.exe
-	$(NM) --numeric-sort apc.exe > apc.sym
-
-include ../../rules.mak
+# EOF

@@ -84,4 +84,12 @@ VOID
 LdrInitDebug(PLOADER_MODULE Module, PWCH Name);
 VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject);
 
+PVOID LdrSafePEProcessModule(
+ 	PVOID ModuleLoadBase,
+  PVOID DriverBase,
+ 	PVOID ImportModuleBase,
+ 	PULONG DriverSize);
+
+extern ULONG_PTR LdrHalBase;
+
 #endif /* __INCLUDE_INTERNAL_LDR_H */

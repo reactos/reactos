@@ -1,51 +1,21 @@
-# $Id: makefile,v 1.8 2001/07/15 21:19:02 rex Exp $
-#
-# Session Manager
-#
-# ReactOS Operating System
-#
+# $Id: makefile,v 1.9 2001/08/21 20:13:17 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET=smss
+TARGET_TYPE = program
 
-CFLAGS = -D__NTAPP__
+TARGET_APPTYPE = native
 
-OBJECTS = $(TARGET).o init.o smapi.o $(TARGET).coff
+TARGET_NAME = smss
 
-LIBS = ../../lib/ntdll/ntdll.a
+TARGET_INSTALLDIR = system32
 
-CLEAN_FILES = *.o $(TARGET).exe $(TARGET).sym $(TARGET).coff
+TARGET_CFLAGS = -D__NTAPP__
 
-all: $(TARGET).exe
+TARGET_OBJECTS = $(TARGET_NAME).o init.o smapi.o
 
-.phony: all
+include $(PATH_TO_TOP)/rules.mak
 
+include $(TOOLS_PATH)/helper.mk
 
-$(TARGET).coff: $(TARGET).rc
-
-$(TARGET).exe: $(OBJECTS) $(LIBS)
-	$(LD) \
-		$(OBJECTS) \
-		$(LIBS) \
-		-o $(TARGET).exe \
-		--subsystem native
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
-
-$(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
-
-
-dist: $(DIST_DIR)/subsys/$(TARGET).exe
-
-$(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
-
-include ../../rules.mak
+# EOF

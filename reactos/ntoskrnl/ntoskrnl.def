@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.112 2001/07/30 03:05:29 rex Exp $
+; $Id: ntoskrnl.def,v 1.113 2001/08/21 20:13:08 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -15,6 +15,7 @@ DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols@12
 DbgPrint
 DbgPrompt@12
+DpcQueueSize DATA
 @ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
@@ -263,6 +264,7 @@ IoQueueThreadIrp@4
 IoRaiseHardError@12
 IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
+IoReadPartitionTable@16
 IoReadTransferCount DATA
 IoRegisterDriverReinitialization@12
 IoRegisterFileSystem@4
@@ -276,6 +278,7 @@ IoReportResourceUsage@36
 IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice@8
 IoSetInformation@16
+IoSetPartitionInformation@16
 IoSetShareAccess@16
 IoSetThreadHardErrorMode@4
 IoSetTopLevelIrp@4
@@ -294,12 +297,14 @@ IoUpdateShareAccess@8
 IoVerifyVolume@8
 IoWriteErrorLogEntry@4
 IoWriteOperationCount DATA
+IoWritePartitionTable@20
 IoWriteTransferCount DATA
 @IofCallDriver@8
 @IofCompleteRequest@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn@0
+KdSystemDebugControl@4
 Ke386CallBios@8
 ;Ke386IoSetAccessProcess
 ;Ke386QueryIoAccessMap
@@ -423,6 +428,7 @@ KiDispatchInterrupt@0
 ;@KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
+KiRawTicks DATA
 LdrAccessResource@16
 ;LdrEnumResources@20
 ;LdrFindResourceDirectory_U@16
@@ -435,6 +441,7 @@ LdrFindResource_U@16
 ;LsaLookupAuthenticationPackage
 ;LsaRegisterLogonProcess
 MmAdjustWorkingSetSize@12
+MmAllocateContiguousAlignedMemory@16
 MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory@4
 MmBuildMdlForNonPagedPool@4
@@ -578,6 +585,7 @@ PsAssignImpersonationToken@8
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
 ;PsCreateWin32Process@4
+PsDispatchThread@4
 ;PsEstablishWin32Callouts@24
 PsGetCurrentProcessId@0
 PsGetCurrentThreadId@0
@@ -998,120 +1006,3 @@ wcsspn
 wcsstr
 wcstombs
 wctomb
-;
-;
-; exports from hal.dll
-;
-;
-@ExAcquireFastMutex@4
-@ExReleaseFastMutex@4
-@ExTryToAcquireFastMutex@4
-HalAcquireDisplayOwnership@4
-HalAdjustResourceList@4
-HalAllProcessorsStarted@0
-HalAllocateAdapterChannel@20
-HalAllocateCommonBuffer@16
-;HalAllocateCrashDumpRegisters@8
-HalAssignSlotResources@32
-HalBeginSystemInterrupt@12
-HalCalibratePerformanceCounter@4
-;@HalClearSoftwareInterrupt@4
-HalDisableSystemInterrupt@8
-HalDisplayString@4
-HalEnableSystemInterrupt@12
-HalEndSystemInterrupt@8
-HalFlushCommonBuffer@32
-HalFreeCommonBuffer@24
-HalGetAdapter@8
-HalGetBusData@20
-HalGetBusDataByOffset@24
-HalGetEnvironmentVariable@12
-HalGetInterruptVector@24
-HalHandleNMI@4
-HalInitSystem@8
-HalInitializeProcessor@4
-HalMakeBeep@4
-HalProcessorIdle@0
-HalQueryDisplayParameters@16
-HalQueryRealTimeClock@4
-HalReadDmaCounter@4
-HalReportResourceUsage@0
-HalRequestIpi@4
-;@HalRequestSoftwareInterrupt@4
-HalReturnToFirmware@4
-HalSetBusData@20
-HalSetBusDataByOffset@24
-HalSetDisplayParameters@8
-HalSetEnvironmentVariable@8
-;HalSetProfileInterval@4
-HalSetRealTimeClock@4
-;HalSetTimeIncrement@4
-HalStartNextProcessor@8
-;HalStartProfileInterrupt@4
-;HalStopProfileInterrupt@4
-@HalSystemVectorDispatchEntry@12
-HalTranslateBusAddress@24
-IoAssignDriveLetters@16
-IoFlushAdapterBuffers@24
-IoFreeAdapterChannel@4
-IoFreeMapRegisters@12
-IoMapTransfer@24
-IoReadPartitionTable@16
-IoSetPartitionInformation@16
-IoWritePartitionTable@20
-IoInitializeRemoveLockEx@20
-IoAcquireRemoveLockEx@20
-IoReleaseRemoveLockEx@12
-IoReleaseRemoveLockAndWaitEx@12
-IoAdjustPagingPathCount@8
-IoGetDeviceInterfaceAlias@12
-IoGetDeviceInterfaces@16
-IoGetDeviceProperty@20
-IoInvalidateDeviceRelations@8
-IoInvalidateDeviceState@4
-IoOpenDeviceInterfaceRegistryKey@12
-IoOpenDeviceRegistryKey@16
-IoRegisterDeviceInterface@16
-IoRegisterPlugPlayNotification@28
-IoReportDetectedDevice@32
-IoReportResourceForDetection@28
-IoReportTargetDeviceChange@8
-IoReportTargetDeviceChangeAsynchronous@16
-IoRequestDeviceEject@4
-IoSetDeviceInterfaceState@8
-IoUnregisterPlugPlayNotification@4
-KdComPortInUse DATA
-KdPortGetByte@4
-KdPortInitialize@12
-KdPortPollByte@4
-KdPortPutByte@4
-KdPortRestore@0
-KdPortSave@0
-KeAcquireSpinLock@8
-@KeAcquireSpinLockRaiseToSynch@4
-KeFlushWriteBuffer@0
-KeGetCurrentIrql@0
-KeLowerIrql@4
-KeQueryPerformanceCounter@4
-KeRaiseIrql@8
-KeRaiseIrqlToDpcLevel@0
-KeRaiseIrqlToSynchLevel@0
-KeReleaseSpinLock@8
-KeStallExecutionProcessor@4
-@KfAcquireSpinLock@4
-@KfLowerIrql@4
-@KfRaiseIrql@4
-@KfReleaseSpinLock@8
-READ_PORT_BUFFER_UCHAR@12
-READ_PORT_BUFFER_ULONG@12
-READ_PORT_BUFFER_USHORT@12
-READ_PORT_UCHAR@4
-READ_PORT_ULONG@4
-READ_PORT_USHORT@4
-WRITE_PORT_BUFFER_UCHAR@12
-WRITE_PORT_BUFFER_ULONG@12
-WRITE_PORT_BUFFER_USHORT@12
-WRITE_PORT_UCHAR@8
-WRITE_PORT_ULONG@8
-WRITE_PORT_USHORT@8
-KdSystemDebugControl@4

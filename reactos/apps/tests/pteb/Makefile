@@ -1,31 +1,21 @@
-#
-#
-#
+# $Id: Makefile,v 1.6 2001/08/21 20:13:04 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = pteb.o
-PROGS = pteb.exe
-LIBS = 
-CLEAN_FILES = pteb.o pteb.exe
+TARGET_NORC = yes
 
-all: pteb.exe
+TARGET_TYPE = program
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_APPTYPE = console
 
-.phony: clean 
+TARGET_NAME = pteb
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_SDKLIBS = ntdll.a kernel32.a crtdll.a
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
+include $(TOOLS_PATH)/helper.mk
 
-pteb.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -o pteb.exe
-
-include ../../rules.mak
+# EOF

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.77 2001/04/17 23:39:26 dwelch Exp $
+/* $Id: thread.c,v 1.78 2001/08/21 20:13:10 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -210,7 +210,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    KeBugCheck(0);
 }
 
-VOID 
+VOID STDCALL
 PsDispatchThread(ULONG NewThreadStatus)
 {
    KIRQL oldIrql;

@@ -1,36 +1,22 @@
 #
-#
-#
+# $Id: makefile,v 1.6 2001/08/21 20:13:04 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS= regtest.o
-PROGS= regtest.exe
-LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a \
-      ../../lib/advapi32/advapi32.a
+TARGET_NORC = yes
 
-BASE_CFLAGS = -I../../include
+TARGET_TYPE = program
 
-all: $(PROGS)
+TARGET_APPTYPE = console
 
-.phony: all
+TARGET_NAME = regtest
 
-clean:
-	- $(RM) *.o *.exe *.sym
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
-.phony: clean
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(TOOLS_PATH)/helper.mk
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-regtest.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o regtest.exe
-	$(NM) --numeric-sort regtest.exe > regtest.sym
-
-include ../../rules.mak
+# EOF

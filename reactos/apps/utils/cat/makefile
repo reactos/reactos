@@ -1,34 +1,19 @@
-#
-#
-#
+# $Id: makefile,v 1.9 2001/08/21 20:13:00 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS= cat.o
-PROGS= cat.exe
+TARGET_NORC = yes
 
-all: cat.exe
+TARGET_TYPE = program
 
-.phony: all
+TARGET_APPTYPE = console
 
-clean:
-	- $(RM) cat.o cat.exe cat.sym
+TARGET_NAME = cat
 
-.phony: clean
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(TOOLS_PATH)/helper.mk
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
-
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-.PHONY: floppy dist
-
-cat.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) -o cat.exe
-	$(NM) --numeric-sort cat.exe > cat.sym
-
-include ../../rules.mak
+# EOF

@@ -1,16 +1,14 @@
-# $Id: makefile,v 1.18 2001/07/15 21:18:54 rex Exp $
-#
-# Makefile for ReactOS advapi32.dll
-#
+# $Id: makefile,v 1.19 2001/08/21 20:13:05 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-BASE_CFLAGS = -I../../include
+TARGET_TYPE = dynlink
 
-TARGETNAME=advapi32
+TARGET_NAME = advapi32
 
-DLLTARGET=$(TARGETNAME).dll
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
-
+TARGET_BASE = 0x77dc0000
 
 MISC_OBJECTS=\
 	misc/dllmain.o	\
@@ -35,84 +33,20 @@ TOKEN_OBJECTS=\
 	token/privilege.o	\
 	token/token.o
 
-RESOURCE_OBJECT=\
-	$(TARGETNAME).coff
+TARGET_OBJECTS = \
+	$(MISC_OBJECTS)	\
+	$(REGISTRY_OBJECTS) \
+	$(SECURITY_OBJECTS) \
+	$(SERVICE_OBJECTS) \
+	$(TOKEN_OBJECTS)
 
-OBJECTS=\
-	$(MISC_OBJECTS)		\
-	$(REGISTRY_OBJECTS)	\
-	$(SECURITY_OBJECTS)	\
-	$(SERVICE_OBJECTS)	\
-	$(TOKEN_OBJECTS)	\
-	$(RESOURCE_OBJECT)
+TARGET_CLEAN = \
+  misc/*.o \
+  reg/*.o \
+  sec/*.o \
+  service/*.o \
+  token/*.o
 
-CLEAN_FILES = misc/*.o reg/*.o sec/*.o service/*.o token/*.o \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
+include $(PATH_TO_TOP)/rules.mak
 
-all: $(DLLTARGET)
-
-$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
-
-$(TARGETNAME).a: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
-
-$(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--def $(TARGETNAME).def \
-		--kill-at \
-		--output-lib $(TARGETNAME).a
-	$(CC) \
-		$(TARGETNAME).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--base-file,base.tmp 
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).edf
-	- $(RM) base.tmp
-	$(CC) \
-		$(TARGETNAME).o \
-		../ntdll/ntdll.a \
-		../kernel32/kernel32.a \
-		-nostartfiles \
-		-nostdlib \
-		-mdll \
-		-o $(TARGETNAME).dll \
-		-Wl,--entry=_DllMain@12\
-		-Wl,--image-base,0x77dc0000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
-
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.PHONY: clean 
-
-install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-
-
-dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
-
-$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-
-
-include ../../rules.mak
+include $(TOOLS_PATH)/helper.mk

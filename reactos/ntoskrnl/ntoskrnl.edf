@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.98 2001/07/30 03:05:29 rex Exp $
+; $Id: ntoskrnl.edf,v 1.99 2001/08/21 20:13:08 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -15,6 +15,7 @@ DbgBreakPointWithStatus=DbgBreakPointWithStatus@4
 ;DbgLoadImageSymbols=DbgLoadImageSymbols@12
 DbgPrint
 DbgPrompt=DbgPrompt@12
+DpcQueueSize DATA
 ExAcquireFastMutexUnsafe=@ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive=ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite=ExAcquireResourceExclusiveLite@8
@@ -263,6 +264,7 @@ IoQueueThreadIrp=IoQueueThreadIrp@4
 IoRaiseHardError=IoRaiseHardError@12
 IoRaiseInformationalHardError=IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
+IoReadPartitionTable=IoReadPartitionTable@16
 IoReadTransferCount DATA
 IoRegisterDriverReinitialization=IoRegisterDriverReinitialization@12
 IoRegisterFileSystem=IoRegisterFileSystem@4
@@ -276,6 +278,7 @@ IoReportResourceUsage=IoReportResourceUsage@36
 IoSetDeviceToVerify=IoSetDeviceToVerify@8
 IoSetHardErrorOrVerifyDevice=IoSetHardErrorOrVerifyDevice@8
 IoSetInformation=IoSetInformation@16
+IoSetPartitionInformation=IoSetPartitionInformation@16
 IoSetShareAccess=IoSetShareAccess@16
 IoSetThreadHardErrorMode=IoSetThreadHardErrorMode@4
 IoSetTopLevelIrp=IoSetTopLevelIrp@4
@@ -294,12 +297,14 @@ IoUpdateShareAccess=IoUpdateShareAccess@8
 IoVerifyVolume=IoVerifyVolume@8
 IoWriteErrorLogEntry=IoWriteErrorLogEntry@4
 IoWriteOperationCount DATA
+IoWritePartitionTable=IoWritePartitionTable@20
 IoWriteTransferCount DATA
 IofCallDriver=@IofCallDriver@8
 IofCompleteRequest=@IofCompleteRequest@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
+KdSystemDebugControl=KdSystemDebugControl@4
 Ke386CallBios=Ke386CallBios@8
 ;Ke386IoSetAccessProcess
 ;Ke386QueryIoAccessMap
@@ -423,6 +428,7 @@ KiDispatchInterrupt=KiDispatchInterrupt@0
 ;KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
+KiRawTicks DATA
 LdrAccessResource=LdrAccessResource@16
 ;LdrEnumResources@20
 ;LdrFindResourceDirectory_U@16
@@ -435,6 +441,7 @@ LdrFindResource_U=LdrFindResource_U@16
 ;LsaLookupAuthenticationPackage
 ;LsaRegisterLogonProcess
 MmAdjustWorkingSetSize=MmAdjustWorkingSetSize@12
+MmAllocateContiguousAlignedMemory=MmAllocateContiguousAlignedMemory@16
 MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
 MmBuildMdlForNonPagedPool=MmBuildMdlForNonPagedPool@4
@@ -578,6 +585,7 @@ PsAssignImpersonationToken=PsAssignImpersonationToken@8
 PsCreateSystemProcess=PsCreateSystemProcess@12
 PsCreateSystemThread=PsCreateSystemThread@28
 ;PsCreateWin32Process
+PsDispatchThread=PsDispatchThread@4
 ;PsEstablishWin32Callouts
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
@@ -996,120 +1004,3 @@ wcsspn
 wcsstr
 wcstombs
 wctomb
-;
-;
-; exports from hal.dll
-;
-;
-ExAcquireFastMutex=@ExAcquireFastMutex@4
-ExReleaseFastMutex=@ExReleaseFastMutex@4
-ExTryToAcquireFastMutex=@ExTryToAcquireFastMutex@4
-HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
-HalAdjustResourceList=HalAdjustResourceList@4
-HalAllProcessorsStarted=HalAllProcessorsStarted@0
-HalAllocateAdapterChannel=HalAllocateAdapterChannel@20
-HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
-;HalAllocateCrashDumpRegisters=HalAllocateCrashDumpRegisters@8
-HalAssignSlotResource=HalAssignSlotResources@32
-HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
-HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
-;HalClearSoftwareInterrupt=@HalClearSoftwareInterrupt@4
-HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
-HalDisplayString=HalDisplayString@4
-HalEnableSystemInterrupt=HalEnableSystemInterrupt@12
-HalEndSystemInterrupt=HalEndSystemInterrupt@8
-HalFlushCommonBuffer=HalFlushCommonBuffer@32
-HalFreeCommonBuffer=HalFreeCommonBuffer@24
-HalGetAdapter=HalGetAdapter@8
-HalGetBusData=HalGetBusData@20
-HalGetBusDataByOffset=HalGetBusDataByOffset@24
-HalGetEnvironmentVariable=HalGetEnvironmentVariable@12
-HalGetInterruptVector=HalGetInterruptVector@24
-HalHandleNMI=HalHandleNMI@4
-HalInitSystem=HalInitSystem@8
-HalInitializeProcessor=HalInitializeProcessor@4
-HalMakeBeep=HalMakeBeep@4
-HalProcessorIdle=HalProcessorIdle@0
-HalQueryDisplayParameters=HalQueryDisplayParameters@16
-HalQueryRealTimeClock=HalQueryRealTimeClock@4
-HalReadDmaCounter=HalReadDmaCounter@4
-HalReportResourceUsage=HalReportResourceUsage@0
-HalRequestIpi=HalRequestIpi@4
-;HalRequestSoftwareInterrupt=@HalRequestSoftwareInterrupt@4
-HalReturnToFirmware=HalReturnToFirmware@4
-HalSetBusData=HalSetBusData@20
-HalSetBusDataByOffset=HalSetBusDataByOffset@24
-HalSetDisplayParameters=HalSetDisplayParameters@8
-HalSetEnvironmentVariable=HalSetEnvironmentVariable@8
-;HalSetProfileInterval=HalSetProfileInterval@4
-HalSetRealTimeClock=HalSetRealTimeClock@4
-;HalSetTimeIncrement=HalSetTimeIncrement@4
-HalStartNextProcessor=HalStartNextProcessor@8
-;HalStartProfileInterrupt=HalStartProfileInterrupt@4
-;HalStopProfileInterrupt=HalStopProfileInterrupt@4
-HalSystemVectorDispatchEntry=@HalSystemVectorDispatchEntry@12
-HalTranslateBusAddress=HalTranslateBusAddress@24
-IoAssignDriveLetters=IoAssignDriveLetters@16
-IoFlushAdapterBuffers=IoFlushAdapterBuffers@24
-IoFreeAdapterChannel=IoFreeAdapterChannel@4
-IoFreeMapRegisters=IoFreeMapRegisters@12
-IoMapTransfer=IoMapTransfer@24
-IoReadPartitionTable=IoReadPartitionTable@16
-IoSetPartitionInformation=IoSetPartitionInformation@16
-IoWritePartitionTable=IoWritePartitionTable@20
-IoInitializeRemoveLockEx=IoInitializeRemoveLockEx@20
-IoAcquireRemoveLockEx=IoAcquireRemoveLockEx@20
-IoReleaseRemoveLockEx=IoReleaseRemoveLockEx@12
-IoReleaseRemoveLockAndWaitEx=IoReleaseRemoveLockAndWaitEx@12
-IoAdjustPagingPathCount=IoAdjustPagingPathCount@8
-IoGetDeviceInterfaceAlias=IoGetDeviceInterfaceAlias@12
-IoGetDeviceInterfaces=IoGetDeviceInterfaces@16
-IoGetDeviceProperty=IoGetDeviceProperty@20
-IoInvalidateDeviceRelations=IoInvalidateDeviceRelations@8
-IoInvalidateDeviceState=IoInvalidateDeviceState@4
-IoOpenDeviceInterfaceRegistryKey=IoOpenDeviceInterfaceRegistryKey@12
-IoOpenDeviceRegistryKey=IoOpenDeviceRegistryKey@16
-IoRegisterDeviceInterface=IoRegisterDeviceInterface@16
-IoRegisterPlugPlayNotification=IoRegisterPlugPlayNotification@28
-IoReportDetectedDevice=IoReportDetectedDevice@32
-IoReportResourceForDetection=IoReportResourceForDetection@28
-IoReportTargetDeviceChange=IoReportTargetDeviceChange@8
-IoReportTargetDeviceChangeAsynchronous=IoReportTargetDeviceChangeAsynchronous@16
-IoRequestDeviceEject=IoRequestDeviceEject@4
-IoSetDeviceInterfaceState=IoSetDeviceInterfaceState@8
-IoUnregisterPlugPlayNotification=IoUnregisterPlugPlayNotification@4
-KdComPortInUse DATA
-KdPortGetByte=KdPortGetByte@4
-KdPortInitialize=KdPortInitialize@12
-KdPortPollByte=KdPortPollByte@4
-KdPortPutByte=KdPortPutByte@4
-KdPortRestore=KdPortRestore@0
-KdPortSave=KdPortSave@0
-KeAcquireSpinLock=KeAcquireSpinLock@8
-KeAcquireSpinLockRaiseToSynch=@KeAcquireSpinLockRaiseToSynch@4
-KeFlushWriteBuffer=KeFlushWriteBuffer@0
-KeGetCurrentIrql=KeGetCurrentIrql@0
-KeLowerIrql=KeLowerIrql@4
-KeQueryPerformanceCounter=KeQueryPerformanceCounter@4
-KeRaiseIrql=KeRaiseIrql@8
-KeRaiseIrqlToDpcLevel=KeRaiseIrqlToDpcLevel@0
-KeRaiseIrqlToSynchLevel=KeRaiseIrqlToSynchLevel@0
-KeReleaseSpinLock=KeReleaseSpinLock@8
-KeStallExecutionProcessor=KeStallExecutionProcessor@4
-KfAcquireSpinLock=@KfAcquireSpinLock@4
-KfLowerIrql=@KfLowerIrql@4
-KfRaiseIrql=@KfRaiseIrql@4
-KfReleaseSpinLock=@KfReleaseSpinLock@8
-READ_PORT_BUFFER_UCHAR=READ_PORT_BUFFER_UCHAR@12
-READ_PORT_BUFFER_ULONG=READ_PORT_BUFFER_ULONG@12
-READ_PORT_BUFFER_USHORT=READ_PORT_BUFFER_USHORT@12
-READ_PORT_UCHAR=READ_PORT_UCHAR@4
-READ_PORT_ULONG=READ_PORT_ULONG@4
-READ_PORT_USHORT=READ_PORT_USHORT@4
-WRITE_PORT_BUFFER_UCHAR=WRITE_PORT_BUFFER_UCHAR@12
-WRITE_PORT_BUFFER_ULONG=WRITE_PORT_BUFFER_ULONG@12
-WRITE_PORT_BUFFER_USHORT=WRITE_PORT_BUFFER_USHORT@12
-WRITE_PORT_UCHAR=WRITE_PORT_UCHAR@8
-WRITE_PORT_ULONG=WRITE_PORT_ULONG@8
-WRITE_PORT_USHORT=WRITE_PORT_USHORT@8
-KdSystemDebugControl = KdSystemDebugControl@4

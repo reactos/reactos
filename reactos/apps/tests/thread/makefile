@@ -1,31 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.6 2001/08/21 20:13:05 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-PROGS = thread
+TARGET_NORC = yes
 
-all: $(PROGS:%=%.exe)
+TARGET_TYPE = program
 
-.phony: all
+TARGET_APPTYPE = console
 
-clean: 
-	- $(RM) *.o *.exe *.sym
+TARGET_NAME = thread
 
-.phony: clean
+TARGET_SDKLIBS = kernel32.a
 
-install: # $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
-
-thread.exe: thread.c
-	$(CC) $(CFLAGS) thread.c -lkernel32 -o thread.exe
-	$(NM) --numeric-sort thread.exe > thread.sym
-
-include ../../rules.mak
+# EOF

@@ -3,13 +3,17 @@
 #
 PATH_TO_TOP = ../..
 
+include $(PATH_TO_TOP)/rules.mak
+
 SRV_OBJECTS = npserver.o
 CLT_OBJECTS = npclient.o
 
 PROGS = npserver.exe npclient.exe
 
-BASE_CFLAGS = -I../../include
-LIBS = ../../lib/crtdll/crtdll.a ../../lib/kernel32/kernel32.a
+BASE_CFLAGS = -I$(PATH_TO_TOP)/include
+
+LIBS = $(SDK_PATH_LIB)/crtdll.a \
+  $(SDK_PATH_LIB)/kernel32.a
 
 all: $(PROGS)
 
@@ -20,15 +24,15 @@ clean:
 
 .phony: clean
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+install: $(PROGS:%=$(INSTALL_DIR)/bin/%)
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+$(PROGS:%=$(INSTALL_DIR)/bin/%): $(INSTALL_DIR)/bin/%: %
+	$(CP) $* $(INSTALL_DIR)/bin/$*
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+dist: $(PROGS:%=$(DIST_DIR)/apps/%)
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
+$(PROGS:%=$(DIST_DIR)/apps/%): $(DIST_DIR)/apps/%: %
+	$(CP) $* $(DIST_DIR)/apps/$*
 
 npserver.exe: $(SRV_OBJECTS) $(LIBS)
 	$(CC) $(SRV_OBJECTS) $(LIBS) -o npserver.exe
@@ -37,6 +41,3 @@ npserver.exe: $(SRV_OBJECTS) $(LIBS)
 npclient.exe: $(CLT_OBJECTS) $(LIBS)
 	$(CC) $(CLT_OBJECTS) $(LIBS) -o npclient.exe
 	$(NM) --numeric-sort npclient.exe > npclient.sym
-
-
-include ../../rules.mak

@@ -3,7 +3,7 @@
 #
 
 # Defines $(OBJECTS_HAL)
-include hal/x86/sources
+# include hal/x86/sources
 
 OBJECTS_BOOT := ke/i386/multiboot.o
 

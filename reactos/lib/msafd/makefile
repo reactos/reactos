@@ -1,87 +1,34 @@
-# Makefile for ReactOS Ancillary Function Driver DLL
+# $Id: makefile,v 1.5 2001/08/21 20:13:06 chorns Exp $
 
 PATH_TO_TOP = ../..
 
-CFLAGS = -I./include -DUNICODE -DDBG
+TARGET_TYPE = dynlink
 
-TARGETNAME=msafd
+TARGET_NAME = msafd
 
-MISC_OBJECTS = misc/dllmain.o misc/event.o misc/helpers.o \
-               misc/sndrcv.o misc/stubs.o
+TARGET_BASE = 0x777a0000
 
-RESOURCE_OBJECT = $(TARGETNAME).coff
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
-OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECT)
+TARGET_CFLAGS = -I./include -DUNICODE -DDBG
 
-LIBS = ../ntdll/ntdll.a \
-       ../kernel32/kernel32.a
+TARGET_OBJECTS = $(TARGET_NAME).o 
 
-CLEAN_FILES = misc/*.o \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	          $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-
-all: $(TARGETNAME).dll
-
-$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
-
-$(TARGETNAME).a: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
-
-$(TARGETNAME).dll: $(LIBS) $(OBJECTS) $(TARGETNAME).def
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--def $(TARGETNAME).def \
-		--kill-at \
-		--output-lib $(TARGETNAME).a
-	$(CC) \
-		$(TARGETNAME).o \
-        $(LIBS) \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--base-file,base.tmp 
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).edf
-	- $(RM) base.tmp
-	$(CC) \
-		$(TARGETNAME).o \
-        $(LIBS) \
-		-mdll \
-		-o $(TARGETNAME).dll \
-		-Wl,--image-base,0x777A0000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
+TARGET_CLEAN = misc/*.o
 
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+include $(PATH_TO_TOP)/rules.mak
 
-.PHONY: clean 
+include $(TOOLS_PATH)/helper.mk
 
-install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
-$(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
-else
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-endif
+MISC_OBJECTS = \
+  misc/dllmain.o misc/event.o misc/helpers.o \
+  misc/sndrcv.o misc/stubs.o
 
-dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
+OBJECTS = $(MISC_OBJECTS)
 
-$(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
-else
-	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-endif
+$(TARGET_NAME).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
-include ../../rules.mak
-
+# EOF

@@ -1,16 +1,31 @@
-# $Id: makefile,v 1.45 2001/07/15 21:18:54 rex Exp $
-#
-# ReactOS Operating System
-#
+# $Id: makefile,v 1.46 2001/08/21 20:13:05 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-TARGET=crtdll
-DLLTARGET=$(TARGET).dll
+TARGET_TYPE = dynlink
+
+TARGET_NAME = crtdll
+
+TARGET_LFLAGS = -nostartfiles
+
+TARGET_SDKLIBS = kernel32.a
+
+TARGET_BASE = 0x77630000
+
+TARGET_DEFONLY = yes
+
+TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CLEAN = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
+	except/*.o float/*.o io/*.o libc/*.o locale/*.o malloc/*.o \
+	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
+	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
+	time/*.o wchar/*.o signal/*.o
 
 
-CFLAGS = 
+include $(PATH_TO_TOP)/rules.mak
 
-all: $(DLLTARGET)
+include $(TOOLS_PATH)/helper.mk
 
 
 ASSERT_OBJECTS = assert/assert.o
@@ -49,7 +64,7 @@ MBSTRING_OBJECTS = mbstring/mbsnicmp.o mbstring/mbsnset.o mbstring/mbsnextc.o mb
 		mbstring/ismbpun.o mbstring/mbslwr.o mbstring/mbsupr.o mbstring/mbstok.o
 
 STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
-                 string/strchr.o string/strcmp.o string/strcoll.o \
+     string/strchr.o string/strcmp.o string/strcoll.o \
 		 string/strcpy.o string/strcspn.o string/memcpy.o \
 		 string/strlen.o string/strncat.o string/strncmp.o \
 		 string/strncpy.o string/strpbrk.o string/strrchr.o \
@@ -124,8 +139,6 @@ FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o f
 SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o sys_stat/ftime.o\
 		sys_stat/systime.o
 
-
-
 MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o\
 		math/atanh.o math/ceil.o math/cos.o math/cosh.o math/exp.o math/fabs.o\
 		math/floor.o math/fmod.o math/frexp.o math/huge_val.o math/hypot.o\
@@ -134,78 +147,14 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 		math/tanh.o math/stubs.o math/j0_y0.o math/j1_y1.o math/jn_yn.o\
 		math/cabs.o math/ftol.o
 
-RESOURCE_OBJECT = $(TARGET).coff
-
 OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
 	  $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
 	  $(STDIO_OBJECTS) $(CTYPE_OBJECTS) $(MATH_OBJECTS) \
 	  $(STRING_OBJECTS) $(TIME_OBJECTS) $(WCHAR_OBJECTS) \
 	  $(SYS_STAT_OBJECTS) $(MALLOC_OBJECTS) $(MBSTRING_OBJECTS)\
 	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) \
-	  $(SIGNAL_OBJECTS) $(SETJMP_OBJECTS) $(RESOURCE_OBJECT) \
-	  $(LOCALE_OBJECTS) $(EXCEPT_OBJECTS) $(TCHAR_OBJECTS)
+	  $(SIGNAL_OBJECTS) $(SETJMP_OBJECTS) $(LOCALE_OBJECTS) \
+	  $(EXCEPT_OBJECTS) $(TCHAR_OBJECTS)
 
-CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
-	except/*.o float/*.o io/*.o libc/*.o locale/*.o malloc/*.o \
-	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
-	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
-	time/*.o wchar/*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
-	$(TARGET).coff $(SIGNAL_OBJECTS)
-
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-
-$(TARGET).a: $(OBJECTS)
-	$(LD)  -r $(OBJECTS) -o $(TARGET).a
-
-$(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
-	$(LD) -r $(OBJECTS) -o $(TARGET).o
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--def $(TARGET).def \
-		--output-lib $(TARGET).a
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--base-file,base.tmp \
-		-Wl,--entry=_DllMain@12 \
-		$(TARGET).o \
-		../kernel32/kernel32.a -lgcc
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGET).dll \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGET).def
-	- $(RM) base.tmp
-	$(CC) \
-		-nostartfiles -nostdlib \
-		-mdll \
-		-o $(TARGET).dll \
-		$(TARGET).o  \
-		../kernel32/kernel32.a -lgcc \
-		-Wl,--image-base,0x77630000 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp \
-		-Wl,--entry=_DllMain@12
-	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
-
-clean: 
-	- $(RM) $(CLEAN_FILES)
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
-
-dist: $(DIST_DIR)/dlls/$(TARGET).dll
-
-$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
-	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
-
-include ../../rules.mak
-
+$(TARGET_NAME).o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o

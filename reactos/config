@@ -1,6 +1,8 @@
 #
 # Architecture to build for
 #
+# Specify one of: i386
+# Possibble values in the future: alpha,i386,m68k,mips,powerpc
 ARCH := i386
 
 #

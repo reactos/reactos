@@ -3,10 +3,13 @@
 #
 .EXPORT_ALL_VARIABLES:
 
+# Windows is default host environment
+ifeq ($(HOST),)
 HOST = mingw32-windows
+endif
 
 # uncomment if you use bochs and it displays only 30 rows
-#BOCHS_30ROWS = yes
+# BOCHS_30ROWS = yes
 
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
@@ -17,21 +20,14 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
-PREFIX = /usr/mingw32-cvs-000216/bin/mingw32-pc-
-#PREFIX = i586-mingw32-
-#PREFIX = /usr/mingw32-cvs-000207/bin/mingw32-cvs-000207-
+PREFIX = i586-mingw32-
 EXE_POSTFIX := 
 EXE_PREFIX := ./
-#CP = cp
-CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM_CMD = nasm
-FLOPPY_DIR = /a
-# DIST_DIR should be relative from the top of the tree
-DIST_DIR = dist
-#DOT := \\.
-#DSEP := /
-#ENABLE_DEPENDENCY_TRACKING := 1
+NASM = nasm
+DOSCLI =
+FLOPPY_DIR = /mnt/floppy
+SEP := /
 endif
 
 ifeq ($(HOST),mingw32-windows)
@@ -39,109 +35,63 @@ NASM_FORMAT = win32
 PREFIX = 
 EXE_PREFIX := 
 EXE_POSTFIX := .exe
-#CP = copy /B
-CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasmw
-RM = $(PATH_TO_TOP)/rdel
-RMDIR = rmdir
 DOSCLI = yes
 FLOPPY_DIR = A:
-# DIST_DIR should be relative from the top of the tree
-DIST_DIR = dist
-#DOT := \.
-#DSEP := \\
-#ENABLE_DEPENDENCY_TRACKING := 1
+SEP := \$(EMPTY_VAR)
 endif
+
+
+# Set INSTALL_DIR to default value if not already set
+# ifeq ($(INSTALL_DIR),)
+INSTALL_DIR = $(PATH_TO_TOP)/reactos
+# endif
+
+# Set DIST_DIR to default value if not already set
+# ifeq ($(DIST_DIR),)
+DIST_DIR = $(PATH_TO_TOP)/dist
+# endif
+
 
 CC = $(PREFIX)gcc
 CXX = $(PREFIX)g++
 HOST_CC = gcc
 HOST_NM = nm
-CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -m386
-CXXFLAGS = $(CFLAGS)
-NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
 LD = $(PREFIX)ld
 NM = $(PREFIX)nm
 OBJCOPY = $(PREFIX)objcopy
 STRIP = $(PREFIX)strip
-ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__
 AS = $(PREFIX)gcc -c -x assembler-with-cpp 
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
 RCINC = --include-dir $(PATH_TO_TOP)/include
 OBJCOPY = $(PREFIX)objcopy
+TOOLS_PATH = $(PATH_TO_TOP)/tools
+CP = $(TOOLS_PATH)/rcopy
+RM = $(TOOLS_PATH)/rdel
+RMDIR = $(TOOLS_PATH)/rrmdir
+RMKDIR = $(TOOLS_PATH)/rmkdir
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.cc
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.S
-	$(AS) $(ASFLAGS) -c $< -o $@
-%.o: %.s
-	$(AS) $(ASFLAGS) -c $< -o $@	
-%.o: %.asm
-	$(NASM_CMD) $(NFLAGS) $< -o $@
-%.coff: %.rc
-	$(RC) $(RCINC) $< $@
+# Maybe we can delete these soon
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe -m386
+CXXFLAGS = $(CFLAGS)
+NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
+ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__
 
-%.sys: %.o
-	$(CC) \
-		-nostartfiles -nostdlib -e _DriverEntry@8\
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $^
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $@ \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o $@.unstripped \
-		$^
-	- $(RM) temp.exp
-	- $(NM) --numeric-sort $@.unstripped > $@.sym
-	$(STRIP) --strip-debug $<
-	$(CC) \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $^
-	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $@ \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-nostartfiles -nostdlib -e _DriverEntry@8 \
-		-mdll \
-		-o $@ \
-		$^
-	- $(RM) temp.exp
 
-RULES_MAK_INCLUDED = 1
+# Developer Kits
+DK_PATH=$(PATH_TO_TOP)/dk
+# Native and kernel mode
+DDK_PATH=$(DK_PATH)/nkm
+DDK_PATH_LIB=$(DDK_PATH)/lib
+DDK_PATH_INC=$(PATH_TO_TOP)/include
+# Win32
+SDK_PATH=$(DK_PATH)/w32
+SDK_PATH_LIB=$(SDK_PATH)/lib
+SDK_PATH_INC=$(PATH_TO_TOP)/include
+# POSIX+
+XDK_PATH=$(DK_PATH)/psx
+XDK_PATH_LIB=$(XDK_PATH)/lib
+XDK_PATH_INC=$(XDK_PATH)/include

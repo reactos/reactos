@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.84 2001/07/30 03:05:30 rex Exp $
+/* $Id: loader.c,v 1.85 2001/08/21 20:13:09 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,13 +35,19 @@
 #include <internal/ldr.h>
 #include <internal/pool.h>
 
+#ifdef HALDBG
+#include <internal/ntosdbg.h>
+#else
+#define ps(args...)
+#endif
+
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* MACROS ********************************************************************/
 
 #define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
+#define  HAL_MODULE_NAME  L"hal.dll"
 #define  MODULE_ROOT_NAME  L"\\Modules\\"
 #define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
@@ -51,7 +57,8 @@ LIST_ENTRY ModuleListHead;
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 LIST_ENTRY ModuleTextListHead;
 STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
-/* STATIC MODULE_TEXT_SECTION HalTextSection; */
+STATIC MODULE_TEXT_SECTION LdrHalTextSection;
+ULONG_PTR LdrHalBase;
 
 #define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M')
 #define TAG_SYM_BUF     TAG('S', 'Y', 'M', 'B')
@@ -80,6 +87,12 @@ static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                                     unsigned short Hint);
 static PMODULE_OBJECT LdrPEGetModuleObject(PUNICODE_STRING ModuleName);
 static PVOID LdrPEFixupForward(PCHAR ForwardName);
+
+static PVOID
+LdrSafePEGetExportAddress(
+		PVOID ImportModuleBase,
+    char *Name,
+    unsigned short Hint);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -121,6 +134,7 @@ LdrInit1(VOID)
 
   InitializeListHead(&ModuleTextListHead);
 
+  /* Setup ntoskrnl.exe text section */
   DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
   FileHeader =
     (PIMAGE_FILE_HEADER) ((DWORD)KERNEL_BASE + 
@@ -136,6 +150,23 @@ LdrInit1(VOID)
   NtoskrnlTextSection.SymbolsBase = NULL;
   NtoskrnlTextSection.SymbolsLength = 0;
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
+
+  /* Setup hal.dll text section */
+  DosHeader = (PIMAGE_DOS_HEADER)LdrHalBase;
+  FileHeader =
+    (PIMAGE_FILE_HEADER) ((DWORD)LdrHalBase + 
+			  DosHeader->e_lfanew + sizeof(ULONG));
+  OptionalHeader = (PIMAGE_OPTIONAL_HEADER)
+    ((DWORD)FileHeader + sizeof(IMAGE_FILE_HEADER));
+  SectionList = (PIMAGE_SECTION_HEADER)
+    ((DWORD)OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
+  LdrHalTextSection.Base = LdrHalBase;
+  LdrHalTextSection.Length = SectionList[0].Misc.VirtualSize +
+    SectionList[0].VirtualAddress;
+  LdrHalTextSection.Name = HAL_MODULE_NAME;
+  LdrHalTextSection.SymbolsBase = NULL;
+  LdrHalTextSection.SymbolsLength = 0;
+  InsertTailList(&ModuleTextListHead, &LdrHalTextSection.ListEntry);
 }
 
 VOID LdrInitModuleManagement(VOID)
@@ -242,7 +273,51 @@ VOID LdrInitModuleManagement(VOID)
    ModuleObject->Length = ModuleObject->Image.PE.OptionalHeader->SizeOfImage;
    ModuleObject->TextSection = &NtoskrnlTextSection;
 
-  /* FIXME: Add fake module entry for HAL */
+  /*  Add module entry for HAL  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  wcscat(NameBuffer, HAL_MODULE_NAME);
+  RtlInitUnicodeString (&ModuleName, NameBuffer);
+  DPRINT("HAL's Module name is: %wZ\n", &ModuleName);
+
+  /*  Initialize ObjectAttributes for ModuleObject  */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &ModuleName,
+                             0,
+                             NULL,
+                             NULL);
+
+  /*  Create module object  */
+  ModuleHandle = 0;
+  Status = ObCreateObject(&ModuleHandle,
+                          STANDARD_RIGHTS_REQUIRED,
+                          &ObjectAttributes,
+                          IoDriverObjectType,
+                          (PVOID*)&ModuleObject);
+  assert(NT_SUCCESS(Status));
+
+   /*  Initialize ModuleObject data  */
+   ModuleObject->Base = (PVOID) LdrHalBase;
+   ModuleObject->Flags = MODULE_FLAG_PE;
+   InsertTailList(&ModuleListHead,
+		  &ModuleObject->ListEntry);
+   RtlCreateUnicodeString(&ModuleObject->FullName,
+			  HAL_MODULE_NAME);
+   LdrpBuildModuleBaseName(&ModuleObject->BaseName,
+			   &ModuleObject->FullName);
+
+  DosHeader = (PIMAGE_DOS_HEADER) LdrHalBase;
+  ModuleObject->Image.PE.FileHeader =
+    (PIMAGE_FILE_HEADER) ((DWORD) ModuleObject->Base +
+    DosHeader->e_lfanew + sizeof(ULONG));
+  ModuleObject->Image.PE.OptionalHeader = (PIMAGE_OPTIONAL_HEADER)
+    ((DWORD)ModuleObject->Image.PE.FileHeader + sizeof(IMAGE_FILE_HEADER));
+  ModuleObject->Image.PE.SectionList = (PIMAGE_SECTION_HEADER)
+    ((DWORD)ModuleObject->Image.PE.OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
+  ModuleObject->EntryPoint = (PVOID) ((DWORD) ModuleObject->Base +
+    ModuleObject->Image.PE.OptionalHeader->AddressOfEntryPoint);
+  DPRINT("ModuleObject:%08x  entrypoint at %x\n", ModuleObject, ModuleObject->EntryPoint);
+   ModuleObject->Length = ModuleObject->Image.PE.OptionalHeader->SizeOfImage;
+   ModuleObject->TextSection = &LdrHalTextSection;
 }
 
 /*
@@ -790,14 +865,18 @@ VOID LdrLoadAutoConfigDrivers (VOID)
      is created after their module entries */
 
   RtlInitUnicodeString(&ModuleName, KERNEL_MODULE_NAME);
-
   Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
-  if (NT_SUCCESS(Status)) {
+  if (NT_SUCCESS(Status))
+  {
     LdrpLoadModuleSymbols(ModuleObject);
   }
 
-  /* FIXME: Load symbols for hal.dll */
-
+  RtlInitUnicodeString(&ModuleName, HAL_MODULE_NAME);
+  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+  if (NT_SUCCESS(Status))
+  {
+    LdrpLoadModuleSymbols(ModuleObject);
+  }
 #endif /* KDBG */
 
    /*
@@ -1375,7 +1454,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   PMODULE_OBJECT CreatedModuleObject;
   PVOID *ImportAddressList;
   PULONG FunctionNameList;
-  PCHAR pName, SymbolNameBuf;
+  PCHAR pName;
   WORD Hint;
   OBJECT_ATTRIBUTES  ObjectAttributes;
   UNICODE_STRING  ModuleName;
@@ -1558,8 +1637,6 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
     {
       PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
 
-      SymbolNameBuf = ExAllocatePoolWithTag(NonPagedPool, 512, TAG_SYM_BUF);
-
       /*  Process each import module  */
       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
         ((DWORD)DriverBase + PEOptionalHeader->
@@ -1571,22 +1648,14 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
           wcscpy(NameBuffer, MODULE_ROOT_NAME);
-          /*FIXME: (RJJ) hack: if HAL is needed for import, substitute the kernel  */
-          /*  this is necessary until we break the hal out of the kernel  */
-          if (_stricmp (pName, "HAL.dll") == 0)
+
+          for (Idx = 0; NameBuffer[Idx] != 0; Idx++);
+          for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
             {
-              wcscat (NameBuffer, KERNEL_MODULE_NAME);
+              NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
             }
-          else
-            {
-              for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
-                ;
-              for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
-                {
-                  NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
-                }
-              NameBuffer[Idx + Idx2] = 0;
-            }
+          NameBuffer[Idx + Idx2] = 0;
+
           RtlInitUnicodeString (&ModuleName, NameBuffer);
           DPRINT("Import module: %wZ\n", &ModuleName);
 
@@ -1645,8 +1714,6 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
             }
           ImportModuleDirectory++;
         }
-
-      ExFreePool(SymbolNameBuf);
     }
 
   /*  Create ModuleName string  */
@@ -1728,6 +1795,264 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   return STATUS_SUCCESS;
 }
 
+PVOID LdrSafePEProcessModule(
+	PVOID ModuleLoadBase,
+  PVOID DriverBase,
+	PVOID ImportModuleBase,
+	PULONG DriverSize)
+{
+  unsigned int Idx, Idx2;
+  ULONG RelocDelta, NumRelocs;
+  DWORD CurrentSize, TotalRelocs;
+  PULONG PEMagic;
+  PIMAGE_DOS_HEADER PEDosHeader;
+  PIMAGE_FILE_HEADER PEFileHeader;
+  PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
+  PIMAGE_SECTION_HEADER PESectionHeaders;
+  PRELOCATION_DIRECTORY RelocDir;
+  PRELOCATION_ENTRY RelocEntry;
+  PVOID *ImportAddressList;
+  PULONG FunctionNameList;
+  PCHAR pName;
+  WORD Hint;
+  UNICODE_STRING  ModuleName;
+  WCHAR  NameBuffer[60];
+
+  ps("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
+
+  /*  Get header pointers  */
+  PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
+  PEMagic = (PULONG) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew);
+  PEFileHeader = (PIMAGE_FILE_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG));
+  PEOptionalHeader = (PIMAGE_OPTIONAL_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER));
+  PESectionHeaders = (PIMAGE_SECTION_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) +
+    sizeof(IMAGE_OPTIONAL_HEADER));
+  CHECKPOINT;
+
+  /*  Check file magic numbers  */
+  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
+    {
+      return 0;
+    }
+  if (PEDosHeader->e_lfanew == 0)
+    {
+      return 0;
+    }
+  if (*PEMagic != IMAGE_PE_MAGIC)
+    {
+      return 0;
+    }
+  if (PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
+    {
+      return 0;
+    }
+
+  ps("OptionalHdrMagic:%04x LinkVersion:%d.%d\n", 
+         PEOptionalHeader->Magic,
+         PEOptionalHeader->MajorLinkerVersion,
+         PEOptionalHeader->MinorLinkerVersion);
+  ps("Entry Point:%08lx\n", PEOptionalHeader->AddressOfEntryPoint);
+
+  /*  Determine the size of the module  */
+  *DriverSize = PEOptionalHeader->SizeOfImage;
+  ps("DriverSize %x\n",*DriverSize);
+
+  /*  Copy headers over */
+  if (DriverBase != ModuleLoadBase)
+    {
+      memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);
+    }
+
+	ps("Hdr: 0x%X\n", (ULONG)PEOptionalHeader);
+	ps("Hdr->SizeOfHeaders: 0x%X\n", (ULONG)PEOptionalHeader->SizeOfHeaders);
+  ps("FileHdr->NumberOfSections: 0x%X\n", (ULONG)PEFileHeader->NumberOfSections);
+
+  /* Ntoskrnl.exe need no relocation fixups since it is linked to run at the same
+     address as it is mapped */
+  if (DriverBase != ModuleLoadBase)
+    {
+      CurrentSize = 0;
+
+  /*  Copy image sections into virtual section  */
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+      //  Copy current section into current offset of virtual section
+      if (PESectionHeaders[Idx].Characteristics & 
+          (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
+        {
+	         //ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
+           //PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
+           memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
+                  (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
+                  PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData ?
+                  PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
+        }
+      else
+        {
+	   ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
+		  PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
+	   memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
+		  '\0', PESectionHeaders[Idx].Misc.VirtualSize);
+
+        }
+      CurrentSize += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize,
+                              PEOptionalHeader->SectionAlignment);
+    }
+
+  /*  Perform relocation fixups  */
+  RelocDelta = (DWORD) DriverBase - PEOptionalHeader->ImageBase;
+  RelocDir = (PRELOCATION_DIRECTORY)(PEOptionalHeader->DataDirectory[
+    IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
+  ps("DrvrBase:%08lx ImgBase:%08lx RelocDelta:%08lx\n", 
+         DriverBase,
+         PEOptionalHeader->ImageBase,
+         RelocDelta);   
+  ps("RelocDir %x\n",RelocDir);
+
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+       if (PESectionHeaders[Idx].VirtualAddress == (DWORD)RelocDir)
+	 {
+	    DPRINT("Name %.8s PESectionHeader[Idx].PointerToRawData %x\n",
+		   PESectionHeaders[Idx].Name,
+		   PESectionHeaders[Idx].PointerToRawData);
+	    RelocDir = PESectionHeaders[Idx].PointerToRawData + ModuleLoadBase;
+            CurrentSize = PESectionHeaders[Idx].Misc.VirtualSize;
+	    break;
+	 }
+    }
+
+  ps("RelocDir %08lx CurrentSize %08lx\n", RelocDir, CurrentSize);
+
+  TotalRelocs = 0;
+  while (TotalRelocs < CurrentSize && RelocDir->SizeOfBlock != 0)
+    {
+      NumRelocs = (RelocDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
+        sizeof(WORD);
+      RelocEntry = (PRELOCATION_ENTRY) ((DWORD)RelocDir + 
+        sizeof(RELOCATION_DIRECTORY));
+      for (Idx = 0; Idx < NumRelocs; Idx++)
+        {
+	   ULONG Offset;
+	   ULONG Type;
+	   PDWORD RelocItem;
+	   
+	   Offset = RelocEntry[Idx].TypeOffset & 0xfff;
+	   Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
+	   RelocItem = (PDWORD)(DriverBase + RelocDir->VirtualAddress + 
+				Offset);
+          if (Type == 3)
+            {
+              (*RelocItem) += RelocDelta;
+            }
+          else if (Type != 0)
+            {
+              DbgPrint("Unknown relocation type %x at %x\n",Type, &Type);
+              return 0;
+            }
+        }
+      TotalRelocs += RelocDir->SizeOfBlock;
+      RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
+        RelocDir->SizeOfBlock);
+    }
+
+    ps("PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] %x\n",
+         PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+         .VirtualAddress);
+  }
+
+  /*  Perform import fixups  */
+  if (PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
+    {
+      PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+
+      /*  Process each import module  */
+      ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+        ((DWORD)DriverBase + PEOptionalHeader->
+          DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+
+      ps("Processeing import directory at %p\n", ImportModuleDirectory);
+      
+        {
+          /*  Check to make sure that import lib is kernel  */
+          pName = (PCHAR) DriverBase + 
+            ImportModuleDirectory->dwRVAModuleName;
+          wcscpy(NameBuffer, MODULE_ROOT_NAME);
+          for (Idx = 0; NameBuffer[Idx] != 0; Idx++);
+          for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
+            {
+              NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
+            }
+          NameBuffer[Idx + Idx2] = 0;
+          RtlInitUnicodeString (&ModuleName, NameBuffer);
+
+
+          ps("Import module: %wZ\n", &ModuleName);
+
+		  /*  Get the import address list  */
+          ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
+            ImportModuleDirectory->dwRVAFunctionAddressList);
+	
+	        ps("  ImportModuleDirectory->dwRVAFunctionAddressList: 0x%X\n",
+		        ImportModuleDirectory->dwRVAFunctionAddressList);
+	        ps("  ImportAddressList: 0x%X\n", ImportAddressList);
+
+          /*  Get the list of functions to import  */
+          if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+            {
+
+				ps("Using function name list.\n");
+
+			  FunctionNameList = (PULONG) ((DWORD)DriverBase + 
+                ImportModuleDirectory->dwRVAFunctionNameList);
+            }
+          else
+            {
+
+				ps("Using function address list.\n");
+
+              FunctionNameList = (PULONG) ((DWORD)DriverBase + 
+                ImportModuleDirectory->dwRVAFunctionAddressList);
+            }
+
+		  /*  Walk through function list and fixup addresses  */
+          while (*FunctionNameList != 0L)
+            {
+              if ((*FunctionNameList) & 0x80000000) // hint
+                {
+                  pName = NULL;
+
+                  Hint = (*FunctionNameList) & 0xffff;
+                }
+              else // hint-name
+                {
+                  pName = (PCHAR)((DWORD)DriverBase + 
+                                  *FunctionNameList + 2);
+                  Hint = *(PWORD)((DWORD)DriverBase + *FunctionNameList);
+                }
+                //ps("  Hint:%04x  Name:%s(0x%X)(%x)\n", Hint, pName, pName, ImportAddressList);
+
+                *ImportAddressList = LdrSafePEGetExportAddress(
+                    ImportModuleBase,
+                    pName,
+                    Hint);
+
+              ImportAddressList++;
+              FunctionNameList++;
+            }
+          ImportModuleDirectory++;
+        }
+    }
+
+  ps("Finished importing.\n");
+
+	return 0;
+}
+
 static PVOID
 LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                       char *Name,
@@ -1795,10 +2120,70 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
 	CPRINT("Export not found for %d:%s\n",
 		 Hint,
 		 Name != NULL ? Name : "(Ordinal)");
-	return NULL;
+	KeBugCheck(0);
      }
 
    return ExportAddress;
+}
+
+static PVOID
+LdrSafePEGetExportAddress(
+		PVOID ImportModuleBase,
+    char *Name,
+    unsigned short Hint)
+{
+  WORD  Idx;
+  PVOID  ExportAddress;
+  PWORD  OrdinalList;
+  PDWORD  FunctionList, NameList;
+  PIMAGE_EXPORT_DIRECTORY  ExportDir;
+  ULONG ExportDirSize;
+
+  static BOOLEAN EP = FALSE;
+
+  ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+    RtlImageDirectoryEntryToData(ImportModuleBase,
+	  TRUE,
+		IMAGE_DIRECTORY_ENTRY_EXPORT,
+		&ExportDirSize);
+
+  if (!EP) {
+    EP = TRUE;
+    ps("ExportDir %x\n", ExportDir);
+  }
+
+  FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + ImportModuleBase);
+  NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + ImportModuleBase);
+  OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + ImportModuleBase);
+
+  ExportAddress = 0;
+
+  if (Name != NULL)
+    {
+      for (Idx = 0; Idx < ExportDir->NumberOfNames; Idx++)
+        {
+          if (!strcmp(Name, (PCHAR) ((DWORD)ImportModuleBase + NameList[Idx])))
+      			{
+              ExportAddress = (PVOID) ((DWORD)ImportModuleBase +
+                FunctionList[OrdinalList[Idx]]);
+              break;
+            }
+        }
+    }
+  else  /*  use hint  */
+    {
+      ExportAddress = (PVOID) ((DWORD)ImportModuleBase +
+        FunctionList[Hint - ExportDir->Base]);
+    }
+
+  if (ExportAddress == 0)
+    {
+	    ps("Export not found for %d:%s\n",
+		  Hint,
+		  Name != NULL ? Name : "(Ordinal)");
+		  for (;;);
+    }
+  return ExportAddress;
 }
 
 

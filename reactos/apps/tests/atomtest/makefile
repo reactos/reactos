@@ -1,34 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.3 2001/08/21 20:13:00 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-OBJECTS = atomtest.o
-PROGS = atomtest.exe
-LIBS = ../../lib/crtdll/crtdll.a ../../lib/kernel32/kernel32.a \
-       ../../lib/ntdll/ntdll.a
+TARGET_NORC = yes
 
-CLEAN_FILES = atomtest.o atomtest.exe
+TARGET_TYPE = program
 
-all: atomtest.exe
+TARGET_APPTYPE = console
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_NAME = atomtest
 
-.phony: clean 
+TARGET_SDKLIBS = ntdll.a kernel32.a crtdll.a
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-
-atomtest.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) $(LIBS) -o atomtest.exe
-	$(NM) --numeric-sort atomtest.exe > atomtest.sym
-
-include ../../rules.mak
+# EOF

@@ -1,31 +1,21 @@
-#
-#
-#
+# $Id: makefile,v 1.6 2001/08/21 20:13:02 chorns Exp $
+
 PATH_TO_TOP = ../..
 
-PROGS = event
+TARGET_NORC = yes
 
-all: $(PROGS:%=%.exe)
+TARGET_TYPE = program
 
-.phony: all
+TARGET_APPTYPE = console
 
-clean: 
-	- $(RM) *.o *.exe *.sym
+TARGET_NAME = event
 
-.phony: clean
+TARGET_SDKLIBS = kernel32.a
 
-install: # $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+include $(PATH_TO_TOP)/rules.mak
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
+include $(TOOLS_PATH)/helper.mk
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
-	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
-
-event.exe: event.c
-	$(CC) $(CFLAGS) event.c -lkernel32 -o event.exe
-	$(NM) --numeric-sort event.exe > event.sym
-
-include ../../rules.mak
+# EOF
