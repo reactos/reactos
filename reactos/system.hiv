@@ -1,0 +1,56 @@
+REGEDIT4
+
+[\Registry\Machine\SYSTEM]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
+"List"="Primary Disk;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
+"ImagePath"="system32\drivers\beep.sys"
+"Group"="Base"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
+"ImagePath"="system32\drivers\floppy.sys"
+"Group"="Primary Disk"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
+"ImagePath"="system32\drivers\ide.sys"
+"Group"="Primary Disk"
+"Start"=dword:00000000
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
+"ImagePath"="system32\drivers\msfs.sys"
+"Group"="File System"
+"Start"=dword:00000001
+"Type"=dword:00000002
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Npfs]
+"ImagePath"="system32\drivers\npfs.sys"
+"Group"="File System"
+"Start"=dword:00000001
+"Type"=dword:00000002
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Null]
+"ImagePath"="system32\drivers\null.sys"
+"Group"="Base"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
+"ImagePath"="system32\drivers\vfatfs.sys"
+"Group"="Boot File System"
+"Start"=dword:00000000
+"Type"=dword:00000002
+
+

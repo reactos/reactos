@@ -19,6 +19,7 @@ md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
 copy aboot.bat %ROS_INSTALL%
 copy boot.hiv %ROS_INSTALL%
+copy system.hiv %ROS_INSTALL%\system32\config
 copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
 copy hal\halx86\hal.dll %ROS_INSTALL%\system32
