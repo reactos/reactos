@@ -291,9 +291,9 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	 // subclass background window
 	new BackgroundWindow(_hwndListView);
 
-	_alignment = 0;
+	_icon_algo = 0;
 
-	PositionIcons(_alignment);
+	PositionIcons();
 	InitDragDrop();
 }
 
@@ -336,10 +336,13 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		break;
 
-	  case PM_POSITION_ICONS:
-		PositionIcons(wparam);
-		_alignment = wparam;
+	  case PM_SET_ICON_ALGORITHM:
+		_icon_algo = wparam;
+		PositionIcons();
 		break;
+
+	  case PM_GET_ICON_ALGORITHM:
+		return _icon_algo;
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
@@ -442,7 +445,11 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 }
 
 
-static const POINTS s_align_start[8] = {
+#define	ARRANGE_BORDER_DOWN	 8
+#define	ARRANGE_BORDER_HV	 9
+#define	ARRANGE_ROUNDABOUT	10
+
+static const POINTS s_align_start[] = {
 	{0, 0},	// left/top
 	{0, 0},
 	{1, 0},	// right/top
@@ -450,10 +457,14 @@ static const POINTS s_align_start[8] = {
 	{0, 1},	// left/bottom
 	{0, 1},
 	{1, 1},	// right/bottom
-	{1, 1}
+	{1, 1},
+
+	{0, 0},	// left/top
+	{0, 0},
+	{0, 0}
 };
 
-static const POINTS s_align_dir1[8] = {
+static const POINTS s_align_dir1[] = {
 	{ 0, +1},	// down
 	{+1,  0},	// right
 	{-1,  0},	// left
@@ -461,10 +472,14 @@ static const POINTS s_align_dir1[8] = {
 	{ 0, -1},	// up
 	{+1,  0},	// right
 	{-1,  0},	// left
-	{ 0, -1}	// up
+	{ 0, -1},	// up
+
+	{ 0, +1},	// down
+	{+1,  0},	// right
+	{+1,  0}	// right
 };
 
-static const POINTS s_align_dir2[8] = {
+static const POINTS s_align_dir2[] = {
 	{+1,  0},	// right
 	{ 0, +1},	// down
 	{ 0, +1},	// down
@@ -472,22 +487,26 @@ static const POINTS s_align_dir2[8] = {
 	{+1,  0},	// right
 	{ 0, -1},	// up
 	{ 0, -1},	// up
-	{-1,  0}	// left
+	{-1,  0},	// left
+
+	{+1,  0},	// right
+	{ 0, +1},	// down
+	{ 0, +1}	// down
 };
 
 typedef pair<int,int> IconPos;
 typedef map<IconPos, int> IconMap;
 
-void DesktopShellView::PositionIcons(int alignment, int dir)
+void DesktopShellView::PositionIcons(int dir)
 {
 	DWORD spacing = ListView_GetItemSpacing(_hwndListView, FALSE);
 
 	RECT work_area;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
 
-	const POINTS& dir1 = s_align_dir1[alignment];
-	const POINTS& dir2 = s_align_dir2[alignment];
-	const POINTS& start_pos = s_align_start[alignment];
+	const POINTS& dir1 = s_align_dir1[_icon_algo];
+	const POINTS& dir2 = s_align_dir2[_icon_algo];
+	const POINTS& start_pos = s_align_start[_icon_algo];
 
 	int dir_x1 = dir1.x;
 	int dir_y1 = dir1.y;
@@ -502,8 +521,8 @@ void DesktopShellView::PositionIcons(int alignment, int dir)
 	int dx2 = dir_x2 * cx;
 	int dy2 = dir_y2 * cy;
 
-	int start_x = start_pos.x * work_area.right + (cx-32)/2;
-	int start_y = start_pos.y * work_area.bottom + 4/*(cy-32)/2*/;
+	int start_x = (start_pos.x * work_area.right)/cx*cx + (cx-32)/2;
+	int start_y = (start_pos.y * work_area.bottom)/cy*cy + 4/*(cy-32)/2*/;
 
 	if (start_x >= work_area.right)
 		start_x -= cx;
@@ -514,21 +533,63 @@ void DesktopShellView::PositionIcons(int alignment, int dir)
 	int x = start_x;
 	int y = start_y;
 
-	int cnt = ListView_GetItemCount(_hwndListView);
+	int all = ListView_GetItemCount(_hwndListView);
 	int i1, i2;
 
 	if (dir > 0) {
 		i1 = 0;
-		i2 = cnt;
+		i2 = all;
 	} else {
-		i1 = cnt-1;
+		i1 = all-1;
 		i2 = -1;
 	}
 
 	IconMap pos_idx;
+	int cnt = 0;
 
 	for(int idx=i1; idx!=i2; idx+=dir) {
 		pos_idx[IconPos(y, x)] = idx;
+
+		if (_icon_algo == ARRANGE_BORDER_DOWN) {
+			if (++cnt & 1)
+				x = work_area.right - x;
+			else {
+				y += dy1;
+
+				if (y >= work_area.bottom) {
+					y = start_y;
+					x += dx2;
+				}
+			}
+
+			continue;
+		}
+		else if (_icon_algo == ARRANGE_BORDER_HV) {
+			if (++cnt & 1)
+				x = work_area.right - x;
+			else if (cnt & 2) {
+				y += dy1;
+
+				if (y >= work_area.bottom) {
+					y = start_y;
+					x += dx2;
+				}
+			} else {
+				x += dx1;
+
+				if (x >= work_area.right) {
+					x = start_x;
+					y += dy2;
+				}
+			}
+
+			continue;
+		}
+		else if (_icon_algo == ARRANGE_ROUNDABOUT) {
+
+			///@todo
+
+		}
 
 		x += dx1;
 		y += dy1;
@@ -541,6 +602,8 @@ void DesktopShellView::PositionIcons(int alignment, int dir)
 			x += dx2;
 		}
 	}
+
+	 // use a little trick to get the icons where we want them to be...
 
 	for(IconMap::const_iterator it=pos_idx.end(); --it!=pos_idx.begin(); ) {
 		const IconPos& pos = it->first;

@@ -47,8 +47,12 @@ protected:
 	ResBitmap	_bmp5;
 	ResBitmap	_bmp6;
 	ResBitmap	_bmp7;
+	ResBitmap	_bmp8;
+	ResBitmap	_bmp9;
+	ResBitmap	_bmp10;
 
-	int	_alignment;
+	int	_alignment_cur;
+	int	_alignment_tmp;
 
 	virtual int Command(int id, int code);
 	virtual int Notify(int id, NMHDR* pnmh);

@@ -374,6 +374,9 @@ IDB_ICON_ALIGN_4        BITMAP  DISCARDABLE     "res/icoalig4.bmp"
 IDB_ICON_ALIGN_5        BITMAP  DISCARDABLE     "res/icoalig5.bmp"
 IDB_ICON_ALIGN_6        BITMAP  DISCARDABLE     "res/icoalig6.bmp"
 IDB_ICON_ALIGN_7        BITMAP  DISCARDABLE     "res/icoalig7.bmp"
+IDB_ICON_ALIGN_8        BITMAP  DISCARDABLE     "res/icoalig8.bmp"
+IDB_ICON_ALIGN_9        BITMAP  DISCARDABLE     "res/icoalig9.bmp"
+IDB_ICON_ALIGN_10       BITMAP  DISCARDABLE     "res/icoali10.bmp"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -700,7 +703,7 @@ BEGIN
                     WS_TABSTOP,7,25,130,33
 END
 
-IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 210, 154
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 210, 170
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop Properties"
 FONT 8, "MS Sans Serif"
@@ -716,13 +719,21 @@ BEGIN
     CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,25,44,41
     CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,76,44,41
+                    BS_BOTTOM | WS_TABSTOP,7,72,44,41
     CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,56,76,44,41
+                    BS_BOTTOM | WS_TABSTOP,56,72,44,41
     CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,111,76,44,41
+                    BS_BOTTOM | WS_TABSTOP,111,72,44,41
     CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,76,44,41
+                    BS_BOTTOM | WS_TABSTOP,159,72,44,41
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,122,44,41
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,56,122,44,41
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,111,122,44,41
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,122,44,41
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
@@ -761,7 +772,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 203
         TOPMARGIN, 7
-        BOTTOMMARGIN, 147
+        BOTTOMMARGIN, 163
     END
 
     IDD_DESKBAR_TASKBAR, DIALOG

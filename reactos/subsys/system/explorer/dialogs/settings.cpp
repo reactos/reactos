@@ -75,7 +75,10 @@ DesktopSettingsDlg::DesktopSettingsDlg(HWND hwnd)
 	_bmp4(IDB_ICON_ALIGN_4),
 	_bmp5(IDB_ICON_ALIGN_5),
 	_bmp6(IDB_ICON_ALIGN_6),
-	_bmp7(IDB_ICON_ALIGN_7)
+	_bmp7(IDB_ICON_ALIGN_7),
+	_bmp8(IDB_ICON_ALIGN_8),
+	_bmp9(IDB_ICON_ALIGN_9),
+	_bmp10(IDB_ICON_ALIGN_10)
 {
 	new PictureButton(_hwnd, IDC_ICON_ALIGN_0, _bmp0);
 	new PictureButton(_hwnd, IDC_ICON_ALIGN_1, _bmp1);
@@ -85,8 +88,12 @@ DesktopSettingsDlg::DesktopSettingsDlg(HWND hwnd)
 	new PictureButton(_hwnd, IDC_ICON_ALIGN_5, _bmp5);
 	new PictureButton(_hwnd, IDC_ICON_ALIGN_6, _bmp6);
 	new PictureButton(_hwnd, IDC_ICON_ALIGN_7, _bmp7);
+	new PictureButton(_hwnd, IDC_ICON_ALIGN_8, _bmp8);
+	new PictureButton(_hwnd, IDC_ICON_ALIGN_9, _bmp9);
+	new PictureButton(_hwnd, IDC_ICON_ALIGN_10, _bmp10);
 
-	_alignment = 0;
+	_alignment_cur = SendMessage(g_Globals._hwndShellView, PM_GET_ICON_ALGORITHM, 0, 0);
+	_alignment_tmp = _alignment_cur;
 }
 
 #ifndef PSN_QUERYINITIALFOCUS	// currently (as of 18.01.2004) missing in MinGW headers
@@ -97,7 +104,16 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 	  case PSN_QUERYINITIALFOCUS:
-		SetWindowLong(_hwnd, DWL_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment));
+		SetWindowLong(_hwnd, DWL_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment_cur));
+		break;
+
+	  case PSN_APPLY:
+		_alignment_cur = _alignment_tmp;
+		break;
+
+	  case PSN_RESET:
+		if (_alignment_tmp != _alignment_cur)
+			SendMessage(g_Globals._hwndShellView, PM_SET_ICON_ALGORITHM, _alignment_cur, 0);
 		break;
 
 	  default:
@@ -109,15 +125,15 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 
 int	DesktopSettingsDlg::Command(int id, int code)
 {
-	if (id>=IDC_ICON_ALIGN_0 && id<=IDC_ICON_ALIGN_7) {
+	if (id>=IDC_ICON_ALIGN_0 && id<=IDC_ICON_ALIGN_10) {
 		int alignment = id - IDC_ICON_ALIGN_0;
 
-		if (alignment != _alignment) {
-			_alignment = alignment;
+		if (alignment != _alignment_tmp) {
+			_alignment_tmp = alignment;
 
 			PropSheet_Changed(GetParent(_hwnd), _hwnd);
 
-			SendMessage(g_Globals._hwndShellView, PM_POSITION_ICONS, alignment, 0);
+			SendMessage(g_Globals._hwndShellView, PM_SET_ICON_ALGORITHM, alignment, 0);
 		}
 	}
 

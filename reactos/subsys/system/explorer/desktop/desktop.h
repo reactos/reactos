@@ -26,7 +26,8 @@
  //
 
 
-#define	PM_POSITION_ICONS		(WM_APP+0x19)
+#define	PM_SET_ICON_ALGORITHM	(WM_APP+0x19)
+#define	PM_GET_ICON_ALGORITHM	(WM_APP+0x1A)
 
 
  /// subclassed Background window behind the visible desktop window
@@ -176,9 +177,9 @@ protected:
 
 	bool	DoContextMenu(int x, int y);
 	HRESULT DoDesktopContextMenu(int x, int y);
-	void	PositionIcons(int alignment, int dir=1);
+	void	PositionIcons(int dir=1);
 
 	DesktopDropTarget* _pDropTarget;
 	HWND	_hwndListView;
-	int		_alignment;
+	int		_icon_algo;
 };
