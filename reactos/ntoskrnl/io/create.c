@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.52 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: create.c,v 1.53 2002/01/26 06:20:16 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,7 +344,10 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
      {
 	FileObject->Flags |= FO_SYNCHRONOUS_IO;
      }
-   
+
+   if( CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING )
+     FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+
    SecurityContext.SecurityQos = NULL; /* ?? */
    SecurityContext.AccessState = NULL; /* ?? */
    SecurityContext.DesiredAccess = DesiredAccess;
