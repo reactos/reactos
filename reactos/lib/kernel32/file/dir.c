@@ -189,8 +189,8 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
    PSTR p;
    PSTR prev = NULL;
    
-   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %s, "
-	  "lpFilePart %x)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
+          "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
    
    if (!lpFileName || !lpBuffer)
         return 0;
@@ -236,8 +236,9 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
    DPRINT("lpBuffer %s\n",lpBuffer);
 
    p = lpBuffer + 2;
+   prev = p;
 
-   while ((*p) != 0) 
+   while ((*p) != 0 || ((*p) == '\\' && (*(p+1)) == 0))
      {
          DWORD dwDotLen;
 
@@ -264,23 +265,20 @@ DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
 		{
                    int n = dwDotLen - 2;
 
-                   while (n > 0)
+                   while (n > 0 && prev > (lpBuffer+2))
                      {
                         prev--;
                         if ((*prev) == '\\')
                              n--;
-                        if (prev == (lpBuffer+2))
-                             break;
                      }
 		}
 
-              lstrcpyA (prev, p+dwDotLen+1);
-              p = prev;
-              if (prev == (lpBuffer+2))
-		{
-                   prev = NULL;
-		}
+              if (*(p+dwDotLen+1) == 0)
+                   *(prev+1) = 0;
               else
+                   lstrcpyA (prev, p+dwDotLen+1);
+              p = prev;
+              if (prev > (lpBuffer+2))
 		{
                    prev--;
                    while ((*prev) != '\\')
@@ -328,8 +326,8 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    PWSTR p;
    PWSTR prev = NULL;
    
-   DPRINT("GetFullPathNameW(lpFileName %w, nBufferLength %d, lpBuffer %w, "
-	  "lpFilePart %x)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+   DPRINT("GetFullPathNameW(lpFileName %w, nBufferLength %d, lpBuffer %p, "
+          "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
    
    if (!lpFileName || !lpBuffer)
         return 0;
@@ -375,8 +373,9 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    DPRINT("lpBuffer %w\n",lpBuffer);
    
    p = lpBuffer + 2;
+   prev = p;
    
-   while ((*p) != 0) 
+   while ((*p) != 0 || ((*p) == L'\\' && (*(p+1)) == 0)) 
      {
 	DWORD dwDotLen;
 
@@ -403,23 +402,20 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
                {
                   int n = dwDotLen - 2;
 
-                  while (n > 0)
+                  while (n > 0 && prev > (lpBuffer+2))
                     {
                        prev--;
                        if ((*prev) == L'\\')
                             n--;
-                       if (prev == (lpBuffer+2))
-                            break;
                     }
                }
 
-             lstrcpyW (prev, p+dwDotLen+1);
-             p = prev;
-             if (prev == (lpBuffer+2))
-               {
-                  prev = NULL;
-               }
+             if (*(p+dwDotLen+1) == 0)
+                  *(prev+1) = 0;
              else
+                  lstrcpyW (prev, p+dwDotLen+1);
+             p = prev;
+             if (prev > (lpBuffer+2))
                {
                   prev--;
                   while ((*prev) != L'\\')
