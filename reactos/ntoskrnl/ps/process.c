@@ -1135,6 +1135,36 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    KPROCESSOR_MODE PreviousMode;
 
    PreviousMode = ExGetPreviousMode();
+   
+   /* check for valid buffers */
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       /* probe with 32bit alignment */
+       ProbeForWrite(ProcessInformation,
+                     ProcessInformationLength,
+                     sizeof(ULONG));
+       if(ReturnLength)
+       {
+         ProbeForWrite(ReturnLength,
+                       sizeof(ULONG),
+                       1);
+       }
+
+       Status = STATUS_SUCCESS;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    /*
     * TODO: Here we should probably check that ProcessInformationLength
@@ -1223,6 +1253,31 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessDebugPort:
+      {
+      	if (ProcessInformationLength != sizeof(ULONG))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+          _SEH_TRY
+          {
+
+            *(PHANDLE)ProcessInformation = (Process->DebugPort != NULL ? (HANDLE)-1 : NULL);
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(HANDLE);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+	}
+        break;
+      }
+      
       case ProcessLdtInformation:
       case ProcessWorkingSetWatch:
       case ProcessWx86Information:
@@ -1458,7 +1513,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             _SEH_TRY
             {
               DstPath->Length = ProcParams->ImagePathName.Length;
-              DstPath->MaximumLength = DstPath->Length + sizeof(WCHAR);
+              DstPath->MaximumLength = ProcParams->ImagePathName.Length + sizeof(WCHAR);
               DstPath->Buffer = (PWSTR)(DstPath + 1);
 
               RtlCopyMemory(DstPath->Buffer, ProcParams->ImagePathName.Buffer, ProcParams->ImagePathName.Length);
@@ -1550,6 +1605,29 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    KPROCESSOR_MODE PreviousMode;
    
    PreviousMode = ExGetPreviousMode();
+   
+   /* check for valid buffers */
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       /* probe with 32bit alignment */
+       ProbeForRead(ProcessInformation,
+                     ProcessInformationLength,
+                     sizeof(ULONG));
+       Status = STATUS_SUCCESS;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
