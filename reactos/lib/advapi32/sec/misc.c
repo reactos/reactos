@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.16 2004/05/26 09:50:10 weiden Exp $
+/* $Id: misc.c,v 1.17 2004/05/26 19:53:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -242,7 +242,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
   /* Impersonate the the current thread */
   Status = NtSetInformationThread (NtCurrentThread (),
 				   ThreadImpersonationToken,
-				   NewToken,
+				   &NewToken,
 				   sizeof(HANDLE));
 
   if (Duplicated == TRUE)
