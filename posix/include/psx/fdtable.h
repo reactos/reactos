@@ -1,9 +1,9 @@
-/* $Id:
+/* $Id: fdtable.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
  */
 /*
  * psx/fdtable.h
  *
- * POSIX subsystem file descriptor table data structure
+ * POSIX+ subsystem file descriptor table data structure
  *
  * This file is part of the ReactOS Operating System.
  *

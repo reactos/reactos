@@ -1,8 +1,8 @@
-/* $Id: dlsym.c,v 1.1 2002/02/20 07:06:50 hyperion Exp $
+/* $Id: dlsym.c,v 1.2 2002/02/20 09:17:56 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     ReactOS POSIX+ Subsystem
  * FILE:        subsys/psx/lib/psxdll/dlfcn/dlsym.c
  * PURPOSE:     Obtain the address of a symbol from a dlopen() object
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>

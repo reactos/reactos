@@ -1,9 +1,9 @@
-/* $Id:
+/* $Id: pdata.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
  */
 /*
  * psx/pdata.h
  *
- * POSIX subsystem process environment data structure
+ * POSIX+ subsystem process environment data structure
  *
  * This file is part of the ReactOS Operating System.
  *

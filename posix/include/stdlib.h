@@ -1,8 +1,10 @@
+/* $Id: stdlib.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
  * stdlib.h
  *
- * standard library definitions. Based on the Single UNIX(r)
- * Specification, Version 2
+ * standard library definitions. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -45,7 +47,7 @@ typedef struct __tagldiv_t
 } ldiv_t;
 
 /* CONSTANTS */
-#define EXIT_FAILURE (-1) /* Unsuccessful termination for exit(), evaluates
+#define EXIT_FAILURE (-1) /* Unsuccessful termination for exit(), evaluates \
                              to a non-zero value. */
 #define EXIT_SUCCESS (0) /* Successful termination for exit(), evaluates to 0. */
 
@@ -53,8 +55,8 @@ typedef struct __tagldiv_t
 #define RAND_MAX (32767) /* Maximum value returned by rand(), at least 32,767. */
 
 /* FIXME */
-#define MB_CUR_MAX (1) /* Integer expression whose value is the maximum number
-                          of bytes in a character specified by the current
+#define MB_CUR_MAX (1) /* Integer expression whose value is the maximum number \
+                          of bytes in a character specified by the current \
                           locale. */
 
 /* PROTOTYPES */
@@ -114,9 +116,9 @@ long int  strtol(const char *, char **, int);
 unsigned long int
           strtoul(const char *, char **, int);
 int       system(const char *);
-int       ttyslot(void); /* (LEGACY) */
+int       ttyslot(void); /* LEGACY */
 int       unlockpt(int);
-void     *valloc(size_t); /* (LEGACY) */
+void     *valloc(size_t); /* LEGACY */
 size_t    wcstombs(char *, const wchar_t *, size_t);
 int       wctomb(char *, wchar_t);
 

@@ -1,7 +1,10 @@
+/* $Id: ucontext.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
  * ucontext.h
  *
- * user context. Based on the Single UNIX(r) Specification, Version 2
+ * user context. Conforming to the Single UNIX(r) Specification Version 2,
+ * System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -30,9 +33,9 @@
 /* TYPES */
 typedef void * mcontext_t;
 
-typedef struct _tagucontext_t ucontext_t;
+typedef struct __tagucontext_t ucontext_t;
 
-struct _tagucontext_t
+struct __tagucontext_t
 {
  ucontext_t *uc_link;     /* pointer to the context that will be resumed
                              when this context returns */

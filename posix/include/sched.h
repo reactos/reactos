@@ -1,3 +1,5 @@
+/* $Id: sched.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * sched.h
  *

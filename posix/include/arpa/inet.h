@@ -1,8 +1,10 @@
+/* $Id: inet.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
  * arpa/inet.h
  *
- * definitions for internet operations. Based on the Single UNIX(r)
- * Specification, Version 2
+ * definitions for internet operations. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -23,25 +25,17 @@
 #ifndef __ARPA_INET_H_INCLUDED__
 #define __ARPA_INET_H_INCLUDED__
 
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-#include <psxdll/netinet/in.h>
-#include <psxdll/inttypes.h>
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
+/* INCLUDES */
 #include <netinet/in.h>
 #include <inttypes.h>
 
-#endif
+/* OBJECTS */
 
-/* types */
+/* TYPES */
 
-/* constants */
+/* CONSTANTS */
 
-/* prototypes */
+/* PROTOTYPES */
 uint32_t htonl(uint32_t hostlong);
 uint16_t htons(uint16_t hostshort);
 uint32_t ntohl(uint32_t netlong);
@@ -54,7 +48,7 @@ in_addr_t      inet_netof(struct in_addr in);
 in_addr_t      inet_network(const char *cp);
 char          *inet_ntoa(struct in_addr in);
 
-/* macros */
+/* MACROS */
 
 #endif /* __ARPA_INET_H_INCLUDED__ */
 

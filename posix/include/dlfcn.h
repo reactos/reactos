@@ -1,7 +1,10 @@
+/* $Id: dlfcn.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * dlfcn.h
  *
- * dynamic linking. Based on the Single UNIX(r) Specification, Version 2
+ * dynamic linking. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -27,16 +30,16 @@
 /* TYPES */
 
 /* CONSTANTS */
-#define RTLD_LAZY   (0x00000000) /* Relocations are performed at an
+#define RTLD_LAZY   (0x00000000) /* Relocations are performed at an \
                                     implementation-dependent time. */
-#define RTLD_NOW    (0x00000001) /* Relocations are performed when
+#define RTLD_NOW    (0x00000001) /* Relocations are performed when \
                                     the object is loaded. */
 
-#define RTLD_GLOBAL (0x00000010) /* All symbols are available for
-                                    relocation processing of other
+#define RTLD_GLOBAL (0x00000010) /* All symbols are available for \
+                                    relocation processing of other \
                                     modules. */
-#define RTLD_LOCAL  (0x00000020) /* All symbols are not made available
-                                    for relocation processing by other
+#define RTLD_LOCAL  (0x00000020) /* All symbols are not made available \
+                                    for relocation processing by other \
                                     modules. */
 
 #define RTLD_NEXT ((void *)(-1))

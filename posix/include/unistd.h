@@ -1,8 +1,10 @@
+/* $Id: unistd.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
- * psx/template.h
+ * unistd.h
  *
- * standard symbolic constants and types. Based on the Single UNIX(r)
- * Specification, Version 2
+ * standard symbolic constants and types. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -399,13 +401,13 @@ int          access(const char *, int);
 unsigned int alarm(unsigned int);
 int          brk(void *);
 int          chdir(const char *);
-int          chroot(const char *); /* (LEGACY) */
+int          chroot(const char *); /* LEGACY */
 int          chown(const char *, uid_t, gid_t);
 int          close(int);
 size_t       confstr(int, char *, size_t);
 char        *crypt(const char *, const char *);
 char        *ctermid(char *);
-char        *cuserid(char *s); /* (LEGACY) */
+char        *cuserid(char *s); /* LEGACY */
 int          dup(int);
 int          dup2(int, int);
 void         encrypt(char[64], int);
@@ -424,7 +426,7 @@ long int     fpathconf(int, int);
 int          fsync(int);
 int          ftruncate(int, off_t);
 char        *getcwd(char *, size_t);
-int          getdtablesize(void); /* (LEGACY) */
+int          getdtablesize(void); /* LEGACY */
 gid_t        getegid(void);
 uid_t        geteuid(void);
 gid_t        getgid(void);
@@ -433,8 +435,8 @@ long         gethostid(void);
 char        *getlogin(void);
 int          getlogin_r(char *, size_t);
 int          getopt(int, char * const [], const char *);
-int          getpagesize(void); /* (LEGACY) */
-char        *getpass(const char *); /* (LEGACY) */
+int          getpagesize(void); /* LEGACY */
+char        *getpass(const char *); /* LEGACY */
 pid_t        getpgid(pid_t);
 pid_t        getpgrp(void);
 pid_t        getpid(void);

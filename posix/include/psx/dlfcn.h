@@ -1,3 +1,5 @@
+/* $Id: dlfcn.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
  * psx/dlfcn.h
  *

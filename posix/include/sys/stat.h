@@ -1,8 +1,10 @@
+/* $Id: stat.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+ */
 /*
  * sys/stat.h
  *
- * data returned by the stat() function. Based on the Single UNIX(r) Specification,
- * Version 2
+ * data returned by the stat() function. Conforming to the Single
+ * UNIX(r) Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *

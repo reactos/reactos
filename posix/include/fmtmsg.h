@@ -1,8 +1,10 @@
+/* $Id: fmtmsg.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * fmtmsg.h
  *
- * message display structures. Based on the Single UNIX(r) Specification,
- * Version 2
+ * message display structures. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -24,15 +26,6 @@
 #define __FMTMSG_H_INCLUDED__
 
 /* INCLUDES */
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
-
-#endif
 
 /* OBJECTS */
 
@@ -68,7 +61,7 @@
 /* Identifiers for the levels of severity */
 #define MM_NOSEV   (0) /* No severity level provided for the message. */
 #define MM_INFO    (1) /* Informative message. */
-#define MM_WARNING (2) /* Application has detected unusual non-error
+#define MM_WARNING (2) /* Application has detected unusual non-error \
                           condition. */
 #define MM_ERROR   (3) /* Application has encountered a non-fatal fault. */
 #define MM_HALT    (4) /* Error causing application to halt. */
@@ -84,9 +77,9 @@
 /* Return values */
 #define MM_OK    ( 0) /* The function succeeded. */
 #define MM_NOTOK (-1) /* The function failed completely. */
-#define MM_NOMSG (-2) /* The function was unable to generate a message on
+#define MM_NOMSG (-2) /* The function was unable to generate a message on \
                          standard error, but otherwise succeeded. */
-#define MM_NOCON (-3) /* The function was unable to generate a console
+#define MM_NOCON (-3) /* The function was unable to generate a console \
                          message, but otherwise succeeded. */
 
 /* PROTOTYPES */

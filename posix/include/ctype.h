@@ -1,7 +1,10 @@
+/* $Id: ctype.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * ctype.h
  *
- * character types. Based on the Single UNIX(r) Specification, Version 2
+ * character types. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -22,21 +25,15 @@
 #ifndef __CTYPE_H_INCLUDED__
 #define __CTYPE_H_INCLUDED__
 
-#ifdef __PSXDLL__
+/* INCLUDES */
 
-/* headers for internal usage by psxdll.dll and ReactOS */
+/* OBJECTS */
 
-#else /* ! __PSXDLL__ */
+/* TYPES */
 
-/* standard POSIX headers */
+/* CONSTANTS */
 
-#endif
-
-/* types */
-
-/* constants */
-
-/* prototypes */
+/* PROTOTYPES */
 int   isalnum(int);
 int   isalpha(int);
 int   isascii(int);
@@ -53,7 +50,7 @@ int   toascii(int);
 int   tolower(int);
 int   toupper(int);
 
-/* macros */
+/* MACROS */
 /* FIXME: the standard isn't clear about these */
 #define _toupper(c) (toupper(c))
 #define _tolower(c) (tolower(c))

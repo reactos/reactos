@@ -1,7 +1,10 @@
+/* $Id: types.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+ */
 /*
  * sys/types.h
  *
- * data types. Based on the Single UNIX(r) Specification, Version 2
+ * data types. Conforming to the Single UNIX(r) Specification Version 2,
+ * System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *

@@ -1,7 +1,10 @@
+/* $Id: stdio.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * stdio.h
  *
- * standard buffered input/output. 
+ * standard buffered input/output. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -31,16 +34,16 @@
 /* OBJECTS */
 extern char  *optarg;
 extern int    opterr;
-extern int    optind; /* (LEGACY) */
+extern int    optind; /* LEGACY */
 extern int    optopt;
 
 /* TYPES */
-typedef struct _tagFILE
+typedef struct __tagFILE
 {
  int _dummy;
 } FILE;
 
-typedef struct _tagfpos_t
+typedef struct __tagfpos_t
 {
  int _dummy;
 } fpos_t;
@@ -93,7 +96,7 @@ typedef struct _tagfpos_t
 /* PROTOTYPES */
 void     clearerr(FILE *);
 char    *ctermid(char *);
-char    *cuserid(char *); /* (LEGACY) */
+char    *cuserid(char *); /* LEGACY */
 int      fclose(FILE *);
 FILE    *fdopen(int, const char *);
 int      feof(FILE *);
@@ -123,7 +126,7 @@ int      getc(FILE *);
 int      getchar(void);
 int      getc_unlocked(FILE *);
 int      getchar_unlocked(void);
-int      getopt(int, char * const[], const char *); /* (LEGACY) */
+int      getopt(int, char * const[], const char *); /* LEGACY */
 char    *gets(char *);
 int      getw(FILE *);
 int      pclose(FILE *);

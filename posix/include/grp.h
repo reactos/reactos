@@ -1,7 +1,10 @@
+/* $Id: grp.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * grp.h
  *
- * group structure. Based on the Single UNIX(r) Specification, Version 2
+ * group structure. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *

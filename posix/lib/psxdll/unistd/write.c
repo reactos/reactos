@@ -1,4 +1,4 @@
-/* $Id:
+/* $Id: write.c,v 1.2 2002/02/20 09:17:58 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory

@@ -1,8 +1,10 @@
+/* $Id: ftw.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * ftw.h
  *
- * file tree traversal. Based on the Single UNIX(r) Specification,
- * Version 2
+ * file tree traversal. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -24,24 +26,15 @@
 #define __FTW_H_INCLUDED__
 
 /* INCLUDES */
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
-
-#endif
 
 /* OBJECTS */
 
 /* TYPES */
 struct FTW
 {
- int  base
- int  level
-}
+ int  base;
+ int  level;
+};
 
 /* CONSTANTS */
 /* Values of the third argument to the application-supplied function
@@ -55,14 +48,14 @@ struct FTW
 #define FTW_SLN (7) /* Symbolic link that names a non-existent file. */
 
 /* Values of the fourth argument to nftw() */
-#define FTW_PHYS  (0x00000001) /* Physical walk, does not follow symbolic
-                                  links. Otherwise, nftw() will follow
-                                  links but will not walk down any path
+#define FTW_PHYS  (0x00000001) /* Physical walk, does not follow symbolic \
+                                  links. Otherwise, nftw() will follow \
+                                  links but will not walk down any path \
                                   that crosses itself. */
 #define FTW_MOUNT (0x00000002) /* The walk will not cross a mount point. */
-#define FTW_DEPTH (0x00000004) /* All subdirectories will be visited before
+#define FTW_DEPTH (0x00000004) /* All subdirectories will be visited before \
                                   the directory itself. */
-#define FTW_CHDIR (0x00000008) /* The walk will change to each directory
+#define FTW_CHDIR (0x00000008) /* The walk will change to each directory \
                                   before reading it. */
 
 /* PROTOTYPES */

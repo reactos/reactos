@@ -1,7 +1,10 @@
+/* $Id: string.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+ */
 /*
  * string.h
  *
- * string operations. Based on the Single UNIX(r) Specification, Version 2
+ * string operations. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *

@@ -1,8 +1,10 @@
+/* $Id: utsname.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+ */
 /*
  * sys/utsname.h
  *
- * system name structure. Based on the Single UNIX(r) Specification,
- * Version 2
+ * system name structure. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *

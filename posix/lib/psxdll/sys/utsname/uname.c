@@ -1,8 +1,8 @@
-/* $Id:
+/* $Id: uname.c,v 1.2 2002/02/20 09:17:58 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     ReactOS POSIX+ Subsystem
  * FILE:        lib/psxdll/sys/utsname/uname.c
  * PURPOSE:     Get name of current system
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>

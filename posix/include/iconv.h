@@ -1,8 +1,10 @@
+/* $Id: iconv.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * iconv.h
  *
- * codeset conversion facility. Based on the Single UNIX(r) Specification,
- * Version 2
+ * codeset conversion facility. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -24,15 +26,6 @@
 #define __ICONV_H_INCLUDED__
 
 /* INCLUDES */
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
-
-#endif
 
 /* OBJECTS */
 

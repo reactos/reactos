@@ -1,8 +1,10 @@
+/* $Id: iso646.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * iso646.h
  *
- * alternative spellings. Based on the Single UNIX(r) Specification,
- * Version 2
+ * alternative spellings. Conforming to the Single UNIX(r) Specification
+ * Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -24,15 +26,6 @@
 #define __ISO646_H_INCLUDED__
 
 /* INCLUDES */
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
-
-#endif
 
 /* OBJECTS */
 

@@ -1,8 +1,10 @@
+/* $Id: fnmatch.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * fnmatch.h
  *
- * filename-matching types. Based on the Single UNIX(r) Specification,
- * Version 2
+ * filename-matching types. Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -40,17 +42,17 @@
 
 /* CONSTANTS */
 /* Flags */
-#define FNM_PATHNAME (0x00000001) /* Slash in string only matches slash
+#define FNM_PATHNAME (0x00000001) /* Slash in string only matches slash \
                                      in pattern. */
-#define FNM_PERIOD   (0x00000002) /* Leading period in string must be
-                                     exactly matched by period in
+#define FNM_PERIOD   (0x00000002) /* Leading period in string must be \
+                                     exactly matched by period in \
                                      pattern. */
 #define FNM_NOESCAPE (0x00000004) /* Disable backslash escaping. */
 
 /* Return values */
-#define FNM_NOMATCH (1) /* The string does not match the specified
+#define FNM_NOMATCH (1) /* The string does not match the specified \
                            pattern. */
-#define FNM_NOSYS   (2) /* The implementation does not support this
+#define FNM_NOSYS   (2) /* The implementation does not support this \
                            function. */
 
 /* PROTOTYPES */

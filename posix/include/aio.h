@@ -1,8 +1,10 @@
+/* $Id: aio.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+ */
 /*
  * aio.h
  *
- * asynchronous input and output (REALTIME). Based on the Single UNIX(r)
- * Specification, Version 2
+ * asynchronous input and output (REALTIME). Conforming to the Single UNIX(r)
+ * Specification Version 2, System Interface & Headers Issue 5
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -23,37 +25,27 @@
 #ifndef __AIO_H_INCLUDED__
 #define __AIO_H_INCLUDED__
 
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-#include <psxdll/fcntl.h>
-#include <psxdll/signal.h>
-#include <psxdll/sys/types.h>
-#include <psxdll/time.h>
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
+/* INCLUDES */
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <time.h>
 
-#endif
+/* OBJECTS */
 
-/* types */
+/* TYPES */
 typedef struct _tag_aiocb
 {
- int             aio_fildes     /* file descriptor */
- off_t           aio_offset     /* file offset */
- volatile void*  aio_buf        /* location of buffer
- size_t          aio_nbytes     /* length of transfer */
- int             aio_reqprio    /* request priority offset */
- struct sigevent aio_sigevent   /* signal number and value */
- int             aio_lio_opcode /* operation to be performed */
+ int             aio_fildes;     /* file descriptor */
+ off_t           aio_offset;     /* file offset */
+ volatile void*  aio_buf;        /* location of buffer */
+ size_t          aio_nbytes;     /* length of transfer */
+ int             aio_reqprio;    /* request priority offset */
+ struct sigevent aio_sigevent;   /* signal number and value */
+ int             aio_lio_opcode; /* operation to be performed */
 } aiocb;
 
-/* constants */
+/* CONSTANTS */
 #define AIO_CANCELED    0
 #define AIO_NOTCANCELED 1
 #define AIO_ALLDONE     2
@@ -64,7 +56,7 @@ typedef struct _tag_aiocb
 #define LIO_WRITE       3
 #define LIO_NOP         4
 
-/* prototypes */
+/* PROTOTYPES */
 int      aio_cancel(int, struct aiocb *);
 int      aio_error(const struct aiocb *);
 int      aio_fsync(int, struct aiocb *);
@@ -73,6 +65,8 @@ ssize_t  aio_return(struct aiocb *);
 int      aio_suspend(const struct aiocb *const[], int, const struct timespec *);
 int      aio_write(struct aiocb *);
 int      lio_listio(int, struct aiocb *const[], int, struct sigevent *);
+
+/* MACROS */
 
 #endif /* __AIO_H_INCLUDED__ */
 
