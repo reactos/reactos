@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.9 2001/06/07 21:16:41 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.10 2001/06/08 15:11:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,79 +66,80 @@ typedef struct _PARTITION_TABLE
 /* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
-xHalpQueryDriveLayout (
-	IN	PUNICODE_STRING	DeviceName,
-	OUT	PDRIVE_LAYOUT_INFORMATION *LayoutInfo
-	)
+xHalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
+		      OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
 {
-	IO_STATUS_BLOCK StatusBlock;
-	DISK_GEOMETRY DiskGeometry;
-	PDEVICE_OBJECT DeviceObject = NULL;
-	PFILE_OBJECT FileObject;
-	KEVENT Event;
-	PIRP Irp;
-	NTSTATUS Status;
+   IO_STATUS_BLOCK StatusBlock;
+   DISK_GEOMETRY DiskGeometry;
+   PDEVICE_OBJECT DeviceObject = NULL;
+   PFILE_OBJECT FileObject;
+   KEVENT Event;
+   PIRP Irp;
+   NTSTATUS Status;
 
-	DPRINT ("xHalpQueryDriveLayout %wZ %p\n",
-	        DeviceName,
-	        LayoutInfo);
+   DPRINT("xHalpQueryDriveLayout %wZ %p\n",
+	  DeviceName,
+	  LayoutInfo);
 
-	/*
-	 * Get the drives sector size
-	 */
-	Status = IoGetDeviceObjectPointer (DeviceName,
-	                                   FILE_READ_DATA,
-	                                   &FileObject,
-	                                   &DeviceObject);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT ("Status %x\n",Status);
-		return Status;
-	}
-
-	KeInitializeEvent (&Event,
-	                   NotificationEvent,
-	                   FALSE);
-
-	Irp = IoBuildDeviceIoControlRequest (IOCTL_DISK_GET_DRIVE_GEOMETRY,
-	                                     DeviceObject,
-	                                     NULL,
-	                                     0,
-	                                     &DiskGeometry,
-	                                     sizeof(DISK_GEOMETRY),
-	                                     FALSE,
-	                                     &Event,
-	                                     &StatusBlock);
-	if (Irp == NULL)
-	{
-		ObDereferenceObject (FileObject);
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-	Status = IoCallDriver(DeviceObject, Irp);
-	if (Status == STATUS_PENDING)
-	{
-		KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-		Status = StatusBlock.Status;
-	}
-	if (!NT_SUCCESS(Status))
-	{
-		ObDereferenceObject (FileObject);
-		return Status;
-	}
-
-	DPRINT("DiskGeometry.BytesPerSector: %d\n",
-	       DiskGeometry.BytesPerSector);
-
-	/* read the partition table */
-	Status = IoReadPartitionTable (DeviceObject,
-	                               DiskGeometry.BytesPerSector,
-	                               FALSE,
-	                               LayoutInfo);
-
-	ObDereferenceObject (FileObject);
-
+   /* Get the drives sector size */
+   Status = IoGetDeviceObjectPointer(DeviceName,
+				     FILE_READ_DATA,
+				     &FileObject,
+				     &DeviceObject);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Status %x\n",Status);
 	return Status;
+	}
+
+   KeInitializeEvent(&Event,
+		     NotificationEvent,
+		     FALSE);
+
+   Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+				       DeviceObject,
+				       NULL,
+				       0,
+				       &DiskGeometry,
+				       sizeof(DISK_GEOMETRY),
+				       FALSE,
+				       &Event,
+				       &StatusBlock);
+   if (Irp == NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return STATUS_INSUFFICIENT_RESOURCES;
+     }
+
+   Status = IoCallDriver(DeviceObject,
+			 Irp);
+   if (Status == STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,
+			      Executive,
+			      KernelMode,
+			      FALSE,
+			      NULL);
+	Status = StatusBlock.Status;
+     }
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(FileObject);
+	return Status;
+     }
+
+   DPRINT("DiskGeometry.BytesPerSector: %d\n",
+	  DiskGeometry.BytesPerSector);
+
+   /* read the partition table */
+   Status = IoReadPartitionTable(DeviceObject,
+				 DiskGeometry.BytesPerSector,
+				 FALSE,
+				 LayoutInfo);
+
+   ObDereferenceObject(FileObject);
+
+   return Status;
 }
 
 
@@ -148,139 +149,138 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 	       IN ULONG MBRTypeIdentifier,
 	       OUT PVOID *Buffer)
 {
-	KEVENT Event;
-	IO_STATUS_BLOCK StatusBlock;
-	LARGE_INTEGER Offset;
-	PUCHAR LocalBuffer;
-	PIRP Irp;
-	NTSTATUS Status;
+   KEVENT Event;
+   IO_STATUS_BLOCK StatusBlock;
+   LARGE_INTEGER Offset;
+   PUCHAR LocalBuffer;
+   PIRP Irp;
+   NTSTATUS Status;
 
-	DPRINT ("xHalExamineMBR()\n");
-	*Buffer = NULL;
+   DPRINT("xHalExamineMBR()\n");
+   *Buffer = NULL;
 
-	if (SectorSize < 512)
-		SectorSize = 512;
-	if (SectorSize > 4096)
-		SectorSize = 4096;
+   if (SectorSize < 512)
+     SectorSize = 512;
+   if (SectorSize > 4096)
+     SectorSize = 4096;
 
-	LocalBuffer = (PUCHAR)ExAllocatePool (PagedPool,
-	                                      SectorSize);
-	if (LocalBuffer == NULL)
-		return;
+   LocalBuffer = (PUCHAR)ExAllocatePool(PagedPool,
+					SectorSize);
+   if (LocalBuffer == NULL)
+     return;
 
-	KeInitializeEvent (&Event,
-	                   NotificationEvent,
-	                   FALSE);
+   KeInitializeEvent(&Event,
+		     NotificationEvent,
+		     FALSE);
 
-	Offset.QuadPart = 0;
+   Offset.QuadPart = 0;
 
-	Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
-	                                    DeviceObject,
-	                                    LocalBuffer,
-	                                    SectorSize,
-	                                    &Offset,
-	                                    &Event,
-	                                    &StatusBlock);
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				      DeviceObject,
+				      LocalBuffer,
+				      SectorSize,
+				      &Offset,
+				      &Event,
+				      &StatusBlock);
 
-	Status = IoCallDriver (DeviceObject,
-	                       Irp);
-	if (Status == STATUS_PENDING)
-	{
-		KeWaitForSingleObject (&Event,
-		                       Executive,
-		                       KernelMode,
-		                       FALSE,
-		                       NULL);
-		Status = StatusBlock.Status;
-	}
+   Status = IoCallDriver(DeviceObject,
+			 Irp);
+   if (Status == STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,
+			      Executive,
+			      KernelMode,
+			      FALSE,
+			      NULL);
+	Status = StatusBlock.Status;
+     }
 
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT ("xHalExamineMBR failed (Status = 0x%08lx)\n",
-		        Status);
-		ExFreePool (LocalBuffer);
-		return;
-	}
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("xHalExamineMBR failed (Status = 0x%08lx)\n",
+	       Status);
+	ExFreePool(LocalBuffer);
+	return;
+     }
 
-	if (LocalBuffer[0x1FE] != 0x55 || LocalBuffer[0x1FF] != 0xAA)
-	{
-		DPRINT ("xHalExamineMBR: invalid MBR signature\n");
-		ExFreePool (LocalBuffer);
-		return;
-	}
+   if (LocalBuffer[0x1FE] != 0x55 || LocalBuffer[0x1FF] != 0xAA)
+     {
+	DPRINT("xHalExamineMBR: invalid MBR signature\n");
+	ExFreePool(LocalBuffer);
+	return;
+     }
 
-	if (LocalBuffer[0x1C2] != MBRTypeIdentifier)
-	{
-		DPRINT ("xHalExamineMBR: invalid MBRTypeIdentifier\n");
-		ExFreePool (LocalBuffer);
-		return;
-	}
+   if (LocalBuffer[0x1C2] != MBRTypeIdentifier)
+     {
+	DPRINT("xHalExamineMBR: invalid MBRTypeIdentifier\n");
+	ExFreePool(LocalBuffer);
+	return;
+     }
 
-	*Buffer = (PVOID)LocalBuffer;
+   *Buffer = (PVOID)LocalBuffer;
 }
 
+
 static VOID
-HalpAssignDrive (
-	IN	PUNICODE_STRING PartitionName,
-	IN OUT	PULONG DriveMap,
-	IN	ULONG DriveNumber
-	)
+HalpAssignDrive(IN PUNICODE_STRING PartitionName,
+		IN OUT PULONG DriveMap,
+		IN ULONG DriveNumber)
 {
-	WCHAR DriveNameBuffer[8];
-	UNICODE_STRING DriveName;
-	ULONG i;
+   WCHAR DriveNameBuffer[8];
+   UNICODE_STRING DriveName;
+   ULONG i;
 
-	DPRINT("HalpAssignDrive()\n");
+   DPRINT("HalpAssignDrive()\n");
 
-	if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 24))
-	{
-		/* force assignment */
-		if ((*DriveMap & (1 << DriveNumber)) != 0)
-		{
-			DbgPrint("Drive letter already used!\n");
-			return;
-		}
-	}
-	else
-	{
-		/* automatic assignment */
-		DriveNumber = AUTO_DRIVE;
+   if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 24))
+     {
+	/* force assignment */
+	if ((*DriveMap & (1 << DriveNumber)) != 0)
+	  {
+	     DbgPrint("Drive letter already used!\n");
+	     return;
+	  }
+     }
+   else
+     {
+	/* automatic assignment */
+	DriveNumber = AUTO_DRIVE;
 
-		for (i = 2; i < 24; i++)
-		{
-			if ((*DriveMap & (1 << i)) == 0)
-			{
-				DriveNumber = i;
-				break;
-			}
-		}
+	for (i = 2; i < 24; i++)
+	  {
+	     if ((*DriveMap & (1 << i)) == 0)
+	       {
+		  DriveNumber = i;
+		  break;
+	       }
+	  }
 
-		if (DriveNumber == AUTO_DRIVE)
-		{
-			DbgPrint("No drive letter available!\n");
-			return;
-		}
-	}
+	if (DriveNumber == AUTO_DRIVE)
+	  {
+	     DbgPrint("No drive letter available!\n");
+	     return;
+	  }
+     }
 
-	DPRINT("DriveNumber %d\n", DriveNumber);
+   DPRINT("DriveNumber %d\n", DriveNumber);
 
-	/* set bit in drive map */
-	*DriveMap = *DriveMap | (1 << DriveNumber);
+   /* set bit in drive map */
+   *DriveMap = *DriveMap | (1 << DriveNumber);
 
-	/* build drive name */
-	swprintf (DriveNameBuffer,
-	          L"\\??\\%C:",
-	          'A' + DriveNumber);
-	RtlInitUnicodeString (&DriveName,
-	                      DriveNameBuffer);
+   /* build drive name */
+   swprintf(DriveNameBuffer,
+	    L"\\??\\%C:",
+	    'A' + DriveNumber);
+   RtlInitUnicodeString(&DriveName,
+			DriveNameBuffer);
 
-	DPRINT("  %wZ ==> %wZ\n",
-	       &DriveName,
-	       PartitionName);
+   DPRINT("  %wZ ==> %wZ\n",
+	  &DriveName,
+	  PartitionName);
 
-	/* create symbolic link */
-	IoCreateSymbolicLink (&DriveName,
-	                      PartitionName);
+   /* create symbolic link */
+   IoCreateSymbolicLink(&DriveName,
+			PartitionName);
 }
 
 
@@ -732,7 +732,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 			IsRecognizedPartition (PartitionTable->Partition[i].PartitionType);
 		  LayoutBuffer->PartitionEntry[Count].RewritePartition = FALSE;
 
-		  DPRINT1(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
+		  DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
 			 Count,
 			 LayoutBuffer->PartitionEntry[Count].PartitionNumber,
 			 LayoutBuffer->PartitionEntry[Count].BootIndicator,
@@ -762,6 +762,27 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
    ExFreePool(SectorBuffer);
 
    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS FASTCALL
+xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+			      IN ULONG SectorSize,
+			      IN ULONG PartitionNumber,
+			      IN ULONG PartitionType)
+{
+   return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS FASTCALL
+xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+			  IN ULONG SectorSize,
+			  IN ULONG SectorsPerTrack,
+			  IN ULONG NumberOfHeads,
+			  IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+   return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

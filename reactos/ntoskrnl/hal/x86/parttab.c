@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.3 2000/08/21 00:12:20 ekohl Exp $
+/* $Id: parttab.c,v 1.4 2001/06/08 15:08:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,14 +19,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-IoReadPartitionTable (
-	PDEVICE_OBJECT			DeviceObject,
-	ULONG				SectorSize,
-	BOOLEAN				ReturnRecognizedPartitions,
-	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
-	)
+NTSTATUS STDCALL
+IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
+		     ULONG SectorSize,
+		     BOOLEAN ReturnRecognizedPartitions,
+		     PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
 #ifdef __NTOSKRNL__
 	return HalDispatchTable.HalIoReadPartitionTable(DeviceObject,
@@ -41,29 +38,47 @@ IoReadPartitionTable (
 #endif
 }
 
-NTSTATUS
-STDCALL
-IoSetPartitionInformation (
-	PDEVICE_OBJECT	DeviceObject,
-	ULONG		SectorSize,
-	ULONG		PartitionNumber,
-	ULONG		PartitionType)
+
+NTSTATUS STDCALL
+IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
+			  ULONG SectorSize,
+			  ULONG PartitionNumber,
+			  ULONG PartitionType)
 {
-	UNIMPLEMENTED;
+#ifdef __NTOSKRNL__
+   return HalDispatchTable.HalIoSetPartitionInformation(DeviceObject,
+							SectorSize,
+							PartitionNumber,
+							PartitionType);
+#else
+   return HalDispatchTable->HalIoSetPartitionInformation(DeviceObject,
+							 SectorSize,
+							 PartitionNumber,
+							 PartitionType);
+#endif
 }
 
-NTSTATUS
-STDCALL
-IoWritePartitionTable (
-	PDEVICE_OBJECT			DeviceObject,
-	ULONG				SectorSize,
-	ULONG				SectorsPerTrack,
-	ULONG				NumberOfHeads,
-	PDRIVE_LAYOUT_INFORMATION	* PBuffer
-	)
-{
-	UNIMPLEMENTED;
-}
 
+NTSTATUS STDCALL
+IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
+		      ULONG SectorSize,
+		      ULONG SectorsPerTrack,
+		      ULONG NumberOfHeads,
+		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+#ifdef __NTOSKRNL__
+   return HalDispatchTable.HalIoWritePartitionTable(DeviceObject,
+						    SectorSize,
+						    SectorsPerTrack,
+						    NumberOfHeads,
+						    PartitionBuffer);
+#else
+   return HalDispatchTable->HalIoWritePartitionTable(DeviceObject,
+						     SectorSize,
+						     SectorsPerTrack,
+						     NumberOfHeads,
+						     PartitionBuffer);
+#endif
+}
 
 /* EOF */

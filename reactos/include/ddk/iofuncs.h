@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.23 2001/05/01 23:08:17 chorns Exp $ */
+/* $Id: iofuncs.h,v 1.24 2001/06/08 15:06:51 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -1181,7 +1181,7 @@ IoWritePartitionTable (
 	ULONG				SectorSize,
 	ULONG				SectorsPerTrack,
 	ULONG				NumberOfHeads,
-	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
+	PDRIVE_LAYOUT_INFORMATION	PartitionBuffer
 	);
 
 
