@@ -343,10 +343,23 @@ BOOL DiskInt13ExtensionsSupported(U32 DriveNumber)
 		return FALSE;
 	}
 
-	if (!(RegsOut.w.cx & 0x01))
+	// Note:
+	// The original check is too strict because some BIOSes report that
+	// extended disk access functions are not suported when booting
+	// from a CD (e.g. Phoenix BIOS v6.00PG). Argh!
+#if 0
+	if (!(RegsOut.w.cx & 0x0001))
 	{
 		// CX = API subset support bitmap
 		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+		return FALSE;
+	}
+#endif
+
+	// Use this relaxed check instead
+	if (RegsOut.w.cx == 0x0000)
+	{
+		// CX = API subset support bitmap
 		return FALSE;
 	}
 
@@ -420,7 +433,7 @@ U32 DiskGetCacheableBlockCount(U32 DriveNumber)
 
 	// If LBA is supported then the block size will be 64 sectors (32k)
 	// If not then the block size is the size of one track
-	if (DiskInt13ExtensionsSupported)
+	if (DiskInt13ExtensionsSupported(DriveNumber))
 	{
 		return 64;
 	}
