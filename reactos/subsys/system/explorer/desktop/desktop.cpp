@@ -314,7 +314,7 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 		rect.right = rect.left + 250;
 		rect.bottom = rect.top + 40;
 
-	#include "../buildno.h"
+#include "../buildno.h"
 		static const LPCTSTR BkgndText = TEXT("ReactOS ")TEXT(KERNEL_VERSION_STR)TEXT(" Explorer\nby Martin Fuchs");
 
 		BkMode bkMode(hdc, TRANSPARENT);
