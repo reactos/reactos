@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.3 2004/01/12 22:36:04 gvg Exp $
+/* $Id: timer.c,v 1.4 2004/05/10 11:13:15 gvg Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -109,14 +109,14 @@ __KeStallExecutionProcessor(ULONG Loops)
 #if defined(__GNUC__)
   __asm__ __volatile__ (
     "mov %0, %%eax\n"
-    "L1: dec %%eax\n"
-    "jnz L1" : : "d" (Loops));
+    "ROSL1: dec %%eax\n"
+    "jnz ROSL1" : : "d" (Loops));
 
 #elif defined(_MSC_VER)
   __asm mov eax, Loops
-L1:
+ROSL1:
   __asm dec eax
-  __asm jnz L1
+  __asm jnz ROSL1
 #else
    volatile unsigned int target = Loops;
    unsigned int i;
