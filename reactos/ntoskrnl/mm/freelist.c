@@ -60,6 +60,7 @@ MmTransferOwnershipPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG NewConsumer)
   InsertTailList(&UsedPageListHeads[NewConsumer], 
     &MmPageArray[Start].ListEntry);
   KeReleaseSpinLock(&PageListLock, oldIrql);  
+  MiZeroPage(PhysicalAddress);
 }
 
 PHYSICAL_ADDRESS
@@ -627,7 +628,7 @@ MmDereferencePage(PHYSICAL_ADDRESS PhysicalAddress)
    ULONG Start = PhysicalAddress.u.LowPart / PAGESIZE;
    KIRQL oldIrql;
    
-   DPRINT("MmDereferencePage(PhysicalAddress %x)\n", PhysicalAddress);
+   DPRINT("MmDereferencePage(PhysicalAddress %I64x)\n", PhysicalAddress);
 
    if (PhysicalAddress.u.LowPart == 0)
      {
@@ -656,7 +657,7 @@ MmDereferencePage(PHYSICAL_ADDRESS PhysicalAddress)
 	 }
        if (MmPageArray[Start].MapCount != 0)
 	 {
-	   DbgPrint("Freeing mapped page (0x%x count %d)\n",
+	   DbgPrint("Freeing mapped page (0x%I64x count %d)\n",
 		    PhysicalAddress, MmPageArray[Start].MapCount);
 	   KeBugCheck(0);
 	 }
