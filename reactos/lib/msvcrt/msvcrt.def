@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.28 2003/12/24 23:20:08 sedwards Exp $
+; $Id: msvcrt.def,v 1.29 2004/01/01 17:08:38 sedwards Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -161,11 +161,11 @@ __setusermatherr
 __threadhandle
 __threadid
 __toascii
-;__unDName
+__unDName
 ;__unDNameEx
 ;__unguarded_readlc_active
 ;__wargv
-;__wgetmainargs
+__wgetmainargs
 ;__winitenv
 ;___lc_codepage_func
 ;___lc_handle_func

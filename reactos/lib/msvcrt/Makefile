@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.41 2003/12/24 23:20:08 sedwards Exp $
+# $Id: Makefile,v 1.42 2004/01/01 17:08:38 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -451,6 +451,7 @@ TIME_OBJECTS = \
 WINE_OBJECTS = \
 	wine/cpp.o \
 	wine/cppexcept.o \
+	wine/data.o \
 	wine/heap.o \
 	wine/lock.o \
 	wine/main.o \

@@ -53,15 +53,17 @@ extern int MSVCRT_current_lc_all_cp;
 void _purecall(void);
 void   MSVCRT__set_errno(int);
 char*  msvcrt_strndup(const char*,unsigned int);
+#ifndef __REACTOS__
 MSVCRT_wchar_t *msvcrt_wstrndup(const MSVCRT_wchar_t*, unsigned int);
-
+#endif
 void MSVCRT__amsg_exit(int errnum);
 
 extern char **MSVCRT__environ;
+#ifndef __REACTOS__
 extern MSVCRT_wchar_t **MSVCRT__wenviron;
-
 extern char ** msvcrt_SnapshotOfEnvironmentA(char **);
 extern MSVCRT_wchar_t ** msvcrt_SnapshotOfEnvironmentW(MSVCRT_wchar_t **);
+#endif
 
 /* FIXME: This should be declared in new.h but it's not an extern "C" so
  * it would not be much use anyway. Even for Winelib applications.
@@ -70,11 +72,11 @@ int    MSVCRT__set_new_mode(int mode);
 
 void* MSVCRT_operator_new(unsigned long size);
 void MSVCRT_operator_delete(void*);
-
 typedef void* (*MSVCRT_malloc_func)(MSVCRT_size_t);
 typedef void (*MSVCRT_free_func)(void*);
-
+#ifndef __REACTOS__
 extern char* MSVCRT___unDName(int,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,unsigned int);
+#endif
 
 /* Setup and teardown multi threaded locks */
 extern void msvcrt_init_mt_locks(void);

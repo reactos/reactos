@@ -19,7 +19,7 @@
  */
 
 /*
- * This file isnt really the main file in ReactOS.
+ * This file isnt really the main file in ReactOS msvcrt.
  * -sedwards
  */
 

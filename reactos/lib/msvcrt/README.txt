@@ -7,10 +7,13 @@ otherwise noted. The sources from WINE are dual licensed GPL/LGPL.
 If you update a function in the ~/wine directory please send a patch to wine-patches@winehq.com
 
 TODO List:
-Remove the internal headers in msvcrt/wine/msvcrt
 Implement the remaining functions that are commented out in the .def file
 Update source code headers for the license information.
-Compleate the W32API conversion for the following source files.
+Compleate the W32API conversion for all source files.
 Write a decent regression test suite.
 Convert all C++ style comments to C style comments.
 ????
+
+WINE Port Notes:
+Remove the internal headers in msvcrt/wine/msvcrt
+Disable of remove duplicate code. (When in doubt check the def)
