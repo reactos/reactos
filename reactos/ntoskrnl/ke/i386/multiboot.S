@@ -119,7 +119,6 @@ _multiboot_entry:
 	movl	$(V2P(apic_pagetable) + 0x3), 0xFEC(%esi)
 #endif /* MP */
 	movl	$(V2P(kpcr_pagetable) + 0x3), 0xFF0(%esi)
-	movl	$(V2P(hal_pagetable) + 0x3), 0xFF4(%esi)
 
 	/*
 	 * Initialize the page table that maps low memory
@@ -364,8 +363,6 @@ apic_pagetable:
 kpcr_pagetable:
 	.fill 4096, 1, 0
 
-/* Reserve a pagetable for HAL to play around with during early boot */
-hal_pagetable:
 	.fill 4096, 1, 0
 _pagetable_end:
 _unmap_me:

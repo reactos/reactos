@@ -336,55 +336,55 @@ KeInit2(VOID)
 
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_PAE)
    {
-      DPRINT1("CPU supports PAE mode\n");
+      DPRINT("CPU supports PAE mode\n");
       if (Ke386Pae)
       {
-         DPRINT1("CPU runs in PAE mode\n");
+         DPRINT("CPU runs in PAE mode\n");
          if (Ke386NoExecute)
          {
-            DPRINT1("NoExecute is enabled\n");
+            DPRINT("NoExecute is enabled\n");
          }
       }
       else
       {
-         DPRINT1("CPU doesn't run in PAE mode\n");
+         DPRINT("CPU doesn't run in PAE mode\n");
       }
    }
    if ((Pcr->PrcbData.FeatureBits & (X86_FEATURE_FXSR | X86_FEATURE_MMX | X86_FEATURE_SSE | X86_FEATURE_SSE2)) ||
        (Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3))
       {
-         DPRINT1("CPU supports" "%s%s%s%s%s" ".\n",
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
-                 ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
+         DPRINT("CPU supports" "%s%s%s%s%s" ".\n",
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
+                ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
       }
    if (Ke386GetCr4() & X86_CR4_OSFXSR)
       {
-         DPRINT1("SSE enabled.\n");
+         DPRINT("SSE enabled.\n");
       }
    if (Ke386GetCr4() & X86_CR4_OSXMMEXCPT)
       {
-         DPRINT1("Unmasked SIMD exceptions enabled.\n");
+         DPRINT("Unmasked SIMD exceptions enabled.\n");
       }
    if (Pcr->PrcbData.VendorString[0])
    {
-      DPRINT1("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
+      DPRINT("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
    }
    if (Ke386CpuidModel[0])
    {
-      DPRINT1("CPU Model:  %s\n", Ke386CpuidModel);
+      DPRINT("CPU Model:  %s\n", Ke386CpuidModel);
    }
 
-   DPRINT1("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
+   DPRINT("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
    if (Ke386L1CacheSize)
    {
-      DPRINT1("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
+      DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
    if (Pcr->L2CacheSize)
    {
-      DPRINT1("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
+      DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
    }
 }
 

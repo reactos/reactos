@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: halinit.c,v 1.2 2004/12/04 21:40:55 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -38,13 +38,12 @@ HalInitSystem (ULONG BootPhase,
 {
   if (BootPhase == 0)
     {
-      /* Initialize display and make the screen black */
-      HalInitializeDisplay (LoaderBlock);
-
       HalpInitPhase0();      
     }
   else if (BootPhase == 1)
     {
+      /* Initialize display and make the screen black */
+      HalInitializeDisplay (LoaderBlock);
       HalpInitBusHandlers();
       HalpInitDma();
 

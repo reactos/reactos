@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.2 2004/12/04 17:22:46 gvg Exp $
+/* $Id: display.c,v 1.3 2004/12/04 21:40:55 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -576,12 +576,20 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
  *         InitParameters = Parameters setup by the boot loader
  */
 {
-  if (DisplayInitialized == FALSE)
+  PHYSICAL_ADDRESS PhysBuffer;
+
+  if (! DisplayInitialized)
     {
       ULONG ScanLines;
       ULONG Data;
 
-      GraphVideoBuffer = (PUCHAR) HalpMapPhysMemory(VGA_GRAPH_MEM, VGA_END_MEM - VGA_GRAPH_MEM + 1);
+      PhysBuffer.u.HighPart = 0;
+      PhysBuffer.u.LowPart = VGA_GRAPH_MEM;
+      GraphVideoBuffer = MmMapIoSpace(PhysBuffer, VGA_END_MEM - VGA_GRAPH_MEM + 1, MmNonCached);
+      if (NULL == GraphVideoBuffer)
+        {
+          return;
+        }
       VideoBuffer = (PUSHORT) (GraphVideoBuffer + (VGA_CHAR_MEM - VGA_GRAPH_MEM));
 
       /* Set cursor position */
@@ -679,7 +687,7 @@ HalDisplayString(IN PCH String)
   ULONG Flags;
 
   /* See comment at top of file */
-  if (!HalOwnsDisplay)
+  if (! HalOwnsDisplay || ! DisplayInitialized)
     {
       return;
     }
@@ -691,14 +699,6 @@ HalDisplayString(IN PCH String)
 
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
-
-
-#if 0  
-  if (HalOwnsDisplay == FALSE)
-    {
-      HalReleaseDisplayOwnership();
-    }
-#endif
   
 #ifdef SCREEN_SYNCHRONIZATION
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
