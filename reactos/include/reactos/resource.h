@@ -29,4 +29,8 @@
 /* FILE_VERSION defaults to PRODUCT_VERSION */
 #define RES_STR_FILE_VERSION	KERNEL_RELEASE_RC	
 
+/* ReactOS default Application Registry Root Path */
+#define RES_STR_ROSAPP_REGISTRY_ROOT	"Software\\ReactWare"
+
 #endif /* ndef _INC_REACTOS_RESOURCE_H */
+
