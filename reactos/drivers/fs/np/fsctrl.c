@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.17 2004/12/23 12:38:16 ekohl Exp $
+/* $Id: fsctrl.c,v 1.18 2004/12/30 12:34:27 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -51,6 +51,16 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 				    NPFS_FCB,
 				    FcbListEntry);
 
+      if (ClientFcb->PipeState == 0)
+	{
+	  /* found a passive (waiting) client fcb */
+	  DPRINT("Passive (waiting) client fcb found -- wake the client\n");
+	  KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
+	  break;
+	}
+
+
+#if 0
       if (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
 	  /* found a listening client fcb */
@@ -74,6 +84,7 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 
 	  return STATUS_PIPE_CONNECTED;
 	}
+#endif
 
       current_entry = current_entry->Flink;
     }
@@ -157,6 +168,12 @@ NpfsWaitPipe(PIRP Irp,
   WaitPipe = (PNPFS_WAIT_PIPE)Irp->AssociatedIrp.SystemBuffer;
   Pipe = Fcb->Pipe;
 
+  if (Fcb->PipeState != 0)
+    {
+      DPRINT("Pipe is not in passive (waiting) state!\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
   /* search for listening server */
   current_entry = Pipe->ServerFcbListHead.Flink;
   while (current_entry != &Pipe->ServerFcbListHead)
@@ -177,8 +194,6 @@ NpfsWaitPipe(PIRP Irp,
     }
 
   /* no listening server fcb found -- wait for one */
-  Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
-
   Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
 				 UserRequest,
 				 KernelMode,

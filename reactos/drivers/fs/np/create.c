@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.26 2004/12/23 23:58:44 ekohl Exp $
+/* $Id: create.c,v 1.27 2004/12/30 12:34:26 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -74,7 +74,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   PFILE_OBJECT FileObject;
   PNPFS_PIPE Pipe;
   PNPFS_FCB ClientFcb;
-  PNPFS_FCB ServerFcb;
+  PNPFS_FCB ServerFcb = NULL;
   PNPFS_DEVICE_EXTENSION DeviceExt;
   ULONG Disposition;
 
@@ -88,6 +88,11 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   DPRINT("FileName %wZ\n", &FileObject->FileName);
 
   Irp->IoStatus.Information = 0;
+
+  if (Disposition & FILE_OPEN)
+    {
+      DPRINT("NpfsCreate() open client end for special use!\n");
+    }
 
   /*
    * Step 1. Find the pipe we're trying to open.
@@ -117,18 +122,26 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    */
   KeLockMutex(&Pipe->FcbListLock);
 
-  ServerFcb = NpfsFindListeningServerInstance(Pipe);
-  if (ServerFcb == NULL)
+  if (!(Disposition & FILE_OPEN))
     {
-      /* Not found, bail out with error for FILE_OPEN requests. */
-      DPRINT("No server fcb found!\n");
-      if (Disposition == FILE_OPEN)
+      ServerFcb = NpfsFindListeningServerInstance(Pipe);
+      if (ServerFcb == NULL)
         {
+          /* Not found, bail out with error for FILE_OPEN requests. */
+          DPRINT("No listening server fcb found!\n");
           KeUnlockMutex(&Pipe->FcbListLock);
           Irp->IoStatus.Status = STATUS_PIPE_BUSY;
           IoCompleteRequest(Irp, IO_NO_INCREMENT);
           return STATUS_PIPE_BUSY;
         }
+    }
+  else if (IsListEmpty(&Pipe->ServerFcbListHead))
+    {
+      DPRINT("No server fcb found!\n");
+      KeUnlockMutex(&Pipe->FcbListLock);
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_UNSUCCESSFUL;
     }
 
   /*
@@ -147,7 +160,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->Pipe = Pipe;
   ClientFcb->PipeEnd = FILE_PIPE_CLIENT_END;
   ClientFcb->OtherSide = NULL;
-  ClientFcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+  ClientFcb->PipeState = (Disposition & FILE_OPEN) ? 0 : FILE_PIPE_DISCONNECTED_STATE;
 
   /* Initialize data list. */
   if (Pipe->InboundQuota)
@@ -480,7 +493,7 @@ NpfsClose(
 #endif
          /*
           * Signaling the write event. If is possible that an other
-          * thread waits of an empty buffer.
+          * thread waits for an empty buffer.
           */
          KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
       }
