@@ -24,6 +24,9 @@ static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
 
+#define READ_REGISTER_UCHAR(p) (*((PUCHAR)(p)))
+#define WRITE_REGISTER_UCHAR(p,c) (*((PCHAR)(p))) = (c)
+
 INT abs(INT nm)
 {
   if(nm<0)
@@ -67,32 +70,31 @@ BYTE bytesPerPixel(ULONG Format)
   // FIXME: GDI bitmaps are supposed to be pixel-packed. Right now if the
   // pixel size if < 1 byte we expand it to 1 byte for simplicities sake
 
-  if(Format==BMF_1BPP)
+  switch ( Format )
   {
+  case BMF_1BPP:
     return 1;
-  } else
-  if((Format==BMF_4BPP) || (Format==BMF_4RLE))
-  {
-    return 1;
-  } else
-  if((Format==BMF_8BPP) || (Format==BMF_8RLE))
-  {
-    return 1;
-  } else
-  if(Format==BMF_16BPP)
-  {
-    return 2;
-  } else
-  if(Format==BMF_24BPP)
-  {
-    return 3;
-  } else
-  if(Format==BMF_32BPP)
-  {
-    return 4;
-  }
 
-  return 0;
+  case BMF_4BPP:
+  case BMF_4RLE:
+    return 1;
+
+  case BMF_8BPP:
+  case BMF_8RLE:
+    return 1;
+
+  case BMF_16BPP:
+    return 2;
+
+  case BMF_24BPP:
+    return 3;
+  
+  case BMF_32BPP:
+    return 4;
+
+  default:
+    return 0;
+  }
 }
 
 VOID vgaPreCalc()
@@ -210,8 +212,8 @@ VOID vgaPutPixel(INT x, INT y, UCHAR c)
 
   offset = xconv[x]+y80[y];
 
-  WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);
-  WRITE_PORT_UCHAR((PUCHAR)0x3cf,maskbit[x]);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,maskbit[x]);
 
   a = READ_REGISTER_UCHAR(vidmem + offset);
   WRITE_REGISTER_UCHAR(vidmem + offset, c);
@@ -224,8 +226,8 @@ VOID vgaPutByte(INT x, INT y, UCHAR c)
   offset = xconv[x]+y80[y];
 
   // Set the write mode
-  WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);
-  WRITE_PORT_UCHAR((PUCHAR)0x3cf,0xff);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,0xff);
 
   WRITE_REGISTER_UCHAR(vidmem + offset, c);
 }
@@ -234,13 +236,13 @@ VOID vgaGetByte(ULONG offset,
                 UCHAR *b, UCHAR *g,
                 UCHAR *r, UCHAR *i)
 {
-  WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0304);
+  WRITE_PORT_USHORT((PUSHORT)GRA_I, 0x0304);
   *i = READ_REGISTER_UCHAR(vidmem + offset);
-  WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0204);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
   *r = READ_REGISTER_UCHAR(vidmem + offset);
-  WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0104);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x01);
   *g = READ_REGISTER_UCHAR(vidmem + offset);
-  WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0004);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   *b = READ_REGISTER_UCHAR(vidmem + offset);
 }
 
@@ -302,8 +304,8 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   if(ileftpix>0)
   {
     // Write left pixels
-    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
-    WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D,startmasks[ileftpix]);
 
     a = READ_REGISTER_UCHAR(vidmem + pre1);
     WRITE_REGISTER_UCHAR(vidmem + pre1, c);
@@ -317,28 +319,28 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
     midpre1=xconv[x]+y80[y];
 
     // Set mask to all pixels in byte
-    WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
-    WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xff);
     memset(vidmem+midpre1, c, imidpix); // write middle pixels, no need to read in latch because of the width
   }
 
-  if(irightpix>0)
+  if ( irightpix > 0 )
   {
     x=orgx+len-irightpix;
-
+#if 0
     for(i=x; i<x+irightpix; i++)
     {
       vgaPutPixel(i, y, c);
     }
-
-/*  pre1=xconv[x]+y80[y];
+#else
+    pre1=xconv[x]+y80[y];
 
     // Write right pixels
-    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
-    WRITE_PORT_UCHAR((PUCHAR)0x3cf, endmasks[irightpix]);
-
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask bits
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, endmasks[irightpix]);
     a = READ_REGISTER_UCHAR(vidmem + pre1);
-    WRITE_REGISTER_UCHAR(vidmem + pre1, c); */
+    WRITE_REGISTER_UCHAR(vidmem + pre1, c);
+#endif
   }
 
   return TRUE;
@@ -351,8 +353,12 @@ BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 
   offset = xconv[x]+y80[y];
 
-  WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);       // set the mask
-  WRITE_PORT_UCHAR((PUCHAR)0x3cf,maskbit[x]);
+#ifdef VGA_PERF
+  vgaSetBitMaskRegister ( maskbit[x] );
+#else
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);       // set the mask
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,maskbit[x]);
+#endif
 
   for(i=y; i<y+len; i++)
   {
@@ -609,9 +615,141 @@ void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDe
   }
 }
 
+// This algorithm goes from left to right, storing each 4BPP pixel
+// in an entire byte.
+void FASTCALL
+vgaReadScan ( int x, int y, int w, void *b )
+{
+  unsigned char *vp, *vpP;
+  unsigned char data, mask, maskP;
+  unsigned char *bp;
+  unsigned char plane_mask;
+  int byte_per_line = SCREEN_X >> 3;
+  int plane, i;
+
+  ASSIGNVP4(x, y, vpP)
+  ASSIGNMK4(x, y, maskP)
+  get_masks(x, w);
+  WRITE_PORT_USHORT((PUSHORT)GRA_I, 0x0005);  // read mode 0
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x04);  // read map select
+
+  memset ( b, 0, w );
+
+  for ( plane=0, plane_mask=1; plane < 4; plane++, plane_mask<<=1 )
+  {
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, plane);  // read map select
+
+    vp = vpP;
+    bp = b;
+    if ( leftMask )
+    {
+      mask = maskP;
+      data = *vp++;
+      do
+      {
+	if (data & mask)
+	  *bp |= plane_mask;
+	bp++;
+	mask >>= 1;
+      } while (mask & leftMask);
+
+    }
+    if (byteCounter)
+    {
+      for (i=byteCounter; i>0; i--)
+      {
+	data = *vp++;
+	if (data & 0x80) *bp |= plane_mask;
+	bp++;
+	if (data & 0x40) *bp |= plane_mask;
+	bp++;
+	if (data & 0x20) *bp |= plane_mask;
+	bp++;
+	if (data & 0x10) *bp |= plane_mask;
+	bp++;
+	if (data & 0x08) *bp |= plane_mask;
+	bp++;
+	if (data & 0x04) *bp |= plane_mask;
+	bp++;
+	if (data & 0x02) *bp |= plane_mask;
+	bp++;
+	if (data & 0x01) *bp |= plane_mask;
+	bp++;
+      }
+    }
+    if (rightMask)
+    {
+      mask = 0x80;
+      data = *vp;
+      do
+      {
+	if (data & mask)
+	  *bp |= plane_mask;
+	bp++;
+	mask >>= 1;
+      } while (mask & rightMask);
+    }
+  }
+
+  // We don't need this if the next call is a DFB blt to VGA (as in the case of moving the mouse pointer)
+  //WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
+  //WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+  //WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
+  //WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+}
+
+//  This algorithm goes from left to right
+//  It stores each 4BPP pixel in an entire byte.
+void FASTCALL
+vgaWriteScan ( int x, int y, int w, void *b )
+{
+  unsigned char *bp;
+  unsigned char *vp;
+  unsigned char init_mask;
+  volatile unsigned char dummy;
+  int byte_per_line;
+  int i, j, off, init_off = x&7;
+
+  bp = b;
+  ASSIGNVP4(x, y, vp)
+  ASSIGNMK4(x, y, init_mask)
+  byte_per_line = SCREEN_X >> 3;
+
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
+
+  //DbgPrint("vgaWriteScan(%i,%i,%i...)\n",x,y,w);
+  for ( j = 0; j < 8; j++ )
+  {
+    unsigned int mask = 0x80 >> j;
+    //DbgPrint("j=%i\n",j);
+    WRITE_PORT_UCHAR ( (PUCHAR)GRA_D, (unsigned char)mask );
+    i = j - init_off;
+    off = 0;
+    if ( j < init_off )
+      i += 8, off++;
+    while ( i < w )
+    {
+      //DbgPrint("(%i)",i);
+      dummy = vp[off];
+      //DbgPrint(".");
+      dummy = bp[i];
+      //DbgPrint(".");
+      vp[off] = dummy;
+      //DbgPrint(".");
+      i += 8;
+      off++;
+    }
+    //DbgPrint("\n");
+  }
+}
+
 void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 
-//  This algorithm goes from goes from left to right, and inside that loop, top to bottom.
+//  This algorithm goes from left to right, and inside that loop, top to bottom.
 //  It also stores each 4BPP pixel in an entire byte.
 {
   unsigned char *vp, *vpY, *vpP;
@@ -630,30 +768,38 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 
   // clear buffer
   bp=b;
-  for (j=h; j>0; j--) {
+  for (j=h; j>0; j--)
+  {
     memset(bp, 0, w);
     bp += bw;
   }
 
-  for (plane=0, plane_mask=1; plane<4; plane++, plane_mask<<=1) {
+  for ( plane=0, plane_mask=1; plane < 4; plane++, plane_mask<<=1 )
+  {
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, plane);  // read map select
     vpY = vpP;
     bpY = b;
-    for (j=h; j>0; j--) {
+    for ( j=h; j>0; j-- )
+    {
       vp = vpY;
       bp = bpY;
-      if (leftMask) {
+      if ( leftMask )
+      {
         mask = maskP;
         data = *vp++;
-        do {
-          if (data & mask) *bp |= plane_mask;
+        do
+	{
+          if (data & mask)
+	    *bp |= plane_mask;
           bp++;
           mask >>= 1;
         } while (mask & leftMask);
 
       }
-      if (byteCounter) {
-        for (i=byteCounter; i>0; i--) {
+      if (byteCounter)
+      {
+        for (i=byteCounter; i>0; i--)
+	{
           data = *vp++;
           if (data & 0x80) *bp |= plane_mask;
           bp++;
@@ -673,10 +819,12 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
           bp++;
         }
       }
-      if (rightMask) {
+      if (rightMask)
+      {
         mask = 0x80;
         data = *vp;
-        do {
+        do
+	{
           if (data & mask) *bp |= plane_mask;
           bp++;
           mask >>= 1;
@@ -696,7 +844,7 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 
 void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
 
-//  This algorithm goes from goes from left to right, and inside that loop, top to bottom.
+//  This algorithm goes from left to right, and inside that loop, top to bottom.
 //  It also stores each 4BPP pixel in an entire byte.
 {
   unsigned char *bp, *bpX;
@@ -717,18 +865,21 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
 
-  for (i=w; i>0; i--) {
+  for (i=w; i>0; i--)
+  {
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
     bp = bpX;
     vp = vpX;
-    for (j=h; j>0; j--) {
+    for (j=h; j>0; j--)
+    {
       dummy = *vp;
       *vp = *bp;
       bp += bw;
       vp += byte_per_line;
     }
     bpX++;
-    if ((mask >>= 1) == 0) {
+    if ((mask >>= 1) == 0)
+    {
       vpX++;
       mask = 0x80;
     }
@@ -758,11 +909,13 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw, char 
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
 
-  for (i=w; i>0; i--) {
+  for (i=w; i>0; i--)
+  {
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
     bp = bpX;
     vp = vpX;
-    for (j=h; j>0; j--) {
+    for (j=h; j>0; j--)
+    {
       if (*bp != Trans)
       {
         dummy = *vp;
@@ -772,7 +925,8 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw, char 
       vp += byte_per_line;
     }
     bpX++;
-    if ((mask >>= 1) == 0) {
+    if ((mask >>= 1) == 0)
+    {
       vpX++;
       mask = 0x80;
     }

@@ -135,12 +135,13 @@ VGAtoDFB(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   // Do DFBs need color translation??
 }
 
-BOOL 
+BOOL
 VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 	 RECTL *DestRect, POINTL *SourcePoint)
 {
-  // FIXME: Use fast blts instead of get and putpixels
-  LONG i, j, dx, dy, alterx, altery, BltDirection;
+  LONG i, i2, j, dx, dy, alterx, altery;
+  //LARGE_INTEGER Start, End; // for performance measurement only
+  static char buf[640];
 
   // Calculate deltas
 
@@ -150,74 +151,32 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   alterx = DestRect->left - SourcePoint->x;
   altery = DestRect->top - SourcePoint->y;
 
-  // Determine bltting direction
-  // FIXME: should we perhaps make this an EngXxx function? Determining
-  // direction is probably used whenever the surfaces are the same (not
-  // just VGA screen)
+  //KeQueryTickCount ( &Start );
+
+  i = SourcePoint->x;
+  i2 = i + alterx;
+
   if (SourcePoint->y >= DestRect->top)
   {
-    if (SourcePoint->x >= DestRect->left)
-    {
-      BltDirection = CD_RIGHTDOWN;
-    }
-    else
-    {
-      BltDirection = CD_LEFTDOWN;
-    }
+    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+      {
+	LONG j2 = j + altery;
+	vgaReadScan  ( i,  j,  dx, buf );
+	vgaWriteScan ( i2, j2, dx, buf );
+      }
   }
   else
   {
-    if (SourcePoint->x >= DestRect->left)
-    {
-      BltDirection = CD_RIGHTUP;
-    }
-    else
-    {
-      BltDirection = CD_LEFTUP;
-    }
+    for(j=(SourcePoint->y+dy-1); j>=SourcePoint->y; j--)
+      {
+	LONG j2 = j + altery;
+	vgaReadScan  ( i,  j,  dx, buf );
+	vgaWriteScan ( i2, j2, dx, buf );
+      }
   }
 
-  // Do the VGA to VGA BitBlt
-  // FIXME: we're using slow get and put pixel routines
-  switch (BltDirection)
-    {
-    case CD_LEFTDOWN:
-      for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
-	{
-	  for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-	    {
-	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
-	    }
-	}
-      break;
-    case CD_LEFTUP:
-      for(j=(SourcePoint->y+dy-1); j>=SourcePoint->y; j--)
-	{
-	  for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-	    {
-	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
-	    }
-	}
-      break;
-    case CD_RIGHTDOWN:
-      for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
-	{
-	  for(i=(SourcePoint->x+dx-1); i>=SourcePoint->x; i--)
-	    {
-	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
-	    }
-	}
-      break;
-    case CD_RIGHTUP:
-      for(j=(SourcePoint->y+dy-1); j>=SourcePoint->y; j--)
-	{
-	  for(i=(SourcePoint->x+dx-1); i>=SourcePoint->x; i--)
-	    {
-	      vgaPutPixel(i+alterx, j+altery, vgaGetPixel(i, j));
-	    }
-	}
-      break;
-    }
+  //KeQueryTickCount ( &End );
+  //DbgPrint ( "VgaBitBlt timing: %lu\n", (ULONG)(End.QuadPart-Start.QuadPart) );
 
   return TRUE;
 }

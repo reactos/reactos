@@ -233,3 +233,9 @@ PSAVED_SCREEN_BITS
 VGADDI_AllocSavedScreenBits(ULONG Size);
 VOID
 VGADDI_InitializeOffScreenMem(ULONG Start, ULONG Length);
+
+void FASTCALL
+vgaReadScan ( int x, int y, int w, void *b );
+
+void FASTCALL
+vgaWriteScan ( int x, int y, int w, void *b );
