@@ -68,47 +68,50 @@ int __cdecl _SEHFrameHandler
  /* Handling */
  else
  {
+  int ret;
+
   if(ExceptionRecord->ExceptionCode)
    frame->SPF_Code = ExceptionRecord->ExceptionCode;
   else
    frame->SPF_Code = 0xC0000001; 
 
-  if(frame->SPF_Handlers->SH_Filter)
+  switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
   {
-   int ret;
-
-   switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
+   case _SEH_EXECUTE_HANDLER + 1:
+   case _SEH_CONTINUE_SEARCH + 1:
+   case _SEH_CONTINUE_EXECUTION + 1:
    {
-    case _SEH_EXECUTE_HANDLER + 1:
-    case _SEH_CONTINUE_SEARCH + 1:
-    case _SEH_CONTINUE_EXECUTION + 1:
-    {
-     ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
-     break;
-    }
-
-    default:
-    {
-     EXCEPTION_POINTERS ep;
-
-     ep.ExceptionRecord = ExceptionRecord;
-     ep.ContextRecord = ContextRecord;
-
-     ret = frame->SPF_Handlers->SH_Filter(&ep, frame);
-     break;
-    }
+    ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
+    break;
    }
 
-   /* _SEH_CONTINUE_EXECUTION */
-   if(ret < 0)
-    return ExceptionContinueExecution;
-   /* _SEH_EXECUTE_HANDLER */
-   else if(ret > 0)
-    _SEHCallHandler(frame);
-   /* _SEH_CONTINUE_SEARCH */
-   else
-    /* fall through */;
+   default:
+   {
+    if(frame->SPF_Handlers->SH_Filter)
+    {
+     EXCEPTION_POINTERS ep;
+ 
+     ep.ExceptionRecord = ExceptionRecord;
+     ep.ContextRecord = ContextRecord;
+ 
+     ret = frame->SPF_Handlers->SH_Filter(&ep, frame);
+    }
+    else
+     ret = _SEH_CONTINUE_SEARCH;
+
+    break;
+   }
   }
+
+  /* _SEH_CONTINUE_EXECUTION */
+  if(ret < 0)
+   return ExceptionContinueExecution;
+  /* _SEH_EXECUTE_HANDLER */
+  else if(ret > 0)
+   _SEHCallHandler(frame);
+  /* _SEH_CONTINUE_SEARCH */
+  else
+   /* fall through */;
  }
 
  return ExceptionContinueSearch;

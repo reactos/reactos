@@ -48,7 +48,6 @@ OBJECTS_RTL_I386 := \
 	rtl/i386/aulldiv.o \
 	rtl/i386/aullrem.o \
 	rtl/i386/aullshr.o \
-	rtl/i386/except.o \
 	rtl/i386/exception.o \
 	rtl/i386/seh.o
 

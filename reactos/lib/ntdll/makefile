@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.103 2004/06/20 23:22:06 gdalsnes Exp $
+# $Id: makefile,v 1.104 2004/07/01 02:40:22 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -57,8 +57,6 @@ RTL_I386_OBJECTS = \
 	rtl/i386/aullrem.o \
 	rtl/i386/aullshr.o \
 	rtl/i386/chkstk.o \
-	rtl/i386/exception.o \
-	rtl/i386/except.o \
 	rtl/i386/float.o \
 	rtl/i386/ftol.o
 

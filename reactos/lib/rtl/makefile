@@ -33,7 +33,10 @@ TARGET_OBJECTS = \
 	version.o \
 	encode.o \
 	image.o \
-	splaytree.o
+	splaytree.o \
+        exception.o \
+        i386/exception.o \
+        i386/except.o
 
 #	atom
 #	registry

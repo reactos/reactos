@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.18 2003/11/17 20:48:22 sedwards Exp $
+# $Id: makefile,v 1.19 2004/07/01 02:40:22 hyperion Exp $
 
 PATH_TO_TOP = ../../..
+
+include $(PATH_TO_TOP)/rules.mak
 
 TARGET_TYPE = driver
 
@@ -8,10 +10,8 @@ TARGET_NAME = null
 
 TARGET_OBJECTS = null.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
-#TARGET_LFLAGS = -Wl,--file-alignment,0x20 -Wl,--section-alignment,0x20
-
-include $(PATH_TO_TOP)/rules.mak
+TARGET_LIBS = $(SDK_PATH_LIB)/pseh.a
 
 include $(TOOLS_PATH)/helper.mk

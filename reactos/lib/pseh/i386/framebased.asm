@@ -54,10 +54,10 @@ __SEHUnwind:
  push ebx
 
  xor eax, eax
- push eax
- push eax
- push eax
- push ecx
+ push eax ; ReturnValue
+ push eax ; ExceptionRecord
+ push eax ; TargetIp
+ push ecx ; TargetFrame
  call [__SEHRtlUnwind]
 
  pop ebx
