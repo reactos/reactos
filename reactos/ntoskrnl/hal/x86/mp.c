@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.11 2001/04/17 23:39:25 dwelch Exp $
+/* $Id: mp.c,v 1.12 2001/04/18 03:31:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2359,6 +2359,9 @@ HalpInitMPS(
 
   /* Setup I/O APIC */
   IOAPICSetup();
+
+  /* We can now enable interrupts */
+  __asm__ __volatile__ ("sti\n\t");
 
   /* Setup busy waiting */
   HalpCalibrateStallExecution();

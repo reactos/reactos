@@ -54,6 +54,9 @@ VOID HalpInitPICs(VOID)
    /* Mask off all interrupts from PICs */
    WRITE_PORT_UCHAR((PUCHAR)0x21, 0xff);
    WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xff);
+
+   /* We can know enable interrupts */
+   __asm__ __volatile__ ("sti\n\t");
 }
 
 static ULONG 

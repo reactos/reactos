@@ -124,8 +124,6 @@ KeInit1(VOID)
    PcrsAllocated++;
 
    Ki386InitializeLdt();
-
-   __asm__ __volatile__ ("sti\n\t");
 }
 
 VOID 

@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.13 2001/04/17 23:39:25 dwelch Exp $
+/* $Id: display.c,v 1.14 2001/04/18 03:31:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,8 +34,8 @@
 
 static ULONG CursorX = 0;      /* Cursor Position */
 static ULONG CursorY = 0;
-static ULONG SizeX = 0;       /* Display size */
-static ULONG SizeY = 0;
+static ULONG SizeX = 80;       /* Display size */
+static ULONG SizeY = 25;
 
 static BOOLEAN DisplayInitialized = FALSE;
 static BOOLEAN HalOwnsDisplay = TRUE;

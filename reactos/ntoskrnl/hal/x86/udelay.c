@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: udelay.c,v 1.8 2001/04/13 16:12:25 chorns Exp $
+/* $Id: udelay.c,v 1.9 2001/04/18 03:31:19 dwelch Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -196,7 +196,7 @@ VOID HalpCalibrateStallExecution(VOID)
 
       __KeStallExecutionProcessor(delay_count);      /* Do the delay */
 
-	    CurCount = Read8254Timer();
+      CurCount = Read8254Timer();
       if (CurCount <= LATCH / 2)   /* If a tick has passed, turn the */
         delay_count &= ~calib_bit; /* calibrated bit back off        */
    }
