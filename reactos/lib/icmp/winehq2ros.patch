@@ -1,10 +1,10 @@
-Index: dlls/icmp/Makefile.in
+Index: Makefile.in
 ===================================================================
 RCS file: /home/wine/wine/dlls/icmp/Makefile.in,v
 retrieving revision 1.13
 diff -u -r1.13 Makefile.in
---- dlls/icmp/Makefile.in	11 Oct 2003 01:09:19 -0000	1.13
-+++ dlls/icmp/Makefile.in	23 Sep 2004 02:56:40 -0000
+--- Makefile.in	11 Oct 2003 01:09:19 -0000	1.13
++++ Makefile.in	7 Dec 2004 22:39:27 -0000
 @@ -4,6 +4,7 @@
  VPATH     = @srcdir@
  MODULE    = icmp.dll
@@ -13,80 +13,13 @@ diff -u -r1.13 Makefile.in
  
  C_SRCS = icmp_main.c
  
-Index: dlls/icmp/icmp_main.c
-===================================================================
-RCS file: /home/wine/wine/dlls/icmp/icmp_main.c,v
-retrieving revision 1.26
-diff -u -r1.26 icmp_main.c
---- dlls/icmp/icmp_main.c	12 Apr 2004 23:15:12 -0000	1.26
-+++ dlls/icmp/icmp_main.c	23 Sep 2004 03:53:26 -0000
-@@ -95,7 +95,6 @@
- #include "ip.h"
- #include "ip_icmp.h"
- 
--
- WINE_DEFAULT_DEBUG_CHANNEL(icmp);
- 
- 
-@@ -136,7 +135,33 @@
-     return(answer);
- }
- 
-+/* A private gettimeofday without the timezone parameter
-+ * to support building on Windows as well as Unix.
-+ */
-+
-+#ifndef __GNUC__
-+#define EPOCHFILETIME (116444736000000000i64)
-+#else
-+#define EPOCHFILETIME (116444736000000000LL)
-+#endif
- 
-+static int icmp_gettimeofday(struct timeval *tv)
-+{
-+    FILETIME        ft;
-+    LARGE_INTEGER   li;
-+    __int64         t;
-+
-+    GetSystemTimeAsFileTime(&ft);
-+    li.LowPart  = ft.dwLowDateTime;
-+    li.HighPart = ft.dwHighDateTime;
-+    t  = li.QuadPart;       /* In 100-nanosecond intervals */
-+    t -= EPOCHFILETIME;     /* Offset to the Epoch time */
-+    t /= 10;                /* In microseconds */
-+    tv->tv_sec  = (long)(t / 1000000);
-+    tv->tv_usec = (long)(t % 1000000);
-+
-+    return 0;
-+}
- 
- /*
-  * Exported Routines.
-@@ -313,7 +338,7 @@
-     }
- #endif
- 
--    gettimeofday(&send_time,NULL);
-+    icmp_gettimeofday(&send_time);
-     res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
-     HeapFree(GetProcessHeap (), 0, reqbuf);
-     if (res<0) {
-@@ -338,7 +363,7 @@
-     /* Get the reply */
-     ip_header_len=0; /* because gcc was complaining */
-     while ((res=select(icp->sid+1,&fdr,NULL,NULL,&timeout))>0) {
--        gettimeofday(&recv_time,NULL);
-+        icmp_gettimeofday(&recv_time);
-         res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,&addrlen);
-         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
-         ier->Status=IP_REQ_TIMED_OUT;
-Index: dlls/icmp/ip.h
+Index: ip.h
 ===================================================================
 RCS file: /home/wine/wine/dlls/icmp/ip.h,v
 retrieving revision 1.3
 diff -u -r1.3 ip.h
---- dlls/icmp/ip.h	6 Jan 2004 22:08:34 -0000	1.3
-+++ dlls/icmp/ip.h	23 Sep 2004 03:43:22 -0000
+--- ip.h	6 Jan 2004 22:08:34 -0000	1.3
++++ ip.h	7 Dec 2004 22:39:27 -0000
 @@ -39,6 +39,21 @@
   */
  #define	IPVERSION	4

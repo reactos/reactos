@@ -135,34 +135,6 @@ static int in_cksum(u_short *addr, int len)
     return(answer);
 }
 
-/* A private gettimeofday without the timezone parameter
- * to support building on Windows as well as Unix.
- */
-
-#ifndef __GNUC__
-#define EPOCHFILETIME (116444736000000000i64)
-#else
-#define EPOCHFILETIME (116444736000000000LL)
-#endif
-
-static int icmp_gettimeofday(struct timeval *tv)
-{
-    FILETIME        ft;
-    LARGE_INTEGER   li;
-    __int64         t;
-
-    GetSystemTimeAsFileTime(&ft);
-    li.LowPart  = ft.dwLowDateTime;
-    li.HighPart = ft.dwHighDateTime;
-    t  = li.QuadPart;       /* In 100-nanosecond intervals */
-    t -= EPOCHFILETIME;     /* Offset to the Epoch time */
-    t /= 10;                /* In microseconds */
-    tv->tv_sec  = (long)(t / 1000000);
-    tv->tv_usec = (long)(t % 1000000);
-
-    return 0;
-}
-
 /*
  * Exported Routines.
  */
@@ -235,7 +207,8 @@ DWORD WINAPI IcmpSendEcho(
     int ip_header_len;
     int maxlen;
     fd_set fdr;
-    struct timeval timeout,send_time,recv_time;
+    struct timeval timeout;
+    DWORD send_time,recv_time;
     struct sockaddr_in addr;
     int addrlen;
     unsigned short id,seq,cksum;
@@ -338,7 +311,7 @@ DWORD WINAPI IcmpSendEcho(
     }
 #endif
 
-    icmp_gettimeofday(&send_time);
+    send_time = GetTickCount();
     res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
@@ -363,7 +336,7 @@ DWORD WINAPI IcmpSendEcho(
     /* Get the reply */
     ip_header_len=0; /* because gcc was complaining */
     while ((res=select(icp->sid+1,&fdr,NULL,NULL,&timeout))>0) {
-        icmp_gettimeofday(&recv_time);
+        recv_time = GetTickCount();
         res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,&addrlen);
         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
         ier->Status=IP_REQ_TIMED_OUT;
@@ -457,18 +430,16 @@ DWORD WINAPI IcmpSendEcho(
              * Decrease the timeout so that we don't enter an endless loop even
              * if we get flooded with ICMP packets that are not for us.
              */
-            timeout.tv_sec=Timeout/1000-(recv_time.tv_sec-send_time.tv_sec);
-            timeout.tv_usec=(Timeout % 1000)*1000+send_time.tv_usec-(recv_time.tv_usec-send_time.tv_usec);
-            if (timeout.tv_usec<0) {
-                timeout.tv_usec+=1000000;
-                timeout.tv_sec--;
-            }
+            int t = Timeout - (recv_time - send_time);
+            if (t < 0) t = 0;
+            timeout.tv_sec = t / 1000;
+            timeout.tv_usec = (t % 1000) * 1000;
             continue;
         } else {
             /* This is a reply to our packet */
             memcpy(&ier->Address,&ip_header->ip_src,sizeof(IPAddr));
             /* Status is already set */
-            ier->RoundTripTime=(recv_time.tv_sec-send_time.tv_sec)*1000+(recv_time.tv_usec-send_time.tv_usec)/1000;
+            ier->RoundTripTime= recv_time - send_time;
             ier->DataSize=res-ip_header_len-ICMP_MINLEN;
             ier->Reserved=0;
             ier->Data=endbuf-ier->DataSize;
