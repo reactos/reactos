@@ -1077,7 +1077,7 @@ RtlCreateHeap(ULONG flags,
               PRTL_HEAP_DEFINITION Definition)
 {
    SUBHEAP *subheap;
-   ULONG i;
+   HEAP *heapPtr;
 
    /* Allocate the heap block */
 
@@ -1091,15 +1091,14 @@ RtlCreateHeap(ULONG flags,
       return 0;
    }
 
+   /* link it into the per-process heap list */
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
-   for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
-   {
-      if (NtCurrentPeb ()->ProcessHeaps[i] == NULL)
-      {
-         NtCurrentPeb()->ProcessHeaps[i] = (PVOID)subheap;
-         break;
-      }
-   }
+   
+   heapPtr = subheap->heap;
+   heapPtr->next = (HEAP*)NtCurrentPeb()->ProcessHeaps;
+   NtCurrentPeb()->ProcessHeaps = (HANDLE)heapPtr;
+   NtCurrentPeb()->NumberOfHeaps++;
+   
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
    return (HANDLE)subheap;
@@ -1112,27 +1111,34 @@ RtlCreateHeap(ULONG flags,
  * FALSE: Failure
  *
  * @implemented
+ * 
+ * RETURNS
+ *  Success: A NULL HANDLE, if heap is NULL or it was destroyed
+ *  Failure: The Heap handle, if heap is the process heap.
  */
-BOOLEAN STDCALL
+HANDLE STDCALL
 RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 {
    HEAP *heapPtr = HEAP_GetPtr( heap );
    SUBHEAP *subheap;
-   ULONG i, flags;
+   ULONG flags;
+   HEAP **pptr;
 
    DPRINT("%08x\n", heap );
    if (!heapPtr)
-      return FALSE;
+      return heap;
 
+   if (heap == NtCurrentPeb()->ProcessHeap) 
+      return heap; /* cannot delete the main process heap */
+ 
+   /* remove it from the per-process list */
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
-   for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
-   {
-      if (NtCurrentPeb ()->ProcessHeaps[i] == heap)
-      {
-         NtCurrentPeb()->ProcessHeaps[i] = NULL;
-         break;
-      }
-   }
+   
+   pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps;
+   while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
+   if (*pptr) *pptr = (*pptr)->next;
+   NtCurrentPeb()->NumberOfHeaps--;
+   
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
    RtlDeleteCriticalSection( &heapPtr->critSection );
@@ -1155,7 +1161,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
       }
       subheap = next;
    }
-   return TRUE;
+   return (HANDLE)NULL;
 }
 
 
@@ -1713,8 +1719,8 @@ RtlInitializeHeapManager(VOID)
    Peb = NtCurrentPeb();
 
    Peb->NumberOfHeaps = 0;
-   Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(HANDLE);
-   Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
+   Peb->MaximumNumberOfHeaps = -1; /* no limit */
+   Peb->ProcessHeaps = NULL;
 
    RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
 }
@@ -1728,13 +1734,13 @@ RtlEnumProcessHeaps(NTSTATUS STDCALL_FUNC(*func)(PVOID, LONG),
                     LONG lParam)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG i;
-
+   HEAP** pptr;
+   
    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
-   for (i = 0; i < NtCurrentPeb()->NumberOfHeaps; i++)
+   for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
    {
-      Status = func(NtCurrentPeb()->ProcessHeaps[i],lParam);
+      Status = func(*pptr,lParam);
       if (!NT_SUCCESS(Status))
          break;
    }
@@ -1753,15 +1759,19 @@ RtlGetProcessHeaps(ULONG HeapCount,
                    HANDLE *HeapArray)
 {
    ULONG Result = 0;
+   HEAP ** pptr;
 
    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
+   Result = NtCurrentPeb()->NumberOfHeaps;
+   
    if (NtCurrentPeb()->NumberOfHeaps <= HeapCount)
    {
-      Result = NtCurrentPeb()->NumberOfHeaps;
-      memmove(HeapArray,
-              NtCurrentPeb()->ProcessHeaps,
-              Result * sizeof(HANDLE));
+      int i = 0;
+      for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
+      {
+         HeapArray[i++] = *pptr;
+      }
    }
 
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
@@ -1776,17 +1786,21 @@ RtlGetProcessHeaps(ULONG HeapCount,
 BOOLEAN STDCALL
 RtlValidateProcessHeaps(VOID)
 {
-   HANDLE Heaps[128];
    BOOLEAN Result = TRUE;
-   ULONG HeapCount;
-   ULONG i;
+   HEAP ** pptr;
 
-   HeapCount = RtlGetProcessHeaps(128, Heaps);
-   for (i = 0; i < HeapCount; i++)
+   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
+
+   for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
    {
-      if (!RtlValidateHeap(Heaps[i], 0, NULL))
+      if (!RtlValidateHeap(*pptr, 0, NULL))
+      {
          Result = FALSE;
+         break;
+      }
    }
+
+   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
    return Result;
 }
