@@ -2538,8 +2538,111 @@ IntChangeDisplaySettings(
     break;
     
   case CDS_UPDATEREGISTRY:
-    Ret = DISP_CHANGE_FAILED;
-    break;
+    {
+	  	UNICODE_STRING ObjectName;
+		UNICODE_STRING KernelModeName;
+	  	WCHAR KernelModeNameBuffer[256];
+		UNICODE_STRING RegistryKey;
+		WCHAR RegistryKeyBuffer[512];
+		PDEVICE_OBJECT DeviceObject;
+		NTSTATUS Status;
+		ULONG LastSlash;
+		OBJECT_ATTRIBUTES ObjectAttributes;
+		HANDLE DevInstRegKey;
+		ULONG NewValue;
+		
+		/* Get device name (pDeviceName is "\.\xxx") */
+		for (LastSlash = pDeviceName->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
+		{
+			if (pDeviceName->Buffer[LastSlash - 1] == L'\\')
+				break;
+		}
+		if (LastSlash == 0) return DISP_CHANGE_FAILED;
+		ObjectName = *pDeviceName;
+		ObjectName.Length -= LastSlash * sizeof(WCHAR);
+		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
+		ObjectName.Buffer += LastSlash;
+		
+		KernelModeName.Length = 0;
+		KernelModeName.MaximumLength = sizeof(KernelModeNameBuffer);
+		KernelModeName.Buffer = KernelModeNameBuffer;
+		
+		/* Open \??\xxx (ex: "\??\DISPLAY1") */
+		Status = RtlAppendUnicodeToString(&KernelModeName, L"\\??\\");
+		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+		Status = RtlAppendUnicodeStringToString(&KernelModeName, &ObjectName);
+		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+		Status = ObReferenceObjectByName(
+			&KernelModeName,
+			OBJ_CASE_INSENSITIVE,
+			NULL,
+			0,
+			IoDeviceObjectType,
+			KernelMode,
+			NULL,
+			(PVOID*)&DeviceObject);
+		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+		/* Get associated driver name (ex: "VBE") */
+		for (LastSlash = DeviceObject->DriverObject->DriverName.Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
+		{
+			if (DeviceObject->DriverObject->DriverName.Buffer[LastSlash - 1] == L'\\')
+				break;
+		}
+		if (LastSlash == 0) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
+		ObjectName = DeviceObject->DriverObject->DriverName;
+		ObjectName.Length -= LastSlash * sizeof(WCHAR);
+		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
+		ObjectName.Buffer += LastSlash;
+		
+		RegistryKey.Length = 0;
+		RegistryKey.MaximumLength = sizeof(RegistryKeyBuffer);
+		RegistryKey.Buffer = RegistryKeyBuffer;
+		
+		/* Open registry key */
+		Status = RtlAppendUnicodeToString(&RegistryKey,
+			L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\");
+		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
+		Status = RtlAppendUnicodeStringToString(&RegistryKey, &ObjectName);
+		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
+		Status = RtlAppendUnicodeToString(&RegistryKey,
+			L"\\Device0");
+		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
+		
+		InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
+			OBJ_CASE_INSENSITIVE, NULL, NULL);
+		Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
+		ObDereferenceObject(DeviceObject);
+		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+		
+		/* Update needed fields */
+		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
+		{
+			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
+			NewValue = DevMode->dmBitsPerPel;
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+		}
+		
+		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
+		{
+			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
+			NewValue = DevMode->dmPelsWidth;
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+		}
+		
+		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
+		{
+			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
+			NewValue = DevMode->dmPelsHeight;
+			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+		}
+		
+		ZwClose(DevInstRegKey);
+		if (NT_SUCCESS(Status))
+			Ret = DISP_CHANGE_RESTART;
+		else
+			Ret = DISP_CHANGE_FAILED;
+		break;
+    }
      
   case CDS_TEST: /* Test if the mode could be set */
     Ret = DISP_CHANGE_FAILED;
