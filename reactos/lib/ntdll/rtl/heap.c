@@ -116,24 +116,6 @@ typedef struct tagHEAP
 #define HEAP_MIN_BLOCK_SIZE  (8+sizeof(ARENA_FREE))  /* Min. heap block size */
 #define COMMIT_MASK          0xffff  /* bitmask for commit/decommit granularity */
 
-#if 0
-HANDLE SystemHeap = 0;
-HANDLE SegptrHeap = 0;
-#endif
-
-#ifdef __WINE__
-SYSTEM_HEAP_DESCR *SystemHeapDescr = 0;
-#endif
-
-#if 0
-static HEAP *processHeap;  /* main process heap */
-static HEAP *firstHeap;    /* head of secondary heaps list */
-#endif
-
-#if 0
-/* address where we try to map the system heap */
-#define SYSTEM_HEAP_BASE  ((void*)0x65430000)
-#endif
 
 static BOOL HEAP_IsRealArena( HANDLE heap, DWORD flags, LPCVOID block, BOOL quiet );
 
@@ -144,6 +126,7 @@ static BOOL HEAP_IsRealArena( HANDLE heap, DWORD flags, LPCVOID block, BOOL quie
 #define GET_EIP()    0
 #define SET_EIP(ptr) /* nothing */
 #endif  /* __GNUC__ */
+
 
 /***********************************************************************
  *           HEAP_Dump
@@ -237,14 +220,12 @@ static HEAP *HEAP_GetPtr(
     if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
     {
         ERR("Invalid heap %08x!\n", heap );
-        SetLastError( ERROR_INVALID_HANDLE );
         return NULL;
     }
     if (TRACE_ON(heap) && !HEAP_IsRealArena( heap, 0, NULL, NOISY ))
     {
         HEAP_Dump( heapPtr );
         assert( FALSE );
-        SetLastError( ERROR_INVALID_HANDLE );
         return NULL;
     }
     return heapPtr;
@@ -309,7 +290,7 @@ static inline BOOL HEAP_Commit( SUBHEAP *subheap, void *ptr )
    
     address = (PVOID)((char *)subheap + subheap->commitSize);
     commitsize = size - subheap->commitSize;
-#if 1   
+
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
 				     &address,
 				     0,
@@ -317,11 +298,6 @@ static inline BOOL HEAP_Commit( SUBHEAP *subheap, void *ptr )
 				     MEM_COMMIT,
 				     PAGE_EXECUTE_READWRITE);
     if (!NT_SUCCESS(Status))
-#else   
-    if (!VirtualAlloc( (char *)subheap + subheap->commitSize,
-                       size - subheap->commitSize, MEM_COMMIT,
-                       PAGE_EXECUTE_READWRITE))
-#endif     
     {
         WARN("Could not commit %08lx bytes at %08lx for heap %08lx\n",
                  size - subheap->commitSize,
@@ -349,18 +325,14 @@ static inline BOOL HEAP_Decommit( SUBHEAP *subheap, void *ptr )
     size = ((size + COMMIT_MASK) & ~COMMIT_MASK) + COMMIT_MASK + 1;
     if (size >= subheap->commitSize) return TRUE;
    
-#if 1  
     address = (PVOID)((char *)subheap + size);
     decommitsize = subheap->commitSize - size;
+
     Status = ZwFreeVirtualMemory(NtCurrentProcess(),
 				 &address,
 				 &decommitsize,
 				 MEM_DECOMMIT);
     if (!NT_SUCCESS(Status));
-#else   
-    if (!VirtualFree( (char *)subheap + size,
-                      subheap->commitSize - size, MEM_DECOMMIT ))
-#endif     
     {
         WARN("Could not decommit %08lx bytes at %08lx for heap %08lx\n",
                  subheap->commitSize - size,
@@ -386,11 +358,7 @@ static void HEAP_CreateFreeBlock( SUBHEAP *subheap, void *ptr, DWORD size )
     /* Create a free arena */
 
     pFree = (ARENA_FREE *)ptr;
-#if 0   
-    pFree->threadId = GetCurrentTask();
-#else   
     pFree->threadId = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
-#endif   
     pFree->magic = ARENA_FREE_MAGIC;
 
     /* If debugging, erase the freed block content */
@@ -478,25 +446,14 @@ static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena )
         if (pPrev) pPrev->next = subheap->next;
         /* Free the memory */
         subheap->magic = 0;
-#if 0       
-        if (subheap->selector) FreeSelector16( subheap->selector );
-#endif
-#if 0       
-        VirtualFree( subheap, 0, MEM_RELEASE );
-#else
         ZwFreeVirtualMemory(NtCurrentProcess(),
 			    (PVOID*)&subheap,
 			    0,
 			    MEM_RELEASE);
-#endif       
         return;
     }
     
     /* Decommit the end of the heap */
-
-#if 0   
-    if (!(subheap->heap->flags & HEAP_WINE_SHARED)) HEAP_Decommit( subheap, pFree + 1 );
-#endif   
 }
 
 
@@ -536,13 +493,6 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
    
     /* Commit memory */
 
-#if 0   
-    if (flags & HEAP_WINE_SHARED)
-        commitSize = totalSize;  /* always commit everything in a shared heap */
-#endif
-#if 0   
-    if (!VirtualAlloc(address, commitSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE))
-#else
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
 				     &address,
 				     0,
@@ -550,30 +500,12 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
 				     MEM_COMMIT,
 				     PAGE_EXECUTE_READWRITE);
    if (!NT_SUCCESS(Status))
-#endif     
     {
         WARN("Could not commit %08lx bytes for sub-heap %08lx\n",
                    commitSize, (DWORD)address );
         return FALSE;
     }
 
-    /* Allocate a selector if needed */
-
-#if 0   
-    if (flags & HEAP_WINE_SEGPTR)
-    {
-        selector = SELECTOR_AllocBlock( address, totalSize,
-                           (flags & (HEAP_WINE_CODESEG|HEAP_WINE_CODE16SEG))
-                            ? SEGMENT_CODE : SEGMENT_DATA,
-                           (flags & HEAP_WINE_CODESEG) != 0, FALSE );
-        if (!selector)
-        {
-            ERR("Could not allocate selector\n" );
-            return FALSE;
-        }
-    }
-#endif
-   
     /* Fill the sub-heap structure */
 
     subheap->heap       = heap;
@@ -617,11 +549,8 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
         /* Initialize critical section */
 
         RtlInitializeCriticalSection( &heap->critSection );
-#if 0       
-	if (!SystemHeap) MakeCriticalSectionGlobal( &heap->critSection );
-#endif       
     }
- 
+
     /* Create the first free block */
 
     HEAP_CreateFreeBlock( subheap, (LPBYTE)subheap + subheap->headerSize, 
@@ -645,28 +574,13 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
    
     /* Round-up sizes on a 64K boundary */
 
-#if 0   
-    if (flags & HEAP_WINE_SEGPTR)
-    {
-        totalSize = commitSize = 0x10000;  /* Only 64K at a time for SEGPTRs */
-    }
-    else
-#else
-    if (1)
-#endif       
-    {
-        totalSize  = (totalSize + 0xffff) & 0xffff0000;
-        commitSize = (commitSize + 0xffff) & 0xffff0000;
-        if (!commitSize) commitSize = 0x10000;
-        if (totalSize < commitSize) totalSize = commitSize;
-    }
+    totalSize  = (totalSize + 0xffff) & 0xffff0000;
+    commitSize = (commitSize + 0xffff) & 0xffff0000;
+    if (!commitSize) commitSize = 0x10000;
+    if (totalSize < commitSize) totalSize = commitSize;
 
     /* Allocate the memory block */
 
-#if 0   
-    if (!(address = VirtualAlloc( NULL, totalSize,
-                                  MEM_RESERVE, PAGE_EXECUTE_READWRITE )))
-#else
     address = BaseAddress;
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
 				     &address,
@@ -675,7 +589,6 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
 				     MEM_RESERVE,
 				     PAGE_EXECUTE_READWRITE);
     if (!NT_SUCCESS(Status))
-#endif     
     {
         WARN("Could not VirtualAlloc %08lx bytes\n",
                  totalSize );
@@ -687,14 +600,10 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
     if (!HEAP_InitSubHeap( heap? heap : (HEAP *)address, 
                            address, flags, commitSize, totalSize ))
     {
-#if 0       
-        VirtualFree( address, 0, MEM_RELEASE );
-#else
         ZwFreeVirtualMemory(NtCurrentProcess(),
 			    address,
 			    0,
 			    MEM_RELEASE);
-#endif       
         return NULL;
     }
 
@@ -1059,12 +968,13 @@ static BOOL HEAP_IsRealArena(
  *	Handle of heap: Success
  *	NULL: Failure
  */
-HANDLE STDCALL RtlCreateHeap(ULONG flags,
-			     PVOID BaseAddress, 
-			     ULONG initialSize,
-			     ULONG maxSize, 
-			     PVOID Unknown,
-			     PRTL_HEAP_DEFINITION Definition) 
+HANDLE STDCALL
+RtlCreateHeap(ULONG flags,
+	      PVOID BaseAddress,
+	      ULONG initialSize,
+	      ULONG maxSize,
+	      PVOID Unknown,
+	      PRTL_HEAP_DEFINITION Definition)
 {
     SUBHEAP *subheap;
     ULONG i;
@@ -1078,25 +988,9 @@ HANDLE STDCALL RtlCreateHeap(ULONG flags,
     }
     if (!(subheap = HEAP_CreateSubHeap( BaseAddress, NULL, flags, initialSize, maxSize )))
     {
-        SetLastError( ERROR_OUTOFMEMORY );
         return 0;
     }
 
-#if 0   
-    /* link it into the per-process heap list */
-    if (processHeap)
-    {
-        HEAP *heapPtr = subheap->heap;
-        RtlEnterCriticalSection( &processHeap->critSection );
-        heapPtr->next = firstHeap;
-        firstHeap = heapPtr;
-        RtlLeaveCriticalSection( &processHeap->critSection );
-    }
-    else  /* assume the first heap we create is the process main heap */
-    {
-        processHeap = subheap->heap;
-    }
-#else
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
    for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
      {
@@ -1106,8 +1000,7 @@ HANDLE STDCALL RtlCreateHeap(ULONG flags,
 	     break;
 	  }
      }
-   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);   
-#endif   
+   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
 
     return (HANDLE)subheap;
 }
@@ -1127,22 +1020,6 @@ BOOL STDCALL RtlDestroyHeap( HANDLE heap /* [in] Handle of heap */ )
     TRACE("%08x\n", heap );
     if (!heapPtr) return FALSE;
 
-#if 0   
-    if (heapPtr == processHeap)  /* cannot delete the main process heap */
-    {
-        SetLastError( ERROR_INVALID_PARAMETER );
-        return FALSE;
-    }
-    else /* remove it from the per-process list */
-    {
-        HEAP **pptr;
-        RtlEnterCriticalSection( &processHeap->critSection );
-        pptr = &firstHeap;
-        while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
-        if (*pptr) *pptr = (*pptr)->next;
-        RtlLeaveCriticalSection( &processHeap->critSection );
-    }
-#else
    RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
    for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
      {
@@ -1153,22 +1030,18 @@ BOOL STDCALL RtlDestroyHeap( HANDLE heap /* [in] Handle of heap */ )
 	  }
      }
    RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
-#endif   
    
     RtlDeleteCriticalSection( &heapPtr->critSection );
     subheap = &heapPtr->subheap;
     while (subheap)
     {
         SUBHEAP *next = subheap->next;
-#if 0       
-        if (subheap->selector) FreeSelector16( subheap->selector );
-        VirtualFree( subheap, 0, MEM_RELEASE );
-#else
+
         ZwFreeVirtualMemory(NtCurrentProcess(),
 			    (PVOID*)&subheap,
 			    0,
 			    MEM_RELEASE);
-#endif       
+
         subheap = next;
     }
     return TRUE;
@@ -1207,7 +1080,6 @@ PVOID STDCALL RtlAllocateHeap(
         TRACE("(%08x,%08lx,%08lx): returning NULL\n",
                   heap, flags, size  );
         if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
-        SetLastError( ERROR_COMMITMENT_LIMIT );
         return NULL;
     }
 
@@ -1222,11 +1094,7 @@ PVOID STDCALL RtlAllocateHeap(
     pInUse->size      = (pInUse->size & ~ARENA_FLAG_FREE)
                         + sizeof(ARENA_FREE) - sizeof(ARENA_INUSE);
     pInUse->callerEIP = GET_EIP();
-#if 0   
-    pInUse->threadId  = GetCurrentTask();
-#else
     pInUse->threadId  = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
-#endif   
     pInUse->magic     = ARENA_INUSE_MAGIC;
 
     /* Shrink the block */
@@ -1277,7 +1145,6 @@ BOOLEAN STDCALL RtlFreeHeap(
     if (!HEAP_IsRealArena( heap, HEAP_NO_SERIALIZE, ptr, QUIET ))
     {
         if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
-        SetLastError( ERROR_INVALID_PARAMETER );
         TRACE("(%08x,%08lx,%08lx): returning FALSE\n",
                       heap, flags, (DWORD)ptr );
         return FALSE;
@@ -1329,7 +1196,6 @@ LPVOID STDCALL RtlReAllocateHeap(
     if (!HEAP_IsRealArena( heap, HEAP_NO_SERIALIZE, ptr, QUIET ))
     {
         if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
-        SetLastError( ERROR_INVALID_PARAMETER );
         TRACE("(%08x,%08lx,%08lx,%08lx): returning NULL\n",
                       heap, flags, (DWORD)ptr, size );
         return NULL;
@@ -1338,11 +1204,8 @@ LPVOID STDCALL RtlReAllocateHeap(
     /* Check if we need to grow the block */
 
     pArena = (ARENA_INUSE *)ptr - 1;
-#if 0   
-    pArena->threadId = GetCurrentTask();
-#else
     pArena->threadId = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
-#endif   
+
     subheap = HEAP_FindSubHeap( heapPtr, pArena );
     oldSize = (pArena->size & ARENA_SIZE_MASK);
     if (size > oldSize)
@@ -1361,7 +1224,6 @@ LPVOID STDCALL RtlReAllocateHeap(
                                                + size + HEAP_MIN_BLOCK_SIZE))
             {
                 if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
-                SetLastError( ERROR_OUTOFMEMORY );
                 return NULL;
             }
             HEAP_ShrinkBlock( subheap, pArena, size );
@@ -1376,7 +1238,6 @@ LPVOID STDCALL RtlReAllocateHeap(
                 !(pNew = HEAP_FindFreeBlock( heapPtr, size, &newsubheap )))
             {
                 if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
-                SetLastError( ERROR_OUTOFMEMORY );
                 return NULL;
             }
 
@@ -1387,11 +1248,7 @@ LPVOID STDCALL RtlReAllocateHeap(
             pInUse = (ARENA_INUSE *)pNew;
             pInUse->size     = (pInUse->size & ~ARENA_FLAG_FREE)
                                + sizeof(ARENA_FREE) - sizeof(ARENA_INUSE);
-#if 0	   
-            pInUse->threadId = GetCurrentTask();
-#else
 	    pInUse->threadId = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
-#endif	   
             pInUse->magic    = ARENA_INUSE_MAGIC;
             HEAP_ShrinkBlock( newsubheap, pInUse, size );
             memcpy( pInUse + 1, pArena + 1, oldSize );
@@ -1724,14 +1581,15 @@ BOOL HEAP_CreateSystemHeap(void)
 }
 #endif
 
-HANDLE STDCALL RtlGetProcessHeap(VOID)
+HANDLE STDCALL
+RtlGetProcessHeap(VOID)
 {
    DPRINT("RtlGetProcessHeap()\n");
    return (HANDLE)NtCurrentPeb()->ProcessHeap;
 }
 
 VOID
-RtlInitializeHeapManager (VOID)
+RtlInitializeHeapManager(VOID)
 {
    PPEB Peb;
    
@@ -1741,76 +1599,68 @@ RtlInitializeHeapManager (VOID)
    Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PPEB)) / sizeof(HANDLE);
    Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
    
-   RtlInitializeCriticalSection (&RtlpProcessHeapsListLock);
+   RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
 }
 
 
-NTSTATUS
-STDCALL
-RtlEnumProcessHeaps (
-	DWORD STDCALL(*func)(void*,LONG),
-	LONG	lParam
-	)
+NTSTATUS STDCALL
+RtlEnumProcessHeaps(DWORD STDCALL(*func)(void*,LONG),
+		    LONG lParam)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-	ULONG i;
+   NTSTATUS Status = STATUS_SUCCESS;
+   ULONG i;
 
-	RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
+   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
-	for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
-	{
-		Status = func (NtCurrentPeb ()->ProcessHeaps[i],lParam);
-		if(!NT_SUCCESS(Status))
-			break;
-	}
+   for (i = 0; i < NtCurrentPeb()->NumberOfHeaps; i++)
+     {
+	Status = func(NtCurrentPeb()->ProcessHeaps[i],lParam);
+	if (!NT_SUCCESS(Status))
+	  break;
+     }
 
-	RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+   RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
 
-	return Status;
-}
-
-ULONG
-STDCALL
-RtlGetProcessHeaps (
-	ULONG	HeapCount,
-	HANDLE	*HeapArray
-	)
-{
-	ULONG Result = 0;
-
-	RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
-
-	if (NtCurrentPeb ()->NumberOfHeaps <= HeapCount)
-	{
-		Result = NtCurrentPeb ()->NumberOfHeaps;
-		memmove (HeapArray,
-		         NtCurrentPeb ()->ProcessHeaps,
-		         Result * sizeof(HANDLE));
-	}
-
-	RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
-
-	return Result;
+   return Status;
 }
 
 
-BOOLEAN
-STDCALL
-RtlValidateProcessHeaps (
-	VOID
-	)
+ULONG STDCALL
+RtlGetProcessHeaps(ULONG HeapCount,
+		   HANDLE *HeapArray)
 {
-	HANDLE Heaps[128];
-	BOOLEAN Result = TRUE;
-	ULONG HeapCount;
-	ULONG i;
+   ULONG Result = 0;
 
-	HeapCount = RtlGetProcessHeaps (128, Heaps);
-	for (i = 0; i < HeapCount; i++)
-	{
-		if (!RtlValidateHeap (Heaps[i], 0, NULL))
-			Result = FALSE;
-	}
+   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
 
-	return Result;
+   if (NtCurrentPeb()->NumberOfHeaps <= HeapCount)
+     {
+	Result = NtCurrentPeb()->NumberOfHeaps;
+	memmove(HeapArray,
+		NtCurrentPeb()->ProcessHeaps,
+		Result * sizeof(HANDLE));
+     }
+
+   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+
+   return Result;
+}
+
+
+BOOLEAN STDCALL
+RtlValidateProcessHeaps(VOID)
+{
+   HANDLE Heaps[128];
+   BOOLEAN Result = TRUE;
+   ULONG HeapCount;
+   ULONG i;
+
+   HeapCount = RtlGetProcessHeaps(128, Heaps);
+   for (i = 0; i < HeapCount; i++)
+     {
+	if (!RtlValidateHeap(Heaps[i], 0, NULL))
+	  Result = FALSE;
+     }
+
+   return Result;
 }
