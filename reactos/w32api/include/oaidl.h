@@ -729,6 +729,28 @@ DECLARE_INTERFACE_(IRecordInfo, IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define IRecordInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IRecordInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IRecordInfo_Release(p) (p)->lpVtbl->Release(p)
+#define IRecordInfo_RecordInit(p,a) (p)->lpVtbl->RecordInit(p,a)
+#define IRecordInfo_RecordClear(p,a) (p)->lpVtbl->RecordClear(p,a)
+#define IRecordInfo_RecordCopy(p,a,b) (p)->lpVtbl->RecordCopy(p,a,b)
+#define IRecordInfo_GetGuid(p,a) (p)->lpVtbl->GetGuid(p,a)
+#define IRecordInfo_GetName(p,a) (p)->lpVtbl->GetName(p,a)
+#define IRecordInfo_GetSize(p,a) (p)->lpVtbl->GetSize(p,a)
+#define IRecordInfo_GetTypeInfo(p,a) (p)->lpVtbl->GetTypeInfo(p,a)
+#define IRecordInfo_GetField(p,a,b,c) (p)->lpVtbl->GetField(p,a,b,c)
+#define IRecordInfo_GetFieldNoCopy(p,a,b,c,d) (p)->lpVtbl->GetFieldNoCopy(p,a,b,c,d)
+#define IRecordInfo_PutField(p,a,b,c,d) (p)->lpVtbl->PutField(p,a,b,c,d)
+#define IRecordInfo_PutFieldNoCopy(p,a,b,c,d) (p)->lpVtbl->PutFieldNoCopy(p,a,b,c,d)
+#define IRecordInfo_GetFieldNames(p,a,b) (p)->lpVtbl->GetFieldNames(p,a,b)
+#define IRecordInfo_IsMatchingType(p,a) (p)->lpVtbl->IsMatchingType(p,a)
+#define IRecordInfo_RecordCreate(p) (p)->lpVtbl->RecordCreate(p)
+#define IRecordInfo_RecordCreateCopy(p,a,b) (p)->lpVtbl->RecordCreateCopy(p,a,b)
+#define IRecordInfo_RecordDestroy(p,a) (p)->lpVtbl->RecordDestroy(p,a)
+#endif
+
 EXTERN_C const IID IID_ITypeMarshal;
 #define INTERFACE ITypeMarshal
 DECLARE_INTERFACE_(ITypeMarshal, IUnknown)

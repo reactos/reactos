@@ -13,16 +13,16 @@ SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 
 C_SRCS = \
 	connpt.c \
+	dispatch.c \
 	hash.c \
 	oleaut.c \
 	stubs.c \
+	safearray.c \
+	varformat.c \
 	variant.c \
-	vartype.c \
-	dispatch.c \
-	varformat.c
+	vartype.c
 
 #	regsvr.c \
-#	safearray.c \
 #	olefont.c \
 #	olepicture.c \
 #	tmarshal.c \

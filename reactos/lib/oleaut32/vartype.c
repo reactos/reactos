@@ -5444,11 +5444,7 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
 
   TRACE("(%g,0x%08lx,0x%08lx,%p)\n", dateIn, lcid, dwFlags, pbstrOut);
 
-#ifndef __REACTOS__ /*FIXME: no VariantTimeToSystemTime() yet */
   if (!pbstrOut || !VariantTimeToSystemTime(dateIn, &st))
-#else
-  if (!pbstrOut)
-#endif
     return E_INVALIDARG;
 
   *pbstrOut = NULL;

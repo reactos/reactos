@@ -413,9 +413,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_DECIMAL:  return VarDateFromDec(&V_DECIMAL(ps), &V_DATE(pd));
 #endif
     case VT_DISPATCH: return VarDateFromDisp(V_DISPATCH(ps), lcid, &V_DATE(pd));
-#ifndef __REACTOS__	/*FIXME: no date funtions yet */
     case VT_BSTR:     return VarDateFromStr(V_BSTR(ps), lcid, dwFlags, &V_DATE(pd));
-#endif
     }
     break;
 
@@ -559,7 +557,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
   return res;
 }
 
-#ifndef __REACTOS__	/*FIXME: no safearray yet */
 /* Coerce to/from an array */
 static inline HRESULT VARIANT_CoerceArray(VARIANTARG* pd, VARIANTARG* ps, VARTYPE vt)
 {
@@ -574,7 +571,6 @@ static inline HRESULT VARIANT_CoerceArray(VARIANTARG* pd, VARIANTARG* ps, VARTYP
 
   return DISP_E_TYPEMISMATCH;
 }
-#endif
 
 /******************************************************************************
  * Check if a variants type is valid.
@@ -1044,11 +1040,9 @@ HRESULT WINAPI VariantChangeTypeEx(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
 
           if (SUCCEEDED(res))
           {
-#ifndef __REACTOS__	/*FIXME: no safearray yet */
             if (V_ISARRAY(&vTmp) || (vt & VT_ARRAY))
               res = VARIANT_CoerceArray(pvargDest, &vTmp, vt);
             else
-#endif
               res = VARIANT_Coerce(pvargDest, lcid, wFlags, &vTmp, vt);
 
             if (SUCCEEDED(res))
