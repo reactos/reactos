@@ -184,7 +184,7 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
 	fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
-	fprintf ( fMakefile, "bin2res = tools" SSEP "winebuild" SSEP "bin2res\n" );
+	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
