@@ -13,7 +13,7 @@ include Makefile.$(ARCH)
 TARGET_CFLAGS = -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
 
 ifeq ($(DBG), 1)
   TARGET_CFLAGS += -g
