@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.8 2003/10/31 16:25:08 navaraf Exp $
+/* $Id: static.c,v 1.9 2003/11/07 21:02:41 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -256,17 +256,6 @@ static LRESULT CALLBACK StaticWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	lParam = (LPARAM)(((LPCREATESTRUCTW)lParam)->lpszName);
 	/* fall through */
     case WM_SETTEXT:
-        if ((LPWSTR)lParam != NULL && ((LPWSTR)lParam)[0] == '#')
-        {
-            ULONG resource = 0, i;
-            LPWSTR name = (LPWSTR)lParam;
-            for (i = 1; name[i] != 0; ++i)
-            {
-                resource *= 10;
-                resource += name[i] - '0';
-            }
-            name = (LPWSTR)resource;
-        }
 	switch (style) {
 	case SS_ICON:
 	{
