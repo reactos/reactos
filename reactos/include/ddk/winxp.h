@@ -1,7 +1,7 @@
 /*
- * ntddbeep.h
+ * winxp.h
  *
- * Beep device IOCTL interface
+ * Definitions only used in Windows XP and earlier versions
  *
  * This file is part of the w32api package.
  *
@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDBEEP_H
-#define __NTDDBEEP_H
+#ifndef __WINXP_H
+#define __WINXP_H
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -31,24 +31,8 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
-#define DD_BEEP_DEVICE_NAME               "\\Device\\Beep"
-#define DD_BEEP_DEVICE_NAME_U             L"\\Device\\Beep"
-
-#define IOCTL_BEEP_SET \
-  CTL_CODE(FILE_DEVICE_BEEP, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-typedef struct _BEEP_SET_PARAMETERS {
-	ULONG  Frequency;
-	ULONG  Duration;
-} BEEP_SET_PARAMETERS, *PBEEP_SET_PARAMETERS;
-
-#define BEEP_FREQUENCY_MINIMUM            0x25
-#define BEEP_FREQUENCY_MAXIMUM            0x7FFF
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __NTDDBEEP_H */
+#endif /* __WINXP_H */

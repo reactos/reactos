@@ -31,20 +31,15 @@
 extern "C" {
 #endif
 
-#define DDKAPI
-
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define EMULATOR_READ_ACCESS              0x01
 #define EMULATOR_WRITE_ACCESS             0x02
 
 typedef enum _EMULATOR_PORT_ACCESS_TYPE {
-  Uchar,
-  Ushort,
-  Ulong
+	Uchar,
+	Ushort,
+	Ulong
 } EMULATOR_PORT_ACCESS_TYPE, *PEMULATOR_PORT_ACCESS_TYPE;
 
 
@@ -69,16 +64,11 @@ typedef struct _VIDEO_ACCESS_RANGE {
 } VIDEO_ACCESS_RANGE, *PVIDEO_ACCESS_RANGE;
 #endif
 
-#ifndef BANKED_SECTION_ROUTINE_DEFINED /* also in video.h */
-#define BANKED_SECTION_ROUTINE_DEFINED
 typedef VOID DDKAPI
 (*PBANKED_SECTION_ROUTINE)(
   IN ULONG  ReadBank,
   IN ULONG  WriteBank,
   IN PVOID  Context);
-#endif
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

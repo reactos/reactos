@@ -31,19 +31,15 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 /* GUIDs */
 
-#ifdef DEFINE_GUID
 DEFINE_GUID(GUID_DEVINTERFACE_COMPORT,
   0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
+
 DEFINE_GUID(GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
   0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
-#endif // DEFINE_GUID
 
 #define IOCTL_SERIAL_CLEAR_STATS \
   CTL_CODE (FILE_DEVICE_SERIAL_PORT, 36, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -445,8 +441,6 @@ typedef struct _SERIALCONFIG {
   ULONG  ProviderSize;
   WCHAR  ProviderData[1];
 } SERIALCONFIG,*PSERIALCONFIG;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

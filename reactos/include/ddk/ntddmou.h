@@ -31,27 +31,16 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
-
-#define DD_MOUSE_DEVICE_NAME	"\\Device\\PointerClass"
-#define DD_MOUSE_DEVICE_NAME_U	L"\\Device\\PointerClass"
-
-#define IO_MOUSE_INCREMENT	6
-#define MOUSE_BUFFER_SIZE	32
-
-#define IOCTL_INTERNAL_MOUSE_CONNECT	CTL_CODE(FILE_DEVICE_MOUSE, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
-#define IOCTL_INTERNAL_MOUSE_DISCONNECT	CTL_CODE(FILE_DEVICE_MOUSE, 0x0100, METHOD_NEITHER, FILE_ANY_ACCESS)
-#define IOCTL_INTERNAL_MOUSE_ENABLE 	CTL_CODE(FILE_DEVICE_MOUSE, 0x0200, METHOD_NEITHER, FILE_ANY_ACCESS)
-#define IOCTL_INTERNAL_MOUSE_DISABLE	CTL_CODE(FILE_DEVICE_MOUSE, 0x0400, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define DD_MOUSE_DEVICE_NAME              "\\Device\\PointerClass"
+#define DD_MOUSE_DEVICE_NAME_U            L"\\Device\\PointerClass"
 
 #define IOCTL_MOUSE_QUERY_ATTRIBUTES \
   CTL_CODE(FILE_DEVICE_MOUSE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-//DEFINE_GUID(GUID_DEVINTERFACE_MOUSE, \
-//  0x378de44c, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
+DEFINE_GUID(GUID_DEVINTERFACE_MOUSE, \
+  0x378de44c, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
 
 #define MOUSE_ERROR_VALUE_BASE            20000
 
@@ -82,19 +71,19 @@ extern "C" {
 #define MOUSE_ATTRIBUTES_CHANGED          0x04
 
 typedef struct _MOUSE_INPUT_DATA {
-	USHORT UnitId;
-	USHORT Flags;
-	union {
+	USHORT  UnitId;
+	USHORT  Flags;
+	_ANONYMOUS_UNION union {
 		ULONG Buttons;
-		struct  {
+		_ANONYMOUS_STRUCT struct  {
 			USHORT  ButtonFlags;
 			USHORT  ButtonData;
-		};
-	};
-	ULONG RawButtons;
-	LONG LastX;
-	LONG LastY;
-	ULONG ExtraInformation;
+		} DUMMYSTRUCTNAME;
+	} DUMMYUNIONNAME;
+	ULONG  RawButtons;
+	LONG  LastX;
+	LONG  LastY;
+	ULONG  ExtraInformation;
 } MOUSE_INPUT_DATA, *PMOUSE_INPUT_DATA;
 
 typedef struct _MOUSE_UNIT_ID_PARAMETER {
@@ -113,38 +102,11 @@ typedef struct _MOUSE_UNIT_ID_PARAMETER {
 #define WHEELMOUSE_HID_HARDWARE           0x0100
 
 typedef struct _MOUSE_ATTRIBUTES {
-	USHORT MouseIdentifier;
-	USHORT NumberOfButtons;
-	USHORT SampleRate;
-	ULONG InputDataQueueLength;
+  USHORT  MouseIdentifier;
+  USHORT  NumberOfButtons;
+  USHORT  SampleRate;
+  ULONG  InputDataQueueLength;
 } MOUSE_ATTRIBUTES, *PMOUSE_ATTRIBUTES;
-
-typedef struct _CLASS_INFORMATION {
-   PDEVICE_OBJECT DeviceObject;
-   PVOID CallBack;
-} CLASS_INFORMATION, *PCLASS_INFORMATION;
-
-typedef struct _GDI_INFORMATION {
-   PVOID CallBack;
-} GDI_INFORMATION, *PGDI_INFORMATION;
-
-typedef
-VOID
-(*PSERVICE_CALLBACK_ROUTINE) (
-    IN PVOID NormalContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2,
-    IN OUT PVOID SystemArgument3
-    );
-
-typedef
-VOID
-(*PGDI_SERVICE_CALLBACK_ROUTINE) (
-    IN PVOID SystemArgument1,
-    IN ULONG SystemArgument2
-    );
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -1,97 +1,83 @@
-/* $Id: ntddk.h,v 1.38 2003/12/30 17:39:38 fireball Exp $
+/*
+ * ntddk.h
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           include/ddk/ntddk.h
- * PURPOSE:        Interface definitions for drivers
- * PROGRAMMER:     David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                 15/05/98: Created
+ * Windows Device Driver Kit
+ *
+ * This file is part of the w32api package.
+ *
+ * Contributors:
+ *   Created by Casper S. Hornstrup <chorns@users.sourceforge.net>
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * DEFINES:
+ *    DBG          - Debugging enabled/disabled (0/1)
+ *    POOL_TAGGING - Enable pool tagging
+ *    _X86_        - X86 environment
  */
-
-#ifdef __USE_W32API
-
-#include_next <ddk/ntddk.h>
-
-#else /* __USE_W32API */
 
 #ifndef __NTDDK_H
 #define __NTDDK_H
+
+#if __GNUC__ >=3
+#pragma GCC system_header
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* INCLUDES ***************************************************************/
+#include <stdarg.h>
+#include <windef.h>
+#include <ntdef.h>
+#include <basetyps.h>
 
-#if defined(__GNUC__)
-#define FASTCALL  __attribute__((fastcall))
-#else
-#define FASTCALL __fastcall
-#endif
+/* Base types, structures and definitions */
+typedef short CSHORT;
+typedef CONST int CINT;
+typedef CONST char *PCSZ;
 
+#ifndef STATIC
 #define STATIC static
-
-#ifndef _GNU_H_WINDOWS_H
-/* NASTY HACK! Our msvcrt are messed up, causing msvcrt.dll to crash when
- * the headers are mixed with MinGW msvcrt headers. Not including stdlib.h
- * seems to correct this.
- */
-#include <stdlib.h>
-#include <string.h>
 #endif
-#include <ntos/types.h>
-#include <ntos/time.h>
-#include <ntos/cdrom.h>
-#include <ntos/disk.h>
-#include <ntos/registry.h>
-#include <ntos/port.h>
-#include <ntos/synch.h>
-#include <napi/types.h>
 
-#include <pe.h>
+#ifndef CALLBACK
+#define CALLBACK
+#endif
 
-#include <ddk/status.h>
-#include <ddk/ntdef.h>
-#include <ddk/defines.h>
-#include <ddk/types.h>
-#include <ddk/cmtypes.h>
-#include <ddk/ketypes.h>
-#include <ntos/security.h>
-#include <ddk/setypes.h>
-#include <ddk/mmtypes.h>
-#include <ddk/potypes.h>
-#include <ddk/pnptypes.h>
-#include <ddk/iotypes.h>
-#include <ddk/extypes.h>
-#include <ddk/pstypes.h>
-#include <ntos/ldrtypes.h>
-#include <ntos/zwtypes.h>
-#include <ddk/ioctrl.h>
-#include <ntos/rtltypes.h>
-#include <napi/shared_data.h>
+#ifndef DECL_IMPORT
+#define DECL_IMPORT __attribute__((dllimport))
+#endif
 
-#include <ntos/zw.h>
-#include <ntos/rtl.h>
-#include <ddk/dbgfuncs.h>
-#include <ddk/ldrfuncs.h>
-#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
-#include <ddk/exfuncs.h>
-#include <ddk/halfuncs.h>
-#include <ddk/mmfuncs.h>
-#include <ddk/kefuncs.h>
-#include <ddk/pofuncs.h>
-#include <ddk/pnpfuncs.h>
-#include <ddk/iofuncs.h>
-#include <ddk/psfuncs.h>
-#include <ddk/obfuncs.h>
-#include <ddk/sefuncs.h>
-#endif /*__NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ */
+#ifndef DECL_EXPORT
+#define DECL_EXPORT __attribute__((dllexport))
+#endif
+
+/* Windows NT status codes */
+#include "ntstatus.h"
+
+/* Windows Device Driver Kit */
+#include "winddk.h"
+
+/* Definitions only in Windows XP */
+#include "winxp.h"
+
+/* Definitions only in Windows 2000 */
+#include "win2k.h"
+
+/* Definitions only in Windows NT 4 */
+#include "winnt4.h"
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __NTDDK_H */
-
-#endif /* __USE_W32API */

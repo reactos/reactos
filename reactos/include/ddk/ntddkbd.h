@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define DD_KEYBOARD_DEVICE_NAME           "\\Device\\KeyboardClass"
 #define DD_KEYBOARD_DEVICE_NAME_U         L"\\Device\\KeyboardClass"
@@ -58,8 +55,8 @@ extern "C" {
   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0002, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
-//DEFINE_GUID(GUID_DEVINTERFACE_KEYBOARD, \
-//  0x884b96c3, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
+DEFINE_GUID(GUID_DEVINTERFACE_KEYBOARD, \
+  0x884b96c3, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
 
 #define KEYBOARD_ERROR_VALUE_BASE         10000
 
@@ -72,17 +69,12 @@ extern "C" {
 #define KEY_E0                            2
 #define KEY_E1                            4
 
-
-    /*
-     * Unit number.  E.g., for \Device\KeyboardPort0 the unit is '0',
-     * for \Device\KeyboardPort1 the unit is '1', and so on.
-     */
 typedef struct _KEYBOARD_INPUT_DATA {
-    USHORT UnitId;
-    USHORT MakeCode;
-    USHORT Flags;
-    USHORT Reserved;
-    ULONG ExtraInformation;
+  USHORT  UnitId;
+  USHORT  MakeCode;
+  USHORT  Flags;
+  USHORT  Reserved;
+  ULONG  ExtraInformation;
 } KEYBOARD_INPUT_DATA, *PKEYBOARD_INPUT_DATA;
 
 
@@ -135,8 +127,6 @@ typedef struct _KEYBOARD_IME_STATUS {
 	ULONG  ImeOpen;
 	ULONG  ImeConvMode;
 } KEYBOARD_IME_STATUS, *PKEYBOARD_IME_STATUS;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

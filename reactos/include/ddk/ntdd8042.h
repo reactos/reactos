@@ -31,15 +31,9 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddkbd.h"
 #include "ntddmou.h"
-
-#ifndef DDKAPI
-#define DDKAPI STDCALL
-#endif
 
 #define IOCTL_INTERNAL_I8042_CONTROLLER_WRITE_BUFFER \
   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0FF2, METHOD_NEITHER, FILE_ANY_ACCESS)
@@ -70,21 +64,21 @@ extern "C" {
                                            I8042_WAKE_SYS_BUTTON)
 
 typedef enum _TRANSMIT_STATE {
-    Idle = 0,
-    SendingBytes
+  Idle = 0,
+  SendingBytes
 } TRANSMIT_STATE;
 
 typedef struct _OUTPUT_PACKET {
-    PUCHAR         Bytes;
-    ULONG          CurrentByte;
-    ULONG          ByteCount;
-    TRANSMIT_STATE State;
+  PUCHAR  Bytes;
+  ULONG  CurrentByte;
+  ULONG  ByteCount;
+  TRANSMIT_STATE  State;
 } OUTPUT_PACKET, *POUTPUT_PACKET;
 
 typedef enum _KEYBOARD_SCAN_STATE {
-    Normal,
-    GotE0,
-    GotE1
+  Normal,
+  GotE0,
+  GotE1
 } KEYBOARD_SCAN_STATE, *PKEYBOARD_SCAN_STATE;
 
 typedef enum _MOUSE_STATE {
@@ -155,68 +149,42 @@ typedef VOID DDKAPI
 
 typedef NTSTATUS DDKAPI
 (*PI8042_SYNCH_READ_PORT) (
-    IN PVOID    Context,
-    OUT PUCHAR      Value,
-    IN BOOLEAN     WaitForACK);
+  IN PVOID  Context,
+  OUT PUCHAR  Value,
+  IN BOOLEAN  WaitForACK);
 
 typedef NTSTATUS DDKAPI
-(*PI8042_SYNCH_WRITE_PORT) (
-    IN PVOID    Context,
-    IN UCHAR       Value,
-    IN BOOLEAN     WaitForACK);
+(*PI8042_SYNCH_WRITE_PORT)(
+  IN PVOID  Context,
+  IN UCHAR  Value,
+  IN BOOLEAN  WaitForACK);
 
 
 typedef NTSTATUS DDKAPI
-(*PI8042_KEYBOARD_INITIALIZATION_ROUTINE) (
-    IN PVOID                           InitializationContext,
-    IN PVOID                           SynchFuncContext,
-    IN PI8042_SYNCH_READ_PORT          ReadPort,
-    IN PI8042_SYNCH_WRITE_PORT         WritePort,
-    OUT PBOOLEAN                       TurnTranslationOn);
+(*PI8042_KEYBOARD_INITIALIZATION_ROUTINE)(
+  IN PVOID  InitializationContext,
+  IN PVOID  SynchFuncContext,
+  IN PI8042_SYNCH_READ_PORT  ReadPort,
+  IN PI8042_SYNCH_WRITE_PORT  WritePort,
+  OUT PBOOLEAN  TurnTranslationOn);
 
 typedef BOOLEAN DDKAPI
-(*PI8042_KEYBOARD_ISR) (
-    PVOID                   IsrContext,
-    PKEYBOARD_INPUT_DATA    CurrentInput,
-    POUTPUT_PACKET          CurrentOutput,
-    UCHAR                   StatusByte,
-    PUCHAR                  Byte,
-    PBOOLEAN                ContinueProcessing,
-    PKEYBOARD_SCAN_STATE    ScanState);
+(*PI8042_KEYBOARD_ISR)(
+  PVOID  IsrContext,
+  PKEYBOARD_INPUT_DATA  CurrentInput,
+  POUTPUT_PACKET  CurrentOutput,
+  UCHAR  StatusByte,
+  PUCHAR  Byte,
+  PBOOLEAN  ContinueProcessing,
+  PKEYBOARD_SCAN_STATE  ScanState);
 
 typedef struct _INTERNAL_I8042_HOOK_KEYBOARD {
-
-    //
-    // Context variable for all callback routines
-    //
-    OUT PVOID Context;
-
-    //
-    // Routine to call after the mouse is reset
-    //
-    OUT PI8042_KEYBOARD_INITIALIZATION_ROUTINE InitializationRoutine;
-
-    //
-    // Routine to call when a byte is received via the interrupt
-    //
-    OUT PI8042_KEYBOARD_ISR IsrRoutine;
-
-    //
-    // Write function
-    //
- //UNIMPLEMENTED   IN PI8042_ISR_WRITE_PORT IsrWritePort;
-
-    //
-    // Queue the current packet (ie the one passed into the isr callback hook)
-    // to be reported to the class driver
-    //
- //UNIMPLEMENTED  IN PI8042_QUEUE_PACKET QueueKeyboardPacket;
-
-    //
-    // Context for IsrWritePort, QueueKeyboardPacket
-    //
- //UNIMPLEMENTED  IN PVOID CallContext;
-
+	OUT PVOID  Context;
+	OUT PI8042_KEYBOARD_INITIALIZATION_ROUTINE  InitializationRoutine;
+	OUT PI8042_KEYBOARD_ISR  IsrRoutine;
+	IN PI8042_ISR_WRITE_PORT  IsrWritePort;
+	IN PI8042_QUEUE_PACKET  QueueKeyboardPacket;
+	IN PVOID  CallContext;
 } INTERNAL_I8042_HOOK_KEYBOARD, *PINTERNAL_I8042_HOOK_KEYBOARD;
 
 typedef BOOLEAN DDKAPI
@@ -237,8 +205,6 @@ typedef struct _INTERNAL_I8042_HOOK_MOUSE {
   IN PI8042_QUEUE_PACKET  QueueMousePacket;
   IN PVOID  CallContext;
 } INTERNAL_I8042_HOOK_MOUSE, *PINTERNAL_I8042_HOOK_MOUSE;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 /*
- * ntddbeep.h
+ * netevent.h
  *
- * Beep device IOCTL interface
+ * Network events
  *
  * This file is part of the w32api package.
  *
@@ -20,35 +20,23 @@
  *
  */
 
-#ifndef __NTDDBEEP_H
-#define __NTDDBEEP_H
+#ifndef __NETEVENT_H
+#define __NETEVENT_H
 
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
 
+#define EVENT_TRANSPORT_REGISTER_FAILED  0xC000232CL
+
+#define EVENT_TRANSPORT_ADAPTER_NOT_FOUND 0xC000232EL
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-
-#define DD_BEEP_DEVICE_NAME               "\\Device\\Beep"
-#define DD_BEEP_DEVICE_NAME_U             L"\\Device\\Beep"
-
-#define IOCTL_BEEP_SET \
-  CTL_CODE(FILE_DEVICE_BEEP, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-typedef struct _BEEP_SET_PARAMETERS {
-	ULONG  Frequency;
-	ULONG  Duration;
-} BEEP_SET_PARAMETERS, *PBEEP_SET_PARAMETERS;
-
-#define BEEP_FREQUENCY_MINIMUM            0x25
-#define BEEP_FREQUENCY_MAXIMUM            0x7FFF
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __NTDDBEEP_H */
+#endif /* __NETEVENT_H */
