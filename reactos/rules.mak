@@ -48,6 +48,10 @@ SEP := \$(EMPTY_VAR)
 PIPE := -pipe
 endif
 
+# Sane TOPDIR for toplevel makefile
+ifeq ($(TOPDIR),)
+TOPDIR = .
+endif
 
 # Use environment var ROS_INSTALL to override default install dir
 ifeq ($(ROS_INSTALL),)
