@@ -14,6 +14,10 @@
  *
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *       Make the file listing readable when there is a lot of long names.
+ *
+
+ *    05-Jul-2004 (Jens Collin <jens.collin@lakhei.com>)
+ *       Now expands lfn even when trailing " is omitted.
  */
 
 #include "config.h"
@@ -25,7 +29,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cmd.h" 
+#include "cmd.h"
 
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
@@ -37,6 +41,7 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 	INT   curplace = 0;
 	INT   start;
 	INT   count;
+	INT step, c;
 	BOOL  found_dot = FALSE;
 	BOOL  perfectmatch = TRUE;
 	TCHAR path[MAX_PATH];
@@ -50,8 +55,18 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 	if (count < 0)
 		count = 0;
 
+	/* find how many '"'s there is typed already.*/
+	step = count;
+	while (step > 0)
+	{
+		if (str[step] == _T('"'))
+			c++;
+		step--;
+	}
+	/* if c is odd, then user typed " before name, else not.*/
+
 	/* find front of word */
-	if (str[count] == _T('"'))
+	if (str[count] == _T('"') || (c % 2))
 	{
 		count--;
 		while (count > 0 && str[count] != _T('"'))
@@ -256,9 +271,9 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 
 	if (curplace >= 0 && directory[curplace] == _T('"'))
 		directory[curplace--] = _T('\0');
-	
+
 	_tcscpy (path, directory);
-	
+
 	while (curplace >= 0 &&
 		   directory[curplace] != _T('\\') &&
 		   directory[curplace] != _T(':'))
@@ -312,13 +327,13 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 
 		/* Increase by the number of spaces behind file name */
 		longestfname += 3;
-		
+
 		/* find anything */
 		ConOutChar (_T('\n'));
 		do
 		{
 			/* ignore . and .. */
-			if (!_tcscmp (file.cFileName, _T(".")) || 
+			if (!_tcscmp (file.cFileName, _T(".")) ||
 				!_tcscmp (file.cFileName, _T("..")))
 				continue;
 
