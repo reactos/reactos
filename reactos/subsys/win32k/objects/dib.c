@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.58 2004/12/18 17:15:10 royce Exp $
+ * $Id: dib.c,v 1.59 2004/12/27 16:47:02 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -725,6 +725,10 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
       hSection, dwOffset, 0);
     DC_UnlockDc(hDC);
   }
+  else
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  }
 
   if (bDesktopDC)
     NtGdiDeleteDC(hDC);
@@ -774,6 +778,7 @@ DIB_CreateDIBSection(
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
 			      0L, offset, totalSize); */
     DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
+    SetLastWin32Error(ERROR_INVALID_FUNCTION);
     return 0;
   }
   else if (ovr_pitch && offset)
@@ -839,11 +844,13 @@ DIB_CreateDIBSection(
                           bm.bmBits);
     if (! res)
       {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
       } 
     bmp = BITMAPOBJ_LockBitmap(res);
     if (NULL == bmp)
       {
+	SetLastWin32Error(ERROR_INVALID_HANDLE);
 	NtGdiDeleteObject(bmp);
 	return NULL;
       }
