@@ -1239,6 +1239,22 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	    OnStateChange(This,CDBOSC_KILLFOCUS);
 	    break;
 
+	  case NM_CUSTOMDRAW:
+	    TRACE("-- NM_CUSTOMDRAW %p\n",This);
+	    return CDRF_DODEFAULT;
+
+	  case NM_RELEASEDCAPTURE:
+	    TRACE("-- NM_RELEASEDCAPTURE %p\n",This);
+	    break;
+
+	  case NM_CLICK:
+	    TRACE("-- NM_CLICK %p\n",This);
+	    break;
+
+	  case NM_RCLICK:
+	    TRACE("-- NM_RCLICK %p\n",This);
+	    break;	    
+
 	  case HDN_ENDTRACKA:
 	    TRACE("-- HDN_ENDTRACKA %p\n",This);
 	    /*nColumn1 = ListView_GetColumnWidth(This->hWndList, 0);
@@ -1249,6 +1265,10 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	    TRACE("-- LVN_DELETEITEM %p\n",This);
 	    SHFree((LPITEMIDLIST)lpnmlv->lParam);     /*delete the pidl because we made a copy of it*/
 	    break;
+
+	  case LVN_DELETEALLITEMS:
+	    TRACE("-- LVN_DELETEALLITEMS %p\n",This);
+	    return FALSE;
 
 	  case LVN_INSERTITEM:
 	    TRACE("-- LVN_INSERTITEM (STUB)%p\n",This);
