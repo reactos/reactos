@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.23 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: time.c,v 1.24 2003/07/20 13:13:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -106,7 +106,7 @@ DosDateTimeToFileTime(
    SystemTime.wYear = 1980 + pddate->Year;
 
    SystemTimeToFileTime(&SystemTime,lpFileTime);
-   
+
    return TRUE;
 }
 
@@ -138,11 +138,10 @@ CompareFileTime(
 /*
  * @implemented
  */
-VOID
-STDCALL 
-GetSystemTimeAsFileTime(PFILETIME lpFileTime)
+VOID STDCALL
+GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 {
-   NtQuerySystemTime ((TIME *)lpFileTime);
+  NtQuerySystemTime ((PLARGE_INTEGER)lpFileTime);
 }
 
 
@@ -255,7 +254,7 @@ GetLocalTime(LPSYSTEMTIME lpSystemTime)
   FILETIME FileTime;
   FILETIME LocalFileTime;
 
-  NtQuerySystemTime ((TIME*)&FileTime);
+  NtQuerySystemTime ((PLARGE_INTEGER)&FileTime);
   FileTimeToLocalFileTime (&FileTime, &LocalFileTime);
   FileTimeToSystemTime (&LocalFileTime, lpSystemTime);
 }
@@ -269,7 +268,7 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
 
-  NtQuerySystemTime ((TIME*)&FileTime);
+  NtQuerySystemTime ((PLARGE_INTEGER)&FileTime);
   FileTimeToSystemTime (&FileTime, lpSystemTime);
 }
 
