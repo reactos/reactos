@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.27 2003/05/04 15:41:40 gvg Exp $
+/* $Id: window.c,v 1.28 2003/05/12 18:52:14 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -332,7 +332,8 @@ CreateWindowExA(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   HWND Handle;
   INT sw;
-  
+
+OutputDebugStringA("CreateWindowEx\n");  
   if (IS_ATOM(lpClassName)) 
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -807,7 +808,9 @@ IsIconic(HWND hWnd)
 WINBOOL STDCALL
 IsWindow(HWND hWnd)
 {
-  return FALSE;
+  DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC);
+
+  return (0 != WndProc || ERROR_INVALID_HANDLE != GetLastError());
 }
 
 WINBOOL STDCALL

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.41 2003/05/02 07:52:33 gvg Exp $
+/* $Id: window.c,v 1.42 2003/05/12 18:52:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1122,6 +1122,7 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
 			       (PVOID*)&WindowObject);
   if (!NT_SUCCESS(Status))
     {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return(0);
     }
 
