@@ -148,39 +148,13 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   KeUnlockMutex(&DeviceExt->PipeListLock);
 
   /*
-   * Step 2. Search for listening server FCB.
-   */
-
-  /*
    * Acquire the lock for FCB lists. From now on no modifications to the
    * FCB lists are allowed, because it can cause various misconsistencies.
    */
   KeLockMutex(&Pipe->FcbListLock);
 
-  if (!SpecialAccess)
-    {
-      ServerFcb = NpfsFindListeningServerInstance(Pipe);
-      if (ServerFcb == NULL)
-        {
-          /* Not found, bail out with error for FILE_OPEN requests. */
-          DPRINT("No listening server fcb found!\n");
-          KeUnlockMutex(&Pipe->FcbListLock);
-          Irp->IoStatus.Status = STATUS_PIPE_BUSY;
-          IoCompleteRequest(Irp, IO_NO_INCREMENT);
-          return STATUS_PIPE_BUSY;
-        }
-    }
-  else if (IsListEmpty(&Pipe->ServerFcbListHead))
-    {
-      DPRINT("No server fcb found!\n");
-      KeUnlockMutex(&Pipe->FcbListLock);
-      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
-      return STATUS_UNSUCCESSFUL;
-    }
-
   /*
-   * Step 3. Create the client FCB.
+   * Step 2. Create the client FCB.
    */
   ClientFcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
   if (ClientFcb == NULL)
@@ -227,6 +201,73 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   KeInitializeEvent(&ClientFcb->Event, SynchronizationEvent, FALSE);
 
   /*
+   * Step 3. Search for listening server FCB.
+   */
+
+  if (!SpecialAccess)
+    {
+      /*
+       * WARNING: Point of no return! Once we get the server FCB it's
+       * possible that we completed a wait request and so we have to
+       * complete even this request.
+       */
+
+      ServerFcb = NpfsFindListeningServerInstance(Pipe);
+      if (ServerFcb == NULL)
+        {
+          PLIST_ENTRY CurrentEntry;
+          PNPFS_FCB Fcb;
+
+          /*
+           * If no waiting server FCB was found then try to pick
+           * one of the listing server FCB on the pipe.
+           */
+
+          CurrentEntry = Pipe->ServerFcbListHead.Flink;
+          while (CurrentEntry != &Pipe->ServerFcbListHead)
+            {
+              Fcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
+              if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+                {
+                  ServerFcb = Fcb;
+                  break;
+                }
+              CurrentEntry = CurrentEntry->Flink;
+            }
+
+          /*
+           * No one is listening to me?! I'm so lonely... :(
+           */
+
+          if (ServerFcb == NULL)
+            {
+              /* Not found, bail out with error for FILE_OPEN requests. */
+              DPRINT("No listening server fcb found!\n");
+              if (ClientFcb->Data)
+                ExFreePool(ClientFcb->Data);
+              KeUnlockMutex(&Pipe->FcbListLock);
+              Irp->IoStatus.Status = STATUS_PIPE_BUSY;
+              IoCompleteRequest(Irp, IO_NO_INCREMENT);
+              return STATUS_PIPE_BUSY;
+            }
+        }
+      else
+        {
+          /* Signal the server thread and remove it from the waiter list */
+          /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
+          NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
+        }
+    }
+  else if (IsListEmpty(&Pipe->ServerFcbListHead))
+    {
+      DPRINT("No server fcb found!\n");
+      KeUnlockMutex(&Pipe->FcbListLock);
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /*
    * Step 4. Add the client FCB to a list and connect it if possible.
    */
 
@@ -240,9 +281,6 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       ServerFcb->OtherSide = ClientFcb;
       ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
       ServerFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
-
-      /* Signal the server thread and remove it from the waiter list */
-      NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
     }
 
   KeUnlockMutex(&Pipe->FcbListLock);

@@ -165,7 +165,10 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 
 	  if (Length == 0)
 	    {
-	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	        {
+	          KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	        }
 	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
@@ -197,6 +200,11 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 	        }
 	      else
 	        {
+                  KeResetEvent(&Fcb->Event);
+                  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+                    {
+                      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+                    }
 	          Fcb->ReadDataAvailable = 0;
 	          Fcb->WriteQuotaAvailable = Fcb->MaxDataLength;
 	        }
@@ -204,11 +212,6 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 
 	  if (Information > 0)
 	    {
-	      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-	        {
-	          KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
-	        }
-	      KeResetEvent(&Fcb->Event);
 	      break;
 	    }
 	}
@@ -383,12 +386,12 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	      ReaderFcb->WriteQuotaAvailable = 0;
 	    }
 
-	  if (Information > 0)
-	    {
-	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
-	      KeResetEvent(&Fcb->Event);
-	      break;
-	    }
+   	  if (Information > 0)
+   	    {
+   	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
+   	      KeResetEvent(&Fcb->Event);
+   	      break;
+   	    }
 	}
     }
 
