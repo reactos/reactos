@@ -107,7 +107,6 @@ VOID KdPrintMda(PCH pch);
 
 #if !defined(KDBG) && !defined(DBG)
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	do { } while (0)
-# define KDB_DELETEPROCESS_HOOK(PROCESS)	do { } while (0)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	do { } while (0)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		do { } while (0)
 # define KDB_LOADERINIT_HOOK(NTOS, HAL)		do { } while (0)
@@ -115,7 +114,6 @@ VOID KdPrintMda(PCH pch);
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #else
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	KdbSymLoadUserModuleSymbols(LDRMOD)
-# define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbDeleteProcessHook(PROCESS)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	KdbSymLoadDriverSymbols(FILENAME, MODULE)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		KdbSymUnloadDriverSymbols(MODULE)
 # define KDB_LOADERINIT_HOOK(NTOS, HAL)		KdbSymInit(NTOS, HAL)
@@ -123,8 +121,6 @@ VOID KdPrintMda(PCH pch);
 /*#define KDB_CREATE_THREAD_HOOK(CONTEXT) \
         KdbCreateThreadHook(CONTEXT)
 */
-VOID
-KdbDeleteProcessHook(IN PEPROCESS Process);
 
 VOID
 KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
@@ -158,6 +154,14 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			  BOOLEAN FirstChance);
 
 #endif /* KDBG || DBG */
+
+#if !defined(KDBG)
+# define KDB_DELETEPROCESS_HOOK(PROCESS)	do { } while (0)
+#else
+# define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbDeleteProcessHook(PROCESS)
+VOID
+KdbDeleteProcessHook(IN PEPROCESS Process);
+#endif /* KDBG */
 
 VOID
 DebugLogDumpMessages(VOID);

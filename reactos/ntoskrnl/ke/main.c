@@ -696,10 +696,12 @@ ExpInitializeExecutive(VOID)
     KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
   }
 
-#if defined(KDBG) || defined(DBG)
+#if defined(KDBG)
   KdbInit();
-  KdbInitProfiling2();
 #endif /* KDBG */
+#if defined(KDBG) || defined(DBG)
+  KdbInitProfiling2();
+#endif /* KDBG || DBG */
 
   /* On the assumption that we can now access disks start up the debug
    * logger thread */
