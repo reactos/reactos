@@ -83,7 +83,7 @@ DNS_STATUS WINAPI DnsQuery_A
     (*QueryResultSet)->pName = xstrsave( Name );
     (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
     (*QueryResultSet)->Data.A.IpAddress = 
-      ntohl( answer->rrs.addr->addr.inet.sin_addr.s_addr );
+      answer->rrs.addr->addr.inet.sin_addr.s_addr;
     adns_finish( astate );
     return ERROR_SUCCESS;
     
