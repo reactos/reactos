@@ -24,8 +24,8 @@
  */
 
 #include <stdarg.h>
-#include "string.h"
-#include "stdlib.h"
+#include <string.h>
+#include <stdlib.h>
 
 #include "wine/debug.h"
 #include "windef.h"
@@ -39,8 +39,8 @@
 #include "fdi.h"
 #include "wine/unicode.h"
 
-#include "fcntl.h"
-#include "share.h"
+#include <fcntl.h>
+#include <share.h>
 
 #include "wine/debug.h"
 
