@@ -247,7 +247,6 @@ OBJECTS_EX = \
 	ex/list.o \
 	ex/lookas.o \
 	ex/mutant.o \
-	ex/napi.o \
 	ex/power.o \
 	ex/profile.o \
 	ex/resource.o \
@@ -438,7 +437,6 @@ TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
   $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc
 
-ex/napi.o: ex/zw.S $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
