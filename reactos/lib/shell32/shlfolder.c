@@ -118,14 +118,16 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
     /* get the shellfolder for the child pidl and let it analyse further */
     hr = IShellFolder_BindToObject (psf, *pidlInOut, pbc, &IID_IShellFolder, (LPVOID *) & psfChild);
 
-    if (SUCCEEDED (hr)) {
+    if (SUCCEEDED(hr)) {
 	hr = IShellFolder_ParseDisplayName (psfChild, hwndOwner, pbc, szNext, pEaten, &pidlOut, pdwAttributes);
 	IShellFolder_Release (psfChild);
 
-	pidlTemp = ILCombine (*pidlInOut, pidlOut);
+	if (SUCCEEDED(hr)) {
+	    pidlTemp = ILCombine (*pidlInOut, pidlOut);
 
-	if (!pidlTemp)
-	    hr = E_OUTOFMEMORY;
+	    if (!pidlTemp)
+		hr = E_OUTOFMEMORY;
+	}
 
 	if (pidlOut)
 	    ILFree (pidlOut);
