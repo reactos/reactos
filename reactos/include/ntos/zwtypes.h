@@ -1556,11 +1556,6 @@ struct _SYSTEM_QUOTA_INFORMATION
 #define THREAD_WAIT_OBJECTS			3
 //#define MAXIMUM_WAIT_OBJECTS			64
 
-// key restore flags
-
-#define REG_WHOLE_HIVE_VOLATILE			1
-#define REG_REFRESH_HIVE			2
-
 // object type  access rights
 
 #define OBJECT_TYPE_CREATE		0x0001

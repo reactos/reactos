@@ -1,4 +1,4 @@
-/* $Id: registry.h,v 1.4 2002/11/14 18:21:03 chorns Exp $
+/* $Id: registry.h,v 1.5 2003/05/30 22:26:25 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -34,6 +34,12 @@
 #define REG_OPTION_CREATE_LINK		(0x2L)
 #define REG_OPTION_BACKUP_RESTORE	(0x8L)
 #define REG_OPTION_OPEN_LINK		(0x8L)
+
+/* Key load/restore options */
+#define REG_WHOLE_HIVE_VOLATILE		(0x1L)
+#define REG_REFRESH_HIVE		(0x2L)
+#define REG_NO_LAZY_FLUSH		(0x4L)
+#define REG_FORCE_RESTORE		(0x8L)
 
 /* Key create/open disposition */
 #define REG_CREATED_NEW_KEY		(0x1L)
