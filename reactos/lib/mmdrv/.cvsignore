@@ -1,9 +1,9 @@
-temp.exp
 *.a
+*.d
+*.o
 *.dll
-*.lib
-*.sym
 *.coff
+*.sym
 *.map
 *.tmp
-*.o
+temp.exp
