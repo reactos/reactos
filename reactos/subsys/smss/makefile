@@ -6,7 +6,7 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = native
 
-TARGET_SDKLIBS = ntdll.a smdll.a
+TARGET_SDKLIBS = smlib.a ntdll.a
 
 TARGET_NAME = smss
 
