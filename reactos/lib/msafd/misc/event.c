@@ -4,57 +4,102 @@
  * FILE:        misc/event.c
  * PURPOSE:     Event handling
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *				Alex Ionescu (alex@relsoft.net)
  * REVISIONS:
  *   CSH 15/06-2001 Created
+ *	 Alex 16/07/2004 - Complete Rewrite
  */
+
 #include <msafd.h>
 
-INT
-WSPAPI
+int 
+WSPAPI 
 WSPEventSelect(
-  IN  SOCKET s,
-  IN  WSAEVENT hEventObject,
-  IN  LONG lNetworkEvents,
-  OUT LPINT lpErrno)
+	SOCKET Handle, 
+	WSAEVENT hEventObject, 
+	long lNetworkEvents, 
+	LPINT lpErrno)
 {
-  FILE_REQUEST_EVENTSELECT Request;
-  FILE_REPLY_EVENTSELECT Reply;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK				IOSB;
+	AFD_EVENT_SELECT_INFO		EventSelectInfo;
+	PSOCKET_INFORMATION			Socket = NULL;
+	NTSTATUS					Status;
+	ULONG						BlockMode;
 
-  Request.hEventObject   = hEventObject;
-  Request.lNetworkEvents = lNetworkEvents;
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(Handle);
 
-  Status = NtDeviceIoControlFile(
-    (HANDLE)s,
-    NULL,
-		NULL,
-		NULL,   
-		&Iosb,
-		IOCTL_AFD_EVENTSELECT,
-		&Request,
-		sizeof(FILE_REQUEST_EVENTSELECT),
-		&Reply,
-		sizeof(FILE_REPLY_EVENTSELECT));
-  if (Status == STATUS_PENDING) {
-    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-    /* FIXME: Wait only for blocking sockets */
-		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
-  }
+	/* Set Socket to Non-Blocking */
+	BlockMode = 1;
+	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+	Socket->SharedData.NonBlocking = TRUE;
 
-  if (!NT_SUCCESS(Status)) {
-    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
-		*lpErrno = WSAENOBUFS;
-    return SOCKET_ERROR;
+	/* Deactivate Async Select if there is one */
+	if (Socket->EventObject) {
+		//SockAsyncSelect(Socket, NULL, 0, 0);
 	}
 
-  AFD_DbgPrint(MAX_TRACE, ("Event select successful. Status (0x%X).\n",
-    Reply.Status));
+	/* Set Structure Info */
+	EventSelectInfo.EventObject = hEventObject;
+	EventSelectInfo.Events = 0;
 
-  *lpErrno = Reply.Status;
+	/* Set Events to wait for */
+	if (lNetworkEvents & FD_READ) {
+		EventSelectInfo.Events |= AFD_EVENT_RECEIVE;
+    }
 
-  return 0;
+    if (lNetworkEvents & FD_WRITE) {
+		EventSelectInfo.Events |= AFD_EVENT_SEND;
+    }
+
+    if (lNetworkEvents & FD_OOB) {
+        EventSelectInfo.Events |= AFD_EVENT_OOB_RECEIVE;
+    }
+
+    if (lNetworkEvents & FD_ACCEPT) {
+		EventSelectInfo.Events |= AFD_EVENT_ACCEPT;
+    }
+
+    if (lNetworkEvents & FD_CONNECT) {
+        EventSelectInfo.Events |= AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL;
+    }
+
+    if (lNetworkEvents & FD_CLOSE) {
+		EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+    }
+
+    if (lNetworkEvents & FD_QOS) {
+		EventSelectInfo.Events |= AFD_EVENT_QOS;
+    }
+
+    if (lNetworkEvents & FD_GROUP_QOS) {
+		EventSelectInfo.Events |= AFD_EVENT_GROUP_QOS;
+    }
+
+	/* Send IOCTL */
+	Status = NtDeviceIoControlFile((HANDLE)Handle,
+									SockEvent,
+									NULL,
+									NULL,
+									&IOSB,
+									IOCTL_AFD_EVENT_SELECT,
+									&EventSelectInfo,
+									sizeof(EventSelectInfo),
+									NULL,
+									0);
+
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, 0);
+	}
+
+	/* Set Socket Data*/
+	Socket->EventObject = hEventObject;
+	Socket->NetworkEvents = lNetworkEvents;
+
+	return 0;
 }
+
 
 INT
 WSPAPI
@@ -64,42 +109,7 @@ WSPEnumNetworkEvents(
   OUT LPWSANETWORKEVENTS lpNetworkEvents, 
   OUT LPINT lpErrno)
 {
-  FILE_REQUEST_ENUMNETWORKEVENTS Request;
-  FILE_REPLY_ENUMNETWORKEVENTS Reply;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-
-  Request.hEventObject = hEventObject;
-
-  Status = NtDeviceIoControlFile(
-    (HANDLE)s,
-    NULL,
-		NULL,
-		NULL,   
-		&Iosb,
-		IOCTL_AFD_ENUMNETWORKEVENTS,
-		&Request,
-		sizeof(FILE_REQUEST_ENUMNETWORKEVENTS),
-		&Reply,
-		sizeof(FILE_REPLY_ENUMNETWORKEVENTS));
-  if (Status == STATUS_PENDING) {
-    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-    /* FIXME: Wait only for blocking sockets */
-		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
-  }
-
-  if (!NT_SUCCESS(Status)) {
-    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
-		*lpErrno = WSAENOBUFS;
-    return SOCKET_ERROR;
-	}
-
-  AFD_DbgPrint(MAX_TRACE, ("EnumNetworkEvents successful. Status (0x%X).\n",
-    Reply.Status));
-
-  *lpErrno = Reply.Status;
-
-  return 0;
+   return 0;
 }
 
 /* EOF */

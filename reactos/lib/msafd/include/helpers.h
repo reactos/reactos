@@ -9,53 +9,64 @@
 
 #include <msafd.h>
 
-typedef struct _WSHELPER_DLL_ENTRIES {
-    PWSH_ADDRESS_TO_STRING      lpWSHAddressToString;
-    PWSH_ENUM_PROTOCOLS         lpWSHEnumProtocols;
-    PWSH_GET_BROADCAST_SOCKADDR lpWSHGetBroadcastSockaddr;
-    PWSH_GET_PROVIDER_GUID      lpWSHGetProviderGuid;
-    PWSH_GET_SOCKADDR_TYPE      lpWSHGetSockaddrType;
-    PWSH_GET_SOCKET_INFORMATION lpWSHGetSocketInformation;
-    PWSH_GET_WILDCARD_SOCKEADDR lpWSHGetWildcardSockaddr;
-    PWSH_GET_WINSOCK_MAPPING    lpWSHGetWinsockMapping;
-    PWSH_GET_WSAPROTOCOL_INFO   lpWSHGetWSAProtocolInfo;
-    PWSH_IOCTL                  lpWSHIoctl;
-    PWSH_JOIN_LEAF              lpWSHJoinLeaf;
-    PWSH_NOTIFY                 lpWSHNotify;
-    PWSH_OPEN_SOCKET            lpWSHOpenSocket;
-    PWSH_OPEN_SOCKET2           lpWSHOpenSocket2;
-    PWSH_SET_SOCKET_INFORMATION lpWSHSetSocketInformation;
-    PWSH_STRING_TO_ADDRESS      lpWSHStringToAddress;
-} WSHELPER_DLL_ENTRIES, *PWSHELPER_DLL_ENTRIES;
+typedef struct _HELPER_DATA {
+    LIST_ENTRY						Helpers;
+	LONG							RefCount;
+    HANDLE							hInstance;
+    INT								MinWSAddressLength;
+    INT								MaxWSAddressLength;
+    INT								MinTDIAddressLength;
+    INT								MaxTDIAddressLength;
+    BOOLEAN							UseDelayedAcceptance;
+    PWINSOCK_MAPPING				Mapping;
+	PWSH_OPEN_SOCKET				WSHOpenSocket;
+	PWSH_OPEN_SOCKET2				WSHOpenSocket2;
+	PWSH_JOIN_LEAF					WSHJoinLeaf;
+	PWSH_NOTIFY						WSHNotify;
+	PWSH_GET_SOCKET_INFORMATION		WSHGetSocketInformation;
+	PWSH_SET_SOCKET_INFORMATION		WSHSetSocketInformation;
+	PWSH_GET_SOCKADDR_TYPE			WSHGetSockaddrType;
+	PWSH_GET_WILDCARD_SOCKEADDR		WSHGetWildcardSockaddr;
+	PWSH_GET_BROADCAST_SOCKADDR		WSHGetBroadcastSockaddr;
+	PWSH_ADDRESS_TO_STRING			WSHAddressToString;
+	PWSH_STRING_TO_ADDRESS			WSHStringToAddress;
+	PWSH_IOCTL						WSHIoctl;
+    WCHAR							TransportName[1];
+} HELPER_DATA, *PHELPER_DATA;
 
-typedef struct _WSHELPER_DLL {
-    LIST_ENTRY ListEntry;
-    CRITICAL_SECTION Lock;
-    WCHAR LibraryName[MAX_PATH];
-    HMODULE hModule;
-    WSHELPER_DLL_ENTRIES EntryTable;
-    PWINSOCK_MAPPING Mapping;
-} WSHELPER_DLL, *PWSHELPER_DLL;
+int SockLoadHelperDll(
+	PWSTR TransportName, 
+	PWINSOCK_MAPPING Mapping, 
+	PHELPER_DATA *HelperDllData
+);
 
+int SockLoadTransportMapping(
+	PWSTR TransportName, 
+	PWINSOCK_MAPPING *Mapping
+);
 
-PWSHELPER_DLL CreateHelperDLL(
-    LPWSTR LibraryName);
+int SockLoadTransportList(
+	PWSTR *TransportList
+);
 
-INT DestroyHelperDLL(
-    PWSHELPER_DLL HelperDLL);
+BOOL SockIsTripleInMapping(
+	PWINSOCK_MAPPING Mapping, 
+	INT AddressFamily, 
+	INT SocketType, 
+	INT Protocol
+);
 
-PWSHELPER_DLL LocateHelperDLL(
-    LPWSAPROTOCOL_INFOW lpProtocolInfo);
-
-INT LoadHelperDLL(
-    PWSHELPER_DLL HelperDLL);
-
-INT UnloadHelperDLL(
-    PWSHELPER_DLL HelperDLL);
-
-VOID CreateHelperDLLDatabase(VOID);
-
-VOID DestroyHelperDLLDatabase(VOID);
+int SockGetTdiName(
+	PINT AddressFamily, 
+	PINT SocketType, 
+	PINT Protocol, 
+	GROUP Group, 
+	DWORD Flags, 
+	PUNICODE_STRING TransportName, 
+	PVOID *HelperDllContext, 
+	PHELPER_DATA *HelperDllData, 
+	PDWORD Events
+);
 
 #endif /* __HELPERS_H */
 

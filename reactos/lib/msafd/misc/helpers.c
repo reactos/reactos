@@ -4,8 +4,10 @@
  * FILE:        misc/helpers.c
  * PURPOSE:     Helper DLL management
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *				Alex Ionescu (alex@relsoft.net)
  * REVISIONS:
  *   CSH 01/09-2000 Created
+ *	 Alex 16/07/2004 - Complete Rewrite
  */
 #include <msafd.h>
 #include <helpers.h>
@@ -13,275 +15,503 @@
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 
-PWSHELPER_DLL CreateHelperDLL(
-    LPWSTR LibraryName)
+
+INT 
+SockGetTdiName(
+    PINT AddressFamily, 
+    PINT SocketType, 
+    PINT Protocol, 
+    GROUP Group, 
+    DWORD Flags, 
+    PUNICODE_STRING TransportName, 
+    PVOID *HelperDllContext, 
+    PHELPER_DATA *HelperDllData, 
+    PDWORD Events)
 {
-    PWSHELPER_DLL HelperDLL;
+    PHELPER_DATA        HelperData;
+    PWSTR               Transports;
+    PWSTR               Transport;
+    PWINSOCK_MAPPING	Mapping;
+    PLIST_ENTRY	        Helpers;
+    INT                 Status;
 
-    HelperDLL = HeapAlloc(GlobalHeap, 0, sizeof(WSHELPER_DLL));
-    if (!HelperDLL)
-        return NULL;
+    AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    InitializeCriticalSection(&HelperDLL->Lock);
-    HelperDLL->hModule = NULL;
-    lstrcpyW(HelperDLL->LibraryName, LibraryName);
-    HelperDLL->Mapping = NULL;
+    /* Check in our Current Loaded Helpers */
+    for (Helpers = SockHelpersListHead.Flink;
+         Helpers != &SockHelpersListHead; 
+         Helpers = Helpers->Flink ) {
 
-    EnterCriticalSection(&HelperDLLDatabaseLock);
-    InsertTailList(&HelperDLLDatabaseListHead, &HelperDLL->ListEntry);
-    LeaveCriticalSection(&HelperDLLDatabaseLock);
+        HelperData = CONTAINING_RECORD(Helpers, HELPER_DATA, Helpers);
 
-    AFD_DbgPrint(MAX_TRACE, ("Returning helper at (0x%X).\n", HelperDLL));
+        /* See if this Mapping works for us */
+        if (SockIsTripleInMapping (HelperData->Mapping, 
+                                   *AddressFamily, 
+                                   *SocketType, 
+                                   *Protocol)) {
 
-    return HelperDLL;
-}
+            /* Call the Helper Dll function get the Transport Name */
+            if (HelperData->WSHOpenSocket2 == NULL ) {
 
-
-INT DestroyHelperDLL(
-    PWSHELPER_DLL HelperDLL)
-{
-    INT Status;
-
-    AFD_DbgPrint(MAX_TRACE, ("HelperDLL (0x%X).\n", HelperDLL));
-
-    EnterCriticalSection(&HelperDLLDatabaseLock);
-    RemoveEntryList(&HelperDLL->ListEntry);
-    LeaveCriticalSection(&HelperDLLDatabaseLock);
-
-    if (HelperDLL->hModule) {
-        Status = UnloadHelperDLL(HelperDLL);
-    } else {
-        Status = NO_ERROR;
-    }
-
-    if (HelperDLL->Mapping)
-        HeapFree(GlobalHeap, 0, HelperDLL->Mapping);
-
-    DeleteCriticalSection(&HelperDLL->Lock);
-
-    HeapFree(GlobalHeap, 0, HelperDLL);
-
-    return Status;
-}
-
-
-PWSHELPER_DLL LocateHelperDLL(
-    LPWSAPROTOCOL_INFOW lpProtocolInfo)
-{
-    PLIST_ENTRY CurrentEntry;
-    PWSHELPER_DLL HelperDLL;
-    UINT i;
-
-    EnterCriticalSection(&HelperDLLDatabaseLock);
-    CurrentEntry = HelperDLLDatabaseListHead.Flink;
-    while (CurrentEntry != &HelperDLLDatabaseListHead) {
-	    HelperDLL = CONTAINING_RECORD(CurrentEntry,
-                                      WSHELPER_DLL,
-                                      ListEntry);
-
-        for (i = 0; i < HelperDLL->Mapping->Rows; i++) {
-            if ((lpProtocolInfo->iAddressFamily == (INT) HelperDLL->Mapping->Mapping[i].AddressFamily) &&
-                (lpProtocolInfo->iSocketType    == (INT) HelperDLL->Mapping->Mapping[i].SocketType) &&
-                ((lpProtocolInfo->iProtocol     == (INT) HelperDLL->Mapping->Mapping[i].Protocol) ||
-                (lpProtocolInfo->iSocketType    == SOCK_RAW))) {
-                LeaveCriticalSection(&HelperDLLDatabaseLock);
-                AFD_DbgPrint(MAX_TRACE, ("Returning helper DLL at (0x%X).\n", HelperDLL));
-                return HelperDLL;
+                /* DLL Doesn't support WSHOpenSocket2, call the old one */
+                HelperData->WSHOpenSocket(AddressFamily,
+                                          SocketType,
+                                          Protocol,
+                                          TransportName,
+                                          HelperDllContext,
+                                          Events
+                                          );
+            } else {
+                HelperData->WSHOpenSocket2(AddressFamily,
+                                           SocketType,
+                                           Protocol,
+                                           Group,
+                                           Flags,
+                                           TransportName,
+                                           HelperDllContext,
+                                           Events
+                                           );
             }
+
+            /* Return the Helper Pointers */
+            *HelperDllData = HelperData;
+            return NO_ERROR;
         }
-
-        CurrentEntry = CurrentEntry->Flink;
     }
-    LeaveCriticalSection(&HelperDLLDatabaseLock);
 
-    AFD_DbgPrint(MAX_TRACE, ("Could not locate helper DLL.\n"));
+    /* Get the Transports available */
+    Status = SockLoadTransportList(&Transports);
 
-    return NULL;
-}
-
-
-INT GetHelperDLLEntries(
-    PWSHELPER_DLL HelperDLL)
-{
-    PVOID e;
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Can't get transport list\n"));
+        return Status;
+    }
     
-  /* The following functions MUST be supported */    
-    e = GetProcAddress(HelperDLL->hModule, "WSHEnumProtocols");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHEnumProtocols = e;
+    /* Loop through each transport until we find one that can satisfy us */
+    for (Transport = Transports; 
+         *Transports != 0; 
+         Transport += wcslen(Transport) + 1) {
 
-  e = GetProcAddress(HelperDLL->hModule, "WSHGetSockaddrType");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHGetSockaddrType = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetSocketInformation");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHGetSocketInformation = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetWildcardSockaddr");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHGetWildcardSockaddr = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetWinsockMapping");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHGetWinsockMapping = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHNotify");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHNotify = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHOpenSocket");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHOpenSocket = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHSetSocketInformation");
-    if (!e) return ERROR_BAD_PROVIDER;
-  HelperDLL->EntryTable.lpWSHSetSocketInformation = e;
-
-
-  /* 
-  The following functions are OPTIONAL.
-  Whoever wants to call them, must check that the pointer is not NULL.
-  */
-    e = GetProcAddress(HelperDLL->hModule, "WSHAddressToString");
-  HelperDLL->EntryTable.lpWSHAddressToString = e;
-  
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetBroadcastSockaddr");
-	HelperDLL->EntryTable.lpWSHGetBroadcastSockaddr = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetProviderGuid");
-	HelperDLL->EntryTable.lpWSHGetProviderGuid = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHGetWSAProtocolInfo");
-	HelperDLL->EntryTable.lpWSHGetWSAProtocolInfo = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHIoctl");
-	HelperDLL->EntryTable.lpWSHIoctl = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHJoinLeaf");
-	HelperDLL->EntryTable.lpWSHJoinLeaf = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHOpenSocket2");
-	HelperDLL->EntryTable.lpWSHOpenSocket2 = e;
-
-    e = GetProcAddress(HelperDLL->hModule, "WSHStringToAddress");
-	HelperDLL->EntryTable.lpWSHStringToAddress = e;
-
-    return NO_ERROR;
-}
-
-
-INT LoadHelperDLL(
-    PWSHELPER_DLL HelperDLL)
-{
-    INT Status = NO_ERROR;
-
-    AFD_DbgPrint(MAX_TRACE, ("Loading helper dll at (0x%X).\n", HelperDLL));
-
-    if (!HelperDLL->hModule) {
-        /* DLL is not loaded so load it now */
-        HelperDLL->hModule = LoadLibrary(HelperDLL->LibraryName);
-
-        AFD_DbgPrint(MAX_TRACE, ("hModule is (0x%X).\n", HelperDLL->hModule));
-
-        if (HelperDLL->hModule) {
-            Status = GetHelperDLLEntries(HelperDLL);
-        } else
-            Status = ERROR_DLL_NOT_FOUND;
-    } else
-        Status = NO_ERROR;
-
-    AFD_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
-
-    return Status;
-}
-
-
-INT UnloadHelperDLL(
-    PWSHELPER_DLL HelperDLL)
-{
-    INT Status = NO_ERROR;
-
-    AFD_DbgPrint(MAX_TRACE, ("HelperDLL (0x%X) hModule (0x%X).\n", HelperDLL, HelperDLL->hModule));
-
-    if (HelperDLL->hModule) {
-        if (!FreeLibrary(HelperDLL->hModule)) {
-            Status = GetLastError();
+        /* See what mapping this Transport supports */
+        Status = SockLoadTransportMapping(Transport, &Mapping);
+        
+        /* Check for error */
+        if (Status) {
+            AFD_DbgPrint(MIN_TRACE, ("Can't get mapping\n"));
+            HeapFree(GlobalHeap, 0, Transports);
+            return Status;
         }
-        HelperDLL->hModule = NULL;
-    }
 
-    return Status;
+        /* See if this Mapping works for us */
+        if (SockIsTripleInMapping(Mapping, *AddressFamily, *SocketType, *Protocol)) {
+
+            /* It does, so load the DLL associated with it */
+            Status = SockLoadHelperDll(Transport, Mapping, &HelperData);
+
+            /* Check for error */
+            if (Status) {
+                AFD_DbgPrint(MIN_TRACE, ("Can't load helper DLL\n"));
+                HeapFree(GlobalHeap, 0, Transports);
+                HeapFree(GlobalHeap, 0, Mapping);
+                return Status;
+            }
+
+            /* Call the Helper Dll function get the Transport Name */
+            if (HelperData->WSHOpenSocket2 == NULL) {
+                /* DLL Doesn't support WSHOpenSocket2, call the old one */
+                HelperData->WSHOpenSocket(AddressFamily,
+                                          SocketType,
+                                          Protocol,
+                                          TransportName,
+                                          HelperDllContext,
+                                          Events
+                                          );
+            } else {
+                HelperData->WSHOpenSocket2(AddressFamily,
+                                           SocketType,
+                                           Protocol,
+                                           Group,
+                                           Flags,
+                                           TransportName,
+                                           HelperDllContext,
+                                           Events
+                                           );
+            }
+
+            /* Return the Helper Pointers */
+            *HelperDllData = HelperData;
+            HeapFree(GlobalHeap, 0, Transports);
+            HeapFree(GlobalHeap, 0, Mapping);
+            return NO_ERROR;
+        }
+        
+        HeapFree(GlobalHeap, 0, Mapping);
+    }
+    HeapFree(GlobalHeap, 0, Transports);
+    return WSAEINVAL;
 }
 
-
-VOID CreateHelperDLLDatabase(VOID)
+INT
+SockLoadTransportMapping(
+    PWSTR TransportName, 
+    PWINSOCK_MAPPING *Mapping)
 {
-    PWSHELPER_DLL HelperDLL;
+    PWSTR               TransportKey;
+    HKEY                KeyHandle;
+    ULONG               MappingSize;
+    LONG                Status;
 
-    InitializeCriticalSection(&HelperDLLDatabaseLock);
+    AFD_DbgPrint(MID_TRACE,("Called: TransportName %ws\n", TransportName));
 
-    InitializeListHead(&HelperDLLDatabaseListHead);
+    /* Allocate a Buffer */
+    TransportKey = HeapAlloc(GlobalHeap, 0, (54 + wcslen(TransportName)) * sizeof(WCHAR));
 
-    /* FIXME: Read helper DLL configuration from registry */
-    HelperDLL = CreateHelperDLL(L"wshtcpip.dll");
-    if (!HelperDLL)
-        return;
-
-    HelperDLL->Mapping = HeapAlloc(
-      GlobalHeap,
-      0,
-      5 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
-    if (!HelperDLL->Mapping)
-        return;
-
-    HelperDLL->Mapping->Rows    = 5;
-    HelperDLL->Mapping->Columns = 3;
-
-    HelperDLL->Mapping->Mapping[0].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[0].SocketType    = SOCK_STREAM;
-    HelperDLL->Mapping->Mapping[0].Protocol      = 0;
-
-    HelperDLL->Mapping->Mapping[1].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[1].SocketType    = SOCK_STREAM;
-    HelperDLL->Mapping->Mapping[1].Protocol      = IPPROTO_TCP;
-
-    HelperDLL->Mapping->Mapping[2].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[2].SocketType    = SOCK_DGRAM;
-    HelperDLL->Mapping->Mapping[2].Protocol      = 0;
-
-    HelperDLL->Mapping->Mapping[3].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[3].SocketType    = SOCK_DGRAM;
-    HelperDLL->Mapping->Mapping[3].Protocol      = IPPROTO_UDP;
-
-    HelperDLL->Mapping->Mapping[4].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[4].SocketType    = SOCK_RAW;
-    HelperDLL->Mapping->Mapping[4].Protocol      = 0;
-
-    LoadHelperDLL(HelperDLL);
-}
-
-
-VOID DestroyHelperDLLDatabase(VOID)
-{
-    PLIST_ENTRY CurrentEntry;
-    PLIST_ENTRY NextEntry;
-    PWSHELPER_DLL HelperDLL;
-
-    CurrentEntry = HelperDLLDatabaseListHead.Flink;
-    while (CurrentEntry != &HelperDLLDatabaseListHead) {
-        NextEntry = CurrentEntry->Flink;
-
-	      HelperDLL = CONTAINING_RECORD(CurrentEntry,
-                                      WSHELPER_DLL,
-                                      ListEntry);
-
-        DestroyHelperDLL(HelperDLL);
-
-        CurrentEntry = NextEntry;
+    /* Check for error */
+    if (TransportKey == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        return WSAEINVAL;
     }
 
-    DeleteCriticalSection(&HelperDLLDatabaseLock);
+    /* Generate the right key name */
+    wcscpy(TransportKey, L"System\\CurrentControlSet\\Services\\");
+    wcscat(TransportKey, TransportName);
+    wcscat(TransportKey, L"\\Parameters\\Winsock");
+
+    /* Open the Key */
+    Status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, TransportKey, 0, KEY_READ, &KeyHandle);
+
+    /* We don't need the Transport Key anymore */
+    HeapFree(GlobalHeap, 0, TransportKey);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        return WSAEINVAL;
+    }
+
+    /* Find out how much space we need for the Mapping */
+    Status = RegQueryValueExW(KeyHandle, L"Mapping", NULL, NULL, NULL, &MappingSize);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        return WSAEINVAL;
+    }
+
+    /* Allocate Memory for the Mapping */
+    *Mapping = HeapAlloc(GlobalHeap, 0, MappingSize);
+
+    /* Check for error */
+    if (*Mapping == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        return WSAEINVAL;
+    }
+
+    /* Read the Mapping */
+    Status = RegQueryValueExW(KeyHandle, L"Mapping", NULL, NULL, (LPBYTE)*Mapping, &MappingSize);
+    
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        HeapFree(GlobalHeap, 0, *Mapping);
+        return WSAEINVAL;
+    }
+
+    /* Close key and return */
+    RegCloseKey(KeyHandle);
+    return 0;
+}
+
+INT 
+SockLoadTransportList(
+    PWSTR *TransportList)
+{
+    ULONG	TransportListSize;
+    HKEY	KeyHandle;
+    LONG	Status;
+
+    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    
+    /* Open the Transports Key */
+    Status = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Services\\Winsock\\Parameters",  
+                            0, 
+                            KEY_READ, 
+                            &KeyHandle);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        return WSAEINVAL;
+    }
+    
+    /* Get the Transport List Size */
+    Status = RegQueryValueExW(KeyHandle,
+                              L"Transports",
+                              NULL,
+                              NULL,
+                              NULL,
+                              &TransportListSize);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        return WSAEINVAL;
+    }
+
+    /* Allocate Memory for the Transport List */
+    *TransportList = HeapAlloc(GlobalHeap, 0, TransportListSize);
+
+    /* Check for error */
+    if (*TransportList == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        return WSAEINVAL;
+    }
+
+    /* Get the Transports */
+    Status = RegQueryValueExW (KeyHandle, 
+                               L"Transports", 
+                               NULL, 
+                               NULL, 
+                               (LPBYTE)*TransportList, 
+                               &TransportListSize);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        HeapFree(GlobalHeap, 0, *TransportList);
+        return WSAEINVAL;
+    }
+
+    /* Close key and return */
+    RegCloseKey(KeyHandle);
+    return 0;
+}
+
+INT
+SockLoadHelperDll(
+    PWSTR TransportName, 
+    PWINSOCK_MAPPING Mapping, 
+    PHELPER_DATA *HelperDllData)
+{
+    PHELPER_DATA	HelperData;
+    PWSTR               HelperDllName;
+    PWSTR               FullHelperDllName;
+    ULONG               HelperDllNameSize;
+    PWSTR               HelperKey;
+    HKEY                KeyHandle;
+    ULONG               DataSize;
+    LONG                Status;
+    
+    /* Allocate space for the Helper Structure and TransportName */
+    HelperData = HeapAlloc(GlobalHeap, 0, sizeof(*HelperData) + (wcslen(TransportName) + 1) * sizeof(WCHAR));
+
+    /* Check for error */
+    if (HelperData == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        return WSAEINVAL;
+    }
+    
+    /* Allocate Space for the Helper DLL Key */
+    HelperKey = HeapAlloc(GlobalHeap, 0, (54 + wcslen(TransportName)) * sizeof(WCHAR));
+	
+    /* Check for error */
+    if (HelperKey == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+
+    /* Generate the right key name */
+    wcscpy(HelperKey, L"System\\CurrentControlSet\\Services\\");
+    wcscat(HelperKey, TransportName);
+    wcscat(HelperKey, L"\\Parameters\\Winsock");
+
+    /* Open the Key */
+    Status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, HelperKey, 0, KEY_READ, &KeyHandle);
+
+    HeapFree(GlobalHeap, 0, HelperKey);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+    
+    /* Read Size of SockAddr Structures */
+    DataSize = sizeof(HelperData->MinWSAddressLength);
+    HelperData->MinWSAddressLength = 16;
+    RegQueryValueExW (KeyHandle, 
+                      L"MinSockaddrLength", 
+                      NULL, 
+                      NULL, 
+                      (LPBYTE)&HelperData->MinWSAddressLength, 
+                      &DataSize);
+    DataSize = sizeof(HelperData->MinWSAddressLength);
+    HelperData->MaxWSAddressLength = 16;
+    RegQueryValueExW (KeyHandle, 
+                      L"MaxSockaddrLength", 
+                      NULL, 
+                      NULL, 
+                      (LPBYTE)&HelperData->MaxWSAddressLength, 
+                      &DataSize);
+
+    /* Size of TDI Structures */
+    HelperData->MinTDIAddressLength = HelperData->MinWSAddressLength + 6;
+    HelperData->MaxTDIAddressLength = HelperData->MaxWSAddressLength + 6;
+    
+    /* Read Delayed Acceptance Setting */
+    DataSize = sizeof(DWORD);
+    HelperData->UseDelayedAcceptance = FALSE;
+    RegQueryValueExW (KeyHandle, 
+                      L"UseDelayedAcceptance", 
+                      NULL, 
+                      NULL, 
+                      (LPBYTE)&HelperData->UseDelayedAcceptance, 
+                      &DataSize);
+
+    /* Allocate Space for the Helper DLL Names */
+    HelperDllName = HeapAlloc(GlobalHeap, 0, 512);
+
+    /* Check for error */
+    if (HelperDllName == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+
+    FullHelperDllName = HeapAlloc(GlobalHeap, 0, 512);
+	
+    /* Check for error */
+    if (FullHelperDllName == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        HeapFree(GlobalHeap, 0, HelperDllName);
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+
+    /* Get the name of the Helper DLL*/
+    DataSize = 512;
+    Status = RegQueryValueExW (KeyHandle, 
+                               L"HelperDllName", 
+                               NULL, 
+                               NULL, 
+                               (LPBYTE)HelperDllName, 
+                               &DataSize);
+
+    /* Check for error */
+    if (Status) {
+        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
+        HeapFree(GlobalHeap, 0, FullHelperDllName);
+        HeapFree(GlobalHeap, 0, HelperDllName);
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+
+    /* Get the Full name, expanding Environment Strings */
+    HelperDllNameSize = ExpandEnvironmentStringsW (HelperDllName,
+                                                   FullHelperDllName, 
+                                                   256);
+
+    /* Load the DLL */
+    HelperData->hInstance = LoadLibraryW(FullHelperDllName);
+
+    HeapFree(GlobalHeap, 0, HelperDllName);
+    HeapFree(GlobalHeap, 0, FullHelperDllName);
+
+    if (HelperData->hInstance == NULL) {
+        AFD_DbgPrint(MIN_TRACE, ("Error loading helper DLL\n"));
+        HeapFree(GlobalHeap, 0, HelperData);
+        return WSAEINVAL;
+    }
+
+    /* Close Key */
+    RegCloseKey(KeyHandle);
+
+    /* Get the Pointers to the Helper Routines */
+    HelperData->WSHOpenSocket =	(PWSH_OPEN_SOCKET)
+									GetProcAddress(HelperData->hInstance,
+									"WSHOpenSocket");
+    HelperData->WSHOpenSocket2 = (PWSH_OPEN_SOCKET2)
+									GetProcAddress(HelperData->hInstance,
+									"WSHOpenSocket2");
+    HelperData->WSHJoinLeaf = (PWSH_JOIN_LEAF)
+								GetProcAddress(HelperData->hInstance,
+								"WSHJoinLeaf");
+    HelperData->WSHNotify = (PWSH_NOTIFY)
+								GetProcAddress(HelperData->hInstance, "WSHNotify");
+    HelperData->WSHGetSocketInformation = (PWSH_GET_SOCKET_INFORMATION)
+											GetProcAddress(HelperData->hInstance, 
+											"WSHGetSocketInformation");
+    HelperData->WSHSetSocketInformation = (PWSH_SET_SOCKET_INFORMATION)
+											GetProcAddress(HelperData->hInstance,
+											"WSHSetSocketInformation");
+    HelperData->WSHGetSockaddrType = (PWSH_GET_SOCKADDR_TYPE)
+										GetProcAddress(HelperData->hInstance,
+										"WSHGetSockaddrType");
+    HelperData->WSHGetWildcardSockaddr = (PWSH_GET_WILDCARD_SOCKEADDR)
+											GetProcAddress(HelperData->hInstance,
+											"WSHGetWildcardSockaddr");
+    HelperData->WSHGetBroadcastSockaddr = (PWSH_GET_BROADCAST_SOCKADDR)
+											GetProcAddress(HelperData->hInstance,
+											"WSHGetBroadcastSockaddr");
+    HelperData->WSHAddressToString = (PWSH_ADDRESS_TO_STRING)
+										GetProcAddress(HelperData->hInstance,
+										"WSHAddressToString");
+    HelperData->WSHStringToAddress = (PWSH_STRING_TO_ADDRESS)
+										GetProcAddress(HelperData->hInstance,
+										"WSHStringToAddress");
+    HelperData->WSHIoctl = (PWSH_IOCTL)
+							GetProcAddress(HelperData->hInstance,
+							"WSHIoctl");
+
+    /* Save the Mapping Structure and transport name */
+    HelperData->Mapping = Mapping;
+    wcscpy(HelperData->TransportName, TransportName);
+
+    /* Increment Reference Count */
+    HelperData->RefCount = 1;
+
+    /* Add it to our list */
+    InsertHeadList(&SockHelpersListHead, &HelperData->Helpers);
+
+    /* Return Pointers */
+    *HelperDllData = HelperData;
+    return 0;
+}
+
+BOOL
+SockIsTripleInMapping(
+    PWINSOCK_MAPPING Mapping, 
+    INT AddressFamily, 
+    INT SocketType, 
+    INT Protocol)
+{
+    /* The Windows version returns more detailed information on which of the 3 parameters failed...we should do this later */
+    ULONG    Row;
+    
+    AFD_DbgPrint(MID_TRACE,("Called, Mapping rows = %d\n", Mapping->Rows));
+
+    /* Loop through Mapping to Find a matching one */
+    for (Row = 0; Row < Mapping->Rows; Row++) {
+	AFD_DbgPrint(MID_TRACE,("Examining: row %d: AF %d type %d proto %d\n",
+				Row,
+				(INT)Mapping->Mapping[Row].AddressFamily,
+				(INT)Mapping->Mapping[Row].SocketType,
+				(INT)Mapping->Mapping[Row].Protocol));
+
+        /* Check of all three values Match */
+        if (((INT)Mapping->Mapping[Row].AddressFamily == AddressFamily) && 
+            ((INT)Mapping->Mapping[Row].SocketType == SocketType) && 
+            ((INT)Mapping->Mapping[Row].Protocol == Protocol)) {
+	    AFD_DbgPrint(MID_TRACE,("Found\n"));
+            return TRUE;
+        }
+    }
+    AFD_DbgPrint(MID_TRACE,("Not found\n"));
+    return FALSE;
 }
 
 /* EOF */

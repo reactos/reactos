@@ -20,7 +20,7 @@
 #include <info.h>
 #include <memtrack.h>
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;

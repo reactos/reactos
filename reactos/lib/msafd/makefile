@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/06/09 18:11:39 arty Exp $
+# $Id: makefile,v 1.15 2004/07/18 22:49:17 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = msafd
 
 TARGET_BASE = $(TARGET_BASE_LIB_MSAFD)
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
 TARGET_CFLAGS = \
  -I./include \
