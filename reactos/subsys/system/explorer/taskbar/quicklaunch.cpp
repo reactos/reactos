@@ -158,7 +158,7 @@ int QuickLaunchBar::Command(int id, int code)
 int QuickLaunchBar::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
-	  case TTN_GETDISPINFO: {
+	  case TTN_GETDISPINFO: {	//TODO: TTN_GETDISPINFO is only received, if desktop bar window has the focus?!
 		NMTTDISPINFO* ttdi = (NMTTDISPINFO*) pnmh;
 
 		int id = ttdi->hdr.idFrom;

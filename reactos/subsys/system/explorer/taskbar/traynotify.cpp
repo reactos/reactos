@@ -220,7 +220,7 @@ void NotifyArea::Refresh()
 
 void NotifyArea::Paint()
 {
-	PaintCanvas canvas(_hwnd);
+	BufferedPaintCanvas canvas(_hwnd);
 
 	 // first fill with the background color
 	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));

@@ -24,7 +24,7 @@ endif
 
 VPATH += ../utility
 VPATH += ../shell
-VPATH += ../taskbar
+VPATH += plugins
 
 WINE_MODE = yes
 

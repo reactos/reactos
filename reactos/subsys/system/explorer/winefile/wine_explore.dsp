@@ -288,23 +288,23 @@ SOURCE=.\winefile.rc
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\taskbar\ex_bar.c
+SOURCE=.\plugins\ex_bar.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\taskbar\ex_bar.h
+SOURCE=.\plugins\ex_bar.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\taskbar\ex_clock.c
+SOURCE=.\plugins\ex_clock.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\taskbar\ex_menu.c
+SOURCE=.\plugins\ex_menu.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\taskbar\ex_shutdwn.c
+SOURCE=.\plugins\ex_shutdwn.c
 # End Source File
 # End Group
 # Begin Source File

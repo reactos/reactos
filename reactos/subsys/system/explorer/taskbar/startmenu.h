@@ -132,7 +132,7 @@ struct StartMenu : public OwnerDrawParent<Dialog>
 	StartMenu(HWND hwnd, const StartMenuFolders& info);
 	~StartMenu();
 
-	static HWND Create(int x, int y, HWND hwndParent=0);
+//	static HWND Create(int x, int y, HWND hwndParent=0);
 	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent=0, CREATORFUNC creator=s_def_creator);
 	static CREATORFUNC s_def_creator;
 

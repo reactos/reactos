@@ -77,6 +77,7 @@ Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
 HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, CREATORFUNC creator)
 {
+	//TODO: check, if coordinates x/y are visible on the screen
 	return Window::Create(creator, &folders, 0, s_wcStartMenu, NULL,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4/*start height*/, hwndParent);
 }
@@ -181,7 +182,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_SETFOCUS:
 		break;	// don't post WM_CANCELMODE in Window::WndProc when focusing the startmenu
 
-	  case PM_STARTENTRY_FOCUSED: {
+	  case PM_STARTENTRY_FOCUSED: {	//TODO: use TrackMouseEvent() and WM_MOUSEHOVER to wait a bit before opening submenus
 		BOOL hasSubmenu = wparam;
 		HWND hctrl = (HWND)lparam;
 
@@ -423,7 +424,7 @@ void StartMenu::ActivateEntry(int id, ShellEntry* entry)
 
 		CreateSubmenu(id, new_folders);
 	} else {
-		entry->launch_entry(_hwnd);	//TODO: launch in the background
+		entry->launch_entry(_hwnd);	//TODO: launch in the background; specify correct HWND for error message box titles
 
 		 // close start menus after launching the selected entry
 		CloseStartMenu(id);
