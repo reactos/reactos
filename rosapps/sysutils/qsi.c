@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.6 2001/01/14 20:16:37 ea Exp $
+/* $Id: qsi.c,v 1.7 2001/07/12 11:58:57 ekohl Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -426,16 +426,16 @@ CMD_DEF(0)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("  Reserved                     0x%08x\n", Info.Reserved);
-	printf ("  TimerResolution              %d\n",    Info.TimerResolution);
-	printf ("  PageSize                     %d\n",    Info.PageSize);
-	printf ("  NumberOfPhysicalPages        %d\n",    Info.NumberOfPhysicalPages);
-	printf ("  LowestPhysicalPageNumber     %d\n",    Info.LowestPhysicalPageNumber);
-	printf ("  HighestPhysicalPageNumber    %d\n",    Info.HighestPhysicalPageNumber);
-	printf ("  AllocationGranularity        %d\n", Info.AllocationGranularity);
-	printf ("  MinimumUserModeAddress       0x%08x (%d)\n", Info.MinimumUserModeAddress, Info.MinimumUserModeAddress);
-	printf ("  MaximumUserModeAddress       0x%08x (%d)\n", Info.MaximumUserModeAddress, Info.MaximumUserModeAddress);
-	printf ("  ActiveProcessorsAffinityMask 0x%08x\n", Info.ActiveProcessorsAffinityMask);
+	printf ("  Reserved                     0x%08lx\n", Info.Reserved);
+	printf ("  TimerResolution              %ld\n",    Info.TimerResolution);
+	printf ("  PageSize                     %ld\n",    Info.PageSize);
+	printf ("  NumberOfPhysicalPages        %ld\n",    Info.NumberOfPhysicalPages);
+	printf ("  LowestPhysicalPageNumber     %ld\n",    Info.LowestPhysicalPageNumber);
+	printf ("  HighestPhysicalPageNumber    %ld\n",    Info.HighestPhysicalPageNumber);
+	printf ("  AllocationGranularity        %ld\n", Info.AllocationGranularity);
+	printf ("  MinimumUserModeAddress       0x%08lx (%ld)\n", Info.MinimumUserModeAddress, Info.MinimumUserModeAddress);
+	printf ("  MaximumUserModeAddress       0x%08lx (%ld)\n", Info.MaximumUserModeAddress, Info.MaximumUserModeAddress);
+	printf ("  ActiveProcessorsAffinityMask 0x%08lx\n", Info.ActiveProcessorsAffinityMask);
 	printf ("  NumberOfProcessors           %d\n",   (int) Info.NumberOfProcessors);
 
 	return EXIT_SUCCESS;
@@ -473,7 +473,7 @@ CMD_DEF(1)
 	printf ("  ProcessorLevel        %d\n",    Info.ProcessorLevel);
 	printf ("  ProcessorRevision     %d\n",    Info.ProcessorRevision);
 	printf ("  Reserved              0x%08x\n", Info.Reserved);
-	printf ("  FeatureBits           %08x\n",   Info.ProcessorFeatureBits);
+	printf ("  FeatureBits           %08lx\n",   Info.ProcessorFeatureBits);
 	/* FIXME: decode feature bits */
 
 	return EXIT_SUCCESS;
@@ -614,7 +614,7 @@ CMD_DEF(3)
 	PrintUtcDateTime ("  CurrentTime  %s\n", (PTIME) & Info.CurrentTime);
 	PrintUtcDateTime ("  TimeZoneBias %s\n", (PTIME) & Info.TimeZoneBias); /* FIXME */
 	printf           ("  TimeZoneId   %ld\n", Info.TimeZoneId);
-	printf           ("  Reserved     %08x\n", Info.Reserved);
+	printf           ("  Reserved     %08lx\n", Info.Reserved);
 
 	return EXIT_SUCCESS;
 }
@@ -918,7 +918,7 @@ CMD_DEF(8)
 	PrintUtcDateTime ("  TotalDPCTime          : %s\n", & Info.TotalDPCTime);
 	PrintUtcDateTime ("  TotalInterruptTime    : %s\n", & Info.TotalInterruptTime);
 	printf           ("  TotalInterrupts       : %ld\n", Info.TotalInterrupts);
-	printf           ("  Unused                : %08x\n", Info.Unused);
+	printf           ("  Unused                : %08lx\n", Info.Unused);
 
 	return EXIT_SUCCESS;
 }
@@ -948,7 +948,7 @@ CMD_DEF(9)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("  NtGlobalFlag: %08x\n", Info.Flags);
+	printf ("  NtGlobalFlag: %08lx\n", Info.Flags);
 	if (FLG_STOP_ON_EXCEPTION & Info.Flags) printf ("\tSTOP_ON_EXCEPTION\n");
 	if (FLG_STOP_ON_HANG_GUI & Info.Flags) printf ("\tSTOP_ON_HANG_GUI\n");
 	if (FLG_SHOW_LDR_SNAPS & Info.Flags) printf ("\tSHOW_LDR_SNAPS\n");
@@ -1068,11 +1068,11 @@ CMD_DEF(11)
 		)
 	{
 		printf (
-			"%8x %08x %8x %s\n",
-			pInfo->Module[Index].ModuleEntryIndex,
-			pInfo->Module[Index].ModuleBaseAddress,
-			pInfo->Module[Index].ModuleSize,
-			pInfo->Module[Index].ModuleName
+			"%8lx %8p %8lx %s\n",
+			pInfo->Module[Index].EntryIndex,
+			pInfo->Module[Index].BaseAddress,
+			pInfo->Module[Index].Size,
+			pInfo->Module[Index].Name
 			);
 	}
 	printf (hr);
@@ -1156,7 +1156,7 @@ CMD_DEF(12)
 		)
 	{
 		printf (
-			"%08x %8ld %8ld %8ld %8ld %08x\n",
+			"%08lx %8ld %8ld %8ld %8ld %08lx\n",
 			pInfo->Lock[Index].ResourceAddress,
 			pInfo->Lock[Index].ActiveCount,
 			pInfo->Lock[Index].ContentionCount,
@@ -1280,7 +1280,7 @@ CMD_DEF(16)
 		)
 	{
 		printf (
-			"%8x %8x %8x %8x %s %s\n",
+			"%8x %8lx %8p %8lx %s %s\n",
 			pInfo->Handle[Index].HandleValue,
 			pInfo->Handle[Index].OwnerPid,
 			pInfo->Handle[Index].ObjectPointer,
@@ -1724,7 +1724,7 @@ CMD_NOT_IMPLEMENTED
 CMD_DEF(28)
 {
 	NTSTATUS			Status = STATUS_SUCCESS;
-	SYSTEM_TIME_ADJUSTMENT_INFO	Info;
+	SYSTEM_QUERY_TIME_ADJUSTMENT	Info;
 
 	RtlZeroMemory (& Info, sizeof Info);
 	Status = NtQuerySystemInformation (
@@ -1738,9 +1738,9 @@ CMD_DEF(28)
 		PrintStatus (Status);
 		return EXIT_FAILURE;
 	}
-	printf ("\tKeTimeAdjustment      = %ld\n", Info.KeTimeAdjustment);
-	printf ("\tKeMaximumIncrement    = %ld\n", Info.KeMaximumIncrement);
-	printf ("\tKeTimeSynchronization = %s\n", TF(Info.KeTimeSynchronization));
+	printf ("\tKeTimeAdjustment      = %ld\n", Info.TimeAdjustment);
+	printf ("\tKeMaximumIncrement    = %ld\n", Info.MaximumIncrement);
+	printf ("\tKeTimeSynchronization = %s\n", TF(Info.TimeSynchronization));
 
 	return EXIT_SUCCESS;
 }
@@ -1981,7 +1981,7 @@ CMD_DEF(44)
 		return EXIT_FAILURE;
 	}
 	printf (
-		"  Bias........: %d'\n",
+		"  Bias........: %ld'\n",
 		Tzi.Bias /* LONG */
 		);
 	
@@ -2005,7 +2005,7 @@ CMD_DEF(44)
 		(PTIME) & Tzi.StandardDate	/* SYSTEMTIME */
 		);
 		
-	printf ("\tBias: %d'\n",
+	printf ("\tBias: %ld'\n",
 		Tzi.StandardBias /* LONG */
 		);
 	
@@ -2030,7 +2030,7 @@ CMD_DEF(44)
 		);
 		
 	printf (
-		"\tBias: %d'\n",
+		"\tBias: %ld'\n",
 		Tzi.DaylightBias /* LONG */ 
 		);
 
