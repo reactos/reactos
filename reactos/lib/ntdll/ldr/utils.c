@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.32 2000/09/01 17:05:09 ekohl Exp $
+/* $Id: utils.c,v 1.33 2000/09/04 19:05:03 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -194,12 +194,13 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	 */
 	if (LdrFindDll(&Module, &AdjustedName) == STATUS_SUCCESS)
 	{
-		DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
+		DPRINT1("DLL %wZ already loaded.\n", &AdjustedName);
 		if (Module->LoadCount != -1)
 			Module->LoadCount++;
 		*BaseAddress = Module->BaseAddress;
 		return STATUS_SUCCESS;
 	}
+	DPRINT("Loading \"%wZ\"\n", Name);
 
 	if (SearchPath == NULL)
 	{
@@ -349,12 +350,27 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	}
 	ZwClose(FileHandle);
 
+	/* relocate dll and fixup import table */
+	if ((NTHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
+	     IMAGE_FILE_DLL)
+	{
+		Entrypoint =
+		(PDLLMAIN_FUNC) LdrPEStartup(
+					ImageBase,
+					SectionHandle
+					);
+	}
+
+	/* build module entry */
 	Module = RtlAllocateHeap(
 			RtlGetProcessHeap(),
 			0,
 			sizeof (LDR_MODULE)
 			);
 	Module->BaseAddress = (PVOID)ImageBase;
+	Module->EntryPoint = NTHeaders->OptionalHeader.AddressOfEntryPoint;
+	if (Module->EntryPoint != 0)
+		Module->EntryPoint += (ULONG)Module->BaseAddress;
 	Module->SizeOfImage = ImageSize;
 	if (NtCurrentPeb()->Ldr->Initialized == TRUE)
 	{
@@ -370,31 +386,29 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 		Module->LoadCount = -1;
 	}
 
-	Module->TlsIndex = 0;	// ???
-	Module->CheckSum = 0;	// ???
+	Module->TlsIndex = 0;
+	Module->CheckSum = NTHeaders->OptionalHeader.CheckSum;
 	Module->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
 	RtlCreateUnicodeString (&Module->FullDllName,
 				FullDosName);
 	RtlCreateUnicodeString (&Module->BaseDllName,
 				wcsrchr(FullDosName, L'\\') + 1);
-
-	InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
-		       &Module->InLoadOrderModuleList);
-
 	DPRINT ("BaseDllName %wZ\n", &Module->BaseDllName);
 
+	/* FIXME: aquire loader lock */
+	InsertTailList(&NtCurrentPeb()->Ldr->InLoadOrderModuleList,
+		       &Module->InLoadOrderModuleList);
+	/* FIXME: release loader lock */
+
+	/* initialize dll */
 	if ((NTHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
 	     IMAGE_FILE_DLL)
 	{
-		Entrypoint =
-		(PDLLMAIN_FUNC) LdrPEStartup(
-					ImageBase,
-					SectionHandle
-					);
-
-		if (Entrypoint != NULL)
+		if (Module->EntryPoint != 0)
 		{
+			Entrypoint = (PDLLMAIN_FUNC)Module->EntryPoint;
+
 			DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
 			if (FALSE == Entrypoint(
 				Module->BaseAddress,
@@ -402,21 +416,22 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 				NULL
 				))
 			{
-				DPRINT("NTDLL.LDR: DLL \"%s\" failed to initialize\n", fqname);
+				DPRINT("NTDLL.LDR: DLL \"%wZ\" failed to initialize\n",
+				       &Module->BaseDllName);
 				/* FIXME: should clean up and fail */
 			}
 			else
 			{
-				DPRINT("NTDLL.LDR: DLL \"%s\" initialized successfully\n", fqname);
+				DPRINT("NTDLL.LDR: DLL \"%wZ\" initialized successfully\n",
+				       &Module->BaseDllName);
 			}
 		}
 		else
 		{
-			DPRINT("NTDLL.LDR: Entrypoint is NULL for \"%s\"\n", fqname);
+			DPRINT("NTDLL.LDR: Entrypoint is NULL for \"%wZ\"\n",
+			       &Module->BaseDllName);
 		}
 	}
-
-	Module->EntryPoint = (ULONG)Entrypoint;
 
 	*BaseAddress = Module->BaseAddress;
 	return STATUS_SUCCESS;
@@ -838,14 +853,18 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	RtlCreateUnicodeStringFromAsciiz (&DllName,
 		  (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
 
-	Status = LdrLoadDll(NULL,
-			    0,
-			    &DllName,
-			    &BaseAddress);
-	RtlFreeUnicodeString (&DllName);
+	Status = LdrGetDllHandle (0, 0, &DllName, &BaseAddress);
 	if (!NT_SUCCESS(Status))
 	  {
-	     return Status;
+	     Status = LdrLoadDll(NULL,
+				 0,
+				 &DllName,
+				 &BaseAddress);
+	     RtlFreeUnicodeString (&DllName);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  return Status;
+	       }
 	  }
 
 	/*
@@ -947,6 +966,9 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    PIMAGE_DOS_HEADER	DosHeader;
    PIMAGE_NT_HEADERS	NTHeaders;
 
+   DPRINT("LdrPEStartup(ImageBase %x SectionHandle %x)\n",
+           ImageBase, (ULONG)SectionHandle);
+
    /*
     * Overlay DOS and WNT headers structures
     * to the DLL's image.
@@ -994,11 +1016,14 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 	     DbgPrint("LdrFixupImports() failed\n");
 	     return NULL;
 	  }
+	DPRINT("Fixup done\n");
      }
 
    /*
     * Compute the DLL's entry point's address.
     */
+   DPRINT("ImageBase = %x\n",(ULONG)ImageBase);
+   DPRINT("AddressOfEntryPoint = %x\n",(ULONG)NTHeaders->OptionalHeader.AddressOfEntryPoint);
    if (NTHeaders->OptionalHeader.AddressOfEntryPoint != 0)
      {
 	EntryPoint = (PEPFUNC) (ImageBase
@@ -1044,10 +1069,9 @@ LdrUnloadDll (IN PVOID BaseAddress)
 	     NtHeaders = RtlImageNtHeader (Module->BaseAddress);
 	     if ((NtHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) == IMAGE_FILE_DLL)
 	       {
-		  Entrypoint = (PDLLMAIN_FUNC) LdrPEStartup(Module->BaseAddress,
-							    Module->SectionHandle);
-		  if (Entrypoint != NULL)
+		  if (Module->EntryPoint != 0)
 		    {
+		       Entrypoint = (PDLLMAIN_FUNC)Module->EntryPoint;
 		       DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
 		       Entrypoint(Module->BaseAddress,
 				  DLL_PROCESS_DETACH,
@@ -1254,14 +1278,22 @@ LdrDisableThreadCalloutsForDll (IN PVOID BaseAddress)
    PLDR_MODULE Module;
    NTSTATUS Status;
 
+   DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %x)\n",
+	  BaseAddress);
+
    Status = STATUS_DLL_NOT_FOUND;
 
    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
    Entry = ModuleListHead->Flink;
 
-   while (Entry != ModuleListHead);
+   while (Entry != ModuleListHead)
      {
 	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+
+	DPRINT("BaseDllName %wZ BaseAddress %x\n",
+	       &Module->BaseDllName,
+	       Module->BaseAddress);
+
 	if (Module->BaseAddress == BaseAddress)
 	  {
 	     if (Module->TlsIndex == 0)
@@ -1400,6 +1432,9 @@ LdrGetDllHandle (IN ULONG Unknown1,
 		     DllName,
 		     TRUE);
 
+   DPRINT("FullDllName %wZ\n",
+	  &FullDllName);
+
    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
    Entry = ModuleListHead->Flink;
 
@@ -1407,9 +1442,11 @@ LdrGetDllHandle (IN ULONG Unknown1,
      {
 	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 
+	DPRINT("EntryPoint %lu\n", Module->EntryPoint);
+
 	DPRINT("Scanning %wZ %wZ\n",
 	       &Module->BaseDllName,
-	       FullDllName);
+	       &FullDllName);
 
 	if (!RtlCompareUnicodeString(&Module->BaseDllName, &FullDllName, TRUE))
 	  {
@@ -1422,7 +1459,7 @@ LdrGetDllHandle (IN ULONG Unknown1,
 	Entry = Entry->Flink;
      }
 
-   DbgPrint("Failed to find dll %wZ\n", &FullDllName);
+   DPRINT("Failed to find dll %wZ\n", &FullDllName);
    RtlFreeUnicodeString (&FullDllName);
    *BaseAddress = NULL;
    return STATUS_DLL_NOT_FOUND;
@@ -1493,7 +1530,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
-
+   DPRINT1("LdrShutdownProcess() called\n");
    return STATUS_SUCCESS;
 }
 
@@ -1501,7 +1538,7 @@ LdrShutdownProcess (VOID)
 NTSTATUS STDCALL
 LdrShutdownThread (VOID)
 {
-
+   DPRINT1("LdrShutdownThread() called\n");
    return STATUS_SUCCESS;
 }
 
