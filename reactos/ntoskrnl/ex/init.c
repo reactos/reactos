@@ -33,6 +33,8 @@ extern LIST_ENTRY KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
 #endif
 
+VOID PspPostInitSystemProcess(VOID);
+
 /* FUNCTIONS ****************************************************************/
 
 static 
@@ -479,6 +481,18 @@ ExpInitializeExecutive(VOID)
     /* Initialize Basic System Objects and Worker Threads */
     ExInit3();
     
+    /* Create the system handle table, assign it to the system process, create
+       the client id table and assign a PID for the system process. This needs
+       to be done before the worker threads are initialized so the system
+       process gets the first PID (4) */
+    PspPostInitSystemProcess();
+
+    /* initialize the worker threads */
+    ExInitializeWorkerThreads();
+    
+    /* initialize callbacks */
+    ExpInitializeCallbacks();
+    
     /* Initialize the GDB Stub and break */
     KdInit1();
   
@@ -656,18 +670,16 @@ ExInit2(VOID)
 VOID INIT_FUNCTION
 ExInit3 (VOID)
 {
-  ExInitializeWorkerThreads();
   ExpInitializeEventImplementation();
   ExpInitializeEventPairImplementation();
   ExpInitializeMutantImplementation();
   ExpInitializeSemaphoreImplementation();
   ExpInitializeTimerImplementation();
-  ExpInitializeHandleTables();
   LpcpInitSystem();
   ExpInitializeProfileImplementation();
   ExpWin32kInit();
   ExpInitUuids();
-  ExpInitializeCallbacks();
+  ExpInitializeHandleTables();
 }
 
 /* EOF */

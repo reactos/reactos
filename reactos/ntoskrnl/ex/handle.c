@@ -77,6 +77,8 @@ static LARGE_INTEGER ExpHandleShortWait;
 #define IS_VALID_EX_HANDLE(index)                                              \
   (((index) & ~VALID_HANDLE_MASK) == 0)
 
+static BOOLEAN ExpInitialized = FALSE;
+
 /******************************************************************************/
 
 VOID
@@ -85,6 +87,8 @@ ExpInitializeHandleTables(VOID)
   ExpHandleShortWait.QuadPart = -50000;
   InitializeListHead(&ExpHandleTableHead);
   ExInitializeFastMutex(&ExpHandleTableListLock);
+
+  ExpInitialized = TRUE;
 }
 
 PHANDLE_TABLE
@@ -93,6 +97,11 @@ ExCreateHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL)
   PHANDLE_TABLE HandleTable;
   
   PAGED_CODE();
+  
+  if(!ExpInitialized)
+  {
+    KEBUGCHECK(0);
+  }
   
   if(QuotaProcess != NULL)
   {

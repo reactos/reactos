@@ -14,8 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-VOID INIT_FUNCTION PsInitClientIDManagment(VOID);
-
 /* FUNCTIONS ***************************************************************/
 
 VOID PiShutdownProcessManager(VOID)
@@ -28,23 +26,10 @@ VOID PiShutdownProcessManager(VOID)
 VOID INIT_FUNCTION
 PiInitProcessManager(VOID)
 {
-   NTSTATUS Status;
-   
-   PsInitClientIDManagment();
    PsInitJobManagment();
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
-   
-   Status = PsCreateCidHandle(PsInitialSystemProcess,
-                              PsProcessType,
-                              &PsInitialSystemProcess->UniqueProcessId);
-   if(!NT_SUCCESS(Status))
-   {
-     DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
-     KEBUGCHECK(0);
-   }
-   
    PsInitialiseSuspendImplementation();
    PsInitialiseW32Call();
 }

@@ -731,9 +731,9 @@ PsInitThreadManagment(VOID)
  * FUNCTION: Initialize thread managment
  */
 {
-   HANDLE PiReaperThreadHandle;
-   PETHREAD FirstThread;
+   PETHREAD FirstThread, ReaperThread;
    ULONG i;
+   KIRQL oldIrql;
    NTSTATUS Status;
 
    for (i=0; i < MAXIMUM_PRIORITY; i++)
@@ -782,20 +782,27 @@ PsInitThreadManagment(VOID)
     */
    PsInitializeThreadReaper();
    KeInitializeEvent(&PiReaperThreadEvent, SynchronizationEvent, FALSE);
-   Status = PsCreateSystemThread(&PiReaperThreadHandle,
-				 THREAD_ALL_ACCESS,
-				 NULL,
-				 NULL,
-				 NULL,
-				 PiReaperThreadMain,
-				 NULL);
+   Status = PsInitializeThread(NULL,
+			       &ReaperThread,
+			       NULL,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("PS: Failed to create reaper thread.\n");
        KEBUGCHECK(0);
      }
 
-   NtClose(PiReaperThreadHandle);
+   ReaperThread->StartAddress = PiReaperThreadMain;
+   Status = KiArchInitThread(&ReaperThread->Tcb, PiReaperThreadMain, NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("PS: Failed to initialize reaper thread.\n");
+       KEBUGCHECK(0);
+     }
+
+   oldIrql = KeAcquireDispatcherDatabaseLock ();
+   PsUnblockThread(ReaperThread, NULL, 0);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
 }
 
 /*

@@ -16,6 +16,8 @@
 
 /* GLOBALS ******************************************************************/
 
+VOID INIT_FUNCTION PsInitClientIDManagment(VOID);
+
 PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
@@ -393,7 +395,6 @@ PsInitProcessManagment(VOID)
    
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
-   ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
    
    KeInitializeEvent(&PsInitialSystemProcess->LockEvent, SynchronizationEvent, FALSE);
    PsInitialSystemProcess->LockCount = 0;
@@ -419,6 +420,28 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
+}
+
+VOID
+PspPostInitSystemProcess(VOID)
+{
+  NTSTATUS Status;
+  
+  /* this routine is called directly after the exectuive handle tables were
+     initialized. We'll set up the Client ID handle table and assign the system
+     process a PID */
+  PsInitClientIDManagment();
+  
+  ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
+  
+  Status = PsCreateCidHandle(PsInitialSystemProcess,
+                             PsProcessType,
+                             &PsInitialSystemProcess->UniqueProcessId);
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
+    KEBUGCHECK(0);
+  }
 }
 
 VOID STDCALL
