@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.4 2000/03/12 23:28:59 ekohl Exp $
+ * $Id: fat.c,v 1.5 2000/06/17 22:03:23 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -439,6 +439,7 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
         else
 	  {
 	     NewCluster = FAT12FindAvailableCluster(DeviceExt);
+	     DPRINT( "NewFat12Cluster: %x\n", NewCluster );
 	  }
         /* Mark the new AU as the EOF */
         WriteCluster(DeviceExt, NewCluster, 0xFFFFFFFF);
