@@ -885,7 +885,7 @@ DetectBiosFloppyController(HKEY SystemKey,
   U32 FloppyCount;
 
   FloppyCount = GetFloppyCount();
-  printf ("Floppy count: %u\n", FloppyCount);
+/*  printf ("Floppy count: %u\n", FloppyCount);*/
 
   if (FloppyCount == 0)
     return;
