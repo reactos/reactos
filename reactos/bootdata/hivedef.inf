@@ -7,6 +7,8 @@ HKCU,"Control Panel",,0x00000012
 HKCU,"Control Panel\Appearance",,0x00000012
 HKCU,"Control Panel\Desktop","CursorBlinkRate",0x00000002,"530"
 HKCU,"Control Panel\Desktop","DragFullWindows",0x00000002,"0"
+HKCU,"Control Panel\International",,0x00000012
+HKCU,"Control Panel\International","Locale",0x00000000,"0409"
 
 HKCU,"Environment",,0x00000012
 
