@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: errno.c,v 1.3 2002/05/17 01:52:03 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -10,15 +10,14 @@
  *              27/12/2001: Created
  */
 
-#include <psx/debug.h>
+#include <ddk/ntddk.h>
+#include <psx/pdata.h>
 #include <psx/errno.h>
-
-static int __errno_storage = 0;
+#include <psx/debug.h>
 
 int * __PdxGetThreadErrNum(void)
 {
- FIXME("errno currently not thread-safe");
- return (&__errno_storage);
+ return &(((__PPDX_TDATA) (NtCurrentTeb()->TlsSlots[__PdxGetProcessData()->TlsIndex]) )->ErrNum);
 }
 
 /* EOF */
