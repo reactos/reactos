@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: jfilby $
- * $Date: 2000/04/01 12:31:28 $
+ * $Date: 2000/04/03 19:55:32 $
  *
  */
 
@@ -37,6 +37,13 @@ ULONG VGADDIGetModes(IN HANDLE Driver,
 BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
                   LONG x1, LONG y1, LONG x2, LONG y2,
                   RECTL *RectBounds, MIX mix);
+BOOL VGADDIPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
+                 IN BRUSHOBJ *Brush,  IN POINTL *BrushOrigin,
+                 IN MIX  Mix);
+BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
+                  CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
+                  RECTL *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
+                  BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4);
 
 DRVFN FuncList[] =
 {
@@ -49,11 +56,12 @@ DRVFN FuncList[] =
   {INDEX_DrvEnableSurface, (PFN) VGADDIEnableSurface},
   {INDEX_DrvGetModes, (PFN) VGADDIGetModes},
   {INDEX_DrvLineTo, (PFN) VGADDILineTo},
+  {INDEX_DrvPaint, (PFN) VGADDIPaint},
+  {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
 
 #if 0
   /*  Optional Display driver functions  */
   {INDEX_, (PFN) },
-  {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
   {INDEX_DrvCopyBits, (PFN) VGADDICopyBits},
   {INDEX_DescribePixelFormat, (PFN) VGADDIDescribePixelFormat},
   {INDEX_DrvDitherColor, (PFN) VGADDIDitherColor},
@@ -61,7 +69,6 @@ DRVFN FuncList[] =
   {INDEX_DrvGetTrueTypeFile, (PFN) VGADDIGetTrueTypeFile},
   {INDEX_DrvLoadFontFile, (PFN) VGADDILoadFontFile},
   {INDEX_DrvMovePointer, (PFN) VGADDIMovePointer},
-  {INDEX_DrvPaint, (PFN) VGADDIPaint}
   {INDEX_DrvQueryFont, (PFN) VGADDIQueryFont},
   {INDEX_DrvQueryFontCaps, (PFN) VGADDIQueryFontCaps},
   {INDEX_DrvQueryFontData, (PFN) VGADDIQueryFontData},

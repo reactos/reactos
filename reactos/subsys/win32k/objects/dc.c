@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.14 2000/04/01 12:31:29 jfilby Exp $
+/* $Id: dc.c,v 1.15 2000/04/03 19:55:33 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -20,22 +20,79 @@
 
 void TestEngXxx(PDC Dc)
 {
-  BRUSHOBJ brushobj;
-  SURFOBJ  *SurfObj;
+  BRUSHOBJ	brushobj;
+  HBITMAP	GDIbmp;
+  SURFOBJ	*SurfObj, *GDIsurf;
+  XLATEOBJ	*RGBtoVGA16, *VGA16toRGB;
+  RECTL		DestBlt, myrect;
+  SIZEL		GDISize;
+  CLIPOBJ	*clipobj;
+  POINTL	SourcePnt;
+  INT		i;
 
-DbgPrint("testing.. ");
   brushobj.iSolidColor = 1;
   SurfObj = AccessUserObject(Dc->Surface);
 
-  /* Diagonals */
+  /* Create a GDI managed bitmap */
+  GDISize.cx = 100;
+  GDISize.cy = 100;
+
+  GDIbmp = EngCreateBitmap(GDISize, GDISize.cx * 3, BMF_24BPP, BMF_TOPDOWN,
+                           NULL);
+
+  // Get GDI surface's object
+  GDIsurf = AccessUserObject(GDIbmp);
+
+  /* Create color translation Xlates */
+
+  // Create color translation for RGB to the VGA's 16 colors
+  RGBtoVGA16 = EngCreateXlate(PAL_INDEXED, PAL_RGB,
+                              Dc->DevInfo.hpalDefault, NULL);
+
+  // Create color translation for RGB to the VGA's 16 colors
+  VGA16toRGB = EngCreateXlate(PAL_RGB, PAL_INDEXED,
+                              NULL, Dc->DevInfo.hpalDefault);
+
+  /* Line Tests */
+
+  // Diagonals
   EngLineTo(SurfObj, NULL, &brushobj, 0, 0, 639, 479, NULL, NULL);
   EngLineTo(SurfObj, NULL, &brushobj, 639, 0, 0, 479, NULL, NULL);
 
-  /* Border */
+  // Border
   EngLineTo(SurfObj, NULL, &brushobj, 0,   0, 639, 0,   NULL, NULL);
   EngLineTo(SurfObj, NULL, &brushobj, 639, 0, 639, 479, NULL, NULL);
   EngLineTo(SurfObj, NULL, &brushobj, 639, 479, 0, 479, NULL, NULL);
   EngLineTo(SurfObj, NULL, &brushobj, 0, 479,   0,   0, NULL, NULL);
+
+  /* Paint Tests */
+
+  // Colored blocks
+  for (i=0; i<16; i++)
+  {
+     myrect.left=10+i*20;
+     myrect.top=10;
+     myrect.right=30+i*20;
+     myrect.bottom=30;
+     clipobj = EngCreateClipRegion(1, &myrect, TC_RECTANGLES, NULL);
+     brushobj.iSolidColor = i;
+     EngPaint(SurfObj, clipobj, &brushobj, NULL, 0xFF);
+     EngDeleteClipRegion(clipobj);
+  }
+
+  /* BitBlt */
+
+  // Blt VGA to GDI
+  DestBlt.left=0; DestBlt.top=0; DestBlt.right=100, DestBlt.bottom=100;
+  SourcePnt.x=10; SourcePnt.y=10;
+  EngBitBlt(GDIsurf, SurfObj, NULL, NULL, VGA16toRGB,  &DestBlt, &SourcePnt,
+            NULL, NULL, NULL, NULL);
+
+  // Blt to VGA again
+  DestBlt.left=300; DestBlt.top=300; DestBlt.right=400, DestBlt.bottom=400;
+  SourcePnt.x=0; SourcePnt.y=0;
+  EngBitBlt(SurfObj, GDIsurf, NULL, NULL, RGBtoVGA16,  &DestBlt, &SourcePnt,
+            NULL, NULL, NULL, NULL);
 }
 
 /* FIXME: DCs should probably be thread safe  */

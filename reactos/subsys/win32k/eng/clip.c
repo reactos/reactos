@@ -51,6 +51,8 @@ CLIPOBJ *EngCreateClipRegion(ULONG NumRects, RECTL Rects[],
          ClipObj->iFComplexity = FC_COMPLEX;
       }
    }
+
+   return ClipObj;
 }
 
 VOID EngDeleteClipRegion(CLIPOBJ *ClipObj)
