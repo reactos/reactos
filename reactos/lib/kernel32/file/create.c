@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2004/10/12 22:04:51 gvg Exp $
+/* $Id: create.c,v 1.41 2004/11/29 17:31:21 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -134,7 +134,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 				      NULL))
    {
      DPRINT("Invalid path\n");
-     SetLastError(ERROR_BAD_PATHNAME);
+     SetLastError(ERROR_PATH_NOT_FOUND);
      return INVALID_HANDLE_VALUE;
    }
    

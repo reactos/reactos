@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.17 2004/08/18 02:13:27 navaraf Exp $
+/* $Id: delete.c,v 1.18 2004/11/29 17:31:21 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -77,7 +77,10 @@ DeleteFileW (
 	                                   &NtPathU,
 	                                   NULL,
 	                                   NULL))
+   {
+      SetLastError(ERROR_PATH_NOT_FOUND);
 		return FALSE;
+   }
 
 	DPRINT("NtPathU \'%wZ\'\n", &NtPathU);
 
