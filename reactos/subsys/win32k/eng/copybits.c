@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.21 2004/02/24 13:27:02 weiden Exp $
+/* $Id: copybits.c,v 1.22 2004/03/05 09:02:41 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,7 +48,8 @@ EngCopyBits(SURFOBJ *Dest,
 	    POINTL *SourcePoint)
 {
   BOOLEAN   ret;
-  SURFGDI   *DestGDI, *SourceGDI;
+  PSURFGDI DestGDI  = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
+           SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   BYTE      clippingType;
   RECTL     rclTmp;
   POINTL    ptlTmp;
@@ -79,8 +80,8 @@ EngCopyBits(SURFOBJ *Dest,
         ret = DestGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
         IntUnLockGDIDriver(DestGDI);
 
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
 
         return ret;
       }
@@ -97,8 +98,8 @@ EngCopyBits(SURFOBJ *Dest,
         ret = SourceGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
         IntUnLockGDIDriver(DestGDI);
 
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
 
         return ret;
       }
@@ -109,8 +110,8 @@ EngCopyBits(SURFOBJ *Dest,
                     NULL, Clip, ColorTranslation, DestRect, SourcePoint,
                     NULL, NULL, NULL, 0);
 
-    MouseSafetyOnDrawEnd(Source, SourceGDI);
     MouseSafetyOnDrawEnd(Dest, DestGDI);
+    MouseSafetyOnDrawEnd(Source, SourceGDI);
 
     return ret;
   }
@@ -131,8 +132,8 @@ EngCopyBits(SURFOBJ *Dest,
       case DC_TRIVIAL:
         DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, NULL, ColorTranslation, SRCCOPY);
 
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
 
         return(TRUE);
 
@@ -145,8 +146,8 @@ EngCopyBits(SURFOBJ *Dest,
 
         DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, NULL, NULL, ColorTranslation, SRCCOPY);
 
-        MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
 
         return(TRUE);
 
@@ -178,15 +179,14 @@ EngCopyBits(SURFOBJ *Dest,
 
           } while(EnumMore);
 
-          MouseSafetyOnDrawEnd(Source, SourceGDI);
-
           MouseSafetyOnDrawEnd(Dest, DestGDI);
+          MouseSafetyOnDrawEnd(Source, SourceGDI);
 
           return(TRUE);
     }
 
-  MouseSafetyOnDrawEnd(Source, SourceGDI);
   MouseSafetyOnDrawEnd(Dest, DestGDI);
+  MouseSafetyOnDrawEnd(Source, SourceGDI);
 
   return FALSE;
 }

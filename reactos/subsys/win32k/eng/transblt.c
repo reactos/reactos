@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.11 2004/02/24 13:27:02 weiden Exp $
+/* $Id: transblt.c,v 1.12 2004/03/05 09:02:42 hbirr Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -102,8 +102,8 @@ EngTransparentBlt(PSURFOBJ Dest,
                                   TransparentColor, Reserved);
     IntUnLockGDIDriver(DestGDI);
 
-    MouseSafetyOnDrawEnd(Source, SourceGDI);
     MouseSafetyOnDrawEnd(Dest, DestGDI);
+    MouseSafetyOnDrawEnd(Source, SourceGDI);
 
     if(EngDeleteSurface(hTemp) == FALSE)
     {
@@ -116,8 +116,8 @@ EngTransparentBlt(PSURFOBJ Dest,
 
   // Simulate a transparent blt
 
-  MouseSafetyOnDrawEnd(Source, SourceGDI);
   MouseSafetyOnDrawEnd(Dest, DestGDI);
+  MouseSafetyOnDrawEnd(Source, SourceGDI);
 
   return TRUE;
 }

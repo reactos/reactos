@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.121 2004/02/19 21:12:10 weiden Exp $
+/* $Id: dc.c,v 1.122 2004/03/05 09:02:42 hbirr Exp $
  *
  * DC.C - Device context functions
  *
@@ -2070,6 +2070,16 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
       DC_UnlockDc(hDC);
     }
+}
+
+BOOL FASTCALL
+IntIsPrimarSurface(PSURFGDI SurfGDI)
+{
+   if (PrimarySurface.Handle == NULL)
+     {
+       return FALSE;
+     }
+   return SurfGDI == (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle) ? TRUE : FALSE;
 }
 
 /* EOF */

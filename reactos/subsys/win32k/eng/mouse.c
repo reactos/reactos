@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.62 2004/02/24 13:27:02 weiden Exp $
+/* $Id: mouse.c,v 1.63 2004/03/05 09:02:41 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -52,6 +52,10 @@
 #define GETSYSCURSOR(x) ((x) - OCR_NORMAL)
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL FASTCALL
+IntIsPrimarSurface(PSURFGDI SurfGDI);
+
 
 BOOL FASTCALL
 IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
@@ -109,9 +113,7 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
-
-
-  if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
+  if (!IntIsPrimarSurface(SurfGDI) || MouseEnabled == FALSE)
     {
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
@@ -199,8 +201,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   }
   
   MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
-
-  if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
+  if (!IntIsPrimarSurface(SurfGDI) || MouseEnabled == FALSE)
     {
       ExReleaseFastMutex(&CurInfo->CursorMutex);
       ObDereferenceObject(InputWindowStation);
