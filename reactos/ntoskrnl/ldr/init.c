@@ -12,7 +12,8 @@
  *   RJJ  10/12/98  Rolled in David's code to load COFF drivers
  *   JM   14/12/98  Built initial PE user module loader
  *   RJJ  06/03/99  Moved user PE loader into NTDLL
- *   EA   19990717  GetSystemDirectory()
+ *   EA   19990717  LdrGetSystemDirectory()
+ *   EK   20000618  Using SystemRoot link instead of LdrGetSystemDirectory()
  */
 
 /* INCLUDES *****************************************************************/
@@ -32,8 +33,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "syspath.h"
-
 /* GLOBALS *******************************************************************/
 
 #define STACK_TOP (0xb0000000)
@@ -49,7 +48,6 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    NTSTATUS Status;
    HANDLE ProcessHandle;
    UNICODE_STRING ProcessName;
-   WCHAR TmpNameBuffer[MAX_PATH];
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    HANDLE SectionHandle;
@@ -63,26 +61,25 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    HANDLE ThreadHandle;
    
    /*
-    * Get the system directory's name (a DOS device
-    * alias name which is in \\??\\).
+    * Get the absolute path to smss.exe using the
+    * SystemRoot link.
     */
-   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
-   wcscat(TmpNameBuffer, L"\\smss.exe");
-   RtlInitUnicodeString(&ProcessName, TmpNameBuffer);
+   RtlInitUnicodeString(&ProcessName,
+			L"\\SystemRoot\\system32\\smss.exe");
    
    /*
     * Open process image to determine ImageBase
     * and StackBase/Size.
     */
    InitializeObjectAttributes(&ObjectAttributes,
-			      &ProcessName, 
+			      &ProcessName,
 			      0,
 			      NULL,
 			      NULL);
    DPRINT("Opening image file %S\n", ObjectAttributes.ObjectName->Buffer);
    Status = ZwOpenFile(&FileHandle,
 		       FILE_ALL_ACCESS,
-		       &ObjectAttributes, 
+		       &ObjectAttributes,
 		       NULL,
 		       0,
 		       0);

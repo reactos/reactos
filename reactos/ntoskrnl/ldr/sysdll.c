@@ -25,8 +25,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "syspath.h"
-
 /* GLOBALS *******************************************************************/
 
 static PVOID SystemDllEntryPoint = NULL;
@@ -56,7 +54,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
  * 
  * RETURNS: Status
  */
-{   
+{
    CHAR			BlockBuffer [1024];
    DWORD			ImageBase;
    ULONG			ImageSize;
@@ -69,15 +67,13 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    PIMAGE_NT_HEADERS	NTHeaders;
    ULONG			InitialViewSize;
    ULONG			i;
-   WCHAR			TmpNameBuffer [MAX_PATH];
 
    /*
     * Locate and open NTDLL to determine ImageBase
     * and LdrStartup
     */
-   LdrGetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
-   wcscat(TmpNameBuffer, L"\\ntdll.dll");
-   RtlInitUnicodeString(&DllPathname, TmpNameBuffer);
+   RtlInitUnicodeString(&DllPathname,
+			L"\\SystemRoot\\system32\\ntdll.dll");
    InitializeObjectAttributes(&FileObjectAttributes,
 			      &DllPathname,
 			      0,
@@ -125,7 +121,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	ZwClose(FileHandle);	
 	return(STATUS_UNSUCCESSFUL);
      }
-   ImageBase = NTHeaders->OptionalHeader.ImageBase;   
+   ImageBase = NTHeaders->OptionalHeader.ImageBase;
    ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
    
    /*
