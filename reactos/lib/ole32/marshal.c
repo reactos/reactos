@@ -58,6 +58,21 @@ extern const CLSID CLSID_DfMarshal;
  * Note that the IUnknown_QI(ob,xiid,&ppv) always returns the SAME ppv value!
  */
 
+inline static HRESULT
+get_facbuf_for_iid(REFIID riid,IPSFactoryBuffer **facbuf) {
+    HRESULT       hres;
+    CLSID         pxclsid;
+
+    if ((hres = CoGetPSClsid(riid,&pxclsid)))
+	return hres;
+    return CoGetClassObject(&pxclsid,CLSCTX_INPROC_SERVER,NULL,&IID_IPSFactoryBuffer,(LPVOID*)facbuf);
+}
+
+typedef struct _wine_marshal_data {
+    DWORD	dwDestContext;
+    DWORD	mshlflags;
+} wine_marshal_data;
+
 typedef struct _mid2unknown {
     wine_marshal_id	mid;
     LPUNKNOWN		pUnk;
@@ -67,6 +82,7 @@ typedef struct _mid2stub {
     wine_marshal_id	mid;
     IRpcStubBuffer	*stub;
     LPUNKNOWN		pUnkServer;
+    BOOL               valid;
 } mid2stub;
 
 static mid2stub *stubs = NULL;
@@ -75,18 +91,19 @@ static int nrofstubs = 0;
 static mid2unknown *proxies = NULL;
 static int nrofproxies = 0;
 
-HRESULT
-MARSHAL_Find_Stub_Server(wine_marshal_id *mid,LPUNKNOWN *punk) {
+void MARSHAL_Invalidate_Stub_From_MID(wine_marshal_id *mid) {
     int i;
 
     for (i=0;i<nrofstubs;i++) {
-	if (MARSHAL_Compare_Mids_NoInterface(mid,&(stubs[i].mid))) {
-	    *punk = stubs[i].pUnkServer;
-	    IUnknown_AddRef((*punk));
-	    return S_OK;
+        if (!stubs[i].valid) continue;
+        
+	if (MARSHAL_Compare_Mids(mid,&(stubs[i].mid))) {
+            stubs[i].valid = FALSE;
+	    return;
 	}
     }
-    return E_FAIL;
+    
+    return;
 }
 
 HRESULT
@@ -94,6 +111,8 @@ MARSHAL_Find_Stub_Buffer(wine_marshal_id *mid,IRpcStubBuffer **stub) {
     int i;
 
     for (i=0;i<nrofstubs;i++) {
+       if (!stubs[i].valid) continue;
+
 	if (MARSHAL_Compare_Mids(mid,&(stubs[i].mid))) {
 	    *stub = stubs[i].stub;
 	    IUnknown_AddRef((*stub));
@@ -103,11 +122,13 @@ MARSHAL_Find_Stub_Buffer(wine_marshal_id *mid,IRpcStubBuffer **stub) {
     return E_FAIL;
 }
 
-HRESULT
+static HRESULT
 MARSHAL_Find_Stub(wine_marshal_id *mid,LPUNKNOWN *pUnk) {
     int i;
 
     for (i=0;i<nrofstubs;i++) {
+       if (!stubs[i].valid) continue;
+
 	if (MARSHAL_Compare_Mids(mid,&(stubs[i].mid))) {
 	    *pUnk = stubs[i].pUnkServer;
 	    IUnknown_AddRef((*pUnk));
@@ -117,7 +138,7 @@ MARSHAL_Find_Stub(wine_marshal_id *mid,LPUNKNOWN *pUnk) {
     return E_FAIL;
 }
 
-HRESULT
+static HRESULT
 MARSHAL_Register_Stub(wine_marshal_id *mid,LPUNKNOWN pUnk,IRpcStubBuffer *stub) {
     LPUNKNOWN	xPunk;
     if (!MARSHAL_Find_Stub(mid,&xPunk)) {
@@ -132,37 +153,24 @@ MARSHAL_Register_Stub(wine_marshal_id *mid,LPUNKNOWN pUnk,IRpcStubBuffer *stub) 
     stubs[nrofstubs].stub = stub;
     stubs[nrofstubs].pUnkServer = pUnk;
     memcpy(&(stubs[nrofstubs].mid),mid,sizeof(*mid));
+    stubs[nrofstubs].valid = TRUE; /* set to false when released by ReleaseMarshalData */
     nrofstubs++;
     return S_OK;
 }
 
 HRESULT
-MARSHAL_Find_Proxy(wine_marshal_id *mid,LPUNKNOWN *punk) {
+MARSHAL_Disconnect_Proxies() {
     int i;
 
-    for (i=0;i<nrofproxies;i++)
-	if (MARSHAL_Compare_Mids(mid,&(proxies[i].mid))) {
-	    *punk = proxies[i].pUnk;
-	    IUnknown_AddRef((*punk));
-	    return S_OK;
-	}
-    return E_FAIL;
+    TRACE("Disconnecting %d proxies\n", nrofproxies);
+
+    for (i = 0; i < nrofproxies; i++)
+        IRpcProxyBuffer_Disconnect((IRpcProxyBuffer*)proxies[i].pUnk);
+    
+    return S_OK;
 }
 
-HRESULT
-MARSHAL_Find_Proxy_Object(wine_marshal_id *mid,LPUNKNOWN *punk) {
-    int i;
-
-    for (i=0;i<nrofproxies;i++)
-	if (MARSHAL_Compare_Mids_NoInterface(mid,&(proxies[i].mid))) {
-	    *punk = proxies[i].pUnk;
-	    IUnknown_AddRef((*punk));
-	    return S_OK;
-	}
-    return E_FAIL;
-}
-
-HRESULT
+static HRESULT
 MARSHAL_Register_Proxy(wine_marshal_id *mid,LPUNKNOWN punk) {
     int i;
 
@@ -185,7 +193,7 @@ MARSHAL_Register_Proxy(wine_marshal_id *mid,LPUNKNOWN punk) {
 
 /********************** StdMarshal implementation ****************************/
 typedef struct _StdMarshalImpl {
-  ICOM_VTABLE(IMarshal)	*lpvtbl;
+  IMarshalVtbl	*lpvtbl;
   DWORD			ref;
 
   IID			iid;
@@ -194,7 +202,7 @@ typedef struct _StdMarshalImpl {
   DWORD			mshlflags;
 } StdMarshalImpl;
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_QueryInterface(LPMARSHAL iface,REFIID riid,LPVOID *ppv) {
   *ppv = NULL;
   if (IsEqualIID(&IID_IUnknown,riid) || IsEqualIID(&IID_IMarshal,riid)) {
@@ -206,14 +214,14 @@ StdMarshalImpl_QueryInterface(LPMARSHAL iface,REFIID riid,LPVOID *ppv) {
   return E_NOINTERFACE;
 }
 
-ULONG WINAPI
+static ULONG WINAPI
 StdMarshalImpl_AddRef(LPMARSHAL iface) {
   ICOM_THIS(StdMarshalImpl,iface);
   This->ref++;
   return This->ref;
 }
 
-ULONG WINAPI
+static ULONG WINAPI
 StdMarshalImpl_Release(LPMARSHAL iface) {
   ICOM_THIS(StdMarshalImpl,iface);
   This->ref--;
@@ -224,7 +232,7 @@ StdMarshalImpl_Release(LPMARSHAL iface) {
   return 0;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_GetUnmarshalClass(
   LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, CLSID* pCid
@@ -233,7 +241,7 @@ StdMarshalImpl_GetUnmarshalClass(
   return S_OK;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_GetMarshalSizeMax(
   LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, DWORD* pSize
@@ -242,7 +250,7 @@ StdMarshalImpl_GetMarshalSizeMax(
   return S_OK;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_MarshalInterface(
   LPMARSHAL iface, IStream *pStm,REFIID riid, void* pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags
@@ -256,6 +264,7 @@ StdMarshalImpl_MarshalInterface(
   IPSFactoryBuffer	*psfacbuf;
 
   TRACE("(...,%s,...)\n",debugstr_guid(riid));
+
   IUnknown_QueryInterface((LPUNKNOWN)pv,&IID_IUnknown,(LPVOID*)&pUnk);
   mid.processid = GetCurrentProcessId();
   mid.objectid = (DWORD)pUnk; /* FIXME */
@@ -268,12 +277,14 @@ StdMarshalImpl_MarshalInterface(
   hres = IStream_Write(pStm,&md,sizeof(md),&res);
   if (hres) return hres;
 
-  if (SUCCEEDED(MARSHAL_Find_Stub(&mid,&pUnk))) {
-      IUnknown_Release(pUnk);
+  if (SUCCEEDED(MARSHAL_Find_Stub_Buffer(&mid,&stub))) {
+      /* Find_Stub_Buffer gives us a ref but we want to keep it, as if we'd created a new one */
+      TRACE("Found RpcStubBuffer %p\n", stub);
       return S_OK;
   }
   hres = get_facbuf_for_iid(riid,&psfacbuf);
   if (hres) return hres;
+
   hres = IPSFactoryBuffer_CreateStub(psfacbuf,riid,pv,&stub);
   IPSFactoryBuffer_Release(psfacbuf);
   if (hres) {
@@ -286,7 +297,7 @@ StdMarshalImpl_MarshalInterface(
   return S_OK;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_UnmarshalInterface(
   LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv
 ) {
@@ -307,6 +318,10 @@ StdMarshalImpl_UnmarshalInterface(
       FIXME("Calling back to ourselves for %s!\n",debugstr_guid(riid));
       return S_OK;
   }
+  if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_NULL)) {
+    /* should return proxy manager IUnknown object */
+    FIXME("Special treatment required for IID of %s\n", debugstr_guid(riid));
+  }
   hres = get_facbuf_for_iid(riid,&psfacbuf);
   if (hres) return hres;
   hres = IPSFactoryBuffer_CreateProxy(psfacbuf,NULL,riid,&rpcproxy,ppv);
@@ -314,6 +329,9 @@ StdMarshalImpl_UnmarshalInterface(
     FIXME("Failed to create a proxy for %s\n",debugstr_guid(riid));
     return hres;
   }
+
+  MARSHAL_Register_Proxy(&mid, (LPUNKNOWN) rpcproxy);
+
   hres = PIPE_GetNewPipeBuf(&mid,&chanbuf);
   IPSFactoryBuffer_Release(psfacbuf);
   if (hres) {
@@ -332,19 +350,48 @@ StdMarshalImpl_UnmarshalInterface(
   return hres;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm) {
-  FIXME("(), stub!\n");
+  wine_marshal_id       mid;
+  ULONG                 res;
+  HRESULT               hres;
+  IRpcStubBuffer       *stub = NULL;
+  int                   i;
+
+  hres = IStream_Read(pStm,&mid,sizeof(mid),&res);
+  if (hres) return hres;
+
+  for (i=0; i < nrofstubs; i++)
+  {
+       if (!stubs[i].valid) continue;
+
+       if (MARSHAL_Compare_Mids(&mid, &(stubs[i].mid)))
+       {
+           stub = stubs[i].stub;
+           break;
+       }
+  }
+
+  if (!stub)
+  {
+      FIXME("Could not map MID to stub??\n");
+      return E_FAIL;
+  }
+
+  res = IRpcStubBuffer_Release(stub);
+  stubs[i].valid = FALSE;
+  TRACE("stub refcount of %p is %ld\n", stub, res);
+
   return S_OK;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved) {
   FIXME("(), stub!\n");
   return S_OK;
 }
 
-ICOM_VTABLE(IMarshal) stdmvtbl = {
+IMarshalVtbl stdmvtbl = {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StdMarshalImpl_QueryInterface,
     StdMarshalImpl_AddRef,
@@ -484,7 +531,10 @@ CoMarshalInterface( IStream *pStm, REFIID riid, IUnknown *pUnk,
     FIXME("Stream write failed, %lx\n",hres);
     goto release_marshal;
   }
+
+  TRACE("Calling IMarshal::MarshalInterace\n");
   hres = IMarshal_MarshalInterface(pMarshal,pStm,riid,pUnk,dwDestContext,pvDestContext,mshlflags);
+
   if (hres) {
     if (IsEqualGUID(riid,&IID_IOleObject)) {
       ERR("WINE currently cannot marshal IOleObject interfaces. This means you cannot embed/link OLE objects between applications.\n");
@@ -701,7 +751,7 @@ SMCF_LockServer(LPCLASSFACTORY iface, BOOL fLock) {
     return S_OK;
 }
 
-static ICOM_VTABLE(IClassFactory) dfmarshalcfvtbl = {
+static IClassFactoryVtbl dfmarshalcfvtbl = {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     SMCF_QueryInterface,
     SMCF_AddRef,
@@ -709,7 +759,7 @@ static ICOM_VTABLE(IClassFactory) dfmarshalcfvtbl = {
     SMCF_CreateInstance,
     SMCF_LockServer
 };
-static ICOM_VTABLE(IClassFactory) *pdfmarshalcfvtbl = &dfmarshalcfvtbl;
+static IClassFactoryVtbl *pdfmarshalcfvtbl = &dfmarshalcfvtbl;
 
 HRESULT
 MARSHAL_GetStandardMarshalCF(LPVOID *ppv) {

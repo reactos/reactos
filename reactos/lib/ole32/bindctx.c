@@ -48,7 +48,7 @@ typedef struct BindCtxObject{
 /* BindCtx data strucrture */
 typedef struct BindCtxImpl{
 
-    ICOM_VFIELD(IBindCtx); /* VTable relative to the IBindCtx interface.*/
+    IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -83,7 +83,7 @@ HRESULT WINAPI BindCtxImpl_Destroy(BindCtxImpl* This);
 HRESULT WINAPI BindCtxImpl_GetObjectIndex(BindCtxImpl* This,IUnknown* punk,LPOLESTR pszkey,DWORD *index);
 
 /* Virtual function table for the BindCtx class. */
-static ICOM_VTABLE(IBindCtx) VT_BindCtxImpl =
+static IBindCtxVtbl VT_BindCtxImpl =
     {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     BindCtxImpl_QueryInterface,
@@ -269,7 +269,7 @@ HRESULT WINAPI BindCtxImpl_RevokeObjectBound(IBindCtx* iface, IUnknown* punk)
 
     TRACE("(%p,%p)\n",This,punk);
 
-    /* check if the object was registred or not */
+    /* check if the object was registered or not */
     if (BindCtxImpl_GetObjectIndex(This,punk,NULL,&index)==S_FALSE)
         return MK_E_NOTBOUND;
 

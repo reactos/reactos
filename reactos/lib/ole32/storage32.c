@@ -158,7 +158,7 @@ static DWORD GetCreationModeFromSTGM(DWORD stgm);
 /*
  * Virtual function table for the IStorage32Impl class.
  */
-static ICOM_VTABLE(IStorage) Storage32Impl_Vtbl =
+static IStorageVtbl Storage32Impl_Vtbl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StorageBaseImpl_QueryInterface,
@@ -184,7 +184,7 @@ static ICOM_VTABLE(IStorage) Storage32Impl_Vtbl =
 /*
  * Virtual function table for the Storage32InternalImpl class.
  */
-static ICOM_VTABLE(IStorage) Storage32InternalImpl_Vtbl =
+static IStorageVtbl Storage32InternalImpl_Vtbl =
   {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StorageBaseImpl_QueryInterface,
@@ -210,7 +210,7 @@ static ICOM_VTABLE(IStorage) Storage32InternalImpl_Vtbl =
 /*
  * Virtual function table for the IEnumSTATSTGImpl class.
  */
-static ICOM_VTABLE(IEnumSTATSTG) IEnumSTATSTGImpl_Vtbl =
+static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     IEnumSTATSTGImpl_QueryInterface,
@@ -4104,7 +4104,9 @@ void StorageUtl_CopyPropertyToSTATSTG(
   /*
    * The copy of the string occurs only when the flag is not set
    */
-  if ((statFlags & STATFLAG_NONAME) != 0)
+  if( ((statFlags & STATFLAG_NONAME) != 0) || 
+       (source->name == NULL) || 
+       (source->name[0] == 0) )
   {
     destination->pwcsName = 0;
   }

@@ -44,12 +44,12 @@ const CLSID CLSID_FileMoniker = {
 /* filemoniker data structure */
 typedef struct FileMonikerImpl{
 
-    ICOM_VTABLE(IMoniker)*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData interface to test whether
      * two monikers are equal. That's whay IROTData interface is implemented by monikers.
      */
-    ICOM_VTABLE(IROTData)*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -111,7 +111,7 @@ int     WINAPI FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** tabStr);
 /********************************************************************************/
 /* Virtual function table for the FileMonikerImpl class which  include IPersist,*/
 /* IPersistStream and IMoniker functions.                                       */
-static ICOM_VTABLE(IMoniker) VT_FileMonikerImpl =
+static IMonikerVtbl VT_FileMonikerImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     FileMonikerImpl_QueryInterface,
@@ -141,7 +141,7 @@ static ICOM_VTABLE(IMoniker) VT_FileMonikerImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
-static ICOM_VTABLE(IROTData) VT_ROTDataImpl =
+static IROTDataVtbl VT_ROTDataImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     FileMonikerROTDataImpl_QueryInterface,
@@ -983,7 +983,7 @@ HRESULT WINAPI FileMonikerImpl_GetTimeOfLastChange(IMoniker* iface,
 
     res= IRunningObjectTable_GetTimeOfLastChange(rot,iface,pFileTime);
 
-    if (FAILED(res)){ /* the moniker is not registred */
+    if (FAILED(res)){ /* the moniker is not registered */
 
         if (!GetFileAttributesExW(This->filePathName,GetFileExInfoStandard,&info))
             return MK_E_NOOBJECT;

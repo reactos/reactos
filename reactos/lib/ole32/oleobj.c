@@ -38,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  */
 typedef struct OleAdviseHolderImpl
 {
-  ICOM_VFIELD(IOleAdviseHolder);
+  IOleAdviseHolderVtbl *lpVtbl;
 
   DWORD ref;
 
@@ -63,7 +63,7 @@ static HRESULT WINAPI    OleAdviseHolderImpl_SendOnClose (LPOLEADVISEHOLDER);
 /**************************************************************************
  *  OleAdviseHolderImpl_VTable
  */
-static struct ICOM_VTABLE(IOleAdviseHolder) oahvt =
+static struct IOleAdviseHolderVtbl oahvt =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     OleAdviseHolderImpl_QueryInterface,
@@ -369,7 +369,7 @@ typedef struct DataAdviseConnection {
 
 typedef struct DataAdviseHolder
 {
-  ICOM_VFIELD(IDataAdviseHolder);
+  IDataAdviseHolderVtbl *lpVtbl;
 
   DWORD                 ref;
   DWORD                 maxCons;
@@ -411,7 +411,7 @@ static HRESULT WINAPI     DataAdviseHolder_SendOnDataChange(
 /**************************************************************************
  *  DataAdviseHolderImpl_VTable
  */
-static struct ICOM_VTABLE(IDataAdviseHolder) DataAdviseHolderImpl_VTable =
+static struct IDataAdviseHolderVtbl DataAdviseHolderImpl_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataAdviseHolder_QueryInterface,

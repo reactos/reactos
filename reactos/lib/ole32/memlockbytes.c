@@ -53,7 +53,7 @@ struct HGLOBALLockBytesImpl
    * Needs to be the first item in the stuct
    * since we want to cast this in an ILockBytes pointer
    */
-  ICOM_VFIELD(ILockBytes);
+  ILockBytesVtbl *lpVtbl;
 
   /*
    * Reference count
@@ -140,7 +140,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_Stat(
 /*
  * Virtual function table for the HGLOBALLockBytesImpl class.
  */
-static ICOM_VTABLE(ILockBytes) HGLOBALLockBytesImpl_Vtbl =
+static ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     HGLOBALLockBytesImpl_QueryInterface,

@@ -17,6 +17,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * TODO:
+ * - IRunningObjectTable should work interprocess, but currently doesn't.
+ *   Native (on Win2k at least) uses an undocumented RPC interface, IROT, to
+ *   communicate with RPCSS which contains the table of marshalled data.
+ * - IRunningObjectTable should use marshalling instead of simple ref
+ *   counting as there is the possibility of using the running object table
+ *   to access objects in other apartments.
  */
 
 #include <assert.h>
@@ -50,7 +58,7 @@ typedef struct RunObject{
 /* define the RunningObjectTableImpl structure */
 typedef struct RunningObjectTableImpl{
 
-    ICOM_VFIELD(IRunningObjectTable);
+    IRunningObjectTableVtbl *lpVtbl;
     ULONG      ref;
 
     RunObject* runObjTab;            /* pointer to the first object in the table       */
@@ -82,7 +90,7 @@ HRESULT WINAPI RunningObjectTableImpl_Destroy();
 HRESULT WINAPI RunningObjectTableImpl_GetObjectIndex(RunningObjectTableImpl* This,DWORD identReg,IMoniker* pmk,DWORD *indx);
 
 /* Virtual function table for the IRunningObjectTable class. */
-static ICOM_VTABLE(IRunningObjectTable) VT_RunningObjectTableImpl =
+static IRunningObjectTableVtbl VT_RunningObjectTableImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     RunningObjectTableImpl_QueryInterface,
@@ -302,9 +310,12 @@ HRESULT WINAPI RunningObjectTableImpl_Register(IRunningObjectTable* iface,
             return E_OUTOFMEMORY;
     }
     /* add a reference to the object in the strong registration case */
-    if ((grfFlags & ROTFLAGS_REGISTRATIONKEEPSALIVE) !=0 )
+    if ((grfFlags & ROTFLAGS_REGISTRATIONKEEPSALIVE) !=0 ) {
+        TRACE("strong registration, reffing %p\n", punkObject);
+        /* this is wrong; we should always add a reference to the object */
         IUnknown_AddRef(punkObject);
-
+    }
+    
     IMoniker_AddRef(pmkObjectName);
 
     return res;
@@ -328,9 +339,12 @@ HRESULT WINAPI RunningObjectTableImpl_Revoke(  IRunningObjectTable* iface,
         return E_INVALIDARG;
 
     /* release the object if it was registered with a strong registrantion option */
-    if ((This->runObjTab[index].regTypeObj & ROTFLAGS_REGISTRATIONKEEPSALIVE)!=0)
+    if ((This->runObjTab[index].regTypeObj & ROTFLAGS_REGISTRATIONKEEPSALIVE)!=0) {
+        TRACE("releasing %p\n", This->runObjTab[index].pObj);
+        /* this is also wrong; we should always release the object (see above) */
         IUnknown_Release(This->runObjTab[index].pObj);
-
+    }
+    
     IMoniker_Release(This->runObjTab[index].pmkObj);
 
     /* remove the object from the table */
@@ -373,8 +387,10 @@ HRESULT WINAPI RunningObjectTableImpl_GetObject(  IRunningObjectTable* iface,
     *ppunkObject=0;
 
     /* verify if the object was registered before or not */
-    if (RunningObjectTableImpl_GetObjectIndex(This,-1,pmkObjectName,&index)==S_FALSE)
+    if (RunningObjectTableImpl_GetObjectIndex(This,-1,pmkObjectName,&index)==S_FALSE) {
+        WARN("Moniker unavailable - needs to work interprocess?\n");
         return MK_E_UNAVAILABLE;
+    }
 
     /* add a reference to the object then set output object argument */
     IUnknown_AddRef(This->runObjTab[index].pObj);

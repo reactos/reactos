@@ -45,10 +45,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(olemalloc);
  *
  *****************************************************************************/
 /* set the vtable later */
-static ICOM_VTABLE(IMalloc) VT_IMalloc32;
+static IMallocVtbl VT_IMalloc32;
 
 typedef struct {
-        ICOM_VFIELD(IMalloc);
+        IMallocVtbl *lpVtbl;
         DWORD dummy;                /* nothing, we are static */
 	IMallocSpy * pSpy;          /* the spy when active */
 	DWORD SpyedAllocationsLeft; /* number of spyed allocations left */
@@ -342,7 +342,7 @@ static VOID WINAPI IMalloc_fnHeapMinimize(LPMALLOC iface) {
 	}
 }
 
-static ICOM_VTABLE(IMalloc) VT_IMalloc32 =
+static IMallocVtbl VT_IMalloc32 =
 {
 	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IMalloc_fnQueryInterface,
@@ -361,10 +361,10 @@ static ICOM_VTABLE(IMalloc) VT_IMalloc32 =
  *****************************************************************************/
 
 /* set the vtable later */
-static ICOM_VTABLE(IMallocSpy) VT_IMallocSpy;
+static IMallocSpyVtbl VT_IMallocSpy;
 
 typedef struct {
-        ICOM_VFIELD(IMallocSpy);
+        IMallocSpyVtbl *lpVtbl;
         DWORD ref;
 } _MallocSpy;
 
@@ -502,7 +502,7 @@ static void MallocSpyDumpLeaks() {
         TRACE("leaks: %lu\n", Malloc32.SpyedAllocationsLeft);
 }
 
-static ICOM_VTABLE(IMallocSpy) VT_IMallocSpy =
+static IMallocSpyVtbl VT_IMallocSpy =
 {
 	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IMallocSpy_fnQueryInterface,

@@ -26,6 +26,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "oleauto.h"
@@ -127,9 +129,9 @@ static VOID WINAPI ERRORINFO_SysFreeString(BSTR in)
 
 typedef struct ErrorInfoImpl
 {
-	ICOM_VTABLE(IErrorInfo)		*lpvtei;
-	ICOM_VTABLE(ICreateErrorInfo)	*lpvtcei;
-	ICOM_VTABLE(ISupportErrorInfo)	*lpvtsei;
+	IErrorInfoVtbl		*lpvtei;
+	ICreateErrorInfoVtbl	*lpvtcei;
+	ISupportErrorInfoVtbl	*lpvtsei;
 	DWORD				ref;
 
 	GUID m_Guid;
@@ -139,9 +141,9 @@ typedef struct ErrorInfoImpl
 	DWORD m_dwHelpContext;
 } ErrorInfoImpl;
 
-static ICOM_VTABLE(IErrorInfo)		IErrorInfoImpl_VTable;
-static ICOM_VTABLE(ICreateErrorInfo)	ICreateErrorInfoImpl_VTable;
-static ICOM_VTABLE(ISupportErrorInfo)	ISupportErrorInfoImpl_VTable;
+static IErrorInfoVtbl		IErrorInfoImpl_VTable;
+static ICreateErrorInfoVtbl	ICreateErrorInfoImpl_VTable;
+static ISupportErrorInfoVtbl	ISupportErrorInfoImpl_VTable;
 
 /*
  converts a objectpointer to This
@@ -300,7 +302,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetHelpContext(
 	return S_OK;
 }
 
-static ICOM_VTABLE(IErrorInfo) IErrorInfoImpl_VTable =
+static IErrorInfoVtbl IErrorInfoImpl_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   IErrorInfoImpl_QueryInterface,
@@ -402,7 +404,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
 	return S_OK;
 }
 
-static ICOM_VTABLE(ICreateErrorInfo) ICreateErrorInfoImpl_VTable =
+static ICreateErrorInfoVtbl ICreateErrorInfoImpl_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   ICreateErrorInfoImpl_QueryInterface,
@@ -453,7 +455,7 @@ static HRESULT WINAPI ISupportErrorInfoImpl_InterfaceSupportsErrorInfo(
 	return (IsEqualIID(riid, &This->m_Guid)) ? S_OK : S_FALSE;
 }
 
-static ICOM_VTABLE(ISupportErrorInfo) ISupportErrorInfoImpl_VTable =
+static ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   ISupportErrorInfoImpl_QueryInterface,

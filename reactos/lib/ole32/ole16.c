@@ -64,7 +64,7 @@ LPMALLOC16 currentMalloc16=NULL;
 typedef struct
 {
         /* IUnknown fields */
-        ICOM_VFIELD(IMalloc16);
+        IMalloc16Vtbl          *lpVtbl;
         DWORD                   ref;
         /* IMalloc16 fields */
 } IMalloc16Impl;
@@ -178,7 +178,7 @@ LPVOID WINAPI IMalloc16_fnHeapMinimize(IMalloc16* iface) {
 LPMALLOC16
 IMalloc16_Constructor()
 {
-    static ICOM_VTABLE(IMalloc16) vt16;
+    static IMalloc16Vtbl vt16;
     static SEGPTR msegvt16;
     IMalloc16Impl* This;
     HMODULE16 hcomp = GetModuleHandle16("COMPOBJ");
@@ -199,7 +199,7 @@ IMalloc16_Constructor()
 #undef VTENT
         msegvt16 = MapLS( &vt16 );
     }
-    This->lpVtbl = (ICOM_VTABLE(IMalloc16)*)msegvt16;
+    This->lpVtbl = (IMalloc16Vtbl*)msegvt16;
     This->ref = 1;
     return (LPMALLOC16)MapLS( This );
 }
@@ -313,7 +313,7 @@ _xmalloc16(DWORD size, SEGPTR *ptr) {
    * everything we need.
    */
   if (!K32WOWCallback16Ex(
-      (DWORD)((ICOM_VTABLE(IMalloc16)*)MapSL(
+      (DWORD)((IMalloc16Vtbl*)MapSL(
 	  (SEGPTR)((LPMALLOC16)MapSL((SEGPTR)mllc))->lpVtbl  )
       )->Alloc,
       WCB16_CDECL,

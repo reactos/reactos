@@ -52,7 +52,7 @@ struct HGLOBALLockBytesImpl16
    * Needs to be the first item in the stuct
    * since we want to cast this in an ILockBytes pointer
    */
-  ICOM_VFIELD(ILockBytes16);
+  ILockBytes16Vtbl *lpVtbl;
   ULONG        ref;
 
   /*
@@ -148,7 +148,7 @@ HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
 {
   HGLOBALLockBytesImpl16* newLockBytes;
 
-  static ICOM_VTABLE(ILockBytes16) vt16;
+  static ILockBytes16Vtbl vt16;
   static SEGPTR msegvt16;
   HMODULE16 hcomp = GetModuleHandle16("OLE2");
 
@@ -176,7 +176,7 @@ HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
 #undef VTENT
       msegvt16 = MapLS( &vt16 );
   }
-  newLockBytes->lpVtbl	= (ICOM_VTABLE(ILockBytes16)*)msegvt16;
+  newLockBytes->lpVtbl	= (ILockBytes16Vtbl*)msegvt16;
   newLockBytes->ref	= 0;
   /*
    * Initialize the support.

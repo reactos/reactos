@@ -41,12 +41,12 @@ const CLSID CLSID_AntiMoniker = {
 /* AntiMoniker data structure */
 typedef struct AntiMonikerImpl{
 
-    ICOM_VTABLE(IMoniker)*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData interface to test whether
      * two monikers are equal. That's whay IROTData interface is implemented by monikers.
      */
-    ICOM_VTABLE(IROTData)*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -104,7 +104,7 @@ HRESULT WINAPI AntiMonikerImpl_Destroy(AntiMonikerImpl* iface);
 /********************************************************************************/
 /* Virtual function table for the AntiMonikerImpl class which  include IPersist,*/
 /* IPersistStream and IMoniker functions.                                       */
-static ICOM_VTABLE(IMoniker) VT_AntiMonikerImpl =
+static IMonikerVtbl VT_AntiMonikerImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     AntiMonikerImpl_QueryInterface,
@@ -134,7 +134,7 @@ static ICOM_VTABLE(IMoniker) VT_AntiMonikerImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
-static ICOM_VTABLE(IROTData) VT_ROTDataImpl =
+static IROTDataVtbl VT_ROTDataImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     AntiMonikerROTDataImpl_QueryInterface,

@@ -1,26 +1,63 @@
 Index: ifs.h
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/ifs.h,v
-retrieving revision 1.11
-diff -u -r1.11 ifs.h
---- ifs.h	23 Jan 2004 22:51:42 -0000	1.11
-+++ ifs.h	14 Mar 2004 09:24:36 -0000
-@@ -35,6 +35,7 @@
+retrieving revision 1.12
+diff -u -r1.12 ifs.h
+--- ifs.h	12 Aug 2004 03:33:30 -0000	1.12
++++ ifs.h	14 Aug 2004 20:12:56 -0000
+@@ -33,8 +33,7 @@
+  * IMalloc16 interface
+  */
  
- typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
- 
+-typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
+-
 +#undef INTERFACE
  #define INTERFACE IMalloc16
  #define IMalloc16_METHODS \
      IUnknown_METHODS \
+@@ -47,14 +46,14 @@
+ DECLARE_INTERFACE_(IMalloc16,IUnknown) { IMalloc16_METHODS };
+ #undef INTERFACE
+ 
++typedef struct IMalloc16 *LPMALLOC16;
++
+ /**********************************************************************/
+ 
+ extern LPMALLOC16 IMalloc16_Constructor();
+ 
+ /**********************************************************************/
+ 
+-typedef struct ILockBytes16 *LPLOCKBYTES16, ILockBytes16;
+-
+ #define INTERFACE ILockBytes
+ #define ILockBytes16_METHODS \
+ 	IUnknown_METHODS \
+@@ -85,8 +84,6 @@
+     DWORD reserved;
+ } STATSTG16;
+ 
+-typedef struct IStream16 IStream16, *LPSTREAM16;
+-
+ #define INTERFACE IStream16
+ #define IStream16_METHODS \
+     ISequentialStream_METHODS \
+@@ -105,8 +102,6 @@
+ /**********************************************************************/
+ 
+ typedef OLECHAR16 **SNB16;
+-
+-typedef struct IStorage16 IStorage16, *LPSTORAGE16;
+ 
+ #define INTERFACE IStorage16
+ #define IStorage16_METHODS \
 Index: oleproxy.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/oleproxy.c,v
-retrieving revision 1.13
-diff -u -r1.13 oleproxy.c
---- oleproxy.c	23 Jan 2004 01:51:34 -0000	1.13
-+++ oleproxy.c	14 Mar 2004 09:24:39 -0000
-@@ -35,6 +35,7 @@
+retrieving revision 1.19
+diff -u -r1.19 oleproxy.c
+--- oleproxy.c	12 Aug 2004 23:00:55 -0000	1.19
++++ oleproxy.c	14 Aug 2004 20:13:00 -0000
+@@ -38,6 +38,7 @@
  
  #include <stdlib.h>
  #include <stdarg.h>

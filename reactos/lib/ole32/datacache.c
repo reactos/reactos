@@ -91,12 +91,12 @@ struct DataCache
   /*
    * List all interface VTables here
    */
-  ICOM_VTABLE(IDataObject)*      lpvtbl1;
-  ICOM_VTABLE(IUnknown)*         lpvtbl2;
-  ICOM_VTABLE(IPersistStorage)*  lpvtbl3;
-  ICOM_VTABLE(IViewObject2)*     lpvtbl4;
-  ICOM_VTABLE(IOleCache2)*       lpvtbl5;
-  ICOM_VTABLE(IOleCacheControl)* lpvtbl6;
+  IDataObjectVtbl*      lpvtbl1;
+  IUnknownVtbl*         lpvtbl2;
+  IPersistStorageVtbl*  lpvtbl3;
+  IViewObject2Vtbl*     lpvtbl4;
+  IOleCache2Vtbl*       lpvtbl5;
+  IOleCacheControlVtbl* lpvtbl6;
 
   /*
    * Reference count of this object
@@ -373,7 +373,7 @@ static HRESULT WINAPI DataCache_OnStop(
 /*
  * Virtual function tables for the DataCache class.
  */
-static ICOM_VTABLE(IUnknown) DataCache_NDIUnknown_VTable =
+static IUnknownVtbl DataCache_NDIUnknown_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_NDIUnknown_QueryInterface,
@@ -381,7 +381,7 @@ static ICOM_VTABLE(IUnknown) DataCache_NDIUnknown_VTable =
   DataCache_NDIUnknown_Release
 };
 
-static ICOM_VTABLE(IDataObject) DataCache_IDataObject_VTable =
+static IDataObjectVtbl DataCache_IDataObject_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_IDataObject_QueryInterface,
@@ -398,7 +398,7 @@ static ICOM_VTABLE(IDataObject) DataCache_IDataObject_VTable =
   DataCache_EnumDAdvise
 };
 
-static ICOM_VTABLE(IPersistStorage) DataCache_IPersistStorage_VTable =
+static IPersistStorageVtbl DataCache_IPersistStorage_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_IPersistStorage_QueryInterface,
@@ -413,7 +413,7 @@ static ICOM_VTABLE(IPersistStorage) DataCache_IPersistStorage_VTable =
   DataCache_HandsOffStorage
 };
 
-static ICOM_VTABLE(IViewObject2) DataCache_IViewObject2_VTable =
+static IViewObject2Vtbl DataCache_IViewObject2_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_IViewObject2_QueryInterface,
@@ -428,7 +428,7 @@ static ICOM_VTABLE(IViewObject2) DataCache_IViewObject2_VTable =
   DataCache_GetExtent
 };
 
-static ICOM_VTABLE(IOleCache2) DataCache_IOleCache2_VTable =
+static IOleCache2Vtbl DataCache_IOleCache2_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_IOleCache2_QueryInterface,
@@ -443,7 +443,7 @@ static ICOM_VTABLE(IOleCache2) DataCache_IOleCache2_VTable =
   DataCache_DiscardCache
 };
 
-static ICOM_VTABLE(IOleCacheControl) DataCache_IOleCacheControl_VTable =
+static IOleCacheControlVtbl DataCache_IOleCacheControl_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DataCache_IOleCacheControl_QueryInterface,

@@ -94,7 +94,7 @@ struct OLEClipbrd
   /*
    * List all interface VTables here
    */
-  ICOM_VTABLE(IDataObject)*  lpvtbl1;  /* IDataObject VTable */
+  IDataObjectVtbl*  lpvtbl1;  /* IDataObject VTable */
 
   /*
    * The hidden OLE clipboard window. This window is used as the bridge between the
@@ -133,7 +133,7 @@ typedef struct OLEClipbrd OLEClipbrd;
 typedef struct
 {
   /* IEnumFORMATETC VTable */
-  ICOM_VFIELD(IEnumFORMATETC);
+  IEnumFORMATETCVtbl          *lpVtbl;
 
   /* IEnumFORMATETC fields */
   UINT                         posFmt;    /* current enumerator position */
@@ -248,7 +248,7 @@ static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_Clone(LPENUMFORMATETC iface, LPE
 /*
  * Virtual function table for the OLEClipbrd's exposed IDataObject interface
  */
-static ICOM_VTABLE(IDataObject) OLEClipbrd_IDataObject_VTable =
+static IDataObjectVtbl OLEClipbrd_IDataObject_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEClipbrd_IDataObject_QueryInterface,
@@ -268,7 +268,7 @@ static ICOM_VTABLE(IDataObject) OLEClipbrd_IDataObject_VTable =
 /*
  * Virtual function table for IEnumFORMATETC interface
  */
-static struct ICOM_VTABLE(IEnumFORMATETC) efvt =
+static struct IEnumFORMATETCVtbl efvt =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEClipbrd_IEnumFORMATETC_QueryInterface,

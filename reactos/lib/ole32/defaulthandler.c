@@ -68,10 +68,10 @@ struct DefaultHandler
   /*
    * List all interface VTables here
    */
-  ICOM_VTABLE(IOleObject)*      lpvtbl1;
-  ICOM_VTABLE(IUnknown)*        lpvtbl2;
-  ICOM_VTABLE(IDataObject)*     lpvtbl3;
-  ICOM_VTABLE(IRunnableObject)* lpvtbl4;
+  IOleObjectVtbl*      lpvtbl1;
+  IUnknownVtbl*        lpvtbl2;
+  IDataObjectVtbl*     lpvtbl3;
+  IRunnableObjectVtbl* lpvtbl4;
 
   /*
    * Reference count of this object
@@ -323,7 +323,7 @@ static HRESULT WINAPI DefaultHandler_SetContainedObject(
 /*
  * Virtual function tables for the DefaultHandler class.
  */
-static ICOM_VTABLE(IOleObject) DefaultHandler_IOleObject_VTable =
+static IOleObjectVtbl DefaultHandler_IOleObject_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_QueryInterface,
@@ -352,7 +352,7 @@ static ICOM_VTABLE(IOleObject) DefaultHandler_IOleObject_VTable =
   DefaultHandler_SetColorScheme
 };
 
-static ICOM_VTABLE(IUnknown) DefaultHandler_NDIUnknown_VTable =
+static IUnknownVtbl DefaultHandler_NDIUnknown_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_NDIUnknown_QueryInterface,
@@ -360,7 +360,7 @@ static ICOM_VTABLE(IUnknown) DefaultHandler_NDIUnknown_VTable =
   DefaultHandler_NDIUnknown_Release,
 };
 
-static ICOM_VTABLE(IDataObject) DefaultHandler_IDataObject_VTable =
+static IDataObjectVtbl DefaultHandler_IDataObject_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_IDataObject_QueryInterface,
@@ -377,7 +377,7 @@ static ICOM_VTABLE(IDataObject) DefaultHandler_IDataObject_VTable =
   DefaultHandler_EnumDAdvise
 };
 
-static ICOM_VTABLE(IRunnableObject) DefaultHandler_IRunnableObject_VTable =
+static IRunnableObjectVtbl DefaultHandler_IRunnableObject_VTable =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_IRunnableObject_QueryInterface,

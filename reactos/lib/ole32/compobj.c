@@ -152,12 +152,13 @@ void COMPOBJ_InitProcess( void )
 {
     WNDCLASSA wclass;
 
-    /* Inter-thread RPCs are done through window messages rather than pipes. When
-       an interface is marshalled into another apartment in the same process,
-       a window of the following class is created. The *caller* of CoMarshalInterface
-       (ie the application) is responsible for pumping the message loop in that thread,
-       the WM_USER messages which point to the RPCs are then dispatched to COM_AptWndProc
-       by the users code.
+    /* Dispatching to the correct thread in an apartment is done through
+     * window messages rather than RPC transports. When an interface is
+     * marshalled into another apartment in the same process, a window of the
+     * following class is created. The *caller* of CoMarshalInterface (ie the
+     * application) is responsible for pumping the message loop in that thread.
+     * The WM_USER messages which point to the RPCs are then dispatched to
+     * COM_AptWndProc by the user's code.
      */
     memset(&wclass, 0, sizeof(wclass));
     wclass.lpfnWndProc = &COM_AptWndProc;
@@ -510,6 +511,11 @@ void WINAPI CoUninitialize(void)
     TRACE("() - Releasing the COM libraries\n");
 
     RunningObjectTableImpl_UnInitialize();
+
+    /* disconnect proxies to release the corresponding stubs.
+     * FIXME: native version might not do this and we might just be working
+     * around bugs elsewhere. */
+    MARSHAL_Disconnect_Proxies();
 
     /* Release the references to the registered class objects */
     COM_RevokeAllClasses();
@@ -903,6 +909,7 @@ HRESULT WINAPI CoGetPSClsid(
     /* Open the key.. */
     if (RegOpenKeyA(HKEY_CLASSES_ROOT, buf, &xhkey))
     {
+       WARN("No PSFactoryBuffer object is registered for this IID\n");
        HeapFree(GetProcessHeap(),0,buf);
        return (E_INVALIDARG);
     }
@@ -1059,40 +1066,9 @@ _LocalServerThread(LPVOID param) {
     ULONG		res;
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&newClass->classIdentifier));
+
     strcpy(pipefn,PIPEPREF);
     WINE_StringFromCLSID(&newClass->classIdentifier,pipefn+strlen(PIPEPREF));
-
-    hres = IUnknown_QueryInterface(newClass->classObject,&IID_IClassFactory,(LPVOID*)&classfac);
-    if (hres) return hres;
-
-    hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
-    if (hres) {
-	FIXME("Failed to create stream on hglobal.\n");
-	return hres;
-    }
-    hres = CoMarshalInterface(pStm,&IID_IClassFactory,(LPVOID)classfac,0,NULL,0);
-    if (hres) {
-	FIXME("CoMarshalInterface failed, %lx!\n",hres);
-	return hres;
-    }
-    hres = IStream_Stat(pStm,&ststg,0);
-    if (hres) return hres;
-
-    buflen = ststg.cbSize.u.LowPart;
-    buffer = HeapAlloc(GetProcessHeap(),0,buflen);
-    seekto.u.LowPart = 0;
-    seekto.u.HighPart = 0;
-    hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
-    if (hres) {
-	FIXME("IStream_Seek failed, %lx\n",hres);
-	return hres;
-    }
-    hres = IStream_Read(pStm,buffer,buflen,&res);
-    if (hres) {
-	FIXME("Stream Read failed, %lx\n",hres);
-	return hres;
-    }
-    IStream_Release(pStm);
 
     hPipe = CreateNamedPipeA( pipefn, PIPE_ACCESS_DUPLEX,
                PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
@@ -1106,9 +1082,51 @@ _LocalServerThread(LPVOID param) {
             ERR("Failure during ConnectNamedPipe %lx, ABORT!\n",GetLastError());
             break;
         }
+
+        TRACE("marshalling IClassFactory to client\n");
+        
+        hres = IUnknown_QueryInterface(newClass->classObject,&IID_IClassFactory,(LPVOID*)&classfac);
+        if (hres) return hres;
+
+        hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
+        if (hres) {
+            FIXME("Failed to create stream on hglobal.\n");
+            return hres;
+        }
+        hres = CoMarshalInterface(pStm,&IID_IClassFactory,(LPVOID)classfac,0,NULL,0);
+        if (hres) {
+            FIXME("CoMarshalInterface failed, %lx!\n",hres);
+            return hres;
+        }
+
+        IUnknown_Release(classfac); /* is this right? */
+
+        hres = IStream_Stat(pStm,&ststg,0);
+        if (hres) return hres;
+
+        buflen = ststg.cbSize.u.LowPart;
+        buffer = HeapAlloc(GetProcessHeap(),0,buflen);
+        seekto.u.LowPart = 0;
+        seekto.u.HighPart = 0;
+        hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
+        if (hres) {
+            FIXME("IStream_Seek failed, %lx\n",hres);
+            return hres;
+        }
+        
+        hres = IStream_Read(pStm,buffer,buflen,&res);
+        if (hres) {
+            FIXME("Stream Read failed, %lx\n",hres);
+            return hres;
+        }
+        
+        IStream_Release(pStm);
+
         WriteFile(hPipe,buffer,buflen,&res,NULL);
         FlushFileBuffers(hPipe);
         DisconnectNamedPipe(hPipe);
+
+        TRACE("done marshalling IClassFactory\n");
     }
     CloseHandle(hPipe);
     return 0;
@@ -1352,7 +1370,7 @@ HRESULT WINAPI CoGetClassObject(
 
 	if ( compobj_RegReadPath(keyname, NULL, dllpath, sizeof(dllpath)) != ERROR_SUCCESS) {
 	    /* failure: CLSID is not found in registry */
-	    WARN("class %s not registred\n", xclsid);
+           WARN("class %s not registered inproc\n", xclsid);
             hres = REGDB_E_CLASSNOTREG;
 	} else {
 	  if ((hLibrary = LoadLibraryExA(dllpath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0) {

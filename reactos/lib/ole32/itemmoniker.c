@@ -43,12 +43,12 @@ const CLSID CLSID_ItemMoniker = {
 /* ItemMoniker data structure */
 typedef struct ItemMonikerImpl{
 
-    ICOM_VTABLE(IMoniker)*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData interface to test whether
      * two monikers are equal. That's whay IROTData interface is implemented by monikers.
      */
-    ICOM_VTABLE(IROTData)*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -110,7 +110,7 @@ static HRESULT WINAPI ItemMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
 /********************************************************************************/
 /* Virtual function table for the ItemMonikerImpl class which  include IPersist,*/
 /* IPersistStream and IMoniker functions.                                       */
-static ICOM_VTABLE(IMoniker) VT_ItemMonikerImpl =
+static IMonikerVtbl VT_ItemMonikerImpl =
     {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     ItemMonikerImpl_QueryInterface,
@@ -140,7 +140,7 @@ static ICOM_VTABLE(IMoniker) VT_ItemMonikerImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
-static ICOM_VTABLE(IROTData) VT_ROTDataImpl =
+static IROTDataVtbl VT_ROTDataImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     ItemMonikerROTDataImpl_QueryInterface,

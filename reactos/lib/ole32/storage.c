@@ -90,10 +90,10 @@ static const BYTE STORAGE_magic[8]   ={0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1};
 #define SMALLBLOCKS_PER_BIGBLOCK	(BIGSIZE/SMALLSIZE)
 
 #define READ_HEADER	STORAGE_get_big_block(hf,-1,(LPBYTE)&sth);assert(!memcmp(STORAGE_magic,sth.magic,sizeof(STORAGE_magic)));
-static ICOM_VTABLE(IStorage16) stvt16;
-static ICOM_VTABLE(IStorage16) *segstvt16 = NULL;
-static ICOM_VTABLE(IStream16) strvt16;
-static ICOM_VTABLE(IStream16) *segstrvt16 = NULL;
+static IStorage16Vtbl stvt16;
+static IStorage16Vtbl *segstvt16 = NULL;
+static IStream16Vtbl strvt16;
+static IStream16Vtbl *segstrvt16 = NULL;
 
 /*ULONG WINAPI IStorage16_AddRef(LPSTORAGE16 this);*/
 static void _create_istorage16(LPSTORAGE16 *stg);
@@ -954,7 +954,7 @@ STORAGE_get_free_pps_entry(HANDLE hf) {
 typedef struct
 {
         /* IUnknown fields */
-        ICOM_VFIELD(IStream16);
+        IStream16Vtbl                  *lpVtbl;
         DWORD                           ref;
         /* IStream16 fields */
         SEGPTR                          thisptr; /* pointer to this struct as segmented */
@@ -1412,7 +1412,7 @@ static void _create_istream16(LPSTREAM16 *str) {
 			VTENT(Stat);
 			VTENT(Clone);
 #undef VTENT
-			segstrvt16 = (ICOM_VTABLE(IStream16)*)MapLS( &strvt16 );
+			segstrvt16 = (IStream16Vtbl*)MapLS( &strvt16 );
 		} else {
 #define VTENT(xfn) strvt16.xfn = IStream16_fn##xfn;
 			VTENT(QueryInterface);
@@ -1448,7 +1448,7 @@ static void _create_istream16(LPSTREAM16 *str) {
 typedef struct
 {
         /* IUnknown fields */
-        ICOM_VFIELD(IStream);
+        IStreamVtbl                    *lpVtbl;
         DWORD                           ref;
         /* IStream32 fields */
         struct storage_pps_entry        stde;
@@ -1502,7 +1502,7 @@ ULONG WINAPI IStream_fnRelease(IStream* iface) {
 typedef struct
 {
         /* IUnknown fields */
-        ICOM_VFIELD(IStorage16);
+        IStorage16Vtbl                 *lpVtbl;
         DWORD                           ref;
         /* IStorage16 fields */
         SEGPTR                          thisptr; /* pointer to this struct as segmented */
@@ -1826,7 +1826,7 @@ static void _create_istorage16(LPSTORAGE16 *stg) {
 			VTENT(SetStateBits)
 			VTENT(Stat)
 #undef VTENT
-			segstvt16 = (ICOM_VTABLE(IStorage16)*)MapLS( &stvt16 );
+			segstvt16 = (IStorage16Vtbl*)MapLS( &stvt16 );
 		} else {
 #define VTENT(xfn) stvt16.xfn = IStorage16_fn##xfn;
 			VTENT(QueryInterface)
@@ -1982,7 +1982,7 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
   args[5] = 0;
 
   if (!K32WOWCallback16Ex(
-      (DWORD)((ICOM_VTABLE(ILockBytes16)*)MapSL(
+      (DWORD)((ILockBytes16Vtbl*)MapSL(
                   (SEGPTR)((LPLOCKBYTES16)MapSL(plkbyt))->lpVtbl)
       )->ReadAt,
       WCB16_PASCAL,

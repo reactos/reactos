@@ -55,7 +55,7 @@ typedef struct tagXIF {
 
 /* exported object */
 typedef struct tagXOBJECT {
-  ICOM_VTABLE(IRpcStubBuffer) *lpVtbl;
+  IRpcStubBufferVtbl *lpVtbl;
   struct tagAPARTMENT *parent;
   struct tagXOBJECT *next;
   LPUNKNOWN obj;           /* object identity (IUnknown) */
@@ -78,7 +78,7 @@ typedef struct tagIIF {
 
 /* imported object */
 typedef struct tagIOBJECT {
-  ICOM_VTABLE(IRemUnknown) *lpVtbl;
+  IRemUnknownVtbl *lpVtbl;
   struct tagAPARTMENT *parent;
   struct tagIOBJECT *next;
   LPRPCCHANNELBUFFER chan; /* channel to object */
@@ -118,18 +118,9 @@ extern HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
 extern void* StdGlobalInterfaceTableInstance;
 
-inline static HRESULT
-get_facbuf_for_iid(REFIID riid,IPSFactoryBuffer **facbuf) {
-    HRESULT       hres;
-    CLSID         pxclsid;
-
-    if ((hres = CoGetPSClsid(riid,&pxclsid)))
-	return hres;
-    return CoGetClassObject(&pxclsid,CLSCTX_INPROC_SERVER,NULL,&IID_IPSFactoryBuffer,(LPVOID*)facbuf);
-}
-
 #define PIPEPREF "\\\\.\\pipe\\"
 #define OLESTUBMGR PIPEPREF"WINE_OLE_StubMgr"
+
 /* Standard Marshalling definitions */
 typedef struct _wine_marshal_id {
     DWORD	processid;
@@ -156,40 +147,10 @@ MARSHAL_Compare_Mids_NoInterface(wine_marshal_id *mid1, wine_marshal_id *mid2) {
 }
 
 HRESULT MARSHAL_Find_Stub_Buffer(wine_marshal_id *mid,IRpcStubBuffer **stub);
-HRESULT MARSHAL_Find_Stub_Server(wine_marshal_id *mid,LPUNKNOWN *punk);
-HRESULT MARSHAL_Register_Stub(wine_marshal_id *mid,LPUNKNOWN punk, IRpcStubBuffer *stub);
+void    MARSHAL_Invalidate_Stub_From_MID(wine_marshal_id *mid);
+HRESULT MARSHAL_Disconnect_Proxies();
 
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
-
-typedef struct _wine_marshal_data {
-    DWORD	dwDestContext;
-    DWORD	mshlflags;
-} wine_marshal_data;
-
-
-#define REQTYPE_REQUEST		0
-typedef struct _wine_rpc_request_header {
-    DWORD		reqid;
-    wine_marshal_id	mid;
-    DWORD		iMethod;
-    DWORD		cbBuffer;
-} wine_rpc_request_header;
-
-#define REQTYPE_RESPONSE	1
-typedef struct _wine_rpc_response_header {
-    DWORD		reqid;
-    DWORD		cbBuffer;
-    DWORD		retval;
-} wine_rpc_response_header;
-
-#define REQSTATE_START			0
-#define REQSTATE_REQ_QUEUED		1
-#define REQSTATE_REQ_WAITING_FOR_REPLY	2
-#define REQSTATE_REQ_GOT		3
-#define REQSTATE_INVOKING		4
-#define REQSTATE_RESP_QUEUED		5
-#define REQSTATE_RESP_GOT		6
-#define REQSTATE_DONE			6
 
 void STUBMGR_Start();
 
@@ -227,5 +188,7 @@ static inline APARTMENT* COM_CurrentApt(void)
 /* compobj.c */
 APARTMENT* COM_CreateApartment(DWORD model);
 HWND COM_GetApartmentWin(OXID oxid);
+
+#define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 #endif /* __WINE_OLE_COMPOBJ_H */

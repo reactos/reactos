@@ -70,7 +70,7 @@ typedef struct StdGITEntry
 /* Class data */
 typedef struct StdGlobalInterfaceTableImpl
 {
-  ICOM_VFIELD(IGlobalInterfaceTable);
+  IGlobalInterfaceTableVtbl *lpVtbl;
 
   ULONG ref;
   struct StdGITEntry* firstEntry;
@@ -92,7 +92,7 @@ static HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalI
 static HRESULT WINAPI StdGlobalInterfaceTable_GetInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie, REFIID riid, void **ppv);
 
 /* Virtual function table */
-static ICOM_VTABLE(IGlobalInterfaceTable) StdGlobalInterfaceTableImpl_Vtbl =
+static IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
 {
   ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   StdGlobalInterfaceTable_QueryInterface,
@@ -349,7 +349,7 @@ static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock) {
     return S_OK;
 }
 
-static ICOM_VTABLE(IClassFactory) GITClassFactoryVtbl = {
+static IClassFactoryVtbl GITClassFactoryVtbl = {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     GITCF_QueryInterface,
     GITCF_AddRef,
@@ -357,7 +357,7 @@ static ICOM_VTABLE(IClassFactory) GITClassFactoryVtbl = {
     GITCF_CreateInstance,
     GITCF_LockServer
 };
-static ICOM_VTABLE(IClassFactory) *PGITClassFactoryVtbl = &GITClassFactoryVtbl;
+static IClassFactoryVtbl *PGITClassFactoryVtbl = &GITClassFactoryVtbl;
 
 HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv) {
   *ppv = &PGITClassFactoryVtbl;

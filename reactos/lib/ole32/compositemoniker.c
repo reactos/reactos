@@ -44,13 +44,13 @@ const CLSID CLSID_CompositeMoniker = {
 /* CompositeMoniker data structure */
 typedef struct CompositeMonikerImpl{
 
-    ICOM_VTABLE(IMoniker)*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
+    IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
 
     /* The ROT (RunningObjectTable implementation) uses the IROTData
      * interface to test whether two monikers are equal. That's why IROTData
      * interface is implemented by monikers.
      */
-    ICOM_VTABLE(IROTData)*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
+    IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -66,7 +66,7 @@ typedef struct CompositeMonikerImpl{
 /* EnumMoniker data structure */
 typedef struct EnumMonikerImpl{
 
-    ICOM_VFIELD(IEnumMoniker);  /* VTable relative to the IEnumMoniker interface.*/
+    IEnumMonikerVtbl *lpVtbl;  /* VTable relative to the IEnumMoniker interface.*/
 
     ULONG ref; /* reference counter for this object */
 
@@ -148,7 +148,7 @@ HRESULT WINAPI EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker,ULONG tab
 /* Virtual function table for the CompositeMonikerImpl class which includes     */
 /* IPersist, IPersistStream and IMoniker functions.                             */
 
-static ICOM_VTABLE(IMoniker) VT_CompositeMonikerImpl =
+static IMonikerVtbl VT_CompositeMonikerImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     CompositeMonikerImpl_QueryInterface,
@@ -178,7 +178,7 @@ static ICOM_VTABLE(IMoniker) VT_CompositeMonikerImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
-static ICOM_VTABLE(IROTData) VT_ROTDataImpl =
+static IROTDataVtbl VT_ROTDataImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     CompositeMonikerROTDataImpl_QueryInterface,
@@ -189,7 +189,7 @@ static ICOM_VTABLE(IROTData) VT_ROTDataImpl =
 
 /********************************************************************************/
 /* Virtual function table for the IROTData class                                */
-static ICOM_VTABLE(IEnumMoniker) VT_EnumMonikerImpl =
+static IEnumMonikerVtbl VT_EnumMonikerImpl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     EnumMonikerImpl_QueryInterface,

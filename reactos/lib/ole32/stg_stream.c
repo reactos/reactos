@@ -46,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
 /*
  * Virtual function table for the StgStreamImpl class.
  */
-static ICOM_VTABLE(IStream) StgStreamImpl_Vtbl =
+static IStreamVtbl StgStreamImpl_Vtbl =
 {
     ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StgStreamImpl_QueryInterface,

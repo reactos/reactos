@@ -204,7 +204,7 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
  */
 struct StorageBaseImpl
 {
-  ICOM_VFIELD(IStorage);   /* Needs to be the first item in the struct
+  IStorageVtbl *lpVtbl;    /* Needs to be the first item in the struct
 			    * since we want to cast this in a Storage32 pointer */
 
   /*
@@ -298,7 +298,7 @@ HRESULT WINAPI StorageBaseImpl_SetClass(
  */
 struct StorageImpl
 {
-  ICOM_VFIELD(IStorage); /* Needs to be the first item in the struct
+  IStorageVtbl *lpVtbl;  /* Needs to be the first item in the struct
 			  * since we want to cast this in a Storage32 pointer */
 
   /*
@@ -498,7 +498,7 @@ void Storage32Impl_SetExtDepotBlock(StorageImpl* This,
  */
 struct StorageInternalImpl
 {
-  ICOM_VFIELD(IStorage);	/* Needs to be the first item in the struct
+  IStorageVtbl *lpVtbl;         /* Needs to be the first item in the struct
 				 * since we want to cast this in a Storage32 pointer */
 
   /*
@@ -542,8 +542,8 @@ HRESULT WINAPI StorageInternalImpl_Revert(
  */
 struct IEnumSTATSTGImpl
 {
-  ICOM_VFIELD(IEnumSTATSTG);    /* Needs to be the first item in the struct
-					 * since we want to cast this in a IEnumSTATSTG pointer */
+  IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
+				* since we want to cast this in a IEnumSTATSTG pointer */
 
   ULONG		 ref;		        /* Reference count */
   StorageImpl* parentStorage;         /* Reference to the parent storage */
@@ -627,8 +627,8 @@ INT IEnumSTATSTGImpl_FindParentProperty(
  */
 struct StgStreamImpl
 {
-  ICOM_VFIELD(IStream);  /* Needs to be the first item in the struct
-				    * since we want to cast this in a IStream pointer */
+  IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
+			 * since we want to cast this in a IStream pointer */
 
   /*
    * Reference count
