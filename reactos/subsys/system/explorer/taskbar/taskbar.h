@@ -58,12 +58,16 @@ protected:
 #define	IDW_TASKTOOLBAR	100
 
 struct TaskBarEntry
-{
+{	
+	TaskBarEntry();
+
 	int		_id;	// ID for WM_COMMAND
 	HBITMAP	_hbmp;
 	int		_bmp_idx;
 	int		_used;
 	int		_btn_idx;
+	String	_title;
+	BYTE	_fsState;
 };
 
 struct TaskBarMap : public map<HWND, TaskBarEntry>

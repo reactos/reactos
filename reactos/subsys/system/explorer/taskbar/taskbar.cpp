@@ -209,6 +209,17 @@ static HBITMAP create_bitmap_from_icon(HICON hicon, HWND hwnd, HBRUSH hbrush_bkg
 }
 
 
+
+TaskBarEntry::TaskBarEntry()
+{
+	_id = 0;
+	_hbmp = 0;
+	_bmp_idx = 0;
+	_used = 0;
+	_btn_idx = 0;
+	_fsState = 0;
+}
+
 TaskBarMap::~TaskBarMap()
 {
 	while(!empty()) {
@@ -329,6 +340,11 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 		!GetParent(hwnd) && !GetWindow(hwnd,GW_OWNER)) {
 		TBBUTTON btn = {-2/*I_IMAGENONE*/, 0, TBSTATE_ENABLED/*|TBSTATE_ELLIPSES*/, BTNS_BUTTON, {0, 0}, 0, 0};
 
+		TCHAR title[BUFFER_LEN];
+
+		if (!GetWindowText(hwnd, title, BUFFER_LEN))
+			title[0] = '\0';
+
 		TaskBarMap::iterator found = pThis->_map.find(hwnd);
 		int last_id = 0;
 
@@ -344,9 +360,14 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 			int bmp_idx = SendMessage(pThis->_htoolbar, TB_ADDBITMAP, 1, (LPARAM)&ab);
 
-			TaskBarEntry bmp = {pThis->_next_id++, hbmp, bmp_idx, 0, 0};
+			TaskBarEntry entry;
 
-			pThis->_map[hwnd] = bmp;
+			entry._id = pThis->_next_id++;
+			entry._hbmp = hbmp;
+			entry._bmp_idx = bmp_idx;
+			entry._title = title;
+
+			pThis->_map[hwnd] = entry;
 			found = pThis->_map.find(hwnd);
 		}
 
@@ -355,18 +376,11 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 		++entry._used;
 		btn.idCommand = entry._id;
 
-		TCHAR title[BUFFER_LEN];
+		if (hwnd == GetForegroundWindow())
+			btn.fsState |= TBSTATE_PRESSED|TBSTATE_CHECKED;
 
-		if (!GetWindowText(hwnd, title, BUFFER_LEN))
-			title[0] = '\0';
-
-		//@@ refresh window titles
-
-		 // create new toolbar buttons for new windows
 		if (!last_id) {
-			if (hwnd == GetForegroundWindow())
-				btn.fsState |= TBSTATE_PRESSED/*|TBSTATE_MARKED*/;
-
+			 // create new toolbar buttons for new windows
 			if (title[0])
 				btn.iString = (INT_PTR)title;
 
@@ -374,11 +388,30 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			entry._btn_idx = SendMessage(pThis->_htoolbar, TB_BUTTONCOUNT, 0, 0);
 
 			SendMessage(pThis->_htoolbar, TB_INSERTBUTTON, entry._btn_idx, (LPARAM)&btn);
+		} else {
+			 // refresh attributes of existing buttons
+			if (btn.fsState != entry._fsState)
+				SendMessage(pThis->_htoolbar, TB_SETSTATE, entry._id, MAKELONG(btn.fsState,0));
+
+			if (entry._title != title) {
+				TBBUTTONINFO info;
+
+				info.cbSize = sizeof(TBBUTTONINFO);
+				info.dwMask = TBIF_TEXT;
+				info.pszText = title;
+
+				SendMessage(pThis->_htoolbar, TB_SETBUTTONINFO, entry._id, (LPARAM)&info);
+
+				entry._title = title;
+			}
 		}
 
-		 // move iconic windows out of sight
+		entry._fsState = btn.fsState;
+
+		 // move minimized windows out of sight
 		if (IsIconic(hwnd)) {
 			RECT rect;
+
 			GetWindowRect(hwnd, &rect);
 
 			if (rect.bottom > 0)

@@ -332,10 +332,6 @@ SOURCE=.\res\toolbar.bmp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\taskbar\shellhook.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\taskbar\taskbar.cpp
 # End Source File
 # Begin Source File

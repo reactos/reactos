@@ -68,6 +68,7 @@ struct String
  : public string
 #endif
 {
+	String& operator=(LPCTSTR s) {assign(s); return *this;}
 	operator LPCTSTR() const {return c_str();}
 };
 
