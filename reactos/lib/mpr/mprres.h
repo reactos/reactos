@@ -20,4 +20,13 @@
 
 #define IDS_ENTIRENETWORK 1
 
+#define IDD_PROXYDLG     0x400
+
+#define IDC_PROXY        0x401
+#define IDC_REALM        0x402
+#define IDC_USERNAME     0x403
+#define IDC_PASSWORD     0x404
+#define IDC_SAVEPASSWORD 0x405
+#define IDC_EXPLAIN      0x406
+
 #endif /* ndef __WINE_MPRRES_H__ */

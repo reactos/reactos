@@ -2,6 +2,7 @@
  * MPR Network Provider Services functions
  *
  * Copyright 1999 Ulrich Weigand
+ * Copyright 2004 Mike McCormack for CodeWeavers Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,24 +19,109 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "config.h"
+
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
+#include "winuser.h"
 #include "winnetwk.h"
 #include "netspi.h"
 #include "wine/debug.h"
+#include "winerror.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
+#include "wine/unicode.h"
+
+#include "mprres.h"
+
+/***********************************************************************
+ *         NPS_ProxyPasswordDialog
+ */
+static INT_PTR WINAPI NPS_ProxyPasswordDialog(
+    HWND hdlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+    HWND hitem;
+    LPAUTHDLGSTRUCTA lpAuthDlgStruct;
+
+    if( uMsg == WM_INITDIALOG )
+    {
+        TRACE("WM_INITDIALOG (%08lx)\n", lParam);
+
+        /* save the parameter list */
+        lpAuthDlgStruct = (LPAUTHDLGSTRUCTA) lParam;
+        SetWindowLongPtrW( hdlg, GWLP_USERDATA, lParam );
+
+        if( lpAuthDlgStruct->lpExplainText )
+        {
+            hitem = GetDlgItem( hdlg, IDC_EXPLAIN );
+            SetWindowTextA( hitem, lpAuthDlgStruct->lpExplainText );
+        }
+
+        /* extract the Realm from the proxy response and show it */
+        if( lpAuthDlgStruct->lpResource )
+        {
+            hitem = GetDlgItem( hdlg, IDC_REALM );
+            SetWindowTextA( hitem, lpAuthDlgStruct->lpResource );
+        }
+
+        return TRUE;
+    }
+
+    lpAuthDlgStruct = (LPAUTHDLGSTRUCTA) GetWindowLongPtrW( hdlg, GWLP_USERDATA );
+
+    switch( uMsg )
+    {
+    case WM_COMMAND:
+        if( wParam == IDOK )
+        {
+            WCHAR username[0x20], password[0x20];
+
+            username[0] = 0;
+            hitem = GetDlgItem( hdlg, IDC_USERNAME );
+            if( hitem )
+                GetWindowTextA( hitem, lpAuthDlgStruct->lpUsername, lpAuthDlgStruct->cbUsername );
+            
+            password[0] = 0;
+            hitem = GetDlgItem( hdlg, IDC_PASSWORD );
+            if( hitem )
+                GetWindowTextA( hitem, lpAuthDlgStruct->lpPassword, lpAuthDlgStruct->cbPassword );
+
+            EndDialog( hdlg, WN_SUCCESS );
+            return TRUE;
+        }
+        if( wParam == IDCANCEL )
+        {
+            EndDialog( hdlg, WN_CANCEL );
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
 
 /*****************************************************************
  *  NPSAuthenticationDialogA [MPR.@]
  */
 DWORD WINAPI NPSAuthenticationDialogA( LPAUTHDLGSTRUCTA lpAuthDlgStruct )
 {
-    FIXME( "(%p): stub\n", lpAuthDlgStruct );
-    return WN_NOT_SUPPORTED;
+    HMODULE hwininet = GetModuleHandleA( "mpr.dll" );
+
+    TRACE("%p\n", lpAuthDlgStruct);
+
+    if( !lpAuthDlgStruct )
+        return WN_BAD_POINTER;
+    if( lpAuthDlgStruct->cbStructure < sizeof *lpAuthDlgStruct )
+        return WN_BAD_POINTER;
+
+    TRACE("%s %s %s\n",lpAuthDlgStruct->lpResource,
+          lpAuthDlgStruct->lpOUTitle, lpAuthDlgStruct->lpExplainText);
+
+    return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),
+             lpAuthDlgStruct->hwndOwner, NPS_ProxyPasswordDialog, 
+             (LPARAM) lpAuthDlgStruct );
 }
 
 /*****************************************************************
