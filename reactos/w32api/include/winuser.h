@@ -3377,7 +3377,6 @@ int WINAPI GetKeyNameTextA(LONG,LPSTR,int);
 int WINAPI GetKeyNameTextW(LONG,LPWSTR,int);
 SHORT WINAPI GetKeyState(int);
 HWND WINAPI GetLastActivePopup(HWND);
-DWORD WINAPI GetLastError(void);
 HMENU WINAPI GetMenu(HWND);
 LONG WINAPI GetMenuCheckMarkDimensions(void);
 DWORD WINAPI GetMenuContextHelpId(HMENU);
