@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.90 2002/09/08 10:23:03 chorns Exp $
+; $Id: ntdll.def,v 1.91 2003/01/08 19:50:39 robd Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -935,12 +935,12 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
-wine_dbgstr_an
-wine_dbgstr_wn
-wine_dbgstr_guid
-wine_dbg_vprintf
-wine_dbg_printf
-wine_dbg_log
+;wine_dbgstr_an
+;wine_dbgstr_wn
+;wine_dbgstr_guid
+;wine_dbg_vprintf
+;wine_dbg_printf
+;wine_dbg_log
 InterlockedIncrement@4
 InterlockedDecrement@4
 InterlockedExchange@8
