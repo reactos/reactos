@@ -1,0 +1,4 @@
+LIBRARY userenv.dll
+EXPORTS
+InitializeProfiles@0
+;EOF
