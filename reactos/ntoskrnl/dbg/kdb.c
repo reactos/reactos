@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.11 2003/07/21 21:53:51 royce Exp $
+/* $Id: kdb.c,v 1.12 2003/12/14 18:03:59 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -32,7 +32,6 @@
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <limits.h>
-#include <ctype.h>
 #include <internal/kd.h>
 #include "kdb.h"
 
