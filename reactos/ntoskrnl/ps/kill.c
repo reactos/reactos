@@ -448,7 +448,7 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      KeGetCurrentThread()->PreviousMode,
 				      (PVOID*)&TerminationPort,
 				      NULL);   

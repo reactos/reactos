@@ -729,10 +729,10 @@ typedef struct _VM_COUNTERS_
 // Information class 4
 typedef struct _KERNEL_USER_TIMES
 {
-	TIME CreateTime;
-	TIME ExitTime;
-	TIME KernelTime;
-	TIME UserTime;
+	LARGE_INTEGER CreateTime;
+	LARGE_INTEGER ExitTime;
+	LARGE_INTEGER KernelTime;
+	LARGE_INTEGER UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
 // Information class 9
@@ -1324,9 +1324,9 @@ typedef struct _SYSTEM_PROCESSES_NT4
  SIZE_T         NextEntryDelta;
  ULONG          ThreadCount;
  ULONG          Reserved1[6];
- TIME           CreateTime;
- TIME           UserTime;
- TIME           KernelTime;
+ LARGE_INTEGER  CreateTime;
+ LARGE_INTEGER  UserTime;
+ LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
  ULONG          ProcessId;
@@ -1342,9 +1342,9 @@ typedef struct _SYSTEM_PROCESSES_NT5
  SIZE_T         NextEntryDelta;
  ULONG          ThreadCount;
  ULONG          Reserved1[6];
- TIME           CreateTime;
- TIME           UserTime;
- TIME           KernelTime;
+ LARGE_INTEGER  CreateTime;
+ LARGE_INTEGER  UserTime;
+ LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
  ULONG          ProcessId;

@@ -134,7 +134,7 @@ NtCreatePort (PHANDLE		      PortHandle,
 
   /* Ask Ob to create the object */
   Status = ObCreateObject (ExGetPreviousMode(),
-			   & LpcPortObjectType,
+			   LpcPortObjectType,
 			   ObjectAttributes,
 			   ExGetPreviousMode(),
 			   NULL,

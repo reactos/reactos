@@ -50,7 +50,7 @@ NtQueryInformationPort (IN	HANDLE	PortHandle,
   
   Status = ObReferenceObjectByHandle (PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID *) & Port,
 				      NULL);

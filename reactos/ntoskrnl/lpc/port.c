@@ -21,7 +21,7 @@
 
 /* GLOBALS *******************************************************************/
 
-OBJECT_TYPE	LpcPortObjectType = {0, };
+POBJECT_TYPE	LpcPortObjectType = 0;
 ULONG		LpcpNextMessageId = 0; /* 0 is not a valid ID */
 FAST_MUTEX	LpcpLock; /* global internal sync in LPC facility */
 
@@ -37,30 +37,32 @@ static GENERIC_MAPPING ExpPortMapping = {
 NTSTATUS INIT_FUNCTION
 NiInitPort (VOID)
 {
-   RtlZeroMemory (& LpcPortObjectType, sizeof (OBJECT_TYPE));
+    /* Allocate Memory for the LPC Object */
+    LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+    RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
    
-   RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType.TypeName,L"Port");
+    RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType->TypeName,L"Port");
    
-   LpcPortObjectType.Tag = TAG('L', 'P', 'R', 'T');
-   LpcPortObjectType.MaxObjects = ULONG_MAX;
-   LpcPortObjectType.MaxHandles = ULONG_MAX;
-   LpcPortObjectType.TotalObjects = 0;
-   LpcPortObjectType.TotalHandles = 0;
-   LpcPortObjectType.PagedPoolCharge = 0;
-   LpcPortObjectType.NonpagedPoolCharge = sizeof(EPORT);
-   LpcPortObjectType.Mapping = &ExpPortMapping;
-   LpcPortObjectType.Dump = NULL;
-   LpcPortObjectType.Open = NULL;
-   LpcPortObjectType.Close = NiClosePort;
-   LpcPortObjectType.Delete = NiDeletePort;
-   LpcPortObjectType.Parse = NULL;
-   LpcPortObjectType.Security = NULL;
-   LpcPortObjectType.QueryName = NULL;
-   LpcPortObjectType.OkayToClose = NULL;
-   LpcPortObjectType.Create = NiCreatePort;
-   LpcPortObjectType.DuplicationNotify = NULL;
+   LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
+   LpcPortObjectType->MaxObjects = ULONG_MAX;
+   LpcPortObjectType->MaxHandles = ULONG_MAX;
+   LpcPortObjectType->TotalObjects = 0;
+   LpcPortObjectType->TotalHandles = 0;
+   LpcPortObjectType->PagedPoolCharge = 0;
+   LpcPortObjectType->NonpagedPoolCharge = sizeof(EPORT);
+   LpcPortObjectType->Mapping = &ExpPortMapping;
+   LpcPortObjectType->Dump = NULL;
+   LpcPortObjectType->Open = NULL;
+   LpcPortObjectType->Close = NiClosePort;
+   LpcPortObjectType->Delete = NiDeletePort;
+   LpcPortObjectType->Parse = NULL;
+   LpcPortObjectType->Security = NULL;
+   LpcPortObjectType->QueryName = NULL;
+   LpcPortObjectType->OkayToClose = NULL;
+   LpcPortObjectType->Create = NiCreatePort;
+   LpcPortObjectType->DuplicationNotify = NULL;
 
-   ObpCreateTypeObject(& LpcPortObjectType);
+   ObpCreateTypeObject(LpcPortObjectType);
    
    LpcpNextMessageId = 0;
 

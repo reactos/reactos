@@ -253,9 +253,9 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
        case ThreadTimes:
 	 u.TTI.KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
          u.TTI.UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
-         u.TTI.CreateTime = (TIME) Thread->CreateTime;
+         u.TTI.CreateTime = Thread->CreateTime;
          /*This works*/
-	 u.TTI.ExitTime = (TIME) Thread->ExitTime;
+	 u.TTI.ExitTime = Thread->ExitTime;
          break;
 
        case ThreadQuerySetWin32StartAddress:

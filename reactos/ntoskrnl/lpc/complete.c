@@ -46,7 +46,7 @@ NtCompleteConnectPort (HANDLE hServerSideCommPort)
    */
   Status = ObReferenceObjectByHandle (hServerSideCommPort,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&ReplyPort,
 				      NULL);

@@ -88,7 +88,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);
@@ -154,7 +154,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);

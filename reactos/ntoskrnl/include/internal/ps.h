@@ -160,11 +160,11 @@ typedef struct _ETHREAD
 {
   KTHREAD Tcb;
   union {
-  	TIME CreateTime;
+  	LARGE_INTEGER CreateTime;
   	UCHAR NestedFaultCount:2;
   	UCHAR ApcNeeded:1;
   };
-  TIME ExitTime;
+  LARGE_INTEGER ExitTime;
   LIST_ENTRY LpcReplyChain;
   NTSTATUS ExitStatus;
   PVOID OfsChain;
@@ -316,14 +316,10 @@ struct _EPROCESS
   ULONG                 LockCount;                    /* 07C */
 
   /* Time of process creation. */
-#ifdef __USE_W32API
-  LARGE_INTEGER                  CreateTime;                   /* 080 */
-#else
-  TIME                  CreateTime;                   /* 080 */
-#endif
+  LARGE_INTEGER         CreateTime;                   /* 080 */
 
   /* Time of process exit. */
-  TIME                  ExitTime;                     /* 088 */
+  LARGE_INTEGER         ExitTime;                     /* 088 */
   /* Unknown. */
   PKTHREAD              LockOwner;                    /* 090 */
   /* Process id. */

@@ -30,7 +30,7 @@
  */
 NTSTATUS STDCALL 
 LpcSendTerminationPort (IN PEPORT Port,
-			IN TIME	CreationTime)
+			IN LARGE_INTEGER CreationTime)
 {
   NTSTATUS Status;
   LPC_TERMINATION_MESSAGE Msg;
@@ -180,7 +180,7 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);
@@ -231,7 +231,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS, 
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);

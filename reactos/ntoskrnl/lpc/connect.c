@@ -66,7 +66,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
    * Create a port to represent our side of the connection
    */
   Status = ObCreateObject (KernelMode,
-			   & LpcPortObjectType,
+			   LpcPortObjectType,
 			   NULL,
 			   KernelMode,
 			   NULL,
@@ -333,7 +333,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
                                     0,
                                     NULL,
                                     PORT_ALL_ACCESS,  /* DesiredAccess */
-                                    & LpcPortObjectType,
+                                    LpcPortObjectType,
                                     UserMode,
                                     NULL,
                                     (PVOID*)&NamedPort);
@@ -547,7 +547,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   
   Status = ObReferenceObjectByHandle(NamedPortHandle,
 				     PORT_ALL_ACCESS,
-				     & LpcPortObjectType,
+				     LpcPortObjectType,
 				     UserMode,
 				     (PVOID*)&NamedPort,
 				     NULL);
@@ -563,7 +563,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   if (AcceptIt)
     {
       Status = ObCreateObject(ExGetPreviousMode(),
-			      & LpcPortObjectType,
+			      LpcPortObjectType,
 			      NULL,
 			      ExGetPreviousMode(),
 			      NULL,
