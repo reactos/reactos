@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.9 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: connect.c,v 1.10 2002/01/03 22:52:29 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -584,7 +584,6 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	sizeof(LPC_MESSAGE_HEADER);
       CReply->ConnectDataLength = 0;
     }
-
   if (AcceptIt != 1)
     {	
       EiReplyOrRequestPort(ConnectionRequest->Sender,
@@ -697,13 +696,14 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     }
   CReply->MaximumMessageSize = 0x148;
 
+
   /*
    * Connect the two ports
    */
   OurPort->OtherPort = ConnectionRequest->Sender;
   OurPort->OtherPort->OtherPort = OurPort;
   EiReplyOrRequestPort(ConnectionRequest->Sender,
-		       LpcMessage,
+		       (PLPC_MESSAGE)CReply,
 		       LPC_REPLY,
 		       OurPort);
   ExFreePool(ConnectionRequest);

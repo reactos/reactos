@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2001/08/22 03:53:51 rex Exp $
+# $Id: Makefile,v 1.3 2002/01/03 22:52:29 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -24,7 +24,7 @@ TARGET_LIBPATH = .
 
 TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
 
-TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -g
 
 
 TARGET_NAME_UP = halx86up

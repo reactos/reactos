@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.1 2001/12/31 19:06:48 dwelch Exp $
+/* $Id: slab.c,v 1.2 2002/01/03 22:52:29 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/slab.c
- * PURPOSE:     kernel memory managment functions
+ * PURPOSE:     Slab allocator.
  * PROGRAMMER:  David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *              Created 27/12/01
@@ -91,7 +91,8 @@ ExCreateSlabCache(PUNICODE_STRING Name, ULONG Size, ULONG Align,
   ObjectSize = Size + sizeof(SLAB_CACHE_BUFCTL);
   AlignSize = Align - (ObjectSize % Align);
   Slab->ObjectSize = ObjectSize + AlignSize;
-  Slab->ObjectsPerPage = (PAGESIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
+  Slab->ObjectsPerPage = 
+    (PAGESIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
   InitializeListHead(&Slab->PageListHead);
   KeInitializeSpinLock(&Slab->SlabLock);
   
@@ -135,7 +136,8 @@ ExGrowSlabCache(PSLAB_CACHE Slab)
 	}
       if (i == (Slab->ObjectsPerPage - 1))
 	{
-	  BufCtl->NextFree = (PSLAB_CACHE_BUFCTL)(Page + ((i + 1) * Slab->ObjectSize));
+	  BufCtl->NextFree = 
+	    (PSLAB_CACHE_BUFCTL)(Page + ((i + 1) * Slab->ObjectSize));
 	}
       else
 	{
@@ -155,9 +157,10 @@ ExAllocateSlabCache(PSLAB_CACHE Slab, BOOLEAN MayWait)
   BOOLEAN NewPage;
 
   KeAcquireSpinLock(&Slab->SlabLock, &oldIrql);
+  
   /*
-   * Check if there is a slab with free objects
-   * present, if so allocation from it, if
+   * Check if there is a page with free objects
+   * present, if so allocate from it, if
    * not grow the slab.
    */
   if (Slab->FirstFreePage == NULL)
@@ -172,22 +175,25 @@ ExAllocateSlabCache(PSLAB_CACHE Slab, BOOLEAN MayWait)
       Page = Slab->FirstFreePage;
       NewPage = FALSE;
     }
+  
   /*
-   * We shouldn't have got a page without free buffer.
+   * We shouldn't have got a page without free buffers.
    */
   if (Page->FirstFreeBuffer == NULL)
     {
       DPRINT1("First free page had no free buffers.\n");
       KeBugCheck(0);
     }
+
   /*
    * Allocate the first free object from the page.
    */
   Object = (PVOID)Page->FirstFreeBuffer + sizeof(SLAB_CACHE_BUFCTL);
   Page->FirstFreeBuffer = Page->FirstFreeBuffer->NextFree;
   Page->ReferenceCount++;
+
   /*
-   * If we just allocate all the objects from this page
+   * If we just allocated all the objects from this page
    * and it was the first free page then adjust the
    * first free page pointer and move the page to the head
    * of the list.
@@ -264,7 +270,7 @@ ExFreeSlabCache(PSLAB_CACHE Slab, PVOID Object)
 	  /*
 	   * If the page just become free then rearrange things.
 	   */
-	  if (current->ReferenceCount == (Slab->ObjectsPerPage - 1))
+	  if (current->ReferenceCount == 0)
 	    {
 	      RemoveEntryList(&current->PageListEntry);
 	      InsertTailList(&Slab->PageListHead, &current->PageListEntry);
@@ -303,7 +309,8 @@ ExDestroySlabCache(PSLAB_CACHE Slab)
 	{
 	  for (i = 0; i < Slab->ObjectsPerPage; i++)
 	    {
-	      Object = Base + (i * Slab->ObjectSize) + sizeof(SLAB_CACHE_BUFCTL);
+	      Object = Base + (i * Slab->ObjectSize) + 
+		sizeof(SLAB_CACHE_BUFCTL);
 	      Slab->Destructor(Object, Slab->BaseSize);
 	    }
 	}
