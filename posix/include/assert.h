@@ -1,4 +1,4 @@
-/* $Id: assert.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+/* $Id: assert.h,v 1.3 2002/05/17 01:42:41 hyperion Exp $
  */
 /*
  * assert.h
@@ -25,35 +25,28 @@
 #ifndef __ASSERT_H_INCLUDED__
 #define __ASSERT_H_INCLUDED__
 
-/* types */
+/* INCLUDES */
 
-/* constants */
+/* OBJECTS */
 
-/* prototypes */
+/* TYPES */
 
-/* macros */
+/* CONSTANTS */
+
+/* PROTOTYPES */
+
+/* MACROS */
 #ifdef NDEBUG
-#define assert(ignore) ((void) 0)
+#define assert(IGNORE) ((void) 0)
 #else /* !NDEBUG */
 
-#define assert(expression) \
-#ifdef __PSXDLL__
-
-/* headers for internal usage by psxdll.dll and ReactOS */
-#include <psxdll/stdio.h>
-#include <psxdll/stdlib.h>
-
-#else /* ! __PSXDLL__ */
-
-/* standard POSIX headers */
 #include <stdio.h>
 #include <stdlib.h>
 
-#endif
-
- if(!(expression)) \
+#define assert(EXPRESSION) \
+ if(!(EXPRESSION)) \
  { \
-  fputs("__FILE__, line __LINE__: assertion \"expression\" failed\n", stderr); \
+  fputs("__FILE__, line __LINE__: assertion \"EXPRESSION\" failed\n", stderr); \
   abort(); \
  }
 
