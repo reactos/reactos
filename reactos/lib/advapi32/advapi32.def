@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.16 2004/03/08 18:09:04 sedwards Exp $
+; $Id: advapi32.def,v 1.17 2004/03/20 04:32:05 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -176,7 +176,7 @@ GetUserNameW@8
 ;I_ScGetCurrentGroupStateW@12
 ;I_ScSetServiceBitsA@20
 ;I_ScSetServiceBitsW@20
-;ImpersonateLoggedOnUser@4
+ImpersonateLoggedOnUser@4
 ;ImpersonateNamedPipeClient@4
 ImpersonateSelf@4
 InitializeAcl@12
