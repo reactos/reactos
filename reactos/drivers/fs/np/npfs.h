@@ -6,7 +6,9 @@
 typedef struct _NPFS_DEVICE_EXTENSION
 {
   LIST_ENTRY PipeListHead;
+  LIST_ENTRY ThreadListHead;
   KMUTEX PipeListLock;
+  ULONG EmptyWaiterCount;
   ULONG MinQuota;
   ULONG DefaultQuota;
   ULONG MaxQuota;
@@ -20,6 +22,7 @@ typedef struct _NPFS_PIPE
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
   LIST_ENTRY WaiterListHead;
+  LIST_ENTRY EmptyBufferListHead;
   ULONG PipeType;
   ULONG ReadMode;
   ULONG WriteMode;
@@ -50,8 +53,28 @@ typedef struct _NPFS_FCB
   PVOID WritePtr;
   ULONG MaxDataLength;
 
-  KSPIN_LOCK DataListLock;	/* Data queue lock */
+  FAST_MUTEX DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
+
+typedef struct _NPFS_CONTEXT
+{
+  PDEVICE_OBJECT DeviceObject;
+  PIRP Irp;
+  PNPFS_FCB Fcb;
+  UCHAR MajorFunction;
+  BOOLEAN AllocatedFromPool;
+} NPFS_CONTEXT, *PNPFS_CONTEXT;
+
+typedef struct _NPFS_THREAD_CONTEXT
+{
+  ULONG Count;
+  KEVENT Event;
+  PNPFS_DEVICE_EXTENSION DeviceExt;
+  LIST_ENTRY ListEntry;
+  PVOID WaitObjectArray[MAXIMUM_WAIT_OBJECTS];
+  KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+  PNPFS_CONTEXT WaitContextArray[MAXIMUM_WAIT_OBJECTS];
+} NPFS_THREAD_CONTEXT, *PNPFS_THREAD_CONTEXT;
 
 typedef struct _NPFS_WAITER_ENTRY
 {

@@ -49,6 +49,7 @@ NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
 {
   PLIST_ENTRY CurrentEntry;
   PNPFS_WAITER_ENTRY Waiter;
+  KIRQL oldIrql;
 
   CurrentEntry = Pipe->WaiterListHead.Flink;
   while (CurrentEntry != &Pipe->WaiterListHead)
@@ -58,11 +59,15 @@ NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
           !Waiter->Irp->Cancel)
 	{
 	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
-
-          if (IoSetCancelRoutine(Waiter->Irp, NULL) != NULL)
-            {
+  
+	  IoAcquireCancelSpinLock(&oldIrql);
+          if (!Waiter->Irp->Cancel)
+	    {
+	      IoSetCancelRoutine(Waiter->Irp, NULL);
+              IoReleaseCancelSpinLock(oldIrql);
               return Waiter->Fcb;
             }
+          IoReleaseCancelSpinLock(oldIrql);
 	}
 
       CurrentEntry = CurrentEntry->Flink;
@@ -174,7 +179,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   /* Initialize data list. */
   if (Pipe->OutboundQuota)
     {
-      ClientFcb->Data = ExAllocatePool(NonPagedPool, Pipe->OutboundQuota);
+      ClientFcb->Data = ExAllocatePool(PagedPool, Pipe->OutboundQuota);
       if (ClientFcb->Data == NULL)
         {
           DPRINT("No memory!\n");
@@ -195,7 +200,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->ReadDataAvailable = 0;
   ClientFcb->WriteQuotaAvailable = Pipe->OutboundQuota;
   ClientFcb->MaxDataLength = Pipe->OutboundQuota;
-  KeInitializeSpinLock(&ClientFcb->DataListLock);
+  ExInitializeFastMutex(&ClientFcb->DataListLock);
   KeInitializeEvent(&ClientFcb->ConnectEvent, SynchronizationEvent, FALSE);
   KeInitializeEvent(&ClientFcb->Event, SynchronizationEvent, FALSE);
 
@@ -455,13 +460,17 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
    if (Pipe->InboundQuota)
      {
-       Fcb->Data = ExAllocatePool(NonPagedPool, Pipe->InboundQuota);
+       Fcb->Data = ExAllocatePool(PagedPool, Pipe->InboundQuota);
        if (Fcb->Data == NULL)
          {
            ExFreePool(Fcb);
 
            if (NewPipe)
              {
+               /* 
+                * FIXME:
+	        *   Lock the pipelist and remove the pipe from the list.
+	        */
                RtlFreeUnicodeString(&Pipe->PipeName);
                ExFreePool(Pipe);
              }
@@ -481,7 +490,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Fcb->ReadDataAvailable = 0;
    Fcb->WriteQuotaAvailable = Pipe->InboundQuota;
    Fcb->MaxDataLength = Pipe->InboundQuota;
-   KeInitializeSpinLock(&Fcb->DataListLock);
+   ExInitializeFastMutex(&Fcb->DataListLock);
 
    Pipe->CurrentInstances++;
 

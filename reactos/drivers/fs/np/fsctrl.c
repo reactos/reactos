@@ -46,6 +46,7 @@ NpfsAddListeningServerInstance(PIRP Irp,
 			       PNPFS_FCB Fcb)
 {
   PNPFS_WAITER_ENTRY Entry;
+  KIRQL oldIrql;
 
   Entry = ExAllocatePool(NonPagedPool, sizeof(NPFS_WAITER_ENTRY));
   if (Entry == NULL)
@@ -61,13 +62,15 @@ NpfsAddListeningServerInstance(PIRP Irp,
   Irp->Tail.Overlay.DriverContext[0] = Entry;
   InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
 
-  IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
-  
+  IoAcquireCancelSpinLock(&oldIrql);
   if (!Irp->Cancel)
     {
+      IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
+      IoReleaseCancelSpinLock(oldIrql);
       KeUnlockMutex(&Fcb->Pipe->FcbListLock);
       return STATUS_PENDING;
     }
+  IoReleaseCancelSpinLock(oldIrql);
   
   RemoveEntryList(&Entry->Entry);
   

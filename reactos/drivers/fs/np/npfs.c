@@ -73,8 +73,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    /* initialize the device extension */
    DeviceExtension = DeviceObject->DeviceExtension;
    InitializeListHead(&DeviceExtension->PipeListHead);
+   InitializeListHead(&DeviceExtension->ThreadListHead);
    KeInitializeMutex(&DeviceExtension->PipeListLock,
 		     0);
+   DeviceExtension->EmptyWaiterCount = 0;
 
    /* set the size quotas */
    DeviceExtension->MinQuota = PAGE_SIZE;
