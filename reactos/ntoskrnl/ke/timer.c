@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.57 2003/02/02 16:55:56 ekohl Exp $
+/* $Id: timer.c,v 1.58 2003/07/09 20:17:47 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -500,6 +500,9 @@ KeInitializeTimerImpl(VOID)
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
    boot_time=SystemBootTime;
    system_time=boot_time;
+
+   SharedUserData->TickCountLow = 0;
+   SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
 
    DPRINT("Finished KeInitializeTimerImpl()\n");
 }
