@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.3 2003/04/12 14:53:56 chorns Exp $ */
+/* $Id: cdmake.c,v 1.4 2003/06/21 09:11:24 guido Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -26,7 +26,7 @@
 #else
 #include <sys/io.h>
 #include <errno.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <dirent.h>
 #endif
 #include <ctype.h>
@@ -545,7 +545,11 @@ new_directory_record (struct dirent *entry,
   }
 
   convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
+#ifdef HAVE_D_TYPE
   if (entry->d_type == DT_DIR)
+#else
+  if (S_ISDIR(stbuf->st_mode))
+#endif
   {
     if (d->extension[0] != 0)
       error_exit("Directory with extension %s", entry->d_name);
@@ -710,17 +714,17 @@ make_directory_records (PDIR_RECORD d)
 
   d->first_record = NULL;
 
-  dirp = opendir(source); 
-
+#ifdef HAVE_D_TYPE
+  dirp = opendir(source);
   if (dirp != NULL)
     {
       while ((entry = readdir (dirp)) != NULL)
-	  {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-          continue; // skip self and parent
+        {
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue; // skip self and parent
 
-        if (entry->d_type == DT_REG) // normal file
-		    {
+	  if (entry->d_type == DT_REG) // normal file
+	    {
               // Check for an absolute path
               if (source[0] == DIR_SEPARATOR_CHAR)
                 {
@@ -735,26 +739,27 @@ make_directory_records (PDIR_RECORD d)
                   strcat(buf, source);
                   strcat(buf, entry->d_name);
                 }
-              if (stat(buf, &stbuf) == -1)
+
+	      if (stat(buf, &stbuf) == -1)
                 {
                   error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
                   return;
                 }
 
-		      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
-			{
-			  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
-			}
-		      else
-			{
-			  if (verbosity == VERBOSE)
-			    {
-			      printf("%d: file %s\n", d->level, buf);
-			    }
-			  (void) new_directory_record(entry, &stbuf, d);
-			}
+	      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+		{
+		  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
+		}
+	      else
+		{
+		  if (verbosity == VERBOSE)
+		    {
+		      printf("%d: file %s\n", d->level, buf);
+		    }
+		  (void) new_directory_record(entry, &stbuf, d);
+		}
          }
-       }
+      }
       closedir (dirp);
     }
   else
@@ -763,7 +768,7 @@ make_directory_records (PDIR_RECORD d)
       return;
     }
 
-  dirp = opendir(source); 
+  dirp = opendir(source);
   if (dirp != NULL)
     {
       while ((entry = readdir (dirp)) != NULL)
@@ -776,29 +781,30 @@ make_directory_records (PDIR_RECORD d)
 	      old_end_source = end_source;
 	      append_string_to_source(entry->d_name);
 	      *end_source++ = DIR_SEPARATOR_CHAR;
+              *end_source = 0;
 	      if (verbosity == VERBOSE)
 		{
-		  *end_source = 0;
 		  printf("%d: directory %s\n", d->level + 1, source);
 		}
 	      if (d->level < MAX_LEVEL)
 		{
-          // Check for an absolute path
-          if (source[0] == DIR_SEPARATOR_CHAR)
-            {
-              strcpy(buf, source);
-            }
-          else
-            {
-              getcwd(buf, sizeof(buf));
-              strcat(buf, DIR_SEPARATOR_STRING);
-              strcat(buf, source);
-            }
-          if (stat(buf, &stbuf) == -1)
-            {
-              error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
-              return;
-            }
+                  // Check for an absolute path
+                  if (source[0] == DIR_SEPARATOR_CHAR)
+                    {
+                      strcpy(buf, source);
+                    }
+                  else
+                    {
+                      getcwd(buf, sizeof(buf));
+                      strcat(buf, DIR_SEPARATOR_STRING);
+                      strcat(buf, source);
+                    }
+
+	          if (stat(buf, &stbuf) == -1)
+                   {
+                     error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+                     return;
+                   }
 		  new_d = new_directory_record(entry, &stbuf, d);
 		  new_d->next_in_path_table = root.next_in_path_table;
 		  root.next_in_path_table = new_d;
@@ -810,10 +816,100 @@ make_directory_records (PDIR_RECORD d)
 		  error_exit("Directory is nested too deep");
 		}
 	      end_source = old_end_source;
+	      *end_source = 0;
 	    }
-       }
+        }
       closedir (dirp);
     }
+  else
+    {
+      error_exit("Can't open %s\n", source);
+      return;
+    }
+
+#else
+
+  dirp = opendir(source);
+  if (dirp != NULL)
+    {
+      while ((entry = readdir (dirp)) != NULL)
+	{
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue; // skip self and parent
+
+          // Check for an absolute path
+          if (source[0] == DIR_SEPARATOR_CHAR)
+            {
+              strcpy(buf, source);
+              strcat(buf, DIR_SEPARATOR_STRING);
+              strcat(buf, entry->d_name);
+            }
+          else
+            {
+              getcwd(buf, sizeof(buf));
+              strcat(buf, DIR_SEPARATOR_STRING);
+              strcat(buf, source);
+              strcat(buf, entry->d_name);
+            }
+
+          if (stat(buf, &stbuf) == -1)
+            {
+              error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+              return;
+            }
+
+          if (S_ISDIR(stbuf.st_mode))
+	    {
+	      old_end_source = end_source;
+	      append_string_to_source(entry->d_name);
+	      *end_source++ = DIR_SEPARATOR_CHAR;
+	      *end_source = 0;
+	      if (verbosity == VERBOSE)
+		{
+		  printf("%d: directory %s\n", d->level + 1, source);
+		}
+
+	      if (d->level < MAX_LEVEL)
+		{
+		  new_d = new_directory_record(entry, &stbuf, d);
+		  new_d->next_in_path_table = root.next_in_path_table;
+		  root.next_in_path_table = new_d;
+		  new_d->level = d->level + 1;
+		  make_directory_records(new_d);
+		}
+	      else
+		{
+		  error_exit("Directory is nested too deep");
+		}
+
+	      end_source = old_end_source;
+              *end_source = 0;
+	    }
+          else if (S_ISREG(stbuf.st_mode))
+	    {
+	      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+		{
+		  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
+		}
+	      else
+		{
+		  if (verbosity == VERBOSE)
+		    {
+		      printf("%d: file %s\n", d->level, buf);
+		    }
+		  (void) new_directory_record(entry, &stbuf, d);
+		}
+	    }
+        }
+      closedir (dirp);
+    }
+  else
+    {
+      error_exit("Can't open %s\n", source);
+      return;
+    }
+
+#endif
 
   // sort directory
   d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
@@ -916,15 +1012,11 @@ static void pass(void)
       fill_sector();
     }
 
-
   // Volume Descriptor Set Terminator
-
   write_string("\377CD001\1");
   fill_sector();
 
-
   // Boot Catalog
-
   if (eltorito == TRUE)
     {
       boot_catalog_sector = cd.sector;
@@ -950,9 +1042,7 @@ static void pass(void)
       fill_sector();
     }
 
-
   // Boot Image
-
   if (eltorito == TRUE)
     {
       boot_image_sector = cd.sector;
@@ -984,9 +1074,7 @@ static void pass(void)
 //      fill_sector();
     }
 
-
   // Little Endian Path Table
-
   little_endian_path_table_sector = cd.sector;
   write_byte(1);
   write_byte(0);  // number of sectors in extended attribute record
@@ -1037,13 +1125,10 @@ static void pass(void)
     }
   fill_sector();
 
-
   // directories and files
-
   for (d = &root; d != NULL; d = d->next_in_path_table)
     {
       // write directory
-
       d->sector = cd.sector;
       write_directory_record(d, DOT_RECORD);
       write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD);
@@ -1058,7 +1143,6 @@ static void pass(void)
       bytes_in_directories += d->size;
 
       // write file data
-
       for (q = d->first_record; q != NULL; q = q->next_in_directory)
       {
         if ((q->flags & DIRECTORY_FLAG) == 0)
