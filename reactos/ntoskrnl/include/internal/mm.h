@@ -158,15 +158,18 @@ typedef struct _SECTION_OBJECT
 
 typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
 
+typedef struct _EPROCESS_QUOTA_ENTRY {
+    ULONG Usage;
+    ULONG Limit;
+    ULONG Peak;
+    ULONG Return;
+} EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
+
 typedef struct _EPROCESS_QUOTA_BLOCK {
-KSPIN_LOCK      QuotaLock;
-ULONG           ReferenceCount;
-ULONG           QuotaPeakPoolUsage[2];
-ULONG           QuotaPoolUsage[2];
-ULONG           QuotaPoolLimit[2];
-ULONG           PeakPagefileUsage;
-ULONG           PagefileUsage;
-ULONG           PagefileLimit;
+    EPROCESS_QUOTA_ENTRY    QuotaEntry[3];
+    LIST_ENTRY              QuotaList;
+    ULONG                   ReferenceCount;
+    ULONG                   ProcessCount;
 } EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
 /*

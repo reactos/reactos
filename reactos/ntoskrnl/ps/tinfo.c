@@ -316,7 +316,7 @@ KeSetPreviousMode (ULONG Mode)
 /*
  * @implemented
  */
-ULONG STDCALL
+KPROCESSOR_MODE STDCALL
 KeGetPreviousMode (VOID)
 {
   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;

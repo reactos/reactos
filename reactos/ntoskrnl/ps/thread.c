@@ -43,9 +43,10 @@ static BOOLEAN DoneInitYet = FALSE;
 static KEVENT PiReaperThreadEvent;
 static BOOLEAN PiReaperThreadShouldTerminate = FALSE;
 
-static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
-					  THREAD_WRITE,
-					  THREAD_EXECUTE,
+static GENERIC_MAPPING PiThreadMapping = {STANDARD_RIGHTS_READ | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION,
+					  STANDARD_RIGHTS_WRITE | THREAD_TERMINATE | THREAD_SUSPEND_RESUME | THREAD_ALERT |
+                      THREAD_SET_INFORMATION | THREAD_SET_CONTEXT,
+                      STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
 					  THREAD_ALL_ACCESS};
 
 /* FUNCTIONS ***************************************************************/
