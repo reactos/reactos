@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.21 2003/03/09 15:09:23 jfilby Exp $
+/* $Id: window.c,v 1.22 2003/03/12 05:40:46 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -777,10 +777,7 @@ MoveWindow(HWND hWnd,
 	   int nHeight,
 	   WINBOOL bRepaint)
 {
-    int flags = SWP_NOZORDER | SWP_NOACTIVATE;
-    if (!bRepaint) flags |= SWP_NOREDRAW;
-    return SetWindowPos( hWnd, 0, X, Y, nWidth, nHeight, SWP_NOZORDER |
-                         SWP_NOACTIVATE | bRepaint ? SWP_NOREDRAW : 0 );
+    return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
 }
 
 WINBOOL STDCALL
