@@ -1,0 +1,6 @@
+TARGETNAME=event
+TARGETPATH=$(BASEDIR)\lib
+TARGETTYPE=DRIVER
+
+SOURCES=event.c \
+        event.rc

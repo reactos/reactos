@@ -1,0 +1,1 @@
+all: mouse.o

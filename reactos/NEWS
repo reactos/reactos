@@ -1,0 +1,10 @@
+0.0.12:      Added support for multiple processes (not really tested)
+	     System calls
+	     kernel32 now compiles (only as a static library)
+	     Fixed invalid tss bug (hopefully)
+	     Added section support
+	     Added some of the ZwxxxVirtual calls
+	     Added prototype caching functions (only the Minix fsd actually
+	      uses them)
+	     Added handle access and type checking
+	     Prototype APC implementation (no support for user APCs)

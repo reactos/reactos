@@ -1,0 +1,32 @@
+- Cache Manager
+
+This document describes the current implementation of the cache manager. 
+
+- Description
+
+In its current state the CM (cache manager) only includes primitives to
+cache disk blocks, this is useful for filesystem metadata but it requires an
+additional copy operation when reading files from cache. This will be fixed.
+
+Each disk drive with data in the cache has an associated DCCB (Device Cache
+Control Block) which details all the blocks from the device in memory. If a
+filesystem requires cache services for a device it must call CbInitDccb to
+initialize this structure.
+
+Each block with data from a device has an associated CCB (Cache Control
+Block) with a pointer to the physical memory used to hold the block, and
+various state and locking information. When a filesystem requires a block
+from the device it calls CbAcquireForRead or CbAcquireForWrite which ensure
+the data for the block is uptodate (loading it from disk if necessary) and
+return a pointer to the associated CCB. When a filesystem has finished with
+a block it calls CbReleaseFromRead or CbReleaseFromWrite, it is important to
+call these functions because the CM can only release blocks from the cache
+if they have no active readers or writers. The CM also enforces cache
+consistency by ensuring that while multiple threads can be reading a block
+simultaneously, there is only ever one active writers. 
+
+The CM provides no support for deadlock prevention/detection as it has no
+knowledge of the layout of a a filesystem (nor should it have).
+
+- TODO
+
