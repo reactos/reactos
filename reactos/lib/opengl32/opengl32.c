@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.13 2004/02/06 20:25:33 royce Exp $
+/* $Id: opengl32.c,v 1.14 2004/02/09 08:00:15 vizzini Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -17,7 +17,13 @@
 #include <string.h>
 #include "opengl32.h"
 
-#define EXT_GET_DRIVERNAME		0x1001 /* ExtEscape code to get driver name */
+#define EXT_GET_DRIVERINFO		0x1101 /* ExtEscape code to get driver info */
+typedef struct tagEXTDRIVERINFO
+{
+	DWORD version;          /* driver interface version */
+	DWORD driver_version;	/* driver version */
+	WCHAR driver_name[256]; /* driver name */
+} EXTDRIVERINFO;
 
 /* function prototypes */
 /*static BOOL OPENGL32_LoadDrivers();*/
@@ -379,13 +385,13 @@ OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
  */
 GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc )
 {
-	WCHAR name[256];
 	DWORD dwInput = 0;
 	LONG ret;
+	EXTDRIVERINFO info;
 
 	/* get driver name */
-	ret = ExtEscape( hdc, EXT_GET_DRIVERNAME, sizeof (dwInput), (LPCSTR)&dwInput,
-	                 sizeof (name), (LPSTR)name );
+	ret = ExtEscape( hdc, EXT_GET_DRIVERINFO, sizeof (dwInput), (LPCSTR)&dwInput,
+	                 sizeof (EXTDRIVERINFO), (LPSTR)&info );
 	if (ret < 0)
 	{
 		DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
@@ -393,7 +399,7 @@ GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc )
 	}
 
 	/* load driver (or get a reference) */
-	return OPENGL32_LoadICD( name );
+	return OPENGL32_LoadICD( info.driver_name );
 }
 
 
@@ -485,8 +491,8 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 	LPCWSTR subKey =
 		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
-	/*DWORD size;*/
-	/*WCHAR driver[256];*/
+	DWORD size;
+	WCHAR driver[256];
 
 	if (name == NULL)
 		return ERROR_SUCCESS; /* nothing to do */
@@ -503,7 +509,7 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 	}
 
 	/* get subkey name */
-	/*size = sizeof (driver) / sizeof (driver[0]);*/
+	size = sizeof (driver) / sizeof (driver[0]);
 	ret = RegEnumKeyW( hKey, idx, name, *cName );
 	if (ret != ERROR_SUCCESS)
 	{

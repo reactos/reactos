@@ -332,12 +332,12 @@ rosglCreateLayerContext( HDC hdc, int layer )
 	GLRC *glrc;
 	HGLRC drvHglrc = NULL;
 
-	if (GetObjectType( hdc ) != OBJ_DC)
+/*	if (GetObjectType( hdc ) != OBJ_DC)
 	{
 		DBGPRINT( "Error: hdc is not a DC handle!" );
 		return NULL;
 	}
-
+*/
 	/* allocate our GLRC */
 	glrc = (GLRC*)HeapAlloc( GetProcessHeap(),
 	               HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, sizeof (GLRC) );
@@ -418,7 +418,6 @@ rosglCreateLayerContext( HDC hdc, int layer )
 
 	/* we have our GLRC in glrc and the ICD's GLRC in drvHglrc */
 	glrc->hglrc = drvHglrc;
-	glrc->iFormat = -1; /* what is this used for? */
 	glrc->icd = icd;
 
 	/* append glrc to context list */
@@ -553,7 +552,12 @@ int
 WINAPI
 rosglGetPixelFormat( HDC hdc )
 {
-	UNIMPLEMENTED;
+	if (OPENGL32_processdata.cachedHdc == hdc)
+		return OPENGL32_processdata.cachedFormat;
+
+	/* FIXME: create real implementation of this function */
+	DBGPRINT( "Warning: Pixel format not cached, returning 0" );
+
 	return 0;
 }
 
@@ -646,6 +650,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 			DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
 			return FALSE;
 		}
+		DBGPRINT( "Info: DrvSetContext succeeded!" );
 	}
 
 	/* make it current */
@@ -694,6 +699,9 @@ rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 		DBGPRINT( "Warning: DrvSetPixelFormat failed (%d)", GetLastError() );
 		return FALSE;
 	}
+
+	OPENGL32_processdata.cachedHdc = hdc;
+	OPENGL32_processdata.cachedFormat = iFormat;
 
 	return TRUE;
 }

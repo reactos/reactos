@@ -1,4 +1,4 @@
-; $Id: opengl32.edf,v 1.4 2004/02/06 17:22:55 royce Exp $
+; $Id: opengl32.edf,v 1.5 2004/02/09 08:00:15 vizzini Exp $
 ;
 ; opengl32.edf
 ;
@@ -374,25 +374,25 @@ glVertex4sv=glVertex4sv@4
 glVertexPointer=glVertexPointer@16
 glViewport=glViewport@16
 
-wglChoosePixelFormat=GDI32.ChoosePixelFormat
+wglChoosePixelFormat=rosglChoosePixelFormat@8
 wglCopyContext=rosglCopyContext@12
 wglCreateContext=rosglCreateContext@4
 wglCreateLayerContext=rosglCreateLayerContext@8
 wglDeleteContext=rosglDeleteContext@4
 wglDescribeLayerPlane=rosglDescribeLayerPlane@20
-wglDescribePixelFormat=GDI32.DescribePixelFormat
+wglDescribePixelFormat=rosglDescribePixelFormat@16
 wglGetCurrentContext=rosglGetCurrentContext@0
 wglGetCurrentDC=rosglGetCurrentDC@0
 ;wglGetDefaultProcAddress=rosglGetDefaultProcAddress@
 wglGetLayerPaletteEntries=rosglGetLayerPaletteEntries@20
-wglGetPixelFormat=GDI32.GetPixelFormat
+wglGetPixelFormat=rosglGetPixelFormat@4
 wglGetProcAddress=rosglGetProcAddress@4
 wglMakeCurrent=rosglMakeCurrent@8
 wglRealizeLayerPalette=rosglRealizeLayerPalette@12
 wglSetLayerPaletteEntries=rosglSetLayerPaletteEntries@20
-wglSetPixelFormat=GDI32.SetPixelFormat
+wglSetPixelFormat=rosglSetPixelFormat@12
 wglShareLists=rosglShareLists@8
-wglSwapBuffers=GDI32.SwapBuffers
+wglSwapBuffers=rosglSwapBuffers@4
 wglSwapLayerBuffers=rosglSwapLayerBuffers@8
 ;wglSwapMultipleBuffers=rosglSwapMultipleBuffers@
 wglUseFontBitmapsA=rosglUseFontBitmapsA@16

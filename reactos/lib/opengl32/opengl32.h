@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.11 2004/02/06 18:17:18 royce Exp $
+/* $Id: opengl32.h,v 1.12 2004/02/09 08:00:15 vizzini Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -148,7 +148,6 @@ typedef struct tagGLDRIVERDATA
 typedef struct tagGLRC
 {
 	GLDRIVERDATA *icd;  /* driver used for this context */
-	INT     iFormat;    /* current pixel format index - ? */
 	HDC     hdc;        /* DC handle */
 	BOOL    is_current; /* wether this context is current for some DC */
 	DWORD   thread_id;  /* thread holding this context */
@@ -165,6 +164,8 @@ typedef struct tagGLPROCESSDATA
 	HANDLE        driver_mutex; /* mutex to protect driver list */
 	GLRC  *glrc_list;           /* list of GL rendering contexts */
 	HANDLE glrc_mutex;          /* mutex to protect glrc list */
+	HDC    cachedHdc;           /* cached HDC from last SetPixelFormat */
+	INT    cachedFormat;        /* cached format from last SetPixelFormat */
 } GLPROCESSDATA;
 
 /* TLS data */
