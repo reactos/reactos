@@ -215,6 +215,12 @@ VBEQueryAvailModes(
    PVIDEO_MODE_INFORMATION ReturnedModes,
    PSTATUS_BLOCK StatusBlock);
 
+BOOL FASTCALL  
+VBEQueryCurrentMode(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE_INFORMATION VideoModeInfo,
+   PSTATUS_BLOCK StatusBlock);
+
 BOOL FASTCALL
 VBESetColorRegisters(
    PVBE_DEVICE_EXTENSION DeviceExtension,

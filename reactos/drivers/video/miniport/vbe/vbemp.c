@@ -442,7 +442,8 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
-         Result = VBEUnmapVideoMemory((PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+         Result = VBEUnmapVideoMemory(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             RequestPacket->StatusBlock);
          break;
 
@@ -482,6 +483,17 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_QUERY_CURRENT_MODE:
+         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION)) 
+         {
+            RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
+            return TRUE;
+         }
+         Result = VBEQueryCurrentMode(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+            (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer,
+            RequestPacket->StatusBlock);
+         break;
+         
       default:
          RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
          return FALSE;
@@ -652,6 +664,69 @@ VBEQueryNumAvailModes(
 }
 
 /*
+ * VBEQueryMode
+ *
+ * Returns information about one particular video mode.
+ */
+
+VOID FASTCALL  
+VBEQueryMode(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE_INFORMATION VideoMode,
+   ULONG VideoModeId)
+{
+   PVBE_MODEINFO VBEMode = &DeviceExtension->ModeInfo[VideoModeId];
+
+   VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
+   VideoMode->ModeIndex = VideoModeId;
+   VideoMode->VisScreenWidth = VBEMode->XResolution;
+   VideoMode->VisScreenHeight = VBEMode->YResolution;
+   VideoMode->ScreenStride = VBEMode->BytesPerScanLine;
+   VideoMode->NumberOfPlanes = VBEMode->NumberOfPlanes;
+   VideoMode->BitsPerPlane = VBEMode->BitsPerPixel / VBEMode->NumberOfPlanes;
+   VideoMode->Frequency = 0; /* FIXME */
+   VideoMode->XMillimeter = 0; /* FIXME */
+   VideoMode->YMillimeter = 0; /* FIXME */
+   if (VBEMode->BitsPerPixel > 8)
+   {
+      if (DeviceExtension->VBEVersion < 0x300)
+      {
+         VideoMode->NumberRedBits = VBEMode->RedMaskSize;
+         VideoMode->NumberGreenBits = VBEMode->GreenMaskSize;
+         VideoMode->NumberBlueBits = VBEMode->BlueMaskSize;
+         VideoMode->RedMask = ((1 << VBEMode->RedMaskSize) - 1) << VBEMode->RedFieldPosition;
+         VideoMode->GreenMask = ((1 << VBEMode->GreenMaskSize) - 1) << VBEMode->GreenFieldPosition;
+         VideoMode->BlueMask = ((1 << VBEMode->BlueMaskSize) - 1) << VBEMode->BlueFieldPosition;
+      }
+      else
+      {
+         VideoMode->NumberRedBits = VBEMode->LinRedMaskSize;
+         VideoMode->NumberGreenBits = VBEMode->LinGreenMaskSize;
+         VideoMode->NumberBlueBits = VBEMode->LinBlueMaskSize;
+         VideoMode->RedMask = ((1 << VBEMode->LinRedMaskSize) - 1) << VBEMode->LinRedFieldPosition;
+         VideoMode->GreenMask = ((1 << VBEMode->LinGreenMaskSize) - 1) << VBEMode->LinGreenFieldPosition;
+         VideoMode->BlueMask = ((1 << VBEMode->LinBlueMaskSize) - 1) << VBEMode->LinBlueFieldPosition;
+      }
+   }
+   else
+   {
+      VideoMode->NumberRedBits = 
+      VideoMode->NumberGreenBits = 
+      VideoMode->NumberBlueBits = 6;
+      VideoMode->RedMask = 
+      VideoMode->GreenMask = 
+      VideoMode->BlueMask = 0;
+   }
+   VideoMode->VideoMemoryBitmapWidth = VBEMode->XResolution;
+   VideoMode->VideoMemoryBitmapHeight = VBEMode->YResolution;
+   VideoMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
+      VIDEO_MODE_NO_OFF_SCREEN;
+   if (VideoMode->BitsPerPlane <= 8)
+      VideoMode->AttributeFlags |= VIDEO_MODE_PALETTE_DRIVEN;
+   VideoMode->DriverSpecificAttributeFlags = 0;
+}
+
+/*
  * VBEQueryAvailModes
  *
  * Returns information about each video mode supported by the adapter.
@@ -672,58 +747,33 @@ VBEQueryAvailModes(
         CurrentModeId < DeviceExtension->ModeCount;
         CurrentModeId++, CurrentMode++, CurrentVBEMode++)
    {
-      CurrentMode->Length = sizeof(VIDEO_MODE_INFORMATION);
-      CurrentMode->ModeIndex = CurrentModeId;
-      CurrentMode->VisScreenWidth = CurrentVBEMode->XResolution;
-      CurrentMode->VisScreenHeight = CurrentVBEMode->YResolution;
-      CurrentMode->ScreenStride = CurrentVBEMode->BytesPerScanLine;
-      CurrentMode->NumberOfPlanes = CurrentVBEMode->NumberOfPlanes;
-      CurrentMode->BitsPerPlane = CurrentVBEMode->BitsPerPixel /
-         CurrentVBEMode->NumberOfPlanes;
-      CurrentMode->Frequency = 0; /* FIXME */
-      CurrentMode->XMillimeter = 0; /* FIXME */
-      CurrentMode->YMillimeter = 0; /* FIXME */
-      if (CurrentVBEMode->BitsPerPixel > 8)
-      {
-         if (DeviceExtension->VBEVersion < 0x300)
-         {
-            CurrentMode->NumberRedBits = CurrentVBEMode->RedMaskSize;
-            CurrentMode->NumberGreenBits = CurrentVBEMode->GreenMaskSize;
-            CurrentMode->NumberBlueBits = CurrentVBEMode->BlueMaskSize;
-            CurrentMode->RedMask = ((1 << CurrentVBEMode->RedMaskSize) - 1) << CurrentVBEMode->RedFieldPosition;
-            CurrentMode->GreenMask = ((1 << CurrentVBEMode->GreenMaskSize) - 1) << CurrentVBEMode->GreenFieldPosition;
-            CurrentMode->BlueMask = ((1 << CurrentVBEMode->BlueMaskSize) - 1) << CurrentVBEMode->BlueFieldPosition;
-         }
-         else
-         {
-            CurrentMode->NumberRedBits = CurrentVBEMode->LinRedMaskSize;
-            CurrentMode->NumberGreenBits = CurrentVBEMode->LinGreenMaskSize;
-            CurrentMode->NumberBlueBits = CurrentVBEMode->LinBlueMaskSize;
-            CurrentMode->RedMask = ((1 << CurrentVBEMode->LinRedMaskSize) - 1) << CurrentVBEMode->LinRedFieldPosition;
-            CurrentMode->GreenMask = ((1 << CurrentVBEMode->LinGreenMaskSize) - 1) << CurrentVBEMode->LinGreenFieldPosition;
-            CurrentMode->BlueMask = ((1 << CurrentVBEMode->LinBlueMaskSize) - 1) << CurrentVBEMode->LinBlueFieldPosition;
-         }
-      }
-      else
-      {
-         CurrentMode->NumberRedBits = 
-         CurrentMode->NumberGreenBits = 
-         CurrentMode->NumberBlueBits = 6;
-         CurrentMode->RedMask = 
-         CurrentMode->GreenMask = 
-         CurrentMode->BlueMask = 0;
-      }
-      CurrentMode->VideoMemoryBitmapWidth = CurrentVBEMode->XResolution;
-      CurrentMode->VideoMemoryBitmapHeight = CurrentVBEMode->YResolution;
-      CurrentMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
-         VIDEO_MODE_NO_OFF_SCREEN;
-      if (CurrentMode->BitsPerPlane <= 8)
-         CurrentMode->AttributeFlags |= VIDEO_MODE_PALETTE_DRIVEN;
-      CurrentMode->DriverSpecificAttributeFlags = 0;
+      VBEQueryMode(DeviceExtension, CurrentMode, CurrentModeId);
    }
 
    StatusBlock->Information =
       sizeof(VIDEO_MODE_INFORMATION) * DeviceExtension->ModeCount;
+
+   return TRUE;
+}
+
+/*
+ * VBEQueryCurrentMode
+ *
+ * Returns information about current video mode.
+ */
+
+BOOL FASTCALL  
+VBEQueryCurrentMode(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MODE_INFORMATION VideoModeInfo,
+   PSTATUS_BLOCK StatusBlock)
+{
+   StatusBlock->Information = sizeof(VIDEO_MODE_INFORMATION);
+
+   VBEQueryMode(
+      DeviceExtension,
+      VideoModeInfo,
+      DeviceExtension->CurrentMode);
 
    return TRUE;
 }
