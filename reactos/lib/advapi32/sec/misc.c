@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.17 2004/05/26 19:53:48 navaraf Exp $
+/* $Id: misc.c,v 1.18 2004/05/27 14:50:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,7 +9,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
-#include <Accctrl.h>
+#include <accctrl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -68,7 +68,7 @@ GetFileSecurityA (LPCSTR lpFileName,
 		  DWORD nLength,
 		  LPDWORD lpnLengthNeeded)
 {
-  DPRINT("GetFileSecurityA: stub\n");
+  DPRINT1("GetFileSecurityA: stub\n");
   return TRUE;
 }
 
@@ -81,7 +81,7 @@ GetFileSecurityW (LPCWSTR lpFileName,
                   PSECURITY_DESCRIPTOR pSecurityDescriptor,
                   DWORD nLength, LPDWORD lpnLengthNeeded)
 {
-  DPRINT("GetFileSecurityW: stub\n");
+  DPRINT1("GetFileSecurityW: stub\n");
   return TRUE;
 }
 
@@ -122,7 +122,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
 		  SECURITY_INFORMATION RequestedInformation,
 		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  DPRINT("SetFileSecurityA : stub\n");
+  DPRINT1("SetFileSecurityW : stub\n");
   return TRUE;
 }
 
@@ -332,6 +332,7 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 
 //  *lpSize = len;
 //  strcpy(lpszName, name);
+  DPRINT1("GetUserNameA: stub\n");
   return TRUE;
 }
 
@@ -358,6 +359,7 @@ GetUserNameW( LPWSTR lpszName, LPDWORD lpSize )
 
 //    *lpSize = len;
 //    MultiByteToWideChar( CP_ACP, 0, name, -1, lpszName, len );
+    DPRINT1("GetUserNameW: stub\n");
     return TRUE;
 }
 
@@ -457,6 +459,7 @@ LookupPrivilegeValueW (LPCWSTR lpSystemName,
 		       LPCWSTR lpName,
 		       PLUID lpLuid)
 {
+  DPRINT1("LookupPrivilegeValueW: stub\n");
   return FALSE;
 }
 
@@ -473,6 +476,7 @@ LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
 			     LPDWORD cbDisplayName,
 			     LPDWORD lpLanguageId)
 {
+  DPRINT1("LookupPrivilegeDisplayNameA: stub\n");
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -490,6 +494,7 @@ LookupPrivilegeDisplayNameW (LPCWSTR lpSystemName,
 			     LPDWORD cbDisplayName,
 			     LPDWORD lpLanguageId)
 {
+  DPRINT1("LookupPrivilegeDisplayNameW: stub\n");
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -506,6 +511,7 @@ LookupPrivilegeNameA (LPCSTR lpSystemName,
 		      LPSTR lpName,
 		      LPDWORD cbName)
 {
+  DPRINT1("LookupPrivilegeNameA: stub\n");
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -522,6 +528,7 @@ LookupPrivilegeNameW (LPCWSTR lpSystemName,
 		      LPWSTR lpName,
 		      LPDWORD cbName)
 {
+  DPRINT1("LookupPrivilegeNameW: stub\n");
   SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
@@ -542,6 +549,7 @@ GetNamedSecurityInfoW(LPWSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
+  DPRINT1("GetNamedSecurityInfoW: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -561,6 +569,7 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
+  DPRINT1("GetNamedSecurityInfoA: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -579,6 +588,7 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
                       PACL pDacl,
                       PACL pSacl)
 {
+  DPRINT1("SetNamedSecurityInfoW: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -597,6 +607,7 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL pDacl,
                       PACL pSacl)
 {
+  DPRINT1("SetNamedSecurityInfoA: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
