@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.109 2003/05/13 21:28:26 chorns Exp $
+/* $Id: section.c,v 1.110 2003/05/14 10:52:46 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2620,12 +2620,12 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	      SectionSegments[i].WriteCopy = 
 		!(Characteristics & IMAGE_SECTION_CHAR_SHARED);
 	    }
-	  else if (Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_CODE)
 	    {
 	      SectionSegments[i].Protection = PAGE_EXECUTE_READ;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
-	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
 	      SectionSegments[i].WriteCopy = TRUE;
@@ -2644,11 +2644,11 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	  /*
 	   * Set up the attributes.
 	   */
-	  if (Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+	  if (Characteristics & IMAGE_SECTION_CHAR_CODE)
 	    {
 	      SectionSegments[i].Attributes = 0;
 	    }
-	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
 	    {
 	      SectionSegments[i].Attributes = 0;
 	    }
@@ -2765,19 +2765,19 @@ NtOpenSection(PHANDLE			SectionHandle,
 	      ACCESS_MASK		DesiredAccess,
 	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-   NTSTATUS Status;
-   
-   *SectionHandle = 0;
+  NTSTATUS Status;
 
-   Status = ObOpenObjectByName(ObjectAttributes,
-			       MmSectionObjectType,
-			       NULL,
-			       UserMode,
-			       DesiredAccess,
-			       NULL,
-			       SectionHandle);
+  *SectionHandle = 0;
 
-   return(Status);
+  Status = ObOpenObjectByName(ObjectAttributes,
+			      MmSectionObjectType,
+			      NULL,
+			      UserMode,
+			      DesiredAccess,
+			      NULL,
+			      SectionHandle);
+
+  return(Status);
 }
 
 NTSTATUS STATIC
@@ -2795,7 +2795,7 @@ MmMapViewOfSegment(PEPROCESS Process,
   KIRQL oldIrql;
 
   Status = MmCreateMemoryArea(Process,
-			      &Process->AddressSpace,
+			      AddressSpace,
 			      MEMORY_AREA_SECTION_VIEW,
 			      BaseAddress,
 			      ViewSize,
@@ -2808,12 +2808,12 @@ MmMapViewOfSegment(PEPROCESS Process,
 	      (*BaseAddress), (*BaseAddress) + ViewSize);
       return(Status);
     }
-  
+
   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-  InsertTailList(&Section->ViewListHead, 
+  InsertTailList(&Section->ViewListHead,
 		 &MArea->Data.SectionData.ViewListEntry);
   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-  
+
   ObReferenceObjectByPointer((PVOID)Section,
 			     SECTION_MAP_READ,
 			     NULL,
@@ -2824,7 +2824,7 @@ MmMapViewOfSegment(PEPROCESS Process,
   MArea->Data.SectionData.WriteCopyView = FALSE;
   MmInitialiseRegion(&MArea->Data.SectionData.RegionListHead,
 		     ViewSize, 0, Protect);
-  
+
   return(STATUS_SUCCESS);
 }
 
@@ -3379,13 +3379,13 @@ MmMapViewOfSection(IN PVOID SectionObject,
    AddressSpace = &Process->AddressSpace;
 
    MmLockSection(SectionObject);
-   
+
    if (Section->AllocationAttributes & SEC_IMAGE)
      {
        ULONG i;
        PVOID ImageBase;
-       ULONG ImageSize;	   
-       
+       ULONG ImageSize;
+
        MmLockAddressSpace(AddressSpace);
 
        ImageBase = *BaseAddress;
@@ -3393,7 +3393,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	 {
 	   ImageBase = Section->ImageBase;
 	 }
-       
+
        ImageSize = 0;
        for (i = 0; i < Section->NrSegments; i++)
 	 {
@@ -3426,11 +3426,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	       return(STATUS_UNSUCCESSFUL);
 	     }
 	 }
-				    
+
        for (i = 0; i < Section->NrSegments; i++)
 	 {
-	   PVOID SBaseAddress;	   	   
-	   
+	   PVOID SBaseAddress;
+
 	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
 	     {
 	       SBaseAddress = (PVOID)
@@ -3466,7 +3466,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
        for (i = 0; i < Section->NrSegments; i++)
 	 {
 	   if (IMAGE_SECTION_INITIALIZED_DATA ==
-               (Section->Segments[i].Characteristics &
+	       (Section->Segments[i].Characteristics &
 	        (IMAGE_SECTION_NOLOAD | IMAGE_SECTION_INITIALIZED_DATA)) &&
 	       Section->Segments[i].RawLength < Section->Segments[i].Length)
 	     {
@@ -3494,7 +3494,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	 {
 	   ViewOffset = SectionOffset->u.LowPart;
 	 }
-       
+
        if ((ViewOffset % PAGE_SIZE) != 0)
 	 {
 	   MmUnlockSection(Section);
@@ -3510,7 +3510,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	 {
 	   (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
 	 }
-       
+
        MmLockSectionSegment(Section->Segments);
        Status = MmMapViewOfSegment(Process,
 				   &Process->AddressSpace,
@@ -3527,7 +3527,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	   MmUnlockSection(Section);
 	   return(Status);
 	 }
-
      }
 
    MmUnlockSection(Section);
@@ -3581,19 +3580,117 @@ MmForceSectionClosed (DWORD	Unknown0,
 
 
 NTSTATUS STDCALL
-MmMapViewInSystemSpace (IN	PVOID	Section,
+MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 			OUT	PVOID	* MappedBase,
-			IN	PULONG	ViewSize)
+			IN OUT	PULONG	ViewSize)
 {
-  UNIMPLEMENTED;
-  return (STATUS_NOT_IMPLEMENTED);
+  PSECTION_OBJECT Section;
+  PMADDRESS_SPACE AddressSpace;
+  NTSTATUS Status;
+
+  DPRINT("MmMapViewInSystemSpace() called\n");
+
+  Section = (PSECTION_OBJECT)SectionObject;
+  AddressSpace = MmGetKernelAddressSpace();
+
+  MmLockSection(SectionObject);
+  MmLockAddressSpace(AddressSpace);
+
+  if ((*ViewSize) == 0)
+    {
+      (*ViewSize) = Section->MaximumSize.u.LowPart;
+    }
+  else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+    {
+      (*ViewSize) = Section->MaximumSize.u.LowPart;
+    }
+
+  MmLockSectionSegment(Section->Segments);
+
+  Status = MmMapViewOfSegment(NULL,
+			      AddressSpace,
+			      Section,
+			      Section->Segments,
+			      MappedBase,
+			      *ViewSize,
+			      PAGE_READWRITE,
+			      0);
+
+  MmUnlockSectionSegment(Section->Segments);
+  MmUnlockAddressSpace(AddressSpace);
+  MmUnlockSection(Section);
+
+  return Status;
 }
 
+
 NTSTATUS STDCALL
-MmUnmapViewInSystemSpace (DWORD	Unknown0)
+MmUnmapViewInSystemSpace (IN	PVOID	MappedBase)
 {
-  UNIMPLEMENTED;
-  return (STATUS_NOT_IMPLEMENTED);
+  PMEMORY_AREA MemoryArea;
+  PMADDRESS_SPACE AddressSpace;
+  PSECTION_OBJECT Section;
+  PMM_SECTION_SEGMENT Segment;
+  KIRQL oldIrql;
+  PLIST_ENTRY CurrentEntry;
+  PMM_REGION CurrentRegion;
+  NTSTATUS Status;
+
+  DPRINT("MmUnmapViewInSystemSpace() called\n");
+
+  AddressSpace = MmGetKernelAddressSpace();
+
+  DPRINT("Opening memory area at base address %x\n",
+	 MappedBase);
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
+					 MappedBase);
+  if (MemoryArea == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  MemoryArea->DeleteInProgress = TRUE;
+
+  MmLockSection(MemoryArea->Data.SectionData.Section);
+  MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
+  Section = MemoryArea->Data.SectionData.Section;
+  Segment = MemoryArea->Data.SectionData.Segment;
+  KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
+  RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
+  KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+
+  CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
+  while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
+    {
+      CurrentRegion =
+	CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
+      CurrentEntry = CurrentEntry->Flink;
+      ExFreePool(CurrentRegion);
+    }
+
+  if (MemoryArea->Data.SectionData.Section->AllocationAttributes & 
+      SEC_PHYSICALMEMORY)
+    {
+      Status = MmFreeMemoryArea(AddressSpace,
+				MappedBase,
+				0,
+				NULL,
+				NULL);
+    }
+  else
+    {
+      Status = MmFreeMemoryArea(AddressSpace,
+				MappedBase,
+				0,
+				MmFreeSectionPage,
+				MemoryArea);
+    }
+
+  MmUnlockSectionSegment(Segment);
+  MmUnlockSection(Section);
+  ObDereferenceObject(Section);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -3677,9 +3774,3 @@ MmCreateSection (OUT	PSECTION_OBJECT		* SectionObject,
 }
 
 /* EOF */
-
-
-
-
-
-

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.14 2002/10/01 19:27:19 chorns Exp $ */
+/* $Id: mmfuncs.h,v 1.15 2003/05/14 10:51:26 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -362,7 +362,7 @@ MmMapVideoDisplay (
 NTSTATUS
 STDCALL
 MmMapViewInSystemSpace (
-	IN	PVOID	Section,
+	IN	PVOID	SectionObject,
 	OUT	PVOID	* MappedBase,
 	IN	PULONG	ViewSize
 	);
@@ -535,7 +535,7 @@ MmUnmapVideoDisplay (
 NTSTATUS
 STDCALL
 MmUnmapViewInSystemSpace (
-	DWORD	Unknown0
+	IN	PVOID	MappedBase
 	);
 #if 0
 NTSTATUS
