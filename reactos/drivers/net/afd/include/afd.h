@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.27 2004/12/11 14:59:31 navaraf Exp $
+/* $Id: afd.h,v 1.28 2004/12/13 21:20:38 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -133,7 +133,7 @@ typedef struct _AFD_FCB {
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
     PTDI_CONNECTION_INFORMATION AddressFrom;
     AFD_TDI_OBJECT AddressFile, Connection;
-    AFD_IN_FLIGHT_REQUEST ListenIrp, ReceiveIrp, SendIrp;
+    AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp;
     AFD_DATA_WINDOW Send, Recv;
     FAST_MUTEX Mutex;
     KEVENT StateLockedEvent;
@@ -144,7 +144,6 @@ typedef struct _AFD_FCB {
     PVOID Context;
     DWORD PollState;
     UINT ContextSize;
-    PIRP PendingTdiIrp;
     LIST_ENTRY PendingIrpList[MAX_FUNCTIONS];
     LIST_ENTRY DatagramList;
 } AFD_FCB, *PAFD_FCB;

@@ -272,6 +272,7 @@ NTSTATUS TdiConnect(
     PIRP *Irp,
     PFILE_OBJECT ConnectionObject,
     PTDI_CONNECTION_INFORMATION RemoteAddress,
+    PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
 /*
@@ -284,7 +285,6 @@ NTSTATUS TdiConnect(
  */
 {
   PDEVICE_OBJECT DeviceObject;
-  IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
@@ -297,7 +297,7 @@ NTSTATUS TdiConnect(
 					  DeviceObject,            /* Device object */
 					  ConnectionObject,        /* File object */
 					  NULL,                    /* Event */
-					  &Iosb);                  /* Status */
+					  Iosb);                   /* Status */
   if (!*Irp) {
     return STATUS_INSUFFICIENT_RESOURCES;
   }
@@ -311,7 +311,7 @@ NTSTATUS TdiConnect(
                   RemoteAddress,          /* Request connection information */
                   RemoteAddress);         /* Return connection information */
 
-  Status = TdiCall(*Irp, DeviceObject, NULL, &Iosb);
+  Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
 
   return Status;
 }

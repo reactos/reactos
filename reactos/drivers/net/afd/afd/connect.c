@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.8 2004/12/11 14:59:31 navaraf Exp $
+/* $Id: connect.c,v 1.9 2004/12/13 21:20:37 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -194,9 +194,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      &ConnectReq->RemoteAddress );
 	
 	if( TargetAddress ) {
-	    Status = TdiConnect( &FCB->PendingTdiIrp, 
+	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest, 
 				 FCB->Connection.Object,
 				 TargetAddress,
+				 &FCB->ConnectIrp.Iosb,
 				 StreamSocketConnectComplete,
 				 FCB );
 
