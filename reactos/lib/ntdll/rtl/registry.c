@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.23 2003/08/14 14:52:13 ekohl Exp $
+/* $Id: registry.c,v 1.24 2003/08/30 14:47:36 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -184,8 +184,10 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   ULONG ResultSize;
   ULONG Index;
   ULONG StringLen;
+  ULONG ValueNameSize;
   PWSTR StringPtr;
   PWSTR ExpandBuffer;
+  PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
 
@@ -350,7 +352,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  RtlInitUnicodeString(&EnvValue,
 				       (PWSTR)ValueInfo->Data);
 		  EnvExpandedValue.Length = 0;
-		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2 * sizeof(WCHAR);
+		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2;
 		  EnvExpandedValue.Buffer = ExpandBuffer;
 		  *ExpandBuffer = 0;
 
@@ -484,7 +486,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 						&StringLen);
 
 		  StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
-		  Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
 						    REG_SZ,
 						    (PVOID)ExpandBuffer,
 						    StringLen,
@@ -537,13 +539,21 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      FullValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
 					      0,
 					      BufferSize);
-	      if (FullValueInfo == NULL)
+              if (FullValueInfo == NULL)
 		{
 		  Status = STATUS_NO_MEMORY;
 		  break;
 		}
-
-	      Index = 0;
+	      ValueNameSize = 256 * sizeof(WCHAR);
+	      ValueName = RtlAllocateHeap(RtlGetProcessHeap(),
+					  0,
+					  ValueNameSize);
+	      if (ValueName == NULL)
+	        {
+		  Status = STATUS_NO_MEMORY;
+		  break;
+		}
+              Index = 0;
 	      while (TRUE)
 		{
 		  Status = NtEnumerateValueKey(CurrentKeyHandle,
@@ -567,6 +577,28 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      break;
 		    }
 
+		  if (FullValueInfo->NameLength > ValueNameSize - sizeof(WCHAR))
+		    {
+		      /* Should not happen, because the name length is limited to 255 characters */
+		      RtlFreeHeap(RtlGetProcessHeap(),
+			          0,
+				  ValueName);
+		      ValueNameSize = FullValueInfo->NameLength + sizeof(WCHAR);
+                      ValueName = RtlAllocateHeap(RtlGetProcessHeap(),
+		                                  0,
+                                                  ValueNameSize);
+		      if (ValueName == NULL)
+		        {
+		          Status = STATUS_NO_MEMORY;
+		          break;
+		        }
+		    }
+
+		  memcpy(ValueName,
+                         FullValueInfo->Name,
+			 FullValueInfo->NameLength);
+		  ValueName[FullValueInfo->NameLength / sizeof(WCHAR)] = 0;
+
 		  DPRINT("FullValueInfo->Type: %lu\n", FullValueInfo->Type);
 		  if ((FullValueInfo->Type == REG_MULTI_SZ) &&
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
@@ -576,7 +608,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
-			  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+			  Status = QueryEntry->QueryRoutine(ValueName,
 							    REG_SZ,
 							    (PVOID)StringPtr,
 							    StringLen,
@@ -605,7 +637,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      RtlInitUnicodeString(&EnvValue,
 					   StringPtr);
 		      EnvExpandedValue.Length = 0;
-		      EnvExpandedValue.MaximumLength = FullValueInfo->DataLength * 2 * sizeof(WCHAR);
+		      EnvExpandedValue.MaximumLength = FullValueInfo->DataLength * 2;
 		      EnvExpandedValue.Buffer = ExpandBuffer;
 		      *ExpandBuffer = 0;
 
@@ -615,7 +647,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 						    &StringLen);
 
 		      StringLen = (wcslen(ExpandBuffer) + 1) * sizeof(WCHAR);
-		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+		      Status = QueryEntry->QueryRoutine(ValueName,
 							REG_SZ,
 							(PVOID)ExpandBuffer,
 							StringLen,
@@ -628,7 +660,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    }
 		  else
 		    {
-		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+		      Status = QueryEntry->QueryRoutine(ValueName,
 							FullValueInfo->Type,
 							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
 							FullValueInfo->DataLength,
@@ -647,7 +679,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      RtlFreeHeap(RtlGetProcessHeap(),
 			  0,
 			  FullValueInfo);
-
+	      RtlFreeHeap(RtlGetProcessHeap(),
+		          0,
+			  ValueName);
 	      if (!NT_SUCCESS(Status))
 		break;
 	    }

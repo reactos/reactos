@@ -13,7 +13,6 @@
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
-#include <internal/pool.h>
 #include <internal/registry.h>
 
 #define NDEBUG
@@ -157,9 +156,11 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PKEY_VALUE_FULL_INFORMATION FullValueInfo;
   ULONG BufferSize;
   ULONG ResultSize;
+  ULONG ValueNameSize;
   ULONG Index;
   ULONG StringLen;
   PWSTR StringPtr;
+  PWSTR ValueName;
 
   DPRINT("RtlQueryRegistryValues() called\n");
 
@@ -412,7 +413,14 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  Status = STATUS_NO_MEMORY;
 		  break;
 		}
-
+              ValueNameSize = 256 * sizeof(WCHAR);
+	      ValueName = ExAllocatePool(PagedPool,
+		                         ValueNameSize);
+	      if (ValueName == NULL)
+	        {
+		  Status = STATUS_NO_MEMORY;
+		  break;
+		}
 	      Index = 0;
 	      while (TRUE)
 		{
@@ -437,6 +445,24 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      break;
 		    }
 
+                  if (FullValueInfo->NameLength > ValueNameSize - sizeof(WCHAR))
+		    {
+		      /* Should not happen, because the name length is limited to 255 characters */
+		      ExFreePool(ValueName);
+		      ValueNameSize = FullValueInfo->NameLength + sizeof(WCHAR);
+		      ValueName = ExAllocatePool(PagedPool, ValueNameSize);
+		      if (ValueName == NULL)
+		        {
+			  Status = STATUS_NO_MEMORY;
+			  break;
+			}
+		    }
+
+	          RtlCopyMemory(ValueName, 
+		                FullValueInfo->Name,
+				FullValueInfo->NameLength);
+		  ValueName[FullValueInfo->NameLength / sizeof(WCHAR)] = 0;
+
 		  if ((FullValueInfo->Type == REG_MULTI_SZ) &&
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
@@ -446,7 +472,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
-			  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+			  Status = QueryEntry->QueryRoutine(ValueName,
 							    REG_SZ,
 							    (PVOID)StringPtr,
 							    StringLen,
@@ -459,7 +485,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    }
 		  else
 		    {
-		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+		      Status = QueryEntry->QueryRoutine(ValueName,
 							FullValueInfo->Type,
 							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
 							FullValueInfo->DataLength,
@@ -476,6 +502,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		}
 
 	      ExFreePool(FullValueInfo);
+	      ExFreePool(ValueName);
 
 	      if (!NT_SUCCESS(Status))
 		break;
