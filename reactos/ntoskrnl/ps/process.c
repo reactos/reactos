@@ -1497,40 +1497,106 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         if(Process->Peb != NULL)
         {
           PRTL_USER_PROCESS_PARAMETERS ProcParams;
+          UNICODE_STRING LocalDest;
+          ULONG ImagePathLen;
+          PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
 
           /* we need to attach to the process to make sure we're in the right context! */
           KeAttachProcess(&Process->Pcb);
           
-          ASSERT(Process->Peb->ProcessParameters); /* FIXME - must ProcessParameters be really != NULL? */
-          
-          ProcParams = Process->Peb->ProcessParameters;
-          if(ProcessInformationLength < sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR))
+          _SEH_TRY
           {
-            Status = STATUS_INFO_LENGTH_MISMATCH;
+            ProcParams = Process->Peb->ProcessParameters;
+            ImagePathLen = ProcParams->ImagePathName.Length;
           }
-          else
+          _SEH_HANDLE
           {
-            PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
-
-            _SEH_TRY
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+          
+          if(NT_SUCCESS(Status))
+          {
+            if(ProcessInformationLength < sizeof(UNICODE_STRING) + ImagePathLen + sizeof(WCHAR))
             {
-              DstPath->Length = ProcParams->ImagePathName.Length;
-              DstPath->MaximumLength = ProcParams->ImagePathName.Length + sizeof(WCHAR);
-              DstPath->Buffer = (PWSTR)(DstPath + 1);
+              Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+            else
+            {
+              PWSTR StrSource = NULL;
 
-              RtlCopyMemory(DstPath->Buffer, ProcParams->ImagePathName.Buffer, ProcParams->ImagePathName.Length);
-              DstPath->Buffer[DstPath->Length / sizeof(WCHAR)] = L'\0';
-              
-              if (ReturnLength)
+              /* create a DstPath structure on the stack */
+              _SEH_TRY
               {
-                *ReturnLength = sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR);
+                LocalDest.Length = ImagePathLen;
+                LocalDest.MaximumLength = ImagePathLen + sizeof(WCHAR);
+                LocalDest.Buffer = (PWSTR)(DstPath + 1);
+
+                /* save a copy of the pointer to the source buffer */
+                StrSource = ProcParams->ImagePathName.Buffer;
+              }
+              _SEH_HANDLE
+              {
+                Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+
+              if(NT_SUCCESS(Status))
+              {
+                /* now, let's allocate some anonymous memory to copy the string to.
+                   we can't just copy it to the buffer the caller pointed as it might
+                   be user memory in another context */
+                PWSTR PathCopy = ExAllocatePool(PagedPool, LocalDest.Length + sizeof(WCHAR));
+                if(PathCopy != NULL)
+                {
+                  /* make a copy of the buffer to the temporary buffer */
+                  _SEH_TRY
+                  {
+                    RtlCopyMemory(PathCopy, StrSource, LocalDest.Length);
+                    PathCopy[LocalDest.Length / sizeof(WCHAR)] = L'\0';
+                  }
+                  _SEH_HANDLE
+                  {
+                    Status = _SEH_GetExceptionCode();
+                  }
+                  _SEH_END;
+
+                  /* detach from the process */
+                  KeDetachProcess();
+
+                  /* only copy the string back to the caller if we were able to
+                     copy it into the temporary buffer! */
+                  if(NT_SUCCESS(Status))
+                  {
+                    /* now let's copy the buffer back to the caller */
+                    _SEH_TRY
+                    {
+                      *DstPath = LocalDest;
+                      RtlCopyMemory(LocalDest.Buffer, PathCopy, LocalDest.Length + sizeof(WCHAR));
+                      if (ReturnLength)
+                      {
+                        *ReturnLength = sizeof(UNICODE_STRING) + LocalDest.Length + sizeof(WCHAR);
+                      }
+                    }
+                    _SEH_HANDLE
+                    {
+                      Status = _SEH_GetExceptionCode();
+                    }
+                    _SEH_END;
+                  }
+
+                  /* we're done with the copy operation, free the temporary kernel buffer */
+                  ExFreePool(PathCopy);
+
+                  /* we need to bail because we're already detached from the process */
+                  break;
+                }
+                else
+                {
+                  Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
               }
             }
-            _SEH_HANDLE
-            {
-              Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
           }
           
           KeDetachProcess();
