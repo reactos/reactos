@@ -54,6 +54,8 @@
 #define	PM_RESIZE_CHILDREN		(WM_APP+0x17)
 #define	PM_GET_WIDTH			(WM_APP+0x18)
 
+#define	PM_REFRESH				(WM_APP+0x1B)
+
 
 #define	CLASSNAME_FRAME 		TEXT("CabinetWClass")	// same class name for frame window as in MS Explorer
 

@@ -369,6 +369,18 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\dot.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\dot_red.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\dot_trans.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
@@ -446,6 +458,10 @@ SOURCE=.\res\icoalig9.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icon.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\images.bmp
 # End Source File
 # Begin Source File
@@ -471,6 +487,18 @@ SOURCE=.\res\logov256.bmp
 # Begin Source File
 
 SOURCE=.\res\network.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\notify.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\notify_h.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\notify_t.ico
 # End Source File
 # Begin Source File
 
@@ -515,6 +543,10 @@ SOURCE=.\taskbar\desktopbar.cpp
 # Begin Source File
 
 SOURCE=.\taskbar\desktopbar.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\notifyhook\notifyhook.h
 # End Source File
 # Begin Source File
 

@@ -35,6 +35,7 @@
 #include "../externals.h"
 #include "../explorer_intres.h"
 #include "../desktop/desktop.h"
+#include "../taskbar/traynotify.h"
 
 #include "settings.h"
 
@@ -136,10 +137,10 @@ int	DesktopSettingsDlg::Command(int id, int code)
 			SendMessage(g_Globals._hwndShellView, PM_SET_ICON_ALGORITHM, alignment, 0);
 		}
 
-		return TRUE;
+		return 0;
 	}
 
-	return FALSE;
+	return 1;
 }
 
 
@@ -148,19 +149,15 @@ TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
 {
 }
 
-LRESULT TaskbarSettingsDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+int	TaskbarSettingsDlg::Command(int id, int code)
 {
-	switch(nmsg) {
-	  case WM_PAINT: {
-		PaintCanvas canvas(_hwnd);
-		FillRect(canvas, &canvas.rcPaint, GetStockBrush(GRAY_BRUSH));
-		break;}
-
-	  default:
-		return super::WndProc(nmsg, wparam, lparam);
+	switch(id) {
+	  case ID_CONFIG_NOTIFYAREA:
+		Dialog::DoModal(IDD_NOTIFYAREA, WINDOW_CREATOR(TrayNotifyDlg), _hwnd);
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 
@@ -169,17 +166,14 @@ StartmenuSettingsDlg::StartmenuSettingsDlg(HWND hwnd)
 {
 }
 
-LRESULT StartmenuSettingsDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+int	StartmenuSettingsDlg::Command(int id, int code)
 {
-	switch(nmsg) {
-	  case WM_PAINT: {
-		PaintCanvas canvas(_hwnd);
-		FillRect(canvas, &canvas.rcPaint, GetStockBrush(DKGRAY_BRUSH));
-		break;}
-
-	  default:
-		return super::WndProc(nmsg, wparam, lparam);
+/*
+	switch(id) {
+	  case ID_CONFIG_NOTIFYAREA:
+		Dialog::DoModal(IDD_NOTIFYAREA, WINDOW_CREATOR(TrayNotifyDlg), _hwnd);
+		return 0;
 	}
-
-	return 0;
+*/
+	return 1;
 }

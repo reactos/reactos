@@ -66,7 +66,7 @@ struct TaskbarSettingsDlg : public PropSheetPageDlg
 
 	TaskbarSettingsDlg(HWND hwnd);
 
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual int	Command(int id, int code);
 };
 
 
@@ -77,5 +77,5 @@ struct StartmenuSettingsDlg : public PropSheetPageDlg
 
 	StartmenuSettingsDlg(HWND hwnd);
 
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual int	Command(int id, int code);
 };

@@ -649,12 +649,19 @@ Dialog::~Dialog()
 	unregister_dialog(_hwnd);
 }
 
+LRESULT Dialog::Init(LPCREATESTRUCT pcs)
+{
+	return TRUE;	// set standard focus
+}
+
 int Dialog::DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 	s_window_creator = creator;
 	s_new_info = NULL;
+
+	///@todo call Window::pretranslate_msg()
 
 	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
 }
@@ -666,6 +673,8 @@ int Dialog::DoModal(UINT nid, CREATORFUNC_INFO creator, const void* info, HWND h
 	s_window_creator = (CREATORFUNC) creator;
 	s_new_info = NULL;
 
+	///@todo call Window::pretranslate_msg()
+
 	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
 }
 
@@ -676,7 +685,7 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 	if (pThis) {
 		switch(nmsg) {
 		  case WM_COMMAND:
-			pThis->Command(LOWORD(wparam), HIWORD(wparam));
+			SetWindowLong(hwnd, DWL_MSGRESULT, (LPARAM)pThis->Command(LOWORD(wparam), HIWORD(wparam)));
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFY:
@@ -699,6 +708,8 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 
 		if (pThis)
 			return pThis->Init(NULL);
+
+		return TRUE;
 	}
 
 	return FALSE;	// message has not been processed
@@ -713,10 +724,10 @@ int Dialog::Command(int id, int code)
 {
 	if (code == BN_CLICKED) {
 		EndDialog(_hwnd, id);
-		return TRUE;	// message has been processed
+		return 0;	// message has been processed
 	}
 
-	return FALSE;
+	return 1;
 }
 
 
@@ -751,8 +762,8 @@ void ResizeManager::HandleSize(int cx, int cy)
 		const ResizeEntry& e = *it;
 		RECT move = {0};
 
-		if (e._flags & MOVE_LEFT)	// Die verschiedenen Transformationsmatrizen in move ließen sich eigentlich
-			move.left += dx;		// cachen oder vorausberechnen, da sie nur von _flags und der Größenänderung abhängig sind.
+		if (e._flags & MOVE_LEFT)
+			move.left += dx;
 
 		if (e._flags & MOVE_RIGHT)
 			move.right += dx;
@@ -773,15 +784,18 @@ void ResizeManager::HandleSize(int cx, int cy)
 
 		if (flags != (SWP_NOMOVE|SWP_NOSIZE)) {
 			HWND hwnd = GetDlgItem(_hwnd, e._id);
-			WindowRect rect(hwnd);
-			ScreenToClient(_hwnd, rect);
 
-			rect.left	+= move.left;
-			rect.right	+= move.right;
-			rect.top	+= move.top;
-			rect.bottom	+= move.bottom;
+			if (hwnd) {
+				WindowRect rect(hwnd);
+				ScreenToClient(_hwnd, rect);
 
-			hDWP = DeferWindowPos(hDWP, hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, flags|SWP_NOACTIVATE|SWP_NOZORDER);
+				rect.left	+= move.left;
+				rect.right	+= move.right;
+				rect.top	+= move.top;
+				rect.bottom	+= move.bottom;
+
+				hDWP = DeferWindowPos(hDWP, hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, flags|SWP_NOACTIVATE|SWP_NOZORDER);
+			}
 		}
 	}
 
@@ -791,6 +805,7 @@ void ResizeManager::HandleSize(int cx, int cy)
 void ResizeManager::Resize(int dx, int dy)
 {
 	::SetWindowPos(_hwnd, 0, 0, 0, _min_wnd_size.cx+dx, _min_wnd_size.cy+dy, SWP_NOMOVE|SWP_NOACTIVATE);
+	MoveVisible(_hwnd);
 
 	ClientRect clnt_rect(_hwnd);
 	HandleSize(clnt_rect.right, clnt_rect.bottom);
@@ -1358,7 +1373,7 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 	if (pThis) {
 		switch(nmsg) {
 		  case WM_COMMAND:
-			pThis->Command(LOWORD(wparam), HIWORD(wparam));
+			SetWindowLong(hwnd, DWL_MSGRESULT, (LPARAM)pThis->Command(LOWORD(wparam), HIWORD(wparam)));
 			return TRUE;	// message has been processed
 
 		  case WM_NOTIFY:
@@ -1386,6 +1401,8 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 			if (pThis)
 				return pThis->Init(NULL);
 		}
+
+		return TRUE;
 	}
 
 	return FALSE;	// message has not been processed
@@ -1395,5 +1412,5 @@ int PropSheetPageDlg::Command(int id, int code)
 {
 	// override call to EndDialog in Dialog::Command();
 
-	return FALSE;
+	return 1;
 }

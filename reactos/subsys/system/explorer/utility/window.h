@@ -371,6 +371,7 @@ struct Dialog : public Window
 	static int DoModal(UINT nid, CREATORFUNC_INFO creator, const void* info, HWND hwndParent=0);
 
 protected:
+	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 };
@@ -953,6 +954,20 @@ protected:
 
 	static int CALLBACK CompareFunc(LPARAM lparam1, LPARAM lparam2, LPARAM lparamSort);
 };
+
+
+inline LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
+{
+	TVITEM tvItem;
+
+	tvItem.mask = TVIF_PARAM;
+	tvItem.hItem = hItem;
+
+	if (!TreeView_GetItem(hwndTreeView, &tvItem))
+		return 0;
+
+	return tvItem.lParam;
+}
 
 
 enum {TRAYBUTTON_LEFT=0, TRAYBUTTON_RIGHT, TRAYBUTTON_MIDDLE};

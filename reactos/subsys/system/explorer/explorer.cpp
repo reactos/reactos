@@ -254,6 +254,17 @@ HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
 	return hbmp;
 }
 
+int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
+{
+	HBITMAP hbmp = create_bitmap_from_icon(hIcon, hbrush_bkgnd, hdc_wnd);
+
+	int ret = ImageList_Add(himl, hbmp, 0);
+
+	DeleteObject(hbmp);
+
+	return ret;
+}
+
 
 int IconCache::s_next_id = ICID_DYNAMIC;
 
@@ -731,6 +742,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	 // initialize COM and OLE before creating the desktop window
 	OleInit usingCOM;
+
+	 // init common controls library
+	CommonControlInit usingCmnCtrl;
 
 	if (startup_desktop) {
 		g_Globals._desktops.init();

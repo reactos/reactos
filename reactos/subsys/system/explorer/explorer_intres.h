@@ -37,6 +37,13 @@
 #define IDS_MINIMIZE_ALL                33
 #define IDS_DESKTOP_NUM                 34
 #define IDS_VOLUME                      35
+#define IDS_ITEMS_CUR                   36
+#define IDS_ITEMS_CONFIGURED            37
+#define IDS_ITEMS_VISIBLE               38
+#define IDS_ITEMS_HIDDEN                39
+#define IDS_NOTIFY_SHOW                 40
+#define IDS_NOTIFY_HIDE                 41
+#define IDS_NOTIFY_AUTOHIDE             42
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -60,6 +67,7 @@
 #define IDB_LOGOV256                    130
 #define IDA_SEARCH_PROGRAM              133
 #define IDI_APPICON                     134
+#define IDA_TRAYNOTIFY                  134
 #define IDI_FLOATING                    135
 #define IDD_ABOUT_EXPLORER              135
 #define IDI_REACTOS_BIG                 137
@@ -83,6 +91,7 @@
 #define IDD_DESKBAR_STARTMENU           154
 #define IDB_ICON_ALIGN_1                154
 #define IDB_ICON_ALIGN_2                155
+#define IDD_NOTIFYAREA                  155
 #define IDB_ICON_ALIGN_3                156
 #define IDB_ICON_ALIGN_4                157
 #define IDB_ICON_ALIGN_5                158
@@ -92,7 +101,10 @@
 #define IDB_ICON_ALIGN_9                162
 #define IDI_SPEAKER                     162
 #define IDB_ICON_ALIGN_10               163
+#define IDI_DOT                         163
 #define IDB_LOGOV16                     164
+#define IDI_DOT_TRANS                   164
+#define IDI_DOT_RED                     165
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -103,19 +115,31 @@
 #define IDC_ROS_EXPLORER                1000
 #define IDC_ICON_ALIGN_0                1002
 #define IDC_ICON_ALIGN_1                1003
+#define IDC_NOTIFY_ICONS                1003
 #define IDC_ICON_ALIGN_2                1004
 #define IDC_ICON_ALIGN_3                1005
 #define IDC_ICON_ALIGN_4                1006
+#define IDC_NOTIFY_TOOLTIP              1006
 #define IDC_ICON_ALIGN_5                1007
+#define IDC_NOTIFY_TITLE                1007
 #define IDC_ICON_ALIGN_6                1008
+#define IDC_NOTIFY_MODULE               1008
 #define IDC_ICON_ALIGN_7                1009
+#define IDC_LABEL1                      1009
 #define IDC_ICON_ALIGN_8                1010
+#define IDC_LABEL2                      1010
 #define IDC_ICON_ALIGN_9                1011
+#define IDC_LABEL3                      1011
 #define IDC_ICON_ALIGN_10               1012
 #define IDC_WWW                         1012
 #define IDC_ICON_ALIGN_11               1013
 #define IDC_TOPIC                       1017
 #define IDC_MAILS_FOUND                 1018
+#define IDC_PICTURE                     1019
+#define IDC_NOTIFY_SHOW                 1020
+#define IDC_NOTIFY_HIDE                 1021
+#define IDC_NOTIFY_AUTOHIDE             1022
+#define IDC_LABEL4                      1023
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDC_FILETREE                    10001
@@ -165,9 +189,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_RESOURCE_VALUE        166
 #define _APS_NEXT_COMMAND_VALUE         40019
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

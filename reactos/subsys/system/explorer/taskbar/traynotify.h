@@ -35,9 +35,10 @@
 #define	NOTIFYICON_DIST			20
 #define	NOTIFYAREA_SPACE		10
 
-#define	PM_GETMODULEPATH_CB		(WM_APP+0x21)
-
 #define	ICON_AUTOHIDE_SECONDS	300
+
+#define	PM_GETMODULEPATH_CB		(WM_APP+0x21)
+#define	PM_GET_NOTIFYAREA		(WM_APP+0x22)
 
 
  /// NotifyIconIndex is used for maintaining the order of notification icons.
@@ -58,25 +59,22 @@ protected:
 
 
 enum NOTIFYICONMODE {
-	NIM_AUTO, NIM_SHOW, NIM_HIDE
+	NIM_SHOW, NIM_HIDE, NIM_AUTO
 };
 
- /// properties used to identify a notification icon
-struct NotifyIconProps
-{
-	String	_tipText;
-	String	_windowTitle;	// To look at the window title and at the window module path of the notify icon owner window
-	String	_modulePath;	// to identify notification icons is an extension above XP's behaviour.
-};							// (XP seems to store icon image data in the registry instead.)
-
  /// configuration for the display mode of a notification icon
-struct NotifyIconConfig : public NotifyIconProps
+struct NotifyIconConfig
 {
 	NotifyIconConfig() : _mode(NIM_AUTO) {}
 
-	bool	match(const NotifyIconProps& props) const;
+	bool	match(const NotifyIconConfig& props) const;
 
-	NOTIFYICONMODE	_mode;
+	 // properties used to identify a notification icon
+	String	_tipText;
+	String	_windowTitle;	// To look at the window title and at the window module path of the notify icon owner window
+	String	_modulePath;	// to identify notification icons is an extension above XP's behaviour.
+							// (XP seems to store icon image data in the registry instead.)
+	NOTIFYICONMODE _mode;
 };
 
  /// list of NotifyIconConfig structures
@@ -84,7 +82,7 @@ typedef list<NotifyIconConfig> NotifyIconCfgList;
 
 
  /// structure for maintaining informations about one notification icon
-struct NotifyInfo : public NotifyIconIndex
+struct NotifyInfo : public NotifyIconIndex, public NotifyIconConfig
 {
 	NotifyInfo();
 
@@ -99,9 +97,7 @@ struct NotifyInfo : public NotifyIconIndex
 	DWORD	_dwState;
 	UINT	_uCallbackMessage;
 	UINT	_version;
-	String	_tipText;
 
-	NOTIFYICONMODE _mode;
 	DWORD	_lastChange;	// timer tick value of the last change
 };
 
@@ -138,12 +134,8 @@ protected:
 	WindowHandle _hwndClock;
 	int		_clock_width;
 
-	NotifyIconMap _icon_map;
-	NotifyIconSet _sorted_icons;
-	int		_next_idx;
-	size_t	_last_icon_count;
-
 	ToolTip	_tooltip;
+	NotifyHook _hook;
 
 	bool	_show_hidden;
 
@@ -160,10 +152,46 @@ protected:
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 	bool	DetermineHideState(NotifyInfo& entry);
 
+public:	// for TrayNotifyDlg
 	NotifyIconCfgList _cfg;
 
-	NotifyHook _hook;
 	map<HWND, String> _window_modules;
+
+	NotifyIconMap _icon_map;
+	NotifyIconSet _sorted_icons;
+	int		_next_idx;
+	size_t	_last_icon_count;
+};
+
+
+ /// configuration dialog for notification icons
+struct TrayNotifyDlg : public ResizeController<Dialog>
+{
+	typedef ResizeController<Dialog> super;
+
+	TrayNotifyDlg(HWND hwnd);
+	~TrayNotifyDlg();
+
+protected:
+	HWND	_tree_ctrl;
+	HACCEL	_haccel;
+	HIMAGELIST	_himl;
+	NotifyArea* _pNotifyArea;
+
+	HTREEITEM _hitemCurrent;
+	HTREEITEM _hitemCurrent_visible;
+	HTREEITEM _hitemCurrent_hidden;
+	HTREEITEM _hitemConfig;
+	HTREEITEM _selectedItem;
+
+	virtual LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual int	Command(int id, int code);
+	virtual int	Notify(int id, NMHDR* pnmh);
+
+	void	Refresh();
+	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo&, HDC);
+	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconConfig&, HDC, HICON, NOTIFYICONMODE);
+	void	SetIconMode(NOTIFYICONMODE mode);
 };
 
 

@@ -246,7 +246,7 @@ void TaskBar::ShowAppSystemMenu(TaskBarMap::iterator it)
 }
 
 
-static HICON get_window_icon(HWND hwnd)
+HICON get_window_icon_small(HWND hwnd)
 {
 	HICON hIcon = 0;
 
@@ -267,8 +267,31 @@ static HICON get_window_icon(HWND hwnd)
 	if (!hIcon)
 		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
 
+	return hIcon;
+}
+
+HICON get_window_icon_big(HWND hwnd, bool allow_from_class)
+{
+	HICON hIcon = 0;
+
+	SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+
 	if (!hIcon)
-		hIcon = LoadIcon(0, IDI_APPLICATION);
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+
+	if (!hIcon)
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+
+	if (allow_from_class) {
+		if (!hIcon)
+			hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
+
+		if (!hIcon)
+			hIcon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+	}
+
+	if (!hIcon)
+		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
 
 	return hIcon;
 }
@@ -298,7 +321,10 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 				found->second._id = pThis->_next_id++;
 		} else {
 			HBITMAP hbmp;
-			HICON hIcon = get_window_icon(hwnd);
+			HICON hIcon = get_window_icon_small(hwnd);
+
+			if (!hIcon)
+				hIcon = LoadIcon(0, IDI_APPLICATION);
 
 			if (hIcon) {
 				hbmp = create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), WindowCanvas(pThis->_htoolbar));

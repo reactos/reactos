@@ -46,6 +46,8 @@ DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
 	_trayIcon(hwnd, ID_TRAY_VOLUME)
 {
+	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);	// icon in for TrayNotifyDlg
+
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &_work_area_org, 0);
 }
 
@@ -246,6 +248,9 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL, TEXT("-t"));	// launch volume control in small mode
 		}
 		break;
+
+	  case PM_GET_NOTIFYAREA:
+		return (LRESULT)(HWND)_hwndNotify;
 
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);

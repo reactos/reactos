@@ -94,7 +94,6 @@ void CollectProgramsThread::free_dirs()
 FindProgramDlg::FindProgramDlg(HWND hwnd)
  :	super(hwnd),
 	_list_ctrl(GetDlgItem(hwnd, IDC_MAILS_FOUND)),
-	//_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32, 0, 0)),
 	_thread(collect_programs_callback, hwnd, this),
 	_sort(_list_ctrl, CompareFunc/*, (LPARAM)this*/)
 {
@@ -108,8 +107,6 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_SEARCH_PROGRAM));
 
 	ListView_SetImageList(_list_ctrl, g_Globals._icon_cache.get_sys_imagelist(), LVSIL_SMALL);
-	//ListView_SetImageList(_list_ctrl, _himl, LVSIL_SMALL);
-	 //_idxNoIcon = ImageList_AddIcon(_himl, SmallIcon(IDI_APPICON));
 
 	LV_COLUMN column = {LVCF_FMT|LVCF_WIDTH|LVCF_TEXT, LVCFMT_LEFT, 250};
 
@@ -137,11 +134,13 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 	CenterWindow(hwnd);
 
 	Refresh();
+
+	register_pretranslate(hwnd);
 }
 
 FindProgramDlg::~FindProgramDlg()
 {
-	//ImageList_Destroy(_himl);
+	unregister_pretranslate(_hwnd);
 }
 
 
@@ -261,6 +260,24 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	ListView_SetItem(_list_ctrl, &item);
 }
 
+LRESULT FindProgramDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case PM_TRANSLATE_MSG: {
+		MSG* pmsg = (MSG*) lparam;
+
+		if (TranslateAccelerator(_hwnd, _haccel, pmsg))
+			return TRUE;
+
+		return FALSE;}
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
 int FindProgramDlg::Command(int id, int code)
 {
 	if (code == BN_CLICKED) {
@@ -277,7 +294,7 @@ int FindProgramDlg::Command(int id, int code)
 			return super::Command(id, code);
 		}
 
-		return TRUE;
+		return 0;
 	}
 	else if (code == EN_CHANGE) {
 		switch(id) {
@@ -286,10 +303,10 @@ int FindProgramDlg::Command(int id, int code)
 			break;
 		}
 
-		return TRUE;
+		return 0;
 	}
 
-	return FALSE;
+	return 1;
 }
 
 void FindProgramDlg::LaunchSelected()
@@ -326,7 +343,7 @@ int FindProgramDlg::Notify(int id, NMHDR* pnmh)
 				if (entry->_icon_id == ICID_UNKNOWN)
 					entry->extract_icon();
 
-				pDispInfo->item.iImage = g_Globals._icon_cache.get_icon(entry->_icon_id).get_sysiml_idx();//ImageList_AddIcon(_himl, g_Globals._icon_cache.get_icon(entry->_icon_id).get_hicon());
+				pDispInfo->item.iImage = g_Globals._icon_cache.get_icon(entry->_icon_id).get_sysiml_idx();
 				pDispInfo->item.mask |= LVIF_DI_SETITEM;
 
 				return 1;

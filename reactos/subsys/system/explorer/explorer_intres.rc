@@ -133,6 +133,13 @@ BEGIN
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
+    IDS_ITEMS_CUR           "current items"
+    IDS_ITEMS_CONFIGURED    "configuration"
+    IDS_ITEMS_VISIBLE       "visible"
+    IDS_ITEMS_HIDDEN        "hidden"
+    IDS_NOTIFY_SHOW         "show"
+    IDS_NOTIFY_HIDE         "hide"
+    IDS_NOTIFY_AUTOHIDE     "autohide"
 END
 
 #endif    // Romanian resources
@@ -173,6 +180,11 @@ BEGIN
 END
 
 IDA_SEARCH_PROGRAM ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
+END
+
+IDA_TRAYNOTIFY ACCELERATORS DISCARDABLE 
 BEGIN
     VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
@@ -445,6 +457,9 @@ IDI_PRINTER             ICON    DISCARDABLE     "res/printer.ico"
 IDI_NETWORK             ICON    DISCARDABLE     "res/network.ico"
 IDI_COMPUTER            ICON    DISCARDABLE     "res/computer.ico"
 IDI_SPEAKER             ICON    DISCARDABLE     "res/speaker.ico"
+IDI_DOT                 ICON    DISCARDABLE     "res/dot.ico"
+IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
+IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -516,6 +531,13 @@ BEGIN
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Lautstärke"
+    IDS_ITEMS_CUR           "aktuelle Icons"
+    IDS_ITEMS_CONFIGURED    "Konfiguratrion"
+    IDS_ITEMS_VISIBLE       "sichtbar"
+    IDS_ITEMS_HIDDEN        "unsichtbar"
+    IDS_NOTIFY_SHOW         "sichtbar"
+    IDS_NOTIFY_HIDE         "versteckt"
+    IDS_NOTIFY_AUTOHIDE     "automatisch"
 END
 
 #endif    // German (Germany) resources
@@ -523,138 +545,11 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// French (France) resources
+// English (U.S.) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
-BEGIN
-    POPUP "&Fichier"
-    BEGIN
-        MENUITEM "&Fermer",                     ID_FILE_EXIT
-    END
-    POPUP "&Affichage"
-    BEGIN
-        MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
-        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
-        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
-        MENUITEM SEPARATOR
-        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
-        MENUITEM "&Refresh\tF5",                ID_REFRESH
-    END
-    POPUP "A&ide"
-    BEGIN
-        MENUITEM "&FAQ Explorateur...",         ID_EXPLORER_FAQ
-        MENUITEM "A propos de l'&explorateur...", ID_ABOUT_WINDOWS
-        MENUITEM "A propos de l'&OS...",        ID_ABOUT_EXPLORER
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Execute"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
-    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
-                    18,60,10
-    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
-    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
-                    45,71,12
-    DEFPUSHBUTTON   "&OK",1,158,6,47,14
-    PUSHBUTTON      "&Cancel",2,158,23,47,14
-    PUSHBUTTON      "&Help",254,158,43,47,14
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_TITLE               "Explorateur Reactos"
-    IDS_START               "Démarrer"
-    IDS_LOGOFF              "Déconnexion ..."
-    IDS_SHUTDOWN            "Arrêter..."
-    IDS_LAUNCH              "Exécuter..."
-    IDS_START_HELP          "Aide"
-    IDS_SEARCH_FILES        "Rechercher Fichiers..."
-    IDS_DOCUMENTS           "Documents"
-    IDS_FAVORITES           "Favoris"
-    IDS_PROGRAMS            "Programmes"
-    IDS_SETTINGS            "Paramètres"
-    IDS_EXPLORE             "Explorer"
-    IDS_EMPTY               "(Vide)"
-    IDS_RECENT              "Documents récents"
-    IDS_ADMIN               "Administration"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_NETWORK             "Réseaux"
-    IDS_CONNECTIONS         "Connexions réseaux"
-    IDS_DRIVES              "Disques"
-    IDS_SEARCH_COMPUTER     "Recherche Ordinateurs..."
-    IDS_SETTINGS_MENU       "Barre des tâches et menu démarrer"
-    IDS_CONTROL_PANEL       "Panneau de configuration"
-    IDS_PRINTERS            "Imprimantes"
-    IDS_BROWSE              "Parcourir"
-    IDS_SEARCH_PRG          "Recherche Programme..."
-    IDS_ALL_USERS           "Tous les utilisateurs\\"
-    IDS_SEARCH              "Rechercher"
-    IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
-    IDS_LAUNCH_MANY_PROGRAMS 
-                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
-    IDS_DESKTOPBAR_SETTINGS "Bureau"
-    IDS_DESKTOP             "Bureau"
-    IDS_TASKBAR             "Taskbar"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Bureau %d"
-    IDS_VOLUME              "Volume"
-END
-
-#endif    // French (France) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
@@ -911,6 +806,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taskbar Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
+    PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,133,50,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
@@ -918,6 +814,33 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Startmenu Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 207, 150
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Configure Notification Icons"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,193,31
+    LTEXT           "&Tooltip Text:",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,55,42,145,14,ES_AUTOHSCROLL
+    LTEXT           "&Window Title:",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,55,60,145,14,ES_AUTOHSCROLL
+    LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,55,78,145,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Display Mode",IDC_LABEL4,7,95,157,28
+    CONTROL         "&show",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,107,33,10
+    CONTROL         "&hide",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+                    107,29,10
+    CONTROL         "a&utohide",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,107,43,10
+    DEFPUSHBUTTON   "&OK",IDOK,91,129,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,150,129,50,14
+    ICON            "",IDC_PICTURE,173,100,20,20
 END
 
 
@@ -959,6 +882,14 @@ BEGIN
         RIGHTMARGIN, 203
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
+    END
+
+    IDD_NOTIFYAREA, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1015,9 +946,150 @@ BEGIN
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
+    IDS_ITEMS_CUR           "current items"
+    IDS_ITEMS_CONFIGURED    "configuration"
+    IDS_ITEMS_VISIBLE       "visible"
+    IDS_ITEMS_HIDDEN        "hidden"
+    IDS_NOTIFY_SHOW         "show"
+    IDS_NOTIFY_HIDE         "hide"
+    IDS_NOTIFY_AUTOHIDE     "autohide"
 END
 
-#endif    // English (U.K.) resources
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// French (France) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Fermer",                     ID_FILE_EXIT
+    END
+    POPUP "&Affichage"
+    BEGIN
+        MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "New &Window",                 ID_WINDOW_NEW
+        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
+        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+    END
+    POPUP "A&ide"
+    BEGIN
+        MENUITEM "&FAQ Explorateur...",         ID_EXPLORER_FAQ
+        MENUITEM "A propos de l'&explorateur...", ID_ABOUT_WINDOWS
+        MENUITEM "A propos de l'&OS...",        ID_ABOUT_EXPLORER
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14
+    PUSHBUTTON      "&Help",254,158,43,47,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Explorateur Reactos"
+    IDS_START               "Démarrer"
+    IDS_LOGOFF              "Déconnexion ..."
+    IDS_SHUTDOWN            "Arrêter..."
+    IDS_LAUNCH              "Exécuter..."
+    IDS_START_HELP          "Aide"
+    IDS_SEARCH_FILES        "Rechercher Fichiers..."
+    IDS_DOCUMENTS           "Documents"
+    IDS_FAVORITES           "Favoris"
+    IDS_PROGRAMS            "Programmes"
+    IDS_SETTINGS            "Paramètres"
+    IDS_EXPLORE             "Explorer"
+    IDS_EMPTY               "(Vide)"
+    IDS_RECENT              "Documents récents"
+    IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Réseaux"
+    IDS_CONNECTIONS         "Connexions réseaux"
+    IDS_DRIVES              "Disques"
+    IDS_SEARCH_COMPUTER     "Recherche Ordinateurs..."
+    IDS_SETTINGS_MENU       "Barre des tâches et menu démarrer"
+    IDS_CONTROL_PANEL       "Panneau de configuration"
+    IDS_PRINTERS            "Imprimantes"
+    IDS_BROWSE              "Parcourir"
+    IDS_SEARCH_PRG          "Recherche Programme..."
+    IDS_ALL_USERS           "Tous les utilisateurs\\"
+    IDS_SEARCH              "Rechercher"
+    IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Bureau"
+    IDS_DESKTOP             "Bureau"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Bureau %d"
+    IDS_VOLUME              "Volume"
+    IDS_ITEMS_CUR           "current items"
+    IDS_ITEMS_CONFIGURED    "configuration"
+    IDS_ITEMS_VISIBLE       "visible"
+    IDS_ITEMS_HIDDEN        "hidden"
+    IDS_NOTIFY_SHOW         "show"
+    IDS_NOTIFY_HIDE         "hide"
+    IDS_NOTIFY_AUTOHIDE     "autohide"
+END
+
+#endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -1218,6 +1290,13 @@ BEGIN
     IDS_MINIMIZE_ALL        "mimimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
+    IDS_ITEMS_CUR           "current items"
+    IDS_ITEMS_CONFIGURED    "configuration"
+    IDS_ITEMS_VISIBLE       "visible"
+    IDS_ITEMS_HIDDEN        "hidden"
+    IDS_NOTIFY_SHOW         "show"
+    IDS_NOTIFY_HIDE         "hide"
+    IDS_NOTIFY_AUTOHIDE     "autohide"
 END
 
 #endif    // Portuguese (Portugal) resources

@@ -85,11 +85,8 @@ struct FindProgramDlg : public ResizeController<Dialog>
 	~FindProgramDlg();
 
 protected:
-	CommonControlInit _usingCmnCtrl;
 	HWND	_list_ctrl;
 	HACCEL	_haccel;
-	//HIMAGELIST _himl;
-	 //int	_idxNoIcon;	// replacement icon
 	String	_lwr_filter;
 
 	CollectProgramsThread _thread;
@@ -99,6 +96,7 @@ protected:
 
 	ListSort _sort;
 
+	virtual LRESULT WndProc(UINT, WPARAM, LPARAM);
 	virtual int	Command(int id, int code);
 	virtual int	Notify(int id, NMHDR* pnmh);
 

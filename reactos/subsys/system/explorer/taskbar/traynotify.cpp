@@ -35,8 +35,6 @@
 
 #include "traynotify.h"
 
-#include "../dialogs/settings.h"
-
 
 #include "../notifyhook/notifyhook.h"
 
@@ -157,6 +155,11 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 			_tipText.assign(txt, l);
 		}
 
+	TCHAR title[MAX_PATH];
+
+	if (GetWindowText(_hWnd, title, MAX_PATH))
+		_windowTitle = title;
+
 	///@todo test for real changes
 	_lastChange = GetTickCount();
 
@@ -173,7 +176,7 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_last_icon_count = 0;
 	_show_hidden = false;
 
-	///@todo read from config file -->
+/*@todo read/write from/to config file/registry
 	NotifyIconConfig cfg;
 
 	cfg._tipText = TEXT("FRITZ!fon");
@@ -207,11 +210,7 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_cfg.push_back(cfg);
 
 	cfg._windowTitle.erase();
-
-	cfg._modulePath = TEXT("xyz");	//@@
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
-	/// <--
+*/
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -292,6 +291,10 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			clock_window->TimerTick();
 		break;}
 
+	  case PM_REFRESH:
+		TimerTick();
+		break;
+
 	  case WM_SIZE: {
 		int cx = LOWORD(lparam);
 		SetWindowPos(_hwndClock, 0, cx-_clock_width, 0, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
@@ -331,10 +334,20 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				)
 				CancelModes();
 
-			NotifyIconSet::iterator found = IconHitTest(Point(lparam));
+			NotifyIconSet::const_iterator found = IconHitTest(Point(lparam));
 
 			if (found != _sorted_icons.end()) {
-				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+				const NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+
+				 // set activation time stamp
+				if (nmsg == WM_LBUTTONDOWN ||	// Some programs need PostMessage() instead of SendMessage().
+					nmsg == WM_MBUTTONDOWN ||	// So call SendMessage() only for BUTTONUP and BLCLK messages
+#ifdef WM_XBUTTONDOWN
+					nmsg == WM_XBUTTONDOWN ||
+#endif
+					nmsg == WM_RBUTTONDOWN) {
+					_icon_map[entry]._lastChange = GetTickCount();
+				}
 
 				 // Notify the message if the owner is still alive
 				if (IsWindow(entry._hWnd)) {
@@ -381,7 +394,7 @@ int NotifyArea::Command(int id, int code)
 		break;
 
 	  case ID_CONFIG_NOTIFYAREA:
-		ExplorerPropertySheet(_hwnd);
+		Dialog::DoModal(IDD_NOTIFYAREA, WINDOW_CREATOR(TrayNotifyDlg), GetParent(_hwnd));
 		break;
 
 	  case ID_CONFIG_TIME:
@@ -615,7 +628,7 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
 
-bool NotifyIconConfig::match(const NotifyIconProps& props) const
+bool NotifyIconConfig::match(const NotifyIconConfig& props) const
 {
 	if (!_tipText.empty() && !props._tipText.empty())
 		if (props._tipText == _tipText)
@@ -634,26 +647,20 @@ bool NotifyIconConfig::match(const NotifyIconProps& props) const
 
 bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 {
-	for(NotifyIconCfgList::const_iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
-		const NotifyIconConfig& cfg = *it;
-
-		NotifyIconProps props;
-
-		props._tipText = entry._tipText;
-
-		TCHAR title[MAX_PATH];
-		if (GetWindowText(entry._hWnd, title, MAX_PATH))
-			props._windowTitle = title;
-
+	if (entry._modulePath.empty()) {
 		const String& modulePath = _window_modules[entry._hWnd];
 
 		 // request module path for new windows (We will get an asynchronous answer by a WM_COPYDATA message.)
 		if (!modulePath.empty())
-			props._modulePath = modulePath;
+			entry._modulePath = modulePath;
 		else
 			_hook.GetModulePath(entry._hWnd, _hwnd);
+	}
 
-		if (cfg.match(props)) {
+	for(NotifyIconCfgList::const_iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
+		const NotifyIconConfig& cfg = *it;
+
+		if (cfg.match(entry)) {
 			entry._mode = cfg._mode;
 			return true;
 		}
@@ -663,6 +670,328 @@ bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 }
 
 #endif
+
+
+TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
+ :	super(hwnd),
+	_tree_ctrl(GetDlgItem(hwnd, IDC_NOTIFY_ICONS)),
+	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR24, 2, 0)),
+	_pNotifyArea(static_cast<NotifyArea*>(Window::get_window((HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_NOTIFYAREA, 0, 0))))
+{
+	_selectedItem = 0;
+
+	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
+
+	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_TRAYNOTIFY));
+
+	{
+	WindowCanvas canvas(_hwnd);
+	HBRUSH hbkgnd = GetStockBrush(WHITE_BRUSH);
+
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_TRANS), hbkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_RED), hbkgnd, canvas);
+	}
+
+	TreeView_SetImageList(_tree_ctrl, _himl, TVSIL_NORMAL);
+
+	_resize_mgr.Add(IDC_NOTIFY_ICONS,	RESIZE);
+	_resize_mgr.Add(IDC_LABEL1,			MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_TOOLTIP,	RESIZE_X|MOVE_Y);
+	_resize_mgr.Add(IDC_LABEL2,			MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_TITLE,	RESIZE_X|MOVE_Y);
+	_resize_mgr.Add(IDC_LABEL3,			MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_MODULE,	RESIZE_X|MOVE_Y);
+
+	_resize_mgr.Add(IDC_LABEL4,			MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_SHOW,	MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_HIDE,	MOVE_Y);
+	_resize_mgr.Add(IDC_NOTIFY_AUTOHIDE,MOVE_Y);
+
+	_resize_mgr.Add(IDC_PICTURE,		MOVE);
+
+	_resize_mgr.Add(IDOK,				MOVE);
+	_resize_mgr.Add(IDCANCEL,			MOVE);
+
+	_resize_mgr.Resize(+150, +200);
+
+	Refresh();
+
+	SetTimer(_hwnd, 0, 3000, NULL);
+	register_pretranslate(hwnd);
+}
+
+TrayNotifyDlg::~TrayNotifyDlg()
+{
+	KillTimer(_hwnd, 0);
+	unregister_pretranslate(_hwnd);
+	ImageList_Destroy(_himl);
+}
+
+void TrayNotifyDlg::Refresh()
+{
+	///@todo refresh incrementally
+
+	HiddenWindow hide(_tree_ctrl);
+
+	TreeView_DeleteAllItems(_tree_ctrl);
+
+	TV_INSERTSTRUCT tvi;
+
+	tvi.hParent = 0;
+	tvi.hInsertAfter = TVI_LAST;
+
+	TV_ITEM& tv = tvi.item;
+	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
+
+	ResString str_cur(IDS_ITEMS_CUR);
+	tv.pszText = (LPTSTR)str_cur.c_str();
+	tv.iSelectedImage = tv.iImage = 0;	// IDI_DOT
+	_hitemCurrent = TreeView_InsertItem(_tree_ctrl, &tvi);
+
+	ResString str_conf(IDS_ITEMS_CONFIGURED);
+	tv.pszText = (LPTSTR)str_conf.c_str();
+	tv.iSelectedImage = tv.iImage = 2;	// IDI_DOT_RED
+	_hitemConfig = TreeView_InsertItem(_tree_ctrl, &tvi);
+
+	tvi.hParent = _hitemCurrent;
+
+	ResString str_visible(IDS_ITEMS_VISIBLE);
+	tv.pszText = (LPTSTR)str_visible.c_str();
+	tv.iSelectedImage = tv.iImage = 0;	// IDI_DOT
+	_hitemCurrent_visible = TreeView_InsertItem(_tree_ctrl, &tvi);
+
+	ResString str_hidden(IDS_ITEMS_HIDDEN);
+	tv.pszText = (LPTSTR)str_hidden.c_str();
+	tv.iSelectedImage = tv.iImage = 1;	// IDI_DOT_TRANS
+	_hitemCurrent_hidden = TreeView_InsertItem(_tree_ctrl, &tvi);
+
+	if (_pNotifyArea) {
+		tv.mask |= TVIF_PARAM;
+
+		WindowCanvas canvas(_hwnd);
+
+		 // insert current (visible and hidden) items
+		for(NotifyIconMap::const_iterator it=_pNotifyArea->_icon_map.begin(); it!=_pNotifyArea->_icon_map.end(); ++it) {
+			const NotifyInfo& entry = it->second;
+
+			InsertItem(entry._dwState&NIS_HIDDEN? _hitemCurrent_hidden: _hitemCurrent_visible, TVI_LAST, entry, canvas);
+		}
+
+		 // insert configured items in tree view
+		const NotifyIconCfgList& cfg = _pNotifyArea->_cfg;
+		for(NotifyIconCfgList::const_iterator it=cfg.begin(); it!=cfg.end(); ++it) {
+			const NotifyIconConfig& cfg_entry = *it;
+
+			HICON hicon = 0;
+
+			if (!cfg_entry._modulePath.empty()) {
+				if ((int)ExtractIconEx(cfg_entry._modulePath, 0, NULL, &hicon, 1) <= 0)
+					hicon = 0;
+
+				if (!hicon) {
+					SHFILEINFO sfi;
+
+					if (SHGetFileInfo(cfg_entry._modulePath, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
+						hicon = sfi.hIcon;
+				}
+			}
+
+			InsertItem(_hitemConfig, TVI_SORT, cfg_entry, canvas, hicon, cfg_entry._mode);
+
+			if (hicon)
+				DestroyIcon(hicon);
+		}
+
+		 // insert new configuration entry
+	}
+
+	TreeView_Expand(_tree_ctrl, _hitemCurrent_visible, TVE_EXPAND);
+	TreeView_Expand(_tree_ctrl, _hitemCurrent_hidden, TVE_EXPAND);
+	TreeView_Expand(_tree_ctrl, _hitemCurrent, TVE_EXPAND);
+	TreeView_Expand(_tree_ctrl, _hitemConfig, TVE_EXPAND);
+}
+
+void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo& entry, HDC hdc)
+{
+	InsertItem(hparent, after, entry, hdc, entry._hIcon, entry._mode);
+}
+
+void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconConfig& entry,
+								HDC hdc, HICON hicon, NOTIFYICONMODE mode)
+{
+	String mode_str;
+
+	switch(mode) {
+	  case NIM_SHOW:	mode_str = ResString(IDS_NOTIFY_SHOW);		break;
+	  case NIM_HIDE:	mode_str = ResString(IDS_NOTIFY_HIDE);		break;
+	  case NIM_AUTO:	mode_str = ResString(IDS_NOTIFY_AUTOHIDE);
+	}
+
+	FmtString txt(TEXT("%s  -  %s  [%s]"), entry._tipText.c_str(), entry._windowTitle.c_str(), mode_str.c_str());
+
+	TV_INSERTSTRUCT tvi;
+
+	tvi.hParent = hparent;
+	tvi.hInsertAfter = after;
+
+	TV_ITEM& tv = tvi.item;
+	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM;
+
+	tv.lParam = (LPARAM)&entry;
+	tv.pszText = (LPTSTR)txt.c_str();
+	tv.iSelectedImage = tv.iImage = ImageList_AddAlphaIcon(_himl, hicon, GetStockBrush(WHITE_BRUSH), hdc);
+	TreeView_InsertItem(_tree_ctrl, &tvi);
+}
+
+LRESULT TrayNotifyDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case PM_TRANSLATE_MSG: {
+		MSG* pmsg = (MSG*) lparam;
+
+		if (TranslateAccelerator(_hwnd, _haccel, pmsg))
+			return TRUE;
+
+		return FALSE;}
+
+	  case WM_TIMER:
+		Refresh();
+		break;
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+int TrayNotifyDlg::Command(int id, int code)
+{
+	if (code == BN_CLICKED) {
+		switch(id) {
+		  case ID_REFRESH:
+			Refresh();
+			break;
+
+		  case IDC_NOTIFY_SHOW:
+			SetIconMode(NIM_SHOW);
+			break;
+
+		  case IDC_NOTIFY_HIDE:
+			SetIconMode(NIM_HIDE);
+			break;
+
+		  case IDC_NOTIFY_AUTOHIDE:
+			SetIconMode(NIM_AUTO);
+			break;
+
+		  case IDOK:
+		  case IDCANCEL:
+			EndDialog(_hwnd, id);
+			break;
+		}
+
+		return 0;
+	}
+
+	return 1;
+}
+
+int TrayNotifyDlg::Notify(int id, NMHDR* pnmh)
+{
+	switch(pnmh->code) {
+	  case TVN_SELCHANGED: {
+		NMTREEVIEW* pnmtv = (NMTREEVIEW*)pnmh;
+		LPARAM lparam = pnmtv->itemNew.lParam;
+
+		if (lparam) {
+			const NotifyIconConfig& entry = *(NotifyIconConfig*)lparam;
+
+			SetDlgItemText(_hwnd, IDC_NOTIFY_TOOLTIP, entry._tipText);
+			SetDlgItemText(_hwnd, IDC_NOTIFY_TITLE, entry._windowTitle);
+			SetDlgItemText(_hwnd, IDC_NOTIFY_MODULE, entry._modulePath);
+
+			CheckRadioButton(_hwnd, IDC_NOTIFY_SHOW, IDC_NOTIFY_AUTOHIDE, IDC_NOTIFY_SHOW+entry._mode);
+
+			HICON hicon = 0; //get_window_icon_big(entry._hWnd, false);
+
+			 // If we could not find an icon associated with the owner window, try to load one from the owning module.
+			if (!hicon && !entry._modulePath.empty()) {
+				hicon = ExtractIcon(g_Globals._hInstance, entry._modulePath, 0);
+
+				if (!hicon) {
+					SHFILEINFO sfi;
+
+					if (SHGetFileInfo(entry._modulePath, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_LARGEICON))
+						hicon = sfi.hIcon;
+				}
+			}
+
+			if (hicon) {
+				SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, (LPARAM)hicon, 0);
+				DestroyIcon(hicon);
+			} else
+				SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, 0, 0);
+
+			_selectedItem = pnmtv->itemNew.hItem;
+		} else {
+			/*
+			SetDlgItemText(_hwnd, IDC_NOTIFY_TOOLTIP, NULL);
+			SetDlgItemText(_hwnd, IDC_NOTIFY_TITLE, NULL);
+			SetDlgItemText(_hwnd, IDC_NOTIFY_MODULE, NULL);
+			*/
+			CheckRadioButton(_hwnd, IDC_NOTIFY_SHOW, IDC_NOTIFY_AUTOHIDE, 0);
+		}
+		break;}
+	}
+
+	return 0;
+}
+
+void TrayNotifyDlg::SetIconMode(NOTIFYICONMODE mode)
+{
+	LPARAM lparam = TreeView_GetItemData(_tree_ctrl, _selectedItem);
+
+	if (!lparam)
+		return;
+
+	NotifyIconConfig& entry = *(NotifyIconConfig*)lparam;
+
+	if (entry._mode != mode) {
+		entry._mode = mode;
+
+		 // trigger refresh in notify area and this dialog
+		SendMessage(*_pNotifyArea, PM_REFRESH, 0, 0);
+	}
+
+	if (_pNotifyArea) {
+		bool found = false;
+
+		NotifyIconCfgList& cfg = _pNotifyArea->_cfg;
+		for(NotifyIconCfgList::iterator it=cfg.begin(); it!=cfg.end(); ++it) {
+			NotifyIconConfig& cfg_entry = *it;
+
+			if (cfg_entry.match(entry)) {
+				cfg_entry._mode = mode;
+				++found;
+				break;
+			}
+		}
+
+		if (!found) {
+			 // insert new configuration entry
+			NotifyIconConfig cfg_entry = entry;
+
+			cfg_entry._mode = mode;
+
+			_pNotifyArea->_cfg.push_back(cfg_entry);
+		}
+	}
+
+	Refresh();
+	///@todo select treeview item at new position in tree view -> refresh HTREEITEM in _selectedItem
+}
 
 
 ClockWindow::ClockWindow(HWND hwnd)

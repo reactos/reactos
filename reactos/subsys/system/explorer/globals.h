@@ -141,6 +141,13 @@ protected:
  /// create a bitmap from an icon
 extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
 
+ /// add icon with alpha channel to imagelist using the specified background color
+extern int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
+ /// retrieve icon from window
+extern HICON get_window_icon_small(HWND hwnd);
+extern HICON get_window_icon_big(HWND hwnd, bool allow_from_class=true);
+
 
  /// desktop management
 #ifdef _USE_HDESK

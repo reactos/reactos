@@ -34,20 +34,6 @@
 #include "../explorer_intres.h"
 
 
-static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
-{
-	TVITEM tvItem;
-
-	tvItem.mask = TVIF_PARAM;
-	tvItem.hItem = hItem;
-
-	if (!TreeView_GetItem(hwndTreeView, &tvItem))
-		return 0;
-
-	return tvItem.lParam;
-}
-
-
 ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
  :	super(hwnd, info),
 	_create_info(info)
@@ -132,19 +118,17 @@ void ShellBrowserChild::InitializeTree()
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
-	TV_ITEM tvItem;
+	TV_INSERTSTRUCT tvInsert;
 
+	tvInsert.hParent = 0;
+	tvInsert.hInsertAfter = TVI_LAST;
+
+	TV_ITEM& tvItem = tvInsert.item;
 	tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
 	tvItem.lParam = (LPARAM)_root._entry;
 	tvItem.pszText = LPSTR_TEXTCALLBACK;
 	tvItem.iImage = tvItem.iSelectedImage = I_IMAGECALLBACK;
 	tvItem.cChildren = 1;
-
-	TV_INSERTSTRUCT tvInsert;
-
-	tvInsert.hParent = 0;
-	tvInsert.hInsertAfter = TVI_LAST;
-	tvInsert.item = tvItem;
 
 	HTREEITEM hItem = TreeView_InsertItem(_left_hwnd, &tvInsert);
 	TreeView_SelectItem(_left_hwnd, hItem);

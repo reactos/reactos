@@ -73,8 +73,6 @@ struct DesktopBar : public TrayIconControllerTemplate<
 	static HWND Create();
 
 protected:
-	CommonControlInit _usingCmnCtrl;
-
 	RECT	_work_area_org;
 	int		_taskbar_pos;
 
