@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2004/06/07 16:37:07 hbirr Exp $
+# $Id: makefile,v 1.8 2004/06/10 08:20:20 hbirr Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -20,3 +20,4 @@ include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
 
+# EOF
