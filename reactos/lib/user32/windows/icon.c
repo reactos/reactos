@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.9 2003/08/20 14:08:19 weiden Exp $
+/* $Id: icon.c,v 1.10 2003/08/22 20:50:44 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -112,7 +112,11 @@ CopyIcon(
   HICON hIcon)
 {
   ICONINFO IconInfo;
-  GetIconInfo(hIcon, &IconInfo);
+  NtUserGetIconInfo(hIcon, &IconInfo.fIcon,
+                           &IconInfo.xHotspot,
+                           &IconInfo.yHotspot,
+                           &IconInfo.hbmMask,
+                           &IconInfo.hbmColor);
   return CreateIconIndirect(&IconInfo);
 }
 
@@ -310,7 +314,11 @@ DrawIconEx(
     BOOL result = FALSE, DoOffscreen;
     HBITMAP hB_off = 0, hOld = 0;
 
-    if (!GetIconInfo(hIcon, &IconInfo))
+    if (!NtUserGetIconInfo(hIcon, &IconInfo.fIcon,
+                                  &IconInfo.xHotspot,
+                                  &IconInfo.yHotspot,
+                                  &IconInfo.hbmMask,
+                                  &IconInfo.hbmColor))
       return FALSE;
 
     NtGdiGetObject(IconInfo.hbmColor, sizeof(BITMAP), &XORBitmap);
@@ -442,12 +450,24 @@ GetIconInfo(
   HICON hIcon,
   PICONINFO piconinfo)
 {
-  return NtUserGetIconInfo(hIcon,
-                           &piconinfo->fIcon,
-                           &piconinfo->xHotspot,
-                           &piconinfo->yHotspot,
-                           &piconinfo->hbmMask,
-                           &piconinfo->hbmColor);
+  ICONINFO IconInfo;
+  WINBOOL res;
+  
+  if(!piconinfo)
+  {
+    SetLastError(ERROR_NOACCESS);
+    return FALSE;
+  }
+  
+  RtlCopyMemory(&IconInfo, piconinfo, sizeof(ICONINFO));
+  res = NtUserGetIconInfo(hIcon,
+                          &piconinfo->fIcon,
+                          &piconinfo->xHotspot,
+                          &piconinfo->yHotspot,
+                          &piconinfo->hbmMask,
+                          &piconinfo->hbmColor);
+  RtlCopyMemory(piconinfo, &IconInfo, sizeof(ICONINFO));
+  return res;
 }
 
 
