@@ -7,6 +7,26 @@
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
+/*
+ * Usage of ERESOURCE members is not documented.
+ * From names of members and functionnalities, we can assume :
+ * ActiveCount = number of threads who have access to the resource
+ * OwnerTable = list of threads who have shared access
+ * OwnerThreads[0]= thread who have exclusive access
+ * OwnerThreads[1]= thread who have shared access if only one thread
+ *                  else
+ *                     OwnerThread=0
+ *                      and TableSize = number of entries in the owner table
+ * Flag = bits : ResourceOwnedExclusive=0x80
+ *               ResourceNeverExclusive=0x10
+ *               ResourceReleaseByOtherThread=0x20
+ *
+ */
+
+#define ResourceOwnedExclusive 0x80
+
+/* INCLUDES *****************************************************************/
+
 
 /* INCLUDES *****************************************************************/
 
@@ -78,31 +98,47 @@ NTSTATUS ExInitializeResource(PERESOURCE Resource)
 
 NTSTATUS ExInitializeResourceLite(PERESOURCE Resource)
 {
-   Resource->NumberOfSharedWaiters = 0;
-   Resource->NumberOfExclusiveWaiters = 0;
+   memset(Resource,0,sizeof(ERESOURCE));
+//   Resource->NumberOfSharedWaiters = 0;
+//   Resource->NumberOfExclusiveWaiters = 0;
    KeInitializeSpinLock(&Resource->SpinLock);
-   Resource->Flag=0;
+//   Resource->Flag=0;
    Resource->ExclusiveWaiters = ExAllocatePool(NonPagedPool,
 					       sizeof(KEVENT));					       
-   KeInitializeEvent(Resource->ExclusiveWaiters,
-		     SynchronizationEvent,
+   KeInitializeEvent(Resource->ExclusiveWaiters,SynchronizationEvent,
 		     FALSE);
    Resource->SharedWaiters = ExAllocatePool(NonPagedPool,
 					    sizeof(KSEMAPHORE));
    KeInitializeSemaphore(Resource->SharedWaiters,5,0);
-   Resource->ActiveCount = 0;
-   
+//   Resource->ActiveCount = 0;
    return(STATUS_SUCCESS);
 }
 
 BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)
 {
-   return(Resource->NumberOfExclusiveWaiters!=0);
+ return((Resource->Flag & ResourceOwnedExclusive)
+       && Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread());
 }
 
-BOOLEAN ExIsResourceAcquiredSharedLite(PERESOURCE Resource)
+/* note : this function is defined USHORT in nt4, but ULONG in nt5
+ * ULONG is more logical, since return value is number of times the resource
+ * is acquired by the caller, and this value is defined ULONG in
+ * PERESOURCE struct
+ */
+ULONG ExIsResourceAcquiredSharedLite(PERESOURCE Resource)
 {
-   return(Resource->NumberOfSharedWaiters!=0);
+ long i;
+  if(Resource->OwnerThreads[0].OwnerThread==ExGetCurrentResourceThread())
+    return Resource->OwnerThreads[0].a.OwnerCount;
+  if(Resource->OwnerThreads[1].OwnerThread==ExGetCurrentResourceThread())
+    return Resource->OwnerThreads[1].a.OwnerCount;
+  if(!Resource->OwnerThreads[1].a.TableSize) return 0;
+  for(i=0;i<Resource->OwnerThreads[1].a.TableSize;i++)
+  {
+    if(Resource->OwnerTable[i].OwnerThread==ExGetCurrentResourceThread())
+      return Resource->OwnerTable[i].a.OwnerCount;
+  }
+  return 0;
 }
 
 VOID ExReinitializeResourceLite(PERESOURCE Resource)
