@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.20 2003/07/11 13:50:23 royce Exp $
+/* $Id: path.c,v 1.21 2003/10/14 19:36:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -380,8 +380,8 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    
    RtlAcquirePebLock ();
    cd = (PCURDIR)&NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName;
+
    size = cd->DosPath.MaximumLength;
-   
    buf = RtlAllocateHeap (RtlGetProcessHeap(),
 			  0,
 			  size);
@@ -638,11 +638,16 @@ CHECKPOINT;
 CHECKPOINT;
 					if (Status == STATUS_BUFFER_TOO_SMALL)
 						return pfx.Length + len * 2 + 2;
-					memcpy (TempFullPathName, var, 6);
+CHECKPOINT;
+					TempFullPathName[0] = drive;
+					TempFullPathName[1] = L':';
+					TempFullPathName[2] = L'\\';
+					TempFullPathName[3] = 0;
 					templen = 3;
 				}
 				else
 				{
+CHECKPOINT;
 					templen = pfx.Length / sizeof(WCHAR);
 				}
 
