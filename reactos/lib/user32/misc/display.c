@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.10 2004/07/08 00:46:22 weiden Exp $
+/* $Id: display.c,v 1.11 2004/07/18 00:36:33 blight Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -142,6 +142,7 @@ EnumDisplaySettingsExA(
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &DevModeW, dwFlags );
 
   RtlFreeUnicodeString ( &DeviceName );
+  RosRtlDevModeW2A ( lpDevMode, &DevModeW );
 
   return rc;
 }
