@@ -796,7 +796,7 @@ HRESULT WINAPI IStream16_fnSeek(
 	IStream16* iface,LARGE_INTEGER offset,DWORD whence,ULARGE_INTEGER *newpos
 ) {
 	ICOM_THIS(IStream16Impl,iface);
-	TRACE_(relay)("(%p)->([%ld.%ld],%ld,%p)\n",This,offset.s.HighPart,offset.s.LowPart,whence,newpos);
+	TRACE_(relay)("(%p)->([%ld.%ld],%ld,%p)\n",This,offset.u.HighPart,offset.u.LowPart,whence,newpos);
 
 	switch (whence) {
 	/* unix SEEK_xx should be the same as win95 ones */
@@ -804,31 +804,31 @@ HRESULT WINAPI IStream16_fnSeek(
 		/* offset must be ==0 (<0 is invalid, and >0 cannot be handled
 		 * right now.
 		 */
-		assert(offset.s.HighPart==0);
-		This->offset.s.HighPart = offset.s.HighPart;
-		This->offset.s.LowPart = offset.s.LowPart;
+		assert(offset.u.HighPart==0);
+		This->offset.u.HighPart = offset.u.HighPart;
+		This->offset.u.LowPart = offset.u.LowPart;
 		break;
 	case SEEK_CUR:
-		if (offset.s.HighPart < 0) {
+		if (offset.u.HighPart < 0) {
 			/* FIXME: is this negation correct ? */
-			offset.s.HighPart = -offset.s.HighPart;
-			offset.s.LowPart = (0xffffffff ^ offset.s.LowPart)+1;
+			offset.u.HighPart = -offset.u.HighPart;
+			offset.u.LowPart = (0xffffffff ^ offset.u.LowPart)+1;
 
-			assert(offset.s.HighPart==0);
-			assert(This->offset.s.LowPart >= offset.s.LowPart);
-			This->offset.s.LowPart -= offset.s.LowPart;
+			assert(offset.u.HighPart==0);
+			assert(This->offset.u.LowPart >= offset.u.LowPart);
+			This->offset.u.LowPart -= offset.u.LowPart;
 		} else {
-			assert(offset.s.HighPart==0);
-			This->offset.s.LowPart+= offset.s.LowPart;
+			assert(offset.u.HighPart==0);
+			This->offset.u.LowPart+= offset.u.LowPart;
 		}
 		break;
 	case SEEK_END:
-		assert(offset.s.HighPart==0);
-		This->offset.s.LowPart = This->stde.pps_size-offset.s.LowPart;
+		assert(offset.u.HighPart==0);
+		This->offset.u.LowPart = This->stde.pps_size-offset.u.LowPart;
 		break;
 	}
-	if (This->offset.s.LowPart>This->stde.pps_size)
-		This->offset.s.LowPart=This->stde.pps_size;
+	if (This->offset.u.LowPart>This->stde.pps_size)
+		This->offset.u.LowPart=This->stde.pps_size;
 	if (newpos) *newpos = This->offset;
 	return S_OK;
 }
@@ -848,11 +848,11 @@ HRESULT WINAPI IStream16_fnRead(
 	if (!pcbRead) bytesread=&xxread;
 	*bytesread = 0;
 
-	if (cb>This->stde.pps_size-This->offset.s.LowPart)
-		cb=This->stde.pps_size-This->offset.s.LowPart;
+	if (cb>This->stde.pps_size-This->offset.u.LowPart)
+		cb=This->stde.pps_size-This->offset.u.LowPart;
 	if (This->stde.pps_size < 0x1000) {
 		/* use small block reader */
-		blocknr = STORAGE_get_nth_next_small_blocknr(This->hf,This->stde.pps_sb,This->offset.s.LowPart/SMALLSIZE);
+		blocknr = STORAGE_get_nth_next_small_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
 		while (cb) {
 			int	cc;
 
@@ -861,10 +861,10 @@ HRESULT WINAPI IStream16_fnRead(
 				return E_FAIL;
 			}
 			cc = cb;
-			if (cc>SMALLSIZE-(This->offset.s.LowPart&(SMALLSIZE-1)))
-				cc=SMALLSIZE-(This->offset.s.LowPart&(SMALLSIZE-1));
-			memcpy((LPBYTE)pv,block+(This->offset.s.LowPart&(SMALLSIZE-1)),cc);
-			This->offset.s.LowPart+=cc;
+			if (cc>SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1)))
+				cc=SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1));
+			memcpy((LPBYTE)pv,block+(This->offset.u.LowPart&(SMALLSIZE-1)),cc);
+			This->offset.u.LowPart+=cc;
 			(LPBYTE)pv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
@@ -872,7 +872,7 @@ HRESULT WINAPI IStream16_fnRead(
 		}
 	} else {
 		/* use big block reader */
-		blocknr = STORAGE_get_nth_next_big_blocknr(This->hf,This->stde.pps_sb,This->offset.s.LowPart/BIGSIZE);
+		blocknr = STORAGE_get_nth_next_big_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
 		while (cb) {
 			int	cc;
 
@@ -881,10 +881,10 @@ HRESULT WINAPI IStream16_fnRead(
 				return E_FAIL;
 			}
 			cc = cb;
-			if (cc>BIGSIZE-(This->offset.s.LowPart&(BIGSIZE-1)))
-				cc=BIGSIZE-(This->offset.s.LowPart&(BIGSIZE-1));
-			memcpy((LPBYTE)pv,block+(This->offset.s.LowPart&(BIGSIZE-1)),cc);
-			This->offset.s.LowPart+=cc;
+			if (cc>BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1)))
+				cc=BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1));
+			memcpy((LPBYTE)pv,block+(This->offset.u.LowPart&(BIGSIZE-1)),cc);
+			This->offset.u.LowPart+=cc;
 			(LPBYTE)pv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
@@ -911,7 +911,7 @@ HRESULT WINAPI IStream16_fnWrite(
 
 	TRACE_(relay)("(%p)->(%p,%ld,%p)\n",This,pv,cb,pcbWrite);
 	/* do we need to junk some blocks? */
-	newsize	= This->offset.s.LowPart+cb;
+	newsize	= This->offset.u.LowPart+cb;
 	oldsize	= This->stde.pps_size;
 	if (newsize < oldsize) {
 		if (oldsize < 0x1000) {
@@ -1107,7 +1107,7 @@ HRESULT WINAPI IStream16_fnWrite(
 
 	/* finally the write pass */
 	if (This->stde.pps_size < 0x1000) {
-		blocknr = STORAGE_get_nth_next_small_blocknr(hf,This->stde.pps_sb,This->offset.s.LowPart/SMALLSIZE);
+		blocknr = STORAGE_get_nth_next_small_blocknr(hf,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
 		assert(blocknr>=0);
 		while (cb>0) {
 			/* we ensured that it is allocated above */
@@ -1118,10 +1118,10 @@ HRESULT WINAPI IStream16_fnWrite(
 			if (!STORAGE_get_small_block(hf,blocknr,block))
 				return E_FAIL;
 
-			cc = SMALLSIZE-(This->offset.s.LowPart&(SMALLSIZE-1));
+			cc = SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1));
 			if (cc>cb)
 				cc=cb;
-			memcpy(	((LPBYTE)block)+(This->offset.s.LowPart&(SMALLSIZE-1)),
+			memcpy(	((LPBYTE)block)+(This->offset.u.LowPart&(SMALLSIZE-1)),
 				(LPBYTE)((char *) pv+curoffset),
 				cc
 			);
@@ -1130,12 +1130,12 @@ HRESULT WINAPI IStream16_fnWrite(
 			cb			-= cc;
 			curoffset		+= cc;
 			(LPBYTE)pv		+= cc;
-			This->offset.s.LowPart	+= cc;
+			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
 			blocknr = STORAGE_get_next_small_blocknr(hf,blocknr);
 		}
 	} else {
-		blocknr = STORAGE_get_nth_next_big_blocknr(hf,This->stde.pps_sb,This->offset.s.LowPart/BIGSIZE);
+		blocknr = STORAGE_get_nth_next_big_blocknr(hf,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
 		assert(blocknr>=0);
 		while (cb>0) {
 			/* we ensured that it is allocated above, so it better is */
@@ -1146,10 +1146,10 @@ HRESULT WINAPI IStream16_fnWrite(
 			if (!STORAGE_get_big_block(hf,blocknr,block))
 				return E_FAIL;
 
-			cc = BIGSIZE-(This->offset.s.LowPart&(BIGSIZE-1));
+			cc = BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1));
 			if (cc>cb)
 				cc=cb;
-			memcpy(	((LPBYTE)block)+(This->offset.s.LowPart&(BIGSIZE-1)),
+			memcpy(	((LPBYTE)block)+(This->offset.u.LowPart&(BIGSIZE-1)),
 				(LPBYTE)((char *) pv+curoffset),
 				cc
 			);
@@ -1158,7 +1158,7 @@ HRESULT WINAPI IStream16_fnWrite(
 			cb			-= cc;
 			curoffset		+= cc;
 			(LPBYTE)pv		+= cc;
-			This->offset.s.LowPart	+= cc;
+			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
 			blocknr = STORAGE_get_next_big_blocknr(hf,blocknr);
 		}
@@ -1345,7 +1345,7 @@ HRESULT WINAPI IStorage16_fnStat(
         WideCharToMultiByte( CP_ACP, 0, This->stde.pps_rawname, -1, nameA, len, NULL, NULL );
 	pstatstg->pwcsName=(LPOLESTR16)MapLS( nameA );
 	pstatstg->type = This->stde.pps_type;
-	pstatstg->cbSize.s.LowPart = This->stde.pps_size;
+	pstatstg->cbSize.u.LowPart = This->stde.pps_size;
 	pstatstg->mtime = This->stde.pps_ft1; /* FIXME */ /* why? */
 	pstatstg->atime = This->stde.pps_ft2; /* FIXME */
 	pstatstg->ctime = This->stde.pps_ft2; /* FIXME */
@@ -1469,8 +1469,8 @@ HRESULT WINAPI IStorage16_fnCreateStream(
 	lpstr = MapSL((SEGPTR)*ppstm);
         DuplicateHandle( GetCurrentProcess(), This->hf, GetCurrentProcess(),
                          &lpstr->hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
-	lpstr->offset.s.LowPart	= 0;
-	lpstr->offset.s.HighPart	= 0;
+	lpstr->offset.u.LowPart	= 0;
+	lpstr->offset.u.HighPart	= 0;
 
 	ppsent=STORAGE_get_free_pps_entry(lpstr->hf);
 	if (ppsent<0)
@@ -1571,8 +1571,8 @@ HRESULT WINAPI IStorage16_fnOpenStream(
 		IStream16_fnRelease((IStream16*)lpstr);
 		return E_FAIL;
 	}
-	lpstr->offset.s.LowPart	= 0;
-	lpstr->offset.s.HighPart	= 0;
+	lpstr->offset.u.LowPart	= 0;
+	lpstr->offset.u.HighPart	= 0;
 	lpstr->ppsent		= newpps;
 	return S_OK;
 }

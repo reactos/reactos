@@ -193,8 +193,8 @@ HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
   /*
    * Initialize the size of the array to the size of the handle.
    */
-  newLockBytes->byteArraySize.s.HighPart = 0;
-  newLockBytes->byteArraySize.s.LowPart  = GlobalSize16(
+  newLockBytes->byteArraySize.u.HighPart = 0;
+  newLockBytes->byteArraySize.u.LowPart  = GlobalSize16(
 					    newLockBytes->supportHandle);
 
   return (HGLOBALLockBytesImpl16*)MapLS(newLockBytes);
@@ -329,7 +329,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
   ULONG bytesReadBuffer = 0;
   ULONG bytesToReadFromBuffer;
 
-  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.s.LowPart,pv,cb,pcbRead);
+  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbRead);
   /*
    * If the caller is not interested in the number of bytes read,
    * we use another buffer to avoid "if" statements in the code.
@@ -340,15 +340,15 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
   /*
    * Make sure the offset is valid.
    */
-  if (ulOffset.s.LowPart > This->byteArraySize.s.LowPart)
+  if (ulOffset.u.LowPart > This->byteArraySize.u.LowPart)
     return E_FAIL;
 
   /*
    * Using the known size of the array, calculate the number of bytes
    * to read.
    */
-  bytesToReadFromBuffer = min(This->byteArraySize.s.LowPart -
-                              ulOffset.s.LowPart, cb);
+  bytesToReadFromBuffer = min(This->byteArraySize.u.LowPart -
+                              ulOffset.u.LowPart, cb);
 
   /*
    * Lock the buffer in position and copy the data.
@@ -356,7 +356,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
   supportBuffer = GlobalLock16(This->supportHandle);
 
   memcpy(pv,
-         (char *) supportBuffer + ulOffset.s.LowPart,
+         (char *) supportBuffer + ulOffset.u.LowPart,
          bytesToReadFromBuffer);
 
   /*
@@ -402,7 +402,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
   ULARGE_INTEGER newSize;
   ULONG          bytesWritten = 0;
 
-  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.s.LowPart,pv,cb,pcbWritten);
+  TRACE("(%p,%ld,%p,%ld,%p)\n",This,ulOffset.u.LowPart,pv,cb,pcbWritten);
   /*
    * If the caller is not interested in the number of bytes written,
    * we use another buffer to avoid "if" statements in the code.
@@ -413,13 +413,13 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
   if (cb == 0)
     return S_OK;
 
-  newSize.s.HighPart = 0;
-  newSize.s.LowPart = ulOffset.s.LowPart + cb;
+  newSize.u.HighPart = 0;
+  newSize.u.LowPart = ulOffset.u.LowPart + cb;
 
   /*
    * Verify if we need to grow the stream
    */
-  if (newSize.s.LowPart > This->byteArraySize.s.LowPart)
+  if (newSize.u.LowPart > This->byteArraySize.u.LowPart)
   {
     /* grow stream */
     if (HGLOBALLockBytesImpl16_SetSize(iface, newSize) == STG_E_MEDIUMFULL)
@@ -431,7 +431,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
    */
   supportBuffer = GlobalLock16(This->supportHandle);
 
-  memcpy((char *) supportBuffer + ulOffset.s.LowPart, pv, cb);
+  memcpy((char *) supportBuffer + ulOffset.u.LowPart, pv, cb);
 
   /*
    * Return the number of bytes written.
@@ -471,26 +471,26 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_SetSize(
   HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
   HGLOBAL16 supportHandle;
 
-  TRACE("(%p,%ld)\n",This,libNewSize.s.LowPart);
+  TRACE("(%p,%ld)\n",This,libNewSize.u.LowPart);
   /*
    * As documented.
    */
-  if (libNewSize.s.HighPart != 0)
+  if (libNewSize.u.HighPart != 0)
     return STG_E_INVALIDFUNCTION;
 
-  if (This->byteArraySize.s.LowPart == libNewSize.s.LowPart)
+  if (This->byteArraySize.u.LowPart == libNewSize.u.LowPart)
     return S_OK;
 
   /*
    * Re allocate the HGlobal to fit the new size of the stream.
    */
-  supportHandle = GlobalReAlloc16(This->supportHandle, libNewSize.s.LowPart, 0);
+  supportHandle = GlobalReAlloc16(This->supportHandle, libNewSize.u.LowPart, 0);
 
   if (supportHandle == 0)
     return STG_E_MEDIUMFULL;
 
   This->supportHandle = supportHandle;
-  This->byteArraySize.s.LowPart = libNewSize.s.LowPart;
+  This->byteArraySize.u.LowPart = libNewSize.u.LowPart;
 
   return S_OK;
 }
