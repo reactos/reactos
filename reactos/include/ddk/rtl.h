@@ -200,6 +200,7 @@ RtlCharToInteger (
 	);
 
 NTSTATUS
+STDCALL
 RtlCheckRegistryKey (
 	ULONG	RelativeTo,
 	PWSTR	Path
@@ -263,6 +264,7 @@ RtlCopyUnicodeString (
 	);
 
 NTSTATUS
+STDCALL
 RtlCreateRegistryKey (
 	ULONG	RelativeTo,
 	PWSTR	Path
@@ -275,6 +277,7 @@ RtlCreateSecurityDescriptor (
 	);
 
 NTSTATUS
+STDCALL
 RtlDeleteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
@@ -575,6 +578,7 @@ RtlMoveMemory (
 	);
 
 NTSTATUS
+STDCALL
 RtlQueryRegistryValues (
 	ULONG				RelativeTo,
 	PWSTR				Path, 
@@ -713,6 +717,7 @@ RtlValidSecurityDescriptor (
 	);
 
 NTSTATUS
+STDCALL
 RtlWriteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
@@ -768,6 +773,7 @@ RtlUnlockHeap (
 	);
 
 UINT
+STDCALL
 RtlCompactHeap (
 	HANDLE	hheap,
 	DWORD	flags

@@ -7,7 +7,7 @@
 #define RES_UINT_FV_MINOR	0
 #define RES_UINT_FV_REVISION	14
 /* Build number as YYYYMMDD */
-#define RES_UINT_FV_BUILD	19990717
+#define RES_UINT_FV_BUILD	19990828
 
 /* ReactOS Product Version UINTs */
 

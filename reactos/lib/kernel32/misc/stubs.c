@@ -1,4 +1,5 @@
-/* $Id: stubs.c,v 1.2 1999/07/17 23:10:20 ea Exp $
+/* $Id: stubs.c,v 1.3 1999/08/29 06:59:03 ea Exp $
+ *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
@@ -3436,17 +3437,6 @@ RegisterConsoleVDM (
 	DWORD	Unknown8,
 	DWORD	Unknown9,
 	DWORD	Unknown10
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-RegisterWaitForInputIdle (
-	DWORD	Unknown0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

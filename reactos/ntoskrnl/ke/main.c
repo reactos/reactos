@@ -1,4 +1,5 @@
-/*
+/* $Id: main.c,v 1.22 1999/08/29 06:59:10 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -107,13 +108,13 @@ extern int edata;
 extern int end;
 
 static char * INIData =
-  "[HKEY_LOCAL_MACHINE\HARDWARE]\r\n"
+  "[HKEY_LOCAL_MACHINE\\HARDWARE]\r\n"
   "\r\n"
-  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP]\r\n"
+  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP]\r\n"
   "\r\n"
-  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\AtDisk]\r\n"
+  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP\\AtDisk]\r\n"
   "\r\n"
-  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\AtDisk\Controller 0]\r\n"
+  "[HKEY_LOCAL_MACHINE\\HARDWARE\\DEVICEMAP\\AtDisk\\Controller 0]\r\n"
   "Controller Address=dword:000001f0\r\n"
   "Controller Interrupt=dword:0000000e\r\n"
   "\r\n"
@@ -148,7 +149,7 @@ asmlinkage void _main(boot_param* _bp)
     */
    HalInitConsole(&bp);
    
-   DbgPrint("Starting ReactOS "KERNEL_VERSION"\n");
+   DbgPrint("Starting ReactOS "KERNEL_VERSION" (Build "__DATE__", "__TIME__")\n");
 
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    if (start < ((int)&end))
@@ -214,3 +215,5 @@ asmlinkage void _main(boot_param* _bp)
    PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
+
+/* EOF */

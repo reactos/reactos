@@ -1,4 +1,5 @@
-/*
+/* $Id: section.c,v 1.14 1999/08/29 06:59:10 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -179,39 +180,110 @@ NtCreateSection (
 }
 
 
+/**********************************************************************
+ * NAME
+ * 	NtOpenSection
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ * 	SectionHandle
+ *
+ * 	DesiredAccess
+ *
+ * 	ObjectAttributes
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ */
 NTSTATUS
+STDCALL
 NtOpenSection (
 	PHANDLE			SectionHandle,
 	ACCESS_MASK		DesiredAccess,
 	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
 {
-   PVOID Object;
-   NTSTATUS Status;
+	PVOID		Object;
+	NTSTATUS	Status;
    
-   *SectionHandle = 0;
+	*SectionHandle = 0;
 
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    MmSectionType,
-				    UserMode,
-				    NULL,
-				    &Object);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+	Status = ObReferenceObjectByName(
+			ObjectAttributes->ObjectName,
+			ObjectAttributes->Attributes,
+			NULL,
+			DesiredAccess,
+			MmSectionType,
+			UserMode,
+			NULL,
+			& Object
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
        
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Object,
-			   DesiredAccess,
-			   FALSE,
-			   SectionHandle);
-   return(Status);
+	Status = ObCreateHandle(
+			PsGetCurrentProcess(),
+			Object,
+			DesiredAccess,
+			FALSE,
+			SectionHandle
+			);
+	return Status;
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtMapViewOfSection
+ *
+ * DESCRIPTION
+ * 	Maps a view of a section into the virtual address space of a 
+ *	process.
+ *	
+ * ARGUMENTS
+ *	SectionHandle
+ *		Handle of the section.
+ *		
+ *	ProcessHandle
+ *		Handle of the process.
+ *		
+ *	BaseAddress
+ *		Desired base address (or NULL) on entry;
+ *		Actual base address of the view on exit.
+ *		
+ *	ZeroBits
+ *		Number of high order address bits that must be zero.
+ *		
+ *	CommitSize
+ *		Size in bytes of the initially committed section of 
+ *		the view.
+ *		
+ *	SectionOffset
+ *		Offset in bytes from the beginning of the section
+ *		to the beginning of the view.
+ *		
+ *	ViewSize
+ *		Desired length of map (or zero to map all) on entry
+ *		Actual length mapped on exit.
+ *		
+ *	InheritDisposition
+ *		Specified how the view is to be shared with
+ *              child processes.
+ *              
+ *	AllocateType
+ *		Type of allocation for the pages.
+ *		
+ *	Protect
+ *		Protection for the committed region of the view.
+ *
+ * RETURN VALUE
+ * 	Status.
+ */
 NTSTATUS
 STDCALL
 NtMapViewOfSection (
@@ -226,137 +298,158 @@ NtMapViewOfSection (
 	ULONG		AllocationType,
 	ULONG		Protect
 	)
-/*
- * FUNCTION: Maps a view of a section into the virtual address space of a 
- *           process
- * ARGUMENTS:
- *        SectionHandle = Handle of the section
- *        ProcessHandle = Handle of the process
- *        BaseAddress = Desired base address (or NULL) on entry
- *                      Actual base address of the view on exit
- *        ZeroBits = Number of high order address bits that must be zero
- *        CommitSize = Size in bytes of the initially committed section of 
- *                     the view 
- *        SectionOffset = Offset in bytes from the beginning of the section
- *                        to the beginning of the view
- *        ViewSize = Desired length of map (or zero to map all) on entry
- *                   Actual length mapped on exit
- *        InheritDisposition = Specified how the view is to be shared with
- *                            child processes
- *        AllocateType = Type of allocation for the pages
- *        Protect = Protection for the committed region of the view
- * RETURNS: Status
- */
 {
-   PSECTION_OBJECT Section;
-   PEPROCESS Process;
-   MEMORY_AREA* Result;
-   NTSTATUS Status;
+	PSECTION_OBJECT	Section;
+	PEPROCESS	Process;
+	MEMORY_AREA	* Result;
+	NTSTATUS	Status;
    
-   DPRINT("NtMapViewOfSection(Section:%08lx, Process:%08lx,\n"
-          "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
-          "  SectionOffs:%08lx, *ViewSize:%08lx, InheritDisp:%08lx,\n"
-          "  AllocType:%08lx, Protect:%08lx)\n",
-	  SectionHandle, 
-          ProcessHandle,
-          BaseAddress,
-          ZeroBits,
-          CommitSize,
-          SectionOffset,
-          *ViewSize,
-          InheritDisposition,
-          AllocationType,
-          Protect);
-   DPRINT("  *Base:%08lx\n", *BaseAddress);
+	DPRINT(
+		"NtMapViewOfSection(Section:%08lx, Process:%08lx,\n"
+		"  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
+		"  SectionOffs:%08lx, *ViewSize:%08lx, InheritDisp:%08lx,\n"
+		"  AllocType:%08lx, Protect:%08lx)\n",
+		SectionHandle, 
+		ProcessHandle,
+		BaseAddress,
+		ZeroBits,
+		CommitSize,
+		SectionOffset,
+		*ViewSize,
+		InheritDisposition,
+		AllocationType,
+		Protect
+		);
    
-   Status = ObReferenceObjectByHandle(SectionHandle,
-				      SECTION_MAP_READ,
-				      MmSectionType,
-				      UserMode,
-				      (PVOID*)&Section,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	DPRINT("ObReference failed rc=%x\n",Status);
-	return(Status);
-     }
+	DPRINT("  *Base:%08lx\n", *BaseAddress);
    
-   DPRINT("Section %x\n",Section);
+	Status = ObReferenceObjectByHandle(
+			SectionHandle,
+			SECTION_MAP_READ,
+			MmSectionType,
+			UserMode,
+			(PVOID *) & Section,
+			NULL
+			);
+	if (Status != STATUS_SUCCESS)
+	{
+		DPRINT("ObReference failed rc=%x\n",Status);
+
+		return Status;
+	}
    
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_VM_OPERATION,
-				      PsProcessType,
-				      UserMode,
-				      (PVOID*)&Process,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
+	DPRINT("Section %x\n",Section);
+
+	Status = ObReferenceObjectByHandle(
+			ProcessHandle,
+			PROCESS_VM_OPERATION,
+			PsProcessType,
+			UserMode,
+			(PVOID *) & Process,
+			NULL
+			);
+	if (Status != STATUS_SUCCESS)
+	{
+		ObDereferenceObject(Section);
+		
+		return Status;
+	}
+   
+	DPRINT("ViewSize %x\n",ViewSize);
+   
+	if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+	{
+		(*ViewSize) = Section->MaximumSize.u.LowPart;
+	}
+   
+	Status = MmCreateMemoryArea(
+			UserMode,
+			Process,
+			MEMORY_AREA_SECTION_VIEW_COMMIT,
+			BaseAddress,
+			* ViewSize,
+			Protect,
+			& Result
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("NtMapViewOfSection() = %x\n",Status);
+
+		ObDereferenceObject(Process);
+		ObDereferenceObject(Section);
+		
+		return Status;
+	}
+	Result->Data.SectionData.Section = Section;
+   
+	DPRINT("SectionOffset %x\n",SectionOffset);
+   
+	if (SectionOffset == NULL)
+	{
+		Result->Data.SectionData.ViewOffset = 0;
+	}
+	else
+	{
+		Result->Data.SectionData.ViewOffset =
+			SectionOffset->u.LowPart;
+	}
+   
+	DPRINT("*BaseAddress %x\n",*BaseAddress);
+	ObDereferenceObject(Process);   
 	ObDereferenceObject(Section);
-	return(Status);
-     }
-   
-   DPRINT("ViewSize %x\n",ViewSize);
-   if ((*ViewSize) > Section->MaximumSize.u.LowPart)
-     {
-        (*ViewSize) = Section->MaximumSize.u.LowPart;
-     }
-   
-   Status = MmCreateMemoryArea(UserMode,
-			       Process,
-			       MEMORY_AREA_SECTION_VIEW_COMMIT,
-			       BaseAddress,
-			       *ViewSize,
-			       Protect,
-			       &Result);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("NtMapViewOfSection() = %x\n",Status);
-	ObDereferenceObject(Process);
-	ObDereferenceObject(Section);
-	return(Status);
-     }
-   Result->Data.SectionData.Section = Section;
-   
-   DPRINT("SectionOffset %x\n",SectionOffset);
-   
-   if (SectionOffset == NULL)
-     {
-	Result->Data.SectionData.ViewOffset = 0;
-     }
-   else
-     {
-        Result->Data.SectionData.ViewOffset = SectionOffset->u.LowPart;
-     }
-   
-   DPRINT("*BaseAddress %x\n",*BaseAddress);
-   ObDereferenceObject(Process);   
-   ObDereferenceObject(Section);
-   return(STATUS_SUCCESS);
+	
+	return STATUS_SUCCESS;
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtUnmapViewOfSection
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *	ProcessHandle
+ *
+ *	BaseAddress
+ *
+ * RETURN VALUE
+ *	Status.
+ *
+ * REVISIONS
+ *
+ */
 NTSTATUS
+STDCALL
 NtUnmapViewOfSection (
 	HANDLE	ProcessHandle,
 	PVOID	BaseAddress
 	)
 {
-   PEPROCESS Process;
-   NTSTATUS Status;
+	PEPROCESS	Process;
+	NTSTATUS	Status;
    
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_VM_OPERATION,
-				      PsProcessType,
-				      UserMode,
-				      (PVOID*)&Process,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-   Status = MmFreeMemoryArea(Process,BaseAddress,0,TRUE);
-   ObDereferenceObject(Process);
-   return(Status);
+	Status = ObReferenceObjectByHandle(
+			ProcessHandle,
+			PROCESS_VM_OPERATION,
+			PsProcessType,
+			UserMode,
+			(PVOID *) & Process,
+			NULL
+			);
+	if (Status != STATUS_SUCCESS)
+	{
+		return Status;
+	}
+	Status = MmFreeMemoryArea(
+			Process,
+			BaseAddress,
+			0,
+			TRUE
+			);
+	ObDereferenceObject(Process);
+
+	return Status;
 }
 
 
@@ -395,3 +488,6 @@ NtExtendSection (
 {
 	UNIMPLEMENTED;
 }
+
+
+/* EOF */

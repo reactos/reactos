@@ -1,4 +1,5 @@
-/*
+/* $Id: startup.c,v 1.9 1999/08/29 06:59:04 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/ldr/startup.c
@@ -9,6 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <reactos/config.h>
 #define WIN32_NO_PEHDR
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -18,7 +20,9 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 
+#ifndef DBG_NTDLL_LDR_STARTUP
 #define NDEBUG
+#endif
 #include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
@@ -30,8 +34,11 @@ extern HANDLE __ProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
-			       PHANDLE PtrNTDllSectionHandle)
+NTSTATUS
+LdrMapNTDllForProcess (
+	HANDLE	ProcessHandle,
+	PHANDLE	PtrNTDllSectionHandle
+	)
 {
    ULONG InitialViewSize;
    NTSTATUS Status;
@@ -125,3 +132,6 @@ VOID LdrStartup(HANDLE SectionHandle,
    Status = EntryPoint();
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }
+
+
+/* EOF */

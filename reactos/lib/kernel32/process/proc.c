@@ -1,4 +1,5 @@
-/*
+/* $Id: proc.c,v 1.19 1999/08/29 06:59:03 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c
@@ -49,44 +50,79 @@ typedef struct _WSTARTUPINFO {
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
-VOID RegisterWaitForInputIdle(WaitForInputIdleType  lpfnRegisterWaitForInputIdle);
+VOID
+STDCALL
+RegisterWaitForInputIdle (
+	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
+	);
 
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
+WINBOOL
+STDCALL
+GetProcessId (
+	HANDLE	hProcess,
+	LPDWORD	lpProcessId
+	);
 
-FARPROC GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+
+FARPROC
+STDCALL
+GetProcAddress (
+	HMODULE	hModule,
+	LPCSTR	lpProcName
+	)
 {
-   UNIMPLEMENTED;
-   return(NULL);
+	UNIMPLEMENTED;
+	return NULL;
 }
 
-WINBOOL STDCALL GetProcessTimes(HANDLE hProcess,
-				LPFILETIME lpCreationTime,
-				LPFILETIME lpExitTime,
-				LPFILETIME lpKernelTime,
-				LPFILETIME lpUserTime)
+
+WINBOOL
+STDCALL
+GetProcessTimes (
+	HANDLE		hProcess,
+	LPFILETIME	lpCreationTime,
+	LPFILETIME	lpExitTime,
+	LPFILETIME	lpKernelTime,
+	LPFILETIME	lpUserTime
+	)
 {
-   dprintf("GetProcessTimes is unimplemented\n");
-   return(FALSE);
+	dprintf("GetProcessTimes is unimplemented\n");
+	return FALSE;
 }
 
-HANDLE STDCALL GetCurrentProcess(VOID)
+
+HANDLE
+STDCALL
+GetCurrentProcess (VOID)
 {
-	return (HANDLE)NtCurrentProcess();
+	return (HANDLE) NtCurrentProcess();
 }
 
-HANDLE STDCALL GetCurrentThread(VOID)
+
+HANDLE
+STDCALL
+GetCurrentThread (VOID)
 {
-	return (HANDLE)NtCurrentThread();
+	return (HANDLE) NtCurrentThread();
 }
 
-DWORD STDCALL GetCurrentProcessId(VOID)
+
+DWORD
+STDCALL
+GetCurrentProcessId (VOID)
 {	
-	return (DWORD)(GetTeb()->Cid).UniqueProcess;		
+	return (DWORD) (GetTeb()->Cid).UniqueProcess;		
 }
 
-WINBOOL STDCALL GetExitCodeProcess(HANDLE hProcess, LPDWORD lpExitCode)
+
+WINBOOL
+STDCALL
+GetExitCodeProcess (
+	HANDLE	hProcess,
+	LPDWORD	lpExitCode
+	)
 {
    NTSTATUS errCode;
    PROCESS_BASIC_INFORMATION ProcessBasic;
@@ -106,7 +142,13 @@ WINBOOL STDCALL GetExitCodeProcess(HANDLE hProcess, LPDWORD lpExitCode)
    return TRUE;	
 }
 
-WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId )
+
+WINBOOL
+STDCALL
+GetProcessId (
+	HANDLE	hProcess,
+	LPDWORD	lpProcessId 
+	)
 {
    NTSTATUS errCode;
    PROCESS_BASIC_INFORMATION ProcessBasic;
@@ -126,7 +168,13 @@ WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId )
    return TRUE;	
 }
 
-PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength)
+
+PWSTR
+InternalAnsiToUnicode (
+	PWSTR	Out,
+	LPCSTR	In,
+	ULONG	MaxLength
+	)
 {
    ULONG i;
    
@@ -148,9 +196,14 @@ PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength)
      }
 }
 
-HANDLE STDCALL OpenProcess(DWORD dwDesiredAccess,
-			   WINBOOL bInheritHandle,
-			   DWORD dwProcessId)
+
+HANDLE
+STDCALL
+OpenProcess (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	DWORD	dwProcessId
+	)
 {
    NTSTATUS errCode;
    HANDLE ProcessHandle;
@@ -183,7 +236,13 @@ HANDLE STDCALL OpenProcess(DWORD dwDesiredAccess,
    return ProcessHandle;
 }
 
-UINT WinExec (LPCSTR lpCmdLine, UINT uCmdShow)
+
+UINT
+STDCALL
+WinExec (
+	LPCSTR	lpCmdLine,
+	UINT	uCmdShow
+	)
 {
    STARTUPINFO StartupInfo;
    PROCESS_INFORMATION  ProcessInformation; 	
@@ -217,27 +276,45 @@ UINT WinExec (LPCSTR lpCmdLine, UINT uCmdShow)
 }
 
 
-
-VOID RegisterWaitForInputIdle(WaitForInputIdleType 
-			      lpfnRegisterWaitForInputIdle)
+VOID
+STDCALL
+RegisterWaitForInputIdle (
+	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
+	)
 {
-   lpfnGlobalRegisterWaitForInputIdle = lpfnRegisterWaitForInputIdle; 
-   return;
+	lpfnGlobalRegisterWaitForInputIdle = lpfnRegisterWaitForInputIdle; 
+	return;
 }
 
-DWORD STDCALL WaitForInputIdle(HANDLE hProcess,	
-			       DWORD dwMilliseconds)
+
+DWORD
+STDCALL
+WaitForInputIdle (
+	HANDLE	hProcess,	
+	DWORD	dwMilliseconds
+	)
 {
-   return 0;
+	return 0;
 }
 
-VOID STDCALL Sleep(DWORD dwMilliseconds)
+
+VOID
+STDCALL
+Sleep (
+	DWORD	dwMilliseconds
+	)
 {
-   SleepEx(dwMilliseconds,FALSE);
-   return;
+	SleepEx (dwMilliseconds, FALSE);
+	return;
 }
 
-DWORD STDCALL SleepEx(DWORD dwMilliseconds, BOOL bAlertable)
+
+DWORD
+STDCALL
+SleepEx (
+	DWORD	dwMilliseconds,
+	BOOL	bAlertable
+	)
 {
 	TIME Interval;
 	NTSTATUS errCode;	
@@ -245,14 +322,20 @@ DWORD STDCALL SleepEx(DWORD dwMilliseconds, BOOL bAlertable)
         Interval.QuadPart = dwMilliseconds * 1000;
 
 	errCode = NtDelayExecution(bAlertable,&Interval);
-	if ( !NT_SUCCESS(errCode) ) {
+	if ( !NT_SUCCESS(errCode) )
+	{
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return -1;
 	}
 	return 0;
 }
 
-VOID STDCALL GetStartupInfoW(LPSTARTUPINFO _lpStartupInfo)
+
+VOID
+STDCALL
+GetStartupInfoW (
+	LPSTARTUPINFO	_lpStartupInfo
+	)
 {
    NT_PEB *pPeb = NtCurrentPeb();
    LPWSTARTUPINFO lpStartupInfo = (LPWSTARTUPINFO)_lpStartupInfo;
@@ -305,7 +388,11 @@ VOID STDCALL GetStartupInfoW(LPSTARTUPINFO _lpStartupInfo)
 }
 
 
-VOID STDCALL GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
+VOID
+STDCALL
+GetStartupInfoA (
+	LPSTARTUPINFO	lpStartupInfo
+	)
 {
    NT_PEB *pPeb = NtCurrentPeb();
    ULONG i = 0;
@@ -355,26 +442,50 @@ VOID STDCALL GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
    return;
 }
 
-BOOL STDCALL FlushInstructionCache(HANDLE hProcess,	
-				   LPCVOID lpBaseAddress,	
-				   DWORD dwSize)
+
+BOOL
+STDCALL
+FlushInstructionCache (
+	HANDLE	hProcess,	
+	LPCVOID	lpBaseAddress,	
+	DWORD	dwSize
+	)
 {
-   NTSTATUS errCode;
-   errCode = NtFlushInstructionCache(hProcess,(PVOID)lpBaseAddress,dwSize);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
-   return TRUE;
+	NTSTATUS	errCode;
+
+	errCode = NtFlushInstructionCache(
+			hProcess,
+			(PVOID) lpBaseAddress,
+			dwSize
+			);
+	if (!NT_SUCCESS(errCode))
+	{
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
 }
 
-VOID STDCALL ExitProcess(UINT uExitCode)
+
+VOID
+STDCALL
+ExitProcess (
+	UINT	uExitCode
+	)
 {
-   NtTerminateProcess(NtCurrentProcess(), uExitCode);
+	NtTerminateProcess(
+		NtCurrentProcess(),
+		uExitCode
+		);
 }
 
-WINBOOL STDCALL TerminateProcess(HANDLE hProcess, UINT uExitCode)
+
+WINBOOL
+STDCALL
+TerminateProcess (
+	HANDLE	hProcess,
+	UINT	uExitCode
+	)
 {
    NTSTATUS errCode;
    errCode = NtTerminateProcess(hProcess, uExitCode);
@@ -386,7 +497,12 @@ WINBOOL STDCALL TerminateProcess(HANDLE hProcess, UINT uExitCode)
    return TRUE;
 }
 
-VOID STDCALL FatalAppExitA(UINT uAction, LPCSTR lpMessageText)
+VOID
+STDCALL
+FatalAppExitA (
+	UINT	uAction,
+	LPCSTR	lpMessageText
+	)
 {
    WCHAR MessageTextW[MAX_PATH];
    UINT i;
@@ -404,7 +520,15 @@ VOID STDCALL FatalAppExitA(UINT uAction, LPCSTR lpMessageText)
 
 
 	
-VOID STDCALL FatalAppExitW(UINT uAction, LPCWSTR lpMessageText)
+VOID
+STDCALL
+FatalAppExitW (
+	UINT	uAction,
+	LPCWSTR	lpMessageText
+	)
 {
-   return;	
+	return;	
 }
+
+
+/* EOF */

@@ -370,6 +370,7 @@ IoCreateNotificationEvent (
 	);
 
 NTSTATUS
+STDCALL
 IoCreateSymbolicLink (
 	PUNICODE_STRING	SymbolicLinkName,
 	PUNICODE_STRING	DeviceName
@@ -382,6 +383,7 @@ IoCreateSynchronizationEvent (
 	);
 
 NTSTATUS
+STDCALL
 IoCreateUnprotectedSymbolicLink (
 	PUNICODE_STRING	SymbolicLinkName,
 	PUNICODE_STRING	DeviceName
@@ -404,6 +406,7 @@ IoDeleteDevice (
 	);
 
 NTSTATUS
+STDCALL
 IoDeleteSymbolicLink (
 	PUNICODE_STRING	SymbolicLinkName
 	);

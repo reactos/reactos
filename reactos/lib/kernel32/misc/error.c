@@ -1,3 +1,8 @@
+/* $Id: error.c,v 1.11 1999/08/29 06:59:02 ea Exp $
+ *
+ * reactos/lib/kernel32/misc/error.c
+ *
+ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
@@ -9,25 +14,38 @@
 static DWORD LastError=0;
 
 
-VOID SetLastError(DWORD dwErrorCode)
+VOID
+STDCALL
+SetLastError (
+	DWORD	dwErrorCode
+	)
 {
-   LastError = dwErrorCode;
+	/* FIXME: it is per thread */
+	LastError = dwErrorCode;
 }
 
-DWORD GetLastError(VOID)
+DWORD
+STDCALL
+GetLastError (VOID)
 {
-   return(LastError);
+	/* FIXME: it is per thread */
+	return LastError;
 }
 
-BOOL __ErrorReturnFalse(ULONG ErrorCode)
+
+BOOL
+__ErrorReturnFalse (ULONG ErrorCode)
 {
    return(FALSE);
 }
 
-PVOID __ErrorReturnNull(ULONG ErrorCode)
+
+PVOID
+__ErrorReturnNull (ULONG ErrorCode)
 {
    return(NULL);
 }
+
 
 WINBOOL
 STDCALL
@@ -65,3 +83,5 @@ Beep (DWORD dwFreq, DWORD dwDuration)
     return TRUE;
 }
 
+
+/* EOF */

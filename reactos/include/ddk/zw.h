@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.17 1999/07/22 21:29:46 ekohl Exp $
+/* $Id: zw.h,v 1.18 1999/08/29 06:58:59 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4143,21 +4143,21 @@ ZwSetHighWaitLowEventPair(
 NTSTATUS
 STDCALL
 NtSetInformationFile(
-    	IN HANDLE FileHandle,
-    	IN PIO_STATUS_BLOCK IoStatusBlock,
-    	IN PVOID FileInformation,
-   	IN ULONG Length,
-    	IN FILE_INFORMATION_CLASS FileInformationClass
-    	);
+	IN	HANDLE			FileHandle,
+	IN	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	PVOID			FileInformation,
+	IN	ULONG			Length,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass
+	);
 NTSTATUS
 STDCALL
 ZwSetInformationFile(
-    	IN HANDLE FileHandle,
-    	IN PIO_STATUS_BLOCK IoStatusBlock,
-    	IN PVOID FileInformation,
-   	IN ULONG Length,
-    	IN FILE_INFORMATION_CLASS FileInformationClass
-    	);
+	IN	HANDLE			FileHandle,
+	IN	PIO_STATUS_BLOCK	IoStatusBlock,
+	IN	PVOID			FileInformation,
+	IN	ULONG			Length,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass
+	);
 
 
 

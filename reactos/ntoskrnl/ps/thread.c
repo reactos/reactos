@@ -1,4 +1,5 @@
-/*
+/* $Id: thread.c,v 1.25 1999/08/29 06:59:11 ea Exp $
+ *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/thread.c
@@ -117,100 +118,129 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
    KeBugCheck(0);
 }
 
-static PETHREAD PsScanThreadList(KPRIORITY Priority)
+static
+PETHREAD
+PsScanThreadList (
+	KPRIORITY	Priority
+	)
 {
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   PETHREAD oldest = NULL;
-   ULONG oldest_time = 0;
+	PLIST_ENTRY	current_entry;
+	PETHREAD	current;
+	PETHREAD	oldest = NULL;
+	ULONG		oldest_time = 0;
    
-//   DPRINT("PsScanThreadList(Priority %d)\n",Priority);
+//	DPRINT("PsScanThreadList(Priority %d)\n",Priority);
    
-   current_entry = PriorityListHead[THREAD_PRIORITY_MAX+Priority].Flink;
-   while (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX+Priority])
-     {
-	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.Entry);
+	current_entry =
+		PriorityListHead[THREAD_PRIORITY_MAX + Priority].Flink;
 
-	if (current->Tcb.State == THREAD_STATE_TERMINATED &&
-	    current != CurrentThread)
-	  {
-	     PsReleaseThread(current);
-	  }
+	while (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX+Priority])
+	{
+		current = CONTAINING_RECORD(
+				current_entry,
+				ETHREAD,
+				Tcb.Entry
+				);
 
-	if (current->Tcb.State == THREAD_STATE_RUNNABLE)
-	  {
-	     if (oldest == NULL || oldest_time > current->Tcb.LastTick)
-	       {
-		  oldest = current;
-		  oldest_time = current->Tcb.LastTick;
-	       }
-	  }
-	current_entry = current_entry->Flink;
-     }
-//   DPRINT("PsScanThreadList() = %x\n",oldest);
-   return(oldest);
+		if (	(current->Tcb.State == THREAD_STATE_TERMINATED)
+			&& (current != CurrentThread)
+			)
+		{
+			PsReleaseThread(current);
+		}
+
+		if (current->Tcb.State == THREAD_STATE_RUNNABLE)
+		{
+			if (	(oldest == NULL)
+				|| (oldest_time > current->Tcb.LastTick)
+				)
+			{
+				oldest = current;
+				oldest_time = current->Tcb.LastTick;
+			}
+		}
+		current_entry = current_entry->Flink;
+	}
+//	DPRINT("PsScanThreadList() = %x\n",oldest);
+	return oldest;
 }
 
-VOID PsDispatchThread(VOID)
+
+VOID
+PsDispatchThread (VOID)
 {
-   KPRIORITY CurrentPriority;
-   PETHREAD Candidate;
-   KIRQL irql;
-   LARGE_INTEGER TickCount;
+	KPRIORITY	CurrentPriority;
+	PETHREAD	Candidate;
+	KIRQL		irql;
+	LARGE_INTEGER	TickCount;
+
+	if (!DoneInitYet)
+	{
+		return;
+	}
    
-   if (!DoneInitYet)
-     {
-	return;
-     }
+	KeAcquireSpinLock(
+		& ThreadListLock,
+		& irql
+		);
    
-   KeAcquireSpinLock(&ThreadListLock, &irql);
-   
-   DPRINT("PsDispatchThread() Current %x\n",CurrentThread);
+	DPRINT("PsDispatchThread() Current %x\n",CurrentThread);
       
-   if (CurrentThread->Tcb.State==THREAD_STATE_RUNNING)     
-     {
-	CurrentThread->Tcb.State=THREAD_STATE_RUNNABLE;
-     }
+	if (CurrentThread->Tcb.State == THREAD_STATE_RUNNING)     
+	{
+		CurrentThread->Tcb.State = THREAD_STATE_RUNNABLE;
+	}
    
-   for (CurrentPriority=THREAD_PRIORITY_TIME_CRITICAL; 
-	CurrentPriority>=THREAD_PRIORITY_IDLE;
-	CurrentPriority--)
-     {
-	Candidate = PsScanThreadList(CurrentPriority);
-	if (Candidate == CurrentThread)
-	  {
-             DPRINT("Scheduling current thread\n");
-             KeQueryTickCount(&TickCount);
-             CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
-	     CurrentThread->Tcb.State = THREAD_STATE_RUNNING;
-	     KeReleaseSpinLock(&ThreadListLock,irql);
-	     return;
-	  }
-	if (Candidate != NULL)
-	  {	
-             DPRINT("Scheduling %x\n",Candidate);
+	for (	CurrentPriority = THREAD_PRIORITY_TIME_CRITICAL; 
+		(CurrentPriority >= THREAD_PRIORITY_IDLE);
+		CurrentPriority--
+		)
+	{
+		Candidate = PsScanThreadList(CurrentPriority);
+		if (Candidate == CurrentThread)
+		{
+			DPRINT("Scheduling current thread\n");
+			KeQueryTickCount(&TickCount);
+			CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
+			CurrentThread->Tcb.State = THREAD_STATE_RUNNING;
+			KeReleaseSpinLock(
+				& ThreadListLock,
+				irql
+				);
+			return;
+		}
+		if (Candidate != NULL)
+		{	
+			DPRINT("Scheduling %x\n",Candidate);
+
+			Candidate->Tcb.State = THREAD_STATE_RUNNING;
 	     
-	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
+			KeQueryTickCount(&TickCount);
+			CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
 	     
-	     KeQueryTickCount(&TickCount);
-             CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
+			CurrentThread = Candidate;
 	     
-	     CurrentThread = Candidate;
-	     
-	     HalTaskSwitch(&CurrentThread->Tcb);
-	     KeReleaseSpinLock(&ThreadListLock, irql);
-	     return;
-	  }
-     }
-   DbgPrint("CRITICAL: No threads are runnable\n");
-   KeBugCheck(0);
+			HalTaskSwitch(&CurrentThread->Tcb);
+			KeReleaseSpinLock(
+				& ThreadListLock,
+				irql
+				);
+			return;
+		}
+	}
+	DbgPrint("CRITICAL: No threads are runnable\n");
+	KeBugCheck(0);
 }
 
-NTSTATUS PsInitializeThread(HANDLE ProcessHandle, 
-			    PETHREAD* ThreadPtr,
-			    PHANDLE ThreadHandle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ThreadAttributes)
+
+NTSTATUS
+PsInitializeThread (
+	HANDLE			ProcessHandle, 
+	PETHREAD		* ThreadPtr,
+	PHANDLE			ThreadHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ThreadAttributes
+	)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -273,7 +303,9 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-VOID PsResumeThread(PETHREAD Thread)
+
+VOID
+PsResumeThread(PETHREAD Thread)
 {
    DPRINT("PsResumeThread(Thread %x)\n",Thread);
    Thread->Tcb.SuspendCount--;
@@ -286,7 +318,9 @@ VOID PsResumeThread(PETHREAD Thread)
    DPRINT("Finished PsResumeThread()\n");
 }
 
-VOID PsSuspendThread(PETHREAD Thread)
+
+VOID
+PsSuspendThread(PETHREAD Thread)
 {
    DPRINT("PsSuspendThread(Thread %x)\n",Thread);
    Thread->Tcb.SuspendCount++;
@@ -300,12 +334,16 @@ VOID PsSuspendThread(PETHREAD Thread)
      }
 }
 
-VOID PiDeleteThread(PVOID ObjectBody)
+
+VOID
+PiDeleteThread(PVOID ObjectBody)
 {
    DbgPrint("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 }
 
-VOID PsInitThreadManagment(VOID)
+
+VOID
+PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment
  */
@@ -354,7 +392,9 @@ VOID PsInitThreadManagment(VOID)
    DoneInitYet = TRUE;
 }
 
+
 NTSTATUS
+STDCALL
 NtCreateThread (
 	PHANDLE			ThreadHandle,
 	ACCESS_MASK		DesiredAccess,
@@ -400,7 +440,9 @@ NtCreateThread (
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
+
+NTSTATUS
+PsCreateSystemThread(PHANDLE ThreadHandle,
 			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
 			      HANDLE ProcessHandle,
@@ -454,12 +496,16 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-LONG KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
+
+LONG
+KeSetBasePriorityThread(PKTHREAD Thread, LONG Increment)
 {
    UNIMPLEMENTED;
 }
 
-KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
+
+KPRIORITY
+KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
 {
    KPRIORITY OldPriority;
    OldPriority = Thread->BasePriority;
@@ -638,3 +684,6 @@ NtYieldExecution(VOID)
 	PsDispatchThread();
 	return(STATUS_SUCCESS);
 }
+
+
+/* EOF */

@@ -1,3 +1,7 @@
+; $Id: ntdll.def,v 1.13 1999/08/29 06:59:04 ea Exp $
+;
+; ReactOS Operating System
+;
 EXPORTS
 InitializeObjectAttributes
 NtAcceptConnectPort@24

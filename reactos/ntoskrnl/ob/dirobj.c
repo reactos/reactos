@@ -1,4 +1,5 @@
-/*
+/* $Id: dirobj.c,v 1.5 1999/08/29 06:59:10 ea Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/dirobj.c
@@ -22,50 +23,107 @@
 
 /* FUNCTIONS **************************************************************/
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	NtOpenDirectoryObject
+ *
+ * DESCRIPTION
+ * 	Opens a namespace directory object.
+ * 	
+ * ARGUMENTS
+ *	DirectoryHandle (OUT)
+ *		Variable which receives the directory handle.
+ *		
+ *	DesiredAccess
+ *		Desired access to the directory.
+ *		
+ *	ObjectAttributes
+ *		Structure describing the directory.
+ *		
+ * RETURN VALUE
+ * 	Status.
+ * 	
+ * NOTES
+ * 	Undocumented.
+ */
 NTSTATUS
+STDCALL
 NtOpenDirectoryObject (
 	PHANDLE			DirectoryHandle,
 	ACCESS_MASK		DesiredAccess,
 	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
-/*
- * FUNCTION: Opens a namespace directory object
- * ARGUMENTS:
- *       DirectoryHandle (OUT) = Variable which receives the directory handle
- *       DesiredAccess = Desired access to the directory
- *       ObjectAttributes = Structure describing the directory
- * RETURNS: Status
- * NOTES: Undocumented
- */
 {
-   PVOID Object;
-   NTSTATUS Status;
+	PVOID		Object;
+	NTSTATUS	Status;
    
-   *DirectoryHandle = 0;
+	*DirectoryHandle = 0;
    
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
-				    NULL,
-				    DesiredAccess,
-				    ObDirectoryType,
-				    UserMode,
-				    NULL,
-				    &Object);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+	Status = ObReferenceObjectByName(
+			ObjectAttributes->ObjectName,
+			ObjectAttributes->Attributes,
+			NULL,
+			DesiredAccess,
+			ObDirectoryType,
+			UserMode,
+			NULL,
+			& Object
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
        
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Object,
-			   DesiredAccess,
-			   FALSE,
-			   DirectoryHandle);
-   return(STATUS_SUCCESS);
+	Status = ObCreateHandle(
+			PsGetCurrentProcess(),
+			Object,
+			DesiredAccess,
+			FALSE,
+			DirectoryHandle
+			);
+	return STATUS_SUCCESS;
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtQueryDirectoryObject
+ * 
+ * DESCRIPTION
+ * 	Reads information from a namespace directory.
+ * 	
+ * ARGUMENTS
+ *	DirObjInformation (OUT)
+ *		Buffer to hold the data read.
+ *		
+ *	BufferLength
+ *		Size of the buffer in bytes.
+ *		
+ *	GetNextIndex
+ *		If TRUE then set ObjectIndex to the index of the
+ *		next object.
+ *		If FALSE then set ObjectIndex to the number of
+ *		objects in the directory.
+ *		
+ *	IgnoreInputIndex
+ *		If TRUE start reading at index 0.
+ *		If FALSE start reading at the index specified
+ *		by object index.
+ *		
+ *	ObjectIndex
+ *		Zero based index into the directory, interpretation
+ *		depends on IgnoreInputIndex and GetNextIndex.
+ *		
+ *	DataWritten (OUT)
+ *		Caller supplied storage for the number of bytes
+ *		written (or NULL).
+ *
+ * RETURN VALUE
+ * 	Status.
+ */
 NTSTATUS
+STDCALL
 NtQueryDirectoryObject (
 	IN	HANDLE			DirObjHandle,
 	OUT	POBJDIR_INFORMATION	DirObjInformation, 
@@ -75,114 +133,149 @@ NtQueryDirectoryObject (
 	IN OUT	PULONG			ObjectIndex,
 	OUT	PULONG			DataWritten	OPTIONAL
 	)
-/*
- * FUNCTION: Reads information from a namespace directory
- * ARGUMENTS:
- *        DirObjInformation (OUT) = Buffer to hold the data read
- *        BufferLength = Size of the buffer in bytes
- *        GetNextIndex = If TRUE then set ObjectIndex to the index of the
- *                       next object
- *                       If FALSE then set ObjectIndex to the number of
- *                       objects in the directory
- *        IgnoreInputIndex = If TRUE start reading at index 0
- *                           If FALSE start reading at the index specified
- *                           by object index
- *        ObjectIndex = Zero based index into the directory, interpretation
- *                      depends on IgnoreInputIndex and GetNextIndex
- *        DataWritten (OUT) = Caller supplied storage for the number of bytes
- *                            written (or NULL)
- * RETURNS: Status
- */
 {
-   PDIRECTORY_OBJECT dir = NULL;
-   ULONG EntriesToRead;
-   PLIST_ENTRY current_entry;
-   POBJECT_HEADER current;
-   ULONG i=0;
-   ULONG EntriesToSkip;
-   NTSTATUS Status;
+	PDIRECTORY_OBJECT	dir = NULL;
+	ULONG			EntriesToRead;
+	PLIST_ENTRY		current_entry;
+	POBJECT_HEADER		current;
+	ULONG			i=0;
+	ULONG			EntriesToSkip;
+	NTSTATUS		Status;
+
+
+	DPRINT(
+		"NtQueryDirectoryObject(DirObjHandle %x)\n",
+		DirObjHandle
+		);
+	DPRINT(
+		"dir %x namespc_root %x\n",
+		dir,
+		HEADER_TO_BODY(&(namespc_root.hdr))
+		);
    
-   DPRINT("NtQueryDirectoryObject(DirObjHandle %x)\n",DirObjHandle);
-   DPRINT("dir %x namespc_root %x\n",dir,HEADER_TO_BODY(&(namespc_root.hdr)));
+//	assert_irql(PASSIVE_LEVEL);
    
-//   assert_irql(PASSIVE_LEVEL);
+	Status = ObReferenceObjectByHandle(
+			DirObjHandle,
+			DIRECTORY_QUERY,
+			ObDirectoryType,
+			UserMode,
+			(PVOID *) & dir,
+			NULL
+			);
+	if (Status != STATUS_SUCCESS)
+	{
+		return Status;
+	}
+
+	EntriesToRead = BufferLength / sizeof (OBJDIR_INFORMATION);
+	*DataWritten = 0;
    
-   Status = ObReferenceObjectByHandle(DirObjHandle,
-				      DIRECTORY_QUERY,
-				      ObDirectoryType,
-				      UserMode,
-				      (PVOID*)&dir,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
+	DPRINT("EntriesToRead %d\n",EntriesToRead);
    
-   EntriesToRead = BufferLength / sizeof(OBJDIR_INFORMATION);
-   *DataWritten = 0;
+	current_entry = dir->head.Flink;
    
-   DPRINT("EntriesToRead %d\n",EntriesToRead);
-   
-   current_entry = dir->head.Flink;
-   
-   /*
-    * Optionally, skip over some entries at the start of the directory
-    */
-   if (!IgnoreInputIndex)
-     {
-	CHECKPOINT;
+	/*
+	 * Optionally, skip over some entries at the start of the directory
+	 */
+	if (!IgnoreInputIndex)
+	{
+		CHECKPOINT;
 	
-	EntriesToSkip = *ObjectIndex;
-	while ( i<EntriesToSkip && current_entry!=NULL)
-	  {
-	     current_entry = current_entry->Flink;
-	  }
-     }
+		EntriesToSkip = *ObjectIndex;
+		while ( (i < EntriesToSkip) && (current_entry != NULL))
+		{
+			current_entry = current_entry->Flink;
+		}
+	}
    
-   DPRINT("DirObjInformation %x\n",DirObjInformation);
+	DPRINT("DirObjInformation %x\n",DirObjInformation);
    
-   /*
-    * Read the maximum entries possible into the buffer
-    */
-   while ( i<EntriesToRead && current_entry!=(&(dir->head)))
-     {
-	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,Entry);
-	DPRINT("Scanning %w\n",current->Name.Buffer);
-	DirObjInformation[i].ObjectName.Buffer = 
-	               ExAllocatePool(NonPagedPool,(current->Name.Length+1)*2);
-	DirObjInformation[i].ObjectName.Length = current->Name.Length;
-	DirObjInformation[i].ObjectName.MaximumLength = current->Name.Length;
-	DPRINT("DirObjInformation[i].ObjectName.Buffer %x\n",
-	       DirObjInformation[i].ObjectName.Buffer);
-	RtlCopyUnicodeString(&DirObjInformation[i].ObjectName,
-			     &(current->Name));
-	i++;
-	current_entry = current_entry->Flink;
-	(*DataWritten) = (*DataWritten) + sizeof(OBJDIR_INFORMATION);
+	/*
+	 * Read the maximum entries possible into the buffer
+	 */
+	while ( (i < EntriesToRead) && (current_entry != (&(dir->head))))
+	{
+		current = CONTAINING_RECORD(
+				current_entry,
+				OBJECT_HEADER,
+				Entry
+				);
+		DPRINT(
+			"Scanning %w\n",
+			current->Name.Buffer
+			);
+		
+		DirObjInformation[i].ObjectName.Buffer = 
+			ExAllocatePool(
+				NonPagedPool,
+				(current->Name.Length + 1) * 2
+				);
+		DirObjInformation[i].ObjectName.Length =
+			current->Name.Length;
+		DirObjInformation[i].ObjectName.MaximumLength =
+			current->Name.Length;
+		
+		DPRINT(
+			"DirObjInformation[i].ObjectName.Buffer %x\n",
+			DirObjInformation[i].ObjectName.Buffer
+			);
+		
+		RtlCopyUnicodeString(
+			& DirObjInformation[i].ObjectName,
+			& (current->Name)
+			);
+		i++;
+		current_entry = current_entry->Flink;
+		(*DataWritten) = (*DataWritten) + sizeof (OBJDIR_INFORMATION);
+
+		CHECKPOINT;
+	}
 	CHECKPOINT;
-     }
-   CHECKPOINT;
    
-   /*
-    * Optionally, count the number of entries in the directory
-    */
-   if (GetNextIndex)
-     {
-	*ObjectIndex=i;
-     }
-   else
-     {
-	while ( current_entry!=(&(dir->head)) )
-	  {
-	     current_entry=current_entry->Flink;
-	     i++;
-	  }
-	*ObjectIndex=i;
-     }
-   return(STATUS_SUCCESS);
+	/*
+	 * Optionally, count the number of entries in the directory
+	 */
+	if (GetNextIndex)
+	{
+		*ObjectIndex = i;
+	}
+	else
+	{
+		while ( current_entry != (&(dir->head)) )
+		{
+			current_entry = current_entry->Flink;
+			i++;
+		}
+		*ObjectIndex = i;
+	}
+	return STATUS_SUCCESS;
 }
 
 
+/**********************************************************************
+ * NAME						(EXPORTED as Zw)
+ * 	NtCreateDirectoryObject
+ * 	
+ * DESCRIPTION
+ * 	Creates or opens a directory object (a container for other
+ *	objects).
+ *	
+ * ARGUMENTS
+ *	DirectoryHandle (OUT)
+ *		Caller supplied storage for the handle of the 
+ *		directory.
+ *		
+ *	DesiredAccess
+ *		Access desired to the directory.
+ *		
+ *	ObjectAttributes
+ *		Object attributes initialized with
+ *		InitializeObjectAttributes.
+ *		
+ * RETURN VALUE
+ * 	Status.
+ */
 NTSTATUS
 STDCALL
 NtCreateDirectoryObject (
@@ -190,56 +283,77 @@ NtCreateDirectoryObject (
 	ACCESS_MASK		DesiredAccess,
 	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
-/*
- * FUNCTION: Creates or opens a directory object (a container for other
- * objects)
- * ARGUMENTS:
- *        DirectoryHandle (OUT) = Caller supplied storage for the handle
- *                                of the directory
- *        DesiredAccess = Access desired to the directory
- *        ObjectAttributes = Object attributes initialized with
- *                           InitializeObjectAttributes
- * RETURNS: Status
- */
 {
-   PDIRECTORY_OBJECT dir;
+	PDIRECTORY_OBJECT dir;
    
-   dir = ObCreateObject(DirectoryHandle,
-			DesiredAccess,
-			ObjectAttributes,
-			ObDirectoryType);
-   return(STATUS_SUCCESS);
+	dir = ObCreateObject(
+		DirectoryHandle,
+		DesiredAccess,
+		ObjectAttributes,
+		ObDirectoryType
+		);
+	return STATUS_SUCCESS;
 }
 
-VOID InitializeObjectAttributes(POBJECT_ATTRIBUTES InitializedAttributes,
-				PUNICODE_STRING ObjectName,
-				ULONG Attributes,
-				HANDLE RootDirectory,
-				PSECURITY_DESCRIPTOR SecurityDescriptor)
-/*
- * FUNCTION: Sets up a parameter of type OBJECT_ATTRIBUTES for a 
- * subsequent call to ZwCreateXXX or ZwOpenXXX
- * ARGUMENTS:
- *        InitializedAttributes (OUT) = Caller supplied storage for the
- *                                      object attributes
- *        ObjectName = Full path name for object
- *        Attributes = Attributes for the object
- *        RootDirectory = Where the object should be placed or NULL
- *        SecurityDescriptor = Ignored
+
+/**********************************************************************
+ * NAME						(MACRO in DDK)
+ *	InitializeObjectAttributes
+ *
+ * DESCRIPTION
+ *	Sets up a parameter of type OBJECT_ATTRIBUTES for a 
+ *	subsequent call to ZwCreateXXX or ZwOpenXXX.
+ *	
+ * ARGUMENTS
+ *	InitializedAttributes (OUT)
+ *		Caller supplied storage for the object attributes.
+ *		
+ *	ObjectName
+ *		Full path name for object.
+ *		
+ *	Attributes
+ *		Attributes for the object.
+ *		
+ *	RootDirectory
+ *		Where the object should be placed or NULL.
+ *		
+ *	SecurityDescriptor
+ *		Ignored.
  * 
- * NOTE:
- *     Either ObjectName is a fully qualified pathname or a path relative
- *     to RootDirectory
+ * NOTE
+ *	Either ObjectName is a fully qualified pathname or a path
+ *	relative to RootDirectory.
  */
+VOID
+InitializeObjectAttributes (
+	POBJECT_ATTRIBUTES	InitializedAttributes,
+	PUNICODE_STRING		ObjectName,
+	ULONG			Attributes,
+	HANDLE			RootDirectory,
+	PSECURITY_DESCRIPTOR	SecurityDescriptor
+	)
 {
-   DPRINT("InitializeObjectAttributes(InitializedAttributes %x "
-	  "ObjectName %x Attributes %x RootDirectory %x)\n",
-	  InitializedAttributes,ObjectName,Attributes,RootDirectory);
-   InitializedAttributes->Length=sizeof(OBJECT_ATTRIBUTES);
-   InitializedAttributes->RootDirectory=RootDirectory;
-   InitializedAttributes->ObjectName=ObjectName;
-   InitializedAttributes->Attributes=Attributes;
-   InitializedAttributes->SecurityDescriptor=SecurityDescriptor;
-   InitializedAttributes->SecurityQualityOfService=NULL;
+	DPRINT(
+		"InitializeObjectAttributes(InitializedAttributes %x "
+		"ObjectName %x Attributes %x RootDirectory %x)\n",
+		InitializedAttributes,
+		ObjectName,
+		Attributes,
+		RootDirectory
+		);
+	InitializedAttributes->Length =
+		sizeof (OBJECT_ATTRIBUTES);
+	InitializedAttributes->RootDirectory =
+		RootDirectory;
+	InitializedAttributes->ObjectName =
+		ObjectName;
+	InitializedAttributes->Attributes =
+		Attributes;
+	InitializedAttributes->SecurityDescriptor =
+		SecurityDescriptor;
+	InitializedAttributes->SecurityQualityOfService =
+		NULL;
 }
 
+
+/* EOF */

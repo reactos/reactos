@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.15 1999/08/17 12:01:38 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.16 1999/08/29 06:59:05 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -104,7 +104,7 @@ IoConnectInterrupt
 IoCreateController
 IoCreateDevice
 IoCreateStreamFileObject
-IoCreateSymbolicLink
+IoCreateSymbolicLink@8
 IoDeleteController
 IoDeleteDevice
 IoDisconnectInterrupt

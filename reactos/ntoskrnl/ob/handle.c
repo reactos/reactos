@@ -1,4 +1,5 @@
-/*
+/* $Id: handle.c,v 1.11 1999/08/29 06:59:11 ea Exp $
+ *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
  * FILE:               ntoskrnl/ob/handle.c
@@ -35,7 +36,10 @@ typedef struct
 
 /* FUNCTIONS ***************************************************************/
 
-static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
+
+static
+PHANDLE_REP
+ObpGetObjectByHandle(PEPROCESS Process,
 					HANDLE h)
 /*
  * FUNCTION: Get the data structure for a handle
@@ -69,6 +73,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
    blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
    return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
+
 
 NTSTATUS
 STDCALL
@@ -150,7 +155,9 @@ NtDuplicateObject (
    return(STATUS_SUCCESS);
 }
 
-VOID ObDeleteHandleTable(PEPROCESS Process)
+
+VOID
+ObDeleteHandleTable(PEPROCESS Process)
 /*
  * FUNCTION: Deletes the handle table associated with a process
  */
@@ -185,7 +192,9 @@ VOID ObDeleteHandleTable(PEPROCESS Process)
      }
 }
 
-VOID ObCreateHandleTable(PEPROCESS Parent,
+
+VOID
+ObCreateHandleTable(PEPROCESS Parent,
 			 BOOLEAN Inherit,
 			 PEPROCESS Process)
 /*
@@ -207,7 +216,9 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
      }
 }
 
-VOID ObDeleteHandle(HANDLE Handle)
+
+	VOID
+ObDeleteHandle(HANDLE Handle)
 {
    PHANDLE_REP Rep;
    
@@ -218,7 +229,9 @@ VOID ObDeleteHandle(HANDLE Handle)
    DPRINT("Finished ObDeleteHandle()\n");
 }
 
-NTSTATUS ObCreateHandle(PEPROCESS Process,
+
+NTSTATUS
+ObCreateHandle(PEPROCESS Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
 			BOOLEAN Inherit,
@@ -289,7 +302,8 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 }
 
 
-NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
+NTSTATUS
+ObReferenceObjectByHandle(HANDLE Handle,
 				   ACCESS_MASK DesiredAccess,
 				   POBJECT_TYPE ObjectType,
 				   KPROCESSOR_MODE AccessMode,
@@ -378,46 +392,66 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS NtClose(HANDLE Handle)
-/*
- * FUNCTION: Closes a handle reference to an object
- * ARGUMENTS:
- *         Handle = handle to close
- * RETURNS: Status
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtClose
+ *	
+ * DESCRIPTION
+ *	Closes a handle reference to an object.
+ *	
+ * ARGUMENTS
+ *	Handle
+ *		Handle to close.
+ *		
+ * RETURN VALUE
+ * 	Status.
  */
+NTSTATUS
+STDCALL
+NtClose(HANDLE Handle)
 {
-   PVOID ObjectBody;
-   POBJECT_HEADER Header;
-   PHANDLE_REP HandleRep;
+	PVOID		ObjectBody;
+	POBJECT_HEADER	Header;
+	PHANDLE_REP	HandleRep;
    
-   assert_irql(PASSIVE_LEVEL);
+	assert_irql(PASSIVE_LEVEL);
    
-   DPRINT("NtClose(Handle %x)\n",Handle);
+	DPRINT("NtClose(Handle %x)\n",Handle);
    
-   HandleRep = ObpGetObjectByHandle(PsGetCurrentProcess(),
-				    Handle);
-   if (HandleRep == NULL)
-     {
-	return(STATUS_INVALID_HANDLE);
-     }
-   ObjectBody = HandleRep->ObjectBody;
+	HandleRep = ObpGetObjectByHandle(
+			PsGetCurrentProcess(),
+			Handle
+			);
+	if (HandleRep == NULL)
+	{
+		return STATUS_INVALID_HANDLE;
+	}
+	ObjectBody = HandleRep->ObjectBody;
    
-   HandleRep->ObjectBody = NULL;
+	HandleRep->ObjectBody = NULL;
    
-   Header = BODY_TO_HEADER(ObjectBody);
+	Header = BODY_TO_HEADER(ObjectBody);
    
-   Header->RefCount++;
-   Header->HandleCount--;
+	Header->RefCount++;
+	Header->HandleCount--;
    
-   if (Header->ObjectType != NULL &&
-       Header->ObjectType->Close != NULL)
-     {
-	Header->ObjectType->Close(ObjectBody, Header->HandleCount);
-     }
+	if (	(Header->ObjectType != NULL)
+		&& (Header->ObjectType->Close != NULL)
+		)
+	{
+		Header->ObjectType->Close(
+				ObjectBody,
+				Header->HandleCount
+				);
+	}
    
-   Header->RefCount--;
+	Header->RefCount--;
    
-   ObPerformRetentionChecks(Header);
+	ObPerformRetentionChecks(Header);
    
-   return(STATUS_SUCCESS);
+	return STATUS_SUCCESS;
 }
+
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: device.c,v 1.10 1999/08/29 06:59:06 ea Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/io/device.c
@@ -33,19 +34,31 @@ NtUnloadDriver (
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtLoadDriver
+ *
+ * DESCRIPTION
+ * 	Loads a device driver.
+ * 	
+ * ARGUMENTS
+ *	DriverServiceName
+ *		Name of the service to load (registry key).
+ *		
+ * RETURN VALUE
+ * 	Status.
+ *
+ * REVISIONS
+ */
 NTSTATUS
+STDCALL
 NtLoadDriver (
 	PUNICODE_STRING	DriverServiceName
 	)
-/*
- * FUNCTION: Loads a driver
- * ARGUMENTS:
- *         DriverServiceName = Name of the service to load (registry key)
- * RETURNS: Status
- */
 {
 	UNIMPLEMENTED;
 }
+
 
 NTSTATUS
 IoAttachDeviceByPointer (
@@ -307,3 +320,6 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    
    return(STATUS_SUCCESS);
 }
+
+
+/* EOF */

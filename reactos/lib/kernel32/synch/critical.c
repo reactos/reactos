@@ -1,4 +1,5 @@
-/*
+/* $Id: critical.c,v 1.5 1999/08/29 06:59:03 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/sync/critical.c
@@ -15,29 +16,46 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID DeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+
+VOID
+STDCALL
+DeleteCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    UNIMPLEMENTED;
 }
 
-VOID EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+
+VOID
+STDCALL
+EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    UNIMPLEMENTED;
 }
 
-VOID InitializeCriticalSection(LPCRITICAL_SECTION pcritical)
+
+VOID
+STDCALL
+InitializeCriticalSection(LPCRITICAL_SECTION pcritical)
 {
    UNIMPLEMENTED;
 }
 
-VOID LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+
+VOID
+STDCALL
+LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    UNIMPLEMENTED;
 }
 
-WINBOOL TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+
+WINBOOL
+STDCALL
+TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    UNIMPLEMENTED;
    return(FALSE);
 }
 
+
+/* EOF */

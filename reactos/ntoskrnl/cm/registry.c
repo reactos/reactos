@@ -1,4 +1,5 @@
-/*
+/* $Id: registry.c,v 1.18 1999/08/29 06:59:05 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/registry.c
@@ -363,13 +364,16 @@ CHECKPOINT;
 
 
 NTSTATUS 
-NtCreateKey(OUT PHANDLE  KeyHandle,
-            IN ACCESS_MASK  DesiredAccess,
-            IN POBJECT_ATTRIBUTES  ObjectAttributes, 
-            IN ULONG  TitleIndex,
-            IN PUNICODE_STRING  Class, 
-            IN ULONG  CreateOptions,
-            OUT PULONG  Disposition)
+STDCALL
+NtCreateKey (
+	OUT	PHANDLE			KeyHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes, 
+	IN	ULONG			TitleIndex,
+	IN	PUNICODE_STRING		Class,
+	IN	ULONG			CreateOptions,
+	OUT	PULONG			Disposition
+	)
 {
 #if PROTO_REG
   PWSTR  KeyNameBuf;
@@ -455,7 +459,10 @@ NtCreateKey(OUT PHANDLE  KeyHandle,
 
 
 NTSTATUS 
-NtDeleteKey(IN HANDLE  KeyHandle)
+STDCALL
+NtDeleteKey (
+	IN	HANDLE	KeyHandle
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -489,12 +496,15 @@ NtDeleteKey(IN HANDLE  KeyHandle)
 
 
 NTSTATUS 
-NtEnumerateKey(IN HANDLE  KeyHandle, 
-               IN ULONG  Index,
-               IN KEY_INFORMATION_CLASS  KeyInformationClass,
-               OUT PVOID  KeyInformation,
-               IN ULONG  Length,
-               OUT PULONG  ResultLength)
+STDCALL
+NtEnumerateKey (
+	IN	HANDLE			KeyHandle,
+	IN	ULONG			Index,
+	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
+	OUT	PVOID			KeyInformation,
+	IN	ULONG			Length,
+	OUT	PULONG			ResultLength
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -637,7 +647,9 @@ NtEnumerateKey(IN HANDLE  KeyHandle,
 #endif
 }
 
+
 NTSTATUS 
+STDCALL
 NtEnumerateValueKey (
 	IN	HANDLE				KeyHandle,
 	IN	ULONG				Index,
@@ -654,8 +666,12 @@ NtEnumerateValueKey (
 #endif
 }
 
+
 NTSTATUS 
-NtFlushKey(IN HANDLE  KeyHandle)
+STDCALL
+NtFlushKey (
+	IN	HANDLE	KeyHandle
+	)
 {
 #ifdef PROTO_REG
   return  STATUS_SUCCESS;
@@ -664,10 +680,14 @@ NtFlushKey(IN HANDLE  KeyHandle)
 #endif
 }
 
+
 NTSTATUS 
-NtOpenKey(OUT PHANDLE  KeyHandle, 
-          IN ACCESS_MASK  DesiredAccess,
-          IN POBJECT_ATTRIBUTES  ObjectAttributes)
+STDCALL
+NtOpenKey (
+	OUT	PHANDLE			KeyHandle, 
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes
+	)
 {
 #ifdef PROTO_REG
   NTSTATUS  Status;
@@ -757,7 +777,9 @@ NtOpenKey(OUT PHANDLE  KeyHandle,
 #endif
 }
 
+
 NTSTATUS 
+STDCALL
 NtQueryKey (
 	IN	HANDLE			KeyHandle, 
 	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
@@ -895,7 +917,9 @@ NtQueryKey (
 #endif
 }
 
+
 NTSTATUS 
+STDCALL
 NtQueryValueKey (
 	IN	HANDLE				KeyHandle,
 	IN	PUNICODE_STRING			ValueName,
@@ -1024,7 +1048,9 @@ NtQueryValueKey (
 #endif
 }
 
+
 NTSTATUS 
+STDCALL
 NtSetValueKey (
 	IN	HANDLE			KeyHandle, 
 	IN	PUNICODE_STRING		ValueName,
@@ -1088,7 +1114,8 @@ NtSetValueKey (
 #endif
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 NtDeleteValueKey (
 	IN	HANDLE		KeyHandle,
 	IN	PUNICODE_STRING	ValueName
@@ -1246,6 +1273,7 @@ NtInitializeRegistry (
 
 
 NTSTATUS 
+STDCALL
 RtlCheckRegistryKey (
 	ULONG	RelativeTo,
 	PWSTR	Path
@@ -1256,6 +1284,7 @@ RtlCheckRegistryKey (
 
 
 NTSTATUS 
+STDCALL
 RtlCreateRegistryKey (
 	IN	ULONG	RelativeTo,
 	IN	PWSTR	Path
@@ -1266,6 +1295,7 @@ RtlCreateRegistryKey (
 
 
 NTSTATUS 
+STDCALL
 RtlDeleteRegistryValue (
 	IN	ULONG	RelativeTo, 
 	IN	PWSTR	Path,
@@ -1277,6 +1307,7 @@ RtlDeleteRegistryValue (
 
 
 NTSTATUS 
+STDCALL
 RtlQueryRegistryValues (
 	IN	ULONG				RelativeTo,
 	IN	PWSTR				Path,
@@ -1290,6 +1321,7 @@ RtlQueryRegistryValues (
 
 
 NTSTATUS 
+STDCALL
 RtlWriteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
@@ -2690,4 +2722,4 @@ CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
 
 #endif
 
-
+/* EOF */

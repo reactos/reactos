@@ -1,4 +1,5 @@
-/*
+/* $Id: interlck.c,v 1.2 1999/08/29 06:59:06 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/interlck.c
@@ -16,28 +17,46 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INTERLOCKED_RESULT ExInterlockedDecrementLong(PLONG Addend,
-					      PKSPIN_LOCK Lock)
+INTERLOCKED_RESULT
+ExInterlockedDecrementLong (
+	PLONG		Addend,
+	PKSPIN_LOCK	Lock
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-ULONG ExInterlockedExchangeUlong(PULONG Target,
-				 ULONG Value,
-				 PKSPIN_LOCK Lock)
+
+ULONG
+ExInterlockedExchangeUlong (
+	PULONG		Target,
+	ULONG		Value,
+	PKSPIN_LOCK	Lock
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-ULONG ExInterlockedAddUlong(PULONG Addend,
-			    ULONG Increment,
-			    PKSPIN_LOCK Lock)
+
+ULONG
+ExInterlockedAddUlong (
+	PULONG		Addend,
+	ULONG		Increment,
+	PKSPIN_LOCK	Lock
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
 
-INTERLOCKED_RESULT ExInterlockedIncrementLong(PLONG Addend,
-					      PKSPIN_LOCK Lock)
+
+INTERLOCKED_RESULT
+ExInterlockedIncrementLong (
+	PLONG		Addend,
+	PKSPIN_LOCK	Lock
+	)
 {
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
+
+
+/* EOF */

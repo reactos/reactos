@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.1 1999/07/17 23:10:20 ea Exp $
+; $Id: kernel32.edf,v 1.2 1999/08/29 06:59:01 ea Exp $
 ;
 ; kernel32.edf
 ;
@@ -649,8 +649,8 @@ _lclose=_lclose@4
 _lcreat=_lcreat@8
 _llseek=_llseek@12
 _lopen=_lopen@8
-_lread=_lread@12
-_lwrite=_lwrite@12
+_lread=_hread@12
+_lwrite=_hwrite@12
 lstrcat=lstrcatA@8
 lstrcatA=lstrcatA@8
 lstrcatW=lstrcatW@8

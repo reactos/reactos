@@ -1,4 +1,5 @@
-/*
+/* $Id: heap.c,v 1.15 1999/08/29 06:59:01 ea Exp $
+ *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
  *
@@ -117,9 +118,17 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 * NT uses this function to compact moveable blocks and other things  *
 * Here it does not compact, but it finds the largest free region     *
 *********************************************************************/
-UINT HeapCompact(HANDLE hheap, DWORD flags)
+UINT
+STDCALL
+HeapCompact (
+	HANDLE	hheap,
+	DWORD	flags
+	)
 {
-   return(RtlCompactHeap(hheap, flags));
+	return RtlCompactHeap(
+			hheap,
+			flags
+			);
 }
 
 /*********************************************************************
@@ -140,3 +149,5 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
    return(RtlValidateHeap(hheap, flags, (PVOID)pmem));
 }
 
+
+/* EOF */

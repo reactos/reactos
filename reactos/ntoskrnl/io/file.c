@@ -1,4 +1,5 @@
-/*
+/* $Id: file.c,v 1.9 1999/08/29 06:59:06 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/file.c
@@ -89,7 +90,9 @@ NtQueryInformationFile (
    return(Status);
 }
 
+
 NTSTATUS
+STDCALL
 NtSetInformationFile (
 	HANDLE			FileHandle,
 	PIO_STATUS_BLOCK	IoStatusBlock,
@@ -98,64 +101,99 @@ NtSetInformationFile (
 	FILE_INFORMATION_CLASS	FileInformationClass
 	)
 {
-  NTSTATUS Status;
-  PFILE_OBJECT FileObject;
-  PIRP Irp;
-  PIO_STACK_LOCATION StackPtr;
-  KEVENT Event;
+	NTSTATUS		Status;
+	PFILE_OBJECT		FileObject;
+	PIRP			Irp;
+	PIO_STACK_LOCATION	StackPtr;
+	KEVENT			Event;
    
-  DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
-         FileHandle,
-         IoStatusBlock,
-         FileInformation,
-         Length,
-         FileInformationClass);
+	DPRINT(
+		"NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
+		FileHandle,
+		IoStatusBlock,
+		FileInformation,
+		Length,
+		FileInformationClass
+		);
    
-  /*  Get the file object from the file handle  */
-  Status = ObReferenceObjectByHandle(FileHandle,
-                                     FILE_WRITE_ATTRIBUTES,
-                                     IoFileType,
-                                     UserMode,
-                                     (PVOID *) &FileObject,
-                                     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  DPRINT("FileObject %x\n", FileObject);
+	/*  Get the file object from the file handle  */
+	Status = ObReferenceObjectByHandle(
+			FileHandle,
+                        FILE_WRITE_ATTRIBUTES,
+                        IoFileType,
+                        UserMode,
+                        (PVOID *) & FileObject,
+                        NULL
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
+	
+	DPRINT("FileObject %x\n", FileObject);
    
-  /*  initialize an event object to wait on for the request  */
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	/*
+	 * Initialize an event object to wait
+	 * on for the request.
+	 */
+	KeInitializeEvent(
+		& Event,
+		NotificationEvent,
+		FALSE
+		);
+	/*
+	 * Build the IRP to be sent to the driver
+	 * for the request.
+	 */
+	Irp = IoBuildSynchronousFsdRequest(
+		IRP_MJ_SET_INFORMATION,
+		FileObject->DeviceObject,
+		FileInformation,
+		Length,
+		0,
+		& Event,
+		IoStatusBlock
+		);
 
-  /*  build the IRP to be sent to the driver for the request  */
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_INFORMATION,
-                                     FileObject->DeviceObject,
-                                     FileInformation,
-                                     Length,
-                                     0,
-                                     &Event,
-                                     IoStatusBlock);
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->FileObject = FileObject;
-  StackPtr->Parameters.SetFile.Length = Length;
-  StackPtr->Parameters.SetFile.FileInformationClass = FileInformationClass;
+	StackPtr = IoGetNextIrpStackLocation(Irp);
+	StackPtr->FileObject = FileObject;
+	StackPtr->Parameters.SetFile.Length = Length;
+	StackPtr->Parameters.SetFile.FileInformationClass =
+		FileInformationClass;
    
-  /*  Pass the IRP to the FSD (and wait for it if required) */
-  DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
-  Status = IoCallDriver(FileObject->DeviceObject, Irp);
-  if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-    {
-      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      Status = Irp->IoStatus.Status;
-    } 
+	/*
+	 * Pass the IRP to the FSD (and wait for
+	 * it if required)
+	 */
+	DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
+	Status = IoCallDriver(
+			FileObject->DeviceObject,
+			Irp
+			);
+	if (	(Status == STATUS_PENDING)
+		&& (FileObject->Flags & FO_SYNCHRONOUS_IO)
+		)
+	{
+		KeWaitForSingleObject(
+			& Event,
+			Executive,
+			KernelMode,
+			FALSE,
+			NULL
+			);
+		Status = Irp->IoStatus.Status;
+	}
 
-  return Status;
+	return Status;
 }
 
-PGENERIC_MAPPING IoGetFileObjectGenericMapping(VOID)
+
+PGENERIC_MAPPING
+IoGetFileObjectGenericMapping(VOID)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
+
 
 NTSTATUS
 STDCALL
@@ -210,3 +248,4 @@ NtSetEaFile (
 }
 
 
+/* EOF */

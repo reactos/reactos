@@ -1,4 +1,5 @@
-/*
+/* $Id: find.c,v 1.21 1999/08/29 06:59:01 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/find.c
@@ -178,7 +179,10 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    return(IData);
 }
 
-HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
+
+HANDLE
+STDCALL
+FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
 {
    WCHAR lpFileNameW[MAX_PATH];
    ULONG i;
@@ -227,7 +231,10 @@ HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
    return(IData);
 }
 
-WINBOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
+
+WINBOOL
+STDCALL
+FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
 {
    PWIN32_FIND_DATA_ASCII Ret;
    PKERNEL32_FIND_FILE_DATA IData;
@@ -265,7 +272,10 @@ WINBOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
    return(TRUE);
 }
 
-BOOL FindClose(HANDLE hFindFile)
+
+BOOL
+STDCALL
+FindClose(HANDLE hFindFile)
 {
    PKERNEL32_FIND_FILE_DATA IData;
    
@@ -282,8 +292,13 @@ BOOL FindClose(HANDLE hFindFile)
    return(TRUE);
 }
 
-HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
-			      LPWIN32_FIND_DATA lpFindFileData)
+
+HANDLE
+STDCALL
+FindFirstFileW (
+	LPCWSTR			lpFileName,
+	LPWIN32_FIND_DATA	lpFindFileData
+	)
 {
    PWIN32_FIND_DATA_UNICODE Ret;
    PKERNEL32_FIND_FILE_DATA IData;
@@ -299,8 +314,13 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
    return(IData);
 }
 
-WINBOOL STDCALL FindNextFileW(HANDLE hFindFile,
-			      LPWIN32_FIND_DATA lpFindFileData)
+
+WINBOOL
+STDCALL
+FindNextFileW (
+	HANDLE			hFindFile,
+	LPWIN32_FIND_DATA	lpFindFileData
+	)
 {
    PWIN32_FIND_DATA_UNICODE Ret;
    PKERNEL32_FIND_FILE_DATA IData;
@@ -320,3 +340,6 @@ WINBOOL STDCALL FindNextFileW(HANDLE hFindFile,
 
    return(TRUE);
 }
+
+
+/* EOF */

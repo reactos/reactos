@@ -1,4 +1,5 @@
-/*
+/* $Id: lib.c,v 1.3 1999/08/29 06:59:03 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c
@@ -23,20 +24,37 @@
 
 /* FUNCTIONS ****************************************************************/
 
-HINSTANCE LoadLibraryW(LPCWSTR lpLibFileName)
+HINSTANCE
+STDCALL
+LoadLibraryW (
+	LPCWSTR	lpLibFileName
+	)
 {
    UNIMPLEMENTED;
    return(NULL);
 }
 
-HINSTANCE LoadLibraryA(LPCSTR lpLibFileName)
+
+HINSTANCE
+STDCALL
+LoadLibraryA (
+	LPCSTR	lpLibFileName
+	)
 {
    UNIMPLEMENTED;
    return(NULL);
 }
 
-BOOL STDCALL FreeLibrary(HMODULE hLibModule)
+
+BOOL
+STDCALL
+FreeLibrary (
+	HMODULE	hLibModule
+	)
 {
    UNIMPLEMENTED;
    return(FALSE);
 }
+
+
+/* EOF */

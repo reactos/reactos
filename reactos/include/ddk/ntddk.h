@@ -20,6 +20,11 @@ extern "C"
 
 #include <windows.h>
 
+/* GCC can not handle __fastcall */
+#ifndef FASTCALL
+#define FASTCALL STDCALL
+#endif
+
 #include <internal/id.h>
 #include <ddk/status.h>
 #include <ddk/ntdef.h>
