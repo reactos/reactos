@@ -1,5 +1,23 @@
 2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* apps/utils/regsvr32: Move to subsys/system/regsvr32.
+
+2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* apps/utils/Makefile (UTIL_NET_APPS): Add arp, finger, ipconfig,
+	netstat, ping, telnet, and whois.
+	* bootdata/packages/reactos.dff: Add arp.exe, finger.exe, ipconfig.exe,
+	netstat.exe, ping.exe, telnet.exe, and whois.exe.
+	* apps/utils/net/arp: New directory; Move from rosapps.
+	* apps/utils/net/finger: Ditto.
+	* apps/utils/net/ipconfig: Ditto.
+	* apps/utils/net/netstat: Ditto.
+	* apps/utils/net/ping: Ditto.
+	* apps/utils/net/telnet: Ditto.
+	* apps/utils/net/whois: Ditto.
+
+2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile (SYS_APPS): Add calc, regedt32, and regsvr32.
 	* bootdata/packages/reactos.dff: Add calc.exe, regedt32.exe, and
 	regsvr32.exe.

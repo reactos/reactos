@@ -1,172 +1,480 @@
 /*
+ * ReactOS regsvr32
+ * Copyright (C) 2004 ReactOS Team
+ *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS
- * FILE:            apps\regsvr32\regsvr32.c
+ * PROJECT:         ReactOS regsvr32.exe
+ * FILE:            apps/utils/regsvr32/regsvr32.c
  * PURPOSE:         Register a COM component in the registry
- * PROGRAMMER:      jurgen van gael [jurgen.vangael@student.kuleuven.ac.be]
- * UPDATE HISTORY:
- *                  Created 31/12/2001
+ * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */
-/********************************************************************
 
+#define WIN32_LEAN_AND_MEAN
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Library General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.
+// Both UNICODE and _UNICODE must be either defined or undefined
+// because some headers use UNICODE and others use _UNICODE
+#ifdef UNICODE
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+#else
+#ifdef _UNICODE
+#define UNICODE
+#endif
+#endif
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Library General Public License for more details.
-
-You should have received a copy of the GNU Library General Public
-License along with this library; see the file COPYING.LIB.  If
-not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-Cambridge, MA 02139, USA.
-
-
-********************************************************************/
-//
-//	regsvr32 [/u] [/s] [/n] [/i[:cmdline]] dllname
-//	[/u]	unregister server
-//	[/s]	silent (no message boxes)
-//	[/i]	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall
-//	[/n]	Do not call DllRegisterServer; this option must be used with [/i]
-//
-#include <stdio.h>
 #include <windows.h>
-#include <olectl.h>
+#include <ole2.h>
+#include <stdio.h>
+#include <string.h>
+#include <malloc.h>
+#include <tchar.h>
 
-typedef HRESULT (*DLLREGISTER)		(void);
-typedef HRESULT (*DLLUNREGISTER)	(void);
+typedef HRESULT (WINAPI *DLLREGISTER)(void);
+typedef HRESULT (WINAPI *DLLINSTALL)(BOOL bInstall, LPWSTR lpwCmdLine);
 
-int Silent = 0;
+#define EXITCODE_SUCCESS 0
+#define EXITCODE_PARAMERROR 1
+#define EXITCODE_LOADERROR 3
+#define EXITCODE_NOENTRY 4
+#define EXITCODE_FAILURE 5
 
-int Usage()
+LPCSTR szDllRegister = "DllRegisterServer";
+LPCSTR szDllUnregister = "DllUnregisterServer";
+LPCSTR szDllInstall = "DllInstall";
+#ifdef UNICODE
+LPCWSTR tszDllRegister = L"DllRegisterServer";
+LPCWSTR tszDllUnregister = L"DllUnregisterServer";
+LPCWSTR tszDllInstall = L"DllInstall";
+#else
+#define tszDllRegister szDllRegister
+#define tszDllUnregister szDllUnregister
+#define tszDllInstall szDllInstall
+#endif
+
+LPCTSTR ModuleTitle = _T("RegSvr32");
+LPCTSTR UsageMessage =
+        _T("%s\n\n")
+        _T("Usage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n")
+        _T("/u -	Unregister server\n")
+        _T("/s -	Silent; display no message boxes\n")
+        _T("/c -	Console output\n")
+        _T("/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n")
+        _T("/n -	Do not call DllRegisterServer; this option must be used with /i");
+LPCTSTR NoDllSpecified = _T("No DLL name specified.");
+LPCTSTR InvalidFlag = _T("Unrecognized flag: %s");
+LPCTSTR SwitchN_NoI = _T("Unrecognized flag: /n must be used with the /i switch");
+LPCTSTR DllNotLoaded =
+        _T("LoadLibrary(\"%s\") failed.\n")
+        _T("GetLastError returns 0x%08x.");
+LPCTSTR MissingEntry =
+        _T("%s was loaded, but the %s entry point was not found.\n\n")
+        _T("%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it.");
+LPCTSTR FailureMessage =
+        _T("%s in %s failed.\n")
+        _T("Return code was: 0x%08x");
+LPCTSTR SuccessMessage = _T("%s in %s succeeded.");
+
+// The macro CommandLineToArgv maps to a function that converts
+// a command-line string to argc and argv similar to the ones
+// in the standard main function.  If this code is compiled for
+// unicode, the build-in Windows API function is used, otherwise
+// a non-unicode non-API version is used for compatibility with
+// Windows versions that have no unicode support.
+#ifdef UNICODE
+#define CommandLineToArgv CommandLineToArgvW
+#include <shellapi.h>
+#else
+#define CommandLineToArgv CommandLineToArgvT
+
+LPTSTR *WINAPI CommandLineToArgvT(LPCTSTR lpCmdLine, int *lpArgc)
 {
-	printf("regsvr32 [/u] [/s] [/n] [/i[:cmdline]] dllname\n");
-	printf("\t[/u]	unregister server\n");
-	printf("\t[/s]	silent (no message boxes)\n");
-	printf("\t[/i]	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n");
-	printf("\t[/n]	Do not call DllRegisterServer; this option must be used with [/i]\n");
+	HGLOBAL hargv;
+	LPTSTR *argv, lpSrc, lpDest, lpArg;
+	int argc, nBSlash;
+	BOOL bInQuotes;
 
-	return 0;
-}
-
-int RegisterDll(char* strDll)
-{
-	HRESULT hr = S_OK;
-	DLLREGISTER pfRegister;
-	HMODULE	DllHandle = NULL;
-
-	DllHandle = LoadLibrary(strDll);
-	if(!DllHandle)
-	{
-		if(!Silent)
-			printf("Dll not found\n");
-
-		return -1;
+	// If null was passed in for lpCmdLine, there are no arguments
+	if (!lpCmdLine) {
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
 	}
-	pfRegister = (VOID*) GetProcAddress(DllHandle, "DllRegisterServer");
-	if(!pfRegister)
-	{
-		if(!Silent)
-			printf("DllRegisterServer not implemented\n");
 
-		return -1;
+	lpSrc = (LPTSTR)lpCmdLine;
+	// Skip spaces at beginning
+	while (*lpSrc == _T(' ') || *lpSrc == _T('\t'))
+		lpSrc++;
+
+	// If command-line starts with null, there are no arguments
+	if (*lpSrc == 0) {
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
 	}
-	hr = pfRegister();
-	if(FAILED(hr))
-	{
-		if(!Silent)
-			printf("Failed to register dll\n");
 
-		return -1;
-	}
-	if(!Silent)
-		printf("Succesfully registered dll\n");
+	lpArg = lpSrc;
+	argc = 0;
+	nBSlash = 0;
+	bInQuotes = FALSE;
 
-	//	clean
-	if(DllHandle)
-		FreeLibrary(DllHandle);
-}
+	// Count the number of arguments
+	while (1) {
+		if (*lpSrc == 0 || ((*lpSrc == _T(' ') || *lpSrc == _T('\t')) && !bInQuotes)) {
+			// Whitespace not enclosed in quotes signals the start of another argument
+			argc++;
 
-int UnregisterDll(char* strDll)
-{
-	HRESULT hr = S_OK;
-	HMODULE	DllHandle = NULL;
-	DLLUNREGISTER pfUnregister;
-
-	DllHandle = LoadLibrary(strDll);
-	if(!DllHandle)
-	{
-		if(!Silent)
-			printf("Dll not found\n");
-
-		return -1;
-	}
-	pfUnregister = (VOID*) GetProcAddress(DllHandle, "DllUnregisterServer");
-	if(!pfUnregister)
-	{
-		if(!Silent)
-			printf("DllUnregisterServer not implemented\n");
-
-		return -1;
-	}
-	hr = pfUnregister();
-	if(FAILED(hr))
-	{
-		if(!Silent)
-			printf("Failed to unregister dll\n");
-
-		return -1;
-	}
-	if(!Silent)
-		printf("Succesfully unregistered dll\n");
-
-	//	clean
-	if(DllHandle)
-		FreeLibrary(DllHandle);
-}
-
-int main(int argc, char* argv[])
-{
-	int		i = 0;
-	int		Unregister = 0;
-	char	DllName[MAX_PATH];
-
-	DllName[0] = '\0';
-
-	for(i = 0; i < argc; i++)
-	{
-		if(argv[i][0] == '/')
-		{
-			if(argv[i][1] == 'u')
-				Unregister = 1;
-			else if(argv[i][1] == 's')
-				Silent = 1;
-			else if(argv[i][1] == 'i')
-				;	//	not implemented yet
-			else if(argv[i][1] == 'n')
-				;	//	not implemented yet
+			// Skip whitespace between arguments
+			while (*lpSrc == _T(' ') || *lpSrc == _T('\t'))
+				lpSrc++;
+			if (*lpSrc == 0)
+				break;
+			nBSlash = 0;
+			continue;
 		}
-		else
-			strcpy(DllName, argv[i]);
+		else if (*lpSrc == _T('\\')) {
+			// Count consecutive backslashes
+			nBSlash++;
+		}
+		else if (*lpSrc == _T('\"') && !(nBSlash & 1)) {
+			// Open or close quotes
+			bInQuotes = !bInQuotes;
+			nBSlash = 0;
+		}
+		else {
+			// Some other character
+			nBSlash = 0;
+		}
+		lpSrc++;
 	}
 
-	if(!strcmp(DllName, "regsvr32") || !strcmp(DllName, "regsvr32.exe"))
-	{
-		if(!Silent)
-			return Usage();
-		else
-			return -1;
+	// Allocate space the same way as CommandLineToArgvW for compatibility
+	hargv = GlobalAlloc(0, argc * sizeof(LPTSTR) + (_tcslen(lpArg) + 1) * sizeof(TCHAR));
+	argv = (LPTSTR *)GlobalLock(hargv);
+
+	if (!argv) {
+		// Memory allocation failed
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
 	}
 
-	if(Unregister == 0)
-		return RegisterDll(DllName);
-	else
-		return UnregisterDll(DllName);
+	lpSrc = lpArg;
+	lpDest = lpArg = (LPTSTR)(argv + argc);
+	argc = 0;
+	nBSlash = 0;
+	bInQuotes = FALSE;
 
-	return 0;
+	// Fill the argument array
+	while (1) {
+		if (*lpSrc == 0 || ((*lpSrc == _T(' ') || *lpSrc == _T('\t')) && !bInQuotes)) {
+			// Whitespace not enclosed in quotes signals the start of another argument
+			// Null-terminate argument
+			*lpDest++ = 0;
+			argv[argc++] = lpArg;
+
+			// Skip whitespace between arguments
+			while (*lpSrc == _T(' ') || *lpSrc == _T('\t'))
+				lpSrc++;
+			if (*lpSrc == 0)
+				break;
+			lpArg = lpDest;
+			nBSlash = 0;
+			continue;
+		}
+		else if (*lpSrc == _T('\\')) {
+			*lpDest++ = _T('\\');
+			lpSrc++;
+
+			// Count consecutive backslashes
+			nBSlash++;
+		}
+		else if (*lpSrc == _T('\"')) {
+			if (!(nBSlash & 1)) {
+				// If an even number of backslashes are before the quotes,
+				// the quotes don't go in the output
+				lpDest -= nBSlash / 2;
+				bInQuotes = !bInQuotes;
+			}
+			else {
+				// If an odd number of backslashes are before the quotes,
+				// output a quote
+				lpDest -= (nBSlash + 1) / 2;
+				*lpDest++ = _T('\"');
+			}
+			lpSrc++;
+			nBSlash = 0;
+		}
+		else {
+			// Copy other characters
+			*lpDest++ = *lpSrc++;
+			nBSlash = 0;
+		}
+	}
+
+	if (lpArgc)
+		*lpArgc = argc;
+	return argv;
 }
+
+#endif
+
+// The macro ConvertToWideChar takes a tstring parameter and returns
+// a pointer to a unicode string.  A conversion is performed if
+// neccessary.  FreeConvertedWideChar string should be used on the
+// return value of ConvertToWideChar when the string is no longer
+// needed.  The original string or the string that is returned
+// should not be modified until FreeConvertedWideChar has been called.
+#ifdef UNICODE
+#define ConvertToWideChar(lptString) (lptString)
+#define FreeConvertedWideChar(lpwString)
+#else
+
+LPWSTR ConvertToWideChar(LPCSTR lpString)
+{
+	LPWSTR lpwString;
+	size_t nStrLen;
+
+	nStrLen = strlen(lpString) + 1;
+
+	lpwString = (LPWSTR)malloc(nStrLen * sizeof(WCHAR));
+	MultiByteToWideChar(0,0,lpString,nStrLen,lpwString,nStrLen);
+
+	return lpwString;
+}
+
+#define FreeConvertedWideChar(lpwString) free(lpwString)
+#endif
+
+void DisplayMessage(BOOL bConsole, BOOL bSilent, LPCTSTR lpMessage, LPCTSTR lpTitle, UINT uType)
+{
+	if (!bSilent)
+		MessageBox(0,lpMessage,lpTitle,uType);
+	if (bConsole)
+		_tprintf(_T("%s: %s\n\n"),lpTitle,lpMessage);
+}
+
+int WINAPI WinMain(
+  HINSTANCE hInstance,
+  HINSTANCE hPrevInstance,
+  LPSTR lpCmdLineA,
+  int nCmdShow
+)
+{
+	int argc;
+	LPTSTR *argv;
+	LPTSTR lptDllName,lptDllCmdLine,lptMsgBuffer;
+	LPCTSTR lptFuncName;
+	LPCSTR lpFuncName;
+	LPWSTR lpwDllCmdLine;
+	BOOL bUnregister,bSilent,bConsole,bInstall,bNoRegister;
+	UINT nDllCount;
+	HMODULE hDll;
+	DLLREGISTER fnDllRegister;
+	DLLINSTALL fnDllInstall;
+	HRESULT hResult;
+	DWORD dwErr;
+	int nRetValue,i;
+
+	// Get command-line in argc-argv format
+	argv = CommandLineToArgv(GetCommandLine(),&argc);
+
+	// Initialize variables
+	lptFuncName = 0;
+	lptDllCmdLine = 0;
+	nDllCount = 0;
+	bUnregister = FALSE;
+	bSilent = FALSE;
+	bConsole = FALSE;
+	bInstall = FALSE;
+	bNoRegister = FALSE;
+
+	// Find all arguments starting with a slash (/)
+	for (i = 1; i < argc; i++) {
+		if (*argv[i] == _T('/')) {
+			switch (argv[i][1]) {
+			case _T('u'):
+			case _T('U'):
+				bUnregister = TRUE;
+				break;
+			case _T('s'):
+			case _T('S'):
+				bSilent = TRUE;
+				break;
+			case _T('c'):
+			case _T('C'):
+				bConsole = TRUE;
+				break;
+			case _T('i'):
+			case _T('I'):
+				bInstall = TRUE;
+				lptDllCmdLine = argv[i];
+				while (*lptDllCmdLine != 0 && *lptDllCmdLine != _T(':'))
+					lptDllCmdLine++;
+				if (*lptDllCmdLine == _T(':'))
+					lptDllCmdLine++;
+				break;
+			case _T('n'):
+			case _T('N'):
+				bNoRegister = TRUE;
+				break;
+			default:
+				if (!lptFuncName)
+					lptFuncName = argv[i];
+			}
+		}
+		else {
+			nDllCount++;
+		}
+	}
+
+	// An unrecognized flag was used, display a message and show available options
+	if (lptFuncName) {
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(InvalidFlag) - 2 + _tcslen(lptFuncName) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer + (_tcslen(UsageMessage) - 2),InvalidFlag,lptFuncName);
+		_stprintf(lptMsgBuffer,UsageMessage,lptMsgBuffer + (_tcslen(UsageMessage) - 2));
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
+		GlobalFree(argv);
+		return EXITCODE_PARAMERROR;
+	}
+
+	// /n was used without /i, display a message and show available options
+	if (bNoRegister && (!bInstall)) {
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(SwitchN_NoI) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer,UsageMessage,SwitchN_NoI);
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
+		GlobalFree(argv);
+		return EXITCODE_PARAMERROR;
+	}
+
+	// No dll was specified, display a message and show available options
+	if (nDllCount == 0) {
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(NoDllSpecified) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer,UsageMessage,NoDllSpecified);
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
+		GlobalFree(argv);
+		return EXITCODE_PARAMERROR;
+	}
+
+	nRetValue = EXITCODE_SUCCESS;
+	if (!bUnregister) {
+		lpFuncName = szDllRegister;
+		lptFuncName = tszDllRegister;
+	}
+	else {
+		lpFuncName = szDllUnregister;
+		lptFuncName = tszDllUnregister;
+	}
+
+	if (lptDllCmdLine)
+		lpwDllCmdLine = ConvertToWideChar(lptDllCmdLine);
+	else
+		lpwDllCmdLine = 0;
+
+	// Initialize OLE32 before attempting to register the
+	// dll.  Some dll's require this to register properly
+	OleInitialize(0);
+
+	// (Un)register every dll whose filename was passed in the command-line string
+	for (i = 1; i < argc; i++) {
+		// Arguments that do not start with a slash (/) are filenames
+		if (*argv[i] != _T('/')) {
+			lptDllName = argv[i];
+
+			// Everything is all setup, so load the dll now
+			hDll = LoadLibraryEx(lptDllName,0,LOAD_WITH_ALTERED_SEARCH_PATH);
+			if (hDll) {
+				if (!bNoRegister) {
+					// Get the address of DllRegisterServer or DllUnregisterServer
+					fnDllRegister = (DLLREGISTER)GetProcAddress(hDll,lpFuncName);
+					if (fnDllRegister) {
+						// If the function exists, call it
+						hResult = fnDllRegister();
+						if (hResult == S_OK) {
+							// (Un)register succeeded, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,SuccessMessage,lptFuncName,lptDllName);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
+						}
+						else {
+							// (Un)register failed, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,FailureMessage,lptFuncName,lptDllName,hResult);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						}
+						free(lptMsgBuffer);
+						if (hResult != S_OK)
+							nRetValue = EXITCODE_FAILURE;
+					}
+					else {
+						FreeLibrary(hDll);
+						// Dll(Un)register was not found, display an error message
+						lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(lptFuncName) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
+						_stprintf(lptMsgBuffer,MissingEntry,lptDllName,lptFuncName,lptFuncName,lptDllName);
+						DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						free(lptMsgBuffer);
+						nRetValue = EXITCODE_NOENTRY;
+					}
+				}
+
+				if (bInstall) {
+					// Get the address of DllInstall
+					fnDllInstall = (DLLINSTALL)GetProcAddress(hDll,szDllInstall);
+					if (fnDllInstall) {
+						// If the function exists, call it
+						if (!bUnregister)
+							hResult = fnDllInstall(1,lpwDllCmdLine);
+						else
+							hResult = fnDllInstall(0,lpwDllCmdLine);
+						if (hResult == S_OK) {
+							// (Un)install succeeded, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,SuccessMessage,tszDllInstall,lptDllName);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
+						}
+						else {
+							// (Un)install failed, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,FailureMessage,tszDllInstall,lptDllName,hResult);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						}
+						free(lptMsgBuffer);
+						if (hResult != S_OK)
+							nRetValue = EXITCODE_FAILURE;
+					}
+					else {
+						FreeLibrary(hDll);
+						// DllInstall was not found, display an error message
+						lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(tszDllInstall) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
+						_stprintf(lptMsgBuffer,MissingEntry,lptDllName,tszDllInstall,tszDllInstall,lptDllName);
+						DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						free(lptMsgBuffer);
+						nRetValue = EXITCODE_NOENTRY;
+					}
+				}
+
+				// The dll function has finished executing, so unload it
+				FreeLibrary(hDll);
+			}
+			else {
+				// The dll could not be loaded; display an error message
+				dwErr = GetLastError();
+				lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) + 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+				_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName,dwErr);
+				DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+				free(lptMsgBuffer);
+				nRetValue = EXITCODE_LOADERROR;
+			}
+		}
+	}
+
+	if (lpwDllCmdLine)
+		FreeConvertedWideChar(lpwDllCmdLine);
+	GlobalFree(argv);
+	OleUninitialize();
+	return nRetValue;
+}
+
