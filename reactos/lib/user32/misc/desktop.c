@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.24 2003/08/14 20:25:52 royce Exp $
+/* $Id: desktop.c,v 1.25 2003/08/19 15:18:26 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -198,7 +198,7 @@ WINBOOL
 STDCALL
 EnumDesktopsA(
   HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
+  DESKTOPENUMPROCA lpEnumFunc,
   LPARAM lParam)
 {
   UNIMPLEMENTED;
@@ -213,7 +213,7 @@ WINBOOL
 STDCALL
 EnumDesktopsW(
   HWINSTA hwinsta,
-  DESKTOPENUMPROC lpEnumFunc,
+  DESKTOPENUMPROCW lpEnumFunc,
   LPARAM lParam)
 {
   UNIMPLEMENTED;

@@ -1126,7 +1126,7 @@ WINBOOL
 STDCALL
 EnumDesktopsW(
     HWINSTA hwinsta,
-    DESKTOPENUMPROC lpEnumFunc,
+    DESKTOPENUMPROCW lpEnumFunc,
     LPARAM lParam);
 
 HWINSTA
