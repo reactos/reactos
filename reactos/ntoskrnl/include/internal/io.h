@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.27 2002/10/05 10:53:37 dwelch Exp $
+/* $Id: io.h,v 1.28 2003/02/25 16:43:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,7 +228,7 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 
 extern PDEVICE_NODE IopRootDeviceNode;
 
-extern POBJECT_TYPE IoSymbolicLinkType;
+//extern POBJECT_TYPE IoSymbolicLinkType;
 
 VOID
 PnpInit(VOID);
@@ -262,8 +262,6 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 		    BOOLEAN FileSystemDriver);
 VOID
 IoInitCancelHandling(VOID);
-VOID
-IoInitSymbolicLinkImplementation(VOID);
 VOID
 IoInitFileSystemImplementation(VOID);
 VOID

@@ -66,6 +66,7 @@ enum
 
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;
+extern POBJECT_TYPE ObSymbolicLinkType;
 
 
 POBJECT_HEADER BODY_TO_HEADER(PVOID body);
@@ -76,6 +77,8 @@ VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			  PWSTR Name);
 VOID ObpRemoveEntryDirectory(POBJECT_HEADER Header);
 
+VOID
+ObInitSymbolicLinkImplementation(VOID);
 
 
 NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
