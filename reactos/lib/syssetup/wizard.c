@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.14 2004/11/22 11:01:45 gvg Exp $
+/* $Id: wizard.c,v 1.15 2004/11/24 23:09:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -29,14 +29,12 @@
 
 #include <windows.h>
 #include <windowsx.h>
-#include <tchar.h>
 #include <commctrl.h>
-
+#include <tchar.h>
 #include <string.h>
 #include <setupapi.h>
 
 #include <syssetup.h>
-
 
 #include "globals.h"
 #include "resource.h"
@@ -87,7 +85,7 @@ CreateTitleFont(VOID)
 
   LogFont = ncm.lfMessageFont;
   LogFont.lfWeight = FW_BOLD;
-  wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
+  _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
 
   hdc = GetDC(NULL);
   FontSize = 12;
@@ -297,8 +295,8 @@ AckPageDlgProc(HWND hwndDlg,
         break;
 
       case WM_COMMAND:
-	if (HIWORD(wParam) == BN_CLICKED && IDC_VIEWGPL == LOWORD(wParam))
-	  {
+        if (HIWORD(wParam) == BN_CLICKED && IDC_VIEWGPL == LOWORD(wParam))
+          {
             DialogBox(hDllInstance, MAKEINTRESOURCE(IDD_GPL), NULL, GplDlgProc);
           }
         break;
@@ -334,8 +332,8 @@ OwnerPageDlgProc(HWND hwndDlg,
                  WPARAM wParam,
                  LPARAM lParam)
 {
-  WCHAR OwnerName[51];
-  WCHAR OwnerOrganization[51];
+  TCHAR OwnerName[51];
+  TCHAR OwnerOrganization[51];
   HKEY hKey;
   LPNMHDR lpnm;
 
@@ -343,8 +341,8 @@ OwnerPageDlgProc(HWND hwndDlg,
     {
       case WM_INITDIALOG:
         {
-          SendDlgItemMessageW(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
-          SendDlgItemMessageW(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
+          SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
+          SendDlgItemMessage(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
 
           /* Set focus to owner name */
           SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
@@ -367,9 +365,9 @@ OwnerPageDlgProc(HWND hwndDlg,
                 OwnerName[0] = 0;
                 if (GetDlgItemText(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
                 {
-                  MessageBoxW(hwndDlg,
-                              L"Setup cannot continue until you enter your name.",
-                              L"ReactOS Setup",
+                  MessageBox(hwndDlg,
+                             _T("Setup cannot continue until you enter your name."),
+                             _T("ReactOS Setup"),
                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
@@ -378,27 +376,27 @@ OwnerPageDlgProc(HWND hwndDlg,
                 OwnerOrganization[0] = 0;
                 GetDlgItemTextW(hwndDlg, IDC_OWNERORGANIZATION, OwnerOrganization, 50);
 
-                RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                              L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                             _T("Software\\Microsoft\\Windows NT\\CurrentVersion"),
+                             0,
+                             KEY_ALL_ACCESS,
+                             &hKey);
+                /* FIXME: check error code */
+
+                RegSetValueEx(hKey,
+                              _T("RegisteredOwner"),
                               0,
-                              KEY_ALL_ACCESS,
-                              &hKey);
+                              REG_SZ,
+                              (LPBYTE)OwnerName,
+                              (_tcslen(OwnerName) + 1) * sizeof(TCHAR));
                 /* FIXME: check error code */
 
-                RegSetValueExW(hKey,
-                               L"RegisteredOwner",
-                               0,
-                               REG_SZ,
-                               (LPBYTE)OwnerName,
-                               (wcslen(OwnerName) + 1) * sizeof(WCHAR));
-                /* FIXME: check error code */
-
-                RegSetValueExW(hKey,
-                               L"RegisteredOrganization",
-                               0,
-                               REG_SZ,
-                               (LPBYTE)OwnerOrganization,
-                               (wcslen(OwnerOrganization) + 1) * sizeof(WCHAR));
+                RegSetValueEx(hKey,
+                              _T("RegisteredOrganization"),
+                              0,
+                              REG_SZ,
+                              (LPBYTE)OwnerOrganization,
+                              (_tcslen(OwnerOrganization) + 1) * sizeof(TCHAR));
                 /* FIXME: check error code */
 
                 RegCloseKey(hKey);
@@ -424,9 +422,9 @@ ComputerPageDlgProc(HWND hwndDlg,
                     WPARAM wParam,
                     LPARAM lParam)
 {
-  WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-  WCHAR Password1[15];
-  WCHAR Password2[15];
+  TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+  TCHAR Password1[15];
+  TCHAR Password2[15];
   DWORD Length;
   LPNMHDR lpnm;
 
@@ -439,12 +437,12 @@ ComputerPageDlgProc(HWND hwndDlg,
           GetComputerName(ComputerName, &Length);
 
           /* Display current computer name */
-          SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
+          SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
 
           /* Set text limits */
-          SendDlgItemMessageW(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
-          SendDlgItemMessageW(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
-          SendDlgItemMessageW(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
+          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
+          SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
+          SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
 
           /* Set focus to computer name */
           SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
@@ -466,10 +464,10 @@ ComputerPageDlgProc(HWND hwndDlg,
               case PSN_WIZNEXT:
                 if (GetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
                 {
-                  MessageBoxW(hwndDlg,
-                              L"Setup cannot continue until you enter the name of your computer.",
-                              L"ReactOS Setup",
-                              MB_ICONERROR | MB_OK);
+                  MessageBox(hwndDlg,
+                             _T("Setup cannot continue until you enter the name of your computer."),
+                             _T("ReactOS Setup"),
+                             MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
@@ -478,23 +476,23 @@ ComputerPageDlgProc(HWND hwndDlg,
 
                 if (!SetComputerName(ComputerName))
                 {
-                  MessageBoxW(hwndDlg,
-                              L"Setup failed to set the computer name.",
-                              L"ReactOS Setup",
-                              MB_ICONERROR | MB_OK);
+                  MessageBox(hwndDlg,
+                             _T("Setup failed to set the computer name."),
+                             _T("ReactOS Setup"),
+                             MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
 
                 /* Check admin passwords */
-                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
-                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
-                if (wcscmp(Password1, Password2))
+                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
+                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+                if (_tcscmp(Password1, Password2))
                 {
-                  MessageBoxW(hwndDlg,
-                              L"The passwords you entered do not match. Please enter "\
-                               "the desired password again.",
-                              L"ReactOS Setup",
+                  MessageBox(hwndDlg,
+                             _T("The passwords you entered do not match. Please enter "\
+                                "the desired password again."),
+                             _T("ReactOS Setup"),
                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
@@ -523,49 +521,49 @@ static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
 #if 0
-  WCHAR szLayoutPath[256];
-  WCHAR szLocaleName[32];
+  TCHAR szLayoutPath[256];
+  TCHAR szLocaleName[32];
   DWORD dwLocaleSize;
   HKEY hKey;
 
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale",
-		    0,
-		    KEY_ALL_ACCESS,
-		    &hKey))
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale"),
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hKey))
     return;
 
-  dwValueSize = 16 * sizeof(WCHAR);
-  if (RegQueryValueExW(hKey,
-		       NULL,
-		       NULL,
-		       NULL,
-		       szLocaleName,
-		       &dwLocaleSize))
+  dwValueSize = 16 * sizeof(TCHAR);
+  if (RegQueryValueEx(hKey,
+		      NULL,
+		      NULL,
+		      NULL,
+		      szLocaleName,
+		      &dwLocaleSize))
     {
       RegCloseKey(hKey);
       return;
     }
 
-  wcscpy(szLayoutPath,
-	 L"SYSTEM\\CurrentControlSet\\Control\\KeyboardLayouts\\"
-  wcscat(szLayoutPath,
-	 szLocaleName);
+  _tcscpy(szLayoutPath,
+	  _T("SYSTEM\\CurrentControlSet\\Control\\KeyboardLayouts\\"));
+  _tcscat(szLayoutPath,
+	  szLocaleName);
 
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    szLayoutPath,
-		    0,
-		    KEY_ALL_ACCESS,
-		    &hKey))
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   szLayoutPath,
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hKey))
     return;
 
-  dwValueSize = 32 * sizeof(WCHAR);
-  if (RegQueryValueExW(hKey,
-		       L"Layout Text",
-		       NULL,
-		       NULL,
-		       szLocaleName,
-		       &dwLocaleSize))
+  dwValueSize = 32 * sizeof(TCHAR);
+  if (RegQueryValueEx(hKey,
+		      _T("Layout Text"),
+		      NULL,
+		      NULL,
+		      szLocaleName,
+		      &dwLocaleSize))
     {
       RegCloseKey(hKey);
       return;
@@ -578,36 +576,36 @@ SetKeyboardLayoutName(HWND hwnd)
 static VOID
 RunInputLocalePage(HWND hwnd)
 {
-  PROPSHEETPAGEW psp;
-  PROPSHEETHEADERW psh;
+  PROPSHEETPAGE psp;
+  PROPSHEETHEADER psh;
   HMODULE hDll;
-//  WCHAR Caption[256];
+//  TCHAR Caption[256];
 
-  hDll = LoadLibraryW(L"intl.cpl");
+  hDll = LoadLibrary(_T("intl.cpl"));
   if (hDll == NULL)
     return;
 
-  ZeroMemory(&psp, sizeof(PROPSHEETPAGEW));
-  psp.dwSize = sizeof(PROPSHEETPAGEW);
+  ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+  psp.dwSize = sizeof(PROPSHEETPAGE);
   psp.dwFlags = PSP_DEFAULT;
   psp.hInstance = hDll;
-  psp.pszTemplate = MAKEINTRESOURCEW(105); /* IDD_LOCALEPAGE from intl.cpl */
+  psp.pszTemplate = MAKEINTRESOURCE(105); /* IDD_LOCALEPAGE from intl.cpl */
   psp.pfnDlgProc = GetProcAddress(hDll, "LocalePageProc");
 
 //  LoadString(hDll, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
-  psh.dwSize = sizeof(PROPSHEETHEADERW);
+  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+  psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
 //  psh.hwndParent = hwnd;
 //  psh.hInstance = hDll;
 //  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-  psh.pszCaption = L"Title"; //Caption;
+  psh.pszCaption = _T("Title"); //Caption;
   psh.nPages = 1;
   psh.nStartPage = 0;
   psh.ppsp = &psp;
 
-  PropertySheetW(&psh);
+  PropertySheet(&psh);
 
   FreeLibrary(hDll);
 }
@@ -708,7 +706,7 @@ GetLargerTimeZoneEntry(PSETUPDATA SetupData, DWORD Index)
 static VOID
 CreateTimeZoneList(PSETUPDATA SetupData)
 {
-  WCHAR szKeyName[256];
+  TCHAR szKeyName[256];
   DWORD dwIndex;
   DWORD dwNameSize;
   DWORD dwValueSize;
@@ -719,33 +717,33 @@ CreateTimeZoneList(PSETUPDATA SetupData)
   PTIMEZONE_ENTRY Entry;
   PTIMEZONE_ENTRY Current;
 
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-		    0,
-		    KEY_ALL_ACCESS,
-		    &hZonesKey))
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"),
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hZonesKey))
     return;
 
   dwIndex = 0;
   while (TRUE)
     {
-      dwNameSize = 256;
-      lError = RegEnumKeyExW(hZonesKey,
-			     dwIndex,
-			     szKeyName,
-			     &dwNameSize,
-			     NULL,
-			     NULL,
-			     NULL,
-			     NULL);
+      dwNameSize = 256 * sizeof(TCHAR);
+      lError = RegEnumKeyEx(hZonesKey,
+			    dwIndex,
+			    szKeyName,
+			    &dwNameSize,
+			    NULL,
+			    NULL,
+			    NULL,
+			    NULL);
       if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
 	break;
 
-      if (RegOpenKeyExW(hZonesKey,
-			szKeyName,
-			0,
-			KEY_ALL_ACCESS,
-			&hZoneKey))
+      if (RegOpenKeyEx(hZonesKey,
+		       szKeyName,
+		       0,
+		       KEY_ALL_ACCESS,
+		       &hZoneKey))
 	break;
 
       Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
@@ -755,61 +753,61 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	  break;
 	}
 
-      dwValueSize = 64 * sizeof(WCHAR);
-      if (RegQueryValueExW(hZoneKey,
-			   L"Display",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->Description,
-			   &dwValueSize))
+      dwValueSize = 64 * sizeof(TCHAR);
+      if (RegQueryValueEx(hZoneKey,
+			  _T("Display"),
+			  NULL,
+			  NULL,
+			  (LPBYTE)&Entry->Description,
+			  &dwValueSize))
+	{
+	  RegCloseKey(hZoneKey);
+	  break;
+	}
+
+      dwValueSize = 32 * sizeof(TCHAR);
+      if (RegQueryValueEx(hZoneKey,
+			  _T("Std"),
+			  NULL,
+			  NULL,
+			  (LPBYTE)&Entry->StandardName,
+			  &dwValueSize))
 	{
 	  RegCloseKey(hZoneKey);
 	  break;
 	}
 
       dwValueSize = 32 * sizeof(WCHAR);
-      if (RegQueryValueExW(hZoneKey,
-			   L"Std",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->StandardName,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
-
-      dwValueSize = 32 * sizeof(WCHAR);
-      if (RegQueryValueExW(hZoneKey,
-			   L"Dlt",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->DaylightName,
-			   &dwValueSize))
+      if (RegQueryValueEx(hZoneKey,
+			  _T("Dlt"),
+			  NULL,
+			  NULL,
+			  (LPBYTE)&Entry->DaylightName,
+			  &dwValueSize))
 	{
 	  RegCloseKey(hZoneKey);
 	  break;
 	}
 
       dwValueSize = sizeof(DWORD);
-      if (RegQueryValueExW(hZoneKey,
-			   L"Index",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->Index,
-			   &dwValueSize))
+      if (RegQueryValueEx(hZoneKey,
+			  _T("Index"),
+			  NULL,
+			  NULL,
+			  (LPBYTE)&Entry->Index,
+			  &dwValueSize))
 	{
 	  RegCloseKey(hZoneKey);
 	  break;
 	}
 
       dwValueSize = sizeof(TZ_INFO);
-      if (RegQueryValueExW(hZoneKey,
-			   L"TZI",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->TimezoneInfo,
-			   &dwValueSize))
+      if (RegQueryValueEx(hZoneKey,
+			  _T("TZI"),
+			  NULL,
+			  NULL,
+			  (LPBYTE)&Entry->TimezoneInfo,
+			  &dwValueSize))
 	{
 	  RegCloseKey(hZoneKey);
 	  break;
@@ -886,27 +884,136 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
 }
 
 
+static BOOL
+GetTimeZoneListIndex(LPDWORD lpIndex)
+{
+  TCHAR szLanguageIdString[9];
+  HKEY hKey;
+  DWORD dwValueSize;
+  DWORD Length;
+  LPTSTR Buffer;
+  LPTSTR Ptr;
+  LPTSTR End;
+  BOOL bFound;
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"),
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hKey))
+    return FALSE;
+
+  dwValueSize = 9 * sizeof(TCHAR);
+  if (RegQueryValueEx(hKey,
+		      _T("Default"),
+		      NULL,
+		      NULL,
+		      (LPBYTE)szLanguageIdString,
+		      &dwValueSize))
+    {
+      RegCloseKey(hKey);
+      return FALSE;
+    }
+
+  RegCloseKey(hKey);
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"),
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hKey))
+    return FALSE;
+
+  dwValueSize = 0;
+  if (RegQueryValueEx(hKey,
+		      _T("IndexMapping"),
+		      NULL,
+		      NULL,
+		      NULL,
+		      &dwValueSize))
+    {
+      RegCloseKey(hKey);
+      return FALSE;
+    }
+
+  Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
+  if (Buffer == NULL)
+    {
+      RegCloseKey(hKey);
+      return FALSE;
+    }
+
+  if (RegQueryValueEx(hKey,
+		      _T("IndexMapping"),
+		      NULL,
+		      NULL,
+		      (LPBYTE)Buffer,
+		      &dwValueSize))
+    {
+      HeapFree(GetProcessHeap(), 0, Buffer);
+      RegCloseKey(hKey);
+      return FALSE;
+    }
+
+  RegCloseKey(hKey);
+
+  Ptr = Buffer;
+  while (*Ptr != 0)
+    {
+      Length = _tcslen(Ptr);
+      if (_tcsicmp(Ptr, szLanguageIdString) == 0)
+        bFound = TRUE;
+
+      Ptr = Ptr + Length + 1;
+      if (*Ptr == 0)
+        break;
+
+      Length = _tcslen(Ptr);
+
+      if (bFound)
+        {
+          *lpIndex = _tcstoul(Ptr, &End, 10);
+          HeapFree(GetProcessHeap(), 0, Buffer);
+          return FALSE;
+        }
+
+      Ptr = Ptr + Length + 1;
+    }
+
+  HeapFree(GetProcessHeap(), 0, Buffer);
+
+  return FALSE;
+}
+
+
 static VOID
 ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData)
 {
   PTIMEZONE_ENTRY Entry;
+  DWORD dwIndex = 0;
+  DWORD dwEntryIndex = 0;
+  DWORD dwCount;
+
+  GetTimeZoneListIndex(&dwEntryIndex);
 
   Entry = SetupData->TimeZoneListHead;
   while (Entry != NULL)
     {
-      SendMessageW(hwnd,
-		   CB_ADDSTRING,
-		   0,
-		   (LPARAM)Entry->Description);
+      dwCount = SendMessage(hwnd,
+			    CB_ADDSTRING,
+			    0,
+			    (LPARAM)Entry->Description);
 
+      if (dwEntryIndex != 0 && dwEntryIndex == Entry->Index)
+        dwIndex = dwCount;
 
       Entry = Entry->Next;
     }
 
-  SendMessageW(hwnd,
-	       CB_SETCURSEL,
-	       (WPARAM)0, // index
-	       0);
+  SendMessage(hwnd,
+	      CB_SETCURSEL,
+	      (WPARAM)dwIndex,
+	      0);
 }
 
 
@@ -934,10 +1041,10 @@ SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
       Entry = Entry->Next;
     }
 
-  wcscpy(TimeZoneInformation.StandardName,
-	 Entry->StandardName);
-  wcscpy(TimeZoneInformation.DaylightName,
-	 Entry->DaylightName);
+  _tcscpy(TimeZoneInformation.StandardName,
+	  Entry->StandardName);
+  _tcscpy(TimeZoneInformation.DaylightName,
+	  Entry->DaylightName);
 
   TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
   TimeZoneInformation.StandardBias = Entry->TimezoneInfo.StandardBias;
@@ -992,19 +1099,19 @@ SetAutoDaylightInfo(HWND hwnd)
 
   if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
     {
-      if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-			L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-			0,
-			KEY_SET_VALUE,
-			&hKey))
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		       _T("SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"),
+		       0,
+		       KEY_SET_VALUE,
+		       &hKey))
 	  return;
 
-      RegSetValueExW(hKey,
-		     L"DisableAutoDaylightTimeSet",
-		     0,
-		     REG_DWORD,
-		     (LPBYTE)&dwValue,
-		     sizeof(DWORD));
+      RegSetValueEx(hKey,
+		    _T("DisableAutoDaylightTimeSet"),
+		    0,
+		    REG_DWORD,
+		    (LPBYTE)&dwValue,
+		    sizeof(DWORD));
       RegCloseKey(hKey);
     }
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.19 2004/11/12 18:23:31 gvg Exp $
+/* $Id: install.c,v 1.20 2004/11/24 23:09:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -79,13 +79,13 @@ static BOOL
 RunVMWInstall(VOID)
 {
   PROCESS_INFORMATION ProcInfo;
-  STARTUPINFOA si;
+  STARTUPINFO si;
   
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
   
-  if(CreateProcessA(NULL, "vmwinst.exe", NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, 
-                    NULL, NULL, &si, &ProcInfo))
+  if(CreateProcess(NULL, _T("vmwinst.exe"), NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, 
+                   NULL, NULL, &si, &ProcInfo))
   {
     WaitForSingleObject(ProcInfo.hProcess, INFINITE);
     CloseHandle(ProcInfo.hThread);
@@ -196,57 +196,57 @@ RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static VOID
 CreateTempDir(LPCWSTR VarName)
 {
-  WCHAR szTempDir[MAX_PATH];
-  WCHAR szBuffer[MAX_PATH];
+  TCHAR szTempDir[MAX_PATH];
+  TCHAR szBuffer[MAX_PATH];
   DWORD dwLength;
   HKEY hKey;
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"),
+		   0,
+		   KEY_ALL_ACCESS,
+		   &hKey))
     {
       DebugPrint("Error: %lu\n", GetLastError());
       return;
     }
 
   /* Get temp dir */
-  dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			VarName,
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  dwLength = MAX_PATH * sizeof(TCHAR);
+  if (RegQueryValueEx(hKey,
+		      VarName,
+		      NULL,
+		      NULL,
+		      (LPBYTE)szBuffer,
+		      &dwLength))
     {
       DebugPrint("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
+      RegCloseKey(hKey);
       return;
     }
 
   /* Expand it */
-  if (!ExpandEnvironmentStringsW (szBuffer,
-				  szTempDir,
-				  MAX_PATH))
+  if (!ExpandEnvironmentStrings(szBuffer,
+				szTempDir,
+				MAX_PATH))
     {
       DebugPrint("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
+      RegCloseKey(hKey);
       return;
     }
 
   /* Create profiles directory */
-  if (!CreateDirectoryW (szTempDir, NULL))
+  if (!CreateDirectory(szTempDir, NULL))
     {
-      if (GetLastError () != ERROR_ALREADY_EXISTS)
+      if (GetLastError() != ERROR_ALREADY_EXISTS)
 	{
 	  DebugPrint("Error: %lu\n", GetLastError());
-	  RegCloseKey (hKey);
+	  RegCloseKey(hKey);
 	  return;
 	}
     }
 
-  RegCloseKey (hKey);
+  RegCloseKey(hKey);
 }
 
 
