@@ -1,0 +1,16 @@
+This is a test to determine how various requests on a socket are completed
+when the socket is closed.
+
+Test program output:
+
+A server is opened, and a socket is connected to it, then the counterpart is
+accepted.  Three seconds after, the accepted socket is closed.
+
+recv test: A blocking recv is done.
+send test: Blocking sends are done until the return is < 0 
+grid points are return,WSAGetLastError result (if nonzero)
+
+     Test ->  recv      send     select:reading select:writing select:exception
+Socket V
+ accepted     -1,10053  -1,10053 1              1              -1,10038
+ connected     0        -1,10054 1              1              0
