@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.24 2004/08/19 21:47:51 hbirr Exp $
+/* $Id: process.c,v 1.25 2004/08/21 21:19:06 tamlin Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -113,8 +113,8 @@ KeDetachProcess (VOID)
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeStackAttachProcess (
     IN PKPROCESS Process,
     OUT PRKAPC_STATE ApcState
@@ -126,8 +126,8 @@ KeStackAttachProcess (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeUnstackDetachProcess (
     IN PRKAPC_STATE ApcState
     )

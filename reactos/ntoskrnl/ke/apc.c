@@ -47,8 +47,8 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 KeAreApcsDisabled(
 	VOID
 	)

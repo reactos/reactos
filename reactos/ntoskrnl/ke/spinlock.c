@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.22 2004/08/15 16:39:05 chorns Exp $
+/* $Id: spinlock.c,v 1.23 2004/08/21 21:19:06 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,8 +56,8 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
 /*
  * @unimplemented
  */
-STDCALL
 KIRQL
+STDCALL
 KeAcquireInterruptSpinLock(
     IN PKINTERRUPT Interrupt
     )
@@ -197,8 +197,8 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeReleaseInterruptSpinLock(
 	IN PKINTERRUPT Interrupt,
 	IN KIRQL OldIrql

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.76 2004/08/15 16:39:05 chorns Exp $
+/* $Id: timer.c,v 1.77 2004/08/21 21:19:06 tamlin Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -472,8 +472,8 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
 /*
  * @unimplemented
  */
-STDCALL
 ULONG
+STDCALL
 KeQueryRuntimeThread(
 	IN PKTHREAD Thread,
 	OUT PULONG UserTime
@@ -486,8 +486,8 @@ KeQueryRuntimeThread(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeSetTimeIncrement(
     IN ULONG MaxIncrement,
     IN ULONG MinIncrement
@@ -759,8 +759,8 @@ KeSetTimeUpdateNotifyRoutine(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 KeUpdateRunTime(
 	IN PKTRAP_FRAME	TrapFrame
 )
@@ -771,8 +771,8 @@ KeUpdateRunTime(
 /*
  * @unimplemented
  */
-STDCALL
 VOID 
+STDCALL
 KeUpdateSystemTime(
 	IN PKTRAP_FRAME TrapFrame,
 	IN ULONG        Increment

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.47 2004/08/15 16:39:05 chorns Exp $
+/* $Id: catch.c,v 1.48 2004/08/21 21:19:06 tamlin Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -251,8 +251,8 @@ ExSystemExceptionFilter()
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 KeDeregisterBugCheckReasonCallback(
     IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
     )
@@ -264,8 +264,8 @@ KeDeregisterBugCheckReasonCallback(
 /*
  * @unimplemented
  */
-STDCALL
 ULONG
+STDCALL
 KeGetRecommendedSharedDataAlignment(
 	VOID
 	)
@@ -277,8 +277,8 @@ KeGetRecommendedSharedDataAlignment(
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 KeRegisterBugCheckReasonCallback(
     IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
     IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
