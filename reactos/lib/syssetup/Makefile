@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/08/07 04:03:23 royce Exp $
+# $Id: Makefile,v 1.3 2004/01/09 21:54:24 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = syssetup
 
 TARGET_BASE = 0x74A30000
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a userenv.a
 
 TARGET_CFLAGS = -Wall -Werror -fno-builtin
 
