@@ -1019,16 +1019,16 @@ void SettingsMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
-		AddButton(ResString(IDS_CONTROL_PANEL),	0, false, IDC_CONTROL_PANEL);
+		AddButton(ResString(IDS_CONTROL_PANEL),	SmallIcon(IDI_CONFIG), false, IDC_CONTROL_PANEL);
 
-	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
-	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_PRINTERS),		SmallIcon(IDI_PRINTER), true, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),	SmallIcon(IDI_NETWORK), true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_ADMIN),			SmallIcon(IDI_CONFIG), true, IDC_ADMIN);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
-		AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
+		AddButton(ResString(IDS_SETTINGS_MENU),	SmallIcon(IDI_CONFIG), true, IDC_SETTINGS_MENU);
 }
 
 int SettingsMenu::Command(int id, int code)
@@ -1070,9 +1070,9 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
-		AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
+		AddButton(ResString(IDS_NETWORK),	SmallIcon(IDI_NETWORK), true, IDC_NETWORK);
 
-	AddButton(ResString(IDS_DRIVES),	0, true, IDC_DRIVES);
+	AddButton(ResString(IDS_DRIVES),	SmallIcon(IDI_FOLDER), true, IDC_DRIVES);
 }
 
 int BrowseMenu::Command(int id, int code)
@@ -1099,14 +1099,14 @@ void SearchMenu::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_SEARCH_PRG),		0, false, IDC_SEARCH_PROGRAM);
+	AddButton(ResString(IDS_SEARCH_PRG),	SmallIcon(IDI_APPS), false, IDC_SEARCH_PROGRAM);
 
-	AddButton(ResString(IDS_SEARCH_FILES),		0, false, IDC_SEARCH_FILES);
+	AddButton(ResString(IDS_SEARCH_FILES),	SmallIcon(IDI_SEARCH_DOC), false, IDC_SEARCH_FILES);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
 #endif
-		AddButton(ResString(IDS_SEARCH_COMPUTER),	0, false, IDC_SEARCH_COMPUTER);
+		AddButton(ResString(IDS_SEARCH_COMPUTER),	SmallIcon(IDI_COMPUTER), false, IDC_SEARCH_COMPUTER);
 }
 
 int SearchMenu::Command(int id, int code)

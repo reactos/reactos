@@ -401,6 +401,10 @@ IDI_APPS                ICON    DISCARDABLE     "res\\apps.ico"
 IDI_SEARCH              ICON    DISCARDABLE     "res\\search.ico"
 IDI_ACTION              ICON    DISCARDABLE     "res\\action.ico"
 IDI_FOLDER              ICON    DISCARDABLE     "res\\folder.ico"
+IDI_SEARCH_DOC          ICON    DISCARDABLE     "res\\search-doc.ico"
+IDI_PRINTER             ICON    DISCARDABLE     "res\\printer.ico"
+IDI_NETWORK             ICON    DISCARDABLE     "res\\network.ico"
+IDI_COMPUTER            ICON    DISCARDABLE     "res\\computer.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

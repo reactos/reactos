@@ -334,10 +334,18 @@ SOURCE=.\utility\window.h
 # End Group
 # Begin Group "resources"
 
-# PROP Default_Filter ""
+# PROP Default_Filter "bmp,ico"
+# Begin Source File
+
+SOURCE=.\res\action.ico
+# End Source File
 # Begin Source File
 
 SOURCE=.\res\appicon.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\apps.ico
 # End Source File
 # Begin Source File
 
@@ -346,6 +354,14 @@ SOURCE=.\res\arrow.ico
 # Begin Source File
 
 SOURCE=.\res\arrowsel.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\computer.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\config.ico
 # End Source File
 # Begin Source File
 
@@ -395,6 +411,10 @@ SOURCE=.\de.rc
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
@@ -463,11 +483,23 @@ SOURCE=.\explorer_intres.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\favorites.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\floating.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\folder.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\images.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\info.ico
 # End Source File
 # Begin Source File
 
@@ -480,6 +512,14 @@ SOURCE=.\res\logov.bmp
 # Begin Source File
 
 SOURCE=.\res\logov256.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\network.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\printer.ico
 # End Source File
 # Begin Source File
 
@@ -533,6 +573,18 @@ SOURCE=.\resource.rc
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=".\res\ros-big.ico"
+# End Source File
+# Begin Source File
+
+SOURCE=".\res\search-doc.ico"
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\search.ico
 # End Source File
 # Begin Source File
 
@@ -705,23 +757,7 @@ SOURCE=.\dialogs\searchprogram.h
 # End Group
 # Begin Source File
 
-SOURCE=.\res\action.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\apps.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\buildno.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\config.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
@@ -737,31 +773,11 @@ SOURCE=.\externals.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\favorites.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\folder.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\globals.h
 # End Source File
 # Begin Source File
 
 SOURCE=".\i386-stub-win32.c"
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\info.ico
-# End Source File
-# Begin Source File
-
-SOURCE=".\res\ros-big.ico"
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\search.ico
 # End Source File
 # End Target
 # End Project
