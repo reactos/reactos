@@ -130,11 +130,11 @@ public:
 		_Last = _First;
 #else
 		destroy(begin( ), end( ));
-//#ifdef __CYGWIN__
-//		_M_finish = _M_start;
-//#else
-//		finish = start;
-//#endif
+#ifdef __CYGWIN__
+		_M_finish = _M_start;
+#else
+		finish = start;
+#endif
 #endif
 	}
 	
