@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.13 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: sysinfo.c,v 1.14 2004/09/21 22:08:18 weiden Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -161,6 +161,41 @@ IsProcessorFeaturePresent(DWORD ProcessorFeature)
     return(FALSE);
 
   return((BOOL)SharedUserData->ProcessorFeatures[ProcessorFeature]);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetSystemRegistryQuota(PDWORD pdwQuotaAllowed,
+                       PDWORD pdwQuotaUsed)
+{
+    SYSTEM_REGISTRY_QUOTA_INFORMATION srqi;
+    ULONG BytesWritten;
+    NTSTATUS Status;
+
+    Status = NtQuerySystemInformation(SystemRegistryQuotaInformation,
+                                      &srqi,
+                                      sizeof(srqi),
+                                      &BytesWritten);
+    if(NT_SUCCESS(Status))
+    {
+      if(pdwQuotaAllowed != NULL)
+      {
+        *pdwQuotaAllowed = srqi.RegistryQuotaAllowed;
+      }
+      if(pdwQuotaUsed != NULL)
+      {
+        *pdwQuotaUsed = srqi.RegistryQuotaUsed;
+      }
+
+      return TRUE;
+    }
+
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /* EOF */
