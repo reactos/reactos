@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.11 2004/03/08 18:09:05 sedwards Exp $
+/* $Id: misc.c,v 1.12 2004/03/25 11:30:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,10 +6,12 @@
  * PURPOSE:         Miscellaneous security functions
  */
 
-#include <debug.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
+
+#define NDEBUG
+#include <debug.h>
 
 
 /*
@@ -33,6 +35,40 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
 {
   return((BOOL)RtlAreAnyAccessesGranted(GrantedAccess,
 					DesiredAccess));
+}
+
+
+/******************************************************************************
+ * GetFileSecurityA [ADVAPI32.@]
+ *
+ * Obtains Specified information about the security of a file or directory.
+ *
+ * PARAMS
+ *  lpFileName           [I] Name of the file to get info for
+ *  RequestedInformation [I] SE_ flags from "winnt.h"
+ *  pSecurityDescriptor  [O] Destination for security information
+ *  nLength              [I] Length of pSecurityDescriptor
+ *  lpnLengthNeeded      [O] Destination for length of returned security information
+ *
+ * RETURNS
+ *  Success: TRUE. pSecurityDescriptor contains the requested information.
+ *  Failure: FALSE. lpnLengthNeeded contains the required space to return the info. 
+ *
+ * NOTES
+ *  The information returned is constrained by the callers access rights and
+ *  privileges.
+ *
+ * @unimplemented
+ */
+BOOL WINAPI
+GetFileSecurityA (LPCSTR lpFileName,
+		  SECURITY_INFORMATION RequestedInformation,
+		  PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		  DWORD nLength,
+		  LPDWORD lpnLengthNeeded)
+{
+  DPRINT("GetFileSecurityW : stub\n");
+  return TRUE;
 }
 
 
@@ -62,6 +98,22 @@ GetKernelObjectSecurity(HANDLE Handle,
 }
 
 
+/******************************************************************************
+ * SetFileSecurityA [ADVAPI32.@]
+ * Sets the security of a file or directory
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+SetFileSecurityA (LPCSTR lpFileName,
+		  SECURITY_INFORMATION RequestedInformation,
+		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+  DPRINT("SetFileSecurityA : stub\n");
+  return TRUE;
+}
+
+
 /*
  * @implemented
  */
@@ -78,9 +130,9 @@ SetKernelObjectSecurity(HANDLE Handle,
   if (!NT_SUCCESS(Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+      return FALSE;
     }
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -97,12 +149,85 @@ MapGenericMask(PDWORD AccessMask,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
 {
-  return FALSE;
+  SECURITY_QUALITY_OF_SERVICE Qos;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE NewToken;
+  TOKEN_TYPE Type;
+  ULONG ReturnLength;
+  BOOL Duplicated;
+  NTSTATUS Status;
+
+  /* Get the token type */
+  Status = NtQueryInformationToken (hToken,
+				    TokenType,
+				    &Type,
+				    sizeof(TOKEN_TYPE),
+				    &ReturnLength);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  if (Type == TokenPrimary)
+    {
+      /* Create a duplicate impersonation token */
+      Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+      Qos.ImpersonationLevel = SecurityImpersonation;
+      Qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+      Qos.EffectiveOnly = FALSE;
+
+      ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+      ObjectAttributes.RootDirectory = NULL;
+      ObjectAttributes.ObjectName = NULL;
+      ObjectAttributes.Attributes = 0;
+      ObjectAttributes.SecurityDescriptor = NULL;
+      ObjectAttributes.SecurityQualityOfService = &Qos;
+
+      Status = NtDuplicateToken (hToken,
+				 TOKEN_IMPERSONATE | TOKEN_QUERY,
+				 &ObjectAttributes,
+				 FALSE,
+				 TokenImpersonation,
+				 &NewToken);
+      if (!NT_SUCCESS(Status))
+	{
+	  SetLastError (RtlNtStatusToDosError (Status));
+	  return FALSE;
+	}
+
+      Duplicated = TRUE;
+    }
+  else
+    {
+      /* User the original impersonation token */
+      NewToken = hToken;
+      Duplicated = FALSE;
+    }
+
+  /* Impersonate the the current thread */
+  Status = NtSetInformationThread (NtCurrentThread (),
+				   ThreadImpersonationToken,
+				   NewToken,
+				   sizeof(HANDLE));
+
+  if (Duplicated == TRUE)
+    {
+      NtClose (NewToken);
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 
@@ -118,9 +243,9 @@ ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
   if (!NT_SUCCESS(Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+      return FALSE;
     }
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -140,9 +265,9 @@ RevertToSelf(VOID)
   if (!NT_SUCCESS(Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+      return FALSE;
     }
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -205,6 +330,172 @@ GetUserNameW( LPWSTR lpszName, LPDWORD lpSize )
 //    *lpSize = len;
 //    MultiByteToWideChar( CP_ACP, 0, name, -1, lpszName, len );
     return TRUE;
+}
+
+
+/******************************************************************************
+ * LookupAccountSidA [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountSidA (LPCSTR lpSystemName,
+		   PSID lpSid,
+		   LPSTR lpName,
+		   LPDWORD cchName,
+		   LPSTR lpReferencedDomainName,
+		   LPDWORD cchReferencedDomainName,
+		   PSID_NAME_USE peUse)
+{
+  DPRINT1("LookupAccountSidA is unimplemented, but returns success\n");
+  return TRUE;
+}
+
+
+/******************************************************************************
+ * LookupAccountSidW [ADVAPI32.@]
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupAccountSidW (LPCWSTR lpSystemName,
+		   PSID lpSid,
+		   LPWSTR lpName,
+		   LPDWORD cchName,
+		   LPWSTR lpReferencedDomainName,
+		   LPDWORD cchReferencedDomainName,
+		   PSID_NAME_USE peUse)
+{
+  DPRINT1("LookupAccountSidW is unimplemented, but returns success\n");
+  return TRUE;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeValueA				EXPORTED
+ *
+ * @implemented
+ */
+BOOL STDCALL
+LookupPrivilegeValueA (LPCSTR lpSystemName,
+		       LPCSTR lpName,
+		       PLUID lpLuid)
+{
+  UNICODE_STRING SystemName;
+  UNICODE_STRING Name;
+  BOOL Result;
+
+  /* Remote system? */
+  if (lpSystemName != NULL)
+    {
+      RtlCreateUnicodeStringFromAsciiz (&SystemName,
+					(LPSTR)lpSystemName);
+    }
+
+  /* Check the privilege name is not NULL */
+  if (lpName == NULL)
+    {
+      SetLastError (ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+  RtlCreateUnicodeStringFromAsciiz (&Name,
+				    (LPSTR)lpName);
+
+  Result = LookupPrivilegeValueW ((lpSystemName != NULL) ? SystemName.Buffer : NULL,
+				  Name.Buffer,
+				  lpLuid);
+
+  RtlFreeUnicodeString (&Name);
+
+  /* Remote system? */
+  if (lpSystemName != NULL)
+    {
+      RtlFreeUnicodeString (&SystemName);
+    }
+
+  return Result;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeValueW				EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeValueW (LPCWSTR lpSystemName,
+		       LPCWSTR lpName,
+		       PLUID lpLuid)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeDisplayNameA			EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeDisplayNameA (LPCSTR lpSystemName,
+			     LPCSTR lpName,
+			     LPSTR lpDisplayName,
+			     LPDWORD cbDisplayName,
+			     LPDWORD lpLanguageId)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeDisplayNameW			EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeDisplayNameW (LPCWSTR lpSystemName,
+			     LPCWSTR lpName,
+			     LPWSTR lpDisplayName,
+			     LPDWORD cbDisplayName,
+			     LPDWORD lpLanguageId)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeNameA				EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeNameA (LPCSTR lpSystemName,
+		      PLUID lpLuid,
+		      LPSTR lpName,
+		      LPDWORD cbName)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
+ * LookupPrivilegeNameW				EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+LookupPrivilegeNameW (LPCWSTR lpSystemName,
+		      PLUID lpLuid,
+		      LPWSTR lpName,
+		      LPDWORD cbName)
+{
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 /* EOF */

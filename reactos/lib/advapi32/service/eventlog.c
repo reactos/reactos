@@ -20,29 +20,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define __USE_W32API
-#define _WIN32_WINNT 0x0501
+#define NTOS_MODE_USER
+#include <ntos.h>
+#include <windows.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "wine/winternl.h"
+#define NDEBUG
+#include <debug.h>
 
-#define YDEBUG
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
-WINE_DECLARE_DEBUG_CHANNEL(eventlog);
 
 /******************************************************************************
  * BackupEventLogA [ADVAPI32.@]
  */
-BOOL WINAPI BackupEventLogA( HANDLE hEventLog, LPCSTR lpBackupFileName )
+BOOL WINAPI
+BackupEventLogA (HANDLE hEventLog,
+		 LPCSTR lpBackupFileName)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
 
 /******************************************************************************
@@ -53,38 +48,48 @@ BOOL WINAPI BackupEventLogA( HANDLE hEventLog, LPCSTR lpBackupFileName )
  *   lpBackupFileName []
  */
 BOOL WINAPI
-BackupEventLogW( HANDLE hEventLog, LPCWSTR lpBackupFileName )
+BackupEventLogW (HANDLE hEventLog,
+		 LPCWSTR lpBackupFileName)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * ClearEventLogA [ADVAPI32.@]
  */
-BOOL WINAPI ClearEventLogA ( HANDLE hEventLog, LPCSTR lpBackupFileName )
+BOOL WINAPI
+ClearEventLogA (HANDLE hEventLog,
+		LPCSTR lpBackupFileName)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * ClearEventLogW [ADVAPI32.@]
  */
-BOOL WINAPI ClearEventLogW ( HANDLE hEventLog, LPCWSTR lpBackupFileName )
+BOOL WINAPI
+ClearEventLogW (HANDLE hEventLog,
+		LPCWSTR lpBackupFileName)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * CloseEventLog [ADVAPI32.@]
  */
-BOOL WINAPI CloseEventLog ( HANDLE hEventLog )
+BOOL WINAPI
+CloseEventLog (HANDLE hEventLog)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * DeregisterEventSource [ADVAPI32.@]
@@ -95,11 +100,13 @@ BOOL WINAPI CloseEventLog ( HANDLE hEventLog )
  *
  * RETURNS STD
  */
-BOOL WINAPI DeregisterEventSource( HANDLE hEventLog )
+BOOL WINAPI
+DeregisterEventSource (HANDLE hEventLog)
 {
-    FIXME("(%p): stub\n",hEventLog);
-    return TRUE;
+  DPRINT1("(%p): stub\n",hEventLog);
+  return TRUE;
 }
+
 
 /******************************************************************************
  * GetNumberOfEventLogRecords [ADVAPI32.@]
@@ -109,11 +116,13 @@ BOOL WINAPI DeregisterEventSource( HANDLE hEventLog )
  *   NumberOfRecords []
  */
 BOOL WINAPI
-GetNumberOfEventLogRecords( HANDLE hEventLog, PDWORD NumberOfRecords )
+GetNumberOfEventLogRecords (HANDLE hEventLog,
+			    PDWORD NumberOfRecords)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * GetOldestEventLogRecord [ADVAPI32.@]
@@ -123,11 +132,13 @@ GetNumberOfEventLogRecords( HANDLE hEventLog, PDWORD NumberOfRecords )
  *   OldestRecord []
  */
 BOOL WINAPI
-GetOldestEventLogRecord( HANDLE hEventLog, PDWORD OldestRecord )
+GetOldestEventLogRecord (HANDLE hEventLog,
+			 PDWORD OldestRecord)
 {
-	FIXME(":stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * NotifyChangeEventLog [ADVAPI32.@]
@@ -136,21 +147,26 @@ GetOldestEventLogRecord( HANDLE hEventLog, PDWORD OldestRecord )
  *   hEventLog []
  *   hEvent    []
  */
-BOOL WINAPI NotifyChangeEventLog( HANDLE hEventLog, HANDLE hEvent )
+BOOL WINAPI
+NotifyChangeEventLog (HANDLE hEventLog,
+		      HANDLE hEvent)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * OpenBackupEventLogA [ADVAPI32.@]
  */
 HANDLE WINAPI
-OpenBackupEventLogA( LPCSTR lpUNCServerName, LPCSTR lpFileName )
+OpenBackupEventLogA (LPCSTR lpUNCServerName,
+		     LPCSTR lpFileName)
 {
-	FIXME("stub\n");
-	return (HANDLE)1;
+  DPRINT1("stub\n");
+  return (HANDLE)1;
 }
+
 
 /******************************************************************************
  * OpenBackupEventLogW [ADVAPI32.@]
@@ -160,20 +176,26 @@ OpenBackupEventLogA( LPCSTR lpUNCServerName, LPCSTR lpFileName )
  *   lpFileName      []
  */
 HANDLE WINAPI
-OpenBackupEventLogW( LPCWSTR lpUNCServerName, LPCWSTR lpFileName )
+OpenBackupEventLogW (LPCWSTR lpUNCServerName,
+		     LPCWSTR lpFileName)
 {
-	FIXME("stub\n");
-	return (HANDLE)1;
+  DPRINT1("stub\n");
+  return (HANDLE)1;
 }
+
 
 /******************************************************************************
  * OpenEventLogA [ADVAPI32.@]
  */
-HANDLE WINAPI OpenEventLogA(LPCSTR uncname,LPCSTR source)
+HANDLE WINAPI
+OpenEventLogA (LPCSTR lpUNCServerName,
+	       LPCSTR lpSourceName)
 {
-	FIXME("(%s,%s),stub!\n",uncname,source);
-	return (HANDLE)0xcafe4242;
+  DPRINT1("(%s,%s),stub!\n",
+	  lpUNCServerName, lpSourceName);
+  return (HANDLE)0xcafe4242;
 }
+
 
 /******************************************************************************
  * OpenEventLogW [ADVAPI32.@]
@@ -183,21 +205,30 @@ HANDLE WINAPI OpenEventLogA(LPCSTR uncname,LPCSTR source)
  *   source  []
  */
 HANDLE WINAPI
-OpenEventLogW( LPCWSTR uncname, LPCWSTR source )
+OpenEventLogW (LPCWSTR lpUNCServerName,
+	       LPCWSTR lpSourceName)
 {
-	FIXME("stub\n");
-	return (HANDLE)1;
+  DPRINT1("stub\n");
+  return (HANDLE)1;
 }
+
 
 /******************************************************************************
  * ReadEventLogA [ADVAPI32.@]
  */
-BOOL WINAPI ReadEventLogA( HANDLE hEventLog, DWORD dwReadFlags, DWORD dwRecordOffset,
-    LPVOID lpBuffer, DWORD nNumberOfBytesToRead, DWORD *pnBytesRead, DWORD *pnMinNumberOfBytesNeeded )
+BOOL WINAPI
+ReadEventLogA (HANDLE hEventLog,
+	       DWORD dwReadFlags,
+	       DWORD dwRecordOffset,
+	       LPVOID lpBuffer,
+	       DWORD nNumberOfBytesToRead,
+	       DWORD *pnBytesRead,
+	       DWORD *pnMinNumberOfBytesNeeded)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * ReadEventLogW [ADVAPI32.@]
@@ -212,30 +243,44 @@ BOOL WINAPI ReadEventLogA( HANDLE hEventLog, DWORD dwReadFlags, DWORD dwRecordOf
  *   pnMinNumberOfBytesNeeded []
  */
 BOOL WINAPI
-ReadEventLogW( HANDLE hEventLog, DWORD dwReadFlags, DWORD dwRecordOffset,
-                 LPVOID lpBuffer, DWORD nNumberOfBytesToRead,
-                 DWORD *pnBytesRead, DWORD *pnMinNumberOfBytesNeeded )
+ReadEventLogW (HANDLE hEventLog,
+	       DWORD dwReadFlags,
+	       DWORD dwRecordOffset,
+	       LPVOID lpBuffer,
+	       DWORD nNumberOfBytesToRead,
+	       DWORD *pnBytesRead,
+	       DWORD *pnMinNumberOfBytesNeeded)
 {
-	FIXME("stub\n");
-	return TRUE;
+  DPRINT1("stub\n");
+  return TRUE;
 }
+
 
 /******************************************************************************
  * RegisterEventSourceA [ADVAPI32.@]
  */
-HANDLE WINAPI RegisterEventSourceA( LPCSTR lpUNCServerName, LPCSTR lpSourceName )
+HANDLE WINAPI
+RegisterEventSourceA (LPCSTR lpUNCServerName,
+		      LPCSTR lpSourceName)
 {
-    
-    UNICODE_STRING lpUNCServerNameW;
-    UNICODE_STRING lpSourceNameW;
-    HANDLE ret;
-    RtlCreateUnicodeStringFromAsciiz(&lpUNCServerNameW, lpUNCServerName);
-    RtlCreateUnicodeStringFromAsciiz(&lpSourceNameW, lpSourceName);
-    ret = RegisterEventSourceW(lpUNCServerNameW.Buffer,lpSourceNameW.Buffer);
-    RtlFreeUnicodeString (&lpUNCServerNameW);
-    RtlFreeUnicodeString (&lpSourceNameW);
-    return ret;
+  UNICODE_STRING UNCServerName;
+  UNICODE_STRING SourceName;
+  HANDLE ret;
+
+  RtlCreateUnicodeStringFromAsciiz (&UNCServerName,
+				    (PSTR)lpUNCServerName);
+  RtlCreateUnicodeStringFromAsciiz (&SourceName,
+				    (PSTR)lpSourceName);
+
+  ret = RegisterEventSourceW (UNCServerName.Buffer,
+			      SourceName.Buffer);
+
+  RtlFreeUnicodeString (&UNCServerName);
+  RtlFreeUnicodeString (&SourceName);
+
+  return ret;
 }
+
 
 /******************************************************************************
  * RegisterEventSourceW [ADVAPI32.@]
@@ -250,42 +295,78 @@ HANDLE WINAPI RegisterEventSourceA( LPCSTR lpUNCServerName, LPCSTR lpSourceName 
  *    Failure: NULL
  */
 HANDLE WINAPI
-RegisterEventSourceW( LPCWSTR lpUNCServerName, LPCWSTR lpSourceName )
+RegisterEventSourceW (LPCWSTR lpUNCServerName,
+		      LPCWSTR lpSourceName)
 {
-    FIXME("(%s,%s): stub\n", debugstr_w(lpUNCServerName),
-          debugstr_w(lpSourceName));
-    return (HANDLE)1;
+  DPRINT1("(%S, %S): stub\n",
+	  lpUNCServerName, lpSourceName);
+  return (HANDLE)1;
 }
+
 
 /******************************************************************************
  * ReportEventA [ADVAPI32.@]
  */
-BOOL WINAPI ReportEventA ( HANDLE hEventLog, WORD wType, WORD wCategory, DWORD dwEventID,
-    PSID lpUserSid, WORD wNumStrings, DWORD dwDataSize, LPCSTR *lpStrings, LPVOID lpRawData)
+BOOL WINAPI
+ReportEventA (HANDLE hEventLog,
+	      WORD wType,
+	      WORD wCategory,
+	      DWORD dwEventID,
+	      PSID lpUserSid,
+	      WORD wNumStrings,
+	      DWORD dwDataSize,
+	      LPCSTR *lpStrings,
+	      LPVOID lpRawData)
 {
-    LPCWSTR *wideStrArray;
-    UNICODE_STRING str;
-    int i;
-    BOOL ret;
+  LPCWSTR *wideStrArray;
+  UNICODE_STRING str;
+  int i;
+  BOOL ret;
 
-    if (wNumStrings == 0) return TRUE;
-    if (!lpStrings) return TRUE;
+  if (wNumStrings == 0)
+     return TRUE;
 
-    wideStrArray = HeapAlloc(GetProcessHeap(), 0, sizeof(LPCWSTR) * wNumStrings);
-    for (i = 0; i < wNumStrings; i++)
+  if (lpStrings == NULL)
+     return TRUE;
+
+  wideStrArray = HeapAlloc (GetProcessHeap (),
+			    0,
+			    sizeof(LPCWSTR) * wNumStrings);
+
+  for (i = 0; i < wNumStrings; i++)
     {
-        RtlCreateUnicodeStringFromAsciiz(&str, lpStrings[i]);
+        RtlCreateUnicodeStringFromAsciiz (&str,
+					  (PSTR)lpStrings[i]);
         wideStrArray[i] = str.Buffer;
     }
-    ret = ReportEventW(hEventLog, wType, wCategory, dwEventID, lpUserSid,
-                       wNumStrings, dwDataSize, wideStrArray, lpRawData);
-    for (i = 0; i < wNumStrings; i++)
+
+  ret = ReportEventW (hEventLog,
+		      wType,
+		      wCategory,
+		      dwEventID,
+		      lpUserSid,
+		      wNumStrings,
+		      dwDataSize,
+		      wideStrArray,
+		      lpRawData);
+
+  for (i = 0; i < wNumStrings; i++)
     {
-        if (wideStrArray[i]) HeapFree( GetProcessHeap(), 0, (LPSTR)wideStrArray[i] );
+      if (wideStrArray[i])
+	{
+	  HeapFree (GetProcessHeap (),
+		    0,
+		    (LPSTR)wideStrArray[i]);
+	}
     }
-    HeapFree(GetProcessHeap(), 0, wideStrArray);
-    return ret;
+
+  HeapFree (GetProcessHeap(),
+	    0,
+	    wideStrArray);
+
+  return ret;
 }
+
 
 /******************************************************************************
  * ReportEventW [ADVAPI32.@]
@@ -302,35 +383,47 @@ BOOL WINAPI ReportEventA ( HANDLE hEventLog, WORD wType, WORD wCategory, DWORD d
  *   lpRawData   []
  */
 BOOL WINAPI
-ReportEventW( HANDLE hEventLog, WORD wType, WORD wCategory,
-                DWORD dwEventID, PSID lpUserSid, WORD wNumStrings,
-                DWORD dwDataSize, LPCWSTR *lpStrings, LPVOID lpRawData )
+ReportEventW (HANDLE hEventLog,
+	      WORD wType,
+	      WORD wCategory,
+	      DWORD dwEventID,
+	      PSID lpUserSid,
+	      WORD wNumStrings,
+	      DWORD dwDataSize,
+	      LPCWSTR *lpStrings,
+	      LPVOID lpRawData)
 {
-    int i;
+  int i;
 
     /* partial stub */
 
-    if (wNumStrings == 0) return TRUE;
-    if (!lpStrings) return TRUE;
+  if (wNumStrings == 0)
+    return TRUE;
 
-    for (i = 0; i < wNumStrings; i++)
+  if (lpStrings == NULL)
+    return TRUE;
+
+  for (i = 0; i < wNumStrings; i++)
     {
-        switch (wType)
+      switch (wType)
         {
         case EVENTLOG_SUCCESS:
-            TRACE_(eventlog)("%s\n", debugstr_w(lpStrings[i]));
+            DPRINT1("Success: %S\n", lpStrings[i]);
             break;
+
         case EVENTLOG_ERROR_TYPE:
-            ERR_(eventlog)("%s\n", debugstr_w(lpStrings[i]));
+            DPRINT1("Error: %S\n", lpStrings[i]);
             break;
+
         case EVENTLOG_WARNING_TYPE:
-            WARN_(eventlog)("%s\n", debugstr_w(lpStrings[i]));
+            DPRINT1("Warning: %S\n", lpStrings[i]);
             break;
+
         default:
-            TRACE_(eventlog)("%s\n", debugstr_w(lpStrings[i]));
+            DPRINT1("Type %hu: %S\n", wType, lpStrings[i]);
             break;
         }
     }
-    return TRUE;
 
+  return TRUE;
 }

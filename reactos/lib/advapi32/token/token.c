@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
+/* $Id: token.c,v 1.10 2004/03/25 11:30:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -283,7 +283,7 @@ DuplicateToken (HANDLE ExistingTokenHandle,
                 PHANDLE DuplicateTokenHandle)
 {
   return DuplicateTokenEx (ExistingTokenHandle,
-                           TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_QUERY,
+                           TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY,
                            NULL,
                            ImpersonationLevel,
                            TokenImpersonation,

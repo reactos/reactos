@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.38 2004/03/10 21:56:04 navaraf Exp $
+# $Id: makefile,v 1.39 2004/03/25 11:30:07 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -34,10 +34,10 @@ SECURITY_OBJECTS = \
 	sec/sid.o
 
 SERVICE_OBJECTS = \
+	service/eventlog.o \
 	service/scm.o \
 	service/sctrl.o \
-	service/undoc.o \
-	service/eventlog.o
+	service/undoc.o
 
 TOKEN_OBJECTS = \
 	token/privilege.o \
