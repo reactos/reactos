@@ -97,6 +97,7 @@ copy /Y drivers\storage\scsiport\scsiport.sys %BOOTCD_DIR%\disk\install
 copy /Y lib\advapi32\advapi32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\crtdll\crtdll.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\fmifs\fmifs.dll %BOOTCD_DIR%\disk\install
+copy /Y lib\freetype\freetype.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\gdi32\gdi32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\kernel32\kernel32.dll %BOOTCD_DIR%\disk\install
 copy /Y lib\msafd\msafd.dll %BOOTCD_DIR%\disk\install

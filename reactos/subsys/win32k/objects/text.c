@@ -8,7 +8,8 @@
 #include <win32k/dc.h>
 #include <win32k/text.h>
 #include <win32k/kapi.h>
-#include <freetype/freetype.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include "../eng/handle.h"
 

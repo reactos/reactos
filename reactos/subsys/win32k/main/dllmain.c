@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.32 2003/03/28 16:20:50 gvg Exp $
+/* $Id: dllmain.c,v 1.33 2003/04/01 08:43:46 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -107,7 +107,9 @@ W32kInitialize (VOID)
   InitGdiObjectHandleTable ();
 
   // Create surface used to draw the internal font onto
+#ifdef TODO
   CreateCellCharSurface();
+#endif
 
   // Initialize FreeType library
   if(!InitFontSupport()) return FALSE;

@@ -57,6 +57,7 @@ scsiport.sys = 3
 advapi32.dll = 2
 crtdll.dll   = 2
 fmifs.dll    = 2
+freetype.dll = 2
 gdi32.dll    = 2
 kernel32.dll = 2
 msafd.dll    = 2

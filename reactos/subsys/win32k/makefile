@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.59 2003/03/20 03:05:03 mtempel Exp $
+# $Id: makefile,v 1.60 2003/04/01 08:43:46 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,6 +10,10 @@ TARGET_BASE = 0x0
 
 TARGET_ENTRY = _DllMain@8
 
+TARGET_DDKLIBS = freetype.a
+
+FREETYPE_DIR = $(PATH_TO_TOP)/lib/freetype
+
 include $(PATH_TO_TOP)/config
 
 ifeq ($(DBG), 1)
@@ -18,7 +22,9 @@ else
 CFLAGS_DBG :=
 endif
 
-TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
+TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -I$(FREETYPE_DIR)/include -DUNICODE -Wall
+
+TARGET_LFLAGS = $(PATH_TO_TOP)/dk/nkm/lib/freetype.a
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
@@ -63,7 +69,7 @@ STUBS_OBJECTS = stubs/stubs.o
 TARGET_OBJECTS = \
   $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) \
   $(NTUSER_OBJECTS) $(OBJECTS_OBJECTS) $(STUBS_OBJECTS) \
-  $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS) $(DIB_OBJECTS)
+  $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(DIB_OBJECTS)
 
 TARGET_CLEAN = $(DEP_FILES) \
   dib/*.o \
@@ -83,7 +89,7 @@ include $(TOOLS_PATH)/helper.mk
 # Automatic dependency tracking
 DEP_OBJECTS := $(TARGET_OBJECTS)
 DEP_EXCLUDE_FILTER := main/svctabm.d
-include $(PATH_TO_TOP)/tools/depend.mk
+#include $(PATH_TO_TOP)/tools/depend.mk
 
 main/svctabm.o: main/svctab.c
 

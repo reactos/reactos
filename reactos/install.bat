@@ -74,6 +74,7 @@ copy services\rpcss\rpcss.exe %ROS_INSTALL%\system32
 copy lib\advapi32\advapi32.dll %ROS_INSTALL%\system32
 copy lib\crtdll\crtdll.dll %ROS_INSTALL%\system32
 copy lib\fmifs\fmifs.dll %ROS_INSTALL%\system32
+copy lib\freetype\freetype.dll %ROS_INSTALL%\system32
 copy lib\gdi32\gdi32.dll %ROS_INSTALL%\system32
 copy lib\iphlpapi\iphlpapi.dll %ROS_INSTALL%\system32
 copy lib\kernel32\kernel32.dll %ROS_INSTALL%\system32
