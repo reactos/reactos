@@ -275,7 +275,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell, SubKeyCell;
-  PHASH_TABLE_CELL  HashTableBlock;
+  PHASH_TABLE_CELL  HashTableCell;
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
@@ -317,38 +317,17 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   /* Get pointer to SubKey */
   if (Index >= KeyCell->NumberOfSubKeys)
     {
-      if (RegistryHive == CmiVolatileHive)
+      if (Index >= KeyObject->NumberOfSubKeys)
 	{
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
-    KeLeaveCriticalRegion();
+	  KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  DPRINT("No more volatile entries\n");
 	  return(STATUS_NO_MORE_ENTRIES);
 	}
       else
 	{
-	  ULONG i;
-	  PKEY_OBJECT CurKey = NULL;
-
-	  /* Search volatile keys */
-	  for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
-	    {
-	      CurKey = KeyObject->SubKeys[i];
-	      if (CurKey->RegistryHive == CmiVolatileHive)
-		{
-		  if (Index-- == KeyCell->NumberOfSubKeys)
-		    break;
-		}
-	    }
-	  if (Index >= KeyCell->NumberOfSubKeys)
-	    {
-	      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
-        KeLeaveCriticalRegion();
-	      ObDereferenceObject(KeyObject);
-	      DPRINT("No more non-volatile entries\n");
-	      return(STATUS_NO_MORE_ENTRIES);
-	    }
-	  SubKeyCell = CurKey->KeyCell;
+	  SubKeyCell = KeyObject->SubKeys[Index]->KeyCell;
 	}
     }
   else
@@ -356,24 +335,26 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
 	{
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
-    KeLeaveCriticalRegion();
+	  KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  return(STATUS_NO_MORE_ENTRIES);
 	}
 
-      HashTableBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
-      if (HashTableBlock == NULL)
+      HashTableCell = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
+      if (HashTableCell == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
-    KeLeaveCriticalRegion();
+	  KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  return STATUS_UNSUCCESSFUL;
 	}
       SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive,
-					    HashTableBlock,
+					    HashTableCell,
 					    Index);
     }
+
+  DPRINT("SubKeyCell %p\n", SubKeyCell);
 
   if (SubKeyCell == NULL)
     {

@@ -199,7 +199,13 @@ typedef struct _KEY_CELL
 /*
  * Hash record
  *
- * HashValue :
+ * KeyOffset:
+ *	The least significant bit is used to distinguish
+ *	between real key offsets and pointers to registry hives:
+ *	  0 : offset
+ *	  1 : pointer to registry hive
+ *
+ * HashValue:
  *	packed name: four letters of value's name
  *	otherwise: Zero!
  */
@@ -297,6 +303,18 @@ typedef struct _REGISTRY_HIVE
 #define IsUsedCell(Cell)(Cell->CellSize < 0)
 
 
+typedef struct _HIVE_LINK
+{
+  LIST_ENTRY Entry;
+
+  PREGISTRY_HIVE ParentKeyRegistryHive;
+  BLOCK_OFFSET ParentKeyCellOffset;
+
+  PREGISTRY_HIVE SubKeyRegistryHive;
+  BLOCK_OFFSET SubKeyCellOffset;
+} HIVE_LINK, *PHIVE_LINK;
+
+
 /* KEY_OBJECT.Flags */
 
 /* When set, the key is scheduled for deletion, and all
@@ -352,6 +370,7 @@ extern PREGISTRY_HIVE CmiVolatileHive;
 extern POBJECT_TYPE CmiKeyType;
 extern KSPIN_LOCK CmiKeyListLock;
 
+extern LIST_ENTRY CmiHiveLinkListHead;
 extern LIST_ENTRY CmiHiveListHead;
 extern ERESOURCE CmiHiveListLock;
 
@@ -472,12 +491,13 @@ CmiGetMaxValueDataLength(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell);
 
 NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_HIVE  RegistryHive,
-		 IN PKEY_CELL  KeyCell,
-		 OUT PKEY_CELL  *SubKeyCell,
-		 OUT BLOCK_OFFSET *BlockOffset,
+CmiScanForSubKey(IN PREGISTRY_HIVE ParentKeyRegistryHive,
+		 IN PKEY_CELL ParentKeyCell,
+		 OUT PREGISTRY_HIVE *SubKeyRegistryHive,
+		 OUT PKEY_CELL *SubKeyCell,
+		 OUT BLOCK_OFFSET *SubKeyCellOffset,
 		 IN PUNICODE_STRING KeyName,
-		 IN ACCESS_MASK  DesiredAccess,
+		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes);
 
 NTSTATUS
@@ -521,22 +541,23 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
 		      IN PUNICODE_STRING ValueName);
 
 NTSTATUS
-CmiAllocateHashTableCell(IN PREGISTRY_HIVE  RegistryHive,
-  OUT PHASH_TABLE_CELL  *HashBlock,
-  OUT BLOCK_OFFSET  *HBOffset,
-  IN ULONG  HashTableSize);
+CmiAllocateHashTableCell(IN PREGISTRY_HIVE RegistryHive,
+			 OUT PHASH_TABLE_CELL *HashCell,
+			 OUT BLOCK_OFFSET *HBOffset,
+			 IN ULONG HashTableSize);
 
 PKEY_CELL
 CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
-PHASH_TABLE_CELL  HashBlock,
-ULONG  Index);
+			 PHASH_TABLE_CELL HashCell,
+			 ULONG Index);
 
 NTSTATUS
 CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
-		     PHASH_TABLE_CELL HashCell,
-		     BLOCK_OFFSET HashCellOffset,
-		     PKEY_CELL  NewKeyCell,
-		     BLOCK_OFFSET  NKBOffset);
+		     PKEY_CELL ParentKeyCell,
+		     BLOCK_OFFSET ParentKeyCellOffset,
+		     PREGISTRY_HIVE NewKeyRegistryHive,
+		     PKEY_CELL NewKeyCell,
+		     BLOCK_OFFSET NewKeyCellOffset);
 
 NTSTATUS
 CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,

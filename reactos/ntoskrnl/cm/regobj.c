@@ -46,6 +46,7 @@ CmiObjectParse(PVOID ParsedObject,
   UNICODE_STRING LinkPath;
   UNICODE_STRING TargetPath;
   UNICODE_STRING KeyName;
+  PREGISTRY_HIVE RegistryHive;
 
   ParsedKey = ParsedObject;
 
@@ -90,6 +91,7 @@ CmiObjectParse(PVOID ParsedObject,
     {
       Status = CmiScanForSubKey(ParsedKey->RegistryHive,
 				ParsedKey->KeyCell,
+				&RegistryHive,
 				&SubKeyCell,
 				&BlockOffset,
 				&KeyName,
@@ -165,7 +167,7 @@ CmiObjectParse(PVOID ParsedObject,
       FoundObject->Flags = 0;
       FoundObject->KeyCell = SubKeyCell;
       FoundObject->KeyCellOffset = BlockOffset;
-      FoundObject->RegistryHive = ParsedKey->RegistryHive;
+      FoundObject->RegistryHive = RegistryHive;
       RtlCreateUnicodeString(&FoundObject->Name,
 			     KeyName.Buffer);
       CmiAddKeyToList(ParsedKey, FoundObject);
