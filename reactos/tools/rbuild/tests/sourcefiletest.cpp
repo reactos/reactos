@@ -32,9 +32,22 @@ SourceFileTest::IsParentOf ( const SourceFile* parent,
 }
 
 void
-SourceFileTest::Run ()
+SourceFileTest::IncludeTest ()
 {
-	const Project project ( "tests/data/automaticdependency.xml" );
+	const Project project ( "tests" SSEP "data" SSEP "automaticdependency_include.xml" );
+	AutomaticDependency automaticDependency ( project );
+	automaticDependency.Process ();
+	ARE_EQUAL( 4, automaticDependency.sourcefile_map.size () );
+	const SourceFile* include = automaticDependency.RetrieveFromCache ( "tests" SSEP "data" SSEP "sourcefile_include.h" );
+	IS_NOT_NULL( include );
+	const SourceFile* includenext = automaticDependency.RetrieveFromCache ( "tests" SSEP "data" SSEP "sourcefile1" SSEP "sourcefile_includenext.h" );
+	IS_NOT_NULL( includenext );
+}
+
+void
+SourceFileTest::FullParseTest ()
+{
+	const Project project ( "tests" SSEP "data" SSEP "automaticdependency.xml" );
 	AutomaticDependency automaticDependency ( project );
 	automaticDependency.Process ();
 	ARE_EQUAL( 5, automaticDependency.sourcefile_map.size () );
@@ -46,4 +59,12 @@ SourceFileTest::Run ()
 	                      recurse ) );
 	IS_FALSE( IsParentOf ( recurse,
 	                       header1 ) );
+	
+}
+
+void
+SourceFileTest::Run ()
+{
+	IncludeTest ();
+	FullParseTest ();
 }

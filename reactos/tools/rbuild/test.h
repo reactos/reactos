@@ -8,37 +8,38 @@ class BaseTest
 {
 public:
 	bool Failed;
-	BaseTest();
-	virtual ~BaseTest();
-	virtual void Run() = 0;
+	BaseTest ();
+	virtual ~BaseTest ();
+	virtual void Run () = 0;
 protected:
-	void Assert(const char *message, ...);
-	void IsNull(void* reference,
-	            const char* file,
-	            int line);
-	void IsNotNull(void* reference,
-	               const char* file,
-	               int line);
-	void IsTrue(bool condition,
-	            const char* file,
-	            int line);
-	void IsFalse(bool condition,
-	             const char* file,
-	             int line);
-	void AreEqual(int expected,
-	              int actual,
+	void Assert ( const char *message,
+	              ... );
+	void IsNull ( void* reference,
 	              const char* file,
-	              int line);
-	void AreEqual(const std::string& expected,
-	              const std::string& actual,
-	              const char* file,
-	              int line);
-	void AreNotEqual(int expected,
-	                 int actual,
+	              int line );
+	void IsNotNull ( void* reference,
 	                 const char* file,
-	                 int line);
+	                 int line );
+	void IsTrue ( bool condition,
+	              const char* file,
+	              int line );
+	void IsFalse ( bool condition,
+	               const char* file,
+	               int line );
+	void AreEqual ( int expected,
+	                int actual,
+	                const char* file,
+	                int line );
+	void AreEqual ( const std::string& expected,
+	                const std::string& actual,
+	                const char* file,
+	                int line );
+	void AreNotEqual ( int expected,
+	                   int actual,
+	                   const char* file,
+	                   int line );
 private:
-	void Fail();
+	void Fail ();
 };
 
 #define IS_NULL(reference) IsNull((void*)reference,__FILE__,__LINE__)
@@ -51,63 +52,65 @@ private:
 class ProjectTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class ModuleTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class DefineTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class IncludeTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class InvokeTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class LinkerFlagTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class IfTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class FunctionTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
 };
 
 
 class SourceFileTest : public BaseTest
 {
 public:
-	void Run();
+	void Run ();
+	void IncludeTest ();
+	void FullParseTest ();
 private:
 	bool IsParentOf ( const SourceFile* parent,
 	                  const SourceFile* child );

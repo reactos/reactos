@@ -63,7 +63,6 @@ public:
 	std::vector<Property*> properties;
 	std::vector<If*> ifs;
 
-	//Project ();
 	Project ( const std::string& filename );
 	~Project ();
 	void ProcessXML ( const std::string& path );
@@ -385,9 +384,11 @@ private:
 	void Close ();
 	void Open ();
 	void SkipWhitespace ();
-	bool ReadInclude ( std::string& filename );
+	bool ReadInclude ( std::string& filename,
+	                   bool& includeNext );
 	bool IsIncludedFrom ( const std::string& normalizedFilename );
 	SourceFile* GetParentSourceFile ();
+	bool CanProcessFile ( const std::string& extension );
 	bool IsParentOf ( const SourceFile* parent,
 	                  const SourceFile* child );
 	std::string buf;
@@ -405,11 +406,14 @@ public:
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
 	void Process ();
+	std::string GetFilename ( const std::string& filename );
 	bool LocateIncludedFile ( const std::string& directory,
 	                          const std::string& includedFilename,
 	                          std::string& resolvedFilename );
-	bool LocateIncludedFile ( Module& module,
+	bool LocateIncludedFile ( SourceFile* sourceFile,
+	                          Module& module,
 	                          const std::string& includedFilename,
+	                          bool includeNext,
 	                          std::string& resolvedFilename );
 	SourceFile* RetrieveFromCacheOrParse ( Module& module,
 	                                       const std::string& filename,

@@ -87,15 +87,31 @@ SourceFile::SkipWhitespace ()
 }
 
 bool
-SourceFile::ReadInclude ( string& filename )
+SourceFile::ReadInclude ( string& filename,
+	                      bool& includeNext)
 {
 	while ( p < end )
 	{
-		if ( ( *p == '#') && ( end - p > 8 ) )
+		if ( ( *p == '#') && ( end - p > 13 ) )
 		{
-			if ( strncmp ( p, "#include", 8 ) == 0 )
+			bool include = false;
+			p++;
+			SkipWhitespace ();
+			if ( strncmp ( p, "include ", 8 ) == 0 )
 			{
 				p += 8;
+				includeNext = false;
+				include = true;
+			}
+	        if ( strncmp ( p, "include_next ", 13 ) == 0 )
+	        {
+				p += 13;
+				includeNext = true;
+	        	include = true;
+	        }
+	        
+       		if ( include )
+			{
 				SkipWhitespace ();
 				if ( p < end && *p == '<' || *p == '"' )
 				{
@@ -112,6 +128,7 @@ SourceFile::ReadInclude ( string& filename )
 		p++;
 	}
 	filename = "";
+	includeNext = false;
 	return false;
 }
 
@@ -162,11 +179,27 @@ SourceFile::GetParentSourceFile ()
 	return this;
 }
 
+bool
+SourceFile::CanProcessFile ( const string& extension )
+{
+	if ( extension == ".h" || extension == ".H" )
+		return true;
+	if ( extension == ".c" || extension == ".C" )
+		return true;
+	if ( extension == ".cpp" || extension == ".CPP" )
+		return true;
+	if ( extension == ".rc" || extension == ".RC" )
+		return true;
+	if ( extension == ".s" || extension == ".S" )
+		return true;
+	return false;
+}
+
 SourceFile*
 SourceFile::ParseFile ( const string& normalizedFilename )
 {
 	string extension = GetExtension ( normalizedFilename );
-	if ( extension == ".c" || extension == ".C" || extension == ".h" || extension == ".H" )
+	if ( CanProcessFile ( extension ) )
 	{
 		if ( IsIncludedFrom ( normalizedFilename ) )
 			return NULL;
@@ -188,11 +221,15 @@ SourceFile::Parse ()
 		string includedFilename ( "" );
 		//printf ( "Parsing '%s'\n", filename.c_str () );
 		
-		while ( ReadInclude ( includedFilename ))
+		bool includeNext;
+		while ( ReadInclude ( includedFilename,
+		                      includeNext ) )
 		{
 			string resolvedFilename ( "" );
-			bool locatedFile = automaticDependency->LocateIncludedFile ( module,
+			bool locatedFile = automaticDependency->LocateIncludedFile ( this,
+			                                                             module,
 			                                                             includedFilename,
+			                                                             includeNext,
 			                                                             resolvedFilename );
 			if ( locatedFile )
 			{
@@ -275,9 +312,22 @@ AutomaticDependency::LocateIncludedFile ( const string& directory,
 	return false;
 }
 
+string
+AutomaticDependency::GetFilename ( const string& filename )
+{
+	size_t index = filename.find_last_of ( CSEP );
+	if (index == string::npos)
+		return filename;
+	else
+		return filename.substr ( index + 1,
+		                         filename.length () - index - 1);
+}
+
 bool
-AutomaticDependency::LocateIncludedFile ( Module& module,
+AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
+	                                      Module& module,
 	                                      const string& includedFilename,
+	                                      bool includeNext,
 	                                      string& resolvedFilename )
 {
 	size_t i;
@@ -287,7 +337,12 @@ AutomaticDependency::LocateIncludedFile ( Module& module,
 		if ( LocateIncludedFile ( include->directory,
 		                          includedFilename,
 		                          resolvedFilename ) )
+		{
+			if ( includeNext && stricmp ( resolvedFilename.c_str (),
+			                              sourceFile->filename.c_str () ) == 0 )
+				continue;
 			return true;
+		}
 	}
 
 	/* FIXME: Ifs */
@@ -298,7 +353,12 @@ AutomaticDependency::LocateIncludedFile ( Module& module,
 		if ( LocateIncludedFile ( include->directory,
 		                          includedFilename,
 		                          resolvedFilename ) )
+		{
+			if ( includeNext && stricmp ( resolvedFilename.c_str (),
+			                              sourceFile->filename.c_str () ) == 0 )
+				continue;
 			return true;
+		}
 	}
 
 	resolvedFilename = "";
