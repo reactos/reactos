@@ -22,17 +22,14 @@
 #include "tui.h"
 #include <rtl.h>
 #include <mm.h>
+#include <machine.h>
 #include <debug.h>
 #include <inifile.h>
 #include <version.h>
 #include <video.h>
 
-
-#define DISPLAYMODE_TEXT		0
-#define DISPLAYMODE_GRAPHICS	1
-
-U32		UiScreenWidth = 80;									// Screen Width
-U32		UiScreenHeight = 25;								// Screen Height
+U32	UiScreenWidth = 80;							// Screen Width
+U32	UiScreenHeight = 25;							// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -55,7 +52,7 @@ UCHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
 BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
 
-BOOL	UiDisplayMode				= DISPLAYMODE_TEXT;		// Tells us if we are in text or graphics mode
+VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text or graphics mode
 
 BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
 
@@ -64,65 +61,23 @@ UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May
 
 BOOL UiInitialize(VOID)
 {
-	U32		SectionId;
+	U32	SectionId;
+	UCHAR	DisplayModeText[260];
 	UCHAR	SettingText[260];
-	U32		VideoMode = VIDEOMODE_NORMAL_TEXT;
+	U32	Depth;
 
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
 
+	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
 	{
-		if (IniReadSettingByName(SectionId, "DisplayMode", SettingText, 260))
+		if (! IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, 260))
 		{
-			if (BiosDetectVideoCard() == VIDEOCARD_CGA_OR_OTHER)
-			{
-				DbgPrint((DPRINT_UI, "CGA or other display adapter detected.\n"));
-				printf("CGA or other display adapter detected.\n");
-				printf("Using 80x25 text mode.\n");
-				VideoMode = VIDEOMODE_NORMAL_TEXT;
-			}
-			else if (BiosDetectVideoCard() == VIDEOCARD_EGA)
-			{
-				DbgPrint((DPRINT_UI, "EGA display adapter detected.\n"));
-				printf("EGA display adapter detected.\n");
-				printf("Using 80x25 text mode.\n");
-				VideoMode = VIDEOMODE_NORMAL_TEXT;
-			}
-			else //if (BiosDetectVideoCard() == VIDEOCARD_VGA)
-			{
-				DbgPrint((DPRINT_UI, "VGA display adapter detected.\n"));
-
-				if (stricmp(SettingText, "NORMAL_VGA") == 0)
-				{
-					VideoMode = VIDEOMODE_NORMAL_TEXT;
-				}
-				else if (stricmp(SettingText, "EXTENDED_VGA") == 0)
-				{
-					VideoMode = VIDEOMODE_EXTENDED_TEXT;
-				}
-				else
-				{
-					VideoMode = atoi(SettingText);
-				}
-			}
-
-			if (!VideoSetMode(VideoMode))
-			{
-				printf("Error: unable to set video display mode 0x%x\n", (int) VideoMode);
-				printf("Defaulting to 80x25 text mode.\n");
-				printf("Press any key to continue.\n");
-				getch();
-
-				VideoMode = VIDEOMODE_NORMAL_TEXT;
-				VideoSetMode(VIDEOMODE_NORMAL_TEXT);
-			}
-
-			UiScreenWidth = VideoGetCurrentModeResolutionX();
-			UiScreenHeight = VideoGetCurrentModeResolutionY();
-			UiDisplayMode = VideoGetCurrentModeType();
+			DisplayModeText[0] = '\0';
 		}
+
 		if (IniReadSettingByName(SectionId, "TitleText", SettingText, 260))
 		{
 			strcpy(UiTitleBoxTitleText, SettingText);
@@ -204,11 +159,15 @@ BOOL UiInitialize(VOID)
 		}
 	}
 
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
+	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+
+	if (VideoTextMode == UiDisplayMode)
 	{
 		if (!TuiInitialize())
 		{
-			VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+			MachVideoSetDisplayMode(NULL, FALSE);
 			return FALSE;
 		}
 	}
@@ -217,7 +176,7 @@ BOOL UiInitialize(VOID)
 		UNIMPLEMENTED();
 		//if (!GuiInitialize())
 		//{
-		//	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+		//	MachSetDisplayMode(NULL, FALSE);
 		//	return FALSE;
 		//}
 	}
@@ -238,7 +197,7 @@ VOID UiUnInitialize(PUCHAR BootText)
 	UiDrawStatusText("Booting...");
 	UiInfoBox(BootText);
 
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiUnInitialize();
 	}
@@ -251,7 +210,7 @@ VOID UiUnInitialize(PUCHAR BootText)
 
 VOID UiDrawBackdrop(VOID)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawBackdrop();
 	}
@@ -264,7 +223,7 @@ VOID UiDrawBackdrop(VOID)
 
 VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiFillArea(Left, Top, Right, Bottom, FillChar, Attr);
 	}
@@ -277,7 +236,7 @@ VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR 
 
 VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawShadow(Left, Top, Right, Bottom);
 	}
@@ -290,7 +249,7 @@ VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 
 VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 	}
@@ -303,7 +262,7 @@ VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR 
 
 VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawText(X, Y, Text, Attr);
 	}
@@ -316,7 +275,7 @@ VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 
 VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 	}
@@ -329,7 +288,7 @@ VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextStr
 
 VOID UiDrawStatusText(PUCHAR StatusText)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawStatusText(StatusText);
 	}
@@ -342,7 +301,7 @@ VOID UiDrawStatusText(PUCHAR StatusText)
 
 VOID UiUpdateDateTime(VOID)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiUpdateDateTime();
 	}
@@ -424,11 +383,11 @@ VOID UiMessageBox(PUCHAR MessageText)
 	{
 		printf("%s\n", MessageText);
 		printf("Press any key\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiMessageBox(MessageText);
 	}
@@ -449,11 +408,11 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 	{
 		printf("%s\n", MessageText);
 		printf("Press any key\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiMessageBoxCritical(MessageText);
 	}
@@ -466,7 +425,7 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 
 UCHAR UiTextToColor(PUCHAR ColorText)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		return TuiTextToColor(ColorText);
 	}
@@ -480,7 +439,7 @@ UCHAR UiTextToColor(PUCHAR ColorText)
 
 UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		return TuiTextToFillStyle(FillStyleText);
 	}
@@ -494,7 +453,7 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 
 VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawProgressBarCenter(Position, Range, ProgressText);
 	}
@@ -507,7 +466,7 @@ VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 
 VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 	}
@@ -598,7 +557,7 @@ VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
 
 BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		return TuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 	}
@@ -612,7 +571,7 @@ BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem
 
 VOID UiFadeInBackdrop(VOID)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiFadeInBackdrop();
 	}
@@ -625,7 +584,7 @@ VOID UiFadeInBackdrop(VOID)
 
 VOID UiFadeOut(VOID)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiFadeOut();
 	}
@@ -638,7 +597,7 @@ VOID UiFadeOut(VOID)
 
 BOOL UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
 {
-	if (UiDisplayMode == DISPLAYMODE_TEXT)
+	if (VideoTextMode == UiDisplayMode)
 	{
 		return TuiEditBox(MessageText, EditTextBuffer, Length);
 	}

@@ -1,4 +1,4 @@
-/* $Id: machxbox.h,v 1.4 2004/11/12 17:17:07 gvg Exp $
+/* $Id: machxbox.h,v 1.5 2004/11/14 22:04:38 gvg Exp $
  *
  *  FreeLoader
  *
@@ -28,10 +28,23 @@ U8 XboxFont8x16[256 * 16];
 
 VOID XboxMachInit(VOID);
 
+VOID XboxConsPutChar(int Ch);
+BOOL XboxConsKbHit();
+int XboxConsGetCh();
+
 VOID XboxVideoInit(VOID);
-VOID XboxVideoClearScreenAttr(U8 Attr);
-VOID XboxVideoPutChar(int Ch);
-VOID XboxVideoPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y);
+VOID XboxVideoClearScreen(U8 Attr);
+VIDEODISPLAYMODE XboxVideoSetDisplayMode(char *DisplayModem, BOOL Init);
+VOID XboxVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth);
+U32 XboxVideoGetBufferSize(VOID);
+VOID XboxVideoSetTextCursorPosition(U32 X, U32 Y);
+VOID XboxVideoHideShowTextCursor(BOOL Show);
+VOID XboxVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y);
+VOID XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
+BOOL XboxVideoIsPaletteFixed(VOID);
+VOID XboxVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue);
+VOID XboxVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue);
+VOID XboxVideoSync(VOID);
 
 VOID XboxMemInit(VOID);
 PVOID XboxMemReserveMemory(U32 MbToReserve);
@@ -42,6 +55,7 @@ BOOL XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_
 BOOL XboxDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 U32 XboxDiskGetCacheableBlockCount(U32 DriveNumber);
 
+VOID XboxRTCGetCurrentDateTime(PU32 Year, PU32 Month, PU32 Day, PU32 Hour, PU32 Minute, PU32 Second);
 #endif /* __I386_HWXBOX_H_ */
 
 /* EOF */

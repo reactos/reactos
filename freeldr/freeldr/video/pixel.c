@@ -21,11 +21,11 @@
 #include <video.h>
 #include <portio.h>
 #include <debug.h>
+#include <machine.h>
 
 
 
-
-
+#if 0 /* This stuff isn't used and as far as I'm concerned it can go - GvG */
 //
 // Arrrggh!
 // I really really hate 16 color bit plane modes.
@@ -230,26 +230,24 @@ VOID VideoSetPixelRGB_24Bit(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue)
 
 VOID VideoSetPixelRGB(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue)
 {
-	if (VesaVideoModeInformation.BitsPerPixel >= 24)
+	U32 Width, Height, Depth;
+
+	MachVideoGetDisplaySize(&Width, &Height, &Depth);
+	if (Depth >= 24)
 	{
 		VideoSetPixelRGB_24Bit(X, Y, Red, Green, Blue);
 	}
-	else if (VesaVideoModeInformation.BitsPerPixel >= 16)
+	else if (Depth >= 16)
 	{
-		// 16-bit color modes give green an extra bit (5:6:5)
-		// 15-bit color modes have just 5:5:5 for R:G:B
-		if (VesaVideoModeInformation.GreenMaskSize == 6)
-		{
-			VideoSetPixelRGB_16Bit(X, Y, Red, Green, Blue);
-		}
-		else
-		{
-			VideoSetPixelRGB_15Bit(X, Y, Red, Green, Blue);
-		}
+		VideoSetPixelRGB_16Bit(X, Y, Red, Green, Blue);
+	}
+	else if (Depth == 15)
+	{
+		VideoSetPixelRGB_15Bit(X, Y, Red, Green, Blue);
 	}
 	else
 	{
-		BugCheck((DPRINT_UI, "This function does not support %d bits per pixel!", VesaVideoModeInformation.BitsPerPixel));
+		BugCheck((DPRINT_UI, "This function does not support %d bits per pixel!", Depth));
 	}
 }
 
@@ -319,25 +317,25 @@ VOID VideoSetPixelRGB_24Bit_OffScreen(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue)
 
 VOID VideoSetPixelRGB_OffScreen(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue)
 {
-	if (VesaVideoModeInformation.BitsPerPixel >= 24)
+	U32 Width, Height, Depth;
+
+	MachVideoGetDisplaySize(&Width, &Height, &Depth);
+	if (Depth >= 24)
 	{
 		VideoSetPixelRGB_24Bit_OffScreen(X, Y, Red, Green, Blue);
 	}
-	else if (VesaVideoModeInformation.BitsPerPixel >= 16)
+	else if (Depth >= 16)
 	{
-		// 16-bit color modes give green an extra bit (5:6:5)
-		// 15-bit color modes have just 5:5:5 for R:G:B
-		if (VesaVideoModeInformation.GreenMaskSize == 6)
-		{
-			VideoSetPixelRGB_16Bit_OffScreen(X, Y, Red, Green, Blue);
-		}
-		else
-		{
-			VideoSetPixelRGB_15Bit_OffScreen(X, Y, Red, Green, Blue);
-		}
+		VideoSetPixelRGB_16Bit_OffScreen(X, Y, Red, Green, Blue);
+	}
+	else if (Depth == 15)
+	{
+		VideoSetPixelRGB_15Bit_OffScreen(X, Y, Red, Green, Blue);
 	}
 	else
 	{
-		BugCheck((DPRINT_UI, "This function does not support %d bits per pixel!", VesaVideoModeInformation.BitsPerPixel));
+		BugCheck((DPRINT_UI, "This function does not support %d bits per pixel!", Depth));
 	}
 }
+
+#endif

@@ -40,7 +40,7 @@ VOID BootMain(char *CmdLine)
 	if (!MmInitializeMemoryManager())
 	{
 		printf("Press any key to reboot.\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 

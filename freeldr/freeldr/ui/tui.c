@@ -27,15 +27,15 @@
 #include <inifile.h>
 #include <version.h>
 #include <video.h>
+#include <machine.h>
 
 
 PVOID	TextVideoBuffer = NULL;
 
 BOOL TuiInitialize(VOID)
 {
-	VideoClearScreen();
-	VideoHideTextCursor();
-	BiosVideoDisableBlinkBit();
+	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
+	MachVideoHideShowTextCursor(FALSE);
 
 	TextVideoBuffer = VideoAllocateOffScreenBuffer();
 	if (TextVideoBuffer == NULL)
@@ -54,13 +54,11 @@ VOID TuiUnInitialize(VOID)
 	}
 	else
 	{
-		VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+		MachVideoSetDisplayMode(NULL, FALSE);
 	}
 
 	//VideoClearScreen();
-	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
-	VideoShowTextCursor();
-	BiosVideoEnableBlinkBit();
+	MachVideoHideShowTextCursor(TRUE);
 }
 
 VOID TuiDrawBackdrop(VOID)
@@ -397,26 +395,28 @@ VOID TuiDrawStatusText(PUCHAR StatusText)
 
 VOID TuiUpdateDateTime(VOID)
 {
+	U32	Year, Month, Day;
+	U32	Hour, Minute, Second;
 	UCHAR	DateString[40];
 	UCHAR	TimeString[40];
 	UCHAR	TempString[20];
-	U32		Hour, Minute, Second;
 	BOOL	PMHour = FALSE;
 
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
 	// Get the month name
-	strcpy(DateString, UiMonthNames[getmonth()-1]);
+	strcpy(DateString, UiMonthNames[Month - 1]);
 	// Get the day
-	itoa(getday(), TempString, 10);
+	itoa(Day, TempString, 10);
 	// Get the day postfix
-	if ((getday() == 1) || (getday() == 21) || (getday() == 31))
+	if (1 == Day || 21 == Day || 31 == Day)
 	{
 		strcat(TempString, "st");
 	}
-	else if ((getday() == 2) || (getday() == 22))
+	else if (2 == Day || 22 == Day)
 	{
 		strcat(TempString, "nd");
 	}
-	else if ((getday() == 3) || (getday() == 23))
+	else if (3 == Day || 23 == Day)
 	{
 		strcat(TempString, "rd");
 	}
@@ -430,14 +430,13 @@ VOID TuiUpdateDateTime(VOID)
 	strcat(DateString, " ");
 
 	// Get the year and add it to the date
-	itoa(getyear(), TempString, 10);
+	itoa(Year, TempString, 10);
 	strcat(DateString, TempString);
 
 	// Draw the date
 	TuiDrawText(UiScreenWidth-strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
 	// Get the hour and change from 24-hour mode to 12-hour
-	Hour = gethour();
 	if (Hour > 12)
 	{
 		Hour -= 12;
@@ -447,8 +446,6 @@ VOID TuiUpdateDateTime(VOID)
 	{
 		Hour = 12;
 	}
-	Minute = getminute();
-	Second = getsecond();
 	itoa(Hour, TempString, 10);
 	strcpy(TimeString, "    ");
 	strcat(TimeString, TempString);
@@ -584,11 +581,11 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 
 	for (;;)
 	{
-		if (kbhit())
+		if (MachConsKbHit())
 		{
-			key = getch();
+			key = MachConsGetCh();
 			if(key == KEY_EXTENDED)
-				key = getch();
+				key = MachConsGetCh();
 
 			if(key == KEY_ENTER)
 				break;
@@ -718,7 +715,7 @@ VOID TuiFadeInBackdrop(VOID)
 {
 	PPALETTE_ENTRY TuiFadePalette = NULL;
 
-	if (UiUseSpecialEffects)
+	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
 	{
 		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
 
@@ -732,7 +729,7 @@ VOID TuiFadeInBackdrop(VOID)
 	// Draw the backdrop and title box
 	TuiDrawBackdrop();
 
-	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
 	{
 		VideoFadeIn(TuiFadePalette, 64);
 		MmFreeMemory(TuiFadePalette);
@@ -743,7 +740,7 @@ VOID TuiFadeOut(VOID)
 {
 	PPALETTE_ENTRY TuiFadePalette = NULL;
 
-	if (UiUseSpecialEffects)
+	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
 	{
 		TuiFadePalette = (PPALETTE_ENTRY)MmAllocateMemory(sizeof(PALETTE_ENTRY) * 64);
 
@@ -753,14 +750,14 @@ VOID TuiFadeOut(VOID)
 		}
 	}
 
-	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
 	{
 		VideoFadeOut(64);
 	}
 
-	VideoSetMode(VIDEOMODE_NORMAL_TEXT);
+	MachVideoSetDisplayMode(NULL, FALSE);
 
-	if (UiUseSpecialEffects && TuiFadePalette != NULL)
+	if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
 	{
 		VideoRestorePaletteState(TuiFadePalette, 64);
 		MmFreeMemory(TuiFadePalette);
@@ -843,8 +840,8 @@ BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
 
 	// Show the cursor
 	EditBoxCursorX = EditBoxStartX;
-	VideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
-	VideoShowTextCursor();
+	MachVideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
+	MachVideoHideShowTextCursor(TRUE);
 
 	// Draw status text
 	UiDrawStatusText("Press ENTER to continue, or ESC to cancel");
@@ -853,12 +850,12 @@ BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
 
 	for (;;)
 	{
-		if (kbhit())
+		if (MachConsKbHit())
 		{
-			key = getch();
+			key = MachConsGetCh();
 			if(key == KEY_EXTENDED)
 			{
-				key = getch();
+				key = MachConsGetCh();
 			}
 
 			if(key == KEY_ENTER)
@@ -915,7 +912,7 @@ BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
 		UiDrawText(EditBoxStartX, EditBoxLine, &EditTextBuffer[EditBoxTextDisplayIndex], ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
 
 		// Move the cursor
-		VideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
+		MachVideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
 
 		TuiUpdateDateTime();
 
@@ -923,7 +920,7 @@ BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
 	}
 
 	// Hide the cursor again
-	VideoHideTextCursor();
+	MachVideoHideShowTextCursor(FALSE);
 
 	// Restore the screen contents
 	TuiRestoreScreen(ScreenBuffer);

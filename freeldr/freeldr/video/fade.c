@@ -19,7 +19,7 @@
 	
 #include <freeldr.h>
 #include <video.h>
-#include <portio.h>
+#include <machine.h>
 
 
 #define RGB_MAX						64
@@ -29,11 +29,11 @@ VOID VideoSetAllColorsToBlack(U32 ColorCount)
 {
 	U32		Color;
 
-	VideoWaitForVerticalRetrace();
+	MachVideoSync();
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
-		VideoSetPaletteColor(Color, 0, 0, 0);
+		MachVideoSetPaletteColor(Color, 0, 0, 0);
 	}
 }
 
@@ -48,7 +48,7 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, U32 ColorCount)
 
 		for (Color=0; Color<ColorCount; Color++)
 		{
-			VideoGetPaletteColor(Color, &PaletteColors[Color].Red, &PaletteColors[Color].Green, &PaletteColors[Color].Blue);
+			MachVideoGetPaletteColor(Color, &PaletteColors[Color].Red, &PaletteColors[Color].Green, &PaletteColors[Color].Blue);
 
 			// Increment each color so it approaches its real value
 			if (PaletteColors[Color].Red < Palette[Color].Red)
@@ -84,10 +84,10 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, U32 ColorCount)
 		{
 			if ((Color % RGB_MAX_PER_ITERATION) == 0)
 			{
-				VideoWaitForVerticalRetrace();
+				MachVideoSync();
 			}
 
-			VideoSetPaletteColor(Color, PaletteColors[Color].Red, PaletteColors[Color].Green, PaletteColors[Color].Blue);
+			MachVideoSetPaletteColor(Color, PaletteColors[Color].Red, PaletteColors[Color].Green, PaletteColors[Color].Blue);
 		}
 	}
 }
@@ -106,10 +106,10 @@ VOID VideoFadeOut(U32 ColorCount)
 		{
 			if ((Color % RGB_MAX_PER_ITERATION) == 0)
 			{
-				VideoWaitForVerticalRetrace();
+				MachVideoSync();
 			}
 
-			VideoGetPaletteColor(Color, &Red, &Green, &Blue);
+			MachVideoGetPaletteColor(Color, &Red, &Green, &Blue);
 
 			if (Red > 0)
 			{
@@ -124,7 +124,7 @@ VOID VideoFadeOut(U32 ColorCount)
 				Blue--;
 			}
 
-			VideoSetPaletteColor(Color, Red, Green, Blue);
+			MachVideoSetPaletteColor(Color, Red, Green, Blue);
 		}
 	}
 }

@@ -285,7 +285,7 @@ VOID RunLoader(VOID)
 #if 0
   printf("low_mem = %d\n", mb_info.mem_lower);
   printf("high_mem = %d\n", mb_info.mem_upper);
-  getch();
+  MachConsGetCh();
 #endif
 
 #ifdef USE_UI
@@ -401,7 +401,7 @@ for(;;);
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
 #else
       printf("\n\n Please insert \"ReactOS Boot Disk 2\" and press ENTER\n");
-      getch();
+      MachConsGetCh();
 #endif
 
       /* Open boot drive */

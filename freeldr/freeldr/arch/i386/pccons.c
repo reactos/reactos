@@ -1,4 +1,4 @@
-/* $Id: pccons.c,v 1.2 2004/11/10 23:45:37 gvg Exp $
+/* $Id: pccons.c,v 1.3 2004/11/14 22:04:38 gvg Exp $
  *
  *  FreeLoader
  *
@@ -29,21 +29,6 @@
 
 #define TEXT_COLS  80
 #define TEXT_LINES 25
-
-VOID
-PcConsClearScreenAttr(U8 Attr)
-{
-  U16 AttrChar;
-  U16 *BufPtr;
-
-  AttrChar = ((U16) Attr << 8) | ' ';
-  for (BufPtr = (U16 *) TEXTMODE_BUFFER;
-       BufPtr < (U16 *) (TEXTMODE_BUFFER + TEXTMODE_BUFFER_SIZE);
-       BufPtr++)
-    {
-      *BufPtr = AttrChar;
-    }
-}
 
 VOID
 PcConsPutChar(int Ch)
@@ -86,13 +71,63 @@ PcConsPutChar(int Ch)
   Int386(0x10, &Regs, &Regs);
 }
 
-VOID
-PcConsPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y)
+BOOL
+PcConsKbHit(VOID)
 {
-  U16 *BufPtr;
+  REGS Regs;
 
-  BufPtr = (U16 *) (TEXTMODE_BUFFER + (Y * TEXT_COLS + X) * 2);
-  *BufPtr = ((U16) Attr << 8) | (Ch & 0xff);
+  /* Int 16h AH=01h
+   * KEYBOARD - CHECK FOR KEYSTROKE
+   *
+   * AH = 01h
+   * Return:
+   * ZF set if no keystroke available
+   * ZF clear if keystroke available
+   * AH = BIOS scan code
+   * AL = ASCII character
+   */
+  Regs.b.ah = 0x01;
+  Int386(0x16, &Regs, &Regs);
+
+  return 0 == (Regs.x.eflags & I386FLAG_ZF);
+}
+
+int
+PcConsGetCh(void)
+{
+  REGS Regs;
+  static BOOL ExtendedKey = FALSE;
+  static char ExtendedScanCode = 0;
+
+  /* If the last time we were called an
+   * extended key was pressed then return
+   * that keys scan code. */
+  if (ExtendedKey)
+    {
+      ExtendedKey = FALSE;
+      return ExtendedScanCode;
+    }
+
+  /* Int 16h AH=00h
+   * KEYBOARD - GET KEYSTROKE
+   *
+   * AH = 00h
+   * Return:
+   * AH = BIOS scan code
+   * AL = ASCII character
+   */
+  Regs.b.ah = 0x00;
+  Int386(0x16, &Regs, &Regs);
+
+  /* Check for an extended keystroke */
+  if (0 == Regs.b.al)
+    {
+      ExtendedKey = TRUE;
+      ExtendedScanCode = Regs.b.ah;
+    }
+
+  /* Return keystroke */
+  return Regs.b.al;
 }
 
 /* EOF */

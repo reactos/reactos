@@ -22,8 +22,10 @@
 #include <comm.h>
 #include <rtl.h>
 #include <debug.h>
+#include <machine.h>
 
 
+#if 0 /* This stuff isn't used and as far as I'm concerned it can go - GvG */
 U32		CurrentMemoryBank = 0;
 
 VOID VideoSetMemoryBank(U16 BankNumber)
@@ -108,45 +110,9 @@ U32 VideoGetOffScreenMemoryOffsetForPixel(U32 X, U32 Y)
 
 	return MemoryPos;
 }
+#endif
 
 VOID VideoCopyOffScreenBufferToVRAM(VOID)
 {
-	U32		BanksToCopy;
-	U32		BytesInLastBank;
-	U32		CurrentBank;
-	U32		BankSize;
-	U32		BufferSize;
-
-	//VideoWaitForVerticalRetrace();
-
-	// Text mode (BIOS or VESA)
-	if (VideoGetCurrentModeType() == MODETYPE_TEXT)
-	{
-		BufferSize = VideoGetCurrentModeResolutionX() * VideoGetBytesPerScanLine();
-		RtlCopyMemory((PVOID)VIDEOTEXT_MEM_ADDRESS, VideoOffScreenBuffer, BufferSize);
-	}
-	// VESA graphics mode
-	else if (VideoGetCurrentModeType() == MODETYPE_GRAPHICS && VideoIsCurrentModeVesa())
-	{
-		BankSize = VesaVideoModeInformation.WindowGranularity << 10;
-		BanksToCopy = (VesaVideoModeInformation.HeightInPixels * VesaVideoModeInformation.BytesPerScanLine) / BankSize;
-		BytesInLastBank = (VesaVideoModeInformation.HeightInPixels * VesaVideoModeInformation.BytesPerScanLine) % BankSize;
-
-		// Copy all the banks but the last one because
-		// it is probably a partial bank
-		for (CurrentBank=0; CurrentBank<BanksToCopy; CurrentBank++)
-		{
-			VideoSetMemoryBank(CurrentBank);
-			RtlCopyMemory((PVOID)VIDEOVGA_MEM_ADDRESS, VideoOffScreenBuffer, BankSize);
-		}
-
-		// Copy the remaining bytes into the last bank
-		VideoSetMemoryBank(CurrentBank);
-		RtlCopyMemory((PVOID)VIDEOVGA_MEM_ADDRESS, VideoOffScreenBuffer, BytesInLastBank);
-	}
-	// BIOS graphics mode
-	else
-	{
-		UNIMPLEMENTED();
-	}
+	MachVideoCopyOffScreenBufferToVRAM(VideoOffScreenBuffer);
 }

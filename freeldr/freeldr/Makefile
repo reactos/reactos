@@ -135,7 +135,7 @@ else
 #############################################
 # COMPILER COMMAND LINE OPTIONS
 #
-COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -ffreestanding -fno-builtin -fno-inline \
+COMPILER_OPTIONS = -Wall -Werror -nostdlib -nostdinc -ffreestanding -fno-builtin -fno-inline \
                    -fno-zero-initialized-in-bss -O1 -MD
 # FreeLoader does not use any of the standard libraries, includes, or built-in functions
 
@@ -215,10 +215,15 @@ ARCH_OBJS	=	fathelp.o	\
 			pccons.o	\
 			pcdisk.o	\
 			pcmem.o		\
+			pcrtc.o		\
+			pcvideo.o	\
+			xboxcons.o	\
 			xboxdisk.o	\
 			xboxfont.o	\
 			xboxmem.o	\
+			xboxrtc.o	\
 			xboxvideo.o	\
+			flashleds.o	\
 			_alloca.o		# For Mingw32 builds
 
 
@@ -265,11 +270,10 @@ INIFILE_OBJS=	inifile.o	\
 INFFILE_OBJS=	inffile.o
 
 VIDEO_OBJS	=	video.o		\
-				vidmode.o	\
-				fade.o		\
-				palette.o	\
-				pixel.o		\
-				bank.o
+			fade.o		\
+			palette.o	\
+			pixel.o		\
+			bank.o
 
 # libgcc2.o contains code (__udivdi3, __umoddi3) necessary to do
 # 64-bit division on the i386 (and other 32-bit) architectures

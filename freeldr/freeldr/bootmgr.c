@@ -35,6 +35,7 @@
 #include <drivemap.h>
 #include <keycodes.h>
 #include <cmdline.h>
+#include <machine.h>
 
 
 VOID RunLoader(VOID)
@@ -52,21 +53,21 @@ VOID RunLoader(VOID)
 	if (!IniFileInitialize())
 	{
 		printf("Press any key to reboot.\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
 		printf("Section [FreeLoader] not found in freeldr.ini.\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 
 	if (!UiInitialize())
 	{
 		printf("Press any key to reboot.\n");
-		getch();
+		MachConsGetCh();
 		return;
 	}
 

@@ -1,4 +1,4 @@
-/* $Id: xboxvideo.c,v 1.2 2004/11/10 23:45:37 gvg Exp $
+/* $Id: xboxvideo.c,v 1.3 2004/11/14 22:04:38 gvg Exp $
  *
  *  FreeLoader
  *
@@ -31,11 +31,6 @@ static U32 ScreenWidth;
 static U32 ScreenHeight;
 static U32 BytesPerPixel;
 static U32 Delta;
-
-static unsigned CurrentCursorX;
-static unsigned CurrentCursorY;
-static unsigned CurrentFgColor;
-static unsigned CurrentBgColor;
 
 #define CHAR_WIDTH  8
 #define CHAR_HEIGHT 16
@@ -91,7 +86,7 @@ XboxVideoAttrToColors(U8 Attr, U32 *FgColor, U32 *BgColor)
 }
 
 static VOID
-XboxVideoClearScreen(U32 Color, BOOL FullScreen)
+XboxVideoClearScreenColor(U32 Color, BOOL FullScreen)
 {
   U32 Line, Col;
   PU32 p;
@@ -107,45 +102,17 @@ XboxVideoClearScreen(U32 Color, BOOL FullScreen)
 }
 
 VOID
-XboxVideoClearScreenAttr(U8 Attr)
+XboxVideoClearScreen(U8 Attr)
 {
   U32 FgColor, BgColor;
 
   XboxVideoAttrToColors(Attr, &FgColor, &BgColor);
 
-  XboxVideoClearScreen(BgColor, FALSE);
+  XboxVideoClearScreenColor(BgColor, FALSE);
 }
 
 VOID
-XboxVideoPutChar(int c)
-{
-  if ('\r' == c)
-    {
-      CurrentCursorX = 0;
-    }
-  else if ('\n' == c)
-    {
-      CurrentCursorX = 0;
-      CurrentCursorY++;
-    }
-  else if ('\t' == c)
-    {
-      CurrentCursorX = (CurrentCursorX + 8) & ~ 7;
-    }
-  else
-    {
-      XboxVideoOutputChar(c, CurrentCursorX, CurrentCursorY, CurrentFgColor, CurrentBgColor);
-      CurrentCursorX++;
-    }
-  if (ScreenWidth / CHAR_WIDTH <= CurrentCursorX)
-    {
-      CurrentCursorX = 0;
-      CurrentCursorY++;
-    }
-}
-
-VOID
-XboxVideoPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y)
+XboxVideoPutChar(int Ch, U8 Attr, unsigned X, unsigned Y)
 {
   U32 FgColor, BgColor;
 
@@ -163,15 +130,83 @@ XboxVideoInit(VOID)
   BytesPerPixel = 4;
   Delta = (ScreenWidth * BytesPerPixel + 3) & ~ 0x3;
 
-  CurrentCursorX = 0;
-  CurrentCursorY = 0;
-  CurrentFgColor = MAKE_COLOR(192, 192, 192);
-  CurrentBgColor = MAKE_COLOR(0, 0, 0);
-
-  XboxVideoClearScreen(CurrentBgColor, TRUE);
+  XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 
   /* Tell the nVidia controller about the framebuffer */
   *((PU32) 0xfd600800) = (U32) FrameBuffer;
+}
+
+VIDEODISPLAYMODE
+XboxVideoSetDisplayMode(char *DisplayMode, BOOL Init)
+{
+  /* We only have one mode, semi-text */
+  return VideoTextMode;
+}
+
+VOID
+XboxVideoGetDisplaySize(PU32 Width, PU32 Height, PU32 Depth)
+{
+  *Width = ScreenWidth / CHAR_WIDTH;
+  *Height = (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT;
+  *Depth = 0;
+}
+
+U32
+XboxVideoGetBufferSize(VOID)
+{
+  return (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT * (ScreenWidth / CHAR_WIDTH) * 2;
+}
+
+VOID
+XboxVideoSetTextCursorPosition(U32 X, U32 Y)
+{
+  /* We don't have a cursor yet */
+}
+
+VOID
+XboxVideoHideShowTextCursor(BOOL Show)
+{
+  /* We don't have a cursor yet */
+}
+
+VOID
+XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
+{
+  PU8 OffScreenBuffer = (PU8) Buffer;
+  U32 Col, Line;
+
+  for (Line = 0; Line < (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT; Line++)
+    {
+      for (Col = 0; Col < ScreenWidth / CHAR_WIDTH; Col++)
+        {
+          XboxVideoPutChar(OffScreenBuffer[0], OffScreenBuffer[1], Col, Line);
+          OffScreenBuffer += 2;
+        }
+    }
+}
+
+BOOL
+XboxVideoIsPaletteFixed(VOID)
+{
+  return FALSE;
+}
+
+VOID
+XboxVideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue)
+{
+  /* Not supported */
+}
+
+VOID
+XboxVideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue)
+{
+  /* Not supported */
+}
+
+VOID
+XboxVideoSync()
+{
+  /* Not supported */
 }
 
 /* EOF */

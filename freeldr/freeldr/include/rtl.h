@@ -72,15 +72,6 @@ int		isxdigit(int c);
 char *	convert_to_ascii(char *buf, int c, ...);
 char *	convert_i64_to_ascii(char *buf, int c, ...);
 
-int		kbhit(void);			// Implemented in asmcode.S
-int		getch(void);			// Implemented in asmcode.S
-int		getyear(void);			// Implemented in asmcode.S
-int		getday(void);			// Implemented in asmcode.S
-int		getmonth(void);			// Implemented in asmcode.S
-int		gethour(void);			// Implemented in asmcode.S
-int		getminute(void);		// Implemented in asmcode.S
-int		getsecond(void);		// Implemented in asmcode.S
-
 void	beep(void);
 void	delay(unsigned msec);
 void	sound(int freq);

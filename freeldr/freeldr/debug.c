@@ -95,7 +95,7 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 	else
 	{
-		MachPutChar(Character);
+		MachConsPutChar(Character);
 	}
 }
 

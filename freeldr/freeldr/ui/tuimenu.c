@@ -24,14 +24,16 @@
 #include "keycodes.h"
 #include <options.h>
 #include <mm.h>
+#include <machine.h>
 #include <video.h>
 
 
 BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	TUI_MENU_INFO	MenuInformation;
-	U32				CurrentClockSecond;
-	U32				KeyPress;
+	U32		LastClockSecond;
+	U32		CurrentClockSecond;
+	U32		KeyPress;
 
 	//
 	// The first thing we need to check is the timeout
@@ -69,7 +71,7 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 	//
 	// Get the current second of time
 	//
-	CurrentClockSecond = getsecond();
+	MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &LastClockSecond);
 
 	//
 	// Process keys
@@ -104,12 +106,13 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuIte
 
 		if (MenuInformation.MenuTimeRemaining > 0)
 		{
-			if (getsecond() != CurrentClockSecond)
+			MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &CurrentClockSecond);
+			if (CurrentClockSecond != LastClockSecond)
 			{
 				//
 				// Update the time information
 				//
-				CurrentClockSecond = getsecond();
+				LastClockSecond = CurrentClockSecond;
 				MenuInformation.MenuTimeRemaining--;
 
 				//
@@ -339,7 +342,7 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCal
 	//
 	// Check for a keypress
 	//
-	if (kbhit())
+	if (MachConsKbHit())
 	{
 		//
 		// Cancel the timeout
@@ -353,13 +356,13 @@ U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCal
 		//
 		// Get the key
 		//
-		KeyEvent = getch();
+		KeyEvent = MachConsGetCh();
 
 		//
 		// Is it extended?
 		//
 		if (KeyEvent == 0)
-			KeyEvent = getch(); // Yes - so get the extended key
+			KeyEvent = MachConsGetCh(); // Yes - so get the extended key
 
 		//
 		// Call the supplied key filter callback function to see

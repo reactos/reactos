@@ -1,4 +1,4 @@
-/* $Id: machxbox.c,v 1.4 2004/11/12 17:17:07 gvg Exp $
+/* $Id: machxbox.c,v 1.5 2004/11/14 22:04:38 gvg Exp $
  *
  *  FreeLoader
  *
@@ -30,12 +30,24 @@ XboxMachInit(VOID)
   XboxVideoInit();
 
   /* Setup vtbl */
-  MachVtbl.ClearScreenAttr = XboxVideoClearScreenAttr;
-  MachVtbl.PutChar = XboxVideoPutChar;
-  MachVtbl.PutCharAttrAtLoc = XboxVideoPutCharAttrAtLoc;
+  MachVtbl.ConsPutChar = XboxConsPutChar;
+  MachVtbl.ConsKbHit = XboxConsKbHit;
+  MachVtbl.ConsGetCh = XboxConsGetCh;
+  MachVtbl.VideoClearScreen = XboxVideoClearScreen;
+  MachVtbl.VideoSetDisplayMode = XboxVideoSetDisplayMode;
+  MachVtbl.VideoGetDisplaySize = XboxVideoGetDisplaySize;
+  MachVtbl.VideoGetBufferSize = XboxVideoGetBufferSize;
+  MachVtbl.VideoHideShowTextCursor = XboxVideoHideShowTextCursor;
+  MachVtbl.VideoPutChar = XboxVideoPutChar;
+  MachVtbl.VideoCopyOffScreenBufferToVRAM = XboxVideoCopyOffScreenBufferToVRAM;
+  MachVtbl.VideoIsPaletteFixed = XboxVideoIsPaletteFixed;
+  MachVtbl.VideoSetPaletteColor = XboxVideoSetPaletteColor;
+  MachVtbl.VideoGetPaletteColor = XboxVideoGetPaletteColor;
+  MachVtbl.VideoSync = XboxVideoSync;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
+  MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
 }

@@ -21,33 +21,10 @@
 #include <video.h>
 #include <portio.h>
 #include <mm.h>
+#include <machine.h>
 
 
 PVOID	VideoOffScreenBuffer = NULL;
-
-VOID VideoClearScreen(VOID)
-{
-	VideoSetMode(VideoGetCurrentMode());
-}
-
-VOID VideoWaitForVerticalRetrace(VOID)
-{
-
-	while ((READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08) == 1)
-	{
-		// Keep reading the port until bit 3 is clear
-		// This waits for the current retrace to end and
-		// we can catch the next one so we know we are
-		// getting a full retrace.
-	}
-
-	while ((READ_PORT_UCHAR((U8*)VIDEOPORT_VERTICAL_RETRACE) & 0x08) == 0)
-	{
-		// Keep reading the port until bit 3 is set
-		// Now that we know we aren't doing a vertical
-		// retrace we need to wait for the next one.
-	}
-}
 
 PVOID VideoAllocateOffScreenBuffer(VOID)
 {
@@ -59,7 +36,7 @@ PVOID VideoAllocateOffScreenBuffer(VOID)
 		VideoOffScreenBuffer = NULL;
 	}
 
-	BufferSize = VideoGetCurrentModeResolutionX() * VideoGetBytesPerScanLine();
+	BufferSize = MachVideoGetBufferSize();
 
 	VideoOffScreenBuffer = MmAllocateMemory(BufferSize);
 

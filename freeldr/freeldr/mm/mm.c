@@ -23,6 +23,7 @@
 #include <rtl.h>
 #include <debug.h>
 #include <ui.h>
+#include <machine.h>
 
 
 #ifdef DEBUG
@@ -377,25 +378,25 @@ VOID MemAllocTest(VOID)
 
 	MemPtr1 = MmAllocateMemory(4096);
 	printf("MemPtr1: 0x%x\n", (int)MemPtr1);
-	getch();
+	MachConsGetCh();
 	MemPtr2 = MmAllocateMemory(4096);
 	printf("MemPtr2: 0x%x\n", (int)MemPtr2);
-	getch();
+	MachConsGetCh();
 	MemPtr3 = MmAllocateMemory(4096);
 	printf("MemPtr3: 0x%x\n", (int)MemPtr3);
 	DumpMemoryAllocMap();
 	VerifyHeap();
-	getch();
+	MachConsGetCh();
 
 	MmFreeMemory(MemPtr2);
-	getch();
+	MachConsGetCh();
 
 	MemPtr4 = MmAllocateMemory(2048);
 	printf("MemPtr4: 0x%x\n", (int)MemPtr4);
-	getch();
+	MachConsGetCh();
 	MemPtr5 = MmAllocateMemory(4096);
 	printf("MemPtr5: 0x%x\n", (int)MemPtr5);
-	getch();
+	MachConsGetCh();
 }
 #endif // DEBUG
 

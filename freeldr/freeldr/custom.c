@@ -29,6 +29,7 @@
 #include <linux.h>
 #include <reactos.h>
 #include <drivemap.h>
+#include <machine.h>
 
 
 UCHAR	BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
@@ -78,7 +79,8 @@ VOID OptionMenuCustomBootDisk(VOID)
 {
 	UCHAR	SectionName[100];
 	UCHAR	BootDriveString[20];
-	U32		SectionId;
+	U32	SectionId;
+	U32	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -89,7 +91,8 @@ VOID OptionMenuCustomBootDisk(VOID)
 	}
 
 	// Generate a unique section name
-	sprintf(SectionName, "CustomBootDisk%d%d%d%d%d%d", getyear(), getday(), getmonth(), gethour(), getminute(), getsecond());
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	sprintf(SectionName, "CustomBootDisk%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -119,7 +122,8 @@ VOID OptionMenuCustomBootPartition(VOID)
 	UCHAR	SectionName[100];
 	UCHAR	BootDriveString[20];
 	UCHAR	BootPartitionString[20];
-	U32		SectionId;
+	U32	SectionId;
+	U32	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -136,7 +140,8 @@ VOID OptionMenuCustomBootPartition(VOID)
 	}
 
 	// Generate a unique section name
-	sprintf(SectionName, "CustomBootPartition%d%d%d%d%d%d", getyear(), getday(), getmonth(), gethour(), getminute(), getsecond());
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	sprintf(SectionName, "CustomBootPartition%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -173,7 +178,8 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 	UCHAR	BootDriveString[20];
 	UCHAR	BootPartitionString[20];
 	UCHAR	BootSectorFileString[200];
-	U32		SectionId;
+	U32	SectionId;
+	U32	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -196,7 +202,8 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 	}
 
 	// Generate a unique section name
-	sprintf(SectionName, "CustomBootSectorFile%d%d%d%d%d%d", getyear(), getday(), getmonth(), gethour(), getminute(), getsecond());
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	sprintf(SectionName, "CustomBootSectorFile%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -241,7 +248,8 @@ VOID OptionMenuCustomBootReactOS(VOID)
 	UCHAR	ReactOSSystemPath[200];
 	UCHAR	ReactOSARCPath[200];
 	UCHAR	ReactOSOptions[200];
-	U32		SectionId;
+	U32	SectionId;
+	U32	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -270,7 +278,8 @@ VOID OptionMenuCustomBootReactOS(VOID)
 	}
 
 	// Generate a unique section name
-	sprintf(SectionName, "CustomReactOS%d%d%d%d%d%d", getyear(), getday(), getmonth(), gethour(), getminute(), getsecond());
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	sprintf(SectionName, "CustomReactOS%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))
@@ -312,7 +321,8 @@ VOID OptionMenuCustomBootLinux(VOID)
 	UCHAR	LinuxKernelString[200];
 	UCHAR	LinuxInitrdString[200];
 	UCHAR	LinuxCommandLineString[200];
-	U32		SectionId;
+	U32	SectionId;
+	U32	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -347,7 +357,8 @@ VOID OptionMenuCustomBootLinux(VOID)
 	}
 
 	// Generate a unique section name
-	sprintf(SectionName, "CustomLinux%d%d%d%d%d%d", getyear(), getday(), getmonth(), gethour(), getminute(), getsecond());
+	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	sprintf(SectionName, "CustomLinux%d%d%d%d%d%d", Year, Day, Month, Hour, Minute, Second);
 
 	// Add the section
 	if (!IniAddSection(SectionName, &SectionId))

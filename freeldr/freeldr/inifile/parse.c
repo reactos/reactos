@@ -22,6 +22,7 @@
 #include <rtl.h>
 #include <mm.h>
 #include <debug.h>
+#include <machine.h>
 
 
 PINI_SECTION		IniFileSectionListHead = NULL;
@@ -125,7 +126,7 @@ BOOL IniParseFile(PUCHAR IniFileData, U32 IniFileSize)
 			{
 				printf("Error: freeldr.ini:%ld: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
 				printf("Press any key to continue...\n");
-				getch();
+				MachConsGetCh();
 				CurrentLineNumber++;
 				continue;
 			}

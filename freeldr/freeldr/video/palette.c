@@ -19,24 +19,7 @@
 	
 #include <freeldr.h>
 #include <video.h>
-#include <portio.h>
-
-
-VOID VideoSetPaletteColor(U8 Color, U8 Red, U8 Green, U8 Blue)
-{
-	WRITE_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_WRITE, Color);
-	WRITE_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA, Red);
-	WRITE_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA, Green);
-	WRITE_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA, Blue);
-}
-
-VOID VideoGetPaletteColor(U8 Color, U8* Red, U8* Green, U8* Blue)
-{
-	WRITE_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_READ, Color);
-	*Red = READ_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA);
-	*Green = READ_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA);
-	*Blue = READ_PORT_UCHAR((U8*)VIDEOPORT_PALETTE_DATA);
-}
+#include <machine.h>
 
 VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
 {
@@ -44,7 +27,7 @@ VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
-		VideoGetPaletteColor(Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
+		MachVideoGetPaletteColor(Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
 	}
 }
 
@@ -52,10 +35,10 @@ VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
 {
 	U32		Color;
 
-	VideoWaitForVerticalRetrace();
+	MachVideoSync();
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
-		VideoSetPaletteColor(Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
+		MachVideoSetPaletteColor(Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
 	}
 }

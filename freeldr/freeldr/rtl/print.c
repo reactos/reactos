@@ -29,7 +29,7 @@ void print(char *str)
 	int	i;
 
 	for (i = 0; i < strlen(str); i++)
-		MachPutChar(str[i]);
+		MachConsPutChar(str[i]);
 }
 
 /*
@@ -48,7 +48,7 @@ void printf(char *format, ... )
 	{
 		if (c != '%')
 		{
-			MachPutChar(c);
+			MachConsPutChar(c);
 		}
 		else
 		{
@@ -77,22 +77,22 @@ void printf(char *format, ... )
 
 				while (*ptr)
 				{
-					MachPutChar(*(ptr++));
+					MachConsPutChar(*(ptr++));
 				}
 				break;
 
-			case 'c': MachPutChar((*(dataptr++))&0xff); break;
+			case 'c': MachConsPutChar((*(dataptr++))&0xff); break;
 
 			case 's':
 				ptr = (char *)(*(dataptr++));
 
 				while ((c = *(ptr++)))
 				{
-					MachPutChar(c);
+					MachConsPutChar(c);
 				}
 				break;
 			case '%':
-				MachPutChar(c);
+				MachConsPutChar(c);
 				break;
 			default:
 				printf("\nprintf() invalid format specifier - %%%c\n", c);

@@ -1,4 +1,4 @@
-/* $Id: machpc.c,v 1.4 2004/11/12 17:17:07 gvg Exp $
+/* $Id: machpc.c,v 1.5 2004/11/14 22:04:38 gvg Exp $
  *
  *  FreeLoader
  *
@@ -30,14 +30,28 @@ PcMachInit(VOID)
   EnableA20();
 
   /* Setup vtbl */
-  MachVtbl.ClearScreenAttr = PcConsClearScreenAttr;
-  MachVtbl.PutChar = PcConsPutChar;
-  MachVtbl.PutCharAttrAtLoc = PcConsPutCharAttrAtLoc;
+  MachVtbl.ConsPutChar = PcConsPutChar;
+  MachVtbl.ConsKbHit = PcConsKbHit;
+  MachVtbl.ConsGetCh = PcConsGetCh;
+  MachVtbl.VideoClearScreen = PcVideoClearScreen;
+  MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
+  MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
+  MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
+  MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
+  MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
+  MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
+  MachVtbl.VideoPutChar = PcVideoPutChar;
+  MachVtbl.VideoCopyOffScreenBufferToVRAM = PcVideoCopyOffScreenBufferToVRAM;
+  MachVtbl.VideoIsPaletteFixed = PcVideoIsPaletteFixed;
+  MachVtbl.VideoSetPaletteColor = PcVideoSetPaletteColor;
+  MachVtbl.VideoGetPaletteColor = PcVideoGetPaletteColor;
+  MachVtbl.VideoSync = PcVideoSync;
   MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
+  MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
 }
 
 /* EOF */
