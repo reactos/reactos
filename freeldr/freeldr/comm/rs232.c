@@ -19,8 +19,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "portio.h"
+#include <freeldr.h>
+#include <comm.h>
 
 
 /* MACROS *******************************************************************/
@@ -120,7 +120,7 @@ static BOOL Rs232DoesComPortExist(PUCHAR BaseAddress)
 BOOL Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
 {
         ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-        char buffer[80];
+        //char buffer[80];
         ULONG divisor;
         BYTE lcr;
 

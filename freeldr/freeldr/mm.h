@@ -1,8 +1,6 @@
 /*
- *  FreeLoader - arcname.h
- *
+ *  FreeLoader
  *  Copyright (C) 2001  Brian Palmer  <brianp@sginet.com>
- *  Copyright (C) 2001  Eric Kohl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,11 +17,22 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __ARCNAME_H
-#define __ARCNAME_H
 
-BOOL	DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition);
-//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, ULONG BiosDriveNumber);
-//ULONG	ConvertArcNameToBiosDrive(PUCHAR ArcName);
+#ifndef __MEMORY_H
+#define __MEMORY_H
 
-#endif // defined __ARCNAME_H
+#include <multiboot.h>
+
+
+VOID	InitMemoryManager(PVOID BaseAddress, ULONG Length);
+
+PVOID	AllocateMemory(ULONG NumberOfBytes);
+VOID	FreeMemory(PVOID MemBlock);
+
+// These functions are implemented in mem.S
+int		GetExtendedMemorySize(void);				// Returns extended memory size in KB
+int		GetConventionalMemorySize(void);			// Returns conventional memory size in KB
+int		GetBiosMemoryMap(memory_map_t *mem_map);	// Fills mem_map structure with BIOS memory map and returns length of memory map
+
+
+#endif // defined __MEMORY_H

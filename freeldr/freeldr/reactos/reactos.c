@@ -18,16 +18,15 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "../freeldr.h"
-#include "../asmcode.h"
-#include "reactos.h"
-#include "../stdlib.h"
-#include "../fs.h"
-#include "../tui.h"
-#include "../multiboot.h"
-#include "../arcname.h"
-#include "../memory.h"
-#include "../parseini.h"
+#include <freeldr.h>
+#include <asmcode.h>
+#include <reactos.h>
+#include <rtl.h>
+#include <fs.h>
+#include <ui.h>
+#include <multiboot.h>
+#include <mm.h>
+#include <parseini.h>
 
 #include "registry.h"
 #include "hwdetect.h"

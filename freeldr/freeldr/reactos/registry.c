@@ -25,9 +25,9 @@
  *	- Fix RegEnumValue().
  */
 
-#include "../freeldr.h"
-#include "../memory.h"
-#include "../stdlib.h"
+#include <freeldr.h>
+#include <mm.h>
+#include <rtl.h>
 #include "registry.h"
 
 #define NDEBUG

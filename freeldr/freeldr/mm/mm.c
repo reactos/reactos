@@ -17,11 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "memory.h"
-#include "stdlib.h"
-#include "debug.h"
-#include "tui.h"
+#include <freeldr.h>
+#include <mm.h>
+#include <rtl.h>
+#include <debug.h>
+#include <ui.h>
 
 
 //
@@ -72,8 +72,8 @@ VOID InitMemoryManager(PVOID BaseAddress, ULONG Length)
 	HeapMemBlockArray = (PMEMBLOCK)(HeapBaseAddress + HeapLengthInBytes);
 
 	// Clear the memory
-	ZeroMemory(HeapBaseAddress, HeapLengthInBytes);
-	ZeroMemory(HeapMemBlockArray, (HeapMemBlockCount * sizeof(MEMBLOCK)));
+	RtlZeroMemory(HeapBaseAddress, HeapLengthInBytes);
+	RtlZeroMemory(HeapMemBlockArray, (HeapMemBlockCount * sizeof(MEMBLOCK)));
 
 #ifdef DEBUG
 	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. BaseAddress = 0x%x Length = 0x%x. %d blocks in heap.\n", BaseAddress, Length, HeapMemBlockCount));

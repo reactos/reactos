@@ -143,4 +143,13 @@ void	DrawProgressBar(int nPos);
 #define KEY_F9			0x43
 #define KEY_F10			0x44
 
+
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Menu Functions
+//
+///////////////////////////////////////////////////////////////////////////////////////
+BOOL	DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
+
+
 #endif // #defined __TUI_H

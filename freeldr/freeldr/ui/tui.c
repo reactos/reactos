@@ -17,12 +17,12 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#include "freeldr.h"
-#include "stdlib.h"
-#include "tui.h"
-#include "memory.h"
-#include "debug.h"
-#include "parseini.h"
+#include <freeldr.h>
+#include <rtl.h>
+#include <ui.h>
+#include <mm.h>
+#include <debug.h>
+#include <parseini.h>
 
 ULONG	nScreenWidth = 80;		// Screen Width
 ULONG	nScreenHeight = 25;		// Screen Height

@@ -21,9 +21,9 @@
 #include "freeldr.h"
 #include "asmcode.h"
 #include "miscboot.h"
-#include "stdlib.h"
+#include "rtl.h"
 #include "fs.h"
-#include "tui.h"
+#include "ui.h"
 #include "linux.h"
 
 void LoadAndBootLinux(int DriveNum, int Partition, char *vmlinuz, char *cmd_line)

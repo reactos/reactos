@@ -19,10 +19,10 @@
 
 #include "freeldr.h"
 #include "parseini.h"
-#include "tui.h"
+#include "ui.h"
 #include "fs.h"
-#include "stdlib.h"
-#include "memory.h"
+#include "rtl.h"
+#include "mm.h"
 #include "debug.h"
 
 PUCHAR	FreeLoaderIniFileData = NULL;

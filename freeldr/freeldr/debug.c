@@ -17,16 +17,14 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "stdlib.h"
-#include "rs232.h"
-#include "parseini.h"
-#include "portio.h"
+#include <freeldr.h>
+#include <debug.h>
+#include <rtl.h>
+#include <comm.h>
 
 #ifdef DEBUG
 
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM | DPRINT_UI;
+ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM | DPRINT_UI | DPRINT_DISK;
 
 #define	SCREEN				0
 #define	RS232				1

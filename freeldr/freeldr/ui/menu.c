@@ -17,12 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#include "freeldr.h"
-#include "stdlib.h"
-#include "tui.h"
-#include "menu.h"
-#include "options.h"
-#include "memory.h"
+#include <freeldr.h>
+#include <rtl.h>
+#include <ui.h>
+#include <options.h>
+#include <mm.h>
 
 
 typedef struct

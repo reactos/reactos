@@ -17,14 +17,15 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "fs.h"
+#include <freeldr.h>
+#include <fs.h>
 #include "fat.h"
-#include "stdlib.h"
-#include "tui.h"
-#include "asmcode.h"
-#include "memory.h"
-#include "debug.h"
+#include <disk.h>
+#include <rtl.h>
+#include <ui.h>
+#include <asmcode.h>
+#include <mm.h>
+#include <debug.h>
 
 
 PFAT_BOOTSECTOR		FatVolumeBootSector = NULL;
@@ -152,8 +153,8 @@ BOOL FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartHead, ULONG VolumeStartTr
 		return FALSE;
 	}
 
-	SetDriveGeometry(get_cylinders(DriveNumber), get_heads(DriveNumber), get_sectors(DriveNumber), FatVolumeBootSector->BytesPerSector);
-	SetVolumeProperties(FatVolumeBootSector->HiddenSectors);
+	DiskSetDriveGeometry(get_cylinders(DriveNumber), get_heads(DriveNumber), get_sectors(DriveNumber), FatVolumeBootSector->BytesPerSector);
+	DiskSetVolumeProperties(FatVolumeBootSector->HiddenSectors);
 
 	//
 	// Check the FAT cluster size
@@ -267,7 +268,7 @@ PVOID FatBufferDirectory(UINT32 DirectoryStartCluster, PUINT32 EntryCountPointer
 			RootDirectoryStartSector = FatVolumeBootSector->ReservedSectors + (FatVolumeBootSector->NumberOfFats * FatVolumeBootSector->SectorsPerFat);
 			RootDirectorySectorCount = FatVolumeBootSector->RootDirEntries / 32;
 
-			if (!ReadMultipleLogicalSectors(RootDirectoryStartSector, RootDirectorySectorCount, DirectoryBuffer))
+			if (!DiskReadMultipleLogicalSectors(RootDirectoryStartSector, RootDirectorySectorCount, DirectoryBuffer))
 			{
 				FreeMemory(DirectoryBuffer);
 				return NULL;
@@ -698,14 +699,14 @@ DWORD FatGetFatEntry(DWORD nCluster)
 
 		if (ThisFatEntOffset == (FatVolumeBootSector->BytesPerSector - 1))
 		{
-			if (!ReadMultipleLogicalSectors(ThisFatSecNum, 2, (PVOID)DISKREADBUFFER))
+			if (!DiskReadMultipleLogicalSectors(ThisFatSecNum, 2, (PVOID)DISKREADBUFFER))
 			{
 				return NULL;
 			}
 		}
 		else
 		{
-			if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+			if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 			{
 				return NULL;
 			}
@@ -725,7 +726,7 @@ DWORD FatGetFatEntry(DWORD nCluster)
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+		if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 		{
 			return NULL;
 		}
@@ -740,7 +741,7 @@ DWORD FatGetFatEntry(DWORD nCluster)
 		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / FatVolumeBootSector->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % FatVolumeBootSector->BytesPerSector);
 
-		if (!ReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
+		if (!DiskReadLogicalSector(ThisFatSecNum, (PVOID)DISKREADBUFFER))
 		{
 			return NULL;
 		}
@@ -885,7 +886,7 @@ BOOL FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector));
 
-	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+	if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
@@ -917,7 +918,7 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 		//
 		// Read cluster into memory
 		//
-		if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+		if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
@@ -965,7 +966,7 @@ BOOL FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Leng
 
 	ClusterStartSector = ((ClusterNumber - 2) * FatVolumeBootSector->SectorsPerCluster) + DataSectorStart;
 
-	if (!ReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
+	if (!DiskReadMultipleLogicalSectors(ClusterStartSector, FatVolumeBootSector->SectorsPerCluster, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}

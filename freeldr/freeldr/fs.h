@@ -75,24 +75,11 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_LDM                   0x42      // Logical Disk Manager partition
 #define PARTITION_UNIX                  0x63      // Unix
 
-typedef struct _GEOMETRY
-{
-	ULONG	Cylinders;
-	ULONG	Heads;
-	ULONG	Sectors;
-	ULONG	BytesPerSector;
-
-} GEOMETRY, *PGEOMETRY;
-
 #define FILE VOID
 #define PFILE FILE *
 
 VOID	FileSystemError(PUCHAR ErrorString);
 BOOL	OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber);
-VOID	SetDriveGeometry(ULONG Cylinders, ULONG Heads, ULONG Sectors, ULONG BytesPerSector);
-VOID	SetVolumeProperties(ULONG HiddenSectors);
-BOOL	ReadMultipleLogicalSectors(ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOL	ReadLogicalSector(ULONG SectorNumber, PVOID Buffer);
 PFILE	OpenFile(PUCHAR FileName);
 VOID	CloseFile(PFILE FileHandle);
 BOOL	ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer);

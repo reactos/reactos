@@ -20,10 +20,10 @@
 	
 #include "freeldr.h"
 #include "asmcode.h"
-#include "stdlib.h"
+#include "rtl.h"
 #include "fs.h"
 #include "multiboot.h"
-#include "tui.h"
+#include "ui.h"
 #include "parseini.h"
 
 unsigned long				next_module_load_base = 0;

@@ -1,5 +1,6 @@
 /*
  *  FreeLoader
+ *
  *  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,9 +18,26 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __MENU_H
-#define __MENU_H
+#ifndef __REACTOS_H
+#define __REACTOS_H
 
-BOOL	DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
 
-#endif // #defined __MENU_H
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// ReactOS Loading Functions
+//
+///////////////////////////////////////////////////////////////////////////////////////
+void LoadAndBootReactOS(PUCHAR OperatingSystemName);
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// ARC Path Functions
+//
+///////////////////////////////////////////////////////////////////////////////////////
+BOOL	DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition);
+//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, ULONG BiosDriveNumber);
+//ULONG	ConvertArcNameToBiosDrive(PUCHAR ArcName);
+
+
+#endif // defined __REACTOS_H

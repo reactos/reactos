@@ -18,8 +18,8 @@
  */
 	
 #include "freeldr.h"
-#include "stdlib.h"
-#include "tui.h"
+#include "rtl.h"
+#include "ui.h"
 #include "options.h"
 #include "miscboot.h"
 
