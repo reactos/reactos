@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2002/03/10 17:10:30 hyperion Exp $
+# $Id: Makefile,v 1.6 2002/03/21 22:49:24 hyperion Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -17,7 +17,7 @@ TARGET_BASE = 0x68EB0000
 TARGET_ENTRY = _DllMain@12
 
 TARGET_CFLAGS =\
-	-W \
+	-Wall \
 	-nostdinc \
 	-nostdlib \
 	-fno-builtin \
@@ -96,7 +96,9 @@ OBJECTS_UNISTD = \
  unistd/dup.o \
  unistd/getcwd.o \
  unistd/getpid.o \
- unistd/getppid.o
+ unistd/getppid.o \
+ unistd/read.o \
+ unistd/write.o
 
 OBJECTS = \
 	$(OBJECTS_MISC) \
@@ -117,9 +119,6 @@ DEP_OBJECTS = $(OBJECTS)
 
 include $(TOOLS_PATH)/depend.mk
 
-$(TARGET_NAME).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o 
-
 DTFLAGS = -k -l $@
 
 $(TARGET_NAME).a: $(TARGET_NAME).def
@@ -127,5 +126,15 @@ $(TARGET_NAME).a: $(TARGET_NAME).def
 		$(DTFLAGS) \
 		-D $(TARGET_NAME).dll \
 		-d $(TARGET_NAME).def
+
+csrapi.a: csrapi.def
+	$(DLLTOOL) \
+		$(DTFLAGS) \
+		-D ntdll.dll \
+		-d csrapi.def
+
+$(TARGET_NAME).o: csrapi.a $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o 
+
 
 # EOF
