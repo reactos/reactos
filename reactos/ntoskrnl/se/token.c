@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.32 2003/12/30 18:52:06 fireball Exp $
+/* $Id: token.c,v 1.33 2004/03/13 19:25:47 jfilby Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -817,7 +817,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
@@ -827,7 +827,6 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 IN TOKEN_TYPE TokenType,
 		 OUT PHANDLE NewTokenHandle)
 {
-#if 0
    PACCESS_TOKEN Token;
    PACCESS_TOKEN NewToken;
    NTSTATUS Status;
@@ -839,19 +838,27 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 				      UserMode,
 				      (PVOID*)&Token,
 				      NULL);
+   if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("Failed to reference token (Status %lx)\n", Status);
+      return Status;
+    }
    
    ExistingImpersonationLevel = Token->ImpersonationLevel;
-   SepDuplicateToken(Token,
+   Status = SepDuplicateToken(Token,
 		     ObjectAttributes,
 		     ImpersonationLevel,
 		     TokenType,
 		     ExistingImpersonationLevel,
 		     KeGetPreviousMode(),
 		     &NewToken);
-#else
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
-#endif
+   if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("Failed to duplicate token (Status %lx)\n", Status);
+      return Status;
+    }
+
+   return STATUS_SUCCESS;
 }
 
 VOID SepAdjustGroups(PACCESS_TOKEN Token,
