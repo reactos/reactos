@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.13 2001/07/12 16:31:03 ekohl Exp $
+; $Id: msvcrt.def,v 1.14 2001/07/18 09:23:02 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -213,14 +213,14 @@ _eof
 _errno
 _except_handler2
 _except_handler3
-; _execl
-; _execle
-; _execlp
-; _execlpe
-; _execv
-; _execve
-; _execvp
-; _execvpe
+_execl
+_execle
+_execlp
+_execlpe
+_execv
+_execve
+_execvp
+_execvpe
 _exit
 ; _expand
 _fcloseall
@@ -288,35 +288,35 @@ _initterm
 _iob
 _isatty
 _isctype
-; _ismbbalnum
-; _ismbbalpha
-; _ismbbgraph
-; _ismbbkalnum
-; _ismbbkana
+_ismbbalnum
+_ismbbalpha
+_ismbbgraph
+_ismbbkalnum
+_ismbbkana
 ; _ismbbkprint
-; _ismbbkpunct
-; _ismbblead
-; _ismbbprint
-; _ismbbpunct
-; _ismbbtrail
-; _ismbcalnum
-; _ismbcalpha
-; _ismbcdigit
+_ismbbkpunct
+_ismbblead
+_ismbbprint
+_ismbbpunct
+_ismbbtrail
+_ismbcalnum
+_ismbcalpha
+_ismbcdigit
 ; _ismbcgraph
-; _ismbchira
-; _ismbckata
-; _ismbcl0
-; _ismbcl1
-; _ismbcl2
-; _ismbclegal
-; _ismbclower
-; _ismbcprint
+_ismbchira
+_ismbckata
+_ismbcl0
+_ismbcl1
+_ismbcl2
+_ismbclegal
+_ismbclower
+_ismbcprint
 ; _ismbcpunct
-; _ismbcspace
-; _ismbcsymbol
-; _ismbcupper
-; _ismbslead
-; _ismbstrail
+_ismbcspace
+_ismbcsymbol
+_ismbcupper
+_ismbslead
+_ismbstrail
 _isnan
 _itoa
 _itow
@@ -339,66 +339,66 @@ _lseeki64
 _ltoa
 _ltow
 _makepath
-; _mbbtombc
-; _mbbtype
+_mbbtombc
+_mbbtype
 ; _mbcasemap
-; _mbccpy
-; _mbcjistojms
-; _mbcjmstojis
-; _mbclen
-; _mbctohira
-; _mbctokata
-; _mbctolower
-; _mbctombb
-; _mbctoupper
-; _mbctype
-; _mbsbtype
-; _mbscat
-; _mbschr
-; _mbscmp
-; _mbscoll
-; _mbscpy
-; _mbscspn
-; _mbsdec
-; _mbsdup
-; _mbsicmp
-; _mbsicoll
-; _mbsinc
-; _mbslen
-; _mbslwr
-; _mbsnbcat
-; _mbsnbcmp
-; _mbsnbcnt
-; _mbsnbcoll
-; _mbsnbcpy
-; _mbsnbicmp
-; _mbsnbicoll
-; _mbsnbset
-; _mbsncat
-; _mbsnccnt
-; _mbsncmp
-; _mbsncoll
-; _mbsncpy
-; _mbsnextc
-; _mbsnicmp
-; _mbsnicoll
-; _mbsninc
-; _mbsnset
-; _mbspbrk
-; _mbsrchr
-; _mbsrev
-; _mbsset
-; _mbsspn
-; _mbsspnp
-; _mbsstr
-; _mbstok
-; _mbstrlen
-; _mbsupr
+_mbccpy
+_mbcjistojms
+_mbcjmstojis
+_mbclen
+_mbctohira
+_mbctokata
+_mbctolower
+_mbctombb
+_mbctoupper
+_mbctype DATA
+_mbsbtype
+_mbscat
+_mbschr
+_mbscmp
+_mbscoll
+_mbscpy
+_mbscspn
+_mbsdec
+_mbsdup
+_mbsicmp
+_mbsicoll
+_mbsinc
+_mbslen
+_mbslwr
+_mbsnbcat
+_mbsnbcmp
+_mbsnbcnt
+_mbsnbcoll
+_mbsnbcpy
+_mbsnbicmp
+_mbsnbicoll
+_mbsnbset
+_mbsncat
+_mbsnccnt
+_mbsncmp
+_mbsncoll
+_mbsncpy
+_mbsnextc
+_mbsnicmp
+_mbsnicoll
+_mbsninc
+_mbsnset
+_mbspbrk
+_mbsrchr
+_mbsrev
+_mbsset
+_mbsspn
+_mbsspnp
+_mbsstr
+_mbstok
+_mbstrlen
+_mbsupr
 _memccpy
 _memicmp
 _mkdir
 _mktemp
-; _msize
+;_msize
 _nextafter
 _onexit
 _open
@@ -443,14 +443,14 @@ _sleep
 _snprintf
 _snwprintf
 _sopen
-; _spawnl
-; _spawnle
-; _spawnlp
-; _spawnlpe
-; _spawnv
-; _spawnve
-; _spawnvp
-; _spawnvpe
+_spawnl
+_spawnle
+_spawnlp
+_spawnlpe
+_spawnv
+_spawnve
+_spawnvp
+_spawnvpe
 _splitpath
 _stat
 _stati64
@@ -639,7 +639,7 @@ isalpha
 iscntrl
 isdigit
 isgraph
-; isleadbyte
+isleadbyte
 islower
 isprint
 ispunct
@@ -668,7 +668,7 @@ log
 log10
 longjmp
 malloc
-; mblen
+mblen
 ; mbstowcs
 ; mbtowc
 memchr

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2001/07/15 21:18:55 rex Exp $
+# $Id: Makefile,v 1.19 2001/07/18 09:23:02 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -138,6 +138,62 @@ OBJECTS_MATH = \
 	math/tan.o \
 	math/tanh.o
 
+OBJECTS_MBSTRING = \
+	mbstring/hanzen.o \
+	mbstring/ischira.o \
+	mbstring/iskana.o \
+	mbstring/iskpun.o \
+	mbstring/islead.o \
+	mbstring/islwr.o \
+	mbstring/ismbal.o \
+	mbstring/ismbaln.o \
+	mbstring/ismbc.o \
+	mbstring/ismbgra.o \
+	mbstring/ismbkaln.o \
+	mbstring/ismblead.o \
+	mbstring/ismbpri.o \
+	mbstring/ismbpun.o \
+	mbstring/ismbtrl.o \
+	mbstring/isuppr.o \
+	mbstring/jistojms.o \
+	mbstring/jmstojis.o \
+	mbstring/mbbtype.o \
+	mbstring/mbccpy.o \
+	mbstring/mbclen.o \
+	mbstring/mbscat.o \
+	mbstring/mbschr.o \
+	mbstring/mbscmp.o \
+	mbstring/mbscoll.o \
+	mbstring/mbscpy.o \
+	mbstring/mbscspn.o \
+	mbstring/mbsdec.o \
+	mbstring/mbsdup.o \
+	mbstring/mbsicmp.o \
+	mbstring/mbsicoll.o \
+	mbstring/mbsinc.o \
+	mbstring/mbslen.o \
+	mbstring/mbslwr.o \
+	mbstring/mbsncat.o \
+	mbstring/mbsnccnt.o \
+	mbstring/mbsncmp.o \
+	mbstring/mbsncoll.o \
+	mbstring/mbsncpy.o \
+	mbstring/mbsnextc.o \
+	mbstring/mbsnicmp.o \
+	mbstring/mbsnicoll.o \
+	mbstring/mbsninc.o \
+	mbstring/mbsnset.o \
+	mbstring/mbspbrk.o \
+	mbstring/mbsrchr.o \
+	mbstring/mbsrev.o \
+	mbstring/mbsset.o \
+	mbstring/mbsspn.o \
+	mbstring/mbsspnp.o \
+	mbstring/mbsstr.o \
+	mbstring/mbstok.o \
+	mbstring/mbstrlen.o \
+	mbstring/mbsupr.o
+
 OBJECTS_MISC = \
 	misc/amsg.o \
 	misc/assert.o \
@@ -151,7 +207,23 @@ OBJECTS_PROCESS = \
 	process/_cwait.o \
 	process/_system.o \
 	process/dll.o \
+	process/execl.o \
+	process/execle.o \
+	process/execlp.o \
+	process/execlpe.o \
+	process/execv.o \
+	process/execve.o \
+	process/execvp.o \
+	process/execvpe.o \
 	process/procid.o \
+	process/spawnl.o \
+	process/spawnle.o \
+	process/spawnlp.o \
+	process/spawnlpe.o \
+	process/spawnv.o \
+	process/spawnve.o \
+	process/spawnvp.o \
+	process/spawnvpe.o \
 	process/thread.o \
 	process/threadid.o
 
@@ -352,6 +424,7 @@ OBJECTS = \
 	$(OBJECTS_IO) \
 	$(OBJECTS_LOCALE) \
 	$(OBJECTS_MATH) \
+	$(OBJECTS_MBSTRING) \
 	$(OBJECTS_MISC) \
 	$(OBJECTS_PROCESS) \
 	$(OBJECTS_SEARCH) \
@@ -366,10 +439,10 @@ OBJECTS = \
 	msvcrt.coff
 
 CLEAN_FILES = conio/*.o ctype/*.o direct/*.o except/*.o float/*.o io/*.o \
-	locale/*.o math/*.o misc/*.o process/*.o search/*.o setjmp/*.o \
-	signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o time/*.o \
-	wstring/*.o $(TARGET_NAME).a $(TARGET_NAME).coff $(TARGET_NAME).o \
-	$(TARGET_NAME).dll $(TARGET_NAME).sym
+	locale/*.o math/*.o mbstring/*.o misc/*.o process/*.o search/*.o \
+	setjmp/*.o signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o \
+	time/*.o wstring/*.o $(TARGET_NAME).a $(TARGET_NAME).coff \
+	$(TARGET_NAME).o $(TARGET_NAME).dll $(TARGET_NAME).sym
 
 $(TARGET_NAME).coff: $(TARGET_NAME).rc ../../include/reactos/resource.h
 
