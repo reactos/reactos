@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.4 2002/06/20 21:30:33 ekohl Exp $
+/* $Id: arcname.c,v 1.5 2002/06/27 17:45:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -295,15 +295,19 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenSymbolicLinkObject(&Handle,
-				    SYMBOLIC_LINK_ALL_ACCESS,
-				    &ObjectAttributes);
+  Status = NtOpenFile(&Handle,
+		      FILE_ALL_ACCESS,
+		      &ObjectAttributes,
+		      NULL,
+		      0,
+		      0);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
+      CPRINT("NtOpenFile() failed to open '\\SystemRoot' (Status %x)\n",
 	     Status);
       return(Status);
     }
+
   NtClose(Handle);
 
   return(STATUS_SUCCESS);
