@@ -1706,6 +1706,8 @@ typedef struct _LPC_MESSAGE
    ULONG SectionSize; /* CallbackID */
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
+#define LPC_MESSAGE_BASE_SIZE sizeof(LPC_MESSAGE)
+
 #define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
 
 #define PORT_MAX_DATA_LENGTH    0x104
