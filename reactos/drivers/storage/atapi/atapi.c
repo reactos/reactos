@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.28 2002/09/04 21:33:26 ekohl Exp $
+/* $Id: atapi.c,v 1.29 2002/09/19 16:17:35 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -46,10 +46,9 @@
 //  -------------------------------------------------------------------------
 
 #include <ddk/ntddk.h>
-
-#include "../include/srb.h"
-#include "../include/scsi.h"
-#include "../include/ntddscsi.h"
+#include <ddk/srb.h>
+#include <ddk/scsi.h>
+#include <ddk/ntddscsi.h>
 
 #include "atapi.h"
 

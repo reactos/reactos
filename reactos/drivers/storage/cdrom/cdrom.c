@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.16 2002/09/17 20:35:21 hbirr Exp $
+/* $Id: cdrom.c,v 1.17 2002/09/19 16:17:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,10 +34,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-#include "../include/scsi.h"
-#include "../include/class2.h"
-#include "../include/ntddscsi.h"
+#include <ddk/scsi.h>
+#include <ddk/class2.h>
+#include <ddk/ntddscsi.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.20 2002/09/08 10:22:23 chorns Exp $
+/* $Id: scsiport.c,v 1.21 2002/09/19 16:18:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,9 +28,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include "../include/srb.h"
-#include "../include/scsi.h"
-#include "../include/ntddscsi.h"
+#include <ddk/srb.h>
+#include <ddk/scsi.h>
+#include <ddk/ntddscsi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -64,6 +64,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG Length;
   ULONG MiniPortExtensionSize;
   PORT_CONFIGURATION_INFORMATION PortConfig;
+  ULONG PortNumber;
   
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
@@ -1116,7 +1117,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 	 AccessRangeSize);
 
   PortDeviceExtension->DeviceObject = PortDeviceObject;
-
+  PortDeviceExtension->PortNumber = PortNumber;
 
   /* Initialize the spin lock in the controller extension */
   KeInitializeSpinLock(&PortDeviceExtension->SpinLock);
@@ -1475,5 +1476,119 @@ ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   DeviceExtension->OriginalSrb = NULL;
 }
 
+
+#if 0
+static NTSTATUS
+ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  WCHAR NameBuffer[32];
+  ULONG Disposition;
+  HANDLE ScsiKey;
+  HANDLE ScsiPortKey;
+  HANDLE ScsiBusKey;
+  HANDLE ScsiTargetKey;
+  HANDLE ScsiUnitKey;
+  ULONG BusNumber;
+  NTSTATUS Status;
+
+  /* Open or create the 'Scsi' subkey */
+  RtlInitUnicodeStringFromLiteral(&KeyName,
+	L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_OPENIF,
+			     0,
+			     NULL);
+  Status = NtCreateKey(&ScsiKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  if (!NT_SUCCESS(Status))
+    return(Status);
+
+  /* Create new 'Scsi Port X' subkey */
+  swprintf(NameBuffer,
+	   L"Scsi Port %lu",
+	   DeviceExtension->PortNumber);
+  RtlInitUnicodeString(&KeyName,
+		       NameBuffer);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     0,
+			     ScsiKey,
+			     NULL);
+  Status = NtCreateKey(&ScsiPortKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  if (!NT_SUCCESS(Status))
+    {
+      NtClose(ScsiKey);
+      return(Status);
+    }
+
+  /* Add port-specific values */
+
+  /* 'DMA Enabled' (REG_DWORD) */
+  DPRINT1("DMA Enabled = %s\n",
+	  (DeviceExtension->PortCapabilities->AdapterUsesPio)?"TRUE":"FALSE");
+
+  /* 'Driver' (REG_SZ) */
+
+  /* 'Interrupt' (REG_DWORD) (NT4 only) */
+  DPRINT1("Interrupt = %lx\n", DeviceExtension->PortConfig.BusInterruptLevel);
+
+  /* 'IOAddress' (REG_DWORD) (NT4 only) */
+  DPRINT1("IOAddress = %lx\n",
+	  ScsiPortConvertPhysicalAddressToUlong(DeviceExtension->PortConfig.AccessRanges[0].RangeStart));
+
+
+  /* Create 'Scsi Bus X' keys */
+  for (BusNumber = 0; BusNumber < DeviceExtension->PortConfig.NumberOfBuses; BusNumber++)
+     {
+	swprintf(NameBuffer,
+		 L"Scsi Bus %lu",
+		 DeviceExtension->PortNumber);
+	RtlInitUnicodeString(&KeyName,
+			     NameBuffer);
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &KeyName,
+				   0,
+				   ScsiPortKey,
+				   NULL);
+	Status = NtCreateKey(&ScsiBusKey,
+			     KEY_ALL_ACCESS,
+			     &ObjectAttributes,
+			     0,
+			     NULL,
+			     REG_OPTION_VOLATILE,
+			     &Disposition);
+	if (!NT_SUCCESS(Status))
+	  {
+	    NtClose(ScsiPortKey);
+	    NtClose(ScsiKey);
+	    return(Status);
+	  }
+
+	/* Create target keys */
+
+
+	NtClose(ScsiBusKey);
+     }
+
+  NtClose(ScsiPortKey);
+  NtClose(ScsiKey);
+
+  return(Status);
+}
+#endif
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.24 2002/09/08 10:22:22 chorns Exp $
+/* $Id: class2.c,v 1.25 2002/09/19 16:18:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,8 +33,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include "../include/scsi.h"
-#include "../include/class2.h"
+#include <ddk/scsi.h>
+#include <ddk/class2.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.18 2002/09/08 10:22:22 chorns Exp $
+/* $Id: disk.c,v 1.19 2002/09/19 16:18:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,10 +28,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-#include "../include/scsi.h"
-#include "../include/class2.h"
-#include "../include/ntddscsi.h"
+#include <ddk/scsi.h>
+#include <ddk/class2.h>
+#include <ddk/ntddscsi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -840,6 +839,45 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case IOCTL_DISK_SET_DRIVE_LAYOUT:
+	if (IrpStack->Parameters.DeviceIoControl.InputBufferLength <
+	    sizeof(DRIVE_LAYOUT_INFORMATION))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	else if (DeviceExtension->PhysicalDevice->DeviceExtension != DeviceExtension)
+	  {
+	    Status = STATUS_INVALID_PARAMETER;
+	  }
+	else
+	  {
+	    PDRIVE_LAYOUT_INFORMATION PartitionList;
+	    ULONG TableSize;
+
+	    PartitionList = Irp->AssociatedIrp.SystemBuffer;
+	    TableSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
+			((PartitionList->PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
+
+	    if (IrpStack->Parameters.DeviceIoControl.InputBufferLength < TableSize)
+	      {
+		Status = STATUS_BUFFER_TOO_SMALL;
+	      }
+	    else
+	      {
+		Status = IoWritePartitionTable(DeviceExtension->DeviceObject,
+					       DeviceExtension->DiskGeometry->BytesPerSector,
+					       DeviceExtension->DiskGeometry->SectorsPerTrack,
+					       DeviceExtension->DiskGeometry->TracksPerCylinder,
+					       PartitionList);
+		if (NT_SUCCESS(Status))
+		  {
+		    /* FIXME: Update partition device objects */
+
+		    Information = TableSize;
+		  }
+	      }
+	  }
+	break;
+
       case IOCTL_DISK_VERIFY:
       case IOCTL_DISK_FORMAT_TRACKS:
       case IOCTL_DISK_PERFORMANCE:
@@ -851,7 +889,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
       case IOCTL_DISK_HISTOGRAM_RESET:
       case IOCTL_DISK_REQUEST_STRUCTURE:
       case IOCTL_DISK_REQUEST_DATA:
-	/* If we get here, something went wrong.  inform the requestor */
+	/* If we get here, something went wrong. Inform the requestor */
 	DPRINT1("Unhandled control code: %lx\n", ControlCode);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
 	Information = 0;
