@@ -51,7 +51,7 @@ LoadKernel(PCHAR szFileName, int nPos)
   FilePointer = OpenFile(szFileName);
   if (FilePointer == NULL)
     {
-      strcat(szBuffer, szShortName);
+      strcpy(szBuffer, szShortName);
       strcat(szBuffer, " not found.");
       MessageBox(szBuffer);
       return(FALSE);
@@ -85,7 +85,7 @@ LoadDriver(PCHAR szFileName, int nPos)
   FilePointer = OpenFile(szFileName);
   if (FilePointer == NULL)
     {
-      strcat(value, szFileName);
+      strcpy(value, szFileName);
       strcat(value, " not found.");
       MessageBox(value);
       return(FALSE);
@@ -123,7 +123,7 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
   FilePointer = OpenFile(szFileName);
   if (FilePointer == NULL)
     {
-      strcat(value, szFileName);
+      strcpy(value, szFileName);
       strcat(value, " not found.");
       MessageBox(value);
       return(FALSE);
