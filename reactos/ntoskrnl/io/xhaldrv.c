@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.46 2004/08/15 16:39:03 chorns Exp $
+/* $Id: xhaldrv.c,v 1.47 2004/08/18 02:20:00 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -916,13 +916,14 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		IsRecognizedPartition (PartitionSector->Partition[i].PartitionType);
 	      LayoutBuffer->PartitionEntry[Count].RewritePartition = FALSE;
 
-	      DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
+	      DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x rec: %d\n",
 		     Count,
 		     LayoutBuffer->PartitionEntry[Count].PartitionNumber,
 		     LayoutBuffer->PartitionEntry[Count].BootIndicator,
 		     LayoutBuffer->PartitionEntry[Count].PartitionType,
 		     LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart,
-		     LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart);
+		     LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart,
+		     LayoutBuffer->PartitionEntry[Count].RecognizedPartition);
 
 	      LayoutBuffer->PartitionCount++;
 	    }
