@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.4 2003/07/22 20:10:04 hyperion Exp $
+/* $Id: create.c,v 1.5 2003/08/07 03:32:00 royce Exp $
 */
 /*
 */
@@ -12,7 +12,8 @@
 
 #include <rosrtl/thread.h>
 
-NTSTATUS STDCALL RtlRosCreateUserThread
+NTSTATUS STDCALL
+RtlRosCreateUserThread
 (
  IN HANDLE ProcessHandle,
  IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -92,7 +93,8 @@ l_Fail:
  return nErrCode;
 }
 
-NTSTATUS CDECL RtlRosCreateUserThreadVa
+NTSTATUS CDECL
+RtlRosCreateUserThreadVa
 (
  IN HANDLE ProcessHandle,
  IN POBJECT_ATTRIBUTES ObjectAttributes,
