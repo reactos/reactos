@@ -242,6 +242,8 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 		RealPageLookupTable[Idx].PageAllocationLength = 0;
 	}
 
+	FreePagesInLookupTable += PageCount;
+
 #ifdef DEBUG
 	DecrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Freed %d pages of memory starting at page %d. AllocationCount: %d\n", PageCount, PageNumber, AllocationCount));
