@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.56 2004/05/04 20:18:52 jimtabor Exp $
+/* $Id: handle.c,v 1.57 2004/07/16 19:54:05 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -950,39 +950,44 @@ ObInsertObject(IN PVOID Object,
 }
 
 
-ULONG 
-ObpGetHandleCountbyHandleTable(PHANDLE_TABLE HandleTable)
+ULONG
+ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
 {
-unsigned int i, Count=0;
-PHANDLE_BLOCK blk;
-POBJECT_HEADER Header;
-PVOID ObjectBody;
-KIRQL oldIrql;
+  PHANDLE_BLOCK blk;
+  POBJECT_HEADER Header;
+  PVOID ObjectBody;
+  KIRQL OldIrql;
+  PLIST_ENTRY current;
+  ULONG i;
+  ULONG Count=0;
 
-PLIST_ENTRY current = HandleTable->ListHead.Flink;
+  KeAcquireSpinLock(&HandleTable->ListLock, &OldIrql);
 
-  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
-
+  current = HandleTable->ListHead.Flink;
   while (current != &HandleTable->ListHead)
-       {
-	  blk = CONTAINING_RECORD(current, HANDLE_BLOCK, entry);
+    {
+      blk = CONTAINING_RECORD(current, HANDLE_BLOCK, entry);
 
-	  for ( i=0; i<HANDLE_BLOCK_ENTRIES; i++)
-	     {
-	         ObjectBody = OB_ENTRY_TO_POINTER(blk->handles[i].ObjectBody);
-	     
-	         if (ObjectBody != NULL)
-	           {
-		     Header = BODY_TO_HEADER(ObjectBody);
-		     /* Make sure this is real. */
-		     if (Header->ObjectType != NULL)
-		         Count++;
-		   }
-	     }
-          current = current->Flink;
-       }
-  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
-  return (Count);	
+      for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
+	{
+	  ObjectBody = OB_ENTRY_TO_POINTER(blk->handles[i].ObjectBody);
+	  if (ObjectBody != NULL)
+	    {
+	      Header = BODY_TO_HEADER(ObjectBody);
+
+	      /* Make sure this is real. */
+	      if (Header->ObjectType != NULL)
+		Count++;
+	    }
+	}
+
+      current = current->Flink;
+    }
+
+  KeReleaseSpinLock(&HandleTable->ListLock,
+		    OldIrql);
+
+  return Count;
 }
 
 /* EOF */

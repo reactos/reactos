@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.37 2004/06/23 21:01:27 ion Exp $
+/* $Id: sysinfo.c,v 1.38 2004/07/16 19:49:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -497,7 +497,7 @@ QSI_DEF(SystemPerformanceInformation)
 QSI_DEF(SystemTimeOfDayInformation)
 {
 	LARGE_INTEGER CurrentTime;
- 
+
 	PSYSTEM_TIMEOFDAY_INFORMATION Sti
 		= (PSYSTEM_TIMEOFDAY_INFORMATION) Buffer;
 
@@ -593,24 +593,24 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
 		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
-		SpiCur->HandleCount = ObpGetHandleCountbyHandleTable(&pr->HandleTable);
+		SpiCur->HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
 		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
 		SpiCur->VmCounters.PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
 		SpiCur->VmCounters.WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
 		SpiCur->VmCounters.QuotaPeakPagedPoolUsage =
- 					pr->QuotaPeakPoolUsage[0];
+					pr->QuotaPeakPoolUsage[0];
 		SpiCur->VmCounters.QuotaPagedPoolUsage =
-					pr->QuotaPoolUsage[0]; 
+					pr->QuotaPoolUsage[0];
 		SpiCur->VmCounters.QuotaPeakNonPagedPoolUsage =
-					pr->QuotaPeakPoolUsage[1]; 
-		SpiCur->VmCounters.QuotaNonPagedPoolUsage = 
-					pr->QuotaPoolUsage[1]; 
+					pr->QuotaPeakPoolUsage[1];
+		SpiCur->VmCounters.QuotaNonPagedPoolUsage =
+					pr->QuotaPoolUsage[1];
 		SpiCur->VmCounters.PagefileUsage = pr->PagefileUsage; // FIXME
 		SpiCur->VmCounters.PeakPagefileUsage = pr->PeakPagefileUsage;
-                // KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
-                // doesn't seem to contain any equivalent field
+		// KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
+		// doesn't seem to contain any equivalent field
 		//SpiCur->TotalPrivateBytes = pr->NumberOfPrivatePages; //FIXME: bytes != pages
 
 		pr = PsGetNextProcess(pr);
@@ -627,7 +627,7 @@ QSI_DEF(SystemProcessInformation)
 	*ReqSize = ovlSize;
 	if (pr != NULL)
 	  {
-            ObDereferenceObject(pr);
+	    ObDereferenceObject(pr);
 	  }
 	return (STATUS_SUCCESS);
 }
