@@ -5,7 +5,6 @@ include $(PATH_TO_TOP)/rules.mak
 CFLAGS += -Wall -Werror
 
 TOOLS = \
-	buildno$(EXE_POSTFIX) \
 	regtests$(EXE_POSTFIX) \
 	rcopy$(EXE_POSTFIX) \
 	rdel$(EXE_POSTFIX) \
@@ -20,11 +19,7 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target
-
-buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
-	@$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
-	@$(EXE_PREFIX)buildno$(EXE_POSTFIX)
+	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target buildno_target
 
 regtests$(EXE_POSTFIX): regtests.c
 	@$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
@@ -133,11 +128,15 @@ bin2res_target:
 wrc_target:
 	$(MAKE) --silent -C wrc wrc$(EXE_POSTFIX)
 
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target
+buildno_target:
+	$(MAKE) --silent -C buildno buildno$(EXE_POSTFIX)
+
+.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target buildno_target
 
 
 ifeq ($(HOST),mingw32-linux)
 clean:
+	$(MAKE) --silent -C buildno clean
 	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
@@ -148,12 +147,12 @@ clean:
 	$(MAKE) --silent -C winebuild clean
 	$(MAKE) --silent -C bin2res clean
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
-	@rm ../include/reactos/buildno.h
 	@rm mkconfig
 	@rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
+	$(MAKE) --silent -C buildno clean
 	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
@@ -165,7 +164,6 @@ clean:
 	$(MAKE) --silent -C winebuild clean
 	$(MAKE) --silent -C bin2res clean
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
-	-@del ..\include\reactos\buildno.h
 	-@del *$(EXE_POSTFIX)
 endif
 

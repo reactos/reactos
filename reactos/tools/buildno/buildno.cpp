@@ -27,13 +27,15 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include "../include/reactos/version.h"
+#include "version.h"
+#include "XML.h"
+#include "exception.h"
 
 #define FALSE 0
 #define TRUE  1
 
 /* File to (over)write */
-#define BUILDNO_INCLUDE_FILE "../include/reactos/buildno.h"
+#define BUILDNO_INCLUDE_FILE "../../include/reactos/buildno.h"
 
 static char * argv0 = "";
 
@@ -59,10 +61,10 @@ write_h (int build, char *buildstr)
   FILE	*h = NULL;
   char* s;
   char* s1;
-  int length;
+  unsigned length;
   int dllversion = KERNEL_VERSION_MAJOR + 42;
 
-  s1 = s = malloc(256 * 1024);
+  s1 = s = (char *) malloc(256 * 1024);
   
   s = s + sprintf (s, "/* Do not edit - Machine generated */\n");
 	
@@ -146,7 +148,7 @@ write_h (int build, char *buildstr)
 	{
 	  char* orig;
 	  
-	  orig = malloc(length);
+	  orig = (char *) malloc(length);
 	  fseek(h, 0, SEEK_SET);
 	  fread(orig, 1, length, h);
 	  if (memcmp(s1, orig, length) == 0)
@@ -175,39 +177,68 @@ char *
 GetRev(void)
 {
   static char Unknown[] = "UNKNOWN";
-  static char Rev[10]; /* 999999999 revisions should be enough for everyone... */
-  FILE *SvnCmd;
-  char Line[256];
-  char *p;
+  static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
 
-  SvnCmd = popen("svn info", "r");
-  if (NULL == SvnCmd)
+  try
     {
-      fprintf(stderr, "Failed to run \"svn info\" command\n");
-      return Unknown;
-    }
-  while (! feof(SvnCmd) && ! ferror(SvnCmd))
-    {
-      if (NULL == fgets(Line, sizeof(Line), SvnCmd))
+      Path path;
+      XMLElement *head;
+
+      try
         {
-          break;
+          head = XMLLoadFile(".svn/entries", path);
         }
-      if (0 == strncmp(Line, "Revision: ", 10))
+      catch(FileNotFoundException)
         {
-          pclose(SvnCmd);
-          p = Line + 10;
-          if (sizeof(Rev) < strlen(p))
+          head = XMLLoadFile("_svn/entries", path);
+        }
+      XMLElement *entries = head->subElements[0];
+      for (size_t i = 0; i < entries->subElements.size(); i++)
+	{
+          XMLElement *entry = entries->subElements[i];
+          if ("entry" == entry->name)
             {
-              fprintf(stderr, "Weird SVN revision number %s", p);
-              return Unknown;
+              bool GotName = false;
+              bool GotKind = false;
+              bool GotRevision = false;
+              for (size_t j = 0; j < entry->attributes.size(); j++)
+                {
+                  XMLAttribute *Attribute = entry->attributes[j];
+                  if ("name" == Attribute->name && "" == Attribute->value)
+                    {
+                      GotName = true;
+                    }
+                  if ("kind" == Attribute->name && "dir" == Attribute->value)
+                    {
+                      GotKind = true;
+                    }
+                  if ("revision" == Attribute->name)
+                    {
+                      if (sizeof(Revision) <= Attribute->value.length() + 1)
+                        {
+                          strcpy(Revision, "revtoobig");
+                        }
+                      else
+                        {
+                          strcpy(Revision, Attribute->value.c_str());
+                        }
+                      GotRevision = true;
+                    }
+                  if (GotName && GotKind && GotRevision)
+                    {
+                      delete head;
+                      return Revision;
+                    }
+                }
             }
-          strncpy(Rev, p, strlen(p) - 1);
-          Rev[strlen(p) - 1] = '\0';
-          return Rev;
         }
-    }
 
-  pclose(SvnCmd);
+      delete head;
+    }
+  catch(...)
+    {
+      ;
+    }
 
   return Unknown;
 }
