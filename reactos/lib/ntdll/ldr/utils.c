@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.84 2004/03/13 18:14:04 hbirr Exp $
+/* $Id: utils.c,v 1.85 2004/05/02 20:53:50 tamlin Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2104,8 +2104,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
          * relocation. */
         if (ImageBase != (PVOID) NtHeaders->OptionalHeader.ImageBase)
           {
-            DPRINT1("Performing relocations (%x -> %x)\n",
-              NtHeaders->OptionalHeader.ImageBase, ImageBase);
+            DPRINT1("Relocating (%x -> %x) %wZ\n",
+              NtHeaders->OptionalHeader.ImageBase, ImageBase, &FullDosName);
             Status = LdrPerformRelocations(NtHeaders, ImageBase);
             if (!NT_SUCCESS(Status))
               {
