@@ -1,0 +1,8 @@
+; PACKET.SYS - PACKET protocol driver
+
+LIBRARY packet.sys
+
+EXPORTS
+DriverEntry=DriverEntry@8
+
+; EOF

@@ -1,0 +1,47 @@
+//#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,3,0,33
+ PRODUCTVERSION 2,3,0,33
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x3L
+ FILESUBTYPE 0x7L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004b0"
+        BEGIN
+            VALUE "Comments", "Netgroup Packet Filter Driver\0"
+            VALUE "CompanyName", "Politecnico di Torino\0"
+            VALUE "FileDescription", "NPF Driver\0"
+            VALUE "FileVersion", "2, 3, 0, 33\0"
+            VALUE "InternalName", "NPF\0"
+            VALUE "LegalCopyright", "Copyright © 2002\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "NPF.RC\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "NPF Driver\0"
+            VALUE "ProductVersion", "2, 3, 0, 33\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+
+
