@@ -608,7 +608,8 @@ SetConsoleCP = SetConsoleCP@4
 ;SetConsoleCommandHistoryMode@4
 ;SetConsoleCtrlHandler@8
 ;SetConsoleCursor@8
-;SetConsoleCursorInfo@8
+SetConsoleCursorInfo@8
+SetConsoleCursorInfo = SetConsoleCursorInfo@8
 SetConsoleCursorPosition@8
 SetConsoleCursorPosition = SetConsoleCursorPosition@8
 ;SetConsoleDisplayMode@12

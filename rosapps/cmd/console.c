@@ -70,7 +70,9 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 
 	do
 	{
-		WaitForSingleObject (hInput, INFINITE);
+#ifndef __REACTOS__
+                WaitForSingleObject (hInput, INFINITE);
+#endif
 		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
 		if ((lpBuffer->EventType == KEY_EVENT) &&
 			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
@@ -239,5 +241,5 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 	cci.dwSize = bInsert ? 10 : 100;
 	cci.bVisible = bVisible;
 
-//        SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
+        SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
 }

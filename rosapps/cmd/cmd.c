@@ -197,27 +197,35 @@ Execute (LPTSTR first, LPTSTR rest)
 	else
 	{
 		/* exec the program */
+#ifndef __REACTOS__
 		TCHAR szFullCmdLine [1024];
+#endif
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
-//                DWORD dwError = 0;
 
 #ifdef _DEBUG
 		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
 #endif
+#ifndef __REACTOS__
 		/* build command line for CreateProcess() */
 		_tcscpy (szFullCmdLine, szFullName);
 		_tcscat (szFullCmdLine, _T(" "));
 		_tcscat (szFullCmdLine, rest);
+#endif
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-			
+
+#ifndef __REACTOS__                 
 		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-						   0, NULL, NULL, &stui, &prci))
+                                   0, NULL, NULL, &stui, &prci))
+#else
+                if (CreateProcess (szFullName, rest, NULL, NULL, FALSE,
+                                   0, NULL, NULL, &stui, &prci))
+#endif
 		{
 			DWORD dwExitCode;
 			WaitForSingleObject (prci.hProcess, INFINITE);
@@ -229,7 +237,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		else
 		{
 			ErrorMessage (GetLastError (),
-						  "Error executing CreateProcess()!!\n");
+                                      "Error executing CreateProcess()!!\n");
 		}
 	}
 }

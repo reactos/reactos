@@ -79,7 +79,7 @@
 #define ENV_BUFFER_SIZE  1024
 
 
-static LPTSTR ext[]  = {".BAT", ".CMD", ".COM", ".EXE"};
+static LPTSTR ext[]  = {".bat", ".cmd", ".com", ".exe"};
 static INT nExtCount = sizeof(ext) / sizeof(LPTSTR);
 
 
@@ -89,7 +89,7 @@ BOOL
 SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 {
 	TCHAR  szPathBuffer[MAX_PATH];
-	LPTSTR pszBuffer;
+        LPTSTR pszBuffer = NULL;
 	DWORD  dwBuffer;
 	INT    n;
 	LPTSTR p,s,f;
@@ -99,8 +99,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 	if (dwBuffer == 0)
 	{
-		ConErrPrintf (_T("Not PATH environment variable found!\n"));
-		return 0;
+                ConErrPrintf (_T("No PATH environment variable found!\n"));
 	}
 	else if (dwBuffer > ENV_BUFFER_SIZE)
 	{
@@ -135,6 +134,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 #ifdef _DEBUG
 			DebugPrintf (_T("Testing: \'%s\'\n"), szPathBuffer);
 #endif
+ConOutPrintf(_T("Testing: \'%s\'\n"), szPathBuffer);
 
 			if (IsValidFileName (szPathBuffer))
 			{
