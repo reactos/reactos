@@ -1,0 +1,11 @@
+*.coff
+*.dll
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+Makefile.ros
+dinput.spec.def
+dinput.stubs.c
