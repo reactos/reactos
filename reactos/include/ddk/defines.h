@@ -34,11 +34,11 @@ enum
 enum
 {
    NonPagedPool,
-   NonPagedPoolMustSucceed,
-   NonPagedPoolCacheAligned,
-   NonPagedPoolCacheAlignedMustS,
    PagedPool,
+   NonPagedPoolMustSucceed,
+   NonPagedPoolCacheAligned = 4,
    PagedPoolCacheAligned,
+   NonPagedPoolCacheAlignedMustS,
 };
 
 
