@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.21 2002/09/08 10:22:43 chorns Exp $
+/* $Id: heap.c,v 1.22 2002/11/10 13:33:26 robd Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -36,11 +36,11 @@
 /*********************************************************************
 *                     HeapCreate -- KERNEL32                         *
 *********************************************************************/
-HANDLE STDCALL HeapCreate(DWORD flags, DWORD minsize, DWORD maxsize)
+HANDLE STDCALL HeapCreate(DWORD flags, DWORD dwInitialSize, DWORD dwMaximumSize)
 {
 
-   DPRINT("HeapCreate( 0x%lX, 0x%lX, 0x%lX )\n", flags, minsize, maxsize);
-   return(RtlCreateHeap(flags, NULL, maxsize, minsize, NULL, NULL));
+   DPRINT("HeapCreate( 0x%lX, 0x%lX, 0x%lX )\n", flags, dwInitialSize, dwMaximumSize);
+   return(RtlCreateHeap(flags, NULL, dwMaximumSize, dwInitialSize, NULL, NULL));
 }
 
 /*********************************************************************
@@ -63,7 +63,7 @@ HANDLE WINAPI GetProcessHeap(VOID)
 /********************************************************************
 *                   GetProcessHeaps  --  KERNEL32                   *
 ********************************************************************/
-DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles )
+DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles)
 {
    return(RtlGetProcessHeaps(maxheaps, phandles));
 }
