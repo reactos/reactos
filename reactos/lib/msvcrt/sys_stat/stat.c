@@ -9,6 +9,9 @@ int _stat(const char *path, struct stat *buffer)
   int fd = _open(path,_O_RDONLY);
   int ret;
 
+  if (fd < 0)
+    return -1;
+
   ret = fstat(fd,buffer);
   _close(fd);
 
