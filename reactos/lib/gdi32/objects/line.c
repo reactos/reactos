@@ -11,6 +11,33 @@
 /*
  * @implemented
  */
+int
+STDCALL
+SetArcDirection(
+        HDC     hdc,
+        int     a1
+        )
+{
+        return W32kSetArcDirection(hdc, a1);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetArcDirection(
+        HDC     hdc
+        )
+{
+        return W32kGetArcDirection(hdc);
+}
+
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 LineTo(HDC hDC, int XEnd, int YEnd)

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.25 2003/07/20 00:42:55 jimtabor Exp $
+/* $Id: stubs.c,v 1.26 2003/07/20 04:00:36 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1865,21 +1865,6 @@ SelectClipPath(
 /*
  * @unimplemented
  */
-int
-STDCALL
-SetArcDirection(
-	HDC	hdc,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 SetMiterLimit(
@@ -1965,20 +1950,6 @@ GetMiterLimit(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetArcDirection(
-	HDC	hdc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
