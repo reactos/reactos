@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.89 2004/08/15 16:39:08 chorns Exp $
+/* $Id: npool.c,v 1.90 2004/09/25 06:41:16 arty Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -24,7 +24,7 @@
 /*#define ENABLE_VALIDATE_POOL*/
 
 /* Enable tracking of statistics about the tagged blocks in the pool */
-#define TAG_STATISTICS_TRACKING
+/*#define TAG_STATISTICS_TRACKING*/
 
 /*
  * Put each block in its own range of pages and position the block at the
@@ -1490,7 +1490,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
       return;
    }
 
-   DPRINT("freeing block %x\n",blk);
+   DPRINT("freeing block %x\n",block);
 
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
               ((PULONG)&block)[-1]);
@@ -1663,7 +1663,7 @@ PVOID STDCALL
 ExAllocateWholePageBlock(ULONG Size)
 {
    PVOID Address;
-   PHYSICAL_ADDRESS Page;
+   PFN_TYPE Page;
    ULONG i;
    ULONG NrPages;
    ULONG Base;
@@ -1680,25 +1680,30 @@ ExAllocateWholePageBlock(ULONG Size)
    {
       NonPagedPoolAllocMapHint += (NrPages + 1);
    }
+
    Address = MiNonPagedPoolStart + Base * PAGE_SIZE;
 
    for (i = 0; i < NrPages; i++)
    {
-      Page = MmAllocPage(MC_NPPOOL, 0);
-      if (Page.QuadPart == 0LL)
+       Page = MmAllocPage(MC_NPPOOL, 0);
+       if (Page == 0)
       {
          KEBUGCHECK(0);
       }
       MmCreateVirtualMapping(NULL,
                              Address + (i * PAGE_SIZE),
                              PAGE_READWRITE | PAGE_SYSTEM,
-                             Page,
+                             &Page,
                              TRUE);
    }
 
    MiCurrentNonPagedPoolLength = max(MiCurrentNonPagedPoolLength, (Base + NrPages) * PAGE_SIZE);
    Size = (Size + 7) & ~7;
-   return((PVOID)((PUCHAR)Address + (NrPages * PAGE_SIZE) - Size));
+   Address = ((PVOID)((PUCHAR)Address + (NrPages * PAGE_SIZE) - Size));
+
+   DPRINT("WPALLOC: %x (%d)\n", Address, Size);
+
+   return Address;
 }
 
 VOID STDCALL
@@ -1729,6 +1734,15 @@ ExFreeWholePageBlock(PVOID Addr)
 
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 
+/* Whole Page Allocations note:
+ *
+ * We need enough pages for these things:
+ *
+ * 1) bitmap buffer
+ * 2) hdr
+ * 3) actual pages
+ *
+ */
 VOID INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
@@ -1754,7 +1768,7 @@ MiInitializeNonPagedPool(VOID)
    FreeBlockListRoot = NULL;
 #ifdef WHOLE_PAGE_ALLOCATIONS
 
-   NonPagedPoolAllocMapHint = PAGE_ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE / 8) / PAGE_SIZE;
+   NonPagedPoolAllocMapHint = PAGE_ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE / 8) / PAGE_SIZE; /* Pages of bitmap buffer */
    MiCurrentNonPagedPoolLength = NonPagedPoolAllocMapHint * PAGE_SIZE;
    Address = MiNonPagedPoolStart;
    for (i = 0; i < NonPagedPoolAllocMapHint; i++)
@@ -1768,8 +1782,8 @@ MiInitializeNonPagedPool(VOID)
       Status = MmCreateVirtualMapping(NULL,
                                       Address,
                                       PAGE_READWRITE|PAGE_SYSTEM,
-                                      Page,
-                                      FALSE);
+                                      &Page,
+                                      1);
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");
@@ -1777,7 +1791,8 @@ MiInitializeNonPagedPool(VOID)
       }
       Address += PAGE_SIZE;
    }
-   RtlInitializeBitMap(&NonPagedPoolAllocMap, MiNonPagedPoolStart, MM_NONPAGED_POOL_SIZE / PAGE_SIZE);
+   RtlInitializeBitMap(&NonPagedPoolAllocMap, MiNonPagedPoolStart, 
+		       MiNonPagedPoolLength / PAGE_SIZE);
    RtlClearAllBits(&NonPagedPoolAllocMap);
    RtlSetBits(&NonPagedPoolAllocMap, 0, NonPagedPoolAllocMapHint);
 #else

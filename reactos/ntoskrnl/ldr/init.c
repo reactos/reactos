@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.46 2004/08/15 16:39:06 chorns Exp $
+/* $Id: init.c,v 1.47 2004/09/25 06:41:16 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -62,7 +62,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
   /* Open image file */
   InitializeObjectAttributes(&ObjectAttributes,
 			     ImagePath,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 

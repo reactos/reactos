@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.44 2004/09/14 11:04:48 ekohl Exp $
+/* $Id: semgr.c,v 1.45 2004/09/25 06:41:16 arty Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -440,20 +440,20 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	{
 	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ParentDescriptor);
 	}
-      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
+      Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
     }
   else if (Token != NULL && Token->DefaultDacl != NULL)
     {
       DPRINT("Use token default DACL!\n");
       /* FIXME: Inherit */
       Dacl = Token->DefaultDacl;
-      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
+      Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
     }
   else
     {
       DPRINT("Use NULL DACL!\n");
       Dacl = NULL;
-      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
+      Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
     }
 
   DaclLength = (Dacl != NULL) ? ROUND_UP(Dacl->AclSize, 4) : 0;
@@ -483,14 +483,22 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	{
 	  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ParentDescriptor);
 	}
-      Control |= (SE_SACL_PRESENT & SE_SACL_DEFAULTED);
+      Control |= (SE_SACL_PRESENT | SE_SACL_DEFAULTED);
     }
 
   SaclLength = (Sacl != NULL) ? ROUND_UP(Sacl->AclSize, 4) : 0;
 
 
   /* Allocate and initialize the new security descriptor */
-  Length = sizeof(SECURITY_DESCRIPTOR) + OwnerLength + GroupLength + DaclLength + SaclLength;
+  Length = sizeof(SECURITY_DESCRIPTOR) + 
+      OwnerLength + GroupLength + DaclLength + SaclLength;
+
+  DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %d OwnerLength %d GroupLength %d DaclLength %d SaclLength %d\n", 
+	 sizeof(SECURITY_DESCRIPTOR),
+	 OwnerLength,
+	 GroupLength,
+	 DaclLength,
+	 SaclLength);
 
   Descriptor = ExAllocatePool(NonPagedPool,
 			      Length);
@@ -533,7 +541,10 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 		    OwnerLength);
       Descriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += OwnerLength;
+      DPRINT("Owner of %x at %x\n", Descriptor, Descriptor->Owner);
     }
+  else
+      DPRINT("Owner of %x is zero length\n", Descriptor);
 
   if (GroupLength != 0)
     {
@@ -547,6 +558,9 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   SeUnlockSubjectContext(SubjectContext);
 
   *NewDescriptor = Descriptor;
+
+  DPRINT("Descrptor %x\n", Descriptor);
+  assert( RtlLengthSecurityDescriptor( Descriptor ) );
 
   return STATUS_SUCCESS;
 }

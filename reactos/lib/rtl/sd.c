@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.5 2004/09/22 20:16:02 weiden Exp $
+/* $Id: sd.c,v 1.6 2004/09/25 06:41:16 arty Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -53,11 +53,10 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       PSID Owner = SecurityDescriptor->Owner;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Owner = (PSID)((ULONG_PTR)Owner +
-                        (ULONG_PTR)SecurityDescriptor);
+	  Owner = (PSID)((ULONG_PTR)Owner +
+			 (ULONG_PTR)SecurityDescriptor);
       }
-      Length = Length + ((sizeof(SID) + (Owner->SubAuthorityCount - 1) *
-                          sizeof(ULONG) + 3) & 0xfc);
+      Length = Length + ROUND_UP(RtlLengthSid( Owner ), 4);
    }
 
    if (SecurityDescriptor->Group != NULL)
@@ -67,8 +66,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       {
          Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
       }
-      Length = Length + ((sizeof(SID) + (Group->SubAuthorityCount - 1) *
-                          sizeof(ULONG_PTR) + 3) & 0xfc);
+      Length = Length + ROUND_UP(RtlLengthSid( Group ), 4);
    }
 
    if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
@@ -79,7 +77,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       {
          Dacl = (PACL)((ULONG_PTR)Dacl + (ULONG_PTR)SecurityDescriptor);
       }
-      Length = Length + ((Dacl->AclSize + 3) & 0xfc);
+      Length = Length + ROUND_UP(Dacl->AclSize, 4);
    }
 
    if (SecurityDescriptor->Control & SE_SACL_PRESENT &&
@@ -90,7 +88,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       {
          Sacl = (PACL)((ULONG_PTR)Sacl + (ULONG_PTR)SecurityDescriptor);
       }
-      Length = Length + ((Sacl->AclSize + 3) & 0xfc);
+      Length = Length + ROUND_UP(Sacl->AclSize, 4);
    }
 
    return(Length);

@@ -433,7 +433,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
   /* Try to open the hive file */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -461,7 +461,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
   /* Try to open the log file */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->LogFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -899,7 +899,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -1423,7 +1423,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
   /* Open log file for writing */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->LogFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -1600,7 +1600,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
   /* Open log file for writing */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->LogFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -1701,7 +1701,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
   /* Open log file for writing */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->LogFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -1779,7 +1779,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
   /* Open hive for writing */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
@@ -1890,7 +1890,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
-			     0,
+			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 

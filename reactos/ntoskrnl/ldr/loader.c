@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.143 2004/08/15 16:39:06 chorns Exp $
+/* $Id: loader.c,v 1.144 2004/09/25 06:41:16 arty Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -322,7 +322,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   /*  Open the Module  */
   InitializeObjectAttributes(&ObjectAttributes,
                              Filename,
-                             0,
+                             OBJ_CASE_INSENSITIVE,
                              NULL,
                              NULL);
   CHECKPOINT;

@@ -35,7 +35,16 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
      {
        "Oh my God, they killed Kenny! Those bastards!\n",
        "Goodbye, and thanks for all the fish\n",
-       "I'll be back\n"
+       "I think you ought to know I'm feeling very depressed\n",
+       "I'm not getting you down at all am I?\n",
+       "I'll be back\n",
+       "It's the same series of signal over and over again!\n",
+       "Pie Iesu Domine, dona eis requiem\n",
+       "Wandering stars, for whom it is reserved;\n"
+       "the blackness and darkness forever.\n",
+       "Your knees start shakin' and your fingers pop\n"
+       "Like a pinch on the neck from Mr. Spock!\n",
+       "It's worse than that ... He's dead, Jim\n"
      };
    LARGE_INTEGER Now;
 
