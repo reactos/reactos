@@ -1059,4 +1059,44 @@ GetDllDirectoryA(
   return Ret;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
+{
+  DPRINT1("NeedCurrentDirectoryForExePathW(0x%x) not implemented!\n", ExeName);
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
+{
+  ANSI_STRING ExeNameA;
+  UNICODE_STRING ExeNameU;
+  BOOL Ret;
+  
+  RtlInitAnsiString(&ExeNameA, ExeName);
+  if(bIsFileApiAnsi)
+  {
+    RtlAnsiStringToUnicodeString(&ExeNameU, &ExeNameA, TRUE);
+  }
+  else
+  {
+    RtlOemStringToUnicodeString(&ExeNameU, &ExeNameA, TRUE);
+  }
+  
+  Ret = NeedCurrentDirectoryForExePathW(ExeNameU.Buffer);
+  
+  RtlFreeUnicodeString(&ExeNameU);
+  
+  return Ret;
+}
+
 /* EOF */

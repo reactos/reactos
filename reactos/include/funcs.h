@@ -358,6 +358,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetWindowsDirectory  GetWindowsDirectoryW
 #define SetCurrentDirectory  SetCurrentDirectoryW
 #define GetCurrentDirectory  GetCurrentDirectoryW
+#define NeedCurrentDirectoryForExePath  NeedCurrentDirectoryForExePathW
 #define GetDiskFreeSpace  GetDiskFreeSpaceW
 #define GetDiskFreeSpaceEx GetDiskFreeSpaceExW
 #define CreateDirectory  CreateDirectoryW
@@ -878,6 +879,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GetWindowsDirectory  GetWindowsDirectoryA
 #define SetCurrentDirectory  SetCurrentDirectoryA
 #define GetCurrentDirectory  GetCurrentDirectoryA
+#define NeedCurrentDirectoryForExePath  NeedCurrentDirectoryForExePathA
 #define GetDiskFreeSpace  GetDiskFreeSpaceA
 #define GetDiskFreeSpaceEx GetDiskFreeSpaceExA
 #define CreateDirectory  CreateDirectoryA

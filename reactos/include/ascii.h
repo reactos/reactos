@@ -1107,6 +1107,12 @@ GetCurrentDirectoryA(
     LPSTR lpBuffer
     );
 
+BOOL
+STDCALL
+NeedCurrentDirectoryForExePathA(
+    LPCSTR ExeName
+    );
+
 WINBOOL
 STDCALL
 GetDiskFreeSpaceA(

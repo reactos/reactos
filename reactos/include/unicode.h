@@ -1118,6 +1118,12 @@ GetCurrentDirectoryW(
     LPWSTR lpBuffer
     );
 
+BOOL
+STDCALL
+NeedCurrentDirectoryForExePathW(
+    LPCWSTR ExeName
+    );
+
 WINBOOL
 STDCALL
 GetDiskFreeSpaceW(

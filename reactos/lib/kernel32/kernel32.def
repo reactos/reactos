@@ -641,6 +641,8 @@ MoveFileW@8
 MoveFileWithProgressW@20
 MulDiv@12
 MultiByteToWideChar@24
+NeedCurrentDirectoryForExePathA@4
+NeedCurrentDirectoryForExePathW@4
 NlsConvertIntegerToString@20
 ;NlsGetCacheUpdateCount
 ;NlsResetProcessLocale
