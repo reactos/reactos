@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.6 2002/09/08 10:23:06 chorns Exp $
+/* $Id: sid.c,v 1.7 2003/06/07 10:35:27 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -243,69 +243,69 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 			     PSID Sid,
 			     BOOLEAN AllocateBuffer)
 {
-	WCHAR Buffer[256];
-	PWSTR wcs;
-	ULONG Length;
-	BYTE  i;
+  WCHAR Buffer[256];
+  PWSTR wcs;
+  ULONG Length;
+  ULONG i;
 
-	if (RtlValidSid (Sid) == FALSE)
-		return STATUS_INVALID_SID;
+  if (RtlValidSid (Sid) == FALSE)
+    return STATUS_INVALID_SID;
 
-	wcs = Buffer;
-	wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
-	if (!Sid->IdentifierAuthority.Value[0] &&
-	    !Sid->IdentifierAuthority.Value[1])
-	{
-		wcs += swprintf (wcs,
-		                 L"%u",
-		                 (DWORD)Sid->IdentifierAuthority.Value[2] << 24 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[3] << 16 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[4] << 8 |
-		                 (DWORD)Sid->IdentifierAuthority.Value[5]);
-	}
-	else
-	{
-		wcs += swprintf (wcs,
-		                 L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
-		                 Sid->IdentifierAuthority.Value[0],
-		                 Sid->IdentifierAuthority.Value[1],
-		                 Sid->IdentifierAuthority.Value[2],
-		                 Sid->IdentifierAuthority.Value[3],
-		                 Sid->IdentifierAuthority.Value[4],
-		                 Sid->IdentifierAuthority.Value[5]);
-	}
+  wcs = Buffer;
+  wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
+  if (Sid->IdentifierAuthority.Value[0] == 0 &&
+      Sid->IdentifierAuthority.Value[1] == 0)
+    {
+      wcs += swprintf (wcs,
+		       L"%lu",
+		       (ULONG)Sid->IdentifierAuthority.Value[2] << 24 |
+		       (ULONG)Sid->IdentifierAuthority.Value[3] << 16 |
+		       (ULONG)Sid->IdentifierAuthority.Value[4] << 8 |
+		       (ULONG)Sid->IdentifierAuthority.Value[5]);
+    }
+  else
+    {
+      wcs += swprintf (wcs,
+		       L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
+		       Sid->IdentifierAuthority.Value[0],
+		       Sid->IdentifierAuthority.Value[1],
+		       Sid->IdentifierAuthority.Value[2],
+		       Sid->IdentifierAuthority.Value[3],
+		       Sid->IdentifierAuthority.Value[4],
+		       Sid->IdentifierAuthority.Value[5]);
+    }
 
-	for (i = 0; i < Sid->SubAuthorityCount; i++)
-	{
-		wcs += swprintf (wcs,
-		                 L"-%u",
-		                 Sid->SubAuthority[0]);
-	}
+  for (i = 0; i < Sid->SubAuthorityCount; i++)
+    {
+      wcs += swprintf (wcs,
+		       L"-%u",
+		       Sid->SubAuthority[i]);
+    }
 
-	Length = (wcs - Buffer) * sizeof(WCHAR);
-	if(AllocateBuffer)
-	{
-		String->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-		                                  0,
-		                                  Length + sizeof(WCHAR));
-		if (String->Buffer == NULL)
-			return STATUS_NO_MEMORY;
-		String->MaximumLength = Length + sizeof(WCHAR);
-	}
-	else
-	{
-		if (Length > String->MaximumLength)
-			return STATUS_BUFFER_TOO_SMALL;
-	}
+  Length = (wcs - Buffer) * sizeof(WCHAR);
+  if (AllocateBuffer)
+    {
+      String->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+					0,
+					Length + sizeof(WCHAR));
+      if (String->Buffer == NULL)
+	return STATUS_NO_MEMORY;
+      String->MaximumLength = Length + sizeof(WCHAR);
+    }
+  else
+    {
+      if (Length > String->MaximumLength)
+	return STATUS_BUFFER_TOO_SMALL;
+    }
 
-	String->Length = Length;
-	memmove (String->Buffer,
-	         Buffer,
-	         Length);
-	if (Length < String->MaximumLength)
-		String->Buffer[Length] = 0;
+  String->Length = Length;
+  RtlCopyMemory (String->Buffer,
+		 Buffer,
+		 Length);
+  if (Length < String->MaximumLength)
+    String->Buffer[Length / sizeof(WCHAR)] = 0;
 
-	return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.12 2002/09/08 10:23:43 chorns Exp $
+/* $Id: sid.c,v 1.13 2003/06/07 10:34:47 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -661,7 +661,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
 	   Buffer,
 	   Length);
    if (Length < String->MaximumLength)
-     String->Buffer[Length] = 0;
+     String->Buffer[Length/sizeof(WCHAR)] = 0;
 
    return STATUS_SUCCESS;
 }
