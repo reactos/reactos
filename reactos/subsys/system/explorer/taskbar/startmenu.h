@@ -75,10 +75,10 @@ typedef set<Entry*> ShellEntrySet;
  /// structure holding information about one start menu entry
 struct StartMenuEntry
 {
-	StartMenuEntry() : _hIcon(0) {}
+	StartMenuEntry() : _icon_id(ICID_UNKNOWN) {}
 
 	String	_title;
-	HICON	_hIcon;
+	ICON_ID	_icon_id;
 	ShellEntrySet _entries;
 };
 
@@ -95,14 +95,14 @@ struct StartMenuButton : public OwnerdrawnButton
 {
 	typedef OwnerdrawnButton super;
 
-	StartMenuButton(HWND hwnd, HICON hIcon, bool hasSubmenu)
+	StartMenuButton(HWND hwnd, ICON_ID icon_id, bool hasSubmenu)
 	 :	super(hwnd), _hIcon(hIcon), _hasSubmenu(hasSubmenu) {}
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
-	HICON	_hIcon;
+	ICON_ID	_icon_id;
 	bool	_hasSubmenu;
 };
 
@@ -159,16 +159,16 @@ struct SMBtnInfo
 {
 	SMBtnInfo(const StartMenuEntry& entry, int id, bool hasSubmenu=false, bool enabled=true)
 	 :	_title(entry._title),
-		_hIcon(entry._hIcon),
+		_icon_id(entry._icon_id),
 		_id(id),
 		_hasSubmenu(hasSubmenu),
 		_enabled(enabled)
 	{
 	}
 
-	SMBtnInfo(LPCTSTR title, HICON hIcon, int id, bool hasSubmenu=false, bool enabled=true)
+	SMBtnInfo(LPCTSTR title, ICON_ID icon_id, int id, bool hasSubmenu=false, bool enabled=true)
 	 :	_title(title),
-		_hIcon(hIcon),
+		_icon_id(icon_id),
 		_id(id),
 		_hasSubmenu(hasSubmenu),
 		_enabled(enabled)
@@ -176,7 +176,7 @@ struct SMBtnInfo
 	}
 
 	String	_title;
-	HICON	_hIcon;
+	ICON_ID	_icon_id;
 	int		_id;
 	bool	_hasSubmenu;
 	bool	_enabled;
@@ -258,14 +258,14 @@ protected:
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(const String& title, HICON hIcon, Entry* entry);
-	StartMenuEntry& AddEntry(const String& title, HICON hIcon=0, int id=-1);
+	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id, Entry* entry);
+	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id=ICID_NONE, int id=-1);
 	StartMenuEntry& AddEntry(const ShellFolder folder, ShellEntry* entry);
 	StartMenuEntry& AddEntry(const ShellFolder folder, Entry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
-	void	AddButton(LPCTSTR title, HICON hIcon=0, bool hasSubmenu=false, int id=-1, bool enabled=true);
+	void	AddButton(LPCTSTR title, ICON_ID icon_id=ICID_NONE, bool hasSubmenu=false, int id=-1, bool enabled=true);
 	void	AddSeparator();
 
 	bool	CloseSubmenus() {return CloseOtherSubmenus(0);}

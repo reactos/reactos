@@ -67,6 +67,18 @@ ExplorerGlobals::ExplorerGlobals()
 }
 
 
+void ExplorerGlobals::init(HINSTANCE hInstance)
+{
+	_hInstance = hInstance;
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	_SHRestricted = (DWORD(STDAPICALLTYPE*)(RESTRICTIONS)) GetProcAddress(GetModuleHandle(TEXT("SHELL32")), "SHRestricted");
+#endif
+
+	_icon_cache.init();
+}
+
+
 void _log_(LPCTSTR txt)
 {
 	FmtString msg(TEXT("%s\n"), txt);
@@ -81,7 +93,7 @@ void _log_(LPCTSTR txt)
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
 #ifndef __WINE__ ///@todo
-	_tcslwr((LPTSTR)ext.data());
+	_tcslwr((LPTSTR)ext.c_str());
 #endif
 
 	iterator found = find(ext);
@@ -108,6 +120,153 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	}
 
 	return ftype;
+}
+
+
+Icon::Icon()
+ :	_id(ICID_UNKNOWN),
+	_itype(IT_STATIC),
+	_hIcon(0)
+{
+}
+
+Icon::Icon(ICON_ID id, UINT nid)
+ :	_id(id),
+	_itype(IT_STATIC),
+	_hIcon(SmallIcon(nid))
+{
+}
+
+Icon::Icon(ICON_TYPE itype, int id, HICON hIcon)
+ :	_id((ICON_ID)id),
+	_itype(itype),
+	_hIcon(hIcon)
+{
+}
+
+
+int IconCache::s_next_id = ICID_DYNAMIC;
+
+
+void IconCache::init()
+{
+	_icons[ICID_NONE]		= Icon(IT_STATIC, ICID_NONE, 0);
+
+	_icons[ICID_FOLDER]		= Icon(ICID_FOLDER,		IDI_FOLDER);
+	//_icons[ICID_DOCUMENT] = Icon(ICID_DOCUMENT,	IDI_DOCUMENT);
+	_icons[ICID_EXPLORER]	= Icon(ICID_EXPLORER,	IDI_EXPLORER);
+	_icons[ICID_APP]		= Icon(ICID_APP,		IDI_APPICON);
+
+	_icons[ICID_CONFIG]		= Icon(ICID_CONFIG,		IDI_CONFIG);
+	_icons[ICID_DOCUMENTS]	= Icon(ICID_DOCUMENTS,	IDI_DOCUMENTS);
+	_icons[ICID_FAVORITES]	= Icon(ICID_FAVORITES,	IDI_FAVORITES);
+	_icons[ICID_INFO]		= Icon(ICID_INFO,		IDI_INFO);
+	_icons[ICID_APPS]		= Icon(ICID_APPS,		IDI_APPS);
+	_icons[ICID_SEARCH]		= Icon(ICID_SEARCH,		IDI_SEARCH);
+	_icons[ICID_ACTION]		= Icon(ICID_ACTION,		IDI_ACTION);
+	_icons[ICID_SEARCH_DOC] = Icon(ICID_SEARCH_DOC,	IDI_SEARCH_DOC);
+	_icons[ICID_PRINTER]	= Icon(ICID_PRINTER,	IDI_PRINTER);
+	_icons[ICID_NETWORK]	= Icon(ICID_NETWORK,	IDI_NETWORK);
+	_icons[ICID_COMPUTER]	= Icon(ICID_COMPUTER,	IDI_COMPUTER);
+	_icons[ICID_LOGOFF]		= Icon(ICID_LOGOFF,		IDI_LOGOFF);
+}
+
+
+const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)
+{
+	HICON hIconLarge = 0;
+	HICON hIcon;
+
+	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
+
+	if (hr == NOERROR) {
+		if (hIconLarge)
+			DestroyIcon(hIconLarge);
+
+		if (hIcon)
+			return add(hIcon);
+	}
+
+	return _icons[ICID_NONE];
+}
+
+const Icon& IconCache::extract_from_file(LPCTSTR path, int idx)
+{
+	CachePair key(path, idx);
+
+#ifndef __WINE__ ///@todo
+	_tcslwr((LPTSTR)key.first.c_str());
+#endif
+
+	CacheMap::iterator found = _cache_map.find(key);
+
+	if (found != _cache_map.end())
+		return _icons[found->second];
+
+	HICON hIcon;
+
+	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
+		const Icon& icon = add_cached(hIcon, path, idx);
+
+		_cache_map[key] = icon._id;
+
+		return icon;
+	} else
+		return _icons[ICID_NONE];
+}
+
+const Icon& IconCache::add(HICON hIcon)
+{
+	int id = ++s_next_id;
+
+	return _icons[id] = Icon(IT_DYNAMIC, id, hIcon);
+}
+
+const Icon& IconCache::add_cached(HICON hIcon, LPCTSTR path, int idx)
+{
+	int id = ++s_next_id;
+
+	return _icons[id] = Icon(IT_CACHED, id, hIcon);
+}
+
+const Icon& IconCache::get_icon(int id)
+{
+	return _icons[id];
+}
+
+HBITMAP	IconCache::get_icon_bitmap(int id, HBRUSH hbrBkgnd, HDC hdc)
+{
+	return create_bitmap_from_icon(_icons[id]._hIcon, hbrBkgnd, hdc);
+}
+
+void IconCache::free_icon(int icon_id)
+{
+	IconMap::iterator found = _icons.find(icon_id);
+
+	if (found != _icons.end()) {
+		Icon& icon = found->second;
+
+		if (icon._itype == IT_DYNAMIC) {
+			DestroyIcon(icon._hIcon);
+			_icons.erase(found);
+		}
+	}
+}
+
+
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
+{
+	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
+
+	MemCanvas canvas;
+	BitmapSelection sel(canvas, hbmp);
+
+	RECT rect = {0, 0, 16, 16};
+	FillRect(canvas, &rect, hbrush_bkgnd);
+
+	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
+
+	return hbmp;
 }
 
 
@@ -394,10 +553,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		initialize_gdb_stub();
 	}
 
-	g_Globals._hInstance = hInstance;
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	g_Globals._SHRestricted = (DWORD(STDAPICALLTYPE*)(RESTRICTIONS)) GetProcAddress(GetModuleHandle(TEXT("SHELL32")), "SHRestricted");
-#endif
+	g_Globals.init(hInstance);
 
 	 // initialize COM and OLE before creating the desktop window
 	OleInit usingCOM;

@@ -121,10 +121,7 @@ ShellPath ShellEntry::create_absolute_pidl() const
 			if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
 				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
 		} else {
-			ShellPath shell_path;
-
-			if (get_entry_pidl(_up, shell_path))
-				return _pidl.create_absolute_pidl(shell_path);
+			return _pidl.create_absolute_pidl(_up->create_absolute_pidl());
 		}
 
 	return _pidl;
@@ -148,14 +145,6 @@ bool ShellEntry::get_path(PTSTR path) const
 	_tcscpy(path, fs_path);
 
 	return true;
-}
-
-
-HRESULT ShellEntry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
-{
-	LPCITEMIDLIST pidl = _pidl;
-
-	return get_parent_folder()->GetUIObjectOf(hWnd, 1, &pidl, riid, NULL, ppvOut);
 }
 
 
@@ -211,100 +200,11 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
-static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
+HRESULT ShellEntry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 {
-	CONTEXT("extract_icon()");
+	LPCITEMIDLIST pidl = _pidl;
 
-	IExtractIcon* pExtract;
-
-	if (SUCCEEDED(folder->GetUIObjectOf(0, 1, (LPCITEMIDLIST*)&pidl, IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
-		TCHAR path[MAX_PATH];
-		unsigned flags;
-		HICON hIcon;
-		int idx;
-
-		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
-			if (!(flags & GIL_NOTFILENAME)) {
-				if (idx == -1)
-					idx = 0;	// special case for some control panel applications
-
-				if ((int)ExtractIconEx(path, idx, 0, &hIcon, 1) > 0)
-					flags &= ~GIL_DONTCACHE;
-			} else {
-				HICON hIconLarge = 0;
-
-				HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
-
-				if (SUCCEEDED(hr))
-					DestroyIcon(hIconLarge);
-			}
-
-			if (!hIcon) {
-				SHFILEINFO sfi;
-
-				if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
-					hIcon = sfi.hIcon;
-			}
-/*
-			if (!hIcon) {
-				LPBYTE b = (LPBYTE) alloca(0x10000);
-				SHFILEINFO sfi;
-
-				FILE* file = fopen(path, "rb");
-				if (file) {
-					int l = fread(b, 1, 0x10000, file);
-					fclose(file);
-
-					if (l)
-						hIcon = CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR);
-				}
-			}
-*/
-			return hIcon;
-		}
-	}
-
-	return 0;
-}
-
-static HICON extract_icon(IShellFolder* folder, const ShellEntry* entry)
-{
-	HICON hIcon = extract_icon(folder, entry->_pidl);
-
-	if (!hIcon) {
-		SHFILEINFO sfi;
-
-		ShellPath pidl_abs = entry->create_absolute_pidl();
-		LPCITEMIDLIST pidl = pidl_abs;
-
-		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
-			hIcon = sfi.hIcon;
-	}
-
-	return hIcon;
-}
-
-HICON extract_icon(const Entry* entry)
-{
-	if (entry->_etype == ET_SHELL) {
-		const ShellEntry* shell_entry = static_cast<const ShellEntry*>(entry);
-
-		return extract_icon(shell_entry->get_parent_folder(), shell_entry);
-	} else {
-		TCHAR path[MAX_PATH];
-
-		if (entry->get_path(path)) {
-			SHFILEINFO sfi;
-
-			ShellPath shell_path(path);
-			LPCITEMIDLIST pidl = shell_path;
-
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
-				return sfi.hIcon;
-		}
-	}
-
-	return 0;
+	return get_parent_folder()->GetUIObjectOf(hWnd, 1, &pidl, riid, NULL, ppvOut);
 }
 
 
@@ -361,15 +261,10 @@ void ShellDirectory::read_directory(int scan_flags)
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
 				if (!(w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-					if (scan_flags & SCAN_EXTRACT_ICONS) {
-						entry->_hIcon = extract_icon(entry);
-
-						if (!entry->_hIcon)
-							entry->_hIcon = (HICON)-1;	// don't try again later
-					} else
-						entry->_hIcon = 0;
+					if (scan_flags & SCAN_EXTRACT_ICONS)
+						entry->extract_icon();
 				} else
-					entry->_hIcon = (HICON)-1;	// don't try again later
+					entry->_icon_id = ICID_NONE;	// don't try again later
 
 				entry->_down = NULL;
 				entry->_expanded = false;
@@ -510,15 +405,10 @@ void ShellDirectory::read_directory(int scan_flags)
 					 // get icons for files and virtual objects
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 						!(attribs & SFGAO_FILESYSTEM)) {
-						if (scan_flags & SCAN_EXTRACT_ICONS) {
-							entry->_hIcon = extract_icon(_folder, static_cast<ShellEntry*>(entry));
-
-							if (!entry->_hIcon)
-								entry->_hIcon = (HICON)-1;	// don't try again later
-						} else
-							entry->_hIcon = 0;
+						if (scan_flags & SCAN_EXTRACT_ICONS)
+							entry->extract_icon();
 					} else
-						entry->_hIcon = (HICON)-1;	// don't try again later
+						entry->_icon_id = ICID_NONE;	// don't try again later
 
 					entry->_down = NULL;
 					entry->_expanded = false;
@@ -575,16 +465,13 @@ int ShellDirectory::extract_icons()
 	int cnt = 0;
 
 	for(Entry*entry=_down; entry; entry=entry->_next)
-		if (!entry->_hIcon) {
-			if (entry->_etype == ET_SHELL)
-				entry->_hIcon = extract_icon(_folder, static_cast<ShellEntry*>(entry));
-			else // !ET_SHELL
-				entry->_hIcon = extract_icon(entry);
+		if (entry->_icon_id == ICID_UNKNOWN) {
+			entry->extract_icon();
 
-			if (entry->_hIcon)
+			if (entry->_icon_id != ICID_NONE)
 				++cnt;
 			else
-				entry->_hIcon = (HICON)-1;	// don't try again later
+				entry->_icon_id = ICID_NONE;	// don't try again later
 		}
 
 	return cnt;

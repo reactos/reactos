@@ -60,7 +60,7 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 	ShellDirectory* dir = new ShellDirectory(Desktop(), path, 0);
 	_dirs.push(dir);
 
-	dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
+	dir->smart_scan(/*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
 
 	for(Entry*entry=dir->_down; entry; entry=entry->_next) {
 		if (!_alive)
@@ -70,10 +70,7 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 			continue;
 
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			ShellPath shell_path;
-
-			if (get_entry_pidl(entry, shell_path))
-				collect_programs(shell_path);
+			collect_programs(entry->create_absolute_pidl());
 		} else if (entry->_shell_attribs & SFGAO_LINK)
 			if (_alive)
 				_callback(entry, _para);
@@ -212,11 +209,7 @@ void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 				new_entry._entry = entry;
 				new_entry._menu_path = menu_path;
 				new_entry._path = path;
-
-				if (entry->_hIcon != (HICON)-1)
-					new_entry._idxIcon = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
-				else
-					new_entry._idxIcon = pThis->_idxNoIcon;
+				new_entry._idxIcon = I_IMAGECALLBACK;
 
 				pThis->_cache.push_front(new_entry);
 				FPDEntry& cache_entry = pThis->_cache.front();
@@ -311,22 +304,23 @@ void FindProgramDlg::LaunchSelected()
 int FindProgramDlg::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
-	  case LVN_GETDISPINFO: {/*
+	  case LVN_GETDISPINFO: {
 		LV_DISPINFO* pDispInfo = (LV_DISPINFO*) pnmh;
 
 		if (pnmh->hwndFrom == _list_ctrl) {
 			if (pDispInfo->item.mask & LVIF_IMAGE) {
-				int icon;
-				HRESULT hr = pShellLink->GetIconLocation(path, MAX_PATH-1, &icon);
+				FPDEntry& cache_entry = *(FPDEntry*)pDispInfo->item.lParam;
+				Entry* entry = cache_entry._entry;
 
-				HICON hIcon = ExtractIcon();
-				pDispInfo->item.iImage = ImageList_AddIcon(_himl, hIcon);
+				if (entry->_icon_id == ICID_UNKNOWN)
+					entry->extract_icon();
 
+				pDispInfo->item.iImage = ImageList_AddIcon(_himl, g_Globals._icon_cache.get_icon(entry->_icon_id)._hIcon); //@@ directly use image list in icon cache
 				pDispInfo->item.mask |= LVIF_DI_SETITEM;
 
 				return 1;
 			}
-		}*/}
+		}}
 		break;
 
 	  case NM_DBLCLK:

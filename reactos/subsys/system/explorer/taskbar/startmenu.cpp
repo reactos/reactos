@@ -162,7 +162,7 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 #else
 		if (!GetWindow(_hwnd, GW_CHILD))
 #endif
-			AddButton(ResString(IDS_EMPTY), 0, false, 0, false);
+			AddButton(ResString(IDS_EMPTY), ICID_NONE, false, 0, false);
 
 #ifdef _LIGHT_STARTMENU
 		ResizeToButtons();
@@ -431,6 +431,7 @@ void StartMenu::SelectButton(int id)
 
 		 // automatically open submenus
 		if (btn->_hasSubmenu) {
+			//@@ allows destroying of startmenu when processing PM_UPDATE_ICONS -> GPF
 			UpdateWindow(_hwnd);	// draw focused button before waiting on submenu creation
 			Command(_selected_id, BN_CLICKED);
 		} else
@@ -548,19 +549,19 @@ void StartMenu::UpdateIcons(/*int idx*/)
 	for(; idx<(int)_buttons.size(); ++idx) {
 		SMBtnInfo& btn = _buttons[idx];
 
-		if (!btn._hIcon && btn._id>0) {
+		if (btn._icon_id==ICID_UNKNOWN && btn._id>0) {
 			StartMenuEntry& sme = _entries[btn._id];
 
-			btn._hIcon = (HICON)-1;
+			btn._icon_id = ICID_NONE;
 
 			for(ShellEntrySet::iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
 				Entry* entry = *it;
 
-				HICON hIcon = extract_icon(entry);
+				if (entry->_icon_id == ICID_UNKNOWN)
+					entry->extract_icon();
 
-				if (hIcon) {
-					btn._hIcon = hIcon;
-					entry->_hIcon = hIcon;
+				if (entry->_icon_id > ICID_NONE) {
+					btn._icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 
 					RECT rect;
 
@@ -674,7 +675,7 @@ int StartMenu::Command(int id, int code)
 }
 
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, Entry* entry)
+StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, Entry* entry)
 {
 	 // search for an already existing subdirectory entry with the same name
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -691,14 +692,14 @@ StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, Entry* ent
 				}
 		}
 
-	StartMenuEntry& sme = AddEntry(title, hIcon);
+	StartMenuEntry& sme = AddEntry(title, icon_id);
 
 	sme._entries.insert(entry);
 
 	return sme;
 }
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, int id)
+StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, int id)
 {
 	if (id == -1)
 		id = ++_next_id;
@@ -706,36 +707,40 @@ StartMenuEntry& StartMenu::AddEntry(const String& title, HICON hIcon, int id)
 	StartMenuEntry& sme = _entries[id];
 
 	sme._title = title;
-	sme._hIcon = hIcon;
+	sme._icon_id = icon_id;
 
 	return sme;
 }
 
 StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
 {
-	HICON hIcon = entry->_hIcon;
+	ICON_ID icon_id;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		hIcon = SmallIcon(IDI_FOLDER);
+		icon_id = ICID_FOLDER;
+	else
+		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 
-	return AddEntry(folder.get_name(entry->_pidl), hIcon, entry);
+	return AddEntry(folder.get_name(entry->_pidl), icon_id, entry);
 }
 
 StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, Entry* entry)
 {
-	HICON hIcon = entry->_hIcon;
+	ICON_ID icon_id;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		hIcon = SmallIcon(IDI_FOLDER);
+		icon_id = ICID_FOLDER;
+	else
+		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 
-	return AddEntry(entry->_display_name, hIcon, entry);
+	return AddEntry(entry->_display_name, icon_id, entry);
 }
 
 
-void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, int id, bool enabled)
+void StartMenu::AddButton(LPCTSTR title, ICON_ID icon_id, bool hasSubmenu, int id, bool enabled)
 {
 #ifdef _LIGHT_STARTMENU
-	_buttons.push_back(SMBtnInfo(title, hIcon, id, hasSubmenu, enabled));
+	_buttons.push_back(SMBtnInfo(title, icon_id, id, hasSubmenu, enabled));
 #else
 	DWORD style = enabled? WS_VISIBLE|WS_CHILD|BS_OWNERDRAW: WS_VISIBLE|WS_CHILD|BS_OWNERDRAW|WS_DISABLED;
 
@@ -764,14 +769,14 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, int id, b
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
 	StartMenuCtrl(_hwnd, _border_left, clnt.bottom, rect.right-rect.left-_border_left,
-					title, id, hIcon, hasSubmenu, style);
+					title, id, g_Globals._icon_cache.get_icon(icon_id)._hIcon, hasSubmenu, style);
 #endif
 }
 
 void StartMenu::AddSeparator()
 {
 #ifdef _LIGHT_STARTMENU
-	_buttons.push_back(SMBtnInfo(NULL, 0, -1, false));
+	_buttons.push_back(SMBtnInfo(NULL, ICID_NONE, -1, false));
 #else
 	WindowRect rect(_hwnd);
 	ClientRect clnt(_hwnd);
@@ -888,7 +893,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			///@todo If the user explicitely clicked on a submenu, display this folder as floating start menu.
 
 			if (entry->_etype == ET_SHELL)
-				new_folders.push_back(static_cast<const ShellEntry*>(entry)->create_absolute_pidl());
+				new_folders.push_back(entry->create_absolute_pidl());
 			else {
 				TCHAR path[MAX_PATH];
 
@@ -976,7 +981,8 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 	if (title)
 		FillRect(hdc, &rect, bk_brush);
 
-	DrawIconEx(hdc, iconPos.x, iconPos.y, btn._hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+	if (btn._icon_id > ICID_NONE)
+		DrawIconEx(hdc, iconPos.x, iconPos.y, g_Globals._icon_cache.get_icon(btn._icon_id)._hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
 
 	 // draw submenu arrow at the right
 	if (btn._hasSubmenu) {
@@ -1213,38 +1219,38 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 
 	 // insert hard coded start entries
-	AddButton(ResString(IDS_PROGRAMS),		SmallIcon(IDI_APPS), true, IDC_PROGRAMS);
+	AddButton(ResString(IDS_PROGRAMS),		ICID_APPS, true, IDC_PROGRAMS);
 
-	AddButton(ResString(IDS_DOCUMENTS),		SmallIcon(IDI_DOCUMENTS), true, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_DOCUMENTS),		ICID_DOCUMENTS, true, IDC_DOCUMENTS);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORECENTDOCSMENU))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoRecentDocsMenu")))
 #endif
-		AddButton(ResString(IDS_RECENT),	SmallIcon(IDI_DOCUMENTS), true, IDC_RECENT);
+		AddButton(ResString(IDS_RECENT),	ICID_DOCUMENTS, true, IDC_RECENT);
 
-	AddButton(ResString(IDS_FAVORITES),		SmallIcon(IDI_FAVORITES), true, IDC_FAVORITES);
+	AddButton(ResString(IDS_FAVORITES),		ICID_FAVORITES, true, IDC_FAVORITES);
 
-	AddButton(ResString(IDS_SETTINGS),		SmallIcon(IDI_CONFIG), true, IDC_SETTINGS);
+	AddButton(ResString(IDS_SETTINGS),		ICID_CONFIG, true, IDC_SETTINGS);
 
-	AddButton(ResString(IDS_BROWSE),		SmallIcon(IDI_FOLDER), true, IDC_BROWSE);
+	AddButton(ResString(IDS_BROWSE),		ICID_FOLDER, true, IDC_BROWSE);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOFIND))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoFind")))
 #endif
-		AddButton(ResString(IDS_SEARCH),	SmallIcon(IDI_SEARCH), true, IDC_SEARCH);
+		AddButton(ResString(IDS_SEARCH),	ICID_SEARCH, true, IDC_SEARCH);
 
-	AddButton(ResString(IDS_START_HELP),	SmallIcon(IDI_INFO), false, IDC_START_HELP);
+	AddButton(ResString(IDS_START_HELP),	ICID_INFO, false, IDC_START_HELP);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NORUN))
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoRun")))
 #endif
-		AddButton(ResString(IDS_LAUNCH),	SmallIcon(IDI_ACTION), false, IDC_LAUNCH);
+		AddButton(ResString(IDS_LAUNCH),	ICID_ACTION, false, IDC_LAUNCH);
 
 
 	AddSeparator();
@@ -1255,7 +1261,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #else
 	if (IS_VALUE_NOT_ZERO(hkeyAdv, _T("StartMenuLogoff")))
 #endif
-		AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
+		AddButton(ResString(IDS_LOGOFF),	ICID_LOGOFF, false, IDC_LOGOFF);
 
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
@@ -1263,7 +1269,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoClose")))
 #endif
-		AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
+		AddButton(ResString(IDS_SHUTDOWN),	ICID_LOGOFF, false, IDC_SHUTDOWN);
 
 
 #ifdef __MINGW32__
@@ -1285,7 +1291,7 @@ void StartMenuRoot::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), false, IDC_EXPLORE);
+	AddButton(ResString(IDS_EXPLORE),	ICID_EXPLORER, false, IDC_EXPLORE);
 }
 
 
@@ -1538,16 +1544,16 @@ void SettingsMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
-		AddButton(ResString(IDS_CONTROL_PANEL),	SmallIcon(IDI_CONFIG), false, IDC_CONTROL_PANEL);
+		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 
-	AddButton(ResString(IDS_PRINTERS),		SmallIcon(IDI_PRINTER), true, IDC_PRINTERS);
-	AddButton(ResString(IDS_CONNECTIONS),	SmallIcon(IDI_NETWORK), true, IDC_CONNECTIONS);
-	AddButton(ResString(IDS_ADMIN),			SmallIcon(IDI_CONFIG), true, IDC_ADMIN);
+	AddButton(ResString(IDS_PRINTERS),		ICID_PRINTER, true, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONNECTIONS),	ICID_NETWORK, true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_ADMIN),			ICID_CONFIG, true, IDC_ADMIN);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
-		AddButton(ResString(IDS_SETTINGS_MENU),	SmallIcon(IDI_CONFIG), true, IDC_SETTINGS_MENU);
+		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
 }
 
 void BrowseMenu::AddEntries()
@@ -1557,23 +1563,23 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
-		AddButton(ResString(IDS_NETWORK),	SmallIcon(IDI_NETWORK), true, IDC_NETWORK);
+		AddButton(ResString(IDS_NETWORK),	ICID_NETWORK, true, IDC_NETWORK);
 
-	AddButton(ResString(IDS_DRIVES),	SmallIcon(IDI_FOLDER), true, IDC_DRIVES);
+	AddButton(ResString(IDS_DRIVES),	ICID_FOLDER, true, IDC_DRIVES);
 }
 
 void SearchMenu::AddEntries()
 {
 	super::AddEntries();
 
-	AddButton(ResString(IDS_SEARCH_PRG),	SmallIcon(IDI_APPS), false, IDC_SEARCH_PROGRAM);
+	AddButton(ResString(IDS_SEARCH_PRG),	ICID_APPS, false, IDC_SEARCH_PROGRAM);
 
-	AddButton(ResString(IDS_SEARCH_FILES),	SmallIcon(IDI_SEARCH_DOC), false, IDC_SEARCH_FILES);
+	AddButton(ResString(IDS_SEARCH_FILES),	ICID_SEARCH_DOC, false, IDC_SEARCH_FILES);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
 #endif
-		AddButton(ResString(IDS_SEARCH_COMPUTER),	SmallIcon(IDI_COMPUTER), false, IDC_SEARCH_COMPUTER);
+		AddButton(ResString(IDS_SEARCH_COMPUTER),	ICID_COMPUTER, false, IDC_SEARCH_COMPUTER);
 }
 
 

@@ -134,9 +134,6 @@ extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
  // search for windows of a specific classname
 extern int find_window_class(LPCTSTR classname);
 
- // create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
-
  // launch a program or document file
 extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
 #ifdef UNICODE

@@ -54,8 +54,8 @@
 #define IDI_FLOATING                    135
 #define IDD_ABOUT_EXPLORER              135
 #define IDI_REACTOS_BIG                 137
-#define IDI_CONFIG                      138
-#define IDI_DOCUMENTS                   139
+#define IDI_DOCUMENTS                   138
+#define IDI_CONFIG                      139
 #define IDI_FAVORITES                   140
 #define IDI_INFO                        141
 #define IDI_APPS                        142

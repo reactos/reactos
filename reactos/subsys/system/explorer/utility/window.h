@@ -319,14 +319,22 @@ struct DialogWindow : public Window
 {
 	typedef Window super;
 
-	DialogWindow(HWND);
-	~DialogWindow();
+	DialogWindow(HWND hwnd)
+	 :	super(hwnd)
+	{
+		register_dialog(hwnd);
+	}
+
+	~DialogWindow()
+	{
+		unregister_dialog(_hwnd);
+	}
 };
 
 
  /**
 	The class Dialog implements modal dialogs.
-	A DialogWindow object should be constructed by calling Dialog::DoModal()
+	A Dialog object should be constructed by calling Dialog::DoModal()
 	and specifying the class using the WINDOW_CREATOR() macro.
  */
 struct Dialog : public Window

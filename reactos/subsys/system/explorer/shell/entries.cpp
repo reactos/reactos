@@ -44,7 +44,7 @@ Entry::Entry(ENTRY_TYPE etype)
 	_scanned = false;
 	_bhfi_valid = false;
 	_level = 0;
-	_hIcon = 0;
+	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
 }
 
@@ -58,7 +58,7 @@ Entry::Entry(Entry* parent, ENTRY_TYPE etype)
 	_scanned = false;
 	_bhfi_valid = false;
 	_level = 0;
-	_hIcon = 0;
+	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
 }
 
@@ -82,7 +82,7 @@ Entry::Entry(const Entry& other)
 	_display_name = other._display_name==other._data.cFileName? _data.cFileName: _tcsdup(other._display_name);
 
 	_etype = other._etype;
-	_hIcon = other._hIcon;
+	_icon_id = other._icon_id;
 
 	_bhfi = other._bhfi;
 	_bhfi_valid = other._bhfi_valid;
@@ -91,8 +91,8 @@ Entry::Entry(const Entry& other)
  // free a directory entry
 Entry::~Entry()
 {
-	if (_hIcon && _hIcon!=(HICON)-1)
-		DestroyIcon(_hIcon);
+	if (_icon_id > ICID_NONE)
+		g_Globals._icon_cache.free_icon(_icon_id);
 
 	if (_display_name != _data.cFileName)
 		free(_display_name);
@@ -292,6 +292,78 @@ void Entry::smart_scan(int scan_flags)
 		free_subentries();
 		read_directory(SORT_NAME, scan_flags);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
 	}
+}
+
+
+ShellPath Entry::create_absolute_pidl() const
+{
+	CONTEXT("Entry::create_absolute_pidl()");
+
+	TCHAR path[MAX_PATH];
+
+	if (get_path(path))
+		return ShellPath(path);
+
+	return ShellPath();
+}
+
+
+void Entry::extract_icon()
+{
+	ICON_ID icon_id = ICID_NONE;
+
+	IExtractIcon* pExtract;
+	if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
+		TCHAR path[MAX_PATH];
+		unsigned flags;
+		int idx;
+
+		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
+			if (flags & GIL_NOTFILENAME)
+				icon_id = g_Globals._icon_cache.extract(pExtract, path, idx)._id;
+			else {
+				if (idx == -1)
+					idx = 0;	// special case for some control panel applications ("System")
+
+				icon_id = g_Globals._icon_cache.extract_from_file(path, idx)._id;
+			}
+
+/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets ("NVidia").
+			if (icon_id == ICID_NONE) {
+				SHFILEINFO sfi;
+
+				if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
+					icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+			}
+*/
+/*
+			if (icon_id == ICID_NONE) {
+				LPBYTE b = (LPBYTE) alloca(0x10000);
+				SHFILEINFO sfi;
+
+				FILE* file = fopen(path, "rb");
+				if (file) {
+					int l = fread(b, 1, 0x10000, file);
+					fclose(file);
+
+					if (l)
+						icon_id = g_Globals._icon_cache.add(CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR));
+				}
+			}
+*/		}
+	}
+
+	if (icon_id == ICID_NONE) {
+		SHFILEINFO sfi;
+
+		const ShellPath& pidl_abs = create_absolute_pidl();
+		LPCITEMIDLIST pidl = pidl_abs;
+
+		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))	//@@ besser SHGFI_SYSICONINDEX ?
+			icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+	}
+
+	_icon_id = icon_id;
 }
 
 

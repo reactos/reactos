@@ -40,10 +40,85 @@ struct FileTypeManager : public map<String, FileTypeInfo>
 };
 
 
- /// structure containing global variable of Explorer
+enum ICON_TYPE {
+	IT_STATIC,
+	IT_CACHED,
+	IT_DYNAMIC,
+	IT_SYSCACHE
+};
+
+enum ICON_ID {
+	ICID_UNKNOWN,
+	ICID_NONE,
+
+	ICID_FOLDER,
+	//ICID_DOCUMENT,
+	ICID_APP,
+	ICID_EXPLORER,
+
+	ICID_CONFIG,
+	ICID_DOCUMENTS,
+	ICID_FAVORITES,
+	ICID_INFO,
+	ICID_APPS,
+	ICID_SEARCH,
+	ICID_ACTION,
+	ICID_SEARCH_DOC,
+	ICID_PRINTER,
+	ICID_NETWORK,
+	ICID_COMPUTER,
+	ICID_LOGOFF,
+
+	ICID_DYNAMIC
+};
+
+struct Icon {
+	ICON_ID	_id;
+	ICON_TYPE _itype;
+	HICON	_hIcon;
+
+	Icon();
+	Icon(ICON_ID id, UINT nid);
+	Icon(ICON_TYPE itype, int id, HICON hIcon);
+};
+
+struct IconCache {
+	void	init();
+
+	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx);
+	const Icon&	extract_from_file(LPCTSTR path, int idx);
+
+	const Icon&	add(HICON hIcon);
+	const Icon&	add_cached(HICON hIcon, LPCTSTR path, int idx);
+
+	const Icon&	get_icon(int icon_id);
+	HBITMAP	get_icon_bitmap(int icon_id, HBRUSH hbrBkgnd, HDC hdc);
+
+	void	free_icon(int icon_id);
+
+protected:
+	typedef map<int, Icon> IconMap;
+
+	typedef pair<String, int> CachePair;
+	typedef map<CachePair, ICON_ID> CacheMap;
+
+	static int s_next_id;
+
+	IconMap	_icons;
+	CacheMap _cache_map;
+};
+
+
+ /// create a bitmap from an icon
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
+
+ /// structure containing global variables of Explorer
 extern struct ExplorerGlobals
 {
 	ExplorerGlobals();
+
+	void		init(HINSTANCE hInstance);
 
 	HINSTANCE	_hInstance;
 	ATOM		_hframeClass;
@@ -59,6 +134,7 @@ extern struct ExplorerGlobals
 #endif
 
 	FileTypeManager	_ftype_mgr;
+	IconCache	_icon_cache;
 } g_Globals;
 
 

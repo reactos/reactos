@@ -591,18 +591,6 @@ PreTranslateWindow::~PreTranslateWindow()
 }
 
 
-DialogWindow::DialogWindow(HWND hwnd)
- :	super(hwnd)
-{
-	register_dialog(hwnd);
-}
-
-DialogWindow::~DialogWindow()
-{
-	unregister_dialog(_hwnd);
-}
-
-
 Dialog::Dialog(HWND hwnd)
  :	super(hwnd)
 {

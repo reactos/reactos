@@ -29,6 +29,7 @@
 #include "../utility/utility.h"
 
 #include "../explorer.h"
+#include "../globals.h"
 
 #include "taskbar.h"
 #include "traynotify.h"	// for NOTIFYAREA_WIDTH
@@ -247,21 +248,6 @@ static HICON get_window_icon(HWND hwnd)
 		hIcon = LoadIcon(0, IDI_APPLICATION);
 
 	return hIcon;
-}
-
-HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
-{
-	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
-
-	MemCanvas canvas;
-	BitmapSelection sel(canvas, hbmp);
-
-	RECT rect = {0, 0, 16, 16};
-	FillRect(canvas, &rect, hbrush_bkgnd);
-
-	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
-
-	return hbmp;
 }
 
  // fill task bar with buttons for enumerated top level windows

@@ -29,6 +29,7 @@
 #include "../utility/utility.h"
 
 #include "../explorer.h"
+#include "../globals.h"
 
 #include "quicklaunch.h"
 
@@ -120,7 +121,7 @@ void QuickLaunchBar::AddShortcuts()
 
 			 // hide subfolders
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-				HBITMAP hbmp = create_bitmap_from_icon(entry->_hIcon, GetSysColorBrush(COLOR_BTNFACE), canvas);
+				HBITMAP hbmp = g_Globals._icon_cache.get_icon_bitmap(entry->_icon_id, GetSysColorBrush(COLOR_BTNFACE), canvas);
 
 				TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 				int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
