@@ -256,6 +256,20 @@ entry:
 	push	di
 	mov	dx, di
 
+	; Check if it is a binary hive file
+	cmp	byte [bx-5],'.'
+	je	.checkForSymbol
+	cmp	byte [bx-4],'.'
+	je	.checkForSymbol
+	cmp	byte [bx-3],'.'
+	je	.checkForSymbol
+	cmp	byte [bx-2],'.'
+	je	.checkForSymbol
+
+	call	sym_load_module
+	jmp	.after_copy
+
+.checkForSymbol:
 	; Check if it is a symbol file
 	cmp	byte [bx-5],'.'
 	jne	.checkForHive
@@ -270,7 +284,7 @@ entry:
 	jmp	.after_copy
 
 .checkForHive:
-	; Check if it is a symbol file
+	; Check if it is a hive file
 	cmp	byte [bx-5],'.'
 	jne	.lst_copy
 	cmp	byte [bx-4],'h'
