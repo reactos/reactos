@@ -231,6 +231,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       ULONG RequiredSize = 0;
       ULONG nDirectories = 0;
       POBJECT_DIRECTORY_INFORMATION DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
+      
+      Status = STATUS_NO_MORE_ENTRIES;
 
       KeAcquireSpinLock(&Directory->Lock, &OldLevel);
 
@@ -269,6 +271,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 
             nDirectories++;
             RequiredSize += EntrySize;
+            
+            Status = STATUS_SUCCESS;
 
             if(ReturnSingleEntry)
             {
@@ -287,11 +291,13 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
               RequiredSize += EntrySize;
               Status = STATUS_BUFFER_TOO_SMALL;
             }
-            else
-            {
-              /* just copy the entries that fit into the buffer */
-              Status = STATUS_NO_MORE_ENTRIES;
-            }
+            
+            /* we couldn't query this entry, so leave the index that will be stored
+               in Context to this entry so the caller can query it the next time
+               he queries (hopefully with a buffer that is large enough then...) */
+            NextEntry--;
+            
+            /* just copy the entries that fit into the buffer */
             break;
           }
         }
@@ -301,15 +307,17 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           SkipEntries--;
         }
       }
+      
+      if(!ReturnSingleEntry && ListEntry != &Directory->head)
+      {
+        /* there are more entries to enumerate but the buffer is already full.
+           only tell this to the user if he queries multiple entries */
+        Status = STATUS_MORE_ENTRIES;
+      }
 
       if(NT_SUCCESS(Status))
       {
-        if(SkipEntries > 0 || nDirectories == 0)
-        {
-          /* we skipped more entries than the directory contains, nothing more to do */
-          Status = STATUS_NO_MORE_ENTRIES;
-        }
-        else
+        if(nDirectories > 0)
         {
           _SEH_TRY
           {
