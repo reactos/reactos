@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.22 2002/04/10 09:57:31 ekohl Exp $
+/* $Id: fs.c,v 1.23 2002/04/19 10:10:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,20 +18,22 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* TYPES *******************************************************************/
 
-typedef struct
+typedef struct _FILE_SYSTEM_OBJECT
 {
   PDEVICE_OBJECT DeviceObject;
   LIST_ENTRY Entry;
-} FILE_SYSTEM_OBJECT;
+} FILE_SYSTEM_OBJECT, *PFILE_SYSTEM_OBJECT;
 
-typedef struct
+typedef struct _FS_CHANGE_NOTIFY_ENTRY
 {
   LIST_ENTRY FsChangeNotifyList;
   PDRIVER_OBJECT DriverObject;
   PFSDNOTIFICATIONPROC FSDNotificationProc;
-}  FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
+} FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
+
 
 /* GLOBALS ******************************************************************/
 
@@ -45,8 +47,10 @@ static LIST_ENTRY FsChangeNotifyListHead;
 #define TAG_FS_CHANGE_NOTIFY  TAG('F', 'S', 'C', 'N')
 
 
-static VOID IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
-				      BOOLEAN DriverActive);
+static VOID
+IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
+			  BOOLEAN DriverActive);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -219,9 +223,9 @@ IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
 
 
 NTSTATUS
-IoAskFileSystemToLoad(PDEVICE_OBJECT DeviceObject)
+IoAskFileSystemToLoad(IN PDEVICE_OBJECT DeviceObject)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
@@ -235,46 +239,78 @@ IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
  * RETURNS: Status
  */
 {
-   KIRQL oldlvl;
-   PLIST_ENTRY current_entry;
-   FILE_SYSTEM_OBJECT* current;
-   NTSTATUS Status;
-   
-   assert_irql(PASSIVE_LEVEL);
-   
-   DPRINT1("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
-   
-   KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
-   current_entry = FileSystemListHead.Flink;
-   while (current_entry!=(&FileSystemListHead))
-     {
-	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
-	KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-	Status = IoAskFileSystemToMountDevice(current->DeviceObject, 
-					      DeviceObject);
-	KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
-	switch (Status)
-	  {
-	   case STATUS_FS_DRIVER_REQUIRED:
-	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-	     (void)IoAskFileSystemToLoad(DeviceObject);
-	     KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
-	     current_entry = FileSystemListHead.Flink;
-	     break;
-	   
-	   case STATUS_SUCCESS:
-	     DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
-	                                VPB_MOUNTED;
-	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-	     return(STATUS_SUCCESS);
-	     
-	   case STATUS_UNRECOGNIZED_VOLUME:
-	   default:
-	     current_entry = current_entry->Flink;
-	  }
-     }
-   KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-   return(STATUS_UNRECOGNIZED_VOLUME);
+  KIRQL oldlvl;
+  PLIST_ENTRY current_entry;
+  FILE_SYSTEM_OBJECT* current;
+  NTSTATUS Status;
+  DEVICE_TYPE MatchingDeviceType;
+
+  assert_irql(PASSIVE_LEVEL);
+
+  DPRINT("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
+
+  switch (DeviceObject->DeviceType)
+    {
+      case FILE_DEVICE_DISK:
+      case FILE_DEVICE_VIRTUAL_DISK: /* ?? */
+	MatchingDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
+	break;
+
+      case FILE_DEVICE_CD_ROM:
+	MatchingDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+	break;
+
+      case FILE_DEVICE_NETWORK:
+	MatchingDeviceType = FILE_DEVICE_NETWORK_FILE_SYSTEM;
+	break;
+
+      case FILE_DEVICE_TAPE:
+	MatchingDeviceType = FILE_DEVICE_TAPE_FILE_SYSTEM;
+	break;
+
+      default:
+	CPRINT("No matching file system type found for device type: %x\n",
+	       DeviceObject->DeviceType);
+	return(STATUS_UNRECOGNIZED_VOLUME);
+    }
+
+  KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+  current_entry = FileSystemListHead.Flink;
+  while (current_entry!=(&FileSystemListHead))
+    {
+      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
+      if (current->DeviceObject->DeviceType != MatchingDeviceType)
+	{
+	  current_entry = current_entry->Flink;
+	  continue;
+	}
+      KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+      Status = IoAskFileSystemToMountDevice(current->DeviceObject,
+					    DeviceObject);
+      KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+      switch (Status)
+	{
+	  case STATUS_FS_DRIVER_REQUIRED:
+	    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	    (void)IoAskFileSystemToLoad(DeviceObject);
+	    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+	    current_entry = FileSystemListHead.Flink;
+	    break;
+
+	  case STATUS_SUCCESS:
+	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
+	                               VPB_MOUNTED;
+	    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	    return(STATUS_SUCCESS);
+
+	  case STATUS_UNRECOGNIZED_VOLUME:
+	  default:
+	    current_entry = current_entry->Flink;
+	}
+    }
+  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+
+  return(STATUS_UNRECOGNIZED_VOLUME);
 }
 
 
@@ -300,11 +336,9 @@ NTSTATUS STDCALL
 IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 	       IN BOOLEAN AllowRawMount)
 {
-#if 0
-  IO_STATUS_BLOCK IoStatusBlock,
-  KEVENT Event;
+  IO_STATUS_BLOCK IoStatusBlock;
+  PKEVENT Event;
   PIRP Irp;
-#endif
   NTSTATUS Status;
 
   DPRINT1("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
@@ -321,18 +355,30 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 
   if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
     {
-      /* FIXME: Issue verify request to the FSD */
-#if 0
-      KeInitializeEvent(&Event,...);
+      /* Issue verify request to the FSD */
+      Event = ExAllocatePool(NonPagedPool,
+			     sizeof(KEVENT));
+      if (Event == NULL)
+	return(STATUS_INSUFFICIENT_RESOURCES);
+
+      KeInitializeEvent(Event,
+			NotificationEvent,
+			FALSE);
 
       Irp = IoBuildFilesystemControlRequest(IRP_MN_VERIFY_VOLUME,
 					    DeviceObject,
-					    &Event,
+					    Event,
 					    &IoStatusBlock,
-					    &DeviceToMount)
+					    NULL); //DeviceToMount);
 
-
-#endif
+      Status = IoCallDriver(DeviceObject,
+			    Irp);
+      if (Status==STATUS_PENDING)
+	{
+	  KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
+	  Status = IoStatusBlock.Status;
+	}
+      ExFreePool(Event);
 
       if (NT_SUCCESS(Status))
 	{
@@ -346,6 +392,8 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
   if (Status == STATUS_WRONG_VOLUME)
     {
       /* FIXME: Replace existing VPB by a new one */
+      DPRINT1("Wrong volume!\n");
+
 
     }
 
@@ -361,49 +409,79 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID STDCALL
-IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
+PDEVICE_OBJECT STDCALL
+IoGetDeviceToVerify(IN PETHREAD Thread)
+/*
+ * FUNCTION: Returns a pointer to the device, representing a removable-media
+ * device, that is the target of the given thread's I/O request
+ */
 {
-   FILE_SYSTEM_OBJECT* fs;
-   
-   DPRINT("IoRegisterFileSystem(DeviceObject %x)\n",DeviceObject);
-   
-   fs = ExAllocatePoolWithTag(NonPagedPool, sizeof(FILE_SYSTEM_OBJECT),
-			      TAG_FILE_SYSTEM);
-   assert(fs!=NULL);
-   
-   fs->DeviceObject = DeviceObject;
-   ExInterlockedInsertTailList(&FileSystemListHead,&fs->Entry,
-			       &FileSystemListLock);
-   IopNotifyFileSystemChange(DeviceObject, TRUE);
+  return(Thread->DeviceToVerify);
 }
 
 
 VOID STDCALL
-IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
+IoSetDeviceToVerify(IN PETHREAD Thread,
+		    IN PDEVICE_OBJECT DeviceObject)
 {
-   KIRQL oldlvl;
-   PLIST_ENTRY current_entry;
-   FILE_SYSTEM_OBJECT* current;
+  Thread->DeviceToVerify = DeviceObject;
+}
 
-   DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
-   
-   KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
-   current_entry = FileSystemListHead.Flink;
-   while (current_entry!=(&FileSystemListHead))
-     {
-	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
-	if (current->DeviceObject == DeviceObject)
-	  {
-	     RemoveEntryList(current_entry);
-	     ExFreePool(current);
-	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-	     IopNotifyFileSystemChange(DeviceObject, FALSE);
-	     return;
-	  }
-	current_entry = current_entry->Flink;
-     }
-   KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+
+VOID STDCALL
+IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
+			     IN PDEVICE_OBJECT DeviceObject)
+{
+  Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
+}
+
+
+VOID STDCALL
+IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
+{
+  PFILE_SYSTEM_OBJECT Fs;
+
+  DPRINT("IoRegisterFileSystem(DeviceObject %x)\n",DeviceObject);
+
+  Fs = ExAllocatePoolWithTag(NonPagedPool,
+			     sizeof(FILE_SYSTEM_OBJECT),
+			     TAG_FILE_SYSTEM);
+  assert(Fs!=NULL);
+
+  Fs->DeviceObject = DeviceObject;
+  ExInterlockedInsertTailList(&FileSystemListHead,
+			      &Fs->Entry,
+			      &FileSystemListLock);
+  IopNotifyFileSystemChange(DeviceObject,
+			    TRUE);
+}
+
+
+VOID STDCALL
+IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
+{
+  KIRQL oldlvl;
+  PLIST_ENTRY current_entry;
+  PFILE_SYSTEM_OBJECT current;
+
+  DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
+
+  KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+  current_entry = FileSystemListHead.Flink;
+  while (current_entry!=(&FileSystemListHead))
+    {
+      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
+      if (current->DeviceObject == DeviceObject)
+	{
+	  RemoveEntryList(current_entry);
+	  ExFreePool(current);
+	  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	  IopNotifyFileSystemChange(DeviceObject, FALSE);
+	  return;
+	}
+      current_entry = current_entry->Flink;
+    }
+  KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 }
 
 
