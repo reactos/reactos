@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: offscreen.c,v 1.1 2002/09/25 21:21:35 dwelch Exp $
+/* $Id: offscreen.c,v 1.2 2003/01/25 22:53:12 ei Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/offscreen.c
@@ -54,7 +54,8 @@ VGADDI_BltFromSavedScreenBits(ULONG DestX,
   for (i = 0; i < SizeY; i++)
     {
       DestOffset = (PUCHAR)vidmem + (i + DestY) * 80 + (DestX >> 3);
-      for (j = 0; j < SizeX; j++, SrcOffset++, DestOffset++)
+	  //FIXME: in the loop below we should treat the case when SizeX is not divisible by 8, i.e. partial bytes
+      for (j = 0; j < SizeX>>3; j++, SrcOffset++, DestOffset++)
 	{
 	  (VOID)READ_REGISTER_UCHAR(SrcOffset);
 	  WRITE_REGISTER_UCHAR(DestOffset, 0);
@@ -86,7 +87,8 @@ VGADDI_BltToSavedScreenBits(PSAVED_SCREEN_BITS Dest,
   for (i = 0; i < SizeY; i++)
     {
       SrcOffset = (PUCHAR)vidmem + (SourceY + i) * 80 + (SourceX >> 3);
-      for (j = 0; j < SizeX; j++, SrcOffset++, DestOffset++)
+	  //FIXME: in the loop below we should treat the case when SizeX is not divisible by 8, i.e. partial bytes
+	  for (j = 0; j < SizeX>>3; j++, SrcOffset++, DestOffset++)
 	{
 	  (VOID)READ_REGISTER_UCHAR(SrcOffset);
 	  WRITE_REGISTER_UCHAR(DestOffset, 0);
@@ -107,7 +109,7 @@ VGADDI_FreeSavedScreenBits(PSAVED_SCREEN_BITS SavedBits)
     {
       PSAVED_SCREEN_BITS Previous;
 
-      Previous = CONTAINING_RECORD(SavedBits->ListEntry.Blink, 
+      Previous = CONTAINING_RECORD(SavedBits->ListEntry.Blink,
 				   SAVED_SCREEN_BITS, ListEntry);
       if (Previous->Free)
 	{
@@ -121,7 +123,7 @@ VGADDI_FreeSavedScreenBits(PSAVED_SCREEN_BITS SavedBits)
     {
       PSAVED_SCREEN_BITS Next;
 
-      Next = CONTAINING_RECORD(SavedBits->ListEntry.Flink, SAVED_SCREEN_BITS, 
+      Next = CONTAINING_RECORD(SavedBits->ListEntry.Flink, SAVED_SCREEN_BITS,
 			       ListEntry);
       if (Next->Free)
 	{
