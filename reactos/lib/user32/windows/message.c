@@ -1,5 +1,4 @@
-/* $Id: message.c,v 1.49 2004/12/30 02:32:26 navaraf Exp $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/message.c
@@ -2038,7 +2037,7 @@ RealMsgWaitForMultipleObjectsEx(
    LPHANDLE RealHandles;
    HANDLE MessageQueueHandle;
    DWORD Result;
-   
+
    if (dwFlags & ~(MWMO_WAITALL | MWMO_ALERTABLE | MWMO_INPUTAVAILABLE))
    {
       SetLastError(ERROR_INVALID_PARAMETER);
@@ -2067,7 +2066,7 @@ RealMsgWaitForMultipleObjectsEx(
       return WAIT_FAILED;
    }
 
-   RtlCopyMemory(RealHandles, pHandles, nCount);
+   RtlCopyMemory(RealHandles, pHandles, nCount * sizeof(HANDLE));
    RealHandles[nCount] = MessageQueueHandle;
 
    Result = WaitForMultipleObjectsEx(nCount + 1, RealHandles,
