@@ -59,4 +59,5 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
+#define NOTHING
 #endif /* _NTDEF_H */
