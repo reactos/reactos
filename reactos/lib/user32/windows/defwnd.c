@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.75 2003/08/29 11:00:19 gvg Exp $
+/* $Id: defwnd.c,v 1.76 2003/08/31 14:25:28 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -320,7 +320,7 @@ UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL down)
         return FALSE;
     }
 
-    BitBlt(hDC, Rect->left + 2, Rect->top + 2, 16, 16, hDcMem,
+    BitBlt(hDC, Rect->left + 2, Rect->top + 3, 16, 14, hDcMem,
            (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ?
 	        GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
 
