@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.25 2002/09/07 15:12:53 chorns Exp $
+/* $Id: iomgr.c,v 1.26 2002/09/07 17:08:31 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -15,13 +15,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-#define xbp(Value) \
-{ \
-  ULONG Port = 0x3f8; \
-__asm__("outb %0, %w1\n\t" : : "a" (Value), "d" (Port)); \
-}
-
 
 /* GLOBALS *******************************************************************/
 
@@ -273,8 +266,6 @@ VOID IoInit (VOID)
    * Initialize PnP manager
    */
   PnpInit();
-
-xbp('a');
 }
 
 

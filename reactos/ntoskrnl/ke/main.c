@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.135 2002/09/07 15:12:56 chorns Exp $
+/* $Id: main.c,v 1.136 2002/09/07 17:08:31 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -33,12 +33,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-#define xbp(Value) \
-{ \
-  ULONG Port = 0x3f8; \
-__asm__("outb %0, %w1\n\t" : : "a" (Value), "d" (Port)); \
-}
 
 /* GLOBALS *******************************************************************/
 
@@ -292,35 +286,20 @@ ExpVerifyOffsets()
   assert(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
   assert(FIELD_OFFSET(KV86M_REGISTERS, Ebp) == KV86M_REGISTERS_EBP);
   assert(FIELD_OFFSET(KV86M_REGISTERS, Edi) == KV86M_REGISTERS_EDI);
-  xbp('S');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Esi) == KV86M_REGISTERS_ESI);
-  xbp('T');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Edx) == KV86M_REGISTERS_EDX);
-  xbp('U');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Ecx) == KV86M_REGISTERS_ECX);
-  xbp('V');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Ebx) == KV86M_REGISTERS_EBX);
-  xbp('W');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Eax) == KV86M_REGISTERS_EAX);
-  xbp('X');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Ds) == KV86M_REGISTERS_DS);
-  xbp('Y');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Es) == KV86M_REGISTERS_ES);
-  xbp('Z');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Fs) == KV86M_REGISTERS_FS);
-  xbp('A');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Gs) == KV86M_REGISTERS_GS);
-  xbp('B');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Eip) == KV86M_REGISTERS_EIP);
-  xbp('C');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Cs) == KV86M_REGISTERS_CS);
-  xbp('D');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Eflags) == KV86M_REGISTERS_EFLAGS);
-  xbp('E');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Esp) == KV86M_REGISTERS_ESP);
-  xbp('F');
   assert(FIELD_OFFSET(KV86M_REGISTERS, Ss) == KV86M_REGISTERS_SS);
-  xbp('G');
 }
 
 VOID
@@ -337,24 +316,19 @@ ExpInitializeExecutive(VOID)
   ExpVerifyOffsets();
 
   LdrInit1();
-  xbp('0');
 
   KeLowerIrql(DISPATCH_LEVEL);
-  xbp('1');
   
   NtEarlyInitVdm();
-  xbp('2');
   
   MmInit1(FirstKrnlPhysAddr,
 	  LastKrnlPhysAddr,
 	  LastKernelAddress,
 	  (PADDRESS_RANGE)&KeMemoryMap,
 	  KeMemoryMapRangeCount);
-  xbp('3');
 
   /* create default nls tables */
   RtlpInitNlsTables();
-  xbp('4');
   
   /*
    * Initialize the kernel debugger
@@ -395,35 +369,27 @@ ExpInitializeExecutive(VOID)
 		   "under certain\n"); 
   HalDisplayString("conditions. There is absolutely no warranty for "
 		   "ReactOS.\n\n");
-  xbp('A');
 
   /* Initialize all processors */
   KeNumberProcessors = 0;
   while (!HalAllProcessorsStarted())
     {
       PVOID ProcessorStack;
-  xbp('B');
       if (KeNumberProcessors != 0)
 	{
 	  KePrepareForApplicationProcessorInit(KeNumberProcessors);
 	  PsPrepareForApplicationProcessorInit(KeNumberProcessors);
 	}
-  xbp('C');
       /* Allocate a stack for use when booting the processor */
       /* FIXME: The nonpaged memory for the stack is not released after use */
       ProcessorStack = 
 	ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
-  xbp('D');
 
       Ki386InitialStackArray[((int)KeNumberProcessors)] = 
 	(PVOID)(ProcessorStack - MM_STACK_SIZE);
-  xbp('E');
       HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
-  xbp('F');
       KeNumberProcessors++;
-  xbp('G');
     }
-  xbp('H');
 
   if (KeNumberProcessors > 1)
     {
@@ -446,23 +412,14 @@ ExpInitializeExecutive(VOID)
   HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   ExInit();
-  xbp('Q');
   IoInit();
-  xbp('R');
   PoInit();
-  xbp('A');
   LdrInitModuleManagement();
-  xbp('B');
   CmInitializeRegistry();
-  xbp('C');
   NtInit();
-  xbp('D');
   MmInit3();
-  xbp('E');
   CcInit();
-  xbp('F');
   KdInit2();
-  xbp('G');
   
   /* Report all resources used by hal */
   HalReportResourceUsage();
