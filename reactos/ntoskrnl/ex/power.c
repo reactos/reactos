@@ -28,7 +28,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN ULONG Flags)
 {
   /* Windows 2000 only */
-  return(STATUS_UNIMPLEMENTED);
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS STDCALL 

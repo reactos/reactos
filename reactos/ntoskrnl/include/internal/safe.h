@@ -9,4 +9,8 @@ MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS
 MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 
+NTSTATUS
+RtlCaptureUnicodeString(PUNICODE_STRING Dest,
+			PUNICODE_STRING UnsafeSrc);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SAFE_Hb */

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.12 2001/09/02 15:38:46 dwelch Exp $
+/* $Id: sysinfo.c,v 1.13 2001/09/02 17:29:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,8 +12,12 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/exfuncs.h>
+#include <ddk/halfuncs.h>
+#include <ddk/iofuncs.h>
 #include <internal/ex.h>
 #include <internal/ldr.h>
+#include <internal/safe.h>
 
 #include <internal/debug.h>
 
@@ -27,11 +31,9 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
 			       IN	ULONG		Length,
 			       IN OUT	PULONG		UnsafeReturnLength)
 {
-  PWCH WNameBuffer;
   NTSTATUS Status;
-  USHORT NameLength;
   ANSI_STRING AName;
-  UNICODE_STRING Name;
+  UNICODE_STRING WName;
   BOOLEAN Result;
   PCH Value;
   ANSI_STRING AValue;
@@ -43,73 +45,57 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
    */
   if (ExGetPreviousMode() != KernelMode)
     {
-      Status = MmSafeCopyFromUser(&NameLength, &UnsafeName->Length, 
-				  sizeof(NameLength));
+      Status = RtlCaptureUnicodeString(&WName, UnsafeName);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
 	}
-      
-      WNameBuffer = ExAllocatePool(NonPagedPool, NameLength + sizeof(WCHAR));
-      if (WNameBuffer != NULL)
-	{
-	  return(STATUS_NO_MORE_MEMORY);
-	}
-      memset(WNameBuffer, 0, NameLength + sizeof(WCHAR));
-      
-      Status = MmSafeCopyFromUser(WNameBuffer, UnsafeName->Buffer, 
-				  NameLength * sizeof(WCHAR));
+      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
       if (!NT_SUCCESS(Status))
 	{
-	  ExFreePool(WNameBuffer);
-	  return(Status);
-	}      
-      WNameBuffer[NameLength / sizeof(WCHAR)] = 0;
-
-      RtlInitUnicodeString(&Name, WNameBuffer);
-      Status = RtlUnicodeStringToAnsiString(&AName, &Name, TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  RtlFreeUnicodeString(&Name);
 	  return(Status);
 	}
     }
   else
     {
-      RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
+      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
     }
 
   /*
    * Create a temporary buffer for the value
    */
-  ValueBuffer = ExAllocatePool(NonPagedPool, Length);
-  if (ValueBuffer == NULL)
+  Value = ExAllocatePool(NonPagedPool, Length);
+  if (Value == NULL)
     {
       RtlFreeAnsiString(&AName);
       if (ExGetPreviousMode() != KernelMode)
 	{
-	  RtlFreeUnicodeString(&Name);
+	  RtlFreeUnicodeString(&WName);
 	}
-      return(STATUS_NO_MORE_MEMORY);
+      return(STATUS_NO_MEMORY);
     }
 
   /*
    * Get the environment variable
    */
-  Result = HalGetEnvironmentVariable(AName->Buffer, Value, Length);
+  Result = HalGetEnvironmentVariable(AName.Buffer, Value, Length);
   if (!Result)
     {
       RtlFreeAnsiString(&AName);
       if (ExGetPreviousMode() != KernelMode)
 	{
-	  RtlFreeUnicodeString(&Name);
+	  RtlFreeUnicodeString(&WName);
 	}
       ExFreePool(Value);
       return(STATUS_UNSUCCESSFUL);
     }
 
   /*
-   * Convert the result to ANSI.
+   * Convert the result to UNICODE.
    */
   RtlInitAnsiString(&AValue, Value);
   Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
@@ -118,38 +104,39 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
       RtlFreeAnsiString(&AName);
       if (ExGetPreviousMode() != KernelMode)
 	{
-	  RtlFreeUnicodeString(&Name);
+	  RtlFreeUnicodeString(&WName);
 	}
       ExFreePool(Value);
       return(Status);
     }
-  ReturnLength = WValue->Length;
+  ReturnLength = WValue.Length;
 
   /*
    * Copy the result back to the caller.
    */
   if (ExGetPreviousMode() != KernelMode)
     {
-      Status = MmCopyToUser(UnsafeValue, WValue->Buffer, ReturnLength);
+      Status = MmCopyToCaller(UnsafeValue, WValue.Buffer, ReturnLength);
       if (!NT_SUCCESS(Status))
 	{
 	  RtlFreeAnsiString(&AName);
 	  if (ExGetPreviousMode() != KernelMode)
 	    {
-	      RtlFreeUnicodeString(&Name);
+	      RtlFreeUnicodeString(&WName);
 	    }
 	  ExFreePool(Value);
 	  RtlFreeUnicodeString(&WValue);
 	  return(Status);
 	}
 
-      Status = MmCopyToUser(UnsafeReturnLength, &ReturnLength, sizeof(ULONG));
+      Status = MmCopyToCaller(UnsafeReturnLength, &ReturnLength, 
+			      sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  RtlFreeAnsiString(&AName);
 	  if (ExGetPreviousMode() != KernelMode)
 	    {
-	      RtlFreeUnicodeString(&Name);
+	      RtlFreeUnicodeString(&WName);
 	    }
 	  ExFreePool(Value);
 	  RtlFreeUnicodeString(&WValue);
@@ -158,7 +145,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
     }
   else
     {
-      memcpy(UnsafeValue, WValue->Buffer, ReturnLength);
+      memcpy(UnsafeValue, WValue.Buffer, ReturnLength);
       memcpy(UnsafeReturnLength, &ReturnLength, sizeof(ULONG));
     }
 
@@ -168,7 +155,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
   RtlFreeAnsiString(&AName);
   if (ExGetPreviousMode() != KernelMode)
     {
-      RtlFreeUnicodeString(&Name);
+      RtlFreeUnicodeString(&WName);
     }
   ExFreePool(Value);
   RtlFreeUnicodeString(&WValue);
@@ -178,10 +165,98 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
 
 
 NTSTATUS STDCALL
-NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeVariableName,
-			     IN	PUNICODE_STRING	Value)
+NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	UnsafeName,
+			     IN	PUNICODE_STRING	UnsafeValue)
 {
-  UNIMPLEMENTED;
+  UNICODE_STRING WName;
+  ANSI_STRING AName;
+  UNICODE_STRING WValue;
+  ANSI_STRING AValue;
+  BOOLEAN Result;
+  NTSTATUS Status;
+
+  /*
+   * Check for required privilege.
+   */
+  /* FIXME: Not implemented. */
+
+  /*
+   * Copy the name to kernel space if necessary and convert it to ANSI.
+   */
+  if (ExGetPreviousMode() != KernelMode)
+    {
+      Status = RtlCaptureUnicodeString(&WName, UnsafeName);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}      
+    }
+  else
+    {
+      Status = RtlUnicodeStringToAnsiString(&AName, UnsafeName, TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+    }
+
+  /*
+   * Copy the value to kernel space and convert to ANSI.
+   */
+  if (ExGetPreviousMode() != KernelMode)
+    {
+      Status = RtlCaptureUnicodeString(&WValue, UnsafeValue);
+      if (!NT_SUCCESS(Status))
+	{
+	  RtlFreeUnicodeString(&WName);
+	  RtlFreeAnsiString(&AName);
+	  return(Status);
+	}
+      Status = RtlUnicodeStringToAnsiString(&AValue, UnsafeValue, TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  RtlFreeUnicodeString(&WName);
+	  RtlFreeAnsiString(&AName);
+	  RtlFreeUnicodeString(&WValue);
+	  return(Status);
+	}      
+    }
+  else
+    {
+      Status = RtlUnicodeStringToAnsiString(&AValue, UnsafeValue, TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  RtlFreeAnsiString(&AName);
+	  return(Status);
+	}
+    }
+
+  /*
+   * Set the environment variable
+   */
+  Result = HalSetEnvironmentVariable(AName.Buffer, AValue.Buffer);
+
+  /*
+   * Free everything and return status.
+   */
+  RtlFreeAnsiString(&AName);
+  RtlFreeAnsiString(&AValue);
+  if (ExGetPreviousMode() != KernelMode)
+    {
+      RtlFreeUnicodeString(&WName);
+      RtlFreeUnicodeString(&WValue);
+    }
+
+  if (!Result)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+  return(STATUS_SUCCESS);
 }
 
 
