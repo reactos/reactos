@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.25 2004/11/24 00:11:06 weiden Exp $
+ * $Id: focus.c,v 1.26 2004/11/25 22:18:59 navaraf Exp $
  */
 
 #include <w32k.h>
@@ -53,7 +53,7 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
    if (hWndPrev)
    {
       IntPostOrSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
-      IntPostOrSendMessage(hWnd, WM_ACTIVATE,
+      IntPostOrSendMessage(hWndPrev, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
          (LPARAM)hWnd);
    }
@@ -174,6 +174,9 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
 
    /* FIXME: Call hooks. */
 
+   IntSendDeactivateMessages(hWndPrev, hWnd);
+   IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
+
    IntSetFocusMessageQueue(Window->MessageQueue);
    IntLockMessageQueue(Window->MessageQueue);
    if (Window->MessageQueue)
@@ -188,12 +191,11 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    }
    IntUnLockMessageQueue(FocusWindow->MessageQueue);
 
-   IntSendDeactivateMessages(hWndPrev, hWnd);
-   IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
    if (PrevForegroundQueue != Window->MessageQueue)
    {
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
+
    IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
    
