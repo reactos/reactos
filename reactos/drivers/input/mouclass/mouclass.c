@@ -73,13 +73,18 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
 
     // Throw data up to GDI callback
     if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
+	  DbgPrint("MouseClassCallBack() Calling GDI callback at %p\n", ClassDeviceExtension->GDIInformation.CallBack);
       (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
         (ClassDeviceExtension->PortData - ReadSize, ReadSize);
-    }
+    } else {
+	  DbgPrint("MouseClassCallBack() NO GDI callback installed\n");
+	}
 
     ClassDeviceExtension->PortData -= ReadSize;
     ClassDeviceExtension->InputCount -= ReadSize;
     ClassDeviceExtension->ReadIsPending = FALSE;
+  } else {
+    DbgPrint("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
   }
 
   return TRUE;
@@ -231,6 +236,8 @@ NTSTATUS STDCALL MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
          DeviceExtension->GDIInformation =
             *((PGDI_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
+
+         DbgPrint("MouseClassInternalDeviceControl() installed GDI callback at %p\n", DeviceExtension->GDIInformation.CallBack);
 
          status = STATUS_SUCCESS;
          break;
