@@ -107,6 +107,10 @@ struct Window : public WindowHandle
 	static int	MessageLoop();
 
 
+	LRESULT	SendParent(UINT nmsg, WPARAM wparam=0, LPARAM lparam=0);
+	LRESULT	PostParent(UINT nmsg, WPARAM wparam=0, LPARAM lparam=0);
+
+
 protected:
 	virtual LRESULT	Init(LPCREATESTRUCT pcs);							// WM_CREATE processing
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

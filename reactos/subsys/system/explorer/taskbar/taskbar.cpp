@@ -60,8 +60,6 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd)
 {
-	_hwndTaskBar = 0;
-	_startMenuRoot = 0;
 }
 
 DesktopBar::~DesktopBar()
@@ -89,7 +87,30 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	taskbar->_desktop_bar = this;
 
+	RegisterHotkeys();
+
 	return 0;
+}
+
+
+void DesktopBar::RegisterHotkeys()
+{
+	 // register hotkey CTRL+ESC for opening Startmenu
+	RegisterHotKey(_hwnd, 0, MOD_CONTROL, VK_ESCAPE);
+
+	 // register hotkey WIN+E opening explorer
+	RegisterHotKey(_hwnd, 1, MOD_WIN, 'E');
+
+		//TODO: register all common hotkeys
+}
+
+void DesktopBar::ProcessHotKey(int id_hotkey)
+{
+	switch(id_hotkey) {
+	  case 0:	ToggleStartmenu();							break;
+	  case 1:	explorer_show_frame(_hwnd, SW_SHOWNORMAL);	break;
+		//TODO: implement all common hotkeys
+	}
 }
 
 
@@ -136,6 +157,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		_startMenuRoot = 0;
 		break;
 
+	  case WM_HOTKEY:
+		ProcessHotKey(wparam);
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -148,20 +173,24 @@ int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_START:
-		if (_startMenuRoot && IsWindow(_startMenuRoot)) {	// IsWindow(): safety first
-			 // dispose Startmenu
-			DestroyWindow(_startMenuRoot);
-			_startMenuRoot = 0;
-		} else {
-			 // create Startmenu
-			WindowRect my_pos(_hwnd);
-
-			_startMenuRoot = StartMenuRoot::Create(my_pos.left, my_pos.top-4, _hwnd);
-		}
+		ToggleStartmenu();
 		break;
 	}
 
 	return 0;
+}
+
+
+void DesktopBar::ToggleStartmenu()
+{
+	if (_startMenuRoot && IsWindow(_startMenuRoot)) {	// IsWindow(): safety first
+		 // dispose Startmenu
+		DestroyWindow(_startMenuRoot);
+		_startMenuRoot = 0;
+	} else {
+		 // create Startmenu
+		_startMenuRoot = StartMenuRoot::Create(_hwnd);
+	}
 }
 
 

@@ -356,9 +356,9 @@ void ChildWindow::resize_children(int cx, int cy)
 
 	cx = _split_pos + SPLIT_WIDTH/2;
 
-	DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
-	DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
 }
@@ -408,30 +408,6 @@ BOOL Window::dispatch_dialog_msg(MSG* pmsg)
 }
 
 
-PreTranslateWindow::PreTranslateWindow(HWND hwnd)
- :	super(hwnd)
-{
-	register_pretranslate(hwnd);
-}
-
-PreTranslateWindow::~PreTranslateWindow()
-{
-	unregister_pretranslate(_hwnd);
-}
-
-
-Dialog::Dialog(HWND hwnd)
- :	super(hwnd)
-{
-	register_dialog(hwnd);
-}
-
-Dialog::~Dialog()
-{
-	unregister_dialog(_hwnd);
-}
-
-
 int Window::MessageLoop()
 {
 	MSG msg;
@@ -460,9 +436,54 @@ int Window::MessageLoop()
 }
 
 
-Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+LRESULT	Window::SendParent(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	HWND parent = GetParent(_hwnd);
+
+	if (!parent)
+		return 0;
+
+	return SendMessage(parent, nmsg, wparam, lparam);
+}
+
+LRESULT	Window::PostParent(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	HWND parent = GetParent(_hwnd);
+
+	if (!parent)
+		return 0;
+
+	return PostMessage(parent, nmsg, wparam, lparam);
+}
+
+
+PreTranslateWindow::PreTranslateWindow(HWND hwnd)
+ :	super(hwnd)
+{
+	register_pretranslate(hwnd);
+}
+
+PreTranslateWindow::~PreTranslateWindow()
+{
+	unregister_pretranslate(_hwnd);
+}
+
+
+Dialog::Dialog(HWND hwnd)
+ :	super(hwnd)
+{
+	register_dialog(hwnd);
+}
+
+Dialog::~Dialog()
+{
+	unregister_dialog(_hwnd);
+}
+
+
+Button::Button(HWND parent, LPCTSTR title, int left, int top, int width, int height,
 				int id, DWORD flags, DWORD exStyle)
- :	WindowHandle(CreateWindowEx(exStyle, TEXT("BUTTON"), text, flags, left, top, width, height,
+ :	WindowHandle(CreateWindowEx(exStyle, TEXT("BUTTON"), title, flags, left, top, width, height,
 							parent, (HMENU)id, g_Globals._hInstance, 0))
 {
 }
@@ -478,9 +499,9 @@ LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 }
 
 
-Static::Static(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+Static::Static(HWND parent, LPCTSTR title, int left, int top, int width, int height,
 				int id, DWORD flags, DWORD exStyle)
- :	WindowHandle(CreateWindowEx(exStyle, TEXT("STATIC"), text, flags, left, top, width, height,
+ :	WindowHandle(CreateWindowEx(exStyle, TEXT("STATIC"), title, flags, left, top, width, height,
 							parent, (HMENU)id, g_Globals._hInstance, 0))
 {
 }
@@ -494,23 +515,23 @@ static BOOL CALLBACK MyDrawText(HDC hdc, LPARAM data, int cnt)
 	return TRUE;
 }
 
-void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR text, int dt_flags)
+void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR title, int dt_flags)
 {
 	COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
 
 	if (gray) {
 		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
 		RECT shadowRect = {pRect->left+1, pRect->top+1, pRect->right+1, pRect->bottom+1};
-		DrawText(dis->hDC, text, -1, &shadowRect, dt_flags);
+		DrawText(dis->hDC, title, -1, &shadowRect, dt_flags);
 
 		BkMode mode(dis->hDC, TRANSPARENT);
 		SetTextColor(dis->hDC, gray);
-		DrawText(dis->hDC, text, -1, pRect, dt_flags);
+		DrawText(dis->hDC, title, -1, pRect, dt_flags);
 	} else {
 		int old_r = pRect->right;
 		int old_b = pRect->bottom;
 
-		DrawText(dis->hDC, text, -1, pRect, dt_flags|DT_CALCRECT);
+		DrawText(dis->hDC, title, -1, pRect, dt_flags|DT_CALCRECT);
 
 		int x = pRect->left + (old_r-pRect->right)/2;
 		int y = pRect->top + (old_b-pRect->bottom)/2;
@@ -519,7 +540,7 @@ void OwnerdrawnButton::DrawGrayText(LPDRAWITEMSTRUCT dis, LPRECT pRect, LPCTSTR 
 		s_MyDrawText_Rect.right = w;
 		s_MyDrawText_Rect.bottom = h;
 
-		GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)text, -1, x, y, w, h);
+		GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)title, -1, x, y, w, h);
 	}
 }
 
@@ -542,14 +563,14 @@ void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 	DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
 
-	TCHAR text[BUFFER_LEN];
-	GetWindowText(_hwnd, text, BUFFER_LEN);
+	TCHAR title[BUFFER_LEN];
+	GetWindowText(_hwnd, title, BUFFER_LEN);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
 	else {
 		TextColor lcColor(dis->hDC, _textColor);
-		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
 	}
 
 	if (dis->itemState & ODS_FOCUS) {
@@ -592,15 +613,15 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
 
-	TCHAR text[BUFFER_LEN];
-	GetWindowText(_hwnd, text, BUFFER_LEN);
+	TCHAR title[BUFFER_LEN];
+	GetWindowText(_hwnd, title, BUFFER_LEN);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 	else {
 		//BkMode mode(dis->hDC, TRANSPARENT);
 		TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNTEXT));
-		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
+		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_VCENTER/*|DT_CENTER*/);
 	}
 
 	if (dis->itemState & ODS_FOCUS) {

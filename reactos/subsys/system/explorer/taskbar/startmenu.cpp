@@ -61,10 +61,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
 
 StartMenu::~StartMenu()
 {
-	HWND parent = GetParent(_hwnd);
-
-	if (parent)
-		SendMessage(parent, WM_STARTMENU_CLOSED, 0, 0);
+	SendParent(WM_STARTMENU_CLOSED);
 }
 
 
@@ -72,7 +69,7 @@ StartMenu::~StartMenu()
 HWND StartMenu::Create(int x, int y, HWND hwndParent)
 {
 	return Window::Create(WINDOW_CREATOR(StartMenu), NULL, s_wcStartMenu, TITLE_STARTMENU,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4, hwndParent);
 }
 */
 
@@ -81,7 +78,7 @@ Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, CREATORFUNC creator)
 {
 	return Window::Create(creator, &folders, 0, s_wcStartMenu, NULL,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4/*start height*/, hwndParent);
 }
 
 
@@ -153,6 +150,10 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
+	  case WM_SIZE:
+		ResizeButtons(LOWORD(lparam));
+		break;
+
 	  case WM_NCHITTEST: {
 		LRESULT res = super::WndProc(nmsg, wparam, lparam);
 
@@ -166,6 +167,27 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return 0;			// disable window resizing
 		goto def;
 
+	  case WM_STARTENTRY_FOCUSED: {
+		BOOL hasSubmenu = wparam;
+		HWND hctrl = (HWND)lparam;
+
+		 // automatically open submenus
+		if (hasSubmenu) {
+			UpdateWindow(_hwnd);	// draw focused button before waiting on submenu creation
+			//SendMessage(_hwnd, WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hctrl),BN_CLICKED), (LPARAM)hctrl);
+			Command(GetDlgCtrlID(hctrl), BN_CLICKED);
+		} else {
+			 // close any open submenu
+			CloseOtherSubmenus(0);
+		}
+		break;}
+
+	  case WM_STARTENTRY_LAUNCHED:
+		 // route message to the parent menu and close menus after launching an entry
+		if (!SendParent(nmsg, wparam, lparam))
+			DestroyWindow(_hwnd);
+		return 1;	// signal that we have received and processed the message
+
 	  case WM_STARTMENU_CLOSED:
 		_submenu = 0;
 		break;
@@ -175,6 +197,29 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
+}
+
+
+ // resize child button controls to accomodate for new window size
+void StartMenu::ResizeButtons(int cx)
+{
+	HDWP hdwp = BeginDeferWindowPos(10);
+
+	for(HWND ctrl=GetWindow(_hwnd,GW_CHILD); ctrl; ctrl=GetNextWindow(ctrl,GW_HWNDNEXT)) {
+		ClientRect rt(ctrl);
+
+		if (rt.right != cx) {
+			int height = rt.bottom - rt.top;
+
+			 // special handling for separator controls
+			if (!height && (GetWindowStyle(ctrl)&SS_TYPEMASK)==SS_ETCHEDHORZ)
+				height = 2;
+
+			hdwp = DeferWindowPos(hdwp, ctrl, 0, 0, 0, cx, height, SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+		}
+	}
+
+	EndDeferWindowPos(hdwp);
 }
 
 
@@ -237,6 +282,7 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, 
 {
 	WindowRect rect(_hwnd);
 
+	 // increase window height to make room for the new button
 	rect.top -= STARTMENU_LINE_HEIGHT;
 
 	if (rect.top < 0) {
@@ -244,9 +290,16 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, 
 		rect.bottom += STARTMENU_LINE_HEIGHT;
 	}
 
+	 // widen window, if it is too small
+	int width = StartMenuButton::GetTextWidth(title) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
+
+	ClientRect clnt(_hwnd);
+	if (width > clnt.right)
+		rect.right += width-clnt.right;
+
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuCtrl(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, title, id, hIcon, hasSubmenu, style);
+	StartMenuCtrl(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-6, title, id, hIcon, hasSubmenu, style);
 }
 
 void StartMenu::AddSeparator()
@@ -262,7 +315,7 @@ void StartMenu::AddSeparator()
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuSeparator(_hwnd, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-4);
+	StartMenuSeparator(_hwnd, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-6);
 }
 
 
@@ -295,7 +348,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREAT
 		WindowRect pos(btn);
 
 		x = pos.right-3;	// Submenus should overlap their parent a bit.
-		y = pos.top;
+		y = pos.top+STARTMENU_LINE_HEIGHT-3;
 	} else {
 		WindowRect pos(_hwnd);
 
@@ -351,7 +404,32 @@ void StartMenu::ActivateEntry(int id, ShellEntry* entry)
 		CreateSubmenu(id, new_folders);
 	} else {
 		entry->launch_entry(_hwnd);	//TODO: launch in the background
+
+		CloseStartMenu(id);
 	}
+}
+
+
+void StartMenu::CloseStartMenu(int id)
+{
+	 // close start menus after launching the selected entry
+	if (!SendParent(WM_STARTENTRY_LAUNCHED, id, (LPARAM)_hwnd))
+		DestroyWindow(_hwnd);
+}
+
+
+int StartMenuButton::GetTextWidth(LPCTSTR title)
+{
+	RECT rect = {0, 0, 0, 0};
+
+	HDC hdc = GetDC(0);
+	SelectedFont font(hdc, GetStockFont(DEFAULT_GUI_FONT));
+
+	DrawText(hdc, title, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+
+	ReleaseDC(0, hdc);
+
+	return rect.right-rect.left;
 }
 
 
@@ -360,17 +438,15 @@ LRESULT StartMenuButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 	switch(message) {
 	  case WM_MOUSEMOVE:
 		 // automatically set the focus to startmenu entries when moving the mouse over them		
-		if (GetFocus()!=_hwnd && !(GetWindowStyle(_hwnd)&WS_DISABLED)) {
+		if (GetFocus()!=_hwnd && !(GetWindowStyle(_hwnd)&WS_DISABLED))
 			SetFocus(_hwnd);
-			UpdateWindow(GetParent(_hwnd));	// draw focused button before waiting on submenu creation
-
-			 // automatically open submenus
-			if (_hasSubmenu)
-				SendMessage(GetParent(_hwnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(_hwnd),BN_CLICKED), (LPARAM)_hwnd);
-		}
 		break;
 
-	  default:
+	  case WM_SETFOCUS:
+		PostParent(WM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
+		goto def;
+
+	  default: def:
 		return super::WndProc(message, wparam, lparam);
 	}
 
@@ -416,15 +492,15 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 					dis->itemState&ODS_FOCUS?selArrowIcon:arrowIcon, 16, 16, 0, bk_brush, DI_NORMAL);
 	}
 
-	TCHAR text[BUFFER_LEN];
-	GetWindowText(_hwnd, text, BUFFER_LEN);
+	TCHAR title[BUFFER_LEN];
+	GetWindowText(_hwnd, title, BUFFER_LEN);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
+		DrawGrayText(dis, &textRect, title, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 	else {
 		BkMode mode(dis->hDC, TRANSPARENT);
 		TextColor lcColor(dis->hDC, GetSysColor(text_color));
-		DrawText(dis->hDC, text, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
+		DrawText(dis->hDC, title, -1, &textRect, DT_SINGLELINE|DT_NOPREFIX|DT_VCENTER);
 	}
 }
 
@@ -441,10 +517,12 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// dont't add subfolders
 }
 
-HWND StartMenuRoot::Create(int x, int y, HWND hwndParent)
+HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 {
+	WindowRect pos(hwndDesktopBar);
+
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, s_wcStartMenu, TITLE_STARTMENU,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH, 4, hwndParent);
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, pos.left, pos.top-4, STARTMENU_WIDTH_MIN, 4, hwndDesktopBar);
 }
 
 LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
@@ -487,6 +565,7 @@ int StartMenuRoot::Command(int id, int code)
 
 	  case IDC_EXPLORE:
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
+		CloseStartMenu(id);
 		break;
 
 	  case IDC_DOCUMENTS:

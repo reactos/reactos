@@ -134,7 +134,6 @@ protected:
 	COLORREF _old_color;
 };
 
-
 struct BkMode
 {
 	BkMode(HDC hdc, int bkmode)
@@ -145,6 +144,18 @@ struct BkMode
 protected:
 	HDC		 _hdc;
 	COLORREF _old_bkmode;
+};
+
+struct SelectedFont
+{
+	SelectedFont(HDC hdc, HFONT hFont)
+	 : _hdc(hdc), _old_hFont(SelectFont(hdc, hFont)) {}
+
+	~SelectedFont() {SelectFont(_hdc, _old_hFont);}
+
+protected:
+	HDC		_hdc;
+	HFONT	_old_hFont;
 };
 
 

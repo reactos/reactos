@@ -33,12 +33,14 @@
 #define	TITLE_STARTMENU			_T("Start Menu")
 
 
-#define	STARTMENU_WIDTH			150
+#define	STARTMENU_WIDTH_MIN		120
 #define	STARTMENU_LINE_HEIGHT	22
 #define	STARTMENU_SEP_HEIGHT	(STARTMENU_LINE_HEIGHT/2)
 
 
 #define	WM_STARTMENU_CLOSED		(WM_APP+0x11)
+#define	WM_STARTENTRY_FOCUSED	(WM_APP+0x12)
+#define	WM_STARTENTRY_LAUNCHED	(WM_APP+0x13)
 
 
 struct StartMenuDirectory
@@ -71,6 +73,8 @@ struct StartMenuButton : public OwnerdrawnButton
 
 	StartMenuButton(HWND hwnd, HICON hIcon, bool hasSubmenu)
 	 :	super(hwnd), _hIcon(hIcon), _hasSubmenu(hasSubmenu) {}
+
+	static int GetTextWidth(LPCTSTR title);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -141,6 +145,8 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
+	void	ResizeButtons(int cx);
+
 	virtual void AddEntries();
 
 	StartMenuEntry& AddEntry(LPCTSTR title, HICON hIcon=0, UINT id=(UINT)-1);
@@ -156,6 +162,7 @@ protected:
 	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder, CREATORFUNC creator=s_def_creator);
 	void	ActivateEntry(int id, ShellEntry* entry);
+	void	CloseStartMenu(int id=0);
 };
 
 
@@ -166,7 +173,7 @@ struct StartMenuRoot : public StartMenu
 
 	StartMenuRoot(HWND hwnd);
 
-	static HWND Create(int x, int y, HWND hwndParent=0);
+	static HWND Create(HWND hwndDesktopBar);
 
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);

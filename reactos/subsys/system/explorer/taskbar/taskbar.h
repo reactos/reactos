@@ -77,6 +77,10 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
+	void	RegisterHotkeys();
+	void	ProcessHotKey(int id_hotkey);
+	void	ToggleStartmenu();
+
 	WindowHandle _hwndTaskBar;
 	WindowHandle _startMenuRoot;
 };
