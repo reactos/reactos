@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.14 2004/11/06 01:42:04 weiden Exp $
+/* $Id: win32.c,v 1.15 2004/11/06 01:43:59 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -970,7 +970,7 @@ GetProcessImageFileNameW(HANDLE hProcess,
     LocalFree((HLOCAL)ImageFileName);
   }
 
-  return 0;
+  return Ret;
 }
 
 
@@ -1026,7 +1026,7 @@ GetProcessImageFileNameA(HANDLE hProcess,
     LocalFree((HLOCAL)ImageFileName);
   }
 
-  return 0;
+  return Ret;
 }
 
 
