@@ -1,11 +1,11 @@
-/* $Id: errno.c,v 1.2 2000/12/03 17:58:38 ekohl Exp $
+/* $Id: errno.c,v 1.3 2001/01/18 13:23:26 jean Exp $
  *
  */
 #include <msvcrt/internal/tls.h>
 
-int _errno (void)
+int *_errno (void)
 {
-   return (GetThreadData()->terrno);
+   return (&GetThreadData()->terrno);
 }
 
 
