@@ -394,13 +394,13 @@ CmiPopulateHive(HANDLE FileHandle)
 
   // Add free blocks so we don't need to expand
   // the file for a while
-  for (i = 0; i < 50; i++)
+  for (i = 1; i < 50; i++)
     {
       // Block offset of this bin
-      BinCell->BlockOffset = (2 + i) * REG_BLOCK_SIZE;
+      BinCell->BlockOffset = i * REG_BLOCK_SIZE;
 
       FileOffset.u.HighPart = 0;
-      FileOffset.u.LowPart   = (2 + i) * REG_BLOCK_SIZE;
+      FileOffset.u.LowPart  = (i + 1) * REG_BLOCK_SIZE;
 
       Status = NtWriteFile(FileHandle,
 			   NULL,
@@ -1194,7 +1194,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
   PVOID BlockPtr;
   NTSTATUS Status;
 
-  DPRINT1("CmiStartLogUpdate() called\n");
+  DPRINT("CmiStartLogUpdate() called\n");
 
   BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
   BufferSize = sizeof(HIVE_HEADER) +
@@ -3276,7 +3276,7 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
   if (IsVolatileHive(RegistryHive))
       return;
 
-  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
+  DPRINT("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
 
   BlockNumber = (ULONG)BlockOffset / 4096;
 
@@ -3290,11 +3290,11 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 
   BlockCount = (ROUND_UP(BlockOffset + CellSize, 4096) - ROUND_DOWN(BlockOffset, 4096)) / 4096;
 
-  DPRINT1("  BlockNumber %lu  Size %lu (%s)  BlockCount %lu\n",
-	  BlockNumber,
-	  CellSize,
-	  (Cell->CellSize < 0) ? "used" : "free",
-	  BlockCount);
+  DPRINT("  BlockNumber %lu  Size %lu (%s)  BlockCount %lu\n",
+	 BlockNumber,
+	 CellSize,
+	 (Cell->CellSize < 0) ? "used" : "free",
+	 BlockCount);
 
   RegistryHive->HiveDirty = TRUE;
   RtlSetBits(&RegistryHive->DirtyBitMap,
@@ -3314,7 +3314,7 @@ CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
   if (IsVolatileHive(RegistryHive))
       return;
 
-  DPRINT1("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);
+  DPRINT("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);
 
   BlockNumber = (ULONG)BinOffset / 4096;
 
@@ -3322,10 +3322,10 @@ CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
 
   BlockCount = Bin->BlockSize / 4096;
 
-  DPRINT1("  BlockNumber %lu  Size %lu  BlockCount %lu\n",
-	  BlockNumber,
-	  Bin->BlockSize,
-	  BlockCount);
+  DPRINT("  BlockNumber %lu  Size %lu  BlockCount %lu\n",
+	 BlockNumber,
+	 Bin->BlockSize,
+	 BlockCount);
 
   RegistryHive->HiveDirty = TRUE;
   RtlSetBits(&RegistryHive->DirtyBitMap,

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.86 2003/03/08 19:26:12 ekohl Exp $
+/* $Id: registry.c,v 1.87 2003/03/18 20:36:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1106,6 +1106,8 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
 
   DPRINT("DeferredContext %x\n", DeferredContext);
   ExFreePool(DeferredContext);
+
+  DPRINT1("CmiHiveSyncRoutine() done\n");
 }
 
 
