@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.13 2003/07/11 15:59:37 royce Exp $
+/* $Id: clip.c,v 1.14 2003/07/14 09:38:02 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -42,54 +42,63 @@ VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
   FreeGDIHandle(HClip);
 }
 
-CLIPOBJ STDCALL * IntEngCreateClipRegion( ULONG count, PRECTL pRect, RECTL rcBounds )
+CLIPOBJ STDCALL *
+IntEngCreateClipRegion(ULONG count, PRECTL pRect, RECTL rcBounds)
 {
-	HCLIP hClip;
-	CLIPGDI* clipInt;
-    CLIPOBJ* clipUser;
-	DPRINT("IntEngCreateClipRegion count: %d\n", count);
-	if( count > 1 ){
-		hClip = (HCLIP)CreateGDIHandle( sizeof( CLIPGDI ) + count*sizeof(RECTL),
-	                                       sizeof( CLIPOBJ ) );
+  HCLIP hClip;
+  CLIPGDI* clipInt;
+  CLIPOBJ* clipUser;
 
-		if( hClip ){
-			clipInt = (CLIPGDI*)AccessInternalObject( hClip );
-			RtlCopyMemory( clipInt->EnumRects.arcl, pRect, count*sizeof(RECTL));
-			clipInt->EnumRects.c=count;
+  DPRINT("IntEngCreateClipRegion count: %d\n", count);
+  if (1 < count)
+    {
+      hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI) + count * sizeof(RECTL),
+                                      sizeof(CLIPOBJ));
 
-			clipUser = (CLIPOBJ*)AccessUserObject( hClip );
-			ASSERT( clipUser );
+      if (hClip)
+	{
+	  clipInt = (CLIPGDI *) AccessInternalObject(hClip);
+	  RtlCopyMemory(clipInt->EnumRects.arcl, pRect, count * sizeof(RECTL));
+	  clipInt->EnumRects.c = count;
+	  clipInt->EnumOrder = CD_ANY;
 
-			clipUser->iDComplexity = DC_COMPLEX;
-			clipUser->iFComplexity = (count <= 4)? FC_RECT4: FC_COMPLEX;
-			clipUser->iMode 	   = TC_RECTANGLES;
-			RtlCopyMemory( &(clipUser->rclBounds), &rcBounds, sizeof( RECTL ) );
+	  clipUser = (CLIPOBJ *) AccessUserObject(hClip);
+	  ASSERT(NULL != clipUser);
 
-			return clipUser;
-		}
-		return NULL;
+	  clipUser->iDComplexity = DC_COMPLEX;
+	  clipUser->iFComplexity = (count <= 4) ? FC_RECT4: FC_COMPLEX;
+	  clipUser->iMode = TC_RECTANGLES;
+	  RtlCopyMemory(&(clipUser->rclBounds), &rcBounds, sizeof(RECTL));
+
+	  return clipUser;
 	}
-	else{
-		hClip = (HCLIP)CreateGDIHandle( sizeof( CLIPGDI ),
-	                                       sizeof( CLIPOBJ ) );
-		if( hClip ){
-			clipInt = (CLIPGDI*)AccessInternalObject( hClip );
-			RtlCopyMemory( clipInt->EnumRects.arcl, &rcBounds, sizeof( RECTL ));
-			clipInt->EnumRects.c = 1;
+    }
+  else
+    {
+      hClip = (HCLIP) CreateGDIHandle(sizeof(CLIPGDI),
+	                              sizeof(CLIPOBJ));
+      if (hClip)
+	{
+	  clipInt = (CLIPGDI *) AccessInternalObject(hClip);
+	  RtlCopyMemory(clipInt->EnumRects.arcl, &rcBounds, sizeof(RECTL));
+	  clipInt->EnumRects.c = 1;
+	  clipInt->EnumOrder = CD_ANY;
 
-			clipUser = (CLIPOBJ*)AccessUserObject( hClip );
-			ASSERT( clipUser );
+	  clipUser = (CLIPOBJ *) AccessUserObject(hClip);
+	  ASSERT(NULL != clipUser);
 
-			clipUser->iDComplexity = ((rcBounds.top==rcBounds.bottom)&&(rcBounds.left==rcBounds.right))?
-										DC_TRIVIAL:DC_RECT;
-			clipUser->iFComplexity = FC_RECT;
-			clipUser->iMode 	   = TC_RECTANGLES;
-			DPRINT("IntEngCreateClipRegion: iDComplexity: %d\n", clipUser->iDComplexity);
-			RtlCopyMemory( &(clipUser->rclBounds), &rcBounds, sizeof( RECTL ) );
-			return clipUser;
-		}
+	  clipUser->iDComplexity = ((rcBounds.top==rcBounds.bottom)
+	                            && (rcBounds.left==rcBounds.right))
+	                           ? DC_TRIVIAL : DC_RECT;
+	  clipUser->iFComplexity = FC_RECT;
+	  clipUser->iMode = TC_RECTANGLES;
+	  DPRINT("IntEngCreateClipRegion: iDComplexity: %d\n", clipUser->iDComplexity);
+	  RtlCopyMemory(&(clipUser->rclBounds), &rcBounds, sizeof(RECTL));
+	  return clipUser;
 	}
-	return NULL;
+    }
+
+  return NULL;
 }
 
 /*
@@ -110,8 +119,144 @@ EngDeleteClip(CLIPOBJ *ClipRegion)
   EngFreeMem(ClipRegion);
 }
 
+static int 
+CompareRightDown(const PRECT r1, const PRECT r2)
+{
+  int Cmp;
+
+  if (r1->top < r2->top)
+    {
+      Cmp = -1;
+    }
+  else if (r2->top < r1->top)
+    {
+      Cmp = +1;
+    }
+  else 
+    {
+      ASSERT(r1->bottom == r2->bottom);
+      if (r1->left < r2->left)
+	{
+	  Cmp = -1;
+	}
+      else if (r2->left < r1->left)
+	{
+	  Cmp = +1;
+	}
+      else
+	{
+	  ASSERT(r1->right == r2->right);
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
+static int 
+CompareRightUp(const PRECT r1, const PRECT r2)
+{
+  int Cmp;
+
+  if (r1->bottom < r2->bottom)
+    {
+      Cmp = +1;
+    }
+  else if (r2->bottom < r1->bottom)
+    {
+      Cmp = -1;
+    }
+  else 
+    {
+      ASSERT(r1->top == r2->top);
+      if (r1->left < r2->left)
+	{
+	  Cmp = -1;
+	}
+      else if (r2->left < r1->left)
+	{
+	  Cmp = +1;
+	}
+      else
+	{
+	  ASSERT(r1->right == r2->right);
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
+static int 
+CompareLeftDown(const PRECT r1, const PRECT r2)
+{
+  int Cmp;
+
+  if (r1->top < r2->top)
+    {
+      Cmp = -1;
+    }
+  else if (r2->top < r1->top)
+    {
+      Cmp = +1;
+    }
+  else 
+    {
+      ASSERT(r1->bottom == r2->bottom);
+      if (r1->right < r2->right)
+	{
+	  Cmp = +1;
+	}
+      else if (r2->right < r1->right)
+	{
+	  Cmp = -1;
+	}
+      else
+	{
+	  ASSERT(r1->left == r2->left);
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
+static int 
+CompareLeftUp(const PRECT r1, const PRECT r2)
+{
+  int Cmp;
+
+  if (r1->bottom < r2->bottom)
+    {
+      Cmp = +1;
+    }
+  else if (r2->bottom < r1->bottom)
+    {
+      Cmp = -1;
+    }
+  else 
+    {
+      ASSERT(r1->top == r2->top);
+      if (r1->right < r2->right)
+	{
+	  Cmp = +1;
+	}
+      else if (r2->right < r1->right)
+	{
+	  Cmp = -1;
+	}
+      else
+	{
+	  ASSERT(r1->left == r2->left);
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG STDCALL
 CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
@@ -121,20 +266,54 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 		   IN ULONG MaxRects)
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
+  SORTCOMP CompareFunc;
+int i;
 
-  ClipGDI->EnumPos     = 0;
-  ClipGDI->EnumMax = (MaxRects>0)? MaxRects : ClipGDI->EnumRects.c;
+  ClipGDI->EnumPos = 0;
+  ClipGDI->EnumMax = (MaxRects > 0) ? MaxRects : ClipGDI->EnumRects.c;
 
-  if( !((BuildOrder == CD_ANY) || (BuildOrder == CD_LEFTDOWN ))){
-  	UNIMPLEMENTED;
-  }
-  ClipGDI->EnumOrder = BuildOrder;
+  if (CD_ANY != BuildOrder && ClipGDI->EnumOrder != BuildOrder)
+    {
+      switch (BuildOrder)
+	{
+	case CD_RIGHTDOWN:
+	  CompareFunc = (SORTCOMP) CompareRightDown;
+	  break;
+	case CD_RIGHTUP:
+	  CompareFunc = (SORTCOMP) CompareRightUp;
+	  break;
+	case CD_LEFTDOWN:
+	  CompareFunc = (SORTCOMP) CompareLeftDown;
+	  break;
+	case CD_LEFTUP:
+	  CompareFunc = (SORTCOMP) CompareLeftUp;
+	  break;
+	default:
+	  DPRINT1("Invalid BuildOrder %d\n", BuildOrder);
+	  BuildOrder = ClipGDI->EnumOrder;
+	  CompareFunc = NULL;
+	  break;
+	}
 
-  // Return the number of rectangles enumerated
-  if( (MaxRects > 0) && (ClipGDI->EnumRects.c>MaxRects) )
-  {
-    return 0xFFFFFFFF;
-  }
+for (i = 0; i < ClipGDI->EnumRects.c; i++)
+DPRINT1("Before %d %p (%d, %d) - (%d, %d)\n", i, ClipGDI->EnumRects.arcl + i, ClipGDI->EnumRects.arcl[i].left, ClipGDI->EnumRects.arcl[i].top, ClipGDI->EnumRects.arcl[i].right, ClipGDI->EnumRects.arcl[i].bottom);
+
+      if (NULL != CompareFunc)
+	{
+	  EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c,
+	          CompareFunc);
+	}
+for (i = 0; i < ClipGDI->EnumRects.c; i++)
+DPRINT1("After %d %p (%d, %d) - (%d, %d)\n", i, ClipGDI->EnumRects.arcl + i, ClipGDI->EnumRects.arcl[i].left, ClipGDI->EnumRects.arcl[i].top, ClipGDI->EnumRects.arcl[i].right, ClipGDI->EnumRects.arcl[i].bottom);
+
+      ClipGDI->EnumOrder = BuildOrder;
+    }
+
+  /* Return the number of rectangles enumerated */
+  if ((MaxRects > 0) && (ClipGDI->EnumRects.c > MaxRects))
+    {
+      return 0xFFFFFFFF;
+    }
 
   return ClipGDI->EnumRects.c;
 }
@@ -164,4 +343,5 @@ CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
 
   return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
 }
+
 /* EOF */
