@@ -7,6 +7,8 @@
 #ifndef __WIN32K_GDIOBJ_H
 #define __WIN32K_GDIOBJ_H
 
+#include <ddk/ntddk.h>
+
   /* GDI objects magic numbers */
 #define GO_PEN_MAGIC             0x4f47
 #define GO_BRUSH_MAGIC           0x4f48
