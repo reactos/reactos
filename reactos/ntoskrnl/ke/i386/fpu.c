@@ -49,12 +49,18 @@ KiCheckFPU(VOID)
    
    HardwareMathSupport = 0;
    
+   __asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
+   /* Set NE and MP. */
+   cr0 = cr0 | 22;
+   __asm__("movl %0, %%cr0\n\t" : : "a" (cr0));
+
    __asm__("clts\n\t");
    __asm__("fninit\n\t");
    __asm__("fstsw %0\n\t" : "=a" (status));
    if (status != 0)
      {
 	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
+	/* Set the EM flag in CR0 so any FPU instructions cause a trap. */
 	cr0 = cr0 | 0x4;
 	__asm__("movl %0, %%cr0\n\t" :
 		: "a" (cr0));
