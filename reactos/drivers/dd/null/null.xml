@@ -1,4 +1,4 @@
-<module name="null" type="kernelmodedriver">
+<module name="null" type="kernelmodedriver" installbase="system32/drivers" installname="null.sys">
 	<include base="null">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

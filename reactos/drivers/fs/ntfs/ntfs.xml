@@ -1,4 +1,4 @@
-<module name="ntfs" type="kernelmodedriver">
+<module name="ntfs" type="kernelmodedriver" installbase="system32/drivers" installname="ntfs.sys">
 	<bootstrap base="reactos" />
 	<include base="ntfs">.</include>
 	<library>ntoskrnl</library>

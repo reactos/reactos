@@ -1,4 +1,4 @@
-<module name="class2" type="kernelmodedriver">
+<module name="class2" type="kernelmodedriver" installbase="system32/drivers" installname="class2.sys">
 	<bootstrap base="reactos" />
 	<importlibrary definition="class2.def" />
 	<library>ntoskrnl</library>

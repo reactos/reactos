@@ -1,4 +1,4 @@
-<module name="win32k" type="kernelmodedriver">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys">
 	<importlibrary definition="win32k.def" />
 	<include base="win32k">.</include>
 	<include base="win32k">include</include>

@@ -1,4 +1,4 @@
-<module name="diskdump" type="kernelmodedriver">
+<module name="diskdump" type="kernelmodedriver" installbase="system32/drivers" installname="diskdump.sys">
 	<bootstrap base="reactos" />
 	<library definition="diskdump.def" />
 	<library>ntoskrnl</library>

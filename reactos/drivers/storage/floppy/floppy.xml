@@ -1,4 +1,4 @@
-<module name="floppy" type="kernelmodedriver">
+<module name="floppy" type="kernelmodedriver" installbase="system32/drivers" installname="floppy.sys">
 	<bootstrap base="reactos" />
 	<include base="floppy">.</include>
 	<library>ntoskrnl</library>

@@ -1,4 +1,4 @@
-<module name="sermouse" type="kernelmodedriver">
+<module name="sermouse" type="kernelmodedriver" installbase="system32/drivers" installname="sermouse.sys">
 	<include base="sermouse">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

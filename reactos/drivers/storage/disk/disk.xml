@@ -1,4 +1,4 @@
-<module name="disk" type="kernelmodedriver">
+<module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="debugout.sys">
 	<bootstrap base="reactos" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

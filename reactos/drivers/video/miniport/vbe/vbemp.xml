@@ -1,4 +1,4 @@
-<module name="vbemp" type="kernelmodedriver">
+<module name="vbemp" type="kernelmodedriver" installbase="system32/drivers" installname="vbemp.sys">
 	<include base="vbemp">.</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />

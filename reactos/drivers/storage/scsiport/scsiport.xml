@@ -1,4 +1,4 @@
-<module name="scsiport" type="kernelmodedriver">
+<module name="scsiport" type="kernelmodedriver" installbase="system32/drivers" installname="scsiport.sys">
 	<bootstrap base="reactos" />
 	<importlibrary definition="scsiport.def" />
 	<include base="scsiport">.</include>

@@ -1,4 +1,4 @@
-<module name="acledit" type="win32dll" baseaddress="${BASEADDRESS_ACLEDIT}">
+<module name="acledit" type="win32dll" baseaddress="${BASEADDRESS_ACLEDIT}" installbase="system32" installname="acledit.dll">
 	<importlibrary definition="acledit.def" />
 	<include base="acledit">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="beep" type="kernelmodedriver">
+<module name="beep" type="kernelmodedriver" installbase="system32/drivers" installname="beep.sys">
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>beep.c</file>

@@ -1,4 +1,4 @@
-<module name="ntoskrnl" type="kernel">
+<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
 	<bootstrap base="reactos" />
 	<importlibrary definition="ntoskrnl.def" />
 	<define name="_SEH_NO_NATIVE_NLG" />

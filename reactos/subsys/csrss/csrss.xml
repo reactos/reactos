@@ -1,4 +1,4 @@
-<module name="csrss" type="nativecui">
+<module name="csrss" type="nativecui" installbase="system32" installname="csrss.exe">
 	<include base="csrss">.</include>
 	<include base="csrss">include</include>
 	<define name="__USE_W32API" />

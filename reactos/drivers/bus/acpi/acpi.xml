@@ -1,4 +1,4 @@
-<module name="acpi" type="kernelmodedriver">
+<module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys">
 	<include base="acpi">include</include>
 	<include base="acpi">ospm/include</include>
 	<library>ntoskrnl</library>

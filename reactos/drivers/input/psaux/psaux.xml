@@ -1,4 +1,4 @@
-<module name="psaux" type="kernelmodedriver">
+<module name="psaux" type="kernelmodedriver" installbase="system32/drivers" installname="psaux.sys">
 	<include base="psaux">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

@@ -1,4 +1,4 @@
-<module name="serial" type="kernelmodedriver">
+<module name="serial" type="kernelmodedriver" installbase="system32/drivers" installname="serial.sys">
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>serial.c</file>

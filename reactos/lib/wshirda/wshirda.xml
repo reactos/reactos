@@ -1,4 +1,4 @@
-<module name="wshirda" type="win32dll" baseaddress="${BASEADDRESS_WSHIRDA}">
+<module name="wshirda" type="win32dll" baseaddress="${BASEADDRESS_WSHIRDA}" installbase="system32" installname="wshirda.dll">
 	<importlibrary definition="wshirda.def" />
 	<include base="wshirda">.</include>
 	<define name="UNICODE" />

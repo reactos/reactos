@@ -1,4 +1,4 @@
-<module name="cdrom" type="kernelmodedriver">
+<module name="cdrom" type="kernelmodedriver" installbase="system32/drivers" installname="cdrom.sys">
 	<bootstrap base="reactos" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

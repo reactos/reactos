@@ -1,4 +1,4 @@
-<module name="npfs" type="kernelmodedriver">
+<module name="npfs" type="kernelmodedriver" installbase="system32/drivers" installname="npfs.sys">
 	<include base="npfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

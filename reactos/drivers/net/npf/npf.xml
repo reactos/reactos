@@ -1,4 +1,4 @@
-<module name="npf" type="kernelmodedriver">
+<module name="npf" type="kernelmodedriver" installbase="system32/drivers" installname="npf.sys">
 	<include base="npf">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="WIN_NT_DRIVER" />

@@ -1,4 +1,4 @@
-<module name="ping" type="win32cui">
+<module name="ping" type="win32cui" installbase="system32" installname="ping.exe">
 	<include base="ping">.</include>
 	<define name="__USE_W32_SOCKETS" />
 	<define name="_WIN32_IE">0x600</define>

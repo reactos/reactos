@@ -1,4 +1,4 @@
-<module name="atapi" type="kernelmodedriver">
+<module name="atapi" type="kernelmodedriver" installbase="system32/drivers" installname="atapi.sys">
 	<bootstrap base="reactos" />
 	<include base="atapi">.</include>
 	<library>ntoskrnl</library>

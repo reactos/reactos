@@ -1,4 +1,4 @@
-<module name="kbdgr" type="kernelmodedll" entrypoint="0">
+<module name="kbdgr" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdgr.dll">
 	<importlibrary definition="kbdgr.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

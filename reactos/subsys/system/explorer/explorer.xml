@@ -1,4 +1,4 @@
-<module name="explorer" type="win32gui">
+<module name="explorer" type="win32gui" installbase="system32" installname="explorer.exe">
 	<linkerflag>-fexceptions</linkerflag>
 	<include base="explorer">.</include>
 	<include base="ReactOS">include/expat</include>

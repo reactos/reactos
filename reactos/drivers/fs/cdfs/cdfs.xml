@@ -1,4 +1,4 @@
-<module name="cdfs" type="kernelmodedriver">
+<module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
 	<bootstrap base="reactos" />
 	<include base="cdfs">.</include>
 	<library>ntoskrnl</library>

@@ -1,4 +1,4 @@
-<module name="ne2000" type="kernelmodedriver">
+<module name="ne2000" type="kernelmodedriver" installbase="system32/drivers" installname="ne2000.sys">
 	<include base="ne2000">include</include>
 	<library>ndis</library>
 	<library>ntoskrnl</library>

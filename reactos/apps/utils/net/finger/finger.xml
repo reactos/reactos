@@ -1,4 +1,4 @@
-<module name="finger" type="win32cui">
+<module name="finger" type="win32cui" installbase="system32" installname="finger.exe">
 	<include base="finger">.</include>
 	<define name="__USE_W32_SOCKETS" />
 	<library>kernel32</library>

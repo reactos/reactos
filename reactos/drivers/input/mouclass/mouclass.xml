@@ -1,4 +1,4 @@
-<module name="mouclass" type="kernelmodedriver">
+<module name="mouclass" type="kernelmodedriver" installbase="system32/drivers" installname="mouclass.sys">
 	<include base="mouclass">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

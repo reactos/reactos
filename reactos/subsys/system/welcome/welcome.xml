@@ -1,4 +1,4 @@
-<module name="welcome" type="win32gui">
+<module name="welcome" type="win32gui" installbase="system32" installname="welcome.exe">
 	<bootstrap base="reactos" />
 	<include base="welcome">.</include>
 	<define name="_WIN32_IE">0x0501</define>

@@ -1,4 +1,4 @@
-<module name="bootvid" type="kernelmodedriver">
+<module name="bootvid" type="kernelmodedriver" installbase="system32/drivers" installname="bootvid.sys">
 	<include base="bootvid">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

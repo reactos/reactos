@@ -1,4 +1,4 @@
-<module name="mup" type="kernelmodedriver">
+<module name="mup" type="kernelmodedriver" installbase="system32/drivers" installname="mup.sys">
 	<include base="mup">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

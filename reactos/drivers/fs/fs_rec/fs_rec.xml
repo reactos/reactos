@@ -1,4 +1,4 @@
-<module name="fs_rec" type="kernelmodedriver">
+<module name="fs_rec" type="kernelmodedriver" installbase="system32/drivers" installname="fs_rec.sys">
 	<include base="fs_rec">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
