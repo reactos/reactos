@@ -485,6 +485,9 @@ MDIShellBrowserChild::MDIShellBrowserChild(HWND hwnd, const ShellChildWndInfo& i
 	_shellpath_info(info)	//@@ copies info -> no referenz to _create_info !
 {
 /**todo Conversion of shell path into path string -> store into URL history
+	const String& path = GetDesktopFolder().get_name(info._shell_path, SHGDN_FORADDRESSBAR);
+	const String& parsingpath = GetDesktopFolder().get_name(info._shell_path, SHGDN_FORPARSING);
+
 	 // store path into history
 	if (info._path && *info._path)
 		_url_history.push(info._path);

@@ -1854,18 +1854,6 @@ int StartMenuHandler::Command(int id, int code)
 		ExplorerPropertySheet(g_Globals._hwndDesktopBar);
 		break;
 
-	  case IDC_SETTINGS_MENU:
-		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
-		break;
-
-	  case IDC_PRINTERS:
-#ifdef _ROS_	// to be removed when printer folder will be implemented
-		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
-#else
-		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
-#endif
-		break;
-
 	  case IDC_CONTROL_PANEL: {
 		CloseStartMenu(id);
 #ifndef _NO_MDI
@@ -1878,6 +1866,39 @@ int StartMenuHandler::Command(int id, int code)
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
 		break;}
+
+	  case IDC_SETTINGS_MENU:
+		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
+		break;
+
+	  case IDC_PRINTERS: {
+		CloseStartMenu(id);
+#ifdef _ROS_	// to be removed when printer folder will be implemented
+		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+#else
+#ifndef _NO_MDI
+		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+		bool mdi = XMLBool(explorer_options, "mdi", true);
+
+		if (mdi)
+			MDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+		else
+#endif
+			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+#endif
+		break;}
+
+	  case IDC_PRINTERS_MENU:
+		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
+/*		StartMenuFolders new_folders;
+
+		try {
+			new_folders.push_back(ShellPath(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}")));
+		} catch(COMException&) {
+		}
+
+		CreateSubmenu(id, new_folders, ResString(IDS_PRINTERS));*/
+		break;
 
 	  case IDC_ADMIN:
 		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
@@ -2009,16 +2030,11 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
-#endif
-		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
-
 #ifdef _ROS_	// to be removed when printer/network will be implemented
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, true, IDC_CONNECTIONS);
 #endif
 	AddButton(ResString(IDS_ADMIN),				ICID_CONFIG, true, IDC_ADMIN);
@@ -2029,6 +2045,13 @@ void SettingsMenu::AddEntries()
 		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
 
 	AddButton(ResString(IDS_DESKTOPBAR_SETTINGS), ICID_CONFIG, false, ID_DESKTOPBAR_SETTINGS);
+
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 }
 
 void BrowseMenu::AddEntries()
