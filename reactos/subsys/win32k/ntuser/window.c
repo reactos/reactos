@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.12 2004/09/27 12:48:48 weiden Exp $
+/* $Id: window.c,v 1.244.2.13 2004/09/27 12:53:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2034,7 +2034,7 @@ IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, WCHAR *Buffer, INT nMaxCou
   INT Result;
   
   ASSERT(WindowObject);
-  ASSERT(Buffer && (nMaxCount <= 1));
+  ASSERT(!Buffer || (Buffer && (nMaxCount >= 1)));
   
   Result = WindowObject->WindowName.Length / sizeof(WCHAR);
   if(Buffer != NULL)
