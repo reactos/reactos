@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.10 2004/02/06 13:59:13 royce Exp $
+/* $Id: opengl32.c,v 1.11 2004/02/06 17:22:55 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -17,6 +17,8 @@
 
 #include <string.h>
 #include "opengl32.h"
+
+#define EXT_GET_DRIVERNAME		0x1001 /* ExtEscape code to get driver name */
 
 /* function prototypes */
 /*static BOOL OPENGL32_LoadDrivers();*/
@@ -356,12 +358,36 @@ static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 }
 
 
+/* FUNCTION: Load ICD from HDC (shared ICD data)
+ * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
+ * NOTES: Make sure the handle you pass in is one for a DC!
+ *        Increases the refcount of the ICD - use
+ *        OPENGL32_UnloadICD to release the ICD.
+ */
+GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc )
+{
+	WCHAR name[256];
+	DWORD dwInput = 0;
+	LONG ret;
+
+	/* get driver name */
+	ret = ExtEscape( hdc, EXT_GET_DRIVERNAME, sizeof (dwInput), (LPCSTR)&dwInput,
+	                 sizeof (name), (LPSTR)name );
+	if (ret < 0)
+	{
+		DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
+		return 0;
+	}
+
+	/* load driver (or get a reference) */
+	return OPENGL32_LoadICD( name );
+}
 
 
 /* FUNCTION: Load ICD (shared ICD data)
  * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
  */
-GLDRIVERDATA *OPENGL32_LoadICD ( LPCWSTR driver )
+GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver )
 {
 	GLDRIVERDATA *icd;
 

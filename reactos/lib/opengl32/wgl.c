@@ -2,7 +2,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/opengl32/wgl.c
- * PURPOSE:              OpenGL32 lib, wglXXX functions
+ * PURPOSE:              OpenGL32 lib, rosglXXX functions
  * PROGRAMMER:           Anich Gregor (blight)
  * UPDATE HISTORY:
  *                       Feb 2, 2004: Created
@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <ntos/types.h>
 #include <napi/teb.h>
+#include <GL/gl.h>
 
 #include "opengl32.h"
 
@@ -170,7 +171,7 @@ DWORD CALLBACK WGL_SetContextCallBack( const ICDTable *table )
 }
 
 
-int WINAPI wglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
+int APIENTRY rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -183,7 +184,7 @@ int WINAPI wglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
  *            [IN]  mask Bitfield like given to glPushAttrib()
  * RETURN: TRUE on success, FALSE on failure
  */
-BOOL WINAPI wglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
+BOOL APIENTRY rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 {
 	GLRC *src = (GLRC *)hsrc;
 	GLRC *dst = (GLRC *)hdst;
@@ -216,9 +217,10 @@ BOOL WINAPI wglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
  * ARGUMENTS: [IN] hdc  Handle for DC for which to create context
  * RETURNS: NULL on failure, new GLRC on success
  */
-HGLRC WINAPI wglCreateContext( HDC hdc )
+HGLRC APIENTRY rosglCreateLayerContext( HDC hdc, int layer );
+HGLRC APIENTRY rosglCreateContext( HDC hdc )
 {
-	return wglCreateLayerContext( hdc, 0 );
+	return rosglCreateLayerContext( hdc, 0 );
 }
 
 
@@ -228,11 +230,11 @@ HGLRC WINAPI wglCreateContext( HDC hdc )
  *            [IN] layer Layer number to bind (draw?) to
  * RETURNS: NULL on failure, new GLRC on success
  */
-HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
+HGLRC APIENTRY rosglCreateLayerContext( HDC hdc, int layer )
 {
-	LONG ret;
+/*	LONG ret;
 	WCHAR driver[256];
-	DWORD dw, size;
+	DWORD dw, size;*/
 
 	GLDRIVERDATA *icd = NULL;
 	GLRC *glrc;
@@ -250,6 +252,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 	if (glrc == NULL)
 		return NULL;
 
+#if 0 /* old code */
 	/* try to find an ICD */
 	for (dw = 0; drvHglrc == NULL; dw++) /* enumerate values */
 	{
@@ -264,7 +267,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 
 		if (icd->DrvCreateLayerContext)
 			drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
-		if (drvHglrc)
+		if (drvHglrc == NULL)
 		{
 			if (layer == 0)
 				drvHglrc = icd->DrvCreateContext( hdc );
@@ -290,6 +293,36 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
 		HeapFree( GetProcessHeap(), 0, glrc );
 		return NULL;
 	}
+#endif /* unused */
+
+	/* load ICD */
+	icd = OPENGL32_LoadICDForHDC( hdc );
+	if (icd == NULL)
+	{
+		DBGPRINT( "Couldn't get ICD by HDC :-(" );
+		/* FIXME: fallback? */
+		return NULL;
+	}
+
+	/* create context */
+	if (icd->DrvCreateLayerContext)
+		drvHglrc = icd->DrvCreateLayerContext( hdc, layer );
+	if (drvHglrc == NULL)
+	{
+		if (layer == 0)
+			drvHglrc = icd->DrvCreateContext( hdc );
+		else
+			DBGPRINT( "Warning: CreateLayerContext not supported by ICD!" );
+	}
+
+	if (drvHglrc == NULL)
+	{
+		/* FIXME: fallback to mesa? */
+		DBGPRINT( "Error: DrvCreate[Layer]Context failed! (%d)", GetLastError() );
+		OPENGL32_UnloadICD( icd );
+		HeapFree( GetProcessHeap(), 0, glrc );
+		return NULL;
+	}
 
 	/* we have our GLRC in glrc and the ICD's GLRC in drvHglrc */
 	glrc->hglrc = drvHglrc;
@@ -307,7 +340,7 @@ HGLRC WINAPI wglCreateLayerContext( HDC hdc, int layer )
  * ARGUMENTS: [IN] hglrc  Handle to GLRC to delete; must not be a threads RC!
  * RETURNS: TRUE on success, FALSE otherwise
  */
-BOOL WINAPI wglDeleteContext( HGLRC hglrc )
+BOOL APIENTRY rosglDeleteContext( HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
 
@@ -336,6 +369,7 @@ BOOL WINAPI wglDeleteContext( HGLRC hglrc )
 	}
 
 	/* free resources */
+	OPENGL32_UnloadICD( glrc->icd );
 	WGL_RemoveContext( glrc );
 	HeapFree( GetProcessHeap(), 0, glrc );
 
@@ -343,7 +377,7 @@ BOOL WINAPI wglDeleteContext( HGLRC hglrc )
 }
 
 
-BOOL WINAPI wglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
+BOOL APIENTRY rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
                                    UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
 	UNIMPLEMENTED;
@@ -351,18 +385,28 @@ BOOL WINAPI wglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
 }
 
 
-int WINAPI wglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
+int APIENTRY rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
                                    LPPIXELFORMATDESCRIPTOR pfd )
 {
-	UNIMPLEMENTED;
-	return 0;
+	int ret = 0;
+	GLDRIVERDATA *icd = OPENGL32_LoadICDForHDC( hdc );
+
+	if (icd != NULL)
+	{
+		ret = icd->DrvDescribePixelFormat( hdc, iFormat, nBytes, pfd );
+		if (ret == 0)
+			DBGPRINT( "Error: DrvDescribePixelFormat failed (%d)", GetLastError() );
+	}
+
+	/* FIXME: implement own functionality? */
+	return ret;
 }
 
 
 /* FUNCTION: Return the current GLRC
  * RETURNS: Current GLRC (NULL if none was set current)
  */
-HGLRC WINAPI wglGetCurrentContext()
+HGLRC APIENTRY rosglGetCurrentContext()
 {
 	return (HGLRC)(OPENGL32_threaddata->glrc);
 }
@@ -371,7 +415,7 @@ HGLRC WINAPI wglGetCurrentContext()
 /* FUNCTION: Return the current DC
  * RETURNS: NULL on failure, current DC otherwise
  */
-HDC WINAPI wglGetCurrentDC()
+HDC APIENTRY rosglGetCurrentDC()
 {
 	/* FIXME: is it correct to return NULL when there is no current GLRC or
 	   is there another way to find out the wanted HDC? */
@@ -381,7 +425,7 @@ HDC WINAPI wglGetCurrentDC()
 }
 
 
-int WINAPI wglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+int APIENTRY rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                                int cEntries, COLORREF *pcr )
 {
 	UNIMPLEMENTED;
@@ -389,7 +433,7 @@ int WINAPI wglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
 }
 
 
-int WINAPI wglGetPixelFormat( HDC hdc )
+int APIENTRY rosglGetPixelFormat( HDC hdc )
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -400,7 +444,7 @@ int WINAPI wglGetPixelFormat( HDC hdc )
  * ARGUMENTS: [IN] proc:  Name of the function to look for
  * RETURNS: The address of the proc or NULL on failure.
  */
-PROC WINAPI wglGetProcAddress( LPCSTR proc )
+PROC APIENTRY rosglGetProcAddress( LPCSTR proc )
 {
 	if (OPENGL32_threaddata->glrc == NULL)
 	{
@@ -418,17 +462,17 @@ PROC WINAPI wglGetProcAddress( LPCSTR proc )
 		}
 
 		/* FIXME: go through own functions? */
-		DBGPRINT( "Unsupported GL extension: %s", proc );
+		DBGPRINT( "Warning: Unsupported GL extension: %s", proc );
 	}
 	if (proc[0] == 'w' && proc[1] == 'g' && proc[2] == 'l') /* wglXXX */
 	{
 		/* FIXME: support wgl extensions? (there are such IIRC) */
-		DBGPRINT( "Unsupported WGL extension: %s", proc );
+		DBGPRINT( "Warning: Unsupported WGL extension: %s", proc );
 	}
 	if (proc[0] == 'g' && proc[1] == 'l' && proc[2] == 'u') /* gluXXX */
 	{
 		/* FIXME: do we support these as well? */
-		DBGPRINT( "GLU extension %s requested, returning NULL", proc );
+		DBGPRINT( "Warning: GLU extension %s requested, returning NULL", proc );
 	}
 
 	return NULL;
@@ -440,7 +484,7 @@ PROC WINAPI wglGetProcAddress( LPCSTR proc )
  *            [IN] hglrc Handle for a GLRC to make current
  * RETURNS: TRUE on success, FALSE otherwise
  */
-BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
+BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
 
@@ -493,25 +537,37 @@ BOOL WINAPI wglMakeCurrent( HDC hdc, HGLRC hglrc )
 }
 
 
-BOOL WINAPI wglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
+BOOL APIENTRY rosglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-int WINAPI wglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                               int cEntries, CONST COLORREF *pcr )
+int APIENTRY rosglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+                                      int cEntries, CONST COLORREF *pcr )
 {
 	UNIMPLEMENTED;
 	return 0;
 }
 
 
-BOOL WINAPI wglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
+BOOL APIENTRY rosglSetPixelFormat( HDC hdc, int iFormat,
+                               CONST PIXELFORMATDESCRIPTOR *pfd )
 {
-	UNIMPLEMENTED;
-	return FALSE;
+	GLDRIVERDATA *icd;
+
+	icd = OPENGL32_LoadICDForHDC( hdc );
+	if (icd == NULL)
+		return FALSE;
+
+	if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
+	{
+		DBGPRINT( "Warning: DrvSetPixelFormat failed (%d)", GetLastError() );
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -520,7 +576,7 @@ BOOL WINAPI wglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR
  *            [IN] hglrc2 GLRC number 2
  * RETURNS: TRUR on success, FALSE on failure
  */
-BOOL WINAPI wglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
+BOOL APIENTRY rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 {
 	GLRC *glrc1 = (GLRC *)hglrc1;
 	GLRC *glrc2 = (GLRC *)hglrc2;
@@ -553,8 +609,9 @@ BOOL WINAPI wglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
  * ARGUMENTS: [IN] hdc  Handle to device context to swap buffers for
  * RETURNS: TRUE on success, FALSE on failure
  */
-BOOL WINAPI wglSwapBuffers( HDC hdc )
+BOOL APIENTRY rosglSwapBuffers( HDC hdc )
 {
+#if 0
 	/* check if there is a current GLRC */
 	if (OPENGL32_threaddata->glrc == NULL)
 	{
@@ -573,35 +630,46 @@ BOOL WINAPI wglSwapBuffers( HDC hdc )
 		}
 		return TRUE;
 	}
+#endif
 
-	/* FIXME: implement own functionality */
+	GLDRIVERDATA *icd = OPENGL32_LoadICDForHDC( hdc );
+	if (icd != NULL)
+	{
+		if (!icd->DrvSwapBuffers( hdc ))
+		{
+			DBGPRINT( "Error: DrvSwapBuffers failed (%d)", GetLastError() );
+			return FALSE;
+		}
+		return TRUE;
+	}
 
+	/* FIXME: implement own functionality? */
 	return FALSE;
 }
 
 
-BOOL WINAPI wglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
+BOOL APIENTRY rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL WINAPI wglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL APIENTRY rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL WINAPI wglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL APIENTRY rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL WINAPI wglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+BOOL APIENTRY rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {
@@ -610,7 +678,7 @@ BOOL WINAPI wglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBa
 }
 
 
-BOOL WINAPI wglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+BOOL APIENTRY rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {

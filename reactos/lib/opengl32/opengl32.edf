@@ -1,4 +1,4 @@
-; $Id: opengl32.edf,v 1.3 2004/02/05 04:28:11 royce Exp $
+; $Id: opengl32.edf,v 1.4 2004/02/06 17:22:55 royce Exp $
 ;
 ; opengl32.edf
 ;
@@ -375,27 +375,27 @@ glVertexPointer=glVertexPointer@16
 glViewport=glViewport@16
 
 wglChoosePixelFormat=GDI32.ChoosePixelFormat
-wglCopyContext=wglCopyContext@12
-wglCreateContext=wglCreateContext@4
-wglCreateLayerContext=wglCreateLayerContext@8
-wglDeleteContext=wglDeleteContext@4
-wglDescribeLayerPlane=wglDescribeLayerPlane@20
+wglCopyContext=rosglCopyContext@12
+wglCreateContext=rosglCreateContext@4
+wglCreateLayerContext=rosglCreateLayerContext@8
+wglDeleteContext=rosglDeleteContext@4
+wglDescribeLayerPlane=rosglDescribeLayerPlane@20
 wglDescribePixelFormat=GDI32.DescribePixelFormat
-wglGetCurrentContext=wglGetCurrentContext@0
-wglGetCurrentDC=wglGetCurrentDC@0
-;wglGetDefaultProcAddress=wglGetDefaultProcAddress@
-wglGetLayerPaletteEntries=wglGetLayerPaletteEntries@20
+wglGetCurrentContext=rosglGetCurrentContext@0
+wglGetCurrentDC=rosglGetCurrentDC@0
+;wglGetDefaultProcAddress=rosglGetDefaultProcAddress@
+wglGetLayerPaletteEntries=rosglGetLayerPaletteEntries@20
 wglGetPixelFormat=GDI32.GetPixelFormat
-wglGetProcAddress=wglGetProcAddress@4
-wglMakeCurrent=wglMakeCurrent@8
-wglRealizeLayerPalette=wglRealizeLayerPalette@12
-wglSetLayerPaletteEntries=wglSetLayerPaletteEntries@20
+wglGetProcAddress=rosglGetProcAddress@4
+wglMakeCurrent=rosglMakeCurrent@8
+wglRealizeLayerPalette=rosglRealizeLayerPalette@12
+wglSetLayerPaletteEntries=rosglSetLayerPaletteEntries@20
 wglSetPixelFormat=GDI32.SetPixelFormat
-wglShareLists=wglShareLists@8
+wglShareLists=rosglShareLists@8
 wglSwapBuffers=GDI32.SwapBuffers
-wglSwapLayerBuffers=wglSwapLayerBuffers@8
-;wglSwapMultipleBuffers=wglSwapMultipleBuffers@
-wglUseFontBitmapsA=wglUseFontBitmapsA@16
-wglUseFontBitmapsW=wglUseFontBitmapsW@16
-wglUseFontOutlinesA=wglUseFontOutlinesA@32
-wglUseFontOutlinesW=wglUseFontOutlinesW@32
+wglSwapLayerBuffers=rosglSwapLayerBuffers@8
+;wglSwapMultipleBuffers=rosglSwapMultipleBuffers@
+wglUseFontBitmapsA=rosglUseFontBitmapsA@16
+wglUseFontBitmapsW=rosglUseFontBitmapsW@16
+wglUseFontOutlinesA=rosglUseFontOutlinesA@32
+wglUseFontOutlinesW=rosglUseFontOutlinesW@32

@@ -8,8 +8,6 @@
  *                       Feb 2, 2004: Created
  */
 
-/* FIXME: everything in this file ;-) */
-
 /* On a x86 we call the ICD functions in a special-way:
  *
  * For every glXXX function we export a glXXX entry-point which loads the
@@ -47,34 +45,37 @@ typedef double GLdouble;
 typedef double GLclampd;
 typedef void GLvoid;
 
-void STDCALL glEmptyFunc0() {}
-void STDCALL glEmptyFunc4( long l1 ) {}
-void STDCALL glEmptyFunc8( long l1, long l2 ) {}
-void STDCALL glEmptyFunc12( long l1, long l2, long l3 ) {}
-void STDCALL glEmptyFunc16( long l1, long l2, long l3, long l4 ) {}
-void STDCALL glEmptyFunc20( long l1, long l2, long l3, long l4, long l5 ) {}
-void STDCALL glEmptyFunc24( long l1, long l2, long l3, long l4, long l5,
-                            long l6 ) {}
-void STDCALL glEmptyFunc28( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7 ) {}
-void STDCALL glEmptyFunc32( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8 ) {}
-void STDCALL glEmptyFunc36( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9 ) {}
-void STDCALL glEmptyFunc40( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9, long l10 ) {}
-void STDCALL glEmptyFunc44( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9, long l10,
-                            long l11 ) {}
-void STDCALL glEmptyFunc48( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9, long l10,
-                            long l11, long l12 ) {}
-void STDCALL glEmptyFunc52( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9, long l10,
-                            long l11, long l12, long l13 ) {}
-void STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
-                            long l6, long l7, long l8, long l9, long l10,
-                            long l11, long l12, long l13, long l14 ) {}
+int STDCALL glEmptyFunc0() { return 0; }
+int STDCALL glEmptyFunc4( long l1 ) { return 0; }
+int STDCALL glEmptyFunc8( long l1, long l2 ) { return 0; }
+int STDCALL glEmptyFunc12( long l1, long l2, long l3 ) { return 0; }
+int STDCALL glEmptyFunc16( long l1, long l2, long l3, long l4 ) { return 0; }
+int STDCALL glEmptyFunc20( long l1, long l2, long l3, long l4, long l5 )
+                           { return 0; }
+int STDCALL glEmptyFunc24( long l1, long l2, long l3, long l4, long l5,
+                           long l6 ) { return 0; }
+int STDCALL glEmptyFunc28( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7 ) { return 0; }
+int STDCALL glEmptyFunc32( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8 ) { return 0; }
+int STDCALL glEmptyFunc36( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9 ) { return 0; }
+int STDCALL glEmptyFunc40( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9, long l10 )
+                           { return 0; }
+int STDCALL glEmptyFunc44( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9, long l10,
+                           long l11 ) { return 0; }
+int STDCALL glEmptyFunc48( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9, long l10,
+                           long l11, long l12 ) { return 0; }
+int STDCALL glEmptyFunc52( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9, long l10,
+                           long l11, long l12, long l13 ) { return 0; }
+int STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
+                           long l6, long l7, long l8, long l9, long l10,
+                           long l11, long l12, long l13, long l14 )
+                           { return 0; }
 
 
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \

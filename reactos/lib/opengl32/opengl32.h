@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.9 2004/02/06 13:59:13 royce Exp $
+/* $Id: opengl32.h,v 1.10 2004/02/06 17:22:55 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -131,33 +131,34 @@ extern GLPROCESSDATA OPENGL32_processdata;
 #define OPENGL32_threaddata ((GLTHREADDATA *)TlsGetValue( OPENGL32_tls ))
 
 /* function prototypes */
+GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc );
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName );
 DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
 
 /* empty gl functions from gl.c */
-void STDCALL glEmptyFunc0();
-void STDCALL glEmptyFunc4( long );
-void STDCALL glEmptyFunc8( long, long );
-void STDCALL glEmptyFunc12( long, long, long );
-void STDCALL glEmptyFunc16( long, long, long, long );
-void STDCALL glEmptyFunc20( long, long, long, long, long );
-void STDCALL glEmptyFunc24( long, long, long, long, long, long );
-void STDCALL glEmptyFunc28( long, long, long, long, long, long, long );
-void STDCALL glEmptyFunc32( long, long, long, long, long, long, long, long );
-void STDCALL glEmptyFunc36( long, long, long, long, long, long, long, long,
-                            long );
-void STDCALL glEmptyFunc40( long, long, long, long, long, long, long, long,
-                            long, long );
-void STDCALL glEmptyFunc44( long, long, long, long, long, long, long, long,
-                            long, long, long );
-void STDCALL glEmptyFunc48( long, long, long, long, long, long, long, long,
-                            long, long, long, long );
-void STDCALL glEmptyFunc52( long, long, long, long, long, long, long, long,
-                            long, long, long, long, long );
-void STDCALL glEmptyFunc56( long, long, long, long, long, long, long, long,
-                            long, long, long, long, long, long );
+int STDCALL glEmptyFunc0();
+int STDCALL glEmptyFunc4( long );
+int STDCALL glEmptyFunc8( long, long );
+int STDCALL glEmptyFunc12( long, long, long );
+int STDCALL glEmptyFunc16( long, long, long, long );
+int STDCALL glEmptyFunc20( long, long, long, long, long );
+int STDCALL glEmptyFunc24( long, long, long, long, long, long );
+int STDCALL glEmptyFunc28( long, long, long, long, long, long, long );
+int STDCALL glEmptyFunc32( long, long, long, long, long, long, long, long );
+int STDCALL glEmptyFunc36( long, long, long, long, long, long, long, long,
+                           long );
+int STDCALL glEmptyFunc40( long, long, long, long, long, long, long, long,
+                           long, long );
+int STDCALL glEmptyFunc44( long, long, long, long, long, long, long, long,
+                           long, long, long );
+int STDCALL glEmptyFunc48( long, long, long, long, long, long, long, long,
+                           long, long, long, long );
+int STDCALL glEmptyFunc52( long, long, long, long, long, long, long, long,
+                           long, long, long, long, long );
+int STDCALL glEmptyFunc56( long, long, long, long, long, long, long, long,
+                           long, long, long, long, long, long );
 
 #endif//OPENGL32_PRIVATE_H
 
