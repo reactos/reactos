@@ -37,10 +37,17 @@ copy /Y drivers\storage\class2\class2.sys %BOOTCD_DIR%\disk\reactos
 copy /Y lib\ntdll\ntdll.dll %BOOTCD_DIR%\disk\reactos\system32
 copy /Y subsys\system\usetup\usetup.exe %BOOTCD_DIR%\disk\reactos\system32\smss.exe
 
-rem copy install files
-copy /Y txtsetup.sif %BOOTCD_DIR%\disk\install
+rem copy data files
+copy /Y bootdata\autorun.inf %BOOTCD_DIR%\disk
+copy /Y bootdata\readme.txt %BOOTCD_DIR%\disk
+
+copy /Y bootdata\hivesft.inf %BOOTCD_DIR%\disk\install
+copy /Y bootdata\hivesys.inf %BOOTCD_DIR%\disk\install
+
+copy /Y bootdata\txtsetup.sif %BOOTCD_DIR%\disk\install
 copy /Y system.hiv %BOOTCD_DIR%\disk\install
 
+rem copy install files
 copy /Y ntoskrnl\ntoskrnl.exe %BOOTCD_DIR%\disk\install
 copy /Y hal\halx86\hal.dll %BOOTCD_DIR%\disk\install
 

@@ -95,4 +95,10 @@ timr____.ttf = 6
 system.hiv   = 4
 
 [SetupData]
-DefaultPath = \reactos
+DefaultPath = \ReactOS
+
+[AddReg]
+HKLM,"System\Setup",00,01,02,03,04,05,0a,a0,ac,ff
+HKLM,"System\Setup","SetupType",0x00010003,1
+HKCU,"Xxxx\XX","bla"
+HKCR,"Fasel","Tick",0x00000001
