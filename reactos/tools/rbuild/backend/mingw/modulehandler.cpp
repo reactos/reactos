@@ -950,6 +950,7 @@ void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 {
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string targetName ( module.GetTargetName () );
 	string target ( FixupTargetFilename (module.GetPath ()) );
 	string workingDirectory = GetWorkingDirectory ();
 	string objectsMacro = GetObjectsMacro ( module );
@@ -981,7 +982,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          junk_tmp.c_str () );
 	fprintf ( fMakefile,
 	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s --kill-at\n",
-	          target.c_str (),
+	          targetName.c_str (),
 	          base_tmp.c_str (),
 	          temp_exp.c_str () );
 	fprintf ( fMakefile,
