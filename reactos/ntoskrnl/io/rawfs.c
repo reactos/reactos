@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.1 2003/05/13 21:28:26 chorns Exp $
+/* $Id: rawfs.c,v 1.2 2003/05/15 13:34:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -776,7 +776,12 @@ static NTSTATUS STDCALL
 RawFsShutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
   DPRINT("RawFsShutdown(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
-  UNIMPLEMENTED
+
+  /*
+   * Note: Do NOT call UNIMPLEMENTED here!
+   * This function must finish in order to shutdown ReactOS properly!
+   */
+
   return STATUS_NOT_IMPLEMENTED;
 }
 
