@@ -147,10 +147,10 @@ CsrpFreeCommandLine (HANDLE                 ProcessHeap,
 
 /**********************************************************************
  * NAME							PRIVATE
- * 	CsrpOpenKeInitDoneEvent/0
+ * 	CsrpOpenSmInitDoneEvent/0
  */
 static NTSTATUS STDCALL
-CsrpOpenKeInitDoneEvent (PHANDLE CsrssInitEvent)
+CsrpOpenSmInitDoneEvent (PHANDLE CsrssInitEvent)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING    EventName;
@@ -194,13 +194,13 @@ VOID STDCALL NtProcessStartup(PPEB Peb)
 		Status);
    }
    /*
-    * Open the Ke notification event to notify we are OK after
+    * Open the SM notification event to notify we are OK after
     * subsystem server initialization.
     */
-   Status = CsrpOpenKeInitDoneEvent(& CsrssInitEvent);
+   Status = CsrpOpenSmInitDoneEvent(& CsrssInitEvent);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("CSR: CsrpOpenKeInitDoneEvent failed (Status=0x%08lx)\n",
+	DbgPrint("CSR: CsrpOpenSmInitDoneEvent failed (Status=0x%08lx)\n",
 			Status);
      }
    /*==================================================================
@@ -209,10 +209,11 @@ VOID STDCALL NtProcessStartup(PPEB Peb)
    if (CsrServerInitialization (CmdLineArg.Count, CmdLineArg.Vector) == TRUE)
      {
 	/*=============================================================
-	 * Tell Ke we are up and safe. If we fail to notify Ke, it will
-	 * bugcheck the system with SESSION5_INITIALIZATION_FAILED.
-	 * TODO: choose a better way to check user mode initialization
-	 * is OK.
+	 * Tell SM we are up and safe. If we fail to notify SM, it will
+	 * die and the kernel will bugcheck with
+	 * SESSION5_INITIALIZATION_FAILED.
+	 * TODO: this won't be necessary, because CSR will call SM
+	 * API SM_SESSION_COMPLETE.
 	 *===========================================================*/
 	NtSetEvent (CsrssInitEvent, NULL);
 
