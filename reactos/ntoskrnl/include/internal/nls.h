@@ -20,7 +20,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
 
-extern PVOID NlsSectionObject;
+extern PSECTION_OBJECT NlsSectionObject;
 
 extern ULONG NlsAnsiTableOffset;
 extern ULONG NlsOemTableOffset;

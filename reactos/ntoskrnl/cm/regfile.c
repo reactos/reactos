@@ -10,6 +10,7 @@
 #include <string.h>
 #include <roscfg.h>
 #include <internal/ob.h>
+#include <internal/mm.h>
 #include <ntos/minmax.h>
 #include <reactos/bugcodes.h>
 
@@ -858,7 +859,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   ULONG CreateDisposition;
   IO_STATUS_BLOCK IoSB;
   HANDLE FileHandle;
-  HANDLE SectionHandle;
+  PSECTION_OBJECT SectionObject;
   PUCHAR ViewBase;
   ULONG ViewSize;
   NTSTATUS Status;
@@ -943,17 +944,17 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
     }
 
   /* Create the hive section */
-  Status = NtCreateSection(&SectionHandle,
+  Status = MmCreateSection(&SectionObject,
 			   SECTION_ALL_ACCESS,
 			   NULL,
 			   NULL,
 			   PAGE_READWRITE,
 			   SEC_COMMIT,
-			   FileHandle);
-  NtClose(FileHandle);
+			   FileHandle,
+			   NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection() failed (Status %lx)\n", Status);
+      DPRINT1("MmCreateSection() failed (Status %lx)\n", Status);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
       return(Status);
@@ -962,8 +963,8 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   /* Map the hive file */
   ViewBase = NULL;
   ViewSize = 0;
-  Status = NtMapViewOfSection(SectionHandle,
-			      NtCurrentProcess(),
+  Status = MmMapViewOfSection(SectionObject,
+			      PsGetCurrentProcess(),
 			      (PVOID*)&ViewBase,
 			      0,
 			      ViewSize,
@@ -974,8 +975,8 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
 			      PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("MmMapViewInSystemSpace() failed (Status %lx)\n", Status);
-      NtClose(SectionHandle);
+      DPRINT1("MmMapViewOfSection() failed (Status %lx)\n", Status);
+      ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
       return(Status);
@@ -996,9 +997,9 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   if (RegistryHive->BlockList == NULL)
     {
       DPRINT1("Failed to allocate the hive block list\n");
-      NtUnmapViewOfSection(NtCurrentProcess(),
+      MmUnmapViewOfSection(PsGetCurrentProcess(),
 			   ViewBase);
-      NtClose(SectionHandle);
+      ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -1012,18 +1013,18 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   if (!NT_SUCCESS(Status))
     {
       ExFreePool(RegistryHive->BlockList);
-      NtUnmapViewOfSection(NtCurrentProcess(),
+      MmUnmapViewOfSection(PsGetCurrentProcess(),
 			   ViewBase);
-      NtClose(SectionHandle);
+      ObDereferenceObject(SectionObject);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
       return Status;
     }
 
   /* Unmap and dereference the hive section */
-  NtUnmapViewOfSection(NtCurrentProcess(),
-		       ViewBase);
-  NtClose(SectionHandle);
+  MmUnmapViewOfSection(PsGetCurrentProcess(),
+                       ViewBase);
+  ObDereferenceObject(SectionObject);
 
   /* Initialize the free cell list */
   Status = CmiCreateHiveFreeCellList (RegistryHive);

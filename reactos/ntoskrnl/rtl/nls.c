@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.23 2004/05/31 19:40:49 gdalsnes Exp $
+/* $Id: nls.c,v 1.24 2004/08/05 19:59:13 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,7 @@ static ULONG NlsOemCodePageTableSize = 0;
 static PUSHORT NlsUnicodeCasemapTable = NULL;
 static ULONG NlsUnicodeCasemapTableSize = 0;
 
-PVOID NlsSectionObject = NULL;
+PSECTION_OBJECT NlsSectionObject = NULL;
 static PVOID NlsSectionBase = NULL;
 static ULONG NlsSectionViewSize = 0;
 
@@ -95,7 +95,6 @@ RtlpCreateNlsSection(VOID)
 {
   NLSTABLEINFO NlsTable;
   LARGE_INTEGER SectionSize;
-  HANDLE SectionHandle;
   NTSTATUS Status;
 
   DPRINT("RtlpCreateNlsSection() called\n");
@@ -107,30 +106,18 @@ RtlpCreateNlsSection(VOID)
   DPRINT("NlsSectionViewSize %lx\n", NlsSectionViewSize);
 
   SectionSize.QuadPart = (LONGLONG)NlsSectionViewSize;
-  Status = NtCreateSection(&SectionHandle,
+  Status = MmCreateSection(&NlsSectionObject,
             SECTION_ALL_ACCESS,
             NULL,
             &SectionSize,
             PAGE_READWRITE,
             SEC_COMMIT,
+            NULL,
             NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection() failed\n");
+      DPRINT1("MmCreateSection() failed\n");
       KEBUGCHECKEX(0x32, Status, 1, 1, 0);
-    }
-
-  Status = ObReferenceObjectByHandle(SectionHandle,
-                 SECTION_ALL_ACCESS,
-                 MmSectionObjectType,
-                 KernelMode,
-                 &NlsSectionObject,
-                 NULL);
-  NtClose(SectionHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ObReferenceObjectByHandle() failed\n");
-      KEBUGCHECKEX(0x32, Status, 1, 2, 0);
     }
 
   Status = MmMapViewInSystemSpace(NlsSectionObject,

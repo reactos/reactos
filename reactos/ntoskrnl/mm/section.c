@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.155 2004/08/01 07:24:58 hbirr Exp $
+/* $Id: section.c,v 1.156 2004/08/05 19:59:13 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2094,7 +2094,6 @@ MmpCreateSection(PVOID ObjectBody,
 NTSTATUS INIT_FUNCTION
 MmCreatePhysicalMemorySection(VOID)
 {
-   HANDLE PhysSectionH;
    PSECTION_OBJECT PhysSection;
    NTSTATUS Status;
    OBJECT_ATTRIBUTES Obj;
@@ -2110,31 +2109,20 @@ MmCreatePhysicalMemorySection(VOID)
                               0,
                               NULL,
                               NULL);
-   Status = NtCreateSection(&PhysSectionH,
+   Status = MmCreateSection(&PhysSection,
                             SECTION_ALL_ACCESS,
                             &Obj,
                             &SectionSize,
                             PAGE_EXECUTE_READWRITE,
                             0,
+                            NULL,
                             NULL);
    if (!NT_SUCCESS(Status))
    {
       DbgPrint("Failed to create PhysicalMemory section\n");
       KEBUGCHECK(0);
    }
-   Status = ObReferenceObjectByHandle(PhysSectionH,
-                                      SECTION_ALL_ACCESS,
-                                      NULL,
-                                      KernelMode,
-                                      (PVOID*)&PhysSection,
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DbgPrint("Failed to reference PhysicalMemory section\n");
-      KEBUGCHECK(0);
-   }
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
-   ObDereferenceObject((PVOID)PhysSection);
 
    return(STATUS_SUCCESS);
 }
@@ -2176,7 +2164,7 @@ MmInitSectionImplementation(VOID)
 }
 
 NTSTATUS
-MmCreatePageFileSection(PHANDLE SectionHandle,
+MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
                         PLARGE_INTEGER UMaximumSize,
@@ -2223,18 +2211,6 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
       return(Status);
    }
 
-   Status = ObInsertObject ((PVOID)Section,
-                            NULL,
-                            DesiredAccess,
-                            0,
-                            NULL,
-                            SectionHandle);
-   if (!NT_SUCCESS(Status))
-   {
-      ObDereferenceObject(Section);
-      return(Status);
-   }
-
    /*
     * Initialize it
     */
@@ -2248,7 +2224,6 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
                                    TAG_MM_SECTION_SEGMENT);
    if (Segment == NULL)
    {
-      ZwClose(*SectionHandle);
       ObDereferenceObject(Section);
       return(STATUS_NO_MEMORY);
    }
@@ -2265,13 +2240,13 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
    RtlZeroMemory(&Segment->PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
    Segment->VirtualAddress = 0;
    Segment->Characteristics = 0;
-   ObDereferenceObject(Section);
+   *SectionObject = Section;
    return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS
-MmCreateDataFileSection(PHANDLE SectionHandle,
+MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
                         PLARGE_INTEGER UMaximumSize,
@@ -2317,18 +2292,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
       return(Status);
    }
 
-   Status = ObInsertObject ((PVOID)Section,
-                            NULL,
-                            DesiredAccess,
-                            0,
-                            NULL,
-                            SectionHandle);
-   if (!NT_SUCCESS(Status))
-   {
-      ObDereferenceObject(Section);
-      return(Status);
-   }
-
    /*
     * Initialize it
     */
@@ -2361,7 +2324,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
-      ZwClose(*SectionHandle);
       ObDereferenceObject(Section);
       return(Status);
    }
@@ -2372,7 +2334,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
     */
    if (!(FileObject->Flags & FO_FCB_IS_VALID))
    {
-      ZwClose(*SectionHandle);
       ObDereferenceObject(Section);
       ObDereferenceObject(FileObject);
       return(STATUS_INVALID_FILE_FOR_SECTION);
@@ -2402,7 +2363,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
                                     FileAllocationInformation);
       if (!NT_SUCCESS(Status))
       {
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(STATUS_SECTION_NOT_EXTENDED);
@@ -2429,7 +2389,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
                           0);
       if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
       {
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(Status);
@@ -2438,7 +2397,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
             FileObject->SectionObjectPointer->SharedCacheMap == NULL)
       {
          /* FIXME: handle this situation */
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return STATUS_INVALID_PARAMETER;
@@ -2451,7 +2409,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
    Status = MmspWaitForFileLock(FileObject);
    if (Status != STATUS_SUCCESS)
    {
-      ZwClose(*SectionHandle);
       ObDereferenceObject(Section);
       ObDereferenceObject(FileObject);
       return(Status);
@@ -2468,7 +2425,6 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
       if (Segment == NULL)
       {
          KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(STATUS_NO_MEMORY);
@@ -2525,7 +2481,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
    Section->MaximumSize = MaximumSize;
    CcRosReferenceCache(FileObject);
    KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
-   ObDereferenceObject(Section);
+   *SectionObject = Section;
    return(STATUS_SUCCESS);
 }
 
@@ -2550,7 +2506,7 @@ static ULONG SectionCharacteristicsToProtect[16] =
    };
 
 NTSTATUS
-MmCreateImageSection(PHANDLE SectionHandle,
+MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
                      PLARGE_INTEGER UMaximumSize,
@@ -2725,20 +2681,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
          return(Status);
       }
 
-      Status = ObInsertObject ((PVOID)Section,
-                               NULL,
-                               DesiredAccess,
-                               0,
-                               NULL,
-                               SectionHandle);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
-         return(Status);
-      }
-
       /*
        * Initialize it
        */
@@ -2765,7 +2707,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
        */
       if (!(FileObject->Flags & FO_FCB_IS_VALID))
       {
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          ExFreePool(ImageSections);
@@ -2778,7 +2719,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
       Status = MmspWaitForFileLock(FileObject);
       if (Status != STATUS_SUCCESS)
       {
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          ExFreePool(ImageSections);
@@ -2794,7 +2734,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
       if (ImageSectionObject == NULL)
       {
          KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          ExFreePool(ImageSections);
@@ -2934,19 +2873,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
          return(Status);
       }
 
-      Status = ObInsertObject ((PVOID)Section,
-                               NULL,
-                               DesiredAccess,
-                               0,
-                               NULL,
-                               SectionHandle);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return(Status);
-      }
-
       /*
        * Initialize it
        */
@@ -2973,7 +2899,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
       Status = MmspWaitForFileLock(FileObject);
       if (Status != STATUS_SUCCESS)
       {
-         ZwClose(*SectionHandle);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(Status);
@@ -2996,7 +2921,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
    Section->FileObject = FileObject;
    CcRosReferenceCache(FileObject);
    KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
-   ObDereferenceObject(Section);
+   *SectionObject = Section;
    return(STATUS_SUCCESS);
 }
 
@@ -3012,34 +2937,33 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                  IN ULONG AllocationAttributes,
                  IN HANDLE FileHandle OPTIONAL)
 {
-   if (AllocationAttributes & SEC_IMAGE)
+   PSECTION_OBJECT SectionObject;
+   NTSTATUS Status;
+
+   Status = MmCreateSection(&SectionObject,
+                            DesiredAccess,
+                            ObjectAttributes,
+                            MaximumSize,
+                            SectionPageProtection,
+                            AllocationAttributes,
+                            FileHandle,
+                            NULL);
+
+   if (NT_SUCCESS(Status))
    {
-      return(MmCreateImageSection(SectionHandle,
-                                  DesiredAccess,
-                                  ObjectAttributes,
-                                  MaximumSize,
-                                  SectionPageProtection,
-                                  AllocationAttributes,
-                                  FileHandle));
+      Status = ObInsertObject ((PVOID)SectionObject,
+                               NULL,
+                               DesiredAccess,
+                               0,
+                               NULL,
+                               SectionHandle);
+      if (!NT_SUCCESS(Status))
+      {
+         ObDereferenceObject(SectionObject);
+      }
    }
 
-   if (FileHandle != NULL)
-   {
-      return(MmCreateDataFileSection(SectionHandle,
-                                     DesiredAccess,
-                                     ObjectAttributes,
-                                     MaximumSize,
-                                     SectionPageProtection,
-                                     AllocationAttributes,
-                                     FileHandle));
-   }
-
-   return(MmCreatePageFileSection(SectionHandle,
-                                  DesiredAccess,
-                                  ObjectAttributes,
-                                  MaximumSize,
-                                  SectionPageProtection,
-                                  AllocationAttributes));
+   return Status;
 }
 
 
@@ -4099,7 +4023,7 @@ MmSetBankedSection (DWORD Unknown0,
  *  Creates a section object.
  *
  * ARGUMENTS
- * SectionObjiect (OUT)
+ * SectionObject (OUT)
  *  Caller supplied storage for the resulting pointer
  *  to a SECTION_OBJECT instance;
  *
@@ -4144,7 +4068,7 @@ MmSetBankedSection (DWORD Unknown0,
  * RETURN VALUE
  *  Status.
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
@@ -4156,7 +4080,34 @@ MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
                  IN HANDLE   FileHandle   OPTIONAL,
                  IN PFILE_OBJECT  File      OPTIONAL)
 {
-   return (STATUS_NOT_IMPLEMENTED);
+   if (AllocationAttributes & SEC_IMAGE)
+   {
+      return(MmCreateImageSection(SectionObject,
+                                  DesiredAccess,
+                                  ObjectAttributes,
+                                  MaximumSize,
+                                  SectionPageProtection,
+                                  AllocationAttributes,
+                                  FileHandle));
+   }
+
+   if (FileHandle != NULL)
+   {
+      return(MmCreateDataFileSection(SectionObject,
+                                     DesiredAccess,
+                                     ObjectAttributes,
+                                     MaximumSize,
+                                     SectionPageProtection,
+                                     AllocationAttributes,
+                                     FileHandle));
+   }
+
+   return(MmCreatePageFileSection(SectionObject,
+                                  DesiredAccess,
+                                  ObjectAttributes,
+                                  MaximumSize,
+                                  SectionPageProtection,
+                                  AllocationAttributes));
 }
 
 /* EOF */
