@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.8 2003/07/10 17:44:06 royce Exp $
+/* $Id: critical.c,v 1.9 2003/11/19 21:19:15 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@
 VOID STDCALL KeEnterCriticalRegion (VOID)
 {
    DPRINT("KeEnterCriticalRegion()\n");
-   KeGetCurrentThread()->KernelApcDisable -= 1;
+   KeGetCurrentThread()->KernelApcDisable--;
 }
 
 /*
@@ -33,8 +33,20 @@ VOID STDCALL KeEnterCriticalRegion (VOID)
  */
 VOID STDCALL KeLeaveCriticalRegion (VOID)
 {
-   DPRINT("KeLeaveCriticalRegion()\n");
-   KeGetCurrentThread()->KernelApcDisable += 1;
+  PKTHREAD Thread = KeGetCurrentThread(); 
+
+  DPRINT("KeLeaveCriticalRegion()\n");
+
+  /* Reference: http://www.ntfsd.org/archive/ntfsd0104/msg0203.html */
+  if(++Thread->KernelApcDisable == 0) 
+  { 
+    if (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) 
+    { 
+      Thread->ApcState.KernelApcPending = TRUE; 
+      HalRequestSoftwareInterrupt(APC_LEVEL); 
+    } 
+  } 
+
 }
 
 /* EOF */
