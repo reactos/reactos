@@ -25,7 +25,8 @@ Project::~Project ()
 	delete head;
 }
 
-void Project::ReadXml ()
+void
+Project::ReadXml ()
 {
 	Path path;
 

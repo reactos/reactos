@@ -12,15 +12,17 @@ MingwModuleHandler::MingwModuleHandler ( FILE* fMakefile )
 {
 }
 
-string MingwModuleHandler::GetModuleDependencies ( Module& module )
+string
+MingwModuleHandler::GetModuleDependencies ( Module& module )
 {
-	string dependencies ( "" );
-	
-	for ( size_t i = 0; i < module.libraries.size(); i++ )
+	if ( !module.libraries.size() )
+		return "";
+
+	string dependencies ( module.libraries[0]->name );
+
+	for ( size_t i = 1; i < module.libraries.size(); i++ )
 	{
-		if (dependencies.size () > 0)
-			dependencies += " ";
-		dependencies += module.libraries[i]->name;
+		dependencies += " " + module.libraries[i]->name;
 	}
 	return dependencies;
 }
@@ -31,17 +33,20 @@ MingwKernelModuleHandler::MingwKernelModuleHandler ( FILE* fMakefile )
 {
 }
 
-bool MingwKernelModuleHandler::CanHandleModule ( Module& module )
+bool
+MingwKernelModuleHandler::CanHandleModule ( Module& module )
 {
 	return true;
 }
 
-void MingwKernelModuleHandler::Process ( Module& module )
+void
+MingwKernelModuleHandler::Process ( Module& module )
 {
 	GenerateKernelModuleTarget ( module );
 }
 
-void MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
+void
+MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
 {
 	fprintf ( fMakefile, "%s: %s",
 	          module.name.c_str (),

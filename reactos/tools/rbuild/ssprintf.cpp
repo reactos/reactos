@@ -34,7 +34,8 @@ typedef struct {
     unsigned int empty:16;
 } ieee_long_double_t;
 
-std::string ssprintf ( const char* fmt, ... )
+std::string
+ssprintf ( const char* fmt, ... )
 {
 	va_list arg;
 	va_start(arg, fmt);
@@ -43,7 +44,8 @@ std::string ssprintf ( const char* fmt, ... )
 	return f;
 }
 
-std::wstring sswprintf ( const wchar_t* fmt, ... )
+std::wstring
+sswprintf ( const wchar_t* fmt, ... )
 {
 	va_list arg;
 	va_start(arg, fmt);
@@ -62,7 +64,8 @@ std::wstring sswprintf ( const wchar_t* fmt, ... )
 #define ZEROTRUNC	128	/* truncate zero 's */
 
 
-static int skip_atoi(const char **s)
+static int
+skip_atoi(const char **s)
 {
 	int i=0;
 
@@ -71,7 +74,8 @@ static int skip_atoi(const char **s)
 	return i;
 }
 
-static int skip_wtoi(const wchar_t **s)
+static int
+skip_wtoi(const wchar_t **s)
 {
 	int i=0;
 
@@ -81,7 +85,8 @@ static int skip_wtoi(const wchar_t **s)
 }
 
 
-static int do_div(LONGLONG *n,int base)
+static int
+do_div(LONGLONG *n,int base)
 {
 	int __res = ((ULONGLONG) *n) % (unsigned) base;
 	*n = ((ULONGLONG) *n) / (unsigned) base;
@@ -89,7 +94,8 @@ static int do_div(LONGLONG *n,int base)
 }
 
 
-static bool number(std::string& f, LONGLONG num, int base, int size, int precision ,int type)
+static bool
+number(std::string& f, LONGLONG num, int base, int size, int precision ,int type)
 {
 	char c,sign,tmp[66];
 	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -165,7 +171,8 @@ static bool number(std::string& f, LONGLONG num, int base, int size, int precisi
 	return true;
 }
 
-static bool wnumber(std::wstring& f, LONGLONG num, int base, int size, int precision ,int type)
+static bool
+wnumber(std::wstring& f, LONGLONG num, int base, int size, int precision ,int type)
 {
 	wchar_t c,sign,tmp[66];
 	const wchar_t *digits = L"0123456789abcdefghijklmnopqrstuvwxyz";
@@ -242,7 +249,8 @@ static bool wnumber(std::wstring& f, LONGLONG num, int base, int size, int preci
 }
 
 
-static bool numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int type)
+static bool
+numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int type)
 {
 	double exponent = 0.0;
 	double e;
@@ -435,7 +443,8 @@ static bool numberf(std::string& f, double __n, char exp_sign,  int size, int pr
 	return true;
 }
 
-static bool wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision, int type)
+static bool
+wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision, int type)
 {
 	double exponent = 0.0;
 	double e;
@@ -628,7 +637,8 @@ static bool wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, i
 	return true;
 }
 
-static bool numberfl(std::string& f, long double __n, char exp_sign,  int size, int precision, int type)
+static bool
+numberfl(std::string& f, long double __n, char exp_sign,  int size, int precision, int type)
 {
 	long double exponent = 0.0;
 	long double e;
@@ -834,7 +844,8 @@ static bool numberfl(std::string& f, long double __n, char exp_sign,  int size, 
 	return true;
 }
 
-static bool wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int precision, int type)
+static bool
+wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int precision, int type)
 {
 	long double exponent = 0.0;
 	long double e;
@@ -1035,7 +1046,8 @@ static bool wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int s
 	return true;
 }
 
-static int do_string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
+static int
+do_string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (s == NULL)
@@ -1076,7 +1088,8 @@ static int do_string(std::string& f, const char* s, int len, int field_width, in
 	return done;
 }
 
-static int do_wstring(std::wstring& f, const wchar_t* s, int len, int field_width, int precision, int flags)
+static int
+do_wstring(std::wstring& f, const wchar_t* s, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (s == NULL)
@@ -1117,7 +1130,8 @@ static int do_wstring(std::wstring& f, const wchar_t* s, int len, int field_widt
 	return done;
 }
 
-static int stringw(std::string& f, const wchar_t* sw, int len, int field_width, int precision, int flags)
+static int
+stringw(std::string& f, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (sw == NULL)
@@ -1169,7 +1183,8 @@ static int stringw(std::string& f, const wchar_t* sw, int len, int field_width, 
 	return done;
 }
 
-static int wstringa(std::wstring& f, const char* sa, int len, int field_width, int precision, int flags)
+static int
+wstringa(std::wstring& f, const char* sa, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (sa == NULL)
@@ -1219,7 +1234,8 @@ static int wstringa(std::wstring& f, const char* sa, int len, int field_width, i
 #define _isnanl _isnan
 #define _finitel _finite
 
-std::string ssvprintf ( const char *fmt, va_list args )
+std::string
+ssvprintf ( const char *fmt, va_list args )
 {
 	ULONGLONG num;
 	int base;
@@ -1569,7 +1585,8 @@ std::string ssvprintf ( const char *fmt, va_list args )
 	return f;
 }
 
-std::wstring sswvprintf ( const wchar_t* fmt, va_list args )
+std::wstring
+sswvprintf ( const wchar_t* fmt, va_list args )
 {
 	ULONGLONG num;
 	int base;

@@ -61,7 +61,7 @@ InvalidBuildFileException::InvalidBuildFileException()
 }
 
 
-XMLSyntaxErrorException::XMLSyntaxErrorException ( const std::string& location,
+XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
 	                                               const char* message,
 	                                               ... )
 {
@@ -72,19 +72,30 @@ XMLSyntaxErrorException::XMLSyntaxErrorException ( const std::string& location,
 }
 
 
-RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const std::string& attributeName,
-                                                                       const std::string& elementName)
+RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const string& attributeName,
+                                                                       const string& elementName)
 	: InvalidBuildFileException ( "Required attribute '%s' not found on '%s'.",
 	                              attributeName.c_str (),
 	                              elementName.c_str ())
 {
 }
 
-InvalidAttributeValueException::InvalidAttributeValueException(const std::string& name,
-	                                                           const std::string& value)
+InvalidAttributeValueException::InvalidAttributeValueException(const string& name,
+	                                                           const string& value)
 	: InvalidBuildFileException ( "Attribute '%s' has an invalid value '%s'.",
 	                              name.c_str (),
 	                              value.c_str ())
 {
 	
+}
+
+BackendNameConflictException::BackendNameConflictException ( const string& name )
+	: Exception ( "Backend name conflict: '%s'", name.c_str() )
+{
+}
+
+
+UnknownBackendException::UnknownBackendException ( const string& name )
+	: Exception ( "Unknown Backend requested: '%s'", name.c_str() )
+{
 }

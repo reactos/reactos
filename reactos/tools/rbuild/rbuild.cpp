@@ -17,11 +17,19 @@ using std::vector;
 int
 main ( int argc, char** argv )
 {
+	Backend::InitFactories();
+	if ( argc != 2 )
+	{
+		printf ( "syntax: rbuild {buildtarget}\n" );
+		return 1;
+	}
+	string buildtarget ( argv[1] );
+	strlwr ( &buildtarget[0] );
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
 		Project project ( projectFilename );
-		Backend* backend = new MingwBackend ( project );
+		Backend* backend = Backend::Create ( buildtarget, project );
 		backend->Process ();
 		delete backend;
 		

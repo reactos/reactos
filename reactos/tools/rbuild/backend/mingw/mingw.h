@@ -20,7 +20,10 @@ public:
 class MingwBackend : public Backend
 {
 public:
+	static Backend* Factory ( Project& project );
+protected:
 	MingwBackend ( Project& project );
+public:
 	virtual void Process ();
 private:
 	void ProcessModule ( Module& module );

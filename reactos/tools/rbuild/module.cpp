@@ -27,8 +27,9 @@ Module::~Module ()
 		delete libraries[i];
 }
 
-void Module::ProcessXML ( const XMLElement& e,
-                          const string& path )
+void
+Module::ProcessXML ( const XMLElement& e,
+                     const string& path )
 {
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () )
@@ -49,7 +50,8 @@ void Module::ProcessXML ( const XMLElement& e,
 		ProcessXML ( *e.subElements[i], subpath );
 }
 
-ModuleType Module::GetModuleType ( const XMLAttribute& attribute )
+ModuleType
+Module::GetModuleType ( const XMLAttribute& attribute )
 {
 	if ( attribute.value == "buildtool" )
 		return BuildTool;

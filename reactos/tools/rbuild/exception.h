@@ -67,4 +67,18 @@ public:
 	                               const std::string& value);
 };
 
+
+class BackendNameConflictException : public Exception
+{
+public:
+	BackendNameConflictException ( const std::string& name );
+};
+
+
+class UnknownBackendException : public Exception
+{
+public:
+	UnknownBackendException ( const std::string& name );
+};
+
 #endif /* __EXCEPTION_H */
