@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.32 2001/10/10 22:19:51 hbirr Exp $
+/* $Id: rw.c,v 1.33 2001/10/11 15:39:51 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -596,9 +596,9 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		        &Fcb->entry.UpdateDate,
 		    	&Fcb->entry.UpdateTime);
       Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
+      // update dates/times and length
+      updEntry (DeviceExt, FileObject);
     }
-    // update dates/times and length
-    updEntry (DeviceExt, FileObject);
   }
 
   return Status;
