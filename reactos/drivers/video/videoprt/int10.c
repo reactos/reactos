@@ -18,11 +18,44 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.3 2004/03/06 01:22:02 navaraf Exp $
+ * $Id: int10.c,v 1.4 2004/03/08 21:45:39 navaraf Exp $
  */
 
 #include "videoprt.h"
 #include "internal/v86m.h"
+
+VOID FASTCALL
+IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+{
+   *CallingProcess = PsGetCurrentProcess();
+   if (*CallingProcess != Csrss)
+   {
+      if (NULL != PsGetCurrentThread()->OldProcess)
+      {
+         *PrevAttachedProcess = *CallingProcess;
+         KeDetachProcess();
+      }
+      else
+      {
+         *PrevAttachedProcess = NULL;
+      }
+      KeAttachProcess(Csrss);
+   }
+}
+
+VOID FASTCALL
+IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+{
+   if (*CallingProcess != Csrss)
+   {
+      KeDetachProcess();
+      if (NULL != *PrevAttachedProcess)
+      {
+         KeAttachProcess(*PrevAttachedProcess);
+      }
+   }
+}
+
 
 /*
  * @implemented
@@ -40,20 +73,7 @@ VideoPortInt10(
 
    DPRINT("VideoPortInt10\n");
 
-   CallingProcess = PsGetCurrentProcess();
-   if (CallingProcess != Csrss)
-   {
-      if (NULL != PsGetCurrentThread()->OldProcess)
-      {
-         PrevAttachedProcess = CallingProcess;
-         KeDetachProcess();
-      }
-      else
-      {
-         PrevAttachedProcess = NULL;
-      }
-      KeAttachProcess(Csrss);
-   }
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    memset(&Regs, 0, sizeof(Regs));
    DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
@@ -72,14 +92,7 @@ VideoPortInt10(
    Regs.Ebp = BiosArguments->Ebp;
    Status = Ke386CallBios(0x10, &Regs);
 
-   if (CallingProcess != Csrss)
-   {
-      KeDetachProcess();
-      if (NULL != PrevAttachedProcess)
-      {
-         KeAttachProcess(PrevAttachedProcess);
-      }
-   }
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    return Status;
 }
@@ -93,8 +106,12 @@ IntInt10AllocateBuffer(
 {
    PVOID MemoryAddress;
    NTSTATUS Status;
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
 
    DPRINT("IntInt10AllocateBuffer\n");
+
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    MemoryAddress = (PVOID)0x20000;
    Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
@@ -119,6 +136,8 @@ IntInt10AllocateBuffer(
    DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xFF);
    DPRINT("- Length: %x\n", *Length);
 
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+
    return STATUS_SUCCESS;
 }
 
@@ -129,11 +148,20 @@ IntInt10FreeBuffer(
    IN USHORT Off)
 {
    PVOID MemoryAddress = (PVOID)((Seg << 4) + Off);
+   NTSTATUS Status;
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
+
    DPRINT("IntInt10FreeBuffer\n");
    DPRINT("- Segment: %x\n", Seg);
    DPRINT("- Offset: %x\n", Off);
-   return ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
+
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+   Status = ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
       MEM_RELEASE);
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+
+   return Status;
 }
 
 VP_STATUS STDCALL
@@ -144,12 +172,19 @@ IntInt10ReadMemory(
    OUT PVOID Buffer,
    IN ULONG Length)
 {
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
+
    DPRINT("IntInt10ReadMemory\n");
    DPRINT("- Segment: %x\n", Seg);
    DPRINT("- Offset: %x\n", Off);
    DPRINT("- Buffer: %x\n", Buffer);
    DPRINT("- Length: %x\n", Length);
+
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) + Off), Length);
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+
    return STATUS_SUCCESS;
 }
 
@@ -161,12 +196,19 @@ IntInt10WriteMemory(
    IN PVOID Buffer,
    IN ULONG Length)
 {
+   PEPROCESS CallingProcess;
+   PEPROCESS PrevAttachedProcess;
+
    DPRINT("IntInt10WriteMemory\n");
    DPRINT("- Segment: %x\n", Seg);
    DPRINT("- Offset: %x\n", Off);
    DPRINT("- Buffer: %x\n", Buffer);
    DPRINT("- Length: %x\n", Length);
+
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
    RtlCopyMemory((PVOID)((Seg << 4) + Off), Buffer, Length);
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+
    return STATUS_SUCCESS;
 }
 
@@ -182,20 +224,7 @@ IntInt10CallBios(
 
    DPRINT("IntInt10CallBios\n");
 
-   CallingProcess = PsGetCurrentProcess();
-   if (CallingProcess != Csrss)
-   {
-      if (NULL != PsGetCurrentThread()->OldProcess)
-      {
-         PrevAttachedProcess = CallingProcess;
-         KeDetachProcess();
-      }
-      else
-      {
-         PrevAttachedProcess = NULL;
-      }
-      KeAttachProcess(Csrss);
-   }
+   IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    memset(&Regs, 0, sizeof(Regs));
    DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
@@ -227,14 +256,7 @@ IntInt10CallBios(
    BiosArguments->SegDs = Regs.Ds;
    BiosArguments->SegEs = Regs.Es;
 
-   if (CallingProcess != Csrss)
-   {
-      KeDetachProcess();
-      if (NULL != PrevAttachedProcess)
-      {
-         KeAttachProcess(PrevAttachedProcess);
-      }
-   }
+   IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    return Status;
 }
