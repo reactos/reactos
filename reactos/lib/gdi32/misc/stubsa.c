@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.29 2004/03/23 07:59:47 gvg Exp $
+/* $Id: stubsa.c,v 1.30 2004/03/23 19:46:49 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -404,21 +404,6 @@ StartDocA(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int   
-STDCALL 
-GetObjectA(
-	HGDIOBJ		a0, 
-	int		a1, 
-	LPVOID		a2
-	)
-{
-	return NtGdiGetObject ( a0, a1, a2 );
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.124 2004/03/15 22:02:31 gvg Exp $
+/* $Id: dc.c,v 1.125 2004/03/23 19:46:50 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -53,6 +53,7 @@
 #include <include/intgdi.h>
 #include <include/cleanup.h>
 #include <include/tags.h>
+#include <include/text.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -1425,47 +1426,55 @@ DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
 DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
 INT FASTCALL
-IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
+IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 {
-  PGDIOBJHDR  gdiObject;
-  INT  result = 0;
-  DWORD objectType;
+  PGDIOBJHDR GdiObject;
+  INT Result = 0;
+  DWORD ObjectType;
 
-  gdiObject = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
-  if (gdiObject == 0)
-    return 0;
+  GdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  if (NULL == GdiObject)
+    {
+      return 0;
+    }
   
-  objectType = GDIOBJ_GetObjectType(handle);
-  switch(objectType)
-  {
-/*    case GDI_OBJECT_TYPE_PEN:
-      result = PEN_GetObject((PENOBJ *)gdiObject, count, buffer);
-      break;
-    case GDI_OBJECT_TYPE_BRUSH:
-      result = BRUSH_GetObject((BRUSHOBJ *)gdiObject, count, buffer);
-       break; */
-    case GDI_OBJECT_TYPE_BITMAP:
-      result = BITMAP_GetObject((BITMAPOBJ *)gdiObject, count, buffer);
-      break;
-/*    case GDI_OBJECT_TYPE_FONT:
-      result = FONT_GetObjectW((FONTOBJ *)gdiObject, count, buffer);
+  ObjectType = GDIOBJ_GetObjectType(Handle);
+  switch (ObjectType)
+    {
+#if 0
+      case GDI_OBJECT_TYPE_PEN:
+        Result = PEN_GetObject((PENOBJ *) GdiObject, Count, Buffer);
+        break;
+      case GDI_OBJECT_TYPE_BRUSH:
+        Result = BRUSH_GetObject((BRUSHOBJ *) GdiObject, Count, Buffer);
+        break;
+#endif
+      case GDI_OBJECT_TYPE_BITMAP:
+        Result = BITMAP_GetObject((BITMAPOBJ *) GdiObject, Count, Buffer);
+        break;
+      case GDI_OBJECT_TYPE_FONT:
+        Result = FontGetObject((PTEXTOBJ) GdiObject, Count, Buffer);
+#if 0
+        // Fix the LOGFONT structure for the stock fonts
+        if (FIRST_STOCK_HANDLE <= Handle && Handle <= LAST_STOCK_HANDLE)
+          {
+            FixStockFontSizeW(Handle, Count, Buffer);
+          }
+#endif
+        break;
+#if 0
+      case GDI_OBJECT_TYPE_PALETTE:
+        Result = PALETTE_GetObject((PALETTEOBJ *) GdiObject, Count, Buffer);
+        break;
+#endif
+      default:
+        DPRINT1("GDI object type 0x%08x not implemented\n", ObjectType);
+        break;
+    }
 
-      // Fix the LOGFONT structure for the stock fonts
+  GDIOBJ_UnlockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
 
-      if ( (handle >= FIRST_STOCK_HANDLE) && (handle <= LAST_STOCK_HANDLE) )
-      FixStockFontSizeW(handle, count, buffer);
-    break;
-    case GDI_OBJECT_TYPE_PALETTE:
-      result = PALETTE_GetObject((PALETTEOBJ *)gdiObject, count, buffer);
-      break; */
-    default:
-      DPRINT1("GDI object type 0x%08x not implemented\n", objectType);
-      break;
-  }
-
-  GDIOBJ_UnlockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
-
-  return result;
+  return Result;
 }
 
 INT STDCALL

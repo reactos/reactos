@@ -5,6 +5,7 @@ BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
+INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExAcquireFastMutex(&W32Process->PrivateFontListLock)

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.26 2004/03/23 07:59:47 gvg Exp $
+/* $Id: stubsw.c,v 1.27 2004/03/23 19:46:49 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -293,21 +293,6 @@ StartDocW(
 	)
 {
 	return NtGdiStartDoc ( hdc, (CONST PDOCINFOW)a1 );
-}
-
-
-/*
- * @unimplemented
- */
-int   
-STDCALL 
-GetObjectW(
-	HGDIOBJ		a0, 
-	int		a1, 
-	LPVOID		a2
-	)
-{
-	return NtGdiGetObject ( a0, a1, a2 );
 }
 
 

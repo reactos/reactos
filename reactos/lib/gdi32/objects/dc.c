@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
+#include <rosrtl/logfont.h>
 
 
 /*
@@ -939,4 +940,56 @@ ExtEscape(
 	)
 {
 	return NtGdiExtEscape(a0, a1, a2, a3, a4, a5);
+}
+
+
+/*
+ * @unimplemented
+ */
+int   
+STDCALL 
+GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
+{
+  LOGFONTW LogFontW;
+  DWORD Type;
+  int Result;
+
+  Type = GetObjectType(Handle);
+  if (0 == Type)
+    {
+      return 0;
+    }
+
+  if (OBJ_FONT == Type)
+    {
+      if (Size < sizeof(LOGFONTA))
+        {
+          SetLastError(ERROR_BUFFER_OVERFLOW);
+          return 0;
+        }
+      Result = NtGdiGetObject(Handle, sizeof(LOGFONTW), &LogFontW);
+      if (0 == Result)
+        {
+          return 0;
+        }
+      RosRtlLogFontW2A((LPLOGFONTA) Buffer, &LogFontW);
+      Result = sizeof(LOGFONTA);
+    }
+  else
+    {
+      Result = NtGdiGetObject(Handle, Size, Buffer);
+    }
+
+  return Result;
+}
+
+
+/*
+ * @unimplemented
+ */
+int   
+STDCALL 
+GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
+{
+  return NtGdiGetObject(Handle, Size, Buffer);
 }

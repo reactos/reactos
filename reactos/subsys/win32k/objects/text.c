@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.83 2004/03/23 07:59:47 gvg Exp $ */
+/* $Id: text.c,v 1.84 2004/03/23 19:46:50 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -2655,6 +2655,20 @@ TextIntRealizeFont(HFONT FontHandle)
   }
 
   return Status;
+}
+
+INT FASTCALL
+FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
+{
+  if (Count < sizeof(LOGFONTW))
+    {
+      SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+      return 0;
+    }
+
+  RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
+
+  return sizeof(LOGFONTW);
 }
 
 /* EOF */
