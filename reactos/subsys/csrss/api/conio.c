@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.52 2003/08/28 13:38:23 gvg Exp $
+/* $Id: conio.c,v 1.53 2003/10/09 06:13:04 gvg Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -15,6 +15,7 @@
 #include "api.h"
 #include <ntdll/rtl.h>
 #include <ddk/ntddblue.h>
+#include <win32k/ntuser.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -29,11 +30,9 @@ extern VOID CsrConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 /* GLOBALS *******************************************************************/
 
 static HANDLE ConsoleDeviceHandle;
-static HANDLE KeyboardDeviceHandle;
 static PCSRSS_CONSOLE ActiveConsole;
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
-static BOOL KeyReadInhibit = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -164,18 +163,30 @@ CSR_API(CsrAllocConsole)
 
 CSR_API(CsrFreeConsole)
 {
+   PCSRSS_CONSOLE Console;
+
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE);
 
-   if (ProcessData == NULL)
+   LOCK;
+   if (ProcessData == NULL || ProcessData->Console == NULL)
    {
+     UNLOCK;
      return(Reply->Status = STATUS_INVALID_PARAMETER);
    }
 
-   Reply->Status = STATUS_NOT_IMPLEMENTED;
+   Console = ProcessData->Console;
+   Console->Header.ReferenceCount--;
+     ProcessData->Console = 0;
+   if( Console->Header.ReferenceCount == 0 ) {
+     if( Console != ActiveConsole ) 
+       CsrDeleteConsole( Console );
+   }
+
+   UNLOCK;
    
-   return(STATUS_NOT_IMPLEMENTED);
+   return(STATUS_SUCCESS);
 }
 
 CSR_API(CsrReadConsole)
@@ -242,7 +253,9 @@ CSR_API(CsrReadConsole)
 		     Input->Echoed = TRUE;   // mark as echoed so we don't echo it below
 		  }
 	       // do not copy backspace to buffer
-	       else Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+	       else {
+                 Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+               }
 	       // echo to screen if enabled and we did not already echo the char
 	       if( Console->Mode & ENABLE_ECHO_INPUT &&
 		   !Input->Echoed &&
@@ -895,6 +908,8 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
    
    DPRINT("CSR: CsrInitConsoleSupport()\n");
+
+   /* Should call LoadKeyboardLayout */
    
    RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\BlueScreen");
    InitializeObjectAttributes(&ObjectAttributes,
@@ -913,23 +928,6 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
 	DbgPrint("CSR: Failed to open console. Expect problems.\n");
      }
 
-   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\Keyboard");
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &DeviceName,
-			      0,
-			      NULL,
-			      NULL);
-   Status = NtOpenFile(&KeyboardDeviceHandle,
-		       FILE_ALL_ACCESS,
-		       &ObjectAttributes,
-		       &Iosb,
-		       0,
-		       0);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("CSR: Failed to open keyboard. Expect problems.\n");
-     }
-   
    ActiveConsole = 0;
    RtlInitializeCriticalSection( &ActiveConsoleLock );
    Status = NtDeviceIoControlFile( ConsoleDeviceHandle, NULL, NULL, NULL, &Iosb, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO, 0, 0, &ScrInfo, sizeof( ScrInfo ) );
@@ -941,302 +939,406 @@ VOID STDCALL CsrInitConsoleSupport(VOID)
    PhysicalConsoleSize = ScrInfo.dwSize;
 }
 
+static void CsrpProcessChar( PCSRSS_CONSOLE Console,
+			     ConsoleInput *KeyEventRecord ) {
+  BOOL updown;
+  BOOL bClientWake = FALSE;
+  ConsoleInput *TempInput;
+
+  /* process Ctrl-C and Ctrl-Break */
+  if (Console->Mode & ENABLE_PROCESSED_INPUT &&
+      KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown &&
+      ((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) || 
+       (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
+      (KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    {
+      PCSRSS_PROCESS_DATA current;
+      PLIST_ENTRY current_entry;
+      DPRINT1("Console_Api Ctrl-C\n");
+      LOCK;
+      current_entry = Console->ProcessList.Flink;
+      while (current_entry != &Console->ProcessList)
+	{
+	  current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+	  current_entry = current_entry->Flink;
+	  CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+	}
+      UNLOCK;
+      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      return;
+    }
+  if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
+      ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) &&
+      ( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP ||
+	KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) )
+    {
+      if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
+	{
+	  /* scroll up or down */
+	  LOCK;
+	  if( Console == 0 )
+	    {
+	      DbgPrint( "CSR: No Active Console!\n" );
+	      UNLOCK;
+	      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	      return;
+	    }
+	  if( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP )
+	    {
+	      /* only scroll up if there is room to scroll up into */
+	      if( Console->ActiveBuffer->ShowY != ((Console->ActiveBuffer->CurrentY + 1) %
+							 Console->ActiveBuffer->MaxY) )
+		Console->ActiveBuffer->ShowY = (Console->ActiveBuffer->ShowY +
+						      Console->ActiveBuffer->MaxY - 1) % Console->ActiveBuffer->MaxY;
+	    }
+	  else if( Console->ActiveBuffer->ShowY != Console->ActiveBuffer->CurrentY )
+	    /* only scroll down if there is room to scroll down into */
+	    if( Console->ActiveBuffer->ShowY % Console->ActiveBuffer->MaxY != 
+		Console->ActiveBuffer->CurrentY )
+	      
+	      if( ((Console->ActiveBuffer->CurrentY + 1) % Console->ActiveBuffer->MaxY) != 
+		  (Console->ActiveBuffer->ShowY + PhysicalConsoleSize.Y) % Console->ActiveBuffer->MaxY )
+		Console->ActiveBuffer->ShowY = (Console->ActiveBuffer->ShowY + 1) %
+		  Console->ActiveBuffer->MaxY;
+	  CsrDrawConsole( Console->ActiveBuffer );
+	  UNLOCK;
+	}
+      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      return;
+    }
+  if( Console == 0 )
+    {
+      DbgPrint( "CSR: No Active Console!\n" );
+      UNLOCK;
+      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+      return;
+    }
+
+  if( Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) )
+    switch( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar )
+      {
+      case '\r':
+	// first add the \r
+        KeyEventRecord->InputEvent.EventType = KEY_EVENT;
+	updown = KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown;
+	KeyEventRecord->Echoed = FALSE;
+	KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
+	KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\r';
+        InsertTailList(&Console->InputEvents, &KeyEventRecord->ListEntry);
+	Console->WaitingChars++;
+	KeyEventRecord = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( ConsoleInput ) );
+	if( !KeyEventRecord )
+	  {
+	    DbgPrint( "CSR: Failed to allocate KeyEventRecord\n" );
+	    return;
+	  }
+	KeyEventRecord->InputEvent.EventType = KEY_EVENT;
+	KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown = updown;
+	KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode = 0;
+	KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualScanCode = 0;
+	KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\n';
+	KeyEventRecord->Fake = TRUE;
+      }
+  // add event to the queue
+  InsertTailList(&Console->InputEvents, &KeyEventRecord->ListEntry);
+  Console->WaitingChars++;
+  // if line input mode is enabled, only wake the client on enter key down
+  if( !(Console->Mode & ENABLE_LINE_INPUT ) ||
+      Console->EarlyReturn ||
+      ( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' &&
+	KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == FALSE) )
+    {
+      if( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+	Console->WaitingLines++;
+      bClientWake = TRUE;
+      NtSetEvent( Console->ActiveEvent, 0 );
+    }
+  KeyEventRecord->Echoed = FALSE;
+  if( Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) &&
+      KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' &&
+      KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown )
+    {
+      // walk the input queue looking for a char to backspace
+      for( TempInput = (ConsoleInput *)Console->InputEvents.Blink;
+	   TempInput != (ConsoleInput *)&Console->InputEvents &&
+	     (TempInput->InputEvent.EventType != KEY_EVENT ||
+	      TempInput->InputEvent.Event.KeyEvent.bKeyDown == FALSE ||
+	      TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' );
+	   TempInput = (ConsoleInput *)TempInput->ListEntry.Blink );
+      // if we found one, delete it, otherwise, wake the client
+      if( TempInput != (ConsoleInput *)&Console->InputEvents )
+	{
+	  // delete previous key in queue, maybe echo backspace to screen, and do not place backspace on queue
+	  RemoveEntryList(&TempInput->ListEntry);
+	  if( TempInput->Echoed )
+	    CsrpWriteConsole( Console->ActiveBuffer, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );	
+  RtlFreeHeap( CsrssApiHeap, 0, TempInput );
+	  RemoveEntryList(&KeyEventRecord->ListEntry);
+	  RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
+	  Console->WaitingChars -= 2;
+	}
+      else {
+          NtSetEvent( Console->ActiveEvent, 0 );
+      }
+    }
+  else {
+    // echo chars if we are supposed to and client is waiting for some
+    if( ( Console->Mode & ENABLE_ECHO_INPUT ) && Console->EchoCount &&
+	KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar &&
+	KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE &&
+	KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar != '\r' )
+      {
+	// mark the char as already echoed
+	CsrpWriteConsole( Console->ActiveBuffer, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );
+	Console->EchoCount--;
+	KeyEventRecord->Echoed = TRUE;
+      }
+  }
+  /* Console->WaitingChars++; */
+  if( bClientWake || !(Console->Mode & ENABLE_LINE_INPUT) ) {
+    NtSetEvent( Console->ActiveEvent, 0 );
+  }
+}
+
+static DWORD CsrpGetShiftState( PBYTE KeyState ) {
+  int i;
+  DWORD ssOut = 0;
+
+  for( i = 0; i < 0x100; i++ ) {
+    if( KeyState[i] & 0x80 ) {
+      UINT vk = NtUserMapVirtualKeyEx( i, 3, 0, 0 ) & 0xff;
+      switch( vk ) {
+      case VK_LSHIFT:
+      case VK_RSHIFT:
+      case VK_SHIFT:
+	ssOut |= SHIFT_PRESSED;
+	break;
+
+      case VK_LCONTROL:
+      case VK_CONTROL:
+	ssOut |= LEFT_CTRL_PRESSED;
+	break;
+
+      case VK_RCONTROL:
+	ssOut |= RIGHT_CTRL_PRESSED | ENHANCED_KEY;
+	break;
+
+      case VK_LMENU:
+      case VK_MENU:
+	ssOut |= LEFT_ALT_PRESSED;
+	break;
+
+      case VK_RMENU:
+	ssOut |= RIGHT_ALT_PRESSED | ENHANCED_KEY;
+	break;
+      }
+    }
+  }
+
+  return ssOut;
+}
+
 VOID Console_Api( DWORD RefreshEvent )
 {
   /* keep reading events from the keyboard and stuffing them into the current
      console's input queue */
-  ConsoleInput *KeyEventRecord;
-  ConsoleInput *TempInput;
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-  HANDLE Events[2];     // 0 = keyboard, 1 = refresh
-  int c;
-  int updown;
   PCSRSS_CONSOLE SwapConsole = 0; // console we are thinking about swapping with
+  MSG msg;
+  ConsoleInput *ConInRec;
+  UINT RepeatCount;
+  WCHAR UnicodeChar;
+  UINT VirtualKeyCode;
+  UINT VirtualScanCode;
+  UINT AsciiChar;
+  DWORD ShiftState;
+  BOOL SubmitKey;
+  BOOL Down = FALSE;
+  BOOL Ext = FALSE;
+  BYTE KeyState[256] = { 0 };
+  int RetChars;
+  WCHAR Chars[2] = { 0 };
+  INPUT_RECORD er;
+  NTSTATUS Status;
+  IO_STATUS_BLOCK Iosb;
+  BYTE Mask;
 
-  Events[0] = 0;
-  Status = NtCreateEvent( &Events[0], STANDARD_RIGHTS_ALL, NULL, FALSE, FALSE );
-  if( !NT_SUCCESS( Status ) )
-    {
-      DbgPrint( "CSR: NtCreateEvent failed: %x\n", Status );
-      NtTerminateProcess( NtCurrentProcess(), Status );
+  /* This call establishes our message queue */
+  NtUserPeekMessage( &msg, 0,0,0, PM_NOREMOVE );
+  /* This call registers our message queue */
+  NtUserCallNoParam( NOPARAM_ROUTINE_REGISTER_PRIMITIVE );
+  /* This call turns on the input system in win32k */
+  NtUserAcquireOrReleaseInputOwnership( FALSE );
+  
+  while( TRUE ) {
+    NtUserGetMessage( &msg, 0,0,0 );
+    NtUserTranslateMessage( &msg, 0 );
+    
+    SubmitKey = FALSE;
+
+    if( msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
+	msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ) {
+      RepeatCount = 1;
+      VirtualScanCode = (msg.lParam >> 16) & 0xff;
+      VirtualKeyCode = msg.wParam;
+      Down = msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN;
+      Ext = msg.lParam & 0x01000000 ? TRUE : FALSE;
+
+      if (Ext)
+        Mask = 0x40;
+      else
+        Mask = 0x80;
+
+      if( Down ) 
+        KeyState[VirtualScanCode] |= Mask;
+      else
+	KeyState[VirtualScanCode] &= ~Mask;
+
+
+      ShiftState = CsrpGetShiftState( KeyState );
+
+      RetChars = NtUserToUnicodeEx( VirtualKeyCode,
+				    VirtualScanCode,
+				    KeyState,
+				    Chars,
+				    2,
+				    0,
+				    0 );
+
+      if( RetChars == 1 )
+	UnicodeChar = Chars[0];
+      else 
+	UnicodeChar = 0;
+
+      ULONG ResultSize;
+
+      RtlUnicodeToOemN (&AsciiChar,
+			1,
+			&ResultSize,
+			&UnicodeChar,
+			2);
+      if( ResultSize == 0 ) AsciiChar = 0;
+
+      SubmitKey = TRUE;
     }
-  Events[1] = (HANDLE)RefreshEvent;
-  while( 1 )
-    {
-      KeyEventRecord = RtlAllocateHeap(CsrssApiHeap, 
-				       0,
-				       sizeof(ConsoleInput));
-       if ( KeyEventRecord == 0 )
-	{
-	  DbgPrint( "CSR: Memory allocation failure!" );
-	  continue;
-	}
-      KeyEventRecord->InputEvent.EventType = KEY_EVENT;
-      if( !KeyReadInhibit ) {
-        Status = NtReadFile( KeyboardDeviceHandle, Events[0], NULL, NULL, &Iosb,
-                             &KeyEventRecord->InputEvent.Event.KeyEvent, sizeof( KEY_EVENT_RECORD ), NULL, 0 );
-      } else {
-	Status = STATUS_PENDING;
-      }
-      if( !NT_SUCCESS( Status ) )
-	{
-	  DbgPrint( "CSR: ReadFile on keyboard device failed\n" );
-	  RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	  continue;
-	}
-      if( Status == STATUS_PENDING )
-	{
-	  while( 1 )
-	    {
-	      Status = NtWaitForMultipleObjects( 2, Events, WaitAny, FALSE, NULL );
-	      if( Status == STATUS_WAIT_0 + 1 )
-		{
-		  LOCK;
-		  CsrDrawConsole( ActiveConsole->ActiveBuffer );
-		  UNLOCK;
-		  continue;
-		}
-	      else if( Status != STATUS_WAIT_0 )
-		{
-		  DbgPrint( "CSR: NtWaitForMultipleObjects failed: %x, exiting\n", Status );
-		  NtTerminateProcess( NtCurrentProcess(), Status );
-		}
-	      else break;
-	    }
-	}
-      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
-        ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED )&&
-          KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_TAB )
-	 if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
-	    {
-	      ANSI_STRING Title;
-	      void * Buffer;
-	      COORD *pos;
-	      
-	       /* alt-tab, swap consoles */
-	       // move SwapConsole to next console, and print its title
-	      LOCK;
-	      if( !SwapConsole )
-		SwapConsole = ActiveConsole;
-	      
-	      if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED )
-		SwapConsole = SwapConsole->Prev;
-	      else SwapConsole = SwapConsole->Next;
-	      Title.MaximumLength = RtlUnicodeStringToAnsiSize( &SwapConsole->Title );
-	      Title.Length = 0;
-	      Buffer = RtlAllocateHeap( CsrssApiHeap,
-					0,
-					sizeof( COORD ) + Title.MaximumLength);
-	      pos = (COORD *)Buffer;
-	      Title.Buffer = Buffer + sizeof( COORD );
 
-              RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
-	      pos->Y = PhysicalConsoleSize.Y / 2;
-	      pos->X = ( PhysicalConsoleSize.X - Title.Length ) / 2;
-	      // redraw the console to clear off old title
-	      CsrDrawConsole( ActiveConsole->ActiveBuffer );
-	      Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
-					      NULL,
-					      NULL,
-					      NULL,
-					      &Iosb,
-					      IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-					      Buffer,
-					      sizeof (COORD) + Title.Length,
-					      NULL,
-					      0);
-	      if( !NT_SUCCESS( Status ) )
-		{
-		  DPRINT1( "Error writing to console\n" );
-		}
-	      RtlFreeHeap( CsrssApiHeap, 0, Buffer );
+    if( !SubmitKey ) continue;
+
+    er.EventType = KEY_EVENT;
+    er.Event.KeyEvent.bKeyDown = Down;
+    er.Event.KeyEvent.wRepeatCount = RepeatCount;
+//    er.Event.KeyEvent.uChar.AsciiChar = AsciiChar;
+//    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
+    er.Event.KeyEvent.uChar.UnicodeChar = AsciiChar;
+    er.Event.KeyEvent.dwControlKeyState = ShiftState;
+    er.Event.KeyEvent.wVirtualKeyCode = VirtualKeyCode;
+    er.Event.KeyEvent.wVirtualScanCode = VirtualScanCode;
+    
+    if (ShiftState & ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED )&&
+        VirtualKeyCode == VK_TAB )
+      {
+        if( Down == TRUE )
+	  {
+	    ANSI_STRING Title;
+	    void * Buffer;
+	    COORD *pos;
 	      
-	      UNLOCK;
-	      RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	      continue;
-	    }
-	 else {
-	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	    continue;
-	 }
-      else if( SwapConsole &&
-	       KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_MENU &&
-	       KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == FALSE )
-	{
-	  // alt key released, swap consoles
-	  PCSRSS_CONSOLE tmp;
-
-	  LOCK;
-	  if( SwapConsole != ActiveConsole )
-	    {
-	      // first remove swapconsole from the list
-	      SwapConsole->Prev->Next = SwapConsole->Next;
-	      SwapConsole->Next->Prev = SwapConsole->Prev;
-	      // now insert before activeconsole
-	      SwapConsole->Next = ActiveConsole;
-	      SwapConsole->Prev = ActiveConsole->Prev;
-	      ActiveConsole->Prev->Next = SwapConsole;
-	      ActiveConsole->Prev = SwapConsole;
-	    }
-	  ActiveConsole = SwapConsole;
-	  SwapConsole = 0;
-	  CsrDrawConsole( ActiveConsole->ActiveBuffer );
-
-	  UNLOCK;
-	}
-     /* process Ctrl-C and Ctrl-Break */
-     if (ActiveConsole->Mode & ENABLE_PROCESSED_INPUT &&
-         KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown &&
-	 ((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) || 
-	 (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
-	 (KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
-         {
-	    PCSRSS_PROCESS_DATA current;
-	    PLIST_ENTRY current_entry;
-            DPRINT1("Console_Api Ctrl-C\n");
+	    /* alt-tab, swap consoles */
+	    // move SwapConsole to next console, and print its title
 	    LOCK;
-	    current_entry = ActiveConsole->ProcessList.Flink;
-	    while (current_entry != &ActiveConsole->ProcessList)
-	    {
-		current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-		current_entry = current_entry->Flink;
-		CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
-	    }
-	    UNLOCK;
-	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	    continue;
-	 }
-     if( KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState &
-        ( RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED ) &&
-        ( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP ||
-          KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_DOWN) )
-	 {
-	    if( KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE )
-	       {
-		  /* scroll up or down */
-		  LOCK;
-		  if( ActiveConsole == 0 )
-		     {
-			DbgPrint( "CSR: No Active Console!\n" );
-	    		UNLOCK;
-			RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-			continue;
-		     }
-		  if( KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_UP )
-		     {
-			/* only scroll up if there is room to scroll up into */
-			if( ActiveConsole->ActiveBuffer->ShowY != ((ActiveConsole->ActiveBuffer->CurrentY + 1) %
-        ActiveConsole->ActiveBuffer->MaxY) )
-			   ActiveConsole->ActiveBuffer->ShowY = (ActiveConsole->ActiveBuffer->ShowY +
-         ActiveConsole->ActiveBuffer->MaxY - 1) % ActiveConsole->ActiveBuffer->MaxY;
-		     }
-		  else if( ActiveConsole->ActiveBuffer->ShowY != ActiveConsole->ActiveBuffer->CurrentY )
-		     /* only scroll down if there is room to scroll down into */
-		     if( ActiveConsole->ActiveBuffer->ShowY % ActiveConsole->ActiveBuffer->MaxY != 
-           ActiveConsole->ActiveBuffer->CurrentY )
+	    if( !SwapConsole )
+	      {
+	  	SwapConsole = ActiveConsole;
+	      }
+	      
+	    if( ShiftState & SHIFT_PRESSED )
+	      {
+                SwapConsole = SwapConsole->Prev;
+	      }
+	    else 
+	      {
+		SwapConsole = SwapConsole->Next;
+	      }
+	    Title.MaximumLength = RtlUnicodeStringToAnsiSize( &SwapConsole->Title );
+	    Title.Length = 0;
+	    Buffer = RtlAllocateHeap( CsrssApiHeap,
+		                      0,
+				      sizeof( COORD ) + Title.MaximumLength);
+	    pos = (COORD *)Buffer;
+	    Title.Buffer = Buffer + sizeof( COORD );
 
-			if( ((ActiveConsole->ActiveBuffer->CurrentY + 1) % ActiveConsole->ActiveBuffer->MaxY) != 
-        (ActiveConsole->ActiveBuffer->ShowY + PhysicalConsoleSize.Y) % ActiveConsole->ActiveBuffer->MaxY )
-			   ActiveConsole->ActiveBuffer->ShowY = (ActiveConsole->ActiveBuffer->ShowY + 1) %
-         ActiveConsole->ActiveBuffer->MaxY;
-		  CsrDrawConsole( ActiveConsole->ActiveBuffer );
-		  UNLOCK;
-	       }
-	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	    continue;
-	}
-      LOCK;
-      if( ActiveConsole == 0 )
-	 {
-	    DbgPrint( "CSR: No Active Console!\n" );
+            RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
+	    pos->Y = PhysicalConsoleSize.Y / 2;
+	    pos->X = ( PhysicalConsoleSize.X - Title.Length ) / 2;
+	    // redraw the console to clear off old title
+	    CsrDrawConsole( ActiveConsole->ActiveBuffer );
+	    Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
+					    NULL,
+					    NULL,
+					    NULL,
+					    &Iosb,
+					    IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+					    Buffer,
+					    sizeof (COORD) + Title.Length,
+					    NULL,
+					    0);
+	    if( !NT_SUCCESS( Status ) )
+	      {
+	        DPRINT1( "Error writing to console\n" );
+	      }
+	    RtlFreeHeap( CsrssApiHeap, 0, Buffer );
+	      
 	    UNLOCK;
-	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-	    continue;
-	 }
-      // process special keys if enabled
-      if( ActiveConsole->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) )
-	  switch( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar )
-	    {
-	    case '\r':
-	      // add a \n to the queue as well
-	      // first add the \r
-	      updown = KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown;
-	      KeyEventRecord->Echoed = FALSE;
-	      KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\r';
-        InsertTailList(&ActiveConsole->InputEvents, &KeyEventRecord->ListEntry);
-	      ActiveConsole->WaitingChars++;
-	      KeyEventRecord = RtlAllocateHeap( CsrssApiHeap, 0, sizeof( ConsoleInput ) );
-	      if( !KeyEventRecord )
-		{
-		  DbgPrint( "CSR: Failed to allocate KeyEventRecord\n" );
-		  UNLOCK;
-		  continue;
-		}
-	      KeyEventRecord->InputEvent.EventType = KEY_EVENT;
-	      KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown = updown;
-	      KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode = 0;
-	      KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualScanCode = 0;
-	      KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\n';
-	    }
-      // add event to the queue
-      InsertTailList(&ActiveConsole->InputEvents, &KeyEventRecord->ListEntry);
-      // if line input mode is enabled, only wake the client on enter key down
-      if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT ) ||
-	  ActiveConsole->EarlyReturn ||
-	  ( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' &&
-	    KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE ) )
-	{
-	  NtSetEvent( ActiveConsole->ActiveEvent, 0 );
-	  if( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
-	     ActiveConsole->WaitingLines++;
-	}
-      KeyEventRecord->Echoed = FALSE;
-      if( ActiveConsole->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) &&
-	  KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' &&
-	  KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown )
-	 {
-	    // walk the input queue looking for a char to backspace
-	    for( TempInput = (ConsoleInput *)ActiveConsole->InputEvents.Blink;
-		  TempInput != (ConsoleInput *)&ActiveConsole->InputEvents &&
-		  (TempInput->InputEvent.EventType != KEY_EVENT ||
-		  TempInput->InputEvent.Event.KeyEvent.bKeyDown == FALSE ||
-		  TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' );
-		  TempInput = (ConsoleInput *)TempInput->ListEntry.Blink );
-	    // if we found one, delete it, otherwise, wake the client
-	    if( TempInput != (ConsoleInput *)&ActiveConsole->InputEvents )
-	       {
-		  // delete previous key in queue, maybe echo backspace to screen, and do not place backspace on queue
-      RemoveEntryList(&TempInput->ListEntry);
-		  if( TempInput->Echoed )
-		     CsrpWriteConsole( ActiveConsole->ActiveBuffer, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );
-		  RtlFreeHeap( CsrssApiHeap, 0, TempInput );
-      RemoveEntryList(&KeyEventRecord->ListEntry);
-		  RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
-		  ActiveConsole->WaitingChars -= 2;
-	       }
-	    else NtSetEvent( ActiveConsole->ActiveEvent, 0 );
-   }
-      else {
-	 // echo chars if we are supposed to and client is waiting for some
-	 if( ( ActiveConsole->Mode & ENABLE_ECHO_INPUT ) && ActiveConsole->EchoCount &&
-	     KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar &&
-	     KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown == TRUE &&
-	     KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar != '\r' )
-	    {
-	       // mark the char as already echoed
-	       CsrpWriteConsole( ActiveConsole->ActiveBuffer, &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE );
-	       ActiveConsole->EchoCount--;
-	       KeyEventRecord->Echoed = TRUE;
-	    }
+	  }
+	continue;
+      }
+    else if( SwapConsole && VirtualKeyCode == VK_MENU && !Down)
+      {
+        // alt key released, swap consoles
+	PCSRSS_CONSOLE tmp;
+
+	LOCK;
+	if( SwapConsole != ActiveConsole )
+	  {
+	    // first remove swapconsole from the list
+	    SwapConsole->Prev->Next = SwapConsole->Next;
+	    SwapConsole->Next->Prev = SwapConsole->Prev;
+	    // now insert before activeconsole
+	    SwapConsole->Next = ActiveConsole;
+	    SwapConsole->Prev = ActiveConsole->Prev;
+	    ActiveConsole->Prev->Next = SwapConsole;
+	    ActiveConsole->Prev = SwapConsole;
+	  }
+	ActiveConsole = SwapConsole;
+	SwapConsole = 0;
+	CsrDrawConsole( ActiveConsole->ActiveBuffer );
+	UNLOCK;
+	continue;
       }
 
-      
-      ActiveConsole->WaitingChars++;
-      if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT) )
-	NtSetEvent( ActiveConsole->ActiveEvent, 0 );
-      UNLOCK;
-    }
+    LOCK;
+    if (ActiveConsole == NULL) 
+      {
+	UNLOCK;
+	continue;
+      }
+
+    ConInRec = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ConsoleInput));
+
+    if(ConInRec == NULL)
+      {
+	UNLOCK;
+	break;
+      }
+    
+    ConInRec->InputEvent = er;
+    ConInRec->Fake = FALSE;
+    ConInRec->Echoed = FALSE;
+    
+    CsrpProcessChar( ActiveConsole, ConInRec );
+    UNLOCK;
+  }
+
+  NtUserAcquireOrReleaseInputOwnership( TRUE );
 }
 
 CSR_API(CsrGetScreenBufferInfo)
@@ -1445,6 +1547,7 @@ CSR_API(CsrReadInputEvent)
    PLIST_ENTRY CurrentEntry;
    PCSRSS_CONSOLE Console;
    NTSTATUS Status;
+   BOOLEAN Done = FALSE;
    ConsoleInput *Input;
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
@@ -1462,50 +1565,36 @@ CSR_API(CsrReadInputEvent)
       }
 
    // only get input if there is any
-   if( Console->InputEvents.Flink != &Console->InputEvents )
+   while( Console->InputEvents.Flink != &Console->InputEvents &&
+	  !Done )
      {
        CurrentEntry = RemoveHeadList(&Console->InputEvents);
        Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+       Done = !Input->Fake;
        Reply->Data.ReadInputReply.Input = Input->InputEvent;
 
        if( Input->InputEvent.EventType == KEY_EVENT )
 	 {
 	   if( Console->Mode & ENABLE_LINE_INPUT &&
-	       Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
-	       Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
+	       Input->InputEvent.Event.KeyEvent.bKeyDown == TRUE &&
+	       Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\r' ) {
 	     Console->WaitingLines--;
+           }
 	   Console->WaitingChars--;
 	 }
        RtlFreeHeap( CsrssApiHeap, 0, Input );
-
-       if (Console->InputEvents.Flink != &Console->InputEvents &&
-	   Reply->Data.ReadInputReply.Input.EventType == KEY_EVENT &&
-	   Reply->Data.ReadInputReply.Input.Event.KeyEvent.uChar.AsciiChar == '\r')
-       {
-          Input = CONTAINING_RECORD(Console->InputEvents.Flink, ConsoleInput, ListEntry);
-	  if (Input->InputEvent.EventType == KEY_EVENT &&
-              Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' && 
-              ((Input->InputEvent.Event.KeyEvent.bKeyDown && Reply->Data.ReadInputReply.Input.Event.KeyEvent.bKeyDown) ||
-              (Input->InputEvent.Event.KeyEvent.bKeyDown==FALSE && Reply->Data.ReadInputReply.Input.Event.KeyEvent.bKeyDown==FALSE)))
-	  {
-	    if(Console->Mode & ENABLE_LINE_INPUT &&
-	       Input->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
-	       Input->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\n' )
-	     Console->WaitingLines--;
-	    Console->WaitingChars--;
-	    RemoveHeadList(&Console->InputEvents);
-            RtlFreeHeap( CsrssApiHeap, 0, Input );
-	  }
-       }
 
        Reply->Data.ReadInputReply.MoreEvents = (Console->InputEvents.Flink != &Console->InputEvents) ? TRUE : FALSE;
        Status = STATUS_SUCCESS;
        Console->EarlyReturn = FALSE; // clear early return
      }
-   else {
-      Status = STATUS_PENDING;
-      Console->EarlyReturn = TRUE;  // mark for early return
-   }
+   
+   if( !Done )
+     {
+       Status = STATUS_PENDING;
+       Console->EarlyReturn = TRUE;  // mark for early return
+     }
+
    UNLOCK;
    return Reply->Status = Status;
 }
@@ -2424,14 +2513,14 @@ CSR_API(CsrReadConsoleOutput)
    ReadRegion.Bottom = ReadRegion.Top + SizeY;
    ReadRegion.Right = ReadRegion.Left + SizeX;
 
-   CsrpInitRect(ScreenRect, 0, 0, ScreenBuffer->MaxY - 1, ScreenBuffer->MaxX - 1);
+   CsrpInitRect(ScreenRect, 0, 0, ScreenBuffer->MaxY, ScreenBuffer->MaxX);
    if (!CsrpGetIntersection(&ReadRegion, ScreenRect, ReadRegion))
    {
       UNLOCK;
       Reply->Status = STATUS_SUCCESS;
       return Reply->Status;
    }
-   
+
    for(i = 0, Y = ReadRegion.Top; Y < ReadRegion.Bottom; ++i, ++Y)
    {
      CurCharInfo = CharInfo + (i * BufferSize.X);
@@ -2509,9 +2598,13 @@ CSR_API(CsrWriteConsoleInput)
          Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
          return Reply->Status;
       }
-      
+
+      Record->Echoed = FALSE;
+      Record->Fake = FALSE;
       Record->InputEvent = *InputRecord++;
-      InsertTailList(&Console->InputEvents, &Record->ListEntry);
+      if( Record->InputEvent.EventType == KEY_EVENT ) {
+	  CsrpProcessChar( Console, Record );
+      }
    }
       
    UNLOCK;
@@ -2542,15 +2635,6 @@ static NTSTATUS FASTCALL SetConsoleHardwareState (PCSRSS_CONSOLE Console, DWORD 
    if ( (CONSOLE_HARDWARE_STATE_GDI_MANAGED == ConsoleHwState)
       ||(CONSOLE_HARDWARE_STATE_DIRECT == ConsoleHwState))
    {
-      /* Inhibit keyboard input when hardware state ==
-       * CONSOLE_HARDWARE_STATE_GDI_MANAGED */
-      if (CONSOLE_HARDWARE_STATE_GDI_MANAGED == ConsoleHwState) {
-         DbgPrint( "Keyboard Inhibited.\n" );
-         KeyReadInhibit = TRUE;
-      } else {
-         DbgPrint( "Keyboard Enabled.\n" );
-         KeyReadInhibit = FALSE;
-      }
       if (Console->HardwareState != ConsoleHwState)
       {
 	 /* TODO: implement switching from full screen to windowed mode */

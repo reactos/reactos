@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.28 2003/09/12 12:54:26 weiden Exp $
+/* $Id: stubs.c,v 1.29 2003/10/09 06:13:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -645,18 +645,6 @@ NtUserGetKeyboardLayoutName(
 
 DWORD
 STDCALL
-NtUserGetKeyNameText(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetListBoxInfo(
   DWORD Unknown0)
 {
@@ -805,19 +793,6 @@ NtUserLoadKeyboardLayoutEx(
 DWORD
 STDCALL
 NtUserLockWorkStation(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserMapVirtualKeyEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 
@@ -1064,22 +1039,6 @@ DWORD
 STDCALL
 NtUserShowCaret(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserToUnicodeEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6)
 {
   UNIMPLEMENTED
 

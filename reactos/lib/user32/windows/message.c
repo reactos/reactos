@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.24 2003/08/14 20:25:52 royce Exp $
+/* $Id: message.c,v 1.25 2003/10/09 06:13:04 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -698,7 +698,7 @@ TranslateMessage(CONST MSG *lpMsg)
 WINBOOL STDCALL
 TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 {
-  return(NtUserTranslateMessage((LPMSG)lpMsg, unk));
+  return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
 }
 
 

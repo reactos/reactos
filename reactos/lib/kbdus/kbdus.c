@@ -80,10 +80,10 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
-  'R',          'T',          'U',          'I',
-  'O',          'P',          
+  'R',          'T',          'Y',          'U',
+  'I',          'O',          'P',          
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
-  /* - 1c - */
+  /* - 1d - */
   /* Second Letters Row */
   VK_LCONTROL,  
   'A',          'S',          'D',          'F',
@@ -95,11 +95,9 @@ ROSDATA USHORT scancode_to_vk[] = {
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
   VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT,
-  /* - 35 - */
+  /* - 37 - */
   /* Bottom Row */
-  VK_EMPTY,                   VK_RSHIFT | KEXT,
-  VK_MULTIPLY,                VK_LMENU,
-  ' ',                        VK_CAPITAL,
+  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
   
   /* - 3b - */
   /* F-Keys */
@@ -153,8 +151,6 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
   { 0, 0 },
 };
 
-#define VK_ALT 
-
 ROSDATA VK_TO_BIT modifier_keys[] = {
   { VK_SHIFT,   KSHIFT },
   { VK_CONTROL, KCTRL },
@@ -164,8 +160,8 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 
 typedef struct _mymod {
   PVOID mod_keys;
-  int maxmod;
-  int mod_max[4];
+  WORD maxmod;
+  BYTE mod_max[4];
 } INTERNAL_KBD_MODIFIERS;
 
 ROSDATA INTERNAL_KBD_MODIFIERS modifier_bits[] = {
@@ -285,7 +281,7 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 };
 
 ROSDATA VSC_LPWSTR key_names[] = {
-  { 0x00, L"Error" },
+  { 0x00, L"" },
   { 0x01, L"Esc" },
   { 0x0e, L"Backspace" },
   { 0x0f, L"Tab" },
@@ -369,7 +365,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
-  (PMODIFIERS)modifier_bits,
+  (PMODIFIERS)&modifier_bits,
   
   /* character from vk tables */
   vk_to_wchar_master_table,

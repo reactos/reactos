@@ -6,6 +6,7 @@ typedef struct _W32THREAD
   PVOID MessageQueue;
   FAST_MUTEX WindowListLock;
   LIST_ENTRY WindowListHead;
+  struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
 } __attribute__((packed)) W32THREAD, *PW32THREAD;
 
@@ -15,6 +16,7 @@ typedef struct _W32PROCESS
   LIST_ENTRY ClassListHead;
   FAST_MUTEX MenuListLock;
   LIST_ENTRY MenuListHead;
+  struct _KBDTABLES* KeyboardLayout;
   struct _WINSTATION_OBJECT* WindowStation;
 } W32PROCESS, *PW32PROCESS;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.18 2003/09/12 12:54:26 weiden Exp $
+/* $Id: input.c,v 1.19 2003/10/09 06:13:04 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -31,6 +31,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <wchar.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -134,33 +135,47 @@ GetKBCodePage(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 GetKeyNameTextA(LONG lParam,
 		LPSTR lpString,
 		int nSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LPWSTR intermediateString = 
+    HeapAlloc(GetProcessHeap(),0,nSize * sizeof(WCHAR));
+  int ret = 0;
+  UINT wstrLen = 0;
+  BOOL defChar = FALSE;
+
+  if( !intermediateString ) return 0;
+  ret = GetKeyNameTextW(lParam,intermediateString,nSize);
+  if( ret == 0 ) { lpString[0] = 0; return 0; }
+  
+  wstrLen = wcslen( intermediateString );
+  ret = WideCharToMultiByte(CP_ACP, 0, 
+			    intermediateString, wstrLen,
+			    lpString, nSize, ".", &defChar );
+  lpString[ret] = 0;
+  HeapFree(GetProcessHeap(),0,intermediateString);
+
+  return ret;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 GetKeyNameTextW(LONG lParam,
 		LPWSTR lpString,
 		int nSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserGetKeyNameText( lParam, lpString, nSize );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SHORT STDCALL
 GetKeyState(int nVirtKey)
@@ -261,52 +276,48 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 MapVirtualKeyA(UINT uCode,
 	       UINT uMapType)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return MapVirtualKeyExA( uCode, uMapType, GetKeyboardLayout( 0 ) );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 MapVirtualKeyExA(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return MapVirtualKeyExW( uCode, uMapType, dwhkl );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 MapVirtualKeyExW(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserMapVirtualKeyEx( uCode, uMapType, 0, dwhkl );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 MapVirtualKeyW(UINT uCode,
 	       UINT uMapType)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return MapVirtualKeyExW( uCode, uMapType, GetKeyboardLayout( 0 ) );
 }
 
 
@@ -401,7 +412,7 @@ ToAsciiEx(UINT uVirtKey,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 ToUnicode(UINT wVirtKey,
@@ -411,8 +422,8 @@ ToUnicode(UINT wVirtKey,
 	  int cchBuff,
 	  UINT wFlags)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return ToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff, 
+		      wFlags, 0 );
 }
 
 
@@ -428,8 +439,8 @@ ToUnicodeEx(UINT wVirtKey,
 	    UINT wFlags,
 	    HKL dwhkl)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
+			    wFlags, dwhkl );
 }
 
 

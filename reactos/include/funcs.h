@@ -8360,8 +8360,7 @@ ToAsciiEx(
  
 int
 STDCALL
-ToUnicode(
-	  UINT wVirtKey,
+ToUnicode(UINT wVirtKey,
 	  UINT wScanCode,
 	  PBYTE lpKeyState,
 	  LPWSTR pwszBuff,

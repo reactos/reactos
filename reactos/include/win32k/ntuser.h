@@ -156,6 +156,7 @@ NtUserCallNextHookEx(
   DWORD Unknown2,
   DWORD Unknown3);
 
+#define NOPARAM_ROUTINE_REGISTER_PRIMITIVE 0xffff0001 /* Private ROS */
 DWORD
 STDCALL
 NtUserCallNoParam(
@@ -745,10 +746,7 @@ NtUserGetKeyboardState(
 
 DWORD
 STDCALL
-NtUserGetKeyNameText(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
 
 DWORD
 STDCALL
@@ -999,13 +997,12 @@ DWORD
 STDCALL
 NtUserLockWorkStation(VOID);
 
-DWORD
+UINT
 STDCALL
-NtUserMapVirtualKeyEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+NtUserMapVirtualKeyEx( UINT keyCode,
+		       UINT transType,
+		       DWORD keyboardId,
+		       HKL dwhkl );
 
 BOOL
 STDCALL
@@ -1652,16 +1649,16 @@ NtUserThunkedMenuItemInfo(
   LPMENUITEMINFOW lpmii,
   PUNICODE_STRING lpszCaption);
 
-DWORD
+int
 STDCALL
 NtUserToUnicodeEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+		  UINT wVirtKey,
+		  UINT wScanCode,
+		  PBYTE lpKeyState,
+		  LPWSTR pwszBuff,
+		  int cchBuff,
+		  UINT wFlags,
+		  HKL dwhkl );
 
 DWORD
 STDCALL
@@ -1689,7 +1686,7 @@ BOOL
 STDCALL
 NtUserTranslateMessage(
   LPMSG lpMsg,
-  DWORD Unknown1);
+  HKL dwhkl );
 
 DWORD
 STDCALL

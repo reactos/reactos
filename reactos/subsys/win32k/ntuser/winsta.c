@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.36 2003/09/25 20:09:56 ekohl Exp $
+/* $Id: winsta.c,v 1.37 2003/10/09 06:13:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -714,6 +714,7 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
     IntCreateDesktopWindow(DesktopObject->WindowStation,
 			    DesktopWindowClass,
 			    640, 480);
+  DbgPrint( "Created Desktop Window: %08x\n", DesktopObject->DesktopWindow );
 
   Status = ObInsertObject ((PVOID)DesktopObject,
 			   NULL,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.13 2003/09/30 22:04:24 gvg Exp $
+/* $Id: input.c,v 1.14 2003/10/09 06:13:04 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,6 +50,7 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
+PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -84,11 +85,13 @@ KeyboardThreadMain(PVOID StartContext)
       /*
        * Wait to start input.
        */
+      DbgPrint( "Input Thread Waiting for start event\n" );
       Status = KeWaitForSingleObject(&InputThreadsStart,
 				     0,
 				     UserMode,
 				     TRUE,
 				     NULL);
+      DbgPrint( "Input Thread Starting...\n" );
 
       /*
        * Receive and process keyboard input.
@@ -96,8 +99,8 @@ KeyboardThreadMain(PVOID StartContext)
       while (InputThreadsRunning)
 	{
 	  KEY_EVENT_RECORD KeyEvent;
-	  LPARAM lParam;
-    BOOLEAN SysKey;
+	  LPARAM lParam = 0;
+	  BOOLEAN SysKey;
 	  
 	  Status = NtReadFile (KeyboardDeviceHandle, 
 			       NULL,
@@ -144,8 +147,9 @@ KeyboardThreadMain(PVOID StartContext)
             lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
           }
 
-	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, KeyEvent.wVirtualKeyCode, 
-				     lParam);
+	MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, 
+			       KeyEvent.wVirtualKeyCode, 
+			       lParam);
 	    }
 	  else
 	    {
@@ -166,16 +170,19 @@ KeyboardThreadMain(PVOID StartContext)
 				     lParam);
 	    }
 	}
+      DbgPrint( "Input Thread Stopped...\n" );
     }
 }
 
 NTSTATUS STDCALL
 NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
-  if (Release && InputThreadsRunning)
+  if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
     {
+      DbgPrint( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
       KeClearEvent(&InputThreadsStart);
       InputThreadsRunning = FALSE;
+      
       NtAlertThread(KeyboardThreadHandle);
     }
   else if (!Release && !InputThreadsRunning)
@@ -183,6 +190,7 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
       InputThreadsRunning = TRUE;
       KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
     }
+
   return(STATUS_SUCCESS);
 }
 
@@ -303,6 +311,5 @@ NtUserDragDetect(
   UNIMPLEMENTED
   return 0;
 }
-
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.44 2003/08/19 11:48:49 weiden Exp $
+/* $Id: dllmain.c,v 1.45 2003/10/09 06:13:04 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -73,6 +73,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       InitializeListHead(&Win32Process->MenuListHead);
       ExInitializeFastMutex(&Win32Process->MenuListLock);      
 
+      Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Process->WindowStation = NULL;
       if (Process->Win32WindowStation != NULL)
 	{
@@ -125,6 +126,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 #endif
 
       Win32Thread->MessageQueue = MsqCreateMessageQueue();
+      Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       InitializeListHead(&Win32Thread->WindowListHead);
       ExInitializeFastMutex(&Win32Thread->WindowListLock);
 

@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
+/* $Id: isbad.c,v 1.8 2003/10/09 06:13:04 gvg Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
@@ -28,7 +28,7 @@ wcsnlen (
 
 /* FIXME: Stubs. What is it for? */
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 strnlen (
@@ -36,9 +36,9 @@ strnlen (
 	UINT	uiMax
 	)
 {
-	DPRINT1("strnlen stub called\n");
-
-	return 0;
+  UINT i = 0;
+  while( lpsz[i] && i < uiMax ) i++;
+  return i;
 }
 
 /* --- --- --- */

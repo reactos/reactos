@@ -21,6 +21,7 @@ typedef struct ConsoleInput_t
   LIST_ENTRY ListEntry;
   INPUT_RECORD InputEvent;
   BOOLEAN Echoed;        // already been echoed or not
+  BOOLEAN Fake;          // synthesized, not a real event
 } ConsoleInput;
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.29 2003/09/27 15:41:54 gvg Exp $
+/* $Id: message.c,v 1.30 2003/10/09 06:13:04 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,6 +39,7 @@
 #include <include/winsta.h>
 #include <include/callback.h>
 #include <include/painting.h>
+#include <include/input.h>
 #include <internal/safe.h>
 
 #define NDEBUG
@@ -90,6 +91,8 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
 				      0 /* GetTickCount() */);
 	}
     }
+
+  if( Msg.hwnd == 0 ) return 0;
 
   /* Get the window object. */
   Status = 
@@ -184,6 +187,7 @@ IntPeekMessage(LPMSG Msg,
 	{
 	  MsqDestroyMessage(Message);
 	}
+      W32kKeyProcessMessage(Msg,PsGetWin32Thread()->KeyboardLayout);
       return TRUE;
     }
 
@@ -536,7 +540,7 @@ IntSendMessage(HWND hWnd,
 	{
 	  Result = IntCallWindowProc(Window->WndProcA, hWnd, Msg, wParam, lParam);
 	}
-	  return Result;
+	return Result;
 	}
     }
   else
@@ -614,7 +618,6 @@ NtUserWaitMessage(VOID)
 
   return IntWaitMessage(NULL, 0, 0);
 }
-
 
 DWORD STDCALL
 NtUserGetQueueStatus(BOOL ClearChanges)

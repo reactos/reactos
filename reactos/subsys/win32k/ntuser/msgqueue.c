@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.25 2003/09/29 19:38:30 weiden Exp $
+/* $Id: msgqueue.c,v 1.26 2003/10/09 06:13:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,6 +37,7 @@
 #include <include/winpos.h>
 #include <include/class.h>
 #include <include/object.h>
+#include <include/input.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -299,6 +300,9 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   ULONG ActiveStamp;
   PWINDOW_OBJECT DesktopWindow;
 
+  if( !IntGetScreenDC() || 
+      PsGetWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() ) 
+    return FALSE;
   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
   /* Process messages in the message queue itself. */
@@ -433,27 +437,45 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     uMsg, wParam, lParam);
 
   FocusMessageQueue = IntGetFocusMessageQueue();
-  if (FocusMessageQueue == NULL)
-    {
-      DPRINT("No focus message queue\n");
-      return;
-    }
+  if( !IntGetScreenDC() ) {
+    Msg.hwnd = 0;
+    Msg.message = uMsg;
+    Msg.wParam = wParam;
+    Msg.lParam = lParam;
+    /* FIXME: Initialize time and point. */
 
-  if (FocusMessageQueue->FocusWindow != (HWND)0)
-    {
-      Msg.hwnd = FocusMessageQueue->FocusWindow;
+    if( W32kGetPrimitiveMessageQueue() ) {
+      Msg.hwnd = 0;
       Msg.message = uMsg;
       Msg.wParam = wParam;
       Msg.lParam = lParam;
       /* FIXME: Initialize time and point. */
-
       Message = MsqCreateMessage(&Msg);
-      MsqPostMessage(FocusMessageQueue, Message);
+      MsqPostMessage(W32kGetPrimitiveMessageQueue(), Message);
     }
-  else
-    {
-      DPRINT("Invalid focus window handle\n");
-    }
+  } else {
+    if (FocusMessageQueue == NULL)
+      {
+	DPRINT("No focus message queue\n");
+	return;
+      }
+    
+    if (FocusMessageQueue->FocusWindow != (HWND)0)
+      {
+	Msg.hwnd = FocusMessageQueue->FocusWindow;
+	Msg.message = uMsg;
+	Msg.wParam = wParam;
+	Msg.lParam = lParam;
+	/* FIXME: Initialize time and point. */
+	
+	Message = MsqCreateMessage(&Msg);
+	MsqPostMessage(FocusMessageQueue, Message);
+      }
+    else
+      {
+	DPRINT("Invalid focus window handle\n");
+      }
+  }
 }
 
 VOID FASTCALL

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.18 2003/09/24 21:09:22 weiden Exp $
+/* $Id: misc.c,v 1.19 2003/10/09 06:13:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,27 +23,48 @@
 #define NDEBUG
 #include <debug.h>
 
+void W32kRegisterPrimitiveMessageQueue() {
+  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
+  if( !pmPrimitiveMessageQueue ) {
+    PW32THREAD pThread;
+    pThread = PsGetWin32Thread();
+    if( pThread && pThread->MessageQueue ) {
+      pmPrimitiveMessageQueue = pThread->MessageQueue;
+      DbgPrint( "Installed primitive input queue.\n" );
+    }    
+  } else {
+    DbgPrint( "Alert! Someone is trying to steal the primitive queue.\n" );
+  }
+}
+
+PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
+  extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
+  return pmPrimitiveMessageQueue;
+}
 
 /*
  * @unimplemented
  */
 DWORD
 STDCALL
-NtUserCallNoParam(
-  DWORD Routine)
+NtUserCallNoParam(DWORD Routine)
 {
-/*
-  switch(Routine)
-  {
-    case 0:
-      break;
-  }
-*/
-  DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam()\n", Routine);
-  SetLastWin32Error(ERROR_INVALID_PARAMETER);
-  return 0;
-}
+  DWORD Result;
 
+  switch(Routine) {
+  case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
+    W32kRegisterPrimitiveMessageQueue();
+    Result = TRUE;
+    break;
+
+  default:
+    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n");
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    Result = 0;
+    break;
+    }
+    return 0;
+  }
 
 /*
  * @implemented

@@ -10,6 +10,7 @@
 typedef struct _USER32_THREAD_DATA
 {
   MSG LastMessage;
+  HKL KeyboardLayoutHandle;
 } USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
 
 PUSER32_THREAD_DATA User32GetThreadData();
