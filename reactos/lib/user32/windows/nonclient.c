@@ -45,6 +45,7 @@ Already defined in makefile now.
 #include <winpos.h>
 #include <user32/wininternal.h>
 #include <user32.h>
+#include "window.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -148,7 +149,7 @@ UserGetWindowIcon(HWND hwnd)
 }
 
 BOOL
-UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect)
+UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL Down)
 {
   HICON WindowIcon;
   
@@ -1141,7 +1142,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
             PatBlt(MemDC, 0, 0, xx, lprc->bottom - lprc->top, PATCOPY);
             // For some reason the icon isn't centered correctly...
             r.top --;
-            UserDrawSysMenuButton(hWnd, MemDC, &r);
+            UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
             r.top ++;
             r.left += xx;
           }
@@ -1187,7 +1188,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     {
         // For some reason the icon isn't centered correctly...
         r.top --;
-        UserDrawSysMenuButton(hWnd, MemDC, &r);
+        UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
         r.top ++;
     }
     r.top ++;

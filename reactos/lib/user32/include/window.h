@@ -17,6 +17,8 @@ ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
 void
 UserGetFrameSize(ULONG Style, ULONG ExStyle, SIZE *Size);
+void
+UserGetInsideRectNC(HWND hWnd, RECT *rect);
 
 DWORD
 SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging );

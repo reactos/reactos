@@ -82,6 +82,7 @@ END
 OBM_CHECKBOXES BITMAP "resources/obm_checkboxes.bmp"
 OBM_CLOSE BITMAP "resources/obm_close.bmp"
 OBM_COMBO BITMAP "resources/obm_combo.bmp"
+OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

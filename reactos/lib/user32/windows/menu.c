@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.55 2004/03/14 16:39:49 gvg Exp $
+/* $Id: menu.c,v 1.56 2004/03/15 23:49:29 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -73,6 +73,8 @@
 
 #define IS_SYSTEM_POPUP(MenuInfo) \
 	(0 != ((MenuInfo)->Flags & MF_POPUP) && 0 != ((MenuInfo)->Flags & MF_SYSMENU))
+
+#define IS_MAGIC_ITEM(Bmp)   ((int) Bmp <12)
   
 #define MENU_BAR_ITEMS_SPACE (12)
 #define SEPARATOR_HEIGHT (5)
@@ -151,8 +153,10 @@ static BOOL fEndMenu = FALSE;
 static HWND TopPopup;
 
 /* Dimension of the menu bitmaps */
-static WORD ArrowBitmapWidth = 0/*, ArrowBitmapHeight = 0*/;
+static WORD ArrowBitmapWidth = 0, ArrowBitmapHeight = 0;
 
+static HBITMAP StdMnArrow = NULL;
+static HBITMAP BmpSysMenu = NULL;
 
 /***********************************************************************
  *           MenuGetRosMenuInfo
@@ -370,6 +374,189 @@ MenuCleanupAllRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
   HeapFree(GetProcessHeap(), 0, ItemInfo);
 }
 
+
+/***********************************************************************
+ *           MenuLoadBitmaps
+ *
+ * Load the arrow bitmap. We can't do this from MenuInit since user32
+ * can also be used (and thus initialized) from text-mode.
+ */
+static void FASTCALL
+MenuLoadBitmaps(VOID)
+{
+  /* Load menu bitmaps */
+  if (NULL == StdMnArrow)
+    {
+      StdMnArrow = LoadBitmapW(0, MAKEINTRESOURCEW(OBM_MNARROW));
+
+      if (NULL != StdMnArrow)
+        {
+          BITMAP bm;
+          GetObjectW(StdMnArrow, sizeof(BITMAP), &bm);
+          ArrowBitmapWidth = bm.bmWidth;
+          ArrowBitmapHeight = bm.bmHeight;
+        }
+    }
+
+  /* Load system buttons bitmaps */
+  if (NULL == BmpSysMenu)
+    {
+      BmpSysMenu = LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE));
+    }
+}
+
+/***********************************************************************
+ *           MenuGetBitmapItemSize
+ *
+ * Get the size of a bitmap item.
+ */
+static void FASTCALL
+MenuGetBitmapItemSize(UINT Id, DWORD Data, SIZE *Size)
+{
+  BITMAP Bm;
+  HBITMAP Bmp = (HBITMAP) Id;
+
+  Size->cx = Size->cy = 0;
+
+  /* check if there is a magic menu item associated with this item */
+  if (0 != Id && IS_MAGIC_ITEM(Id))
+    {
+      switch(LOWORD(Id))
+        {
+          case (INT_PTR) HBMMENU_SYSTEM:
+            if (0 != Data)
+              {
+                Bmp = (HBITMAP) Data;
+                break;
+              }
+            /* fall through */
+          case (INT_PTR) HBMMENU_MBAR_RESTORE:
+          case (INT_PTR) HBMMENU_MBAR_MINIMIZE:
+          case (INT_PTR) HBMMENU_MBAR_MINIMIZE_D:
+          case (INT_PTR) HBMMENU_MBAR_CLOSE:
+          case (INT_PTR) HBMMENU_MBAR_CLOSE_D:
+            Size->cx = GetSystemMetrics(SM_CXSIZE);
+            Size->cy = GetSystemMetrics(SM_CYSIZE);
+            return;
+          case (INT_PTR) HBMMENU_CALLBACK:
+          case (INT_PTR) HBMMENU_POPUP_CLOSE:
+          case (INT_PTR) HBMMENU_POPUP_RESTORE:
+          case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
+          case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
+          default:
+            FIXME("Magic menu bitmap not implemented\n");
+            return;
+        }
+    }
+
+  if (GetObjectW(Bmp, sizeof(BITMAP), &Bm))
+    {
+      Size->cx = Bm.bmWidth;
+      Size->cy = Bm.bmHeight;
+    }
+}
+
+/***********************************************************************
+ *           MenuDrawBitmapItem
+ *
+ * Draw a bitmap item.
+ */
+static void FASTCALL
+MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect, BOOL MenuBar)
+{
+  BITMAP Bm;
+  DWORD Rop;
+  HDC DcMem;
+  HBITMAP Bmp = (HBITMAP) Item->hbmpItem;
+  int w = Rect->right - Rect->left;
+  int h = Rect->bottom - Rect->top;
+  int BmpXoffset = 0;
+  int Left, Top;
+
+  /* Check if there is a magic menu item associated with this item */
+  if (IS_MAGIC_ITEM(Item->hbmpItem))
+    {
+      UINT Flags = 0;
+      RECT r;
+
+      switch ((int) Item->hbmpItem)
+        {
+          case (INT_PTR) HBMMENU_SYSTEM:
+            if (NULL != Item->hbmpItem)
+              {
+                Bmp = Item->hbmpItem;
+                if (! GetObjectW(Bmp, sizeof(BITMAP), &Bm))
+                  {
+                    return;
+                  }
+              }
+            else
+              {
+                Bmp = BmpSysMenu;
+                if (! GetObjectW(Bmp, sizeof(BITMAP), &Bm))
+                  {
+                    return;
+                  }
+                /* only use right half of the bitmap */
+                BmpXoffset = Bm.bmWidth / 2;
+                Bm.bmWidth -= BmpXoffset;
+              }
+            goto got_bitmap;
+          case (INT_PTR) HBMMENU_MBAR_RESTORE:
+            Flags = DFCS_CAPTIONRESTORE;
+            break;
+          case (INT_PTR) HBMMENU_MBAR_MINIMIZE:
+            Flags = DFCS_CAPTIONMIN;
+            break;
+          case (INT_PTR) HBMMENU_MBAR_MINIMIZE_D:
+            Flags = DFCS_CAPTIONMIN | DFCS_INACTIVE;
+            break;
+          case (INT_PTR) HBMMENU_MBAR_CLOSE:
+            Flags = DFCS_CAPTIONCLOSE;
+            break;
+          case (INT_PTR) HBMMENU_MBAR_CLOSE_D:
+            Flags = DFCS_CAPTIONCLOSE | DFCS_INACTIVE;
+            break;
+          case (INT_PTR) HBMMENU_CALLBACK:
+          case (INT_PTR) HBMMENU_POPUP_CLOSE:
+          case (INT_PTR) HBMMENU_POPUP_RESTORE:
+          case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
+          case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
+          default:
+            FIXME("Magic menu bitmap not implemented\n");
+            return;
+        }
+      r = *Rect;
+      InflateRect(&r, -1, -1);
+      if (0 != (Item->fState & MF_HILITE))
+        {
+          Flags |= DFCS_PUSHED;
+        }
+      DrawFrameControl(Dc, &r, DFC_CAPTION, Flags);
+      return;
+    }
+
+  if (NULL == Bmp || ! GetObjectW(Bmp, sizeof(BITMAP), &Bm))
+    {
+      return;
+    }
+
+got_bitmap:
+  DcMem = CreateCompatibleDC(Dc);
+  SelectObject(DcMem, Bmp);
+
+  /* handle fontsize > bitmap_height */
+  Top = (Bm.bmHeight < h) ? Rect->top + (h - Bm.bmHeight) / 2 : Rect->top;
+  Left = Rect->left;
+  Rop = (0 != (Item->fState & MF_HILITE) && ! IS_MAGIC_ITEM(Item->hbmpItem)) ? NOTSRCCOPY : SRCCOPY;
+  if (0 != (Item->fState & MF_HILITE) && IS_BITMAP_ITEM(Item->fType))
+    {
+      SetBkColor(Dc, GetSysColor(COLOR_HIGHLIGHT));
+    }
+  BitBlt(Dc, Left, Top, w, h, DcMem, BmpXoffset, 0, Rop);
+  DeleteDC(DcMem);
+}
+
 /***********************************************************************
  *           MenuDrawMenuItem
  *
@@ -384,18 +571,12 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
 
   if (0 != (Item->fType & MF_SYSMENU))
     {
-#if 0 /* FIXME */
-	if( !IsIconic(hwnd) ) {
-	    if (TWEAK_WineLook > WIN31_LOOK)
-		NC_DrawSysButton95( hwnd, hdc,
-				    lpitem->fState &
-				    (MF_HILITE | MF_MOUSESELECT) );
-	    else
-		NC_DrawSysButton( hwnd, hdc,
-				  lpitem->fState &
-				  (MF_HILITE | MF_MOUSESELECT) );
+      if (! IsIconic(Wnd))
+        {
+          UserGetInsideRectNC(Wnd, &Rect);
+          UserDrawSysMenuButton(Wnd, Dc, &Rect,
+                                Item->fState & (MF_HILITE | MF_MOUSESELECT));
 	}
-#endif
 
       return;
     }
@@ -554,8 +735,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
            * FIXME:
            * Custom checkmark bitmaps are monochrome but not always 1bpp.
            */
-#if 0 /* FIXME */
-          HBITMAP bm = 0 != (Item->fState & MF_CHECKED) ? Item->hCheckBit : Item->hUnCheckBit;
+          HBITMAP bm = 0 != (Item->fState & MF_CHECKED) ? Item->hbmpChecked : Item->hbmpUnchecked;
           if (NULL != bm)  /* we have a custom bitmap */
             {
               HDC DcMem = CreateCompatibleDC(Dc);
@@ -566,9 +746,6 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
               DeleteDC(DcMem);
             }
           else if (0 != (Item->fState & MF_CHECKED))  /* standard bitmaps */
-#else
-          if (0 != (Item->fState & MF_CHECKED))  /* standard bitmaps */
-#endif
             {
               RECT r;
               HBITMAP bm = CreateBitmap(CheckBitmapWidth, CheckBitmapHeight, 1, 1, NULL);
@@ -585,22 +762,20 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
             }
         }
 
-#if 0 /* FIXME */
-	  /* Draw the popup-menu arrow */
-	if (lpitem->fType & MF_POPUP)
-	{
-	    HDC hdcMem = CreateCompatibleDC( hdc );
-	    HBITMAP hOrigBitmap;
+      /* Draw the popup-menu arrow */
+      if (0 != (Item->fType & MF_POPUP))
+        {
+          HDC DcMem = CreateCompatibleDC(Dc);
+          HBITMAP OrigBitmap;
 
-	    hOrigBitmap = SelectObject( hdcMem, hStdMnArrow );
-	    BitBlt( hdc, rect.right - arrow_bitmap_width - 1,
-		      (y - arrow_bitmap_height) / 2,
-		      arrow_bitmap_width, arrow_bitmap_height,
-		      hdcMem, 0, 0, SRCCOPY );
-            SelectObject( hdcMem, hOrigBitmap );
-	    DeleteDC( hdcMem );
-	}
-#endif
+          OrigBitmap = SelectObject(DcMem, StdMnArrow);
+          BitBlt(Dc, Rect.right - ArrowBitmapWidth - 1,
+                 (y - ArrowBitmapHeight) / 2,
+                 ArrowBitmapWidth, ArrowBitmapHeight,
+                 DcMem, 0, 0, SRCCOPY);
+          SelectObject(DcMem, OrigBitmap);
+          DeleteDC(DcMem);
+        }
 
       Rect.left += CheckBitmapWidth;
       Rect.right -= ArrowBitmapWidth;
@@ -615,9 +790,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
   /* Draw the item text or bitmap */
   if (IS_BITMAP_ITEM(Item->fType))
     {
-#if 0 /* FIXME */
-      MENU_DrawBitmapItem( hdc, lpitem, &rect, menuBar );
-#endif
+      MenuDrawBitmapItem(Dc, Item, &Rect, MenuBar);
       return;
     }
   /* No bitmap - process text if present */
@@ -1055,17 +1228,15 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, HWND WndOwner,
 
   if (IS_BITMAP_ITEM(ItemInfo->fType))
     {
-#if 0 /* FIXME */
-      SIZE size;
+      SIZE Size;
 
-      MENU_GetBitmapItemSize( (int)lpitem->text, lpitem->dwItemData, &size );
-      lpitem->rect.right  += size.cx;
-      lpitem->rect.bottom += size.cy;
+      MenuGetBitmapItemSize((int) ItemInfo->hbmpItem, (DWORD) ItemInfo->hbmpItem, &Size);
+      ItemInfo->Rect.right  += Size.cx;
+      ItemInfo->Rect.bottom += Size.cy;
 
       /* Leave space for the sunken border */
-      lpitem->rect.right  += 2;
-      lpitem->rect.bottom += 2;
-#endif
+      ItemInfo->Rect.right  += 2;
+      ItemInfo->Rect.bottom += 2;
     }
 
   /* it must be a text item - unless it's the system menu */
@@ -3331,6 +3502,7 @@ CheckMenuRadioItem(HMENU hmenu,
 HMENU STDCALL
 CreateMenu(VOID)
 {
+  MenuLoadBitmaps();
   return NtUserCreateMenu(FALSE);
 }
 
@@ -3341,6 +3513,7 @@ CreateMenu(VOID)
 HMENU STDCALL
 CreatePopupMenu(VOID)
 {
+  MenuLoadBitmaps();
   return NtUserCreateMenu(TRUE);
 }
 
