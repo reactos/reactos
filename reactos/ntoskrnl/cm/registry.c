@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.85 2003/02/15 18:46:28 ekohl Exp $
+/* $Id: registry.c,v 1.86 2003/03/08 19:26:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -325,8 +325,6 @@ CmInitializeRegistry(VOID)
 
   KeInitializeSpinLock(&CmiKeyListLock);
 
-  /* Create initial predefined symbolic links */
-
   /* Create '\Registry\Machine' key. */
   Status = ObCreateObject(&KeyHandle,
     STANDARD_RIGHTS_REQUIRED,
@@ -485,9 +483,6 @@ CmInitializeRegistry(VOID)
   NewKey->NameSize = strlen("RESOURCEMAP");
   memcpy(NewKey->Name, "RESOURCEMAP", strlen("RESOURCEMAP"));
   CmiAddKeyToList(CmiHardwareKey, NewKey);
-
-  /* FIXME: create remaining structure needed for default handles  */
-  /* FIXME: load volatile registry data from ROSDTECT  */
 }
 
 
@@ -603,7 +598,7 @@ CmiCreateCurrentControlSetLink(VOID)
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
   RtlInitUnicodeStringFromLiteral(&LinkName,
-		       L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
@@ -623,7 +618,7 @@ CmiCreateCurrentControlSetLink(VOID)
     }
 
   RtlInitUnicodeStringFromLiteral(&LinkValue,
-		       L"SymbolicLinkValue");
+				  L"SymbolicLinkValue");
   Status = NtSetValueKey(KeyHandle,
 			 &LinkValue,
 			 0,
@@ -643,10 +638,10 @@ CmiCreateCurrentControlSetLink(VOID)
 
 NTSTATUS
 CmiConnectHive(PWSTR FileName,
-  PWSTR FullName,
-  PCHAR KeyName,
-  PKEY_OBJECT Parent,
-  BOOLEAN CreateNew)
+	       PWSTR FullName,
+	       PCHAR KeyName,
+	       PKEY_OBJECT Parent,
+	       BOOLEAN CreateNew)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   PREGISTRY_HIVE RegistryHive = NULL;
@@ -725,21 +720,109 @@ CmiConnectHive(PWSTR FileName,
 }
 
 
+static NTSTATUS
+CmiInitializeSystemHive(PWSTR FileName,
+			PWSTR FullName,
+			PCHAR KeyName,
+			PKEY_OBJECT Parent,
+			BOOLEAN CreateNew)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ControlSetKeyName;
+  UNICODE_STRING ControlSetLinkName;
+  UNICODE_STRING ControlSetValueName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+
+  if (CreateNew == TRUE)
+    {
+      Status = CmiConnectHive(FileName,
+			      FullName,
+			      KeyName,
+			      Parent,
+			      TRUE);
+      if (!NT_SUCCESS(Status))
+	return(Status);
+
+      /* Create 'ControlSet001' key */
+      RtlInitUnicodeStringFromLiteral(&ControlSetKeyName,
+				      L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &ControlSetKeyName,
+				 OBJ_CASE_INSENSITIVE,
+				 NULL,
+				 NULL);
+      Status = NtCreateKey(&KeyHandle,
+			   KEY_ALL_ACCESS,
+			   &ObjectAttributes,
+			   0,
+			   NULL,
+			   REG_OPTION_NON_VOLATILE,
+			   NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+	  return(Status);
+	}
+      NtClose(KeyHandle);
+
+      /* Link 'CurrentControlSet' to 'ControlSet001' key */
+      RtlInitUnicodeStringFromLiteral(&ControlSetLinkName,
+				      L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &ControlSetLinkName,
+				 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+				 NULL,
+				 NULL);
+      Status = NtCreateKey(&KeyHandle,
+			   KEY_ALL_ACCESS | KEY_CREATE_LINK,
+			   &ObjectAttributes,
+			   0,
+			   NULL,
+			   REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+			   NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+	  return(Status);
+	}
+
+      RtlInitUnicodeStringFromLiteral(&ControlSetValueName,
+				      L"SymbolicLinkValue");
+      Status = NtSetValueKey(KeyHandle,
+			     &ControlSetValueName,
+			     0,
+			     REG_LINK,
+			     (PVOID)ControlSetKeyName.Buffer,
+			     ControlSetKeyName.Length);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
+      NtClose(KeyHandle);
+    }
+  else
+    {
+      /* FIXME: Set the SYSTEM hive's file name and mark it non-volatile */
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
 NTSTATUS
 CmiInitializeHive(PWSTR FileName,
-  PWSTR FullName,
-  PCHAR KeyName,
-  PKEY_OBJECT Parent,
-  BOOLEAN CreateNew)
+		  PWSTR FullName,
+		  PCHAR KeyName,
+		  PKEY_OBJECT Parent,
+		  BOOLEAN CreateNew)
 {
   NTSTATUS Status;
 
   DPRINT("CmiInitializeHive(%s) called\n", KeyName);
 
   /* Try to connect the hive */
-  //Status = CmiConnectHive(FileName, FullName, KeyName, Parent, FALSE);
   Status = CmiConnectHive(FileName, FullName, KeyName, Parent, CreateNew);
-
   if (!NT_SUCCESS(Status))
     {
 #if 0
@@ -791,58 +874,58 @@ CmiInitHives(BOOLEAN SetUpBoot)
   DPRINT("CmiInitHives() called\n");
 
   if (SetUpBoot == TRUE)
-  {
-    RtlInitUnicodeStringFromLiteral(&KeyName,
-				    L"\\Registry\\Machine\\HARDWARE");
-    InitializeObjectAttributes(&ObjectAttributes,
-			       &KeyName,
-			       OBJ_CASE_INSENSITIVE,
-			       NULL,
-			       NULL);
-    Status =  NtOpenKey(&KeyHandle,
-			KEY_ALL_ACCESS,
-			&ObjectAttributes);
-    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-      return(Status);
-    }
+      RtlInitUnicodeStringFromLiteral(&KeyName,
+				      L"\\Registry\\Machine\\HARDWARE");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyName,
+				 OBJ_CASE_INSENSITIVE,
+				 NULL,
+				 NULL);
+      Status =  NtOpenKey(&KeyHandle,
+			  KEY_ALL_ACCESS,
+			  &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+	  return(Status);
+	}
 
-    RtlInitUnicodeStringFromLiteral(&ValueName,
-				    L"InstallPath");
+      RtlInitUnicodeStringFromLiteral(&ValueName,
+				      L"InstallPath");
 
-    BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-    ValueInfo = ExAllocatePool(PagedPool,
-			       BufferSize);
-    if (ValueInfo == NULL)
-    {
+      BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+      ValueInfo = ExAllocatePool(PagedPool,
+				 BufferSize);
+      if (ValueInfo == NULL)
+	{
+	  NtClose(KeyHandle);
+	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+      Status = NtQueryValueKey(KeyHandle,
+			       &ValueName,
+			       KeyValuePartialInformation,
+			       ValueInfo,
+			       BufferSize,
+			       &ResultSize);
       NtClose(KeyHandle);
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
+      if (ValueInfo == NULL)
+	{
+	  ExFreePool(ValueInfo);
+	  return(Status);
+	}
 
-    Status = NtQueryValueKey(KeyHandle,
-			     &ValueName,
-			     KeyValuePartialInformation,
-			     ValueInfo,
-			     BufferSize,
-			     &ResultSize);
-    NtClose(KeyHandle);
-    if (ValueInfo == NULL)
-    {
+      RtlCopyMemory(ConfigPath,
+		    ValueInfo->Data,
+		    ValueInfo->DataLength);
+      ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
       ExFreePool(ValueInfo);
-      return(Status);
     }
-
-    RtlCopyMemory(ConfigPath,
-		  ValueInfo->Data,
-		  ValueInfo->DataLength);
-    ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
-    ExFreePool(ValueInfo);
-  }
   else
-  {
-    wcscpy(ConfigPath, L"\\SystemRoot");
-  }
+    {
+      wcscpy(ConfigPath, L"\\SystemRoot");
+    }
   wcscat(ConfigPath, L"\\system32\\config");
 
   DPRINT("ConfigPath: %S\n", ConfigPath);
@@ -853,19 +936,24 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* FIXME: Save boot log */
 
-  /* FIXME: Rename \Registry\Machine\System */
-
   /* Connect the SYSTEM hive */
-//  Status = CmiInitializeHive(SYSTEM_REG_FILE, REG_SYSTEM_KEY_NAME, "System", CmiMachineKey, SetUpBoot);
-//  assert(NT_SUCCESS(Status));
+  wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
+  DPRINT("ConfigPath: %S\n", ConfigPath);
 
-  /* FIXME: Synchronize old and new system hive (??) */
-
-  /* FIXME: Delete old system hive */
+  Status = CmiInitializeSystemHive(ConfigPath,
+				   REG_SYSTEM_KEY_NAME,
+				   "System",
+				   CmiMachineKey,
+				   SetUpBoot);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("CmiInitializeSystemHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Connect the SOFTWARE hive */
   wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
-  DPRINT1("ConfigPath: %S\n", ConfigPath);
+  DPRINT("ConfigPath: %S\n", ConfigPath);
 
   Status = CmiInitializeHive(ConfigPath,
 			     REG_SOFTWARE_KEY_NAME,
@@ -873,10 +961,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
 			     CmiMachineKey,
 			     SetUpBoot);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-    return(Status);
-  }
+    {
+      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Connect the SAM hive */
   wcscpy(EndPtr, REG_SAM_FILE_NAME);
@@ -888,10 +976,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
 			     CmiMachineKey,
 			     SetUpBoot);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-    return(Status);
-  }
+    {
+      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Connect the SECURITY hive */
   wcscpy(EndPtr, REG_SEC_FILE_NAME);
@@ -902,10 +990,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
 			     CmiMachineKey,
 			     SetUpBoot);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-    return(Status);
-  }
+    {
+      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   /* Connect the DEFAULT hive */
   wcscpy(EndPtr, REG_USER_FILE_NAME);
@@ -917,12 +1005,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
 			     CmiUserKey,
 			     SetUpBoot);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-    return(Status);
-  }
-
-  /* FIXME : initialize standards symbolic links */
+    {
+      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
 //  CmiCheckRegistry(TRUE);
 
