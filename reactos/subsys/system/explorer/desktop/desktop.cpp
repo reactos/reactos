@@ -68,7 +68,7 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	// space the text actually needs...
 
 	rect.left = rect.right - 280;
-	rect.top = rect.bottom - 60;
+	rect.top = rect.bottom - 56 - 30;
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
