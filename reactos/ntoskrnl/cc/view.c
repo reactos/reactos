@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.60 2003/05/25 21:49:04 hbirr Exp $
+/* $Id: view.c,v 1.61 2003/06/06 21:02:42 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -465,6 +465,12 @@ CcRosCreateCacheSegment(PBCB Bcb,
   assert(Bcb);
 
   DPRINT("CcRosCreateCacheSegment()\n");
+
+  if (FileOffset >= Bcb->FileSize.u.LowPart)
+  {
+     CacheSeg = NULL;
+     return STATUS_INVALID_PARAMETER;
+  }
 
   current = ExAllocateFromNPagedLookasideList(&CacheSegLookasideList);
   current->Valid = FALSE;
