@@ -116,34 +116,44 @@ LoadExtraBootCode:
 ; EAX has logical sector number to read
 ; CX has number of sectors to read
 ReadSectors:
-		cmp eax,DWORD [BiosCHSDriveSize]		; Check if they are reading a sector within CHS range
-		jb  ReadSectorsCHS						; Yes - go to the old CHS routine
+		cmp  eax,DWORD [BiosCHSDriveSize]		; Check if they are reading a sector outside CHS range
+		jae  ReadSectorsLBA						; Yes - go to the LBA routine
+												; If at all possible we want to use LBA routines because
+												; They are optimized to read more than 1 sector per read
 
-ReadSectorsLBA:
 		pushad									; Save logical sector number & sector count
 
-		o32 push byte 0
-		push eax								; Put 64-bit logical block address on stack
-		push es									; Put transfer segment on stack
-		push bx									; Put transfer offset on stack
-		push byte 1								; Set transfer count to 1 sector
-		push byte 0x10							; Set size of packet to 10h
-		mov  si,sp								; Setup disk address packet on stack
-
-CheckInt13hExtensions:							; Now make sure this computer supports extended reads
+CheckInt13hExtensions:							; Now check if this computer supports extended reads
 		mov  ah,0x41							; AH = 41h
 		mov  bx,0x55aa							; BX = 55AAh
 		mov  dl,[BYTE bp+BootDrive]				; DL = drive (80h-FFh)
 		int  13h								; IBM/MS INT 13 Extensions - INSTALLATION CHECK
-		jc   PrintDiskError						; CF set on error (extensions not supported)
+		jc   ReadSectorsCHS						; CF set on error (extensions not supported)
 		cmp  bx,0xaa55							; BX = AA55h if installed
-		jne  PrintDiskError
+		jne  ReadSectorsCHS
 		test cl,1								; CX = API subset support bitmap
-		jz   PrintDiskError						; Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+		jz   ReadSectorsCHS						; Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+
+		popad									; Restore sector count & logical sector number
+
+ReadSectorsLBA:
+		pushad									; Save logical sector number & sector count
+
+		cmp  cx,64								; Since the LBA calls only support 0x7F sectors at a time we will limit ourselves to 64
+		jbe  ReadSectorsSetupDiskAddressPacket	; If we are reading less than 65 sectors then just do the read
+		mov  cx,64								; Otherwise read only 64 sectors on this loop iteration
+
+ReadSectorsSetupDiskAddressPacket:
+		mov  [LBASectorsRead],cx
+		o32 push byte 0
+		push eax								; Put 64-bit logical block address on stack
+		push es									; Put transfer segment on stack
+		push bx									; Put transfer offset on stack
+		push cx									; Set transfer count
+		push byte 0x10							; Set size of packet to 10h
+		mov  si,sp								; Setup disk address packet on stack
 
 
-												; Good, we're here so the computer supports LBA disk access
-												; So finish the extended read
         mov  dl,[BYTE bp+BootDrive]				; Drive number
 		mov  ah,42h								; Int 13h, AH = 42h - Extended Read
 		int  13h								; Call BIOS
@@ -153,20 +163,30 @@ CheckInt13hExtensions:							; Now make sure this computer supports extended rea
 
 		popad									; Restore sector count & logical sector number
 
-        inc  eax								; Increment sector to read
+		movzx ebx,WORD [LBASectorsRead]
+        add  eax,ebx							; Increment sector to read
+		shr  ebx,4
         mov  dx,es
-        add  dx,byte 20h						; Increment read buffer for next sector
+        add  dx,bx								; Setup read buffer for next sector
         mov  es,dx
-												
-        loop ReadSectorsLBA						; Read next sector
+		xor  bx,bx
 
-        ret   
+		sub  cx,[LBASectorsRead]
+        jnz  ReadSectorsLBA						; Read next sector
+
+        ret
+
+LBASectorsRead:
+	dw	0
 
 
 ; Reads logical sectors into [ES:BX]
 ; EAX has logical sector number to read
 ; CX has number of sectors to read
 ReadSectorsCHS:
+		popad										; Get logical sector number & sector count off stack
+
+ReadSectorsCHSLoop:
         pushad
         xor   edx,edx
 		movzx ecx,WORD [BYTE bp+SectorsPerTrack]
@@ -198,7 +218,7 @@ ReadSectorsCHS:
         add   dx,byte 20h							; Increment read buffer for next sector
         mov   es,dx
 
-        loop  ReadSectorsCHS						; Read next sector
+        loop  ReadSectorsCHSLoop					; Read next sector
 
         ret   
 
