@@ -280,7 +280,16 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    }
 
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-   Active = (GetForegroundWindow() == hWnd);
+   if (ExStyle & WS_EX_MDICHILD)
+   {
+      Active = IsChild(GetForegroundWindow(), hWnd);
+      if (Active)
+         Active = (hWnd == (HWND)SendMessageW(GetParent(hWnd), WM_MDIGETACTIVE, 0, 0));
+   }
+   else
+   {
+      Active = (GetForegroundWindow() == hWnd);
+   }
    GetWindowRect(hWnd, &WindowRect);
    GetClientRect(hWnd, &ClientRect);
 
