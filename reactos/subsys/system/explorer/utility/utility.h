@@ -121,6 +121,22 @@ struct WindowRect : public RECT
 	}
 };
 
+struct Point: public POINT
+{
+	Point(LONG x_, LONG y_)
+	{
+		x = x_;
+		y = y_;
+	}
+
+	 // constructor for being used in processing WM_MOUSEMOVE, WM_LBUTTONDOWN, ... messages
+	Point(LPARAM lparam)
+	{
+		x = GET_X_LPARAM(lparam);
+		y = GET_Y_LPARAM(lparam);
+	}
+};
+
 
 struct TextColor
 {

@@ -74,7 +74,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 			return S_OK;
 		}
 
-		HWND hwnd = (HWND)SendMessage(_hWndFrame, WM_GET_CONTROLWINDOW, id, 0);
+		HWND hwnd = (HWND)SendMessage(_hWndFrame, PM_GET_CONTROLWINDOW, id, 0);
 
 		if (hwnd) {
 			*lphwnd = hwnd;
@@ -89,7 +89,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		if (!pret)
 			return E_POINTER;
 
-		HWND hstatusbar = (HWND)SendMessage(_hWndFrame, WM_GET_CONTROLWINDOW, id, 0);
+		HWND hstatusbar = (HWND)SendMessage(_hWndFrame, PM_GET_CONTROLWINDOW, id, 0);
 
 		if (hstatusbar) {
 			*pret = ::SendMessage(hstatusbar, uMsg, wParam, lParam);

@@ -311,7 +311,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				resize_children(LOWORD(lparam), HIWORD(lparam));
 			return DefMDIChildProc(_hwnd, nmsg, wparam, lparam);
 
-		case WM_GET_FILEWND_PTR:
+		case PM_GET_FILEWND_PTR:
 			return (LRESULT)this;
 
 		case WM_SETFOCUS: {
@@ -325,7 +325,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			SetFocus(_focus_pane? _right_hwnd: _left_hwnd);
 			break;}
 
-		case WM_DISPATCH_COMMAND: {
+		case PM_DISPATCH_COMMAND: {
 			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 
 			switch(LOWORD(wparam)) {

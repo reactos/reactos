@@ -170,7 +170,7 @@ HWND MainFrame::Create()
 LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_TRANSLATE_MSG: {
+	  case PM_TRANSLATE_MSG: {
 		MSG* pmsg = (MSG*) lparam;
 
 #ifndef _NO_MDI
@@ -202,14 +202,14 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		lpmmi->ptMaxTrackSize.y <<= 1;/*2*GetSystemMetrics(SM_CYSCREEN) / SM_CYVIRTUALSCREEN */
 		break;}
 
-	  case FRM_CALC_CLIENT:
+	  case PM_FRM_CALC_CLIENT:
 		frame_get_clientspace((PRECT)lparam);
 		return TRUE;
 
-	  case FRM_GET_MENUINFO:
+	  case PM_FRM_GET_MENUINFO:
 		return (LPARAM)&_menu_info;
 
-	  case WM_OPEN_WINDOW: {
+	  case PM_OPEN_WINDOW: {
 		TCHAR path[MAX_PATH];
 
 		//TODO: read paths and window placements from registry
@@ -228,7 +228,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		ShellBrowserChild::create(_hmdiclient, create_info);
 		break;}
 
-	  case WM_GET_CONTROLWINDOW:
+	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)
 			return (LRESULT)(HWND)_hstatusbar;
 		break;
@@ -250,7 +250,7 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
 
-	if (SendMessage(hwndClient, WM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
+	if (SendMessage(hwndClient, PM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
 		return 0;
 #endif
 
@@ -575,7 +575,7 @@ bool MainFrame::activate_drive_window(LPCTSTR path)
 
 	 // search for a already open window for the same drive
 	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, WM_GET_FILEWND_PTR, 0, 0);
+		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
 
 		if (child) {
 			_tsplitpath(child->get_root()._path, drv2, 0, 0, 0);
@@ -600,7 +600,7 @@ bool MainFrame::activate_fs_window(LPCTSTR filesys)
 
 	 // search for a already open window of the given file system name
 	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, WM_GET_FILEWND_PTR, 0, 0);
+		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
 
 		if (child) {
 			if (!lstrcmpi(child->get_root()._fs, filesys)) {

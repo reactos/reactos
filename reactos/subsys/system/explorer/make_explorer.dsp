@@ -41,7 +41,7 @@ CFG=make_explorer - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make"
+# PROP Cmd_Line "msdevfilt -gcc make"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""

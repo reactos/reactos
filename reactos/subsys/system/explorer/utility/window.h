@@ -218,8 +218,9 @@ struct IconWindowClass : public WindowClass
 };
 
 
-#define	WM_DISPATCH_COMMAND		(WM_APP+0x00)
-#define	WM_TRANSLATE_MSG		(WM_APP+0x01)
+ // private message constants
+#define	PM_DISPATCH_COMMAND		(WM_APP+0x00)
+#define	PM_TRANSLATE_MSG		(WM_APP+0x01)
 
 
 #define SPLIT_WIDTH 		5
@@ -234,9 +235,9 @@ struct MenuInfo
 	HMENU	_hMenuOptions;
 };
 
-#define	FRM_GET_MENUINFO		(WM_APP+0x02)
+#define	PM_FRM_GET_MENUINFO		(WM_APP+0x02)
 
-#define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, FRM_GET_MENUINFO, 0, 0))
+#define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, PM_FRM_GET_MENUINFO, 0, 0))
 
 
  /**
@@ -271,7 +272,7 @@ protected:
 
  /**
 	PreTranslateWindow is used to register windows to be called by Window::pretranslate_msg().
-	This way you get WM_TRANSLATE_MSG messages before the message loop dispatches messages.
+	This way you get PM_TRANSLATE_MSG messages before the message loop dispatches messages.
 	You can then for example use TranslateAccelerator() to implement key shortcuts.
  */
 struct PreTranslateWindow : public Window
@@ -325,7 +326,7 @@ struct Static : public WindowHandle
 /*
  // control color message routing for ColorStatic and HyperlinkCtrl
 
-#define	WM_DISPATCH_CTLCOLOR	(WM_APP+0x07)
+#define	PM_DISPATCH_CTLCOLOR	(WM_APP+0x07)
 
 template<typename BASE> struct CtlColorParent : public BASE
 {
@@ -334,20 +335,20 @@ template<typename BASE> struct CtlColorParent : public BASE
 	CtlColorParent(HWND hwnd)
 	 : super(hwnd) {}
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		switch(message) {
+		switch(nmsg) {
 		  case WM_CTLCOLOR:
 		  case WM_CTLCOLORBTN:
 		  case WM_CTLCOLORDLG:
 		  case WM_CTLCOLORSCROLLBAR:
 		  case WM_CTLCOLORSTATIC: {
 			HWND hctl = (HWND) lparam;
-			return SendMessage(hctl, WM_DISPATCH_CTLCOLOR, wparam, message);
+			return SendMessage(hctl, PM_DISPATCH_CTLCOLOR, wparam, nmsg);
 		  }
 
 		  default:
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 		}
 	}
 };
@@ -356,7 +357,7 @@ template<typename BASE> struct CtlColorParent : public BASE
 
  // owner draw message routing for ColorButton and PictureButton 
 
-#define	WM_DISPATCH_DRAWITEM	(WM_APP+0x08)
+#define	PM_DISPATCH_DRAWITEM	(WM_APP+0x08)
 
 template<typename BASE> struct OwnerDrawParent : public BASE
 {
@@ -365,29 +366,29 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 	OwnerDrawParent(HWND hwnd)
 	 : super(hwnd) {}
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		switch(message) {
+		switch(nmsg) {
 		  case WM_DRAWITEM:
 			if (wparam) {	// ein Control?
 				HWND hctl = GetDlgItem(_hwnd, wparam);
 
 				if (hctl)
-					return SendMessage(hctl, WM_DISPATCH_DRAWITEM, wparam, lparam);
+					return SendMessage(hctl, PM_DISPATCH_DRAWITEM, wparam, lparam);
 			} /*else	// oder ein Menüeintrag?
 				; */
 
 			return 0;
 
 		  default:
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 		}
 	}
 };
 
 
  /**
-	Subclass button controls to draw them by using WM_DISPATCH_DRAWITEM
+	Subclass button controls to draw them by using PM_DISPATCH_DRAWITEM
 	The owning window should use the OwnerDrawParent template to route owner draw messages to the buttons.
  */
 struct OwnerdrawnButton : public SubclassedWindow

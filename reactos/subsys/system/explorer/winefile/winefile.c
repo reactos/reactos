@@ -3227,7 +3227,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 		case WM_LBUTTONDOWN: {
 			RECT rt;
-			int x = LOWORD(lparam);
+			int x = GET_X_LPARAM(lparam);
 
 			GetClientRect(hwnd, &rt);
 

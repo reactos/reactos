@@ -1,6 +1,5 @@
 - extend shell view code in Wine
-- iplement taskbar and additional deskbands
-- taskbar notification area (aka "tray")
+- implement additional deskbands
 - paint desktop background: configurable colors, background image, ...
 - Drag Drop on desktop does not work.
 - implement Drag Drop from the tree view.

@@ -286,7 +286,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 
 	  case WM_LBUTTONDOWN: {
-		int x = LOWORD(lparam);
+		int x = GET_X_LPARAM(lparam);
 
 		ClientRect rt(_hwnd);
 
@@ -333,7 +333,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		break;
 
-	  case WM_DISPATCH_COMMAND:
+	  case PM_DISPATCH_COMMAND:
 		return FALSE;
 
 	  default: def:
@@ -379,7 +379,7 @@ void Window::unregister_pretranslate(HWND hwnd)
 BOOL Window::pretranslate_msg(LPMSG pmsg)
 {
 	for(WindowSet::const_iterator it=Window::s_pretranslate_windows.begin(); it!=s_pretranslate_windows.end(); ++it)
-		if (SendMessage(*it, WM_TRANSLATE_MSG, 0, (LPARAM)pmsg))
+		if (SendMessage(*it, PM_TRANSLATE_MSG, 0, (LPARAM)pmsg))
 			return TRUE;
 
 	return FALSE;
@@ -491,7 +491,7 @@ Button::Button(HWND parent, LPCTSTR title, int left, int top, int width, int hei
 
 LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 {
-	if (message == WM_DISPATCH_DRAWITEM) {
+	if (message == PM_DISPATCH_DRAWITEM) {
 		DrawItem((LPDRAWITEMSTRUCT)lparam);
 		return TRUE;
 	} else

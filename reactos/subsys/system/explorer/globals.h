@@ -38,6 +38,8 @@ extern struct ExplorerGlobals
 	bool		_desktop_mode;
 } g_Globals;
 
+extern UINT PM_DESKTOP_GOT_FOCUS;
+
 
 struct ResString : public String
 {

@@ -58,7 +58,8 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 
 
 DesktopBar::DesktopBar(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
 {
 }
 
@@ -84,10 +85,20 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
-
 	taskbar->_desktop_bar = this;
 
+	 // create tray notification area
+	_hwndNotify = Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
+							BtnWindowClass(CLASSNAME_TRAYNOTIFY), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
+
+	NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
+	notify_area->_desktop_bar = this;
+
 	RegisterHotkeys();
+
+	 // notify all top level windows about the successfully created desktop bar
+	PostMessage(HWND_BROADCAST, WM_TASKBARCREATED, 0, 0);
 
 	return 0;
 }
@@ -145,21 +156,34 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		goto def;
 
-	  case WM_SIZE:
+	  case WM_SIZE: {
+		ClientRect clnt(_hwnd);
+		int cy = HIWORD(lparam);
+
 		if (_hwndTaskBar)
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, HIWORD(lparam), TRUE);
-		break;
+			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-NOTIFYAREA_WIDTH, cy, TRUE);
+
+		if (_hwndNotify)
+			MoveWindow(_hwndNotify, clnt.right-NOTIFYAREA_WIDTH, 0, NOTIFYAREA_WIDTH, cy, TRUE);
+		break;}
 
 	  case WM_CLOSE:
 		break;
 
-	  case WM_STARTMENU_CLOSED:
+	  case PM_STARTMENU_CLOSED:
 		_startMenuRoot = 0;
 		break;
+
+	  case WM_SETFOCUS:
+		CloseStartMenu();
+		goto def;
 
 	  case WM_HOTKEY:
 		ProcessHotKey(wparam);
 		break;
+
+	  case WM_COPYDATA:
+		return ProcessCopyData((COPYDATASTRUCT*)lparam);
 
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
@@ -172,7 +196,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_START:
+	  case IDC_START:	//TODO: startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
 		ToggleStartmenu();
 		break;
 	}
@@ -191,6 +215,39 @@ void DesktopBar::ToggleStartmenu()
 		 // create Startmenu
 		_startMenuRoot = StartMenuRoot::Create(_hwnd);
 	}
+}
+
+void DesktopBar::CloseStartMenu()
+{
+	if (_startMenuRoot) {
+		DestroyWindow(_startMenuRoot);
+
+		_startMenuRoot = 0;
+	}
+}
+
+
+ /// copy data structure for tray notifications
+struct TrayNotifyCDS {
+	DWORD	cookie;
+	DWORD	notify_code;
+	DWORD	offset;
+};
+
+LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
+{
+	 // Is this a tray notification message?
+	if (pcd->dwData == 1) {
+		TrayNotifyCDS* ptr = (TrayNotifyCDS*) pcd->lpData;
+		NOTIFYICONDATA* pnid = (NOTIFYICONDATA*) (LPBYTE(pcd->lpData)+ptr->offset);
+
+		NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
+
+		if (notify_area)
+			return notify_area->ProcessTrayNotification(ptr->notify_code, pnid);
+	}
+
+	return 0;
 }
 
 
@@ -285,7 +342,7 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	//InstallShellHook(_hwnd, WM_SHELLHOOK_NOTIFY);
+	//InstallShellHook(_hwnd, PM_SHELLHOOK_NOTIFY);
 
 	Refresh();
 
@@ -297,8 +354,8 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_CLOSE:
-		break;
+/*	  case WM_CLOSE:
+		break; */
 
 	  case WM_SIZE:
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -308,7 +365,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Refresh();
 		return 0;
 
-	  case WM_SHELLHOOK_NOTIFY: {
+	  case PM_SHELLHOOK_NOTIFY: {
 		int code = lparam;
 /*
 		switch(code) {
@@ -494,4 +551,64 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 			return it;
 
 	return end();
+}
+
+
+NotifyArea::NotifyArea(HWND hwnd)
+ :	super(hwnd)
+{
+	_desktop_bar = NULL;
+}
+
+NotifyArea::~NotifyArea()
+{
+}
+
+LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
+{
+	if (super::Init(pcs))
+		return 1;
+
+	return 0;
+}
+
+LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+/*@@
+	switch(nmsg) {
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+*/return super::WndProc(nmsg, wparam, lparam);
+
+	return 0;
+}
+
+int NotifyArea::Command(int id, int code)
+{
+	return super::Command(id, code);
+}
+
+LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid)
+{
+	switch(notify_code) {
+	  case NIM_ADD:
+		break;
+
+	  case NIM_MODIFY:
+		break;
+
+	  case NIM_DELETE:
+		break;
+
+#if NOTIFYICON_VERSION>=3	// currently (as of 21.08.2003) missing in MinGW headers
+	  case NIM_SETFOCUS:
+		break;
+
+	  case NIM_SETVERSION:
+		break;
+#endif
+	}
+
+	return 0;
 }

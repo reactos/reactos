@@ -61,7 +61,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
 
 StartMenu::~StartMenu()
 {
-	SendParent(WM_STARTMENU_CLOSED);
+	SendParent(PM_STARTMENU_CLOSED);
 }
 
 
@@ -167,7 +167,17 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return 0;			// disable window resizing
 		goto def;
 
-	  case WM_STARTENTRY_FOCUSED: {
+	  case WM_ACTIVATEAPP:
+		 // close start menu when activating another application
+		if (!wparam)
+			CloseStartMenu();
+		goto def;
+
+	  case WM_CANCELMODE:
+		CloseStartMenu();
+		break;
+
+	  case PM_STARTENTRY_FOCUSED: {
 		BOOL hasSubmenu = wparam;
 		HWND hctrl = (HWND)lparam;
 
@@ -182,17 +192,23 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		break;}
 
-	  case WM_STARTENTRY_LAUNCHED:
+	  case PM_STARTENTRY_LAUNCHED:
 		 // route message to the parent menu and close menus after launching an entry
 		if (!SendParent(nmsg, wparam, lparam))
 			DestroyWindow(_hwnd);
 		return 1;	// signal that we have received and processed the message
 
-	  case WM_STARTMENU_CLOSED:
+	  case PM_STARTMENU_CLOSED:
 		_submenu = 0;
 		break;
 
-	  default: def:
+	  default:
+		if (nmsg == PM_DESKTOP_GOT_FOCUS) {
+			CloseStartMenu();
+			return 0;
+		}
+
+	  def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
@@ -321,14 +337,18 @@ void StartMenu::AddSeparator()
 
 bool StartMenu::CloseOtherSubmenus(int id)
 {
-	if (_submenu && IsWindow(_submenu)) {
-		if (_submenu_id == id)
-			return false;
-		else {
-			DestroyWindow(_submenu);
-			_submenu_id = 0;
-			_submenu = 0;	// safetly first - should be reset automatically by WM_STARTMENU_CLOSED
+	if (_submenu) {
+		if (IsWindow(_submenu)) {
+			if (_submenu_id == id)
+				return false;
+			else {
+				DestroyWindow(_submenu);
+				_submenu_id = 0;
+				// _submenu should be reset automatically by PM_STARTMENU_CLOSED, but safety first...
+			}
 		}
+
+		_submenu = 0;
 	}
 
 	return true;
@@ -405,15 +425,16 @@ void StartMenu::ActivateEntry(int id, ShellEntry* entry)
 	} else {
 		entry->launch_entry(_hwnd);	//TODO: launch in the background
 
+		 // close start menus after launching the selected entry
 		CloseStartMenu(id);
 	}
 }
 
 
+ /// close all windows of the start menu popup
 void StartMenu::CloseStartMenu(int id)
 {
-	 // close start menus after launching the selected entry
-	if (!SendParent(WM_STARTENTRY_LAUNCHED, id, (LPARAM)_hwnd))
+	if (!SendParent(PM_STARTENTRY_LAUNCHED, id, (LPARAM)_hwnd))
 		DestroyWindow(_hwnd);
 }
 
@@ -433,9 +454,9 @@ int StartMenuButton::GetTextWidth(LPCTSTR title)
 }
 
 
-LRESULT StartMenuButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT StartMenuButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	switch(message) {
+	switch(nmsg) {
 	  case WM_MOUSEMOVE:
 		 // automatically set the focus to startmenu entries when moving the mouse over them		
 		if (GetFocus()!=_hwnd && !(GetWindowStyle(_hwnd)&WS_DISABLED))
@@ -443,11 +464,15 @@ LRESULT StartMenuButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_SETFOCUS:
-		PostParent(WM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
+		PostParent(PM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
 		goto def;
 
-	  default: def:
-		return super::WndProc(message, wparam, lparam);
+	  default: 
+		if (nmsg == PM_DESKTOP_GOT_FOCUS)
+			return SendParent(nmsg, wparam, lparam);
+
+	  def:
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;

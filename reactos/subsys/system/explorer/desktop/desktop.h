@@ -34,6 +34,9 @@
 #include "../externals.h"
 
 
+#define	WINMSG_DESKTOP_GOT_FOCUS	_T("DesktopWindowGotFocus")
+
+
 struct BackgroundWindow : public SubclassedWindow
 {
 	typedef SubclassedWindow super;

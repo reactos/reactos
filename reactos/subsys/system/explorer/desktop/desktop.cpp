@@ -32,6 +32,9 @@
 #include "../explorer_intres.h"
 
 
+UINT PM_DESKTOP_GOT_FOCUS = RegisterWindowMessage(WINMSG_DESKTOP_GOT_FOCUS);
+
+
 static BOOL (WINAPI*SetShellWindow)(HWND);
 static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
@@ -208,6 +211,12 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
+	  case WM_SETFOCUS:
+		 // notify Startmenu of focus change
+		if (wparam)
+			SendMessage((HWND)wparam, PM_DESKTOP_GOT_FOCUS, 0, 0);
+		goto def;
+
 	  case WM_GETISHELLBROWSER:
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
@@ -222,7 +231,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CLOSE:
 		break;	// Over-ride close. We need to close desktop some other way.
 
-	  default:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

@@ -136,7 +136,7 @@ LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_SETFOCUS: {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), PM_GET_FILEWND_PTR, 0, 0);
 
 		child->set_focus_pane(this);
 		ListBox_SetSel(_hwnd, TRUE, 1);
@@ -144,7 +144,7 @@ LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 
 	  case WM_KEYDOWN: {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), PM_GET_FILEWND_PTR, 0, 0);
 
 		if (wparam == VK_TAB) {
 			/*TODO: SetFocus(g_Globals.hdrivebar) */

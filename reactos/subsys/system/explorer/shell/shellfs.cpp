@@ -147,7 +147,7 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 	SHELLEXECUTEINFO shexinfo;
 
 	shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	shexinfo.fMask = SEE_MASK_IDLIST;
+	shexinfo.fMask = SEE_MASK_INVOKEIDLIST;//@@SEE_MASK_IDLIST;
 	shexinfo.hwnd = hwnd;
 	shexinfo.lpVerb = NULL;
 	shexinfo.lpFile = NULL;

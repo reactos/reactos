@@ -17,3 +17,5 @@
 13.08.2003	m. fuchs	make explorer bar look more like windows taskbar bar
 16.08.2003	m. fuchs	first draft of working task bar
 18.08.2003	m. fuchs	first draft of explorer start menu
+21.08.2003	m. fuchs	working start menu; beginning of tray notification area
+						Start menu popup is now closed when clicking in another window.

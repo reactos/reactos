@@ -34,15 +34,23 @@
 #define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP
 
+#define	NOTIFYAREA_WIDTH		100
+
 
 #define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
-#define	TITLE_EXPLORERBAR		_T("DesktopBar")
+#define	TITLE_EXPLORERBAR		_T("DesktopBar")	//_T("")
 
 #define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
 #define	TITLE_TASKBAR			_T("Running Applications")
 
+#define	CLASSNAME_TRAYNOTIFY	_T("TrayNotifyWnd")
+#define	TITLE_TRAYNOTIFY		_T("")
 
-#define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
+
+ // private message constant
+#define	PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
+
+#define	WINMSG_TASKBARCREATED	_T("TaskbarCreated")
 
 
 #define	IDC_START		0x1000
@@ -65,6 +73,7 @@
 #define	IDC_FIRST_MENU	0x3000
 
 
+ /// desktop bar window, also known as "system tray"
 struct DesktopBar : public OwnerDrawParent<Window>
 {
 	typedef OwnerDrawParent<Window> super;
@@ -73,6 +82,8 @@ struct DesktopBar : public OwnerDrawParent<Window>
 	~DesktopBar();
 
 protected:
+	int		WM_TASKBARCREATED;
+
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
@@ -80,15 +91,18 @@ protected:
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
 	void	ToggleStartmenu();
+	void	CloseStartMenu();
+	LRESULT ProcessCopyData(COPYDATASTRUCT* pcd);
 
 	WindowHandle _hwndTaskBar;
 	WindowHandle _startMenuRoot;
+	WindowHandle _hwndNotify;
 };
 
 
 #define	IDW_TASKTOOLBAR	100
 
- // internal task bar button management entry
+ /// internal task bar button management entry
 struct TaskBarEntry
 {	
 	TaskBarEntry();
@@ -102,7 +116,7 @@ struct TaskBarEntry
 	BYTE	_fsState;
 };
 
- // map for managing the task bar buttons
+ /// map for managing the task bar buttons
 struct TaskBarMap : public map<HWND, TaskBarEntry>
 {
 	~TaskBarMap();
@@ -110,7 +124,7 @@ struct TaskBarMap : public map<HWND, TaskBarEntry>
 	iterator find_id(int id);
 };
 
- // Taskbar window
+ /// Taskbar window
 struct TaskBar : public Window
 {
 	typedef Window super;
@@ -118,7 +132,7 @@ struct TaskBar : public Window
 	TaskBar(HWND hwnd);
 	~TaskBar();
 
-	DesktopBar*	_desktop_bar;
+	DesktopBar*	_desktop_bar;	// may be not necessary
 
 protected:
 	WindowHandle _htoolbar;
@@ -133,4 +147,33 @@ protected:
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 
 	void	Refresh();
+};
+
+
+struct NotifyIconIndex {
+	HWND	hWnd;
+	UINT	uID;
+};
+
+typedef map<NotifyIconIndex, int> NotifyIconMap;
+
+
+ /// tray notification area aka "tray"
+struct NotifyArea : public Window
+{
+	typedef Window super;
+
+	NotifyArea(HWND hwnd);
+	~NotifyArea();
+
+	DesktopBar*	_desktop_bar;
+
+	LRESULT ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
+
+protected:
+	NotifyIconMap _icon_map;
+
+	LRESULT	Init(LPCREATESTRUCT pcs);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
 };
