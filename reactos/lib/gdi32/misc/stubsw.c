@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.14 2003/07/21 04:56:32 royce Exp $
+/* $Id: stubsw.c,v 1.15 2003/07/21 05:53:15 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -135,7 +135,7 @@ int
 STDCALL
 EnumFontFamiliesExW(
 	HDC		hdc,
-	LPLOGFONT	lpLogFont,
+	LPLOGFONTW	lpLogFont,
 	FONTENUMEXPROC	lpEnumFontFamProc,
 	LPARAM		lParam,
 	DWORD		dwFlags
@@ -162,138 +162,130 @@ EnumFontFamiliesW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
 EnumFontsW(
-	HDC		a0,
-	LPCWSTR		a1,
-	ENUMFONTSPROC	a2,
-	LPARAM		a3
+	HDC  hDC,
+	LPCWSTR lpFaceName,
+	FONTENUMPROC  FontFunc,
+	LPARAM  lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCharWidthW(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPINT	a3
+GetCharWidthW (
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetCharWidth32W(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPINT	a3
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharWidthFloatW(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	PFLOAT	a3
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	PFLOAT	pxBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharABCWidthsW(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPABC	a3
+	HDC	hdc,
+	UINT	uFirstChar,
+	UINT	uLastChar,
+	LPABC	lpabc
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharABCWidthsFloatW(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPABCFLOAT	a3
+	HDC		hdc,
+	UINT		iFirstChar,
+	UINT		iLastChar,
+	LPABCFLOAT	lpABCF
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 GetGlyphOutlineW(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPGLYPHMETRICS	a3,
-	DWORD		a4,
-	LPVOID		a5,
-	CONST MAT2	*a6
+	HDC		hdc,
+	UINT		uChar,
+	UINT		uFormat,
+	LPGLYPHMETRICS	lpgm,
+	DWORD		cbBuffer,
+	LPVOID		lpvBuffer,
+	CONST MAT2	*lpmat2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMETAFILE
 STDCALL
 GetMetaFileW(
-	LPCWSTR	a0
+	LPCWSTR	lpszMetaFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kGetMetaFile ( lpszMetaFile );
 }
 
 
@@ -303,13 +295,13 @@ GetMetaFileW(
 UINT
 APIENTRY
 GetOutlineTextMetricsW(
-	HDC			a0,
-	UINT			a1,
-	LPOUTLINETEXTMETRICW	a2
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICW	lpOTM
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 
@@ -469,8 +461,7 @@ GetObjectW(
 	LPVOID		a2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return W32kGetObject ( a0, a1, a2 );
 }
 
 

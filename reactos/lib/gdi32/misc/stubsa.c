@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.14 2003/07/21 04:56:31 royce Exp $
+/* $Id: stubsa.c,v 1.15 2003/07/21 05:53:15 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -19,6 +19,7 @@
 #include <win32k/metafile.h>
 #include <win32k/dc.h>
 #include <rosrtl/devmode.h>
+#include <rosrtl/logfont.h>
 
 /*
  * @implemented
@@ -292,25 +293,29 @@ DeviceCapabilitiesExA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
 EnumFontFamiliesExA(
 	HDC		hdc,
-	LPLOGFONT	lpLogFont,
+	LPLOGFONTA	lpLogFont,
 	FONTENUMEXPROC	lpEnumFontFamProc,
 	LPARAM		lParam,
 	DWORD		dwFlags
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  LOGFONTW LogFontW;
+
+  RosRtlLogFontA2W ( &LogFontW, lpLogFont );
+
+  /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
+  return W32kEnumFontFamiliesEx ( hdc, &LogFontW, lpEnumFontFamProc, lParam, dwFlags );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -321,144 +326,183 @@ EnumFontFamiliesA(
 	LPARAM		lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING Family;
+  int rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &Family,
+					      (PCSZ)lpszFamily );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kEnumFontFamilies ( hdc, Family.Buffer, lpEnumFontFamProc, lParam );
+
+  RtlFreeUnicodeString ( &Family );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
-EnumFontsA(
-	HDC		a0,
-	LPCSTR		a1,
-	ENUMFONTSPROC	a2,
-	LPARAM		a3
+EnumFontsA (
+	HDC  hDC,
+	LPCSTR lpFaceName,
+	FONTENUMPROC  FontFunc,
+	LPARAM  lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING FaceName;
+  int rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &FaceName,
+					      (PCSZ)lpFaceName );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kEnumFonts ( hDC, FaceName.Buffer, FontFunc, lParam );
+
+  RtlFreeUnicodeString ( &FaceName );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCharWidthA(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPINT	a3
+GetCharWidthA (
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetCharWidth32A(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPINT	a3
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharWidthFloatA(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	PFLOAT	a3
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	PFLOAT	pxBuffer
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharABCWidthsA(
-	HDC	a0,
-	UINT	a1,
-	UINT	a2,
-	LPABC	a3
+	HDC	hdc,
+	UINT	uFirstChar,
+	UINT	uLastChar,
+	LPABC	lpabc
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 GetCharABCWidthsFloatA(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPABCFLOAT	a3
+	HDC		hdc,
+	UINT		iFirstChar,
+	UINT		iLastChar,
+	LPABCFLOAT	lpABCF
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+  return W32kGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 GetGlyphOutlineA(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPGLYPHMETRICS	a3,
-	DWORD		a4,
-	LPVOID		a5,
-	CONST MAT2	*a6
+	HDC		hdc,
+	UINT		uChar,
+	UINT		uFormat,
+	LPGLYPHMETRICS	lpgm,
+	DWORD		cbBuffer,
+	LPVOID		lpvBuffer,
+	CONST MAT2	*lpmat2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMETAFILE
 STDCALL
 GetMetaFileA(
-	LPCSTR	a0
+	LPCSTR	lpszMetaFile
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  NTSTATUS Status;
+  UNICODE_STRING MetaFile;
+  HMETAFILE rc;
+
+  Status = RtlCreateUnicodeStringFromAsciiz ( &MetaFile,
+					      (PCSZ)lpszMetaFile );
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError(Status));
+      return 0;
+    }
+
+  rc = W32kGetMetaFile ( MetaFile.Buffer );
+
+  RtlFreeUnicodeString ( &MetaFile );
+
+  return rc;
 }
 
 
@@ -468,13 +512,13 @@ GetMetaFileA(
 UINT
 APIENTRY
 GetOutlineTextMetricsA(
-	HDC			a0,
-	UINT			a1,
-	LPOUTLINETEXTMETRICA	a2
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICA	lpOTM
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 
@@ -634,8 +678,7 @@ GetObjectA(
 	LPVOID		a2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return W32kGetObject ( a0, a1, a2 );
 }
 
 
