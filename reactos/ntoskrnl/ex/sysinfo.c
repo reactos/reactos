@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.54 2004/10/17 15:39:29 hbirr Exp $
+/* $Id: sysinfo.c,v 1.55 2004/10/30 16:07:46 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,6 @@ ExGetCurrentProcessorCpuUsage (
 
 	Pcr = KeGetCurrentKPCR();
 
-	/* FIXME: Needs Idle Thread to be implented properly */
 	ScaledIdle = Pcr->PrcbData.IdleThread->KernelTime * 100;
 	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
 	if (TotalTime) PercentTime = 100 - (ScaledIdle / TotalTime);
@@ -358,7 +357,7 @@ QSI_DEF(SystemBasicInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	Sbi->Unknown = 0;
-	Sbi->MaximumIncrement = 100000; /* FIXME */
+	Sbi->MaximumIncrement = KeMaximumIncrement;
 	Sbi->PhysicalPageSize = PAGE_SIZE; /* FIXME: it should be PAGE_SIZE */
 	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
 	Sbi->LowestPhysicalPage = 0; /* FIXME */ 
@@ -366,7 +365,7 @@ QSI_DEF(SystemBasicInformation)
 	Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
 	Sbi->LowestUserAddress = 0x10000; /* Top of 64k */
 	Sbi->HighestUserAddress = (ULONG_PTR)MmHighestUserAddress;
-	Sbi->ActiveProcessors = 0x00000001; /* FIXME */
+	Sbi->ActiveProcessors = KeActiveProcessors;
 	Sbi->NumberProcessors = KeNumberProcessors;
 	return (STATUS_SUCCESS);
 }
