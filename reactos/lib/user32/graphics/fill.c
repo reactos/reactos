@@ -1,14 +1,12 @@
 #include <windows.h>
 #include <user32/win.h>
+#include <user32/paint.h>
 
-/***********************************************************************
- *           FillWindow    (USER.324)
- */
+
 void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush )
 {
     RECT rect;
     GetClientRect( hwnd, &rect );
-   // DPtoLP16( hdc, (LPPOINT16)&rect, 2 );
     PaintRect( hwndParent, hwnd, hdc, hbrush, &rect );
 }
 
@@ -34,23 +32,8 @@ void  PaintRect( HWND hwndParent, HWND hwnd, HDC hdc,
 }
 
 
-/***********************************************************************
- *           GetControlBrush    (USER.326)
- */
-HBRUSH STDCALL GetControlBrush( HWND hwnd, HDC hdc, UINT ctlType )
-{
-    WND* wndPtr = WIN_FindWndPtr( hwnd );
 
-    if((ctlType <= CTLCOLOR_MAX) && wndPtr )
-    {
-	WND* parent;
-	if( wndPtr->dwStyle & WS_POPUP ) parent = wndPtr->owner;
-	else parent = wndPtr->parent;
-	if( !parent ) parent = wndPtr;
-	return (HBRUSH)PAINT_GetControlBrush( parent->hwndSelf, hwnd, hdc, ctlType );
-    }
-    return (HBRUSH)0;
-}
+
 
 INT STDCALL FrameRect( HDC hdc, const RECT *rect, HBRUSH hbrush )
 {

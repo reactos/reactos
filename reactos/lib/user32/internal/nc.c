@@ -278,8 +278,8 @@ static void NC_GetInsideRect( HWND hwnd, RECT *rect )
     rect->top    = rect->left = 0;
     rect->right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
     rect->bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
-
-    if ((wndPtr->dwStyle & WS_ICONIC) || (wndPtr->flags & WIN_MANAGED)) return;
+// || (wndPtr->flags & WIN_MANAGED)
+    if ((wndPtr->dwStyle & WS_ICONIC) ) return;
 
     /* Remove frame from rectangle */
     if (HAS_DLGFRAME( wndPtr->dwStyle, wndPtr->dwExStyle ))
@@ -317,7 +317,8 @@ NC_GetInsideRect95 (HWND hwnd, RECT *rect)
     rect->right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
     rect->bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
 
-    if ((wndPtr->dwStyle & WS_ICONIC) || (wndPtr->flags & WIN_MANAGED)) return;
+// || (wndPtr->flags & WIN_MANAGED)
+    if ((wndPtr->dwStyle & WS_ICONIC) ) return;
 
     /* Remove frame from rectangle */
     if (HAS_FIXEDFRAME (wndPtr->dwStyle, wndPtr->dwExStyle ))
@@ -362,7 +363,7 @@ LONG NC_DoNCHitTest (WND *wndPtr, POINT pt )
 
     if (wndPtr->dwStyle & WS_MINIMIZE) return HTCAPTION;
 
-    if (!(wndPtr->flags & WIN_MANAGED))
+//    if (!(wndPtr->flags & WIN_MANAGED))
     {
         /* Check borders */
         if (HAS_THICKFRAME( wndPtr->dwStyle ))
@@ -498,7 +499,7 @@ NC_DoNCHitTest95 (WND *wndPtr, POINT pt )
 
     if (wndPtr->dwStyle & WS_MINIMIZE) return HTCAPTION;
 
-    if (!(wndPtr->flags & WIN_MANAGED))
+//    if (!(wndPtr->flags & WIN_MANAGED))
     {
         /* Check borders */
         if (HAS_SIZEFRAME( wndPtr->dwStyle ))
@@ -654,7 +655,7 @@ void NC_DrawSysButton( HWND hwnd, HDC hdc, WINBOOL down )
     HBITMAP hbitmap;
     WND *wndPtr = WIN_FindWndPtr( hwnd );
 
-    if( !(wndPtr->flags & WIN_MANAGED) )
+//    if( !(wndPtr->flags & WIN_MANAGED) )
     {
       NC_GetInsideRect( hwnd, &rect );
       hdcMem = CreateCompatibleDC( hdc );
@@ -677,7 +678,7 @@ static void NC_DrawMaxButton( HWND hwnd, HDC hdc, WINBOOL down )
     WND *wndPtr = WIN_FindWndPtr( hwnd );
     HDC hdcMem;
 
-    if( !(wndPtr->flags & WIN_MANAGED) )
+//    if( !(wndPtr->flags & WIN_MANAGED) )
     {
       NC_GetInsideRect( hwnd, &rect );
       hdcMem = CreateCompatibleDC( hdc );
@@ -701,7 +702,7 @@ static void NC_DrawMinButton( HWND hwnd, HDC hdc, WINBOOL down )
     WND *wndPtr = WIN_FindWndPtr( hwnd );
     HDC hdcMem;
 
-    if( !(wndPtr->flags & WIN_MANAGED) )
+//    if( !(wndPtr->flags & WIN_MANAGED) )
     {
       NC_GetInsideRect( hwnd, &rect );
       hdcMem = CreateCompatibleDC( hdc );
@@ -737,7 +738,7 @@ NC_DrawSysButton95 (HWND hwnd, HDC hdc, WINBOOL down)
 {
     WND *wndPtr = WIN_FindWndPtr( hwnd );
 
-    if( !(wndPtr->flags & WIN_MANAGED) )
+//    if( !(wndPtr->flags & WIN_MANAGED) )
     {
 	HICON  hIcon = 0;
 	RECT rect;
@@ -783,7 +784,7 @@ NC_DrawCloseButton95 (HWND hwnd, HDC hdc, WINBOOL down)
     HDC hdcMem;
     WND *wndPtr = WIN_FindWndPtr( hwnd );
 
-    if( !(wndPtr->flags & WIN_MANAGED) )
+//    if( !(wndPtr->flags & WIN_MANAGED) )
     {
 	BITMAP bmp;
 	HBITMAP hBmp, hOldBmp;
@@ -837,7 +838,8 @@ static void  NC_DrawMaxButton95(
     HDC hdcMem;
 
 
-    if( !(wndPtr->flags & WIN_MANAGED) ) {
+//    if( !(wndPtr->flags & WIN_MANAGED) ) 
+      {
 	GetBitmapDimensionEx((bm = IsZoomed(hwnd) ?
 			(down ? hbitmapRestoreD : hbitmapRestore ) :
 			(down ? hbitmapMaximizeD : hbitmapMaximize)),
@@ -896,9 +898,8 @@ static void  NC_DrawMinButton95(
     SIZE  bmsz;
     HBITMAP  bm;
     HDC hdcMem;
-
-    if( !(wndPtr->flags & WIN_MANAGED) &&
-	GetBitmapDimensionEx((bm = down ? hbitmapMinimizeD :
+// !(wndPtr->flags & WIN_MANAGED) &&
+    if( GetBitmapDimensionEx((bm = down ? hbitmapMinimizeD :
 				hbitmapMinimize), &bmsz)) {
 	
 	NC_GetInsideRect95( hwnd, &rect );
@@ -1099,7 +1100,7 @@ static void NC_DrawCaption( HDC hdc, RECT *rect, HWND hwnd,
     WND * wndPtr = WIN_FindWndPtr( hwnd );
     char buffer[256];
 
-    if (wndPtr->flags & WIN_MANAGED) return;
+//    if (wndPtr->flags & WIN_MANAGED) return;
 
     if (!hbitmapClose)
     {
@@ -1156,6 +1157,8 @@ static void NC_DrawCaption( HDC hdc, RECT *rect, HWND hwnd,
 	SetBkMode( hdc, TRANSPARENT );
 	DrawTextA( hdc, buffer, -1, &r,
                      DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX );
+
+	
     }
 }
 
@@ -1196,15 +1199,15 @@ void  NC_DrawCaption95(
     WND     *wndPtr = WIN_FindWndPtr( hwnd );
     char    buffer[256];
     HPEN  hPrevPen;
-    int txt;
+    int txtlen;
 
-    if (wndPtr->flags & WIN_MANAGED) return;
+//    if (wndPtr->flags & WIN_MANAGED) return;
 
     hPrevPen = SelectObject( hdc, GetSysColorPen(COLOR_3DFACE) );
     MoveToEx( hdc, r.left, r.bottom - 1, NULL );
     LineTo( hdc, r.right, r.bottom - 1 );
     SelectObject( hdc, hPrevPen );
- //   r.bottom - 2;
+    r.bottom - 2;
    
 
     FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
@@ -1239,12 +1242,12 @@ void  NC_DrawCaption95(
     }
    
     if ( wndPtr->class->bUnicode )
-    	txt = GetWindowTextW( hwnd, buffer, sizeof(buffer) );
+    	txtlen = GetWindowTextW( hwnd, buffer, sizeof(buffer) );
     else
-    	txt = GetWindowTextA( hwnd, buffer, sizeof(buffer) );
+    	txtlen = GetWindowTextA( hwnd, buffer, sizeof(buffer) );
 
 
-    if (txt) {
+    if (txtlen > 0 && txtlen <  sizeof(buffer)  ) {
 	NONCLIENTMETRICS nclm;
 	HFONT hFont, hOldFont;
 	nclm.cbSize = sizeof(NONCLIENTMETRICS);
@@ -1261,9 +1264,10 @@ void  NC_DrawCaption95(
 	if ( wndPtr->class->bUnicode )
 		DrawTextW( hdc, buffer, -1, &r,
 		     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_LEFT );
-	else
+	else {
 		DrawTextA( hdc, buffer, -1, &r,
 		     DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_LEFT );
+	}
 	DeleteObject(SelectObject (hdc, hOldFont));
     }
 }
@@ -1291,7 +1295,7 @@ void NC_DoNCPaint( WND* wndPtr, HRGN clip, WINBOOL suppress_menupaint )
 
     if (!(hdc = GetDCEx( hwnd, 0, DCX_USESTYLE | DCX_WINDOW ))) return;
 
-    if (ExcludeVisRect( hdc, wndPtr->rectClient.left-wndPtr->rectWindow.left,
+    if (ExcludeClipRect( hdc, wndPtr->rectClient.left-wndPtr->rectWindow.left,
 		        wndPtr->rectClient.top-wndPtr->rectWindow.top,
 		        wndPtr->rectClient.right-wndPtr->rectWindow.left,
 		        wndPtr->rectClient.bottom-wndPtr->rectWindow.top )
@@ -1305,15 +1309,16 @@ void NC_DoNCPaint( WND* wndPtr, HRGN clip, WINBOOL suppress_menupaint )
     rect.right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
     rect.bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
 
+
     SelectObject( hdc, GetSysColorPen(COLOR_WINDOWFRAME) );
 
-    if (!(wndPtr->flags & WIN_MANAGED))
+//    if (!(wndPtr->flags & WIN_MANAGED))
     {
         if ((wndPtr->dwStyle & WS_BORDER) || (wndPtr->dwStyle & WS_DLGFRAME) ||
             (wndPtr->dwExStyle & WS_EX_DLGMODALFRAME))
         {
 	    SelectObject( hdc, GetStockObject(NULL_BRUSH) );
-            Rectangle( hdc, 0, 0, rect.right, rect.bottom );
+            Rectangle( hdc, rect.top, rect.left, rect.right, rect.bottom );
             InflateRect( &rect, -1, -1 );
         }
 
@@ -1404,7 +1409,7 @@ void  NC_DoNCPaint95(
 
     if (!(hdc = GetDCEx( hwnd, 0, DCX_USESTYLE | DCX_WINDOW ))) return;
 
-    if (ExcludeVisRect( hdc, wndPtr->rectClient.left -wndPtr->rectWindow.left,
+    if (ExcludeClipRect( hdc, wndPtr->rectClient.left -wndPtr->rectWindow.left,
 		        wndPtr->rectClient.top  -wndPtr->rectWindow.top,
 		        wndPtr->rectClient.right  -wndPtr->rectWindow.left,
 		        wndPtr->rectClient.bottom  -wndPtr->rectWindow.top )
@@ -1414,13 +1419,20 @@ void  NC_DoNCPaint95(
 	return;
     }
 
+
+
     rect.top = rect.left = 0;
     rect.right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
     rect.bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
 
+    //rect = wndPtr->rectWindow;
+
+    printf("::%d %d\n", rect.right, rect.bottom);
+
+
     SelectObject( hdc, GetSysColorPen(COLOR_WINDOWFRAME) );
 
-    if(!(wndPtr->flags & WIN_MANAGED)) {
+    //if((wndPtr->flags & WIN_MANAGED)) {
         if ((wndPtr->dwStyle & WS_BORDER) && ((wndPtr->dwStyle & WS_DLGFRAME) ||
 	    (wndPtr->dwExStyle & WS_EX_DLGMODALFRAME) || (wndPtr->dwStyle & WS_THICKFRAME))) {
             DrawEdge(hdc, &rect, EDGE_RAISED, BF_RECT | BF_ADJUST);
@@ -1445,7 +1457,7 @@ void  NC_DoNCPaint95(
             NC_DrawCaption95 (hdc, &r, hwnd, wndPtr->dwStyle,
                               wndPtr->dwExStyle, active);
         }
-    }
+    //}
 
     if (HAS_MENU(wndPtr))
     {
@@ -1499,7 +1511,7 @@ LONG NC_HandleNCPaint( HWND hwnd , HRGN clip)
 {
     WND* wndPtr = WIN_FindWndPtr( hwnd );
 
-    if( wndPtr && wndPtr->dwStyle & WS_VISIBLE )
+    //if( wndPtr && wndPtr->dwStyle & WS_VISIBLE )
     {
 	if( wndPtr->dwStyle & WS_MINIMIZE )
 	    WINPOS_RedrawIconTitle( hwnd );
@@ -1733,8 +1745,9 @@ static void NC_DoSizeMove( HWND hwnd, WORD wParam )
 
     capturePoint = pt = *(POINT*)&dwPoint;
 
-    if (IsZoomed(hwnd) || !IsWindowVisible(hwnd) ||
-        (wndPtr->flags & WIN_MANAGED)) return;
+// || (wndPtr->flags & WIN_MANAGED)
+    if (IsZoomed(hwnd) || !IsWindowVisible(hwnd) ) 
+	return;
 
     if ((wParam & 0xfff0) == SC_MOVE)
     {
@@ -1910,11 +1923,11 @@ static void NC_DoSizeMove( HWND hwnd, WORD wParam )
     if (HOOK_IsHooked( WH_CBT ))
     {
 	if ( wndPtr->class->bUnicode == FALSE ) {
-		if( HOOK_CallHooksA( WH_CBT, HCBT_MOVESIZE, hwnd,(LPARAM)&sizingRect) )
+		if( HOOK_CallHooksA( WH_CBT, HCBT_MOVESIZE,(WPARAM) hwnd,(LPARAM)&sizingRect) )
 			sizingRect = wndPtr->rectWindow;   
 	}
 	else {
-		if( HOOK_CallHooksW( WH_CBT, HCBT_MOVESIZE, hwnd,(LPARAM)&sizingRect) )
+		if( HOOK_CallHooksW( WH_CBT, HCBT_MOVESIZE, (WPARAM) hwnd,(LPARAM)&sizingRect) )
 			sizingRect = wndPtr->rectWindow;   
 	}
     }

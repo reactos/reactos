@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.7 1999/08/29 13:44:58 dwelch Exp $
+# $Id: makefile_rex,v 1.8 1999/12/01 22:30:45 ariadne Exp $
 #
 # ReactOS Operating System
 #
@@ -23,11 +23,11 @@ endif
 all: $(DLLTARGET)
 
 
-MISC_OBJECTS = misc/sprintf.o misc/exitwin.o misc/dllmain.o #misc/string.o
+MISC_OBJECTS = misc/sprintf.o misc/exitwin.o misc/dllmain.o misc/string.o misc/sysmetr.o
 
 #RESOURCE_OBJECT = $(TARGET).coff
 
-WINDOWS_OBJECTS = windows/message.o windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
+WINDOWS_OBJECTS = windows/msg.o windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
 		#windows/queue.o
 
 OBJECTS = $(MISC_OBJECTS)  $(WINDOWS_OBJECTS)

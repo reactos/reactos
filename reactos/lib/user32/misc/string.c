@@ -5,11 +5,12 @@
  * Copyright 1996 Marcus Meissner
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
 #include <string.h>
 #include <stdarg.h>
 #include <wchar.h>
-#include <ddk/ntddk.h>
+
 
 /* Funny to divide them between user and kernel. */
 

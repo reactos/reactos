@@ -19,7 +19,7 @@ HANDLE HOOK_systemHooks[WH_NB_HOOKS] = { NULL, };
  *
  * FIXME: I don't know if this is correct
  */
-HHOOK SetWindowsHookExA(int  idHook, HOOKPROC  lpfn, HINSTANCE  hMod, DWORD  dwThreadId )
+HHOOK STDCALL SetWindowsHookExA(int  idHook, HOOKPROC  lpfn, HINSTANCE  hMod, DWORD  dwThreadId )
 {
     return HOOK_SetHook( idHook, lpfn, HOOK_WINA, hMod, dwThreadId );
 
@@ -31,9 +31,9 @@ HHOOK SetWindowsHookExA(int  idHook, HOOKPROC  lpfn, HINSTANCE  hMod, DWORD  dwT
  *
  * FIXME: I don't know if this is correct
  */
-HHOOK SetWindowsHookExW(int  idHook, HOOKPROC  lpfn, HINSTANCE  hMod, DWORD  dwThreadId )
+HHOOK STDCALL SetWindowsHookExW(int  idHook, HOOKPROC  lpfn, HINSTANCE  hMod, DWORD  dwThreadId )
 {
-    return HOOK_SetHook( idHook, lpfn, HOOK_WIN32W, hMod, dwThreadId );
+    return HOOK_SetHook( idHook, lpfn, HOOK_WINW, hMod, dwThreadId );
 
 }
 
@@ -224,7 +224,7 @@ HANDLE HOOK_SetHook( INT id, LPVOID proc, INT type,
 WINBOOL HOOK_RemoveHook( HANDLE hook )
 {
     HOOKDATA *data;
-    HANDLE *prevHook;
+    HANDLE *prevHook = NULL;
 
 
 

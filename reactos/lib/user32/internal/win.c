@@ -64,6 +64,12 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
         wndPtr->parent = WIN_FindWndPtr( cs->hWndParent );
         wndPtr->owner  = NULL;
     }
+    else {
+	wndPtr->owner = NULL;
+	wndPtr->parent = NULL;
+    }
+	
+/*
     else
     {
         wndPtr->parent = pWndDesktop;
@@ -72,7 +78,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
         else
             wndPtr->owner = WIN_GetTopParentPtr(WIN_FindWndPtr(cs->hWndParent));
     }
-
+ */  
     
     wndPtr->winproc        = classPtr->winproc;
     wndPtr->dwMagic        = WND_MAGIC;
@@ -134,13 +140,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
 
 
 
-    /* Get class or window DC if needed */
 
-
-
-    if (classPtr->style & CS_OWNDC) wndPtr->dce = DCE_AllocDCE(hWnd,DCE_WINDOW_DC);
-    else if (classPtr->style & CS_CLASSDC) wndPtr->dce = classPtr->dce;
-    else wndPtr->dce = DCE_AllocDCE(hWnd,DCE_WINDOW_DC);;
 
     GetStartupInfoW((STARTUPINFO *)&StartupInfo);
     if (cs->x == CW_USEDEFAULT) 
@@ -168,25 +168,31 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
         }
         else
         {
-            cs->cx = 600; /* FIXME */
-            cs->cy = 400;
+   		cs->cx = SYSMETRICS_CXSCREEN;
+    		cs->cy = SYSMETRICS_CYSCREEN;
         }
     }
 
 
  
 
-    /* Send the WM_GETMINMAXINFO message and fix the size if needed */
+    /* Send the WM_GETMINMAXINFO message and fix the size if needed and appropriate */
 
-    if ((cs->style & WS_THICKFRAME) || !(cs->style & (WS_POPUP | WS_CHILD)))
-    {
-        WINPOS_GetMinMaxInfo( wndPtr, &maxSize, &maxPos, &minTrack, &maxTrack);
-        if (maxSize.x < cs->cx) cs->cx = maxSize.x;
-        if (maxSize.y < cs->cy) cs->cy = maxSize.y;
-        if (cs->cx < minTrack.x ) cs->cx = minTrack.x;
-        if (cs->cy < minTrack.y ) cs->cy = minTrack.y;
+    if ( !(cs->style & (WS_POPUP | WS_CHILD) )) {
+
+    	if ((cs->style & WS_THICKFRAME) )
+    	{
+
+        	WINPOS_GetMinMaxInfo( wndPtr, &maxSize, &maxPos, &minTrack, &maxTrack);
+        	if (maxSize.x < cs->cx) cs->cx = maxSize.x;
+        	if (maxSize.y < cs->cy) cs->cy = maxSize.y;
+        	if (cs->cx < minTrack.x ) cs->cx = minTrack.x;
+        	if (cs->cy < minTrack.y ) cs->cy = minTrack.y;
+
+    	}
+
+
     }
-
     if(cs->style & WS_CHILD)
     {
         if(cs->cx < 0) cs->cx = 0;
@@ -203,8 +209,26 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->rectWindow.right  = cs->x + cs->cx;
     wndPtr->rectWindow.bottom = cs->y + cs->cy;
 
+    wndPtr->rectClient= wndPtr->rectWindow;
 
-    wndPtr->rectClient        = wndPtr->rectWindow;
+
+    printf(":%d %d %d %d\n", wndPtr->rectWindow.left, wndPtr->rectWindow.top,
+		wndPtr->rectWindow.right, wndPtr->rectWindow.bottom);
+
+        /* Get class or window DC if needed */
+
+    if (classPtr->style & CS_OWNDC) 
+	wndPtr->dce = DCE_AllocDCE(wndPtr,DCE_WINDOW_DC);
+    else if (classPtr->style & CS_CLASSDC) 
+	wndPtr->dce = classPtr->dce;
+    else if ( classPtr->style & CS_PARENTDC)
+	wndPtr->dce = wndPtr->parent->dce;
+    else wndPtr->dce = DCE_AllocDCE(wndPtr,DCE_WINDOW_DC);;
+
+
+    //wndPtr->rectClient.top = wndPtr->rectClient.left = 0;
+    //wndPtr->rectClient.right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
+    //wndPtr->rectClient.bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
 
 
      /* Set the window menu */
@@ -307,7 +331,6 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     if (!(wndPtr->dwStyle & WS_CHILD) && !wndPtr->owner)
                 HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWCREATED, (INT)hWnd, 0L,  classPtr->bUnicode);
 
-            
     return hWnd;
  
 
@@ -927,6 +950,19 @@ WINBOOL STDCALL WIN_IsDialogMessage( HWND hwndDlg, LPMSG msg )
     return ret;
 }
 
+
+WINBOOL WIN_GetClientRect(WND *wndPtr, LPRECT lpRect )
+{
+    if ( lpRect == NULL )
+	return FALSE;
+    lpRect->left = lpRect->top = lpRect->right = lpRect->bottom = 0;
+    if (wndPtr) 
+    {
+	lpRect->right  = wndPtr->rectClient.right - wndPtr->rectClient.left;
+	lpRect->bottom = wndPtr->rectClient.bottom - wndPtr->rectClient.top;
+    }
+    return TRUE;	
+}
 
 
 /*******************************************************************

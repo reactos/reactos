@@ -4,6 +4,19 @@
  * Copyright 1993, 1994, 1996 Alexandre Julliard
  */
 
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/user32/internal/dialog.c
+ * PURPOSE:     Reads resources and creates dialogs
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              09/09/99: Modified
+ * TODO		Fixup fonts and fonts and text metrics
+ 		Warnings
+		references to libc
+ */
+
 #include <ctype.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -48,8 +61,6 @@ WINBOOL DIALOG_Init(void)
     if (!(tm.tmPitchAndFamily & TMPF_FIXED_PITCH))
         xBaseUnit = xBaseUnit * 5 / 4;
 
-    DPRINT( "base units = %d,%d\n",
-                    xBaseUnit, yBaseUnit );
     return TRUE;
 }
 
@@ -110,7 +121,9 @@ LPCDLGITEMTEMPLATE  DIALOG_ParseTemplate( LPCDLGTEMPLATE DlgTemplate, DLG_TEMPLA
     result->cx      = DlgTemplate->cx;
     result->cy      = DlgTemplate->cy;
     
+    printf("%d %d %d %d\n",result->x, result->y, result->cx, result->cy);
  
+
     p = &(DlgTemplate->cy);
     p++;
 
@@ -160,11 +173,14 @@ LPCDLGITEMTEMPLATE  DIALOG_ParseTemplate( LPCDLGTEMPLATE DlgTemplate, DLG_TEMPLA
         break;
     }
 
+      result->caption = L"";
+
     /* Get the window caption */
     if ( *p != 0 ) {
     	result->caption = (LPCWSTR)p;
     	p += lstrlenW( (LPCWSTR)p ) + 1;
- 
+
+
     	/* Get the font name */
 
     	if (result->style & DS_SETFONT)
@@ -174,7 +190,7 @@ LPCDLGITEMTEMPLATE  DIALOG_ParseTemplate( LPCDLGTEMPLATE DlgTemplate, DLG_TEMPLA
         	if (result->dialogEx)
         	{
             		result->weight = *p; p++;
-            		result->italic = *p; p++;
+            		result->italic = LOBYTE(*p); p++;
         	}
         	else
         	{
@@ -182,13 +198,35 @@ LPCDLGITEMTEMPLATE  DIALOG_ParseTemplate( LPCDLGTEMPLATE DlgTemplate, DLG_TEMPLA
             		result->italic = FALSE;
         	}
 		result->faceName = (LPCWSTR)p;
-        	p += lstrlenW( (LPCWSTR)p );
-		p++;
+        	p += lstrlenW( (LPCWSTR)p ) + 1;
 	
     	}
-    } else {
-	result->caption = L"";
-    }
+    } 
+    else if ( *(p+1) != 0 ) {
+	p++;
+
+    	/* Get the font name */
+
+    	if (result->style & DS_SETFONT)
+    	{
+		result->pointSize = *p;
+       		p++;
+        	if (result->dialogEx)
+        	{
+            		result->weight = *p; p++;
+            		result->italic = LOBYTE(*p); p++;
+        	}
+        	else
+        	{
+            		result->weight = FW_DONTCARE;
+            		result->italic = FALSE;
+        	}
+		result->faceName = (LPCWSTR)p;
+        	p += lstrlenW( (LPCWSTR)p ) + 1;
+	
+    	}
+    } 
+    
 
 
 
@@ -264,11 +302,39 @@ LPCDLGITEMTEMPLATEEX  DIALOG_ParseTemplateEx( LPCDLGTEMPLATEEX DlgTemplate, DLG_
         break;
     }
 
+
+    result->caption = L"";
+
     /* Get the window caption */
     if ( *p != 0 ) {
     	result->caption = (LPCWSTR)p;
     	p += lstrlenW( (LPCWSTR)p ) + 1;
- 
+
+
+    	/* Get the font name */
+
+    	if (result->style & DS_SETFONT)
+    	{
+		result->pointSize = *p;
+       		p++;
+        	if (result->dialogEx)
+        	{
+            		result->weight = *p; p++;
+            		result->italic = LOBYTE(*p); p++;
+        	}
+        	else
+        	{
+            		result->weight = FW_DONTCARE;
+            		result->italic = FALSE;
+        	}
+		result->faceName = (LPCWSTR)p;
+        	p += lstrlenW( (LPCWSTR)p ) + 1;
+	
+    	}
+    } 
+    else if ( *(p+1) != 0 ) {
+	p++;
+
     	/* Get the font name */
 
     	if (result->style & DS_SETFONT)
@@ -289,8 +355,7 @@ LPCDLGITEMTEMPLATEEX  DIALOG_ParseTemplateEx( LPCDLGTEMPLATEEX DlgTemplate, DLG_
         	p += lstrlenW( (LPCWSTR)p ) + 1;
 	
     	}
-    } else 
-	result->caption = L"";
+    } 
     
 
     /* First control is on dword boundary */
@@ -318,7 +383,7 @@ LPCDLGITEMTEMPLATE DIALOG_GetControl( LPCDLGITEMTEMPLATE DlgItemTemplate, DLG_CO
     info->cx      = DlgItemTemplate->cx;
     info->cy      = DlgItemTemplate->cy;
 
-  
+
     info->id = DlgItemTemplate->id;
     
 
@@ -343,9 +408,6 @@ LPCDLGITEMTEMPLATE DIALOG_GetControl( LPCDLGITEMTEMPLATE DlgItemTemplate, DLG_CO
             info->className = (LPCSTR)HEAP_strdupW(GetProcessHeap(),0,class_names[id - 0x80]);
         else
             info->className = NULL;
-       
-	printf("%S\n",info->className);        
-
         p++;
     }
     else
@@ -415,12 +477,12 @@ LPCDLGITEMTEMPLATEEX DIALOG_GetControlEx( LPCDLGITEMTEMPLATEEX DlgItemTemplate, 
 
         static const WCHAR class_names[6][10] =
         {
-            { L"Button" },     /* 0x80 */
-            { L"Edit"},        /* 0x81 */
-            { L"Static" },     /* 0x82 */
-            { L"ListBox"},     /* 0x83 */
-            { L"ScrollBar" },  /* 0x84 */
-            { L"ComboBox" }    /* 0x85 */
+            { BUTTON_CLASS_NAME },     /* 0x80 */
+            { EDIT_CLASS_NAME },        /* 0x81 */
+            { STATIC_CLASS_NAME  },     /* 0x82 */
+            { LISTBOX_CLASS_NAME},     /* 0x83 */
+            { SCROLLBAR_CLASS_NAME },  /* 0x84 */
+            { COMBOBOX_CLASS_NAME }    /* 0x85 */
         };
 	p++;
         id = (WORD)*(p);
@@ -488,14 +550,16 @@ WINBOOL DIALOG_CreateControls( HANDLE hWndDialog, DIALOGINFO *dlgInfo ,
 	else
 		template = (void *)DIALOG_GetControl( (LPDLGITEMTEMPLATE)template, &info );
 
+ 
+
         hwndCtrl = CreateWindowExW( info.exStyle | WS_EX_NOPARENTNOTIFY,
                           (LPCWSTR)info.className,
                           (LPCWSTR)info.windowName,
-                          info.style | WS_CHILD | WS_THICKFRAME | WS_VISIBLE,
-                          info.x * dlgInfo->xBaseUnit / 4,
-                          info.y * dlgInfo->yBaseUnit / 8,
-                          info.cx * dlgInfo->xBaseUnit / 4 ,
-                          info.cy * dlgInfo->yBaseUnit / 8,
+                          info.style | WS_CHILD | WS_VISIBLE  ,
+      			  info.x * dlgInfo->xBaseUnit / 4,
+     			  info.y * dlgInfo->yBaseUnit / 4,
+     			  info.cx * dlgInfo->xBaseUnit / 4,
+     			  info.cy * dlgInfo->yBaseUnit / 4,
                           hWndDialog, (HMENU)info.id,
                           hInst, info.data );
       
@@ -514,6 +578,8 @@ WINBOOL DIALOG_CreateControls( HANDLE hWndDialog, DIALOGINFO *dlgInfo ,
             		hwndDefButton = hwndCtrl;
             		dlgInfo->idResult = GetWindowLong( hwndCtrl, GWL_ID );
         	}
+
+		
 	}
     }    
     return TRUE;
@@ -549,6 +615,8 @@ HWND DIALOG_CreateIndirect( HINSTANCE hInst, void *dlgTemplate, HWND owner,
     xUnit = xBaseUnit;
     yUnit = yBaseUnit;
 
+   
+
       /* Parse dialog template */
 
  
@@ -576,22 +644,27 @@ HWND DIALOG_CreateIndirect( HINSTANCE hInst, void *dlgTemplate, HWND owner,
                                    FALSE, DEFAULT_CHARSET, 0, 0, PROOF_QUALITY,
                                    FF_DONTCARE, (LPCWSTR)template.faceName );
 	
+
 	if (hFont)
 	{
 	    TEXTMETRIC tm;
 	    HFONT oldFont;
+	    HDC hdc;
+	     /* Calculate the dialog base units */
 
-	    HDC hdc = GetDC(0);
-	    oldFont = SelectObject( hdc, hFont );
-	    GetTextMetrics( hdc, &tm );
-	    SelectObject( hdc, oldFont );
-	    ReleaseDC( 0, hdc );
+    	    hdc = CreateDC( L"DISPLAY", NULL, NULL, NULL );
+	    SelectObject( hdc, hFont );
+    	    GetTextMetrics( hdc, &tm );
+            DeleteDC( hdc );
+
+	  
 	    xUnit = tm.tmAveCharWidth;
 	    yUnit = tm.tmHeight;
             if (!(tm.tmPitchAndFamily & TMPF_FIXED_PITCH))
                 xBaseUnit = xBaseUnit * 5 / 4;  /* See DIALOG_Init() */
 
 	}
+
     }
   
  
@@ -600,12 +673,20 @@ HWND DIALOG_CreateIndirect( HINSTANCE hInst, void *dlgTemplate, HWND owner,
     rect.left = rect.top = 0;
     rect.right = template.cx * xUnit / 4;
     rect.bottom = template.cy * yUnit / 8;
+
+    //rect.left = template.x;
+    //rect.top = template.y;
+
+    //rect.right = template.cx + template.x;
+    //rect.bottom = template.cy + template.y;
+
     if (template.style & DS_MODALFRAME)
         template.exStyle |= WS_EX_DLGMODALFRAME;
     AdjustWindowRectEx( &rect, template.style, 
                           hMenu ? TRUE : FALSE , template.exStyle );
     rect.right -= rect.left;
     rect.bottom -= rect.top;
+
 
     if ((INT)template.x == CW_USEDEFAULT)
     {
@@ -616,7 +697,7 @@ HWND DIALOG_CreateIndirect( HINSTANCE hInst, void *dlgTemplate, HWND owner,
         if (template.style & DS_CENTER)
         {
             rect.left = (SYSMETRICS_CXSCREEN - rect.right) / 2;
-            rect.top = (SYSMETRICS_CYSCREEN - rect.bottom) / 2;
+            rect.top = (SYSMETRICS_CYSCREEN - rect.bottom) / 3;
         }
         else
         {
@@ -644,11 +725,12 @@ HWND DIALOG_CreateIndirect( HINSTANCE hInst, void *dlgTemplate, HWND owner,
 
 // template.style & ~WS_VISIBLE
 
-template.style |= WS_VISIBLE;
-template.style |= WS_THICKFRAME;
+//template.style |= WS_VISIBLE;
+//template.style |= WS_THICKFRAME;
+//template.style |= WS_SYSMENU;
     hwnd = CreateWindowExW(template.exStyle, (LPCWSTR)template.className,
                                  (LPCWSTR)template.caption,
-                                 template.style ,
+                                 template.style & ~WS_VISIBLE  ,
                                  rect.left, rect.top, rect.right, rect.bottom ,
                                  owner, hMenu, hInst, NULL );
   
@@ -669,7 +751,9 @@ template.style |= WS_THICKFRAME;
 
     dlgInfo = (DIALOGINFO *)wndPtr->wExtra;
     dlgInfo->dlgProc   = dlgProc;
-    dlgInfo->hUserFont = hFont;
+    //dlgInfo->hUserFont = hFont;
+    dlgInfo->hUserFont = NULL;
+
     dlgInfo->hMenu     = hMenu;
     dlgInfo->xBaseUnit = xUnit;
     dlgInfo->yBaseUnit = yUnit;
@@ -701,17 +785,14 @@ template.style |= WS_THICKFRAME;
     if (MSG_SendMessage( wndPtr, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param))
             SetFocus( dlgInfo->hwndFocus );
 
+    
 
-    //if (template.style & WS_VISIBLE && !(wndPtr->dwStyle & WS_VISIBLE)) 
-    //{
+    if (template.style & WS_VISIBLE && !(wndPtr->dwStyle & WS_VISIBLE)) 
+    {
 	   ShowWindow( hwnd, SW_SHOWNORMAL );	/* SW_SHOW doesn't always work */
 	   UpdateWindow( hwnd );
-   // }
+    }
 
-
-  PAINT_RedrawWindow( wndPtr->hwndSelf, NULL, 0,
-                                RDW_INVALIDATE | RDW_ALLCHILDREN |
-                                RDW_FRAME | RDW_ERASENOW | RDW_ERASE, 0 );
     return hwnd;
  
 }

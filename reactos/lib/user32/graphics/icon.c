@@ -82,12 +82,16 @@ GetIconInfo(
 	    HICON hIcon,
 	    PICONINFO piconinfo)
 {
+	
+	return TRUE;
 }
 
 
 
 
-HICON LoadIconA(HINSTANCE hInstance,LPCSTR  lpIconName )
+HICON
+STDCALL
+LoadIconA(HINSTANCE hInstance,LPCSTR  lpIconName )
 {
 	HRSRC hrsrc;
 	ICONINFO *IconInfo;
@@ -96,7 +100,7 @@ HICON LoadIconA(HINSTANCE hInstance,LPCSTR  lpIconName )
 		return LoadStandardIcon((UINT)lpIconName);
 	}
 //RT_GROUP_ICON
-hrsrc = FindResourceExA(hInstance,RT_GROUP_ICON, lpIconName, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+	hrsrc = FindResourceExA(hInstance,RT_GROUP_ICON, lpIconName, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
 
 	if ( hrsrc == NULL )
 		return NULL;
@@ -108,7 +112,9 @@ hrsrc = FindResourceExA(hInstance,RT_GROUP_ICON, lpIconName, MAKELANGID(LANG_NEU
     	return CreateIconIndirect(IconInfo);
 }
 
-HICON LoadIconW(HINSTANCE hInstance,LPCWSTR  lpIconName )
+HICON 
+STDCALL
+LoadIconW(HINSTANCE hInstance,LPCWSTR  lpIconName )
 {
 	HRSRC hrsrc;
 	ICONINFO *IconInfo;
@@ -164,4 +170,32 @@ HICON LoadStandardIcon(UINT IconId)
 	
 	}
 	return NULL;
+}
+
+WINBOOL STDCALL DrawIcon(HDC  hDC, int  xLeft, int  yTop, HICON  hIcon )
+{
+	
+	return DrawIconEx( hDC, xLeft, yTop,hIcon, -1, -1,0,NULL, DI_DEFAULTSIZE);
+}
+
+WINBOOL
+STDCALL
+DrawIconEx(HDC hdc, int xLeft, int yTop,
+	   HICON hIcon, int cxWidth, int cyWidth,
+	   UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags)
+{
+	//ICONINFO IconInfo;
+	//SIZE Size;;
+	//GetIconInfo(hIcon,&IconInfo);
+	//GetBitmapDimensionEx(IconInfo.hbmMask,&Size);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+DrawFocusRect(
+	      HDC hDC,
+	      CONST RECT * lprc)
+{
+	return FALSE;
 }

@@ -2,12 +2,18 @@
 
 HBITMAP BITMAP_LoadBitmapW(HINSTANCE instance,LPCWSTR name,  UINT loadflags);
 
-HBITMAP LoadBitmapW(HINSTANCE  hInstance, LPCWSTR  lpBitmapName)
+
+
+HBITMAP 
+STDCALL 
+LoadBitmapW(HINSTANCE  hInstance, LPCWSTR  lpBitmapName)
 {
 	return BITMAP_LoadBitmapW(hInstance, lpBitmapName, 0);
 }
 
-HBITMAP LoadBitmapA(HINSTANCE  hInstance, LPCSTR  lpBitmapName)
+HBITMAP 
+STDCALL
+LoadBitmapA(HINSTANCE  hInstance, LPCSTR  lpBitmapName)
 {
 	return CreateBitmap(GetSystemMetrics(SM_CXSMICON),
 		GetSystemMetrics(SM_CXSMICON),

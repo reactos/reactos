@@ -217,7 +217,7 @@ ATOM STDCALL RegisterClassExW( const WNDCLASSEX* wc )
     return atom;
 }
 
-WINBOOL UnregisterClassA(LPCSTR  lpClassName,	 HINSTANCE  hInstance )
+WINBOOL STDCALL UnregisterClassA(LPCSTR  lpClassName,	 HINSTANCE  hInstance )
 {
     CLASS *classPtr;
     classPtr = CLASS_FindClassByAtom( STRING2ATOMA(lpClassName), hInstance );
@@ -233,7 +233,7 @@ WINBOOL UnregisterClassA(LPCSTR  lpClassName,	 HINSTANCE  hInstance )
 
 
 
-WINBOOL UnregisterClassW(LPCWSTR  lpClassName,	 HINSTANCE  hInstance )
+WINBOOL STDCALL UnregisterClassW(LPCWSTR  lpClassName,	 HINSTANCE  hInstance )
 {
     CLASS *classPtr;
     classPtr = CLASS_FindClassByAtom( STRING2ATOMW(lpClassName), hInstance );
@@ -247,14 +247,35 @@ WINBOOL UnregisterClassW(LPCWSTR  lpClassName,	 HINSTANCE  hInstance )
 }
 
 
-WINBOOL GetClassInfoA( HINSTANCE  hInstance, LPCSTR  lpClassName, LPWNDCLASS  lpWndClass )
+WINBOOL STDCALL GetClassInfoA( HINSTANCE  hInstance, LPCSTR  lpClassName, LPWNDCLASS  lpWndClass )
 {
 
-	return FALSE;
+	CLASS *classPtr;
+	ATOM a;
+
+	if ( HIWORD(lpClassName) != 0 )
+		a = FindAtomA(lpClassName);
+	else
+		a = lpClassName;
+
+	classPtr = CLASS_FindClassByAtom(  a,  hInstance );
+	if ( classPtr == NULL )
+		return FALSE;
+
+		
+	lpWndClass->style = classPtr->style;
+    	lpWndClass->lpfnWndProc = classPtr->winproc;
+	lpWndClass->cbClsExtra =   classPtr->cbWndExtra;
+	lpWndClass->cbClsExtra = classPtr->cbClsExtra;
+    	lpWndClass->hInstance = classPtr->hInstance;
+    	lpWndClass->hIcon = classPtr->hIcon;
+    	lpWndClass->hCursor = classPtr->hCursor;
+	lpWndClass->hbrBackground = classPtr->hbrBackground;
+	return TRUE;
 }
 
 
-WINBOOL GetClassInfoW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASS  lpWndClass )
+WINBOOL STDCALL GetClassInfoW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASS  lpWndClass )
 {
 	CLASS *classPtr;
 	ATOM a;
@@ -281,13 +302,40 @@ WINBOOL GetClassInfoW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASS  l
 	
 }
 
-WINBOOL GetClassInfoExA( HINSTANCE  hInstance, LPCSTR  lpClassName, LPWNDCLASSEX  lpWndClass )
+WINBOOL STDCALL GetClassInfoExA( HINSTANCE  hInstance, LPCSTR  lpClassName, LPWNDCLASSEX  lpWndClassEx )
 {
 
-	return FALSE;
+	CLASS *classPtr;
+	ATOM a;
+
+	if ( HIWORD(lpClassName) != 0 )
+		a = FindAtomA(lpClassName);
+	else
+		a = (ATOM)lpClassName;
+
+	classPtr = CLASS_FindClassByAtom(  a, hInstance );
+	if ( classPtr == NULL )
+		return FALSE;
+
+	
+	if ( lpWndClassEx ->cbSize != sizeof(WNDCLASSEX) ) 
+		return FALSE;
+		
+	
+	lpWndClassEx->style = classPtr->style;
+    	lpWndClassEx->lpfnWndProc = classPtr->winproc;
+	lpWndClassEx->cbClsExtra =   classPtr->cbWndExtra;
+	lpWndClassEx->cbClsExtra = classPtr->cbClsExtra;
+    	lpWndClassEx->hInstance = classPtr->hInstance;
+    	lpWndClassEx->hIcon = classPtr->hIcon;
+    	lpWndClassEx->hCursor = classPtr->hCursor;
+	lpWndClassEx->hbrBackground = classPtr->hbrBackground;
+		
+	
+	return TRUE;
 }
 
-WINBOOL GetClassInfoExW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASSEX  lpWndClassEx )
+WINBOOL STDCALL GetClassInfoExW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASSEX  lpWndClassEx )
 {
 
 	CLASS *classPtr;
@@ -320,7 +368,7 @@ WINBOOL GetClassInfoExW( HINSTANCE  hInstance, LPCWSTR  lpClassName, LPWNDCLASSE
 	return TRUE;
 }
 
-int GetClassNameA(HWND  hWnd, LPSTR  lpClassName, int  nMaxCount )
+int STDCALL  GetClassNameA(HWND  hWnd, LPSTR  lpClassName, int  nMaxCount )
 {
 	WND *wndPtr = WIN_FindWndPtr(hWnd);
 
@@ -334,7 +382,7 @@ int GetClassNameA(HWND  hWnd, LPSTR  lpClassName, int  nMaxCount )
 	
 }
 
-int GetClassNameW(HWND  hWnd, LPWSTR  lpClassName, int  nMaxCount )
+int STDCALL GetClassNameW(HWND  hWnd, LPWSTR  lpClassName, int  nMaxCount )
 {
 	WND *wndPtr = WIN_FindWndPtr(hWnd);
 
@@ -349,7 +397,7 @@ int GetClassNameW(HWND  hWnd, LPWSTR  lpClassName, int  nMaxCount )
 
 }
 
-DWORD GetClassLongA(HWND  hWnd,	int  nIndex )
+DWORD STDCALL GetClassLongA(HWND  hWnd,	int  nIndex )
 {
     WND * wndPtr;
     
@@ -380,7 +428,7 @@ DWORD GetClassLongA(HWND  hWnd,	int  nIndex )
     return 0;
 }
 
-DWORD GetClassLongW(HWND  hWnd,	int  nIndex )
+DWORD STDCALL GetClassLongW(HWND  hWnd,	int  nIndex )
 {
     WND * wndPtr;
     

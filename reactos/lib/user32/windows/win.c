@@ -527,7 +527,7 @@ WINBOOL STDCALL IsChild( HWND parent, HWND child )
     return FALSE;
 }
 
-WINBOOL IsWindow(HANDLE hWnd)
+WINBOOL STDCALL IsWindow(HANDLE hWnd)
 {	
         if (WIN_FindWndPtr( hWnd ) == NULL) return FALSE;
 	return TRUE;
@@ -552,7 +552,6 @@ WINBOOL STDCALL IsWindowEnabled(HWND hWnd)
 WINBOOL STDCALL IsWindowUnicode( HWND hWnd )
 {
     WND * wndPtr; 
-// What if handle is invalid ??
 
     if (!(wndPtr = WIN_FindWndPtr(hWnd))) 
 	return FALSE;
@@ -572,122 +571,7 @@ WINBOOL STDCALL IsWindowVisible( HWND hwnd )
 }
 
 
-/***********************************************************************
- *           ShowWindow   (USER32.534)
- */
-WINBOOL STDCALL ShowWindow( HWND hwnd, INT cmd ) 
-{    
-    WND* 	wndPtr = WIN_FindWndPtr( hwnd );
-    WINBOOL 	wasVisible = FALSE, showFlag;
-    RECT 	newPos = {0, 0, 0, 0};
-    int 	swp = 0;
 
-    if (!wndPtr) return FALSE;
-
-//    DPRINT("hwnd=%04x, cmd=%d\n", hwnd, cmd);
-#ifdef OPTIMIZATION
-
-    wasVisible = (wndPtr->dwStyle & WS_VISIBLE) != 0;
-#endif
-
-    switch(cmd)
-    {
-        case SW_HIDE:
-            if (!wasVisible) return FALSE;
-	    swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | 
-		        SWP_NOACTIVATE | SWP_NOZORDER;
-	    break;
-
-	case SW_SHOWMINNOACTIVE:
-            swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-            /* fall through */
-	case SW_SHOWMINIMIZED:
-            swp |= SWP_SHOWWINDOW;
-            /* fall through */
-	case SW_MINIMIZE:
-            swp |= SWP_FRAMECHANGED;
-            if( !(wndPtr->dwStyle & WS_MINIMIZE) )
-		 swp |= WINPOS_MinMaximize( wndPtr, SW_MINIMIZE, &newPos );
-            else swp |= SWP_NOSIZE | SWP_NOMOVE;
-	    break;
-
-	case SW_SHOWMAXIMIZED: /* same as SW_MAXIMIZE */
-            swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
-            if( !(wndPtr->dwStyle & WS_MAXIMIZE) )
-		 swp |= WINPOS_MinMaximize( wndPtr, SW_MAXIMIZE, &newPos );
-            else swp |= SWP_NOSIZE | SWP_NOMOVE;
-            break;
-
-	case SW_SHOWNA:
-            swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-            /* fall through */
-	case SW_SHOW:
-	    swp |= SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE;
-	    break;
-
-	case SW_SHOWNOACTIVATE:
-            swp |= SWP_NOZORDER;
-            if (GetActiveWindow()) swp |= SWP_NOACTIVATE;
-            /* fall through */
-	case SW_SHOWNORMAL:  /* same as SW_NORMAL: */
-	case SW_SHOWDEFAULT: /* FIXME: should have its own handler */
-	case SW_RESTORE:
-	    swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
-
-            if( wndPtr->dwStyle & (WS_MINIMIZE | WS_MAXIMIZE) )
-		 swp |= WINPOS_MinMaximize( wndPtr, SW_RESTORE, &newPos );
-            else swp |= SWP_NOSIZE | SWP_NOMOVE;
-	    break;
-    }
-
-    showFlag = (cmd != SW_HIDE);
-    if (showFlag != wasVisible)
-    {
-        SendMessageW( hwnd, WM_SHOWWINDOW, showFlag, 0 );
-        if (!IsWindow( hwnd )) return wasVisible;
-    }
-
-    if ((wndPtr->dwStyle & WS_CHILD) &&
-        !IsWindowVisible( wndPtr->parent->hwndSelf ) &&
-        (swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE) )
-    {
-        /* Don't call SetWindowPos() on invisible child windows */
-        if (cmd == SW_HIDE) wndPtr->dwStyle &= ~WS_VISIBLE;
-        else wndPtr->dwStyle |= WS_VISIBLE;
-    }
-    else
-    {
-        /* We can't activate a child window */
-        if (wndPtr->dwStyle & WS_CHILD) swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-        SetWindowPos( hwnd, HWND_TOP, 
-			newPos.left, newPos.top, newPos.right, newPos.bottom, swp );
-        if (!IsWindow( hwnd )) return wasVisible;
-	else if( wndPtr->dwStyle & WS_MINIMIZE ) WINPOS_ShowIconTitle( wndPtr, TRUE );
-    }
-
-    if (wndPtr->flags & WIN_NEED_SIZE)
-    {
-        /* should happen only in CreateWindowEx() */
-	int wParam = SIZE_RESTORED;
-
-	wndPtr->flags &= ~WIN_NEED_SIZE;
-	if (wndPtr->dwStyle & WS_MAXIMIZE) wParam = SIZE_MAXIMIZED;
-	else if (wndPtr->dwStyle & WS_MINIMIZE) wParam = SIZE_MINIMIZED;
-	SendMessageW( hwnd, WM_SIZE, wParam,
-		     MAKELONG(wndPtr->rectClient.right-wndPtr->rectClient.left,
-			    wndPtr->rectClient.bottom-wndPtr->rectClient.top));
-	SendMessageW( hwnd, WM_MOVE, 0,
-		   MAKELONG(wndPtr->rectClient.left, wndPtr->rectClient.top) );
-    }
-
-
- //   SendMessage(hwnd, WM_NCACTIVATE,TRUE,0);
- //   SendMessage(hwnd, WM_NCPAINT,CreateRectRgn(100,100,100, 100) ,0);
-
-   
-    
-    return wasVisible;
-}
 
 
 /*******************************************************************

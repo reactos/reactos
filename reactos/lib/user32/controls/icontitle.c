@@ -5,7 +5,7 @@
  */
 
 #include <windows.h>
-#include <user32/widgets.h>
+#include <user32/paint.h>
 #include <user32/sysmetr.h>
 #include <user32/win.h>
 #include <user32/heapdup.h>
@@ -39,14 +39,21 @@ HWND ICONTITLE_Create( WND* wnd )
     WND* wndPtr;
     HWND hWnd;
 
-    if( wnd->dwStyle & WS_CHILD )
-	hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_NAME, NULL,
+	
+
+    if( wnd->dwStyle & WS_CHILD ) {
+	
+		hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_NAME_A, NULL,
 				  WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 1, 1,
 				  wnd->parent->hwndSelf, 0, wnd->hInstance, NULL );
-    else
-	hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_NAME, NULL,
+    }
+    else {
+	
+		hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_NAME_A, NULL,
 				  WS_CLIPSIBLINGS, 0, 0, 1, 1,
 				  wnd->hwndSelf, 0, wnd->hInstance, NULL );
+	
+    }
     wndPtr = WIN_FindWndPtr( hWnd );
     if( wndPtr )
     {

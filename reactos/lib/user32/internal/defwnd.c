@@ -18,7 +18,6 @@
 #include <user32/debug.h>
 
 
-void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush );
 
 #define WM_CTLCOLOR             0x0019
 #define WM_ISACTIVEICON         0x0035
@@ -80,8 +79,11 @@ void DEFWND_SetTextA( WND *wndPtr, LPCSTR text )
 {
     if (!text) text = "";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
-    wndPtr->text = (void *)HEAP_strdupA( GetProcessHeap(), 0, text );   
-    NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */
+    wndPtr->text = (void *)HEAP_strdupA( GetProcessHeap(), 0, text );  
+    if ( wndPtr->dwStyle & WS_CAPTION ) 
+    	NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */
+   
+	
 }
 
 
@@ -90,7 +92,8 @@ void DEFWND_SetTextW( WND *wndPtr, LPCWSTR text )
     if (!text) text = L"";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
     wndPtr->text = (void *)HEAP_strdupW( GetProcessHeap(), 0, text );  
-    NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */  
+    if ( wndPtr->dwStyle & WS_CAPTION ) 
+    	NC_HandleNCPaint( wndPtr->hwndSelf , (HRGN)1 );  /* Repaint caption */  
 
 }
 /***********************************************************************

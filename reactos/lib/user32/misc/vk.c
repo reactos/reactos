@@ -1,9 +1,55 @@
 #include <windows.h>
 
-SHORT GetKeyState(    int  nVirtKey 	)
+SHORT 
+STDCALL
+GetKeyState(    int  nVirtKey 	)
 {
 	return 0;
 }
+
+UINT
+STDCALL
+GetKBCodePage(
+	      VOID)
+{
+	return 0;
+}
+
+SHORT
+STDCALL
+GetAsyncKeyState(
+		 int vKey)
+{
+	return 0;
+}
+
+ 
+WINBOOL
+STDCALL
+GetKeyboardState(
+		 PBYTE lpKeyState)
+{
+	return FALSE;
+}
+
+ 
+WINBOOL
+STDCALL
+SetKeyboardState(
+		 LPBYTE lpKeyState)
+{
+	return FALSE;
+}
+
+ 
+int
+STDCALL
+GetKeyboardType(
+		int nTypeFlag)
+{
+	return 0;
+}
+
 
 int
 STDCALL

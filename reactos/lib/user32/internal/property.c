@@ -97,7 +97,7 @@ void PROPERTY_RemoveWindowProps( HANDLE hwnd  )
 
 
     if (!pWnd) 
-	return (HANDLE)0;
+	return;
     
 
 
@@ -115,8 +115,7 @@ WINBOOL PROPERTY_EnumPropEx(HWND hwnd, PROPVALUE **pv , int maxsize, int *size )
 {
     PROPERTY *prop, *next;
     WND *pWnd;
-    INT ret = -1;
-    int i;
+    int i = 0;
  
     if (!(pWnd = WIN_FindWndPtr( hwnd )))
 	return FALSE;

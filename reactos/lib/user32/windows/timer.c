@@ -1,6 +1,6 @@
 #include <windows.h>
 
-UINT SetTimer( HWND  hWnd,UINT  nIDEvent,
+UINT STDCALL SetTimer( HWND  hWnd,UINT  nIDEvent,
     UINT  uElapse, TIMERPROC  lpTimerFunc 	
    )
 {

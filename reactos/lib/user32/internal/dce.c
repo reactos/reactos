@@ -8,43 +8,69 @@ HDC defaultDCstate = 0;
 
 
 /***********************************************************************
+ *           REGION_UnionRectWithRgn
+ *           Adds a rectangle to a HRGN32
+ *           A helper used by scroll.c
+ */
+WINBOOL REGION_UnionRectWithRgn( HRGN hrgn, const RECT *lpRect )
+{
+
+    HRGN hRgn;
+    hRgn = CreateRectRgn(lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+
+    CombineRgn(hrgn,hrgn,hRgn, RGN_DIFF);
+    
+    return TRUE;
+}
+
+
+/***********************************************************************
  *           DCE_AllocDCE
  *
  * Allocate a new DCE.
  */
-DCE *DCE_AllocDCE( HWND hWnd, DCE_TYPE type )
+DCE *DCE_AllocDCE( struct tagWND * wndPtr, DCE_TYPE type )
 {
     DCE * dce;
+   
+
     if (!(dce = HeapAlloc( GetProcessHeap(), 0, sizeof(DCE) ))) return NULL;
-    if (!(dce->hDC = CreateDC( "DISPLAY", NULL, NULL, NULL )))
+    if (!(dce->hDC = CreateDC( "DISPLAY", NULL, NULL, NULL)))
     {
         HeapFree( GetProcessHeap(), 0, dce );
 	return 0;
     }
 
-    /* store DCE handle in DC hook data field */
-
-    //SetDCHook( dce->hDC, (FARPROC)DCHook, (DWORD)dce );
-
-    dce->hwndCurrent = hWnd;
+   
+   /* store DCE handle in DC hook data field */
+    if ( wndPtr != NULL ) {
+    	OffsetWindowOrgEx(dce->hDC,-wndPtr->rectWindow.left, -wndPtr->rectWindow.top, NULL );
+    	dce->hwndCurrent = wndPtr->hwndSelf;
+    }
+    else
+	dce->hwndCurrent = NULL;
     dce->hClipRgn    = 0;
     dce->next        = firstDCE;
     firstDCE = dce;
 
+    
+    FillRect(dce->hDC,&(wndPtr->rectWindow),GetStockObject(GRAY_BRUSH));
+
+#if 0                        
     if( type != DCE_CACHE_DC ) /* owned or class DC */
     {
 	dce->DCXflags = DCX_DCEBUSY;
-	if( hWnd )
+	if( wndPtr != NULL  )
 	{
-	    WND* wnd = WIN_FindWndPtr(hWnd);
+	   
 	
-	    if( wnd->dwStyle & WS_CLIPCHILDREN ) dce->DCXflags |= DCX_CLIPCHILDREN;
-	    if( wnd->dwStyle & WS_CLIPSIBLINGS ) dce->DCXflags |= DCX_CLIPSIBLINGS;
+	    if( wndPtr->dwStyle & WS_CLIPCHILDREN ) dce->DCXflags |= DCX_CLIPCHILDREN;
+	    if( wndPtr->dwStyle & WS_CLIPSIBLINGS ) dce->DCXflags |= DCX_CLIPSIBLINGS;
 	}
 	//SetHookFlags(dce->hDC,DCHF_INVALIDATEVISRGN);
     }
     else dce->DCXflags = DCX_CACHE | DCX_DCEEMPTY;
-
+#endif
     return dce;
 }
 
@@ -86,7 +112,7 @@ void DCE_DeleteClipRgn( DCE* dce )
 
     //DPRINT("\trestoring VisRgn\n");
 
-    RestoreVisRgn(dce->hDC);
+    SelectClipRgn(dce->hDC,NULL);
    
 }
 

@@ -56,6 +56,8 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
  
     GetClientRect( hwnd, &rectClient );
 
+    OffsetRect(&rectClient,5,16);
+    
     if (flags & RDW_INVALIDATE)  /* Invalidate */
     {
         int rgnNotEmpty = COMPLEXREGION;
@@ -160,7 +162,8 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
         if (wndPtr->hrgnUpdate) /* wm_painticon wparam is 1 */
             SendMessageA( hwnd, (bIcon) ? WM_PAINTICON : WM_PAINT, bIcon, 0 );
     }
-    else if (flags & RDW_ERASENOW)
+    else 
+//if (flags & RDW_ERASENOW)
     {
         //if (wndPtr->flags & WIN_NEEDS_NCPAINT)
 	    WIN_UpdateNCArea( wndPtr, FALSE);
@@ -242,6 +245,8 @@ WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
     }
     return TRUE;
 }
+
+
 
 /***********************************************************************
  *           GetControlBrush   Not A Win32 API

@@ -109,14 +109,20 @@ WINBOOL STDCALL ScrollDC( HDC hdc, INT dx, INT dy, const RECT *rc,
                           const RECT *prLClip, HRGN hrgnUpdate,
                           LPRECT rcUpdate )
 {
-#if 0
+
+
     RECT rClip;
     POINT src, dest;
     INT  ldx, ldy;
-    
+    SIZE vportExt;
+    SIZE wndExt;
+    POINT DCOrg;
 
     if (!hdc ) return FALSE;
-
+  
+    GetViewportExtEx( hdc,&vportExt);
+    GetWindowExtEx(hdc, &wndExt);
+    GetDCOrgEx(hdc,&DCOrg);
 
     /* compute device clipping region */
 
@@ -133,15 +139,16 @@ WINBOOL STDCALL ScrollDC( HDC hdc, INT dx, INT dy, const RECT *rc,
 	return FALSE;
     }
    
-    SaveVisRgn( hdc );
-    IntersectVisRect( hdc, rClip.left, rClip.top, 
-                           rClip.right, rClip.bottom ); 
+
+   /// IntersectVisRect( hdc, rClip.left, rClip.top, 
+   //                        rClip.right, rClip.bottom ); 
 
 
     /* translate coordinates */
 
-    ldx = dx * dc->wndExtX / dc->vportExtX;
-    ldy = dy * dc->wndExtY / dc->vportExtY;
+
+    ldx = dx * wndExt.cx / vportExt.cx;
+    ldy = dy * wndExt.cy / vportExt.cy;
 
     if (dx > 0)
 	dest.x = (src.x = rClip.left) + ldx;
@@ -170,32 +177,33 @@ WINBOOL STDCALL ScrollDC( HDC hdc, INT dx, INT dy, const RECT *rc,
 
     /* restore clipping region */
 
-    RestoreVisRgn( hdc );
+    SelectClipRgn( hdc,NULL );
 
 
     /* compute update areas */
 
-    if ( (hrgnUpdate || rcUpdate) && dc->w.hVisRgn )
+    //&& dc->w.hVisRgn
+    if ( (hrgnUpdate || rcUpdate)  )
     {
 	HRGN hrgn = (hrgnUpdate) ? hrgnUpdate : CreateRectRgn( 0,0,0,0 );
         HRGN hrgnClip;
 
-        LPtoDP( hdc, (LPPOINT)&rClip, 2 );
-        OffsetRect( &rClip, dc->w.DCOrgX, dc->w.DCOrgY );
+        //LPtoDP( hdc, (LPPOINT)&rClip, 2 );
+        OffsetRect( &rClip, DCOrg.x, DCOrg.y );
         hrgnClip = CreateRectRgnIndirect( &rClip );
         
-        CombineRgn( hrgn, dc->w.hVisRgn, hrgnClip, RGN_AND );
+        //CombineRgn( hrgn, dc->w.hVisRgn, hrgnClip, RGN_AND );
         OffsetRgn( hrgn, dx, dy );
-        CombineRgn( hrgn, dc->w.hVisRgn, hrgn, RGN_DIFF );
+        //CombineRgn( hrgn, dc->w.hVisRgn, hrgn, RGN_DIFF );
         CombineRgn( hrgn, hrgn, hrgnClip, RGN_AND );
-        OffsetRgn( hrgn, -dc->w.DCOrgX, -dc->w.DCOrgY );
+        OffsetRgn( hrgn, -DCOrg.x, -DCOrg.y );
 
         if( rcUpdate ) GetRgnBox( hrgnUpdate, rcUpdate );
 
 	if (!hrgnUpdate) DeleteObject( hrgn );
         DeleteObject( hrgnClip );     
     }
-#endif
+
     return TRUE;
 }
 

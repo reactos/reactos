@@ -22,8 +22,8 @@ int i;
 
 int main(int argc, char **argv)
 {
-	WIDGETS_Init();
-#if 0
+	
+
 	HWND hwnd;
 	HWND User32hWnd;
 	HMENU hmenu;
@@ -36,6 +36,8 @@ int main(int argc, char **argv)
         
 	HANDLE hMod, hrsrc;
 	RECT rect, cl;
+
+        WIDGETS_Init();
 
 	wc1.hInstance = hInst;
 	wc1.lpszClassName = szName;
@@ -59,24 +61,26 @@ int main(int argc, char **argv)
 
 	hwnd = CreateWindowEx
 	(0, szName, "test2", WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
+		CW_USEDEFAULT,CW_USEDEFAULT,100,100,
 		NULL,NULL,hInst, NULL);
 
 
-        MessageBox(NULL,"Hallo","Hallo",MB_OK);
+        
 
 	ShowWindow(hwnd,nWinMode);
 	UpdateWindow(hwnd);
-#endif
-	MessageBox(NULL,"xxx","yyyy",MB_OK);
-#if 0
+
+
+
+	MessageBox(hwnd,"xxx","yyyy",MB_OK);
+
 	GetWindowRect(hwnd,&rect);
 	GetClientRect(hwnd,&cl);
 
 	printf("%d\n",(rect.left - rect.right) - (cl.left - cl.right));
 	SetWindowText(hwnd,"Hallo3");
 
-	DrawMenuBar(hwnd);	
+//	DrawMenuBar(hwnd);	
 //	SendMessage( hwnd, WM_MOVE, 0,MAKELONG(0,0));
 //        SendMessage( hwnd, WM_PAINT, GetWindowDC(hwnd),0);
 	while(GetMessage(&msg,NULL, 0, 0))
@@ -86,7 +90,7 @@ int main(int argc, char **argv)
 	}
 	Sleep(10000);
 	return msg.wParam;
-#endif
+
 }
 
 

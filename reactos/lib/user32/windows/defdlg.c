@@ -9,6 +9,7 @@
 #include <user32/widgets.h>
 #include <user32/dialog.h>
 #include <user32/win.h>
+#include <user32/paint.h>
 
 
 

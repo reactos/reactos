@@ -4,7 +4,7 @@ INTERNAL_OBJECTS = internal/property.o internal/menu.o internal/heapdup.o intern
 		 internal/win.o internal/dce.o internal/msg.o internal/queue.o\
 		internal/signal.o internal/event.o internal/timer.o internal/region.o\
 		internal/text.o internal/defwnd.o internal/paint.o internal/uitools.o\
-		internal/dialog.o
+		internal/dialog.o internal/winpos.o
 
 MISC_OBJECTS = misc/sprintf.o  misc/dllmain.o misc/string.o misc/sysmetr.o\
 		misc/main.o misc/bitmap.o misc/cursor.o misc/vk.o
