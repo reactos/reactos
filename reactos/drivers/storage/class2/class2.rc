@@ -22,11 +22,11 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"SCSI Port Driver\0"
+            VALUE "FileDescription",	"SCSI Class Driver Helper\0"
             VALUE "FileVersion",	"0.0.0\0"
-            VALUE "InternalName",	"scsiport\0"
+            VALUE "InternalName",	"class2\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"scsiport.sys\0"
+            VALUE "OriginalFilename",	"class2.sys\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
         END
