@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.120.8.1 2003/12/22 20:16:54 hyperion Exp $
+/* $Id: process.c,v 1.120.8.2 2003/12/23 00:39:04 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -329,9 +329,6 @@ VOID STDCALL
 PiDeleteProcessWorker(PVOID pContext)
 {
   KIRQL oldIrql;
-  ULONG i;
-  PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
-  ULONG NotifyRoutineCount;
   PDEL_CONTEXT Context;
   PEPROCESS CurrentProcess;
   PEPROCESS Process;
@@ -567,9 +564,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PEPORT ExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
-   ULONG i;
-   PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
-   ULONG NotifyRoutineCount;
 
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -1554,7 +1548,6 @@ NTSTATUS STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
 				IN BOOLEAN Remove)
 {
-  KIRQL oldIrql;
   ULONG i;
 
   if (Remove)
