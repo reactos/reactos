@@ -15,6 +15,9 @@ MAKE := @$(MAKE)
 # Do not print "Entering directory ..."
 MAKEFLAGS += --no-print-directory
 
+# Do not print "'target' is up to date."
+MAKEFLAGS += --silent
+
 # Windows is default host environment
 ifeq ($(HOST),)
 HOST = mingw32-windows
