@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.32 2004/11/21 06:51:17 ion Exp $
+/* $Id: time.c,v 1.33 2004/11/29 15:02:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,16 +21,16 @@
 
 typedef struct __DOSTIME
 {
-   WORD	Second:5;
-   WORD	Minute:6;
-   WORD Hour:5;
+  WORD Second:5;
+  WORD Minute:6;
+  WORD Hour:5;
 } DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
-   WORD	Day:5;
-   WORD	Month:4;
-   WORD Year:5;
+  WORD Day:5;
+  WORD Month:4;
+  WORD Year:5;
 } DOSDATE, *PDOSDATE;
 
 #define TICKSPERMIN        600000000
@@ -156,8 +156,8 @@ GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 BOOL 
 STDCALL
 SystemTimeToFileTime(
-    CONST SYSTEMTIME *  lpSystemTime,	
-    LPFILETIME  lpFileTime 	
+    CONST SYSTEMTIME *  lpSystemTime,
+    LPFILETIME  lpFileTime
    )
 
 {
@@ -217,7 +217,7 @@ FileTimeToSystemTime(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -226,15 +226,24 @@ FileTimeToLocalFileTime(
 			LPFILETIME lpLocalFileTime
 			)
 {
-  // FIXME: include time bias
-  *((PLONGLONG)lpLocalFileTime) = *((PLONGLONG)lpFileTime);
+  LARGE_INTEGER TimeZoneBias;
+
+  do
+    {
+      TimeZoneBias.HighPart = SharedUserData->TimeZoneBias.High1Time;
+      TimeZoneBias.LowPart = SharedUserData->TimeZoneBias.LowPart;
+    }
+  while (TimeZoneBias.HighPart != SharedUserData->TimeZoneBias.High2Time);
+
+  *((PLONGLONG)lpLocalFileTime) =
+    *((PLONGLONG)lpFileTime) - TimeZoneBias.QuadPart;
 
   return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -243,8 +252,17 @@ LocalFileTimeToFileTime(
 			LPFILETIME lpFileTime
 			)
 {
-  // FIXME: include time bias
-  *((PLONGLONG)lpFileTime) = *((PLONGLONG)lpLocalFileTime);
+  LARGE_INTEGER TimeZoneBias;
+
+  do
+    {
+      TimeZoneBias.HighPart = SharedUserData->TimeZoneBias.High1Time;
+      TimeZoneBias.LowPart = SharedUserData->TimeZoneBias.LowPart;
+    }
+  while (TimeZoneBias.HighPart != SharedUserData->TimeZoneBias.High2Time);
+
+  *((PLONGLONG)lpFileTime) =
+    *((PLONGLONG)lpLocalFileTime) + TimeZoneBias.QuadPart;
 
   return TRUE;
 }
@@ -260,8 +278,8 @@ GetLocalTime(LPSYSTEMTIME lpSystemTime)
   FILETIME LocalFileTime;
 
   GetSystemTimeAsFileTime(&FileTime);
-  FileTimeToLocalFileTime (&FileTime, &LocalFileTime);
-  FileTimeToSystemTime (&LocalFileTime, lpSystemTime);
+  FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
+  FileTimeToSystemTime(&LocalFileTime, lpSystemTime);
 }
 
 
@@ -274,7 +292,7 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
   FILETIME FileTime;
 
   GetSystemTimeAsFileTime(&FileTime);
-  FileTimeToSystemTime (&FileTime, lpSystemTime);
+  FileTimeToSystemTime(&FileTime, lpSystemTime);
 }
 
 
@@ -286,12 +304,12 @@ SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 {
   FILETIME LocalFileTime;
   LARGE_INTEGER FileTime;
-  NTSTATUS errCode;
+  NTSTATUS Status;
 
-  SystemTimeToFileTime (lpSystemTime, &LocalFileTime);
-  LocalFileTimeToFileTime (&LocalFileTime, (FILETIME *)&FileTime);
-  errCode = NtSetSystemTime (&FileTime, &FileTime);
-  if (!NT_SUCCESS(errCode))
+  SystemTimeToFileTime(lpSystemTime, &LocalFileTime);
+  LocalFileTimeToFileTime(&LocalFileTime, (FILETIME *)&FileTime);
+  Status = NtSetSystemTime(&FileTime, &FileTime);
+  if (!NT_SUCCESS(Status))
     return FALSE;
   return TRUE;
 }
@@ -304,11 +322,11 @@ BOOL STDCALL
 SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 {
   LARGE_INTEGER NewSystemTime;
-  NTSTATUS errCode;
+  NTSTATUS Status;
 
-  SystemTimeToFileTime (lpSystemTime, (PFILETIME)&NewSystemTime);
-  errCode = NtSetSystemTime (&NewSystemTime, &NewSystemTime);
-  if (!NT_SUCCESS(errCode))
+  SystemTimeToFileTime(lpSystemTime, (PFILETIME)&NewSystemTime);
+  Status = NtSetSystemTime(&NewSystemTime, &NewSystemTime);
+  if (!NT_SUCCESS(Status))
     return FALSE;
   return TRUE;
 }
@@ -397,7 +415,7 @@ SystemTimeToTzSpecificLocalTime(
 
   if (!lpTimeZoneInformation)
   {
-    GetTimeZoneInformation (&TimeZoneInformation);
+    GetTimeZoneInformation(&TimeZoneInformation);
     lpTzInfo = &TimeZoneInformation;
   }
   else
@@ -409,9 +427,9 @@ SystemTimeToTzSpecificLocalTime(
   if (!lpLocalTime)
     return FALSE;
 
-  SystemTimeToFileTime (lpUniversalTime, (PFILETIME)&FileTime);
+  SystemTimeToFileTime(lpUniversalTime, (PFILETIME)&FileTime);
   FileTime.QuadPart -= (lpTzInfo->Bias * TICKSPERMIN);
-  FileTimeToSystemTime ((PFILETIME)&FileTime, lpLocalTime);
+  FileTimeToSystemTime((PFILETIME)&FileTime, lpLocalTime);
 
   return TRUE;
 }
