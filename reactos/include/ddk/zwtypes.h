@@ -333,6 +333,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
 } SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
 #endif
 
+#if 0
 #pragma pack(4)
 typedef struct _SYSTEM_DRIVER_INFO
 {
@@ -396,6 +397,7 @@ typedef struct _SYSTEM_CACHE_INFORMATION
 	ULONG	MaximumWorkingSet;
 	ULONG	Unused[4];
 } SYSTEM_CACHE_INFORMATION;
+#endif
 
 // file information
 
