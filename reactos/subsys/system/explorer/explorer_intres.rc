@@ -13,6 +13,397 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "设置(&S)...",                 ID_DESKTOPBAR_SETTINGS
+        MENUITEM "任务管理器(&T)...",           ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "关于浏览器(&A)...",           ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "退出(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "查看(&V)"
+    BEGIN
+        MENUITEM "工具栏(&T)",                  ID_VIEW_TOOL_BAR
+        MENUITEM "附加栏(&E)",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "驱动器栏(&D)",                ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "侧边栏(&S)",                  ID_VIEW_SIDE_BAR
+        MENUITEM "状态栏(&S)",                  ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "全屏(&U)\tCtrl+Shift+S",      ID_VIEW_FULLSCREEN
+    END
+    POPUP "窗口(&W)"
+    BEGIN
+        MENUITEM "新窗口(&W)",                  ID_WINDOW_NEW
+        MENUITEM "层叠排列(&C)\tShift+F5",      ID_WINDOW_CASCADE
+        MENUITEM "横向平铺(&H)",                ID_WINDOW_TILE_HORZ
+        MENUITEM "纵向平铺(&V)\tShift+F4",      ID_WINDOW_TILE_VERT
+        MENUITEM "自动排列(&A)",                ID_WINDOW_AUTOSORT
+        MENUITEM "全部最小化(&S)",              ID_WINDOW_ARRANGE
+        MENUITEM "刷新(&R)\tF5",                ID_REFRESH
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "浏览器帮助文档(&F)...",       ID_EXPLORER_FAQ
+        MENUITEM "关于浏览器(&A)...",           ID_ABOUT_EXPLORER
+        MENUITEM "关于操作系统(&O)...",         ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "显示隐藏图标(&S)",            ID_SHOW_HIDDEN_ICONS
+        MENUITEM "配置任务栏通知区(&C)...",     ID_CONFIG_NOTIFYAREA
+        MENUITEM "设置日期/时间(&T)...",        ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "关于浏览器(&A)...",           ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "打开音量控制",                ID_TRAY_VOLUME
+        MENUITEM "调整音频属性",                ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_WINEFILE MENU FIXED IMPURE 
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "打开(&O)\tEnter",             101
+        MENUITEM "移动(&M)...\tF7",             106
+        MENUITEM "复制(&C)...\tF8",             107
+        MENUITEM "从剪贴板(&I)...\tF9",         118
+        MENUITEM "删除(&D)\tDel",               108
+        MENUITEM "重命名(&N)...",               109
+        MENUITEM "属性(&I)...\tAlt+Enter",      ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "压缩(&O)...",                 119
+        MENUITEM "解压(&O)...",                 120
+        MENUITEM SEPARATOR
+        MENUITEM "运行(&R)...",                 ID_EXECUTE
+        MENUITEM "打印(&P)...",                 102
+        MENUITEM "关联(GA)...",                 103
+        MENUITEM SEPARATOR
+        MENUITEM "创建目录(&E)...",             ID_EXECUTE
+        MENUITEM "搜索(&H)...",                 104
+        MENUITEM "选定文件(&S)...",             116
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)\tAlt+X",             ID_FILE_EXIT
+    END
+    POPUP "磁盘(&D)"
+    BEGIN
+        MENUITEM "复制磁盘(&C)...",             201
+        MENUITEM "标注磁盘(&L)...",             202
+        MENUITEM SEPARATOR
+        MENUITEM "格式化磁盘(&F)...",           203
+        MENUITEM SEPARATOR
+        MENUITEM "映射网络驱动器(&N)",          252
+        MENUITEM "断开网络驱动器(&D)",          253
+        MENUITEM SEPARATOR
+        MENUITEM "共享为...",                   254
+        MENUITEM "移除共享(&R)...",             255
+        MENUITEM SEPARATOR
+        MENUITEM "选择驱动器(&S)...",           251
+    END
+    POPUP "目录树(&T)"
+    BEGIN
+        MENUITEM "展开一层(&X)\t+",             301
+        MENUITEM "展开分支(&B)\t*",             302
+        MENUITEM "展开全部(&A)\tStrg+*",        303
+        MENUITEM "折叠分支(&C)\t-",             304
+        MENUITEM SEPARATOR
+        MENUITEM "表明可展开的分支(&I)",        505
+    END
+    POPUP "查看(&V)"
+    BEGIN
+        MENUITEM "目录树与目录(&R)",            413
+        MENUITEM "目录树(&E)",                  411
+        MENUITEM "目录(&O)",                    412
+        MENUITEM SEPARATOR
+        MENUITEM "拆分(&L)",                    414
+        MENUITEM SEPARATOR
+        MENUITEM "名称(&N)",                    ID_VIEW_NAME
+        MENUITEM "文件的全部详细资料(&A)",      ID_VIEW_ALL_ATTRIBUTES
+        , CHECKED
+        MENUITEM "部分详细资料(&P)...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM SEPARATOR
+        MENUITEM "按名称排序(&S)",              404
+        MENUITEM "按类型排序(&B)",              405
+        MENUITEM "按大小排序(&Z)",              406
+        MENUITEM "按日期排序(&D)",              407
+        MENUITEM SEPARATOR
+        MENUITEM "按文件类型(&T)...",           409
+    END
+    POPUP "选项(&O)"
+    BEGIN
+        MENUITEM "确认(&C)...",                 65535
+        MENUITEM "字体(&F)...",                 65535
+        MENUITEM "自定义工具栏(&B)...",         65535
+        MENUITEM SEPARATOR
+        MENUITEM "工具栏(&T)",                  ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "驱动器栏(&D)",                ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "状态栏(&S)",                  ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "全屏幕(&U)\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "自动缩成图标(&M)",            65535
+        MENUITEM "退出时保存设定值(&E)",        511
+    END
+    POPUP "&Security"
+    BEGIN
+        MENUITEM "&Access...",                  605
+        MENUITEM "&Logging...",                 606
+        MENUITEM "&Owner...",                   607
+    END
+    POPUP "窗口(&W)"
+    BEGIN
+        MENUITEM "新窗口(&N)",                  ID_WINDOW_NEW
+        MENUITEM "层叠(&C)\tCtrl+F5",           ID_WINDOW_CASCADE
+        MENUITEM "水平平铺(&H)",                ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直平铺(&T)\tCtrl+F4",       ID_WINDOW_TILE_VERT
+        MENUITEM "自动排列",                    ID_WINDOW_AUTOSORT
+        MENUITEM "重排图标(&A)",                ID_WINDOW_ARRANGE
+        MENUITEM "刷新(&R)\tF5",                ID_REFRESH
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "帮助主题(&H)\tF1",            ID_HELP
+        MENUITEM "帮助搜索(&S)...\tF1",         ID_HELP
+        MENUITEM "使用帮助(&U)\tF1",            ID_HELP_USING
+        MENUITEM SEPARATOR
+        MENUITEM "关于文件管理器(&A)...",       ID_ABOUT_WINEFILE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "桌面属性"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please select your prefered icon alignment algorithm:",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+    CONTROL         "Display &Version Number",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "开始菜单属性"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "任务栏属性"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "显示时钟(&C)",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,152,52,10
+    CONTROL         "隐藏不活动的通知区图标(&H)",ID_HIDE_INACTIVE_ICONS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,174,111,10
+    PUSHBUTTON      "任务栏通知区(&N)...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "运行"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "命令(&C):",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "确定(&O)",1,158,6,47,14
+    PUSHBUTTON      "取消(&C)",2,158,23,47,14
+    PUSHBUTTON      "帮助(&H)",254,158,43,47,14
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 207, 150
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "配置通知区图标"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,193,31
+    LTEXT           "提示文字(&T):",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,55,42,145,14,ES_AUTOHSCROLL
+    LTEXT           "窗口标题(&I):",IDC_LABEL2,7,63,44,8
+    EDITTEXT        IDC_NOTIFY_TITLE,55,60,145,14,ES_AUTOHSCROLL
+    LTEXT           "模块路径(&M):",IDC_LABEL3,7,81,43,8
+    EDITTEXT        IDC_NOTIFY_MODULE,55,78,145,14,ES_AUTOHSCROLL
+    GROUPBOX        "显示模式(&D)",IDC_LABEL4,7,95,157,28
+    CONTROL         "显示(&S)",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,107,33,10
+    CONTROL         "隐藏(&H)",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,
+                    66,107,29,10
+    CONTROL         "自动隐藏(&U)",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,112,107,43,10
+    ICON            "",IDC_PICTURE,173,100,20,20
+    CONTROL         "显示被隐藏的(&W)",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,131,56,10
+    DEFPUSHBUTTON   "确定(&O)",IDOK,91,129,50,14,WS_GROUP
+    PUSHBUTTON      "取消(&C)",IDCANCEL,150,129,50,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "在开始菜单搜索程序"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,185,33
+    PUSHBUTTON      "&Check Entries",IDC_CHECK_ENTRIES,143,7,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SEARCH_PROGRAM, DIALOG
+    BEGIN
+        RIGHTMARGIN, 193
+        BOTTOMMARGIN, 58
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos 浏览器"
+    IDS_START               "开始"
+    IDS_LOGOFF              "注销..."
+    IDS_SHUTDOWN            "关闭..."
+    IDS_LAUNCH              "运行..."
+    IDS_START_HELP          "帮助"
+    IDS_SEARCH_FILES        "搜索..."
+    IDS_DOCUMENTS           "我的文档"
+    IDS_FAVORITES           "收藏夹"
+    IDS_PROGRAMS            "程序"
+    IDS_SETTINGS            "设置"
+    IDS_EXPLORE             "浏览器"
+    IDS_EMPTY               "(空)"
+    IDS_RECENT              "最近的文档"
+    IDS_ADMIN               "管理工具"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "网络"
+    IDS_CONNECTIONS         "网络连接"
+    IDS_DRIVES              "驱动器"
+    IDS_SEARCH_COMPUTER     "搜索计算机..."
+    IDS_SETTINGS_MENU       "设置菜单"
+    IDS_CONTROL_PANEL       "控制面板"
+    IDS_PRINTERS            "打印机"
+    IDS_BROWSE              "浏览文件"
+    IDS_SEARCH_PRG          "搜索程序..."
+    IDS_ALL_USERS           "All Users\\"
+    IDS_SEARCH              "搜索"
+    IDS_ABOUT_EXPLORER      "关于浏览器(&A)..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "请选择一个以上的应用程序。\n确定要运行这些程序么？"
+    IDS_DESKTOPBAR_SETTINGS "桌面设置"
+    IDS_DESKTOP             "桌面"
+    IDS_TASKBAR             "任务栏"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "开始菜单"
+    IDS_MINIMIZE_ALL        "最小化所有窗口"
+    IDS_DESKTOP_NUM         "桌面 %d"
+    IDS_VOLUME              "音量"
+    IDS_ITEMS_CUR           "当前项目"
+    IDS_ITEMS_CONFIGURED    "配置"
+    IDS_ITEMS_VISIBLE       "可见"
+    IDS_ITEMS_HIDDEN        "隐藏"
+    IDS_NOTIFY_SHOW         "显示"
+    IDS_NOTIFY_HIDE         "隐藏"
+    IDS_NOTIFY_AUTOHIDE     "自动隐藏"
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Romanian resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ROM)
@@ -763,7 +1154,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Search Program in Startmenu"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
