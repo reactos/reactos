@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.1 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: timer.c,v 1.2 2002/08/27 06:40:15 robd Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -52,3 +52,4 @@ SetTimer(
 {
   return (UINT_PTR)0;
 }
+

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.5 2001/11/05 20:59:57 jimtabor Exp $
+/* $Id: sprintf.c,v 1.6 2002/08/27 06:40:15 robd Exp $
  *
  * user32.dll
  *
@@ -937,3 +937,4 @@ wvsprintfW(
 
 
 /* EOF */
+

@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.3 2002/06/11 22:09:01 dwelch Exp $
+/* $Id: winsta.c,v 1.4 2002/08/27 06:40:15 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -133,3 +133,4 @@ SetProcessWindowStation(HWINSTA hWinSta)
 }
 
 /* EOF */
+
