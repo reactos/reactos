@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.13 2002/12/27 13:54:28 robd Exp $
+/* $Id: winlogon.c,v 1.14 2003/01/23 00:16:47 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -168,16 +168,59 @@ BOOLEAN StartLsass(VOID)
    return(TRUE);
 }
 
-VOID DoLoginUser(PCHAR Name, PCHAR Password)
+PCHAR GetShell(PCHAR CommandLine)
+{
+   HANDLE WinLogonKey;
+   BOOL GotCommandLine;
+   DWORD Type;
+   DWORD Size;
+   CHAR Shell[_MAX_PATH];
+
+   GotCommandLine = FALSE;
+   if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                                     _T("SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon"),
+                                     0,
+                                     KEY_QUERY_VALUE,
+                                     &WinLogonKey))
+     {
+	Size = MAX_PATH;
+	if (ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
+                                             _T("Shell"),
+	                                     NULL,
+	                                     &Type,
+	                                     Shell,
+                                             &Size))
+	   {
+	   if (REG_EXPAND_SZ == Type)
+	     {
+		ExpandEnvironmentStrings(Shell, CommandLine, _MAX_PATH);
+		GotCommandLine = TRUE;
+	     }
+	   else if (REG_SZ == Type)
+	     {
+		strcpy(CommandLine, Shell);
+		GotCommandLine = TRUE;
+	     }
+	   }
+	RegCloseKey(WinLogonKey);
+     }
+
+   if (! GotCommandLine)
+     {
+	GetSystemDirectory(CommandLine, MAX_PATH - 10);
+	strcat(CommandLine, "\\shell.exe");
+     }
+
+   return CommandLine;
+}
+
+BOOL DoLoginUser(PCHAR Name, PCHAR Password)
 {
    PROCESS_INFORMATION ProcessInformation;
    STARTUPINFO StartupInfo;
    BOOLEAN Result;
    CHAR CommandLine[MAX_PATH];
    CHAR CurrentDirectory[MAX_PATH];
-   
-   GetSystemDirectory(CommandLine, MAX_PATH);
-   strcat(CommandLine, "\\shell.exe");
 
    GetWindowsDirectory(CurrentDirectory, MAX_PATH);
 
@@ -189,8 +232,8 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
    
-   Result = CreateProcess(CommandLine,
-                          NULL,
+   Result = CreateProcess(NULL,
+                          GetShell(CommandLine),
                           NULL,
                           NULL,
                           FALSE,
@@ -201,12 +244,14 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
                           &ProcessInformation);
    if (!Result)
      {
-        DbgPrint("WL: Failed to execute user shell\n");
-        return;
+        DbgPrint("WL: Failed to execute user shell %s\n", CommandLine);
+        return FALSE;
      }
    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
    CloseHandle( ProcessInformation.hProcess );
    CloseHandle( ProcessInformation.hThread );
+
+   return TRUE;
 }
 
 int STDCALL
@@ -375,7 +420,10 @@ WinMain(HINSTANCE hInstance,
          } while (Password[i - 1] != '\n');
        Password[i - 1] =0;
 #endif
-       DoLoginUser(LoginName, Password);
+       if (! DoLoginUser(LoginName, Password))
+         {
+           break;
+         }
      }
    
    ExitProcess(0);

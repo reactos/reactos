@@ -319,3 +319,11 @@ REGEDIT4
 [\Registry\Machine\SOFTWARE\Classes\NDS\Clsid]
 "Default" = "{323991f0-7bad-11cf-b03d-00aa006e0975}"
 
+[\Registry\Machine\SOFTWARE\ReactOS]
+
+[\Registry\Machine\SOFTWARE\ReactOS\Windows NT]
+
+[\Registry\Machine\SOFTWARE\ReactOS\Windows NT\CurrentVersion]
+
+[\Registry\Machine\SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon]
+"Shell"=expand:"%SystemRoot%\System32\Shell.exe"
