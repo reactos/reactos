@@ -194,6 +194,7 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
   PUCHAR Video;
   UCHAR Mask;
   ULONG i, j;
+  ULONG RasterOp = 0;
 
   /* Punt brush blts to non-device surfaces. */
   if (Dest->iType != STYPE_DEVICE)
@@ -202,23 +203,48 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
     }
 
   /* Punt pattern fills. */
-  if (Rop4 == PATCOPY && Brush->iSolidColor == 0xFFFFFFFF)
+  if ((Rop4 == PATCOPY || Rop4 == DSTINVERT) && 
+      Brush->iSolidColor == 0xFFFFFFFF)
     {
       return(FALSE);
     }
-  if (Rop4 == PATCOPY)
+
+  /* Get the brush colour. */
+  if (Rop4 == PATCOPY || Rop4 == PATINVERT)
     {
       SolidColor = Brush->iSolidColor;
     }
   else if (Rop4 == WHITENESS)
     {
-      SolidColor = 1;
+      SolidColor = 0xF;
     }
   else
     {
-      SolidColor = 0;
+      SolidColor = 0x0;
     }
 
+  /* Get the raster op. */
+  if (Rop4 == PATINVERT)
+    {
+      RasterOp = 3;
+    }
+
+  /* Select write mode 3. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x03);
+
+  /* Setup set/reset register. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x00);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, (UCHAR)SolidColor);
+
+  /* Enable writes to all pixels. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
+
+  /* Set up data rotate. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, RasterOp << 3);
+  
   /* Fill any pixels on the left which don't fall into a full row of eight. */
   if ((DestRect->left % 8) != 0)
     {
@@ -228,21 +254,15 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
 	{
 	  Mask &= ~((1 << (8 - (DestRect->right % 8))) - 1);
 	}
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
-      WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       /* Write the same color to each pixel. */
       Video = (PUCHAR)vidmem + DestRect->top * 80 + (DestRect->left >> 3);
       for (i = DestRect->top; i < DestRect->bottom; i++, Video+=80)
 	{
 	  (VOID)READ_REGISTER_UCHAR(Video);
-	  WRITE_REGISTER_UCHAR(Video, SolidColor);
+	  WRITE_REGISTER_UCHAR(Video, Mask);
 	}
-    }
-
-  /* Enable writes to all pixels. */
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
+    }  
 
   /* Have we finished. */
   if ((DestRect->right - DestRect->left) < (8 - (DestRect->left % 8)))
@@ -258,7 +278,8 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
       Video = (PUCHAR)vidmem + i * 80 + (Left >> 3);
       for (j = 0; j < Length; j++, Video++)
 	{
-	  WRITE_REGISTER_UCHAR(Video, SolidColor);
+	  (VOID)READ_REGISTER_UCHAR(Video);
+	  WRITE_REGISTER_UCHAR(Video, 0xFF);
 	}
     }
 
@@ -267,22 +288,23 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
     {
       /* Disable writes to pixels outside the destination rectangle. */
       Mask = ~((1 << (8 - (DestRect->right % 8))) - 1);
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
-      WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       Video = (PUCHAR)vidmem + DestRect->top * 80 + (DestRect->right >> 3);
       for (i = DestRect->top; i < DestRect->bottom; i++, Video+=80)
 	{
-	  /* Read the existing colours for this pixel into the latches. */
 	  (VOID)READ_REGISTER_UCHAR(Video);
-	  /* Write the new colour for the pixels selected in the mask. */
-	  WRITE_REGISTER_UCHAR(Video, SolidColor);
+	  WRITE_REGISTER_UCHAR(Video, Mask);
 	}
-
-      /* Restore the default write masks. */
-      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
-      WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
     }
+
+  /* Restore write mode 2. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+
+  /* Set up data rotate. */
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+
   return(TRUE);
 }
 
@@ -389,6 +411,7 @@ DrvBitBlt(SURFOBJ *Dest,
     case BLACKNESS:
     case PATCOPY:
     case WHITENESS:
+    case PATINVERT:
       BltRectFunc = VGADDI_BltBrush;
       break;
 
