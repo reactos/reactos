@@ -1,5 +1,14 @@
 2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile (SYS_APPS): Add calc, regedt32, and regsvr32.
+	* bootdata/packages/reactos.dff: Add calc.exe, regedt32.exe, and
+	regsvr32.exe.
+	* subsys/system/calc: New directory; Move here from rosapps.
+	* subsys/system/regedt32: Ditto.
+	* subsys/system/regsvr32: Ditto.
+
+2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* bootdata/hivesys.inf: Remove kmregtests.
 
 2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
