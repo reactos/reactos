@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.17 2002/03/21 19:35:58 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.18 2002/04/12 17:54:07 ei Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -516,27 +516,29 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
    DPRINT("Assigning extended (logical) partitions:\n");
    for (i = 0; i < ConfigInfo->DiskCount; i++)
      {
-	/* search for extended partitions */
-	for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
-	  {
-	     if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
-		 (LayoutArray[i]->PartitionEntry[j].PartitionNumber != 0))
-	       {
-		  swprintf(Buffer2,
-			   L"\\Device\\Harddisk%d\\Partition%d",
-			   i,
-			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-		  RtlInitUnicodeString(&UnicodeString2,
-				       Buffer2);
+		if( LayoutArray[i] ){
+			/* search for extended partitions */
+			for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
+			  {
+			     if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
+				 (LayoutArray[i]->PartitionEntry[j].PartitionNumber != 0))
+			       {
+				  swprintf(Buffer2,
+					   L"\\Device\\Harddisk%d\\Partition%d",
+					   i,
+					   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
+				  RtlInitUnicodeString(&UnicodeString2,
+						       Buffer2);
 
-		  /* assign it */
-		  DPRINT("  %wZ\n",
-			 &UnicodeString2);
-		  HalpAssignDrive(&UnicodeString2,
-				  &DriveMap,
-				  AUTO_DRIVE);
-	       }
-	  }
+				  /* assign it */
+				  DPRINT("  %wZ\n",
+					 &UnicodeString2);
+				  HalpAssignDrive(&UnicodeString2,
+						  &DriveMap,
+						  AUTO_DRIVE);
+			       }
+			  }
+		}
      }
 
    /* Free layout array */
@@ -691,7 +693,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 #ifndef NDEBUG
 	for (i = 0; i < PARTITION_TBL_SIZE; i++)
 	  {
-	     DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
+	     DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n",
 		    i,
 		    PartitionTable->Partition[i].BootFlags,
 		    PartitionTable->Partition[i].PartitionType,
