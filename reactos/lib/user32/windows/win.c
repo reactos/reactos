@@ -676,6 +676,10 @@ WINBOOL STDCALL ShowWindow( HWND hwnd, INT cmd )
 		   MAKELONG(wndPtr->rectClient.left, wndPtr->rectClient.top) );
     }
 
+
+ //   SendMessage(hwnd, WM_NCACTIVATE,TRUE,0);
+ //   SendMessage(hwnd, WM_NCPAINT,CreateRectRgn(100,100,100, 100) ,0);
+
     return wasVisible;
 }
 

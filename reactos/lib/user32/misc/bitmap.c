@@ -9,6 +9,9 @@ HBITMAP LoadBitmapW(HINSTANCE  hInstance, LPCWSTR  lpBitmapName)
 
 HBITMAP LoadBitmapA(HINSTANCE  hInstance, LPCSTR  lpBitmapName)
 {
+	return CreateBitmap(GetSystemMetrics(SM_CXSMICON),
+		GetSystemMetrics(SM_CXSMICON),
+		1,1, NULL );
 	return NULL;
 //	return BITMAP_LoadBitmap32W(hInstance, lpBitmapName, 0);
 }
@@ -16,6 +19,9 @@ HBITMAP LoadBitmapA(HINSTANCE  hInstance, LPCSTR  lpBitmapName)
 HBITMAP BITMAP_LoadBitmapW(HINSTANCE instance,LPCWSTR name, 
 			       UINT loadflags)
 {
+		return CreateBitmap(GetSystemMetrics(SM_CXSMICON),
+		GetSystemMetrics(SM_CXSMICON),
+		1,1, NULL );
 #if 0
     HBITMAP hbitmap = 0;
     HDC hdc;

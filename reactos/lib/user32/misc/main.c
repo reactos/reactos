@@ -9,16 +9,20 @@ int _CRT_glob = 0;
 
 int __main(int argc, char **argv)
 {
+	return 0;
 }
 
 
 int main(int argc, char **argv)
 {
 	HWND hwnd;
+	HMENU hmenu;
 	MSG msg;
 	WNDCLASSEX wc1;
 	HINSTANCE hInst = 0;
-	int nWinMode = SW_SHOWMAXIMIZED;
+	int nWinMode = SW_SHOW;
+
+	RECT rect;
 
 	wc1.hInstance = hInst;
 	wc1.lpszClassName = szName;
@@ -38,21 +42,26 @@ int main(int argc, char **argv)
 
 	if ( !RegisterClassEx(&wc1)) return 0;
 
-	hwnd = CreateWindowEx(0, szName, "test", WS_OVERLAPPEDWINDOW| WS_VISIBLE,
+	hmenu = CreateMenu();
+
+	hwnd = CreateWindowEx(0, szName, "test", WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
-		NULL,NULL,hInst, NULL);
+		NULL,hmenu,hInst, NULL);
 
       
-
 	ShowWindow(hwnd,nWinMode);
 	UpdateWindow(hwnd);
 
-	SendMessageW( hwnd, WM_MOVE, 0,MAKELONG(0,0));
-	//while(GetMessage(&msg,NULL, 0, 0))
-	//{
-	//	TranslateMessage(&msg);
-	//	DispatchMessage(&msg);
-	//}
+	SetWindowText(hwnd,"Hallo");
+
+	DrawMenuBar(hwnd);	
+//	SendMessage( hwnd, WM_MOVE, 0,MAKELONG(0,0));
+//        SendMessage( hwnd, WM_PAINT, GetWindowDC(hwnd),0);
+	while(GetMessage(&msg,NULL, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 	Sleep(10000);
 	return msg.wParam;
 }

@@ -31,7 +31,7 @@ short sysMetrics[SM_CMETRICS+1] = {
     32,  // [SM_CYCURSOR]             /* 14 */               
     19,  // [SM_CYMENU]               /* 15 */               
     800, // [SM_CXFULLSCREEN]         /* 16 */               
-    0,   // [SM_CYFULLSCREEN]         /* 17 */               
+    600, // [SM_CYFULLSCREEN]         /* 17 */               
     0,   // [SM_CYKANJIWINDOW]        /* 18 */               
     0,   // [SM_MOUSEPRESENT]         /* 19 */               
     0,   // [SM_CYVSCROLL]            /* 20 */               
@@ -42,12 +42,12 @@ short sysMetrics[SM_CMETRICS+1] = {
     0,   // [SM_RESERVED2]            /* 25 */               
     0,   // [SM_RESERVED3]            /* 26 */               
     0,   // [SM_RESERVED4]            /* 27 */               
-    0,   // [SM_CXMIN]                /* 28 */               
-    0,   // [SM_CYMIN]                /* 29 */               
-    0,   // [SM_CXSIZE]               /* 30 */               
-    0,   // [SM_CYSIZE]               /* 31 */               
-    0,   // [SM_CXFRAME]              /* 32 */               
-    0,   // [SM_CYFRAME]              /* 33 */               
+    112, // [SM_CXMIN]                /* 28 */               
+    27,  // [SM_CYMIN]                /* 29 */               
+    17,  // [SM_CXSIZE]               /* 30 */               
+    17,  // [SM_CYSIZE]               /* 31 */               
+    4,   // [SM_CXFRAME]              /* 32 */               
+    4,   // [SM_CYFRAME]              /* 33 */               
     0,   // [SM_CXMINTRACK]           /* 34 */               
     0,   // [SM_CYMINTRACK]           /* 35 */               
     0,   // [SM_CXDOUBLECLK]          /* 36 */               
@@ -63,17 +63,17 @@ short sysMetrics[SM_CMETRICS+1] = {
          // [SM_CXFRAME]              /* win40 name change */
          // [SM_CYFRAME]              /* win40 name change */
     0,   // [SM_SECURE]               /* 44 */               
-    0,   // [SM_CXEDGE]               /* 45 */               
-    0,   // [SM_CYEDGE]               /* 46 */               
+    2,   // [SM_CXEDGE]               /* 45 */   // sysMetrics[SM_CXBORDER] + 1;            
+    2,   // [SM_CYEDGE]               /* 46 */               
     0,   // [SM_CXMINSPACING]         /* 47 */               
     0,   // [SM_CYMINSPACING]         /* 48 */               
-    0,   // [SM_CXSMICON]             /* 49 */               
-    0,   // [SM_CYSMICON]             /* 50 */               
+    14,   // [SM_CXSMICON]             /* 49 */               
+    14,   // [SM_CYSMICON]             /* 50 */               
     0,   // [SM_CYSMCAPTION]          /* 51 */               
     0,   // [SM_CXSMSIZE]             /* 52 */               
     0,   // [SM_CYSMSIZE]             /* 53 */               
-    0,   // [SM_CXMENUSIZE]           /* 54 */               
-    0,   // [SM_CYMENUSIZE]           /* 55 */               
+    19,   // [SM_CXMENUSIZE]           /* 54 */               
+    19,   // [SM_CYMENUSIZE]           /* 55 */               
     8,   // [SM_ARRANGE]              /* 56 */               
     160,   // [SM_CXMINIMIZED]          /* 57 */               
     24,   // [SM_CYMINIMIZED]          /* 58 */               

@@ -39,9 +39,12 @@ INT  RestoreVisRgn(HDC hdc);
 
 HDC STDCALL GetDC( HWND  hWnd 	)
 {
+    WND *wndPtr;
     if (!hWnd)
-        return GetDCEx( GetDesktopWindow(), 0, DCX_CACHE | DCX_WINDOW );
-    return GetDCEx( hWnd, 0, DCX_USESTYLE );
+        hWnd= GetDesktopWindow();
+    if (!(wndPtr = WIN_FindWndPtr( hWnd ))) return 0;
+
+    return wndPtr->dce->hDC;
 }
 
 /***********************************************************************
@@ -51,6 +54,8 @@ HDC STDCALL GetDC( HWND  hWnd 	)
  *
  * FIXME: Full support for hrgnClip == 1 (alias for entire window).
  */
+
+
 HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 {
     HRGN 	hrgnVisible = 0;
@@ -69,7 +74,10 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 
     /* fixup flags */
 
-    if (!(wndPtr->class->style & (CS_OWNDC | CS_CLASSDC))) flags |= DCX_CACHE;
+#if 0
+    if (!(wndPtr->class->style & (CS_OWNDC | CS_CLASSDC))) 
+   	flags |= DCX_CACHE;
+
 
     if (flags & DCX_USESTYLE)
     {
@@ -88,15 +96,19 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 	else flags |= DCX_CACHE;
     }
 
+
     if( flags & DCX_NOCLIPCHILDREN )
     {
         flags |= DCX_CACHE;
         flags &= ~(DCX_PARENTCLIP | DCX_CLIPCHILDREN);
     }
 
-    if (flags & DCX_WINDOW) 
-	flags = (flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
 
+    if (flags & DCX_WINDOW) 
+  	flags = (flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
+
+#endif
+    
     if (!(wndPtr->dwStyle & WS_CHILD) || !wndPtr->parent ) 
 	flags &= ~DCX_PARENTCLIP;
     else if( flags & DCX_PARENTCLIP )
@@ -116,6 +128,7 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
     dcxFlags = flags & (DCX_PARENTCLIP | DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | 
 		        DCX_CACHE | DCX_WINDOW);
 
+#if 0
     if (flags & DCX_CACHE)
     {
 	DCE*	dceEmpty;
@@ -137,9 +150,9 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 		if (dce->DCXflags & DCX_DCEEMPTY)
 		    dceEmpty = dce;
 		else
-		if ((dce->hwndCurrent == hwnd) &&
-		   ((dce->DCXflags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
-				      DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)) == dcxFlags))
+		if ((dce->hwndCurrent == hwnd) 
+		   && ((dce->DCXflags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN |
+			DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)) == dcxFlags))
 		{
 		    DPRINT("\tfound valid %08x dce [%04x], flags %08x\n", 
 					(unsigned)dce, hwnd, (unsigned)dcxFlags );
@@ -153,7 +166,13 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
     }
     else 
     {
-        dce = (wndPtr->class->style & CS_OWNDC) ? wndPtr->dce : wndPtr->class->dce;
+	if (wndPtr->class->style & CS_OWNDC) 
+        	dce = wndPtr->dce;
+	else if ( wndPtr->class->style & CS_CLASSDC)
+		dce = wndPtr->class->dce;
+	else
+		return 0;
+
 	if( dce->hwndCurrent == hwnd )
 	{
 	    DPRINT("\tskipping hVisRgn update\n");
@@ -176,6 +195,9 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 	}
     }
     if (!dce) return 0;
+
+#endif
+    dce = wndPtr->dce;
 
     dce->hwndCurrent = hwnd;
     dce->hClipRgn = 0;

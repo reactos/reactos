@@ -18,73 +18,7 @@
   /* Last CTLCOLOR id */
 //#define CTLCOLOR_MAX   CTLCOLOR_STATIC
 
-#if 0
-/***********************************************************************
- *           WIN_UpdateNCArea
- *
- */
-void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
-{
-    POINT16 pt = {0, 0}; 
-    HRGN hClip = 1;
 
-    TRACE(nonclient,"hwnd %04x, hrgnUpdate %04x\n", 
-                      wnd->hwndSelf, wnd->hrgnUpdate );
-
-    /* desktop window doesn't have nonclient area */
-    if(wnd == WIN_GetDesktop()) 
-    {
-        wnd->flags &= ~WIN_NEEDS_NCPAINT;
-        return;
-    }
-
-    if( wnd->hrgnUpdate > 1 )
-    {
-	ClientToScreen16(wnd->hwndSelf, &pt);
-
-        hClip = CreateRectRgn( 0, 0, 0, 0 );
-        if (!CombineRgn( hClip, wnd->hrgnUpdate, 0, RGN_COPY ))
-        {
-            DeleteObject(hClip);
-            hClip = 1;
-        }
-	else
-	    OffsetRgn( hClip, pt.x, pt.y );
-
-        if (bUpdate)
-        {
-	    /* exclude non-client area from update region */
-            HRGN hrgn = CreateRectRgn( 0, 0,
-                                 wnd->rectClient.right - wnd->rectClient.left,
-                                 wnd->rectClient.bottom - wnd->rectClient.top);
-
-            if (hrgn && (CombineRgn( wnd->hrgnUpdate, wnd->hrgnUpdate,
-                                       hrgn, RGN_AND) == NULLREGION))
-            {
-                DeleteObject( wnd->hrgnUpdate );
-                wnd->hrgnUpdate = 1;
-            }
-
-            DeleteObject( hrgn );
-        }
-    }
-
-    wnd->flags &= ~WIN_NEEDS_NCPAINT;
-
-    if ((wnd->hwndSelf == GetActiveWindow()) &&
-        !(wnd->flags & WIN_NCACTIVATED))
-    {
-        wnd->flags |= WIN_NCACTIVATED;
-        if( hClip > 1) DeleteObject( hClip );
-        hClip = 1;
-    }
-
-    if (hClip) SendMessage16( wnd->hwndSelf, WM_NCPAINT, hClip, 0L );
-
-    if (hClip > 1) DeleteObject( hClip );
-}
-
-#endif
 
 
 
@@ -123,7 +57,7 @@ BeginPaint(
     if (wndPtr->class->style & CS_PARENTDC)
     {
         /* Don't clip the output to the update region for CS_PARENTDC window */
-	if(hrgnUpdate > 1)
+	if(hrgnUpdate > (HRGN)1)
 	    DeleteObject(hrgnUpdate);
         lpPaint->hdc = GetDCEx( hWnd, 0, DCX_WINDOWPAINT | DCX_USESTYLE |
                               (bIcon ? DCX_WINDOW : 0) );
@@ -250,7 +184,7 @@ WINBOOL STDCALL GetUpdateRect( HWND hwnd, LPRECT rect, WINBOOL erase )
 
     if (rect)
     {
-	if (wndPtr->hrgnUpdate > 1)
+	if (wndPtr->hrgnUpdate > (HRGN)1)
 	{
 	    HRGN hrgn = CreateRectRgn( 0, 0, 0, 0 );
 	    if (GetUpdateRgn( hwnd, hrgn, erase ) == ERROR) return FALSE;
@@ -298,7 +232,7 @@ INT STDCALL ExcludeUpdateRgn( HDC hdc, HWND hwnd )
 				      wndPtr->rectWindow.top - wndPtr->rectClient.top,
 				      wndPtr->rectClient.right - wndPtr->rectClient.left,
 				      wndPtr->rectClient.bottom - wndPtr->rectClient.top);
-	if( wndPtr->hrgnUpdate > 1 )
+	if( wndPtr->hrgnUpdate > (HRGN)1 )
 	    CombineRgn(hrgn, wndPtr->hrgnUpdate, 0, RGN_COPY);
 
 	/* do ugly coordinate translations in dce.c */

@@ -149,6 +149,20 @@ NC_AdjustRectOuter95 (LPRECT rect, DWORD style, WINBOOL menu, DWORD exStyle)
 	    else
 		rect->top -= SYSMETRICS_CYCAPTION;
         }
+    } else {
+
+
+        if (style & WS_BORDER)
+            InflateRect( rect, SYSMETRICS_CXBORDER, SYSMETRICS_CYBORDER);
+
+
+        if ((style & WS_CAPTION) == WS_CAPTION)
+        {
+	    if (exStyle & WS_EX_TOOLWINDOW)
+		rect->top -= SYSMETRICS_CYSMCAPTION;
+	    else
+		rect->top -= SYSMETRICS_CYCAPTION;
+        }
     }
 
     if (menu)
@@ -1174,7 +1188,8 @@ static void  NC_DrawCaption95(
     MoveToEx( hdc, r.left, r.bottom - 1, NULL );
     LineTo( hdc, r.right, r.bottom - 1 );
     SelectObject( hdc, hPrevPen );
-    r.bottom--;
+    r.bottom-2;
+   
 
     FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
 					    COLOR_INACTIVECAPTION) );

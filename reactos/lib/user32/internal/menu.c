@@ -1093,16 +1093,16 @@ UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, HWND hwnd,
     
     FillRect(hDC, lprect, GetSysColorBrush(COLOR_MENU) );
 
-//    if (TWEAK_WineLook == WIN31_LOOK) {
+    if (TWEAK_WineLook == WIN31_LOOK) {
 	SelectObject( hDC,(HGDIOBJ)GetSysColorPen(COLOR_WINDOWFRAME) );
 	MoveToEx( hDC, lprect->left, lprect->bottom,NULL );
 	LineTo( hDC, lprect->right, lprect->bottom );
-//    }
-//    else {
-//	SelectObject( hDC,(HGDIOBJ) GetSysColorPen(COLOR_3DFACE));
-//	MoveToEx( hDC, lprect->left, lprect->bottom,NULL );
-//	LineTo( hDC, lprect->right, lprect->bottom );
-//    }
+    }
+    else {
+	SelectObject( hDC,(HGDIOBJ) GetSysColorPen(COLOR_3DFACE));
+	MoveToEx( hDC, lprect->left, lprect->bottom,NULL );
+	LineTo( hDC, lprect->right, lprect->bottom );
+    }
 
     if (lppop->nItems == 0) return SYSMETRICS_CYMENU;
     for (i = 0; i < lppop->nItems; i++)

@@ -73,7 +73,7 @@ typedef struct tagWND
     HINSTANCE     hInstance;     /* Window hInstance (from CreateWindow) */
     RECT          rectClient;    /* Client area rel. to parent client area */
     RECT          rectWindow;    /* Whole window rel. to parent client area */
-    LPWSTR        text;          /* Window text */
+    void          *text;          /* Window text */
     void          *pVScroll;      /* Vertical scroll-bar info */
     void          *pHScroll;      /* Horizontal scroll-bar info */
     void          *pProp;         /* Pointer to properties list */
@@ -197,7 +197,8 @@ typedef struct
 
   /* Window functions */
 HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM atomName );
-WND*   WIN_FindWndPtr( HWND hwnd );
+#define WIN_FindWndPtr(hwnd) (WND *)hwnd
+//WND*   WIN_FindWndPtr( HWND hwnd );
 WND*   WIN_GetDesktop(void);
 void   WIN_DumpWindow( HWND hwnd );
 void   WIN_WalkWindows( HWND hwnd, int indent );

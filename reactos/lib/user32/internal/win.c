@@ -80,8 +80,7 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->hmemTaskQ      = GetFastQueue();
     wndPtr->hrgnUpdate     = 0;
     wndPtr->hwndLastActive = wndPtr->hwndSelf;
-//    wndPtr->dwStyle        = cs->style & ~WS_VISIBLE;
-      wndPtr->dwStyle        = cs->style | WS_VISIBLE;
+    wndPtr->dwStyle        = cs->style & ~WS_VISIBLE;
     wndPtr->dwExStyle      = cs->dwExStyle;
     wndPtr->wIDmenu        = 0;
     wndPtr->helpContext    = 0;
@@ -135,9 +134,11 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
 
     /* Get class or window DC if needed */
 
+
+
     if (classPtr->style & CS_OWNDC) wndPtr->dce = DCE_AllocDCE(hWnd,DCE_WINDOW_DC);
     else if (classPtr->style & CS_CLASSDC) wndPtr->dce = classPtr->dce;
-    else wndPtr->dce = NULL;
+    else wndPtr->dce = DCE_AllocDCE(hWnd,DCE_WINDOW_DC);;
 
     GetStartupInfoW((STARTUPINFO *)&StartupInfo);
     if (cs->x == CW_USEDEFAULT) 
@@ -199,6 +200,8 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->rectWindow.top    = cs->y;
     wndPtr->rectWindow.right  = cs->x + cs->cx;
     wndPtr->rectWindow.bottom = cs->y + cs->cy;
+
+
     wndPtr->rectClient        = wndPtr->rectWindow;
 
 
@@ -229,12 +232,20 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     maxPos.x = wndPtr->rectWindow.left;
     maxPos.y = wndPtr->rectWindow.top;
 
-    
-    if( SendMessageW( hWnd, WM_NCCREATE, 0, (LPARAM)cs) == 0)
-    {
+    if ( classPtr->bUnicode == TRUE ) {
+    	if( SendMessageW( hWnd, WM_NCCREATE, 0, (LPARAM)cs) == 0)
+    	{
 	    /* Abort window creation */
-	 WIN_DestroyWindow( wndPtr );
-	 return NULL;
+		WIN_DestroyWindow( wndPtr );
+	 	return NULL;
+    	}
+    } else {
+	if( SendMessageA( hWnd, WM_NCCREATE, 0, (LPARAM)cs) == 0)
+    	{
+	    /* Abort window creation */
+		WIN_DestroyWindow( wndPtr );
+	 	return NULL;
+    	}
     }
 	
     /* Insert the window in the linked list */
@@ -245,7 +256,9 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
                                NULL, NULL, 0, &wndPtr->rectClient );
     OffsetRect(&wndPtr->rectWindow, maxPos.x - wndPtr->rectWindow.left,
                                           maxPos.y - wndPtr->rectWindow.top);
-    if( (SendMessageW( hWnd, WM_CREATE, 0, (LPARAM)cs )) == -1 )
+
+
+    if( (SendMessageA( hWnd, WM_CREATE, 0, (LPARAM)cs )) == -1 )
     {
 	WIN_UnlinkWindow( hWnd );
 	WIN_DestroyWindow( wndPtr );
@@ -636,6 +649,9 @@ WND * WIN_FindWndPtr( HWND hWnd )
 
 #endif
 
+
+#undef WIN_FindWndPtr
+WND*   WIN_FindWndPtr( HWND hwnd );
 WND * WIN_FindWndPtr( HWND hwnd )
 {
     WND * ptr;
@@ -651,6 +667,7 @@ WND * WIN_FindWndPtr( HWND hwnd )
     }
     return ptr;
 }
+
 WND*   WIN_GetDesktop(void)
 {
 	return NULL;
@@ -830,13 +847,17 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
 WINBOOL WIN_IsWindowDrawable( WND* wnd, WINBOOL icon )
 {
 
+  return TRUE;
+
+  if ( wnd == NULL )
+	return FALSE;
   if( (wnd->dwStyle & WS_MINIMIZE &&
        icon && wnd->class->hIcon) ||
      !(wnd->dwStyle & WS_VISIBLE) ) return FALSE;
   for(wnd = wnd->parent; wnd; wnd = wnd->parent)
     if( wnd->dwStyle & WS_MINIMIZE ||
       !(wnd->dwStyle & WS_VISIBLE) ) break;
-  return (wnd == NULL);
+  return wnd == NULL;
 }
 
 
@@ -884,6 +905,9 @@ void WIN_SendDestroyMsg( WND* pWnd )
     else
 	DPRINT( "\tdestroyed itself while in WM_DESTROY!\n");
 }
+
+
+
 
 
 /*******************************************************************

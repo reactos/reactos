@@ -81,4 +81,13 @@ LPINTERNALPOS WINPOS_InitInternalPos( WND* wnd, POINT pt,
 					     LPRECT restoreRect );
 WINBOOL WINPOS_SetPlacement( HWND hwnd, const WINDOWPLACEMENT *wndpl,
 						UINT flags );
+
+void WINPOS_MoveWindowZOrder( HWND hwnd, HWND hwndAfter );
+
+UINT WINPOS_SizeMoveClean( WND* Wnd, HRGN oldVisRgn,
+                                    LPRECT lpOldWndRect,
+                                    LPRECT lpOldClientRect, UINT uFlags );
+
+HWND WINPOS_ReorderOwnedPopups(HWND hwndInsertAfter,WND* wndPtr,WORD flags);
+
 #endif  /* __WINE_WINPOS_H */

@@ -3,7 +3,7 @@ all: user32.exe
 INTERNAL_OBJECTS = internal/property.o internal/menu.o internal/heapdup.o internal/nc.o\
 		internal/scroll.o internal/win.o internal/dce.o internal/msg.o internal/queue.o\
 		internal/signal.o internal/event.o internal/timer.o internal/region.o\
-		internal/text.o internal/defwnd.o internal/paint.o
+		internal/text.o internal/defwnd.o internal/paint.o internal/uitools.o
 
 MISC_OBJECTS = misc/sprintf.o  misc/dllmain.o misc/string.o misc/sysmetr.o\
 		misc/main.o misc/bitmap.o misc/cursor.o misc/vk.o
@@ -15,14 +15,14 @@ WINDOWS_OBJECTS = windows/wndproc.o windows/win.o windows/hook.o windows/spy.o\
 		windows/focus.o windows/paint.o
 
 GRAPHICS_OBJECTS = graphics/rect.o graphics/caret.o graphics/text.o graphics/syscol.o graphics/fill.o\
-		graphics/draw.o 
+		graphics/draw.o graphics/icon.o
 
 RESOURCE_OBJECTS = resources/sysres.o 
 
 OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJECTS) $(WINDOWS_OBJECTS)
 
 user32.exe: $(OBJECTS)
-	$(LD) $(OBJECTS)  F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/crt1.o F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/libgdi32.a F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/libkernel32.a F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/libcrtdll.a   -o user32.exe
+	$(LD) $(OBJECTS)  F:/gnu/cygnus/cygwin-b20/H-i586-cygwin32/i586-cygwin32/lib/crt1.o ./libgdi32.a ./libkernel32.a ./libcrtdll.a   -o user32.exe
 
 dummy:
 

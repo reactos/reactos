@@ -103,9 +103,9 @@ ATOM STDCALL RegisterClassExA(const WNDCLASSEX* wc)
 
     if (wc->style & CS_CLASSDC)
        classPtr->dce         = DCE_AllocDCE( 0, DCE_CLASS_DC ) ;
-    else classPtr->style |= CS_OWNDC;
+    else 
+       classPtr->dce = NULL;
 
-    
 
     if ( wc->lpszMenuName != NULL ) {
 	len = lstrlenA(wc->lpszMenuName);

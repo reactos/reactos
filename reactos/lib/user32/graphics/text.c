@@ -10,7 +10,7 @@ DrawTextA(
 	DRAWTEXTPARAMS dtp;
 	dtp.cbSize = sizeof(DRAWTEXTPARAMS);
 	dtp.iTabLength = 0;
-	//return TEXT_DrawTextEx(hDC,(void *)lpString, nCount,lpRect,uFormat, &dtp, FALSE);
+	return TEXT_DrawTextEx(hDC,(void *)lpString, nCount,lpRect,uFormat, &dtp, FALSE);
 }
 
 

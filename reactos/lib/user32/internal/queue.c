@@ -93,7 +93,8 @@ void QUEUE_WalkQueues(void)
  */
 WINBOOL QUEUE_IsExitingQueue( HQUEUE hQueue )
 {
-    return (hExitingQueue && (hQueue == hExitingQueue));
+	return FALSE;
+//    return (hExitingQueue && (hQueue == hExitingQueue));
 }
 
 
