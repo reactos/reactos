@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.2 2000/02/18 00:49:11 ekohl Exp $
+/* $Id: path.c,v 1.3 2000/03/13 17:54:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -521,7 +521,7 @@ CHECKPOINT;
 			return 0;
 	}
 
-	DPRINT("buf \'%S\' DosName \'%S\'\n", buf, DosName);
+	DPRINT("buf \'%S\' DosName \'%S\' len %ld\n", buf, DosName, len);
 	/* add dosname to prefix */
 	wcsncat (buf, DosName, len);
 
@@ -531,7 +531,13 @@ CHECKPOINT;
 		if (*wcs == L'/')
 			*wcs = L'\\';
 
+	len = wcslen (buf);
+	if (len < 3 && buf[len-1] == L':')
+		wcscat (buf, L"\\");
+
+	DPRINT("buf \'%S\'\n", buf);
 	RtlpEatPath (buf);
+	DPRINT("buf \'%S\'\n", buf);
 
 	len = wcslen (buf);
 
