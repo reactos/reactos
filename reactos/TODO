@@ -9,3 +9,5 @@ DMA support
 Registry support
 Cache read ahead
 Caching file mapping
+Driver unloading
+
