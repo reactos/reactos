@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.18 2004/05/27 14:50:17 weiden Exp $
+/* $Id: misc.c,v 1.19 2004/07/06 22:08:48 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -455,11 +455,64 @@ LookupPrivilegeValueA (LPCSTR lpSystemName,
  * @unimplemented
  */
 BOOL STDCALL
-LookupPrivilegeValueW (LPCWSTR lpSystemName,
-		       LPCWSTR lpName,
-		       PLUID lpLuid)
+LookupPrivilegeValueW (LPCWSTR SystemName,
+		       LPCWSTR PrivName,
+		       PLUID Luid)
 {
-  DPRINT1("LookupPrivilegeValueW: stub\n");
+  static const WCHAR * const DefaultPrivNames[] =
+    {
+      L"SeCreateTokenPrivilege",
+      L"SeAssignPrimaryTokenPrivilege",
+      L"SeLockMemoryPrivilege",
+      L"SeIncreaseQuotaPrivilege",
+      L"SeUnsolicitedInputPrivilege",
+      L"SeMachineAccountPrivilege",
+      L"SeTcbPrivilege",
+      L"SeSecurityPrivilege",
+      L"SeTakeOwnershipPrivilege",
+      L"SeLoadDriverPrivilege",
+      L"SeSystemProfilePrivilege",
+      L"SeSystemtimePrivilege",
+      L"SeProfileSingleProcessPrivilege",
+      L"SeIncreaseBasePriorityPrivilege",
+      L"SeCreatePagefilePrivilege",
+      L"SeCreatePermanentPrivilege",
+      L"SeBackupPrivilege",
+      L"SeRestorePrivilege",
+      L"SeShutdownPrivilege",
+      L"SeDebugPrivilege",
+      L"SeAuditPrivilege",
+      L"SeSystemEnvironmentPrivilege",
+      L"SeChangeNotifyPrivilege",
+      L"SeRemoteShutdownPrivilege",
+      L"SeUndockPrivilege",
+      L"SeSyncAgentPrivilege",
+      L"SeEnableDelegationPrivilege",
+      L"SeManageVolumePrivilege",
+      L"SeImpersonatePrivilege",
+      L"SeCreateGlobalPrivilege"
+    };
+  unsigned Priv;
+
+  if (NULL != SystemName && L'\0' != *SystemName)
+    {
+      DPRINT1("LookupPrivilegeValueW: not implemented for remote system\n");
+      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+      return FALSE;
+    }
+
+  for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
+    {
+      if (0 == wcscmp(PrivName, DefaultPrivNames[Priv]))
+        {
+          Luid->LowPart = Priv + 1;
+          Luid->HighPart = 0;
+          return TRUE;
+        }
+    }
+
+  DPRINT1("LookupPrivilegeValueW: no such privilege %S\n", PrivName);
+  SetLastError(ERROR_NO_SUCH_PRIVILEGE);
   return FALSE;
 }
 
