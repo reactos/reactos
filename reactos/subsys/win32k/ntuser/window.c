@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.37 2003/03/22 04:53:01 rcampbell Exp $
+/* $Id: window.c,v 1.38 2003/03/24 01:36:10 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -843,21 +843,55 @@ NtUserMoveWindow(
 {
     PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
     ULONG uStyle, uExStyle;
-    if (!Window)
-    {
-        return FALSE;
-    }
+    WINDOWPOS pWinPos;
+
+    if (!Window) return FALSE;
+    
     uStyle = Window->Style;
     uExStyle = Window->ExStyle;
+    pWinPos.hwnd = hWnd;
+    
+        /* FIXME:  Is this the correct behavior? */  
     if (X)
-        Window->WindowRect.left = X;
+    {
+        pWinPos.x = X;
+    }
+    else
+    {
+        pWinPos.x = Window->WindowRect.left;
+    }
     if (Y)
-        Window->WindowRect.top = Y;
+    {
+        pWinPos.y = Y;
+    }
+    else
+    {
+        pWinPos.y = Window->WindowRect.top;
+    }
+    
     if (nWidth)
-        Window->WindowRect.right = Window->WindowRect.left + nWidth;
+    {
+        pWinPos.cx = pWinPos.x + nWidth;
+    }
+    else
+    {
+        pWinPos.cx = pWinPos.x + (Window->WindowRect.right - Window->WindowRect.left);
+    }
     if (nHeight)
-        Window->WindowRect.bottom = Window->WindowRect.top + nHeight;
-    Window->ClientRect = Window->WindowRect;
+    {
+        pWinPos.cy = pWinPos.y + nHeight;
+    }
+    else
+    {
+        pWinPos.cy = pWinPos.y + (Window->WindowRect.bottom - Window->WindowRect.top);
+    }
+    
+    NtUserSendMessage(hWnd, WM_WINDOWPOSCHANGING, 0, (LPARAM)&pWinPos);
+    
+    Window->WindowRect.top = Window->ClientRect.top = pWinPos.y;
+    Window->WindowRect.left = Window->ClientRect.left = pWinPos.x;
+    Window->WindowRect.bottom = Window->ClientRect.bottom = pWinPos.cy;
+    Window->WindowRect.right = Window->ClientRect.right = pWinPos.cx;
     
     if (uStyle & WS_BORDER)
     {
@@ -872,7 +906,20 @@ NtUserMoveWindow(
     {
         Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
     }
+
+    NtUserSendMessage(hWnd, WM_WINDOWPOSCHANGED, 0, (LPARAM)&pWinPos);
+    
+    NtUserSendMessage(hWnd, WM_MOVE, 0, MAKEWORD(Window->ClientRect.left,
+                                                 Window->ClientRect.top));
+                                                 
+    NtUserSendMessage(hWnd, WM_SIZE, 0, MAKEWORD(Window->ClientRect.right -
+                                                 Window->ClientRect.left,
+                                                 Window->ClientRect.bottom -
+                                                 Window->ClientRect.top));
+
+    /* FIXME:  Send WM_NCCALCSIZE */
     W32kReleaseWindowObject(Window);
+    if (bRepaint) NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
     return TRUE;
 }
 
