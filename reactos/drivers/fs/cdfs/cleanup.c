@@ -54,7 +54,11 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
   /* Uninitialize file cache if initialized for this file object. */
   if (FileObject->SectionObjectPointer && FileObject->SectionObjectPointer->SharedCacheMap)
     {
+#ifdef USE_ROS_CC_AND_FS
       CcRosReleaseFileCache (FileObject);
+#else
+      CcUninitializeCacheMap (FileObject, NULL, NULL);
+#endif
     }
  
   return STATUS_SUCCESS;
