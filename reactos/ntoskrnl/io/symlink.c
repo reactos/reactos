@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.12 2000/03/26 22:00:08 dwelch Exp $
+/* $Id: symlink.c,v 1.13 2000/06/13 15:51:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@ typedef struct
 	CSHORT			Type;
 	CSHORT			Size;
 	UNICODE_STRING		TargetName;
-	OBJECT_ATTRIBUTES	Target;	
+	OBJECT_ATTRIBUTES	Target;
 } SYMLNK_OBJECT, *PSYMLNK_OBJECT;
 
 POBJECT_TYPE IoSymbolicLinkType = NULL;
@@ -89,7 +89,7 @@ IopParseSymbolicLink (
 	NTSTATUS	Status;
 	PSYMLNK_OBJECT	SymlinkObject = (PSYMLNK_OBJECT) Object;
 	PVOID		ReturnedObject;
-   
+
 	Status = ObReferenceObjectByName(
 			SymlinkObject->Target.ObjectName,
 			0,
@@ -185,7 +185,7 @@ NtOpenSymbolicLinkObject (
 	{
 		return Status;
 	}
-   
+
 	Status = ObCreateHandle(
 			PsGetCurrentProcess(),
 			Object,
@@ -197,7 +197,7 @@ NtOpenSymbolicLinkObject (
 	{
 		return Status;
 	}
-   
+
 	return STATUS_SUCCESS;
 }
 
@@ -225,7 +225,7 @@ NtQuerySymbolicLinkObject (
 {
 	PSYMLNK_OBJECT	SymlinkObject;
 	NTSTATUS	Status;
-   
+
 	Status = ObReferenceObjectByHandle(
 			LinkHandle,
 			SYMBOLIC_LINK_QUERY,
@@ -238,7 +238,7 @@ NtQuerySymbolicLinkObject (
 	{
 		return Status;
 	}
-   
+
 	RtlCopyUnicodeString(
 		LinkTarget,
 		SymlinkObject->Target.ObjectName
@@ -302,15 +302,15 @@ IoCreateSymbolicLink (
 {
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 	PSYMLNK_OBJECT		SymbolicLink;
-   
+
 	assert_irql(PASSIVE_LEVEL);
-   
+
 	DPRINT(
 		"IoCreateSymbolicLink(SymbolicLinkName %S, DeviceName %S)\n",
 		SymbolicLinkName->Buffer,
 		DeviceName->Buffer
 		);
-   
+
 	InitializeObjectAttributes(
 		& ObjectAttributes,
 		SymbolicLinkName,
@@ -335,7 +335,7 @@ IoCreateSymbolicLink (
 	SymbolicLink->TargetName.Buffer =
 		ExAllocatePool(
 			NonPagedPool,
-                        SymbolicLink->TargetName.MaximumLength
+			SymbolicLink->TargetName.MaximumLength
 			);
 	RtlCopyUnicodeString(
 		& (SymbolicLink->TargetName),
@@ -353,7 +353,7 @@ IoCreateSymbolicLink (
 		);
 	
 	DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
-    ObDereferenceObject( SymbolicLink );
+	ObDereferenceObject( SymbolicLink );
 	return STATUS_SUCCESS;
 }
 
@@ -374,10 +374,34 @@ IoCreateSymbolicLink (
 NTSTATUS
 STDCALL
 IoDeleteSymbolicLink (
-	PUNICODE_STRING	DeviceName
+	PUNICODE_STRING	SymbolicLinkName
 	)
 {
-	UNIMPLEMENTED;
+	OBJECT_ATTRIBUTES	ObjectAttributes;
+	HANDLE			Handle;
+	NTSTATUS		Status;
+
+	assert_irql(PASSIVE_LEVEL);
+
+	DPRINT("IoDeleteSymbolicLink (SymbolicLinkName %S)\n",
+	       SymbolicLinkName->Buffer);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+	                            SymbolicLinkName,
+	                            0,
+	                            NULL,
+	                            NULL);
+
+	Status = NtOpenSymbolicLinkObject (&Handle,
+	                                   SYMBOLIC_LINK_ALL_ACCESS,
+	                                   &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+		return Status;
+
+	Status = NtMakeTemporaryObject (Handle);
+	NtClose (Handle);
+
+	return Status;
 }
 
 
@@ -400,11 +424,58 @@ NtCreateSymbolicLinkObject (
 	OUT	PHANDLE			SymbolicLinkHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	PUNICODE_STRING		Name
+	IN	PUNICODE_STRING		DeviceName
 	)
 {
-	UNIMPLEMENTED;
-}
+	PSYMLNK_OBJECT SymbolicLink;
 
+	assert_irql(PASSIVE_LEVEL);
+
+	DPRINT(
+		"NtCreateSymbolicLinkObject(SymbolicLinkHandle %p, DesiredAccess %ul, ObjectAttributes %p, DeviceName %S)\n",
+		SymbolicLinkHandle,
+		DesiredAccess,
+		ObjectAttributes,
+		DeviceName->Buffer
+		);
+
+	SymbolicLink = ObCreateObject(
+			SymbolicLinkHandle,
+			DesiredAccess,
+			ObjectAttributes,
+			IoSymbolicLinkType
+			);
+	if (SymbolicLink == NULL)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
+	
+	SymbolicLink->TargetName.Length = 0;
+	SymbolicLink->TargetName.MaximumLength = 
+		((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
+	SymbolicLink->TargetName.Buffer =
+		ExAllocatePool(
+			NonPagedPool,
+			SymbolicLink->TargetName.MaximumLength
+			);
+	RtlCopyUnicodeString(
+		& (SymbolicLink->TargetName),
+		DeviceName
+		);
+	
+	DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
+	
+	InitializeObjectAttributes(
+		& (SymbolicLink->Target),
+		& (SymbolicLink->TargetName),
+		0,
+		NULL,
+		NULL
+		);
+	
+	DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
+	ObDereferenceObject( SymbolicLink );
+	return STATUS_SUCCESS;
+}
 
 /* EOF */

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.13 2000/06/12 14:51:26 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.14 2000/06/13 15:50:51 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -527,7 +527,7 @@ IoCreateUnprotectedSymbolicLink (
  *		);
  */
 #define IoDeassignArcName(ArcName) \
-	IoDeleteSymbolicLink((ArcName))
+	(IoDeleteSymbolicLink((ArcName)))
 
 VOID
 STDCALL
