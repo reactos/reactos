@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.47 2004/09/28 19:49:20 gvg Exp $
+/* $Id: sysinfo.c,v 1.48 2004/09/30 21:14:24 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1009,7 +1009,7 @@ QSI_DEF(SystemEventIdsInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 32 - Crach Dump Information */
+/* Class 32 - Crash Dump Information */
 QSI_DEF(SystemCrashDumpInformation)
 {
 	/* FIXME */
@@ -1023,7 +1023,7 @@ QSI_DEF(SystemExceptionInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 34 - Crach Dump State Information */
+/* Class 34 - Crash Dump State Information */
 QSI_DEF(SystemCrashDumpStateInformation)
 {
 	/* FIXME */
@@ -1070,7 +1070,7 @@ SSI_DEF(SystemLoadAndCallImage)
   return(LdrpLoadAndCallImage(&Slci->ModuleName));
 }
 
-/* Class 39 - Priority Seperation */
+/* Class 39 - Priority Separation */
 SSI_DEF(SystemPrioritySeperation)
 {
 	/* FIXME */
@@ -1234,7 +1234,7 @@ struct _QSSI_CALLS
 
 // QS	Query & Set
 // QX	Query
-// XQ	Set
+// XS	Set
 // XX	unknown behaviour
 //
 #define SI_QS(n) {QSI_USE(n),SSI_USE(n)}
