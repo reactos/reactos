@@ -3,8 +3,10 @@
  */
 
 #include <windows.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
 
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
@@ -420,7 +422,6 @@ PnpDecodeFixedIoPort(unsigned char *Ptr)
 static VOID
 PnpDecodeMemory16(unsigned char *Ptr)
 {
-  USHORT DescLength;
   UCHAR Info;
   USHORT MinBase;
   USHORT MaxBase;
@@ -458,7 +459,6 @@ PnpDecodeMemory16(unsigned char *Ptr)
 static VOID
 PnpDecodeMemory32(unsigned char *Ptr)
 {
-  USHORT DescLength;
   UCHAR Info;
   ULONG MinBase;
   ULONG MaxBase;
@@ -512,7 +512,6 @@ PnpDecodeMemory32(unsigned char *Ptr)
 static VOID
 PnpDecodeFixedMemory(unsigned char *Ptr)
 {
-  USHORT DescLength;
   UCHAR Info;
   ULONG Base;
   ULONG Length;
@@ -669,7 +668,6 @@ int main (int argc, char *argv[])
   HKEY hPnpKey;
   DWORD dwType;
   DWORD dwSize;
-  DWORD i;
   PCM_FULL_RESOURCE_DESCRIPTOR lpBuffer;
   PCM_PNP_BIOS_INSTALLATION_CHECK lpPnpInst;
   PCM_PNP_BIOS_DEVICE_NODE lpDevNode;

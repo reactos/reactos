@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.12 2003/09/03 20:16:06 ekohl Exp $
+/* $Id: objdir.c,v 1.13 2003/11/11 17:00:41 ekohl Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -284,7 +284,7 @@ ListDirectory (
 		++ EntryCount;
 		++ pDirectoryEntry;
 	}
-	printf ("\n\t%d object(s)\n", EntryCount);
+	printf ("\n\t%lu object(s)\n", EntryCount);
 	/*
 	 * Free any resource.
 	 */
