@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2003/06/22 19:18:06 sedwards Exp $
+# $Id: Makefile,v 1.16 2003/06/23 10:10:51 rcampbell Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,6 +25,7 @@ CONTROLS_OBJECTS = \
 	controls/listbox.o \
 	controls/scrollbar.o \
 	controls/static.o \
+	controls/button.o \
 	controls/regcontrol.o
 
 MISC_OBJECTS = \
