@@ -50,7 +50,25 @@ lstrcpynA(
 	  int iMaxLength
 	  )
 {
-	return strncpy(lpString1,lpString2,iMaxLength);
+  /* Can't use strncpy, because strncpy will fill unused bytes in
+     lpString1 with NUL bytes while lstrcpynA doesn't */
+
+  if (0 != iMaxLength)
+    {
+      char *d = lpString1;
+      const char *s = lpString2;
+
+      do
+        {
+          if (0 == (*d++ = *s++))
+            {
+              break;
+            }
+        }
+      while(0 != --iMaxLength);
+    }
+
+  return lpString1;
 }
 
 
@@ -134,7 +152,25 @@ lstrcpynW(
     int iMaxLength
     )
 {
-	return wcsncpy(lpString1,lpString2,iMaxLength);
+  /* Can't use wcsncpy, because wcsncpy will fill unused bytes in
+     lpString1 with NUL bytes while lstrcpynW doesn't */
+
+  if (0 != iMaxLength)
+    {
+      WCHAR *d = lpString1;
+      const WCHAR *s = lpString2;
+
+      do
+        {
+          if (0 == (*d++ = *s++))
+            {
+              break;
+            }
+        }
+      while(0 != --iMaxLength);
+    }
+
+  return lpString1;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: tcsncpy.h,v 1.2 2004/01/27 21:43:47 gvg Exp $
+/* $Id: tcsncpy.h,v 1.3 2004/01/28 08:51:09 gvg Exp $
  */
 
 #include <stddef.h>
@@ -15,6 +15,7 @@ _TCHAR * _tcsncpy(_TCHAR * dst, const _TCHAR * src, size_t n)
   {
    if((*d ++ = *s ++) == 0)
    {
+    while (-- n != 0) *d ++ = 0;
     break;
    }
   }
