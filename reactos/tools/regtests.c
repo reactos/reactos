@@ -426,7 +426,7 @@ static char KMSTUB[] =
   "\n"
   "  if (KMRegTestsDeviceObject == NULL)\n"
   "    {\n"
-  "      RtlInitUnicodeString(&DriverName, L\"\\Device\\KMRegTests\");\n"
+  "      RtlInitUnicodeString(&DriverName, L\"\\\\Device\\\\KMRegTests\");\n"
   "	     Status = IoGetDeviceObjectPointer(&DriverName, FILE_WRITE_ATTRIBUTES,\n"
   "	       &KMRegTestsFileObject, &KMRegTestsDeviceObject);\n"
   "	     if (!NT_SUCCESS(Status)) return;\n"
