@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.3 2004/06/29 12:03:56 ekohl Exp $
+/* $Id: control.c,v 1.4 2004/06/30 12:10:12 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c
@@ -26,16 +26,14 @@
  * UPDATE HISTORY:
  *      06-13-2004  Created
  */
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <tchar.h>
-#include <windows.h>
-
-#ifdef _MSC_VER
-#include <commctrl.h>
-#include <cpl.h>
-#endif
 
 #include "resource.h"
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/06/18 20:43:44 kuehng Exp $
+# $Id: Makefile,v 1.2 2004/06/30 12:11:11 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,13 +13,19 @@ TARGET_INSTALLDIR = system32
 TARGET_BASE = $(TARGET_BASE_LIB_CPL_SYSDM)
 
 TARGET_CFLAGS = \
+ -D_WIN32_IE=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
  -I./include \
  -DUNICODE \
  -D_UNICODE \
  -D__REACTOS__ \
+ -D__USE_W32API \
  -Wall \
  -Werror \
  -fno-builtin
+
+TARGET_LFLAGS = -nostartfiles
+
 
 TARGET_LFLAGS = -nostartfiles
 
