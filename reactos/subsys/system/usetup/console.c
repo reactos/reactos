@@ -32,12 +32,14 @@
 #include "usetup.h"
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 
 /* GLOBALS ******************************************************************/
 
 static HANDLE StdInput  = INVALID_HANDLE_VALUE;
 static HANDLE StdOutput = INVALID_HANDLE_VALUE;
-static HANDLE InputEvent = INVALID_HANDLE_VALUE;
 
 static SHORT xScreen = 0;
 static SHORT yScreen = 0;
@@ -68,26 +70,12 @@ AllocConsole(VOID)
 			     0,
 			     NULL,
 			     NULL);
-  Status = NtCreateFile(&StdOutput,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			0,
-			0,
-			FILE_OPEN,
-			0,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  /* Create input event */
-  Status = NtCreateEvent(&InputEvent,
-			 STANDARD_RIGHTS_ALL,
-			 NULL,
-			 FALSE,
-			 FALSE);
+  Status = NtOpenFile (&StdOutput,
+		       FILE_ALL_ACCESS,
+		       &ObjectAttributes,
+		       &IoStatusBlock,
+		       0,
+		       FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     return(Status);
 
@@ -99,17 +87,14 @@ AllocConsole(VOID)
 			     0,
 			     NULL,
 			     NULL);
-  Status = NtCreateFile(&StdInput,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			0,
-			0,
-			FILE_OPEN,
-			0,
-			NULL,
-			0);
+  Status = NtOpenFile (&StdInput,
+		       FILE_ALL_ACCESS,
+		       &ObjectAttributes,
+		       &IoStatusBlock,
+		       0,
+		       FILE_SYNCHRONOUS_IO_ALERT);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
   GetConsoleScreenBufferInfo(&csbi);
 
@@ -123,14 +108,15 @@ AllocConsole(VOID)
 VOID
 FreeConsole(VOID)
 {
+  DPRINT1("FreeConsole() called\n");
+
   if (StdInput != INVALID_HANDLE_VALUE)
     NtClose(StdInput);
 
   if (StdOutput != INVALID_HANDLE_VALUE)
     NtClose(StdOutput);
 
-  if (InputEvent != INVALID_HANDLE_VALUE)
-    NtClose(InputEvent);
+  DPRINT1("FreeConsole() done\n");
 }
 
 
@@ -154,15 +140,8 @@ WriteConsole(PCHAR Buffer,
 		       NumberOfCharsToWrite,
 		       NULL,
 		       NULL);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
-  if (NumberOfCharsWritten != NULL)
+  if (NT_SUCCESS(Status) && NumberOfCharsWritten != NULL)
     {
       *NumberOfCharsWritten = IoStatusBlock.Information;
     }
@@ -219,22 +198,14 @@ ReadConsoleInput(PINPUT_RECORD Buffer)
 
   Buffer->EventType = KEY_EVENT;
   Status = NtReadFile(StdInput,
-		      InputEvent,
+		      NULL,
 		      NULL,
 		      NULL,
 		      &Iosb,
-		      &Buffer->Event.KeyEvent,	//&KeyEventRecord->InputEvent.Event.KeyEvent,
+		      &Buffer->Event.KeyEvent,
 		      sizeof(KEY_EVENT_RECORD),
 		      NULL,
 		      0);
-
-      if( Status == STATUS_PENDING )
-	{
-	  NtWaitForSingleObject(InputEvent,
-				FALSE,
-				NULL);
-	  Status = Iosb.Status;
-	}
 
   return(Status);
 }
@@ -263,13 +234,6 @@ ReadConsoleOutputCharacters(LPSTR lpCharacter,
 				 sizeof(OUTPUT_CHARACTER),
 				 (PVOID)lpCharacter,
 				 nLength);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   if (NT_SUCCESS(Status) && lpNumberOfCharsRead != NULL)
     {
@@ -303,13 +267,6 @@ ReadConsoleOutputAttributes(PUSHORT lpAttribute,
 				 sizeof(OUTPUT_ATTRIBUTE),
 				 (PVOID)lpAttribute,
 				 nLength);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   if (NT_SUCCESS(Status) && lpNumberOfAttrsRead != NULL)
     {
@@ -350,13 +307,6 @@ WriteConsoleOutputCharacters(LPCSTR lpCharacter,
 				 nLength + sizeof(COORD),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   RtlFreeHeap(ProcessHeap,
 	      0,
@@ -401,13 +351,6 @@ WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
 				 nLength + sizeof(COORD),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   RtlFreeHeap(ProcessHeap,
 	      0,
@@ -448,13 +391,6 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 				 nLength * sizeof(USHORT) + sizeof(COORD),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   RtlFreeHeap(ProcessHeap,
 	      0,
@@ -489,13 +425,7 @@ FillConsoleOutputAttribute(USHORT wAttribute,
 				 sizeof(OUTPUT_ATTRIBUTE),
 				 &Buffer,
 				 sizeof(OUTPUT_ATTRIBUTE));
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   if (NT_SUCCESS(Status))
     {
       *lpNumberOfAttrsWritten = Buffer.dwTransfered;
@@ -530,13 +460,7 @@ FillConsoleOutputCharacter(CHAR Character,
 				 sizeof(OUTPUT_CHARACTER),
 				 &Buffer,
 				 sizeof(OUTPUT_CHARACTER));
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   if (NT_SUCCESS(Status))
     {
       *NumberOfCharsWritten = Buffer.dwTransfered;
@@ -627,13 +551,7 @@ SetConsoleMode(HANDLE hConsoleHandle,
 				 sizeof(CONSOLE_MODE),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(hConsoleHandle,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   return(Status);
 }
 #endif
@@ -655,13 +573,6 @@ GetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo)
 				 0,
 				 ConsoleScreenBufferInfo,
 				 sizeof(CONSOLE_SCREEN_BUFFER_INFO));
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
 
   return(Status);
 }
@@ -683,13 +594,7 @@ SetConsoleCursorInfo(PCONSOLE_CURSOR_INFO lpConsoleCursorInfo)
 				 sizeof(CONSOLE_CURSOR_INFO),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   return(Status);
 }
 
@@ -718,19 +623,13 @@ SetConsoleCursorPosition(COORD dwCursorPosition)
 				 sizeof(CONSOLE_SCREEN_BUFFER_INFO),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   return(Status);
 }
 
 
 NTSTATUS
-SetConsoleTextAttribute(WORD wAttributes)
+SetConsoleTextAttribute(USHORT wAttributes)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -742,16 +641,10 @@ SetConsoleTextAttribute(WORD wAttributes)
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
 				 &wAttributes,
-				 sizeof(WORD),
+				 sizeof(USHORT),
 				 NULL,
 				 0);
-  if (Status == STATUS_PENDING)
-    {
-      NtWaitForSingleObject(StdOutput,
-			    FALSE,
-			    NULL);
-      Status = IoStatusBlock.Status;
-    }
+
   return(Status);
 }
 
