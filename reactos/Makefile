@@ -38,7 +38,7 @@ LIB_STATIC = string rosrtl epsapi zlib
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 DLLS = advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand msafd \
        msvcrt ntdll psapi richedit secur32 syssetup twain user32 version winedbgc \
-       winspool ws2help ws2_32 wsock32 wshirda iphlpapi kbdus mswsock
+       winspool ws2help ws2_32 wsock32 wshirda iphlpapi kbdus mswsock msimg32
 
 SUBSYS = smss win32k csrss ntvdm
 
