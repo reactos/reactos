@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define DEC_SIGN(d)	((d)->u.s.sign)
+#define DEC_SIGN(d) ((d)->u.s.sign)
 #define DEC_SCALE(d) ((d)->u.s.scale)
 #define DEC_SIGNSCALE(d) ((d)->u.signscale)
 #define DEC_HI32(d) ((d)->Hi32)

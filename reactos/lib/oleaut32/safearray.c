@@ -655,7 +655,7 @@ SAFEARRAY* WINAPI SafeArrayCreateEx(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsa
  * NOTES
  * See SafeArray.
  */
-SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, UINT cElements)
+SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, ULONG cElements)
 {
   TRACE("(%d->%s,%ld,%ld\n", vt, debugstr_vt(vt), lLbound, cElements);
     
@@ -683,7 +683,7 @@ SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, UINT cElements
  * NOTES
  * See SafeArray.
  */
-SAFEARRAY* WINAPI SafeArrayCreateVectorEx(VARTYPE vt, LONG lLbound, UINT cElements, LPVOID pvExtra)
+SAFEARRAY* WINAPI SafeArrayCreateVectorEx(VARTYPE vt, LONG lLbound, ULONG cElements, LPVOID pvExtra)
 {
   ULONG ulSize;
   IRecordInfo* iRecInfo = (IRecordInfo*)pvExtra;
