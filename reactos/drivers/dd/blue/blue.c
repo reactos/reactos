@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.15 1999/12/10 17:04:37 dwelch Exp $
+/* $Id: blue.c,v 1.16 1999/12/11 01:44:29 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -95,14 +95,14 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
 
     /* switch blinking characters off */
-    READ_PORT_UCHAR (ATTRC_INPST1 /*0x3da*/);
-    value = READ_PORT_UCHAR (ATTRC_WRITEREG/*0x3c0*/);
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, 0x10);
-    data  = READ_PORT_UCHAR (ATTRC_READREG /*0x3c1*/);
+    READ_PORT_UCHAR (ATTRC_INPST1);
+    value = READ_PORT_UCHAR (ATTRC_WRITEREG);
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG, 0x10);
+    data  = READ_PORT_UCHAR (ATTRC_READREG);
     data  = data & ~0x08;
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, data);
-    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, value);
-    READ_PORT_UCHAR (ATTRC_INPST1 /*0x3da*/);
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG, data);
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG, value);
+    READ_PORT_UCHAR (ATTRC_INPST1);
     __asm__("sti\n\t");
 
     DeviceExtension->ScanLines = NR_SCANLINES; /* FIXME: read it from CRTC */
@@ -198,7 +198,7 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     }
                 }
                 break;
-	
+
             default:
                 vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
                 vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
@@ -210,14 +210,13 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 }
                 break;
         }
-   
-   
+
         if (cursory >= rows)
         {
             unsigned short *LinePtr;
 
-            memcpy (vidmem, 
-                    &vidmem[columns * 2], 
+            memcpy (vidmem,
+                    &vidmem[columns * 2],
                     columns * (rows - 1) * 2);
 
             LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
@@ -235,7 +234,6 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
     }
 
-
     /* Set the cursor position */
     offset = (cursory * columns) + cursorx;
 
@@ -246,7 +244,7 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
 
     Status = STATUS_SUCCESS;
-   
+
     Irp->IoStatus.Status = Status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
@@ -299,7 +297,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 Status = STATUS_SUCCESS;
             }
             break;
-           
+
         case IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO:
             {
                 PCONSOLE_SCREEN_BUFFER_INFO pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
@@ -584,7 +582,7 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     UNICODE_STRING device_name;
     ANSI_STRING asymlink_name;
     UNICODE_STRING symlink_name;
-   
+
     DbgPrint ("Screen Driver 0.0.6\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
