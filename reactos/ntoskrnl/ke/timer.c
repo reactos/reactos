@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.79 2004/10/01 20:09:57 hbirr Exp $
+/* $Id: timer.c,v 1.80 2004/10/13 22:27:03 ion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -54,6 +54,17 @@ volatile ULONG KiRawTicks = 0;
  * RJJ was 54945055
  */
 #define CLOCK_INCREMENT (100000)
+
+#ifdef  __GNUC__
+ULONG EXPORTED KeMaximumIncrement = 100000;
+ULONG EXPORTED KeMinimumIncrement = 100000;
+#else
+/* Microsoft-style declarations */
+EXPORTED ULONG KeMaximumIncrement = 100000;
+EXPORTED ULONG KeMinimumIncrement = 100000;
+#endif
+
+
 
 /*
  * PURPOSE: List of timers
@@ -470,7 +481,7 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 STDCALL
@@ -479,12 +490,15 @@ KeQueryRuntimeThread(
 	OUT PULONG UserTime
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+	/* Return the User Time */
+	*UserTime = Thread->UserTime;
+	
+	/* Return the Kernel Time */
+	return Thread->KernelTime;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -493,7 +507,10 @@ KeSetTimeIncrement(
     IN ULONG MinIncrement
 )
 {
-	UNIMPLEMENTED;
+	/* Set some Internal Variables */
+	/* FIXME: We use a harcoded CLOCK_INCREMENT. That *must* be changed */
+	KeMaximumIncrement = MaxIncrement;
+	KeMinimumIncrement = MinIncrement;
 }
 
 /*
@@ -774,7 +791,7 @@ KeSetTimeUpdateNotifyRoutine(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -782,11 +799,14 @@ KeUpdateRunTime(
 	IN PKTRAP_FRAME	TrapFrame
 )
 {
-	UNIMPLEMENTED;
+	KIRQL OldIrql;
+	
+	/* These are equivalent... we should just remove the Ki and stick it here... */
+	KiUpdateProcessThreadTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID 
 STDCALL
@@ -795,7 +815,10 @@ KeUpdateSystemTime(
 	IN ULONG        Increment
 )
 {
-	UNIMPLEMENTED;
+	KIRQL OldIrql;
+	
+	/* These are equivalent... we should just remove the Ki and stick it here... */
+	KiUpdateSystemTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
 }
 
 /*EOF*/

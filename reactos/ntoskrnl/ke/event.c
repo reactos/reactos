@@ -133,7 +133,7 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -142,7 +142,17 @@ KeSetEventBoostPriority(
 	IN PKTHREAD *Thread OPTIONAL
 )
 {
-	UNIMPLEMENTED;
+	PKTHREAD WaitingThread;
+	
+	/* Get Thread that is currently waiting. First get the Wait Block, then the Thread */
+	WaitingThread = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry)->Thread;
+	
+	/* Return it to caller if requested */
+	if ARGUMENT_PRESENT(Thread) *Thread = WaitingThread;
+	
+	/* Reset the Quantum and Unwait the Thread */
+	WaitingThread->Quantum = WaitingThread->ApcState.Process->ThreadQuantum;
+	KeRemoveAllWaitsThread((PETHREAD)WaitingThread, STATUS_SUCCESS, TRUE);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.3 2004/10/13 01:42:14 ion Exp $
+/* $Id: device.c,v 1.4 2004/10/13 22:27:03 ion Exp $
  *
  * FILE:            ntoskrnl/ke/profile.c
  * PURPOSE:         Kernel Device/Settings Functions
@@ -12,7 +12,7 @@
 #include <internal/debug.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
 STDCALL
 PVOID
@@ -23,8 +23,8 @@ KeFindConfigurationEntry(
     IN PULONG RegKey
 )
 {
-	UNIMPLEMENTED;
-	return 0;
+	/* Start Search at Root */
+	return KeFindConfigurationNextEntry(Unknown, Class, Type, RegKey, NULL);
 }
 
 /*
@@ -94,7 +94,7 @@ KeFlushEntireTb(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STDCALL
 VOID
@@ -102,7 +102,7 @@ KeSetDmaIoCoherency(
     IN ULONG Coherency
 )
 {
-	UNIMPLEMENTED;
+	KiDmaIoCoherency = Coherency;
 }
 
 /*
@@ -120,7 +120,7 @@ KeRemoveByKeyDeviceQueueIfBusy (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 STDCALL
 KAFFINITY
@@ -128,8 +128,7 @@ KeQueryActiveProcessors (
     VOID
     )
 {
-	UNIMPLEMENTED;
-	return 0;
+	return KeActiveProcessors;
 }
 
 

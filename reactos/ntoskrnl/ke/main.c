@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.198 2004/10/03 03:03:54 ion Exp $
+/* $Id: main.c,v 1.199 2004/10/13 22:27:03 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -53,17 +53,21 @@
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors;
+KAFFINITY  EXPORTED KeActiveProcessors;
 LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 ULONG EXPORTED KeDcacheFlushCount = 0;
 ULONG EXPORTED KeIcacheFlushCount = 0;
+ULONG EXPORTED KiDmaIoCoherency = 0; /* RISC Architectures only */
 #else
 /* Microsoft-style declarations */
 EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 EXPORTED ULONG NtGlobalFlag = 0;
 EXPORTED CHAR  KeNumberProcessors;
+EXPORTED KAFFINITY KeActiveProcessors;
 EXPORTED LOADER_PARAMETER_BLOCK KeLoaderBlock;
 EXPORTED ULONG KeDcacheFlushCount = 0;
 EXPORTED ULONG KeIcacheFlushCount = 0;
+EXPORTED ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
 #endif	/* __GNUC__ */
 
 static LOADER_MODULE KeLoaderModules[64];

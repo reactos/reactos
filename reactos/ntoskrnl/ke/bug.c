@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.46 2004/09/28 15:02:29 weiden Exp $
+/* $Id: bug.c,v 1.47 2004/10/13 22:27:03 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -50,13 +50,20 @@ KeInitializeBugCheck(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+	/* Check the Current State */
+	if (CallbackRecord->State == BufferInserted) {
+		CallbackRecord->State = BufferEmpty;
+		RemoveEntryList(&CallbackRecord->Entry);
+		return TRUE;
+	}
+	
+	/* The callback wasn't registered */
+	return FALSE;
 }
 
 /*
@@ -69,12 +76,21 @@ KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
 			   ULONG Length,
 			   PUCHAR Component)
 {
-  InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
-  CallbackRecord->Length = Length;
-  CallbackRecord->Buffer = Buffer;
-  CallbackRecord->Component = Component;
-  CallbackRecord->CallbackRoutine = CallbackRoutine;
-  return(TRUE);
+
+	/* Check the Current State first so we don't double-register */
+	if (CallbackRecord->State == BufferEmpty) {
+		CallbackRecord->Length = Length;
+		CallbackRecord->Buffer = Buffer;
+		CallbackRecord->Component = Component;
+		CallbackRecord->CallbackRoutine = CallbackRoutine;
+		CallbackRecord->State = BufferInserted;
+		InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
+		
+		return TRUE;
+	}
+  
+	/* The Callback was already registered */
+	return(FALSE);
 }
 
 VOID STDCALL

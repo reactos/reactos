@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.28 2004/10/13 01:42:14 ion Exp $
+/* $Id: process.c,v 1.29 2004/10/13 22:27:03 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -114,7 +114,19 @@ KeDetachProcess (VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+KeIsAttachedProcess(
+	VOID
+	)
+{
+	return KeGetCurrentThread()->ApcStateIndex;
+}
+
+/*
+ * @implemented
  */
 VOID
 STDCALL

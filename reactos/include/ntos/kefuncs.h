@@ -15,11 +15,19 @@ extern CHAR EXPORTED KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 extern ULONG EXPORTED KeDcacheFlushCount;
 extern ULONG EXPORTED KeIcacheFlushCount;
+extern KAFFINITY EXPORTED KeActiveProcessors;
+extern ULONG EXPORTED KiDmaIoCoherency; /* RISC Architectures only */
+extern ULONG EXPORTED KeMaximumIncrement;
+extern ULONG EXPORTED KeMinimumIncrement;
 #else
 extern CHAR IMPORTED KeNumberProcessors;
+extern KAFFINITY IMPORTED KeActiveProcessors;
 extern LOADER_PARAMETER_BLOCK IMPORTED KeLoaderBlock;
 extern ULONG EXPORTED KeDcacheFlushCount;
 extern ULONG EXPORTED KeIcacheFlushCount;
+extern ULONG IMPORTED KiDmaIoCoherency; /* RISC Architectures only */
+extern ULONG IMPORTED KeMaximumIncrement;
+extern ULONG IMPORTED KeMinimumIncrement;
 #endif
 
 
