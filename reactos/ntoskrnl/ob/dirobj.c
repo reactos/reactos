@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.13 2002/01/23 23:39:26 chorns Exp $
+/* $Id: dirobj.c,v 1.14 2002/03/17 17:51:33 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -185,7 +185,8 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
     {
 	DirectoryCount = 1;
     }
-    DirectorySize = DirectoryCount * sizeof (OBJDIR_INFORMATION);
+    // count is DirectoryCount + one null entry
+    DirectorySize = (DirectoryCount + 1) * sizeof (OBJDIR_INFORMATION);
     if (DirectorySize > SpaceLeft)
     {
 	return (STATUS_BUFFER_TOO_SMALL);
