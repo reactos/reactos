@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.30 2003/07/11 13:50:23 royce Exp $
+/* $Id: unicode.c,v 1.31 2004/01/07 10:11:03 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1335,14 +1335,13 @@ RtlUnicodeStringToInteger(
 		{
 			return STATUS_INVALID_PARAMETER;
 		}
-		else if ((((*Str > L'9') || (*Str < L'0')) ||
-		          ((towupper (*Str) > L'F') ||
-		           (towupper (*Str) < L'A'))) && (Base == 16))
+		else if (  ((*Str > L'9') || (*Str < L'0')) &&
+		           ((towupper (*Str) > L'F') || (towupper (*Str) < L'A')) && 
+			   (Base == 16))
 		{
 			return STATUS_INVALID_PARAMETER;
 		}
-		else
-			Str++;
+		Str++;
 	}
 
 	Str = String->Buffer + lenmin;
@@ -1352,7 +1351,7 @@ RtlUnicodeStringToInteger(
 
 	while (iswxdigit (*Str) &&
 	       (Val = iswdigit (*Str) ? *Str - L'0' : (iswlower (*Str)
-	        ? toupper (*Str) : *Str) - L'A' + 10) < Base)
+	        ? towupper (*Str) : *Str) - L'A' + 10) < Base)
 	{
 		*Value = *Value * Base + Val;
 		Str++;
