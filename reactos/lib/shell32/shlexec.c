@@ -1219,7 +1219,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     }
     else if (PathIsURLW((LPWSTR)lpFile))    /* File not found, check for URL */
     {
-	static const WCHAR wszShell[] = {'\\','s','h','e','l','l',0};
+	static const WCHAR wszShell[] = {'\\','s','h','e','l','l','\\',0};
 	static const WCHAR wCommand[] = {'\\','c','o','m','m','a','n','d',0};
         LPWSTR lpstrRes;
         INT iSize;
@@ -1346,15 +1346,13 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
 
     ret = ShellExecuteExW32 (&seiW, SHELL_ExecuteW);
 
+    sei->hInstApp = seiW.hInstApp;
+
     if (wVerb) SHFree(wVerb);
     if (wFile) SHFree(wFile);
     if (wParameters) SHFree(wParameters);
     if (wDirectory) SHFree(wDirectory);
     if (wClass) SHFree(wClass);
-
-    sei->hInstApp = seiW.hInstApp;
-
-    TRACE("ShellExecuteExW(): ret=%d\n", ret);
 
     return ret;
 }
