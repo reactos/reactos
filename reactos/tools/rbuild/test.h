@@ -8,7 +8,8 @@ class BaseTest
 public:
 	bool Failed;
 	BaseTest();
-	/*virtual void Run();*/
+	virtual ~BaseTest();
+	virtual void Run() = 0;
 protected:
 	void Assert(char *message);
 	void IsTrue(bool condition);
@@ -24,6 +25,7 @@ private:
 
 class ModuleTest : public BaseTest
 {
+public:
 	void Run();
 };
 

@@ -5,11 +5,11 @@ BaseTest::BaseTest()
 {
 	Failed = true;
 }
-/*
-void BaseTest::Run()
+
+BaseTest::~BaseTest()
 {
 }
-*/
+
 void BaseTest::Assert(char *message)
 {
 	printf(message);
@@ -81,6 +81,17 @@ void BaseTest::Fail()
 	Failed = true;
 }
 
+class BaseTestList : public vector<BaseTest*>
+{
+public:
+	~BaseTestList()
+	{
+		for ( size_t i = 0; i < size(); i++ )
+		{
+			delete (*this)[i];
+		}
+	}
+};
 
 class TestDispatcher
 {
@@ -88,10 +99,10 @@ public:
 	void Run()
 	{
 		int numberOfFailedTests = 0;
-		vector<BaseTest> tests = GetTests();
+		BaseTestList tests = GetTests();
 		for (size_t i = 0; i < tests.size(); i++)
 		{
-			BaseTest& test = tests[i];
+			BaseTest& test = *tests[i];
 			/*test.Run();*/
 			if (test.Failed)
 				numberOfFailedTests++;
@@ -105,10 +116,10 @@ public:
 	}
 
 private:
-	vector<BaseTest> GetTests()
+	BaseTestList GetTests()
 	{
-		vector<BaseTest> tests;
-		tests.push_back(ModuleTest());
+		BaseTestList tests;
+		tests.push_back(new ModuleTest());
 		return tests;
 	}
 };
