@@ -132,57 +132,150 @@ typedef struct _EVENT_BASIC_INFORMATION
 
 // system information
 // {Nt|Zw}{Query|Set}SystemInformation
+// (GN means Gary Nebbet in "NT/W2K Native API Reference")
 
 typedef
 enum _SYSTEM_INFORMATION_CLASS
 {
 	SystemInformationClassMin		= 0,
 	SystemBasicInformation			= 0,	/* Q */
+	
 	SystemProcessorInformation		= 1,	/* Q */
+	
 	SystemPerformanceInformation		= 2,	/* Q */
+	
 	SystemTimeOfDayInformation		= 3,	/* Q */
+	
 	SystemPathInformation			= 4,	/* Q (checked build only) */
+	SystemNotImplemented1                   = 4,	/* Q (GN) */
+	
 	SystemProcessInformation		= 5,	/* Q */
+	SystemProcessesAndThreadsInformation    = 5,	/* Q (GN) */
+	
 	SystemCallCountInfoInformation		= 6,	/* Q */
+	SystemCallCounts			= 6,	/* Q (GN) */
+	
 	SystemDeviceInformation			= 7,	/* Q */
+// It conflicts with symbol in ntoskrnl/io/resource.c
+//	SystemConfigurationInformation		= 7,	/* Q (GN) */
+	
 	SystemProcessorPerformanceInformation	= 8,	/* Q */
+	SystemProcessorTimes			= 8,	/* Q (GN) */
+	
 	SystemFlagsInformation			= 9,	/* QS */
+	SystemGlobalFlag			= 9,	/* QS (GN) */
+	
 	SystemCallTimeInformation		= 10,
+	SystemNotImplemented2			= 10,	/* (GN) */
+	
 	SystemModuleInformation			= 11,	/* Q */
+	
 	SystemLocksInformation			= 12,	/* Q */
+	SystemLockInformation			= 12,	/* Q (GN) */
+	
 	SystemStackTraceInformation		= 13,
+	SystemNotImplemented3			= 13,	/* Q (GN) */
+	
 	SystemPagedPoolInformation		= 14,
+	SystemNotImplemented4			= 14,	/* Q (GN) */
+	
 	SystemNonPagedPoolInformation		= 15,
+	SystemNotImplemented5			= 15,	/* Q (GN) */
+	
 	SystemHandleInformation			= 16,	/* Q */
+	
 	SystemObjectInformation			= 17,	/* Q */
+	
 	SystemPageFileInformation		= 18,	/* Q */
+	SystemPagefileInformation		= 18,	/* Q (GN) */
+	
 	SystemVdmInstemulInformation		= 19,	/* Q */
+	SystemInstructionEmulationCounts	= 19,	/* Q (GN) */
+	
 	SystemVdmBopInformation			= 20,
+	SystemInvalidInfoClass1			= 20,	/* (GN) */
+	
 	SystemFileCacheInformation		= 21,	/* QS */
+	SystemCacheInformation			= 21,	/* QS (GN) */
+	
 	SystemPoolTagInformation		= 22,	/* Q (checked build only) */
+	
 	SystemInterruptInformation		= 23,	/* Q */
+	SystemProcessorStatistics		= 23,	/* Q (GN) */
+	
 	SystemDpcBehaviourInformation		= 24,	/* QS */
+	SystemDpcInformation			= 24,	/* QS (GN) */
+	
 	SystemFullMemoryInformation		= 25,
+	SystemNotImplemented6			= 25,	/* (GN) */
+	
 	SystemLoadGdiDriverInformation		= 26,	/* S (callable) */
+	SystemLoadImage				= 26,	/* S (callable) (GN) */
+	
 	SystemUnloadGdiDriverInformation	= 27,	/* S (callable) */
+	SystemUnloadImage			= 27,	/* S (callable) (GN) */
+	
 	SystemTimeAdjustmentInformation		= 28,	/* QS */
-	SystemSummryMemoryInformation		= 29,
+	SystemTimeAdjustment			= 28,	/* QS (GN) */
+	
+	SystemSummaryMemoryInformation		= 29,
+	SystemNotImplemented7			= 29,	/* (GN) */
+	
 	SystemNextEventIdInformation		= 30,
+	SystemNotImplemented8			= 30,	/* (GN) */
+	
 	SystemEventIdsInformation		= 31,
+	SystemNotImplemented9			= 31,	/* (GN) */
+	
 	SystemCrashDumpInformation		= 32,	/* Q */
+	
 	SystemExceptionInformation		= 33,	/* Q */
+	
 	SystemCrashDumpStateInformation		= 34,	/* Q */
+	
 	SystemKernelDebuggerInformation		= 35,	/* Q */
+	
 	SystemContextSwitchInformation		= 36,	/* Q */
+	
 	SystemRegistryQuotaInformation		= 37,	/* QS */
+	
 	SystemExtendServiceTableInformation	= 38,	/* S */
-	SystemPrioritySeperation		= 39,	/* S */
+	SystemLoadAndCallImage			= 38,	/* S (GN) */
+	
+	SystemPrioritySeparation		= 39,	/* S */
+	
 	SystemPlugPlayBusInformation		= 40,
+	SystemNotImplemented10			= 40,	/* Q (GN) */
+	
 	SystemDockInformation			= 41,
+	SystemNotImplemented11			= 41,	/* Q (GN) */
+	
 	SystemPowerInformation			= 42,
+	SystemInvalidInfoClass2			= 42,	/* (GN) */
+	
 	SystemProcessorSpeedInformation		= 43,
+	SystemInvalidInfoClass3			= 43,	/* (GN) */
+	
 	SystemCurrentTimeZoneInformation	= 44,	/* QS */
+	SystemTimeZoneInformation		= 44,	/* QS (GN) */
+	
 	SystemLookasideInformation		= 45,	/* Q */
+	
+	SystemSetTimeSlipEvent			= 46,	/* S (GN) */
+	
+	SystemCreateSession			= 47,	/* S (GN) */
+	
+	SystemDeleteSession			= 48,	/* S (GN) */
+	
+	SystemInvalidInfoClass4			= 49,	/* (GN) */
+	
+	SystemRangeStartInformation		= 50,	/* Q (GN) */
+	
+	SystemVerifierInformation		= 51,	/* QS (GN) */
+	
+	SystemAddVerifier			= 52,	/* S (GN) */
+	
+	SystemSessionProcessesInformation	= 53,	/* Q (GN) */
 	SystemInformationClassMax
 
 } SYSTEM_INFORMATION_CLASS;
@@ -389,6 +482,7 @@ struct _SYSTEM_DEVICE_INFORMATION
 } SYSTEM_DEVICE_INFORMATION, *PSYSTEM_DEVICE_INFORMATION;
 
 // SystemProcessorPerformanceInformation (8)
+// (one per processor in the system)
 typedef
 struct _SYSTEM_PROCESSORTIME_INFO
 {
@@ -454,7 +548,7 @@ struct _SYSTEM_MODULE_ENTRY
 	ULONG	Unknown2;
 	PVOID	BaseAddress;
 	ULONG	Size;
-	ULONG	Unknown3;
+	ULONG	Flags;
 	ULONG	EntryIndex;
 	USHORT	NameLength; /* Length of module name not including the path, this field contains valid value only for NTOSKRNL module*/
 	USHORT	PathLength; /* Length of 'directory path' part of modulename*/
@@ -523,12 +617,38 @@ struct _SYSTEM_HANDLE_INFORMATION
 } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
 
 // SystemObjectInformation (17)
-// UNKNOWN
+typedef
+struct _SYSTEM_OBJECT_TYPE_INFORMATION
+{
+	ULONG		NextEntryOffset;
+	ULONG		ObjectCount;
+	ULONG		HandleCount;
+	ULONG		TypeNumber;
+	ULONG		InvalidAttributes;
+	GENERIC_MAPPING	GenericMapping;
+	ACCESS_MASK	ValidAccessMask;
+	POOL_TYPE	PoolType;
+	UCHAR		Unknown;
+	UNICODE_STRING	Name;
+	
+} SYSTEM_OBJECT_TYPE_INFORMATION, *PSYSTEM_OBJECT_TYPE_INFORMATION;
+
 typedef
 struct _SYSTEM_OBJECT_INFORMATION
 {
-	DWORD	Unknown;
-	/* FIXME */
+	ULONG			NextEntryOffset;
+	PVOID			Object;
+	ULONG			CreatorProcessId;
+	USHORT			Unknown;
+	USHORT			Flags;
+	ULONG			PointerCount;
+	ULONG			HandleCount;
+	ULONG			PagedPoolUsage;
+	ULONG			NonPagedPoolUsage;
+	ULONG			ExclusiveProcessId;
+	PSECURITY_DESCRIPTOR	SecurityDescriptor;
+	UNICODE_STRING		Name;
+
 } SYSTEM_OBJECT_INFORMATION, *PSYSTEM_OBJECT_INFORMATION;
 
 // SystemPageFileInformation (18)
@@ -670,25 +790,22 @@ typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
 } SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
 
 // SystemTimeAdjustmentInformation (28)
-// (what is the right one?)
-#if 0
 typedef
-struct _SYSTEM_TIME_ADJUSTMENT_INFO
+struct _SYSTEM_QUERY_TIME_ADJUSTMENT
 {
-	TIME	TimeAdjustment;
-	BOOL	TimeAdjustmentDisabled;
+	ULONG	TimeAdjustment;
+	ULONG	MaximumIncrement;
+	BOOLEAN	TimeSynchronization;
 
-} SYSTEM_TIME_ADJUSTMENT_INFO, *PSYSTEM_TIME_ADJUSTMENT_INFO;
-#else
+} SYSTEM_QUERY_TIME_ADJUSTMENT, *PSYSTEM_QUERY_TIME_ADJUSTMENT;
+
 typedef
-struct _SYSTEM_TIME_ADJUSTMENT_INFO
+struct _SYSTEM_SET_TIME_ADJUSTMENT
 {
-	ULONG	KeTimeAdjustment;
-	ULONG	KeMaximumIncrement;
-	BOOLEAN	KeTimeSynchronization;
+	ULONG	TimeAdjustment;
+	BOOLEAN	TimeSynchronization;
 	
 } SYSTEM_TIME_ADJUSTMENT_INFO, *PSYSTEM_TIME_ADJUSTMENT_INFO;
-#endif
 
 // SystemProcessorFaultCountInfo (33)
 typedef
@@ -747,6 +864,76 @@ struct _SYSTEM_TIME_ZONE_INFORMATION
 	LONG	DaylightBias;
 
 } SYSTEM_TIME_ZONE_INFORMATION, * PSYSTEM_TIME_ZONE_INFORMATION;
+
+// SystemLookasideInformation (45)
+typedef
+struct _SYSTEM_LOOKASIDE_INFORMATION
+{
+	USHORT		Depth;
+	USHORT		MaximumDepth;
+	ULONG		TotalAllocates;
+	ULONG		AllocatesMisses;
+	ULONG		TotalFrees;
+	ULONG		FreeMisses;
+	POOL_TYPE	Type;
+	ULONG		Tag;
+	ULONG		Size;
+	
+} SYSTEM_LOOKASIDE_INFORMATION, * PSYSTEM_LOOKASIDE_INFORMATION;
+
+// SystemSetTimeSlipEvent (46)
+typedef
+struct _SYSTEM_SET_TIME_SLIP_EVENT
+{
+	HANDLE	TimeSlipEvent; /* IN */
+
+} SYSTEM_SET_TIME_SLIP_EVENT, * PSYSTEM_SET_TIME_SLIP_EVENT;
+
+// SystemCreateSession (47)
+// (available only on TSE)
+typedef
+struct _SYSTEM_CREATE_SESSION
+{
+	ULONG	SessionId; /* OUT */
+
+} SYSTEM_CREATE_SESSION, * PSYSTEM_CREATE_SESSION;
+
+// SystemDeleteSession (48)
+// (available only on TSE)
+typedef
+struct _SYSTEM_DELETE_SESSION
+{
+	ULONG	SessionId; /* IN */
+
+} SYSTEM_DELETE_SESSION, * PSYSTEM_DELETE_SESSION;
+
+// (49)
+// UNKNOWN
+
+// SystemRangeStartInformation (50)
+typedef
+struct _SYSTEM_RANGE_START_INFORMATION
+{
+	PVOID	SystemRangeStart;
+
+} SYSTEM_RANGE_START_INFORMATION, * PSYSTEM_RANGE_START_INFORMATION;
+
+// SystemVerifierInformation (51)
+// UNKNOWN
+
+// SystemAddVerifier (52)
+// UNKNOWN
+
+// SystemSessionProcessesInformation (53)
+// (available only on TSE)
+typedef
+struct _SYSTEM_SESSION_PROCESSES_INFORMATION
+{
+	ULONG	SessionId;
+	ULONG	BufferSize;
+	PVOID	Buffer; /* same format as in SystemProcessInformation */
+
+} SYSTEM_SESSION_PROCESSES_INFORMATION, * PSYSTEM_SESSION_PROCESSES_INFORMATION;
 
 // memory information
 

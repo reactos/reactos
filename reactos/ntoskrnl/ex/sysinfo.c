@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.10 2001/01/18 16:53:50 ekohl Exp $
+/* $Id: sysinfo.c,v 1.11 2001/04/22 23:06:57 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -647,6 +647,77 @@ QSI_DEF(SystemLookasideInformation)
 }
 
 
+/* Class 46 - Set time slip event */
+SSI_DEF(SystemSetTimeSlipEvent)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 47 - Create a new session (TSE) */
+SSI_DEF(SystemCreateSession)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 48 - Delete an existing session (TSE) */
+SSI_DEF(SystemDeleteSession)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 49 - UNKNOWN */
+QSI_DEF(SystemInvalidInfoClass4)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 50 - System range start address */
+QSI_DEF(SystemRangeStartInformation)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 51 - Driver verifier information */
+QSI_DEF(SystemVerifierInformation)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+SSI_DEF(SystemVerifierInformation)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 52 - Add a driver verifier */
+SSI_DEF(SystemAddVerifier)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/* Class 53 - A session's processes  */
+QSI_DEF(SystemSessionProcessesInformation)
+{
+	/* FIXME */
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -715,7 +786,15 @@ CallQS [] =
 	SI_QX(SystemPowerInformation), /* it should be SI_XX */
 	SI_QX(SystemProcessorSpeedInformation), /* it should be SI_XX */
 	SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */
-	SI_QX(SystemLookasideInformation)
+	SI_QX(SystemLookasideInformation),
+	SI_XS(SystemSetTimeSlipEvent),
+	SI_XS(SystemCreateSession),
+	SI_XS(SystemDeleteSession),
+	SI_QX(SystemInvalidInfoClass4), /* it should be SI_XX */
+	SI_QX(SystemRangeStartInformation),
+	SI_QS(SystemVerifierInformation),
+	SI_XS(SystemAddVerifier),
+	SI_QX(SystemSessionProcessesInformation)
 };
 
 
