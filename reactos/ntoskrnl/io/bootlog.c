@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.2 2004/09/24 10:51:35 ekohl Exp $
+/* $Id: bootlog.c,v 1.3 2004/09/24 15:00:34 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -395,6 +395,7 @@ IopSaveBootLogToFile(VOID)
       if (!NT_SUCCESS(Status))
 	{
 	  CHECKPOINT1;
+	  NtClose(KeyHandle);
 	  ExFreePool(KeyInfo);
 	  ExReleaseResourceLite(&IopBootLogResource);
 	  return;
@@ -404,6 +405,7 @@ IopSaveBootLogToFile(VOID)
       if (!NT_SUCCESS(Status))
 	{
 	  CHECKPOINT1;
+	  NtClose(KeyHandle);
 	  ExFreePool(KeyInfo);
 	  ExReleaseResourceLite(&IopBootLogResource);
 	  return;
@@ -423,9 +425,5 @@ IopSaveBootLogToFile(VOID)
 
   DPRINT("IopSaveBootLogToFile() done\n");
 }
-
-
-
-
 
 /* EOF */
