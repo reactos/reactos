@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.11 2003/03/24 23:08:51 rcampbell Exp $
+/* $Id: paint.c,v 1.12 2003/03/27 02:27:42 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -85,7 +85,7 @@ InvalidateRect(
   CONST RECT *lpRect,
   WINBOOL bErase)
 {
-  return FALSE;
+  return NtUserInvalidateRect( hWnd, lpRect, bErase );
 }
 
 WINBOOL
@@ -95,7 +95,7 @@ InvalidateRgn(
   HRGN hRgn,
   WINBOOL bErase)
 {
-  return FALSE;
+  return NtUserInvalidateRgn( hWnd, hRgn, bErase );
 }
 
 WINBOOL
