@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.29 2004/08/21 21:20:08 tamlin Exp $
+/* $Id: usercall.c,v 1.30 2004/10/22 20:32:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@ KiSystemCallHook(ULONG Nr, ...)
 	DbgPrint("%x, ", va_arg(ap, ULONG));
      }
    DbgPrint(")\n");
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
    va_end(ap);
 #endif
 }

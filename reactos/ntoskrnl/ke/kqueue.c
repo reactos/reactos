@@ -27,8 +27,8 @@ KeInsertByKeyDeviceQueue (
   IN ULONG			SortKey)
 {
   DPRINT("KeInsertByKeyDeviceQueue()\n");
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);   
-   
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
   DeviceQueueEntry->SortKey=SortKey;
 
   KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
@@ -62,12 +62,12 @@ KeRemoveByKeyDeviceQueue (
 	)
 {
   PLIST_ENTRY current;
-  PKDEVICE_QUEUE_ENTRY entry;   
-   
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
-  assert(DeviceQueue!=NULL);
-  assert(DeviceQueue->Busy);
-   
+  PKDEVICE_QUEUE_ENTRY entry;
+
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(DeviceQueue!=NULL);
+  ASSERT(DeviceQueue->Busy);
+
   KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
   /* an attempt to remove an entry from an empty (and busy) queue sets the queue to idle */
@@ -117,9 +117,9 @@ KeRemoveDeviceQueue (
    
    DPRINT("KeRemoveDeviceQueue(DeviceQueue %x)\n",DeviceQueue);
    
-   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
-   assert(DeviceQueue!=NULL);
-   assert(DeviceQueue->Busy);
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT(DeviceQueue!=NULL);
+   ASSERT(DeviceQueue->Busy);
    
    KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
@@ -151,7 +151,7 @@ KeInitializeDeviceQueue (
  *       DeviceQueue = Device queue to initialize
  */
 {
-   assert(DeviceQueue!=NULL);
+   ASSERT(DeviceQueue!=NULL);
    InitializeListHead(&DeviceQueue->DeviceListHead);
    DeviceQueue->Busy=FALSE;
    KeInitializeSpinLock(&DeviceQueue->Lock);
@@ -175,7 +175,7 @@ KeInsertDeviceQueue (
  *          True otherwise
  */
 {
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
    
   KeAcquireSpinLockAtDpcLevel(&DeviceQueue->Lock);
    
@@ -206,7 +206,7 @@ KeRemoveEntryDeviceQueue(
   KIRQL oldIrql;
   PKDEVICE_QUEUE_ENTRY entry;
   
-  assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   
   KeAcquireSpinLock(&DeviceQueue->Lock, &oldIrql);
   

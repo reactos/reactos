@@ -117,7 +117,7 @@ MmSetLRULastPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
 
-   assert (Pfn < MmPageArraySize);
+   ASSERT(Pfn < MmPageArraySize);
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    if (MmPageArray[Pfn].Flags.Type == MM_PHYSICAL_PAGE_USED &&
        MmPageArray[Pfn].Flags.Consumer == MC_USER)
@@ -506,7 +506,7 @@ MmSetFlagsPage(PFN_TYPE Pfn, ULONG Flags)
 {
    KIRQL oldIrql;
 
-   assert (Pfn < MmPageArraySize);
+   ASSERT(Pfn < MmPageArraySize);
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    MmPageArray[Pfn].AllFlags = Flags;
    KeReleaseSpinLock(&PageListLock, oldIrql);
@@ -571,7 +571,7 @@ MmGetFlagsPage(PFN_TYPE Pfn)
    KIRQL oldIrql;
    ULONG Flags;
 
-   assert (Pfn < MmPageArraySize);
+   ASSERT(Pfn < MmPageArraySize);
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    Flags = MmPageArray[Pfn].AllFlags;
    KeReleaseSpinLock(&PageListLock, oldIrql);
@@ -585,7 +585,7 @@ MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SavedSwapEntry)
 {
    KIRQL oldIrql;
 
-   assert (Pfn < MmPageArraySize);
+   ASSERT(Pfn < MmPageArraySize);
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    MmPageArray[Pfn].SavedSwapEntry = SavedSwapEntry;
    KeReleaseSpinLock(&PageListLock, oldIrql);
@@ -597,7 +597,7 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
    SWAPENTRY SavedSwapEntry;
    KIRQL oldIrql;
 
-   assert (Pfn < MmPageArraySize);
+   ASSERT(Pfn < MmPageArraySize);
    KeAcquireSpinLock(&PageListLock, &oldIrql);
    SavedSwapEntry = MmPageArray[Pfn].SavedSwapEntry;
    KeReleaseSpinLock(&PageListLock, oldIrql);

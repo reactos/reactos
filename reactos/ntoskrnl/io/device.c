@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.78 2004/10/22 11:00:41 ekohl Exp $
+/* $Id: device.c,v 1.79 2004/10/22 20:25:53 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,8 +14,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-#define ASSERT assert
 
 /* GLOBALS ********************************************************************/
 
@@ -538,7 +536,7 @@ IoCreateDevice(
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
    
    if (DeviceName != NULL)
    {

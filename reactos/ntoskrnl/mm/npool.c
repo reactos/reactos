@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.91 2004/10/01 20:51:28 arty Exp $
+/* $Id: npool.c,v 1.92 2004/10/22 20:38:22 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -322,7 +322,7 @@ void avl_insert (PNODE * root, PNODE n, int (*compare)(PNODE, PNODE))
       }
       else
       {
-         assert (x->balance == +1);
+         ASSERT(x->balance == +1);
          w = x->link[1];
          x->link[1] = w->link[0];
          w->link[0] = x;
@@ -373,7 +373,7 @@ void avl_insert (PNODE * root, PNODE n, int (*compare)(PNODE, PNODE))
       }
       else
       {
-         assert (x->balance == -1);
+         ASSERT(x->balance == -1);
          w = x->link[0];
          x->link[0] = w->link[1];
          w->link[1] = x;
@@ -528,7 +528,7 @@ void avl_remove (PNODE *root, PNODE item, int (*compare)(PNODE, PNODE))
             {
                PNODE w;
 
-               assert (x->balance == -1);
+               ASSERT(x->balance == -1);
                w = x->link[0];
                x->link[0] = w->link[1];
                w->link[1] = x;
@@ -600,7 +600,7 @@ void avl_remove (PNODE *root, PNODE item, int (*compare)(PNODE, PNODE))
             if (x->balance == +1)
             {
                PNODE w;
-               assert (x->balance == +1);
+               ASSERT(x->balance == +1);
                w = x->link[1];
                x->link[1] = w->link[0];
                w->link[0] = x;

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.148 2004/10/09 12:17:53 gvg Exp $
+/* $Id: loader.c,v 1.149 2004/10/22 20:33:53 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -943,7 +943,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
   ModuleTextSection = ExAllocatePool(NonPagedPool, 
 				     sizeof(MODULE_TEXT_SECTION));
-  assert(ModuleTextSection);
+  ASSERT(ModuleTextSection);
   RtlZeroMemory(ModuleTextSection, sizeof(MODULE_TEXT_SECTION));
   ModuleTextSection->Base = (ULONG)DriverBase;
   ModuleTextSection->Length = DriverSize;

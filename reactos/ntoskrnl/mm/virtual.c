@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.80 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: virtual.c,v 1.81 2004/10/22 20:38:23 ekohl Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -623,7 +623,7 @@ ProbeForRead (IN PVOID Address,
               IN ULONG Length,
               IN ULONG Alignment)
 {
-   assert (Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;
@@ -652,7 +652,7 @@ ProbeForWrite (IN PVOID Address,
    ULONG x;
    ULONG i;
 
-   assert (Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;

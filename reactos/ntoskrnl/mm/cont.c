@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.34 2004/08/15 16:39:06 chorns Exp $
+/* $Id: cont.c,v 1.35 2004/10/22 20:38:22 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,7 @@ MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
 {
-   assert(SwapEntry == 0);
+   ASSERT(SwapEntry == 0);
    if (Page != 0)
    {
       MmReleasePageMemoryConsumer(MC_NPPOOL, Page);

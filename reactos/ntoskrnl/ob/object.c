@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.83 2004/08/15 16:39:10 chorns Exp $
+/* $Id: object.c,v 1.84 2004/10/22 20:43:58 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -343,7 +343,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
   SECURITY_SUBJECT_CONTEXT SubjectContext;
 
-  assert_irql(APC_LEVEL);
+  ASSERT_IRQL(APC_LEVEL);
 
   DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n",
 	 Type, ObjectAttributes, Object);
@@ -603,10 +603,10 @@ ObOpenObjectByPointer(IN POBJECT Object,
 static NTSTATUS
 ObpDeleteObject(POBJECT_HEADER Header)
 {
-  DPRINT("ObPerformRetentionChecks(Header %p)\n", Header);
+  DPRINT("ObpDeleteObject(Header %p)\n", Header);
   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
     {
-      DPRINT("ObpPerformRetentionChecks called at an unsupported IRQL.  Use ObpPerformRetentionChecksDpcLevel instead.\n");
+      DPRINT("ObpDeleteObject called at an unsupported IRQL.  Use ObpDeleteObjectDpcLevel instead.\n");
       KEBUGCHECK(0);
     }
 
@@ -640,8 +640,8 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
   PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
   /* ULONG Tag; */ /* See below */
 
-  assert(Params);
-  assert(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
+  ASSERT(Params);
+  ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
 
   /* Turn this on when we have ExFreePoolWithTag
   Tag = Params->ObjectHeader->ObjectType->Tag; */
@@ -706,7 +706,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
       return STATUS_PENDING;
       
     default:
-      DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported "
+      DPRINT("ObpDeleteObjectDpcLevel called at unsupported "
 	     "IRQL %u!\n", KeGetCurrentIrql());
       KEBUGCHECK(0);
       return STATUS_UNSUCCESSFUL;
@@ -737,7 +737,7 @@ ObfReferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
 
-  assert(Object);
+  ASSERT(Object);
 
   Header = BODY_TO_HEADER(Object);
 
@@ -775,7 +775,7 @@ ObfDereferenceObject(IN PVOID Object)
   BOOL Permanent;
   ULONG HandleCount;
 
-  assert(Object);
+  ASSERT(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
@@ -787,7 +787,7 @@ ObfDereferenceObject(IN PVOID Object)
      last reference.
   */
   NewRefCount = InterlockedDecrement(&Header->RefCount);
-  assert(NewRefCount >= 0);
+  ASSERT(NewRefCount >= 0);
 
   /* Check whether the object can now be deleted. */
   if (NewRefCount == 0 &&
@@ -819,10 +819,10 @@ ObGetObjectPointerCount(PVOID Object)
 {
   POBJECT_HEADER Header;
 
-  assert(Object);
+  ASSERT(Object);
   Header = BODY_TO_HEADER(Object);
 
-  return(Header->RefCount);
+  return Header->RefCount;
 }
 
 
@@ -844,10 +844,10 @@ ObGetObjectHandleCount(PVOID Object)
 {
   POBJECT_HEADER Header;
 
-  assert(Object);
+  ASSERT(Object);
   Header = BODY_TO_HEADER(Object);
 
-  return(Header->HandleCount);
+  return Header->HandleCount;
 }
 
 

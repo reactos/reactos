@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.25 2004/08/15 16:39:03 chorns Exp $
+/* $Id: vpb.c,v 1.26 2004/10/22 20:25:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -100,8 +100,8 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    PVOID SystemBuffer;
    KPROCESSOR_MODE PreviousMode;
    
-   assert(IoStatusBlock != NULL);
-   assert(FsInformation != NULL);
+   ASSERT(IoStatusBlock != NULL);
+   ASSERT(FsInformation != NULL);
    
    DPRINT("FsInformation %p\n", FsInformation);
 
@@ -202,7 +202,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    PIRP Irp;
    NTSTATUS Status;
    
-   assert(FsInformation != NULL);
+   ASSERT(FsInformation != NULL);
    
    DPRINT("FsInformation %p\n", FsInformation);
    
@@ -285,8 +285,8 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    PVOID SystemBuffer;
    KPROCESSOR_MODE PreviousMode;
 
-   assert(IoStatusBlock != NULL);
-   assert(FsInformation != NULL);
+   ASSERT(IoStatusBlock != NULL);
+   ASSERT(FsInformation != NULL);
 
    PreviousMode = ExGetPreviousMode();
 

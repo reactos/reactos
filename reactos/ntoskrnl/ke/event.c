@@ -44,7 +44,7 @@ VOID STDCALL KeInitializeEvent (PKEVENT		Event,
      }
    else
      {
-	assert(FALSE);
+	ASSERT(FALSE);
 	return;
      }
    

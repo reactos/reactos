@@ -34,7 +34,7 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
 	  FileHandle,DesiredAccess,ObjectAttributes,
 	  ObjectAttributes->ObjectName->Buffer);
    
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
    
    if (TimeOut != NULL)
      {

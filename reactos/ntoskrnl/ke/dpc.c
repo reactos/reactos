@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.38 2004/10/17 15:39:29 hbirr Exp $
+/* $Id: dpc.c,v 1.39 2004/10/22 20:30:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,7 +82,7 @@ KiDispatchInterrupt(VOID)
    KIRQL oldlvl;
    PKPCR Pcr;
 
-   assert_irql(DISPATCH_LEVEL);
+   ASSERT_IRQL(DISPATCH_LEVEL);
 
    Pcr = KeGetCurrentKPCR();
 
@@ -96,13 +96,13 @@ KiDispatchInterrupt(VOID)
 
    while (!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead))
    {
-      assert(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
+      ASSERT(Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0);
 
       current_entry = RemoveHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead);
       Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
       Pcr->PrcbData.DpcData[0].DpcCount++;
 
-      assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+      ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
              (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
 
       current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
@@ -176,7 +176,7 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 	Dpc->Lock=0;
      }
 
-   assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+   ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
           (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
 
    KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
@@ -208,7 +208,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
    DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
 	  Dpc, SystemArgument1, SystemArgument2);
 
-   assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql()>=DISPATCH_LEVEL);
 
    Dpc->Number=0;
    Dpc->Importance=MediumImportance;
@@ -222,7 +222,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
    Pcr = KeGetCurrentKPCR();
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-   assert((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
+   ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
           (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
    InsertHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);

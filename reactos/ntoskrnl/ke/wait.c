@@ -136,7 +136,7 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
 
          Mutex = CONTAINING_RECORD(hdr, KMUTEX, Header);
          hdr->SignalState--;
-         assert(hdr->SignalState <= 1);
+         ASSERT(hdr->SignalState <= 1);
          if (hdr->SignalState == 0)
          {
             if (Thread == NULL)
@@ -171,7 +171,7 @@ KiIsObjectSignalled(DISPATCHER_HEADER * hdr,
 
       Mutex = CONTAINING_RECORD(hdr, KMUTEX, Header);
 
-      assert(hdr->SignalState <= 1);
+      ASSERT(hdr->SignalState <= 1);
 
       if ((hdr->SignalState < 1 && Mutex->OwnerThread == Thread) || hdr->SignalState == 1)
       {
@@ -255,8 +255,8 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
       WaiterHead = CONTAINING_RECORD(EnumEntry, KWAIT_BLOCK, WaitListEntry);
       DPRINT("current_entry %x current %x\n", EnumEntry, WaiterHead);
       EnumEntry = EnumEntry->Flink;
-      assert(WaiterHead->Thread != NULL);
-      assert(WaiterHead->Thread->WaitBlockList != NULL);
+      ASSERT(WaiterHead->Thread != NULL);
+      ASSERT(WaiterHead->Thread->WaitBlockList != NULL);
 
       Abandoned = FALSE;
 
@@ -317,7 +317,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
                }
 
                //no WaitAny objects can possibly be signaled since we are here
-               assert(!(Waiter->WaitType == WaitAny
+               ASSERT(!(Waiter->WaitType == WaitAny
 					  && KiIsObjectSignalled(Waiter->Object, Waiter->Thread)));
             }
 
@@ -495,7 +495,7 @@ KeWaitForMultipleObjects(ULONG Count,
    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
           "PsGetCurrentThread() %x\n", Count, Object, PsGetCurrentThread());
 
-   assert(0 < Count && Count <= EX_MAXIMUM_WAIT_OBJECTS);
+   ASSERT(0 < Count && Count <= EX_MAXIMUM_WAIT_OBJECTS);
 
    CurrentThread = KeGetCurrentThread();
    WaitIrql = KeGetCurrentIrql();

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.70 2004/10/04 21:38:49 ion Exp $
+/* $Id: mminit.c,v 1.71 2004/10/22 20:38:22 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -152,7 +152,7 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
-   assert (BaseAddress == (PVOID)&_init_start__);
+   ASSERT(BaseAddress == (PVOID)&_init_start__);
    Length = PAGE_ROUND_UP(((ULONG)&_init_end__)) -
             PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
@@ -469,7 +469,7 @@ MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
 {
-   assert(SwapEntry == 0);
+   ASSERT(SwapEntry == 0);
    if (Page != 0)
    {
       MmReleasePageMemoryConsumer(MC_NPPOOL, Page);

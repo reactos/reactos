@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.78 2004/08/21 19:04:47 tamlin Exp $
+/* $Id: mm.c,v 1.79 2004/10/22 20:38:22 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -103,7 +103,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    {
       case MEMORY_AREA_SECTION_VIEW:
          Status = MmUnmapViewOfSection(Process, Marea->BaseAddress);
-         assert(Status == STATUS_SUCCESS);
+         ASSERT(Status == STATUS_SUCCESS);
          return(STATUS_SUCCESS);
 
       case MEMORY_AREA_VIRTUAL_MEMORY:

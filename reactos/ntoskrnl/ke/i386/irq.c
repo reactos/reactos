@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.47 2004/10/17 15:39:29 hbirr Exp $
+/* $Id: irq.c,v 1.48 2004/10/22 20:32:49 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -518,7 +518,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 	   
            KiDeliverNormalApc();
            
-	   assert(KeGetCurrentThread() == CurrentThread);
+	   ASSERT(KeGetCurrentThread() == CurrentThread);
            if (CurrentThread->TrapFrame == &KernelTrapFrame)
 	     {
                KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);

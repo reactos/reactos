@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.165 2004/10/09 12:17:54 gvg Exp $
+/* $Id: section.c,v 1.166 2004/10/22 20:38:23 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -458,7 +458,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->FileOffset;
    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
-   assert(Bcb);
+   ASSERT(Bcb);
 
    DPRINT("%S %x\n", FileObject->FileName.Buffer, FileOffset);
 
@@ -1766,7 +1766,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
     */
    if (DirectMapped && !Private)
    {
-      assert(SwapEntry == 0);
+      ASSERT(SwapEntry == 0);
       CcRosMarkDirtyCacheSegment(Bcb, Offset + MemoryArea->Data.SectionData.ViewOffset);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -3215,7 +3215,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
          Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
          CcRosMarkDirtyCacheSegment(Bcb, Offset);
-         assert(SwapEntry == 0);
+         ASSERT(SwapEntry == 0);
       }
    }
 
@@ -3337,7 +3337,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
           Process, BaseAddress);
 
-   assert(Process);
+   ASSERT(Process);
 
    AddressSpace = &Process->AddressSpace;
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
@@ -3760,7 +3760,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    ULONG ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
 
-   assert(Process);
+   ASSERT(Process);
 
    Section = (PSECTION_OBJECT)SectionObject;
    AddressSpace = &Process->AddressSpace;

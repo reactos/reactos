@@ -685,7 +685,7 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
 static void set_trap_gate(unsigned int sel, unsigned int func, unsigned int dpl)
 {
    DPRINT("set_trap_gate(sel %d, func %x, dpl %d)\n",sel, func, dpl);
-   assert(dpl <= 3);
+   ASSERT(dpl <= 3);
    KiIdt[sel].a = (((int)func)&0xffff) +
      (KERNEL_CS << 16);
    KiIdt[sel].b = 0x8f00 + (dpl << 13) + (((int)func)&0xffff0000);

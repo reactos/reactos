@@ -74,9 +74,9 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
       current = CONTAINING_RECORD(current_entry,
                                   MEMORY_AREA,
                                   Entry);
-      assert(current_entry->Blink->Flink == current_entry);
-      assert(current_entry->Flink->Blink == current_entry);
-      assert(previous_entry->Flink == current_entry);
+      ASSERT(current_entry->Blink->Flink == current_entry);
+      ASSERT(current_entry->Flink->Blink == current_entry);
+      ASSERT(previous_entry->Flink == current_entry);
       if (current->BaseAddress <= Address &&
             (PVOID)((char*)current->BaseAddress + current->Length) > Address)
       {
@@ -612,7 +612,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
       if (BoundaryAddressMultiple.QuadPart != 0)
       {
          EndAddress = ((char*)(*BaseAddress)) + tmpLength-1;
-         assert(((DWORD_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
+         ASSERT(((DWORD_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
       }
 
       if (MmOpenMemoryAreaByRegion(AddressSpace,

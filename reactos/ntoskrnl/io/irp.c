@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.67 2004/08/21 20:51:26 tamlin Exp $
+/* $Id: irp.c,v 1.68 2004/10/22 20:25:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -162,7 +162,7 @@ IoInitializeIrp(PIRP Irp,
  *          StackSize = Number of stack locations in the IRP
  */
 {
-  assert(Irp != NULL);
+  ASSERT(Irp != NULL);
 
   memset(Irp, 0, PacketSize);
   Irp->Size = PacketSize;
@@ -186,21 +186,21 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
 {
   PDRIVER_OBJECT DriverObject;
   PIO_STACK_LOCATION Param;
-  
+
   DPRINT("IofCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-  
-  assert(Irp);
-  assert(DeviceObject);
+
+  ASSERT(Irp);
+  ASSERT(DeviceObject);
 
   DriverObject = DeviceObject->DriverObject;
 
-  assert(DriverObject);
+  ASSERT(DriverObject);
 
   IoSetNextIrpStackLocation(Irp);
   Param = IoGetCurrentIrpStackLocation(Irp);
 
   DPRINT("IrpSp 0x%X\n", Param);
-  
+
   Param->DeviceObject = DeviceObject;
 
   DPRINT("MajorFunction %d\n", Param->MajorFunction);
@@ -301,9 +301,9 @@ IofCompleteRequest(PIRP Irp,
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
       Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
-   assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-   assert(Irp->CancelRoutine == NULL);
-   assert(Irp->IoStatus.Status != STATUS_PENDING);
+   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT(Irp->CancelRoutine == NULL);
+   ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
 
    if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
    {
@@ -394,9 +394,9 @@ IofCompleteRequest(PIRP Irp,
 
          if (Irp->MdlAddress->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
          {
-            MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa, Irp->MdlAddress);            
+            MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa, Irp->MdlAddress);
          }
-         
+
          ExFreePool(Irp->MdlAddress);
       }
 

@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.48 2004/08/21 19:13:22 hbirr Exp $
+/* $Id: xhaldrv.c,v 1.49 2004/10/22 20:25:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -185,8 +185,8 @@ xHalpReadSector (IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT("xHalpReadSector() called\n");
 
-  assert(DeviceObject);
-  assert(Sector);
+  ASSERT(DeviceObject);
+  ASSERT(Sector);
 
   KeInitializeEvent(&Event,
 		    NotificationEvent,
@@ -1183,8 +1183,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 	  NumberOfHeads,
 	  PartitionBuffer);
 
-  assert(DeviceObject);
-  assert(PartitionBuffer);
+  ASSERT(DeviceObject);
+  ASSERT(PartitionBuffer);
 
   DiskManager = NoDiskManager;
 

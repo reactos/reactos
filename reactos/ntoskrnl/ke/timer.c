@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.81 2004/10/17 15:39:29 hbirr Exp $
+/* $Id: timer.c,v 1.82 2004/10/22 20:30:48 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -301,7 +301,7 @@ KeSetTimerEx (PKTIMER		Timer,
 
    DPRINT("KeSetTimerEx(Timer %x), DueTime: \n",Timer);
 
-   assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
    KeAcquireSpinLock(&TimerListLock, &oldlvl);
 
@@ -327,7 +327,7 @@ KeSetTimerEx (PKTIMER		Timer,
    Timer->Period = Period;
    Timer->Header.SignalState = FALSE;
    AlreadyInList = (Timer->TimerListEntry.Flink == NULL) ? FALSE : TRUE;
-   assert((Timer->TimerListEntry.Flink == NULL && Timer->TimerListEntry.Blink == NULL) ||
+   ASSERT((Timer->TimerListEntry.Flink == NULL && Timer->TimerListEntry.Blink == NULL) ||
           (Timer->TimerListEntry.Flink != NULL && Timer->TimerListEntry.Blink != NULL));
    if (AlreadyInList)
      {
@@ -383,13 +383,13 @@ KeCancelTimer (PKTIMER	Timer)
      }
    if (Timer->Header.Absolute)
      {
-       assert(&Timer->TimerListEntry != &AbsoluteTimerListHead);
+       ASSERT(&Timer->TimerListEntry != &AbsoluteTimerListHead);
      }
    else
      {
-       assert(&Timer->TimerListEntry != &RelativeTimerListHead);
+       ASSERT(&Timer->TimerListEntry != &RelativeTimerListHead);
      }
-   assert(Timer->TimerListEntry.Flink != &Timer->TimerListEntry);
+   ASSERT(Timer->TimerListEntry.Flink != &Timer->TimerListEntry);
    RemoveEntryList(&Timer->TimerListEntry);
    Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
    KeReleaseSpinLock(&TimerListLock, oldlvl);
@@ -450,7 +450,7 @@ KeInitializeTimerEx (PKTIMER		Timer,
      }
    else
      {
-	assert(FALSE);
+	ASSERT(FALSE);
 	return;
      }
 
@@ -526,7 +526,7 @@ HandleExpiredTimer(PKTIMER Timer)
 	DPRINT("Finished dpc routine\n");
      }
 
-   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
    KeAcquireDispatcherDatabaseLockAtDpcLevel();
    Timer->Header.SignalState = TRUE;
@@ -571,7 +571,7 @@ KeExpireTimers(PKDPC Dpc,
 
    DPRINT("KeExpireTimers()\n");
 
-   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
    InitializeListHead(&TimerList);
 
@@ -581,13 +581,13 @@ KeExpireTimers(PKDPC Dpc,
    KeQuerySystemTime(&SystemTime);
 
    current_entry = RelativeTimerListHead.Flink;
-   assert(current_entry);
+   ASSERT(current_entry);
    while (current_entry != &RelativeTimerListHead)
      {
        current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-       assert(current);
-       assert(current_entry != &RelativeTimerListHead);
-       assert(current_entry->Flink != current_entry);
+       ASSERT(current);
+       ASSERT(current_entry != &RelativeTimerListHead);
+       ASSERT(current_entry->Flink != current_entry);
        if ((ULONGLONG)InterruptTime.QuadPart < current->DueTime.QuadPart)
          {
 	   break;
@@ -598,13 +598,13 @@ KeExpireTimers(PKDPC Dpc,
      }
 
    current_entry = AbsoluteTimerListHead.Flink;
-   assert(current_entry);
+   ASSERT(current_entry);
    while (current_entry != &AbsoluteTimerListHead)
      {
        current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
-       assert(current);
-       assert(current_entry != &AbsoluteTimerListHead);
-       assert(current_entry->Flink != current_entry);
+       ASSERT(current);
+       ASSERT(current_entry != &AbsoluteTimerListHead);
+       ASSERT(current_entry->Flink != current_entry);
        if ((ULONGLONG)SystemTime.QuadPart < current->DueTime.QuadPart)
          {
 	   break;
@@ -637,7 +637,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
 {
    LARGE_INTEGER Time;
 
-   assert(KeGetCurrentIrql() == PROFILE_LEVEL);
+   ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
 
    KiRawTicks++;
    
@@ -766,13 +766,13 @@ KiUpdateProcessThreadTime(KIRQL oldIrql, PKIRQ_TRAPFRAME Tf)
 #ifdef MP
          InterlockedIncrement((PLONG)&ThreadsProcess->Pcb.KernelTime);
 #else
-         ThreadsProcess->Pcb.KernelTime++;  
+         ThreadsProcess->Pcb.KernelTime++;
 #endif
          CurrentThread->KernelTime++;
          Pcr->PrcbData.KernelTime++;
-      }  	
+      }
    }
-} 
+}
 
 /*
  * @unimplemented
@@ -793,11 +793,11 @@ KeSetTimeUpdateNotifyRoutine(
 VOID
 STDCALL
 KeUpdateRunTime(
-	IN PKTRAP_FRAME	TrapFrame
-)
+    IN PKTRAP_FRAME TrapFrame
+    )
 {
 	KIRQL OldIrql = PASSIVE_LEVEL;
-	
+
 	/* These are equivalent... we should just remove the Ki and stick it here... */
 	KiUpdateProcessThreadTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
 }
@@ -808,12 +808,12 @@ KeUpdateRunTime(
 VOID 
 STDCALL
 KeUpdateSystemTime(
-	IN PKTRAP_FRAME TrapFrame,
-	IN ULONG        Increment
-)
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Increment
+    )
 {
 	KIRQL OldIrql = PASSIVE_LEVEL;
-	
+
 	/* These are equivalent... we should just remove the Ki and stick it here... */
 	KiUpdateSystemTime(OldIrql, (PKIRQ_TRAPFRAME)TrapFrame);
 }

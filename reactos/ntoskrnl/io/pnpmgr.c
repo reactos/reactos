@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.42 2004/10/22 18:34:11 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.43 2004/10/22 20:25:54 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -32,17 +32,6 @@ KSPIN_LOCK IopDeviceTreeLock;
 PDRIVER_OBJECT IopRootDriverObject;
 
 /* FUNCTIONS *****************************************************************/
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoAdjustPagingPathCount(
-  IN PLONG Count,
-  IN BOOLEAN Increment)
-{
-}
 
 /*
  * @unimplemented
@@ -491,11 +480,11 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
   KIRQL OldIrql;
 
   /* All children must be deleted before a parent is deleted */
-  assert(!DeviceNode->Child);
+  ASSERT(!DeviceNode->Child);
 
   KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
 
-  assert(DeviceNode->Pdo);
+  ASSERT(DeviceNode->Pdo);
 
   ObDereferenceObject(DeviceNode->Pdo);
 

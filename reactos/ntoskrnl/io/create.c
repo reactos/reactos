@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.74 2004/08/15 16:39:03 chorns Exp $
+/* $Id: create.c,v 1.75 2004/10/22 20:25:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -212,7 +212,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
 	 FileObject, DeviceObject);
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   Status = ObCreateObject(KernelMode,
 			  IoFileObjectType,
@@ -346,7 +346,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	  FileHandle,DesiredAccess,ObjectAttributes,
 	  ObjectAttributes->ObjectName->Buffer);
    
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
 
   if (IoStatusBlock == NULL)
     return STATUS_ACCESS_VIOLATION;
@@ -491,7 +491,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	ZwClose(*FileHandle);
      }
 
-   assert_irql(PASSIVE_LEVEL);
+   ASSERT_IRQL(PASSIVE_LEVEL);
 
    DPRINT("Finished IoCreateFile() (*FileHandle) %x\n", (*FileHandle));
 

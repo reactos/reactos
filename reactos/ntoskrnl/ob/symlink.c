@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.9 2004/08/15 16:39:10 chorns Exp $
+/* $Id: symlink.c,v 1.10 2004/10/22 20:43:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -210,7 +210,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
   PSYMLINK_OBJECT SymbolicLink;
   NTSTATUS Status;
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   DPRINT("NtCreateSymbolicLinkObject(SymbolicLinkHandle %p, DesiredAccess %ul, ObjectAttributes %p, DeviceName %wZ)\n",
 	 SymbolicLinkHandle,

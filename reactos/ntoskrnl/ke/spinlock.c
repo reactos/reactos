@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.23 2004/08/21 21:19:06 tamlin Exp $
+/* $Id: spinlock.c,v 1.24 2004/10/22 20:30:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,7 +88,7 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
 VOID FASTCALL
 KefAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
 {
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
   KiAcquireSpinLock(SpinLock);
 }
 
@@ -132,7 +132,7 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(
 VOID FASTCALL
 KefReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
 {
-  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
   KiReleaseSpinLock(SpinLock);  
 }
 

@@ -631,7 +631,7 @@ KiSwapApcEnvironment(
   if (Thread->ApcStateIndex == AttachedApcEnvironment)
   {
     /* NewProcess must be the same as in the original-environment */
-    assert(NewProcess == Thread->ApcStatePointer[OriginalApcEnvironment]->Process);
+    ASSERT(NewProcess == Thread->ApcStatePointer[OriginalApcEnvironment]->Process);
 
     /*    
     FIXME: Deliver any pending apc's queued to the attached environment before 
@@ -643,11 +643,11 @@ KiSwapApcEnvironment(
     */
 
     /* we don't support targeting apc's at attached-environments (yet)... */
-    assert(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]));
-    assert(IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]));
-    assert(Thread->ApcState.KernelApcInProgress == FALSE);
-    assert(Thread->ApcState.KernelApcPending == FALSE);
-    assert(Thread->ApcState.UserApcPending == FALSE);
+    ASSERT(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]));
+    ASSERT(IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]));
+    ASSERT(Thread->ApcState.KernelApcInProgress == FALSE);
+    ASSERT(Thread->ApcState.KernelApcPending == FALSE);
+    ASSERT(Thread->ApcState.UserApcPending == FALSE);
     
     /* restore backup of original environment */
     Thread->ApcState = Thread->SavedApcState;

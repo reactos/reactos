@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.54 2004/10/13 01:42:14 ion Exp $
+/* $Id: kthread.c,v 1.55 2004/10/22 20:30:47 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -55,7 +55,7 @@ VOID
 KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
 		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
-  assert(SwapEntry == 0);
+  ASSERT(SwapEntry == 0);
   if (Page != 0)
     {
       MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
@@ -328,7 +328,7 @@ crashes. I'm disabling it again, until we fix the APC implementation...
 }
 
 VOID STDCALL
-KeRescheduleThread()
+KeRescheduleThread(VOID)
 {
   PsDispatchThread(THREAD_STATE_READY);
 }
@@ -338,9 +338,7 @@ KeRescheduleThread()
  */
 VOID
 STDCALL
-KeRevertToUserAffinityThread(
-    VOID
-)
+KeRevertToUserAffinityThread(VOID)
 {
 	PKTHREAD CurrentThread;
 	CurrentThread = KeGetCurrentThread();
@@ -359,8 +357,7 @@ CCHAR
 STDCALL
 KeSetIdealProcessorThread (
 	IN PKTHREAD Thread,
-	IN CCHAR Processor
-	)
+	IN CCHAR Processor)
 {
 	CCHAR PreviousIdealProcessor;
 
@@ -379,9 +376,7 @@ KeSetIdealProcessorThread (
  */
 VOID
 STDCALL
-KeSetSystemAffinityThread(
-    IN KAFFINITY Affinity
-)
+KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
 	PKTHREAD CurrentThread;
 	CurrentThread = KeGetCurrentThread();
@@ -396,11 +391,9 @@ KeSetSystemAffinityThread(
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
-KeTerminateThread(
-	IN KPRIORITY   	 Increment  	 
-)
+KeTerminateThread(IN KPRIORITY Increment)
 {
 	/* The Increment Argument seems to be ignored by NT and always 0 when called */
 	

@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.24 2004/08/15 16:39:09 chorns Exp $
+/* $Id: nttimer.c,v 1.25 2004/10/22 20:41:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -113,7 +113,7 @@ NtpTimerApcKernelRoutine(PKAPC Apc,
 VOID INIT_FUNCTION
 NtInitializeTimerImplementation(VOID)
 {
-   assert(!ExTimerType)
+   ASSERT(!ExTimerType)
    ExTimerType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 
    RtlCreateUnicodeString(&ExTimerType->TypeName, L"Timer");

@@ -245,7 +245,7 @@ IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
   DPRINT("IopMountFileSystem(DeviceObject %x, DeviceToMount %x)\n",
 	 DeviceObject,DeviceToMount);
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
@@ -293,7 +293,7 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
 
   DPRINT("IopLoadFileSystem(DeviceObject %x)\n", DeviceObject);
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
@@ -343,7 +343,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
   DEVICE_TYPE MatchingDeviceType;
   PDEVICE_OBJECT DevObject;
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   DPRINT("IoMountVolume(DeviceObject %x  AllowRawMount %x)\n",
 	 DeviceObject, AllowRawMount);
@@ -589,7 +589,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
   Fs = ExAllocatePoolWithTag(NonPagedPool,
 			     sizeof(FILE_SYSTEM_OBJECT),
 			     TAG_FILE_SYSTEM);
-  assert(Fs!=NULL);
+  ASSERT(Fs!=NULL);
 
   Fs->DeviceObject = DeviceObject;
   KeEnterCriticalRegion();
@@ -633,7 +633,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 	  RemoveEntryList(current_entry);
 	  ExFreePool(current);
 	  ExReleaseResourceLite(&FileSystemListLock);
-    KeLeaveCriticalRegion();
+	  KeLeaveCriticalRegion();
 	  IopNotifyFileSystemChange(DeviceObject, FALSE);
 	  return;
 	}

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.34 2004/08/15 16:39:03 chorns Exp $
+/* $Id: symlink.c,v 1.35 2004/10/22 20:25:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,7 +40,7 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
   HANDLE Handle;
   NTSTATUS Status;
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   DPRINT("IoCreateSymbolicLink(SymbolicLinkName %wZ, DeviceName %wZ)\n",
 	 SymbolicLinkName,
@@ -91,7 +91,7 @@ IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
   HANDLE Handle;
   NTSTATUS Status;
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   DPRINT("IoCreateUnprotectedSymbolicLink(SymbolicLinkName %wZ, DeviceName %wZ)\n",
 	 SymbolicLinkName,
@@ -158,7 +158,7 @@ IoDeleteSymbolicLink(PUNICODE_STRING SymbolicLinkName)
   HANDLE Handle;
   NTSTATUS Status;
 
-  assert_irql(PASSIVE_LEVEL);
+  ASSERT_IRQL(PASSIVE_LEVEL);
 
   DPRINT("IoDeleteSymbolicLink (SymbolicLinkName %S)\n",
 	 SymbolicLinkName->Buffer);

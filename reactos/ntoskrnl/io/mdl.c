@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.18 2004/08/21 20:47:28 tamlin Exp $
+/* $Id: mdl.c,v 1.19 2004/10/22 20:25:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,7 +54,7 @@ IoAllocateMdl(PVOID VirtualAddress,
    {
       if (SecondaryBuffer)
       {
-         assert(Irp->MdlAddress);
+         ASSERT(Irp->MdlAddress);
          
          /* FIXME: add to end of list maybe?? */
          Mdl->Next = Irp->MdlAddress->Next;
