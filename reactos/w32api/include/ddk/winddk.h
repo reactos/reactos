@@ -178,6 +178,9 @@ typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
 #define FILE_EXISTS                       0x00000004
 #define FILE_DOES_NOT_EXIST               0x00000005
 
+#define FILE_USE_FILE_POINTER_POSITION    0xfffffffe
+#define FILE_WRITE_TO_END_OF_FILE         0xffffffff
+
 /* also in winnt.h */
 #define FILE_LIST_DIRECTORY               0x00000001
 #define FILE_READ_DATA                    0x00000001
@@ -2165,7 +2168,7 @@ typedef BOOLEAN DDKAPI
 typedef BOOLEAN DDKAPI
 (*PFAST_IO_UNLOCK_ALL_BY_KEY)(
   IN struct _FILE_OBJECT  *FileObject,
-  PVOID  ProcessId,
+  PEPROCESS  ProcessId,
   ULONG  Key,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
