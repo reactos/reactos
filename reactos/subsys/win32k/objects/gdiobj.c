@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.61 2004/02/28 21:16:55 weiden Exp $
+ * $Id: gdiobj.c,v 1.62 2004/03/09 20:34:28 dwelch Exp $
  *
  */
 
@@ -745,6 +745,9 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
+#ifdef NDEBUG
+  ExAcquireFastMutex(&ObjHdr->Lock);
+#else /* NDEBUG */
   if (! ExTryToAcquireFastMutex(&ObjHdr->Lock))
     {
       DPRINT1("Caution! GDIOBJ_LockObj trying to lock object 0x%x second time\n", hObj);
@@ -756,6 +759,7 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       ExAcquireFastMutex(&ObjHdr->Lock);
       DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);
     }
+#endif /* NDEBUG */
 
   ExAcquireFastMutex(&RefCountHandling);
   ObjHdr->dwCount++;
