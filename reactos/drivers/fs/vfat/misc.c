@@ -218,7 +218,9 @@ PVOID VfatGetUserBuffer(IN PIRP Irp)
 
    if (Irp->MdlAddress)
    {
-      return MmGetSystemAddressForMdl(Irp->MdlAddress);
+      /* This call may be in the paging path, so use maximum priority */
+      /* FIXME: call with normal priority in the non-paging path */
+      return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
    }
    else
    {
