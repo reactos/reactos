@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.19 2004/04/06 23:05:36 weiden Exp $ */
+/* $Id: dib8bpp.c,v 1.20 2004/04/07 10:19:34 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -277,10 +277,10 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    LONG i, j, k, sx, sy;
-   ULONG Dest, Source, Pattern;
+   ULONG Dest, Source, Pattern = 0, PatternY;
    PULONG DestBits;
    BOOL UsesSource;
-   BOOL UsesPattern;
+   BOOL UsesPattern, CalcPattern;
    LONG RoundedRight;
    /* Pattern brushes */
    PGDIBRUSHOBJ GdiBrush;
@@ -303,11 +303,11 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
    UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
 
-   if (UsesPattern)
+   if ((CalcPattern = UsesPattern))
    {
       if (Brush == NULL)
       {
-         UsesPattern = FALSE;
+         UsesPattern = CalcPattern = FALSE;
       } else
       if (Brush->iSolidColor == 0xFFFFFFFF)
       {
@@ -325,6 +325,15 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
          PatternWidth = PatternObj->sizlBitmap.cx;
          PatternHeight = PatternObj->sizlBitmap.cy;
+         CalcPattern = TRUE;
+      }
+      else
+      {
+         CalcPattern = FALSE;
+         Pattern = (Brush->iSolidColor & 0xFF) |
+                    ((Brush->iSolidColor & 0xFF) << 8) |
+                    ((Brush->iSolidColor & 0xFF) << 16) |
+                    ((Brush->iSolidColor & 0xFF) << 24);
       }
    }
    
@@ -335,6 +344,9 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    {
       sx = SourcePoint->x;
       DestBits = (PULONG)(DestSurf->pvScan0 + DestRect->left + j * DestSurf->lDelta);
+
+      if(CalcPattern)
+        PatternY = j % PatternHeight;
 
       for (i = DestRect->left; i < RoundedRight; i += 4, DestBits++)
       {
@@ -347,22 +359,12 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << (k * 8));
          }
 
-         if (UsesPattern)
+         if (UsesPattern && (Brush->iSolidColor == 0xFFFFFFFF))
          {
-            if (Brush->iSolidColor == 0xFFFFFFFF)
-            {
-               Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack;
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 1) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 2) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 3) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
-            }
-            else
-            {
-               Pattern = (Brush->iSolidColor & 0xFF) |
-                        ((Brush->iSolidColor & 0xFF) << 8) |
-                        ((Brush->iSolidColor & 0xFF) << 16) |
-                        ((Brush->iSolidColor & 0xFF) << 24);
-            }
+            Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 2) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 3) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
          }
          *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
       }
@@ -380,7 +382,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             if (UsesPattern)
             {
                if (Brush->iSolidColor == 0xFFFFFFFF)
-                  Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack;
+                  Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth,PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
                else
                   Pattern = Brush->iSolidColor & 0xFF;
             }
