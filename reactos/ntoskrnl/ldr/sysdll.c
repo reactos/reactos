@@ -12,14 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/module.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ldr.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

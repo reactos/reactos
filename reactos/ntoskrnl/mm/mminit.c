@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.65 2004/08/14 09:17:05 hbirr Exp $
+/* $Id: mminit.c,v 1.66 2004/08/15 16:39:08 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -11,15 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/i386/segment.h>
-#include <internal/mm.h>
-#include <internal/ntoskrnl.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,11 +1,10 @@
-/* $Id: pool.c,v 1.5 2003/07/10 06:27:13 royce Exp $
+/* $Id: pool.c,v 1.6 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/pool.c
  *
  */
-#include <ntos.h>
-#include <ddk/ntifs.h>
-#include <internal/ifs.h>
+
+#include <ntoskrnl.h>
 
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.27 2003/12/30 18:52:03 fireball Exp $
+/* $Id: resource.c,v 1.28 2004/08/15 16:39:01 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,17 +36,9 @@
 #define ResourceOwnedExclusive 0x80
 #define ResourceDisableBoost   0x08
 
-//#ifdef __USE_W32API
-//#define NONAMELESSUNION
-//#endif
-
-
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.24 2003/12/13 14:36:42 ekohl Exp $
+/* $Id: vpb.c,v 1.25 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,12 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <internal/pool.h>
-
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

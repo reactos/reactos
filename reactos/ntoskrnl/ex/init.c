@@ -26,9 +26,7 @@
  *                  Created 11/09/99
  */
 
-#include <ddk/ntddk.h>
-#include <internal/ex.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: continue.c,v 1.4 2004/08/04 00:17:14 navaraf Exp $
+/* $Id: continue.c,v 1.5 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -11,16 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-#include <internal/ldr.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.57 2004/07/16 19:54:05 ekohl Exp $
+/* $Id: handle.c,v 1.58 2004/08/15 16:39:09 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -29,13 +29,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

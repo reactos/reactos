@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.45 2004/06/05 20:05:06 hbirr Exp $
+/* $Id: xhaldrv.c,v 1.46 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,9 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/xhal.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

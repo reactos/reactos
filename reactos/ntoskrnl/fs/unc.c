@@ -1,10 +1,10 @@
-/* $Id: unc.c,v 1.5 2003/07/10 06:27:13 royce Exp $
+/* $Id: unc.c,v 1.6 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/unc.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+
+#include <ntoskrnl.h>
 
 
 /**********************************************************************

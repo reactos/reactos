@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fmutex.c,v 1.20 2003/07/12 01:09:10 dwelch Exp $
+/* $Id: fmutex.c,v 1.21 2004/08/15 16:39:01 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
@@ -29,8 +29,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

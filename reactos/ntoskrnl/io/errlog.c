@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.17 2004/06/23 21:42:50 ion Exp $
+/* $Id: errlog.c,v 1.18 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
-#include <internal/port.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -83,13 +83,7 @@
  *
  ****************************************************************************/
 
-#include <ntddk.h>
-#include <internal/kd.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/module.h>
-#include <internal/ldr.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

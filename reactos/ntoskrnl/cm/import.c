@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.29 2004/05/09 12:23:35 ekohl Exp $
+/* $Id: import.c,v 1.30 2004/08/15 16:39:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,11 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-
-#include <ddk/ntddk.h>
-#include <string.h>
-#include <roscfg.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

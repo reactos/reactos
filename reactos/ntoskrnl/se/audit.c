@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.5 2004/08/03 19:20:39 ion Exp $
+/* $Id: audit.c,v 1.6 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,8 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.1 2004/05/24 12:05:54 ekohl Exp $
+/* $Id: rangelist.c,v 1.2 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -26,8 +26,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

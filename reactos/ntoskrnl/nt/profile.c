@@ -27,15 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/mm.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <limits.h>
-#include <internal/safe.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* TYPES ********************************************************************/

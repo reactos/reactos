@@ -1,4 +1,4 @@
-/* $Id: regio.c,v 1.7 2004/06/10 07:50:30 hbirr Exp $
+/* $Id: regio.c,v 1.8 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -9,7 +9,7 @@
  *                       29/12/1999 Created
  */
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 
 /* FUNCTIONS ***************************************************************/

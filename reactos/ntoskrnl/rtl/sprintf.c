@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.17 2004/06/15 08:53:53 hbirr Exp $
+/* $Id: sprintf.c,v 1.18 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,13 +20,8 @@
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdlib.h>
+#include <ntoskrnl.h>
 #include <internal/ctype.h>
-#include <string.h>
-#include <limits.h>
-
 #include <internal/debug.h>
 
 

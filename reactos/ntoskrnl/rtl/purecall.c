@@ -1,4 +1,4 @@
-/* $Id: purecall.c,v 1.1 2002/07/18 18:14:41 ekohl Exp $
+/* $Id: purecall.c,v 1.2 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 /* FUNCTIONS ****************************************************************/
 

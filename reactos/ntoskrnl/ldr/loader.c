@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.142 2004/05/30 11:47:43 navaraf Exp $
+/* $Id: loader.c,v 1.143 2004/08/15 16:39:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,19 +24,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/module.h>
-#include <internal/ntoskrnl.h>
-#include <internal/kd.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/ldr.h>
-#include <internal/pool.h>
-#include <internal/kd.h>
-#include <ntos/minmax.h>
+#include <ntoskrnl.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>

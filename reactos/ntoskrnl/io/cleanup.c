@@ -10,13 +10,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/ob.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <rosrtl/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

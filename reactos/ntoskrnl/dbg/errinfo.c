@@ -27,8 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/

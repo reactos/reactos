@@ -6,7 +6,7 @@
  * PROGRAMMER:      Filip Navara (xnavara@volny.cz)
  */
 
-#include <ddk/ntddk.h>
+#include <ntoskrnl.h>
 
 /*
  * @implemented

@@ -6,14 +6,7 @@
  * UPDATE HISTORY:
 */
 
-#include <ddk/ntddk.h>
-#include <string.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <internal/mm.h>
-#include <ntos/minmax.h>
-#include <reactos/bugcodes.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

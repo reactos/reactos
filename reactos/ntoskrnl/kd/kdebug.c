@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.54 2004/08/07 03:41:31 sedwards Exp $
+/* $Id: kdebug.c,v 1.55 2004/08/15 16:39:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,11 +9,7 @@
  *                  21/10/99: Created
  */
 
-#include <ddk/ntddk.h>
-#include <internal/ntoskrnl.h>
-#include <internal/kd.h>
-#include <internal/mm.h>
-#include <roscfg.h>
+#include <ntoskrnl.h>
 #include "../dbg/kdb.h"
 #include <internal/debug.h>
 

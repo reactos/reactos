@@ -10,11 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/safe.h>
-#include <internal/v86m.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/

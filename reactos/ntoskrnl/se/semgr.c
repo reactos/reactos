@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.39 2004/08/03 19:20:39 ion Exp $
+/* $Id: semgr.c,v 1.40 2004/08/15 16:39:12 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/se.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

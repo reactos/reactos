@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.18 2004/07/18 23:52:50 navaraf Exp $
+/* $Id: resource.c,v 1.19 2004/08/15 16:39:03 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -29,8 +29,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/

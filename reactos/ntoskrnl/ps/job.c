@@ -11,8 +11,7 @@
 /* Note: Jobs are only supported on Win2K+ */
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

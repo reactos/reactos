@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.138 2004/08/12 06:04:21 ion Exp $
+# $Id: Makefile,v 1.139 2004/08/15 16:38:59 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -559,7 +559,7 @@ NTOSKRNL_LD_FLAGS := \
 	-Wl,--section-alignment,0x1000 \
 	-Wl,--entry,_NtProcessStartup
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(NTOSKRNL_LIBS)
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).all.o $(IE_DATA) $(NTOSKRNL_LIBS)
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -568,7 +568,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(NTOSKRNL_LIBS)
 		-o junk.tmp \
 		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).o -lgcc \
+		$(TARGETNAME).all.o -lgcc \
 		$(NTOSKRNL_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -586,11 +586,11 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(NTOSKRNL_LIBS)
 		-o $(TARGETNAME).nostrip.exe \
 		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,temp.exp \
-		$(TARGETNAME).o -lgcc \
+		$(TARGETNAME).all.o -lgcc \
 		$(NTOSKRNL_LIBS)
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
+$(TARGETNAME).exe: $(TARGETNAME).all.o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
@@ -599,7 +599,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
 		-o junk.tmp \
 		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,--base-file,base.tmp \
-		$(TARGETNAME).o -lgcc \
+		$(TARGETNAME).all.o -lgcc \
 		$(NTOSKRNL_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -617,12 +617,12 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(NTOSKRNL_LIBS)
 		-o $(TARGETNAME).exe \
 		$(NTOSKRNL_LD_FLAGS) \
 		-Wl,temp.exp \
-		$(TARGETNAME).o -lgcc \
+		$(TARGETNAME).all.o -lgcc \
 		$(NTOSKRNL_LIBS)
 	- $(RM) temp.exp
 
-$(TARGETNAME).dbg.o: $(TARGETNAME).o
-	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
+$(TARGETNAME).dbg.o: $(TARGETNAME).all.o
+	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).all.o
 
 $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(NTOSKRNL_LIBS)
 	$(CC) \
@@ -668,10 +668,10 @@ else
 	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > $(TARGETNAME).map
 endif
 
-$(TARGETNAME).o: $(OBJECTS)
+$(TARGETNAME).all.o: $(OBJECTS)
 	$(LD) \
 		-r \
-		-o $(TARGETNAME).o \
+		-o $(TARGETNAME).all.o \
 		$(OBJECTS)
 
 $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
@@ -693,10 +693,10 @@ test:
 	-
 
 clean:
-	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
+	- $(RM) depend.d $(MK_PCHNAME) $(MK_PCHFAKE) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               ex/i386/*.o inbv/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o \
               ps/*.o ps/i386/*.o rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o \
-              mm/i386/*.o fs/*.o po/*.o lpc/*.o kd/*.o $(TARGETNAME).o \
+              mm/i386/*.o fs/*.o po/*.o lpc/*.o kd/*.o $(TARGETNAME).all.o \
               junk.tmp base.tmp temp.exp $(TARGETNAME).exe \
               $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
               $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
@@ -731,9 +731,40 @@ ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
+TARGET_PCH = include/ntoskrnl.h
+
+# Precompiled header support
+# When using PCHs, use dependency tracking to keep the .gch files up-to-date.
+
+MK_PCHNAME =
+ifeq ($(ROS_USE_PCH),yes)
+MK_PCHNAME = $(TARGET_PCH).gch
+
+PCH_CC := $(CC)
+
+# GCC generates wrong dependencies for header files.
+MK_PCHFAKE = $(TARGET_PCH:.h=.o)
+ifneq ($(MAKECMDGOALS),clean)
+$(MK_PCHFAKE):
+	- $(RTOUCH) $(MK_PCHFAKE)
+
+$(MK_PCHNAME): depend.d
+	- $(RTOUCH) $(MK_PCHNAME)
+	- $(PCH_CC) $(CFLAGS) $(TARGET_PCH)
+
+depend.d: $(MK_PCHFAKE) $(PATH_TO_TOP)/include/reactos/bugcodes.h
+	- $(RTOUCH) depend.d
+	- $(PCH_CC) $(CFLAGS) $(TARGET_PCH) -M -MF depend.d
+
+-include depend.d
+
+endif
+
+endif # ROS_USE_PCH
+
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.c
+%.o: %.c $(MK_PCHNAME)
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@

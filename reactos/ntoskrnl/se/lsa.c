@@ -1,7 +1,7 @@
-/* $Id: lsa.c,v 1.5 2004/08/07 19:13:27 ion Exp $
+/* $Id: lsa.c,v 1.6 2004/08/15 16:39:11 chorns Exp $
  */
-#include <ddk/ntddk.h>
 
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

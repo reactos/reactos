@@ -1,10 +1,9 @@
-/* $Id: interlck.c,v 1.7 2004/08/07 19:13:26 ion Exp $
+/* $Id: interlck.c,v 1.8 2004/08/15 16:39:01 chorns Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
  */
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 
 #if defined(__GNUC__)
 

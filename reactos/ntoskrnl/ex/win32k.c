@@ -24,13 +24,8 @@
  * UPDATE HISTORY:
  *      04-06-2001  CSH  Created
  */
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/ex.h>
-#include <internal/ob.h>
-#include <rosrtl/string.h>
-#include <wchar.h>
 
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

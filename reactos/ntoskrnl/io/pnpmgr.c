@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.31 2004/08/01 21:57:34 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.32 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,15 +11,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <reactos/bugcodes.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/module.h>
-
+#include <ntoskrnl.h>
 #include <ole32/guiddef.h>
-//#include <ddk/pnpfuncs.h>
 #ifdef DEFINE_GUID
 DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
 DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);

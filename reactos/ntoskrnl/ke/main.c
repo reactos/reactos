@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.191 2004/08/07 03:41:31 sedwards Exp $
+/* $Id: main.c,v 1.192 2004/08/15 16:39:05 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -28,27 +28,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ntoskrnl.h>
-#include <reactos/resource.h>
-#include <internal/mm.h>
-#include <internal/ifs.h>
-#include <internal/module.h>
-#include <internal/ldr.h>
-#include <internal/ex.h>
-#include <internal/ps.h>
-#include <internal/ke.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/cc.h>
-#include <internal/se.h>
-#include <internal/v86m.h>
-#include <internal/kd.h>
-#include <internal/trap.h>
+#include <ntoskrnl.h>
 #include "../dbg/kdb.h"
-#include <internal/nls.h>
-#include <reactos/bugcodes.h>
 #include <ntos/bootvid.h>
 #include <napi/core.h>
 

@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.5 2003/12/20 21:43:21 navaraf Exp $
+/* $Id: pnpdma.c,v 1.6 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,16 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/pnptypes.h>
-#include <ddk/pnpfuncs.h>
-#include <reactos/bugcodes.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/module.h>
-
-//#define NDEBUG
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 #ifdef __USE_W32API

@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.27 2004/07/01 01:52:37 royce Exp $
+/* $Id: usercall.c,v 1.28 2004/08/15 16:39:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,18 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/i386/segment.h>
-#include <internal/i386/mm.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-#include <internal/ps.h>
 
 /* FUNCTIONS *****************************************************************/
 

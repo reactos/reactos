@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.7 2004/05/07 05:12:10 royce Exp $
+/* $Id: inbv.c,v 1.8 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,11 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <roskrnl.h>
+#include <ntoskrnl.h>
 #include <ntos/bootvid.h>
 #include <ddk/ntbootvid.h>
-#include <rosrtl/string.h>
-
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.82 2004/07/26 13:19:34 ekohl Exp $
+/* $Id: object.c,v 1.83 2004/08/15 16:39:10 chorns Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -13,14 +13,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/id.h>
-#include <internal/ke.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.13 2004/08/01 07:24:59 hbirr Exp $
+/* $Id: w32call.c,v 1.14 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,15 +20,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-#include <internal/ldr.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

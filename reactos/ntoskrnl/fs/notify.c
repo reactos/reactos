@@ -1,11 +1,10 @@
-/* $Id: notify.c,v 1.11 2004/06/27 13:58:05 navaraf Exp $
+/* $Id: notify.c,v 1.12 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
  */
-#include <ntos.h>
-#include <ddk/ntifs.h>
 
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.75 2004/08/10 01:49:36 navaraf Exp $
+/* $Id: view.c,v 1.76 2004/08/15 16:39:00 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -51,13 +51,7 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <internal/mm.h>
-#include <internal/cc.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

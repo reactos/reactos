@@ -1,4 +1,4 @@
-/* $Id: wmi.c,v 1.1 2004/06/23 21:42:50 ion Exp $
+/* $Id: wmi.c,v 1.2 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.49 2004/08/01 07:24:58 hbirr Exp $
+/* $Id: pagefile.c,v 1.50 2004/08/15 16:39:08 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -28,14 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <napi/core.h>
-#include <internal/ps.h>
-#include <internal/ldr.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

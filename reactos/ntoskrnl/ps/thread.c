@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.131 2004/08/09 22:15:01 gvg Exp $
+/* $Id: thread.c,v 1.132 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -20,16 +20,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-#include <internal/ldr.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

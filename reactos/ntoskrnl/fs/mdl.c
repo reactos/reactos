@@ -1,12 +1,10 @@
-/* $Id: mdl.c,v 1.7 2004/08/12 06:04:21 ion Exp $
+/* $Id: mdl.c,v 1.8 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
  */
-#include <ntos.h>
-#include <internal/cc.h>
-#include <ddk/ntifs.h>
 
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /*

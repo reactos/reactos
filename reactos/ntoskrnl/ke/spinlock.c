@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.21 2004/06/23 22:31:51 ion Exp $
+/* $Id: spinlock.c,v 1.22 2004/08/15 16:39:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,9 +16,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/

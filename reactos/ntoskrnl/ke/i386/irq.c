@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.44 2004/07/30 19:28:49 jimtabor Exp $
+/* $Id: irq.c,v 1.45 2004/08/15 16:39:05 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -35,13 +35,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <roscfg.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/i386/segment.h>
-#include <internal/pool.h>
+#include <ntoskrnl.h>
 #ifdef KDBG
 #include <../dbg/kdb.h>
 #endif /* KDBG */

@@ -8,13 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <string.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <internal/se.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.1 2004/06/23 22:31:51 ion Exp $
+/* $Id: device.c,v 1.2 2004/08/15 16:39:05 chorns Exp $
  *
  * FILE:            ntoskrnl/ke/profile.c
  * PURPOSE:         Kernel Device/Settings Functions
@@ -7,11 +7,7 @@
  *                  Created 23/06/04
  */
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.29 2004/08/01 21:57:34 navaraf Exp $
+/* $Id: copy.c,v 1.30 2004/08/15 16:38:59 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,14 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <internal/mm.h>
-#include <internal/cc.h>
-#include <internal/pool.h>
-#include <internal/io.h>
-#include <ntos/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

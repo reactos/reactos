@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.67 2004/08/07 19:13:26 ion Exp $
+/* $Id: mdl.c,v 1.68 2004/08/15 16:39:07 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -11,12 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.10 2003/10/20 06:03:29 vizzini Exp $
+/* $Id: adapter.c,v 1.11 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/halfuncs.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* DATA **********************************************************************/

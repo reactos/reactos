@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.24 2004/08/05 19:59:13 navaraf Exp $
+/* $Id: nls.c,v 1.25 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,11 +8,7 @@
  *                  20/08/99 Created by Eric Kohl
  */
 
-#include <ddk/ntddk.h>
-
-#include <internal/mm.h>
-#include <internal/nls.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,10 +1,10 @@
-/* $Id: oplock.c,v 1.7 2003/08/05 21:37:21 ea Exp $
+/* $Id: oplock.c,v 1.8 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/oplock.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+
+#include <ntoskrnl.h>
 
 
 /**********************************************************************

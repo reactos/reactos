@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.29 2004/08/01 07:24:58 hbirr Exp $
+/* $Id: ncache.c,v 1.30 2004/08/15 16:39:08 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

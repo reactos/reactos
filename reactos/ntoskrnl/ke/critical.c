@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.9 2003/11/19 21:19:15 gdalsnes Exp $
+/* $Id: critical.c,v 1.10 2004/08/15 16:39:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

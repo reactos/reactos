@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.16 2004/08/01 21:57:35 navaraf Exp $
+/* $Id: mutex.c,v 1.17 2004/08/15 16:39:05 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -28,12 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/id.h>
-#include <reactos/bugcodes.h> 
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

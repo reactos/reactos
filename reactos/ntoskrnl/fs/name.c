@@ -1,9 +1,10 @@
-/* $Id: name.c,v 1.8 2003/12/17 20:26:28 ekohl Exp $
+/* $Id: name.c,v 1.9 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
  */
-#include <ntos.h>
+
+#include <ntoskrnl.h>
 
 /* DATA */
 

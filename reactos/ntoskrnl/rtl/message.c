@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.7 2004/08/10 01:49:37 navaraf Exp $
+/* $Id: message.c,v 1.8 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,8 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

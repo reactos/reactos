@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.46 2004/08/05 18:17:37 ion Exp $
+/* $Id: catch.c,v 1.47 2004/08/15 16:39:05 chorns Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -27,15 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <reactos/bugcodes.h>
-#include <roscfg.h>
-#include <internal/ke.h>
-#include <internal/ldr.h>
-#include <internal/ps.h>
-#include <internal/kd.h>
-#include <internal/safe.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

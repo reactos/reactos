@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.21 2004/03/07 19:59:37 hbirr Exp $
+/* $Id: evtpair.c,v 1.22 2004/08/15 16:39:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,13 +15,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <ntos/synch.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <limits.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

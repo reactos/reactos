@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.138 2004/08/08 20:33:17 ion Exp $
+/* $Id: process.c,v 1.139 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,27 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/mm.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
-#include <internal/se.h>
-#include <internal/id.h>
-#include <napi/teb.h>
-#include <internal/ldr.h>
-#include <internal/port.h>
-#include <napi/dbg.h>
-#include <internal/dbg.h>
-#include <internal/pool.h>
-#include <roscfg.h>
-#include <internal/se.h>
-#include <internal/kd.h>
-#include <internal/nls.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

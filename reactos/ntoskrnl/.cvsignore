@@ -7,6 +7,7 @@ ntoskrnl.map
 ntoskrnl.dbg
 bugcodes.rc
 msg*.bin
+*.d
 *.o
 *.sym
 *.exe

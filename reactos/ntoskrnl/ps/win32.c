@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.7 2003/07/11 01:23:15 royce Exp $
+/* $Id: win32.c,v 1.8 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -29,9 +29,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <napi/win32.h>
+#include <ntoskrnl.h>
 
 /* TYPES *******************************************************************/
 

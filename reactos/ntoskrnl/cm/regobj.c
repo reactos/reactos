@@ -6,15 +6,7 @@
  * UPDATE HISTORY:
 */
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <string.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <ntos/minmax.h>
-#include <reactos/bugcodes.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

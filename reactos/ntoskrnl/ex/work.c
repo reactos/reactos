@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.18 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: work.c,v 1.19 2004/08/15 16:39:01 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
-#include <internal/ps.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

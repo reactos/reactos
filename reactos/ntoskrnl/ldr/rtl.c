@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.19 2004/06/27 14:15:33 navaraf Exp $
+/* $Id: rtl.c,v 1.20 2004/08/15 16:39:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,13 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/module.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ob.h>
-#include <internal/ps.h>
-#include <internal/ldr.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

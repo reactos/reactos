@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.11 2004/06/19 08:48:00 navaraf Exp $
+/* $Id: callback.c,v 1.12 2004/08/15 16:39:01 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -34,11 +34,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-#include <internal/debug.h>
-#include <internal/ob.h>
+#include <ntoskrnl.h>
 #include <internal/callbacks.h>
+#include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -54,7 +52,7 @@
  * RETURNS:
  * TRUE if the Callback Object Type was successfully created.
  */
-BOOLEAN
+VOID
 ExpInitializeCallbacks(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -94,7 +92,7 @@ ExpInitializeCallbacks(VOID)
    /* Fail if it wasn't created successfully */
    if (!NT_SUCCESS(Status))
    {
-      return FALSE;
+      return;
    }
 
    /* Initialize the Object */
@@ -117,7 +115,7 @@ ExpInitializeCallbacks(VOID)
    /* Fail if couldn't create */
    if (!NT_SUCCESS(Status))
    {
-      return FALSE;
+      return;
    }
 
    /* Close Handle... */
@@ -152,11 +150,10 @@ ExpInitializeCallbacks(VOID)
       /* Make sure Global Callbacks have been created */
       if (!NT_SUCCESS(Status))
       {
-         return FALSE;
+         return;
       }
    }
    /* Everything successful */
-   return TRUE;
 }
 
 /*

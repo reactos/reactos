@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.53 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: rw.c,v 1.54 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/ob.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

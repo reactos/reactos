@@ -8,13 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-#include <rosrtl/minmax.h>
-#include <roscfg.h>
-#include <limits.h>
-#include <string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

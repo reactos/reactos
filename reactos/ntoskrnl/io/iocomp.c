@@ -11,12 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-//#include <ntos/synch.h>
-#include <internal/io.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

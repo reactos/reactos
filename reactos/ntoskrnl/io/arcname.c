@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.18 2004/05/29 21:28:28 navaraf Exp $
+/* $Id: arcname.c,v 1.19 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,12 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-
-#include "internal/io.h"
-#include "internal/xhal.h"
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

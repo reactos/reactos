@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.75 2004/08/04 18:22:41 navaraf Exp $
+# $Id: helper.mk,v 1.76 2004/08/15 16:38:59 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -881,12 +881,12 @@ implib: $(SUBDIRS:%=%_implib)
 endif
 
 # Precompiled header support
-# When using PCHs, use dependency tracking to keep the .pch files up-to-date.
+# When using PCHs, use dependency tracking to keep the .gch files up-to-date.
 
 MK_PCHNAME =
 ifeq ($(ROS_USE_PCH),yes)
 ifneq ($(TARGET_PCH),)
-MK_PCHNAME = $(TARGET_PCH).pch
+MK_PCHNAME = $(TARGET_PCH).gch
 
 ifeq ($(TARGET_CPPAPP),yes)
 PCH_CC := $(CXX)
@@ -907,7 +907,7 @@ depend.d: $(MK_PCHFAKE)
 	- $(RTOUCH) depend.d
 	- $(PCH_CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
 
-include depend.d
+-include depend.d
 
 endif # TARGET_PCH
 endif # ROS_USE_PCH

@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.26 2004/02/21 09:06:27 navaraf Exp $
+/* $Id: connect.c,v 1.27 2004/08/15 16:39:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,15 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/port.h>
-#include <internal/dbg.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
-#include <internal/mm.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

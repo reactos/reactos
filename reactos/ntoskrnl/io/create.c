@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.73 2004/07/22 02:32:43 navaraf Exp $
+/* $Id: create.c,v 1.74 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,13 +11,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/id.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.34 2004/08/14 09:17:05 hbirr Exp $
+/* $Id: kmap.c,v 1.35 2004/08/15 16:39:07 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -9,12 +9,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ntoskrnl.h>
-#include <internal/pool.h>
-#include <ntos/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.46 2004/07/17 20:34:42 ekohl Exp $
+/* $Id: namespc.c,v 1.47 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,15 +11,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-#include <internal/pool.h>
-#include <internal/se.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.21 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: ntsem.c,v 1.22 2004/08/15 16:39:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,14 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <ntos/synch.h>
-#include <internal/ob.h>
-#include <internal/pool.h>
-#include <internal/ps.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

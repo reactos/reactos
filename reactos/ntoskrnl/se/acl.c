@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.19 2004/08/05 18:17:37 ion Exp $
+/* $Id: acl.c,v 1.20 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/se.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 #define TAG_ACL    TAG('A', 'C', 'L', 'T')

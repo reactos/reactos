@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.12 2004/06/23 21:01:27 ion Exp $
+/* $Id: list.c,v 1.13 2004/08/15 16:39:01 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,11 +13,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#ifdef __USE_W32API
-//#define NONAMELESSUNION
-//#endif
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

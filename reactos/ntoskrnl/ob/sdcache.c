@@ -1,4 +1,4 @@
-/* $Id: sdcache.c,v 1.2 2004/07/23 21:44:10 ekohl Exp $
+/* $Id: sdcache.c,v 1.3 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ob.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

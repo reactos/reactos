@@ -11,14 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
-#include <internal/ps.h>
-#include <internal/io.h>
-#include <internal/mm.h>
-#include <internal/po.h>
-#include <internal/cc.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

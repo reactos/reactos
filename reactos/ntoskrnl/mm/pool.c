@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.31 2004/08/08 20:33:17 ion Exp $
+/* $Id: pool.c,v 1.32 2004/08/15 16:39:08 chorns Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -9,11 +9,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <reactos/bugcodes.h>
-#include <internal/ntoskrnl.h>
-#include <internal/pool.h>
-#include <internal/mm.h>
+#include <ntoskrnl.h>
 #include <pseh.h>
 
 #define NDEBUG

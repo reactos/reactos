@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.7 2004/02/10 16:22:57 navaraf Exp $
+/* $Id: profile.c,v 1.8 2004/08/15 16:39:00 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -28,9 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ldr.h>
+#include <ntoskrnl.h>
 #include "kdb.h"
 
 #define NDEBUG

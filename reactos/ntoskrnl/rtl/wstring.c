@@ -1,4 +1,4 @@
-/* $Id: wstring.c,v 1.20 2003/07/11 01:23:16 royce Exp $
+/* $Id: wstring.c,v 1.21 2004/08/15 16:39:11 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,8 +13,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

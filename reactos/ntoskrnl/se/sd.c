@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.19 2004/08/04 02:36:53 ion Exp $
+/* $Id: sd.c,v 1.20 2004/08/15 16:39:12 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/se.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

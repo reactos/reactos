@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.22 2003/12/14 14:29:44 navaraf Exp $
+/* $Id: dirobj.c,v 1.23 2004/08/15 16:39:09 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,11 +11,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <internal/io.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

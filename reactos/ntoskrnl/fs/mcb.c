@@ -1,11 +1,10 @@
-/* $Id: mcb.c,v 1.12 2004/06/23 00:42:21 ion Exp $
+/* $Id: mcb.c,v 1.13 2004/08/15 16:39:02 chorns Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
 
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /**********************************************************************

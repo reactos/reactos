@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.124 2004/05/30 21:40:47 navaraf Exp $
+/* $Id: registry.c,v 1.125 2004/08/15 16:39:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,15 +11,7 @@
  *                  Created 22/05/98
  */
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <limits.h>
-#include <string.h>
-#include <roscfg.h>
-#include <internal/ob.h>
-#include <reactos/bugcodes.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

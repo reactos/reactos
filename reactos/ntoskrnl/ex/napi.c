@@ -8,11 +8,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/debug.h>
-
+#include <ntoskrnl.h>
 #include <ntdll/napi.h>
+#include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.73 2004/08/14 22:47:08 ekohl Exp $
+/* $Id: device.c,v 1.74 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,16 +11,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/id.h>
-#include <internal/pool.h>
-
-#include <roscfg.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

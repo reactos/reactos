@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.23 2003/12/30 18:52:05 fireball Exp $
+/* $Id: nttimer.c,v 1.24 2004/08/15 16:39:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,15 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <ntos/synch.h>
-#include <internal/ke.h>
-#include <internal/ob.h>
-#include <limits.h>
-#include <internal/pool.h>
-#include <internal/safe.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 

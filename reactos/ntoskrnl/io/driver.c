@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.48 2004/06/23 21:42:50 ion Exp $
+/* $Id: driver.c,v 1.49 2004/08/15 16:39:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,21 +12,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <limits.h>
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-#include <internal/po.h>
-#include <internal/ldr.h>
-#include <internal/id.h>
-#include <internal/pool.h>
-#include <internal/se.h>
-#include <internal/mm.h>
-#include <internal/ke.h>
-#include <internal/kd.h>
-#include <rosrtl/string.h>
-
-#include <roscfg.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

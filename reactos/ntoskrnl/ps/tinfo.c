@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.27 2004/08/07 19:13:26 ion Exp $
+/* $Id: tinfo.c,v 1.28 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,11 +13,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-#include <internal/ex.h>
-#include <internal/safe.h>
-
+#include <ntoskrnl.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.8 2003/12/30 18:52:05 fireball Exp $
+/* $Id: symlink.c,v 1.9 2004/08/15 16:39:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,12 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <limits.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <internal/ob.h>
-#include <rosrtl/string.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.12 2003/12/30 18:52:04 fireball Exp $
+/* $Id: fpu.c,v 1.13 2004/08/15 16:39:05 chorns Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -28,11 +28,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ke.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

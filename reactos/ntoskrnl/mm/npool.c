@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.88 2004/08/10 20:00:49 hbirr Exp $
+/* $Id: npool.c,v 1.89 2004/08/15 16:39:08 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -16,11 +16,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/mm.h>
-#include <internal/ntoskrnl.h>
-#include <internal/pool.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 

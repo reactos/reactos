@@ -1,13 +1,6 @@
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <internal/mm.h>
-#include <internal/cc.h>
-#include <internal/pool.h>
-#include <internal/io.h>
-#include <ntos/minmax.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
