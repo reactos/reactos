@@ -146,8 +146,13 @@ CmiObjectParse(PVOID ParsedObject,
 	}
 
       FoundObject->Flags = 0;
-      FoundObject->Name = SubKeyCell->Name;
-      FoundObject->NameSize = SubKeyCell->NameSize;
+
+      FoundObject->Name.Length = Length * sizeof(WCHAR);
+      FoundObject->Name.MaximumLength = FoundObject->Name.Length + sizeof(WCHAR);
+      FoundObject->Name.Buffer = ExAllocatePool(NonPagedPool, FoundObject->Name.MaximumLength);
+      RtlCopyMemory(FoundObject->Name.Buffer, StartPtr, FoundObject->Name.Length);
+      FoundObject->Name.Buffer[FoundObject->Name.Length / sizeof(WCHAR)] = 0;
+
       FoundObject->KeyCell = SubKeyCell;
       FoundObject->BlockOffset = BlockOffset;
       FoundObject->RegistryHive = ParsedKey->RegistryHive;
@@ -224,25 +229,22 @@ CmiObjectCreate(PVOID ObjectBody,
 		PWSTR RemainingPath,
 		POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  PKEY_OBJECT pKey = ObjectBody;
+  PKEY_OBJECT KeyObject = ObjectBody;
+  PWSTR Start;
 
-  pKey->ParentKey = Parent;
+  KeyObject->ParentKey = Parent;
   if (RemainingPath)
     {
-      if(RemainingPath[0]== L'\\')
-	{
-	  pKey->Name = (PCHAR)(&RemainingPath[1]);
-	  pKey->NameSize = wcslen(RemainingPath) - 1;
-	}
-      else
-	{
-	  pKey->Name = (PCHAR)RemainingPath;
-	  pKey->NameSize = wcslen(RemainingPath);
-	}
+      Start = RemainingPath;
+      if(*Start == L'\\')
+	Start++;
+      RtlCreateUnicodeString(&KeyObject->Name,
+			     Start);
     }
    else
     {
-      pKey->NameSize = 0;
+      RtlInitUnicodeString(&KeyObject->Name,
+			   NULL);
     }
 
   return STATUS_SUCCESS;
@@ -262,6 +264,8 @@ CmiObjectDelete(PVOID DeletedObject)
     {
       DPRINT1("Key not found in parent list ???\n");
     }
+
+  RtlFreeUnicodeString(&KeyObject->Name);
 
   if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
     {
@@ -376,13 +380,15 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 {
   PKEY_OBJECT CurKey;
   KIRQL OldIrql;
-  WORD NameSize;
-  DWORD Index;
+  ULONG Index;
+  UNICODE_STRING UName;
 
-  DPRINT("Scanning key list for: %s (Parent: %s)\n",
-    KeyName, Parent->Name);
+  DPRINT("Scanning key list for: %s (Parent: %wZ)\n",
+    KeyName, &Parent->Name);
 
-  NameSize = strlen(KeyName);
+  RtlCreateUnicodeStringFromAsciiz(&UName,
+				   KeyName);
+
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
   /* FIXME: if list maintained in alphabetic order, use dichotomic search */
   for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
@@ -390,24 +396,27 @@ CmiScanKeyList(PKEY_OBJECT Parent,
       CurKey = Parent->SubKeys[Index];
       if (Attributes & OBJ_CASE_INSENSITIVE)
 	{
-	  if ((NameSize == CurKey->NameSize)
-	      && (_strnicmp(KeyName, CurKey->Name, NameSize) == 0))
+	  if ((UName.Length == CurKey->Name.Length)
+	      && (_wcsicmp(UName.Buffer, CurKey->Name.Buffer) == 0))
 	    {
 	      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+	      RtlFreeUnicodeString(&UName);
 	      return CurKey;
 	    }
 	}
       else
 	{
-	  if ((NameSize == CurKey->NameSize)
-	      && (strncmp(KeyName,CurKey->Name,NameSize) == 0))
+	  if ((UName.Length == CurKey->Name.Length)
+	      && (wcscmp(UName.Buffer, CurKey->Name.Buffer) == 0))
 	    {
 	      KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+	      RtlFreeUnicodeString(&UName);
 	      return CurKey;
 	    }
 	}
     }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+  RtlFreeUnicodeString(&UName);
 
   return NULL;
 }

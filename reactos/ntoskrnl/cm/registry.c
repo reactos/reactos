@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.95 2003/05/13 21:28:26 chorns Exp $
+/* $Id: registry.c,v 1.96 2003/05/28 12:04:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -311,9 +311,8 @@ CmInitializeRegistry(VOID)
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
-  RootKey->NameSize = strlen("Registry");
-  RootKey->Name = ExAllocatePool(PagedPool, RootKey->NameSize);
-  RtlCopyMemory(RootKey->Name, "Registry", RootKey->NameSize);
+  Status = RtlCreateUnicodeString(&RootKey->Name, L"Registry");
+  assert(NT_SUCCESS(Status));
 
   KeInitializeSpinLock(&CmiKeyListLock);
 
@@ -338,9 +337,8 @@ CmInitializeRegistry(VOID)
   MachineKey->NumberOfSubKeys = 0;
   MachineKey->SubKeys = NULL;
   MachineKey->SizeOfSubKeys = MachineKey->KeyCell->NumberOfSubKeys;
-  MachineKey->NameSize = strlen("Machine");
-  MachineKey->Name = ExAllocatePool(PagedPool, MachineKey->NameSize);
-  RtlCopyMemory(MachineKey->Name, "Machine", MachineKey->NameSize);
+  Status = RtlCreateUnicodeString(&MachineKey->Name, L"Machine");
+  assert(NT_SUCCESS(Status));
   CmiAddKeyToList(RootKey, MachineKey);
 
   /* Create '\Registry\User' key. */
@@ -364,9 +362,8 @@ CmInitializeRegistry(VOID)
   UserKey->NumberOfSubKeys = 0;
   UserKey->SubKeys = NULL;
   UserKey->SizeOfSubKeys = UserKey->KeyCell->NumberOfSubKeys;
-  UserKey->NameSize = strlen("User");
-  UserKey->Name = ExAllocatePool(PagedPool, UserKey->NameSize);
-  RtlCopyMemory(UserKey->Name, "User", UserKey->NameSize);
+  Status = RtlCreateUnicodeString(&UserKey->Name, L"User");
+  assert(NT_SUCCESS(Status));
   CmiAddKeyToList(RootKey, UserKey);
 }
 
@@ -598,23 +595,17 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->NameSize = wcslen (SubName);
-  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
-
-  if ((NewKey->Name == NULL) && (NewKey->NameSize != 0))
+  Status = RtlCreateUnicodeString(&NewKey->Name,
+				  SubName);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT("NewKey->NameSize %d\n", NewKey->NameSize);
+      DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
       if (NewKey->SubKeys != NULL)
 	ExFreePool(NewKey->SubKeys);
       NtClose(KeyHandle);
       ObDereferenceObject (ParentKey);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-  wcstombs (NewKey->Name,
-	    SubName,
-	    NewKey->NameSize);
 
   CmiAddKeyToList (ParentKey, NewKey);
   ObDereferenceObject (ParentKey);

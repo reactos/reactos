@@ -46,6 +46,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   NTSTATUS Status;
   PVOID Object;
   PWSTR End;
+  PWSTR Start;
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
 	 ObjectAttributes->ObjectName,
@@ -90,11 +91,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   /* If RemainingPath contains \ we must return error
      because NtCreateKey don't create trees */
-  if (RemainingPath.Buffer[0] == '\\')
-    End = wcschr(RemainingPath.Buffer + 1, '\\');
-  else
-    End = wcschr(RemainingPath.Buffer, '\\');
+  Start = RemainingPath.Buffer;
+  if (*Start == L'\\')
+    Start++;
 
+  End = wcschr(Start, L'\\');
   if (End != NULL)
     {
       ObDereferenceObject(Object);
@@ -147,8 +148,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       return STATUS_UNSUCCESSFUL;
     }
 
-  KeyObject->Name = KeyObject->KeyCell->Name;
-  KeyObject->NameSize = KeyObject->KeyCell->NameSize;
+  RtlCreateUnicodeString(&KeyObject->Name,
+			 Start);
 
   if (KeyObject->RegistryHive == KeyObject->ParentKey->RegistryHive)
     {
@@ -383,7 +384,6 @@ NtEnumerateKey(
           mbstowcs(BasicInformation->Name, 
             SubKeyCell->Name, 
             SubKeyCell->NameSize * 2);
-//          BasicInformation->Name[SubKeyCell->NameSize] = 0;
         }
       break;
       
@@ -410,7 +410,6 @@ NtEnumerateKey(
           mbstowcs(NodeInformation->Name, 
             SubKeyCell->Name,
             SubKeyCell->NameSize * 2);
-//          NodeInformation->Name[SubKeyCell->NameSize] = 0;
           if (SubKeyCell->ClassSize != 0)
             {
               pClassData=CmiGetBlock(KeyObject->RegistryHive,
@@ -845,7 +844,7 @@ NtQueryKey(IN HANDLE KeyHandle,
     case KeyBasicInformation:
       /* Check size of buffer */
       if (Length < sizeof(KEY_BASIC_INFORMATION) + 
-          KeyObject->NameSize * sizeof(WCHAR))
+          KeyObject->Name.Length)
         {
           Status = STATUS_BUFFER_OVERFLOW;
         }
@@ -856,19 +855,19 @@ NtQueryKey(IN HANDLE KeyHandle,
           BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.dwLowDateTime;
           BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
           BasicInformation->TitleIndex = 0;
-          BasicInformation->NameLength = (KeyObject->NameSize) * sizeof(WCHAR);
-          mbstowcs(BasicInformation->Name,
-            KeyObject->Name, 
-            KeyObject->NameSize*sizeof(WCHAR));
+          BasicInformation->NameLength = KeyObject->Name.Length;
+          RtlCopyMemory(BasicInformation->Name,
+                        KeyObject->Name.Buffer,
+                        KeyObject->Name.Length);
           *ResultLength = sizeof(KEY_BASIC_INFORMATION) + 
-            KeyObject->NameSize * sizeof(WCHAR);
+            KeyObject->Name.Length;
         }
       break;
 
     case KeyNodeInformation:
       /* Check size of buffer */
       if (Length < sizeof(KEY_NODE_INFORMATION)
-         + KeyObject->NameSize * sizeof(WCHAR)
+         + KeyObject->Name.Length
          + KeyCell->ClassSize)
         {
           Status = STATUS_BUFFER_OVERFLOW;
@@ -881,24 +880,24 @@ NtQueryKey(IN HANDLE KeyHandle,
           NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.dwHighDateTime;
           NodeInformation->TitleIndex = 0;
           NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) + 
-            KeyObject->NameSize * sizeof(WCHAR);
+            KeyObject->Name.Length;
           NodeInformation->ClassLength = KeyCell->ClassSize;
-          NodeInformation->NameLength = KeyObject->NameSize * sizeof(WCHAR);
-          mbstowcs(NodeInformation->Name,
-            KeyObject->Name,
-            KeyObject->NameSize * sizeof(WCHAR));
+          NodeInformation->NameLength = KeyObject->Name.Length;
+          RtlCopyMemory(NodeInformation->Name,
+                        KeyObject->Name.Buffer,
+                        KeyObject->Name.Length);
 
           if (KeyCell->ClassSize != 0)
             {
               pClassData = CmiGetBlock(KeyObject->RegistryHive,
                 KeyCell->ClassNameOffset,
                 NULL);
-              wcsncpy(NodeInformation->Name + KeyObject->NameSize * sizeof(WCHAR),
+              wcsncpy(NodeInformation->Name + KeyObject->Name.Length,
                 (PWCHAR)pClassData->Data,
                 KeyCell->ClassSize);
             }
           *ResultLength = sizeof(KEY_NODE_INFORMATION)
-            + KeyObject->NameSize * sizeof(WCHAR)
+            + KeyObject->Name.Length
             + KeyCell->ClassSize;
         }
       break;

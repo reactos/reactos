@@ -302,11 +302,8 @@ typedef struct _KEY_OBJECT
   /* Key flags */
   ULONG Flags;
 
-  /* Length of Name */
-  USHORT NameSize;
-
-  /* Name of key */
-  PCHAR Name;
+  /* Key name */
+  UNICODE_STRING Name;
 
   /* Registry hive the key belongs to */
   PREGISTRY_HIVE RegistryHive;
