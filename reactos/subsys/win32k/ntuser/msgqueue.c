@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.65 2004/02/08 21:47:10 gvg Exp $
+/* $Id: msgqueue.c,v 1.66 2004/02/19 15:27:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -291,6 +291,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         }
         else
         {
+          if(Window)
+            IntReleaseWindowObject(Window);
           ExFreePool(Message);
           *Freed = TRUE;
           return(FALSE);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.90 2004/02/18 12:21:57 rcampbell Exp $
+/* $Id: winpos.c,v 1.91 2004/02/19 15:27:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1231,17 +1231,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 }
 
 BOOL STATIC FASTCALL
-WinPosPtInWindow(PWINDOW_OBJECT Window, POINT Point)
-{
-  return(Point.x >= Window->WindowRect.left &&
-	 Point.x < Window->WindowRect.right &&
-	 Point.y >= Window->WindowRect.top &&
-	 Point.y < Window->WindowRect.bottom);
-}
-
-USHORT STATIC FASTCALL
-WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
-		     PWINDOW_OBJECT* Window)
+WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
+		     PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
   PWINDOW_OBJECT Current;
 
@@ -1252,37 +1243,64 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
       if (Current->Style & WS_VISIBLE &&
 	  ((!(Current->Style & WS_DISABLED)) ||
 	   (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
-	  WinPosPtInWindow(Current, Point))
+	  (Point->x >= Current->WindowRect.left &&
+           Point->x < Current->WindowRect.right &&
+           Point->y >= Current->WindowRect.top &&
+           Point->y < Current->WindowRect.bottom))
+           /* FIXME - check if Point is in window region */
 	{
 	  if(*Window)
+	  {
 	    ObmDereferenceObject(*Window);
+	  }
 	  ObmReferenceObjectByPointer(Current, otWindow);
-	  
 	  *Window = Current;
 	  
 	  if (Current->Style & WS_DISABLED)
 	    {
-		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	      return(HTERROR);
+	      ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
+	      *HitTest = HTERROR;
+	      return TRUE;
 	    }
-	  if (Point.x >= Current->ClientRect.left &&
-	      Point.x < Current->ClientRect.right &&
-	      Point.y >= Current->ClientRect.top &&
-	      Point.y < Current->ClientRect.bottom)
+	  if(Current->MessageQueue == PsGetWin32Thread()->MessageQueue)
+	  {
+	    *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
+				      MAKELONG(Point->x, Point->y));
+	    if((*HitTest) == (USHORT)HTTRANSPARENT)
 	    {
-
-		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	      return(WinPosSearchChildren(Current, Point, Window));
+	      Current = Current->NextSibling;
+	      continue;
+	    }
+	  }
+	  else
+	  {
+	    *HitTest = HTCLIENT;
+	  }
+	  
+	  if (Point->x >= Current->ClientRect.left &&
+	      Point->x < Current->ClientRect.right &&
+	      Point->y >= Current->ClientRect.top &&
+	      Point->y < Current->ClientRect.bottom)
+	    {
+	      USHORT ChildHitTest;
+	      ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
+	      if(WinPosSearchChildren(Current, Point, Window, &ChildHitTest))
+	      {
+	        *HitTest = ChildHitTest;
+	        return TRUE;
+	      }
 	    }
 
 	  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	  return(0);
+	  return TRUE;
 	}
       Current = Current->NextSibling;
     }
 		  
   ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-  return(0);
+  if(*Window == NULL)
+    *HitTest = HTNOWHERE;
+  return FALSE;
 }
 
 USHORT FASTCALL
@@ -1314,28 +1332,11 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
   Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
   IntReleaseWindowObject(DesktopWindow);
 
-  HitTest = WinPosSearchChildren(ScopeWin, Point, Window);
-  if (HitTest != 0)
-    {
-      return(HitTest);
-    }
-
-  if ((*Window) == NULL)
-    {
-      return(HTNOWHERE);
-    }
-  if ((*Window)->MessageQueue == PsGetWin32Thread()->MessageQueue)
-    {
-      HitTest = IntSendMessage((*Window)->Self, WM_NCHITTEST, 0,
-				MAKELONG(Point.x, Point.y));
-      /* FIXME: Check for HTTRANSPARENT here. */
-    }
-  else
-    {
-      HitTest = HTCLIENT;
-    }
-
-  return(HitTest);
+  if(WinPosSearchChildren(ScopeWin, &Point, Window, &HitTest))
+  {
+    return HitTest;
+  }
+  return HTNOWHERE;
 }
 
 BOOL
