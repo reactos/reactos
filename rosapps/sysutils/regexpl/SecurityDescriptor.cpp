@@ -1,4 +1,4 @@
-/* $Id: SecurityDescriptor.cpp,v 1.4 2001/01/13 23:54:41 narnaoud Exp $
+/* $Id: SecurityDescriptor.cpp,v 1.5 2001/07/14 07:01:38 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -26,6 +26,7 @@
 
 #include <windows.h>
 #include <assert.h>
+#include <tchar.h>
 #include "SecurityDescriptor.h"
 
 #define ASSERT assert
@@ -33,7 +34,7 @@
 // *** THIS SHOULD GO IN A MINGW/ROS HEADER - Begin
 #if 1
 
-#define SID_REVISION (1) // Current revision level
+//#define SID_REVISION (1) // Current revision level
 
 //typedef struct _ACE_HEADER {
 //    BYTE  AceType;
@@ -56,11 +57,11 @@ typedef ACE_HEADER * PACE_HEADER;
 //#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
 //#define FAILED_ACCESS_ACE_FLAG           (0x80)
 
-typedef struct _SYSTEM_AUDIT_ACE {
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    DWORD SidStart;
-} SYSTEM_AUDIT_ACE;
+//typedef struct _SYSTEM_AUDIT_ACE {
+//    ACE_HEADER Header;
+//    ACCESS_MASK Mask;
+//    DWORD SidStart;
+//} SYSTEM_AUDIT_ACE;
 
 #endif
 // *** THIS SHOULD GO IN A MINGW/ROS HEADER - End
