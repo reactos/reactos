@@ -1,4 +1,4 @@
-/* $Id: rosglue.c,v 1.1 2003/04/01 08:38:28 gvg Exp $
+/* $Id: rosglue.c,v 1.2 2003/04/01 17:14:36 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS
@@ -62,6 +62,12 @@ isalnum(int c)
   assert(0x20 <= c && c <= 0x7f);
 
   return (('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
+}
+
+long
+labs(long j)
+{
+  return (j < 0 ? -j : j);
 }
 
 /*
