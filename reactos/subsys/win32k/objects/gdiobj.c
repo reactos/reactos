@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.41 2003/09/09 10:57:03 gvg Exp $
+ * $Id: gdiobj.c,v 1.42 2003/09/23 18:04:42 gvg Exp $
  *
  */
 
@@ -43,7 +43,7 @@
 
 #define GDI_GLOBAL_PROCESS ((HANDLE) 0xffffffff)
 
-#define GDI_HANDLE_INDEX_MASK 0x00000fff
+#define GDI_HANDLE_INDEX_MASK 0x00003fff
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
 
