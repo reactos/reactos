@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.29 2003/12/21 10:27:10 navaraf Exp $
+/* $Id: surface.c,v 1.29.2.1 2004/01/16 19:19:19 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -463,6 +463,8 @@ EngAssociateSurface(IN HSURF Surface,
   SurfGDI->SetPalette = Device->DriverFunctions.SetPalette;
   SurfGDI->MovePointer = Device->DriverFunctions.MovePointer;
   SurfGDI->SetPointerShape = (PFN_SetPointerShape)Device->DriverFunctions.SetPointerShape;
+
+  SurfGDI->DriverLock = &Device->DriverLock;
 
   return TRUE;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.24 2003/12/21 10:27:10 navaraf Exp $
+/* $Id: objects.h,v 1.24.2.1 2004/01/16 19:19:19 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -195,7 +195,8 @@ typedef struct _SURFGDI {
   PFN_DIB_StretchBlt DIB_StretchBlt;
 
   /* misc */
-  ULONG PointerStatus;
+  ULONG       PointerStatus;
+  PFAST_MUTEX DriverLock;
 } SURFGDI;
 
 typedef struct _XFORMGDI {

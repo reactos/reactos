@@ -41,7 +41,7 @@ int     STDCALL  DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);
 INT     FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
 INT     STDCALL  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
 BOOL    FASTCALL Bitmap_InternalDelete( PBITMAPOBJ pBmp );
-HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj);
+HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
 
 /*  User Entry Points  */
 BOOL

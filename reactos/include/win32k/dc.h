@@ -84,6 +84,7 @@ typedef struct _DC
   PGDIINFO  GDIInfo;
   PDEVINFO  DevInfo;
   HSURF  Surface;
+  HDEV   GDIDevice;
 
   DRIVER_FUNCTIONS  DriverFunctions;
   UNICODE_STRING    DriverName;
@@ -115,6 +116,7 @@ typedef struct
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
+  FAST_MUTEX DriverLock;
 } GDIDEVICE;
 
 /*  Internal functions  */
