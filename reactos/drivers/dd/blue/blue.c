@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.38 2003/06/20 13:04:09 gvg Exp $
+/* $Id: blue.c,v 1.39 2003/06/21 14:25:30 gvg Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -169,6 +169,17 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     int cursorx, cursory;
     int rows, columns;
     int processed = DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT;
+
+    if (HalQueryDisplayOwnership())
+       {
+	  /* Display is in graphics mode, we're not allowed to touch it */
+	  Status = STATUS_SUCCESS;
+
+	  Irp->IoStatus.Status = Status;
+	  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+
+	  return Status;
+       }
 
     vidmem  = DeviceExtension->VideoMemory;
     rows = DeviceExtension->Rows;
@@ -615,11 +626,11 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
     DPRINT ("Screen Driver 0.0.6\n");
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = ScrCreate;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = ScrDispatch;
-    DriverObject->MajorFunction[IRP_MJ_READ]   = ScrDispatch;
-    DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) ScrCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = (PDRIVER_DISPATCH) ScrDispatch;
+    DriverObject->MajorFunction[IRP_MJ_READ]   = (PDRIVER_DISPATCH) ScrDispatch;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]  = (PDRIVER_DISPATCH) ScrWrite;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = (PDRIVER_DISPATCH) ScrIoControl;
 
     IoCreateDevice (DriverObject,
                     sizeof(DEVICE_EXTENSION),

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.29 2003/04/24 16:53:59 hbirr Exp $
+/* $Id: bug.c,v 1.30 2003/06/21 14:25:30 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -31,6 +31,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/kd.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 
@@ -84,7 +85,11 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
-  
+
+  /* Make sure we're switching back to the blue screen and print messages on it */
+  HalReleaseDisplayOwnership();  
+  KdDebugState |= KD_DEBUG_SCREEN;
+
   __asm__("cli\n\t");
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,
@@ -155,6 +160,10 @@ KeBugCheckEx(ULONG BugCheckCode,
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
   
+  /* Make sure we're switching back to the blue screen and print messages on it */
+  HalReleaseDisplayOwnership();  
+  KdDebugState |= KD_DEBUG_SCREEN;
+
   __asm__("cli\n\t");
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,

@@ -112,6 +112,7 @@ typedef struct
   GDIINFO GDIInfo;
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
+  HANDLE DisplayDevice;
 } GDIDEVICE;
 
 /*  Internal functions  */

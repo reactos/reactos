@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.6 2003/06/07 10:14:39 chorns Exp $ */
+/* $Id: halfuncs.h,v 1.7 2003/06/21 14:25:30 gvg Exp $ */
 
 #include <ntos/haltypes.h>
 
@@ -280,6 +280,13 @@ WRITE_PORT_ULONG(PULONG Port,
 VOID STDCALL
 WRITE_PORT_USHORT(PUSHORT Port,
 		  USHORT Value);
+
+/* Non-standard functions */
+VOID STDCALL
+HalReleaseDisplayOwnership();
+
+BOOLEAN STDCALL
+HalQueryDisplayOwnership();
 
 #endif /* __INCLUDE_DDK_HALDDK_H */
 

@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: reboot.c,v 1.4 2003/06/21 14:25:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,7 +66,7 @@ HalReturnToFirmware (
     }
     else if (Action == FIRMWARE_REBOOT)
     {
-        HalResetDisplay ();
+        HalReleaseDisplayOwnership();
         HalReboot ();
     }
 }

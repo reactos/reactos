@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.5 2003/06/19 15:57:45 gvg Exp $
+/* $Id: videoprt.c,v 1.6 2003/06/21 14:25:30 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -38,6 +38,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
   KIRQL  IRQL;
   KAFFINITY  Affinity;
   PVIDEO_HW_INITIALIZE HwInitialize;
+  PVIDEO_HW_RESET_HW HwResetHw;
   LIST_ENTRY AddressMappingListHead;
   INTERFACE_TYPE AdapterInterfaceType;
   ULONG SystemIoBusNumber;
@@ -48,7 +49,8 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 
 
 static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-static NTSTATUS STDCALL VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS STDCALL VidDispatchOpen(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS STDCALL VidDispatchClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static PVOID STDCALL InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
                                        IN PHYSICAL_ADDRESS  IoAddress,
@@ -58,8 +60,8 @@ static VOID STDCALL InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceEx
                                         IN PVOID MappedAddress);
 
 static BOOLEAN CsrssInitialized = FALSE;
-static HANDLE CsrssHandle = 0;
-static struct _EPROCESS* Csrss = NULL;
+static PEPROCESS Csrss = NULL;
+static PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
 
 PBYTE ReturnCsrssAddress(void)
 {
@@ -391,8 +393,8 @@ VideoPortInitialize(IN PVOID  Context1,
       MPDriverObject->DeviceObject = MPDeviceObject;
 
       /* Initialize the miniport drivers dispatch table */
-      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) VidDispatchOpenClose;
-      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) VidDispatchOpenClose;
+      MPDriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) VidDispatchOpen;
+      MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) VidDispatchClose;
       MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH) VidDispatchDeviceControl;
 
       /* Initialize our device extension */
@@ -400,6 +402,7 @@ VideoPortInitialize(IN PVOID  Context1,
         (PVIDEO_PORT_DEVICE_EXTENSION) MPDeviceObject->DeviceExtension;
       DeviceExtension->DeviceObject = MPDeviceObject;
       DeviceExtension->HwInitialize = HwInitializationData->HwInitialize;
+      DeviceExtension->HwResetHw = HwInitializationData->HwResetHw;
       DeviceExtension->AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
       DeviceExtension->SystemIoBusNumber = 0;
       MaxLen = (wcslen(RegistryPath->Buffer) + 10) * sizeof(WCHAR);
@@ -545,9 +548,15 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
 {
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
+  PEPROCESS CallingProcess;
 
   DPRINT("VideoPortInt10\n");
-  KeAttachProcess(Csrss);
+
+  CallingProcess = PsGetCurrentProcess();
+  if (CallingProcess != Csrss)
+    {
+      KeAttachProcess(Csrss);
+    }
 
   memset(&Regs, 0, sizeof(Regs));
   Regs.Eax = BiosArguments->Eax;
@@ -559,7 +568,10 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   Regs.Ebp = BiosArguments->Ebp;
   Status = Ke386CallBios(0x10, &Regs);
 
-  KeDetachProcess();
+  if (CallingProcess != Csrss)
+    {
+      KeDetachProcess();
+    }
 
   return(Status);
 }
@@ -1033,13 +1045,44 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
   RtlZeroMemory(Destination, Length);
 }
 
+/*
+ * Reset display to blue screen
+ */
+static BOOLEAN STDCALL
+VideoPortResetDisplayParameters(Columns, Rows)
+{
+  VIDEO_X86_BIOS_ARGUMENTS Int10Arguments;
 
-//  -------------------------------------------  Nondiscardable statics
+  if (NULL != ResetDisplayParametersDeviceExtension &&
+      (NULL == ResetDisplayParametersDeviceExtension->HwResetHw ||
+       ! ResetDisplayParametersDeviceExtension->HwResetHw(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+                                                          Columns, Rows)))
+    {
+      /* This should really be done by HAL, but we have this nice
+       * VideoPortInt10 available */
 
-//    VidDispatchOpenClose
+      /* Set mode */
+      RtlZeroMemory(&Int10Arguments, sizeof(VIDEO_X86_BIOS_ARGUMENTS));
+      Int10Arguments.Eax = 0x0003;
+      VideoPortInt10(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+                     &Int10Arguments);
+
+      /* Select 8x8 font */
+      Int10Arguments.Eax = 0x1112;
+      Int10Arguments.Ebx = 0;
+      VideoPortInt10(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+                     &Int10Arguments);
+    }
+  ResetDisplayParametersDeviceExtension = NULL;
+
+  return TRUE;
+}
+
+
+//    VidDispatchOpen
 //
 //  DESCRIPTION:
-//    Answer requests for Open/Close calls: a null operation
+//    Answer requests for Open calls
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
@@ -1052,39 +1095,85 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 //
 
 static NTSTATUS STDCALL
-VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
-                     IN PIRP Irp)
+VidDispatchOpen(IN PDEVICE_OBJECT pDO,
+                IN PIRP Irp)
 {
   PIO_STACK_LOCATION IrpStack;
-  PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT("VidDispatchOpenClose() called\n");
+  DPRINT("VidDispatchOpen() called\n");
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
-  if (IrpStack->MajorFunction == IRP_MJ_CREATE &&
-      CsrssInitialized == FALSE)
+  if (! CsrssInitialized)
     {
       DPRINT("Referencing CSRSS\n");
       Csrss = PsGetCurrentProcess();
-      CsrssInitialized = TRUE;
       DPRINT("Csrss %p\n", Csrss);
+    }
+  else
+    {
       DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION) pDO->DeviceExtension;
       if (DeviceExtension->HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
 	{
 	  Irp->IoStatus.Status = STATUS_SUCCESS;
+	  /* Storing the device extension pointer in a static variable is an ugly
+	   * hack. Unfortunately, we need it in VideoPortResetDisplayParameters
+	   * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
+           * parameter. On the bright side, the DISPLAY device is opened
+	   * exclusively, so there can be only one device extension active at
+	   * any point in time. */
+	  ResetDisplayParametersDeviceExtension = DeviceExtension;
+	  HalAcquireDisplayOwnership(VideoPortResetDisplayParameters);
 	}
       else
 	{
 	  Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
 	}
     }
-  else
-    {
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    }
 
   Irp->IoStatus.Information = FILE_OPENED;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
+}
+
+//    VidDispatchClose
+//
+//  DESCRIPTION:
+//    Answer requests for Close calls
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    Standard dispatch arguments
+//
+//  RETURNS:
+//    NTSTATUS
+//
+
+static NTSTATUS STDCALL
+VidDispatchClose(IN PDEVICE_OBJECT pDO,
+                 IN PIRP Irp)
+{
+  PIO_STACK_LOCATION IrpStack;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VidDispatchClose() called\n");
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+  if (! CsrssInitialized)
+    {
+      CsrssInitialized = TRUE;
+    }
+  else
+    {
+      HalReleaseDisplayOwnership();
+    }
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return STATUS_SUCCESS;

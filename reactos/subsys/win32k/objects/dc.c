@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.60 2003/05/18 17:16:18 ea Exp $
+/* $Id: dc.c,v 1.61 2003/06/21 14:25:30 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -31,6 +31,7 @@
 #include <win32k/coord.h>
 #include <win32k/driver.h>
 #include <win32k/dc.h>
+#include <win32k/misc.h>
 #include <win32k/print.h>
 #include <win32k/region.h>
 #include <win32k/gdiobj.h>
@@ -247,7 +248,6 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
 {
   PGD_ENABLEDRIVER GDEnableDriver;
-  HANDLE DeviceDriver;
   DRVENABLEDATA DED;
   PSURFOBJ SurfObj;
   UNICODE_STRING DriverFileNames;
@@ -255,7 +255,7 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   BOOL GotDriver;
 
   /*  Open the miniport driver  */
-  if ((DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
+  if ((PrimarySurface.DisplayDevice = DRIVER_FindMPDriver(Driver)) == NULL)
   {
     DPRINT("FindMPDriver failed\n");
     return(FALSE);
@@ -348,7 +348,7 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 					     &PrimarySurface.DevInfo,
 					     NULL,
 					     L"",
-					     DeviceDriver);
+					     PrimarySurface.DisplayDevice);
   if (PrimarySurface.PDev == NULL)
   {
     DPRINT("DrvEnablePDEV failed\n");
@@ -479,13 +479,18 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
     if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
     {
       DPRINT( "No more references to driver, reseting display\n" );
-      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
-      CHECKPOINT;
       DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
       CHECKPOINT;
+      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+      CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
-	  PrimarySurfaceCreated = FALSE;
-	}
+
+      KeAttachProcess(W32kDeviceProcess);
+      ZwClose(PrimarySurface.DisplayDevice);
+      KeDetachProcess();
+
+      PrimarySurfaceCreated = FALSE;
+    }
   }
   CHECKPOINT;
   /*  First delete all saved DCs  */

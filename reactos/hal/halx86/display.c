@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.4 2002/09/08 10:22:24 chorns Exp $
+/* $Id: display.c,v 1.5 2003/06/21 14:25:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,6 +25,71 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  * UPDATE HISTORY:
  *                  Created 08/10/99
+ */
+
+/* DISPLAY OWNERSHIP
+ *
+ * So, who owns the physical display and is allowed to write to it?
+ *
+ * In MS NT, upon boot HAL owns the display. Somewhere in the boot
+ * sequence (haven't figured out exactly where or by who), some
+ * component calls HalAcquireDisplayOwnership. From that moment on,
+ * the display is owned by that component and is switched to graphics
+ * mode. The display is not supposed to return to text mode, except
+ * in case of a bug check. The bug check will call HalDisplayString
+ * to output a string to the text screen. HAL will notice that it
+ * currently doesn't own the display and will re-take ownership, by
+ * calling the callback function passed to HalAcquireDisplayOwnership.
+ * After the bugcheck, execution is halted. So, under NT, the only
+ * possible sequence of display modes is text mode -> graphics mode ->
+ * text mode (the latter hopefully happening very infrequently).
+ *
+ * Things are a little bit different in the current state of ReactOS.
+ * We want to have a functional interactive text mode. We should be
+ * able to switch from text mode to graphics mode when a GUI app is
+ * started and switch back to text mode when it's finished. Then, when
+ * another GUI app is started, another switch to and from graphics mode
+ * is possible. Also, when the system bugchecks in graphics mode we want
+ * to switch back to text mode to show the registers and stack trace.
+ * Last but not least, HalDisplayString is used a lot more in ReactOS,
+ * e.g. to print debug messages when the /DEBUGPORT=SCREEN boot option
+ * is present.
+ * 3 Components are involved in Reactos: HAL, BLUE.SYS and VIDEOPRT.SYS.
+ * As in NT, on boot HAL owns the display. When entering the text mode
+ * command interpreter, BLUE.SYS kicks in. It will write directly to the
+ * screen, more or less behind HALs back.
+ * When a GUI app is started, WIN32K.SYS will open the DISPLAY device.
+ * This open call will end up in VIDEOPRT.SYS. That component will then
+ * take ownership of the display by calling HalAcquireDisplayOwnership.
+ * When the GUI app terminates (WIN32K.SYS will close the DISPLAY device),
+ * we want to give ownership of the display back to HAL. Using the
+ * standard exported HAL functions, that's a bit of a problem, because
+ * there is no function defined to do that. In NT, this is handled by
+ * HalDisplayString, but that solution isn't satisfactory in ReactOS,
+ * because HalDisplayString is (in some cases) also used to output debug
+ * messages. If we do it the NT way, the first debug message output while
+ * in graphics mode would switch the display back to text mode.
+ * So, instead, if HalDisplayString detects that HAL doesn't have ownership
+ * of the display, it doesn't do anything.
+ * To return ownership to HAL, a new function is exported,
+ * HalReleaseDisplayOwnership. This function is called by the DISPLAY
+ * device Close routine in VIDEOPRT.SYS. It is also called at the beginning
+ * of a bug check, so HalDisplayString is activated again.
+ * Now, while the display is in graphics mode (not owned by HAL), BLUE.SYS
+ * should also refrain from writing to the screen buffer. The text mode
+ * screen buffer might overlap the graphics mode screen buffer, so changing
+ * something in the text mode buffer might mess up the graphics screen. To
+ * allow BLUE.SYS to detect if HAL owns the display, another new function is
+ * exported, HalQueryDisplayOwnership. BLUE.SYS will call this function to
+ * check if it's allowed to touch the text mode buffer.
+ *
+ * In an ideal world, when HAL takes ownership of the display, it should set
+ * up the CRT using real-mode (actually V86 mode, but who cares) INT 0x10
+ * calls. Unfortunately, this will require HAL to setup a real-mode interrupt
+ * table etc. So, we chickened out of that by having the loader set up the
+ * display before switching to protected mode. If HAL is given back ownership
+ * after a GUI app terminates, the INT 0x10 calls are made by VIDEOPRT.SYS,
+ * since there is already support for them via the VideoPortInt10 routine.
  */
 
 #include <ddk/ntddk.h>
@@ -156,12 +221,12 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 
-VOID
-HalResetDisplay(VOID)
+/* PUBLIC FUNCTIONS *********************************************************/
+
+VOID STDCALL
+HalReleaseDisplayOwnership()
 /*
- * FUNCTION: Reset the display
- * ARGUMENTS:
- *         None
+ * FUNCTION: Release ownership of display back to HAL
  */
 {
   if (HalResetDisplayParameters == NULL)
@@ -178,8 +243,6 @@ HalResetDisplay(VOID)
 }
 
 
-/* PUBLIC FUNCTIONS *********************************************************/
-
 VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 /*
@@ -192,7 +255,6 @@ HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParamete
   HalOwnsDisplay = FALSE;
   HalResetDisplayParameters = ResetDisplayParameters;
 }
-
 
 VOID STDCALL
 HalDisplayString(IN PCH String)
@@ -212,16 +274,24 @@ HalDisplayString(IN PCH String)
   static KSPIN_LOCK Lock;
   ULONG Flags;
 
+  /* See comment at top of file */
+  if (! HalOwnsDisplay)
+    {
+      return;
+    }
+
   pch = String;
 
   pushfl(Flags);
   __asm__ ("cli\n\t");
   KeAcquireSpinLockAtDpcLevel(&Lock);
-  
+
+#if 0  
   if (HalOwnsDisplay == FALSE)
     {
-      HalResetDisplay ();
+      HalReleaseDisplayOwnership();
     }
+#endif
   
 #ifdef SCREEN_SYNCHRONIZATION
   WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
@@ -273,7 +343,6 @@ HalDisplayString(IN PCH String)
   popfl(Flags);
 }
 
-
 VOID STDCALL
 HalQueryDisplayParameters(OUT PULONG DispSizeX,
 			  OUT PULONG DispSizeY,
@@ -297,6 +366,12 @@ HalSetDisplayParameters(IN ULONG CursorPosX,
 {
   CursorX = (CursorPosX < SizeX) ? CursorPosX : SizeX - 1;
   CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
+}
+
+BOOLEAN STDCALL
+HalQueryDisplayOwnership()
+{
+  return ! HalOwnsDisplay;
 }
 
 /* EOF */

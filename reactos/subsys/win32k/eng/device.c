@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.7 2003/05/18 17:16:17 ea Exp $
+/* $Id: device.c,v 1.8 2003/06/21 14:25:30 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -81,6 +81,8 @@ EngDeviceIoControl(HANDLE  hDevice,
   {
     (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
   }
+
+  ObDereferenceObject(FileObject);
 
   return (Status);
 }
