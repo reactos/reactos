@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.216 2004/04/11 16:51:56 gvg Exp $
+# $Id: Makefile,v 1.217 2004/04/12 12:08:52 weiden Exp $
 #
 # Global makefile
 #
@@ -22,10 +22,6 @@ COMPONENTS = iface_native iface_additional hallib ntoskrnl
 # Hardware Abstraction Layers
 # halx86
 HALS = halx86
-
-# Bus drivers
-# acpi isapnp pci
-BUS = acpi isapnp pci
 
 # Filesystem libraries
 # vfatlib
@@ -62,34 +58,6 @@ SERVERS = win32
 # dos
 LOADERS = dos
 
-# Driver support libraries
-#bzip2 zlib
-DRIVERS_LIB = bzip2
-
-# Kernel mode device drivers
-# Obsolete: ide
-# beep blue floppy null parallel ramdrv serenum serial
-DEVICE_DRIVERS = beep blue debugout floppy null serial bootvid
-
-# Kernel mode input drivers
-INPUT_DRIVERS = keyboard mouclass psaux sermouse
-
-# Kernel mode file system drivers
-# cdfs ext2 fs_rec ms np vfat
-FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
-
-# Kernel mode networking drivers
-# afd ndis npf tcpip tdi wshtcpip
-NET_DRIVERS = afd ndis npf tcpip tdi wshtcpip
-
-# Kernel mode networking device drivers
-# ne2000 pcnet
-NET_DEVICE_DRIVERS = ne2000 pcnet
-
-# Kernel mode storage drivers
-# atapi cdrom class2 disk scsiport
-STORAGE_DRIVERS = atapi cdrom class2 disk scsiport diskdump
-
 # System applications
 # autochk cmd format services setup usetup welcome winlogon
 SYS_APPS = autochk cmd explorer format services setup taskmgr userinit usetup welcome vmwinst winlogon regedit
@@ -111,8 +79,7 @@ else
 EXT_MODULES =
 endif
 
-KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
-	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS) VIDEO_DRIVERS
+KERNEL_DRIVERS = drivers
 
 # Regression tests
 REGTESTS = regtests
@@ -381,200 +348,25 @@ iface_additional_bootcd:
 
 
 #
-# Bus driver rules
+# Kernel Drivers rules
 #
-$(BUS): %:
-	$(MAKE) -C drivers/bus/$*
+$(KERNEL_DRIVERS): %:
+	$(MAKE) -C $*
 
-$(BUS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/bus/$* implib
+$(KERNEL_DRIVERS:%=%_implib): %_implib:
+	$(MAKE) -C $* implib
 
-$(BUS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/bus/$* clean
+$(KERNEL_DRIVERS:%=%_clean): %_clean:
+	$(MAKE) -C $* clean
 
-$(BUS:%=%_install): %_install:
-	$(MAKE) -C drivers/bus/$* install
+$(KERNEL_DRIVERS:%=%_install): %_install:
+	$(MAKE) -C $* install
 
-$(BUS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/bus/$* bootcd
+$(KERNEL_DRIVERS:%=%_bootcd): %_bootcd:
+	$(MAKE) -C $* bootcd
 
-.PHONY: $(BUS) $(BUS:%=%_implib) $(BUS:%=%_clean) \
-        $(BUS:%=%_install) $(BUS:%=%_bootcd)
-
-
-#
-# Driver support libraries rules
-#
-$(DRIVERS_LIB): %:
-	$(MAKE) -C drivers/lib/$*
-
-$(DRIVERS_LIB:%=%_implib): %_implib:
-	$(MAKE) -C drivers/lib/$* implib
-
-$(DRIVERS_LIB:%=%_clean): %_clean:
-	$(MAKE) -C drivers/lib/$* clean
-
-$(DRIVERS_LIB:%=%_install): %_install:
-	$(MAKE) -C drivers/lib/$* install
-
-$(DRIVERS_LIB:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/lib/$* bootcd
-
-.PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_clean) \
-        $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_bootcd)
-
-
-#
-# Device driver rules
-#
-$(DEVICE_DRIVERS): %:
-	$(MAKE) -C drivers/dd/$*
-
-$(DEVICE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/dd/$* implib
-
-$(DEVICE_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/dd/$* clean
-
-$(DEVICE_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/dd/$* install
-
-$(DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/dd/$* bootcd
-
-.PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
-        $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_bootcd)
-
-
-#
-# Video device driver rules
-#
-VIDEO_DRIVERS: 
-	$(MAKE) -C drivers/video
-
-VIDEO_DRIVERS_implib:
-	$(MAKE) -C drivers/video implib
-
-VIDEO_DRIVERS_clean:
-	$(MAKE) -C drivers/video clean
-
-VIDEO_DRIVERS_install:
-	$(MAKE) -C drivers/video install
-
-VIDEO_DRIVERS_bootcd:
-	$(MAKE) -C drivers/video bootcd
-
-.PHONY: VIDEO_DRIVERS VIDEO_DRIVERS_implib VIDEO_DRIVERS_clean \
-        VIDEO_DRIVERS_install VIDEO_DRIVERS_bootcd
-
-
-#
-# Input driver rules
-#
-$(INPUT_DRIVERS): %:
-	$(MAKE) -C drivers/input/$*
-
-$(INPUT_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/input/$* implib
-
-$(INPUT_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/input/$* clean
-
-$(INPUT_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/input/$* install
-
-$(INPUT_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/input/$* bootcd
-
-.PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
-        $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_bootcd)
-
-#
-# Filesystem driver rules
-#
-$(FS_DRIVERS): %:
-	$(MAKE) -C drivers/fs/$*
-
-$(FS_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/fs/$* implib
-
-$(FS_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/fs/$* clean
-
-$(FS_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/fs/$* install
-
-$(FS_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/fs/$* bootcd
-
-.PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
-        $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_bootcd)
-
-
-#
-# Network driver rules
-#
-$(NET_DRIVERS): %:
-	$(MAKE) -C drivers/net/$*
-
-$(NET_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/net/$* implib
-
-$(NET_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/net/$* clean
-
-$(NET_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/net/$* install
-
-$(NET_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/net/$* bootcd
-
-.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
-        $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_bootcd)
-
-
-#
-# Network device driver rules
-#
-$(NET_DEVICE_DRIVERS): %:
-	$(MAKE) -C drivers/net/dd/$*
-
-$(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/net/dd/$* implib
-
-$(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/net/dd/$* clean
-
-$(NET_DEVICE_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/net/dd/$* install
-
-$(NET_DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/net/dd/$* bootcd
-
-.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
-        $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_bootcd)
-
-
-#
-# storage driver rules
-#
-$(STORAGE_DRIVERS): %:
-	$(MAKE) -C drivers/storage/$*
-
-$(STORAGE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/storage/$* implib
-
-$(STORAGE_DRIVERS:%=%_clean): %_clean:
-	$(MAKE) -C drivers/storage/$* clean
-
-$(STORAGE_DRIVERS:%=%_install): %_install:
-	$(MAKE) -C drivers/storage/$* install
-
-$(STORAGE_DRIVERS:%=%_bootcd): %_bootcd:
-	$(MAKE) -C drivers/storage/$* bootcd
-
-.PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) $(STORAGE_DRIVERS:%=%_implib) \
-		$(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_bootcd)
+.PHONY: $(KERNEL_DRIVERS) $(KERNEL_DRIVERS:%=%_implib) $(KERNEL_DRIVERS:%=%_clean) \
+        $(KERNEL_DRIVERS:%=%_install) $(KERNEL_DRIVERS:%=%_bootcd)
 
 
 #

@@ -1,13 +1,12 @@
-
 #
-# ReactOS control panels makefile
+# ReactOS Storage Drivers
 #
 
-PATH_TO_TOP = ..
+PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = bus dd fs input lib net storage video
+DRIVERS = atapi cdrom class2 disk diskdump scsiport
 
 all: $(DRIVERS)
 
@@ -21,14 +20,11 @@ install: $(DRIVERS:%=%_install)
 
 bootcd: $(DRIVERS:%=%_bootcd)
 
-docu:
-	doxygen Doxyfile
-
-.PHONY: all depends implib clean install bootcd docu
+.PHONY: all depends implib clean install bootcd
 
 
 #
-# Drivers
+# STORAGE DRIVERS
 #
 $(DRIVERS): %:
 	$(MAKE) -C $*
@@ -52,4 +48,3 @@ etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 
 # EOF
-
