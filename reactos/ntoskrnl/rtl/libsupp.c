@@ -14,83 +14,73 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-//FIXME: sort this out somehow
-#define PCRITICAL_SECTION PVOID
-#define LPCRITICAL_SECTION PVOID
+//FIXME: sort this out somehow. IAI: Sorted in new header branch
+#define PRTL_CRITICAL_SECTION PVOID
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-VOID STDCALL
-RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
+NTSTATUS 
+STDCALL
+RtlDeleteCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
+    return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
- */
-DWORD STDCALL
+DWORD
+STDCALL
 RtlSetCriticalSectionSpinCount(
-   LPCRITICAL_SECTION CriticalSection,
+   PRTL_CRITICAL_SECTION CriticalSection,
    DWORD SpinCount
    )
 {
    return 0;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL
-RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
+NTSTATUS
+STDCALL
+RtlEnterCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   ExAcquireFastMutex((PFAST_MUTEX) CriticalSection );
+    ExAcquireFastMutex((PFAST_MUTEX) CriticalSection);
+    return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
+NTSTATUS
+STDCALL
+RtlInitializeCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
    ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
    return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL
-RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
+NTSTATUS
+STDCALL
+RtlLeaveCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-   ExReleaseFastMutex((PFAST_MUTEX) CriticalSection );
+    ExReleaseFastMutex((PFAST_MUTEX) CriticalSection );
+    return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
+BOOLEAN 
+STDCALL
+RtlTryEnterCriticalSection(
+    PRTL_CRITICAL_SECTION CriticalSection)
 {
-  return ExTryToAcquireFastMutex((PFAST_MUTEX) CriticalSection );
+    return ExTryToAcquireFastMutex((PFAST_MUTEX) CriticalSection );
 }
 
 
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-RtlInitializeCriticalSectionAndSpinCount (
-   PCRITICAL_SECTION CriticalSection,
-	ULONG SpinCount)
+NTSTATUS
+STDCALL
+RtlInitializeCriticalSectionAndSpinCount(
+    PRTL_CRITICAL_SECTION CriticalSection,
+    ULONG SpinCount)
 {
-   ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
-   return STATUS_SUCCESS;
+    ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
