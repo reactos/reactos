@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.19 2003/08/20 10:08:53 weiden Exp $
+/* $Id: menu.c,v 1.20 2003/08/20 13:02:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,7 @@
 
 /* maximum number of menu items a menu can contain */
 #define MAX_MENU_ITEMS (0x4000)
+#define MAX_GOINTOSUBMENU (0x10)
 
 #ifndef MIIM_STRING
 #define MIIM_STRING      (0x00000040)
@@ -57,7 +58,6 @@
 #define MIIM_FTYPE       (0x00000100)
 #endif
 
-/* TODO - Optimize */
 #define UpdateMenuItemState(state, change) \
 {\
   if((change) & MFS_DISABLED) { \
@@ -74,6 +74,11 @@
     if(!((state) & MFS_HILITE)) (state) |= MFS_HILITE; \
   } else { \
     if((state) & MFS_HILITE) (state) ^= MFS_HILITE; \
+  } \
+  if(((change) & MFS_DEFAULT) && !((state) & MFS_DEFAULT)) { \
+    (state) |= MFS_DEFAULT; \
+  } else if(((state) & MFS_DEFAULT) && !((change) & MFS_DEFAULT)) { \
+    (state) ^= MFS_DEFAULT; \
   } \
 }
 
@@ -510,8 +515,9 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
   }
   if(lpmii->fMask & MIIM_STATE)
   {
+    if(lpmii->fState & MFS_DEFAULT)
+      IntSetMenuDefaultItem(MenuObject, -1, 0);
     UpdateMenuItemState(MenuItem->fState, lpmii->fState);
-    /* FIXME - only one item can have MFS_DEFAULT */
   }
   
   if(lpmii->fMask & MIIM_SUBMENU)
@@ -709,7 +715,19 @@ BOOL FASTCALL
 IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
 {
   BOOL ret = FALSE;
-  PMENU_ITEM MenuItem = MenuObject->MenuItemList;  
+  PMENU_ITEM MenuItem = MenuObject->MenuItemList;
+    
+  if(uItem == -1)
+  {
+    while(MenuItem)
+    {
+      if(MenuItem->fState & MFS_DEFAULT)
+        MenuItem->fState ^= MFS_DEFAULT;
+      MenuItem = MenuItem->Next;
+    }
+    return TRUE;
+  }
+  
   if(fByPos)
   {
     UINT pos = 0;
@@ -749,6 +767,63 @@ IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
     }
   }
   return ret;
+}
+
+
+UINT FASTCALL
+IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
+  DWORD *gismc)
+{
+  UINT x = 0;
+  UINT res = -1;
+  UINT sres;
+  PMENU_OBJECT SubMenuObject;
+  PMENU_ITEM MenuItem = MenuObject->MenuItemList;
+  
+  while(MenuItem)
+  {
+    if(MenuItem->fState & MFS_DEFAULT)
+
+      if(!(gmdiFlags & GMDI_USEDISABLED) && (MenuItem->fState & MFS_DISABLED))
+        break;
+        
+      if(fByPos & MF_BYPOSITION)
+        res = x;
+      else
+        res = MenuItem->wID;
+      break;
+        
+      if((*gismc < MAX_GOINTOSUBMENU) && (gmdiFlags & GMDI_GOINTOPOPUPS) && 
+         MenuItem->hSubMenu)
+      {
+      
+        SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu);
+        if(!SubMenuObject || (SubMenuObject == MenuObject))
+          break;
+          
+        ExAcquireFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
+        ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+        
+        *gismc++;
+        sres = IntGetMenuDefaultItem(SubMenuObject, fByPos, gmdiFlags, gismc);
+        *gismc--;
+        
+        ExReleaseFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
+        ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+        IntReleaseMenuObject(SubMenuObject);
+        
+        if(sres > -1)
+          res = sres;
+        break;
+      }
+
+    }
+    
+    MenuItem = MenuItem->Next;
+    x++;
+  }
+  
+  return res;
 }
 
 /*!
@@ -990,7 +1065,7 @@ NtUserEndMenu(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 NtUserGetMenuDefaultItem(
@@ -998,9 +1073,20 @@ NtUserGetMenuDefaultItem(
   UINT fByPos,
   UINT gmdiFlags)
 {
-  UNIMPLEMENTED
-  
-  return -1;
+  PMENU_OBJECT MenuObject;
+  UINT res = -1;
+  DWORD gismc = 0;
+  MenuObject = IntGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return res;
+  }
+  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  res = IntGetMenuDefaultItem(MenuObject, fByPos, gmdiFlags, &gismc);
+  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntReleaseMenuObject(MenuObject);
+  return res;
 }
 
 
