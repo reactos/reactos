@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.74 2004/06/01 10:16:26 gdalsnes Exp $
+/* $Id: mm.c,v 1.75 2004/07/17 03:03:51 ion Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -44,8 +44,9 @@
 
 PVOID EXPORTED MmUserProbeAddress = NULL;
 PVOID EXPORTED MmHighestUserAddress = NULL;
+PBOOLEAN EXPORTED Mm64BitPhysicalAddress = FALSE;
+PVOID EXPORTED MmSystemRangeStart = NULL;
 
-PVOID MmSystemRangeStart = NULL;
 MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
@@ -519,6 +520,19 @@ MmSetAddressRangeModified (
 {
    UNIMPLEMENTED;
    return (FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTKERNELAPI
+PVOID
+MmGetSystemRoutineAddress (
+    IN PUNICODE_STRING SystemRoutineName
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 /* EOF */

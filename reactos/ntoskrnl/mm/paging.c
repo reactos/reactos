@@ -17,3 +17,17 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmMapUserAddressesToPage (
+    IN PVOID BaseAddress,
+    IN SIZE_T NumberOfBytes,
+    IN PVOID PageAddress
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.78 2004/07/10 17:01:02 hbirr Exp $
+/* $Id: virtual.c,v 1.79 2004/07/17 03:03:52 ion Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -545,6 +545,20 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
    *NumberOfBytesWritten = NumberOfBytesToWrite;
 
    return(STATUS_SUCCESS);
+}
+
+/*
+ * @unimplemented
+ */
+
+PVOID
+STDCALL
+MmGetVirtualForPhysical (
+    IN PHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 /* FUNCTION:

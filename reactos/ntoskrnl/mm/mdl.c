@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.64 2004/06/06 07:52:22 hbirr Exp $
+/* $Id: mdl.c,v 1.65 2004/07/17 03:03:51 ion Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -44,6 +44,20 @@ MDL_PARTIAL_HAS_BEEN_MAPPED   mdl flagged MDL_PARTIAL has been mapped into kerne
 */
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmAdvanceMdl (
+    IN PMDL Mdl,
+    IN ULONG NumberOfBytes
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 VOID INIT_FUNCTION
 MmInitializeMdlImplementation(VOID)
@@ -92,6 +106,7 @@ MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
 
    return((PVOID)MdlPages[((ULONG)Offset) / PAGE_SIZE]);
 }
+
 
 /*
  * @implemented
@@ -311,6 +326,23 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    return((char*)Base + Mdl->ByteOffset);
 }
 
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+MmMapLockedPagesWithReservedMapping (
+    IN PVOID MappingAddress,
+    IN ULONG PoolTag,
+    IN PMDL MemoryDescriptorList,
+    IN MEMORY_CACHING_TYPE CacheType
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
 /*
  * @implemented
  */
@@ -401,6 +433,20 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+MmUnmapReservedMapping (
+     IN PVOID BaseAddress,
+     IN ULONG PoolTag,
+     IN PMDL MemoryDescriptorList
+     )
+{
+	UNIMPLEMENTED;
+}
+
 
 VOID
 MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
@@ -419,6 +465,33 @@ MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmPrefetchPages (
+    IN ULONG NumberOfLists,
+    IN PREAD_LIST *ReadLists
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmProtectMdlSystemAddress (
+    IN PMDL MemoryDescriptorList,
+    IN ULONG NewProtect
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 
 /*
@@ -548,6 +621,35 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+MmProbeAndLockProcessPages (
+    IN OUT PMDL MemoryDescriptorList,
+    IN PEPROCESS Process,
+    IN KPROCESSOR_MODE AccessMode,
+    IN LOCK_OPERATION Operation
+    )
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID 
+STDCALL
+MmProbeAndLockSelectedPages(
+	IN OUT PMDL MemoryDescriptorList,
+	IN LARGE_INTEGER PageList[],
+	IN KPROCESSOR_MODE AccessMode,
+	IN LOCK_OPERATION Operation
+	)
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.18 2004/04/10 22:35:26 gdalsnes Exp $
+/* $Id: wset.c,v 1.19 2004/07/17 03:03:52 ion Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -67,4 +67,17 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
       CurrentPhysicalAddress = NextPhysicalAddress;
    }
    return(STATUS_SUCCESS);
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+MmTrimAllSystemPagableMemory (
+	IN ULONG PurgeTransitionList
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
 }

@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.29 2004/06/23 21:50:59 ion Exp $
+/* $Id: pool.c,v 1.30 2004/07/17 03:03:52 ion Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -220,6 +220,34 @@ ExQueryPoolBlockSize (
 {
 	UNIMPLEMENTED;
 	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+MmAllocateMappingAddress (
+     IN SIZE_T NumberOfBytes,
+     IN ULONG PoolTag
+     )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+MmFreeMappingAddress (
+     IN PVOID BaseAddress,
+     IN ULONG PoolTag
+     )
+{
+	UNIMPLEMENTED;
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.153 2004/07/10 17:01:02 hbirr Exp $
+/* $Id: section.c,v 1.154 2004/07/17 03:03:52 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -4113,6 +4113,21 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    return Status;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmMapViewInSessionSpace (
+    IN PVOID Section,
+    OUT PVOID *MappedBase,
+    IN OUT PSIZE_T ViewSize
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /*
  * @implemented
@@ -4132,6 +4147,18 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
    return Status;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+MmUnmapViewInSessionSpace (
+    IN PVOID MappedBase
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented
