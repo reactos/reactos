@@ -37,12 +37,24 @@
  */
 
 #include <windows.h>
+#include <wintrust.h>
 
-LONG WINAPI WinVerifyTrust (HWND hwnd, GUID *rActionID,  LPVOID rActionData)
+
+LONG WINAPI WinVerifyTrust (HWND hwnd, GUID *pActionID,  LPVOID pActionData)
 {
-
 /*
- * not implemented
- */
+ * @unimplemented
+ */              
 	return TRUE;
 }
+
+
+BOOL WintrustAddActionID(GUID* pgActionID,DWORD fdwFlags,
+		         CRYPT_REGISTER_ACTIONID* psProvInfo)
+{
+/*
+ * @unimplemented
+ */              
+	return TRUE;
+}                   
+                                             	

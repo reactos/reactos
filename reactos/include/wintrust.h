@@ -4,7 +4,7 @@
  * DESCRIPTION: ReactOS wintrust lib
  * DATE       : 25.08.2004 (My birthday!)
  * AUTHOR     : Semyon Novikov <tappak@freemail.ru>
- *
+ *      	
  * --------------------------------------------------------------------
  * Copyright (c) 1998, 2004
  *	ReactOS developers team.  All rights reserved.
@@ -36,27 +36,51 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-typedef struct _WINTRUST_DATA 
+typedef struct _CRYPT_TRUST_REG_ENTRY 
 {
   DWORD cbStruct;
+
+  WCHAR* pwszDLLName;
+  WCHAR* pwszFunctionName;
+} CRYPT_TRUST_REG_ENTRY,*PCRYPT_TRUST_REG_ENTRY;
+
+typedef struct _WINTRUST_DATA 
+{                
+  DWORD cbStruct;
+
   LPVOID pPolicyCallbackData;
   LPVOID pSIPClientData;
   DWORD dwUIChoice;
   DWORD fdwRevocationChecks;
   DWORD dwUnionChoice;
 
-   union{
+  union	{
+	    struct WINTRUST_SGNR_INFO_* pSgnr;
+	    struct WINTRUST_CERT_INFO_* pCert;
 	    struct WINTRUST_FILE_INFO_* pFile;
 	    struct WINTRUST_CATALOG_INFO_* pCatalog;
 	    struct WINTRUST_BLOB_INFO_* pBlob;
-	    struct WINTRUST_SGNR_INFO_* pSgnr;
-	    struct WINTRUST_CERT_INFO_* pCert;
-	 };
+        };
 
+  DWORD dwProvFlags;
   DWORD dwStateAction;
   HANDLE hWVTStateData;
-  WCHAR* pwszURLReference;
-  DWORD dwProvFlags;
   DWORD dwUIContext;
+  WCHAR* pwszURLReference;
 
 } WINTRUST_DATA,*PWINTRUST_DATA;
+
+typedef struct _CRYPT_REGISTER_ACTIONID 
+{
+  DWORD cbStruct;
+
+  CRYPT_TRUST_REG_ENTRY sInitProvider;
+  CRYPT_TRUST_REG_ENTRY sObjectProvider;
+  CRYPT_TRUST_REG_ENTRY sSignatureProvider;
+  CRYPT_TRUST_REG_ENTRY sCertificateProvider;
+  CRYPT_TRUST_REG_ENTRY sCertificatePolicyProvider;
+  CRYPT_TRUST_REG_ENTRY sFinalPolicyProvider;
+  CRYPT_TRUST_REG_ENTRY sTestPolicyProvider;
+  CRYPT_TRUST_REG_ENTRY sCleanupProvider;
+
+} CRYPT_REGISTER_ACTIONID,*PCRYPT_REGISTER_ACTIONID;
