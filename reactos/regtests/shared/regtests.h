@@ -171,6 +171,9 @@ _GetProcAddress(HMODULE hModule,
 HINSTANCE STDCALL
 _LoadLibraryA(LPCSTR lpLibFileName);
 
+VOID STDCALL
+_ExitProcess(UINT uExitCode);
+
 static inline PCHAR
 FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)
 {

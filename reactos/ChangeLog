@@ -1,5 +1,21 @@
 2004-10-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/Makefile (TARGET_REGTESTS): Define to yes.
+	* regtests/regtests/regtests.c (_ExitProcess): Declare.
+	* regtests/regtests/regtests.def (_ExitProcess@4): Ditto.
+	* regtests/shared/regtests.h (_ExitProcess): Ditto.
+	* tools/regtests.c: Exit process using _ExitProcess();
+	Properly support fastcall symbols.
+	* ntoskrnl/tests: New directory.
+	* ntoskrnl/tests/tests: Ditto.
+	* ntoskrnl/tests/.cvsignore: New file.
+	* ntoskrnl/tests/Makefile: Ditto.
+	* ntoskrnl/tests/setup.c: Ditto.
+	* ntoskrnl/tests/stubs.tst: Ditto.
+	* ntoskrnl/tests/tests/.cvsignore: Ditto.
+
+2004-10-24  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* config (REGRESSIONTESTS): Remove.
 	* tools/config.mk: Update.
 	* lib/kernel32/misc/dllmain.c: Update.

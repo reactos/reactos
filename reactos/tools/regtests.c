@@ -433,17 +433,6 @@ static char EXESTUB[] =
   "\n"
   "#include \"regtests.h\"\n"
   "\n"
-  "#if defined(__USE_W32API)\n"
-  "  #define HANDLE PVOID\n"
-  "  #define NTSTATUS ULONG\n"
-  "\n"
-  "  NTSTATUS STDCALL\n"
-  "  NtTerminateProcess(HANDLE ProcessHandle,\n"
-  "    NTSTATUS ExitStatus);\n"
-  "\n"
-  "  #define NtCurrentProcess() ((HANDLE) 0xFFFFFFFF)\n"
-  "#endif\n"
-  "\n"
   "void\n"
   "ConsoleWrite(char *Buffer)\n"
   "{\n"
@@ -460,7 +449,7 @@ static char EXESTUB[] =
   "  RegisterTests();\n"
   "  SetupOnce();\n"
   "  PerformTests(ConsoleWrite, NULL);\n"
-  "  NtTerminateProcess (NtCurrentProcess(), 0);\n"
+  "  _ExitProcess(0);\n"
   "  return 0;\n"
   "}\n";
 
@@ -523,6 +512,18 @@ write_hooks_footer(FILE *hooks_out, unsigned long nr_stubs)
 }
 
 char *
+get_symbolname(char *decoratedname)
+{
+  char buf[300];
+
+  if (decoratedname[0] == '@')
+    return strdup(decoratedname);
+  strcpy(buf, "_");
+  strcat(buf, decoratedname);
+  return strdup(buf);
+}
+
+char *
 get_undecorated_name(char *buf,
   char *decoratedname)
 {
@@ -570,6 +571,7 @@ write_stub(FILE *stubs_out, FILE *hooks_out, char *dllname,
   char *p;
   char *decoratedname = NULL;
   char *forwardedexport = NULL;
+  char *symbolname = NULL;
 
   p = strtok(decoratedname_and_forward, "=");
   if (p != NULL)
@@ -585,8 +587,10 @@ write_stub(FILE *stubs_out, FILE *hooks_out, char *dllname,
       forwardedexport = decoratedname_and_forward;
     }
 
-  fprintf(stubs_out, ".globl _%s\n", decoratedname);
-  fprintf(stubs_out, "_%s:\n", decoratedname);
+  symbolname = get_symbolname(decoratedname);
+  fprintf(stubs_out, ".globl %s\n", symbolname);
+  fprintf(stubs_out, "%s:\n", symbolname);
+  free(symbolname);
   fprintf(stubs_out, "  pushl $%d\n", stub_index);
   fprintf(stubs_out, "  jmp passthrough\n");
   fprintf(stubs_out, "\n");

@@ -1,5 +1,6 @@
 LIBRARY REGTESTS.DLL
 EXPORTS
+_ExitProcess@4
 _GetModuleHandleA@4
 _GetProcAddress@8
 _LoadLibraryA@4

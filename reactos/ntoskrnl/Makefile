@@ -4,6 +4,8 @@ PATH_TO_TOP := ..
 
 include $(PATH_TO_TOP)/config
 
+TARGET_REGTESTS = yes
+
 TARGET_TYPE = kernel
 
 TARGET_NAME = ntoskrnl
