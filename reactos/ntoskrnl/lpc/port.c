@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.17 2004/02/02 23:48:42 ea Exp $
+/* $Id: port.c,v 1.18 2004/08/04 12:50:42 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,6 +66,8 @@ NiInitPort (VOID)
    ExPortType->OkayToClose = NULL;
    ExPortType->Create = NiCreatePort;
    ExPortType->DuplicationNotify = NULL;
+
+   ObpCreateTypeObject(ExPortType);
    
    EiNextLpcMessageId = 0;
    
@@ -75,7 +77,7 @@ NiInitPort (VOID)
 
 /**********************************************************************
  * NAME							INTERNAL
- *	NiInitializePort
+ *	NiInitializePort/3
  *	
  * DESCRIPTION
  *	Initialize the EPORT object attributes. The Port
@@ -120,7 +122,7 @@ NiInitializePort (IN OUT  PEPORT Port,
 
 /**********************************************************************
  * NAME							SYSTEM
- *	NtImpersonateClientOfPort@8
+ *	NtImpersonateClientOfPort/2
  *	
  * DESCRIPTION
  *
@@ -137,7 +139,5 @@ NtImpersonateClientOfPort (HANDLE		PortHandle,
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);
 }
-
-
 
 /* EOF */
