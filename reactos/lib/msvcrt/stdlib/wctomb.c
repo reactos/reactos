@@ -47,6 +47,8 @@ int wctomb(char* dst, wchar_t ch)
 #else
     if (dst == NULL) {
         return 1;
+    } else if (0 != (ch & 0xff00)) {
+        return -1;
     }
     *dst = ch;
     return 1;
