@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.31 2003/06/07 19:13:43 gvg Exp $
+/* $Id: irq.c,v 1.32 2003/06/11 18:38:44 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -467,15 +467,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    KIRQL old_level;
    KTRAP_FRAME KernelTrapFrame;
    PKTHREAD CurrentThread;
-   PKTRAP_FRAME OldTrapFrame;
-
-   CurrentThread = KeGetCurrentThread();
-   if (NULL != CurrentThread && NULL == CurrentThread->TrapFrame)
-      {
-	OldTrapFrame = CurrentThread->TrapFrame;
-	KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-	CurrentThread->TrapFrame = &KernelTrapFrame;
-      }
+   PKTRAP_FRAME OldTrapFrame=NULL;
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -492,6 +484,14 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
      {
        return;
      }
+
+   CurrentThread = KeGetCurrentThread();
+   if (NULL != CurrentThread && NULL == CurrentThread->TrapFrame)
+      {
+	OldTrapFrame = CurrentThread->TrapFrame;
+	KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
+	CurrentThread->TrapFrame = &KernelTrapFrame;
+      }
 
    /*
     * Enable interrupts
