@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.26 2004/07/14 20:48:57 navaraf Exp $
+/* $Id: copybits.c,v 1.27 2004/12/14 04:22:00 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,6 +44,8 @@ EngCopyBits(SURFOBJ *Dest,
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
   BLTINFO   BltInfo;
+
+  ASSERT(Dest != NULL && Source != NULL && DestRect != NULL && SourcePoint != NULL);
 
   MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
