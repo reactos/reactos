@@ -774,7 +774,7 @@ LicensePage(PINPUT_RECORD Ir)
   SetTextXY(8, 19, "save applicable local and international law. The licensing of");
   SetTextXY(8, 20, "ReactOS only covers distribution to third parties.");
 
-  SetTextXY(8, 22, "If for some resion you did not receive a copy of the");
+  SetTextXY(8, 22, "If for some reason you did not receive a copy of the");
   SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
   SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
   
