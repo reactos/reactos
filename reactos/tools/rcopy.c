@@ -28,13 +28,13 @@ make_absolute(char *absolute, char *path)
 #ifndef WIN32
   if (path[0] == DIR_SEPARATOR_CHAR)
     {
-      strcpy(buf, path);
+      strcpy(absolute, path);
     }
   else
     {
-      getcwd(buf, sizeof(buf));
-      strcat(buf, DIR_SEPARATOR_STRING);
-      strcat(buf, path);
+      getcwd(absolute, sizeof(absolute));
+      strcat(absolute, DIR_SEPARATOR_STRING);
+      strcat(absolute, path);
     }
 #else
   _fullpath(absolute, path, MAX_PATH);
