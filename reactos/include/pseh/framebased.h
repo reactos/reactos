@@ -298,6 +298,8 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
   _SEHHandlers.SH_Finally(&_SEHFrame->SEH_Header);                             \
 }
 
+#define _SEH2_HANDLE _SEH2_EXCEPT(_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER))
+
 #define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
 
 #define _SEH_GetExceptionPointers() \
