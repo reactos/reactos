@@ -60,7 +60,7 @@ EXTERN(_boot_reactos)
 	movb	$0x32,%al		// Clear 25 lines
 	movw	$0,%cx			// Upper left of scroll
 	movw	$0x314F,%dx		// Lower right of scroll
-	movb	$(1*0x10+1),%bh	// Use normal attribute on blanked line
+	movb	$(1*0x00+0),%bh	// Use normal attribute on blanked line
 	int		$0x10			// Video-IO
 
 
