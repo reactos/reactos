@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.24 2003/09/10 21:03:18 fireball Exp $ */
+/* $Id: color.c,v 1.25 2003/09/25 15:12:42 fireball Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -565,7 +565,11 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
 
     if( r < diff ) { best = i; diff = r; }
   }
-  return (XlateObj->pulXlate) ? (INT)XlateObj->pulXlate[best] : best;
+
+  if (XlateObj == NULL)
+    return best;
+  else
+    return (XlateObj->pulXlate) ? (INT)XlateObj->pulXlate[best] : best;
 }
 
 COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
