@@ -1415,21 +1415,21 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
       return(Status);
     }
 
-  Status = NtAllocateLocallyUniqueId(&AccessToken->TokenId);
+  Status = ExpAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
       return(Status);
     }
 
-  Status = NtAllocateLocallyUniqueId(&AccessToken->ModifiedId);
+  Status = ExpAllocateLocallyUniqueId(&AccessToken->ModifiedId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
       return(Status);
     }
 
-  Status = NtAllocateLocallyUniqueId(&AccessToken->AuthenticationId);
+  Status = ExpAllocateLocallyUniqueId(&AccessToken->AuthenticationId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
