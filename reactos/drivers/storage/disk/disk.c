@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.41 2004/05/10 18:02:20 gvg Exp $
+/* $Id: disk.c,v 1.42 2004/06/21 21:03:12 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -548,6 +548,14 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->PathId = InquiryData->PathId;
   DiskDeviceExtension->TargetId = InquiryData->TargetId;
   DiskDeviceExtension->Lun = InquiryData->Lun;
+  DiskDeviceExtension->SrbFlags = 0;
+
+  /* Enable the command queueing, if it possible */
+  if (Capabilities->TaggedQueuing &&
+      ((PINQUIRYDATA)InquiryData->InquiryData)->CommandQueue)
+    {
+      DiskDeviceExtension->SrbFlags |= SRB_FLAGS_QUEUE_ACTION_ENABLE;
+    }
 
   /* Get timeout value */
   DiskDeviceExtension->TimeOutValue =
@@ -589,7 +597,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
 
   /* Allocate sense data buffer */
-  DiskDeviceExtension->SenseData = ExAllocatePool(NonPagedPool,
+  DiskDeviceExtension->SenseData = ExAllocatePool(NonPagedPoolCacheAligned,
 						  SENSE_BUFFER_SIZE);
   if (DiskDeviceExtension->SenseData == NULL)
     {
@@ -853,14 +861,17 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
   DiskDeviceExtension = (PDEVICE_EXTENSION)DiskDeviceObject->DeviceExtension;
   DiskData = (PDISK_DATA)(DiskDeviceExtension + 1);
 
-  if (DiskDeviceExtension->StartingOffset.QuadPart)
+  Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT("Partition already installed\n");
-      return(STATUS_SUCCESS);
+      /* Drive is not ready. */
+      DPRINT("Drive not ready\n");
+      DiskData->DriveNotReady = TRUE;
+      return Status;
     }
 
-      /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceObject,
+  /* Read partition table */
+  Status = IoReadPartitionTable(DiskDeviceExtension->PhysicalDevice,
 				DiskDeviceExtension->DiskGeometry->BytesPerSector,
 				TRUE,
 				&PartitionList);
@@ -886,27 +897,42 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       /* Set disk signature */
       DiskData->Signature = PartitionList->Signature;
 
-      for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
-	{
-	  PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
+      DiskData->NextPartition = NULL;
 
-      	DiskData->NextPartition = NULL;
-      	DiskData->PartitionType = PartitionEntry->PartitionType;
-      	DiskData->PartitionNumber = PartitionNumber + 1;
-      	DiskData->PartitionOrdinal = PartitionNumber + 1;
-      	DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
-      	DiskData->BootIndicator = PartitionEntry->BootIndicator;
-      	DiskData->DriveNotReady = FALSE;
-      	DiskDeviceExtension->StartingOffset = PartitionEntry->StartingOffset;
-      	DiskDeviceExtension->PartitionLength = PartitionEntry->PartitionLength;
+      if (PartitionList->PartitionCount)
+        {
+          for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
+	    {
+	      PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
+
+      	      DiskData->PartitionType = PartitionEntry->PartitionType;
+      	      DiskData->PartitionNumber = PartitionNumber + 1;
+      	      DiskData->PartitionOrdinal = PartitionNumber + 1;
+      	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
+      	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
+      	      DiskData->DriveNotReady = FALSE;
+      	      DiskDeviceExtension->StartingOffset = PartitionEntry->StartingOffset;
+      	      DiskDeviceExtension->PartitionLength = PartitionEntry->PartitionLength;
 		
-	  DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
-		 PartitionNumber,
-		 DiskData->PartitionNumber,
-		 DiskData->BootIndicator,
-		 DiskData->PartitionType,
-		 DiskDeviceExtension->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-		 DiskDeviceExtension->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+	      DPRINT1("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
+		      PartitionNumber,
+		      DiskData->PartitionNumber,
+		      DiskData->BootIndicator,
+		      DiskData->PartitionType,
+		      DiskDeviceExtension->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
+		      DiskDeviceExtension->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+	    }
+	}
+      else
+        {
+      	  DiskData->PartitionType = 0;
+      	  DiskData->PartitionNumber = 1;
+      	  DiskData->PartitionOrdinal = 0;
+          DiskData->HiddenSectors = 0;
+ 	  DiskData->BootIndicator = 0;
+  	  DiskData->DriveNotReady = FALSE;
+          DiskDeviceExtension->PartitionLength.QuadPart += DiskDeviceExtension->StartingOffset.QuadPart;
+	  DiskDeviceExtension->StartingOffset.QuadPart = 0;
 	}    
     }
 
@@ -980,7 +1006,7 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	    if (!NT_SUCCESS(Status))
 	      {
 		/* Drive is not ready */
-		DiskData->DriveNotReady = FALSE;
+		DiskData->DriveNotReady = TRUE;
 		break;
 	      }
 
