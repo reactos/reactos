@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.43 2004/07/03 17:40:21 navaraf Exp $
+/* $Id: disk.c,v 1.44 2004/07/05 21:42:05 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1204,25 +1204,6 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	    }
 	  ExFreePool (ModeData);
 	}
-	break;
-
-
-      case IOCTL_DISK_CHECK_VERIFY:
-          DPRINT("IOCTL_DISK_CHECK_VERIFY\n");
-          Information = 0;
-	  if (OutputLength != 0)
-	    {
-	       Irp->AssociatedIrp.SystemBuffer = (PVOID) DeviceExtension->MediaChangeCount;
-	       Information = sizeof(ULONG);
-
-	    }
-          if (DeviceObject->Flags & DO_VERIFY_VOLUME)
-            {
-               DPRINT("Do Verify Set\n");
-               Status = STATUS_VERIFY_REQUIRED;
-            }
-            else
-	       Status = STATUS_SUCCESS;
 	break;
 
       case IOCTL_DISK_VERIFY:
