@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.16 2004/03/09 14:16:39 navaraf Exp $
+ * $Id: videoprt.c,v 1.17 2004/03/09 17:28:49 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -211,25 +211,9 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
   USHORT VendorIdToFind;
   USHORT DeviceIdToFind;
+  ULONG SlotIdToFind;
 
   DPRINT("VideoPortGetAccessRanges\n");
-
-  if (VendorId != NULL)
-    {
-      VendorIdToFind = *(PUSHORT)VendorId;
-    }
-  else
-    {
-      VendorIdToFind = 0;
-    }
-  if (DeviceId != NULL)
-    {
-      DeviceIdToFind = *(PUSHORT)DeviceId;
-    }
-  else
-    {
-      DeviceIdToFind = 0;
-    }
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      VIDEO_PORT_DEVICE_EXTENSION,
@@ -238,10 +222,14 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   if (0 == NumRequestedResources && 
       PCIBus == DeviceExtension->AdapterInterfaceType)
     {
-      DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", 
-	     VendorIdToFind, DeviceIdToFind);
+      VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
+      DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
+      SlotIdToFind = Slot != NULL ? *Slot : 0;
 
-      PciSlotNumber.u.AsULONG = *Slot;
+      DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x SlotId 0x%04x\n", 
+	     VendorIdToFind, DeviceIdToFind, SlotIdToFind);
+
+      PciSlotNumber.u.AsULONG = SlotIdToFind;
 
       /*
 	Search for the device id and vendor id on this bus.
@@ -249,23 +237,23 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
       for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
 	{
 	  ULONG ReturnedLength;
+	  DPRINT("- Function number: %d\n", FunctionNumber);
 	  PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
 	  ReturnedLength = HalGetBusData(PCIConfiguration, 
 					 DeviceExtension->SystemIoBusNumber,
 					 PciSlotNumber.u.AsULONG,
 					 &Config,
 					 sizeof(PCI_COMMON_CONFIG));
-	  if (sizeof(PCI_COMMON_CONFIG) == ReturnedLength)	      
+	  DPRINT("- Length of data: %x\n", ReturnedLength);
+	  if (sizeof(PCI_COMMON_CONFIG) == ReturnedLength)
 	    {
-              if (DeviceId != NULL && VendorId != NULL)
-                {
-                  DPRINT("Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
-			 "DeviceId 0x%04x\n",
-                         PciSlotNumber.u.AsULONG, 
-			 PciSlotNumber.u.bits.DeviceNumber,
-                         PciSlotNumber.u.bits.FunctionNumber, Config.VendorID,
-			 Config.DeviceID);
-                }
+              DPRINT("- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
+                     "DeviceId 0x%04x\n",
+                     PciSlotNumber.u.AsULONG, 
+                     PciSlotNumber.u.bits.DeviceNumber,
+                     PciSlotNumber.u.bits.FunctionNumber,
+                     Config.VendorID,
+                     Config.DeviceID);
 
 	      if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
 		  (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
@@ -1857,3 +1845,16 @@ VideoPortGetProcAddress(IN PVOID HwDeviceExtension,
   DPRINT("VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
   return(NULL);
 }
+
+LONGLONG STDCALL
+VideoPortQueryPerformanceCounter(
+   IN PVOID HwDeviceExtension,
+   OUT PLONGLONG PerformanceFrequency OPTIONAL)
+{
+   LARGE_INTEGER Result;
+
+   DPRINT("VideoPortQueryPerformanceCounter\n");
+   Result = KeQueryPerformanceCounter((PLARGE_INTEGER)PerformanceFrequency);
+   return Result.QuadPart;
+}
+

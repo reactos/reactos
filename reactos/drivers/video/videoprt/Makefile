@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/03/04 18:51:58 navaraf Exp $
+# $Id: Makefile,v 1.3 2004/03/09 17:28:49 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,7 +12,8 @@ TARGET_OBJECTS = \
 	int10.o \
 	interrupt.o \
 	videoprt.o \
-	services.o
+	services.o \
+	spinlock.o
 
 include $(PATH_TO_TOP)/rules.mak
 
