@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.45 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: scsiport.c,v 1.46 2004/02/01 16:02:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2420,7 +2420,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	      DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
       swprintf(NameBuffer,
 	       L"Initiator Id %u",
-	       DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
+	       (unsigned int)(UCHAR)DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
       RtlInitUnicodeString(&KeyName,
 			   NameBuffer);
       InitializeObjectAttributes(&ObjectAttributes,
