@@ -59,7 +59,6 @@ write_h (int build, char *buildstr)
   FILE	*h = NULL;
   char* s;
   char* s1;
-  unsigned length;
   int dllversion = KERNEL_VERSION_MAJOR + 42;
 
   s1 = s = (char *) malloc(256 * 1024);
@@ -136,27 +135,6 @@ write_h (int build, char *buildstr)
     }
   s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
   s = s + sprintf (s, "#endif\n/* EOF */\n");
-
-  h = fopen (filename, "rb");
-  if (h != NULL)
-    {
-      fseek(h, 0, SEEK_END);
-      length = ftell(h);
-      if (length == strlen(s1))
-	{
-	  char* orig;
-	  
-	  orig = (char *) malloc(length);
-	  fseek(h, 0, SEEK_SET);
-	  fread(orig, 1, length, h);
-	  if (memcmp(s1, orig, length) == 0)
-	    {
-	      fclose(h);
-	      return;
-	    }
-	}
-      fclose(h);
-    }
 
   h = fopen (filename, "wb");
   if (!h) 
