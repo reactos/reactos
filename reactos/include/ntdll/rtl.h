@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.44 2004/07/08 00:40:30 weiden Exp $
+/* $Id: rtl.h,v 1.45 2004/07/08 22:05:48 gvg Exp $
  *
  */
 
@@ -618,7 +618,11 @@ RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
 
 /* Timer Queue functions */
 
+#ifdef __USE_W32API
+#include <winnt.h>
+#else /* __USE_W32API */
 typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
+#endif /* __USE_W32API */
 
 NTSTATUS
 STDCALL
