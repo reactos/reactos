@@ -19,7 +19,7 @@
  * - No Joliet file name validations
  * - Very bad ISO file name generation
  *
- * $Id: cdmake.c,v 1.10.8.1 2004/05/27 20:33:38 navaraf Exp $
+ * $Id: cdmake.c,v 1.10.8.2 2004/05/29 18:50:04 navaraf Exp $
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
@@ -536,12 +536,12 @@ int cdname_exists ( PDIR_RECORD d )
       && !strcasecmp ( p->name_on_cd, d->name_on_cd )
       && !strcasecmp ( p->extension_on_cd, d->extension_on_cd ) )
       return 1;
-    p = p->next_in_path_table;
+    p = p->next_in_directory;
   }
   return 0;
 }
 
-void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d )
+void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL dir )
 {
   const char *s = filename;
   char *t = d->name_on_cd;
@@ -580,10 +580,23 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d )
   *t = 0;
   *n = 0;
 
+  if ( dir )
+  {
+    if (d->extension[0] != 0)
+    {
+      if (joliet)
+        d->extension_on_cd[0] = 0;
+      else
+        error_exit("Directory with extension %s", filename);
+    }
+    d->flags = DIRECTORY_FLAG;
+  } else
+    d->flags = 0;
+
   if ( cdname_exists ( d ) )
     error_exit ( "'%s' is a duplicate file name, aborting...", filename );
 
-  if (joliet)
+  if ( joliet )
   {
     joliet_length = strlen(filename);
     if (joliet_length > 64)
@@ -618,22 +631,10 @@ new_directory_record (struct _finddata_t *f,
   /* I need the parent set before calling parse_filename_into_dirrecord(),
   because that functions checks for duplicate file names*/
   d->parent = parent;
-  parse_filename_into_dirrecord ( f->name, d );
+  parse_filename_into_dirrecord ( f->name, d, f->attrib & _A_SUBDIR );
 
   convert_date_and_time(&d->date_and_time, &f->time_write);
-  if (f->attrib & _A_SUBDIR)
-  {
-    if (d->extension[0] != 0)
-    {
-      if (joliet)
-        d->extension_on_cd[0] = 0;
-      else
-        error_exit("Directory with extension %s", f->name);
-    }
-    d->flags = DIRECTORY_FLAG;
-  }
-  else
-    d->flags = f->attrib & _A_HIDDEN ? HIDDEN_FLAG : 0;
+  d->flags |= f->attrib & _A_HIDDEN ? HIDDEN_FLAG : 0;
   d->size = d->joliet_size = f->size;
   d->next_in_directory = parent->first_record;
   parent->first_record = d;
@@ -665,26 +666,14 @@ new_directory_record (struct dirent *entry,
   /* I need the parent set before calling parse_filename_into_dirrecord(),
   because that functions checks for duplicate file names*/
   d->parent = parent;
-  parse_filename_into_dirrecord ( entry->d_name, d );
+#ifdef HAVE_D_TYPE
+  parse_filename_into_dirrecord ( entry->d_name, d, entry->d_type == DT_DIR );
+#else
+  parse_filename_into_dirrecord ( entry->d_name, d, S_ISDIR(stbuf->st_mode) );
+#endif
 
   convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
-#ifdef HAVE_D_TYPE
-  if (entry->d_type == DT_DIR)
-#else
-  if (S_ISDIR(stbuf->st_mode))
-#endif
-  {
-    if (d->extension[0] != 0)
-    {
-      if (joliet)
-        d->extension_on_cd[0] = 0;
-      else
-        error_exit("Directory with extension %s", entry->d_name);
-    }
-    d->flags = DIRECTORY_FLAG;
-  }
-  else
-    d->flags = entry->d_name[0] == '.' ? HIDDEN_FLAG : 0;
+  d->flags |= entry->d_name[0] == '.' ? HIDDEN_FLAG : 0;
   d->size = d->joliet_size = stbuf->st_size;
   d->next_in_directory = parent->first_record;
   parent->first_record = d;
