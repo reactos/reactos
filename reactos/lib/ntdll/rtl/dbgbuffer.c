@@ -98,6 +98,152 @@ RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
 }
 
 /*
+ *	Based on lib/epsapi/enum/modules.c by KJK::Hyperion.
+ *
+ */
+NTSTATUS STDCALL
+RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
+			IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+                                 IN ULONG Size OPTIONAL,
+                                 OUT PULONG ReturnedSize)
+{
+  PROCESS_BASIC_INFORMATION pbiInfo;
+  PPEB_LDR_DATA ppldLdrData;
+  LDR_MODULE lmModule;
+  PLIST_ENTRY pleListHead;
+  PLIST_ENTRY pleCurEntry;
+
+  PMODULE_ENTRY ModulePtr = NULL;
+  NTSTATUS Status = STATUS_SUCCESS;
+  ULONG UsedSize = sizeof(ULONG);
+  ANSI_STRING AnsiString;
+  PCHAR p;
+
+  DPRINT("RtlpQueryRemoteProcessModules Start\n");
+ 
+  /* query the process basic information (includes the PEB address) */
+  Status = NtQueryInformationProcess ( ProcessHandle,
+                                       ProcessBasicInformation,
+                                      &pbiInfo,
+                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       NULL);
+ 
+  if (!NT_SUCCESS(Status))
+    {
+       /* failure */
+       DPRINT("NtQueryInformationProcess 1 &x \n", Status);
+       return Status;
+    }
+
+  if (ModuleInformation == NULL || Size == 0)
+    {
+      Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+  else
+    {
+      ModuleInformation->ModuleCount = 0;
+      ModulePtr = &ModuleInformation->ModuleEntry[0];
+      Status = STATUS_SUCCESS;
+    }
+
+  /* get the address of the PE Loader data */
+  Status = NtReadVirtualMemory ( ProcessHandle,
+                                &(pbiInfo.PebBaseAddress->Ldr),
+                                &ppldLdrData,
+                                sizeof(ppldLdrData),
+                                NULL );
+ 
+  if (!NT_SUCCESS(Status))
+    {
+       /* failure */
+       DPRINT("NtReadVirtualMemory 1 %x \n", Status);
+       return Status;
+    }
+
+ 
+  /* head of the module list: the last element in the list will point to this */
+  pleListHead = &ppldLdrData->InLoadOrderModuleList;
+
+  /* get the address of the first element in the list */
+  Status = NtReadVirtualMemory ( ProcessHandle,
+               &(ppldLdrData->InLoadOrderModuleList.Flink),
+                                &pleCurEntry,
+                                 sizeof(pleCurEntry),
+                                 NULL );
+
+   if (!NT_SUCCESS(Status))
+     {
+        /* failure */
+        DPRINT("NtReadVirtualMemory 2 %x \n", Status);
+        return Status;
+     }
+
+  while(pleCurEntry != pleListHead)
+  {
+   /* read the current module */
+   Status = NtReadVirtualMemory ( ProcessHandle,
+            CONTAINING_RECORD(pleCurEntry, LDR_MODULE, InLoadOrderModuleList),
+                                 &lmModule,
+                                 sizeof(LDR_MODULE),
+                                 NULL );
+ 
+   if (!NT_SUCCESS(Status))
+     {
+        /* failure */
+        DPRINT( "NtReadVirtualMemory 3 %x \n", Status);
+        return Status;
+     }
+
+      DPRINT("  Module %wZ\n",
+             &lmModule.FullDllName);
+
+      if (UsedSize > Size)
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+      else if (ModuleInformation != NULL)
+        {
+          ModulePtr->Unknown0    = 0;      // FIXME: ??
+          ModulePtr->Unknown1    = 0;      // FIXME: ??
+          ModulePtr->BaseAddress = lmModule.BaseAddress;
+          ModulePtr->SizeOfImage = lmModule.SizeOfImage;
+          ModulePtr->Flags       = lmModule.Flags;
+          ModulePtr->Unknown2    = 0;      // FIXME: load order index ??
+          ModulePtr->Unknown3    = 0;      // FIXME: ??
+          ModulePtr->LoadCount   = lmModule.LoadCount;
+
+          AnsiString.Length        = 0;
+          AnsiString.MaximumLength = 256;
+          AnsiString.Buffer        = ModulePtr->ModuleName;
+          RtlUnicodeStringToAnsiString(&AnsiString,
+                                       &lmModule.FullDllName,
+                                       FALSE);
+
+          p = strrchr(ModulePtr->ModuleName, '\\');
+          if (p != NULL)
+            ModulePtr->PathLength = p - ModulePtr->ModuleName + 1;
+          else
+            ModulePtr->PathLength = 0;
+
+          ModulePtr++;
+          ModuleInformation->ModuleCount++;
+        }
+      UsedSize += sizeof(MODULE_ENTRY);
+
+      /* address of the next module in the list */
+      pleCurEntry = lmModule.InLoadOrderModuleList.Flink;
+  }
+ 
+  if (ReturnedSize != 0)
+       *ReturnedSize = UsedSize;
+
+  DPRINT("RtlpQueryRemoteProcessModules End\n");
+
+    /* success */
+  return (STATUS_SUCCESS);
+}
+
+/*
  * @unimplemented
  */
 NTSTATUS STDCALL 
@@ -106,30 +252,57 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN OUT PDEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
+   ULONG Pid = (ULONG) NtCurrentTeb()->Cid.UniqueProcess;
 
    Buf->InfoClassMask = DebugInfoMask;
-   Buf->SizeOfInfo = 0;
+   Buf->SizeOfInfo = sizeof(DEBUG_BUFFER);
 
    DPRINT("QueryProcessDebugInformation Start\n");
-   
+
+/*
+      Currently ROS can not read-only from kenrel space, and doesn't
+      check for boundaries inside kernel space that are page protected
+      from every one but the kernel. aka page 0 - 2
+ */
+if (ProcessId <= 1)
+  {
+	Status = STATUS_ACCESS_VIOLATION;
+  }
+else   
+if (Pid == ProcessId)
+  {
    if (DebugInfoMask & PDI_MODULES)
      {
     PMODULE_INFORMATION Mp;
+    ULONG ReturnSize = 0;
     ULONG MSize;
 
-    Mp = (PMODULE_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
-    MSize = sizeof(MODULE_INFORMATION);
+    Mp = (PMODULE_INFORMATION)(Buf + Buf->SizeOfInfo);
+
+    /* I like this better than the do & while loop. */
+    Status = LdrQueryProcessModuleInformation( NULL,
+                                               0 ,
+                                              &ReturnSize);
+    Status = LdrQueryProcessModuleInformation( Mp,
+                                               ReturnSize ,
+                                              &ReturnSize);
+   if (!NT_SUCCESS(Status))
+     {
+         return Status;
+     }
+    
+    MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
     Buf->ModuleInformation = Mp;        
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
      
    if (DebugInfoMask & PDI_HEAPS)
      {
-   PDEBUG_HEAP_INFORMATION Hp;
+   PHEAP_INFORMATION Hp;
    ULONG HSize;
 
-   Hp = (PDEBUG_HEAP_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
-   HSize = sizeof(DEBUG_HEAP_INFORMATION);
+   Hp = (PHEAP_INFORMATION)(Buf + Buf->SizeOfInfo);
+   HSize = sizeof(HEAP_INFORMATION);
         if (DebugInfoMask & PDI_HEAP_TAGS)
           {
           }
@@ -143,18 +316,104 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
      
    if (DebugInfoMask & PDI_LOCKS)
      {
-   PDEBUG_LOCK_INFORMATION Lp;
+   PLOCK_INFORMATION Lp;
    ULONG LSize;
    
-   Lp = (PDEBUG_LOCK_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
-   LSize = sizeof(DEBUG_LOCK_INFORMATION);
+   Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
+   LSize = sizeof(LOCK_INFORMATION);
    Buf->LockInformation = Lp;        
    Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }
 
    DPRINT("QueryProcessDebugInformation end \n");
    DPRINT("QueryDebugInfo : %d\n", Buf->SizeOfInfo);
+}
+else
+{
+  HANDLE hProcess;
+  CLIENT_ID ClientId;
+  OBJECT_ATTRIBUTES ObjectAttributes;
 
+       Buf->Unknown[0] = (ULONG)NtCurrentProcess();
+
+       ClientId.UniqueThread = INVALID_HANDLE_VALUE;
+       ClientId.UniqueProcess = (HANDLE)ProcessId;
+       ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+       ObjectAttributes.RootDirectory = (HANDLE)NULL;
+       ObjectAttributes.SecurityDescriptor = NULL;
+       ObjectAttributes.SecurityQualityOfService = NULL;
+       ObjectAttributes.ObjectName = NULL;
+       ObjectAttributes.Attributes = 0;
+
+       Status = NtOpenProcess( &hProcess,
+                                (PROCESS_ALL_ACCESS),
+                               &ObjectAttributes,
+                               &ClientId );    
+       if (!NT_SUCCESS(Status))
+         {
+           return Status;
+         }
+
+   if (DebugInfoMask & PDI_MODULES)
+     {
+    PMODULE_INFORMATION Mp;
+    ULONG ReturnSize = 0;
+    ULONG MSize;
+
+    Mp = (PMODULE_INFORMATION)(Buf + Buf->SizeOfInfo);
+
+    Status = RtlpQueryRemoteProcessModules( hProcess,
+                                            NULL,
+                                            0,
+                                           &ReturnSize);
+
+    Status = RtlpQueryRemoteProcessModules( hProcess,
+                                            Mp,
+                                            ReturnSize ,
+                                           &ReturnSize);
+   if (!NT_SUCCESS(Status))
+     {
+         return Status;
+     }
+    
+    MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
+
+    Buf->ModuleInformation = Mp;        
+    Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
+     }
+     
+   if (DebugInfoMask & PDI_HEAPS)
+     {
+   PHEAP_INFORMATION Hp;
+   ULONG HSize;
+
+   Hp = (PHEAP_INFORMATION)(Buf + Buf->SizeOfInfo);
+   HSize = sizeof(HEAP_INFORMATION);
+        if (DebugInfoMask & PDI_HEAP_TAGS)
+          {
+          }
+        if (DebugInfoMask & PDI_HEAP_BLOCKS)
+          {
+          }
+   Buf->HeapInformation = Hp;        
+   Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
+        
+     }
+     
+   if (DebugInfoMask & PDI_LOCKS)
+     {
+   PLOCK_INFORMATION Lp;
+   ULONG LSize;
+   
+   Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
+   LSize = sizeof(LOCK_INFORMATION);
+   Buf->LockInformation = Lp;        
+   Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
+    }
+
+   DPRINT("QueryProcessDebugInformation end \n");
+   DPRINT("QueryDebugInfo : %d\n", Buf->SizeOfInfo);
+}
    return Status;
 
 }
