@@ -148,7 +148,7 @@ NdisUnicodeStringToAnsiString(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 EXPORT
@@ -162,9 +162,9 @@ NdisUpcaseUnicodeString(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
-
-    return STATUS_NOT_IMPLEMENTED;
+  ASSERT_IRQL(PASSIVE_LEVEL);
+  // FIXME - not sure if 3rd param should be TRUE or FALSE
+  return RtlUpcaseUnicodeString ( DestinationString, SourceString, FALSE );
 }
 
 /* EOF */

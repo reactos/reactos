@@ -37,6 +37,9 @@ NdisCompleteUnbindAdapter(
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisInitializeListHead(
@@ -47,7 +50,7 @@ NdisInitializeListHead(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -56,12 +59,12 @@ NdisInterlockedAddUlong (
     IN  ULONG           Increment,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED
+  ExInterlockedAddUlong ( Addend, Increment, (PKSPIN_LOCK)SpinLock );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PLIST_ENTRY
 EXPORT
@@ -70,14 +73,12 @@ NdisInterlockedInsertHeadList(
     IN  PLIST_ENTRY     ListEntry,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED
-
-	return NULL;
+  return ExInterlockedInsertHeadList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PLIST_ENTRY
 EXPORT
@@ -86,14 +87,12 @@ NdisInterlockedInsertTailList(
     IN  PLIST_ENTRY     ListEntry,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED
-
-	return NULL;
+  return ExInterlockedInsertTailList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PLIST_ENTRY
 EXPORT
@@ -101,9 +100,7 @@ NdisInterlockedRemoveHeadList(
     IN  PLIST_ENTRY     ListHead,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED
-
-	return NULL;
+  return ExInterlockedRemoveHeadList ( ListHead, (PKSPIN_LOCK)SpinLock );
 }
 
 
@@ -150,16 +147,58 @@ NdisMapFile(
     UNIMPLEMENTED
 }
 
+typedef struct _NDIS_HANDLE_OBJECT
+{
+  HANDLE FileHandle;
+  BOOL Mapped;
+  ULONG FileLength;
+  PVOID MapBuffer;
+} NDIS_HANDLE_OBJECT, *PNDIS_HANDLE_OBJECT;
+
+inline
+PNDIS_HANDLE_OBJECT
+NDIS_HANDLE_TO_POBJECT ( NDIS_HANDLE handle )
+{
+  return (PNDIS_HANDLE_OBJECT)handle;
+}
+
+inline
+NDIS_HANDLE
+NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
+{
+  return (NDIS_HANDLE)obj;
+}
+
+const WCHAR* NDIS_FILE_FOLDER = L"\\SystemRoot\\System32\\Drivers\\";
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisCloseFile(
     IN  NDIS_HANDLE FileHandle)
 {
-    UNIMPLEMENTED
+  PNDIS_HANDLE_OBJECT FileHandleObject;
+
+  ASSERT_IRQL(PASSIVE_LEVEL);
+
+  ASSERT ( FileHandle );
+
+  FileHandleObject = NDIS_HANDLE_TO_POBJECT(FileHandle);
+
+  ASSERT ( FileHandleObject->FileHandle );
+
+  /*
+  if ( FileHandleObject->Mapped )
+    NdisUnmapFile ( FileHandle );
+  */
+
+  ZwClose ( FileHandleObject->FileHandle );
+
+  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
+
+  ExFreePool ( FileHandleObject );
 }
 
 
@@ -263,7 +302,79 @@ NdisOpenFile(
     IN  PNDIS_STRING            FileName,
     IN  NDIS_PHYSICAL_ADDRESS   HighestAcceptableAddress)
 {
-    UNIMPLEMENTED
+  NDIS_STRING FullFileName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
+  //IO_STATUS_BLOCK IoStatusBlock;
+
+  ASSERT_IRQL(PASSIVE_LEVEL);
+
+  *Status = NDIS_STATUS_SUCCESS;
+  FullFileName.Buffer = NULL;
+
+  ASSERT ( Status && FileName );
+
+  FullFileName.Length = sizeof(NDIS_FILE_FOLDER);
+  FullFileName.MaximumLength = FileName->MaximumLength + sizeof(NDIS_FILE_FOLDER);
+  FullFileName.Buffer = ExAllocatePool ( NonPagedPool, FullFileName.MaximumLength );
+
+  if ( !FullFileName.Buffer )
+  {
+    *Status = NDIS_STATUS_RESOURCES;
+    goto cleanup;
+  }
+
+  FileHandleObject = ExAllocatePool ( NonPagedPool, sizeof(NDIS_HANDLE_OBJECT) );
+  if ( !FileHandleObject )
+  {
+    *Status = NDIS_STATUS_RESOURCES;
+    goto cleanup;
+  }
+  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
+
+  memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
+  *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
+  if ( !NT_SUCCESS(*Status) )
+    goto cleanup;
+
+  InitializeObjectAttributes ( &ObjectAttributes,
+    &FullFileName,
+    OBJ_CASE_INSENSITIVE,
+    NULL,
+    NULL );
+
+  *Status = ZwCreateFile (
+    &FileHandleObject->FileHandle,
+    FILE_READ_DATA|SYNCHRONIZE,
+    &ObjectAttributes,
+    NULL, //&IoStatusBlock, // PIO_STATUS_BLOCK
+    NULL, // PLARGE_INTEGER AllocationSize
+    0, // ULONG FileAttributes
+    FILE_SHARE_READ, // ULONG ShareAccess
+    CREATE_NEW, // ULONG CreateDisposition
+    FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
+    0, // PVOID EaBuffer
+    0 ); // ULONG EaLength
+
+  //if ( !NT_SUCCESS(*Status) )
+  //  goto cleanup;
+
+cleanup:
+  if ( FullFileName.Buffer != NULL )
+  {
+    ExFreePool ( FullFileName.Buffer );
+    FullFileName.Buffer = NULL;
+  }
+  if ( !NT_SUCCESS(*Status) && FileHandleObject != NULL )
+  {
+    ExFreePool ( FileHandleObject );
+    FileHandleObject = NULL;
+    *FileHandle = NULL;
+  }
+  else
+    *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
+
+  return;
 }
 
 
@@ -462,7 +573,7 @@ NdisGetSystemUptime(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG
 EXPORT
@@ -475,14 +586,12 @@ NdisInterlockedDecrement(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
-
-    return 0;
+  return InterlockedDecrement ( Addend );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG
 EXPORT
@@ -495,14 +604,12 @@ NdisInterlockedIncrement(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
-
-    return 0;
+  return InterlockedIncrement ( Addend );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PSINGLE_LIST_ENTRY 
 EXPORT
@@ -516,14 +623,12 @@ NdisInterlockedPopEntrySList(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
-
-    return NULL;
+  return ExInterlockedPopEntrySList ( ListHead, Lock );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PSINGLE_LIST_ENTRY 
 EXPORT
@@ -538,9 +643,7 @@ NdisInterlockedPushEntrySList(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
-
-    return NULL;
+  return ExInterlockedPushEntrySList ( ListHead, ListEntry, Lock );
 }
 
 
