@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.1 2002/06/25 22:23:05 ekohl Exp $
+/* $Id: create.c,v 1.2 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,12 +44,9 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 {
   PWSTR rcName;
   PFCB Fcb;
-  PCCB Ccb;
 
   DPRINT("try related for %S\n", pRelativeFileName);
-  Ccb = pFileObject->FsContext2;
-  assert(Ccb);
-  Fcb = Ccb->Fcb;
+  Fcb = pFileObject->FsContext;
   assert(Fcb);
 
   /* verify related object is a directory and target name

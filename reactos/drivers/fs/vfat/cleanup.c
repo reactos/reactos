@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.10 2003/01/25 15:55:07 hbirr Exp $
+/* $Id: cleanup.c,v 1.11 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,6 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
  * FUNCTION: Cleans up after a file has been closed.
  */
 {
-  PVFATCCB pCcb;
   PVFATFCB pFcb;
   PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
   PFILE_OBJECT FileObject = IrpContext->FileObject;
@@ -33,30 +32,25 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
 	 DeviceExt, FileObject);
   
   /* FIXME: handle file/directory deletion here */
-  pCcb = (PVFATCCB) (FileObject->FsContext2);
-  if (pCcb == NULL)
-    {
-      return  STATUS_SUCCESS;
-    }
-  pFcb = pCcb->pFcb;
-
-  if (!(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY) &&
-     FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
+  pFcb = (PVFATFCB) FileObject->FsContext;
+  if (pFcb)
   {
-    /* remove all locks this process have on this file */
-    FsRtlFastUnlockAll(&pFcb->FileLock,
-                       FileObject,
-                       IoGetRequestorProcess(IrpContext->Irp),
-                       NULL
-                       );
-  }
+     if (!(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY) &&
+        FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
+     {
+        /* remove all locks this process have on this file */
+        FsRtlFastUnlockAll(&pFcb->FileLock,
+                           FileObject,
+                           IoGetRequestorProcess(IrpContext->Irp),
+                           NULL);
+     }
 
-  /* Uninitialize file cache if initialized for this file object. */
-  if (pFcb->RFCB.Bcb != NULL)
-    {
-      CcRosReleaseFileCache (FileObject, pFcb->RFCB.Bcb);
-    }
-  
+     /* Uninitialize file cache if initialized for this file object. */
+     if (FileObject->PrivateCacheMap)
+     {
+        CcRosReleaseFileCache (FileObject);
+     }
+  }
   return STATUS_SUCCESS;
 }
 

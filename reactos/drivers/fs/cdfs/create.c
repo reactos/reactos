@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.7 2002/09/15 22:21:40 hbirr Exp $
+/* $Id: create.c,v 1.8 2003/02/13 22:24:15 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,12 +45,9 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 {
   PWSTR rcName;
   PFCB Fcb;
-  PCCB Ccb;
 
   DPRINT("try related for %S\n", pRelativeFileName);
-  Ccb = pFileObject->FsContext2;
-  assert(Ccb);
-  Fcb = Ccb->Fcb;
+  Fcb = pFileObject->FsContext;
   assert(Fcb);
 
   /* verify related object is a directory and target name
@@ -169,7 +166,6 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
   ULONG RequestedDisposition;
   ULONG RequestedOptions;
   PFCB Fcb;
-  PCCB Ccb;
 //  PWSTR FileName;
   NTSTATUS Status;
 
@@ -200,8 +196,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
   if (NT_SUCCESS(Status))
   {
-    Ccb = FileObject->FsContext2;
-    Fcb = Ccb->Fcb;
+    Fcb = FileObject->FsContext;
     /*
      * Check the file has the requested attributes
      */

@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.10 2003/01/11 15:22:31 hbirr Exp $
+/* $Id: pin.c,v 1.11 2003/02/13 22:24:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -51,7 +51,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	 Length, Wait, pBcb, pBuffer);
   
   ReadOffset = FileOffset->QuadPart;
-  Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
   assert(Bcb);
 
   DPRINT("AllocationSize %d, FileSize %d\n",

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.4 2003/01/17 18:51:13 ekohl Exp $
+/* $Id: dirctl.c,v 1.5 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -505,7 +505,7 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
   FileObject = Stack->FileObject;
 
   Ccb = (PCCB)FileObject->FsContext2;
-  Fcb = Ccb->Fcb;
+  Fcb = (PFCB)FileObject->FsContext;
 
   /* Obtain the callers parameters */
   BufferLength = Stack->Parameters.QueryDirectory.Length;

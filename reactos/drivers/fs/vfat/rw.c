@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.54 2003/01/25 15:55:07 hbirr Exp $
+/* $Id: rw.c,v 1.55 2003/02/13 22:24:17 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -290,7 +290,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   *LengthRead = 0;
 
   Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
-  Fcb = Ccb->pFcb;
+  Fcb = IrpContext->FileObject->FsContext;
   BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
   BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
 
@@ -451,7 +451,7 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    assert (IrpContext->FileObject->FsContext2 != NULL);
 
    Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
-   Fcb = Ccb->pFcb;
+   Fcb = IrpContext->FileObject->FsContext;
    BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
    BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
 
@@ -580,7 +580,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 {
    NTSTATUS Status;
    PVFATFCB Fcb;
-   PVFATCCB Ccb;
    ULONG Length;
    ULONG ReturnedLength = 0;
    PERESOURCE Resource = NULL;
@@ -605,9 +604,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 
    assert(IrpContext->DeviceExt);
    assert(IrpContext->FileObject);
-   Ccb = (PVFATCCB) IrpContext->FileObject->FsContext2;
-   assert(Ccb);
-   Fcb =  Ccb->pFcb;
+   Fcb = IrpContext->FileObject->FsContext;
    assert(Fcb);
 
    DPRINT("<%S>\n", Fcb->PathName);
@@ -711,7 +708,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 	  {
 	     CacheSize = PAGE_SIZE;
 	  }
-	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
+	  CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
       }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
                       IrpContext->Flags & IRPCONTEXT_CANWAIT, Buffer,
@@ -805,7 +802,6 @@ ByeBye:
 
 NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 {
-   PVFATCCB Ccb;
    PVFATFCB Fcb;
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
@@ -832,9 +828,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    assert(IrpContext->DeviceExt);
    assert(IrpContext->FileObject);
-   Ccb = (PVFATCCB) IrpContext->FileObject->FsContext2;
-   assert(Ccb);
-   Fcb =  Ccb->pFcb;
+   Fcb = IrpContext->FileObject->FsContext;
    assert(Fcb);
 
    DPRINT("<%S>\n", Fcb->PathName);
@@ -988,7 +982,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 	  {
 	     CacheSize = PAGE_SIZE;
 	  }
-	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
+	  CcRosInitializeFileCache(IrpContext->FileObject, CacheSize);
       }
       if (ByteOffset.QuadPart > OldFileSize.QuadPart)
       {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.53 2003/01/19 01:06:45 gvg Exp $
+/* $Id: create.c,v 1.54 2003/02/13 22:24:16 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -364,12 +364,9 @@ vfatMakeAbsoluteFilename (PFILE_OBJECT pFileObject,
 {
   PWSTR  rcName;
   PVFATFCB  fcb;
-  PVFATCCB  ccb;
 
   DPRINT ("try related for %S\n", pRelativeFileName);
-  ccb = pFileObject->FsContext2;
-  assert (ccb);
-  fcb = ccb->pFcb;
+  fcb = pFileObject->FsContext;
   assert (fcb);
 
   /* verify related object is a directory and target name
@@ -600,11 +597,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       memset(pCcb, 0, sizeof(VFATCCB));
       FileObject->Flags |= FO_FCB_IS_VALID;
       FileObject->SectionObjectPointers = &pFcb->SectionObjectPointers;
-      FileObject->FsContext = (PVOID) &pFcb->RFCB;
+      FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;
-      pCcb->pFcb = pFcb;
-      pCcb->PtrFileObject = FileObject;
-      pFcb->pDevExt = DeviceExt;
       pFcb->RefCount++;
 
       Irp->IoStatus.Information = FILE_OPENED;
@@ -654,8 +648,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				 Attributes & FILE_ATTRIBUTE_VALID_FLAGS);
 	  if (NT_SUCCESS (Status))
 	    {
-	      pCcb = FileObject->FsContext2;
-	      pFcb = pCcb->pFcb;
+	      pFcb = FileObject->FsContext;
 	      Irp->IoStatus.Information = FILE_CREATED;
 	      VfatSetAllocationSizeInformation(FileObject, 
 					       pFcb,
@@ -689,8 +682,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  return(STATUS_OBJECT_NAME_COLLISION);
 	}
 
-      pCcb = FileObject->FsContext2;
-      pFcb = pCcb->pFcb;
+      pFcb = FileObject->FsContext;
 
       /*
        * Check the file has the requested attributes

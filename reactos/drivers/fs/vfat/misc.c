@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.6 2003/02/09 18:02:55 hbirr Exp $
+/* $Id: misc.c,v 1.7 2003/02/13 22:24:17 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -71,15 +71,13 @@ NTSTATUS VfatLockControl(
    )
 {
    PVFATFCB Fcb;
-   PVFATCCB Ccb;
    NTSTATUS Status;
 
    DPRINT("VfatLockControl(IrpContext %x)\n", IrpContext);
  
    assert(IrpContext);
 
-   Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
-   Fcb = Ccb->pFcb;
+   Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
 
    if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
    {
@@ -119,8 +117,6 @@ NTSTATUS STDCALL VfatBuildRequest (
 
    assert (DeviceObject);
    assert (Irp);
-
-   FsRtlEnterFileSystem();
    IrpContext = VfatAllocateIrpContext(DeviceObject, Irp);
    if (IrpContext == NULL)
    {
@@ -130,9 +126,20 @@ NTSTATUS STDCALL VfatBuildRequest (
    }
    else
    {
+      if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
+      {
+         FsRtlEnterFileSystem();
+      }
+      else
+      {
+         DPRINT1("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
+      }
       Status = VfatDispatchRequest (IrpContext);
+      if (KeGetCurrentIrql() <= PASSIVE_LEVEL)
+      {
+         FsRtlExitFileSystem();
+      }
    }
-   FsRtlExitFileSystem();
    return Status;
 }
 

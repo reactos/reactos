@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.16 2003/01/11 15:56:43 hbirr Exp $
+/* $Id: close.c,v 1.17 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,13 +33,13 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 
   /* FIXME : update entry in directory? */
   pCcb = (PVFATCCB) (FileObject->FsContext2);
+  pFcb = (PVFATFCB) (FileObject->FsContext);
 
-  DPRINT ("pCcb %x\n", pCcb);
-  if (pCcb == NULL)
+  if (pFcb == NULL)
   {
-    return  STATUS_SUCCESS;
+     return STATUS_SUCCESS;
   }
-  pFcb = pCcb->pFcb;
+
   if (pFcb->Flags & FCB_IS_VOLUME)
   {
      DPRINT1("Volume\n");
@@ -58,15 +58,21 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
         delEntry (DeviceExt, FileObject);
       }
       else
-       Status = STATUS_DELETE_PENDING;
+      {
+        Status = STATUS_DELETE_PENDING;
+      }
     }
-    FileObject->FsContext2 = NULL;
     vfatReleaseFCB (DeviceExt, pFcb);
   }
-  else
-    FileObject->FsContext2 = NULL;
+    
+  FileObject->FsContext2 = NULL;
+  FileObject->FsContext = NULL;
+  FileObject->SectionObjectPointers = NULL;
 
-  vfatDestroyCCB(pCcb);
+  if (pCcb)
+  {
+    vfatDestroyCCB(pCcb);
+  }
   
   return  Status;
 }

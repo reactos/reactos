@@ -13,6 +13,14 @@
 
 /* GLOBALS *******************************************************************/
 
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) (((N) % (S)) ? ROUND_UP(N, S) - S : N)
+
+extern FAST_MUTEX ViewLock;
+extern ULONG DirtyPageCount;
+
+NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
+
 /* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
@@ -73,6 +81,8 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   PBCB Bcb;
   PLIST_ENTRY current_entry;
   PCACHE_SEGMENT current;
+  LIST_ENTRY FreeListHead;
+  NTSTATUS Status;
 
   DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
 	 FileObject, FileSizes);
@@ -81,31 +91,66 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
          (ULONG)FileSizes->FileSize.QuadPart,
          (ULONG)FileSizes->ValidDataLength.QuadPart);
 
-  Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
-
-  DPRINT("Bcb 0x%.08x\n", Bcb);
-  
-  KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-  
+  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+  assert(Bcb);
+ 
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
-    {
-      current_entry = Bcb->BcbSegmentListHead.Flink;
-      while (current_entry != &Bcb->BcbSegmentListHead)
-      {
-	 current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
-			             BcbSegmentListEntry);
-	 current_entry = current_entry->Flink;
-	 if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
-	 {
-            KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-	    CcRosFreeCacheSegment(Bcb, current);
-            KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-            current_entry = Bcb->BcbSegmentListHead.Flink;
-	 }
-      }
-    }
-  Bcb->AllocationSize = FileSizes->AllocationSize;
-  Bcb->FileSize = FileSizes->FileSize;
-  KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+  {
+     InitializeListHead(&FreeListHead);
+     ExAcquireFastMutex(&ViewLock);
+     KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+
+     current_entry = Bcb->BcbSegmentListHead.Flink;
+     while (current_entry != &Bcb->BcbSegmentListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+	current_entry = current_entry->Flink;
+	if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
+	{
+           if (current->ReferenceCount == 0 || (current->ReferenceCount == 1 && current->Dirty))
+	   {
+              RemoveEntryList(&current->BcbSegmentListEntry);
+              RemoveEntryList(&current->CacheSegmentListEntry);
+              RemoveEntryList(&current->CacheSegmentLRUListEntry);
+              if (current->Dirty)
+              {
+                 RemoveEntryList(&current->DirtySegmentListEntry);
+                 DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+              }
+	      InsertHeadList(&FreeListHead, &current->BcbSegmentListEntry);
+	   }
+	   else
+	   {
+	      DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
+	      KeBugCheck(0);
+	   }
+	}
+     }
+     
+     Bcb->AllocationSize = FileSizes->AllocationSize;
+     Bcb->FileSize = FileSizes->FileSize;
+     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+     ExReleaseFastMutex(&ViewLock);
+
+     current_entry = FreeListHead.Flink;
+     while(current_entry != &FreeListHead)
+     {
+        current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+        current_entry = current_entry->Flink;
+        Status = CcRosInternalFreeCacheSegment(current);
+        if (!NT_SUCCESS(Status))
+        {
+           DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n");
+	   KeBugCheck(0);
+        }
+     }
+  }
+  else
+  {
+     KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+     Bcb->AllocationSize = FileSizes->AllocationSize;
+     Bcb->FileSize = FileSizes->FileSize;
+     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+  }
 }
 

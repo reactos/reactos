@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.103 2003/01/11 15:31:05 hbirr Exp $
+/* $Id: section.c,v 1.104 2003/02/13 22:24:18 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -269,7 +269,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
   if (SHARE_COUNT_FROM_SSE(Entry) == 0)
     {
       PFILE_OBJECT FileObject;
-      PREACTOS_COMMON_FCB_HEADER Fcb;
+      PBCB Bcb;
       SWAPENTRY SavedSwapEntry;
       PHYSICAL_ADDRESS Page;
       
@@ -277,13 +277,13 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
       FileObject = Section->FileObject;
       if (FileObject != NULL)
 	{
-	  Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
+	  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
       
 	  if (FileObject->Flags & FO_DIRECT_CACHE_PAGING_READ &&
 	      (Offset % PAGE_SIZE) == 0)
 	    {
 	      NTSTATUS Status;
-	      Status = CcRosUnmapCacheSegment(Fcb->Bcb, Offset, Dirty);
+	      Status = CcRosUnmapCacheSegment(Bcb, Offset, Dirty);
 	      if (!NT_SUCCESS(Status))
 		{
 		  KeBugCheck(0);
@@ -324,12 +324,12 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   PCACHE_SEGMENT CacheSeg;
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
-  PREACTOS_COMMON_FCB_HEADER Fcb;
+  PBCB Bcb;
 
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-  Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
+  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
   
-  assert(Fcb->Bcb);
+  assert(Bcb);
 
   /*
    * If the file system is letting us go directly to the cache and the
@@ -346,12 +346,12 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * filesystems do because it is safe for us to use an offset with a
        * alignment less than the file system block size.
        */
-      Status = CcRosGetCacheSegment(Fcb->Bcb,
-				 Offset->u.LowPart,
-				 &BaseOffset,
-				 &BaseAddress,
-				 &UptoDate,
-				 &CacheSeg);
+      Status = CcRosGetCacheSegment(Bcb,
+				    Offset->u.LowPart,
+				    &BaseOffset,
+				    &BaseAddress,
+				    &UptoDate,
+				    &CacheSeg);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
@@ -365,7 +365,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
           Status = ReadCacheSegment(CacheSeg);
 	  if (!NT_SUCCESS(Status))
 	  {
-	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
+	      CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return Status;
 	  }
 	}
@@ -377,7 +377,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       (*Page) = Addr;
       MmReferencePage((*Page));
 
-      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, TRUE);
+      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, TRUE);
     }
   else
     {
@@ -393,12 +393,12 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	  return(Status);
 	}
 
-      Status = CcRosGetCacheSegment(Fcb->Bcb,
-				 Offset->u.LowPart,
-				 &BaseOffset,
-				 &BaseAddress,
-				 &UptoDate,
-				 &CacheSeg);
+      Status = CcRosGetCacheSegment(Bcb,
+				    Offset->u.LowPart,
+				    &BaseOffset,
+				    &BaseAddress,
+				    &UptoDate,
+				    &CacheSeg);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
@@ -412,7 +412,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
           Status = ReadCacheSegment(CacheSeg);
 	  if (!NT_SUCCESS(Status))
 	  {
-	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
+	      CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return Status;
 	  }
 	}
@@ -425,13 +425,13 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       else
       {
 	 memcpy(PageAddr, BaseAddress + Offset->u.LowPart - BaseOffset, OffsetInPage);
-         CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, FALSE);
-         Status = CcRosGetCacheSegment(Fcb->Bcb,
-				 Offset->u.LowPart + OffsetInPage,
-				 &BaseOffset,
-				 &BaseAddress,
-				 &UptoDate,
-				 &CacheSeg);
+         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
+         Status = CcRosGetCacheSegment(Bcb,
+				       Offset->u.LowPart + OffsetInPage,
+				       &BaseOffset,
+				       &BaseAddress,
+				       &UptoDate,
+				       &CacheSeg);
          if (!NT_SUCCESS(Status))
 	   {
 	     ExUnmapPage(PageAddr);
@@ -446,14 +446,14 @@ MiReadPage(PMEMORY_AREA MemoryArea,
              Status = ReadCacheSegment(CacheSeg);
 	     if (!NT_SUCCESS(Status))
 	       {
-	         CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
+	         CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 		 ExUnmapPage(PageAddr);
 	         return Status;
 	       }
 	   }
 	 memcpy(PageAddr + OffsetInPage, BaseAddress, PAGE_SIZE - OffsetInPage);
       }
-      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, FALSE);
+      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
       ExUnmapPage(PageAddr);
     }
   return(STATUS_SUCCESS);
@@ -1571,7 +1571,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   BOOLEAN Private;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
-  PREACTOS_COMMON_FCB_HEADER Fcb = NULL;
+  PBCB Bcb = NULL;
   BOOLEAN DirectMapped;
 
   Address = (PVOID)PAGE_ROUND_DOWN(Address);
@@ -1583,7 +1583,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   DirectMapped = FALSE;
   if (FileObject != NULL)
     {
-      Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
+      Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
   
       /*
        * If the file system is letting us go directly to the cache and the
@@ -1654,7 +1654,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
   if (DirectMapped && !Private)
     {
       assert(SwapEntry == 0);
-      CcRosMarkDirtyCacheSegment(Fcb->Bcb, Offset.u.LowPart);
+      CcRosMarkDirtyCacheSegment(Bcb, Offset.u.LowPart);
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
       MmReleasePageOp(PageOp);
@@ -2940,7 +2940,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
   PMEMORY_AREA MArea;
   ULONG Entry;
   PFILE_OBJECT FileObject;
-  PREACTOS_COMMON_FCB_HEADER Fcb;
+  PBCB Bcb;
   ULONG Offset;
   SWAPENTRY SavedSwapEntry;
   PMM_PAGEOP PageOp;
@@ -2978,8 +2978,8 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (PhysAddr.QuadPart == PAGE_FROM_SSE(Entry) && Dirty)
 	{
 	  FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-	  Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
-	  CcRosMarkDirtyCacheSegment(Fcb->Bcb, Offset);
+	  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+	  CcRosMarkDirtyCacheSegment(Bcb, Offset);
 	  assert(SwapEntry == 0);
 	}
     }
@@ -3232,6 +3232,7 @@ NtExtendSection(IN	HANDLE	SectionHandle,
 		IN	ULONG	NewMaximumSize)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 

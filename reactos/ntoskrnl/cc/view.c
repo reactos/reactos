@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.56 2003/01/30 18:30:53 hbirr Exp $
+/* $Id: view.c,v 1.57 2003/02/13 22:24:18 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -82,9 +82,9 @@ static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
 static LIST_ENTRY CacheSegmentLRUListHead;
 static LIST_ENTRY ClosedListHead;
-static ULONG DirtyPageCount=0;
+ULONG DirtyPageCount=0;
 
-static FAST_MUTEX ViewLock;
+FAST_MUTEX ViewLock;
 
 #ifdef CACHE_BITMAP
 #define	CI_CACHESEG_MAPPING_REGION_SIZE	(128*1024*1024)
@@ -994,18 +994,19 @@ VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
 }
 
 NTSTATUS STDCALL 
-CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
+CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Called by the file system when a handle to a file object
  * has been closed.
  */
 {
-  assert(Bcb);
+  PBCB Bcb;
 
   ExAcquireFastMutex(&ViewLock);
 
   if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
   {
+    Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
     if (FileObject->PrivateCacheMap != NULL)
     {
       FileObject->PrivateCacheMap = NULL;
@@ -1033,52 +1034,53 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 
 NTSTATUS STDCALL 
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
-			 PBCB* Bcb,
 			 ULONG CacheSegmentSize)
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
 {
+   PBCB Bcb;
    DPRINT("CcRosInitializeFileCache(FileObject %x, *Bcb %x, CacheSegmentSize %d)\n",
            FileObject, Bcb, CacheSegmentSize);
 
    ExAcquireFastMutex(&ViewLock);
 
-   if (*Bcb == NULL)
+   Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
+   if (Bcb == NULL)
    {
-      (*Bcb) = ExAllocateFromNPagedLookasideList(&BcbLookasideList);	
-      if ((*Bcb) == NULL)
+      Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);	
+      if (Bcb == NULL)
       {
         ExReleaseFastMutex(&ViewLock);
 	return(STATUS_UNSUCCESSFUL);
       }
-      memset((*Bcb), 0, sizeof(BCB));      
+      memset(Bcb, 0, sizeof(BCB));      
       ObReferenceObjectByPointer(FileObject,
 			         FILE_ALL_ACCESS,
 			         NULL,
 			         KernelMode);
-      (*Bcb)->FileObject = FileObject;
-      (*Bcb)->CacheSegmentSize = CacheSegmentSize;
+      Bcb->FileObject = FileObject;
+      Bcb->CacheSegmentSize = CacheSegmentSize;
       if (FileObject->FsContext)
       {
-         (*Bcb)->AllocationSize = 
+         Bcb->AllocationSize = 
 	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
-         (*Bcb)->FileSize = 
+         Bcb->FileSize = 
 	   ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
       }
-      KeInitializeSpinLock(&(*Bcb)->BcbLock);
-      InitializeListHead(&(*Bcb)->BcbSegmentListHead);
-      FileObject->SectionObjectPointers->SharedCacheMap = *Bcb;
+      KeInitializeSpinLock(&Bcb->BcbLock);
+      InitializeListHead(&Bcb->BcbSegmentListHead);
+      FileObject->SectionObjectPointers->SharedCacheMap = Bcb;
    }
    if (FileObject->PrivateCacheMap == NULL)
    {
-      FileObject->PrivateCacheMap = *Bcb;
-      (*Bcb)->RefCount++;
+      FileObject->PrivateCacheMap = Bcb;
+      Bcb->RefCount++;
    }
-   if ((*Bcb)->BcbRemoveListEntry.Flink != NULL)
+   if (Bcb->BcbRemoveListEntry.Flink != NULL)
    {
-      RemoveEntryList(&(*Bcb)->BcbRemoveListEntry);
-      (*Bcb)->BcbRemoveListEntry.Flink = NULL;
+      RemoveEntryList(&Bcb->BcbRemoveListEntry);
+      Bcb->BcbRemoveListEntry.Flink = NULL;
    }
    ExReleaseFastMutex(&ViewLock);
 

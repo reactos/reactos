@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.27 2002/11/11 21:49:18 hbirr Exp $
+ * $Id: dir.c,v 1.28 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -209,7 +209,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   BOOLEAN First = FALSE;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
-  pFcb = pCcb->pFcb;
+  pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
 
   if (!ExAcquireResourceSharedLite(&pFcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
   {

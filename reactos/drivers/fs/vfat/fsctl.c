@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.13 2003/02/09 18:02:55 hbirr Exp $
+/* $Id: fsctl.c,v 1.14 2003/02/13 22:24:17 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -301,15 +301,12 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    wcscpy(Fcb->PathName, L"$$Fat$$");
    Fcb->ObjectName = Fcb->PathName;
    DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-   DeviceExt->FATFileObject->FsContext = (PVOID) &Fcb->RFCB;
+   DeviceExt->FATFileObject->FsContext = Fcb;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
    DeviceExt->FATFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
    DeviceExt->FATFileObject->PrivateCacheMap = NULL;
    DeviceExt->FATFileObject->Vpb = DeviceObject->Vpb;
-   Ccb->pFcb = Fcb;
-   Ccb->PtrFileObject = DeviceExt->FATFileObject;
    Fcb->FileObject = DeviceExt->FATFileObject;
-   Fcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
 
    Fcb->Flags = FCB_IS_FAT;
 
@@ -319,11 +316,11 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    if (DeviceExt->FatInfo.FatType != FAT12)
    {
-      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, CACHEPAGESIZE(DeviceExt));
+      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, CACHEPAGESIZE(DeviceExt));
    }
    else
    {
-      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, 2 * PAGE_SIZE);
+      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, 2 * PAGE_SIZE);
    }
    if (!NT_SUCCESS (Status))
    {
@@ -349,7 +346,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
    VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
    VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
-   VolumeFcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
    DeviceExt->VolumeFcb = VolumeFcb;
 
    ExAcquireResourceExclusiveLite(&VfatGlobalData->VolumeListLock, TRUE);

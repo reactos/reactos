@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.26 2003/01/28 16:48:03 hbirr Exp $
+/* $Id: finfo.c,v 1.27 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -553,7 +553,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   /* INITIALIZATION */
   FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
-  FCB = ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb;
+  FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
 
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
   BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
@@ -654,7 +654,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   /* INITIALIZATION */
   FileInformationClass = 
     IrpContext->Stack->Parameters.SetFile.FileInformationClass;
-  FCB = ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb;
+  FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
   
   DPRINT("FileInformationClass %d\n", FileInformationClass);

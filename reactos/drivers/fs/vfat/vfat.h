@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.55 2003/02/09 18:02:55 hbirr Exp $ */
+/* $Id: vfat.h,v 1.56 2003/02/13 22:24:17 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -181,28 +181,56 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 
 typedef struct _VFATFCB
 {
+  /* FCB header required by ROS/NT */
   REACTOS_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
+  ERESOURCE MainResource;
+  ERESOURCE PagingIoResource;
+  /* end FCB header required by ROS/NT */
+
+  /* */
   FATDirEntry entry;
+
   /* point on filename (250 chars max) in PathName */
   WCHAR *ObjectName;
+
   /* path+filename 260 max */
   WCHAR PathName[MAX_PATH];
+
+  /* short file name */
   WCHAR ShortName[14];
+
+  /* */
   LONG RefCount;
-  PDEVICE_EXTENSION pDevExt;
+
+  /* List of FCB's for this volume */
   LIST_ENTRY FcbListEntry;
+
+  /* pointer to the parent fcb */
   struct _VFATFCB* parentFcb;
+
+  /* Flags for the fcb */
   ULONG Flags;
+
+  /* pointer to the file object which has initialized the fcb */
   PFILE_OBJECT FileObject;
+
+  /* Directory index for the short name entry */
   ULONG dirIndex;
+
+  /* Directory index where the long name starts */
   ULONG startIndex;
-  ERESOURCE PagingIoResource;
-  ERESOURCE MainResource;
-  ULONG TimerCount;
+
+  /* Share access for the file object */
   SHARE_ACCESS FCBShareAccess;
+
+  /* Entry into the hash table for the path + long name */
   HASHENTRY Hash;
+
+  /* Entry into the hash table for the path + short name */
   HASHENTRY ShortHash;
+
+  /* List of byte-range locks for this file */
   FILE_LOCK FileLock;
 
   /* Structure members used only for paging files. */
@@ -212,9 +240,6 @@ typedef struct _VFATFCB
 
 typedef struct _VFATCCB
 {
-  VFATFCB *   pFcb;
-  LIST_ENTRY     NextCCB;
-  PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;
   /* for DirectoryControl */
   ULONG Entry;

@@ -193,7 +193,6 @@ typedef struct _FCB
 
 typedef struct _CCB
 {
-  PFCB           Fcb;
   LIST_ENTRY     NextCCB;
   PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;

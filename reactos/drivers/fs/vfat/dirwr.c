@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.34 2003/01/11 15:57:55 hbirr Exp $
+/* $Id: dirwr.c,v 1.35 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,7 +45,7 @@ VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   DPRINT ("updEntry PathFileName \'%S\'\n", 
           ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
 
-  pFcb = ((PVFATCCB)(pFileObject->FsContext2))->pFcb;
+  pFcb = (PVFATFCB)pFileObject->FsContext;
   assert (pFcb);
   pDirFcb = pFcb->parentFcb;
   assert (pDirFcb);
@@ -559,7 +559,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
 
-  // FEXME: check status
+  // FIXME: check status
   vfatMakeFCBFromDirEntry (DeviceExt, pDirFcb, FileName, pEntry,
                            start, start + nbSlots - 1, &newFCB);
   vfatAttachFCBToFileObject (DeviceExt, newFCB, pFileObject);
@@ -635,7 +635,7 @@ delEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
     }
     return status;
   }
-  pName = ((PVFATCCB)(pFileObject->FsContext2))->pFcb->ObjectName;
+  pName = ((PVFATFCB)pFileObject->FsContext)->ObjectName;
   if (*pName == L'\\')
   {
     pName ++;

@@ -1,15 +1,11 @@
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
-struct _BCB;
-
 NTSTATUS STDCALL
 CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
-		          struct _BCB** Bcb,
 		          ULONG		CacheSegmentSize);
 NTSTATUS STDCALL
-CcRosReleaseFileCache (PFILE_OBJECT	FileObject,
-		       struct _BCB*	Bcb);
+CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
 #include <ddk/cctypes.h>
 

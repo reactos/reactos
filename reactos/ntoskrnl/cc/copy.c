@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.13 2002/10/01 19:27:20 chorns Exp $
+/* $Id: copy.c,v 1.14 2003/02/13 22:24:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -268,7 +268,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	 FileObject, (ULONG)FileOffset->QuadPart, Length, Wait,
 	 Buffer, IoStatus);
 
-  Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+  Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
   ReadOffset = FileOffset->QuadPart;
   
   DPRINT("AllocationSize %d, FileSize %d\n",
@@ -369,7 +369,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	  "Length %d, Wait %d, Buffer %x)\n",
           FileObject, (ULONG)FileOffset->QuadPart, Length, Wait, Buffer);
 
-   Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+   Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
    WriteOffset = (ULONG)FileOffset->QuadPart;
 
    if (!Wait)
@@ -472,9 +472,6 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   
   Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
 
-  /* 
-   * FIXME: NT uses the shared cache map field for cached/non cached detection
-   */
   if (FileObject->SectionObjectPointers->SharedCacheMap == NULL)
     {
       /* File is not cached */
@@ -535,7 +532,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       PHYSICAL_ADDRESS page;
 
       Start = StartOffset->u.LowPart;
-      Bcb = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->Bcb;
+      Bcb = FileObject->SectionObjectPointers->SharedCacheMap;
       if (Wait)
 	{
           /* testing, if the requested datas are available */

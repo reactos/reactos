@@ -1,4 +1,4 @@
-/* $Id: flush.c,v 1.1 2003/02/09 18:02:55 hbirr Exp $
+/* $Id: flush.c,v 1.2 2003/02/13 22:24:17 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,7 +36,6 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
 {
    PLIST_ENTRY ListEntry;
    PVFATFCB Fcb;
-   PVFATCCB Ccb;
    NTSTATUS Status, ReturnStatus = STATUS_SUCCESS;
 
    DPRINT("VfatFlushVolume(DeviceExt %x, FatFcb %x)\n", DeviceExt, VolumeFcb);
@@ -54,11 +53,10 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
          DPRINT1("VfatFlushFile failed, status = %x\n", Status);
 	 ReturnStatus = Status;
       }
-      /* FIXME: Stop flushing if this a removable media and the media was removed */
+      /* FIXME: Stop flushing if this is a removable media and the media was removed */
    }
 
-   Ccb = (PVFATCCB) DeviceExt->FATFileObject->FsContext2;
-   Fcb =  Ccb->pFcb;
+   Fcb = (PVFATFCB) DeviceExt->FATFileObject->FsContext;
   
    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
    Status = VfatFlushFile(DeviceExt, Fcb);
@@ -79,7 +77,6 @@ NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS Status;
   PVFATFCB Fcb;
-  PVFATCCB Ccb;
   /*
    * This request is not allowed on the main device object.
    */
@@ -89,9 +86,7 @@ NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext)
      goto ByeBye;
   }
 
-  Ccb = (PVFATCCB) IrpContext->FileObject->FsContext2;
-  assert(Ccb);
-  Fcb =  Ccb->pFcb;
+  Fcb = (PVFATFCB)IrpContext->FileObject->FsContext;
   assert(Fcb);
 
   if (Fcb->Flags & FCB_IS_VOLUME)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.12 2002/10/01 19:27:16 chorns Exp $
+/* $Id: fsctl.c,v 1.13 2003/02/13 22:24:15 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -379,12 +379,11 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 		sizeof(CCB));
 
   DeviceExt->StreamFileObject->Flags = DeviceExt->StreamFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-  DeviceExt->StreamFileObject->FsContext = (PVOID)&Fcb->RFCB;
+  DeviceExt->StreamFileObject->FsContext = Fcb;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
   DeviceExt->StreamFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
   DeviceExt->StreamFileObject->PrivateCacheMap = NULL;
   DeviceExt->StreamFileObject->Vpb = DeviceExt->Vpb;
-  Ccb->Fcb = Fcb;
   Ccb->PtrFileObject = DeviceExt->StreamFileObject;
   Fcb->FileObject = DeviceExt->StreamFileObject;
   Fcb->DevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
@@ -398,7 +397,6 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Fcb->Entry.DataLengthL = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
 
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
-				    &Fcb->RFCB.Bcb,
 				    PAGE_SIZE);
   if (!NT_SUCCESS (Status))
     {

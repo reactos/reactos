@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.4 2002/10/01 19:27:17 chorns Exp $
+/* $Id: fcb.c,v 1.5 2003/02/13 22:24:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -153,7 +153,7 @@ NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
   if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
     {
       RemoveEntryList(&Fcb->FcbListEntry);
-      CcRosReleaseFileCache(NULL, Fcb->RFCB.Bcb);
+      CcRosReleaseFileCache(Fcb->FileObject);
       NtfsDestroyFCB(Fcb);
     }
   KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -186,7 +186,7 @@ NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
   if (FileName == NULL || *FileName == 0)
     {
       DPRINT("Return FCB for stream file object\n");
-      Fcb = ((PCCB)Vcb->StreamFileObject->FsContext2)->Fcb;
+      Fcb = Vcb->StreamFileObject->FsContext;
       Fcb->RefCount++;
       KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
       return(Fcb);
@@ -236,15 +236,13 @@ NtfsFCBInitializeCache(PVCB Vcb,
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
   FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
-  FileObject->FsContext = (PVOID) &Fcb->RFCB;
+  FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
-  newCCB->Fcb = Fcb;
   newCCB->PtrFileObject = FileObject;
   Fcb->FileObject = FileObject;
   Fcb->DevExt = Vcb;
 
   Status = CcRosInitializeFileCache(FileObject,
-				    &Fcb->RFCB.Bcb,
 				    CACHEPAGESIZE(Vcb));
   if (!NT_SUCCESS(Status))
     {
@@ -409,16 +407,14 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
   FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
-  FileObject->FsContext = (PVOID)&Fcb->RFCB;
+  FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
-  newCCB->Fcb = Fcb;
   newCCB->PtrFileObject = FileObject;
   Fcb->DevExt = Vcb;
 
   if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
     {
       Status = CcRosInitializeFileCache(FileObject,
-					&Fcb->RFCB.Bcb,
 					CACHEPAGESIZE(Vcb));
       if (!NT_SUCCESS(Status))
 	{

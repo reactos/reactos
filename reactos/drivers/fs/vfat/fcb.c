@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.26 2003/01/25 15:55:07 hbirr Exp $
+/* $Id: fcb.c,v 1.27 2003/02/13 22:24:16 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -156,12 +156,13 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
         if (vfatFCBIsDirectory(pFCB))
         {
            /* Uninitialize file cache if initialized for this file object. */
-           if (pFCB->RFCB.Bcb != NULL)
+           if (pFCB->FileObject->SectionObjectPointers->SharedCacheMap)
 	   {
-              CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+              CcRosReleaseFileCache(pFCB->FileObject);
 	   }
            vfatDestroyCCB(pFCB->FileObject->FsContext2);
            pFCB->FileObject->FsContext2 = NULL;
+	   pFCB->FileObject->FsContext = NULL;
            ObDereferenceObject(pFCB->FileObject);
         }
         vfatDestroyFCB (pFCB);
@@ -185,7 +186,6 @@ vfatAddFCBToTable(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   Index = pFCB->Hash.Hash % FCB_HASH_TABLE_SIZE;
   ShortIndex = pFCB->ShortHash.Hash % FCB_HASH_TABLE_SIZE;
   KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
-  pFCB->pDevExt = pVCB;
   InsertTailList (&pVCB->FcbListHead, &pFCB->FcbListEntry);
    
   pFCB->Hash.next = pVCB->FcbHashTable[Index];
@@ -287,19 +287,15 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 
   fileObject->Flags |= FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
-  fileObject->FsContext = (PVOID) &fcb->RFCB;
+  fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
-  newCCB->pFcb = fcb;
-  newCCB->PtrFileObject = fileObject;
   fcb->FileObject = fileObject;
-  fcb->pDevExt = vcb;
 
 
   fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
       vcb->FatInfo.BytesPerCluster : PAGE_SIZE;
 
   status = CcRosInitializeFileCache (fileObject,
-                                     &fcb->RFCB.Bcb,
                                      fileCacheQuantum);
   if (!NT_SUCCESS (status))
   {
@@ -331,7 +327,6 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
     CurrentCluster = FirstCluster = pVCB->FatInfo.RootCluster;
     FCB->entry.FirstCluster = FirstCluster & 0xffff;
     FCB->entry.FirstClusterHigh = FirstCluster >> 16;
-    CurrentCluster = FirstCluster;
 
     while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
@@ -469,11 +464,8 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
   fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
-  fileObject->FsContext = (PVOID) &fcb->RFCB;
+  fileObject->FsContext = fcb;
   fileObject->FsContext2 = newCCB;
-  newCCB->pFcb = fcb;
-  newCCB->PtrFileObject = fileObject;
-  fcb->pDevExt = vcb;
   DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
 
   return  STATUS_SUCCESS;

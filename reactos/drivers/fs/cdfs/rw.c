@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.9 2003/01/02 16:02:02 hbirr Exp $
+/* $Id: rw.c,v 1.10 2003/02/13 22:24:15 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -71,7 +71,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     return(STATUS_SUCCESS);
 
   Ccb = (PCCB)FileObject->FsContext2;
-  Fcb = Ccb->Fcb;
+  Fcb = (PFCB)FileObject->FsContext;
 
   if (ReadOffset >= Fcb->Entry.DataLengthL)
     return(STATUS_END_OF_FILE);
@@ -87,7 +87,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
          Length = Fcb->Entry.DataLengthL - ReadOffset;
       if (FileObject->PrivateCacheMap == NULL)
       {
-	  CcRosInitializeFileCache(FileObject, &Fcb->RFCB.Bcb, PAGE_SIZE);
+	  CcRosInitializeFileCache(FileObject, PAGE_SIZE);
       }
 
       FileOffset.QuadPart = (LONGLONG)ReadOffset;
