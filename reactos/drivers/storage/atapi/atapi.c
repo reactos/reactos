@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.32 2002/12/10 12:18:33 ekohl Exp $
+/* $Id: atapi.c,v 1.33 2002/12/13 19:35:12 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -997,10 +997,10 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 		}
 
 	      /* Check for data overrun */
-	      if (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
+	      while (IDEReadStatus(CommandPortBase) & IDE_SR_DRQ)
 		{
-		  /* FIXME: Handle error! */
-		  DPRINT1("AtapiInterrupt(): data overrun error!");
+		  DPRINT1("AtapiInterrupt(): reading overrun data!\n");
+		  IDEReadWord(CommandPortBase);
 		}
 	    }
 
@@ -1521,7 +1521,7 @@ AtapiPolledRead(IN ULONG CommandPort,
 	  if (Status & IDE_SR_ERR)
 	    {
 	      IDEWriteDriveControl(ControlPort, 0);
-              ScsiPortStallExecution(50);
+	      ScsiPortStallExecution(50);
 	      IDEReadStatus(CommandPort);
 
 	      return(IDE_ER_ABRT);
@@ -1575,9 +1575,9 @@ AtapiPolledRead(IN ULONG CommandPort,
 	    {
 	      if (Status & IDE_SR_ERR)
 		{
-	          IDEWriteDriveControl(ControlPort, 0);
-	          ScsiPortStallExecution(50);
-	          IDEReadStatus(CommandPort);
+		  IDEWriteDriveControl(ControlPort, 0);
+		  ScsiPortStallExecution(50);
+		  IDEReadStatus(CommandPort);
 
 		  return(IDE_ER_ABRT);
 		}
@@ -1597,9 +1597,9 @@ AtapiPolledRead(IN ULONG CommandPort,
 		      DPRINT("Read %lu sectors of junk!\n",
 			     SectorCount - SectorCnt);
 		    }
-	          IDEWriteDriveControl(ControlPort, 0);
-	          ScsiPortStallExecution(50);
-	          IDEReadStatus(CommandPort);
+		  IDEWriteDriveControl(ControlPort, 0);
+		  ScsiPortStallExecution(50);
+		  IDEReadStatus(CommandPort);
 
 		  return(0);
 		}

@@ -116,6 +116,10 @@ extern "C" {
   (ScsiPortReadPortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 #define IDEWriteBlock32(Address, Buffer, Count) \
   (ScsiPortWritePortBufferUlong((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
+
+#define IDEReadWord(Address) \
+  (ScsiPortReadPortUshort((PUSHORT)((Address) + IDE_REG_DATA_PORT)))
+
 //
 //  Access macros for control registers
 //  Each macro takes an address of the control port blank and data
