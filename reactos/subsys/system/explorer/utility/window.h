@@ -77,8 +77,8 @@ struct Window : public WindowHandle
 
 	static Window* get_window(HWND hwnd);
 #ifndef _MSC_VER
-	template<typename WNDCLASS> static WNDCLASS* get_window(HWND hwnd) {return static_cast<WNDCLASS*>(get_window(hwnd));}
-#define	GET_WINDOW(WNDCLASS, hwnd) Window::get_window<WNDCLASS>(hwnd)
+	template<typename CLASS> static CLASS* get_window(HWND hwnd) {return static_cast<CLASS*>(get_window(hwnd));}
+#define	GET_WINDOW(CLASS, hwnd) Window::get_window<CLASS>(hwnd)
 #endif
 
 	static void register_pretranslate(HWND hwnd);
@@ -122,13 +122,24 @@ protected:
 
 
 #ifdef _MSC_VER
-template<typename WNDCLASS> struct GetWindowHelper {
-	static WNDCLASS* get_window(HWND hwnd) {
-		return static_cast<WNDCLASS*>(Window::get_window(hwnd));
+template<typename CLASS> struct GetWindowHelper
+{
+	static CLASS* get_window(HWND hwnd) {
+		return static_cast<CLASS*>(Window::get_window(hwnd));
 	}
 };
-#define	GET_WINDOW(WNDCLASS, hwnd) GetWindowHelper<WNDCLASS>::get_window(hwnd)
+#define	GET_WINDOW(CLASS, hwnd) GetWindowHelper<CLASS>::get_window(hwnd)
 #endif
+
+
+template<typename CLASS> struct TypeCheck
+{
+	static CLASS* dyn_cast(Window* wnd)
+		{return dynamic_cast<CLASS*>(wnd);}
+};
+
+#define	WINDOW_DYNAMIC_CAST(CLASS, hwnd) \
+	TypeCheck<CLASS>::dyn_cast(Window::get_window(hwnd))
 
 
  /**

@@ -181,9 +181,6 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		CloseStartMenu();
 		break;
 
-	  case WM_SETFOCUS:
-		break;	// don't post WM_CANCELMODE in Window::WndProc when focusing the startmenu
-
 	  case PM_STARTENTRY_FOCUSED: {	//TODO: use TrackMouseEvent() and WM_MOUSEHOVER to wait a bit before opening submenus
 		BOOL hasSubmenu = wparam;
 		HWND hctrl = (HWND)lparam;
@@ -467,13 +464,13 @@ LRESULT StartMenuButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_SETFOCUS:
 		PostParent(PM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
-		return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);	// don't post WM_CANCELMODE in Window::WndProc when focusing the startmenu
+		goto def;
 
 	  case WM_CANCELMODE:
 		 // route WM_CANCELMODE to the startmenu window
 		return SendParent(nmsg, wparam, lparam);
 
-	  default:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
@@ -564,11 +561,32 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 
 void StartMenuRoot::TrackStartmenu()
 {
-	//TODO
-
 	MSG msg;
+	HWND hwnd = _hwnd;
 
-	while(GetMessage(&msg, 0, 0, 0)) {
+	while(IsWindow(hwnd)) {
+		if (!GetMessage(&msg, 0, 0, 0)) {
+			PostQuitMessage(msg.wParam);
+			break;
+		}
+
+		 // Check for a mouse click on any window, which is not part of the start menu
+		if (msg.message==WM_LBUTTONDOWN || msg.message==WM_MBUTTONDOWN || msg.message==WM_RBUTTONDOWN) {
+			StartMenu* menu_wnd = NULL;
+
+			for(HWND hwnd=msg.hwnd; hwnd; hwnd=GetParent(hwnd)) {
+				menu_wnd = WINDOW_DYNAMIC_CAST(StartMenu, hwnd);
+
+				if (menu_wnd)
+					break;
+			}
+
+			if (!menu_wnd) {
+				DestroyWindow(_hwnd);
+				break;
+			}
+		}
+
 		try {
 			if (pretranslate_msg(&msg))
 				continue;
@@ -587,8 +605,6 @@ void StartMenuRoot::TrackStartmenu()
 			HandleException(e, g_Globals._hMainWnd);
 		}
 	}
-
-	//@@return msg.wParam;
 }
 
 

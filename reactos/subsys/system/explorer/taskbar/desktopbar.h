@@ -80,12 +80,10 @@ protected:
 
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
-	void	ToggleStartmenu();
-	void	CloseStartMenu();
+	void	ShowStartMenu();
 	LRESULT ProcessCopyData(COPYDATASTRUCT* pcd);
 
 	WindowHandle _hwndTaskBar;
-	WindowHandle _startMenuRoot;
 	WindowHandle _hwndNotify;
 	WindowHandle _hwndQuickLaunch;
 };

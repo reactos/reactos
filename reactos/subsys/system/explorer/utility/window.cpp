@@ -222,15 +222,16 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 
 LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
+/*@@TODO: replaced by StartMenu::TrackStartmenu()
 	HWND hwnd = _hwnd;
 
-/*@@TODO: replace by StartMenu::TrackStartmenu()
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)
-		CancelModes((HWND)wparam);	//@@ erronesly cancels desktop bar resize when switching from another process
+		CancelModes((HWND)wparam);	// erronesly cancels desktop bar resize when switching from another process
 */
-	return DefWindowProc(hwnd, nmsg, wparam, lparam);
+
+	return DefWindowProc(_hwnd, nmsg, wparam, lparam);
 }
 
 int Window::Command(int id, int code)
@@ -263,11 +264,12 @@ SubclassedWindow::SubclassedWindow(HWND hwnd)
 
 LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
+/*@@TODO: replaced by StartMenu::TrackStartmenu()
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)
 		CancelModes((HWND)wparam);
-
+*/
 	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
 }
 

@@ -151,7 +151,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			else
 				return 0;			// disable any other resizing
 		} else if (wparam == SC_TASKLIST)
-			ToggleStartmenu();
+			ShowStartMenu();
 		goto def;
 
 	  case WM_SIZE: {
@@ -176,14 +176,6 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CLOSE:
 		break;
 
-	  case PM_STARTMENU_CLOSED:
-		_startMenuRoot = 0;
-		break;
-
-	  case WM_SETFOCUS:
-		CloseStartMenu();
-		goto def;
-
 	  case WM_HOTKEY:
 		ProcessHotKey(wparam);
 		break;
@@ -203,7 +195,7 @@ int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
 	  case IDC_START:	//TODO: startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
-		ToggleStartmenu();
+		ShowStartMenu();
 		break;
 
 	  default:
@@ -215,25 +207,13 @@ int DesktopBar::Command(int id, int code)
 }
 
 
-void DesktopBar::ToggleStartmenu()
+void DesktopBar::ShowStartMenu()
 {
-	if (_startMenuRoot && IsWindow(_startMenuRoot)) {	// IsWindow(): safety first
-		 // dispose Startmenu
-		DestroyWindow(_startMenuRoot);
-		_startMenuRoot = 0;
-	} else {
-		 // create Startmenu
-		_startMenuRoot = StartMenuRoot::Create(_hwnd);
-	}
-}
+	 // create Startmenu
+	StartMenuRoot* startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd));
 
-void DesktopBar::CloseStartMenu()
-{
-	if (_startMenuRoot) {
-		DestroyWindow(_startMenuRoot);
-
-		_startMenuRoot = 0;
-	}
+	if (startMenuRoot)
+		startMenuRoot->TrackStartmenu();
 }
 
 
