@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.77 2004/01/04 11:40:56 gvg Exp $
+/* $Id: create.c,v 1.78 2004/01/05 13:49:18 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -146,14 +146,14 @@ BOOL STDCALL CreateProcessA
  BOOL bRetVal;
  STARTUPINFOW wsiStartupInfo;
 
- NTSTATUS STDCALL (*pTrue)
+ NTSTATUS STDCALL_FUNC (*pTrue)
  (
   UNICODE_STRING *,
   ANSI_STRING *,
   BOOLEAN
  );
 
- ULONG STDCALL (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
+ ULONG STDCALL_FUNC (*pRtlMbStringToUnicodeSize)(ANSI_STRING *);
 
  DPRINT("CreateProcessA(%s)\n", lpApplicationName);
 

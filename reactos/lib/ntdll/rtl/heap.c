@@ -1631,7 +1631,7 @@ RtlInitializeHeapManager(VOID)
  * @implemented
  */
 NTSTATUS STDCALL
-RtlEnumProcessHeaps(DWORD STDCALL(*func)(void*,LONG),
+RtlEnumProcessHeaps(DWORD STDCALL_FUNC(*func)(void*,LONG),
 		    LONG lParam)
 {
    NTSTATUS Status = STATUS_SUCCESS;
