@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.64 2004/08/29 14:46:02 weiden Exp $
+/* $Id: proc.c,v 1.65 2004/09/13 19:10:45 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -639,8 +639,7 @@ ExitProcess(UINT uExitCode)
 			       sizeof(CSRSS_API_REPLY));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
     {
-      DbgPrint("Failed to tell csrss about terminating process. "
-	       "Expect trouble.\n");
+      DPRINT("Failed to tell csrss about terminating process\n");
     }
   
   

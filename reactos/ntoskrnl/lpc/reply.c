@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.21 2004/08/15 16:39:06 chorns Exp $
+/* $Id: reply.c,v 1.22 2004/09/13 19:10:45 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -98,6 +98,12 @@ NtReplyPort (IN	HANDLE		PortHandle,
      {
 	DPRINT("NtReplyPort() = %x\n", Status);
 	return(Status);
+     }
+
+   if (EPORT_DISCONNECTED == Port->State)
+     {
+	ObDereferenceObject(Port);
+	return STATUS_PORT_DISCONNECTED;
      }
    
    Status = EiReplyOrRequestPort(Port->OtherPort, 

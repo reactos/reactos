@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.13 2004/08/15 16:39:06 chorns Exp $
+/* $Id: close.c,v 1.14 2004/09/13 19:10:45 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,11 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 {
   PEPORT Port = (PEPORT)ObjectBody;
   LPC_MESSAGE Message;
-  
+
+  /* FIXME Race conditions here! */
+
+  DPRINT("NiClosePort 0x%p OtherPort 0x%p State %d\n", Port, Port->OtherPort, Port->State);
+
   /*
    * If the client has just closed its handle then tell the server what
    * happened and disconnect this port.
@@ -41,6 +45,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
   if (HandleCount == 0 && Port->State == EPORT_CONNECTED_CLIENT && 
       ObGetObjectPointerCount(Port) == 2)
     {
+      DPRINT("Informing server\n");
       Message.MessageSize = sizeof(LPC_MESSAGE);
       Message.DataSize = 0;
       EiReplyOrRequestPort (Port->OtherPort,
@@ -61,8 +66,9 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
    * don't actually notify the client until it attempts an operation.
    */
   if (HandleCount == 0 && Port->State == EPORT_CONNECTED_SERVER && 
-      ObGetObjectPointerCount(Port) == 2)
+      ObGetObjectPointerCount(Port) == 1)
     {
+        DPRINT("Cleaning up server\n");
 	Port->OtherPort->OtherPort = NULL;
 	Port->OtherPort->State = EPORT_DISCONNECTED;
 	ObDereferenceObject(Port->OtherPort);

@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.17 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: send.c,v 1.18 2004/09/13 19:10:45 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -238,6 +238,12 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
+     }
+
+   if (EPORT_DISCONNECTED == Port->State)
+     {
+	ObDereferenceObject(Port);
+	return STATUS_PORT_DISCONNECTED;
      }
 
    /* win32k sometimes needs to KeAttach() the CSRSS process in order to make
