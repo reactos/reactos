@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.17 2003/10/30 08:56:37 gvg Exp $
+/* $Id: clip.c,v 1.18 2003/12/31 14:43:48 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -328,7 +328,10 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
                min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
                     (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
-
+  if(nCopy == 0)
+  {
+    return FALSE;
+  }
   RtlCopyMemory( pERects->arcl, ClipGDI->EnumRects.arcl + ClipGDI->EnumPos,
                  nCopy * sizeof(RECTL) );
   pERects->c = nCopy;
