@@ -31,8 +31,8 @@ drivers\dd\beep\beep.sys                2
 drivers\dd\bootvid\bootvid.sys          2
 drivers\dd\null\null.sys                2
 drivers\dd\serial\serial.sys            2
-drivers\dd\vga\display\vgaddi.dll       1
-drivers\dd\vga\miniport\vgamp.sys       2
+drivers\video\displays\vga\vgaddi.dll   1
+drivers\video\miniport\vga\vgamp.sys    2
 drivers\dd\videoprt\videoprt.sys        2
 drivers\fs\fs_rec\fs_rec.sys            2
 drivers\fs\ms\msfs.sys                  2
