@@ -19,8 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-	
-#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
+    
+#define WIN32_LEAN_AND_MEAN    /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <winnt.h>
-	
+    
 #include "taskmgr.h"
 #include "trayicon.h"
 #include "perfdata.h"
@@ -37,177 +37,177 @@
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {
-	HICON		hTrayIcon = NULL;
-	HDC			hScreenDC = NULL;
-	HDC			hDC = NULL;
-	HBITMAP		hBitmap = NULL;
-	HBITMAP		hOldBitmap = NULL;
-	HBITMAP		hBitmapMask = NULL;
-	ICONINFO	iconInfo;
-	ULONG		ProcessorUsage;
-	int			nLinesToDraw;
-	HBRUSH		hBitmapBrush = NULL;
-	RECT		rc;
+    HICON        hTrayIcon = NULL;
+    HDC            hScreenDC = NULL;
+    HDC            hDC = NULL;
+    HBITMAP        hBitmap = NULL;
+    HBITMAP        hOldBitmap = NULL;
+    HBITMAP        hBitmapMask = NULL;
+    ICONINFO    iconInfo;
+    ULONG        ProcessorUsage;
+    int            nLinesToDraw;
+    HBRUSH        hBitmapBrush = NULL;
+    RECT        rc;
 
-	/*
-	 * Get a handle to the screen DC
-	 */
-	hScreenDC = GetDC(NULL);
-	if (!hScreenDC)
-		goto done;
-	
-	/*
-	 * Create our own DC from it
-	 */
-	hDC = CreateCompatibleDC(hScreenDC);
-	if (!hDC)
-		goto done;
+    /*
+     * Get a handle to the screen DC
+     */
+    hScreenDC = GetDC(NULL);
+    if (!hScreenDC)
+        goto done;
+    
+    /*
+     * Create our own DC from it
+     */
+    hDC = CreateCompatibleDC(hScreenDC);
+    if (!hDC)
+        goto done;
 
-	/*
-	 * Load the bitmaps
-	 */
-	hBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYICON));
-	hBitmapMask = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYMASK));
-	if (!hBitmap || !hBitmapMask)
-		goto done;
+    /*
+     * Load the bitmaps
+     */
+    hBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYICON));
+    hBitmapMask = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYMASK));
+    if (!hBitmap || !hBitmapMask)
+        goto done;
 
-	hBitmapBrush = CreateSolidBrush(RGB(0, 255, 0));
-	if (!hBitmapBrush)
-		goto done;
-	
-	/*
-	 * Select the bitmap into our device context
-	 * so we can draw on it.
-	 */
-	hOldBitmap = (HBITMAP) SelectObject(hDC, hBitmap);
+    hBitmapBrush = CreateSolidBrush(RGB(0, 255, 0));
+    if (!hBitmapBrush)
+        goto done;
+    
+    /*
+     * Select the bitmap into our device context
+     * so we can draw on it.
+     */
+    hOldBitmap = (HBITMAP) SelectObject(hDC, hBitmap);
 
-	/*
-	 * Get the cpu usage
-	 */
-	ProcessorUsage = PerfDataGetProcessorUsage();
+    /*
+     * Get the cpu usage
+     */
+    ProcessorUsage = PerfDataGetProcessorUsage();
 
-	/*
-	 * Calculate how many lines to draw
-	 * since we have 11 rows of space
-	 * to draw the cpu usage instead of
-	 * just having 10.
-	 */
-	nLinesToDraw = (ProcessorUsage + (ProcessorUsage / 10)) / 11;
-	rc.left = 3;
-	rc.top = 12 - nLinesToDraw;
-	rc.right = 13;
-	rc.bottom = 13;
+    /*
+     * Calculate how many lines to draw
+     * since we have 11 rows of space
+     * to draw the cpu usage instead of
+     * just having 10.
+     */
+    nLinesToDraw = (ProcessorUsage + (ProcessorUsage / 10)) / 11;
+    rc.left = 3;
+    rc.top = 12 - nLinesToDraw;
+    rc.right = 13;
+    rc.bottom = 13;
 
-	/*
-	 * Now draw the cpu usage
-	 */
-	if (nLinesToDraw)
-		FillRect(hDC, &rc, hBitmapBrush);
+    /*
+     * Now draw the cpu usage
+     */
+    if (nLinesToDraw)
+        FillRect(hDC, &rc, hBitmapBrush);
 
-	/*
-	 * Now that we are done drawing put the
-	 * old bitmap back.
-	 */
-	SelectObject(hDC, hOldBitmap);
-	hOldBitmap = NULL;
-	
-	iconInfo.fIcon = TRUE;
-	iconInfo.xHotspot = 0;
-	iconInfo.yHotspot = 0;
-	iconInfo.hbmMask = hBitmapMask;
-	iconInfo.hbmColor = hBitmap;
+    /*
+     * Now that we are done drawing put the
+     * old bitmap back.
+     */
+    SelectObject(hDC, hOldBitmap);
+    hOldBitmap = NULL;
+    
+    iconInfo.fIcon = TRUE;
+    iconInfo.xHotspot = 0;
+    iconInfo.yHotspot = 0;
+    iconInfo.hbmMask = hBitmapMask;
+    iconInfo.hbmColor = hBitmap;
 
-	hTrayIcon = CreateIconIndirect(&iconInfo);
+    hTrayIcon = CreateIconIndirect(&iconInfo);
 
 done:
-	/*
-	 * Cleanup
-	 */
-	if (hScreenDC)
-		ReleaseDC(NULL, hScreenDC);
-	if (hOldBitmap)
-		SelectObject(hDC, hOldBitmap);
-	if (hDC)
-		DeleteDC(hDC);
-	if (hBitmapBrush)
-		DeleteObject(hBitmapBrush);
-	if (hBitmap)
-		DeleteObject(hBitmap);
-	if (hBitmapMask)
-		DeleteObject(hBitmapMask);
-	
-	/*
-	 * Return the newly created tray icon (if successful)
-	 */
-	return hTrayIcon;
+    /*
+     * Cleanup
+     */
+    if (hScreenDC)
+        ReleaseDC(NULL, hScreenDC);
+    if (hOldBitmap)
+        SelectObject(hDC, hOldBitmap);
+    if (hDC)
+        DeleteDC(hDC);
+    if (hBitmapBrush)
+        DeleteObject(hBitmapBrush);
+    if (hBitmap)
+        DeleteObject(hBitmap);
+    if (hBitmapMask)
+        DeleteObject(hBitmapMask);
+    
+    /*
+     * Return the newly created tray icon (if successful)
+     */
+    return hTrayIcon;
 }
 
 BOOL TrayIcon_ShellAddTrayIcon(void)
 {
-	NOTIFYICONDATA	nid;
-	HICON			hIcon = NULL;
-	BOOL			bRetVal;
+    NOTIFYICONDATA    nid;
+    HICON            hIcon = NULL;
+    BOOL            bRetVal;
 
-	memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    memset(&nid, 0, sizeof(NOTIFYICONDATA));
 
-	hIcon = TrayIcon_GetProcessorUsageIcon();
+    hIcon = TrayIcon_GetProcessorUsageIcon();
 
-	nid.cbSize = sizeof(NOTIFYICONDATA);
-	nid.hWnd = hMainWnd;
-	nid.uID = 0;
-	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	/* nid.uCallbackMessage = ??; */
-	nid.hIcon = hIcon;
-	wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hMainWnd;
+    nid.uID = 0;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    /* nid.uCallbackMessage = ??; */
+    nid.hIcon = hIcon;
+    wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
 
-	bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);
+    bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);
 
-	if (hIcon)
-		DeleteObject(hIcon);
+    if (hIcon)
+        DeleteObject(hIcon);
 
-	return bRetVal;
+    return bRetVal;
 }
 
 BOOL TrayIcon_ShellRemoveTrayIcon(void)
 {
-	NOTIFYICONDATA	nid;
-	BOOL			bRetVal;
-	
-	memset(&nid, 0, sizeof(NOTIFYICONDATA));
-	
-	nid.cbSize = sizeof(NOTIFYICONDATA);
-	nid.hWnd = hMainWnd;
-	nid.uID = 0;
-	nid.uFlags = 0;
-	/* nid.uCallbackMessage = ??; */
-	
-	bRetVal = Shell_NotifyIcon(NIM_DELETE, &nid);
-	
-	return bRetVal;
+    NOTIFYICONDATA    nid;
+    BOOL            bRetVal;
+    
+    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hMainWnd;
+    nid.uID = 0;
+    nid.uFlags = 0;
+    /* nid.uCallbackMessage = ??; */
+    
+    bRetVal = Shell_NotifyIcon(NIM_DELETE, &nid);
+    
+    return bRetVal;
 }
 
 BOOL TrayIcon_ShellUpdateTrayIcon(void)
 {
-	NOTIFYICONDATA	nid;
-	HICON			hIcon = NULL;
-	BOOL			bRetVal;
-	
-	memset(&nid, 0, sizeof(NOTIFYICONDATA));
-	
-	hIcon = TrayIcon_GetProcessorUsageIcon();
-	
-	nid.cbSize = sizeof(NOTIFYICONDATA);
-	nid.hWnd = hMainWnd;
-	nid.uID = 0;
-	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	/* nid.uCallbackMessage = ??; */
-	nid.hIcon = hIcon;
-	wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
-	
-	bRetVal = Shell_NotifyIcon(NIM_MODIFY, &nid);
-	
-	if (hIcon)
-		DeleteObject(hIcon);
-	
-	return bRetVal;
+    NOTIFYICONDATA    nid;
+    HICON            hIcon = NULL;
+    BOOL            bRetVal;
+    
+    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    
+    hIcon = TrayIcon_GetProcessorUsageIcon();
+    
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hMainWnd;
+    nid.uID = 0;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    /* nid.uCallbackMessage = ??; */
+    nid.hIcon = hIcon;
+    wsprintf(nid.szTip, _T("CPU Usage: %d%%"), PerfDataGetProcessorUsage());
+    
+    bRetVal = Shell_NotifyIcon(NIM_MODIFY, &nid);
+    
+    if (hIcon)
+        DeleteObject(hIcon);
+    
+    return bRetVal;
 }

@@ -20,7 +20,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN		/*  Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -40,51 +40,42 @@
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
 TGraphCtrl PerformancePageMemUsageHistoryGraph;
 
-HWND		hPerformancePage;								// Performance Property Page
-
-HWND		hPerformancePageCpuUsageGraph;					// CPU Usage Graph
-HWND		hPerformancePageMemUsageGraph;					// MEM Usage Graph
-HWND		hPerformancePageCpuUsageHistoryGraph;			// CPU Usage History Graph
-HWND		hPerformancePageMemUsageHistoryGraph;			// Memory Usage History Graph
-
-HWND		hPerformancePageTotalsFrame;					// Totals Frame
-HWND		hPerformancePageCommitChargeFrame;				// Commit Charge Frame
-HWND		hPerformancePageKernelMemoryFrame;				// Kernel Memory Frame
-HWND		hPerformancePagePhysicalMemoryFrame;			// Physical Memory Frame
-
+HWND		hPerformancePage;					/*  Performance Property Page */
+HWND		hPerformancePageCpuUsageGraph;				/*  CPU Usage Graph */
+HWND		hPerformancePageMemUsageGraph;				/*  MEM Usage Graph */
+HWND		hPerformancePageCpuUsageHistoryGraph;			/*  CPU Usage History Graph */
+HWND		hPerformancePageMemUsageHistoryGraph;			/*  Memory Usage History Graph */
+HWND		hPerformancePageTotalsFrame;				/*  Totals Frame */
+HWND		hPerformancePageCommitChargeFrame;			/*  Commit Charge Frame */
+HWND		hPerformancePageKernelMemoryFrame;			/*  Kernel Memory Frame */
+HWND		hPerformancePagePhysicalMemoryFrame;			/*  Physical Memory Frame */
 HWND		hPerformancePageCpuUsageFrame;
 HWND		hPerformancePageMemUsageFrame;
 HWND		hPerformancePageCpuUsageHistoryFrame;
 HWND		hPerformancePageMemUsageHistoryFrame;
-
-HWND		hPerformancePageCommitChargeTotalEdit;			// Commit Charge Total Edit Control
-HWND		hPerformancePageCommitChargeLimitEdit;			// Commit Charge Limit Edit Control
-HWND		hPerformancePageCommitChargePeakEdit;			// Commit Charge Peak Edit Control
-
-HWND		hPerformancePageKernelMemoryTotalEdit;			// Kernel Memory Total Edit Control
-HWND		hPerformancePageKernelMemoryPagedEdit;			// Kernel Memory Paged Edit Control
-HWND		hPerformancePageKernelMemoryNonPagedEdit;		// Kernel Memory NonPaged Edit Control
-
-HWND		hPerformancePagePhysicalMemoryTotalEdit;		// Physical Memory Total Edit Control
-HWND		hPerformancePagePhysicalMemoryAvailableEdit;	// Physical Memory Available Edit Control
-HWND		hPerformancePagePhysicalMemorySystemCacheEdit;	// Physical Memory System Cache Edit Control
-
-HWND		hPerformancePageTotalsHandleCountEdit;			// Total Handles Edit Control
-HWND		hPerformancePageTotalsProcessCountEdit;			// Total Processes Edit Control
-HWND		hPerformancePageTotalsThreadCountEdit;			// Total Threads Edit Control
+HWND		hPerformancePageCommitChargeTotalEdit;			/*  Commit Charge Total Edit Control */
+HWND		hPerformancePageCommitChargeLimitEdit;			/*  Commit Charge Limit Edit Control */
+HWND		hPerformancePageCommitChargePeakEdit;			/*  Commit Charge Peak Edit Control */
+HWND		hPerformancePageKernelMemoryTotalEdit;			/*  Kernel Memory Total Edit Control */
+HWND		hPerformancePageKernelMemoryPagedEdit;			/*  Kernel Memory Paged Edit Control */
+HWND		hPerformancePageKernelMemoryNonPagedEdit;		/*  Kernel Memory NonPaged Edit Control */
+HWND		hPerformancePagePhysicalMemoryTotalEdit;		/*  Physical Memory Total Edit Control */
+HWND		hPerformancePagePhysicalMemoryAvailableEdit;	/*  Physical Memory Available Edit Control */
+HWND		hPerformancePagePhysicalMemorySystemCacheEdit;	/*  Physical Memory System Cache Edit Control */
+HWND		hPerformancePageTotalsHandleCountEdit;			/*  Total Handles Edit Control */
+HWND		hPerformancePageTotalsProcessCountEdit;			/*  Total Processes Edit Control */
+HWND		hPerformancePageTotalsThreadCountEdit;			/*  Total Threads Edit Control */
 
 
 static int	nPerformancePageWidth;
 static int	nPerformancePageHeight;
-
-static HANDLE	hPerformancePageEvent = NULL;	// When this event becomes signaled then we refresh the performance page
-
+static HANDLE	hPerformancePageEvent = NULL;	/*  When this event becomes signaled then we refresh the performance page */
 DWORD WINAPI	PerformancePageRefreshThread(void *lpParameter);
 
 void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int pos)
 {
     RECT	rc;
-	int		cx, cy, sx, sy;
+    int		cx, cy, sx, sy;
 
     GetClientRect(hCntrl, &rc);
     MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
@@ -133,23 +124,23 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 	int		nXDifference;
 	int		nYDifference;
 
-//    HDC hdc;
-//    PAINTSTRUCT ps;
+/*     HDC hdc; */
+/*     PAINTSTRUCT ps; */
 
     switch (message) {
 	case WM_INITDIALOG:
 		
-		// Save the width and height
+		/*  Save the width and height */
 		GetClientRect(hDlg, &rc);
 		nPerformancePageWidth = rc.right;
 		nPerformancePageHeight = rc.bottom;
 
-		// Update window position
+		/*  Update window position */
 		SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
-		//
-		// Get handles to all the controls
-		//
+		/* 
+		 *  Get handles to all the controls
+		 */ 
 		hPerformancePageTotalsFrame = GetDlgItem(hDlg, IDC_TOTALS_FRAME);
 		hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
 		hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);
@@ -179,16 +170,16 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
 		
 		GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
-        // create the control
-        //PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+        /*  create the control */
+        /* PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH); */
         GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-        // customize the control
+        /*  customize the control */
         GraphCtrl_SetRange(&PerformancePageCpuUsageHistoryGraph, 0.0, 100.0, 10);
-//        PerformancePageCpuUsageHistoryGraph.SetYUnits("Current") ;
-//        PerformancePageCpuUsageHistoryGraph.SetXUnits("Samples (Windows Timer: 100 msec)") ;
-//        PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 64)) ;
-//        PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ;
-//        PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ;
+/*         PerformancePageCpuUsageHistoryGraph.SetYUnits("Current") ; */
+/*         PerformancePageCpuUsageHistoryGraph.SetXUnits("Samples (Windows Timer: 100 msec)") ; */
+/*         PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 64)) ; */
+/*         PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ; */
+/*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
         GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
         GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(255, 0, 0)) ;
@@ -200,14 +191,14 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
         GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(152, 215, 152)) ;
         GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
-		// Start our refresh thread
+		/*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE
         CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
 #endif
 
-		//
-		// Subclass graph buttons
-		//
+		/* 
+		 *  Subclass graph buttons
+		 */ 
         OldGraphWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
         SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
 		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
@@ -246,7 +237,7 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		nPerformancePageHeight = cy;
         } while (0);
 
-		// Reposition the performance page's controls
+		/*  Reposition the performance page's controls */
         AdjustFrameSize(hPerformancePageTotalsFrame, hDlg, 0, nYDifference, 0);
         AdjustFrameSize(hPerformancePageCommitChargeFrame, hDlg, 0, nYDifference, 0);
         AdjustFrameSize(hPerformancePageKernelMemoryFrame, hDlg, 0, nYDifference, 0);
@@ -315,8 +306,8 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 
 void RefreshPerformancePage(void)
 {
-	// Signal the event so that our refresh thread
-	// will wake up and refresh the performance page
+	/*  Signal the event so that our refresh thread */
+	/*  will wake up and refresh the performance page */
 	SetEvent(hPerformancePageEvent);
 }
 
@@ -340,10 +331,10 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 
 	TCHAR	Text[260];
 
-	// Create the event
+	/*  Create the event */
 	hPerformancePageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Performance Page Event"));
 
-	// If we couldn't create the event then exit the thread
+	/*  If we couldn't create the event then exit the thread */
 	if (!hPerformancePageEvent)
 		return 0;
 
@@ -351,22 +342,22 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 	{
 		DWORD	dwWaitVal;
 
-		// Wait on the event
+		/*  Wait on the event */
 		dwWaitVal = WaitForSingleObject(hPerformancePageEvent, INFINITE);
 
-		// If the wait failed then the event object must have been
-		// closed and the task manager is exiting so exit this thread
+		/*  If the wait failed then the event object must have been */
+		/*  closed and the task manager is exiting so exit this thread */
 		if (dwWaitVal == WAIT_FAILED)
 			return 0;
 
 		if (dwWaitVal == WAIT_OBJECT_0)
 		{
-			// Reset our event
+			/*  Reset our event */
 			ResetEvent(hPerformancePageEvent);
 
-			//
-			// Update the commit charge info
-			//
+			/* 
+			 *  Update the commit charge info
+			 */ 
 			CommitChargeTotal = PerfDataGetCommitChargeTotalK();
 			CommitChargeLimit = PerfDataGetCommitChargeLimitK();
 			CommitChargePeak = PerfDataGetCommitChargePeakK();
@@ -379,9 +370,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			wsprintf(Text, _T("Mem Usage: %dK / %dK"), CommitChargeTotal, CommitChargeLimit);
 			SendMessage(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
 
-			//
-			// Update the kernel memory info
-			//
+			/* 
+			 *  Update the kernel memory info
+			 */ 
 			KernelMemoryTotal = PerfDataGetKernelMemoryTotalK();
 			KernelMemoryPaged = PerfDataGetKernelMemoryPagedK();
 			KernelMemoryNonPaged = PerfDataGetKernelMemoryNonPagedK();
@@ -392,9 +383,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(KernelMemoryNonPaged, Text, 10);
 			SetWindowText(hPerformancePageKernelMemoryNonPagedEdit, Text);
 
-			//
-			// Update the physical memory info
-			//
+			/* 
+			 *  Update the physical memory info
+			 */ 
 			PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
 			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
 			PhysicalMemorySystemCache = PerfDataGetPhysicalMemorySystemCacheK();
@@ -405,9 +396,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(PhysicalMemorySystemCache, Text, 10);
 			SetWindowText(hPerformancePagePhysicalMemorySystemCacheEdit, Text);
 
-			//
-			// Update the totals info
-			//
+			/* 
+			 *  Update the totals info
+			 */ 
 			TotalHandles = PerfDataGetSystemHandleCount();
 			TotalThreads = PerfDataGetTotalThreadCount();
 			TotalProcesses = PerfDataGetProcessCount();
@@ -418,13 +409,12 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			_ultot(TotalProcesses, Text, 10);
 			SetWindowText(hPerformancePageTotalsProcessCountEdit, Text);
 
-			//
-			// Redraw the graphs
-			//
+			/* 
+			 *  Redraw the graphs
+			 */ 
 			InvalidateRect(hPerformancePageCpuUsageGraph, NULL, FALSE);
 			InvalidateRect(hPerformancePageMemUsageGraph, NULL, FALSE);
 
-            //
 
         	ULONG	  CpuUsage;
 	        ULONG	  CpuKernelUsage;
@@ -435,9 +425,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             int nBarsUsed1;
             int nBarsUsed2;
 
-        	//
-        	// Get the CPU usage
-        	//
+        	/* 
+        	 *  Get the CPU usage
+        	 */ 
 	        CpuUsage = PerfDataGetProcessorUsage();
         	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
         	if (CpuUsage < 0 )        CpuUsage = 0;
@@ -445,9 +435,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
         	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
         	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
 
-            //
-            // Get the memory usage
-            //
+            /* 
+             *  Get the memory usage
+             */ 
             CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
             CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
             nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
@@ -459,7 +449,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 
             GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
             GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);
-            //PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
+            /* PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ; */
 			InvalidateRect(hPerformancePageMemUsageHistoryGraph, NULL, FALSE);
 			InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
 		}
@@ -475,7 +465,7 @@ void PerformancePage_OnViewShowKernelTimes(void)
 	hMenu = GetMenu(hMainWnd);
 	hViewMenu = GetSubMenu(hMenu, 2);
 
-	// Check or uncheck the show 16-bit tasks menu item
+	/*  Check or uncheck the show 16-bit tasks menu item */
 	if (GetMenuState(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND) & MF_CHECKED)
 	{
 		CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);

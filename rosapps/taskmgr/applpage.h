@@ -19,32 +19,32 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-	
+    
 #ifndef __APPLICATIONPAGE_H
 #define __APPLICATIONPAGE_H
 
-extern	HWND		hApplicationPage;				/* Application List Property Page */
+extern    HWND        hApplicationPage;                /* Application List Property Page */
 
-extern	HWND		hApplicationPageListCtrl;		/* Application ListCtrl Window */
-extern	HWND		hApplicationPageEndTaskButton;	/* Application End Task button */
-extern	HWND		hApplicationPageSwitchToButton;	/* Application Switch To button */
-extern	HWND		hApplicationPageNewTaskButton;	/* Application New Task button */
+extern    HWND        hApplicationPageListCtrl;        /* Application ListCtrl Window */
+extern    HWND        hApplicationPageEndTaskButton;    /* Application End Task button */
+extern    HWND        hApplicationPageSwitchToButton;    /* Application Switch To button */
+extern    HWND        hApplicationPageNewTaskButton;    /* Application New Task button */
 
-LRESULT CALLBACK	ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-void				RefreshApplicationPage(void);
-void				UpdateApplicationListControlViewSetting(void);
+LRESULT CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+void                RefreshApplicationPage(void);
+void                UpdateApplicationListControlViewSetting(void);
 
-void				ApplicationPage_OnViewLargeIcons(void);
-void				ApplicationPage_OnViewSmallIcons(void);
-void				ApplicationPage_OnViewDetails(void);
-void				ApplicationPage_OnWindowsTileHorizontally(void);
-void				ApplicationPage_OnWindowsTileVertically(void);
-void				ApplicationPage_OnWindowsMinimize(void);
-void				ApplicationPage_OnWindowsMaximize(void);
-void				ApplicationPage_OnWindowsCascade(void);
-void				ApplicationPage_OnWindowsBringToFront(void);
-void				ApplicationPage_OnSwitchTo(void);
-void				ApplicationPage_OnEndTask(void);
-void				ApplicationPage_OnGotoProcess(void);
+void                ApplicationPage_OnViewLargeIcons(void);
+void                ApplicationPage_OnViewSmallIcons(void);
+void                ApplicationPage_OnViewDetails(void);
+void                ApplicationPage_OnWindowsTileHorizontally(void);
+void                ApplicationPage_OnWindowsTileVertically(void);
+void                ApplicationPage_OnWindowsMinimize(void);
+void                ApplicationPage_OnWindowsMaximize(void);
+void                ApplicationPage_OnWindowsCascade(void);
+void                ApplicationPage_OnWindowsBringToFront(void);
+void                ApplicationPage_OnSwitchTo(void);
+void                ApplicationPage_OnEndTask(void);
+void                ApplicationPage_OnGotoProcess(void);
 
 #endif /* __APPLICATIONPAGE_H */

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
+#define WIN32_LEAN_AND_MEAN    /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -885,7 +885,7 @@ void ApplicationPage_OnSwitchTo(void)
         SwitchToThisWindow = (PROCSWITCHTOTHISWINDOW)GetProcAddress(hUser32, "SwitchToThisWindow");
         if (SwitchToThisWindow) {
             SwitchToThisWindow(pAPLI->hWnd, TRUE);
-		} else {
+        } else {
             if (IsIconic(pAPLI->hWnd))
                 ShowWindow(pAPLI->hWnd, SW_RESTORE);
             BringWindowToTop(pAPLI->hWnd);
@@ -956,10 +956,10 @@ int CALLBACK ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM l
     LPAPPLICATION_PAGE_LIST_ITEM Param1;
     LPAPPLICATION_PAGE_LIST_ITEM Param2;
 
-	if (bSortAscending) {
+    if (bSortAscending) {
         Param1 = (LPAPPLICATION_PAGE_LIST_ITEM)lParam1;
         Param2 = (LPAPPLICATION_PAGE_LIST_ITEM)lParam2;
-	} else {
+    } else {
         Param1 = (LPAPPLICATION_PAGE_LIST_ITEM)lParam2;
         Param2 = (LPAPPLICATION_PAGE_LIST_ITEM)lParam1;
     }
