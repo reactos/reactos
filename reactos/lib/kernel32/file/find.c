@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.34 2003/01/15 21:24:33 chorns Exp $
+/* $Id: find.c,v 1.35 2003/03/23 10:48:14 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -88,34 +88,100 @@ InternalFindFirstFile (
 	UNICODE_STRING NtPathU;
 	UNICODE_STRING PatternStr;
 	NTSTATUS Status;
-	PWSTR End;
+	PWSTR e1, e2;
+	WCHAR CurrentDir[256];
+	PWSTR SearchPath;
+	PWCHAR SearchPattern;
+	ULONG Length;
+	BOOLEAN bResult;
 
 	DPRINT("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
 
-	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
-	                                   &NtPathU,
-	                                   &End,
-	                                   NULL))
-		return FALSE;
+	e1 = wcsrchr(lpFileName, L'/');
+	e2 = wcsrchr(lpFileName, L'\\');
+	SearchPattern = max(e1, e2);
+	SearchPath = CurrentDir;
 
-	DPRINT("NtPathU \'%S\' End \'%S\'\n", NtPathU.Buffer, End);
+	if (NULL == SearchPattern)
+	{
+	   CHECKPOINT;
+	   SearchPattern = (PWCHAR)lpFileName;
+           Length = GetCurrentDirectoryW(sizeof(CurrentDir) / sizeof(WCHAR), SearchPath);
+	   if (0 == Length)
+	   {
+	      return NULL;
+	   }
+	   if (Length > sizeof(CurrentDir) / sizeof(WCHAR))
+	   {
+	      SearchPath = RtlAllocateHeap(hProcessHeap,
+	                                   HEAP_ZERO_MEMORY,
+					   Length * sizeof(WCHAR));
+	      if (NULL == SearchPath)
+	      {
+	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	         return NULL;
+	      }
+	      GetCurrentDirectoryW(Length, SearchPath);
+	   }
+	}
+	else
+	{
+	   CHECKPOINT;
+	   SearchPattern++;
+	   Length = SearchPattern - lpFileName;
+	   if (Length + 1 > sizeof(CurrentDir) / sizeof(WCHAR))
+	   {
+              SearchPath = RtlAllocateHeap(hProcessHeap,
+	                                   HEAP_ZERO_MEMORY,
+					   (Length + 1) * sizeof(WCHAR));
+	      if (NULL == SearchPath)
+	      {
+	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	         return NULL;
+	      }
+	   }
+           memcpy(SearchPath, lpFileName, Length * sizeof(WCHAR));
+	   SearchPath[Length] = 0;
+	}
+
+	bResult = RtlDosPathNameToNtPathName_U ((LPWSTR)SearchPath,
+	                                        &NtPathU,
+	                                        NULL,
+	                                        NULL);
+        if (SearchPath != CurrentDir)
+	{
+	   RtlFreeHeap(hProcessHeap,
+	               0,
+		       SearchPath);
+	}
+	if (FALSE == bResult)
+	{
+	   return NULL;
+	}
+
+	DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
 
 	IData = RtlAllocateHeap (hProcessHeap,
 	                         HEAP_ZERO_MEMORY,
 	                         sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
-
-	/* move seach pattern to separate string */
-	RtlCreateUnicodeString (&PatternStr,
-	                        End);
-	*End = 0;
-	NtPathU.Length = wcslen(NtPathU.Buffer)*sizeof(WCHAR);
+	if (NULL == IData)
+	{
+	   RtlFreeHeap (hProcessHeap,
+	                0,
+	                NtPathU.Buffer);
+	   SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	   return NULL;
+	}
 
 	/* change pattern: "*.*" --> "*" */
-	if (!wcscmp (PatternStr.Buffer, L"*.*"))
+	if (!wcscmp (SearchPattern, L"*.*"))
 	{
-		PatternStr.Buffer[1] = 0;
-		PatternStr.Length = sizeof(WCHAR);
+	    RtlInitUnicodeStringFromLiteral(&PatternStr, L"*");
+	}
+	else
+	{
+	    RtlInitUnicodeString(&PatternStr, SearchPattern);
 	}
 
 	DPRINT("NtPathU \'%S\' Pattern \'%S\'\n",
@@ -140,7 +206,6 @@ InternalFindFirstFile (
 
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeHeap (hProcessHeap, 0, PatternStr.Buffer);
 		RtlFreeHeap (hProcessHeap, 0, IData);
 		SetLastErrorByStatus (Status);
 		return(NULL);
@@ -159,7 +224,6 @@ InternalFindFirstFile (
 	                               TRUE,
 	                               &PatternStr,
 	                               TRUE);
-	RtlFreeHeap (hProcessHeap, 0, PatternStr.Buffer);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Status %lx\n", Status);
