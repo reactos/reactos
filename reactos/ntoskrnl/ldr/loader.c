@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.149 2004/10/22 20:33:53 ekohl Exp $
+/* $Id: loader.c,v 1.150 2004/10/26 10:56:38 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -857,7 +857,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   DPRINT("OptionalHeader at %x\n", CreatedModuleObject->Image.PE.OptionalHeader);
   CreatedModuleObject->Image.PE.SectionList = 
     (PIMAGE_SECTION_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG) +
-    sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_OPTIONAL_HEADER));
+    sizeof(IMAGE_FILE_HEADER) + CreatedModuleObject->Image.PE.FileHeader->SizeOfOptionalHeader);
   DPRINT("SectionList at %x\n", CreatedModuleObject->Image.PE.SectionList);
 
   /*  Perform import fixups  */
