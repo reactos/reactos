@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.42 2002/01/01 03:29:15 dwelch Exp $
+/* $Id: create.c,v 1.43 2002/02/04 13:08:58 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -483,7 +483,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    ANSI_STRING ProcedureName;
    UNICODE_STRING CurrentDirectoryW;
    SECTION_IMAGE_INFORMATION Sii;
-   CHAR TempCurrentDirectoryW[256];
+   WCHAR TempCurrentDirectoryW[256];
    
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
