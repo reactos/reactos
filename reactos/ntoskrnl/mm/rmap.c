@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.14 2002/11/09 20:27:03 hbirr Exp $
+/* $Id: rmap.c,v 1.15 2003/01/11 15:28:18 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -50,6 +50,7 @@ typedef struct _MM_RMAP_ENTRY
 /* GLOBALS ******************************************************************/
 
 static FAST_MUTEX RmapListLock;
+static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -57,6 +58,13 @@ VOID
 MmInitializeRmapList(VOID)
 {
   ExInitializeFastMutex(&RmapListLock);
+  ExInitializeNPagedLookasideList (&RmapLookasideList,
+	                           NULL,
+				   NULL,
+				   0,
+				   sizeof(MM_RMAP_ENTRY),
+				   TAG_RMAP,
+				   50);
 }
 
 NTSTATUS
@@ -356,7 +364,7 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
 
   Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-  new_entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_RMAP_ENTRY), TAG_RMAP);
+  new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
   if (new_entry == NULL)
     {
       KeBugCheck(0);
@@ -405,7 +413,7 @@ MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context,
 	  DeleteMapping(Context, previous_entry->Process, 
 			previous_entry->Address);
 	}
-      ExFreePool(previous_entry);
+      ExFreeToNPagedLookasideList(&RmapLookasideList, previous_entry);
     }
   MmSetRmapListHeadPage(PhysicalAddress, NULL);
   ExReleaseFastMutex(&RmapListLock);
@@ -428,15 +436,13 @@ MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
 	  if (previous_entry == NULL)
 	    {
 	      MmSetRmapListHeadPage(PhysicalAddress, current_entry->Next);
-	      ExReleaseFastMutex(&RmapListLock);
-	      ExFreePool(current_entry);
 	    }
 	  else
 	    {
 	      previous_entry->Next = current_entry->Next;
-	      ExReleaseFastMutex(&RmapListLock);
-	      ExFreePool(current_entry);
 	    }
+	  ExReleaseFastMutex(&RmapListLock);
+	  ExFreeToNPagedLookasideList(&RmapLookasideList, current_entry);
 	  return;
 	}
       previous_entry = current_entry;
