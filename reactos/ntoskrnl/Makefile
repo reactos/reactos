@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.111 2003/12/23 05:07:26 arty Exp $
+# $Id: Makefile,v 1.112 2004/01/10 21:06:37 arty Exp $
 #
 # ReactOS Operating System
 #
@@ -27,7 +27,13 @@ endif
 
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/profile.o
+                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/profile.o \
+		../dk/w32/lib/kjs.a
+CFLAGS += -I../lib/kjs/include
+preall: all
+
+../dk/w32/lib/kjs.a:
+	$(MAKE) -C ../lib/kjs
 else
 OBJECTS_KDBG :=
 endif
@@ -51,6 +57,9 @@ CFLAGS += -D_DISABLE_TIDENTS
 #
 include $(PATH_TO_TOP)/rules.mak
 
+#
+# Javascript extension for kdb
+#
 
 TARGETNAME := ntoskrnl
 
@@ -517,7 +526,7 @@ OBJECTS := \
 	$(OBJECTS_RESOURCE)
 
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a 
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a $(SDK_PATH_LIB)/rosrtl.a
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \

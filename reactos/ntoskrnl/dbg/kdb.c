@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.14 2003/12/25 14:06:15 chorns Exp $
+/* $Id: kdb.c,v 1.15 2004/01/10 21:06:38 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -35,6 +35,7 @@
 #include <limits.h>
 #include <internal/kd.h>
 #include "kdb.h"
+#include "kjs.h"
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -62,6 +63,8 @@ ULONG
 DbgAddrCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgXCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgScriptCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgThreadListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
@@ -95,9 +98,12 @@ struct
   {"sfiles", "sfiles", "Show files that print debug prints", DbgShowFilesCommand},
   {"efile", "efile <filename>", "Enable debug prints from file", DbgEnableFileCommand},
   {"dfile", "dfile <filename>", "Disable debug prints from file", DbgDisableFileCommand},
+  {"js", "js", "Script mode", DbgScriptCommand},
   {"help", "help", "Display help screen", DbgProcessHelpCommand},
   {NULL, NULL, NULL}
 };
+
+volatile DWORD x_dr0 = 0, x_dr1 = 0, x_dr2 = 0, x_dr3 = 0, x_dr7 = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -191,6 +197,7 @@ VOID
 KdbGetCommand(PCH Buffer)
 {
   CHAR Key;
+  PCH Orig = Buffer;
 
   for (;;)
     {
@@ -205,11 +212,22 @@ KdbGetCommand(PCH Buffer)
 	  *Buffer = 0;
 	  return;
 	}
+      else if (Key == '\x8')
+        {
+          if (Buffer > Orig)
+            {
+              Buffer--;
+              *Buffer = 0;
+              DbgPrint("%c %c", 8, 8);
+	    }
+        }
+      else
+        {
+          DbgPrint("%c", Key);
 
-      DbgPrint("%c", Key);
-
-      *Buffer = Key;
-      Buffer++;
+          *Buffer = Key;
+          Buffer++;
+        }
     }
 }
 
@@ -286,11 +304,7 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
   while (Frame != NULL && (ULONG)Frame >= StackLimit && 
 	 (ULONG)Frame < StackBase)
     {
-#if 0
-      DbgPrint("%.8x  ", Frame[1]);
-#else
       KdbPrintAddress((PVOID)Frame[1]);
-#endif
       Frame = (PULONG)Frame[0];
       i++;
     }
@@ -337,6 +351,215 @@ DbgXCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
       }
       DbgPrint( "%08x ", Addr[i] );
     }
+
+  return(1);
+}
+
+static int KjsReadRegValue( void *context,
+			    JSNode *result,
+			    JSNode *args ) {
+  PCHAR cp;
+  PVOID *context_list = context;
+  PKJS kjs = (PKJS)context_list[0];
+  JSVirtualMachine *vm = kjs->vm;
+  NTSTATUS Status;
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { 0 } };
+  UNICODE_STRING NameString;
+  UNICODE_STRING PathString;
+  UNICODE_STRING DefaultString;
+  UNICODE_STRING ValueResult;
+  ANSI_STRING AnsiResult;
+  
+  if (args->u.vinteger != 2 ||
+      args[1].type != JS_STRING || args[2].type != JS_STRING) {
+    return JS_PROPERTY_FOUND;
+  }
+
+  RtlInitUnicodeString(&PathString,NULL);
+  RtlInitUnicodeString(&NameString,NULL);
+  
+  cp = js_string_to_c_string (vm, &args[1]);
+  RtlCreateUnicodeStringFromAsciiz(&PathString,cp);
+  js_free(cp);
+  cp = js_string_to_c_string (vm, &args[2]);
+  RtlCreateUnicodeStringFromAsciiz(&NameString,cp);
+  js_free(cp);
+  
+  RtlInitUnicodeString(&ValueResult,NULL);
+  RtlInitUnicodeString(&DefaultString,L"");
+  RtlInitAnsiString(&AnsiResult,NULL);
+
+  QueryTable->EntryContext = 0;
+  QueryTable->Flags =
+    RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable->Name = NameString.Buffer;
+  QueryTable->DefaultType = REG_SZ;
+  QueryTable->DefaultData = &DefaultString;
+  QueryTable->EntryContext = &ValueResult;
+  Status = RtlQueryRegistryValues( RTL_REGISTRY_ABSOLUTE, 
+				   PathString.Buffer, 
+				   QueryTable, 
+				   NULL, 
+				   NULL );
+  
+  RtlFreeUnicodeString(&NameString);
+  RtlFreeUnicodeString(&PathString);
+  
+  if (NT_SUCCESS(Status)) {
+    RtlInitAnsiString(&AnsiResult,NULL);
+    RtlUnicodeStringToAnsiString(&AnsiResult,
+				 &ValueResult,
+				 TRUE);
+    js_vm_make_string (vm, result, AnsiResult.Buffer, 
+		       strlen(AnsiResult.Buffer));
+    RtlFreeAnsiString(&AnsiResult);
+  } else {
+    result->type = JS_INTEGER;
+    result->u.vinteger = Status;
+  }
+
+  return JS_PROPERTY_FOUND;
+}
+
+static int KjsGetRegister( void *context, 
+			   JSNode *result, 
+			   JSNode *args ) {
+  PVOID *context_list = context;
+  if( args->u.vinteger == 1 && args->type == JS_INTEGER ) {
+    DWORD Result = ((DWORD *)context_list[1])[args[1].u.vinteger];
+    result->type = JS_INTEGER;
+    result->u.vinteger = Result;
+  }
+
+  return JS_PROPERTY_FOUND;
+}
+
+static int KjsGetNthModule( void *context,
+			    JSNode *result,
+			    JSNode *args ) {
+  PVOID *context_list = context;
+  PKJS kjs = (PKJS)context_list[0];
+  JSVirtualMachine *vm = kjs->vm;
+  PLIST_ENTRY current_entry;
+  MODULE_TEXT_SECTION *current;
+  extern LIST_ENTRY ModuleTextListHead;
+  int n = 0;
+  
+  if (args->u.vinteger != 1 || args[1].type != JS_INTEGER) {
+    return JS_PROPERTY_FOUND;
+  }
+
+  current_entry = ModuleTextListHead.Flink;
+
+  while (current_entry != &ModuleTextListHead &&
+	 current_entry != NULL &&
+	 n <= args[1].u.vinteger) {
+    current = CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION,
+				ListEntry);    
+    current_entry = current_entry->Flink;
+    n++;
+  }
+
+  if (current_entry && current) {
+    ANSI_STRING NameStringNarrow;
+    UNICODE_STRING NameUnicodeString;
+
+    RtlInitUnicodeString( &NameUnicodeString, current->Name );
+    RtlUnicodeStringToAnsiString( &NameStringNarrow,
+				  &NameUnicodeString,
+				  TRUE );
+
+    js_vm_make_array (vm, result, 2);
+  
+    js_vm_make_string (vm, 
+		       &result->u.varray->data[0], 
+		       NameStringNarrow.Buffer,
+		       NameStringNarrow.Length);
+
+    RtlFreeAnsiString(&NameStringNarrow);
+
+    result->u.varray->data[1].type = JS_INTEGER;
+    result->u.varray->data[1].u.vinteger = (DWORD)current->Base;
+    result->type = JS_ARRAY;
+    return JS_PROPERTY_FOUND;
+  }
+  result->type = JS_UNDEFINED;
+  return JS_PROPERTY_FOUND;
+}
+
+static BOOL FindJSEndMark( PCHAR Buffer ) {
+  int i;
+
+  for( i = 0; Buffer[i] && Buffer[i+1]; i++ ) {
+    if( Buffer[i] == ';' && Buffer[i+1] == ';' ) return TRUE;
+  }
+  return FALSE;
+}
+
+ULONG
+DbgScriptCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
+{
+  PCHAR Buffer;
+  PCHAR BufferStart;
+  static void *interp = 0;
+  void *script_cmd_context[2];
+
+  if( !interp ) interp = kjs_create_interp(NULL);
+  if( !interp ) return 1;
+
+  BufferStart = Buffer = ExAllocatePool( NonPagedPool, 4096 );
+  if( !Buffer ) return 1;
+
+  script_cmd_context[0] = interp;
+  script_cmd_context[1] = &tf;
+  
+  kjs_system_register( interp, "regs", script_cmd_context,
+		       KjsGetRegister );
+  kjs_system_register( interp, "regread", script_cmd_context,
+		       KjsReadRegValue );
+  kjs_system_register( interp, "getmodule", script_cmd_context,
+		       KjsGetNthModule );
+
+  kjs_eval( interp,
+	    "eval("
+	    "System.regread("
+	    "'\\\\Registry\\\\Machine\\\\System\\\\"
+	    "CurrentControlSet\\\\Control\\\\Kdb',"
+	    "'kjsinit'));" );
+
+  DbgPrint("\nKernel Debugger Script Interface (JavaScript :-)\n");
+  DbgPrint("Terminate input with ;; and end scripting with .\n");
+  do
+    {
+      if( Buffer != BufferStart )
+	DbgPrint("..... ");
+      else
+	DbgPrint("kjs:> ");
+      KdbGetCommand( BufferStart );
+      if( BufferStart[0] == '.' ) {
+	if( BufferStart != Buffer ) {
+	  DbgPrint("Input Aborted.\n");
+	  BufferStart = Buffer;
+	} else {
+	  /* Single dot input -> exit */
+	  break;
+	}
+      } else {
+	if( FindJSEndMark( Buffer ) ) {
+	  kjs_eval( interp, Buffer );
+	  BufferStart = Buffer;
+	  DbgPrint("\n");
+	} else {
+	  BufferStart = BufferStart + strlen(BufferStart);
+	}
+      }
+    } while (TRUE);
+
+  ExFreePool( Buffer );
+
+  kjs_system_unregister( interp, script_cmd_context, KjsGetRegister );
+  kjs_system_unregister( interp, script_cmd_context, KjsReadRegValue );
+  kjs_system_unregister( interp, script_cmd_context, KjsGetNthModule );
 
   return(1);
 }
@@ -477,7 +700,7 @@ DbgCRegsCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 ULONG 
 DbgDRegsCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
-  DbgPrint("DR0 %.8x DR1 %.8x DR2 %.8x DR3 %.8x DR6 %.8x DR7 %.8x\n",
+  DbgPrint("Trap   : DR0 %.8x DR1 %.8x DR2 %.8x DR3 %.8x DR6 %.8x DR7 %.8x\n",
 	   Tf->Dr0, Tf->Dr1, Tf->Dr2, Tf->Dr3, Tf->Dr6, Tf->Dr7);
   return(1);
 }
@@ -683,6 +906,16 @@ DbgDisableFileCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
   return(1);
 }
 
+VOID
+KdbCreateThreadHook(PCONTEXT Context)
+{
+  Context->Dr0 = x_dr0;
+  Context->Dr1 = x_dr1;
+  Context->Dr2 = x_dr2;
+  Context->Dr3 = x_dr3;
+  Context->Dr7 = x_dr7;
+}
+
 ULONG
 KdbDoCommand(PCH CommandLine, PKTRAP_FRAME Tf)
 {
@@ -730,7 +963,6 @@ KdbMainLoop(PKTRAP_FRAME Tf)
       DbgPrint("\nkdb:> ");
 
       KdbGetCommand(Command);
-
       s = KdbDoCommand(Command, Tf);    
     } while (s != 0);
 }

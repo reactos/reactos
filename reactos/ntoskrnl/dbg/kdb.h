@@ -32,3 +32,10 @@ VOID
 KdbEnableProfiling();
 VOID
 KdbProfileInterrupt(ULONG_PTR Eip);
+
+struct KDB_BPINFO {
+    DWORD Addr;
+    DWORD Type;
+    DWORD Size;
+    DWORD Enabled;
+};
