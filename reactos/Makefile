@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.263 2004/11/30 19:19:48 jimtabor Exp $
+# $Id: Makefile,v 1.264 2004/11/30 20:21:33 weiden Exp $
 #
 # Global makefile
 #
@@ -53,7 +53,7 @@ DLLS_SHELLEXT = shellext
 # libpcap packet epsapi
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
-	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
+	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
 	riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
 	dnsapi \
