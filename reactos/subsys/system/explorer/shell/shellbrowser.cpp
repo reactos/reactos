@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@ LRESULT ShellBrowser::Init(HWND hWndFrame)
 
 	_hWndFrame = hWndFrame;
 
-	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
+	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORADDRESSBAR);
 
 	_root._drive_type = DRIVE_UNKNOWN;
 	lstrcpy(_root._volname, root_name);

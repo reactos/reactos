@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -135,6 +135,9 @@ struct ShellBrowser : public IShellBrowserImpl
 	void	UpdateFolderView(IShellFolder* folder);
 	HTREEITEM select_entry(HTREEITEM hitem, Entry* entry, bool expand=true);
 
+	 // for SDIMainFrame
+	void	jump_to(LPCITEMIDLIST pidl);
+
 protected:
 	HWND	_hwnd;
 	HWND	_left_hwnd;
@@ -158,9 +161,6 @@ protected:
 
 	void	InitializeTree(HIMAGELIST himl);
 	bool	InitDragDrop();
-
-	 // for SDIMainFrame
-	void	jump_to(LPCITEMIDLIST pidl);
 };
 
 

@@ -1898,7 +1898,7 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_DRIVES:
-		///@todo exclude removeable drives
+		///@todo exclude removable drives
 		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
 		break;
 

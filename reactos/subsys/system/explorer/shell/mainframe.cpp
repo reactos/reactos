@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1652,17 +1652,16 @@ void SDIMainFrame::jump_to(LPCTSTR path, int mode)
 
 void SDIMainFrame::jump_to(LPCITEMIDLIST path, int mode)
 {
-/*@@todo
 	if (_shellBrowser.get() && (_shellpath_info._open_mode&~OWM_PIDL)==(mode&~OWM_PIDL)) {
 		ShellPath shell_path = path;
 
 		_shellBrowser->jump_to(shell_path);
 
 		_shellpath_info._shell_path = shell_path;
-	} else */{
+	} else {
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = DesktopFolderPath();	//@@
+		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
 
 		update_shell_browser();
 	}
