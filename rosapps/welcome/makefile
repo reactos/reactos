@@ -25,9 +25,9 @@ welcome.exe: welcome.o welcome.coff
 		-lkernel32 -lgdi32 -luser32 -o welcome.exe
 
 clean:
-	$(RM) *.o
-	$(RM) *.coff
-	$(RM) *.exe
+	- $(RM) *.o
+	- $(RM) *.coff
+	- $(RM) *.exe
 
 include $(PATH_TO_TOP)/rules.mak
 
