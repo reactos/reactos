@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.8 2002/08/20 20:37:05 hyperion Exp $
+/* $Id: parallel.c,v 1.9 2003/09/20 20:12:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -145,9 +145,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
      }
 
    DeviceObject->Flags=0;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = Dispatch;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = Dispatch;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)Dispatch;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)Dispatch;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)Dispatch;
    DriverObject->DriverUnload = NULL;
    
    return(STATUS_SUCCESS);

@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.10 2002/09/08 10:22:05 chorns Exp $
+/* $Id: null.c,v 1.11 2003/09/20 20:12:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -105,12 +105,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  NTSTATUS nErrCode;
 
  /* register driver routines */
- DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_WRITE] = NullDispatch;
- DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
- /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch; */
- DriverObject->DriverUnload = NullUnload;
+ DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)NullDispatch;
+ /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = (PDRIVER_DISPATCH)NullDispatch; */
+ DriverObject->DriverUnload = (PDRIVER_UNLOAD)NullUnload;
 
  /* create null device */
  RtlInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Null");

@@ -1,4 +1,4 @@
-/* $Id: bootvid.c,v 1.2 2003/08/25 12:27:45 dwelch Exp $
+/* $Id: bootvid.c,v 1.3 2003/09/20 20:12:43 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -359,7 +359,7 @@ InbvInitVGAMode(VOID)
 }
 
 
-BOOLEAN
+BOOL
 STDCALL
 VidResetDisplay(VOID)
 {

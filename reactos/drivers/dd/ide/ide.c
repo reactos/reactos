@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.58 2003/07/21 21:53:46 royce Exp $
+/* $Id: ide.c,v 1.59 2003/09/20 20:12:43 weiden Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -242,13 +242,13 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
   /* Export other driver entry points... */
   DriverObject->DriverStartIo = IDEStartIo;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = IDEDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = IDEDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_READ] = IDEDispatchReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_WRITE] = IDEDispatchReadWrite;
-//  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = IDEDispatchQueryInformation;
-//  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = IDEDispatchSetInformation;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IDEDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)IDEDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)IDEDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)IDEDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)IDEDispatchReadWrite;
+//  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = (PDRIVER_DISPATCH)IDEDispatchQueryInformation;
+//  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = (PDRIVER_DISPATCH)IDEDispatchSetInformation;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)IDEDispatchDeviceControl;
 
   Status = IdeFindControllers(DriverObject);
   if (NT_SUCCESS(Status))

@@ -1,5 +1,8 @@
-floppy.coff
-*.sys
+*.tmp
+*.exp
+*.coff
+*.d
 *.o
 *.sym
+*.sys
 *.map

@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.15 2002/10/21 17:05:32 hbirr Exp $
+/* $Id: beep.c,v 1.16 2003/09/20 20:12:43 weiden Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -247,11 +247,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   DPRINT("Beep Device Driver 0.0.3\n");
 
   DriverObject->Flags = 0;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = BeepCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = BeepClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = BeepCleanup;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = BeepDeviceControl;
-  DriverObject->DriverUnload = BeepUnload;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)BeepCreate;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)BeepClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)BeepCleanup;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)BeepDeviceControl;
+  DriverObject->DriverUnload = (PDRIVER_UNLOAD)BeepUnload;
 
   Status = IoCreateDevice(DriverObject,
 			  sizeof(DEVICE_EXTENSION),

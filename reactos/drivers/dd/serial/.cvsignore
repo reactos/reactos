@@ -1,9 +1,8 @@
-base.tmp
-junk.tmp
-temp.exp
+*.tmp
+*.exp
+*.coff
+*.d
 *.o
-serial.coff
-serial.sys
-serial.sym
-serial.nostrip.sys
+*.sym
+*.sys
 *.map

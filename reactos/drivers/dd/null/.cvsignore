@@ -1,8 +1,8 @@
-base.tmp
-junk.tmp
-temp.exp
-null.coff
-*.sym
+*.tmp
+*.exp
+*.coff
+*.d
 *.o
+*.sym
 *.sys
 *.map

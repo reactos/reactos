@@ -1,7 +1,7 @@
-base.tmp
-junk.tmp
-temp.exp
-blue.coff
+*.tmp
+*.exp
+*.coff
+*.d
 *.o
 *.sym
 *.sys
