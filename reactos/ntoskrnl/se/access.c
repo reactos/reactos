@@ -26,6 +26,8 @@ RtlAreAllAccessesGranted (
 	ACCESS_MASK	DesiredAccess
 	)
 {
+	PAGED_CODE_RTL();
+
 	return ((GrantedAccess & DesiredAccess) == DesiredAccess);
 }
 
@@ -40,6 +42,8 @@ RtlAreAnyAccessesGranted (
 	ACCESS_MASK	DesiredAccess
 	)
 {
+	PAGED_CODE_RTL();
+
 	return ((GrantedAccess & DesiredAccess) != 0);
 }
 
@@ -54,6 +58,8 @@ RtlMapGenericMask (
 	PGENERIC_MAPPING	GenericMapping
 	)
 {
+	PAGED_CODE_RTL();
+
 	if (*AccessMask & GENERIC_READ)
 		*AccessMask |= GenericMapping->GenericRead;
 

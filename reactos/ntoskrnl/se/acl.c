@@ -225,6 +225,8 @@ SepCreateImpersonationTokenDacl(PTOKEN Token,
 {
   ULONG AclLength;
   PVOID TokenDacl;
+  
+  PAGED_CODE();
 
   AclLength = sizeof(ACL) +
 	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +

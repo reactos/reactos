@@ -40,37 +40,6 @@
 /* FUNCTIONS ****************************************************************/
 
 /*
-* @implemented
-*/
-NTSTATUS STDCALL
-RtlGetVersion(RTL_OSVERSIONINFOW *Info)
-{
-   WCHAR CSDString[] = L"Service Pack 6";
-
-   if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
-         Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
-   {
-      Info->dwMajorVersion = 4;
-      Info->dwMinorVersion = 0;
-      Info->dwBuildNumber = 1381;
-      Info->dwPlatformId = VER_PLATFORM_WIN32_NT;
-      RtlCopyMemory(Info->szCSDVersion, CSDString, sizeof(CSDString));
-      if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
-      {
-         RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)Info;
-         InfoEx->wServicePackMajor = 6;
-         InfoEx->wServicePackMinor = 0;
-         InfoEx->wSuiteMask = 0;
-         InfoEx->wProductType = VER_NT_WORKSTATION;
-      }
-
-      return STATUS_SUCCESS;
-   }
-
-   return STATUS_INVALID_PARAMETER;
-}
-
-/*
 * @unimplemented
 */
 /*
@@ -114,39 +83,37 @@ RtlVerifyVersionInfo(
 /*
  * @implemented
  */
-ULONGLONG NTAPI VerSetConditionMask
-(
- IN ULONGLONG dwlConditionMask,
- IN DWORD dwTypeBitMask,
- IN BYTE dwConditionMask
-)
+ULONGLONG NTAPI
+VerSetConditionMask(IN ULONGLONG dwlConditionMask,
+                    IN DWORD dwTypeBitMask,
+                    IN BYTE dwConditionMask)
 {
- if(dwTypeBitMask == 0)
+  if(dwTypeBitMask == 0)
+    return dwlConditionMask;
+
+  dwConditionMask &= VER_CONDITION_MASK;
+
+  if(dwConditionMask == 0)
+    return dwlConditionMask;
+
+  if(dwTypeBitMask & VER_PRODUCT_TYPE)
+    dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_SUITENAME)
+    dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_SERVICEPACKMAJOR)
+    dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_SERVICEPACKMINOR)
+    dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_PLATFORMID)
+    dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_BUILDNUMBER)
+    dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_MAJORVERSION)
+    dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+  else if(dwTypeBitMask & VER_MINORVERSION)
+    dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+
   return dwlConditionMask;
-
- dwConditionMask &= VER_CONDITION_MASK;
-
- if(dwConditionMask == 0)
-  return dwlConditionMask;
-
- if(dwTypeBitMask & VER_PRODUCT_TYPE)
-  dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_SUITENAME)
-  dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_SERVICEPACKMAJOR)
-  dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_SERVICEPACKMINOR)
-  dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_PLATFORMID)
-  dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_BUILDNUMBER)
-  dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_MAJORVERSION)
-  dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
- else if(dwTypeBitMask & VER_MINORVERSION)
-  dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
-
- return dwlConditionMask;
 }
 
 /* EOF */

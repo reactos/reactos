@@ -108,7 +108,9 @@ main(int argc, char* argv[])
         }
       else
         {
+          s = s + sprintf(s, "#ifndef %s\n", argv[i]);
           s = s + sprintf(s, "#define %s\n", argv[i]);
+          s = s + sprintf(s, "#endif /* %s */\n", argv[i]);
         }
       strcat(config, argv[i]);
       if (i != (argc - 1))

@@ -324,4 +324,47 @@ RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
    return(STATUS_SUCCESS);
 }
 
+
+/*
+* @implemented
+*/
+NTSTATUS STDCALL
+RtlGetVersion(RTL_OSVERSIONINFOW *Info)
+{
+   if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
+       Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+   {
+      PPEB Peb = NtCurrentPeb();
+      
+      Info->dwMajorVersion = Peb->OSMajorVersion;
+      Info->dwMinorVersion = Peb->OSMinorVersion;
+      Info->dwBuildNumber = Peb->OSBuildNumber;
+      Info->dwPlatformId = Peb->OSPlatformId;
+      if(((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
+      {
+        int i = _snwprintf(Info->szCSDVersion,
+                           (sizeof(Info->szCSDVersion) / sizeof(Info->szCSDVersion[0])) - 1,
+                           L"Service Pack %d",
+                           ((Peb->OSCSDVersion >> 8) & 0xFF));
+        Info->szCSDVersion[i] = L'\0';
+      }
+      else
+      {
+        RtlZeroMemory(Info->szCSDVersion, sizeof(Info->szCSDVersion));
+      }
+      if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+      {
+         RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)Info;
+         InfoEx->wServicePackMajor = (Peb->OSCSDVersion >> 8) & 0xFF;
+         InfoEx->wServicePackMinor = Peb->OSCSDVersion & 0xFF;
+         InfoEx->wSuiteMask = SharedUserData->SuiteMask;
+         InfoEx->wProductType = SharedUserData->NtProductType;
+      }
+
+      return STATUS_SUCCESS;
+   }
+
+   return STATUS_INVALID_PARAMETER;
+}
+
 /* EOF */

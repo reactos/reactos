@@ -14,6 +14,12 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#ifdef DBG
+extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
+#define PAGED_CODE_RTL() CHECK_PAGED_CODE_RTL(__FILE__, __LINE__)
+#else
+#define PAGED_CODE_RTL()
+#endif
 
 #ifndef __USE_W32API
 

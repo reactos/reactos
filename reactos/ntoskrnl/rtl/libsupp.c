@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -108,5 +108,18 @@ RtlInitializeCriticalSectionAndSpinCount(
     ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
     return STATUS_SUCCESS;
 }
+
+
+#ifdef DBG
+VOID FASTCALL
+CHECK_PAGED_CODE_RTL(char *file, int line)
+{
+  if(KeGetCurrentIrql() > APC_LEVEL)
+  {
+    DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n", file, line, KeGetCurrentIrql());
+    KEBUGCHECK(0);
+  }
+}
+#endif
 
 /* EOF */

@@ -54,6 +54,10 @@ else
 TARGET_BASE = 0x80000000
 endif
 
+ifneq ($(DBG), 0)
+TARGET_CFLAGS += -DDBG
+endif
+
 # enable thread event pair features (NT4 only!)
 # TARGET_CFLAGS += -D_ENABLE_THRDEVTPAIR
 
