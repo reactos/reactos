@@ -1,5 +1,9 @@
 2003-08-30  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/rmkdir.c: Fix for absolute paths.
+
+2003-08-30  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/rmkdir.c: Create all (sub)directories in path on win32.
 
 2003-08-30  Casper S. Hornstrup  <chorns@users.sourceforge.net>

@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
    FILE* out;
    char* csec;
    int is_abs_path;
+   char buf[256];
    
    if (argc != 2)
      {
@@ -89,7 +90,8 @@ int main(int argc, char* argv[])
    if (isalpha(path1[0]) && path1[1] == ':' && path1[2] == DIR_SEPARATOR_CHAR)
      {
 	csec = strtok(path1, DIR_SEPARATOR_STRING);
-	chdir(csec);
+  sprintf(buf, "%s\\", csec);
+	chdir(buf);
 	csec = strtok(NULL, DIR_SEPARATOR_STRING);
      }
    else if (path1[0] == DIR_SEPARATOR_CHAR)
