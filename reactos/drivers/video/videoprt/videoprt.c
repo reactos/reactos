@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.15 2004/03/08 20:54:10 navaraf Exp $
+ * $Id: videoprt.c,v 1.16 2004/03/09 14:16:39 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -1619,10 +1619,10 @@ VideoPortGetDmaAdapter ( IN PVOID HwDeviceExtension,
   
   DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
   DeviceDescription.Master = TRUE /* ?? */;
-  DeviceDescription.ScatterGather = TRUE /* ?? */;
+  DeviceDescription.ScatterGather = VpDeviceExtension->ScatterGather;
   DeviceDescription.DemandMode = FALSE /* ?? */;
   DeviceDescription.AutoInitialize = FALSE /* ?? */;
-  DeviceDescription.Dma32BitAddresses = TRUE /* ?? */;
+  DeviceDescription.Dma32BitAddresses = VpDeviceExtension->Dma32BitAddresses;
   DeviceDescription.IgnoreCount = FALSE /* ?? */;
   DeviceDescription.Reserved1 = FALSE;
   DeviceDescription.BusNumber = DeviceExtension->SystemIoBusNumber;
@@ -1630,7 +1630,7 @@ VideoPortGetDmaAdapter ( IN PVOID HwDeviceExtension,
   DeviceDescription.InterfaceType = DeviceExtension->AdapterInterfaceType;
   DeviceDescription.DmaWidth = Width8Bits;
   DeviceDescription.DmaSpeed = Compatible;
-  DeviceDescription.MaximumLength = 65536 /* ?? */;
+  DeviceDescription.MaximumLength = VpDeviceExtension->MaximumLength;
   DeviceDescription.DmaPort = 0;
 
   Adapter = 
