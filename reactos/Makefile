@@ -8,6 +8,8 @@
 #HOST = mingw32-linux
 #HOST = mingw32-windows
 
+PATH_TO_TOP = .
+
 include rules.mak
 
 #
@@ -37,7 +39,7 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 
 INPUT_DRIVERS = keyboard
 
-FS_DRIVERS = vfat minix
+FS_DRIVERS = vfat 
 # FS_DRIVERS = minix ext2 template
 
 # ndis tdi tcpip tditest wshtcpip
