@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.12 2004/12/13 18:30:08 hbirr Exp $
+/* $Id$
  *
  * dllmain.c
  *
@@ -56,7 +56,7 @@ int BlockEnvToEnvironA(void)
          count++;
    }
 
-   _environ = malloc(count * sizeof(char*));
+   __initenv = _environ = malloc(count * sizeof(char*));
    if (_environ)
    {
       for (ptr = environment_strings, envptr = _environ; count > 1; ptr += len)
@@ -71,6 +71,7 @@ int BlockEnvToEnvironA(void)
                   free(*envptr);
                FreeEnvironmentStringsA(environment_strings);
                free(_environ);
+	       __initenv = _environ = NULL;
                return -1;
             }
             memcpy(*envptr++, ptr, len);
@@ -106,7 +107,7 @@ int BlockEnvToEnvironW(void)
          count++;
    }
 
-   _wenviron = malloc(count * sizeof(wchar_t*));
+   __winitenv = _wenviron = malloc(count * sizeof(wchar_t*));
    if (_wenviron)
    {
       for (ptr = environment_strings, envptr = _wenviron; count > 1; ptr += len)
@@ -121,6 +122,7 @@ int BlockEnvToEnvironW(void)
                   free(*envptr);
                FreeEnvironmentStringsW(environment_strings);
                free(_wenviron);
+	       __winitenv = _wenviron = NULL;
                return -1;
             }
             memcpy(*envptr++, ptr, len * sizeof(wchar_t));
