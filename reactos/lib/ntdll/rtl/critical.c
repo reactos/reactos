@@ -16,7 +16,7 @@
 #include <ntdll/rtl.h>
 #include <ntos/synch.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -146,6 +146,7 @@ RtlEnterCriticalSection(
         }
         
         /* We don't own it, so we must wait for it */
+        DPRINT ("Waiting\n");
         RtlpWaitForCriticalSection(CriticalSection);
     }
     
@@ -486,14 +487,16 @@ RtlpCreateCriticalSectionSem(
     /* Chevk if we have an event */
     if (!hEvent) {
         
+        DPRINT ("Creating Event\n");
         /* No, so create it */
-        if (NT_SUCCESS(Status = NtCreateEvent(hNewEvent,
-                                              EVENT_ALL_ACCESS,
-                                              NULL,
-                                              SynchronizationEvent,
-                                              FALSE))) {
+        if (!NT_SUCCESS(Status = NtCreateEvent(&hNewEvent,
+                                               EVENT_ALL_ACCESS,
+                                               NULL,
+                                               SynchronizationEvent,
+                                               FALSE))) {
                 
                 /* We failed, this is bad... */
+                DPRINT1("Failed to Create Event!\n");
                 InterlockedDecrement(&CriticalSection->LockCount);
                 RtlRaiseStatus(Status);
                 return;
@@ -508,11 +511,13 @@ RtlpCreateCriticalSectionSem(
         } else {
         
             /* Some just created an event */
+            DPRINT("Closing already created event!\n");
             NtClose(hNewEvent);
         }
         
         /* Set either the new or the old */
         CriticalSection->LockSemaphore = hEvent;
+        DPRINT("Event set!\n");
     }
     
     return;

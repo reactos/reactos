@@ -99,7 +99,6 @@ typedef struct _CRITICAL_SECTION_DEBUG
   LIST_ENTRY ProcessLocksList;
   ULONG EntryCount;
   ULONG ContentionCount;
-  PVOID OwnerBackTrace[2];
   PVOID Spare[2];
 } CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
 
