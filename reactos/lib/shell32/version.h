@@ -1,7 +1,7 @@
 /*
- *	version information for shell32.dll
+ * Shared Resource/DllGetVersion version information
  *
- * Copyright (C) 2003 John K. Hohm
+ * Copyright (C) 2004 Robert Shearman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,10 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "version.h"
+#define WINE_FILEVERSION_MAJOR         4
+#define WINE_FILEVERSION_MINOR        72
+#define WINE_FILEVERSION_BUILD      3110
+#define WINE_FILEVERSION_PLATFORMID    1
 
-#define WINE_OLESELFREGISTER
-#define WINE_FILEVERSION WINE_FILEVERSION_MAJOR,WINE_FILEVERSION_MINOR,WINE_FILEVERSION_BUILD,WINE_FILEVERSION_PLATFORMID
-#define WINE_FILENAME_STR "shell32.dll"
-
-#include <wine/wine_common_ver.rc>
+/* FIXME: when libs/wpp gets fixed to support concatenation we can remove
+ * this and define it in version.rc */
+#define WINE_FILEVERSION "4.72.3110.1"

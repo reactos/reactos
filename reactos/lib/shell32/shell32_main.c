@@ -41,6 +41,7 @@
 #include "undocshell.h"
 #include "pidl.h"
 #include "shell32_main.h"
+#include "version.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -897,16 +898,19 @@ HRESULT WINAPI SHELL32_DllGetVersion (DLLVERSIONINFO *pdvi)
     if (pdvi->cbSize == sizeof(DLLVERSIONINFO) ||
      pdvi->cbSize == sizeof(DLLVERSIONINFO2))
     {
-        pdvi->dwMajorVersion = 4;
-        pdvi->dwMinorVersion = 72;
-        pdvi->dwBuildNumber = 3110;
-        pdvi->dwPlatformID = DLLVER_PLATFORM_WINDOWS;
+        pdvi->dwMajorVersion = WINE_FILEVERSION_MAJOR;
+        pdvi->dwMinorVersion = WINE_FILEVERSION_MINOR;
+        pdvi->dwBuildNumber = WINE_FILEVERSION_BUILD;
+        pdvi->dwPlatformID = WINE_FILEVERSION_PLATFORMID;
         if (pdvi->cbSize == sizeof(DLLVERSIONINFO2))
         {
             DLLVERSIONINFO2 *pdvi2 = (DLLVERSIONINFO2 *)pdvi;
 
             pdvi2->dwFlags = 0;
-            pdvi2->ullVersion = MAKEDLLVERULL(4, 72, 3110, 0);
+            pdvi2->ullVersion = MAKEDLLVERULL(WINE_FILEVERSION_MAJOR,
+                                              WINE_FILEVERSION_MINOR,
+                                              WINE_FILEVERSION_BUILD,
+                                              WINE_FILEVERSION_PLATFORMID);
         }
         TRACE("%lu.%lu.%lu.%lu\n",
            pdvi->dwMajorVersion, pdvi->dwMinorVersion,
