@@ -1,9 +1,9 @@
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 TARGET_TYPE = driver
 
 TARGET_NAME = pice
-TARGET_CFLAGS := -g -I../../../ntoskrnl/include  -I../../../ntoskrnl/include -DDEBUG
+TARGET_CFLAGS := -g -I../../../../ntoskrnl/include  -DDEBUG
 TARGET_SDK_LIBS :=
 
 TARGET_OBJECTS = \

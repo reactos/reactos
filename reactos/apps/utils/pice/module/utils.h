@@ -29,7 +29,7 @@ Copyright notice:
 
 --*/
 #include <stdarg.h>
-#include "../../../ntoskrnl/include/internal/ps.h"
+#include "../../../../ntoskrnl/include/internal/ps.h"
 #define __STR(x) #x
 #define STR(x) __STR(x)
 
@@ -56,7 +56,7 @@ typedef struct tagKEYBOARD_LAYOUT
 } KEYBOARD_LAYOUT, *PKEYBOARD_LAYOUT;
 
 extern PKEYBOARD_LAYOUT CurrentKeyboard;
- 
+
 typedef struct _FRAME
 {
     ULONG error_code;

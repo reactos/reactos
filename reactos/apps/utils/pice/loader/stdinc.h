@@ -18,7 +18,7 @@
 //#include <unistd.h>
 //#include <linux/unistd.h>
 
-#include "../../../include/pe.h"
+#include "../../../../include/pe.h"
 #include "stab_gnu.h"
 //#include "retypes.h"
 //#include "terminal.h"
