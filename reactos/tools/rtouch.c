@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         }
     }
 
-  close(file);
+  fclose(file);
 
 #ifdef WIN32
   now = time();
