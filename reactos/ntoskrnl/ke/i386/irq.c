@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.41 2004/03/09 21:49:53 dwelch Exp $
+/* $Id: irq.c,v 1.42 2004/04/14 23:32:38 jimtabor Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -520,6 +520,11 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    Ke386DisableInterrupts();
 
    HalEndSystemInterrupt (old_level, 0);
+
+   if (old_level==PASSIVE_LEVEL)
+     {
+       KiUpdateProcessThreadTime();
+     }
 
    if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
      {

@@ -32,9 +32,9 @@
 
 #ifndef __ASM__
 extern LARGE_INTEGER SystemBootTime;
-extern ULONG KiKernelTime;
-extern ULONG KiUserTime;
-extern ULONG KiDpcTime;
+extern volatile ULONG KiKernelTime;
+extern volatile ULONG KiUserTime;
+extern volatile ULONG KiDpcTime;
 #endif
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
@@ -135,6 +135,9 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
+
+VOID
+KiUpdateProcessThreadTime(VOID);
 
 #endif /* not __ASM__ */
 

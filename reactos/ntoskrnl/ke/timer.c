@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.69 2004/04/14 17:14:45 jimtabor Exp $
+/* $Id: timer.c,v 1.70 2004/04/14 23:32:37 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -38,9 +38,9 @@ LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
 LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
-ULONG KiKernelTime;
-ULONG KiUserTime;
-ULONG KiDpcTime;
+volatile ULONG KiKernelTime;
+volatile ULONG KiUserTime;
+volatile ULONG KiDpcTime;
 
 /*
  * Number of timer interrupts since initialisation
@@ -600,10 +600,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
  */
 {
    LARGE_INTEGER Time;
-/*
-   PKTHREAD CurrentThread;
-   PKPROCESS CurrentProcess;
- */  
+
    assert(KeGetCurrentIrql() == PROFILE_LEVEL);
 
    KiRawTicks++;
@@ -634,24 +631,6 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
 
-/*
-   CurrentThread = KeGetCurrentThread();
-   CurrentProcess = KeGetCurrentProcess();
-
-   if (CurrentThread->PreviousMode == UserMode)
-     {
-   	++CurrentThread->UserTime;
-   	++CurrentProcess->UserTime;
-   	++KiUserTime;
-     }
-   if (CurrentThread->PreviousMode == KernelMode)
-     {
-   	++CurrentProcess->KernelTime;
-   	++CurrentThread->KernelTime;
-   	++KiKernelTime;
-     }
- */
- 
    KiReleaseSpinLock(&TimerValueLock);
 
    /*
@@ -694,3 +673,31 @@ KeInitializeTimerImpl(VOID)
    TimerInitDone = TRUE;
    DPRINT("Finished KeInitializeTimerImpl()\n");
 }
+
+
+VOID
+KiUpdateProcessThreadTime(VOID)
+{
+   PKTHREAD CurrentThread;
+   PKPROCESS CurrentProcess;
+
+   assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+   CurrentThread = KeGetCurrentThread();
+   CurrentProcess = KeGetCurrentProcess();
+
+  DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
+
+   if (CurrentThread->PreviousMode == UserMode)
+    {
+       ++CurrentThread->UserTime;
+       ++CurrentProcess->UserTime;
+       ++KiUserTime;
+    }
+   if (CurrentThread->PreviousMode == KernelMode)
+     {
+       ++CurrentProcess->KernelTime;
+       ++CurrentThread->KernelTime;
+       ++KiKernelTime;
+     }
+} 
