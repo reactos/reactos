@@ -178,6 +178,41 @@ SerialGetPerfStats(IN PIRP pIrp)
 	return TRUE;
 }
 
+NTSTATUS
+SerialGetCommProp(
+	OUT PSERIAL_COMMPROP pCommProp,
+	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
+{
+	RtlZeroMemory(pCommProp, sizeof(SERIAL_COMMPROP));
+	
+	pCommProp->PacketLength = sizeof(SERIAL_COMMPROP);
+	pCommProp->PacketVersion = 2;
+	pCommProp->ServiceMask = SERIAL_SP_SERIALCOMM;
+	pCommProp->MaxTxQueue = pCommProp->CurrentTxQueue = DeviceExtension->OutputBuffer.Length - 1;
+	pCommProp->MaxRxQueue = pCommProp->CurrentRxQueue = DeviceExtension->InputBuffer.Length - 1;
+	pCommProp->MaxBaud = SERIAL_BAUD_115200;
+	pCommProp->ProvSubType = 1; // PST_RS232;
+	/* FIXME: ProvCapabilities may be related to Uart type */
+	pCommProp->ProvCapabilities = SERIAL_PCF_DTRDSR | SERIAL_PCF_INTTIMEOUTS | SERIAL_PCF_PARITY_CHECK
+		| SERIAL_PCF_RTSCTS | SERIAL_PCF_SETXCHAR | SERIAL_PCF_SPECIALCHARS | SERIAL_PCF_TOTALTIMEOUTS
+		| SERIAL_PCF_XONXOFF;
+	/* FIXME: SettableParams may be related to Uart type */
+	pCommProp->SettableParams = SERIAL_SP_BAUD | SERIAL_SP_DATABITS | SERIAL_SP_HANDSHAKING
+		| SERIAL_SP_PARITY | SERIAL_SP_PARITY_CHECK | SERIAL_SP_STOPBITS;
+	/* FIXME: SettableBaud may be related to Uart type */
+	pCommProp->SettableBaud = SERIAL_BAUD_075 | SERIAL_BAUD_110 | SERIAL_BAUD_134_5
+		| SERIAL_BAUD_150 | SERIAL_BAUD_300 | SERIAL_BAUD_600 | SERIAL_BAUD_1200
+		| SERIAL_BAUD_1800 | SERIAL_BAUD_2400 | SERIAL_BAUD_4800 | SERIAL_BAUD_7200
+		| SERIAL_BAUD_9600 | SERIAL_BAUD_14400 | SERIAL_BAUD_19200 | SERIAL_BAUD_38400
+		| SERIAL_BAUD_56K | SERIAL_BAUD_57600 | SERIAL_BAUD_115200 | SERIAL_BAUD_128K
+		| SERIAL_BAUD_USER;
+	pCommProp->SettableData = SERIAL_DATABITS_5 | SERIAL_DATABITS_6 | SERIAL_DATABITS_7 | SERIAL_DATABITS_8;
+	pCommProp->SettableStopParity = SERIAL_STOPBITS_10 | SERIAL_STOPBITS_15 | SERIAL_STOPBITS_20
+		| SERIAL_PARITY_NONE | SERIAL_PARITY_ODD | SERIAL_PARITY_EVEN | SERIAL_PARITY_MARK | SERIAL_PARITY_SPACE;
+	
+	return STATUS_SUCCESS;
+}
+
 NTSTATUS STDCALL
 SerialDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -349,9 +384,22 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_GET_PROPERTIES:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_GET_PROPERTIES not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			DPRINT("Serial: IOCTL_SERIAL_GET_PROPERTIES\n");
+			if (LengthOut < sizeof(SERIAL_COMMPROP))
+			{
+				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
+				Status = STATUS_BUFFER_TOO_SMALL;
+			}
+			else if (Buffer == NULL)
+			{
+				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
+				Status = STATUS_INVALID_PARAMETER;
+			}
+			else
+			{
+				Status = SerialGetCommProp((PSERIAL_COMMPROP)Buffer, DeviceExtension);
+				Information = sizeof(SERIAL_COMMPROP);
+			}
 			break;
 		}
 		case IOCTL_SERIAL_GET_STATS:
