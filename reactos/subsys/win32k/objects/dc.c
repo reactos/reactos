@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.79 2003/09/10 21:06:26 fireball Exp $
+/* $Id: dc.c,v 1.80 2003/09/10 23:16:13 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -37,6 +37,7 @@
 #include <win32k/print.h>
 #include <win32k/region.h>
 #include <win32k/gdiobj.h>
+#include <win32k/paint.h>
 #include <win32k/pen.h>
 #include <win32k/text.h>
 #include "../eng/clip.h"
@@ -124,20 +125,25 @@ NtGdiCancelDC(HDC  hDC)
 HDC STDCALL
 NtGdiCreateCompatableDC(HDC  hDC)
 {
-  PDC  NewDC, OrigDC = NULL;
+  PDC  NewDC, OrigDC;
   HBITMAP  hBitmap;
   HDC hNewDC;
   HRGN hVisRgn;
   BITMAPOBJ *pb;
 
-  OrigDC = DC_LockDc(hDC);
-  if (OrigDC == NULL)
+  if (hDC == NULL)
   {
+    OrigDC = NULL;
     hNewDC = DC_AllocDC(L"DISPLAY");
   }
   else
   {
     /*  Allocate a new DC based on the original DC's device  */
+    OrigDC = DC_LockDc(hDC);
+    if (NULL == OrigDC)
+    {
+      return NULL;
+    }
     hNewDC = DC_AllocDC(OrigDC->DriverName);
   }
 
@@ -213,8 +219,13 @@ NtGdiCreateCompatableDC(HDC  hDC)
     NewDC->w.hPalette = OrigDC->w.hPalette;
     NewDC->w.textColor = OrigDC->w.textColor;
     NewDC->w.textAlign = OrigDC->w.textAlign;
+    NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
+    NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
   }
-  DC_UnlockDc( hDC );
+  if (NULL != hDC)
+  {
+    DC_UnlockDc( hDC );
+  }
   DC_UnlockDc( hNewDC );
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
@@ -491,6 +502,8 @@ NtGdiCreateDC(LPCWSTR  Driver,
   DC_InitDC(hNewDC);
   NtGdiSetTextColor(hNewDC, RGB(0, 0, 0));
   NtGdiSetTextAlign(hNewDC, TA_TOP);
+  NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
+  NtGdiSetBkMode(hNewDC, OPAQUE);
 
   return hNewDC;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.50 2003/08/31 13:24:38 gvg Exp $ */
+/* $Id: text.c,v 1.51 2003/09/10 23:16:13 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -210,8 +210,8 @@ NtGdiAddFontResource(LPCWSTR  Filename)
   FontGDI->face = face;
 
   // FIXME: Complete text metrics
-  FontGDI->TextMetric.tmAscent = face->size->metrics.ascender; // units above baseline
-  FontGDI->TextMetric.tmDescent = face->size->metrics.descender; // units below baseline
+  FontGDI->TextMetric.tmAscent = (face->size->metrics.ascender + 32) / 64; // units above baseline
+  FontGDI->TextMetric.tmDescent = (- face->size->metrics.descender + 32) / 64; // units below baseline
   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
 
   DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
@@ -933,9 +933,8 @@ NtGdiGetTextMetrics(HDC hDC,
 	  {
 	  memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
   	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) / 64; // units above baseline
-	  SafeTm.tmDescent = (Face->size->metrics.descender + 32) / 64; // units below baseline
-	  SafeTm.tmHeight = (Face->size->metrics.ascender +
-	                     Face->size->metrics.descender + 32) / 64;
+	  SafeTm.tmDescent = (- Face->size->metrics.descender + 32) / 64; // units below baseline
+	  SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
 	  Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
 	  }
       }
@@ -1038,12 +1037,14 @@ NtGdiTextOut(HDC  hDC,
   int error, glyph_index, n, i;
   FT_Face face;
   FT_GlyphSlot glyph;
-  ULONG TextLeft, TextTop, pitch, previous;
+  ULONG TextLeft, TextTop, pitch, previous, BackgroundLeft;
   FT_Bool use_kerning;
   RECTL DestRect, MaskRect;
   POINTL SourcePoint, BrushOrigin;
-  HBRUSH hBrush = NULL;
-  PBRUSHOBJ Brush = NULL;
+  HBRUSH hBrushFg = NULL;
+  PBRUSHOBJ BrushFg = NULL;
+  HBRUSH hBrushBg = NULL;
+  PBRUSHOBJ BrushBg = NULL;
   HBITMAP HSourceGlyph;
   PSURFOBJ SourceGlyphSurf;
   SIZEL bitSize;
@@ -1064,6 +1065,7 @@ NtGdiTextOut(HDC  hDC,
   YStart += dc->w.DCOrgY;
   TextLeft = XStart;
   TextTop = YStart;
+  BackgroundLeft = XStart;
 
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
 
@@ -1104,13 +1106,18 @@ NtGdiTextOut(HDC  hDC,
 	goto fail;
   }
 
-  // Create the brush
+  // Create the brushes
   PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
   Mode = PalDestGDI->Mode;
   PALETTE_UnlockPalette(dc->w.hPalette);
   XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
-  hBrush = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
-  Brush = BRUSHOBJ_LockBrush(hBrush);
+  hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
+  BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
+  if (OPAQUE == dc->w.backgroundMode)
+    {
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
+      BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+    }
   EngDeleteXlate(XlateObj);
 
   SourcePoint.x = 0;
@@ -1165,11 +1172,32 @@ NtGdiTextOut(HDC  hDC,
       pitch = glyph->bitmap.width;
     }
 
+    if (OPAQUE == dc->w.backgroundMode)
+      {
+	DestRect.left = BackgroundLeft;
+	DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
+	DestRect.top = TextTop + yoff - (face->size->metrics.ascender + 32) / 64;
+	DestRect.bottom = TextTop + yoff + (- face->size->metrics.descender + 32) / 64;
+	IntEngBitBlt(SurfObj,
+	             NULL,
+		     NULL,
+	             dc->CombinedClip,
+	             NULL,
+	             &DestRect,
+	             &SourcePoint,
+	             &SourcePoint,
+	             BrushBg,
+	             &BrushOrigin,
+		     PATCOPY);
+	BackgroundLeft = DestRect.right;
+      }
+
     DestRect.left = TextLeft;
-    DestRect.top = TextTop + yoff - glyph->bitmap_top;
     DestRect.right = TextLeft + glyph->bitmap.width;
+    DestRect.top = TextTop + yoff - glyph->bitmap_top;
     DestRect.bottom = DestRect.top + glyph->bitmap.rows;
-    bitSize.cx = pitch;
+	
+    bitSize.cx = glyph->bitmap.width;
     bitSize.cy = glyph->bitmap.rows;
     MaskRect.right = glyph->bitmap.width;
     MaskRect.bottom = glyph->bitmap.rows;
@@ -1190,29 +1218,40 @@ NtGdiTextOut(HDC  hDC,
 		&DestRect,
 		&SourcePoint,
 		(PPOINTL)&MaskRect,
-		Brush,
+		BrushFg,
 		&BrushOrigin,
 		0xAACC );
 
     EngDeleteSurface(HSourceGlyph);
 
-    TextLeft += glyph->advance.x >> 6;
+    TextLeft += (glyph->advance.x + 32) / 64;
     previous = glyph_index;
 
     String++;
   }
-  TEXTOBJ_UnlockText( dc->w.hFont );
-  BRUSHOBJ_UnlockBrush(hBrush);
-  NtGdiDeleteObject( hBrush );
-  DC_UnlockDc( hDC );
+  TEXTOBJ_UnlockText(dc->w.hFont);
+  if (NULL != hBrushBg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushBg);
+      NtGdiDeleteObject(hBrushBg);
+    }
+  BRUSHOBJ_UnlockBrush(hBrushFg);
+  NtGdiDeleteObject(hBrushFg);
+  DC_UnlockDc(hDC);
   return TRUE;
 
 fail:
   TEXTOBJ_UnlockText( dc->w.hFont );
-  if( hBrush ){
-    BRUSHOBJ_UnlockBrush(hBrush);
-    NtGdiDeleteObject( hBrush );
-  }
+  if (NULL != hBrushBg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushBg);
+      NtGdiDeleteObject(hBrushBg);
+    }
+  if (NULL != hBrushFg)
+    {
+      BRUSHOBJ_UnlockBrush(hBrushFg);
+      NtGdiDeleteObject(hBrushFg);
+    }
   DC_UnlockDc( hDC );
   return FALSE;
 }
