@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.29 2002/03/01 00:47:40 ekohl Exp $
+/* $Id: namespc.c,v 1.30 2002/03/06 12:40:47 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -413,28 +413,13 @@ NTSTATUS
 ObpCreateTypeObject(POBJECT_TYPE ObjectType)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR NameString[80];
+  WCHAR NameString[120];
   PTYPE_OBJECT TypeObject = NULL;
   UNICODE_STRING Name;
-  HANDLE TypesDir;
   NTSTATUS Status;
 
-  RtlInitUnicodeString(&Name,
-		       L"\\ObjectTypes");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     0,
-			     NULL,
-			     NULL);
-  
-  Status = NtOpenDirectoryObject(&TypesDir,
-				 STANDARD_RIGHTS_REQUIRED,
-				 &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
   DPRINT("ObjectType: %wZ\n", &ObjectType->TypeName);
-  wcscpy(NameString, L"\\");
+  wcscpy(NameString, L"\\ObjectTypes\\");
   wcscat(NameString, ObjectType->TypeName.Buffer);
   RtlInitUnicodeString(&Name,
 		       NameString);
@@ -442,7 +427,7 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
 			     OBJ_PERMANENT,
-			     TypesDir,
+			     NULL,
 			     NULL);
   Status = ObCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
@@ -453,8 +438,6 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
     {
       TypeObject->ObjectType = ObjectType;
     }
-
-  NtClose(TypesDir);
 
   return(STATUS_SUCCESS);
 }
