@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.198 2004/03/09 21:21:39 dwelch Exp $
+/* $Id: window.c,v 1.199 2004/03/13 23:12:19 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -533,7 +533,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
     
     for(pWnd = List; *pWnd; pWnd++)
     {
-      IntDestroyWindow(*pWnd, Win32Process, Win32Thread, FALSE);
+      NtUserDestroyWindow((*pWnd)->Self);
       IntReleaseWindowObject(*pWnd);
     }
     ExFreePool(List);
@@ -1867,9 +1867,6 @@ NtUserDestroyWindow(HWND Wnd)
       IntReleaseWindowObject(Window);
       return TRUE;
     }
-
-  /* Unlink now so we won't bother with the children later on */
-  IntUnlinkWindow(Window);
 
   /* Destroy the window storage */
   IntDestroyWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);
