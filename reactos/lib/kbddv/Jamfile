@@ -1,0 +1,15 @@
+SubDir ROS_TOP lib kbddv ;
+
+# This stuff should actually be moved to Jamrules
+# in order to more easily support other compilers
+CCFLAGS += -Wall -fno-builtin ;
+
+# NOTE - I'm no Jam expert, yet. This stuff should be
+# abstracted into the Jamrules file.
+LINKFLAGS = -nostartfiles -nostdlib -shared ;
+LINKFLAGS += -Wl,--image-base,0x77F00000 -lgcc ;
+
+SRCS = kbddv
+
+SharedLibrary kbddv : $(SRCS) ;
+LINKLIBS = ;
