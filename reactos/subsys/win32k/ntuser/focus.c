@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.9.2.1 2004/01/15 20:54:56 gvg Exp $
+ * $Id: focus.c,v 1.9.2.2 2004/01/16 13:22:57 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -404,7 +404,7 @@ NtUserSetFocus(HWND hWnd)
          return 0;
       }
 
-      hWndTop = NtUserGetAncestor(hWnd, GA_ROOTOWNER);
+      hWndTop = NtUserGetAncestor(hWnd, GA_ROOT);
       if (hWndTop != NtUserGetActiveWindow())
       {
          NtUserSetActiveWindow(hWndTop);
