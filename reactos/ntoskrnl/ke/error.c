@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,10 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
+
+BOOLEAN ExReadyForErrors = FALSE;
+PEPORT ExpDefaultErrorPort = NULL;
+PEPROCESS ExpDefaultErrorPortProcess = NULL;
 
 /*
  * @unimplemented
@@ -54,8 +58,41 @@ NtRaiseHardError(IN NTSTATUS Status,
 NTSTATUS STDCALL 
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                             PreviousMode))
+  {
+    DPRINT1("NtSetDefaultHardErrorPort: Caller requires the SeTcbPrivilege privilege!\n");
+    return STATUS_PRIVILEGE_NOT_HELD;
+  }
+  
+  /* serialization shouldn't be required here as it usually is just called once
+     during startup */
+  
+  if(!ExReadyForErrors)
+  {
+    Status = ObReferenceObjectByHandle(PortHandle,
+                                       0,
+                                       LpcPortObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&ExpDefaultErrorPort,
+                                       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      ExpDefaultErrorPortProcess = PsGetCurrentProcess();
+      ExReadyForErrors = TRUE;
+    }
+  }
+  else
+  {
+    Status = STATUS_UNSUCCESSFUL;
+  }
+  
+  return Status;
 }
 
 /* EOF */

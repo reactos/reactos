@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -517,13 +517,16 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 
 	PKAPC Apc;
 	PETHREAD Thread;
+	KPROCESSOR_MODE PreviousMode;
 	NTSTATUS Status;
+	
+	PreviousMode = ExGetPreviousMode();
 
 	/* Get ETHREAD from Handle */
 	Status = ObReferenceObjectByHandle(ThreadHandle,
 					   THREAD_SET_CONTEXT,
 					   PsThreadType,
-					   KeGetPreviousMode(),
+					   PreviousMode,
 					   (PVOID)&Thread,
 					   NULL);
 	
@@ -552,7 +555,7 @@ NtQueueApcThread(HANDLE			ThreadHandle,
 			KiFreeApcRoutine,
 			NULL,
 			ApcRoutine,
-			UserMode,
+			PreviousMode,
 			NormalContext);
 	if (!KeInsertQueueApc(Apc, SystemArgument1, SystemArgument2, IO_NO_INCREMENT)) {
 		Status = STATUS_UNSUCCESSFUL;

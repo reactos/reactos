@@ -107,13 +107,16 @@ NtAlertResumeThread(IN  HANDLE ThreadHandle,
 NTSTATUS STDCALL
 NtAlertThread (IN HANDLE ThreadHandle)
 {
+   KPROCESSOR_MODE PreviousMode;
    PETHREAD Thread;
    NTSTATUS Status;
+   
+   PreviousMode = ExGetPreviousMode();
 
    Status = ObReferenceObjectByHandle(ThreadHandle,
                   THREAD_SUSPEND_RESUME,
                   PsThreadType,
-                  ExGetPreviousMode(),
+                  PreviousMode,
                   (PVOID*)&Thread,
                   NULL);
    if (!NT_SUCCESS(Status))
@@ -125,7 +128,7 @@ NtAlertThread (IN HANDLE ThreadHandle)
     * ZwAlertThread was called?
     * -Gunnar
     */ 
-   KeAlertThread((PKTHREAD)Thread, UserMode);
+   KeAlertThread((PKTHREAD)Thread, PreviousMode);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
