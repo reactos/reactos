@@ -130,7 +130,8 @@ VOID MmBuildMdlFromPages(PMDL Mdl)
 }
 			 
 
-VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
+VOID MmProbeAndLockPages(PMDL Mdl, 
+			 KPROCESSOR_MODE AccessMode,
 			 LOCK_OPERATION Operation)
 /*
  * FUNCTION: Probes the specified pages, makes them resident and locks them

@@ -193,7 +193,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   stack_start = kernel_stack + 4096 - sizeof(CONTEXT);
+   stack_start = kernel_stack + 3*PAGESIZE - sizeof(CONTEXT);
    memcpy(stack_start, Context, sizeof(CONTEXT));
    
    /*

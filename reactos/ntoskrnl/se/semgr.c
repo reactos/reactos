@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.14 2000/01/05 21:57:00 dwelch Exp $
+/* $Id: semgr.c,v 1.15 2000/01/26 10:07:30 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,266 +26,6 @@ VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
 {
    UNIMPLEMENTED;
 }
-
-VOID SepFreeProxyData(PVOID ProxyData)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS SepCopyProxyData(PVOID* Dest, PVOID Src)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS SepDuplicationToken(PACCESS_TOKEN Token,
-			     PULONG a,
-			     ULONG b,
-			     TOKEN_TYPE TokenType,
-			     SECURITY_IMPERSONATION_LEVEL Level,
-			     ULONG d,
-			     PACCESS_TOKEN* e)
-{
-#if 0
-   PVOID mem1;
-   PVOID mem2;
-   PVOID f;
-   PACCESS_TOKEN g;
-   NTSTATUS Status;
-   
-   if (TokenType == 2 && 
-       (Level > 3 || Level < 0))
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   SepReferenceLogonSession(&Token->AuthenticationId);
-   
-   mem1 = ExAllocatePool(NonPagedPool, Token->DynamicCharged);
-   if (mem1 == NULL)
-     {
-	SepDeReferenceLogonSession(&Token->AuthenticationId);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (Token->ProxyData != NULL)
-     {
-	Status = SepCopyProxyData(&f, Token->ProxyData);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SepDeReferenceLogonSession(&Token->AuthenticationId);
-	     ExFreePool(mem1);
-	     return(Status);
-	  }
-     }
-   else
-     {
-	f = 0;
-     }
-   if (Token->AuditData != NULL)
-     {
-	mem2 = ExAllocatePool(NonPagedPool, 0xc);
-	if (mem2 == NULL)
-	  {
-	     SepFreeProxyData(f);
-	     SepDeReferenceLogonSession(&Token->AuthenticationId);
-	     ExFreePool(mem1);
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	memcpy(mem2, Token->AuditData, 0xc);
-     }
-   else
-     {
-	mem2 = NULL;
-     }
-   
-   Status = ObCreateObject(d,
-			   SeTokenType,
-			   b,
-			   d,
-			   0,
-			   Token->VariableLength + 0x78,
-			   Token->DynamicCharged,
-			   Token->VariableLength + 0x78,
-			   &g);
-   if (!NT_SUCCESS(Status))
-     {
-	SepDeReferenceLogonSession(Token->AuthenticationId);
-	ExFreePool(mem1);
-	SepFreeProxyData(f);
-	if (mem2 != NULL)
-	  {
-	     ExFreePool(mem2);
-	  }
-	return(Status);
-     }
-   
-   g->TokenId = Token->TokenId;
-   g->ModifiedId = Token->ModifiedId;
-   g->ExpirationTime = Token->ExpirationTime;
-   memcpy(&g->TokenSource, &Token->TokenSource, sizeof(TOKEN_SOURCE));
-   g->DynamicCharged = Token->DynamicCharged;
-   g->DynamicAvailable = Token->DynamicAvailable;
-   g->DefaultOwnerIndex = Token->DefaultOwnerIndex;
-   g->UserAndGroupCount = Token->UserAndGroupCount;
-   g->PrivilegeCount = Token->PrivilegeCount;
-   g->VariableLength = Token->VariableLength;
-   g->TokenFlags = Token->TokenFlags;
-   g->ProxyData = f;
-   g->AuditData = mem2;
-   //g->TokenId = ExInterlockedExchangeAdd();
-   g->TokenInUse = 0;
-   g->TokenType = TokenType;
-   g->ImpersonationLevel = Level;
-   memmove(g->VariablePart, Token->VariablePart, Token->VariableLength);
-   /* ... */
-   *e = g;
-   return(STATUS_SUCCESS);
-#endif
-   UNIMPLEMENTED;   
-}
-
-NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
-			   SECURITY_IMPERSONATION_LEVEL Level,
-			   ULONG a,
-			   PACCESS_TOKEN* b)
-{
-   ULONG c;
-   PACCESS_TOKEN d;
-   NTSTATUS Status;
-   
-   c = 18;
-   Status = SepDuplicationToken(Token,
-				&c,
-				0,
-				TokenImpersonation,
-				Level,
-				a,
-				&d);
-   *b = d;
-   return(Status);
-}
-
-NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
-				PSECURITY_QUALITY_OF_SERVICE Qos,
-				ULONG e,
-				PSE_SOME_STRUCT2 f)
-{
-   TOKEN_TYPE TokenType;
-   UCHAR b;
-   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-   PACCESS_TOKEN Token;
-   ULONG g;   
-   PACCESS_TOKEN NewToken;
-   
-   Token = PsReferenceEffectiveToken(Thread,
-				     &TokenType,
-				     &b,
-				     &ImpersonationLevel);
-   if (TokenType != 2)
-     {
-	f->Unknown9 = Qos->EffectiveOnly;
-     }
-   else
-     {
-	if (Qos->ImpersonationLevel > ImpersonationLevel)
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (ImpersonationLevel == 0 ||
-	    ImpersonationLevel == 1 ||
-	    (e != 0 && ImpersonationLevel != 3))
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (b != 0 ||
-	    Qos->EffectiveOnly != 0)
-	  {
-	     f->Unknown9 = 1;
-	  }
-	else
-	  {
-	     f->Unknown9 = 0;
-	  }       
-     }
-   
-   if (Qos->ContextTrackingMode == 0)
-     {
-	f->Unknown8 = 0;
-	g = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
-	if (g >= 0)
-	  {
-//	     ObDeleteCapturedInsertInfo(NewToken);
-	  }
-	if (TokenType == TokenPrimary || Token != NULL)		 
-	  {
-	     ObDereferenceObject(Token);
-	  }
-	if (g < 0)
-	  {
-	     return(g);
-	  }
-     }
-   else
-     {
-	f->Unknown8 = 1;
-	if (e != 0)
-	  {
-//	     SeGetTokenControlInformation(Token, &f->Unknown11);
-	  }
-	NewToken = Token;
-     }
-   f->Unknown1 = 0xc;
-   f->Level = Qos->ImpersonationLevel;
-   f->ContextTrackingMode = Qos->ContextTrackingMode;
-   f->EffectiveOnly = Qos->EffectiveOnly;
-   f->Unknown10 = e;
-   f->Token = NewToken;
-   
-   return(STATUS_SUCCESS);
-}
-
-
-VOID SeImpersonateClient(PSE_SOME_STRUCT2 a,
-			 PETHREAD Thread)
-{
-   UCHAR b;
-   
-   if (a->Unknown8 == 0)
-     {
-	b = a->EffectiveOnly;
-     }
-   else
-     {
-	b = a->Unknown9;
-     }
-   if (Thread == NULL)
-     {
-	Thread = PsGetCurrentThread();
-     }
-   PsImpersonateClient(Thread, 
-		       a->Token, 
-		       1, 
-		       (ULONG)b, 
-		       a->Level);
-}
-
-
-
-
-NTSTATUS STDCALL NtPrivilegeCheck (IN	HANDLE		ClientToken,
-				   IN	PPRIVILEGE_SET	RequiredPrivileges,  
-				   IN	PBOOLEAN	Result)
-{
-   UNIMPLEMENTED;
-}
-
 
 NTSTATUS STDCALL NtPrivilegedServiceAuditAlarm(
 					     IN PUNICODE_STRING SubsystemName, 
@@ -392,6 +132,8 @@ NtDeleteObjectAuditAlarm (
  UNIMPLEMENTED;
 }
 
+
+
 VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    ObDereferenceObject(SubjectContext->PrimaryToken);
@@ -417,129 +159,127 @@ VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 				   &SubjectContext->ImpersonationLevel);
    SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
-
-BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
-			  PLUID_AND_ATTRIBUTES Privileges,
-			  ULONG PrivilegeCount,
-			  ULONG PrivilegeControl,
-			  KPROCESSOR_MODE PreviousMode)
+   
+NTSTATUS STDCALL SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
 {
-   ULONG i;
-   PLUID_AND_ATTRIBUTES Current;
-   ULONG j;
-   ULONG k;
-   
-   if (PreviousMode == KernelMode)
+   if ((*SecurityDescriptor) != NULL)
      {
-	return(TRUE);
+	ExFreePool(*SecurityDescriptor);
+	(*SecurityDescriptor) = NULL;
      }
-   
-   j = 0;
-   if (PrivilegeCount != 0)
-     {
-	k = PrivilegeCount;
-	do
-	  {
-	     i = Token->PrivilegeCount;
-	     Current = Token->Privileges;
-	     for (i = 0; i < Token->PrivilegeCount; i++)
-	       {
-		  if (!(Current[i].Attributes & 2) &&
-		      Privileges[i].Luid.u.LowPart == 
-		      Current[i].Luid.u.LowPart &&
-		      Privileges[i].Luid.u.HighPart == 
-		      Current[i].Luid.u.HighPart)
-		    {
-		       Privileges[i].Attributes = 
-			 Privileges[i].Attributes | 0x80;
-		       j++;
-		       break;
-		    }
-	       }
-	     k--;
-	  } while (k > 0);
-     }
-   
-   if ((PrivilegeControl & 0x2) && PrivilegeCount == j)       
-     {
-	return(TRUE);
-     }
-       
-   if (j > 0 && !(PrivilegeControl & 0x2))
-     {
-	return(TRUE);
-     }
-
-   return(FALSE);
+   return(STATUS_SUCCESS);
 }
-   
-BOOLEAN STDCALL SePrivilegeCheck(PPRIVILEGE_SET Privileges,
-			 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-			 KPROCESSOR_MODE PreviousMode)
+
+#if 0
+VOID SepGetDefaultsSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext,
+				  PSID* Owner,
+				  PSID* PrimaryGroup,
+				  PSID* ProcessOwner,
+				  PSID* ProcessPrimaryGroup,
+				  PACL* DefaultDacl)
 {
-   PACCESS_TOKEN Token = NULL;
+   PACCESS_TOKEN Token;
    
-   if (SubjectContext->ClientToken == NULL)
+   if (SubjectContext->ClientToken != NULL)
      {
-	Token = SubjectContext->PrimaryToken;
+	Token = SubjectContext->ClientToken;
      }
    else
      {
-	Token = SubjectContext->ClientToken;
-	if (SubjectContext->ImpersonationLevel < 2)
-	  {
-	     return(FALSE);
-	  }
+	Token = SubjectContext->PrimaryToken;
      }
-   
-   return(SepPrivilegeCheck(Token,
-			    Privileges->Privilege,
-			    Privileges->PrivilegeCount,
-			    Privileges->Control,
-			    PreviousMode));			    
+   *Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+   *PrimaryGroup = Token->PrimaryGroup;
+   *DefaultDacl = Token->DefaultDacl;
+   *ProcessOwner = SubjectContext->PrimaryToken->
+     UserAndGroups[Token->DefaultOwnerIndex].Sid;
+   *ProcessPrimaryGroup = SubjectContext->PrimaryToken->PrimaryGroup;
 }
 
-BOOLEAN STDCALL SeSinglePrivilegeCheck(LUID PrivilegeValue,
-			       KPROCESSOR_MODE PreviousMode)
+NTSTATUS SepInheritAcl(PACL Acl,
+		       BOOLEAN IsDirectoryObject,
+		       PSID Owner,
+		       PSID PrimaryGroup,
+		       PACL DefaultAcl,
+		       PSID ProcessOwner,
+		       PSID ProcessGroup,
+		       PGENERIC_MAPPING GenericMapping)
 {
-   SECURITY_SUBJECT_CONTEXT SubjectContext;
-   BOOLEAN r;
-   PRIVILEGE_SET Priv;
-   
-   SeCaptureSubjectContext(&SubjectContext);
-   
-   Priv.PrivilegeCount = 1;
-   Priv.Control = 1;
-   Priv.Privilege[0].Luid = PrivilegeValue;
-   Priv.Privilege[0].Attributes = 0;
-   
-   r = SePrivilegeCheck(&Priv,
-			&SubjectContext,
-			PreviousMode);
-      
-   if (PreviousMode != KernelMode)
+   if (Acl == NULL)
      {
-/*	SePrivilegeServiceAuditAlarm(0,
-				     &SubjectContext,
-				     &PrivilegeValue);*/
+	return(STATUS_UNSUCCESSFUL);
      }
-   SeReleaseSubjectContext(&SubjectContext);
-   return(r);
+   if (Acl->AclRevision != 2 &&
+       Acl->AclRevision != 3 )
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
 }
-
-NTSTATUS STDCALL SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
-{
-   UNIMPLEMENTED;
-}
+#endif
 
 NTSTATUS STDCALL SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 				  PSECURITY_DESCRIPTOR ExplicitDescriptor,
+				  PSECURITY_DESCRIPTOR* NewDescriptor,
 				  BOOLEAN IsDirectoryObject,
 				  PSECURITY_SUBJECT_CONTEXT SubjectContext,
 				  PGENERIC_MAPPING GenericMapping,
 				  POOL_TYPE PoolType)
 {
-   UNIMPLEMENTED;
+#if 0
+   PSECURITY_DESCRIPTOR Descriptor;
+   PSID Owner;
+   PSID PrimaryGroup;
+   PACL DefaultDacl;
+   PSID ProcessOwner;
+   PSID ProcessPrimaryGroup;
+   PACL Sacl;
+   
+   if (ExplicitDescriptor == NULL)
+     {
+	RtlCreateSecurityDescriptor(&Descriptor, 1);
+     }
+   else
+     {
+	Descriptor = ExplicitDescriptor;
+     }
+   SeLockSubjectContext(SubjectContext);
+   SepGetDefaultsSubjectContext(SubjectContext,
+				&Owner,
+				&PrimaryGroup,
+				&DefaultDacl,
+				&ProcessOwner,
+				&ProcessPrimaryGroup);
+   if (Descriptor->Control & SE_SACL_PRESENT ||
+       Descriptor->Control & SE_SACL_DEFAULTED)
+     {
+	if (ParentDescriptor == NULL)
+	  {
+	  }
+	if (Descriptor->Control & SE_SACL_PRESENT ||
+	    Descriptor->Sacl == NULL ||)
+	  {
+	     Sacl = NULL;	     
+	  }
+	else
+	  {
+	     Sacl = Descriptor->Sacl;
+	     if (Descriptor->Control & SE_SELF_RELATIVE)
+	       {
+		  Sacl = (PACL)(((PVOID)Sacl) + (PVOID)Descriptor);
+	       }
+	  }
+	SepInheritAcl(Sacl,
+		      IsDirectoryObject,
+		      Owner,
+		      PrimaryGroup,
+		      DefaultDacl,
+		      ProcessOwner,
+		      GenericMapping);
+     }
+#else
+  UNIMPLEMENTED;   
+#endif
 }
 
 BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
@@ -557,7 +297,7 @@ BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
 	if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
 	  {
 	     if (i == 0 ||
-		 (!(Token->UserAndGroups[i].Attributes & 0x4)))
+		 (!(Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED)))
 	       {
 		  return(TRUE);
 	       }

@@ -13,11 +13,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-ExInit (VOID)
+VOID ExInit (VOID)
 {
-  ExInitTimeZoneInfo ();
-
+  ExInitTimeZoneInfo();
 }
 
 /* EOF */

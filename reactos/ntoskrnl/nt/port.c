@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.16 2000/01/12 19:04:01 ekohl Exp $
+/* $Id: port.c,v 1.17 2000/01/26 10:07:28 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,14 +24,13 @@
 #include <internal/ob.h>
 #include <string.h>
 #include <internal/string.h>
+#include <internal/port.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 
 /* TYPES ********************************************************************/
-
-#define PORT_ALL_ACCESS               (0x1)
 
 #define EPORT_INACTIVE                (0)
 #define EPORT_WAIT_FOR_CONNECT        (1)
@@ -48,23 +47,6 @@ typedef struct _QUEUEDMESSAGE
    LIST_ENTRY QueueListEntry;
    LPCMESSAGE Message;
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
-
-typedef struct _EPORT
-{
-   KSPIN_LOCK Lock;
-   KEVENT Event;
-   
-   struct _EPORT* OtherPort;
-   
-   ULONG QueueLength;
-   LIST_ENTRY QueueListHead;
-   
-   ULONG ConnectQueueLength;
-   LIST_ENTRY ConnectQueueListHead;
-   
-   ULONG MaxDataLength;
-   ULONG MaxConnectInfoLength;
-} EPORT, *PEPORT;
 
 /* GLOBALS *******************************************************************/
 
@@ -603,6 +585,21 @@ NTSTATUS STDCALL NtReplyWaitReceivePort (IN	HANDLE		PortHandle,
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS STDCALL LpcRequestPort(PEPORT Port,
+				PLPCMESSAGE LpcMessage)
+{
+   NTSTATUS Status;
+   
+   DPRINT("LpcRequestPort(PortHandle %x LpcMessage %x)\n", Port, LpcMessage);
+   
+   Status = EiReplyOrRequestPort(Port->OtherPort, 
+				 LpcMessage, 
+				 LPC_DATAGRAM,
+				 Port);
+   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+
+   return(Status);
+}
 
 NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
 				IN PLPCMESSAGE	LpcMessage	/* guess */)
@@ -625,11 +622,7 @@ NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
 	return(Status);
      }
 
-   Status = EiReplyOrRequestPort(Port->OtherPort, 
-				 LpcMessage, 
-				 LPC_DATAGRAM,
-				 Port);
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+   Status = LpcRequestPort(Port, LpcMessage);
    
    ObDereferenceObject(Port);
    return(Status);

@@ -40,97 +40,86 @@
 
 #define STACK_TOP (0xb0000000)
 
-static NTSTATUS
-LdrCreatePpb (
-	PRTL_USER_PROCESS_PARAMETERS	*PpbPtr,
-	HANDLE				ProcessHandle
-	)
+static NTSTATUS LdrCreateUserProcessParameters (
+		       PRTL_USER_PROCESS_PARAMETERS *PpbPtr,
+		       HANDLE ProcessHandle)
 {
-	RTL_USER_PROCESS_PARAMETERS	Ppb;
-	PVOID		PpbBase;
-	ULONG		PpbSize;
-	ULONG		BytesWritten;
-	NTSTATUS	Status;
+   PVOID		PpbBase;
+   ULONG		PpbSize;
+   RTL_USER_PROCESS_PARAMETERS		Ppb;
+   ULONG		BytesWritten;
+   NTSTATUS	Status;
+   
+   /* Create process parameters block (PPB)*/
+   PpbBase = (PVOID)PEB_STARTUPINFO;
+   PpbSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
 
-	/* Create process parameters block (PPB)*/
-	PpbBase = (PVOID)PEB_STARTUPINFO;
-	PpbSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
+   Status = ZwAllocateVirtualMemory (ProcessHandle,
+				     (PVOID*)&PpbBase,
+				     0,
+				     &PpbSize,
+				     MEM_COMMIT,
+				     PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Ppb allocation failed (Status %x)\n", Status);
+	return Status;
+     }
 
-	Status = NtAllocateVirtualMemory (
-		ProcessHandle,
-		(PVOID*)&PpbBase,
-		0,
-		&PpbSize,
-		MEM_COMMIT,
-		PAGE_READWRITE
-		);
-	if (!NT_SUCCESS(Status))
-	{
-		DbgPrint ("Process Parameters allocation failed \n");
-		DbgPrintErrorMessage (Status);
-		return Status;
-	}
-
-	/* initialize the ppb */
-	memset (&Ppb, 0, sizeof(RTL_USER_PROCESS_PARAMETERS));
-
-	NtWriteVirtualMemory (
-			ProcessHandle,
+   /* initialize the ppb */
+   memset (&Ppb, 0, sizeof(RTL_USER_PROCESS_PARAMETERS));
+   
+   DPRINT("PpbBase %x\n", PpbBase);
+   ZwWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			&Ppb,
 			sizeof(RTL_USER_PROCESS_PARAMETERS),
 			&BytesWritten);
-
-	*PpbPtr = PpbBase;
-
-	return STATUS_SUCCESS;
+   
+   *PpbPtr = PpbBase;
+   
+   return STATUS_SUCCESS;
 }
 
 
-static NTSTATUS
-LdrCreatePeb (
-	PPEB	*PebPtr,
-	HANDLE	ProcessHandle,
-	PRTL_USER_PROCESS_PARAMETERS	Ppb
-	)
+static NTSTATUS LdrCreatePeb (PPEB	*PebPtr,
+			      HANDLE	ProcessHandle,
+			      PRTL_USER_PROCESS_PARAMETERS Ppb)
 {
-	PPEB		PebBase;
-	ULONG		PebSize;
-	PEB		Peb;
-	ULONG		BytesWritten;
-	NTSTATUS	Status;
+   PPEB		PebBase;
+   ULONG		PebSize;
+   PEB		Peb;
+   ULONG		BytesWritten;
+   NTSTATUS	Status;
+   
+   PebBase = (PVOID)PEB_BASE;
+   PebSize = 0x1000;
+   
+   Status = ZwAllocateVirtualMemory (ProcessHandle,
+				     (PVOID*)&PebBase,
+				     0,
+				     &PebSize,
+				     MEM_COMMIT,
+				     PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("Peb allocation failed (Status %x)\n", Status);
+	return(Status);
+     }
 
-	PebBase = (PVOID)PEB_BASE;
-	PebSize = 0x1000;
-
-	Status = ZwAllocateVirtualMemory (
-		ProcessHandle,
-		(PVOID*)&PebBase,
-		0,
-		&PebSize,
-		MEM_COMMIT,
-		PAGE_READWRITE
-		);
-	if (!NT_SUCCESS(Status))
-	{
-		DbgPrint ("Peb allocation failed \n");
-		DbgPrintErrorMessage (Status);
-	}
-
-	/* initialize the peb */
-	memset(&Peb, 0, sizeof Peb);
-	Peb.ProcessParameters = Ppb;
-
-	ZwWriteVirtualMemory (
-		ProcessHandle,
-		PebBase,
-		&Peb,
-		sizeof(Peb),
-		&BytesWritten);
-
-	*PebPtr = (PPEB)PebBase;
-
-	return(STATUS_SUCCESS);
+   /* initialize the peb */
+   memset(&Peb, 0, sizeof Peb);
+   Peb.ProcessParameters = Ppb;
+   
+   ZwWriteVirtualMemory (ProcessHandle,
+			 PebBase,
+			 &Peb,
+			 sizeof(Peb),
+			 &BytesWritten);
+   
+   *PebPtr = (PPEB)PebBase;
+   
+   return(STATUS_SUCCESS);
 }
 
 
@@ -177,7 +166,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
    WCHAR			TmpNameBuffer [MAX_PATH];
 
-   PRTL_USER_PROCESS_PARAMETERS	Ppb;
+   PRTL_USER_PROCESS_PARAMETERS				Ppb;
    PPEB				Peb;
 
 
@@ -459,117 +448,102 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
 /* -- PART III -- */
 
-	/* Create the process parameter block (PPB) */
-	Status = LdrCreatePpb (&Ppb,
-	                       ProcessHandle);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("PPB creation failed ");
-		DbgPrintErrorMessage(Status);
-
-		/* FIXME: unmap the section here  */
-		/* FIXME: destroy the section here  */
-
-		return Status;
+   /* Create the process parameter block (PPB) */
+   DPRINT("Creating PPB\n");
+   Status = LdrCreateUserProcessParameters (&Ppb, ProcessHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("PPB creation failed ");
+	DbgPrintErrorMessage(Status);
+	
+	/* FIXME: unmap the section here  */
+	/* FIXME: destroy the section here  */
+	
+	return Status;
 	}
-
-	/* Create the process environment block (PEB) */
-	Status = LdrCreatePeb (&Peb,
-	                       ProcessHandle,
-	                       Ppb);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("PEB creation failed ");
+   
+   /* Create the process environment block (PEB) */
+   DPRINT("Creating Peb\n");
+   Status = LdrCreatePeb (&Peb,
+			  ProcessHandle,
+			  Ppb);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("PEB creation failed ");
 		DbgPrintErrorMessage(Status);
-
-		/* FIXME: unmap the section here  */
-		/* FIXME: destroy the section here  */
-		/* FIXME: free the PPB */
-
+	
+	/* FIXME: unmap the section here  */
+	/* FIXME: destroy the section here  */
+	/* FIXME: free the PPB */
+	
 		return Status;
-	}
+     }
+   
+   /*
+    * Create page backed section for stack
+    */
+   DPRINT("Allocating stack\n");
+   StackBase = (STACK_TOP - NTHeaders->OptionalHeader.SizeOfStackReserve);
+   StackSize = NTHeaders->OptionalHeader.SizeOfStackReserve;
+   DbgPrint ("Stack size %x\n", StackSize);
 
-	/*
-	 * Create page backed section for stack
-	 */
-	StackBase = (
-		STACK_TOP
-		- NTHeaders->OptionalHeader.SizeOfStackReserve
-		);
-	StackSize =
-		NTHeaders->OptionalHeader.SizeOfStackReserve;
-	DbgPrint ("Stack size %x\n", StackSize);
+   Status = ZwAllocateVirtualMemory(ProcessHandle,
+				    (PVOID*)&StackBase,
+				    0,
+				    &StackSize,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Stack allocation failed ");
+	DbgPrintErrorMessage(Status);
 
-	Status = ZwAllocateVirtualMemory(
-			ProcessHandle,
-			(PVOID *) & StackBase,
-			0,
-			& StackSize,
-			MEM_COMMIT,
-			PAGE_READWRITE
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Stack allocation failed ");
-		DbgPrintErrorMessage(Status);
+	/* FIXME: unmap the section here  */
+	/* FIXME: destroy the section here  */
+	
+	return Status;
+     }
+   
+   ZwDuplicateObject(NtCurrentProcess(),
+		     &SectionHandle,
+		     ProcessHandle,
+		     &DupSectionHandle,
+		     0,
+		     FALSE,
+		     DUPLICATE_SAME_ACCESS);
+   ZwDuplicateObject(NtCurrentProcess(),
+		     &NTDllSectionHandle,
+		     ProcessHandle,
+		     &DupNTDllSectionHandle,
+		     0,
+		     FALSE,
+		     DUPLICATE_SAME_ACCESS);
+   
+   DPRINT("DupNTDllSectionHandle %x\n", DupNTDllSectionHandle);
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 4),
+			&DupNTDllSectionHandle,
+			sizeof(DupNTDllSectionHandle),
+			&BytesWritten);
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 8),
+			&ImageBase,
+			sizeof (ImageBase),
+			&BytesWritten);
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 12),
+			&DupSectionHandle,
+			sizeof (DupSectionHandle),
+			&BytesWritten);
 
-		/* FIXME: unmap the section here  */
-		/* FIXME: destroy the section here  */
-
-		return Status;
-	}
-
-	ZwDuplicateObject(
-		NtCurrentProcess(),
-		& SectionHandle,
-		ProcessHandle,
-		& DupSectionHandle,
-		0,
-		FALSE,
-		DUPLICATE_SAME_ACCESS
-		);
-	ZwDuplicateObject(
-		NtCurrentProcess(),
-		& NTDllSectionHandle,
-		ProcessHandle,
-		&DupNTDllSectionHandle,
-		0,
-		FALSE,
-		DUPLICATE_SAME_ACCESS
-		);
-
-	ZwWriteVirtualMemory(
-		ProcessHandle,
-		(PVOID) (STACK_TOP - 4),
-		& DupNTDllSectionHandle,
-		sizeof (DupNTDllSectionHandle),
-		& BytesWritten
-		);
-	ZwWriteVirtualMemory(
-		ProcessHandle,
-		(PVOID) (STACK_TOP - 8),
-		& ImageBase,
-		sizeof (ImageBase),
-		& BytesWritten
-		);
-	ZwWriteVirtualMemory(
-		ProcessHandle,
-		(PVOID) (STACK_TOP - 12),
-		& DupSectionHandle,
-		sizeof (DupSectionHandle),
-		& BytesWritten
-		);
-
-	/* write pointer to peb on the stack (parameter of NtProcessStartup) */
-	ZwWriteVirtualMemory(
-		ProcessHandle,
-		(PVOID) (STACK_TOP - 16),
-		&Peb,
-		sizeof (ULONG),
-		&BytesWritten
-		);
-
-	DbgPrint ("NTOSKRNL: Peb = %x\n", Peb);
+   /* write pointer to peb on the stack (parameter of NtProcessStartup) */
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID) (STACK_TOP - 16),
+			&Peb,
+			sizeof (ULONG),
+			&BytesWritten);
+   
+   DbgPrint ("NTOSKRNL: Peb = %x\n", Peb);
    /*
     * Initialize context to point to LdrStartup
     */

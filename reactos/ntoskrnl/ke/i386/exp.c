@@ -181,7 +181,7 @@ asmlinkage void exception_handler(unsigned int edi,
    unsigned int cr2, cr3;
    unsigned int i;
 //   unsigned int j, sym;
-   unsigned int* stack;
+   PULONG stack;
    static char *TypeStrings[] = 
      {
        "Divide Error",
@@ -282,8 +282,9 @@ asmlinkage void exception_handler(unsigned int edi,
   if ((cs & 0xffff) == KERNEL_CS)
     {
       DbgPrint("ESP %x\n",esp);
-      stack = (unsigned int *) (esp + 24);
-	
+       stack = (PULONG) (esp + 24);
+       stack = (PULONG)(((ULONG)stack) & (~0x3));
+       
       DbgPrint("Stack:\n");
       for (i = 0; i < 16; i = i + 4)
         {
@@ -309,7 +310,7 @@ asmlinkage void exception_handler(unsigned int edi,
    else
      {
 	DbgPrint("SS:ESP %x:%x\n",ss0,esp0);
-        stack=(unsigned int *)(esp0);
+        stack=(PULONG)(esp0);
        
         DbgPrint("Stack:\n");
         for (i=0; i<16; i++)
@@ -348,6 +349,11 @@ VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
    
    Stack = (PVOID)(((ULONG)Stack) & (~0x3));
    DbgPrint("Stack: %x\n", Stack);
+   if (PsGetCurrentThread() != NULL)
+     {
+	DbgPrint("kernel stack base %x\n",
+		 PsGetCurrentThread()->Tcb.Context.KernelStackBase);
+     }
    
    DbgPrint("Frames:\n");
    for (i=0; i<NrFrames; i++)

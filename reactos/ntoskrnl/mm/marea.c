@@ -138,6 +138,19 @@ static MEMORY_AREA* MmInternalOpenMemoryAreaByAddress(PLIST_ENTRY ListHead,
 	DPRINT("Scanning %x BaseAddress %x Length %x\n",
 	       current, current->BaseAddress, current->Length);
 	assert(current_entry->Blink->Flink == current_entry);
+	if (current_entry->Flink->Blink != current_entry)
+	  {
+	     DPRINT("BaseAddress %x\n", current->BaseAddress);
+	     DPRINT("current_entry->Flink %x ", current_entry->Flink);
+	     DPRINT("&current_entry->Flink %x\n",
+		     &current_entry->Flink);
+	     DPRINT("current_entry->Flink->Blink %x\n",
+		     current_entry->Flink->Blink);
+	     DPRINT("&current_entry->Flink->Blink %x\n",
+		     &current_entry->Flink->Blink);
+	     DPRINT("&current_entry->Flink %x\n",
+		     &current_entry->Flink);
+	  }
 	assert(current_entry->Flink->Blink == current_entry);
 	assert(previous_entry->Flink == current_entry);
 	if (current->BaseAddress <= Address &&
@@ -170,7 +183,7 @@ MEMORY_AREA* MmInternalOpenMemoryAreaByRegion(PLIST_ENTRY ListHead,
    DPRINT("MmInternalOpenMemoryAreaByRegion(ListHead %x, Address %x, "
 	    "Length %x)\n",ListHead,Address,Length);
    
-// MmDumpMemoryAreas();
+//   MmDumpMemoryAreas(ListHead);
    
    current_entry = ListHead->Flink;
    while (current_entry!=ListHead)
@@ -179,7 +192,7 @@ MEMORY_AREA* MmInternalOpenMemoryAreaByRegion(PLIST_ENTRY ListHead,
 	DPRINT("current->BaseAddress %x current->Length %x\n",
 	       current->BaseAddress,current->Length);
 	if (current->BaseAddress >= Address &&
-	    current->BaseAddress <= (Address+Length))
+	    current->BaseAddress < (Address+Length))
 	  {
 	     DPRINT("Finished MmInternalOpenMemoryAreaByRegion() = %x\n",
 		    current);
@@ -273,7 +286,7 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
 {
    PLIST_ENTRY ListHead;
    PLIST_ENTRY current_entry;
-   PLIST_ENTRY inserted_entry = &(marea->Entry);
+   PLIST_ENTRY inserted_entry = &marea->Entry;
    MEMORY_AREA* current;
    MEMORY_AREA* next;   
    
@@ -288,6 +301,7 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
      {
 	CHECKPOINT;
 	InsertHeadList(ListHead,&marea->Entry);
+	DPRINT("Inserting at list head\n");
 	CHECKPOINT;
 	return;
      }
@@ -298,6 +312,7 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
      {
 	CHECKPOINT;
 	InsertHeadList(ListHead,&marea->Entry);
+	DPRINT("Inserting at list head\n");
 	CHECKPOINT;
 	return;
      }
@@ -312,15 +327,17 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
 	if (current->BaseAddress < marea->BaseAddress &&
 	    current->Entry.Flink==ListHead)
 	  {
+	     DPRINT("Insert after %x\n", current_entry);
 	     current_entry->Flink = inserted_entry;
 	     inserted_entry->Flink=ListHead;
 	     inserted_entry->Blink=current_entry;
-	     ListHead->Blink = inserted_entry;
+	     ListHead->Blink = inserted_entry;	    	     
 	     return;
 	  }
 	if (current->BaseAddress < marea->BaseAddress &&
 	    next->BaseAddress > marea->BaseAddress)
 	  {	     
+	     DPRINT("Inserting before %x\n", current_entry);
 	     inserted_entry->Flink = current_entry->Flink;
 	     inserted_entry->Blink = current_entry;
 	     inserted_entry->Flink->Blink = inserted_entry;
@@ -330,6 +347,7 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
 	current_entry = current_entry->Flink;
      }
    CHECKPOINT;
+   DPRINT("Inserting at list tail\n");
    InsertTailList(ListHead,inserted_entry);
 }
 

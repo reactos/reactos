@@ -21,13 +21,9 @@ VOID ExRaiseStatus(NTSTATUS Status)
 }
 
 
-NTSTATUS
-STDCALL
-NtRaiseException (
-	IN	PEXCEPTION_RECORD	ExceptionRecord,
-	IN	PCONTEXT		Context,
-	IN	BOOL			IsDebugger		OPTIONAL
-	)
+NTSTATUS STDCALL NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+				  IN PCONTEXT Context,
+				  IN BOOL	IsDebugger OPTIONAL)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }

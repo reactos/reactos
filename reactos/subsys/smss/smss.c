@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.4 1999/12/15 06:48:10 phreak Exp $
+/* $Id: smss.c,v 1.5 2000/01/26 10:07:30 dwelch Exp $
  *
  * smss.c - Session Manager
  * 
@@ -66,67 +66,66 @@ PrintString (char* fmt,...)
 
 /* Native image's entry point */
 
-void
-NtProcessStartup (PPEB Peb)
+void NtProcessStartup (PPEB Peb)
 {
-	HANDLE	Children[2]; /* csrss, winlogon */
+   HANDLE Children[2]; /* csrss, winlogon */
 	
-	DisplayString( L"Session Manager\n" );
+   DisplayString( L"Session Manager\n" );
 
-	PrintString ("Peb %x\n", Peb);
+   PrintString ("Peb %x\n", Peb);
 
-	if (TRUE == InitSessionManager(Children))
-	{
-		NTSTATUS	wws;
-
-		DisplayString( L"SM: Waiting for process termination...\n" );
+   if (TRUE == InitSessionManager(Children))
+     {
+	NTSTATUS	wws;
+	
+	DisplayString( L"SM: Waiting for process termination...\n" );
 
 #if 0
-		wws = NtWaitForMultipleObjects (
-				((LONG) sizeof Children / sizeof (HANDLE)),
-				Children,
-				WaitAny,
-				TRUE,	/* alertable */
-				NULL    /* NULL for infinite */
-				);
+	wws = NtWaitForMultipleObjects (
+					((LONG) sizeof Children / sizeof (HANDLE)),
+					Children,
+					WaitAny,
+					TRUE,	/* alertable */
+					NULL    /* NULL for infinite */
+					);
 #endif
-		wws = NtWaitForSingleObject (
-				Children[CHILD_WINLOGON],
-				TRUE,	/* alertable */
-				NULL
-				);
-
-
-//		if (!NT_SUCCESS(wws))
-		if (wws > 1)
-		{
-			DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
-			/* FIXME: CRASH THE SYSTEM (BSOD) */
-		}
-		else
-		{
-			DisplayString( L"SM: Process terminated!\n" );
-			/* FIXME: CRASH THE SYSTEM (BSOD) */
-		}
-	}
+	wws = NtWaitForSingleObject (
+				     Children[CHILD_WINLOGON],
+				     TRUE,	/* alertable */
+				     NULL
+				     );
+	
+	
+	//		if (!NT_SUCCESS(wws))
+	if (wws > 1)
+	  {
+	     DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
+	     /* FIXME: CRASH THE SYSTEM (BSOD) */
+	  }
 	else
-	{
-		DisplayString( L"SM: initialization failed!\n" );
-		/* FIXME: CRASH SYSTEM (BSOD)*/
-	}
-
-
-	/*
-	 * OK: CSRSS asked to shutdown the system;
-	 * We die.
-	 */
+	  {
+	     DisplayString( L"SM: Process terminated!\n" );
+	     /* FIXME: CRASH THE SYSTEM (BSOD) */
+	  }
+     }
+   else
+     {
+	DisplayString( L"SM: initialization failed!\n" );
+	/* FIXME: CRASH SYSTEM (BSOD)*/
+     }
+   
+   
+   /*
+    * OK: CSRSS asked to shutdown the system;
+    * We die.
+    */
 #if 0
-	NtRaiseHardError (
-		STATUS_SYSTEM_PROCESS_TERMINATED,
+   NtRaiseHardError (
+		     STATUS_SYSTEM_PROCESS_TERMINATED,
 		...);
 #endif
-
-	NtTerminateProcess( NtCurrentProcess(), 0 );
+   
+   NtTerminateProcess( NtCurrentProcess(), 0 );
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.8 2000/01/11 17:28:57 ekohl Exp $
+/* $Id: process.c,v 1.9 2000/01/26 10:07:24 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -161,7 +161,7 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
     *Section = NULL;
 
 
-    DPRINT("ApplicationName %S\n", ApplicationName->Buffer);
+    DPRINT("ApplicationName %w\n", ApplicationName->Buffer);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                ApplicationName,
@@ -229,7 +229,7 @@ static NTSTATUS
 RtlpCreatePpbAndPeb (
 	PPEB	*PebPtr,
 	HANDLE	ProcessHandle,
-	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters)
+	PRTL_USER_PROCESS_PARAMETERS	Ppb)
 {
     NTSTATUS Status;
     ULONG BytesWritten;
@@ -239,52 +239,48 @@ RtlpCreatePpbAndPeb (
     PVOID PpbBase;
     ULONG PpbSize;
 
-	/* create the process parameter block */
-	PpbBase = (PVOID)PEB_STARTUPINFO;
-	PpbSize = ProcessParameters->MaximumLength;
-	Status = NtAllocateVirtualMemory (
-		ProcessHandle,
-		&PpbBase,
-		0,
-		&PpbSize,
-		MEM_COMMIT,
-		PAGE_READWRITE);
+   /* create the PPB */
+   PpbBase = (PVOID)PEB_STARTUPINFO;
+   PpbSize = Ppb->TotalSize;
+   Status = NtAllocateVirtualMemory (ProcessHandle,
+				     &PpbBase,
+				     0,
+				     &PpbSize,
+				     MEM_COMMIT,
+				     PAGE_READWRITE);
 
-	if (!NT_SUCCESS(Status))
-		return(Status);
+   if (!NT_SUCCESS(Status))
+     return(Status);
 
-	DPRINT("Ppb size %x\n", PpbSize);
-	NtWriteVirtualMemory (
-		ProcessHandle,
-		PpbBase,
-		ProcessParameters,
-		ProcessParameters->MaximumLength,
-		&BytesWritten);
-
-	/* create the PEB */
-	PebBase = (PVOID)PEB_BASE;
-	PebSize = 0x1000;
-	Status = NtAllocateVirtualMemory (
-		ProcessHandle,
-		&PebBase,
-		0,
-		&PebSize,
-		MEM_COMMIT,
-		PAGE_READWRITE);
-
-	memset (&Peb, 0, sizeof(PEB));
-	Peb.ProcessParameters = (PRTL_USER_PROCESS_PARAMETERS)PpbBase;
-
-	NtWriteVirtualMemory (
-		ProcessHandle,
-		PebBase,
-		&Peb,
-		sizeof(PEB),
-		&BytesWritten);
-
-	*PebPtr = (PPEB)PebBase;
-
-	return STATUS_SUCCESS;
+   DPRINT("Ppb size %x\n", PpbSize);
+   NtWriteVirtualMemory (ProcessHandle,
+			 PpbBase,
+			 Ppb,
+			 Ppb->TotalSize,
+			 &BytesWritten);
+   
+   /* create the PEB */
+   PebBase = (PVOID)PEB_BASE;
+   PebSize = 0x1000;
+   Status = NtAllocateVirtualMemory (ProcessHandle,
+				     &PebBase,
+				     0,
+				     &PebSize,
+				     MEM_COMMIT,
+				     PAGE_READWRITE);
+   
+   memset (&Peb, 0, sizeof(PEB));
+   Peb.ProcessParameters = (PRTL_USER_PROCESS_PARAMETERS)PpbBase;
+   
+   NtWriteVirtualMemory (ProcessHandle,
+			 PebBase,
+			 &Peb,
+			 sizeof(PEB),
+			 &BytesWritten);
+   
+   *PebPtr = (PPEB)PebBase;
+   
+   return STATUS_SUCCESS;
 }
 
 
@@ -293,7 +289,7 @@ STDCALL
 RtlCreateUserProcess (
 	PUNICODE_STRING		CommandLine,
 	ULONG			Unknown1,
-	PRTL_USER_PROCESS_PARAMETERS	Params,
+	PRTL_USER_PROCESS_PARAMETERS			Ppb,
 	PSECURITY_DESCRIPTOR ProcessSd,
 	PSECURITY_DESCRIPTOR ThreadSd,
 	WINBOOL bInheritHandles,
@@ -316,7 +312,7 @@ RtlCreateUserProcess (
    ULONG retlen;
    PPEB Peb;
 
-	DPRINT ("RtlCreateUserProcess(CommandLine '%S')\n",
+	DPRINT ("RtlCreateUserProcess(CommandLine '%w')\n",
 		CommandLine->Buffer);
 
     Status = RtlpMapFile(CommandLine,
@@ -340,7 +336,7 @@ RtlCreateUserProcess (
                               &retlen);
     DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
            ProcessBasicInfo.UniqueProcessId);
-    LocalClientId.UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
+    LocalClientId.UniqueProcess = ProcessBasicInfo.UniqueProcessId;
 
     /*
      * Map NT DLL into the process
@@ -370,7 +366,7 @@ RtlCreateUserProcess (
     * 
     */
    DPRINT("Creating PPB and PEB\n");
-   RtlpCreatePpbAndPeb (&Peb, hProcess, Params);
+   RtlpCreatePpbAndPeb (&Peb, hProcess, Ppb);
 
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
@@ -384,7 +380,7 @@ RtlCreateUserProcess (
 		lpStartAddress,
 		Peb,
 		dwCreationFlags,
-		(LPDWORD)&LocalClientId.UniqueThread,
+		&LocalClientId.UniqueThread,
 		NTDllSection,
 		hSection,
 		(PVOID)Headers.OptionalHeader.ImageBase);
@@ -407,16 +403,14 @@ RtlCreateUserProcess (
     return STATUS_SUCCESS;
 }
 
-VOID
-STDCALL
-RtlAcquirePebLock (VOID)
+
+VOID STDCALL RtlAcquirePebLock(VOID)
 {
 
 }
 
-VOID
-STDCALL
-RtlReleasePebLock (VOID)
+
+VOID STDCALL RtlReleasePebLock(VOID)
 {
 
 }
@@ -424,20 +418,20 @@ RtlReleasePebLock (VOID)
 NTSTATUS
 STDCALL
 RtlCreateProcessParameters (
-	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
-	PUNICODE_STRING			CommandLine,
-	PUNICODE_STRING			DllPath,
-	PUNICODE_STRING			CurrentDirectory,
-	PUNICODE_STRING			ImagePathName,
-	PVOID				Environment,
-	PUNICODE_STRING			WindowTitle,
-	PUNICODE_STRING			DesktopInfo,
-	PUNICODE_STRING			ShellInfo,
-	PVOID				Reserved2
+	PRTL_USER_PROCESS_PARAMETERS		*Ppb,
+	PUNICODE_STRING	CommandLine,
+	PUNICODE_STRING	LibraryPath,
+	PUNICODE_STRING	CurrentDirectory,
+	PUNICODE_STRING	ImageName,
+	PVOID		Environment,
+	PUNICODE_STRING	Title,
+	PUNICODE_STRING	Desktop,
+	PUNICODE_STRING	Reserved,
+	PVOID		Reserved2
 	)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	PRTL_USER_PROCESS_PARAMETERS Params = NULL;
+	PRTL_USER_PROCESS_PARAMETERS Param = NULL;
 	ULONG RegionSize = 0;
 	ULONG DataSize = 0;
 	PWCHAR Dest;
@@ -449,34 +443,37 @@ RtlCreateProcessParameters (
 	/* size of process parameter block */
 	DataSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
 
+	/* size of (reserved) buffer */
+	DataSize += (256 * sizeof(WCHAR));
+
 	/* size of current directory buffer */
 	DataSize += (MAX_PATH * sizeof(WCHAR));
 
 	/* add string lengths */
-	if (DllPath != NULL)
-		DataSize += (DllPath->Length + sizeof(WCHAR));
-
-	if (ImagePathName != NULL)
-		DataSize += (ImagePathName->Length + sizeof(WCHAR));
+	if (LibraryPath != NULL)
+		DataSize += (LibraryPath->Length + sizeof(WCHAR));
 
 	if (CommandLine != NULL)
 		DataSize += (CommandLine->Length + sizeof(WCHAR));
 
-	if (WindowTitle != NULL)
-		DataSize += (WindowTitle->Length + sizeof(WCHAR));
+	if (ImageName != NULL)
+		DataSize += (ImageName->Length + sizeof(WCHAR));
 
-	if (DesktopInfo != NULL)
-		DataSize += (DesktopInfo->Length + sizeof(WCHAR));
+	if (Title != NULL)
+		DataSize += (Title->Length + sizeof(WCHAR));
 
-	if (ShellInfo != NULL)
-		DataSize += (ShellInfo->Length + sizeof(WCHAR));
+	if (Desktop != NULL)
+		DataSize += (Desktop->Length + sizeof(WCHAR));
+
+	if (Reserved != NULL)
+		DataSize += (Reserved->Length + sizeof(WCHAR));
 
 	/* Calculate the required block size */
 	RegionSize = ROUNDUP(DataSize, PAGESIZE);
 
 	Status = NtAllocateVirtualMemory (
 		NtCurrentProcess (),
-		(PVOID*)&Params,
+		(PVOID*)&Param,
 		0,
 		&RegionSize,
 		MEM_COMMIT,
@@ -487,153 +484,124 @@ RtlCreateProcessParameters (
 		return Status;
 	}
 
-	DPRINT ("Process parameter block allocated\n");
+	DPRINT ("Ppb allocated\n");
 
-	Params->MaximumLength = RegionSize;
-	Params->Length = DataSize;
-	Params->Flags = TRUE;
-	Params->Environment = Environment;
-//	Params->Unknown1 =
-//	Params->Unknown2 =
-//	Params->Unknown3 =
-//	Params->Unknown4 =
+	Param->TotalSize = RegionSize;
+	Param->DataSize = DataSize;
+	Param->Flags = TRUE;
+	Param->Environment = Environment;
+//	Param->Unknown1 =
+//	Param->Unknown2 =
+//	Param->Unknown3 =
+//	Param->Unknown4 =
 
 	/* copy current directory */
-	Dest = (PWCHAR)(((PBYTE)Params) +
-	                sizeof(RTL_USER_PROCESS_PARAMETERS));
+   Dest = (PWCHAR)(((PBYTE)Param) + 
+		   sizeof(RTL_USER_PROCESS_PARAMETERS) + 
+		   (256 * sizeof(WCHAR)));
 
-	Params->CurrentDirectory.DosPath.Buffer = Dest;
-	if (CurrentDirectory != NULL)
-	{
-		Params->CurrentDirectory.DosPath.Length =
-			CurrentDirectory->Length;
-		Params->CurrentDirectory.DosPath.MaximumLength =
-			CurrentDirectory->Length + sizeof(WCHAR);
+   Param->CurrentDirectory.DosPath.Buffer = Dest;
+   if (CurrentDirectory != NULL)
+     {
+	Param->CurrentDirectory.DosPath.Length = CurrentDirectory->Length;
+	Param->CurrentDirectory.DosPath.MaximumLength = 
+	  CurrentDirectory->Length + sizeof(WCHAR);
+	memcpy(Dest,
+	       CurrentDirectory->Buffer,
+	       CurrentDirectory->Length);
+	Dest = (PWCHAR)(((PBYTE)Dest) + CurrentDirectory->Length);
+     }
+   *Dest = 0;
+
+   Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS) +
+		   (256 * sizeof(WCHAR)) + (MAX_PATH * sizeof(WCHAR)));
+   
+   /* copy library path */
+   Param->LibraryPath.Buffer = Dest;
+   if (LibraryPath != NULL)
+     {
+	Param->LibraryPath.Length = LibraryPath->Length;
+	memcpy (Dest,
+		LibraryPath->Buffer,
+		LibraryPath->Length);
+	Dest = (PWCHAR)(((PBYTE)Dest) + LibraryPath->Length);
+     }
+   Param->LibraryPath.MaximumLength = Param->LibraryPath.Length + 
+     sizeof(WCHAR);
+   *Dest = 0;
+   Dest++;
+   
+   /* copy command line */
+   Param->CommandLine.Buffer = Dest;
+   if (CommandLine != NULL)
+     {
+	Param->CommandLine.Length = CommandLine->Length;
+	memcpy (Dest,
+		CommandLine->Buffer,
+		CommandLine->Length);
+	Dest = (PWCHAR)(((PBYTE)Dest) + CommandLine->Length);
+     }
+   Param->CommandLine.MaximumLength = Param->CommandLine.Length + sizeof(WCHAR);
+   *Dest = 0;
+   Dest++;
+   
+   /* copy image name */
+   Param->ImageName.Buffer = Dest;
+   if (ImageName != NULL)
+     {
+	Param->ImageName.Length = ImageName->Length;
 		memcpy (Dest,
-		        CurrentDirectory->Buffer,
-		        CurrentDirectory->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + CurrentDirectory->Length);
-	}
-	*Dest = 0;
+		        ImageName->Buffer,
+		        ImageName->Length);
+	Dest = (PWCHAR)(((PBYTE)Dest) + ImageName->Length);
+     }
+   Param->ImageName.MaximumLength = Param->ImageName.Length + sizeof(WCHAR);
+   *Dest = 0;
+   Dest++;
 
-	Dest = (PWCHAR)(((PBYTE)Params) +
-			sizeof(RTL_USER_PROCESS_PARAMETERS) +
-			(MAX_PATH * sizeof(WCHAR)));
-
-	/* copy dll path */
-	Params->DllPath.Buffer = Dest;
-	if (DllPath != NULL)
+	/* copy title */
+	Param->Title.Buffer = Dest;
+	if (Title != NULL)
 	{
-		Params->DllPath.Length = DllPath->Length;
+		Param->Title.Length = Title->Length;
 		memcpy (Dest,
-		        DllPath->Buffer,
-		        DllPath->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + DllPath->Length);
+		        Title->Buffer,
+		        Title->Length);
+		Dest = (PWCHAR)(((PBYTE)Dest) + Title->Length);
 	}
-	Params->DllPath.MaximumLength =
-		Params->DllPath.Length + sizeof(WCHAR);
-	*Dest = 0;
-	Dest++;
-
-	/* copy image path name */
-	Params->ImagePathName.Buffer = Dest;
-	if (ImagePathName != NULL)
-	{
-		Params->ImagePathName.Length = ImagePathName->Length;
-		memcpy (Dest,
-		        ImagePathName->Buffer,
-		        ImagePathName->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + ImagePathName->Length);
-	}
-	Params->ImagePathName.MaximumLength =
-		Params->ImagePathName.Length + sizeof(WCHAR);
-	*Dest = 0;
-	Dest++;
-
-	/* copy command line */
-	Params->CommandLine.Buffer = Dest;
-	if (CommandLine != NULL)
-	{
-		Params->CommandLine.Length = CommandLine->Length;
-		memcpy (Dest,
-		        CommandLine->Buffer,
-		        CommandLine->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + CommandLine->Length);
-	}
-	Params->CommandLine.MaximumLength =
-		Params->CommandLine.Length + sizeof(WCHAR);
-	*Dest = 0;
-	Dest++;
-
-	/* copy window title */
-	Params->WindowTitle.Buffer = Dest;
-	if (WindowTitle != NULL)
-	{
-		Params->WindowTitle.Length = WindowTitle->Length;
-		memcpy (Dest,
-		        WindowTitle->Buffer,
-		        WindowTitle->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + WindowTitle->Length);
-	}
-	Params->WindowTitle.MaximumLength =
-		Params->WindowTitle.Length + sizeof(WCHAR);
+	Param->Title.MaximumLength = Param->Title.Length + sizeof(WCHAR);
 	*Dest = 0;
 	Dest++;
 
-	/* copy desktop info */
-	Params->DesktopInfo.Buffer = Dest;
-	if (DesktopInfo != NULL)
-	{
-		Params->DesktopInfo.Length = DesktopInfo->Length;
-		memcpy (Dest,
-		        DesktopInfo->Buffer,
-		        DesktopInfo->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + DesktopInfo->Length);
-	}
-	Params->DesktopInfo.MaximumLength =
-		Params->DesktopInfo.Length + sizeof(WCHAR);
-	*Dest = 0;
-	Dest++;
-
-	/* copy shell info */
-	Params->ShellInfo.Buffer = Dest;
-	if (ShellInfo != NULL)
-	{
-		Params->ShellInfo.Length = ShellInfo->Length;
-		memcpy (Dest,
-		        ShellInfo->Buffer,
-		        ShellInfo->Length);
-		Dest = (PWCHAR)(((PBYTE)Dest) + ShellInfo->Length);
-	}
-	Params->ShellInfo.MaximumLength =
-		Params->ShellInfo.Length + sizeof(WCHAR);
-	*Dest = 0;
-	Dest++;
-
-	/* set runtime data */
-	Params->RuntimeData.Length = 0;
-	Params->RuntimeData.MaximumLength = 0;
-	Params->RuntimeData.Buffer = NULL;
-
-	RtlDeNormalizeProcessParams (Params);
-	*ProcessParameters = Params;
-	RtlReleasePebLock ();
-
-	return Status;
+	/* copy desktop */
+   Param->Desktop.Buffer = Dest;
+   if (Desktop != NULL)
+     {
+	Param->Desktop.Length = Desktop->Length;
+	memcpy (Dest,
+		Desktop->Buffer,
+		Desktop->Length);
+	Dest = (PWCHAR)(((PBYTE)Dest) + Desktop->Length);
+     }
+   Param->Desktop.MaximumLength = Param->Desktop.Length + sizeof(WCHAR);
+   *Dest = 0;
+   Dest++;
+   
+   RtlDeNormalizeProcessParams (Param);
+   *Ppb = Param;
+   RtlReleasePebLock ();
+   
+   return(Status);
 }
 
-VOID
-STDCALL
-RtlDestroyProcessParameters (
-	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
-	)
+VOID STDCALL RtlDestroyProcessParameters (PRTL_USER_PROCESS_PARAMETERS	Ppb)
 {
-	ULONG RegionSize = 0;
+   ULONG RegionSize = 0;
 
-	NtFreeVirtualMemory (NtCurrentProcess (),
-	                     (PVOID)ProcessParameters,
-	                     &RegionSize,
-	                     MEM_RELEASE);
+   NtFreeVirtualMemory (NtCurrentProcess (),
+			(PVOID)Ppb,
+			&RegionSize,
+			MEM_RELEASE);
 }
 
 /*
@@ -642,132 +610,114 @@ RtlDestroyProcessParameters (
 VOID
 STDCALL
 RtlDeNormalizeProcessParams (
-	PRTL_USER_PROCESS_PARAMETERS	Params
+	PRTL_USER_PROCESS_PARAMETERS	Ppb
 	)
 {
-	if (Params == NULL)
+	if (Ppb == NULL)
 		return;
 
-	if (Params->Flags == FALSE)
+	if (Ppb->Flags == FALSE)
 		return;
 
-	if (Params->CurrentDirectory.DosPath.Buffer != NULL)
+	if (Ppb->CurrentDirectory.DosPath.Buffer != NULL)
 	{
-		Params->CurrentDirectory.DosPath.Buffer =
-			(PWSTR)((ULONG)Params->CurrentDirectory.DosPath.Buffer -
-				(ULONG)Params);
+		Ppb->CurrentDirectory.DosPath.Buffer =
+			(PWSTR)((ULONG)Ppb->CurrentDirectory.DosPath.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->DllPath.Buffer != NULL)
+	if (Ppb->LibraryPath.Buffer != NULL)
 	{
-		Params->DllPath.Buffer =
-			(PWSTR)((ULONG)Params->DllPath.Buffer -
-				(ULONG)Params);
+		Ppb->LibraryPath.Buffer =
+			(PWSTR)((ULONG)Ppb->LibraryPath.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->ImagePathName.Buffer != NULL)
+	if (Ppb->CommandLine.Buffer != NULL)
 	{
-		Params->ImagePathName.Buffer =
-			(PWSTR)((ULONG)Params->ImagePathName.Buffer -
-				(ULONG)Params);
+		Ppb->CommandLine.Buffer =
+			(PWSTR)((ULONG)Ppb->CommandLine.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->CommandLine.Buffer != NULL)
+	if (Ppb->ImageName.Buffer != NULL)
 	{
-		Params->CommandLine.Buffer =
-			(PWSTR)((ULONG)Params->CommandLine.Buffer -
-				(ULONG)Params);
+		Ppb->ImageName.Buffer =
+			(PWSTR)((ULONG)Ppb->ImageName.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->WindowTitle.Buffer != NULL)
+	if (Ppb->Title.Buffer != NULL)
 	{
-		Params->WindowTitle.Buffer =
-			(PWSTR)((ULONG)Params->WindowTitle.Buffer -
-				(ULONG)Params);
+		Ppb->Title.Buffer =
+			(PWSTR)((ULONG)Ppb->Title.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->DesktopInfo.Buffer != NULL)
+	if (Ppb->Desktop.Buffer != NULL)
 	{
-		Params->DesktopInfo.Buffer =
-			(PWSTR)((ULONG)Params->DesktopInfo.Buffer -
-				(ULONG)Params);
+		Ppb->Desktop.Buffer =
+			(PWSTR)((ULONG)Ppb->Desktop.Buffer -
+				(ULONG)Ppb);
 	}
 
-	if (Params->ShellInfo.Buffer != NULL)
-	{
-		Params->ShellInfo.Buffer =
-			(PWSTR)((ULONG)Params->ShellInfo.Buffer -
-				(ULONG)Params);
-	}
-
-	Params->Flags = FALSE;
+   Ppb->Flags = FALSE;
 }
 
 /*
  * normalize process parameters (Offset-->Pointer)
  */
-VOID
-STDCALL
-RtlNormalizeProcessParams (
-	PRTL_USER_PROCESS_PARAMETERS	Params
-	)
+VOID STDCALL RtlNormalizeProcessParams (PRTL_USER_PROCESS_PARAMETERS Ppb)
 {
-	if (Params == NULL)
-		return;
+   if (Ppb == NULL)
+     return;
+   
+   if (Ppb->Flags == TRUE)
+     return;
+   
+   if (Ppb->CurrentDirectory.DosPath.Buffer != NULL)
+     {
+	Ppb->CurrentDirectory.DosPath.Buffer =
+	  (PWSTR)((ULONG)Ppb->CurrentDirectory.DosPath.Buffer +
+		  (ULONG)Ppb);
+     }
+   
+   if (Ppb->LibraryPath.Buffer != NULL)
+     {
+	Ppb->LibraryPath.Buffer =
+	  (PWSTR)((ULONG)Ppb->LibraryPath.Buffer +
+		  (ULONG)Ppb);
+     }
+   
+   if (Ppb->CommandLine.Buffer != NULL)
+     {
+	Ppb->CommandLine.Buffer =
+	  (PWSTR)((ULONG)Ppb->CommandLine.Buffer +
+		  (ULONG)Ppb);
+     }
+   
+   if (Ppb->ImageName.Buffer != NULL)
+     {
+	Ppb->ImageName.Buffer =
+			(PWSTR)((ULONG)Ppb->ImageName.Buffer +
+				(ULONG)Ppb);
+     }
+   
+   if (Ppb->Title.Buffer != NULL)
+     {
+	Ppb->Title.Buffer =
+	  (PWSTR)((ULONG)Ppb->Title.Buffer +
+		  (ULONG)Ppb);
+     }
+   
+   if (Ppb->Desktop.Buffer != NULL)
+     {
+	Ppb->Desktop.Buffer =
+	  (PWSTR)((ULONG)Ppb->Desktop.Buffer +
+		  (ULONG)Ppb);
+     }
 
-	if (Params->Flags == TRUE) // & PPF_NORMALIZED
-		return;
-
-	if (Params->CurrentDirectory.DosPath.Buffer != NULL)
-	{
-		Params->CurrentDirectory.DosPath.Buffer =
-			(PWSTR)((ULONG)Params->CurrentDirectory.DosPath.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->DllPath.Buffer != NULL)
-	{
-		Params->DllPath.Buffer =
-			(PWSTR)((ULONG)Params->DllPath.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->ImagePathName.Buffer != NULL)
-	{
-		Params->ImagePathName.Buffer =
-			(PWSTR)((ULONG)Params->ImagePathName.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->CommandLine.Buffer != NULL)
-	{
-		Params->CommandLine.Buffer =
-			(PWSTR)((ULONG)Params->CommandLine.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->WindowTitle.Buffer != NULL)
-	{
-		Params->WindowTitle.Buffer =
-			(PWSTR)((ULONG)Params->WindowTitle.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->DesktopInfo.Buffer != NULL)
-	{
-		Params->DesktopInfo.Buffer =
-			(PWSTR)((ULONG)Params->DesktopInfo.Buffer +
-				(ULONG)Params);
-	}
-
-	if (Params->ShellInfo.Buffer != NULL)
-	{
-		Params->ShellInfo.Buffer =
-			(PWSTR)((ULONG)Params->ShellInfo.Buffer +
-				(ULONG)Params);
-	}
-
-	Params->Flags = TRUE;  // |= PPF_NORMALIZED;
+   Ppb->Flags = TRUE;
 }
 
 /* EOF */

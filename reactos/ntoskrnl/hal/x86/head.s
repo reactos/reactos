@@ -16,7 +16,7 @@ start:
         lidt    _idt_descr
         lgdt    _gdt_descr
 
-        movw    $0x28,%ax
+        movw    $0x10,%ax
         movw    %ax,%ds
 
         popl    %eax
@@ -34,7 +34,7 @@ _idt_descr:
         .long _KiIdt
 
 _gdt_descr:
-        .word ((6+NR_TASKS)*8)-1
+        .word ((8+NR_TASKS)*8)-1
         .long _KiGdt
 
 /*_idt:

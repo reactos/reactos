@@ -12,11 +12,17 @@
 
 #include <ddk/ntddk.h>
 
+#include <internal/ps.h>
+
 #include <internal/debug.h>
+
+/* DEFINES *******************************************************************/
+
+#define NUMBER_OF_WORKER_THREADS   (5)
 
 /* TYPES *********************************************************************/
 
-typedef struct
+typedef struct _WORK_QUEUE
 {
    /*
     * PURPOSE: Head of the list of waiting work items
@@ -31,12 +37,12 @@ typedef struct
    /*
     * PURPOSE: Worker threads with nothing to do wait on this event
     */
-   KEVENT Busy;
+   KSEMAPHORE Sem;
    
    /*
     * PURPOSE: Thread associated with work queue
     */
-   HANDLE Thread;
+   HANDLE Thread[NUMBER_OF_WORKER_THREADS];
 } WORK_QUEUE, *PWORK_QUEUE;
 
 /* GLOBALS *******************************************************************/
@@ -44,9 +50,11 @@ typedef struct
 /*
  * PURPOSE: Queue of items waiting to be processed at normal priority
  */
-WORK_QUEUE normal_work_queue = {{0,}};
+WORK_QUEUE EiNormalWorkQueue;
 
-#define WAIT_INTERVAL (0)
+WORK_QUEUE EiCriticalWorkQueue;
+
+WORK_QUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -60,13 +68,14 @@ static NTSTATUS ExWorkerThreadEntryPoint(PVOID context)
  * calls PsTerminateSystemThread
  */
 {
-   PWORK_QUEUE param = (PWORK_QUEUE)context;
+   PWORK_QUEUE queue = (PWORK_QUEUE)context;
    PWORK_QUEUE_ITEM item;
    PLIST_ENTRY current;
    
-   while (1)
+   for(;;)
      {
-	current = ExInterlockedRemoveHeadList(&param->Head,&param->Lock);
+	current = ExInterlockedRemoveHeadList(&queue->Head,
+					      &queue->Lock);
 	if (current!=NULL)
 	  {
 	     item = CONTAINING_RECORD(current,WORK_QUEUE_ITEM,Entry);
@@ -74,37 +83,55 @@ static NTSTATUS ExWorkerThreadEntryPoint(PVOID context)
 	  }
 	else
 	  {
-	     KeClearEvent(&param->Busy);
-	     KeWaitForSingleObject((PVOID)&param->Busy,Executive,KernelMode,
-				   FALSE,WAIT_INTERVAL);
+	     KeWaitForSingleObject((PVOID)&queue->Sem,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   NULL);
 	  }
-     };   
+     }
 }
 
-static VOID ExKillWorkerThreadCallback(PVOID Context)
+static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
+				  KPRIORITY Priority)
 {
-   PsTerminateSystemThread(STATUS_SUCCESS);
-}
-
-void ExKillWorkerThreads(void)
-/*
- * FUNCTION: Kill all running worker threads in preparation for a shutdown
- */
-{
-   WORK_QUEUE_ITEM item1;
+   ULONG i;
+   PETHREAD Thread;
    
-   ExInitializeWorkItem(&item1,ExKillWorkerThreadCallback,NULL);
-   ExQueueWorkItem(&item1,DelayedWorkQueue);
+   InitializeListHead(&WorkQueue->Head);
+   KeInitializeSpinLock(&WorkQueue->Lock);
+   KeInitializeSemaphore(&WorkQueue->Sem,
+			 0,
+			 256);
+   for (i=0; i<NUMBER_OF_WORKER_THREADS; i++)
+     {
+	PsCreateSystemThread(&WorkQueue->Thread[i],
+			     THREAD_ALL_ACCESS,
+			     NULL,
+			     NULL,
+			     NULL,
+			     ExWorkerThreadEntryPoint,
+			     WorkQueue);
+	ObReferenceObjectByHandle(WorkQueue->Thread[i],
+				  THREAD_ALL_ACCESS,
+				  PsThreadType,
+				  KernelMode,
+				  (PVOID*)&Thread,
+				  NULL);
+	KeSetPriorityThread(&Thread->Tcb,
+			    Priority);
+	ObDereferenceObject(Thread);
+     }
 }
 
-void ExInitializeWorkerThreads(void)
+VOID ExInitializeWorkerThreads(VOID)
 {
-   InitializeListHead(&normal_work_queue.Head);
-   KeInitializeSpinLock(&normal_work_queue.Lock);
-   KeInitializeEvent(&normal_work_queue.Busy,NotificationEvent,FALSE);   
-   PsCreateSystemThread(&normal_work_queue.Thread,THREAD_ALL_ACCESS,
-			NULL,NULL,NULL,ExWorkerThreadEntryPoint,
-			&normal_work_queue);
+   ExInitializeWorkQueue(&EiNormalWorkQueue,
+			 LOW_PRIORITY);
+   ExInitializeWorkQueue(&EiCriticalWorkQueue,
+			 LOW_REALTIME_PRIORITY);
+   ExInitializeWorkQueue(&EiHyperCriticalWorkQueue,
+			 HIGH_PRIORITY);
 }
 
 VOID ExInitializeWorkItem(PWORK_QUEUE_ITEM Item,
@@ -121,10 +148,10 @@ VOID ExInitializeWorkItem(PWORK_QUEUE_ITEM Item,
 {
    ASSERT_IRQL(DISPATCH_LEVEL);
    
-   Item->Routine=Routine;
-   Item->Context=Context;
-   Item->Entry.Flink=NULL;
-   Item->Entry.Blink=NULL;
+   Item->Routine = Routine;
+   Item->Context = Context;
+   Item->Entry.Flink = NULL;
+   Item->Entry.Blink = NULL;
 }
 
 VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
@@ -147,9 +174,34 @@ VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
    switch(QueueType)
      {
       case DelayedWorkQueue:
-	ExInterlockedInsertTailList(&normal_work_queue.Head,&(WorkItem->Entry),
-				    &normal_work_queue.Lock);
-	KeSetEvent(&normal_work_queue.Busy,IO_NO_INCREMENT,FALSE);
+	ExInterlockedInsertTailList(&EiNormalWorkQueue.Head,
+				    &WorkItem->Entry,
+				    &EiNormalWorkQueue.Lock);
+	KeReleaseSemaphore(&EiNormalWorkQueue.Sem,
+			   1,
+			   IO_NO_INCREMENT,
+			   FALSE);
 	break;
+	
+      case CriticalWorkQueue:
+	ExInterlockedInsertTailList(&EiCriticalWorkQueue.Head,
+				    &WorkItem->Entry,
+				    &EiCriticalWorkQueue.Lock);
+	KeReleaseSemaphore(&EiCriticalWorkQueue.Sem,
+			   1,
+			   IO_NO_INCREMENT,
+			   FALSE);
+	break;
+
+      case HyperCriticalWorkQueue:
+	ExInterlockedInsertTailList(&EiHyperCriticalWorkQueue.Head,
+				    &WorkItem->Entry,
+				    &EiHyperCriticalWorkQueue.Lock);
+	KeReleaseSemaphore(&EiHyperCriticalWorkQueue.Sem,
+			   1,
+			   IO_NO_INCREMENT,
+			   FALSE);
+	break;
+
      }
 }

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.4 2000/01/05 21:56:58 dwelch Exp $ */
+/* $Id: sefuncs.h,v 1.5 2000/01/26 10:07:22 dwelch Exp $ */
 NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
 BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
 ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
@@ -26,11 +26,12 @@ BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 		      OUT PACCESS_MODE GrantedAccess,
 		      OUT PNTSTATUS AccessStatus);
 NTSTATUS STDCALL SeAssignSecurity (PSECURITY_DESCRIPTOR ParentDescriptor,
-			  PSECURITY_DESCRIPTOR ExplicitDescriptor,
-			  BOOLEAN IsDirectoryObject,
-			  PSECURITY_SUBJECT_CONTEXT SubjectContext,
-			  PGENERIC_MAPPING GenericMapping,
-			  POOL_TYPE PoolType);
+				   PSECURITY_DESCRIPTOR ExplicitDescriptor,
+				   PSECURITY_DESCRIPTOR* NewDescriptor,
+				   BOOLEAN IsDirectoryObject,
+				   PSECURITY_SUBJECT_CONTEXT SubjectContext,
+				   PGENERIC_MAPPING GenericMapping,
+				   POOL_TYPE PoolType);
 NTSTATUS STDCALL SeDeassignSecurity (PSECURITY_DESCRIPTOR* SecurityDescriptor);
 BOOLEAN STDCALL SeSinglePrivilegeCheck (LUID PrivilegeValue, KPROCESSOR_MODE PreviousMode);
 ULONG STDCALL RtlLengthSid (PSID Sid);
@@ -43,6 +44,20 @@ NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
 				PSECURITY_QUALITY_OF_SERVICE Qos,
 				ULONG e,
 				PSE_SOME_STRUCT2 f);
+NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
+				PACCESS_TOKEN NewToken,
+				PACCESS_TOKEN* OldTokenP);
+VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext);
+VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext);
+NTSTATUS SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
+					 ULONG PrivilegeCount,
+					 KPROCESSOR_MODE PreviousMode,
+					 PLUID_AND_ATTRIBUTES AllocatedMem,
+					 ULONG AllocatedLength,
+					 POOL_TYPE PoolType,
+					 ULONG d,
+					 PLUID_AND_ATTRIBUTES* Dest,
+					 PULONG Length);
 
 
 #endif /* ndef _INCLUDE_DDK_SEFUNCS_H */

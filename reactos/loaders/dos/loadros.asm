@@ -11,10 +11,13 @@ KERNEL_BASE	equ     0c0000000h
 ;
 ; Segment selectors
 ;
-USER_CS		equ     08h
-USER_DS		equ     010h
-KERNEL_CS	equ     020h
-KERNEL_DS	equ     028h
+;USER_CS		equ     08h
+;USER_DS		equ     010h
+;KERNEL_CS	equ     020h
+;KERNEL_DS	equ     028h
+
+KERNEL_CS       equ     08h
+KERNEL_DS       equ     010h
                                      
 ;
 ; Space reserved in the gdt for tss descriptors
@@ -850,7 +853,7 @@ empty_8042:
 align 8
 gdt_descr:
 gdt_limit:
-        dw (((6+NR_TASKS)*8)-1)
+        dw (3*8)-1
 gdt_base:
         dd gdt
 
@@ -1122,20 +1125,20 @@ gdt:
         dw 0
         dw 0
                                 
-        dw 00000h          ; User code descriptor
-        dw 00000h          ; base: 0h limit: 3gb
-        dw 0fa00h
-        dw 000cch
+        ;dw 00000h          ; User code descriptor
+        ;dw 00000h          ; base: 0h limit: 3gb
+        ;dw 0fa00h
+        ;dw 000cch
                                
-        dw 00000h          ; User data descriptor
-        dw 00000h          ; base: 0h limit: 3gb
-        dw 0f200h
-        dw 000cch
+        ;dw 00000h          ; User data descriptor
+        ;dw 00000h          ; base: 0h limit: 3gb
+        ;dw 0f200h
+        ;dw 000cch
                             
-        dw 00000h          
-        dw 00000h         
-        dw 00000h
-        dw 00000h
+        ;dw 00000h          
+        ;dw 00000h         
+        ;dw 00000h
+        ;dw 00000h
 
         dw 0ffffh          ; Kernel code descriptor 
         dw 00000h          ; 
@@ -1148,7 +1151,7 @@ gdt:
         dw 000cfh
 
                                 
-        times NR_TASKS*8 db 0
+        ;times NR_TASKS*8 db 0
 
 _end:
 

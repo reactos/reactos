@@ -1,11 +1,19 @@
 #ifndef _ASM_SEGMENT_H
 #define _ASM_SEGMENT_H
 
-#define USER_CS            (0x8+0x3)
-#define USER_DS            (0x10+0x3)
-#define ZERO_DS            0x18
-#define KERNEL_CS          0x20
-#define KERNEL_DS          0x28
+#define KERNEL_CS            (0x8)
+#define KERNEL_DS            (0x10)
+#define USER_CS              (0x18 + 0x3)
+#define USER_DS              (0x20 + 0x3)
+#define RESERVED_FOR_TSS     (0x28)
+#define PCR_SELECTOR         (0x30)
+#define TEB_SELECTOR         (0x38 + 0x3)
+
+//#define USER_CS            (0x8+0x3)
+//#define USER_DS            (0x10+0x3)
+//#define ZERO_DS            0x18
+//#define KERNEL_CS          0x20
+//#define KERNEL_DS          0x28
 
 #ifndef __ASSEMBLY__
 

@@ -92,40 +92,40 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
     // Standard fields.
     //
 
-    WORD    Magic;
+    WORD    Magic;                                                // 0x04
     BYTE    MajorLinkerVersion;
     BYTE    MinorLinkerVersion;
-    DWORD   SizeOfCode;
-    DWORD   SizeOfInitializedData;
-    DWORD   SizeOfUninitializedData;
-    DWORD   AddressOfEntryPoint;
-    DWORD   BaseOfCode;
-    DWORD   BaseOfData;
+    DWORD   SizeOfCode;                                           // 0x08
+    DWORD   SizeOfInitializedData;                                // 0x0C
+    DWORD   SizeOfUninitializedData;                              // 0x10
+    DWORD   AddressOfEntryPoint;                                  // 0x14
+    DWORD   BaseOfCode;                                           // 0x18
+    DWORD   BaseOfData;                                           // 0x1C
 
     //
     // NT additional fields.
     //
 
-    DWORD   ImageBase;
-    DWORD   SectionAlignment;
-    DWORD   FileAlignment;
-    WORD    MajorOperatingSystemVersion;
-    WORD    MinorOperatingSystemVersion;
-    WORD    MajorImageVersion;
-    WORD    MinorImageVersion;
-    WORD    MajorSubsystemVersion;
-    WORD    MinorSubsystemVersion;
-    DWORD   Win32VersionValue;
-    DWORD   SizeOfImage;
-    DWORD   SizeOfHeaders;
-    DWORD   CheckSum;
-    WORD    Subsystem;
-    WORD    DllCharacteristics;
-    DWORD   SizeOfStackReserve;
-    DWORD   SizeOfStackCommit;
-    DWORD   SizeOfHeapReserve;
-    DWORD   SizeOfHeapCommit;
-    DWORD   LoaderFlags;
+    DWORD   ImageBase;                                             // 0x20
+    DWORD   SectionAlignment;                                      // 0x24
+    DWORD   FileAlignment;                                         // 0x28
+    WORD    MajorOperatingSystemVersion;                           // 0x2C
+    WORD    MinorOperatingSystemVersion;                           // 0x2E
+    WORD    MajorImageVersion;                                     // 0x30
+    WORD    MinorImageVersion;                                     // 0x32
+    WORD    MajorSubsystemVersion;                                 // 0x34
+    WORD    MinorSubsystemVersion;                                 // 0x36
+    DWORD   Win32VersionValue;                                     // 0x38
+    DWORD   SizeOfImage;                                           // 0x3C
+    DWORD   SizeOfHeaders;                                         // 0x40
+    DWORD   CheckSum;                                              // 0x44
+    WORD    Subsystem;                                             // 0x48
+    WORD    DllCharacteristics;                                    // 0x4A
+    DWORD   SizeOfStackReserve;                                    // 0x4C
+    DWORD   SizeOfStackCommit;                                     // 0x50
+    DWORD   SizeOfHeapReserve;                                     // 0x54
+    DWORD   SizeOfHeapCommit;                                      // 0x58
+    DWORD   LoaderFlags;                                           // 0x5C
     DWORD   NumberOfRvaAndSizes;
     IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER, *PIMAGE_OPTIONAL_HEADER;

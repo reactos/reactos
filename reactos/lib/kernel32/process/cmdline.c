@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.10 2000/01/11 17:30:46 ekohl Exp $
+/* $Id: cmdline.c,v 1.11 2000/01/26 10:07:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -41,7 +41,6 @@ static VOID
 InitCommandLines (VOID)
 {
 	PRTL_USER_PROCESS_PARAMETERS Params;
-
 	// initialize command line buffers
 	CommandLineW[0] = 0;
 	CommandLineStringW.Buffer = CommandLineW;

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.7 2000/01/05 21:57:00 dwelch Exp $
+/* $Id: create.c,v 1.8 2000/01/26 10:07:29 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -307,11 +307,11 @@ VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount)
 	   ObGetHandleCount(ObjectBody));
 }
 
-NTSTATUS PsInitializeThread(HANDLE			ProcessHandle, 
-			    PETHREAD		* ThreadPtr,
-			    PHANDLE			ThreadHandle,
-			    ACCESS_MASK		DesiredAccess,
-			    POBJECT_ATTRIBUTES	ThreadAttributes)
+NTSTATUS PsInitializeThread(HANDLE ProcessHandle, 
+			    PETHREAD* ThreadPtr,
+			    PHANDLE ThreadHandle,
+			    ACCESS_MASK	DesiredAccess,
+			    POBJECT_ATTRIBUTES ThreadAttributes)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -363,7 +363,7 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
    Thread->Tcb.KernelApcDisable = 1;
    Thread->Tcb.WaitIrql = PASSIVE_LEVEL;
    Thread->ThreadsProcess = Process;
-   KeInitializeDpc( &Thread->Tcb.TimerDpc, PiTimeoutThread, Thread );
+   KeInitializeDpc(&Thread->Tcb.TimerDpc, PiTimeoutThread, Thread);
    Thread->Tcb.WaitBlockList = NULL;
    InsertTailList( &Thread->ThreadsProcess->Pcb.ThreadListHead, &Thread->Tcb.ProcessThreadListEntry );
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
@@ -395,7 +395,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
 			     PETHREAD Thread,
 			     PINITIAL_TEB InitialTeb)
 {
-   MEMORY_BASIC_INFORMATION Info;
+//   MEMORY_BASIC_INFORMATION Info;
    NTSTATUS Status;
    ULONG ByteCount;
    ULONG RegionSize;
@@ -423,9 +423,12 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
         else
           {
              DPRINT ("TEB allocation failed! Status %x\n",Status);
+	     for(;;);
+	     return(Status);
           }
 
-        TebBase = Info.BaseAddress - TebSize;
+//        TebBase = Info.BaseAddress - TebSize;
+	TebBase = TebBase - TebSize;
    }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);

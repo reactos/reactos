@@ -1,37 +1,19 @@
-/* $Id: rtl.h,v 1.6 2000/01/11 17:28:11 ekohl Exp $
+/* $Id: rtl.h,v 1.7 2000/01/26 10:07:22 dwelch Exp $
  *
  */
 
-VOID
-WINAPI
-__RtlInitHeap (
-	PVOID	base,
-	ULONG	minsize,
-	ULONG	maxsize
-	);
+VOID WINAPI __RtlInitHeap(PVOID	base,
+			  ULONG	minsize,
+			  ULONG	maxsize);
 
 #define HEAP_BASE (0xa0000000)
 
-VOID
-RtlDeleteCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
-	);
-VOID
-RtlEnterCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
-	);
-VOID
-RtlInitializeCriticalSection (
-	LPCRITICAL_SECTION	pcritical
-	);
-VOID
-RtlLeaveCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
-	);
-WINBOOL
-RtlTryEntryCriticalSection (
-	LPCRITICAL_SECTION	lpCriticalSection
-	);
+VOID RtlDeleteCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
+VOID RtlEnterCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
+VOID RtlInitializeCriticalSection (LPCRITICAL_SECTION	pcritical);
+VOID RtlLeaveCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
+WINBOOL RtlTryEntryCriticalSection (LPCRITICAL_SECTION	lpCriticalSection);
+
 UINT
 STDCALL
 RtlCompactHeap (

@@ -20,6 +20,7 @@
 
 DWORD STDCALL TlsAlloc(VOID)
 {
+#if 0
    DWORD dwTlsIndex = GetTeb()->dwTlsIndex;
    void	**TlsData = GetTeb()->TlsData;
 	
@@ -29,15 +30,19 @@ DWORD STDCALL TlsAlloc(VOID)
 	return (dwTlsIndex++);
      }
    return (0xFFFFFFFFUL);
+#endif
 }
 
 WINBOOL	STDCALL TlsFree(DWORD dwTlsIndex)
 {
+#if 0
    return (TRUE);
+#endif
 }
 
 LPVOID STDCALL TlsGetVlue(DWORD dwTlsIndex)
 {
+#if 0
    void	**TlsData = GetTeb()->TlsData;
 	
    if (dwTlsIndex < (sizeof(TlsData) / sizeof(TlsData[0])))
@@ -47,10 +52,12 @@ LPVOID STDCALL TlsGetVlue(DWORD dwTlsIndex)
      }
    SetLastError(1);
    return (NULL);
+#endif
 }
 
 WINBOOL	STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
+#if 0
    void	**TlsData = GetTeb()->TlsData;
 	
    if (dwTlsIndex < (sizeof(TlsData) / sizeof(TlsData[0])))
@@ -59,4 +66,5 @@ WINBOOL	STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 	return (TRUE);
      }
    return (FALSE);
+#endif
 }

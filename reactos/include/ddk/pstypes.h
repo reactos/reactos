@@ -3,6 +3,7 @@
 
 #include <kernel32/atom.h>
 #include <internal/hal.h>
+#include <internal/teb.h>
 
 #ifndef TLS_MINIMUM_AVAILABLE
 #define TLS_MINIMUM_AVAILABLE 	(64)
@@ -45,127 +46,6 @@ typedef struct linux_sigcontext {
 } TRAP_FRAME, *PTRAP_FRAME;
 
 typedef ULONG THREADINFOCLASS;
-
-typedef struct _CURDIR
-{
-	UNICODE_STRING	DosPath;
-	HANDLE		Handle;
-} CURDIR, *PCURDIR;
-
-typedef struct _RTL_DRIVE_LETTER_CURDIR
-{
-	USHORT	Flags;
-	USHORT	Length;
-	ULONG	TimeStamp;
-	UNICODE_STRING	DosPath;
-} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
-
-typedef struct _RTL_USER_PROCESS_PARAMETERS
-{
-	ULONG			MaximumLength;		// 00h
-	ULONG			Length;			// 04h
-	ULONG			Flags;			// 08h
-	ULONG			DebugFlags;		// 0Ch
-	HANDLE			ConsoleHandle;		// 10h
-	ULONG			ConsoleFlags;		// 14h
-	HANDLE			StandardInput;		// 18h
-	HANDLE			StandardOutput;		// 1Ch
-	HANDLE			StandardError;		// 20h
-	CURDIR			CurrentDirectory;	// 24h
-	UNICODE_STRING		DllPath;		// 30h
-	UNICODE_STRING		ImagePathName;		// 38h
-	UNICODE_STRING		CommandLine;		// 40h
-	PVOID			Environment;		// 48h
-	ULONG			StartingX;		// 4Ch
-	ULONG			StartingY;		// 50h
-	ULONG			CountX;			// 54h
-	ULONG			CountY;			// 58h
-	ULONG			CountCharsX;		// 5Ch
-	ULONG			CountCharsY;		// 60h
-	ULONG			FillAttribute;		// 64h
-	ULONG			WindowFlags;		// 68h
-	ULONG			ShowWindowFlags;	// 6Ch
-	UNICODE_STRING		WindowTitle;		// 70h
-	UNICODE_STRING		DesktopInfo;		// 78h
-	UNICODE_STRING		ShellInfo;		// 80h
-	UNICODE_STRING		RuntimeData;		// 88h
-	RTL_DRIVE_LETTER_CURDIR	DLCurrentDirectory[32];	// 90h
-} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
-
-
-typedef struct _LDR
-{
-	UCHAR	Initialized;
-	UCHAR	InInitializationOrderModuleList;
-	PVOID	InLoadOrderModuleList;
-	PVOID	InMemoryOrderModuleList;
-} LDR, *PLDR;
-
-
-typedef struct _PEB
-{
-	UCHAR			InheritedAddressSpace;      // 00
-	UCHAR			ReadImageFileExecOptions;   // 01h
-	UCHAR			BeingDebugged;              // 02h
-	LONG			ImageBaseAddress;           // 03h
-	LDR			Ldr;                        // 07h
-
-	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters;	// 10h
-
-	WORD			NumberOfProcessors;         // 11h
-	WORD			NtGlobalFlag;               // 13h
-
-	HANDLE			ProcessHeap;                // 19h
-	ATOMTABLE		LocalAtomTable;             // 1Dh
-	LPCRITICAL_SECTION	CriticalSection;            // 35h
-	DWORD			CriticalSectionTimeout;     // 39h
-	WORD			MajorVersion;               // 3Dh
-	WORD			MinorVersion;               // 3Fh
-	WORD			BuildNumber;                // 41h
-	WORD			PlatformId;                 // 43h
-} PEB, *PPEB;
-
-typedef struct _CLIENT_ID
-{
-    HANDLE UniqueProcess;
-    HANDLE UniqueThread;
-} CLIENT_ID, *PCLIENT_ID;
-
-typedef struct _NT_TIB {
-    struct _EXCEPTION_REGISTRATION_RECORD* ExceptionList;  // 00h
-    PVOID StackBase;                                       // 04h
-    PVOID StackLimit;                                      // 08h
-    PVOID SubSystemTib;                                    // 0Ch
-    union {
-        PVOID FiberData;                                   // 10h
-        ULONG Version;                                     // 10h
-    } Fib;
-    PVOID ArbitraryUserPointer;                            // 14h
-    struct _NT_TIB *Self;                                  // 18h
-} NT_TIB, *PNT_TIB;
-
-typedef struct _NT_TEB
-{
-	NT_TIB			Tib;              // 00h
-	ULONG			reserved1;        // 1Ch  ???
-	CLIENT_ID		Cid;              // 20h
-	ULONG			reserved2;        // 28h  ???
-	ULONG			reserved3;        // 2Ch  ???
-	PPEB			Peb;             // 30h 
-	DWORD			LastErrorCode;    // 34h
-
-	HANDLE			RPCHandle;        // 36
-	PVOID			TlsData[TLS_MINIMUM_AVAILABLE]; // 40
-	DWORD			dwTlsIndex;       // 230
-	NTSTATUS		LastStatusValue;  // 242
-	DWORD			LockCount;        // 244
-	UCHAR			HardErrorMode;    // 248
-
-	/* reactos only ??? (Eric Kohl) */
-	PVOID			StackCommit;
-	PVOID			StackCommitMax;
-	PVOID			StackReserved;
-} NT_TEB, *PNT_TEB;
 
 struct _KPROCESS;
 
@@ -427,5 +307,11 @@ typedef struct _EPROCESS
 
 #define PROCESS_STATE_TERMINATED (1)
 #define PROCESS_STATE_ACTIVE     (2)
+
+#define LOW_PRIORITY (0)
+#define LOW_REALTIME_PRIORITY (16)
+#define HIGH_PRIORITY (31)
+#define MAXIMUM_PRIORITY (32)
+
 
 #endif /* __INCLUDE_DDK_PSTYPES_H */

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.17 2000/01/11 17:30:46 ekohl Exp $
+/* $Id: create.c,v 1.18 2000/01/26 10:07:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -236,19 +236,19 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
    TempApplicationName[3] = '\\';
    TempApplicationName[4] = 0;
    
-   DPRINT("TempApplicationName '%S'\n",TempApplicationName);
+   DPRINT("TempApplicationName '%w'\n",TempApplicationName);
 
    if (lpApplicationName != NULL)
      {
 	wcscpy(TempFileName, lpApplicationName);
 	
-	DPRINT("TempFileName '%S'\n",TempFileName);
+	DPRINT("TempFileName '%w'\n",TempFileName);
      }
    else
      {
 	wcscpy(TempFileName, lpCommandLine);
 	
-	DPRINT("TempFileName '%S'\n",TempFileName);
+	DPRINT("TempFileName '%w'\n",TempFileName);
 	
 	for (i=0; TempFileName[i]!=' ' && TempFileName[i] != 0; i++);
 	TempFileName[i]=0;
@@ -268,7 +268,7 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 
    RtlInitUnicodeString(&ApplicationNameString, TempApplicationName);
 
-   DPRINT("ApplicationName %S\n",ApplicationNameString.Buffer);
+   DPRINT("ApplicationName %w\n",ApplicationNameString.Buffer);
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &ApplicationNameString,
@@ -349,7 +349,7 @@ static NTSTATUS
 CreatePeb (
 	PPEB	*PebPtr,
 	HANDLE	ProcessHandle,
-	PRTL_USER_PROCESS_PARAMETERS Ppb)
+	PRTL_USER_PROCESS_PARAMETERS	Ppb)
 {
    NTSTATUS Status;
    PVOID PebBase;
@@ -361,7 +361,7 @@ CreatePeb (
 
    /* create the PPB */
    PpbBase = (PVOID)PEB_STARTUPINFO;
-   PpbSize = Ppb->MaximumLength;
+   PpbSize = Ppb->TotalSize;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -373,11 +373,11 @@ CreatePeb (
 	return(Status);
      }
 
-   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
+   DPRINT("Ppb->TotalSize %x\n", Ppb->TotalSize);
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->MaximumLength,
+			Ppb->TotalSize,
 			&BytesWritten);
 
 
@@ -439,11 +439,11 @@ CreateProcessW (
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    DWORD len = 0;
-   PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+   PRTL_USER_PROCESS_PARAMETERS Ppb;
    UNICODE_STRING CommandLine_U;
    PPEB Peb;
 
-   DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
+   DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
 
    if (lpApplicationName[1] != ':')
@@ -469,10 +469,10 @@ CreateProcessW (
 		&CommandLine_U,
 		TempCommandLine);
 
-	DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
+	DPRINT("CommandLine_U %w\n", CommandLine_U.Buffer);
 
 	RtlCreateProcessParameters (
-		&ProcessParams,
+		&Ppb,
 		&CommandLine_U,
 		NULL,
 		NULL,
@@ -529,7 +529,7 @@ CreateProcessW (
 			       PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
-	RtlDestroyProcessParameters (ProcessParams);
+	RtlDestroyProcessParameters (Ppb);
 	SetLastError(RtlNtStatusToDosError(Status));
 	return FALSE;
      }
@@ -538,9 +538,9 @@ CreateProcessW (
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   CreatePeb(&Peb, hProcess, ProcessParams);
+   CreatePeb(&Peb, hProcess, Ppb);
 
-   RtlDestroyProcessParameters (ProcessParams);
+   RtlDestroyProcessParameters (Ppb);
 
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)

@@ -334,7 +334,7 @@ NTSTATUS STDCALL NtCreateProcess (
    InitializeListHead( &KProcess->ThreadListHead );
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
-   Status = PsCreatePeb (*ProcessHandle);
+   Status = PsCreatePeb(*ProcessHandle);
    if (!NT_SUCCESS(Status))
      {
 //        DPRINT("NtCreateProcess() Peb creation failed: Status %x\n",Status);
@@ -358,14 +358,10 @@ NTSTATUS STDCALL NtCreateProcess (
 }
 
 
-NTSTATUS
-STDCALL
-NtOpenProcess (
-	OUT	PHANDLE			ProcessHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	PCLIENT_ID		ClientId
-	)
+NTSTATUS STDCALL NtOpenProcess (OUT	PHANDLE		    ProcessHandle,
+				IN	ACCESS_MASK	    DesiredAccess,
+				IN	POBJECT_ATTRIBUTES  ObjectAttributes,
+				IN	PCLIENT_ID	    ClientId)
 {
    DPRINT("NtOpenProcess(ProcessHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
@@ -444,15 +440,11 @@ NtOpenProcess (
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryInformationProcess (
-	IN	HANDLE	ProcessHandle,
-	IN	CINT	ProcessInformationClass,
-	OUT	PVOID	ProcessInformation,
-	IN	ULONG	ProcessInformationLength,
-	OUT	PULONG	ReturnLength
-	)
+NTSTATUS STDCALL NtQueryInformationProcess (IN	HANDLE ProcessHandle,
+					    IN	CINT ProcessInformationClass,
+					    OUT	PVOID ProcessInformation,
+					    IN	ULONG ProcessInformationLength,
+					    OUT	PULONG ReturnLength)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -474,7 +466,8 @@ NtQueryInformationProcess (
       case ProcessBasicInformation:
 	ProcessBasicInformationP = (PPROCESS_BASIC_INFORMATION)
 	  ProcessInformation;
-	memset(ProcessBasicInformationP, 0, sizeof(PROCESS_BASIC_INFORMATION));
+	ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
+	ProcessBasicInformationP->PebBaseAddress = Process->Peb;
 	ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
         ProcessBasicInformationP->UniqueProcessId =
           Process->UniqueProcessId;
@@ -494,7 +487,13 @@ NtQueryInformationProcess (
       case ProcessAccessToken:
       case ProcessLdtInformation:
       case ProcessLdtSize:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+	
       case ProcessDefaultHardErrorMode:
+	*((PULONG)ProcessInformation) = Process->DefaultHardErrorProcessing;
+	break;
+	
       case ProcessIoPortHandlers:
       case ProcessWorkingSetWatch:
       case ProcessUserModeIOPL:
@@ -510,19 +509,41 @@ NtQueryInformationProcess (
    return(Status);
 }
 
+NTSTATUS PspAssignPrimaryToken(PEPROCESS Process,
+			       HANDLE TokenHandle)
+{
+   PACCESS_TOKEN Token;
+   PACCESS_TOKEN OldToken;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(TokenHandle,
+				      0,
+				      SeTokenType,
+				      UserMode,
+				      (PVOID*)&Token,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   Status = SeExchangePrimaryToken(Process, Token, &OldToken);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(OldToken);
+     }
+   ObDereferenceObject(Token);
+   return(Status);
+}
 
-NTSTATUS
-STDCALL
-NtSetInformationProcess (
-	IN	HANDLE	ProcessHandle,
-	IN	CINT	ProcessInformationClass,
-	IN	PVOID	ProcessInformation,
-	IN	ULONG	ProcessInformationLength
-	)
+NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
+					 IN CINT ProcessInformationClass,
+					 IN PVOID ProcessInformation,
+					 IN ULONG ProcessInformationLength)
 {
    PEPROCESS Process;
    NTSTATUS Status;
    PPROCESS_BASIC_INFORMATION ProcessBasicInformationP;
+   PHANDLE ProcessAccessTokenP;
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
@@ -530,7 +551,7 @@ NtSetInformationProcess (
 				      UserMode,
 				      (PVOID*)&Process,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -554,6 +575,10 @@ NtSetInformationProcess (
       case ProcessDebugPort:
       case ProcessExceptionPort:
       case ProcessAccessToken:
+	ProcessAccessTokenP = (PHANDLE)ProcessInformation;
+	Status = PspAssignPrimaryToken(Process, *ProcessAccessTokenP);
+	break;
+	
       case ProcessLdtInformation:
       case ProcessLdtSize:
       case ProcessDefaultHardErrorMode:
