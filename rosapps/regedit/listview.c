@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,11 +29,11 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include <windowsx.h>
 #include "main.h"
 #include "listview.h"
+#include "hex_str.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,21 +85,21 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
         case REG_DWORD:
             {
                 TCHAR buf[64];
-                wsprintf(buf, "0x%08X (%d)", *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                wsprintf(buf, _T("0x%08X (%d)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
                 ListView_SetItemText(hwndLV, index, 2, buf);
             }
 //            lpsRes = convertHexToDWORDStr(lpbData, dwLen);
             break;
         case REG_BINARY:
             {
-                int i;
+                unsigned int i;
                 LPTSTR pData = (LPTSTR)ValBuf;
                 LPTSTR strBinary = malloc(dwCount * sizeof(TCHAR) * 3 + 1);
                 memset(strBinary, _T(' '), dwCount * sizeof(TCHAR) * 3);
                 strBinary[dwCount * sizeof(TCHAR) * 3] = _T('\0');
                 for (i = 0; i < dwCount; i++) {
                     unsigned short* pShort;
-                    pShort = &(strBinary[i*3]);
+                    pShort = (unsigned short*)&(strBinary[i*3]);
 //                    strBinary[i*3] = Byte2Hex((LPTSTR)ValBuf+i);
 //                    *pShort++ = Byte2Hex(*(pData+i));
                     *pShort = Byte2Hex(*(pData+i));
@@ -202,6 +199,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     }
 } 
 
+#if 0
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     TCHAR buf1[1000];
@@ -211,6 +209,7 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     ListView_GetItemText((HWND)lParamSort, lParam2, 0, buf2, sizeof(buf2));
     return _tcscmp(buf1, buf2);
 }
+#endif
 
 static void ListViewPopUpMenu(HWND hWnd, POINT pt)
 {
@@ -363,7 +362,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
 //                }
 //                dwValSize = max_val_size;
                 while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
-                    ValBuf[dwValSize] = NULL;
+                    ValBuf[dwValSize] = 0;
                     AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize);
                     dwValNameLen = max_val_name_len;
                     dwValSize = max_val_size;

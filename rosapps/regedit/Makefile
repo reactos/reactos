@@ -36,6 +36,8 @@ OBJS =	framewnd.o \
         about.o \
         trace.o \
         hex_str.o \
+	regcmds.o \
+	regproc.o \
         main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32

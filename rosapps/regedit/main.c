@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,11 +29,13 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include "main.h"
 #include "framewnd.h"
 #include "childwnd.h"
+
+
+BOOL ProcessCmdLine(LPSTR lpCmdLine);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +101,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     };
     ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
+    hChildWndClass = hChildWndClass; // warning eater
 
 	hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
 
@@ -137,7 +137,6 @@ void ExitInstance(void)
     DestroyMenu(hMenuFrame);
 }
 
-
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPSTR     lpCmdLine,
@@ -145,6 +144,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 {
     MSG msg;
     HACCEL hAccel;
+
+    if (ProcessCmdLine(lpCmdLine)) {
+        return 0;
+    }
 
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
