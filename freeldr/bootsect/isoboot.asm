@@ -31,7 +31,7 @@
 ; ****************************************************************************
 
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
-;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
+%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
 
 
@@ -77,6 +77,7 @@ SECTORSIZE_LG2	equ 11			; 2048 bytes/sector (El Torito requirement)
 SECTORSIZE	equ (1 << SECTORSIZE_LG2)
 CR		equ 13			; Carriage Return
 LF		equ 10			; Line Feed
+retry_count	equ 6			; How patient are we with the BIOS?
 
 
 
@@ -130,6 +131,7 @@ relocate:
 
 
 	; Make sure the keyboard buffer is empty
+%ifdef WAIT_FOR_KEY
 .kbd_buffer_test:
 	call	pollchar
 	jz	.kbd_buffer_empty
@@ -179,7 +181,7 @@ relocate:
 	mov	dx, 0080h
 
 	jmp	0:0x7C00
-
+%endif
 
 .boot_cdrom:
 	; Save and display the boot drive number
@@ -288,7 +290,7 @@ get_fs_structures:
 	call	crlf
 %endif
 
-	; Look for the "X86" directory, and if found,
+	; Look for the "REACTOS" directory, and if found,
 	; make it the current directory instead of the root
 	; directory.
 	mov	di,isolinux_dir
@@ -316,7 +318,7 @@ get_fs_structures:
 	jmp	kaboom				; fail boot
 
 .isolinux_opened:
-	push	si				; save file pointer
+	mov	di, si				; save file pointer
 
 %ifdef DEBUG_MESSAGES
 	mov	si, filelen_msg
@@ -325,10 +327,40 @@ get_fs_structures:
 	call	crlf
 %endif
 
+	mov ecx, eax			; calculate sector count
+	shr ecx, 11
+	test eax, 0x7FF
+	jz .full_sector
+	inc ecx
+.full_sector:
+
+%ifdef DEBUG_MESSAGES
+	mov eax, ecx
+	mov	si, filesect_msg
+	call	writemsg
+	call	writehex8
+	call	crlf
+%endif
+
+	mov eax, [di+file_sector]
+	call	writehex8
+	call	crlf
+
+	mov eax, [di+file_left]
+	call	writehex8
+	call	crlf
+
 	mov	bx, 0x8000			; bx = load address
-	pop	si				; si = file pointer
+	mov	si, di				; restore file pointer
 	mov	cx, 0xFFFF			; load the whole file
-	call	getfssec			; get the first sector
+	call	getfssec			; get the whole file
+
+%ifdef DEBUG_MESSAGES
+	mov	si, startldr_msg
+	call	writemsg
+	call	crlf
+%endif
+
 	mov	dl, [DriveNo]			; dl = boot drive
 	mov dh, 0					; dh = boot partition
 	jmp	0:0x8000			; jump into OSLoader
@@ -642,7 +674,8 @@ spec_query_failed:
 	cmp	byte [DriveNo], dl
 	je	.found_drive
 
-.still_broken:	dec dx
+.still_broken:
+	dec dx
 	cmp	dl, 80h
 	jnb	.test_loop
 
@@ -774,11 +807,11 @@ getlinsec:
 	mov bx,es
 	mov [si+6],bx
 	mov [si+8],eax
-.loop:
+.loop2:
 	push bp				; Sectors left
-	cmp bp,byte 32
+	cmp bp,[MaxTransfer]
 	jbe .bp_ok
-	mov bp,32
+	mov bp,[MaxTransfer]
 .bp_ok:
 	mov [si+2],bp
 	push si
@@ -793,13 +826,13 @@ getlinsec:
 	shl ax,SECTORSIZE_LG2-4		; 2048-byte sectors -> segment
 	add [si+6],ax			; Advance buffer pointer
 	and bp,bp
-	jnz .loop
+	jnz .loop2
 	mov eax,[si+8]			; Next sector
 	ret
 
 	; INT 13h with retry
 xint13:
-	mov	byte [RetryCount], 6
+	mov	byte [RetryCount], retry_count
 .try:
 	pushad
 	int	13h
@@ -809,8 +842,26 @@ xint13:
 .error:
 	mov	[DiskError], ah		; Save error code
 	popad
-	dec	byte [RetryCount]
-	jnz	.try
+	dec byte [RetryCount]
+	jz .real_error
+	push ax
+	mov al,[RetryCount]
+	mov ah,[dapa+2]			; Sector transfer count
+	cmp al,2			; Only 2 attempts left
+	ja .nodanger
+	mov ah,1			; Drop transfer size to 1
+	jmp short .setsize
+.nodanger:
+	cmp al,retry_count-2
+	ja .again			; First time, just try again
+	shr ah,1			; Otherwise, try to reduce
+	adc ah,0			; the max transfer size, but not to 0
+.setsize:
+	mov [MaxTransfer],ah
+	mov [dapa+2],ah
+.again:
+	pop ax
+	jmp .try
 
 .real_error:
 	mov	si, diskerr_msg
@@ -858,11 +909,11 @@ getchar:
 ; pollchar: check if we have an input character pending (ZF = 0)
 ;
 pollchar:
-		pushad
-		mov ah,1		; Poll keyboard
-		int 16h
-		popad
-		ret
+	pushad
+	mov ah,1		; Poll keyboard
+	int 16h
+	popad
+	ret
 
 
 
@@ -878,10 +929,11 @@ secsize_msg:	db 'Sector size appears to be ', 0
 rootloc_msg:	db 'Root directory location: ', 0
 rootlen_msg:	db 'Root directory length: ', 0
 rootsect_msg:	db 'Root directory length(sectors): ', 0
-fileloc_msg:	db 'FreeLdr.sys location: ', 0
-filelen_msg:	db 'FreeLdr.sys length: ', 0
-filesect_msg:	db 'FreeLdr.sys length(sectors): ', 0
+fileloc_msg:	db 'SETUPLDR.SYS location: ', 0
+filelen_msg:	db 'SETUPLDR.SYS length: ', 0
+filesect_msg:	db 'SETUPLDR.SYS length(sectors): ', 0
 findfail_msg:	db 'Failed to find file!', 0
+startldr_msg:	db 'Starting SETUPLDR.SYS', 0
 %endif
 
 nosecsize_msg:	db 'Failed to get sector size, assuming 0800', CR, LF, 0
@@ -896,8 +948,8 @@ ondrive_str:	db ', drive ', 0
 err_bootfailed	db CR, LF, 'Boot failed: press a key to retry...'
 isolinux_dir	db '\REACTOS', 0
 no_dir_msg	db 'Could not find the REACTOS directory.', CR, LF, 0
-isolinux_bin	db 'FREELDR.SYS', 0
-no_isolinux_msg	db 'Could not find the file FREELDR.SYS.', CR, LF, 0
+isolinux_bin	db 'SETUPLDR.SYS', 0
+no_isolinux_msg	db 'Could not find SETUPLDR.SYS.', CR, LF, 0
 
 ;
 ; El Torito spec packet
@@ -948,6 +1000,9 @@ dapa:		dw 16				; Packet size
 .seg:		dw 0				; Segment of buffer
 .lba:		dd 0				; LBA (LSW)
 		dd 0				; LBA (MSW)
+
+		alignb 4, db 0
+MaxTransfer	dw 2 ;32				; Max sectors per transfer
 
 		times 2048-($-$$) nop		; Pad to file offset 2048
 
