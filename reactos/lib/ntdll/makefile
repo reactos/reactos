@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.63 2001/07/15 21:18:55 rex Exp $
+# $Id: makefile,v 1.64 2001/08/02 20:25:17 phreak Exp $
 #
 # ReactOS Operating System
 #
@@ -112,3 +112,9 @@ $(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 
 include ../../rules.mak
+
+%/TAGS:
+	etags -o $(@D)/TAGS $(@D)/\*.c
+
+etags: csr/TAGS dbg/TAGS ldr/TAGS main/TAGS rtl/TAGS stdio/TAGS stdlib/TAGS string/TAGS stubs/TAGS
+	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS
