@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 2001/05/02 12:35:06 jfilby Exp $
+/* $Id: stubs.c,v 1.6 2001/08/02 20:20:17 phreak Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1437,19 +1437,6 @@ SetGraphicsMode(
 
 
  
-int   
-STDCALL 
-SetMapMode(
-	HDC	a0, 
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
- 
 HMETAFILE   
 STDCALL 
 SetMetaFileBitsEx(
@@ -2458,21 +2445,6 @@ SetViewportExtEx(
 
 BOOL
 STDCALL
-SetViewportOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
 SetWindowExtEx(
 	HDC	a0,
 	int	a1,
@@ -2484,21 +2456,6 @@ SetWindowExtEx(
 	return FALSE;
 }
 
-
-
-
-BOOL
-STDCALL
-SetWindowOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 

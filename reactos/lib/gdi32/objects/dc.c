@@ -117,3 +117,37 @@ SelectObject(
 {
 	return W32kSelectObject(hDC, hGDIObj);
 }
+
+int   
+STDCALL 
+SetMapMode(
+	HDC	a0, 
+	int	a1
+	)
+{
+  return W32kSetMapMode( a0, a1 );
+}
+
+BOOL
+STDCALL
+SetViewportOrgEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	LPPOINT	a3
+	)
+{
+  return W32kSetViewportOrgEx( a0, a1, a2, a3 );
+}
+
+BOOL
+STDCALL
+SetWindowOrgEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	LPPOINT	a3
+	)
+{
+  return W32kSetWindowOrgEx( a0, a1, a2, a3 );
+}
