@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.1 2004/03/08 08:05:27 navaraf Exp $
+/* $Id: version.c,v 1.2 2004/03/08 14:22:30 navaraf Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -35,7 +35,7 @@
 NTSTATUS STDCALL
 RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {
-   PWCHAR CSDString = L"Service Pack 6";
+   WCHAR CSDString[] = L"Service Pack 6";
 
    if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
        Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
@@ -44,7 +44,7 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
       Info->dwMinorVersion = 0;
       Info->dwBuildNumber = 1381;
       Info->dwPlatformId = VER_PLATFORM_WIN32_NT;
-      MmCopyToCaller(Info->szCSDVersion, CSDString, sizeof(CSDString));
+      RtlCopyMemory(Info->szCSDVersion, CSDString, sizeof(CSDString));
       if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
       {
          RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)Info;
