@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.57 2004/02/23 22:44:52 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.58 2004/02/25 01:25:51 sedwards Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -280,7 +280,7 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
   }
   if (Planes != 1)
   {
-    UNIMPLEMENTED;
+    DPRINT("NtGdiCreateBitmap - UNIMPLEMENTED\n");
     return  0;
   }
   if (Height < 0)
