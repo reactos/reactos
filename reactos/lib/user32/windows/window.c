@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.40 2003/07/05 17:57:22 chorns Exp $
+/* $Id: window.c,v 1.41 2003/07/07 06:39:34 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -946,8 +946,8 @@ DWORD STDCALL
 GetWindowThreadProcessId(HWND hWnd,
 			 LPDWORD lpdwProcessId)
 {
-  UNIMPLEMENTED;
-  return 0;
+	if(lpdwProcessId) *lpdwProcessId = NtUserQueryWindow(hWnd, 0);
+	return(NtUserQueryWindow(hWnd, 1));
 }
 
 WINBOOL STDCALL
