@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.48 2004/05/09 15:02:07 hbirr Exp $
+/* $Id: iomgr.c,v 1.49 2004/07/22 18:36:35 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -139,6 +139,38 @@ IopDeleteFile(PVOID ObjectBody)
 
 
 NTSTATUS STDCALL
+IopSecurityFile(PVOID ObjectBody,
+		SECURITY_OPERATION_CODE OperationCode,
+		SECURITY_INFORMATION SecurityInformation,
+		PSECURITY_DESCRIPTOR SecurityDescriptor,
+		PULONG BufferLength)
+{
+  DPRINT("IopSecurityFile() called\n");
+
+  switch (OperationCode)
+    {
+      case SetSecurityDescriptor:
+	DPRINT("Set security descriptor\n");
+	return STATUS_SUCCESS;
+
+      case QuerySecurityDescriptor:
+	DPRINT("Query security descriptor\n");
+	return STATUS_UNSUCCESSFUL;
+
+      case DeleteSecurityDescriptor:
+	DPRINT("Delete security descriptor\n");
+	return STATUS_SUCCESS;
+
+      case AssignSecurityDescriptor:
+	DPRINT("Assign security descriptor\n");
+	return STATUS_SUCCESS;
+    }
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+
+NTSTATUS STDCALL
 IopQueryNameFile(PVOID ObjectBody,
 		 POBJECT_NAME_INFORMATION ObjectNameInfo,
 		 ULONG Length,
@@ -261,7 +293,7 @@ IoInit (VOID)
   IoFileObjectType->Close = IopCloseFile;
   IoFileObjectType->Delete = IopDeleteFile;
   IoFileObjectType->Parse = NULL;
-  IoFileObjectType->Security = NULL;
+  IoFileObjectType->Security = IopSecurityFile;
   IoFileObjectType->QueryName = IopQueryNameFile;
   IoFileObjectType->OkayToClose = NULL;
   IoFileObjectType->Create = IopCreateFile;

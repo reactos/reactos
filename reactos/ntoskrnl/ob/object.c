@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.80 2004/07/19 12:48:59 ekohl Exp $
+/* $Id: object.c,v 1.81 2004/07/22 18:38:08 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -372,7 +372,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
-	  return(Status);
+	  return Status;
 	}
     }
   else
@@ -453,7 +453,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	  RtlFreeUnicodeString(&Header->Name);
 	  RtlFreeUnicodeString(&RemainingPath);
 	  ExFreePool(Header);
-	  return(Status);
+	  return Status;
 	}
     }
   RtlFreeUnicodeString(&RemainingPath);
@@ -474,8 +474,15 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
       if (Header->ObjectType->Security != NULL)
 	{
-	  /* FIXME: Call the security method */
+	  /* Call the security method */
+	  Status = Header->ObjectType->Security(HEADER_TO_BODY(Header),
+						AssignSecurityDescriptor,
+						0,
+						NewSecurityDescriptor,
+						NULL);
+#if 0
 	  Status = STATUS_SUCCESS;
+#endif
 	}
       else
 	{
@@ -496,7 +503,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       *Object = HEADER_TO_BODY(Header);
     }
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 

@@ -327,9 +327,28 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength)
 {
-  DPRINT1 ("CmiObjectSecurity() called\n");
+  DPRINT("CmiObjectSecurity() called\n");
 
-  return STATUS_SUCCESS;
+  switch (OperationCode)
+    {
+      case SetSecurityDescriptor:
+        DPRINT("Set security descriptor\n");
+        return STATUS_SUCCESS;
+
+      case QuerySecurityDescriptor:
+        DPRINT("Query security descriptor\n");
+        return STATUS_UNSUCCESSFUL;
+
+      case DeleteSecurityDescriptor:
+        DPRINT("Delete security descriptor\n");
+        return STATUS_SUCCESS;
+
+      case AssignSecurityDescriptor:
+        DPRINT("Assign security descriptor\n");
+        return STATUS_SUCCESS;
+    }
+
+  return STATUS_UNSUCCESSFUL;
 }
 
 

@@ -18,7 +18,7 @@
 /* FUNCTIONS ***************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 ObAssignSecurity(IN PACCESS_STATE AccessState,
@@ -26,8 +26,40 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 		 IN PVOID Object,
 		 IN POBJECT_TYPE Type)
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+  PSECURITY_DESCRIPTOR NewDescriptor;
+  NTSTATUS Status;
+
+  /* Build the new security descriptor */
+  Status = SeAssignSecurity(SecurityDescriptor,
+			    AccessState->SecurityDescriptor,
+			    &NewDescriptor,
+			    (Type == ObDirectoryType),
+			    &AccessState->SubjectSecurityContext,
+			    Type->Mapping,
+			    PagedPool);
+  if (!NT_SUCCESS(Status))
+    return Status;
+
+  if (Type->Security != NULL)
+    {
+      /* Call the security method */
+      Status = Type->Security(Object,
+			      AssignSecurityDescriptor,
+			      0,
+			      NewDescriptor,
+			      NULL);
+    }
+  else
+    {
+      /* Assign the security descriptor to the object header */
+      Status = ObpAddSecurityDescriptor(NewDescriptor,
+					&(BODY_TO_HEADER(Object)->SecurityDescriptor));
+    }
+
+  /* Release the new security descriptor */
+  SeDeassignSecurity(&NewDescriptor);
+
+  return Status;
 }
 
 
