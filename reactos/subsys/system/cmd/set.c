@@ -94,7 +94,10 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		/* set or remove environment variable */
 		*p = _T('\0');
 		p++;
-
+		if (*p == _T('\0'))
+		{
+			p = NULL;
+		}
 		SetEnvironmentVariable (param, p);
 	}
 	else
