@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.10 2000/03/26 19:38:22 ea Exp $
+/* $Id: file.c,v 1.11 2000/09/03 14:49:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -215,7 +215,7 @@ IoGetFileObjectGenericMapping(VOID)
 NTSTATUS
 STDCALL
 NtQueryAttributesFile (
-	IN	HANDLE	FileHandle,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	IN	PVOID	Buffer
 	)
 {
@@ -226,7 +226,7 @@ NtQueryAttributesFile (
 NTSTATUS
 STDCALL
 NtQueryFullAttributesFile (
-	IN	HANDLE	FileHandle, 
+	IN	HANDLE	FileHandle,
 	IN	PVOID	Attributes
 	)
 {

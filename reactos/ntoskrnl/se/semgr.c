@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.16 2000/07/04 08:52:47 dwelch Exp $
+/* $Id: semgr.c,v 1.17 2000/09/03 14:53:13 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -93,9 +93,9 @@ NtAccessCheckAndAuditAlarm (
 NTSTATUS
 STDCALL
 NtAllocateUuids (
-	PLARGE_INTEGER	Time,
-	PULONG		Version, // ???
-	PULONG		ClockCycle
+	PULARGE_INTEGER	Time,
+	PULONG		Range,
+	PULONG		Sequence
 	)
 {
    UNIMPLEMENTED;

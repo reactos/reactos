@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.33 2000/07/04 08:52:34 dwelch Exp $
+/* $Id: zw.h,v 1.34 2000/09/03 14:48:58 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -269,23 +269,23 @@ NtAllocateLocallyUniqueId(
 NTSTATUS
 STDCALL
 ZwAllocateLocallyUniqueId(
-	OUT LUID *LocallyUniqueId
+	OUT PLUID Luid
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 NtAllocateUuids(
-	PLARGE_INTEGER Time,
-	PULONG Version, // ???
-	PULONG ClockCycle
+	PULARGE_INTEGER Time,
+	PULONG Range,
+	PULONG Sequence
 	);
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 ZwAllocateUuids(
-	PLARGE_INTEGER Time,
-	PULONG Version, // ???
-	PULONG ClockCycle
+	PULARGE_INTEGER Time,
+	PULONG Range,
+	PULONG Sequence
 	);
 
 
@@ -408,8 +408,8 @@ NtClearEvent(
 
 NTSTATUS
 STDCALL
-ZwClearEvent( 
-	IN HANDLE  EventHandle 
+ZwClearEvent(
+	IN HANDLE  EventHandle
 	);
 
 /*
@@ -444,8 +444,6 @@ ZwClose(
  * RETURNS: Status
  */
 
-
-
 NTSTATUS
 STDCALL
 NtCloseObjectAuditAlarm(
@@ -461,8 +459,6 @@ ZwCloseObjectAuditAlarm(
 	IN PVOID HandleId,
 	IN BOOLEAN GenerateOnClose
 	);
-
-
 
 /*
  * FUNCTION: Continues a thread with the specified context
@@ -1882,22 +1878,22 @@ NtMapViewOfSection(
 	IN SECTION_INHERIT InheritDisposition,
 	IN ULONG AllocationType,
 	IN ULONG AccessProtection
-    );
+	);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 ZwMapViewOfSection(
 	IN HANDLE SectionHandle,
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID *BaseAddress,
- 	IN ULONG ZeroBits,
+	IN ULONG ZeroBits,
 	IN ULONG CommitSize,
 	IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
 	IN OUT PULONG ViewSize,
 	IN SECTION_INHERIT InheritDisposition,
 	IN ULONG AllocationType,
 	IN ULONG AccessProtection
-    );
+	);
 
 /*
  * FUNCTION: Installs a notify for the change of a directory's contents
@@ -2049,17 +2045,17 @@ ZwOpenDirectoryObject(
  */
 NTSTATUS
 STDCALL
-NtOpenEvent(	
+NtOpenEvent(
 	OUT PHANDLE EventHandle,
-        IN ACCESS_MASK DesiredAccess,
+	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
 NTSTATUS
 STDCALL
-ZwOpenEvent(	
+ZwOpenEvent(
 	OUT PHANDLE EventHandle,
-        IN ACCESS_MASK DesiredAccess,
+	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
@@ -2074,17 +2070,17 @@ ZwOpenEvent(
 
 NTSTATUS
 STDCALL
-NtOpenEventPair(	
+NtOpenEventPair(
 	OUT PHANDLE EventPairHandle,
-        IN ACCESS_MASK DesiredAccess,
+	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
 NTSTATUS
 STDCALL
-ZwOpenEventPair(	
+ZwOpenEventPair(
 	OUT PHANDLE EventPairHandle,
-        IN ACCESS_MASK DesiredAccess,
+	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 /*
@@ -2104,9 +2100,9 @@ NtOpenFile(
 	OUT PHANDLE FileHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,   
-	IN ULONG ShareAccess,         
-   	IN ULONG OpenOptions                                                                    
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG ShareAccess,
+	IN ULONG OpenOptions
 	);
 
 NTSTATUS
@@ -2115,9 +2111,9 @@ ZwOpenFile(
 	OUT PHANDLE FileHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,   
-	IN ULONG ShareAccess,         
-   	IN ULONG OpenOptions                                                                    
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG ShareAccess,
+	IN ULONG OpenOptions
 	);
 
 /*
@@ -2548,7 +2544,7 @@ ZwPulseEvent(
 /*
  * FUNCTION: Queries the attributes of a file
  * ARGUMENTS:
- *        FileHandle  = Handle to the file
+ *        ObjectAttributes = Initialized attributes for the object
  *        Buffer = Caller supplies storage for the attributes
  * RETURNS: Status
  */
@@ -2556,14 +2552,14 @@ ZwPulseEvent(
 NTSTATUS 
 STDCALL 
 NtQueryAttributesFile(
-	IN HANDLE FileHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PVOID Buffer
 	);
 
 NTSTATUS 
 STDCALL 
 ZwQueryAttributesFile(
-	IN HANDLE FileHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PVOID Buffer
 	);
 
@@ -3465,7 +3461,7 @@ ZwQueryValueKey(
 	  ResultLength = Data written
  * RETURNS: Status
  *
-*/        
+*/
 
 NTSTATUS
 STDCALL
@@ -3510,7 +3506,7 @@ ZwQueryVirtualMemory(
  * RETURNS: Status [ STATUS_SUCCESS | STATUS_INSUFFICIENT_RESOURCES | STATUS_INVALID_PARAMETER |
 		 STATUS_INVALID_DEVICE_REQUEST | STATUS_BUFFER_OVERFLOW ]
  *
-*/     
+*/
 NTSTATUS
 STDCALL
 NtQueryVolumeInformationFile(
@@ -3519,7 +3515,7 @@ NtQueryVolumeInformationFile(
 	OUT PVOID FsInformation,
 	IN ULONG Length,
 	IN FS_INFORMATION_CLASS FsInformationClass 
-    );
+	);
 
 NTSTATUS
 STDCALL
@@ -3566,10 +3562,10 @@ ZwQueueApcThread(
 
 /*
  * FUNCTION: Raises an exception
- * ARGUMENTS: 
-	  ExceptionRecord = Structure specifying the exception
-	  Context = Context in which the excpetion is raised 
- *        IsDebugger = 
+ * ARGUMENTS:
+ *	  ExceptionRecord = Structure specifying the exception
+ *	  Context = Context in which the excpetion is raised 
+ *	  IsDebugger = 
  * RETURNS: Status
  *
 */
@@ -3590,23 +3586,56 @@ ZwRaiseException(
 	IN BOOL IsDebugger OPTIONAL
 	);
 
-//NtRaiseHardError
 /*
- * FUNCTION: Read a file
- * ARGUMENTS: 
-	  FileHandle = Handle of a file to read
-	  Event = This event is signalled when the read operation completes
- *        UserApcRoutine = Call back , if supplied Event should be NULL
-	  UserApcContext = Argument to the callback
-	  IoStatusBlock = Caller should supply storage for additional status information
-	  Buffer = Caller should supply storage to receive the information
-	  BufferLength = Size of the buffer
-	  ByteOffset = Offset to start reading the file
-	  Key = If a range is lock a matching key will allow the read to continue.
+ * FUNCTION: Raises a hard error (stops the system)
+ * ARGUMENTS:
+ *	  Status = Status code of the hard error
+ *	  Unknown2 = ??
+ *	  Unknown3 = ??
+ *	  Unknown4 = ??
+ *	  Unknown5 = ??
+ *	  Unknown6 = ??
  * RETURNS: Status
  *
-*/       
+ */
 
+NTSTATUS
+STDCALL
+NtRaiseHardError(
+	IN NTSTATUS Status,
+	ULONG Unknown2,
+	ULONG Unknown3,
+	ULONG Unknown4,
+	ULONG Unknown5,
+	ULONG Unknown6
+	);
+
+NTSTATUS
+STDCALL
+ZwRaiseHardError(
+	IN NTSTATUS Status,
+	ULONG Unknown2,
+	ULONG Unknown3,
+	ULONG Unknown4,
+	ULONG Unknown5,
+	ULONG Unknown6
+	);
+
+/*
+ * FUNCTION: Read a file
+ * ARGUMENTS:
+ *	  FileHandle = Handle of a file to read
+ *	  Event = This event is signalled when the read operation completes
+ *	  UserApcRoutine = Call back , if supplied Event should be NULL
+ *	  UserApcContext = Argument to the callback
+ *	  IoStatusBlock = Caller should supply storage for additional status information
+ *	  Buffer = Caller should supply storage to receive the information
+ *	  BufferLength = Size of the buffer
+ *	  ByteOffset = Offset to start reading the file
+ *	  Key = If a range is lock a matching key will allow the read to continue.
+ * RETURNS: Status
+ *
+ */
 
 NTSTATUS
 STDCALL
@@ -3736,14 +3765,14 @@ NTSTATUS
 STDCALL	
 NtReleaseMutant(
 	IN HANDLE MutantHandle,
-	IN PULONG ReleaseCount OPTIONAL 
+	IN PULONG ReleaseCount OPTIONAL
 	);
 
 NTSTATUS
 STDCALL	
 ZwReleaseMutant(
 	IN HANDLE MutantHandle,
-	IN PULONG ReleaseCount OPTIONAL 
+	IN PULONG ReleaseCount OPTIONAL
 	);
 /*
  * FUNCTION: Releases a semaphore 
@@ -3755,7 +3784,7 @@ ZwReleaseMutant(
  */
 NTSTATUS
 STDCALL
-NtReleaseSemaphore( 
+NtReleaseSemaphore(
 	IN HANDLE SemaphoreHandle,
 	IN ULONG ReleaseCount,
 	IN PULONG PreviousCount
@@ -3763,7 +3792,7 @@ NtReleaseSemaphore(
 
 NTSTATUS
 STDCALL
-ZwReleaseSemaphore( 
+ZwReleaseSemaphore(
 	IN HANDLE SemaphoreHandle,
 	IN ULONG ReleaseCount,
 	IN PULONG PreviousCount
@@ -5221,11 +5250,4 @@ NtQueryOleDirectoryFile (
 	VOID
 	);
 
-NTSTATUS
-STDCALL
-NtRaiseHardError (
-	VOID
-	);
-
- 
 #endif /* __DDK_ZW_H */
