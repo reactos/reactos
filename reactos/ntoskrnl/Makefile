@@ -563,7 +563,7 @@ $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 
 TARGET_CLEAN = \
   $(PATH_TO_TOP)/include/reactos/bugcodes.h \
-  $(DEP_OBJECTS)
+  $(DEP_OBJECTS) $(DEP_FILES) MSG00409.bin bugcodes.rc 
 
 ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 

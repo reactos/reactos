@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.251 2004/09/26 12:39:30 weiden Exp $
+# $Id: Makefile,v 1.252 2004/10/09 17:14:11 navaraf Exp $
 #
 # Global makefile
 #
@@ -73,7 +73,7 @@ LOADERS = dos
 
 # Driver support libraries
 #bzip2 zlib oskittcp
-DRIVERS_LIB = bzip2 oskittcp csq
+DRIVERS_LIB = bzip2 oskittcp ip csq
 
 # Kernel mode device drivers
 # Obsolete: ide
@@ -148,12 +148,13 @@ test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
 	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
 	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
-clean: tools dk_clean $(HALS:%=%_clean) \
-       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) \
-       msvcrt_clean $(DLLS:%=%_clean) $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(NET_APPS:%=%_clean) \
-       $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) $(REGTESTS:%=%_clean) \
-       clean_after tools_clean
+clean: tools dk_clean iface_native_clean iface_additional_clean hallib_clean \
+       $(HALS:%=%_clean) $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) \
+       $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) msvcrt_clean \
+       $(DLLS:%=%_clean) $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
+       $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
+       $(NET_APPS:%=%_clean) $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
+       $(REGTESTS:%=%_clean) clean_after tools_clean
 
 clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
