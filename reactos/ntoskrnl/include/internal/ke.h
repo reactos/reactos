@@ -41,6 +41,7 @@ VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
 struct _KTHREAD;
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
+struct _KEXCEPTION_FRAME;
 
 VOID STDCALL 
 DbgBreakPointNoBugCheck(VOID);
@@ -58,12 +59,10 @@ KeProfileInterruptWithSource(
 	IN KPROFILE_SOURCE		Source
 );
 
-/*BOOLEAN
+BOOLEAN
 STDCALL
-KiIpiServiceRoutine(
-	IN PKTRAP_FRAME   		TrapFrame,
-	IN PKEXCEPTION_FRAME  	ExceptionFrame
-);*/
+KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
+	            IN struct _KEXCEPTION_FRAME* ExceptionFrame);
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
