@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.14 2003/10/29 08:38:55 gvg Exp $
+/* $Id: mem.c,v 1.15 2004/03/15 22:01:17 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -85,7 +85,6 @@ EngAllocUserMem(ULONG cj, ULONG Tag)
   ULONG MemSize = sizeof(USERMEMHEADER) + cj;
   PUSERMEMHEADER Header;
 
-  DbgPrint("EngAllocUserMem\n");
   Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
 
   if (! NT_SUCCESS(Status))
