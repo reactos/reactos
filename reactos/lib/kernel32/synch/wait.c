@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.15 2001/11/07 02:17:22 ekohl Exp $
+/* $Id: wait.c,v 1.16 2001/11/08 13:58:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -57,9 +57,10 @@ WaitForSingleObjectEx(HANDLE hHandle,
      {
          return WAIT_TIMEOUT;
      }
-   else if (errCode == WAIT_OBJECT_0)
+   else if ((errCode == WAIT_OBJECT_0) ||
+	    (errCode == WAIT_ABANDONED_0))
      {
-        return WAIT_OBJECT_0;
+	return(errCode);
      }
 
    SetLastErrorByStatus (errCode);
