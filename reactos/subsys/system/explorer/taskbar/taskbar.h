@@ -29,8 +29,8 @@
 //#include "shellhook.h"
 
 
-#define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
-#define	TITLE_TASKBAR			_T("Running Applications")
+#define	CLASSNAME_TASKBAR		TEXT("MSTaskSwWClass")
+#define	TITLE_TASKBAR			TEXT("Running Applications")
 
 #define	IDC_FIRST_APP	0x2000
 

@@ -26,11 +26,11 @@
  //
 
 
-#define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
-#define	TITLE_EXPLORERBAR		_T("")	// use an empty window title, so windows taskmanager does not show the window in its application list
+#define	CLASSNAME_EXPLORERBAR	TEXT("Shell_TrayWnd")
+#define	TITLE_EXPLORERBAR		TEXT("")	// use an empty window title, so windows taskmanager does not show the window in its application list
 
 
-#define	WINMSG_TASKBARCREATED	_T("TaskbarCreated")
+#define	WINMSG_TASKBARCREATED	TEXT("TaskbarCreated")
 
 
 #define	DESKTOPBARBAR_HEIGHT	29

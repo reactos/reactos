@@ -26,10 +26,10 @@
  //
 
 
-#define	CLASSNAME_TRAYNOTIFY	_T("TrayNotifyWnd")
-#define	TITLE_TRAYNOTIFY		_T("")
+#define	CLASSNAME_TRAYNOTIFY	TEXT("TrayNotifyWnd")
+#define	TITLE_TRAYNOTIFY		TEXT("")
 
-#define	CLASSNAME_CLOCKWINDOW	_T("TrayClockWClass")
+#define	CLASSNAME_CLOCKWINDOW	TEXT("TrayClockWClass")
 
 #define	NOTIFYAREA_WIDTH		244
 #define	CLOCKWINDOW_WIDTH		32

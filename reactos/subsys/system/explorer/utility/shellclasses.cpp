@@ -268,7 +268,7 @@ String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 		strret.GetString(pidl->mkid, buffer, MAX_PATH);
 	else {
 		CheckError(hr);
-		*buffer = _T('\0');
+		*buffer = TEXT('\0');
 	}
 
 	return buffer;
@@ -337,7 +337,7 @@ ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 
 ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 {
-	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(_T("SHELL32"), 25);
+	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(TEXT("SHELL32"), 25);
 
 	if (ILCombine)
 		return (*ILCombine)(parent_pidl, _p);

@@ -103,7 +103,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 	HWND	_hwnd;
 
 protected:
-	bool	fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA*, BY_HANDLE_FILE_INFORMATION*, bool access=true);
+	bool	fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA*, BY_HANDLE_FILE_INFORMATION*, bool do_access=true);
 };
 
 

@@ -38,7 +38,9 @@
 
 #include "explorer_intres.h"
 
-#include <locale.h>
+#include <locale.h>	// for setlocale()
+#include <io.h>		// for dup2()
+#include <fcntl.h>	// for _O_RDONLY
 
 
 ExplorerGlobals g_Globals;
@@ -52,6 +54,7 @@ ExplorerGlobals::ExplorerGlobals()
 	_hMainWnd = 0;
 	_prescan_nodes = false;
 	_desktop_mode = false;
+	_log = NULL;
 }
 
 
@@ -162,10 +165,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 int main(int argc, char* argv[])
 {
 	STARTUPINFO startupinfo;
+	int nShowCmd = SW_SHOWNORMAL;
 
 	GetStartupInfo(&startupinfo);
 
-	return wWinMain(GetModuleHandle(NULL), 0, GetCommandLine(), startupinfo.wShowWindow);
+	if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
+		nShowCmd = startupinfo.wShowWindow;
+
+	return wWinMain(GetModuleHandle(NULL), 0, GetCommandLine(), nShowCmd);
 }
 
 #endif	// __MINGW && UNICODE
@@ -195,8 +202,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		startup_desktop = TRUE;
 	}
 
-	if (!_tcsstr(lpCmdLine,TEXT("-noautostart")))
+	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
+
+	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
+		AllocConsole();
+
+		_dup2(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
+		_dup2(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), 0), 1);
+		_dup2(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), 0), 2);
+
+		g_Globals._log = fdopen(1, "w");
+		setvbuf(g_Globals._log, 0, _IONBF, 0);
+	}
 
 	g_Globals._hInstance = hInstance;
 

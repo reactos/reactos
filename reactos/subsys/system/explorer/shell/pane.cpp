@@ -193,8 +193,8 @@ void Pane::init()
 	HKEY hkeyExplorer = 0;
 	DWORD len = sizeof(_clrCompressed);
 
-	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hkeyExplorer) ||
-		RegQueryValueEx(hkeyExplorer, _T("AltColor"), 0, NULL, (LPBYTE)&_clrCompressed, &len) || len!=sizeof(_clrCompressed))
+	if (RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hkeyExplorer) ||
+		RegQueryValueEx(hkeyExplorer, TEXT("AltColor"), 0, NULL, (LPBYTE)&_clrCompressed, &len) || len!=sizeof(_clrCompressed))
 		_clrCompressed = RGB(0,0,255);
 
 	if (hkeyExplorer)

@@ -45,7 +45,7 @@ static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 BOOL IsAnyDesktopRunning()
 {
-	HINSTANCE shell32 = GetModuleHandle(_T("user32"));
+	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
 
 	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
 	SetShellWindowEx = (BOOL(WINAPI*)(HWND,HWND)) GetProcAddress(shell32, "SetShellWindowEx");
@@ -71,7 +71,7 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	rect.bottom = rect.top + 40;
 
 #include "../buildno.h"
-	static const LPCTSTR BkgndText = _T("ReactOS ")_T(KERNEL_VERSION_STR)_T(" Explorer\nby Martin Fuchs");
+	static const LPCTSTR BkgndText = TEXT("ReactOS ")TEXT(KERNEL_VERSION_STR)TEXT(" Explorer\nby Martin Fuchs");
 
 	BkMode bkMode(hdc, TRANSPARENT);
 
@@ -119,14 +119,14 @@ DesktopWindow::~DesktopWindow()
 
 HWND DesktopWindow::Create()
 {
-	IconWindowClass wcDesktop(_T("Progman"), IDI_REACTOS, CS_DBLCLKS);
+	IconWindowClass wcDesktop(TEXT("Progman"), IDI_REACTOS, CS_DBLCLKS);
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
 
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
 	HWND hwndDesktop = Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					WS_EX_TOOLWINDOW, wcDesktop, TEXT("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 
 	 // work around to display desktop bar in Wine

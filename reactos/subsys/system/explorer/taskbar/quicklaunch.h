@@ -35,7 +35,7 @@
 #define	IDC_FIRST_QUICK_ID	0x4000
 
 
-#define	QUICKLAUNCH_FOLDER	_T("Microsoft\\Internet Explorer\\Quick Launch")
+#define	QUICKLAUNCH_FOLDER	TEXT("Microsoft\\Internet Explorer\\Quick Launch")
 
 
  /// quick launch bar shortcut

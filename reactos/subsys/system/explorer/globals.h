@@ -36,7 +36,11 @@ extern struct ExplorerGlobals
 	HWND		_hMainWnd;
 	bool		_prescan_nodes;
 	bool		_desktop_mode;
+
+	FILE*		_log;
 } g_Globals;
+
+#define	LOG(x) if (g_Globals._log) _ftprintf(g_Globals._log, TEXT("%s\n"), (LPCTSTR)(x));
 
 
 struct ResString : public String

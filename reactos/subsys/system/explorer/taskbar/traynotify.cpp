@@ -283,7 +283,7 @@ ClockWindow::ClockWindow(HWND hwnd)
  :	super(hwnd),
 	_tooltip(hwnd)
 {
-	*_time = _T('\0');
+	*_time = TEXT('\0');
 	FormatTime();
 
 	_tooltip.add(_hwnd, _hwnd);
@@ -306,9 +306,9 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_LBUTTONDBLCLK:
-		//launch_file(_hwnd, _T("timedate.cpl"), SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
-		//launch_file(_hwnd, _T("rundll32.exe /d shell32.dll,Control_RunDLL timedate.cpl"), SW_SHOWNORMAL);
-		RunDLL(_hwnd, _T("shell32"), "Control_RunDLL", _T("timedate.cpl"), SW_SHOWNORMAL);
+		//launch_file(_hwnd, TEXT("timedate.cpl"), SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
+		//launch_file(_hwnd, TEXT("rundll32.exe /d shell32.dll,Control_RunDLL timedate.cpl"), SW_SHOWNORMAL);
+		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("timedate.cpl"), SW_SHOWNORMAL);
 		break;
 
 	  default:

@@ -26,8 +26,8 @@
  //
 
 
-#define	CLASSNAME_STARTMENU		_T("ReactosStartmenuClass")
-#define	TITLE_STARTMENU			_T("Start Menu")
+#define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
+#define	TITLE_STARTMENU			TEXT("Start Menu")
 
 
 #define	STARTMENU_WIDTH_MIN		120

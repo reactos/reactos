@@ -92,7 +92,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);
 
-		_stprintf(path, _T("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
+		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
 		_dir = new ShellDirectory(Desktop(), path, _hwnd);
 

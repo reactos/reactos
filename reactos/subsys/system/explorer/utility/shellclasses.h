@@ -77,7 +77,7 @@ struct COMException
 				LocalFree(pBuf);
 			 } else {
 				TCHAR buffer[128];
-				_stprintf(buffer, _T("unknown COM Exception: 0x%08X"), _hr);
+				_stprintf(buffer, TEXT("unknown COM Exception: 0x%08X"), _hr);
 				_msg = buffer;
 			 }
 		}
@@ -426,6 +426,13 @@ extern HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR b
 
 #ifdef __MINGW32__	// ILGetSize() is currently missing in MinGW.
 extern "C" UINT ILGetSize(LPCITEMIDLIST pidl);
+
+#ifdef UNICODE		// CFSTR_FILENAME is defined wrong in MinGW.
+#define CFSTR_FILENAMEW TEXT("FileNameW")
+#undef CFSTR_FILENAME
+#define CFSTR_FILENAME CFSTR_FILENAMEW
+#endif
+
 #endif
 
 

@@ -803,7 +803,7 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 	static LPCSTR szTitle = "Create New Task";
 	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
 
-	static DynamicFct<RUNFILEDLG> RunFileDlg(_T("SHELL32"), 61);
+	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
 
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
@@ -823,7 +823,7 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 
 void StartMenuRoot::ShowExitWindowsDialog(HWND hwndOwner)
 {
-	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(_T("SHELL32"), 60);
+	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
 
 	if (ExitWindowsDlg)
 		(*ExitWindowsDlg)(hwndOwner);
@@ -831,7 +831,7 @@ void StartMenuRoot::ShowExitWindowsDialog(HWND hwndOwner)
 
 void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 {
-	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(_T("SHELL32"), 59);
+	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
 
 	if (RestartDlg)
 		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
@@ -839,7 +839,7 @@ void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 
 void StartMenuRoot::ShowSearchDialog()
 {
-	static DynamicFct<SHFINDFILES> SHFindFiles(_T("SHELL32"), 90);
+	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
 
 	if (SHFindFiles)
 		(*SHFindFiles)(NULL, NULL);
@@ -847,7 +847,7 @@ void StartMenuRoot::ShowSearchDialog()
 
 void StartMenuRoot::ShowSearchComputer()
 {
-	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(_T("SHELL32"), 91);
+	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
@@ -878,7 +878,7 @@ int SettingsMenu::Command(int id, int code)
 
 	  case IDC_CONTROL_PANEL:
 		CloseStartMenu(id);
-		MainFrame::Create(_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
+		MainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
 		break;
 
 	  case IDC_ADMIN:
