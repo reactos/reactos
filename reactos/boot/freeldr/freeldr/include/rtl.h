@@ -51,6 +51,9 @@ int		isspace(int c);
 int		isdigit(int c);
 int		isxdigit(int c);
 
+int stricmp(const char *string1, const char *string2);
+int strnicmp(const char *string1, const char *string2, size_t length);
+
 char *	convert_to_ascii(char *buf, int c, ...);
 char *	convert_i64_to_ascii(char *buf, int c, ...);
 

@@ -22,6 +22,7 @@
 #include "machine.h"
 #include "machpc.h"
 #include "machxbox.h"
+#include "machxen.h"
 #include "portio.h"
 #include "hardware.h"
 #include "rtl.h"
@@ -33,20 +34,28 @@ MachInit(VOID)
 
   memset(&MachVtbl, 0, sizeof(MACHVTBL));
 
-  /* Check for Xbox by identifying device at PCI 0:0:0, if it's
-   * 0x10de/0x02a5 then we're running on an Xbox */
-  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0));
-  PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
-  if (0x02a510de == PciId)
+  /* First check if we were launched by Xen */
+  if (XenActive)
     {
-      XboxMachInit();
+      XenMachInit();
     }
   else
     {
-      PcMachInit();
+    /* Check for Xbox by identifying device at PCI 0:0:0, if it's
+     * 0x10de/0x02a5 then we're running on an Xbox */
+    WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0));
+    PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
+    if (0x02a510de == PciId)
+      {
+        XboxMachInit();
+      }
+    else
+      {
+        PcMachInit();
+      }
     }
 
-  HalpCalibrateStallExecution();
+//  HalpCalibrateStallExecution();
 }
 
 /* EOF */

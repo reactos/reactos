@@ -47,15 +47,15 @@ EXTERN(RealEntryPoint)
 	.code32
 
 	/* Store the boot drive */
-	movb	%dl,(_BootDrive)
+	movb	%dl,(BootDrive)
 
 	/* Store the boot partition */
-	movb	%dh,(_BootPartition)
+	movb	%dh,(BootPartition)
 
 	/* GO! */
 	xorl	%eax,%eax
 	pushl	%eax
-	call	_BootMain
+	call	BootMain
 
 	call	switch_to_real
 	.code16
@@ -222,7 +222,7 @@ empty_8042:
 	/*
 	 * Enable the A20 address line (to allow access to over 1mb)
 	 */
-EXTERN(_EnableA20)
+EXTERN(EnableA20)
 	.code32
 
 	pushal
@@ -247,7 +247,7 @@ EXTERN(_EnableA20)
 	/*
 	 * Disable the A20 address line
 	 */
-EXTERN(_DisableA20)
+EXTERN(DisableA20)
 	.code32
 
 	pushal
@@ -304,12 +304,14 @@ MultibootHeader:
 	.long INITIAL_BASE + MultibootHeader - FREELDR_BASE
 	/* load_addr */
 	.long INITIAL_BASE
+#ifdef TODO
 	/* load_end_addr */
 	.long INITIAL_BASE + __bss_start__ - FREELDR_BASE
 	/* bss_end_addr */
 	.long INITIAL_BASE + __bss_end__ - FREELDR_BASE
 	/* entry_addr */
 	.long INITIAL_BASE + MultibootEntry - FREELDR_BASE
+#endif
 
 MultibootEntry:
 	cli		/* Even after setting up the our IDT below we are
@@ -331,7 +333,9 @@ mb1:
 	/* Copy to low mem */
 	movl	$INITIAL_BASE,%esi
 	movl	$FREELDR_BASE,%edi
+#ifdef TODO
 	movl	$(__bss_end__ - FREELDR_BASE),%ecx
+#endif
 	addl	$3,%ecx
 	shrl	$2,%ecx
 	rep movsl
@@ -365,12 +369,12 @@ mb2:
 	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
 	shrl	$16,%eax
 	incb	%al
-	movb	%al,_BootPartition
-	movb	%ah,_BootDrive
+	movb	%al,BootPartition
+	movb	%ah,BootDrive
 	jmp	mb4
 mb3:	/* No boot device known, assume first partition of first harddisk */
-	movb	$0x80,_BootDrive
-	movb	$1,_BootPartition
+	movb	$0x80,BootDrive
+	movb	$1,BootPartition
 mb4:
 
 	/* Check for a command line */
@@ -389,7 +393,7 @@ mb6:
 
 	/* GO! */
 	pushl	%eax	
-	call	_BootMain
+	call	BootMain
 
 mbfail:	call	switch_to_real
 	.code16
@@ -462,8 +466,8 @@ rmode_idtptr:
 	.word	0x3ff		/* Limit */
 	.long	0			/* Base Address */
 
-EXTERN(_BootDrive)
+EXTERN(BootDrive)
 	.long	0
 
-EXTERN(_BootPartition)
+EXTERN(BootPartition)
 	.long	0

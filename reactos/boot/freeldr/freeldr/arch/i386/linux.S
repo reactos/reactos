@@ -25,12 +25,12 @@
 
 
 	.code32
-EXTERN(_BootNewLinuxKernel)
+EXTERN(BootNewLinuxKernel)
 	call	switch_to_real
 	.code16
 
 	/* Set the boot drive */
-	movb	(_BootDrive),%dl
+	movb	(BootDrive),%dl
 
 	/* Load segment registers */
 	cli
@@ -49,7 +49,7 @@ EXTERN(_BootNewLinuxKernel)
 /*
  *  VOID BootOldLinuxKernel(ULONG KernelSize);
  */
-EXTERN(_BootOldLinuxKernel)
+EXTERN(BootOldLinuxKernel)
 
 	/* First we have to copy the kernel down from 0x100000 to 0x10000 */
 	/* The reason we can overwrite low memory is because this code */
@@ -66,7 +66,7 @@ EXTERN(_BootOldLinuxKernel)
 	.code16
 
 	/* Set the boot drive */
-	movb	(_BootDrive),%dl
+	movb	(BootDrive),%dl
 
 	/* Load segment registers */
 	cli

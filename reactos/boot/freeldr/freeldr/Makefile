@@ -21,6 +21,9 @@ PATH_TO_TOP = ../../..
 
 include ../rules.mak
 
+CC = gcc
+LD = ld
+
 TARGET = i386
 ifeq ($(DEBUG),)
 # Debugging information on (bigger binary)
@@ -95,7 +98,13 @@ endif
 
 COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 
-COMPILER_INCLUDES	=	-I$(SRCDIR)/include -I$(PATH_TO_TOP)/w32api/include -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include
+COMPILER_INCLUDES = -I$(SRCDIR)/include \
+                    -I$(PATH_TO_TOP)/w32api/include \
+                    -I$(PATH_TO_TOP)/include \
+                    -I$(PATH_TO_TOP)/ntoskrnl/include \
+                    -I$(PATH_TO_TOP)/include/xen3 \
+                    -I$(PATH_TO_TOP)/include/xen3/public \
+                    -I$(PATH_TO_TOP)/include/xen3/private
 
 CFLAGS = $(COMPILER_OPTIONS) \
          $(COMPILER_DEFINES) \
@@ -106,7 +115,7 @@ LINKER_OPTIONS = -N -Ttext=0x8000
 LFLAGS	=	$(LINKER_OPTIONS)
 
 ifeq ($(HOST),mingw32-linux)
-  NASMFLAGS	=	-f win32
+  NASMFLAGS	=	-f elf
 else
   NASMFLAGS	=	-f elf
 endif
@@ -136,6 +145,7 @@ ARCH_I386_OBJS = fathelp.o	\
   archmach.o \
   machpc.o \
   machxbox.o \
+  machxen.o \
   pccons.o \
   pcdisk.o \
   pcmem.o \
@@ -148,6 +158,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xboxmem.o	\
   xboxrtc.o	\
   xboxvideo.o	\
+  xencons.o \
   _alloca.o # For Mingw32 builds
 
 ARCH_OBJS	= $(addprefix i386/,$(ARCH_I386_OBJS))
@@ -264,13 +275,13 @@ all : freeldr.sys setupldr.sys
 
 freeldr.sys : $(ALL_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 	@echo freeldr: LINKING $@
-	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
+	@$(LD) $(LFLAGS) -o freeldr.elf $(F_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 ifeq ($(FULL_MAP),yes)
-	@$(OBJDUMP) -d -S freeldr.exe > freeldr.map
+	@$(OBJDUMP) -d -S freeldr.elf > freeldr.map
 else
-	@$(NM) --numeric-sort freeldr.exe > freeldr.map
+	@$(NM) --numeric-sort freeldr.elf > freeldr.map
 endif
-	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
+	@$(OBJCOPY) -O binary freeldr.elf freeldr.sys
 
 
 setupldr.sys : $(ALL_OBJS)

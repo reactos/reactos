@@ -73,6 +73,7 @@ FrLdrLoadKernel(PCHAR szFileName,
     return(TRUE);
 }
 
+#ifdef TODO
 static VOID
 FreeldrFreeMem(PVOID Area)
 {
@@ -100,10 +101,12 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
   FsSetFilePointer((PFILE) FileContext, (ULONG) Position);
     return TRUE;
 }
+#endif
 
 static BOOL
 LoadKernelSymbols(PCHAR szKernelName, int nPos)
 {
+#ifdef TODO
   static ROSSYM_CALLBACKS FreeldrCallbacks =
     {
       FreeldrAllocMem,
@@ -132,6 +135,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   RosSymGetRawData(RosSymInfo, (PVOID)Base);
   FrLdrCloseModule(Base, Size);
   RosSymDelete(RosSymInfo);
+#endif
   return TRUE;
 }
   
