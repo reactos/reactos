@@ -110,6 +110,20 @@ static VOID StringCompareRemoveLast(LPSTR String, CHAR character)
 	if(len && String[len-1] == character) String[len-1] = 0;
 }
 
+static INT MSIEXEC_lstrncmpiA(LPCSTR str1, LPCSTR str2, INT size)
+{
+    INT ret;
+
+    if ((str1 == NULL) && (str2 == NULL)) return 0;
+    if (str1 == NULL) return -1;
+    if (str2 == NULL) return 1;
+
+    ret = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, str1, size, str2, -1);
+    if (ret) ret -= 2;
+
+    return ret;
+}
+
 static VOID *LoadProc(LPCSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 {
 	VOID* (*proc)(void);
@@ -179,6 +193,9 @@ int main(int argc, char *argv[])
 	BOOL FunctionPatch = FALSE;
 	BOOL FunctionDllRegisterServer = FALSE;
 	BOOL FunctionDllUnregisterServer = FALSE;
+	BOOL FunctionRegServer = FALSE;
+	BOOL FunctionUnregServer = FALSE;
+	BOOL FunctionUnknown = FALSE;
 
 	BOOL GotProductCode = FALSE;
 	LPCSTR PackageName = NULL;
@@ -209,16 +226,30 @@ int main(int argc, char *argv[])
 	{
 		WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 
-		if(!strcasecmp(argv[i], "/i"))
+                if (!lstrcmpiA(argv[i], "/regserver"))
+                {
+                    FunctionRegServer = TRUE;
+                }
+                else if (!lstrcmpiA(argv[i], "/unregserver") || !lstrcmpiA(argv[i], "/unregister"))
+                {
+                    FunctionUnregServer = TRUE;
+                }
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "/i", 2))
 		{
+			char *argvi = argv[i];
 			FunctionInstall = TRUE;
-			i++;
-			if(i >= argc)
-				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
+			if(strlen(argvi) > 2)
+				argvi += 2;
+			else {
+				i++;
+				if(i >= argc)
+					ShowUsage(1);
+				WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
+				argvi = argv[i];
+			}
+			GotProductCode = GetProductCode(argvi, &PackageName, &ProductCode);
 		}
-		else if(!strcasecmp(argv[i], "/a"))
+		else if(!lstrcmpiA(argv[i], "/a"))
 		{
 			FunctionInstall = TRUE;
 			FunctionInstallAdmin = TRUE;
@@ -230,7 +261,7 @@ int main(int argc, char *argv[])
 			PackageName = argv[i];
 			StringListAppend(&Properties, ActionAdmin);
 		}
-		else if(!strncasecmp(argv[i], "/f", 2))
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "/f", 2))
 		{
 			int j;
 			int len = strlen(argv[i]);
@@ -298,7 +329,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
 		}
-		else if(!strcasecmp(argv[i], "/x"))
+		else if(!lstrcmpiA(argv[i], "/x"))
 		{
 			FunctionInstall = TRUE;
 			i++;
@@ -308,7 +339,7 @@ int main(int argc, char *argv[])
 			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
 			StringListAppend(&Properties, RemoveAll);
 		}
-		else if(!strncasecmp(argv[i], "/j", 2))
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "/j", 2))
 		{
 			int j;
 			int len = strlen(argv[i]);
@@ -336,7 +367,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			PackageName = argv[i];
 		}
-		else if(!strcasecmp(argv[i], "u"))
+		else if(!lstrcmpiA(argv[i], "u"))
 		{
 			FunctionAdvertise = TRUE;
 			AdvertiseMode = ADVERTISEFLAGS_USERASSIGN;
@@ -346,7 +377,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			PackageName = argv[i];
 		}
-		else if(!strcasecmp(argv[i], "m"))
+		else if(!lstrcmpiA(argv[i], "m"))
 		{
 			FunctionAdvertise = TRUE;
 			AdvertiseMode = ADVERTISEFLAGS_MACHINEASSIGN;
@@ -356,7 +387,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			PackageName = argv[i];
 		}
-		else if(!strcasecmp(argv[i], "/t"))
+		else if(!lstrcmpiA(argv[i], "/t"))
 		{
 			i++;
 			if(i >= argc)
@@ -365,12 +396,12 @@ int main(int argc, char *argv[])
 			StringListAppend(&Transforms, argv[i]);
 			StringListAppend(&Transforms, ";");
 		}
-		else if(!strncasecmp(argv[i], "TRANSFORMS=", 11))
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "TRANSFORMS=", 11))
 		{
 			StringListAppend(&Transforms, argv[i]+11);
 			StringListAppend(&Transforms, ";");
 		}
-		else if(!strcasecmp(argv[i], "/g"))
+		else if(!lstrcmpiA(argv[i], "/g"))
 		{
 			i++;
 			if(i >= argc)
@@ -378,7 +409,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			Language = strtol(argv[i], NULL, 0);
 		}
-		else if(!strncasecmp(argv[i], "/l", 2))
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "/l", 2))
 		{
 			int j;
 			int len = strlen(argv[i]);
@@ -468,7 +499,7 @@ int main(int argc, char *argv[])
 				ExitProcess(1);
 			}
 		}
-		else if(!strcasecmp(argv[i], "/p"))
+		else if(!lstrcmpiA(argv[i], "/p"))
 		{
 			FunctionPatch = TRUE;
 			i++;
@@ -477,35 +508,40 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			PatchFileName = argv[i];
 		}
-		else if(!strncasecmp(argv[i], "/q", 2))
+		else if(!MSIEXEC_lstrncmpiA(argv[i], "/q", 2))
 		{
-			if(strlen(argv[i]) == 2 || !strcasecmp(argv[i]+2, "n"))
+			if(strlen(argv[i]) == 2 || !lstrcmpiA(argv[i]+2, "n"))
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE;
 			}
-			else if(!strcasecmp(argv[i]+2, "b"))
+			else if(!lstrcmpiA(argv[i]+2, "b"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC;
 			}
-			else if(!strcasecmp(argv[i]+2, "r"))
+			else if(!lstrcmpiA(argv[i]+2, "r"))
 			{
 				InstallUILevel = INSTALLUILEVEL_REDUCED;
 			}
-			else if(!strcasecmp(argv[i]+2, "f"))
+			else if(!lstrcmpiA(argv[i]+2, "f"))
 			{
 				InstallUILevel = INSTALLUILEVEL_FULL|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!strcasecmp(argv[i]+2, "n+"))
+			else if(!lstrcmpiA(argv[i]+2, "n+"))
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!strcasecmp(argv[i]+2, "b+"))
+			else if(!lstrcmpiA(argv[i]+2, "b+"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!strcasecmp(argv[i]+2, "b-"))
+			else if(!lstrcmpiA(argv[i]+2, "b-"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY;
+			}
+			else if(!lstrcmpiA(argv[i]+2, "b+!"))
+            		{
+				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
+				WINE_FIXME("Unknown modifier: !\n");
 			}
 			else
 			{
@@ -518,7 +554,7 @@ int main(int argc, char *argv[])
 				ExitProcess(1);
 			}
 		}
-		else if(!strcasecmp(argv[i], "/y"))
+		else if(!lstrcmpiA(argv[i], "/y"))
 		{
 			FunctionDllRegisterServer = TRUE;
 			i++;
@@ -527,7 +563,7 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			DllName = argv[i];
 		}
-		else if(!strcasecmp(argv[i], "/z"))
+		else if(!lstrcmpiA(argv[i], "/z"))
 		{
 			FunctionDllUnregisterServer = TRUE;
 			i++;
@@ -536,9 +572,19 @@ int main(int argc, char *argv[])
 			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
 			DllName = argv[i];
 		}
-		else if(!strcasecmp(argv[i], "/h") || !strcasecmp(argv[i], "/?"))
+		else if(!lstrcmpiA(argv[i], "/h") || !lstrcmpiA(argv[i], "/?"))
 		{
 			ShowUsage(0);
+		}
+		else if(!lstrcmpiA(argv[i], "/m"))
+		{
+			FunctionUnknown = TRUE;
+			WINE_FIXME("Unknown parameter /m\n");
+		}
+		else if(!lstrcmpiA(argv[i], "/D"))
+		{
+			FunctionUnknown = TRUE;
+			WINE_FIXME("Unknown parameter /D\n");
 		}
 		else if(strchr(argv[i], '='))
 		{
@@ -613,6 +659,18 @@ int main(int argc, char *argv[])
 	else if(FunctionDllUnregisterServer)
 	{
 		DllUnregisterServer(DllName);
+	}
+	else if (FunctionRegServer)
+	{
+		WINE_FIXME( "/regserver not implemented yet, ignoring\n" );
+	}
+	else if (FunctionUnregServer)
+	{
+		WINE_FIXME( "/unregserver not implemented yet, ignoring\n" );
+	}
+	else if (FunctionUnknown)
+	{
+		WINE_FIXME( "Unknown function, ignoring\n" );
 	}
 	else
 		ShowUsage(1);
