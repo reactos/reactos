@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.161 2004/08/23 22:29:43 hbirr Exp $
+/* $Id: section.c,v 1.162 2004/08/28 22:18:24 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2346,6 +2346,13 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    else
    {
       MaximumSize = FileInfo.EndOfFile;
+      /* Mapping zero-sized files isn't allowed. */
+      if (MaximumSize.QuadPart == 0)
+      {
+         ObDereferenceObject(Section);
+         ObDereferenceObject(FileObject);
+         return STATUS_FILE_INVALID;
+      }
    }
 
    if (MaximumSize.QuadPart > FileInfo.EndOfFile.QuadPart)
