@@ -16,11 +16,15 @@
  
 HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPVOID* lplpDD, LPUNKNOWN pUnkOuter) 
 {    	
-   return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
+    if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
+	return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
 }
 
 HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
 {
+	if (pUnkOuter==NULL) return DDERR_INVALIDPARAMS;
+	if (!IsEqualGUID(iid, &IID_IDirectDraw7)) return DDERR_INVALIDPARAMS;
+
     return DDRAW_Create(lpGUID, lplpDD, pUnkOuter, iid, TRUE);
 }
 
@@ -81,14 +85,14 @@ HRESULT DDRAW_Create(
 	   now we will assume it is the current display driver 
 	*/
 
-	if (pUnkOuter != NULL) return DDERR_INVALIDPARAMS;
 	
+	/*
 	desktop = GetWindowDC(GetDesktopWindow());
-
 	lplpDD = OsThunkDdCreateDirectDrawObject(desktop);   
 	if (lplpDD == NULL) return DDERR_NODIRECTDRAWHW;
+	*/
 	 	
-	return DD_OK;
+	return DDERR_NODIRECTDRAWHW;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD fwdReason, LPVOID lpvReserved)
