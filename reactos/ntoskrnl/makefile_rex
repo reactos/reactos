@@ -110,6 +110,7 @@ ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
 
 kimage: $(OBJECTS)
 	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBGCC) -o kimage
+	$(NM) --numeric-sort kimage > kernel.sym
 	$(OBJCOPY) -S --gap-fill=0 -O binary kimage kimage.bin
 
 old_kimage: $(OBJECTS)
