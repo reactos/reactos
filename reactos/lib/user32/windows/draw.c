@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.18 2003/08/15 02:51:53 silverblade Exp $
+/* $Id: draw.c,v 1.19 2003/08/15 13:44:30 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -522,13 +522,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBOuterPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.left, InnerRect.bottom-1);
+        MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
+        LineTo(hdc, InnerRect.right, InnerRect.bottom-1);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom, NULL);
-        LineTo(hdc, InnerRect.right-1, InnerRect.top);
+        MoveToEx(hdc, InnerRect.right-1, InnerRect.top, NULL);
+        LineTo(hdc, InnerRect.right-1, InnerRect.bottom);
     }
 
     /* Draw the inner edge */
@@ -546,13 +546,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBInnerPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2, NULL);
-        LineTo(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2);
+        MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
+        LineTo(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus, NULL);
-        LineTo(hdc, InnerRect.right-2, InnerRect.top+RTpenplus);
+        MoveToEx(hdc, InnerRect.right-2, InnerRect.top+RTpenplus, NULL);
+        LineTo(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus);
     }
 
     if( ((uFlags & BF_MIDDLE) && retval) || (uFlags & BF_ADJUST) )
