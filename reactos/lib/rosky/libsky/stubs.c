@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2004/08/12 23:38:17 weiden Exp $
+/* $Id: stubs.c,v 1.4 2004/08/14 00:39:19 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS library
@@ -12,24 +12,6 @@
 #include <windows.h>
 /* #define NDEBUG */
 #include "libsky.h"
-
-/*
- * @unimplemented
- */
-void __cdecl
-__libc_init_memory(void *end,
-                   void *__bss_end__,
-                   void *__bss_start__)
-{
-  STUB("__libc_init_memory: end=0x%x __bss_end__=0x%x __bss_start__=0x%x\n", end, __bss_end__, __bss_start__);
-  #if 1
-  RtlZeroMemory(__bss_start__, (PCHAR)__bss_end__ - (PCHAR)__bss_start__);
-  #else
-  RtlCopyMemory(__bss_start__, /* I think this function should initialize the data in the .bss section */
-                end, /* The source should be the pointer to raw of the EOF Extra Data, but how to get it?! It's not loaded to memory in win/ros */
-                (PCHAR)__bss_end__ - (PCHAR)__bss_start__); /* Or should we rather copy 0x2000 (raw size of EOF Extra data)? */
-  #endif
-}
 
 
 typedef void (__cdecl *func_ptr) (void);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libsky.c,v 1.3 2004/08/13 23:31:12 sedwards Exp $
+/* $Id: libsky.c,v 1.4 2004/08/14 00:39:19 weiden Exp $
  *
  * PROJECT:         SkyOS library
  * FILE:            lib/libsky/libsky.c
@@ -39,5 +39,19 @@ __to_kernel(int ret)
 {
   DBG("__to_kernel: ret=0x%x\n", ret);
   ExitProcess(ret);
+}
+
+
+/*
+ * @implemented
+ */
+void __cdecl
+__libc_init_memory(void *end,
+                   void *__bss_end__,
+                   void *__bss_start__)
+{
+  DBG("__libc_init_memory: end=0x%x __bss_end__=0x%x __bss_start__=0x%x\n", end, __bss_end__, __bss_start__);
+  RtlZeroMemory(__bss_start__, (PCHAR)__bss_end__ - (PCHAR)__bss_start__);
+  /* FIXME - initialize other stuff */
 }
 
