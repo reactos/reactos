@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.50 2003/03/08 13:16:51 gvg Exp $
+/* $Id: dc.c,v 1.51 2003/03/22 23:57:32 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1043,34 +1043,39 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // Convert the color of the pen to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-	  if( PalGDI ){
+      if( PalGDI ){
       	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-		if( pen ){
-	      	pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
-		}
-	  	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
-	  }
+	if( pen ){
+      	  pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+	}
+	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+	EngDeleteXlate(XlateObj);
+      }
       break;
+
     case GO_BRUSH_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hBrush;
       dc->w.hBrush = (HBRUSH) hGDIObj;
 
       // Convert the color of the brush to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-	  if( PalGDI ){
+      if( PalGDI ){
       	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-		if( brush ){
-      		brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
-		}
-	  	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
-	  }
+	if( brush ){
+      	  brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
+	}
+	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
+	EngDeleteXlate(XlateObj);
+      }
       break;
-      case GO_FONT_MAGIC:
+
+    case GO_FONT_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hFont;
       dc->w.hFont = (HFONT) hGDIObj;
       break;
+
     case GO_BITMAP_MAGIC:
       // must be memory dc to select bitmap
       if (!(dc->w.flags & DC_MEMORY)) return NULL;
@@ -1115,6 +1120,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
       }
       break;
+
 #if UPDATEREGIONS
     case GO_REGION_MAGIC:
       /* objOrg = (HGDIOBJ)hDC->region; */
