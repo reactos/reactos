@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.63 2004/05/21 10:09:31 weiden Exp $
+/* $Id: stubs.c,v 1.64 2004/07/12 22:34:27 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -367,17 +367,6 @@ RegisterSystemThread ( DWORD flags, DWORD reserved )
 DWORD
 STDCALL
 RegisterTasklist ( DWORD x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetLogonNotifyWindow ( HWINSTA hwinsta, HWND hwnd )
 {
   UNIMPLEMENTED;
   return FALSE;
