@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.11 2003/05/18 17:16:17 ea Exp $
+/* $Id: windc.c,v 1.12 2003/06/15 20:08:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -503,13 +503,15 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 					 Window->Self, Flags);
 	      if (Flags & DCX_WINDOW)
 		{
-		  W32kOffsetRgn(hRgnVisible, -Window->WindowRect.left,
-				-Window->WindowRect.top);
+		  W32kOffsetRgn(hRgnVisible,
+		                Parent->WindowRect.left - Window->WindowRect.left,
+		                Parent->WindowRect.top - Window->WindowRect.top);
 		}
 	      else
 		{
-		  W32kOffsetRgn(hRgnVisible, -Window->ClientRect.left,
-				-Window->ClientRect.top);
+		  W32kOffsetRgn(hRgnVisible,
+		                Parent->ClientRect.left - Window->ClientRect.left,
+		                Parent->ClientRect.top - Window->ClientRect.top);
 		}
 	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
 	    }
@@ -532,10 +534,10 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 	      hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
 	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
 	    }
-
-	  Dce->DCXFlags &= ~DCX_DCEDIRTY;
-	  W32kSelectVisRgn(Dce->hDC, hRgnVisible);
 	}
+
+      Dce->DCXFlags &= ~DCX_DCEDIRTY;
+      W32kSelectVisRgn(Dce->hDC, hRgnVisible);
     }
 
   if (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN))

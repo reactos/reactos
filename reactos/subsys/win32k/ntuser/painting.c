@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.17 2003/05/31 08:51:58 gvg Exp $
+/* $Id: painting.c,v 1.18 2003/06/15 20:08:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -859,6 +859,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   RECT ClientRect;
   RECT ClipRect;
   NTSTATUS Status;
+  INT DcxFlags;
 
   Status =
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
@@ -888,30 +889,34 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   /* FIXME: Hide claret. */
 
-
+  DcxFlags = DCX_INTERSECTRGN | DCX_WINDOWPAINT | DCX_USESTYLE;
+  if (IsIcon)
+    {
+    DcxFlags |= DCX_WINDOW;
+    }
   if (NtUserGetClassLong(Window->Self, GCL_STYLE) & CS_PARENTDC)
     {
-      if (UpdateRegion != NULL)
+      /* Don't clip the output to the update region for CS_PARENTDC window */
+      if ((HRGN) 1 < UpdateRegion)
 	{
 	  W32kDeleteObject(UpdateRegion);
 	}
-      lPs->hdc = NtUserGetDCEx(hWnd, 0, DCX_WINDOWPAINT | DCX_USESTYLE |
-			       (IsIcon ? DCX_WINDOW : 0));
+      UpdateRegion = NULL;
+      DcxFlags &= ~DCX_INTERSECTRGN;
     }
   else
     {
-      if (UpdateRegion != NULL)
+      if (NULL == UpdateRegion)  /* empty region, clip everything */
 	{
-	  W32kOffsetRgn(UpdateRegion,
-			Window->WindowRect.left -
-			Window->ClientRect.left,
-			Window->WindowRect.top -
-			Window->ClientRect.top);
+          UpdateRegion = W32kCreateRectRgn(0, 0, 0, 0);
 	}
-      lPs->hdc = NtUserGetDCEx(hWnd, UpdateRegion, DCX_INTERSECTRGN |
-			       DCX_WINDOWPAINT | DCX_USESTYLE |
-			       (IsIcon ? DCX_WINDOW : 0));
+      else if ((HRGN) 1 == UpdateRegion)  /* whole client area, don't clip */
+	{
+	  UpdateRegion = NULL;
+	  DcxFlags &= ~DCX_INTERSECTRGN;
+	}
     }
+  lPs->hdc = NtUserGetDCEx(hWnd, UpdateRegion, DcxFlags);
 
   /* FIXME: Check for DC creation failure. */
 
