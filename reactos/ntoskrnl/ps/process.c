@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.128 2004/04/18 00:50:53 jimtabor Exp $
+/* $Id: process.c,v 1.129 2004/04/18 06:08:36 jimtabor Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1073,7 +1073,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	    Process->UniqueProcessId;
 	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
 	    (ULONG)Process->InheritedFromUniqueProcessId;
-
+	  ProcessBasicInformationP->BasePriority =
+	    Process->Pcb.BasePriority;
+	  
 	  if (ReturnLength)
 	  {
 	    *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
@@ -1092,7 +1094,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	{
 	   PKERNEL_USER_TIMES ProcessTimeP =
 	                     (PKERNEL_USER_TIMES)ProcessInformation;
-	    
+
 	   ProcessTimeP->CreateTime = (TIME) Process->CreateTime;
            ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000;
            ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000;
