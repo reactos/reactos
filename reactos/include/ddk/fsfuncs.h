@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.10 2000/03/11 00:51:36 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.11 2001/04/24 18:36:38 ea Exp $ */
+#define FlagOn(x,f) ((x) & (f))
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -66,10 +67,10 @@ FsRtlAllocateResource (
 BOOLEAN
 STDCALL
 FsRtlAreNamesEqual (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	IN	PUNICODE_STRING	Name1,
+	IN	PUNICODE_STRING	Name2,
+	IN	BOOLEAN		IgnoreCase,
+	IN	PWCHAR		UpcaseTable	OPTIONAL
 	);
 DWORD
 STDCALL
@@ -162,7 +163,7 @@ FsRtlDissectName (
 BOOLEAN
 STDCALL
 FsRtlDoesDbcsContainWildCards (
-	IN	DWORD		Unknown0
+	IN	DWORD	Unknown0
 	);
 BOOLEAN
 STDCALL
@@ -172,22 +173,22 @@ FsRtlDoesNameContainWildCards (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	PLARGE_INTEGER		Length,
+	IN	ULONG			Key,
+	IN	PFILE_OBJECT		FileObject,
+	IN	PEPROCESS		ProcessId
 	);
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	PLARGE_INTEGER		Length,
+	IN	ULONG			Key,
+	IN	PFILE_OBJECT		FileObject,
+	IN	PEPROCESS		ProcessId
 	);
 NTSTATUS
 STDCALL
@@ -326,7 +327,7 @@ FsRtlIsNameInExpression (
 BOOLEAN
 STDCALL
 FsRtlIsNtstatusExpected (
-	NTSTATUS	NtStatus
+	IN NTSTATUS	NtStatus
 	);
 BOOLEAN
 STDCALL
@@ -387,7 +388,7 @@ BOOLEAN
 STDCALL
 FsRtlMdlReadComplete (
 	IN	PFILE_OBJECT	FileObject,
-	IN OUT	PMDL		Mdl
+	IN OUT	PMDL		MdlChain
 	);
 BOOLEAN
 STDCALL
@@ -425,47 +426,53 @@ FsRtlMdlWriteCompleteDev (
 VOID
 STDCALL
 FsRtlNotifyChangeDirectory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PNOTIFY_SYNC			NotifySync,
+	IN	PLIST_ENTRY			NotifyList,
+	IN	PVOID				FsContext,
+	IN	PSTRING				FullDirectoryName,
+	IN	BOOLEAN				WatchTree,
+	IN	ULONG				CompletionFilter,
+	IN	PIRP				NotifyIrp
 	);
 VOID
 STDCALL
 FsRtlNotifyCleanup (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PVOID		FsContext
+	);
+typedef
+BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
+	IN	PVOID				NotifyContext,
+	IN	PVOID				TargetContext,
+	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext
 	);
 VOID
 STDCALL
 FsRtlNotifyFullChangeDirectory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9
+	IN	PNOTIFY_SYNC			NotifySync,
+	IN	PLIST_ENTRY			NotifyList,
+	IN	PVOID				FsContext,
+	IN	PSTRING				FullDirectoryName,
+	IN	BOOLEAN				WatchTree,
+	IN	BOOLEAN				IgnoreBuffer,
+	IN	ULONG				CompletionFilter,
+	IN	PIRP				NotifyIrp,
+	IN	PCHECK_FOR_TRAVERSE_ACCESS	TraverseCallback	OPTIONAL,
+	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext		OPTIONAL
 	);
 VOID
 STDCALL
 FsRtlNotifyFullReportChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PSTRING		FullTargetName,
+	IN	USHORT		TargetNameOffset,
+	IN	PSTRING		StreamName OPTIONAL,
+	IN	PSTRING		NormalizedParentName	OPTIONAL,
+	IN	ULONG		FilterMatch,
+	IN	ULONG		Action,
+	IN	PVOID		TargetContext
 	);
 VOID
 STDCALL
@@ -475,11 +482,11 @@ FsRtlNotifyUninitializeSync (
 VOID
 STDCALL
 FsRtlNotifyReportChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	PVOID	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PSTRING		FullTargetName,
+	IN	USHORT		TargetNameOffset,
+	IN	ULONG		FilterMatch
 	);
 VOID
 STDCALL
@@ -522,8 +529,8 @@ FsRtlPrepareMdlWriteDev (
 NTSTATUS
 STDCALL
 FsRtlNormalizeNtstatus (
-	NTSTATUS	NtStatusToNormalize,
-	NTSTATUS	NormalizedNtStatus
+	IN	NTSTATUS	NtStatusToNormalize,
+	IN	NTSTATUS	NormalizedNtStatus
 	);
 VOID
 STDCALL

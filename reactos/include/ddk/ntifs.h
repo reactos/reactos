@@ -35,6 +35,7 @@ CcReleaseFileCache (PFILE_OBJECT	FileObject,
 
 #include <ddk/ccfuncs.h>
 
+#include <ddk/fstypes.h>
 #include <ddk/fsfuncs.h>
 
 #endif /* __INCLUDE_DDK_NTIFS_H */

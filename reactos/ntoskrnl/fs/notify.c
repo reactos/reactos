@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.1 2000/03/11 00:51:36 ea Exp $
+/* $Id: notify.c,v 1.2 2001/04/24 18:36:39 ea Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -21,26 +21,26 @@
 VOID
 STDCALL
 FsRtlNotifyChangeDirectory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	IN	PNOTIFY_SYNC			NotifySync,
+	IN	PLIST_ENTRY			NotifyList,
+	IN	PVOID				FsContext,
+	IN	PSTRING				FullDirectoryName,
+	IN	BOOLEAN				WatchTree,
+	IN	ULONG				CompletionFilter,
+	IN	PIRP				NotifyIrp
 	)
 {
 	FsRtlNotifyFullChangeDirectory (
-		Unknown0,
-		Unknown3,
-		Unknown1,
-		Unknown2,
-		Unknown4,
-		1,
-		Unknown5,
-		Unknown6,
-		0,
-		0
+		NotifySync,
+		NotifyList,
+		FsContext,
+		FullDirectoryName,
+		WatchTree,
+		TRUE, /* IgnoreBuffer */
+		CompletionFilter,
+		NotifyIrp,
+		NULL,
+		NULL
 		);
 }
 
@@ -59,9 +59,9 @@ FsRtlNotifyChangeDirectory (
 VOID
 STDCALL
 FsRtlNotifyCleanup (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PVOID		FsContext
 	)
 {
 }
@@ -81,16 +81,16 @@ FsRtlNotifyCleanup (
 VOID
 STDCALL
 FsRtlNotifyFullChangeDirectory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9
+	IN	PNOTIFY_SYNC			NotifySync,
+	IN	PLIST_ENTRY			NotifyList,
+	IN	PVOID				FsContext,
+	IN	PSTRING				FullDirectoryName,
+	IN	BOOLEAN				WatchTree,
+	IN	BOOLEAN				IgnoreBuffer,
+	IN	ULONG				CompletionFilter,
+	IN	PIRP				NotifyIrp,
+	IN	PCHECK_FOR_TRAVERSE_ACCESS	TraverseCallback	OPTIONAL,
+	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext		OPTIONAL
 	)
 {
 }
@@ -110,15 +110,15 @@ FsRtlNotifyFullChangeDirectory (
 VOID
 STDCALL
 FsRtlNotifyFullReportChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PSTRING		FullTargetName,
+	IN	USHORT		TargetNameOffset,
+	IN	PSTRING		StreamName		OPTIONAL,
+	IN	PSTRING		NormalizedParentName	OPTIONAL,
+	IN	ULONG		FilterMatch,
+	IN	ULONG		Action,
+	IN	PVOID		TargetContext
 	)
 {
 }
@@ -158,17 +158,24 @@ FsRtlNotifyInitializeSync (
 VOID
 STDCALL
 FsRtlNotifyReportChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	PVOID	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
+	IN	PNOTIFY_SYNC	NotifySync,
+	IN	PLIST_ENTRY	NotifyList,
+	IN	PSTRING		FullTargetName,
+	IN	USHORT		TargetNameOffset,
+	IN	ULONG		FilterMatch
 	)
 {
-	/*
-	 * It should probably call
-	 * FsRtlNotifyFullReportChange.
-	 */
+	FsRtlNotifyFullReportChange (
+		NotifySync,
+		NotifyList,
+		FullTargetName,
+		(FullTargetName->Length - TargetNameOffset), /*?*/
+		NULL,
+		NULL,
+		FilterMatch,
+		0, /* Action ? */
+		NULL
+		);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.2 2000/02/25 23:27:51 ea Exp $
+/* $Id: name.c,v 1.3 2001/04/24 18:36:39 ea Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -20,14 +20,17 @@ PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
  *
  * RETURN VALUE
  *
+ * NOTE
+ * 	From Bo Branten's ntifs.h v25.
+ *
  */
 BOOLEAN
 STDCALL
 FsRtlAreNamesEqual (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	IN	PUNICODE_STRING	Name1,
+	IN	PUNICODE_STRING	Name2,
+	IN	BOOLEAN		IgnoreCase,
+	IN	PWCHAR		UpcaseTable	OPTIONAL
 	)
 {
 	return FALSE;

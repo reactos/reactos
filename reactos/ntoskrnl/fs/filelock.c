@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.1 2000/02/26 16:22:27 ea Exp $
+/* $Id: filelock.c,v 1.2 2001/04/24 18:36:39 ea Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -65,12 +65,12 @@ FsRtlCheckLockForWriteAccess (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForRead (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	PLARGE_INTEGER		Length,
+	IN	ULONG			Key,
+	IN	PFILE_OBJECT		FileObject,
+	IN	PEPROCESS		ProcessId
 	)
 {
 	return FALSE;
@@ -91,12 +91,12 @@ FsRtlFastCheckLockForRead (
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForWrite (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
+	IN	PFILE_LOCK_ANCHOR	FileLockAnchor,
+	IN	PLARGE_INTEGER		FileOffset,
+	IN	PLARGE_INTEGER		Length,
+	IN	ULONG			Key,
+	IN	PFILE_OBJECT		FileObject,
+	IN	PEPROCESS		ProcessId
 	)
 {
 	return FALSE;
