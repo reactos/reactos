@@ -654,12 +654,12 @@ NtUserGetGUIThreadInfo(
 DWORD
 STDCALL
 NtUserGetIconInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+  HICON hIcon,
+  PBOOL fIcon,
+  PDWORD xHotspot,
+  PDWORD yHotspot,
+  HBITMAP *hbmMask,
+  HBITMAP *hbmColor);
 
 DWORD
 STDCALL

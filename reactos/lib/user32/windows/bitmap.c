@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.9 2003/05/22 21:41:20 sedwards Exp $
+/* $Id: bitmap.c,v 1.10 2003/06/03 22:25:37 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -32,6 +32,12 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+#include <stdlib.h>
+
+/*forward declerations... actualy in user32\windows\icon.c but usful here****/
+HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired);
+CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -61,6 +67,178 @@ LoadImageA(HINSTANCE hinst,
 			  cyDesired, fuLoad);
     }
   return(Handle);
+}
+
+HANDLE STATIC
+LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
+{
+  DbgPrint("FIXME: Need support for loading cursor images.\n");
+  return(NULL);
+}
+
+HANDLE STATIC
+LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuLoad)
+{
+  HANDLE hResource;
+  HANDLE h2Resource;
+  HANDLE hFile;
+  HANDLE hSection;
+  CURSORICONDIR* IconDIR;
+  HDC hScreenDc;
+  HANDLE hIcon;
+  ULONG HeaderSize;
+  ULONG ColourCount;
+  PVOID Data;
+  CURSORICONDIRENTRY* dirEntry;
+  ICONIMAGE* SafeIconImage;
+  GRPICONDIR* IconResDir;
+  INT id;
+  ICONIMAGE *ResIcon;
+
+  if (fuLoad & LR_SHARED)
+    DbgPrint("FIXME: need LR_SHARED support Loading icon images\n");
+
+  if (!(fuLoad & LR_LOADFROMFILE))
+  {
+      if (hinst == NULL)
+	  {
+	    hinst = GetModuleHandle(L"USER32");		
+	  }
+      hResource = FindResourceW(hinst, lpszName, RT_GROUP_ICON);
+      if (hResource == NULL)
+	  {
+	    return(NULL);
+	  }
+
+      hResource = LoadResource(hinst, hResource);
+      if (hResource == NULL)
+	  {
+	    return(NULL);
+	  }
+      IconResDir = LockResource(hResource);
+      if (IconResDir == NULL)
+	  {
+	    return(NULL);
+	  }
+
+      //find the best fitting in the IconResDir for this resolution
+      id = LookupIconIdFromDirectoryEx((PBYTE) IconResDir, TRUE,
+                width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+
+	  h2Resource = FindResource(hinst,
+                     MAKEINTRESOURCE(id),
+                     MAKEINTRESOURCE(RT_ICON));
+
+      hResource = LoadResource(hinst, h2Resource);
+      if (hResource == NULL)
+	  {
+	    return(NULL);
+	  }
+
+      ResIcon = LockResource(hResource);
+      if (ResIcon == NULL)
+	  {
+	    return(NULL);
+	  }
+      return CreateIconFromResourceEx((PBYTE) ResIcon,
+                  SizeofResource(hinst, h2Resource), TRUE, 0x00030000,
+                  width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+  }
+  else
+  {
+      hFile = CreateFile(lpszName,
+			 GENERIC_READ,
+			 FILE_SHARE_READ,
+			 NULL,
+			 OPEN_EXISTING,
+			 0,
+			 NULL);
+      if (hFile == NULL)
+	  {
+	    return(NULL);
+	  }
+
+      hSection = CreateFileMapping(hFile,
+				   NULL,
+				   PAGE_READONLY,
+				   0,
+				   0,
+				   NULL);
+
+      CloseHandle(hFile);
+      if (hSection == NULL)
+	  {
+	    return(NULL);
+	  }
+      IconDIR = MapViewOfFile(hSection,
+				 FILE_MAP_READ,
+				 0,
+				 0,
+				 0);
+
+      CloseHandle(hSection);
+      if (IconDIR == NULL)
+	  {
+	    return(NULL);
+	  }
+
+      //pick the best size.
+      dirEntry = (CURSORICONDIRENTRY *)  CURSORICON_FindBestIcon( IconDIR, width, height, 1);
+
+
+      if (!dirEntry)
+	  {
+         if (fuLoad & LR_LOADFROMFILE)
+		 {
+	       UnmapViewOfFile(IconDIR);
+		 }
+         return(NULL);
+	  }
+
+      SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+
+      memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+  }
+
+  //at this point we have a copy of the icon image to play with
+
+  SafeIconImage->icHeader.biHeight = SafeIconImage->icHeader.biHeight /2;
+
+  if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+      BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)SafeIconImage;
+      ColourCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
+      HeaderSize = sizeof(BITMAPCOREHEADER) + ColourCount * sizeof(RGBTRIPLE);
+    }
+  else
+    {
+      ColourCount = SafeIconImage->icHeader.biClrUsed;
+      if (ColourCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
+	{
+	  ColourCount = 1 << SafeIconImage->icHeader.biBitCount;
+	}
+      HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
+    }
+  
+  //make data point to the start of the XOR image data
+  Data = (PBYTE)SafeIconImage + HeaderSize;
+
+
+  //get a handle to the screen dc, the icon we create is going to be compatable with this
+  hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+  if (hScreenDc == NULL)
+  {
+      if (fuLoad & LR_LOADFROMFILE)
+	  {
+	  	RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+        UnmapViewOfFile(IconDIR);
+	  }
+      return(NULL);
+  }
+
+  hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, width, height);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+  return hIcon;
 }
 
 HANDLE STATIC
@@ -123,9 +301,9 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 	{		
 	  return(NULL);
 	}
-      BitmapInfo = MapViewOfFile(hSection, 
+      BitmapInfo = MapViewOfFile(hSection,
 				 FILE_MAP_READ,
-				 0, 
+				 0,
 				 0,
 				 0);
       CloseHandle(hSection);
@@ -246,8 +424,11 @@ LoadImageW(HINSTANCE hinst,
       }
     case IMAGE_CURSOR:
       {
-	DbgPrint("FIXME: Need support for loading cursor images.\n");
-	return(NULL);
+	return(LoadCursorImage(hinst, lpszName, fuLoad));
+      }
+    case IMAGE_ICON:
+      {
+	return(LoadIconImage(hinst, lpszName, cxDesired, cyDesired, fuLoad));
       }
     default:
       DbgBreakPoint();

@@ -5,6 +5,7 @@
 #include <win32k/cliprgn.h>
 #include <win32k/color.h>
 #include <win32k/coord.h>
+#include <win32k/cursoricon.h>
 #include <win32k/dc.h>
 #include <win32k/debug.h>
 #include <win32k/fillshap.h>

@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
+#include <debug.h>
 
 BOOL
 STDCALL
@@ -175,8 +176,43 @@ SetDIBitsToDevice(HDC  hDC,
 		Bits, bmi, ColorUse);
 }
 
-int   
-STDCALL 
+BOOL
+STDCALL
+StretchBlt(
+           HDC hdcDest,      // handle to destination DC
+           int nXOriginDest, // x-coord of destination upper-left corner
+           int nYOriginDest, // y-coord of destination upper-left corner
+           int nWidthDest,   // width of destination rectangle
+           int nHeightDest,  // height of destination rectangle
+           HDC hdcSrc,       // handle to source DC
+           int nXOriginSrc,  // x-coord of source upper-left corner
+           int nYOriginSrc,  // y-coord of source upper-left corner
+           int nWidthSrc,    // width of source rectangle
+           int nHeightSrc,   // height of source rectangle
+           DWORD dwRop       // raster operation code
+	)
+{
+	//SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	if ( (nWidthDest==nWidthSrc) && (nHeightDest==nHeightSrc) )
+	{
+	        return 	BitBlt(hdcDest,
+				nXOriginDest,  // x-coord of destination upper-left corner
+				nYOriginDest,  // y-coord of destination upper-left corner
+				nWidthDest,  // width of destination rectangle
+				nHeightDest, // height of destination rectangle
+				hdcSrc,  // handle to source DC
+				nXOriginSrc,   // x-coordinate of source upper-left corner
+				nYOriginSrc,   // y-coordinate of source upper-left corner
+				dwRop  // raster operation code
+				);
+	}
+	
+	DPRINT1("FIXME: StretchBlt can only Blt, not Stretch!\n");
+	return FALSE;
+}
+
+int
+STDCALL
 StretchDIBits(HDC  hDC,
 	INT  XDest,
 	INT  YDest,

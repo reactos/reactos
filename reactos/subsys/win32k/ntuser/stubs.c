@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.11 2003/05/26 18:52:37 gvg Exp $
+/* $Id: stubs.c,v 1.12 2003/06/03 22:26:12 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -222,16 +222,6 @@ NtUserCheckMenuItem(
 
 DWORD
 STDCALL
-NtUserClipCursor(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserCloseClipboard(VOID)
 {
   UNIMPLEMENTED
@@ -373,17 +363,6 @@ DWORD
 STDCALL
 NtUserDestroyAcceleratorTable(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDestroyCursor(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 
@@ -594,18 +573,6 @@ NtUserExcludeUpdateRgn(
 
 DWORD
 STDCALL
-NtUserFindExistingCursorIcon(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetAltTabInfo(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -700,16 +667,6 @@ NtUserGetClipboardViewer(VOID)
 
 DWORD
 STDCALL
-NtUserGetClipCursor(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetComboBoxInfo(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -758,29 +715,6 @@ NtUserGetCPD(
 
 DWORD
 STDCALL
-NtUserGetCursorFrameInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetCursorInfo(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetDoubleClickTime(VOID)
 {
   UNIMPLEMENTED
@@ -804,34 +738,6 @@ STDCALL
 NtUserGetGUIThreadInfo(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetIconInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetIconSize(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 
@@ -1346,40 +1252,6 @@ NtUserSetConsoleReserveKeys(
 
 DWORD
 STDCALL
-NtUserSetCursor(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetCursorContents(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetCursorIconData(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetDbgTag(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -1497,17 +1369,6 @@ NtUserSetSysColors(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetSystemCursor(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

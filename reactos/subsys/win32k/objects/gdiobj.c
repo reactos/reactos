@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.25 2003/05/29 13:18:39 gvg Exp $
+ * $Id: gdiobj.c,v 1.26 2003/06/03 22:26:52 ekohl Exp $
  *
  */
 
@@ -35,6 +35,7 @@
 #include <win32k/dc.h>
 #include <win32k/bitmaps.h>
 #include <win32k/region.h>
+#include <win32k/cursoricon.h>
 #include <include/palette.h>
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -243,71 +244,74 @@ HGDIOBJ FASTCALL GDIOBJ_AllocObj(WORD Size, WORD Magic)
 */
 BOOL STDCALL GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 {
-  	PGDIOBJHDR  objectHeader;
-  	PGDI_HANDLE_ENTRY  handleEntry;
+	PGDIOBJHDR  objectHeader;
+	PGDI_HANDLE_ENTRY  handleEntry;
 	PGDIOBJ 	Obj;
 	BOOL 	bRet = TRUE;
 
-  	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
+	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
 	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", (WORD)hObj & 0xffff, Magic, handleEntry );
 
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
 	     || ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag & GDIOBJFLAG_IGNOREPID))){
 
 	  DPRINT("Can't Delete hObj: %d, magic: %x, pid:%d\n currpid:%d, flag:%d, hmm:%d\n",(WORD)hObj & 0xffff, handleEntry->wMagic, handleEntry->hProcessId, PsGetCurrentProcessId(), (Flag&GDIOBJFLAG_IGNOREPID), ((handleEntry->hProcessId != PsGetCurrentProcessId()) && !(Flag&GDIOBJFLAG_IGNOREPID)) );
-  	  return  FALSE;
+	  return  FALSE;
 	}
 
 	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	ASSERT(objectHeader);
 	DPRINT("FreeObj: locks: %x\n", objectHeader->dwCount );
 	if( !(Flag & GDIOBJFLAG_IGNORELOCK) ){
-  		// check that the reference count is zero. if not then set flag
-  		// and delete object when releaseobj is called
-  		ExAcquireFastMutex(&RefCountHandling);
-  		if( ( objectHeader->dwCount & ~0x80000000 ) > 0 ){
+		// check that the reference count is zero. if not then set flag
+		// and delete object when releaseobj is called
+		ExAcquireFastMutex(&RefCountHandling);
+		if( ( objectHeader->dwCount & ~0x80000000 ) > 0 ){
 			DPRINT("GDIOBJ_FreeObj: delayed object deletion: count %d\n", objectHeader->dwCount);
-  			objectHeader->dwCount |= 0x80000000;
-  			ExReleaseFastMutex(&RefCountHandling);
+			objectHeader->dwCount |= 0x80000000;
+			ExReleaseFastMutex(&RefCountHandling);
 			return TRUE;
-  		}
-  		ExReleaseFastMutex(&RefCountHandling);
+		}
+		ExReleaseFastMutex(&RefCountHandling);
 	}
 
 	//allow object to delete internal data
 	Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
 	switch( handleEntry->wMagic ){
- 		case GO_REGION_MAGIC:
+		case GO_REGION_MAGIC:
 			bRet = RGNDATA_InternalDelete( (PROSRGNDATA) Obj );
 			break;
- 		case GO_BITMAP_MAGIC:
+		case GO_BITMAP_MAGIC:
 			bRet = Bitmap_InternalDelete( (PBITMAPOBJ) Obj );
 			break;
- 		case GO_DC_MAGIC:
+		case GO_DC_MAGIC:
 			bRet = DC_InternalDeleteDC( (PDC) Obj );
 			break;
- 		case GO_PEN_MAGIC:
- 		case GO_PALETTE_MAGIC:
- 		case GO_DISABLED_DC_MAGIC:
- 		case GO_META_DC_MAGIC:
- 		case GO_METAFILE_MAGIC:
- 		case GO_METAFILE_DC_MAGIC:
- 		case GO_ENHMETAFILE_MAGIC:
- 		case GO_ENHMETAFILE_DC_MAGIC:
+		case GO_PEN_MAGIC:
+		case GO_PALETTE_MAGIC:
+		case GO_DISABLED_DC_MAGIC:
+		case GO_META_DC_MAGIC:
+		case GO_METAFILE_MAGIC:
+		case GO_METAFILE_DC_MAGIC:
+		case GO_ENHMETAFILE_MAGIC:
+		case GO_ENHMETAFILE_DC_MAGIC:
 
- 		case GO_BRUSH_MAGIC:
- 		case GO_FONT_MAGIC:
+		case GO_BRUSH_MAGIC:
+		case GO_FONT_MAGIC:
 			break;
 		case GO_DCE_MAGIC:
 			bRet = DCE_InternalDelete( (PDCE) Obj );
 			break;
+		case GO_ICONCURSOR_MAGIC:
+			bRet = IconCursor_InternalDelete( (PICONCURSOROBJ) Obj );
+			break;
 	}
-  	handleEntry->hProcessId = 0;
+	handleEntry->hProcessId = 0;
 	ExFreePool (handleEntry->pObject);
 	handleEntry->pObject = 0;
-  	handleEntry->wMagic = 0;
+	handleEntry->wMagic = 0;
 
-  	return  TRUE;
+	return  TRUE;
 }
 
 /*!

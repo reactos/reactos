@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.27 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: bitmaps.c,v 1.28 2003/06/03 22:26:52 ekohl Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -456,6 +456,7 @@ BOOL STDCALL W32kStretchBlt(HDC  hDCDest,
 INT FASTCALL
 BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 {
+#if 0
   switch(bpp)
   {
     case 1:
@@ -481,6 +482,9 @@ BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
   }
 
   return -1;
+#endif
+
+  return ((bmWidth * bpp + 31) & ~31) >> 3;
 }
 
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)

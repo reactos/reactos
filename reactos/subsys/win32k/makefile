@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.63 2003/05/26 18:52:37 gvg Exp $
+# $Id: makefile,v 1.64 2003/06/03 22:25:53 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -59,19 +59,12 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o \
-	          objects/palette.o objects/rect.o objects/polyfill.o
+                  objects/palette.o objects/rect.o objects/polyfill.o \
+                  objects/cursoricon.o
 
 DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o \
               dib/dib24bpp.o dib/dib32bpp.o
-FREETYPE_OBJECTS = freetype/ctype.o freetype/grfont.o \
-		freetype/src/base/ftsystem.o freetype/src/base/ftdebug.o \
-		freetype/src/base/ftinit.o freetype/src/base/ftbase.o \
-		freetype/src/base/ftglyph.o freetype/src/base/ftmm.o \
-		freetype/src/autohint/autohint.o freetype/src/cff/cff.o \
-		freetype/src/cid/type1cid.o freetype/src/psnames/psnames.o \
-		freetype/src/winfonts/winfnt.o freetype/src/raster1/raster1.o \
-		freetype/src/sfnt/sfnt.o freetype/src/smooth/smooth.o \
-		freetype/src/truetype/truetype.o freetype/src/type1z/type1z.o
+
 STUBS_OBJECTS = stubs/stubs.o
 
 TARGET_OBJECTS = \
@@ -82,7 +75,6 @@ TARGET_OBJECTS = \
 TARGET_CLEAN = $(DEP_FILES) \
   dib/*.o \
   eng/*.o \
-  freetype/*.o \
   ldr/*.o \
   main/*.o \
   misc/*.o \
@@ -107,7 +99,7 @@ main/svctabm.o: main/svctab.c
 	etags $(@D)/\*.c -o $(@D)/TAGS
 
 etags: TAGS
-TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS freetype/TAGS
-	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS -i freetype/TAGS
+TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS
+	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS
 
 # EOF

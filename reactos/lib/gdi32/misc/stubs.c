@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.18 2003/05/27 07:23:04 gvg Exp $
+/* $Id: stubs.c,v 1.19 2003/06/03 22:24:51 ekohl Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1228,30 +1228,6 @@ SetPixelFormat(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-
-BOOL
-STDCALL
-StretchBlt(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	HDC	a5,
-	int	a6,
-	int	a7,
-	int	a8,
-	int	a9,
-	DWORD	a10
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 
 int
