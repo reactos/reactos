@@ -104,7 +104,7 @@ TDI_STATUS InfoInterfaceTdiSetEx( UINT InfoClass,
 				  TDIEntityID *id,
 				  PCHAR Buffer,
 				  UINT BufferSize ) {
-    TI_DbgPrint("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
-                InfoClass, InfoId, id->tei_entity, id->tei_instance);
+    TI_DbgPrint(MAX_TRACE, ("Got Request: Class %x Type %x Id %x, EntityID %x:%x\n",
+                InfoClass, InfoId, id->tei_entity, id->tei_instance));
     return TDI_INVALID_REQUEST;
 }
