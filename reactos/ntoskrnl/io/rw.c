@@ -130,7 +130,7 @@ NtReadFile (IN HANDLE FileHandle,
      return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
   }
 
-  Irp->UserEvent = Event;
+  Irp->UserEvent = EventObject;
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
   {
      /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
@@ -310,7 +310,7 @@ NtWriteFile (IN HANDLE FileHandle,
      return NT_SUCCESS(Status) ? STATUS_INSUFFICIENT_RESOURCES : Status;
   }
 
-  Irp->UserEvent = Event;
+  Irp->UserEvent = EventObject;
   if (FileObject->Flags & FO_SYNCHRONOUS_IO)
   {
      /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
