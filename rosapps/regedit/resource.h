@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedit.rc
 //
+
 #define ID_REGISTRY_MENU                0
 #define ID_EDIT_MENU                    1
 #define ID_VIEW_MENU                    2
@@ -28,7 +29,6 @@
 #define IDB_ROOT                        134
 
 #define ID_REGISTRY_EXIT                32770
-#define ID_HELP_HELPTOPICS              32771
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
 #define ID_FAVOURITES_REMOVEFAVOURITE   32773
 #define ID_VIEW_STATUSBAR               32774
@@ -49,6 +49,7 @@
 #define ID_REGISTRY_CONNECTNETWORKREGISTRY 32791
 #define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32792
 #define ID_REGISTRY_PRINT               32793
+#define ID_HELP_HELPTOPICS              32794
 #define ID_HELP_ABOUT                   32795
 #define ID_WINDOW_CASCADE               32797
 #define ID_WINDOW_TILE                  32798

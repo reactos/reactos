@@ -1,7 +1,7 @@
 /*
- *  ReactOS regedt32
+ *  ReactOS regedit
  *
- *  childwnd.h
+ *  listview.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __CHILDWND_H__
-#define __CHILDWND_H__
+#ifndef __LISTVIEW_H__
+#define __LISTVIEW_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +32,12 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-    
+HWND CreateListView(HWND hwndParent);
+BOOL RefreshListView(HWND hwndTV, HKEY hKey, LPTSTR keyPath);
+
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __CHILDWND_H__
+#endif // __LISTVIEW_H__

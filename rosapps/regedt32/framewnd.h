@@ -1,5 +1,5 @@
 /*
- *  ReactOS Application Main Window
+ *  ReactOS regedt32
  *
  *  framewnd.h
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __FRAME_WND_H__
-#define __FRAME_WND_H__
+#ifndef __FRAMEWND_H__
+#define __FRAMEWND_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,10 +33,14 @@ extern "C" {
 
 
 LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+void CreateClientChildren(HWND hWnd);
     
+void SetupStatusBar(HWND hWnd, BOOL bResize);
+void UpdateStatusBar(void);
+
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __FRAME_WND_H__
+#endif // __FRAMEWND_H__

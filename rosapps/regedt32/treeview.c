@@ -109,7 +109,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
 }
 
 
-static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName) 
+static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR szKeyName, HKEY hKey) 
 { 
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
@@ -117,25 +117,26 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
 
     tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
     // Set the text of the item. 
-    tvi.pszText = pHostName; 
+    tvi.pszText = szKeyName; 
     tvi.cchTextMax = lstrlen(tvi.pszText); 
     // Assume the item is not a parent item, so give it an image. 
     tvi.iImage = Image_Root; 
     tvi.iSelectedImage = Image_Root; 
     tvi.cChildren = 5; 
     // Save the heading level in the item's application-defined data area. 
-    tvi.lParam = (LPARAM)NULL;
+    //tvi.lParam = (LPARAM)NULL;
+    tvi.lParam = (LPARAM)hKey;
     tvins.item = tvi; 
     tvins.hInsertAfter = (HTREEITEM)TVI_FIRST; 
     tvins.hParent = TVI_ROOT; 
     // Add the item to the tree view control. 
     hRoot = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins); 
 
-    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1);
-    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1);
-    AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1);
-    AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1);
-    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1);
+//    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1);
+//    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1);
+//    AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1);
+//    AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1);
+//    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1);
 
     return TRUE; 
 } 
@@ -238,7 +239,7 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 // Returns the handle to the new control if successful, or NULL otherwise. 
 // hwndParent - handle to the control's parent window. 
 
-HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id) 
+HWND CreateTreeView(HWND hwndParent, LPTSTR szKeyName, HKEY hKey) 
 { 
     RECT rcClient;
     HWND hwndTV;
@@ -248,9 +249,9 @@ HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id)
     hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
         WS_VISIBLE | WS_CHILD | WS_EX_CLIENTEDGE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
         0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
+        hwndParent, (HMENU)TREE_WINDOW, hInst, NULL); 
     // Initialize the image list, and add items to the control. 
-    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pHostName)) { 
+    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, szKeyName, hKey)) { 
         DestroyWindow(hwndTV); 
         return NULL; 
     } 

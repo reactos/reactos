@@ -2,7 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedt32.rc
 //
-#define IDW_FIRST_CHILD                 200
 
 #define ID_REGISTRY_MENU                0
 #define ID_EDIT_MENU                    1
@@ -13,24 +12,30 @@
 #define ID_WINDOW_MENU                  6
 #define ID_HELP_MENU                    7
 
-#define ID_WINDOW_CLOSE                 798
-#define ID_WINDOW_CLOSEALL              799
-#define STATUS_WINDOW                   2001
+#define IDS_LIST_COLUMN_FIRST           91
+#define IDS_LIST_COLUMN_NAME            91
+#define IDS_LIST_COLUMN_TYPE            92
+#define IDS_LIST_COLUMN_DATA            93
+#define IDS_LIST_COLUMN_LAST            93
 
-#define IDD_ABOUTBOX                    103
-#define IDS_APP_TITLE                   103
-#define IDM_EXIT                        105
-#define IDS_HELLO                       106
-#define IDI_REGEDT32                    107
-#define IDI_SMALL                       108
-#define IDC_REGEDT32                    109
-#define IDC_REGEDT32_FRAME              110
-#define IDR_REGEDT32_MENU               129
-#define IDR_REGEDT_MENU                 130
-#define ID_HELP_ABOUT                   32770
-#define ID_HELP_HELPTOPICS              32771
-#define ID_FAVORITES_ADDTOFAVOURITES    32772
-#define ID_FAVORITES_REMOVEFAVOURITE    32773
+#define IDD_ABOUTBOX                    101
+#define IDS_APP_TITLE                   102
+#define IDI_REGEDT32                    103
+#define IDI_SMALL                       104
+#define IDC_REGEDT32                    105
+#define IDC_REGEDT32_FRAME              106
+#define IDR_REGEDT32_MENU               107
+#define IDS_APP_REG_KEY                 108
+#define IDS_APP_REG_PATH                109
+
+#define IDB_OPEN_FILE                   132
+#define IDB_CLOSED_FILE                 133
+#define IDB_ROOT                        134
+
+#define ID_REGISTRY_EXIT                32770
+#define ID_WINDOW_TILE                  32772
+#define ID_WINDOW_TILE_VERT             32772
+#define ID_WINDOW_REFRESH               32773
 #define ID_VIEW_STATUSBAR               32774
 #define ID_VIEW_SPLIT                   32775
 #define ID_VIEW_REFRESH                 32776
@@ -45,14 +50,17 @@
 #define ID_EDIT_NEW_BINARYVALUE         32787
 #define ID_EDIT_NEW_DWORDVALUE          32788
 
-#define ID_WINDOW_NEW_WINDOW            32794
-#define ID_WINDOW_CASCADE               32795
-#define ID_WINDOW_TILE                  32796
-#define ID_WINDOW_TILE_HORZ             32796
-#define ID_WINDOW_TILE_VERT             32797
-#define ID_WINDOW_ARRANGE_ICONS         32798
-#define ID_WINDOW_REFRESH               32799
-
+#define ID_REGISTRY_IMPORTREGISTRYFILE  32789
+#define ID_REGISTRY_EXPORTREGISTRYFILE  32790
+#define ID_REGISTRY_CONNECTNETWORKREGISTRY 32791
+#define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32792
+#define ID_REGISTRY_PRINT               32793
+#define ID_HELP_HELPTOPICS              32794
+#define ID_HELP_ABOUT                   32795
+#define ID_HELP_CONTENTS                32796
+#define ID_WINDOW_CASCADE               32797
+#define ID_WINDOW_TILE_HORZ             32798
+#define ID_WINDOW_ARRANGEICONS          32799
 #define ID_OPTIONS_FONT                 32800
 #define ID_OPTIONS_AUTOREFRESH          32801
 #define ID_OPTIONS_READONLYMODE         32802
@@ -86,12 +94,6 @@
 #define ID_REGISTRY_PRINTSUBTREE        32832
 #define ID_REGISTRY_PRINTERSETUP        32833
 #define ID_REGISTRY_SAVESUBTREEAS       32834
-#define ID_REGISTRY_IMPORTREGISTRYFILE  32835
-#define ID_REGISTRY_EXPORTREGISTRYFILE  32836
-#define ID_REGISTRY_CONNECTNETWORKREGISTRY 32837
-#define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32838
-#define ID_REGISTRY_PRINT               32839
-#define ID_HELP_CONTENTS                32840
 
 #define IDC_LICENSE_EDIT                1029
 #define IDS_LICENSE                     32835

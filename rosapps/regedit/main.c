@@ -101,37 +101,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
 
     };
-//    ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
-    RegisterClassEx(&wcChild); // register child windows class
-
-/*
-    WNDCLASSEX wcex;
-    wcex.cbSize         = sizeof(WNDCLASSEX); 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = (WNDPROC)FrameWndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, (LPCTSTR)IDI_REGEDIT);
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)SS_BLACKRECT;
-//    wcex.lpszMenuName   = (LPCSTR)IDC_REGEDIT;
-    wcex.lpszMenuName   = (LPCSTR)IDR_REGEDIT_MENU;
-    wcex.lpszClassName  = szFrameClass;
-    wcex.hIconSm        = LoadIcon((HINSTANCE)wcex.hInstance, (LPCTSTR)IDI_SMALL);
-    RegisterClassEx(&wcex);
- */
+    ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
 
 	hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
 
     // Initialize the Windows Common Controls DLL
     InitCommonControls();
 
-    hInst = hInstance; // Store instance handle in our global variable
-//    hFrameWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW,
-//                            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
-                    WS_OVERLAPPEDWINDOW,
+                    WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 

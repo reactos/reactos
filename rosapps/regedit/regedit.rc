@@ -1,3 +1,6 @@
+#include <defines.h>
+#include <reactos/resource.h>
+
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
@@ -173,8 +176,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -187,10 +190,10 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "0c0904b0"
+        BLOCK "040904b0"
         BEGIN
             VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
-            VALUE "CompanyName", "ReactWare\0"
+            VALUE "CompanyName", RES_STR_COMPANY_NAME
             VALUE "FileDescription", "ReactOS Registry Editor by Robert Dickenson\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "regedit\0"
@@ -198,8 +201,8 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "regedit.exe\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "ReactOS Registry Editor\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
             VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
         END
     END
@@ -342,10 +345,6 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     ID_HELP_ABOUT           "Displays program information, version number, and copyright."
 END
 

@@ -1,7 +1,7 @@
 /*
  *  ReactOS regedt32
  *
- *  childwnd.h
+ *  settings.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,9 +19,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-#ifndef __CHILDWND_H__
-#define __CHILDWND_H__
+    
+#ifndef __SETTINGS_H__
+#define __SETTINGS_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +32,12 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-    
+void LoadSettings(void);
+void SaveSettings(void);
+
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __CHILDWND_H__
+#endif // __SETTINGS_H__

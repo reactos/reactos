@@ -1,3 +1,6 @@
+#include <defines.h>
+#include <reactos/resource.h>
+
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
@@ -36,6 +39,15 @@ IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Bitmap
+//
+
+IDB_OPEN_FILE           BITMAP  DISCARDABLE     "res/folder3.bmp"
+IDB_CLOSED_FILE         BITMAP  DISCARDABLE     "res/folder1.bmp"
+IDB_ROOT                BITMAP  DISCARDABLE     "res/folder2.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Menu
 //
 
@@ -58,7 +70,7 @@ BEGIN
         MENUITEM "P&rinter Setup...",           ID_REGISTRY_PRINTERSETUP
         MENUITEM "Save Subtree &As...",         ID_REGISTRY_SAVESUBTREEAS
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       IDM_EXIT
+        MENUITEM "E&xit",                       ID_REGISTRY_EXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -82,15 +94,14 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "Tree &and Data",              ID_VIEW_TREEANDDATA
-        , CHECKED, GRAYED
-        MENUITEM "&Tree only",                  ID_VIEW_TREEONLY, GRAYED
-        MENUITEM "&Data only",                  ID_VIEW_DATAONLY, GRAYED
+        MENUITEM "Tree &and Data",              ID_VIEW_TREEANDDATA, CHECKED
+        MENUITEM "&Tree only",                  ID_VIEW_TREEONLY
+        MENUITEM "&Data only",                  ID_VIEW_DATAONLY
         MENUITEM SEPARATOR
+        MENUITEM "Status &Bar",                 ID_VIEW_STATUSBAR
         MENUITEM "&Split",                      ID_VIEW_SPLIT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Display &Binary Data",        ID_VIEW_DISPLAYBINARYDATA
-        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "R&efresh All\tShift+F6",      ID_VIEW_REFRESHALL, GRAYED
         MENUITEM "&Refresh Active\tF6",         ID_VIEW_REFRESHACTIVE
@@ -108,19 +119,15 @@ BEGIN
         MENUITEM "&Font...",                    ID_OPTIONS_FONT
         MENUITEM SEPARATOR
         MENUITEM "&Auto Refresh",               ID_OPTIONS_AUTOREFRESH
-        , CHECKED
         MENUITEM "&Read Only Mode",             ID_OPTIONS_READONLYMODE
         MENUITEM "&Confirm on Delete",          ID_OPTIONS_CONFIRMONDELETE
-        , CHECKED
         MENUITEM "&Save Settings on Exit",      ID_OPTIONS_SAVESETTINGSONEXIT
-        , CHECKED
     END
     POPUP "&Window"
     BEGIN
         MENUITEM "&Cascade\tShift+F5",          ID_WINDOW_CASCADE
         MENUITEM "&Tile\tShift+F4",             ID_WINDOW_TILE
-        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE_ICONS
-        MENUITEM SEPARATOR
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGEICONS
     END
     POPUP "&Help"
     BEGIN
@@ -175,15 +182,66 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", RES_STR_COMPANY_NAME
+            VALUE "FileDescription", "ReactOS Registry Editor 32 by Robert Dickenson\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "regedt32\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "regedt32.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_TYPE    "Type"
+    IDS_LIST_COLUMN_DATA    "Data"
+END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "ReactOS Registry Editor"
     IDC_REGEDT32            "REGED32"
     IDC_REGEDT32_FRAME      "REGED32_FRAME"
-    IDS_HELLO               "Hello World!"
+    IDS_APP_REG_KEY         "\\Regedt32"
+    IDS_APP_REG_PATH        RES_STR_ROSAPP_REGISTRY_ROOT
 END
 
 #endif    // English (U.S.) resources

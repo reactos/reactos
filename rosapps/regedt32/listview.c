@@ -263,7 +263,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 }
 
 
-HWND CreateListView(HWND hwndParent, int id)
+HWND CreateListView(HWND hwndParent)
 { 
     RECT rcClient;
     HWND hwndLV;
@@ -273,7 +273,7 @@ HWND CreateListView(HWND hwndParent, int id)
     hwndLV = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
         WS_VISIBLE | WS_CHILD | WS_EX_CLIENTEDGE | LVS_REPORT, 
         0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
+        hwndParent, (HMENU)LIST_WINDOW, hInst, NULL); 
     ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
  
     // Initialize the image list, and add items to the control. 

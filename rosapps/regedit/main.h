@@ -32,60 +32,48 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 #include "resource.h"
-//#include "regproc.h"
 
 
 #define STATUS_WINDOW   2001
 #define TREE_WINDOW     2002
 #define LIST_WINDOW     2003
-#define SPLIT_WINDOW    2004
 
 #define MAX_LOADSTRING  100
-#define	SPLIT_WIDTH		3
+#define	SPLIT_WIDTH		5
 #define MAX_NAME_LEN    500
 
 
-//#include "entries.h"
-//#if 0
-typedef struct _Entry {
-	struct _Entry*	next;
-	struct _Entry*	down;
-	struct _Entry*	up;
-	BOOL	expanded;
-	BOOL	scanned;
-	int		level;
-    BOOL    bKey;       // key or value?
-    HKEY    hKey;
-//    BOOL    bRoot;
-    HTREEITEM hTreeItem;
-    TCHAR   szName[MAX_NAME_LEN];
-} Entry;
+////////////////////////////////////////////////////////////////////////////////
 
-
-typedef struct {
-	Entry	entry;
-	TCHAR	path[MAX_PATH];
-//	DWORD	_flags;
-} Root;
+enum OPTION_FLAGS {
+    OPTIONS_AUTO_REFRESH               = 0x01,
+    OPTIONS_READ_ONLY_MODE             = 0x02,
+    OPTIONS_CONFIRM_ON_DELETE          = 0x04,
+    OPTIONS_SAVE_ON_EXIT          	   = 0x08,
+    OPTIONS_DISPLAY_BINARY_DATA    	   = 0x10,
+    OPTIONS_VIEW_TREE_ONLY       	   = 0x20,
+    OPTIONS_VIEW_DATA_ONLY      	   = 0x40,
+};
 
 typedef struct {
 	HWND	hWnd;
     HWND    hTreeWnd;
     HWND    hListWnd;
     int     nFocusPanel;      // 0: left  1: right
-	WINDOWPLACEMENT pos;
 	int		nSplitPos;
-	Root	root;
+	WINDOWPLACEMENT pos;
+	TCHAR	szPath[MAX_PATH];
 } ChildWnd;
-//#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
 //
 extern HINSTANCE hInst;
-extern HWND hFrameWnd;
-extern HWND hStatusBar;
-extern HMENU hMenuFrame;
+extern HWND      hFrameWnd;
+extern HMENU     hMenuFrame;
+extern HWND      hStatusBar;
+extern HFONT     hFont;
+extern enum OPTION_FLAGS Options;
 
 extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];

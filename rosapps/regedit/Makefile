@@ -29,11 +29,11 @@ BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400
 RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
-OBJS =	about.o \
-        framewnd.o \
+OBJS =	framewnd.o \
         childwnd.o \
         listview.o \
         treeview.o \
+        about.o \
         trace.o \
         main.o
 
@@ -50,15 +50,17 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 
 main.h:		resource.h
 
-about.o:	about.c about.h main.h
-
 main.o:		main.c main.h framewnd.h
 
 framewnd.o:	framewnd.c framewnd.h listview.h treeview.h main.h
 
+childwnd.o:	childwnd.c childwnd.h main.h
+
 listview.o:	listview.c listview.h main.h 
 
 treeview.o:	treeview.c treeview.h main.h 
+
+about.o:	about.c about.h main.h
 
 debug.o:	debug.c debug.h main.h
 

@@ -43,7 +43,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Globals and Variables:
+// Global and Local Variables:
 //
 
 static BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
@@ -70,16 +70,9 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
 		GetClientRect(hStatusBar, &rt);
 		prect->bottom -= rt.bottom;
 	}
-	MoveWindow(hChildWnd, prect->left-1,prect->top-1,prect->right+2,prect->bottom+1, TRUE);
+    MoveWindow(hChildWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }
-/*
-static void resize_frame(HWND hWnd, int cx, int cy)
-{
-	RECT rect = {0, 0, cx, cy};
 
-	resize_frame_rect(hWnd, &rect);
-}
- */
 void resize_frame_client(HWND hWnd)
 {
 	RECT rect;
@@ -88,6 +81,7 @@ void resize_frame_client(HWND hWnd)
 	resize_frame_rect(hWnd, &rect);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 static void OnEnterMenuLoop(HWND hWnd)
 {
@@ -146,10 +140,6 @@ void UpdateStatusBar(void)
     TCHAR text[260];
 	DWORD size;
 
-//	size = sizeof(text)/sizeof(TCHAR);
-//	GetUserName(text, &size);
-//  SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
-//    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
 	size = sizeof(text)/sizeof(TCHAR);
 	GetComputerName(text, &size);
     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
@@ -184,19 +174,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         //PageSetupDlg(&psd);
         break;
     case ID_REGISTRY_OPENLOCAL:
-/*
-            {
-            HWND hChildWnd;
-//            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
-//                                   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hWnd, NULL, hInst, NULL);
-            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
-                                     0, 0, 150, 170, hWnd, NULL, hInst, NULL);
-            if (hChildWnd) {
-                ShowWindow(hChildWnd, 1);
-                UpdateWindow(hChildWnd);
-            }
-            }
- */
         break;
     case ID_REGISTRY_EXIT:
         DestroyWindow(hWnd);
@@ -234,30 +211,24 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //  PURPOSE:  Processes messages for the main frame window.
 //
 //  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
 //  WM_DESTROY  - post a quit message and return
 //
 //
-static ChildWnd Child;
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static ChildWnd* pChildWnd = NULL;
 
     switch (message) {
     case WM_CREATE:
         {
-        //Child.root.entry = ;
-        _tcsncpy(Child.root.path, _T("My Computer"), MAX_PATH);
-
-//        HMENU hMenuWindow = GetSubMenu(hMenuFrame, GetMenuItemCount(hMenuFrame)-2);
+        pChildWnd = malloc(sizeof(ChildWnd));
+        _tcsncpy(pChildWnd->szPath, _T("My Computer"), MAX_PATH);
         hChildWnd = CreateWindowEx(0, szChildClass, _T("regedit child window"),
-//        hChildWnd = CreateWindowEx(0, (LPCTSTR)(int)hChildWndClass, _T("regedit child window"),
 //                    WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE|WS_BORDER,
-                    WS_CHILD|WS_VISIBLE|WS_BORDER,
+                    WS_CHILD|WS_VISIBLE | WS_EX_CLIENTEDGE,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-//                    hWnd, (HMENU)0, hInst, NULL/*lpParam*/);
-                    hWnd, (HMENU)0, hInst, &Child);
-        
+                    hWnd, (HMENU)0, hInst, pChildWnd);
         }
         break;
     case WM_COMMAND:
@@ -268,11 +239,8 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_SIZE:
         resize_frame_client(hWnd);
         break;
-//        OnSize(wParam, lParam);
-//        goto def;
     case WM_TIMER:
         break;
-
     case WM_ENTERMENULOOP:
         OnEnterMenuLoop(hWnd);
         break;
@@ -283,6 +251,10 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
     case WM_DESTROY:
+        if (pChildWnd) {
+            free(pChildWnd);
+            pChildWnd = NULL;
+        }
 		WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
         PostQuitMessage(0);
     default:

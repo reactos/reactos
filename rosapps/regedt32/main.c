@@ -37,6 +37,7 @@
 #include "main.h"
 #include "framewnd.h"
 #include "childwnd.h"
+#include "settings.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,16 +47,27 @@
 HINSTANCE hInst;
 HACCEL    hAccel;
 HWND      hFrameWnd;
-HMENU     hMenuFrame;
 HWND      hMDIClient;
 HWND      hStatusBar;
+HMENU     hMenuFrame;
 
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szFrameClass[MAX_LOADSTRING];
 TCHAR szChildClass[MAX_LOADSTRING];
 
-////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+//   FUNCTION: InitInstance(HANDLE, int)
+//
+//   PURPOSE: Saves instance handle and creates main window
+//
+//   COMMENTS:
+//
+//        In this function, we save the instance handle in a global variable and
+//        create and display the main program window.
+//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     WNDCLASSEX wcFrame = {
@@ -77,7 +89,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     WNDCLASSEX wcChild = {
         sizeof(WNDCLASSEX),
-        CS_HREDRAW | CS_VREDRAW/*style*/,
+        CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE/*style*/,
         ChildWndProc,
         0/*cbClsExtra*/,
         sizeof(HANDLE)/*cbWndExtra*/,
@@ -93,17 +105,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     };
     ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
 
-    HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDT32_MENU));
-    HMENU hMenuOptions = GetSubMenu(hMenu, ID_OPTIONS_MENU);
-    HMENU hChildMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDT32_MENU));
-
-    INITCOMMONCONTROLSEX icc = {
-        sizeof(INITCOMMONCONTROLSEX),
-        ICC_BAR_CLASSES
-    };
-
-    hMenuFrame = hMenu;
-    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_REGEDT32));
+    hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDT32_MENU));
+//    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_REGEDT32));
 
     // Initialize the Windows Common Controls DLL
     InitCommonControls();
@@ -111,26 +114,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
                     WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                    NULL/*hWndParent*/, hMenuFrame, hInstance, NULL/*lpParam*/);
+                    NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
     if (!hFrameWnd) {
         return FALSE;
     }
 
-#if 0
-    {
-    int nParts[3];
     // Create the status bar
-    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, "", hFrameWnd, STATUS_WINDOW);
-    if (!hStatusBar)
-        return FALSE;
-    // Create the status bar panes
-    nParts[0] = 100;
-    nParts[1] = 210;
-    nParts[2] = 400;
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (long)nParts);
+    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
+                                    _T(""), hFrameWnd, STATUS_WINDOW);
+    if (hStatusBar) {
+        // Create the status bar panes
+        SetupStatusBar(hFrameWnd, FALSE);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
-#endif
-
     ShowWindow(hFrameWnd, nCmdShow);
     UpdateWindow(hFrameWnd);
     return TRUE;
@@ -160,6 +156,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     // Store instance handle in our global variable
     hInst = hInstance;
 
+    // Load our settings from the registry
+    LoadSettings();
+
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
@@ -175,6 +174,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+    // Save our settings to the registry
+    SaveSettings();
     ExitInstance();
     return msg.wParam;
 }

@@ -41,17 +41,55 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Globals and Variables:
+// Global and Local Variables:
 //
 
+enum OPTION_FLAGS Options;
 BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
 
 static HHOOK hcbthook;
 static ChildWnd* newchild = NULL;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
+
+static void resize_frame_rect(HWND hWnd, PRECT prect)
+{
+	RECT rt;
+/*
+	if (IsWindowVisible(hToolBar)) {
+		SendMessage(hToolBar, WM_SIZE, 0, 0);
+		GetClientRect(hToolBar, &rt);
+		prect->top = rt.bottom+3;
+		prect->bottom -= rt.bottom+3;
+	}
+ */
+	if (IsWindowVisible(hStatusBar)) {
+		SetupStatusBar(hWnd, TRUE);
+		GetClientRect(hStatusBar, &rt);
+		prect->bottom -= rt.bottom;
+	}
+	MoveWindow(hMDIClient, prect->left,prect->top,prect->right,prect->bottom, TRUE);
+}
+
+static void resize_frame(HWND hWnd, int cx, int cy)
+{
+	RECT rect = {0, 0, cx, cy};
+
+	resize_frame_rect(hWnd, &rect);
+}
+
+void resize_frame_client(HWND hWnd)
+{
+	RECT rect;
+
+	GetClientRect(hWnd, &rect);
+	resize_frame_rect(hWnd, &rect);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
 {
@@ -64,42 +102,59 @@ static LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hcbthook, code, wParam, lParam);
 }
 
-static HWND InitChildWindow(LPTSTR param)
+static ChildWnd* alloc_child_window(LPCTSTR szKeyName, HKEY hKey)
 {
-	//TCHAR drv[_MAX_DRIVE];
-	TCHAR path[MAX_PATH];
-	ChildWnd* pChildWnd = NULL;
-	pChildWnd = (ChildWnd*)malloc(sizeof(ChildWnd));
+	ChildWnd* pChildWnd = (ChildWnd*)malloc(sizeof(ChildWnd));
+
+	memset(pChildWnd, 0, sizeof(ChildWnd));
+	pChildWnd->pos.length = sizeof(WINDOWPLACEMENT);
+	pChildWnd->pos.flags = 0;
+	pChildWnd->pos.showCmd = SW_SHOWNORMAL;
+	pChildWnd->pos.rcNormalPosition.left = CW_USEDEFAULT;
+	pChildWnd->pos.rcNormalPosition.top = CW_USEDEFAULT;
+	pChildWnd->pos.rcNormalPosition.right = CW_USEDEFAULT;
+	pChildWnd->pos.rcNormalPosition.bottom = CW_USEDEFAULT;
+	pChildWnd->nFocusPanel = 0;
+	pChildWnd->nSplitPos = 300;
+//	pChildWnd->visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES;
+//	pChildWnd->sortOrder = SORT_NAME;
+//	pChildWnd->header_wdths_ok = FALSE;
+	lstrcpy(pChildWnd->szKeyName, szKeyName); // MAX_PATH
+	pChildWnd->hKey = hKey;
+	return pChildWnd;
+}
+
+static HWND CreateChildWindow(HWND hWnd, LPCTSTR szKeyName, HKEY hKey, int unused)
+{
+	ChildWnd* pChildWnd = alloc_child_window(szKeyName, hKey);
 	if (pChildWnd != NULL) {
-        MDICREATESTRUCT mcs = {
-            szChildClass, path, hInst,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            0/*style*/, 0/*lParam*/
-		};
-		memset(pChildWnd, 0, sizeof(ChildWnd));
-        lstrcpy(pChildWnd->szPath, path);
-		pChildWnd->pos.length = sizeof(WINDOWPLACEMENT);
-		pChildWnd->pos.flags = 0;
-		pChildWnd->pos.showCmd = SW_SHOWNORMAL;
-		pChildWnd->pos.rcNormalPosition.left = CW_USEDEFAULT;
-		pChildWnd->pos.rcNormalPosition.top = CW_USEDEFAULT;
-	    pChildWnd->pos.rcNormalPosition.right = CW_USEDEFAULT;
-    	pChildWnd->pos.rcNormalPosition.bottom = CW_USEDEFAULT;
-  	    pChildWnd->nFocusPanel = 0;
-	    pChildWnd->nSplitPos = 200;
+        MDICREATESTRUCT mcs = { szChildClass, szKeyName, hInst,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            0/*style*/, (LPARAM)hKey/*lParam*/};
         hcbthook = SetWindowsHookEx(WH_CBT, CBTProc, 0, GetCurrentThreadId());
     	newchild = pChildWnd;
         pChildWnd->hWnd = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LPARAM)&mcs);
         UnhookWindowsHookEx(hcbthook);
-        if (pChildWnd->hWnd == NULL) {
+        if (pChildWnd->hWnd != NULL) {
+            return pChildWnd->hWnd;
+        } else {
             free(pChildWnd);
         	newchild = pChildWnd = NULL;
         }
-        return pChildWnd->hWnd;
 	}
     return 0;
 }
+
+void CreateClientChildren(HWND hWnd)
+{
+    CreateChildWindow(hWnd, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1);
+    CreateChildWindow(hWnd, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1);
+    CreateChildWindow(hWnd, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1);
+    CreateChildWindow(hWnd, _T("HKEY_USERS"), HKEY_USERS, 1);
+    CreateChildWindow(hWnd, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1);
+    PostMessage(hMDIClient, WM_MDICASCADE, 0, 0);
+}
+
 
 static BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
 {
@@ -140,7 +195,7 @@ typedef struct {
   INT          nSizeMax; 
 } CHOOSEFONT, *LPCHOOSEFONT; 
  */
-void CmdOptionsFont(HWND hWnd)
+static void CmdOptionsFont(HWND hWnd)
 {
 //    LOGFONT LogFont;
     CHOOSEFONT cf = { sizeof(CHOOSEFONT), hWnd, NULL,
@@ -193,7 +248,7 @@ void CmdOptionsFont(HWND hWnd)
 }
 
 
-void CmdRegistryPrint(HWND hWnd, int cmd)
+static void CmdRegistryPrint(HWND hWnd, int cmd)
 {
     PRINTDLG pd = { sizeof(PRINTDLG), hWnd,
         0, // hDevMode; 
@@ -257,7 +312,7 @@ typedef struct tagOFN {
  */
     //GetOpenFileName(...);
     //GetSaveFileName(...);
-void CmdRegistrySaveSubTreeAs(HWND hWnd)
+static void CmdRegistrySaveSubTreeAs(HWND hWnd)
 {
     OPENFILENAME ofn;// = {    };
 
@@ -270,8 +325,46 @@ void CmdRegistrySaveSubTreeAs(HWND hWnd)
     }
 }
 
+void SetupStatusBar(HWND hWnd, BOOL bResize)
+{
+    RECT  rc;
+    int nParts;
+    GetClientRect(hWnd, &rc);
+    nParts = rc.right;
+//    nParts = -1;
+	if (bResize)
+		SendMessage(hStatusBar, WM_SIZE, 0, 0);
+	SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
+}
 
-static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+void UpdateStatusBar(void)
+{
+    TCHAR text[260];
+	DWORD size;
+
+	size = sizeof(text)/sizeof(TCHAR);
+	GetComputerName(text, &size);
+    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
+}
+
+static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
+{
+	BOOL vis = IsWindowVisible(hchild);
+
+	CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
+	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
+	resize_frame_client(hWnd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
+//
+//  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
+//
+//
+
+static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND hChildWnd;
     switch (LOWORD(wParam)) {
@@ -283,13 +376,19 @@ static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         if (!SendMessage(hChildWnd, WM_QUERYENDSESSION, 0, 0))
             SendMessage(hMDIClient, WM_MDIDESTROY, (WPARAM)hChildWnd, 0);
         break;
-//        case ID_FILE_EXIT:
-//            SendMessage(hWnd, WM_CLOSE, 0, 0);
-//            break;
-//        case IDM_EXIT:
-//            DestroyWindow(hWnd);
-//            break;
-//        case ID_FILE_OPEN:
+    case ID_REGISTRY_OPENLOCAL:
+        CreateClientChildren(hWnd);
+        break;
+    case ID_REGISTRY_CLOSE:
+        SendMessage(hWnd, WM_COMMAND, ID_WINDOW_CLOSEALL, 0);
+//        SendMessage(hWnd, WM_CLOSE, 0, 0);
+        break;
+    case ID_REGISTRY_LOADHIVE:
+    case ID_REGISTRY_UNLOADHIVE:
+    case ID_REGISTRY_RESTORE:
+    case ID_REGISTRY_SAVEKEY:
+    case ID_REGISTRY_SELECTCOMPUTER:
+        break;
     case ID_REGISTRY_PRINTSUBTREE:
     case ID_REGISTRY_PRINTERSETUP:
         CmdRegistryPrint(hWnd, LOWORD(wParam));
@@ -297,13 +396,83 @@ static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     case ID_REGISTRY_SAVESUBTREEAS:
         CmdRegistrySaveSubTreeAs(hWnd);
         break;
+    case ID_REGISTRY_EXIT:
+        DestroyWindow(hWnd);
+        break;
     case ID_OPTIONS_FONT:
         CmdOptionsFont(hWnd);
         break;
-    case ID_REGISTRY_OPENLOCAL:
-    case ID_WINDOW_NEW_WINDOW:
-        InitChildWindow("Child Window");
-        return 0;
+
+    case ID_VIEW_STATUSBAR:
+		toggle_child(hWnd, LOWORD(wParam), hStatusBar);
+        break;
+
+    case ID_VIEW_DISPLAYBINARYDATA:
+        if (Options & OPTIONS_DISPLAY_BINARY_DATA) {
+            Options &= ~OPTIONS_DISPLAY_BINARY_DATA;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), LOWORD(wParam), MF_BYCOMMAND);
+        } else {
+            Options |= OPTIONS_DISPLAY_BINARY_DATA;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        }
+        break;
+////
+    case ID_VIEW_TREEANDDATA:
+        Options &= ~(OPTIONS_VIEW_TREE_ONLY|OPTIONS_VIEW_DATA_ONLY);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_TREEONLY, MF_BYCOMMAND);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_DATAONLY, MF_BYCOMMAND);
+        break;
+    case ID_VIEW_TREEONLY:
+        Options &= ~OPTIONS_VIEW_DATA_ONLY;
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_TREEANDDATA, MF_BYCOMMAND);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_DATAONLY, MF_BYCOMMAND);
+        break;
+    case ID_VIEW_DATAONLY:
+        Options &= ~OPTIONS_VIEW_TREE_ONLY;
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_TREEANDDATA, MF_BYCOMMAND);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_TREEONLY, MF_BYCOMMAND);
+        break;
+////
+    case ID_OPTIONS_AUTOREFRESH:
+        if (Options & OPTIONS_AUTO_REFRESH) {
+            Options &= ~OPTIONS_AUTO_REFRESH;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND);
+        } else {
+            Options |= OPTIONS_AUTO_REFRESH;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        }
+        break;
+    case ID_OPTIONS_READONLYMODE:
+        if (Options & OPTIONS_READ_ONLY_MODE) {
+            Options &= ~OPTIONS_READ_ONLY_MODE;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND);
+        } else {
+            Options |= OPTIONS_READ_ONLY_MODE;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        }
+        break;
+    case ID_OPTIONS_CONFIRMONDELETE:
+        if (Options & OPTIONS_CONFIRM_ON_DELETE) {
+            Options &= ~OPTIONS_CONFIRM_ON_DELETE;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND);
+        } else {
+            Options |= OPTIONS_CONFIRM_ON_DELETE;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        }
+        break;
+    case ID_OPTIONS_SAVESETTINGSONEXIT:
+        if (Options & OPTIONS_SAVE_ON_EXIT) {
+            Options &= ~OPTIONS_SAVE_ON_EXIT;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND);
+        } else {
+            Options |= OPTIONS_SAVE_ON_EXIT;
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), LOWORD(wParam), MF_BYCOMMAND | MF_CHECKED);
+        }
+        break;
+
     case ID_WINDOW_CASCADE:
         SendMessage(hMDIClient, WM_MDICASCADE, 0, 0);
         break;
@@ -313,7 +482,7 @@ static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     case ID_WINDOW_TILE_VERT:
         SendMessage(hMDIClient, WM_MDITILE, MDITILE_VERTICAL, 0);
         break;
-    case ID_WINDOW_ARRANGE_ICONS:
+    case ID_WINDOW_ARRANGEICONS:
         SendMessage(hMDIClient, WM_MDIICONARRANGE, 0, 0);
         break;
     case ID_HELP_ABOUT:
@@ -325,13 +494,9 @@ static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         }
         break;
     default:
-        hChildWnd = (HWND)SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
-        if (IsWindow(hChildWnd))
-            SendMessage(hChildWnd, WM_COMMAND, wParam, lParam);
-        else
-            return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
-    }
-    return 0;
+        return FALSE;
+	}
+	return TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,15 +518,38 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HMENU hMenuWindow = GetSubMenu(hMenuFrame, GetMenuItemCount(hMenuFrame)-2);
         CLIENTCREATESTRUCT ccs = { hMenuWindow, IDW_FIRST_CHILD };
         hMDIClient = CreateWindowEx(0, _T("MDICLIENT"), NULL,
-                    WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
-                    0, 0, 0, 0,
-                    hWnd, (HMENU)0, hInst, &ccs);
+                WS_EX_MDICHILD|WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE,
+                0, 0, 0, 0,
+                hWnd, (HMENU)0, hInst, &ccs);
         }
+        if (Options & OPTIONS_AUTO_REFRESH) {
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), ID_OPTIONS_AUTOREFRESH, MF_BYCOMMAND | MF_CHECKED);
+        }
+        if (Options & OPTIONS_READ_ONLY_MODE) {
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), ID_OPTIONS_READONLYMODE, MF_BYCOMMAND | MF_CHECKED);
+        }
+        if (Options & OPTIONS_CONFIRM_ON_DELETE) {
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), ID_OPTIONS_CONFIRMONDELETE, MF_BYCOMMAND | MF_CHECKED);
+        }
+        if (Options & OPTIONS_SAVE_ON_EXIT) {
+            CheckMenuItem(GetSubMenu(hMenuFrame, ID_OPTIONS_MENU), ID_OPTIONS_SAVESETTINGSONEXIT, MF_BYCOMMAND | MF_CHECKED);
+        }
+        CreateClientChildren(hWnd);
 	    break;
    	case WM_COMMAND:
-    	return _CmdWndProc(hWnd, message, wParam, lParam);
+        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
+//            HWND hChildWnd = (HWND)SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
+//            if (IsWindow(hChildWnd))
+//                if (SendMessage(hChildWnd, WM_DISPATCH_COMMAND, wParam, lParam))
+//                    break;
+   		    return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
+        }
 	    break;
+	case WM_SIZE:
+        resize_frame_client(hWnd);
+		break;
     case WM_DESTROY:
+		WinHelp(hWnd, _T("regedt32"), HELP_QUIT, 0);
         PostQuitMessage(0);
         break;
     case WM_QUERYENDSESSION:

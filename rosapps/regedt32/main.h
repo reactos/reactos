@@ -34,39 +34,73 @@ extern "C" {
 #include "resource.h"
 
 
+#define STATUS_WINDOW   2001
+#define TREE_WINDOW     2002
+#define LIST_WINDOW     2003
+
+#define MAX_LOADSTRING  100
+#define	SPLIT_WIDTH		5
+#define MAX_NAME_LEN    500
+
+
+#define ID_WINDOW_CLOSE                 798
+#define ID_WINDOW_CLOSEALL              799
+
+#define	IDW_FIRST_CHILD		0xC000	//0x200
+
 ////////////////////////////////////////////////////////////////////////////////
 
-#define	SPLIT_WIDTH    5
-#define MAX_LOADSTRING 100
+enum OPTION_FLAGS {
+    OPTIONS_AUTO_REFRESH               = 0x01,
+    OPTIONS_READ_ONLY_MODE             = 0x02,
+    OPTIONS_CONFIRM_ON_DELETE          = 0x04,
+    OPTIONS_SAVE_ON_EXIT          	   = 0x08,
+    OPTIONS_DISPLAY_BINARY_DATA    	   = 0x10,
+    OPTIONS_VIEW_TREE_ONLY       	   = 0x20,
+    OPTIONS_VIEW_DATA_ONLY      	   = 0x40,
+};
 
 typedef struct {
     HWND    hWnd;
-    HWND    hLeftWnd;
-    HWND    hRightWnd;
+    HWND    hTreeWnd;
+    HWND    hListWnd;
     int     nFocusPanel;      // 0: left  1: right
 	int		nSplitPos;
     WINDOWPLACEMENT pos;
-	TCHAR	szPath[MAX_PATH];
+	TCHAR	szKeyName[MAX_PATH];
+    HKEY    hKey;
 } ChildWnd;
-
-//void UpdateStatusBar(void);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
-
+//
 extern HINSTANCE hInst;
 extern HACCEL    hAccel;
 extern HWND      hFrameWnd;
 extern HMENU     hMenuFrame;
 extern HWND      hMDIClient;
-//extern HWND      hStatusBar;
+extern HWND      hStatusBar;
 //extern HWND      hToolBar;
 extern HFONT     hFont;
+extern enum OPTION_FLAGS Options;
 
 extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];
 extern TCHAR szChildClass[];
+
+#ifndef _MSC_VER
+typedef struct tagNMITEMACTIVATE{
+    NMHDR   hdr;
+    int     iItem;
+    int     iSubItem;
+    UINT    uNewState;
+    UINT    uOldState;
+    UINT    uChanged;
+    POINT   ptAction;
+    LPARAM  lParam;
+    UINT    uKeyFlags;
+} NMITEMACTIVATE, FAR *LPNMITEMACTIVATE;
+#endif
 
 #ifdef __cplusplus
 };

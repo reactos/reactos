@@ -30,10 +30,13 @@ RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
 OBJS =	framewnd.o \
-	childwnd.o \
-	main.o
+        childwnd.o \
+        listview.o \
+        treeview.o \
+        settings.o \
+        main.o
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
+LIBS = -lgdi32 -luser32 -lkernel32 -ladvapi32 -lcomctl32 -lcomdlg32
 
 all:	$(TARGET).exe
 
@@ -44,13 +47,20 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-main.o:		main.c main.h framewnd.h resource.h
+main.h:		resource.h
 
-framewnd.o:	framewnd.c framewnd.h resource.h
+main.o:		main.c main.h framewnd.h
 
-childwnd.o:	childwnd.c childwnd.h resource.h
+framewnd.o:	framewnd.c framewnd.h listview.h treeview.h main.h
 
-$(TARGET).o:	$(TARGET).c $(TARGET).h resource.h
+childwnd.o:	childwnd.c childwnd.h main.h
+
+listview.o:	listview.c listview.h main.h 
+
+treeview.o:	treeview.c treeview.h main.h 
+
+settings.o:	settings.c settings.h main.h 
+
 
 clean:
 	- $(RM) $(OBJS)

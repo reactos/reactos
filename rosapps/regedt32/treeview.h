@@ -1,7 +1,7 @@
 /*
- *  ReactOS regedt32
+ *  ReactOS regedit
  *
- *  childwnd.h
+ *  treeview.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __CHILDWND_H__
-#define __CHILDWND_H__
+#ifndef __TREEVIEW_H__
+#define __TREEVIEW_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +32,13 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-    
+HWND CreateTreeView(HWND hwndParent, LPTSTR szKeyName, HKEY hKey);
+BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
+HKEY FindRegRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max);
+
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __CHILDWND_H__
+#endif // __TREEVIEW_H__

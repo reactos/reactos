@@ -45,6 +45,8 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// Local module support methods
+//
 
 static void MakeFullRegPath(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
 {
@@ -87,15 +89,8 @@ static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 
 	cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
     DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-	DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	EndDeferWindowPos(hdwp);
-}
-
-static void OnSize(ChildWnd* pChildWnd, WPARAM wParam, LPARAM lParam)
-{
-    if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
-		ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
-    }
 }
 
 static void OnPaint(HWND hWnd)
@@ -109,7 +104,6 @@ static void OnPaint(HWND hWnd)
     FillRect(ps.hdc, &rt, GetStockObject(LTGRAY_BRUSH));
     EndPaint(hWnd, &ps);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -157,12 +151,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         pChildWnd = (ChildWnd*)((LPCREATESTRUCT)lParam)->lpCreateParams;
         ASSERT(pChildWnd);
         pChildWnd->nSplitPos = 250;
-        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->root.path, TREE_WINDOW);
-        pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW/*, &pChildWnd->root*/);
+        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, TREE_WINDOW);
+        pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW/*, pChildWnd->szPath*/);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
-   		    return DefWindowProc(hWnd, message, wParam, lParam);
+            goto def;
         }
 		break;
     case WM_PAINT:
@@ -179,8 +173,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			}
 		}
 		goto def;
-        //break;
-
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -264,7 +256,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     int keyPathLen = 0;
                     keyPath[0] = _T('\0');
                     hKey = FindRegRoot(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
-                //BOOL RefreshListView(HWND hwndTV, HKEY hKey, LPTSTR keyPath)
                     RefreshListView(pChildWnd->hListWnd, hKey, keyPath);
 
                     keyPathLen = 0;
@@ -272,7 +263,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
                     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)keyPath);
                 }
-//                RefreshList(pChildWnd->hListWnd, entry);
                 break;
             default:
                 goto def;
@@ -286,8 +276,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
 	case WM_SIZE:
-        if (wParam != SIZE_MINIMIZED) {
-            OnSize(pChildWnd, wParam, lParam);
+        if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
+	    	ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
         }
         // fall through
     default: def:
