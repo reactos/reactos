@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 
@@ -20,7 +21,11 @@ void debug_printf(char* fmt, ...)
 
 void ExecuteVer(void)
 {
-    debug_printf("Reactos Simple Shell\n");
+    debug_printf(
+	"Reactos Simple Shell\n(compiled on %s, at %s)\n",
+	__DATE__,
+	__TIME__
+	);
 }
 
 void ExecuteCd(char* cmdline)
@@ -96,33 +101,131 @@ void ExecuteType(char* cmdline)
    CloseHandle(FileHandle);
 }
 
-int ExecuteProcess(char* name, char* cmdline)
+int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 {
-   PROCESS_INFORMATION ProcessInformation;
-   STARTUPINFO StartupInfo;
-//   char arguments;
-   BOOL ret;
+	PROCESS_INFORMATION	ProcessInformation;
+	STARTUPINFO		StartupInfo;
+//	char			arguments;
+	BOOL			ret;
 
-   memset(&StartupInfo,0,sizeof(StartupInfo));
-   StartupInfo.cb = sizeof(STARTUPINFO);
-   StartupInfo.lpTitle = name;
+	memset(
+		& StartupInfo,
+		0,
+		(sizeof StartupInfo)
+		);
+	StartupInfo.cb = sizeof (STARTUPINFO);
+	StartupInfo.lpTitle = name;
 
-   ret = CreateProcessA(name,
-			 cmdline,
-			 NULL,
-			 NULL,
-			 TRUE,
-			 CREATE_NEW_CONSOLE,
-			 NULL,
-			 NULL,
-			 &StartupInfo,
-			 &ProcessInformation);
-   if (ret)
-     {
-	WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
-     }
-   CloseHandle(ProcessInformation.hProcess);
-   return(ret);
+	ret = CreateProcessA(
+		name,
+		cmdline,
+		NULL,
+		NULL,
+		TRUE,
+		(	(TRUE == detached)
+			? DETACHED_PROCESS
+			: CREATE_NEW_CONSOLE
+			),
+		NULL,
+		NULL,
+		& StartupInfo,
+		& ProcessInformation
+		);
+	if (TRUE == detached)
+	{
+		if (ret)
+		{
+			debug_printf(
+"%s detached:\n\
+\thProcess = %08X\n\
+\thThread  = %08X\n\
+\tPID      = %d\n\
+\tTID      = %d\n\n",
+				ProcessInformation.hProcess,
+				ProcessInformation.hThread,
+				ProcessInformation.dwProcessId,
+				ProcessInformation.dwThreadId
+				);
+		}
+		else
+		{
+			debug_printf("Could not detach %s\n");
+		}
+	}
+	else
+	{
+		if (ret)
+		{
+			WaitForSingleObject(
+				ProcessInformation.hProcess,
+				INFINITE
+				);
+		}
+		CloseHandle(ProcessInformation.hProcess);
+	}
+	return(ret);
+}
+
+void
+ExecuteStart(
+	char	* CommandLine
+	)
+{
+	   char *ImageName = CommandLine;
+
+	   for (	;
+			(	(*CommandLine)
+				&& (*CommandLine != ' ')
+				&& (*CommandLine != '\t')
+				);
+			CommandLine++
+		);
+	   *CommandLine++ = '\0';
+	   while (	(*CommandLine)
+			&& (	(*CommandLine == ' ')
+				|| (*CommandLine == '\t')
+				)
+			);
+	   ExecuteProcess(
+		ImageName,
+		CommandLine,
+		TRUE
+		);
+	   return;
+}
+
+void
+ExecuteKill(char * lpPid)
+{
+	HANDLE	hProcess;
+	DWORD	dwProcessId;
+
+	dwProcessId = (DWORD) atol(lpPid);
+	hProcess = OpenProcess(
+			PROCESS_TERMINATE,
+			FALSE,
+			dwProcessId
+			);
+	if (NULL == hProcess)
+	{
+		debug_printf(
+			"Could not open the process with PID = %d\n",
+			dwProcessId
+			);
+		return;
+	}
+	if (FALSE == TerminateProcess(
+			hProcess,
+			0
+			)
+	) {
+		debug_printf(
+			"Could not terminate the process with PID = %d\n",
+			dwProcessId
+			);
+	}
+	CloseHandle(hProcess);
+	return;
 }
 
 void ExecuteCommand(char* line)
@@ -165,6 +268,11 @@ void ExecuteCommand(char* line)
 	ExecuteDir(tail);
 	return;
      }
+   if (strcmp(cmd,"kill")==0)
+     {
+	ExecuteKill(tail);
+	return;
+     }
    if (strcmp(cmd,"type")==0)
      {
 	ExecuteType(tail);	
@@ -188,12 +296,17 @@ void ExecuteCommand(char* line)
 	  }
 	return;
      }
+   if (strcmp(cmd,"start") == 0)
+   {
+	   ExecuteStart(tail);
+	   return;
+   }
    if (strcmp(cmd,"exit")==0)
      {
 	ExitProcess(0);
 	return;
      }
-   if (ExecuteProcess(cmd,tail))
+   if (ExecuteProcess(cmd,tail,FALSE))
      {
 	return;
      }
