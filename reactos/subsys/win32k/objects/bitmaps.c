@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.79 2004/07/14 20:48:57 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.80 2004/10/23 19:17:54 gvg Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -548,6 +548,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return Result;
 	}
+	XPos += dc->w.DCOrgX;
+	YPos += dc->w.DCOrgY;
 	if ( IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos) )
 	{
 		bInRect = TRUE;
