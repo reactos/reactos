@@ -49,7 +49,7 @@ EXPORTS
 ;?unexpected@std@@YAXXZ	@1557
 ;?what@exception@std@@UBEPBDXZ	@1575
 ;_AAFS_CloseAllFileHandles	@655
-_AFS_CreateDirectoryW	@644
+;_AFS_CreateDirectoryW	@644
 ;_AFS_CreateFileW	@648
 ;_AFS_DeleteFileW	@649
 ;_AFS_FindFirstChangeNotificationW	@1685
@@ -739,7 +739,7 @@ _LocalFree	@36
 ;_MapWindowPoints	@284
 ;_MaskBlt	@904
 ;_MessageBeep	@857
-;_MessageBoxW	@858
+_MessageBoxW	@858
 ;_MonitorFromPoint	@1522
 ;_MonitorFromRect	@1523
 ;_MonitorFromWindow	@1524
@@ -1117,7 +1117,7 @@ __XcptFilter    @1645
 ;___RTCastToVoid @1559
 ;___RTDynamicCast        @1561
 ;___RTtypeid     @1560
-;___abnormal_termination @86
+___abnormal_termination @86
 ;___strgtold12   @1089
 ;__alldiv        @2001
 ;__allmul        @2002

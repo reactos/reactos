@@ -16,6 +16,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * TODO:
+ * ATM this is just a dummy forwarding dll for the WinCE API to Win32 API
+ * When you exit a simple WinCE app on Windows or on ReactOS it causes
+ * a program error or unhandled exception probl'y because we dont handle
+ * threading and process attaching/detaching like we should here.
+ *
+ * There will be some parts of the WinCE API that cant just be forwarded to
+ * the Win32 API as paramater names or types may differ. In that case you will
+ * need to copy the Win32 implementation and make the needed changes.
  */
 
 #include "windows.h"
