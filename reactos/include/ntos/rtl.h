@@ -1,7 +1,6 @@
-/* $Id: rtl.h,v 1.23 2004/01/18 22:28:48 gdalsnes Exp $
+/* $Id: rtl.h,v 1.24 2004/01/23 18:00:53 navaraf Exp $
  * 
  */
-
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
@@ -13,7 +12,7 @@
 #endif /* __NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ || __NTDLL__ || __NTAPP__ */
 
 #include <pe.h>
-
+#include <ole32/guiddef.h>
 
 #ifndef __USE_W32API
 
@@ -991,6 +990,13 @@ RtlFillMemoryUlong (
 	ULONG	Fill
 	);
 
+NTSTATUS
+STDCALL
+RtlStringFromGUID (
+    IN REFGUID Guid,
+    OUT PUNICODE_STRING GuidString
+    );
+	
 ULONG
 STDCALL
 RtlFindClearBits (
@@ -1732,7 +1738,7 @@ RtlSizeHeap (
 	{ \
 		*((PUSHORT)(Address))=(USHORT)(Value); \
 	}
-
+	
 BOOLEAN
 STDCALL
 RtlTimeFieldsToTime (

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.34 2003/12/30 18:52:06 fireball Exp $
+/* $Id: unicode.c,v 1.35 2004/01/23 18:00:53 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1050,6 +1050,40 @@ RtlPrefixUnicodeString(IN PUNICODE_STRING String1,
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+RtlStringFromGUID(
+    IN REFGUID Guid,
+    OUT PUNICODE_STRING GuidString
+    )
+{
+	if( Guid == NULL )
+	{
+		return FALSE;
+	}
+	PWCHAR Buffer;
+	PWCHAR String4;
+	PWCHAR String4a;
+	PWCHAR String4b;
+	
+	wcsncpy( String4a, String4, 4 );
+	wcsncpy( String4b, String4+4, wcslen(String4) );
+	
+	swprintf( Buffer, L"{%X-%X-%X-%X-%X}",
+					  Guid->Data1,
+					  Guid->Data2,
+					  Guid->Data3,
+					  String4a,
+					  String4b );
+		
+	RtlInitUnicodeString( GuidString, Buffer );
+	
+	return(TRUE);
 }
 
 

@@ -882,19 +882,6 @@ RtlMergeRangeLists(
 /*
  * @unimplemented
  */
-NTSTATUS
-STDCALL
-RtlStringFromGUID(
-    IN REFGUID Guid,
-    OUT PUNICODE_STRING GuidString
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 RtlValidRelativeSecurityDescriptor (
