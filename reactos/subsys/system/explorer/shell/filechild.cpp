@@ -37,14 +37,16 @@
 #include "../explorer_intres.h"
 
 
-FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
+FileChildWndInfo::FileChildWndInfo(LPCTSTR path, ENTRY_TYPE etype)
+ :	_etype(etype)
 {
+	if (etype == ET_UNKNOWN)
 #ifdef __WINE__
-	if (*path == '/')
-		_etype = ET_UNIX;
-	else
+		if (*path == '/')
+			_etype = ET_UNIX;
+		else
 #endif
-		_etype = ET_WINDOWS;
+			_etype = ET_WINDOWS;
 
 	_path = path;
 
@@ -61,32 +63,34 @@ FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
 
 
 ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path)
- :	FileChildWndInfo(path),
+ :	FileChildWndInfo(path, ET_SHELL),
 	_shell_path(path&&*path? path: root_shell_path),
 	_root_shell_path(root_shell_path)
 {
-	_etype = ET_SHELL;
 }
 
 
 NtObjChildWndInfo::NtObjChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path)
+ :	FileChildWndInfo(path, ET_NTOBJS)
 {
-	_etype = ET_NTOBJS;
 }
 
 
 RegistryChildWndInfo::RegistryChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path)
+ :	FileChildWndInfo(path, ET_REGISTRY)
 {
-	_etype = ET_REGISTRY;
 }
 
 
 FATChildWndInfo::FATChildWndInfo(LPCTSTR path)
- :	FileChildWndInfo(path)
+ :	FileChildWndInfo(path, ET_FAT)
 {
-	_etype = ET_FAT;
+}
+
+
+WebChildWndInfo::WebChildWndInfo(LPCTSTR url)
+ :	FileChildWndInfo(url, ET_WEB)
+{
 }
 
 
@@ -98,8 +102,8 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	TCHAR drv[_MAX_DRIVE+1];
 	Entry* entry;
 
-	if (info._etype == ET_SHELL)	//@@ evtl. Aufteilung von FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow
-	{
+	switch(info._etype) {
+	  case ET_SHELL: {	//@@ evtl. Aufteilung von FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow
 		_root._drive_type = DRIVE_UNKNOWN;
 		lstrcpy(drv, TEXT("\\"));
 		lstrcpy(_root._volname, TEXT("Desktop"));
@@ -109,11 +113,10 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
 		_root._entry = new ShellDirectory(Desktop(), DesktopFolderPath(), hwnd);
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME);
-	}
-	else
+		break;}
+
 #ifdef __WINE__
-	if (info._etype == ET_UNIX)
-	{
+	  case ET_UNIX: {
 		_root._drive_type = GetDriveType(info._path);
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -124,11 +127,11 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, TEXT("/"));
 		_root._entry = new UnixDirectory(_root._path);
 		entry = _root._entry->read_tree(info._path, SORT_NAME);
-	}
-	else
+		break;}
+
 #endif
-	if (info._etype == ET_NTOBJS)
-	{
+
+	  case ET_NTOBJS:
 		_root._drive_type = DRIVE_UNKNOWN;
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -138,9 +141,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, drv);
 		_root._entry = new NtObjDirectory(_root._path);
 		entry = _root._entry->read_tree(info._path, SORT_NAME);
-	}
-	else if (info._etype == ET_REGISTRY)
-	{
+		break;
+
+	  case ET_REGISTRY:
 		_root._drive_type = DRIVE_UNKNOWN;
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -150,9 +153,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, drv);
 		_root._entry = new RegistryRoot();
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
-	}
-	else if (info._etype == ET_FAT)
-	{
+		break;
+
+	  case ET_FAT:
 		_root._drive_type = DRIVE_UNKNOWN;
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -162,9 +165,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, drv);
 		_root._entry = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
-	}
-	else //if (info._etype == ET_WINDOWS)
-	{
+		break;
+
+	  default:	// ET_WINDOWS
 		_root._drive_type = GetDriveType(info._path);
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);

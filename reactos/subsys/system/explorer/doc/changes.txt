@@ -60,3 +60,4 @@ If you search for more information, look into the CVS repository.
 31.01.2004	m. fuchs	included NT Object namespace as virtual file system
 31.01.2004	m. fuchs	included Registry as virtual file system
 02.02.2004	m. fuchs	reading of FAT image files
+07.02.2004	m. fuchs	included IE/Mozilla as Active X control

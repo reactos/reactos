@@ -144,7 +144,7 @@ struct COMException : public COMExceptionBase
 	int _line;
 };
 
-#define	THROW_EXCEPTION(e) throw COMException(e, __FILE__, __LINE__)
+#define	THROW_EXCEPTION(hr) throw COMException(hr, __FILE__, __LINE__)
 #define	CHECKERROR(hr) ((void)(FAILED(hr)? THROW_EXCEPTION(hr): 0))
 
 
@@ -329,6 +329,12 @@ template<typename T> struct SIfacePtr
 			p->AddRef();
 	}
 
+	SIfacePtr(IUnknown* unknown, REFIID riid)
+	{
+		CHECKERROR(unknown->QueryInterface(riid, (LPVOID*)&_p));
+		//@@ _p->AddRef();
+	}
+
 	~SIfacePtr()
 	{
 		Free();
@@ -360,7 +366,7 @@ template<typename T> struct SIfacePtr
 		return &_p;
 	}
 
-	bool empty() const	//NOTE: GCC seems not to work correctly when defining operator bool() AND operator T*()
+	bool empty() const	//NOTE: GCC seems not to work correctly when defining operator bool() AND operator T*() at one time
 	{
 		return !_p;
 	}
@@ -368,8 +374,11 @@ template<typename T> struct SIfacePtr
 	SIfacePtr& operator=(T* p)
 	{
 		Free();
-		p->AddRef();
-		_p = p;
+
+		if (p) {
+			p->AddRef();
+			_p = p;
+		}
 
 		return *this;
 	}
@@ -385,6 +394,16 @@ template<typename T> struct SIfacePtr
 
 		if (h)
 			h->Release();
+	}
+
+	HRESULT CreateInstance(REFIID clsid, REFIID riid)
+	{
+		return CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, riid, (LPVOID*)&_p);
+	}
+
+	template<typename I> HRESULT QueryInterface(REFIID riid, I* p)
+	{
+		return _p->QueryInterface(riid, (LPVOID*)p);
 	}
 
 	void Free()
@@ -728,7 +747,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 };
 
 
-#ifdef __GCC__	// Wine doesn't know of unnamed union members and uses some macros instead.
+#ifdef __WINE__	// Wine doesn't know of unnamed union members and uses some macros instead.
 #define	UNION_MEMBER(x) DUMMYUNIONNAME.##x
 #else
 #define	UNION_MEMBER(x) x

@@ -114,6 +114,7 @@
 #define ID_ABOUT_WINEFILE               1705
 #define IDC_FILETREE                    10001
 #define ID_EXPLORER_FAQ                 10002
+#define ID_WEB_WINDOW                 10003
 #define ID_WINDOW_AUTOSORT              0x8003
 #define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERED_SIZES               0x8005

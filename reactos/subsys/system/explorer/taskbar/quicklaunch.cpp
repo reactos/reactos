@@ -30,6 +30,8 @@
 
 #include "../explorer.h"
 #include "../globals.h"
+#include "../externals.h"
+#include "../explorer_intres.h"
 
 #include "quicklaunch.h"
 
@@ -116,7 +118,8 @@ void QuickLaunchBar::AddShortcuts()
 	COLORREF bk_color = GetSysColor(COLOR_BTNFACE);
 	HBRUSH bk_brush = GetSysColorBrush(COLOR_BTNFACE);
 
-	TBBUTTON btn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
+	AddButton(g_Globals._icon_cache.get_icon(ICID_LOGOFF/*@@*/).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_MINIMIZE_ALL), NULL);
+	AddButton(g_Globals._icon_cache.get_icon(ICID_EXPLORER).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_TITLE), NULL);
 
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
@@ -127,29 +130,36 @@ void QuickLaunchBar::AddShortcuts()
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 				HBITMAP hbmp = g_Globals._icon_cache.get_icon(entry->_icon_id).create_bitmap(bk_color, bk_brush, canvas);
 
-				TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
-				int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
-
-				QuickLaunchEntry qle;
-
-				int id = ++_next_id;
-
-				qle._hbmp = hbmp;
-				qle._title = entry->_display_name;	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name
-				qle._entry = entry;
-
-				_entries[id] = qle;
-
-				btn.idCommand = id;
-				btn.iBitmap = bmp_idx;
-				int idx = SendMessage(_hwnd, TB_BUTTONCOUNT, 0, 0);
-
-				SendMessage(_hwnd, TB_INSERTBUTTON, idx, (LPARAM)&btn);
+				AddButton(hbmp, entry->_display_name, entry);	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name);
 			}
 	}
 
 	_btn_dist = LOWORD(SendMessage(_hwnd, TB_GETBUTTONSIZE, 0, 0));
 	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
+}
+
+void QuickLaunchBar::AddButton(HBITMAP hbmp, LPCTSTR name, Entry* entry)
+{
+	TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
+	int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
+
+	QuickLaunchEntry qle;
+
+	int id = _next_id++;
+
+	qle._hbmp = hbmp;
+	qle._title = name;
+	qle._entry = entry;
+
+	_entries[id] = qle;
+
+	TBBUTTON btn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
+
+	btn.idCommand = id;
+	btn.iBitmap = bmp_idx;
+	int idx = SendMessage(_hwnd, TB_BUTTONCOUNT, 0, 0);
+
+	SendMessage(_hwnd, TB_INSERTBUTTON, idx, (LPARAM)&btn);
 }
 
 LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -173,7 +183,14 @@ int QuickLaunchBar::Command(int id, int code)
 {
 	CONTEXT("QuickLaunchBar::Command()");
 
-	_entries[id]._entry->launch_entry(_hwnd);
+	QuickLaunchEntry& qle = _entries[id];
+
+	if (qle._entry)
+		qle._entry->launch_entry(_hwnd);
+	else if (id == IDC_FIRST_QUICK_ID)
+		;	///@todo minimize/restore all windows
+	else if (id == IDC_FIRST_QUICK_ID+1)
+		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 
 	return 0;
 }

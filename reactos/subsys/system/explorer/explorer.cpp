@@ -429,8 +429,14 @@ ResBitmap::ResBitmap(UINT nid)
 
 void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine)
 {
-	if (g_Globals._hMainWnd)
+	if (g_Globals._hMainWnd) {
+		if (IsIconic(g_Globals._hMainWnd))
+			ShowWindow(g_Globals._hMainWnd, SW_RESTORE);
+		else
+			SetForegroundWindow(g_Globals._hMainWnd);
+
 		return;
+	}
 
 	g_Globals._prescan_nodes = false;
 

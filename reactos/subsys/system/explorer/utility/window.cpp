@@ -238,7 +238,7 @@ Window* Window::create_controller(HWND hwnd)
 }
 
 
-LRESULT	Window::Init(LPCREATESTRUCT pcs)
+LRESULT Window::Init(LPCREATESTRUCT pcs)
 {
 	return 0;
 }

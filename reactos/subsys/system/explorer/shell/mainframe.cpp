@@ -32,6 +32,11 @@
 #include "../globals.h"
 #include "../externals.h"
 
+/* We can't include webchild.h here - otherwise MinGW produces errors like: "multiple definition of `QACONTAINERFLAGS'"
+#include "webchild.h"
+*/
+extern HWND create_webchildwindow(HWND hmdiclient, const WebChildWndInfo& info);
+
 #include "../explorer_intres.h"
 
 
@@ -138,6 +143,13 @@ MainFrame::MainFrame(HWND hwnd)
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
+	 // insert web control button
+	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
+
+	drivebarBtn.idCommand = ID_WEB_WINDOW;
+	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
+	++drivebarBtn.iString;
+
 	 // register windows drive root strings
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
 
@@ -163,6 +175,20 @@ MainFrame::MainFrame(HWND hwnd)
 		while(*p++);
 	}
 
+
+	 // address & command bar
+	WindowCanvas canvas(hwnd);
+	RECT rect = {0, 0, 0, 0};
+	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+	HFONT hfont = GetStockFont(DEFAULT_GUI_FONT);
+
+	_haddressedit = CreateWindow(TEXT("EDIT"), TEXT("file://C:\\"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
+							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
+	SetWindowFont(_haddressedit, hfont, FALSE);
+
+	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> Command"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
+							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
+	SetWindowFont(_hcommandedit, hfont, FALSE);
 
 	/* CreateStatusWindow does not accept WS_BORDER
 		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,
@@ -521,6 +547,18 @@ int MainFrame::Command(int id, int code)
 #endif
 		break;}
 #endif
+
+	  case ID_DRIVE_DESKTOP: {
+		TCHAR path[MAX_PATH];
+
+		if (activate_child_window(TEXT("Desktop")))
+			break;
+
+		GetCurrentDirectory(MAX_PATH, path);
+
+		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
+		break;}
+
 	  case ID_DRIVE_SHELL_NS: {
 		TCHAR path[MAX_PATH];
 
@@ -572,16 +610,9 @@ int MainFrame::Command(int id, int code)
 #endif
 	  break;}
 
-	  case ID_DRIVE_DESKTOP: {
-		TCHAR path[MAX_PATH];
-
-		if (activate_child_window(TEXT("Desktop")))
-			break;
-
-		GetCurrentDirectory(MAX_PATH, path);
-
-		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
-		break;}
+	  case ID_WEB_WINDOW:
+		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.reactos.com")));	//@@
+		break;
 
 	///@todo There are even more menu items!
 
@@ -595,6 +626,11 @@ int MainFrame::Command(int id, int code)
 
 	  case ID_EXPLORER_FAQ:
 		launch_file(_hwnd, TEXT("http://www.sky.franken.de/explorer/"), SW_SHOWNORMAL);
+		break;
+
+	  case IDW_ADDRESSBAR:
+	  case IDW_COMMANDBAR:
+		//@@
 		break;
 
 	  default:
@@ -623,7 +659,7 @@ void MainFrame::resize_frame_rect(PRECT prect)
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
 		ClientRect rt(_htoolbar);
 		prect->top = rt.bottom+3;
-		prect->bottom -= rt.bottom+3;
+//		prect->bottom -= rt.bottom+3;
 	}
 
 	if (IsWindowVisible(_hdrivebar)) {
@@ -632,7 +668,7 @@ void MainFrame::resize_frame_rect(PRECT prect)
 		new_top = --prect->top + rt.bottom+3;
 		MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
 		prect->top = new_top;
-		prect->bottom -= rt.bottom+2;
+//		prect->bottom -= rt.bottom+2;
 	}
 
 	if (IsWindowVisible(_hstatusbar)) {
@@ -644,8 +680,17 @@ void MainFrame::resize_frame_rect(PRECT prect)
 		prect->bottom -= rt.bottom;
 	}
 
+	if (IsWindowVisible(_haddressedit) || IsWindowVisible(_hcommandedit)) {
+		ClientRect rt(_haddressedit);
+		prect->bottom -= rt.bottom;
+
+		int mid = (prect->right-prect->left) / 2;	///@todo use split bar
+		SetWindowPos(_haddressedit, 0, 0, prect->bottom, mid, rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
+		SetWindowPos(_hcommandedit, 0, mid+1, prect->bottom, prect->right-(mid+1), rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
+	}
+
 #ifndef _NO_MDI
-	MoveWindow(_hmdiclient, prect->left-1,prect->top-1,prect->right+2,prect->bottom+1, TRUE);
+	MoveWindow(_hmdiclient, prect->left-1,prect->top-1,prect->right-prect->left+2,prect->bottom-prect->top+1, TRUE);
 #endif
 }
 

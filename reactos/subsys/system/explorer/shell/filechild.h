@@ -29,7 +29,7 @@
  /// information structure for creation of FileChildWindow
 struct FileChildWndInfo
 {
-	FileChildWndInfo(LPCTSTR path);
+	FileChildWndInfo(LPCTSTR path, ENTRY_TYPE etype=ET_UNKNOWN);
 
 	ENTRY_TYPE	_etype;
 	LPCTSTR		_path;
@@ -59,10 +59,16 @@ struct RegistryChildWndInfo : public FileChildWndInfo
 	RegistryChildWndInfo(LPCTSTR path);
 };
 
- /// information structure for creation of FileChildWindow for the Registry
+ /// information structure for creation of FileChildWindow
 struct FATChildWndInfo : public FileChildWndInfo
 {
 	FATChildWndInfo(LPCTSTR path);
+};
+
+ /// information structure for creation of WebChildWindow
+struct WebChildWndInfo : public FileChildWndInfo
+{
+	WebChildWndInfo(LPCTSTR url);
 };
 
 

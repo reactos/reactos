@@ -78,4 +78,5 @@ protected:
 	int				_btn_dist;
 
 	void	AddShortcuts();
+	void	AddButton(HBITMAP hbmp, LPCTSTR name, Entry* entry);
 };

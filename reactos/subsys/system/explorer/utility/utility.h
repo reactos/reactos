@@ -40,6 +40,11 @@
 #include <windowsx.h>	// for SelectBrush(), ListBox_SetSel(), SubclassWindow(), ...
 #include <commctrl.h>
 
+#ifndef _MSC_VER
+#include <objbase.h>
+#include <oleauto.h>	// for VARIANT
+#endif
+
 #include <malloc.h>		// for alloca()
 #include <assert.h>
 #include <stdlib.h>		// for _MAX_DIR, ...
@@ -640,6 +645,76 @@ protected:
 };
 
 
+struct Variant : public VARIANT
+{
+	Variant() {VariantInit(this);}
+	Variant(const VARIANT& var);
+	Variant(const VARIANT* var);
+	~Variant();
+
+	operator long() const;
+	operator bool() const;
+	operator VARIANT_BOOL() const;
+	operator IDispatch*() const;
+};
+
+
+struct BStr
+{
+	BStr()
+	{
+		_p = NULL;
+	}
+
+	BStr(const BSTR s)
+	{
+		_p = SysAllocString(s);
+	}
+
+	BStr(LPCSTR s)
+	{
+		WCHAR b[BUFFER_LEN];
+
+		if (s)
+			_p = SysAllocStringLen(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));
+		else
+			_p = NULL;
+	}
+
+	BStr(LPCWSTR s)
+	{
+		_p = SysAllocString(s);
+	}
+
+	BStr(const VARIANT& var)
+	 :	_p(NULL)
+	{
+		assign(var);
+	}
+
+	~BStr()
+	{
+		SysFreeString(_p);
+	}
+
+	void assign(BSTR s);
+	void assign(const VARIANT& var);
+
+	operator BSTR() const
+	{
+		return _p? _p: (BSTR)L"";
+	}
+
+	int length() const
+	{
+		return _p? wcslen(_p): 0;
+	}
+
+protected:
+	BSTR	_p;
+};
+
+
  /// string class for convenience
 struct String
 #ifdef UNICODE
@@ -667,6 +742,7 @@ struct String
 	String& operator=(LPCSTR s) {assign(s); return *this;}
 	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));} else erase();}
 	void assign(LPCSTR s, int l) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));} else erase();}
+	void assign(const BStr& s) {int l = s.length(); super::assign(s, l);}
 #else
 	String(LPCWSTR s) {assign(s);}
 	String(LPCWSTR s, int l) {assign(s, l);}
@@ -674,7 +750,10 @@ struct String
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
 	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));} else erase();}
 	void assign(LPCWSTR s, int l) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
+	void assign(const BStr& s) {int l = s.length(); if (l) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
 #endif
+	String(const BStr& s) {assign(s);}
+	String& operator=(const BStr& s) {assign(s); return *this;}
 
 	String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	String& operator=(const super& s) {super::assign(s); return *this;}

@@ -37,9 +37,11 @@
 #include "utility/window.h"
 
 
-#define IDW_STATUSBAR			0x100
-#define IDW_TOOLBAR				0x101
-#define IDW_DRIVEBAR			0x102
+#define	IDW_STATUSBAR			0x100
+#define	IDW_TOOLBAR				0x101
+#define	IDW_DRIVEBAR			0x102
+#define	IDW_ADDRESSBAR			0x103
+#define	IDW_COMMANDBAR			0x104
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 
 
@@ -52,10 +54,10 @@
 #define	PM_GET_WIDTH			(WM_APP+0x18)
 
 
-#define CLASSNAME_FRAME 		TEXT("CabinetWClass")	// same class name for frame window as in MS Explorer
+#define	CLASSNAME_FRAME 		TEXT("CabinetWClass")	// same class name for frame window as in MS Explorer
 
-#define CLASSNAME_CHILDWND		TEXT("WFS_Child")
-#define CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
+#define	CLASSNAME_CHILDWND		TEXT("WFS_Child")
+#define	CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
 
 
 #include "shell/mainframe.h"

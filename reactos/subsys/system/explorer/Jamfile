@@ -24,6 +24,7 @@ exe explorer :
 	shell/ntobjfs.cpp
 	shell/regfs.cpp
 	shell/fatfs.cpp
+	shell/webchild.cpp
 	shell/startup.c
 	taskbar/desktopbar.cpp
 	taskbar/quicklaunch.cpp
@@ -48,5 +49,6 @@ exe explorer :
 	<find-shared-library>comctl32
 	<find-shared-library>uuid
 	<find-shared-library>wsock32
+	<find-shared-library>oleaut32
  ;
 

@@ -56,6 +56,8 @@ protected:
 	WindowHandle _hstatusbar;
 	WindowHandle _htoolbar;
 	WindowHandle _hdrivebar;
+	WindowHandle _haddressedit;
+	WindowHandle _hcommandedit;
 
 	HMENU	_hMenuFrame;
 	HMENU	_hMenuWindow;

@@ -83,6 +83,7 @@ OBJECTS = \
 	ntobjfs.o \
 	regfs.o \
 	fatfs.o \
+	webchild.o \
 	mainframe.o \
 	filechild.o \
 	pane.o \
@@ -97,7 +98,7 @@ OBJECTS = \
 	settings.o \
 	i386-stub-win32.o
 
-LIBS = gdi32 comctl32 ole32 uuid wsock32
+LIBS = gdi32 comctl32 ole32 uuid wsock32 oleaut32
 
 .PHONY: all depends implib clean install dist bootcd depends
 

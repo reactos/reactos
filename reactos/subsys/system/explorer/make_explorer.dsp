@@ -69,7 +69,7 @@ CFG=make_explorer - Win32 bjam
 # PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW UNICODE=0 DEBUG=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
-# PROP Bsc_Name ""
+# PROP Bsc_Name "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW UNICODE=0 DEBUG=1"
 # PROP Target_Dir ""
 
 !ELSEIF  "$(CFG)" == "make_explorer - Win32 Unicode Debug"

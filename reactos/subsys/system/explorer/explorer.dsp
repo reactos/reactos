@@ -808,6 +808,14 @@ SOURCE=.\shell\unixfs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\shell\webchild.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\shell\webchild.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\shell\winfs.cpp
 # End Source File
 # Begin Source File
