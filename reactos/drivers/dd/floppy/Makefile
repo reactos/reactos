@@ -1,20 +1,28 @@
-# $Id: Makefile,v 1.5 2000/12/08 00:43:45 ekohl Exp $
+# $Id: Makefile,v 1.6 2001/03/31 15:53:56 phreak Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
 TARGET=floppy
 
-OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = floppy.o isr.o dpc.o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 CFLAGS = -I.
 
 all: $(TARGET).sys
 
+floppy.o: floppy.h
+
+isr.o: floppy.h
+
+dpc.o: floppy.h
+
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
+	- $(RM) floppy.o
+	- $(RM) isr.o
+	- $(RM) dpc.o
 	- $(RM) $(TARGET).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp

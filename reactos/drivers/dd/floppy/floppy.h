@@ -1,12 +1,14 @@
-
-#define FLOPPY_MAX_STAT_RETRIES 10000
-
-#define FLOPPY_NEEDS_OUTPUT  -2
 //
 //  Floppy register definitions
 //
 
 #define  FLOPPY_REG_DOR        0x0002
+#define   FLOPPY_DOR_ENABLE      0x04
+#define   FLOPPY_DOR_DMA         0x08
+#define   FLOPPY_DOR_MOTOR0      0x10
+#define   FLOPPY_DOR_MOTOR1      0x20
+#define   FLOPPY_DRIVE0_ON    ( FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA | FLOPPY_DOR_MOTOR0 )
+#define   FLOPPY_DRIVE1_ON    ( FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA | FLOPPY_DOR_MOTOR1 | 1 )
 #define  FLOPPY_REG_MSTAT      0x0004
 #define    FLOPPY_MS_DRV0BUSY    0x01
 #define    FLOPPY_MS_DRV1BUSY    0x02
@@ -15,7 +17,9 @@
 #define    FLOPPY_MS_FDCBUSY     0x10
 #define    FLOPPY_MS_DMAMODE     0x20
 #define    FLOPPY_MS_DATADIR     0x40
-#define    FLOPPY_MS_DATARDY     0x80
+#define    FLOPPY_MS_RDYMASK     0xF0
+#define    FLOPPY_MS_DATARDYW    0x80
+#define    FLOPPY_MS_DATARDYR    0xC0
 #define  FLOPPY_REG_DATA       0x0005
 #define  FLOPPY_REG_DIR        0x0007  /* READ ONLY */
 #define    FLOPPY_DI_DSKCHNG     0x80
@@ -32,10 +36,8 @@
 #define  FLOPPY_CMD_RD_DATA      0x06
 #define  FLOPPY_CMD_RECAL        0x07
 #define  FLOPPY_CMD_SNS_INTR     0x08
-#define    FLOPPY_CSI_IC_MASK      0xe0
-#define    FLOPPY_CSI_IC_RDYCH     0x60
-#define    FLOPPY_CSI_IC_SEEKGD    0x80
-#define    FLOPPY_CSI_IC_SEEKBD    0xc0
+#define    FLOPPY_ST0_SEEKGD     0x20
+#define    FLOPPY_ST0_GDMASK     0xd8
 #define  FLOPPY_CMD_WRT_DEL      0x09
 #define  FLOPPY_CMD_RD_ID        0x0a
 #define  FLOPPY_CMD_RD_DEL       0x0c
@@ -80,32 +82,12 @@
 //
 //  HAL floppy register access commands
 //
-#define FloppyWriteDOR(A, V) (WRITE_BYTE((A) + FLOPPY_REG_DOR, (V)))
-#define FloppyReadMSTAT(A) (READ_BYTE((A) + FLOPPY_REG_MSTAT))
-#define FloppyReadDATA(A) (READ_BYTE((A) + FLOPPY_REG_DATA))
-#define FloppyWriteDATA(A, V) (WRITE_BYTE((A) + FLOPPY_REG_DATA, (V)))
-#define FloppyReadDIR(A) (READ_BYTE((A) + FLOPPY_REG_DIR))
-#define FloppyWriteCCNTL(A, V) (WRITE_BYTE((A) + FLOPPY_REG_CCNTL, (V)))
-
-//
-//  Known Floppy controller types
-//
-typedef enum _FLOPPY_CONTROLLER_TYPE
-{
-  FDC_NONE, 
-  FDC_UNKNOWN,
-  FDC_8272A,       /* Intel 8272a, NEC 765 */
-  FDC_765ED,       /* Non-Intel 1MB-compatible FDC, can't detect */
-  FDC_82072,       /* Intel 82072; 8272a + FIFO + DUMPREGS */
-  FDC_82072A,      /* 82072A (on Sparcs) */
-  FDC_82077_ORIG,  /* Original version of 82077AA, sans LOCK */
-  FDC_82077,       /* 82077AA-1 */
-  FDC_82078_UNKN,  /* Unknown 82078 variant */
-  FDC_82078,       /* 44pin 82078 or 64pin 82078SL */
-  FDC_82078_1,     /* 82078-1 (2Mbps fdc) */
-  FDC_S82078B,     /* S82078B (first seen on Adaptec AVA-2825 VLB SCSI/EIDE/Floppy controller) */
-  FDC_87306        /* National Semiconductor PC 87306 */
-} FLOPPY_CONTROLLER_TYPE, *PFLOPPY_CONTROLLER_TYPE;
+#define FloppyWriteDOR(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DOR, (V)))
+#define FloppyReadMSTAT(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_MSTAT))
+#define FloppyReadDATA(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DATA))
+#define FloppyWriteDATA(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DATA, (V)))
+#define FloppyReadDIR(A) (READ_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_DIR))
+#define FloppyWriteCCNTL(A, V) (WRITE_PORT_UCHAR((PVOID)(A) + FLOPPY_REG_CCNTL, (V)))
 
 typedef struct _FLOPPY_ERROR_THRESHOLDS
 {
@@ -125,34 +107,134 @@ typedef struct _FLOPPY_ERROR_THRESHOLDS
   unsigned int Reporting;
 } FLOPPY_ERROR_THRESHOLDS;
 
+typedef struct _FLOPPY_MEDIA_TYPE
+{
+  BYTE SectorSizeCode;
+  BYTE MaximumTrack;
+  BYTE Heads;
+  DWORD SectorsPerTrack;
+  ULONG BytesPerSector;
+} FLOPPY_MEDIA_TYPE;
+
 #define FDP_DEBUG            0x02
 #define FDP_SILENT_DCL_CLEAR 0x04
 #define FDP_MSG              0x10
 #define FDP_BROKEN_DCL       0x20
 #define FDP_INVERTED_DCL     0x80
 
-typedef struct _FLOPPY_DEVICE_PARAMETERS
+// time to hold reset line low
+#define FLOPPY_RESET_TIME          1000
+#define FLOPPY_MOTOR_SPINUP_TIME   -10000000
+#define FLOPPY_MOTOR_SPINDOWN_TIME -30000000
+#define FLOPPY_RECAL_TIMEOUT       -5000000
+
+typedef BOOLEAN (*FloppyIsrStateRoutine)( PCONTROLLER_OBJECT Controller );
+typedef PIO_DPC_ROUTINE FloppyDpcStateRoutine;
+
+typedef struct _FLOPPY_DEVICE_EXTENSION
 {
-  char CMOSType;
-  unsigned long MaxDTR;          /* Step rate, usec */
-  unsigned long HLT;             /* Head load/settle time, msec */
-  unsigned long HUT;             /* Head unload time (remnant of 8" drives) */
-  unsigned long SRT;             /* Step rate, usec */
-  unsigned long Spinup;          /* time needed for spinup  */
-  unsigned long Spindown;        /* timeout needed for spindown */
-  unsigned char SpindownOffset;  /* decides in which position the disk will stop */
-  unsigned char SelectDelay;     /* delay to wait after select */
-  unsigned char RPS;             /* rotations per second */
-  unsigned char Tracks;          /* maximum number of tracks */
-  unsigned long Timeout;         /* timeout for interrupt requests */
-  unsigned char InterleaveSect;  /* if there are more sectors, use interleave */
-  FLOPPY_ERROR_THRESHOLDS MaxErrors;
-  char Flags;                    /* various flags, including ftd_msg */
-  BOOLEAN ReadTrack;             /* use readtrack during probing? */
-  short Autodetect[8];           /* autodetected formats */
-  int CheckFreq;                 /* how often should the drive be checked for disk changes */
-  int NativeFormat;              /* native format of this drive */
-  char *DriveName;               /* name of the drive for reporting */
-} FLOPPY_DEVICE_PARAMETERS, *PFLOPPY_DEVICE_PARAMETERS;
+   PCONTROLLER_OBJECT Controller;
+   CHAR DriveSelect;
+   ULONG MediaType;                // Media type index
+} FLOPPY_DEVICE_EXTENSION, *PFLOPPY_DEVICE_EXTENSION;
 
+typedef struct _FLOPPY_CONTROLLER_EXTENSION
+{
+  PKINTERRUPT Interrupt;
+  KSPIN_LOCK SpinLock;
+  ULONG Number;
+  ULONG PortBase;
+  ULONG Vector;
+  KEVENT Event;                   // Event set by ISR/DPC to wake DeviceEntry
+  PDEVICE_OBJECT Device;          // Pointer to the primary device on this controller 
+  PIRP Irp;                       // Current IRP
+  CHAR St0;                       // Status registers
+  CHAR St1;
+  CHAR St2;
+  CHAR SectorSizeCode;
+  FloppyIsrStateRoutine IsrState; // pointer to state routine handler for ISR
+  FloppyDpcStateRoutine DpcState; // pointer to state routine handler for DPC
+  CHAR MotorOn;                   // drive select for drive with motor on
+  KDPC MotorSpinupDpc;            // DPC for motor spin up time
+  KTIMER SpinupTimer;             // Timer for motor spin up time
+  KDPC MotorSpindownDpc;          // DPC for motor spin down
+  PADAPTER_OBJECT AdapterObject;  // Adapter object for dma
+  PVOID MapRegisterBase;
+  DWORD CurrentOffset;
+  DWORD CurrentLength;            // offset and length of next operation
+  PVOID CurrentVa;                // current VA offset for IoMapTransfer
+} FLOPPY_CONTROLLER_EXTENSION, *PFLOPPY_CONTROLLER_EXTENSION;
 
+typedef struct _FLOPPY_CONTROLLER_PARAMETERS
+{
+   ULONG            PortBase;
+   ULONG            Vector;
+   ULONG            IrqL;
+   ULONG            DmaChannel;
+   ULONG            SynchronizeIrqL;
+   KINTERRUPT_MODE  InterruptMode;
+   KAFFINITY        Affinity;
+} FLOPPY_CONTROLLER_PARAMETERS, *PFLOPPY_CONTROLLER_PARAMETERS;
+
+#define  FLOPPY_MAX_CONTROLLERS  1
+
+VOID FloppyDpcDetectMedia( PKDPC Dpc,
+			   PDEVICE_OBJECT DeviceObject,
+			   PIRP Irp,
+			   PVOID Context );
+VOID FloppyDpcFailIrp( PKDPC Dpc,
+		       PDEVICE_OBJECT DeviceObject,
+		       PIRP Irp,
+		       PVOID Context );
+
+IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
+					     PIRP Irp,
+					     PVOID MapRegisterbase,
+					     PVOID Context );
+
+IO_ALLOCATION_ACTION FloppyExecuteSpindown( PDEVICE_OBJECT DeviceObject,
+					    PIRP Irp,
+					    PVOID MapRegisterbase,
+					    PVOID Context );
+
+VOID FloppyMotorSpinupDpc( PKDPC Dpc,
+			   PVOID Context,
+			   PVOID Arg1,
+			   PVOID Arg2 );
+
+VOID FloppyMotorSpindownDpc( PKDPC Dpc,
+			     PVOID Context,
+			     PVOID Arg1,
+			     PVOID Arg2 );
+
+VOID FloppyDpcDetect( PKDPC Dpc,
+		      PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp,
+		      PVOID Context );
+
+VOID FloppyDpcReadWrite( PKDPC Dpc,
+			 PDEVICE_OBJECT DeviceObject,
+			 PIRP Irp,
+			 PVOID Context );
+
+VOID FloppyDpc( PKDPC Dpc,
+		PDEVICE_OBJECT DeviceObject,
+		PIRP Irp,
+		PVOID Context );
+
+BOOLEAN FloppyIsrDetect( PCONTROLLER_OBJECT Controller );
+
+BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller );
+
+BOOLEAN FloppyIsrUnexpected( PCONTROLLER_OBJECT Controller );
+
+BOOLEAN FloppyIsrDetectMedia( PCONTROLLER_OBJECT Controller );
+
+BOOLEAN FloppyIsrRecal( PCONTROLLER_OBJECT Controller );
+
+BOOLEAN FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext);
+
+IO_ALLOCATION_ACTION FloppyAdapterControl( PDEVICE_OBJECT DeviceObject,
+					   PIRP Irp,
+					   PVOID MapRegisterBase,
+					   PVOID Context );

@@ -6,6 +6,7 @@
  *
  *  Modification History:
  *    08/19/98  RJJ  Created.
+ *    01/31/01  PJS  Heavy rewrite, most of code thrown out
  *
  *  To do:
  * FIXME: get it working
@@ -19,390 +20,37 @@
 
 #include <debug.h>
 
-#define  VERSION  "V0.0.1"
 
-/* ---------------------------------------------------  File Statics */
-
-/* from linux drivers/block/floppy.c */
-#define FLOPPY_MAX_REPLIES  (16)
-
-typedef struct _FLOPPY_DEVICE_EXTENSION
-{
-} FLOPPY_DEVICE_EXTENSION, *PFLOPPY_DEVICE_EXTENSION;
-
-typedef struct _FLOPPY_CONTROLLER_EXTENSION
-{
-   PKINTERRUPT Interrupt;
-   KSPIN_LOCK SpinLock;
-   FLOPPY_CONTROLLER_TYPE FDCType;
-   ULONG Number;
-   ULONG PortBase;
-   ULONG Vector;
-} FLOPPY_CONTROLLER_EXTENSION, *PFLOPPY_CONTROLLER_EXTENSION;
-
-typedef struct _FLOPPY_CONTROLLER_PARAMETERS
-{
-  ULONG              PortBase;
-  ULONG              Vector;
-  ULONG              IrqL;
-  ULONG             SynchronizeIrqL;
-  KINTERRUPT_MODE  InterruptMode;
-  KAFFINITY        Affinity;
-} FLOPPY_CONTROLLER_PARAMETERS, *PFLOPPY_CONTROLLER_PARAMETERS;
-
-#define  FLOPPY_MAX_CONTROLLERS  2
 FLOPPY_CONTROLLER_PARAMETERS ControllerParameters[FLOPPY_MAX_CONTROLLERS] = 
 {
-  {0x03f0, 6, 6, 6, LevelSensitive, 0xffff},
-  {0x0370, 6, 6, 6, LevelSensitive, 0xffff},
+  {0x03f0, 6, 6, 2, 6, LevelSensitive, 0xffff}
+  //  {0x0370, 6, 6, 6, LevelSensitive, 0xffff},
 };
 
-FLOPPY_DEVICE_PARAMETERS DeviceTypes[] = 
-{
-    /* Unknown  */
-  {0,  500, 16, 16, 8000, 1000, 3000,  0, 20, 5,  80, 3000, 20, {3,1,2,0,2}, 0, 0, { 7, 4, 8, 2, 1, 5, 3,10}, 1500, 0, "unknown"},
-    /* 5 1/4 360 KB PC*/
-  {1,  300, 16, 16, 8000, 1000, 3000,  0, 20, 5,  40, 3000, 17, {3,1,2,0,2}, 0, 0, { 1, 0, 0, 0, 0, 0, 0, 0}, 1500, 1, "360K PC"},
-    /* 5 1/4 HD AT*/
-  {2,  500, 16, 16, 6000,  400, 3000, 14, 20, 6,  83, 3000, 17, {3,1,2,0,2}, 0, 0, { 2, 5, 6,23,10,20,11, 0}, 1500, 2, "1.2M"},
-    /* 3 1/2 DD*/
-  {3,  250, 16, 16, 3000, 1000, 3000,  0, 20, 5,  83, 3000, 20, {3,1,2,0,2}, 0, 0, { 4,22,21,30, 3, 0, 0, 0}, 1500, 4, "720k"},
-    /* 3 1/2 HD*/
-  {4,  500, 16, 16, 4000,  400, 3000, 10, 20, 5,  83, 3000, 20, {3,1,2,0,2}, 0, 0, { 7, 4,25,22,31,21,29,11}, 1500, 7, "1.44M"},
-    /* 3 1/2 ED*/
-  {5, 1000, 15,  8, 3000,  400, 3000, 10, 20, 5,  83, 3000, 40, {3,1,2,0,2}, 0, 0, { 7, 8, 4,25,28,22,31,21}, 1500, 8, "2.88M AMI BIOS"},
-    /* 3 1/2 ED*/
-  {6, 1000, 15,  8, 3000,  400, 3000, 10, 20, 5,  83, 3000, 40, {3,1,2,0,2}, 0, 0, { 7, 8, 4,25,28,22,31,21}, 1500, 8, "2.88M"}
-};
+const FLOPPY_MEDIA_TYPE MediaTypes[] = {
+   { 0x02, 9, 80, 18, 512 },
+   { 0, 0, 0, 0, 0 } };
 
-static BOOLEAN FloppyInitialized = FALSE;
-
-/* Bits of main status register */
-#define STATUS_BUSYMASK  (0x0f)
-#define STATUS_BUSY      (0x10)
-#define STATUS_DMA       (0x20)
-#define STATUS_DIR       (0x40)
-#define STATUS_READY     (0x80)
-
-#define FLOPPY_STATUS (4)
-#define FLOPPY_DATA   (5)
-
-#define FLOPPY_CMD_UNLK_FIFO 0x14
-#define FLOPPY_CMD_LOCK_FIFO 0x94
-
-/*  ------------------------------------------------------  Functions */
-
-static int
-FloppyReadSTAT(ULONG PortBase)
-{
-   return(READ_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_STATUS)));
-}
-
-/* waits until the fdc becomes ready */
-static int
-FloppyWaitUntilReady(ULONG PortBase)
-{
-  int Retries;
-  int Status;
-
-  for (Retries = 0; Retries < FLOPPY_MAX_STAT_RETRIES; Retries++)
-    {
-      Status = FloppyReadSTAT(PortBase);
-      if (Status & STATUS_READY)
-        {
-          return Status;
-        }
-    }
-
-  if (FloppyInitialized)
-    {
-      DPRINT("Getstatus times out (%x) on fdc %d\n",
-             Status,
-             PortBase);
-    }
-
-  return -1;
-}
-
-static VOID
-FloppyWriteData(ULONG PortBase, BYTE Byte)
-{
-   WRITE_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_DATA), Byte);
-}
-
-/* sends a command byte to the fdc */
-static BOOLEAN
-FloppyWriteCommandByte(ULONG PortBase, BYTE Byte)
-{
-  int Status;
-
-  if ((Status = FloppyWaitUntilReady(PortBase)) < 0)
-    {
-      return FALSE;
-    }
-
-  if ((Status & (STATUS_READY|STATUS_DIR|STATUS_DMA)) == STATUS_READY)
-    {
-      FloppyWriteData(PortBase, Byte);
-      return TRUE;
-    }
-
-  if (FloppyInitialized)
-    {
-      DPRINT("Unable to send byte %x to FDC. Fdc=%x Status=%x\n",
-             Byte,
-             PortBase,
-             Status);
-    }
-
-  return FALSE;
-}
-
-/* gets the response from the fdc */
-static int
-FloppyReadResultCode(ULONG PortBase, PUCHAR Result)
-{
-  int Replies;
-  int Status;
-
-  for (Replies = 0; Replies < FLOPPY_MAX_REPLIES; Replies++)
-    {
-      if ((Status = FloppyWaitUntilReady(PortBase)) < 0)
-        {
-          break;
-        }
-      Status &= STATUS_DIR | STATUS_READY | STATUS_BUSY | STATUS_DMA;
-      if ((Status & ~STATUS_BUSY) == STATUS_READY)
-        {
-          return Replies;
-        }
-      if (Status == (STATUS_DIR | STATUS_READY | STATUS_BUSY))
-        {
-          Result[Replies] = READ_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_DATA));
-        }
-      else
-        {
-          DPRINT("FloppyReadResultCode: break\n");
-          break;
-        }
-    }
-
-  if (FloppyInitialized)
-    {
-      DPRINT("get result error. Fdc=%d Last status=%x Read bytes=%d\n",
-             PortBase,
-             Status,
-             Replies);
-    }
-
-  return -1;
-}
-
-#define MORE_OUTPUT -2
-/* does the fdc need more output? */
-static int
-FloppyNeedsMoreOutput(ULONG PortBase, PUCHAR Result)
-{
-  int Status;
-
-  if ((Status = FloppyWaitUntilReady(PortBase)) < 0)
-    return -1;
-  if ((Status & (STATUS_READY | STATUS_DIR | STATUS_DMA)) == STATUS_READY)
-    {
-      return FLOPPY_NEEDS_OUTPUT;
-    }
-
-  return FloppyReadResultCode(PortBase, Result);
-}
-
-static BOOLEAN
-FloppyConfigure(ULONG PortBase, BOOLEAN DisableFIFO, BYTE FIFODepth)
-{
-  BYTE Result[FLOPPY_MAX_REPLIES];
-
-  /* Turn on FIFO */
-  FloppyWriteCommandByte(PortBase, FLOPPY_CMD_CFG_FIFO);
-  if (FloppyNeedsMoreOutput(PortBase, Result) != FLOPPY_NEEDS_OUTPUT)
-    {
-      return FALSE;
-    }
-  FloppyWriteCommandByte(PortBase, 0);
-  FloppyWriteCommandByte(PortBase,
-                         0x10 | 
-                           (DisableFIFO ? 0x20 : 0x00) | 
-                           (FIFODepth & 0x0f));
-  /* pre-compensation from track 0 upwards */
-  FloppyWriteCommandByte(PortBase, 0);
-
-  return TRUE;
-}
-
-/*    FloppyGetControllerVersion
- *
- *  DESCRIPTION
- *    Get the type/version of the floppy controller
- *
- *  RUN LEVEL:
- *    PASSIVE_LEVEL
- *
- *  ARGUMENTS:
- *    IN OUT  PFLOPPY_DEVICE_EXTENSION  DeviceExtension
- *
- *  RETURNS:
- *    BOOL  success or failure
- *
- *  COMMENTS:
- *    This routine (get_fdc_version) was originally written by David C. Niemi
- */
-static BOOLEAN  
-FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters,
-                           OUT PFLOPPY_CONTROLLER_TYPE ControllerType)
-{
-  UCHAR Result[FLOPPY_MAX_REPLIES];
-  int ResultLength;
-
-  /* 82072 and better know DUMPREGS */
-  if (!FloppyWriteCommandByte(ControllerParameters->PortBase, 
-                              FLOPPY_CMD_DUMP_FDC))
-    {
-       DPRINT("Failed to write command byte\n");
-       return FALSE;
-    }
-  ResultLength = FloppyReadResultCode(ControllerParameters->PortBase, 
-				      Result);
-  if (ResultLength < 0)
-    {
-      return FALSE;
-    }
-
-  /* 8272a/765 don't know DUMPREGS */
-  if ((ResultLength == 1) && (Result[0] == 0x80))
-    {
-      DPRINT("FDC %d is an 8272A\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_8272A;
-      return TRUE;
-    }
-  if (ResultLength != 10)
-    {
-      DPRINT("FDC %d init: DUMP_FDC: unexpected return of %d bytes.\n",
-             ControllerParameters->PortBase,
-             ResultLength);
-      return FALSE;
-    }
-
-  if (!FloppyConfigure(ControllerParameters->PortBase, FALSE, 0x0a))
-    {
-      DPRINT("FDC %d is an 82072\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82072;
-      return TRUE;
-    }
-  FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_PPND_RW);
-  if (FloppyNeedsMoreOutput(ControllerParameters->PortBase, Result) == 
-      FLOPPY_NEEDS_OUTPUT)
-    {
-      FloppyWriteCommandByte(ControllerParameters->PortBase, 0);
-    }
-  else
-    {
-      DPRINT("FDC %d is an 82072A\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82072A;
-      return TRUE;
-    }
-
-  /* Pre-1991 82077, doesn't know LOCK/UNLOCK */
-  FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_UNLK_FIFO);
-  ResultLength = FloppyReadResultCode(ControllerParameters->PortBase,
-				      Result);
-  if ((ResultLength == 1) && (Result[0] == 0x80))
-    {
-      DPRINT("FDC %d is a pre-1991 82077\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82077_ORIG;
-      return TRUE;
-    }
-  if ((ResultLength != 1) || (Result[0] != 0x00))
-    {
-      DPRINT("FDC %d init: UNLOCK: unexpected return of %d bytes.\n",
-             ControllerParameters->PortBase,
-             ResultLength);
-      return FALSE;
-    }
-
-  /* Revised 82077AA passes all the tests */
-  FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_PARTID);
-  ResultLength = FloppyReadResultCode(ControllerParameters->PortBase, 
-				      Result);
-  if (ResultLength != 1)
-    {
-      DPRINT("FDC %d init: PARTID: unexpected return of %d bytes.\n",
-             ControllerParameters->PortBase,
-             ResultLength);
-      return FALSE;
-    }
-  if (Result[0] == 0x80)
-    {
-      DPRINT("FDC %d is a post-1991 82077\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82077;
-      return TRUE;
-    }
-  switch (Result[0] >> 5)
-    {
-    case 0x0:
-      /* Either a 82078-1 or a 82078SL running at 5Volt */
-      DPRINT("FDC %d is an 82078.\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82078;
-      return TRUE;
-
-    case 0x1:
-      DPRINT("FDC %d is a 44pin 82078\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82078;
-      return TRUE;
-
-    case 0x2:
-      DPRINT("FDC %d is a S82078B\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_S82078B;
-      return TRUE;
-
-    case 0x3:
-      DPRINT("FDC %d is a National Semiconductor PC87306\n",
-	     ControllerParameters->PortBase);
-      *ControllerType = FDC_87306;
-      return TRUE;
-
-    default:
-      DPRINT("FDC %d init: 82078 variant with unknown PARTID=%d.\n",
-             ControllerParameters->PortBase,
-             Result[0] >> 5);
-      *ControllerType = FDC_82078_UNKN;
-      return TRUE;
-    }
-}
-
-static BOOLEAN
-FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
-{
-   return(TRUE);
-}
 
 static BOOLEAN
 FloppyCreateController(PDRIVER_OBJECT DriverObject,
                        PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters,
                        int Index)
 {
-   FLOPPY_CONTROLLER_TYPE ControllerType;
    PCONTROLLER_OBJECT ControllerObject;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
+   PFLOPPY_DEVICE_EXTENSION DeviceExtension;
    UNICODE_STRING DeviceName;
    UNICODE_STRING SymlinkName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
    PCONFIGURATION_INFORMATION ConfigInfo;
-   
-   /*  Detect controller and determine type  */
-   if (!FloppyGetControllerVersion(ControllerParameters, &ControllerType))
-     {
-	DPRINT("Failed to get controller version\n");
-	return FALSE;
-     }
+   LARGE_INTEGER Timeout;
+   BYTE Byte;
+   int c;
+   PCONFIGURATION_INFORMATION Config;
+   DEVICE_DESCRIPTION DeviceDescription;
+   ULONG MaxMapRegs;
    
    /* FIXME: Register port ranges and interrupts with HAL */
 
@@ -421,15 +69,18 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    ControllerExtension->Number = Index;
    ControllerExtension->PortBase = ControllerParameters->PortBase;
    ControllerExtension->Vector = ControllerParameters->Vector;
-   ControllerExtension->FDCType = ControllerType;
-
+   KeInitializeEvent( &ControllerExtension->Event, SynchronizationEvent, FALSE );
+   ControllerExtension->Device = 0;  // no active device
+   ControllerExtension->Irp = 0;     // no active IRP
    /*  Initialize the spin lock in the controller extension  */
    KeInitializeSpinLock(&ControllerExtension->SpinLock);
+   ControllerExtension->IsrState = FloppyIsrDetect;
+   ControllerExtension->DpcState = FloppyDpcDetect;
    
    /*  Register an interrupt handler for this controller  */
    Status = IoConnectInterrupt(&ControllerExtension->Interrupt,
 			       FloppyIsr, 
-			       ControllerExtension, 
+			       ControllerObject, 
 			       &ControllerExtension->SpinLock, 
 			       ControllerExtension->Vector, 
 			       ControllerParameters->IrqL, 
@@ -442,12 +93,26 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
      {
 	DPRINT("Could not Connect Interrupt %d\n", 
 	       ControllerExtension->Vector);
-	IoDeleteController(ControllerObject);
-	return FALSE;
+	goto controllercleanup;
      }
+
    
-   /* FIXME: setup DMA stuff for controller */
-   
+   /* setup DMA stuff for controller */
+   DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
+   DeviceDescription.Master = FALSE;
+   DeviceDescription.ScatterGather = FALSE;
+   DeviceDescription.AutoInitialize = FALSE;
+   DeviceDescription.Dma32BitAddress = FALSE;
+   DeviceDescription.DmaChannel = ControllerParameters->DmaChannel;
+   DeviceDescription.InterfaceType = Isa;
+   //   DeviceDescription.DmaWidth = Width8Bits;
+   ControllerExtension->AdapterObject = HalGetAdapter( &DeviceDescription, &MaxMapRegs );
+   if( ControllerExtension->AdapterObject == NULL )
+      {
+	 DPRINT1( "Could not get adapter object\n" );
+	 goto interruptcleanup;
+      }
+			     
 #if 0
    /*  Check for each possible drive and create devices for them */
    for (DriveIdx = 0; DriveIdx < FLOPPY_MAX_DRIVES; DriveIdx++)
@@ -468,40 +133,292 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 			   &DeviceObject);
    if (!NT_SUCCESS(Status))
      {
-	IoDisconnectInterrupt(ControllerExtension->Interrupt);
-	IoDeleteController(ControllerObject);
+	goto interruptcleanup;
      }
-   
+   DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   DeviceExtension->DriveSelect = 0;
+   DeviceExtension->Controller = ControllerObject;
+   DeviceExtension->MediaType = ~0;
+   ControllerExtension->MotorOn = ~0;
+   // set up DPC
+   ControllerExtension->Device = DeviceObject;
+   KeInitializeDpc( &ControllerExtension->MotorSpinupDpc,
+		    FloppyMotorSpinupDpc,
+		    ControllerObject );
+   KeInitializeDpc( &ControllerExtension->MotorSpindownDpc,
+		    FloppyMotorSpindownDpc,
+		    ControllerObject );
+   KeInitializeTimer( &ControllerExtension->SpinupTimer );
+   IoInitializeDpcRequest( DeviceObject, FloppyDpc );
+   // reset controller and wait for interrupt
+   DPRINT( "Controller Off\n" );
+   FloppyWriteDOR( ControllerExtension->PortBase, 0 );
+   // let controller reset for at least FLOPPY_RESET_TIME
+   KeStallExecutionProcessor( FLOPPY_RESET_TIME );
+   DPRINT( "Controller On\n" ); 
+   FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA );
+   // wait for interrupt now
+   Timeout.QuadPart = -10000000;
+   Status = KeWaitForSingleObject( &ControllerExtension->Event,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   &Timeout );
+   if( Status != STATUS_WAIT_0 )
+      {
+	 DPRINT1( "Error: KeWaitForSingleObject returned: %x\n", Status );
+	 goto devicecleanup;
+      }
+   // ok, so we have an FDC, now check for drives
+   // aparently the sense drive status command does not work on any FDC I can find
+   // so instead we will just have to assume a 1.44 meg 3.5 inch floppy.  At some
+   // point we should get the bios disk parameters passed in to the kernel at boot
+   // and stored in the HARDWARE registry key for us to pick up here.
+
+   // turn on motor, wait for spinup time, and recalibrate the drive
+   FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DRIVE0_ON );
+   Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
+   KeDelayExecutionThread( KernelMode, FALSE, &Timeout );
+   DPRINT( "MSTAT: %2x\n", FloppyReadMSTAT( ControllerExtension->PortBase ) );
+   FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_RECAL );
+   DPRINT( "MSTAT: %2x\n", FloppyReadMSTAT( ControllerExtension->PortBase ) );
+   FloppyWriteDATA( ControllerExtension->PortBase, 0 ); // drive select
+   Timeout.QuadPart = FLOPPY_RECAL_TIMEOUT;
+   Status = KeWaitForSingleObject( &ControllerExtension->Event,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   &Timeout );
+   if( Status != STATUS_WAIT_0 )
+      {
+	 DPRINT1( "Error: KeWaitForSingleObject returned: %x\n", Status );
+	 goto devicecleanup;
+      }
+   if( ControllerExtension->St0 != FLOPPY_ST0_SEEKGD )
+     {
+       DbgPrint( "Floppy: error recalibrating drive, ST0: %2x\n", (DWORD)ControllerExtension->St0 );
+       goto interruptcleanup;
+     }
+   // drive is good, and it is now on track 0, turn off the motor
+   FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA );
    /* Initialize the device */
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
-   DeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
-   
-   /* count new floppy drive */
-   /* NOTE: HalIoAssignDriveLetters assigns the drive letters! */
-   ConfigInfo = IoGetConfigurationInformation ();
-   ConfigInfo->FloppyCount++;
-
+   DeviceObject->AlignmentRequirement = FILE_512_BYTE_ALIGNMENT;
+   // change state machine, no interrupt expected
+   ControllerExtension->IsrState = FloppyIsrUnexpected;
+   Config = IoGetConfigurationInformation();
+   Config->FloppyCount++;
+   // call IoAllocateAdapterChannel, and wait for execution routine to be given the channel
+   CHECKPOINT;
+   Status = IoAllocateAdapterChannel( ControllerExtension->AdapterObject,
+				      DeviceObject,
+				      0x3000/PAGESIZE,  // max track size is 12k
+				      FloppyAdapterControl,
+				      ControllerExtension );
+   if( !NT_SUCCESS( Status ) )
+     {
+       DPRINT1( "Error: IoAllocateAdapterChannel returned %x\n", Status );
+       goto interruptcleanup;
+     }
+   CHECKPOINT;
+   Status = KeWaitForSingleObject( &ControllerExtension->Event,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   &Timeout );
+   CHECKPOINT;
+   if( Status != STATUS_WAIT_0 )
+      {
+	 DPRINT1( "Error: KeWaitForSingleObject returned: %x\n", Status );
+	 goto interruptcleanup;
+      }
+   // Ok, we own the adapter object, from now on we can just IoMapTransfer, and not
+   // bother releasing the adapter ever.
+   DbgPrint( "Floppy drive initialized\n" );
    return TRUE;
+
+ devicecleanup:
+   IoDeleteDevice( DeviceObject );   
+ interruptcleanup:
+   IoDisconnectInterrupt(ControllerExtension->Interrupt);
+ controllercleanup:
+   // turn off controller
+   FloppyWriteDOR( ControllerExtension->PortBase, 0 );
+   IoDeleteController(ControllerObject);
+   for(;;);
+   return FALSE;
 }
 
-VOID STDCALL FloppyStartIo(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp)
+IO_ALLOCATION_ACTION FloppyExecuteSpindown( PDEVICE_OBJECT DeviceObject,
+					    PIRP Irp,
+					    PVOID MapRegisterbase,
+					    PVOID Context )
 {
-   DPRINT("FloppyStartIo\n");
+   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension= (PFLOPPY_CONTROLLER_EXTENSION)Context;
+
+   // turn off motor, and return
+   DPRINT( "Spinning down motor\n" );
+   ControllerExtension->MotorOn = ~0;
+   FloppyWriteDOR( ControllerExtension->PortBase,
+		   FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA );
+   return DeallocateObject;
 }
+
+IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
+					     PIRP Irp,
+					     PVOID MapRegisterbase,
+					     PVOID Context )
+{
+   PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
+   LARGE_INTEGER Timeout;
+   BOOLEAN WriteToDevice;
+   UCHAR Cyl, Sector, Head;
+
+   ControllerExtension->Irp = Irp = (PIRP)Context;
+   ControllerExtension->Device = DeviceObject;
+   Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
+   CHECKPOINT;
+   WriteToDevice = IoGetCurrentIrpStackLocation( Irp )->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
+   // verify drive is spun up and selected
+   if( ControllerExtension->MotorOn != DeviceExtension->DriveSelect )
+      {
+	 // turn on and select drive, and allow it to spin up
+	 // FloppyMotorSpinupDpc will restart this operation once motor is spun up
+	 DPRINT( "Motor not on, turning it on now\n" );
+	 FloppyWriteDOR( ControllerExtension->PortBase,
+			 DeviceExtension->DriveSelect ? FLOPPY_DRIVE1_ON : FLOPPY_DRIVE0_ON );
+	 // cancel possible spindown timer first
+	 KeCancelTimer( &ControllerExtension->SpinupTimer );
+	 KeSetTimerEx( &ControllerExtension->SpinupTimer,
+		       Timeout,
+		       0,
+		       &ControllerExtension->MotorSpinupDpc );
+	 return KeepObject;
+      }
+		       
+   // verify media content
+   if( FloppyReadDIR( ControllerExtension->PortBase ) & FLOPPY_DI_DSKCHNG )
+      {
+	 // No disk is in the drive
+	 DPRINT( "No disk is in the drive\n" );
+	 Irp->IoStatus.Status = STATUS_NO_MEDIA;
+	 Irp->IoStatus.Information = 0;
+	 IoCompleteRequest( Irp, 0 );
+	 return DeallocateObject;
+      }
+   if( DeviceExtension->MediaType == ~0 )
+      {
+	 // media is in disk, but we have not yet detected what kind it is,
+	 // so detect it now
+	 // First, we need to recalibrate the drive though
+	 ControllerExtension->IsrState = FloppyIsrRecal;
+	 DPRINT( "Recalibrating drive\n" );
+	 KeStallExecutionProcessor( 1000 );
+	 FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_RECAL );
+	 KeStallExecutionProcessor( 1000 );
+	 FloppyWriteDATA( ControllerExtension->PortBase, DeviceExtension->DriveSelect );
+	 return KeepObject;
+      }
+   // looks like we have media in the drive.... do the read
+   // first, calculate geometry for read
+   Sector = ControllerExtension->CurrentOffset / MediaTypes[DeviceExtension->MediaType].BytesPerSector;
+   // absolute sector right now
+   Cyl = Sector / MediaTypes[DeviceExtension->MediaType].SectorsPerTrack;
+   Head = Cyl % MediaTypes[DeviceExtension->MediaType].Heads;
+   // convert absolute cyl to relative
+   Cyl /= MediaTypes[DeviceExtension->MediaType].Heads;
+   // convert absolute sector to relative
+   Sector %= MediaTypes[DeviceExtension->MediaType].SectorsPerTrack;
+   Sector++;  // track relative sector numbers are 1 based, not 0 based
+   DPRINT( "Cyl = %2x, Head = %2x, Sector = %2x\n", Cyl, Head, Sector );
+   //set up DMA and issue read command
+   IoMapTransfer( ControllerExtension->AdapterObject,
+		  Irp->MdlAddress,
+		  ControllerExtension->MapRegisterBase,
+		  ControllerExtension->CurrentVa,
+		  &MediaTypes[DeviceExtension->MediaType].BytesPerSector,
+		  WriteToDevice );
+   ControllerExtension->IsrState = FloppyIsrReadWrite;
+   ControllerExtension->DpcState = FloppyDpcReadWrite;
+   CHECKPOINT;
+   FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_READ );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, ( Head << 2 ) | DeviceExtension->DriveSelect );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, Cyl );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, Head );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, Sector );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, MediaTypes[DeviceExtension->MediaType].SectorSizeCode );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, MediaTypes[DeviceExtension->MediaType].SectorsPerTrack );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, 0 );
+   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, 0xFF );
+   CHECKPOINT;
+   // eventually, the FDC will interrupt and we will read results then
+   return KeepObject;
+}	
 
 NTSTATUS STDCALL FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
    DPRINT("FloppyDispatchOpenClose\n");
-   return(STATUS_UNSUCCESSFUL);
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
-   DPRINT("FloppyDispatchReadWrite\n");
-   return(STATUS_UNSUCCESSFUL);
+  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
+  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( Irp );
+  KIRQL oldlvl;
+  
+  if( Stk->Parameters.Read.ByteOffset.u.HighPart )
+    {
+      Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest( Irp, 1 );
+      return STATUS_INVALID_PARAMETER;
+    }
+  ControllerExtension->CurrentOffset = Stk->Parameters.Read.ByteOffset.u.LowPart;
+  ControllerExtension->CurrentLength = Stk->Parameters.Read.Length;
+  ControllerExtension->CurrentVa = MmGetMdlVirtualAddress( Irp->MdlAddress );
+  DPRINT( "FloppyDispatchReadWrite: offset = %x, length = %x, va = %x\n",
+	  ControllerExtension->CurrentOffset,
+	  ControllerExtension->CurrentLength,
+	  ControllerExtension->CurrentVa );
+
+  // Queue IRP
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = ControllerExtension->CurrentLength;
+  IoMarkIrpPending( Irp );
+  KeRaiseIrql( DISPATCH_LEVEL, &oldlvl );
+  IoAllocateController( ((PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Controller,
+			DeviceObject,
+			FloppyExecuteReadWrite,
+			Irp );
+  KeLowerIrql( oldlvl );
+  return STATUS_PENDING;
+}
+
+IO_ALLOCATION_ACTION FloppyAdapterControl( PDEVICE_OBJECT DeviceObject,
+					   PIRP Irp,
+					   PVOID MapRegisterBase,
+					   PVOID Context )
+{
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Context;
+
+  // just set the event, and return KeepObject
+  CHECKPOINT;
+  ControllerExtension->MapRegisterBase = MapRegisterBase;
+  KeSetEvent( &ControllerExtension->Event, 0, FALSE );
+  return KeepObject;
 }
 
 NTSTATUS STDCALL FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
@@ -536,7 +453,6 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
    DbgPrint("Floppy driver\n");
    
    /* Export other driver entry points... */
-   DriverObject->DriverStartIo = FloppyStartIo;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = FloppyDispatchOpenClose;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FloppyDispatchOpenClose;
    DriverObject->MajorFunction[IRP_MJ_READ] = FloppyDispatchReadWrite;
