@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.7 2004/09/30 20:23:00 ekohl Exp $ 
+/* $Id: setup.c,v 1.8 2004/10/02 12:31:28 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,74 +27,53 @@
 
 #include "precomp.h"
 
-
-typedef struct _DIRDATA
-{
-  BOOL Hidden;
-  LPWSTR DirName;
-} DIRDATA, *PDIRDATA;
-
-typedef struct _REGDATA
+typedef struct _FOLDERDATA
 {
   LPWSTR ValueName;
-  LPWSTR ValueData;
-} REGDATA, *PREGDATA;
+  LPWSTR Path;
+  BOOL Hidden;
+  BOOL bShellFolder;
+  BOOL bUserShellFolder;
+} FOLDERDATA, *PFOLDERDATA;
 
 
-
-static DIRDATA
-DefaultUserDirectories[] =
+static FOLDERDATA
+UserShellFolders[] =
 {
-  {TRUE,  L"Application Data"},
-  {FALSE, L"Desktop"},
-  {FALSE, L"Favorites"},
-  {FALSE, L"My Documents"},
-  {TRUE,  L"PrintHood"},
-  {TRUE,  L"Recent"},
-  {FALSE, L"Start Menu"},
-  {FALSE, L"Start Menu\\Programs"},
-  {FALSE, L"Start Menu\\Programs\\Startup"},
-  {TRUE,  L"Local Settings"},
-  {TRUE,  L"Local Settings\\Application Data"},
-  {FALSE, L"Local Settings\\Temp"},
-  {FALSE, NULL}
+  {L"AppData", L"Application Data", TRUE, TRUE, TRUE},
+  {L"Desktop", L"Desktop", FALSE, TRUE, TRUE},
+  {L"Favorites", L"Favorites", FALSE, TRUE, TRUE},
+  {L"Personal", L"My Documents", FALSE, TRUE, TRUE},
+  {L"PrintHood", L"PrintHood", TRUE, TRUE, TRUE},
+  {L"Recent", L"Recent", TRUE, TRUE, TRUE},
+  {L"SendTo", L"SendTo", FALSE, TRUE, TRUE},
+  {L"Templates", L"Templates", FALSE, TRUE, TRUE},
+  {L"Start Menu", L"Start Menu", FALSE, TRUE, TRUE},
+  {L"Programs", L"Start Menu\\Programs", FALSE, TRUE, TRUE},
+  {L"Startup", L"Start Menu\\Programs\\Startup", FALSE, TRUE, TRUE},
+  {L"Local Settings", L"Local Settings", TRUE, TRUE, TRUE},
+  {L"Local AppData", L"Local Settings\\Application Data", TRUE, TRUE, TRUE},
+  {L"Temp", L"Local Settings\\Temp", FALSE, FALSE, FALSE},
+  {NULL, NULL, FALSE, FALSE, FALSE}
 };
 
 
-static DIRDATA
-AllUsersDirectories[] =
-{
-  {TRUE,  L"Application Data"},
-  {FALSE, L"Desktop"},
-  {FALSE, L"Favorites"},
-  {FALSE, L"My Documents"},
-  {FALSE, L"Start Menu"},
-  {FALSE, L"Start Menu\\Programs"},
-  {FALSE, L"Start Menu\\Programs\\Startup"},
-  {FALSE, L"Start Menu\\Programs\\Administrative Tools"},
-  {TRUE,  L"Templates"},
-  {FALSE, NULL}
-};
-
-
-static REGDATA
+static FOLDERDATA
 CommonShellFolders[] =
 {
-  {L"Desktop", L"%ALLUSERSPROFILE%\\Desktop"},
-  {L"Common AppData", L"%ALLUSERSPROFILE%\\Application Data"},
-  {L"Common Programs", L"%ALLUSERSPROFILE%\\Start Menu\\Programs"},
-  {L"Common Documents", L"%ALLUSERSPROFILE%\\Documents"},
-  {L"Common Desktop", L"%ALLUSERSPROFILE%\\Desktop"},
-  {L"Common Start Menu", L"%ALLUSERSPROFILE%\\Start Menu"},
-  {L"CommonPictures", L"%ALLUSERSPROFILE%\\Documents\\My Pictures"},
-  {L"CommonMusic", L"%ALLUSERSPROFILE%\\Documents\\My Music"},
-  {L"CommonVideo", L"%ALLUSERSPROFILE%\\Documents\\My Videos"},
-  {L"Common Favorites", L"%ALLUSERSPROFILE%\\Favorites"},
-  {L"Common Startup", L"%ALLUSERSPROFILE%\\Start Menu\\Programs\\Startup"},
-  {L"Common Administrative Tools", L"%ALLUSERSPROFILE%\\Start Menu\\Programs\\Administrative Tools"},
-  {L"Common Templates", L"%ALLUSERSPROFILE%\\Templates"},
-  {L"Personal", L"%ALLUSERSPROFILE%\\My Documents"},
-  {NULL, NULL}
+  {L"Common AppData", L"Application Data", TRUE, TRUE, TRUE},
+  {L"Common Desktop", L"Desktop", FALSE, TRUE, TRUE},
+  {L"Common Favorites", L"Favorites", FALSE, TRUE, TRUE},
+  {L"Common Start Menu", L"Start Menu", FALSE, TRUE, TRUE},
+  {L"Common Programs", L"Start Menu\\Programs", FALSE, TRUE, TRUE},
+  {L"Common Administrative Tools", L"Start Menu\\Programs\\Administrative Tools", FALSE, TRUE, FALSE},
+  {L"Common Startup", L"Start Menu\\Programs\\Startup", FALSE, TRUE, TRUE},
+  {L"Common Templates", L"Templates", TRUE, TRUE, TRUE},
+  {L"Common Documents", L"My Documents", FALSE, TRUE, TRUE},
+  {L"CommonPictures", L"My Documents\\My Pictures", FALSE, TRUE, TRUE},
+  {L"CommonMusic", L"My Documents\\My Music", FALSE, TRUE, TRUE},
+  {L"CommonVideo", L"My Documents\\My Videos", FALSE, TRUE, TRUE},
+  {NULL, NULL, FALSE, FALSE, FALSE}
 };
 
 
@@ -118,11 +97,8 @@ InitializeProfiles (VOID)
   WCHAR szProfilesPath[MAX_PATH];
   WCHAR szProfilePath[MAX_PATH];
   WCHAR szBuffer[MAX_PATH];
-  LPWSTR lpszPtr;
   DWORD dwLength;
-  PDIRDATA lpDirData;
-  PREGDATA lpRegData;
-
+  PFOLDERDATA lpFolderData;
   HKEY hKey;
 
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
@@ -192,6 +168,8 @@ InitializeProfiles (VOID)
       return FALSE;
     }
 
+  RegCloseKey (hKey);
+
   /* Create 'Default User' profile directory */
   wcscpy (szProfilePath, szProfilesPath);
   wcscat (szProfilePath, L"\\");
@@ -201,7 +179,6 @@ InitializeProfiles (VOID)
       if (GetLastError () != ERROR_ALREADY_EXISTS)
 	{
 	  DPRINT1("Error: %lu\n", GetLastError());
-	  RegCloseKey (hKey);
 	  return FALSE;
 	}
     }
@@ -211,37 +188,141 @@ InitializeProfiles (VOID)
 
   /* Create 'Default User' subdirectories */
   /* FIXME: Get these paths from the registry */
-  lpszPtr = AppendBackslash (szProfilePath);
-  lpDirData = &DefaultUserDirectories[0];
-  while (lpDirData->DirName != NULL)
+  lpFolderData = &UserShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
     {
-      wcscpy (lpszPtr, lpDirData->DirName);
+      wcscpy(szBuffer, szProfilePath);
+      wcscat(szBuffer, L"\\");
+      wcscat(szBuffer, lpFolderData->Path);
 
-      if (!CreateDirectoryW (szProfilePath, NULL))
+      if (!CreateDirectoryW(szBuffer, NULL))
 	{
 	  if (GetLastError () != ERROR_ALREADY_EXISTS)
 	    {
 	      DPRINT1("Error: %lu\n", GetLastError());
-	      RegCloseKey (hKey);
 	      return FALSE;
 	    }
 	}
 
-      if (lpDirData->Hidden == TRUE)
+      if (lpFolderData->Hidden == TRUE)
 	{
-	  SetFileAttributesW (szProfilePath,
+	  SetFileAttributesW (szBuffer,
 			      FILE_ATTRIBUTE_HIDDEN);
 	}
 
-      lpDirData++;
+      lpFolderData++;
     }
+
+  /* Set default 'Shell Folders' values */
+  if (RegOpenKeyExW(HKEY_USERS,
+		    L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  lpFolderData = &UserShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
+    {
+      if (lpFolderData->bShellFolder)
+	{
+	  wcscpy(szBuffer, szProfilePath);
+	  wcscat(szBuffer, L"\\");
+	  wcscat(szBuffer, lpFolderData->Path);
+
+	  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+	  if (RegSetValueExW(hKey,
+			     lpFolderData->ValueName,
+			     0,
+			     REG_SZ,
+			     (LPBYTE)szBuffer,
+			     dwLength))
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey(hKey);
+	      return FALSE;
+	    }
+	}
+
+      lpFolderData++;
+    }
+
+  /* Set 'Fonts' folder path */
+  GetWindowsDirectory(szBuffer, MAX_PATH);
+  wcscat(szBuffer, L"\\media\\fonts");
+
+  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+  if (RegSetValueExW(hKey,
+		     L"Fonts",
+		     0,
+		     REG_SZ,
+		     (LPBYTE)szBuffer,
+		     dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey(hKey);
+      return FALSE;
+    }
+
+  RegCloseKey(hKey);
+
+  /* Set default 'User Shell Folders' values */
+  if (RegOpenKeyExW(HKEY_USERS,
+		    L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  lpFolderData = &UserShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
+    {
+      if (lpFolderData->bUserShellFolder)
+	{
+	  wcscpy(szBuffer, L"%USERPROFILE%\\");
+	  wcscat(szBuffer, lpFolderData->Path);
+
+	  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+	  if (RegSetValueExW(hKey,
+			     lpFolderData->ValueName,
+			     0,
+			     REG_EXPAND_SZ,
+			     (LPBYTE)szBuffer,
+			     dwLength))
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey(hKey);
+	      return FALSE;
+	    }
+	}
+
+      lpFolderData++;
+    }
+
+  RegCloseKey(hKey);
+
 
   /* Set 'AllUsersProfile' value */
   wcscpy (szBuffer, L"All Users");
   if (!AppendSystemPostfix (szBuffer, MAX_PATH))
     {
       DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
       return FALSE;
     }
 
@@ -270,7 +351,6 @@ InitializeProfiles (VOID)
       if (GetLastError () != ERROR_ALREADY_EXISTS)
 	{
 	  DPRINT1("Error: %lu\n", GetLastError());
-	  RegCloseKey (hKey);
 	  return FALSE;
 	}
     }
@@ -280,32 +360,32 @@ InitializeProfiles (VOID)
 
   /* Create 'All Users' subdirectories */
   /* FIXME: Take these paths from the registry */
-  lpszPtr = AppendBackslash (szProfilePath);
-  lpDirData = &AllUsersDirectories[0];
-  while (lpDirData->DirName != NULL)
+  lpFolderData = &CommonShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
     {
-      wcscpy (lpszPtr, lpDirData->DirName);
+      wcscpy(szBuffer, szProfilePath);
+      wcscat(szBuffer, L"\\");
+      wcscat(szBuffer, lpFolderData->Path);
 
-      if (!CreateDirectoryW (szProfilePath, NULL))
+      if (!CreateDirectoryW(szBuffer, NULL))
 	{
 	  if (GetLastError () != ERROR_ALREADY_EXISTS)
 	    {
 	      DPRINT1("Error: %lu\n", GetLastError());
-	      RegCloseKey (hKey);
 	      return FALSE;
 	    }
 	}
 
-      if (lpDirData->Hidden == TRUE)
+      if (lpFolderData->Hidden)
 	{
-	  SetFileAttributesW (szProfilePath,
-			      FILE_ATTRIBUTE_HIDDEN);
+	  SetFileAttributesW(szBuffer,
+			     FILE_ATTRIBUTE_HIDDEN);
 	}
 
-      lpDirData++;
+      lpFolderData++;
     }
 
-  /* Create common shell folder registry values */
+  /* Set common 'Shell Folders' values */
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 		    L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
 		    0,
@@ -316,37 +396,76 @@ InitializeProfiles (VOID)
       return FALSE;
     }
 
-  lpRegData = &CommonShellFolders[0];
-  while (lpRegData->ValueName != NULL)
+  lpFolderData = &CommonShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
     {
-      if (!ExpandEnvironmentStringsW(lpRegData->ValueData,
-				     szBuffer,
-				     MAX_PATH))
+      if (lpFolderData->bShellFolder)
 	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  RegCloseKey(hKey);
-	  return FALSE;
+	  wcscpy(szBuffer, szProfilePath);
+	  wcscat(szBuffer, L"\\");
+	  wcscat(szBuffer, lpFolderData->Path);
+
+	  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+	  if (RegSetValueExW(hKey,
+			     lpFolderData->ValueName,
+			     0,
+			     REG_SZ,
+			     (LPBYTE)szBuffer,
+			     dwLength))
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey(hKey);
+	      return FALSE;
+	    }
 	}
 
-      dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
-      if (RegSetValueExW(hKey,
-			 lpRegData->ValueName,
-			 0,
-			 REG_SZ,
-			 (LPBYTE)szBuffer,
-			 dwLength))
-	{
-	  DPRINT1("Error: %lu\n", GetLastError());
-	  RegCloseKey(hKey);
-	  return FALSE;
-	}
-
-      lpRegData++;
+      lpFolderData++;
     }
 
   RegCloseKey(hKey);
+
+  /* Set common 'User Shell Folders' values */
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+		    0,
+		    KEY_ALL_ACCESS,
+		    &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  lpFolderData = &CommonShellFolders[0];
+  while (lpFolderData->ValueName != NULL)
+    {
+      if (lpFolderData->bUserShellFolder)
+	{
+	  wcscpy(szBuffer, L"%ALLUSERSPROFILE%\\");
+	  wcscat(szBuffer, lpFolderData->Path);
+
+	  dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+	  if (RegSetValueExW(hKey,
+			     lpFolderData->ValueName,
+			     0,
+			     REG_EXPAND_SZ,
+			     (LPBYTE)szBuffer,
+			     dwLength))
+	    {
+	      DPRINT1("Error: %lu\n", GetLastError());
+	      RegCloseKey(hKey);
+	      return FALSE;
+	    }
+	}
+
+      lpFolderData++;
+    }
+
+  RegCloseKey(hKey);
+
 
   DPRINT1("Success\n");
 
   return TRUE;
 }
+
+/* EOF */
