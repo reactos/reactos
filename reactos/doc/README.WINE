@@ -55,7 +55,7 @@ reactos/lib/oledlg              # Synced to Wine-20050111
 reactos/lib/olepro32		# Synced to Wine-20050111
 reactos/lib/richedit		# Synced to Wine-20050111
 reactos/lib/rpcrt4		# Synced to Wine-20050111
-reactos/lib/setupapi		# Out of sync
+reactos/lib/setupapi		# Synced to Wine-20050125 # CVS
 reactos/lib/shell32             # Synced to Wine-20050111
 reactos/lib/shdocvw             # Synced to Wine-20050111
 reactos/lib/shlwapi             # Synced to Wine-20050111
@@ -100,5 +100,3 @@ User32 -
   reactos/lib/user32/misc/wsprintf.c	# Out of sync
   reactos/lib/user32/windows/mdi.c	# Out of sync
 
-
-                                                         `
