@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.76 2004/02/21 21:15:22 navaraf Exp $ */
+/* $Id: text.c,v 1.77 2004/02/22 08:35:21 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -560,8 +560,15 @@ NtGdiEnumFonts(HDC  hDC,
 }
 
 BOOL STDCALL
-NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
-   CONST RECT *lprc, LPCWSTR String, UINT Count, CONST INT *lpDx)
+NtGdiExtTextOut(
+   HDC hDC,
+   INT XStart,
+   INT YStart,
+   UINT fuOptions,
+   CONST RECT *lprc,
+   LPCWSTR String,
+   UINT Count,
+   CONST INT *lpDx)
 {
    /*
     * FIXME:
@@ -604,9 +611,6 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
 
    XStart += dc->w.DCOrgX;
    YStart += dc->w.DCOrgY;
-   TextLeft = XStart;
-   TextTop = YStart;
-   BackgroundLeft = XStart;
 
    TextObj = TEXTOBJ_LockText(dc->w.hFont);
 
@@ -719,143 +723,221 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
       }
    }
 
-  // Determine the yoff from the dc's w.textAlign
-  if (dc->w.textAlign & TA_BASELINE) {
-    yoff = 0;
-  }
-  else
-  if (dc->w.textAlign & TA_BOTTOM) {
-    yoff = -face->size->metrics.descender / 64;
-  }
-  else { // TA_TOP
-    yoff = face->size->metrics.ascender / 64;
-  }
+   /*
+    * Process the vertical alignment and determine the yoff.
+    */
 
-  use_kerning = FT_HAS_KERNING(face);
-  previous = 0;
+   if (dc->w.textAlign & TA_BASELINE)
+      yoff = 0;
+   else if (dc->w.textAlign & TA_BOTTOM)
+      yoff = -face->size->metrics.descender / 64;
+   else /* TA_TOP */
+      yoff = face->size->metrics.ascender / 64;
 
-  for(i=0; i<Count; i++)
-  {
-    ExAcquireFastMutex(&FreeTypeLock);
-    glyph_index = FT_Get_Char_Index(face, *String);
-    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-    ExReleaseFastMutex(&FreeTypeLock);
-    if(error) {
-      EngDeleteXlate(XlateObj);
-      EngDeleteXlate(XlateObj2);
-      DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-      goto fail;
-    }
-    glyph = face->glyph;
+   use_kerning = FT_HAS_KERNING(face);
+   previous = 0;
 
-    // retrieve kerning distance and move pen position
-    if (use_kerning && previous && glyph_index)
-    {
-      FT_Vector delta;
-      ExAcquireFastMutex(&FreeTypeLock);
-      FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-      ExReleaseFastMutex(&FreeTypeLock);
-      TextLeft += delta.x >> 6;
-    }
+   /*
+    * Process the horizontal alignment and modify XStart accordingly.
+    */
 
-    if (glyph->format == ft_glyph_format_outline)
-    {
-      ExAcquireFastMutex(&FreeTypeLock);
-      error = FT_Render_Glyph(glyph, RenderMode);
-      ExReleaseFastMutex(&FreeTypeLock);
-      if(error) {
-        EngDeleteXlate(XlateObj);
-        EngDeleteXlate(XlateObj2);
-        DPRINT1("WARNING: Failed to render glyph!\n");
-		goto fail;
-      }
-      pitch = glyph->bitmap.pitch;
-    } else {
-      pitch = glyph->bitmap.width;
-    }
+   if (dc->w.textAlign & (TA_RIGHT | TA_CENTER))
+   {
+      UINT TextWidth;
+      LPCWSTR TempText = String;
 
-    if (fuOptions & ETO_OPAQUE)
+      /*
+       * Calculate width of the text.
+       */
+
+      for (i = 0; i < Count; i++)
       {
-	DestRect.left = BackgroundLeft;
-	DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
-	DestRect.top = TextTop + yoff - (face->size->metrics.ascender + 32) / 64;
-	DestRect.bottom = TextTop + yoff + (- face->size->metrics.descender + 32) / 64;
-	IntEngBitBlt(SurfObj,
-	             NULL,
-		     NULL,
-	             dc->CombinedClip,
-	             NULL,
-	             &DestRect,
-	             &SourcePoint,
-	             &SourcePoint,
-	             BrushBg,
-	             &BrushOrigin,
-		     PATCOPY);
-	BackgroundLeft = DestRect.right;
+         ExAcquireFastMutex(&FreeTypeLock);
+         glyph_index = FT_Get_Char_Index(face, *TempText);
+         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+         ExReleaseFastMutex(&FreeTypeLock);
+      
+         if (error)
+         {
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+         }
+
+         glyph = face->glyph;
+
+         /* retrieve kerning distance */
+         if (use_kerning && previous && glyph_index)
+         {
+            FT_Vector delta;
+            ExAcquireFastMutex(&FreeTypeLock);
+            FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+            ExReleaseFastMutex(&FreeTypeLock);
+            TextWidth += delta.x >> 6;
+         }
+
+         TextWidth += glyph->advance.x >> 6;
+
+         previous = glyph_index;
+         TempText++;
       }
 
-    DestRect.left = TextLeft;
-    DestRect.right = TextLeft + glyph->bitmap.width;
-    DestRect.top = TextTop + yoff - glyph->bitmap_top;
-    DestRect.bottom = DestRect.top + glyph->bitmap.rows;
+      previous = 0;
+
+      if (dc->w.textAlign & TA_RIGHT)
+      {
+         XStart -= TextWidth;
+      }
+      else
+      {
+         XStart -= TextWidth >> 1;
+      }
+   }
+
+   TextLeft = XStart;
+   TextTop = YStart;
+   BackgroundLeft = XStart;
+
+   /*
+    * The main rendering loop.
+    */
+
+   for (i = 0; i < Count; i++)
+   {
+      ExAcquireFastMutex(&FreeTypeLock);
+      glyph_index = FT_Get_Char_Index(face, *String);
+      error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+      ExReleaseFastMutex(&FreeTypeLock);
+
+      if (error)
+      {
+         EngDeleteXlate(XlateObj);
+         EngDeleteXlate(XlateObj2);
+         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+         goto fail;
+      }
+
+      glyph = face->glyph;
+
+      /* retrieve kerning distance and move pen position */
+      if (use_kerning && previous && glyph_index)
+      {
+         FT_Vector delta;
+         ExAcquireFastMutex(&FreeTypeLock);
+         FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+         ExReleaseFastMutex(&FreeTypeLock);
+         TextLeft += delta.x >> 6;
+      }
+
+      if (glyph->format == ft_glyph_format_outline)
+      {
+         ExAcquireFastMutex(&FreeTypeLock);
+         error = FT_Render_Glyph(glyph, RenderMode);
+         ExReleaseFastMutex(&FreeTypeLock);
+         if (error)
+         {
+            EngDeleteXlate(XlateObj);
+            EngDeleteXlate(XlateObj2);
+            DPRINT1("WARNING: Failed to render glyph!\n");
+            goto fail;
+         }
+         pitch = glyph->bitmap.pitch;
+      } else {
+         pitch = glyph->bitmap.width;
+      }
+
+      if (fuOptions & ETO_OPAQUE)
+      {
+         DestRect.left = BackgroundLeft;
+         DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
+         DestRect.top = TextTop + yoff - (face->size->metrics.ascender + 32) / 64;
+         DestRect.bottom = TextTop + yoff + (- face->size->metrics.descender + 32) / 64;
+         IntEngBitBlt(
+            SurfObj,
+            NULL,
+            NULL,
+            dc->CombinedClip,
+            NULL,
+            &DestRect,
+            &SourcePoint,
+            &SourcePoint,
+            BrushBg,
+            &BrushOrigin,
+            PATCOPY);
+         BackgroundLeft = DestRect.right;
+      }
+
+      DestRect.left = TextLeft;
+      DestRect.right = TextLeft + glyph->bitmap.width;
+      DestRect.top = TextTop + yoff - glyph->bitmap_top;
+      DestRect.bottom = DestRect.top + glyph->bitmap.rows;
 	
-    bitSize.cx = glyph->bitmap.width;
-    bitSize.cy = glyph->bitmap.rows;
-    MaskRect.right = glyph->bitmap.width;
-    MaskRect.bottom = glyph->bitmap.rows;
+      bitSize.cx = glyph->bitmap.width;
+      bitSize.cy = glyph->bitmap.rows;
+      MaskRect.right = glyph->bitmap.width;
+      MaskRect.bottom = glyph->bitmap.rows;
     
-    // We should create the bitmap out of the loop at the biggest possible glyph size
-    // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
-    HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
-    SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
+      /*
+       * We should create the bitmap out of the loop at the biggest possible
+       * glyph size. Then use memset with 0 to clear it and sourcerect to
+       * limit the work of the transbitblt.
+       */
+
+      HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
+      SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
     
-    // Use the font data as a mask to paint onto the DCs surface using a brush
-    IntEngMaskBlt (
-		SurfObj,
-		SourceGlyphSurf,
-		dc->CombinedClip,
-		XlateObj,
-		XlateObj2,
-		&DestRect,
-		&SourcePoint,
-		(PPOINTL)&MaskRect,
-		BrushFg,
-		&BrushOrigin);
+      /*
+       * Use the font data as a mask to paint onto the DCs surface using a
+       * brush.
+       */
 
-    EngDeleteSurface(HSourceGlyph);
+      IntEngMaskBlt(
+         SurfObj,
+         SourceGlyphSurf,
+         dc->CombinedClip,
+         XlateObj,
+         XlateObj2,
+         &DestRect,
+         &SourcePoint,
+         (PPOINTL)&MaskRect,
+         BrushFg,
+         &BrushOrigin);
 
-    TextLeft += (glyph->advance.x + 32) / 64;
-    previous = glyph_index;
+      EngDeleteSurface(HSourceGlyph);
 
-    String++;
-  }
-  EngDeleteXlate(XlateObj);
-  EngDeleteXlate(XlateObj2);
-  TEXTOBJ_UnlockText(dc->w.hFont);
-  if (NULL != hBrushBg)
-    {
+      TextLeft += (glyph->advance.x + 32) / 64;
+      previous = glyph_index;
+
+      String++;
+   }
+
+   EngDeleteXlate(XlateObj);
+   EngDeleteXlate(XlateObj2);
+   TEXTOBJ_UnlockText(dc->w.hFont);
+   if (hBrushBg != NULL)
+   {
       BRUSHOBJ_UnlockBrush(hBrushBg);
       NtGdiDeleteObject(hBrushBg);
-    }
-  BRUSHOBJ_UnlockBrush(hBrushFg);
-  NtGdiDeleteObject(hBrushFg);
-  DC_UnlockDc(hDC);
-  return TRUE;
+   }
+   BRUSHOBJ_UnlockBrush(hBrushFg);
+   NtGdiDeleteObject(hBrushFg);
+   DC_UnlockDc(hDC);
+ 
+   return TRUE;
 
 fail:
-  TEXTOBJ_UnlockText( dc->w.hFont );
-  if (NULL != hBrushBg)
-    {
+   TEXTOBJ_UnlockText(dc->w.hFont);
+   if (hBrushBg != NULL)
+   {
       BRUSHOBJ_UnlockBrush(hBrushBg);
       NtGdiDeleteObject(hBrushBg);
-    }
-  if (NULL != hBrushFg)
-    {
+   }
+   if (hBrushFg != NULL)
+   {
       BRUSHOBJ_UnlockBrush(hBrushFg);
       NtGdiDeleteObject(hBrushFg);
-    }
-  DC_UnlockDc( hDC );
-  return FALSE;
+   }
+   DC_UnlockDc(hDC);
+
+   return FALSE;
 }
 
 BOOL
@@ -1167,16 +1249,6 @@ TextIntGetTextExtentPoint(HDC hDC,
 	}
 
       TotalWidth += glyph->advance.x >> 6;
-      if (glyph->format == ft_glyph_format_outline)
-	{
-          ExAcquireFastMutex(&FreeTypeLock);
-	  error = FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO);
-          ExReleaseFastMutex(&FreeTypeLock);
-	  if (error)
-	    {
-	      DPRINT1("WARNING: Failed to render glyph!\n");
-	    }
-    	}
 
       if (TotalWidth <= MaxExtent && NULL != Fit)
 	{
