@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.140 2004/08/31 20:17:18 hbirr Exp $
+/* $Id: process.c,v 1.141 2004/09/22 14:53:26 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1671,16 +1671,15 @@ PsGetProcessInheritedFromUniqueProcessId(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-PVOID /*PEJOB*/
+PEJOB
 STDCALL
 PsGetProcessJob(
 	PEPROCESS Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->Job;
 }
 
 /*

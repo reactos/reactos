@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.66 2004/08/31 20:17:17 hbirr Exp $
+/* $Id: ps.h,v 1.67 2004/09/22 14:53:26 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -33,6 +33,7 @@
 /* Forward declarations. */
 struct _KTHREAD;
 struct _KTRAPFRAME;
+struct _EJOB;
 
 #endif /* __ASM__ */
 
@@ -433,6 +434,9 @@ struct _EPROCESS
   /* Added by Alex Ionescu (alex@relsoft.net)*/
   ULONG					SessionId;
   struct _EPORT*		SecurityPort;
+  
+  struct _EJOB*         Job;
+  UINT                  JobStatus;
 };
 
 #define PROCESS_STATE_TERMINATED (1)
@@ -573,6 +577,69 @@ PspRunCreateThreadNotifyRoutines(PETHREAD, BOOLEAN);
 VOID
 STDCALL
 PspRunCreateProcessNotifyRoutines(PEPROCESS, BOOLEAN);
+
+#include <pshpack1.h>
+typedef struct _PS_JOB_TOKEN_FILTER
+{
+  UINT CapturedSidCount;
+  PSID_AND_ATTRIBUTES CapturedSids;
+  UINT CapturedSidsLength;
+  UINT CapturedGroupCount;
+  PSID_AND_ATTRIBUTES CapturedGroups;
+  UINT CapturedGroupsLength;
+  UINT CapturedPrivilegeCount;
+  PLUID_AND_ATTRIBUTES CapturedPrivileges;
+  UINT CapturedPrivilegesLength;
+} PS_JOB_TOKEN_FILTER, *PPS_JOB_TOKEN_FILTER;
+#include <poppack.h>
+
+#include <pshpack1.h>
+typedef struct _EJOB
+{
+  KEVENT Event;
+  LIST_ENTRY JobLinks;
+  LIST_ENTRY ProcessListHead;
+  ERESOURCE JobLock;
+  LARGE_INTEGER TotalUserTime;
+  LARGE_INTEGER TotalKernelTime;
+  LARGE_INTEGER ThisPeriodTotalUserTime;
+  LARGE_INTEGER ThisPeriodTotalKernelTime;
+  UINT TotalPageFaultCount;
+  UINT TotalProcesses;
+  UINT ActiveProcesses;
+  UINT TotalTerminatedProcesses;
+  LARGE_INTEGER PerProcessUserTimeLimit;
+  LARGE_INTEGER PerJobUserTimeLimit;
+  UINT LimitFlags;
+  UINT MinimumWorkingSetSize;
+  UINT MaximumWorkingSetSize;
+  UINT ActiveProcessLimit;
+  UINT Affinity;
+  BYTE PriorityClass;
+  UINT UIRestrictionsClass;
+  UINT SecurityLimitFlags;
+  PVOID Token;
+  PPS_JOB_TOKEN_FILTER Filter;
+  UINT EndOfJobTimeAction;
+  PVOID CompletionPort;
+  PVOID CompletionKey;
+  UINT SessionId;
+  UINT SchedulingClass;
+  ULONGLONG ReadOperationCount;
+  ULONGLONG WriteOperationCount;
+  ULONGLONG OtherOperationCount;
+  ULONGLONG ReadTransferCount;
+  ULONGLONG WriteTransferCount;
+  ULONGLONG OtherTransferCount;
+  IO_COUNTERS IoInfo;
+  UINT ProcessMemoryLimit;
+  UINT JobMemoryLimit;
+  UINT PeakProcessMemoryUsed;
+  UINT PeakJobMemoryUsed;
+  UINT CurrentJobMemoryUsed;
+  FAST_MUTEX MemoryLimitsLock;
+} EJOB;
+#include <poppack.h>
 
 #endif /* ASSEMBLER */
 

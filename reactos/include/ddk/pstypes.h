@@ -20,7 +20,9 @@ struct _EPROCESS;
 struct _KPROCESS;
 struct _ETHREAD;
 struct _KTHREAD;
+struct _EJOB;
 
+typedef struct _EJOB *PEJOB;
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
 typedef struct _IMAGE_INFO {

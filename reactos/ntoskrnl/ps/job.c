@@ -21,152 +21,146 @@
  */
 NTSTATUS 
 STDCALL 
-NtAssignProcessToJobObject(
-	HANDLE JobHandle,
-    HANDLE ProcessHandle
-	)
+NtAssignProcessToJobObject(HANDLE JobHandle,
+                           HANDLE ProcessHandle)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
+
 /*
  * @unimplemented
  */
 NTSTATUS 
 STDCALL 
-NtCreateJobObject(
-	PHANDLE JobHandle, 
-	ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
-	)
+NtCreateJobObject(PHANDLE JobHandle,
+                  ACCESS_MASK DesiredAccess,
+                  POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
+
 /*
  * @unimplemented
  */
 NTSTATUS
 STDCALL
-NtIsProcessInJob(
-	IN HANDLE ProcessHandle,  // ProcessHandle must PROCESS_QUERY_INFORMATION grant access.
-	IN HANDLE JobHandle OPTIONAL	// JobHandle must grant JOB_OBJECT_QUERY access. Defaults to the current process's job object.
-	)
+NtIsProcessInJob(IN HANDLE ProcessHandle, // ProcessHandle must PROCESS_QUERY_INFORMATION grant access.
+                 IN HANDLE JobHandle OPTIONAL) // JobHandle must grant JOB_OBJECT_QUERY access. Defaults to the current process's job object.
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
-NTSTATUS 
-STDCALL 
-NtOpenJobObject(
-	PHANDLE JobHandle, 
-	ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-/*
- * @unimplemented
- */
-NTSTATUS 
-STDCALL 
-NtQueryInformationJobObject(
-	HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass, 
-	PVOID JobInformation,
-    ULONG JobInformationLength, 
-	PULONG ReturnLength
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-/*
- * @unimplemented
- */
-NTSTATUS 
-STDCALL 
-NtSetInformationJobObject(
-	HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation, 
-	ULONG JobInformationLength
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
+
 
 /*
  * @unimplemented
  */
 NTSTATUS 
 STDCALL 
-NtTerminateJobObject(
-	HANDLE JobHandle, 
-	NTSTATUS ExitStatus
-	)
+NtOpenJobObject(PHANDLE JobHandle,
+                ACCESS_MASK DesiredAccess,
+                POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /*
  * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtQueryInformationJobObject(HANDLE JobHandle,
+                            JOBOBJECTINFOCLASS JobInformationClass,
+                            PVOID JobInformation,
+                            ULONG JobInformationLength,
+                            PULONG ReturnLength)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtSetInformationJobObject(HANDLE JobHandle,
+                          JOBOBJECTINFOCLASS JobInformationClass,
+                          PVOID JobInformation,
+                          ULONG JobInformationLength)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+STDCALL 
+NtTerminateJobObject(HANDLE JobHandle,
+                     NTSTATUS ExitStatus)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @implemented
  */
 PVOID
 STDCALL 
-PsGetJobLock(
-    PVOID */*PEJOB*/ Job
-	)
+PsGetJobLock(PEJOB Job)
 {
-	UNIMPLEMENTED;
-	return 0;	
+  assert(Job);
+  return (PVOID)&Job->JobLock;
 }
 
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
-PsGetJobSessionId(
-    PVOID /*PEJOB*/	Job
-	)
+PsGetJobSessionId(PEJOB Job)
 {
-	UNIMPLEMENTED;
-	return 0;	
+  assert(Job);
+  return (PVOID)Job->SessionId;
 }
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 STDCALL
-PsGetJobUIRestrictionsClass(
-   	PVOID /*PEJOB*/	Job
-	)
+PsGetJobUIRestrictionsClass(PEJOB Job)
 {
-	UNIMPLEMENTED;
-	return 0;	
+  assert(Job);
+  return Job->UIRestrictionsClass;
 }
+
 
 /*
  * @unimplemented
  */                       
 VOID
 STDCALL
-PsSetJobUIRestrictionsClass(
-    PVOID /*PEJOB*/	Job,
-    ULONG	UIRestrictionsClass	
-	)
+PsSetJobUIRestrictionsClass(PEJOB Job,
+                            ULONG UIRestrictionsClass)
 {
-	UNIMPLEMENTED;
+  assert(Job);
+  InterlockedExchange((LONG*)&Job->UIRestrictionsClass, (LONG)UIRestrictionsClass);
+  /* FIXME - walk through the job process list and update the restrictions? */
 }
+
 /* EOF */
