@@ -3,6 +3,7 @@
 #define NTOS_MODE_USER
 #define __NO_CTYPE_INLINES
 #include <ntos.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <limits.h>
