@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.12 2001/01/28 17:37:48 ekohl Exp $
+/* $Id: file.c,v 1.13 2001/03/06 23:34:39 cnettel Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,42 +19,22 @@
 
 /* FUNCTIONS *****************************************************************/
 
-
-NTSTATUS
-STDCALL
-NtQueryInformationFile (
-	HANDLE			FileHandle,
+NTSTATUS STDCALL internalQueryFileInfo (
+	IN	PFILE_OBJECT		FileObject,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass,
 	PIO_STATUS_BLOCK	IoStatusBlock,
-	PVOID			FileInformation,
-	ULONG			Length,
-	FILE_INFORMATION_CLASS	FileInformationClass
+	IN	ULONG			Length,
+	OUT	PVOID			FileInformation,
+	OUT	PULONG			ReturnedLength	// FIXME: ReturnedLength not implemented
 	)
 {
+   //This code is taken from old NtQueryInformationFile, now shared with IoQueryFileInformation
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
-   PFILE_OBJECT FileObject;
    NTSTATUS Status;
    KEVENT Event;
    PIO_STACK_LOCATION StackPtr;
-   
-   DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
-          FileHandle,
-          IoStatusBlock,
-          FileInformation,
-          Length,
-          FileInformationClass);
-   
-   Status = ObReferenceObjectByHandle(FileHandle,
-                                      FILE_READ_ATTRIBUTES,
-                                      IoFileObjectType,
-                                      UserMode,
-				      (PVOID *)&FileObject,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   DPRINT("FileObject %x\n", FileObject);
+
 
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    DeviceObject = FileObject->DeviceObject;
@@ -88,8 +68,47 @@ NtQueryInformationFile (
         KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;
      }
+
+   return Status;
+}
+
+NTSTATUS
+STDCALL
+NtQueryInformationFile (
+	HANDLE			FileHandle,
+	PIO_STATUS_BLOCK	IoStatusBlock,
+	PVOID			FileInformation,
+	ULONG			Length,
+	FILE_INFORMATION_CLASS	FileInformationClass
+	)
+{
+   PFILE_OBJECT FileObject;
+   NTSTATUS Status;
+   
+   DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d Class %d)\n",
+          FileHandle,
+          IoStatusBlock,
+          FileInformation,
+          Length,
+          FileInformationClass);
+   
+   Status = ObReferenceObjectByHandle(FileHandle,
+                                      FILE_READ_ATTRIBUTES,
+                                      IoFileObjectType,
+                                      UserMode,
+				      (PVOID *)&FileObject,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   DPRINT("FileObject %x\n", FileObject);
+   Status = internalQueryFileInfo(FileObject, FileInformationClass, IoStatusBlock, Length, FileInformation, NULL);
+
+//   ObDereferenceObject(FileObject); FIXME: Why will a Dereference here make the OS impossible to boot. Incorrect deferring somewhere else?
    return(Status);
 }
+
 
 
 NTSTATUS 
@@ -99,11 +118,22 @@ IoQueryFileInformation (
 	IN	FILE_INFORMATION_CLASS	FileInformationClass,
 	IN	ULONG			Length,
 	OUT	PVOID			FileInformation,
-	OUT	PULONG			ReturnedLength	
+	OUT	PULONG			ReturnedLength	// FIXME: ReturnedLength not implemented
 	)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+   NTSTATUS Status;
+
+   Status = ObReferenceObjectByPointer(FileObject,
+                                      FILE_READ_ATTRIBUTES,
+                                      IoFileObjectType,
+                                      KernelMode); // FIXME: Is KernelMode the correct choice here?
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
+//   ObDereferenceObject(FileObject); For some reason, ObDereference is NOT a good thing here... wish I knew why
+   return internalQueryFileInfo(FileObject,FileInformationClass,NULL,Length,FileInformation,ReturnedLength);
 }
 
 
