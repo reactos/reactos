@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.24.4.4 2004/09/27 01:39:10 royce Exp $
+ * $Id: focus.c,v 1.24.4.5 2004/09/27 13:17:12 weiden Exp $
  */
 #include <w32k.h>
 
@@ -334,11 +334,11 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 }
 
 PWINDOW_OBJECT INTERNAL_CALL
-IntSetFocusWindow(PWINDOW_OBJECT Window)
+IntSetFocusWindow(PUSER_MESSAGE_QUEUE WindowMessageQueue, PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT PrevWindow;
   
-  PrevWindow = MsqSetStateWindow(Window->MessageQueue, MSQ_STATE_FOCUS, Window);
+  PrevWindow = MsqSetStateWindow(WindowMessageQueue, MSQ_STATE_FOCUS, Window);
   
   #if 0
   if(Window != PrevWindow)
@@ -354,12 +354,11 @@ IntSetFocusWindow(PWINDOW_OBJECT Window)
 PWINDOW_OBJECT INTERNAL_CALL
 IntSetFocus(PWINDOW_OBJECT Window)
 {
+  PUSER_MESSAGE_QUEUE ThreadQueue = PsGetWin32Thread()->MessageQueue;
+  
   if(Window != NULL)
   {
-    PUSER_MESSAGE_QUEUE ThreadQueue;
     PWINDOW_OBJECT WindowTop;
-    
-    ThreadQueue = PsGetWin32Thread()->MessageQueue;
     
     if(Window->Style & (WS_MINIMIZE | WS_DISABLED))
     {
@@ -383,10 +382,10 @@ IntSetFocus(PWINDOW_OBJECT Window)
       IntSetActiveWindow(WindowTop);
     }
     
-    return IntSetFocusWindow(Window);
+    return IntSetFocusWindow(ThreadQueue, Window);
   }
   
-  return IntSetFocusWindow(NULL);
+  return IntSetFocusWindow(ThreadQueue, NULL);
 }
 
 PWINDOW_OBJECT INTERNAL_CALL

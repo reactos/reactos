@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100.12.5 2004/09/14 01:00:44 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.6 2004/09/27 13:17:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1265,7 +1265,7 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT W
       return NULL;
   }
   
-  return (PWINDOW_OBJECT)InterlockedExchange((LONG*)Change, (LONG)Window);
+  return (PWINDOW_OBJECT)InterlockedExchangePointer(Change, Window);
 }
 
 /* EOF */
