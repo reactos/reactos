@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.7 2000/06/03 14:47:31 ea Exp $
+/* $Id: copy.c,v 1.8 2001/08/04 10:40:38 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -167,7 +167,7 @@ CopyFileExW (
 			    lpData,
 			    (PIO_STATUS_BLOCK)&IoStatusBlock,
 			    lpBuffer,
-			    RegionSize,
+			    IoStatusBlock.Information,
 			    NULL,
 			    NULL);
 
