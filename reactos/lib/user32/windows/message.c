@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.12 2003/03/06 23:57:00 gvg Exp $
+/* $Id: message.c,v 1.13 2003/05/02 07:52:33 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -483,7 +483,7 @@ RegisterWindowMessageA(LPCSTR lpString)
     {
       return(0);
     }
-  Atom = RegisterWindowMessageW(String.Buffer);
+  Atom = NtUserRegisterWindowMessage(&String);
   RtlFreeUnicodeString(&String);
   return(Atom);
 }
@@ -491,7 +491,10 @@ RegisterWindowMessageA(LPCSTR lpString)
 UINT STDCALL
 RegisterWindowMessageW(LPCWSTR lpString)
 {
-  return(NtUserRegisterWindowMessage(lpString));
+  UNICODE_STRING String;
+
+  RtlInitUnicodeString(&String, lpString);
+  return(NtUserRegisterWindowMessage(&String));
 }
 
 

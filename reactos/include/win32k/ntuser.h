@@ -1116,7 +1116,7 @@ NtUserRegisterTasklist(
   DWORD Unknown0);
 
 UINT STDCALL
-NtUserRegisterWindowMessage(LPCWSTR MessageName);
+NtUserRegisterWindowMessage(PUNICODE_STRING MessageName);
 
 DWORD
 STDCALL

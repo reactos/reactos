@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.40 2003/03/28 18:59:18 rcampbell Exp $
+/* $Id: window.c,v 1.41 2003/05/02 07:52:33 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,17 @@
 #include <debug.h>
 
 #define TAG_WNAM  TAG('W', 'N', 'A', 'M')
+
+typedef struct _REGISTERED_MESSAGE
+{
+  LIST_ENTRY ListEntry;
+  WCHAR MessageName[1];
+} REGISTERED_MESSAGE, *PREGISTERED_MESSAGE;
+
+static LIST_ENTRY RegisteredMessageListHead;
+
+#define REGISTERED_MESSAGE_MIN 0xc000
+#define REGISTERED_MESSAGE_MAX 0xffff
 
 /* FUNCTIONS *****************************************************************/
 
@@ -299,6 +310,8 @@ W32kGetWindowProc(HWND Wnd)
 NTSTATUS
 InitWindowImpl(VOID)
 {
+  InitializeListHead(&RegisteredMessageListHead);
+
   return(STATUS_SUCCESS);
 }
 
@@ -947,11 +960,69 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flag
 }
 
 UINT STDCALL
-NtUserRegisterWindowMessage(LPCWSTR MessageName)
+NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
-  UNIMPLEMENTED
+  PLIST_ENTRY Current;
+  PREGISTERED_MESSAGE NewMsg, RegMsg;
+  UINT Msg = REGISTERED_MESSAGE_MIN;
+  UNICODE_STRING MessageName;
+  NTSTATUS Status;
 
-  return(0);
+  Status = MmCopyFromCaller(&MessageName, MessageNameUnsafe, sizeof(UNICODE_STRING));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return 0;
+    }
+
+  NewMsg = ExAllocatePoolWithTag(PagedPool,
+                                 sizeof(REGISTERED_MESSAGE) +
+                                 MessageName.Length,
+                                 TAG_WNAM);
+  if (NULL == NewMsg)
+    {
+      SetLastNtError(STATUS_NO_MEMORY);
+      return 0;
+    }
+
+  Status = MmCopyFromCaller(NewMsg->MessageName, MessageName.Buffer, MessageName.Length);
+  if (! NT_SUCCESS(Status))
+    {
+      ExFreePool(NewMsg);
+      SetLastNtError(Status);
+      return 0;
+    }
+  NewMsg->MessageName[MessageName.Length / sizeof(WCHAR)] = L'\0';
+  if (wcslen(NewMsg->MessageName) != MessageName.Length / sizeof(WCHAR))
+    {
+      ExFreePool(NewMsg);
+      SetLastNtError(STATUS_INVALID_PARAMETER);
+      return 0;
+    }
+
+  Current = RegisteredMessageListHead.Flink;
+  while (Current != &RegisteredMessageListHead)
+    {
+      RegMsg = CONTAINING_RECORD(Current, REGISTERED_MESSAGE, ListEntry);
+      if (0 == wcscmp(NewMsg->MessageName, RegMsg->MessageName))
+	{
+	  ExFreePool(NewMsg);
+	  return Msg;
+	}
+      Msg++;
+      Current = Current->Flink;
+    }
+
+  if (REGISTERED_MESSAGE_MAX < Msg)
+    {
+      ExFreePool(NewMsg);
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return 0;
+    }
+
+  InsertTailList(&RegisteredMessageListHead, &(NewMsg->ListEntry));
+
+  return Msg;
 }
 
 DWORD STDCALL
