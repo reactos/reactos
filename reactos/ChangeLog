@@ -1,5 +1,15 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* include/ntos/rtltypes.h (PRTL_BASE_PROCESS_START_ROUTINE): Define.
+	* lib/kernel32/process/create.c (RtlBaseProcessStartRoutine): Import.
+	(KlCreateFirstThread): Support images with native subsystem ID.
+	* lib/ntdll/def/ntdll.def (RtlBaseProcessStartRoutine): Export.
+	* lib/ntdll/def/ntdll.edf (RtlBaseProcessStartRoutine): Ditto.
+	* lib/ntdll/rtl/exception.c (RtlBaseProcessStart): Forward declare.
+	(RtlBaseProcessStartRoutine, RtlBaseProcessStart): Add.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* include/defines.h (VS_FFI_SIGNATURE, VS_FFI_STRUCVERSION): Define.
 
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>

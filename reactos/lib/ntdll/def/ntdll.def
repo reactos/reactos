@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.92 2003/02/16 18:54:26 hbirr Exp $
+; $Id: ntdll.def,v 1.93 2003/03/16 14:16:54 chorns Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -302,6 +302,7 @@ RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 RtlAssert@16
+RtlBaseProcessStartRoutine DATA
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 RtlCheckRegistryKey@8

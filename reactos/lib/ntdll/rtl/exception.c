@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.11 2002/10/26 00:32:18 chorns Exp $
+/* $Id: exception.c,v 1.12 2003/03/16 14:16:54 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,6 +17,13 @@
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
+
+VOID STDCALL
+RtlBaseProcessStart(PTHREAD_START_ROUTINE StartAddress,
+  PVOID Parameter);
+
+__declspec(dllexport)
+PRTL_BASE_PROCESS_START_ROUTINE RtlBaseProcessStartRoutine = RtlBaseProcessStart;
 
 ULONG
 RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
@@ -53,5 +60,16 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
 	DbgPrint("RtlRaiseException()");
 }
+
+VOID STDCALL
+RtlBaseProcessStart(PTHREAD_START_ROUTINE StartAddress,
+  PVOID Parameter)
+{
+  NTSTATUS ExitStatus = STATUS_SUCCESS;
+
+  ExitStatus = (NTSTATUS) (StartAddress)(Parameter);
+
+  NtTerminateProcess(NtCurrentProcess(), ExitStatus);
+ }
 
 /* EOF */

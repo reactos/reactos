@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.62 2003/03/09 21:38:40 hbirr Exp $
+/* $Id: create.c,v 1.63 2003/03/16 14:16:54 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
+
+__declspec(dllimport)
+PRTL_BASE_PROCESS_START_ROUTINE RtlBaseProcessStartRoutine;
 
 WINBOOL STDCALL
 CreateProcessA (LPCSTR			lpApplicationName,
@@ -217,9 +220,8 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 HANDLE STDCALL 
 KlCreateFirstThread(HANDLE ProcessHandle,
 		    LPSECURITY_ATTRIBUTES lpThreadAttributes,
-		    ULONG StackReserve,
-		    ULONG StackCommit,
-		    LPTHREAD_START_ROUTINE lpStartAddress,
+        PSECTION_IMAGE_INFORMATION Sii,
+        LPTHREAD_START_ROUTINE lpStartAddress,
 		    DWORD dwCreationFlags,
 		    LPDWORD lpThreadId)
 {
@@ -232,6 +234,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   BOOLEAN CreateSuspended = FALSE;
   ULONG OldPageProtection;
   ULONG ResultLength;
+  ULONG ThreadStartAddress;
   ULONG InitialStack[6];
 
   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
@@ -252,10 +255,10 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   else
     CreateSuspended = FALSE;
 
-  InitialTeb.StackReserve = (StackReserve < 0x100000) ? 0x100000 : StackReserve;
+  InitialTeb.StackReserve = (Sii->StackReserve < 0x100000) ? 0x100000 : Sii->StackReserve;
   /* FIXME: use correct commit size */
 #if 0
-  InitialTeb.StackCommit = (StackCommit < PAGE_SIZE) ? PAGE_SIZE : StackCommit;
+  InitialTeb.StackCommit = (Sii->StackCommit < PAGE_SIZE) ? PAGE_SIZE : Sii->StackCommit;
 #endif
   InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
@@ -274,7 +277,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
     {
       DPRINT("Error reserving stack space!\n");
       SetLastErrorByStatus(Status);
-      return(NULL);
+      return(INVALID_HANDLE_VALUE);
     }
 
   DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
@@ -328,8 +331,17 @@ KlCreateFirstThread(HANDLE ProcessHandle,
       return(INVALID_HANDLE_VALUE);
     }
 
+   if (Sii->Subsystem != IMAGE_SUBSYSTEM_NATIVE)
+     {
+       ThreadStartAddress = (ULONG) BaseProcessStart;
+     }
+   else
+     {
+       ThreadStartAddress = (ULONG) RtlBaseProcessStartRoutine;
+     }
+
   memset(&ThreadContext,0,sizeof(CONTEXT));
-  ThreadContext.Eip = (ULONG)BaseProcessStart;
+  ThreadContext.Eip = ThreadStartAddress;
   ThreadContext.SegGs = USER_DS;
   ThreadContext.SegFs = USER_DS;
   ThreadContext.SegEs = USER_DS;
@@ -738,7 +750,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    TempCurrentDirectoryW);
      }
 
-   
    /*
     * Create a section for the executable
     */
@@ -893,7 +904,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       Status = NtDuplicateObject (NtCurrentProcess(),
 	                 Ppb->CurrentDirectoryHandle,
 			 hProcess,
-			 &Ppb->CurrentDirectoryHandle,
+		 &Ppb->CurrentDirectoryHandle,
 			 0,
 			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
@@ -934,7 +945,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
-   
+
    /*
     * Tell the csrss server we are creating a new process
     */
@@ -1080,12 +1091,12 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Create the thread for the kernel
     */
-   DPRINT("Creating thread for process\n");
+   DPRINT("Creating thread for process (EntryPoint = 0x%.08x)\n",
+    ImageBaseAddress + (ULONG)Sii.EntryPoint);
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
-				  Sii.StackReserve,
-				  Sii.StackCommit,
-				  ImageBaseAddress + (ULONG)Sii.EntryPoint,
+          &Sii,
+          ImageBaseAddress + (ULONG)Sii.EntryPoint,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == INVALID_HANDLE_VALUE)

@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.3 2002/11/25 15:47:52 robd Exp $
+/* $Id: rtltypes.h,v 1.4 2003/03/16 14:16:54 chorns Exp $
  * 
  */
 
@@ -219,5 +219,9 @@ typedef struct _RTL_MESSAGE_RESOURCE_DATA
   ULONG NumberOfBlocks;
   RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
 } RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
+
+typedef VOID STDCALL
+(*PRTL_BASE_PROCESS_START_ROUTINE)(PTHREAD_START_ROUTINE StartAddress,
+  PVOID Parameter);
 
 #endif /* __DDK_RTLTYPES_H */
