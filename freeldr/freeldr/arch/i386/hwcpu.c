@@ -77,6 +77,36 @@ typedef struct _MP_PROCESSOR_ENTRY
 
 /* FUNCTIONS ****************************************************************/
 
+static U32
+GetCpuSpeed(VOID)
+{
+  U64 Timestamp1;
+  U64 Timestamp2;
+  U64 Diff;
+
+  /* Read TSC (Time Stamp Counter) */
+  Timestamp1 = RDTSC();
+
+  /* Wait for 0.1 seconds (= 100 milliseconds = 100000 microseconds)*/
+  KeStallExecutionProcessor(100000);
+
+  /* Read TSC (Time Stamp Counter) again */
+  Timestamp2 = RDTSC();
+
+  /* Calculate elapsed time (check for counter overrun) */
+  if (Timestamp2 > Timestamp1)
+    {
+      Diff = Timestamp2 - Timestamp1;
+    }
+  else
+    {
+      Diff = Timestamp2 + (((U64)-1) - Timestamp1);
+    }
+
+  return (U32)(Diff / 100000);
+}
+
+
 static VOID
 DetectCPU(HKEY CpuKey,
 	  HKEY FpuKey)
@@ -92,6 +122,9 @@ DetectCPU(HKEY CpuKey,
   U32 edx = 0;
   U32 *Ptr;
   S32 Error;
+  BOOL SupportTSC = FALSE;
+  U32 CpuSpeed;
+
 
   /* Create the CPU instance key */
   Error = RegCreateKey(CpuKey,
@@ -136,6 +169,8 @@ DetectCPU(HKEY CpuKey,
 	      (unsigned int)((eax >> 4) & 0x0F),
 	      (unsigned int)(eax & 0x0F));
       FeatureSet = edx;
+      if (((eax >> 8) & 0x0F) >= 5)
+        SupportTSC = TRUE;
     }
   else
     {
@@ -207,7 +242,21 @@ DetectCPU(HKEY CpuKey,
 
   /* FIXME: Set 'Update Status' value (CPU only) */
 
-  /* FIXME: Set '~MHz' value (CPU only) */
+  /* Set '~MHz' value (CPU only) */
+  if (SupportTSC)
+    {
+      CpuSpeed = GetCpuSpeed();
+
+      Error = RegSetValue(CpuInstKey,
+			  "~MHz",
+			  REG_DWORD,
+			  (PU8)&CpuSpeed,
+			  sizeof(U32));
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+	}
+    }
 }
 
 
@@ -228,6 +277,7 @@ SetMpsProcessor(HKEY CpuKey,
   U32 edx = 0;
   U32 *Ptr;
   S32 Error;
+  U32 CpuSpeed;
 
   /* Get processor instance number */
   sprintf(Buffer, "%u", CpuEntry->LocalApicId);
@@ -336,7 +386,21 @@ SetMpsProcessor(HKEY CpuKey,
 
   /* FIXME: Set 'Update Status' value (CPU only) */
 
-  /* FIXME: Set '~MHz' value (CPU only) */
+  /* Set '~MHz' value (CPU only) */
+  if (((CpuEntry->CpuSignature >> 8) & 0x0F) >= 5)
+    {
+      CpuSpeed = GetCpuSpeed();
+
+      Error = RegSetValue(CpuInstKey,
+			  "~MHz",
+			  REG_DWORD,
+			  (PU8)&CpuSpeed,
+			  sizeof(U32));
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+	}
+    }
 }
 
 

@@ -118,4 +118,14 @@ EXTERN(_GetCpuid)
 	popl	%ebp
 	ret
 
+
+/*
+ * U64 RDTSC(VOID);
+ */
+
+EXTERN(_RDTSC)
+	.code32
+	rdtsc
+	ret
+
 /* EOF */

@@ -50,6 +50,42 @@
 #define MOUSE_TYPE_MOUSESYSTEMS	4
 
 
+/* PS2 stuff */
+
+/* Controller registers. */
+#define CONTROLLER_REGISTER_STATUS                      0x64
+#define CONTROLLER_REGISTER_CONTROL                     0x64
+#define CONTROLLER_REGISTER_DATA                        0x60
+
+/* Controller commands. */
+#define CONTROLLER_COMMAND_READ_MODE                    0x20
+#define CONTROLLER_COMMAND_WRITE_MODE                   0x60
+#define CONTROLLER_COMMAND_GET_VERSION                  0xA1
+#define CONTROLLER_COMMAND_MOUSE_DISABLE                0xA7
+#define CONTROLLER_COMMAND_MOUSE_ENABLE                 0xA8
+#define CONTROLLER_COMMAND_TEST_MOUSE                   0xA9
+#define CONTROLLER_COMMAND_SELF_TEST                    0xAA
+#define CONTROLLER_COMMAND_KEYBOARD_TEST                0xAB
+#define CONTROLLER_COMMAND_KEYBOARD_DISABLE             0xAD
+#define CONTROLLER_COMMAND_KEYBOARD_ENABLE              0xAE
+#define CONTROLLER_COMMAND_WRITE_MOUSE_OUTPUT_BUFFER    0xD3
+#define CONTROLLER_COMMAND_WRITE_MOUSE                  0xD4
+
+/* Controller status */
+#define CONTROLLER_STATUS_OUTPUT_BUFFER_FULL            0x01
+#define CONTROLLER_STATUS_INPUT_BUFFER_FULL             0x02
+#define CONTROLLER_STATUS_SELF_TEST                     0x04
+#define CONTROLLER_STATUS_COMMAND                       0x08
+#define CONTROLLER_STATUS_UNLOCKED                      0x10
+#define CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL      0x20
+#define CONTROLLER_STATUS_GENERAL_TIMEOUT               0x40
+#define CONTROLLER_STATUS_PARITY_ERROR                  0x80
+#define AUX_STATUS_OUTPUT_BUFFER_FULL                   (CONTROLLER_STATUS_OUTPUT_BUFFER_FULL | \
+                                                         CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL)
+
+/* Timeout in ms for sending to keyboard controller. */
+#define CONTROLLER_TIMEOUT                              250
+
 
 typedef struct _CM_INT13_DRIVE_PARAMETER
 {
@@ -122,7 +158,8 @@ __KeStallExecutionProcessor(U32 Loops)
 
 VOID KeStallExecutionProcessor(U32 Microseconds)
 {
-  __KeStallExecutionProcessor((delay_count * Microseconds) / 1000);
+  U64 LoopCount = ((U64)delay_count * (U64)Microseconds) / 1000ULL;
+  __KeStallExecutionProcessor((U32)LoopCount);
 }
 
 
@@ -214,7 +251,6 @@ HalpCalibrateStallExecution(VOID)
   }
   
   /* We're finished:  Do the finishing touches                      */
-  
   delay_count /= (MILLISEC / 2);   /* Calculate delay_count for 1ms */
 }
 
@@ -991,7 +1027,8 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
 			  (PU8)&FullResourceDescriptor,
-			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+			  sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT,
@@ -1016,8 +1053,7 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
 
 
 static VOID
-DetectSerialPorts(HKEY SystemKey,
-		  HKEY BusKey)
+DetectSerialPorts(HKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -1154,6 +1190,230 @@ DetectSerialPorts(HKEY SystemKey,
 
 
 static VOID
+PS2ControllerWait(VOID)
+{
+  U32 Timeout;
+  U8 Status;
+
+  for (Timeout = 0; Timeout < CONTROLLER_TIMEOUT; Timeout++)
+    {
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+      if ((Status & CONTROLLER_STATUS_INPUT_BUFFER_FULL) == 0)
+	return;
+
+      /* Sleep for one millisecond */
+      KeStallExecutionProcessor(1000);
+    }
+}
+
+
+static BOOLEAN
+DetectPS2AuxPort(VOID)
+{
+  U32 Loops;
+  U8 Scancode;
+  U8 Status;
+
+  /* Put the value 0x5A in the output buffer using the
+   * "WriteAuxiliary Device Output Buffer" command (0xD3).
+   * Poll the Status Register for a while to see if the value really turns up
+   * in the Data Register. If the KEYBOARD_STATUS_MOUSE_OBF bit is also set
+   * to 1 in the Status Register, we assume this controller has an
+   *  Auxiliary Port (a.k.a. Mouse Port).
+   */
+  PS2ControllerWait();
+  WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_CONTROL,
+		   CONTROLLER_COMMAND_WRITE_MOUSE_OUTPUT_BUFFER);
+  PS2ControllerWait();
+
+  /* 0x5A is a random dummy value */
+  WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
+		   0x5A);
+
+  for (Loops = 0; Loops < 10; Loops++)
+    {
+      Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+
+      if ((Status & CONTROLLER_STATUS_OUTPUT_BUFFER_FULL) != 0)
+	{
+	  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+	  if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) != 0)
+	    {
+	      return TRUE;
+	    }
+	  break;
+	}
+
+      KeStallExecutionProcessor(10000);
+    }
+
+  return FALSE;
+}
+
+
+static BOOLEAN
+DetectPS2AuxDevice(VOID)
+{
+  U8 Scancode;
+  U8 Status;
+
+  PS2ControllerWait();
+  WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_CONTROL,
+		   CONTROLLER_COMMAND_WRITE_MOUSE);
+  PS2ControllerWait();
+
+  /* Identify device */
+  WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
+		   0xF2);
+
+  KeStallExecutionProcessor(10000);
+
+  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+  if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
+    {
+      return FALSE;
+    }
+
+  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+  if (Scancode != 0xFA)
+    return FALSE;
+
+  KeStallExecutionProcessor(10000);
+
+  Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
+  if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
+    {
+      return FALSE;
+    }
+
+  Scancode = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA);
+  if (Scancode != 0x00)
+    return FALSE;
+
+  return TRUE;
+}
+
+
+static VOID
+DetectPS2Mouse(HKEY BusKey)
+{
+  CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  HKEY ControllerKey;
+  HKEY PeripheralKey;
+  S32 Error;
+
+  if (DetectPS2AuxPort())
+    {
+      DbgPrint((DPRINT_HWDETECT, "Detected PS2 port\n"));
+
+      /* Create controller key */
+      Error = RegCreateKey(BusKey,
+			   "PointerController\\0",
+			   &ControllerKey);
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+	  return;
+	}
+      DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
+
+      /* Set 'ComponentInformation' value */
+      SetComponentInformation(ControllerKey,
+			      0x20,
+			      0,
+			      0xFFFFFFFF);
+
+      memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+
+      /* Initialize resource descriptor */
+      FullResourceDescriptor.InterfaceType = Isa;
+      FullResourceDescriptor.BusNumber = 0;
+      FullResourceDescriptor.PartialResourceList.Count = 1;
+
+      /* Set Interrupt */
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeInterrupt;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 12;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 12;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
+
+      /* Set 'Configuration Data' value */
+      Error = RegSetValue(ControllerKey,
+			  "Configuration Data",
+			  REG_FULL_RESOURCE_DESCRIPTOR,
+			  (PU8)&FullResourceDescriptor,
+			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+      if (Error != ERROR_SUCCESS)
+	{
+	  DbgPrint((DPRINT_HWDETECT,
+		    "RegSetValue(Configuration Data) failed (Error %u)\n",
+		    (int)Error));
+	  return;
+	}
+
+
+      if (DetectPS2AuxDevice())
+	{
+	  DbgPrint((DPRINT_HWDETECT, "Detected PS2 mouse\n"));
+
+	  /* Create peripheral key */
+	  Error = RegCreateKey(ControllerKey,
+			       "PointerPeripheral\\0",
+			       &PeripheralKey);
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
+	      return;
+	    }
+	  DbgPrint((DPRINT_HWDETECT, "Created key: PointerPeripheral\\0\n"));
+
+	  /* Set 'ComponentInformation' value */
+	  SetComponentInformation(PeripheralKey,
+				  0x20,
+				  0,
+				  0xFFFFFFFF);
+
+	  /* Initialize resource descriptor */
+	  memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+	  FullResourceDescriptor.InterfaceType = Isa;
+	  FullResourceDescriptor.BusNumber = 0;
+	  FullResourceDescriptor.PartialResourceList.Count = 0;
+
+	  /* Set 'Configuration Data' value */
+	  Error = RegSetValue(PeripheralKey,
+			      "Configuration Data",
+			      REG_FULL_RESOURCE_DESCRIPTOR,
+			      (PU8)&FullResourceDescriptor,
+			      sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+			      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT,
+			"RegSetValue(Configuration Data) failed (Error %u)\n",
+			(int)Error));
+	      return;
+	    }
+
+	  /* Set 'Identifier' value */
+	  Error = RegSetValue(PeripheralKey,
+			      "Identifier",
+			      REG_SZ,
+			      (PU8)"MICROSOFT PS2 MOUSE",
+			      20);
+	  if (Error != ERROR_SUCCESS)
+	    {
+	      DbgPrint((DPRINT_HWDETECT,
+			"RegSetValue() failed (Error %u)\n",
+			(int)Error));
+	      return;
+	    }
+	}
+    }
+}
+
+
+static VOID
 DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
@@ -1224,17 +1484,22 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
+
 #if 0
   DetectBiosFloppyDisks(SystemKey, BusKey);
 #endif
 
-  DetectSerialPorts(SystemKey, BusKey);
+  DetectSerialPorts(BusKey);
+
 #if 0
   DetectBiosParallelPorts();
-
-  DetectBiosKeyboard();
-  DetectBiosMouse();
 #endif
+
+#if 0
+  DetectBiosKeyboard(BusKey);
+#endif
+
+  DetectPS2Mouse(BusKey);
 
   /* FIXME: Detect more ISA devices */
 }
@@ -1280,10 +1545,10 @@ DetectHardware(VOID)
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 
-#if 0
+//#if 0
   printf("*** System stopped ***\n");
   for (;;);
-#endif
+//#endif
 }
 
 /* EOF */

@@ -153,6 +153,8 @@ typedef struct _CM_COMPONENT_INFORMATION
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
+VOID KeStallExecutionProcessor(U32 Microseconds);
+
 VOID SetComponentInformation(HKEY ComponentKey,
 			     U32 Flags,
 			     U32 Key,
@@ -168,6 +170,7 @@ VOID GetCpuid(U32 Level,
 	      U32 *ebx,
 	      U32 *ecx,
 	      U32 *edx);
+U64 RDTSC(VOID);
 
 /* i386pnp.S */
 U32 PnpBiosSupported(VOID);
