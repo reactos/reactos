@@ -300,23 +300,26 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 /*
  * GetConsoleWindow - returns the handle to the current console window
  */
-HWND GetConsoleWindow(VOID)
+HWND GetConsoleWindow (VOID)
 {
-	TCHAR original[256];	/* stores original title*/
-	TCHAR temp[256];		/* stores temp title*/
-
+	TCHAR original[256];
+	TCHAR temp[256];
 	HWND h=0;
 
-	GetConsoleTitle(original,sizeof(original));
+	GetConsoleTitle (original, sizeof(original));
 
-	_tcscpy(temp,original);
-	_tcscat(temp,_T("-xxx   "));
+	_tcscpy (temp, original);
+	_tcscat (temp, _T("-xxx   "));
 
-	if((h = FindWindow("tty",temp)) == NULL )
+	if (FindWindow (0, temp) == NULL )
 	{
-		SetConsoleTitle(temp);
-		h=FindWindow("tty",temp);
-		SetConsoleTitle(original);
+		SetConsoleTitle (temp);
+		Sleep (0);
+
+		while(!(h = FindWindow (0, temp)))
+			;
+
+		SetConsoleTitle (original);
 	}
 
 	return h;

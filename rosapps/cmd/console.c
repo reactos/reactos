@@ -25,7 +25,7 @@
 #ifdef _DEBUG
 VOID DebugPrintf (LPTSTR szFormat, ...)
 {
-        TCHAR szOut[OUTPUT_BUFFER_SIZE];
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 	DWORD dwWritten;
 
@@ -57,7 +57,7 @@ VOID ConInDummy (VOID)
 
 VOID ConInFlush (VOID)
 {
-        FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));
+	FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));
 }
 
 

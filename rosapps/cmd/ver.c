@@ -128,7 +128,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 							   "\n"
 							   "ReactOS version written by:\n"
 							   "    Eric Kohl       Emanuele Aliberti\n"
-							   "    Dr. Faustus\n"));
+							   "    Paolo Pantaleo\n"));
 			}
 			else
 			{

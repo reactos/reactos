@@ -1,13 +1,14 @@
 /*
- * WINDOW.C - internal command.
+ * WINDOW.C - activate internal command.
  *
  * clone from 4nt window command
  *
  * 10 Sep 1999
- *     started - Dr.F <dfaustus@freemail.it>
+ *     started - Paolo Pantaleo <dfaustus@freemail.it>
  *
  *
  */
+
 
 #include "config.h"
 
@@ -27,69 +28,65 @@
 #define A_SIZE		0x10
 
 
-
-
 INT CommandWindow (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR *p;
+	LPTSTR *p,p_tmp;
 	INT argc,i;
-
 	INT iAction=0;
-
 	LPTSTR title=0;
-
 	HWND hWnd;
 	WINDOWPLACEMENT wp;
 	RECT pos;
-
 	LPTSTR tmp;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "change console window aspect\n"
+		ConOutPuts(_T("change console window aspect\n"
 		              "\n"
-					"WINDOW [/POS[=]left,top,width,heigth]\n"
-					"              [MIN|MAX|RESTORE]\n"
-					"\n"					
-					"/POS          specify window placement and dimensions\n"
-					"MIN           minimize the winodw\n"
-					"MAX           maximize the winodw\n"
-					"RESTORE       restore the window"					
-				   ));
+		              "WINDOW [/POS[=]left,top,width,heigth]\n"
+		              "              [MIN|MAX|RESTORE]\n"
+		              "\n"
+		              "/POS          specify window placement and dimensions\n"
+		              "MIN           minimize the window\n"
+		              "MAX           maximize the window\n"
+		              "RESTORE       restore the window"));
 		return 0;
 	}
 
 	p=split(param,&argc);
 
-	for(i=0;i <argc;i++)
+	for(i = 0; i < argc; i++)
 	{
-		if (_tcsicmp(p[i],_T("min"))==0)
+		p_tmp=p[i];
+		if (*p_tmp == _T('/'))
+			p_tmp++;
+
+		if (_tcsicmp(p_tmp,_T("min"))==0)
 		{
-			iAction |=A_MIN;
+			iAction |= A_MIN;
 			continue;
 		}
 
-		if (_tcsicmp(p[i],_T("max"))==0)
+		if (_tcsicmp(p_tmp,_T("max"))==0)
 		{
-			iAction |=A_MAX;
+			iAction |= A_MAX;
 			continue;
 		}
 
-		if (_tcsicmp(p[i],_T("restore"))==0)
+		if (_tcsicmp(p_tmp,_T("restore"))==0)
 		{
-			iAction |=A_RESTORE;
+			iAction |= A_RESTORE;
 			continue;
 		}
 
-		if (_tcsnicmp(p[i],_T("/pos"),4)==0)
+		if (_tcsnicmp(p_tmp,_T("pos"),3)==0)
 		{
-			iAction |=A_POS;
-			tmp = p[i]+4;
+			iAction |= A_POS;
+			tmp = p_tmp+3;
 			if (*tmp == _T('='))
 				tmp++;
 
-			pos.left=_ttoi(tmp);
+			pos.left= _ttoi(tmp);
 			if(!(tmp=_tcschr(tmp,_T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
@@ -97,7 +94,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 				return 1;
 			}
 
-			pos.top=_ttoi(++tmp);
+			pos.top = _ttoi (++tmp);
 			if(!(tmp=_tcschr(tmp,_T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
@@ -105,26 +102,25 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 				return 1;
 			}
 
-			pos.right=_ttoi(++tmp)+pos.left;
+			pos.right = _ttoi(++tmp)+pos.left;
 			if(!(tmp=_tcschr(tmp,_T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
 				freep(p);
 				return 1;
 			}
-			pos.bottom=_ttoi(++tmp)+pos.top;
-
+			pos.bottom = _ttoi(++tmp) + pos.top;
 			continue;
 		}
 
-		if (_tcsnicmp(p[i],_T("/size"),5)==0)
+		if (_tcsnicmp(p_tmp,_T("size"),4)==0)
 		{
 			iAction |=A_SIZE;
 			continue;
 		}
 
 #if 0
-		if(*p[i] != _T('"'))
+		if(*p_tmp != '"')
 		{
 			error_invalid_parameter_format(p[i]);
 			
@@ -141,13 +137,13 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 			return 1;
 		}
 
-		if (p[i][0] ==_T('"'))
+		if (p_tmp[0] == _T('"'))
 		{
-			title = (p[i]+1);
-			*_tcschr(p[i]+1,_T('"'))=0;
+			title = (p_tmp+1);
+			*_tcschr(p_tmp+1,_T('"'))=0;
 			continue;
 		}
-		title = p[i];
+		title = p_tmp;
 	}
 
 	if(title)
@@ -175,6 +171,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 	wp.length=sizeof(WINDOWPLACEMENT);
 	SetWindowPlacement(hWnd,&wp);
 
+	freep(p);
 	return 0;
 }
 
