@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.66.12.2 2004/07/26 21:36:47 navaraf Exp $
+/* $Id: rw.c,v 1.66.12.3 2004/07/27 14:48:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,26 +49,8 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
     }
   else
     {
-      /* 
-       * CN: FIXME: Real bug here or in dirwr, where CurrentCluster isn't 
-       * initialized when 0
-       */
-      if (FirstCluster == 0)
-	{
-	  NTSTATUS Status;
-	  
-	  Status = GetNextCluster(DeviceExt, 0, CurrentCluster,
-				  Extend);
-	  return(Status);
-	}
-      else
-	{
-	  NTSTATUS Status;
-	  
-	  Status = GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster,
-				  Extend);
-	  return(Status);
-	}
+      return GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster,
+                            Extend);
     }
 }
 
@@ -710,7 +692,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (ByteOffset.QuadPart + Length > ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
       {
-         Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
+         Length = ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart;
       }
 
       Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);

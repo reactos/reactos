@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.16 2003/10/19 17:07:58 hbirr Exp $
+/* $Id: direntry.c,v 1.16.24.1 2004/07/27 14:48:27 navaraf Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -297,11 +297,3 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
       }
     return STATUS_SUCCESS;
 }
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.44.26.2 2004/07/26 21:36:47 navaraf Exp $
+ * $Id: fat.c,v 1.44.26.3 2004/07/27 14:48:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+FAT32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 		    ULONG CurrentCluster,
 		    PULONG NextCluster)
 /*
@@ -61,7 +61,7 @@ Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+FAT16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 		    ULONG CurrentCluster,
 		    PULONG NextCluster)
 /*
@@ -90,7 +90,7 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+FAT12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 		    ULONG CurrentCluster,
 		    PULONG NextCluster)
 /*
@@ -603,25 +603,14 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   ULONG OldValue;
   ExAcquireResourceExclusiveLite (&DeviceExt->FatResource, TRUE);
-  if (DeviceExt->FatInfo.FatType == FAT16)
-    {
-      Status = FAT16WriteCluster(DeviceExt, ClusterToWrite, NewValue, &OldValue);
-    }
-  else if (DeviceExt->FatInfo.FatType == FAT32)
-    {
-      Status = FAT32WriteCluster(DeviceExt, ClusterToWrite, NewValue, &OldValue);
-    }
-  else
-    {
-      Status = FAT12WriteCluster(DeviceExt, ClusterToWrite, NewValue, &OldValue);
-    }
+  Status = DeviceExt->WriteCluster(DeviceExt, ClusterToWrite, NewValue, &OldValue);
   if (DeviceExt->AvailableClustersValid)
-	{
+  {
       if (OldValue && NewValue == 0)
         InterlockedIncrement(&DeviceExt->AvailableClusters);
       else if (OldValue == 0 && NewValue)
         InterlockedDecrement(&DeviceExt->AvailableClusters);
-    }
+  }
   ExReleaseResourceLite(&DeviceExt->FatResource);
   return(Status);
 }
@@ -670,35 +659,13 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   {
     ULONG NewCluster;
 
-    if (DeviceExt->FatInfo.FatType == FAT16)
-	 {
-	   CHECKPOINT;
-	   Status = FAT16FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	   CHECKPOINT;
-	   if (!NT_SUCCESS(Status))
-	   {
-          ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	   }
-	 }
-    else if (DeviceExt->FatInfo.FatType == FAT32)
-	 {
-	    Status = FAT32FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	    if (!NT_SUCCESS(Status))
-	    {
-          ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	    }
-	 }
-    else
-	 {
-	    Status = FAT12FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	    if (!NT_SUCCESS(Status))
-	    {
-          ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	    }
-	 }
+    Status = DeviceExt->FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
+    if (!NT_SUCCESS(Status))
+    {
+      ExReleaseResourceLite(&DeviceExt->FatResource);
+      return Status;
+    }
+
     *NextCluster = NewCluster;
     ExReleaseResourceLite(&DeviceExt->FatResource);
     return(STATUS_SUCCESS);
@@ -709,51 +676,22 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
      return(STATUS_UNSUCCESSFUL);
   }
 
-  if (DeviceExt->FatInfo.FatType == FAT16)
-  {
-     Status = Fat16GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
-  }
-  else if (DeviceExt->FatInfo.FatType == FAT32)
-  {
-     Status = Fat32GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
-  }
-  else
-  {
-     Status = Fat12GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
-  }
+  Status = DeviceExt->GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
+
   if (Extend && (*NextCluster) == 0xFFFFFFFF)
   {
      ULONG NewCluster;
 
      /* We are after last existing cluster, we must add one to file */
-     /* Firstly, find the next available open allocation unit */
-     if (DeviceExt->FatInfo.FatType == FAT16)
-	  {
-	    Status = FAT16FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	    if (!NT_SUCCESS(Status))
-	    {
-         ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	    }
-	  }
-     else if (DeviceExt->FatInfo.FatType == FAT32)
-	  {
-	    Status = FAT32FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	    if (!NT_SUCCESS(Status))
-	    {
-         ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	    }
-	  }
-     else
-	  {
-	    Status = FAT12FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
-	    if (!NT_SUCCESS(Status))
-	    {
-         ExReleaseResourceLite(&DeviceExt->FatResource);
-	      return(Status);
-	    }
-	  }
+     /* Firstly, find the next available open allocation unit and
+        mark it as end of file */
+     Status = DeviceExt->FindAndMarkAvailableCluster(DeviceExt, &NewCluster);
+     if (!NT_SUCCESS(Status))
+     {
+        ExReleaseResourceLite(&DeviceExt->FatResource);
+        return Status;
+     }
+
      /* Now, write the AU of the LastCluster with the value of the newly
         found AU */
      WriteCluster(DeviceExt, CurrentCluster, NewCluster);

@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.39 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: dirwr.c,v 1.39.26.1 2004/07/27 14:48:27 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -203,6 +203,13 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     {
       return STATUS_UNSUCCESSFUL;
     }
+
+  if (!ExAcquireResourceExclusiveLite(&pDirFcb->MainResource, TRUE))
+    {
+      DPRINT("Failed acquiring lock\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+  
   nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
   Buffer = ExAllocatePool (NonPagedPool, (nbSlots - 1) * sizeof (FATDirEntry));
@@ -248,6 +255,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
       if (i == 100) /* FIXME : what to do after this ? */
         {
           vfatReleaseFCB(DeviceExt, pDirFcb);
+          ExReleaseResourceLite(&pDirFcb->MainResource);
           ExFreePool (Buffer);
 	  CHECKPOINT;
           return STATUS_UNSUCCESSFUL;
@@ -401,17 +409,19 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   if (!vfatFindDirSpace(DeviceExt, pDirFcb, nbSlots, &DirContext.StartIndex))
     {
       vfatReleaseFCB(DeviceExt, pDirFcb);
+      ExReleaseResourceLite(&pDirFcb->MainResource);
       ExFreePool (Buffer);
       return STATUS_DISK_FULL;
     }
   DirContext.DirIndex = DirContext.StartIndex + nbSlots - 1;
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
-      CurrentCluster = 0xffffffff;
+      CurrentCluster = 0;
       Status = NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
       if (CurrentCluster == 0xffffffff || !NT_SUCCESS(Status))
         {
           vfatReleaseFCB(DeviceExt, pDirFcb);
+          ExReleaseResourceLite(&pDirFcb->MainResource);
           ExFreePool (Buffer);
           if (!NT_SUCCESS(Status))
             {
@@ -496,6 +506,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
       CcUnpinData(Context);
     }
   vfatReleaseFCB (DeviceExt, pDirFcb);
+  ExReleaseResourceLite(&pDirFcb->MainResource);
   ExFreePool (Buffer);
   DPRINT ("addentry ok\n");
   return STATUS_SUCCESS;

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.65.4.2 2004/07/26 21:36:47 navaraf Exp $ */
+/* $Id: vfat.h,v 1.65.4.3 2004/07/27 14:48:28 navaraf Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -144,7 +144,13 @@ HASHENTRY;
 
 #define FCB_HASH_TABLE_SIZE 1024
 
-typedef struct
+typedef struct DEVICE_EXTENSION *PDEVICE_EXTENSION;
+
+typedef NTSTATUS (*PGET_NEXT_CLUSTER)(PDEVICE_EXTENSION,ULONG,PULONG);
+typedef NTSTATUS (*PFIND_AND_MARK_AVAILABLE_CLUSTER)(PDEVICE_EXTENSION,PULONG);
+typedef NTSTATUS (*PWRITE_CLUSTER)(PDEVICE_EXTENSION,ULONG,ULONG,PULONG);
+
+typedef struct DEVICE_EXTENSION
 {
   ERESOURCE DirResource;
   ERESOURCE FatResource;
@@ -162,8 +168,13 @@ typedef struct
   ULONG Flags;  
   struct _VFATFCB * VolumeFcb;
 
+  /* Pointers to functions for manipulating FAT. */
+  PGET_NEXT_CLUSTER GetNextCluster;
+  PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
+  PWRITE_CLUSTER WriteCluster;
+
   LIST_ENTRY VolumeListEntry;
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
+} DEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct
 {
@@ -450,6 +461,42 @@ BOOLEAN wstrcmpjoki (PWSTR s1,
                      PWSTR s2);
 
 /*  -----------------------------------------------------------  fat.c  */
+
+NTSTATUS FAT12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+                             ULONG CurrentCluster,
+                             PULONG NextCluster);
+
+NTSTATUS FAT12FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
+                                          PULONG Cluster);
+
+NTSTATUS FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
+                           ULONG ClusterToWrite,
+                           ULONG NewValue,
+                           PULONG OldValue);
+
+NTSTATUS FAT16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+                             ULONG CurrentCluster,
+                             PULONG NextCluster);
+
+NTSTATUS FAT16FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
+                                          PULONG Cluster);
+
+NTSTATUS FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
+                           ULONG ClusterToWrite,
+                           ULONG NewValue,
+                           PULONG OldValue);
+
+NTSTATUS FAT32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
+                             ULONG CurrentCluster,
+                             PULONG NextCluster);
+
+NTSTATUS FAT32FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
+                                          PULONG Cluster);
+
+NTSTATUS FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
+                           ULONG ClusterToWrite,
+                           ULONG NewValue,
+                           PULONG OldValue);
 
 NTSTATUS OffsetToCluster (PDEVICE_EXTENSION DeviceExt,
                           ULONG FirstCluster,
