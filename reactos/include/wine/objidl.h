@@ -440,7 +440,6 @@ DECLARE_ENUMERATOR_(IEnumMoniker,interface IMoniker*);
 DECLARE_ENUMERATOR_(IEnumUnknown,IUnknown*);
 
 EXTERN_C const IID IID_ISequentialStream;
-#undef INTERFACE
 #define INTERFACE ISequentialStream
 DECLARE_INTERFACE_(ISequentialStream,IUnknown)
 {
@@ -450,9 +449,9 @@ DECLARE_INTERFACE_(ISequentialStream,IUnknown)
 	STDMETHOD(Read)(THIS_ void*,ULONG,ULONG*) PURE;
 	STDMETHOD(Write)(THIS_ void const*,ULONG,ULONG*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IStream;
-#undef INTERFACE
 #define INTERFACE IStream
 DECLARE_INTERFACE_(IStream,ISequentialStream)
 {
@@ -471,9 +470,9 @@ DECLARE_INTERFACE_(IStream,ISequentialStream)
 	STDMETHOD(Stat)(THIS_ STATSTG*,DWORD) PURE;
 	STDMETHOD(Clone)(THIS_ LPSTREAM*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IMarshal;
-#undef INTERFACE
 #define INTERFACE IMarshal
 DECLARE_INTERFACE_(IMarshal,IUnknown)
 {
@@ -487,9 +486,9 @@ DECLARE_INTERFACE_(IMarshal,IUnknown)
 	STDMETHOD(ReleaseMarshalData) (THIS_ IStream*) PURE;
 	STDMETHOD(DisconnectObject) (THIS_ DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IStdMarshalInfo;
-#undef INTERFACE
 #define INTERFACE IStdMarshalInfo
 DECLARE_INTERFACE_(IStdMarshalInfo,IUnknown)
 {
@@ -498,9 +497,9 @@ DECLARE_INTERFACE_(IStdMarshalInfo,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetClassForHandler)(THIS_ DWORD,PVOID,CLSID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IMalloc;
-#undef INTERFACE
 #define INTERFACE IMalloc
 DECLARE_INTERFACE_(IMalloc,IUnknown)
 {
@@ -514,9 +513,9 @@ DECLARE_INTERFACE_(IMalloc,IUnknown)
 	STDMETHOD_(int,DidAlloc)(THIS_ void*) PURE;
 	STDMETHOD_(void,HeapMinimize)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IMallocSpy;
-#undef INTERFACE
 #define INTERFACE IMallocSpy
 DECLARE_INTERFACE_(IMallocSpy,IUnknown)
 {
@@ -536,9 +535,9 @@ DECLARE_INTERFACE_(IMallocSpy,IUnknown)
 	STDMETHOD_(void,PreHeapMinimize)(THIS) PURE;
 	STDMETHOD_(void,PostHeapMinimize)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IMessageFilter;
-#undef INTERFACE
 #define INTERFACE IMessageFilter
 DECLARE_INTERFACE_(IMessageFilter,IUnknown)
 {
@@ -549,9 +548,9 @@ DECLARE_INTERFACE_(IMessageFilter,IUnknown)
 	STDMETHOD_(DWORD,RetryRejectedCall)(THIS_ HTASK,DWORD,DWORD) PURE;
 	STDMETHOD_(DWORD,MessagePending)(THIS_ HTASK,DWORD,DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersist;
-#undef INTERFACE
 #define INTERFACE IPersist
 DECLARE_INTERFACE_(IPersist,IUnknown)
 {
@@ -560,9 +559,9 @@ DECLARE_INTERFACE_(IPersist,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetClassID)(THIS_ CLSID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersistStream;
-#undef INTERFACE
 #define INTERFACE IPersistStream
 DECLARE_INTERFACE_(IPersistStream,IPersist)
 {
@@ -575,9 +574,9 @@ DECLARE_INTERFACE_(IPersistStream,IPersist)
 	STDMETHOD(Save)(THIS_ IStream*,BOOL) PURE;
 	STDMETHOD(GetSizeMax)(THIS_ PULARGE_INTEGER) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRunningObjectTable;
-#undef INTERFACE
 #define INTERFACE IRunningObjectTable
 DECLARE_INTERFACE_(IRunningObjectTable,IUnknown)
 {
@@ -592,9 +591,9 @@ DECLARE_INTERFACE_(IRunningObjectTable,IUnknown)
 	STDMETHOD(GetTimeOfLastChange)(THIS_ LPMONIKER,LPFILETIME) PURE;
 	STDMETHOD(EnumRunning)(THIS_ IEnumMoniker**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IBindCtx;
-#undef INTERFACE
 #define INTERFACE IBindCtx
 DECLARE_INTERFACE_(IBindCtx,IUnknown)
 {
@@ -612,9 +611,9 @@ DECLARE_INTERFACE_(IBindCtx,IUnknown)
 	STDMETHOD(EnumObjectParam)(THIS_ IEnumString**) PURE;
 	STDMETHOD(RevokeObjectParam)(THIS_ LPOLESTR) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IMoniker;
-#undef INTERFACE
 #define INTERFACE IMoniker
 DECLARE_INTERFACE_(IMoniker,IPersistStream)
 {
@@ -642,9 +641,9 @@ DECLARE_INTERFACE_(IMoniker,IPersistStream)
 	STDMETHOD(ParseDisplayName)(THIS_ IBindCtx*,IMoniker*,LPOLESTR,ULONG*,IMoniker**) PURE;
 	STDMETHOD(IsSystemMoniker)(THIS_ PDWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersistStorage;
-#undef INTERFACE
 #define INTERFACE IPersistStorage
 DECLARE_INTERFACE_(IPersistStorage,IPersist)
 {
@@ -659,9 +658,9 @@ DECLARE_INTERFACE_(IPersistStorage,IPersist)
 	STDMETHOD(SaveCompleted)(THIS_ LPSTORAGE) PURE;
 	STDMETHOD(HandsOffStorage)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersistFile;
-#undef INTERFACE
 #define INTERFACE IPersistFile
 DECLARE_INTERFACE_(IPersistFile,IPersist)
 {
@@ -675,9 +674,9 @@ DECLARE_INTERFACE_(IPersistFile,IPersist)
 	STDMETHOD(SaveCompleted)(THIS_ LPCOLESTR) PURE;
 	STDMETHOD(GetCurFile)(THIS_ LPOLESTR*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IAdviseSink;
-#undef INTERFACE
 #define INTERFACE IAdviseSink
 DECLARE_INTERFACE_(IAdviseSink,IUnknown)
 {
@@ -690,9 +689,9 @@ DECLARE_INTERFACE_(IAdviseSink,IUnknown)
 	STDMETHOD_(void,OnSave)(THIS) PURE;
 	STDMETHOD_(void,OnClose)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IAdviseSink2;
-#undef INTERFACE
 #define INTERFACE IAdviseSink2
 DECLARE_INTERFACE_(IAdviseSink2,IAdviseSink)
 {
@@ -706,9 +705,9 @@ DECLARE_INTERFACE_(IAdviseSink2,IAdviseSink)
 	STDMETHOD_(void,OnClose)(THIS) PURE;
 	STDMETHOD_(void,OnLinkSrcChange)(THIS_ IMoniker*);
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IDataObject;
-#undef INTERFACE
 #define INTERFACE IDataObject
 DECLARE_INTERFACE_(IDataObject,IUnknown)
 {
@@ -725,9 +724,9 @@ DECLARE_INTERFACE_(IDataObject,IUnknown)
 	STDMETHOD(DUnadvise)(THIS_ DWORD) PURE;
 	STDMETHOD(EnumDAdvise)(THIS_ IEnumSTATDATA**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IDataAdviseHolder;
-#undef INTERFACE
 #define INTERFACE IDataAdviseHolder
 DECLARE_INTERFACE_(IDataAdviseHolder,IUnknown)
 {
@@ -739,9 +738,9 @@ DECLARE_INTERFACE_(IDataAdviseHolder,IUnknown)
 	STDMETHOD(EnumAdvise)(THIS_ IEnumSTATDATA**) PURE;
 	STDMETHOD(SendOnDataChange)(THIS_ IDataObject*,DWORD,DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IStorage;
-#undef INTERFACE
 #define INTERFACE IStorage
 DECLARE_INTERFACE_(IStorage,IUnknown)
 {
@@ -764,9 +763,9 @@ DECLARE_INTERFACE_(IStorage,IUnknown)
 	STDMETHOD(SetStateBits)(THIS_ DWORD,DWORD) PURE;
 	STDMETHOD(Stat)(THIS_ STATSTG*,DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRootStorage;
-#undef INTERFACE
 #define INTERFACE IRootStorage
 DECLARE_INTERFACE_(IRootStorage,IPersist)
 {
@@ -775,9 +774,9 @@ DECLARE_INTERFACE_(IRootStorage,IPersist)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(SwitchToFile)(THIS_ LPOLESTR) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRpcChannelBuffer;
-#undef INTERFACE
 #define INTERFACE IRpcChannelBuffer
 DECLARE_INTERFACE_(IRpcChannelBuffer,IUnknown)
 {
@@ -790,9 +789,9 @@ DECLARE_INTERFACE_(IRpcChannelBuffer,IUnknown)
 	STDMETHOD(GetDestCtx)(THIS_ PDWORD,PVOID*) PURE;
 	STDMETHOD(IsConnected)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRpcProxyBuffer;
-#undef INTERFACE
 #define INTERFACE IRpcProxyBuffer
 DECLARE_INTERFACE_(IRpcProxyBuffer,IUnknown)
 {
@@ -803,9 +802,9 @@ DECLARE_INTERFACE_(IRpcProxyBuffer,IUnknown)
 	STDMETHOD_(void,Disconnect)(THIS) PURE;
 
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRpcStubBuffer;
-#undef INTERFACE
 #define INTERFACE IRpcStubBuffer
 DECLARE_INTERFACE_(IRpcStubBuffer,IUnknown)
 {
@@ -820,9 +819,9 @@ DECLARE_INTERFACE_(IRpcStubBuffer,IUnknown)
 	STDMETHOD(DebugServerQueryInterface)(THIS_ PVOID*) PURE;
 	STDMETHOD(DebugServerRelease)(THIS_ PVOID) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPSFactoryBuffer;
-#undef INTERFACE
 #define INTERFACE IPSFactoryBuffer
 DECLARE_INTERFACE_(IPSFactoryBuffer,IUnknown)
 {
@@ -832,9 +831,9 @@ DECLARE_INTERFACE_(IPSFactoryBuffer,IUnknown)
 	STDMETHOD(CreateProxy)(THIS_ LPUNKNOWN,REFIID,LPRPCPROXYBUFFER*,PVOID*) PURE;
 	STDMETHOD(CreateStub)(THIS_ REFIID,LPUNKNOWN,LPRPCSTUBBUFFER*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_ILockBytes;
-#undef INTERFACE
 #define INTERFACE ILockBytes
 DECLARE_INTERFACE_(ILockBytes,IUnknown)
 {
@@ -849,9 +848,9 @@ DECLARE_INTERFACE_(ILockBytes,IUnknown)
 	STDMETHOD(UnlockRegion)(THIS_ ULARGE_INTEGER,ULARGE_INTEGER,DWORD) PURE;
 	STDMETHOD(Stat)(THIS_ STATSTG*,DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IExternalConnection;
-#undef INTERFACE
 #define INTERFACE IExternalConnection
 DECLARE_INTERFACE_(IExternalConnection,IUnknown)
 {
@@ -861,9 +860,9 @@ DECLARE_INTERFACE_(IExternalConnection,IUnknown)
 	STDMETHOD(AddConnection)(THIS_ DWORD,DWORD) PURE;
 	STDMETHOD(ReleaseConnection)(THIS_ DWORD,DWORD,BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRunnableObject;
-#undef INTERFACE
 #define INTERFACE IRunnableObject
 DECLARE_INTERFACE_(IRunnableObject,IUnknown)
 {
@@ -876,9 +875,9 @@ DECLARE_INTERFACE_(IRunnableObject,IUnknown)
 	STDMETHOD(LockRunning)(THIS_ BOOL,BOOL) PURE;
 	STDMETHOD(SetContainedObject)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IROTData;
-#undef INTERFACE
 #define INTERFACE IROTData
 DECLARE_INTERFACE_(IROTData,IUnknown)
 {
@@ -887,9 +886,9 @@ DECLARE_INTERFACE_(IROTData,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetComparisonData)(THIS_ PVOID,ULONG,PULONG) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IChannelHook;
-#undef INTERFACE
 #define INTERFACE IChannelHook
 DECLARE_INTERFACE_(IChannelHook,IUnknown)
 {
@@ -903,9 +902,9 @@ DECLARE_INTERFACE_(IChannelHook,IUnknown)
 	STDMETHOD_(void,ServerGetSize)(THIS_ REFGUID,REFIID,HRESULT,PULONG) PURE;
 	STDMETHOD_(void,ServerFillBuffer)(THIS_ REFGUID,REFIID,PULONG,PVOID,HRESULT) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyStorage;
-#undef INTERFACE
 #define INTERFACE IPropertyStorage
 DECLARE_INTERFACE_(IPropertyStorage,IUnknown)
 {
@@ -925,9 +924,9 @@ DECLARE_INTERFACE_(IPropertyStorage,IUnknown)
 	STDMETHOD(Stat)(THIS_ STATPROPSTG*) PURE;
 	STDMETHOD(SetTimes)(THIS_ FILETIME const*,FILETIME const*,FILETIME const*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertySetStorage;
-#undef INTERFACE
 #define INTERFACE IPropertySetStorage
 DECLARE_INTERFACE_(IPropertySetStorage,IUnknown)
 {
@@ -939,9 +938,9 @@ DECLARE_INTERFACE_(IPropertySetStorage,IUnknown)
 	STDMETHOD(Delete)(THIS_ REFFMTID) PURE;
 	STDMETHOD(Enum)(THIS_ IEnumSTATPROPSETSTG**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IClientSecurity;
-#undef INTERFACE
 #define INTERFACE IClientSecurity
 DECLARE_INTERFACE_(IClientSecurity,IUnknown)
 {
@@ -952,9 +951,9 @@ DECLARE_INTERFACE_(IClientSecurity,IUnknown)
 	STDMETHOD(SetBlanket)(THIS_ PVOID,DWORD,DWORD,LPWSTR,DWORD,DWORD,RPC_AUTH_IDENTITY_HANDLE*,DWORD) PURE;
 	STDMETHOD(CopyProxy)(THIS_ LPUNKNOWN,LPUNKNOWN*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IServerSecurity;
-#undef INTERFACE
 #define INTERFACE IServerSecurity
 DECLARE_INTERFACE_(IServerSecurity,IUnknown)
 {
@@ -966,9 +965,9 @@ DECLARE_INTERFACE_(IServerSecurity,IUnknown)
 	STDMETHOD(RevertToSelf)(THIS) PURE;
 	STDMETHOD(IsImpersonating)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IClassActivator;
-#undef INTERFACE
 #define INTERFACE IClassActivator
 DECLARE_INTERFACE_(IClassActivator,IUnknown)
 {
@@ -977,9 +976,9 @@ DECLARE_INTERFACE_(IClassActivator,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetClassObject)(THIS_ REFCLSID,DWORD,LCID,REFIID,PVOID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IFillLockBytes;
-#undef INTERFACE
 #define INTERFACE IFillLockBytes
 DECLARE_INTERFACE_(IFillLockBytes,IUnknown)
 {
@@ -991,9 +990,9 @@ DECLARE_INTERFACE_(IFillLockBytes,IUnknown)
 	STDMETHOD(SetFillSize)(THIS_ ULARGE_INTEGER) PURE;
 	STDMETHOD(Terminate)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IProgressNotify;
-#undef INTERFACE
 #define INTERFACE IProgressNotify
 DECLARE_INTERFACE_(IProgressNotify,IUnknown)
 {
@@ -1002,9 +1001,9 @@ DECLARE_INTERFACE_(IProgressNotify,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(OnProgress)(THIS_ DWORD,DWORD,BOOL,BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_ILayoutStorage;
-#undef INTERFACE
 #define INTERFACE ILayoutStorage
 DECLARE_INTERFACE_(ILayoutStorage,IUnknown)
 {
@@ -1016,6 +1015,7 @@ DECLARE_INTERFACE_(ILayoutStorage,IUnknown)
 	STDMETHOD(EndMonitor)(THIS) PURE;
 	STDMETHOD(ReLayoutDocfile)(THIS_ OLECHAR*) PURE;
 };
+#undef INTERFACE
 
 HRESULT STDMETHODCALLTYPE IMarshal_GetUnmarshalClass_Proxy(IMarshal*,REFIID,void*,DWORD,void*,DWORD,CLSID*);
 void STDMETHODCALLTYPE IMarshal_GetUnmarshalClass_Stub(IRpcStubBuffer*,IRpcChannelBuffer*,PRPC_MESSAGE,PDWORD);

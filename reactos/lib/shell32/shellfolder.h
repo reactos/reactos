@@ -39,7 +39,6 @@ typedef struct ISFHelper ISFHelper, *LPISFHELPER;
  * ISFHelper interface
  */
 
-#undef INTERFACE
 #define INTERFACE ISFHelper
 #define ISFHelper_METHODS \
 	IUnknown_METHODS \

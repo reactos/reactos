@@ -94,7 +94,6 @@ DECLARE_ENUMERATOR(OLEVERB);
 typedef IEnumOLEVERB IEnumOleVerb;
 
 EXTERN_C const IID IID_IParseDisplayName;
-#undef INTERFACE
 #define INTERFACE IParseDisplayName
 DECLARE_INTERFACE_(IParseDisplayName,IUnknown)
 {
@@ -103,6 +102,7 @@ DECLARE_INTERFACE_(IParseDisplayName,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(ParseDisplayName)(THIS_ IBindCtx*,LPOLESTR,ULONG*,IMoniker**) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IParseDisplayName_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -112,7 +112,6 @@ DECLARE_INTERFACE_(IParseDisplayName,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IOleContainer;
-#undef INTERFACE
 #define INTERFACE IOleContainer
 DECLARE_INTERFACE_(IOleContainer,IParseDisplayName)
 {
@@ -123,9 +122,9 @@ DECLARE_INTERFACE_(IOleContainer,IParseDisplayName)
 	STDMETHOD(EnumObjects)(THIS_ DWORD,IEnumUnknown**) PURE;
 	STDMETHOD(LockContainer)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleItemContainer;
-#undef INTERFACE
 #define INTERFACE IOleItemContainer
 DECLARE_INTERFACE_(IOleItemContainer,IOleContainer)
 {
@@ -139,6 +138,7 @@ DECLARE_INTERFACE_(IOleItemContainer,IOleContainer)
 	STDMETHOD(GetObjectStorage)(THIS_ LPOLESTR,IBindCtx*,REFIID,void**) PURE;
 	STDMETHOD(IsRunning)(THIS_ LPOLESTR) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleItemContainer_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -153,7 +153,6 @@ DECLARE_INTERFACE_(IOleItemContainer,IOleContainer)
 #endif
 
 EXTERN_C const IID IID_IOleClientSite;
-#undef INTERFACE
 #define INTERFACE IOleClientSite
 DECLARE_INTERFACE_(IOleClientSite,IUnknown)
 {
@@ -167,6 +166,7 @@ DECLARE_INTERFACE_(IOleClientSite,IUnknown)
 	STDMETHOD(OnShowWindow)(THIS_ BOOL) PURE;
 	STDMETHOD(RequestNewObjectLayout)(THIS) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleClientSite_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -181,7 +181,6 @@ DECLARE_INTERFACE_(IOleClientSite,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IOleObject;
-#undef INTERFACE
 #define INTERFACE IOleObject
 DECLARE_INTERFACE_(IOleObject,IUnknown)
 {
@@ -210,6 +209,7 @@ DECLARE_INTERFACE_(IOleObject,IUnknown)
 	STDMETHOD(GetMiscStatus)(THIS_ DWORD,PDWORD) PURE;
 	STDMETHOD(SetColorScheme)(THIS_ LPLOGPALETTE) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleObject_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -239,7 +239,6 @@ DECLARE_INTERFACE_(IOleObject,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IOleWindow;
-#undef INTERFACE
 #define INTERFACE IOleWindow
 DECLARE_INTERFACE_(IOleWindow,IUnknown)
 {
@@ -249,6 +248,7 @@ DECLARE_INTERFACE_(IOleWindow,IUnknown)
 	STDMETHOD(GetWindow)(THIS_ HWND*) PURE;
 	STDMETHOD(ContextSensitiveHelp)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleWindow_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -259,7 +259,6 @@ DECLARE_INTERFACE_(IOleWindow,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IOleInPlaceUIWindow;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceUIWindow
 DECLARE_INTERFACE_(IOleInPlaceUIWindow,IOleWindow)
 {
@@ -273,9 +272,9 @@ DECLARE_INTERFACE_(IOleInPlaceUIWindow,IOleWindow)
 	STDMETHOD(SetBorderSpace)(THIS_ LPCBORDERWIDTHS) PURE;
 	STDMETHOD(SetActiveObject)(THIS_ LPOLEINPLACEACTIVEOBJECT,LPCOLESTR) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleInPlaceObject;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceObject
 DECLARE_INTERFACE_(IOleInPlaceObject,IOleWindow)
 {
@@ -289,9 +288,9 @@ DECLARE_INTERFACE_(IOleInPlaceObject,IOleWindow)
 	STDMETHOD(SetObjectRects)(THIS_ LPCRECT,LPCRECT) PURE;
 	STDMETHOD(ReactivateAndUndo)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleInPlaceActiveObject;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceActiveObject
 DECLARE_INTERFACE_(IOleInPlaceActiveObject,IOleWindow)
 {
@@ -306,9 +305,9 @@ DECLARE_INTERFACE_(IOleInPlaceActiveObject,IOleWindow)
 	STDMETHOD(ResizeBorder)(THIS_ LPCRECT,LPOLEINPLACEUIWINDOW,BOOL) PURE;
 	STDMETHOD(EnableModeless)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleInPlaceFrame;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceFrame
 DECLARE_INTERFACE_(IOleInPlaceFrame,IOleInPlaceUIWindow)
 {
@@ -328,6 +327,7 @@ DECLARE_INTERFACE_(IOleInPlaceFrame,IOleInPlaceUIWindow)
 	STDMETHOD(EnableModeless)(THIS_ BOOL) PURE;
 	STDMETHOD(TranslateAccelerator)(THIS_ LPMSG,WORD) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleInPlaceFrame_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -348,7 +348,6 @@ DECLARE_INTERFACE_(IOleInPlaceFrame,IOleInPlaceUIWindow)
 #endif
 
 EXTERN_C const IID IID_IOleInPlaceSite;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceSite
 DECLARE_INTERFACE_(IOleInPlaceSite,IOleWindow)
 {
@@ -368,9 +367,9 @@ DECLARE_INTERFACE_(IOleInPlaceSite,IOleWindow)
 	STDMETHOD(DeactivateAndUndo)(THIS) PURE;
 	STDMETHOD(OnPosRectChange)(THIS_ LPCRECT) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleAdviseHolder;
-#undef INTERFACE
 #define INTERFACE IOleAdviseHolder
 DECLARE_INTERFACE_(IOleAdviseHolder,IUnknown)
 {
@@ -384,6 +383,7 @@ DECLARE_INTERFACE_(IOleAdviseHolder,IUnknown)
 	STDMETHOD(SendOnSave)(THIS) PURE;
 	STDMETHOD(SendOnClose)(THIS) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleAdviseHolder_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -398,7 +398,6 @@ DECLARE_INTERFACE_(IOleAdviseHolder,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IDropSource;
-#undef INTERFACE
 #define INTERFACE IDropSource
 DECLARE_INTERFACE_(IDropSource,IUnknown)
 {
@@ -408,6 +407,7 @@ DECLARE_INTERFACE_(IDropSource,IUnknown)
 	STDMETHOD(QueryContinueDrag)(THIS_ BOOL,DWORD) PURE;
 	STDMETHOD(GiveFeedback)(THIS_ DWORD) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IDropSource_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -418,7 +418,6 @@ DECLARE_INTERFACE_(IDropSource,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IDropTarget;
-#undef INTERFACE
 #define INTERFACE IDropTarget
 DECLARE_INTERFACE_(IDropTarget,IUnknown)
 {
@@ -430,6 +429,7 @@ DECLARE_INTERFACE_(IDropTarget,IUnknown)
 	STDMETHOD(DragLeave)(THIS) PURE;
 	STDMETHOD(Drop)(THIS_ LPDATAOBJECT,DWORD,POINTL,PDWORD) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IDropTarget_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -443,7 +443,6 @@ DECLARE_INTERFACE_(IDropTarget,IUnknown)
 
 typedef BOOL(CALLBACK *__IView_pfncont)(DWORD);
 EXTERN_C const IID IID_IViewObject;
-#undef INTERFACE
 #define INTERFACE IViewObject
 DECLARE_INTERFACE_(IViewObject,IUnknown)
 {
@@ -457,6 +456,7 @@ DECLARE_INTERFACE_(IViewObject,IUnknown)
 	STDMETHOD(SetAdvise)(THIS_ DWORD,DWORD,IAdviseSink*) PURE;
 	STDMETHOD(GetAdvise)(THIS_ PDWORD,PDWORD,IAdviseSink**) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IViewObject_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -471,7 +471,6 @@ DECLARE_INTERFACE_(IViewObject,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IViewObject2;
-#undef INTERFACE
 #define INTERFACE IViewObject2
 DECLARE_INTERFACE_(IViewObject2,IViewObject)
 {
@@ -486,6 +485,7 @@ DECLARE_INTERFACE_(IViewObject2,IViewObject)
 	STDMETHOD(GetAdvise)(THIS_ PDWORD,PDWORD,IAdviseSink**) PURE;
 	STDMETHOD(GetExtent)(THIS_ DWORD,LONG,DVTARGETDEVICE*,LPSIZEL) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IViewObject2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -501,7 +501,6 @@ DECLARE_INTERFACE_(IViewObject2,IViewObject)
 #endif
 
 EXTERN_C const IID IID_IOleCache;
-#undef INTERFACE
 #define INTERFACE IOleCache
 DECLARE_INTERFACE_(IOleCache,IUnknown)
 {
@@ -514,6 +513,7 @@ DECLARE_INTERFACE_(IOleCache,IUnknown)
 	STDMETHOD(InitCache)(THIS_ LPDATAOBJECT); 
 	STDMETHOD(SetData)(THIS_ FORMATETC*,STGMEDIUM*,BOOL); 
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleCache_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -527,7 +527,6 @@ DECLARE_INTERFACE_(IOleCache,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IOleCache2;
-#undef INTERFACE
 #define INTERFACE IOleCache2
 DECLARE_INTERFACE_(IOleCache2,IOleCache)
 {
@@ -542,6 +541,7 @@ DECLARE_INTERFACE_(IOleCache2,IOleCache)
 	STDMETHOD(UpdateCache)(THIS_ LPDATAOBJECT,DWORD,LPVOID) PURE; 
 	STDMETHOD(DiscardCache)(THIS_ DWORD) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleCache2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -557,7 +557,6 @@ DECLARE_INTERFACE_(IOleCache2,IOleCache)
 #endif
 
 EXTERN_C const IID IID_IOleCacheControl;
-#undef INTERFACE
 #define INTERFACE IOleCacheControl
 DECLARE_INTERFACE_(IOleCacheControl,IUnknown)
 {
@@ -567,6 +566,7 @@ DECLARE_INTERFACE_(IOleCacheControl,IUnknown)
 	STDMETHOD(OnRun)(THIS_ LPDATAOBJECT) PURE;
 	STDMETHOD(OnStop)(THIS) PURE;
 };
+#undef INTERFACE
 
 #ifdef __cplusplus
 }

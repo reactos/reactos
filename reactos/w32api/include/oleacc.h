@@ -149,7 +149,6 @@ typedef enum tagSELFLAG
 EXTERN_C const IID LIBID_Accessibility;
 EXTERN_C const IID IID_IAccessible;
 
-#undef INTERFACE
 #define INTERFACE IAccessible
 DECLARE_INTERFACE_(IAccessible, IDispatch)
 {
@@ -185,6 +184,7 @@ DECLARE_INTERFACE_(IAccessible, IDispatch)
     STDMETHOD(put_accName)(THIS_ VARIANT, BSTR) PURE;
     STDMETHOD(put_accValue)(THIS_ VARIANT, BSTR) PURE;
 };
+#undef INTERFACE
 typedef IAccessible* LPACCESSIBLE;
 
 STDAPI AccessibleChildren(IAccessible*,LONG,LONG,VARIANT*,LONG*);

@@ -54,7 +54,6 @@ typedef struct _reobject {
 	DWORD	dwUser;
 } REOBJECT;
 
-#undef INTERFACE
 #define INTERFACE IRichEditOle
 DECLARE_INTERFACE_(IRichEditOle, IUnknown)
 {
@@ -78,9 +77,9 @@ DECLARE_INTERFACE_(IRichEditOle, IUnknown)
 	STDMETHOD(GetClipboardData)(THIS_ CHARRANGE*,DWORD,LPDATAOBJECT*) PURE;
 	STDMETHOD(ImportDataObject)(THIS_ LPDATAOBJECT,CLIPFORMAT,HGLOBAL) PURE;
 };
+#undef INTERFACE
 typedef IRichEditOle *LPRICHEDITOLE;
 
-#undef INTERFACE
 #define INTERFACE IRichEditOleCallback
 DECLARE_INTERFACE_(IRichEditOleCallback, IUnknown)
 {
@@ -98,6 +97,7 @@ DECLARE_INTERFACE_(IRichEditOleCallback, IUnknown)
 	STDMETHOD(GetDragDropEffect) (THIS_ BOOL,DWORD,PDWORD) PURE;
 	STDMETHOD(GetContextMenu) (THIS_ WORD,LPOLEOBJECT,CHARRANGE*,HMENU*) PURE;
 };
+#undef INTERFACE
 typedef IRichEditOleCallback FAR * LPRICHEDITOLECALLBACK;
 #endif
 #pragma pack(pop)

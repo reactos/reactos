@@ -530,7 +530,6 @@ typedef IEnumIDList *LPENUMIDLIST;
 #define IEnumIDList_Clone(T,a) (T)->lpVtbl->Clone(T,a)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IContextMenu
 DECLARE_INTERFACE_(IContextMenu,IUnknown)
 {
@@ -552,7 +551,6 @@ typedef IContextMenu *LPCONTEXTMENU;
 #define IContextMenu_GetCommandString(T,a,b,c,d,e) (T)->lpVtbl->GetCommandString(T,a,b,c,d,e)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IContextMenu2
 DECLARE_INTERFACE_(IContextMenu2,IContextMenu)
 {
@@ -564,6 +562,7 @@ DECLARE_INTERFACE_(IContextMenu2,IContextMenu)
 	STDMETHOD(GetCommandString)(THIS_ UINT,UINT,PUINT,LPSTR,UINT) PURE;
 	STDMETHOD(HandleMenuMsg)(THIS_ UINT,WPARAM,LPARAM) PURE;
 };
+#undef INTERFACE
 typedef IContextMenu2 *LPCONTEXTMENU2;
 
 #if (_WIN32_IE >= 0x0500)
@@ -623,7 +622,6 @@ typedef enum {
 #define IContextMenu2_HandleMenuMsg(T,a,b,c) (T)->lpVtbl->HandleMenuMsg(T,a,b,c)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IColumnProvider
 DECLARE_INTERFACE_(IColumnProvider,IUnknown)
 {
@@ -634,9 +632,9 @@ DECLARE_INTERFACE_(IColumnProvider,IUnknown)
 	STDMETHOD(GetColumnInfo)(THIS_ DWORD,SHCOLUMNINFO*) PURE;
 	STDMETHOD(GetItemData)(THIS_ LPCSHCOLUMNID,LPCSHCOLUMNDATA,VARIANT*) PURE;
 };
+#undef INTERFACE
 #endif  /* _WIN32_IE >= 0x0500 */
 
-#undef INTERFACE
 #define INTERFACE IQueryInfo
 DECLARE_INTERFACE_(IQueryInfo,IUnknown)
 {
@@ -646,8 +644,8 @@ DECLARE_INTERFACE_(IQueryInfo,IUnknown)
 	STDMETHOD(GetInfoTip)(THIS_ DWORD,WCHAR**) PURE;
 	STDMETHOD(GetInfoFlags)(THIS_ DWORD*) PURE;
 };
-
 #undef INTERFACE
+
 #define INTERFACE IShellExtInit
 DECLARE_INTERFACE_(IShellExtInit, IUnknown)
 {
@@ -656,9 +654,9 @@ DECLARE_INTERFACE_(IShellExtInit, IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(Initialize)(THIS_ LPCITEMIDLIST,LPDATAOBJECT,HKEY) PURE;
 };
+#undef INTERFACE
 typedef IShellExtInit *LPSHELLEXTINIT;
 
-#undef INTERFACE
 #define INTERFACE IShellPropSheetExt
 DECLARE_INTERFACE_(IShellPropSheetExt, IUnknown)
 {
@@ -668,9 +666,9 @@ DECLARE_INTERFACE_(IShellPropSheetExt, IUnknown)
 	STDMETHOD(AddPages)(THIS_ LPFNADDPROPSHEETPAGE,LPARAM) PURE;
 	STDMETHOD(ReplacePage)(THIS_ UINT,LPFNADDPROPSHEETPAGE,LPARAM) PURE;
 };
+#undef INTERFACE
 typedef IShellPropSheetExt *LPSHELLPROPSHEETEXT;
 
-#undef INTERFACE
 #define INTERFACE IExtractIconA
 DECLARE_INTERFACE_(IExtractIconA, IUnknown)
 {
@@ -680,6 +678,7 @@ DECLARE_INTERFACE_(IExtractIconA, IUnknown)
 	STDMETHOD(GetIconLocation)(THIS_ UINT,LPSTR,UINT,int*,PUINT) PURE;
 	STDMETHOD(Extract)(THIS_ LPCSTR,UINT,HICON*,HICON*,UINT) PURE;
 };
+#undef INTERFACE
 typedef IExtractIconA *LPEXTRACTICONA;
 
 #ifdef COBJMACROS
@@ -690,7 +689,6 @@ typedef IExtractIconA *LPEXTRACTICONA;
 #define IExtractIconA_Extract(T,a,b,c,d,e) (T)->lpVtbl->Extract(T,a,b,c,d,e)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IExtractIconW
 DECLARE_INTERFACE_(IExtractIconW, IUnknown)
 {
@@ -700,6 +698,7 @@ DECLARE_INTERFACE_(IExtractIconW, IUnknown)
 	STDMETHOD(GetIconLocation)(THIS_ UINT,LPWSTR,UINT,int*,PUINT) PURE;
 	STDMETHOD(Extract)(THIS_ LPCWSTR,UINT,HICON*,HICON*,UINT) PURE;
 };
+#undef INTERFACE
 typedef IExtractIconW *LPEXTRACTICONW;
 
 #ifdef COBJMACROS
@@ -718,7 +717,6 @@ typedef IExtractIconW *LPEXTRACTICONW;
 #define LPEXTRACTICON LPEXTRACTICONA
 #endif
 
-#undef INTERFACE
 #define INTERFACE IShellLinkA
 DECLARE_INTERFACE_(IShellLinkA, IUnknown)
 {
@@ -744,6 +742,7 @@ DECLARE_INTERFACE_(IShellLinkA, IUnknown)
 	STDMETHOD(Resolve)(THIS_ HWND,DWORD) PURE;
 	STDMETHOD(SetPath)(THIS_ LPCSTR) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IShellLinkA_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -769,7 +768,6 @@ DECLARE_INTERFACE_(IShellLinkA, IUnknown)
 #define IShellLinkA_SetPath(T,a) (T)->lpVtbl->SetPath(T,a)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IShellLinkW
 DECLARE_INTERFACE_(IShellLinkW, IUnknown)
 {
@@ -795,6 +793,7 @@ DECLARE_INTERFACE_(IShellLinkW, IUnknown)
 	STDMETHOD(Resolve)(THIS_ HWND,DWORD) PURE;
 	STDMETHOD(SetPath)(THIS_ LPCWSTR) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IShellLinkW_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -820,7 +819,6 @@ DECLARE_INTERFACE_(IShellLinkW, IUnknown)
 #define IShellLinkW_SetPath(T,a) (T)->lpVtbl->SetPath(T,a)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IShellFolder
 DECLARE_INTERFACE_(IShellFolder, IUnknown)
 {
@@ -838,6 +836,7 @@ DECLARE_INTERFACE_(IShellFolder, IUnknown)
 	STDMETHOD(GetDisplayNameOf)(THIS_ LPCITEMIDLIST,DWORD,LPSTRRET) PURE;
 	STDMETHOD(SetNameOf)(THIS_ HWND,LPCITEMIDLIST,LPCOLESTR,DWORD,LPITEMIDLIST*) PURE;
 };
+#undef INTERFACE
 typedef IShellFolder *LPSHELLFOLDER;
 
 #ifdef COBJMACROS
@@ -861,7 +860,6 @@ typedef IShellFolder *LPSHELLFOLDER;
 DECLARE_ENUMERATOR_(IEnumExtraSearch,LPEXTRASEARCH);
 typedef IEnumExtraSearch *LPENUMEXTRASEARCH;
 
-#undef INTERFACE
 #define INTERFACE IShellFolder2
 DECLARE_INTERFACE_(IShellFolder2, IShellFolder)
 {
@@ -886,6 +884,7 @@ DECLARE_INTERFACE_(IShellFolder2, IShellFolder)
 	STDMETHOD(GetDetailsOf)(THIS_ LPCITEMIDLIST,UINT,SHELLDETAILS*) PURE;
 	STDMETHOD(MapColumnToSCID)(THIS_ UINT,SHCOLUMNID*) PURE;
 };
+#undef INTERFACE
 typedef IShellFolder2 *LPSHELLFOLDER2;
 
 #ifdef COBJMACROS
@@ -912,7 +911,6 @@ typedef IShellFolder2 *LPSHELLFOLDER2;
 #endif
 
 #endif /* _WIN32_IE >= 0x0500 */
-#undef INTERFACE
 #define INTERFACE ICopyHook
 DECLARE_INTERFACE_(ICopyHook, IUnknown)
 {
@@ -921,9 +919,9 @@ DECLARE_INTERFACE_(ICopyHook, IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD_(UINT,CopyCallback)(THIS_ HWND,UINT,UINT,LPCSTR,DWORD,LPCSTR,DWORD) PURE;
 };
+#undef INTERFACE
 typedef ICopyHook *LPCOPYHOOK;
 
-#undef INTERFACE
 #define INTERFACE IFileViewerSite
 DECLARE_INTERFACE(IFileViewerSite)
 {
@@ -933,9 +931,9 @@ DECLARE_INTERFACE(IFileViewerSite)
 	STDMETHOD(SetPinnedWindow)(THIS_ HWND) PURE;
 	STDMETHOD(GetPinnedWindow)(THIS_ HWND*) PURE;
 };
+#undef INTERFACE
 typedef IFileViewerSite *LPFILEVIEWERSITE;
 
-#undef INTERFACE
 #define INTERFACE IFileViewer
 DECLARE_INTERFACE(IFileViewer)
 {
@@ -946,9 +944,9 @@ DECLARE_INTERFACE(IFileViewer)
 	STDMETHOD(Show)(THIS_ LPFVSHOWINFO) PURE;
 	STDMETHOD(PrintTo)(THIS_ LPSTR,BOOL) PURE;
 };
+#undef INTERFACE
 typedef IFileViewer *LPFILEVIEWER;
 
-#undef INTERFACE
 #define INTERFACE IFileSystemBindData
 DECLARE_INTERFACE_(IFileSystemBindData, IUnknown)
 {
@@ -958,8 +956,8 @@ DECLARE_INTERFACE_(IFileSystemBindData, IUnknown)
 	STDMETHOD(SetFindData)(THIS_ const WIN32_FIND_DATAW*) PURE;
 	STDMETHOD(GetFindData)(THIS_ WIN32_FIND_DATAW*) PURE;
 };
-
 #undef INTERFACE
+
 #define INTERFACE IPersistFolder
 DECLARE_INTERFACE_(IPersistFolder,IPersist)
 {
@@ -969,6 +967,7 @@ DECLARE_INTERFACE_(IPersistFolder,IPersist)
 	STDMETHOD(GetClassID)(THIS_ CLSID*) PURE;
 	STDMETHOD(Initialize)(THIS_ LPCITEMIDLIST) PURE;
 };
+#undef INTERFACE
 typedef IPersistFolder *LPPERSISTFOLDER;
 
 #ifdef COBJMACROS
@@ -981,7 +980,6 @@ typedef IPersistFolder *LPPERSISTFOLDER;
 
 #if (_WIN32_IE >= 0x0400 || _WIN32_WINNT >= 0x0500)
 
-#undef INTERFACE
 #define INTERFACE IPersistFolder2
 DECLARE_INTERFACE_(IPersistFolder2,IPersistFolder)
 {
@@ -992,6 +990,7 @@ DECLARE_INTERFACE_(IPersistFolder2,IPersistFolder)
 	STDMETHOD(Initialize)(THIS_ LPCITEMIDLIST) PURE;
 	STDMETHOD(GetCurFolder)(THIS_ LPITEMIDLIST*) PURE;
 };
+#undef INTERFACE
 typedef IPersistFolder2 *LPPERSISTFOLDER2;
 
 #ifdef COBJMACROS
@@ -1007,7 +1006,6 @@ typedef IPersistFolder2 *LPPERSISTFOLDER2;
 
 #if (_WIN32_IE >= 0x0500)
 
-#undef INTERFACE
 #define INTERFACE IPersistFolder3
 DECLARE_INTERFACE_(IPersistFolder3,IPersistFolder2)
 {
@@ -1020,6 +1018,7 @@ DECLARE_INTERFACE_(IPersistFolder3,IPersistFolder2)
 	STDMETHOD(InitializeEx)(THIS_ IBindCtx*,LPCITEMIDLIST,const PERSIST_FOLDER_TARGET_INFO*) PURE;
 	STDMETHOD(GetFolderTargetInfo)(THIS_ PERSIST_FOLDER_TARGET_INFO*) PURE;
 };
+#undef INTERFACE
 typedef IPersistFolder3 *LPPERSISTFOLDER3;
 
 #ifdef COBJMACROS
@@ -1038,7 +1037,6 @@ typedef IPersistFolder3 *LPPERSISTFOLDER3;
 typedef interface IShellBrowser *LPSHELLBROWSER;
 typedef interface IShellView *LPSHELLVIEW;
 
-#undef INTERFACE
 #define INTERFACE IShellBrowser
 DECLARE_INTERFACE_(IShellBrowser,IOleWindow)
 {
@@ -1061,6 +1059,7 @@ DECLARE_INTERFACE_(IShellBrowser,IOleWindow)
 	STDMETHOD(OnViewWindowActive)(THIS_ LPSHELLVIEW) PURE;
 	STDMETHOD(SetToolbarItems)(THIS_ LPTBBUTTON,UINT,UINT) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IShellBrowser_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -1083,7 +1082,6 @@ DECLARE_INTERFACE_(IShellBrowser,IOleWindow)
 #define IShellBrowser_SetToolbarItems(T,a,b,c) (T)->lpVtbl->SetToolbarItems(T,a,b,c)
 #endif
 
-#undef INTERFACE
 #define INTERFACE IShellView
 DECLARE_INTERFACE_(IShellView,IOleWindow)
 {
@@ -1108,6 +1106,7 @@ DECLARE_INTERFACE_(IShellView,IOleWindow)
 	STDMETHOD(SelectItem)(THIS_ LPCITEMIDLIST,UINT) PURE;
 	STDMETHOD(GetItemObject)(THIS_ UINT,REFIID,PVOID*) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IShellView_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -1132,7 +1131,6 @@ DECLARE_INTERFACE_(IShellView,IOleWindow)
 #define IShellView_GetItemObject(T,a,b,c) (T)->lpVtbl->GetItemObject(T,a,b,c)
 #endif
 
-#undef INTERFACE
 #define INTERFACE ICommDlgBrowser
 DECLARE_INTERFACE_(ICommDlgBrowser,IUnknown)
 {
@@ -1143,6 +1141,7 @@ DECLARE_INTERFACE_(ICommDlgBrowser,IUnknown)
 	STDMETHOD(OnStateChange)(THIS_ IShellView*,ULONG) PURE;
 	STDMETHOD(IncludeObject)(THIS_ IShellView*,LPCITEMIDLIST) PURE;
 };
+#undef INTERFACE
 typedef ICommDlgBrowser *LPCOMMDLGBROWSER;
 
 #ifdef COBJMACROS
@@ -1164,7 +1163,6 @@ typedef struct _SV2CVW2_PARAMS {
 	SHELLVIEWID const *pvid;
 	HWND hwndView;
 } SV2CVW2_PARAMS,*LPSV2CVW2_PARAMS;
-#undef INTERFACE
 #define INTERFACE IShellView2
 DECLARE_INTERFACE_(IShellView2,IShellView)
 {
@@ -1192,8 +1190,8 @@ DECLARE_INTERFACE_(IShellView2,IShellView)
 	STDMETHOD(GetView)(THIS_ SHELLVIEWID*,ULONG) PURE;
 	STDMETHOD(CreateViewWindow2)(THIS_ LPSV2CVW2_PARAMS) PURE;
 };
-
 #undef INTERFACE
+
 #define INTERFACE IShellExecuteHookA
 DECLARE_INTERFACE_(IShellExecuteHookA,IUnknown)
 {
@@ -1203,6 +1201,7 @@ DECLARE_INTERFACE_(IShellExecuteHookA,IUnknown)
 	STDMETHOD(Execute)(THIS_ LPSHELLEXECUTEINFOA) PURE;
 };
 #undef INTERFACE
+
 #define INTERFACE IShellExecuteHookW
 DECLARE_INTERFACE_(IShellExecuteHookW,IUnknown)
 {
@@ -1211,8 +1210,8 @@ DECLARE_INTERFACE_(IShellExecuteHookW,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(Execute)(THIS_ LPSHELLEXECUTEINFOW) PURE;
 };
-
 #undef INTERFACE
+
 #define INTERFACE IShellIcon
 DECLARE_INTERFACE_(IShellIcon,IUnknown)
 {
@@ -1221,6 +1220,7 @@ DECLARE_INTERFACE_(IShellIcon,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetIconOf)(THIS_ LPCITEMIDLIST,UINT,PINT) PURE;
 };
+#undef INTERFACE
 typedef IShellIcon *LPSHELLICON;
 
 typedef struct {
@@ -1312,7 +1312,6 @@ typedef struct
 } SHDRAGIMAGE, *LPSHDRAGIMAGE;
 #pragma pack(pop)
 
-#undef INTERFACE
 #define INTERFACE IDragSourceHelper
 DECLARE_INTERFACE_(IDragSourceHelper, IUnknown)
 {
@@ -1322,8 +1321,8 @@ DECLARE_INTERFACE_(IDragSourceHelper, IUnknown)
 	STDMETHOD (InitializeFromBitmap)(THIS_ LPSHDRAGIMAGE pshdi, IDataObject* pDataObject) PURE;
 	STDMETHOD (InitializeFromWindow)(THIS_ HWND hwnd, POINT* ppt, IDataObject* pDataObject) PURE;
 };
-
 #undef INTERFACE
+
 #define INTERFACE IDropTargetHelper
 DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 {
@@ -1336,6 +1335,7 @@ DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 	STDMETHOD (Drop)(THIS_ IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) PURE;
 	STDMETHOD (Show)(THIS_ BOOL fShow) PURE;
 };
+#undef INTERFACE
 #endif /* _WIN32_IE >= 0x0500 */
 
 void WINAPI SHAddToRecentDocs(UINT,PCVOID);

@@ -10,7 +10,6 @@ extern "C" {
 #endif
 
 EXTERN_C const IID IID_IServiceProvider;
-#undef INTERFACE
 #define INTERFACE IServiceProvider
 DECLARE_INTERFACE_(IServiceProvider,IUnknown)
 {
@@ -19,6 +18,7 @@ DECLARE_INTERFACE_(IServiceProvider,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(QueryService)(THIS_ REFGUID,REFIID,void**) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IServiceProvider_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)

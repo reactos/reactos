@@ -78,7 +78,6 @@ EXTERN_C const IID IID_IEnumOleDocumentViews;
 EXTERN_C const IID IID_IPrint;
 
 EXTERN_C const IID IID_IOleDocumentView;
-#undef INTERFACE
 #define INTERFACE IOleDocumentView
 DECLARE_INTERFACE_(IOleDocumentView,IUnknown)
 {
@@ -100,11 +99,11 @@ DECLARE_INTERFACE_(IOleDocumentView,IUnknown)
 	STDMETHOD(ApplyViewState)(THIS_ IStream*) PURE;
 	STDMETHOD(Clone)(THIS_ LPOLEINPLACESITE,IOleDocumentView**) PURE;
 };
+#undef INTERFACE
 
 DECLARE_ENUMERATOR_(IEnumOleDocumentViews,IOleDocumentView);
 
 EXTERN_C const IID IID_IOleDocument;
-#undef INTERFACE
 #define INTERFACE IOleDocument
 DECLARE_INTERFACE_(IOleDocument,IUnknown)
 {
@@ -116,9 +115,9 @@ DECLARE_INTERFACE_(IOleDocument,IUnknown)
 	STDMETHOD(GetDocMiscStatus)(THIS_ DWORD*) PURE;
 	STDMETHOD(EnumViews)(THIS_ LPENUMOLEDOCUMENTVIEWS*,IOleDocumentView**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleCommandTarget;
-#undef INTERFACE
 #define INTERFACE IOleCommandTarget
 DECLARE_INTERFACE_(IOleCommandTarget,IUnknown)
 {
@@ -129,9 +128,9 @@ DECLARE_INTERFACE_(IOleCommandTarget,IUnknown)
 	STDMETHOD(QueryStatus)(THIS_ const GUID*,ULONG,OLECMD*,OLECMDTEXT*) PURE;
 	STDMETHOD(Exec)(THIS_ const GUID*,DWORD,DWORD,VARIANTARG*,VARIANTARG*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleDocumentSite;
-#undef INTERFACE
 #define INTERFACE IOleDocumentSite
 DECLARE_INTERFACE_(IOleDocumentSite,IUnknown)
 {
@@ -141,6 +140,7 @@ DECLARE_INTERFACE_(IOleDocumentSite,IUnknown)
 
 	STDMETHOD(ActivateMe)(THIS_ IOleDocumentView*) PURE;
 };
+#undef INTERFACE
 
 #ifdef __cplusplus
 }

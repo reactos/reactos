@@ -139,7 +139,6 @@ typedef struct tagPROPPAGEINFO {
 } PROPPAGEINFO,*LPPROPPAGEINFO;
 
 EXTERN_C const IID IID_IOleControl;
-#undef INTERFACE
 #define INTERFACE IOleControl
 DECLARE_INTERFACE_(IOleControl,IUnknown)
 {
@@ -151,9 +150,9 @@ DECLARE_INTERFACE_(IOleControl,IUnknown)
 	STDMETHOD(OnAmbientPropertyChange)(THIS_ DISPID) PURE;
 	STDMETHOD(FreezeEvents)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleControlSite;
-#undef INTERFACE
 #define INTERFACE IOleControlSite
 DECLARE_INTERFACE_(IOleControlSite,IUnknown)
 {
@@ -168,6 +167,7 @@ DECLARE_INTERFACE_(IOleControlSite,IUnknown)
 	STDMETHOD(OnFocus)(THIS_ BOOL) PURE;
 	STDMETHOD(ShowPropertyFrame)(THIS) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IOleControlSite_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -183,7 +183,6 @@ DECLARE_INTERFACE_(IOleControlSite,IUnknown)
 #endif
 
 EXTERN_C const IID IID_ISimpleFrameSite;
-#undef INTERFACE
 #define INTERFACE ISimpleFrameSite
 DECLARE_INTERFACE_(ISimpleFrameSite,IUnknown)
 {
@@ -193,9 +192,9 @@ DECLARE_INTERFACE_(ISimpleFrameSite,IUnknown)
 	STDMETHOD(PreMessageFilter)(THIS_ HWND,UINT,WPARAM,LPARAM,LRESULT*,PDWORD) PURE;
 	STDMETHOD(PostMessageFilter)(THIS_ HWND,UINT,WPARAM,LPARAM,LRESULT*,DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IErrorLog;
-#undef INTERFACE
 #define INTERFACE IErrorLog
 DECLARE_INTERFACE_(IErrorLog,IUnknown)
 {
@@ -204,9 +203,9 @@ DECLARE_INTERFACE_(IErrorLog,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(AddError)(THIS_ LPCOLESTR,LPEXCEPINFO) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyBag;
-#undef INTERFACE
 #define INTERFACE IPropertyBag
 DECLARE_INTERFACE_(IPropertyBag,IUnknown)
 {
@@ -216,9 +215,9 @@ DECLARE_INTERFACE_(IPropertyBag,IUnknown)
 	STDMETHOD(Read)(THIS_ LPCOLESTR,LPVARIANT,LPERRORLOG) PURE;
 	STDMETHOD(Write)(THIS_ LPCOLESTR,LPVARIANT) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyBag2;
-#undef INTERFACE
 #define INTERFACE IPropertyBag2
 DECLARE_INTERFACE_(IPropertyBag2,IUnknown)
 {
@@ -231,9 +230,9 @@ DECLARE_INTERFACE_(IPropertyBag2,IUnknown)
 	STDMETHOD(GetPropertyInfo)(THIS_ ULONG,ULONG,PROPBAG2*,ULONG*) PURE;
 	STDMETHOD(LoadObject)(THIS_ LPCOLESTR,DWORD,IUnknown*,LPERRORLOG) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersistPropertyBag;
-#undef INTERFACE
 #define INTERFACE IPersistPropertyBag
 DECLARE_INTERFACE_(IPersistPropertyBag,IPersist)
 {
@@ -245,6 +244,7 @@ DECLARE_INTERFACE_(IPersistPropertyBag,IPersist)
 	STDMETHOD(Load)(THIS_ LPPROPERTYBAG,LPERRORLOG) PURE;
 	STDMETHOD(Save)(THIS_ LPPROPERTYBAG,BOOL,BOOL) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IPersistPropertyBag_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -257,7 +257,6 @@ DECLARE_INTERFACE_(IPersistPropertyBag,IPersist)
 #endif
 
 EXTERN_C const IID IID_IPersistPropertyBag2;
-#undef INTERFACE
 #define INTERFACE IPersistPropertyBag2
 DECLARE_INTERFACE_(IPersistPropertyBag2,IPersist)
 {
@@ -270,6 +269,7 @@ DECLARE_INTERFACE_(IPersistPropertyBag2,IPersist)
 	STDMETHOD(Save)(THIS_ LPPROPERTYBAG2,BOOL,BOOL) PURE;
 	STDMETHOD(IsDirty)(THIS) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IPersistPropertyBag2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -283,7 +283,6 @@ DECLARE_INTERFACE_(IPersistPropertyBag2,IPersist)
 #endif
 
 EXTERN_C const IID IID_IPersistStreamInit;
-#undef INTERFACE
 #define INTERFACE IPersistStreamInit
 DECLARE_INTERFACE_(IPersistStreamInit,IPersist)
 {
@@ -297,9 +296,9 @@ DECLARE_INTERFACE_(IPersistStreamInit,IPersist)
 	STDMETHOD(GetSizeMax)(THIS_ PULARGE_INTEGER) PURE;
 	STDMETHOD(InitNew)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPersistMemory;
-#undef INTERFACE
 #define INTERFACE IPersistMemory
 DECLARE_INTERFACE_(IPersistMemory,IPersist)
 {
@@ -313,9 +312,9 @@ DECLARE_INTERFACE_(IPersistMemory,IPersist)
 	STDMETHOD(GetSizeMax)(THIS_ PULONG) PURE;
 	STDMETHOD(InitNew)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyNotifySink;
-#undef INTERFACE
 #define INTERFACE IPropertyNotifySink
 DECLARE_INTERFACE_(IPropertyNotifySink,IUnknown)
 {
@@ -325,6 +324,7 @@ DECLARE_INTERFACE_(IPropertyNotifySink,IUnknown)
 	STDMETHOD(OnChanged)(THIS_ DISPID) PURE;
 	STDMETHOD(OnRequestEdit)(THIS_ DISPID) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IPropertyNotifySink_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -335,7 +335,6 @@ DECLARE_INTERFACE_(IPropertyNotifySink,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IProvideClassInfo;
-#undef INTERFACE
 #define INTERFACE IProvideClassInfo
 DECLARE_INTERFACE_(IProvideClassInfo,IUnknown)
 {
@@ -344,9 +343,9 @@ DECLARE_INTERFACE_(IProvideClassInfo,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetClassInfo)(THIS_ LPTYPEINFO*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IProvideClassInfo2;
-#undef INTERFACE
 #define INTERFACE IProvideClassInfo2
 DECLARE_INTERFACE_(IProvideClassInfo2,IProvideClassInfo)
 {
@@ -356,9 +355,9 @@ DECLARE_INTERFACE_(IProvideClassInfo2,IProvideClassInfo)
 	STDMETHOD(GetClassInfo)(THIS_ LPTYPEINFO*) PURE;
 	STDMETHOD(GetGUID)(THIS_ DWORD,GUID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IConnectionPointContainer;
-#undef INTERFACE
 #define INTERFACE IConnectionPointContainer
 DECLARE_INTERFACE_(IConnectionPointContainer,IUnknown)
 {
@@ -368,6 +367,7 @@ DECLARE_INTERFACE_(IConnectionPointContainer,IUnknown)
 	STDMETHOD(EnumConnectionPoints)(THIS_ LPENUMCONNECTIONPOINTS*) PURE;
 	STDMETHOD(FindConnectionPoint)(THIS_ REFIID,LPCONNECTIONPOINT*) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IConnectionPointContainer_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -378,7 +378,6 @@ DECLARE_INTERFACE_(IConnectionPointContainer,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IEnumConnectionPoints;
-#undef INTERFACE
 #define INTERFACE IEnumConnectionPoints
 DECLARE_INTERFACE_(IEnumConnectionPoints,IUnknown)
 {
@@ -390,9 +389,9 @@ DECLARE_INTERFACE_(IEnumConnectionPoints,IUnknown)
 	STDMETHOD(Reset)(THIS) PURE;
 	STDMETHOD(Clone)(THIS_ LPENUMCONNECTIONPOINTS*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IConnectionPoint;
-#undef INTERFACE
 #define INTERFACE IConnectionPoint
 DECLARE_INTERFACE_(IConnectionPoint,IUnknown)
 {
@@ -405,6 +404,7 @@ DECLARE_INTERFACE_(IConnectionPoint,IUnknown)
 	STDMETHOD(Unadvise)(THIS_ DWORD) PURE;
 	STDMETHOD(EnumConnections)(THIS_ LPENUMCONNECTIONS*) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IConnectionPoint_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -418,7 +418,6 @@ DECLARE_INTERFACE_(IConnectionPoint,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IEnumConnections;
-#undef INTERFACE
 #define INTERFACE IEnumConnections
 DECLARE_INTERFACE_(IEnumConnections,IUnknown)
 {
@@ -430,6 +429,7 @@ DECLARE_INTERFACE_(IEnumConnections,IUnknown)
 	STDMETHOD(Reset)(THIS) PURE;
 	STDMETHOD(Clone)(THIS_ LPENUMCONNECTIONS*) PURE;
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IEnumConnections_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -442,7 +442,6 @@ DECLARE_INTERFACE_(IEnumConnections,IUnknown)
 #endif
 
 EXTERN_C const IID IID_IClassFactory2;
-#undef INTERFACE
 #define INTERFACE IClassFactory2
 DECLARE_INTERFACE_(IClassFactory2,IClassFactory)
 {
@@ -455,9 +454,9 @@ DECLARE_INTERFACE_(IClassFactory2,IClassFactory)
 	STDMETHOD(RequestLicKey)(THIS_ DWORD,BSTR*) PURE;
 	STDMETHOD(CreateInstanceLic)(THIS_ LPUNKNOWN,LPUNKNOWN,REFIID,BSTR,PVOID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_ISpecifyPropertyPages;
-#undef INTERFACE
 #define INTERFACE ISpecifyPropertyPages
 DECLARE_INTERFACE_(ISpecifyPropertyPages,IUnknown)
 {
@@ -466,9 +465,9 @@ DECLARE_INTERFACE_(ISpecifyPropertyPages,IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	STDMETHOD(GetPages)(THIS_ CAUUID*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPerPropertyBrowsing;
-#undef INTERFACE
 #define INTERFACE IPerPropertyBrowsing
 DECLARE_INTERFACE_(IPerPropertyBrowsing,IUnknown)
 {
@@ -480,9 +479,9 @@ DECLARE_INTERFACE_(IPerPropertyBrowsing,IUnknown)
 	STDMETHOD(GetPredefinedStrings)(THIS_ DISPID,CALPOLESTR*,CADWORD*) PURE;
 	STDMETHOD(GetPredefinedValue)(THIS_ DISPID,DWORD,VARIANT*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyPageSite;
-#undef INTERFACE
 #define INTERFACE IPropertyPageSite
 DECLARE_INTERFACE_(IPropertyPageSite,IUnknown)
 {
@@ -494,9 +493,9 @@ DECLARE_INTERFACE_(IPropertyPageSite,IUnknown)
 	STDMETHOD(GetPageContainer)(THIS_ LPUNKNOWN*) PURE;
 	STDMETHOD(TranslateAccelerator)(THIS_ LPMSG) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyPage;
-#undef INTERFACE
 #define INTERFACE IPropertyPage
 DECLARE_INTERFACE_(IPropertyPage,IUnknown)
 {
@@ -515,9 +514,9 @@ DECLARE_INTERFACE_(IPropertyPage,IUnknown)
 	STDMETHOD(Help)(THIS_ LPCOLESTR) PURE;
 	STDMETHOD(TranslateAccelerator)(THIS_ LPMSG) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPropertyPage2;
-#undef INTERFACE
 #define INTERFACE IPropertyPage2
 DECLARE_INTERFACE_(IPropertyPage2,IPropertyPage)
 {
@@ -537,9 +536,9 @@ DECLARE_INTERFACE_(IPropertyPage2,IPropertyPage)
 	STDMETHOD(TranslateAccelerator)(THIS_ LPMSG) PURE;
 	STDMETHOD(EditProperty)(THIS_ DISPID) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IFont;
-#undef INTERFACE
 #define INTERFACE IFont
 DECLARE_INTERFACE_(IFont,IUnknown)
 {
@@ -571,9 +570,9 @@ DECLARE_INTERFACE_(IFont,IUnknown)
 	STDMETHOD(ReleaseHfont)(THIS_ HFONT) PURE;
 	STDMETHOD(SetHdc)(THIS_ HDC) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IFontDisp;
-#undef INTERFACE
 #define INTERFACE IFontDisp
 DECLARE_INTERFACE_(IFontDisp,IDispatch)
 {
@@ -585,9 +584,9 @@ DECLARE_INTERFACE_(IFontDisp,IDispatch)
 	STDMETHOD(GetIDsOfNames)(THIS_ REFIID,LPOLESTR*,UINT,LCID,DISPID*) PURE;
 	STDMETHOD(Invoke)(THIS_ DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPicture;
-#undef INTERFACE
 #define INTERFACE IPicture
 DECLARE_INTERFACE_(IPicture,IUnknown)
 {
@@ -609,9 +608,9 @@ DECLARE_INTERFACE_(IPicture,IUnknown)
 	STDMETHOD(SaveAsFile)(THIS_ LPSTREAM,BOOL,LONG*) PURE;
 	STDMETHOD(get_Attributes)(THIS_ PDWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPictureDisp;
-#undef INTERFACE
 #define INTERFACE IPictureDisp
 DECLARE_INTERFACE_(IPictureDisp,IDispatch)
 {
@@ -623,9 +622,9 @@ DECLARE_INTERFACE_(IPictureDisp,IDispatch)
 	STDMETHOD(GetIDsOfNames)(THIS_ REFIID,LPOLESTR*,UINT,LCID,DISPID*) PURE;
 	STDMETHOD(Invoke)(THIS_ DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleInPlaceSiteEx;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceSiteEx
 DECLARE_INTERFACE_(IOleInPlaceSiteEx,IOleInPlaceSite)
 {
@@ -648,9 +647,9 @@ DECLARE_INTERFACE_(IOleInPlaceSiteEx,IOleInPlaceSite)
 	STDMETHOD(OnInPlaceDeactivateEx)(THIS_ BOOL) PURE;
 	STDMETHOD(RequestUIActivate)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IObjectWithSite;
-#undef INTERFACE
 #define INTERFACE IObjectWithSite
 DECLARE_INTERFACE_(IObjectWithSite,IUnknown)
 {
@@ -660,9 +659,9 @@ DECLARE_INTERFACE_(IObjectWithSite,IUnknown)
 	STDMETHOD(SetSite)(THIS_ IUnknown*) PURE;
 	STDMETHOD(GetSite)(THIS_ REFIID, void**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleInPlaceSiteWindowless;
-#undef INTERFACE
 #define INTERFACE IOleInPlaceSiteWindowless
 DECLARE_INTERFACE_(IOleInPlaceSiteWindowless,IOleInPlaceSiteEx)
 {
@@ -699,9 +698,9 @@ DECLARE_INTERFACE_(IOleInPlaceSiteWindowless,IOleInPlaceSiteEx)
 	STDMETHOD(AdjustRect)(THIS_ LPCRECT) PURE;
 	STDMETHOD(OnDefWindowMessage)(THIS_ UINT,WPARAM,LPARAM,LRESULT*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IAdviseSinkEx;
-#undef INTERFACE
 #define INTERFACE IAdviseSinkEx
 DECLARE_INTERFACE_(IAdviseSinkEx,IUnknown)
 {
@@ -715,9 +714,9 @@ DECLARE_INTERFACE_(IAdviseSinkEx,IUnknown)
 	STDMETHOD_(void,OnClose)(THIS) PURE;
 	STDMETHOD(OnViewStatusChange)(THIS_ DWORD) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IPointerInactive;
-#undef INTERFACE
 #define INTERFACE IPointerInactive
 DECLARE_INTERFACE_(IPointerInactive,IUnknown)
 {
@@ -728,9 +727,9 @@ DECLARE_INTERFACE_(IPointerInactive,IUnknown)
 	STDMETHOD(OnInactiveMouseMove)(THIS_ LPCRECT,LONG,LONG,DWORD) PURE;
 	STDMETHOD(OnInactiveSetCursor)(THIS_ LPCRECT,LONG,LONG,DWORD,BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleUndoUnit;
-#undef INTERFACE
 #define INTERFACE IOleUndoUnit
 DECLARE_INTERFACE_(IOleUndoUnit,IUnknown)
 {
@@ -742,9 +741,9 @@ DECLARE_INTERFACE_(IOleUndoUnit,IUnknown)
 	STDMETHOD(GetUnitType)(THIS_ CLSID*,LONG*) PURE;
 	STDMETHOD(OnNextAdd)(THIS) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleParentUndoUnit;
-#undef INTERFACE
 #define INTERFACE IOleParentUndoUnit
 DECLARE_INTERFACE_(IOleParentUndoUnit,IOleUndoUnit)
 {
@@ -761,9 +760,9 @@ DECLARE_INTERFACE_(IOleParentUndoUnit,IOleUndoUnit)
 	STDMETHOD(FindUnit)(THIS_ IOleUndoUnit*) PURE;
 	STDMETHOD(GetParentState)(THIS_ DWORD*) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IEnumOleUndoUnits;
-#undef INTERFACE
 #define INTERFACE IEnumOleUndoUnits
 DECLARE_INTERFACE_(IEnumOleUndoUnits,IUnknown)
 {
@@ -775,9 +774,9 @@ DECLARE_INTERFACE_(IEnumOleUndoUnits,IUnknown)
 	STDMETHOD(Reset)(THIS) PURE;
 	STDMETHOD(Clone)(THIS_ IEnumOleUndoUnits**) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IOleUndoManager;
-#undef INTERFACE
 #define INTERFACE IOleUndoManager
 DECLARE_INTERFACE_(IOleUndoManager,IUnknown)
 {
@@ -797,9 +796,9 @@ DECLARE_INTERFACE_(IOleUndoManager,IUnknown)
 	STDMETHOD(GetLastRedoDescription)(THIS_ BSTR*) PURE;
 	STDMETHOD(Enable)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IQuickActivate;
-#undef INTERFACE
 #define INTERFACE IQuickActivate
 DECLARE_INTERFACE_(IQuickActivate,IUnknown)
 {
@@ -810,6 +809,7 @@ DECLARE_INTERFACE_(IQuickActivate,IUnknown)
 	STDMETHOD(SetContentExtent)(THIS_ LPSIZEL) PURE;
 	STDMETHOD(GetContentExtent)(THIS_ LPSIZEL) PURE;
 };
+#undef INTERFACE
 
 #ifdef __cplusplus
 }

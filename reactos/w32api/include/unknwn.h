@@ -20,7 +20,6 @@ EXTERN_C const IID IID_IUnknown;
 EXTERN_C const IID IID_IClassFactory;
 #ifndef __IUnknown_INTERFACE_DEFINED__
 #define __IUnknown_INTERFACE_DEFINED__
-#undef INTERFACE
 #define INTERFACE IUnknown
 DECLARE_INTERFACE(IUnknown)
 {
@@ -28,11 +27,11 @@ DECLARE_INTERFACE(IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 };
+#undef INTERFACE
 typedef IUnknown *LPUNKNOWN;
 #endif
 #ifndef __IClassFactory_INTERFACE_DEFINED__
 #define __IClassFactory_INTERFACE_DEFINED__
-#undef INTERFACE
 #define INTERFACE IClassFactory
 DECLARE_INTERFACE_(IClassFactory,IUnknown)
 {
@@ -42,6 +41,7 @@ DECLARE_INTERFACE_(IClassFactory,IUnknown)
 	STDMETHOD(CreateInstance)(THIS_ LPUNKNOWN,REFIID,PVOID*) PURE;
 	STDMETHOD(LockServer)(THIS_ BOOL) PURE;
 };
+#undef INTERFACE
 typedef IClassFactory *LPCLASSFACTORY;
 #endif
 HRESULT STDMETHODCALLTYPE IUnknown_QueryInterface_Proxy(IUnknown*,REFIID,void**);
