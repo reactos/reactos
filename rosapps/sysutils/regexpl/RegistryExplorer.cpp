@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.cpp,v 1.7 2001/04/24 22:53:00 narnaoud Exp $
+/* $Id: RegistryExplorer.cpp,v 1.8 2001/05/03 22:41:16 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -172,12 +172,13 @@ int main ()
 
 	TCHAR *pchCommand;
 
-	pchCommand = Console.Init(INPUT_BUFFER_SIZE,10);
-	if (pchCommand == NULL)
-	{
-		_ftprintf(stderr,_T("Cannot initialize console.\n"));
-		goto Abort;
-	}
+  pchCommand = Console.Init(INPUT_BUFFER_SIZE,10);
+  if (pchCommand == NULL)
+  {
+    _ftprintf(stderr,_T("Cannot initialize console.\n"));
+    nRetCode = 1;
+    goto Exit;
+  }
 
 	Console.SetReplaceCompletionCallback(CompletionCallback);
 

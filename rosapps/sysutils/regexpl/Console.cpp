@@ -1,4 +1,4 @@
-/* $Id: Console.cpp,v 1.4 2001/01/13 23:54:07 narnaoud Exp $
+/* $Id: Console.cpp,v 1.5 2001/05/03 22:41:16 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -864,38 +864,60 @@ TCHAR * CConsole::Init(DWORD dwBufferSize, DWORD dwMaxHistoryLines)
 	if (m_hStdIn != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(m_hStdIn));
 	if (m_hStdOut != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(m_hStdOut));
 
-  m_hStdIn = CreateFile("CONIN$",GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
-  //m_hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	if (m_hStdIn == INVALID_HANDLE_VALUE)
-    goto Abort;
+  m_hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 
-  m_hStdOut = CreateFile("CONOUT$",GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
-	//m_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (m_hStdOut == INVALID_HANDLE_VALUE)
+  if (m_hStdIn == INVALID_HANDLE_VALUE)
+  {
+//    _ftprintf(stderr,_T("GetStdHandle(STD_INPUT_HANDLE) failed. GetLastError return 0x%X\n"),(unsigned)GetLastError());
     goto Abort;
+  }
+
+  m_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+  if (m_hStdOut == INVALID_HANDLE_VALUE)
+  {
+//    _ftprintf(stderr,_T("GetStdHandle(STD_OUTPUT_HANDLE) failed. GetLastError return 0x%X\n"),(unsigned)GetLastError());
+    goto Abort;
+  }
 
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	if (!GetConsoleScreenBufferInfo(m_hStdOut,&info))
+  {
+//    _ftprintf(stderr,_T("GetConsoleScreenBufferInfo(m_hStdOut,&info) failed. GetLastError return 0x%X\n"),(unsigned)GetLastError());
+    if (GetLastError() == 6) // redirected output
+      _ftprintf(stderr,_T("Redirection is not supported.\n"));
+
     goto Abort;
+  }
 	m_wAttributes = info.wAttributes;
 	
 	if (!m_blnOldInputModeSaved)
 	{
 		if (!GetConsoleMode(m_hStdIn,&m_dwOldInputMode))
+    {
+      if (GetLastError() == 6) // redirected input
+        _ftprintf(stderr,_T("Redirection is not supported.\n"));
+//      _ftprintf(stderr,_T("GetConsoleMode(0x%X,&m_dwOldINputMode) failed. GetLastError() returns 0x%X\n"),(int)m_hStdIn,GetLastError());
 			goto Abort;
+    }
 
 		m_blnOldInputModeSaved = TRUE;
 	}
 
+//  _ftprintf(stderr,_T("Calling GetConsoleMode(0x%X,&m_dwOldOutputMode) ...\n"),(int)m_hStdOut);
 	if (!m_blnOldOutputModeSaved)
 	{
 		if (!GetConsoleMode(m_hStdOut,&m_dwOldOutputMode))
 			goto Abort;
+//    _ftprintf(stderr,_T("Calling GetConsoleMode(0x%X,&m_dwOldOutputMode) done.\n"),(int)m_hStdOut);
 		m_blnOldOutputModeSaved = TRUE;
 	}
 
-	if (!SetConsoleMode(m_hStdIn,0)) goto Abort;
-	if (!SetConsoleMode(m_hStdOut,0)) goto Abort;
+//  _ftprintf(stderr,_T("Calling SetConsoleMode(0x%X,0) ...\n"),(int)m_hStdIn);
+  if (!SetConsoleMode(m_hStdIn,0))
+    goto Abort;
+  if (!SetConsoleMode(m_hStdOut,0))
+    goto Abort;
 
 	m_CursorPosition = info.dwCursorPosition;
 	m_BufferSize = info.dwSize;
