@@ -37,6 +37,8 @@ typedef struct _WINDOW_OBJECT
   INT y;
   INT Width;
   INT Height;
+  /* Context help id */
+  DWORD ContextHelpId;
   /* Parent window handle. */
   HWND ParentHandle;
   /* Window menu handle. */

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.5 2003/08/17 09:17:04 weiden Exp $
+/* $Id: misc.c,v 1.6 2003/08/18 00:11:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,7 +55,9 @@ NtUserCallOneParam(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
       }
+      
       Result = (DWORD)WindowObject->Menu;
+      
       W32kReleaseWindowObject(WindowObject);
       return Result;
       
@@ -72,6 +74,19 @@ NtUserCallOneParam(
       
     case ONEPARAM_ROUTINE_WINDOWFROMDC:
       return (DWORD)W32kWindowFromDC((HDC)Param);
+      
+    case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
+      WindowObject = W32kGetWindowObject((HWND)Param);
+      if(!WindowObject)
+      {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+      }
+      
+      Result = WindowObject->ContextHelpId;
+      
+      W32kReleaseWindowObject(WindowObject);
+      return Result;
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
@@ -88,6 +103,7 @@ NtUserCallTwoParam(
   DWORD Param2,
   DWORD Routine)
 {
+  PWINDOW_OBJECT WindowObject;
   switch(Routine)
   {
     case TWOPARAM_ROUTINE_ENABLEWINDOW:
@@ -108,6 +124,19 @@ NtUserCallTwoParam(
 
     case TWOPARAM_ROUTINE_VALIDATERGN:
       return (DWORD)NtUserValidateRgn((HWND) Param1, (HRGN) Param2);
+      
+    case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
+      WindowObject = W32kGetWindowObject((HWND)Param1);
+      if(!WindowObject)
+      {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+      }
+      
+      WindowObject->ContextHelpId = Param2;
+      
+      W32kReleaseWindowObject(WindowObject);
+      return TRUE;
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param1=0x%x Parm2=0x%x\n",

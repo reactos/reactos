@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.95 2003/08/17 19:07:11 silverblade Exp $
+/* $Id: window.c,v 1.96 2003/08/18 00:11:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -683,6 +683,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->y = y;
   WindowObject->Width = nWidth;
   WindowObject->Height = nHeight;
+  WindowObject->ContextHelpId = 0;
   WindowObject->ParentHandle = hWndParent;
   WindowObject->Menu = hMenu;
   WindowObject->Instance = hInstance;

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.64 2003/08/17 23:48:36 weiden Exp $
+/* $Id: window.c,v 1.65 2003/08/18 00:11:17 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1614,25 +1614,27 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetWindowContextHelpId(HWND hwnd,
           DWORD dwContextHelpId)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+  return (WINBOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)dwContextHelpId, 
+                                     TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 GetWindowContextHelpId(HWND hwnd)
 {
-  UNIMPLEMENTED;
-  return(0);
+  return NtUserCallOneParam((DWORD)hwnd, ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID);
 }
 
 /*
