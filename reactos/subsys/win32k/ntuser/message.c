@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.30 2003/10/09 06:13:04 gvg Exp $
+/* $Id: message.c,v 1.30.6.1 2003/11/13 10:29:21 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -182,12 +182,16 @@ IntPeekMessage(LPMSG Msg,
                            &Message);
   if (Present)
     {
+      DWORD UniqueId;
+
+      UniqueId = Message->UserMessageUniqueId;
+      W32kKeyProcessMessage(&Message->Msg,PsGetWin32Thread()->KeyboardLayout,
+			    UniqueId);
       RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
       if (RemoveMessages)
 	{
 	  MsqDestroyMessage(Message);
 	}
-      W32kKeyProcessMessage(Msg,PsGetWin32Thread()->KeyboardLayout);
       return TRUE;
     }
 
@@ -201,6 +205,11 @@ IntPeekMessage(LPMSG Msg,
                            &Message);
   if (Present)
     {
+      DWORD UniqueId;
+
+      UniqueId = Message->UserMessageUniqueId;
+      W32kKeyProcessMessage(&Message->Msg,PsGetWin32Thread()->KeyboardLayout,
+			    UniqueId);
       RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
       if (RemoveMessages)
 	{

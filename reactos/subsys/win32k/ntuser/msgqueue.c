@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.30 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: msgqueue.c,v 1.30.2.1 2003/11/13 10:29:21 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -472,7 +472,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 }
 
 VOID STDCALL
-MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, DWORD UniqueId)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
   PUSER_MESSAGE Message;
@@ -481,21 +481,17 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
 
+  Msg.hwnd = 0;
+  Msg.message = uMsg;
+  Msg.wParam = wParam;
+  Msg.lParam = lParam;
+  /* FIXME: Initialize time and point. */
+  
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
-    Msg.hwnd = 0;
-    Msg.message = uMsg;
-    Msg.wParam = wParam;
-    Msg.lParam = lParam;
-    /* FIXME: Initialize time and point. */
-
     if( W32kGetPrimitiveMessageQueue() ) {
-      Msg.hwnd = 0;
-      Msg.message = uMsg;
-      Msg.wParam = wParam;
-      Msg.lParam = lParam;
-      /* FIXME: Initialize time and point. */
       Message = MsqCreateMessage(&Msg);
+      Message->UserMessageUniqueId = UniqueId;
       MsqPostMessage(W32kGetPrimitiveMessageQueue(), Message);
     }
   } else {
@@ -508,12 +504,8 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (FocusMessageQueue->FocusWindow != (HWND)0)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
-	Msg.message = uMsg;
-	Msg.wParam = wParam;
-	Msg.lParam = lParam;
-	/* FIXME: Initialize time and point. */
-	
 	Message = MsqCreateMessage(&Msg);
+	Message->UserMessageUniqueId = UniqueId;
 	MsqPostMessage(FocusMessageQueue, Message);
       }
     else

@@ -7,6 +7,7 @@ typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
+  DWORD UserMessageUniqueId;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
 struct _USER_MESSAGE_QUEUE;
@@ -126,7 +127,8 @@ IntSendMessage(HWND hWnd,
 		LPARAM lParam,
 		BOOL KernelMessage);
 VOID STDCALL
-MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		       DWORD UniqueId);
 VOID STDCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.17 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: input.c,v 1.17.2.1 2003/11/13 10:29:21 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,6 +63,7 @@ KeyboardThreadMain(PVOID StartContext)
   OBJECT_ATTRIBUTES KeyboardObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+  DWORD MsgId = 0;
 
   RtlInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
@@ -183,7 +184,7 @@ KeyboardThreadMain(PVOID StartContext)
 
 	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYDOWN : WM_KEYDOWN,
 				     KeyEvent.wVirtualKeyCode,
-				     lParam);
+				     lParam, MsgId++);
 	    }
 	  else
 	    {
@@ -204,7 +205,7 @@ KeyboardThreadMain(PVOID StartContext)
 
 	      MsqPostKeyboardMessage((fsModifiers & MOD_ALT) ? WM_SYSKEYUP : WM_KEYUP,
 				     KeyEvent.wVirtualKeyCode,
-				     lParam);
+				     lParam,MsgId++);
 	    }
 	}
       DbgPrint( "Input Thread Stopped...\n" );
