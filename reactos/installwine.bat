@@ -10,7 +10,7 @@ goto Install
 set ROS_INSTALL=c:\reactos
 set WINE_INSTALL=%ROS_INSTALL%\system32
 set WINE_APP_INSTALL=%ROS_INSTALL%\bin
-set WINE_TESTS_INSTALL=%ROS_INSTALL%\tests
+set WINE_TESTS_INSTALL=%ROS_INSTALL%\test
 
 
 :Install
