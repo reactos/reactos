@@ -72,14 +72,14 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( sizeof(UNICODE_STRING),                sizeof(ULONG), ICIF_QUERY | ICIF_SIZE_VARIABLE), /* ProcessImageFileName */
 
   /* FIXME */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessLUIDDeviceMapsEnabled */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessBreakOnTermination */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessDebugObjectHandle */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessDebugFlags */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessHandleTracing */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown33 */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown34 */
-  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown35 */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessLUIDDeviceMapsEnabled */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessBreakOnTermination */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessDebugObjectHandle */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessDebugFlags */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessHandleTracing */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown33 */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown34 */
+  ICI_SQ_SAME( 0,                                     1,             0 ),                              /* ProcessUnknown35 */
   
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY),                      /* ProcessCookie */
 };
