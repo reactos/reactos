@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.10 2002/09/13 18:51:01 hbirr Exp $
+/* $Id: dirctl.c,v 1.11 2002/09/14 13:10:45 guido Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,10 +56,9 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Retrieves the file name, be it in short or long file name format
  */
 {
-  PDIR_RECORD Record;
-  Record = *Ptr;
+  PDIR_RECORD Record = *Ptr;
   ULONG Index;
-
+  
   if (*CurrentOffset >= DirLength)
      return(STATUS_NO_MORE_ENTRIES);
 
