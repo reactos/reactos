@@ -13,8 +13,10 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <cpl.h>
 
 #include "resource.h"
+#include "desk.h"
 
 /* As slider control can't contain user data, we have to keep an
  * array of RESOLUTION_INFO to have our own associated data.
@@ -54,9 +56,11 @@ static VOID
 UpdateDisplay(IN HWND hwndDlg)
 {
 	TCHAR Buffer[64];
+	TCHAR Pixel[64];
 	DWORD index;
 	
-	_stprintf(Buffer, TEXT("%lux%lu"), CurrentDisplayDevice->CurrentSettings->dmPelsWidth, CurrentDisplayDevice->CurrentSettings->dmPelsHeight);
+	LoadString(hApplet, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
+	_stprintf(Buffer, Pixel, CurrentDisplayDevice->CurrentSettings->dmPelsWidth, CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
 	
 	for (index = 0; index < CurrentDisplayDevice->ResolutionsCount; index++)
@@ -66,8 +70,8 @@ UpdateDisplay(IN HWND hwndDlg)
 			SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
 			break;
 		}
-	_stprintf(Buffer, TEXT("%d bits"), CurrentDisplayDevice->CurrentSettings->dmBitsPerPel);
-	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, -1, (LPARAM)Buffer);
+	if (LoadString(hApplet, (2900 + CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR))) 
+		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, -1, (LPARAM)Buffer);
 }
 
 static PSETTINGS_ENTRY
@@ -94,8 +98,16 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	/* List all settings */
 	devmode.dmSize = (WORD)sizeof(DEVMODE);
 	devmode.dmDriverExtra = 0;
-	while (EnumDisplaySettingsEx(DeviceName, NbSettings, &devmode, dwFlags))
+	while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
 	{
+	
+		if (devmode.dmPelsWidth < 640 ||
+			devmode.dmPelsHeight < 480)
+		{
+ 			iMode++;
+ 			continue;
+		}
+
 		Current = HeapAlloc(GetProcessHeap(), 0, sizeof(SETTINGS_ENTRY));
 		if (Current != NULL)
 		{
@@ -225,12 +237,14 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
 	for (Current = pDeviceEntry->Settings; Current != NULL; Current = Current->Flink)
 	{
 		TCHAR Buffer[64];
-		_stprintf(Buffer, TEXT("%d bits"), Current->dmBitsPerPel);
-		index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
-		if (index == CB_ERR)
+		if (LoadString(hApplet, (2900 + Current->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
 		{
-			index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_ADDSTRING, 0, (LPARAM)Buffer);
-			SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SETITEMDATA, index, Current->dmBitsPerPel);
+			index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
+			if (index == CB_ERR)
+			{
+				index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_ADDSTRING, 0, (LPARAM)Buffer);
+				SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SETITEMDATA, index, Current->dmBitsPerPel);
+			}
 		}
 	}
 	
