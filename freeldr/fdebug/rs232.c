@@ -148,7 +148,7 @@ BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
 	}
 
 	// Set the timeouts
-	if (!Rs232SetCommunicationTimeoutsWin32(MAXDWORD, MAXDWORD, 1000, 0, 0))
+	if (!Rs232SetCommunicationTimeoutsWin32(MAXDWORD, 0, 0, 0, 0))
 	{
 		return FALSE;
 	}

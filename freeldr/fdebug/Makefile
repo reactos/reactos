@@ -24,7 +24,7 @@ RM		= cmd /C del
 
 FLAGS = -Wall
 
-OBJS = rs232.o fdebug.o
+OBJS = rs232.o fdebug.o fdebug.res
 
 .PHONY : clean
 
@@ -32,7 +32,11 @@ all: fdebug.exe
 
 fdebug.exe: $(OBJS)
 	@echo ===================================================== LINKING fdebug
-	$(CC) $(FLAGS) -o fdebug.exe $(OBJS)
+	$(CC) $(FLAGS) -o fdebug.exe $(OBJS) -lgdi32 -lcomdlg32 -Wl,--subsystem,windows
+
+fdebug.res: fdebug.rc resource.h
+	@echo ===================================================== Compiling $*
+	windres -o fdebug.res fdebug.rc -O coff
 
 fdebug.o: fdebug.c rs232.h
 	@echo ===================================================== Compiling $*
@@ -44,5 +48,6 @@ rs232.o: rs232.c rs232.h
 
 clean:
 	@-$(RM) *.o
+	@-$(RM) *.res
 	@-$(RM) *.exe
 	@echo Clean ALL done.
