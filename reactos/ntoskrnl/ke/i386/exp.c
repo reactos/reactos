@@ -660,6 +660,10 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 		{
 			DbgPrint("<%X>", (PVOID)Frame[1]);
 		}
+		if (Frame[1] == 0xdeadbeef)
+		{
+		    break;
+		}
 		Frame = (PULONG)Frame[0];
 		DbgPrint(" ");
 	}
