@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.12 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: finfo.c,v 1.13 2002/07/20 00:57:36 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -239,6 +239,40 @@ VfatGetInternalInformation(PVFATFCB Fcb,
 }
 
 
+static NTSTATUS
+VfatGetNetworkOpenInformation(PVFATFCB Fcb,
+			      PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
+			      PULONG BufferLength)
+/*
+ * FUNCTION: Retrieve the file network open information
+ */
+{
+  assert (NetworkInfo);
+  assert (Fcb);
+
+  if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
+    return(STATUS_BUFFER_OVERFLOW);
+
+  FsdDosDateTimeToFileTime(Fcb->entry.CreationDate,
+			   Fcb->entry.CreationTime,
+			   &NetworkInfo->CreationTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.AccessDate,
+			   0,
+			   &NetworkInfo->LastAccessTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
+			   Fcb->entry.UpdateTime,
+			   &NetworkInfo->LastWriteTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
+			   Fcb->entry.UpdateTime,
+			   &NetworkInfo->ChangeTime);
+  NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+  NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+  NetworkInfo->FileAttributes = Fcb->entry.Attrib;
+
+  *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
+  return STATUS_SUCCESS;
+}
+
 
 NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -305,6 +339,12 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 				      SystemBuffer,
 				      &BufferLength);
       break;
+    case FileNetworkOpenInformation:
+      RC = VfatGetNetworkOpenInformation(FCB,
+					 SystemBuffer,
+					 &BufferLength);
+      break;
+
     case FileAlternateNameInformation:
     case FileAllInformation:
       RC = STATUS_NOT_IMPLEMENTED;

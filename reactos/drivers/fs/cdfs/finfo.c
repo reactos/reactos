@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.2 2002/05/01 13:15:42 ekohl Exp $
+/* $Id: finfo.c,v 1.3 2002/07/20 00:57:15 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -176,6 +176,38 @@ CdfsGetInternalInformation(PFCB Fcb,
   return(STATUS_SUCCESS);
 }
 
+static NTSTATUS
+CdfsGetNetworkOpenInformation(PFCB Fcb,
+			      PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
+			      PULONG BufferLength)
+/*
+ * FUNCTION: Retrieve the file network open information
+ */
+{
+  assert(NetworkInfo);
+  assert(Fcb);
+
+  if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
+    return(STATUS_BUFFER_OVERFLOW);
+
+  CdfsDateTimeToFileTime(Fcb,
+			 &NetworkInfo->CreationTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &NetworkInfo->LastAccessTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &NetworkInfo->LastWriteTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &NetworkInfo->ChangeTime);
+  NetworkInfo->AllocationSize = Fcb->RFCB.AllocationSize;
+  NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
+  CdfsFileFlagsToAttributes(Fcb,
+			    &NetworkInfo->FileAttributes);
+
+  *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
+
+  return(STATUS_SUCCESS);
+}
+
 
 NTSTATUS STDCALL
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
@@ -238,6 +270,12 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 	Status = CdfsGetInternalInformation(Fcb,
 					    SystemBuffer,
 					    &BufferLength);
+	break;
+
+      case FileNetworkOpenInformation:
+	Status = CdfsGetNetworkOpenInformation(Fcb,
+					       SystemBuffer,
+					       &BufferLength);
 	break;
 
       case FileAlternateNameInformation:
