@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84.2.5 2004/09/27 01:38:36 royce Exp $
+ *  $Id: painting.c,v 1.84.2.6 2004/09/27 03:37:54 royce Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -675,6 +675,7 @@ IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 HDC INTERNAL_CALL
 IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
 {
+   DPRINT1("IntBeginPaint(0x%x,0x%x)\n", Window, lPs );
    ASSERT(Window);
 
    #if 0
@@ -683,6 +684,7 @@ IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
 
    if (!(lPs->hdc = IntGetDCEx(Window, 0, DCX_INTERSECTUPDATE | DCX_WINDOWPAINT | DCX_USESTYLE)))
    {
+      DPRINT1("IntGetDCEx() failed\n");
       return NULL;
    }
 
@@ -691,10 +693,14 @@ IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
       IntValidateParent(Window, Window->UpdateRegion);
-      NtGdiGetRgnBox(Window->UpdateRegion, &lPs->rcPaint);
+      UnsafeIntNtGdiGetRgnBox(Window->UpdateRegion, &lPs->rcPaint);
+      DPRINT1("UnsafeIntNtGdiGetRgnBox() result: 0x%x,0x%x,0x%x,0x%x\n",
+         lPs->rcPaint.left, lPs->rcPaint.top, lPs->rcPaint.right, lPs->rcPaint.bottom );
       NtGdiOffsetRect(&lPs->rcPaint,
          Window->WindowRect.left - Window->ClientRect.left,
          Window->WindowRect.top - Window->ClientRect.top);
+      DPRINT1("NtGdiOffsetRect() result: 0x%x,0x%x,0x%x,0x%x\n",
+         lPs->rcPaint.left, lPs->rcPaint.top, lPs->rcPaint.right, lPs->rcPaint.bottom );
       GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
@@ -702,6 +708,8 @@ IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
    else
    {
       IntGetClientRect(Window, &lPs->rcPaint);
+      DPRINT1("IntGetClientRect() returned 0x%x,0x%x,0x%x,0x%x\n",
+         lPs->rcPaint.left, lPs->rcPaint.top, lPs->rcPaint.right, lPs->rcPaint.bottom );
    }
    IntUnLockWindowUpdate(Window);
 
@@ -884,7 +892,7 @@ IntScrollDC(HDC hDC, INT dx, INT dy, LPRECT lprcScroll,
 
       if (lprcUpdate)
       {
-         NtGdiGetRgnBox(hRgn, lprcUpdate);
+         UnsafeIntNtGdiGetRgnBox(hRgn, lprcUpdate);
 
          /* Put the lprcUpdate in logical coordinate */
          NtGdiDPtoLP(hDC, (LPPOINT)lprcUpdate, 2);

@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.62.2.2 2004/09/14 01:00:45 weiden Exp $ */
+/* $Id: region.c,v 1.62.2.3 2004/09/27 03:37:54 royce Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -2313,33 +2313,51 @@ UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
   return 0; //if invalid region return zero
 }
 
+INT INTERNAL_CALL
+UnsafeIntNtGdiGetRgnBox (
+	HRGN   hRgn,
+	LPRECT pRect )
+{
+	PROSRGNDATA Rgn;
+	DWORD ret;
+
+	if (!(Rgn = RGNDATA_LockRgn(hRgn)))
+	{
+		DPRINT1("RGNDATA_LockRgn() failed\n");
+		return ERROR;
+	}
+	ret = UnsafeIntGetRgnBox ( Rgn, pRect );
+	RGNDATA_UnlockRgn(Rgn);
+#ifndef NDEBUG
+	if (ERROR == ret)
+		DPRINT1("UnsafeIntGetRgnBox() failed\n");
+#endif/*NDEBUG*/
+	return ret;
+}
 
 INT STDCALL
-NtGdiGetRgnBox(HRGN  hRgn,
-	      LPRECT  pRect)
+NtGdiGetRgnBox (
+	HRGN   hRgn,
+	LPRECT pRect)
 {
-  PROSRGNDATA  Rgn;
-  RECT SafeRect;
-  DWORD ret;
+	RECT SafeRect;
+	DWORD ret;
 
-  if (!(Rgn = RGNDATA_LockRgn(hRgn)))
-    {
-      return ERROR;
-    }
+	ret = UnsafeIntNtGdiGetRgnBox(hRgn, &SafeRect);
+	if (ERROR == ret)
+	{
+		DPRINT1("UnsafeIntNtGdiGetRgnBox() failed\n");
+		return ret;
+	}
 
-  ret = UnsafeIntGetRgnBox(Rgn, &SafeRect);
-  RGNDATA_UnlockRgn(Rgn);
-  if (ERROR == ret)
-    {
-      return ret;
-    }
+	if (!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
+	{
+		DPRINT1("MmCopyToCaller() failed\n");
+		KeRosDumpStackFrames(NULL,10);
+		return ERROR;
+	}
 
-  if (!NT_SUCCESS(MmCopyToCaller(pRect, &SafeRect, sizeof(RECT))))
-    {
-      return ERROR;
-    }
-
-  return ret;
+	return ret;
 }
 
 BOOL

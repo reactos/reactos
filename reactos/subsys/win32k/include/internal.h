@@ -945,6 +945,7 @@ BOOL           INTERNAL_CALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndPr
 DWORD          INTERNAL_CALL IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD          INTERNAL_CALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD          INTERNAL_CALL IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
+INT            INTERNAL_CALL UnsafeIntNtGdiGetRgnBox ( HRGN hRgn, LPRECT pRect );
 
 /* WINPOS *********************************************************************/
 
