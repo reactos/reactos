@@ -183,14 +183,14 @@ TCharmap::TCharmap() {
 	memset(map, 0, sizeof(map));
 
 	map[0] = mapB;				// default map
-	map['B'] = mapB;
-	map['A'] = mapA;
+	map[(unsigned char)'B'] = mapB;
+	map[(unsigned char)'A'] = mapA;
 	if(ini.get_fast_write()) {
-		map['0'] = map0_safe;
-		map['2'] = map0_safe;
+		map[(unsigned char)'0'] = map0_safe;
+		map[(unsigned char)'2'] = map0_safe;
 	} else {
-		map['0'] = map0;
-		map['2'] = map0;
+		map[(unsigned char)'0'] = map0;
+		map[(unsigned char)'2'] = map0;
 	}
 	current_map = map[0];
 }
@@ -212,9 +212,9 @@ TCharmap::~TCharmap() {
 }
 
 void TCharmap::modmap(char pos, char mapchar, char c) {
-	if(!map[mapchar]) {
-		map[mapchar] = new char[256];
-		for(int j = 0; j < 256; j++) map[mapchar][pos] = j;
+	if(!map[(unsigned char)mapchar]) {
+		map[(unsigned char)mapchar] = new char[256];
+		for(int j = 0; j < 256; j++) map[(unsigned char)mapchar][(unsigned char)pos] = j;
 	}
-	map[mapchar][pos] = c;
+	map[(unsigned char)mapchar][(unsigned char)pos] = c;
 }

@@ -15,7 +15,7 @@ public:
 	void init() {}
 
 	char translate(char c, char mapchar) {
-		if(map[mapchar]) return map[mapchar][(unsigned char)c];
+		if(map[(unsigned char)mapchar]) return map[(unsigned char)mapchar][(unsigned char)c];
 		return c;
 	}
 	char translate(char c) {
@@ -23,7 +23,7 @@ public:
 	}
 
 	void setmap(char mapchar) {
-		if(map[mapchar]) current_map = map[mapchar];
+		if(map[(unsigned char)mapchar]) current_map = map[(unsigned char)mapchar];
 	}
 
 	void translate_buffer(char *start, char *end) {
