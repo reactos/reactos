@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.178 2003/11/18 22:28:24 sedwards Exp $
+# $Id: Makefile,v 1.179 2003/11/19 03:20:25 rcampbell Exp $
 #
 # Global makefile
 #
@@ -40,7 +40,8 @@ DLLS_KBD = kbdus kbdgr kbdfr
 # User mode libraries
 # advapi32 cards crtdll fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
-DLLS = advapi32 cards crtdll fmifs freetype gdi32 imagehlp kernel32 packet lzexpand msafd \
+# imagehlp
+DLLS = advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand msafd \
        msvcrt ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version winedbgc \
        winspool ws2help ws2_32 wsock32 wshirda iphlpapi mswsock msimg32 d3d8thk \
        $(DLLS_KBD)
