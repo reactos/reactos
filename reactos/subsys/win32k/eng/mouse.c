@@ -3,9 +3,11 @@
 #include "../../drivers/input/include/mouse.h"
 #include "objects.h"
 
-BOOLEAN SafetySwitch = FALSE, SafetySwitch2 = FALSE, MouseEnabled = FALSE;
-LONG mouse_x, mouse_y;
-UINT mouse_width = 0, mouse_height = 0;
+static BOOLEAN SafetySwitch = FALSE;
+static BOOLEAN SafetySwitch2 = FALSE;
+static BOOLEAN MouseEnabled = FALSE;
+static LONG mouse_x, mouse_y;
+static UINT mouse_width = 0, mouse_height = 0;
 
 INT MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2)
 {
@@ -148,7 +150,7 @@ VOID EnableMouse(HDC hDisplayDC)
   MouseRect.left = 0;
   MouseRect.bottom = 16;
   MouseRect.right = 16;
-  EngBitBlt(MouseSurf, SurfObj, NULL, NULL, NULL, &MouseRect, &ZeroPoint, NULL, NULL, NULL, 0);
+  EngBitBlt(MouseSurf, SurfObj, NULL, NULL, NULL, &MouseRect, &ZeroPoint, NULL, NULL, NULL, SRCCOPY);
   SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL, 0, 0, 50, 50, &MouseRect, 0);
 
   mouse_x = 320;

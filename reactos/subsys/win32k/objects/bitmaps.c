@@ -86,7 +86,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
 
   // Perform the bitblt operation
 
-  Status = EngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, NULL);
+  Status = EngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
   if(SurfDestAlloc == TRUE) ExFreePool(SurfDest);
   if(SurfSrcAlloc  == TRUE) ExFreePool(SurfSrc);
