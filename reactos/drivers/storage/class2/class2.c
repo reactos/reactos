@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.33 2003/04/27 10:49:06 ekohl Exp $
+/* $Id: class2.c,v 1.34 2003/05/01 17:49:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -923,11 +923,10 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	{
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
-	  ScsiClassRetryRequest(
-                  DeviceObject,
-		  Irp, 
-		  Srb,
-		  FALSE);
+	  ScsiClassRetryRequest(DeviceObject,
+				Irp,
+				Srb,
+				FALSE);
 
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
@@ -1076,7 +1075,71 @@ ScsiClassModeSense(PDEVICE_OBJECT DeviceObject,
 ULONG STDCALL
 ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath)
 {
-  UNIMPLEMENTED;
+  PRTL_QUERY_REGISTRY_TABLE Table;
+  ULONG TimeOutValue;
+  ULONG ZeroTimeOut;
+  ULONG Size;
+  PWSTR Path;
+  NTSTATUS Status;
+
+  if (RegistryPath == NULL)
+    {
+      return 0;
+    }
+
+  TimeOutValue = 0;
+  ZeroTimeOut = 0;
+
+  /* Allocate zero-terminated path string */
+  Size = RegistryPath->Length + sizeof(WCHAR);
+  Path = (PWSTR)ExAllocatePool (NonPagedPool,
+				Size);
+  if (Path == NULL)
+    {
+      return 0;
+    }
+  RtlZeroMemory (Path,
+		 Size);
+  RtlCopyMemory (Path,
+		 RegistryPath->Buffer,
+		 Size - sizeof(WCHAR));
+
+  /* Allocate query table */
+  Size = sizeof(RTL_QUERY_REGISTRY_TABLE) * 2;
+  Table = (PRTL_QUERY_REGISTRY_TABLE)ExAllocatePool (NonPagedPool,
+						     Size);
+  if (Table == NULL)
+    {
+      ExFreePool (Path);
+      return 0;
+    }
+  RtlZeroMemory (Table,
+		 Size);
+
+  Table[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  Table[0].Name = L"TimeOutValue";
+  Table[0].EntryContext = &TimeOutValue;
+  Table[0].DefaultType = REG_DWORD;
+  Table[0].DefaultData = &ZeroTimeOut;
+  Table[0].DefaultLength = sizeof(ULONG);
+
+  Status = RtlQueryRegistryValues (RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
+				   Path,
+				   Table,
+				   NULL,
+				   NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlQueryRegistryValue() failed (Status %lx)\n", Status);
+      TimeOutValue = 0;
+    }
+
+  ExFreePool (Table);
+  ExFreePool (Path);
+
+  DPRINT("TimeOut: %lu\n", TimeOutValue);
+
+  return TimeOutValue;
 }
 
 
@@ -1629,12 +1692,10 @@ ScsiClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
 
 static VOID
-ScsiClassRetryRequest(
-   PDEVICE_OBJECT DeviceObject,
-   PIRP Irp, 
-   PSCSI_REQUEST_BLOCK Srb,
-   BOOLEAN Associated
-   )
+ScsiClassRetryRequest(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp,
+		      PSCSI_REQUEST_BLOCK Srb,
+		      BOOLEAN Associated)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentIrpStack;
@@ -1676,24 +1737,23 @@ ScsiClassRetryRequest(
   NextIrpStack->Parameters.Scsi.Srb = Srb;
 
   if (Associated == FALSE)
-  {
-     IoSetCompletionRoutine(Irp,
-                            ScsiClassIoComplete,   
-                            Srb,   
-                            TRUE,   
-                            TRUE,   
-                            TRUE);   
-  }   
-  else   
-  {   
-     IoSetCompletionRoutine(Irp,   
-                            ScsiClassIoCompleteAssociated,   
-                            Srb,   
-                            TRUE,   
-                            TRUE,   
-                            TRUE);   
-  } 
-
+    {
+      IoSetCompletionRoutine(Irp,
+			     ScsiClassIoComplete,
+			     Srb,
+			     TRUE,
+			     TRUE,
+			     TRUE);
+    }			
+  else
+    {
+      IoSetCompletionRoutine(Irp,
+			     ScsiClassIoCompleteAssociated,
+			     Srb,
+			     TRUE,
+			     TRUE,
+			     TRUE);
+    }
 
   IoCallDriver(DeviceExtension->PortDeviceObject,
 	       Irp);
