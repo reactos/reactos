@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.62 2003/12/23 08:48:59 navaraf Exp $
+/* $Id: winpos.c,v 1.63 2003/12/23 17:56:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -252,7 +252,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	      }
 	    else
 	      {
-		WindowObject->Style &= ~WINDOWOBJECT_RESTOREMAX;
+		WindowObject->Flags &= ~WINDOWOBJECT_RESTOREMAX;
 	      }
 	    WindowObject->Style |= WS_MINIMIZE;
 	    WinPosFindIconPos(WindowObject, &InternalPos->IconPos);
