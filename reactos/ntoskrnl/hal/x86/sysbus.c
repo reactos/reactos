@@ -1,4 +1,4 @@
-/* $Id: sysbus.c,v 1.2 2001/02/25 12:54:37 chorns Exp $
+/* $Id: sysbus.c,v 1.3 2001/06/13 22:17:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,61 +12,53 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
-
-typedef struct _BUS_HANDLER *PBUS_HANDLER;
+#include <internal/hal/bus.h>
 
 
 /* FUNCTIONS ****************************************************************/
 
-ULONG
-STDCALL
-HalpGetSystemInterruptVector (
-	PVOID		BusHandler,
-	ULONG		BusNumber,
-	ULONG		BusInterruptLevel,
-	ULONG		BusInterruptVector,
-	PKIRQL		Irql,
-	PKAFFINITY	Affinity
-	)
+ULONG STDCALL
+HalpGetSystemInterruptVector(PVOID BusHandler,
+			     ULONG BusNumber,
+			     ULONG BusInterruptLevel,
+			     ULONG BusInterruptVector,
+			     PKIRQL Irql,
+			     PKAFFINITY Affinity)
 {
-	*Irql = HIGH_LEVEL - BusInterruptVector;
+   *Irql = HIGH_LEVEL - BusInterruptVector;
    *Affinity = 0xFFFFFFFF;
-	return BusInterruptVector;
+   return BusInterruptVector;
 }
 
 
-BOOLEAN
-STDCALL
-HalpTranslateSystemBusAddress (
-	PBUS_HANDLER		BusHandler,
-	ULONG			BusNumber,
-	PHYSICAL_ADDRESS	BusAddress,
-	PULONG			AddressSpace,
-	PPHYSICAL_ADDRESS	TranslatedAddress
-	)
+BOOLEAN STDCALL
+HalpTranslateSystemBusAddress(PBUS_HANDLER BusHandler,
+			      ULONG BusNumber,
+			      PHYSICAL_ADDRESS BusAddress,
+			      PULONG AddressSpace,
+			      PPHYSICAL_ADDRESS TranslatedAddress)
 {
-	ULONG BaseAddress = 0;
+   ULONG BaseAddress = 0;
 
-	if (*AddressSpace == 0)
-	{
-		/* memory space */
+   if (*AddressSpace == 0)
+     {
+	/* memory space */
 
-	}
-	else if (*AddressSpace == 1)
-	{
-		/* io space */
+     }
+   else if (*AddressSpace == 1)
+     {
+	/* io space */
 
-	}
-	else
-	{
-		/* other */
-		return FALSE;
-	}
+     }
+   else
+     {
+	/* other */
+	return FALSE;
+     }
 
-	TranslatedAddress->QuadPart = BusAddress.QuadPart + BaseAddress;
+   TranslatedAddress->QuadPart = BusAddress.QuadPart + BaseAddress;
 
-	return TRUE;
+   return TRUE;
 }
 
 /* EOF */

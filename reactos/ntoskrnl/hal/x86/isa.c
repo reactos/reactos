@@ -1,4 +1,4 @@
-/* $Id: isa.c,v 1.6 2000/04/09 15:58:13 ekohl Exp $
+/* $Id: isa.c,v 1.7 2001/06/13 22:17:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,9 +12,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <ddk/ntddk.h>
-
-
-typedef struct _BUS_HANDLER *PBUS_HANDLER;
+#include <internal/hal/bus.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -36,34 +34,29 @@ BOOL HalIsaProbe(VOID)
 }
 
 
-BOOLEAN
-STDCALL
-HalpTranslateIsaBusAddress (
-	PBUS_HANDLER		BusHandler,
-	ULONG			BusNumber,
-	PHYSICAL_ADDRESS	BusAddress,
-	PULONG			AddressSpace,
-	PPHYSICAL_ADDRESS	TranslatedAddress
-	)
+BOOLEAN STDCALL
+HalpTranslateIsaBusAddress(PBUS_HANDLER BusHandler,
+			   ULONG BusNumber,
+			   PHYSICAL_ADDRESS BusAddress,
+			   PULONG AddressSpace,
+			   PPHYSICAL_ADDRESS TranslatedAddress)
 {
-	BOOLEAN Result;
+   BOOLEAN Result;
 
-	Result = HalTranslateBusAddress (PCIBus,
-	                                 BusNumber,
-	                                 BusAddress,
-	                                 AddressSpace,
-	                                 TranslatedAddress);
+   Result = HalTranslateBusAddress(PCIBus,
+				   BusNumber,
+				   BusAddress,
+				   AddressSpace,
+				   TranslatedAddress);
+   if (Result != FALSE)
+     return Result;
 
-	if (Result != FALSE)
-		return Result;
-
-	Result = HalTranslateBusAddress (Internal,
-	                                 BusNumber,
-	                                 BusAddress,
-	                                 AddressSpace,
-	                                 TranslatedAddress);
-
-	return Result;
+   Result = HalTranslateBusAddress(Internal,
+				   BusNumber,
+				   BusAddress,
+				   AddressSpace,
+				   TranslatedAddress);
+   return Result;
 }
 
 /* EOF */
