@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.9 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: reply.c,v 1.9.2.1 2002/05/13 20:36:59 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -149,6 +149,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 {
    NTSTATUS Status;
    PEPORT Port;
+   KIRQL Irql;
    KIRQL oldIrql;
    PQUEUEDMESSAGE Request;
    BOOLEAN Disconnected;
@@ -229,8 +230,12 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
     * Dequeue the message
     */
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
+   /* HACK: Lower IRQL to passive level so we can take page faults in
+    * MmCopyToCaller. This can cause a deadlock.
+    * FIXME: We should replace the spinlock with a mutex or similar object */
+   KeLowerIrql(PASSIVE_LEVEL);
    Request = EiDequeueMessagePort(Port);
-   
+
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
        LPC_MESSAGE_HEADER Header;
@@ -261,6 +266,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 	* FIXME: Also increment semaphore.
 	*/
        EiEnqueueMessageAtHeadPort(Port, Request);
+       KeRaiseIrql(DISPATCH_LEVEL, &Irql);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
        ObDereferenceObject(Port);
        return(Status);
@@ -268,10 +274,12 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
        EiEnqueueConnectMessagePort(Port, Request);
+       KeRaiseIrql(DISPATCH_LEVEL, &Irql);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
      }
    else
      {
+       KeRaiseIrql(DISPATCH_LEVEL, &Irql);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
        ExFreePool(Request);
      }

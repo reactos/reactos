@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.55 2002/05/13 18:10:40 chorns Exp $
+/* $Id: mm.c,v 1.55.2.1 2002/05/13 20:37:00 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,10 +41,12 @@
 
 /* GLOBALS *****************************************************************/
 
-PVOID EXPORTED MmUserProbeAddress = NULL;
+PVOID EXPORTED MmUserProbeAddress = NULL; 
 PVOID EXPORTED MmHighestUserAddress = NULL;
-MM_STATS MmStats;
+MM_STATS MmStats; 
 extern PVOID MmSharedDataPagePhysicalAddress;
+ULONG MiMaximumModifiedPageListSize;
+ULONG MiMaximumStandbyPageListSize;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -169,22 +171,20 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
  *        allow byte granular access?
  */
 {
-   MEMORY_AREA* MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
-   
-   AddressSpace = &PsGetCurrentProcess()->AddressSpace;
-   
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					  VirtualAddress);
-
-   if (MemoryArea == NULL)
-     {
+	MEMORY_AREA* MemoryArea;
+	PMADDRESS_SPACE AddressSpace;
+	
+	AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+	MmLockAddressSpace(AddressSpace);
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, VirtualAddress);
+	if (MemoryArea == NULL)
+    {
+      MmUnlockAddressSpace(AddressSpace);
+      return(FALSE);
+    }
+  MmCloseMemoryArea(MemoryArea);
 	MmUnlockAddressSpace(AddressSpace);
-	return(FALSE);
-     }
-   MmUnlockAddressSpace(AddressSpace);
-   return(TRUE);
+	return(TRUE);
 }
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
@@ -197,18 +197,18 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    BOOLEAN Locked = FromMdl;
    
    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
-   
+
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
 	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+	assert(FALSE);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (PsGetCurrentProcess() == NULL)
-     {
-	DbgPrint("No current process\n");
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
+
+	assertmsg(PsGetCurrentProcess() != NULL, ("No current process\n"));
+	if (PsGetCurrentProcess() == NULL)
+		return(STATUS_UNSUCCESSFUL);
+
    /*
     * Find the memory area for the faulting address
     */
@@ -243,10 +243,13 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 	  }
 	return(STATUS_UNSUCCESSFUL);
      }
-   
+
+   DPRINT("MmAccessFault(). MemoryArea->Type %d\n", MemoryArea->Type);
+
    switch (MemoryArea->Type)
      {
       case MEMORY_AREA_SYSTEM:
+     assertmsg(FALSE, ("Access fault on system memory area\n"));
 	Status = STATUS_UNSUCCESSFUL;
 	break;
 
@@ -256,28 +259,33 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
 	Status = MmAccessFaultSectionView(AddressSpace,
-					  MemoryArea, 
-					  (PVOID)Address,
-					  Locked);
+		MemoryArea, 
+		(PVOID)Address,
+		Locked);
 	break;
 	
       case MEMORY_AREA_VIRTUAL_MEMORY:
+     assertmsg(FALSE, ("Access fault on virtual memory area\n"));
 	Status = STATUS_UNSUCCESSFUL;
 	break;
 	
       case MEMORY_AREA_SHARED_DATA:
+     assertmsg(FALSE, ("Access fault on shared memory area\n"));
 	Status = STATUS_UNSUCCESSFUL;
 	break;
 	
       default:
+    assertmsg(FALSE, ("Unknown memory area type %d\n", MemoryArea->Type));
 	Status = STATUS_UNSUCCESSFUL;
 	break;
      }
-   DPRINT("Completed page fault handling\n");
    if (!FromMdl)
      {
        MmUnlockAddressSpace(AddressSpace);
      }
+   DPRINT("Completed access fault handling for 0x%.08x with status 0x%.08x\n",
+		 Address, Status);
+   MmCloseMemoryArea(MemoryArea);
    return(Status);
 }
 
@@ -285,6 +293,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 {
   NTSTATUS Status;
   ULONG_PTR AllocatedPage;
+
   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
   if (!NT_SUCCESS(Status))
     {
@@ -312,6 +321,135 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
   return(Status);
 }
 
+
+/*
+ * Wait on a page operation if one is in progress
+ * The address space is locked when called
+ */
+NTSTATUS
+MiCheckFaultState(IN PMADDRESS_SPACE  AddressSpace,
+  IN PMEMORY_AREA  MemoryArea,
+  IN PVOID  Address)
+{
+  PMM_PAGEOP PageOp;
+
+  DPRINT("MiCheckFaultState(MemoryArea 0x%.08x,  Address 0x%.08x)\n",
+    MemoryArea, Address);
+
+	/*
+	 * See if there is a page operation in progress for this address
+	 */
+
+  if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+    {
+      LARGE_INTEGER Offset;
+      ULONG_PTR Page;
+
+      Page = (ULONG_PTR) PAGE_ROUND_DOWN(((ULONG_PTR) Address));
+      Offset.QuadPart = (Page - (ULONG_PTR)MemoryArea->BaseAddress) +
+        MemoryArea->Data.SectionData.ViewOffset;
+
+      DPRINT("Offset 0x%.08x\n", Offset.u.LowPart);
+
+      PageOp = MmGotPageOp(MemoryArea,
+        0,
+        NULL,
+        MemoryArea->Data.SectionData.Segment,
+        Offset.u.LowPart);
+    }
+  else
+    {
+      PageOp = MmGotPageOp(MemoryArea,
+        (ULONG)PsGetCurrentProcessId(), 
+		    (PVOID)PAGE_ROUND_DOWN(Address),
+        NULL,
+        0);
+    }
+
+	if (PageOp != NULL)
+    {
+      NTSTATUS Status;
+
+      DPRINT("Got a page operation 0x%.08x\n", PageOp);
+
+			/*
+			 * Check if someone else is already handling this fault, if so
+			 * wait for them
+			 */
+		  if (PageOp->Thread != PsGetCurrentThread())
+		    {
+          DPRINT("Waiting for someone else to handle the page operation 0x%.08x\n",
+            PageOp);
+
+          MmUnlockAddressSpace(AddressSpace);
+
+			    Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+						0,
+						KernelMode,
+						FALSE,
+						NULL);
+
+          MmLockAddressSpace(AddressSpace);
+		
+		      if (!NT_SUCCESS(Status))
+		        {
+		          assertmsg(FALSE, ("Failed to wait for page operation (Status 0x%.08x)\n", Status));
+		          MmReleasePageOp(PageOp);
+		          return(Status);
+			      }
+
+		      if (PageOp->Status == STATUS_PENDING)
+		        {
+		          assertmsg(FALSE, ("Woke for page operation before completion\n"));
+		          MmReleasePageOp(PageOp);
+		          return(STATUS_UNSUCCESSFUL);
+		        }
+
+          DPRINT("Someone else handled the page operation 0x%.08x\n", PageOp);
+		
+					/*
+					 * Restart the handling
+					 */
+				  MmReleasePageOp(PageOp);
+				  return(STATUS_MM_RESTART_OPERATION);
+        }
+      else
+				{
+          assertmsg(FALSE, ("I am handling the page operation 0x%.08x\n", PageOp));
+				}
+    }
+
+  DPRINT("No one else is handling the page operation\n");
+
+  /*
+   * If there is a physical page on either the standby or modified page list
+   * backing the virtual address, then put it back on the used list.
+   */
+  if (MiPageState(PsGetCurrentProcess(), Address, PAGE_STATE_TRANSITION))
+		{
+      ULONG_PTR PhysicalAddress;
+      NTSTATUS Status;
+
+      DPRINT("Page at 0x%.08x is in transition\n", Address);
+      PhysicalAddress = MmGetPhysicalAddressForProcess(PsGetCurrentProcess(), Address);
+      assertmsg((ULONG_PTR) PhysicalAddress != 0, ("PhysicalAddress for PS/VA (0x%.08x, 0x%.08x) is 0\n",
+        PsGetCurrentProcess(), Address));
+
+      assertmsg(MmGetFlagsPage(PhysicalAddress) != MM_PHYSICAL_PAGE_MPW,
+        ("Page at 0x%.08x is beeing flushed to secondary storage.\n", PhysicalAddress));
+
+      MmUnlockAddressSpace(AddressSpace);
+      Status = MiAbortTransition(PhysicalAddress);
+      MmLockAddressSpace(AddressSpace);
+
+      DPRINT("MiAbortTransition() said 0x%.08x\n", Status);
+      return Status;
+		}
+
+  return(STATUS_MM_RESTART_OPERATION);
+}
+
+
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 			   ULONG Address, 
 			   BOOLEAN FromMdl)
@@ -322,17 +460,17 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    BOOLEAN Locked = FromMdl;
    
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
-   
+
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
-	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
-	return(STATUS_UNSUCCESSFUL);
+       DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+	   assert(FALSE);
+       return(STATUS_UNSUCCESSFUL);
      }
-   if (PsGetCurrentProcess() == NULL)
-     {
-	DbgPrint("No current process\n");
-	return(STATUS_UNSUCCESSFUL);
-     }
+
+   assertmsg(PsGetCurrentProcess() != NULL, ("No current process\n"));
+	if (PsGetCurrentProcess() == NULL)
+		return(STATUS_UNSUCCESSFUL);
    
    /*
     * Find the memory area for the faulting address
@@ -344,7 +482,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	 */
 	if (Mode != KernelMode)
 	  {
-	     DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	     assert(FALSE);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
 	AddressSpace = MmGetKernelAddressSpace();
@@ -353,7 +491,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
      {
 	AddressSpace = &PsGetCurrentProcess()->AddressSpace;
      }
-   
+
    if (!FromMdl)
      {
        MmLockAddressSpace(AddressSpace);
@@ -366,13 +504,27 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
      {
        MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
        if (MemoryArea == NULL)
-	 {
-	   if (!FromMdl)
-	     {
-	       MmUnlockAddressSpace(AddressSpace);
-	     }
-	   return (STATUS_UNSUCCESSFUL);
-	 }
+				 {
+				   if (!FromMdl)
+				     {
+				       MmUnlockAddressSpace(AddressSpace);
+				     }
+			     assertmsg(FALSE, ("No memory area for address 0x%.08x\n", Address));
+				   return (STATUS_UNSUCCESSFUL);
+				 }
+
+        DPRINT("Memory area type %d\n", MemoryArea->Type);
+
+        Status = MiCheckFaultState(AddressSpace, MemoryArea, (PVOID) Address);
+	      if (Status == STATUS_SUCCESS)
+          {
+						MmCloseMemoryArea(MemoryArea);
+	          if (!FromMdl)
+	            {
+	              MmUnlockAddressSpace(AddressSpace);
+	            }
+	          return (Status);
+	        }
 
        switch (MemoryArea->Type)
 	 {
@@ -410,24 +562,27 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	   if (!NT_SUCCESS(Status))
 	     {
 	       MmUnlockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
-	       Status = 
-		 MmCreateVirtualMapping(PsGetCurrentProcess(),
+	       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					(PVOID)PAGE_ROUND_DOWN(Address),
 					PAGE_READONLY,
-					(ULONG)MmSharedDataPagePhysicalAddress,
+					(ULONG_PTR)MmSharedDataPagePhysicalAddress,
 					TRUE);
 	       MmLockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
 	     }
 	   break;
 	   
 	 default:
+     assertmsg(FALSE, ("Unknown memory area type %d\n", MemoryArea->Type));
 	   Status = STATUS_UNSUCCESSFUL;
 	   break;
 	 }
+	 MmCloseMemoryArea(MemoryArea);
      }
    while (Status == STATUS_MM_RESTART_OPERATION);
 
-   DPRINT("Completed page fault handling\n");
+   DPRINT("Completed not-present fault handling for 0x%.08x with status 0x%.08x\n",
+		 Address, Status);
+
    if (!FromMdl)
      {
        MmUnlockAddressSpace(AddressSpace);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.4 2002/05/13 18:10:40 chorns Exp $
+/* $Id: rmap.c,v 1.4.2.1 2002/05/13 20:37:00 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -97,104 +97,6 @@ MmInitializeRmapList(VOID)
 }
 
 
-NTSTATUS
-MmPageOutPhysicalAddress(ULONG_PTR  PhysicalAddress)
-{
-  PMM_RMAP_ENTRY entry;
-  PMEMORY_AREA MemoryArea;
-  ULONG Type;
-  PVOID Address;
-  PEPROCESS Process;
-  PMM_PAGEOP PageOp;
-  LARGE_INTEGER Offset;
-  NTSTATUS Status;
-
-  ExAcquireFastMutex(&MiRmapListLock);
-  entry = MmGetRmapListHeadPage(PhysicalAddress);
-  if (entry == NULL)
-    {
-      ExReleaseFastMutex(&MiRmapListLock);
-      return(STATUS_UNSUCCESSFUL);
-    }
-  Process = entry->Process;
-  Address = entry->Address;
-  if ((((ULONG)Address) & 0xFFF) != 0)
-    {
-      KeBugCheck(0);
-    }
-
-  MmLockAddressSpace(&Process->AddressSpace);
-  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
-  Type = MemoryArea->Type;
-  if (Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
-    {
-      Offset.QuadPart = (ULONG)((Address - (ULONG)MemoryArea->BaseAddress) +
-	MemoryArea->Data.SectionData.ViewOffset);
-
-      /*
-       * Get or create a pageop
-       */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0,
-			   MemoryArea->Data.SectionData.Segment,
-			   Offset.u.LowPart, MM_PAGEOP_PAGEOUT);
-      if (PageOp == NULL)
-	{
-	  DPRINT1("MmGetPageOp failed\n");
-	  KeBugCheck(0);
-	}
-
-      if (PageOp->Thread != PsGetCurrentThread())
-	{
-	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-	  ExReleaseFastMutex(&MiRmapListLock);
-	  return(STATUS_UNSUCCESSFUL);
-	}
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(&Process->AddressSpace);
-      ExReleaseFastMutex(&MiRmapListLock);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutSectionView(&Process->AddressSpace, MemoryArea,
-				    Address, PageOp);
-    }
-  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
-    {
-      PageOp = MmGetPageOp(MemoryArea, Process->UniqueProcessId,
-			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
-      if (PageOp->Thread != PsGetCurrentThread())
-	{
-	  MmReleasePageOp(PageOp);
-	  MmUnlockAddressSpace(&Process->AddressSpace);
-	  ExReleaseFastMutex(&MiRmapListLock);
-	  return(STATUS_UNSUCCESSFUL);
-	}
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(&Process->AddressSpace);
-      ExReleaseFastMutex(&MiRmapListLock);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutVirtualMemory(&Process->AddressSpace, MemoryArea,
-				      Address, PageOp);
-    }
-  else
-    {
-      KeBugCheck(0);
-    }
-  return(Status);
-}
-
-
 VOID
 MmReferenceRmap(IN PMM_RMAP_ENTRY  RmapEntry)
 {
@@ -210,6 +112,170 @@ MmDereferenceRmap(IN PMM_RMAP_ENTRY  RmapEntry)
 	assertmsg(RmapEntry->ReferenceCount > 0, ("Bad reference count (%d) for "
 	  "Process (0x%.08x)  Addresss (0x%.08x)\n",
 	  RmapEntry->ReferenceCount, RmapEntry->Process, RmapEntry->Address));
+}
+
+
+VOID
+MiTransitionAllRmaps(IN ULONG_PTR  PhysicalAddress,
+  IN BOOLEAN  Reference,
+  OUT PBOOLEAN  Modified  OPTIONAL)
+{
+  PMM_RMAP_ENTRY CurrentEntry;
+  PMM_RMAP_ENTRY NextEntry;
+  BOOLEAN WasDirty;
+  BOOLEAN Dirty;
+	
+	DPRINT("MiTransitionAllRmaps(PhysicalAddress 0x%.08x)\n", PhysicalAddress);
+
+  ExAcquireFastMutex(&MiRmapListLock);
+
+  CurrentEntry = MmGetRmapListHeadPage(PhysicalAddress);
+
+  assertmsg(CurrentEntry != NULL, ("MiTransitionAllRmaps: No rmaps.\n"))
+
+  Dirty = FALSE;
+
+  if (Reference)
+    {
+		  while (CurrentEntry != NULL)
+		    {
+          NextEntry = CurrentEntry->Next;
+
+		      /*
+		       * Reference the address space and rmap entry so they won't go away
+           * while the page is in transition
+			     */
+
+          MmReferenceRmap(CurrentEntry);
+
+          //FIXME: Deadlock here
+          MmLockAddressSpace(&CurrentEntry->Process->AddressSpace);
+		      MmReferenceAddressSpace(&CurrentEntry->Process->AddressSpace);
+
+		      MmDisableVirtualMapping(CurrentEntry->Process,
+		        CurrentEntry->Address,
+		        &WasDirty,
+		        NULL);
+
+		      if (WasDirty)
+		        {
+		          Dirty = TRUE;
+		        }
+
+		      MiSetPageState(CurrentEntry->Process,
+		        CurrentEntry->Address,
+		        PAGE_STATE_TRANSITION);
+
+          MmUnlockAddressSpace(&CurrentEntry->Process->AddressSpace);
+
+		      CurrentEntry = NextEntry;
+		    }
+    }
+	else
+		{
+		  while (CurrentEntry != NULL)
+		    {
+          NextEntry = CurrentEntry->Next;
+		      /*
+		       * Dereference the address space and rmap entry because the page is
+           * not in transition anymore
+		       */
+          MmDereferenceRmap(CurrentEntry);
+          MmLockAddressSpace(&CurrentEntry->Process->AddressSpace);
+		      MmDereferenceAddressSpace(&CurrentEntry->Process->AddressSpace);
+
+		      MiClearPageState(CurrentEntry->Process,
+		        CurrentEntry->Address,
+		        PAGE_STATE_TRANSITION);
+		
+		      MmEnableVirtualMapping(CurrentEntry->Process,
+		        CurrentEntry->Address);
+
+          MmUnlockAddressSpace(&CurrentEntry->Process->AddressSpace);
+
+          CurrentEntry = NextEntry;
+				}
+    }
+
+  ExReleaseFastMutex(&MiRmapListLock);
+
+  if (Modified != NULL)
+    {
+      *Modified = Dirty;
+    }
+}
+
+
+NTSTATUS
+MiAbortTransition(IN ULONG_PTR  PhysicalAddress)
+{
+  ULONG Flags;
+
+  DPRINT("MiAbortTransition(PhysicalAddress 0x%.08x)\n", PhysicalAddress);
+
+  Flags = MmGetFlagsPage(PhysicalAddress);
+
+  assertmsg(Flags != MM_PHYSICAL_PAGE_MPW, ("Page at 0x%.08x is beeing flushed to secondary storage\n",
+    PhysicalAddress));
+
+  if ((Flags != MM_PHYSICAL_PAGE_STANDBY) && (Flags != MM_PHYSICAL_PAGE_MODIFIED))
+    {
+      DPRINT("Page is not in transition.\n");
+      assertmsg(FALSE, ("Page is not in transition.\n"));
+      return STATUS_SUCCESS;
+    }
+
+  MiTransitionAllRmaps(PhysicalAddress, FALSE, NULL);
+
+  if (Flags == MM_PHYSICAL_PAGE_STANDBY)
+    {
+      DPRINT("Page at 0x%.08x is on standby page list\n", PhysicalAddress);
+      MmTransferOwnershipPage(PhysicalAddress, MC_USER);
+      InterlockedDecrement(&MiStandbyPageListSize);
+    }
+	else if (Flags == MM_PHYSICAL_PAGE_MODIFIED)
+		{
+      DPRINT("Page at 0x%.08x is on modified page list\n", PhysicalAddress);
+      MmTransferOwnershipPage(PhysicalAddress, MC_USER);
+			InterlockedDecrement(&MiModifiedPageListSize);
+		}
+  else
+	  {
+      DPRINT("Page at 0x%.08x is not on any transition page list\n", PhysicalAddress);
+      KeBugCheck(0);
+	  }
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+MiFinishTransition(IN ULONG_PTR  PhysicalAddress,
+  IN BOOLEAN  Dirty)
+{
+  ULONG Flags;
+
+  DPRINT("MiFinishTransition(PhysicalAddress 0x%.08x,  Dirty %d)\n",
+    PhysicalAddress, Dirty);
+
+  Flags = MmGetFlagsPage(PhysicalAddress);
+
+  if (Flags != MM_PHYSICAL_PAGE_MPW)
+		{
+		  if ((Flags != MM_PHYSICAL_PAGE_STANDBY) && (Flags != MM_PHYSICAL_PAGE_MODIFIED))
+			  {
+		      DPRINT("Page is not in transition, enabling all rmaps.\n");
+          assert(FALSE);
+		      MiEnableAllRmaps(PhysicalAddress, Dirty);
+		      return STATUS_SUCCESS;
+			  }
+		}
+
+  /* Transition the PTEs and put the physical page back on the standby or the
+     modified page list */
+  MiTransitionAllRmaps(PhysicalAddress, FALSE, NULL);
+  MiReclaimPage(PhysicalAddress, Dirty);
+  return STATUS_SUCCESS;
 }
 
 
@@ -471,8 +537,208 @@ MiSetPageStateAllRmaps(IN ULONG_PTR  PhysicalAddress,
 }
 
 
+/*
+ * This routine is called from the Modified Page Writer (MPW) at DISPATCH_LEVEL
+ * to prepare for a page flush. A pageop is created and saved in the Page Frame
+ * Number (PFN) database. If a pageop already exists the routine returns
+ * STATUS_UNSUCCESSFUL and the MPW will not try to flush the page.
+ */
+NTSTATUS
+MmPrepareFlushPhysicalAddress(IN ULONG_PTR  PhysicalAddress)
+{
+  PMEMORY_AREA MemoryArea;
+  PMM_RMAP_ENTRY entry;
+  PMM_PAGEOP PageOp;
+  PEPROCESS Process;
+  PVOID Address;
+
+  DPRINT("MmPrepareFlushPhysicalAddress(PhysicalAddress 0x%.08x)\n",
+    PhysicalAddress);
+
+ /*
+  * When the page was put on the modified page list, the address space and
+  * rmap entry was referenced so they won't go away now.
+  * FIXME: Ensure that memory area stays too.
+  */
+
+  entry = MmGetRmapListHeadPage(PhysicalAddress);
+
+  assertmsg(entry != NULL, ("MmPrepareFlushPhysicalAddress: No rmaps.\n"))
+
+  Process = entry->Process;
+  Address = entry->Address;
+
+  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  assert(MemoryArea);
+
+	/*
+	 * Get or create a page operation
+	 */
+  if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+    {
+      LARGE_INTEGER Offset;
+
+      Offset.QuadPart = (ULONG_PTR)((Address - (ULONG_PTR)MemoryArea->BaseAddress)
+        + MemoryArea->Data.SectionData.ViewOffset);
+
+		  PageOp = MmGetPageOp(MemoryArea,
+		    0,
+				NULL,
+			  MemoryArea->Data.SectionData.Segment, 
+			  Offset.u.LowPart,
+		    MM_PAGEOP_PAGESYNCH);
+    }
+	else if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+	  {
+			PageOp = MmGetPageOp(MemoryArea,
+			  Process->UniqueProcessId,
+				Address,
+			  NULL, 
+			  0,
+			  MM_PAGEOP_PAGESYNCH);
+		}
+  else
+		{
+      assertmsg(FALSE, ("Unknown type (%d) for memory area (0x%.08x)\n",
+        MemoryArea->Type, MemoryArea));
+		}
+
+  MmCloseMemoryArea(MemoryArea);
+
+  assertmsg(PageOp != NULL, ("MmGetPageOp() failed\n"));
+
+  /* If the page operation is handled by another thread then abort */
+  if (PageOp->Thread != PsGetCurrentThread())
+		{
+		  MmReleasePageOp(PageOp);
+      DPRINT("MmPrepareFlushPhysicalAddress(PhysicalAddress 0x%.08x) STATUS_UNSUCCESSFUL\n",
+        PhysicalAddress);
+		  return(STATUS_UNSUCCESSFUL);
+		}
+
+  assertmsg((MmGetSavedPageOp(PhysicalAddress) == NULL),
+    ("PhysicalAddress (0x%.08x) has saved page operation\n", PhysicalAddress));
+
+  MmSetSavedPageOp(PhysicalAddress, PageOp);
+
+  /* Keep a reference to the page operation. The MPW will release the page
+     operation when the page is flushed to secondary storage */
+
+  DPRINT("MmPrepareFlushPhysicalAddress(PhysicalAddress 0x%.08x) SUCCESS\n",
+    PhysicalAddress);
+
+  return(STATUS_SUCCESS);
+}
+
+
+/*
+ * Flush a physical page to secondary storage. This routine retrieves the
+ * page operation saved in the PFN database by MmPrepareFlushPhysicalAddress().
+ * It then directs the memory area specific page flush routine to actually flush
+ * the page.
+ */
+NTSTATUS
+MmFlushPhysicalAddress(IN ULONG_PTR  PhysicalAddress)
+{
+  PMEMORY_AREA MemoryArea;
+  PVOID Address;
+  PEPROCESS Process;
+  PMM_PAGEOP PageOp;
+  NTSTATUS Status;
+  PMM_RMAP_ENTRY entry;
+
+  DPRINT("MmFlushPhysicalAddress(PhysicalAddress 0x%.08x)\n",
+    PhysicalAddress);
+
+  ExAcquireFastMutex(&MiRmapListLock);
+
+  entry = MmGetRmapListHeadPage(PhysicalAddress);
+  assert(entry);
+
+  Process = entry->Process;
+  Address = entry->Address;
+  assertmsg(((((ULONG_PTR)Address) & (PAGESIZE - 1)) == 0), ("Address 0x%.08x is not page-aligned.\n", Address))
+
+  //MmLockAddressSpace(&Process->AddressSpace);
+
+  PageOp = MmGetSavedPageOp(PhysicalAddress);
+  MmSetSavedPageOp(PhysicalAddress, NULL);
+
+  assertmsg(PageOp != NULL, ("No PageOp. Flush not prepared for physical page 0x%.08x\n",
+    PhysicalAddress));
+
+  assertmsg((PageOp->Thread == PsGetCurrentThread()), ("Wrong thread handling PageOp (0x%.08x)\n",
+    PageOp));
+
+  MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
+  //MmUnlockAddressSpace(&Process->AddressSpace);
+  ExReleaseFastMutex(&MiRmapListLock);
+  if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+    {
+      DPRINT("Flushing section memory page at 0x%.08x\n", MemoryArea->BaseAddress);
+#if 0
+      /* Loose the data */
+      Status = STATUS_UNSUCCESSFUL;
+#else
+      /*
+       * Do the actual page flush
+       */
+      Status = MmFlushSectionView(&Process->AddressSpace,
+        MemoryArea, 
+				Address,
+        PageOp);
+#endif
+    }
+  else if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+    {
+      DPRINT("Flushing virtual memory page at 0x%.08x\n", MemoryArea->BaseAddress);
+#if 0
+      Status = STATUS_UNSUCCESSFUL;
+#else
+      /*
+       * Do the actual flushing.
+       */
+      Status = MmFlushVirtualMemory(&Process->AddressSpace, MemoryArea, 
+				Address, PageOp);
+#endif
+    }
+  else
+		{
+      assertmsg(FALSE, ("Unknown type (%d) for memory area (0x%.08x)\n",
+        MemoryArea->Type, MemoryArea));
+		}
+
+  MmCloseMemoryArea(MemoryArea);
+
+  if (NT_SUCCESS(Status))
+    {
+      MiFinishTransition(PhysicalAddress, FALSE);
+    }
+	else
+		{
+#if 0
+      MiFinishTransition(PhysicalAddress, TRUE);
+#else
+      /* Loose the changes because we failed to write the data to secondary storage */
+      DPRINT1("WARNING! Discarding data on page 0x%.08x.\n", PhysicalAddress);
+      MiFinishTransition(PhysicalAddress, FALSE);
+#endif
+		}
+
+	PageOp->Status = Status;
+	KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	MmReleasePageOp(PageOp);
+
+  return(Status);
+}
+
+
 VOID
-MmInsertRmap(ULONG_PTR PhysicalAddress, PEPROCESS Process, PVOID Address)
+MmInsertRmap(IN ULONG_PTR  PhysicalAddress,
+  IN PEPROCESS  Process,
+  IN PVOID  Address,
+  IN PRMAP_DELETE_CALLBACK  RmapDelete,
+  IN PVOID  RmapDeleteContext)
 {
   PMM_RMAP_ENTRY Current;
   PMM_RMAP_ENTRY New;
@@ -485,12 +751,12 @@ MmInsertRmap(ULONG_PTR PhysicalAddress, PEPROCESS Process, PVOID Address)
   New->Address = Address;
   New->Process = Process;
 
-  if (MmGetPhysicalAddressForProcess(Process, Address) !=
+  if (MmGetPhysicalAddressForProcess(Process, Address) != 
       (ULONG_PTR)PhysicalAddress)
     {
       DPRINT("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
-	      "address 0x%.8X\n", Process->UniqueProcessId, Address,
-	      MmGetPhysicalAddressForProcess(Process, Address),
+	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
+	      MmGetPhysicalAddressForProcess(Process, Address), 
 	      PhysicalAddress)
       KeBugCheck(0);
     }
@@ -499,37 +765,50 @@ MmInsertRmap(ULONG_PTR PhysicalAddress, PEPROCESS Process, PVOID Address)
   Current = MmGetRmapListHeadPage(PhysicalAddress);
   New->Next = Current;
   MmSetRmapListHeadPage(PhysicalAddress, New);
-  MmSetRmapCallback(PhysicalAddress, NULL, NULL);
+  MmSetRmapCallback(PhysicalAddress, RmapDelete, RmapDeleteContext);
   ExReleaseFastMutex(&MiRmapListLock);
 }
 
+
 VOID
-MmDeleteAllRmaps(ULONG_PTR PhysicalAddress, PVOID Context,
-		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
-				       PVOID Address))
+MmDeleteAllRmaps(IN ULONG_PTR  PhysicalAddress)
 {
-  PMM_RMAP_ENTRY current_entry;
-  PMM_RMAP_ENTRY previous_entry;
+  PRMAP_DELETE_CALLBACK RmapDelete;
+  PMM_RMAP_ENTRY Previous;
+  PVOID RmapDeleteContext;
+  PMM_RMAP_ENTRY Current;
+
+  DPRINT("PhysicalAddress %x\n", PhysicalAddress);
 
   ExAcquireFastMutex(&MiRmapListLock);
-  current_entry = MmGetRmapListHeadPage(PhysicalAddress);
-  if (current_entry == NULL)
+  Current = MmGetRmapListHeadPage(PhysicalAddress);
+
+  assertmsg(Current != NULL, ("MmDeleteAllRmaps: No rmaps.\n"))
+
+  MmGetRmapCallback(PhysicalAddress, &RmapDelete, &RmapDeleteContext);
+  while (Current != NULL)
     {
-      DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
-      KeBugCheck(0);
-    }
-  while (current_entry != NULL)
-    {
-      previous_entry = current_entry;
-      current_entry = current_entry->Next;
-      if (DeleteMapping)
-	{
-	  DeleteMapping(Context, previous_entry->Process,
-			previous_entry->Address);
-	}
-      ExFreePool(previous_entry);
+      Previous = Current;
+      Current = Current->Next;
+
+      if (RmapDelete)
+				{
+				  (*RmapDelete)(RmapDeleteContext,
+            Previous->Process, 
+						Previous->Address);
+				}
+
+      Current->ReferenceCount--;
+		  assertmsg(Current->ReferenceCount == 0, ("Rmap has outstanding references (%d) for Page (0x%.08x)  "
+        "Process (0x%.08x)  Addresss (0x%.08x)\n",
+        Current->ReferenceCount, PhysicalAddress,
+        Current->Process,
+        Current->Address));
+
+      ExFreePool(Previous);
     }
   MmSetRmapListHeadPage(PhysicalAddress, NULL);
+  MmSetRmapCallback(PhysicalAddress, NULL, NULL);
   ExReleaseFastMutex(&MiRmapListLock);
 }
 

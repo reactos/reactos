@@ -120,7 +120,7 @@ typedef struct
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
 
-typedef struct _MEMORY_AREA
+typedef struct
 {
 #ifdef DBG
    ULONG Magic;
@@ -179,7 +179,7 @@ typedef struct _MM_PAGEOP
   ULONG Hash;
   struct _MM_PAGEOP* Next;
   struct _ETHREAD* Thread;
-  /*
+  /* 
    * These fields are used to identify the operation if it is against a
    * virtual memory area.
    */
@@ -466,7 +466,7 @@ NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
 VOID
 MmDeleteVirtualMapping(struct _EPROCESS* Process, 
-		       PVOID Address,
+		       PVOID Address, 
 		       BOOLEAN FreePage,
 		       PBOOLEAN WasDirty,
 		       PULONG PhysicalPage);
@@ -530,7 +530,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			       BOOLEAN Locked);
 NTSTATUS 
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-			     MEMORY_AREA* MemoryArea,
+			     MEMORY_AREA* MemoryArea, 
 			     PVOID Address,
 			     BOOLEAN Locked);
 NTSTATUS MmWaitForPage(PVOID Page);
@@ -754,7 +754,7 @@ MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS
 MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
 
-NTSTATUS
+NTSTATUS 
 MmCreatePhysicalMemorySection(VOID);
 
 PVOID
@@ -889,26 +889,25 @@ MmSetRmapListHeadPage(IN ULONG_PTR PhysicalAddress,
 struct _MM_RMAP_ENTRY*
 MmGetRmapListHeadPage(IN ULONG_PTR  PhysicalAddress);
 
-VOID
+VOID 
 MmSetRmapCallback(IN ULONG_PTR  PhysicalAddress,
   IN PRMAP_DELETE_CALLBACK  RmapDelete,
   IN PVOID  RmapDeleteContext);
 
-VOID
+VOID 
 MmGetRmapCallback(IN ULONG_PTR  PhysicalAddress,
   IN PRMAP_DELETE_CALLBACK  *RmapDelete,
   IN PVOID  *RmapDeleteContext);
 
-NTSTATUS
-MmPageOutPhysicalAddress(ULONG_PTR PhysicalAddress);
+VOID
+MmInsertRmap(IN ULONG_PTR  PhysicalAddress,
+  IN PEPROCESS  Process,
+  IN PVOID  Address,
+  IN PRMAP_DELETE_CALLBACK  RmapDelete,
+  IN PVOID  RmapDeleteContext);
 
 VOID
-MmInsertRmap(ULONG_PTR PhysicalAddress, PEPROCESS Process, PVOID Address);
-
-VOID
-MmDeleteAllRmaps(ULONG_PTR PhysicalAddress, PVOID Context,
-		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
-				       PVOID Address));
+MmDeleteAllRmaps(IN ULONG_PTR  PhysicalAddress);
 
 VOID
 MmDeleteRmap(IN ULONG_PTR  PhysicalAddress,
@@ -963,17 +962,5 @@ MmTransferOwnershipPage(IN ULONG_PTR  PhysicalAddress,
 VOID
 MmSetDirtyPage(IN PEPROCESS  Process,
   IN PVOID  Address);
-
-NTSTATUS
-MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
-		     MEMORY_AREA* MemoryArea,
-		     PVOID Address,
-		     PMM_PAGEOP PageOp);
-
-NTSTATUS
-MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
-		       PMEMORY_AREA MemoryArea,
-		       PVOID Address,
-		       PMM_PAGEOP PageOp);
 
 #endif

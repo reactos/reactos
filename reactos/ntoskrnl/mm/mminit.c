@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.32 2002/05/13 18:10:40 chorns Exp $
+/* $Id: mminit.c,v 1.32.2.1 2002/05/13 20:37:00 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -271,7 +271,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     */
    DPRINT("first krnl %x\nlast krnl %x\n",FirstKrnlPhysAddr,
 	  LastKrnlPhysAddr);
-   
+
    /*
     * Free physical memory not used by the kernel
     */
@@ -356,6 +356,8 @@ VOID MmInit3(VOID)
 	MmCreatePhysicalMemorySection();
 	MmInitializeRmapList();
 	MmInitPagerThread();
+    MmInitializeBalanceSetManager();
+	MmInitMpwThreads();
 
   /* FIXME: Read parameters from memory */
 }
