@@ -4,8 +4,9 @@
 
 #include <windows.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-int main()
+int main( void )
 {
    HANDLE file;
    char buffer[4096];
@@ -47,4 +48,6 @@ int main()
      }
    
    printf("Finished\n");
+
+   return 0;
 }

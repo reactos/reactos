@@ -11,7 +11,7 @@ DWORD WINAPI thread( LPVOID crap )
 	return 1;
 }
 
-int main()
+int main( void )
 {
 	DWORD id, Status;
 	printf( "Creating events\n" );

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdlib.h>
 
-int main()
+int main( void )
 {
   HANDLE file = CreateFile( "test.dat", GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
   char buffer[4096];
@@ -34,4 +34,6 @@ int main()
       exit(3);
     }
   cout << "Test passed" << endl;
+
+  return 0;
 }
