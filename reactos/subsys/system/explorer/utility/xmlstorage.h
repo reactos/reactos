@@ -331,7 +331,7 @@ struct XMLNode : public String
 	}
 
 	 /// read only access to an attribute
-	String operator[](const String& attr_name) const
+	template<typename T> String get(const T& attr_name) const
 	{
 		AttributeMap::const_iterator found = _attributes.find(attr_name);
 
@@ -347,7 +347,7 @@ struct XMLNode : public String
 		const XMLNode* node = find_first(name);
 
 		if (node)
-			return (*node)[attr_name];
+			return node->get(attr_name);
 		else
 			return TEXT("");
 	}
@@ -366,26 +366,13 @@ struct XMLNode : public String
 	}
 
 #ifdef UNICODE
-#ifndef __GNUC__	// avoid GCC complaining about: "ISO C++ says that `String  XMLStorage::XMLNode::operator[](const char *) const' and `String & XMLStorage::XMLNode::operator[](const String &)' are ambiguous even though the worst conversion for the former is better than the worst conversion for the latter
-	 /// read only access to an attribute
-	String operator[](const char* attr_name) const
-	{
-		AttributeMap::const_iterator found = _attributes.find(attr_name);
-
-		if (found != _attributes.end())
-			return found->second;
-		else
-			return TEXT("");
-	}
-#endif
-
 	 /// convenient value access in children node
 	String value(const char* name, const char* attr_name) const
 	{
 		const XMLNode* node = find_first(name);
 
 		if (node)
-			return (*node)[attr_name];
+			return node->get(attr_name);
 		else
 			return TEXT("");
 	}
@@ -468,7 +455,7 @@ protected:
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
 			const XMLNode& node = **it;
 
-			if (node==name && node[attr_name]==attr_value)
+			if (node==name && node.get(attr_name)==attr_value)
 				return *it;
 		}
 
@@ -491,7 +478,7 @@ protected:
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
 			const XMLNode& node = **it;
 
-			if (node==name && node[attr_name]==attr_value)
+			if (node==name && node.get(attr_name)==attr_value)
 				return *it;
 		}
 
@@ -646,7 +633,7 @@ struct XMLPos
 
 	 /// attribute access
 	String& operator[](const String& attr_name) {return (*_cur)[attr_name];}
-	String operator[](const String& attr_name) const {return (*_cur)[attr_name];}
+	template<typename T> String get(const T& attr_name) const {return (*_cur)[attr_name];}
 
 	 /// insert children when building tree
 	void add_down(XMLNode* child)

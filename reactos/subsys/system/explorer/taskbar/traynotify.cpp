@@ -234,11 +234,11 @@ void NotifyArea::read_config()
 
 			NotifyIconConfig cfg;
 
-			cfg._name = node["name"];
-			cfg._tipText = node["text"];
-			cfg._windowTitle = node["window"];
-			cfg._modulePath = node["module"];
-			const string& mode = node["show"];
+			cfg._name = node.get("name");
+			cfg._tipText = node.get("text");
+			cfg._windowTitle = node.get("window");
+			cfg._modulePath = node.get("module");
+			const string& mode = node.get("show");
 
 			if (mode == "show")
 				cfg._mode = NIM_SHOW;
