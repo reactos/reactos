@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.5 2002/06/11 22:09:03 dwelch Exp $
+/* $Id: class.c,v 1.6 2002/06/14 15:21:43 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -188,6 +188,8 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   WORD  objectSize;
   LPTSTR  namePtr;
   
+  W32kGuiCheck();
+
   DPRINT("About to open window station handle (0x%X)\n", 
 	 PROCESS_WINDOW_STATION());
 
