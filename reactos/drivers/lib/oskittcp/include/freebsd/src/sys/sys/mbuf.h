@@ -304,14 +304,13 @@ union mcluster {
 #ifdef __REACTOS__
 #define MCLGET(m, how) { \
           OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
-          (m)->m_data = malloc(MCLBYTES); \
+          (m)->m_data = (m)->m_ext.ext_buf = malloc(MCLBYTES); \
           (m)->m_flags |= M_EXT; \
           (m)->m_ext.ext_size = MCLBYTES; \
         }
 
 #define MCLFREE(p) { \
-          OS_DbgPrint(OSK_MID_TRACE,("(MCLFREE) p = %x\n", p)); \
-          free( (m)->m_data ); \
+          free( (p) ); \
         }
 #else
 #define	MCLGET(m, how) \
