@@ -14,6 +14,7 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -40,6 +41,7 @@ VOID KeAttachProcess(PEPROCESS Process)
    CurrentThread->ThreadsProcess = Process;
    PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.PageTableDirectory;
    CurrentThread->Tcb.Context.cr3 = PageDir;
+   DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
 	   : "r" (PageDir));

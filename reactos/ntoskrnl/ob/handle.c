@@ -328,11 +328,13 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    
    if (Handle == NtCurrentProcess())
      {
+	BODY_TO_HEADER(PsGetCurrentProcess())->RefCount++;
 	*Object = PsGetCurrentProcess();
 	return(STATUS_SUCCESS);
      }
    if (Handle == NtCurrentThread())
      {
+	BODY_TO_HEADER(PsGetCurrentThread())->RefCount++;
 	*Object = PsGetCurrentThread();
 	return(STATUS_SUCCESS);
      }

@@ -13,8 +13,10 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <internal/ke.h>
+#include <internal/mm.h>
+#include <internal/ob.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLBOALS *******************************************************************/
@@ -22,6 +24,12 @@
 extern ULONG PiNrThreads;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID PiDeleteProcess(PVOID ObjectBody)
+{
+   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
+}
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
 /*
@@ -39,6 +47,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    
    DPRINT("terminating %x\n",CurrentThread);
    ObDereferenceObject(CurrentThread->ThreadsProcess);
+   CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
    ZwYieldExecution();
@@ -66,7 +75,10 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    KIRQL oldlvl;
-
+   
+   DPRINT("ZwTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
+          ProcessHandle, ExitStatus);
+   
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_TERMINATE,
                                       PsProcessType,
@@ -77,17 +89,22 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
    {
         return(Status);
    }
-
+   
+   DPRINT("Process %x ReferenceCount %d\n",Process,
+	  ObGetReferenceCount(Process));
+   
    PiTerminateProcessThreads(Process, ExitStatus);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
+   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {
       KeLowerIrql(oldlvl);
+      ObDereferenceObject(Process);
       PsTerminateCurrentThread(ExitStatus);
    }
    KeLowerIrql(oldlvl);
+   ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 

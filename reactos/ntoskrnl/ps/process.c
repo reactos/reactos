@@ -14,6 +14,7 @@
 #include <internal/ob.h>
 #include <internal/mm.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
 
@@ -28,27 +29,6 @@ HANDLE SystemProcessHandle = NULL;
 POBJECT_TYPE PsProcessType = NULL;
 
 /* FUNCTIONS *****************************************************************/
-
-#define IDMAP_BASE         (0xd0000000)
-
-/*
- * Return a linear address which can be used to access the physical memory
- * starting at x 
- */
-extern inline unsigned int physical_to_linear(unsigned int x)
-{
-        return(x+IDMAP_BASE);
-}
-
-extern inline unsigned int linear_to_physical(unsigned int x)
-{
-        return(x-IDMAP_BASE);
-}
-
-PEPROCESS PsGetSystemProcess(VOID)
-{
-   return(SystemProcess);
-}
 
 VOID PsInitProcessManagment(VOID)
 {
@@ -70,7 +50,7 @@ VOID PsInitProcessManagment(VOID)
    PsProcessType->Dump = NULL;
    PsProcessType->Open = NULL;
    PsProcessType->Close = NULL;
-   PsProcessType->Delete = NULL;
+   PsProcessType->Delete = PiDeleteProcess;
    PsProcessType->Parse = NULL;
    PsProcessType->Security = NULL;
    PsProcessType->QueryName = NULL;
@@ -82,8 +62,10 @@ VOID PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   SystemProcess = ObCreateObject(NULL,PROCESS_ALL_ACCESS,NULL,
-					 PsProcessType);
+   SystemProcess = ObCreateObject(NULL,
+				  PROCESS_ALL_ACCESS,
+				  NULL,
+				  PsProcessType);
    KProcess = &SystemProcess->Pcb;  
    
    InitializeListHead(&(KProcess->MemoryAreaList));
@@ -174,12 +156,8 @@ NTSTATUS STDCALL ZwCreateProcess(
 {
    PEPROCESS Process;
    PEPROCESS ParentProcess;
-   PULONG PageDirectory;
-   PULONG CurrentPageDirectory;
-   ULONG i;
    PKPROCESS KProcess;
    NTSTATUS Status;
-   PULONG PhysicalPageDirectory;
    
    DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -210,22 +188,8 @@ NTSTATUS STDCALL ZwCreateProcess(
    ObCreateHandleTable(ParentProcess,
 		       InheritObjectTable,
 		       Process);
-   
-   PhysicalPageDirectory = (PULONG)MmAllocPage();
-   PageDirectory = (PULONG)physical_to_linear((ULONG)PhysicalPageDirectory);
-   KProcess->PageTableDirectory = PhysicalPageDirectory;
-   
-   CurrentPageDirectory = (PULONG)physical_to_linear(
-						  (ULONG)get_page_directory());
-   
-   memset(PageDirectory,0,PAGESIZE);
-   for (i=768; i<896; i++)
-     {
-	PageDirectory[i] = CurrentPageDirectory[i];
-     }
-   PageDirectory[0xf0000000 / (4*1024*1024)] 
-     = (ULONG)PhysicalPageDirectory | 0x7;
-   
+   MmCopyMmInfo(ParentProcess, Process);
+
    /*
     * FIXME: I don't what I'm supposed to know with a section handle
     */
@@ -236,7 +200,8 @@ NTSTATUS STDCALL ZwCreateProcess(
      }
 
    Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
-
+   ObDereferenceObject(Process);
+   ObDereferenceObject(ParentProcess);
    return(STATUS_SUCCESS);
 }
 

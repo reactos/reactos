@@ -6,10 +6,10 @@
 #include <internal/hal.h>
 
 #ifndef TLS_MINIMUM_AVAILABLE
-	#define TLS_MINIMUM_AVAILABLE 	(64)
+#define TLS_MINIMUM_AVAILABLE 	(64)
 #endif
 #ifndef MAX_PATH
-	#define MAX_PATH 	(260)
+#define MAX_PATH 	(260)
 #endif
 
 typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
@@ -109,7 +109,7 @@ typedef struct _CLIENT_ID
     HANDLE UniqueProcess;
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
-
+ 
 typedef struct _NT_TIB {
     struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
     PVOID StackBase;
@@ -125,7 +125,6 @@ typedef struct _NT_TIB {
 
 typedef struct _NT_TEB
 {
-
 	NT_TIB			Tib; 
 	CLIENT_ID		Cid;
 	HANDLE			RPCHandle;
@@ -136,7 +135,6 @@ typedef struct _NT_TEB
 	NTSTATUS		LastStatusValue; 
 	DWORD			LockCount;
 	UCHAR			HardErrorMode;
-	
 } NT_TEB;
 
 typedef struct _KTHREAD 

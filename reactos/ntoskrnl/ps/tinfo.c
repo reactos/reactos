@@ -93,6 +93,7 @@ NTSTATUS ZwSetInformationThread(HANDLE ThreadHandle,
       default:
 	Status = STATUS_UNSUCCESSFUL;
      }
+   ObDereferenceObject(Thread);
    return(Status);
 }
 

@@ -91,4 +91,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 PVOID MmAllocPage(VOID);
 VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr);
 VOID MmDeletePageTable(PEPROCESS Process, PVOID Address);
+NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest);
+NTSTATUS MmReleaseMmInfo(PEPROCESS Process);
 #endif

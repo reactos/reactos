@@ -57,5 +57,6 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
 void HalTaskSwitch(PKTHREAD thread);
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
+VOID PiDeleteProcess(PVOID ObjectBody);
 
 #endif

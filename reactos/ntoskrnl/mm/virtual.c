@@ -218,6 +218,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	stat = 0;
 	break;
      }
+   DPRINT("Completed page fault handling\n");
    if (stat)
      {
 	KeLowerIrql(oldlvl);
@@ -355,6 +356,7 @@ ZwAllocateVirtualMemory(
 		  MemoryArea->Type = Type;
 		  MemoryArea->Attributes =Protect;
 		  DPRINT("*BaseAddress %x\n",*BaseAddress);
+		  ObDereferenceObject(Process);
 		  return(STATUS_SUCCESS);
 	       }
 	     
@@ -365,6 +367,7 @@ ZwAllocateVirtualMemory(
 					    Type,
 					    Protect);
 	     DPRINT("*BaseAddress %x\n",*BaseAddress);
+	     ObDereferenceObject(Process);
 	     return(STATUS_SUCCESS);
 	  }
      }
@@ -383,11 +386,12 @@ ZwAllocateVirtualMemory(
    if (Status != STATUS_SUCCESS)
      {
 	DPRINT("ZwAllocateVirtualMemory() = %x\n",Status);
+	ObDereferenceObject(Process);
 	return(Status);
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
-   
+   ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 
@@ -476,12 +480,14 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
       case MEM_RELEASE:
 	if (MemoryArea->BaseAddress != (*BaseAddress))
 	  {
+	     ObDereferenceObject(Process);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
 	MmFreeMemoryArea(PsGetCurrentProcess(),
 			 BaseAddress,
 			 0,
 			 TRUE);
+	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
 	
       case MEM_DECOMMIT:	
@@ -491,9 +497,10 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
 			  *RegionSize,
 			  MEMORY_AREA_RESERVE,
 			  MemoryArea->Attributes);
+	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
      }
-   
+   ObDereferenceObject(Process);
    return(STATUS_NOT_IMPLEMENTED);
 }
 
@@ -592,6 +599,7 @@ NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
      }
    MmChangeAreaProtection(Process,BaseAddress,NumberOfBytesToProtect,
 			  NewAccessProtection);
+   ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 
@@ -764,6 +772,8 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
    memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
    
    KeDetachProcess();
+   
+   ObDereferenceObject(Process);
    
    *NumberOfBytesWritten = NumberOfBytesToWrite;
    return(STATUS_SUCCESS);

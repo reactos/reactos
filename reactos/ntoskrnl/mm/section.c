@@ -345,6 +345,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ZwMapViewOfSection() = %x\n",Status);
+	ObDereferenceObject(Process);
 	return(Status);
      }
    Result->Data.SectionData.Section = Section;
@@ -362,7 +363,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
-   
+   ObDereferenceObject(Process);   
    return(STATUS_SUCCESS);
 }
 

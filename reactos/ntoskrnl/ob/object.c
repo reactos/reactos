@@ -205,6 +205,8 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
    
    if (Header->RefCount <  0 || Header->HandleCount < 0)
      {
+	DbgPrint("Object %x/%x has invalid reference or handle count\n",
+		 Header,HEADER_TO_BODY(Header));
 	KeBugCheck(0);
      }
    
@@ -224,6 +226,13 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 	ExFreePool(Header);
      }
    return(STATUS_SUCCESS);
+}
+
+ULONG ObGetReferenceCount(PVOID ObjectBody)
+{
+   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   
+   return(Header->RefCount);
 }
 
 VOID ObDereferenceObject(PVOID ObjectBody)

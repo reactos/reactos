@@ -78,6 +78,7 @@ void HalTaskSwitch(PKTHREAD thread)
 	  &(gdt[thread->Context.nr/8].a),
 	  gdt[thread->Context.nr/8].a,
 	  gdt[thread->Context.nr/8].b);
+   DPRINT("thread->Context.cr3 %x\n",thread->Context.cr3);
    __asm__("pushfl\n\t"
 	   "cli\n\t"
 	   "ljmp %0\n\t"

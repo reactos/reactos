@@ -86,22 +86,43 @@ unsigned int EiUsedNonPagedPool = 0;
 
 /* FUNCTIONS ***************************************************************/
 
+VOID ExUnmapPage(PVOID Addr)
+{
+   KIRQL oldIrql;
+   ULONG i = ((ULONG)Addr - kernel_pool_base) / PAGESIZE;
+   
+   DbgPrint("ExUnmapPage(Addr %x)\n",Addr);
+   DbgPrint("i %x\n",i);
+   
+   KeAcquireSpinLock(&AllocMapLock, &oldIrql);
+   MmSetPage(NULL, (PVOID)Addr, 0, 0);
+   clear_bit(i%32, &alloc_map[i/32]);
+   KeReleaseSpinLock(&AllocMapLock, oldIrql);
+}
+
 PVOID ExAllocatePage(VOID)
 {
    KIRQL oldlvl;
    ULONG addr;
    ULONG i;
-   
+   ULONG PhysPage;
+
+   PhysPage = (ULONG)MmAllocPage();
+   DbgPrint("Allocated page %x\n",PhysPage);
+   if (PhysPage == 0)
+     {
+	return(NULL);
+     }
+
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    for (i=1; i<ALLOC_MAP_SIZE;i++)
      {
 	if (!test_bit(i%32,&alloc_map[i/32]))
 	  {
+	     DbgPrint("i %x\n",i);
+	     set_bit(i%32,&alloc_map[i/32]);
 	     addr = kernel_pool_base + (i*PAGESIZE);
-	     MmSetPage(NULL,
-		       (PVOID)addr,
-		       PAGE_READWRITE,
-		       (ULONG)MmAllocPage());
+	     MmSetPage(NULL, (PVOID)addr, PAGE_READWRITE, PhysPage);
 	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
 	     return((PVOID)addr);
 	  }

@@ -111,6 +111,7 @@ int ExecuteProcess(char* name, char* cmdline)
      {
 	WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
      }
+   CloseHandle(ProcessInformation.hProcess);
    return(ret);
 }
 

@@ -44,8 +44,7 @@ DeviceIoControl(
 		bFsIoControlCode = TRUE;	
 	else
 		bFsIoControlCode = FALSE;
-// CHECKPOINT
-    	if(lpOverlapped  != NULL) {
+   if(lpOverlapped  != NULL) {
 		hEvent = lpOverlapped->hEvent;
 		lpOverlapped->Internal = STATUS_PENDING;
 		IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
@@ -54,14 +53,13 @@ DeviceIoControl(
 		IoStatusBlock = &IIosb;
 	}
 
-// CHECKPOINT
         if(bFsIoControlCode == TRUE) {
             	errCode = NtFsControlFile(hDevice,hEvent,NULL,NULL,IoStatusBlock,dwIoControlCode,lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize );
         } else {   
             	errCode = NtDeviceIoControlFile(hDevice,hEvent,NULL,NULL,IoStatusBlock,dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize);
         }
-// CHECKPOINT
-	if(errCode == STATUS_PENDING ) {
+   
+   if(errCode == STATUS_PENDING ) {
            
             	if(NtWaitForSingleObject(hDevice,FALSE,NULL) < 0) {
 			*lpBytesReturned = IoStatusBlock->Information;
@@ -73,12 +71,10 @@ DeviceIoControl(
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-// CHECKPOINT
-        if (lpOverlapped)
+   if (lpOverlapped)
                 *lpBytesReturned = lpOverlapped->InternalHigh;
         else
                 *lpBytesReturned = IoStatusBlock->Information;
-// CHECKPOINT
         return TRUE;
 }
 

@@ -15,6 +15,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/bitops.h>
+#include <internal/ex.h>
 #include <ddk/ntddk.h>
 
 #define NDEBUG
@@ -57,6 +58,69 @@ static ULONG ProtectToPTE(ULONG flProtect)
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))
 #define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((ULONG)v / 1024))
 
+NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
+{
+   ULONG i,j,addr;
+   
+   DbgPrint("MmReleaseMmInfo(Process %x)\n",Process);
+   
+   KeAttachProcess(Process);
+   for (i=0; i<1024; i++)
+     {
+	if (ADDR_TO_PDE(i*4*1024*1024) != 0)
+	  {
+	     for (j=0; j<1024; j++)
+	       {
+		  addr = i*4*1024*1024 + j*4*1024;
+		  if (ADDR_TO_PTE(addr) != 0)
+		    {
+		       MmFreePage((PVOID)PAGE_MASK(*ADDR_TO_PTE(addr)), 1);
+		    }
+	       }
+	  }
+     }
+   KeDetachProcess();
+   MmFreePage(Process->Pcb.PageTableDirectory, 1);
+   Process->Pcb.PageTableDirectory = NULL;
+   
+   DbgPrint("Finished MmReleaseMmInfo()\n");
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
+{
+   PULONG PhysPageDirectory;
+   PULONG PageDirectory;
+   PULONG CurrentPageDirectory;
+   PKPROCESS KProcess = &Dest->Pcb;
+   ULONG i;
+   
+   DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
+   
+   PageDirectory = ExAllocatePage();
+   if (PageDirectory == NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   PhysPageDirectory = (PULONG)
+     GET_LARGE_INTEGER_LOW_PART(MmGetPhysicalAddress(PageDirectory));
+   KProcess->PageTableDirectory = PhysPageDirectory;   
+   CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
+   
+   memset(PageDirectory,0,PAGESIZE);
+   for (i=768; i<896; i++)
+     {
+	PageDirectory[i] = CurrentPageDirectory[i];
+     }
+   DPRINT("Addr %x\n",0xf0000000 / (4*1024*1024));
+   PageDirectory[0xf0000000 / (4*1024*1024)] = (ULONG)PhysPageDirectory | 0x7;
+   
+   ExUnmapPage(PageDirectory);
+   
+   DPRINT("Finished MmCopyMmInfo()\n");
+   return(STATUS_SUCCESS);
+}
+
 VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 {
    if (Process != NULL && Process != PsGetCurrentProcess())
@@ -87,6 +151,33 @@ ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
    return(Entry);
 }
 
+VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address)
+{
+   PULONG page_tlb;
+   PULONG page_dir;
+   
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeAttachProcess(Process);
+     }
+   page_dir = ADDR_TO_PDE(Address);
+   if ((*page_dir) == 0)
+     {
+	if (Process != NULL && Process != PsGetCurrentProcess())
+	  {
+	     KeDetachProcess();
+	  }	
+	return;
+     }
+   page_tlb = ADDR_TO_PTE(Address);
+   *page_tlb = 0;
+   if (Process != NULL && Process != PsGetCurrentProcess())
+     {
+	KeDetachProcess();
+     }
+}
+
+
 PULONG MmGetPageEntry(PVOID PAddress)
 /*
  * FUNCTION: Get a pointer to the page table entry for a virtual address
@@ -114,6 +205,7 @@ BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess(Process, Address)) & PA_PRESENT);
 }
+
 
 VOID MmSetPage(PEPROCESS Process,
 	       PVOID Address, 

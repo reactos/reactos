@@ -243,7 +243,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
      }
    else
      {
-	Thread->ThreadsProcess=SystemProcess;
+	Thread->ThreadsProcess = SystemProcess;
 	ObReferenceObjectByPointer(Thread->ThreadsProcess,
 				   PROCESS_CREATE_THREAD,
 				   PsProcessType,
@@ -297,7 +297,12 @@ VOID PsSuspendThread(PETHREAD Thread)
      }
 }
 
-void PsInitThreadManagment(void)
+VOID PiDeleteThread(PVOID ObjectBody)
+{
+   DbgPrint("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+}
+
+VOID PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment
  */
@@ -327,7 +332,7 @@ void PsInitThreadManagment(void)
    PsThreadType->Dump = NULL;
    PsThreadType->Open = NULL;
    PsThreadType->Close = NULL;
-   PsThreadType->Delete = NULL;
+   PsThreadType->Delete = PiDeleteThread;
    PsThreadType->Parse = NULL;
    PsThreadType->Security = NULL;
    PsThreadType->QueryName = NULL;
