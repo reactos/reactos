@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.9 2000/10/07 13:41:50 dwelch Exp $
+/* $Id: work.c,v 1.10 2001/06/04 11:26:11 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -15,6 +15,7 @@
 
 #include <internal/ps.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* DEFINES *******************************************************************/
@@ -89,7 +90,7 @@ static NTSTATUS ExWorkerThreadEntryPoint(PVOID context)
 				   KernelMode,
 				   FALSE,
 				   NULL);
-	     DPRINT1("Woke from wait\n");
+	     DPRINT("Woke from wait\n");
 	  }
      }
 }

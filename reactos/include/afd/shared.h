@@ -11,6 +11,7 @@
 #define AFD_SOCKET_LENGTH   (sizeof(AfdSocket) - 1)
 
 typedef struct _AFD_SOCKET_INFORMATION {
+    BOOL CommandChannel;
     INT AddressFamily;
     INT SocketType;
     INT Protocol;
@@ -39,6 +40,9 @@ typedef struct _AFD_SOCKET_INFORMATION {
 
 #define IOCTL_AFD_RECVFROM \
     AFD_CTL_CODE(3, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_AFD_SELECT \
+    AFD_CTL_CODE(4, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 typedef struct _FILE_REQUEST_BIND {
     SOCKADDR Name;
@@ -85,6 +89,19 @@ typedef struct _FILE_REPLY_RECVFROM {
     INT Status;
     DWORD NumberOfBytesRecvd;
 } FILE_REPLY_RECVFROM, *PFILE_REPLY_RECVFROM;
+
+
+typedef struct _FILE_REQUEST_SELECT {
+    LPFD_SET ReadFDSet;
+    LPFD_SET WriteFDSet;
+    LPFD_SET ExceptFDSet;
+    TIMEVAL Timeout;
+} FILE_REQUEST_SELECT, *PFILE_REQUEST_SELECT;
+
+typedef struct _FILE_REPLY_SELECT {
+    INT Status;
+    DWORD SocketCount;
+} FILE_REPLY_SELECT, *PFILE_REPLY_SELECT;
 
 #endif /*__AFD_SHARED_H */
 

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.33 2000/11/19 15:59:46 ekohl Exp $
+/* $Id: startup.c,v 1.34 2001/06/04 11:26:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -179,6 +179,10 @@ LdrInitializeThunk (ULONG Unknown1,
    InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
 		  &NtModule->InInitializationOrderModuleList);
 
+#ifdef KDBG
+  LdrLoadModuleSymbols(NtModule);
+#endif /* KDBG */
+
 
    /* add entry for executable (becomes first list entry) */
    ExeModule = (PLDR_MODULE)RtlAllocateHeap (Peb->ProcessHeap,
@@ -220,6 +224,10 @@ LdrInitializeThunk (ULONG Unknown1,
 
    InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
 		  &ExeModule->InLoadOrderModuleList);
+
+#ifdef KDBG
+  LdrLoadModuleSymbols(ExeModule);
+#endif /* KDBG */
 
    EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
    ExeModule->EntryPoint = (ULONG)EntryPoint;

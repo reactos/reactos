@@ -19,8 +19,8 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-//DWORD DebugTraceLevel = MAX_TRACE | DEBUG_CHECK | DEBUG_IRP | DEBUG_RCACHE | DEBUG_ROUTER | DEBUG_REFCOUNT;
 DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 

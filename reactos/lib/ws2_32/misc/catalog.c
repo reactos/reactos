@@ -59,11 +59,15 @@ PCATALOG_ENTRY CreateCatalogEntry(
 
   Provider = HeapAlloc(GlobalHeap, 0, sizeof(CATALOG_ENTRY));
   if (!Provider) {
-	  WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
     return NULL;
 	}
 
   ZeroMemory(Provider, sizeof(CATALOG_ENTRY));
+
+  if (!RtlCreateUnicodeString(&Provider->LibraryName, LibraryName)) {
+    RtlFreeHeap(GlobalHeap, 0, Provider);
+    return NULL;
+  }
 
   Provider->ReferenceCount = 1;
 
@@ -164,8 +168,8 @@ PCATALOG_ENTRY LocateProviderById(
 
     if (Provider->ProtocolInfo.dwCatalogEntryId == CatalogEntryId) {
       //LeaveCriticalSection(&CatalogLock);
-		  WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X)  Name (%s).\n",
-        Provider, Provider->LibraryName));
+		  WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X)  Name (%wZ).\n",
+        Provider, &Provider->LibraryName));
       return Provider;
     }
 
@@ -185,23 +189,33 @@ INT LoadProvider(
 {
   INT Status;
 
-  WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%S).\n",
-    Provider, Provider->LibraryName));
+  WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%wZ).\n",
+    Provider, &Provider->LibraryName));
 
-  if (!Provider->hModule) {
+  if (Provider->hModule == INVALID_HANDLE_VALUE) {
     /* DLL is not loaded so load it now */
-    Provider->hModule = LoadLibrary(Provider->LibraryName);
-
-    if (Provider->hModule) {
-      Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(Provider->hModule,
-                                                          "WSPStartup");
+    Provider->hModule = LoadLibrary(Provider->LibraryName.Buffer);
+    if (Provider->hModule != INVALID_HANDLE_VALUE) {
+      Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(
+        Provider->hModule,
+        "WSPStartup");
       if (Provider->WSPStartup) {
-			  WS_DbgPrint(MAX_TRACE, ("Calling WSPStartup at (0x%X).\n", Provider->WSPStartup));
-        Status = Provider->WSPStartup(MAKEWORD(2, 2),
+			  WS_DbgPrint(MAX_TRACE, ("Calling WSPStartup at (0x%X).\n",
+          Provider->WSPStartup));
+        Status = Provider->WSPStartup(
+          MAKEWORD(2, 2),
           &Provider->WSPData,
           lpProtocolInfo,
           UpcallTable,
           &Provider->ProcTable);
+
+        /* FIXME: Validate the procedure table */
+
+        WS_DbgPrint(MAX_TRACE, ("OFFSET2 (0x%X)\n",
+          FIELD_OFFSET(WSPPROC_TABLE, lpWSPSocket)));
+
+        assert(Provider->ProcTable.lpWSPSocket);
+
       } else
         Status = ERROR_BAD_PROVIDER;
     } else
@@ -253,9 +267,9 @@ VOID CreateCatalog(VOID)
 #if 1
     Provider = CreateCatalogEntry(L"msafd.dll");
     if (!Provider) {
-		WS_DbgPrint(MIN_TRACE, ("Could not create catalog entry.\n"));
-        return;
-	}
+		  WS_DbgPrint(MIN_TRACE, ("Could not create catalog entry.\n"));
+      return;
+  }
 	
   /* Assume one Service Provider with id 1 */
   Provider->ProtocolInfo.dwCatalogEntryId = 1;

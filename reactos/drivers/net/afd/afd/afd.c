@@ -13,8 +13,12 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
+
+
+NPAGED_LOOKASIDE_LIST BufferLookasideList;
 
 
 NTSTATUS
@@ -70,6 +74,10 @@ AfdDispatch(
 
     case IOCTL_AFD_RECVFROM:
         Status = AfdDispRecvFrom(Irp, IrpSp);
+        break;
+
+    case IOCTL_AFD_SELECT:
+        Status = AfdDispSelect(Irp, IrpSp);
         break;
 
     default:
@@ -151,6 +159,15 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdClose;
 
     DriverObject->DriverUnload = (PDRIVER_UNLOAD)AfdUnload;
+
+/*    ExInitializeNPagedLookasideList(
+      &BufferLookasideList,
+      NULL,
+      NULL,
+      0,
+      sizeof(AFD_BUFFER),
+      TAG('A', 'F', 'D', 'B'),
+      0);*/
 
     return STATUS_SUCCESS;
 }

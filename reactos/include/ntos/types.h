@@ -376,9 +376,9 @@ typedef struct _EXCEPTION_RECORD {
 } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
 
 typedef const void *LPCVOID;
-typedef BYTE *LPBYTE;
+typedef BYTE *LPBYTE, *PBYTE;
 
-typedef BYTE *PBYTE;
+typedef BOOL *PBOOL;
 
 typedef DWORD LCID;
 typedef DWORD *PLCID;

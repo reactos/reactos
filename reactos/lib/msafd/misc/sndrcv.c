@@ -193,7 +193,6 @@ WSPSendTo(
   Request = (PFILE_REQUEST_SENDTO)HeapAlloc(
     GlobalHeap, 0, sizeof(FILE_REQUEST_SENDTO) + Size);
   if (!Request) {
-    AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     *lpErrno = WSAENOBUFS;
     return SOCKET_ERROR;
   }

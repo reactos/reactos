@@ -14,7 +14,7 @@ typedef struct _CATALOG_ENTRY {
     LIST_ENTRY ListEntry;
     ULONG ReferenceCount;
     CRITICAL_SECTION Lock;
-    WCHAR LibraryName[MAX_PATH];
+    UNICODE_STRING LibraryName;
     HMODULE hModule;
     WSAPROTOCOL_INFOW ProtocolInfo;
     PWINSOCK_MAPPING Mapping;

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.80 2001/05/26 10:05:40 jfilby Exp $
+/* $Id: loader.c,v 1.81 2001/06/04 11:26:12 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -341,7 +341,7 @@ ULONG HexL(PCHAR Buffer)
 PSYMBOL LdrpParseLine(PCHAR Line,
                       PULONG TextBase,
                       PBOOLEAN TextBaseValid,
-                      PULONG FileAlignment)
+                      PULONG Alignment)
 /*
     Line format: [ADDRESS] <TYPE> <NAME>
     TYPE:
@@ -386,18 +386,11 @@ PSYMBOL LdrpParseLine(PCHAR Line,
   else
     strncpy((char*)&Buffer, Line, Str - Line);
 
-  if ((Type == 'A') && (strcmp((char*)&Buffer, "__file_alignment__")) == 0)
+  if ((Type == 'A') && (strcmp((char*)&Buffer, "__section_alignment__")) == 0)
     {
-      *FileAlignment = Address;
+      *Alignment = Address;
       return NULL;
     }
-
-/*  if ((Type == 'A') && (strcmp((char*)&Buffer, "__image_base__")) == 0)
-    {
-      *TextBase = Address;
-      *TextBaseValid = TRUE;
-      return NULL;
-    }*/
 
   /* We only want symbols in the .text segment */
   if ((Type != 't') && (Type != 'T'))
@@ -420,7 +413,7 @@ PSYMBOL LdrpParseLine(PCHAR Line,
 
   if (!(*TextBaseValid))
     {
-      *TextBase = Address - *FileAlignment;
+      *TextBase = Address - *Alignment;
       *TextBaseValid = TRUE;
     }
 
@@ -440,7 +433,7 @@ VOID LdrpLoadModuleSymbolsFromBuffer(
   BOOLEAN TextBaseValid;
   BOOLEAN Valid;
   ULONG TextBase = 0;
-  ULONG FileAlignment = 0;
+  ULONG Alignment = 0;
   CHAR Line[256];
   ULONG Tmp;
 
@@ -463,7 +456,7 @@ VOID LdrpLoadModuleSymbolsFromBuffer(
   Valid = FALSE;
   while (LdrpReadLine((PCHAR)&Line, 256, &Buffer, &Length))
     {
-      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &FileAlignment);
+      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &Alignment);
 
       if ((Valid) && (!TextBaseValid))
         {
@@ -487,7 +480,61 @@ VOID LdrpLoadModuleSymbolsFromBuffer(
     }
 }
 
-VOID LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
+VOID LdrpLoadUserModuleSymbolsFromBuffer(
+  PLDR_MODULE ModuleObject,
+  PVOID Buffer,
+  ULONG Length)
+/*
+   Symbols must be sorted by address, e.g.
+   "nm --numeric-sort module.dll > module.sym"
+ */
+{
+  PSYMBOL Symbol, CurrentSymbol = NULL;
+  BOOLEAN TextBaseValid;
+  BOOLEAN Valid;
+  ULONG TextBase = 0;
+  ULONG Alignment = 0;
+  CHAR Line[256];
+  ULONG Tmp;
+
+  if (ModuleObject->Symbols.SymbolCount > 0)
+    {
+      DPRINT("Symbols are already loaded for %wZ\n", &ModuleObject->BaseDllName);
+      return;
+    }
+
+  ModuleObject->Symbols.SymbolCount = 0;
+  ModuleObject->Symbols.Symbols = NULL;
+  TextBaseValid = FALSE;
+  Valid = FALSE;
+  while (LdrpReadLine((PCHAR)&Line, 256, &Buffer, &Length))
+    {
+      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &Alignment);
+
+      if ((Valid) && (!TextBaseValid))
+        {
+          TextBase = Tmp;
+          TextBaseValid = TRUE;
+        }
+
+      if (Symbol != NULL)
+        {
+          Symbol->RelativeAddress -= TextBase;
+
+          if (ModuleObject->Symbols.Symbols == NULL)
+            ModuleObject->Symbols.Symbols = Symbol;
+          else
+            CurrentSymbol->Next = Symbol;
+
+          CurrentSymbol = Symbol;
+
+          ModuleObject->Symbols.SymbolCount++;
+        }
+    }
+}
+
+VOID LdrpLoadModuleSymbols(
+  PMODULE_OBJECT ModuleObject)
 {
   FILE_STANDARD_INFORMATION FileStdInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -582,6 +629,101 @@ VOID LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
   ExFreePool(FileBuffer);
 }
 
+VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
+{
+  FILE_STANDARD_INFORMATION FileStdInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR TmpFileName[MAX_PATH];
+  UNICODE_STRING Filename;
+  LPWSTR Start, Ext;
+  HANDLE FileHandle;
+  PVOID FileBuffer;
+  NTSTATUS Status;
+  ULONG Length;
+
+  /*  Get the path to the symbol store  */
+  wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
+
+  /*  Get the symbol filename from the module name  */
+  Start = wcsrchr(ModuleObject->BaseDllName.Buffer, L'\\');
+  if (Start == NULL)
+    Start = ModuleObject->BaseDllName.Buffer;
+  else
+    Start++;
+
+  Ext = wcsrchr(ModuleObject->BaseDllName.Buffer, L'.');
+  if (Ext != NULL)
+    Length = Ext - Start;
+  else
+    Length = wcslen(Start);
+
+  wcsncat(TmpFileName, Start, Length);
+  wcscat(TmpFileName, L".sym");
+  RtlInitUnicodeString(&Filename, TmpFileName);
+
+  /*  Open the file  */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &Filename,
+                             0,
+                             NULL,
+                             NULL);
+
+  Status = ZwOpenFile(&FileHandle,
+                      FILE_ALL_ACCESS,
+                      &ObjectAttributes,
+                      NULL, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not open symbol file: %wZ\n", &Filename);
+      return;
+    }
+
+  DbgPrint("Loading symbols from %wZ...\n", &Filename);
+
+  /*  Get the size of the file  */
+  Status = ZwQueryInformationFile(FileHandle,
+                                  NULL,
+                                  &FileStdInfo,
+                                  sizeof(FileStdInfo),
+                                  FileStandardInformation);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not get file size\n");
+      return;
+    }
+
+  /*  Allocate nonpageable memory for symbol file  */
+  FileBuffer = ExAllocatePool(NonPagedPool,
+                              FileStdInfo.EndOfFile.u.LowPart);
+
+  if (FileBuffer == NULL)
+    {
+      DPRINT("Could not allocate memory for symbol file\n");
+      return;
+    }
+   
+  /*  Load file into memory chunk  */
+  Status = ZwReadFile(FileHandle, 
+                      0, 0, 0, 0, 
+                      FileBuffer, 
+                      FileStdInfo.EndOfFile.u.LowPart, 
+                      0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Could not read symbol file into memory\n");
+      ExFreePool(FileBuffer);
+      return;
+    }
+
+  ZwClose(FileHandle);
+
+  LdrpLoadUserModuleSymbolsFromBuffer(ModuleObject,
+                                      FileBuffer,
+                                      FileStdInfo.EndOfFile.u.LowPart);
+
+  ExFreePool(FileBuffer);
+}
+
 NTSTATUS LdrpFindModuleObject(
   PUNICODE_STRING ModuleName,
   PMODULE_OBJECT *ModuleObject)
@@ -663,7 +805,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * 
     */
    LdrLoadAutoConfigDriver(L"vgamp.sys");
-   
+#if 0
    /*
     * Minix filesystem driver
     */
@@ -678,7 +820,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Named pipe filesystem driver
     */
    LdrLoadAutoConfigDriver(L"npfs.sys");
-
+#endif
    /*
     * Mouse drivers
     */
@@ -688,7 +830,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Networking
     */
-#if 0
+#if 1
    /*
     * NDIS library
     */
@@ -697,7 +839,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Novell Eagle 2000 driver
     */
-   LdrLoadAutoConfigDriver(L"ne2000.sys");
+   //LdrLoadAutoConfigDriver(L"ne2000.sys");
 
    /*
     * TCP/IP protocol driver
@@ -707,7 +849,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * TDI test driver
     */
-   LdrLoadAutoConfigDriver(L"tditest.sys");
+   //LdrLoadAutoConfigDriver(L"tditest.sys");
 
    /*
     * Ancillary Function Driver

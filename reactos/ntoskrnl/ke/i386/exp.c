@@ -37,6 +37,7 @@
 #include <internal/mm.h>
 #include <internal/ps.h>
 #include <internal/trap.h>
+#include <ntdll/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -98,7 +99,7 @@ static char *ExceptionTypeStrings[] =
 extern unsigned int _text_start__, _text_end__;
 
 STATIC BOOLEAN 
-print_address(PVOID address)
+print_kernel_address(PVOID address)
 {
 #ifdef KDBG
    ULONG Offset;
@@ -159,6 +160,97 @@ print_address(PVOID address)
 	current_entry = current_entry->Flink;
      }
    return(FALSE);
+}
+
+STATIC BOOLEAN 
+print_user_address(PVOID address)
+{
+#ifdef KDBG
+   ULONG Offset;
+   PSYMBOL Symbol, NextSymbol;
+   BOOLEAN Printed = FALSE;
+   ULONG NextAddress;
+#endif /* KDBG */
+   PLIST_ENTRY current_entry;
+   PLDR_MODULE current;
+   PEPROCESS CurrentProcess;
+   PPEB Peb = NULL;
+
+   CurrentProcess = PsGetCurrentProcess();
+   if (NULL != CurrentProcess)
+    {
+      Peb = CurrentProcess->Peb;
+    }
+
+   if (NULL == Peb)
+	   {
+       DbgPrint("<%x>", address);
+       return(TRUE);
+     }
+
+   current_entry = Peb->Ldr->InLoadOrderModuleList.Flink;
+   
+   while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
+	  current_entry != NULL)
+     {
+	current = 
+	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
+	
+	if (address >= (PVOID)current->BaseAddress &&
+	    address < (PVOID)(current->BaseAddress + current->SizeOfImage))
+	  {
+#ifdef KDBG
+
+      Offset = (ULONG)(address - current->BaseAddress);
+      Symbol = current->Symbols.Symbols;
+      while (Symbol != NULL)
+        {
+          NextSymbol = Symbol->Next;
+          if (NextSymbol != NULL)
+            NextAddress = NextSymbol->RelativeAddress;
+          else
+            NextAddress = current->SizeOfImage;
+
+          if ((Offset >= Symbol->RelativeAddress) &&
+              (Offset < NextAddress))
+            {
+              DbgPrint("<%wZ: %x (%wZ)>",
+                &current->BaseDllName, Offset, &Symbol->Name);
+              Printed = TRUE;
+              break;
+            }
+          Symbol = NextSymbol;
+        }
+      if (!Printed)
+        DbgPrint("<%wZ: %x>", &current->BaseDllName, Offset);
+
+#else /* KDBG */
+
+	     DbgPrint("<%wZ: %x>", &current->BaseDllName, 
+		      address - current->BaseAddress);
+
+#endif /* KDBG */
+
+	     return(TRUE);
+	  }
+
+	current_entry = current_entry->Flink;
+     }
+   return(FALSE);
+}
+
+STATIC BOOLEAN 
+print_address(PVOID address)
+{
+  /* FIXME: There is a variable with this value somewhere...use it */
+  if ((ULONG)address >= 0xc0000000)
+    {
+      return print_kernel_address(address);
+    }
+  else
+    {
+      return print_user_address(address);
+    }
 }
 
 #if 0
@@ -244,7 +336,7 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   DbgPrint("\n");
   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
   DbgPrint("CR2 %x CR3 %x ", Cr2, cr3);
-  DbgPrint("Proc: %x ",PsGetCurrentProcess());
+  DbgPrint("Process: %x ",PsGetCurrentProcess());
   if (PsGetCurrentProcess() != NULL)
     {
       DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
@@ -305,13 +397,9 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   Frame = (PULONG)Tf->Ebp;
   while (Frame != NULL)
     {
-      DbgPrint("%.8x  ", Frame[1]);
+      print_address((PVOID)Frame[1]);
       Frame = (PULONG)Frame[0];
       i++;
-    }
-  if ((i % 8) != 0)
-    {
-      DbgPrint("\n");
     }
 
   /*
@@ -466,7 +554,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
-   
+  
    /* Get CR2 */
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
    

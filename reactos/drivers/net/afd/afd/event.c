@@ -82,24 +82,77 @@ NTSTATUS ClientEventChainedReceive(
 
 
 NTSTATUS AfdEventReceiveDatagramHandler(
-    IN PVOID TdiEventContext,
-    IN LONG SourceAddressLength,
-    IN PVOID SourceAddress,
-    IN LONG OptionsLength,
-    IN PVOID Options,
-    IN ULONG ReceiveDatagramFlags,
-    IN ULONG BytesIndicated,
-    IN ULONG BytesAvailable,
-    OUT ULONG *BytesTaken,
-    IN PVOID Tsdu,
-    OUT PIRP *IoRequestPacket)
+  IN PVOID TdiEventContext,
+  IN LONG SourceAddressLength,
+  IN PVOID SourceAddress,
+  IN LONG OptionsLength,
+  IN PVOID Options,
+  IN ULONG ReceiveDatagramFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket)
 {
-    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+  PAFDFCB FCB = (PAFDFCB)TdiEventContext;
+  PAFD_READ_REQUEST ReadRequest;
+  PVOID ReceiveBuffer;
+  PAFD_BUFFER Buffer;
+  PLIST_ENTRY Entry;
+  NTSTATUS Status;
+  KIRQL OldIrql;
 
-    AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes from (0x%X).\n",
-        BytesAvailable, *(PULONG)SourceAddress));
+  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return STATUS_SUCCESS;
+  AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes from (0x%X).\n",
+    BytesAvailable, *(PULONG)SourceAddress));
+
+  ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
+  if (!ReceiveBuffer) {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
+    &BufferLookasideList);*/
+  Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
+  if (!Buffer) {
+    ExFreePool(ReceiveBuffer);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  Buffer->Buffer.len = BytesAvailable;
+  Buffer->Buffer.buf = ReceiveBuffer;
+
+  ExInterlockedInsertTailList(
+    &FCB->ReceiveQueue,
+    &Buffer->ListEntry,
+    &FCB->ReceiveQueueLock);
+
+  KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
+
+  if (!IsListEmpty(&FCB->ReadRequestQueue)) {
+    Entry = RemoveHeadList(&FCB->ReceiveQueue);
+    ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
+
+    Status = FillWSABuffers(
+      FCB,
+      ReadRequest->RecvFromRequest->Buffers,
+      ReadRequest->RecvFromRequest->BufferCount,
+      &ReadRequest->RecvFromReply->NumberOfBytesRecvd);
+    ReadRequest->RecvFromReply->Status = NO_ERROR;
+
+    ReadRequest->Irp->IoStatus.Information = 0;
+    ReadRequest->Irp->IoStatus.Status = Status;
+    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
+  }
+
+  KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+
+  *BytesTaken = BytesAvailable;
+
+  AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -108,6 +161,9 @@ NTSTATUS AfdRegisterEventHandlers(
 {
     NTSTATUS Status;
 
+    assert(FCB->TdiAddressObject);
+
+    /* Report errors for all types of sockets */
     Status = TdiSetEventHandler(FCB->TdiAddressObject,
         TDI_EVENT_ERROR,
         (PVOID)AfdEventError,
@@ -140,7 +196,9 @@ NTSTATUS AfdRegisterEventHandlers(
             (PVOID)FCB);
         if (!NT_SUCCESS(Status)) { return Status; }
         break;
+
     case SOCK_DGRAM:
+    case SOCK_RAW:
         Status = TdiSetEventHandler(FCB->TdiAddressObject,
             TDI_EVENT_RECEIVE_DATAGRAM,
             (PVOID)AfdEventReceiveDatagramHandler,
@@ -190,6 +248,7 @@ NTSTATUS AfdDeregisterEventHandlers(
         break;
 
     case SOCK_DGRAM:
+    case SOCK_RAW:
         Status = TdiSetEventHandler(FCB->TdiAddressObject,
             TDI_EVENT_RECEIVE_DATAGRAM,
             NULL,

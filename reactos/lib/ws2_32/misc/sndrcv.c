@@ -34,9 +34,16 @@ recvfrom(
     OUT     LPSOCKADDR from,
     IN OUT  INT FAR* fromlen)
 {
-    UNIMPLEMENTED
+    DWORD BytesReceived;
+    WSABUF WSABuf;
 
-    return 0;
+    WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
+        s, buf, len, flags));
+
+    WSABuf.len = len;
+    WSABuf.buf = (CHAR FAR*)buf;
+
+    return WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
 }
 
 
@@ -119,9 +126,29 @@ WSARecvFrom(
     IN      LPWSAOVERLAPPED lpOverlapped,
     IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-    UNIMPLEMENTED
+    PCATALOG_ENTRY Provider;
+    INT Errno;
+    INT Code;
 
-    return 0;
+    WS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
+
+    assert(Provider->ProcTable.lpWSPRecvFrom);
+
+    Code = Provider->ProcTable.lpWSPRecvFrom(s, lpBuffers, dwBufferCount,
+        lpNumberOfBytesRecvd, lpFlags, lpFrom, lpFromlen, lpOverlapped,
+        lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+
+    DereferenceProviderByPointer(Provider);
+
+    if (Code == SOCKET_ERROR)
+        WSASetLastError(Errno);
+
+    return Code;
 }
 
 
@@ -177,6 +204,8 @@ WSASendTo(
         WSASetLastError(WSAENOTSOCK);
         return SOCKET_ERROR;
     }
+
+    assert(Provider->ProcTable.lpWSPSendTo);
 
     Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
         lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped,

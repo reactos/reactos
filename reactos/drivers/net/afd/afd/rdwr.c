@@ -12,7 +12,7 @@
 NTSTATUS AfdReadFile(
     PDEVICE_EXTENSION DeviceExt,
     PFILE_OBJECT FileObject,
-	PVOID Buffer,
+    PVOID Buffer,
     ULONG Length,
     ULONG Offset)
 /*
@@ -79,23 +79,39 @@ AfdWrite(
     FCB = FileObject->FsContext;
     CCB = FileObject->FsContext2;
 
+    assert(FCB);
+    assert(CCB);
+
     Length = IoSp->Parameters.Write.Length;
     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
     Offset = IoSp->Parameters.Write.ByteOffset.u.LowPart;
 
-    AFD_DbgPrint(MIN_TRACE, ("Called. Length (%d)  Buffer (0x%X)  Offset (0x%X)\n",
+    AFD_DbgPrint(MAX_TRACE, ("Called. Length (%d)  Buffer (0x%X)  Offset (0x%X)\n",
         Length, Buffer, Offset));
 
-    /* FIXME: Connectionless communication only */
-    //Status = TdiSendDatagram(FCB->TdiAddressObject, WH2N(2000), 0x7F000001, Buffer, Length);
-    //if (!NT_SUCCESS(Status))
-        Length = 0;
+    assert((FCB->SocketType == SOCK_STREAM) || (FCB->SocketType == SOCK_DGRAM));
+
+    switch (FCB->SocketType) {
+      case SOCK_STREAM:
+        /* FIXME: Support connectionful communication */
+        break;
+      case SOCK_DGRAM:
+        /* Connectionless communication */
+        //Status = TdiSendDatagram(FCB->TdiAddressObject, WH2N(2000), 0x7F000001, Buffer, Length);
+        //if (!NT_SUCCESS(Status)) {
+          Length = 0;
+        //}
+        break;
+      case SOCK_RAW:
+        /* FIXME: Support raw communication */
+        break;
+    }
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Length;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    AFD_DbgPrint(MIN_TRACE, ("Leaving.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
     return Status;
 }

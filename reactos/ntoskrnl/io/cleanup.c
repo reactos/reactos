@@ -252,7 +252,7 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    
    if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
      {
-	ObDereferenceObject(FileObject);
+	//ObDereferenceObject(FileObject);
      }
    
    IoFreeIrp(Irp);

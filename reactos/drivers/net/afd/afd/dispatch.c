@@ -102,7 +102,6 @@ NTSTATUS AfdDispListen(
 }
 
 
-
 NTSTATUS AfdDispSendTo(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp)
@@ -122,6 +121,7 @@ NTSTATUS AfdDispSendTo(
     PFILE_REPLY_SENDTO Reply;
     PAFDFCB FCB;
     PVOID SystemVirtualAddress;
+    PVOID DataBufferAddress;
     ULONG BufferSize;
     ULONG BytesCopied;
     PMDL Mdl;
@@ -142,18 +142,41 @@ NTSTATUS AfdDispSendTo(
         Reply   = (PFILE_REPLY_SENDTO)Irp->AssociatedIrp.SystemBuffer;
         BufferSize = WSABufferSize(Request->Buffers, Request->BufferCount);
 
+
+        /* FIXME: Should we handle special cases here? */
+        if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET)) {
+            BufferSize += sizeof(IPv4_HEADER);
+        }
+
+
         if (BufferSize != 0) {
             AFD_DbgPrint(MAX_TRACE, ("Allocating %d bytes for send buffer.\n", BufferSize));
             SystemVirtualAddress = ExAllocatePool(NonPagedPool, BufferSize);
             if (!SystemVirtualAddress) {
-                AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
                 return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            /* FIXME: Should we handle special cases here? */
+            if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET)) {
+                DataBufferAddress = SystemVirtualAddress + sizeof(IPv4_HEADER);
+
+                /* FIXME: Should TCP/IP driver assign source address for raw sockets? */
+                ((PSOCKADDR_IN)&FCB->SocketName)->sin_addr.S_un.S_addr = 0x0100007F;
+
+                BuildIPv4Header(
+                    (PIPv4_HEADER)SystemVirtualAddress,
+                    BufferSize,
+                    FCB->Protocol,
+                    &FCB->SocketName,
+                    &Request->To);
+            } else {
+                DataBufferAddress = SystemVirtualAddress;
             }
 
             Status = MergeWSABuffers(
                 Request->Buffers,
                 Request->BufferCount,
-                SystemVirtualAddress,
+                DataBufferAddress,
                 BufferSize,
                 &BytesCopied);
             if (!NT_SUCCESS(Status)) {
@@ -165,8 +188,6 @@ NTSTATUS AfdDispSendTo(
             BytesCopied = 0;
         }
 
-        AFD_DbgPrint(MAX_TRACE, ("KeGetCurrentIrql() 1 (%d).\n", KeGetCurrentIrql()));
-
         Mdl = IoAllocateMdl(
             SystemVirtualAddress,   /* Virtual address of buffer */
             BufferSize,             /* Length of buffer */
@@ -174,18 +195,11 @@ NTSTATUS AfdDispSendTo(
             FALSE,                  /* Don't charge quota */
             NULL);                  /* Don't use IRP */
         if (!Mdl) {
-            AFD_DbgPrint(MIN_TRACE, ("IoAllocateMdl() failed.\n"));
             ExFreePool(SystemVirtualAddress);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        AFD_DbgPrint(MAX_TRACE, ("KeGetCurrentIrql() 2 (%d).\n", KeGetCurrentIrql()));
-
-        AFD_DbgPrint(MIN_TRACE, ("NDIS data buffer MdlFlags 1 is (0x%X).\n", Mdl->MdlFlags));
-
         MmBuildMdlForNonPagedPool(Mdl);
-
-        AFD_DbgPrint(MAX_TRACE, ("KeGetCurrentIrql() 3 (%d).\n", KeGetCurrentIrql()));
 
         AFD_DbgPrint(MAX_TRACE, ("System virtual address is (0x%X).\n", SystemVirtualAddress));
         AFD_DbgPrint(MAX_TRACE, ("MDL for data buffer is at (0x%X).\n", Mdl));
@@ -216,13 +230,10 @@ NTSTATUS AfdDispSendTo(
 #endif
 #endif
 
-        DisplayBuffer(SystemVirtualAddress, BufferSize);
-
-        Status = STATUS_SUCCESS;
-/*        Status = TdiSendDatagram(FCB->TdiAddressObject,
+        Status = TdiSendDatagram(FCB->TdiAddressObject,
             &Request->To,
             Mdl,
-            BufferSize);*/
+            BufferSize);
 
         /* FIXME: Assumes synchronous operation */
 #if 0
@@ -231,16 +242,12 @@ NTSTATUS AfdDispSendTo(
 
         IoFreeMdl(Mdl);
 
-        AFD_DbgPrint(MAX_TRACE, ("KeGetCurrentIrql() 4 (%d).\n", KeGetCurrentIrql()));
-
         if (BufferSize != 0) {
             ExFreePool(SystemVirtualAddress);
         }
 
-        AFD_DbgPrint(MAX_TRACE, ("KeGetCurrentIrql() 5 (%d).\n", KeGetCurrentIrql()));
-
         Reply->NumberOfBytesSent = BufferSize;
-        Reply->Status = Status;
+        Reply->Status = NO_ERROR;
     } else
         Status = STATUS_INVALID_PARAMETER;
 
@@ -267,7 +274,11 @@ NTSTATUS AfdDispRecvFrom(
     UINT OutputBufferLength;
     PFILE_REQUEST_RECVFROM Request;
     PFILE_REPLY_RECVFROM Reply;
+    PAFD_READ_REQUEST ReadRequest;
+    KIRQL OldIrql;
     PAFDFCB FCB;
+
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -279,6 +290,65 @@ NTSTATUS AfdDispRecvFrom(
 
         Request = (PFILE_REQUEST_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
         Reply   = (PFILE_REPLY_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
+
+        KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
+
+        if (IsListEmpty(&FCB->ReadRequestQueue)) {
+          /* Queue request and return STATUS_PENDING */
+          ReadRequest->Irp = Irp;
+          ReadRequest->RecvFromRequest = Request;
+          ReadRequest->RecvFromReply = Reply;
+          InsertTailList(&FCB->ReadRequestQueue, &ReadRequest->ListEntry);
+          KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+          Status = STATUS_PENDING;
+        } else {
+          /* Satisfy the request at once */
+          Status = FillWSABuffers(
+            FCB,
+            Request->Buffers,
+            Request->BufferCount,
+            &Reply->NumberOfBytesRecvd);
+          KeReleaseSpinLock(&FCB->ReadRequestQueueLock, OldIrql);
+          Reply->Status = NO_ERROR;
+        }
+    } else
+        Status = STATUS_INVALID_PARAMETER;
+
+    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+    return Status;
+}
+
+
+NTSTATUS AfdDispSelect(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Checks if sockets have data in the receive buffers
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    NTSTATUS Status;
+    UINT InputBufferLength;
+    UINT OutputBufferLength;
+    PFILE_REQUEST_SELECT Request;
+    PFILE_REPLY_SELECT Reply;
+    PAFDFCB FCB;
+
+    InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+    OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+    /* Validate parameters */
+    if ((InputBufferLength >= sizeof(FILE_REQUEST_SELECT)) &&
+        (OutputBufferLength >= sizeof(FILE_REPLY_SELECT))) {
+        FCB = IrpSp->FileObject->FsContext;
+
+        Request = (PFILE_REQUEST_SELECT)Irp->AssociatedIrp.SystemBuffer;
+        Reply   = (PFILE_REPLY_SELECT)Irp->AssociatedIrp.SystemBuffer;
     } else
         Status = STATUS_INVALID_PARAMETER;
 

@@ -405,6 +405,10 @@ VOID DisplayIPPacket(
     PNDIS_BUFFER Buffer;
     PNDIS_BUFFER NextBuffer;
 
+    if ((DebugTraceLevel & DEBUG_BUFFER) == 0) {
+        return;
+    }
+
     if (!IPPacket) {
         TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
         return;

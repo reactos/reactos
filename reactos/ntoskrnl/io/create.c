@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.42 2001/05/13 13:35:37 chorns Exp $
+/* $Id: create.c,v 1.43 2001/06/04 11:26:11 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -406,7 +406,7 @@ IoCreateFile(
      }
    if (!NT_SUCCESS(Status))
      {
-	DPRINT1("Failing create request with status %x\n", Status);
+	DPRINT("Failing create request with status %x\n", Status);
 	ZwClose(*FileHandle);
 	(*FileHandle) = 0;
      }

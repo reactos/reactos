@@ -34,5 +34,6 @@ $(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
 
 $(TARGETNAME).exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) $(LIBS) -o $(TARGETNAME).exe
+	$(NM) --numeric-sort $(TARGETNAME).exe > $(TARGETNAME).sym
 
 include ../../../rules.mak

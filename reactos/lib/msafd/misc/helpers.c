@@ -10,7 +10,7 @@
 #include <msafd.h>
 #include <helpers.h>
 
-//CRITICAL_SECTION HelperDLLDatabaseLock;
+CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 
 PWSHELPER_DLL CreateHelperDLL(
@@ -19,19 +19,17 @@ PWSHELPER_DLL CreateHelperDLL(
     PWSHELPER_DLL HelperDLL;
 
     HelperDLL = HeapAlloc(GlobalHeap, 0, sizeof(WSHELPER_DLL));
-    if (!HelperDLL) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+    if (!HelperDLL)
         return NULL;
-    }
 
-    //InitializeCriticalSection(&HelperDLL->Lock);
+    InitializeCriticalSection(&HelperDLL->Lock);
     HelperDLL->hModule = NULL;
     lstrcpyW(HelperDLL->LibraryName, LibraryName);
     HelperDLL->Mapping = NULL;
 
-    //EnterCriticalSection(&HelperDLLDatabaseLock);
+    EnterCriticalSection(&HelperDLLDatabaseLock);
     InsertTailList(&HelperDLLDatabaseListHead, &HelperDLL->ListEntry);
-    //LeaveCriticalSection(&HelperDLLDatabaseLock);
+    LeaveCriticalSection(&HelperDLLDatabaseLock);
 
     AFD_DbgPrint(MAX_TRACE, ("Returning helper at (0x%X).\n", HelperDLL));
 
@@ -46,9 +44,9 @@ INT DestroyHelperDLL(
 
     AFD_DbgPrint(MAX_TRACE, ("HelperDLL (0x%X).\n", HelperDLL));
 
-    //EnterCriticalSection(&HelperDLLDatabaseLock);
+    EnterCriticalSection(&HelperDLLDatabaseLock);
     RemoveEntryList(&HelperDLL->ListEntry);
-    //LeaveCriticalSection(&HelperDLLDatabaseLock);
+    LeaveCriticalSection(&HelperDLLDatabaseLock);
 
     if (HelperDLL->hModule) {
         Status = UnloadHelperDLL(HelperDLL);
@@ -59,7 +57,7 @@ INT DestroyHelperDLL(
     if (HelperDLL->Mapping)
         HeapFree(GlobalHeap, 0, HelperDLL->Mapping);
 
-    //DeleteCriticalSection(&HelperDLL->Lock);
+    DeleteCriticalSection(&HelperDLL->Lock);
 
     HeapFree(GlobalHeap, 0, HelperDLL);
 
@@ -74,7 +72,7 @@ PWSHELPER_DLL LocateHelperDLL(
     PWSHELPER_DLL HelperDLL;
     UINT i;
 
-    //EnterCriticalSection(&HelperDLLDatabaseLock);
+    EnterCriticalSection(&HelperDLLDatabaseLock);
     CurrentEntry = HelperDLLDatabaseListHead.Flink;
     while (CurrentEntry != &HelperDLLDatabaseListHead) {
 	    HelperDLL = CONTAINING_RECORD(CurrentEntry,
@@ -86,7 +84,7 @@ PWSHELPER_DLL LocateHelperDLL(
                 (lpProtocolInfo->iSocketType    == HelperDLL->Mapping->Mapping[i].SocketType) &&
                 ((lpProtocolInfo->iProtocol     == HelperDLL->Mapping->Mapping[i].Protocol) ||
                 (lpProtocolInfo->iSocketType    == SOCK_RAW))) {
-                //LeaveCriticalSection(&HelperDLLDatabaseLock);
+                LeaveCriticalSection(&HelperDLLDatabaseLock);
                 AFD_DbgPrint(MAX_TRACE, ("Returning helper DLL at (0x%X).\n", HelperDLL));
                 return HelperDLL;
             }
@@ -94,7 +92,7 @@ PWSHELPER_DLL LocateHelperDLL(
 
         CurrentEntry = CurrentEntry->Flink;
     }
-    //LeaveCriticalSection(&HelperDLLDatabaseLock);
+    LeaveCriticalSection(&HelperDLLDatabaseLock);
 
     AFD_DbgPrint(MAX_TRACE, ("Could not locate helper DLL.\n"));
 
@@ -156,7 +154,7 @@ INT LoadHelperDLL(
     } else
         Status = NO_ERROR;
 
-    AFD_DbgPrint(MIN_TRACE, ("Status (%d).\n", Status));
+    AFD_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
 
     return Status;
 }
@@ -186,22 +184,18 @@ VOID CreateHelperDLLDatabase(VOID)
 {
     PWSHELPER_DLL HelperDLL;
 
-    //InitializeCriticalSection(&HelperDLLDatabaseLock);
+    InitializeCriticalSection(&HelperDLLDatabaseLock);
 
     InitializeListHead(&HelperDLLDatabaseListHead);
 
     /* FIXME: Read helper DLL configuration from registry */
     HelperDLL = CreateHelperDLL(L"wshtcpip.dll");
-    if (!HelperDLL) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+    if (!HelperDLL)
         return;
-    }
 
     HelperDLL->Mapping = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
-    if (!HelperDLL->Mapping) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+    if (!HelperDLL->Mapping)
         return;
-    }
 
     HelperDLL->Mapping->Rows    = 1;
     HelperDLL->Mapping->Columns = 3;
@@ -231,7 +225,7 @@ VOID DestroyHelperDLLDatabase(VOID)
         CurrentEntry = NextEntry;
     }
 
-    //DeleteCriticalSection(&HelperDLLDatabaseLock);
+    DeleteCriticalSection(&HelperDLLDatabaseLock);
 }
 
 /* EOF */

@@ -9,6 +9,7 @@
  */
 #include <tcpip.h>
 #include <icmp.h>
+#include <rawip.h>
 #include <checksum.h>
 #include <routines.h>
 #include <transmit.h>
@@ -72,6 +73,9 @@ PIP_PACKET PrepareICMPPacket(
         return NULL;
 
     TI_DbgPrint(DEBUG_ICMP, ("IPPacket at (0x%X).\n", IPPacket));
+
+    /* No special flags */
+    IPPacket->Flags = 0;
 
     Size = MaxLLHeaderSize + sizeof(IPv4_HEADER) +
         sizeof(ICMP_HEADER) + DataSize;
@@ -189,10 +193,8 @@ VOID ICMPReceive(
         /* Reply with an ICMP echo reply message */
         DataSize  = IPPacket->TotalSize - IPPacket->HeaderSize - sizeof(ICMP_HEADER);
         NewPacket = PrepareICMPPacket(NTE, &IPPacket->SrcAddr, DataSize);
-        if (!NewPacket) {
-            TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        if (!NewPacket)
             return;
-        }
 
         /* Copy ICMP header and data into new packet */
         RtlCopyMemory(NewPacket->Data, IPPacket->Data, DataSize  + sizeof(ICMP_HEADER));
@@ -203,13 +205,20 @@ VOID ICMPReceive(
         ICMPTransmit(NTE, NewPacket);
 
         TI_DbgPrint(DEBUG_ICMP, ("Echo reply sent.\n"));
-
         return;
+
+    case ICMP_TYPE_ECHO_REPLY:
+        break;
+
     default:
-        TI_DbgPrint(DEBUG_ICMP, ("Discarded ICMP datagram of unknown type.\n"));
+        TI_DbgPrint(DEBUG_ICMP, ("Discarded ICMP datagram of unknown type %d.\n",
+            ICMPHeader->Type));
         /* Discard packet */
         break;
     }
+
+    /* Send datagram up the protocol stack */
+    RawIPReceive(NTE, IPPacket);
 }
 
 
@@ -256,8 +265,8 @@ VOID ICMPTransmit(
 VOID ICMPReply(
     PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket,
-	UCHAR Type,
-	UCHAR Code)
+	  UCHAR Type,
+ 	  UCHAR Code)
 /*
  * FUNCTION: Transmits an ICMP packet in response to an incoming packet
  * ARGUMENTS:

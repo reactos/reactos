@@ -543,7 +543,7 @@ VOID IPv4Receive(
     PNET_TABLE_ENTRY NTE;
     UINT AddressType;
 
-    //TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
+    TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
 
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
 

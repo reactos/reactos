@@ -26,7 +26,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
+#include <internal/ldr.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -39,5 +42,18 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
 		     ULONG OutputBufferLength,
 		     PULONG ReturnLength)
 {
-   UNIMPLEMENTED;
+  switch (ControlCode) {
+    case DebugGetTraceInformation:
+    case DebugSetInternalBreakpoint:
+    case DebugSetSpecialCalls:
+    case DebugClearSpecialCalls:
+    case DebugQuerySpecialCalls:
+    case DebugDbgBreakPoint:
+      break;
+    default:
+#ifdef KDBG
+      LdrLoadUserModuleSymbols((PLDR_MODULE)InputBuffer);
+#endif /* KDBG */
+  }
+  return STATUS_SUCCESS;
 }

@@ -5,24 +5,7 @@
 #include <ddk/ntddk.h>
 #include <internal/config.h>
 #include <pe.h>
-
-#ifdef KDBG
-
-typedef struct _SYMBOL
-{
-  struct _SYMBOL *Next;
-  /* Address relative to module base address */
-  ULONG RelativeAddress;
-  UNICODE_STRING Name;
-} SYMBOL, *PSYMBOL;
-
-typedef struct _SYMBOL_TABLE
-{
-  ULONG SymbolCount;
-  PSYMBOL Symbols;
-} SYMBOL_TABLE, *PSYMBOL_TABLE;
-
-#endif /* KDBG */
+#include <ntos/kdbgsyms.h>
 
 typedef struct _MODULE_TEXT_SECTION
 {

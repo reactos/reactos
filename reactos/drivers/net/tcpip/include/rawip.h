@@ -13,6 +13,10 @@ NTSTATUS RawIPSendDatagram(
     PNDIS_BUFFER Buffer,
     ULONG DataSize);
 
+VOID RawIPReceive(
+    PNET_TABLE_ENTRY NTE,
+    PIP_PACKET IPPacket);
+
 NTSTATUS RawIPStartup(
     VOID);
 

@@ -16,6 +16,7 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -185,22 +186,24 @@ WSASocketW(
   }
 
   Status = LoadProvider(Provider, lpProtocolInfo);
-
   if (Status != NO_ERROR) {
     WSASetLastError(Status);
-   return INVALID_SOCKET;
+    return INVALID_SOCKET;
   }
 
-  WS_DbgPrint(MAX_TRACE, ("Calling WSPSocket at (0x%X).\n", Provider->ProcTable.lpWSPSocket));
+  WS_DbgPrint(MAX_TRACE, ("Calling WSPSocket at (0x%X).\n",
+    Provider->ProcTable.lpWSPSocket));
 
-  Socket = Provider->ProcTable.lpWSPSocket(af,
+  assert(Provider->ProcTable.lpWSPSocket);
+
+  Socket = Provider->ProcTable.lpWSPSocket(
+    af,
     type,
     protocol,
     lpProtocolInfo,
     g,
     dwFlags,
     &Status);
-
 	if (Status != NO_ERROR) {
     WSASetLastError(Status);
     return INVALID_SOCKET;
@@ -336,33 +339,28 @@ DllMain(HANDLE hInstDll,
   switch (dwReason) {
   case DLL_PROCESS_ATTACH:
     GlobalHeap = GetProcessHeap();
-    //GlobalHeap = HeapCreate(0, 0, 0);
-    if (!GlobalHeap) {
-		  WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
-			return FALSE;
-		}
 
     CreateCatalog();
 
     InitProviderHandleTable();
 
-/*      FIXME: Causes trap
-        UpcallTable.lpWPUCloseEvent         = WPUCloseEvent;
-        UpcallTable.lpWPUCloseSocketHandle  = WPUCloseSocketHandle;
-        UpcallTable.lpWPUCreateEvent        = WPUCreateEvent;
-        UpcallTable.lpWPUCreateSocketHandle = WPUCreateSocketHandle;
-        UpcallTable.lpWPUFDIsSet            = WPUFDIsSet;
-        UpcallTable.lpWPUGetProviderPath    = WPUGetProviderPath;
-        UpcallTable.lpWPUModifyIFSHandle    = WPUModifyIFSHandle;
-        UpcallTable.lpWPUPostMessage        = WPUPostMessage;
-        UpcallTable.lpWPUQueryBlockingCallback    = WPUQueryBlockingCallback;
-        UpcallTable.lpWPUQuerySocketHandleContext = WPUQuerySocketHandleContext;
-        UpcallTable.lpWPUQueueApc           = WPUQueueApc;
-        UpcallTable.lpWPUResetEvent         = WPUResetEvent;
-        UpcallTable.lpWPUSetEvent           = WPUSetEvent;
-        UpcallTable.lpWPUOpenCurrentThread  = WPUOpenCurrentThread;
-        UpcallTable.lpWPUCloseThread        = WPUCloseThread;*/
-        /* Fall through to thread attachment handler */
+    UpcallTable.lpWPUCloseEvent         = WPUCloseEvent;
+    UpcallTable.lpWPUCloseSocketHandle  = WPUCloseSocketHandle;
+    UpcallTable.lpWPUCreateEvent        = WPUCreateEvent;
+    UpcallTable.lpWPUCreateSocketHandle = WPUCreateSocketHandle;
+    UpcallTable.lpWPUFDIsSet            = WPUFDIsSet;
+    UpcallTable.lpWPUGetProviderPath    = WPUGetProviderPath;
+    UpcallTable.lpWPUModifyIFSHandle    = WPUModifyIFSHandle;
+    UpcallTable.lpWPUPostMessage        = WPUPostMessage;
+    UpcallTable.lpWPUQueryBlockingCallback    = WPUQueryBlockingCallback;
+    UpcallTable.lpWPUQuerySocketHandleContext = WPUQuerySocketHandleContext;
+    UpcallTable.lpWPUQueueApc           = WPUQueueApc;
+    UpcallTable.lpWPUResetEvent         = WPUResetEvent;
+    UpcallTable.lpWPUSetEvent           = WPUSetEvent;
+    UpcallTable.lpWPUOpenCurrentThread  = WPUOpenCurrentThread;
+    UpcallTable.lpWPUCloseThread        = WPUCloseThread;
+
+    /* Fall through to thread attachment handler */
 
   case DLL_THREAD_ATTACH:
     p = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_THREAD_BLOCK));
@@ -370,7 +368,6 @@ DllMain(HANDLE hInstDll,
     WS_DbgPrint(MAX_TRACE, ("Thread block at 0x%X.\n", p));
         
     if (!p) {
-      WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
       return FALSE;
     }
 
@@ -389,8 +386,6 @@ DllMain(HANDLE hInstDll,
     DestroyCatalog();
 
     FreeProviderHandleTable();
-
-    //HeapDestroy(GlobalHeap);
     break;
 
   case DLL_THREAD_DETACH:

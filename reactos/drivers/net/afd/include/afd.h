@@ -60,6 +60,7 @@ typedef struct _FsdNTRequiredFCB {
 typedef struct _AFDFCB {
     FsdNTRequiredFCB    NTRequiredFCB;
     LIST_ENTRY          ListEntry;
+    BOOL                CommandChannel;
     PDEVICE_EXTENSION   DeviceExt;
     SHARE_ACCESS        ShareAccess;
     ULONG               ReferenceCount;
@@ -72,17 +73,34 @@ typedef struct _AFDFCB {
     INT                 AddressFamily;
     INT                 SocketType;
     INT                 Protocol;
+    SOCKADDR            SocketName;
     PVOID               HelperContext;
     DWORD               NotificationEvents;
     UNICODE_STRING      TdiDeviceName;
     DWORD               State;
     PVOID               SendBuffer;
+    LIST_ENTRY          ReceiveQueue;
+    KSPIN_LOCK          ReceiveQueueLock;
+    LIST_ENTRY          ReadRequestQueue;
+    KSPIN_LOCK          ReadRequestQueueLock;
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */
 #define SOCKET_STATE_CREATED    0
 #define SOCKET_STATE_BOUND      1
 #define SOCKET_STATE_LISTENING  2
+
+typedef struct _AFD_BUFFER {
+  LIST_ENTRY ListEntry;
+  WSABUF Buffer;
+} AFD_BUFFER, *PAFD_BUFFER;
+
+typedef struct _AFD_READ_REQUEST {
+  LIST_ENTRY ListEntry;
+  PIRP Irp;
+  PFILE_REQUEST_RECVFROM RecvFromRequest;
+  PFILE_REPLY_RECVFROM RecvFromReply;
+} AFD_READ_REQUEST, *PAFD_READ_REQUEST;
 
 typedef struct IPSNMP_INFO {
 	ULONG Forwarding;
@@ -125,6 +143,21 @@ typedef struct IPADDR_ENTRY {
 
 #define IP_MIB_STATS_ID             0x1
 #define IP_MIB_ADDRTABLE_ENTRY_ID   0x102
+
+
+/* IPv4 header format */
+typedef struct IPv4_HEADER {
+    UCHAR VerIHL;                /* 4-bit version, 4-bit Internet Header Length */
+    UCHAR Tos;                   /* Type of Service */
+    USHORT TotalLength;          /* Total Length */
+    USHORT Id;                   /* Identification */
+    USHORT FlagsFragOfs;         /* 3-bit Flags, 13-bit Fragment Offset */
+    UCHAR Ttl;                   /* Time to Live */
+    UCHAR Protocol;              /* Protocol */
+    USHORT Checksum;             /* Header Checksum */
+    ULONG SrcAddr;               /* Source Address */
+    ULONG DstAddr;               /* Destination Address */
+} IPv4_HEADER, *PIPv4_HEADER;
 
 
 /* IOCTL codes */
@@ -183,6 +216,8 @@ typedef struct IPADDR_ENTRY {
 #endif /* i386 */
 
 
+extern NPAGED_LOOKASIDE_LIST BufferLookasideList;
+
 /* Prototypes from dispatch.c */
 
 NTSTATUS AfdDispBind(
@@ -198,6 +233,10 @@ NTSTATUS AfdDispSendTo(
     PIO_STACK_LOCATION IrpSp);
 
 NTSTATUS AfdDispRecvFrom(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispSelect(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
@@ -254,6 +293,19 @@ NTSTATUS MergeWSABuffers(
     PVOID Destination,
     ULONG MaxLength,
     PULONG BytesCopied);
+
+NTSTATUS FillWSABuffers(
+    PAFDFCB FCB,
+    LPWSABUF Buffers,
+    DWORD BufferCount,
+    PULONG BytesCopied);
+
+VOID BuildIPv4Header(
+    PIPv4_HEADER IPHeader,
+    ULONG TotalSize,
+    ULONG Protocol,
+    PSOCKADDR SourceAddress,
+    PSOCKADDR DestinationAddress);
 
 /* Prototypes from tdi.c */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.95 2001/05/01 23:08:19 chorns Exp $
+/* $Id: main.c,v 1.96 2001/06/04 11:26:12 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -660,7 +660,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    * This should be done by the boot loader.
    */
   strcpy (KeLoaderCommandLine,
-	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
+	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=COM1");
   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
   
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;

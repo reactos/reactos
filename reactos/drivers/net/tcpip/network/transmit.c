@@ -321,7 +321,7 @@ NTSTATUS IPSendDatagram(
     if (IPPacket->TotalSize > PathMTU) {
         return SendFragments(IPPacket, NCE, PathMTU);
     } else {
-        if (IPPacket->Flags & IP_PACKET_FLAG_RAW == 0) {
+        if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
             /* Calculate checksum of IP header */
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
 
@@ -330,6 +330,9 @@ NTSTATUS IPSendDatagram(
 
             TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
                 WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
+        } else {
+            TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
+              IPPacket->Flags));
         }
 
         return IPSendFragment(IPPacket->NdisPacket, NCE);

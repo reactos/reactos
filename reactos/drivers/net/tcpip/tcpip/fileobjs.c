@@ -244,6 +244,7 @@ NTSTATUS FileOpenAddress(
         break;
     default:
         /* Use raw IP for all other protocols */
+        AddrFile->Port = 0;
         AddrFile->Send = RawIPSendDatagram;
         break;
     }

@@ -163,9 +163,8 @@ CreateProviderHandleTable(PPROVIDER_HANDLE_BLOCK HandleTable,
         GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
 
     if (!NewBlock) {
-		WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
         return NULL;
-	}
+	  }
 
     ZeroMemory(NewBlock, sizeof(PROVIDER_HANDLE_BLOCK));
     InsertTailList(&HandleTable->Entry, &NewBlock->Entry);
@@ -239,9 +238,8 @@ CloseProviderHandle(HANDLE Handle)
 
     Provider = DeleteProviderHandle(ProviderHandleTable, Handle);
     if (!Provider) {
-		WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
         return FALSE;
-	}
+	  }
 
     //LeaveCriticalSection(&ProviderHandleTableLock);
 
@@ -257,11 +255,8 @@ InitProviderHandleTable(VOID)
     ProviderHandleTable = (PPROVIDER_HANDLE_BLOCK)
         HeapAlloc(GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
     if (!ProviderHandleTable) {
-		WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
         return FALSE;
-	}
-
-    WS_DbgPrint(MIN_TRACE, ("ProviderHandleTable at 0x%X.\n", ProviderHandleTable));
+	  }
 
     ZeroMemory(ProviderHandleTable, sizeof(PROVIDER_HANDLE_BLOCK));
 

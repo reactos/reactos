@@ -8,9 +8,10 @@
  *   CSH 01/08-2000 Created
  */
 #include <tcpip.h>
+#include <rawip.h>
 #include <routines.h>
 #include <datagram.h>
-#include <rawip.h>
+#include <address.h>
 #include <pool.h>
 
 
@@ -96,8 +97,6 @@ NTSTATUS BuildRawIPPacket(
         NdisChainBufferAtFront(Packet->NdisPacket, HeaderBuffer);
     }
 
-    TI_DbgPrint(MIN_TRACE, ("Chaining data NDIS buffer at back (0x%X)\n", SendRequest->Buffer));
-    
     /* Chain data after link level header if it exists */
     NdisChainBufferAtBack(Packet->NdisPacket, SendRequest->Buffer);
 
@@ -127,6 +126,70 @@ NTSTATUS RawIPSendDatagram(
 {
     return DGSendDatagram(Request, ConnInfo,
         Buffer, DataSize, BuildRawIPPacket);
+}
+
+
+VOID RawIPReceive(
+    PNET_TABLE_ENTRY NTE,
+    PIP_PACKET IPPacket)
+/*
+ * FUNCTION: Receives and queues a raw IP datagram
+ * ARGUMENTS:
+ *     NTE      = Pointer to net table entry which the packet was received on
+ *     IPPacket = Pointer to an IP packet that was received
+ * NOTES:
+ *     This is the low level interface for receiving ICMP datagrams.
+ *     It delivers the packet header and data to anyone that wants it
+ *     When we get here the datagram has already passed sanity checks
+ */
+{
+    AF_SEARCH SearchContext;
+    PADDRESS_FILE AddrFile;
+    PIP_ADDRESS DstAddress;
+
+    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    switch (IPPacket->Type) {
+    /* IPv4 packet */
+    case IP_ADDRESS_V4:
+        DstAddress = &IPPacket->DstAddr;
+        break;
+
+    /* IPv6 packet */
+    case IP_ADDRESS_V6:
+        TI_DbgPrint(MIN_TRACE, ("Discarded IPv6 raw IP datagram (%i bytes).\n",
+          IPPacket->TotalSize));
+
+        /* FIXME: IPv6 is not supported */
+        return;
+
+    default:
+        return;
+    }
+
+    /* Locate a receive request on destination address file object
+       and deliver the packet if one is found. If there is no receive
+       request on the address file object, call the associated receive
+       handler. If no receive handler is registered, drop the packet */
+
+    AddrFile = AddrSearchFirst(DstAddress,
+                               0,
+                               IPPROTO_ICMP,
+                               &SearchContext);
+    if (AddrFile) {
+        do {
+            DGDeliverData(AddrFile,
+                          DstAddress,
+                          IPPacket,
+                          IPPacket->TotalSize);
+        } while ((AddrFile = AddrSearchNext(&SearchContext)) != NULL);
+    } else {
+        /* There are no open address files that will take this datagram */
+        /* FIXME: IPv4 only */
+        TI_DbgPrint(MID_TRACE, ("Cannot deliver IPv4 ICMP datagram to address (0x%X).\n",
+            DN2H(DstAddress->Address.IPv4Address)));
+    }
+    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 

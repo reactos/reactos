@@ -1,3 +1,6 @@
+#include <ntos/kdbgsyms.h>
+#include "../ntoskrnl/include/internal/config.h"
+
 typedef NTSTATUS (*PEPFUNC)(PPEB);
 
 typedef struct _LDR_MODULE
@@ -16,6 +19,9 @@ typedef struct _LDR_MODULE
    HANDLE         SectionHandle;
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
+#ifdef KDBG
+  SYMBOL_TABLE    Symbols;
+#endif /* KDBG */
 } LDR_MODULE, *PLDR_MODULE;
 
 
@@ -67,5 +73,7 @@ LdrShutdownThread (VOID);
 
 NTSTATUS STDCALL
 LdrUnloadDll (IN PVOID BaseAddress);
+
+VOID LdrLoadModuleSymbols(PLDR_MODULE ModuleObject);
 
 /* EOF */

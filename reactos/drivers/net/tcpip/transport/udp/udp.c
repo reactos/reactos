@@ -181,115 +181,6 @@ NTSTATUS BuildUDPPacket(
 }
 
 
-VOID DeliverUDPData(
-    PADDRESS_FILE AddrFile,
-    PIP_ADDRESS Address,
-    PIP_PACKET IPPacket,
-    UINT DataSize)
-/*
- * FUNCTION: Delivers UDP data to a user
- * ARGUMENTS:
- *     AddrFile = Address file to deliver data to
- *     Address  = Remote address the packet came from
- *     IPPacket = Pointer to IP packet to deliver
- *     DataSize = Number of bytes in data area
- * NOTES:
- *     If there is a receive request, then we copy the data to the
- *     buffer supplied by the user and complete the receive request.
- *     If no suitable receive request exists, then we call the event
- *     handler if it exists, otherwise we drop the packet.
- */
-{
-    KIRQL OldIrql;
-    PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler;
-    PVOID HandlerContext;
-    LONG AddressLength;
-    PVOID SourceAddress;
-    ULONG BytesTaken;
-    NTSTATUS Status;
-
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-    if (!IsListEmpty(&AddrFile->ReceiveQueue)) {
-        PLIST_ENTRY CurrentEntry;
-        PDATAGRAM_RECEIVE_REQUEST Current;
-        BOOLEAN Found;
-
-        /* Search receive request list to find a match */
-        Found = FALSE;
-        CurrentEntry = AddrFile->ReceiveQueue.Flink;
-        while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found)) {
-            Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-            if (!Current->RemoteAddress)
-                Found = TRUE;
-            else if (AddrIsEqual(Address, Current->RemoteAddress))
-                Found = TRUE;
-
-            if (Found) {
-                /* FIXME: Maybe we should check if the buffer of this
-                   receive request is large enough and if not, search
-                   for another. Also a 'best fit' strategy could be used. */
-
-                /* Remove the request from the queue */
-                RemoveEntryList(&Current->ListEntry);
-                AddrFile->RefCount--;
-                break;
-            }
-            CurrentEntry = CurrentEntry->Flink;
-        }
-
-        KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-        if (Found) {
-            /* Copy the data into buffer provided by the user */
-            CopyBufferToBufferChain(Current->Buffer,
-                                    0,
-                                    IPPacket->Data,
-                                    DataSize);
-
-            /* Complete the receive request */
-            (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
-
-            /* Finally free the receive request */
-            if (Current->RemoteAddress)
-                PoolFreeBuffer(Current->RemoteAddress);
-            PoolFreeBuffer(Current);
-        }
-    } else if (AddrFile->RegisteredReceiveDatagramHandler) {
-        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
-
-        ReceiveHandler = AddrFile->ReceiveDatagramHandler;
-        HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
-
-        KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-        if (Address->Type == IP_ADDRESS_V4) {
-            AddressLength = sizeof(IPv4_RAW_ADDRESS);
-            SourceAddress = &Address->Address.IPv4Address;
-        } else /* (Address->Type == IP_ADDRESS_V6) */ {
-            AddressLength = sizeof(IPv6_RAW_ADDRESS);
-            SourceAddress = Address->Address.IPv6Address;
-        }
-
-        Status = (*ReceiveHandler)(HandlerContext,
-                                   AddressLength,
-                                   SourceAddress,
-                                   0,
-                                   NULL,
-                                   TDI_RECEIVE_ENTIRE_MESSAGE,
-                                   DataSize,
-                                   DataSize,
-                                   &BytesTaken,
-                                   IPPacket->Data,
-                                   NULL);
-    }
-
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
-
-
 NTSTATUS UDPSendDatagram(
     PTDI_REQUEST Request,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -416,10 +307,10 @@ VOID UDPReceive(
                                &SearchContext);
     if (AddrFile) {
         do {
-            DeliverUDPData(AddrFile,
-                           DstAddress,
-                           IPPacket,
-                           DataSize);
+            DGDeliverData(AddrFile,
+                          DstAddress,
+                          IPPacket,
+                          DataSize);
         } while ((AddrFile = AddrSearchNext(&SearchContext)) != NULL);
     } else {
         /* There are no open address files that will take this datagram */

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.43 2001/04/10 19:14:27 ekohl Exp $
+/* $Id: utils.c,v 1.44 2001/06/04 11:26:10 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -51,6 +51,23 @@ static PVOID LdrGetExportByName(PVOID BaseAddress, PUCHAR SymbolName, USHORT Hin
 
 
 /* FUNCTIONS *****************************************************************/
+
+
+#ifdef KDBG
+
+VOID LdrLoadModuleSymbols(PLDR_MODULE ModuleObject)
+{
+  NtSystemDebugControl(
+    0xffffffff,
+    (PVOID)ModuleObject,
+    0,
+    NULL,
+    0,
+    NULL);
+}
+
+#endif /* KDBG */
+
 
 /***************************************************************************
  * NAME								LOCAL
@@ -385,7 +402,11 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
 		 &Module->InInitializationOrderModuleList);
   /* FIXME: release loader lock */
-  
+
+#ifdef KDBG
+  LdrLoadModuleSymbols(Module);
+#endif /* KDBG */
+
   /* initialize dll */
   if ((NTHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
       IMAGE_FILE_DLL)
@@ -415,7 +436,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 		 &Module->BaseDllName);
 	}
     }
-  
+
   *BaseAddress = Module->BaseAddress;
   return STATUS_SUCCESS;
 }

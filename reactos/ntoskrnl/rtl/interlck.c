@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.6 1999/12/11 21:14:48 dwelch Exp $
+/* $Id: interlck.c,v 1.7 2001/06/04 11:26:12 chorns Exp $
  *
  * reactos/ntoskrnl/rtl/interlck.c
  *
@@ -27,11 +27,66 @@ LONG FASTCALL InterlockedDecrement(PLONG Addend)
 }
 #endif
 
+#ifdef I386_FIX
+
+LONG FASTCALL InterlockedIncrement (PLONG Addend)
+{
+    *Addend = *Addend + 1;
+    return *Addend;
+}
+
+LONG FASTCALL InterlockedDecrement (PLONG Addend)
+{
+    *Addend = *Addend - 1;
+    return *Addend;
+}
+
+LONG
+FASTCALL
+InterlockedExchange (
+	PLONG	Target,
+	LONG	Value
+	)
+{
+    LONG Val = *Target;
+    *Target = Value;
+    return Val;
+}
+
+LONG
+FASTCALL
+InterlockedExchangeAdd (
+	PLONG	Addend,
+	LONG	Value
+	)
+{
+    LONG Val = *Addend;
+    *Addend = Value;
+    return Val;
+}
+
+PVOID
+FASTCALL
+InterlockedCompareExchange (
+	PVOID	* Destination,
+	PVOID	Exchange,
+	PVOID	Comperand
+	)
+{
+    LONG Val = *((LONG*)Destination);
+    
+    if (*((LONG*)Destination) == (LONG)Comperand) {
+        *((LONG*)Destination) = (LONG)Exchange;
+    }
+    return (PVOID)Val;
+}
+
+#else /* I386_FIX */
+
 /**********************************************************************
  * FASTCALL: @InterlockedIncrement@0
  * STDCALL : _InterlockedIncrement@4
  */
-#if 1
 LONG FASTCALL InterlockedIncrement (PLONG Addend);
 /*
  * FUNCTION: Increments a caller supplied variable of type LONG as an 
@@ -53,7 +108,6 @@ __asm__("\n\t.global _InterlockedIncrement@4\n\t"
 	"movl %ebp,%esp\n\t"
 	"popl %ebp\n\t"
 	"ret $4\n\t");
-#endif
 
 #if 0
 /*
@@ -80,7 +134,6 @@ __asm__(
  * FASTCALL: @InterlockedDecrement@0
  * STDCALL : _InterlockedDecrement@4
  */
-#if 1
 LONG FASTCALL InterlockedDecrement(PLONG Addend);
 __asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"_InterlockedDecrement@4:\n\t"
@@ -95,12 +148,12 @@ __asm__("\n\t.global _InterlockedDecrement@4\n\t"
 	"movl %ebp,%esp\n\t"
 	"popl %ebp\n\t"
 	"ret $4\n\t");
-#endif
  
 /**********************************************************************
  * FASTCALL: @InterlockedExchange@0
  * STDCALL : _InterlockedExchange@8
  */
+
 LONG
 FASTCALL
 InterlockedExchange (
@@ -229,5 +282,6 @@ __asm__(
 #endif
 */
 
+#endif /* I386_FIX */
 
 /* EOF */

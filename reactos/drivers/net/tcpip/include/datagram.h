@@ -14,6 +14,12 @@ VOID DGSend(
     PVOID Context,
     PDATAGRAM_SEND_REQUEST SendRequest);
 
+VOID DGDeliverData(
+    PADDRESS_FILE AddrFile,
+    PIP_ADDRESS Address,
+    PIP_PACKET IPPacket,
+    UINT DataSize);
+
 VOID DGCancelSendRequest(
     PADDRESS_FILE AddrFile,
     PVOID Context);

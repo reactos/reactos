@@ -16,13 +16,13 @@ PAFDFCB AfdInitializeFCB(
  * FUNCTION: Allocates and initializes a File Control Block structure
  */
 {
-    PAFDFCB NewFCB;
+  PAFDFCB NewFCB;
 
-    NewFCB = ExAllocatePool(NonPagedPool, sizeof(AFDFCB));
-    if (!NewFCB)
-        return NULL;
+  NewFCB = ExAllocatePool(NonPagedPool, sizeof(AFDFCB));
+  if (!NewFCB)
+    return NULL;
 
-    RtlZeroMemory(NewFCB, sizeof(AFDFCB));
+  RtlZeroMemory(NewFCB, sizeof(AFDFCB));
 
 	ExInitializeResourceLite(&NewFCB->NTRequiredFCB.MainResource);
 	ExInitializeResourceLite(&NewFCB->NTRequiredFCB.PagingIoResource);
@@ -31,19 +31,25 @@ PAFDFCB AfdInitializeFCB(
 	NewFCB->ReferenceCount  = 1;
 	NewFCB->OpenHandleCount = 1;
 
-    NewFCB->TdiAddressObjectHandle    = INVALID_HANDLE_VALUE;
-    NewFCB->TdiConnectionObjectHandle = INVALID_HANDLE_VALUE;
+  NewFCB->TdiAddressObjectHandle    = INVALID_HANDLE_VALUE;
+  NewFCB->TdiConnectionObjectHandle = INVALID_HANDLE_VALUE;
 
-    InitializeListHead(&NewFCB->CCBListHead);
+  InitializeListHead(&NewFCB->CCBListHead);
 
-    InsertTailList(&DeviceExt->FCBListHead, &NewFCB->ListEntry);
+  InsertTailList(&DeviceExt->FCBListHead, &NewFCB->ListEntry);
+
+  InitializeListHead(&NewFCB->ReceiveQueue);
+  KeInitializeSpinLock(&NewFCB->ReceiveQueueLock);
+
+  InitializeListHead(&NewFCB->ReadRequestQueue);
+  KeInitializeSpinLock(&NewFCB->ReadRequestQueueLock);
 
 	if (FileObject)
 		FileObject->FsContext = (PVOID)&NewFCB->NTRequiredFCB;
 
-    AFD_DbgPrint(MAX_TRACE, ("FCB created for file object (0x%X) at (0x%X).\n", FileObject, NewFCB));
+  AFD_DbgPrint(MAX_TRACE, ("FCB created for file object (0x%X) at (0x%X).\n", FileObject, NewFCB));
 
-    return NewFCB;
+  return NewFCB;
 }
 
 
@@ -91,7 +97,7 @@ AfdCreate(
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject  = IrpSp->FileObject;
 
-    AFD_DbgPrint(MIN_TRACE, ("Called.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     assert(DeviceObject);
 
@@ -126,39 +132,47 @@ AfdCreate(
     CCB = AfdInitializeCCB(FCB, FileObject);
 
     if (CCB && FCB) {
-        FCB->AddressFamily      = SocketInfo->AddressFamily;
-        FCB->SocketType         = SocketInfo->SocketType;
-        FCB->Protocol           = SocketInfo->Protocol;
-        FCB->HelperContext      = SocketInfo->HelperContext;
-        FCB->NotificationEvents = SocketInfo->NotificationEvents;
+        FCB->CommandChannel = SocketInfo->CommandChannel;
 
-        if (RtlCreateUnicodeString(&FCB->TdiDeviceName, SocketInfo->TdiDeviceName.Buffer)) {
-/*        RtlInitUnicodeString(&FCB->TdiDeviceName, NULL);
-        FCB->TdiDeviceName.MaximumLength = SocketInfo->TdiDeviceName.Length + sizeof(WCHAR);
-        FCB->TdiDeviceName.Buffer = ExAllocatePool(NonPagedPool, FCB->TdiDeviceName.MaximumLength);*/
+        if (!FCB->CommandChannel) {
+            FCB->AddressFamily      = SocketInfo->AddressFamily;
+            FCB->SocketType         = SocketInfo->SocketType;
+            FCB->Protocol           = SocketInfo->Protocol;
+            FCB->SocketName         = SocketInfo->Name;
+            FCB->HelperContext      = SocketInfo->HelperContext;
+            FCB->NotificationEvents = SocketInfo->NotificationEvents;
 
-            RtlCopyUnicodeString(&FCB->TdiDeviceName, &SocketInfo->TdiDeviceName);
+            if (RtlCreateUnicodeString(&FCB->TdiDeviceName, SocketInfo->TdiDeviceName.Buffer)) {
 
-            AFD_DbgPrint(MAX_TRACE, ("TDI device name is (%wZ).\n", &FCB->TdiDeviceName));
+                RtlCopyUnicodeString(&FCB->TdiDeviceName, &SocketInfo->TdiDeviceName);
 
-            /* Open address file now for raw sockets */
-            if (FCB->SocketType == SOCK_RAW) {
-                AFD_DbgPrint(MAX_TRACE, ("Opening raw socket.\n"));
+                AFD_DbgPrint(MAX_TRACE, ("TDI device name is (%wZ).\n", &FCB->TdiDeviceName));
 
-                Status = TdiOpenAddressFile(
-                    &FCB->TdiDeviceName,
-                    &SocketInfo->Name,
-                    &FCB->TdiAddressObjectHandle,
-                    &FCB->TdiAddressObject);
+                /* Open address file now for raw sockets */
+                if (FCB->SocketType == SOCK_RAW) {
+                    AFD_DbgPrint(MAX_TRACE, ("Opening raw socket.\n"));
 
-                AFD_DbgPrint(MAX_TRACE, ("Status of open operation (0x%X).\n", Status));
-
-                if (NT_SUCCESS(Status))
-                    FCB->State = SOCKET_STATE_BOUND;
+                    Status = TdiOpenAddressFile(
+                        &FCB->TdiDeviceName,
+                        &SocketInfo->Name,
+                        &FCB->TdiAddressObjectHandle,
+                        &FCB->TdiAddressObject);
+                    if (NT_SUCCESS(Status)) {
+                        Status = AfdRegisterEventHandlers(FCB);
+                        if (NT_SUCCESS(Status)) {
+                          FCB->State = SOCKET_STATE_BOUND;
+                        } else {
+                          AFD_DbgPrint(MAX_TRACE, ("AfdRegisterEventHandlers() failed (0x%X).\n", Status));
+                        }
+                    } else {
+                      AFD_DbgPrint(MAX_TRACE, ("TdiOpenAddressFile() failed (0x%X).\n", Status));
+                    }
+                } else
+                    Status = STATUS_SUCCESS;
             } else
-                Status = STATUS_SUCCESS;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
         } else
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_SUCCESS;
     } else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -171,7 +185,7 @@ AfdCreate(
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    AFD_DbgPrint(MIN_TRACE, ("Leaving. Status (0x%X).\n", Status));
+    AFD_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
 
     return Status;
 }
@@ -189,7 +203,7 @@ AfdClose(
     PAFDFCB FCB;
     PAFDCCB CCB;
 
-    AFD_DbgPrint(MIN_TRACE, ("Called.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     assert(DeviceObject);
     assert(FileObject);
@@ -202,17 +216,19 @@ AfdClose(
     case IRP_MJ_CLOSE:
         FCB->ReferenceCount--;
         if (FCB->ReferenceCount < 1) {
-            /* Close TDI connection file object */
-            if (FCB->TdiConnectionObjectHandle != INVALID_HANDLE_VALUE) {
-                TdiCloseDevice(FCB->TdiConnectionObjectHandle, FCB->TdiConnectionObject);
-                FCB->TdiConnectionObjectHandle = INVALID_HANDLE_VALUE;
-            }
+            if (!FCB->CommandChannel) {
+                /* Close TDI connection file object */
+                if (FCB->TdiConnectionObjectHandle != INVALID_HANDLE_VALUE) {
+                    TdiCloseDevice(FCB->TdiConnectionObjectHandle, FCB->TdiConnectionObject);
+                    FCB->TdiConnectionObjectHandle = INVALID_HANDLE_VALUE;
+                }
 
-            /* Close TDI address file object */
-            if (FCB->TdiAddressObjectHandle != INVALID_HANDLE_VALUE) {
-                AfdDeregisterEventHandlers(FCB);
-                TdiCloseDevice(FCB->TdiAddressObjectHandle, FCB->TdiAddressObject);
-                FCB->TdiAddressObjectHandle = INVALID_HANDLE_VALUE;
+                /* Close TDI address file object */
+                if (FCB->TdiAddressObjectHandle != INVALID_HANDLE_VALUE) {
+                    AfdDeregisterEventHandlers(FCB);
+                    TdiCloseDevice(FCB->TdiAddressObjectHandle, FCB->TdiAddressObject);
+                    FCB->TdiAddressObjectHandle = INVALID_HANDLE_VALUE;
+                }
             }
 
             ExFreePool(FCB);

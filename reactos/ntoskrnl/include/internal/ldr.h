@@ -10,6 +10,7 @@
 
 #include <pe.h>
 #include <internal/io.h>
+#include <ntdll/ldr.h>
 
 NTSTATUS
 LdrLoadDriver (
@@ -81,5 +82,6 @@ VOID
 LdrInit1(VOID);
 VOID
 LdrInitDebug(PLOADER_MODULE Module, PWCH Name);
+VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject);
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */
