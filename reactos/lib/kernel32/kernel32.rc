@@ -1,6 +1,7 @@
 #include <defines.h>
 #include <reactos/resource.h>
 
+
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 VS_VERSION_INFO VERSIONINFO
@@ -36,3 +37,5 @@ BEGIN
     END
 END
 
+
+#include "errcodes.rc"

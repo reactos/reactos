@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.2 2002/12/08 16:07:17 robd Exp $
+/* $Id: errormsg.c,v 1.3 2003/01/07 17:29:08 robd Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -140,7 +140,7 @@ static INT load_messageA( HMODULE instance, UINT id, WORD lang,
     PMESSAGE_RESOURCE_ENTRY     mre;
     int         i,slen;
 
-    TRACE("instance = %08lx, id = %08lx, buffer = %p, length = %ld\n", (DWORD)instance, (DWORD)id, buffer, (DWORD)buflen);
+    //TRACE("instance = %08lx, id = %08lx, buffer = %p, length = %ld\n", (DWORD)instance, (DWORD)id, buffer, (DWORD)buflen);
 
     /*FIXME: I am not sure about the '1' ... But I've only seen those entries*/
     hrsrc = FindResourceExW(instance,RT_MESSAGETABLEW,(LPWSTR)1,lang);
@@ -167,7 +167,7 @@ static INT load_messageA( HMODULE instance, UINT id, WORD lang,
         mre = (PMESSAGE_RESOURCE_ENTRY)(((char*)mre)+mre->Length);
     }
     slen=mre->Length;
-    TRACE("	- strlen=%d\n",slen);
+    //TRACE("	- strlen=%d\n",slen);
     i = min(buflen - 1, slen);
     if (buffer == NULL)
         return slen;
@@ -183,8 +183,10 @@ static INT load_messageA( HMODULE instance, UINT id, WORD lang,
             return 0;
         }
     }
-    if (buffer)
-            TRACE("'%s' copied !\n", buffer);
+    if (buffer) {
+        //TRACE("'%s' copied !\n", buffer);
+        TRACE("'%s'\n", buffer);
+    }
     return i;
 }
 
@@ -238,8 +240,7 @@ DWORD WINAPI FormatMessageA(
     HMODULE     hmodule = (HMODULE)lpSource;
     CHAR        ch;
 
-    TRACE("(0x%lx,%p,%ld,0x%lx,%p,%ld,%p)\n",
-          dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
+    //TRACE("(0x%lx,%p,%ld,0x%lx,%p,%ld,%p)\n", dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
     if ((dwFlags & FORMAT_MESSAGE_FROM_STRING)
         &&((dwFlags & FORMAT_MESSAGE_FROM_SYSTEM)
            || (dwFlags & FORMAT_MESSAGE_FROM_HMODULE))) return 0;
@@ -454,7 +455,7 @@ DWORD WINAPI FormatMessageA(
     }
     HeapFree(GetProcessHeap(),0,target);
     if (from) HeapFree(GetProcessHeap(),0,from);
-    TRACE("-- returning %d\n", (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?  strlen(*(LPSTR*)lpBuffer):strlen(lpBuffer));
+    //TRACE("-- returning %d\n", (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?  strlen(*(LPSTR*)lpBuffer):strlen(lpBuffer));
     return (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) ?
         strlen(*(LPSTR*)lpBuffer):
             strlen(lpBuffer);
@@ -489,8 +490,7 @@ DWORD WINAPI FormatMessageW(
     HMODULE hmodule = (HMODULE)lpSource;
     CHAR ch;
 
-    TRACE("(0x%lx,%p,%ld,0x%lx,%p,%ld,%p)\n",
-          dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
+    //TRACE("(0x%lx,%p,%ld,0x%lx,%p,%ld,%p)\n", dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
     if ((dwFlags & FORMAT_MESSAGE_FROM_STRING)
         &&((dwFlags & FORMAT_MESSAGE_FROM_SYSTEM)
            || (dwFlags & FORMAT_MESSAGE_FROM_HMODULE))) return 0;

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.56 2003/01/05 10:07:07 robd Exp $
+# $Id: makefile,v 1.57 2003/01/07 17:29:09 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,6 +26,10 @@ include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
+depends:
+	make -f errormsg.mak
+
+.PHONY: depends
 
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
@@ -107,7 +111,7 @@ OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
 #$(NLS_OBJECTS)
 
 
-$(TARGET_NAME).o: $(OBJECTS)
+$(TARGET_NAME).o: $(OBJECTS) errcodes.rc
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
 %/TAGS:

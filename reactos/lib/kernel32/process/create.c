@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.57 2002/11/05 20:54:10 hbirr Exp $
+/* $Id: create.c,v 1.58 2003/01/07 17:29:08 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,7 +25,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
 
-#define NDEBUG
+#define DBG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 
@@ -167,6 +167,8 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	return Result;
 }
 
+static int _except_recursion_trap = 0;
+
 struct _CONTEXT;
 struct __EXCEPTION_RECORD;
 
@@ -181,15 +183,25 @@ _except_handler(
 {
 	DPRINT("Process terminated abnormally...\n");
 
+	if (++_except_recursion_trap > 3) {
+        DPRINT("_except_handler(...) appears to be recursing.\n");
+        DPRINT("Process HALTED.\n");
+		for (;;) {}
+	}
+
 	if (/* FIXME: */ TRUE) /* Not a service */
 	{
-		ExitProcess(0);
+        DPRINT("  calling ExitProcess(0) no, lets try ExitThread . . .\n");
+		//ExitProcess(0);
+		ExitThread(0);
 	}
 	else
 	{
+        DPRINT("  calling ExitThread(0) . . .\n");
 		ExitThread(0);
 	}
 
+    DPRINT("  We should not get to here !!!\n");
 	/* We should not get to here */
 	return ExceptionContinueSearch;
 }
@@ -200,12 +212,16 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 {
 	UINT uExitCode = 0;
 
+    DPRINT("\nBaseProcessStart(..) - setting up exception frame.\n\n");
+
 	__try1(_except_handler)
 	{
 		uExitCode = (lpStartAddress)((PVOID)lpParameter);
 	} __except1
 	{
 	}
+
+    DPRINT("\nBaseProcessStart(..) - cleaned up exception frame.\n\n");
 
 	ExitThread(uExitCode);
 }
@@ -534,7 +550,7 @@ KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
+   //DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
@@ -743,9 +759,94 @@ CreateProcessW(LPCWSTR lpApplicationName,
    hSection = KlMapFile (ImagePathName);
    if (hSection == NULL)
    {
-	return FALSE;
+/////////////////////////////////////////
+        /*
+         * Inspect the image to determine executable flavour
+         */
+        IO_STATUS_BLOCK IoStatusBlock;
+        UNICODE_STRING ApplicationNameString;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+        IMAGE_DOS_HEADER DosHeader;
+        IO_STATUS_BLOCK Iosb;
+        LARGE_INTEGER Offset;
+        HANDLE hFile = NULL;
+
+        DPRINT("Inspecting Image Header for image type id\n");
+
+        // Find the application name
+        if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpApplicationName,
+                &ApplicationNameString, NULL, NULL)) {
+            return FALSE;
+        }
+        DPRINT("ApplicationName %S\n",ApplicationNameString.Buffer);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+			      &ApplicationNameString,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      SecurityDescriptor);
+
+        // Try to open the executable
+        Status = NtOpenFile(&hFile,
+			SYNCHRONIZE|FILE_EXECUTE|FILE_READ_DATA,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			FILE_SHARE_DELETE|FILE_SHARE_READ,
+			FILE_SYNCHRONOUS_IO_NONALERT|FILE_NON_DIRECTORY_FILE);
+
+        RtlFreeUnicodeString(&ApplicationNameString);
+
+        if (!NT_SUCCESS(Status)) {
+            DPRINT("Failed to open file\n");
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+
+        // Read the dos header
+        Offset.QuadPart = 0;
+        Status = ZwReadFile(hFile,
+		      NULL,
+		      NULL,
+		      NULL,
+		      &Iosb,
+		      &DosHeader,
+		      sizeof(DosHeader),
+		      &Offset,
+		      0);
+
+        if (!NT_SUCCESS(Status)) {
+            DPRINT("Failed to read from file\n");
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+        if (Iosb.Information != sizeof(DosHeader)) {
+            DPRINT("Failed to read dos header from file\n");
+            SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
+            return FALSE;
+        }
+
+        // Check the DOS signature
+        if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE) {
+            DPRINT("Failed dos magic check\n");
+            SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
+            return FALSE;
+        }
+        NtClose(hFile);
+
+        DPRINT("Launching VDM...\n");
+        return CreateProcessW(L"ntvdm.exe",
+	         lpApplicationName,
+	         lpProcessAttributes,
+	         lpThreadAttributes,
+	         bInheritHandles,
+  	         dwCreationFlags,
+  	         lpEnvironment,
+ 	         lpCurrentDirectory,
+	         lpStartupInfo,
+	         lpProcessInformation);
    }
-   
+/////////////////////////////////////////
    /*
     * Create a new process
     */

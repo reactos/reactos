@@ -263,6 +263,8 @@ GetExitCodeThread@8
 GetFiberData@0
 GetFileAttributesA@4
 GetFileAttributesW@4
+GetFileAttributesExA
+GetFileAttributesExW
 GetFileInformationByHandle@8
 GetFileSize@8
 GetFileTime@16

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.19 2003/01/05 14:32:32 robd Exp $
+; $Id: kernel32.edf,v 1.20 2003/01/07 17:29:09 robd Exp $
 ;
 ; kernel32.edf
 ;
@@ -54,6 +54,7 @@ BuildCommDCBAndTimeoutsW=BuildCommDCBAndTimeoutsW@12
 BuildCommDCBW=BuildCommDCBW@8
 CallNamedPipeA=CallNamedPipeA@28
 CallNamedPipeW=CallNamedPipeW@28
+CancelIo=CancelIo@4
 CancelWaitableTimer=CancelWaitableTimer@4
 ClearCommBreak=ClearCommBreak@4
 ClearCommError=ClearCommError@12
@@ -267,6 +268,8 @@ GetExitCodeThread=GetExitCodeThread@8
 GetFiberData=GetFiberData@0
 GetFileAttributesA=GetFileAttributesA@4
 GetFileAttributesW=GetFileAttributesW@4
+GetFileAttributesExA=GetFileAttributesExA@12
+GetFileAttributesExW=GetFileAttributesExW@12
 GetFileInformationByHandle=GetFileInformationByHandle@8
 GetFileSize=GetFileSize@8
 GetFileTime=GetFileTime@16

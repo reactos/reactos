@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.40 2003/01/05 10:07:08 robd Exp $
+/* $Id: stubs.c,v 1.41 2003/01/07 17:29:09 robd Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1022,5 +1022,30 @@ VirtualBufferExceptionHandler (
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
+
+BOOL
+STDCALL
+GetFileAttributesExA(
+    LPCSTR lpFileName,
+    GET_FILEEX_INFO_LEVELS fInfoLevelId,
+    LPVOID lpFileInformation
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+BOOL
+STDCALL
+GetFileAttributesExW(
+    LPCWSTR lpFileName,
+    GET_FILEEX_INFO_LEVELS fInfoLevelId,
+    LPVOID lpFileInformation
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
 
 /* EOF */
