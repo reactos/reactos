@@ -1138,7 +1138,7 @@ static int IpForwardTableSorter(const void *a, const void *b)
 DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSize, BOOL bOrder)
 {
   DWORD ret;
-
+  
   TRACE("pIpForwardTable %p, pdwSize %p, bOrder %ld\n", pIpForwardTable,
 	pdwSize, (DWORD)bOrder);
   if (!pdwSize)

@@ -249,18 +249,18 @@ NTSTATUS tdiGetMibForIfEntity
 	   "  if_physaddr .................... %02x:%02x:%02x:%02x:%02x:%02x\n",
 	   "  if_descr ....................... %s\n"
 	   "} status %08x\n",
-	   (int)entry->ent.if_index,
-	   (int)entry->ent.if_type,
-	   (int)entry->ent.if_mtu,
-	   (int)entry->ent.if_speed,
-	   (int)entry->ent.if_physaddrlen,
-	   entry->ent.if_physaddr[0] & 0xff,
-	   entry->ent.if_physaddr[1] & 0xff,
-	   entry->ent.if_physaddr[2] & 0xff,
-	   entry->ent.if_physaddr[3] & 0xff,
-	   entry->ent.if_physaddr[4] & 0xff,
-	   entry->ent.if_physaddr[5] & 0xff,
-	   entry->ent.if_descr,
+	   (int)entry->offset.ent.if_index,
+	   (int)entry->offset.ent.if_type,
+	   (int)entry->offset.ent.if_mtu,
+	   (int)entry->offset.ent.if_speed,
+	   (int)entry->offset.ent.if_physaddrlen,
+	   entry->offset.ent.if_physaddr[0] & 0xff,
+	   entry->offset.ent.if_physaddr[1] & 0xff,
+	   entry->offset.ent.if_physaddr[2] & 0xff,
+	   entry->offset.ent.if_physaddr[3] & 0xff,
+	   entry->offset.ent.if_physaddr[4] & 0xff,
+	   entry->offset.ent.if_physaddr[5] & 0xff,
+	   entry->offset.ent.if_descr,
 	   (int)status);
 	
     return status;    
@@ -304,8 +304,8 @@ static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
 			  loop_maybe->tei_instance,
 			  &entryInfo );
 
-    return !entryInfo.ent.if_type || 
-	entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK;
+    return !entryInfo.offset.ent.if_type || 
+	entryInfo.offset.ent.if_type == IFENT_SOFTWARE_LOOPBACK;
 }
 
 NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
@@ -443,7 +443,7 @@ const char *getInterfaceNameByIndex(DWORD index)
 				   ent.tei_instance,
 				   &entityInfo );
     if( NT_SUCCESS(status) ) {
-	adapter_name = entityInfo.ent.if_descr; 
+	adapter_name = entityInfo.offset.ent.if_descr; 
     } else {
 	sprintf( simple_name_buf, "eth%x", 
 		 (int)ent.tei_instance );

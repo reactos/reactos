@@ -73,8 +73,13 @@
 typedef char *caddr_t;
 
 typedef union _IFEntrySafelySized {
-    PCHAR MaxSize[sizeof(IFEntry) + MAX_ADAPTER_DESCRIPTION_LENGTH + 1];
-    IFEntry ent;
+    PCHAR MaxSize[sizeof(DWORD) + 
+		  sizeof(IFEntry) + 
+		  MAX_ADAPTER_DESCRIPTION_LENGTH + 1];
+    struct {
+	DWORD ProperlyOffsetTheStructure;
+	IFEntry ent;
+    } offset;
 } IFEntrySafelySized;
 
 #endif/*IPPRIVATE_H*/
