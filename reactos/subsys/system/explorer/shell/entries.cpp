@@ -343,8 +343,12 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 	ShellPath shell_path(path);
 	ShellFolder shell_folder(shell_path);
 
+#ifdef UNICODE
+	LPWSTR wname = _data.cFileName;
+#else
 	WCHAR wname[MAX_PATH];
 	MultiByteToWideChar(CP_ACP, 0, _data.cFileName, -1, wname, MAX_PATH);
+#endif
 
 	LPITEMIDLIST pidl_last = NULL;
 	HRESULT hr = shell_folder->ParseDisplayName(hWnd, NULL, wname, NULL, &pidl_last, NULL);
