@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.25 2001/04/16 00:44:54 chorns Exp $
+/* $Id: iotypes.h,v 1.26 2001/04/26 01:31:35 phreak Exp $
  * 
  */
 
@@ -345,7 +345,10 @@ typedef struct _IRP
      {
 	struct
 	  {
-	     KDEVICE_QUEUE_ENTRY DeviceQueueEntry;
+	     union {
+	       KDEVICE_QUEUE_ENTRY DeviceQueueEntry;
+	       PVOID DriverContext[4];
+	     };
 	     struct _ETHREAD* Thread;
 	     PCHAR AuxiliaryBuffer;
 	     LIST_ENTRY ListEntry;
