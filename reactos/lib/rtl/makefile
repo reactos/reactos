@@ -14,13 +14,18 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = \
 	acl.o \
+	bit.o \
+	bitmap.o \
 	bootdata.o \
 	compress.o \
 	dos8dot3.o \
+	encode.o \
 	env.o \
 	error.o \
-	heap.o \
+	exception.o \
 	generictable.o \
+	heap.o \
+	image.o \
 	largeint.o \
 	luid.o \
 	mem.o \
@@ -30,21 +35,18 @@ TARGET_OBJECTS = \
 	sd.o \
 	security.o \
 	sid.o \
+	splaytree.o \
 	time.o \
 	timezone.o \
 	unicode.o \
-	version.o \
-	encode.o \
-	image.o \
-	splaytree.o \
 	unicodeprefix.o \
-        exception.o \
-        i386/exception.o \
-        i386/except.o
+	version.o \
+	i386/exception.o \
+	i386/except.o
 
 #	atom
 #	registry
- 
+
 
 include $(PATH_TO_TOP)/rules.mak
 
