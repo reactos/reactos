@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.26 2004/03/27 15:16:05 gvg Exp $
+ * $Id: vis.c,v 1.27 2004/04/24 14:21:36 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,7 @@
 #include <include/painting.h>
 #include <include/rect.h>
 #include <include/vis.h>
+#include <include/intgdi.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>

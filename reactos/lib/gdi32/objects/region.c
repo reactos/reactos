@@ -309,3 +309,19 @@ InvertRgn(
 {
 	return NtGdiInvertRgn(hDc, hRgn);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FrameRgn(
+	HDC	hdc,
+	HRGN	hrgn,
+	HBRUSH	hbr,
+	int	nWidth,
+	int	nHeight
+	)
+{
+	return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
+}

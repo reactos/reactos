@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.111 2004/04/14 17:19:38 weiden Exp $
+/* $Id: winpos.c,v 1.112 2004/04/24 14:21:36 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,6 +44,7 @@
 #include <include/painting.h>
 #include <include/dce.h>
 #include <include/vis.h>
+#include <include/intgdi.h>
 #include <include/focus.h>
 #include <include/tags.h>
 

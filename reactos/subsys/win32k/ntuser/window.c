@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.219 2004/04/17 11:00:14 weiden Exp $
+/* $Id: window.c,v 1.220 2004/04/24 14:21:36 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,7 +46,7 @@
 #include <include/paint.h>
 #include <include/painting.h>
 #include <include/scroll.h>
-#include <include/vis.h>
+#include <include/intgdi.h>
 #include <include/menu.h>
 #include <include/hotkey.h>
 #include <include/focus.h>

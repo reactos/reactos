@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.49 2004/04/23 13:34:04 weiden Exp $ */
+/* $Id: region.c,v 1.50 2004/04/24 14:21:37 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -30,6 +30,7 @@
 #include <include/rect.h>
 #include <include/object.h>
 #include <include/inteng.h>
+#include <include/intgdi.h>
 #include <include/error.h>
 #include <include/tags.h>
 
@@ -103,6 +104,7 @@ typedef struct _POINTBLOCK {
   struct _POINTBLOCK *next;
 } POINTBLOCK;
 
+#ifndef NDEBUG
 /*
  * This function is left there for debugging purposes.
  */
@@ -129,6 +131,7 @@ IntDumpRegion(HRGN hRgn)
 
    RGNDATA_UnlockRgn(hRgn);
 }
+#endif /* NDEBUG */
 
 static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 {
@@ -365,7 +368,7 @@ empty:
  *
  * \return	hDst if success, 0 otherwise.
  */
-HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
+HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
   PROSRGNDATA objSrc, rgnDst;
   HRGN hNewDst, hRet = NULL;
@@ -1413,7 +1416,99 @@ static void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rg
 }
 
 
-BOOL STDCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
+BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
+{
+  PROSRGNDATA srcObj, destObj;
+  PRECT rc;
+  INT dx, dy;
+  ULONG i;
+  
+  if(!(srcObj = (PROSRGNDATA)RGNDATA_LockRgn(hSrc)))
+  {
+    return FALSE;
+  }
+  if(!REGION_NOT_EMPTY(srcObj))
+  {
+    RGNDATA_UnlockRgn(hSrc);
+    return FALSE;
+  }
+  if(!(destObj = (PROSRGNDATA)RGNDATA_LockRgn(hDest)))
+  {
+    RGNDATA_UnlockRgn(hSrc);
+    return FALSE;
+  }
+  
+  EMPTY_REGION(destObj);
+  if(!REGION_CopyRegion(destObj, srcObj))
+  {
+    RGNDATA_UnlockRgn(hDest);
+    RGNDATA_UnlockRgn(hSrc);
+    return FALSE;
+  }
+  
+  /* left-top */
+  dx = x * 2;
+  dy = y * 2;
+  rc = (PRECT)srcObj->Buffer;
+  for(i = 0; i < srcObj->rdh.nCount; i++)
+  {
+    rc->left += x;
+    rc->top += y;
+    rc->right += x;
+    rc->bottom += y;
+    rc++;
+  }
+  REGION_IntersectRegion(destObj, destObj, srcObj);
+  
+  /* right-top */
+  rc = (PRECT)srcObj->Buffer;
+  for(i = 0; i < srcObj->rdh.nCount; i++)
+  {
+    rc->left -= dx;
+    rc->right -= dx;
+    rc++;
+  }
+  REGION_IntersectRegion(destObj, destObj, srcObj);
+  
+  /* right-bottom */
+  rc = (PRECT)srcObj->Buffer;
+  for(i = 0; i < srcObj->rdh.nCount; i++)
+  {
+    rc->top -= dy;
+    rc->bottom -= dy;
+    rc++;
+  }
+  REGION_IntersectRegion(destObj, destObj, srcObj);
+  
+  /* left-bottom */
+  rc = (PRECT)srcObj->Buffer;
+  for(i = 0; i < srcObj->rdh.nCount; i++)
+  {
+    rc->left += dx;
+    rc->right += dx;
+    rc++;
+  }
+  REGION_IntersectRegion(destObj, destObj, srcObj);
+  
+  
+  rc = (PRECT)srcObj->Buffer;
+  for(i = 0; i < srcObj->rdh.nCount; i++)
+  {
+    rc->left -= x;
+    rc->top += y;
+    rc->right -= x;
+    rc->bottom += y;
+    rc++;
+  }
+  REGION_SubtractRegion(destObj, srcObj, destObj);
+  
+  RGNDATA_UnlockRgn(hDest);
+  RGNDATA_UnlockRgn(hSrc);
+  return TRUE;
+}
+
+
+BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
 {
   RECT *pCurRect, *pEndRect;
   PROSRGNDATA srcObj = NULL;
@@ -1893,13 +1988,25 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 
 BOOL
 STDCALL
-NtGdiFrameRgn(HDC  hDC,
-                   HRGN  hRgn,
-                   HBRUSH  hBrush,
-                   INT  Width,
-                   INT  Height)
+NtGdiFrameRgn(HDC hDC, HRGN  hRgn, HBRUSH  hBrush, INT  Width, INT  Height)
 {
-  UNIMPLEMENTED;
+  HRGN FrameRgn;
+  BOOL Ret;
+  
+  if(!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+  {
+    return FALSE;
+  }
+  if(!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
+  {
+    NtGdiDeleteObject(FrameRgn);
+    return FALSE;
+  }
+  
+  Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
+  
+  NtGdiDeleteObject(FrameRgn);
+  return Ret;
 }
 
 INT FASTCALL

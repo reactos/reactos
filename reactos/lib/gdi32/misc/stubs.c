@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.53 2004/04/23 13:34:04 weiden Exp $
+/* $Id: stubs.c,v 1.54 2004/04/24 14:21:36 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -207,23 +207,6 @@ ExtCreateRegion(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FrameRgn(
-	HDC	a0,
-	HRGN	a1,
-	HBRUSH	a2,
-	int	a3,
-	int	a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.31 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.32 2004/04/24 14:21:37 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -27,6 +27,7 @@
 #include <win32k/cliprgn.h>
 #include <win32k/coord.h>
 #include <include/error.h>
+#include <include/intgdi.h>
 #include "../eng/clip.h"
 
 #define NDEBUG

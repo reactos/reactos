@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.19 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: path.c,v 1.20 2004/04/24 14:21:37 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -31,7 +31,6 @@
 #define _WIN32K_PATH_INTERNAL
 #include <include/object.h>
 #include <include/path.h>
-#include <include/intgdi.h>
 #include <include/tags.h>
 
 #include <math.h>
@@ -45,6 +44,8 @@
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
 
 
+INT FASTCALL
+IntGdiGetArcDirection(DC *dc);
 
 BOOL
 STDCALL

@@ -100,6 +100,13 @@ int FASTCALL
 IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc);
 
+HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
+
+HRGN FASTCALL UnsafeIntCreateRectRgnIndirect(CONST PRECT rc);
+INT FASTCALL UnsafeIntGetRgnBox(PROSRGNDATA Rgn, LPRECT pRect);
+VOID FASTCALL UnsafeIntUnionRectWithRgn(PROSRGNDATA RgnDest, CONST PRECT Rect);
+BOOL FASTCALL UnsafeIntRectInRegion(PROSRGNDATA Rgn, CONST LPRECT rc);
+
 /* DC functions */
 
 BOOL FASTCALL
