@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2002/09/08 10:23:13 chorns Exp $
+/* $Id: stubs.c,v 1.4 2003/07/10 21:07:14 chorns Exp $
  *
  * version.dll stubs: remove from this file if
  * you implement one of these functions.
@@ -6,6 +6,10 @@
 #include <windows.h>
 
 #ifndef HAVE_DLL_FORWARD
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFileVersionInfoSizeA (
@@ -18,6 +22,9 @@ GetFileVersionInfoSizeA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetFileVersionInfoA (
@@ -32,6 +39,9 @@ GetFileVersionInfoA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetFileVersionInfoSizeW (
@@ -44,6 +54,9 @@ GetFileVersionInfoSizeW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetFileVersionInfoW (
@@ -60,6 +73,9 @@ GetFileVersionInfoW (
 #endif /* ndef HAVE_DLL_FORWARD */
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerFindFileA (
@@ -78,6 +94,9 @@ VerFindFileA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerFindFileW (
@@ -96,6 +115,9 @@ VerFindFileW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerInstallFileA (
@@ -114,6 +136,9 @@ VerInstallFileA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerInstallFileW (
@@ -133,6 +158,9 @@ VerInstallFileW (
 
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerLanguageNameA (
@@ -146,6 +174,9 @@ VerLanguageNameA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerLanguageNameW (
@@ -158,6 +189,10 @@ VerLanguageNameW (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 VerQueryValueA (
@@ -172,6 +207,9 @@ VerQueryValueA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 VerQueryValueW (
@@ -188,6 +226,9 @@ VerQueryValueW (
 
 /* VerQueryValueIndex seems undocumented */
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerQueryValueIndexA (
@@ -204,6 +245,9 @@ VerQueryValueIndexA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerQueryValueIndexW (
@@ -218,6 +262,5 @@ VerQueryValueIndexW (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /* EOF */
