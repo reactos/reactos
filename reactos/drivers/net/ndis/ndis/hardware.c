@@ -53,7 +53,7 @@ NdisImmediateWritePciSlotInformation(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
@@ -62,9 +62,28 @@ NdisMPciAssignResources(
     IN  ULONG                   SlotNumber,
     OUT PNDIS_RESOURCE_LIST     *AssignedResources)
 {
-    UNIMPLEMENTED
+  PCM_RESOURCE_LIST ResourceList;
+  NTSTATUS Status;
 
-	return NDIS_STATUS_FAILURE;
+  ResourceList = NULL;
+  Status = HalAssignSlotResources (NULL,		/* FIXME: RegistryPath */
+				   NULL,
+				   NULL,		/* FIXME: DriverObject */
+				   NULL,		/* FIXME: DeviceObject */
+				   PCIConfiguration,	/* FIXME: BusType */
+				   0,			/* FIXME: BusNumber */
+				   SlotNumber,
+				   &ResourceList);
+  if (!NT_SUCCESS (Status))
+    {
+      *AssignedResources = NULL;
+      return NDIS_STATUS_FAILURE;
+    }
+
+  *AssignedResources =
+    (PNDIS_RESOURCE_LIST)&ResourceList->List[0].PartialResourceList;
+
+  return NDIS_STATUS_SUCCESS;
 }
 
 
