@@ -230,8 +230,11 @@ echo.
 echo installing fonts and media...
 copy media\fonts\*.ttf %ROS_INSTALL%\media\fonts
 copy media\nls\c_1252.nls %ROS_INSTALL%\system32\ansi.nls
+copy media\nls\c_1252.nls %ROS_INSTALL%\system32
 copy media\nls\c_437.nls %ROS_INSTALL%\system32\oem.nls
+copy media\nls\c_437.nls %ROS_INSTALL%\system32
 copy media\nls\l_intl.nls %ROS_INSTALL%\system32\casemap.nls
+copy media\nls\l_intl.nls %ROS_INSTALL%\system32
 
 tools\mkhive\mkhive bootdata %ROS_INSTALL%\system32\config
 
