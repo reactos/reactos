@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.164 2003/12/16 18:14:39 weiden Exp $
+/* $Id: window.c,v 1.165 2003/12/17 13:11:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -276,10 +276,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
             {
               if (IntWndBelongsToThread(Child, ThreadData))
                   IntDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
-#if 0 /* FIXME */
               else
-                  SendMessageW( list[i], WM_WINE_DESTROYWINDOW, 0, 0 );
-#endif
+                  IntSendMessage(Child->Self, WM_DESTROY, 0, 0, TRUE);
+              IntReleaseWindowObject(Child);
             }
         }
       ExFreePool(Children);
