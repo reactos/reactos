@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.9 2003/12/30 18:52:06 fireball Exp $
+/* $Id: exception.c,v 1.10 2004/02/24 23:51:04 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -164,6 +164,15 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
   DWORD ReturnValue;
 
   DPRINT("RtlpDispatchException()\n");
+
+  /*
+    This could be true very early in the boot process 
+    in which case there is no point in continuing. 
+  */
+  if (KeGetCurrentThread() == NULL)
+    {
+      return ExceptionContinueExecution;
+    }
 
 #ifndef NDEBUG
   RtlpDumpExceptionRegistrations();
