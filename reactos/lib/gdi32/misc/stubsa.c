@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.24 2003/08/19 11:48:49 weiden Exp $
+/* $Id: stubsa.c,v 1.25 2003/11/15 15:18:06 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -16,7 +16,6 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/text.h>
-#include <win32k/metafile.h>
 #include <win32k/dc.h>
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>
@@ -53,34 +52,6 @@ STDCALL
 AddFontResourceA ( LPCSTR lpszFilename )
 {
   return AddFontResourceExA ( lpszFilename, 0, 0 );
-}
-
-
-/*
- * @implemented
- */
-HMETAFILE
-STDCALL
-CopyMetaFileA(
-	HMETAFILE	Src,
-	LPCSTR		lpszFile
-	)
-{
-  NTSTATUS Status;
-  PWSTR lpszFileW;
-  HMETAFILE rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    rc = NtGdiCopyMetaFile ( Src, lpszFileW );
-
-    HEAP_free ( lpszFileW );
-  }
-
-  return rc;
 }
 
 
@@ -130,32 +101,6 @@ CreateICA(
       }
     HEAP_free ( lpszDriverW );
   }
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateMetaFileA(
-	LPCSTR		lpszFile
-	)
-{
-  NTSTATUS Status;
-  PWSTR lpszFileW;
-  HDC rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiCreateMetaFile ( lpszFileW );
-
-      HEAP_free ( lpszFileW );
-    }
   return rc;
 }
 
@@ -424,33 +369,6 @@ GetGlyphOutlineA(
 
 
 /*
- * @implemented
- */
-HMETAFILE
-STDCALL
-GetMetaFileA(
-	LPCSTR	lpszMetaFile
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszMetaFileW;
-  HMETAFILE rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiGetMetaFile ( lpszMetaFileW );
-
-      HEAP_free ( lpszMetaFileW );
-    }
-
-  return rc;
-}
-
-
-/*
  * @unimplemented
  */
 UINT
@@ -558,146 +476,6 @@ RemoveFontResourceA(
       rc = NtGdiRemoveFontResource ( lpFileNameW );
 
       HEAP_free ( lpFileNameW );
-    }
-
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-HENHMETAFILE
-STDCALL
-CopyEnhMetaFileA(
-	HENHMETAFILE	hemfSrc,
-	LPCSTR		lpszFile
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszFileW;
-  HENHMETAFILE rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiCopyEnhMetaFile ( hemfSrc, lpszFileW );
-
-      HEAP_free ( lpszFileW );
-    }
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateEnhMetaFileA(
-	HDC		hdc,
-	LPCSTR		lpFileName,
-	CONST RECT	*lpRect,
-	LPCSTR		lpDescription
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpFileNameW, lpDescriptionW;
-  HDC rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      Status = HEAP_strdupA2W ( &lpDescriptionW, lpDescription );
-      if (!NT_SUCCESS (Status))
-	SetLastError (RtlNtStatusToDosError(Status));
-      else
-      {
-	rc = NtGdiCreateEnhMetaFile (
-	  hdc, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
-
-	HEAP_free ( lpDescriptionW );
-      }
-      HEAP_free ( lpFileNameW );
-    }
-
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-HENHMETAFILE
-STDCALL
-GetEnhMetaFileA(
-	LPCSTR	lpszMetaFile
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszMetaFileW;
-  HENHMETAFILE rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    rc = NtGdiGetEnhMetaFile ( lpszMetaFileW );
-
-    HEAP_free ( lpszMetaFileW );
-  }
-
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetEnhMetaFileDescriptionA(
-	HENHMETAFILE	hemf,
-	UINT		cchBuffer,
-	LPSTR		lpszDescription
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszDescriptionW;
-  UINT rc;
-
-  if ( lpszDescription && cchBuffer )
-    {
-      lpszDescriptionW = (LPWSTR)HEAP_alloc ( cchBuffer*sizeof(WCHAR) );
-      if ( !lpszDescriptionW )
-	{
-	  SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-	  return 0;
-	}
-    }
-  else
-    lpszDescriptionW = NULL;
-
-  rc = NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
-
-  if ( lpszDescription && cchBuffer )
-    {
-      Status = RtlUnicodeToMultiByteN ( lpszDescription,
-	                                cchBuffer,
-	                                NULL,
-	                                lpszDescriptionW,
-	                                cchBuffer );
-      HEAP_free ( lpszDescriptionW );
-      if ( !NT_SUCCESS(Status) )
-	{
-	  SetLastError (RtlNtStatusToDosError(Status));
-	  return 0;
-	}
     }
 
   return rc;

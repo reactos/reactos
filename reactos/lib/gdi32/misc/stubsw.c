@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.20 2003/08/19 11:48:49 weiden Exp $
+/* $Id: stubsw.c,v 1.21 2003/11/15 15:18:06 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -39,20 +39,6 @@ AddFontResourceW ( LPCWSTR lpszFilename )
 /*
  * @implemented
  */
-HMETAFILE
-STDCALL
-CopyMetaFileW(
-	HMETAFILE	Src,
-	LPCWSTR		File
-	)
-{
-	return NtGdiCopyMetaFile ( Src, File );
-}
-
-
-/*
- * @implemented
- */
 HDC
 STDCALL
 CreateICW(
@@ -66,19 +52,6 @@ CreateICW(
 		      lpszDevice,
 		      lpszOutput,
 		      (CONST PDEVMODEW)lpdvmInit );
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateMetaFileW(
-	LPCWSTR		lpszFile
-	)
-{
-	return NtGdiCreateMetaFile ( lpszFile );
 }
 
 
@@ -292,19 +265,6 @@ GetGlyphOutlineW(
 
 
 /*
- * @implemented
- */
-HMETAFILE
-STDCALL
-GetMetaFileW(
-	LPCWSTR	lpszMetaFile
-	)
-{
-  return NtGdiGetMetaFile ( lpszMetaFile );
-}
-
-
-/*
  * @unimplemented
  */
 UINT
@@ -383,64 +343,6 @@ RemoveFontResourceW(
 	)
 {
   return NtGdiRemoveFontResource ( lpFileName );
-}
-
-
-/*
- * @implemented
- */
-HENHMETAFILE 
-STDCALL 
-CopyEnhMetaFileW(
-	HENHMETAFILE	hemfSrc,
-	LPCWSTR		lpszFile
-	)
-{
-  return NtGdiCopyEnhMetaFile ( hemfSrc, lpszFile );
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateEnhMetaFileW(
-	HDC		hdc,
-	LPCWSTR		lpFileName,
-	CONST RECT	*lpRect,
-	LPCWSTR		lpDescription
-	)
-{
-  return NtGdiCreateEnhMetaFile ( hdc, lpFileName, (CONST LPRECT)lpRect, lpDescription );
-}
-
-
-/*
- * @implemented
- */
-HENHMETAFILE
-STDCALL
-GetEnhMetaFileW(
-	LPCWSTR	lpszMetaFile
-	)
-{
-  return NtGdiGetEnhMetaFile ( lpszMetaFile );
-}
-
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetEnhMetaFileDescriptionW(
-	HENHMETAFILE	hemf,
-	UINT		cchBuffer,
-	LPWSTR		lpszDescription
-	)
-{
-  return NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescription );
 }
 
 
