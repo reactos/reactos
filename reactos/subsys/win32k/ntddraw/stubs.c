@@ -16,6 +16,17 @@
 #include <debug.h>
 
 
+DWORD STDCALL NtGdiDdGetAvailDriverMemory(      
+    HANDLE hDirectDrawLocal,
+    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
+)
+{
+	UNIMPLEMENTED
+	
+
+	return 0;
+}
+
 BOOL STDCALL NtGdiD3dContextCreate(
     HANDLE hDirectDrawLocal,
     HANDLE hSurfColor,
@@ -308,15 +319,6 @@ DWORD STDCALL NtGdiDdFlipToGDISurface(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdGetAvailDriverMemory(      
-    HANDLE hDirectDraw,
-    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdGetBltStatus(      
     HANDLE hSurface,
@@ -338,15 +340,7 @@ HDC STDCALL NtGdiDdGetDC(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdGetDriverInfo(      
-    HANDLE hDirectDraw,
-    PDD_GETDRIVERINFODATA puGetDriverInfoData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdGetDriverState(      
     PDD_GETDRIVERSTATEDATA pdata
@@ -600,14 +594,5 @@ DWORD STDCALL NtGdiDdUpdateOverlay(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdWaitForVerticalBlank(      
-    HANDLE hDirectDraw,
-    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
 
 /* EOF */
