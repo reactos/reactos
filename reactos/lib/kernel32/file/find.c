@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.32 2002/09/08 10:22:42 chorns Exp $
+/* $Id: find.c,v 1.33 2002/09/13 19:03:40 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,12 +22,16 @@
 
 /* TYPES ********************************************************************/
 
+#ifndef offsetof
+#define	offsetof(TYPE, MEMBER)	((size_t) &( ((TYPE *) 0)->MEMBER ))
+#endif
+
+#define FIND_DATA_SIZE	(16*1024)
+
 typedef struct _KERNEL32_FIND_FILE_DATA
 {
    HANDLE DirectoryHandle;
-   FILE_BOTH_DIRECTORY_INFORMATION FileInfo;
-   WCHAR FileNameExtra[MAX_PATH];
-   UNICODE_STRING PatternStr;
+   PFILE_BOTH_DIRECTORY_INFORMATION pFileInfo;
 } KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
 
 
@@ -46,25 +50,31 @@ InternalFindNextFile (
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
+	if (IData->pFileInfo->NextEntryOffset != 0)
+	{
+	   IData->pFileInfo = (PVOID)IData->pFileInfo + IData->pFileInfo->NextEntryOffset;
+	   DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
+	   return TRUE;
+	}
+	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
+	IData->pFileInfo->FileIndex = 0;
 	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
 	                               NULL,
 	                               NULL,
 	                               NULL,
 	                               &IoStatusBlock,
-	                               (PVOID)&IData->FileInfo,
-	                               sizeof(IData->FileInfo) +
-	                               sizeof(IData->FileNameExtra),
+	                               (PVOID)IData->pFileInfo,
+	                               FIND_DATA_SIZE,
 	                               FileBothDirectoryInformation,
-	                               TRUE,
-	                               &(IData->PatternStr),
+	                               FALSE,
+	                               NULL,
 	                               FALSE);
-	DPRINT("Found %S\n",IData->FileInfo.FileName);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
-
+	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
 	return TRUE;
 }
 
@@ -79,11 +89,12 @@ InternalFindFirstFile (
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
 	UNICODE_STRING NtPathU;
+	UNICODE_STRING PatternStr;
 	NTSTATUS Status;
 	PWSTR End;
 
-	DPRINT("FindFirstFileW(lpFileName %S, lpFindFileData %x)\n",
-	       lpFileName, lpFindFileData);
+	DPRINT("FindFirstFileW(lpFileName %S)\n",
+	       lpFileName);
 
 	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
 	                                   &NtPathU,
@@ -93,25 +104,25 @@ InternalFindFirstFile (
 
 	DPRINT("NtPathU \'%S\' End \'%S\'\n", NtPathU.Buffer, End);
 
-	IData = RtlAllocateHeap (RtlGetProcessHeap (),
+	IData = RtlAllocateHeap (hProcessHeap,
 	                         HEAP_ZERO_MEMORY,
-	                         sizeof(KERNEL32_FIND_FILE_DATA));
+	                         sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
 
 	/* move seach pattern to separate string */
-	RtlCreateUnicodeString (&IData->PatternStr,
+	RtlCreateUnicodeString (&PatternStr,
 	                        End);
 	*End = 0;
 	NtPathU.Length = wcslen(NtPathU.Buffer)*sizeof(WCHAR);
 
 	/* change pattern: "*.*" --> "*" */
-	if (!wcscmp (IData->PatternStr.Buffer, L"*.*"))
+	if (!wcscmp (PatternStr.Buffer, L"*.*"))
 	{
-		IData->PatternStr.Buffer[1] = 0;
-		IData->PatternStr.Length = sizeof(WCHAR);
+		PatternStr.Buffer[1] = 0;
+		PatternStr.Length = sizeof(WCHAR);
 	}
 
 	DPRINT("NtPathU \'%S\' Pattern \'%S\'\n",
-	       NtPathU.Buffer, IData->PatternStr.Buffer);
+	       NtPathU.Buffer, PatternStr.Buffer);
 
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &NtPathU,
@@ -126,39 +137,40 @@ InternalFindFirstFile (
 	                     FILE_OPEN_IF,
 	                     OPEN_EXISTING);
 
-	RtlFreeHeap (RtlGetProcessHeap (),
+	RtlFreeHeap (hProcessHeap,
 	             0,
 	             NtPathU.Buffer);
 
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
-		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+		RtlFreeHeap (hProcessHeap, 0, PatternStr.Buffer);
+		RtlFreeHeap (hProcessHeap, 0, IData);
 		SetLastErrorByStatus (Status);
 		return(NULL);
 	}
+	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
+	IData->pFileInfo->FileIndex = 0;
 
 	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
 	                               NULL,
 	                               NULL,
 	                               NULL,
 	                               &IoStatusBlock,
-	                               (PVOID)&IData->FileInfo,
-	                               sizeof(IData->FileInfo) +
-	                               sizeof(IData->FileNameExtra),
+	                               (PVOID)IData->pFileInfo,
+	                               FIND_DATA_SIZE,
 	                               FileBothDirectoryInformation,
 	                               TRUE,
-	                               &(IData->PatternStr),
-	                               FALSE);
+	                               &PatternStr,
+	                               TRUE);
+	RtlFreeHeap (hProcessHeap, 0, PatternStr.Buffer);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Status %lx\n", Status);
-		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
-		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+		RtlFreeHeap (hProcessHeap, 0, IData);
 		SetLastErrorByStatus (Status);
 		return NULL;
 	}
-	DPRINT("Found %S\n",IData->FileInfo.FileName);
+	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength, IData->pFileInfo->FileName);
 
 	return IData;
 }
@@ -198,26 +210,26 @@ FindFirstFileA (
 		return INVALID_HANDLE_VALUE;
 	}
 
-	DPRINT("IData->FileInfo.FileNameLength %d\n",
-	       IData->FileInfo.FileNameLength);
+	DPRINT("IData->pFileInfo->FileNameLength %d\n",
+	       IData->pFileInfo->FileNameLength);
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
 	memcpy (&lpFindFileData->ftCreationTime,
-	        &IData->FileInfo.CreationTime,
+	        &IData->pFileInfo->CreationTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastAccessTime,
-	        &IData->FileInfo.LastAccessTime,
+	        &IData->pFileInfo->LastAccessTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastWriteTime,
-	        &IData->FileInfo.LastWriteTime,
+	        &IData->pFileInfo->LastWriteTime,
 	        sizeof(FILETIME));
-	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
+	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
+	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
 
-	FileNameU.Length = IData->FileInfo.FileNameLength;
+	FileNameU.Length = IData->pFileInfo->FileNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->FileInfo.FileName;
+	FileNameU.Buffer = IData->pFileInfo->FileName;
 
 	FileName.Length = 0;
 	FileName.MaximumLength = MAX_PATH;
@@ -233,12 +245,12 @@ FindFirstFileA (
 		                             &FileNameU,
 		                             FALSE);
 
-	DPRINT("IData->FileInfo.ShortNameLength %d\n",
-	       IData->FileInfo.ShortNameLength);
+	DPRINT("IData->pFileInfo->ShortNameLength %d\n",
+	       IData->pFileInfo->ShortNameLength);
 
-	FileNameU.Length = IData->FileInfo.ShortNameLength;
+	FileNameU.Length = IData->pFileInfo->ShortNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->FileInfo.ShortName;
+	FileNameU.Buffer = IData->pFileInfo->ShortName;
 
 	FileName.Length = 0;
 	FileName.MaximumLength = 14;
@@ -280,26 +292,26 @@ FindNextFileA (
 		return FALSE;
 	}
 
-	DPRINT("IData->FileInfo.FileNameLength %d\n",
-	       IData->FileInfo.FileNameLength);
+	DPRINT("IData->pFileInfo->FileNameLength %d\n",
+	       IData->pFileInfo->FileNameLength);
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
 	memcpy (&lpFindFileData->ftCreationTime,
-	        &IData->FileInfo.CreationTime,
+	        &IData->pFileInfo->CreationTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastAccessTime,
-	        &IData->FileInfo.LastAccessTime,
+	        &IData->pFileInfo->LastAccessTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastWriteTime,
-	        &IData->FileInfo.LastWriteTime,
+	        &IData->pFileInfo->LastWriteTime,
 	        sizeof(FILETIME));
-	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
+	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
+	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
 
-	FileNameU.Length = IData->FileInfo.FileNameLength;
+	FileNameU.Length = IData->pFileInfo->FileNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->FileInfo.FileName;
+	FileNameU.Buffer = IData->pFileInfo->FileName;
 
 	FileName.Length = 0;
 	FileName.MaximumLength = MAX_PATH;
@@ -315,12 +327,12 @@ FindNextFileA (
 		                             &FileNameU,
 		                             FALSE);
 
-	DPRINT("IData->FileInfo.ShortNameLength %d\n",
-	       IData->FileInfo.ShortNameLength);
+	DPRINT("IData->pFileInfo->ShortNameLength %d\n",
+	       IData->pFileInfo->ShortNameLength);
 
-	FileNameU.Length = IData->FileInfo.ShortNameLength;
+	FileNameU.Length = IData->pFileInfo->ShortNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->FileInfo.ShortName;
+	FileNameU.Buffer = IData->pFileInfo->ShortName;
 
 	FileName.Length = 0;
 	FileName.MaximumLength = 14;
@@ -359,9 +371,7 @@ FindClose (
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
 	CloseHandle (IData->DirectoryHandle);
-	if (IData->PatternStr.Buffer)
-		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
+	RtlFreeHeap (hProcessHeap, 0, IData);
 
 	return TRUE;
 }
@@ -384,26 +394,26 @@ FindFirstFileW (
 	}
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
 	memcpy (&lpFindFileData->ftCreationTime,
-	        &IData->FileInfo.CreationTime,
+	        &IData->pFileInfo->CreationTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastAccessTime,
-	        &IData->FileInfo.LastAccessTime,
+	        &IData->pFileInfo->LastAccessTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastWriteTime,
-	        &IData->FileInfo.LastWriteTime,
+	        &IData->pFileInfo->LastWriteTime,
 	        sizeof(FILETIME));
-	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
+	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
+	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
 	memcpy (lpFindFileData->cFileName,
-	        IData->FileInfo.FileName,
-	        IData->FileInfo.FileNameLength);
-  lpFindFileData->cFileName[IData->FileInfo.FileNameLength] = 0;
+	        IData->pFileInfo->FileName,
+	        IData->pFileInfo->FileNameLength);
+  lpFindFileData->cFileName[IData->pFileInfo->FileNameLength] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
-	        IData->FileInfo.ShortName,
-	        IData->FileInfo.ShortNameLength);
-  lpFindFileData->cAlternateFileName[IData->FileInfo.ShortNameLength] = 0;
+	        IData->pFileInfo->ShortName,
+	        IData->pFileInfo->ShortNameLength);
+  lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength] = 0;
 	return IData;
 }
 
@@ -425,26 +435,26 @@ FindNextFileW (
 	}
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
 	memcpy (&lpFindFileData->ftCreationTime,
-	        &IData->FileInfo.CreationTime,
+	        &IData->pFileInfo->CreationTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastAccessTime,
-	        &IData->FileInfo.LastAccessTime,
+	        &IData->pFileInfo->LastAccessTime,
 	        sizeof(FILETIME));
 	memcpy (&lpFindFileData->ftLastWriteTime,
-	        &IData->FileInfo.LastWriteTime,
+	        &IData->pFileInfo->LastWriteTime,
 	        sizeof(FILETIME));
-	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
+	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
+	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
 	memcpy (lpFindFileData->cFileName,
-	        IData->FileInfo.FileName,
-	        IData->FileInfo.FileNameLength);
-  lpFindFileData->cFileName[IData->FileInfo.FileNameLength] = 0;
+	        IData->pFileInfo->FileName,
+	        IData->pFileInfo->FileNameLength);
+  lpFindFileData->cFileName[IData->pFileInfo->FileNameLength] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
-	        IData->FileInfo.ShortName,
-	        IData->FileInfo.ShortNameLength);
-  lpFindFileData->cAlternateFileName[IData->FileInfo.ShortNameLength] = 0;
+	        IData->pFileInfo->ShortName,
+	        IData->pFileInfo->ShortNameLength);
+  lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength] = 0;
 	return TRUE;
 }
 
@@ -463,7 +473,7 @@ FindFirstFileExW (
 	/* FIXME */
 	return (HANDLE) 0;
 }
- 
+
 
 HANDLE
 STDCALL
