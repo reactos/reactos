@@ -517,7 +517,7 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
 {
     HWND hwndChild, hwndStc32;
     RECT rectParent, rectChild, rectStc32;
-    INT help_fixup = 0;
+    INT help_fixup = 0, child_height_fixup = 0, child_width_fixup = 0;
 
     /* Take into account if open as read only checkbox and help button
      * are hidden
@@ -580,16 +580,24 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
             /* move only if stc32 exist */
             if (hwndStc32 && rectChild.left > rectStc32.right)
             {
+                LONG old_left = rectChild.left;
+
                 /* move to the right of visible controls of the parent dialog */
                 rectChild.left += rectParent.right;
                 rectChild.left -= rectStc32.right;
+
+                child_width_fixup = rectChild.left - old_left;
             }
             /* move even if stc32 doesn't exist */
-            if (rectChild.top > rectStc32.bottom)
+            if (rectChild.top >= rectStc32.bottom)
             {
+                LONG old_top = rectChild.top;
+
                 /* move below visible controls of the parent dialog */
                 rectChild.top += rectParent.bottom;
                 rectChild.top -= rectStc32.bottom - rectStc32.top;
+
+                child_height_fixup = rectChild.top - old_top;
             }
 
             SetWindowPos(hwndChild, 0, rectChild.left, rectChild.top,
@@ -627,6 +635,9 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
 
     if (hwndStc32)
     {
+        rectChild.right += child_width_fixup;
+        rectChild.bottom += child_height_fixup;
+
         if (rectParent.right > rectChild.right)
         {
             rectParent.right += rectChild.right;
@@ -644,7 +655,10 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
         }
         else
         {
-            rectParent.bottom = rectChild.bottom;
+            /* child dialog is higher, unconditionally set new dialog
+             * height to its size (help_fixup will be subtracted below)
+             */
+            rectParent.bottom = rectChild.bottom + help_fixup;
         }
     }
     else
@@ -1960,7 +1974,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             if (lpstrFilter != (LPWSTR)CB_ERR)  /* control is not empty */
                 filterExt = PathFindExtensionW(lpstrFilter);
 
-            if ( *filterExt ) /* attach the file extension from file type filter*/
+            if ( filterExt && *filterExt ) /* attach the file extension from file type filter*/
                 strcatW(lpstrPathAndFile, filterExt + 1);
             else if ( fodInfos->defext ) /* attach the default file extension*/
                 strcatW(lpstrPathAndFile, fodInfos->defext);

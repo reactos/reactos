@@ -668,7 +668,7 @@ static LPWSTR FD31_MapStringPairsToW(LPCSTR strA, UINT size)
 {
     LPCSTR s;
     LPWSTR x;
-    int n, len;
+    unsigned int n, len;
 
     s = strA;
     while (*s)

@@ -320,15 +320,18 @@ BOOL16 CALLBACK FormatCharDlgProc16(HWND16 hDlg16, UINT16 message,
         {
             DRAWITEMSTRUCT16* dis16 = MapSL(lParam);
             DRAWITEMSTRUCT dis;
-            dis.CtlType    = dis16->CtlType;
-            dis.CtlID      = dis16->CtlID;
-            dis.itemID     = dis16->itemID;
-            dis.itemAction = dis16->itemAction;
-            dis.itemState  = dis16->itemState;
-            dis.hwndItem   = HWND_32(dis16->hwndItem);
-            dis.hDC        = HDC_32(dis16->hDC);
-            dis.itemData   = dis16->itemData;
-            CONV_RECT16TO32( &dis16->rcItem, &dis.rcItem );
+            dis.CtlType       = dis16->CtlType;
+            dis.CtlID         = dis16->CtlID;
+            dis.itemID        = dis16->itemID;
+            dis.itemAction    = dis16->itemAction;
+            dis.itemState     = dis16->itemState;
+            dis.hwndItem      = HWND_32(dis16->hwndItem);
+            dis.hDC           = HDC_32(dis16->hDC);
+            dis.itemData      = dis16->itemData;
+            dis.rcItem.left   = dis16->rcItem.left;
+            dis.rcItem.top    = dis16->rcItem.top;
+            dis.rcItem.right  = dis16->rcItem.right;
+            dis.rcItem.bottom = dis16->rcItem.bottom;
             res = CFn_WMDrawItem(hDlg, wParam, (LPARAM)&dis);
         }
         break;
