@@ -63,11 +63,10 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 	    
+	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    ShowTrackedThing( "Alloc", ThingInList, FileName, LineNo );
-	    
 	    ExFreePool( ThingInList );
 	    TrackDumpFL( FileName, LineNo );
-	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    DbgPrint("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
 	    KeBugCheck( 0 );
 	}

@@ -91,7 +91,6 @@ PIP_PACKET PrepareICMPPacket(
         exFreePool(DataBuffer);
         return NULL;
     }
-    Track(NDIS_PACKET_TAG,NdisPacket);
 
     TI_DbgPrint(MAX_TRACE, ("NdisPacket at (0x%X).\n", NdisPacket));
 
@@ -103,7 +102,6 @@ PIP_PACKET PrepareICMPPacket(
         exFreePool(DataBuffer);
         return NULL;
     }
-    Track(NDIS_BUFFER_TAG,NdisBuffer);
     
     TI_DbgPrint(MAX_TRACE, ("NdisBuffer at (0x%X).\n", NdisBuffer));
 
