@@ -547,6 +547,473 @@ EngMovePointer(
   UNIMPLEMENTED;
 }
 
+
+INT
+STDCALL
+EngMultiByteToWideChar(
+	IN UINT  CodePage,
+	OUT LPWSTR  WideCharString,
+	IN INT  BytesInWideCharString,
+	IN LPSTR  MultiByteString,
+	IN INT  BytesInMultiByteString
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_32cn.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+VOID
+STDCALL
+EngQueryLocalTime ( OUT PENG_TIME_FIELDS ptf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_389z.htm
+  UNIMPLEMENTED;
+}
+
+ULONG
+STDCALL
+EngQueryPalette(
+	IN HPALETTE  hPal,
+	OUT ULONG  *piMode,
+	IN ULONG  cColors,
+	OUT ULONG  *pulColors
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_21t3.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+EngRestoreFloatingPointState ( IN VOID *pBuffer )
+{
+  // www.osr.com/ddk/graphics/gdifncs_9l0n.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+ULONG
+STDCALL
+EngSaveFloatingPointState(
+	OUT VOID  *pBuffer,
+	IN ULONG  cjBufferSize
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_9tif.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+ULONG
+STDCALL
+EngSetPointerShape(
+	IN SURFOBJ  *pso,
+	IN SURFOBJ  *psoMask,
+	IN SURFOBJ  *psoColor,
+	IN XLATEOBJ  *pxlo,
+	IN LONG  xHot,
+	IN LONG  yHot,
+	IN LONG  x,
+	IN LONG  y,
+	IN RECTL  *prcl,
+	IN FLONG  fl
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1y5j.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+EngSetPointerTag(
+	IN HDEV  hdev,
+	IN SURFOBJ  *psoMask,
+	IN SURFOBJ  *psoColor,
+	IN XLATEOBJ  *pxlo,
+	IN FLONG  fl
+	)
+{
+  // This function is obsolete for Windows 2000 and later.
+  // This function is still supported, but always returns FALSE.
+  // www.osr.com/ddk/graphics/gdifncs_4yav.htm
+  return FALSE;
+}
+
+DWORD
+STDCALL
+EngSetPrinterData(
+	IN HANDLE  hPrinter,
+	IN LPWSTR  pType,
+	IN DWORD  dwType,
+	IN LPBYTE  lpbPrinterData,
+	IN DWORD  cjPrinterData
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8drb.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+EngStretchBlt(
+	IN SURFOBJ  *psoDest,
+	IN SURFOBJ  *psoSrc,
+	IN SURFOBJ  *psoMask,
+	IN CLIPOBJ  *pco,
+	IN XLATEOBJ  *pxlo,
+	IN COLORADJUSTMENT  *pca,
+	IN POINTL  *pptlHTOrg,
+	IN RECTL  *prclDest,
+	IN RECTL  *prclSrc,
+	IN POINTL  *pptlMask,
+	IN ULONG  iMode
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+EngStrokeAndFillPath(
+	IN SURFOBJ  *pso,
+	IN PATHOBJ  *ppo,
+	IN CLIPOBJ  *pco,
+	IN XFORMOBJ  *pxo,
+	IN BRUSHOBJ  *pboStroke,
+	IN LINEATTRS  *plineattrs,
+	IN BRUSHOBJ  *pboFill,
+	IN POINTL  *pptlBrushOrg,
+	IN MIX  mixFill,
+	IN FLONG  flOptions
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_2xwn.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+EngStrokePath(
+	IN SURFOBJ  *pso,
+	IN PATHOBJ  *ppo,
+	IN CLIPOBJ  *pco,
+	IN XFORMOBJ  *pxo,
+	IN BRUSHOBJ  *pbo,
+	IN POINTL  *pptlBrushOrg,
+	IN LINEATTRS  *plineattrs,
+	IN MIX  mix
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+VOID
+STDCALL
+EngUnloadImage ( IN HANDLE hModule )
+{
+  // www.osr.com/ddk/graphics/gdifncs_586f.htm
+  UNIMPLEMENTED;
+}
+
+BOOL
+STDCALL
+EngUnlockDriverObj ( IN HDRVOBJ hdo )
+{
+  // www.osr.com/ddk/graphics/gdifncs_0l5z.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+INT
+STDCALL
+EngWideCharToMultiByte(
+	IN UINT  CodePage,
+	IN LPWSTR  WideCharString,
+	IN INT  BytesInWideCharString,
+	OUT LPSTR  MultiByteString,
+	IN INT  BytesInMultiByteString
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_35wn.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+EngWritePrinter (
+	IN HANDLE    hPrinter,
+	IN LPVOID    pBuf,
+	IN DWORD     cbBuf,
+	OUT LPDWORD  pcWritten
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_9v6v.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Add (
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ      pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_2i3r.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_AddFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0ip3.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_AddLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_12jr.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Div(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_3ndz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_DivFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0gfb.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_DivLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6jdz.htm
+  UNIMPLEMENTED;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_Equal(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6ysn.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_EqualLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1pgn.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+LONG
+STDCALL
+FLOATOBJ_GetFloat ( IN PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_4d5z.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+LONG
+STDCALL
+FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_0tgn.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_GreaterThan(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8n53.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_GreaterThanLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6gx3.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_LessThan(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1ynb.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_LessThanLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_9nzb.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Mul(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8ppj.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_MulFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_3puv.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_MulLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_56lj.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Neg ( IN OUT PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_14pz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SetFloat(
+	OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1prb.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SetLong(
+	OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0gpz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Sub(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6lyf.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SubFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_2zvr.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SubLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_852f.htm
+  UNIMPLEMENTED;
+}
+
 /*
  * @unimplemented
  */
@@ -626,457 +1093,8 @@ FONTOBJ_vGetInfo (
   UNIMPLEMENTED;
 }
 
-INT
-EngMultiByteToWideChar(
-	IN UINT  CodePage,
-	OUT LPWSTR  WideCharString,
-	IN INT  BytesInWideCharString,
-	IN LPSTR  MultiByteString,
-	IN INT  BytesInMultiByteString
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_32cn.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-VOID
-EngProbeForRead(
-	IN PVOID  Address,
-	IN ULONG  Length,
-	IN ULONG  Alignment
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_4vqf.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-EngProbeForReadAndWrite(
-	IN PVOID  Address,
-	IN ULONG  Length,
-	IN ULONG  Alignment
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_502v.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-EngQueryLocalTime ( OUT PENG_TIME_FIELDS ptf )
-{
-  // www.osr.com/ddk/graphics/gdifncs_389z.htm
-  UNIMPLEMENTED;
-}
-
-ULONG
-EngQueryPalette(
-	IN HPALETTE  hPal,
-	OUT ULONG  *piMode,
-	IN ULONG  cColors,
-	OUT ULONG  *pulColors
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_21t3.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-EngRestoreFloatingPointState ( IN VOID *pBuffer )
-{
-  // www.osr.com/ddk/graphics/gdifncs_9l0n.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-ULONG
-EngSaveFloatingPointState(
-	OUT VOID  *pBuffer,
-	IN ULONG  cjBufferSize
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_9tif.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-ULONG
-EngSetPointerShape(
-	IN SURFOBJ  *pso,
-	IN SURFOBJ  *psoMask,
-	IN SURFOBJ  *psoColor,
-	IN XLATEOBJ  *pxlo,
-	IN LONG  xHot,
-	IN LONG  yHot,
-	IN LONG  x,
-	IN LONG  y,
-	IN RECTL  *prcl,
-	IN FLONG  fl
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_1y5j.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-EngSetPointerTag(
-	IN HDEV  hdev,
-	IN SURFOBJ  *psoMask,
-	IN SURFOBJ  *psoColor,
-	IN XLATEOBJ  *pxlo,
-	IN FLONG  fl
-	)
-{
-  // This function is obsolete for Windows 2000 and later.
-  // This function is still supported, but always returns FALSE.
-  // www.osr.com/ddk/graphics/gdifncs_4yav.htm
-  return FALSE;
-}
-
-DWORD
-EngSetPrinterData(
-	IN HANDLE  hPrinter,
-	IN LPWSTR  pType,
-	IN DWORD  dwType,
-	IN LPBYTE  lpbPrinterData,
-	IN DWORD  cjPrinterData
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_8drb.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-EngStretchBlt(
-	IN SURFOBJ  *psoDest,
-	IN SURFOBJ  *psoSrc,
-	IN SURFOBJ  *psoMask,
-	IN CLIPOBJ  *pco,
-	IN XLATEOBJ  *pxlo,
-	IN COLORADJUSTMENT  *pca,
-	IN POINTL  pptlHTOrg,
-	IN RECTL  *prclDest,
-	IN RECTL  *prclSrc,
-	IN POINTL  *pptlMask,
-	IN ULONG  iMode
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-EngStrokeAndFillPath(
-	IN SURFOBJ  *pso,
-	IN PATHOBJ  *ppo,
-	IN CLIPOBJ  *pco,
-	IN XFORMOBJ  *pxo,
-	IN BRUSHOBJ  *pboStroke,
-	IN LINEATTRS  *plineattrs,
-	IN BRUSHOBJ  *pboFill,
-	IN POINTL  *pptlBrushOrg,
-	IN MIX  mixFill,
-	IN FLONG  flOptions
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_2xwn.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-EngStrokePath(
-	IN SURFOBJ  *pso,
-	IN PATHOBJ  *ppo,
-	IN CLIPOBJ  *pco,
-	IN XFORMOBJ  *pxo,
-	IN BRUSHOBJ  *pbo,
-	IN POINTL  *pptlBrushOrg,
-	IN LINEATTRS  *plineattrs,
-	IN MIX  mix
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-VOID
-EngUnloadImage ( IN HANDLE hModule )
-{
-  // www.osr.com/ddk/graphics/gdifncs_586f.htm
-  UNIMPLEMENTED;
-}
-
-BOOL
-EngUnlockDriverObj ( IN HDRVOBJ hdo )
-{
-  // www.osr.com/ddk/graphics/gdifncs_0l5z.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-INT
-EngWideCharToMultiByte(
-	IN UINT  CodePage,
-	IN LPWSTR  WideCharString,
-	IN INT  BytesInWideCharString,
-	OUT LPSTR  MultiByteString,
-	IN INT  BytesInMultiByteString
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_35wn.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-EngWritePrinter (
-	IN HANDLE    hPrinter,
-	IN LPVOID    pBuf,
-	IN DWORD     cbBuf,
-	OUT LPDWORD  pcWritten
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_9v6v.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-VOID
-FLOATOBJ_Add (
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ      pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_2i3r.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_AddFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0ip3.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_AddLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_12jr.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_Div(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_3ndz.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_DivFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0gfb.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_DivLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_6jdz.htm
-  UNIMPLEMENTED;
-}
-
-BOOL
-FLOATOBJ_Equal(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_6ysn.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-FLOATOBJ_EqualLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_1pgn.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
 LONG
-FLOATOBJ_GetFloat ( IN PFLOATOBJ pf )
-{
-  // www.osr.com/ddk/graphics/gdifncs_4d5z.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-LONG
-FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
-{
-  // www.osr.com/ddk/graphics/gdifncs_0tgn.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-BOOL
-FLOATOBJ_GreaterThan(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_8n53.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-FLOATOBJ_GreaterThanLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_6gx3.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-FLOATOBJ_LessThan(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_1ynb.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-FLOATOBJ_LessThanLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_9nzb.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-VOID
-FLOATOBJ_Mul(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_8ppj.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_MulFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_3puv.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_MulLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_56lj.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_Neg ( IN OUT PFLOATOBJ pf )
-{
-  // www.osr.com/ddk/graphics/gdifncs_14pz.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_SetFloat(
-	OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_1prb.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_SetLong(
-	OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0gpz.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_Sub(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_6lyf.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_SubFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_2zvr.htm
-  UNIMPLEMENTED;
-}
-
-VOID
-FLOATOBJ_SubLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_852f.htm
-  UNIMPLEMENTED;
-}
-
-LONG
+STDCALL
 HT_ComputeRGBGammaTable(
 	IN USHORT  GammaTableEntries,
 	IN USHORT  GammaTableType,
@@ -1092,6 +1110,7 @@ HT_ComputeRGBGammaTable(
 }
 
 LONG
+STDCALL
 HT_Get8BPPFormatPalette(
 	OUT LPPALETTEENTRY  pPaletteEntry,
 	IN USHORT  RedGamma,
@@ -1105,6 +1124,7 @@ HT_Get8BPPFormatPalette(
 }
 
 BOOL
+STDCALL
 PATHOBJ_bCloseFigure ( IN PATHOBJ *ppo )
 {
   // www.osr.com/ddk/graphics/gdifncs_5mhz.htm
@@ -1113,6 +1133,7 @@ PATHOBJ_bCloseFigure ( IN PATHOBJ *ppo )
 }
 
 BOOL
+STDCALL
 PATHOBJ_bEnum (
 	IN  PATHOBJ   *ppo,
 	OUT PATHDATA  *ppd
@@ -1124,6 +1145,7 @@ PATHOBJ_bEnum (
 }
 
 BOOL
+STDCALL
 PATHOBJ_bEnumClipLines(
 	IN PATHOBJ  *ppo,
 	IN ULONG  cb,
@@ -1136,6 +1158,7 @@ PATHOBJ_bEnumClipLines(
 }
 
 BOOL
+STDCALL
 PATHOBJ_bMoveTo(
 	IN PATHOBJ  *ppo,
 	IN POINTFIX  ptfx
@@ -1147,6 +1170,7 @@ PATHOBJ_bMoveTo(
 }
 
 BOOL
+STDCALL
 PATHOBJ_bPolyBezierTo(
 	IN PATHOBJ  *ppo,
 	IN POINTFIX  *pptfx,
@@ -1159,6 +1183,7 @@ PATHOBJ_bPolyBezierTo(
 }
 
 BOOL
+STDCALL
 PATHOBJ_bPolyLineTo(
 	IN PATHOBJ  *ppo,
 	IN POINTFIX  *pptfx,
@@ -1171,6 +1196,7 @@ PATHOBJ_bPolyLineTo(
 }
 
 VOID
+STDCALL
 PATHOBJ_vEnumStart ( IN PATHOBJ *ppo )
 {
   // www.osr.com/ddk/graphics/gdifncs_74br.htm
@@ -1178,6 +1204,7 @@ PATHOBJ_vEnumStart ( IN PATHOBJ *ppo )
 }
 
 VOID
+STDCALL
 PATHOBJ_vEnumStartClipLines(
 	IN PATHOBJ  *ppo,
 	IN CLIPOBJ  *pco,
@@ -1190,6 +1217,7 @@ PATHOBJ_vEnumStartClipLines(
 }
 
 VOID
+STDCALL
 PATHOBJ_vGetBounds(
 	IN PATHOBJ  *ppo,
 	OUT PRECTFX  prectfx
@@ -1200,6 +1228,7 @@ PATHOBJ_vGetBounds(
 }
 
 BOOL
+STDCALL
 STROBJ_bEnum(
 	IN STROBJ  *pstro,
 	OUT ULONG  *pc,
@@ -1212,6 +1241,7 @@ STROBJ_bEnum(
 }
 
 DWORD
+STDCALL
 STROBJ_dwGetCodePage ( IN STROBJ *pstro )
 {
   // www.osr.com/ddk/graphics/gdifncs_9jmv.htm
@@ -1220,6 +1250,7 @@ STROBJ_dwGetCodePage ( IN STROBJ *pstro )
 }
 
 VOID
+STDCALL
 STROBJ_vEnumStart ( IN STROBJ *pstro )
 {
   // www.osr.com/ddk/graphics/gdifncs_32uf.htm
@@ -1227,6 +1258,7 @@ STROBJ_vEnumStart ( IN STROBJ *pstro )
 }
 
 BOOL
+STDCALL
 WNDOBJ_bEnum(
 	IN WNDOBJ  *pwo,
 	IN ULONG  cj,
@@ -1239,6 +1271,7 @@ WNDOBJ_bEnum(
 }
 
 ULONG
+STDCALL
 WNDOBJ_cEnumStart(
 	IN WNDOBJ  *pwo,
 	IN ULONG  iType,
@@ -1252,6 +1285,7 @@ WNDOBJ_cEnumStart(
 }
 
 VOID
+STDCALL
 WNDOBJ_vSetConsumer(
 	IN WNDOBJ  *pwo,
 	IN PVOID  pvConsumer
@@ -1262,6 +1296,7 @@ WNDOBJ_vSetConsumer(
 }
 
 BOOL
+STDCALL
 XFORMOBJ_bApplyXform(
 	IN XFORMOBJ  *pxo,
 	IN ULONG  iMode,
@@ -1276,6 +1311,7 @@ XFORMOBJ_bApplyXform(
 }
 
 ULONG
+STDCALL
 XFORMOBJ_iGetFloatObjXform(
 	IN XFORMOBJ  *pxo,
 	OUT FLOATOBJ_XFORM  *pxfo
@@ -1287,6 +1323,7 @@ XFORMOBJ_iGetFloatObjXform(
 }
 
 ULONG
+STDCALL
 XFORMOBJ_iGetXform(
 	IN XFORMOBJ  *pxo,
 	OUT XFORML  *pxform
