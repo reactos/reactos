@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.32 2003/08/19 00:36:40 weiden Exp $
+/* $Id: class.c,v 1.33 2003/08/19 01:03:41 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -257,9 +257,10 @@ NtUserGetClassName (
 
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
-    {
-      return(0);
-    }
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
   Ret = W32kGetClassName(WindowObject, lpClassName, nMaxCount);
   W32kReleaseWindowObject(WindowObject);
   return(Ret);
@@ -450,9 +451,10 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
-    {
-      return(0);
-    }
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
   Ret = W32kGetClassLong(WindowObject, Offset, Ansi);
   W32kReleaseWindowObject(WindowObject);
   return(Ret);
@@ -528,9 +530,10 @@ NtUserSetClassLong(HWND hWnd,
 
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
-    {
-      return(0);
-    }
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
   Ret = W32kGetClassLong(WindowObject, Offset, Ansi);
   W32kSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
   W32kReleaseWindowObject(WindowObject);

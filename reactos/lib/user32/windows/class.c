@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.32 2003/08/19 00:49:42 weiden Exp $
+/* $Id: class.c,v 1.33 2003/08/19 01:03:41 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -137,6 +137,13 @@ GetClassInfoA(
 {
 	WNDCLASSEXA w;
 	WINBOOL retval;
+	
+	if(!lpClassName || !lpWndClass)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
+	
 	retval = GetClassInfoExA(hInstance,lpClassName,&w);
     RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSA));
 	return retval;
@@ -154,6 +161,13 @@ GetClassInfoW(
 {
 	WNDCLASSEXW w;
 	WINBOOL retval;
+	
+	if(!lpClassName || !lpWndClass)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
+	
 	retval = GetClassInfoExW(hInstance,lpClassName,&w);
     RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSW));
 	return retval;
@@ -221,6 +235,9 @@ GetClassNameA(
   int result;
   LPWSTR ClassNameW;
   NTSTATUS Status;
+  
+  if(!lpClassName)
+    return 0;
 
   ClassNameW = HEAP_alloc ( (nMaxCount+1)*sizeof(WCHAR) );
 
@@ -249,6 +266,9 @@ GetClassNameW(
 {
   int result;
   LPWSTR ClassNameW;
+  
+  if(!lpClassName)
+    return 0;
 
   ClassNameW = HEAP_alloc ( (nMaxCount+1) * sizeof(WCHAR) );
 
