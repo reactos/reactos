@@ -89,6 +89,7 @@ enum IMAGE {
 #define	IMAGE_WIDTH			16
 #define	IMAGE_HEIGHT		13
 #define	SPLIT_WIDTH			5
+#define TREE_LINE_DX		3
 
 #define IDW_STATUSBAR		0x100
 #define IDW_TOOLBAR			0x101

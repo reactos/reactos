@@ -2557,7 +2557,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 	if (pane->treePane) {
 		if (entry) {
-			img_pos = dis->rcItem.left + entry->level*(IMAGE_WIDTH+Globals.spaceSize.cx);
+			img_pos = dis->rcItem.left + entry->level*(IMAGE_WIDTH+TREE_LINE_DX);
 
 			if (calcWidthCol == -1) {
 				int x;
@@ -2590,7 +2590,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 					x = img_pos - IMAGE_WIDTH/2;
 
 					do {
-						x -= IMAGE_WIDTH+Globals.spaceSize.cx;
+						x -= IMAGE_WIDTH+TREE_LINE_DX;
 
 						if (up->next
 #ifndef _LEFT_FILES
@@ -2616,7 +2616,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
 
 				if (entry->down && entry->expanded) {
-					x += IMAGE_WIDTH+Globals.spaceSize.cx;
+					x += IMAGE_WIDTH+TREE_LINE_DX;
 					MoveToEx(dis->hDC, x, dis->rcItem.top+IMAGE_HEIGHT, 0);
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
 				}
@@ -2625,7 +2625,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 				if (hrgn_org) DeleteObject(hrgn_org);
 				/* SelectObject(dis->hDC, holdPen); */
 			} else if (calcWidthCol==col || calcWidthCol==COLUMNS) {
-				int right = img_pos + IMAGE_WIDTH - Globals.spaceSize.cx;
+				int right = img_pos + IMAGE_WIDTH - TREE_LINE_DX;
 
 				if (right > pane->widths[col])
 					pane->widths[col] = right;
@@ -2649,7 +2649,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 			DrawText(dis->hDC, entry->data.cFileName, -1, &rt, DT_CALCRECT|DT_SINGLELINE|DT_NOPREFIX);
 
-			focusRect.right = dis->rcItem.left+pane->positions[col+1]+Globals.spaceSize.cx + rt.right +2;
+			focusRect.right = dis->rcItem.left+pane->positions[col+1]+TREE_LINE_DX + rt.right +2;
 		}
 #else
 
@@ -3746,7 +3746,7 @@ static void InitInstance(HINSTANCE hinstance)
 
 	Globals.haccel = LoadAccelerators(hinstance, MAKEINTRESOURCE(IDA_WINEFILE));
 
-	Globals.hfont = CreateFont(-MulDiv(8,GetDeviceCaps(hdc,LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("MS Sans Serif"));
+	Globals.hfont = CreateFont(-MulDiv(8,GetDeviceCaps(hdc,LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("Microsoft Sans Serif"));
 
 	ReleaseDC(0, hdc);
 
