@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.11 2004/10/23 23:43:23 ion Exp $
+ * $Id: videoprt.h,v 1.12 2004/12/18 22:14:39 blight Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -51,10 +51,12 @@ typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
    LIST_ENTRY List;
    PVOID MappedAddress;
+   PVOID MappedUserAddress;
    ULONG NumberOfUchars;
    PHYSICAL_ADDRESS IoAddress;
    ULONG SystemIoBusNumber;
    UINT MappingCount;
+   UINT UserMappingCount;
 } VIDEO_PORT_ADDRESS_MAPPING, *PVIDEO_PORT_ADDRESS_MAPPING;
 
 typedef struct _VIDEO_PORT_DRIVER_EXTENSION

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: resource.c,v 1.4 2004/10/15 22:48:43 gvg Exp $
+ * $Id: resource.c,v 1.5 2004/12/18 22:14:38 blight Exp $
  */
 
 #include "videoprt.h"
@@ -34,7 +34,7 @@ IntVideoPortMapMemory(
    OUT VP_STATUS *Status)
 {
    PHYSICAL_ADDRESS TranslatedAddress;
-   PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
+   PVIDEO_PORT_ADDRESS_MAPPING AddressMapping = NULL;
    ULONG AddressSpace;
    PVOID MappedAddress;
    PLIST_ENTRY Entry;
@@ -62,17 +62,32 @@ IntVideoPortMapMemory(
          if (IoAddress.QuadPart == AddressMapping->IoAddress.QuadPart &&
              NumberOfUchars <= AddressMapping->NumberOfUchars)
          {
-            AddressMapping->MappingCount++;
-            if (Status)
-               *Status = NO_ERROR;
-
-            return AddressMapping->MappedAddress;
+            if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0 &&
+                AddressMapping->MappedUserAddress != NULL)
+            {
+               AddressMapping->UserMappingCount++;
+               if (Status)
+                  *Status = NO_ERROR;
+               return AddressMapping->MappedUserAddress;
+            }
+            else if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0 &&
+                     AddressMapping->MappedUserAddress != NULL)
+            {
+               AddressMapping->MappingCount++;
+               if (Status)
+                  *Status = NO_ERROR;
+               return AddressMapping->MappedAddress;
+            }
+            break;
          }
          Entry = Entry->Flink;
       }
+      if (Entry == &DeviceExtension->AddressMappingListHead)
+         AddressMapping = NULL;
    }
 
    AddressSpace = (ULONG)InIoSpace;
+   AddressSpace &= ~VIDEO_MEMORY_SPACE_USER_MODE;
    if (HalTranslateBusAddress(
           DeviceExtension->AdapterInterfaceType,
           DeviceExtension->SystemIoBusNumber,
@@ -96,45 +111,109 @@ IntVideoPortMapMemory(
       return (PVOID)TranslatedAddress.u.LowPart;
    }
 
-   MappedAddress = MmMapIoSpace(
-      TranslatedAddress,
-      NumberOfUchars,
-      MmNonCached);
-
-   if (MappedAddress)
+   /* user space */
+   if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0)
    {
+      OBJECT_ATTRIBUTES ObjAttribs;
+      UNICODE_STRING UnicodeString;
+      HANDLE hMemObj;
+      NTSTATUS NtStatus;
+      SIZE_T Size;
+
+      RtlInitUnicodeString(&UnicodeString, L"\\Device\\PhysicalMemory");
+      InitializeObjectAttributes(&ObjAttribs,
+                                 &UnicodeString,
+                                 OBJ_CASE_INSENSITIVE/* | OBJ_KERNEL_HANDLE*/,
+                                 NULL, NULL);
+      NtStatus = ZwOpenSection(&hMemObj, SECTION_ALL_ACCESS, &ObjAttribs);
+      if (!NT_SUCCESS(NtStatus))
+      {
+         DPRINT("ZwOpenSection() failed! (0x%x)\n", NtStatus);
+         if (Status)
+            *Status = NO_ERROR;
+         return NULL;
+      }
+      Size = NumberOfUchars;
+      MappedAddress = NULL;
+      NtStatus = ZwMapViewOfSection(hMemObj,
+                                    NtCurrentProcess(),
+                                    &MappedAddress,
+                                    0,
+                                    NumberOfUchars,
+                                    (PLARGE_INTEGER)(&TranslatedAddress),
+                                    &Size,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE/* | PAGE_WRITECOMBINE*/);
+      if (!NT_SUCCESS(NtStatus))
+      {
+         DPRINT("ZwMapViewOfSection() failed! (0x%x)\n", NtStatus);
+         ZwClose(hMemObj);
+         if (Status)
+            *Status = NO_ERROR;
+         return NULL;
+      }
+      ZwClose(hMemObj);
+      DPRINT("Mapped user address = 0x%08x\n", MappedAddress);
+   }
+   else /* kernel space */
+   {
+      MappedAddress = MmMapIoSpace(
+         TranslatedAddress,
+         NumberOfUchars,
+         MmNonCached);
+   }
+
+   if (MappedAddress != NULL)
+   {
+      BOOL InsertIntoList = FALSE;
+
       if (Status)
       {
          *Status = NO_ERROR;
       }
-
-      AddressMapping = ExAllocatePoolWithTag(
-         PagedPool,
-         sizeof(VIDEO_PORT_ADDRESS_MAPPING),
-         TAG_VIDEO_PORT);
-
       if (AddressMapping == NULL)
-         return MappedAddress;
+      {
+         AddressMapping = ExAllocatePoolWithTag(
+            PagedPool,
+            sizeof(VIDEO_PORT_ADDRESS_MAPPING),
+            TAG_VIDEO_PORT);
 
-      AddressMapping->MappedAddress = MappedAddress;
-      AddressMapping->NumberOfUchars = NumberOfUchars;
-      AddressMapping->IoAddress = IoAddress;
-      AddressMapping->SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
-      AddressMapping->MappingCount = 1;
+         if (AddressMapping == NULL)
+            return MappedAddress;
 
-      InsertHeadList(
-         &DeviceExtension->AddressMappingListHead,
-         &AddressMapping->List);
+         InsertIntoList = TRUE;
+         RtlZeroMemory(AddressMapping, sizeof(VIDEO_PORT_ADDRESS_MAPPING));
+         AddressMapping->NumberOfUchars = NumberOfUchars;
+         AddressMapping->IoAddress = IoAddress;
+         AddressMapping->SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
+      }
+
+      if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0)
+      {
+         AddressMapping->MappedUserAddress = MappedAddress;
+         AddressMapping->UserMappingCount = 1;
+      }
+      else
+      {
+         AddressMapping->MappedAddress = MappedAddress;
+         AddressMapping->MappingCount = 1;
+      }
+
+      if (InsertIntoList)
+      {
+         InsertHeadList(
+            &DeviceExtension->AddressMappingListHead,
+            &AddressMapping->List);
+      }
 
       return MappedAddress;
    }
-   else
-   {
-      if (Status)
-         *Status = NO_ERROR;
 
-      return NULL;
-   }
+   if (Status)
+      *Status = NO_ERROR;
+
+   return NULL;
 }
 
 VOID STDCALL
@@ -152,20 +231,40 @@ IntVideoPortUnmapMemory(
          Entry,
          VIDEO_PORT_ADDRESS_MAPPING,
          List);
-      if (AddressMapping->MappedAddress == MappedAddress)
+      if (AddressMapping->MappedUserAddress == MappedAddress)
       {
-         ASSERT(AddressMapping->MappingCount >= 0);
+         ASSERT(AddressMapping->UserMappingCount > 0);
+         AddressMapping->UserMappingCount--;
+         if (AddressMapping->UserMappingCount == 0)
+         {
+            ZwUnmapViewOfSection(NtCurrentProcess(),
+                                 AddressMapping->MappedUserAddress);
+            AddressMapping->MappedUserAddress = NULL;
+            if (AddressMapping->MappingCount == 0)
+            {
+               RemoveEntryList(Entry);
+               ExFreePool(AddressMapping);
+            }
+         }
+         return;
+      }
+      else if (AddressMapping->MappedAddress == MappedAddress)
+      {
+         ASSERT(AddressMapping->MappingCount > 0);
          AddressMapping->MappingCount--;
          if (AddressMapping->MappingCount == 0)
          {
             MmUnmapIoSpace(
                AddressMapping->MappedAddress,
                AddressMapping->NumberOfUchars);
-            RemoveEntryList(Entry);
-            ExFreePool(AddressMapping);
-
-            return;
+            AddressMapping->MappedAddress = NULL;
+            if (AddressMapping->UserMappingCount == 0)
+            {
+               RemoveEntryList(Entry);
+               ExFreePool(AddressMapping);
+            }
          }
+         return;
       }
 
       Entry = Entry->Flink;
