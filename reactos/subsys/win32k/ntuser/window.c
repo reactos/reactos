@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.126 2003/10/29 16:24:59 navaraf Exp $
+/* $Id: window.c,v 1.127 2003/10/30 21:57:21 mtempel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3302,16 +3302,171 @@ NtUserValidateRect(HWND hWnd, const RECT* Rect)
 }
 
 
-/*
- * @unimplemented
- */
-DWORD STDCALL
-NtUserWindowFromPoint(DWORD Unknown0,
-		      DWORD Unknown1)
+#define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
+static BOOL IsStaticClass(PWINDOW_OBJECT Window)
 {
-  UNIMPLEMENTED
+    BOOL rc = FALSE;
 
-  return 0;
+    ASSERT(0 != Window->Class);
+    ASSERT(0 != Window->Class->lpszClassName);
+    
+    DbgPrint("FIXME: Update IsStatic to really check if a window is a static\n");
+    /*
+    if (0 == wcscmp((LPWSTR)Window->Class->lpszClassName, L"Static"))
+        rc = TRUE;
+    */    
+    return rc;
+}
+
+static BOOL IsHidden(PWINDOW_OBJECT Window)
+{
+    BOOL rc = FALSE;
+    ASSERT(0 != Window);
+    PWINDOW_OBJECT wnd = Window;
+
+    while (0 != wnd && wnd->Style & WS_CHILD)
+    {
+      if (!(wnd->Style & WS_VISIBLE))
+	  {
+	    rc = TRUE;
+        break;
+	  }
+      wnd = wnd->Parent;
+    }
+    if (0 != wnd)
+    {
+      rc = !(wnd->Style & WS_VISIBLE);
+    }
+
+    return rc;
+}
+
+static BOOL IsDisabled(PWINDOW_OBJECT Window)
+{
+    BOOL rc = FALSE;
+    ASSERT(0 != Window);
+
+    rc = (Window->Style & WS_DISABLED);
+    
+    return rc;
+}
+
+static PWINDOW_OBJECT RestrictiveSearchChildWindows(PWINDOW_OBJECT Window, POINT p)
+{
+    PWINDOW_OBJECT ChildWindow = 0;
+    PWINDOW_OBJECT rc          = Window;
+    ASSERT(0 != Window);
+
+    /*
+    **Aquire a mutex to the Child list.
+    */
+    ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+
+    /*
+    **Now Find the first non-static window.
+    */
+    ChildWindow = Window->FirstChild;
+
+    while (0 != ChildWindow)
+    {
+        /*
+        **Test Restrictions on the window.
+        */
+        if (!IsStaticClass(ChildWindow) &&
+            !IsDisabled(ChildWindow)    &&
+            !IsHidden(ChildWindow)       )
+        {
+            /*
+            **Now find the deepest child window
+            */
+            if (POINT_IN_RECT(p, ChildWindow->WindowRect))
+            {
+                rc = RestrictiveSearchChildWindows(ChildWindow, p);
+                break;
+            }
+        }
+        ChildWindow = ChildWindow->NextSibling;
+    }
+   
+    /*
+    **Release mutex.
+    */     
+    ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+
+    return rc;
+}
+
+/*
+ * @implemented
+ * Return Value:
+ *  The return value is a handle to the window that contains the point. 
+ *  If no window exists at the given point, the return value is NULL. 
+ *  If the point is over a static text control, the return value is a handle 
+ *  to the window under the static text control. 
+ *
+ * Remarks
+ *  The WindowFromPoint function does not retrieve a handle to a hidden or 
+ *  disabled window, even if the point is within the window. An application
+ *  should use the ChildWindowFromPoint function for a nonrestrictive search. 
+ */
+
+HWND STDCALL
+NtUserWindowFromPoint(LONG X,
+		              LONG Y)
+{
+  
+  HWND hwnd = 0;
+  PWINDOW_OBJECT DesktopWindow = 0;
+  PWINDOW_OBJECT TopWindow     = 0;
+  PWINDOW_OBJECT ChildWindow   = 0;
+  DesktopWindow = IntGetWindowObject(IntGetActiveDesktop()->DesktopWindow);
+
+  POINT pt;
+  pt.x = X;
+  pt.y = Y;
+
+  if (0 != DesktopWindow)
+  {
+      /*
+      **Aquire the mutex to the child window list. (All the topmost windows)
+      */
+      ExAcquireFastMutexUnsafe (&DesktopWindow->ChildrenListLock);
+
+      /*
+      **Spin through the windows looking for the window that contains the 
+      **point.  The child windows are in Z-order.
+      */
+      TopWindow = DesktopWindow->FirstChild;
+      while (0 != TopWindow)
+      {
+          if (POINT_IN_RECT(pt, TopWindow->WindowRect))
+          {
+              break;
+          }
+          TopWindow = TopWindow->NextSibling;
+      }
+      
+      /*
+      ** Search for the child window that contains the point.
+      */
+      if (0 != TopWindow)
+      {
+          ChildWindow = RestrictiveSearchChildWindows(TopWindow, pt);
+          if (0 != ChildWindow)
+          {
+              hwnd = ChildWindow->Self;
+          }
+      }
+      
+      /*
+      **Release mutex.
+      */
+      ExReleaseFastMutexUnsafe(&DesktopWindow->ChildrenListLock);
+  }
+
+  //IntReleaseWindowObject(DesktopWindow);
+  
+  return hwnd;
 }
 
 /* EOF */
