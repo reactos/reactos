@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.4 2004/04/08 15:36:36 gvg Exp $
+ * $Id: dispatch.c,v 1.5 2004/04/18 12:59:14 hbirr Exp $
  */
 
 #include "videoprt.h"
@@ -174,7 +174,7 @@ IntVideoPortDispatchClose(
    DPRINT("IntVideoPortDispatchClose\n");
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   if (DeviceExtension->DeviceOpened > 1 &&
+   if (DeviceExtension->DeviceOpened >= 1 &&
        InterlockedDecrement(&DeviceExtension->DeviceOpened) == 0)
    {
       ResetDisplayParametersDeviceExtension = DeviceExtension;
