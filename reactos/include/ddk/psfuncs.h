@@ -1,18 +1,21 @@
-/* $Id: psfuncs.h,v 1.27 2003/10/04 18:19:17 navaraf Exp $
+/* $Id: psfuncs.h,v 1.28 2004/03/14 18:10:41 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
 
-NTSTATUS STDCALL PsAssignImpersonationToken (struct _ETHREAD* Thread,
-					     HANDLE TokenHandle);
+NTSTATUS STDCALL
+PsAssignImpersonationToken (IN struct _ETHREAD* Thread,
+			    IN HANDLE TokenHandle);
 
 /*
  * Warning: Even though it returns HANDLE, it's not a real HANDLE but really a
  * ULONG ProcessId! (Skywing)
  */
-HANDLE STDCALL PsGetCurrentProcessId(VOID);
+HANDLE STDCALL
+PsGetCurrentProcessId (VOID);
 
-HANDLE STDCALL PsGetCurrentThreadId(VOID);
+HANDLE STDCALL
+PsGetCurrentThreadId (VOID);
 
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
@@ -30,18 +33,22 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID);
  *                     execution
  * RETURNS: Success or failure status
  */
-NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
-				      ACCESS_MASK DesiredAccess,
-				      POBJECT_ATTRIBUTES ObjectAttributes,
-				      HANDLE ProcessHandle,
-				      PCLIENT_ID ClientId,
-				      PKSTART_ROUTINE StartRoutine,
-				      void *StartContext);
-NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus);
+NTSTATUS STDCALL
+PsCreateSystemThread (PHANDLE ThreadHandle,
+		      ACCESS_MASK DesiredAccess,
+		      POBJECT_ATTRIBUTES ObjectAttributes,
+		      HANDLE ProcessHandle,
+		      PCLIENT_ID ClientId,
+		      PKSTART_ROUTINE StartRoutine,
+		      void *StartContext);
 
-NTSTATUS STDCALL PsCreateSystemProcess(PHANDLE ProcessHandle,
-				       ACCESS_MASK DesiredAccess,
-				       POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS STDCALL
+PsTerminateSystemThread (NTSTATUS ExitStatus);
+
+NTSTATUS STDCALL
+PsCreateSystemProcess (PHANDLE ProcessHandle,
+		       ACCESS_MASK DesiredAccess,
+		       POBJECT_ATTRIBUTES ObjectAttributes);
 
 NTSTATUS STDCALL PsCreateWin32Process(struct _EPROCESS* Process);
 NTSTATUS STDCALL PsCreateWin32Thread(struct _ETHREAD* Thread);
@@ -57,21 +64,24 @@ PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
 #define PsGetCurrentProcess() IoGetCurrentProcess()
 #define PsGetCurrentThread() ((struct _ETHREAD*) (KeGetCurrentThread()))
 
-PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,
-						    PULONG Unknown1,
-						    PULONG Unknown2,
-						    SECURITY_IMPERSONATION_LEVEL* 
-						    Level);
-PACCESS_TOKEN STDCALL PsReferencePrimaryToken(struct _EPROCESS* Process);
-NTSTATUS STDCALL PsAssignImpersonationToken(struct _ETHREAD* Thread,
-					    HANDLE TokenHandle);
+PACCESS_TOKEN STDCALL
+PsReferenceImpersonationToken (IN struct _ETHREAD *Thread,
+			       OUT PBOOLEAN CopyOnOpen,
+			       OUT PBOOLEAN EffectiveOnly,
+			       OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
 
-VOID STDCALL PsImpersonateClient(struct _ETHREAD* Thread,
-				 PACCESS_TOKEN Token,
-				 UCHAR b,
-				 UCHAR c,
-				 SECURITY_IMPERSONATION_LEVEL Level);
-VOID STDCALL PsRevertToSelf(VOID);
+PACCESS_TOKEN STDCALL
+PsReferencePrimaryToken (struct _EPROCESS* Process);
+
+VOID STDCALL
+PsImpersonateClient (IN struct _ETHREAD* Thread,
+		     IN PACCESS_TOKEN Token,
+		     IN BOOLEAN CopyOnOpen,
+		     IN BOOLEAN EffectiveOnly,
+		     IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
+VOID STDCALL
+PsRevertToSelf (VOID);
 
 BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 			      PULONG		MinorVersion	OPTIONAL,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.57 2004/01/05 14:28:20 weiden Exp $
+/* $Id: ps.h,v 1.58 2004/03/14 18:11:25 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -163,11 +163,11 @@ typedef struct _KTHREAD
 #include <poppack.h>
 
 /* Top level irp definitions. */
-#define 	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
-#define 	FSRTL_CACHE_TOP_LEVEL_IRP		(0x02)
-#define 	FSRTL_MOD_WRITE_TOP_LEVEL_IRP		(0x03)
-#define		FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
-#define		FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
+#define	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
+#define	FSRTL_CACHE_TOP_LEVEL_IRP		(0x02)
+#define	FSRTL_MOD_WRITE_TOP_LEVEL_IRP		(0x03)
+#define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
+#define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
 
 typedef struct _TOP_LEVEL_IRP
 {
@@ -177,11 +177,11 @@ typedef struct _TOP_LEVEL_IRP
 
 typedef struct
 {
-   PACCESS_TOKEN Token;                              // 0x0
-   UCHAR Unknown1;                                   // 0x4
-   UCHAR Unknown2;                                   // 0x5
-   UCHAR Pad[2];                                     // 0x6
-   SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
+  PACCESS_TOKEN Token;                              // 0x0
+  BOOLEAN CopyOnOpen;                               // 0x4
+  BOOLEAN EffectiveOnly;                            // 0x5
+  UCHAR Pad[2];                                     // 0x6
+  SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
 
 #include <pshpack1.h>
@@ -226,7 +226,7 @@ typedef struct _ETHREAD
   UCHAR LpcExitThreadCalled;                        /* 238/264 */
   UCHAR HardErrorsAreDisabled;                      /* 239/265 */
   UCHAR LpcReceivedMsgIdValid;                      /* 23A/266 */
-  UCHAR ActiveImpersonationInfo;                    /* 23B/267 */
+  BOOLEAN ActiveImpersonationInfo;                  /* 23B/267 */
   ULONG PerformanceCountHigh;                       /* 23C/268 */
 
   /*

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.70 2004/01/05 14:28:21 weiden Exp $
+/* $Id: create.c,v 1.71 2004/03/14 18:12:07 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -91,87 +91,92 @@ PsAssignImpersonationToken(PETHREAD Thread,
    return(STATUS_SUCCESS);
 }
 
+
 /*
  * @implemented
  */
 VOID STDCALL
-PsRevertToSelf(VOID)
+PsRevertToSelf (VOID)
 {
-   PETHREAD Thread;
+  PETHREAD Thread;
 
-   Thread = PsGetCurrentThread();
+  Thread = PsGetCurrentThread ();
 
-   if (Thread->ActiveImpersonationInfo != 0)
-     {
-	ObDereferenceObject(Thread->ImpersonationInfo->Token);
-	Thread->ActiveImpersonationInfo = 0;
-     }
+  if (Thread->ActiveImpersonationInfo == TRUE)
+    {
+      ObDereferenceObject (Thread->ImpersonationInfo->Token);
+      Thread->ActiveImpersonationInfo = FALSE;
+    }
 }
 
+
 /*
  * @implemented
  */
 VOID STDCALL
-PsImpersonateClient(PETHREAD Thread,
-		    PACCESS_TOKEN Token,
-		    UCHAR b,
-		    UCHAR c,
-		    SECURITY_IMPERSONATION_LEVEL Level)
+PsImpersonateClient (IN PETHREAD Thread,
+		     IN PACCESS_TOKEN Token,
+		     IN BOOLEAN CopyOnOpen,
+		     IN BOOLEAN EffectiveOnly,
+		     IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
-   if (Token == 0)
-     {
-	if (Thread->ActiveImpersonationInfo != 0)
-	  {
-	     Thread->ActiveImpersonationInfo = 0;
-	     if (Thread->ImpersonationInfo->Token != NULL)
-	       {
-		  ObDereferenceObject(Thread->ImpersonationInfo->Token);
-	       }
-	  }
-	return;
-     }
-   if (Thread->ActiveImpersonationInfo == 0 ||
-       Thread->ImpersonationInfo == NULL)
-     {
-	Thread->ImpersonationInfo = ExAllocatePool(NonPagedPool,
-      					   sizeof(PS_IMPERSONATION_INFO));	
-     }
-   Thread->ImpersonationInfo->Level = Level;
-   Thread->ImpersonationInfo->Unknown2 = c;
-   Thread->ImpersonationInfo->Unknown1 = b;
-   Thread->ImpersonationInfo->Token = Token;
-   ObReferenceObjectByPointer(Token,
+  if (Token == NULL)
+    {
+      if (Thread->ActiveImpersonationInfo == TRUE)
+	{
+	  Thread->ActiveImpersonationInfo = FALSE;
+	  if (Thread->ImpersonationInfo->Token != NULL)
+	    {
+	      ObDereferenceObject (Thread->ImpersonationInfo->Token);
+	    }
+	}
+      return;
+    }
+
+  if (Thread->ImpersonationInfo == NULL)
+    {
+      Thread->ImpersonationInfo = ExAllocatePool (NonPagedPool,
+						  sizeof(PS_IMPERSONATION_INFO));
+    }
+
+  Thread->ImpersonationInfo->Level = ImpersonationLevel;
+  Thread->ImpersonationInfo->CopyOnOpen = CopyOnOpen;
+  Thread->ImpersonationInfo->EffectiveOnly = EffectiveOnly;
+  Thread->ImpersonationInfo->Token = Token;
+  ObReferenceObjectByPointer (Token,
 			      0,
 			      SepTokenObjectType,
 			      KernelMode);
-   Thread->ActiveImpersonationInfo = 1;
+  Thread->ActiveImpersonationInfo = TRUE;
 }
+
 
 PACCESS_TOKEN
 PsReferenceEffectiveToken(PETHREAD Thread,
 			  PTOKEN_TYPE TokenType,
-			  PUCHAR b,
+			  PBOOLEAN EffectiveOnly,
 			  PSECURITY_IMPERSONATION_LEVEL Level)
 {
    PEPROCESS Process;
    PACCESS_TOKEN Token;
    
-   if (Thread->ActiveImpersonationInfo == 0)
+   if (Thread->ActiveImpersonationInfo == FALSE)
      {
 	Process = Thread->ThreadsProcess;
 	*TokenType = TokenPrimary;
-	*b = 0;
+	*EffectiveOnly = FALSE;
 	Token = Process->Token;
      }
    else
      {
 	Token = Thread->ImpersonationInfo->Token;
 	*TokenType = TokenImpersonation;
-	*b = Thread->ImpersonationInfo->Unknown2;
-	*Level = Thread->ImpersonationInfo->Level;	
+	*EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+	*Level = Thread->ImpersonationInfo->Level;
      }
    return(Token);
 }
+
 
 NTSTATUS STDCALL
 NtImpersonateThread(IN HANDLE ThreadHandle,
@@ -225,11 +230,12 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
+
 NTSTATUS STDCALL
-NtOpenThreadToken(IN	HANDLE		ThreadHandle,  
-		  IN	ACCESS_MASK	DesiredAccess,  
-		  IN	BOOLEAN		OpenAsSelf,     
-		  OUT	PHANDLE		TokenHandle)
+NtOpenThreadToken (IN HANDLE ThreadHandle,
+		   IN ACCESS_MASK DesiredAccess,
+		   IN BOOLEAN OpenAsSelf,
+		   OUT PHANDLE TokenHandle)
 {
 #if 0
    PETHREAD Thread;
@@ -250,38 +256,42 @@ NtOpenThreadToken(IN	HANDLE		ThreadHandle,
    Token = PsReferencePrimaryToken(Thread->ThreadsProcess);
    SepCreateImpersonationTokenDacl(Token);
 #endif
-   return(STATUS_UNSUCCESSFUL);
+   return STATUS_NO_TOKEN;
 }
+
 
 /*
  * @implemented
  */
-PACCESS_TOKEN STDCALL 
-PsReferenceImpersonationToken(PETHREAD Thread,
-			      PULONG Unknown1,
-			      PULONG Unknown2,
-			      SECURITY_IMPERSONATION_LEVEL* Level)
+PACCESS_TOKEN STDCALL
+PsReferenceImpersonationToken(IN PETHREAD Thread,
+			      OUT PBOOLEAN CopyOnOpen,
+			      OUT PBOOLEAN EffectiveOnly,
+			      OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
-   if (Thread->ActiveImpersonationInfo == 0)
-     {
-	return(NULL);
-     }
-   
-   *Level = Thread->ImpersonationInfo->Level;
-   *Unknown1 = Thread->ImpersonationInfo->Unknown1;
-   *Unknown2 = Thread->ImpersonationInfo->Unknown2;
-   ObReferenceObjectByPointer(Thread->ImpersonationInfo->Token,
+  if (Thread->ActiveImpersonationInfo == FALSE)
+    {
+      return NULL;
+    }
+
+  *ImpersonationLevel = Thread->ImpersonationInfo->Level;
+  *CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
+  *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+  ObReferenceObjectByPointer (Thread->ImpersonationInfo->Token,
 			      TOKEN_ALL_ACCESS,
 			      SepTokenObjectType,
 			      KernelMode);
-   return(Thread->ImpersonationInfo->Token);
+
+  return Thread->ImpersonationInfo->Token;
 }
+
 
 VOID
 PiBeforeBeginThread(CONTEXT c)
 {
    KeLowerIrql(PASSIVE_LEVEL);
 }
+
 
 VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
@@ -304,6 +314,7 @@ PiDeleteThread(PVOID ObjectBody)
   KeReleaseThread(Thread);
   DPRINT("PiDeleteThread() finished\n");
 }
+
 
 NTSTATUS
 PsInitializeThread(HANDLE ProcessHandle,
@@ -529,11 +540,13 @@ PsCreateTeb(HANDLE ProcessHandle,
    return Status;
 }
 
+
 VOID STDCALL
 LdrInitApcRundownRoutine(PKAPC Apc)
 {
    ExFreePool(Apc);
 }
+
 
 VOID STDCALL
 LdrInitApcKernelRoutine(PKAPC Apc,
@@ -544,6 +557,7 @@ LdrInitApcKernelRoutine(PKAPC Apc,
 {
   ExFreePool(Apc);
 }
+
 
 NTSTATUS STDCALL
 NtCreateThread(PHANDLE ThreadHandle,
@@ -700,20 +714,20 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-VOID
-STDCALL
-PspRunCreateThreadNotifyRoutines
-(
- PETHREAD CurrentThread,
- BOOLEAN Create
-)
-{
- ULONG i;
- CLIENT_ID Cid = CurrentThread->Cid;
 
- for(i = 0; i < PiThreadNotifyRoutineCount; ++ i)
-  PiThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+VOID STDCALL
+PspRunCreateThreadNotifyRoutines(PETHREAD CurrentThread,
+				 BOOLEAN Create)
+{
+  ULONG i;
+  CLIENT_ID Cid = CurrentThread->Cid;
+
+  for (i = 0; i < PiThreadNotifyRoutineCount; i++)
+    {
+      PiThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+    }
 }
+
 
 /*
  * @implemented
@@ -721,10 +735,10 @@ PspRunCreateThreadNotifyRoutines
 NTSTATUS STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
- if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
-  {
-    return(STATUS_INSUFFICIENT_RESOURCES);
-  }
+  if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+    {
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   PiThreadNotifyRoutine[PiThreadNotifyRoutineCount] = NotifyRoutine;
   PiThreadNotifyRoutineCount++;

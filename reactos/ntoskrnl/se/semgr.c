@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.28 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: semgr.c,v 1.29 2004/03/14 18:13:19 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -219,33 +219,36 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 /*
  * @implemented
  */
-VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
+VOID STDCALL
+SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-   ObDereferenceObject(SubjectContext->PrimaryToken);
-   if (SubjectContext->ClientToken != NULL)
-     {
-	ObDereferenceObject(SubjectContext->ClientToken);
-     }   
+  ObDereferenceObject (SubjectContext->PrimaryToken);
+  if (SubjectContext->ClientToken != NULL)
+    {
+      ObDereferenceObject (SubjectContext->ClientToken);
+    }
 }
+
 
 /*
  * @implemented
  */
-VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
+VOID STDCALL
+SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-   PEPROCESS Process;
-   ULONG a;
-   ULONG b;
-   
-   Process = PsGetCurrentThread()->ThreadsProcess;
-   
-   SubjectContext->ProcessAuditId = Process;
-   SubjectContext->ClientToken = 
-     PsReferenceImpersonationToken(PsGetCurrentThread(),
-				   &a,
-				   &b,
+  PEPROCESS Process;
+  BOOLEAN CopyOnOpen;
+  BOOLEAN EffectiveOnly;
+
+  Process = PsGetCurrentThread ()->ThreadsProcess;
+
+  SubjectContext->ProcessAuditId = Process;
+  SubjectContext->ClientToken = 
+    PsReferenceImpersonationToken (PsGetCurrentThread(),
+				   &CopyOnOpen,
+				   &EffectiveOnly,
 				   &SubjectContext->ImpersonationLevel);
-   SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
+   SubjectContext->PrimaryToken = PsReferencePrimaryToken (Process);
 }
 
 

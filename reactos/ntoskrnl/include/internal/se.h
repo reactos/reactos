@@ -114,7 +114,7 @@ VOID SepInitializeTokenImplementation(VOID);
 
 NTSTATUS SepCreateSystemProcessToken(struct _EPROCESS* Process);
 NTSTATUS SepInitializeNewProcess(struct _EPROCESS* NewProcess,
-								 struct _EPROCESS* ParentProcess);
+				 struct _EPROCESS* ParentProcess);
 
 NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
