@@ -1014,8 +1014,9 @@ ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
 	    {
 	      Header = BODY_TO_HEADER(ObjectBody);
 
-	      /* Make sure this is real. */
-	      if (Header->ObjectType != NULL)
+	      /* Make sure this is real. Okay! For real!*/
+	      if ((Header->ObjectType != NULL) &&
+		      (Header->ObjectType->Close != NULL))
 		Count++;
 	    }
 	}
@@ -1077,5 +1078,32 @@ ObFindHandleForObject(IN PEPROCESS Process,
   UNIMPLEMENTED;
   return STATUS_UNSUCCESSFUL;
 }
+
+VOID
+ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
+                               PEPROCESS Process,
+                               int Count)
+{
+      ULONG P;
+      KIRQL oldIrql;
+
+//      pshi->HandleValue;
+
+      P = (ULONG) Process->UniqueProcessId;
+      pshi->UniqueProcessId = (USHORT) P;
+
+      KeAcquireSpinLock( &Process->HandleTable.ListLock, &oldIrql );
+
+//      pshi->GrantedAccess;
+//      pshi->Object;
+//      pshi->ObjectTypeIndex;
+//      pshi->HandleAttributes;
+
+      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );
+
+      return;
+}
+
+
 
 /* EOF */

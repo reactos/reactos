@@ -811,13 +811,107 @@ QSI_DEF(SystemNonPagedPoolInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
+
+VOID
+ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
+                               PEPROCESS Process,
+                               int Count);
+
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
-	/* FIXME */
-	DPRINT1("NtQuerySystemInformation - SystemHandleInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+
+        PSYSTEM_HANDLE_INFORMATION Shi = 
+        	(PSYSTEM_HANDLE_INFORMATION) Buffer;
+
+        DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
+
+	if (Size < sizeof (SYSTEM_HANDLE_INFORMATION))
+        {
+		* ReqSize = sizeof (SYSTEM_HANDLE_INFORMATION);
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+
+	DPRINT("SystemHandleInformation 1\n");
+
+	PEPROCESS pr, syspr;
+	int curSize, i = 0;
+	ULONG hCount = 0;
+		
+        /* First Calc Size from Count. */
+        syspr = PsGetNextProcess(NULL);
+	pr = syspr;
+
+        do
+	  {
+            hCount = hCount + ObpGetHandleCountByHandleTable(&pr->HandleTable);
+
+            curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
+                        (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
+                           (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) ));
+
+            Shi->NumberOfHandles = hCount;
+
+           if (curSize > Size)
+             {
+               *ReqSize = curSize;
+               DPRINT1("SystemHandleInformation 2\n");
+               return (STATUS_INFO_LENGTH_MISMATCH);
+             }
+
+	    pr = PsGetNextProcess(pr);
+
+	    if ((pr == syspr) || (pr == NULL))
+		break;
+        } while ((pr != syspr) && (pr != NULL));
+
+	if (pr != NULL)
+	  {
+	    ObDereferenceObject(pr);
+	  }
+
+	DPRINT("SystemHandleInformation 3\n");
+
+        /* Now get Handles from all processs. */
+        syspr = PsGetNextProcess(NULL);
+	pr = syspr;
+
+	 do
+	  {
+            int Count = 0, HandleCount = 0;
+
+            HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
+
+            for (Count = 0; HandleCount > 0 ; HandleCount--)
+               {
+                 ObpGetNextHandleByProcessCount( &Shi->Handles[i], pr, Count);
+                 Count++;
+                 i++;
+               }
+
+	    pr = PsGetNextProcess(pr);
+
+	    if ((pr == syspr) || (pr == NULL))
+		break;
+	   } while ((pr != syspr) && (pr != NULL));
+
+
+	if (pr != NULL)
+	  {
+	    ObDereferenceObject(pr);
+	  }
+
+	DPRINT("SystemHandleInformation 4\n");
+	return (STATUS_SUCCESS);
+
 }
+/*
+SSI_DEF(SystemHandleInformation)
+{
+	
+	return (STATUS_SUCCESS);
+}
+*/
 
 /* Class 17 -  Information */
 QSI_DEF(SystemObjectInformation)
