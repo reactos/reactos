@@ -1,9 +1,9 @@
-/* $Id: elf.c,v 1.2 2004/12/30 05:59:11 hyperion Exp $
+/* $Id: elf.c,v 1.3 2004/12/30 08:13:00 hyperion Exp $
 */
 
 #include <ntoskrnl.h>
 
-/*#define NDEBUG*/
+#define NDEBUG
 #include <internal/debug.h>
 
 #include <reactos/exeformat.h>
