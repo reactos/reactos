@@ -4,7 +4,7 @@
 
 BaseTest::BaseTest()
 {
-	Failed = true;
+	Failed = false;
 }
 
 BaseTest::~BaseTest()
@@ -61,6 +61,32 @@ void BaseTest::AreEqual(int expected,
 	}
 }
 
+void BaseTest::AreEqual(string expected,
+                        string actual,
+                        const char* file,
+                        int line)
+{
+	if (actual != expected)
+	{
+		Assert("Expected '%s' was '%s' at %s:%d\n",
+		       expected.c_str(),
+		       actual.c_str(),
+		       file,
+		       line);
+	}
+}
+
+void BaseTest::AreEqual(const char* expected,
+                        string actual,
+                        const char* file,
+                        int line)
+{
+	AreEqual(string(expected),
+             actual,
+             file,
+             line);
+}
+
 void BaseTest::AreNotEqual(int expected,
                            int actual,
                            const char* file,
@@ -103,10 +129,19 @@ public:
 		GetTests(tests);
 		for (size_t i = 0; i < tests.size(); i++)
 		{
-			BaseTest& test = *tests[i];
-			test.Run();
-			if (test.Failed)
+			try
+			{
+				BaseTest& test = *tests[i];
+				test.Run();
+				if (test.Failed)
+					numberOfFailedTests++;
+			}
+			catch (Exception& ex)
+			{
+				printf("%s\n",
+				       ex.Message.c_str());
 				numberOfFailedTests++;
+			}
 		}
 		
 		if (numberOfFailedTests > 0)
@@ -119,6 +154,7 @@ public:
 private:
 	void GetTests ( BaseTestList& tests )
 	{
+		tests.push_back(new ProjectTest());
 		tests.push_back(new ModuleTest());
 	}
 };

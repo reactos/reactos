@@ -14,18 +14,26 @@ protected:
 	void Assert(const char *message, ...);
 	void IsTrue(bool condition,
 	            const char* file,
-	            int line );
+	            int line);
 	void IsFalse(bool condition,
 	             const char* file,
-	             int line );
+	             int line);
 	void AreEqual(int expected,
 	              int actual,
 	              const char* file,
-	              int line );
+	              int line);
+	void AreEqual(string expected,
+	              string actual,
+	              const char* file,
+	              int line);
+	void AreEqual(const char* expected,
+	              string actual,
+	              const char* file,
+	              int line);
 	void AreNotEqual(int expected,
 	                 int actual,
 	                 const char* file,
-	                 int line );
+	                 int line);
 private:
 	void Fail();
 };
@@ -34,6 +42,13 @@ private:
 #define IS_FALSE(condition) IsFalse(condition,__FILE__,__LINE__)
 #define ARE_EQUAL(expected,actual) AreEqual(expected,actual,__FILE__,__LINE__)
 #define ARE_NOT_EQUAL(expected,actual) AreNotEqual(expected,actual,__FILE__,__LINE__)
+
+class ProjectTest : public BaseTest
+{
+public:
+	void Run();
+};
+
 
 class ModuleTest : public BaseTest
 {

@@ -58,7 +58,8 @@ main ( int argc, char** argv )
 	}
 	catch (Exception& ex)
 	{
-		printf ( ex.Message.c_str() );
+		printf ( "%s\n",
+		         ex.Message.c_str() );
 		return 1;
 	}
 }

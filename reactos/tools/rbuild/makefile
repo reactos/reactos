@@ -13,7 +13,9 @@ BASE_OBJECTS = \
 
 OBJECTS = $(BASE_OBJECTS) rbuild.o
 
-TESTS = tests/moduletest.o
+TESTS = \
+	tests/moduletest.o \
+	tests/projecttest.o
 
 TEST_OBJECTS = $(BASE_OBJECTS) $(TESTS) tests/alltests.o
 

@@ -1,0 +1,14 @@
+<project name="Project">
+	<directory name="dir1">
+		<module name="module1" type="buildtool">
+			<file>file1.c</file>
+			<file>file2.c</file>
+		</module>
+	</directory>
+	<directory name="dir2">
+		<module name="module2" type="buildtool">
+			<file>file3.c</file>
+			<file>file4.c</file>
+		</module>
+	</directory>
+</project>
