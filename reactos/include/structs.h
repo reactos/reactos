@@ -39,7 +39,6 @@
 #include <ntos/console.h>
 #include <ntos/keyboard.h>
 #include <ntos/heap.h>
-#include <ntos/atom.h>
 #include <ntos/mm.h>
 #include <ntos/file.h>
 #include <ntos/ps.h>

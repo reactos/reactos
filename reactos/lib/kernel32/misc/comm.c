@@ -1,4 +1,4 @@
-/* $Id: comm.c,v 1.1 2001/03/31 01:17:29 dwelch Exp $
+/* $Id: comm.c,v 1.2 2001/05/27 15:40:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,7 +11,6 @@
  */
 
 #include <ddk/ntddk.h>
-#include <kernel32/atom.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <wchar.h>
