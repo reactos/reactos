@@ -1,0 +1,24 @@
+EXTRADEFS = -D_SVRAPI_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = netapi32.dll
+IMPORTS   = iphlpapi ws2_32 advapi32 kernel32
+
+C_SRCS = \
+	access.c \
+	apibuf.c \
+	browsr.c \
+	nbcmdqueue.c \
+	nbnamecache.c \
+	nbt.c \
+	netapi32.c \
+	netbios.c \
+	wksta.c
+
+SUBDIRS = tests
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

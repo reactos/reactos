@@ -1,0 +1,13 @@
+
+			     TODO jswrap
+			     ===========
+
+* Fix the debugging information in the embedded byte-code files: input
+  file name (.psw) and line numbers.  This requires support from the
+  compiler.
+
+* The current version do not optimize with -O2.  We can't do the
+  liveness analysing, because on `return' statements, arguments are
+  not alive, and the by-reference return values won't work.  The
+  compiler needs a new flag JSC$FLAG_OPTIMIZE_ARGUMENTS_LIVE_ON_RETURN
+  that would fix the problem.

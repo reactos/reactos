@@ -1,0 +1,43 @@
+A collection of articles on kernel internals, please add to this
+
+------------------------------------------------------------------------------
+IRQ level
+------------------------------------------------------------------------------
+
+IRQ level (IRQL) is a per-processor state in ReactOS used to coordinate
+execution between ISRs and between threads. There are several levels
+
+       PASSIVE_LEVEL, APC_LEVEL: The normal level for user mode and most
+       kernel mode code. At the moment APC_LEVEL is unused.
+       
+       DISPATCH_LEVEL: At this level all irqs are still allowed but thread
+       rescheduling on the current processor is disabled. This is used by
+       the spinlock synchronization primitive to implement its uniprocessor
+       semantics (multiprocessor is more complex). It is also used for some
+       other forms of synchronization, DPCs for example. Many APIs are
+       unavailable at this IRQL, usually those that might have to wait. It
+       is recommended that you don't spend too much time at this IRQL 
+       otherwise system responsiveness will be reduced.
+       
+       > DISPATCH_LEVEL: Each irq is assigned a priority (which will be 
+       greater than DISPATCH_LEVEL). At an irq's priority level that irq,
+       lower priority irqs and thread rescheduling are disabled. Higher
+       priority irqs can still run. Very few APIs are available at IRQLs
+       greater than DISPATCH_LEVEL.
+       
+       HIGH_LEVEL: All irqs are disabled.
+
+-------------------------------------------------------------------------------
+DPCs
+-------------------------------------------------------------------------------
+
+It is a design goal not to spend too much time in ISRs, for this reason
+ISRs should postpone most processing till it can run at a lower IRQL. The
+mechanism for this is a Delayed Procedure Call (DPC). When a DPC object is
+created, it is associated with a function. The DPC object can then be inserted
+in the DPC queue from an ISR. If the IRQL on return from the ISR is less than
+DISPATCH_LEVEL the DPC queue will be drained, otherwise this will happen when
+the IRQL level drops below DISPATCH_LEVEL or the processor becomes idle. When
+the DPC queue is drained each DPC object is removed and the associated
+function is called at DISPATCH_LEVEL. A DPC object can only be inserted once,
+further insertions before it is removed will have no effect. 

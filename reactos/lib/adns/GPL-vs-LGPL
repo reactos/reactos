@@ -1,0 +1,122 @@
+              GPL vs LGPL, in the context of adns
+              -----------------------------------
+
+Several people have asked me to release GNU adns under the GNU Lesser
+General Public Licence (LGPL, formerly the Library GPL) instead of the
+`stronger' GPL.  This file is intended to answer most of these
+questions.  If you still have questions or comments, please mail me at
+<adns-maint@chiark.greenend.org.uk>.
+
+Typically there are two or three kinds of situation where people make
+this request: the first is where someone is developing a proprietary
+program and wishes to make use of adns but doesn't wish to make their
+program free software.  The second case is where a free software
+project is currently using an MIT-like licence or the LGPL and fear
+`GPL infection'.  The third case, which often overlaps with the
+second, is where another free software project currently using a
+GPL-incompatible licence, wishes to use adns.
+
+
+1. Proprietary applications of adns
+-----------------------------------
+
+So, let me get this straight.  You're writing a proprietary
+program, by which I mean that you will not be distributing source code
+and not allowing users to modify and share your software; most likely
+you are doing this for your own (personal or corporate) financial
+gain.
+
+However, you want to take advantage of adns, software which I have
+spent my time and effort on, and which I release as free software so
+that everyone can improve, share and use it.
+
+Don't you think that is a little hypocritical ?  I'm sorry, but I
+don't want you to just take my nice convenient software, without
+giving something back to the free software community or giving the
+same rights to your users as I do to you.
+
+If you really aren't the nasty kind of person I've described here, for
+example if you have a good reason other than your own selfishness for
+wanting to restrict distribution of your program, then perhaps you
+should contact me to discuss it.
+
+
+2. GPL-avoiding projects (MIT licence, et al)
+---------------------------------------------
+
+Some free software projects prefer to avoid the GPL and other licences
+which force the software always to be free.  Instead they use
+something like the MIT X licence, which allows proprietary versions of
+their software, or the in the case of some free libraries, the LGPL,
+which allows proprietary applications.  I have to say that I think
+these people are misguided, but that doesn't mean that they don't have
+a perfect right to do that.
+
+Some of these people think that merely writing to an interface
+provided by GPL'd software will cause their program to become GPL'd
+too, even if they don't distribute the GPL'd software.  I don't think
+this is the case.  I'm perfectly happy for non-GPL'd but
+GPL-compatible software to refer to adns in its source code.  However,
+I think that exectuables (or compiled libraries) which contain or are
+dynamically linked against adns must be GPL'd; likewise executable
+programs (whether compiled or in an interpreted language) which
+require utilities from adns to function properly must be GPL'd.
+
+So, you can distribute your non-GPL'd program source which needs adns
+to compile (provided it's under a GPL-compatible licence), but people
+who wish to distribute binaries must do so under the terms of the GNU
+GPL.  This may make sense for some GPL-avoiding free software
+projects; people can still make proprietary programs from your code,
+provided that they make some provision to replace adns with something
+whose copyright allows proprietary versions.
+
+However, this doesn't make much sense for the authors of LGPL'd
+libraries.  All I can say to them is to ask which is more important:
+that their library be well-constructed and use all the best technology
+available as free software, or whether it is worth degrading quality
+of their library in order to allow proprietary programs to use it !
+
+To help the case of LGPL'd libraries for which adns is not a vital
+component - for example, a library which provides access to other
+libraries so that programs which use it need only use certain parts,
+I have released adns.h (just the public header file) under the LGPL as
+well as the GPL.  See the copyright notice in adns.h for details.
+Note that this will not help you if it adns is essential to the
+functioning of your library, because all programs using your library
+must link against both your library and adns and so must be GPL'd.
+
+
+For some information and views from the Free Software Foundation on
+free software licensing, visit:
+
+ Various licenses and comments about them
+  at http://www.fsf.org/philosophy/license-list.html
+
+ Why you shouldn't use the Library GPL for your next library
+  at http://www.fsf.org/philosophy/why-not-lgpl.html
+
+
+3. GPL-incompatible free software licences
+------------------------------------------
+
+Regrettably, there are a number of free software licences (and
+semi-free licences) in existence which are not compatible with the
+GPL.  That is, they impose restrictions which are not present in the
+GPL, and therefore distributing a whole work which contains both such
+a program and a GPL'd program is not possible: either the combination
+would have to be distributed under the GPL (violating the restrictions
+made by the original author), or under the GPL-incompatible licence
+(violating the GPL).
+
+I may be prepared to make exceptions for such a licence.  Please
+contact me at <adns-maint@chiark.greenend.org.uk> with the full text
+of the GPL-incompatible licence.  However, I would usually prefer it
+if you could use a GPL-compatible licence for your project instead.
+
+
+-- Ian Jackson 17.9.2000
+
+
+Local variables:
+mode: text
+End: 

@@ -1,0 +1,37 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+LEXOPT    = -Cf #-w -b
+YACCOPT   = #-v
+MODULE    = libwpp.a
+
+C_SRCS = \
+	preproc.c \
+	wpp.c
+
+EXTRA_SRCS = ppy.y ppl.l
+EXTRA_OBJS = y.tab.o @LEX_OUTPUT_ROOT@.o
+
+all: $(MODULE)
+
+@MAKE_RULES@
+
+$(MODULE): $(OBJS)
+	$(RM) $@
+	$(AR) $@ $(OBJS)
+	$(RANLIB) $@
+
+y.tab.c y.tab.h: ppy.y
+	$(YACC) $(YACCOPT) -ppp -d -t $(SRCDIR)/ppy.y
+
+# hack to allow parallel make
+y.tab.h: y.tab.c
+y.tab.o: y.tab.h
+
+@LEX_OUTPUT_ROOT@.c: ppl.l
+	$(LEX) $(LEXOPT) -d -Ppp -o$@ -8 $(SRCDIR)/ppl.l
+
+@LEX_OUTPUT_ROOT@.o: y.tab.h
+
+### Dependencies:

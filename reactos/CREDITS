@@ -1,0 +1,78 @@
+ReactOS is available thanks to the work of
+
+Emanuele Aliberti <ea@iol.it>
+Robert Bergkvist <fragdance@hotmail.com>
+Hartmut Birr <hartmut.birr@gmx.de>
+Aleksey Bragin <aleksey@studiocerebral.com>
+Richard Campbell <eek2121@comcast.net>
+Gunnar Andre' Dalsnes <hardon@online.no>
+Arindam Das
+Boudewijn Dekker <ariadne@xs4all.nl>
+Robert Dickenson <robd@reactos.org>
+Marty Dill <mdill@uvic.ca>
+Jason Eager
+Steven Edwards <steven_ed4153@yahoo.com>
+Iwan Fatahi <i_fatahi@hotmail.com>
+Jason Filby <jasonfilby@yahoo.com>
+Martin Fuchs <martin-fuchs@gmx.net>
+Jurgen van Gael <jurgen.vangael@student.kuleuven.ac.be>
+Ge van Geldorp <ge@gse.nl>
+Andrew Greenwood <lists@silverblade.co.uk>
+Casper S. Hornstrup <chorns@users.sourceforge.net>
+KJK::Hyperion <noog@libero.it>
+Eugene Ingerman <geneing@myrealbox.com>
+Rex Jolliff <rex@lvcablemodem.com>
+Guido de Jong
+Victor Kirhenshtein <sauros@iname.com>
+Eric Kohl <ekohl@rz-online.de>
+Hans Kremer
+Frederik Leemans
+Jean Michault
+Royce Mitchell III <royce3@ev1.net>
+Filip Navara <xnavara@volny.cz>
+Jim Noeth
+Mike Nordell ("tamlin")
+Hernan Ochoa
+Brian Palmer <brianp@sginet.com>
+Paolo Pantaleo <paolopan@freemail.it>
+Matt Pyne
+Phillip Susi <phreak@iag.net>
+James B. Tabor <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
+Mark Tempel <mtempel@visi.com>
+Vizzini <vizzini@plasmic.com>
+Mark Weaver <mark@npsl.co.uk>
+Thomas Weidenmueller <w3seek@users.sourceforge.net>
+Jason Weiler
+David Welch <welch@cwcom.net>
+Jonathan Wilson <jonwil@tpgi.com.au>
+Art Yerkes <ayerkes@speakeasy.net>
+
+Graphic Design from
+
+Everaldo (http://everaldo.com) for Explorer icons
+
+Source and inspiration from
+
+WINE (http://www.winehq.com)
+WinFree (http://www.stack.nl/~onno/win32/)
+Linux (http://www.kernel.org)
+XFree86 (http://www.xfree86.org/)
+
+References (Rex's at least)
+
+Baker, Art. The Windows NT Device Driver Book. Prentice Hall, 1997.
+Borate, Dabak & Phadke. Undocumented Windows NT. M&T Books, 1999.
+Brain, Marshall. Win32 System Services. Prentice Hall, 1996.
+Cant, Chris. Writing Windows WDM Device Drivers. R&D Books, 1999.
+Canton & Sanchez. IBM Microcomputers: A Programmer's Handbook. McGraw Hill, 1990.
+Davis & Wallace. Windows Undocumented File Formats. R&D Books, 1997.
+Mason & Viscarola. Windows NT Device Driver Development. Macmillan, 1999.
+Mitchell, Stan. Inside the Windows 95 File System. O'Reilly, 1997.
+Murray, James D. Windows NT Event Logging. O'Reilly, 1998.
+Nagar, Rajeev. Windows NT File System Internals. O'Reilly, 1997.
+Osbourne, Sandra. Windows NT Registry: A Settings Reference. New Riders, 1998.
+Pietrek, Matt. Windows 95 System Programming Secrets. IDG, 1995.
+Richter, Jeffery. Advanced Windows, 3rd ed. Microsoft, 1997.
+Simon, Richard J. Windows NT Win32 API Superbible. Waite Group, 1996.
+Solomon, David A. Inside Windows NT, 2nd Ed. Microsoft, 1998.
+"The NT Insider." Open Systems Resources, 1999-2000.
