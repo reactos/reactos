@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.25 2004/08/21 21:19:06 tamlin Exp $
+/* $Id: process.c,v 1.25.2.1 2004/08/27 10:38:17 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -55,16 +55,17 @@ KeAttachProcess (PEPROCESS Process)
 	KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
      }
    
-   /* The stack of the current process may be located in a page which is
-      not present in the page directory of the process we're attaching to.
-      That would lead to a page fault when this function returns. However,
-      since the processor can't call the page fault handler 'cause it can't
-      push EIP on the stack, this will show up as a stack fault which will
-      crash the entire system.
+   /* The stack and the thread structure of the current process may be 
+      located in a page which is not present in the page directory of 
+      the process we're attaching to. That would lead to a page fault 
+      when this function returns. However, since the processor can't 
+      call the page fault handler 'cause it can't push EIP on the stack, 
+      this will show up as a stack fault which will crash the entire system.
       To prevent this, make sure the page directory of the process we're
       attaching to is up-to-date. */
 
    MmUpdatePageDir(Process, (PVOID)CurrentThread->Tcb.StackLimit, MM_STACK_SIZE);
+   MmUpdatePageDir(Process, (PVOID)CurrentThread, sizeof(ETHREAD));
 
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
 
