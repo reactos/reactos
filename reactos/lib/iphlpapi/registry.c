@@ -10,7 +10,7 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
   LONG Status;
   DWORD MaxAdapterName;
 
-  Status = RegQueryInfoKeyW(RegHandle, 
+  Status = RegQueryInfoKeyA(RegHandle, 
 			    NULL, 
 			    NULL, 
 			    NULL, 
@@ -29,9 +29,9 @@ int GetLongestChildKeyName( HANDLE RegHandle ) {
 }
 
 LONG OpenChildKeyRead( HANDLE RegHandle, 
-		       PWCHAR ChildKeyName, 
+		       PCHAR ChildKeyName, 
 		       PHKEY ReturnHandle ) {
-  return RegOpenKeyExW( RegHandle, 
+  return RegOpenKeyExA( RegHandle, 
 			ChildKeyName, 
 			0,
 			KEY_READ,
@@ -42,10 +42,10 @@ LONG OpenChildKeyRead( HANDLE RegHandle,
  * Yields a malloced value that must be freed.
  */
 
-PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
+PCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   LONG Status;
   int MaxAdapterName = GetLongestChildKeyName( RegHandle );
-  PWCHAR Value;
+  PCHAR Value;
   DWORD ValueLen;
 
   if (MaxAdapterName == -1) {
@@ -54,8 +54,8 @@ PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   }
 
   ValueLen = MaxAdapterName;
-  Value = (PWCHAR)malloc( MaxAdapterName * sizeof(WCHAR) );
-  Status = RegEnumKeyExW( RegHandle, n, Value, &ValueLen, 
+  Value = (PCHAR)HeapAlloc( GetProcessHeap(), 0, MaxAdapterName );
+  Status = RegEnumKeyExA( RegHandle, n, Value, &ValueLen, 
 			  NULL, NULL, NULL, NULL );
   if (Status != ERROR_SUCCESS)
     return 0;
@@ -65,27 +65,27 @@ PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   }
 }
 
-void ConsumeChildKeyName( PWCHAR Name ) {
-  if (Name) free( Name );
+void ConsumeChildKeyName( PCHAR Name ) {
+  if (Name) HeapFree( GetProcessHeap(), 0, Name );
 }
 
-PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName ) {
-  PWCHAR Name;
+PCHAR QueryRegistryValueString( HANDLE RegHandle, PCHAR ValueName ) {
+  PCHAR Name;
   DWORD ReturnedSize = 0;
   
-  if (RegQueryValueExW( RegHandle, ValueName, NULL, NULL, NULL, 
+  if (RegQueryValueExA( RegHandle, ValueName, NULL, NULL, NULL, 
 			&ReturnedSize ) != 0) 
     return 0;
   else {
     Name = malloc( (ReturnedSize + 1) * sizeof(WCHAR) );
-    RegQueryValueExW( RegHandle, ValueName, NULL, NULL, (PVOID)Name, 
+    RegQueryValueExA( RegHandle, ValueName, NULL, NULL, (PVOID)Name, 
 		      &ReturnedSize );
     Name[ReturnedSize] = 0;
     return Name;
   }
 }
 
-void ConsumeRegValueString( PWCHAR Value ) {
+void ConsumeRegValueString( PCHAR Value ) {
   if (Value) free(Value);
 }
 
@@ -93,8 +93,8 @@ PWCHAR *QueryRegistryValueStringMulti( HANDLE RegHandle, PWCHAR ValueName ) {
   return 0; /* FIXME if needed */
 }
 
-void ConsumeRegValueStringMulti( PWCHAR *Value ) {
-  PWCHAR *Orig = Value;
+void ConsumeRegValueStringMulti( PCHAR *Value ) {
+  PCHAR *Orig = Value;
   if (Value) {
     while (*Value) {
       free(*Value);

@@ -1,0 +1,36 @@
+GetAdaptersInfo --
+Wine uses: Software\\Wine\\Wine\\Config\\Network
+     -- Wins support is todo so this part isn't so important.
+     -- Overall, workable
+Wine uses ansi functions
+GetNetworkParams --
+     -- Make workable interface for _res
+        -- Wine based on real _res
+	-- Reactos based on my enumerator funcs
+
+ROUTE PRINT:
+
+iphlpapi_main.c:137 - ppIfTable 0104bd80, bOrder 1, heap 0xa0000000, flags 0x00000001
+ - AllocateAndGetIfTableFromStack
+iphlpapi_main.c:898 - pIfTable 0104bd00, pdwSize 0104bd00, bOrder 1
+ - GetIfTable
+(tcpip/main.c:168)(TiCreateFileObject) No EA information in IRP.
+ - We need a special case of no EA information to handle these ioctls in
+   tcpip.sys
+iphlpapi_main.c:939 - returning 122
+iphlpapi_main.c:898 - pIfTable 0104bd00, pdwSize 0104bd00, bOrder 1
+ - GetIfTable again
+(tcpip/main.c:168)(TiCreateFileObject) No EA information in IRP.
+(tcpip/main.c:168)(TiCreateFileObject) No EA information in IRP.
+getInterfaceIndexTable: numInterfaces: 0
+iphlpapi_main.c:939 - returning 0
+iphlpapi_main.c:149 - returning 0
+iphlpapi_main.c:213 - ppIpForwardTable 0104bd78, bOrder 1, heap 0xa0000000, flags 0x00000001
+ - AllocateAndGetIpForwardTableFromStack
+iphlpapi_main.c:1151 - pIpForwardTable 00000000, pdwSize 0104bd00, bOrder 1
+ - GetIpForwardTable
+iphlpapi_main.c:1214 - returning 122
+iphlpapi_main.c:1151 - pIpForwardTable a0001d68, pdwSize 0104bd00, bOrder 1
+ - GetIpForwardTable again
+iphlpapi_main.c:1214 - returning 122
+iphlpapi_main.c:225 - returning 122

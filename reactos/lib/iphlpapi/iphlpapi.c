@@ -42,10 +42,9 @@ DWORD DebugTraceLevel = MAX_TRACE;
 /* To make the linker happy */
 //VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
-
 BOOL
 EXPORT
-DllMain(HANDLE hInstDll,
+/*ARTYDONE*/DllMain(HANDLE hInstDll,
         ULONG dwReason,
         PVOID Reserved)
 {
@@ -76,7 +75,7 @@ DllMain(HANDLE hInstDll,
  */
 DWORD
 STDCALL
-AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PULONG NTEInstance)
+/*ARTYDONE*/AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PULONG NTEInstance)
 {
     UNIMPLEMENTED
     return 0L;
@@ -88,7 +87,7 @@ AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PU
  */
 DWORD
 STDCALL
-SetIpNetEntry(PMIB_IPNETROW pArpEntry)
+/*ARTYDONE*/SetIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
     UNIMPLEMENTED
     return 0L;
@@ -100,7 +99,7 @@ SetIpNetEntry(PMIB_IPNETROW pArpEntry)
  */
 DWORD
 STDCALL 
-CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+/*ARTYDONE*/CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
     UNIMPLEMENTED
     return 0L;
@@ -112,18 +111,18 @@ CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
  */
 DWORD
 STDCALL 
-GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
+/*ARTYDONE*/GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 {
     return 0;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL 
-GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
+/*ARTYDONE*/GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
 	LONG lErr;
 	DWORD dwSize;
@@ -264,7 +263,7 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
  */
 DWORD
 STDCALL 
-GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
+/*ARTYDONE*/GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
 {
     DWORD result = NO_ERROR;
     HKEY hKey;
@@ -302,7 +301,7 @@ GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
  */
 DWORD
 STDCALL 
-GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
+/*ARTYDONE*/GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
 {
     DWORD result = ERROR_SUCCESS;
     DWORD dwSize;
@@ -561,9 +560,7 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     }
 
     /* For now, set the first server as the current server, if there are any */
-    if( PrivateNSEnum.NumServers ) {
-      pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
-    }
+    pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
 
     free(PrivateNSEnum.AddrString);
   }
@@ -615,7 +612,7 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
  */
 DWORD
 STDCALL 
-GetTcpStatistics(PMIB_TCPSTATS pStats)
+/*ARTYDONE*/GetTcpStatistics(PMIB_TCPSTATS pStats)
 {
     DWORD result = NO_ERROR;
 
@@ -630,7 +627,7 @@ GetTcpStatistics(PMIB_TCPSTATS pStats)
  */
 DWORD
 STDCALL 
-GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
+/*ARTYDONE*/GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -645,7 +642,7 @@ GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
  */
 DWORD
 STDCALL 
-GetUdpStatistics(PMIB_UDPSTATS pStats)
+/*ARTYDONE*/GetUdpStatistics(PMIB_UDPSTATS pStats)
 {
     DWORD result = NO_ERROR;
 
@@ -660,7 +657,7 @@ GetUdpStatistics(PMIB_UDPSTATS pStats)
  */
 DWORD
 STDCALL 
-GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
+/*ARTYDONE*/GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -675,7 +672,7 @@ GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
  */
 DWORD
 STDCALL 
-FlushIpNetTable(DWORD dwIfIndex)
+/*ARTYDONE*/FlushIpNetTable(DWORD dwIfIndex)
 {
     DWORD result = NO_ERROR;
 
@@ -697,7 +694,7 @@ FlushIpNetTable(DWORD dwIfIndex)
  */
 DWORD
 STDCALL  
-GetIfEntry(PMIB_IFROW pIfRow)
+/*ARTYDONE*/GetIfEntry(PMIB_IFROW pIfRow)
 {
     DWORD result = NO_ERROR;
 
@@ -722,7 +719,7 @@ GetIfEntry(PMIB_IFROW pIfRow)
  */
 DWORD
 STDCALL 
-GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
+/*ARTYDONE*/GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -732,7 +729,7 @@ GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
+/*ARTYDONE*/DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
  BOOL bOrder)
 {
     UNIMPLEMENTED
@@ -742,7 +739,7 @@ DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
+/*ARTYDONE*/DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
  BOOL bOrder)
 {
     UNIMPLEMENTED
@@ -752,7 +749,7 @@ DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
+/*ARTYDONE*/DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
  PULONG pdwSize, BOOL bOrder)
 {
     UNIMPLEMENTED
@@ -762,7 +759,7 @@ DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpStatistics(PMIB_IPSTATS pStats)
+/*ARTYDONE*/DWORD STDCALL GetIpStatistics(PMIB_IPSTATS pStats)
 {
     UNIMPLEMENTED
     return 0L;
@@ -771,7 +768,7 @@ DWORD STDCALL GetIpStatistics(PMIB_IPSTATS pStats)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
+/*ARTYDONE*/DWORD STDCALL GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
 {
     UNIMPLEMENTED
     return 0L;
@@ -780,7 +777,7 @@ DWORD STDCALL GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIcmpStatistics(PMIB_ICMP pStats)
+/*ARTYDONE*/DWORD STDCALL GetIcmpStatistics(PMIB_ICMP pStats)
 {
     UNIMPLEMENTED
     return 0L;
@@ -789,7 +786,7 @@ DWORD STDCALL GetIcmpStatistics(PMIB_ICMP pStats)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetTcpStatisticsEx(PMIB_TCPSTATS pStats, DWORD dwFamily)
+/*ARTYDONE*/DWORD STDCALL GetTcpStatisticsEx(PMIB_TCPSTATS pStats, DWORD dwFamily)
 {
     UNIMPLEMENTED
     return 0L;
@@ -798,7 +795,7 @@ DWORD STDCALL GetTcpStatisticsEx(PMIB_TCPSTATS pStats, DWORD dwFamily)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetUdpStatisticsEx(PMIB_UDPSTATS pStats, DWORD dwFamily)
+/*ARTYDONE*/DWORD STDCALL GetUdpStatisticsEx(PMIB_UDPSTATS pStats, DWORD dwFamily)
 {
     UNIMPLEMENTED
     return 0L;
@@ -807,7 +804,7 @@ DWORD STDCALL GetUdpStatisticsEx(PMIB_UDPSTATS pStats, DWORD dwFamily)
 /*
  * @unimplemented
  */
-DWORD STDCALL SetIfEntry(PMIB_IFROW pIfRow)
+/*ARTYDONE*/DWORD STDCALL SetIfEntry(PMIB_IFROW pIfRow)
 {
     UNIMPLEMENTED
     return 0L;
@@ -816,7 +813,25 @@ DWORD STDCALL SetIfEntry(PMIB_IFROW pIfRow)
 /*
  * @unimplemented
  */
-DWORD STDCALL SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+/*ARTYDONE*/DWORD STDCALL CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+{
+    
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+/*ARTYDONE*/DWORD STDCALL SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+{
+    
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+/*ARTYDONE*/DWORD STDCALL DeleteIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
     UNIMPLEMENTED
     return 0L;
@@ -825,7 +840,7 @@ DWORD STDCALL SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 /*
  * @unimplemented
  */
-DWORD STDCALL DeleteIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+/*ARTYDONE*/DWORD STDCALL SetIpStatistics(PMIB_IPSTATS pIpStats)
 {
     UNIMPLEMENTED
     return 0L;
@@ -834,7 +849,7 @@ DWORD STDCALL DeleteIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 /*
  * @unimplemented
  */
-DWORD STDCALL SetIpStatistics(PMIB_IPSTATS pIpStats)
+/*ARTYDONE*/DWORD STDCALL SetIpTTL(UINT nTTL)
 {
     UNIMPLEMENTED
     return 0L;
@@ -843,7 +858,7 @@ DWORD STDCALL SetIpStatistics(PMIB_IPSTATS pIpStats)
 /*
  * @unimplemented
  */
-DWORD STDCALL SetIpTTL(UINT nTTL)
+/*ARTYDONE*/DWORD STDCALL CreateIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
     UNIMPLEMENTED
     return 0L;
@@ -852,7 +867,7 @@ DWORD STDCALL SetIpTTL(UINT nTTL)
 /*
  * @unimplemented
  */
-DWORD STDCALL CreateIpNetEntry(PMIB_IPNETROW pArpEntry)
+/*ARTYDONE*/DWORD STDCALL DeleteIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
     UNIMPLEMENTED
     return 0L;
@@ -861,16 +876,7 @@ DWORD STDCALL CreateIpNetEntry(PMIB_IPNETROW pArpEntry)
 /*
  * @unimplemented
  */
-DWORD STDCALL DeleteIpNetEntry(PMIB_IPNETROW pArpEntry)
-{
-    UNIMPLEMENTED
-    return 0L;
-}
-
-/*
- * @unimplemented
- */
-DWORD STDCALL CreateProxyArpEntry(DWORD dwAddress, DWORD dwMask,
+/*ARTYDONE*/DWORD STDCALL CreateProxyArpEntry(DWORD dwAddress, DWORD dwMask,
  DWORD dwIfIndex)
 {
     UNIMPLEMENTED
@@ -880,7 +886,7 @@ DWORD STDCALL CreateProxyArpEntry(DWORD dwAddress, DWORD dwMask,
 /*
  * @unimplemented
  */
-DWORD STDCALL DeleteProxyArpEntry(DWORD dwAddress, DWORD dwMask,
+/*ARTYDONE*/DWORD STDCALL DeleteProxyArpEntry(DWORD dwAddress, DWORD dwMask,
  DWORD dwIfIndex)
 {
     UNIMPLEMENTED
@@ -890,7 +896,7 @@ DWORD STDCALL DeleteProxyArpEntry(DWORD dwAddress, DWORD dwMask,
 /*
  * @unimplemented
  */
-DWORD STDCALL SetTcpEntry(PMIB_TCPROW pTcpRow)
+/*ARTYDONE*/DWORD STDCALL SetTcpEntry(PMIB_TCPROW pTcpRow)
 {
     UNIMPLEMENTED
     return 0L;
@@ -899,7 +905,7 @@ DWORD STDCALL SetTcpEntry(PMIB_TCPROW pTcpRow)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetUniDirectionalAdapterInfo(
+/*ARTYDONE*/DWORD STDCALL GetUniDirectionalAdapterInfo(
  PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIPIfInfo, PULONG dwOutBufLen)
 {
     UNIMPLEMENTED
@@ -909,7 +915,7 @@ DWORD STDCALL GetUniDirectionalAdapterInfo(
 /*
  * @unimplemented
  */
-DWORD STDCALL GetBestInterface(IPAddr dwDestAddr, PDWORD pdwBestIfIndex)
+/*ARTYDONE*/DWORD STDCALL GetBestInterface(IPAddr dwDestAddr, PDWORD pdwBestIfIndex)
 {
     UNIMPLEMENTED
     return 0L;
@@ -918,7 +924,7 @@ DWORD STDCALL GetBestInterface(IPAddr dwDestAddr, PDWORD pdwBestIfIndex)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr,
+/*ARTYDONE*/DWORD STDCALL GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr,
  PMIB_IPFORWARDROW   pBestRoute)
 {
     UNIMPLEMENTED
@@ -928,7 +934,7 @@ DWORD STDCALL GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr,
 /*
  * @unimplemented
  */
-DWORD STDCALL NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
+/*ARTYDONE*/DWORD STDCALL NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -937,7 +943,7 @@ DWORD STDCALL NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 /*
  * @unimplemented
  */
-DWORD STDCALL NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
+/*ARTYDONE*/DWORD STDCALL NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -946,7 +952,7 @@ DWORD STDCALL NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 /*
  * @unimplemented
  */
-DWORD STDCALL DeleteIPAddress(ULONG NTEContext)
+/*ARTYDONE*/DWORD STDCALL DeleteIPAddress(ULONG NTEContext)
 {
     UNIMPLEMENTED
     return 0L;
@@ -955,7 +961,7 @@ DWORD STDCALL DeleteIPAddress(ULONG NTEContext)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetPerAdapterInfo(ULONG IfIndex,
+/*ARTYDONE*/DWORD STDCALL GetPerAdapterInfo(ULONG IfIndex,
  PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
 {
     UNIMPLEMENTED
@@ -965,7 +971,7 @@ DWORD STDCALL GetPerAdapterInfo(ULONG IfIndex,
 /*
  * @unimplemented
  */
-DWORD STDCALL IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+/*ARTYDONE*/DWORD STDCALL IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
     UNIMPLEMENTED
     return 0L;
@@ -974,7 +980,7 @@ DWORD STDCALL IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 /*
  * @unimplemented
  */
-DWORD STDCALL IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+/*ARTYDONE*/DWORD STDCALL IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
     UNIMPLEMENTED
     return 0L;
@@ -983,7 +989,7 @@ DWORD STDCALL IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 /*
  * @unimplemented
  */
-DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
+/*ARTYDONE*/DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
  PULONG  PhyAddrLen)
 {
     UNIMPLEMENTED
@@ -993,7 +999,7 @@ DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
 /*
  * @unimplemented
  */
-BOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
+/*ARTYDONE*/BOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
  ULONG  MaxHops, PULONG RTT)
 {
     UNIMPLEMENTED
@@ -1003,7 +1009,7 @@ BOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
 /*
  * @unimplemented
  */
-DWORD STDCALL GetFriendlyIfIndex(DWORD IfIndex)
+/*ARTYDONE*/DWORD STDCALL GetFriendlyIfIndex(DWORD IfIndex)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1012,7 +1018,7 @@ DWORD STDCALL GetFriendlyIfIndex(DWORD IfIndex)
 /*
  * @unimplemented
  */
-DWORD STDCALL EnableRouter(HANDLE* pHandle, OVERLAPPED* pOverlapped)
+/*ARTYDONE*/DWORD STDCALL EnableRouter(HANDLE* pHandle, OVERLAPPED* pOverlapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1021,7 +1027,7 @@ DWORD STDCALL EnableRouter(HANDLE* pHandle, OVERLAPPED* pOverlapped)
 /*
  * @unimplemented
  */
-DWORD STDCALL UnenableRouter(OVERLAPPED* pOverlapped, LPDWORD lpdwEnableCount)
+/*ARTYDONE*/DWORD STDCALL UnenableRouter(OVERLAPPED* pOverlapped, LPDWORD lpdwEnableCount)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1030,7 +1036,7 @@ DWORD STDCALL UnenableRouter(OVERLAPPED* pOverlapped, LPDWORD lpdwEnableCount)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
+/*ARTYDONE*/DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1039,7 +1045,7 @@ DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 /*
  * @unimplemented
  */
-DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags)
+/*ARTYDONE*/DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1048,7 +1054,7 @@ DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **p
 /*
  * @unimplemented
  */
-DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
+/*ARTYDONE*/DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1057,7 +1063,7 @@ DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfInde
 /*
  * @unimplemented
  */
-BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
+/*ARTYDONE*/BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1066,7 +1072,7 @@ BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
 /*
  * @unimplemented
  */
-PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID)
+/*ARTYDONE*/PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1075,7 +1081,7 @@ PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
+/*ARTYDONE*/DWORD STDCALL GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1084,7 +1090,7 @@ DWORD STDCALL GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_A
 /*
  * @unimplemented
  */
-DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
+/*ARTYDONE*/DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1093,7 +1099,7 @@ DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
 /*
  * @unimplemented
  */
-DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
+/*ARTYDONE*/DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1102,7 +1108,7 @@ DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
+/*ARTYDONE*/DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
 {
     UNIMPLEMENTED
     return 0L;
@@ -1111,7 +1117,7 @@ DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
 /*
  * @unimplemented
  */
-HANDLE STDCALL  IcmpCreateFile(
+/*ARTYDONE*/HANDLE STDCALL  IcmpCreateFile(
     VOID
     )
 {
@@ -1122,7 +1128,7 @@ HANDLE STDCALL  IcmpCreateFile(
 /*
  * @unimplemented
  */
-HANDLE STDCALL  Icmp6CreateFile(
+/*ARTYDONE*/HANDLE STDCALL  Icmp6CreateFile(
     VOID
     )
 {
@@ -1133,7 +1139,7 @@ HANDLE STDCALL  Icmp6CreateFile(
 /*
  * @unimplemented
  */
-BOOL STDCALL  IcmpCloseHandle(
+/*ARTYDONE*/BOOL STDCALL  IcmpCloseHandle(
     HANDLE  IcmpHandle
     )
 {
@@ -1144,7 +1150,7 @@ BOOL STDCALL  IcmpCloseHandle(
 /*
  * @unimplemented
  */
-DWORD STDCALL  IcmpSendEcho(
+/*ARTYDONE*/DWORD STDCALL  IcmpSendEcho(
     HANDLE                 IcmpHandle,
     IPAddr                 DestinationAddress,
     LPVOID                 RequestData,
@@ -1164,7 +1170,7 @@ DWORD STDCALL  IcmpSendEcho(
  */
 DWORD
 STDCALL 
-IcmpSendEcho2(
+/*ARTYDONE*/IcmpSendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
     FARPROC                  ApcRoutine,
@@ -1187,7 +1193,7 @@ IcmpSendEcho2(
  */
 DWORD
 STDCALL 
-Icmp6SendEcho2(
+/*ARTYDONE*/Icmp6SendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
     FARPROC                  ApcRoutine,
@@ -1211,7 +1217,7 @@ Icmp6SendEcho2(
  */
 DWORD
 STDCALL
-IcmpParseReplies(
+/*ARTYDONE*/IcmpParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     )
@@ -1225,7 +1231,7 @@ IcmpParseReplies(
  */
 DWORD
 STDCALL
-Icmp6ParseReplies(
+/*ARTYDONE*/Icmp6ParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     )
@@ -1237,7 +1243,7 @@ Icmp6ParseReplies(
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
  BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
@@ -1247,7 +1253,7 @@ DWORD STDCALL AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable,
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable,
  BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
@@ -1257,7 +1263,7 @@ DWORD STDCALL AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
  ppIpForwardTable, BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
@@ -1267,7 +1273,7 @@ DWORD STDCALL AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
  BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
@@ -1277,7 +1283,7 @@ DWORD STDCALL AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
  BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
@@ -1287,7 +1293,7 @@ DWORD STDCALL AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
 /*
  * @unimplemented
  */
-DWORD STDCALL AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
+/*ARTYDONE*/DWORD STDCALL AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
  BOOL bOrder, HANDLE heap, DWORD flags)
 {
     UNIMPLEMENTED
