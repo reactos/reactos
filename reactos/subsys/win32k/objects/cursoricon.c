@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.49 2004/02/26 22:23:55 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.50 2004/02/27 10:08:21 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -107,6 +107,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    PSURFOBJ soMask = NULL, soColor = NULL;
    PXLATEOBJ XlateObj = NULL;
    RECTL PointerRect;
+   HDC Screen;
   
    CurInfo = &WinStaObject->SystemCursor;
    OldCursor = CurInfo->CurrentCursorObject;
@@ -121,8 +122,12 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    }
   
    {
+      if(!(Screen = IntGetScreenDC()))
+      {
+        return (HCURSOR)0;
+      }
       /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-      PDC dc = DC_LockDc(IntGetScreenDC());
+      PDC dc = DC_LockDc(Screen);
 
       if (!dc)
       {
@@ -132,7 +137,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
       SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
       DevInfo = dc->DevInfo;
-      DC_UnlockDc(IntGetScreenDC());
+      DC_UnlockDc(Screen);
    }
   
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
