@@ -63,7 +63,7 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
 	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi smdll snmpapi syssetup \
 	twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
-	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
