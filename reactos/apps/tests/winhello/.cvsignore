@@ -1,0 +1,6 @@
+winhello.exe
+winhello.nostrip.exe
+winhello.sym
+winhello.coff
+*.d
+*.o
