@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.4 1999/12/06 05:48:34 phreak Exp $
+/* $Id: print.c,v 1.5 1999/12/26 15:50:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,6 +43,7 @@
 #define SERIAL_DEBUG_BAUD_RATE 19200
 
 
+#define BOCHS_DEBUGGING
 #ifdef BOCHS_DEBUGGING
 #define BOCHS_LOGGER_PORT (0xe9)
 #endif

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.10 1999/11/17 21:28:08 ariadne Exp $
+/* $Id: stubs.c,v 1.11 1999/12/26 15:50:44 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -240,16 +240,6 @@ ClearCommError (
 	return FALSE;
 }
 
-
-BOOL
-STDCALL
-CloseConsoleHandle (
-	HANDLE	hConsole
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 BOOL
 STDCALL

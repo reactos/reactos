@@ -117,7 +117,7 @@ typedef struct _CLIENT_ID
 } CLIENT_ID, *PCLIENT_ID;
 
 typedef struct _NT_TIB {
-    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;  // 00h
+    struct _EXCEPTION_REGISTRATION_RECORD* ExceptionList;  // 00h
     PVOID StackBase;                                       // 04h
     PVOID StackLimit;                                      // 08h
     PVOID SubSystemTib;                                    // 0Ch
@@ -269,6 +269,15 @@ typedef struct _TOP_LEVEL_IRP
 	ULONG TopLevelIrpConst;
 } TOP_LEVEL_IRP;
 
+typedef struct
+{
+   PACCESS_TOKEN Token;
+   UCHAR Unknown1;
+   UCHAR Unknown2;
+   UCHAR Pad[2];
+   SECURITY_IMPERSONATION_LEVEL Level;
+} IMPERSONATION_INFO, *PIMPERSONATION_INFO;
+
 typedef struct _ETHREAD {
 	KTHREAD			Tcb;
 	TIME			CreateTime;
@@ -282,7 +291,7 @@ typedef struct _ETHREAD {
 	PLARGE_INTEGER		LpcReplySemaphore;
 	PVOID			LpcReplyMessage;
 	PLARGE_INTEGER		LpcReplyMessageId;
-	PVOID			ImpersonationInfo;
+	PIMPERSONATION_INFO     ImpersonationInfo;
 	LIST_ENTRY		IrpList; //
 	TOP_LEVEL_IRP		TopLevelIrp;
 	ULONG			ReadClusterSize;
@@ -295,8 +304,10 @@ typedef struct _ETHREAD {
 	PKSTART_ROUTINE		StartAddress;
 	LPTHREAD_START_ROUTINE  Win32StartAddress; // Should Specify a win32 start func
 	UCHAR 			LpcExitThreadCalled;
-	UCHAR 			HardErrorsAreDisabled;
-
+        UCHAR 			HardErrorsAreDisabled;
+        UCHAR                   LpcReceivedMsgIdValid;
+        UCHAR                   ActiveImpersonationInfo;
+        ULONG                   PerformanceCountHigh;
 
    /*
     * Added by David Welch (welch@cwcom.net)

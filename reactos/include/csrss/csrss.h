@@ -1,6 +1,11 @@
 #ifndef __INCLUDE_CSRSS_CSRSS_H
 #define __INCLUDE_CSRSS_CSRSS_H
 
+typedef struct
+{
+   
+} CONNECT_INFO, *PCONNECT_INFO;
+
 #define CSRSS_CREATE_PROCESS            (0x1)
 #define CSRSS_TERMINATE_PROCESS         (0x2)
 #define CSRSS_WRITE_CONSOLE             (0x3)

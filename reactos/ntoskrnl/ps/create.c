@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.5 1999/12/22 14:48:26 dwelch Exp $
+/* $Id: create.c,v 1.6 1999/12/26 15:50:51 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -43,11 +43,35 @@ extern LIST_ENTRY PiThreadListHead;
 
 /* FUNCTIONS ***************************************************************/
 
+PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
+					    PULONG Unknown1,
+					    PULONG Unknown2,
+					    SECURITY_IMPERSONATION_LEVEL* 
+					    Level)
+{
+   if (Thread->ActiveImpersonationInfo == 0)
+     {
+	return(NULL);
+     }
+   
+   *Level = Thread->ImpersonationInfo->Level;
+   *Unknown1 = Thread->ImpersonationInfo->Unknown1;
+   *Unknown2 = Thread->ImpersonationInfo->Unknown2;
+   ObReferenceObjectByPointer(Thread->ImpersonationInfo->Token,
+			      GENERIC_ALL,
+			      SeTokenType,
+			      KernelMode);
+   return(Thread->ImpersonationInfo->Token);
+}
+
 static VOID PiTimeoutThread( struct _KDPC *dpc, PVOID Context, PVOID arg1, PVOID arg2 )
 {
    // wake up the thread, and tell it it timed out
    NTSTATUS Status = STATUS_TIMEOUT;
-   PsUnfreezeThread( (ETHREAD *)Context, &Status );
+   
+   DPRINT("PiTimeoutThread()\n");
+   
+   KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
 VOID PiBeforeBeginThread(VOID)
@@ -76,6 +100,8 @@ VOID PiDeleteThread(PVOID ObjectBody)
    DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   DPRINT("Process %x(%d)\n", ((PETHREAD)ObjectBody)->ThreadsProcess,
+	   ObGetReferenceCount(((PETHREAD)ObjectBody)->ThreadsProcess));
    ObDereferenceObject(((PETHREAD)ObjectBody)->ThreadsProcess);
    ((PETHREAD)ObjectBody)->ThreadsProcess = NULL;
    PiNrThreads--;

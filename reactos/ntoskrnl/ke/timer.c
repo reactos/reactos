@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.25 1999/12/18 17:48:22 dwelch Exp $
+/* $Id: timer.c,v 1.26 1999/12/26 15:50:48 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -137,7 +137,7 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
    
    IntervalP = (PLARGE_INTEGER)Interval;
    
-   DPRINT1("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
+   DPRINT("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
 	  Alertable, Internal, IntervalP);
    
    Status = KeDelayExecutionThread(UserMode, Alertable, IntervalP);

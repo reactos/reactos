@@ -29,7 +29,7 @@ extern ULONG MiNrFreePages;
 #define PA_BIT_READWRITE (1)
 #define PA_BIT_USER      (2)
 
-#define PA_PRESENT (1<<PA_BIT_PRESENT)
+#define PA_PRESENT  (1<<PA_BIT_PRESENT)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
@@ -231,17 +231,7 @@ VOID MmSetPage(PEPROCESS Process,
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG Attributes = 0;
    
-   if (PAGE_ROUND_DOWN(Address) == 0x77630000 ||
-       PAGE_ROUND_DOWN(Address) == 0x77631000 ||
-       PAGE_ROUND_DOWN(Address) == 0x77632000 ||
-       PAGE_ROUND_DOWN(Address) == 0x77633000)
-     {
-	DPRINT1("MmSetPage(Process %x, Address %x, flProtect %x, "
-		"PhysicalAddress %x)\n",Process,Address,flProtect,
-		PhysicalAddress);
-     }
-   
-    if (((ULONG)PhysicalAddress) >= 0x400000)
+   if (((ULONG)PhysicalAddress) >= 0x400000)
      {
 	DbgPrint("MmSetPage(Process %x, Address %x, PhysicalAddress %x)\n",
 		 Process, Address, PhysicalAddress);

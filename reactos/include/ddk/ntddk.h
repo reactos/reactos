@@ -35,8 +35,8 @@ extern "C"
 #include <ddk/cmtypes.h>
 #include <ddk/ketypes.h>
 #include <ddk/obtypes.h>
-#include <ddk/mmtypes.h>
 #include <ddk/setypes.h>
+#include <ddk/mmtypes.h>
 #include <ddk/iotypes.h>
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>

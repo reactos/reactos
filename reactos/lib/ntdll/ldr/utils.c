@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.21 1999/12/20 02:14:37 dwelch Exp $
+/* $Id: utils.c,v 1.22 1999/12/26 15:50:46 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -702,7 +702,6 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 			       ImageBase + NTHeaders->OptionalHeader
 				 .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
 			     .VirtualAddress);
-   DPRINT1("ImportModuleDirectory %x\n", ImportModuleDirectory);
    DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
    
    while (ImportModuleDirectory->dwRVAModuleName)

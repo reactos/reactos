@@ -14,7 +14,9 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/string.h>
+#include <internal/ps.h>
 #include <internal/id.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -166,6 +168,8 @@ PVOID ObCreateObject(PHANDLE Handle,
    if (Header->ObjectType != NULL &&
        Header->ObjectType->Create != NULL)
      {
+	DPRINT("Calling %x\n", Header->ObjectType);
+	DPRINT("Calling %x\n", Header->ObjectType->Create);
 	Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
 					    Parent,
 					    RemainingPath,
@@ -201,9 +205,25 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
    
    if (ObjectType != NULL && ObjectHeader->ObjectType != ObjectType)
      {
-	DPRINT("Failed (type was %x %w)\n",ObjectHeader->ObjectType,
-	       ObjectHeader->ObjectType->TypeName.Buffer);
+	DPRINT("Failed %x (type was %x %w) should %x\n",
+		ObjectHeader,
+		ObjectHeader->ObjectType,
+		ObjectHeader->ObjectType->TypeName.Buffer,
+		ObjectType);
+	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
+     }
+   if (ObjectHeader->ObjectType == PsProcessType)
+     {
+	DPRINT("Ref p 0x%x refcount %d type %x ",
+		ObjectBody, ObjectHeader->RefCount, PsProcessType);
+	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+     }
+   if (ObjectHeader->ObjectType == PsThreadType)
+     {
+	DPRINT("Deref t 0x%x with refcount %d type %x ",
+		ObjectBody, ObjectHeader->RefCount, PsThreadType);
+	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
      }
    
    ObjectHeader->RefCount++;
@@ -270,10 +290,24 @@ VOID ObDereferenceObject(PVOID ObjectBody)
  */
 {
    POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   extern POBJECT_TYPE PsProcessType;
    
 //   DPRINT("ObDeferenceObject(ObjectBody %x) RefCount %d\n",ObjectBody,
 //	  Header->RefCount);
-      
+
+   if (Header->ObjectType == PsProcessType)
+     {
+	DPRINT("Deref p 0x%x with refcount %d type %x ",
+		ObjectBody, Header->RefCount, PsProcessType);
+	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+     }
+   if (Header->ObjectType == PsThreadType)
+     {
+	DPRINT("Deref t 0x%x with refcount %d type %x ",
+		ObjectBody, Header->RefCount, PsThreadType);
+	DPRINT("eip %x\n", ((PULONG)&ObjectBody)[-1]);
+     }
+   
    Header->RefCount--;
    
    ObPerformRetentionChecks(Header);

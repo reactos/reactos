@@ -35,3 +35,9 @@ ULONG PsResumeThread(PETHREAD Thread,
 		     PNTSTATUS WaitStatus);
 PETHREAD PsGetCurrentThread(VOID);
 struct _EPROCESS* PsGetCurrentProcess(VOID);
+PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
+					    PULONG Unknown1,
+					    PULONG Unknown2,
+					    SECURITY_IMPERSONATION_LEVEL* 
+					    Level);
+PACCESS_TOKEN PsReferencePrimaryToken(PEPROCESS Process);

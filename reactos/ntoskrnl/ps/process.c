@@ -36,6 +36,36 @@ static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+PACCESS_TOKEN PsReferencePrimaryToken(PEPROCESS Process)
+{
+   ObReferenceObjectByPointer(Process->Token,
+			      GENERIC_ALL,
+			      SeTokenType,
+			      UserMode);
+   return(Process->Token);
+}
+
+NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
+			      PACCESS_TOKEN* Token)
+{
+   PEPROCESS Process;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+				      PROCESS_QUERY_INFORMATION,
+				      PsProcessType,
+				      UserMode,
+				      (PVOID*)&Process,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   *Token = PsReferencePrimaryToken(Process);
+   ObDereferenceObject(Process);
+   return(STATUS_SUCCESS);
+}
+
 VOID PiKillMostProcesses(VOID)
 {
    KIRQL oldIrql;
@@ -205,9 +235,7 @@ struct _EPROCESS* PsGetCurrentProcess(VOID)
      }
 }
 
-NTSTATUS
-STDCALL
-NtCreateProcess (
+NTSTATUS STDCALL NtCreateProcess (
 	OUT	PHANDLE			ProcessHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,

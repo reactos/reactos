@@ -9,6 +9,9 @@
  *	19990204 EA	SetConsoleTitleA
  *      19990306 EA	Stubs
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 #include <ddk/ntddblue.h>
 #include <windows.h>
@@ -18,20 +21,26 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+/* GLOBALS ******************************************************************/
 
-/* What is this?
-#define EXTENDED_CONSOLE */
+static HANDLE StdInput  = INVALID_HANDLE_VALUE;
+static HANDLE StdOutput = INVALID_HANDLE_VALUE;
+static HANDLE StdError  = INVALID_HANDLE_VALUE;
 
-HANDLE StdInput  = INVALID_HANDLE_VALUE;
-HANDLE StdOutput = INVALID_HANDLE_VALUE;
-HANDLE StdError  = INVALID_HANDLE_VALUE;
-#ifdef EXTENDED_CONSOLE
-HANDLE StdAux    = INVALID_HANDLE_VALUE;
-HANDLE StdPrint  = INVALID_HANDLE_VALUE;
-#endif
+/* FUNCTIONS *****************************************************************/
 
+WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle)
+{   
+}
 
-
+BOOLEAN IsConsoleHandle(HANDLE Handle)
+{
+   if ((((ULONG)Handle) & 0x10000003) == 0x3)
+     {
+	return(TRUE);
+     }
+   return(FALSE);
+}
 
 
 /*--------------------------------------------------------------
@@ -47,10 +56,6 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
       case STD_INPUT_HANDLE:	return StdInput;
       case STD_OUTPUT_HANDLE:	return StdOutput;
       case STD_ERROR_HANDLE:	return StdError;
-#ifdef EXTENDED_CONSOLE
-      case STD_AUX_HANDLE:	return StdError;
-      case STD_PRINT_HANDLE:	return StdError;
-#endif
      }
    SetLastError(0); /* FIXME: What error code? */
    return INVALID_HANDLE_VALUE;
@@ -60,43 +65,31 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 /*--------------------------------------------------------------
  *	SetStdHandle
  */
-WINBASEAPI
-BOOL
-WINAPI
-SetStdHandle(
-	DWORD	nStdHandle,
-	HANDLE	hHandle
-	)
+WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
+				    HANDLE hHandle)
 {
-	/* More checking needed? */
-	if (hHandle == INVALID_HANDLE_VALUE)
-	{
-		SetLastError(0);	/* FIXME: What error code? */
-		return FALSE;
-	}
-	SetLastError(ERROR_SUCCESS); /* OK */
-	switch (nStdHandle)
-	{
-		case STD_INPUT_HANDLE:
-			StdInput = hHandle;
-			return TRUE;
-		case STD_OUTPUT_HANDLE:
-			StdOutput = hHandle;
-			return TRUE;
-		case STD_ERROR_HANDLE:
-			StdError = hHandle;
-			return TRUE;
-#ifdef EXTENDED_CONSOLE
-		case STD_AUX_HANDLE:
-			StdError = hHandle;
-			return TRUE;
-		case STD_PRINT_HANDLE:
-			StdError = hHandle;
-			return TRUE;
-#endif
-	}
-	SetLastError(0); /* FIXME: What error code? */
+   /* More checking needed? */
+   if (hHandle == INVALID_HANDLE_VALUE)
+     {
+	SetLastError(0);	/* FIXME: What error code? */
 	return FALSE;
+     }
+   
+   SetLastError(ERROR_SUCCESS); /* OK */
+   switch (nStdHandle)
+     {
+      case STD_INPUT_HANDLE:
+	StdInput = hHandle;
+	return TRUE;
+      case STD_OUTPUT_HANDLE:
+	StdOutput = hHandle;
+	return TRUE;
+      case STD_ERROR_HANDLE:
+	StdError = hHandle;
+	return TRUE;
+     }
+   SetLastError(0); /* FIXME: What error code? */
+   return FALSE;
 }
 
 

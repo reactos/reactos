@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.16 1999/12/22 14:48:25 dwelch Exp $
+/* $Id: handle.c,v 1.17 1999/12/26 15:50:50 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -47,7 +47,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
  */
 {
    PLIST_ENTRY current;
-   unsigned int handle = ((unsigned int)h) - 1;
+   unsigned int handle = (((unsigned int)h) - 1) >> 3;
    unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
    HANDLE_BLOCK* blk = NULL;
    unsigned int i;
@@ -130,10 +130,15 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    if (SourceHandleRep == NULL)
      {
 	KeReleaseSpinLock(&SourceProcess->Pcb.HandleTable.ListLock, oldIrql);
+	ObDereferenceObject(SourceProcess);
+	ObDereferenceObject(TargetProcess);
 	return(STATUS_INVALID_HANDLE);
      }
    ObjectBody = SourceHandleRep->ObjectBody;
-   BODY_TO_HEADER(ObjectBody)->RefCount++;
+   ObReferenceObjectByPointer(ObjectBody,
+			      GENERIC_ALL,
+			      NULL,
+			      UserMode);
    
    if (Options & DUPLICATE_SAME_ACCESS)
      {
@@ -187,13 +192,30 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 	     
 	     if (ObjectBody != NULL)
 	       {
-		  DPRINT("Deleting handle to %x\n", Object);
+		  POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
 		  
-		  BODY_TO_HEADER(ObjectBody)->RefCount++;
-		  BODY_TO_HEADER(ObjectBody)->HandleCount--;
+		  if (Header->ObjectType == PsProcessType ||
+		      Header->ObjectType == PsThreadType)
+		    {
+		       DPRINT("Deleting handle to %x\n", ObjectBody);
+		    }
+		  
+		  ObReferenceObjectByPointer(ObjectBody,
+					     GENERIC_ALL,
+					     NULL,
+					     UserMode);
+		  Header->HandleCount--;
 		  current->handles[i].ObjectBody = NULL;
 		  
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
+		  
+		  if ((Header->ObjectType != NULL) &&
+		      (Header->ObjectType->Close != NULL))
+		    {
+		       Header->ObjectType->Close(ObjectBody, 
+						 Header->HandleCount);
+		    }
+		  
 		  ObDereferenceObject(ObjectBody);
 		  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 		  current_entry = &HandleTable->ListHead;
@@ -205,6 +227,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
      }
    KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
    DPRINT("ObCloseAllHandles() finished\n");
+   DPRINT("Type %x\n", BODY_TO_HEADER(Process)->ObjectType);
 }
 
 VOID ObDeleteHandleTable(PEPROCESS Process)
@@ -304,6 +327,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    PVOID ObjectBody;
    KIRQL oldIrql;
    PHANDLE_TABLE HandleTable;
+   POBJECT_HEADER Header;
    
    DPRINT("ObDeleteHandle(Handle %x)\n",Handle);
    
@@ -313,11 +337,21 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    
    Rep = ObpGetObjectByHandle(HandleTable, Handle);
    ObjectBody = Rep->ObjectBody;
+   Header = BODY_TO_HEADER(ObjectBody);
    BODY_TO_HEADER(ObjectBody)->HandleCount--;
-   BODY_TO_HEADER(ObjectBody)->RefCount++;
+   ObReferenceObjectByPointer(ObjectBody,
+			      GENERIC_ALL,
+			      NULL,
+			      UserMode);
    Rep->ObjectBody = NULL;
    
    KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
+   
+   if ((Header->ObjectType != NULL) &&
+       (Header->ObjectType->Close != NULL))
+     {
+	Header->ObjectType->Close(ObjectBody, Header->HandleCount);
+     }
    
    DPRINT("Finished ObDeleteHandle()\n");
    return(ObjectBody);
@@ -375,7 +409,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 		  blk->handles[i].GrantedAccess = GrantedAccess;
 		  blk->handles[i].Inherit = Inherit;
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
-		  *HandleReturn = (HANDLE)(handle + i);
+		  *HandleReturn = (HANDLE)((handle + i) << 3);
 		  return(STATUS_SUCCESS);
 	       }
 	  }
@@ -395,7 +429,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    new_blk->handles[0].ObjectBody = ObjectBody;
    new_blk->handles[0].GrantedAccess = GrantedAccess;
    new_blk->handles[0].Inherit = Inherit;
-   *HandleReturn = (HANDLE)handle;
+   *HandleReturn = (HANDLE)(handle << 3);
    return(STATUS_SUCCESS);   
 }
 
@@ -440,7 +474,10 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    if (Handle == NtCurrentProcess() && 
        (ObjectType == PsProcessType || ObjectType == NULL))
      {
-	BODY_TO_HEADER(PsGetCurrentProcess())->RefCount++;
+	ObReferenceObjectByPointer(PsGetCurrentProcess(),
+				   PROCESS_ALL_ACCESS,
+				   PsProcessType,
+				   UserMode);
 	*Object = PsGetCurrentProcess();
 	DPRINT("Referencing current process %x\n", PsGetCurrentProcess());
 	return(STATUS_SUCCESS);
@@ -453,7 +490,10 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    if (Handle == NtCurrentThread() && 
        (ObjectType == PsThreadType || ObjectType == NULL))
      {
-	BODY_TO_HEADER(PsGetCurrentThread())->RefCount++;
+	ObReferenceObjectByPointer(PsGetCurrentThread(),
+				   THREAD_ALL_ACCESS,
+				   PsThreadType,
+				   UserMode);
 	*Object = PsGetCurrentThread();
 	CHECKPOINT;
 	return(STATUS_SUCCESS);
@@ -475,7 +515,10 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 	return(STATUS_INVALID_HANDLE);
      }
    ObjectBody = HandleRep->ObjectBody;
-   BODY_TO_HEADER(ObjectBody)->RefCount++;
+   ObReferenceObjectByPointer(ObjectBody,
+			      GENERIC_ALL,
+			      NULL,
+			      UserMode);
    GrantedAccess = HandleRep->GrantedAccess;
    KeReleaseSpinLock(&PsGetCurrentProcess()->Pcb.HandleTable.ListLock,
 		     oldIrql);
@@ -488,7 +531,8 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 	return(STATUS_OBJECT_TYPE_MISMATCH);
      }   
    
-   if (!(GrantedAccess & DesiredAccess))
+   if (!(GrantedAccess & DesiredAccess) &&
+       !((~GrantedAccess) & DesiredAccess))
      {
 	CHECKPOINT;
 	return(STATUS_ACCESS_DENIED);
@@ -528,12 +572,7 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
 
    Header = BODY_TO_HEADER(ObjectBody);
    
-   if ((Header->ObjectType != NULL) &&
-       (Header->ObjectType->Close != NULL))
-     {
-	Header->ObjectType->Close(ObjectBody, Header->HandleCount);
-     }
-   
+   DPRINT("Dereferencing %x\n", ObjectBody);
    ObDereferenceObject(ObjectBody);
    
    return STATUS_SUCCESS;

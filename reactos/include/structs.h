@@ -29,6 +29,7 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */ 
 
+
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
@@ -52,63 +53,14 @@ typedef union _ULARGE_INTEGER
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
+#include <ddk/setypes.h>
 
 typedef struct _LIST_ENTRY { 
   struct _LIST_ENTRY *Flink; 
   struct _LIST_ENTRY *Blink; 
 } LIST_ENTRY, *PLIST_ENTRY; 
 
-typedef DWORD ACCESS_MASK; 
 
-
-typedef struct _SID_IDENTIFIER_AUTHORITY { 
-  BYTE Value[6]; 
-} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY, 
-    *LPSID_IDENTIFIER_AUTHORITY; 
-
-
-typedef struct _ACL {
-  BYTE AclRevision; 
-  BYTE Sbz1; 
-  WORD AclSize; 
-  WORD AceCount; 
-  WORD Sbz2; 
-} ACL, *PACL; 
-
-
-typedef struct _SID {
-   BYTE  Revision;
-   BYTE  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   DWORD SubAuthority[ANYSIZE_ARRAY];
-} SID, *PSID;
-
-typedef WORD SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
-
-typedef struct _SECURITY_DESCRIPTOR {
-  BYTE  Revision;
-  BYTE  Sbz1;
-  SECURITY_DESCRIPTOR_CONTROL Control;
-  PSID Owner;
-  PSID Group;
-  PACL Sacl;
-  PACL Dacl;
-} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
-
-typedef struct _SECURITY_QUALITY_OF_SERVICE { 
-  DWORD Length; 
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
-  /* SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode; */
-  WINBOOL ContextTrackingMode; 
-  BOOLEAN EffectiveOnly; 
-} SECURITY_QUALITY_OF_SERVICE; 
-
-typedef LARGE_INTEGER LUID, *PLUID;
-
-typedef struct _TOKEN_SOURCE {
-  CHAR SourceName[8]; 
-  LUID SourceIdentifier; 
-} TOKEN_SOURCE, *PTOKEN_SOURCE; 
 
 typedef struct _PARTITION_INFORMATION { 
   BYTE PartitionType; 
@@ -151,11 +103,6 @@ typedef struct _GENERIC_MAPPING {
   ACCESS_MASK GenericExecute; 
   ACCESS_MASK GenericAll; 
 } GENERIC_MAPPING, *PGENERIC_MAPPING; 
-
-typedef struct _LUID_AND_ATTRIBUTES { 
-  LUID  Luid; 
-  DWORD Attributes; 
-} LUID_AND_ATTRIBUTES; 
 
 typedef struct _PRIVILEGE_SET { 
   DWORD PrivilegeCount; 
@@ -418,27 +365,7 @@ typedef struct tagACCEL {
   BYTE   fVirt; 
   WORD   key; 
   WORD   cmd; 
-} ACCEL, *LPACCEL; 
-
-typedef struct _ACE_HEADER {
-  BYTE AceType; 
-  BYTE AceFlags; 
-  WORD AceSize; 
-} ACE_HEADER; 
-
-typedef ACCESS_MASK REGSAM;
-
-typedef struct _ACCESS_ALLOWED_ACE {
-  ACE_HEADER Header; 
-  ACCESS_MASK Mask; 
-  DWORD SidStart; 
-} ACCESS_ALLOWED_ACE; 
-
-typedef struct _ACCESS_DENIED_ACE {
-  ACE_HEADER  Header; 
-  ACCESS_MASK Mask; 
-  DWORD       SidStart; 
-} ACCESS_DENIED_ACE; 
+} ACCEL, *LPACCEL;  
 
 typedef struct tagACCESSTIMEOUT {
   UINT  cbSize; 
@@ -2551,7 +2478,7 @@ typedef struct _JOB_INFO_1 {
   SYSTEMTIME Submitted; 
 } JOB_INFO_1; 
  
- 
+#if 0 
 typedef struct _JOB_INFO_2 { 
   DWORD      JobId; 
   LPTSTR     pPrinterName; 
@@ -2577,7 +2504,8 @@ typedef struct _JOB_INFO_2 {
   DWORD      Time; 
   DWORD      PagesPrinted ; 
 } JOB_INFO_2; 
- 
+#endif
+   
 typedef struct tagKERNINGPAIR { 
   WORD wFirst; 
   WORD wSecond; 
@@ -2619,11 +2547,13 @@ typedef struct tagLOCALESIGNATURE {
   DWORD  lsCsbDefault[2];
   DWORD  lsCsbSupported[2];
 } LOCALESIGNATURE; 
- 
+
+   #if 0
 typedef struct _LOCALGROUP_MEMBERS_INFO_0 {  
   PSID  lgrmi0_sid; 
 } LOCALGROUP_MEMBERS_INFO_0; 
- 
+ #endif
+   
 typedef struct _LOCALGROUP_MEMBERS_INFO_3 {  
   LPWSTR  lgrmi3_domainandname; 
 } LOCALGROUP_MEMBERS_INFO_3; 
@@ -3461,7 +3391,8 @@ typedef struct _PRINTER_INFO_1 {
   LPTSTR pName; 
   LPTSTR pComment; 
 } PRINTER_INFO_1, *PPRINTER_INFO_1, *LPPRINTER_INFO_1; 
- 
+
+   #if 0
 typedef struct _PRINTER_INFO_2 { 
   LPTSTR    pServerName; 
   LPTSTR    pPrinterName; 
@@ -3485,11 +3416,13 @@ typedef struct _PRINTER_INFO_2 {
   DWORD     cJobs; 
   DWORD     AveragePPM; 
 } PRINTER_INFO_2; 
- 
+
+   
 typedef struct _PRINTER_INFO_3 { 
   PSECURITY_DESCRIPTOR pSecurityDescriptor; 
 } PRINTER_INFO_3; 
- 
+ #endif
+   
 typedef struct _PRINTER_INFO_4 { 
   LPTSTR  pPrinterName; 
   LPTSTR  pServerName; 

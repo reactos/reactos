@@ -42,7 +42,13 @@ VOID KeFreeGdtSelector(ULONG Entry)
 {
    KIRQL oldIrql;
    
-   DPRINT("KeFreeGdtSelector(Entry %x)\n",Entry);
+   DPRINT("KeFreeGdtSelector(Entry %d)\n",Entry);
+   
+   if (Entry > (6 + NR_TASKS))
+     {
+	DPRINT1("Entry too large\n");
+	KeBugCheck(0);
+     }
    
    KeAcquireSpinLock(&GdtLock, &oldIrql);
    KiGdt[Entry*4] = 0;

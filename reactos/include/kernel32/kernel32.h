@@ -33,3 +33,7 @@ BOOL KERNEL32_AnsiToUnicode(PWSTR DestStr,
 			    LPCSTR SrcStr,
 			    ULONG MaxLen);
 PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength);
+
+BOOLEAN IsConsoleHandle(HANDLE Handle);
+
+WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle);

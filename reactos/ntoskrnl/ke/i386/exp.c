@@ -325,15 +325,18 @@ asmlinkage void exception_handler(unsigned int edi,
      }
    
    DbgPrint("\n");
-   DbgPrint("Killing current task\n");
-//   for(;;);
-   KeLowerIrql(PASSIVE_LEVEL);
-   if ((cs&0xffff) == USER_CS)
+   if ((cs&0xffff) == USER_CS &&
+       eip < KERNEL_BASE)
      {
-	ZwTerminateProcess(NtCurrentProcess(),
-			   STATUS_NONCONTINUABLE_EXCEPTION);
-     }
-   
+	DbgPrint("Killing current task\n");
+	//   for(;;);
+	KeLowerIrql(PASSIVE_LEVEL);
+	if ((cs&0xffff) == USER_CS)
+	  {
+	     ZwTerminateProcess(NtCurrentProcess(),
+				STATUS_NONCONTINUABLE_EXCEPTION);
+	  }
+     }   
    for(;;);
 }
 

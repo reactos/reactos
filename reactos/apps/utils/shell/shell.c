@@ -124,7 +124,7 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 			cmdline,
 			NULL,
 			NULL,
-			TRUE,
+			FALSE,
 			((TRUE == detached)
 			 ? DETACHED_PROCESS
 			: CREATE_NEW_CONSOLE
@@ -162,9 +162,11 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 	  {
 	     	debug_printf("ProcessInformation.hThread %x\n",
 			     ProcessInformation.hThread);
-	     CloseHandle(ProcessInformation.hThread);
+//	     CloseHandle(ProcessInformation.hThread);
 	     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 	     CloseHandle(ProcessInformation.hProcess);
+	     debug_printf("Thandle %x\n", ProcessInformation.hThread);
+	     CloseHandle(ProcessInformation.hThread);
 	  }
      }
    return(ret);

@@ -78,17 +78,19 @@ VOID PsReapThreads(VOID)
 	     PEPROCESS Process = current->ThreadsProcess; 
 	     NTSTATUS Status = current->ExitStatus;
 	     
+	     DPRINT("PsProcessType %x\n", PsProcessType);
 	     ObReferenceObjectByPointer(Process, 
 					0, 
 					PsProcessType, 
-					KernelMode );
+					KernelMode);
 	     DPRINT("Reaping thread %x\n", current);
+	     DPRINT("Ref count %d\n", ObGetReferenceCount(Process));
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
 	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-	     if(IsListEmpty( &Process->Pcb.ThreadListHead))
+	     if(IsListEmpty(&Process->Pcb.ThreadListHead))
 	       {
 		  /* 
 		   * TODO: Optimize this so it doesnt jerk the IRQL around so 
@@ -99,6 +101,7 @@ VOID PsReapThreads(VOID)
 		  PiTerminateProcess(Process, Status);
 		  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 	       }
+	     DPRINT("Ref count %d\n", ObGetReferenceCount(Process));
 	     ObDereferenceObject(Process);
 	     current_entry = PiThreadListHead.Flink;
 	  }
@@ -129,6 +132,9 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    
+   DPRINT("Type %x\n", 
+	   BODY_TO_HEADER(CurrentThread->ThreadsProcess)->ObjectType);
+   
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    KeBugCheck(0);
 }
@@ -145,10 +151,15 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
      {
 	RemoveEntryList(&Thread->Tcb.QueueListEntry);
      }
+   RemoveEntryList(&Thread->Tcb.ProcessThreadListEntry);
    Thread->Tcb.State = THREAD_STATE_TERMINATED_2;
    Thread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   if (IsListEmpty(&Thread->ThreadsProcess->Pcb.ThreadListHead))
+     {
+	PiTerminateProcess(Thread->ThreadsProcess, ExitStatus);
+     }
    ObDereferenceObject(Thread);
 }
 
@@ -160,13 +171,20 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
    DPRINT("PsTerminateProcess(Process %x, ExitStatus %x)\n",
           Process, ExitStatus);
    
+   if (Process->Pcb.ProcessState == PROCESS_STATE_TERMINATED)
+     {
+	return(STATUS_SUCCESS);
+     }
+   
    PiTerminateProcessThreads(Process, ExitStatus);
    ObCloseAllHandles(Process);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
+   DPRINT("Type %x\n", BODY_TO_HEADER(Process)->ObjectType);
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeLowerIrql(oldlvl);
+   DPRINT("Type %x\n", BODY_TO_HEADER(Process)->ObjectType);
    return(STATUS_SUCCESS);
 }
 
@@ -193,7 +211,9 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
    PiTerminateProcess(Process, ExitStatus);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {
+      DPRINT("Type %x\n", BODY_TO_HEADER(Process)->ObjectType);
       ObDereferenceObject(Process);
+      DPRINT("Type %x\n", BODY_TO_HEADER(Process)->ObjectType);
       PsTerminateCurrentThread(ExitStatus);
    }
    ObDereferenceObject(Process);

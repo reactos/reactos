@@ -304,9 +304,10 @@ typedef char *PTSTR;
 #endif /* UNICODE */
 
 /*
-typedef PWSTR;
-typedef REGSAM;
-*/
+ typedef PWSTR;
+ */
+typedef PVOID REGSAM;
+
 
 typedef short RETCODE;
 

@@ -80,7 +80,10 @@ typedef struct _OBJECT_TYPE
    
    /*
     */
-   VOID (*Security)(VOID);
+   NTSTATUS (*Security)(PVOID Object, 
+			ULONG InfoClass,
+			PVOID Info,
+			PULONG InfoLength);
    
    /*
     */

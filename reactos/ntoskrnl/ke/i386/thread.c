@@ -140,7 +140,7 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
  * NOTE: The thread had better not be running when this is called
  */
 {
-   KeFreeGdtSelector(Thread->Tcb.Context.nr);
+   KeFreeGdtSelector(Thread->Tcb.Context.nr / 8);
    ExFreePool(Thread->Tcb.Context.KernelStackBase);
    if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
      {

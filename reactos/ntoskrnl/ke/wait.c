@@ -19,6 +19,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <internal/ob.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -600,16 +601,21 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
 				      UserMode,
 				      &ObjectPtr,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
+   
+   DPRINT("ObjectPtr %x\n", ObjectPtr);
    
    Status = KeWaitForSingleObject(ObjectPtr,
 				  UserMode,
 				  UserMode,
 				  Alertable,
 				  Time);
+   
+   DPRINT("Returned from wait (status is %x) ObjectPtr %x(%d)\n", 
+	   Status, ObjectPtr, ObGetReferenceCount(ObjectPtr));
    
    ObDereferenceObject(ObjectPtr);
    

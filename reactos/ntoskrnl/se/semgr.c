@@ -17,66 +17,10 @@
 /* FUNCTIONS ***************************************************************/
 
 
-NTSTATUS
-STDCALL
-NtQueryInformationToken (
-	IN	HANDLE			TokenHandle,     
-	IN	TOKEN_INFORMATION_CLASS	TokenInformationClass,
-	OUT	PVOID			TokenInformation,  
-  	IN	ULONG			TokenInformationLength,
-  	OUT	PULONG			ReturnLength
-	)
-{
-	UNIMPLEMENTED;
-}
 
-
-NTSTATUS
-STDCALL
-NtQuerySecurityObject (
-	IN	HANDLE	Object,
-	IN	CINT	SecurityObjectInformationClass,
-	OUT	PVOID	SecurityObjectInformation,
-	IN	ULONG	Length,
-	OUT	PULONG	ReturnLength
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtSetSecurityObject(
-	IN	HANDLE			Handle, 
-	IN	SECURITY_INFORMATION	SecurityInformation, 
-	IN	PSECURITY_DESCRIPTOR	SecurityDescriptor 
-	)
-{
-   UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtSetInformationToken(
-	IN	HANDLE			TokenHandle,            
-	IN	TOKEN_INFORMATION_CLASS	TokenInformationClass,
-	OUT	PVOID			TokenInformation,       
-	IN	ULONG			TokenInformationLength   
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtPrivilegeCheck (
-	IN	HANDLE		ClientToken,             
-	IN	PPRIVILEGE_SET	RequiredPrivileges,  
-	IN	PBOOLEAN	Result                    
-	)
+NTSTATUS STDCALL NtPrivilegeCheck (IN	HANDLE		ClientToken,
+				   IN	PPRIVILEGE_SET	RequiredPrivileges,  
+				   IN	PBOOLEAN	Result)
 {
    UNIMPLEMENTED;
 }
@@ -155,19 +99,6 @@ NtOpenThreadToken (
 }
 
 
-NTSTATUS
-STDCALL
-NtDuplicateToken (
-	IN	HANDLE				ExistingToken, 
-	IN	ACCESS_MASK			DesiredAccess, 
-	IN	POBJECT_ATTRIBUTES		ObjectAttributes,
-	IN	SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel,
-	IN	TOKEN_TYPE			TokenType,  
-	OUT	PHANDLE				NewToken
-	)
-{
-	UNIMPLEMENTED;
-}
 
 
 NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
@@ -178,37 +109,6 @@ NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
    UNIMPLEMENTED;
 }
 
-
-NTSTATUS
-STDCALL
-NtCreateToken (
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtAllocateLocallyUniqueId (
-	OUT	LUID	* LocallyUniqueId
-	)
-{
-	UNIMPLEMENTED;
-}
 
 
 NTSTATUS
@@ -299,34 +199,135 @@ NtDeleteObjectAuditAlarm (
  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
-				     ULONG Revision)
+VOID SeReleaseSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-   UNIMPLEMENTED;
+   
 }
 
-ULONG RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
+VOID SeCaptureSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-   UNIMPLEMENTED;
+   PEPROCESS Process;
+   ULONG a;
+   ULONG b;
+   
+   Process = PsGetCurrentThread()->ThreadsProcess;
+   
+   SubjectContext->ProcessAuditId = Process;
+   SubjectContext->ClientToken = 
+     PsReferenceImpersonationToken(PsGetCurrentThread(),
+				   &a,
+				   &b,
+				   &SubjectContext->ImpersonationLevel);
+   SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
 
-NTSTATUS RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
-				      BOOLEAN DaclPresent,
-				      PACL Dacl,
-				      BOOLEAN DaclDefaulted)
+BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
+			  PLUID_AND_ATTRIBUTES Privileges,
+			  ULONG PrivilegeCount,
+			  ULONG PrivilegeControl,
+			  KPROCESSOR_MODE PreviousMode)
 {
-   UNIMPLEMENTED;
-}
+   ULONG i;
+   PLUID_AND_ATTRIBUTES Current;
+   ULONG j;
+   ULONG k;
+   
+   if (PreviousMode == KernelMode)
+     {
+	return(TRUE);
+     }
+   
+   j = 0;
+   if (PrivilegeCount != 0)
+     {
+	k = PrivilegeCount;
+	do
+	  {
+	     i = Token->PrivilegeCount;
+	     Current = Token->Privileges;
+	     for (i = 0; i < Token->PrivilegeCount; i++)
+	       {
+		  if (!(Current[i].Attributes & 2) &&
+		      Privileges[i].Luid.u.LowPart == 
+		      Current[i].Luid.u.LowPart &&
+		      Privileges[i].Luid.u.HighPart == 
+		      Current[i].Luid.u.HighPart)
+		    {
+		       Privileges[i].Attributes = 
+			 Privileges[i].Attributes | 0x80;
+		       j++;
+		       break;
+		    }
+	       }
+	     k--;
+	  } while (k > 0);
+     }
+   
+   if ((PrivilegeControl & 0x2) && PrivilegeCount == j)       
+     {
+	return(TRUE);
+     }
+       
+   if (j > 0 && !(PrivilegeControl & 0x2))
+     {
+	return(TRUE);
+     }
 
-BOOLEAN RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
+   return(FALSE);
+}
+   
+BOOLEAN SePrivilegeCheck(PPRIVILEGE_SET Privileges,
+			 PSECURITY_SUBJECT_CONTEXT SubjectContext,
+			 KPROCESSOR_MODE PreviousMode)
 {
-   UNIMPLEMENTED;
+   PACCESS_TOKEN Token = NULL;
+   
+   if (SubjectContext->ClientToken == NULL)
+     {
+	Token = SubjectContext->PrimaryToken;
+     }
+   else
+     {
+	Token = SubjectContext->ClientToken;
+	if (SubjectContext->ImpersonationLevel < 2)
+	  {
+	     return(FALSE);
+	  }
+     }
+   
+   return(SepPrivilegeCheck(Token,
+			    Privileges->Privilege,
+			    Privileges->PrivilegeCount,
+			    Privileges->Control,
+			    PreviousMode));			    
 }
 
 BOOLEAN SeSinglePrivilegeCheck(LUID PrivilegeValue,
 			       KPROCESSOR_MODE PreviousMode)
 {
-   UNIMPLEMENTED;
+   SECURITY_SUBJECT_CONTEXT SubjectContext;
+   BOOLEAN r;
+   PRIVILEGE_SET Priv;
+   
+   SeCaptureSubjectContext(&SubjectContext);
+   
+   Priv.PrivilegeCount = 1;
+   Priv.Control = 1;
+   Priv.Privilege[0].Luid = PrivilegeValue;
+   Priv.Privilege[0].Attributes = 0;
+   
+   r = SePrivilegeCheck(&Priv,
+			&SubjectContext,
+			PreviousMode);
+      
+   if (PreviousMode != KernelMode)
+     {
+/*	SePrivilegeServiceAuditAlarm(0,
+				     &SubjectContext,
+				     &PrivilegeValue);*/
+     }
+   SeReleaseSubjectContext(&SubjectContext);
+   return(r);
 }
 
 NTSTATUS SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
@@ -358,12 +359,12 @@ BOOLEAN SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  * FUNCTION: Determines whether the requested access rights can be granted
  * to an object protected by a security descriptor and an object owner
  * ARGUMENTS:
- *      SecurityDescriptor = Security descriptor protected the object
+ *      SecurityDescriptor = Security descriptor protecting the object
  *      SubjectSecurityContext = Subject's captured security context
  *      SubjectContextLocked = Indicates the user's subject context is locked
  *      DesiredAccess = Access rights the caller is trying to acquire
  *      PreviouslyGrantedAccess = Specified the access rights already granted
- *      Priveleges = ?
+ *      Privileges = ?
  *      GenericMapping = Generic mapping associated with the object
  *      AccessMode = Access mode used for the check
  *      GrantedAccess (OUT) = On return specifies the access granted
@@ -371,7 +372,67 @@ BOOLEAN SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  * RETURNS: If access was granted, returns TRUE
  */
 {
-   UNIMPLEMENTED;
+   ULONG i;
+   PACL Dacl;
+   BOOLEAN Present;
+   BOOLEAN Defaulted;
+   NTSTATUS Status;
+   PACE CurrentAce;
+   PSID Sid;
+   ACCESS_MASK CurrentAccess;
+   
+   CurrentAccess = PreviouslyGrantedAccess;
+   
+   /*    
+    * Ignore the SACL for now
+    */
+   
+   /*
+    * Check the DACL
+    */
+   Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
+					 &Present,
+					 &Dacl,
+					 &Defaulted);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   CurrentAce = (PACE)(Dacl + 1);
+   for (i = 0; i < Dacl->AceCount; i++)
+     {
+	Sid = (PSID)(CurrentAce + 1);
+	if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+	  {
+	     if (RtlEqualSid(Sid, NULL))
+	       {
+		  *AccessStatus = STATUS_ACCESS_DENIED;
+		  *GrantedAccess = 0;
+		  return(STATUS_SUCCESS);
+	       }
+	  }
+	if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+	  {
+	     if (RtlEqualSid(Sid, NULL))
+	       {
+		  CurrentAccess = CurrentAccess | 
+		    CurrentAce->Header.AccessMask;		  
+	       }
+	  }
+     }
+   if (!(CurrentAccess & DesiredAccess) &&
+       !((~CurrentAccess) & DesiredAccess))
+     {
+	*AccessStatus = STATUS_ACCESS_DENIED;	
+     }
+   else
+     {
+	*AccessStatus = STATUS_SUCCESS;
+     }
+   *GrantedAccess = CurrentAccess;
+   
+   return(STATUS_SUCCESS);
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.40 1999/12/13 22:04:35 dwelch Exp $
+# $Id: makefile_rex,v 1.41 1999/12/26 15:50:47 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -45,7 +45,8 @@ IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
 	     io/fs.o io/vpb.o io/buildirp.o io/flush.o io/dir.o io/iocomp.o \
 	     io/mailslot.o io/npipe.o io/lock.o io/page.o io/cleanup.o
 
-OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o ob/ntobj.o ob/dirobj.o
+OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o ob/ntobj.o ob/dirobj.o \
+             ob/security.o
 
 PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o ps/kill.o \
              ps/tinfo.o ps/create.o
@@ -54,7 +55,7 @@ EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
              ex/callback.o ex/napi.o ex/power.o ex/sysinfo.o ex/locale.o \
              ex/stamp.o ex/init.o
 
-SE_OBJECTS = se/semgr.o
+SE_OBJECTS = se/semgr.o se/acl.o se/sid.o se/sd.o se/token.o se/luid.o
 
 CM_OBJECTS = cm/registry.o
 
