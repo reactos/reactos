@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.36 2001/08/03 17:15:00 ekohl Exp $
+/* $Id: create.c,v 1.37 2001/08/07 14:01:42 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -292,7 +292,7 @@ PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 }
 #endif
 
-VOID
+VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
 {
    KIRQL oldIrql;
@@ -311,7 +311,7 @@ PiDeleteThread(PVOID ObjectBody)
    DPRINT("PiDeleteThread() finished\n");
 }
 
-VOID
+VOID STDCALL
 PiCloseThread(PVOID ObjectBody,
 	      ULONG HandleCount)
 {
@@ -448,7 +448,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 					      &TebBase,
 					      0,
 					      &TebSize,
-					      MEM_COMMIT,
+					      MEM_RESERVE | MEM_COMMIT,
 					      PAGE_READWRITE);
 	     if (NT_SUCCESS(Status))
 	       {
@@ -516,7 +516,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtCreateThread (PHANDLE		ThreadHandle,
 		ACCESS_MASK		DesiredAccess,
 		POBJECT_ATTRIBUTES	ObjectAttributes,
@@ -533,42 +533,33 @@ NtCreateThread (PHANDLE		ThreadHandle,
    DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
 	  ThreadHandle,ThreadContext);
    
-   Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
-			       DesiredAccess,ObjectAttributes, FALSE);
+   Status = PsInitializeThread(ProcessHandle,
+			       &Thread,
+			       ThreadHandle,
+			       DesiredAccess,
+			       ObjectAttributes,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-
-#if 0
-   Status = NtWriteVirtualMemory(ProcessHandle,
-				 (PVOID)(((ULONG)ThreadContext->Esp) - 8),
-				 &ThreadContext->Eip,
-				 sizeof(ULONG),
-				 &Length);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT1("NtWriteVirtualMemory failed\n");
-	KeBugCheck(0);
-     }
-   ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
-#endif
    
-   Status = Ke386InitThreadWithContext(&Thread->Tcb, ThreadContext);
+   Status = Ke386InitThreadWithContext(&Thread->Tcb,
+				       ThreadContext);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-
-   Status = PsCreateTeb (ProcessHandle,
-                         &TebBase,
-                         Thread,
-                         InitialTeb);
+   
+   Status = PsCreateTeb(ProcessHandle,
+                        &TebBase,
+                        Thread,
+                        InitialTeb);
    if (!NT_SUCCESS(Status))
      {
         return(Status);
      }
-
+   
    /* Attention: TebBase is in user memory space */
    Thread->Tcb.Teb = TebBase;
 
@@ -600,7 +591,7 @@ NtCreateThread (PHANDLE		ThreadHandle,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 PsCreateSystemThread(PHANDLE ThreadHandle,
 		     ACCESS_MASK DesiredAccess,
 		     POBJECT_ATTRIBUTES ObjectAttributes,
@@ -631,15 +622,21 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    DPRINT("PsCreateSystemThread(ThreadHandle %x, ProcessHandle %x)\n",
 	    ThreadHandle,ProcessHandle);
    
-   Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
-			       DesiredAccess,ObjectAttributes, FALSE);
+   Status = PsInitializeThread(ProcessHandle,
+			       &Thread,
+			       ThreadHandle,
+			       DesiredAccess,
+			       ObjectAttributes,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
    Thread->StartAddress=StartRoutine;
-   Status = Ke386InitThread(&Thread->Tcb, StartRoutine, StartContext);
+   Status = Ke386InitThread(&Thread->Tcb,
+			    StartRoutine,
+			    StartContext);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.65 2001/06/16 14:11:15 ekohl Exp $
+/* $Id: process.c,v 1.66 2001/08/07 14:01:42 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -88,6 +88,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
    return(NextProcess);
 }
 
+
 NTSTATUS STDCALL 
 NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
@@ -111,6 +112,7 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
    return(Status);
 }
 
+
 PACCESS_TOKEN STDCALL
 PsReferencePrimaryToken(PEPROCESS Process)
 {
@@ -120,6 +122,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
 			      UserMode);
    return(Process->Token);
 }
+
 
 NTSTATUS
 PsOpenTokenOfProcess(HANDLE ProcessHandle,
@@ -142,6 +145,7 @@ PsOpenTokenOfProcess(HANDLE ProcessHandle,
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
+
 
 VOID 
 PiKillMostProcesses(VOID)
@@ -169,7 +173,9 @@ PiKillMostProcesses(VOID)
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 }
 
-VOID PsInitProcessManagment(VOID)
+
+VOID
+PsInitProcessManagment(VOID)
 {
 
    PKPROCESS KProcess;
@@ -249,7 +255,9 @@ VOID PsInitProcessManagment(VOID)
 		  &SystemProcessHandle);
 }
 
-VOID PiDeleteProcess(PVOID ObjectBody)
+
+VOID
+PiDeleteProcess(PVOID ObjectBody)
 {
    KIRQL oldIrql;
    
@@ -263,9 +271,10 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 }
 
 
-static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
-			    PVOID ImageBase,
-			    PVOID* RPeb)
+static NTSTATUS
+PsCreatePeb(HANDLE ProcessHandle,
+	    PVOID ImageBase,
+	    PVOID* RPeb)
 {
    NTSTATUS Status;
    PVOID PebBase;
@@ -282,14 +291,14 @@ static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
 				    &PebBase,
 				    0,
 				    &PebSize,
-				    MEM_COMMIT,
+				    MEM_RESERVE | MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
-   ZwWriteVirtualMemory(ProcessHandle,
+   NtWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
 			&Peb,
 			sizeof(Peb),
