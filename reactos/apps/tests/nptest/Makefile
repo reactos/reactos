@@ -12,8 +12,7 @@ PROGS = npserver.exe npclient.exe
 
 BASE_CFLAGS = -I$(PATH_TO_TOP)/include
 
-LIBS = $(SDK_PATH_LIB)/crtdll.a \
-  $(SDK_PATH_LIB)/kernel32.a
+LIBS = $(SDK_PATH_LIB)/kernel32.a
 
 all: $(PROGS)
 

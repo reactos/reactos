@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2001/08/21 20:13:03 chorns Exp $
+# $Id: Makefile,v 1.4 2001/10/16 22:45:39 phreak Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = telnet
 
-TARGET_SDKLIBS = crtdll.a kernel32.a ws2_32.a
+TARGET_SDKLIBS = kernel32.a ws2_32.a
 
 TARGET_OBJECTS = \
 	ansi.o		\

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001/08/21 20:13:05 chorns Exp $
+# $Id: Makefile,v 1.5 2001/10/16 22:45:40 phreak Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = vmtest
 
-TARGET_SDKLIBS = ntdll.a kernel32.a crtdll.a
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
