@@ -22,7 +22,7 @@ APPS = 	calc \
 	notevil \
 	sysutils \
 	sysutils$(SEP)ctm \
-	net$(SEP)finger \
+	#net$(SEP)finger \
 	net$(SEP)ncftp \
 	net$(SEP)ping \
 	regedt32 \
