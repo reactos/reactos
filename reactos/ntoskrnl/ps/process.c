@@ -1738,7 +1738,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         }
         else
         {
-          HANDLE PortHandle;
+          HANDLE PortHandle = NULL;
 
           /* make a safe copy of the buffer on the stack */
           _SEH_TRY
@@ -1826,7 +1826,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         }
         else
         {
-          HANDLE PortHandle;
+          HANDLE PortHandle = NULL;
 
           /* make a safe copy of the buffer on the stack */
           _SEH_TRY
@@ -1895,7 +1895,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         }
         else
         {
-          HANDLE TokenHandle;
+          HANDLE TokenHandle = NULL;
 
           /* make a safe copy of the buffer on the stack */
           _SEH_TRY
