@@ -53,8 +53,8 @@ SHOW_USED_FILES        = YES
 # configuration options related to warning and progress messages
 #---------------------------------------------------------------------------
 QUIET                  = NO
-WARNINGS               = YES
-WARN_IF_UNDOCUMENTED   = YES
+WARNINGS               = NO
+WARN_IF_UNDOCUMENTED   = NO
 WARN_IF_DOC_ERROR      = YES
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LOGFILE           = 
@@ -115,7 +115,7 @@ TOC_EXPAND             = NO
 DISABLE_INDEX          = NO
 ENUM_VALUES_PER_LINE   = 4
 GENERATE_TREEVIEW      = YES
-TREEVIEW_WIDTH         = 250
+TREEVIEW_WIDTH         = 240
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
