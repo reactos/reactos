@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2002/03/21 22:49:24 hyperion Exp $
+# $Id: Makefile,v 1.7 2002/03/23 18:13:33 hyperion Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -28,7 +28,7 @@ TARGET_CFLAGS =\
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CLEAN = $(OBJECTS)
+TARGET_CLEAN = $(OBJECTS) csrapi.a
 
 include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
