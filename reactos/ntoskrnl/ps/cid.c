@@ -1,4 +1,4 @@
-/* $Id: cid.c,v 1.2 2004/10/12 20:00:40 navaraf Exp $
+/* $Id: cid.c,v 1.3 2004/11/27 19:41:55 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -66,7 +66,7 @@ PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle)
   if(cido != NULL)
   {
     cido->ref = 1;
-    cido->Lock = 0;
+    ExInitializeFastMutex(&cido->Lock);
     cido->Obj.Object = Object;
 
     KeAcquireSpinLock(&CidLock, &oldIrql);
@@ -147,35 +147,16 @@ PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
   
   if(Found != NULL)
   {
-    ULONG Attempt = 0;
-    for (;;)
-    {
-      if(InterlockedCompareExchange(&Found->Lock, 1, 0) == 0)
-      {
-        /* got the lock, bail */
-        break;
-      }
-
-      if(Attempt++ >= 1)
-      {
-        /* wait a little longer */
-        KeDelayExecutionThread(KernelMode, FALSE, &LongDelay);
-      }
-      else
-      {
-        /* try again, just wait shortly */
-        KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay);
-      }
-    }
+    ExAcquireFastMutex(&Found->Lock);
   }
-  
+
   return Found;
 }
 
 VOID
 PsUnlockCidObject(PCID_OBJECT CidObject)
 {
-  InterlockedExchange(&CidObject->Lock, 0);
+  ExReleaseFastMutex(&CidObject->Lock);
   PspDereferenceCidObject(CidObject);
 }
 
