@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.86 2003/09/10 18:18:25 gvg Exp $
+/* $Id: defwnd.c,v 1.87 2003/09/11 08:32:06 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1691,6 +1691,52 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
     return 0;
 }
 
+/***********************************************************************
+ *           DefWndControlColor
+ *
+ * Default colors for control painting.
+ */
+static HBRUSH
+DefWndControlColor(HDC hDC, UINT ctlType)
+{
+  if (CTLCOLOR_SCROLLBAR == ctlType)
+    {
+      HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
+      COLORREF bk = GetSysColor(COLOR_3DHILIGHT);
+      SetTextColor(hDC, GetSysColor(COLOR_3DFACE));
+      SetBkColor(hDC, bk);
+
+      /* if COLOR_WINDOW happens to be the same as COLOR_3DHILIGHT
+       * we better use 0x55aa bitmap brush to make scrollbar's background
+       * look different from the window background.
+       */
+      if (bk == GetSysColor(COLOR_WINDOW))
+	{
+#if 0 /* FIXME */
+	  return CACHE_GetPattern55AABrush();
+#else
+	  return NULL;
+#endif
+	}
+      UnrealizeObject(hb);
+      return hb;
+    }
+
+  SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
+
+  if ((CTLCOLOR_EDIT == ctlType) || (CTLCOLOR_LISTBOX == ctlType))
+    {
+      SetBkColor(hDC, GetSysColor(COLOR_WINDOW));
+    }
+  else
+    {
+      SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
+      return GetSysColorBrush(COLOR_3DFACE);
+    }
+
+  return GetSysColorBrush(COLOR_WINDOW);
+}
+
 
 LRESULT STDCALL
 User32DefWindowProc(HWND hWnd,
@@ -1952,8 +1998,6 @@ User32DefWindowProc(HWND hWnd,
             return (1);
         }
 
-        /* FIXME: Implement colour controls. */
-/*
         case WM_CTLCOLORMSGBOX:
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORLISTBOX:
@@ -1961,8 +2005,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_CTLCOLORDLG:
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORSCROLLBAR:
-        case WM_CTLCOLOR:
-*/
+	    return (LRESULT) DefWndControlColor((HDC)wParam, Msg - WM_CTLCOLORMSGBOX);
 
         case WM_SETCURSOR:
         {
