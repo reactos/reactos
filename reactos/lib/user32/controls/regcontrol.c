@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.15 2003/11/11 20:28:20 gvg Exp $
+/* $Id: regcontrol.c,v 1.16 2003/11/26 22:02:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -57,9 +57,9 @@ void ControlsInit(void)
 
   RegisterBuiltinClass(&DIALOG_builtin_class);
   RegisterBuiltinClass(&POPUPMENU_builtin_class);
-#if 0
   RegisterBuiltinClass(&COMBO_builtin_class);
   RegisterBuiltinClass(&COMBOLBOX_builtin_class);
+#if 0
   RegisterBuiltinClass(&DESKTOP_builtin_class);
 #endif
   RegisterBuiltinClass(&MDICLIENT_builtin_class);
@@ -70,7 +70,6 @@ void ControlsInit(void)
   RegisterBuiltinClass(&BUTTON_builtin_class);
   RegisterBuiltinClass(&LISTBOX_builtin_class);
   RegisterBuiltinClass(&EDIT_builtin_class);
-  RegisterBuiltinClass(&COMBO_builtin_class);
   RegisterBuiltinClass(&ICONTITLE_builtin_class);
   RegisterBuiltinClass(&STATIC_builtin_class);
 }
