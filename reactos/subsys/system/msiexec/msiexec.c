@@ -2,6 +2,7 @@
  * msiexec.exe implementation
  *
  * Copyright 2004 Vincent Béron
+ * Copyright 2005 Mike McCormack
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,8 +27,15 @@
 #include "msiexec.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
+
+struct string_list
+{
+	struct string_list *next;
+	WCHAR str[1];
+};
 
 static const char UsageStr[] =
 "Usage:\n"
@@ -58,8 +66,18 @@ static const char UsageStr[] =
 "\n"
 "Copyright 2004 Vincent Béron\n";
 
-static const char ActionAdmin[] = "ACTION=ADMIN ";
-static const char RemoveAll[] = "REMOVE=ALL ";
+static const WCHAR ActionAdmin[] = {
+   'A','C','T','I','O','N','=','A','D','M','I','N',' ',0 };
+static const WCHAR RemoveAll[] = {
+   'R','E','M','O','V','E','=','A','L','L',' ',0 };
+
+static const WCHAR InstallRunOnce[] = {
+   'S','o','f','t','w','a','r','e','\\',
+   'M','i','c','r','o','s','o','f','t','\\',
+   'W','i','n','d','o','w','s','\\',
+   'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+   'I','n','s','t','a','l','l','e','r','\\',
+   'R','u','n','O','n','c','e','E','n','t','r','i','e','s',0};
 
 static void ShowUsage(int ExitCode)
 {
@@ -67,77 +85,187 @@ static void ShowUsage(int ExitCode)
 	ExitProcess(ExitCode);
 }
 
-static BOOL GetProductCode(LPCSTR str, LPCSTR *PackageName, LPGUID *ProductCode)
+static BOOL IsProductCode(LPWSTR str)
 {
-	BOOL ret = FALSE;
-	int len = 0;
-	LPWSTR wstr = NULL;
+	GUID ProductCode;
 
-	if(strlen(str) == 38)
-	{
-		len = MultiByteToWideChar(CP_ACP, 0, str, -1, wstr, 0);
-		wstr = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
-		ret = (CLSIDFromString(wstr, *ProductCode) == NOERROR);
-		HeapFree(GetProcessHeap(), 0, wstr);
-		wstr = NULL;
-	}
+	if(lstrlenW(str) != 38)
+		return FALSE;
+	return ( (CLSIDFromString(str, &ProductCode) == NOERROR) );
 
-	if(!ret)
-	{
-		HeapFree(GetProcessHeap(), 0, *ProductCode);
-		*ProductCode = NULL;
-		*PackageName = str;
-	}
-
-	return ret;
 }
 
-static VOID StringListAppend(LPSTR *StringList, LPCSTR StringAppend)
+static VOID StringListAppend(struct string_list **list, LPCWSTR str)
 {
-	LPSTR TempStr = HeapReAlloc(GetProcessHeap(), 0, *StringList, HeapSize(GetProcessHeap(), 0, *StringList)+strlen(StringAppend));
-	if(!TempStr)
+	struct string_list *entry;
+	DWORD size;
+
+	size = sizeof *entry + lstrlenW(str) * sizeof (WCHAR);
+	entry = HeapAlloc(GetProcessHeap(), 0, size);
+	if(!entry)
 	{
 		WINE_ERR("Out of memory!\n");
 		ExitProcess(1);
 	}
-	*StringList = TempStr;
-	strcat(*StringList, StringAppend);
+	lstrcpyW(entry->str, str);
+	entry->next = NULL;
+
+	/*
+	 * Ignoring o(n^2) time complexity to add n strings for simplicity,
+	 *  add the string to the end of the list to preserve the order.
+	 */
+	while( *list )
+		list = &(*list)->next;
+	*list = entry;
 }
 
-static VOID StringCompareRemoveLast(LPSTR String, CHAR character)
+static LPWSTR build_properties(struct string_list *property_list)
 {
-	int len = strlen(String);
-	if(len && String[len-1] == character) String[len-1] = 0;
+	struct string_list *list;
+	LPWSTR ret, p, value;
+	DWORD len;
+	BOOL needs_quote;
+
+	if(!property_list)
+		return NULL;
+
+	/* count the space we need */
+	len = 1;
+	for(list = property_list; list; list = list->next)
+		len += lstrlenW(list->str) + 3;
+
+	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+
+	/* add a space before each string, and quote the value */
+	p = ret;
+	for(list = property_list; list; list = list->next)
+	{
+		value = strchrW(list->str,'=');
+		if(!value)
+			continue;
+		len = value - list->str;
+		*p++ = ' ';
+		strncpyW(p, list->str, len);
+		p += len;
+		*p++ = '=';
+
+		/* check if the value contains spaces and maybe quote it */
+		value++;
+		needs_quote = strchrW(value,' ') ? 1 : 0;
+		if(needs_quote)
+			*p++ = '"';
+		len = lstrlenW(value);
+		strncpyW(p, value, len);
+		p += len;
+		if(needs_quote)
+			*p++ = '"';
+	}
+	*p = 0;
+
+	WINE_TRACE("properties -> %s\n", wine_dbgstr_w(ret) );
+
+	return ret;
 }
 
-static INT MSIEXEC_lstrncmpiA(LPCSTR str1, LPCSTR str2, INT size)
+static LPWSTR build_transforms(struct string_list *transform_list)
 {
-    INT ret;
+	struct string_list *list;
+	LPWSTR ret, p;
+	DWORD len;
 
-    if ((str1 == NULL) && (str2 == NULL)) return 0;
-    if (str1 == NULL) return -1;
-    if (str2 == NULL) return 1;
+	/* count the space we need */
+	len = 1;
+	for(list = transform_list; list; list = list->next)
+		len += lstrlenW(list->str) + 1;
 
-    ret = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, str1, size, str2, -1);
-    if (ret) ret -= 2;
+	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
 
-    return ret;
+	/* add all the transforms with a semicolon between each one */
+	p = ret;
+	for(list = transform_list; list; list = list->next)
+	{
+		len = lstrlenW(list->str);
+		lstrcpynW(p, list->str, len );
+		p += len;
+		if(list->next)
+			*p++ = ';';
+	}
+	*p = 0;
+
+	return ret;
 }
 
-static VOID *LoadProc(LPCSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
+static DWORD msi_atou(LPCWSTR str)
+{
+	DWORD ret = 0;
+	while(*str >= '0' && *str <= '9')
+	{
+		ret *= 10;
+		ret += (*str - '0');
+		str++;
+	}
+	return 0;
+}
+
+static LPWSTR msi_strdup(LPCWSTR str)
+{
+	DWORD len = lstrlenW(str)+1;
+	LPWSTR ret = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	lstrcpyW(ret, str);
+	return ret;
+}
+
+/* str1 is the same as str2, ignoring case */
+static BOOL msi_strequal(LPCWSTR str1, LPCSTR str2)
+{
+	DWORD len, ret;
+	LPWSTR strW;
+
+	len = MultiByteToWideChar( CP_ACP, 0, str2, -1, NULL, 0);
+	if( !len )
+		return TRUE;
+	if( lstrlenW(str1) != (len-1) )
+		return TRUE;
+	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
+	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len, strW, len);
+	HeapFree(GetProcessHeap(), 0, strW);
+	return (ret != CSTR_EQUAL);
+}
+
+/* str2 is at the beginning of str1, ignoring case */
+static BOOL msi_strprefix(LPCWSTR str1, LPCSTR str2)
+{
+	DWORD len, ret;
+	LPWSTR strW;
+
+	len = MultiByteToWideChar( CP_ACP, 0, str2, -1, NULL, 0);
+	if( !len )
+		return TRUE;
+	if( lstrlenW(str1) < (len-1) )
+		return TRUE;
+	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
+	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len-1, strW, len-1);
+	HeapFree(GetProcessHeap(), 0, strW);
+	return (ret != CSTR_EQUAL);
+}
+
+static VOID *LoadProc(LPCWSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 {
 	VOID* (*proc)(void);
 
-	*DllHandle = LoadLibraryExA(DllName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+	*DllHandle = LoadLibraryExW(DllName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	if(!*DllHandle)
 	{
-		fprintf(stderr, "Unable to load dll %s\n", DllName);
+		fprintf(stderr, "Unable to load dll %s\n", wine_dbgstr_w(DllName));
 		ExitProcess(1);
 	}
 	proc = (VOID *) GetProcAddress(*DllHandle, ProcName);
 	if(!proc)
 	{
-		fprintf(stderr, "Dll %s does not implement function %s\n", DllName, ProcName);
+		fprintf(stderr, "Dll %s does not implement function %s\n",
+			wine_dbgstr_w(DllName), ProcName);
 		FreeLibrary(*DllHandle);
 		ExitProcess(1);
 	}
@@ -145,7 +273,7 @@ static VOID *LoadProc(LPCSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 	return proc;
 }
 
-static void DllRegisterServer(LPCSTR DllName)
+static DWORD DllRegisterServer(LPCWSTR DllName)
 {
 	HRESULT hr;
 	DLLREGISTERSERVER pfDllRegisterServer = NULL;
@@ -156,15 +284,16 @@ static void DllRegisterServer(LPCSTR DllName)
 	hr = pfDllRegisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to register dll %s\n", DllName);
-		ExitProcess(1);
+		fprintf(stderr, "Failed to register dll %s\n", wine_dbgstr_w(DllName));
+		return 1;
 	}
-	printf("Successfully registered dll %s\n", DllName);
+	printf("Successfully registered dll %s\n", wine_dbgstr_w(DllName));
 	if(DllHandle)
 		FreeLibrary(DllHandle);
+	return 0;
 }
 
-static void DllUnregisterServer(LPCSTR DllName)
+static DWORD DllUnregisterServer(LPCWSTR DllName)
 {
 	HRESULT hr;
 	DLLUNREGISTERSERVER pfDllUnregisterServer = NULL;
@@ -175,15 +304,133 @@ static void DllUnregisterServer(LPCSTR DllName)
 	hr = pfDllUnregisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to unregister dll %s\n", DllName);
-		ExitProcess(1);
+		fprintf(stderr, "Failed to unregister dll %s\n", wine_dbgstr_w(DllName));
+		return 1;
 	}
-	printf("Successfully unregistered dll %s\n", DllName);
+	printf("Successfully unregistered dll %s\n", wine_dbgstr_w(DllName));
 	if(DllHandle)
 		FreeLibrary(DllHandle);
+	return 0;
 }
 
-int main(int argc, char *argv[])
+/*
+ * state machine to break up the command line properly
+ */
+
+enum chomp_state
+{
+	cs_whitespace,
+	cs_token,
+	cs_quote
+};
+
+static int chomp( WCHAR *str )
+{
+	enum chomp_state state = cs_whitespace;
+	WCHAR *p, *out;
+	int count = 0, ignore;
+
+	for( p = str, out = str; *p; p++ )
+	{
+		ignore = 1;
+		switch( state )
+		{
+		case cs_whitespace:
+			switch( *p )
+			{
+			case ' ':
+				break;
+			case '"':
+				state = cs_quote;
+				count++;
+				break;
+			default:
+				count++;
+				ignore = 0;
+				state = cs_token;
+			}
+			break;
+
+		case cs_token:
+			switch( *p )
+			{
+			case '"':
+				state = cs_quote;
+				break;
+			case ' ':
+				state = cs_whitespace;
+				*out++ = 0;
+				break;
+			default:
+				ignore = 0;
+			}
+			break;
+
+		case cs_quote:
+			switch( *p )
+			{
+			case '"':
+				state = cs_token;
+				break;
+			default:
+				ignore = 0;
+			}
+			break;
+		}
+		if( !ignore )
+			*out++ = *p;
+	}
+
+	*out = 0;
+
+	return count;
+}
+
+void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
+{
+	WCHAR **argv, *p = msi_strdup(cmdline);
+	int i, n;
+
+	n = chomp( p );
+	argv = HeapAlloc(GetProcessHeap(), 0, sizeof (WCHAR*)*(n+1));
+	for( i=0; i<n; i++ )
+	{
+		argv[i] = p;
+		p += lstrlenW(p) + 1;
+	}
+	argv[i] = NULL;
+
+	*pargc = n;
+	*pargv = argv;
+}
+
+BOOL process_args_from_reg( LPWSTR ident, int *pargc, WCHAR ***pargv )
+{
+	LONG r;
+	HKEY hkey = 0, hkeyArgs = 0;
+	DWORD sz = 0, type = 0;
+	LPWSTR buf = NULL;
+	BOOL ret = FALSE;
+
+	r = RegOpenKeyW(HKEY_LOCAL_MACHINE, InstallRunOnce, &hkey);
+	if(r != ERROR_SUCCESS)
+		return FALSE;
+	r = RegQueryValueExW(hkey, ident, 0, &type, 0, &sz);
+	if(r == ERROR_SUCCESS && type == REG_SZ)
+	{
+		buf = HeapAlloc(GetProcessHeap(), 0, sz);
+		r = RegQueryValueExW(hkey, ident, 0, &type, (LPBYTE)buf, &sz);
+		if( r == ERROR_SUCCESS )
+		{
+			process_args(buf, pargc, pargv);
+			ret = TRUE;
+		}
+	}
+	RegCloseKey(hkeyArgs);
+	return ret;
+}
+
+int main(int argc, char **argv)
 {
 	int i;
 	BOOL FunctionInstall = FALSE;
@@ -197,59 +444,74 @@ int main(int argc, char *argv[])
 	BOOL FunctionUnregServer = FALSE;
 	BOOL FunctionUnknown = FALSE;
 
-	BOOL GotProductCode = FALSE;
-	LPCSTR PackageName = NULL;
-	LPGUID ProductCode = HeapAlloc(GetProcessHeap(), 0, sizeof(GUID));
-	LPSTR Properties = HeapAlloc(GetProcessHeap(), 0, 1);
+	LPWSTR PackageName = NULL;
+	LPWSTR Properties = NULL;
+	struct string_list *property_list = NULL;
 
 	DWORD RepairMode = 0;
 
 	DWORD AdvertiseMode = 0;
-	LPSTR Transforms = HeapAlloc(GetProcessHeap(), 0, 1);
+	LPWSTR Transforms = NULL;
+	struct string_list *transform_list = NULL;
 	LANGID Language = 0;
 
 	DWORD LogMode = 0;
-	LPSTR LogFileName = NULL;
+	LPWSTR LogFileName = NULL;
 	DWORD LogAttributes = 0;
 
-	LPSTR PatchFileName = NULL;
+	LPWSTR PatchFileName = NULL;
 	INSTALLTYPE InstallType = INSTALLTYPE_DEFAULT;
 
-	INSTALLUILEVEL InstallUILevel = 0, retInstallUILevel;
+	INSTALLUILEVEL InstallUILevel = INSTALLUILEVEL_FULL;
 
-	LPSTR DllName = NULL;
+	LPWSTR DllName = NULL;
+	DWORD ReturnCode;
+	LPWSTR *argvW = NULL;
 
-	Properties[0] = 0;
-	Transforms[0] = 0;
+	/* overwrite the command line */
+	process_args( GetCommandLineW(), &argc, &argvW );
+
+	/*
+	 * If the args begin with /@ IDENT then we need to load the real
+	 * command line out of the RunOnceEntries key in the registry.
+	 *  We do that before starting to process the real commandline,
+	 * then overwrite the commandline again.
+	 */
+	if(!msi_strequal(argvW[1], "/@"))
+	{
+		if(!process_args_from_reg( argvW[2], &argc, &argvW ))
+			return 1;
+	}
 
 	for(i = 1; i < argc; i++)
 	{
-		WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
+		WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 
-                if (!lstrcmpiA(argv[i], "/regserver"))
-                {
-                    FunctionRegServer = TRUE;
-                }
-                else if (!lstrcmpiA(argv[i], "/unregserver") || !lstrcmpiA(argv[i], "/unregister"))
-                {
-                    FunctionUnregServer = TRUE;
-                }
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "/i", 2))
+		if (!msi_strequal(argvW[i], "/regserver"))
 		{
-			char *argvi = argv[i];
+			FunctionRegServer = TRUE;
+		}
+		else if (!msi_strequal(argvW[i], "/unregserver") || !msi_strequal(argvW[i], "/unregister"))
+		{
+			FunctionUnregServer = TRUE;
+		}
+		else if(!msi_strprefix(argvW[i], "/i"))
+		{
+			LPWSTR argvWi = argvW[i];
 			FunctionInstall = TRUE;
-			if(strlen(argvi) > 2)
-				argvi += 2;
-			else {
+			if(lstrlenW(argvWi) > 2)
+				argvWi += 2;
+			else
+			{
 				i++;
 				if(i >= argc)
 					ShowUsage(1);
-				WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-				argvi = argv[i];
+				WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+				argvWi = argvW[i];
 			}
-			GotProductCode = GetProductCode(argvi, &PackageName, &ProductCode);
+			PackageName = argvWi;
 		}
-		else if(!lstrcmpiA(argv[i], "/a"))
+		else if(!msi_strequal(argvW[i], "/a"))
 		{
 			FunctionInstall = TRUE;
 			FunctionInstallAdmin = TRUE;
@@ -257,18 +519,18 @@ int main(int argc, char *argv[])
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			PackageName = argv[i];
-			StringListAppend(&Properties, ActionAdmin);
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
+			StringListAppend(&property_list, ActionAdmin);
 		}
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "/f", 2))
+		else if(!msi_strprefix(argvW[i], "/f"))
 		{
 			int j;
-			int len = strlen(argv[i]);
+			int len = lstrlenW(argvW[i]);
 			FunctionRepair = TRUE;
 			for(j = 2; j < len; j++)
 			{
-				switch(argv[i][j])
+				switch(argvW[i][j])
 				{
 					case 'P':
 					case 'p':
@@ -311,7 +573,7 @@ int main(int argc, char *argv[])
 						RepairMode |= REINSTALLMODE_PACKAGE;
 						break;
 					default:
-						fprintf(stderr, "Unknown option \"%c\" in Repair mode\n", argv[i][j]);
+						fprintf(stderr, "Unknown option \"%c\" in Repair mode\n", argvW[i][j]);
 						break;
 				}
 			}
@@ -326,27 +588,27 @@ int main(int argc, char *argv[])
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "/x"))
+		else if(!msi_strequal(argvW[i], "/x"))
 		{
 			FunctionInstall = TRUE;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
-			StringListAppend(&Properties, RemoveAll);
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
+			StringListAppend(&property_list, RemoveAll);
 		}
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "/j", 2))
+		else if(!msi_strprefix(argvW[i], "/j"))
 		{
 			int j;
-			int len = strlen(argv[i]);
+			int len = lstrlenW(argvW[i]);
 			FunctionAdvertise = TRUE;
 			for(j = 2; j < len; j++)
 			{
-				switch(argv[i][j])
+				switch(argvW[i][j])
 				{
 					case 'U':
 					case 'u':
@@ -357,65 +619,63 @@ int main(int argc, char *argv[])
 						AdvertiseMode = ADVERTISEFLAGS_MACHINEASSIGN;
 						break;
 					default:
-						fprintf(stderr, "Unknown option \"%c\" in Advertise mode\n", argv[i][j]);
+						fprintf(stderr, "Unknown option \"%c\" in Advertise mode\n", argvW[i][j]);
 						break;
 				}
 			}
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			PackageName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "u"))
+		else if(!msi_strequal(argvW[i], "u"))
 		{
 			FunctionAdvertise = TRUE;
 			AdvertiseMode = ADVERTISEFLAGS_USERASSIGN;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			PackageName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "m"))
+		else if(!msi_strequal(argvW[i], "m"))
 		{
 			FunctionAdvertise = TRUE;
 			AdvertiseMode = ADVERTISEFLAGS_MACHINEASSIGN;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			PackageName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PackageName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "/t"))
+		else if(!msi_strequal(argvW[i], "/t"))
 		{
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			StringListAppend(&Transforms, argv[i]);
-			StringListAppend(&Transforms, ";");
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			StringListAppend(&transform_list, argvW[i]);
 		}
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "TRANSFORMS=", 11))
+		else if(!msi_strprefix(argvW[i], "TRANSFORMS="))
 		{
-			StringListAppend(&Transforms, argv[i]+11);
-			StringListAppend(&Transforms, ";");
+			StringListAppend(&transform_list, argvW[i]+11);
 		}
-		else if(!lstrcmpiA(argv[i], "/g"))
+		else if(!msi_strequal(argvW[i], "/g"))
 		{
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			Language = strtol(argv[i], NULL, 0);
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			Language = msi_atou(argvW[i]);
 		}
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "/l", 2))
+		else if(!msi_strprefix(argvW[i], "/l"))
 		{
 			int j;
-			int len = strlen(argv[i]);
+			int len = lstrlenW(argvW[i]);
 			for(j = 2; j < len; j++)
 			{
-				switch(argv[i][j])
+				switch(argvW[i][j])
 				{
 					case 'I':
 					case 'i':
@@ -491,174 +751,147 @@ int main(int argc, char *argv[])
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			LogFileName = argv[i];
-			if(MsiEnableLogA(LogMode, LogFileName, LogAttributes) != ERROR_SUCCESS)
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			LogFileName = argvW[i];
+			if(MsiEnableLogW(LogMode, LogFileName, LogAttributes) != ERROR_SUCCESS)
 			{
-				fprintf(stderr, "Logging in %s (0x%08lx, %lu) failed\n", LogFileName, LogMode, LogAttributes);
+				fprintf(stderr, "Logging in %s (0x%08lx, %lu) failed\n",
+					 wine_dbgstr_w(LogFileName), LogMode, LogAttributes);
 				ExitProcess(1);
 			}
 		}
-		else if(!lstrcmpiA(argv[i], "/p"))
+		else if(!msi_strequal(argvW[i], "/p"))
 		{
 			FunctionPatch = TRUE;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			PatchFileName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			PatchFileName = argvW[i];
 		}
-		else if(!MSIEXEC_lstrncmpiA(argv[i], "/q", 2))
+		else if(!msi_strprefix(argvW[i], "/q"))
 		{
-			if(strlen(argv[i]) == 2 || !lstrcmpiA(argv[i]+2, "n"))
+			if(lstrlenW(argvW[i]) == 2 || !msi_strequal(argvW[i]+2, "n"))
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "b"))
+			else if(!msi_strequal(argvW[i]+2, "b"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "r"))
+			else if(!msi_strequal(argvW[i]+2, "r"))
 			{
 				InstallUILevel = INSTALLUILEVEL_REDUCED;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "f"))
+			else if(!msi_strequal(argvW[i]+2, "f"))
 			{
 				InstallUILevel = INSTALLUILEVEL_FULL|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "n+"))
+			else if(!msi_strequal(argvW[i]+2, "n+"))
 			{
 				InstallUILevel = INSTALLUILEVEL_NONE|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "b+"))
+			else if(!msi_strequal(argvW[i]+2, "b+"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "b-"))
+			else if(!msi_strequal(argvW[i]+2, "b-"))
 			{
 				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY;
 			}
-			else if(!lstrcmpiA(argv[i]+2, "b+!"))
-            		{
+			else if(!msi_strequal(argvW[i]+2, "b+!"))
+			{
 				InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_ENDDIALOG;
 				WINE_FIXME("Unknown modifier: !\n");
 			}
 			else
 			{
-				fprintf(stderr, "Unknown option \"%s\" for UI level\n", argv[i]+2);
-			}
-			retInstallUILevel = MsiSetInternalUI(InstallUILevel, NULL);
-			if(retInstallUILevel == INSTALLUILEVEL_NOCHANGE)
-			{
-				fprintf(stderr, "Setting the UI level to 0x%x failed.\n", InstallUILevel);
-				ExitProcess(1);
+				fprintf(stderr, "Unknown option \"%s\" for UI level\n",
+					 wine_dbgstr_w(argvW[i]+2));
 			}
 		}
-		else if(!lstrcmpiA(argv[i], "/y"))
+		else if(!msi_strequal(argvW[i], "/y"))
 		{
 			FunctionDllRegisterServer = TRUE;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			DllName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			DllName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "/z"))
+		else if(!msi_strequal(argvW[i], "/z"))
 		{
 			FunctionDllUnregisterServer = TRUE;
 			i++;
 			if(i >= argc)
 				ShowUsage(1);
-			WINE_TRACE("argv[%d] = %s\n", i, argv[i]);
-			DllName = argv[i];
+			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
+			DllName = argvW[i];
 		}
-		else if(!lstrcmpiA(argv[i], "/h") || !lstrcmpiA(argv[i], "/?"))
+		else if(!msi_strequal(argvW[i], "/h") || !msi_strequal(argvW[i], "/?"))
 		{
 			ShowUsage(0);
 		}
-		else if(!lstrcmpiA(argv[i], "/m"))
+		else if(!msi_strequal(argvW[i], "/m"))
 		{
 			FunctionUnknown = TRUE;
 			WINE_FIXME("Unknown parameter /m\n");
 		}
-		else if(!lstrcmpiA(argv[i], "/D"))
+		else if(!msi_strequal(argvW[i], "/D"))
 		{
 			FunctionUnknown = TRUE;
 			WINE_FIXME("Unknown parameter /D\n");
 		}
-		else if(strchr(argv[i], '='))
+		else if(strchrW(argvW[i], '='))
 		{
-			StringListAppend(&Properties, argv[i]);
-			StringListAppend(&Properties, " ");
+			StringListAppend(&property_list, argvW[i]);
 		}
 		else
 		{
 			FunctionInstall = TRUE;
-			GotProductCode = GetProductCode(argv[i], &PackageName, &ProductCode);
+			PackageName = argvW[i];
 		}
 	}
 
-	StringCompareRemoveLast(Properties, ' ');
-	StringCompareRemoveLast(Transforms, ';');
+	/* start the GUI */
+	MsiSetInternalUI(InstallUILevel, NULL);
+
+	Properties = build_properties( property_list );
+	Transforms = build_transforms( transform_list );
 
 	if(FunctionInstallAdmin && FunctionPatch)
 		FunctionInstall = FALSE;
 
+	ReturnCode = 1;
 	if(FunctionInstall)
 	{
-		if(GotProductCode)
-		{
-			WINE_FIXME("Product code treatment not implemented yet\n");
-			ExitProcess(1);
-		}
+		if(IsProductCode(PackageName))
+			ReturnCode = MsiConfigureProductExW(PackageName, 0, INSTALLSTATE_DEFAULT, Properties);
 		else
-		{
-			if(MsiInstallProductA(PackageName, Properties) != ERROR_SUCCESS)
-			{
-				fprintf(stderr, "Installation of %s (%s) failed.\n", PackageName, Properties);
-				ExitProcess(1);
-			}
-		}
+			ReturnCode = MsiInstallProductW(PackageName, Properties);
 	}
 	else if(FunctionRepair)
 	{
-		if(GotProductCode)
-		{
+		if(IsProductCode(PackageName))
 			WINE_FIXME("Product code treatment not implemented yet\n");
-			ExitProcess(1);
-		}
 		else
-		{
-			if(MsiReinstallProductA(PackageName, RepairMode) != ERROR_SUCCESS)
-			{
-				fprintf(stderr, "Repair of %s (0x%08lx) failed.\n", PackageName, RepairMode);
-				ExitProcess(1);
-			}
-		}
+			ReturnCode = MsiReinstallProductW(PackageName, RepairMode);
 	}
 	else if(FunctionAdvertise)
 	{
-		if(MsiAdvertiseProductA(PackageName, (LPSTR) AdvertiseMode, Transforms, Language) != ERROR_SUCCESS)
-		{
-			fprintf(stderr, "Advertising of %s (%lu, %s, 0x%04x) failed.\n", PackageName, AdvertiseMode, Transforms, Language);
-			ExitProcess(1);
-		}
+		ReturnCode = MsiAdvertiseProductW(PackageName, (LPWSTR) AdvertiseMode, Transforms, Language);
 	}
 	else if(FunctionPatch)
 	{
-		if(MsiApplyPatchA(PatchFileName, PackageName, InstallType, Properties) != ERROR_SUCCESS)
-		{
-			fprintf(stderr, "Patching with %s (%s, %d, %s)\n", PatchFileName, PackageName, InstallType, Properties);
-			ExitProcess(1);
-		}
+		ReturnCode = MsiApplyPatchW(PatchFileName, PackageName, InstallType, Properties);
 	}
 	else if(FunctionDllRegisterServer)
 	{
-		DllRegisterServer(DllName);
+		ReturnCode = DllRegisterServer(DllName);
 	}
 	else if(FunctionDllUnregisterServer)
 	{
-		DllUnregisterServer(DllName);
+		ReturnCode = DllUnregisterServer(DllName);
 	}
 	else if (FunctionRegServer)
 	{
@@ -675,5 +908,5 @@ int main(int argc, char *argv[])
 	else
 		ShowUsage(1);
 
-	return 0;
+	return ReturnCode;
 }

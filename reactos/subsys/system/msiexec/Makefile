@@ -11,7 +11,16 @@ TARGET_NAME = msiexec
 TARGET_CFLAGS = -I$(PATH_TO_TOP)/include/wine -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -D__USE_W32API
 
 TARGET_OBJECTS = msiexec.o
-TARGET_SDKLIBS = msi.a ole32.a ntdll.a user32.a kernel32.a wine.a wine_uuid.a
+
+TARGET_SDKLIBS = wine.a \
+	ntdll.a \
+	kernel32.a \
+	user32.a \
+	advapi32.a \
+	ole32.a \
+	wine_uuid.a \
+	msi.a
+
 TARGET_RC_SRCS = version.rc
 
 TARGET_RC_BINSRC = 
