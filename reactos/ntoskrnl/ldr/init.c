@@ -553,7 +553,8 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     * alias name which is in \\??\\).
     */
    GetSystemDirectory(TmpNameBuffer, sizeof TmpNameBuffer);
-   wcscat(TmpNameBuffer, L"\\shell.exe");
+//   wcscat(TmpNameBuffer, L"\\shell.exe");
+   wcscat(TmpNameBuffer, L"\\smss.exe");
    RtlInitUnicodeString(&ProcessName, TmpNameBuffer);
    Status = LdrLoadImage(ProcessHandle, &ProcessName);
    if (!NT_SUCCESS(Status))
