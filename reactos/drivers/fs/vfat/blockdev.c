@@ -21,7 +21,7 @@
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-            IN ULONG    DiskSector,
+                        IN ULONG    DiskSector,
                         IN ULONG        SectorCount,
 			IN UCHAR*	Buffer)
 {
@@ -33,21 +33,27 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     ULONG           sectorSize;
     PULONG          mbr;
    
-   DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-   	    pDeviceObject,DiskSector,Buffer);
-
     SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector << 9);
     SET_LARGE_INTEGER_HIGH_PART(sectorNumber, DiskSector >> 23);
     KeInitializeEvent(&event, NotificationEvent, FALSE);
+    sectorSize = BLOCKSIZE * SectorCount;
 
-    sectorSize = BLOCKSIZE*SectorCount;
+    /* FIXME: this routine does not need to alloc mem and copy  */
 
     mbr = ExAllocatePool(NonPagedPool, sectorSize);
+
+    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,
+           DiskSector,
+           Buffer);
+    DPRINT("sectorNumber %08lx:%08lx sectorSize %ld\n", 
+           (unsigned long int)GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
+           (unsigned long int)GET_LARGE_INTEGER_LOW_PART(sectorNumber),
+           sectorSize);
 
     if (!mbr) {
         return FALSE;
     }
-
 
     DPRINT("Building synchronous FSD Request...\n");
     irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,

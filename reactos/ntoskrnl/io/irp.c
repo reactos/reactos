@@ -33,7 +33,7 @@
 #include <internal/io.h>
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -109,7 +109,8 @@ VOID IoInitializeIrp(PIRP Irp, USHORT PacketSize, CCHAR StackSize)
  *          StackSize = Number of stack locations in the IRP
  */
 {
-   assert(Irp!=NULL);
+   assert(Irp != NULL);
+
    memset(Irp,0,PacketSize);
    Irp->StackCount=StackSize;
    Irp->CurrentLocation=StackSize;
@@ -193,7 +194,8 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
 {
    PIRP Irp;
    
-   DPRINT("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",StackSize,
+   DPRINT("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
+          StackSize,
 	  ChargeQuota);
    if (ChargeQuota)
      {
@@ -209,11 +211,11 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
 	return(NULL);
      }
    
-   Irp->StackCount=StackSize;
-   Irp->CurrentLocation=StackSize;
+   IoInitializeIrp(Irp, IoSizeOfIrp(StackSize), StackSize);
 
-   DPRINT("Irp %x Irp->StackPtr %d\n",Irp,Irp->CurrentLocation);
-   return(Irp);
+   DPRINT("Irp %x Irp->StackPtr %d\n", Irp, Irp->CurrentLocation);
+
+   return Irp;
 }
 
 VOID IoSetCompletionRoutine(PIRP Irp,
@@ -269,8 +271,10 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 
    for (i=0;i<Irp->StackCount;i++)
      {
-	DPRINT("&Irp->Stack[i] %x\n",&Irp->Stack[i]);
-	if (Irp->Stack[i].CompletionRoutine!=NULL)
+	DPRINT("&Irp->Stack[%d].CompletionRoutine %08lx\n", 
+               i, 
+               Irp->Stack[i].CompletionRoutine);
+	if (Irp->Stack[i].CompletionRoutine != NULL)
 	  {
 	     Status = Irp->Stack[i].CompletionRoutine(
 					     Irp->Stack[i].DeviceObject,
@@ -281,7 +285,7 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 		  return;
 	       }
 	  }
-	DPRINT("Irp->Stack[i].Control %x\n",Irp->Stack[i].Control);
+	DPRINT("Irp->Stack[%d].Control %08lx\n", i, Irp->Stack[i].Control);
 	if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
 	  {
 	     DPRINT("Setting PendingReturned flag\n");
@@ -306,4 +310,4 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 	IoSecondStageCompletion(Irp,PriorityBoost);
      }
 }
->>>>>>> 1.7
+

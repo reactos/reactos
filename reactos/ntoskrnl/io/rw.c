@@ -72,6 +72,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
      {
 	return(Status);
      }
+   assert(FileObject != NULL);
    
    if (ByteOffset==NULL)
      {

@@ -1,66 +1,67 @@
-//
-//  IDE.C - IDE Disk driver 
-//     written by Rex Jolliff
-//     with help from various documentation sources and a few peeks at
-//       linux and freebsd sources.
-// 
-//    This driver supports up to 4 controllers with up to 2 drives each.
-//    The device names are assigned as follows:
-//      \Devices\HarddiskX\Partition0
-//    for the raw device, and 
-//      \Devices\HarddiskX\PartitionY
-//    for partitions
-//    where:
-//      X is computed by counting the available drives from the following
-//          sequence: the controller number (0=0x1f0, 1=0x170, 2=0x1e8, 
-//          3=0x168) * 2 plus the drive number (0,1)
-//      Y is the partition number
-// 
-//     The driver exports the following function:
-// 
-//       DriverEntry() - NT device driver initialization routine
-// 
-//     And the following functions are exported implicitly:
-// 
-//       IDEStartIo() - called to start an I/O request packet
-//       IDEDispatchOpenClose() - Called to open/close the device.  a NOOP
-//       IDEDispatchReadWrite() - Called to read/write the device.
-//       IDEDispatchQueryInformation() - Called to get device information 
-//       IDEDispatchSetInformation() - Called to set device information
-//       IDEDispatchDeviceControl() - Called to execute device control requests
-// 
-//   Modification History:
-//     05/25/98  RJJ  Created.
-//     05/30/98  RJJ  Removed IRQ handler and inserted busy waits
-//                    just to get something working...
-//     07/18/98  RJJ  Made drastic changes so that the driver
-//                    resembles a WinNT driver.
-//     08/05/98  RJJ  Changed to .C extension
-//     09/19/98  RJJ  First release (run for cover!)
-//
-//   Test List:
-//     09/17/98  RJJ  Pri/MST: 14.12X19 WDC AC31000H  Test Passed
-//                    Pri/SLV: None.
-//     
-//
-//   To Do:
-// FIXME: a timer should be used to watch for device timeouts and errors
-// FIXME: errors should be retried
-// FIXME: a drive reset/recalibrate should be attempted if errors occur
-// FIXME: Use DMA for transfers if drives support it
-// FIXME: should we support unloading of this driver???
-// FIXME: the device information should come from AUTODETECT (via registry)
-// FIXME: really big devices need to be handled correctly
-// FIXME: should get device info from the registry
-// FIXME: should report hardware usage to iomgr
-// FIXME: finish implementation of QueryInformation
-// FIXME: finish implementation of SetInformation
-// FIXME: finish implementation of DeviceControl
-// FIXME: bring up to ATA-3 spec
-// FIXME: add general support for ATAPI devices
-// FIXME: add support for ATAPI CDROMs
-// FIXME: add support for ATAPI ZIP drives/RHDs
-// FIXME: add support for ATAPI tape drives
+/*
+ *  IDE.C - IDE Disk driver 
+ *     written by Rex Jolliff
+ *     with help from various documentation sources and a few peeks at
+ *       linux and freebsd sources.
+ * 
+ *    This driver supports up to 4 controllers with up to 2 drives each.
+ *    The device names are assigned as follows:
+ *      \Devices\HarddiskX\Partition0
+ *    for the raw device, and 
+ *      \Devices\HarddiskX\PartitionY
+ *    for partitions
+ *    where:
+ *      X is computed by counting the available drives from the following
+ *          sequence: the controller number (0=0x1f0, 1=0x170, 2=0x1e8, 
+ *          3=0x168) * 2 plus the drive number (0,1)
+ *      Y is the partition number
+ * 
+ *     The driver exports the following function:
+ * 
+ *       DriverEntry() - NT device driver initialization routine
+ * 
+ *     And the following functions are exported implicitly:
+ * 
+ *       IDEStartIo() - called to start an I/O request packet
+ *       IDEDispatchOpenClose() - Called to open/close the device.  a NOOP
+ *       IDEDispatchReadWrite() - Called to read/write the device.
+ *       IDEDispatchQueryInformation() - Called to get device information 
+ *       IDEDispatchSetInformation() - Called to set device information
+ *       IDEDispatchDeviceControl() - Called to execute device control requests
+ * 
+ *   Modification History:
+ *     05/25/98  RJJ  Created.
+ *     05/30/98  RJJ  Removed IRQ handler and inserted busy waits
+ *                    just to get something working...
+ *     07/18/98  RJJ  Made drastic changes so that the driver
+ *                    resembles a WinNT driver.
+ *     08/05/98  RJJ  Changed to .C extension
+ *     09/19/98  RJJ  First release (run for cover!)
+ *
+ *   Test List:
+ *     09/17/98  RJJ  Pri/MST: 14.12X19 WDC AC31000H  Test Passed
+ *                    Pri/SLV: None.
+ *     
+ *
+ *   To Do:
+ * FIXME: a timer should be used to watch for device timeouts and errors
+ * FIXME: errors should be retried
+ * FIXME: a drive reset/recalibrate should be attempted if errors occur
+ * FIXME: Use DMA for transfers if drives support it
+ * FIXME: should we support unloading of this driver???
+ * FIXME: the device information should come from AUTODETECT (via registry)
+ * FIXME: really big devices need to be handled correctly
+ * FIXME: should get device info from the registry
+ * FIXME: should report hardware usage to iomgr
+ * FIXME: finish implementation of QueryInformation
+ * FIXME: finish implementation of SetInformation
+ * FIXME: finish implementation of DeviceControl
+ * FIXME: bring up to ATA-3 spec
+ * FIXME: add general support for ATAPI devices
+ * FIXME: add support for ATAPI CDROMs
+ * FIXME: add support for ATAPI ZIP drives/RHDs
+ * FIXME: add support for ATAPI tape drives
+ */
 
 #include <ddk/ntddk.h>
 

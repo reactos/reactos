@@ -25,7 +25,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* MACROS ********************************************************************/
@@ -196,7 +196,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   PIMAGE_FILE_HEADER PEFileHeader;
   PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
   
-  DbgPrint("Processing PE Driver at module base:%08lx\n", ModuleLoadBase);
+  DPRINT("Processing PE Driver at module base:%08lx\n", ModuleLoadBase);
 
   /*  Get header pointers  */
   PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
@@ -223,18 +223,18 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 
   /* FIXME: check/verify OS version number  */
 
-  DbgPrint("OptionalHdrMagic:%04x LinkVersion:%d.%d\n", 
-           PEOptionalHeader->Magic,
-           PEOptionalHeader->MajorLinkerVersion,
-           PEOptionalHeader->MinorLinkerVersion);
-  DbgPrint("Size: CODE:%08lx(%d) DATA:%08lx(%d) BSS:%08lx(%d)\n",
-           PEOptionalHeader->SizeOfCode,
-           PEOptionalHeader->SizeOfCode,
-           PEOptionalHeader->SizeOfInitializedData,
-           PEOptionalHeader->SizeOfInitializedData,
-           PEOptionalHeader->SizeOfUninitializedData,
-           PEOptionalHeader->SizeOfUninitializedData);
-  DbgPrint("Entry Point:%08lx\n", PEOptionalHeader->AddressOfEntryPoint);
+  DPRINT("OptionalHdrMagic:%04x LinkVersion:%d.%d\n", 
+         PEOptionalHeader->Magic,
+         PEOptionalHeader->MajorLinkerVersion,
+         PEOptionalHeader->MinorLinkerVersion);
+  DPRINT("Size: CODE:%08lx(%d) DATA:%08lx(%d) BSS:%08lx(%d)\n",
+         PEOptionalHeader->SizeOfCode,
+         PEOptionalHeader->SizeOfCode,
+         PEOptionalHeader->SizeOfInitializedData,
+         PEOptionalHeader->SizeOfInitializedData,
+         PEOptionalHeader->SizeOfUninitializedData,
+         PEOptionalHeader->SizeOfUninitializedData);
+  DPRINT("Entry Point:%08lx\n", PEOptionalHeader->AddressOfEntryPoint);
   CHECKPOINT;
 
   /*  Determine the size of the module  */
@@ -450,8 +450,9 @@ LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex)
 
   for (j = 0; j < Section->s_nreloc; j++)
     {
-      DbgPrint("vaddr %x ", Relocation->r_vaddr);
-      DbgPrint("symndex %x ", Relocation->r_symndx);
+      DPRINT("vaddr %x symndex %x", 
+             Relocation->r_vaddr, 
+             Relocation->r_symndx);
 
       switch (Relocation->r_type)
         {
@@ -470,10 +471,10 @@ LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex)
             break;
 
           default:
-            DbgPrint("%.8s: Unknown relocation type %x at %d in module\n",
-                     Module->scn_list[SectionIndex].s_name,
-		     Relocation->r_type,
-                     j);
+            DPRINT("%.8s: Unknown relocation type %x at %d in module\n",
+                   Module->scn_list[SectionIndex].s_name,
+                   Relocation->r_type,
+                   j);
             return FALSE;
         }
       Relocation++;
@@ -502,7 +503,7 @@ LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation)
    
   Value = LdrCOFFGetSymbolValue(Module, Relocation->r_symndx);
   Location = (unsigned int *)(Module->base + Relocation->r_vaddr);
-  DbgPrint("ADDR32 loc %x value %x *loc %x ", Location, Value, *Location);
+  DPRINT("ADDR32 loc %x value %x *loc %x\n", Location, Value, *Location);
   *Location = (*Location) + Module->base;
    
   return TRUE;
@@ -596,7 +597,7 @@ LdrCOFFGetSymbolValue(module *Module, unsigned int Idx)
   char Name[255];
 
   LdrCOFFGetSymbolName(Module, Idx, Name);
-  DbgPrint("name %s ", Name);
+  DPRINT("name %s ", Name);
    
   /*  Check if the symbol is a section we have relocated  */
   if (strcmp(Name, ".text") == 0)
@@ -714,7 +715,7 @@ NTSTATUS LdrLoadLibrary(HANDLE ProcessHandle,
     }
   else
     {
-      DbgPrint("Library already loaded\n");
+      DPRINT("Library already loaded\n");
       *Module = Library
     }
   RtlFreeUnicodeString(&umodName);

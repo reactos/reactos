@@ -26,7 +26,7 @@
 #include <wstring.h>
 #include <ddk/cctypes.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "vfat.h"
@@ -668,18 +668,12 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
           FileObject,
           FileName);
 
-CHECKPOINT;
    string = FileName;
-CHECKPOINT;
    ParentFcb = NULL;
-CHECKPOINT;
    Fcb = ExAllocatePool(NonPagedPool, sizeof(FCB));
-CHECKPOINT;
    next = &string[0];
-CHECKPOINT;
    current = next+1;
    
-CHECKPOINT;
    while (next!=NULL)
      {
 	DPRINT("current %w next %x\n",current,next);
@@ -692,7 +686,6 @@ CHECKPOINT;
 	     *next=0;
 	  }
 	
-CHECKPOINT;
       Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
@@ -709,7 +702,6 @@ CHECKPOINT;
 	     Fcb = ParentFcb;
 	  }
        ParentFcb = Temp;
-CHECKPOINT;
      }
    FileObject->FsContext = ParentFcb;
    DPRINT("file opn, fcb=%x\n",ParentFcb);
@@ -724,7 +716,7 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
  *           by this fsd
  */
 {
-   BootSector* Boot;
+   BootSector *Boot;
 
    Boot = ExAllocatePool(NonPagedPool,512);
 
@@ -738,7 +730,8 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 	return(TRUE);
      }
    ExFreePool(Boot);
-   return(FALSE);
+
+   return FALSE;
 }
 
 NTSTATUS FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
@@ -844,19 +837,37 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PVOID Temp;
    ULONG TempLength;
    
+   /* PRECONDITION */
+   assert(DeviceExt != NULL);
+   assert(DeviceExt->BytesPerCluster != 0);
+   assert(FileObject != NULL);
+   assert(FileObject->FsContext != NULL);
+
    DPRINT("FsdReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
-	    "Length %d, ReadOffset %d)\n",DeviceExt,FileObject,Buffer,
-	    Length,ReadOffset);
+          "Length %d, ReadOffset %d)\n",
+          DeviceExt,
+          FileObject,
+          Buffer,
+          Length,
+          ReadOffset);
+   DPRINT("DeviceExt->BytesPerCluster %d\n", DeviceExt->BytesPerCluster);
    
    FirstCluster = ReadOffset / DeviceExt->BytesPerCluster;
    Fcb = FileObject->FsContext;
    if (DeviceExt->FatType == FAT32)
-	CurrentCluster = Fcb->entry.FirstCluster+Fcb->entry.FirstClusterHigh*65536;
+     {
+       CurrentCluster = Fcb->entry.FirstCluster + 
+         Fcb->entry.FirstClusterHigh * 65536;
+     }
    else
-	CurrentCluster = Fcb->entry.FirstCluster;
-   if (CurrentCluster<2)
-     return STATUS_UNSUCCESSFUL;// FIXME : root of FAT16 ?
-   DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
+     {
+       CurrentCluster = Fcb->entry.FirstCluster;
+     }
+   if (CurrentCluster < 2)
+     {
+       /* FIXME : root of FAT16 ? */
+       return STATUS_UNSUCCESSFUL;
+     }
    
    if (ReadOffset >= Fcb->entry.FileSize)
      {
@@ -868,11 +879,11 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      }
    *LengthRead = 0;
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
+   /* FIXME: optimize by remembering the last cluster read and using if possible */
    for (FileOffset=0; FileOffset < FirstCluster; FileOffset++)
-   {
-     CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
-   }
-   CHECKPOINT;
+     {
+       CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
+     }
    if ((ReadOffset % DeviceExt->BytesPerCluster)!=0)
      {
 	VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
@@ -888,7 +899,6 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	Length = Length - TempLength;
 	Buffer = Buffer + TempLength;	     
      }
-   CHECKPOINT;
    while (Length > DeviceExt->BytesPerCluster)
      {
 	VFATLoadCluster(DeviceExt, Buffer, CurrentCluster);
@@ -904,7 +914,6 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
 	Length = Length - DeviceExt->BytesPerCluster;
      }
-   CHECKPOINT;
    if (Length > 0)
      {
 	(*LengthRead) = (*LengthRead) + Length;
@@ -1041,21 +1050,14 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
           Irp);
 
    Stack = IoGetCurrentIrpStackLocation(Irp);
-CHECKPOINT;
    FileObject = Stack->FileObject;
-CHECKPOINT;
    DeviceExt = DeviceObject->DeviceExtension;
-CHECKPOINT;
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
-CHECKPOINT;
    
    Irp->IoStatus.Status = Status;
-CHECKPOINT;
    Irp->IoStatus.Information = 0;
-CHECKPOINT;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-CHECKPOINT;
 
    return Status;
 }
@@ -1097,14 +1099,23 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    ULONG Length;
    PVOID Buffer;
    ULONG Offset;
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+   PIO_STACK_LOCATION Stack;
+   PFILE_OBJECT FileObject;
+   PDEVICE_EXTENSION DeviceExt;
    NTSTATUS Status;
    ULONG LengthRead;
    
    DPRINT("FsdRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
+   /* Precondition / Initialization */
+   assert(Irp != NULL);
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   assert(Stack != NULL);
+   FileObject = Stack->FileObject;
+   assert(FileObject != NULL);
+   DeviceExt = DeviceObject->DeviceExtension;
+   assert(DeviceExt != NULL);
+
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
    Offset = GET_LARGE_INTEGER_LOW_PART(Stack->Parameters.Read.ByteOffset);
@@ -1143,7 +1154,8 @@ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
    DeviceObject->Vpb->Flags |= VPB_MOUNTED;
    DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							  DeviceToMount);
-   return(STATUS_SUCCESS);
+
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -1156,7 +1168,9 @@ NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_OBJECT DeviceToMount = Stack->Parameters.Mount.DeviceObject;
    NTSTATUS Status;
 
-   DPRINT("VFAT FSC\n");
+   DPRINT("FsdFileSystemControl(DevObj %08lx, Irp %08lx)\n", DeviceObject, Irp);
+
+   /* FIXME: should make sure that this is actually a mount request!  */
 
    if (FsdHasFileSystem(DeviceToMount))
      {
@@ -1182,8 +1196,16 @@ NTSTATUS FsdGetStandardInformation(PFCB FCB, PDEVICE_OBJECT DeviceObject,
  * FUNCTION: Retrieve the standard file information
  */
 {
-  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+  PDEVICE_EXTENSION DeviceExtension;
   unsigned long AllocSize;
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+
+  /* PRECONDITION */
+  assert(DeviceExtension != NULL);
+  assert(DeviceExtension->BytesPerCluster != 0);
+  assert(StandardInfo != NULL);
+  assert(FCB != NULL);
 
   RtlZeroMemory(StandardInfo, sizeof(FILE_STANDARD_INFORMATION));
 
@@ -1210,27 +1232,42 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  * FUNCTION: Retrieve the specified file information
  */
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   FILE_INFORMATION_CLASS FileInformationClass =
-     Stack->Parameters.QueryFile.FileInformationClass;
-   PFILE_OBJECT FileObject = NULL;
-   PFCB FCB = NULL;
-//   PCCB CCB = NULL;
-
-   NTSTATUS RC = STATUS_SUCCESS;
+   NTSTATUS RC;
+   PIO_STACK_LOCATION Stack;
+   FILE_INFORMATION_CLASS FileInformationClass;
+   PFILE_OBJECT FileObject;
+   PFCB FCB;
+//   PCCB CCB;
    void *SystemBuffer;
 
+   /* PRECONDITION */
+   assert(DeviceObject != NULL);
+   assert(Irp != NULL);
+
+   /* INITIALIZATION */
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
+   FileObject = NULL;
+   FCB = NULL;
+//   PCCB CCB = NULL;
+   RC = STATUS_SUCCESS;
    FileObject = Stack->FileObject;
 //   CCB = (PCCB)(FileObject->FsContext2);
 //   FCB = CCB->Buffer; // Should be CCB->FCB???
-   FCB=(PFCB)(FileObject->FsContext);
+   FCB = (PFCB)(FileObject->FsContext);
+   SystemBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+//   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+   DPRINT("FsdQueryInformation(DevObj %08lx, Irp %08lx)\n", DeviceObject, Irp);
 
    switch(FileInformationClass) {
       case FileStandardInformation:
          RC = FsdGetStandardInformation(FCB, DeviceObject, SystemBuffer);
-      break;
+         break;
+
+      default:
+         RC = STATUS_INVALID_PARAMETER;
+         break;
    }
 
    return RC;
@@ -1264,7 +1301,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 	return(ret);
      }
 
-   DeviceObject->Flags=0;
+   DeviceObject->Flags = DO_DIRECT_IO;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsdClose;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = FsdCreate;
    DriverObject->MajorFunction[IRP_MJ_READ] = FsdRead;

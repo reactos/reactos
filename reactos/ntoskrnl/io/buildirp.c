@@ -67,7 +67,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    
-   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
    if (Irp==NULL)
      {
 	return(NULL);
@@ -83,6 +83,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
    StackPtr->Control = 0;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
+   StackPtr->CompletionRoutine = NULL;
    
    switch(MinorFunction)
      {
@@ -144,6 +145,7 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->Control = 0;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
+   StackPtr->CompletionRoutine = NULL;
    StackPtr->Parameters.Write.Length = Length;
    
    if (MajorFunction == IRP_MJ_READ || MajorFunction == IRP_MJ_WRITE)
@@ -237,7 +239,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    Irp->UserBuffer = (LPVOID)Buffer;
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
-   if (DeviceObject->Flags&DO_BUFFERED_IO)
+   if (DeviceObject->Flags & DO_BUFFERED_IO)
      {
 	DPRINT("Doing buffer i/o\n");
 	Irp->AssociatedIrp.SystemBuffer = (PVOID)
@@ -247,12 +249,13 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 	     IoFreeIrp(Irp);
 	     return(NULL);
 	  }
+        /* FIXME: should copy buffer in on other ops */
         if (MajorFunction == IRP_MJ_WRITE)
           {
              RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
           }
      }
-   if (DeviceObject->Flags&DO_DIRECT_IO)
+   if (DeviceObject->Flags & DO_DIRECT_IO)
      {
 	DPRINT("Doing direct i/o\n");
 	
@@ -276,6 +279,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->Control = 0;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
+   StackPtr->CompletionRoutine = NULL;
    StackPtr->Parameters.Write.Length = Length;
    if (MajorFunction == IRP_MJ_READ)
      {
