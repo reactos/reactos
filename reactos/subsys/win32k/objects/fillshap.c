@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.41 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: fillshap.c,v 1.42 2004/03/03 04:09:20 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -279,9 +279,9 @@ NtGdiEllipse(
    HPenToBrushObj(&PenBrush, dc->w.hPen);
 
    nLeftRect += dc->w.DCOrgX;
-   nRightRect += dc->w.DCOrgX;
+   nRightRect += dc->w.DCOrgX - 1;
    nTopRect += dc->w.DCOrgY;
-   nBottomRect += dc->w.DCOrgY;
+   nBottomRect += dc->w.DCOrgY - 1;
 
    RadiusX = max((nRightRect - nLeftRect) >> 1, 1);
    RadiusY = max((nBottomRect - nTopRect) >> 1, 1);
