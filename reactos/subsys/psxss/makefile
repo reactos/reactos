@@ -1,14 +1,16 @@
-# $Id: makefile,v 1.2 1999/08/29 13:45:07 dwelch Exp $
+# $Id: makefile,v 1.3 1999/09/07 17:12:39 ea Exp $
 #
-# CSRSS: Client/server run-time subsystem
+# PSXSS: POSIX+ Subsystem server process
 #
 # ReactOS Operating System
 #
-TARGET=csrss
+TARGET=psxss
 
-BASE_CFLAGS = -I../../include
+OBJECTS_API = api/process.o api/thread.o api/subsys.o
 
-OBJECTS = $(TARGET).o init.o $(TARGET).coff
+OBJECTS_MISC = $(TARGET).o init.o $(TARGET).coff
+
+OBJECTS =  $(OBJECTS_MISC) $(OBJECTS_API)
 
 LIBS = ../../lib/ntdll/ntdll.a
 
@@ -17,10 +19,11 @@ all: $(TARGET).exe
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
+	- $(RM) *.o
 	- $(RM) $(TARGET).exe
 	- $(RM) $(TARGET).sym
 	- $(RM) $(TARGET).coff
+	- $(RM) api/*.o
 
 .phony: clean
 
