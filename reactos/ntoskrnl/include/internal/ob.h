@@ -93,9 +93,9 @@ typedef struct
 PHANDLE_REP ObTranslateHandle(struct _EPROCESS* Process, HANDLE h);
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 
-VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-			 POBJECT Object,
-			 PWSTR Name);
+VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+				 POBJECT Object,
+				 PWSTR Name);
 NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
