@@ -445,6 +445,9 @@ typedef struct _BRUSHOBJ
 {
   ULONG  iSolidColor;
   PVOID  pvRbrush;
+
+  /*  remainder of fields are for GDI internal use  */
+  LOGBRUSH  logbrush;
 } BRUSHOBJ, *PBRUSHOBJ;
 
 typedef struct _CLIPOBJ 

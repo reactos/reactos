@@ -2,7 +2,9 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdlib.h>
 #include <win32k/bitmaps.h>
+#include <win32k/debug.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -68,7 +70,7 @@ HBITMAP  W32kCreateBitmap(INT  Width,
   bmp->bitmap.bmHeight = Height;
   bmp->bitmap.bmPlanes = Planes;
   bmp->bitmap.bmBitsPixel = BitsPerPel;
-  bmp->bitmap.bmWidthBytes = BITMAP_GetWidthBytes (Width, BitsPerPel);
+  bmp->bitmap.bmWidthBytes = BITMAPOBJ_GetWidthBytes (Width, BitsPerPel);
   bmp->bitmap.bmBits = NULL;
   bmp->DDBitmap = NULL;
   bmp->dib = NULL;
@@ -158,7 +160,8 @@ HBITMAP  W32kCreateDiscardableBitmap(HDC  hDC,
                                      INT  Width,
                                      INT  Height)
 {
-  UNIMPLEMENTED;
+  /* FIXME: this probably should do something else */
+  return  W32kCreateCompatibleBitmap(hDC, Width, Height);
 }
 
 BOOL W32kExtFloodFill(HDC  hDC,
@@ -258,7 +261,18 @@ LONG  W32kGetBitmapBits(HBITMAP  hBitmap,
 BOOL  W32kGetBitmapDimensionEx(HBITMAP  hBitmap,
                                LPSIZE  Dimension)
 {
-  UNIMPLEMENTED;
+  PBITMAPOBJ  bmp;
+  
+  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  if (bmp == NULL) 
+    {
+      return FALSE;
+    }
+  
+  *Dimension = bmp->size;
+  BITMAPOBJ_UnlockBitmap (hBitmap);
+
+  return  TRUE;
 }
 
 UINT  W32kGetDIBColorTable(HDC  hDC,
@@ -321,7 +335,77 @@ LONG  W32kSetBitmapBits(HBITMAP  hBitmap,
                         DWORD  Bytes,
                         CONST VOID *Bits)
 {
-  UNIMPLEMENTED;
+  DWORD  height, ret;
+  PBITMAPOBJ  bmp;
+  
+  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  if (bmp == NULL || Bits == NULL)
+    {
+      return 0;
+    }
+
+  if (Bytes < 0) 
+    {
+      DPRINT ("(%ld): Negative number of bytes passed???\n", Bytes );
+      Bytes = -Bytes;
+    }
+
+  /* Only get entire lines */
+  height = Bytes / bmp->bitmap.bmWidthBytes;
+  if (height > bmp->bitmap.bmHeight) 
+    {
+      height = bmp->bitmap.bmHeight;
+    }
+  Bytes = height * bmp->bitmap.bmWidthBytes;
+  DPRINT ("(%08x, %ld, %p) %dx%d %d colors fetched height: %ld\n",
+          hBitmap, 
+          Bytes, 
+          Bits, 
+          bmp->bitmap.bmWidth, 
+          bmp->bitmap.bmHeight,
+          1 << bmp->bitmap.bmBitsPixel, 
+          height);
+
+#if 0
+  /* FIXME: call DDI specific function here if available  */
+  if(bmp->DDBitmap) 
+    {
+      DPRINT ("Calling device specific BitmapBits\n");
+      if (bmp->DDBitmap->funcs->pBitmapBits)
+        {
+          ret = bmp->DDBitmap->funcs->pBitmapBits(hBitmap, 
+                                                  (void *) Bits,
+                                                  Bytes, 
+                                                  DDB_SET);
+        } 
+      else 
+        {
+          DPRINT ("BitmapBits == NULL??\n");
+          ret = 0;
+        }
+    } 
+  else
+#endif
+    {
+      /* FIXME: Alloc enough for entire bitmap */
+      if (bmp->bitmap.bmBits == NULL)
+        {
+          bmp->bitmap.bmBits = ExAllocatePool (NonPagedPool, Bytes);
+        }
+      if(!bmp->bitmap.bmBits) 
+        {
+          DPRINT ("Unable to allocate bit buffer\n");
+          ret = 0;
+        } 
+      else 
+        {
+          memcpy(bmp->bitmap.bmBits, Bits, Bytes);
+          ret = Bytes;
+        }
+    }
+  BITMAPOBJ_UnlockBitmap (hBitmap);
+
+  return ret;
 }
 
 BOOL  W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
@@ -329,7 +413,23 @@ BOOL  W32kSetBitmapDimensionEx(HBITMAP  hBitmap,
                                INT  Height,
                                LPSIZE  Size)
 {
-  UNIMPLEMENTED;
+  PBITMAPOBJ  bmp;
+  
+  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  if (bmp == NULL) 
+    {
+      return FALSE;
+    }
+  
+  if (Size) 
+    {
+      *Size = bmp->size;
+    }
+  bmp->size.cx = Width;
+  bmp->size.cy = Height;
+  BITMAPOBJ_UnlockBitmap (hBitmap);
+
+  return TRUE;
 }
 
 UINT  W32kSetDIBColorTable(HDC  hDC,
@@ -418,7 +518,7 @@ INT  W32kStretchDIBits(HDC  hDC,
 /*  Internal Functions  */
 
 INT 
-BITMAP_GetWidthBytes (INT bmWidth, INT bpp)
+BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 {
   switch(bpp)
     {
@@ -441,9 +541,108 @@ BITMAP_GetWidthBytes (INT bmWidth, INT bpp)
       return 2 * ((bmWidth+3) >> 2);
       
     default:
-      UNIMPLEMENTED;
+      FIXME ("stub");
     }
 
   return -1;
+}
+
+HBITMAP  BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
+{
+  PBITMAPOBJ  bmp;
+  HBITMAP  res;
+  BITMAP  bm;
+
+  bmp = BITMAPOBJ_HandleToPtr (hBitmap);
+  if (bmp == NULL) 
+    {
+      return 0;
+    }
+  res = 0;
+  
+  bm = bmp->bitmap;
+  bm.bmBits = NULL;
+  res = W32kCreateBitmapIndirect(&bm);
+  if(res) 
+    {
+      char *buf;
+      
+      buf = ExAllocatePool (NonPagedPool, bm.bmWidthBytes * bm.bmHeight);
+      W32kGetBitmapBits (hBitmap, bm.bmWidthBytes * bm.bmHeight, buf);
+      W32kSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
+      ExFreePool (buf);
+    }
+  BITMAPOBJ_UnlockBitmap (hBitmap);
+
+  return  res;
+}
+
+/***********************************************************************
+ *           DIB_GetDIBWidthBytes
+ *
+ * Return the width of a DIB bitmap in bytes. DIB bitmap data is 32-bit aligned.
+ * http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/struc/src/str01.htm
+ * 11/16/1999 (RJJ) lifted from wine
+ */
+int DIB_GetDIBWidthBytes(int  width, int  depth)
+{
+  int words;
+  
+  switch(depth)
+    {
+    case 1:  words = (width + 31) / 32; break;
+    case 4:  words = (width + 7) / 8; break;
+    case 8:  words = (width + 3) / 4; break;
+    case 15:
+    case 16: words = (width + 1) / 2; break;
+    case 24: words = (width * 3 + 3)/4; break;
+      
+    default:
+      DPRINT("(%d): Unsupported depth\n", depth );
+      /* fall through */
+    case 32:
+      words = width;
+    }
+  return 4 * words;
+}
+
+/***********************************************************************
+ *           DIB_GetDIBImageBytes
+ *
+ * Return the number of bytes used to hold the image in a DIB bitmap.
+ * 11/16/1999 (RJJ) lifted from wine
+ */
+
+int DIB_GetDIBImageBytes (int  width, int  height, int  depth)
+{
+  return DIB_GetDIBWidthBytes( width, depth ) * abs( height );
+}
+
+/***********************************************************************
+ *           DIB_BitmapInfoSize
+ *
+ * Return the size of the bitmap info structure including color table.
+ * 11/16/1999 (RJJ) lifted from wine
+ */
+
+int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
+{
+  int colors;
+
+  if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+      BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)info;
+      colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
+      return sizeof(BITMAPCOREHEADER) + colors *
+        ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
+    }
+  else  /* assume BITMAPINFOHEADER */
+    {
+      colors = info->bmiHeader.biClrUsed;
+      if (!colors && (info->bmiHeader.biBitCount <= 8))
+        colors = 1 << info->bmiHeader.biBitCount;
+        return sizeof(BITMAPINFOHEADER) + colors *
+               ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+    }
 }
 

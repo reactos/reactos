@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.8 1999/10/31 22:43:40 ea Exp $
+/* $Id: dc.c,v 1.9 1999/11/17 20:54:05 rex Exp $
  *
  * DC.C - Device context functions
  * 
@@ -92,7 +92,11 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   HBITMAP  hBitmap;
 
   OrigDC = DC_HandleToPtr(hDC);
-
+  if (OrigDC == NULL)
+    {
+      return  0;
+    }
+  
   /*  Allocate a new DC based on the original DC's device  */
   NewDC = DC_AllocDC(OrigDC->DriverName);
   if (NewDC == NULL) 
@@ -268,13 +272,62 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   UNIMPLEMENTED;
 
   DCToDelete = DC_HandleToPtr(DCHandle);
-
-  /* FIXME: Verify that is is a valid handle */
+  if (DCToDelete == NULL)
+    {
+      return  FALSE;
+    }
   
   DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
   DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
 
-  DC_FreeDC(DCToDelete);
+  /*  First delete all saved DCs  */
+  while (DCToDelete->saveLevel)
+    {
+      PDC  savedDC;
+      HDC  savedHDC;
+      
+      savedHDC = GDIOBJ_GetNextObject (DCHandle, GO_DC_MAGIC);
+      savedDC = DC_HandleToPtr (savedHDC);
+      if (savedDC == NULL)
+        {
+          break;
+        }
+      GDIOBJ_SetNextObject (DCHandle, GO_DC_MAGIC, GDIOBJ_GetNextObject (savedHDC, GO_DC_MAGIC));
+      DCToDelete->saveLevel--;
+      DC_UnlockDC (savedDC);
+      W32kDeleteDC (savedHDC);
+    }
+  
+  /*  Free GDI resources allocated to this DC  */
+  if (!(DCToDelete->w.flags & DC_SAVED))
+    {
+      DC_UnlockDC (DCToDelete);
+      SelectObject (DCHandle, STOCK_BLACK_PEN);
+      SelectObject (DCHandle, STOCK_WHITE_BRUSH);
+      SelectObject (DCHandle, STOCK_SYSTEM_FONT);
+      DC_LockDC (DCHandle);
+      if (DCToDelete->w.flags & DC_MEMORY) 
+        {
+          W32kDeleteObject (DCToDelete->w.hFirstBitmap);
+        }
+    }
+  if (DCToDelete->w.hClipRgn) 
+    {
+      W32kDeleteObject (DCToDelete->w.hClipRgn);
+    }
+  if (DCToDelete->w.hVisRgn) 
+    {
+      W32kDeleteObject (DCToDelete->w.hVisRgn);
+    }
+  if (DCToDelete->w.hGCClipRgn) 
+    {
+      W32kDeleteObject (DCToDelete->w.hGCClipRgn);
+    }
+#if 0 /* FIXME */
+  PATH_DestroyGdiPath (&DCToDelete->w.path);
+#endif
+  
+  DC_FreeDC (DCToDelete);
   
   return  STATUS_SUCCESS;
 }
@@ -570,19 +623,19 @@ BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
   success = TRUE;
   while (dc->saveLevel >= SaveLevel)
     {
-      HDC hdcs = dc->header.hNext;
+      HDC hdcs = GDIOBJ_GetNextObject (hDC, GO_DC_MAGIC);
       
-      dcs = DC_HandleToPtr(hdcs);
+      dcs = DC_HandleToPtr (hdcs);
       if (dcs == NULL)
         {
-          DC_UnlockDC(hDC);
+          DC_UnlockDC (hDC);
           
           return FALSE;
         }
-      dc->header.hNext = dcs->header.hNext;
+      GDIOBJ_SetNextObject (hDC, GO_DC_MAGIC, GDIOBJ_GetNextObject (hdcs, GO_DC_MAGIC));
       if (--dc->saveLevel < SaveLevel)
         {
-          W32kSetDCState16(hDC, hdcs);
+          W32kSetDCState16 (hDC, hdcs);
 #if 0
           if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
             {
@@ -592,9 +645,9 @@ BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SaveLevel)
             }
 #endif
         }
-      W32kDeleteDC(hdcs);
+      W32kDeleteDC (hdcs);
     }
-  DC_UnlockDC(hDC);
+  DC_UnlockDC (hDC);
   
   return  success;
 }
@@ -605,19 +658,19 @@ INT STDCALL W32kSaveDC(HDC  hDC)
   PDC  dc, dcs;
   INT  ret;
 
-  dc = DC_HandleToPtr(hDC);
+  dc = DC_HandleToPtr (hDC);
   if (dc == NULL)
     {
       return 0;
     }
 
-  if (!(hdcs = W32kGetDCState16(hDC)))
+  if (!(hdcs = W32kGetDCState16 (hDC)))
     {
-      DC_UnlockDC(hDC);
+      DC_UnlockDC (hDC);
       
       return 0;
     }
-  dcs = DC_HandleToPtr(hdcs);
+  dcs = DC_HandleToPtr (hdcs);
 
 #if 0
     /* Copy path. The reason why path saving / restoring is in SaveDC/
@@ -626,20 +679,20 @@ INT STDCALL W32kSaveDC(HDC  hDC)
      * SetDCState doesn't allow us to signal an error (which can happen
      * when copying paths).
      */
-  if (!PATH_AssignGdiPath(&dcs->w.path, &dc->w.path))
+  if (!PATH_AssignGdiPath (&dcs->w.path, &dc->w.path))
     {
-      DC_UnlockDC(hdc);
-      DC_UnlockDC(hdcs);
-      W32kDeleteDC(hdcs);
+      DC_UnlockDC (hdc);
+      DC_UnlockDC (hdcs);
+      W32kDeleteDC (hdcs);
       return 0;
     }
 #endif
     
-  dcs->header.hNext = dc->header.hNext;
-  dc->header.hNext = hdcs;
+  GDIOBJ_SetNextObject (hdcs, GO_DC_MAGIC, GDIOBJ_GetNextObject (hDC, GO_DC_MAGIC));
+  GDIOBJ_SetNextObject (hDC, GO_DC_MAGIC, hdcs);
   ret = ++dc->saveLevel;
-  DC_UnlockDC(hdcs);
-  DC_UnlockDC(hDC);
+  DC_UnlockDC (hdcs);
+  DC_UnlockDC (hDC);
 
   return  ret;
 }
@@ -810,7 +863,7 @@ PDC  DC_AllocDC(LPCWSTR  Driver)
                                          wcslen(Driver) * sizeof(WCHAR));
       wcscpy(NewDC->DriverName, Driver);
     }
-
+  
   return  NewDC;
 }
 

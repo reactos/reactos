@@ -15,7 +15,6 @@ typedef struct _DDBITMAP
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
-  GDIOBJHDR   header;
   BITMAP      bitmap;
   SIZE        size;   /* For SetBitmapDimension() */
   
@@ -28,16 +27,20 @@ typedef struct _BITMAPOBJ
 /*  Internal interface  */
 
 #define  BITMAPOBJ_AllocBitmap()  \
-  ((PBITMAPOBJ) GDIOBJ_AllocObject(sizeof(BITMAPOBJ), GO_BITMAP_MAGIC))
-#define  BITMAPOBJ_FreeBitmap(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ)hBMObj)
+  ((PBITMAPOBJ) GDIOBJ_AllocObject (sizeof (BITMAPOBJ), GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_FreeBitmap(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ) hBMObj)
 #define  BITMAPOBJ_HandleToPtr(hBMObj)  \
-  ((PBITMAPOBJ) GDIOBJ_HandleToPtr((HGDIOBJ)hBMObj, GO_BITMAP_MAGIC))
+  ((PBITMAPOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
 #define  BITMAPOBJ_PtrToHandle(hBMObj)  \
-  ((HBITMAP) GDIOBJ_HandleToPtr((PGDIOBJ)hBMObj, GO_BITMAP_MAGIC))
-#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObject((HGDIOBJ)hBMObj)
-#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObject((HGDIOBJ)hBMObj)
+  ((HBITMAP) GDIOBJ_PtrToHandle ((PGDIOBJ) hBMObj, GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObject ((HGDIOBJ) hBMObj)
+#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObject ((HGDIOBJ) hBMObj)
 
-INT  BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
+INT  BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
+HBITMAP  BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
+int DIB_GetDIBWidthBytes (int  width, int  depth);
+int DIB_GetDIBImageBytes (int  width, int  height, int  depth);
+int DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
 
 /*  User Entry Points  */
 BOOL  W32kBitBlt(HDC  hDCDest,

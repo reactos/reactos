@@ -45,14 +45,9 @@ typedef struct _WIN_DC_INFO
 {
   int  flags;
   const PDEVICECAPS  devCaps;
-
   HRGN  hClipRgn;     /* Clip region (may be 0) */
-  
-#if 0
-    HRGN        hVisRgn;      /* Visible region (must never be 0) */
-    HRGN        hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
-#endif
-  
+  HRGN  hVisRgn;      /* Visible region (must never be 0) */
+  HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
   HPEN  hPen;
   HBRUSH  hBrush;
   HFONT  hFont;
@@ -116,7 +111,6 @@ typedef struct _WIN_DC_INFO
 
 typedef struct _DC
 {
-  GDIOBJHDR  header;
   HDC  hSelf;
   DHPDEV  PDev;  
   DEVMODEW  DMW;
@@ -146,11 +140,11 @@ typedef struct _DC
 /*  Internal functions  */
 
 #define  DC_PtrToHandle(pDC)  \
-  ((HDC) GDIOBJ_PtrToHandle((PGDIOBJ)pDC, GO_DC_MAGIC))
+  ((HDC) GDIOBJ_PtrToHandle ((PGDIOBJ) pDC, GO_DC_MAGIC))
 #define  DC_HandleToPtr(hDC)  \
-  ((PDC) GDIOBJ_HandleToPtr((HGDIOBJ)hDC, GO_DC_MAGIC))
-#define  DC_LockDC(hDC)  GDIOBJ_LockObject((HGDIOBJ)hDC)
-#define  DC_UnlockDC(hDC)  GDIOBJ_UnlockObject((HGDIOBJ)hDC)
+  ((PDC) GDIOBJ_HandleToPtr ((HGDIOBJ) hDC, GO_DC_MAGIC))
+#define  DC_LockDC(hDC)  GDIOBJ_LockObject ((HGDIOBJ) hDC)
+#define  DC_UnlockDC(hDC)  GDIOBJ_UnlockObject ((HGDIOBJ) hDC)
 PDC  DC_AllocDC(LPCWSTR  Driver);
 void  DC_InitDC(PDC  DCToInit);
 PDC  DC_FindOpenDC(LPCWSTR  Driver);
