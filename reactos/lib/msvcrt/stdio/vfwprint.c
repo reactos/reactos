@@ -858,6 +858,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 			} else {
 				/* print ascii string */
 				s = va_arg(args, char *);
+				result = string(f, s, -1, field_width, precision, flags);
 			}
 			if (result < 0)
 				return -1;
