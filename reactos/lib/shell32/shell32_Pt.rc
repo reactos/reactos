@@ -174,7 +174,16 @@ BEGIN
 	IDS_SHV_COLUMN4		"Modificado"
 	IDS_SHV_COLUMN5		"Atributos"
 	IDS_SHV_COLUMN6		"Tamanho"
-	IDS_SHV_COLUMN7		"Espaço disponível"
+	IDS_SHV_COLUMN7		"Disponível"
 	IDS_SHV_COLUMN8		"Nome"
 	IDS_SHV_COLUMN9		"Comentários"
 END
+
+/* message box strings */
+STRINGTABLE DISCARDABLE
+{
+       IDS_RESTART_TITLE       "Reiniciar"
+       IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
+       IDS_SHUTDOWN_TITLE      "Desligar"
+       IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no Wine?"
+}

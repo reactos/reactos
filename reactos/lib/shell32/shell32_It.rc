@@ -1,6 +1,6 @@
 /*
  * Copyright 1998 Juergen Schmied
- * Copyright 2003-2004 Ivan Leo Murray-Smith
+ * Copyright 2003-2004 Puoti
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,7 @@ BEGIN
 	POPUP ""
 	BEGIN
 	  MENUITEM "E&splora",		FCIDM_SHVIEW_EXPLORE
-	  MENUITEM "&Apri",		    FCIDM_SHVIEW_OPEN
+	  MENUITEM "&Apri",		FCIDM_SHVIEW_OPEN
 	  MENUITEM SEPARATOR
 	  MENUITEM "&Taglia",		FCIDM_SHVIEW_CUT
 	  MENUITEM "&Copia",		FCIDM_SHVIEW_COPY
@@ -176,5 +176,15 @@ BEGIN
 	IDS_SHV_COLUMN6		"Dimensione"
 	IDS_SHV_COLUMN7		"Dimensione disponibile"
 	IDS_SHV_COLUMN8		"Nome"
-	IDS_SHV_COLUMN9		"Commentari"
+	IDS_SHV_COLUMN9		"Commenti"
 END
+
+
+/* message box strings */
+STRINGTABLE DISCARDABLE
+{
+       IDS_RESTART_TITLE       "Riavvia"
+       IDS_RESTART_PROMPT      "Vuoi simulare un riavvio do Windows?"
+       IDS_SHUTDOWN_TITLE      "Termina sessione"
+       IDS_SHUTDOWN_PROMPT     "Vuoi terminare la sessione di Wine?"
+}
