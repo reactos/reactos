@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.11 $
-; $Author: rex $
-; $Date: 1999/05/21 18:47:43 $
+; $Revision: 1.12 $
+; $Author: ariadne $
+; $Date: 1999/05/24 15:22:43 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -66,7 +66,7 @@ __fpecode
 __isascii
 __iscsym
 __iscsymf
-;__mb_cur_max_dll
+__mb_cur_max_dll
 __pxcptinfoptrs
 __threadhandle
 __threadid
@@ -454,7 +454,7 @@ isxdigit
 labs
 ldexp
 ldiv
-;localeconv
+localeconv
 localtime
 log
 log10
@@ -485,7 +485,7 @@ rename
 rewind
 scanf
 setbuf
-;setlocale
+setlocale
 setvbuf
 signal
 sin
