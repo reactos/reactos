@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.11 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: rect.c,v 1.12 2002/10/20 23:57:03 mdill Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -37,6 +37,9 @@
 WINBOOL STDCALL
 CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 {
+  if(lprcDst == NULL || lprcSrc == NULL)
+    return(FALSE);
+  
   *lprcDst = *lprcSrc;
   return(TRUE);
 }
@@ -64,8 +67,8 @@ InflateRect(LPRECT rect, int dx, int dy)
 {
   rect->left -= dx;
   rect->top -= dy;
-  rect->right -= dx;
-  rect->bottom -= dy;
+  rect->right += dx;
+  rect->bottom += dy;
   return(TRUE);
 }
 
@@ -99,6 +102,9 @@ IsRectEmpty(CONST RECT *lprc)
 WINBOOL STDCALL
 OffsetRect(LPRECT rect, int dx, int dy)
 {
+  if(rect == NULL)
+    return(FALSE);
+  
   rect->left += dx;
   rect->top += dy;
   rect->right += dx;
@@ -133,8 +139,32 @@ SetRectEmpty(LPRECT lprc)
 WINBOOL STDCALL
 SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  RECT tempRect;
+  
+  if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
+    return(FALSE);
+  
+  CopyRect(lprcDst, lprcSrc1);
+  
+  if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+    return(FALSE);
+  
+  if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
+  {
+    if(lprcDst->left == tempRect.left)
+      lprcDst->left = tempRect.right;
+    else if(lprcDst->right == tempRect.right)
+      lprcDst->right = tempRect.left;
+  }
+  else if(lprcDst->left == tempRect.left && lprcDst->right == tempRect.right)
+  {
+    if(lprcDst->top == tempRect.top)
+      lprcDst->top = tempRect.bottom;
+    else if(lprcDst->right == tempRect.right)
+      lprcDst->right = tempRect.left;
+  }
+  
+  return(TRUE);
 }
 
 WINBOOL STDCALL
