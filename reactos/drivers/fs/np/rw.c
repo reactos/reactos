@@ -102,7 +102,10 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
       if (Fcb->ReadDataAvailable == 0)
 	{
 	  KeResetEvent(&Fcb->Event);
-	  KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	    {
+	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	    }
 	  KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
 	  if (Information > 0)
 	    {
@@ -190,7 +193,10 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 
 	  if (Information > 0)
 	    {
-	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	        {
+	          KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
+	        }
 	      break;
 	    }
 	}
