@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.20 2001/04/02 04:07:49 phreak Exp $
+/* $Id: dpc.c,v 1.21 2001/04/03 17:25:49 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -96,7 +96,10 @@ KiDispatchInterrupt(VOID)
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    current_entry = RemoveHeadList(&DpcQueueHead);
-   DpcQueueSize--;
+   if (current_entry != &DpcQueueHead)
+     {
+       DpcQueueSize--;
+     }
    KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
    current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
    current->Lock=FALSE;
@@ -110,7 +113,10 @@ KiDispatchInterrupt(VOID)
 	KeRaiseIrql(HIGH_LEVEL, &oldlvl);
 	KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
 	current_entry = RemoveHeadList(&DpcQueueHead);
-	DpcQueueSize--;
+	if (current_entry != &DpcQueueHead)
+	  {
+	    DpcQueueSize--;
+	  }
 	KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
 	current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
 	current->Lock=FALSE;

@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.33 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: mdl.c,v 1.34 2001/04/03 17:25:49 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -35,7 +35,8 @@ MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
    return((PVOID)MdlPages[((ULONG)Offset) / PAGESIZE]);
 }
 
-VOID STDCALL MmUnlockPages(PMDL Mdl)
+VOID STDCALL 
+MmUnlockPages(PMDL Mdl)
 /*
  * FUNCTION: Unlocks the physical pages described by a given MDL
  * ARGUMENTS:
@@ -92,6 +93,11 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    NTSTATUS Status;
    
    DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
+
+   if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+     {
+       return(Mdl->MappedSystemVa);
+     }
    
    MmLockAddressSpace(MmGetKernelAddressSpace());
    
@@ -131,7 +137,8 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 }
 
 
-VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
+VOID STDCALL 
+MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 /*
  * FUNCTION: Releases a mapping set up by a preceding call to MmMapLockedPages
  * ARGUMENTS:
@@ -140,6 +147,16 @@ VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
  */
 {
    DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
+
+   /*
+    * In this case, the MDL has the same system address as the base address
+    * so there is no need to free it
+    */
+   if (Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+     {
+       return;
+     }
+
    MmLockAddressSpace(MmGetKernelAddressSpace());
    (VOID)MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			  BaseAddress - Mdl->ByteOffset,
@@ -152,7 +169,8 @@ VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 }
 
 
-VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
+VOID 
+MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
 {
    ULONG i;
    PULONG MdlPages;
@@ -286,7 +304,8 @@ ULONG STDCALL MmSizeOfMdl (PVOID	Base,
 }
 
 
-VOID STDCALL MmBuildMdlForNonPagedPool (PMDL	Mdl)
+VOID STDCALL 
+MmBuildMdlForNonPagedPool (PMDL	Mdl)
 /*
  * FUNCTION: Fills in the corresponding physical page array of a given 
  * MDL for a buffer in nonpaged system space
@@ -296,8 +315,9 @@ VOID STDCALL MmBuildMdlForNonPagedPool (PMDL	Mdl)
  */
 {
    int va;
-   Mdl->MdlFlags = Mdl->MdlFlags | MDL_SOURCE_IS_NONPAGED_POOL;
-   for (va=0; va<Mdl->Size; va++)
+   Mdl->MdlFlags = Mdl->MdlFlags | 
+     (MDL_SOURCE_IS_NONPAGED_POOL | MDL_PAGES_LOCKED);
+   for (va=0; va < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); va++)
      {
         ((PULONG)(Mdl + 1))[va] =
             (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGESIZE))).u.LowPart;
@@ -306,9 +326,10 @@ VOID STDCALL MmBuildMdlForNonPagedPool (PMDL	Mdl)
 }
 
 
-PMDL STDCALL MmCreateMdl (PMDL	MemoryDescriptorList,
-			  PVOID	Base,
-			  ULONG	Length)
+PMDL STDCALL 
+MmCreateMdl (PMDL	MemoryDescriptorList,
+	     PVOID	Base,
+	     ULONG	Length)
 /*
  * FUNCTION: Allocates and initalizes an MDL
  * ARGUMENTS:
@@ -337,8 +358,8 @@ PMDL STDCALL MmCreateMdl (PMDL	MemoryDescriptorList,
    return(MemoryDescriptorList);
 }
 
-
-VOID STDCALL MmMapMemoryDumpMdl (PVOID	Unknown0)
+VOID STDCALL 
+MmMapMemoryDumpMdl (PVOID	Unknown0)
 /*
  * FIXME: Has something to do with crash dumps. Do we want to implement
  * this?

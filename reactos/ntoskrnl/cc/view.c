@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.22 2001/03/25 02:34:27 dwelch Exp $
+/* $Id: view.c,v 1.23 2001/04/03 17:25:48 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,7 +64,7 @@
 /* GLOBALS *******************************************************************/
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define ROUND_DOWN(N, S) (ROUND_UP(N, S) - S)
+#define ROUND_DOWN(N, S) (((N) % (S)) ? ROUND_UP(N, S) - S : N)
 
 #define TAG_CSEG  TAG('C', 'S', 'E', 'G')
 #define TAG_BCB   TAG('B', 'C', 'B', ' ')
@@ -104,29 +104,18 @@ CcReleaseCacheSegment(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
-CcRequestCacheSegment(PBCB Bcb,
-		      ULONG FileOffset,
-		      PVOID* BaseAddress,
-		      PBOOLEAN UptoDate,
-		      PCACHE_SEGMENT* CacheSeg)
-/*
- * FUNCTION: Request a page mapping for a BCB
- */
+NTSTATUS
+CcGetCacheSegment(PBCB Bcb,
+		  ULONG FileOffset,
+		  PULONG BaseOffset,
+		  PVOID* BaseAddress,
+		  PBOOLEAN UptoDate,
+		  PCACHE_SEGMENT* CacheSeg)
 {
    KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    ULONG i;
-   
-   if ((FileOffset % Bcb->CacheSegmentSize) != 0)
-     {
-       KeBugCheck(0);
-     }
-
-   DPRINT("CcRequestCachePage(Bcb %x, FileOffset %x, BaseAddress %x, "
-	  "UptoDate %x, CacheSeg %x)\n", Bcb, FileOffset, BaseAddress,
-	  UptoDate, CacheSeg);
    
    KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
    
@@ -134,12 +123,11 @@ CcRequestCacheSegment(PBCB Bcb,
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
-	if (current->FileOffset == FileOffset)
+	if (current->FileOffset <= FileOffset &&
+	    (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
 	  {
-	     DPRINT("Found existing segment at %x\n", current);
 	     current->ReferenceCount++;
 	     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-	     DPRINT("Waiting for segment\n");
 	     KeWaitForSingleObject(&current->Lock,
 				   Executive,
 				   KernelMode,
@@ -148,7 +136,7 @@ CcRequestCacheSegment(PBCB Bcb,
 	     *UptoDate = current->Valid;
 	     *BaseAddress = current->BaseAddress;
 	     *CacheSeg = current;
-	     DPRINT("Returning %x (UptoDate %d)\n", current, current->Valid);
+	     *BaseOffset = current->FileOffset;
 	     return(STATUS_SUCCESS);
 	  }
 	current_entry = current_entry->Flink;
@@ -170,7 +158,7 @@ CcRequestCacheSegment(PBCB Bcb,
 		      (PMEMORY_AREA*)&current->MemoryArea,
 		      FALSE);
    current->Valid = FALSE;
-   current->FileOffset = FileOffset;
+   current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
    current->Bcb = Bcb;
    KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
    current->ReferenceCount = 1;
@@ -178,6 +166,7 @@ CcRequestCacheSegment(PBCB Bcb,
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
    *CacheSeg = current;
+   *BaseOffset = current->FileOffset;
    for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
      {
        MmCreateVirtualMapping(NULL,
@@ -187,9 +176,33 @@ CcRequestCacheSegment(PBCB Bcb,
      }
    
    
-   DPRINT("Returning %x (BaseAddress %x)\n", current, *BaseAddress);
    
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL 
+CcRequestCacheSegment(PBCB Bcb,
+		      ULONG FileOffset,
+		      PVOID* BaseAddress,
+		      PBOOLEAN UptoDate,
+		      PCACHE_SEGMENT* CacheSeg)
+/*
+ * FUNCTION: Request a page mapping for a BCB
+ */
+{
+  ULONG BaseOffset;
+   
+  if ((FileOffset % Bcb->CacheSegmentSize) != 0)
+    {
+      KeBugCheck(0);
+    }
+
+  return(CcGetCacheSegment(Bcb,
+			   FileOffset,
+			   &BaseOffset,
+			   BaseAddress,
+			   UptoDate,
+			   CacheSeg));
 }
 
 STATIC VOID 

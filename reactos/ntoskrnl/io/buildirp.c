@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.24 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: buildirp.c,v 1.25 2001/04/03 17:25:49 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -481,13 +481,14 @@ IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 }
 
 
-PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
-					 PDEVICE_OBJECT DeviceObject,
-					 PMDL Mdl,
-					 PLARGE_INTEGER StartingOffset,
-					 PKEVENT Event,
-					 PIO_STATUS_BLOCK IoStatusBlock,
-					 ULONG PagingIo)
+PIRP 
+IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
+				    PDEVICE_OBJECT DeviceObject,
+				    PMDL Mdl,
+				    PLARGE_INTEGER StartingOffset,
+				    PKEVENT Event,
+				    PIO_STATUS_BLOCK IoStatusBlock,
+				    BOOLEAN PagingIo)
 /*
  * FUNCTION: Allocates and builds an IRP to be sent synchronously to lower
  * level driver(s)

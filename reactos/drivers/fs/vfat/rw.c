@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.21 2001/03/02 15:59:16 cnettel Exp $
+/* $Id: rw.c,v 1.22 2001/04/03 17:25:50 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -174,7 +174,10 @@ VfatReadBigCluster(PDEVICE_EXTENSION DeviceExt,
   /*
    * Copy the data from the cache to the caller
    */
-  memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
+  if (InternalOffset != 0 || !NoCache)
+    {
+      memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
+    }
   if (!NoCache)
     {
       CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
@@ -292,7 +295,10 @@ VfatReadSmallCluster(PDEVICE_EXTENSION DeviceExt,
   /*
    * Copy the data from the cache to the caller
    */
-  memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
+  if (InternalOffset != 0 || !NoCache)
+    {
+      memcpy(Destination, BaseAddress + InternalOffset, InternalLength);
+    }
   if (!NoCache)
     {
       CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.11 2001/01/13 18:38:09 dwelch Exp $
+/* $Id: page.c,v 1.12 2001/04/03 17:25:49 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -68,11 +68,12 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 }
 
 
-NTSTATUS STDCALL IoPageRead(PFILE_OBJECT FileObject,
-			    PMDL Mdl,
-			    PLARGE_INTEGER Offset,
-			    PIO_STATUS_BLOCK StatusBlock,
-			    ULONG PagingIo)
+NTSTATUS STDCALL 
+IoPageRead(PFILE_OBJECT FileObject,
+	   PMDL Mdl,
+	   PLARGE_INTEGER Offset,
+	   PIO_STATUS_BLOCK StatusBlock,
+	   BOOLEAN PagingIo)
 {
    PIRP Irp;
    KEVENT Event;

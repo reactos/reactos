@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.54 2001/03/30 15:14:53 dwelch Exp $
+/* $Id: section.c,v 1.55 2001/04/03 17:25:49 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -35,6 +35,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
+#include <internal/cc.h>
 #include <ddk/ntifs.h>
 
 #define NDEBUG
@@ -248,6 +249,98 @@ MmUnsharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
   MmSetPageEntrySectionSegment(Segment, Offset, Entry);
 }
 
+NTSTATUS
+MiReadPage(PMEMORY_AREA MemoryArea,
+	   PLARGE_INTEGER Offset,
+	   PVOID* Page)
+{
+  IO_STATUS_BLOCK IoStatus;
+  PFILE_OBJECT FileObject;
+  PMDL Mdl;
+  NTSTATUS Status;
+  PREACTOS_COMMON_FCB_HEADER Fcb;
+
+  FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+  Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
+
+  if (FileObject->Flags & FO_DIRECT_CACHE_PAGING_READ &&
+      (Offset->QuadPart % PAGESIZE) == 0)
+    {
+      ULONG BaseOffset;
+      PVOID BaseAddress;
+      BOOLEAN UptoDate;
+      PCACHE_SEGMENT CacheSeg;
+      LARGE_INTEGER SegOffset;
+      PHYSICAL_ADDRESS Addr;
+
+      Status = CcGetCacheSegment(Fcb->Bcb,
+				 (ULONG)Offset->QuadPart,
+				 &BaseOffset,
+				 &BaseAddress,
+				 &UptoDate,
+				 &CacheSeg);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+
+      if (!UptoDate)
+	{
+	  Mdl = MmCreateMdl(NULL, BaseAddress, Fcb->Bcb->CacheSegmentSize);
+	  MmBuildMdlForNonPagedPool(Mdl);
+
+	  SegOffset.QuadPart = BaseOffset;
+	  Status = IoPageRead(FileObject,
+			      Mdl,
+			      &SegOffset,
+			      &IoStatus,
+			      TRUE);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      CcReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE);
+	      return(Status);
+	    }
+	}
+
+      Addr = MmGetPhysicalAddress(BaseAddress + 
+				  Offset->QuadPart - BaseOffset);
+      (*Page) = (PVOID)(ULONG)Addr.QuadPart;
+      MmReferencePage((*Page));
+
+      CcReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE);
+      return(STATUS_SUCCESS);
+    }
+  else
+    {
+      
+      /*
+       * Allocate a page, this is rather complicated by the possibility
+       * we might have to move other things out of memory
+       */
+      (*Page) = MmAllocPage(0);
+      while ((*Page) == NULL)
+	{
+	  MmWaitForFreePages();
+	  (*Page) = MmAllocPage(0);
+	}
+      
+      /*
+       * Create an mdl to hold the page we are going to read data into.
+       */
+      Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+      MmBuildMdlFromPages(Mdl, (PULONG)Page);
+  
+      /*
+       * Call the FSD to read the page
+       */
+      Status = IoPageRead(FileObject,
+			  Mdl,
+			  Offset,
+			  &IoStatus,
+			  FALSE);
+      return(Status);
+    }
+}
 
 NTSTATUS 
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
@@ -256,8 +349,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			     BOOLEAN Locked)
 {
    LARGE_INTEGER Offset;
-   IO_STATUS_BLOCK IoStatus;
-   PMDL Mdl;
    PVOID Page;
    NTSTATUS Status;
    ULONG PAddress;
@@ -461,41 +552,15 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 * If the entry is zero (and it can't change because we have
 	 * locked the segment) then we need to load the page.
 	 */
-	
-	/*
-	 * Allocate a page, this is rather complicated by the possibility
-	 * we might have to move other things out of memory
-	 */
-	Page = MmAllocPage(0);
-	while (Page == NULL)
-	  {
-	    MmUnlockSectionSegment(Segment);
-	    MmUnlockSection(Section);
-	    MmUnlockAddressSpace(AddressSpace);
-	    MmWaitForFreePages();
-	    MmLockAddressSpace(AddressSpace);
-	    MmLockSection(Section);
-	    MmLockSectionSegment(Segment);
-	    Page = MmAllocPage(0);
-	  }
-	
-	/*
-	 * Create an mdl to hold the page we are going to read data into.
-	 */
-	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-	MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-	
+
 	/*
 	 * Release all our locks and read in the page from disk
 	 */
 	MmUnlockSectionSegment(Segment);
 	MmUnlockSection(Section);
 	MmUnlockAddressSpace(AddressSpace);
-	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-			    Mdl,
-			    &Offset,
-			    &IoStatus,
-			    FALSE);
+
+	Status = MiReadPage(MemoryArea, &Offset, &Page);
 	if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	  {
 	     /*
