@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.15 2003/05/11 10:47:33 jfilby Exp $
+/* $Id: message.c,v 1.16 2003/05/11 12:29:41 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -462,6 +462,8 @@ NtUserSendMessageCallback(HWND hWnd,
 			  SENDASYNCPROC lpCallBack,
 			  ULONG_PTR dwData)
 {
+  UNIMPLEMENTED;
+
   return(0);
 }
 
