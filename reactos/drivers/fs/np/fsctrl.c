@@ -18,7 +18,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID
+static VOID STDCALL
 NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                            IN PIRP Irp)
 {
