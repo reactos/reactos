@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.22 2002/04/26 13:07:33 ekohl Exp $
+/* $Id: volume.c,v 1.23 2002/08/18 21:07:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -303,13 +303,16 @@ GetDiskFreeSpaceExW(
         FileFsSize.BytesPerSector * FileFsSize.SectorsPerAllocationUnit;
 
     // FIXME: Use quota information
-    lpFreeBytesAvailableToCaller->QuadPart =
-        BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
-
-    lpTotalNumberOfBytes->QuadPart =
-        BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.QuadPart;
-    lpTotalNumberOfFreeBytes->QuadPart =
-        BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+	if (lpFreeBytesAvailableToCaller)
+        lpFreeBytesAvailableToCaller->QuadPart =
+            BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+	
+	if (lpTotalNumberOfBytes)
+        lpTotalNumberOfBytes->QuadPart =
+            BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.QuadPart;
+	if (lpTotalNumberOfFreeBytes)
+        lpTotalNumberOfFreeBytes->QuadPart =
+            BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
 
     CloseHandle(hFile);
     return TRUE;
@@ -502,6 +505,8 @@ GetVolumeInformationW(
 	PFILE_FS_VOLUME_INFORMATION FileFsVolume;
 	PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
 	IO_STATUS_BLOCK IoStatusBlock;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+	UNICODE_STRING NtPathU;
 	USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
 	USHORT Buffer2[FS_ATTRIBUTE_BUFFER_SIZE];
 
@@ -514,13 +519,41 @@ GetVolumeInformationW(
         DPRINT("FileFsVolume %p\n", FileFsVolume);
         DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
-        hFile = CreateFileW(lpRootPathName,
-                            FILE_READ_ATTRIBUTES,
-                            FILE_SHARE_READ|FILE_SHARE_WRITE,
-                            NULL,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            NULL);
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpRootPathName,
+					   &NtPathU,
+					   NULL,
+					   NULL))
+	{
+	    DPRINT("Invalid path\n");
+	    SetLastError(ERROR_BAD_PATHNAME);
+	    return FALSE;
+	}
+
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &NtPathU,
+				   FILE_READ_ATTRIBUTES,
+				   NULL,
+				   NULL);
+
+        errCode = NtCreateFile (&hFile,
+			        FILE_GENERIC_READ,
+			        &ObjectAttributes,
+			        &IoStatusBlock,
+			        NULL,
+			        0,
+			        FILE_SHARE_READ|FILE_SHARE_WRITE,
+			        FILE_OPEN,
+			        0,
+			        NULL,
+			        0);
+
+        RtlFreeUnicodeString(&NtPathU);
+
+        if (!NT_SUCCESS(errCode))
+	{
+	    SetLastErrorByStatus (errCode);
+	    return FALSE;
+	}
 
         DPRINT("hFile: %x\n", hFile);
         errCode = NtQueryVolumeInformationFile(hFile,
