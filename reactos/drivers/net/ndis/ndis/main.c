@@ -4,8 +4,10 @@
  * FILE:        ndis/main.c
  * PURPOSE:     Driver entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *   8/20/2003 Vizzini - NDIS4/5 revisions
  */
 #include <ndissys.h>
 #include <protocol.h>
@@ -15,11 +17,13 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-//DWORD DebugTraceLevel = 0xffffffff;
 DWORD DebugTraceLevel = MIN_TRACE;
+//DWORD DebugTraceLevel = -1;
 
 #endif /* DBG */
 
+extern KSPIN_LOCK OrphanAdapterListLock;
+extern LIST_ENTRY OrphanAdapterListHead;
 
 VOID MainUnload(
     PDRIVER_OBJECT DriverObject)
@@ -31,7 +35,6 @@ VOID MainUnload(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
-
 
 NTSTATUS
 #ifndef _MSC_VER
@@ -60,11 +63,17 @@ DriverEntry(
     InitializeListHead(&AdapterListHead);
     KeInitializeSpinLock(&AdapterListLock);
 
-#ifdef _MSC_VER
-    DriverObject->DriverUnload = MainUnload;
-#else
+    InitializeListHead(&OrphanAdapterListHead);
+    KeInitializeSpinLock(&OrphanAdapterListLock);
+
     DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
-#endif
+
+    /* 
+     * until we have PNP support, query the enum key and NdisFindDevice() each one
+     * NOTE- this will load and start other services before this one returns STATUS_SUCCESS.
+     * I hope there aren't code reentrancy problems. :) 
+     */
+    /* NdisStartDevices(); */
 
     return STATUS_SUCCESS;
 }
@@ -73,7 +82,7 @@ DriverEntry(
  * @unimplemented
  */
 VOID
-EXPORT
+CDECL
 NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
@@ -82,12 +91,27 @@ NdisWriteErrorLogEntry(
 /*  IN  ULONG           ...) 
  *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
  */
+/*
+ * FUNCTION: Write a syslog error
+ * ARGUMENTS:
+ *     NdisAdapterHandle:  Handle passed into MiniportInitialize
+ *     ErrorCode:  32-bit error code to be logged
+ *     NumberOfErrorValues: number of errors to log
+ *     Variable: list of log items
+ * NOTES:
+ *     - THIS IS >CDECL<
+ *     - This needs to be fixed to do var args
+ */
 {
-	/*
-	 * XXX This may be tricky due to the va_arg thing.  I don't
-	 * want to figure it out now so it's just gonna be disabled.
-    UNIMPLEMENTED
-	 */
+  /*
+   * XXX This may be tricky due to the va_arg thing.  I don't
+   * want to figure it out now so it's just gonna be disabled.
+   */
+  NDIS_DbgPrint(MIN_TRACE, ("ERROR: ErrorCode 0x%x\n", ErrorCode));
+#if DBG
+  /* break into a debugger so we can see what's up */
+  __asm__("int $3\n");
+#endif
 }
 
 /*
@@ -134,6 +158,7 @@ NdisWriteEventLogEntry(
 
     return NDIS_STATUS_FAILURE;
 	 */
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 	return NDIS_STATUS_SUCCESS;
 }
 
