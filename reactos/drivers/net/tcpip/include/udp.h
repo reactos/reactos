@@ -7,6 +7,8 @@
 #ifndef __UDP_H
 #define __UDP_H
 
+#define UDP_STARTING_PORT 0x8000
+#define UDP_DYNAMIC_PORTS 0x8000
 
 /* UDPv4 header structure */
 typedef struct UDP_HEADER {
@@ -34,6 +36,8 @@ typedef struct UDP_STATISTICS {
   ULONG NumAddresses;
 } UDP_STATISTICS, *PUDP_STATISTICS;
 
+extern UDP_STATISTICS UDPStats;
+
 VOID UDPSend(
   PVOID Context,
   PDATAGRAM_SEND_REQUEST SendRequest);
@@ -52,7 +56,9 @@ NTSTATUS UDPReceiveDatagram(
     ULONG ReceiveLength,
     ULONG ReceiveFlags,
     PTDI_CONNECTION_INFORMATION ReturnInfo,
-    PULONG BytesReceived);
+    PULONG BytesReceived,
+    PDATAGRAM_COMPLETION_ROUTINE Complete,
+    PVOID Context);
 
 VOID UDPReceive(
   PNET_TABLE_ENTRY NTE,
@@ -63,6 +69,8 @@ NTSTATUS UDPStartup(
 
 NTSTATUS UDPShutdown(
   VOID);
+UINT UDPAllocatePort( UINT HintPort );
+VOID UDPFreePort( UINT Port );
 
 #endif /* __UDP_H */
 

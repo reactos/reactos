@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.8 2004/11/12 07:34:56 arty Exp $
+/* $Id: read.c,v 1.9 2004/11/14 19:45:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -45,6 +45,7 @@ NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 				    i, 
 				    Map[i].BufferAddress,
 				    BytesToCopy));
+
 	    RtlCopyMemory( Map[i].BufferAddress,
 			   FCB->Recv.Window + FCB->Recv.BytesUsed,
 			   BytesToCopy );
@@ -100,7 +101,7 @@ NTSTATUS DDKAPI ReceiveComplete
 
 	AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
 				FCB, FCB->Recv.Content));
-	OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );
+	/*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
 
 	Status = STATUS_SUCCESS;
 
@@ -253,6 +254,9 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     BytesToCopy = 
 	MIN( RecvReq->BufferArray[0].len, BytesAvailable );
     
+    AFD_DbgPrint(MID_TRACE,("BytesToCopy: %d len %d\n", BytesToCopy,
+			    RecvReq->BufferArray[0].len));
+		 
     if( Map[0].Mdl ) {
 	Map[0].BufferAddress = MmMapLockedPages( Map[0].Mdl, KernelMode );
 	
@@ -260,6 +264,10 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 				0, 
 				Map[0].BufferAddress,
 				BytesToCopy));
+
+	/* OskitDumpBuffer
+	   ( FCB->Recv.Window + FCB->Recv.BytesUsed, BytesToCopy ); */
+
 	RtlCopyMemory( Map[0].BufferAddress,
 		       FCB->Recv.Window + FCB->Recv.BytesUsed,
 		       BytesToCopy );
@@ -316,12 +324,12 @@ PacketSocketRecvComplete(
 
     while( NT_SUCCESS(Status) && 
 	   !IsListEmpty( &FCB->DatagramList ) && 
-	   !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV_DATAGRAM] ) ) {
+	   !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
 	DatagramRecv = CONTAINING_RECORD( ListEntry, AFD_STORED_DATAGRAM,
 					  ListEntry );
 	ListEntry = RemoveHeadList
-	    ( &FCB->PendingIrpList[FUNCTION_RECV_DATAGRAM] );
+	    ( &FCB->PendingIrpList[FUNCTION_RECV] );
 	NextIrp = CONTAINING_RECORD( ListEntry, IRP, Tail.Overlay.ListEntry );
 	NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
 	RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
@@ -396,6 +404,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !(RecvReq = LockRequest( Irp, IrpSp )) ) 
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
+    
+    RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray, 
+					RecvReq->BufferCount,
+					TRUE );
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
@@ -420,9 +432,6 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL, TRUE );
 	}
     } else {
-	RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray, 
-					    RecvReq->BufferCount,
-					    TRUE );
-	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV_DATAGRAM );
+	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

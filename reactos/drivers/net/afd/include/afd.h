@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.21 2004/11/12 07:34:56 arty Exp $
+/* $Id: afd.h,v 1.22 2004/11/14 19:45:16 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,10 +50,9 @@
 
 #define FUNCTION_CONNECT                0
 #define FUNCTION_RECV                   1
-#define FUNCTION_RECV_DATAGRAM          2
-#define FUNCTION_SEND                   3
-#define FUNCTION_CLOSE                  4
-#define MAX_FUNCTIONS                   5
+#define FUNCTION_SEND                   2
+#define FUNCTION_CLOSE                  3
+#define MAX_FUNCTIONS                   4
 
 #define IN_FLIGHT_REQUESTS              3
 

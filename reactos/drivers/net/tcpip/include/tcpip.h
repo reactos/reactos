@@ -52,8 +52,6 @@
 
 #include <titypes.h>
 #include <ticonsts.h>
-#include <udp.h>
-
 
 /* Macros */
 
@@ -156,7 +154,6 @@ extern KSPIN_LOCK EntityListLock;
 extern TDIEntityInfo *EntityList;
 extern ULONG EntityCount;
 extern ULONG EntityMax;
-extern UDP_STATISTICS UDPStats;
 
 extern NTSTATUS TiGetProtocolNumber( PUNICODE_STRING FileName,
 				     PULONG Protocol );

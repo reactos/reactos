@@ -110,6 +110,8 @@ typedef VOID (*DATAGRAM_COMPLETION_ROUTINE)(
     NDIS_STATUS Status,
     ULONG Count);
 
+typedef DATAGRAM_COMPLETION_ROUTINE PDATAGRAM_COMPLETION_ROUTINE;
+
 typedef struct _DATAGRAM_RECEIVE_REQUEST {
     LIST_ENTRY ListEntry;                   /* Entry on list */
     IP_ADDRESS RemoteAddress;              /* Remote address we receive from (NULL means any) */

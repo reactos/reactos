@@ -730,7 +730,9 @@ NTSTATUS DispTdiReceiveDatagram(
 	  DgramInfo->ReceiveLength,
 	  DgramInfo->ReceiveFlags,
 	  DgramInfo->ReturnDatagramInformation,
-	  &BytesReceived);
+	  &BytesReceived,
+	  (PDATAGRAM_COMPLETION_ROUTINE)DispDataRequestComplete,
+	  Irp);
       if (Status != STATUS_PENDING)
         {
           DispDataRequestComplete(Irp, Status, BytesReceived);

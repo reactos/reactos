@@ -7,6 +7,7 @@
 #include <loopback.h>
 #include <ip.h>
 #include <lan.h>
+#include <datagram.h>
 #include <checksum.h>
 #include <address.h>
 #include <routines.h>
@@ -26,7 +27,6 @@
 #include <tilists.h>
 #include <dispatch.h>
 #include <fileobjs.h>
-#include <datagram.h>
 #include <info.h>
 #include <lock.h>
 #include <wait.h>
@@ -34,3 +34,4 @@
 #include <memtrack.h>
 #include <oskittcp.h>
 #include <interface.h>
+#include <ports.h>

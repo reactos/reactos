@@ -211,84 +211,6 @@ VOID DeleteConnectionEndpoint(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-#if 0
-VOID STDCALL RequestWorker(PVOID Context)
-/*
- * FUNCTION: Worker routine for processing address file object requests
- * ARGUMENTS:
- *     Context = Pointer to context information (ADDRESS_FILE)
- */
-{
-  KIRQL OldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PADDRESS_FILE AddrFile = Context;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-  /* Check it the address file should be deleted */
-  if (AF_IS_PENDING(AddrFile, AFF_DELETE)) {
-    DATAGRAM_COMPLETION_ROUTINE RtnComplete;
-    PVOID RtnContext;
-
-    RtnComplete = AddrFile->Complete;
-    RtnContext  = AddrFile->Context;
-
-    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-    DeleteAddress(AddrFile);
-
-    (*RtnComplete)(RtnContext, TDI_SUCCESS, 0);
-
-    TI_DbgPrint(MAX_TRACE, ("Leaving (delete).\n"));
-
-    return;
-  }
-
-  /* Check if there is a pending send request */
-  if (AF_IS_PENDING(AddrFile, AFF_SEND)) {
-    if (!IsListEmpty(&AddrFile->TransmitQueue)) {
-      PDATAGRAM_SEND_REQUEST SendRequest;
-
-      CurrentEntry = RemoveHeadList(&AddrFile->TransmitQueue);
-      SendRequest  = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-
-      AF_CLR_BUSY(AddrFile);
-
-      ReferenceObject(AddrFile);
-
-      TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-      /* The send routine processes the send requests in
-         the transmit queue on the address file. When the
-         queue is empty the pending send flag is cleared.
-         The routine may return with the pending send flag
-         set. This can happen if there was not enough free
-         resources available to complete all send requests */
-      DGSend(AddrFile, SendRequest);
-
-      TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-      DereferenceObject(AddrFile);
-      TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (send request).\n"));
-
-      return;
-    } else
-      /* There was a pending send, but no send request.
-         Print a debug message and continue */
-      TI_DbgPrint(MIN_TRACE, ("Pending send, but no send request.\n"));
-  }
-
-  AF_CLR_BUSY(AddrFile);
-
-  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
-#endif
-
 /*
  * FUNCTION: Open an address file object
  * ARGUMENTS:
@@ -308,7 +230,7 @@ NTSTATUS FileOpenAddress(
   PADDRESS_FILE AddrFile;
   IPv4_RAW_ADDRESS IPv4Address;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+  TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
   AddrFile = ExAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
   if (!AddrFile) {
@@ -329,9 +251,9 @@ NTSTATUS FileOpenAddress(
   /* FIXME: IPv4 only */
   IPv4Address = Address->Address[0].Address[0].in_addr;
   if (IPv4Address == 0)
-    AddrFile->ADE = IPGetDefaultADE(ADE_UNICAST);
+      AddrFile->ADE = IPGetDefaultADE(ADE_UNICAST);
   else
-    AddrFile->ADE = AddrLocateADEv4(IPv4Address);
+      AddrFile->ADE = AddrLocateADEv4(IPv4Address);
 
   if (!AddrFile->ADE) {
     ExFreePool(AddrFile);
@@ -339,8 +261,8 @@ NTSTATUS FileOpenAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  TI_DbgPrint(MID_TRACE, ("Opening address %s for communication.\n",
-    A2S(&AddrFile->ADE->Address)));
+  TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
+    A2S(&AddrFile->ADE->Address), Protocol, IPPROTO_UDP));
 
   /* Protocol specific handling */
   switch (Protocol) {
@@ -351,10 +273,12 @@ NTSTATUS FileOpenAddress(
     break;
 
   case IPPROTO_UDP:
-    /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = Address->Address[0].Address[0].sin_port;
-    AddrFile->Send = UDPSendDatagram;
-    break;
+      TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
+      AddrFile->Port = 
+	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
+      TI_DbgPrint(MID_TRACE,("Setting port %d\n", AddrFile->Port));
+      AddrFile->Send = UDPSendDatagram;
+      break;
 
   default:
     /* Use raw IP for all other protocols */
@@ -375,9 +299,6 @@ NTSTATUS FileOpenAddress(
   /* Initialize receive and transmit queues */
   InitializeListHead(&AddrFile->ReceiveQueue);
   InitializeListHead(&AddrFile->TransmitQueue);
-
-  /* Initialize work queue item. We use this for pending requests */
-  /*ExInitializeWorkItem(&AddrFile->WorkItem, RequestWorker, AddrFile);*/
 
   /* Initialize spin lock that protects the address file object */
   KeInitializeSpinLock(&AddrFile->Lock);
@@ -420,40 +341,15 @@ NTSTATUS FileCloseAddress(
 
   TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-  if (!AF_IS_BUSY(AddrFile)) {
-    /* Set address file object exclusive to us */
-    AF_SET_BUSY(AddrFile);
-    AF_CLR_VALID(AddrFile);
-
-    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-    DeleteAddress(AddrFile);
-  } else {
-    if (!AF_IS_PENDING(AddrFile, AFF_DELETE)) {
-      AddrFile->Complete = Request->RequestNotifyObject;
-      AddrFile->Context  = Request->RequestContext;
-
-      /* Shedule address file for deletion */
-      AF_SET_PENDING(AddrFile, AFF_DELETE);
-      AF_CLR_VALID(AddrFile);
-
-      if (!AF_IS_BUSY(AddrFile)) {
-        /* Worker function is not running, so shedule it to run */
-        AF_SET_BUSY(AddrFile);
-        TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-        ExQueueWorkItem(&AddrFile->WorkItem, CriticalWorkQueue);
-      } else
-        TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-
-      return STATUS_PENDING;
-    } else
-      Status = STATUS_ADDRESS_CLOSED;
-
-    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-  }
-
+  /* Set address file object exclusive to us */
+  AF_SET_BUSY(AddrFile);
+  AF_CLR_VALID(AddrFile);
+  
+  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  UDPFreePort( AddrFile->Port );
+  
+  DeleteAddress(AddrFile);
+  
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return Status;

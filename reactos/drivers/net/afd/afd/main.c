@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.9 2004/11/12 09:27:02 arty Exp $
+/* $Id: main.c,v 1.10 2004/11/14 19:45:16 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -22,8 +22,8 @@
 extern NTSTATUS DDKAPI MmCopyFromCaller( PVOID Dst, PVOID Src, UINT Size );
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = DEBUG_ULTRA;
-//DWORD DebugTraceLevel = 0;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = 0;
 
 #endif /* DBG */
 
