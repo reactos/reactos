@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.23 2003/08/18 00:14:50 silverblade Exp $
+/* $Id: draw.c,v 1.24 2003/08/19 03:05:42 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1805,20 +1805,13 @@ WINBOOL INTERNAL_DrawState(
   UINT fuFlags,
   BOOL unicode)
 {
-    // AG: Experimental, unfinished, and most likely buggy! I haven't been
-    // able to test this - my intention was to implement some things needed
-    // by the button control.
-
-    if ((! lpOutputFunc) && (fuFlags & DST_COMPLEX))
-        return FALSE;
-    
-    UINT type = fuFlags & 0xf;          // DST_xxx
-    UINT state = fuFlags & 0x7ff0;      // DSS_xxx
-    INT len = wData;                    // Data length
+    UINT type;
+    UINT state;
+    INT len;
     RECT rect;
     UINT dtflags = DT_NOCLIP;           // Flags for DrawText
     BOOL retval = FALSE;                // Return value
-    
+
     COLORREF ForeColor,                 // Foreground color
              BackColor;                 // Background color
 
@@ -1829,8 +1822,19 @@ WINBOOL INTERNAL_DrawState(
     HBRUSH  OldBrush = NULL,            // Old brush (for MemDC)
             TempBrush = NULL;           // Temporary brush (for MemDC)
 
+    // AG: Experimental, unfinished, and most likely buggy! I haven't been
+    // able to test this - my intention was to implement some things needed
+    // by the button control.
+
+    if ((! lpOutputFunc) && (fuFlags & DST_COMPLEX))
+        return FALSE;
+
+    type = fuFlags & 0xf;          // DST_xxx
+    state = fuFlags & 0x7ff0;      // DSS_xxx
+    len = wData;                    // Data length
+
     DbgPrint("Entered DrawState, fuFlags %d, type %d, state %d\n", fuFlags, type, state);
-    
+
     if ((type == DST_TEXT || type == DST_PREFIXTEXT) && ! len)
     {
         // The string is NULL-terminated
@@ -1852,14 +1856,15 @@ WINBOOL INTERNAL_DrawState(
             case DST_TEXT :
             case DST_PREFIXTEXT :
             {
-                DbgPrint("DST_TEXT / DST_PREFIXTEXT\n");
-            
                 BOOL success;
+
+                DbgPrint("DST_TEXT / DST_PREFIXTEXT\n");
+
                 if (unicode)
                     success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
                 else
                     success = GetTextExtentPoint32A(hdc, (LPSTR) lData, len, &s);
-                    
+
                 if (!success) return FALSE;
                 break;
             }
@@ -1911,7 +1916,7 @@ WINBOOL INTERNAL_DrawState(
 
     // Set the rectangle to that of the memory DC
     SetRect(&rect, 0, 0, cx, cy);
-    
+
     // Set colors
     ForeColor = SetTextColor(hdc, RGB(0, 0, 0));
     BackColor = SetBkColor(hdc, RGB(255, 255, 255));
@@ -1923,25 +1928,29 @@ WINBOOL INTERNAL_DrawState(
     if (! MemBMP) goto cleanup;
     OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
     if (! OldBMP) goto cleanup;
-    
+
     DbgPrint("Created and inited MemDC\n");
-    
+
     // Set up the default colors and font
     if (! FillRect(MemDC, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH))) goto cleanup;
     SetBkColor(MemDC, RGB(255, 255, 255));
     SetTextColor(MemDC, RGB(0, 0, 0));
     Font = (HFONT)SelectObject(MemDC, GetCurrentObject(hdc, OBJ_FONT));
-    
+
     DbgPrint("Selected font and set colors\n");
 
     // Enable this line to use the current DC image to begin with (wrong?)
 //    if (! BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY)) goto cleanup;
 
     // DST_COMPLEX may draw text as well, so make sure font is selected
-    if (! Font && (type <= DST_PREFIXTEXT)) goto cleanup;   // THIS FAILS
-    BOOL TempResult = INTERNAL_DrawStateDraw(MemDC, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
-    if (Font) SelectObject(MemDC, Font);
-    if (! TempResult) goto cleanup;
+    if (! Font && (type <= DST_PREFIXTEXT)) // THIS FAILS
+      goto cleanup;
+
+    {
+      BOOL TempResult = INTERNAL_DrawStateDraw(MemDC, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
+      if (Font) SelectObject(MemDC, Font);
+      if (! TempResult) goto cleanup;
+    }
 
     DbgPrint("Done drawing\n");
 
