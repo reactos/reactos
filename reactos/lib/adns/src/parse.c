@@ -47,7 +47,7 @@ int vbuf__append_quoted1035(vbuf *vb, const byte *buf, int len) {
 	break;
       }
     }
-    if (!adns__vbuf_append(vb,buf,i) || !adns__vbuf_append(vb,qbuf,strlen(qbuf)))
+    if (!adns__vbuf_append(vb,buf,i) || !adns__vbuf_append(vb,qbuf,(int)  strlen(qbuf)))
       return 0;
     if (i<len) i++;
     buf+= i;
