@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.47 2004/08/09 19:41:13 jimtabor Exp $
+/* $Id: rtl.h,v 1.48 2004/08/11 21:03:11 jimtabor Exp $
  *
  */
 
@@ -91,6 +91,18 @@ typedef struct _DEBUG_LOCK_INFORMATION {
 	ULONG  NumberOfExclusiveWaiters;
 } DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
 
+
+typedef struct _LOCK_INFORMATION
+{
+  ULONG LockCount;
+  DEBUG_LOCK_INFORMATION LockEntry[1];
+} LOCK_INFORMATION, *PLOCK_INFORMATION;
+
+typedef struct _HEAP_INFORMATION
+{
+  ULONG HelpCount;
+  DEBUG_HEAP_INFORMATION HeapEntry[1];
+} HEAP_INFORMATION, *PHEAP_INFORMATION;
 
 
 typedef struct _CRITICAL_SECTION_DEBUG
