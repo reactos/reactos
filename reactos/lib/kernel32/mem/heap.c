@@ -31,7 +31,7 @@
 
 #include <kernel32/proc.h>
 #include <kernel32/heap.h>
-#include <internal/string.h>
+#include <string.h>
 
 #include <ddk/ntddk.h>
 
