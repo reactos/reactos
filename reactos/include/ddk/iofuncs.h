@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.20 2000/08/24 19:06:29 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.21 2000/12/11 18:20:02 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -920,14 +920,14 @@ IoReportResourceUsage (
 VOID
 STDCALL
 IoSetDeviceToVerify (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	IN	struct _ETHREAD*	Thread,
+	IN	PDEVICE_OBJECT		DeviceObject
 	);
 VOID
 STDCALL
 IoSetHardErrorOrVerifyDevice (
-	PIRP		Irp,
-	PDEVICE_OBJECT	DeviceObject
+	IN	PIRP		Irp,
+	IN	PDEVICE_OBJECT	DeviceObject
 	);
 NTSTATUS
 STDCALL
