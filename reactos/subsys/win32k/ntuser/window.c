@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.58 2003/06/25 22:37:07 gvg Exp $
+/* $Id: window.c,v 1.59 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -124,9 +124,65 @@ NtUserGetAncestor(HWND hWnd, UINT Flags)
     }
 }
 
-VOID FASTCALL
+HWND FASTCALL
 W32kSetFocusWindow(HWND hWnd)
 {
+  PUSER_MESSAGE_QUEUE OldMessageQueue;
+  PDESKTOP_OBJECT DesktopObject;
+  PWINDOW_OBJECT WindowObject;
+  HWND hWndOldFocus;
+
+  DPRINT("W32kSetFocusWindow(hWnd 0x%x)\n", hWnd);
+
+  if (hWnd != (HWND)0)
+    {
+      WindowObject = W32kGetWindowObject(hWnd);
+      if (!WindowObject)
+        {
+          DPRINT("Bad window handle 0x%x\n", hWnd);
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+      	  return (HWND)0;
+        }
+    }
+  else
+  {
+    WindowObject = NULL;
+  }
+
+  DesktopObject = W32kGetActiveDesktop();
+  if (!DesktopObject)
+    {
+      DPRINT("No active desktop\n");
+      if (WindowObject != NULL)
+        {
+    	    W32kReleaseWindowObject(WindowObject);
+        }
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+  	  return (HWND)0;
+    }
+
+  hWndOldFocus = (HWND)0;
+  OldMessageQueue = (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue;
+  if (OldMessageQueue != NULL)
+    {
+      hWndOldFocus = OldMessageQueue->FocusWindow;
+    }
+
+  if (WindowObject != NULL)
+    {
+      WindowObject->MessageQueue->FocusWindow = hWnd;
+      (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue =
+        WindowObject->MessageQueue;
+      W32kReleaseWindowObject(WindowObject);
+    }
+  else
+    {
+      (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue = NULL;
+    }
+
+  DPRINT("hWndOldFocus = 0x%x\n", hWndOldFocus);
+
+  return hWndOldFocus;
 }
 
 BOOL FASTCALL
@@ -297,6 +353,7 @@ NtUserGetClientRect(HWND hWnd, LPRECT Rect)
   W32kGetClientRect(WindowObject, &SafeRect);
   if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
     {
+      W32kReleaseWindowObject(WindowObject);
       return(FALSE);
     }
 
@@ -348,7 +405,7 @@ W32kGetWindowProc(HWND Wnd)
 	return NULL;
 
   WndProc = WindowObject->WndProc;
-  W32kReleaseWindowObject(Wnd);
+  W32kReleaseWindowObject(WindowObject);
   return(WndProc);
 }
 
@@ -495,6 +552,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&WindowName);
+      W32kReleaseWindowObject(ParentWindow);
       return((HWND)0);
     }
 
@@ -509,6 +567,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       RtlFreeUnicodeString(&WindowName);
       ObmDereferenceObject(ClassObject);
+      W32kReleaseWindowObject(ParentWindow);
       DPRINT("Validation of window station handle (0x%X) failed\n",
 	     PROCESS_WINDOW_STATION());
       return (HWND)0;
@@ -524,6 +583,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       ObDereferenceObject(WinStaObject);
       ObmDereferenceObject(ClassObject);
       RtlFreeUnicodeString(&WindowName);
+      W32kReleaseWindowObject(ParentWindow);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return (HWND)0;
     }
@@ -649,8 +709,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!Result)
     {
       /* FIXME: Cleanup. */
+      W32kReleaseWindowObject(ParentWindow);
       DPRINT("NtUserCreateWindowEx(): NCCREATE message failed.\n");
-      return(NULL);
+      return((HWND)0);
     }
  
   /* Calculate the non-client size. */
@@ -670,8 +731,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (Result == (LRESULT)-1)
     {
       /* FIXME: Cleanup. */
+      W32kReleaseWindowObject(ParentWindow);
       DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
-      return(NULL);
+      return((HWND)0);
     } 
 
   /* Send move and size messages. */
@@ -984,8 +1046,9 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window,
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd)
 {
-  BOOL isChild;
   PWINDOW_OBJECT Window;
+  BOOLEAN isChild;
+  HWND hWndFocus;
 
   Window = W32kGetWindowObject(Wnd);
   if (Window == NULL)
@@ -996,6 +1059,7 @@ NtUserDestroyWindow(HWND Wnd)
   /* Check for desktop window (has NULL parent) */
   if (NULL == Window->Parent)
     {
+      W32kReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
     }
@@ -1003,18 +1067,16 @@ NtUserDestroyWindow(HWND Wnd)
   /* Look whether the focus is within the tree of windows we will
    * be destroying.
    */
-#if 0 /* FIXME */
-  h = GetFocus();
-  if (h == Wnd || IsChild(Wnd, h))
+  hWndFocus = W32kGetFocusWindow();
+  if (hWndFocus == Wnd || W32kIsChildWindow(Wnd, hWndFocus))
     {
-      HWND Parent = GetAncestor(Wnd, GA_PARENT);
-      if (Parent == GetDesktopWindow())
-	{
-	  Parent = NULL;
-	}
-        SetFocus(Parent);
+      HWND Parent = NtUserGetAncestor(Wnd, GA_PARENT);
+      if (Parent == W32kGetDesktopWindow())
+      	{
+      	  Parent = NULL;
+      	}
+        W32kSetFocusWindow(Parent);
     }
-#endif
 
   /* Call hooks */
 #if 0 /* FIXME */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.7 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: input.c,v 1.8 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -89,6 +89,7 @@ KeyboardThreadMain(PVOID StartContext)
 				     UserMode,
 				     TRUE,
 				     NULL);
+
       /*
        * Receive and process keyboard input.
        */
@@ -96,6 +97,7 @@ KeyboardThreadMain(PVOID StartContext)
 	{
 	  KEY_EVENT_RECORD KeyEvent;
 	  LPARAM lParam;
+    BOOLEAN SysKey;
 	  
 	  Status = NtReadFile (KeyboardDeviceHandle, 
 			       NULL,
@@ -116,23 +118,48 @@ KeyboardThreadMain(PVOID StartContext)
 	      return(Status);
 	    }
 	  
+    SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
+
 	  /*
 	   * Post a keyboard message.
 	   */
 	  if (KeyEvent.bKeyDown)
 	    {
-	      /* FIXME: Bit 24 indicates if this is an extended key. */
 	      lParam = KeyEvent.wRepeatCount | 
-		((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
-	      MsqPostKeyboardMessage(WM_KEYDOWN, KeyEvent.wVirtualKeyCode, 
+		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
+
+	      /* Bit 24 indicates if this is an extended key */
+        if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+          {
+            lParam |= (1 << 24);
+          }
+
+        if (SysKey)
+          {
+            lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+          }
+
+	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, KeyEvent.wVirtualKeyCode, 
 				     lParam);
 	    }
 	  else
 	    {
-	      /* FIXME: Bit 24 indicates if this is an extended key. */
 	      lParam = KeyEvent.wRepeatCount | 
-		((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0xC0000000;
-	      MsqPostKeyboardMessage(WM_KEYUP, KeyEvent.wVirtualKeyCode, 
+		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0xC0000000;
+
+	      /* Bit 24 indicates if this is an extended key */
+        if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+          {
+            lParam |= (1 << 24);
+          }
+
+        if (SysKey)
+          {
+            lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+          }
+
+
+	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, KeyEvent.wVirtualKeyCode, 
 				     lParam);
 	    }
 	}

@@ -1,6 +1,31 @@
+2003-07-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/win32k/ntuser.h (NtUserSetFocus): Correct prototype.
+	* lib/user32/misc/stubs.c (SetFocus): Remove.
+	* lib/user32/windows/defwnd.c (KEYDATA_ALT): New.
+	(User32DefWindowProc): Handle WM_SYSKEYDOWN.
+	* lib/user32/windows/input.c (SetFocus): New.
+	* subsys/win32k/include/msgqueue.h (USER_MESSAGE_QUEUE): Document
+	FocusWindow field.
+	* subsys/win32k/include/window.h (W32kSetFocusWindow): Change return type
+	to HWND.
+	* subsys/win32k/include/winsta.h (W32kGetFocusMessageQueue): New.
+	* subsys/win32k/ntuser/input.c (KeyboardThreadMain): Handle system keys.
+	* subsys/win32k/ntuser/keyboard.c (NtUserSetFocus): New.
+	* subsys/win32k/ntuser/msgqueue.c (MsqPostKeyboardMessage): Implement.
+	* subsys/win32k/ntuser/stubs.c (NtUserSetFocus): Remove.
+	* subsys/win32k/ntuser/window.c (W32kSetFocusWindow): Implement.
+	(NtUserGetClientRect, W32kGetWindowProc, NtUserCreateWindowEx): Release
+	window reference on error.
+	(W32kDestroyWindow): Remove focus from window tree before destroying it
+	if needed.
+	* subsys/win32k/ntuser/winpos.c (WinPosChangeActiveWindow): Implement.
+	(WinPosShowWindow): Activate window if needed.
+	* subsys/win32k/ntuser/winsta.c (W32kGetFocusMessageQueue): New.
+
 2003-06-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
-	* lib/user32/controls/button.c (ButtonWndProc_comm): Fix unsigned/signed
+	* lib/user32/controls/button.c (ButtonWndProc_common): Fix unsigned/signed
 	warning.
 
 2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>

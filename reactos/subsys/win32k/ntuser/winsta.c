@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.16 2003/06/20 16:26:14 ekohl Exp $
+/* $Id: winsta.c,v 1.17 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -73,6 +73,21 @@ W32kGetActiveDesktop(VOID)
 {
   return(InputDesktop);
 }
+
+PUSER_MESSAGE_QUEUE FASTCALL
+W32kGetFocusMessageQueue(VOID)
+{
+  PDESKTOP_OBJECT pdo = W32kGetActiveDesktop();
+
+  if (!pdo)
+    {
+      DPRINT("No active desktop\n");
+  	  return(NULL);
+    }
+
+  return (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
+}
+
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID)

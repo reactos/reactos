@@ -1270,10 +1270,10 @@ NtUserSetDbgTag(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+HWND
 STDCALL
 NtUserSetFocus(
-  DWORD Unknown0);
+  HWND hWnd);
 
 DWORD
 STDCALL

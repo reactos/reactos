@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.6 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: input.c,v 1.7 2003/07/05 16:04:01 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -207,6 +207,12 @@ OemKeyScan(WORD wOemChar)
 {
   UNIMPLEMENTED;
   return 0;
+}
+
+HWND STDCALL
+SetFocus(HWND hWnd)
+{
+  return NtUserSetFocus(hWnd);
 }
 
 WINBOOL STDCALL

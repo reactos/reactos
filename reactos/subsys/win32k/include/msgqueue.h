@@ -52,7 +52,7 @@ typedef struct _USER_MESSAGE_QUEUE
   KEVENT NewMessages;  
   /* FIXME: Unknown. */
   ULONG QueueStatus;
-  /* Current window with focus for this queue. */
+  /* Current window with focus (ie. receives keyboard input) for this queue. */
   HWND FocusWindow;
   /* True if a window needs painting. */
   BOOLEAN PaintPosted;

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.23 2003/07/03 02:52:54 sedwards Exp $
+/* $Id: stubs.c,v 1.24 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -397,15 +397,6 @@ SetDoubleClickTime(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-HWND
-STDCALL
-SetFocus(
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
 }
 
 VOID

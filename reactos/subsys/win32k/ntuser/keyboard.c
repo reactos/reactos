@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.3 2003/05/18 17:16:17 ea Exp $
+/* $Id: keyboard.c,v 1.4 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Messages
- * FILE:             subsys/win32k/ntuser/message.c
+ * FILE:             subsys/win32k/ntuser/keyboard.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -239,4 +239,11 @@ NtUserTranslateMessage(LPMSG lpMsg,
     }
   return(FALSE);
 }
+
+HWND STDCALL
+NtUserSetFocus(HWND hWnd)
+{
+  return W32kSetFocusWindow(hWnd);
+}
+
 /* EOF */

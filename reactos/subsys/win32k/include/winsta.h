@@ -5,6 +5,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 #include <internal/ps.h>
+#include "msgqueue.h"
 
 #define PROCESS_WINDOW_STATION() \
   ((HWINSTA)(IoGetCurrentProcess()->Win32WindowStation))
@@ -34,6 +35,8 @@ LRESULT CALLBACK
 W32kDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 PDESKTOP_OBJECT FASTCALL
 W32kGetActiveDesktop(VOID);
+PUSER_MESSAGE_QUEUE FASTCALL
+W32kGetFocusMessageQueue(VOID);
 VOID FASTCALL
 W32kInitializeDesktopGraphics(VOID);
 VOID FASTCALL

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.52 2003/06/24 00:55:02 rcampbell Exp $
+/* $Id: defwnd.c,v 1.53 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -70,6 +70,9 @@ static COLORREF SysColours[] =
   };
 
 static ATOM AtomInternalPos;
+
+/* Bits in the dwKeyData */
+#define KEYDATA_ALT   0x2000
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1183,10 +1186,10 @@ User32DefWindowProc(HWND hWnd,
 
     case WM_ACTIVATE:
       {
+  /* Check if the window is minimized. */
 	if (LOWORD(lParam) != WA_INACTIVE &&
-	    GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE)
+	    !(GetWindowLong(hWnd, GWL_STYLE) & WS_MINIMIZE))
 	  {
-	    /* Check if the window is minimized. */
 	    SetFocus(hWnd);
 	  }
 	break;
@@ -1370,6 +1373,30 @@ User32DefWindowProc(HWND hWnd,
 	  }
 	break;
       }
+
+    case WM_SYSKEYDOWN:
+    	if (HIWORD(lParam) & KEYDATA_ALT)
+      	{
+     	    if (wParam == VK_F4)  /* Try to close the window */
+     	      {
+              //HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
+              HWND hTopWnd = hWnd;
+              if (!(GetClassLongW(hTopWnd, GCL_STYLE) & CS_NOCLOSE))
+                {
+                	if (bUnicode)
+                	  {
+                      PostMessageW(hTopWnd, WM_CLOSE, 0, 0);
+                	    PostMessageW(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+                	  }
+                	else
+                	  {
+                      PostMessageA(hTopWnd, WM_CLOSE, 0, 0);
+                	    PostMessageA(hTopWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+                	  }
+                }
+            }
+      	}
+      break;
     }
   return 0;
 }

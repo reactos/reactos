@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.9 2003/05/21 22:58:42 gvg Exp $
+/* $Id: msgqueue.c,v 1.10 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -351,24 +351,35 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-#if 0
-  MSG Msg;
+  PUSER_MESSAGE_QUEUE FocusMessageQueue;
   PUSER_MESSAGE Message;
+  MSG Msg;
 
-  if (CurrentFocusMessageQueue == NULL)
+  DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
+    uMsg, wParam, lParam);
+
+  FocusMessageQueue = W32kGetFocusMessageQueue();
+  if (FocusMessageQueue == NULL)
     {
+      DPRINT("No focus message queue\n");
       return;
     }
 
-  Msg.hwnd = CurrentFocusMessageQueue->FocusWindow;
-  Msg.message = uMsg;
-  Msg.wParam = wParam;
-  Msg.lParam = lParam;
-  /* FIXME: Initialize time and point. */
-
-  Message = MsqCreateMessage(&Msg);
-  MsqPostMessage(CurrentFocusMessageQueue, Message, TRUE);
-#endif
+  if (FocusMessageQueue->FocusWindow != (HWND)0)
+    {
+      Msg.hwnd = FocusMessageQueue->FocusWindow;
+      Msg.message = uMsg;
+      Msg.wParam = wParam;
+      Msg.lParam = lParam;
+      /* FIXME: Initialize time and point. */
+    
+      Message = MsqCreateMessage(&Msg);
+      MsqPostMessage(FocusMessageQueue, Message);
+    }
+  else
+    {
+      DPRINT("Invalid focus window handle\n");
+    }
 }
 
 VOID FASTCALL

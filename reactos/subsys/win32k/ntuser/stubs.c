@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.12 2003/06/03 22:26:12 ekohl Exp $
+/* $Id: stubs.c,v 1.13 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1255,16 +1255,6 @@ STDCALL
 NtUserSetDbgTag(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetFocus(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 

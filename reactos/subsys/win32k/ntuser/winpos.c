@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.11 2003/05/18 22:09:08 gvg Exp $
+/* $Id: winpos.c,v 1.12 2003/07/05 16:04:01 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -346,9 +346,25 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 }
 
 BOOL STATIC FASTCALL
-WinPosChangeActiveWindow(HWND Wnd, BOOL MouseMsg)
+WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
 {
-  return FALSE;
+  PWINDOW_OBJECT WindowObject;
+
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return FALSE;
+    }
+
+  NtUserSendMessage(hWnd,
+    WM_ACTIVATE,
+	  MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
+      (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
+    W32kGetDesktopWindow());  /* FIXME: Previous active window */
+
+  W32kReleaseWindowObject(WindowObject);
+
+  return TRUE;
 }
 
 LONG STATIC STDCALL
@@ -759,6 +775,13 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 			MAKELONG(Window->ClientRect.left,
 				 Window->ClientRect.top));
     }
+
+  /* Activate the window if activation is not requested and the window is not minimized */
+  if (!(Swp & (SWP_NOACTIVATE | SWP_HIDEWINDOW)) && !(Window->Style & WS_MINIMIZE))
+    {
+      WinPosChangeActiveWindow(Wnd, FALSE);
+    }
+
   ObmDereferenceObject(Window);
   return(WasVisible);
 }
