@@ -297,6 +297,10 @@ VOID
 STDCALL
 ObQueryDeviceMapInformation(PEPROCESS Process, PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo);
 
+VOID FASTCALL
+ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent);
+
+
 /* Security descriptor cache functions */
 
 NTSTATUS

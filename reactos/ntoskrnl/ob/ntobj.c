@@ -207,8 +207,25 @@ NtQueryObject (IN HANDLE ObjectHandle,
 
 
 /**********************************************************************
+ * NAME							PRIVATE
+ *	ObpSetPermanentObject/2
+ *
+ * DESCRIPTION
+ *	Fast general purpose routine to set an object's permanent
+ *	attribute, given a  pointer to the object's body.
+ */
+VOID FASTCALL
+ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
+{
+  POBJECT_HEADER ObjectHeader;
+
+  ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  ObjectHeader->Permanent = Permanent;
+}
+
+/**********************************************************************
  * NAME							EXPORTED
- *	ObMakeTemporaryObject
+ *	ObMakeTemporaryObject/1
  *
  * DESCRIPTION
  *
@@ -223,10 +240,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 VOID STDCALL
 ObMakeTemporaryObject(IN PVOID ObjectBody)
 {
-  POBJECT_HEADER ObjectHeader;
-
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  ObjectHeader->Permanent = FALSE;
+  ObpSetPermanentObject (ObjectBody, FALSE);
 }
 
 
@@ -245,25 +259,23 @@ ObMakeTemporaryObject(IN PVOID ObjectBody)
 NTSTATUS STDCALL
 NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 {
-  POBJECT_HEADER ObjectHeader;
-  PVOID Object;
+  PVOID ObjectBody;
   NTSTATUS Status;
 
   Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,
 				     NULL,
 				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     &Object,
+				     &ObjectBody,
 				     NULL);
   if (Status != STATUS_SUCCESS)
     {
       return Status;
     }
 
-  ObjectHeader = BODY_TO_HEADER(Object);
-  ObjectHeader->Permanent = FALSE;
+  ObpSetPermanentObject (ObjectBody, FALSE);
 
-  ObDereferenceObject(Object);
+  ObDereferenceObject(ObjectBody);
 
   return STATUS_SUCCESS;
 }
@@ -271,7 +283,7 @@ NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 
 /**********************************************************************
  * NAME							EXPORTED
- *	NtMakePermanentObject
+ *	NtMakePermanentObject/1
  *
  * DESCRIPTION
  *
@@ -286,25 +298,23 @@ NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 NTSTATUS STDCALL
 NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
-  POBJECT_HEADER ObjectHeader;
-  PVOID Object;
+  PVOID ObjectBody;
   NTSTATUS Status;
 
   Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,
 				     NULL,
 				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     &Object,
+				     &ObjectBody,
 				     NULL);
   if (Status != STATUS_SUCCESS)
     {
       return Status;
     }
 
-  ObjectHeader = BODY_TO_HEADER(Object);
-  ObjectHeader->Permanent = TRUE;
+  ObpSetPermanentObject (ObjectBody, TRUE);
 
-  ObDereferenceObject(Object);
+  ObDereferenceObject(ObjectBody);
 
   return STATUS_SUCCESS;
 }
