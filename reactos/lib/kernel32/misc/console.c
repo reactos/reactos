@@ -29,7 +29,7 @@ GetStdHandle(
 	if ( nStdHandle == STD_PRINT_HANDLE )
 		return StdError;
 */
-	return NULL;		
+	return NULL;            
 	
 }
 
@@ -68,7 +68,7 @@ ReadConsoleA(
 		Overlapped.InternalHigh = 0;
 		Overlapped.Offset = 0;
 		Overlapped.OffsetHigh = 0;
-	//	Overlapped.hEvent = CreateEvent(NULL,FALSE,TRUE,NULL);
+	//      Overlapped.hEvent = CreateEvent(NULL,FALSE,TRUE,NULL);
 		lpOverlapped = &Overlapped;
 	}
 	else
@@ -105,7 +105,7 @@ ReadConsoleA(
 
 	HeapFree(GetProcessHeap(),0,k);
 	//if ( lpReserved == NULL ) {
-	//	CloseHandle(Overlapped.hEvent);
+	//      CloseHandle(Overlapped.hEvent);
 	//}
 	
 }
@@ -114,7 +114,7 @@ WINBOOL
 STDCALL
 AllocConsole( VOID )
 {
-	StdInput = CreateFile("\\Device\\Keyboard",
+	StdInput = CreateFile("\\Keyboard",
 			       FILE_GENERIC_READ,
 			       0,
 			       NULL,
@@ -122,7 +122,7 @@ AllocConsole( VOID )
 			       FILE_FLAG_OVERLAPPED,
 			       NULL);
 
-	StdOutput = CreateFile("\\Device\\BlueScreen",
+	StdOutput = CreateFile("\\BlueScreen",
 			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
 			       0,
 			       NULL,
