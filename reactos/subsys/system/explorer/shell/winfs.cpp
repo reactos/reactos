@@ -280,3 +280,15 @@ bool WinEntry::get_path(PTSTR path) const
 
 	return true;
 }
+
+ShellPath WinEntry::create_absolute_pidl() const
+{
+	CONTEXT("WinEntry::create_absolute_pidl()");
+
+	TCHAR path[MAX_PATH];
+
+	if (get_path(path))
+		return ShellPath(path);
+
+	return ShellPath();
+}

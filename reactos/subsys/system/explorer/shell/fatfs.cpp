@@ -293,6 +293,21 @@ bool FATEntry::get_path(PTSTR path) const
 	return true;
 }
 
+ShellPath FATEntry::create_absolute_pidl() const
+{
+	CONTEXT("WinEntry::create_absolute_pidl()");
+
+	return (LPCITEMIDLIST)NULL;
+/* prepend root path if the drive is currently actually mounted in the file system -> return working PIDL
+	TCHAR path[MAX_PATH];
+
+	if (get_path(path))
+		return ShellPath(path);
+
+	return ShellPath();
+*/
+}
+
 
 FATDirectory::FATDirectory(FATDrive& drive, LPCTSTR root_path)
  :	FATEntry(),

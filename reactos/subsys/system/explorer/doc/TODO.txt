@@ -30,16 +30,12 @@
 - Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
   with pressing Win-key, but can't close with another hit of Win-key.
 
-- Despite of settings, the clock's always shown I set my Win-Exp to hide the clock shown in
-  the taskbar, but the ROS-Exp ignores the setting and always shows the clock.
+- > Despite of settings, the clock's always shown I set my Win-Explorer to hide the clock
+  > shown in the taskbar, but the ROS-Exp ignores the setting and always shows the clock.
   Yes, ROS explorer doesn't read many settings from the registry currently,
   as it doesn't have a way to configure them. (missing configuration dialogs)
 
-- Wenn man in der Toolbar auf "NT Obj." klickt und dann mit der rechten
-  Maustaste in die TreeView klickt, gibt es eine COM Exeption "Falscher Parameter".
-  Wenn man das öfter macht crasht das Programm.
-
-- Es scheint ein paar GDI-Leaks in deinem Programm zu geben…
+- Es scheint ein paar GDI-Leaks in deinem Programm zu geben.
   Wenn man ein neues MDI Fenster öffnet und dann wieder schließt, werden
-  einige GDI-Objekte nicht wieder gelöscht…
+  einige GDI-Objekte nicht wieder gelöscht.
 
