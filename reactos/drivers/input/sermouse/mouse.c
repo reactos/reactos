@@ -9,6 +9,8 @@
  ** Known Limitations:
  ** Only supports mice on COM port 1
 
+ ** Old Driver, We done build it. Just keep for History. (S.E.)
+
 */
 
 #include <ddk/ntddk.h>

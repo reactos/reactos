@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include "../include/mouse.h"
 #include "sermouse.h"
+#include "mouse.h"
 
 #define MOUSE_IRQ_COM1  4
 #define MOUSE_IRQ_COM2  3
@@ -24,7 +25,7 @@
 #define max_screen_x    79
 #define max_screen_y    24
 
-static unsigned int MOUSE_IRQ=MOUSE_IRQ_COM1;
+//static unsigned int MOUSE_IRQ=MOUSE_IRQ_COM1;
 static unsigned int MOUSE_COM=COM1_PORT;
 
 static unsigned int     bytepos=0, coordinate;
