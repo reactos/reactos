@@ -1,0 +1,459 @@
+; File generated automatically from shlwapi/shlwapi.spec; do not edit!
+
+LIBRARY shlwapi.dll
+
+EXPORTS
+  ParseURLA@8 @1 NONAME
+  ParseURLW@8 @2 NONAME
+  PathFileExistsDefExtA@8 @3 NONAME
+  PathFileExistsDefExtW@8 @4 NONAME
+  PathFindOnPathExA@12 @5 NONAME
+  PathFindOnPathExW@12 @6 NONAME
+  SHAllocShared@12 @7 NONAME
+  SHLockShared@8 @8 NONAME
+  SHUnlockShared@4 @9 NONAME
+  SHFreeShared@8 @10 NONAME
+  SHMapHandle@20 @11 NONAME
+  SHCreateMemStream@8 @12 NONAME
+  RegisterDefaultAcceptHeaders@8 @13 NONAME
+  GetAcceptLanguagesA@8 @14 NONAME
+  GetAcceptLanguagesW@8 @15 NONAME
+  SHCreateThread@16 @16
+  SHWriteDataBlockList@8 @17 NONAME
+  SHReadDataBlockList@8 @18 NONAME
+  SHFreeDataBlockList@4 @19 NONAME
+  SHAddDataBlock@8 @20 NONAME
+  SHRemoveDataBlock@8 @21 NONAME
+  SHFindDataBlock@8 @22 NONAME
+  SHStringFromGUIDA@12 @23 NONAME
+  SHStringFromGUIDW@12 @24 NONAME
+  IsCharAlphaWrapW@4 @25 NONAME
+  IsCharUpperWrapW@4 @26 NONAME
+  IsCharLowerWrapW@4 @27 NONAME
+  IsCharAlphaNumericWrapW@4 @28 NONAME
+  IsCharSpaceW@4 @29 NONAME
+  IsCharBlankW@4 @30 NONAME
+  IsCharPunctW@4 @31 NONAME
+  IsCharCntrlW@4 @32 NONAME
+  IsCharDigitW@4 @33 NONAME
+  IsCharXDigitW@4 @34 NONAME
+  GetStringType3ExW@12 @35 NONAME
+  AppendMenuWrapW@16 @36 NONAME
+  GetDlgItemTextWrapW@16 @74 NONAME
+  SetDlgItemTextWrapW@12 @138 NONAME
+  StrCmpNCA@12 @151 NONAME
+  StrCmpNCW@12 @152 NONAME
+  StrCmpNICA@12 @153 NONAME
+  StrCmpNICW@12 @154 NONAME
+  StrCmpCA@8 @155 NONAME
+  StrCmpCW@8 @156 NONAME
+  StrCmpICA@8 @157 NONAME
+  StrCmpICW@8 @158 NONAME
+  SHAboutInfoA@8 @160 NONAME
+  SHAboutInfoW@8 @161 NONAME
+  SHTruncateString@8 @162 NONAME
+  IUnknown_QueryStatus@20 @163 NONAME
+  IUnknown_Exec@24 @164 NONAME
+  SHSetWindowBits@16 @165 NONAME
+  SHIsEmptyStream@4 @166 NONAME
+  SHSetParentHwnd@8 @167 NONAME
+  ConnectToConnectionPoint@24 @168 NONAME
+  IUnknown_AtomicRelease@4 @169 NONAME
+  PathSkipLeadingSlashesA@4 @170 NONAME
+  SHIsSameObject@8 @171 NONAME
+  IUnknown_GetWindow@8 @172 NONAME
+  IUnknown_SetOwner@8 @173 NONAME
+  IUnknown_SetSite@8 @174 NONAME
+  IUnknown_GetClassID@8 @175 NONAME
+  IUnknown_QueryService@16 @176 NONAME
+  SHLoadMenuPopup@8 @177 NONAME
+  SHPropagateMessage@20 @178 NONAME
+  SHRemoveAllSubMenus@4 @180 NONAME
+  SHEnableMenuItem@12 @181 NONAME
+  SHCheckMenuItem@12 @182 NONAME
+  SHRegisterClassA@4 @183 NONAME
+  SHLoadFromPropertyBag@8 @187 NONAME
+  IUnknown_OnFocusOCS@8 @189 NONAME
+  SHGetMenuFromID@8 @192 NONAME
+  SHGetCurColorRes@0 @193 NONAME
+  SHFillRectClr@12 @197 NONAME
+  IUnknown_Set@8 @199 NONAME
+  MayExecForward@28 @201 NONAME
+  IsQSForward@12 @202 NONAME
+  SHStripMneumonicA@4 @203 NONAME
+  SHIsChildOrSelf@8 @204 NONAME
+  SHGetValueGoodBootA@24 @205 NONAME
+  SHGetValueGoodBootW@24 @206 NONAME
+  FDSA_Initialize@20 @208 NONAME
+  FDSA_Destroy@4 @209 NONAME
+  FDSA_InsertItem@12 @210 NONAME
+  FDSA_DeleteItem@8 @211 NONAME
+  IStream_Reset@4 @213 NONAME
+  IStream_Size@8 @214 NONAME
+  SHAnsiToUnicode@12 @215 NONAME
+  SHUnicodeToAnsi@12 @217 NONAME
+  SHUnicodeToAnsiCP@16 @218 NONAME
+  QISearch@16 @219 NONAME
+  SHRemoveDefaultDialogFont@4 @221 NONAME
+  _SHGlobalCounterCreate@4 @222 NONAME
+  _SHGlobalCounterGetValue@4 @223 NONAME
+  _SHGlobalCounterIncrement@4 @224 NONAME
+  SHPinDllOfCLSID@4 @236 NONAME
+  SHRegisterClassW@4 @237 NONAME
+  SHUnregisterClassesA@12 @238 NONAME
+  SHUnregisterClassesW@12 @239 NONAME
+  SHDefWindowProc@16 @240 NONAME
+  StopWatchMode@0 @241 NONAME
+  SHCreateWorkerWindowA@24 @257 NONAME
+  SHQueueUserWorkItem@28 @260 NONAME
+  SHRestrictionLookup@16 @266 NONAME
+  SHWeakQueryInterface@16 @267 NONAME
+  SHWeakReleaseInterface@8 @268 NONAME
+  GUIDFromStringA@8 @269 NONAME
+  GUIDFromStringW@8 @270 NONAME
+  SHGetRestriction@12 @271 NONAME
+  WhichPlatform@0 @276 NONAME
+  SHCreateWorkerWindowW@24 @278 NONAME
+  SHInvokeDefaultCommand@12 @279 NONAME
+  SHRegGetIntW@12 @280 NONAME
+  SHPackDispParamsV@16 @281 NONAME
+  SHPackDispParams@16 @282 NONAME
+  IConnectionPoint_SimpleInvoke@12 @284 NONAME
+  IConnectionPoint_OnChanged@8 @285 NONAME
+  IUnknown_CPContainerOnChanged@8 @287 NONAME
+  PlaySoundWrapW@12 @289 NONAME
+  SHGetIniStringW@20 @294 NONAME
+  SHSetIniStringW@16 @295 NONAME
+  ExtTextOutWrapW@32 @299 NONAME
+  SHGetFileInfoWrapW@20 @313 NONAME
+  DragQueryFileWrapW@16 @318 NONAME
+  RegisterMIMETypeForExtensionA@8 @320 NONAME
+  RegisterMIMETypeForExtensionW@8 @321 NONAME
+  UnregisterMIMETypeForExtensionA@4 @322 NONAME
+  UnregisterMIMETypeForExtensionW@4 @323 NONAME
+  RegisterExtensionForMIMETypeA@8 @324 NONAME
+  RegisterExtensionForMIMETypeW@8 @325 NONAME
+  UnregisterExtensionForMIMETypeA@4 @326 NONAME
+  UnregisterExtensionForMIMETypeW@4 @327 NONAME
+  GetMIMETypeSubKeyA@12 @328 NONAME
+  GetMIMETypeSubKeyW@12 @329 NONAME
+  SHBrowseForFolderWrapW@4 @333 NONAME
+  SHGetPathFromIDListWrapW@8 @334 NONAME
+  ShellExecuteExWrapW@4 @335 NONAME
+  SHFileOperationWrapW@4 @336 NONAME
+  ExtractIconExWrapW@20 @337 NONAME
+  SHInterlockedCompareExchange@12 @342 NONAME
+  SHRegGetCLSIDKeyA@20 @343 NONAME
+  SHRegGetCLSIDKeyW@20 @344 NONAME
+  SHUnicodeToUnicode@12 @346 NONAME
+  GetFileVersionInfoSizeWrapW@8 @350 NONAME
+  GetFileVersionInfoWrapW@16 @351 NONAME
+  VerQueryValueWrapW@16 @352 NONAME
+  IUnknown_EnableModeless@8 @355 NONAME
+  _CreateAllAccessSecurityAttributes@8 @356 NONAME
+  SHGetNewLinkInfoWrapW@20 @357 NONAME
+  SHDefExtractIconWrapW@24 @358 NONAME
+  SHInvokeCommand@16 @363 NONAME
+  DoesStringRoundTripA@12 @364 NONAME
+  ExtractIconWrapW@12 @370 NONAME
+  MLGetUILanguage@0 @376 NONAME
+  MLLoadLibraryA@12 @377
+  MLLoadLibraryW@12 @378
+  GetSaveFileNameWrapW@4 @389 NONAME
+  WNetRestoreConnectionWrapW@8 @390 NONAME
+  WNetGetLastErrorWrapW@20 @391 NONAME
+  StrCpyNXA@12 @399 NONAME
+  StrCpyNXW@12 @400 NONAME
+  PageSetupDlgWrapW@4 @401 NONAME
+  PrintDlgWrapW@4 @402 NONAME
+  GetOpenFileNameWrapW@4 @403 NONAME
+  MLBuildResURLA@24 @405 NONAME
+  MLBuildResURLW@24 @406 NONAME
+  SHGetMachineInfo@4 @413 NONAME
+  MLFreeLibrary@4 @418 NONAME
+  _SHGlobalCounterCreateNamedA@8 @422 NONAME
+  _SHGlobalCounterCreateNamedW@8 @423 NONAME
+  _SHGlobalCounterDecrement@4 @424 NONAME
+  MLSetMLHInstance@8 @430 NONAME
+  MLClearMLHInstance@4 @431 NONAME
+  CLSIDFromStringWrap@8 @436 NONAME
+  IsOS@4 @437 NONAME
+  SHGetWebFolderFilePathA@12 @440 NONAME
+  SHGetWebFolderFilePathW@12 @441 NONAME
+  SHGetShellKey@12 @491 NONAME
+  IUnknown_OnFocusChangeIS@12 @509 NONAME
+  SKGetValueW@24 @516 NONAME
+  AssocCreate@24 @487
+  AssocQueryKeyA@20 @501
+  AssocQueryKeyW@20 @502
+  AssocQueryStringA@24 @503
+  AssocQueryStringByKeyA@24 @504
+  AssocQueryStringByKeyW@24 @515
+  AssocQueryStringW@24 @547
+  ChrCmpIA@8 @552
+  ChrCmpIW@8 @553
+  ColorAdjustLuma@12 @554
+  ColorHLSToRGB@12 @555
+  ColorRGBToHLS@16 @556
+  DllGetVersion@4=SHLWAPI_DllGetVersion@4 @557
+  GetMenuPosFromID@8 @558
+  HashData@16 @559
+  PathAddBackslashA@4 @562
+  PathAddBackslashW@4 @563
+  PathAddExtensionA@8 @564
+  PathAddExtensionW@8 @565
+  PathAppendA@8 @566
+  PathAppendW@8 @567
+  PathBuildRootA@8 @568
+  PathBuildRootW@8 @569
+  PathCanonicalizeA@8 @570
+  PathCanonicalizeW@8 @571
+  PathCombineA@12 @572
+  PathCombineW@12 @573
+  PathCommonPrefixA@12 @574
+  PathCommonPrefixW@12 @575
+  PathCompactPathA@12 @576
+  PathCompactPathExA@16 @577
+  PathCompactPathExW@16 @578
+  PathCompactPathW@12 @579
+  PathCreateFromUrlA@16 @580
+  PathCreateFromUrlW@16 @581
+  PathFileExistsA@4 @582
+  PathFileExistsW@4 @583
+  PathFindExtensionA@4 @584
+  PathFindExtensionW@4 @585
+  PathFindFileNameA@4 @586
+  PathFindFileNameW@4 @587
+  PathFindNextComponentA@4 @588
+  PathFindNextComponentW@4 @589
+  PathFindOnPathA@8 @590
+  PathFindOnPathW@8 @591
+  PathGetArgsA@4 @594
+  PathGetArgsW@4 @595
+  PathGetCharTypeA@4 @596
+  PathGetCharTypeW@4 @597
+  PathGetDriveNumberA@4 @598
+  PathGetDriveNumberW@4 @599
+  PathIsContentTypeA@8 @600
+  PathIsContentTypeW@8 @601
+  PathIsDirectoryA@4 @602
+  PathIsDirectoryW@4 @605
+  PathIsFileSpecA@4 @606
+  PathIsFileSpecW@4 @607
+  PathIsPrefixA@8 @612
+  PathIsPrefixW@8 @613
+  PathIsRelativeA@4 @614
+  PathIsRelativeW@4 @615
+  PathIsRootA@4 @616
+  PathIsRootW@4 @617
+  PathIsSameRootA@8 @618
+  PathIsSameRootW@8 @619
+  PathIsSystemFolderA@8 @620
+  PathIsSystemFolderW@8 @621
+  PathIsUNCA@4 @622
+  PathIsUNCServerA@4 @623
+  PathIsUNCServerShareA@4 @624
+  PathIsUNCServerShareW@4 @625
+  PathIsUNCServerW@4 @626
+  PathIsUNCW@4 @627
+  PathIsURLA@4 @628
+  PathIsURLW@4 @629
+  PathMakePrettyA@4 @630
+  PathMakePrettyW@4 @631
+  PathMakeSystemFolderA@4 @632
+  PathMakeSystemFolderW@4 @633
+  PathMatchSpecA@8 @634
+  PathMatchSpecW@8 @635
+  PathParseIconLocationA@4 @636
+  PathParseIconLocationW@4 @637
+  PathQuoteSpacesA@4 @638
+  PathQuoteSpacesW@4 @639
+  PathRelativePathToA@20 @640
+  PathRelativePathToW@20 @641
+  PathRemoveArgsA@4 @642
+  PathRemoveArgsW@4 @643
+  PathRemoveBackslashA@4 @644
+  PathRemoveBackslashW@4 @645
+  PathRemoveBlanksA@4 @646
+  PathRemoveBlanksW@4 @647
+  PathRemoveExtensionA@4 @648
+  PathRemoveExtensionW@4 @649
+  PathRemoveFileSpecA@4 @650
+  PathRemoveFileSpecW@4 @651
+  PathRenameExtensionA@8 @652
+  PathRenameExtensionW@8 @653
+  PathSearchAndQualifyA@12 @654
+  PathSearchAndQualifyW@12 @655
+  PathSetDlgItemPathA@12 @656
+  PathSetDlgItemPathW@12 @657
+  PathSkipRootA@4 @658
+  PathSkipRootW@4 @659
+  PathStripPathA@4 @660
+  PathStripPathW@4 @661
+  PathStripToRootA@4 @662
+  PathStripToRootW@4 @663
+  PathUnmakeSystemFolderA@4 @668
+  PathUnmakeSystemFolderW@4 @669
+  PathUnquoteSpacesA@4 @670
+  PathUnquoteSpacesW@4 @671
+  SHCreateShellPalette@4 @675
+  SHDeleteEmptyKeyA@8 @680
+  SHDeleteEmptyKeyW@8 @681
+  SHDeleteKeyA@8 @682
+  SHDeleteKeyW@8 @683
+  SHDeleteOrphanKeyA@8 @684
+  SHDeleteOrphanKeyW@8 @685
+  SHDeleteValueA@12 @686
+  SHDeleteValueW@12 @687
+  SHEnumKeyExA@16 @688
+  SHEnumKeyExW@16 @689
+  SHEnumValueA@28 @690
+  SHEnumValueW@28 @691
+  SHGetInverseCMAP@8 @692
+  SHGetValueA@24 @694
+  SHGetValueW@24 @695
+  SHIsLowMemoryMachine@4 @696
+  SHOpenRegStreamA@16 @699
+  SHOpenRegStreamW@16 @700
+  SHOpenRegStream2A@16 @697
+  SHOpenRegStream2W@16 @698
+  SHQueryInfoKeyA@20 @701
+  SHQueryInfoKeyW@20 @702
+  SHQueryValueExA@24 @703
+  SHQueryValueExW@24 @704
+  SHRegCloseUSKey@4 @705
+  SHRegEnumUSKeyA@20 @713
+  SHRegEnumUSKeyW@20 @714
+  SHRegGetBoolUSValueA@16 @717
+  SHRegGetBoolUSValueW@16 @718
+  SHRegGetUSValueA@32 @721
+  SHRegGetUSValueW@32 @722
+  SHRegOpenUSKeyA@20 @723
+  SHRegOpenUSKeyW@20 @724
+  SHRegQueryInfoUSKeyA@24 @725
+  SHRegQueryInfoUSKeyW@24 @726
+  SHRegQueryUSValueA@32 @727
+  SHRegQueryUSValueW@32 @728
+  SHRegSetUSValueA@24 @731
+  SHRegSetUSValueW@24 @732
+  SHRegWriteUSValueA@24 @733
+  SHRegWriteUSValueW@24 @734
+  SHSetValueA@24 @738
+  SHSetValueW@24 @739
+  StrCSpnA@8 @743
+  StrCSpnIA@8 @744
+  StrCSpnIW@8 @745
+  StrCSpnW@8 @746
+  StrCatBuffA@12 @747
+  StrCatBuffW@12 @748
+  StrCatW@8 @749
+  StrChrA@8 @750
+  StrChrIA@8 @751
+  StrChrIW@8 @752
+  StrChrW@8 @753
+  StrCmpIW@8 @754
+  StrCmpNA@12 @756
+  StrCmpNIA@12 @757
+  StrCmpNIW@12 @758
+  StrCmpNW@12 @759
+  StrCmpW@8 @760
+  StrCpyNW@12 @761
+  StrCpyW@8 @762
+  StrDupA@4 @763
+  StrDupW@4 @764
+  StrFormatByteSizeA@12 @766
+  StrFormatByteSizeW@16 @767
+  StrFromTimeIntervalA@16 @770
+  StrFromTimeIntervalW@16 @771
+  StrIsIntlEqualA@16 @772
+  StrIsIntlEqualW@16 @773
+  StrNCatA@12 @774
+  StrNCatW@12 @775
+  StrPBrkA@8 @776
+  StrPBrkW@8 @777
+  StrRChrA@12 @778
+  StrRChrIA@12 @779
+  StrRChrIW@12 @780
+  StrRChrW@12 @781
+  StrRStrIA@12 @782
+  StrRStrIW@12 @783
+  StrSpnA@8 @788
+  StrSpnW@8 @789
+  StrStrA@8 @790
+  StrStrIA@8 @791
+  StrStrIW@8 @792
+  StrStrW@8 @793
+  StrToIntA@4 @794
+  StrToIntExA@12 @795
+  StrToIntExW@12 @796
+  StrToIntW@4 @797
+  StrTrimA@8 @798
+  StrTrimW@8 @799
+  UrlApplySchemeA@16 @800
+  UrlApplySchemeW@16 @801
+  UrlCanonicalizeA@16 @802
+  UrlCanonicalizeW@16 @803
+  UrlCombineA@20 @804
+  UrlCombineW@20 @805
+  UrlCompareA@12 @806
+  UrlCompareW@12 @807
+  UrlCreateFromPathA@16 @808
+  UrlCreateFromPathW@16 @809
+  UrlEscapeA@16 @810
+  UrlEscapeW@16 @811
+  UrlGetLocationA@4 @812
+  UrlGetLocationW@4 @813
+  UrlGetPartA@20 @814
+  UrlGetPartW@20 @815
+  UrlHashA@12 @816
+  UrlHashW@12 @817
+  UrlIsA@8 @818
+  UrlIsNoHistoryA@4 @819
+  UrlIsNoHistoryW@4 @820
+  UrlIsOpaqueA@4 @821
+  UrlIsOpaqueW@4 @822
+  UrlIsW@8 @823
+  UrlUnescapeA@16 @824
+  UrlUnescapeW@16 @825
+  wnsprintfA @827
+  wnsprintfW @828
+  wvnsprintfA@16 @829
+  wvnsprintfW@16 @830
+  AssocIsDangerous@4 @500
+  StrRetToBufA@16 @784
+  StrRetToBufW@16 @785
+  StrRetToStrA@12 @786
+  StrRetToStrW@12 @787
+  SHRegGetPathA@20 @719
+  SHRegGetPathW@20 @720
+  PathIsDirectoryEmptyA@4 @603
+  PathIsDirectoryEmptyW@4 @604
+  PathIsNetworkPathA@4 @610
+  PathIsNetworkPathW@4 @611
+  PathIsLFNFileSpecA@4 @608
+  PathIsLFNFileSpecW@4 @609
+  PathFindSuffixArrayA@12 @592
+  PathFindSuffixArrayW@12 @593
+  _SHGetInstanceExplorer@4 @826
+  PathUndecorateA@4 @666
+  PathUndecorateW@4 @667
+  SHCopyKeyA@16 @673
+  SHCopyKeyW@16 @674
+  SHAutoComplete@8 @672
+  SHCreateStreamOnFileA@12 @676
+  SHCreateStreamOnFileW@12 @678
+  SHCreateStreamOnFileEx@24 @677
+  SHCreateStreamWrapper@16 @679
+  SHGetThreadRef@4 @693
+  SHRegDuplicateHKey@4 @712
+  SHRegSetPathA@20 @729
+  SHRegSetPathW@20 @730
+  SHSetThreadRef@4 @737
+  SHReleaseThreadRef@0 @736
+  SHSkipJunction@8 @740
+  SHStrDupA@8 @741
+  SHStrDupW@8 @742
+  StrFormatByteSize64A@16 @765
+  StrFormatKBSizeA@16 @768
+  StrFormatKBSizeW@16 @769
+  StrCmpLogicalW@8 @755
