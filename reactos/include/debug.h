@@ -29,8 +29,8 @@
 #define assert(x)
 #endif
 
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); ExAllocatePool(NonPagedPool,0); } while(0);
-#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
+#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
 extern unsigned int old_idt[256][2];
 //extern unsigned int idt;
@@ -47,7 +47,7 @@ extern unsigned int old_idt_valid;
 #ifndef NDEBUG
 #define OLD_DPRINT(fmt,args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(fmt,args); } while(0);
 #define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); DPRINT_CHECKS  } while(0);
-#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
+#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 #else
 //#define DPRINT(args...) do { DPRINT_CHECKS } while (0);
 #define DPRINT(args...)
