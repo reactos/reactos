@@ -28,8 +28,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -47,6 +49,7 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "shlwapi.h"
+#include "winnt.h"
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -3657,12 +3660,118 @@ HRESULT WINAPI CLSIDFromStringWrap(LPCWSTR idstr, CLSID *id)
  *  TRUE  If the feature is available.
  *  FALSE If the feature is not available.
  */
-DWORD WINAPI IsOS(DWORD feature)
+BOOL WINAPI IsOS(DWORD feature)
 {
-  FIXME("(0x%08lx) stub\n", feature);
-  if (feature == 4)
-    return TRUE;
-  return FALSE;
+    OSVERSIONINFOA osvi;
+    DWORD platform, majorv, minorv;
+
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+    if(!GetVersionExA(&osvi))  {
+        ERR("GetVersionEx failed");
+        return FALSE;
+    }
+
+    majorv = osvi.dwMajorVersion;
+    minorv = osvi.dwMinorVersion;
+    platform = osvi.dwPlatformId;
+
+#define ISOS_RETURN(x) \
+    TRACE("(0x%lx) ret=%d\n",feature,(x)); \
+    return (x);
+
+    switch(feature)  {
+    case OS_WIN32SORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32s
+                 || platform == VER_PLATFORM_WIN32_WINDOWS)
+    case OS_NT:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_WIN95ORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS)
+    case OS_NT4ORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 4)
+    case OS_WIN2000ORGREATER_ALT:
+    case OS_WIN2000ORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
+    case OS_WIN98ORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv >= 10)
+    case OS_WIN98_GOLD:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv == 10)
+    case OS_WIN2000PRO:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
+    case OS_WIN2000SERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
+    case OS_WIN2000ADVSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
+    case OS_WIN2000DATACENTER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
+    case OS_WIN2000TERMINAL:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
+    case OS_EMBEDDED:
+        FIXME("(OS_EMBEDDED) What should we return here?\n");
+        return FALSE;
+    case OS_TERMINALCLIENT:
+        FIXME("(OS_TERMINALCLIENT) What should we return here?\n");
+        return FALSE;
+    case OS_TERMINALREMOTEADMIN:
+        FIXME("(OS_TERMINALREMOTEADMIN) What should we return here?\n");
+        return FALSE;
+    case OS_WIN95_GOLD:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv == 0)
+    case OS_MEORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv >= 90)
+    case OS_XPORGREATER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
+    case OS_HOME:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
+    case OS_PROFESSIONAL:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT) 
+    case OS_DATACENTER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_ADVSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
+    case OS_SERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_TERMINALSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_PERSONALTERMINALSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && minorv >= 1 && majorv >= 5)
+    case OS_FASTUSERSWITCHING:
+        FIXME("(OS_FASTUSERSWITCHING) What should we return here?\n");
+        return TRUE;
+    case OS_WELCOMELOGONUI:
+        FIXME("(OS_WELCOMELOGONUI) What should we return here?\n");
+        return FALSE;
+    case OS_DOMAINMEMBER:
+        FIXME("(OS_DOMAINMEMBER) What should we return here?\n");
+        return TRUE;
+    case OS_ANYSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_WOW6432:
+        FIXME("(OS_WOW6432) Should we check this?\n");
+        return FALSE;
+    case OS_WEBSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_SMALLBUSINESSSERVER:
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+    case OS_TABLETPC:
+        FIXME("(OS_TABLEPC) What should we return here?\n");
+        return FALSE;
+    case OS_SERVERADMINUI:
+        FIXME("(OS_SERVERADMINUI) What should we return here?\n");
+        return FALSE;
+    case OS_MEDIACENTER:
+        FIXME("(OS_MEDIACENTER) What should we return here?\n");
+        return FALSE;
+    case OS_APPLIANCE:
+        FIXME("(OS_APPLIANCE) What should we return here?\n");
+        return FALSE;
+    }
+
+#undef ISOS_RETURN
+
+    WARN("(0x%lx) unknown parameter\n",feature);
+
+    return FALSE;
 }
 
 /*************************************************************************

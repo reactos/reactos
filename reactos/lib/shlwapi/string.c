@@ -2051,24 +2051,18 @@ INT WINAPI StrFromTimeIntervalW(LPWSTR lpszStr, UINT cchMax, DWORD dwMS,
 BOOL WINAPI StrIsIntlEqualA(BOOL bCase, LPCSTR lpszStr, LPCSTR lpszComp,
                             int iLen)
 {
-  DWORD dwFlags = LOCALE_USE_CP_ACP;
-  int iRet;
+  DWORD dwFlags;
 
   TRACE("(%d,%s,%s,%d)\n", bCase,
         debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
 
-  /* FIXME: These flags are undocumented and unknown by our CompareString.
-   *        We need defines for them.
+  /* FIXME: This flag is undocumented and unknown by our CompareString.
+   *        We need a define for it.
    */
-  dwFlags |= bCase ? 0x10000000 : 0x10000001;
+  dwFlags = 0x10000000;
+  if (!bCase) dwFlags |= NORM_IGNORECASE;
 
-  iRet = CompareStringA(GetThreadLocale(),
-                        dwFlags, lpszStr, iLen, lpszComp, iLen);
-
-  if (!iRet)
-    iRet = CompareStringA(2048, dwFlags, lpszStr, iLen, lpszComp, iLen);
-
-  return iRet == 2 ? TRUE : FALSE;
+  return (CompareStringA(GetThreadLocale(), dwFlags, lpszStr, iLen, lpszComp, iLen) == CSTR_EQUAL);
 }
 
 /*************************************************************************
@@ -2080,23 +2074,17 @@ BOOL WINAPI StrIsIntlEqualW(BOOL bCase, LPCWSTR lpszStr, LPCWSTR lpszComp,
                             int iLen)
 {
   DWORD dwFlags;
-  int iRet;
 
   TRACE("(%d,%s,%s,%d)\n", bCase,
         debugstr_w(lpszStr),debugstr_w(lpszComp), iLen);
 
-  /* FIXME: These flags are undocumented and unknown by our CompareString.
-   *        We need defines for them.
+  /* FIXME: This flag is undocumented and unknown by our CompareString.
+   *        We need a define for it.
    */
-  dwFlags = bCase ? 0x10000000 : 0x10000001;
+  dwFlags = 0x10000000;
+  if (!bCase) dwFlags |= NORM_IGNORECASE;
 
-  iRet = CompareStringW(GetThreadLocale(),
-                        dwFlags, lpszStr, iLen, lpszComp, iLen);
-
-  if (!iRet)
-    iRet = CompareStringW(2048, dwFlags, lpszStr, iLen, lpszComp, iLen);
-
-  return iRet == 2 ? TRUE : FALSE;
+  return (CompareStringW(GetThreadLocale(), dwFlags, lpszStr, iLen, lpszComp, iLen) == CSTR_EQUAL);
 }
 
 /*************************************************************************

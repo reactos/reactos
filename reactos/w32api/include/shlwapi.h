@@ -33,6 +33,44 @@ extern "C" {
 #define URL_UNESCAPE_HIGH_ANSI_ONLY 0x00400000
 #define URL_UNESCAPE_INPLACE	0x00100000
 
+#define OS_WIN32SORGREATER        0x00
+#define OS_NT                     0x01
+#define OS_WIN95ORGREATER         0x02
+#define OS_NT4ORGREATER           0x03
+#define OS_WIN2000ORGREATER_ALT   0x04
+#define OS_WIN98ORGREATER         0x05
+#define OS_WIN98_GOLD             0x06
+#define OS_WIN2000ORGREATER       0x07
+#define OS_WIN2000PRO             0x08
+#define OS_WIN2000SERVER          0x09
+#define OS_WIN2000ADVSERVER       0x0A
+#define OS_WIN2000DATACENTER      0x0B
+#define OS_WIN2000TERMINAL        0x0C
+#define OS_EMBEDDED               0x0D
+#define OS_TERMINALCLIENT         0x0E
+#define OS_TERMINALREMOTEADMIN    0x0F
+#define OS_WIN95_GOLD             0x10
+#define OS_MEORGREATER            0x11
+#define OS_XPORGREATER            0x12
+#define OS_HOME                   0x13
+#define OS_PROFESSIONAL           0x14
+#define OS_DATACENTER             0x15
+#define OS_ADVSERVER              0x16
+#define OS_SERVER                 0x17
+#define OS_TERMINALSERVER         0x18
+#define OS_PERSONALTERMINALSERVER 0x19
+#define OS_FASTUSERSWITCHING      0x1A
+#define OS_WELCOMELOGONUI         0x1B
+#define OS_DOMAINMEMBER           0x1C
+#define OS_ANYSERVER              0x1D
+#define OS_WOW6432                0x1E
+#define OS_WEBSERVER              0x1F
+#define OS_SMALLBUSINESSSERVER    0x20
+#define OS_TABLETPC               0x21
+#define OS_SERVERADMINUI          0x22
+#define OS_MEDIACENTER            0x23
+#define OS_APPLIANCE              0x24
+
 #ifndef RC_INVOKED
 #include <pshpack1.h>
 typedef struct _DllVersionInfo
@@ -120,6 +158,7 @@ WINSHLWAPI BOOL WINAPI ChrCmpIW(WCHAR,WCHAR);
 #define IntlStrEqNIW(pStr1, pStr2, nChar) IntlStrEqWorkerW(FALSE, pStr1, pStr2, nChar);
 WINSHLWAPI BOOL WINAPI IntlStrEqWorkerA(BOOL,LPCSTR,LPCSTR,int);
 WINSHLWAPI BOOL WINAPI IntlStrEqWorkerW(BOOL,LPCWSTR,LPCWSTR,int);
+WINSHLWAPI BOOL WINAPI IsOS(DWORD);
 WINSHLWAPI HRESULT WINAPI SHStrDupA(LPCSTR,LPWSTR*);
 WINSHLWAPI HRESULT WINAPI SHStrDupW(LPCWSTR,LPWSTR*);
 WINSHLWAPI LPSTR WINAPI StrCatA(LPSTR,LPCSTR);
