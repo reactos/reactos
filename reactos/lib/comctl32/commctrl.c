@@ -1127,32 +1127,28 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
 
    /* Check to see if we have called this function with the same uIDSubClass
     * and pfnSubclass */
-   for (n = 0; n <= stack->stacknum + stack->stacknew - 1; n++)
+   for (n = 0; n < stack->stacknum; n++)
       if ((stack->SubclassProcs[n].id == uIDSubclass) && 
          (stack->SubclassProcs[n].subproc == pfnSubclass)) {
          stack->SubclassProcs[n].ref = dwRef;
          return TRUE;
       }
 
-   if ((stack->stacknum + stack->stacknew) >= 32) {
+   if (stack->stacknum >= 32) {
       ERR ("We have a Subclass stack overflow, please increment size\n");
       return FALSE;
    }
 
-   /* we can't simply increment both stackpos and stacknum because there might
-    * be a window procedure running lower in the stack, we can only get them
-    * up to date once the last window procedure has run */
-   if (stack->stacknum == stack->stackpos) {
-      stack->stacknum++;
+   memmove (&stack->SubclassProcs[1], &stack->SubclassProcs[0],
+            sizeof(stack->SubclassProcs[0]) * stack->stacknum);
+
+   stack->stacknum++;
+   if (stack->wndprocrecursion)
       stack->stackpos++;
-   } else
-      stack->stacknew++;
 
-   newnum = stack->stacknew + stack->stacknum - 1;
-
-   stack->SubclassProcs[newnum].subproc = pfnSubclass;
-   stack->SubclassProcs[newnum].ref = dwRef;
-   stack->SubclassProcs[newnum].id = uIDSubclass;
+   stack->SubclassProcs[0].subproc = pfnSubclass;
+   stack->SubclassProcs[0].ref = dwRef;
+   stack->SubclassProcs[0].id = uIDSubclass;
    
    return TRUE;
 }
@@ -1187,7 +1183,7 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    if (!stack)
       return FALSE;
 
-   for (n = 0; n <= stack->stacknum + stack->stacknew - 1; n++)
+   for (n = 0; n < stack->stacknum; n++)
       if ((stack->SubclassProcs[n].id == uID) &&
          (stack->SubclassProcs[n].subproc == pfnSubclass)) {
          *pdwRef = stack->SubclassProcs[n].ref;
@@ -1225,7 +1221,8 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    if (!stack)
       return FALSE;
 
-   if ((stack->stacknum == 1) && (stack->stackpos == 1) && !stack->stacknew) {
+   if ((stack->stacknum == 1) && (stack->stackpos == 1) &&
+       !stack->wndprocrecursion) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the origional window procedure */
       if (IsWindowUnicode (hWnd))
@@ -1237,24 +1234,21 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
       return TRUE;
    }
  
-   for (n = stack->stacknum + stack->stacknew - 1; n >= 0; n--)
+   for (n = stack->stacknum - 1; n >= 0; n--)
       if ((stack->SubclassProcs[n].id == uID) &&
          (stack->SubclassProcs[n].subproc == pfnSubclass)) {
-         if (n != (stack->stacknum + stack->stacknew))
+         if (n != stack->stacknum)
             /* Fill the hole in the stack */
             memmove (&stack->SubclassProcs[n], &stack->SubclassProcs[n + 1],
-                    sizeof(stack->SubclassProcs[0]) * (stack->stacknew + stack->stacknum - n));
+                    sizeof(stack->SubclassProcs[0]) * (stack->stacknum - n));
          stack->SubclassProcs[n].subproc = NULL;
          stack->SubclassProcs[n].ref = 0;
          stack->SubclassProcs[n].id = 0;
 
-         /* If we are currently running a window procedure we have to manipulate
-          * the stack position pointers so that we don't corrupt the stack */
-         if ((n < stack->stackpos) || (stack->stackpos == stack->stacknum)) {
-            stack->stacknum--;
+         stack->stacknum--;
+         if (n < stack->stackpos && stack->wndprocrecursion)
             stack->stackpos--;
-         } else if (n >= stack->stackpos)
-            stack->stacknew--;
+
          return TRUE;
       }
 
@@ -1291,24 +1285,27 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
       return 0;
    }
 
-   /* If we are at pos 0 then we have to call the origional window procedure */
-   if (stack->stackpos == 0) {
+   stack->wndprocrecursion++;
+
+   /* If we are at the end of stack then we have to call the original
+    * window procedure */
+   if (stack->stackpos == stack->stacknum) {
       if (IsWindowUnicode (hWnd))
-         return CallWindowProcW (stack->origproc, hWnd, uMsg, wParam, lParam);
+         ret = CallWindowProcW (stack->origproc, hWnd, uMsg, wParam, lParam);
       else
-         return CallWindowProcA (stack->origproc, hWnd, uMsg, wParam, lParam);
+         ret = CallWindowProcA (stack->origproc, hWnd, uMsg, wParam, lParam);
+   } else {
+      stack->stackpos++;
+      /* call the Subclass procedure from the stack */
+      ret = stack->SubclassProcs[stack->stackpos - 1].subproc (hWnd, uMsg, wParam, lParam,
+            stack->SubclassProcs[stack->stackpos - 1].id, stack->SubclassProcs[stack->stackpos - 1].ref);
+      stack->stackpos--;
    }
 
-   stackpos = --stack->stackpos;
-   /* call the Subclass procedure from the stack */
-   ret = stack->SubclassProcs[stackpos].subproc (hWnd, uMsg, wParam, lParam,
-         stack->SubclassProcs[stackpos].id, stack->SubclassProcs[stackpos].ref);
-   stack->stackpos++;
-
-   if ((stack->stackpos == stack->stacknum) && stack->stacknew) {
-      stack->stacknum += stack->stacknew;
-      stack->stackpos += stack->stacknew;
-      stack->stacknew = 0;
+   /* We finished the recursion, so let's reinitalize the stack position to
+    * beginning */
+   if ((--stack->wndprocrecursion) == 0) {
+      stack->stackpos = 0;
    }
 
    /* If we removed the last entry in our stack while a window procedure was

@@ -153,7 +153,7 @@ typedef struct
    } SubclassProcs[31];
    int stackpos;
    int stacknum;
-   int stacknew;
+   int wndprocrecursion;
    WNDPROC origproc;
 } SUBCLASS_INFO, *LPSUBCLASS_INFO;
 
