@@ -21,7 +21,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"ReactOS Shell Common Library\0"
+            VALUE "FileDescription",	"ReactOS Shell32 Common Library\0"
             VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"shell32\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT

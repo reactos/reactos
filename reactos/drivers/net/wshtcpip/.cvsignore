@@ -5,3 +5,6 @@ wshtcpip.coff
 base.tmp
 junk.tmp
 temp.exp
+*.d
+*.o
+*.sym

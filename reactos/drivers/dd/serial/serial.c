@@ -1,4 +1,4 @@
-/* $Id: serial.c,v 1.8 2000/06/29 23:35:49 dwelch Exp $
+/* $Id: serial.c,v 1.9 2002/08/25 06:59:34 robd Exp $
  *
  * Serial driver
  * Written by Jason Filby (jasonfilby@yahoo.com)
@@ -8,7 +8,12 @@
 
 #include <ddk/ntddk.h>
 //#include <internal/mmhal.h>
-#include "../../../ntoskrnl/include/internal/i386/io.h"
+//#include "../../../ntoskrnl/include/internal/i386/io.h"
+//#include "../../../ntoskrnl/include/internal/io.h"
+
+#define outb_p(a,p) WRITE_PORT_UCHAR((PUCHAR)a,p)
+#define outw_p(a,p) WRITE_PORT_USHORT((PUSHORT)a,p)
+#define inb_p(p)    READ_PORT_UCHAR((PUCHAR)p)
 
 #define NDEBUG
 #include <debug.h>

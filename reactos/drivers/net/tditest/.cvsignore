@@ -1,2 +1,5 @@
 objects
 tditest.coff
+*.d
+*.o
+*.sym
