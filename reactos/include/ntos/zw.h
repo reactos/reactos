@@ -1485,14 +1485,14 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
  *	  IoStatusBlock = Caller should supply storage for 
  *        IoControlCode = Contains the File System Control command. This is an 
  *			index to the structures in InputBuffer and OutputBuffer.
- *		FSCTL_GET_RETRIEVAL_POINTERS  	MAPPING_PAIR
- *		FSCTL_GET_RETRIEVAL_POINTERS  	GET_RETRIEVAL_DESCRIPTOR
- *		FSCTL_GET_VOLUME_BITMAP  	BITMAP_DESCRIPTOR
- *		FSCTL_MOVE_FILE  		MOVEFILE_DESCRIPTOR
+ *		FSCTL_GET_RETRIEVAL_POINTERS  [Input/Output] RETRIEVAL_POINTERS_BUFFER
+ *		FSCTL_GET_VOLUME_BITMAP       [Input]        STARTING_LCN_INPUT_BUFFER
+ *		FSCTL_GET_VOLUME_BITMAP       [Output]       VOLUME_BITMAP_BUFFER
+ *		FSCTL_MOVE_FILE               [Input]        MOVE_FILE_DATA
  *
- *	  InputBuffer = Caller should supply storage for input buffer if FCTL expects one.
+ *	  InputBuffer = Caller should supply storage for input buffer if FSCTL expects one.
  * 	  InputBufferSize = Size of the input bufffer
- *        OutputBuffer = Caller should supply storage for output buffer if FCTL expects one.
+ *        OutputBuffer = Caller should supply storage for output buffer if FSCTL expects one.
  *        OutputBufferSize  = Size of the input bufffer
  * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
  *		STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST ]

@@ -1406,6 +1406,7 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
+#pragma pack(push,8)
 typedef struct _RETRIEVAL_POINTERS_BUFFER {
     ULONG               ExtentCount;
     LARGE_INTEGER       StartingVcn;
@@ -1414,6 +1415,7 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
         LARGE_INTEGER   Lcn;
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
+#pragma pack(pop)
 
 typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *Parent;

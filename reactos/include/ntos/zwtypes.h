@@ -1111,31 +1111,17 @@ typedef struct _FILE_NOTIFY_INFORMATION {
 #define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
 #define FSCTL_MOVE_FILE				0x90074
 
-typedef struct _MAPPING_PAIR
-{
-	ULONGLONG	Vcn;
-	ULONGLONG	Lcn;
-} MAPPING_PAIR, *PMAPPING_PAIR;
-
-/* Must match RETRIEVAL_POINTERS_BUFFER (ntifs.h) */
-#include <pshpack4.h>
-typedef struct _GET_RETRIEVAL_DESCRIPTOR
-{
-	ULONG		NumberOfPairs;
-	ULONGLONG	StartVcn;
-	MAPPING_PAIR	Pair[0]; // variable size 
-} GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
+/* Structure copied from ntifs.h (Must be in sync!) */
+#include <pshpack8.h>
+typedef struct _RETRIEVAL_POINTERS_BUFFER {
+    ULONG               ExtentCount;
+    LARGE_INTEGER       StartingVcn;
+    struct {
+        LARGE_INTEGER   NextVcn;
+        LARGE_INTEGER   Lcn;
+    } Extents[1];
+} RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
 #include <poppack.h>
-
-typedef struct _MOVEFILE_DESCRIPTOR
-{
-	HANDLE            FileHandle;
-	ULONG             Reserved;
-	LARGE_INTEGER     StartVcn;
-	LARGE_INTEGER     TargetLcn;
-	ULONG             NumVcns;
-	ULONG             Reserved1;
-} MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
 
 typedef struct _SECTION_BASIC_INFORMATION
 {
@@ -1722,14 +1708,6 @@ typedef enum _POWER_INFORMATION_LEVEL {
 // File System Control commands ( related to defragging )
 
 #define	FSCTL_READ_MFT_RECORD			0x90068 // NTFS only
-
-typedef struct _BITMAP_DESCRIPTOR
-{
-	ULONGLONG	StartLcn;
-	ULONGLONG	ClustersToEndOfVol;
-	BYTE		Map[0]; // variable size
-} BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR;
-
 
 //typedef enum _TIMER_TYPE 
 //{
