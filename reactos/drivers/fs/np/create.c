@@ -435,6 +435,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Irp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+   DPRINT("Success!\n");
+
    return STATUS_SUCCESS;
 }
 
@@ -460,6 +462,7 @@ NpfsClose(
 
    if (Fcb == NULL)
    {
+      DPRINT("Success!\n");
       Irp->IoStatus.Status = STATUS_SUCCESS;
       Irp->IoStatus.Information = 0;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -537,7 +540,8 @@ NpfsClose(
 
    KeUnlockMutex(&Pipe->FcbListLock);
 
-   if (Server && Pipe->CurrentInstances == 0)
+   if (IsListEmpty(&Pipe->ServerFcbListHead) &&
+       IsListEmpty(&Pipe->ClientFcbListHead))
    {
       RtlFreeUnicodeString(&Pipe->PipeName);
       KeLockMutex(&DeviceExt->PipeListLock);
@@ -549,6 +553,8 @@ NpfsClose(
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   DPRINT("Success!\n");
 
    return STATUS_SUCCESS;
 }
