@@ -134,6 +134,7 @@ VfatWriteFsInfo(IN HANDLE FileHandle,
   FsInfo->StrucSig = 0x61417272;
   FsInfo->FreeCount = 0xffffffff;
   FsInfo->NextFree = 0xffffffff;
+  FsInfo->TrailSig = 0xaa550000;
 
   /* Write sector */
   FileOffset.QuadPart = BootSector->FSInfoSector * BootSector->BytesPerSector;
@@ -194,7 +195,7 @@ VfatWriteFAT(IN HANDLE FileHandle,
   Buffer[4] = 0xff; /* Clean shutdown, no disk read/write errors, end-of-cluster (EOC) mark */
   Buffer[5] = 0xff;
   Buffer[6] = 0xff;
-  Buffer[7] = 0x0f; 
+  Buffer[7] = 0x0f;
   /* FAT cluster 2 */
   Buffer[8] = 0xff; /* End of root directory */
   Buffer[9] = 0xff;
@@ -425,10 +426,35 @@ VfatFormat(
       return Status;
     }
 
+  /* Calculate cluster size */
+  if (ClusterSize == 0)
+    {
+      if (PartitionInfo.PartitionLength.QuadPart < 8ULL * 1024ULL * 1024ULL)
+	{
+	  /* Partition < 8GB ==> 4KB Cluster */
+	  ClusterSize = 4096;
+	}
+      else if (PartitionInfo.PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL)
+	{
+	  /* Partition 8GB - 16GB ==> 8KB Cluster */
+	  ClusterSize = 8192;
+	}
+      else if (PartitionInfo.PartitionLength.QuadPart < 32ULL * 1024ULL * 1024ULL)
+	{
+	  /* Partition 16GB - 32GB ==> 16KB Cluster */
+	  ClusterSize = 16384;
+	}
+      else
+	{
+	  /* Partition >= 32GB ==> 32KB Cluster */
+	  ClusterSize = 32768;
+	}
+    }
+
   memset(&BootSector, 0, sizeof(FAT32_BOOT_SECTOR));
   memcpy(&BootSector.OEMName[0], "MSWIN4.1", 8);
   BootSector.BytesPerSector = DiskGeometry.BytesPerSector;
-  BootSector.SectorsPerCluster = 4096 / BootSector.BytesPerSector;  // 4KB clusters /* FIXME: */
+  BootSector.SectorsPerCluster = ClusterSize / BootSector.BytesPerSector;
   BootSector.ReservedSectors = 32;
   BootSector.FATCount = 2;
   BootSector.RootEntries = 0;
@@ -437,7 +463,7 @@ VfatFormat(
   BootSector.FATSectors = 0;
   BootSector.SectorsPerTrack = DiskGeometry.SectorsPerTrack;
   BootSector.Heads = DiskGeometry.TracksPerCylinder;
-  BootSector.HiddenSectors = PartitionInfo.HiddenSectors;
+  BootSector.HiddenSectors = DiskGeometry.SectorsPerTrack; //PartitionInfo.HiddenSectors;
   BootSector.SectorsHuge = PartitionInfo.PartitionLength.QuadPart >>
     GetShiftCount(BootSector.BytesPerSector); /* Use shifting to avoid 64-bit division */
   BootSector.FATSectors32 = 0; /* Set later */

@@ -26,9 +26,9 @@ typedef struct _FAT32_BOOT_SECTOR
   unsigned char  Media;                       // 21
   unsigned short FATSectors;                  // 22
   unsigned short SectorsPerTrack;             // 24
-  unsigned short Heads;	                      // 22
-  unsigned long  HiddenSectors;               // 24
-  unsigned long  SectorsHuge;                 // 28
+  unsigned short Heads;                       // 26
+  unsigned long  HiddenSectors;               // 28
+  unsigned long  SectorsHuge;                 // 32
   unsigned long  FATSectors32;                // 36
   unsigned short ExtFlag;                     // 40
   unsigned short FSVersion;                   // 42
@@ -48,10 +48,11 @@ typedef struct _FAT32_BOOT_SECTOR
 
 typedef struct _FAT32_FSINFO
 {
-  unsigned int  LeadSig;          // 0
-  unsigned char Res1[480];        // 4
-  unsigned int  StrucSig;         // 484
-  unsigned int  FreeCount;        // 488
-  unsigned int  NextFree;         // 492
-  unsigned int  Res2;             // 496
+  unsigned long  LeadSig;          // 0
+  unsigned char  Res1[480];        // 4
+  unsigned long  StrucSig;         // 484
+  unsigned long  FreeCount;        // 488
+  unsigned long  NextFree;         // 492
+  unsigned long  Res2[3];          // 496
+  unsigned long  TrailSig;         // 508
 } __attribute__((packed)) FAT32_FSINFO, *PFAT32_FSINFO;
