@@ -1,1 +1,1 @@
-#include "../gdi32/misc/win32k.c"
+#include "../gdi32/misc/win32k.S"
