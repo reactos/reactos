@@ -6528,6 +6528,10 @@ IoOpenDeviceInterfaceRegistryKey(
   IN ACCESS_MASK  DesiredAccess,
   OUT PHANDLE  DeviceInterfaceKey);
 
+#define PLUGPLAY_REGKEY_DEVICE                            1
+#define PLUGPLAY_REGKEY_DRIVER                            2
+#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
+
 NTOSAPI
 NTSTATUS
 DDKAPI
