@@ -671,7 +671,7 @@ static HRESULT WINAPI IPersistStream_fnSave(
     *exePath = '\0';
 
     if (This->sPath)
-	SHELL_FindExecutable(NULL, This->sPath, wOpen, exePath, NULL, NULL, NULL, NULL);
+	SHELL_FindExecutable(NULL, This->sPath, wOpen, exePath, MAX_PATH, NULL, NULL, NULL, NULL);
 
     /* if there's no PIDL, generate one */
     if( ! This->pPidl )

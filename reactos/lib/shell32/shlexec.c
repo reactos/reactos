@@ -503,7 +503,7 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCW
  *              on the operation)
  */
 UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
-			    LPWSTR lpResult, LPWSTR key, void **env, LPITEMIDLIST pidl, LPCWSTR args)
+			    LPWSTR lpResult, int resultLen, LPWSTR key, void **env, LPITEMIDLIST pidl, LPCWSTR args)
 {
     static const WCHAR wWindows[] = {'w','i','n','d','o','w','s',0};
     static const WCHAR wPrograms[] = {'p','r','o','g','r','a','m','s',0};
@@ -660,7 +660,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 
 	if (retval > 32)
         {
-            SHELL_ArgifyW(lpResult, MAX_PATH, command, xlpFile, pidl, args);
+            SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args);
 
             /* Remove double quotation marks and command line arguments */
             if (*lpResult == '"')
@@ -908,7 +908,7 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
         SetCurrentDirectoryW(lpDirectory);
     }
 
-    retval = SHELL_FindExecutable(lpDirectory, lpFile, wszOpen, lpResult, NULL, NULL, NULL, NULL);
+    retval = SHELL_FindExecutable(lpDirectory, lpFile, wszOpen, lpResult, MAX_PATH, NULL, NULL, NULL, NULL);
 
     TRACE("returning %s\n", debugstr_w(lpResult));
     if (lpDirectory)
@@ -1187,7 +1187,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 
     /* Else, try to find the executable */
     buffer[0] = '\0';
-    retval = SHELL_FindExecutable(*sei_tmp.lpDirectory? sei_tmp.lpDirectory: NULL, lpFile, sei_tmp.lpVerb, buffer, wszProtocol, &env, sei_tmp.lpIDList, sei_tmp.lpParameters);
+    retval = SHELL_FindExecutable(*sei_tmp.lpDirectory? sei_tmp.lpDirectory: NULL, lpFile, sei_tmp.lpVerb, buffer, 1024, wszProtocol, &env, sei_tmp.lpIDList, sei_tmp.lpParameters);
 
     if (retval > 32)  /* Found */
     {
