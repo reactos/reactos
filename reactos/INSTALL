@@ -17,15 +17,23 @@ structure like the following
 
 make directories C:\reactos,C:\reactos\system32,C:\reactos\system32\drivers
 
-Copy apps/shell/shell.exe to C:\reactos\system32
+Copy apps/system/shell/shell.exe to C:\reactos\system32
 Copy subsys/smss/smss.exe to C:\reactos\system32
-Copy services/dd/keyboard/keyboard.sys to C:\reactos\system32\drivers
+Copy apps/system/winlogon/winlogon.exe to C:\reactos\system32
+Copy apps/system/services/services.exe to C:\reactos\system32
+Copy services/input/keyboard/keyboard.sys to C:\reactos\system32\drivers
 Copy services/dd/blue/blue.sys to C:\reactos\system32\drivers
 Copy lib/ntdll/ntdll.dll to C:\reactos\system32
 Copy lib/kernel32/kernel32.dll to C:\reactos\system32
 Copy lib/crtdll/crtdll.dll to C:\reactos\system32
 
 The system can only be started from DOS. Copy the following files,
-services/dd/ide/ide.sys, services/fs/vfat/vfatfsd.sys and
-loaders/dos/loadros.com, to a suitable directory. The system can then be
-booted with the command 'loadros.com ide.sys vfatfsd.sys'.
+services/dd/ide/ide.sys, services/fs/vfat/vfatfsd.sys
+ntoskrnl/ntoskrnl.exe and loaders/dos/loadros.com, to a suitable
+directory, such as C:\. The system can then be booted with the
+command 'loadros.com ntoskrnl.exe ide.sys vfatfsd.sys'.
+
+
+You may also want to try running the enhanced shell, cmd.exe, found in
+the rosapps CVS module.  For more information see the doc directory
+
