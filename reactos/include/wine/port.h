@@ -25,10 +25,6 @@
 # error You must include config.h to use this header
 #endif
 
-#ifdef __REACTOS__
-#include "wineros.h" /* Remove in the future */
-#endif /* __REACTOS__ */
-
 #define _GNU_SOURCE  /* for pread/pwrite */
 #include <fcntl.h>
 #include <math.h>
