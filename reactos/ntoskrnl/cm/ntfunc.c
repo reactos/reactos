@@ -30,23 +30,22 @@ static BOOLEAN CmiRegistryInitialized = FALSE;
  */
 NTSTATUS STDCALL
 CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
-                   IN PVOID                 Context,
-                   IN OUT PLARGE_INTEGER    Cookie
-                    )
+                   IN PVOID Context,
+                   IN OUT PLARGE_INTEGER Cookie)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /*
  * @unimplemented
  */
-
 NTSTATUS STDCALL
-CmUnRegisterCallback(IN LARGE_INTEGER    Cookie)
+CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1640,7 +1639,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       KeyCell->Flags |= REG_KEY_LINK_CELL;
     }
 
-  ZwQuerySystemTime (&KeyCell->LastWriteTime);
+  KeQuerySystemTime (&KeyCell->LastWriteTime);
   CmiMarkBlockDirty (RegistryHive, KeyObject->KeyCellOffset);
 
   ExReleaseResourceLite(&CmiRegistryLock);
@@ -1685,7 +1684,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 				 KeyObject->KeyCellOffset,
 				 ValueName);
 
-  ZwQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
+  KeQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
   CmiMarkBlockDirty (KeyObject->RegistryHive, KeyObject->KeyCellOffset);
 
   /* Release hive lock */
@@ -1749,7 +1748,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       if (Buffer == NULL)
 	return STATUS_INSUFFICIENT_RESOURCES;
 
-      Status = NtQueryObject (FileObjectAttributes->RootDirectory,
+      Status = ZwQueryObject (FileObjectAttributes->RootDirectory,
 			      ObjectNameInformation,
 			      Buffer,
 			      BufferSize,

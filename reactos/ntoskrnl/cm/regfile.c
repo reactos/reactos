@@ -71,7 +71,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Flags = REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED;
-  ZwQuerySystemTime(&RootKeyCell->LastWriteTime);
+  KeQuerySystemTime(&RootKeyCell->LastWriteTime);
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
@@ -1939,7 +1939,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
 	 &RegistryHive->LogFileName);
 
   /* Update hive header modification time */
-  ZwQuerySystemTime(&RegistryHive->HiveHeader->DateModified);
+  KeQuerySystemTime(&RegistryHive->HiveHeader->DateModified);
 
   /* Start log update */
   Status = CmiStartLogUpdate(RegistryHive);
@@ -2436,7 +2436,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     {
       NewKeyCell->Id = REG_KEY_CELL_ID;
       NewKeyCell->Flags = 0;
-      ZwQuerySystemTime(&NewKeyCell->LastWriteTime);
+      KeQuerySystemTime(&NewKeyCell->LastWriteTime);
       NewKeyCell->ParentKeyOffset = -1;
       NewKeyCell->NumberOfSubKeys = 0;
       NewKeyCell->HashTableOffset = -1;
@@ -2552,7 +2552,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       ParentKeyCell->NumberOfSubKeys++;
     }
 
-  ZwQuerySystemTime (&ParentKeyCell->LastWriteTime);
+  KeQuerySystemTime (&ParentKeyCell->LastWriteTime);
   CmiMarkBlockDirty (RegistryHive, ParentKey->KeyCellOffset);
 
   return(Status);
@@ -2710,7 +2710,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	    }
 	}
 
-      ZwQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
+      KeQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
       CmiMarkBlockDirty(ParentKey->RegistryHive,
 			ParentKey->KeyCellOffset);
     }
@@ -3210,7 +3210,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
       /* Update time of heap */
       if (!IsNoFileHive(RegistryHive))
-	ZwQuerySystemTime(&Bin->DateModified);
+	KeQuerySystemTime(&Bin->DateModified);
     }
 
   /* Destroy the value cell */
@@ -3219,7 +3219,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   /* Update time of heap */
   if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, ValueCellOffset, &Bin))
     {
-      ZwQuerySystemTime(&Bin->DateModified);
+      KeQuerySystemTime(&Bin->DateModified);
     }
 
   return Status;
@@ -3254,7 +3254,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   RegistryHive->FileSize += BinSize;
   tmpBin->BinSize = BinSize;
   tmpBin->Unused1 = 0;
-  ZwQuerySystemTime(&tmpBin->DateModified);
+  KeQuerySystemTime(&tmpBin->DateModified);
   tmpBin->Unused2 = 0;
 
   DPRINT ("  BinOffset %lx  BinSize %lx\n", tmpBin->BinOffset,tmpBin->BinSize);
@@ -3382,7 +3382,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 		  return STATUS_UNSUCCESSFUL;
 		}
 
-	      ZwQuerySystemTime(&Bin->DateModified);
+	      KeQuerySystemTime(&Bin->DateModified);
 	      CmiMarkBlockDirty(RegistryHive, RegistryHive->FreeListOffset[i]);
 
 	      if ((i + 1) < RegistryHive->FreeListSize)
@@ -3471,7 +3471,7 @@ CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
 
       /* Update time of heap */
       if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, CellOffset,&pBin))
-	ZwQuerySystemTime(&pBin->DateModified);
+	KeQuerySystemTime(&pBin->DateModified);
 
       CmiMarkBlockDirty(RegistryHive, CellOffset);
     }

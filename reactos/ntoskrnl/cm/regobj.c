@@ -287,7 +287,7 @@ CmiObjectDelete(PVOID DeletedObject)
 		      ParentKeyObject,
 		      KeyObject);
 
-      NtQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
+      KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
       CmiMarkBlockDirty (ParentKeyObject->RegistryHive,
 			 ParentKeyObject->KeyCellOffset);
 

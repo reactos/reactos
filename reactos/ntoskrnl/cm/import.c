@@ -233,7 +233,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
-      Status = NtCreateKey (&HardwareKey,
+      Status = ZwCreateKey (&HardwareKey,
 			    KEY_ALL_ACCESS,
 			    &ObjectAttributes,
 			    0,
@@ -245,7 +245,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
           DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
           return FALSE;
 	}
-      NtClose (HardwareKey);
+      ZwClose (HardwareKey);
 
       /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
       RtlInitUnicodeString(&KeyName,
@@ -255,7 +255,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
-      Status = NtCreateKey (&HardwareKey,
+      Status = ZwCreateKey (&HardwareKey,
 			    KEY_ALL_ACCESS,
 			    &ObjectAttributes,
 			    0,
@@ -267,7 +267,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
           DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
           return FALSE;
 	}
-      NtClose (HardwareKey);
+      ZwClose (HardwareKey);
 
       /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
       RtlInitUnicodeString (&KeyName,
@@ -277,7 +277,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
-      Status = NtCreateKey (&HardwareKey,
+      Status = ZwCreateKey (&HardwareKey,
 			    KEY_ALL_ACCESS,
 			    &ObjectAttributes,
 			    0,
@@ -289,7 +289,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
           DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
           return FALSE;
 	}
-      NtClose (HardwareKey);
+      ZwClose (HardwareKey);
 
       /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
       RtlInitUnicodeString(&KeyName,
@@ -299,7 +299,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
-      Status = NtCreateKey (&HardwareKey,
+      Status = ZwCreateKey (&HardwareKey,
 			    KEY_ALL_ACCESS,
 			    &ObjectAttributes,
 			    0,
@@ -311,7 +311,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
           DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
           return FALSE;
 	}
-      NtClose (HardwareKey);
+      ZwClose (HardwareKey);
 
       return TRUE;
     }
