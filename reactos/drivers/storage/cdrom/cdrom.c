@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.2 2002/03/08 11:59:08 ekohl Exp $
+/* $Id: cdrom.c,v 1.3 2002/03/15 16:35:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
   InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION) + sizeof(CDROM_DATA);
   InitData.DeviceType = FILE_DEVICE_CD_ROM;
-  InitData.DeviceCharacteristics = 0;
+  InitData.DeviceCharacteristics = FILE_REMOVABLE_MEDIA | FILE_READ_ONLY_DEVICE;
 
   InitData.ClassError = NULL;				// CdromClassProcessError;
   InitData.ClassReadWriteVerification = CdromClassCheckReadWrite;
