@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.35 2000/12/07 17:00:12 jean Exp $
+/* $Id: utils.c,v 1.36 2001/01/23 04:37:13 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -534,22 +534,38 @@ NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
 	DPRINT("Mapping section %d offset %x base %x size %x\n",
 	        i, Offset.u.LowPart, Base, Sections[i].Misc.VirtualSize);
 	DPRINT("Size %x\n", Sections[i].SizeOfRawData);
-	
-	Status = ZwMapViewOfSection(SectionHandle,
-				    ProcessHandle,
-				    (PVOID*)&Base,
-				    0,
-				    Size,
-				    &Offset,
-				    (PULONG)&Size,
-				    0,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT("Failed to map section");
-	     return(Status);
+	if( Offset.u.LowPart )
+	  { // only map section if it is initialized
+	    Status = ZwMapViewOfSection(SectionHandle,
+					ProcessHandle,
+					(PVOID*)&Base,
+					0,
+					Size,
+					&Offset,
+					(PULONG)&Size,
+					0,
+					MEM_COMMIT,
+					PAGE_READWRITE);
+	    if (!NT_SUCCESS(Status))
+	      {
+		DPRINT1("Failed to map section");
+		return(Status);
+	      }
 	  }
+	else {
+	  // allocate pure memory for uninitialized section
+	  Status = NtAllocateVirtualMemory( NtCurrentProcess(),
+					    (PVOID *)&Base,
+					    0,
+					    &Size,
+					    MEM_COMMIT,
+					    PAGE_READWRITE );
+	  if( !NT_SUCCESS( Status ) )
+	    {
+	      DPRINT1( "Failed to allocate memory for uninitialized section\n" );
+	      return Status;
+	    }
+	}
      }
    return STATUS_SUCCESS;
 }
