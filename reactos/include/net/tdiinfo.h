@@ -198,10 +198,10 @@ typedef struct _IPSNMPInfo {
 // END ORIGINAL SOURCE INFORMATION --
 
 typedef struct _IPRouteEntry {
-    ULONG ire_addr;
+    ULONG ire_dest;
     ULONG ire_index;            //matches if_index in IFEntry and iae_index in IPAddrEntry
     ULONG ire_metric;
-    ULONG ire_dest;             //??
+    ULONG ire_unk1;             //??
     ULONG ire_unk2;             //??
     ULONG ire_unk3;             //??
     ULONG ire_gw;
