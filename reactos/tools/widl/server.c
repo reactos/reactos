@@ -336,14 +336,35 @@ static void unmarshall_arguments(func_t *func)
 
 static void write_function_stubs(type_t *iface)
 {
+    int explicit_handle = is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE);
     func_t *func = iface->funcs;
     var_t *var;
+    var_t* explicit_handle_var;
     unsigned int proc_offset = 0;
 
     while (NEXT_LINK(func)) func = NEXT_LINK(func);
     while (func)
     {
         var_t *def = func->def;
+
+        /* check for a defined binding handle */
+        explicit_handle_var = get_explicit_handle_var(func);
+        if (explicit_handle)
+        {
+            if (!explicit_handle_var)
+            {
+                error("%s() does not define an explicit binding handle!\n", def->name);
+                return;
+            }
+        }
+        else
+        {
+            if (explicit_handle_var)
+            {
+                error("%s() must not define a binding handle!\n", def->name);
+                return;
+            }
+        }
 
         write_type(server, def->type, def, def->tname);
         fprintf(server, " __RPC_STUB\n");
@@ -396,6 +417,12 @@ static void write_function_stubs(type_t *iface)
         print_server("&%s_StubDesc);\n", iface->name);
         indent--;
         fprintf(server, "\n");
+
+        if (explicit_handle)
+        {
+            print_server("%s = _pRpcMessage->Handle;\n", explicit_handle_var->name);
+            fprintf(server, "\n");
+        }
 
         print_server("RpcTryFinally\n");
         print_server("{\n");
@@ -698,38 +725,46 @@ static void init_server(void)
 
 void write_server(ifref_t *ifaces)
 {
-    ifref_t *lcur = ifaces;
-    char *file_id = server_token;
-    int c;
+    ifref_t *iface = ifaces;
 
     if (!do_server)
         return;
-    if (!lcur)
+    if (!iface)
         return;
-    END_OF_LIST(lcur);
+    END_OF_LIST(iface);
 
     init_server();
     if (!server)
         return;
 
-    write_formatstringsdecl(lcur->iface);
-    write_serverinterfacedecl(lcur->iface);
-    write_stubdescdecl(lcur->iface);
+    while (iface)
+    {
+        fprintf(server, "/*****************************************************************************\n");
+        fprintf(server, " * %s interface\n", iface->iface->name);
+        fprintf(server, " */\n");
+        fprintf(server, "\n");
 
-    write_function_stubs(lcur->iface);
+        write_formatstringsdecl(iface->iface);
+        write_serverinterfacedecl(iface->iface);
+        write_stubdescdecl(iface->iface);
 
-    write_stubdescriptor(lcur->iface);
-    write_dispatchtable(lcur->iface);
+        write_function_stubs(iface->iface);
 
-    print_server("#if !defined(__RPC_WIN32__)\n");
-    print_server("#error  Invalid build platform for this stub.\n");
-    print_server("#endif\n");
-    fprintf(server, "\n");
+        write_stubdescriptor(iface->iface);
+        write_dispatchtable(iface->iface);
 
-    write_procformatstring(lcur->iface);
-    write_typeformatstring();
+        print_server("#if !defined(__RPC_WIN32__)\n");
+        print_server("#error  Invalid build platform for this stub.\n");
+        print_server("#endif\n");
+        fprintf(server, "\n");
 
-    fprintf(server, "\n");
+        write_procformatstring(iface->iface);
+        write_typeformatstring();
+
+        fprintf(server, "\n");
+
+        iface = PREV_LINK(iface);
+    }
 
     fclose(server);
 }

@@ -1,5 +1,15 @@
 ChangeLog
 
+2005-02-25 ekohl
+  tools/widl/client.c
+  tools/widl/header.c
+  tools/widl/header.h
+  tools/widl/server.c
+
+Support multiple interfaces per idl file.
+Support explicit binding handles.
+
+
 2005-02-24 ekohl
   include/wine/rpcfc.h
   tools/widl/client.c

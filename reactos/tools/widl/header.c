@@ -427,6 +427,28 @@ void write_externdef(var_t *v)
   fprintf(header, ";\n\n");
 }
 
+
+var_t* get_explicit_handle_var(func_t* func)
+{
+    var_t* var;
+
+    if (!func->args)
+        return NULL;
+
+    var = func->args;
+    while (NEXT_LINK(var)) var = NEXT_LINK(var);
+    while (var)
+    {
+        if (var->type->type == RPC_FC_IGNORE)
+            return var;
+
+        var = PREV_LINK(var);
+    }
+
+    return NULL;
+}
+
+
 /********** INTERFACES **********/
 
 int is_object(attr_t *a)
@@ -663,10 +685,28 @@ static void write_method_proto(type_t *iface)
 
 static void write_function_proto(type_t *iface)
 {
+  int explicit_handle = is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE);
+  var_t* explicit_handle_var;
+
   func_t *cur = iface->funcs;
   while (NEXT_LINK(cur)) cur = NEXT_LINK(cur);
   while (cur) {
     var_t *def = cur->def;
+
+    /* check for a defined binding handle */
+    explicit_handle_var = get_explicit_handle_var(cur);
+    if (explicit_handle) {
+      if (!explicit_handle_var) {
+        error("%s() does not define an explicit binding handle!\n", def->name);
+        return;
+      }
+    } else {
+      if (explicit_handle_var) {
+        error("%s() must not define a binding handle!\n", def->name);
+        return;
+      }
+    }
+
     /* FIXME: do we need to handle call_as? */
     write_type(header, def->type, def, def->tname);
     fprintf(header, " ");

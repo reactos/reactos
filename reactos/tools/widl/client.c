@@ -225,8 +225,8 @@ static void write_typeformatstring(void)
 static void print_message_buffer_size(func_t *func)
 {
     unsigned int alignment;
-    unsigned int size;
-    unsigned int last_size = 0;
+    int size;
+    int last_size = -1;
     var_t *var;
 
     if (!func->args)
@@ -253,7 +253,7 @@ static void print_message_buffer_size(func_t *func)
         case RPC_FC_USHORT:
         case RPC_FC_SHORT:
             size = 2;
-            if (last_size != 0 && last_size < 2)
+            if (last_size != -1 && last_size < 2)
                 alignment += (2 - last_size);
             break;
 
@@ -261,14 +261,14 @@ static void print_message_buffer_size(func_t *func)
         case RPC_FC_LONG:
         case RPC_FC_FLOAT:
             size = 4;
-            if (last_size != 0 && last_size < 4)
+            if (last_size != -1 && last_size < 4)
                 alignment += (4 - last_size);
             break;
 
         case RPC_FC_HYPER:
         case RPC_FC_DOUBLE:
             size = 8;
-            if (last_size != 0 && last_size < 4)
+            if (last_size != -1 && last_size < 4)
                 alignment += (4 - last_size);
             break;
 
@@ -280,21 +280,11 @@ static void print_message_buffer_size(func_t *func)
             error("Unknown/unsupported type!");
         }
 
-        if (size == 0)
-        {
-            if (last_size != 0)
-                fprintf(client, " +");
-            fprintf(client, " 0U");
-        }
-        else
-        {
-            if (last_size != 0)
-                fprintf(client, " +");
-            fprintf(client, " %uU", size + alignment);
+        if (last_size != -1)
+            fprintf(client, " +");
+        fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
 
-            last_size = size;
-        }
-        
+        last_size = size;
 
         var = PREV_LINK(var);
     }
@@ -379,9 +369,10 @@ static void marshall_arguments(func_t *func)
 static void write_function_stubs(type_t *iface)
 {
     char *implicit_handle = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
-    int explitit_handle = is_attr(iface->attrs, ATTR_IMPLICIT_HANDLE);
+    int explicit_handle = is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE);
     func_t *func = iface->funcs;
     var_t* var;
+    var_t* explicit_handle_var;
     int method_count = 0;
     unsigned int proc_offset = 0;
 
@@ -389,6 +380,25 @@ static void write_function_stubs(type_t *iface)
     while (func)
     {
         var_t *def = func->def;
+
+        /* check for a defined binding handle */
+        explicit_handle_var = get_explicit_handle_var(func);
+        if (explicit_handle)
+        {
+            if (!explicit_handle_var)
+            {
+                error("%s() does not define an explicit binding handle!\n", def->name);
+                return;
+            }
+        }
+        else
+        {
+            if (explicit_handle_var)
+            {
+                error("%s() must not define a binding handle!\n", def->name);
+                return;
+            }
+        }
 
         write_type(client, def->type, def, def->tname);
         fprintf(client, " ");
@@ -411,7 +421,7 @@ static void write_function_stubs(type_t *iface)
             fprintf(client, " _RetVal;\n");
         }
 
-        if (implicit_handle)
+        if (implicit_handle || explicit_handle)
             print_client("RPC_BINDING_HANDLE _Handle = 0;\n");
         print_client("RPC_MESSAGE _RpcMessage;\n");
         print_client("MIDL_STUB_MESSAGE _StubMsg;\n");
@@ -434,6 +444,11 @@ static void write_function_stubs(type_t *iface)
             print_client("_Handle = %s;\n", implicit_handle);
             fprintf(client, "\n");
         }
+        else if (explicit_handle)
+        {
+            print_client("_Handle = %s;\n", explicit_handle_var->name);
+            fprintf(client, "\n");
+        }
 
         /* emit the message buffer size */
         print_client("_StubMsg.BufferLength =");
@@ -445,7 +460,7 @@ static void write_function_stubs(type_t *iface)
         indent++;
         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
         print_client("_StubMsg.BufferLength,\n");
-        if (implicit_handle)
+        if (implicit_handle || explicit_handle)
             print_client("%_Handle);\n");
         else
             print_client("%s__MIDL_AutoBindHandle);\n", iface->name);
@@ -691,39 +706,47 @@ static void init_client(void)
 
 void write_client(ifref_t *ifaces)
 {
-    ifref_t *lcur = ifaces;
-    char *file_id = client_token;
-    int c;
+    ifref_t *iface = ifaces;
 
     if (!do_client)
         return;
-    if (!lcur)
+    if (!iface)
         return;
-    END_OF_LIST(lcur);
+    END_OF_LIST(iface);
 
     init_client();
     if (!client)
         return;
 
-    write_formatstringsdecl(lcur->iface);
-    write_implicithandledecl(lcur->iface);
+    while (iface)
+    {
+        fprintf(client, "/*****************************************************************************\n");
+        fprintf(client, " * %s interface\n", iface->iface->name);
+        fprintf(client, " */\n");
+        fprintf(client, "\n");
 
-    write_clientinterfacedecl(lcur->iface);
-    write_stubdescdecl(lcur->iface);
-    write_bindinghandledecl(lcur->iface);
+        write_formatstringsdecl(iface->iface);
+        write_implicithandledecl(iface->iface);
 
-    write_function_stubs(lcur->iface);
-    write_stubdescriptor(lcur->iface);
+        write_clientinterfacedecl(iface->iface);
+        write_stubdescdecl(iface->iface);
+        write_bindinghandledecl(iface->iface);
 
-    print_client("#if !defined(__RPC_WIN32__)\n");
-    print_client("#error  Invalid build platform for this stub.\n");
-    print_client("#endif\n");
-    fprintf(client, "\n");
+        write_function_stubs(iface->iface);
+        write_stubdescriptor(iface->iface);
 
-    write_procformatstring(lcur->iface);
-    write_typeformatstring();
+        print_client("#if !defined(__RPC_WIN32__)\n");
+        print_client("#error  Invalid build platform for this stub.\n");
+        print_client("#endif\n");
+        fprintf(client, "\n");
 
-    fprintf(client, "\n");
+        write_procformatstring(iface->iface);
+        write_typeformatstring();
+
+        fprintf(client, "\n");
+
+        iface = PREV_LINK(iface);
+    }
 
     fclose(client);
 }
