@@ -46,8 +46,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #include "cdlg.h"
 #include "printdlg.h"
 
-#include "ros.h"
-
 /* Yes these constants are the same, but we're just copying win98 */
 #define UPDOWN_ID 0x270f
 #define MAX_COPIES 9999

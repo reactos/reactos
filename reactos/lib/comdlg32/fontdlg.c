@@ -36,8 +36,6 @@
 #include "wine/debug.h"
 #include "cderr.h"
 
-#include "ros.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define WINE_FONTDATA "__WINE_FONTDLGDATA"

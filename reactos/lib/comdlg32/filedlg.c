@@ -81,8 +81,6 @@
 #include "filedlgbrowser.h"
 #include "shlwapi.h"
 
-#include "ros.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define UNIMPLEMENTED_FLAGS \
