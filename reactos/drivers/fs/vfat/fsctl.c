@@ -27,7 +27,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntos/kefuncs.h>
 #include <rosrtl/string.h>
 #include <wchar.h>
 
@@ -654,9 +653,9 @@ VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
 static NTSTATUS 
 VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
 {
-  PIO_STACK_LOCATION Stack;
+   PIO_STACK_LOCATION Stack;
    LARGE_INTEGER Vcn;
-   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+   PRETRIEVAL_POINTERS_BUFFER RetrievalPointers;
    PFILE_OBJECT FileObject;
    ULONG MaxExtentCount;
    PVFATFCB Fcb;
@@ -677,7 +676,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       return STATUS_INVALID_PARAMETER;
    }
    if (IrpContext->Irp->UserBuffer == NULL ||
-       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR))
+       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(RETRIEVAL_POINTERS_BUFFER))
    {
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -689,7 +688,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
    Vcn = *(PLARGE_INTEGER)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
    RetrievalPointers = IrpContext->Irp->UserBuffer;
 
-   MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(GET_RETRIEVAL_DESCRIPTOR)) / sizeof(MAPPING_PAIR));
+   MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(RetrievalPointers->ExtentCount) - sizeof(RetrievalPointers->StartingVcn)) / sizeof(RetrievalPointers->Extents[0]));
 
 
    if (Vcn.QuadPart >= Fcb->RFCB.AllocationSize.QuadPart / DeviceExt->FatInfo.BytesPerCluster)
@@ -707,11 +706,12 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   RetrievalPointers->StartVcn = Vcn.QuadPart;
-   RetrievalPointers->NumberOfPairs = 0;
-   RetrievalPointers->Pair[0].Lcn = CurrentCluster - 2;
+   RetrievalPointers->StartingVcn = Vcn;
+   RetrievalPointers->ExtentCount = 0;
+   RetrievalPointers->Extents[0].Lcn.u.HighPart = 0;
+   RetrievalPointers->Extents[0].Lcn.u.LowPart = CurrentCluster - 2;
    LastCluster = 0;
-   while (CurrentCluster != 0xffffffff && RetrievalPointers->NumberOfPairs < MaxExtentCount)
+   while (CurrentCluster != 0xffffffff && RetrievalPointers->ExtentCount < MaxExtentCount)
    {
 
       LastCluster = CurrentCluster;
@@ -724,16 +724,17 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       
       if (LastCluster + 1 != CurrentCluster)
       {
-	 RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Vcn = Vcn.QuadPart;
-	 RetrievalPointers->NumberOfPairs++;
-	 if (RetrievalPointers->NumberOfPairs < MaxExtentCount)
+	 RetrievalPointers->Extents[RetrievalPointers->ExtentCount].NextVcn = Vcn;
+	 RetrievalPointers->ExtentCount++;
+	 if (RetrievalPointers->ExtentCount < MaxExtentCount)
 	 {
-	    RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Lcn = CurrentCluster - 2;
+	    RetrievalPointers->Extents[RetrievalPointers->ExtentCount].Lcn.u.HighPart = 0;
+	    RetrievalPointers->Extents[RetrievalPointers->ExtentCount].Lcn.u.LowPart = CurrentCluster - 2;
 	 }
       }
    }
    
-   IrpContext->Irp->IoStatus.Information = sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR) * RetrievalPointers->NumberOfPairs;
+   IrpContext->Irp->IoStatus.Information = sizeof(RETRIEVAL_POINTERS_BUFFER) + (sizeof(RetrievalPointers->Extents[0]) * (RetrievalPointers->ExtentCount - 1));
    Status = STATUS_SUCCESS;
 
 ByeBye:
@@ -757,7 +758,7 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
    PROS_QUERY_LCN_MAPPING LcnQuery;
    PIO_STACK_LOCATION Stack;
 
-   DPRINT("VfatGetRetrievalPointers(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatRosQueryLcnMapping(IrpContext %x)\n", IrpContext);
 
    DeviceExt = IrpContext->DeviceExt;
    Stack = IrpContext->Stack;

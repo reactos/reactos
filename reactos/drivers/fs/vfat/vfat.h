@@ -1,6 +1,27 @@
 /* $Id$ */
 
 #include <ddk/ntifs.h>
+#include <ddk/ntdddisk.h>
+#undef DeleteFile /* FIXME */
+
+#define USE_ROS_CC_AND_FS
+
+/* FIXME */
+#ifdef __USE_W32API
+NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOLEAN);
+NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
+NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
+#endif
+
+#ifdef USE_ROS_CC_AND_FS
+NTSTATUS STDCALL CcRosInitializeFileCache(PFILE_OBJECT, ULONG);
+NTSTATUS STDCALL CcRosReleaseFileCache(PFILE_OBJECT);
+#define FSCTL_ROS_QUERY_LCN_MAPPING CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
+typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
+#endif
+
+#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
+#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
@@ -75,8 +96,10 @@ struct _FsInfoSector
 
 typedef struct _BootSector BootSector;
 
-#define VFAT_CASE_LOWER_BASE	8			// base is lower case
-#define VFAT_CASE_LOWER_EXT	16			// extension is lower case
+#define VFAT_CASE_LOWER_BASE	8  		// base is lower case
+#define VFAT_CASE_LOWER_EXT 	16 		// extension is lower case
+
+#define LONGNAME_MAX_LENGTH 	256		// max length for a long filename
 
 #define ENTRY_DELETED(DeviceExt, DirEntry) ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
 #define ENTRY_VOLUME(DeviceExt, DirEntry)  ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
@@ -284,7 +307,7 @@ typedef struct _VFATFCB
   UNICODE_STRING PathNameU;
 
   /* buffer for PathNameU */
-  WCHAR PathNameBuffer[MAX_PATH];
+  PWCHAR PathNameBuffer;
 
   /* buffer for ShortNameU */
   WCHAR ShortNameBuffer[13];

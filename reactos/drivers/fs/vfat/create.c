@@ -41,7 +41,7 @@
 void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
 {
   OEM_STRING StringA;
-  ULONG Length;
+  USHORT Length;
   CHAR  cString[12];
   
   RtlCopyMemory(cString, pEntry->Filename, 11);
@@ -191,22 +191,39 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
  * FUNCTION: Find a file
  */
 {
-  WCHAR PathNameBuffer[MAX_PATH];
+  PWCHAR PathNameBuffer;
+  ULONG PathNameBufferLength;
   NTSTATUS Status;
   PVOID Context = NULL;
   PVOID Page;
   PVFATFCB rcFcb;
   BOOLEAN Found;
   UNICODE_STRING PathNameU;
+  UNICODE_STRING FileToFindUpcase;
   BOOLEAN WildCard;
 
   DPRINT ("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n", 
           Parent, FileToFindU, DirContext->DirIndex);
   DPRINT ("FindFile: Path %wZ)\n",&Parent->PathNameU);
+  
+  PathNameBufferLength = Parent->PathNameU.Length + LONGNAME_MAX_LENGTH + 2 * sizeof(WCHAR);
+  if (PathNameBufferLength > (USHRT_MAX - 2) * sizeof(WCHAR))
+  {
+    /* A valid filename can't be so long. Do as if the file doesn't exist. */
+    CHECKPOINT;
+    return STATUS_NO_SUCH_FILE;
+  }
+  
+  PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameBufferLength);
+  if (!PathNameBuffer)
+  {
+    CHECKPOINT1;
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   PathNameU.Buffer = PathNameBuffer;
   PathNameU.Length = 0;
-  PathNameU.MaximumLength = sizeof(PathNameBuffer);
+  PathNameU.MaximumLength = PathNameBufferLength;
 
   DirContext->LongNameU.Length = 0;
   DirContext->ShortNameU.Length = 0;
@@ -244,10 +261,21 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	      Status = STATUS_UNSUCCESSFUL;
 	    }
           vfatReleaseFCB(DeviceExt, rcFcb);
+	  ExFreePool(PathNameBuffer);
 	  return Status;
 	}
     }
 
+  /* FsRtlIsNameInExpression need the searched string to be upcase,
+   * even if IgnoreCase is specified */
+  Status = RtlUpcaseUnicodeString(&FileToFindUpcase, FileToFindU, TRUE);
+  if (!NT_SUCCESS(Status))
+  {
+    CHECKPOINT;
+    ExFreePool(PathNameBuffer);
+    return Status;
+  }
+  
   while(TRUE)
     {
       Status = DeviceExt->GetNextDirEntry(&Context, &Page, Parent, DirContext, First);
@@ -263,14 +291,13 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
         }
       if (WildCard)
         {
-          Found = FsRtlIsNameInExpression(FileToFindU, &DirContext->LongNameU, TRUE, NULL) ||
-                  FsRtlIsNameInExpression(FileToFindU, &DirContext->ShortNameU, TRUE, NULL);
+          Found = FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->LongNameU, TRUE, NULL) ||
+                  FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->ShortNameU, TRUE, NULL);
 	}
       else
         {
-          /* FIXME: Use FsRtlAreNamesEqual */
-          Found = RtlEqualUnicodeString(&DirContext->LongNameU, FileToFindU, TRUE) ||
-	          RtlEqualUnicodeString(&DirContext->ShortNameU, FileToFindU, TRUE);
+          Found = FsRtlAreNamesEqual(&DirContext->LongNameU, FileToFindU, TRUE, NULL) ||
+	          FsRtlAreNamesEqual(&DirContext->ShortNameU, FileToFindU, TRUE, NULL);
 	}
 
       if (Found)
@@ -300,6 +327,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	    {
               CcUnpinData(Context);
 	    }
+          RtlFreeUnicodeString(&FileToFindUpcase);
+          ExFreePool(PathNameBuffer);
           return STATUS_SUCCESS;
 	}
       DirContext->DirIndex++;
@@ -310,6 +339,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
       CcUnpinData(Context);
     }
 
+  RtlFreeUnicodeString(&FileToFindUpcase);
+  ExFreePool(PathNameBuffer);
   return Status;
 }
 

@@ -13,7 +13,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntos/kefuncs.h>
 #include <wchar.h>
 #include <ntos/minmax.h>
 

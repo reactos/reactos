@@ -211,7 +211,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   BOOLEAN SpacesFound;
 
   VFAT_DIRENTRY_CONTEXT DirContext;
-  WCHAR LongNameBuffer[MAX_PATH];
+  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH];
   WCHAR ShortNameBuffer[13];
 
   DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
@@ -370,16 +370,6 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
   /* set dates and times */
   KeQuerySystemTime (&SystemTime);
-#if 0
-  {
-    TIME_FIELDS tf;
-    RtlTimeToTimeFields (&SystemTime, &tf);
-    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%wZ'\n", 
-	    tf.Day, tf.Month, tf.Year, tf.Hour, 
-	    tf.Minute, tf.Second, tf.Milliseconds,
-	    NameU);
-  }
-#endif
   FsdSystemTimeToDosDateTime (DeviceExt, &SystemTime, &DirContext.DirEntry.Fat.CreationDate,
                               &DirContext.DirEntry.Fat.CreationTime);
   DirContext.DirEntry.Fat.UpdateDate = DirContext.DirEntry.Fat.CreationDate;
@@ -566,7 +556,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    NameA.Length = 0;
    NameA.MaximumLength = 42;
    RtlUnicodeStringToOemString(&NameA, &DirContext.LongNameU, FALSE);
-   DirContext.DirEntry.FatX.FilenameLength = NameA.Length;
+   DirContext.DirEntry.FatX.FilenameLength = (unsigned char)NameA.Length;
    
    /* set attributes */
    DirContext.DirEntry.FatX.Attrib = ReqAttr;

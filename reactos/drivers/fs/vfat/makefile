@@ -38,9 +38,9 @@ TARGET_CLEAN = $(DEP_FILES) *.o *.sys *.sym
 include $(PATH_TO_TOP)/config
 
 ifeq ($(DBG), 1)
-TARGET_CFLAGS = -Wall -Werror -g
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror -g
 else
-TARGET_CFLAGS = -Wall -Werror -O3 -fno-strict-aliasing 
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror -O3 -fno-strict-aliasing 
 endif
 
 include $(PATH_TO_TOP)/rules.mak

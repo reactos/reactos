@@ -311,7 +311,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   BOOLEAN First = FALSE;
   BOOLEAN FirstCall;
   VFAT_DIRENTRY_CONTEXT DirContext;
-  WCHAR LongNameBuffer[MAX_PATH];
+  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH];
   WCHAR ShortNameBuffer[13];
 
   PIO_STACK_LOCATION Stack = IrpContext->Stack;
@@ -344,7 +344,13 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     }
 
   /* Obtain the callers parameters */
+#ifdef _MSC_VER
+  /* HACKHACK: Bug in the MS ntifs.h header:
+   * FileName is really a PUNICODE_STRING, not a PSTRING */
+  pSearchPattern = (PUNICODE_STRING)Stack->Parameters.QueryDirectory.FileName;
+#else
   pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
+#endif
   FileInformationClass =
     Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;

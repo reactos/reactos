@@ -226,8 +226,9 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-
+#ifdef DBG
   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+#endif
 
   DPRINT ("FsdSetDispositionInformation()\n");
 
@@ -248,7 +249,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
       return STATUS_ACCESS_DENIED;
     }
 
-  if (DispositionInfo->DoDeleteFile)
+  if (DispositionInfo->DeleteFile)
     {
       if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
         {
