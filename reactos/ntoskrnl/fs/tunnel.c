@@ -1,6 +1,6 @@
-/* $Id: oplock.c,v 1.2 2000/03/11 00:51:36 ea Exp $
+/* $Id: tunnel.c,v 1.1 2000/03/11 00:51:36 ea Exp $
  *
- * reactos/ntoskrnl/fs/oplock.c
+ * reactos/ntoskrnl/fs/tunnel.c
  *
  */
 #include <ntos.h>
@@ -9,7 +9,7 @@
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlCheckOplock@20
+ *	FsRtlAddToTunnelCache@32
  *
  * DESCRIPTION
  *	
@@ -18,23 +18,25 @@
  * RETURN VALUE
  *
  */
-DWORD
+VOID
 STDCALL
-FsRtlCheckOplock (
+FsRtlAddToTunnelCache (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3,
-	DWORD	Unknown4
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
 	)
 {
-	return 0;
 }
 
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlCurrentBatchOplock@4
+ *	FsRtlDeleteKeyFromTunnelCache@12
  *
  * DESCRIPTION
  *	
@@ -42,65 +44,21 @@ FsRtlCheckOplock (
  *
  * RETURN VALUE
  *
- */
-BOOLEAN
-STDCALL
-FsRtlCurrentBatchOplock (
-	DWORD	Unknown0
-	)
-{
-	return FALSE;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlInitializeOplock@4
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *	Obsolete function.
  */
 VOID
 STDCALL
-FsRtlInitializeOplock (
-	DWORD	Unknown0
-	)
-{
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlOplockFsctrl@12
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- */
-NTSTATUS
-STDCALL
-FsRtlOplockFsctrl (
+FsRtlDeleteKeyFromTunnelCache (
 	DWORD	Unknown0,
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	)
 {
-	return 0;
 }
 
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlOplockIsFastIoPossible@4
+ *	FsRtlDeleteTunnelCache@4
  *
  * DESCRIPTION
  *	
@@ -109,19 +67,18 @@ FsRtlOplockFsctrl (
  * RETURN VALUE
  *
  */
-BOOLEAN
+VOID
 STDCALL
-FsRtlOplockIsFastIoPossible (
-	DWORD	Unknown0
+FsRtlDeleteTunnelCache (
+	IN OUT	PVOID	lpTunnel
 	)
 {
-	return FALSE;
 }
 
 
 /**********************************************************************
  * NAME							EXPORTED
- *	FsRtlUninitializeOplock@4
+ *	FsRtlFindInTunnelCache@32
  *
  * DESCRIPTION
  *	
@@ -130,13 +87,39 @@ FsRtlOplockIsFastIoPossible (
  * RETURN VALUE
  *
  */
-DWORD
+VOID
 STDCALL
-FsRtlUninitializeOplock (
-	DWORD	Unknown0
+FsRtlFindInTunnelCache (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
 	)
 {
-	return 0;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlInitializeTunnelCache@4
+ *
+ * DESCRIPTION
+ *	
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ */
+VOID
+STDCALL
+FsRtlInitializeTunnelCache (
+	IN OUT	PVOID	lpTunnel
+	)
+{
 }
 
 

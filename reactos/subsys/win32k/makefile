@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2000/03/08 22:37:03 ea Exp $
+# $Id: makefile,v 1.18 2000/03/11 00:51:36 ea Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -42,7 +42,8 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
 		--def $(TARGET).def \
-		--output-lib $(TARGET).a
+		--output-lib $(TARGET).a \
+		--kill-at
 	$(CC) \
 		--subsystem=native \
 		-mdll \
@@ -63,7 +64,8 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).sys \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).edf
+		--def $(TARGET).edf \
+		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
 		--subsystem=native \

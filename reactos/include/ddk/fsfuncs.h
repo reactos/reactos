@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.9 2000/03/10 22:09:16 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.10 2000/03/11 00:51:36 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -19,6 +19,18 @@ FsRtlAddMcbEntry (
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3
+	);
+VOID
+STDCALL
+FsRtlAddToTunnelCache (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
 	);
 PVOID
 STDCALL
@@ -116,6 +128,18 @@ FsRtlCurrentBatchOplock (
 	);
 VOID
 STDCALL
+FsRtlDeleteKeyFromTunnelCache (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+VOID
+STDCALL
+FsRtlDeleteTunnelCache (
+	IN OUT	PVOID	lpTunnel
+	);
+VOID
+STDCALL
 FsRtlDeregisterUncProvider (
 	DWORD	Unknown0
 	);
@@ -194,6 +218,18 @@ FsRtlFastUnlockSingle (
 	IN	DWORD	Unknown6,
 	IN	DWORD	Unknown7
 	);
+VOID
+STDCALL
+FsRtlFindInTunnelCache (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
+	);
 DWORD
 STDCALL
 FsRtlGetFileSize (
@@ -249,6 +285,11 @@ VOID
 STDCALL
 FsRtlInitializeOplock (
 	DWORD	Unknown0
+	);
+VOID
+STDCALL
+FsRtlInitializeTunnelCache (
+	IN OUT	PVOID	lpTunnel
 	);
 BOOLEAN
 STDCALL
@@ -380,6 +421,70 @@ FsRtlMdlWriteCompleteDev (
 	IN	PLARGE_INTEGER	FileOffset,
 	IN	PMDL		MdlChain,
 	IN	PDEVICE_OBJECT	DeviceObject
+	);
+VOID
+STDCALL
+FsRtlNotifyChangeDirectory (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6
+	);
+VOID
+STDCALL
+FsRtlNotifyCleanup (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+VOID
+STDCALL
+FsRtlNotifyFullChangeDirectory (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8,
+	DWORD	Unknown9
+	);
+VOID
+STDCALL
+FsRtlNotifyFullReportChange (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8
+	);
+VOID
+STDCALL
+FsRtlNotifyUninitializeSync (
+	IN OUT	PVOID	* Unknown0
+	);
+VOID
+STDCALL
+FsRtlNotifyReportChange (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	PVOID	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	);
+VOID
+STDCALL
+FsRtlNotifyInitializeSync (
+	IN OUT	PVOID	* Unknown0
 	);
 NTSTATUS
 STDCALL

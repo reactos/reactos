@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.43 2000/03/10 22:09:17 ea Exp $
+; $Id: ntoskrnl.edf,v 1.44 2000/03/11 00:51:36 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -82,6 +82,7 @@ ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
+FsRtlAddToTunnelCache=FsRtlAddToTunnelCache@32
 FsRtlAllocatePool=FsRtlAllocatePool@8
 FsRtlAllocatePoolWithQuota=FsRtlAllocatePoolWithQuota@8
 FsRtlAllocatePoolWithQuotaTag=FsRtlAllocatePoolWithQuotaTag@12
@@ -95,6 +96,8 @@ FsRtlCheckOplock=FsRtlCheckOplock@20
 FsRtlCopyRead=FsRtlCopyRead@32
 FsRtlCopyWrite=FsRtlCopyWrite@32
 FsRtlCurrentBatchOplock=FsRtlCurrentBatchOplock@4
+FsRtlDeleteKeyFromTunnelCache=FsRtlDeleteKeyFromTunnelCache@12
+FsRtlDeleteTunnelCache=FsRtlDeleteTunnelCache@4
 FsRtlDeregisterUncProvider=FsRtlDeregisterUncProvider@4
 FsRtlDissectDbcs=FsRtlDissectDbcs@16
 FsRtlDissectName=FsRtlDissectName@16
@@ -105,6 +108,7 @@ FsRtlFastCheckLockForWrite=FsRtlFastCheckLockForWrite@24
 FsRtlFastUnlockAll=FsRtlFastUnlockAll@16
 FsRtlFastUnlockAllByKey=FsRtlFastUnlockAllByKey@20
 FsRtlFastUnlockSingle=FsRtlFastUnlockSingle@32
+FsRtlFindInTunnelCache=FsRtlFindInTunnelCache@32
 FsRtlGetFileSize=FsRtlGetFileSize@8
 FsRtlGetNextFileLock=FsRtlGetNextFileLock@8
 FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
@@ -113,6 +117,7 @@ FsRtlInitializeFileLock=FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb=FsRtlInitializeMcb@8
 FsRtlInitializeOplock=FsRtlInitializeOplock@4
+FsRtlInitializeTunnelCache=FsRtlInitializeTunnelCache@4
 FsRtlIsDbcsInExpression=FsRtlIsDbcsInExpression@8
 FsRtlIsFatDbcsLegal=FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal=FsRtlIsHpfsDbcsLegal@20
@@ -131,6 +136,13 @@ FsRtlMdlReadDev=FsRtlMdlReadDev@28
 FsRtlMdlWriteComplete=FsRtlMdlWriteComplete@12
 FsRtlMdlWriteCompleteDev=FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus=FsRtlNormalizeNtstatus@8
+FsRtlNotifyChangeDirectory=FsRtlNotifyChangeDirectory@28
+FsRtlNotifyCleanup=FsRtlNotifyCleanup@12
+FsRtlNotifyFullChangeDirectory=FsRtlNotifyFullChangeDirectory@40
+FsRtlNotifyFullReportChange=FsRtlNotifyFullReportChange@36
+FsRtlNotifyInitializeSync=FsRtlNotifyInitializeSync@4
+FsRtlNotifyReportChange=FsRtlNotifyReportChange@20
+FsRtlNotifyUninitializeSync=FsRtlNotifyUninitializeSync@4
 FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
 FsRtlOplockFsctrl=FsRtlOplockFsctrl@12

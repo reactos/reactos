@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.56 2000/03/10 22:09:17 ea Exp $
+; $Id: ntoskrnl.def,v 1.57 2000/03/11 00:51:36 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -82,6 +82,7 @@ ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry@16
+FsRtlAddToTunnelCache@32
 FsRtlAllocatePool@8
 FsRtlAllocatePoolWithQuota@8
 FsRtlAllocatePoolWithQuotaTag@12
@@ -95,6 +96,8 @@ FsRtlCheckOplock@20
 FsRtlCopyRead@32
 FsRtlCopyWrite@32
 FsRtlCurrentBatchOplock@4
+FsRtlDeleteKeyFromTunnelCache@12
+FsRtlDeleteTunnelCache@4
 FsRtlDeregisterUncProvider@4
 FsRtlDissectDbcs@16
 FsRtlDissectName@16
@@ -105,6 +108,7 @@ FsRtlFastCheckLockForWrite@24
 FsRtlFastUnlockAll@16
 FsRtlFastUnlockAllByKey@20
 FsRtlFastUnlockSingle@32
+FsRtlFindInTunnelCache@32
 FsRtlGetFileSize@8
 FsRtlGetNextFileLock@8
 FsRtlGetNextLargeMcbEntry@20
@@ -113,6 +117,7 @@ FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb@8
 FsRtlInitializeOplock@4
+FsRtlInitializeTunnelCache@4
 FsRtlIsDbcsInExpression@8
 FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal@20
@@ -131,6 +136,13 @@ FsRtlMdlReadDev@28
 FsRtlMdlWriteComplete@12
 FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus@8
+FsRtlNotifyChangeDirectory@28
+FsRtlNotifyCleanup@12
+FsRtlNotifyFullChangeDirectory@40
+FsRtlNotifyFullReportChange@36
+FsRtlNotifyInitializeSync@4
+FsRtlNotifyReportChange@20
+FsRtlNotifyUninitializeSync@4
 FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
 FsRtlOplockFsctrl@12
