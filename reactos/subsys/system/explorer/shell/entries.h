@@ -37,6 +37,7 @@ enum ENTRY_TYPE {
 };
 
 enum SORT_ORDER {
+	SORT_NONE,
 	SORT_NAME,
 	SORT_EXT,
 	SORT_SIZE,

@@ -149,23 +149,23 @@ struct UnicodeString : public RtlUnicodeString {
 };
 
 
-static DWORD NtOpenObject(OBJECT_TYPE type, HANDLE* phandle, DWORD flags, LPCWSTR path/*, BOOL xflag=FALSE*/)
+static DWORD NtOpenObject(OBJECT_TYPE type, HANDLE* phandle, DWORD access, LPCWSTR path/*, BOOL xflag=FALSE*/)
 {
 	UnicodeString ustr(path);
 	OpenStruct open_struct = {sizeof(OpenStruct), 0x00, &ustr, 0x40};
 
 	if (type==SYMBOLICLINK_OBJECT || type==DIRECTORY_OBJECT)
-		flags |= 1;	//@@ ENUMERATE
+		access |= FILE_LIST_DIRECTORY;
 
 	/* if (xflag)
-		flags |= 0x80000000; */
+		access |= GENERIC_READ; */
 
-	DWORD retx;
+	DWORD ioStatusBlock[2];	// IO_STATUS_BLOCK
 
 	if (type>=DIRECTORY_OBJECT && type<=IOCOMPLETITION_OBJECT)
-		return g_NTDLL->_ObjectOpenFunctions[type](phandle, flags|0x20000, &open_struct);
+		return g_NTDLL->_ObjectOpenFunctions[type](phandle, access|STANDARD_RIGHTS_READ, &open_struct);
 	else if (type == FILE_OBJECT)
-		return (*g_NTDLL->NtOpenFile)(phandle, flags, &open_struct, &retx, 7, 0);
+		return (*g_NTDLL->NtOpenFile)(phandle, access, &open_struct, ioStatusBlock, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, 0/*OpenOptions*/);
 	else
 		return ERROR_INVALID_FUNCTION;
 }
@@ -199,7 +199,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 	--w;
 #endif
 
-	DWORD idx1, idx2;
+	DWORD idx;
 	HANDLE dir_handle;
 
 #ifdef UNICODE
@@ -218,9 +218,9 @@ void NtObjDirectory::read_directory(int scan_flags)
 #endif
 
 	if (_type == DIRECTORY_OBJECT) {
-		NtObjectInfo* info = (NtObjectInfo*)alloca(0x800);
+		NtObjectInfo* info = (NtObjectInfo*)alloca(2048);
 
-		if (!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 0x800, TRUE, TRUE, &idx1, &idx2)) {
+		if (!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, TRUE, &idx, NULL)) {
 			WIN32_FIND_DATA w32fd;
 			Entry* last = NULL;
 			Entry* entry;
@@ -288,7 +288,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 					NtObject object;
 					DWORD read;
 
-					if (!(*g_NTDLL->NtQueryObject)(handle, 0, &object, sizeof(NtObject), &read)) {
+					if (!(*g_NTDLL->NtQueryObject)(handle, 0/*ObjectBasicInformation*/, &object, sizeof(NtObject), &read)) {
 						memcpy(&w32fd.ftCreationTime, &object.creation_time, sizeof(FILETIME));
 
 						memset(&entry->_bhfi, 0, sizeof(BY_HANDLE_FILE_INFORMATION));
@@ -313,7 +313,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 				entry->_level = level;
 
 				last = entry;
-			} while(!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 0x800, TRUE, FALSE, &idx1, &idx2));
+			} while(!(*g_NTDLL->NtQueryDirectoryObject)(dir_handle, info, 2048, TRUE, FALSE, &idx, NULL));
 
 			last->_next = NULL;
 		}

@@ -100,7 +100,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 
 		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
 		_root._entry = new ShellDirectory(Desktop(), DesktopFolderPath(), hwnd);
-		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME/*_sortOrder*/);
+		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME);
 	}
 	else
 #ifdef __WINE__
@@ -115,7 +115,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("unixfs"));
 		lstrcpy(_root._path, TEXT("/"));
 		_root._entry = new UnixDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+		entry = _root._entry->read_tree(info._path, SORT_NAME);
 	}
 	else
 #endif
@@ -129,7 +129,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("NTOBJ"));
 		lstrcpy(_root._path, drv);
 		_root._entry = new NtObjDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+		entry = _root._entry->read_tree(info._path, SORT_NAME);
 	}
 	else if (info._etype == ET_REGISTRY)
 	{
@@ -141,7 +141,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("Registry"));
 		lstrcpy(_root._path, drv);
 		_root._entry = new RegistryRoot();
-		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+		entry = _root._entry->read_tree(info._path, SORT_NONE);
 	}
 	else //if (info._etype == ET_WINDOWS)
 	{
@@ -152,7 +152,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		GetVolumeInformation(drv, _root._volname, _MAX_FNAME, 0, 0, &_root._fs_flags, _root._fs, _MAX_DIR);
 		lstrcpy(_root._path, drv);
 		_root._entry = new WinDirectory(_root._path);
-		entry = _root._entry->read_tree(info._path, SORT_NAME/*_sortOrder*/);
+		entry = _root._entry->read_tree(info._path, SORT_NAME);
 	}
 
 	if (info._etype != ET_SHELL)

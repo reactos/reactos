@@ -242,7 +242,7 @@ RegDirectory::RegDirectory(Entry* parent, LPCTSTR path, HKEY hKeyRoot)
 
 void RegistryRoot::read_directory(int scan_flags)
 {
-	Entry *entry, *last;
+	Entry *entry, *last, *first_entry;
 	int level = _level + 1;
 
 	_data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
@@ -251,7 +251,7 @@ void RegistryRoot::read_directory(int scan_flags)
 	_tcscpy(entry->_data.cFileName, TEXT("HKEY_CURRENT_USER"));
 	entry->_level = level;
 
-	_down = entry;
+	first_entry = entry;
 	last = entry;
 
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_LOCAL_MACHINE);
@@ -297,4 +297,7 @@ void RegistryRoot::read_directory(int scan_flags)
 	last = entry;
 */
 	last->_next = NULL;
+
+	_down = first_entry;
+	_scanned = true;
 }

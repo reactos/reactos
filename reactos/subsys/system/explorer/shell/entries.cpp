@@ -167,6 +167,11 @@ static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 }
 
 
+static int compareNothing(const void* arg1, const void* arg2)
+{
+	return -1;
+}
+
 static int compareName(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
@@ -247,6 +252,7 @@ static int compareDate(const void* arg1, const void* arg2)
 
 
 static int (*sortFunctions[])(const void* arg1, const void* arg2) = {
+	compareNothing,	// SORT_NONE
 	compareName,	// SORT_NAME
 	compareExt, 	// SORT_EXT
 	compareSize,	// SORT_SIZE
@@ -256,30 +262,32 @@ static int (*sortFunctions[])(const void* arg1, const void* arg2) = {
 
 void Entry::sort_directory(SORT_ORDER sortOrder)
 {
-	Entry* entry = _down;
-	Entry** array, **p;
-	int len;
+	if (sortOrder != SORT_NONE) {
+		Entry* entry = _down;
+		Entry** array, **p;
+		int len;
 
-	len = 0;
-	for(entry=_down; entry; entry=entry->_next)
-		++len;
-
-	if (len) {
-		array = (Entry**) alloca(len*sizeof(Entry*));
-
-		p = array;
+		len = 0;
 		for(entry=_down; entry; entry=entry->_next)
-			*p++ = entry;
+			++len;
 
-		 // call qsort with the appropriate compare function
-		qsort(array, len, sizeof(array[0]), sortFunctions[sortOrder]);
+		if (len) {
+			array = (Entry**) alloca(len*sizeof(Entry*));
 
-		_down = array[0];
+			p = array;
+			for(entry=_down; entry; entry=entry->_next)
+				*p++ = entry;
 
-		for(p=array; --len; p++)
-			p[0]->_next = p[1];
+			 // call qsort with the appropriate compare function
+			qsort(array, len, sizeof(array[0]), sortFunctions[sortOrder]);
 
-		(*p)->_next = 0;
+			_down = array[0];
+
+			for(p=array; --len; p++)
+				(*p)->_next = p[1];
+
+			(*p)->_next = 0;
+		}
 	}
 }
 
