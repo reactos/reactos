@@ -330,7 +330,6 @@ GetTempFileNameW@16
 GetTempPathA@8
 GetTempPathW@8
 GetThreadContext@8
-_imp__GetThreadContext@8
 GetThreadLocale@0
 GetThreadPriority@4
 GetThreadSelectorEntry@12

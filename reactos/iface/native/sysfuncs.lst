@@ -208,3 +208,4 @@ NtReplyWaitSendChannel		ZwReplyWaitSendChannel		  12
 NtSendWaitReplyChannel		ZwSendWaitReplyChannel		  16          
 NtSetContextChannel		ZwSetContextChannel		  4           
 NtYieldExecution        	ZwYieldExecution		  0
+

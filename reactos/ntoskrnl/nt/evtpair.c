@@ -19,7 +19,7 @@
 NTSTATUS
 STDCALL
 NtCreateEventPair(
-	OUT PHANDLE FileHandle,
+	OUT PHANDLE EventPairHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	)
@@ -29,7 +29,7 @@ NtCreateEventPair(
 NTSTATUS
 STDCALL
 ZwCreateEventPair(
-	OUT PHANDLE FileHandle,
+	OUT PHANDLE EventPairHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	)
@@ -40,7 +40,7 @@ ZwCreateEventPair(
 NTSTATUS
 STDCALL
 NtSetHighEventPair(
-	IN HANDLE EventPair
+	IN HANDLE EventPairHandle
 	)
 {
 }
@@ -48,7 +48,7 @@ NtSetHighEventPair(
 NTSTATUS
 STDCALL
 ZwSetHighEventPair(
-	IN HANDLE EventPair
+	IN HANDLE EventPairHandle
 	)
 {
 }
@@ -56,7 +56,7 @@ ZwSetHighEventPair(
 NTSTATUS
 STDCALL
 NtSetHighWaitLowEventPair(
-	IN HANDLE EventPair
+	IN HANDLE EventPairHandle
 	)
 {
 }
@@ -64,7 +64,7 @@ NtSetHighWaitLowEventPair(
 NTSTATUS
 STDCALL
 ZwSetHighWaitLowEventPair(
-	IN HANDLE EventPair
+	IN HANDLE EventPairHandle
 	)
 {
 }
@@ -73,7 +73,7 @@ ZwSetHighWaitLowEventPair(
 NTSTATUS
 STDCALL
 NtSetLowEventPair(
-	HANDLE EventPair
+	HANDLE EventPairHandle
 	)
 {
 }
@@ -81,7 +81,7 @@ NtSetLowEventPair(
 NTSTATUS
 STDCALL
 ZwSetLowEventPair(
-	HANDLE EventPair
+	HANDLE EventPairHandle
 	)
 {
 }
@@ -90,7 +90,7 @@ ZwSetLowEventPair(
 NTSTATUS
 STDCALL
 NtSetLowWaitHighEventPair(
-	HANDLE EventPair
+	HANDLE EventPairHandle
 	)
 {
 }
@@ -98,7 +98,7 @@ NtSetLowWaitHighEventPair(
 NTSTATUS
 STDCALL
 ZwSetLowWaitHighEventPair(
-	HANDLE EventPair
+	HANDLE EventPairHandle
 	)
 {
 }
@@ -106,7 +106,7 @@ ZwSetLowWaitHighEventPair(
 NTSTATUS
 STDCALL
 NtWaitLowEventPair(
-	IN HANDLE EventHandle
+	IN HANDLE EventPairHandle
 	)
 {
 }
@@ -114,15 +114,43 @@ NtWaitLowEventPair(
 NTSTATUS
 STDCALL
 ZwWaitLowEventPair(
-	IN HANDLE EventHandle
+	IN HANDLE EventPairHandle
 	)
 {
 }
 
-NTSTATUS STDCALL NtOpenEventPair(VOID)
+NTSTATUS
+STDCALL
+NtOpenEventPair(	
+	OUT PHANDLE EventPairHandle,
+        IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	)
 {
 }
 
-NTSTATUS STDCALL NtWaitHighEventPair(VOID)
+NTSTATUS
+STDCALL
+ZwOpenEventPair(	
+	OUT PHANDLE EventPairHandle,
+        IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+NtWaitHighEventPair(
+	IN HANDLE EventPairHandle
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+ZwWaitHighEventPair(
+	IN HANDLE EventPairHandle
+	)
 {
 }

@@ -1,27 +1,314 @@
-
 /*
-author: Boudewijn Dekker
-original source : wine
-todo: improve debug info
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/kernel32/thread/thread.c
+ * PURPOSE:         Thread functions
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+			Tls functions are modified from WINE
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
+ */
 
-#include <thread.h>
+#include <windows.h>
+#include <kernel32/thread.h>
+#include <ddk/ntddk.h>
+#include <string.h>
 
 
-WINBASEAPI BOOL WINAPI SwitchToThread(VOID )
+HANDLE
+STDCALL
+CreateThread(
+	     LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	     DWORD dwStackSize,
+	     LPTHREAD_START_ROUTINE lpStartAddress,
+	     LPVOID lpParameter,
+	     DWORD dwCreationFlags,
+	     LPDWORD lpThreadId
+	     )
 {
-	return NtYieldExecution();
+	return CreateRemoteThread(NtCurrentProcess(),lpThreadAttributes,dwStackSize,
+			lpStartAddress,lpParameter,dwCreationFlags,lpThreadId);
 }
+
+
+
+
+HANDLE
+STDCALL
+CreateRemoteThread(
+		   HANDLE hProcess,
+		   LPSECURITY_ATTRIBUTES lpThreadAttributes,
+		   DWORD dwStackSize,
+		   LPTHREAD_START_ROUTINE lpStartAddress,
+		   LPVOID lpParameter,
+		   DWORD dwCreationFlags,
+		   LPDWORD lpThreadId
+		   )
+{	
+	NTSTATUS errCode;
+	HANDLE ThreadHandle;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	CLIENT_ID ClientId;
+	CONTEXT ThreadContext;
+	INITIAL_TEB InitialTeb;
+	BOOLEAN CreateSuspended = FALSE;
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = NULL;
+	ObjectAttributes.Attributes = 0;
+	if ( lpThreadAttributes != NULL ) {
+		if ( lpThreadAttributes->bInheritHandle ) 
+			ObjectAttributes.Attributes = OBJ_INHERIT;
+		ObjectAttributes.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
+	}
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	if ( ( dwCreationFlags & CREATE_SUSPENDED ) == CREATE_SUSPENDED )
+		CreateSuspended = TRUE;
+	else
+		CreateSuspended = FALSE;
+	// fix context
+	GetThreadContext(NtCurrentThread(),&ThreadContext);
+	// fix teb [ stack context ] --> check the image file 
+
+	errCode = NtCreateThread(
+		&ThreadHandle,
+		THREAD_ALL_ACCESS,
+		&ObjectAttributes,
+		hProcess,
+		&ClientId,
+		&ThreadContext,
+		&InitialTeb,
+		CreateSuspended
+	);
+	if ( lpThreadId != NULL )
+		memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+
+	return ThreadHandle;
+}
+
+NT_TEB *GetTeb(VOID)
+{
+	return NULL;
+}
+
+WINBOOL STDCALL
+SwitchToThread(VOID )
+{
+	NTSTATUS errCode;
+	errCode = NtYieldExecution();
+	return TRUE;
+}
+
+DWORD
+STDCALL
+GetCurrentThreadId()
+{
+
+	return (DWORD)(GetTeb()->Cid).UniqueThread; 
+}
+
+VOID
+STDCALL
+ExitThread(
+	    UINT uExitCode
+	    ) 
+{
+	NTSTATUS errCode;	 
+
+	errCode = NtTerminateThread(
+		NtCurrentThread() ,
+		uExitCode
+	);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+	}
+	return;
+}
+
+WINBOOL
+STDCALL
+GetThreadTimes(
+	       HANDLE hThread,
+	       LPFILETIME lpCreationTime,
+	       LPFILETIME lpExitTime,
+	       LPFILETIME lpKernelTime,
+	       LPFILETIME lpUserTime
+	       )
+{
+	NTSTATUS errCode;
+	KERNEL_USER_TIMES KernelUserTimes;
+	ULONG ReturnLength;
+	errCode = NtQueryInformationThread(hThread,ThreadTimes,&KernelUserTimes,sizeof(KERNEL_USER_TIMES),&ReturnLength);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	memcpy(lpCreationTime, &KernelUserTimes.CreateTime, sizeof(FILETIME));
+	memcpy(lpExitTime, &KernelUserTimes.ExitTime, sizeof(FILETIME));
+	memcpy(lpKernelTime, &KernelUserTimes.KernelTime, sizeof(FILETIME));
+	memcpy(lpUserTime, &KernelUserTimes.UserTime, sizeof(FILETIME));
+	return TRUE;
+	
+}
+
+
+WINBOOL
+STDCALL GetThreadContext(
+    HANDLE hThread,	
+    LPCONTEXT lpContext 	
+   )
+{
+	NTSTATUS errCode;
+	errCode = NtGetContextThread(hThread,lpContext);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+WINBOOL
+STDCALL
+SetThreadContext(
+    HANDLE hThread,	
+    CONST CONTEXT *lpContext 
+   )
+{
+	NTSTATUS errCode;
+
+	errCode = NtSetContextThread(hThread,(void *)lpContext);
+	if (!NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+
+WINBOOL 
+STDCALL
+GetExitCodeThread(
+    HANDLE hThread,	
+    LPDWORD lpExitCode 
+   )
+{
+	NTSTATUS errCode;
+	THREAD_BASIC_INFORMATION ThreadBasic;
+	ULONG DataWritten;
+	errCode = NtQueryInformationThread(hThread,ThreadBasicInformation,&ThreadBasic,sizeof(THREAD_BASIC_INFORMATION),&DataWritten);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	memcpy( lpExitCode ,&ThreadBasic.ExitStatus,sizeof(DWORD));
+	return TRUE;
+	
+}
+
+
+DWORD 
+STDCALL
+ResumeThread(
+    HANDLE hThread 	
+   )
+{
+	NTSTATUS errCode;
+	ULONG PreviousResumeCount;
+
+	errCode = NtResumeThread(hThread,&PreviousResumeCount );
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return  -1;
+	}
+	return PreviousResumeCount;
+}
+
+DWORD 
+STDCALL
+SuspendThread(
+    HANDLE hThread 
+   )
+{
+	NTSTATUS errCode;
+	ULONG PreviousSuspendCount;
+
+	errCode = NtSuspendThread(hThread,&PreviousSuspendCount );
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return  -1;
+	}
+	return PreviousSuspendCount;
+}
+
+
+DWORD
+STDCALL
+SetThreadAffinityMask(
+		      HANDLE hThread,
+		      DWORD dwThreadAffinityMask
+		      )
+{
+	return 0;
+}
+
+
+WINBOOL
+STDCALL
+SetThreadPriority(
+		  HANDLE hThread,
+		  int nPriority
+		  )
+{
+	NTSTATUS errCode;
+	THREAD_BASIC_INFORMATION ThreadBasic;
+	ULONG DataWritten;
+	errCode = NtQueryInformationThread(hThread,ThreadBasicInformation,&ThreadBasic,sizeof(THREAD_BASIC_INFORMATION),&DataWritten);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	ThreadBasic.BasePriority = nPriority;
+	errCode = NtSetInformationThread(hThread,ThreadBasicInformation,&ThreadBasic,sizeof(THREAD_BASIC_INFORMATION));
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+int
+STDCALL
+GetThreadPriority(
+		  HANDLE hThread
+		  )
+{
+	NTSTATUS errCode;
+	THREAD_BASIC_INFORMATION ThreadBasic;
+	ULONG DataWritten;
+	errCode = NtQueryInformationThread(hThread,ThreadBasicInformation,&ThreadBasic,sizeof(THREAD_BASIC_INFORMATION),&DataWritten);
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return THREAD_PRIORITY_ERROR_RETURN;
+	}
+	return ThreadBasic.BasePriority;
+}
+
 
 /* (WIN32) Thread Local Storage ******************************************** */
 
-DWORD	WINAPI
+DWORD	STDCALL
 TlsAlloc(VOID)
 {
 	DWORD 	dwTlsIndex = GetTeb()->dwTlsIndex;
+	
+
 	void	**TlsData = GetTeb()->TlsData;
 	
-	APISTR((LF_API, "TlsAlloc: (API)\n"));
+	
 	if (dwTlsIndex < sizeof(TlsData) / sizeof(TlsData[0]))
 	{
 		TlsData[dwTlsIndex] = NULL;
@@ -30,45 +317,42 @@ TlsAlloc(VOID)
 	return (0xFFFFFFFFUL);
 }
 
-BOOL	WINAPI
+WINBOOL	STDCALL
 TlsFree(DWORD dwTlsIndex)
 {
-	APISTR((LF_APISTUB, "TlsFree(DWORD=%ld)\n", dwTlsIndex));
+	
 	return (TRUE);
 }
 
-LPVOID	WINAPI
+LPVOID	STDCALL
 TlsGetValue(DWORD dwTlsIndex)
 {
 	
-	DWORD 	dwTlsIndex = GetTeb()->dwTlsIndex;
+	
 	void	**TlsData = GetTeb()->TlsData;
 
-	APISTR((LF_API, "TlsGetValue: (API) dwTlsIndex %ld\n", dwTlsIndex));
+	
 	if (dwTlsIndex < sizeof(TlsData) / sizeof(TlsData[0]))
 	{
-		LOGSTR((LF_LOG, "TlsGetValue: (LOG) [%ld] = %p\n",
-			dwTlsIndex, TlsData[dwTlsIndex]));
+	
 		SetLastError(NO_ERROR);
 		return (TlsData[dwTlsIndex]);
 	}
-	SetLastErrorEx(1, 0);
+	SetLastError(1);
 	return (NULL);
 }
 
-BOOL	WINAPI
+WINBOOL	STDCALL
 TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
 	
-	DWORD 	dwTlsIndex = GetTeb()->dwTlsIndex;
+	
 	void	**TlsData = GetTeb()->TlsData;
 
-	APISTR((LF_API, "TlsSetValue: (API) dwTlsIndex %ld lpTlsValue %p\n",
-		dwTlsIndex, lpTlsValue));
+	
 	if (dwTlsIndex < sizeof(TlsData) / sizeof(TlsData[0]))
 	{
-		LOGSTR((LF_LOG, "TlsSetValue: (LOG) [%ld] = %p\n",
-			dwTlsIndex, lpTlsValue));
+		
 		TlsData[dwTlsIndex] = lpTlsValue;
 		return (TRUE);
 	}

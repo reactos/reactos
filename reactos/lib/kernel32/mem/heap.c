@@ -26,9 +26,11 @@
  * Put the type definitions of the heap in a seperate header. Boudewijn Dekker
  */
 
+#include <kernel32/proc.h>
 #include <kernel32/kernel32.h>
 #include <kernel32/heap.h>
 #include <internal/string.h>
+
 
 static HEAP_BUCKET __HeapDefaultBuckets[]=
 {
@@ -773,7 +775,7 @@ DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles )
 
    aprintf("GetProcessHeaps( %u, 0x%lX )\n", maxheaps, (ULONG) phandles );
 
-   pheap=__ProcessHeap;
+   pheap= __ProcessHeap;
    retval=0;
    while((pheap)&&(maxheaps))
    {

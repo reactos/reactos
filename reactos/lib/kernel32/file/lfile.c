@@ -1,15 +1,18 @@
 /*
-* created:	Boudewijn Dekker
-* org. source:	WINE
-* date:		june 1998
-* todo:		check the _lopen for correctness
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/kernel32/file/lfile.c
+ * PURPOSE:         Find functions
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
+ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <string.h>
 #include <wstring.h>
-#include <fcntl.h>
+
 
 
 
@@ -20,7 +23,7 @@ long _hread(
    )
 {
 	DWORD  NumberOfBytesRead;
-	if ( ReadFile((HANDLE)hFile,(LPCVOID)lpBuffer,(DWORD)lBytes,&NumberOfBytesRead, NULL) == FALSE )
+	if ( ReadFile((HANDLE)hFile,(LPVOID)lpBuffer,(DWORD)lBytes,&NumberOfBytesRead, NULL) == FALSE )
 		return -1;
 	else
 		return NumberOfBytesRead;
@@ -47,7 +50,7 @@ long _hwrite(
 		else
 			return 0;
 	}
-	if ( WriteFile((HANDLE)hFile,(LPCVOID)lpBuffer,(DWORD)lBytes, &NumberOfBytesWritten,NULL) == FALSE )
+	if ( WriteFile((HANDLE)hFile,(LPVOID)lpBuffer,(DWORD)lBytes, &NumberOfBytesWritten,NULL) == FALSE )
 		return -1;
 	else
 		return NumberOfBytesWritten;
@@ -65,55 +68,65 @@ _lwrite(
 	return _hwrite(hFile,lpBuffer,uBytes);
 }
 
-#define OF_OPENMASK	(OF_READ|OF_READWRITE|OF_WRITE|OF_CREATE)
-#define OF_FILEMASK	(OF_DELETE|OF_PARSE)
-#define OF_MASK		(OF_OPENMASK|OF_FILEMASK)
 
-HFILE _open( LPCSTR  lpPathName, int  iReadWrite 	 )
+
+
+
+HFILE _lopen( LPCSTR  lpPathName, int  iReadWrite 	 )
 {
 
 
 	
-	HFILE fd;
-	int nFunction;
+	DWORD dwAccessMask = 0;
+	DWORD dwShareMode = 0;
 	
+	if ( (iReadWrite & OF_READWRITE ) == OF_READWRITE )
+		dwAccessMask = GENERIC_READ | GENERIC_WRITE;
+	else if ( (iReadWrite & OF_READ ) == OF_READ )
+		dwAccessMask = GENERIC_READ;
+	else if ( (iReadWrite & OF_WRITE ) == OF_WRITE )
+		dwAccessMask = GENERIC_WRITE;
 
 
-   	
-	/* Don't assume a 1:1 relationship between OF_* modes and O_* modes */
-	/* Here we translate the read/write permission bits (which had better */
-	/* be the low 2 bits.  If not, we're in trouble.  Other bits are  */
-	/* passed through unchanged */
+
+
+
+if ((iReadWrite & OF_SHARE_COMPAT) == OF_SHARE_COMPAT )
+	dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
+else if ((iReadWrite & OF_SHARE_DENY_NONE) == OF_SHARE_DENY_NONE)
+	dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
+else if ((iReadWrite & OF_SHARE_DENY_READ) == OF_SHARE_DENY_READ)
+	dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_DELETE;	
+else if ((iReadWrite & OF_SHARE_DENY_WRITE) == OF_SHARE_DENY_WRITE )
+	dwShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;		
+else if ((iReadWrite & OF_SHARE_EXCLUSIVE) == OF_SHARE_EXCLUSIVE)
+	dwShareMode = 0;	
+
 	
-	nFunction = wFunction & 3;
-   	
-	switch (wFunction & 3) {
-		case OF_READ:
-			nFunction |= O_RDONLY;
-   			break;
-   		case OF_READWRITE:
-   			nFunction |= O_RDWR;
-   			break;
-   		case OF_WRITE:
-   			nFunction |= O_WRONLY;
-   			break;
-   		default:
-   			//ERRSTR((LF_ERROR, "_lopen: bad file open mode %x\n", wFunction));
-   			return HFILE_ERROR;
-   	}
+
 	SetLastError(0);
-	fd = CreateFileA( filename,nFunction,OPEN_EXISTING,
-			NULL,OPEN_EXISTING,NULL,NULL);	
-	if (fd == INVALID_HANDLE_VALUE )
-		 return HFILE_ERROR;
-	return fd;
+	return (HFILE) CreateFileA( lpPathName,dwAccessMask,dwShareMode,
+			NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);	
+
 }
 
-int _creat(const char *filename, int pmode)
+
+HFILE _lcreat(  LPCSTR  lpPathName,	 int  iAttribute 	 )
 {
-	SetLastError(0);
-	return CreateFileA( filename,GENERIC_READ & GENERIC_WRITE,FILE_SHARE_WRITE,
-			NULL,CREATE_ALWAYS,pmode & 0x00003FB7,NULL);	
+
+	DWORD FileAttributes = 0;
+	
+	if (  iAttribute == 1 )
+		FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+	else if (  iAttribute == 2 )
+		FileAttributes |= FILE_ATTRIBUTE_READONLY;
+	else if (  iAttribute == 3 )
+		FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	else if (  iAttribute == 4 )
+		FileAttributes |= FILE_ATTRIBUTE_SYSTEM;
+
+	return(HFILE) CreateFileA( lpPathName,GENERIC_ALL,FILE_SHARE_READ|FILE_SHARE_WRITE,
+			NULL,CREATE_ALWAYS,iAttribute ,NULL);	
 }
 
 

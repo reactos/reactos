@@ -1,23 +1,24 @@
-
-
-#include <Atom.h>
-#include <process.h>
-#include <thread.h>
-#include <wstring.h>
-
-
 /*
-	title:	atom.c
-	author: Boudewijn Dekker
-	hsitory:copied from twin wine source
-	modified:	-- add wide char support
-			-- removed ex functions
-			-- use a per process local atom table
-	todo :	
-		check initatomtable
-		check if not calling down to ntdll conflicts with anything
-		check anis2unicode procedure 
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/kernel32/misc/atom.c
+ * PURPOSE:         Atom functions
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+		    modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
+ */
+
+#include <kernel32\atom.h>
+#include <kernel32\proc.h>
+#include <kernel32\thread.h>
+#include <wstring.h>
+#include <string.h>
+#include <stdlib.h>
+
+
+
+
 
 
 /* system global and local atom tables */
@@ -26,15 +27,17 @@ static ATOMTABLE GlobalAtomTable;
 
 /* internal functions */
 ATOM GLDeleteAtom(ATOMTABLE *at, ATOM nAtom);
-ATOM AWGLAddAtom( ATOMTABLE *at, const wchar_t *lpString);
-ATOM AWGLFindAtom(ATOMTABLE *at, const wchar_t *lpString);
-UINT AWGLGetAtomName(ATOMTABLE *at,ATOM atom, wchar_t *lpString, int nSize);
+ATOM AWGLAddAtom( ATOMTABLE *at, const WCHAR *lpString);
+ATOM AWGLFindAtom(ATOMTABLE *at, const WCHAR *lpString);
+UINT AWGLGetAtomName(ATOMTABLE *at,ATOM atom, WCHAR *lpString, int nSize);
 
 static ATOMENTRY *GetAtomPointer(ATOMTABLE *,int);
-static ATOMID    AtomHashString(const wchar_t *,int *);
+static ATOMID    AtomHashString(const WCHAR *,int *);
 
 #define ATOMBASE	 0xcc00
 
+int unicode2ansi( char *ansi,const WCHAR *uni, int s);
+int ansi2unicode( WCHAR *uni,const char *ansi, int s);
 
 
 ATOM
@@ -58,13 +61,12 @@ InitAtomTable(
 	if ( nSize < 4 || nSize >= 512 ) {
 		nSize = 37;
 	}
-	/*
-	if ( GetTeb()->pPeb->LocalAtomTable == NULL ) {
-		GetTeb()->pPeb->LocalAtomTable = (ATOMTABLE *)malloc(nSize*sizeof(ATOMTABLE));
+	
+	if ( (GetCurrentPeb()->LocalAtomTable).lpDrvData == NULL ) {
+		(GetCurrentPeb()->LocalAtomTable).lpDrvData = HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize*sizeof(ATOMENTRY));
 	}
 	
-	GetTeb()->pPeb->LocalAtomTable->TableSize = nSize;
-	*/
+	
 	return TRUE;
 }
 
@@ -75,7 +77,7 @@ DeleteAtom(
     ATOM nAtom
     )
 {
-	return GLDeleteAtom(&GetTeb()->pPeb->LocalAtomTable, nAtom);
+	return GLDeleteAtom(&GetCurrentPeb()->LocalAtomTable, nAtom);
 	
 }
 
@@ -85,16 +87,16 @@ DeleteAtom(
 ATOM
 STDCALL
 GlobalAddAtomA(
-    const char *lpString
+    LPCSTR lpString
     )
 {
 
 	UINT	 BufLen = strlen(lpString);
-	wchar_t *lpBuffer = (wchar_t *)malloc(BufLen*sizeof(wchar_t));
+	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*sizeof(WCHAR));
 	ATOM atom;
 	ansi2unicode(lpBuffer, lpString,BufLen);
 	atom = AWGLAddAtom(&GlobalAtomTable,lpBuffer );
-	free(lpBuffer);
+	HeapFree(GetProcessHeap(),0,lpBuffer);
 	return atom;
 }
 
@@ -105,7 +107,7 @@ GlobalAddAtomA(
 ATOM
 STDCALL
 GlobalAddAtomW(
-    const wchar_t *lpString
+    LPCWSTR lpString
     )
 {
 	return AWGLAddAtom(&GlobalAtomTable, lpString);	
@@ -115,15 +117,15 @@ GlobalAddAtomW(
 ATOM
 STDCALL
 GlobalFindAtomA(
-    const char *lpString
+    LPCSTR lpString
     )
 {
 	ATOM 	a;
 	UINT	BufLen = strlen(lpString);
-	wchar_t *lpBuffer = (wchar_t *)malloc(BufLen*sizeof(wchar_t));
+	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*sizeof(WCHAR));
 	ansi2unicode(lpBuffer, lpString,BufLen);
 	a = AWGLFindAtom(&GlobalAtomTable, lpBuffer);
-	free(lpBuffer);
+	HeapFree(GetProcessHeap(),0,lpBuffer);
 	return a;
 }
 
@@ -131,7 +133,7 @@ GlobalFindAtomA(
 ATOM
 STDCALL
 GlobalFindAtomW(
-    const wchar_t *lpString
+    const WCHAR *lpString
     )
 {
 	return AWGLFindAtom(&GlobalAtomTable, lpString);	
@@ -148,10 +150,10 @@ GlobalGetAtomNameA(
     )
 {
 	
-	wchar_t *lpUnicode = (wchar_t *)malloc(nSize *sizeof(wchar_t));
+	WCHAR *lpUnicode = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *sizeof(WCHAR));
 	UINT x = AWGLGetAtomName(&GlobalAtomTable,nAtom, lpUnicode,nSize);	
 	unicode2ansi(lpBuffer,lpUnicode,nSize);
-	free(lpUnicode);
+	HeapFree(GetProcessHeap(),0,lpUnicode);
 	return x;
 }
 
@@ -160,7 +162,7 @@ UINT
 STDCALL
 GlobalGetAtomNameW(
     ATOM nAtom,
-    wchar_t * lpBuffer,
+    WCHAR * lpBuffer,
     int nSize
     )
 {
@@ -175,11 +177,11 @@ AddAtomA(
     )
 {
 	UINT	BufLen = strlen(lpString);
-	wchar_t *lpBuffer = (wchar_t*)malloc(BufLen*2);
+	WCHAR *lpBuffer = (WCHAR*)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
 	ATOM a;
 	ansi2unicode(lpBuffer, lpString,BufLen);
-	a = AWGLAddAtom(&GetTeb()->pPeb->LocalAtomTable, lpBuffer);
-	free(lpBuffer);
+	a = AWGLAddAtom(&GetCurrentPeb()->LocalAtomTable, lpBuffer);
+	HeapFree(GetProcessHeap(),0,lpBuffer);
 	return a;
 	
 }
@@ -188,10 +190,10 @@ AddAtomA(
 ATOM
 STDCALL
 AddAtomW(
-    const wchar_t * lpString
+    const WCHAR * lpString
     )
 {
-	return AWGLAddAtom(&GetTeb()->pPeb->LocalAtomTable, lpString);
+	return AWGLAddAtom(&GetCurrentPeb()->LocalAtomTable, lpString);
 }
 
 
@@ -204,11 +206,11 @@ FindAtomA(
     )
 {
 	UINT	BufLen = strlen(lpString);
-	wchar_t *lpBuffer = (wchar_t *)malloc(BufLen*2);
+	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*2);
 	ATOM a;
 	ansi2unicode(lpBuffer, lpString,BufLen);
-	a = AWGLFindAtom(&GetTeb()->pPeb->LocalAtomTable, lpBuffer);
-	free(lpBuffer);
+	a = AWGLFindAtom(&GetCurrentPeb()->LocalAtomTable, lpBuffer);
+	HeapFree(GetProcessHeap(),0,lpBuffer);
 	return a;
 }
 
@@ -216,10 +218,10 @@ FindAtomA(
 ATOM
 STDCALL
 FindAtomW(
-    const wchar_t * lpString
+    const WCHAR * lpString
     )
 {
-	return AWGLFindAtom(&GetTeb()->pPeb->LocalAtomTable, lpString);
+	return AWGLFindAtom(&GetCurrentPeb()->LocalAtomTable, lpString);
 }
 
 
@@ -232,10 +234,10 @@ GetAtomNameA(
     int nSize
     )
 {
-	LPWSTR lpUnicode = (wchar_t *)malloc(nSize *2);
+	LPWSTR lpUnicode = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize *2);
 	UINT x = AWGLGetAtomName(&GlobalAtomTable, nAtom,lpUnicode,nSize);	
 	unicode2ansi(lpBuffer,lpUnicode,nSize);
-	free(lpUnicode);
+	HeapFree(GetProcessHeap(),0,lpUnicode);
 	return x;
 }
 
@@ -244,11 +246,11 @@ UINT
 STDCALL
 GetAtomNameW(
     ATOM nAtom,
-    wchar_t * lpBuffer,
+    WCHAR * lpBuffer,
     int nSize
     )
 {
-	return AWGLGetAtomName(&GetTeb()->pPeb->LocalAtomTable,nAtom,lpBuffer,  nSize);
+	return AWGLGetAtomName(&GetCurrentPeb()->LocalAtomTable,nAtom,lpBuffer,  nSize);
 }
 
 ATOM
@@ -265,9 +267,9 @@ GLDeleteAtom(
 			lp->refcnt--;
 
 		if(lp->refcnt == 0) {
-			free(at->AtomTable);
+			HeapFree(GetProcessHeap(),0,at->AtomTable);
 			at->AtomTable = NULL;
-			free(at->AtomData);
+			HeapFree(GetProcessHeap(),0,at->AtomData);
 			at->AtomData = NULL;
 			return lp->q = 0;
 		}
@@ -281,7 +283,7 @@ GLDeleteAtom(
 
 ATOM
 AWGLAddAtom(
-     ATOMTABLE *at, const wchar_t *lpString
+     ATOMTABLE *at, const WCHAR *lpString
   	)
 {
 	ATOM 		atom;
@@ -329,13 +331,13 @@ AWGLAddAtom(
 	/* no space was available, or we have an INTATOM		*/
 	/* so expand or create the table 				*/
 	if(at->AtomTable == 0) {
-		at->AtomTable = (ATOMENTRY *) malloc(sizeof(ATOMENTRY));	
+		at->AtomTable = (ATOMENTRY *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
 		at->TableSize = 1;
 		lp = at->AtomTable;
 		index = 0;
 	} else {
 		at->TableSize++;
-		at->AtomTable = (ATOMENTRY *) realloc(
+		at->AtomTable = (ATOMENTRY *) HeapReAlloc(GetProcessHeap(),0,
 			(LPVOID) at->AtomTable,
 			at->TableSize * sizeof(ATOMENTRY));
 		lp = &at->AtomTable[at->TableSize - 1];
@@ -352,15 +354,15 @@ AWGLAddAtom(
 		newlen = at->DataSize + atomlen;
 
 		if(at->AtomData == 0) {
-			at->AtomData = (wchar_t *) malloc(newlen*2);
+			at->AtomData = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
 			lp->idx = 0;
 		} else {
 			
-			at->AtomData = (wchar_t *) realloc(at->AtomData,newlen*2);
+			at->AtomData = (WCHAR *) HeapReAlloc(GetProcessHeap(),0,at->AtomData,newlen*2);
 			lp->idx = at->DataSize;
 		}
 
-		wcscpy(&at->AtomData[lp->idx],lpString);
+		lstrcpyW(&at->AtomData[lp->idx],lpString);
 		at->DataSize = newlen;
 	}	
 
@@ -378,7 +380,7 @@ AWGLAddAtom(
 
 ATOM
 AWGLFindAtom(
-     ATOMTABLE *at, const wchar_t *lpString
+     ATOMTABLE *at, const WCHAR *lpString
     )
 {
 
@@ -408,11 +410,11 @@ AWGLFindAtom(
 
 
 UINT
-AWGLGetAtomName(ATOMTABLE *at, ATOM atom, wchar_t *lpString,int len)
+AWGLGetAtomName(ATOMTABLE *at, ATOM atom, WCHAR *lpString,int len)
 {
 	
 	ATOMENTRY	*lp;
-	wchar_t 	*atomstr;
+	WCHAR 	*atomstr;
 	int		atomlen;
 	
 	
@@ -420,17 +422,17 @@ AWGLGetAtomName(ATOMTABLE *at, ATOM atom, wchar_t *lpString,int len)
 	/* return the atom name, or create the INTATOM */
 	if((lp = GetAtomPointer(at,atom - ATOMBASE))) {
 		if(lp->idsize) {
-			atomlen = wcslen(atomstr = &at->AtomData[lp->idx]);
+			atomlen = lstrlenW(atomstr = &at->AtomData[lp->idx]);
 			if (atomlen < len)
-			    wcscpy(lpString,atomstr);
+			    lstrcpyW(lpString,atomstr);
 			else {
 			    wcsncpy(lpString,atomstr,len-1);
 			    lpString[len-1] = '\0';
 			}
-			return (UINT)wcslen(lpString);
+			return (UINT)lstrlenW(lpString);
 		} else {
 			//wsprintf((wchar *)lpString,"#%d",lp->q);
-			return (UINT)wcslen(lpString);
+			return (UINT)lstrlenW(lpString);
 		}
 	}
 	return 0;
@@ -444,10 +446,10 @@ AWGLGetAtomName(ATOMTABLE *at, ATOM atom, wchar_t *lpString,int len)
 /********************************************************/
 
 static ATOMID
-AtomHashString(const wchar_t * lp,int *lplen)
+AtomHashString(const WCHAR * lp,int *lplen)
 {
 	ATOMID 	q;
-	wchar_t   *p,ch;
+	WCHAR   *p,ch;
 	int	len;
 
 	/* if we have an intatom... */
@@ -457,7 +459,7 @@ AtomHashString(const wchar_t * lp,int *lplen)
 	}
 
 	/* convert the string to an internal representation */
-	for(p=(wchar_t *)lp,q=0,len=0;(p++,ch=*p++);len++)
+	for(p=(WCHAR *)lp,q=0,len=0;(p++,ch=*p++);len++)
 		q = (q<<1) + iswlower(ch)?towupper(ch):ch;
 
 	/* 0 is reserved for empty slots */
@@ -503,22 +505,22 @@ GetAtomPointer(ATOMTABLE *at,int index)
 	return lp;
 }
 
-int ansi2unicode( wchar_t *uni, char *ansi, int s)
+int ansi2unicode( WCHAR *uni,const char *ansi, int s)
 {
 	register int i;
 	
 	for(i=0;i<=s;i++) 
-		uni[i] = (wchar_t)ansi[i];
-	return;
+		uni[i] = (WCHAR)ansi[i];
+	return i;
 }
 
-int unicode2ansi( char *ansi, wchar_t *uni, int s)
+int unicode2ansi( char *ansi,const WCHAR *uni, int s)
 {
 	register int i;
 	
 	for(i=0;i<=s;i++) 
 		ansi[i] = (char)uni[i];
-	return;
+	return i;
 }
 
 

@@ -50,6 +50,10 @@ NTSTATUS STDCALL NtRaiseHardError(VOID)
 {
 }
 
-NTSTATUS STDCALL NtSetDefaultHardErrorPort(VOID)
+NTSTATUS 
+STDCALL 
+NtSetDefaultHardErrorPort(
+	IN HANDLE PortHandle
+	)
 {
 }

@@ -156,7 +156,7 @@ HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
          palloc=GlobalLock(hnew);
          memcpy(palloc, (LPVOID) hmem, size);
          GlobalUnlock(hnew);
-         GlobalFree(hmem);
+         GlobalHeapFree(GetProcessHeap(),0,hmem);
       }
       else if((((ULONG)hmem%8) != 0)&&(flags & GMEM_DISCARDABLE))
       {
@@ -205,7 +205,7 @@ HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
          {
             if(phandle->Pointer)
             {
-               HeapFree(__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
+               HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
                phandle->Pointer=NULL;
             }
          }
@@ -218,15 +218,15 @@ HGLOBAL WINAPI GlobalReAlloc(HGLOBAL hmem, DWORD size, UINT flags)
 /*********************************************************************
 *                    GlobalFree  --  KERNEL32                        *
 *********************************************************************/
-HGLOBAL WINAPI GlobalFree(HGLOBAL hmem)
+HGLOBAL WINAPI GlobalHeapFree(GetProcessHeap(),0,HGLOBAL hmem)
 {
    PGLOBAL_HANDLE phandle;
 
-   aprintf("GlobalFree( 0x%lX )\n", (ULONG) hmem );
+   aprintf("GlobalHeapFree(GetProcessHeap(),0, 0x%lX )\n", (ULONG) hmem );
 
    if(((ULONG)hmem%4)==0) /* POINTER */
    {
-      HeapFree(__ProcessHeap, 0, (LPVOID) hmem);
+      HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, (LPVOID) hmem);
    }
    else  /* HANDLE */
    {
@@ -238,7 +238,7 @@ HGLOBAL WINAPI GlobalFree(HGLOBAL hmem)
          if(phandle->LockCount!=0)
             SetLastError(ERROR_INVALID_HANDLE);
          if(phandle->Pointer)
-            HeapFree(__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
+            HeapHeapFree(GetProcessHeap(),0,__ProcessHeap, 0, phandle->Pointer-sizeof(HANDLE));
          __HeapFreeFragment(__ProcessHeap, 0, phandle);
       }
       HeapUnlock(__ProcessHeap);

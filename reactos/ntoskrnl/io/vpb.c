@@ -93,7 +93,7 @@ NTSTATUS STDCALL NtQueryVolumeInformationFile(
 					    OUT PIO_STATUS_BLOCK IoStatusBlock,
 					    OUT PVOID FSInformation,
 					    IN ULONG Length,
-					    IN CINT FSInformationClass)
+					    IN FS_INFORMATION_CLASS FSInformationClass)
 
 /*
  * FUNCTION: Queries the volume information
@@ -129,7 +129,7 @@ ZwQueryVolumeInformationFile(
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID FSInformation,
 	IN ULONG Length,
-	IN CINT FSInformationClass)
+	IN FS_INFORMATION_CLASS FSInformationClass)
 {
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;

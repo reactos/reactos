@@ -55,8 +55,8 @@ NTSTATUS STDCALL ZwLockFile(IN  HANDLE FileHandle,
 
 NTSTATUS STDCALL NtUnlockFile(IN HANDLE FileHandle,
 			      OUT PIO_STATUS_BLOCK IoStatusBlock,
-			      IN LARGE_INTEGER ByteOffset,
-			      IN LARGE_INTEGER Length,
+			      IN PLARGE_INTEGER ByteOffset,
+			      IN PLARGE_INTEGER Length,
 			      OUT PULONG Key OPTIONAL)
 {
    return(ZwUnlockFile(FileHandle,
@@ -68,8 +68,8 @@ NTSTATUS STDCALL NtUnlockFile(IN HANDLE FileHandle,
 
 NTSTATUS STDCALL ZwUnlockFile(IN HANDLE FileHandle,
 			      OUT PIO_STATUS_BLOCK IoStatusBlock,
-			      IN LARGE_INTEGER ByteOffset,
-			      IN LARGE_INTEGER Length,
+			      IN PLARGE_INTEGER ByteOffset,
+			      IN PLARGE_INTEGER Length,
 			      OUT PULONG Key OPTIONAL)
 {
    UNIMPLEMENTED;

@@ -197,7 +197,7 @@ VOID KeInitializeDispatcher(VOID)
 }
 
 NTSTATUS STDCALL NtWaitForMultipleObjects (IN ULONG Count,
-					   IN PHANDLE Object[],
+					   IN HANDLE Object[],
 					   IN CINT WaitType,
 					   IN BOOLEAN Alertable,
 					   IN PLARGE_INTEGER Time)
@@ -210,7 +210,7 @@ NTSTATUS STDCALL NtWaitForMultipleObjects (IN ULONG Count,
 }
 
 NTSTATUS STDCALL ZwWaitForMultipleObjects (IN ULONG Count,
-					   IN PHANDLE Object[],
+					   IN HANDLE Object[],
 					   IN CINT WaitType,
 					   IN BOOLEAN Alertable,
 					   IN PLARGE_INTEGER Time)
@@ -218,7 +218,7 @@ NTSTATUS STDCALL ZwWaitForMultipleObjects (IN ULONG Count,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtWaitForSingleObject (IN PHANDLE Object,
+NTSTATUS STDCALL NtWaitForSingleObject (IN HANDLE Object,
 					IN BOOLEAN Alertable,
 					IN PLARGE_INTEGER Time)
 {
@@ -227,7 +227,7 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN PHANDLE Object,
 				Time));
 }
 
-NTSTATUS STDCALL ZwWaitForSingleObject (IN PHANDLE Object,
+NTSTATUS STDCALL ZwWaitForSingleObject (IN HANDLE Object,
 					IN BOOLEAN Alertable,
 					IN PLARGE_INTEGER Time)
 {

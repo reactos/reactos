@@ -132,7 +132,7 @@ VOID Hal_bios32_probe()
 	  {
 	     continue;
 	  }
-	DbgPrint("BIOS32 detected at %x\n",i);
+        DbgPrint("ReactOS: BIOS32 detected at %x\n",i);
 	bios32_indirect.address = service_entry->entry;
 	bios32_detected=TRUE;
      }

@@ -21,7 +21,7 @@ STDCALL
 NtCreateMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN OBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN BOOLEAN InitialOwner
 	)
 {
@@ -32,7 +32,7 @@ STDCALL
 ZwCreateMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN OBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN BOOLEAN InitialOwner
 	)
 {

@@ -1,8 +1,17 @@
-
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/kernel32/file/lstring.c
+ * PURPOSE:         Local string functions
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
+ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <string.h>
 #include <wstring.h>
+
 
 int
 STDCALL
@@ -122,4 +131,12 @@ lstrlenW(
     )
 {
 	return wcslen(lpString);
+	
 }
+
+
+
+
+
+
+

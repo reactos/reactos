@@ -1,8 +1,9 @@
 /*
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
- * FILE:                  lib/ntdll/genntdll.c
+ * FILE:                  iface/native/genntdll.c
  * PURPOSE:               Generates the system call stubs in ntdll
+ * CHANGE HISTORY:	  Added a '@xx' to deal with stdcall [ Ariadne ]
  */
 
 /* INCLUDE ******************************************************************/
@@ -29,6 +30,7 @@ int process(FILE* in, FILE* out, FILE *out2)
    fprintf(out,"; Machine generated, don't edit\n");
    fprintf(out,"\n\n");
    fprintf(out,"SECTION .text\n\n");
+   fprintf(out,"BITS 32\n\n");
    
    fprintf(out2,"// Machine generated, don't edit\n");
    fprintf(out2,"\n\n");
@@ -41,12 +43,12 @@ int process(FILE* in, FILE* out, FILE *out2)
    while (!feof(in) && fgets(line,255,in) != NULL)
      {
 //	fgets(line,255,in);
-	if ((s=(char *)strchr(line,'\n'))!=NULL)
+	if ((s=(char *)strchr(line,13))!=NULL)
 	  {
 	     *s=0;
 	  }
 	s=&line[0];
-	if ((*s)!='#')
+	if ((*s)!='#' && (*s) != 0)
 	  {
 	     name = (char *)strtok(s," \t");
 	     name2 = (char *)strtok(NULL," \t");
@@ -54,10 +56,10 @@ int process(FILE* in, FILE* out, FILE *out2)
 	     nr_args = (char *)strtok(NULL," \t");
 	     
 //	     printf("name %s value %d\n",name,value);
-	     fprintf(out,"GLOBAL _%s\n",name);
-	     fprintf(out,"GLOBAL _%s\n",name2);
-	     fprintf(out,"_%s:\n",name);
-	     fprintf(out,"_%s:\n",name2);
+	     fprintf(out,"GLOBAL _%s@%s\n",name,nr_args);
+	     fprintf(out,"GLOBAL _%s@%s\n",name2,nr_args);
+	     fprintf(out,"_%s@%s:\n",name,nr_args);
+	     fprintf(out,"_%s@%s:\n",name2,nr_args);
 	     fprintf(out,"\tmov\teax,%d\n",value);
 	     fprintf(out,"\tlea\tedx,[esp+4]\n");
 	     fprintf(out,"\tint\t2Eh\n");

@@ -22,13 +22,14 @@ LPVOID STDCALL VirtualAllocEx(HANDLE hProcess,
    NTSTATUS Status;
    
    Status = ZwAllocateVirtualMemory(hProcess,
-				    &lpAddress,
+				    (PVOID *)&lpAddress,
 				    0,
-				    dwSize,
+				    (PULONG)&dwSize,
 				    flAllocationType,
 				    flProtect);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
+        SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);
      }
    return(lpAddress);
@@ -51,11 +52,12 @@ WINBOOL STDCALL VirtualFreeEx(HANDLE hProcess,
    NTSTATUS Status;
    
    Status = ZwFreeVirtualMemory(hProcess,
-				&lpAddress,
-				dwSize,
+				(PVOID *)&lpAddress,
+				(PULONG)&dwSize,
 				dwFreeType);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
+	SetLastError(RtlNtStatusToDosError(Status));
 	return(FALSE);
      }
    return(TRUE);
@@ -88,12 +90,13 @@ WINBOOL STDCALL VirtualProtectEx(HANDLE hProcess,
    NTSTATUS Status;
    
    Status = ZwProtectVirtualMemory(hProcess,
-				   lpAddress,
-				   dwSize,
+				   (PVOID)lpAddress,
+				   (PULONG)dwSize,
 				   flNewProtect,
 				   lpflOldProtect);
    if (Status != STATUS_SUCCESS)
      {
+	SetLastError(RtlNtStatusToDosError(Status));
 	return(FALSE);
      }
    return(TRUE);

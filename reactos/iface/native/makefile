@@ -6,7 +6,7 @@ all: genntdll$(EXE_POSTFIX) ../../lib/ntdll/napi.asm
 ../../include/ntdll/napi.h: dummy
 
 genntdll$(EXE_POSTFIX): genntdll.c
-	$(NATIVE_CC) -g genntdll.c -o genntdll$(EXE_POSTFIX)	
+	$(NATIVE_CC) -If:\gnu\mingw32\include -g genntdll.c -o genntdll$(EXE_POSTFIX)	
 
 sysfuncs.lst: dummy
 

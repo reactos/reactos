@@ -1,8 +1,18 @@
 #ifndef __INCLUDE_DDK_PSTYPES_H
 #define __INCLUDE_DDK_PSTYPES_H
 
+#undef WIN32_LEAN_AND_MEAN
+#include <windows.h> // might be redundant
 #include <kernel32/heap.h>
+#include <kernel32/atom.h>
 #include <internal/hal.h>
+
+#ifndef TLS_MINIMUM_AVAILABLE
+	#define TLS_MINIMUM_AVAILABLE 	(64)
+#endif
+#ifndef MAX_PATH
+	#define MAX_PATH 	(260)
+#endif
 
 typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
 
@@ -39,17 +49,34 @@ typedef struct linux_sigcontext {
 
 typedef ULONG THREADINFOCLASS;
 
-typedef void* ATOMTABLE;
+typedef struct _STARTUPINFOW { 
+  DWORD   cb; 
+  WCHAR	  WindowTitle[MAX_PATH];
+  WCHAR	  ImageFile[MAX_PATH];	
+  WCHAR	  CommandLine[MAX_PATH];
+  WCHAR	  DllPath[MAX_PATH];
+  LPWSTR  Reserved[MAX_PATH]; 
+  LPWSTR  Desktop[MAX_PATH]; 
+  LPWSTR  Title[MAX_PATH]; 
+  DWORD   dwX; 
+  DWORD   dwY; 
+  DWORD   dwXSize; 
+  DWORD   dwYSize; 
+  DWORD   dwXCountChars; 
+  DWORD   dwYCountChars; 
+  DWORD   dwFillAttribute; 
+  DWORD   dwFlags; 
+  WORD    wShowWindow; 
+  WORD    cbReserved2; 
+  unsigned char * lpReserved2; 
+  HANDLE  hStdInput; 
+  HANDLE  hStdOutput; 
+  HANDLE  hStdError; 
+} PROCESSINFOW, *PPROCESSINFOW; 
 
-typedef struct _pPebInfo {
-	WCHAR*		WindowTitle;
-	WCHAR*		ImageFile;	
-	WCHAR*		CommandLine;
-	WCHAR*		DllPath;
-//	STARTUPINFOW	StartupInfo;
-} PEBINFO;
 
-typedef struct _LDR_ {
+
+typedef struct _LDR {
 	UCHAR	Initialized;
 	UCHAR	InInitializationOrderModuleList;
 	PVOID	InLoadOrderModuleList;
@@ -64,15 +91,11 @@ typedef struct _NT_PEB
 	UCHAR			BeingDebugged;
 	LONG			ImageBaseAddress; 
 	LDR			Ldr;
-	DWORD			dwTlsBits[2]; // tls in use bits 
+
 	WORD			NumberOfProcessors;
 	WORD			NtGlobalFlag;
-	DWORD			HeapReserve;
-	DWORD			HeapCommit;
-	DWORD			HeapDecommitFreeBlockThreshold;
-	DWORD			NumberOfHeaps;
-	DWORD			MaxiumNumberOfHeaps;
-	PEBINFO*		PebInfo; 
+
+	PPROCESSINFOW		StartupInfo;
 	PHEAP			ProcessHeap; 
 	ATOMTABLE		LocalAtomTable;
 	LPCRITICAL_SECTION	CriticalSection;
@@ -108,8 +131,9 @@ typedef struct _NT_TEB
 	NT_TIB			Tib; 
 	CLIENT_ID		Cid;
 	HANDLE			RPCHandle;
-	PVOID	 		TlsData;
-	NT_PEB			*pPeb;   
+	PVOID	 		TlsData[TLS_MINIMUM_AVAILABLE];
+	DWORD 			dwTlsIndex;
+	NT_PEB			*Peb;   
 	DWORD			LastErrorCode;
 	NTSTATUS		LastStatusValue; 
 	DWORD			LockCount;
@@ -135,7 +159,7 @@ typedef struct _KTHREAD
 	PTRAP_FRAME		TrapFrame; 
 	PVOID			*Tls;
 	KWAIT_BLOCK		WaitBlock[4];	
-	struct _KMUTANT*			MutantList;
+	struct _KMUTANT*	MutantList;
 	PLIST_ENTRY		ApcList;
 	UCHAR			KernelApcDisable;
 	KTIMER			TimerBlock;
@@ -154,61 +178,19 @@ typedef struct _KTHREAD
 
 
 // According to documentation the stack should have a commited [ 1 page ] and
-// a reserved part [ 1 M ].
+// a reserved part [ 1 M ] but can be specified otherwise in the image file.
 
 typedef struct _INITIAL_TEB {
+	PVOID StackBase;
+    	PVOID StackLimit;
 	PVOID StackCommit;
+	PVOID StackCommitMax;
 	PVOID StackReserved;
 } INITIAL_TEB, *PINITIAL_TEB;
 
 
 
 
-//ThreadState defines the current state of a thread
-//FIXME I am allready defined in psmgr.h as a enum
-/*
-enum 
-{
-	THREAD_STATE_INITIALIZED = 0,
-	THREAD_STATE_READY,
-	THREAD_STATE_RUNNING,
-	THREAD_STATE_STANDBY,		
-	THREAD_STATE_TERMINATED,
-	THREAD_STATE_WAIT,		
-	THREAD_STATE_TRANSITION,	
-	THREAD_STATE_RESERVED 	
-};
-*/
-
-// wait reason only applies for threads in a wait state
-// part of this enum is double ???? 
-
-/*
-typedef _KWAIT_REASON
-{
-	WAIT_EXCECUTIVE1 = 0,
-	WAIT_FREE_PAGE1,
-	WAIT_PAGE_IN1,
-	WAIT_POOL_ALLOCATION1,
-	WAIT_EXECUTION_DELAY1,
-	WAIT_SUSPENDED_CONDITION1,
-	WAIT_USER_REQUEST1,
-	WAIT_EXCECUTIVE2, 
-	WAIT_FREE_PAGE2,
-	WAIT_PAGE_IN2,
-	WAIT_POOL_ALLOCATION2,
-	WAIT_EXECUTION_DELAY2,
-	WAIT_SUSPENDED_CONDITION2,
-	WAIT_USER_REQUEST2,
-	WAIT_EVENT_PAIR_HIGH,
-	WAIT_EVENT_PAIR_LOW, 
-	WAIT_LPC_RECEIVE,
-	WAIT_LPC_REPLY,
-	WAIT_VIRTUAL_MEMORY,
-	WAIT_PAGE_OUT
-} KWAIT_REASON;	
-
-*/
 
 
 // TopLevelIrp can be one of the following values:
@@ -259,19 +241,20 @@ typedef struct _ETHREAD {
 typedef struct _KPROCESS 
 {
    DISPATCHER_HEADER 	DispatcherHeader;
-   PVOID			PageTableDirectory; // FIXME: I shoud point to a PTD
+   PVOID		PageTableDirectory; // FIXME: I shoud point to a PTD
    TIME			ElapsedTime;
    TIME			KernelTime;
    TIME			UserTime;
-   LIST_ENTRY		InOutSwap;   // ??	
+   LIST_ENTRY		InMemoryList;  
+   LIST_ENTRY		SwappedOutList;   	
    KSPIN_LOCK		SpinLock;
    KAFFINITY		Affinity;
-   ULONG			StackCount;
+   ULONG		StackCount;
    KPRIORITY		BasePriority;
-   ULONG			DefaultThreadQuantum;
-   UCHAR			ProcessState;
-   ULONG			ThreadSeed;
-   UCHAR			DisableBoost;
+   ULONG		DefaultThreadQuantum;
+   UCHAR		ProcessState;
+   ULONG		ThreadSeed;
+   UCHAR		DisableBoost;
    
    /*
     * Added by David Welch (welch@mcmail.com)

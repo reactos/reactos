@@ -247,12 +247,16 @@ BOOLEAN MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
-NTSTATUS STDCALL NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
-					 OUT PVOID *BaseAddress,
-					 IN ULONG  ZeroBits,
-					 IN ULONG  RegionSize,
-					 IN ULONG  AllocationType, 
-					 IN ULONG  Protect)
+NTSTATUS
+STDCALL
+NtAllocateVirtualMemory( 
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID *BaseAddress,
+	IN ULONG  ZeroBits,
+	IN OUT PULONG  RegionSize,
+	IN ULONG  AllocationType, 
+	IN ULONG  Protect
+	)
 {
    return(ZwAllocateVirtualMemory(ProcessHandle,
 				  BaseAddress,
@@ -262,12 +266,16 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 				  Protect));
 }
 
-NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
-					 OUT PVOID *BaseAddress,
-					 IN ULONG  ZeroBits,
-					 IN ULONG  RegionSize,
-					 IN ULONG  AllocationType, 
-					 IN ULONG  Protect)
+NTSTATUS
+STDCALL
+ZwAllocateVirtualMemory( 
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID *BaseAddress,
+	IN ULONG  ZeroBits,
+	IN OUT PULONG  RegionSize,
+	IN ULONG  AllocationType, 
+	IN ULONG  Protect
+	)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -300,7 +308,6 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
    PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
    ULONG Type;
-   ULONG i;
    NTSTATUS Status;
    
    DbgPrint("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
@@ -336,7 +343,7 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
 	if (MemoryArea != NULL)
 	  {
 	     if (MemoryArea->BaseAddress == (*BaseAddress) &&
-		 MemoryArea->Length == RegionSize)
+		 MemoryArea->Length == *RegionSize)
 	       {
 		  MemoryArea->Type = Type;
 		  MemoryArea->Attributes =Protect;
@@ -347,7 +354,7 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
 	     MemoryArea = MmSplitMemoryArea(Process,
 					    MemoryArea,
 					    *BaseAddress,
-					    RegionSize,
+					    *RegionSize,
 					    Type,
 					    Protect);
 	     DbgPrint("*BaseAddress %x\n",*BaseAddress);
@@ -355,11 +362,14 @@ NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
 	  }
      }
    
+ //FIXME RegionSize should be passed as pointer
+
+
    Status = MmCreateMemoryArea(UserMode,
 			       Process,
 			       Type,
-			       (PULONG)BaseAddress,
-			       RegionSize,
+			       BaseAddress,
+			       *RegionSize,
 			       Protect,
 			       &MemoryArea);
    
@@ -406,7 +416,7 @@ NTSTATUS STDCALL ZwFlushVirtualMemory(IN HANDLE ProcessHandle,
 
 NTSTATUS STDCALL NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 				     IN PVOID  *BaseAddress,	
-				     IN ULONG  RegionSize,	
+				     IN PULONG  RegionSize,	
 				     IN ULONG  FreeType)
 {
    return(ZwFreeVirtualMemory(ProcessHandle,
@@ -417,7 +427,7 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
 NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
 				     IN PVOID  *BaseAddress,	
- 				     IN ULONG  RegionSize,	
+ 				     IN PULONG  RegionSize,	
 				     IN ULONG  FreeType)
 
 /*

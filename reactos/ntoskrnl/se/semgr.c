@@ -16,55 +16,149 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL NtQueryInformationToken(VOID)
+NTSTATUS
+STDCALL
+NtQueryInformationToken(  
+	IN HANDLE TokenHandle,     
+	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+	OUT PVOID TokenInformation,  
+  	IN ULONG TokenInformationLength,
+  	OUT PULONG ReturnLength       
+	)
 {
 }
 
-NTSTATUS STDCALL NtQuerySecurityObject(VOID)
+NTSTATUS
+STDCALL
+NtQuerySecurityObject(
+	IN HANDLE Object,
+	IN CINT SecurityObjectInformationClass,
+	OUT PVOID SecurityObjectInformation,
+	IN ULONG Length,
+	OUT PULONG ReturnLength
+	)
 {
 }
 
-NTSTATUS STDCALL NtSetSecurityObject(VOID)
+NTSTATUS
+STDCALL
+NtSetSecurityObject(
+	IN HANDLE Handle, 
+	IN SECURITY_INFORMATION SecurityInformation, 
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor 
+	)
 {
 }
 
-NTSTATUS STDCALL NtSetInformationToken(VOID)
+NTSTATUS
+STDCALL
+NtSetInformationToken(
+	IN HANDLE TokenHandle,            
+	IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+	OUT PVOID TokenInformation,       
+	IN ULONG TokenInformationLength   
+	)
 {
 }
 
-NTSTATUS STDCALL NtPrivilegeCheck(VOID)
+NTSTATUS
+STDCALL
+NtPrivilegeCheck(
+	IN HANDLE ClientToken,             
+	IN PPRIVILEGE_SET RequiredPrivileges,  
+	IN PBOOLEAN Result                    
+	)
 {
 }
 
-NTSTATUS STDCALL NtPrivilegedServiceAuditAlarm(VOID)
+NTSTATUS
+STDCALL
+NtPrivilegedServiceAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,	
+	IN PUNICODE_STRING ServiceName,	
+	IN HANDLE ClientToken,
+	IN PPRIVILEGE_SET Privileges,	
+	IN BOOLEAN AccessGranted 	
+	)
 {
 }
 
-NTSTATUS STDCALL NtPrivilegeObjectAuditAlarm(VOID)
+NTSTATUS
+STDCALL
+NtPrivilegeObjectAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PVOID HandleId,	
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAccess,
+	IN PPRIVILEGE_SET Privileges,
+	IN BOOLEAN AccessGranted 
+	)
 {
 }
 
-NTSTATUS STDCALL NtOpenObjectAuditAlarm(VOID)
+NTSTATUS
+STDCALL
+NtOpenObjectAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,	
+	IN PVOID HandleId,	
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN HANDLE ClientToken,	
+	IN ULONG DesiredAccess,	
+	IN ULONG GrantedAccess,	
+	IN PPRIVILEGE_SET Privileges,
+	IN BOOLEAN ObjectCreation,	
+	IN BOOLEAN AccessGranted,	
+	OUT PBOOLEAN GenerateOnClose 	
+	)
 {
 }
 
-NTSTATUS STDCALL NtOpenProcessToken(VOID)
+NTSTATUS
+STDCALL
+NtOpenProcessToken(  
+	IN HANDLE ProcessHandle, 
+	IN ACCESS_MASK DesiredAccess,  
+	OUT PHANDLE TokenHandle  
+	)
 {
 }
 
-NTSTATUS STDCALL NtOpenThreadToken(VOID)
+NTSTATUS
+STDCALL
+NtOpenThreadToken(  
+	IN HANDLE ThreadHandle,  
+  	IN ACCESS_MASK DesiredAccess,  
+  	IN BOOLEAN OpenAsSelf,     
+  	OUT PHANDLE TokenHandle  
+	)
 {
 }
 
-NTSTATUS STDCALL NtDuplicateToken(VOID)
+NTSTATUS
+STDCALL
+NtDuplicateToken(  
+	IN HANDLE ExistingToken, 
+  	IN ACCESS_MASK DesiredAccess, 
+ 	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+  	IN TOKEN_TYPE TokenType,  
+  	OUT PHANDLE NewToken     
+	)
 {
 }
+
 
 NTSTATUS STDCALL NtImpersonateClientOfPort(VOID)
 {
 }
 
-NTSTATUS STDCALL NtImpersonateThread(VOID)
+NTSTATUS
+STDCALL 
+NtImpersonateThread(
+	IN HANDLE ThreadHandle,
+	IN HANDLE ThreadToImpersonate,
+	IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
+	)
 {
 }
 
@@ -72,7 +166,13 @@ NTSTATUS STDCALL NtCreateToken(VOID)
 {
 }
 
-NTSTATUS STDCALL NtDeleteObjectAuditAlarm(VOID)
+NTSTATUS
+STDCALL
+NtDeleteObjectAuditAlarm ( 
+	IN PUNICODE_STRING SubsystemName, 
+	IN PVOID HandleId, 
+	IN BOOLEAN GenerateOnClose 
+	)
 {
 }
 
@@ -80,7 +180,7 @@ NTSTATUS STDCALL NtDeleteObjectAuditAlarm(VOID)
 NTSTATUS
 STDCALL
 NtAllocateLocallyUniqueId(
-	OUT PVOID LocallyUniqueId
+	OUT LUID *LocallyUniqueId
 	)
 {
 }
@@ -88,28 +188,92 @@ NtAllocateLocallyUniqueId(
 NTSTATUS
 STDCALL
 ZwAllocateLocallyUniqueId(
-	OUT PVOID LocallyUniqueId
+	OUT LUID *LocallyUniqueId
 	)
 {
 }
 
-NTSTATUS STDCALL NtAccessCheckAndAuditAlarm(VOID)
+NTSTATUS
+STDCALL
+NtAccessCheckAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PHANDLE ObjectHandle,	
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ACCESS_MASK DesiredAccess,	
+	IN PGENERIC_MAPPING GenericMapping,	
+	IN BOOLEAN ObjectCreation,	
+	OUT PULONG GrantedAccess,	
+	OUT PBOOLEAN AccessStatus,	
+	OUT PBOOLEAN GenerateOnClose 	
+	)
 {
 }
 
-NTSTATUS STDCALL NtAdjustGroupsToken(VOID)
+NTSTATUS 
+STDCALL 
+NtAdjustGroupsToken(
+	IN HANDLE TokenHandle,
+	IN BOOLEAN  ResetToDefault,	
+	IN PTOKEN_GROUPS  NewState, 
+	IN ULONG  BufferLength,	
+	OUT PTOKEN_GROUPS  PreviousState OPTIONAL,	
+	OUT PULONG  ReturnLength 	
+	)
 {
 }
 
-NTSTATUS STDCALL NtAdjustPrivilegesToken(VOID)
+NTSTATUS 
+STDCALL 
+NtAdjustPrivilegesToken(
+	IN HANDLE  TokenHandle,	
+	IN BOOLEAN  DisableAllPrivileges,
+	IN PTOKEN_PRIVILEGES  NewState,	
+	IN ULONG  BufferLength,	
+	OUT PTOKEN_PRIVILEGES  PreviousState,	
+	OUT PULONG ReturnLength 	
+	)
+{
+}
+NTSTATUS 
+STDCALL 
+ZwAdjustPrivilegesToken(
+	IN HANDLE  TokenHandle,	
+	IN BOOLEAN  DisableAllPrivileges,
+	IN PTOKEN_PRIVILEGES  NewState,	
+	IN ULONG  BufferLength,	
+	OUT PTOKEN_PRIVILEGES  PreviousState,	
+	OUT PULONG ReturnLength 	
+	)
 {
 }
 
-NTSTATUS STDCALL NtAllocateUuids(VOID)
+NTSTATUS 
+STDCALL 
+NtAllocateUuids(
+	PLARGE_INTEGER Time,
+	PULONG Version, // ???
+	PULONG ClockCycle
+	)
 {
 }
 
-NTSTATUS STDCALL NtCloseObjectAuditAlarm(VOID)
+NTSTATUS 
+STDCALL 
+ZwAllocateUuids(
+	PLARGE_INTEGER Time,
+	PULONG Version, // ???
+	PULONG ClockCycle
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+NtCloseObjectAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,	
+	IN PVOID HandleId,	
+	IN BOOLEAN GenerateOnClose 	
+	)
 {
 }
 
@@ -118,12 +282,12 @@ STDCALL
 NtAccessCheck(
 	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN HANDLE ClientToken,
-	IN ULONG DesiredAcces,
+	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
 	OUT PRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
-	OUT PULONG AccessStatus
+	OUT PBOOLEAN AccessStatus
 	)
 {
 }
@@ -133,12 +297,12 @@ STDCALL
 ZwAccessCheck(
 	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN HANDLE ClientToken,
-	IN ULONG DesiredAcces,
+	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
 	OUT PRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
-	OUT PULONG AccessStatus
+	OUT PBOOLEAN AccessStatus
 	)
 {
 }

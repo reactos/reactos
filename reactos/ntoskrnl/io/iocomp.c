@@ -1,11 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
+ * FILE:            ntoskrnl/ke/iocomp.c
+ * PURPOSE:         
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+		    Changed NtQueryIoCompletion 
  */
 
 /* INCLUDES *****************************************************************/
@@ -58,10 +59,30 @@ ZwOpenIoCompletion(
 {
 }
 
-NTSTATUS STDCALL NtQueryIoCompletion(VOID)
+NTSTATUS
+STDCALL
+NtQueryIoCompletion(
+	IN HANDLE CompletionPort,
+	IN ULONG CompletionKey,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PULONG NumberOfBytesTransferred
+	)
 {
+	
+return ZwQueryIoCompletion(CompletionPort,CompletionKey,IoStatusBlock,NumberOfBytesTransferred);
+
 }
 
+NTSTATUS
+STDCALL
+ZwQueryIoCompletion(
+	IN HANDLE CompletionPort,
+	IN ULONG CompletionKey,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PULONG NumberOfBytesTransferred
+	)
+{
+}
 NTSTATUS
 STDCALL
 NtRemoveIoCompletion(
@@ -69,7 +90,7 @@ NtRemoveIoCompletion(
 	OUT PULONG CompletionKey,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PULONG CompletionStatus,
-	ULONG WaitTime 
+	PLARGE_INTEGER WaitTime 
 	)
 {
 }
@@ -81,7 +102,7 @@ ZwRemoveIoCompletion(
 	OUT PULONG CompletionKey,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PULONG CompletionStatus,
-	ULONG WaitTime 
+	PLARGE_INTEGER WaitTime 
 	)
 {
 }

@@ -66,9 +66,11 @@ static unsigned int cursorx=0, cursory=0;
 
 static unsigned int lines_seen = 0;
 
-#define NR_ROWS     25
+//#define NR_ROWS     25
+#define NR_ROWS     50
 #define NR_COLUMNS  80
 #define VIDMEM_BASE 0xb8000
+
 
 /*
  * PURPOSE: Points to the base of text mode video memory
@@ -189,7 +191,7 @@ static void putchar(char c)
 	
       default:
 	vidmem[(cursorx*2) + (cursory*80*2)]=c;
-	vidmem[(cursorx*2) + (cursory*80*2)+1]=0x7;
+        vidmem[(cursorx*2) + (cursory*80*2)+1]=0x17;
 	cursorx++;
 	if (cursorx>=NR_COLUMNS)
 	  {
@@ -208,7 +210,7 @@ static void putchar(char c)
         for (i=0;str[i]!=0;i++)
         {
                 vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2]=str[i];
-                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2+1]=0x7;
+                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2+1]=0x37; // 17 for white on blue 37
         }
 
         while (inb_p(0x60)!=0x81);
@@ -221,7 +223,7 @@ static void putchar(char c)
 	memcpy(vidmem,&vidmem[NR_COLUMNS*2],
 	       NR_COLUMNS*(NR_ROWS-1)*2);
 	memset(&vidmem[NR_COLUMNS*(NR_ROWS-1)*2],0,NR_COLUMNS*2);
-	cursory=NR_ROWS-1;
+        cursory=NR_ROWS-1;
      }
    
    /*

@@ -62,7 +62,7 @@ wchar_t* wcsrchr(const wchar_t* str, wchar_t ch)
      {
 	if (str[len-1]==ch)
 	  {
-	     return(&str[len-1]);
+	     return((wchar_t*)&str[len-1]);
 	  }
      }
    return(NULL);
@@ -92,23 +92,41 @@ wchar_t * wcscpy(wchar_t * str1,const wchar_t * str2)
 	     return(0);
 	  }
      }
-   return( (*str1) - (*str2) );
+   return(wchar_t *)( (*str1) - (*str2) );
 }
+
 
 unsigned long wstrlen(PWSTR s)
 {
-        WCHAR c=' ';
+    return wcslen(s);
+}
+
+#ifndef __MACHINE_STRING_FUNCTIONS
+
+size_t wcslen(const wchar_t * s)
+{
+      
         unsigned int len=0;
 
-        while(c!=0) {
-                c=*s;
-                s++;
+        while(s[len]!=0) {
                 len++;
         };
-        s-=len;
-
-        return len-1;
+        return len;
 }
+#else
+size_t wcslen(const wchar_t * s)
+{
+register int __res;
+__asm__ __volatile__(
+	"cld\n\t"
+	"repne\n\t"
+	"scasw\n\t"
+	"notl %0\n\t"
+	"decl %0"
+	:"=c" (__res):"D" (s),"a" (0),"0" (0xffffffff):"edi");
+return __res;
+}
+#endif
 
 inline int wcscmp(const wchar_t* cs,const wchar_t * ct)
 {
@@ -128,6 +146,64 @@ __asm__ __volatile__(
 	:"=a" (__res):"S" (cs),"D" (ct):"esi","edi");
 return __res;
 }
+
+int wcsicmp(const wchar_t* cs,const wchar_t * ct)
+{
+register int __res;
+
+
+__asm__ __volatile__(
+	"cld\n"
+	"1:\tmovw (%%esi), %%eax\n\t"
+	"movw  (%%edi), %%edx \n\t"
+	"cmpw $0x5A, %%eax\n\t"
+	"ja 2f\t\n"
+	"cmpw $0x40, %%eax\t\n"
+        "jbe 2f\t\n"
+        "addw $0x20, %%eax\t\n"
+	"2:\t cmpw $0x5A, %%edx\t\n"
+	"ja 3f\t\n"
+	"cmpw $0x40, %%edx\t\n"
+        "jbe 3f\t\n"
+        "addw $0x20, %%edx\t\n"
+	"3:\t inc %%esi\t\n"
+	"inc %%esi\t\n"
+	"inc %%edi\t\n"
+	"inc %%edi\t\n"
+	"cmpw %%eax, %%edx\t\n"
+	"jne 4f\n\t"  
+	"cmpw $00, %%eax\n\t"
+	"jne 1b\n\t"
+	"xorl %%eax,%%eax\n\t"
+	"jmp 5f\n"
+	"4:\tsbbl %%eax,%%eax\n\t"
+	"orw $1,%%eax\n"
+	"5:"
+	:"=a" (__res):"S" (cs),"D" (ct):"esi","edi");
+	
+return __res;
+}
+
+wchar_t * wcscat(wchar_t * dest,const wchar_t * src)
+{
+__asm__ __volatile__(
+	"cld\n\t"
+	"repnz\n\t"  
+	"scasw\n\t"  
+	"decl %1\n"
+	"decl %1\n\t"  
+	"1:\tlodsw\n\t" 
+	"stosw\n\t"	
+	"testw %%eax,%%eax\n\t"
+	"jne 1b"
+	: // no output 
+	:"S" (src),"D" (dest),"a" (0),"c" (0xffffffff):"esi","edi","eax","ecx");
+return dest;
+}
+
+
+
+
 
 #ifdef __MACHINE_STRING_FUNCTIONS
 /*
@@ -196,7 +272,7 @@ __asm__ __volatile__(
 	:"S" (src),"D" (dest),"c" (count):"esi","edi","eax","ecx","memory");
 return dest;
 }
-
+/*
 #define __HAVE_ARCH_WCSCAT
 inline wchar_t * wcscat(wchar_t * dest,const wchar_t * src)
 {
@@ -210,11 +286,11 @@ __asm__ __volatile__(
 	"stosw\n\t"	
 	"testw %%eax,%%eax\n\t"
 	"jne 1b"
-	: /* no output */
+	: // no output 
 	:"S" (src),"D" (dest),"a" (0),"c" (0xffffffff):"esi","edi","eax","ecx");
 return dest;
 }
-
+*/
 #define __HAVE_ARCH_WCSNCAT
 inline wchar_t * wcsncat(wchar_t * dest,const wchar_t * src,size_t count)
 {
@@ -410,7 +486,7 @@ __asm__ __volatile__(
 return __res;
 }
 
-
+/*
 #define __HAVE_ARCH_WCSLEN
 inline size_t wcslen(const wchar_t * s)
 {
@@ -425,7 +501,7 @@ __asm__ __volatile__(
 return __res;
 }
 
-
+*/
 
 #define __HAVE_ARCH_WCSTOK
 
@@ -499,7 +575,7 @@ return __res;
 }
 
 
-#define __HAVE_ARCH_WCSNNLEN
+#define __HAVE_ARCH_WCSNLEN
 inline size_t wcsnlen(const wchar_t * s, size_t count)
 {
 register int __res;
@@ -520,7 +596,7 @@ return __res;
 }
 
 
-
+/*
 #define __HAVE_ARCH_WCSICMP
 inline int wcsicmp(const wchar_t* cs,const wchar_t * ct)
 {
@@ -559,7 +635,7 @@ __asm__ __volatile__(
 return __res;
 }
 
-
+*/
 #define __HAVE_ARCH_WCSNICMP
 inline int wcsnicmp(const wchar_t* cs,const wchar_t * ct, size_t count)
 {

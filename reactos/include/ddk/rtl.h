@@ -153,6 +153,8 @@ LONG RtlCompareString(PSTRING String1, PSTRING String2,
 LONG RtlCompareUnicodeString(PUNICODE_STRING String1,
 			     PUNICODE_STRING String2,
 			     BOOLEAN BaseInsensitive);
+LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
+LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
 VOID RtlCopyBytes(PVOID Destination, CONST VOID* Source, ULONG Length);
 VOID RtlCopyMemory(VOID* Destination, VOID* Source, ULONG Length);
 VOID RtlCopyString(PSTRING DestinationString, PSTRING SourceString);
@@ -165,12 +167,27 @@ NTSTATUS RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 NTSTATUS RtlDeleteRegistryValue(ULONG RelativeTo,
 				PWSTR Path,
 				PWSTR ValueName);
+LARGE_INTEGER RtlEnlargedIntegerMultiply(LONG Multiplicand,
+					 LONG Multiplier);
+ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
+				ULONG Divisor,
+				PULONG Remainder);
+LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
+					  ULONG Multiplier);
 BOOLEAN RtlEqualString(PSTRING String1,
 		       PSTRING String2,
 		       BOOLEAN CaseInSensitive);
 BOOLEAN RtlEqualUnicodeString(PUNICODE_STRING String1,
 			      PUNICODE_STRING String2,
 			      BOOLEAN CaseInSensitive);
+LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
+					 LONG Multiplier);
+LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
+					    ULONG Divisor,
+					    PULONG Remainder);
+LARGE_INTEGER RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
+				     LARGE_INTEGER MagicDivisor,
+				     CCHAR ShiftCount);
 VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill);
 VOID RtlFreeAnsiString(PANSI_STRING AnsiString);
 VOID RtlFreeUnicodeString(PUNICODE_STRING UnicodeString);
@@ -182,8 +199,13 @@ VOID RtlInitUnicodeString(PUNICODE_STRING DestinationString,
 NTSTATUS RtlIntegerToUnicodeString(ULONG Value,
 				   ULONG Base,
 				   PUNICODE_STRING String);
+LARGE_INTEGER RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
+				 LARGE_INTEGER Addend2);
+VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
+			LARGE_INTEGER Source,
+			LARGE_INTEGER Mask);
 
-/**  LARGE_INTEGER Functions  *******************************************/
+/* MISSING FUNCTIONS GO HERE */
 LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
 LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
 LARGE_INTEGER RtlEnlargedIntegerMultiply(LONG Multiplicand,
@@ -239,8 +261,6 @@ LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
 					CCHAR ShiftCount);
 LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
 				      LARGE_INTEGER Subtrahend);
-
-/* MISSING FUNCTIONS GO HERE */
 
 ULONG RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor);
 VOID RtlMoveMemory(PVOID Destination, CONST VOID* Source, ULONG Length);
@@ -322,6 +342,11 @@ NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
 
 VOID RtlStoreUlong(PULONG Address,
 		   ULONG Value);
+
+
+DWORD RtlNtStatusToDosError(NTSTATUS StatusCode);
+
+
 
 
 

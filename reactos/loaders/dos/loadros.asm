@@ -384,6 +384,7 @@ last_addr dw 0
 ; Generic error message
 ;
 err_msg db 'Error during operation',0
+rostitle db '',0
 
 ;
 ;
@@ -453,6 +454,50 @@ _to_pmode:
         ;
         ; Save cursor position
         ;
+        mov     ax,3          ;! Reset video mode
+        int     10h
+
+
+        mov     bl,10
+        mov     ah,12
+        int     10h
+        
+        mov     ax,1112h      ;! Use 8x8 font
+	xor	bl,bl
+        int     10h
+        mov     ax,1200h      ;! Use alternate print screen
+        mov     bl,20h
+        int     10h
+        mov     ah,1h         ;! Define cursor (scan lines 6 to 7)
+        mov     cx,0607h
+        int     10h
+
+        mov     ah,1
+        mov     cx,0600h
+        int     10h
+
+        MOV       AH,6        ;SCROLL ACTIVE PAGE UP
+        MOV       AL,32H     ;CLEAR 25 LINES
+        MOV       CX,0H       ;UPPER LEFT OF SCROLL
+        MOV       DX,314FH    ;LOWER RIGHT OF SCROLL
+        MOV       BH,1*10h+1       ;USE NORMAL ATTRIBUTE ON BLANKED LINE
+        INT       10H         ;VIDEO-IO
+
+
+        mov     dx,0
+        mov     dh,0
+
+        mov     ah,02h
+        mov     bh,0
+        int     10h
+
+        mov     dx,0
+        mov     dh,0
+
+        mov     ah,02h
+        mov     bh,0
+        int     010h
+          
         mov     ah,03h
         mov     bh,0h
         int     010h
@@ -460,7 +505,6 @@ _to_pmode:
         mov     [_cursorx],eax
         movzx   eax,dh
         mov     [_cursory],eax
-
 
         mov     bx,ds
         movzx   eax,bx

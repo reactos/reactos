@@ -1,4 +1,12 @@
-
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            include/kernel32/atom.h
+ * PURPOSE:         Include file for lib/kernel32/atom.c
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
+ */
 /********************************************************************
 
 
@@ -24,7 +32,7 @@ Cambridge, MA 02139, USA.
 #define Atoms__h
 
 #include <windows.h>
-#include <ctype.h>
+//#include <ctype.h>
 //#include <types.h>
 
 
@@ -40,18 +48,11 @@ typedef ATOMENTRY *LPATOMENTRY;
 
 typedef struct {
 	ATOMENTRY 	*AtomTable;	/* pointer to table data 	*/
-	wchar_t		*AtomData;	/* pointer to name data 	*/
+	WCHAR		*AtomData;	/* pointer to name data 	*/
 	unsigned long	 TableSize;	/* number items in this table   */
 	unsigned long	 DataSize;	/* space used by string data    */
 	LPVOID		 lpDrvData;
 } ATOMTABLE;
 typedef ATOMTABLE *LPATOMTABLE;
-
-
-
-
-
-
-
 
 #endif /* Atoms__h */

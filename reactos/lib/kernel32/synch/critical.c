@@ -35,6 +35,7 @@ VOID LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
 }
 
-BOOL TryEntryCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+WINBOOL TryEntryCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
 }
+

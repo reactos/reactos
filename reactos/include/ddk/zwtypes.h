@@ -265,8 +265,8 @@ typedef struct _OBJECT_NAME_INFORMATION
 
 typedef struct _OBJECT_DATA_INFORMATION 
 {
-	BOOL bInheritHanlde;
-	BOOL bProtectFromClose;
+	BOOLEAN bInheritHandle;
+	BOOLEAN bProtectFromClose;
 } OBJECT_DATA_INFORMATION,  *POBJECT_DATA_INFORMATION;
 
 

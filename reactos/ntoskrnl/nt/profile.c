@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * FILE:            ntoskrnl/nt/Profile.c
+ * PURPOSE:         
+ * PROGRAMMER:      
  * UPDATE HISTORY:
- *                  Created 22/05/98
+ *                  
  */
 
 /* INCLUDES *****************************************************************/
@@ -16,22 +16,52 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtCreateProfile(VOID)
+NTSTATUS 
+STDCALL
+NtCreateProfile(
+	OUT PHANDLE ProfileHandle, 
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG ImageBase, 
+	IN ULONG ImageSize, 
+	IN ULONG Granularity,
+	OUT PVOID Buffer, 
+	IN ULONG ProfilingSize,
+	IN ULONG ClockSource,
+	IN ULONG ProcessorMask 
+	)
 {
 }
 
-NTSTATUS STDCALL NtQueryIntervalProfile(VOID)
+NTSTATUS
+STDCALL
+NtQueryIntervalProfile(
+	OUT PULONG Interval,
+	OUT PULONG ClockSource
+	)
 {
 }
 
-NTSTATUS STDCALL NtSetIntervalProfile(VOID)
+NTSTATUS 
+STDCALL
+NtSetIntervalProfile(
+	IN ULONG Interval,
+	IN ULONG ClockSource
+	)
 {
 }
 
-NTSTATUS STDCALL NtStartProfile(VOID)
+NTSTATUS
+STDCALL
+NtStartProfile(
+	IN HANDLE ProfileHandle
+	)
 {
 }
 
-NTSTATUS STDCALL NtStopProfile(VOID)
+NTSTATUS
+STDCALL
+NtStopProfile(
+	IN HANDLE ProfileHandle
+	)
 {
 }

@@ -101,9 +101,9 @@ HLOCAL WINAPI LocalReAlloc(HLOCAL hmem, UINT size, UINT flags)
 /*********************************************************************
 *                    LocalFree  --  KERNEL32                         *
 *********************************************************************/
-HLOCAL WINAPI LocalFree(HLOCAL hmem)
+HLOCAL WINAPI LocalHeapFree(GetProcessHeap(),0,HLOCAL hmem)
 {
-   return (HLOCAL) GlobalFree( (HGLOBAL) hmem );
+   return (HLOCAL) GlobalHeapFree(GetProcessHeap(),0, (HGLOBAL) hmem );
 }
 
 /*********************************************************************
