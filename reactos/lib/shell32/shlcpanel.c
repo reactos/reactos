@@ -52,7 +52,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /***********************************************************************
-*   IShellFolder implementation
+*   control panel implementation in shell namespace
 */
 
 typedef struct {
