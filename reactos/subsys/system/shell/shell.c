@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.6 2001/06/18 03:02:43 phreak Exp $
+/* $Id: shell.c,v 1.7 2001/07/30 11:50:44 ea Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -175,12 +175,12 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
      {
 	if (ret)
 	  {
-	     debug_printf("%s detached:\n"
+	     debug_printf("\"%s\" detached:\n"
 			  "\thProcess = %08X\n"
 			  "\thThread  = %08X\n"
 			  "\tPID      = %d\n"
 			  "\tTID      = %d\n\n",
-			  name,
+			  fullname,
 			  ProcessInformation.hProcess,
 			  ProcessInformation.hThread,
 			  ProcessInformation.dwProcessId,
@@ -240,7 +240,7 @@ ExecuteKill(char * lpPid)
 	DWORD	dwProcessId;
 
 	dwProcessId = (DWORD) atol(lpPid);
-	debug_printf("dwProcessId %d\n",dwProcessId);
+	debug_printf("Killing PID %d...\n",dwProcessId);
 	hProcess = OpenProcess(
 			PROCESS_TERMINATE,
 			FALSE,
