@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.12 2002/09/13 18:58:36 hbirr Exp $
+/* $Id: time.c,v 1.13 2002/09/27 15:23:03 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -117,7 +117,7 @@ RtlTimeToTimeFields (
   CurYear--; /* The next calculation needs CurYear - 1 */
   Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
   CurYear++;
-  Days -= EPOCHYEAR - EPOCHYEAR / 4 + EPOCHYEAR / 100 - EPOCHYEAR / 400;
+  Days -= EPOCHYEAR - 1 - (EPOCHYEAR -1) / 4 + (EPOCHYEAR -1) / 100 - (EPOCHYEAR - 1) / 400;
   while (1)
     {
       LeapYear = IsLeapYear(CurYear);
@@ -131,6 +131,7 @@ RtlTimeToTimeFields (
   TimeFields->Year = (CSHORT) CurYear;
 
     /* Compute month of year */
+  LeapYear = IsLeapYear(CurYear);
   Months = MonthLengths[LeapYear];
   for (CurMonth = 0; Days >= (long) Months[CurMonth]; CurMonth++)
     Days = Days - (long) Months[CurMonth];
