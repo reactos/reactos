@@ -29,6 +29,10 @@
 
 #include <syssetup.h>
 
+#include <shlobj.h>
+#include <objidl.h>
+#include <shlwapi.h>
+
 #define DEBUG
 
 typedef DWORD STDCALL (*PINSTALL_REACTOS)(HINSTANCE hInstance);
@@ -50,6 +54,74 @@ LPTSTR lstrchr(LPCTSTR s, TCHAR c)
     return (LPTSTR)s;
 
   return (LPTSTR)NULL;
+}
+
+
+HRESULT CreateShellLink(LPCSTR linkPath, LPCSTR cmd, LPCSTR arg, LPCSTR dir, LPCSTR iconPath, int icon_nr, LPCSTR comment)
+{
+  IShellLinkA* psl;
+  IPersistFile* ppf;
+  WCHAR buffer[MAX_PATH];
+
+  HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
+
+  if (SUCCEEDED(hr))
+    {
+      hr = psl->lpVtbl->SetPath(psl, cmd);
+
+      if (arg)
+        {
+          hr = psl->lpVtbl->SetArguments(psl, arg);
+        }
+
+      if (dir)
+        {
+          hr = psl->lpVtbl->SetWorkingDirectory(psl, dir);
+        }
+
+      if (iconPath)
+        {
+          hr = psl->lpVtbl->SetIconLocation(psl, iconPath, icon_nr);
+        }
+
+      if (comment)
+        {
+          hr = psl->lpVtbl->SetDescription(psl, comment);
+        }
+
+      hr = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+
+      if (SUCCEEDED(hr))
+        {
+          MultiByteToWideChar(CP_ACP, 0, linkPath, -1, buffer, MAX_PATH);
+
+          hr = ppf->lpVtbl->Save(ppf, buffer, TRUE);
+
+          ppf->lpVtbl->Release(ppf);
+        }
+
+      psl->lpVtbl->Release(psl);
+    }
+
+  return hr;
+}
+
+
+static VOID
+CreateCmdLink()
+{
+  char path[MAX_PATH];
+  LPSTR p;
+
+  CoInitialize(NULL);
+
+  SHGetSpecialFolderPathA(0, path, CSIDL_DESKTOP, TRUE);
+  p = PathAddBackslashA(path);
+
+  strcpy(p, "Command Prompt.lnk");
+  CreateShellLink(path, "cmd.exe", "", NULL, NULL, 0, "Open command prompt");
+
+  CoUninitialize();
 }
 
 
@@ -85,6 +157,8 @@ RunNewSetup (HINSTANCE hInstance)
   InstallReactOS (hInstance);
 
   FreeLibrary (hDll);
+
+  CreateCmdLink();
 }
 
 
