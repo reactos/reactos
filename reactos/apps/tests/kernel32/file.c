@@ -1,7 +1,7 @@
 /*
  * Unit tests for file functions in Wine
  *
- * Copyright (c) 2002 Jakob Eriksson
+ * Copyright (c) 2002, 2004 Jakob Eriksson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,15 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+
+static int dll_capable(const char *dll, const char *function)
+{
+    HMODULE module = GetModuleHandleA(dll);
+    if (!module) return 0;
+
+    return (GetProcAddress(module, function) != NULL);
+}
+
 
 LPCSTR filename = "testfile.xxx";
 LPCSTR sillytext =
@@ -270,9 +279,8 @@ static void test__lcreat( void )
     } else { /* only NT succeeds */
       _lclose(filehandle);
       find=FindFirstFileA (slashname, &search_results);
-      if (INVALID_HANDLE_VALUE==find)
-        ok (0, "file \"%s\" not found\n", slashname);
-      else {
+      if (INVALID_HANDLE_VALUE!=find)
+      {
         ok (0!=FindClose (find), "FindClose complains (%ld)\n", GetLastError ());
         slashname[strlen(slashname)-1]=0;
         ok (!strcmp (slashname, search_results.cFileName),
@@ -597,6 +605,7 @@ static void test_CreateFileW(void)
     HANDLE hFile;
     WCHAR temp_path[MAX_PATH];
     WCHAR filename[MAX_PATH];
+    static const WCHAR emptyW[]={'\0'};
     static const WCHAR prefix[] = {'p','f','x',0};
     DWORD ret;
 
@@ -616,24 +625,54 @@ static void test_CreateFileW(void)
 
     ret = DeleteFileW(filename);
     ok(ret, "DeleteFileW: error %ld\n", GetLastError());
+
+    hFile = CreateFileW(NULL, GENERIC_READ, 0, NULL,
+                        CREATE_NEW, FILE_FLAG_RANDOM_ACCESS, 0);
+    ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
+       "CreateFileW(NULL) returned ret=%p error=%ld\n",hFile,GetLastError());
+
+    hFile = CreateFileW(emptyW, GENERIC_READ, 0, NULL,
+                        CREATE_NEW, FILE_FLAG_RANDOM_ACCESS, 0);
+    ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
+       "CreateFileW(\"\") returned ret=%p error=%ld\n",hFile,GetLastError());
 }
 
-
-static void test_GetTempFileNameA() {
+static void test_GetTempFileNameA()
+{
     UINT result;
     char out[MAX_PATH];
-    char *expected = "c:\\windows\\abc2.tmp";
+    char expected[MAX_PATH + 10];
+    char windowsdir[MAX_PATH + 10];
+    char windowsdrive[3];
 
-    /* this test may depend on the config file settings */
-    result = GetTempFileNameA("C:", "abc", 1, out);
-    ok( result != 0, "GetTempFileNameA: error %ld\n", GetLastError() );
-    ok( ((out[0] == 'C') && (out[1] == ':')) && (out[2] == '\\'), "GetTempFileNameA: first three characters should be C:\\, string was actually %s\n", out );
+    result = GetWindowsDirectory(windowsdir, sizeof(windowsdir));
+    ok(result < sizeof(windowsdir), "windowsdir is abnormally long!\n");
+    ok(result != 0, "GetWindowsDirectory: error %ld\n", GetLastError());
 
-    result = GetTempFileNameA("c:\\windows\\", "abc", 2, out);
-    ok( result != 0, "GetTempFileNameA: error %ld\n", GetLastError() );
-    ok( lstrcmpiA( out, expected ) == 0, "GetTempFileNameA: Unexpected output \"%s\" vs \"%s\"\n", out, expected );
+    /* If the Windows directory is the root directory, it ends in backslash, not else. */
+    if (strlen(windowsdir) != 3) /* As in  "C:\"  or  "F:\"  */
+    {
+        strcat(windowsdir, "\\");
+    }
+
+    windowsdrive[0] = windowsdir[0];
+    windowsdrive[1] = windowsdir[1];
+    windowsdrive[2] = '\0';
+
+    result = GetTempFileNameA(windowsdrive, "abc", 1, out);
+    ok(result != 0, "GetTempFileNameA: error %ld\n", GetLastError());
+    ok(((out[0] == windowsdrive[0]) && (out[1] == ':')) && (out[2] == '\\'),
+       "GetTempFileNameA: first three characters should be %c:\\, string was actually %s\n",
+       windowsdrive[0], out);
+
+    result = GetTempFileNameA(windowsdir, "abc", 2, out);
+    ok(result != 0, "GetTempFileNameA: error %ld\n", GetLastError());
+    expected[0] = '\0';
+    strcat(expected, windowsdir);
+    strcat(expected, "abc2.tmp");
+    ok(lstrcmpiA(out, expected) == 0, "GetTempFileNameA: Unexpected output \"%s\" vs \"%s\"\n",
+       out, expected);
 }
-
 
 static void test_DeleteFileA( void )
 {
@@ -648,12 +687,18 @@ static void test_DeleteFileA( void )
     ok(!ret && (GetLastError() == ERROR_PATH_NOT_FOUND ||
                 GetLastError() == ERROR_BAD_PATHNAME),
        "DeleteFileA(\"\") returned ret=%d error=%ld\n",ret,GetLastError());
+
+    ret = DeleteFileA("nul");
+    ok(!ret && (GetLastError() == ERROR_FILE_NOT_FOUND ||
+                GetLastError() == ERROR_INVALID_PARAMETER ||
+                GetLastError() == ERROR_ACCESS_DENIED),
+       "DeleteFileA(\"nul\") returned ret=%d error=%ld\n",ret,GetLastError());
 }
 
 static void test_DeleteFileW( void )
 {
     BOOL ret;
-    WCHAR emptyW[]={'\0'};
+    static const WCHAR emptyW[]={'\0'};
 
     ret = DeleteFileW(NULL);
     if (ret==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
@@ -702,14 +747,13 @@ static void test_MoveFileA(void)
     lstrcpyA(source, dest);
     lstrcpyA(dest, tempdir);
     lstrcatA(dest, "\\wild?.*");
+    /* FIXME: if we create a file with wildcards we can't delete it now that DeleteFile works correctly */
     ret = MoveFileA(source, dest);
-    todo_wine {
-      ok(!ret, "MoveFileA: shouldn't move to wildcard file\n");
-      ok(GetLastError() == ERROR_INVALID_NAME,
-              "MoveFileA: with wildcards, unexpected error %ld\n", GetLastError());
-#if 0
-      if (ret || (GetLastError() != ERROR_INVALID_NAME))
-      {
+    ok(!ret, "MoveFileA: shouldn't move to wildcard file\n");
+    ok(GetLastError() == ERROR_INVALID_NAME,
+       "MoveFileA: with wildcards, unexpected error %ld\n", GetLastError());
+    if (ret || (GetLastError() != ERROR_INVALID_NAME))
+    {
         WIN32_FIND_DATAA fd;
         char temppath[MAX_PATH];
         HANDLE hFind;
@@ -730,14 +774,11 @@ static void test_MoveFileA(void)
           while (FindNextFileA(hFind, &fd));
           FindClose(hFind);
         }
-      }
-#endif
-      ret = DeleteFileA(source);
-      ok(ret, "DeleteFileA: error %ld\n", GetLastError());
-      ret = DeleteFileA(dest);
-      ok(!ret, "DeleteFileA: error %ld\n", GetLastError());
     }
-
+    ret = DeleteFileA(source);
+    ok(ret, "DeleteFileA: error %ld\n", GetLastError());
+    ret = DeleteFileA(dest);
+    ok(!ret, "DeleteFileA: error %ld\n", GetLastError());
     ret = RemoveDirectoryA(tempdir);
     ok(ret, "DeleteDirectoryA: error %ld\n", GetLastError());
 }
@@ -803,7 +844,7 @@ static void test_offset_in_overlapped_structure(void)
     if (rc || GetLastError()!=ERROR_INVALID_PARAMETER) {
         ok(rc, "WriteFile error %ld\n", GetLastError());
         ok(done == sizeof(pattern), "expected number of bytes written %lu\n", done);
-        trace("Current offset = %04lx\n", SetFilePointer(hFile, 0, NULL, FILE_CURRENT));
+        /*trace("Current offset = %04lx\n", SetFilePointer(hFile, 0, NULL, FILE_CURRENT));*/
         ok(SetFilePointer(hFile, 0, NULL, FILE_CURRENT) == (PATTERN_OFFSET + sizeof(pattern)),
            "expected file offset %d\n", PATTERN_OFFSET + sizeof(pattern));
 
@@ -832,7 +873,7 @@ static void test_offset_in_overlapped_structure(void)
     if (rc || GetLastError()!=ERROR_INVALID_PARAMETER) {
         ok(rc, "ReadFile error %ld\n", GetLastError());
         ok(done == sizeof(pattern), "expected number of bytes read %lu\n", done);
-        trace("Current offset = %04lx\n", SetFilePointer(hFile, 0, NULL, FILE_CURRENT));
+        /*trace("Current offset = %04lx\n", SetFilePointer(hFile, 0, NULL, FILE_CURRENT));*/
         ok(SetFilePointer(hFile, 0, NULL, FILE_CURRENT) == (PATTERN_OFFSET + sizeof(pattern)),
            "expected file offset %d\n", PATTERN_OFFSET + sizeof(pattern));
         ok(!memcmp(buf, pattern, sizeof(pattern)), "pattern match failed\n");
@@ -848,6 +889,9 @@ static void test_LockFile(void)
     HANDLE handle;
     DWORD written;
     OVERLAPPED overlapped;
+    int limited_LockFile;
+    int limited_UnLockFile;
+    int lockfileex_capable;
 
     handle = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
                           FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -861,7 +905,12 @@ static void test_LockFile(void)
 
     ok( LockFile( handle, 0, 0, 0, 0 ), "LockFile failed\n" );
     ok( UnlockFile( handle, 0, 0, 0, 0 ), "UnlockFile failed\n" );
-    ok( !UnlockFile( handle, 0, 0, 0, 0 ), "UnlockFile succeeded\n" );
+
+    limited_UnLockFile = 0;
+    if (UnlockFile( handle, 0, 0, 0, 0 ))
+    {
+        limited_UnLockFile = 1;
+    }
 
     ok( LockFile( handle, 10, 0, 20, 0 ), "LockFile 10,20 failed\n" );
     /* overlapping locks must fail */
@@ -878,18 +927,39 @@ static void test_LockFile(void)
     overlapped.Offset = 100;
     overlapped.OffsetHigh = 0;
     overlapped.hEvent = 0;
-    ok( LockFileEx( handle, 0, 0, 100, 0, &overlapped ), "LockFileEx 100,100 failed\n" );
+
+    lockfileex_capable = dll_capable("kernel32", "LockFileEx");
+    if (lockfileex_capable)
+    {
+        /* Test for broken LockFileEx a la Windows 95 OSR2. */
+        if (LockFileEx( handle, 0, 0, 100, 0, &overlapped ))
+        {
+            /* LockFileEx is probably OK, test it more. */
+            ok( LockFileEx( handle, 0, 0, 100, 0, &overlapped ),
+                "LockFileEx 100,100 failed\n" );
+	}
+    }
+
     /* overlapping shared locks are OK */
     overlapped.Offset = 150;
-    ok( LockFileEx( handle, 0, 0, 100, 0, &overlapped ), "LockFileEx 150,100 failed\n" );
+    limited_UnLockFile || ok( LockFileEx( handle, 0, 0, 100, 0, &overlapped ), "LockFileEx 150,100 failed\n" );
+
     /* but exclusive is not */
-    ok( !LockFileEx( handle, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY, 0, 50, 0, &overlapped ),
-        "LockFileEx exclusive 150,50 succeeded\n" );
-    ok( UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 150,100 failed\n" );
-    ok( !UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 150,100 again succeeded\n" );
-    overlapped.Offset = 100;
-    ok( UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 100,100 failed\n" );
-    ok( !UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 100,100 again succeeded\n" );
+    if (lockfileex_capable)
+    {
+        ok( !LockFileEx( handle, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY,
+                         0, 50, 0, &overlapped ),
+                         "LockFileEx exclusive 150,50 succeeded\n" );
+	if (dll_capable("kernel32.dll", "UnlockFileEx"))
+        {
+            if (!UnlockFileEx( handle, 0, 100, 0, &overlapped ))
+            { /* UnLockFile is capable. */
+                overlapped.Offset = 100;
+                ok( !UnlockFileEx( handle, 0, 100, 0, &overlapped ),
+                    "UnlockFileEx 150,100 again succeeded\n" );
+	    }
+	}
+    }
 
     ok( LockFile( handle, 0, 0x10000000, 0, 0xf0000000 ), "LockFile failed\n" );
     ok( !LockFile( handle, ~0, ~0, 1, 0 ), "LockFile ~0,1 succeeded\n" );
@@ -899,19 +969,99 @@ static void test_LockFile(void)
     /* wrap-around lock should not do anything */
     /* (but still succeeds on NT4 so we don't check result) */
     LockFile( handle, 0, 0x10000000, 0, 0xf0000001 );
-    ok( LockFile( handle, ~0, ~0, 1, 0 ), "LockFile ~0,1 failed\n" );
-    ok( UnlockFile( handle, ~0, ~0, 1, 0 ), "Unlockfile ~0,1 failed\n" );
+
+    limited_LockFile = 0;
+    if (!LockFile( handle, ~0, ~0, 1, 0 ))
+    {
+        limited_LockFile = 1;
+    }
+
+    limited_UnLockFile || ok( UnlockFile( handle, ~0, ~0, 1, 0 ), "Unlockfile ~0,1 failed\n" );
 
     /* zero-byte lock */
     ok( LockFile( handle, 100, 0, 0, 0 ), "LockFile 100,0 failed\n" );
-    ok( !LockFile( handle, 98, 0, 4, 0 ), "LockFile 98,4 succeeded\n" );
+    limited_LockFile || ok( !LockFile( handle, 98, 0, 4, 0 ), "LockFile 98,4 succeeded\n" );
     ok( LockFile( handle, 90, 0, 10, 0 ), "LockFile 90,10 failed\n" );
-    ok( LockFile( handle, 100, 0, 10, 0 ), "LockFile 100,10 failed\n" );
+    limited_LockFile || ok( !LockFile( handle, 100, 0, 10, 0 ), "LockFile 100,10 failed\n" );
+
     ok( UnlockFile( handle, 90, 0, 10, 0 ), "UnlockFile 90,10 failed\n" );
-    ok( UnlockFile( handle, 100, 0, 10, 0 ), "UnlockFile 100,10 failed\n" );
+    !ok( UnlockFile( handle, 100, 0, 10, 0 ), "UnlockFile 100,10 failed\n" );
+
     ok( UnlockFile( handle, 100, 0, 0, 0 ), "UnlockFile 100,0 failed\n" );
 
     CloseHandle( handle );
+    DeleteFileA( filename );
+}
+
+static inline int is_sharing_compatible( DWORD access1, DWORD sharing1, DWORD access2, DWORD sharing2 )
+{
+    if (!access1 || !access2) return 1;
+    if ((access1 & GENERIC_READ) && !(sharing2 & FILE_SHARE_READ)) return 0;
+    if ((access1 & GENERIC_WRITE) && !(sharing2 & FILE_SHARE_WRITE)) return 0;
+    if ((access2 & GENERIC_READ) && !(sharing1 & FILE_SHARE_READ)) return 0;
+    if ((access2 & GENERIC_WRITE) && !(sharing1 & FILE_SHARE_WRITE)) return 0;
+    return 1;
+}
+
+static void test_file_sharing(void)
+{
+    static const DWORD access_modes[4] = { 0, GENERIC_READ, GENERIC_WRITE, GENERIC_READ|GENERIC_WRITE };
+    static const DWORD sharing_modes[4] = { 0, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE };
+    int a1, s1, a2, s2;
+    int ret;
+
+    /* make sure the file exists */
+    HANDLE h = CreateFileA( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
+    CloseHandle( h );
+
+    for (a1 = 0; a1 < 4; a1++)
+    {
+        for (s1 = 0; s1 < 4; s1++)
+        {
+            HANDLE h = CreateFileA( filename, access_modes[a1], sharing_modes[s1],
+                                    NULL, OPEN_EXISTING, 0, 0 );
+            if (h == INVALID_HANDLE_VALUE)
+            {
+                ok(0,"couldn't create file \"%s\" (err=%ld)\n",filename,GetLastError());
+                return;
+            }
+            for (a2 = 0; a2 < 4; a2++)
+            {
+                for (s2 = 0; s2 < 4; s2++)
+                {
+                    HANDLE h2 = CreateFileA( filename, access_modes[a2], sharing_modes[s2],
+                                          NULL, OPEN_EXISTING, 0, 0 );
+                    if (is_sharing_compatible( access_modes[a1], sharing_modes[s1],
+                                               access_modes[a2], sharing_modes[s2] ))
+                    {
+                        ret = GetLastError();
+                        ok( ERROR_SHARING_VIOLATION == ret || 0 == ret,
+                            "Windows 95 sets GetLastError() = ERROR_SHARING_VIOLATION and\n"
+                            "  Windows XP GetLastError() = 0, but now it is %d.\n"
+                            "  indexes = %d, %d, %d, %d\n"
+                            "  modes   =\n  %lx/%lx/%lx/%lx\n",
+			    ret,
+                            a1, s1, a2, s2, 
+                            access_modes[a1], sharing_modes[s1],
+			    access_modes[a2], sharing_modes[s2]
+                            );
+                    }
+                    else
+                    {
+                        ok( h2 == INVALID_HANDLE_VALUE,
+                            "open succeeded for modes %lx/%lx/%lx/%lx\n",
+                            access_modes[a1], sharing_modes[s1],
+                            access_modes[a2], sharing_modes[s2] );
+                        if (h2 == INVALID_HANDLE_VALUE)
+                            ok( GetLastError() == ERROR_SHARING_VIOLATION,
+                                "wrong error code %ld\n", GetLastError() );
+                    }
+                    if (h2 != INVALID_HANDLE_VALUE) CloseHandle( h2 );
+                }
+            }
+            CloseHandle( h );
+        }
+    }
     DeleteFileA( filename );
 }
 
@@ -948,35 +1098,76 @@ static void test_FindNextFileA()
     ok ( err == ERROR_NO_MORE_FILES, "GetLastError should return ERROR_NO_MORE_FILES\n");
 }
 
-static void test_MapFile()
+static int test_Mapfile_createtemp(HANDLE *handle)
 {
-    HANDLE handle, hmap;
-
-    /* be sure to remove stale files */
     SetFileAttributesA(filename,FILE_ATTRIBUTE_NORMAL);
     DeleteFile(filename);
-    handle = CreateFile( filename, GENERIC_READ|GENERIC_WRITE, 0, 0,
-                         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-    ok( handle != INVALID_HANDLE_VALUE, "couldn't create test file\n");
+    *handle = CreateFile(filename, GENERIC_READ|GENERIC_WRITE, 0, 0,
+                         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (*handle != INVALID_HANDLE_VALUE) {
+
+        return 1;
+    }
+
+    return 0;
+}
+
+static void test_MapFile()
+{
+    HANDLE handle;
+    HANDLE hmap;
+
+    ok(test_Mapfile_createtemp(&handle), "Couldn't create test file.\n");
+
+    hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0, 0x1000, "named_file_map" );
+    ok( hmap != NULL, "mapping should work, I named it!\n" );
+
+    ok( CloseHandle( hmap ), "can't close mapping handle\n");
+
+    /* We have to close file before we try new stuff with mapping again.
+       Else we would always succeed on XP or block descriptors on 95. */
+    hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0, 0, NULL );
+    ok( hmap != NULL, "We should still be able to map!\n" );
+    ok( CloseHandle( hmap ), "can't close mapping handle\n");
+    ok( CloseHandle( handle ), "can't close file handle\n");
+    handle = NULL;
+
+    ok(test_Mapfile_createtemp(&handle), "Couldn't create test file.\n");
 
     hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0, 0, NULL );
+    ok( hmap == NULL, "Mapping should not work, no name provided.\n" );
+
     ok( hmap == NULL, "mapped zero size file\n");
     ok( GetLastError() == ERROR_FILE_INVALID, "not ERROR_FILE_INVALID\n");
 
     hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0x1000, 0, NULL );
     ok( hmap == NULL, "mapping should fail\n");
-    /* GetLastError() varies between win9x and WinNT */
+    /* GetLastError() varies between win9x and WinNT and also depends on the filesystem */
 
     hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0x1000, 0x10000, NULL );
     ok( hmap == NULL, "mapping should fail\n");
-    /* GetLastError() varies between win9x and WinNT */
+    /* GetLastError() varies between win9x and WinNT and also depends on the filesystem */
 
-    hmap = CreateFileMapping( handle, NULL, PAGE_READWRITE, 0, 0x1000, NULL );
-    ok( hmap != NULL, "mapping should succeed\n");
+    /* On XP you can now map again, on Win 95 you can not. */
 
-    ok( CloseHandle( hmap ), "can't close mapping handle\n");
     ok( CloseHandle( handle ), "can't close file handle\n");
     ok( DeleteFileA( filename ), "DeleteFile failed after map\n" );
+}
+
+static void test_GetFileType(void)
+{
+    DWORD type;
+    HANDLE h = CreateFileA( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
+    ok( h != INVALID_HANDLE_VALUE, "open %s failed\n", filename );
+    type = GetFileType(h);
+    ok( type == FILE_TYPE_DISK, "expected type disk got %ld\n", type );
+    CloseHandle( h );
+    h = CreateFileA( "nul", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0 );
+    ok( h != INVALID_HANDLE_VALUE, "open nul failed\n" );
+    type = GetFileType(h);
+    ok( type == FILE_TYPE_CHAR, "expected type char for nul got %ld\n", type );
+    CloseHandle( h );
+    DeleteFileA( filename );
 }
 
 START_TEST(file)
@@ -1001,6 +1192,8 @@ START_TEST(file)
     test_FindFirstFileA();
     test_FindNextFileA();
     test_LockFile();
+    test_file_sharing();
     test_offset_in_overlapped_structure();
     test_MapFile();
+    test_GetFileType();
 }

@@ -42,7 +42,7 @@ void test_message_from_string(void)
 {
     CHAR out[0x100] = {0};
     DWORD r;
-    WCHAR szwTest[] = { 't','e','s','t',0};
+    static const WCHAR szwTest[] = { 't','e','s','t',0};
 
     /* the basics */
     r = FormatMessageA(FORMAT_MESSAGE_FROM_STRING, "test", 0,

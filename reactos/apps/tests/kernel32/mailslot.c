@@ -35,9 +35,9 @@
 
 #endif
 
-const char szmspath[] = "\\\\.\\mailslot\\wine_mailslot_test";
+static const char szmspath[] = "\\\\.\\mailslot\\wine_mailslot_test";
 
-int mailslot_test()
+static int mailslot_test()
 {
     HANDLE hSlot, hSlot2, hWriter, hWriter2;
     unsigned char buffer[16];

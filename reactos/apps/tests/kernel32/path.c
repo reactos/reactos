@@ -48,7 +48,6 @@
 */
 static const CHAR funny_chars[]="!@#$%^&*()=+{}[],?'`";
 static const CHAR is_char_ok[] ="11111110111111111011";
-static const CHAR wine_todo[]  ="00000000000000000000";
 
 static DWORD (WINAPI *pGetLongPathNameA)(LPCSTR,LPSTR,DWORD);
 
@@ -228,44 +227,24 @@ static void test_LongtoShortA(CHAR *teststr,CHAR *goodstr,
          Get(Short|Long)PathNameA should never pass, but GetFullPathNameA
          should.
 */
-static void test_FunnyChars(CHAR *curdir,CHAR *filename,
-                             INT valid,INT todo,CHAR *errstr) {
+static void test_FunnyChars(CHAR *curdir,CHAR *filename, INT valid,CHAR *errstr)
+{
   CHAR tmpstr[MAX_PATH],tmpstr1[MAX_PATH];
   SLpassfail passfail;
 
   test_ValidPathA(curdir,"",filename,tmpstr,&passfail,errstr);
   if(valid) {
     sprintf(tmpstr1,"%s\\%s",curdir,filename);
-    if(todo) {
-      todo_wine {
-        ok((passfail.shortlen==0 &&
-            (passfail.shorterror==ERROR_FILE_NOT_FOUND || passfail.shorterror==ERROR_PATH_NOT_FOUND || !passfail.shorterror)) ||
-           (passfail.shortlen==strlen(tmpstr1) && lstrcmpiA(tmpstr,tmpstr1)==0),
-           "%s: GetShortPathNameA error: len=%ld error=%ld tmpstr=[%s]\n",
-           errstr,passfail.shortlen,passfail.shorterror,tmpstr);
-      }
-    } else {
       ok((passfail.shortlen==0 &&
           (passfail.shorterror==ERROR_FILE_NOT_FOUND || passfail.shorterror==ERROR_PATH_NOT_FOUND || !passfail.shorterror)) ||
          (passfail.shortlen==strlen(tmpstr1) && lstrcmpiA(tmpstr,tmpstr1)==0),
          "%s: GetShortPathNameA error: len=%ld error=%ld tmpstr=[%s]\n",
          errstr,passfail.shortlen,passfail.shorterror,tmpstr);
-    }
   } else {
-    if(todo) {
-      todo_wine {
-/* Win2k returns ERROR_INVALID_NAME, Win98, wine return ERROR_FILE_NOT_FOUND, NT4 doesn't set last error */
-        ok(passfail.shortlen==0 &&
-           (passfail.shorterror==ERROR_INVALID_NAME || passfail.shorterror==ERROR_FILE_NOT_FOUND || !passfail.shorterror),
-           "%s: GetShortPathA should have failed len=%ld, error=%ld\n",
-           errstr,passfail.shortlen,passfail.shorterror);
-      }
-    } else {
       ok(passfail.shortlen==0 &&
          (passfail.shorterror==ERROR_INVALID_NAME || passfail.shorterror==ERROR_FILE_NOT_FOUND || !passfail.shorterror),
          "%s: GetShortPathA should have failed len=%ld, error=%ld\n",
          errstr,passfail.shortlen,passfail.shorterror);
-    }
   }
   if(pGetLongPathNameA) {
     ok(passfail.longlen==0,"GetLongPathNameA passed when it shouldn't have\n");
@@ -782,30 +761,29 @@ static void test_PathNameA(CHAR *curdir, CHAR curDrive, CHAR otherDrive)
   }
 /* Check out Get*PathNameA on some funny characters */
   for(i=0;i<lstrlenA(funny_chars);i++) {
-    INT valid,todo;
+    INT valid;
     valid=(is_char_ok[i]=='0') ? 0 : 1;
-    todo=(wine_todo[i]=='0') ? 0 : 1;
     sprintf(tmpstr1,"check%d-1",i);
     sprintf(tmpstr,"file%c000.ext",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,todo,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-2",i);
     sprintf(tmpstr,"file000.e%ct",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,todo,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-3",i);
     sprintf(tmpstr,"%cfile000.ext",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,todo,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-4",i);
     sprintf(tmpstr,"file000%c.ext",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,todo,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-5",i);
     sprintf(tmpstr,"Long %c File",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,0,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-6",i);
     sprintf(tmpstr,"%c Long File",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,0,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
     sprintf(tmpstr1,"check%d-7",i);
     sprintf(tmpstr,"Long File %c",funny_chars[i]);
-    test_FunnyChars(curdir,tmpstr,valid,0,tmpstr1);
+    test_FunnyChars(curdir,tmpstr,valid,tmpstr1);
   }
 }
 

@@ -109,6 +109,221 @@
 #define TEST_TYPE_UNSIGNED(type) \
      ok((type) -1 > 0, "(" #type ") -1 > 0\n");
 
+static void test_pack_LPOSVERSIONINFOA(void)
+{
+    /* LPOSVERSIONINFOA */
+    TEST_TYPE(LPOSVERSIONINFOA, 4, 4);
+    TEST_TYPE_POINTER(LPOSVERSIONINFOA, 148, 4);
+}
+
+static void test_pack_LPOSVERSIONINFOEXA(void)
+{
+    /* LPOSVERSIONINFOEXA */
+    TEST_TYPE(LPOSVERSIONINFOEXA, 4, 4);
+    TEST_TYPE_POINTER(LPOSVERSIONINFOEXA, 156, 4);
+}
+
+static void test_pack_LPOSVERSIONINFOEXW(void)
+{
+    /* LPOSVERSIONINFOEXW */
+    TEST_TYPE(LPOSVERSIONINFOEXW, 4, 4);
+    TEST_TYPE_POINTER(LPOSVERSIONINFOEXW, 284, 4);
+}
+
+static void test_pack_LPOSVERSIONINFOW(void)
+{
+    /* LPOSVERSIONINFOW */
+    TEST_TYPE(LPOSVERSIONINFOW, 4, 4);
+    TEST_TYPE_POINTER(LPOSVERSIONINFOW, 276, 4);
+}
+
+static void test_pack_OSVERSIONINFOA(void)
+{
+    /* OSVERSIONINFOA (pack 4) */
+    TEST_TYPE(OSVERSIONINFOA, 148, 4);
+    TEST_FIELD(OSVERSIONINFOA, DWORD, dwOSVersionInfoSize, 0, 4, 4);
+    TEST_FIELD(OSVERSIONINFOA, DWORD, dwMajorVersion, 4, 4, 4);
+    TEST_FIELD(OSVERSIONINFOA, DWORD, dwMinorVersion, 8, 4, 4);
+    TEST_FIELD(OSVERSIONINFOA, DWORD, dwBuildNumber, 12, 4, 4);
+    TEST_FIELD(OSVERSIONINFOA, DWORD, dwPlatformId, 16, 4, 4);
+    TEST_FIELD(OSVERSIONINFOA, CHAR[128], szCSDVersion, 20, 128, 1);
+}
+
+static void test_pack_OSVERSIONINFOEXA(void)
+{
+    /* OSVERSIONINFOEXA (pack 4) */
+    TEST_TYPE(OSVERSIONINFOEXA, 156, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwOSVersionInfoSize, 0, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwMajorVersion, 4, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwMinorVersion, 8, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwBuildNumber, 12, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwPlatformId, 16, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXA, CHAR[128], szCSDVersion, 20, 128, 1);
+    TEST_FIELD(OSVERSIONINFOEXA, WORD, wServicePackMajor, 148, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXA, WORD, wServicePackMinor, 150, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXA, WORD, wSuiteMask, 152, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXA, BYTE, wProductType, 154, 1, 1);
+    TEST_FIELD(OSVERSIONINFOEXA, BYTE, wReserved, 155, 1, 1);
+}
+
+static void test_pack_OSVERSIONINFOEXW(void)
+{
+    /* OSVERSIONINFOEXW (pack 4) */
+    TEST_TYPE(OSVERSIONINFOEXW, 284, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwOSVersionInfoSize, 0, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwMajorVersion, 4, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwMinorVersion, 8, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwBuildNumber, 12, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwPlatformId, 16, 4, 4);
+    TEST_FIELD(OSVERSIONINFOEXW, WCHAR[128], szCSDVersion, 20, 256, 2);
+    TEST_FIELD(OSVERSIONINFOEXW, WORD, wServicePackMajor, 276, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXW, WORD, wServicePackMinor, 278, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXW, WORD, wSuiteMask, 280, 2, 2);
+    TEST_FIELD(OSVERSIONINFOEXW, BYTE, wProductType, 282, 1, 1);
+    TEST_FIELD(OSVERSIONINFOEXW, BYTE, wReserved, 283, 1, 1);
+}
+
+static void test_pack_OSVERSIONINFOW(void)
+{
+    /* OSVERSIONINFOW (pack 4) */
+    TEST_TYPE(OSVERSIONINFOW, 276, 4);
+    TEST_FIELD(OSVERSIONINFOW, DWORD, dwOSVersionInfoSize, 0, 4, 4);
+    TEST_FIELD(OSVERSIONINFOW, DWORD, dwMajorVersion, 4, 4, 4);
+    TEST_FIELD(OSVERSIONINFOW, DWORD, dwMinorVersion, 8, 4, 4);
+    TEST_FIELD(OSVERSIONINFOW, DWORD, dwBuildNumber, 12, 4, 4);
+    TEST_FIELD(OSVERSIONINFOW, DWORD, dwPlatformId, 16, 4, 4);
+    TEST_FIELD(OSVERSIONINFOW, WCHAR[128], szCSDVersion, 20, 256, 2);
+}
+
+static void test_pack_POSVERSIONINFOA(void)
+{
+    /* POSVERSIONINFOA */
+    TEST_TYPE(POSVERSIONINFOA, 4, 4);
+    TEST_TYPE_POINTER(POSVERSIONINFOA, 148, 4);
+}
+
+static void test_pack_POSVERSIONINFOEXA(void)
+{
+    /* POSVERSIONINFOEXA */
+    TEST_TYPE(POSVERSIONINFOEXA, 4, 4);
+    TEST_TYPE_POINTER(POSVERSIONINFOEXA, 156, 4);
+}
+
+static void test_pack_POSVERSIONINFOEXW(void)
+{
+    /* POSVERSIONINFOEXW */
+    TEST_TYPE(POSVERSIONINFOEXW, 4, 4);
+    TEST_TYPE_POINTER(POSVERSIONINFOEXW, 284, 4);
+}
+
+static void test_pack_POSVERSIONINFOW(void)
+{
+    /* POSVERSIONINFOW */
+    TEST_TYPE(POSVERSIONINFOW, 4, 4);
+    TEST_TYPE_POINTER(POSVERSIONINFOW, 276, 4);
+}
+
+static void test_pack_LPLONG(void)
+{
+    /* LPLONG */
+    TEST_TYPE(LPLONG, 4, 4);
+}
+
+static void test_pack_LPVOID(void)
+{
+    /* LPVOID */
+    TEST_TYPE(LPVOID, 4, 4);
+}
+
+static void test_pack_PHKEY(void)
+{
+    /* PHKEY */
+    TEST_TYPE(PHKEY, 4, 4);
+}
+
+static void test_pack_ACTCTXA(void)
+{
+    /* ACTCTXA (pack 4) */
+    TEST_TYPE(ACTCTXA, 32, 4);
+    TEST_FIELD(ACTCTXA, ULONG, cbSize, 0, 4, 4);
+    TEST_FIELD(ACTCTXA, DWORD, dwFlags, 4, 4, 4);
+    TEST_FIELD(ACTCTXA, LPCSTR, lpSource, 8, 4, 4);
+    TEST_FIELD(ACTCTXA, USHORT, wProcessorArchitecture, 12, 2, 2);
+    TEST_FIELD(ACTCTXA, LANGID, wLangId, 14, 2, 2);
+    TEST_FIELD(ACTCTXA, LPCSTR, lpAssemblyDirectory, 16, 4, 4);
+    TEST_FIELD(ACTCTXA, LPCSTR, lpResourceName, 20, 4, 4);
+    TEST_FIELD(ACTCTXA, LPCSTR, lpApplicationName, 24, 4, 4);
+    TEST_FIELD(ACTCTXA, HMODULE, hModule, 28, 4, 4);
+}
+
+static void test_pack_ACTCTXW(void)
+{
+    /* ACTCTXW (pack 4) */
+    TEST_TYPE(ACTCTXW, 32, 4);
+    TEST_FIELD(ACTCTXW, ULONG, cbSize, 0, 4, 4);
+    TEST_FIELD(ACTCTXW, DWORD, dwFlags, 4, 4, 4);
+    TEST_FIELD(ACTCTXW, LPCWSTR, lpSource, 8, 4, 4);
+    TEST_FIELD(ACTCTXW, USHORT, wProcessorArchitecture, 12, 2, 2);
+    TEST_FIELD(ACTCTXW, LANGID, wLangId, 14, 2, 2);
+    TEST_FIELD(ACTCTXW, LPCWSTR, lpAssemblyDirectory, 16, 4, 4);
+    TEST_FIELD(ACTCTXW, LPCWSTR, lpResourceName, 20, 4, 4);
+    TEST_FIELD(ACTCTXW, LPCWSTR, lpApplicationName, 24, 4, 4);
+    TEST_FIELD(ACTCTXW, HMODULE, hModule, 28, 4, 4);
+}
+
+static void test_pack_ACTCTX_SECTION_KEYED_DATA(void)
+{
+    /* ACTCTX_SECTION_KEYED_DATA (pack 4) */
+    TEST_TYPE(ACTCTX_SECTION_KEYED_DATA, 64, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, cbSize, 0, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulDataFormatVersion, 4, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, PVOID, lpData, 8, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulLength, 12, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, PVOID, lpSectionGlobalData, 16, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulSectionGlobalDataLength, 20, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, PVOID, lpSectionBase, 24, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulSectionTotalLength, 28, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, HANDLE, hActCtx, 32, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulAssemblyRosterIndex, 36, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ULONG, ulFlags, 40, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA, ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, AssemblyMetadata, 44, 20, 4);
+}
+
+static void test_pack_ACTCTX_SECTION_KEYED_DATA_2600(void)
+{
+    /* ACTCTX_SECTION_KEYED_DATA_2600 (pack 4) */
+    TEST_TYPE(ACTCTX_SECTION_KEYED_DATA_2600, 40, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, cbSize, 0, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, ulDataFormatVersion, 4, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, PVOID, lpData, 8, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, ulLength, 12, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, PVOID, lpSectionGlobalData, 16, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, ulSectionGlobalDataLength, 20, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, PVOID, lpSectionBase, 24, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, ulSectionTotalLength, 28, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, HANDLE, hActCtx, 32, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_2600, ULONG, ulAssemblyRosterIndex, 36, 4, 4);
+}
+
+static void test_pack_ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA(void)
+{
+    /* ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA (pack 4) */
+    TEST_TYPE(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, 20, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, PVOID, lpInformation, 0, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, PVOID, lpSectionBase, 4, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, ULONG, ulSectionLength, 8, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, PVOID, lpSectionGlobalDataBase, 12, 4, 4);
+    TEST_FIELD(ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, ULONG, ulSectionGlobalDataLength, 16, 4, 4);
+}
+
+static void test_pack_ACTIVATION_CONTEXT_BASIC_INFORMATION(void)
+{
+    /* ACTIVATION_CONTEXT_BASIC_INFORMATION (pack 4) */
+    TEST_TYPE(ACTIVATION_CONTEXT_BASIC_INFORMATION, 8, 4);
+    TEST_FIELD(ACTIVATION_CONTEXT_BASIC_INFORMATION, HANDLE, hActCtx, 0, 4, 4);
+    TEST_FIELD(ACTIVATION_CONTEXT_BASIC_INFORMATION, DWORD, dwFlags, 4, 4, 4);
+}
+
 static void test_pack_BY_HANDLE_FILE_INFORMATION(void)
 {
     /* BY_HANDLE_FILE_INFORMATION (pack 4) */
@@ -123,14 +338,6 @@ static void test_pack_BY_HANDLE_FILE_INFORMATION(void)
     TEST_FIELD(BY_HANDLE_FILE_INFORMATION, DWORD, nNumberOfLinks, 40, 4, 4);
     TEST_FIELD(BY_HANDLE_FILE_INFORMATION, DWORD, nFileIndexHigh, 44, 4, 4);
     TEST_FIELD(BY_HANDLE_FILE_INFORMATION, DWORD, nFileIndexLow, 48, 4, 4);
-}
-
-static void test_pack_COMMCONFIG(void)
-{
-    /* COMMCONFIG (pack 4) */
-    TEST_FIELD(COMMCONFIG, DWORD, dwSize, 0, 4, 4);
-    TEST_FIELD(COMMCONFIG, WORD, wVersion, 4, 2, 2);
-    TEST_FIELD(COMMCONFIG, WORD, wReserved, 6, 2, 2);
 }
 
 static void test_pack_COMMPROP(void)
@@ -166,14 +373,6 @@ static void test_pack_COMMTIMEOUTS(void)
     TEST_FIELD(COMMTIMEOUTS, DWORD, ReadTotalTimeoutConstant, 8, 4, 4);
     TEST_FIELD(COMMTIMEOUTS, DWORD, WriteTotalTimeoutMultiplier, 12, 4, 4);
     TEST_FIELD(COMMTIMEOUTS, DWORD, WriteTotalTimeoutConstant, 16, 4, 4);
-}
-
-static void test_pack_COMSTAT(void)
-{
-    /* COMSTAT (pack 4) */
-    TEST_TYPE(COMSTAT, 12, 4);
-    TEST_FIELD(COMSTAT, DWORD, cbInQue, 4, 4, 4);
-    TEST_FIELD(COMSTAT, DWORD, cbOutQue, 8, 4, 4);
 }
 
 static void test_pack_CREATE_PROCESS_DEBUG_INFO(void)
@@ -213,19 +412,40 @@ static void test_pack_CRITICAL_SECTION_DEBUG(void)
     TEST_TYPE(CRITICAL_SECTION_DEBUG, 32, 4);
 }
 
-static void test_pack_DCB(void)
+static void test_pack_ENUMRESLANGPROCA(void)
 {
-    /* DCB (pack 4) */
-    TEST_FIELD(DCB, DWORD, DCBlength, 0, 4, 4);
-    TEST_FIELD(DCB, DWORD, BaudRate, 4, 4, 4);
+    /* ENUMRESLANGPROCA */
+    TEST_TYPE(ENUMRESLANGPROCA, 4, 4);
 }
 
-static void test_pack_DEBUG_EVENT(void)
+static void test_pack_ENUMRESLANGPROCW(void)
 {
-    /* DEBUG_EVENT (pack 4) */
-    TEST_FIELD(DEBUG_EVENT, DWORD, dwDebugEventCode, 0, 4, 4);
-    TEST_FIELD(DEBUG_EVENT, DWORD, dwProcessId, 4, 4, 4);
-    TEST_FIELD(DEBUG_EVENT, DWORD, dwThreadId, 8, 4, 4);
+    /* ENUMRESLANGPROCW */
+    TEST_TYPE(ENUMRESLANGPROCW, 4, 4);
+}
+
+static void test_pack_ENUMRESNAMEPROCA(void)
+{
+    /* ENUMRESNAMEPROCA */
+    TEST_TYPE(ENUMRESNAMEPROCA, 4, 4);
+}
+
+static void test_pack_ENUMRESNAMEPROCW(void)
+{
+    /* ENUMRESNAMEPROCW */
+    TEST_TYPE(ENUMRESNAMEPROCW, 4, 4);
+}
+
+static void test_pack_ENUMRESTYPEPROCA(void)
+{
+    /* ENUMRESTYPEPROCA */
+    TEST_TYPE(ENUMRESTYPEPROCA, 4, 4);
+}
+
+static void test_pack_ENUMRESTYPEPROCW(void)
+{
+    /* ENUMRESTYPEPROCW */
+    TEST_TYPE(ENUMRESTYPEPROCW, 4, 4);
 }
 
 static void test_pack_EXCEPTION_DEBUG_INFO(void)
@@ -268,13 +488,6 @@ static void test_pack_HW_PROFILE_INFOW(void)
     TEST_FIELD(HW_PROFILE_INFOW, WCHAR[MAX_PROFILE_LEN], szHwProfileName, 82, 160, 2);
 }
 
-static void test_pack_LDT_ENTRY(void)
-{
-    /* LDT_ENTRY (pack 4) */
-    TEST_FIELD(LDT_ENTRY, WORD, LimitLow, 0, 2, 2);
-    TEST_FIELD(LDT_ENTRY, WORD, BaseLow, 2, 2, 2);
-}
-
 static void test_pack_LOAD_DLL_DEBUG_INFO(void)
 {
     /* LOAD_DLL_DEBUG_INFO (pack 4) */
@@ -294,12 +507,6 @@ static void test_pack_LPBY_HANDLE_FILE_INFORMATION(void)
     TEST_TYPE_POINTER(LPBY_HANDLE_FILE_INFORMATION, 52, 4);
 }
 
-static void test_pack_LPCOMMCONFIG(void)
-{
-    /* LPCOMMCONFIG */
-    TEST_TYPE(LPCOMMCONFIG, 4, 4);
-}
-
 static void test_pack_LPCOMMPROP(void)
 {
     /* LPCOMMPROP */
@@ -314,19 +521,6 @@ static void test_pack_LPCOMMTIMEOUTS(void)
     TEST_TYPE_POINTER(LPCOMMTIMEOUTS, 20, 4);
 }
 
-static void test_pack_LPCOMSTAT(void)
-{
-    /* LPCOMSTAT */
-    TEST_TYPE(LPCOMSTAT, 4, 4);
-    TEST_TYPE_POINTER(LPCOMSTAT, 12, 4);
-}
-
-static void test_pack_LPCONTEXT(void)
-{
-    /* LPCONTEXT */
-    TEST_TYPE(LPCONTEXT, 4, 4);
-}
-
 static void test_pack_LPCRITICAL_SECTION(void)
 {
     /* LPCRITICAL_SECTION */
@@ -337,18 +531,6 @@ static void test_pack_LPCRITICAL_SECTION_DEBUG(void)
 {
     /* LPCRITICAL_SECTION_DEBUG */
     TEST_TYPE(LPCRITICAL_SECTION_DEBUG, 4, 4);
-}
-
-static void test_pack_LPDCB(void)
-{
-    /* LPDCB */
-    TEST_TYPE(LPDCB, 4, 4);
-}
-
-static void test_pack_LPDEBUG_EVENT(void)
-{
-    /* LPDEBUG_EVENT */
-    TEST_TYPE(LPDEBUG_EVENT, 4, 4);
 }
 
 static void test_pack_LPEXCEPTION_POINTERS(void)
@@ -383,12 +565,6 @@ static void test_pack_LPHW_PROFILE_INFOW(void)
     TEST_TYPE_POINTER(LPHW_PROFILE_INFOW, 244, 4);
 }
 
-static void test_pack_LPLDT_ENTRY(void)
-{
-    /* LPLDT_ENTRY */
-    TEST_TYPE(LPLDT_ENTRY, 4, 4);
-}
-
 static void test_pack_LPMEMORYSTATUS(void)
 {
     /* LPMEMORYSTATUS */
@@ -403,32 +579,6 @@ static void test_pack_LPOFSTRUCT(void)
     TEST_TYPE_POINTER(LPOFSTRUCT, 136, 2);
 }
 
-static void test_pack_LPOSVERSIONINFOA(void)
-{
-    /* LPOSVERSIONINFOA */
-    TEST_TYPE(LPOSVERSIONINFOA, 4, 4);
-    TEST_TYPE_POINTER(LPOSVERSIONINFOA, 148, 4);
-}
-
-static void test_pack_LPOSVERSIONINFOEXA(void)
-{
-    /* LPOSVERSIONINFOEXA */
-    TEST_TYPE(LPOSVERSIONINFOEXA, 4, 4);
-}
-
-static void test_pack_LPOSVERSIONINFOEXW(void)
-{
-    /* LPOSVERSIONINFOEXW */
-    TEST_TYPE(LPOSVERSIONINFOEXW, 4, 4);
-}
-
-static void test_pack_LPOSVERSIONINFOW(void)
-{
-    /* LPOSVERSIONINFOW */
-    TEST_TYPE(LPOSVERSIONINFOW, 4, 4);
-    TEST_TYPE_POINTER(LPOSVERSIONINFOW, 276, 4);
-}
-
 static void test_pack_LPOVERLAPPED(void)
 {
     /* LPOVERLAPPED */
@@ -440,12 +590,6 @@ static void test_pack_LPOVERLAPPED_COMPLETION_ROUTINE(void)
 {
     /* LPOVERLAPPED_COMPLETION_ROUTINE */
     TEST_TYPE(LPOVERLAPPED_COMPLETION_ROUTINE, 4, 4);
-}
-
-static void test_pack_LPPROCESS_HEAP_ENTRY(void)
-{
-    /* LPPROCESS_HEAP_ENTRY */
-    TEST_TYPE(LPPROCESS_HEAP_ENTRY, 4, 4);
 }
 
 static void test_pack_LPPROCESS_INFORMATION(void)
@@ -472,6 +616,7 @@ static void test_pack_LPSTARTUPINFOA(void)
 {
     /* LPSTARTUPINFOA */
     TEST_TYPE(LPSTARTUPINFOA, 4, 4);
+    TEST_TYPE_POINTER(LPSTARTUPINFOA, 68, 4);
 }
 
 static void test_pack_LPSTARTUPINFOW(void)
@@ -486,12 +631,6 @@ static void test_pack_LPSYSTEMTIME(void)
     /* LPSYSTEMTIME */
     TEST_TYPE(LPSYSTEMTIME, 4, 4);
     TEST_TYPE_POINTER(LPSYSTEMTIME, 16, 2);
-}
-
-static void test_pack_LPSYSTEM_INFO(void)
-{
-    /* LPSYSTEM_INFO */
-    TEST_TYPE(LPSYSTEM_INFO, 4, 4);
 }
 
 static void test_pack_LPSYSTEM_POWER_STATUS(void)
@@ -535,13 +674,6 @@ static void test_pack_LPWIN32_FIND_DATAW(void)
     TEST_TYPE_POINTER(LPWIN32_FIND_DATAW, 592, 4);
 }
 
-static void test_pack_LPWIN32_STREAM_ID(void)
-{
-    /* LPWIN32_STREAM_ID */
-    TEST_TYPE(LPWIN32_STREAM_ID, 4, 4);
-    TEST_TYPE_POINTER(LPWIN32_STREAM_ID, 24, 4);
-}
-
 static void test_pack_MEMORYSTATUS(void)
 {
     /* MEMORYSTATUS (pack 4) */
@@ -568,59 +700,13 @@ static void test_pack_OFSTRUCT(void)
     TEST_FIELD(OFSTRUCT, BYTE[OFS_MAXPATHNAME], szPathName, 8, 128, 1);
 }
 
-static void test_pack_OSVERSIONINFOA(void)
-{
-    /* OSVERSIONINFOA (pack 4) */
-    TEST_TYPE(OSVERSIONINFOA, 148, 4);
-    TEST_FIELD(OSVERSIONINFOA, DWORD, dwOSVersionInfoSize, 0, 4, 4);
-    TEST_FIELD(OSVERSIONINFOA, DWORD, dwMajorVersion, 4, 4, 4);
-    TEST_FIELD(OSVERSIONINFOA, DWORD, dwMinorVersion, 8, 4, 4);
-    TEST_FIELD(OSVERSIONINFOA, DWORD, dwBuildNumber, 12, 4, 4);
-    TEST_FIELD(OSVERSIONINFOA, DWORD, dwPlatformId, 16, 4, 4);
-    TEST_FIELD(OSVERSIONINFOA, CHAR[128], szCSDVersion, 20, 128, 1);
-}
-
-static void test_pack_OSVERSIONINFOEXA(void)
-{
-    /* OSVERSIONINFOEXA (pack 4) */
-    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwOSVersionInfoSize, 0, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwMajorVersion, 4, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwMinorVersion, 8, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwBuildNumber, 12, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXA, DWORD, dwPlatformId, 16, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXA, CHAR[128], szCSDVersion, 20, 128, 1);
-    TEST_FIELD(OSVERSIONINFOEXA, WORD, wServicePackMajor, 148, 2, 2);
-    TEST_FIELD(OSVERSIONINFOEXA, WORD, wServicePackMinor, 150, 2, 2);
-}
-
-static void test_pack_OSVERSIONINFOEXW(void)
-{
-    /* OSVERSIONINFOEXW (pack 4) */
-    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwOSVersionInfoSize, 0, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwMajorVersion, 4, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwMinorVersion, 8, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwBuildNumber, 12, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXW, DWORD, dwPlatformId, 16, 4, 4);
-    TEST_FIELD(OSVERSIONINFOEXW, WCHAR[128], szCSDVersion, 20, 256, 2);
-    TEST_FIELD(OSVERSIONINFOEXW, WORD, wServicePackMajor, 276, 2, 2);
-    TEST_FIELD(OSVERSIONINFOEXW, WORD, wServicePackMinor, 278, 2, 2);
-}
-
-static void test_pack_OSVERSIONINFOW(void)
-{
-    /* OSVERSIONINFOW (pack 4) */
-    TEST_TYPE(OSVERSIONINFOW, 276, 4);
-    TEST_FIELD(OSVERSIONINFOW, DWORD, dwOSVersionInfoSize, 0, 4, 4);
-    TEST_FIELD(OSVERSIONINFOW, DWORD, dwMajorVersion, 4, 4, 4);
-    TEST_FIELD(OSVERSIONINFOW, DWORD, dwMinorVersion, 8, 4, 4);
-    TEST_FIELD(OSVERSIONINFOW, DWORD, dwBuildNumber, 12, 4, 4);
-    TEST_FIELD(OSVERSIONINFOW, DWORD, dwPlatformId, 16, 4, 4);
-    TEST_FIELD(OSVERSIONINFOW, WCHAR[128], szCSDVersion, 20, 256, 2);
-}
-
 static void test_pack_OUTPUT_DEBUG_STRING_INFO(void)
 {
     /* OUTPUT_DEBUG_STRING_INFO (pack 4) */
+    TEST_TYPE(OUTPUT_DEBUG_STRING_INFO, 8, 4);
+    TEST_FIELD(OUTPUT_DEBUG_STRING_INFO, LPSTR, lpDebugStringData, 0, 4, 4);
+    TEST_FIELD(OUTPUT_DEBUG_STRING_INFO, WORD, fUnicode, 4, 2, 2);
+    TEST_FIELD(OUTPUT_DEBUG_STRING_INFO, WORD, nDebugStringLength, 6, 2, 2);
 }
 
 static void test_pack_OVERLAPPED(void)
@@ -634,6 +720,48 @@ static void test_pack_OVERLAPPED(void)
     TEST_FIELD(OVERLAPPED, HANDLE, hEvent, 16, 4, 4);
 }
 
+static void test_pack_PACTCTXA(void)
+{
+    /* PACTCTXA */
+    TEST_TYPE(PACTCTXA, 4, 4);
+    TEST_TYPE_POINTER(PACTCTXA, 32, 4);
+}
+
+static void test_pack_PACTCTXW(void)
+{
+    /* PACTCTXW */
+    TEST_TYPE(PACTCTXW, 4, 4);
+    TEST_TYPE_POINTER(PACTCTXW, 32, 4);
+}
+
+static void test_pack_PACTCTX_SECTION_KEYED_DATA(void)
+{
+    /* PACTCTX_SECTION_KEYED_DATA */
+    TEST_TYPE(PACTCTX_SECTION_KEYED_DATA, 4, 4);
+    TEST_TYPE_POINTER(PACTCTX_SECTION_KEYED_DATA, 64, 4);
+}
+
+static void test_pack_PACTCTX_SECTION_KEYED_DATA_2600(void)
+{
+    /* PACTCTX_SECTION_KEYED_DATA_2600 */
+    TEST_TYPE(PACTCTX_SECTION_KEYED_DATA_2600, 4, 4);
+    TEST_TYPE_POINTER(PACTCTX_SECTION_KEYED_DATA_2600, 40, 4);
+}
+
+static void test_pack_PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA(void)
+{
+    /* PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA */
+    TEST_TYPE(PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, 4, 4);
+    TEST_TYPE_POINTER(PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, 20, 4);
+}
+
+static void test_pack_PACTIVATION_CONTEXT_BASIC_INFORMATION(void)
+{
+    /* PACTIVATION_CONTEXT_BASIC_INFORMATION */
+    TEST_TYPE(PACTIVATION_CONTEXT_BASIC_INFORMATION, 4, 4);
+    TEST_TYPE_POINTER(PACTIVATION_CONTEXT_BASIC_INFORMATION, 8, 4);
+}
+
 static void test_pack_PAPCFUNC(void)
 {
     /* PAPCFUNC */
@@ -645,6 +773,41 @@ static void test_pack_PBY_HANDLE_FILE_INFORMATION(void)
     /* PBY_HANDLE_FILE_INFORMATION */
     TEST_TYPE(PBY_HANDLE_FILE_INFORMATION, 4, 4);
     TEST_TYPE_POINTER(PBY_HANDLE_FILE_INFORMATION, 52, 4);
+}
+
+static void test_pack_PCACTCTXA(void)
+{
+    /* PCACTCTXA */
+    TEST_TYPE(PCACTCTXA, 4, 4);
+    TEST_TYPE_POINTER(PCACTCTXA, 32, 4);
+}
+
+static void test_pack_PCACTCTXW(void)
+{
+    /* PCACTCTXW */
+    TEST_TYPE(PCACTCTXW, 4, 4);
+    TEST_TYPE_POINTER(PCACTCTXW, 32, 4);
+}
+
+static void test_pack_PCACTCTX_SECTION_KEYED_DATA(void)
+{
+    /* PCACTCTX_SECTION_KEYED_DATA */
+    TEST_TYPE(PCACTCTX_SECTION_KEYED_DATA, 4, 4);
+    TEST_TYPE_POINTER(PCACTCTX_SECTION_KEYED_DATA, 64, 4);
+}
+
+static void test_pack_PCACTCTX_SECTION_KEYED_DATA_2600(void)
+{
+    /* PCACTCTX_SECTION_KEYED_DATA_2600 */
+    TEST_TYPE(PCACTCTX_SECTION_KEYED_DATA_2600, 4, 4);
+    TEST_TYPE_POINTER(PCACTCTX_SECTION_KEYED_DATA_2600, 40, 4);
+}
+
+static void test_pack_PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA(void)
+{
+    /* PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA */
+    TEST_TYPE(PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, 4, 4);
+    TEST_TYPE_POINTER(PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA, 20, 4);
 }
 
 static void test_pack_PCRITICAL_SECTION(void)
@@ -672,38 +835,6 @@ static void test_pack_POFSTRUCT(void)
     TEST_TYPE_POINTER(POFSTRUCT, 136, 2);
 }
 
-static void test_pack_POSVERSIONINFOA(void)
-{
-    /* POSVERSIONINFOA */
-    TEST_TYPE(POSVERSIONINFOA, 4, 4);
-    TEST_TYPE_POINTER(POSVERSIONINFOA, 148, 4);
-}
-
-static void test_pack_POSVERSIONINFOEXA(void)
-{
-    /* POSVERSIONINFOEXA */
-    TEST_TYPE(POSVERSIONINFOEXA, 4, 4);
-}
-
-static void test_pack_POSVERSIONINFOEXW(void)
-{
-    /* POSVERSIONINFOEXW */
-    TEST_TYPE(POSVERSIONINFOEXW, 4, 4);
-}
-
-static void test_pack_POSVERSIONINFOW(void)
-{
-    /* POSVERSIONINFOW */
-    TEST_TYPE(POSVERSIONINFOW, 4, 4);
-    TEST_TYPE_POINTER(POSVERSIONINFOW, 276, 4);
-}
-
-static void test_pack_PPROCESS_HEAP_ENTRY(void)
-{
-    /* PPROCESS_HEAP_ENTRY */
-    TEST_TYPE(PPROCESS_HEAP_ENTRY, 4, 4);
-}
-
 static void test_pack_PPROCESS_INFORMATION(void)
 {
     /* PPROCESS_INFORMATION */
@@ -711,14 +842,10 @@ static void test_pack_PPROCESS_INFORMATION(void)
     TEST_TYPE_POINTER(PPROCESS_INFORMATION, 16, 4);
 }
 
-static void test_pack_PROCESS_HEAP_ENTRY(void)
+static void test_pack_PQUERYACTCTXW_FUNC(void)
 {
-    /* PROCESS_HEAP_ENTRY (pack 4) */
-    TEST_FIELD(PROCESS_HEAP_ENTRY, LPVOID, lpData, 0, 4, 4);
-    TEST_FIELD(PROCESS_HEAP_ENTRY, DWORD, cbData, 4, 4, 4);
-    TEST_FIELD(PROCESS_HEAP_ENTRY, BYTE, cbOverhead, 8, 1, 1);
-    TEST_FIELD(PROCESS_HEAP_ENTRY, BYTE, iRegionIndex, 9, 1, 1);
-    TEST_FIELD(PROCESS_HEAP_ENTRY, WORD, wFlags, 10, 2, 2);
+    /* PQUERYACTCTXW_FUNC */
+    TEST_TYPE(PQUERYACTCTXW_FUNC, 4, 4);
 }
 
 static void test_pack_PROCESS_INFORMATION(void)
@@ -792,7 +919,25 @@ static void test_pack_SECURITY_ATTRIBUTES(void)
 static void test_pack_STARTUPINFOA(void)
 {
     /* STARTUPINFOA (pack 4) */
+    TEST_TYPE(STARTUPINFOA, 68, 4);
     TEST_FIELD(STARTUPINFOA, DWORD, cb, 0, 4, 4);
+    TEST_FIELD(STARTUPINFOA, LPSTR, lpReserved, 4, 4, 4);
+    TEST_FIELD(STARTUPINFOA, LPSTR, lpDesktop, 8, 4, 4);
+    TEST_FIELD(STARTUPINFOA, LPSTR, lpTitle, 12, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwX, 16, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwY, 20, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwXSize, 24, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwYSize, 28, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwXCountChars, 32, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwYCountChars, 36, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwFillAttribute, 40, 4, 4);
+    TEST_FIELD(STARTUPINFOA, DWORD, dwFlags, 44, 4, 4);
+    TEST_FIELD(STARTUPINFOA, WORD, wShowWindow, 48, 2, 2);
+    TEST_FIELD(STARTUPINFOA, WORD, cbReserved2, 50, 2, 2);
+    TEST_FIELD(STARTUPINFOA, BYTE *, lpReserved2, 52, 4, 4);
+    TEST_FIELD(STARTUPINFOA, HANDLE, hStdInput, 56, 4, 4);
+    TEST_FIELD(STARTUPINFOA, HANDLE, hStdOutput, 60, 4, 4);
+    TEST_FIELD(STARTUPINFOA, HANDLE, hStdError, 64, 4, 4);
 }
 
 static void test_pack_STARTUPINFOW(void)
@@ -817,6 +962,14 @@ static void test_pack_STARTUPINFOW(void)
     TEST_FIELD(STARTUPINFOW, HANDLE, hStdInput, 56, 4, 4);
     TEST_FIELD(STARTUPINFOW, HANDLE, hStdOutput, 60, 4, 4);
     TEST_FIELD(STARTUPINFOW, HANDLE, hStdError, 64, 4, 4);
+}
+
+static void test_pack_SYSLEVEL(void)
+{
+    /* SYSLEVEL (pack 4) */
+    TEST_TYPE(SYSLEVEL, 28, 4);
+    TEST_FIELD(SYSLEVEL, CRITICAL_SECTION, crst, 0, 24, 4);
+    TEST_FIELD(SYSLEVEL, INT, level, 24, 4, 4);
 }
 
 static void test_pack_SYSTEMTIME(void)
@@ -865,6 +1018,12 @@ static void test_pack_UNLOAD_DLL_DEBUG_INFO(void)
     TEST_FIELD(UNLOAD_DLL_DEBUG_INFO, LPVOID, lpBaseOfDll, 0, 4, 4);
 }
 
+static void test_pack_WAITORTIMERCALLBACK(void)
+{
+    /* WAITORTIMERCALLBACK */
+    TEST_TYPE(WAITORTIMERCALLBACK, 4, 4);
+}
+
 static void test_pack_WIN32_FILE_ATTRIBUTE_DATA(void)
 {
     /* WIN32_FILE_ATTRIBUTE_DATA (pack 4) */
@@ -911,40 +1070,42 @@ static void test_pack_WIN32_FIND_DATAW(void)
 
 static void test_pack(void)
 {
+    test_pack_ACTCTXA();
+    test_pack_ACTCTXW();
+    test_pack_ACTCTX_SECTION_KEYED_DATA();
+    test_pack_ACTCTX_SECTION_KEYED_DATA_2600();
+    test_pack_ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA();
+    test_pack_ACTIVATION_CONTEXT_BASIC_INFORMATION();
     test_pack_BY_HANDLE_FILE_INFORMATION();
-    test_pack_COMMCONFIG();
     test_pack_COMMPROP();
     test_pack_COMMTIMEOUTS();
-    test_pack_COMSTAT();
     test_pack_CREATE_PROCESS_DEBUG_INFO();
     test_pack_CREATE_THREAD_DEBUG_INFO();
     test_pack_CRITICAL_SECTION();
     test_pack_CRITICAL_SECTION_DEBUG();
-    test_pack_DCB();
-    test_pack_DEBUG_EVENT();
+    test_pack_ENUMRESLANGPROCA();
+    test_pack_ENUMRESLANGPROCW();
+    test_pack_ENUMRESNAMEPROCA();
+    test_pack_ENUMRESNAMEPROCW();
+    test_pack_ENUMRESTYPEPROCA();
+    test_pack_ENUMRESTYPEPROCW();
     test_pack_EXCEPTION_DEBUG_INFO();
     test_pack_EXIT_PROCESS_DEBUG_INFO();
     test_pack_EXIT_THREAD_DEBUG_INFO();
     test_pack_HW_PROFILE_INFOA();
     test_pack_HW_PROFILE_INFOW();
-    test_pack_LDT_ENTRY();
     test_pack_LOAD_DLL_DEBUG_INFO();
     test_pack_LPBY_HANDLE_FILE_INFORMATION();
-    test_pack_LPCOMMCONFIG();
     test_pack_LPCOMMPROP();
     test_pack_LPCOMMTIMEOUTS();
-    test_pack_LPCOMSTAT();
-    test_pack_LPCONTEXT();
     test_pack_LPCRITICAL_SECTION();
     test_pack_LPCRITICAL_SECTION_DEBUG();
-    test_pack_LPDCB();
-    test_pack_LPDEBUG_EVENT();
     test_pack_LPEXCEPTION_POINTERS();
     test_pack_LPEXCEPTION_RECORD();
     test_pack_LPFIBER_START_ROUTINE();
     test_pack_LPHW_PROFILE_INFOA();
     test_pack_LPHW_PROFILE_INFOW();
-    test_pack_LPLDT_ENTRY();
+    test_pack_LPLONG();
     test_pack_LPMEMORYSTATUS();
     test_pack_LPOFSTRUCT();
     test_pack_LPOSVERSIONINFOA();
@@ -953,21 +1114,19 @@ static void test_pack(void)
     test_pack_LPOSVERSIONINFOW();
     test_pack_LPOVERLAPPED();
     test_pack_LPOVERLAPPED_COMPLETION_ROUTINE();
-    test_pack_LPPROCESS_HEAP_ENTRY();
     test_pack_LPPROCESS_INFORMATION();
     test_pack_LPPROGRESS_ROUTINE();
     test_pack_LPSECURITY_ATTRIBUTES();
     test_pack_LPSTARTUPINFOA();
     test_pack_LPSTARTUPINFOW();
     test_pack_LPSYSTEMTIME();
-    test_pack_LPSYSTEM_INFO();
     test_pack_LPSYSTEM_POWER_STATUS();
     test_pack_LPTHREAD_START_ROUTINE();
     test_pack_LPTIME_ZONE_INFORMATION();
+    test_pack_LPVOID();
     test_pack_LPWIN32_FILE_ATTRIBUTE_DATA();
     test_pack_LPWIN32_FIND_DATAA();
     test_pack_LPWIN32_FIND_DATAW();
-    test_pack_LPWIN32_STREAM_ID();
     test_pack_MEMORYSTATUS();
     test_pack_OFSTRUCT();
     test_pack_OSVERSIONINFOA();
@@ -976,19 +1135,30 @@ static void test_pack(void)
     test_pack_OSVERSIONINFOW();
     test_pack_OUTPUT_DEBUG_STRING_INFO();
     test_pack_OVERLAPPED();
+    test_pack_PACTCTXA();
+    test_pack_PACTCTXW();
+    test_pack_PACTCTX_SECTION_KEYED_DATA();
+    test_pack_PACTCTX_SECTION_KEYED_DATA_2600();
+    test_pack_PACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA();
+    test_pack_PACTIVATION_CONTEXT_BASIC_INFORMATION();
     test_pack_PAPCFUNC();
     test_pack_PBY_HANDLE_FILE_INFORMATION();
+    test_pack_PCACTCTXA();
+    test_pack_PCACTCTXW();
+    test_pack_PCACTCTX_SECTION_KEYED_DATA();
+    test_pack_PCACTCTX_SECTION_KEYED_DATA_2600();
+    test_pack_PCACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA();
     test_pack_PCRITICAL_SECTION();
     test_pack_PCRITICAL_SECTION_DEBUG();
     test_pack_PFIBER_START_ROUTINE();
+    test_pack_PHKEY();
     test_pack_POFSTRUCT();
     test_pack_POSVERSIONINFOA();
     test_pack_POSVERSIONINFOEXA();
     test_pack_POSVERSIONINFOEXW();
     test_pack_POSVERSIONINFOW();
-    test_pack_PPROCESS_HEAP_ENTRY();
     test_pack_PPROCESS_INFORMATION();
-    test_pack_PROCESS_HEAP_ENTRY();
+    test_pack_PQUERYACTCTXW_FUNC();
     test_pack_PROCESS_INFORMATION();
     test_pack_PSECURITY_ATTRIBUTES();
     test_pack_PSYSTEMTIME();
@@ -1000,10 +1170,12 @@ static void test_pack(void)
     test_pack_SECURITY_ATTRIBUTES();
     test_pack_STARTUPINFOA();
     test_pack_STARTUPINFOW();
+    test_pack_SYSLEVEL();
     test_pack_SYSTEMTIME();
     test_pack_SYSTEM_POWER_STATUS();
     test_pack_TIME_ZONE_INFORMATION();
     test_pack_UNLOAD_DLL_DEBUG_INFO();
+    test_pack_WAITORTIMERCALLBACK();
     test_pack_WIN32_FILE_ATTRIBUTE_DATA();
     test_pack_WIN32_FIND_DATAA();
     test_pack_WIN32_FIND_DATAW();

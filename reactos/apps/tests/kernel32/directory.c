@@ -193,21 +193,19 @@ static void test_CreateDirectoryA(void)
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryA should always succeed\n");
 
-    todo_wine {
-      lstrcatA(tmpdir, "?");
-      ret = CreateDirectoryA(tmpdir, NULL);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "CreateDirectoryA with ? wildcard name should fail, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-      ret = RemoveDirectoryA(tmpdir);
+    lstrcatA(tmpdir, "?");
+    ret = CreateDirectoryA(tmpdir, NULL);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "CreateDirectoryA with ? wildcard name should fail, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
+    ret = RemoveDirectoryA(tmpdir);
 
-      tmpdir[lstrlenA(tmpdir) - 1] = '*';
-      ret = CreateDirectoryA(tmpdir, NULL);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "CreateDirectoryA with * wildcard name should fail, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-      ret = RemoveDirectoryA(tmpdir);
-    }
+    tmpdir[lstrlenA(tmpdir) - 1] = '*';
+    ret = CreateDirectoryA(tmpdir, NULL);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "CreateDirectoryA with * wildcard name should fail, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
+    ret = RemoveDirectoryA(tmpdir);
 }
 
 static void test_CreateDirectoryW(void)
@@ -256,21 +254,19 @@ static void test_CreateDirectoryW(void)
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryW should always succeed\n");
 
-    todo_wine {
-      lstrcatW(tmpdir, questionW);
-      ret = CreateDirectoryW(tmpdir, NULL);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "CreateDirectoryW with ? wildcard name should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-      ret = RemoveDirectoryW(tmpdir);
+    lstrcatW(tmpdir, questionW);
+    ret = CreateDirectoryW(tmpdir, NULL);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "CreateDirectoryW with ? wildcard name should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
+    ret = RemoveDirectoryW(tmpdir);
 
-      tmpdir[lstrlenW(tmpdir) - 1] = '*';
-      ret = CreateDirectoryW(tmpdir, NULL);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-      ret = RemoveDirectoryW(tmpdir);
-    }
+    tmpdir[lstrlenW(tmpdir) - 1] = '*';
+    ret = CreateDirectoryW(tmpdir, NULL);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
+    ret = RemoveDirectoryW(tmpdir);
 }
 
 static void test_RemoveDirectoryA(void)
@@ -286,19 +282,17 @@ static void test_RemoveDirectoryA(void)
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryA should always succeed\n");
 
-    todo_wine {
-      lstrcatA(tmpdir, "?");
-      ret = RemoveDirectoryA(tmpdir);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "RemoveDirectoryA with ? wildcard name should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
+    lstrcatA(tmpdir, "?");
+    ret = RemoveDirectoryA(tmpdir);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "RemoveDirectoryA with ? wildcard name should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
 
-      tmpdir[lstrlenA(tmpdir) - 1] = '*';
-      ret = RemoveDirectoryA(tmpdir);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "RemoveDirectoryA with * wildcard name should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-    }
+    tmpdir[lstrlenA(tmpdir) - 1] = '*';
+    ret = RemoveDirectoryA(tmpdir);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "RemoveDirectoryA with * wildcard name should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
 }
 
 static void test_RemoveDirectoryW(void)
@@ -319,20 +313,17 @@ static void test_RemoveDirectoryW(void)
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryW should always succeed\n");
 
-    todo_wine {
-      lstrcatW(tmpdir, questionW);
-      ret = RemoveDirectoryW(tmpdir);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "RemoveDirectoryW with wildcard should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
+    lstrcatW(tmpdir, questionW);
+    ret = RemoveDirectoryW(tmpdir);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "RemoveDirectoryW with wildcard should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
 
-      tmpdir[lstrlenW(tmpdir) - 1] = '*';
-      ret = RemoveDirectoryW(tmpdir);
-      ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-         "RemoveDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
-         ret ? " True" : "False", GetLastError());
-    }
-
+    tmpdir[lstrlenW(tmpdir) - 1] = '*';
+    ret = RemoveDirectoryW(tmpdir);
+    ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
+       "RemoveDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
+       ret ? " True" : "False", GetLastError());
 }
 
 START_TEST(directory)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/02/14 20:11:42 sedwards Exp $
+# $Id: Makefile,v 1.2 2004/05/04 17:25:18 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,7 +9,7 @@ TARGET_TYPE = program
 TARGET_APPTYPE = console
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
+TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API -DWINVER=0x0500
 
 TARGET_NAME = kernel32_test
 

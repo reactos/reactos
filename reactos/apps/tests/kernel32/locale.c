@@ -35,13 +35,6 @@
 #include "winerror.h"
 #include "winnls.h"
 
-#ifndef DATE_YEARMONTH
-#define DATE_YEARMONTH 8
-#endif
-#ifndef MAP_EXPAND_LIGATURES
-#define MAP_EXPAND_LIGATURES   0x2000
-#endif
-
 static inline unsigned int strlenW( const WCHAR *str )
 {
     const WCHAR *s = str;
@@ -802,8 +795,17 @@ static void test_CompareStringA()
     ok(!ret, "CompareStringA must fail with invalid flag\n");
 
     ret = lstrcmpA("", "");
-    ok (!ret, "lstrcmpA(\"\", \"\") should return 0, got %d\n", ret);
+    ok (ret == 0, "lstrcmpA(\"\", \"\") should return 0, got %d\n", ret);
 
+    ret = lstrcmpA(NULL, NULL);
+    ok (ret == 0, "lstrcmpA(NULL, NULL) should return 0, got %d\n", ret);
+
+    ret = lstrcmpA("", NULL);
+    ok (ret == 1, "lstrcmpA(\"\", NULL) should return 1, got %d\n", ret);
+
+    ret = lstrcmpA(NULL, "");
+    ok (ret == -1, "lstrcmpA(NULL, \"\") should return -1, got %d\n", ret);
+  
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"EndDialog",-1,"_Property",-1);
     ok( ret == 3, "EndDialog vs _Property ... expected 3, got %d\n", ret);
 

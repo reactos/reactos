@@ -50,18 +50,28 @@
 
 #define PIPENAME "\\\\.\\PiPe\\tests_" __FILE__
 
-void test_CreateNamedPipe(void)
+#define NB_SERVER_LOOPS 8
+
+static HANDLE alarm_event;
+
+static void test_CreateNamedPipe(pipemode)
 {
     HANDLE hnp;
     HANDLE hFile;
-    const char obuf[] = "Bit Bucket";
-    char ibuf[32];
+    static const char obuf[] = "Bit Bucket";
+    static const char obuf2[] = "More bits";
+    char ibuf[32], *pbuf;
     DWORD written;
     DWORD readden;
+    DWORD avail;
+    DWORD lpmode;
 
-    trace("test_CreateNamedPipe starting\n");
+    if (pipemode == PIPE_TYPE_BYTE)
+        trace("test_CreateNamedPipe starting in byte mode\n");
+    else
+        trace("test_CreateNamedPipe starting in message mode\n");
     /* Bad parameter checks */
-    hnp = CreateNamedPipe("not a named pipe", PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+    hnp = CreateNamedPipe("not a named pipe", PIPE_ACCESS_DUPLEX, pipemode | PIPE_WAIT,
         /* nMaxInstances */ 1,
         /* nOutBufSize */ 1024,
         /* nInBufSize */ 1024,
@@ -78,7 +88,7 @@ void test_CreateNamedPipe(void)
         "CreateNamedPipe should fail if name doesn't start with \\\\.\\pipe\n");
 
     hnp = CreateNamedPipe(NULL,
-        PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+        PIPE_ACCESS_DUPLEX, pipemode | PIPE_WAIT,
         1, 1024, 1024, NMPWAIT_USE_DEFAULT_WAIT, NULL);
     ok(hnp == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
         "CreateNamedPipe should fail if name is NULL\n");
@@ -90,7 +100,7 @@ void test_CreateNamedPipe(void)
 
     /* Functional checks */
 
-    hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+    hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, pipemode | PIPE_WAIT,
         /* nMaxInstances */ 1,
         /* nOutBufSize */ 1024,
         /* nInBufSize */ 1024,
@@ -108,17 +118,160 @@ void test_CreateNamedPipe(void)
         /* Make sure we can read and write a few bytes in both directions */
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len\n");
-        ok(ReadFile(hFile, ibuf, sizeof(obuf), &readden, NULL), "ReadFile\n");
-        ok(readden == sizeof(obuf), "read file len\n");
-        ok(memcmp(obuf, ibuf, written) == 0, "content check\n");
+        ok(written == sizeof(obuf), "write file len 1\n");
+        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
+        ok(readden == sizeof(obuf), "peek 1 got %ld bytes\n", readden);
+        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+        ok(readden == sizeof(obuf), "read 1 got %ld bytes\n", readden);
+        ok(memcmp(obuf, ibuf, written) == 0, "content 1 check\n");
 
         memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len\n");
-        ok(ReadFile(hnp, ibuf, sizeof(obuf), &readden, NULL), "ReadFile\n");
-        ok(readden == sizeof(obuf), "read file len\n");
-        ok(memcmp(obuf, ibuf, written) == 0, "content check\n");
+        ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), "WriteFile\n");
+        ok(written == sizeof(obuf2), "write file len 2\n");
+        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
+        ok(readden == sizeof(obuf2), "peek 2 got %ld bytes\n", readden);
+        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+        ok(readden == sizeof(obuf2), "read 2 got %ld bytes\n", readden);
+        ok(memcmp(obuf2, ibuf, written) == 0, "content 2 check\n");
+
+        /* Test reading of multiple writes */
+        memset(ibuf, 0, sizeof(ibuf));
+        ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile3a\n");
+        ok(written == sizeof(obuf), "write file len 3a\n");
+        ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), " WriteFile3b\n");
+        ok(written == sizeof(obuf2), "write file len 3b\n");
+        ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek3\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            todo_wine {
+                /* should return all 23 bytes */
+                ok(readden == sizeof(obuf) + sizeof(obuf2), "peek3 got %ld bytes\n", readden);
+            }
+        }
+        else
+            ok(readden == sizeof(obuf), "peek3 got %ld bytes\n", readden);
+        todo_wine {
+            ok(avail == sizeof(obuf) + sizeof(obuf2), "peek3 got %ld bytes available\n", avail);
+        }
+        pbuf = ibuf;
+        ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "pipe content 3a check\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            todo_wine {
+                pbuf += sizeof(obuf);
+                ok(memcmp(obuf2, pbuf, sizeof(obuf2)) == 0, "pipe content 3b check\n");
+            }
+        }
+        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+        ok(readden == sizeof(obuf) + sizeof(obuf2), "read 3 got %ld bytes\n", readden);
+        pbuf = ibuf;
+        ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 3a check\n");
+        pbuf += sizeof(obuf);
+        ok(memcmp(obuf2, pbuf, sizeof(obuf2)) == 0, "content 3b check\n");
+
+        /* Multiple writes in the reverse direction */
+        memset(ibuf, 0, sizeof(ibuf));
+        ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile4a\n");
+        ok(written == sizeof(obuf), "write file len 4a\n");
+        ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), " WriteFile4b\n");
+        ok(written == sizeof(obuf2), "write file len 4b\n");
+        ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek4\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            todo_wine {
+                /* should return all 23 bytes */
+                ok(readden == sizeof(obuf) + sizeof(obuf2), "peek4 got %ld bytes\n", readden);
+            }
+        }
+        else
+            ok(readden == sizeof(obuf), "peek4 got %ld bytes\n", readden);
+        todo_wine {
+            ok(avail == sizeof(obuf) + sizeof(obuf2), "peek4 got %ld bytes available\n", avail);
+        }
+        pbuf = ibuf;
+        ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "pipe content 4a check\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            todo_wine {
+                pbuf += sizeof(obuf);
+                ok(memcmp(obuf2, pbuf, sizeof(obuf2)) == 0, "pipe content 4b check\n");
+            }
+        }
+        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            ok(readden == sizeof(obuf) + sizeof(obuf2), "read 4 got %ld bytes\n", readden);
+        }
+        else {
+            todo_wine {
+                ok(readden == sizeof(obuf), "read 4 got %ld bytes\n", readden);
+            }
+        }
+        pbuf = ibuf;
+        ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 4a check\n");
+        if (pipemode == PIPE_TYPE_BYTE) {
+            pbuf += sizeof(obuf);
+            ok(memcmp(obuf2, pbuf, sizeof(obuf2)) == 0, "content 4b check\n");
+        }
+
+        /* Test reading of multiple writes after a mode change
+          (CreateFile always creates a byte mode pipe) */
+        lpmode = PIPE_READMODE_MESSAGE;
+        if (pipemode == PIPE_TYPE_BYTE) {
+            /* trying to change the client end of a byte pipe to message mode should fail */
+            ok(!SetNamedPipeHandleState(hFile, &lpmode, NULL, NULL), "Change mode\n");
+        }
+        else {
+            todo_wine {
+                ok(SetNamedPipeHandleState(hFile, &lpmode, NULL, NULL), "Change mode\n");
+            }
+        
+            memset(ibuf, 0, sizeof(ibuf));
+            ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile5a\n");
+            ok(written == sizeof(obuf), "write file len 3a\n");
+            ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), " WriteFile5b\n");
+            ok(written == sizeof(obuf2), "write file len 3b\n");
+            ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek5\n");
+            ok(readden == sizeof(obuf), "peek5 got %ld bytes\n", readden);
+            todo_wine {
+                ok(avail == sizeof(obuf) + sizeof(obuf2), "peek5 got %ld bytes available\n", avail);
+            }
+            pbuf = ibuf;
+            ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 5a check\n");
+            ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+            todo_wine {
+                ok(readden == sizeof(obuf), "read 5 got %ld bytes\n", readden);
+            }
+            pbuf = ibuf;
+            ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 5a check\n");
+    
+            /* Multiple writes in the reverse direction */
+            /* the write of obuf2 from write4 should still be in the buffer */
+            ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek6a\n");
+            todo_wine {
+                ok(readden == sizeof(obuf2), "peek6a got %ld bytes\n", readden);
+                ok(avail == sizeof(obuf2), "peek6a got %ld bytes available\n", avail);
+            }
+            if (avail > 0) {
+                ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+                ok(readden == sizeof(obuf2), "read 6a got %ld bytes\n", readden);
+                pbuf = ibuf;
+                ok(memcmp(obuf2, pbuf, sizeof(obuf2)) == 0, "content 6a check\n");
+            }
+            memset(ibuf, 0, sizeof(ibuf));
+            ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile6a\n");
+            ok(written == sizeof(obuf), "write file len 6a\n");
+            ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), " WriteFile6b\n");
+            ok(written == sizeof(obuf2), "write file len 6b\n");
+            ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek6\n");
+            ok(readden == sizeof(obuf), "peek6 got %ld bytes\n", readden);
+            todo_wine {
+                ok(avail == sizeof(obuf) + sizeof(obuf2), "peek6b got %ld bytes available\n", avail);
+            }
+            pbuf = ibuf;
+            ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 6a check\n");
+            ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
+            todo_wine {
+                ok(readden == sizeof(obuf), "read 6b got %ld bytes\n", readden);
+            }
+            pbuf = ibuf;
+            ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 6a check\n");
+        }
 
         /* Picky conformance tests */
 
@@ -235,9 +388,11 @@ static DWORD CALLBACK alarmThreadMain(LPVOID arg)
 {
     DWORD timeout = (DWORD) arg;
     trace("alarmThreadMain\n");
-    Sleep(timeout);
-    ok(FALSE, "alarm\n");
-    ExitProcess(1);
+    if (WaitForSingleObject( alarm_event, timeout ) == WAIT_TIMEOUT)
+    {
+        ok(FALSE, "alarm\n");
+        ExitProcess(1);
+    }
     return 1;
 }
 
@@ -259,7 +414,7 @@ static DWORD CALLBACK serverThreadMain1(LPVOID arg)
         /* lpSecurityAttrib */ NULL);
 
     ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-    for (i = 0; ; i++) {
+    for (i = 0; i < NB_SERVER_LOOPS; i++) {
         char buf[512];
         DWORD written;
         DWORD readden;
@@ -291,6 +446,7 @@ static DWORD CALLBACK serverThreadMain1(LPVOID arg)
         ok(DisconnectNamedPipe(hnp), "DisconnectNamedPipe\n");
         trace("Server done disconnecting.\n");
     }
+    return 0;
 }
 
 /** Trivial byte echo server - closes after each connection */
@@ -310,7 +466,7 @@ static DWORD CALLBACK serverThreadMain2(LPVOID arg)
         /* lpSecurityAttrib */ NULL);
     ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
 
-    for (i = 0; ; i++) {
+    for (i = 0; i < NB_SERVER_LOOPS; i++) {
         char buf[512];
         DWORD written;
         DWORD readden;
@@ -354,6 +510,7 @@ static DWORD CALLBACK serverThreadMain2(LPVOID arg)
         ok(CloseHandle(hnp), "CloseHandle\n");
         hnp = hnpNext;
     }
+    return 0;
 }
 
 /** Trivial byte echo server - uses overlapped named pipe calls */
@@ -379,7 +536,7 @@ static DWORD CALLBACK serverThreadMain3(LPVOID arg)
         NULL);                  /* name */
     ok(hEvent != NULL, "CreateEvent\n");
 
-    for (i = 0; ; i++) {
+    for (i = 0; i < NB_SERVER_LOOPS; i++) {
         char buf[512];
         DWORD written;
         DWORD readden;
@@ -450,6 +607,7 @@ static DWORD CALLBACK serverThreadMain3(LPVOID arg)
         ok(FlushFileBuffers(hnp), "FlushFileBuffers\n");
         ok(DisconnectNamedPipe(hnp), "DisconnectNamedPipe\n");
     }
+    return 0;
 }
 
 static void exercizeServer(const char *pipename, HANDLE serverThread)
@@ -457,9 +615,9 @@ static void exercizeServer(const char *pipename, HANDLE serverThread)
     int i;
 
     trace("exercizeServer starting\n");
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < NB_SERVER_LOOPS; i++) {
         HANDLE hFile=INVALID_HANDLE_VALUE;
-        const char obuf[] = "Bit Bucket";
+        static const char obuf[] = "Bit Bucket";
         char ibuf[32];
         DWORD written;
         DWORD readden;
@@ -497,12 +655,12 @@ static void exercizeServer(const char *pipename, HANDLE serverThread)
         ok(CloseHandle(hFile), "CloseHandle\n");
     }
 
-    ok(TerminateThread(serverThread, 0), "TerminateThread\n");
+    ok(WaitForSingleObject(serverThread,INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject\n");
     CloseHandle(hnp);
     trace("exercizeServer returning\n");
 }
 
-void test_NamedPipe_2(void)
+static void test_NamedPipe_2(void)
 {
     HANDLE serverThread;
     DWORD serverThreadId;
@@ -511,6 +669,7 @@ void test_NamedPipe_2(void)
 
     trace("test_NamedPipe_2 starting\n");
     /* Set up a ten second timeout */
+    alarm_event = CreateEvent( NULL, TRUE, FALSE, NULL );
     alarmThread = CreateThread(NULL, 0, alarmThreadMain, (void *) 10000, 0, &alarmThreadId);
 
     /* The servers we're about to exercize do try to clean up carefully,
@@ -519,7 +678,7 @@ void test_NamedPipe_2(void)
      */
 
     /* Try server #1 */
-    serverThread = CreateThread(NULL, 0, serverThreadMain1, 0, 0, &serverThreadId);
+    serverThread = CreateThread(NULL, 0, serverThreadMain1, (void *)8, 0, &serverThreadId);
     ok(serverThread != INVALID_HANDLE_VALUE, "CreateThread\n");
     exercizeServer(PIPENAME "serverThreadMain1", serverThread);
 
@@ -536,15 +695,16 @@ void test_NamedPipe_2(void)
     exercizeServer(PIPENAME "serverThreadMain3", serverThread);
     }
 
-    ok(TerminateThread(alarmThread, 0), "TerminateThread\n");
+    ok(SetEvent( alarm_event ), "SetEvent\n");
+    CloseHandle( alarm_event );
     trace("test_NamedPipe_2 returning\n");
 }
 
-void test_DisconnectNamedPipe(void)
+static void test_DisconnectNamedPipe(void)
 {
     HANDLE hnp;
     HANDLE hFile;
-    const char obuf[] = "Bit Bucket";
+    static const char obuf[] = "Bit Bucket";
     char ibuf[32];
     DWORD written;
     DWORD readden;
@@ -596,6 +756,8 @@ START_TEST(pipe)
     trace("test 3 of 4:\n");
     test_NamedPipe_2();
     trace("test 4 of 4:\n");
-    test_CreateNamedPipe();
+    test_CreateNamedPipe(PIPE_TYPE_BYTE);
+    trace("all tests done\n");
+    test_CreateNamedPipe(PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE);
     trace("all tests done\n");
 }
