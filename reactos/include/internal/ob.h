@@ -59,14 +59,12 @@ HANDLE ObInsertHandle(PKPROCESS Process, PVOID ObjectBody,
 		      ACCESS_MASK GrantedAccess, BOOLEAN Inherit);
 VOID ObDeleteHandle(HANDLE Handle);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
-			 PWSTR* UnparsedSection);
+			 PWSTR* UnparsedSection, ULONG Attributes);
 
 PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,
 			    POBJECT_TYPE Type);
-NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
-			    PVOID* Object, PWSTR* UnparsedSection);
 VOID ObInitializeHandleTable(PKPROCESS Parent, BOOLEAN Inherit,
 			     PKPROCESS Process);
 VOID ObRemoveEntry(POBJECT_HEADER Header);
