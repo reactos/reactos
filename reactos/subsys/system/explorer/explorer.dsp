@@ -425,6 +425,9 @@ SOURCE=.\dialogs\settings.cpp
 SOURCE=.\dialogs\settings.h
 # End Source File
 # End Group
+# Begin Group "main"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\buildno.h
@@ -445,5 +448,6 @@ SOURCE=.\externals.h
 
 SOURCE=.\globals.h
 # End Source File
+# End Group
 # End Target
 # End Project
