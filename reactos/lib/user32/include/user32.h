@@ -52,6 +52,9 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 #define NtUserGetWindowInfo(hwnd, pwi) \
   (BOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)pwi, TWOPARAM_ROUTINE_GETWINDOWINFO)
 
+#define NtUserRegisterLogonProcess(hproc, x) \
+  (BOOL)NtUserCallTwoParam((DWORD)hproc, (DWORD)x, TWOPARAM_ROUTINE_REGISTERLOGONPROC)
+
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
 

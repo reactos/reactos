@@ -16,7 +16,12 @@
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
 #define WINSTA_ROOT_NAME_LENGTH	23
 
+/* Window Station Status Flags */
+#define WSS_LOCKED	(1)
+#define WSS_NOINTERACTIVE	(2)
+
 extern WINSTATION_OBJECT *InputWindowStation;
+extern PW32PROCESS LogonProcess;
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID);

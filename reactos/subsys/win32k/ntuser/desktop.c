@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.10 2004/04/09 20:03:19 navaraf Exp $
+ *  $Id: desktop.c,v 1.11 2004/05/01 16:43:15 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -719,7 +719,19 @@ NtUserSwitchDesktop(HDESK hDesktop)
       DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
       return FALSE;
    }
-
+   
+   /*
+    * Don't allow applications switch the desktop if it's locked, unless the caller
+    * is the logon application itself
+    */
+   if((DesktopObject->WindowStation->Flags & WSS_LOCKED) &&
+      LogonProcess != NULL && LogonProcess != PsGetWin32Process())
+   {
+      ObDereferenceObject(DesktopObject);
+      DPRINT1("Switching desktop 0x%x denied because the work station is locked!\n", hDesktop);
+      return FALSE;
+   }
+   
    /* FIXME: Fail if the desktop belong to an invisible window station */
    /* FIXME: Fail if the process is associated with a secured
              desktop such as Winlogon or Screen-Saver */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.3 2003/12/07 23:02:57 gvg Exp $
+/* $Id: misc.c,v 1.4 2004/05/01 16:43:14 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -55,4 +55,14 @@ STDCALL
 PrivateCsrssManualGuiCheck(LONG Check)
 {
   NtUserManualGuiCheck(Check);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RegisterLogonProcess ( HANDLE hprocess, BOOL x )
+{
+  return NtUserRegisterLogonProcess(hprocess, x);
 }

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.66 2004/05/01 11:38:28 weiden Exp $
+/* $Id: misc.c,v 1.67 2004/05/01 16:43:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,6 +36,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* registered Logon process */
+PW32PROCESS LogonProcess = NULL;
+
 /* FIXME - not yet defined in w32api :( */
 #define SPI_GETFOCUSBORDERWIDTH	(8206)
 #define SPI_SETFOCUSBORDERWIDTH	(8207)
@@ -59,6 +62,43 @@ void W32kRegisterPrimitiveMessageQueue() {
 PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue() {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
   return pmPrimitiveMessageQueue;
+}
+
+BOOL FASTCALL
+IntRegisterLogonProcess(HANDLE hProcess, BOOL x)
+{
+  PEPROCESS Process;
+  NTSTATUS Status;
+  
+  if(LogonProcess != NULL && LogonProcess != PsGetWin32Process())
+  {
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return FALSE;
+  }
+  
+  if(hProcess)
+  {
+    Status = ObReferenceObjectByHandle(hProcess,
+                                       PROCESS_QUERY_INFORMATION,
+                                       PsProcessType,
+                                       ExGetPreviousMode(),
+                                       (PVOID*)&Process,
+                                       NULL);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return 0;
+    }
+  
+    LogonProcess = Process->Win32Process;
+    ObDereferenceObject(Process);
+  }
+  else
+  {
+    /* deregister the logon process */
+    LogonProcess = NULL;
+  }
+  return TRUE;
 }
 
 /*
@@ -94,7 +134,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     default:
-      DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n");
+      DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       break;
   }
@@ -223,7 +263,7 @@ NtUserCallOneParam(
       return (DWORD)TRUE;
     }
   }
-  DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
+  DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n", 
           Routine, Param);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;
@@ -394,8 +434,12 @@ NtUserCallTwoParam(
       IntReleaseWindowObject(WindowObject);
       return Ret;
     }
+    
+    case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
+      return (DWORD)IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
+    
   }
-  DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam()\n Param1=0x%x Parm2=0x%x\n",
+  DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
           Routine, Param1, Param2);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
   return 0;

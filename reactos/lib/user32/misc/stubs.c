@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.59 2004/04/29 20:26:35 weiden Exp $
+/* $Id: stubs.c,v 1.60 2004/05/01 16:43:14 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -370,17 +370,6 @@ STDCALL
 RegisterSystemThread ( DWORD flags, DWORD reserved )
 {
   UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-RegisterLogonProcess ( HANDLE hprocess, BOOL x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*

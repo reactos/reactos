@@ -4624,7 +4624,7 @@ RegisterSystemThread(
 		     DWORD reserved
 		     );
 
-DWORD
+BOOL
 STDCALL
 RegisterLogonProcess(
 		     HANDLE hprocess,
