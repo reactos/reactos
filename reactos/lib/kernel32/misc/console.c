@@ -112,10 +112,11 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
    PCSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
+   WORD Size;
    
    Request = HeapAlloc(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
-		       sizeof(CSRSS_API_REQUEST) + nNumberOfCharsToWrite);
+		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_REQUEST);
    if (Request == NULL)
      {
 	return(FALSE);
@@ -123,38 +124,36 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
 
    Request->Type = CSRSS_WRITE_CONSOLE;
    Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
-   Request->Data.WriteConsoleRequest.NrCharactersToWrite =
-     nNumberOfCharsToWrite;
-
-//   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
-//   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
-
-   memcpy(Request->Data.WriteConsoleRequest.Buffer,
-	  lpBuffer,
-	  nNumberOfCharsToWrite);
-   
-   Status = CsrClientCallServer(Request,
-				&Reply,
-				sizeof(CSRSS_API_REQUEST) + 
-				nNumberOfCharsToWrite,
-				sizeof(CSRSS_API_REPLY));
-
-   HeapFree(GetProcessHeap(),
-	    0,
-	    Request);
-
-   if (!NT_SUCCESS(Status))
-     {
-	return(FALSE);
-     }
-
    if (lpNumberOfCharsWritten != NULL)
-     {
-	*lpNumberOfCharsWritten = 
-	  Reply.Data.WriteConsoleReply.NrCharactersWritten;
-     }
+      *lpNumberOfCharsWritten = nNumberOfCharsToWrite;
+   while( nNumberOfCharsToWrite )
+      {
+	 Size = nNumberOfCharsToWrite > CSRSS_MAX_WRITE_CONSOLE_REQUEST ? CSRSS_MAX_WRITE_CONSOLE_REQUEST : nNumberOfCharsToWrite;
+
+	 Request->Data.WriteConsoleRequest.NrCharactersToWrite = Size;
+
+	 //   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
+	 //   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
+	 
+	 memcpy( Request->Data.WriteConsoleRequest.Buffer, lpBuffer, Size );
    
-   return(TRUE);
+	 Status = CsrClientCallServer(Request,
+				      &Reply,
+				      sizeof(CSRSS_WRITE_CONSOLE_REQUEST) + 
+				      Size,
+				      sizeof(CSRSS_API_REPLY));
+	 
+	 if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
+	    {
+	       HeapFree( GetProcessHeap(), 0, Request );
+	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       return(FALSE);
+	    }
+	 nNumberOfCharsToWrite -= Size;
+	 lpBuffer += Size;
+      }
+   HeapFree( GetProcessHeap(), 0, Request );
+   return TRUE;
 }
 
 
@@ -181,8 +180,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    
    Request.Type = CSRSS_READ_CONSOLE;
    Request.Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
-   Request.Data.ReadConsoleRequest.NrCharactersToRead =
-     nNumberOfCharsToRead;
+   Request.Data.ReadConsoleRequest.NrCharactersToRead = nNumberOfCharsToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : nNumberOfCharsToRead;
    
    Status = CsrClientCallServer(&Request, 
 				Reply,
@@ -190,13 +188,14 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 				sizeof(CSRSS_API_REPLY) + 
 				nNumberOfCharsToRead);
    //   DbgPrint( "Csrss Returned\n" );
-   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Reply->Status))
+   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply->Status ))
      {
 	DbgPrint( "CSR returned error in ReadConsole\n" );
+	SetLastError( RtlNtStatusToDosError( Status ) );
 	HeapFree( GetProcessHeap(), 0, Reply );
 	return(FALSE);
      }
-   if( Reply->Status == STATUS_PENDING )
+   while( Reply->Status == STATUS_PENDING )
      {
        //DbgPrint( "Read pending, waiting on object %x\n", Reply->Data.ReadConsoleReply.EventHandle );
        Status = NtWaitForSingleObject( Reply->Data.ReadConsoleReply.EventHandle, FALSE, 0 );
@@ -207,18 +206,15 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 	   return FALSE;
 	 }
        Status = CsrClientCallServer( &Request, Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) + nNumberOfCharsToRead );
-       if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Reply->Status ) )
+       if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply->Status ) )
 	 {
-	   SetLastError( RtlNtStatusToDosError( Reply->Status ) );
+	   SetLastError( RtlNtStatusToDosError( Status ) );
 	   HeapFree( GetProcessHeap(), 0, Reply );
 	   return FALSE;
 	 }
      }
    if (lpNumberOfCharsRead != NULL)
-     {
-	*lpNumberOfCharsRead =
-	  Reply->Data.ReadConsoleReply.NrCharactersRead;
-     }
+	*lpNumberOfCharsRead = Reply->Data.ReadConsoleReply.NrCharactersRead;
    memcpy(lpBuffer, 
 	  Reply->Data.ReadConsoleReply.Buffer,
 	  Reply->Data.ReadConsoleReply.NrCharactersRead);
@@ -241,8 +237,11 @@ WINBOOL STDCALL AllocConsole(VOID)
 
    Request.Type = CSRSS_ALLOC_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
-   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Reply.Status ) )
-     return FALSE;
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
    SetStdHandle( STD_ERROR_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
@@ -256,6 +255,7 @@ WINBOOL STDCALL AllocConsole(VOID)
 WINBOOL STDCALL FreeConsole(VOID)
 {
    DbgPrint("FreeConsole() is unimplemented");
+   return FALSE;
 }
 
 
@@ -269,25 +269,20 @@ GetConsoleScreenBufferInfo(
     PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo
     )
 {
-	DWORD	dwBytesReturned;
-	
-	if ( !DeviceIoControl(
-		hConsoleOutput,
-                IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
-		NULL,
-		0,
-		lpConsoleScreenBufferInfo,
-		sizeof(CONSOLE_SCREEN_BUFFER_INFO),
-		& dwBytesReturned,
-		NULL
-		)
-	)
-	{
-		SetLastError(0); /* FIXME: What error code? */
-		return FALSE;
-	}
-	SetLastError(ERROR_SUCCESS); /* OK */
-	return TRUE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_SCREEN_BUFFER_INFO;
+   Request.Data.ScreenBufferInfoRequest.ConsoleHandle = hConsoleOutput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   *lpConsoleScreenBufferInfo = Reply.Data.ScreenBufferInfoReply.Info;
+   return TRUE;
 }
 
 
@@ -301,29 +296,20 @@ SetConsoleCursorPosition(
     COORD dwCursorPosition
     )
 {
-	DWORD dwBytesReturned;
-	CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-	if( !GetConsoleScreenBufferInfo(hConsoleOutput,&ConsoleScreenBufferInfo) )
-	{
-		SetLastError(0); /* FIXME: What error code? */
-		return FALSE;
-	}
-	ConsoleScreenBufferInfo.dwCursorPosition.X = dwCursorPosition.X;
-	ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
-	
-	if( !DeviceIoControl(
-			hConsoleOutput,
-			IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
-			&ConsoleScreenBufferInfo,
-			sizeof(CONSOLE_SCREEN_BUFFER_INFO),
-			NULL,
-			0,
-			&dwBytesReturned,
-			NULL ))
-		return FALSE;
-
-	return TRUE;
+   Request.Type = CSRSS_SET_CURSOR;
+   Request.Data.SetCursorRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.SetCursorRequest.Position = dwCursorPosition;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   return TRUE;
 }
 
 
@@ -340,28 +326,23 @@ FillConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsWritten
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_CHARACTER Buffer;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-    Buffer.cCharacter = cCharacter;
-    Buffer.nLength    = nLength;
-    Buffer.dwCoord    = dwWriteCoord;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER,
-                         &Buffer,
-                         sizeof(OUTPUT_CHARACTER),
-                         &Buffer,
-                         sizeof(OUTPUT_CHARACTER),
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfCharsWritten = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfCharsWritten = 0;
-    return FALSE;
+   Request.Type = CSRSS_FILL_OUTPUT;
+   Request.Data.FillOutputRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.FillOutputRequest.Char = cCharacter;
+   Request.Data.FillOutputRequest.Position = dwWriteCoord;
+   Request.Data.FillOutputRequest.Length = nLength;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   *lpNumberOfCharsWritten = nLength;
+   return TRUE;
 }
 
 
@@ -432,28 +413,36 @@ ReadConsoleInputA(
 	LPDWORD			lpNumberOfEventsRead
 	)
 {
-   BOOL  stat = TRUE;
-   DWORD Result;
-   int i;
-   
-   for (i=0; (stat && i < nLength);)     
-     {
-	stat = ReadFile(hConsoleInput,
-                        &lpBuffer[i].Event.KeyEvent,
-                        sizeof(KEY_EVENT_RECORD),
-			&Result,
-			NULL);
-        if (stat)
-	  {
-             lpBuffer[i].EventType = KEY_EVENT;
-	     i++;
-	  }
-     }
-   if (lpNumberOfEventsRead != NULL)
-     {
-        *lpNumberOfEventsRead = i;
-     }
-   return(stat);
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+
+   Request.Type = CSRSS_READ_INPUT;
+   Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   while( Status == STATUS_PENDING )
+      {
+	 Status = NtWaitForSingleObject( Reply.Data.ReadInputReply.Event, FALSE, 0 );
+	 if( !NT_SUCCESS( Status ) )
+	    {
+	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       return FALSE;
+	    }
+	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+	    {
+	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       return FALSE;
+	    }
+      }
+   *lpNumberOfEventsRead = 1;
+   *lpBuffer = Reply.Data.ReadInputReply.Input;
+   return TRUE;
 }
 
 
@@ -600,26 +589,8 @@ ReadConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsRead
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_CHARACTER Buffer;
-
-    Buffer.dwCoord    = dwReadCoord;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_READ_OUTPUT_CHARACTER,
-                         &Buffer,
-                         sizeof(OUTPUT_CHARACTER),
-                         lpCharacter,
-                         nLength,
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfCharsRead = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfCharsRead = 0;
-    return FALSE;
+   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+   return FALSE;
 }
 
 
@@ -656,27 +627,8 @@ ReadConsoleOutputAttribute(
 	LPDWORD		lpNumberOfAttrsRead
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_ATTRIBUTE Buffer;
-
-    Buffer.dwCoord = dwReadCoord;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE,
-                         &Buffer,
-                         sizeof(OUTPUT_ATTRIBUTE),
-                         (PVOID)lpAttribute,
-                         nLength,
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfAttrsRead = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfAttrsRead = 0;
-
-    return FALSE;
+   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+   return FALSE;
 }
 
 
@@ -694,26 +646,32 @@ WriteConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsWritten
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_CHARACTER Buffer;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   WORD Size;
 
-    Buffer.dwCoord    = dwWriteCoord;
+   Request.Type = CSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
+   Request.Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
+   if( lpNumberOfCharsWritten )
+      *lpNumberOfCharsWritten = nLength;
+   while( nLength )
+      {
+	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR : nLength;
+	 Request.Data.WriteConsoleOutputCharRequest.Length = Size;
 
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-                         &Buffer,
-                         sizeof(OUTPUT_CHARACTER),
-                         (LPSTR)lpCharacter,
-                         nLength,
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfCharsWritten = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfCharsWritten = 0;
-    return FALSE;
+	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+	    {
+	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       return FALSE;
+	    }
+	 nLength -= Size;
+	 lpCharacter += Size;
+	 Request.Data.WriteConsoleOutputCharRequest.Coord = Reply.Data.WriteConsoleOutputCharReply.EndCoord;
+      }
+   return TRUE;
 }
 
 
@@ -751,27 +709,34 @@ WriteConsoleOutputAttribute(
 	LPDWORD		 lpNumberOfAttrsWritten
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_ATTRIBUTE Buffer;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
+   WORD Size;
+   int c;
 
-    Buffer.dwCoord = dwWriteCoord;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-                         &Buffer,
-                         sizeof(OUTPUT_ATTRIBUTE),
-                         (PVOID)lpAttribute,
-                         nLength,
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfAttrsWritten = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfAttrsWritten = 0;
-
-    return FALSE;
+   Request.Type = CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
+   Request.Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.WriteConsoleOutputAttribRequest.Coord = dwWriteCoord;
+   if( lpNumberOfAttrsWritten )
+      *lpNumberOfAttrsWritten = nLength;
+   while( nLength )
+      {
+	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB : nLength;
+	 Request.Data.WriteConsoleOutputAttribRequest.Length = Size;
+	 for( c = 0; c < Size; c++ )
+	    Request.Data.WriteConsoleOutputAttribRequest.String[c] = lpAttribute[c];
+	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+	    {
+	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       return FALSE;
+	    }
+	 nLength -= Size;
+	 lpAttribute += Size;
+	 Request.Data.WriteConsoleOutputAttribRequest.Coord = Reply.Data.WriteConsoleOutputAttribReply.EndCoord;
+      }
+   return TRUE;
 }
 
 
@@ -789,29 +754,24 @@ FillConsoleOutputAttribute(
 	LPDWORD		lpNumberOfAttrsWritten
 	)
 {
-    DWORD dwBytesReturned;
-    OUTPUT_ATTRIBUTE Buffer;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-    Buffer.wAttribute = wAttribute;
-    Buffer.nLength    = nLength;
-    Buffer.dwCoord    = dwWriteCoord;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
-                         &Buffer,
-                         sizeof(OUTPUT_ATTRIBUTE),
-                         &Buffer,
-                         sizeof(OUTPUT_ATTRIBUTE),
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpNumberOfAttrsWritten = Buffer.dwTransfered;
-        return TRUE;
-    }
-
-    *lpNumberOfAttrsWritten = 0;
-
-    return FALSE;
+   Request.Type = CSRSS_FILL_OUTPUT_ATTRIB;
+   Request.Data.FillOutputAttribRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.FillOutputAttribRequest.Attribute = wAttribute;
+   Request.Data.FillOutputAttribRequest.Coord = dwWriteCoord;
+   Request.Data.FillOutputAttribRequest.Length = nLength;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   if( lpNumberOfAttrsWritten )
+      *lpNumberOfAttrsWritten = nLength;
+   return TRUE;
 }
 
 
@@ -826,25 +786,8 @@ GetConsoleMode(
 	LPDWORD		lpMode
 	)
 {
-    CONSOLE_MODE Buffer;
-    DWORD   dwBytesReturned;
-	
-    if (DeviceIoControl (hConsoleHandle,
-                         IOCTL_CONSOLE_GET_MODE,
-                         NULL,
-                         0,
-                         &Buffer,
-                         sizeof(CONSOLE_MODE),
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpMode = Buffer.dwMode;
-        SetLastError (ERROR_SUCCESS);
-        return TRUE;
-    }
-
-    SetLastError(0); /* FIXME: What error code? */
-    return FALSE;
+   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+   return FALSE;
 }
 
 
@@ -894,19 +837,20 @@ GetConsoleCursorInfo(
 	PCONSOLE_CURSOR_INFO	lpConsoleCursorInfo
 	)
 {
-    DWORD   dwBytesReturned;
-	
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_GET_CURSOR_INFO,
-                         NULL,
-                         0,
-                         lpConsoleCursorInfo,
-                         sizeof(CONSOLE_CURSOR_INFO),
-                         &dwBytesReturned,
-                         NULL))
-        return TRUE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-    return FALSE;
+   Request.Type = CSRSS_GET_CURSOR_INFO;
+   Request.Data.GetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   *lpConsoleCursorInfo = Reply.Data.GetCursorInfoReply.Info;
+   return TRUE;
 }
 
 
@@ -936,26 +880,8 @@ SetConsoleMode(
 	DWORD		dwMode
 	)
 {
-    CONSOLE_MODE Buffer;
-    DWORD   dwBytesReturned;
-
-    Buffer.dwMode = dwMode;
-	
-    if (DeviceIoControl (hConsoleHandle,
-                         IOCTL_CONSOLE_SET_MODE,
-                         &Buffer,
-                         sizeof(CONSOLE_MODE),
-                         NULL,
-                         0,
-                         &dwBytesReturned,
-                         NULL))
-    {
-        SetLastError (ERROR_SUCCESS);
-        return TRUE;
-    }
-
-    SetLastError(0); /* FIXME: What error code? */
-    return FALSE;
+   SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+   return FALSE;
 }
 
 
@@ -1015,19 +941,20 @@ SetConsoleCursorInfo(
 	CONST CONSOLE_CURSOR_INFO	*lpConsoleCursorInfo
 	)
 {
-    DWORD   dwBytesReturned;
-	
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_SET_CURSOR_INFO,
-                         (PCONSOLE_CURSOR_INFO)lpConsoleCursorInfo,
-                         sizeof(CONSOLE_CURSOR_INFO),
-                         NULL,
-                         0,
-                         &dwBytesReturned,
-                         NULL))
-        return TRUE;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-    return FALSE;
+   Request.Type = CSRSS_SET_CURSOR_INFO;
+   Request.Data.SetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.SetCursorInfoRequest.Info = *lpConsoleCursorInfo;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   return TRUE;
 }
 
 
@@ -1097,18 +1024,20 @@ SetConsoleTextAttribute(
         WORD            wAttributes
         )
 {
-    DWORD dwBytesReturned;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
+   NTSTATUS Status;
 
-    if (!DeviceIoControl (hConsoleOutput,
-                          IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
-                          &wAttributes,
-                          sizeof(WORD),
-                          NULL,
-                          0,
-                          &dwBytesReturned,
-                          NULL))
-        return FALSE;
-    return TRUE;
+   Request.Type = CSRSS_SET_ATTRIB;
+   Request.Data.SetAttribRequest.ConsoleHandle = hConsoleOutput;
+   Request.Data.SetAttribRequest.Attrib = wAttributes;
+   Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+   if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      {
+	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 return FALSE;
+      }
+   return TRUE;
 }
 
 
@@ -1421,4 +1350,3 @@ SetConsoleOutputCP(
 
 
 /* EOF */
-
