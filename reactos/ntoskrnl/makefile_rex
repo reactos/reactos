@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.62 2000/03/19 09:14:49 ea Exp $
+# $Id: makefile_rex,v 1.63 2000/03/24 22:25:37 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -8,7 +8,7 @@ TARGET=ntoskrnl
 BASE_CFLAGS = -I../include -D__NTOSKRNL__
 
 
-all: objects $(TARGET).exe
+all: objects $(TARGET).exe $(TARGET).nostrip.exe
 
 #
 # Defines $(HAL_OBJECTS)
@@ -168,10 +168,54 @@ CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
 endif
 
 
+$(TARGET).nostrip.exe: $(OBJECTS) $(TARGET).def
+	$(LD) \
+		-r $(OBJECTS) \
+		-o $(TARGET).o
+	$(DLLTOOL) \
+		--dllname $(TARGET).exe \
+		--def $(TARGET).def \
+		--kill-at \
+		--output-lib $(TARGET).a
+	$(CC) \
+		$(TARGET).o \
+		-Wl,-d -specs=../specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_end=__bss_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $(TARGET).exe \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGET).edf \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		$(TARGET).o \
+		-Wl,-d -specs=../specs \
+		-mdll \
+		-o $(TARGET).nostrip.exe \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--defsym,_end=__bss_end__ \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,temp.exp
+	- $(RM) temp.exp
+
 $(TARGET).exe: $(OBJECTS) $(TARGET).def
 	$(LD) \
 		-r $(OBJECTS) \
 		-o $(TARGET).o
+	$(STRIP) --strip-debug $(TARGET).o
 	$(DLLTOOL) \
 		--dllname $(TARGET).exe \
 		--def $(TARGET).def \
@@ -211,6 +255,7 @@ $(TARGET).exe: $(OBJECTS) $(TARGET).def
 		-Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
+
 
 $(TARGET).o: $(OBJECTS)
 	$(LD) \
@@ -256,7 +301,7 @@ ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 ke/main.o: ke/main.c ../include/reactos/buildno.h
 
-#WITH_DEBUGGING = yes
+WITH_DEBUGGING = yes
 WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
 include ../rules.mak

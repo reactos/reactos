@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.26 2000/01/06 00:26:16 dwelch Exp $
+/* $Id: ide.c,v 1.27 2000/03/24 22:25:39 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -826,7 +826,8 @@ IDEGetPartitionTable(IN int CommandPort,
                      CylinderLow,
                      CylinderHigh,
                      DrvHead, 
-                     IDE_CMD_READ_RETRY,
+//                     IDE_CMD_READ_RETRY,
+		     IDE_CMD_READ,
                      SectorBuf);
   if (RC != 0) 
     {
@@ -1456,7 +1457,8 @@ IDEStartController(IN OUT PVOID Context)
       CylinderHigh = StartingSector >> 8;
     }
   Command = DeviceExtension->Operation == IRP_MJ_READ ? 
-      IDE_CMD_READ_RETRY : IDE_CMD_WRITE_RETRY;
+//      IDE_CMD_READ_RETRY : IDE_CMD_WRITE_RETRY;
+     IDE_CMD_READ : IDE_CMD_WRITE;
   if (DrvHead & IDE_DH_LBA) 
     {
       DPRINT("%s:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",

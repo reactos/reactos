@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.25 2000/03/22 18:35:48 dwelch Exp $
+/* $Id: create.c,v 1.26 2000/03/24 22:25:37 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -246,6 +246,7 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
 
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("Failed to open file\n");
 	SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);
      }
@@ -261,6 +262,7 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
 
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("Failed to create section\n");
 	SetLastError(RtlNtStatusToDosError(Status));
 	return(NULL);
      }
@@ -419,7 +421,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
      }
    if (e != NULL)
      {
-	*e = 0;
+	*e = '.';
      }
    
    /*
@@ -515,7 +517,10 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
     */   
    DPRINT("Creating peb\n");
    
-   Ppb->ConsoleHandle = ConsoleHandle;      
+   Ppb->ConsoleHandle = ConsoleHandle;
+   Ppb->InputHandle = ConsoleHandle;
+   Ppb->OutputHandle = ConsoleHandle;
+   Ppb->ErrorHandle = ConsoleHandle;
    KlInitPeb(hProcess, Ppb);
 
    RtlDestroyProcessParameters (Ppb);

@@ -208,7 +208,7 @@ NtCreateFile (
    KEVENT Event;
    PIO_STACK_LOCATION StackLoc;
    
-   DPRINT("NtCreateFile(FileHandle %x, DesiredAccess %x, "
+   DPRINT1("NtCreateFile(FileHandle %x, DesiredAccess %x, "
 	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
 	    FileHandle,DesiredAccess,ObjectAttributes,
 	    ObjectAttributes->ObjectName->Buffer);   

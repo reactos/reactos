@@ -24,12 +24,6 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-/* GLOBALS ******************************************************************/
-
-static HANDLE StdInput  = INVALID_HANDLE_VALUE;
-static HANDLE StdOutput = INVALID_HANDLE_VALUE;
-static HANDLE StdError  = INVALID_HANDLE_VALUE;
-
 /* FUNCTIONS *****************************************************************/
 
 WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle)
@@ -51,14 +45,17 @@ BOOLEAN IsConsoleHandle(HANDLE Handle)
  */
 HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 {
+   PRTL_USER_PROCESS_PARAMETERS Ppb;
+   
    DPRINT("GetStdHandle(nStdHandle %d)\n",nStdHandle);
    
    SetLastError(ERROR_SUCCESS); /* OK */
+   Ppb = NtCurrentPeb()->ProcessParameters;  
    switch (nStdHandle)
      {
-      case STD_INPUT_HANDLE:	return StdInput;
-      case STD_OUTPUT_HANDLE:	return StdOutput;
-      case STD_ERROR_HANDLE:	return StdError;
+      case STD_INPUT_HANDLE:	return Ppb->InputHandle;
+      case STD_OUTPUT_HANDLE:	return Ppb->OutputHandle;
+      case STD_ERROR_HANDLE:	return Ppb->ErrorHandle;
      }
    SetLastError(0); /* FIXME: What error code? */
    return INVALID_HANDLE_VALUE;
@@ -71,6 +68,10 @@ HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
 				    HANDLE hHandle)
 {
+   PRTL_USER_PROCESS_PARAMETERS Ppb;
+   
+   Ppb = NtCurrentPeb()->ProcessParameters;
+   
    /* More checking needed? */
    if (hHandle == INVALID_HANDLE_VALUE)
      {
@@ -82,13 +83,13 @@ WINBASEAPI BOOL WINAPI SetStdHandle(DWORD nStdHandle,
    switch (nStdHandle)
      {
       case STD_INPUT_HANDLE:
-	StdInput = hHandle;
+	Ppb->InputHandle = hHandle;
 	return TRUE;
       case STD_OUTPUT_HANDLE:
-	StdOutput = hHandle;
+	Ppb->OutputHandle = hHandle;
 	return TRUE;
       case STD_ERROR_HANDLE:
-	StdError = hHandle;
+	Ppb->ErrorHandle = hHandle;
 	return TRUE;
      }
    SetLastError(0); /* FIXME: What error code? */

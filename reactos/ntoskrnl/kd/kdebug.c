@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.8 2000/03/04 22:02:13 ekohl Exp $
+/* $Id: kdebug.c,v 1.9 2000/03/24 22:25:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,13 +26,9 @@
 
 /* TYPEDEFS ****************************************************************/
 
-typedef enum
-{
-	ScreenDebug,
-	SerialDebug,
-	BochsDebug
-} DEBUGTYPE;
-
+#define ScreenDebug  (0x1)
+#define SerialDebug  (0x2)
+#define BochsDebug   (0x4)
 
 /* VARIABLES ***************************************************************/
 
@@ -47,7 +43,7 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 static BOOLEAN KdpBreakPending = FALSE;
 static BOOLEAN KdpBreakRecieved = FALSE;
-static DEBUGTYPE KdpDebugType = ScreenDebug;
+static ULONG KdpDebugType = ScreenDebug | BochsDebug;
 
 
 /* PRIVATE FUNCTIONS ********************************************************/
@@ -99,13 +95,13 @@ KdInitSystem (
 			{
 				p2 += 6;
 				KdDebuggerEnabled = TRUE;
-				KdpDebugType = ScreenDebug;
+				KdpDebugType |= ScreenDebug;
 			}
 			else if (!_strnicmp (p2, "BOCHS", 5))
 			{
 				p2 += 5;
 				KdDebuggerEnabled = TRUE;
-				KdpDebugType = BochsDebug;
+				KdpDebugType |= BochsDebug;
 			}
 			else if (!_strnicmp (p2, "COM", 3))
 			{
@@ -114,7 +110,7 @@ KdInitSystem (
 				if (Value > 0 && Value < 5)
 				{
 					KdDebuggerEnabled = TRUE;
-					KdpDebugType = SerialDebug;
+					KdpDebugType |= SerialDebug;
 					PortInfo.ComPort = Value;
 				}
 			}
@@ -208,15 +204,15 @@ KdInitSystem (
 	/* print some information */
 	if (KdDebuggerEnabled == TRUE)
 	{
-		if (KdpDebugType == ScreenDebug)
+		if (KdpDebugType & ScreenDebug)
 		{
 			PrintString ("\n   Screen debugging enabled\n\n");
 		}
-		else if (KdpDebugType == BochsDebug)
+		if (KdpDebugType & BochsDebug)
 		{
 			PrintString ("\n   Bochs debugging enabled\n\n");
 		}
-		else if (KdpDebugType == SerialDebug)
+		if (KdpDebugType & SerialDebug)
 		{
 			PrintString ("\n   Serial debugging enabled: COM%ld %ld Baud\n\n",
 			             PortInfo.ComPort, PortInfo.BaudRate);
@@ -236,41 +232,40 @@ KdInitSystem (
 }
 
 
-ULONG
-KdpPrintString (PANSI_STRING String)
+ULONG KdpPrintString (PANSI_STRING String)
 {
-	PCH pch = String->Buffer;
-
-	if (KdpDebugType == ScreenDebug)
-	{
-		HalDisplayString (String->Buffer);
+   PCH pch = String->Buffer;
+   
+   if (KdpDebugType & ScreenDebug)
+     {
+	HalDisplayString (String->Buffer);
+     }
+   if (KdpDebugType & SerialDebug)
+     {
+	while (*pch != 0)
+	  {
+	     if (*pch == '\n')
+	       {
+		  KdPortPutByte ('\r');
+	       }
+	     KdPortPutByte (*pch);
+	     pch++;
+	  }
 	}
-	else if (KdpDebugType == SerialDebug)
-	{
-		while (*pch != 0)
-		{
-			if (*pch == '\n')
-			{
-				KdPortPutByte ('\r');
-			}
-			KdPortPutByte (*pch);
-			pch++;
-		}
-	}
-	else if (KdpDebugType == BochsDebug)
-	{
-		while (*pch != 0)
-		{
-			if (*pch == '\n')
-			{
-				WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
-			}
-			WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
-			pch++;
-		}
-	}
-
-	return (ULONG)String->Length;
+   if (KdpDebugType & BochsDebug)
+     {
+	while (*pch != 0)
+	  {
+	     if (*pch == '\n')
+	       {
+		  WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
+	       }
+	     WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
+	     pch++;
+	  }
+     }
+   
+   return (ULONG)String->Length;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/

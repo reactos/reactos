@@ -295,6 +295,9 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
    DPRINT("marea->Length %x\n",marea->Length);
    
    ListHead=MmGetRelatedListHead(Process,marea->BaseAddress);
+   
+//   MmDumpMemoryAreas(ListHead);
+   
    current_entry = ListHead->Flink;
    CHECKPOINT;
    if (IsListEmpty(ListHead))
@@ -322,8 +325,8 @@ static VOID MmInsertMemoryAreaWithoutLock(PEPROCESS Process,
 //	CHECKPOINT;
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-	assert(current->BaseAddress != marea->BaseAddress);
-	assert(next->BaseAddress != marea->BaseAddress);
+//	assert(current->BaseAddress != marea->BaseAddress);	
+//	assert(next->BaseAddress != marea->BaseAddress);
 	if (current->BaseAddress < marea->BaseAddress &&
 	    current->Entry.Flink==ListHead)
 	  {
