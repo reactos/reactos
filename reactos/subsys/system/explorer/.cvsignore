@@ -24,3 +24,4 @@ WineRelease
 buildno.h
 notifyhook.dll
 *.gch
+*.h.pch
