@@ -205,7 +205,8 @@ ARCH_OBJS	=	fathelp.o	\
 				drvmap.o	\
 				int386.o	\
 				i386disk.o	\
-				portio.o
+				portio.o	\
+				_alloca.o		# For Mingw32 builds
 
 RTL_OBJS	=	print.o		\
 				stdlib.o	\

@@ -52,6 +52,8 @@ BootPartition			equ		0x7dfd
 ; This code is loaded at 0000:8000 so we have to
 ; encode a jmp instruction to jump to 0000:8200
 
+global _mainCRTStartup	; For Mingw32 builds where the linker looks for this symbol
+_mainCRTStartup:
 global start
 start:
         db	0xe9

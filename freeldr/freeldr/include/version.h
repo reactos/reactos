@@ -22,7 +22,7 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v1.8.2"
+#define VERSION			"FreeLoader v1.8.3"
 #define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
 #define AUTHOR_EMAIL	"<brianp@sginet.com>"
 #define BY_AUTHOR		"by Brian Palmer"
@@ -36,7 +36,7 @@
 //
 #define FREELOADER_MAJOR_VERSION	1
 #define FREELOADER_MINOR_VERSION	8
-#define FREELOADER_PATCH_VERSION	2
+#define FREELOADER_PATCH_VERSION	3
 
 
 PUCHAR	GetFreeLoaderVersionString(VOID);
