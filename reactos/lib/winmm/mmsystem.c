@@ -1893,7 +1893,7 @@ static  WINE_MMTHREAD*	WINMM_GetmmThread(HANDLE16 h)
     return (WINE_MMTHREAD*)MapSL( MAKESEGPTR(h, 0) );
 }
 
-void WINAPI WINE_mmThreadEntryPoint(DWORD);
+DWORD WINAPI WINE_mmThreadEntryPoint(LPVOID);
 
 /**************************************************************************
  * 				mmThreadCreate		[MMSYSTEM.1120]
@@ -1951,8 +1951,8 @@ LRESULT	WINAPI mmThreadCreate16(FARPROC16 fpThreadAddr, LPHANDLE16 lpHndl, DWORD
 		/* lpMMThd->hVxD = OpenVxDHandle(lpMMThd->hEvent); */
 	    }
 
-	    lpMMThd->hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)WINE_mmThreadEntryPoint,
-					    (LPVOID)(DWORD)hndl, CREATE_SUSPENDED, &lpMMThd->dwThreadID);
+	    lpMMThd->hThread = CreateThread(0, 0, WINE_mmThreadEntryPoint,
+					    (LPVOID)(DWORD_PTR)hndl, CREATE_SUSPENDED, &lpMMThd->dwThreadID);
 	    if (lpMMThd->hThread == 0) {
 		WARN("Couldn't create thread\n");
 		/* clean-up(VxDhandle...); devicedirectio... */
@@ -2143,9 +2143,9 @@ HANDLE16 WINAPI mmThreadGetTask16(HANDLE16 hndl)
 /**************************************************************************
  * 			        __wine_mmThreadEntryPoint (MMSYSTEM.2047)
  */
-void WINAPI WINE_mmThreadEntryPoint(DWORD _pmt)
+DWORD WINAPI WINE_mmThreadEntryPoint(LPVOID p)
 {
-    HANDLE16		hndl = (HANDLE16)_pmt;
+    HANDLE16		hndl = (HANDLE16)(DWORD_PTR)p;
     WINE_MMTHREAD*	lpMMThd = WINMM_GetmmThread(hndl);
 
     TRACE("(%04x %p)\n", hndl, lpMMThd);
@@ -2173,6 +2173,8 @@ void WINAPI WINE_mmThreadEntryPoint(DWORD _pmt)
 	CloseHandle(lpMMThd->hEvent);
     GlobalFree16(hndl);
     TRACE("done\n");
+
+    return 0;
 }
 
 typedef	BOOL16 (WINAPI *MMCPLCALLBACK)(HWND, LPCSTR, LPCSTR, LPCSTR);

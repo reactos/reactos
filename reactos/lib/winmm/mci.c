@@ -248,8 +248,8 @@ static	BOOL		MCI_IsCommandTableValid(UINT uTbl)
 	do {
 	    str = lmem;
 	    lmem += strlen(lmem) + 1;
-	    flg = *(LPDWORD)lmem;
-	    eid = *(LPWORD)(lmem + sizeof(DWORD));
+	    flg = *(const DWORD*)lmem;
+	    eid = *(const WORD*)(lmem + sizeof(DWORD));
 	    lmem += sizeof(DWORD) + sizeof(WORD);
 	    idx ++;
 	    /* EPP 	    TRACE("cmd='%s' %08lx %04x\n", str, flg, eid); */
@@ -291,8 +291,8 @@ static	BOOL		MCI_DumpCommandTable(UINT uTbl)
 	do {
 	    str = lmem;
 	    lmem += strlen(lmem) + 1;
-	    flg = *(LPDWORD)lmem;
-	    eid = *(LPWORD)(lmem + sizeof(DWORD));
+	    flg = *(const DWORD*)lmem;
+	    eid = *(const WORD*)(lmem + sizeof(DWORD));
 	    TRACE("cmd='%s' %08lx %04x\n", str, flg, eid);
 	    lmem += sizeof(DWORD) + sizeof(WORD);
 	} while (eid != MCI_END_COMMAND && eid != MCI_END_COMMAND_LIST);
@@ -379,7 +379,7 @@ UINT MCI_SetCommandTable(void *table, UINT uDevType)
 	    count = 0;
 	    do {
 		lmem += strlen(lmem) + 1;
-		eid = *(LPWORD)(lmem + sizeof(DWORD));
+		eid = *(const WORD*)(lmem + sizeof(DWORD));
 		lmem += sizeof(DWORD) + sizeof(WORD);
 		if (eid == MCI_COMMAND_HEAD)
 		    count++;
@@ -393,7 +393,7 @@ UINT MCI_SetCommandTable(void *table, UINT uDevType)
 	    do {
 		str = lmem;
 		lmem += strlen(lmem) + 1;
-		eid = *(LPWORD)(lmem + sizeof(DWORD));
+		eid = *(const WORD*)(lmem + sizeof(DWORD));
 		lmem += sizeof(DWORD) + sizeof(WORD);
 		if (eid == MCI_COMMAND_HEAD)
 		    S_MciCmdTable[uTbl].aVerbs[count++] = str;
@@ -619,8 +619,8 @@ static	LPCSTR		MCI_FindCommand(UINT uTbl, LPCSTR verb)
 static	DWORD		MCI_GetReturnType(LPCSTR lpCmd)
 {
     lpCmd += strlen(lpCmd) + 1 + sizeof(DWORD) + sizeof(WORD);
-    if (*lpCmd == '\0' && *(LPWORD)(lpCmd + 1 + sizeof(DWORD)) == MCI_RETURN) {
-	return *(LPDWORD)(lpCmd + 1);
+    if (*lpCmd == '\0' && *(const WORD*)(lpCmd + 1 + sizeof(DWORD)) == MCI_RETURN) {
+	return *(const DWORD*)(lpCmd + 1);
     }
     return 0L;
 }
@@ -630,7 +630,7 @@ static	DWORD		MCI_GetReturnType(LPCSTR lpCmd)
  */
 static	WORD		MCI_GetMessage(LPCSTR lpCmd)
 {
-    return (WORD)*(LPDWORD)(lpCmd + strlen(lpCmd) + 1);
+    return (WORD)*(const DWORD*)(lpCmd + strlen(lpCmd) + 1);
 }
 
 /**************************************************************************
@@ -712,8 +712,8 @@ static	DWORD	MCI_ParseOptArgs(LPDWORD data, int _offset, LPCSTR lpCmd,
 	do { /* loop on options for command table for the requested verb */
 	    str = lmem;
 	    lmem += (len = strlen(lmem)) + 1;
-	    flg = *(LPDWORD)lmem;
-	    eid = *(LPWORD)(lmem + sizeof(DWORD));
+	    flg = *(const DWORD*)lmem;
+	    eid = *(const WORD*)(lmem + sizeof(DWORD));
 	    lmem += sizeof(DWORD) + sizeof(WORD);
 /* EPP 	    TRACE("\tcmd='%s' inCst=%c eid=%04x\n", str, inCst ? 'Y' : 'N', eid); */
 

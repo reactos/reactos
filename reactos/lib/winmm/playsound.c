@@ -72,7 +72,7 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
     static const WCHAR  wszNull[] = {0};
 
     TRACE("searching in SystemSound list for %s\n", debugstr_w(lpszName));
-    GetProfileStringW(wszSounds, (LPWSTR)lpszName, wszNull, str, sizeof(str)/sizeof(str[0]));
+    GetProfileStringW(wszSounds, lpszName, wszNull, str, sizeof(str)/sizeof(str[0]));
     if (lstrlenW(str) == 0)
     {
 	if (uFlags & SND_NODEFAULT) goto next;
@@ -420,7 +420,7 @@ errCleanUp:
     return bRet;
 }
 
-BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSound, BOOL bUnicode)
+static BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSound, BOOL bUnicode)
 {
     WINE_PLAYSOUND*     wps = NULL;
 

@@ -242,18 +242,7 @@ static DWORD CALLBACK TIME_MMSysTimeThread(LPVOID arg)
 	sleep_time = TIME_MMSysTimeCallback(iData);
 
         if (sleep_time == 0)
-        {
-            /* This Sleep is controversial; it was added to make
-               Wine able to replicate a high speed (e.g. 1 ms)
-               timer event where the called event routine chews
-               a lot of CPU.  This is required because of the
-               bias some Linux kernel versions have against threads that
-               chew a lot of the CPU; this Sleep(0) yields enough
-               in that spin case doesn't trigger the bias.
-               Further, it should do no harm, but an fyi.  */
-            Sleep(0);
             continue;
-        }
 
         rc = WaitForSingleObject(TIME_hWakeEvent, sleep_time);
         if (rc != WAIT_TIMEOUT && rc != WAIT_OBJECT_0)
