@@ -219,7 +219,7 @@ int MainFrame::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 	ShellFolder folder(parent_pidl);
 
 	for(int i=pida->cidl; i>0; --i) {
-		LPCITEMIDLIST pidl = (LPCITEMIDLIST)((LPBYTE)pida+pida->aoffset[i]);
+		LPCITEMIDLIST pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
 
 		SFGAOF attribs = SFGAO_FOLDER;
 		HRESULT hr = folder->GetAttributesOf(1, &pidl, &attribs);
