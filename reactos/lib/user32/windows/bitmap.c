@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.26 2003/12/31 19:25:51 navaraf Exp $
+/* $Id: bitmap.c,v 1.27 2004/02/23 18:16:37 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -94,7 +94,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    GRPCURSORICONDIR* IconResDir;
    INT id;
    ICONIMAGE *ResIcon;
-   UINT Colors;
+   UINT ColorBits;
   
    if (!(fuLoad & LR_LOADFROMFILE))
    {
@@ -200,19 +200,21 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
       if (fuLoad & LR_MONOCHROME)
       {
-         Colors = 2;
+         ColorBits = 1;
       }
       else
       {
-         Colors = GetDeviceCaps(hScreenDc, BITSPIXEL);
-         if (Colors > 8)
-            Colors = 256;
-         else
-            Colors = 1 << Colors;
+         ColorBits = GetDeviceCaps(hScreenDc, BITSPIXEL);
+         /*
+          * FIXME:
+          * Remove this after proper support for alpha icons will be finished.
+          */
+         if (ColorBits > 8)
+            ColorBits = 8;
       }
 
       /* Pick the best size. */
-      dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, 32, 32, Colors);
+      dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, 32, 32, ColorBits);
       if (!dirEntry)
       {
          UnmapViewOfFile(IconDIR);

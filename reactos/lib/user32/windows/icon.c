@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.18 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: icon.c,v 1.19 2004/02/23 18:16:37 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -505,7 +505,7 @@ CURSORICON_FindBestCursor( GRPCURSORICONDIR *dir, int width, int height, int col
 
 /* Ported from WINE20030408 */
 GRPCURSORICONDIRENTRY*
-CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int colors)
+CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int colorbits)
 {
     int i;
     GRPCURSORICONDIRENTRY *entry, *bestEntry = NULL;
@@ -543,7 +543,7 @@ CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int color
         if(abs(width - entry->ResInfo.icon.bWidth) == (int) iXDiff &&
            abs(height - entry->ResInfo.icon.bHeight) == (int) iYDiff)
         {
-            iTempColorDiff = abs(colors - entry->ResInfo.icon.bColorCount);
+            iTempColorDiff = abs(colorbits - entry->wBitCount);
             if(iColorDiff > iTempColorDiff)
             {
                 bestEntry = entry;
