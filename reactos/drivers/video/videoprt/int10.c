@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.1 2004/01/19 15:56:53 navaraf Exp $
+ * $Id: int10.c,v 1.2 2004/02/22 22:19:42 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -94,17 +94,23 @@ IntInt10AllocateBuffer(
       Length, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
    if (!NT_SUCCESS(Status))
    {
+      DPRINT("- ZwAllocateVirtualMemory failed\n");
       return STATUS_NO_MEMORY;
    }
    if (MemoryAddress > (PVOID)(0x100000 - *Length))
    {
       ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, Length,
          MEM_RELEASE);
+      DPRINT("- Unacceptable memory allocated\n");
       return STATUS_NO_MEMORY;
    }
 
    *Seg = (ULONG)MemoryAddress >> 4;
    *Off = (ULONG)MemoryAddress & 0xFF;
+
+   DPRINT("- Segment: %x\n", (ULONG)MemoryAddress >> 4);
+   DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xFF);
+   DPRINT("- Length: %x\n", *Length);
 
    return STATUS_SUCCESS;
 }
@@ -117,6 +123,8 @@ IntInt10FreeBuffer(
 {
    PVOID MemoryAddress = (PVOID)((Seg << 4) + Off);
    DPRINT("IntInt10FreeBuffer\n");
+   DPRINT("- Segment: %x\n", Seg);
+   DPRINT("- Offset: %x\n", Off);
    return ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
       MEM_RELEASE);
 }
@@ -130,6 +138,10 @@ IntInt10ReadMemory(
    IN ULONG Length)
 {
    DPRINT("IntInt10ReadMemory\n");
+   DPRINT("- Segment: %x\n", Seg);
+   DPRINT("- Offset: %x\n", Off);
+   DPRINT("- Buffer: %x\n", Buffer);
+   DPRINT("- Length: %x\n", Length);
    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) + Off), Length);
    return STATUS_SUCCESS;
 }
@@ -143,6 +155,10 @@ IntInt10WriteMemory(
    IN ULONG Length)
 {
    DPRINT("IntInt10WriteMemory\n");
+   DPRINT("- Segment: %x\n", Seg);
+   DPRINT("- Offset: %x\n", Off);
+   DPRINT("- Buffer: %x\n", Buffer);
+   DPRINT("- Length: %x\n", Length);
    RtlCopyMemory((PVOID)((Seg << 4) + Off), Buffer, Length);
    return STATUS_SUCCESS;
 }
@@ -175,14 +191,23 @@ IntInt10CallBios(
    }
 
    memset(&Regs, 0, sizeof(Regs));
+   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
    Regs.Eax = BiosArguments->Eax;
+   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
    Regs.Ebx = BiosArguments->Ebx;
+   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
    Regs.Ecx = BiosArguments->Ecx;
+   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
    Regs.Edx = BiosArguments->Edx;
+   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
    Regs.Esi = BiosArguments->Esi;
+   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
    Regs.Edi = BiosArguments->Edi;
+   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
    Regs.Ebp = BiosArguments->Ebp;
+   DPRINT("- Input register SegDs: %x\n", BiosArguments->SegDs);
    Regs.Ds = BiosArguments->SegDs;
+   DPRINT("- Input register SegEs: %x\n", BiosArguments->SegEs);
    Regs.Es = BiosArguments->SegEs;
    Status = Ke386CallBios(0x10, &Regs);
    BiosArguments->Eax = Regs.Eax;
