@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.22 2001/04/03 17:25:50 dwelch Exp $
+/* $Id: rw.c,v 1.23 2001/04/26 01:28:54 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -384,7 +384,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   else
     CurrentCluster = Fcb->entry.FirstCluster;
   FirstCluster = CurrentCluster;
-  
+  DPRINT( "FirstCluster = %x\n", FirstCluster );
   /*
    * Truncate the read if necessary
    */
@@ -433,7 +433,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    * If the read doesn't begin on a chunk boundary then we need special
    * handling
    */
-  if ((ReadOffset % ChunkSize) != 0)
+  if ((ReadOffset % ChunkSize) != 0 )
     {      
       TempLength = min (Length, ChunkSize - (ReadOffset % ChunkSize));
       VfatReadCluster(DeviceExt, Fcb, ROUND_DOWN(ReadOffset, ChunkSize),
@@ -446,7 +446,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       ReadOffset = ReadOffset + TempLength;
     }
 
-  while (Length >= ChunkSize)
+  while (Length >= ChunkSize && CurrentCluster)
     {
       VfatReadCluster(DeviceExt, Fcb, ReadOffset,
 		      FirstCluster, &CurrentCluster, Buffer, NoCache, 0, 
@@ -457,7 +457,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Length = Length - ChunkSize;
       ReadOffset = ReadOffset + ChunkSize;
     }
-  if (Length > 0)
+  if (Length > 0 && CurrentCluster)
     {
       VfatReadCluster(DeviceExt, Fcb, ReadOffset,
 		      FirstCluster, &CurrentCluster, Buffer, NoCache, 0, 
