@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.57 2004/03/24 08:56:52 gvg Exp $
+/* $Id: menu.c,v 1.58 2004/03/25 08:51:44 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -581,6 +581,41 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       return;
     }
 
+  /* Setup colors */
+
+  if (0 != (Item->fState & MF_HILITE))
+    {
+      if (MenuBar)
+        {
+          SetTextColor(Dc, GetSysColor(COLOR_MENUTEXT));
+          SetBkColor(Dc, GetSysColor(COLOR_MENU));
+        }
+      else
+        {
+          if (0 != (Item->fState & MF_GRAYED))
+            {
+              SetTextColor(Dc, GetSysColor(COLOR_GRAYTEXT));
+            }
+          else
+            {
+              SetTextColor(Dc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            }
+          SetBkColor(Dc, GetSysColor(COLOR_HIGHLIGHT));
+        }
+    }
+  else
+    {
+      if (0 != (Item->fState & MF_GRAYED))
+        {
+          SetTextColor(Dc, GetSysColor(COLOR_GRAYTEXT));
+        }
+      else
+        {
+          SetTextColor(Dc, GetSysColor(COLOR_MENUTEXT));
+        }
+      SetBkColor(Dc, GetSysColor(COLOR_MENU));
+    }
+
   if (0 != (Item->fType & MF_OWNERDRAW))
     {
       /*
@@ -677,41 +712,6 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
 
 	  return;
         }
-    }
-
-  /* Setup colors */
-
-  if (0 != (Item->fState & MF_HILITE))
-    {
-      if (MenuBar)
-        {
-          SetTextColor(Dc, GetSysColor(COLOR_MENUTEXT));
-          SetBkColor(Dc, GetSysColor(COLOR_MENU));
-        }
-      else
-        {
-          if (0 != (Item->fState & MF_GRAYED))
-            {
-              SetTextColor(Dc, GetSysColor(COLOR_GRAYTEXT));
-            }
-          else
-            {
-              SetTextColor(Dc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-            }
-          SetBkColor(Dc, GetSysColor(COLOR_HIGHLIGHT));
-        }
-    }
-  else
-    {
-      if (0 != (Item->fState & MF_GRAYED))
-        {
-          SetTextColor(Dc, GetSysColor(COLOR_GRAYTEXT));
-        }
-      else
-        {
-          SetTextColor(Dc, GetSysColor(COLOR_MENUTEXT));
-        }
-      SetBkColor(Dc, GetSysColor(COLOR_MENU));
     }
 
 #if 0
