@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.82 2004/10/01 20:26:05 gvg Exp $
+/* $Id: create.c,v 1.83 2004/10/22 20:45:46 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -518,7 +518,7 @@ PsCreateTeb(HANDLE ProcessHandle,
      {
        /* We'll be allocating a 64k block here and only use 4k of it, but this
           path should almost never be taken. Actually, I never saw it was taken,
-          so maybe we should just assert(NULL != Thread->ThreadsProcess) and
+          so maybe we should just ASSERT(NULL != Thread->ThreadsProcess) and
           move on */
        TebBase = NULL;
        Status = ZwAllocateVirtualMemory(ProcessHandle,
@@ -573,7 +573,7 @@ PsCreateTeb(HANDLE ProcessHandle,
      }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
-   assert(NULL != TebBase && PAGE_SIZE <= TebSize);
+   ASSERT(NULL != TebBase && PAGE_SIZE <= TebSize);
 
    RtlZeroMemory(&Teb, sizeof(TEB));
    /* set all pointers to and from the TEB */

@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.15 2004/08/27 10:25:46 hbirr Exp $
+/* $Id: w32call.c,v 1.16 2004/10/22 20:45:46 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -142,7 +142,7 @@ PsFreeCallbackStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 			PFN_TYPE Page, SWAPENTRY SwapEntry, 
 			BOOLEAN Dirty)
 {
-  assert(SwapEntry == 0);
+  ASSERT(SwapEntry == 0);
   if (Page != 0)
     {
       MmReleasePageMemoryConsumer(MC_NPPOOL, Page);

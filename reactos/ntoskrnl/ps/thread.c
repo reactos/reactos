@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.136 2004/10/17 15:39:29 hbirr Exp $
+/* $Id: thread.c,v 1.137 2004/10/22 20:45:46 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -236,7 +236,7 @@ PsIsThreadImpersonating(
 static VOID
 PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
-   assert(THREAD_STATE_READY == Thread->Tcb.State);
+   ASSERT(THREAD_STATE_READY == Thread->Tcb.State);
    if (Priority >= MAXIMUM_PRIORITY || Priority < LOW_PRIORITY)
      {
 	DPRINT1("Invalid thread priority (%d)\n", Priority);
@@ -248,7 +248,7 @@ PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 
 static VOID PsRemoveFromThreadList(PETHREAD Thread)
 {
-   assert(THREAD_STATE_READY == Thread->Tcb.State);
+   ASSERT(THREAD_STATE_READY == Thread->Tcb.State);
    RemoveEntryList(&Thread->Tcb.QueueListEntry);
    if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Tcb.Priority]))
      {
@@ -327,7 +327,7 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority, ULONG Affinity)
 	     {
 	       DPRINT1("%d/%d\n", current->Cid.UniqueThread, current->Tcb.State);
 	     }
-           assert(current->Tcb.State == THREAD_STATE_READY);
+           ASSERT(current->Tcb.State == THREAD_STATE_READY);
            DPRINT("current->Tcb.UserAffinity %x Affinity %x PID %d %d\n",
 	          current->Tcb.UserAffinity, Affinity, current->Cid.UniqueThread,
 	          Priority);

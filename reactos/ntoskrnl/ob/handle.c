@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.62 2004/09/28 15:02:29 weiden Exp $
+/* $Id: handle.c,v 1.63 2004/10/22 20:57:39 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -639,7 +639,7 @@ ObCreateHandle(PEPROCESS Process,
 
    DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
 
-   assert(Process);
+   ASSERT(Process);
 
    if (ObjectBody != NULL)
      {
@@ -753,16 +753,6 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
 
 
 /*
- * @implemented
- */
-NTSTATUS STDCALL
-ObReferenceObjectByHandle(HANDLE Handle,
-			  ACCESS_MASK DesiredAccess,
-			  POBJECT_TYPE ObjectType,
-			  KPROCESSOR_MODE AccessMode,
-			  PVOID* Object,
-			  POBJECT_HANDLE_INFORMATION HandleInformation)
-/*
  * FUNCTION: Increments the reference count for an object and returns a 
  * pointer to its body
  * ARGUMENTS:
@@ -774,7 +764,16 @@ ObReferenceObjectByHandle(HANDLE Handle,
  *         HandleInformation (OUT) = Contains information about the handle 
  *                                   on return
  * RETURNS: Status
+ *
+ * @implemented
  */
+NTSTATUS STDCALL
+ObReferenceObjectByHandle(HANDLE Handle,
+			  ACCESS_MASK DesiredAccess,
+			  POBJECT_TYPE ObjectType,
+			  KPROCESSOR_MODE AccessMode,
+			  PVOID* Object,
+			  POBJECT_HANDLE_INFORMATION HandleInformation)
 {
    PHANDLE_ENTRY HandleEntry;
    POBJECT_HEADER ObjectHeader;

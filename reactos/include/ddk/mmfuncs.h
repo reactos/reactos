@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.23 2004/07/17 03:04:45 ion Exp $ */
+/* $Id: mmfuncs.h,v 1.24 2004/10/22 20:51:44 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -541,12 +541,12 @@ MmPrefetchPages (
 #define MmPrepareMdlForReuse(Mdl) \
 	if (((Mdl)->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED) != 0) \
 	{ \
-		assert(((Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
+		ASSERT(((Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
 		MmUnmapLockedPages ((Mdl)->MappedSystemVa, (Mdl)); \
 	} \
 	else if (((Mdl)->MdlFlags & MDL_PARTIAL) == 0) \
 	{ \
-		assert(((Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
+		ASSERT(((Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
 	}
 
 /*

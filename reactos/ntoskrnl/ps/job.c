@@ -238,7 +238,7 @@ PVOID
 STDCALL 
 PsGetJobLock(PEJOB Job)
 {
-  assert(Job);
+  ASSERT(Job);
   return (PVOID)&Job->JobLock;
 }
 
@@ -250,7 +250,7 @@ PVOID
 STDCALL
 PsGetJobSessionId(PEJOB Job)
 {
-  assert(Job);
+  ASSERT(Job);
   return (PVOID)Job->SessionId;
 }
 
@@ -262,20 +262,20 @@ ULONG
 STDCALL
 PsGetJobUIRestrictionsClass(PEJOB Job)
 {
-  assert(Job);
+  ASSERT(Job);
   return Job->UIRestrictionsClass;
 }
 
 
 /*
  * @unimplemented
- */                       
+ */
 VOID
 STDCALL
 PsSetJobUIRestrictionsClass(PEJOB Job,
                             ULONG UIRestrictionsClass)
 {
-  assert(Job);
+  ASSERT(Job);
   InterlockedExchange((LONG*)&Job->UIRestrictionsClass, (LONG)UIRestrictionsClass);
   /* FIXME - walk through the job process list and update the restrictions? */
 }

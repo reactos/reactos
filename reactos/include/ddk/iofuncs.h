@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.44 2004/10/09 18:16:57 navaraf Exp $ */
+/* $Id: iofuncs.h,v 1.45 2004/10/22 20:51:44 ekohl Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -56,6 +56,7 @@ STDCALL
 IoAcquireVpbSpinLock (
 	PKIRQL	Irpl
 	);
+
 /**********************************************************************
  * NAME							EXPORTED
  *	IoAllocateAdapterChannel@
@@ -977,7 +978,7 @@ IoReportResourceUsage (
 #define IoSetCompletionRoutine(Irp,Routine,NewContext,Success,Error,Cancel) \
 	{ \
 		PIO_STACK_LOCATION param; \
-		assert((Success)||(Error)||(Cancel)?(Routine)!=NULL:TRUE); \
+		ASSERT((Success)||(Error)||(Cancel)?(Routine)!=NULL:TRUE); \
 		param = IoGetNextIrpStackLocation((Irp)); \
 		param->CompletionRoutine=(Routine); \
 		param->Context=(NewContext); \
@@ -1484,8 +1485,7 @@ IoCreateDisk(
     );
 
 NTSTATUS
-STDCALL /* TMN: Huh? BOTH explicit STDCALL, and implicit by NTAPI ??? */
-NTAPI
+STDCALL
 IoGetDeviceInterfaces(
     IN CONST GUID *InterfaceClassGuid,
     IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
@@ -1494,8 +1494,7 @@ IoGetDeviceInterfaces(
     );
 
 NTSTATUS
-STDCALL /* TMN: Huh? BOTH explicit STDCALL, and implicit by NTAPI ??? */
-NTAPI
+STDCALL
 IoGetDeviceInterfaceAlias(
     IN PUNICODE_STRING SymbolicLinkName,
     IN CONST GUID *AliasInterfaceClassGuid,

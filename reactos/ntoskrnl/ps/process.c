@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.144 2004/10/01 20:26:05 gvg Exp $
+/* $Id: process.c,v 1.145 2004/10/22 20:45:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -439,7 +439,7 @@ PsCreatePeb(HANDLE ProcessHandle,
       DPRINT1("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
       return(Status);
     }
-  assert((ULONG_PTR) Process->TebBlock <= PEB_BASE &&
+  ASSERT((ULONG_PTR) Process->TebBlock <= PEB_BASE &&
          PEB_BASE + PAGE_SIZE <= (ULONG_PTR) Process->TebBlock + AllocSize);
   Peb = (PPEB)PEB_BASE;
   PebSize = PAGE_SIZE;
@@ -455,15 +455,11 @@ PsCreatePeb(HANDLE ProcessHandle,
       return(Status);
     }
   DPRINT("Peb %p  PebSize %lu\n", Peb, PebSize);
-  assert((PPEB) PEB_BASE == Peb && PAGE_SIZE <= PebSize);
+  ASSERT((PPEB) PEB_BASE == Peb && PAGE_SIZE <= PebSize);
   Process->TebLastAllocated = (PVOID) Peb;
 
   ViewSize = 0;
-#if defined(__GNUC__)
-  SectionOffset.QuadPart = 0LL;
-#else
-  SectionOffset.QuadPart = 0;
-#endif
+  SectionOffset.QuadPart = (ULONGLONG)0;
   TableBase = NULL;
   Status = MmMapViewOfSection(NlsSectionObject,
 			      Process,

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.34 2004/09/13 20:25:25 weiden Exp $
+/* $Id: rtl.h,v 1.35 2004/10/22 20:53:11 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -115,11 +115,11 @@
 	(ListEntry)->Blink = (ListHead); \
 	OldFlink->Blink = (ListEntry); \
 	(ListHead)->Flink = (ListEntry); \
-	assert((ListEntry) != NULL); \
-	assert((ListEntry)->Blink!=NULL); \
-	assert((ListEntry)->Blink->Flink == (ListEntry)); \
-	assert((ListEntry)->Flink != NULL); \
-	assert((ListEntry)->Flink->Blink == (ListEntry)); \
+	ASSERT((ListEntry) != NULL); \
+	ASSERT((ListEntry)->Blink!=NULL); \
+	ASSERT((ListEntry)->Blink->Flink == (ListEntry)); \
+	ASSERT((ListEntry)->Flink != NULL); \
+	ASSERT((ListEntry)->Flink->Blink == (ListEntry)); \
 }
 
 
@@ -235,11 +235,11 @@ PushEntryList (
 { \
 	PLIST_ENTRY OldFlink; \
 	PLIST_ENTRY OldBlink; \
-	assert((ListEntry) != NULL); \
-	assert((ListEntry)->Blink!=NULL); \
-	assert((ListEntry)->Blink->Flink == (ListEntry)); \
-	assert((ListEntry)->Flink != NULL); \
-	assert((ListEntry)->Flink->Blink == (ListEntry)); \
+	ASSERT((ListEntry) != NULL); \
+	ASSERT((ListEntry)->Blink!=NULL); \
+	ASSERT((ListEntry)->Blink->Flink == (ListEntry)); \
+	ASSERT((ListEntry)->Flink != NULL); \
+	ASSERT((ListEntry)->Flink->Blink == (ListEntry)); \
 	OldFlink = (ListEntry)->Flink; \
 	OldBlink = (ListEntry)->Blink; \
 	OldFlink->Blink = OldBlink; \

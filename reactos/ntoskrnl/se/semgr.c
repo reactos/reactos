@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.47 2004/10/01 01:28:56 arty Exp $
+/* $Id: semgr.c,v 1.48 2004/10/22 20:48:00 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -562,7 +562,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   *NewDescriptor = Descriptor;
 
   DPRINT("Descrptor %x\n", Descriptor);
-  assert( RtlLengthSecurityDescriptor( Descriptor ) );
+  ASSERT(RtlLengthSecurityDescriptor(Descriptor));
 
   return STATUS_SUCCESS;
 }

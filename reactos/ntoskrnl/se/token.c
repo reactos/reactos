@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.41 2004/08/10 21:11:20 gvg Exp $
+/* $Id: token.c,v 1.42 2004/10/22 20:48:00 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -31,7 +31,7 @@ static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
 					  TOKEN_EXECUTE,
 					  TOKEN_ALL_ACCESS};
 
-#define SYSTEM_LUID                      0x3E7;
+//#define SYSTEM_LUID                      0x3E7;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -351,7 +351,7 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 				     &TokenType,
 				     &b,
 				     &ImpersonationLevel);
-   if (TokenType != 2)
+   if (TokenType != TokenImpersonation)
      {
 	ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
      }
@@ -365,9 +365,9 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 	       }
 	     return(STATUS_UNSUCCESSFUL);
 	  }
-	if (ImpersonationLevel == 0 ||
-	    ImpersonationLevel == 1 ||
-	    (RemoteClient != FALSE && ImpersonationLevel != 3))
+	if (ImpersonationLevel == SecurityAnonymous ||
+	    ImpersonationLevel == SecurityIdentification ||
+	    (RemoteClient != FALSE && ImpersonationLevel != SecurityDelegation))
 	  {
 	     if (Token != NULL)
 	       {
@@ -1335,8 +1335,12 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
       return(Status);
     }
 
-  AccessToken->AuthenticationId.LowPart = SYSTEM_LUID;
-  AccessToken->AuthenticationId.HighPart = 0;
+  Status = NtAllocateLocallyUniqueId(&AccessToken->AuthenticationId);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(AccessToken);
+      return Status;
+    }
 
   AccessToken->TokenType = TokenPrimary;
   AccessToken->ImpersonationLevel = SecurityDelegation;
@@ -1457,7 +1461,7 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   AccessToken->Privileges[i++].Luid = SeManageVolumePrivilege;
 #endif
 
-  assert( i == 20 );
+  ASSERT(i == 20);
 
   uSize = sizeof(ACL);
   uSize += sizeof(ACE) + uLocalSystemLength;
