@@ -16,9 +16,11 @@ APPS = cmdutils \
     	devutils$(SEP)zoomin \
 	dflat32 \
     	games$(SEP)winemine \
+	games$(SEP)solitaire \
 	hcalc \
 	mc \
 	notevil \
+	packmgr \
 	sysutils \
 	sysutils$(SEP)ctm \
     	sysutils$(SEP)kill \
@@ -27,7 +29,6 @@ APPS = cmdutils \
 	net$(SEP)niclist \
 	net$(SEP)ncftp \
 	sysutils$(SEP)regexpl \
-	tests \
 	welcome \
 	winfile
 
