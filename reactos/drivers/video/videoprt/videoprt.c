@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.2 2004/03/15 17:02:14 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.3 2004/03/16 20:36:54 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -166,31 +166,36 @@ VideoPortInitialize(
    PUNICODE_STRING RegistryPath = Context2;
    NTSTATUS Status;
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+   BOOL LegacyDetection = FALSE;
 
    DPRINT("VideoPortInitialize\n");
 
+   /*
+    * NOTE:
+    * The driver extension can be already allocated in case that we were
+    * called by legacy driver and failed detecting device. Some miniport
+    * drivers in that case adjust parameters and calls VideoPortInitialize
+    * again.
+    */
+
    DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
-   if (DriverExtension != NULL)
+   if (DriverExtension == NULL)
    {
-      DPRINT1(
-         "Oops, we were called twice to initialize the driver. This propably\n"
-         "means that we were loaded by legacy driver, so we have to fallback\n"
-         "to the old driver detection paradigm. Unfortunetly this case isn't\n"
-         "implemented yet.");
+      Status = IoAllocateDriverObjectExtension(
+         DriverObject,
+         DriverObject,
+         sizeof(VIDEO_PORT_DRIVER_EXTENSION),
+         (PVOID *)&DriverExtension);
 
-      return STATUS_UNSUCCESSFUL;
+      if (!NT_SUCCESS(Status))
+      {
+         return Status;
+      }
    }
 
-   Status = IoAllocateDriverObjectExtension(
-      DriverObject,
-      DriverObject,
-      sizeof(VIDEO_PORT_DRIVER_EXTENSION),
-      (PVOID *)&DriverExtension);
-
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }
+   /*
+    * Copy the correct miniport initializtation data to the device extension.
+    */
 
    RtlCopyMemory(
       &DriverExtension->InitializationData,
@@ -200,29 +205,53 @@ VideoPortInitialize(
 
    RtlCopyMemory(&DriverExtension->RegistryPath, RegistryPath, sizeof(UNICODE_STRING));
 
-#ifndef NDEBUG
    switch (HwInitializationData->HwInitDataSize)
    {
-      case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows NT miniport driver.\n"); break;
-      case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows 2000 miniport driver.\n"); break;
-      case sizeof(VIDEO_HW_INITIALIZATION_DATA):
-         DPRINT("We were loaded by a Windows XP or later miniport driver.\n"); break;
-      default:
-         DPRINT("Invalid HwInitializationData size.\n"); break;
-   }
-#endif
+      /*
+       * NT4 drivers are special case, because we must use legacy method
+       * of detection instead of the Plug & Play one.
+       */
 
-   DriverObject->DriverExtension->AddDevice = VideoPortAddDevice;
+      case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
+         DPRINT("We were loaded by a Windows NT miniport driver.\n");
+         LegacyDetection = TRUE;
+         break;
+
+      case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
+         DPRINT("We were loaded by a Windows 2000 miniport driver.\n");
+         break;
+
+      case sizeof(VIDEO_HW_INITIALIZATION_DATA):
+         DPRINT("We were loaded by a Windows XP or later miniport driver.\n");
+         break;
+
+      default:
+         DPRINT("Invalid HwInitializationData size.\n");
+         return STATUS_UNSUCCESSFUL;
+   }
+
    DriverObject->MajorFunction[IRP_MJ_CREATE] = VideoPortDispatchOpen;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = VideoPortDispatchClose;
    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VideoPortDispatchDeviceControl;
-   DriverObject->MajorFunction[IRP_MJ_PNP] = VideoPortDispatchPnp;
-   DriverObject->MajorFunction[IRP_MJ_POWER] = VideoPortDispatchPower;
    DriverObject->DriverUnload = VideoPortUnload;
 
-   return STATUS_SUCCESS;
+   /*
+    * Plug & Play drivers registers the device in AddDevice routine. For
+    * legacy drivers we must do it now.
+    */
+
+   if (LegacyDetection)
+   {
+      return VideoPortAddDevice(DriverObject, NULL);
+   }
+   else
+   {
+      DriverObject->DriverExtension->AddDevice = VideoPortAddDevice;
+      DriverObject->MajorFunction[IRP_MJ_PNP] = VideoPortDispatchPnp;
+      DriverObject->MajorFunction[IRP_MJ_POWER] = VideoPortDispatchPower;
+
+      return STATUS_SUCCESS;
+   }
 }
 
 /*
@@ -261,55 +290,6 @@ VideoPortLogError(
    {
       DPRINT1("Vrp->IoControlCode %lu (0x%lx)\n", Vrp->IoControlCode, Vrp->IoControlCode);
    }
-}
-
-/*
- * @implemented
- */
-
-ULONG STDCALL
-VideoPortGetBusData(
-   IN PVOID HwDeviceExtension,
-   IN BUS_DATA_TYPE BusDataType,
-   IN ULONG SlotNumber,
-   OUT PVOID Buffer,
-   IN ULONG Offset,
-   IN ULONG Length)
-{
-   DPRINT("VideoPortGetBusData\n");
-
-   return HalGetBusDataByOffset(
-      BusDataType, 
-      VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->SystemIoBusNumber,
-      BusDataType == Cmos ? SlotNumber :
-      VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->SystemIoSlotNumber,
-      Buffer, 
-      Offset, 
-      Length);
-}
-
-/*
- * @implemented
- */
-
-ULONG STDCALL
-VideoPortSetBusData(
-   IN PVOID HwDeviceExtension,
-   IN BUS_DATA_TYPE BusDataType,
-   IN ULONG SlotNumber,
-   IN PVOID Buffer,
-   IN ULONG Offset,
-   IN ULONG Length)
-{
-   DPRINT("VideoPortSetBusData\n");
-   return HalSetBusDataByOffset(
-      BusDataType,
-      VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->SystemIoBusNumber,
-      BusDataType == Cmos ? SlotNumber :
-      VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->SystemIoSlotNumber,
-      Buffer,
-      Offset,
-      Length);
 }
 
 /*

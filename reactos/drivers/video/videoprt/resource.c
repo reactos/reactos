@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: resource.c,v 1.1.2.2 2004/03/15 17:02:14 navaraf Exp $
+ * $Id: resource.c,v 1.1.2.3 2004/03/16 20:36:54 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -314,7 +314,10 @@ VideoPortGetAccessRanges(
    {
       VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
       DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
-      SlotIdToFind = Slot != NULL ? *Slot : DeviceExtension->SystemIoSlotNumber;
+      if (DeviceExtension->PhysicalDeviceObject != NULL)
+         SlotIdToFind = DeviceExtension->SystemIoSlotNumber;
+      else
+         SlotIdToFind = Slot != NULL ? *Slot : 0;
 
       DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x SlotId 0x%04x\n", 
 	     VendorIdToFind, DeviceIdToFind, SlotIdToFind);
@@ -566,4 +569,74 @@ VideoPortSetTrappedEmulatorPorts(
    DPRINT("VideoPortSetTrappedEmulatorPorts\n");
    /* Should store the ranges in the device extension for use by ntvdm. */
    return NO_ERROR;
+}
+
+/*
+ * @implemented
+ */
+
+ULONG STDCALL
+VideoPortGetBusData(
+   IN PVOID HwDeviceExtension,
+   IN BUS_DATA_TYPE BusDataType,
+   IN ULONG SlotNumber,
+   OUT PVOID Buffer,
+   IN ULONG Offset,
+   IN ULONG Length)
+{
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DPRINT("VideoPortGetBusData\n");
+
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+   if (BusDataType != Cmos)
+   {
+      /* Legacy vs. PnP behaviour */
+      if (DeviceExtension->PhysicalDeviceObject != NULL)
+         SlotNumber = DeviceExtension->SystemIoSlotNumber;
+   }
+
+   return HalGetBusDataByOffset(
+      BusDataType, 
+      DeviceExtension->SystemIoBusNumber,
+      SlotNumber,
+      Buffer, 
+      Offset, 
+      Length);
+}
+
+/*
+ * @implemented
+ */
+
+ULONG STDCALL
+VideoPortSetBusData(
+   IN PVOID HwDeviceExtension,
+   IN BUS_DATA_TYPE BusDataType,
+   IN ULONG SlotNumber,
+   IN PVOID Buffer,
+   IN ULONG Offset,
+   IN ULONG Length)
+{
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DPRINT("VideoPortSetBusData\n");
+
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+ 
+   if (BusDataType != Cmos)
+   {
+      /* Legacy vs. PnP behaviour */
+      if (DeviceExtension->PhysicalDeviceObject != NULL)
+         SlotNumber = DeviceExtension->SystemIoSlotNumber;
+   }
+
+   return HalSetBusDataByOffset(
+      BusDataType,
+      DeviceExtension->SystemIoBusNumber,
+      SlotNumber,
+      Buffer,
+      Offset,
+      Length);
 }

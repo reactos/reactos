@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.6 2004/03/15 20:21:50 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.7 2004/03/16 20:36:54 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -138,6 +138,17 @@ VideoPortAddDevice(
    ConfigInfo.AdapterInterfaceType = 
       DriverExtension->InitializationData.AdapterInterfaceType;
 
+   if (PhysicalDeviceObject != NULL)
+   {
+      Size = sizeof(ULONG);
+      IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyLegacyBusType,
+         Size,
+         &ConfigInfo.AdapterInterfaceType,
+         &Size);
+   }
+
    if (ConfigInfo.AdapterInterfaceType == PCIBus)
       ConfigInfo.InterruptMode = LevelSensitive;
    else
@@ -147,13 +158,16 @@ VideoPortAddDevice(
    ConfigInfo.VideoPortGetProcAddress = VideoPortGetProcAddress;
 
    /* Get bus number from the upper level bus driver. */
-   Size = sizeof(ULONG);
-   IoGetDeviceProperty(
-      PhysicalDeviceObject,
-      DevicePropertyBusNumber,
-      Size,
-      &ConfigInfo.SystemIoBusNumber,
-      &Size);
+   if (PhysicalDeviceObject != NULL)
+   {
+      Size = sizeof(ULONG);
+      IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyBusNumber,
+         Size,
+         &ConfigInfo.SystemIoBusNumber,
+         &Size);
+   }
 
    Size = sizeof(SystemBasicInfo);
    Status = ZwQuerySystemInformation(
@@ -211,17 +225,19 @@ VideoPortAddDevice(
    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
    DeviceExtension->FunctionalDeviceObject = DeviceObject;
    DeviceExtension->SystemIoBusNumber = ConfigInfo.SystemIoBusNumber;
-   DeviceExtension->AdapterInterfaceType = 
-      DriverExtension->InitializationData.AdapterInterfaceType;
+   DeviceExtension->AdapterInterfaceType = ConfigInfo.AdapterInterfaceType;
 
    /* Get bus device address from the upper level bus driver. */
-   Size = sizeof(ULONG);
-   IoGetDeviceProperty(
-      PhysicalDeviceObject,
-      DevicePropertyAddress,
-      Size,
-      &DeviceExtension->SystemIoSlotNumber,
-      &Size);   
+   if (PhysicalDeviceObject != NULL)
+   {
+      Size = sizeof(ULONG);
+      IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyAddress,
+         Size,
+         &DeviceExtension->SystemIoSlotNumber,
+         &Size);   
+   }
 
    InitializeListHead(&DeviceExtension->AddressMappingListHead);
    KeInitializeDpc(
@@ -244,13 +260,56 @@ VideoPortAddDevice(
     * particular device is present.
     */
     
-   /* FIXME: Need to figure out what string to pass as param 3. */
-   Status = DriverExtension->InitializationData.HwFindAdapter(
-      &DeviceExtension->MiniPortDeviceExtension,
-      DriverExtension->HwContext,
-      NULL,
-      &ConfigInfo,
-      &Again);
+   if (PhysicalDeviceObject == NULL)
+   {
+      /*
+       * Legacy detection method: Try all available buses.
+       */
+
+      ULONG BusNumber, MaxBuses;
+
+      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? 8 : 1;
+
+      for (BusNumber = 0; BusNumber < MaxBuses; BusNumber++)
+      {
+         DeviceExtension->SystemIoBusNumber =
+         ConfigInfo.SystemIoBusNumber = BusNumber;
+
+         /* FIXME: Need to figure out what string to pass as param 3. */
+         Status = DriverExtension->InitializationData.HwFindAdapter(
+            &DeviceExtension->MiniPortDeviceExtension,
+            DriverExtension->HwContext,
+            NULL,
+            &ConfigInfo,
+            &Again);
+
+         if (Status == ERROR_DEV_NOT_EXIST)
+         {
+            continue;
+         }
+         else if (Status == NO_ERROR)
+         {
+            break;
+         }
+         else
+         {
+            DPRINT("HwFindAdapter call failed with error %X\n", Status);
+            IoDeleteDevice(DeviceObject);
+
+            return Status;
+         }
+      }
+   }
+   else
+   {
+      /* FIXME: Need to figure out what string to pass as param 3. */
+      Status = DriverExtension->InitializationData.HwFindAdapter(
+         &DeviceExtension->MiniPortDeviceExtension,
+         DriverExtension->HwContext,
+         NULL,
+         &ConfigInfo,
+         &Again);
+   }
 
    if (Status != NO_ERROR)
    {
@@ -358,7 +417,8 @@ VideoPortAddDevice(
       }
    }
 
-   IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+   if (PhysicalDeviceObject != NULL)
+      IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
 
    return STATUS_SUCCESS;
 }
