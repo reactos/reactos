@@ -1,4 +1,5 @@
-/*
+/* $Id: ddk.h,v 1.10 2000/03/04 20:45:33 ea Exp $
+ *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
  * FILE:                     include/internal/hal/ddk.h
@@ -64,15 +65,18 @@ typedef struct _DEVICE_DESCRIPTION
 typedef BOOLEAN (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
 
-VOID HalAcquireDisplayOwnership (
+VOID
+HalAcquireDisplayOwnership (
 	PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
 
-PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
+PVOID
+HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      ULONG Length,
 			      PPHYSICAL_ADDRESS LogicalAddress,
 			      BOOLEAN CacheEnabled);
 
-NTSTATUS HalAssignSlotResources(PUNICODE_STRING RegistryPath,
+NTSTATUS
+HalAssignSlotResources(PUNICODE_STRING RegistryPath,
 				PUNICODE_STRING DriverClassName,
 				PDRIVER_OBJECT DriverObject,
 				PDEVICE_OBJECT DeviceObject,
@@ -81,80 +85,100 @@ NTSTATUS HalAssignSlotResources(PUNICODE_STRING RegistryPath,
 				ULONG SlotNumber,
 				PCM_RESOURCE_LIST* AllocatedResources);
 
-VOID HalDisplayString (PCH String);
+VOID
+HalDisplayString (PCH String);
 
-VOID HalExamineMBR(PDEVICE_OBJECT DeviceObject,
+VOID
+HalExamineMBR(PDEVICE_OBJECT DeviceObject,
 		   ULONG SectorSize,
 		   ULONG MBRTypeIdentifier,
 		   PVOID Buffer);
 
-VOID HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
+VOID
+HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			 ULONG Length,
 			 PHYSICAL_ADDRESS LogicalAddress,
 			 PVOID VirtualAddress,
 			 BOOLEAN CacheEnabled);
 
-PADAPTER_OBJECT HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
+PADAPTER_OBJECT
+HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
 			      PULONG NumberOfMapRegisters);
 
-ULONG HalGetBusData(BUS_DATA_TYPE BusDataType,
+ULONG
+HalGetBusData(BUS_DATA_TYPE BusDataType,
 		    ULONG BusNumber,
 		    ULONG SlotNumber,
 		    PVOID Buffer,
 		    ULONG Length);
 
-ULONG HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
+ULONG
+HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    ULONG BusNumber,
 			    ULONG SlotNumber,
 			    PVOID Buffer,
 			    ULONG Offset,
 			    ULONG Length);
 
-ULONG HalGetDmaAlignmentRequirement(VOID);
+ULONG
+HalGetDmaAlignmentRequirement(VOID);
 
-ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
+ULONG
+HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 			    ULONG BusNumber,
 			    ULONG BusInterruptLevel,
 			    ULONG BusInterruptVector,
 			    PKIRQL Irql,
 			    PKAFFINITY Affinity);
 
-BOOLEAN HalInitSystem (ULONG Phase,
+BOOLEAN
+HalInitSystem (ULONG Phase,
 		       boot_param *bp);
 
-BOOLEAN HalMakeBeep (ULONG Frequency);
+BOOLEAN
+HalMakeBeep (ULONG Frequency);
 
-VOID HalQueryDisplayParameters(PULONG DispSizeX,
+VOID
+HalQueryDisplayParameters(PULONG DispSizeX,
 			       PULONG DispSizeY,
 			       PULONG CursorPosX,
 			       PULONG CursorPosY);
 
-VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
-VOID HalSetRealTimeClock(PTIME_FIELDS Time);
+VOID
+HalQueryRealTimeClock(PTIME_FIELDS pTime);
+VOID
+HalSetRealTimeClock(PTIME_FIELDS Time);
 
-VOID HalQuerySystemInformation(VOID);
+VOID
+HalQuerySystemInformation(VOID);
 
-ULONG HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
+ULONG
+HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
 
-VOID HalReturnToFirmware(ULONG Action);
+VOID
+HalReturnToFirmware(ULONG Action);
 
-ULONG HalSetBusData(BUS_DATA_TYPE BusDataType,
+ULONG
+HalSetBusData(BUS_DATA_TYPE BusDataType,
 		    ULONG BusNumber,
 		    ULONG SlotNumber,
 		    PVOID Buffer,
 		    ULONG Length);
 
-ULONG HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
+ULONG
+HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    ULONG BusNumber,
 			    ULONG SlotNumber,
 			    PVOID Buffer,
 			    ULONG Offset,
 			    ULONG Length);
 
-VOID HalSetDisplayParameters(ULONG CursorPosX,
+VOID
+HalSetDisplayParameters(ULONG CursorPosX,
 			     ULONG CursorPosY);
 
-BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
+BOOLEAN
+HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       ULONG BusNumber,
 			       PHYSICAL_ADDRESS BusAddress,
 			       PULONG AddressSpace,
@@ -172,8 +196,11 @@ typedef struct _KD_PORT_INFORMATION
 } KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
 
 
-extern ULONG KdComPortInUse;
-
+#if defined(__HAL__) || defined(__NTOSKRNL__)
+extern ULONG KdComPortInUse __declspec(dllexport);
+#else
+extern ULONG KdComPortInUse __declspec(dllimport);
+#endif
 
 BOOLEAN
 STDCALL
@@ -191,39 +218,51 @@ KdPortPutByte (UCHAR ByteToSend);
  */
 
 VOID
+STDCALL
 READ_PORT_BUFFER_UCHAR (PUCHAR Port, PUCHAR Value, ULONG Count);
 
 VOID
+STDCALL
 READ_PORT_BUFFER_ULONG (PULONG Port, PULONG Value, ULONG Count);
 
 VOID
+STDCALL
 READ_PORT_BUFFER_USHORT (PUSHORT Port, PUSHORT Value, ULONG Count);
 
 UCHAR
+STDCALL
 READ_PORT_UCHAR (PUCHAR Port);
 
 ULONG
+STDCALL
 READ_PORT_ULONG (PULONG Port);
 
 USHORT
+STDCALL
 READ_PORT_USHORT (PUSHORT Port);
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_UCHAR (PUCHAR Port, PUCHAR Value, ULONG Count);
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_ULONG (PULONG Port, PULONG Value, ULONG Count);
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_USHORT (PUSHORT Port, PUSHORT Value, ULONG Count);
 
 VOID
+STDCALL
 WRITE_PORT_UCHAR (PUCHAR Port, UCHAR Value);
 
 VOID
+STDCALL
 WRITE_PORT_ULONG (PULONG Port, ULONG Value);
 
 VOID
+STDCALL
 WRITE_PORT_USHORT (PUSHORT Port, USHORT Value);
 
 

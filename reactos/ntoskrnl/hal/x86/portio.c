@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.2 1999/12/12 03:48:47 phreak Exp $
+/* $Id: portio.c,v 1.3 2000/03/04 20:45:34 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 /* FUNCTIONS ****************************************************************/
 
 VOID
+STDCALL
 READ_PORT_BUFFER_UCHAR (PUCHAR Port,
                         PUCHAR Buffer,
                         ULONG Count)
@@ -25,6 +26,7 @@ READ_PORT_BUFFER_UCHAR (PUCHAR Port,
 
 
 VOID
+STDCALL
 READ_PORT_BUFFER_ULONG (PULONG Port,
                         PULONG Buffer,
                         ULONG Count)
@@ -34,6 +36,7 @@ READ_PORT_BUFFER_ULONG (PULONG Port,
 
 
 VOID
+STDCALL
 READ_PORT_BUFFER_USHORT (PUSHORT Port,
                          PUSHORT Buffer,
                          ULONG Count)
@@ -43,6 +46,7 @@ READ_PORT_BUFFER_USHORT (PUSHORT Port,
 
 
 UCHAR
+STDCALL
 READ_PORT_UCHAR (PUCHAR Port)
 {
         return inb_p ((ULONG)Port);
@@ -50,6 +54,7 @@ READ_PORT_UCHAR (PUCHAR Port)
 
 
 ULONG
+STDCALL
 READ_PORT_ULONG (PULONG Port)
 {
         return inl_p ((ULONG)Port);
@@ -57,6 +62,7 @@ READ_PORT_ULONG (PULONG Port)
 
 
 USHORT
+STDCALL
 READ_PORT_USHORT (PUSHORT Port)
 {
         return inw_p ((ULONG)Port);
@@ -64,6 +70,7 @@ READ_PORT_USHORT (PUSHORT Port)
 
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
                          PUCHAR Buffer,
                          ULONG Count)
@@ -73,6 +80,7 @@ WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
 
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_ULONG (PULONG Port,
                          PULONG Buffer,
                          ULONG Count)
@@ -82,6 +90,7 @@ WRITE_PORT_BUFFER_ULONG (PULONG Port,
 
 
 VOID
+STDCALL
 WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
                           PUSHORT Buffer,
                           ULONG Count)
@@ -91,6 +100,7 @@ WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
 
 
 VOID
+STDCALL
 WRITE_PORT_UCHAR (PUCHAR Port,
                   UCHAR Value)
 {
@@ -99,6 +109,7 @@ WRITE_PORT_UCHAR (PUCHAR Port,
 
 
 VOID
+STDCALL
 WRITE_PORT_ULONG (PULONG Port,
                   ULONG Value)
 {
@@ -107,6 +118,7 @@ WRITE_PORT_ULONG (PULONG Port,
 
 
 VOID
+STDCALL
 WRITE_PORT_USHORT (PUSHORT Port,
                    USHORT Value)
 {
