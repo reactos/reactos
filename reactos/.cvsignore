@@ -17,3 +17,5 @@ reactos
 *.plg
 *.bak
 *.zip
+*.iso
+*.cab
