@@ -85,7 +85,6 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 	__asm__("sti\n\t");
 	return;
      }
-<<<<<<< irql.c
    
    HiSetCurrentPICMask(0);
    if(CurrentIrql == APC_LEVEL)
