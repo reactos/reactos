@@ -748,10 +748,12 @@ HEXEDIT_WM_LBUTTONDOWN(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
   POINT EditPos;
   DWORD Hit = HEXEDIT_HitRegionTest(hed, Pt);
   
+  SetFocus(hed->hWndSelf);
+  
   hed->Position = HEXEDIT_PositionFromPoint(hed, Pt, Hit, &EditPos, &NewField); 
   hed->EditingField = NewField;
   hed->CaretCol = EditPos.x;
-  hed->CaretLine = EditPos.y;
+  hed->CaretLine = EditPos.y;  
   
   HEXEDIT_MoveCaret(hed, TRUE);
   
