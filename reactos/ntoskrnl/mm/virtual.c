@@ -795,7 +795,7 @@ ProbeForRead (IN CONST VOID *Address,
               IN ULONG Length,
               IN ULONG Alignment)
 {
-   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;
@@ -804,8 +804,8 @@ ProbeForRead (IN CONST VOID *Address,
    {
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
-   else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+   else if ((ULONG_PTR)Address + Length - 1 < (ULONG_PTR)Address ||
+            (ULONG_PTR)Address + Length - 1 > (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
@@ -820,10 +820,10 @@ ProbeForWrite (IN CONST VOID *Address,
                IN ULONG Length,
                IN ULONG Alignment)
 {
-   volatile PCHAR Ptr;
-   ULONG i;
+   volatile CHAR *Current;
+   PCHAR Last;
 
-   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;
@@ -832,18 +832,21 @@ ProbeForWrite (IN CONST VOID *Address,
    {
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
-   else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+
+   Last = (PCHAR)((ULONG_PTR)Address + Length - 1);
+   if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
+       (ULONG_PTR)Last > (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
 
    /* Check for accessible pages */
-   for (i = 0; i < Length; i += PAGE_SIZE)
+   Current = (CHAR*)Address;
+   do
    {
-      Ptr = (PCHAR)(((ULONG_PTR)Address & ~(PAGE_SIZE - 1)) + i);
-      *Ptr = *Ptr;
-   }
+     *Current = *Current;
+     Current = (CHAR*)((ULONG_PTR)Current + PAGE_SIZE);
+   } while (Current <= Last);
 }
 
 /* EOF */
