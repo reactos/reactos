@@ -49,8 +49,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
 
-  /* FIXME: should the miniport driver be loaded here?  */
-
   return  STATUS_SUCCESS;
 }
 
@@ -616,7 +614,7 @@ VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
 VOID VideoPortZeroMemory(OUT PVOID  Destination, 
                          IN ULONG  Length)
 {
-  UNIMPLEMENTED;
+  RtlZeroMemory (Destination, Length);
 }
 
 VOID VideoPortZeroDeviceMemory(OUT PVOID  Destination, 

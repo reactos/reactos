@@ -38,22 +38,39 @@ else
 endif
 
 vidport.sys: $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(OBJECTS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname vidport.sys --base-file base.tmp \
-	           --output-exp temp.exp
-	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-              -specs=../../svc_specs -mdll -o vidport.sys $(OBJECTS) -Wl,temp.exp
-	- $(RM) temp.exp
-
-vidport.a: vidport.sys vidport.def
 	$(DLLTOOL) \
-		--dllname vidport.sys \
-		--def vidport.def \
-		--output-lib vidport.a
-
+		--dllname $(TARGET).sys \
+		--def $(TARGET).def \
+		--kill-at \
+		--output-lib $(TARGET).a
+	$(CC) \
+                $(OBJECTS) \
+                -Wl,-d -specs=../../svc_specs \
+                -mdll \
+                -o junk.tmp \
+                -Wl,--image-base,0x10000 \
+                -Wl,--defsym,_end=end \
+	        -Wl,--defsym,_edata=__data_end__ \
+                -Wl,--defsym,_etext=etext \
+	        -Wl,--base-file,base.tmp
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+                --dllname $(TARGET).sys \
+                --base-file base.tmp \
+	        --output-exp temp.exp \
+                --def $(TARGET).edf
+	- $(RM) base.tmp
+	$(CC) \
+                $(OBJECTS) \
+                -specs=../../svc_specs \
+                -mdll \
+                -o $(TARGET).sys \
+                -Wl,--image-base,0x10000 \
+                -Wl,-e,_DriverEntry@8 \
+                -Wl,--defsym,_end=end \
+	        -Wl,--defsym,_edata=__data_end__ \
+                -Wl,--defsym,_etext=etext \
+                -Wl,temp.exp 
+	- $(RM) temp.exp
 
 include ../../../rules.mak

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.35 1999/10/24 17:07:57 rex Exp $
+/* $Id: loader.c,v 1.36 1999/10/28 06:58:05 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,7 @@
 #include <internal/string.h>
 #include <internal/symbol.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
@@ -837,6 +837,8 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
   /*  Get the IMAGE_SECTION_HEADER that contains the exports.  This is
       usually the .edata section, but doesn't have to be.  */
   SectionHeader = LdrPEGetEnclosingSectionHeader(ExportsStartRVA, ModuleObject);
+  DPRINT("Base:%08lx ExportsStartRVA:%08lx End:%08lx SectionHeader:%08lx\n", 
+         ModuleObject->Base, ExportsStartRVA, ExportsEndRVA, SectionHeader);
   if (!SectionHeader)
     {
       return 0;
@@ -846,7 +848,7 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
   ExportDirectory = MakePtr(PIMAGE_EXPORT_DIRECTORY, 
                             ModuleObject->Base,
                             ExportsStartRVA - Delta);
-
+  DPRINT("Export Dir:%08lx\n", ExportDirectory);
   FunctionList = (PDWORD)((DWORD)ExportDirectory->AddressOfFunctions - 
     Delta + ModuleObject->Base);
   NameList = (PDWORD)((DWORD)ExportDirectory->AddressOfNames - 
@@ -865,10 +867,12 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
     {
       for (Idx = 0; Idx < ExportDirectory->NumberOfNames; Idx++)
         {
+#if 0
           DPRINT("  Name:%s  NameList[%d]:%s\n", 
                  Name, 
                  Idx, 
                  (DWORD) ModuleObject->Base + NameList[Idx]);
+#endif
           if (!strcmp(Name, (PCHAR) ((DWORD)ModuleObject->Base + NameList[Idx])))
             {
               ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +

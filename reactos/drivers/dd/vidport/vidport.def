@@ -1,24 +1,24 @@
-; $Id: vidport.def,v 1.1 1999/08/06 17:27:45 rex Exp $
+; $Id: vidport.def,v 1.2 1999/10/28 06:58:05 rex Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
 EXPORTS
 VideoPortCompareMemory@12
-VideoPortDebugPrint@8
+VideoPortDebugPrint@0
 VideoPortDisableInterrupt@4
 VideoPortEnableInterrupt@4
 VideoPortFreeDeviceBase@8
 VideoPortGetBusData@24
 VideoPortGetCurrentIrql@0
-VideoPortGetDeviceBase@16
+VideoPortGetDeviceBase@20
 VideoPortGetDeviceData@16
 VideoPortGetAccessRanges@32
 VideoPortGetRegistryParameters@20
 VideoPortInitialize@16
 VideoPortInt10@8
 VideoPortLogError@16
-VideoPortMapBankedMemory@36
-VideoPortMapMemory@20
+VideoPortMapBankedMemory@40
+VideoPortMapMemory@24
 VideoPortMoveMemory@12
 VideoPortReadPortUchar@4
 VideoPortReadPortUshort@4
