@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.3 2000/02/22 02:02:08 ekohl Exp $
+/* $Id: rw.c,v 1.4 2000/03/12 23:28:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,12 +54,7 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	CurrentCluster = Fcb->entry.FirstCluster;
    FirstCluster=CurrentCluster;
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
-   
-   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-     {
-	return(STATUS_FILE_IS_A_DIRECTORY);
-     }
-   
+
    if (ReadOffset >= Fcb->entry.FileSize
        && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
@@ -167,6 +162,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PVFATCCB pCcb;
    PVOID Temp;
    ULONG TempLength,Length2=Length;
+   LARGE_INTEGER SystemTime, LocalTime;
    
    DPRINT1("FsdWriteFile(FileObject %x, Buffer %x, Length %x, "
 	   "WriteOffset %x\n", FileObject, Buffer, Length, WriteOffset);
@@ -243,7 +239,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 				  CurrentCluster,
 				  DeviceExt->Boot->SectorsPerCluster,
 				  Temp);
-	       }
+	  }
 	else
 	  {
 	     VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
@@ -338,13 +334,20 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		  VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
 	       }
 	  }
-	CHECKPOINT;	
+	CHECKPOINT;
      }
    
-   /*
-    * FIXME : set  last write time and date
-    */
-   if (Fcb->entry.FileSize < WriteOffset+Length 
+
+   /* set dates and times */
+   KeQuerySystemTime (&SystemTime);
+   ExSystemTimeToLocalTime (&SystemTime,
+                            &LocalTime);
+   FsdFileTimeToDosDateTime ((TIME*)&LocalTime,
+                             &Fcb->entry.UpdateDate,
+                             &Fcb->entry.UpdateTime);
+   Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
+
+   if (Fcb->entry.FileSize < WriteOffset+Length
        && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
 	Fcb->entry.FileSize = WriteOffset+Length;
@@ -399,7 +402,8 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_EXTENSION DeviceExt;
    NTSTATUS Status;
    ULONG LengthRead;
-   
+   PVFATFCB Fcb;
+
    DPRINT("FsdRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
 
    /* Precondition / Initialization */
@@ -414,10 +418,23 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
    Offset = Stack->Parameters.Read.ByteOffset.u.LowPart;
-   
-   Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
-			&LengthRead);
-   
+
+   /* fail if file is a directory */
+   Fcb = ((PVFATCCB)(FileObject->FsContext2))->pFcb;
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+     {
+	Status = STATUS_FILE_IS_A_DIRECTORY;
+     }
+   else
+     {
+	Status = FsdReadFile(DeviceExt,
+	                     FileObject,
+	                     Buffer,
+	                     Length,
+	                     Offset,
+	                     &LengthRead);
+    }
+
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = LengthRead;
    IoCompleteRequest(Irp,IO_NO_INCREMENT);

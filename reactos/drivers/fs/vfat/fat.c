@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.3 2000/02/22 02:02:08 ekohl Exp $
+ * $Id: fat.c,v 1.4 2000/03/12 23:28:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -339,6 +339,8 @@ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 {
    ULONG FATsector;
    PUSHORT Block;
+   ULONG Start;
+   int i;
    
    DbgPrint("FAT16WriteCluster %u : %u\n", ClusterToWrite, NewValue);
    
@@ -347,11 +349,17 @@ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 
    /* Update the in-memory FAT */
    Block[ClusterToWrite] = NewValue;
-   /* Write the changed FAT sector to disk */
-   VFATWriteSectors(DeviceExt->StorageDevice,
- 	            DeviceExt->FATStart+FATsector,
-                    1,
-	            (UCHAR *)Block);
+
+   /* Write the changed FAT sector to disk (all FAT's) */
+   Start = DeviceExt->FATStart + FATsector;
+   for (i = 0; i < DeviceExt->Boot->FATCount; i++)
+     {
+	VFATWriteSectors(DeviceExt->StorageDevice,
+	                 Start,
+	                 1,
+	                 (UCHAR *)Block);
+	Start += DeviceExt->Boot->FATSectors;
+     }
 }
 
 void  FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,

@@ -1,11 +1,11 @@
-/* $Id: dirwr.c,v 1.9 2000/03/01 23:41:35 ea Exp $
+/* $Id: dirwr.c,v 1.10 2000/03/12 23:28:59 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/dirwr.c
  * PURPOSE:          VFAT Filesystem : write in directory
-
-*/
+ *
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -72,28 +72,31 @@ DPRINT("open directory %S for update of entry %S\n",DirName,FileName);
    return status;
 }
 
-NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
-                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr)
+NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt,
+                  PFILE_OBJECT pFileObject,
+                  ULONG RequestedOptions,
+                  UCHAR ReqAttr)
 /*
   create a new FAT entry
 */
 {
- WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
- VFATFCB DirFcb,FileFcb;
- FATDirEntry FatEntry;
- NTSTATUS status;
- FILE_OBJECT FileObject;
- FATDirEntry *pEntry;
- slot *pSlots;
- ULONG LengthRead,Offset;
- short nbSlots=0,nbFree=0,i,j,posCar,NameLen;
- PUCHAR Buffer,Buffer2;
- BOOLEAN needTilde=FALSE,needLong=FALSE;
- PVFATFCB newFCB;
- PVFATCCB newCCB;
- ULONG CurrentCluster;
+   WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
+   VFATFCB DirFcb,FileFcb;
+   FATDirEntry FatEntry;
+   NTSTATUS status;
+   FILE_OBJECT FileObject;
+   FATDirEntry *pEntry;
+   slot *pSlots;
+   ULONG LengthRead,Offset;
+   short nbSlots=0,nbFree=0,i,j,posCar,NameLen;
+   PUCHAR Buffer,Buffer2;
+   BOOLEAN needTilde=FALSE,needLong=FALSE;
+   PVFATFCB newFCB;
+   PVFATCCB newCCB;
+   ULONG CurrentCluster;
    KIRQL oldIrql;
-   
+   LARGE_INTEGER SystemTime, LocalTime;
+
    PathFileName=pFileObject->FileName.Buffer;
    DPRINT("addEntry: Pathname=%S\n",PathFileName);
    //find last \ in PathFileName
@@ -226,13 +229,23 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
       DirName[NameLen]=0;
    }
    DPRINT("dos name=%11.11s\n",pEntry->Filename);
-   //FIXME : set attributes, dates, times
-   pEntry->Attrib=ReqAttr;
 
+   /* set attributes */
+   pEntry->Attrib=ReqAttr;
    if(RequestedOptions&FILE_DIRECTORY_FILE)
      pEntry->Attrib |= FILE_ATTRIBUTE_DIRECTORY;
-   pEntry->CreationDate=0x21;
-   pEntry->UpdateDate=0x21;
+
+   /* set dates and times */
+   KeQuerySystemTime (&SystemTime);
+   ExSystemTimeToLocalTime (&SystemTime,
+                            &LocalTime);
+   FsdFileTimeToDosDateTime ((TIME*)&LocalTime,
+                             &pEntry->CreationDate,
+                             &pEntry->CreationTime);
+   pEntry->UpdateDate = pEntry->CreationDate;
+   pEntry->UpdateTime = pEntry->CreationTime;
+   pEntry->AccessDate = pEntry->CreationDate;
+
    // calculate checksum for 8.3 name
    for(pSlots[0].alias_checksum=i=0;i<11;i++)
    {
@@ -258,6 +271,7 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
       memcpy(pSlots[i].name11_12,FileName+(nbSlots-i-2)*13+11
          ,2*sizeof(WCHAR));
    }
+
    //try to find nbSlots contiguous entries frees in directory
    for(i=0,status=STATUS_SUCCESS;status==STATUS_SUCCESS;i++)
    {
@@ -265,11 +279,17 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
            ,sizeof(FATDirEntry),i*sizeof(FATDirEntry),&LengthRead);
       if(IsLastEntry(&FatEntry,0))
         break;
-      if(IsDeletedEntry(&FatEntry,0)) nbFree++;
-      else nbFree=0;
-      if (nbFree==nbSlots) break;
+
+      if(IsDeletedEntry(&FatEntry,0))
+        nbFree++;
+      else
+        nbFree=0;
+
+      if (nbFree==nbSlots)
+        break;
    }
-   DPRINT("NbFree %d, entry number %d\n",nbFree,i);
+   DPRINT("nbSlots %d nbFree %d, entry number %d\n",nbSlots,nbFree,i);
+
    if(RequestedOptions&FILE_DIRECTORY_FILE)
    {
      CurrentCluster=GetNextWriteCluster(DeviceExt,0);
@@ -345,3 +365,4 @@ DPRINT("addentry ok\n");
    return STATUS_SUCCESS;
 }
 
+/* EOF */
