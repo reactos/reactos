@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.11 2004/10/08 21:48:46 weiden Exp $
+/* $Id: pipe.c,v 1.12 2004/10/08 23:12:29 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,7 +37,7 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
    NTSTATUS Status;
    HANDLE ReadPipeHandle;
    HANDLE WritePipeHandle;
-   ULONG PipeId;
+   ULONG PipeId, Attributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
    DefaultTimeout.QuadPart = 300000000; /* 30 seconds */
@@ -50,23 +50,19 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
    RtlInitUnicodeString (&PipeName,
 			 Buffer);
 
+   Attributes = OBJ_CASE_INSENSITIVE;
    if (lpPipeAttributes)
      {
 	SecurityDescriptor = lpPipeAttributes->lpSecurityDescriptor;
+	if(lpPipeAttributes->bInheritHandle)
+           Attributes |= OBJ_INHERIT;
      }
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PipeName,
-			      OBJ_CASE_INSENSITIVE,
+			      Attributes,
 			      NULL,
 			      SecurityDescriptor);
-   if (lpPipeAttributes)
-   {
-      if(lpPipeAttributes->bInheritHandle)
-         ObjectAttributes.Attributes |= OBJ_INHERIT;
-      if (lpPipeAttributes->lpSecurityDescriptor)
-	 ObjectAttributes.SecurityDescriptor = lpPipeAttributes->lpSecurityDescriptor;
-   }
 
    Status = NtCreateNamedPipeFile(&ReadPipeHandle,
 				  FILE_GENERIC_READ,
