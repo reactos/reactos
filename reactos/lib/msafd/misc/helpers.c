@@ -53,6 +53,7 @@ SockGetTdiName(
 
                 /* DLL Doesn't support WSHOpenSocket2, call the old one */
                 HelperData->WSHOpenSocket(AddressFamily,
+                                          SocketType,
                                           Protocol,
                                           TransportName,
                                           HelperDllContext,
@@ -115,6 +116,7 @@ SockGetTdiName(
             if (HelperData->WSHOpenSocket2 == NULL) {
                 /* DLL Doesn't support WSHOpenSocket2, call the old one */
                 HelperData->WSHOpenSocket(AddressFamily,
+                                          SocketType,
                                           Protocol,
                                           TransportName,
                                           HelperDllContext,
