@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.1.12.1 2004/10/24 23:07:04 ion Exp $
+/* $Id: image.c,v 1.1.12.2 2004/10/25 02:25:01 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
