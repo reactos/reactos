@@ -7,7 +7,9 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
+#include <roscfg.h>
 #include <ne2000.h>
+#include <debug.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
 ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
@@ -921,6 +923,8 @@ VOID NICIndicatePacket(
 #endif
 
     if (IndicateLength >= DRIVER_HEADER_SIZE) {
+	NDIS_DbgPrint(MAX_TRACE,("Adapter->MiniportAdapterHandle: %x\n",
+				 Adapter->MiniportAdapterHandle));
         NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle,
                                 NULL,
                                 (PVOID)&Adapter->Lookahead,
@@ -974,6 +978,8 @@ VOID NICReadPacket(
         /* Skip packet */
         Adapter->NextPacket = Adapter->CurrentPage;
     } else {
+	NDIS_DbgPrint(MAX_TRACE,("Adapter->MiniportAdapterHandle: %x\n",
+				 Adapter->MiniportAdapterHandle));
         NICIndicatePacket(Adapter);
 
         /* Go to the next free buffer in receive ring */
@@ -1221,6 +1227,8 @@ VOID HandleReceive(
         } else {
             NDIS_DbgPrint(MID_TRACE, ("Got a packet in the receive ring.\n"));
 
+	    NDIS_DbgPrint(MAX_TRACE,("Adapter->MiniportAdapterHandle: %x\n",
+				     Adapter->MiniportAdapterHandle));
             /* Read packet from receive buffer ring */
             NICReadPacket(Adapter);
 
@@ -1334,7 +1342,12 @@ VOID STDCALL MiniportHandleInterrupt(
             /* Overflow. Handled almost the same way as a receive interrupt */
             Adapter->BufferOverflow = TRUE;
 
-            HandleReceive(Adapter);
+	    NDIS_DbgPrint(MAX_TRACE,("Adapter->MiniportAdapterHandle: %x\n",
+				     Adapter->MiniportAdapterHandle));
+	    if(Adapter->MiniportAdapterHandle)
+		HandleReceive(Adapter);
+	    else
+		NDIS_DbgPrint(MAX_TRACE,("No miniport adapter yet\n"));
 
             Adapter->InterruptStatus &= ~ISR_OVW;
             break;
@@ -1348,8 +1361,13 @@ VOID STDCALL MiniportHandleInterrupt(
         case ISR_PRX:
             NDIS_DbgPrint(MID_TRACE, ("Receive interrupt.\n"));
 
-            HandleReceive(Adapter);
-
+	    NDIS_DbgPrint(MAX_TRACE,("Adapter->MiniportAdapterHandle: %x\n",
+				     Adapter->MiniportAdapterHandle));
+	    if(Adapter->MiniportAdapterHandle)
+		HandleReceive(Adapter);
+	    else
+		NDIS_DbgPrint(MAX_TRACE,("No miniport adapter yet\n"));
+	    
             Adapter->InterruptStatus &= ~(ISR_PRX | ISR_RXE);
             break;  
 

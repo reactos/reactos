@@ -162,7 +162,8 @@ MiniIndicateData(
   /* KIRQL OldIrql; */
   PLIST_ENTRY CurrentEntry;
   PADAPTER_BINDING AdapterBinding;
-
+  static PVOID ReceiveHandler = 0;
+  
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called. Adapter (0x%X)  HeaderBuffer (0x%X)  "
       "HeaderBufferSize (0x%X)  LookaheadBuffer (0x%X)  LookaheadBufferSize (0x%X).\n",
       Adapter, HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize));
@@ -224,6 +225,25 @@ MiniIndicateData(
               break;
             }
 #endif
+
+	  if( !ReceiveHandler ) 
+	      ReceiveHandler = 
+		  *AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler;
+	  ASSERT( ReceiveHandler ==
+		  *AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler );
+	      
+
+	  NDIS_DbgPrint
+	      (MID_TRACE, 
+	       ("XXX (%x) %x %x %x %x %x %x %x XXX\n",
+		*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler,
+		AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+		MacReceiveContext,
+		HeaderBuffer,
+		HeaderBufferSize,
+		LookaheadBuffer,
+		LookaheadBufferSize,
+		PacketSize));
 
           /* call the receive handler */
           (*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler)(
@@ -353,7 +373,7 @@ MiniEthReceiveComplete(
 
 VOID STDCALL
 MiniEthReceiveIndication(
-    IN  PETH_FILTER Filter,     /* shouldn't be NDIS_HANDLE? */
+    IN  NDIS_HANDLE MiniportAdapter,
     IN  NDIS_HANDLE MacReceiveContext,
     IN  PCHAR       Address,
     IN  PVOID       HeaderBuffer,
@@ -364,7 +384,7 @@ MiniEthReceiveIndication(
 /*
  * FUNCTION: Receive indication function for Ethernet devices
  * ARGUMENTS:
- *     Filter              = Pointer to Ethernet filter
+ *     MiniportAdapter     = Miniport Adapter Handle (PLOGICAL_ADAPTER)
  *     MacReceiveContext   = MAC receive context handle
  *     Address             = Pointer to destination Ethernet address
  *     HeaderBuffer        = Pointer to Ethernet header buffer
@@ -374,15 +394,13 @@ MiniEthReceiveIndication(
  *     PacketSize          = Total size of received packet
  */
 {
-    if( Filter ) {
-	MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
-			 MacReceiveContext,
-			 HeaderBuffer,
-			 HeaderBufferSize,
-			 LookaheadBuffer,
-			 LookaheadBufferSize,
-			 PacketSize);
-    }
+    MiniIndicateData(MiniportAdapter,
+		     MacReceiveContext,
+		     HeaderBuffer,
+		     HeaderBufferSize,
+		     LookaheadBuffer,
+		     LookaheadBufferSize,
+		     PacketSize);
 }
 
 

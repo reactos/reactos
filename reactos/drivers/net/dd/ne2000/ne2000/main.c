@@ -7,7 +7,9 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
+#include <roscfg.h>
 #include <ne2000.h>
+#include <debug.h>
 
 
 #ifdef DBG
@@ -163,7 +165,7 @@ NDIS_STATUS STDCALL MiniportInitialize(
     NDIS_STATUS Status;
     PNIC_ADAPTER Adapter;
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    NDIS_DbgPrint(MAX_TRACE, ("Called (Adapter %X).\n", MiniportAdapterHandle));
 
     /* Search for 802.3 media which is the only one we support */
     for (i = 0; i < MediumArraySize; i++) {
