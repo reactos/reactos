@@ -52,9 +52,9 @@ Already defined in makefile now.
  * FIXME: This should be moved to a header
  */
 VOID
-SCROLL_DrawScrollBar(HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
+IntDrawScrollBar(HWND hWnd, HDC hDC, INT nBar);
 DWORD
-SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging );
+IntScrollHitTest(HWND hWnd, INT nBar, POINT pt, BOOL bDragging);
 HPEN STDCALL
 GetSysColorPen(int nIndex);
 
@@ -483,15 +483,15 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
       FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
       /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
       SCROLL_DrawSizeGrip(hDC, &TempRect);
-      SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
-      SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
+      IntDrawScrollBar(hWnd, hDC, SB_VERT);
+      IntDrawScrollBar(hWnd, hDC, SB_HORZ);
    }
    else
    {
       if (Style & WS_VSCROLL)
-         SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
+         IntDrawScrollBar(hWnd, hDC, SB_VERT);
       else if (Style & WS_HSCROLL)
-         SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
+         IntDrawScrollBar(hWnd, hDC, SB_HORZ);
    }
 
    ReleaseDC(hWnd, hDC);
@@ -790,10 +790,7 @@ DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   Point.x = GET_X_LPARAM(lParam);
   Point.y = GET_Y_LPARAM(lParam);
   
-  hit = SCROLL_HitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
-  
-  if(hit)
-    DPRINT("SCROLL_HitTest() == 0x%x\n", hit);
+  hit = IntScrollHitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
   
   SendMessageW(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
 }
@@ -965,6 +962,27 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
   }
   return(0);
+}
+
+VOID
+DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
+{
+   INT ScrollBar;
+
+   if ((wParam & 0xfff0) == SC_HSCROLL)
+   {
+      if ((wParam & 0x0f) != HTHSCROLL)
+         return;
+      ScrollBar = SB_HORZ;
+   }
+   else
+   {
+      if ((wParam & 0x0f) != HTVSCROLL)
+         return;
+      ScrollBar = SB_VERT;
+   }
+
+   /* FIXME */
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

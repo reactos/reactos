@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.112 2003/12/20 22:33:45 weiden Exp $
+/* $Id: defwnd.c,v 1.113 2003/12/22 20:22:40 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -29,6 +29,7 @@ LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
+VOID DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point);
 
 /* GLOBALS *******************************************************************/
 
@@ -809,6 +810,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
       case SC_KEYMENU:
         MenuTrackKbdMenuBar(hWnd, wParam, Pt.x);
 	break;
+
       default:
 	/* FIXME: Implement */
         UNIMPLEMENTED;
@@ -880,7 +882,7 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
  *
  * Default colors for control painting.
  */
-static HBRUSH
+HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
   if (CTLCOLOR_SCROLLBAR == ctlType)
