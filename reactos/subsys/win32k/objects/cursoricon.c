@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.17 2003/11/10 17:44:50 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.18 2003/11/11 17:50:58 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -1109,6 +1109,9 @@ NtUserDrawIconEx(
     hbmColor = CurIconObject->IconInfo.hbmColor;
     IntReleaseCurIconObject(WinStaObject);
     
+    if(istepIfAniCur)
+      DbgPrint("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
+    
     if(!hbmMask || !NtGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
       goto done;
     
@@ -1175,10 +1178,11 @@ NtUserDrawIconEx(
       hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
       #if CANSTRETCHBLT
       NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                      cxWidth, cyWidth, hdcMem, 0, 0, IconSize.cx, IconSize.cy, SRCAND);
+                      cxWidth, cyWidth, hdcMem, 0, 0, IconSize.cx, IconSize.cy, 
+                      ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
       #else
       NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                  cxWidth, cyWidth, hdcMem, 0, 0, SRCAND);
+                  cxWidth, cyWidth, hdcMem, 0, 0, ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
       #endif
       if(!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) && (diFlags & DI_IMAGE))
       {
@@ -1194,15 +1198,17 @@ NtUserDrawIconEx(
       NtGdiSelectObject(hdcMem, hOldMem);
     }
     
-    if((diFlags & DI_IMAGE) && hbmColor)
+    if(diFlags & DI_IMAGE)
     {
-      hOldMem = NtGdiSelectObject(hdcMem, hbmColor);
+      hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
       #if CANSTRETCHBLT
       NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                      cxWidth, cyWidth, hdcMem, 0, 0, IconSize.cx, IconSize.cy, SRCINVERT);
+                      cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
+                      IconSize.cx, IconSize.cy, ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
       #else
       NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                  cxWidth, cyWidth, hdcMem, 0, 0, SRCINVERT);
+                  cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
+                  ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
       #endif
       NtGdiSelectObject(hdcMem, hOldMem);
     }
