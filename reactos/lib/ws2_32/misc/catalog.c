@@ -191,9 +191,14 @@ INT LoadProvider(
   WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%wZ).\n",
     Provider, &Provider->LibraryName));
 
-  if (Provider->hModule == INVALID_HANDLE_VALUE) {
-    /* DLL is not loaded so load it now */
-    Provider->hModule = LoadLibrary(Provider->LibraryName.Buffer);
+  if (Provider->hModule == INVALID_HANDLE_VALUE)
+  {
+    /* DLL is not loaded so load it now
+     * UNICODE_STRING objects are not null-terminated, but LoadLibraryW
+     * expects a null-terminated string
+     */
+    Provider->LibraryName.Buffer[Provider->LibraryName.Length] = L'\0';
+    Provider->hModule = LoadLibraryW(Provider->LibraryName.Buffer);
     if (Provider->hModule != INVALID_HANDLE_VALUE) {
       Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(
         Provider->hModule,
