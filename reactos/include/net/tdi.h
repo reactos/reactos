@@ -434,7 +434,7 @@ typedef struct _TA_ADDRESS_IP {
         USHORT          AddressType;
         TDI_ADDRESS_IP  Address[1];
     } Address[1];
-} TA_ADDRESS_IP, *PTA_ADDRESS_IP;
+} TA_IP_ADDRESS, *PTA_IP_ADDRESS;
 
 typedef struct _TA_ADDRESS_IPX {
     LONG    TAAddressCount;
