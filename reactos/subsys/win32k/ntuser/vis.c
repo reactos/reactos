@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.16 2004/01/17 15:18:25 navaraf Exp $
+ * $Id: vis.c,v 1.17 2004/02/04 22:55:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -140,7 +140,7 @@ VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window,
   HRGN ClipRgn;
   PWINDOW_OBJECT DesktopWindow;
   INT LeftOffset, TopOffset;
-  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+  PDESKTOP_OBJECT Desktop = Window->OwnerThread->Win32Thread->Desktop;
 
   DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
   if (NULL == DesktopWindow)
