@@ -12,12 +12,6 @@
 #include <ddk/ntddmou.h>
 
 /*
- * HAL:KdComPortInUse used to prevent detecting mouse on port
- * that is occupied by kernel debugger.
- */
-ULONG DECLSPEC_IMPORT KdComPortInUse;
-
-/*
  * Compile time options
  */
 
@@ -26,7 +20,7 @@ ULONG DECLSPEC_IMPORT KdComPortInUse;
 /* Check for mouse on COM1? */
 #define SERMOUSE_COM1_SUPPORT
 /* Check for mouse on COM2? */
-#define SERMOUSE_COM2_SUPPORT
+/* #define SERMOUSE_COM2_SUPPORT */
 /* Create \??\Mouse* symlink for device? */
 #define SERMOUSE_MOUSESYMLINK_SUPPORT
 
@@ -573,10 +567,6 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	KIRQL Dirql;
 	KAFFINITY Affinity;
 	ULONG MouseType;
-
-	/* Don't detect mouse on port that is occupied by kernel debugger */
-	if (KdComPortInUse == Port)
-		return FALSE;
 
 	/* Try to detect mouse on specified port */
 	MouseType = DetectMicrosoftMouse(Port);
