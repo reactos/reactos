@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.19 2002/06/04 13:44:06 ekohl Exp $
+/* $Id: semgr.c,v 1.20 2002/06/04 14:14:07 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -58,7 +58,7 @@ SeInit1(VOID)
 BOOLEAN
 SeInit2(VOID)
 {
-  SeInitializeTokenImplementation();
+  SepInitializeTokenImplementation();
 
   return(TRUE);
 }
