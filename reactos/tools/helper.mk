@@ -926,10 +926,9 @@ MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d) $(TARGET_PCH:.h=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
-# FIXME: The $(MK_BASENAME).sym can be removed around 15 Feb 2005
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	$(HALFVERBOSEECHO) [CLEAN]
-	- $(RM) *.o $(MK_PCHCLEAN) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
+	- $(RM) *.o $(MK_PCHCLEAN) $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_STUBS_SRC) \
 	  $(MK_GENERATED_MAKEFILE) $(TARGET_CLEAN)

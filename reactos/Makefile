@@ -983,8 +983,6 @@ install_clean:
 	$(RM) $(INSTALL_DIR)/system32/config/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/system32/*.*
 	$(RM) $(INSTALL_DIR)/system32/*.*
-	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/symbols/*.*
-	$(RM) $(INSTALL_DIR)/symbols/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/fonts/*.*
 	$(RM) $(INSTALL_DIR)/media/fonts/*.*
 	$(HALFVERBOSEECHO) [RM]      $(INSTALL_DIR)/media/*.*
@@ -999,8 +997,6 @@ install_clean:
 	$(RMDIR) $(INSTALL_DIR)/system32/config
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/system32
 	$(RMDIR) $(INSTALL_DIR)/system32
-	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/symbols
-	$(RMDIR) $(INSTALL_DIR)/symbols
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media/fonts
 	$(RMDIR) $(INSTALL_DIR)/media/fonts
 	$(HALFVERBOSEECHO) [RMDIR]   $(INSTALL_DIR)/media
@@ -1023,8 +1019,6 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)/media
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/media/fonts
 	$(RMKDIR) $(INSTALL_DIR)/media/fonts
-	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/symbols
-	$(RMKDIR) $(INSTALL_DIR)/symbols
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32
 	$(RMKDIR) $(INSTALL_DIR)/system32
 	$(HALFVERBOSEECHO) [RMKDIR]  $(INSTALL_DIR)/system32/config
