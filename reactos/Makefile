@@ -71,20 +71,30 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
        objdir atomtest winhello partinfo mutex stats pice isotest
 
-  
-#lzexpand (missing imports)
-#dsound (missing winmm.dll)
+
+#
+# Wine userspace win32 subsystem plus other stuff. This will all be moved 
+# to helper makefile down the road and there will be peace on earth.
+#  
+
+WINE_OTHER = unicode
+
+WINE_TOOLS = wrc winebuild
+
 WINE_DLLS = rpcrt4 mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
             shell32 shlwapi comctl32 shfolder shdocvw commdlg \
             ddraw dinput dplay dplayx \
             psapi richedit serialui tapi32 urlmon winspool wintrust
+            #lzexpand (missing imports)
+            #dsound (missing winmm.dll)
+
 
 WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
              progman uninstaller view wcmd winefile winemine \
              winver
 
 ifeq ($(ROS_BUILD_WINE),yes)
-WINE_MODULES = $(WINE_DLLS) $(WINE_PROGS)
+WINE_MODULES = $(WINE_OTHER) $(WINE_TOOLS) $(WINE_DLLS) $(WINE_PROGS) 
 else
 WINE_MODULES =
 endif
@@ -165,6 +175,47 @@ $(APPS:%=%_install): %_install:
 	make -C apps/$* install
 
 .PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
+
+#
+# Other Wine Modules
+#
+$(WINE_OTHER): %:
+	make -f makefile.ros -C $(WINE_PATH)/$*
+
+$(WINE_OTHER:%=%_implib): %_implib:
+	make -f makefile.ros -C $(WINE_PATH)/$* implib
+
+$(WINE_OTHER:%=%_clean): %_clean:
+	make -f makefile.ros -C $(WINE_PATH)/$* clean
+
+$(WINE_OTHER:%=%_dist): %_dist:
+	make -f makefile.ros -C $(WINE_PATH)/$* dist
+
+$(WINE_OTHER:%=%_install): %_install:
+	make -f makefile.ros -C $(WINE_PATH)/$* install
+
+.PHONY: $(WINE_OTHER) $(WINE_OTHER:%=%_implib) $(WINE_OTHER:%=%_clean) $(WINE_OTHER:%=%_install) $(WINE_OTHER:%=%_dist)
+
+#
+# Wine Tools
+#
+$(WINE_TOOLS): %:
+	make -f makefile.ros -C $(WINE_PATH)/tools/$*
+
+$(WINE_TOOLS:%=%_implib): %_implib:
+	make -f makefile.ros -C $(WINE_PATH)/tools/$* implib
+
+$(WINE_TOOLS:%=%_clean): %_clean:
+	make -f makefile.ros -C $(WINE_PATH)/tools/$* clean
+
+$(WINE_TOOLS:%=%_dist): %_dist:
+	make -f makefile.ros -C $(WINE_PATH)/tools/$* dist
+
+$(WINE_TOOLS:%=%_install): %_install:
+	make -f makefile.ros -C $(WINE_PATH)/tools/$* install
+
+.PHONY: $(WINE_DLLS) $(WINE_DLLS:%=%_implib) $(WINE_DLLS:%=%_clean) $(WINE_DLLS:%=%_install) $(WINE_DLLS:%=%_dist)
+
 
 #
 # Wine DLLs
