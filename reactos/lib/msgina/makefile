@@ -14,6 +14,7 @@ TARGET_CFLAGS = \
  -I./include \
  -DUNICODE \
  -D_UNICODE \
+ -D__USE_W32API \
  -D__REACTOS__ \
  -Wall \
  -Werror \

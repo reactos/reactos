@@ -30,6 +30,8 @@
 #include "msgina.h"
 #include "resource.h"
 
+#include <wine/debug.h>
+
 extern HINSTANCE hDllInstance;
 
 typedef struct _DISPLAYSTATUSMSG
@@ -203,7 +205,7 @@ WlxActivateUserShell(
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                   L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-  {DbgPrint("GINA: Failed: 1\n");
+  {ERR("GINA: Failed: 1\n");
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
@@ -211,7 +213,7 @@ WlxActivateUserShell(
   if((RegQueryValueEx(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
                      &BufSize) != ERROR_SUCCESS) || 
                      !((ValueType == REG_SZ) || (ValueType == REG_EXPAND_SZ)))
-  {DbgPrint("GINA: Failed: 2\n");
+  {ERR("GINA: Failed: 2\n");
     RegCloseKey(hKey);
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
@@ -243,7 +245,7 @@ WlxActivateUserShell(
                             NULL,
                             &si,
                             &pi);
-  if(!Ret) DbgPrint("GINA: Failed: 3\n");
+  if(!Ret) ERR("GINA: Failed: 3\n");
   VirtualFree(pEnvironment, 0, MEM_RELEASE);
   return Ret;
 }
@@ -281,22 +283,22 @@ WlxLoggedOnSAS(
     }
     case WLX_SAS_TYPE_SC_INSERT:
     {
-      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_INSERT not supported!\n");
+      FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_INSERT not supported!\n");
       break;
     }
     case WLX_SAS_TYPE_SC_REMOVE:
     {
-      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_REMOVE not supported!\n");
+      FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_REMOVE not supported!\n");
       break;
     }
     case WLX_SAS_TYPE_TIMEOUT:
     {
-      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_TIMEOUT not supported!\n");
+      FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_TIMEOUT not supported!\n");
       break;
     }
     default:
     {
-      DbgPrint("WlxLoggedOnSAS: Unknown SasType: 0x%x\n", dwSasType);
+      WARN("WlxLoggedOnSAS: Unknown SasType: 0x%x\n", dwSasType);
       break;
     }
   }
@@ -494,7 +496,7 @@ WlxLoggedOutSAS(
 
   if(!phToken)
   {
-    DbgPrint("msgina: phToken == NULL!\n");
+    WARN("msgina: phToken == NULL!\n");
     return WLX_SAS_ACTION_NONE;
   }
 
@@ -503,13 +505,13 @@ WlxLoggedOutSAS(
                 LOGON32_PROVIDER_DEFAULT,
                 phToken))
   {
-    DbgPrint("msgina: Logonuser() failed\n");
+    WARN("msgina: Logonuser() failed\n");
     return WLX_SAS_ACTION_NONE;
   }
   
   if(!(*phToken))
   {
-    DbgPrint("msgina: *phToken == NULL!\n");
+    WARN("msgina: *phToken == NULL!\n");
     return WLX_SAS_ACTION_NONE;
   }
 
@@ -524,7 +526,7 @@ WlxLoggedOutSAS(
                           sizeof(TOKEN_STATISTICS),
                           &cbStats))
   {
-    DbgPrint("msgina: Couldn't get Autentication id from user token!\n");
+    WARN("msgina: Couldn't get Autentication id from user token!\n");
     return WLX_SAS_ACTION_NONE;
   }
   *pAuthenticationId = Stats.AuthenticationId; 

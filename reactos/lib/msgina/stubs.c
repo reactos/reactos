@@ -12,9 +12,7 @@
 #include <windows.h>
 #include <winwlx.h>
 
-#define UNIMPLEMENTED \
-  DbgPrint("MSGINA:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
-
+#include <wine/debug.h>
 
 /*
  * @unimplemented
