@@ -106,4 +106,129 @@ void XMLCALL XMLReader::XML_DefaultHandler(void* userData, const XML_Char* s, in
 }
 
 
+std::string XMLString(LPCTSTR s)
+{
+	TCHAR buffer[BUFFER_LEN];
+	LPTSTR o = buffer;
+
+	for(LPCTSTR p=s; *p; ++p)
+		switch(*p) {
+		  case '&':
+			*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
+			break;
+
+		  case '<':
+			*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
+			break;
+
+		  case '>':
+			*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
+			break;
+
+		  default:
+			*o++ = *p;
+		}
+
+	return get_utf8(buffer, o-buffer);
+}
+
+
+ /// write node with children tree to output stream
+std::ostream& XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int indent)
+{
+	bool format = mode==FORMAT_PRETTY;
+
+	if (format)
+		for(int i=indent; i--; )
+			out << XML_INDENT_SPACE;
+
+	out << '<' << XMLString(*this);
+
+	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+
+	if (!_children.empty() || !_content.empty()) {
+		out << '>';
+
+		if (format)
+			out << '\n';
+		else
+			out << _content;
+
+		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+			(*it)->write_worker(out, mode, indent+1);
+
+		if (format)
+			for(int i=indent; i--; )
+				out << XML_INDENT_SPACE;
+
+		out << "</" << XMLString(*this) << '>';
+	} else {
+		out << "/>";
+	}
+
+	if (format)
+		out << '\n';
+	else
+		out << _trailing;
+
+	return out;
+}
+
+
+ /// write node with children tree to output stream using smart formating
+std::ostream& XMLNode::smart_write_worker(std::ostream& out, int indent, bool& next_format)
+{
+	bool format_pre, format_mid, format_post;
+
+	format_pre = next_format;
+	format_mid = _content.empty();
+	format_post = _trailing.empty();
+
+	if (format_pre)
+		for(int i=indent; i--; )
+			out << XML_INDENT_SPACE;
+
+	out << '<' << XMLString(*this);
+
+	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+
+	if (!_children.empty() || !_content.empty()) {
+		out << '>';
+
+		if (format_mid)
+			out << '\n';
+		else
+			out << _content;
+
+		Children::const_iterator it = _children.begin();
+
+		if (it != _children.end()) {
+			next_format = (*it)->_content.empty() && (*it)->_trailing.empty();
+
+			for(; it!=_children.end(); ++it)
+				(*it)->smart_write_worker(out, indent+1, next_format);
+		}
+
+		if (next_format)
+			for(int i=indent; i--; )
+				out << XML_INDENT_SPACE;
+
+		out << "</" << XMLString(*this) << '>';
+	} else {
+		out << "/>";
+	}
+
+	if (format_post)
+		out << '\n';
+	else
+		out << _trailing;
+
+	next_format = format_post;
+
+	return out;
+}
+
+
 }	// namespace XMLStorage

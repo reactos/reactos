@@ -202,31 +202,7 @@ inline std::string get_utf8(const String& s)
 	return get_utf8(s.c_str(), s.length());
 }
 
-inline std::string XMLString(const String& s)
-{
-	TCHAR buffer[BUFFER_LEN];
-	LPTSTR o = buffer;
-
-	for(LPCTSTR p=s; *p; ++p)
-		switch(*p) {
-		  case '&':
-			*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
-			break;
-
-		  case '<':
-			*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
-			break;
-
-		  case '>':
-			*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
-			break;
-
-		  default:
-			*o++ = *p;
-		}
-
-	return get_utf8(buffer, o-buffer);
-}
+extern std::string XMLString(LPCTSTR s);
 
 
  // write XML files with 2 spaces indenting
@@ -306,54 +282,22 @@ struct XMLNode : public String
 		return _children;
 	}
 
-	 /// write XML stream preserving original white space and comments
-	std::ostream& write(std::ostream& out)
+	enum WRITE_MODE {
+		FORMAT_SMART	= 0,	/// preserve original white space and comments if present; pretty print otherwise
+		FORMAT_ORIGINAL = 1,	/// write XML stream preserving original white space and comments
+		FORMAT_PRETTY	= 2		/// pretty print node to stream without preserving original white space
+	};
+
+	 /// write node with children tree to output stream
+	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART, int indent=0)
 	{
-		out << "<" << XMLString(*this);
+		if (mode) {
+			return write_worker(out, mode, indent);
+		} else { // FORMAT_SMART
+			bool next_format = _content.empty() && _trailing.empty();
 
-		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
-
-		if (!_children.empty() || !_content.empty()) {
-			out << ">" << _content;
-
-			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-				(*it)->write(out);
-
-			out << "</" << XMLString(*this) << ">" << _trailing;
-		} else {
-			out << "/>" << _trailing;
+			return smart_write_worker(out, indent, next_format);
 		}
-
-		return out;
-	}
-
-	 /// print write node to stream without preserving original white space
-	std::ostream& write_formating(std::ostream& out, int indent=0)
-	{
-		for(int i=indent; i--; )
-			out << XML_INDENT_SPACE;
-
-		out << "<" << XMLString(*this);
-
-		for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
-			out << " " << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
-
-		if (!_children.empty()) {
-			out << ">\n";
-
-			for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-				(*it)->write_formating(out, indent+1);
-
-			for(int i=indent; i--; )
-				out << XML_INDENT_SPACE;
-
-			out << "</" << XMLString(*this) << ">\n";
-		} else {
-			out << "/>\n";
-		}
-
-		return out;
 	}
 
 protected:
@@ -407,6 +351,9 @@ protected:
 		else
 			_children.back()->_trailing.append(s, l);
 	}
+
+	std::ostream& write_worker(std::ostream& out, WRITE_MODE mode, int indent);
+	std::ostream& smart_write_worker(std::ostream& out, int indent, bool& next_format);
 };
 
 
@@ -724,7 +671,8 @@ struct XMLDoc : public XMLNode
 	}
 
 	 /// write XML stream preserving previous white space and comments
-	std::ostream& write(std::ostream& out, const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
+	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART,
+						const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
 	{
 		out << "<?xml version=\"" << xml_version << "\" encoding=\"" << encoding << "\"?>\n";
 
@@ -737,19 +685,15 @@ struct XMLDoc : public XMLNode
 	 /// write XML stream with formating
 	std::ostream& write_formating(std::ostream& out)
 	{
-		out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-
-		if (!_children.empty())
-			_children.front()->write_formating(out);
-
-		return out;
+		return write(out, FORMAT_PRETTY);
 	}
 
-	void write(const std::string& path, const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
+	void write(const std::string& path, WRITE_MODE mode=FORMAT_SMART,
+				const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
 	{
 		std::ofstream out(path.c_str());
 
-		write(out, xml_version);
+		write(out, mode, xml_version, encoding);
 	}
 
 	void write_formating(const std::string& path)
