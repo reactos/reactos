@@ -83,6 +83,7 @@ typedef struct _WINDOW_OBJECT
   PSCROLLBARINFO wExtra;
   LONG UserData;
   WNDPROC WndProc;
+  PETHREAD OwnerThread;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */
@@ -108,6 +109,10 @@ BOOL     FASTCALL W32kIsChildWindow (HWND Parent, HWND Child);
 HWND     FASTCALL W32kGetDesktopWindow (VOID);
 HWND     FASTCALL W32kGetFocusWindow (VOID);
 HWND     FASTCALL W32kSetFocusWindow (HWND hWnd);
+
+DWORD FASTCALL
+W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
+
 #endif /* __WIN32K_WINDOW_H */
 
 /* EOF */

@@ -1741,6 +1741,9 @@ DWORD
 STDCALL
 NtUserYieldTask(VOID);
 
+DWORD STDCALL
+NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
+
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

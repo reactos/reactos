@@ -545,3 +545,4 @@ NtUserYieldTask                         0
 NtUserGetDesktopWindow			0
 # ReactOS only system calls
 NtUserAcquireOrReleaseInputOwnership    1
+NtUserGetWindowThreadProcessId          2

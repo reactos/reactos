@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.66 2003/07/24 15:59:34 rcampbell Exp $
+/* $Id: window.c,v 1.67 2003/07/25 19:35:51 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -490,6 +490,7 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->ClientRect = WindowObject->WindowRect;
   WindowObject->UserData = 0;
   WindowObject->WndProc = DesktopClass->Class.lpfnWndProc;
+  WindowObject->OwnerThread = PsGetCurrentThread();
 
   InitializeListHead(&WindowObject->ChildrenListHead);
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
@@ -631,6 +632,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->UserData = 0;
   WindowObject->WndProc = ClassObject->Class.lpfnWndProc;
+  WindowObject->OwnerThread = PsGetCurrentThread();
 
   ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
   InsertHeadList(&ParentWindow->ChildrenListHead,
@@ -1962,6 +1964,38 @@ HWND STDCALL
 NtUserGetDesktopWindow()
 {
 	return W32kGetDesktopWindow();
+}
+
+
+DWORD FASTCALL
+W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
+{
+   if (pid) *pid = (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
+   return (DWORD) Wnd->OwnerThread->ThreadsProcess->UniqueProcessId;
+}
+
+
+DWORD STDCALL
+NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
+{
+   PWINDOW_OBJECT Wnd;
+   DWORD tid, pid;
+
+   //W32kAcquireWindowsLockShared();
+
+   if (!(Wnd = W32kGetWindowObject(hWnd)))
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+   }
+
+   tid = W32kGetWindowThreadProcessId(Wnd, &pid);
+   W32kReleaseWindowObject(Wnd);
+   //W32kReleaseWindowsLock();
+   
+   if (UnsafePid) MmCopyToCaller(UnsafePid, &pid, sizeof(DWORD));
+   
+   return tid;
 }
 
 /* EOF */
