@@ -19,3 +19,23 @@ Source and inspiration from
 WINE (http://www.winehq.com)
 WinFree (http://www.stack.nl/~onno/win32/)
 Linux (http://www.kernel.org)
+
+References (Rex's at least)
+
+Baker, Art. The Windows NT Device Driver Book. Prentice Hall, 1997.
+Borate, Dabak & Phadke. Undocumented Windows NT. M&T Books, 1999.
+Brain, Marshall. Win32 System Services. Prentice Hall, 1996.
+Cant, Chris. Writing Windows WDM Device Drivers. R&D Books, 1999.
+Canton & Sanchez. IBM Microcomputers: A Programmer's Handbook. McGraw Hill, 1990.
+Davis & Wallace. Windows Undocumented File Formats. R&D Books, 1997.
+Mason & Viscarola. Windows NT Device Driver Development. Macmillan, 1999.
+Mitchell, Stan. Inside the Windows 95 File System. O'Reilly, 1997.
+Murray, James D. Windows NT Event Logging. O'Reilly, 1998.
+Nagar, Rajeev. Windows NT File System Internals. O'Reilly, 1997.
+Osbourne, Sandra. Windows NT Registry: A Settings Reference. New Riders, 1998.
+Pietrek, Matt. Windows 95 System Programming Secrets. IDG, 1995.
+Richter, Jeffery. Advanced Windows, 3rd ed. Microsoft, 1997.
+Simon, Richard J. Windows NT Win32 API Superbible. Waite Group, 1996.
+Solomon, David A. Inside Windows NT, 2nd Ed. Microsoft, 1998.
+"The NT Insider." Open Systems Resources, 1999-2000.
+
