@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.27 2001/07/05 01:51:52 rex Exp $
+/* $Id: create.c,v 1.28 2001/07/18 12:04:52 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -110,6 +110,7 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
   ULONG StartingSector = *_StartingSector;
   ULONG jloop = *_jloop;
   ULONG cpos;
+  PVOID OldBlock;
 
   test = (FATDirEntry *) Block;
   test2 = (slot *) Block;
@@ -136,8 +137,8 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 	  if (Offset == ENTRIES_PER_SECTOR)
 	    {
 	      Offset = 0;
-              /* FIXME: Check status */
-              GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
+	      /* FIXME: Check status */
+	      GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
 	      jloop++;
 	      /* FIXME: Check status */
 	      VfatReadSectors (DeviceExt->StorageDevice,
@@ -152,19 +153,51 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 
 	}
 
-      if (IsDeletedEntry (Block, Offset + 1))
-	{
-	  Offset++;
-	  *_Offset = Offset;
-	  *_jloop = jloop;
-	  *_StartingSector = StartingSector;
-	  return (FALSE);
-	}
-
+      // save values for returning
       *_Offset = Offset;
       *_jloop = jloop;
       *_StartingSector = StartingSector;
 
+      if (Offset + 1 == ENTRIES_PER_SECTOR)
+	{
+	  // save the old sector
+	  OldBlock = ExAllocatePool (NonPagedPool, BLOCKSIZE);
+	  memcpy (OldBlock, Block, BLOCKSIZE);
+
+	  // read the next sector
+	  Offset = 0;
+	  /* FIXME: Check status */
+	  GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
+	  jloop++;
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, Block);
+
+	  test2 = (slot *) Block;
+
+	  if (IsDeletedEntry (Block, Offset))
+	    {
+	      ExFreePool (OldBlock);
+	      *_Offset = Offset;
+	      *_jloop = jloop;
+	      *_StartingSector = StartingSector;
+	      return FALSE;
+	    }
+
+	  // restore the old sector
+	  memcpy (Block, OldBlock, BLOCKSIZE);
+	  ExFreePool (OldBlock);
+	}
+      else
+	{
+	  if (IsDeletedEntry (Block, Offset + 1))
+	    {
+	      Offset++;
+	      *_Offset = Offset;
+	      *_jloop = jloop;
+	      *_StartingSector = StartingSector;
+	      return (FALSE);
+	    }
+	}
       return (TRUE);
     }
 
@@ -359,7 +392,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		    i++;
 		  if (i == (ENTRIES_PER_SECTOR))
 		    {
-                      /* FIXME: Check status */
+		      /* FIXME: Check status */
 		      GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
 
 		      /* FIXME: Check status */
@@ -373,12 +406,18 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		    CHECKPOINT;
 		    memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));
 		    Fcb->ObjectName=&Fcb->PathName[len];
+		    if (len != 1 || Fcb->PathName[0] != '\\')
+		      {
+			Fcb->ObjectName[0] = '\\';
+			Fcb->ObjectName = &Fcb->ObjectName[1];
+		      }
 		  }
 		  else
-		  	Fcb->ObjectName=Fcb->PathName;
-
-		  Fcb->ObjectName[0]='\\';
-		  Fcb->ObjectName=&Fcb->ObjectName[1];
+		  {
+		    Fcb->ObjectName=Fcb->PathName;
+		    Fcb->ObjectName[0]='\\';
+		    Fcb->ObjectName=&Fcb->ObjectName[1];
+		  }
 
 		  memcpy (&Fcb->entry, &((FATDirEntry *) block)[i],
 			  sizeof (FATDirEntry));
@@ -388,7 +427,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		  if (Entry)
 		    *Entry = i;
 		  ExFreePool (block);
-	    DPRINT("FindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
+		  DPRINT("FindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
 		  return (STATUS_SUCCESS);
 		}
 	    }
@@ -400,7 +439,10 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
          GetNextSector was originally implemented to handle the case above */
       if (Entry)
 	*Entry = 0;
-      StartingSector++;
+
+      /* FIXME: Check status */
+      GetNextSector (DeviceExt, StartingSector, &StartingSector, FALSE);
+
       if ((Parent != NULL && Parent->entry.FirstCluster != 1)
 	  || DeviceExt->FatType == FAT32)
 	{
