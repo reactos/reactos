@@ -1,3 +1,5 @@
+/* $Id: npfs.h,v 1.11 2002/05/07 22:41:22 hbirr Exp $ */
+
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
 
@@ -65,6 +67,17 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
 #define CP DPRINT("\n");
+
+static inline VOID
+NpfsFreePipeData(PNPFS_PIPE_DATA PipeData)
+{
+  if (PipeData->Data)
+    {
+      ExFreePool(PipeData->Data);
+    }
+  ExFreeToNPagedLookasideList(&NpfsPipeDataLookasideList, PipeData);
+}
+
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
