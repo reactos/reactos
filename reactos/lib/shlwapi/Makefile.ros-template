@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.6 2004/05/29 21:24:47 hbirr Exp $
+# $Id: Makefile.ros-template,v 1.7 2004/06/19 17:58:37 navaraf Exp $
 
 TARGET_NAME = shlwapi
 
@@ -9,7 +9,7 @@ TARGET_CFLAGS = -D__REACTOS__ @EXTRADEFS@
 # FIXME: we don't do delayed imports yet so oleaut32.a is listed explicitly
 # NOTE: msvcrt.a must be listed before ntdll.a, because sprintf that is
 #       exported from ntdll doesn't support printing of float types (%f)
-TARGET_SDKLIBS = @IMPORTS@ msvcrt.a oleaut32.a libwine.a wine_uuid.a libwine_unicode.a ntdll.a
+TARGET_SDKLIBS = msvcrt.a @IMPORTS@ oleaut32.a libwine.a wine_uuid.a libwine_unicode.a msvcrt.a ntdll.a
 
 TARGET_NORC = yes
 
