@@ -241,24 +241,6 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
 }
 
-/* FIXME: Verify implementation. */
-BOOL
-DefWndRedrawIconTitle(HWND hWnd)
-{
-   PINTERNALPOS lpPos = (PINTERNALPOS)GetPropA(hWnd, (LPSTR)(DWORD)AtomInternalPos);
-
-   if (lpPos != NULL)
-   {
-      if (lpPos->IconTitle != NULL)
-      {
-         SendMessageW(lpPos->IconTitle, WM_SHOWWINDOW, TRUE, 0);
-         InvalidateRect(lpPos->IconTitle, NULL, TRUE);
-         return TRUE;
-      }
-   }
-   return FALSE;
-}
-
 /*
  * FIXME:
  * - Drawing of WS_BORDER after scrollbars
@@ -276,12 +258,6 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
       return 0;
 
    Style = GetWindowLongW(hWnd, GWL_STYLE);
-
-   if (Style & WS_MINIMIZE)
-   {
-      DefWndRedrawIconTitle(hWnd);
-      return 0;
-   }
 
    hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | 0x10000);
    if (hDC == 0)

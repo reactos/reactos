@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.8 2003/08/07 04:03:24 royce Exp $
+/* $Id: winpos.c,v 1.9 2003/12/26 12:37:53 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -24,39 +24,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL
-WinPosShowIconTitle(HWND hWnd, BOOL bShow)
-{
-    PINTERNALPOS lpPos = UserGetInternalPos(hWnd);
-  
-    if( lpPos)
-    {
-	HWND hWnd = lpPos->IconTitle;
-
-	if( !hWnd )
-	  lpPos->IconTitle = hWnd = NULL; /*ICONTITLE_Create( pWnd );*/
-	if( bShow )
-	{
-	  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
-	  if( !(Style & WS_VISIBLE) )
-	    {
-	      SendMessageA( hWnd, WM_SHOWWINDOW, TRUE, 0 );
-	      SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-			    SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW );
-	    }
-	}
-	else ShowWindow( hWnd, SW_HIDE );
-    }
-    return FALSE;
-}
-
 UINT STDCALL
 WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 		  POINT* MinTrack, POINT* MaxTrack)
 {
   MINMAXINFO MinMax;
   INT XInc, YInc;
-  INTERNALPOS* Pos;
   ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
   ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
@@ -90,16 +63,16 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
   MinMax.ptMaxSize.x += 2 * XInc;
   MinMax.ptMaxSize.y += 2 * YInc;
 
-  Pos = UserGetInternalPos(hWnd);
-  if (Pos != NULL)
-    {
-      MinMax.ptMaxPosition = Pos->MaxPos;
-    }
-  else
-    {
+  //Pos = UserGetInternalPos(hWnd);
+  //if (Pos != NULL)
+   // {
+    //  MinMax.ptMaxPosition = Pos->MaxPos;
+   // }
+  //else
+   // {
       MinMax.ptMaxPosition.x -= XInc;
       MinMax.ptMaxPosition.y -= YInc;
-    }
+   // }
 
   SendMessageW(hWnd, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 

@@ -84,7 +84,6 @@ Init(VOID)
   /* Allocate an index for user32 thread local data. */
   User32TlsIndex = TlsAlloc();
 
-  UserSetupInternalPos();
   MenuInit();
 
   RtlInitializeCriticalSection(&U32AccelCacheLock);

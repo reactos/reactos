@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.116 2003/12/26 01:05:41 weiden Exp $
+/* $Id: defwnd.c,v 1.117 2003/12/26 12:37:53 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -52,7 +52,7 @@ static COLORREF SysColors[] =
   {
     RGB(192, 192, 192) /* COLOR_SCROLLBAR */,
     RGB(58, 110, 165) /* COLOR_BACKGROUND */,
-    RGB(0, 0, 128) /* COLOR_ACTIVECAPTION */,
+    RGB(10, 36, 106) /* COLOR_ACTIVECAPTION */,
     RGB(128, 128, 128) /* COLOR_INACTIVECAPTION */,
     RGB(192, 192, 192) /* COLOR_MENU */,
     RGB(255, 255, 255) /* COLOR_WINDOW */,
@@ -77,25 +77,16 @@ static COLORREF SysColors[] =
     RGB(255, 255, 192) /* COLOR_INFOBK */,
     RGB(180, 180, 180) /* COLOR_ALTERNATEBTNFACE */,
     RGB(0, 0, 255) /* COLOR_HOTLIGHT */,
-    RGB(16, 132, 208) /* COLOR_GRADIENTACTIVECAPTION */,
-    RGB(181, 181, 181) /* COLOR_GRADIENTINACTIVECAPTION */,
+    RGB(166, 202, 240) /* COLOR_GRADIENTACTIVECAPTION */,
+    RGB(192, 192, 192) /* COLOR_GRADIENTINACTIVECAPTION */,
   };
 
 #define NUM_SYSCOLORS (sizeof(SysColors) / sizeof(SysColors[0]))
-
-ATOM AtomInternalPos;
 
 /* Bits in the dwKeyData */
 #define KEYDATA_ALT   0x2000
 
 /* FUNCTIONS *****************************************************************/
-
-VOID
-UserSetupInternalPos(VOID)
-{
-    LPSTR Str = "SysIP";
-    AtomInternalPos = GlobalAddAtomA(Str);
-}
 
 /*
  * @implemented
@@ -185,14 +176,6 @@ DefFrameProcW(HWND hWnd,
     return ((LRESULT)0);
 }
 */
-
-PINTERNALPOS
-UserGetInternalPos(HWND hWnd)
-{
-    PINTERNALPOS lpPos;
-    lpPos = (PINTERNALPOS)GetPropA(hWnd, (LPSTR)(DWORD)AtomInternalPos);
-    return(lpPos);
-}
 
 ULONG
 UserHasAnyFrameStyle(ULONG Style, ULONG ExStyle)
@@ -663,7 +646,6 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 		  {
 		    hOldCursor = SetCursor(hDragCursor);
 		    ShowCursor( TRUE );
-		    WinPosShowIconTitle( hwnd, FALSE );
 		  } 
 	    }
 	  
@@ -761,7 +743,6 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      SendMessageA( hwnd, WM_SYSCOMMAND,
 			    SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
 	  }
-	else WinPosShowIconTitle( hwnd, TRUE );
       }
 }
 

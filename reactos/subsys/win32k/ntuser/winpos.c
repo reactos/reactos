@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.69 2003/12/26 01:14:10 weiden Exp $
+/* $Id: winpos.c,v 1.70 2003/12/26 12:37:53 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -142,54 +142,6 @@ WinPosFindIconPos(HWND hWnd, POINT *Pos)
   /* FIXME */
 }
 
-HWND STATIC FASTCALL
-WinPosNtGdiIconTitle(PWINDOW_OBJECT WindowObject)
-{
-  return(NULL);
-}
-
-BOOL STATIC FASTCALL
-WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
-{
-  PWINDOW_OBJECT IconWindow;
-  NTSTATUS Status;
-
-  if (WindowObject->InternalPos)
-    {
-      HWND hWnd = WindowObject->InternalPos->IconTitle;
-
-      if (hWnd == NULL)
-	{
-	  hWnd = WinPosNtGdiIconTitle(WindowObject);
-	}
-      if (Show)
-	{
-	  Status = 
-	    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->
-				       HandleTable,
-				       hWnd,
-				       otWindow,
-				       (PVOID*)&IconWindow);
-	  if (NT_SUCCESS(Status))
-	    {
-	      if (!(IconWindow->Style & WS_VISIBLE))
-		{
-		  IntSendMessage(hWnd, WM_SHOWWINDOW, TRUE, 0, TRUE);
-		  WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE |
-				     SWP_NOMOVE | SWP_NOACTIVATE | 
-				     SWP_NOZORDER | SWP_SHOWWINDOW);
-		}
-	      ObmDereferenceObject(IconWindow);
-	    }
-	}
-      else
-	{
-	  WinPosShowWindow(hWnd, SW_HIDE);
-	}
-    }
-  return(FALSE);
-}
-
 PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
@@ -211,7 +163,6 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
         return NULL;
       }
-      WindowObject->InternalPos->IconTitle = 0;
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
       if (HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle))
       {
@@ -302,7 +253,6 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 				NULL, NULL);
 	    if (WindowObject->Style & WS_MINIMIZE)
 	      {
-		WinPosShowIconTitle(WindowObject, FALSE);
 		WindowObject->Style &= ~WS_MINIMIZE;
 	      }
 	    WindowObject->Style |= WS_MAXIMIZE;
@@ -316,7 +266,6 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	    if (WindowObject->Style & WS_MINIMIZE)
 	      {
 		WindowObject->Style &= ~WS_MINIMIZE;
-		WinPosShowIconTitle(WindowObject, FALSE);
 		if (WindowObject->Flags & WINDOWOBJECT_RESTOREMAX)
 		  {
 		    WinPosGetMinMaxInfo(WindowObject, &Size,
@@ -1158,7 +1107,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       /* Fall through. */
     case SW_MINIMIZE:
       {
-	Swp |= SWP_FRAMECHANGED;
+	Swp |= SWP_FRAMECHANGED | SWP_NOACTIVATE;
 	if (!(Window->Style & WS_MINIMIZE))
 	  {
 	    Swp |= WinPosMinMaximize(Window, SW_MINIMIZE, &NewPos);
@@ -1251,11 +1200,6 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     }
 
   /* FIXME: Check for window destruction. */
-  /* Show title for minimized windows. */
-  if (Window->Style & WS_MINIMIZE)
-    {
-      WinPosShowIconTitle(Window, TRUE);
-    }
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
     {

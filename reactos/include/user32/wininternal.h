@@ -6,7 +6,6 @@ typedef struct _INTERNALPOS
   RECT NormalRect;
   POINT IconPos;
   POINT MaxPos;
-  HWND IconTitle;
 } INTERNALPOS, *PINTERNALPOS;
 
 #define WIN_NCACTIVATED  (0x0080)
