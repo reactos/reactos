@@ -10,6 +10,7 @@ copy boot.bat c:\reactos
 copy loaders\dos\loadros.com c:\reactos
 copy ntoskrnl\ntoskrnl.exe c:\reactos
 copy services\fs\vfat\vfatfs.sys c:\reactos
+copy services\fs\ms\msfs.sys c:\reactos\system32\drivers
 copy services\bus\acpi\acpi.sys c:\reactos
 copy services\bus\isapnp\isapnp.sys c:\reactos
 copy services\dd\ide\ide.sys c:\reactos
@@ -50,5 +51,7 @@ copy apps\pteb\pteb.exe c:\reactos\bin
 copy apps\consume\consume.exe c:\reactos\bin
 copy apps\vmtest\vmtest.exe c:\reactos\bin
 copy apps\gditest\gditest.exe c:\reactos\bin
+copy apps\mstest\msserver.exe c:\reactos\bin
+copy apps\mstest\msclient.exe c:\reactos\bin
 copy media\fonts\helb____.ttf c:\reactos\media\fonts
 copy media\fonts\timr____.ttf c:\reactos\media\fonts

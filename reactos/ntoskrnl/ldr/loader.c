@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.77 2001/05/01 23:08:20 chorns Exp $
+/* $Id: loader.c,v 1.78 2001/05/05 15:19:14 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,6 +42,7 @@
 /* MACROS ********************************************************************/
 
 #define  MODULE_ROOT_NAME  L"\\Modules\\"
+#define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
 /* GLOBALS *******************************************************************/
 
@@ -164,6 +165,19 @@ VOID LdrInitModuleManagement(VOID)
 
   /*  Create Modules object directory  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  *(wcsrchr(NameBuffer, L'\\')) = 0;
+  RtlInitUnicodeString (&ModuleName, NameBuffer);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &ModuleName,
+                             0,
+                             NULL,
+                             NULL);
+  DPRINT("Create dir: %wZ\n", &ModuleName);
+  Status = NtCreateDirectoryObject(&DirHandle, 0, &ObjectAttributes);
+  assert(NT_SUCCESS(Status));
+
+  /*  Create FileSystem object directory  */
+  wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
   *(wcsrchr(NameBuffer, L'\\')) = 0;
   RtlInitUnicodeString (&ModuleName, NameBuffer);
   InitializeObjectAttributes(&ObjectAttributes,
@@ -654,7 +668,17 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Minix filesystem driver
     */
    LdrLoadAutoConfigDriver(L"minixfs.sys");
-
+   
+   /*
+    * Mailslot filesystem driver
+    */
+   LdrLoadAutoConfigDriver(L"msfs.sys");
+   
+   /*
+    * Named pipe filesystem driver
+    */
+//   LdrLoadAutoConfigDriver(L"npfs.sys");
+   
    /*
     * Networking
     */

@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.3 2001/05/03 06:10:29 ekohl Exp $
+/* $Id: mailslot.c,v 1.4 2001/05/05 15:21:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -71,7 +71,7 @@ CreateMailslotW(LPCWSTR lpName,
    
    InitializeObjectAttributes(&ObjectAttributes,
 			      &MailslotName,
-			      0,
+			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      NULL);
    
@@ -136,7 +136,7 @@ GetMailslotInfo(HANDLE hMailslot,
      }
    if (lpReadTimeout != NULL)
      {
-	*lpReadTimeout = (DWORD)(Buffer.Timeout.QuadPart / 10000);
+	*lpReadTimeout = (DWORD)(Buffer.Timeout.QuadPart / -10000);
      }
    
    return(TRUE);
@@ -151,7 +151,7 @@ SetMailslotInfo(HANDLE hMailslot,
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    
-   Buffer.Timeout.QuadPart = lReadTimeout * 10000;
+   Buffer.Timeout.QuadPart = lReadTimeout * -10000;
    
    Status = NtSetInformationFile(hMailslot,
 				 &Iosb,

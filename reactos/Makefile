@@ -42,7 +42,7 @@ DEVICE_DRIVERS = vidport vga blue ide null floppy
 INPUT_DRIVERS = keyboard
 
 #FS_DRIVERS = vfat minix ext2 template
-FS_DRIVERS = vfat
+FS_DRIVERS = vfat ms
 
 #NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
 NET_DRIVERS = ndis tcpip tditest wshtcpip afd
@@ -57,9 +57,7 @@ NET_DEVICE_DRIVERS = ne2000
 SYS_APPS = shell winlogon services
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest regtest alive
-
-#       objdir
+       pteb consume dump_shared_data vmtest regtest alive mstest objdir
 
 #NET_APPS = ping roshttpd
 NET_APPS = ping
