@@ -1,0 +1,51 @@
+#
+#
+#
+OBJECTS= file.o
+PROGS= file.exe
+
+BASE_CFLAGS = -I../../include
+
+all: $(PROGS)
+
+.phony: all
+
+clean:
+	- $(RM) file.o
+	- $(RM) file.exe
+	- $(RM) file.sym
+
+.phony: clean
+
+floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+
+$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
+else
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../../$(DIST_DIR)/apps/$*
+endif
+
+file.exe: $(OBJECTS)
+	$(CPP) $(OBJECTS) $(BASE_CFLAGS) -o file.exe
+	$(NM) --numeric-sort file.exe > file.sym
+
+include ../../rules.mak
+
+
+
+
+
+
+
+
+
