@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.124 2004/06/21 04:12:59 ion Exp $
+# $Id: Makefile,v 1.125 2004/06/21 21:07:29 hyperion Exp $
 #
 # ReactOS Operating System
 #
@@ -51,6 +51,9 @@ endif
 
 # require os code to explicitly request A/W version of structs/functions
 CFLAGS += -D_DISABLE_TIDENTS
+
+# no native setjmp/longjmp in the kernel
+CFLAGS += -D_SEH_NO_NATIVE_NLG
 
 CFLAGS += $(STD_CFLAGS)
 ASFLAGS += $(STD_ASFLAGS)
