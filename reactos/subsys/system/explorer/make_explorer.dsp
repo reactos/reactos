@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) External Target" 0x0106
 
-CFG=make_explorer - Win32 bjam
+CFG=make_explorer - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=make_explorer - Win32 bjam
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "make_explorer.mak" CFG="make_explorer - Win32 bjam"
+!MESSAGE NMAKE /f "make_explorer.mak" CFG="make_explorer - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -106,7 +106,7 @@ CFG=make_explorer - Win32 bjam
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "URelease"
 # PROP Intermediate_Dir "URelease"
-# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW UNICODE=1"
+# PROP Cmd_Line "make -f Makefile.MinGW UNICODE=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""

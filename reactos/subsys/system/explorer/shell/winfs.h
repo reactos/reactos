@@ -62,5 +62,3 @@ struct WinDirectory : public WinEntry, public Directory
 	virtual void read_directory(int scan_flags=SCAN_ALL);
 	virtual Entry* find_entry(const void*);
 };
-
-extern int ScanNTFSStreams(Entry* entry, HANDLE hFile);

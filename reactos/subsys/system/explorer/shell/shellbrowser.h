@@ -45,7 +45,7 @@ struct ShellPathInfo
 struct ShellBrowserChild : public IShellBrowserImpl
 {
 	ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info);
-	~ShellBrowserChild();
+	virtual ~ShellBrowserChild();
 
 	//IOleWindow
 	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND* lphwnd)
