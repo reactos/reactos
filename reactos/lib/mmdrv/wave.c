@@ -1,16 +1,24 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              ReactOS Multimedia
  * FILE:                 lib/mmdrv/wave.c
  * PURPOSE:              Multimedia User Mode Driver
  * PROGRAMMER:           Andrew Greenwood
+ *                       Aleksey Bragin (aleksey at studiocerebral.com)
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *                       Jan 30, 2004: Imported into ReactOS tree (Greenwood)
+ *                       Mar 16, 2004: Implemented some funcs (Bragin)
  */
 
 #include "mmdrv.h"
+#include "wave.h"
 
+/* ============================
+ *  INTERNAL
+ *  functions start here
+ * ============================
+ */
 
 static MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                                       LPBYTE pCaps, DWORD Size)
@@ -47,233 +55,259 @@ static MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
     return Result;
 }
 
-
-APIENTRY DWORD wodMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWORD Param2)
+static MMRESULT OpenWaveDevice(UINT  DeviceType,
+								DWORD id,
+								DWORD dwUser,
+								DWORD dwParam1,
+								DWORD dwParam2)
 {
-//    PWAVEALLOC pOutClient;
-    MMRESULT Result;
+	// TODO: Implement
+	return MMSYSERR_NOERROR;
+}
 
-    switch (Message) {
+//FIXME: Params are MS-specific
+static MMRESULT ThreadCallWaveDevice(WAVETHREADFUNCTION Function, PWAVEALLOC pClient)
+{
+	return MMSYSERR_NOERROR;
+}
+
+//FIXME: Params are MS-specific
+static void CallbackWaveDevice(PWAVEALLOC pWave, DWORD msg, DWORD dw1)
+{
+}
+
+//FIXME: Params are MS-specific
+static MMRESULT WriteWaveDevice(LPWAVEHDR pHdr, PWAVEALLOC pClient)
+{
+	return MMSYSERR_NOERROR;
+}
+
+//FIXME: MS-specific code, except for name of the func!
+MMRESULT GetPositionWaveDevice(PWAVEALLOC pClient, LPMMTIME lpmmt, DWORD dwSize)
+{
+	/*
+    WAVE_DD_POSITION PositionData;
+    MMRESULT mErr;
+
+    if (dwSize < sizeof(MMTIME))
+        return MMSYSERR_ERROR;
+
+    //
+    // Get the current position from the driver
+    //
+    mErr = sndGetHandleData(pClient->hDev,
+                            sizeof(PositionData),
+                            &PositionData,
+                            IOCTL_WAVE_GET_POSITION,
+                            pClient->Event);
+
+    if (mErr == MMSYSERR_NOERROR) {
+        if (lpmmt->wType == TIME_BYTES) {
+            lpmmt->u.cb = PositionData.ByteCount;
+        }
+
+        // default is samples.
+        else {
+            lpmmt->wType = TIME_SAMPLES;
+            lpmmt->u.sample = PositionData.SampleCount;
+        }
+    }
+
+    return mErr;*/ return MMSYSERR_NOERROR;
+}
+
+//FIXME: Params are MS-specific
+MMRESULT soundSetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
+                     ULONG Ioctl)
+{
+	return MMSYSERR_NOERROR;
+}
+
+//FIXME: Params are MS-specific
+MMRESULT soundGetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
+                     ULONG Ioctl)
+{
+	return MMSYSERR_NOERROR;
+}
+
+
+/* ============================
+ *  EXPORT
+ *  functions start here
+ * ============================
+ */
+
+/*
+ * @implemented
+ */
+APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
+{
+    switch (dwMessage) {
         case WODM_GETNUMDEVS:
-            printf(("WODM_GETNUMDEVS"));
+            printf("WODM_GETNUMDEVS");
             return GetDeviceCount(WaveOutDevice);
 
         case WODM_GETDEVCAPS:
-            printf(("WODM_GETDEVCAPS"));
-            return GetDeviceCapabilities(ID, WaveOutDevice, (LPBYTE)Param1,
-                                  (DWORD)Param2);
+            printf("WODM_GETDEVCAPS");
+            return GetDeviceCapabilities(dwId, WaveOutDevice, (LPBYTE)dwParam1,
+                                  (DWORD)dwParam2);
 
         case WODM_OPEN:
-            printf(("WODM_OPEN"));
-//            return waveOpen(WaveOutDevice, id, dwUser, dwParam1, dwParam2);
+            printf("WODM_OPEN");
+            return OpenWaveDevice(WaveOutDevice, dwId, dwUser, dwParam1, dwParam2);
 
         case WODM_CLOSE:
-            printf(("WODM_CLOSE"));
-//            pOutClient = (PWAVEALLOC)dwUser;
+			{
+				MMRESULT Result;
+				PWAVEALLOC pTask = (PWAVEALLOC)dwUser;
+				printf("WODM_CLOSE");
 
-            //
-            // Call our task to see if it's ready to complete
-            //
-//            Result = waveThreadCall(WaveThreadClose, pOutClient);
-            if (Result != MMSYSERR_NOERROR) {
-                return Result;
-            }
+				// 1. Check if the task is ready to complete
+				Result = ThreadCallWaveDevice(WaveThreadClose, pTask);
+				if (Result != MMSYSERR_NOERROR) {
+				    return Result;
+				}
+				else
+					CallbackWaveDevice(pTask, WOM_CLOSE, 0L);
+				
+				// 2. Close the device
+				if (pTask->hDev != INVALID_HANDLE_VALUE) {
+					CloseHandle(pTask->hDev);
 
-//            waveCallback(pOutClient, WOM_CLOSE, 0L);
+					EnterCriticalSection(&CS);
+					pTask->hDev = INVALID_HANDLE_VALUE;
+					LeaveCriticalSection(&CS);
+				}
 
-            //
-            // Close our device
-            //
-//            if (pOutClient->hDev != INVALID_HANDLE_VALUE) {
-//                CloseHandle(pOutClient->hDev);
-
-                EnterCriticalSection(&CS);
-//                pOutClient->hDev = INVALID_HANDLE_VALUE;
-                LeaveCriticalSection(&CS);
-//            }
-
-            return MMSYSERR_NOERROR;
+				return MMSYSERR_NOERROR;
+			};
 
         case WODM_WRITE:
-            printf(("WODM_WRITE"));
-/*            WinAssert(dwParam1 != 0);
-            WinAssert(!(((LPWAVEHDR)dwParam1)->dwFlags &
-                     ~(WHDR_INQUEUE|WHDR_DONE|WHDR_PREPARED|
-                       WHDR_BEGINLOOP|WHDR_ENDLOOP)));
+			{
+				LPWAVEHDR pWaveHdr = (LPWAVEHDR)dwParam1;
 
-            ((LPWAVEHDR)dwParam1)->dwFlags &=
-                (WHDR_INQUEUE|WHDR_DONE|WHDR_PREPARED|
-                 WHDR_BEGINLOOP|WHDR_ENDLOOP);
+				printf("WODM_WRITE");
 
-            WinAssert(((LPWAVEHDR)dwParam1)->dwFlags & WHDR_PREPARED);
+				if (dwParam1 != 0)
+					return MMSYSERR_INVALPARAM;
 
-            // check if it's been prepared
-            if (!(((LPWAVEHDR)dwParam1)->dwFlags & WHDR_PREPARED))
-                return WAVERR_UNPREPARED;
+				if ((pWaveHdr->dwFlags & ~(WHDR_INQUEUE|WHDR_DONE|WHDR_PREPARED|WHDR_BEGINLOOP|WHDR_ENDLOOP)))
+					return MMSYSERR_INVALPARAM;
 
-            WinAssert(!(((LPWAVEHDR)dwParam1)->dwFlags & WHDR_INQUEUE));
+				pWaveHdr->dwFlags &= (WHDR_INQUEUE|WHDR_DONE|WHDR_PREPARED|WHDR_BEGINLOOP|WHDR_ENDLOOP);
 
-            // if it is already in our Q, then we cannot do this
-            if ( ((LPWAVEHDR)dwParam1)->dwFlags & WHDR_INQUEUE )
-                return ( WAVERR_STILLPLAYING );
+				if ((pWaveHdr->dwFlags & WHDR_PREPARED) == 0)
+					return MMSYSERR_INVALPARAM;
 
-            // store the pointer to my WAVEALLOC structure in the wavehdr
-            pOutClient = (PWAVEALLOC)dwUser;
-            ((LPWAVEHDR)dwParam1)->reserved = (DWORD)(LPSTR)pOutClient;
+				// Check, if the wave header is already prepared
+				if (!(pWaveHdr->dwFlags & WHDR_PREPARED))
+					return WAVERR_UNPREPARED;
 
-            return waveWrite((LPWAVEHDR)dwParam1, pOutClient);
-*/
+				// If it's already located in the queue, this op is impossible
+				if (pWaveHdr->dwFlags & WHDR_INQUEUE )
+					return ( WAVERR_STILLPLAYING );
+
+				// save WAVEALLOC pointer in the WaveHeader
+				pWaveHdr->reserved = dwUser;
+
+				return WriteWaveDevice(pWaveHdr, (PWAVEALLOC)dwUser);
+			}
+
 
         case WODM_PAUSE:
-            printf(("WODM_PAUSE"));
-/*
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.State = WAVE_DD_STOP;
-            return waveThreadCall(WaveThreadSetState, pOutClient);
-*/
+            printf("WODM_PAUSE");
+            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_STOP;
+            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
 
         case WODM_RESTART:
-            printf(("WODM_RESTART"));
-/*
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.State = WAVE_DD_PLAY;
-            return waveThreadCall(WaveThreadSetState, pOutClient);
-*/
+            printf("WODM_RESTART");
+            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_PLAY;
+            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
 
         case WODM_RESET:
-            printf(("WODM_RESET"));
-
-/*
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.State = WAVE_DD_RESET;
-            return waveThreadCall(WaveThreadSetState, pOutClient);
-*/
+            printf("WODM_RESET");
+            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_RESET;
+            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
 
         case WODM_BREAKLOOP:
-/*
-            pOutClient = (PWAVEALLOC)dwUser;
-            printf(("WODM_BREAKLOOP"));
-            return waveThreadCall(WaveThreadBreakLoop, pOutClient);
-*/
-
+            printf("WODM_BREAKLOOP");
+            return ThreadCallWaveDevice(WaveThreadBreakLoop, (PWAVEALLOC)dwUser);
 
         case WODM_GETPOS:
-            printf(("WODM_GETPOS"));
-            /*
-            pOutClient = (PWAVEALLOC)dwUser;
-            return waveGetPos(pOutClient, (LPMMTIME)dwParam1, dwParam2);
-            */
+            printf("WODM_GETPOS");
+            return GetPositionWaveDevice(((PWAVEALLOC)dwUser), (LPMMTIME)dwParam1, dwParam2);
 
         case WODM_SETPITCH:
-            printf(("WODM_SETPITCH"));
-            /*
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
-            pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            pOutClient->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PITCH;
-            return waveThreadCall(WaveThreadSetData, pOutClient);
-            */
+            printf("WODM_SETPITCH");
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PITCH;
+            return ThreadCallWaveDevice(WaveThreadSetData, ((PWAVEALLOC)dwUser));
 
         case WODM_SETVOLUME:
-            printf(("WODM_SETVOLUME"));// i didnt do this - AG
-            //pOutClient = (PWAVEALLOC)dwUser;
-            //pOutClient->AuxParam.GetSetData.pData = *(PBYTE *)&dwParam1;
-            //pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            //pOutClient->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_VOLUME;
-            //return waveThreadCall(WaveThreadSetData, pOutClient);
-
+            printf("WODM_SETVOLUME");
             {
-                //
-                // Translate to device volume structure
-                //
+                WAVE_DD_VOLUME Vol;
+                Vol.Left = LOWORD(dwParam1) << 16;
+                Vol.Right = HIWORD(dwParam1) << 16;
 
-//                WAVE_DD_VOLUME Volume;
-//                Volume.Left = LOWORD(dwParam1) << 16;
-//                Volume.Right = HIWORD(dwParam1) << 16;
-
-//                return sndSetData(WaveOutDevice, id, sizeof(Volume),
-//                                  (PBYTE)&Volume, IOCTL_WAVE_SET_VOLUME);
+                return soundSetData(WaveOutDevice, dwId, sizeof(Vol),
+                                  (PBYTE)&Vol, IOCTL_WAVE_SET_VOLUME);
             }
 
-
         case WODM_SETPLAYBACKRATE:
-        /*
-            printf(("WODM_SETPLAYBACKRATE"));
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
-            pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            pOutClient->AuxParam.GetSetData.Function =
-                IOCTL_WAVE_SET_PLAYBACK_RATE;
-            return waveThreadCall(WaveThreadSetData, pOutClient);
-        */
+            printf("WODM_SETPLAYBACKRATE");
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PLAYBACK_RATE;
+            return ThreadCallWaveDevice(WaveThreadSetData, (PWAVEALLOC)dwUser);
 
         case WODM_GETPITCH:
-        /*
-            printf(("WODM_GETPITCH"));
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
-            pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            pOutClient->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PITCH;
-            return waveThreadCall(WaveThreadGetData, pOutClient);
-        */
+            printf("WODM_GETPITCH");
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PITCH;
+            return ThreadCallWaveDevice(WaveThreadGetData, (PWAVEALLOC)dwUser);
 
         case WODM_GETVOLUME:
-            printf(("WODM_GETVOLUME"));
-            //pOutClient = (PWAVEALLOC)dwUser;
-            //pOutClient->AuxParam.GetSetData.pData = *(PBYTE *)&dwParam1;
-            //pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            //pOutClient->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_VOLUME;
-            //return waveThreadCall(WaveThreadGetData, pOutClient);
-
+            printf("WODM_GETVOLUME");
             {
-                //
-                // Translate to device volume structure
-                //
-/*
-                WAVE_DD_VOLUME Volume;
-                DWORD rc;
+                WAVE_DD_VOLUME Vol;
+                DWORD res;
 
-                rc = sndGetData(WaveOutDevice, id, sizeof(Volume),
-                                (PBYTE)&Volume, IOCTL_WAVE_GET_VOLUME);
+                res = soundGetData(WaveOutDevice, dwId, sizeof(Vol),
+                                (PBYTE)&Vol, IOCTL_WAVE_GET_VOLUME);
 
-                if (rc == MMSYSERR_NOERROR) {
-                    *(LPDWORD)dwParam1 =
-                        (DWORD)MAKELONG(HIWORD(Volume.Left),
-                                        HIWORD(Volume.Right));
-                }
-
-                return rc;
-                */
+                if (res == MMSYSERR_NOERROR)
+                    *(LPDWORD)dwParam1 = (DWORD)MAKELONG(HIWORD(Vol.Left), HIWORD(Vol.Right));
+                
+                return res;
             }
 
         case WODM_GETPLAYBACKRATE:
-            printf(("WODM_GETPLAYBACKRATE"));
-            /*
-            pOutClient = (PWAVEALLOC)dwUser;
-            pOutClient->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
-            pOutClient->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            pOutClient->AuxParam.GetSetData.Function =
-                IOCTL_WAVE_GET_PLAYBACK_RATE;
-            return waveThreadCall(WaveThreadGetData, pOutClient);
-            */
+            printf("WODM_GETPLAYBACKRATE");
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PLAYBACK_RATE;
+            return ThreadCallWaveDevice(WaveThreadGetData, (PWAVEALLOC)dwUser);
 
         default:
             return MMSYSERR_NOTSUPPORTED;
     }
 
-    //
-    // Should not get here
-    //
-
+	// This point of execution should never be reached
     return MMSYSERR_NOTSUPPORTED;
 }
 
 
-APIENTRY DWORD widMessage(DWORD id, DWORD msg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
+/*
+ * @unimplemented
+ */
+APIENTRY DWORD widMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
 {
     printf("widMessage\n");
 
-    switch (msg) {
+    switch (dwMessage) {
         case WIDM_GETNUMDEVS:
             return GetDeviceCount(WaveInDevice);
         default :

@@ -1,12 +1,14 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              ReactOS Multimedia
  * FILE:                 lib/mmdrv/entry.c
  * PURPOSE:              Multimedia User Mode Driver
  * PROGRAMMER:           Andrew Greenwood
+ *                       Aleksey Bragin
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *                       Jan 30, 2004: Imported into ReactOS tree (Greenwood)
+ *                       Mar 16, 2004: Cleaned up a bit (Bragin)
  */
 
 
@@ -129,67 +131,4 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
     return TRUE;
 }
 
-
-
-/*
-EXPORT DWORD midMessage(DWORD id, DWORD msg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
-{
-    printf("midMessage\n");
-
-    switch (msg) {
-
-        case MIDM_GETNUMDEVS:
-            printf("MIDM_GETNUMDEVS");
-            return GetNumDevs(MidiInDevice);
-
-        case MIDM_GETDEVCAPS:
-            printf("MIDM_GETDEVCAPS");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_OPEN:
-            printf("MIDM_OPEN");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_CLOSE:
-            printf("MIDM_CLOSE");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_ADDBUFFER:
-            printf("MIDM_ADDBUFFER");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_STOP:
-            printf("MIDM_PAUSE");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_START:
-            printf("MIDM_RESTART");
-            return MMSYSERR_NOERROR;
-
-        case MIDM_RESET:
-            printf("MIDM_RESET");
-            return MMSYSERR_NOERROR;
-
-        default:
-            return MMSYSERR_NOTSUPPORTED;
-    }
-
-    //
-    // Should not get here
-    //
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-*/
-
-
-APIENTRY DWORD auxMessage(UINT uDevice,
-                  UINT uMsg,
-                  DWORD dwUser,
-                  DWORD dwParam1,
-                  DWORD dwParam2)
-
-{
-    printf("auxMessage\n");
-    return MMSYSERR_NOERROR;
-}
+/* EOF */

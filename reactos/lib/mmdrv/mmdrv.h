@@ -1,10 +1,11 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              ReactOS Multimedia
  * FILE:                 lib/mmdrv/mmdrv.h
  * PURPOSE:              Multimedia User Mode Driver (header)
  * PROGRAMMER:           Andrew Greenwood
+ *                       Aleksey Bragin
  * UPDATE HISTORY:
  *                       Jan 30, 2004: Imported into ReactOS tree
  */
@@ -101,7 +102,6 @@ HANDLE Heap;
       MidiOutDevice,
       AuxDevice
 };
-
 
 MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
                     DWORD Access);

@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              ReactOS Multimedia
  * FILE:                 lib/mmdrv/midi.c
  * PURPOSE:              Multimedia User Mode Driver
  * PROGRAMMER:           Andrew Greenwood
@@ -172,10 +172,51 @@ static int GetMidiLength(PMIDIALLOC pClient, BYTE b)
     Exported functions
 ----------------------------------------------------------------------------- */
 
-APIENTRY DWORD midMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWORD Param2)
+APIENTRY DWORD midMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
 {
     printf("midMessage\n");
     return MMSYSERR_NOERROR;
+
+    switch (dwMessage) {
+        case MIDM_GETNUMDEVS:
+            printf("MIDM_GETNUMDEVS");
+            return 0;
+
+        case MIDM_GETDEVCAPS:
+            printf("MIDM_GETDEVCAPS");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_OPEN:
+            printf("MIDM_OPEN");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_CLOSE:
+            printf("MIDM_CLOSE");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_ADDBUFFER:
+            printf("MIDM_ADDBUFFER");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_STOP:
+            printf("MIDM_PAUSE");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_START:
+            printf("MIDM_RESTART");
+            return MMSYSERR_NOERROR;
+
+        case MIDM_RESET:
+            printf("MIDM_RESET");
+            return MMSYSERR_NOERROR;
+
+        default:
+            return MMSYSERR_NOTSUPPORTED;
+    }
+
+	// the function should never get to this point
+	//FIXME: Would it be wise to assert here?
+    return MMSYSERR_NOTSUPPORTED;
 }
 
 APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWORD Param2)

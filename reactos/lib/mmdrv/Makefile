@@ -17,6 +17,7 @@ TARGET_LFLAGS =
 TARGET_SDKLIBS = winmm.a
 
 TARGET_OBJECTS = \
+	auxil.o \
 	entry.o \
 	midi.o \
 	utils.o \
