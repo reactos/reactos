@@ -109,7 +109,7 @@ WINE_DLLS = comcat crtdll dsound dplayx richedit shlwapi twain
 #winspool msinfo comcat
 #lzexpand (missing imports)
 
-WINE_PROGS = control expand osversioncheck regedit regsvr32 winver
+WINE_PROGS = control expand osversioncheck regedit regsrv32 winver
 # (waiting on wrc fix for the rest of these)
 # clock cmdlgtst  notepad  progman wcmd  
 # uninstaller winefile winemine winetest 
