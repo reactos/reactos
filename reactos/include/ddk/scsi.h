@@ -1,4 +1,4 @@
-/* $Id: scsi.h,v 1.2 2002/10/03 18:33:47 sedwards Exp $
+/* $Id: scsi.h,v 1.3 2003/06/24 12:39:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -814,14 +814,14 @@ typedef struct _SENSE_DATA
 
 /* Additional Sense codes */
 
-#define SCSI_ADSENSE_NO_SENSE       0x00
-#define SCSI_ADSENSE_LUN_NOT_READY  0x04
+#define SCSI_ADSENSE_NO_SENSE        0x00
+#define SCSI_ADSENSE_LUN_NOT_READY   0x04
 #define SCSI_ADSENSE_ILLEGAL_COMMAND 0x20
-#define SCSI_ADSENSE_ILLEGAL_BLOCK  0x21
-#define SCSI_ADSENSE_INVALID_LUN    0x25
-#define SCSI_ADSENSE_INVALID_CDB    0x24
-#define SCSI_ADSENSE_MUSIC_AREA     0xA0
-#define SCSI_ADSENSE_DATA_AREA      0xA1
+#define SCSI_ADSENSE_ILLEGAL_BLOCK   0x21
+#define SCSI_ADSENSE_INVALID_LUN     0x25
+#define SCSI_ADSENSE_INVALID_CDB     0x24
+#define SCSI_ADSENSE_MUSIC_AREA      0xA0
+#define SCSI_ADSENSE_DATA_AREA       0xA1
 #define SCSI_ADSENSE_VOLUME_OVERFLOW 0xA7
 
 #define SCSI_ADSENSE_NO_MEDIA_IN_DEVICE 0x3a
