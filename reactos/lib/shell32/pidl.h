@@ -209,7 +209,6 @@ LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCSTR);
-LPITEMIDLIST	_ILCreateCPanel		(LPCSTR name, LPCSTR displayName, LPCSTR comment, int iconIdx);
 
 /*
  * helper functions (getting struct-pointer)
@@ -218,7 +217,6 @@ LPPIDLDATA	_ILGetDataPointer	(LPCITEMIDLIST);
 LPSTR		_ILGetTextPointer	(LPCITEMIDLIST);
 LPSTR		_ILGetSTextPointer	(LPCITEMIDLIST);
 REFIID		_ILGetGUIDPointer	(LPCITEMIDLIST pidl);
-PIDLCPanelStruct* _ILGetCPanelPointer	(LPCITEMIDLIST pidl);
 
 /*
  * debug helper

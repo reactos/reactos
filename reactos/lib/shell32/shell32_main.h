@@ -97,14 +97,6 @@ HRESULT WINAPI CPanel_GetIconLocationW(LPITEMIDLIST pidl, LPWSTR szIconFile, UIN
 HRESULT WINAPI CPanel_ExtractIconA(LPITEMIDLIST pidl, LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 HRESULT WINAPI CPanel_ExtractIconW(LPITEMIDLIST pidl, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
-/* kind of enumidlist */
-#define EIDL_DESK	0
-#define EIDL_MYCOMP	1
-#define EIDL_FILE	2
-#define EIDL_CPANEL	3
-
-LPENUMIDLIST	IEnumIDList_Constructor(LPCSTR,DWORD,DWORD);
-
 LPEXTRACTICONA	IExtractIconA_Constructor(LPCITEMIDLIST);
 LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST);
 HRESULT		CreateStreamOnFile (LPCWSTR pszFilename, DWORD grfMode, IStream ** ppstm);

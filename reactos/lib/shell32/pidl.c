@@ -1644,49 +1644,6 @@ LPITEMIDLIST _ILCreateDrive( LPCSTR lpszNew)
     return pidlOut;
 }
 
-LPITEMIDLIST _ILCreateCPanel(LPCSTR name, LPCSTR displayName, LPCSTR comment, int iconIdx)
-{
-    PIDLCPanelStruct *p;
-    LPITEMIDLIST pidl;
-    PIDLDATA tmp;
-    int size0 = (char*)&tmp.u.cpanel.szName-(char*)&tmp.u.cpanel;
-    int size = size0;
-    int l;
-
-    tmp.type = 0;
-    tmp.u.cpanel.dummy = 0;
-    tmp.u.cpanel.iconIdx = iconIdx;
-
-    l = strlen(name);
-    size += l+1;
-
-    tmp.u.cpanel.offsDispName = l+1;
-    l = strlen(displayName);
-    size += l+1;
-
-    tmp.u.cpanel.offsComment = tmp.u.cpanel.offsDispName+1+l;
-    l = strlen(comment);
-    size += l+1;
-
-    pidl = SHAlloc(size+4);
-    if (!pidl)
-	return NULL;
-
-    pidl->mkid.cb = size+2;
-    memcpy(pidl->mkid.abID, &tmp, 2+size0);
-
-    p = &((PIDLDATA*)pidl->mkid.abID)->u.cpanel;
-    strcpy(p->szName, name);
-    strcpy(p->szName+tmp.u.cpanel.offsDispName, displayName);
-    strcpy(p->szName+tmp.u.cpanel.offsComment, comment);
-
-    *(WORD*)((char*)pidl+(size+2)) = 0;
-
-    pcheck(pidl);
-
-    return pidl;
-}
-
 /**************************************************************************
  *  _ILGetDrive()
  *
@@ -1988,20 +1945,6 @@ REFIID _ILGetGUIDPointer(LPCITEMIDLIST pidl)
 	  }
 	}
 	return NULL;
-}
-
-/**************************************************************************
- *  _ILGetCPanelPointer()
- * gets a pointer to the control panel struct stored in the pidl
- */
-PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
-{
-    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
-
-    if (pdata && pdata->type==0)
-	return (PIDLCPanelStruct*)&(pdata->u.cpanel);
-
-    return NULL;
 }
 
 /*************************************************************************

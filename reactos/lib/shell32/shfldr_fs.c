@@ -40,6 +40,7 @@
 #include "ole2.h"
 #include "shlguid.h"
 
+#include "enumidlist.h"
 #include "pidl.h"
 #include "undocshell.h"
 #include "shell32_main.h"
@@ -391,7 +392,9 @@ IShellFolder_fnEnumObjects (IShellFolder2 * iface, HWND hwndOwner, DWORD dwFlags
 
     TRACE ("(%p)->(HWND=%p flags=0x%08lx pplist=%p)\n", This, hwndOwner, dwFlags, ppEnumIDList);
 
-    *ppEnumIDList = IEnumIDList_Constructor (This->sPathTarget, dwFlags, EIDL_FILE);
+    *ppEnumIDList = IEnumIDList_Constructor();
+    if (*ppEnumIDList)
+        CreateFolderEnumList(*ppEnumIDList, This->sPathTarget, dwFlags);
 
     TRACE ("-- (%p)->(new ID List: %p)\n", This, *ppEnumIDList);
 
@@ -656,7 +659,7 @@ IShellFolder_fnGetDisplayNameOf (IShellFolder2 * iface, LPCITEMIDLIST pidl, DWOR
     int len = 0;
     BOOL bSimplePidl;
 
-	*szPath = '\0';
+    *szPath = '\0';
 
     TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", This, pidl, dwFlags, strRet);
     pdump (pidl);

@@ -537,10 +537,9 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 
     TRACE("%s\n", (lpFile != NULL) ? debugstr_w(lpFile) : "-");
 
+    xlpFile[0] = '\0';
     lpResult[0] = '\0'; /* Start off with an empty return string */
     if (key) *key = '\0';
-
-    xlpFile[0] = '\0';
 
     /* trap NULL parameters on entry */
     if ((lpFile == NULL) || (lpResult == NULL))

@@ -38,7 +38,7 @@
 #include "wingdi.h"
 #include "pidl.h"
 #include "shlguid.h"
-
+#include "enumidlist.h"
 #include "undocshell.h"
 #include "shell32_main.h"
 #include "shresdef.h"
@@ -238,6 +238,62 @@ ISF_MyComputer_fnParseDisplayName (IShellFolder2 * iface,
 }
 
 /**************************************************************************
+ *  CreateMyCompEnumList()
+ */
+static BOOL CreateMyCompEnumList(IEnumIDList *list, DWORD dwFlags)
+{
+    BOOL ret = TRUE;
+
+    TRACE("(%p)->(flags=0x%08lx) \n",list,dwFlags);
+
+    /*enumerate the folders*/
+    if(dwFlags & SHCONTF_FOLDERS)
+    {
+        CHAR szDriveName[] = "A:\\";
+        DWORD dwDrivemap = GetLogicalDrives();
+        HKEY hkey;
+
+        while (ret && szDriveName[0]<='Z')
+        {
+            if(dwDrivemap & 0x00000001L)
+                ret = AddToEnumList(list, _ILCreateDrive(szDriveName));
+            szDriveName[0]++;
+            dwDrivemap = dwDrivemap >> 1;
+        }
+
+        TRACE("-- (%p)-> enumerate (mycomputer shell extensions)\n",list);
+        if (ret && !RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+         "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\explorer\\mycomputer\\NameSpace",
+         0, KEY_READ, &hkey))
+        {
+            char iid[50];
+            int i=0;
+
+            while (ret)
+            {
+                DWORD size = sizeof (iid);
+                LONG apiRet = RegEnumKeyExA(hkey, i, iid, &size, 0, NULL, NULL,
+                 NULL);
+
+                if (ERROR_SUCCESS == apiRet)
+                {
+                    /* FIXME: shell extensions, shouldn't the type be
+                     * PT_SHELLEXT? */
+                    ret = AddToEnumList(list, _ILCreateGuidFromStrA(iid));
+                    i++;
+                }
+                else if (ERROR_NO_MORE_ITEMS == apiRet)
+                    break;
+                else
+                    ret = FALSE;
+            }
+            RegCloseKey(hkey);
+        }
+    }
+    return ret;
+}
+
+/**************************************************************************
 *		ISF_MyComputer_fnEnumObjects
 */
 static HRESULT WINAPI
@@ -247,7 +303,9 @@ ISF_MyComputer_fnEnumObjects (IShellFolder2 * iface, HWND hwndOwner, DWORD dwFla
 
     TRACE ("(%p)->(HWND=%p flags=0x%08lx pplist=%p)\n", This, hwndOwner, dwFlags, ppEnumIDList);
 
-    *ppEnumIDList = IEnumIDList_Constructor (NULL, dwFlags, EIDL_MYCOMP);
+    *ppEnumIDList = IEnumIDList_Constructor();
+    if (*ppEnumIDList)
+        CreateMyCompEnumList(*ppEnumIDList, dwFlags);
 
     TRACE ("-- (%p)->(new ID List: %p)\n", This, *ppEnumIDList);
 
