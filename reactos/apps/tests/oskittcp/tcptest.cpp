@@ -254,6 +254,38 @@ int main( int argc, char **argv ) {
 			}
 			printf( "\n" );
 		    }
+		} else if ( word == "type" ) {
+			std::string therest = &cmdin.str()[word.size()];
+			char* p = &therest[0];
+			p += strspn ( p, " \t" );
+			char* src = p;
+			char* dst = p;
+			while ( *src )
+			{
+				if ( *src == '\\' )
+				{
+					src++;
+					char c = *src++;
+					switch ( c )
+					{
+					case 'b': *dst++ = '\b'; break;
+					case 'n': *dst++ = '\n'; break;
+					case 'r': *dst++ = '\r'; break;
+					case 't': *dst++ = '\t'; break;
+					case 'v': *dst++ = '\v'; break;
+					default: *dst++ = c; break;
+					}
+				}
+				else
+					*dst++ = *src++;
+			}
+			*dst = '\0';
+			if ( (err = OskitTCPSend ( conn, (OSK_PCHAR)p, strlen(p), (OSK_UINT*)&bytin, 0 ))
+				!= 0 ) {
+				fprintf ( stderr, "OskitTCPConnect: error %d\n", err );
+			} else {
+				printf ( "wrote %d bytes\n", bytin );
+			}
 		} else if( word == "send" ) {
 		    off = 0;
 		    while( cmdin >> word ) {
