@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.49 2002/08/26 12:27:48 dwelch Exp $
+/* $Id: create.c,v 1.50 2002/08/26 22:07:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -897,8 +897,8 @@ CreateProcessW(LPCWSTR lpApplicationName,
     */
    if (lpStartupInfo)
      {
-       Ppb->Flags = lpStartupInfo->dwFlags;
-       if (Ppb->Flags & STARTF_USESHOWWINDOW)
+       Ppb->WindowFlags = lpStartupInfo->dwFlags;
+       if (Ppb->WindowFlags & STARTF_USESHOWWINDOW)
 	 {
 	   Ppb->ShowWindowFlags = lpStartupInfo->wShowWindow;
 	 }
