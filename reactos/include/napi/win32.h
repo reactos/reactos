@@ -8,6 +8,8 @@ typedef struct _W32THREAD
   PVOID MessageQueue;
   FAST_MUTEX WindowListLock;
   LIST_ENTRY WindowListHead;
+  FAST_MUTEX W32CallbackListLock;
+  LIST_ENTRY W32CallbackListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
   HANDLE hDesktop;

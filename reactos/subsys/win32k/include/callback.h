@@ -21,9 +21,6 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 HMENU STDCALL
 IntLoadSysMenuTemplate();
 
-BOOL STDCALL
-IntLoadDefaultCursors(BOOL SetDefault);
-
 LRESULT STDCALL
 IntCallHookProc(INT HookId,
                 INT Code,
@@ -32,5 +29,14 @@ IntCallHookProc(INT HookId,
                 HOOKPROC Proc,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
+
+VOID FASTCALL
+IntCleanupThreadCallbacks(PW32THREAD W32Thread);
+
+PVOID FASTCALL
+IntCbAllocateMemory(ULONG Size);
+
+VOID FASTCALL
+IntCbFreeMemory(PVOID Data);
 
 #endif /* _WIN32K_CALLBACK_H */

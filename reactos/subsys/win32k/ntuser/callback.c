@@ -16,15 +16,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.22 2004/05/10 17:07:18 weiden Exp $
+/* $Id: callback.c,v 1.23 2004/05/22 21:12:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
  * FILE:             subsys/win32k/ntuser/wndproc.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
+ * NOTES:            Please use the Callback Memory Management functions for
+ *                   callbacks to make sure, the memory is freed on thread
+ *                   termination!
  */
 
 /* INCLUDES ******************************************************************/
@@ -34,7 +38,78 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_CALLBACK TAG('C', 'B', 'C', 'K')
+/* CALLBACK MEMORY MANAGEMENT ************************************************/
+
+typedef struct _INT_CALLBACK_HEADER
+{
+  /* list entry in the W32THREAD structure */
+  LIST_ENTRY ListEntry;
+} INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
+
+PVOID FASTCALL
+IntCbAllocateMemory(ULONG Size)
+{
+  PINT_CALLBACK_HEADER Mem;
+  PW32THREAD W32Thread;
+  
+  if(!(Mem = ExAllocatePoolWithTag(PagedPool, Size + sizeof(INT_CALLBACK_HEADER),
+                                   TAG_CALLBACK)))
+  {
+    return NULL;
+  }
+  
+  W32Thread = PsGetWin32Thread();
+  ASSERT(W32Thread);
+  
+  /* insert the callback memory into the thread's callback list */
+  
+  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
+  InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
+  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
+  
+  return (Mem + 1);
+}
+
+VOID FASTCALL
+IntCbFreeMemory(PVOID Data)
+{
+  PINT_CALLBACK_HEADER Mem;
+  PW32THREAD W32Thread;
+  
+  ASSERT(Data);
+  
+  Mem = ((PINT_CALLBACK_HEADER)Data - 1);
+  
+  W32Thread = PsGetWin32Thread();
+  ASSERT(W32Thread);
+  
+  /* remove the memory block from the thread's callback list */
+  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
+  RemoveEntryList(&Mem->ListEntry);
+  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
+  
+  /* free memory */
+  ExFreePool(Mem);
+}
+
+VOID FASTCALL
+IntCleanupThreadCallbacks(PW32THREAD W32Thread)
+{
+  PLIST_ENTRY CurrentEntry;
+  PINT_CALLBACK_HEADER Mem;
+  
+  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
+  while (!IsListEmpty(&W32Thread->W32CallbackListHead))
+  {
+    CurrentEntry = RemoveHeadList(&W32Thread->W32CallbackListHead);
+    Mem = CONTAINING_RECORD(CurrentEntry, INT_CALLBACK_HEADER, 
+                            ListEntry);
+    
+    /* free memory */
+    ExFreePool(Mem);
+  }
+  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -85,7 +160,7 @@ IntCallWindowProc(WNDPROC Proc,
   if (0 < lParamBufferSize)
     {
       ArgumentLength = sizeof(WINDOWPROC_CALLBACK_ARGUMENTS) + lParamBufferSize;
-      Arguments = ExAllocatePoolWithTag(PagedPool,ArgumentLength, TAG_CALLBACK);
+      Arguments = IntCbAllocateMemory(ArgumentLength);
       if (NULL == Arguments)
         {
           DPRINT1("Unable to allocate buffer for window proc callback\n");
@@ -117,7 +192,7 @@ IntCallWindowProc(WNDPROC Proc,
     {
       if (0 < lParamBufferSize)
         {
-          ExFreePool(Arguments);
+          IntCbFreeMemory(Arguments);
         }
       return -1;
     }
@@ -128,7 +203,7 @@ IntCallWindowProc(WNDPROC Proc,
       RtlMoveMemory((PVOID) lParam,
                     (PVOID) ((char *) Arguments + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS)),
                     lParamBufferSize);
-      ExFreePool(Arguments);
+      IntCbFreeMemory(Arguments);
     }      
 
   return Result;
@@ -154,28 +229,6 @@ IntLoadSysMenuTemplate()
       return(0);
     }
   return (HMENU)Result;
-}
-
-BOOL STDCALL
-IntLoadDefaultCursors(BOOL SetDefault)
-{
-  LRESULT Result;
-  NTSTATUS Status;
-  PVOID ResultPointer;
-  ULONG ResultLength;
-
-  ResultPointer = &Result;
-  ResultLength = sizeof(LRESULT);
-  Status = NtW32Call(USER32_CALLBACK_LOADDEFAULTCURSORS,
-		     &SetDefault,
-		     sizeof(BOOL),
-		     &ResultPointer,
-		     &ResultLength);
-  if (!NT_SUCCESS(Status))
-    {
-      return(0);
-    }
-  return (BOOL)Result;
 }
 
 LRESULT STDCALL
@@ -229,7 +282,7 @@ IntCallHookProc(INT HookId,
       return 0;
     }
 
-  Argument = ExAllocatePoolWithTag(PagedPool, ArgumentLength, TAG_CALLBACK);
+  Argument = IntCbAllocateMemory(ArgumentLength);
   if (NULL == Argument)
     {
       DPRINT1("HookProc callback failed: out of memory\n");
@@ -283,6 +336,9 @@ IntCallHookProc(INT HookId,
 		     ArgumentLength,
 		     &ResultPointer,
 		     &ResultLength);
+  
+  IntCbFreeMemory(Argument);
+  
   if (!NT_SUCCESS(Status))
     {
       return 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.75 2004/05/22 16:48:50 weiden Exp $
+/* $Id: dllmain.c,v 1.76 2004/05/22 21:12:15 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -149,6 +149,8 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       Win32Thread->MessagePumpHookValue = 0;
       InitializeListHead(&Win32Thread->WindowListHead);
       ExInitializeFastMutex(&Win32Thread->WindowListLock);
+      InitializeListHead(&Win32Thread->W32CallbackListHead);
+      ExInitializeFastMutex(&Win32Thread->W32CallbackListLock);
 
       /* By default threads get assigned their process's desktop. */
       Win32Thread->Desktop = NULL;
@@ -182,6 +184,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       DestroyThreadWindows(Thread);
       IntBlockInput(Win32Thread, FALSE);
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
+      IntCleanupThreadCallbacks(Win32Thread);
     }
 
   return STATUS_SUCCESS;

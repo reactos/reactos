@@ -21,6 +21,7 @@
 #define TAG_TIMER	TAG('T', 'I', 'M', 'R') /* timer entry */
 #define TAG_TIMERTD	TAG('T', 'I', 'M', 'T') /* timer thread dereference list */
 #define TAG_TIMERBMP	TAG('T', 'I', 'M', 'B') /* timers bitmap */
+#define TAG_CALLBACK	TAG('C', 'B', 'C', 'K') /* callback memory */
 
 /* objects */
 #define TAG_BEZIER	TAG('B', 'E', 'Z', 'R') /* bezier */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.68 2004/05/22 09:22:41 weiden Exp $
+/* $Id: message.c,v 1.69 2004/05/22 21:12:15 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -410,8 +410,6 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
   
   if(!(Window = IntGetWindowObject(Msg->hwnd)))
   {
-    /* FIXME - change the mouse cursor to an arrow, maybe do this a better way */
-    IntLoadDefaultCursors(TRUE);
     /* let's just eat the message?! */
     return TRUE;
   }
