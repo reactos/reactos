@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.41 2003/03/24 23:45:47 rcampbell Exp $
+/* $Id: defwnd.c,v 1.42 2003/03/26 01:01:21 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -73,57 +73,85 @@ static ATOM AtomInternalPos;
 
 BOOL IsMaxBoxActive(HWND hWnd)
 {
-    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
     return (uStyle & WS_MAXIMIZEBOX);
 }
 
-BOOL IsCloseBoxActive(HWND hWnd)
+BOOL IsCloseBoxActive( HWND hWnd )
 {
-    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
-    return (uStyle & WS_SYSMENU);
+    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE );
+    return ( uStyle & WS_SYSMENU );
 }
 
-BOOL IsMinBoxActive(HWND hWnd)
+BOOL IsMinBoxActive( HWND hWnd )
 {
-    ULONG uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
     return (uStyle & WS_MINIMIZEBOX);
 }
 
+INT UIGetFrameSizeX( HWND hWnd )
+{
+    ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
+    
+    if ( uStyle & WS_THICKFRAME )
+        return GetSystemMetrics( SM_CXSIZEFRAME );
+    else
+        return GetSystemMetrics( SM_CXFRAME );
+}
+
+INT UIGetFrameSizeY( HWND hWnd )
+{
+    ULONG uStyle = GetWindowLong( hWnd, GWL_STYLE );
+    
+    if ( uStyle & WS_THICKFRAME )
+        return GetSystemMetrics( SM_CYSIZEFRAME );
+    else
+        return GetSystemMetrics( SM_CYFRAME );
+}
+
 VOID
-UserSetupInternalPos(VOID)
+UserSetupInternalPos( VOID )
 {
   LPSTR Str = "SysIP";
   AtomInternalPos = GlobalAddAtomA(Str);
 }
 
 HPEN STDCALL
-GetSysColorPen(int nIndex)
+GetSysColorPen( int nIndex )
 {
   return(CreatePen(PS_SOLID, 1, SysColours[nIndex]));
 }
 
 HBRUSH STDCALL
-GetSysColorBrush(int nIndex)
+GetSysColorBrush( int nIndex )
 {
   return(CreateSolidBrush(SysColours[nIndex]));
 }
 
 
 LRESULT STDCALL
-DefFrameProcA(HWND hWnd,
+DefFrameProcA( HWND hWnd,
 	      HWND hWndMDIClient,
 	      UINT uMsg,
 	      WPARAM wParam,
-	      LPARAM lParam)
+	      LPARAM lParam )
 {
   return((LRESULT)0);
 }
 /*
-static LRESULT WINAPI DefButtonWndProc(HWND hWnd, UINT uMsg,
-                                           WPARAM wParam, LPARAM lParam)
+static LRESULT WINAPI DefButtonWndProc( HWND hWnd, UINT uMsg,
+                                       WPARAM wParam, LPARAM lParam )
 {
     return ((LRESULT)0);
 }
+
+
+static LRESULT WINAPI DefDesktopWndProc( HWND hWnd, UINT uMsg,
+                                        WPARAM wParam, LPARAM lParam )
+{
+    return ((LRESULT)0);
+}
+
 */
 LRESULT STDCALL
 DefFrameProcW(HWND hWnd,
@@ -283,23 +311,30 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
 {
     RECT rect;
+    
     BOOL bToolWindow = GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW;
     INT iBmpWidth =  (bToolWindow ? GetSystemMetrics(SM_CXSMSIZE) :
                       GetSystemMetrics(SM_CXSIZE)) - 2;
     INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
                       GetSystemMetrics(SM_CYSIZE) - 4);
-    int FrameSize = GetFrameSize(hWnd);
+    INT OffsetX = UIGetFrameSizeY( hWnd );
+    INT OffsetY = UIGetFrameSizeY( hWnd );
+    
     
     if(!(GetWindowLong( hWnd, GWL_STYLE ) & WS_SYSMENU))
     {
         return;
     }
-    UserGetInsideRectNC(hWnd, &rect);
+    GetWindowRect( hWnd, &rect );
+    
+    rect.right = rect.right - rect.left;
+    rect.bottom = rect.bottom - rect.top;
+    rect.left = rect.top = 0;
     SetRect(&rect,
-            rect.right - iBmpWidth - (FrameSize + 2),
-            rect.top + FrameSize + 1,
-            rect.right - FrameSize - 2,
-            rect.top + iBmpHeight + FrameSize + 1 );
+            rect.right - OffsetX - iBmpWidth - 3,
+            OffsetY + 2,
+            rect.right - OffsetX - 3,
+            rect.top + iBmpHeight + OffsetY + 2 );      
             
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                       (DFCS_CAPTIONCLOSE |
@@ -308,30 +343,36 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
 }
            
 static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
-{ 
+{
+
     RECT rect;
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
 
-    int FrameSize = GetFrameSize(hWnd);
+    INT OffsetX = UIGetFrameSizeY( hWnd );
+    INT OffsetY = UIGetFrameSizeY( hWnd );
+    
+    GetWindowRect( hWnd, &rect );
     
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
         return;    
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return;  /* ToolWindows don't have min/max buttons */
+        return;   /* ToolWindows don't have min/max buttons */
         
-    UserGetInsideRectNC(hWnd, &rect );
-    
+    rect.right = rect.right - rect.left;
+    rect.bottom = rect.bottom - rect.top;
+    rect.left = rect.top = 0;
     SetRect(&rect,
-            rect.right - (iBmpWidth * 2) - FrameSize - 4,
-            rect.top + FrameSize + 1,
-            rect.right - iBmpWidth - FrameSize - 4,
-            rect.top + iBmpHeight + FrameSize + 1);
+            rect.right - OffsetX - (iBmpWidth*2) - 5,
+            OffsetY + 2,
+            rect.right - iBmpWidth - OffsetX - 5,
+            rect.top + iBmpHeight + OffsetY + 2 );  
     
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
                      (bDown ? DFCS_PUSHED : 0) |
                      (IsMaxBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
+    
 }
 
 static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
@@ -341,21 +382,24 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
     INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
     INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
     
-    int FrameSize = GetFrameSize(hWnd);
+    INT OffsetX = UIGetFrameSizeX( hWnd );
+    INT OffsetY = UIGetFrameSizeY( hWnd );
+    
+    GetWindowRect( hWnd, &rect );
     
     if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
-        return;
+        return;    
     if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return; /*ToolWindows don't have min/max buttons */
+        return;   /* ToolWindows don't have min/max buttons */
         
-    UserGetInsideRectNC(hWnd, &rect );
-    
+    rect.right = rect.right - rect.left;
+    rect.bottom = rect.bottom - rect.top;
+    rect.left = rect.top = 0;
     SetRect(&rect,
-            rect.right - (iBmpWidth * 3) - FrameSize - 4,
-            rect.top + FrameSize + 1,
-            rect.right - (iBmpWidth * 2) - FrameSize - 4,
-            rect.top + iBmpHeight + FrameSize + 1 );
-
+            rect.right - OffsetX - (iBmpWidth*3) - 5,
+            OffsetY + 2,
+            rect.right - (iBmpWidth * 2) - OffsetX - 5,
+            rect.top + iBmpHeight + OffsetY + 2 );  
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
                      DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
                      (IsMinBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
