@@ -92,6 +92,7 @@ copy apps\partinfo\partinfo.exe %ROS_INSTALL%\bin
 copy apps\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\mutex\mutex.exe %ROS_INSTALL%\bin
 copy apps\winhello\winhello.exe %ROS_INSTALL%\bin
+copy apps\sectest\sectest.exe %ROS_INSTALL%\bin
 copy apps\pice\module\pice.sys %ROS_INSTALL%\system32\drivers
 copy apps\pice\module\pice.sym %ROS_INSTALL%\symbols
 copy apps\pice\pice.cfg %ROS_INSTALL%\symbols
