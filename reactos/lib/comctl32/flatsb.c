@@ -60,7 +60,6 @@ typedef struct
 BOOL WINAPI InitializeFlatSB(HWND hwnd)
 {
     TRACE("[%p]\n", hwnd);
-    FIXME("stub\n");
     return FALSE;
 }
 
@@ -76,7 +75,6 @@ BOOL WINAPI InitializeFlatSB(HWND hwnd)
 HRESULT WINAPI UninitializeFlatSB(HWND hwnd)
 {
     TRACE("[%p]\n", hwnd);
-    FIXME("stub\n");
     return S_FALSE;
 }
 
@@ -92,7 +90,6 @@ BOOL WINAPI
 FlatSB_GetScrollProp(HWND hwnd, INT propIndex, LPINT prop)
 {
     TRACE("[%p] propIndex=%d\n", hwnd, propIndex);
-    FIXME("stub\n");
     return FALSE;
 }
 
@@ -103,7 +100,6 @@ BOOL WINAPI
 FlatSB_SetScrollProp(HWND hwnd, UINT index, INT newValue, BOOL flag)
 {
     TRACE("[%p] index=%u newValue=%d flag=%d\n", hwnd, index, newValue, flag);
-    FIXME("stub\n");
     return FALSE;
 }
 

@@ -38,6 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(hotkey);
 typedef struct tagHOTKEY_INFO
 {
     HWND  hwndSelf;
+    HWND  hwndNotify;
     HFONT hFont;
     BOOL  bFocus;
     INT   nHeight;
@@ -222,6 +223,7 @@ HOTKEY_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->HotKey = infoPtr->InvComb = infoPtr->InvMod = infoPtr->CurrMod = 0;
     infoPtr->CaretPos = 2;
     infoPtr->hwndSelf = hwnd;
+    infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
     LoadStringW(COMCTL32_hModule, HKY_NONE, infoPtr->strNone, 15);
 
     /* get default font height */
@@ -252,7 +254,7 @@ HOTKEY_EraseBackground (HOTKEY_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     RECT   rc;
 
     hBrush =
-	(HBRUSH)SendMessageW (GetParent (infoPtr->hwndSelf), WM_CTLCOLOREDIT,
+	(HBRUSH)SendMessageW (infoPtr->hwndNotify, WM_CTLCOLOREDIT,
 				wParam, (LPARAM)infoPtr->hwndSelf);
     if (hBrush)
 	hBrush = (HBRUSH)GetStockObject (WHITE_BRUSH);

@@ -44,6 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(pager);
 typedef struct
 {
     HWND   hwndChild;  /* handle of the contained wnd */
+    HWND   hwndNotify; /* handle of the parent wnd */
     BOOL   bNoResize;  /* set when created with CCS_NORESIZE */
     COLORREF clrBk;    /* background color */
     INT    nBorder;    /* border size for the control */
@@ -325,6 +326,7 @@ PAGER_GetBkColor(HWND hwnd)
 static void
 PAGER_CalcSize (HWND hwnd, INT* size, BOOL getWidth)
 {
+    PAGER_INFO *infoPtr = PAGER_GetInfoPtr (hwnd);
     NMPGCALCSIZE nmpgcs;
     ZeroMemory (&nmpgcs, sizeof (NMPGCALCSIZE));
     nmpgcs.hdr.hwndFrom = hwnd;
@@ -333,7 +335,7 @@ PAGER_CalcSize (HWND hwnd, INT* size, BOOL getWidth)
     nmpgcs.dwFlag = getWidth ? PGF_CALCWIDTH : PGF_CALCHEIGHT;
     nmpgcs.iWidth = getWidth ? *size : 0;
     nmpgcs.iHeight = getWidth ? 0 : *size;
-    SendMessageA (GetParent (hwnd), WM_NOTIFY,
+    SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
                   (WPARAM)nmpgcs.hdr.idFrom, (LPARAM)&nmpgcs);
 
     *size = getWidth ? nmpgcs.iWidth : nmpgcs.iHeight;
@@ -795,7 +797,7 @@ PAGER_Scroll(HWND hwnd, INT dir)
         }
         nmpgScroll.iScroll -= 2*infoPtr->nButtonSize;
 
-        SendMessageA (GetParent(hwnd), WM_NOTIFY,
+        SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
                     (WPARAM)nmpgScroll.hdr.idFrom, (LPARAM)&nmpgScroll);
 
         TRACE("[%p] PGN_SCROLL returns iScroll=%d\n", hwnd, nmpgScroll.iScroll);
@@ -843,6 +845,7 @@ PAGER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* set default settings */
     infoPtr->hwndChild = NULL;
+    infoPtr->hwndNotify = ((LPCREATESTRUCTW)lParam)->hwndParent;
     infoPtr->bNoResize = dwStyle & CCS_NORESIZE;
     infoPtr->clrBk = GetSysColor(COLOR_BTNFACE);
     infoPtr->nBorder = 0;
@@ -1177,7 +1180,7 @@ PAGER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
         nmhdr.hwndFrom = hwnd;
         nmhdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
         nmhdr.code = NM_RELEASEDCAPTURE;
-        SendMessageA (GetParent(hwnd), WM_NOTIFY,
+        SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
                         (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
     }
 
@@ -1267,7 +1270,7 @@ PAGER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		nmhdr.hwndFrom = hwnd;
 		nmhdr.idFrom   = GetWindowLongA (hwnd, GWL_ID);
 		nmhdr.code = NM_RELEASEDCAPTURE;
-		SendMessageA (GetParent(hwnd), WM_NOTIFY,
+		SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
 			      (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
 	    }
 	}
@@ -1575,7 +1578,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_NOTIFY:
         case WM_COMMAND:
-            return SendMessageA (GetParent (hwnd), uMsg, wParam, lParam);
+            return SendMessageA (infoPtr->hwndNotify, uMsg, wParam, lParam);
 
         default:
             return DefWindowProcA (hwnd, uMsg, wParam, lParam);

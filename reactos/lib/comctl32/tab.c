@@ -4,6 +4,7 @@
  * Copyright 1998 Anders Carlsson
  * Copyright 1999 Alex Priem <alexp@sci.kun.nl>
  * Copyright 1999 Francis Beaudet
+ * Copyright 2003 Vitaliy Margolen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,6 +60,7 @@ typedef struct
 
 typedef struct
 {
+  HWND       hwndNotify;      /* notification window (parent) */
   UINT       uNumItem;        /* number of tab items */
   UINT       uNumRows;	      /* number of tab rows */
   INT        tabHeight;       /* height of the tab row */
@@ -66,6 +68,8 @@ typedef struct
   INT        tabMinWidth;     /* minimum width of items */
   USHORT     uHItemPadding;   /* amount of horizontal padding, in pixels */
   USHORT     uVItemPadding;   /* amount of vertical padding, in pixels */
+  USHORT     uHItemPadding_s; /* Set amount of horizontal padding, in pixels */
+  USHORT     uVItemPadding_s; /* Set amount of vertical padding, in pixels */
   HFONT      hFont;           /* handle to the current font */
   HCURSOR    hcurArrow;       /* handle to the current cursor */
   HIMAGELIST himl;            /* handle to a image list (may be 0) */
@@ -118,13 +122,14 @@ static void TAB_DrawItemInterior(HWND hwnd, HDC hdc, INT iItem, RECT* drawRect);
 static BOOL
 TAB_SendSimpleNotify (HWND hwnd, UINT code)
 {
+    TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
     NMHDR nmhdr;
 
     nmhdr.hwndFrom = hwnd;
     nmhdr.idFrom = GetWindowLongA(hwnd, GWL_ID);
     nmhdr.code = code;
 
-    return (BOOL) SendMessageA (GetParent (hwnd), WM_NOTIFY,
+    return (BOOL) SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
             (WPARAM) nmhdr.idFrom, (LPARAM) &nmhdr);
 }
 
@@ -270,8 +275,8 @@ TAB_SetPadding (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
     
     if (infoPtr == NULL) return 0;
-    infoPtr->uHItemPadding=LOWORD(lParam);
-    infoPtr->uVItemPadding=HIWORD(lParam);
+    infoPtr->uHItemPadding_s=LOWORD(lParam);
+    infoPtr->uVItemPadding_s=HIWORD(lParam);
     return 0;
 }
 
@@ -316,14 +321,13 @@ static BOOL TAB_InternalGetItemRect(
   if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
   {
     itemRect->bottom = clientRect.bottom -
-                   SELECTED_TAB_OFFSET -
                    itemRect->top * (infoPtr->tabHeight - 2) -
-                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : 0);
+                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
 
     itemRect->top = clientRect.bottom -
                    infoPtr->tabHeight -
                    itemRect->top * (infoPtr->tabHeight - 2) -
-                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : 0);
+                   ((lStyle & TCS_BUTTONS) ? itemRect->top * BUTTON_SPACINGY : SELECTED_TAB_OFFSET);
   }
   else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
   {
@@ -400,7 +404,6 @@ static BOOL TAB_InternalGetItemRect(
     /* If it also a bit higher. */
     if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
     {
-      selectedRect->top -= 2; /* the border is thicker on the bottom */
       selectedRect->bottom += SELECTED_TAB_OFFSET;
     }
     else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
@@ -416,7 +419,7 @@ static BOOL TAB_InternalGetItemRect(
     else
     {
       selectedRect->top -= SELECTED_TAB_OFFSET;
-      selectedRect->bottom += 1;
+      selectedRect->bottom -= 1;
     }
   }
 
@@ -647,9 +650,12 @@ static void
 TAB_DrawLoneItemInterior(HWND hwnd, TAB_INFO* infoPtr, int iItem)
 {
   HDC hdc = GetDC(hwnd);
-  HFONT hOldFont = SelectObject(hdc, infoPtr->hFont);
+  RECT r, rC;
+
+  GetWindowRect(hwnd, &rC);
+  GetWindowRect(infoPtr->hwndUpDown, &r);
+  ExcludeClipRect(hdc, r.left - rC.left, r.top - rC.top, r.right - rC.left, r.bottom - rC.top);
   TAB_DrawItemInterior(hwnd, hdc, iItem, NULL);
-  SelectObject(hdc, hOldFont);
   ReleaseDC(hwnd, hdc);
 }
 
@@ -1098,6 +1104,10 @@ static void TAB_SetItemBounds (HWND hwnd)
      clientRect.right = iTemp;
   }
 
+  /* Now use hPadding and vPadding */
+  infoPtr->uHItemPadding = infoPtr->uHItemPadding_s;
+  infoPtr->uVItemPadding = infoPtr->uVItemPadding_s;
+  
   /* The leftmost item will be "0" aligned */
   curItemLeftPos = 0;
   curItemRowCount = infoPtr->uNumItem ? 1 : 0;
@@ -1414,6 +1424,69 @@ static void TAB_SetItemBounds (HWND hwnd)
   ReleaseDC (hwnd, hdc);
 }
 
+
+static void
+TAB_EraseTabInterior
+    (
+    HWND	hwnd,
+    HDC         hdc,
+    INT         iItem,
+    RECT*       drawRect
+    )
+{
+    TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
+    LONG     lStyle  = GetWindowLongA(hwnd, GWL_STYLE);
+    HBRUSH   hbr = CreateSolidBrush (comctl32_color.clrBtnFace);
+    BOOL     deleteBrush = TRUE;
+    RECT     rTemp = *drawRect;
+
+    InflateRect(&rTemp, -2, -2);
+    if (lStyle & TCS_BUTTONS)
+    {
+	if (iItem == infoPtr->iSelected)
+	{
+	    /* Background color */
+	    if (!(lStyle & TCS_OWNERDRAWFIXED))
+	    {
+		DeleteObject(hbr);
+		hbr = GetSysColorBrush(COLOR_SCROLLBAR);
+
+		SetTextColor(hdc, comctl32_color.clr3dFace);
+		SetBkColor(hdc, comctl32_color.clr3dHilight);
+
+		/* if COLOR_WINDOW happens to be the same as COLOR_3DHILIGHT
+		* we better use 0x55aa bitmap brush to make scrollbar's background
+		* look different from the window background.
+		*/
+		if (comctl32_color.clr3dHilight == comctl32_color.clrWindow)
+		    hbr = COMCTL32_hPattern55AABrush;
+
+		deleteBrush = FALSE;
+	    }
+	    FillRect(hdc, &rTemp, hbr);
+	}
+	else  /* ! selected */
+	{
+	    if (lStyle & TCS_FLATBUTTONS)
+	    {
+		FillRect(hdc, drawRect, hbr);
+		if (iItem == infoPtr->iHotTracked)
+		    DrawEdge(hdc, drawRect, EDGE_RAISED, BF_SOFT|BF_RECT);
+	    }
+	    else
+		FillRect(hdc, &rTemp, hbr);
+	}
+
+    }
+    else /* !TCS_BUTTONS */
+    {
+	FillRect(hdc, &rTemp, hbr);
+    }
+
+    /* Cleanup */
+    if (deleteBrush) DeleteObject(hbr);
+}
+
 /******************************************************************************
  * TAB_DrawItemInterior
  *
@@ -1437,7 +1510,8 @@ TAB_DrawItemInterior
   HPEN   htextPen;
   HPEN   holdPen;
   INT    oldBkMode;
-
+  HFONT  hOldFont;
+  
   if (drawRect == NULL)
   {
     BOOL isVisible;
@@ -1467,31 +1541,76 @@ TAB_DrawItemInterior
       *drawRect = itemRect;
       if (iItem == infoPtr->iSelected)
       {
-        drawRect->right--;
-        drawRect->bottom--;
+	OffsetRect(drawRect, 1, 1);
       }
     }
     else
     {
       if (iItem == infoPtr->iSelected)
+      {
         *drawRect = selectedRect;
+	if (lStyle & TCS_BOTTOM)
+	{
+	  if (lStyle & TCS_VERTICAL)
+	  {
+	    drawRect->left++;
+	  }
+	  else
+	  {
+	    drawRect->top += 3;
+	    drawRect->left += 1;
+	  }
+	}
+      }
       else
         *drawRect = itemRect;
-      drawRect->right--;
-      drawRect->bottom--;
+
+
+      if (lStyle & TCS_BOTTOM && !(lStyle & TCS_VERTICAL))
+      {
+        drawRect->top--;
+        drawRect->bottom--;
+      }
     }
+  }
+  TRACE("drawRect=(%ld,%ld)-(%ld,%ld)\n",
+	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom);
+
+  /* Clear interior */
+  TAB_EraseTabInterior (hwnd, hdc, iItem, drawRect);
+
+  /* Draw the focus rectangle */
+  if (!(lStyle & TCS_FOCUSNEVER) &&
+      (GetFocus() == hwnd) &&
+      (iItem == infoPtr->uFocus) )
+  {
+    RECT rFocus = *drawRect;
+    InflateRect(&rFocus, -3, -3);
+    if (lStyle & TCS_BOTTOM && !(lStyle & TCS_VERTICAL))
+      rFocus.top -= 3;
+    if (lStyle & TCS_BUTTONS)
+    {
+      rFocus.left -= 3;
+      rFocus.top -= 3;
+    }
+
+    DrawFocusRect(hdc, &rFocus);
   }
 
   /*
    * Text pen
    */
   htextPen = CreatePen( PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT) );
-  holdPen = SelectObject(hdc, htextPen);
+  holdPen  = SelectObject(hdc, htextPen);
+  hOldFont = SelectObject(hdc, infoPtr->hFont);
 
+  /*
+   * Setup for text output
+  */
   oldBkMode = SetBkMode(hdc, TRANSPARENT);
-  SetTextColor(hdc, ( (iItem == infoPtr->iHotTracked) | (infoPtr->items[iItem].dwState & TCIS_HIGHLIGHTED)) ?
+  SetTextColor(hdc, (((iItem == infoPtr->iHotTracked) && !(lStyle & TCS_FLATBUTTONS)) |
+		     (infoPtr->items[iItem].dwState & TCIS_HIGHLIGHTED)) ?
                      comctl32_color.clrHighlight : comctl32_color.clrBtnText);
-
 
   /*
    * if owner draw, tell the owner to draw
@@ -1521,39 +1640,22 @@ TAB_DrawItemInterior
     dis.hwndItem = hwnd;		/* */
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
+    InflateRect(&dis.rcItem, -2, -2);
     dis.itemData = infoPtr->items[iItem].lParam;
 
     /*
      * send the draw message
      */
-    SendMessageA( GetParent(hwnd), WM_DRAWITEM, (WPARAM)id, (LPARAM)&dis );
+    SendMessageA( infoPtr->hwndNotify, WM_DRAWITEM, (WPARAM)id, (LPARAM)&dis );
   }
   else
   {
-    INT cx;
-    INT cy;
-    UINT uHorizAlign;
     RECT rcTemp;
     RECT rcImage;
-    LOGFONTA logfont;
-    HFONT hFont = 0;
-    HFONT hOldFont = 0; /* stop uninitialized warning */
-
-    INT nEscapement = 0; /* stop uninitialized warning */
-    INT nOrientation = 0; /* stop uninitialized warning */
-    INT iPointSize;
 
     /* used to center the icon and text in the tab */
     RECT rcText;
     INT center_offset_h, center_offset_v;
-
-    /*
-     * Deflate the rectangle to acount for the padding
-     */
-    if(lStyle & TCS_VERTICAL)
-      InflateRect(drawRect, -infoPtr->uVItemPadding, -infoPtr->uHItemPadding);
-    else
-      InflateRect(drawRect, -infoPtr->uHItemPadding, -infoPtr->uVItemPadding);
 
     /* set rcImage to drawRect, we will use top & left in our ImageList_Draw call */
     rcImage = *drawRect;
@@ -1562,17 +1664,9 @@ TAB_DrawItemInterior
 
     rcText.left = rcText.top = rcText.right = rcText.bottom = 0;
 
-    /*
-     * Setup for text output
-     */
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, ((iItem == infoPtr->iHotTracked) | (infoPtr->items[iItem].dwState & TCIS_HIGHLIGHTED))?
-		 comctl32_color.clrHighlight : comctl32_color.clrBtnText);
-
     /* get the rectangle that the text fits in */
     DrawTextW(hdc, infoPtr->items[iItem].pszText, -1,
               &rcText, DT_CALCRECT);
-    rcText.right += 4;
     /*
      * If not owner draw, then do the drawing ourselves.
      *
@@ -1580,6 +1674,9 @@ TAB_DrawItemInterior
      */
     if (infoPtr->himl && (infoPtr->items[iItem].mask & TCIF_IMAGE))
     {
+      INT cx;
+      INT cy;
+      
       ImageList_GetIconSize(infoPtr->himl, &cx, &cy);
 
       if(lStyle & TCS_VERTICAL)
@@ -1593,36 +1690,37 @@ TAB_DrawItemInterior
         center_offset_v = ((drawRect->bottom - drawRect->top) - (cy + infoPtr->uVItemPadding)) / 2;
       }
 
-      if ((lStyle & TCS_FIXEDWIDTH &&
-           lStyle & (TCS_FORCELABELLEFT | TCS_FORCEICONLEFT)) ||
-	  (center_offset_h < 0))
-	center_offset_h = 0;
+      if (lStyle & TCS_FIXEDWIDTH && lStyle & (TCS_FORCELABELLEFT | TCS_FORCEICONLEFT))
+	center_offset_h = infoPtr->uHItemPadding;
 
-      TRACE("for <%s>, c_o=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
-	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h,
+      if (center_offset_h < 2)
+        center_offset_h = 2;
+	
+      TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
+	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
 
       if((lStyle & TCS_VERTICAL) && (lStyle & TCS_BOTTOM))
       {
-        rcImage.top  = drawRect->top + center_offset_h;
+        rcImage.top = drawRect->top + center_offset_h;
 	/* if tab is TCS_VERTICAL and TCS_BOTTOM, the text is drawn from the */
 	/* right side of the tab, but the image still uses the left as its x position */
 	/* this keeps the image always drawn off of the same side of the tab */
         rcImage.left = drawRect->right - cx - center_offset_v;
-        drawRect->top = rcImage.top + (cx + infoPtr->uHItemPadding);
+        drawRect->top += cy + infoPtr->uHItemPadding;
       }
       else if(lStyle & TCS_VERTICAL)
       {
         rcImage.top  = drawRect->bottom - cy - center_offset_h;
 	rcImage.left = drawRect->left + center_offset_v;
-        drawRect->bottom = rcImage.top - infoPtr->uHItemPadding;
+        drawRect->bottom -= cy + infoPtr->uHItemPadding;
       }
       else /* normal style, whether TCS_BOTTOM or not */
       {
-        rcImage.left = drawRect->left + center_offset_h + 3;
-        drawRect->left = rcImage.left + cx + infoPtr->uHItemPadding;
+        rcImage.left = drawRect->left + center_offset_h;
 	rcImage.top = drawRect->top + center_offset_v;
+        drawRect->left += cx + infoPtr->uHItemPadding;
       }
 
       TRACE("drawing image=%d, left=%ld, top=%ld\n",
@@ -1637,70 +1735,52 @@ TAB_DrawItemInterior
         ILD_NORMAL
         );
     }
-    else /* no image, so just shift the drawRect borders around */
-    {
+
+    /* Now position text */
+    if (lStyle & TCS_FIXEDWIDTH && lStyle & TCS_FORCELABELLEFT)
+      center_offset_h = infoPtr->uHItemPadding;
+    else
       if(lStyle & TCS_VERTICAL)
-      {
-        center_offset_h = 0;
-        /*
-        currently the rcText rect is flawed because the rotated font does not
-        often match the horizontal font. So leave this as 0
-        ((drawRect->bottom - drawRect->top) - (rcText.right - rcText.left)) / 2;
-        */
-        if(lStyle & TCS_BOTTOM)
-          drawRect->top+=center_offset_h;
-        else
-          drawRect->bottom-=center_offset_h;
-      }
+        center_offset_h = ((drawRect->bottom - drawRect->top) - (rcText.right - rcText.left)) / 2;
       else
-      {
         center_offset_h = ((drawRect->right - drawRect->left) - (rcText.right - rcText.left)) / 2;
-        drawRect->left+=center_offset_h;
-      }
-    }
 
     if(lStyle & TCS_VERTICAL)
     {
-      center_offset_v = ((drawRect->right - drawRect->left) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
-      drawRect->left += center_offset_v;
+      if(lStyle & TCS_BOTTOM)
+        drawRect->top+=center_offset_h;
+      else
+        drawRect->bottom-=center_offset_h;
+
+      drawRect->left += ((drawRect->right - drawRect->left) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
     }
     else
     {
-      center_offset_v = ((drawRect->bottom - drawRect->top) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
-      drawRect->top += center_offset_v;
+      drawRect->left += center_offset_h;
+      drawRect->top += ((drawRect->bottom - drawRect->top) - ((rcText.bottom - rcText.top) + infoPtr->uVItemPadding)) / 2;
     }
-
 
     /* Draw the text */
-    if ((lStyle & TCS_FIXEDWIDTH && lStyle & TCS_FORCELABELLEFT) ||
-	!center_offset_h)
-      uHorizAlign = DT_LEFT;
-    else
-      uHorizAlign = DT_CENTER;
-
     if(lStyle & TCS_VERTICAL) /* if we are vertical rotate the text and each character */
     {
+      LOGFONTA logfont;
+      HFONT hFont = 0;
+      INT nEscapement = 900;
+      INT nOrientation = 900;
+
       if(lStyle & TCS_BOTTOM)
       {
         nEscapement = -900;
         nOrientation = -900;
       }
-      else
-      {
-        nEscapement = 900;
-        nOrientation = 900;
-      }
-    }
 
-    /* to get a font with the escapement and orientation we are looking for, we need to */
-    /* call CreateFontIndirectA, which requires us to set the values of the logfont we pass in */
-    if(lStyle & TCS_VERTICAL)
-    {
+      /* to get a font with the escapement and orientation we are looking for, we need to */
+      /* call CreateFontIndirectA, which requires us to set the values of the logfont we pass in */
       if (!GetObjectA((infoPtr->hFont) ?
                 infoPtr->hFont : GetStockObject(SYSTEM_FONT),
                 sizeof(LOGFONTA),&logfont))
       {
-        iPointSize = 9;
+        INT iPointSize = 9;
 
         lstrcpyA(logfont.lfFaceName, "Arial");
         logfont.lfHeight = -MulDiv(iPointSize, GetDeviceCaps(hdc, LOGPIXELSY),
@@ -1714,11 +1794,8 @@ TAB_DrawItemInterior
       logfont.lfEscapement = nEscapement;
       logfont.lfOrientation = nOrientation;
       hFont = CreateFontIndirectA(&logfont);
-      hOldFont = SelectObject(hdc, hFont);
-    }
+      SelectObject(hdc, hFont);
 
-    if (lStyle & TCS_VERTICAL)
-    {
       ExtTextOutW(hdc,
       (lStyle & TCS_BOTTOM) ? drawRect->right : drawRect->left,
       (!(lStyle & TCS_BOTTOM)) ? drawRect->bottom : drawRect->top,
@@ -1727,6 +1804,8 @@ TAB_DrawItemInterior
       infoPtr->items[iItem].pszText,
       lstrlenW(infoPtr->items[iItem].pszText),
       0);
+
+      DeleteObject(hFont);
     }
     else
     {
@@ -1736,24 +1815,17 @@ TAB_DrawItemInterior
         infoPtr->items[iItem].pszText,
         lstrlenW(infoPtr->items[iItem].pszText),
         drawRect,
-        uHorizAlign | DT_SINGLELINE
+        DT_LEFT | DT_SINGLELINE
         );
     }
 
-    /* clean things up */
     *drawRect = rcTemp; /* restore drawRect */
-
-    if(lStyle & TCS_VERTICAL)
-    {
-      SelectObject(hdc, hOldFont); /* restore the original font */
-      if (hFont)
-        DeleteObject(hFont);
-    }
   }
 
   /*
   * Cleanup
   */
+  SelectObject(hdc, hOldFont);
   SetBkMode(hdc, oldBkMode);
   SelectObject(hdc, holdPen);
   DeleteObject( htextPen );
@@ -1790,6 +1862,13 @@ static void TAB_DrawItem(
 
   if (isVisible)
   {
+    RECT rUD, rC;
+
+    /* Clip UpDown control to not draw over it */
+    GetWindowRect(hwnd, &rC);
+    GetWindowRect(infoPtr->hwndUpDown, &rUD);
+    ExcludeClipRect(hdc, rUD.left - rC.left, rUD.top - rC.top, rUD.right - rC.left, rUD.bottom - rC.top);
+
     /* If you need to see what the control is doing,
      * then override these variables. They will change what
      * fill colors are used for filling the tabs, and the
@@ -1800,9 +1879,6 @@ static void TAB_DrawItem(
 
     if (lStyle & TCS_BUTTONS)
     {
-      HBRUSH hbr       = CreateSolidBrush (bkgnd);
-      BOOL   deleteBrush = TRUE;
-
       /* Get item rectangle */
       r = itemRect;
 
@@ -1816,43 +1892,15 @@ static void TAB_DrawItem(
 
       if (iItem == infoPtr->iSelected)
       {
-        /* Background color */
-        if (!(lStyle & TCS_OWNERDRAWFIXED))
-	{
-              DeleteObject(hbr);
-              hbr = GetSysColorBrush(COLOR_SCROLLBAR);
-
-              SetTextColor(hdc, comctl32_color.clr3dFace);
-              SetBkColor(hdc, comctl32_color.clr3dHilight);
-
-              /* if COLOR_WINDOW happens to be the same as COLOR_3DHILIGHT
-               * we better use 0x55aa bitmap brush to make scrollbar's background
-               * look different from the window background.
-               */
-               if (comctl32_color.clr3dHilight == comctl32_color.clrWindow)
-                  hbr = COMCTL32_hPattern55AABrush;
-
-              deleteBrush = FALSE;
-	}
-
-	/* Clear interior */
-        FillRect(hdc, &r, hbr);
-
 	DrawEdge(hdc, &r, EDGE_SUNKEN, BF_SOFT|BF_RECT);
+	
+	OffsetRect(&r, 1, 1);
       }
       else  /* ! selected */
       {
 	if (!(lStyle & TCS_FLATBUTTONS))
-	{
-	  /* Clear interior */
-          FillRect(hdc, &r, hbr);
-
 	  DrawEdge(hdc, &r, EDGE_RAISED, BF_SOFT|BF_RECT);
-	}
       }
-
-      /* Cleanup */
-      if (deleteBrush) DeleteObject(hbr);
     }
     else /* !TCS_BUTTONS */
     {
@@ -2029,11 +2077,17 @@ static void TAB_DrawItem(
 	  r1.bottom--;
 	  DrawEdge(hdc, &r1, EDGE_RAISED, BF_SOFT|BF_DIAGONAL_ENDTOPLEFT);
 
-	  if ((iItem == infoPtr->iSelected) && (selectedRect.left == 0)) {
+	  if (iItem == infoPtr->iSelected)
+	  {
+	    r.top += 2;
+	    r.left += 1;
+	    if (selectedRect.left == 0)
+	    {
 	      r1 = r;
 	      r1.bottom = r1.top;
 	      r1.top--;
 	      DrawEdge(hdc, &r1, EDGE_RAISED, BF_SOFT|BF_LEFT);
+	    }
 	  }
 
         }
@@ -2081,22 +2135,7 @@ static void TAB_DrawItem(
     TAB_DumpItemInternal(infoPtr, iItem);
 
     /* This modifies r to be the text rectangle. */
-    {
-      HFONT hOldFont = SelectObject(hdc, infoPtr->hFont);
-      TAB_DrawItemInterior(hwnd, hdc, iItem, &r);
-      SelectObject(hdc,hOldFont);
-    }
-
-    /* Draw the focus rectangle */
-    if (((lStyle & TCS_FOCUSNEVER) == 0) &&
-	 (GetFocus() == hwnd) &&
-	 (iItem == infoPtr->uFocus) )
-    {
-      r = itemRect;
-      InflateRect(&r, -1, -1);
-
-      DrawFocusRect(hdc, &r);
-    }
+    TAB_DrawItemInterior(hwnd, hdc, iItem, &r);
   }
 }
 
@@ -2355,7 +2394,7 @@ static void TAB_InvalidateTabArea(
   HWND      hwnd,
   TAB_INFO* infoPtr)
 {
-  RECT clientRect, r;
+  RECT clientRect, rInvalidate;
   DWORD lStyle = GetWindowLongA(hwnd, GWL_STYLE);
   INT lastRow = infoPtr->uNumRows - 1;
   RECT rect;
@@ -2363,49 +2402,54 @@ static void TAB_InvalidateTabArea(
   if (lastRow < 0) return;
 
   GetClientRect(hwnd, &clientRect);
+  rInvalidate = clientRect;
 
   TAB_InternalGetItemRect(hwnd, infoPtr, infoPtr->uNumItem-1 , &rect, NULL);
   if ((lStyle & TCS_BOTTOM) && !(lStyle & TCS_VERTICAL))
   {
-    clientRect.top = clientRect.bottom -
+    rInvalidate.top = clientRect.bottom -
                    infoPtr->tabHeight -
                    lastRow * (infoPtr->tabHeight - 2) -
                    ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) - 3;
-    clientRect.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
   }
   else if((lStyle & TCS_BOTTOM) && (lStyle & TCS_VERTICAL))
   {
-    clientRect.left = clientRect.right - infoPtr->tabHeight -
+    rInvalidate.left = clientRect.right - infoPtr->tabHeight -
                       lastRow * (infoPtr->tabHeight - 2) -
                       ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) - 2;
-    clientRect.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
   }
   else if(lStyle & TCS_VERTICAL)
   {
-    clientRect.right = clientRect.left + infoPtr->tabHeight +
+    rInvalidate.right = clientRect.left + infoPtr->tabHeight +
                        lastRow * (infoPtr->tabHeight - 2) -
                       ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) + 2;
-    clientRect.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.bottom = clientRect.top + rect.bottom + 2 * SELECTED_TAB_OFFSET;
   }
   else
   {
-    clientRect.bottom = clientRect.top + infoPtr->tabHeight +
+    rInvalidate.bottom = clientRect.top + infoPtr->tabHeight +
                       lastRow * (infoPtr->tabHeight - 2) +
                       ((lStyle & TCS_BUTTONS) ? lastRow * BUTTON_SPACINGY : 0) + 2;
-    clientRect.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
+    rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
   }
   
   /* Punch out the updown control */
-  if (infoPtr->needsScrolling && (clientRect.right > 0)) {
+  if (infoPtr->needsScrolling && (rInvalidate.right > 0)) {
+    RECT r;
     GetClientRect(infoPtr->hwndUpDown, &r);
-    clientRect.right = clientRect.right - (r.right - r.left);
+    if (rInvalidate.right > clientRect.right - r.left)
+      rInvalidate.right = rInvalidate.right - (r.right - r.left);
+    else
+      rInvalidate.right = clientRect.right - r.left;
   }
   
   TRACE("invalidate (%ld,%ld)-(%ld,%ld)\n",
 	clientRect.left,clientRect.top,
 	clientRect.right,clientRect.bottom);
  
-  InvalidateRect(hwnd, &clientRect, TRUE);
+  InvalidateRect(hwnd, &rInvalidate, TRUE);
 }
 
 static LRESULT
@@ -3001,10 +3045,13 @@ TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   SetWindowLongA(hwnd, 0, (DWORD)infoPtr);
 
+  infoPtr->hwndNotify      = ((LPCREATESTRUCTW)lParam)->hwndParent;
   infoPtr->uNumItem        = 0;
   infoPtr->uNumRows        = 0;
   infoPtr->uHItemPadding   = 6;
   infoPtr->uVItemPadding   = 3;
+  infoPtr->uHItemPadding_s = 6;
+  infoPtr->uVItemPadding_s = 3;
   infoPtr->hFont           = 0;
   infoPtr->items           = 0;
   infoPtr->hcurArrow       = LoadCursorA (0, (LPSTR)IDC_ARROW);
@@ -3044,7 +3091,7 @@ TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
       nmttc.hdr.code = NM_TOOLTIPSCREATED;
       nmttc.hwndToolTips = infoPtr->hwndToolTip;
 
-      SendMessageA (GetParent (hwnd), WM_NOTIFY,
+      SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
 		    (WPARAM)GetWindowLongA(hwnd, GWL_ID), (LPARAM)&nmttc);
     }
   }
@@ -3113,6 +3160,7 @@ TAB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
 
     TRACE("hwnd=%p msg=%x wParam=%x lParam=%lx\n", hwnd, uMsg, wParam, lParam);
     if (!TAB_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
@@ -3243,7 +3291,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_LButtonUp (hwnd, wParam, lParam);
 
     case WM_NOTIFY:
-      return SendMessageA(GetParent(hwnd), WM_NOTIFY, wParam, lParam);
+      return SendMessageA(infoPtr->hwndNotify, WM_NOTIFY, wParam, lParam);
 
     case WM_RBUTTONDOWN:
       return TAB_RButtonDown (hwnd, wParam, lParam);

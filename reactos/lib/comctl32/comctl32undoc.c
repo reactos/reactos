@@ -2303,15 +2303,8 @@ DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
 	idFrom = lpHdr->idFrom;
     }
     else {
-	if (lpNotify->hwndFrom) {
-	    HWND hwndParent = GetParent (lpNotify->hwndFrom);
-	    if (hwndParent) {
-		hwndParent = GetWindow (lpNotify->hwndFrom, GW_OWNER);
-		/* the following is done even if the return from above
-		 * is zero.  GLA 12/2001 */
-		idFrom = GetDlgCtrlID (lpNotify->hwndFrom);
-	    }
-	}
+	if (lpNotify->hwndFrom)
+	    idFrom = GetDlgCtrlID (lpNotify->hwndFrom);
 
 	lpNmh = (lpHdr) ? lpHdr : &nmhdr;
 

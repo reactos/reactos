@@ -44,6 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 typedef struct
 {
 	HWND hMonthCal;
+	HWND hwndNotify;
 	HWND hUpdown;
 	SYSTEMTIME date;
 	BOOL dateValid;
@@ -895,11 +896,8 @@ DATETIME_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
     else
         ShowWindow(infoPtr->hMonthCal, SW_SHOW);
 
-    TRACE ("dt:%p mc:%p mc parent:%p, desktop:%p, mcpp:%p\n",
-              hwnd,infoPtr->hMonthCal,
-              GetParent (infoPtr->hMonthCal),
-              GetDesktopWindow (),
-              GetParent (GetParent (infoPtr->hMonthCal)));
+    TRACE ("dt:%p mc:%p mc parent:%p, desktop:%p\n",
+           hwnd, infoPtr->hMonthCal, infoPtr->hwndNotify, GetDesktopWindow ());
     DATETIME_SendSimpleNotify (hwnd, DTN_DROPDOWN);
   }
 
@@ -1119,7 +1117,7 @@ DATETIME_SendDateTimeChangeNotify (HWND hwnd)
    dtdtc.dwFlags = GDT_VALID;
 
  MONTHCAL_CopyTime (&infoPtr->date, &dtdtc.st);
- return (BOOL) SendMessageA (GetParent (hwnd), WM_NOTIFY,
+ return (BOOL) SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
                               (WPARAM)dtdtc.nmhdr.idFrom, (LPARAM)&dtdtc);
 }
 
@@ -1127,6 +1125,7 @@ DATETIME_SendDateTimeChangeNotify (HWND hwnd)
 static BOOL
 DATETIME_SendSimpleNotify (HWND hwnd, UINT code)
 {
+    DATETIME_INFO *infoPtr = DATETIME_GetInfoPtr (hwnd);
     NMHDR nmhdr;
 
     TRACE("%x\n",code);
@@ -1134,7 +1133,7 @@ DATETIME_SendSimpleNotify (HWND hwnd, UINT code)
     nmhdr.idFrom   = GetWindowLongA( hwnd, GWL_ID);
     nmhdr.code     = code;
 
-    return (BOOL) SendMessageA (GetParent (hwnd), WM_NOTIFY,
+    return (BOOL) SendMessageA (infoPtr->hwndNotify, WM_NOTIFY,
                                 (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
 }
 
@@ -1225,6 +1224,7 @@ DATETIME_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   infoPtr->fieldRect = (RECT *) Alloc (32*sizeof(RECT));
   infoPtr->buflen = (int *) Alloc (32*sizeof(int));
   infoPtr->nrFieldsAllocated = 32;
+  infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
 
   DATETIME_SetFormat (hwnd, 0, 0);
 
@@ -1232,7 +1232,7 @@ DATETIME_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->hMonthCal = CreateWindowExA (0,"SysMonthCal32", 0,
 	WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS,
 	0, 0, 0, 0,
-	GetParent(hwnd),
+	infoPtr->hwndNotify,
 	0, 0, 0);
 
   /* initialize info structure */

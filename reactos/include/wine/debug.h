@@ -2,14 +2,22 @@
 #define __WINE_DEBUG_H
 
 #include "../roscfg.h"
-#if ! defined(DBG) || ! defined(YDEBUG)
-#define NDEBUG
-#endif
-#include "../debug.h"
 #include <stdarg.h>
 #include <wchar.h>
 
 ULONG DbgPrint(PCH Format,...);
+
+#define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
+
+#if !defined(DBG) || !defined(YDEBUG)
+#ifdef __GNUC__
+#define DPRINT(args...)
+#else
+#define DPRINT
+#endif
+#else
+#define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
+#endif
 
 struct _GUID;
 

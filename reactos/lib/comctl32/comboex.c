@@ -64,6 +64,7 @@ typedef struct
 {
     HIMAGELIST   himl;
     HWND         hwndSelf;         /* my own hwnd */
+    HWND         hwndNotify;       /* my parent hwnd */
     HWND         hwndCombo;
     HWND         hwndEdit;
     WNDPROC      prevEditWndProc;  /* previous Edit WNDPROC value */
@@ -190,11 +191,9 @@ static INT COMBOEX_Notify (COMBOEX_INFO *infoPtr, INT code, NMHDR *hdr)
     hdr->hwndFrom = infoPtr->hwndSelf;
     hdr->code = code;
     if (infoPtr->NtfUnicode)
-	return SendMessageW (GetParent(infoPtr->hwndSelf), WM_NOTIFY, 0,
-			     (LPARAM)hdr);
+	return SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, 0, (LPARAM)hdr);
     else
-	return SendMessageA (GetParent(infoPtr->hwndSelf), WM_NOTIFY, 0,
-			     (LPARAM)hdr);
+	return SendMessageA (infoPtr->hwndNotify, WM_NOTIFY, 0, (LPARAM)hdr);
 }
 
 
@@ -935,8 +934,9 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
     infoPtr->selected = -1;
 
     infoPtr->unicode = IsWindowUnicode (hwnd);
+    infoPtr->hwndNotify = cs->hwndParent;
 
-    i = SendMessageW(GetParent (hwnd), WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
+    i = SendMessageW(infoPtr->hwndNotify, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
     if ((i != NFR_ANSI) && (i != NFR_UNICODE)) {
 	WARN("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n", i);
 	i = NFR_ANSI;
@@ -1079,7 +1079,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
     INT cursel, n, oldItem;
     NMCBEENDEDITW cbeend;
     DWORD oldflags;
-    HWND parent = GetParent (infoPtr->hwndSelf);
+    HWND parent = infoPtr->hwndNotify;
 
     TRACE("for command %d\n", command);
 
@@ -1587,7 +1587,7 @@ static LRESULT COMBOEX_NCCreate (HWND hwnd)
 static LRESULT COMBOEX_NotifyFormat (COMBOEX_INFO *infoPtr, LPARAM lParam)
 {
     if (lParam == NF_REQUERY) {
-	INT i = SendMessageW(GetParent (infoPtr->hwndSelf),
+	INT i = SendMessageW(infoPtr->hwndNotify,
 			 WM_NOTIFYFORMAT, (WPARAM)infoPtr->hwndSelf, NF_QUERY);
 	infoPtr->NtfUnicode = (i == NFR_UNICODE) ? 1 : 0;
     }
@@ -2070,7 +2070,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    /* strings not equal -- indicate edit has changed */
 		    infoPtr->flags |= WCBE_EDITCHG;
 		}
-		SendMessageW ( GetParent(infoPtr->hwndSelf), WM_COMMAND,
+		SendMessageW ( infoPtr->hwndNotify, WM_COMMAND,
 			       MAKEWPARAM(GetDlgCtrlID (infoPtr->hwndSelf),
 					  CBN_EDITCHANGE),
 			       (LPARAM)infoPtr->hwndSelf);
@@ -2236,9 +2236,9 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_NOTIFY:
 	    if (infoPtr->NtfUnicode)
-		return SendMessageW (GetParent (hwnd), uMsg, wParam, lParam);
+		return SendMessageW (infoPtr->hwndNotify, uMsg, wParam, lParam);
 	    else
-		return SendMessageA (GetParent (hwnd), uMsg, wParam, lParam);
+		return SendMessageA (infoPtr->hwndNotify, uMsg, wParam, lParam);
 
 
 /*   Window messages we need to process */

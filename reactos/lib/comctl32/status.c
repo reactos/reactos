@@ -67,6 +67,7 @@ typedef struct
 typedef struct
 {
     HWND              Self;
+    HWND              Notify;
     WORD              numParts;
     UINT              height;
     BOOL              simple;
@@ -170,8 +171,7 @@ STATUSBAR_DrawPart (HDC hdc, const STATUSWINDOWPART *part, const STATUSWINDOWINF
 	    dis.hDC = hdc;
 	    dis.rcItem = r;
 	    dis.itemData = (INT)part->text;
-	    SendMessageW (GetParent (infoPtr->Self), WM_DRAWITEM,
-		    (WPARAM)dis.CtlID, (LPARAM)&dis);
+	    SendMessageW (infoPtr->Notify, WM_DRAWITEM, (WPARAM)dis.CtlID, (LPARAM)&dis);
     }
     else
 	{
@@ -561,7 +561,7 @@ STATUSBAR_SetMinHeight (STATUSWINDOWINFO *infoPtr, INT height)
 	INT  width, x, y;
 	RECT parent_rect;
 
-	GetClientRect (GetParent (infoPtr->Self), &parent_rect);
+	GetClientRect (infoPtr->Notify, &parent_rect);
 	infoPtr->height = height + VERT_BORDER;
 	width = parent_rect.right - parent_rect.left;
 	x = parent_rect.left;
@@ -779,7 +779,7 @@ STATUSBAR_Simple (STATUSWINDOWINFO *infoPtr, BOOL simple)
     nmhdr.hwndFrom = infoPtr->Self;
     nmhdr.idFrom = GetWindowLongW (infoPtr->Self, GWL_ID);
     nmhdr.code = SBN_SIMPLEMODECHANGE;
-    SendMessageW (GetParent (infoPtr->Self), WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    SendMessageW (infoPtr->Notify, WM_NOTIFY, 0, (LPARAM)&nmhdr);
     InvalidateRect(infoPtr->Self, NULL, FALSE);
     return TRUE;
 }
@@ -829,13 +829,14 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     SetWindowLongW (hwnd, 0, (DWORD)infoPtr);
 
     infoPtr->Self = hwnd;
+    infoPtr->Notify = lpCreate->hwndParent;
     infoPtr->numParts = 1;
     infoPtr->parts = 0;
     infoPtr->simple = FALSE;
     infoPtr->clrBk = CLR_DEFAULT;
     infoPtr->hFont = 0;
 
-    i = SendMessageW(GetParent (hwnd), WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
+    i = SendMessageW(infoPtr->Notify, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
     infoPtr->NtfUnicode = (i == NFR_UNICODE);
 
     GetClientRect (hwnd, &rect);
@@ -925,7 +926,7 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
     }
 
     if (!(dwStyle & CCS_NORESIZE)) { /* don't resize wnd if it doesn't want it ! */
-        GetClientRect (GetParent (hwnd), &rect);
+        GetClientRect (infoPtr->Notify, &rect);
         width = rect.right - rect.left;
         infoPtr->height = textHeight + 4 + VERT_BORDER;
         SetWindowPos(hwnd, 0, lpCreate->x, lpCreate->y - 1,
@@ -1076,7 +1077,7 @@ STATUSBAR_WMSize (STATUSWINDOWINFO *infoPtr, WORD flags)
     if (GetWindowLongW(infoPtr->Self, GWL_STYLE) & CCS_NORESIZE) return FALSE;
 
     /* width and height don't apply */
-    GetClientRect (GetParent(infoPtr->Self), &parent_rect);
+    GetClientRect (infoPtr->Notify, &parent_rect);
     width = parent_rect.right - parent_rect.left;
     x = parent_rect.left;
     y = parent_rect.bottom - infoPtr->height;
@@ -1102,13 +1103,14 @@ STATUSBAR_NotifyFormat (STATUSWINDOWINFO *infoPtr, HWND from, INT cmd)
 static LRESULT
 STATUSBAR_SendNotify (HWND hwnd, UINT code)
 {
+    STATUSWINDOWINFO *infoPtr = STATUSBAR_GetInfoPtr(hwnd);
     NMHDR  nmhdr;
 
     TRACE("code %04x\n", code);
     nmhdr.hwndFrom = hwnd;
     nmhdr.idFrom = GetWindowLongW (hwnd, GWL_ID);
     nmhdr.code = code;
-    SendMessageW (GetParent (hwnd), WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    SendMessageW (infoPtr->Notify, WM_NOTIFY, 0, (LPARAM)&nmhdr);
     return 0;
 }
 
@@ -1222,7 +1224,7 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_NCLBUTTONUP:
 	case WM_NCLBUTTONDOWN:
-    	    PostMessageW (GetParent (hwnd), msg, wParam, lParam);
+    	    PostMessageW (infoPtr->Notify, msg, wParam, lParam);
 	    return 0;
 
 	case WM_NOTIFYFORMAT:

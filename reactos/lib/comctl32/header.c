@@ -199,7 +199,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	dis.rcItem     = r;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
-	SendMessageA (GetParent (hwnd), WM_DRAWITEM,
+	SendMessageA (infoPtr->hwndNotify, WM_DRAWITEM,
 			(WPARAM)dis.CtlID, (LPARAM)&dis);
         if (oldBkMode != TRANSPARENT)
             SetBkMode(hdc, oldBkMode);
@@ -1287,7 +1287,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr = (HEADER_INFO *)Alloc (sizeof(HEADER_INFO));
     SetWindowLongA (hwnd, 0, (DWORD)infoPtr);
 
-    infoPtr->hwndNotify = GetParent(hwnd);
+    infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
     infoPtr->uNumItem = 0;
     infoPtr->hFont = 0;
     infoPtr->items = 0;

@@ -104,6 +104,7 @@ typedef struct
     RECT days;		/* calendar area */
     RECT weeknums;	/* week numbers at left side */
     RECT todayrect;	/* `today: xx/xx/xx' text rect */
+    HWND hwndNotify;    /* Window to receive the notifications */
     HWND hWndYearEdit;  /* Window Handle of edit box to handle years */
     HWND hWndYearUpDown;/* Window Handle of updown box to handle years */
 } MONTHCAL_INFO, *LPMONTHCAL_INFO;
@@ -1304,7 +1305,7 @@ static void MONTHCAL_GoToNextMonth(HWND hwnd, MONTHCAL_INFO *infoPtr)
     nmds.cDayState	= infoPtr->monthRange;
     nmds.prgDayState	= Alloc(infoPtr->monthRange * sizeof(MONTHDAYSTATE));
 
-    SendMessageA(GetParent(hwnd), WM_NOTIFY,
+    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
     (WPARAM)nmds.nmhdr.idFrom, (LPARAM)&nmds);
     for(i=0; i<infoPtr->monthRange; i++)
       infoPtr->monthdayState[i] = nmds.prgDayState[i];
@@ -1335,7 +1336,7 @@ static void MONTHCAL_GoToPrevMonth(HWND hwnd,  MONTHCAL_INFO *infoPtr)
     nmds.prgDayState	= Alloc
                         (infoPtr->monthRange * sizeof(MONTHDAYSTATE));
 
-    SendMessageA(GetParent(hwnd), WM_NOTIFY,
+    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
         (WPARAM)nmds.nmhdr.idFrom, (LPARAM)&nmds);
     for(i=0; i<infoPtr->monthRange; i++)
        infoPtr->monthdayState[i] = nmds.prgDayState[i];
@@ -1489,7 +1490,7 @@ MONTHCAL_LButtonDown(HWND hwnd, WPARAM wParam, LPARAM lParam)
     MONTHCAL_CopyTime(&nmsc.stSelStart, &infoPtr->minSel);
     MONTHCAL_CopyTime(&nmsc.stSelEnd, &infoPtr->maxSel);
 
-    SendMessageA(GetParent(hwnd), WM_NOTIFY,
+    SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
            (WPARAM)nmsc.nmhdr.idFrom,(LPARAM)&nmsc);
 
     MONTHCAL_CopyTime(&ht.st, &selArray[0]);
@@ -1555,9 +1556,9 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
   nmhdr.hwndFrom = hwnd;
   nmhdr.idFrom   = GetWindowLongA( hwnd, GWL_ID);
   nmhdr.code     = NM_RELEASEDCAPTURE;
-  TRACE("Sent notification from %p to %p\n", hwnd, GetParent(hwnd));
+  TRACE("Sent notification from %p to %p\n", hwnd, infoPtr->hwndNotify);
 
-  SendMessageA(GetParent(hwnd), WM_NOTIFY,
+  SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
                                 (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
 
   nmsc.nmhdr.hwndFrom = hwnd;
@@ -1566,7 +1567,7 @@ MONTHCAL_LButtonUp(HWND hwnd, WPARAM wParam, LPARAM lParam)
   MONTHCAL_CopyTime(&nmsc.stSelStart, &infoPtr->minSel);
   MONTHCAL_CopyTime(&nmsc.stSelEnd, &infoPtr->maxSel);
 
-  SendMessageA(GetParent(hwnd), WM_NOTIFY,
+  SendMessageA(infoPtr->hwndNotify, WM_NOTIFY,
            (WPARAM)nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
 
   /* redraw if necessary */
@@ -1880,6 +1881,8 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
     ERR( "pointer assignment error!\n");
     return 0;
   }
+
+  infoPtr->hwndNotify = ((LPCREATESTRUCTW)lParam)->hwndParent;
 
   infoPtr->hFont = GetStockObject(DEFAULT_GUI_FONT);
   GetObjectA(infoPtr->hFont, sizeof(LOGFONTA), &logFont);

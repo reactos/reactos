@@ -61,6 +61,7 @@ typedef struct
 typedef struct
 {
     HWND	Self;
+    HWND	Notify;
     IPPART_INFO	Part[4];
 } IPADDRESS_INFO;
 
@@ -82,7 +83,7 @@ static LRESULT IPADDRESS_Notify (IPADDRESS_INFO *infoPtr, UINT command)
 
     TRACE("(command=%x)\n", command);
 
-    return SendMessageW (GetParent (hwnd), WM_COMMAND,
+    return SendMessageW (infoPtr->Notify, WM_COMMAND,
              MAKEWPARAM (GetWindowLongW (hwnd, GWL_ID), command), (LPARAM)hwnd);
 }
 
@@ -99,7 +100,7 @@ static INT IPADDRESS_IPNotify (IPADDRESS_INFO *infoPtr, INT field, INT value)
     nmip.iField = field;
     nmip.iValue = value;
 
-    SendMessageW (GetParent (infoPtr->Self), WM_NOTIFY,
+    SendMessageW (infoPtr->Notify, WM_NOTIFY,
                   (WPARAM)nmip.hdr.idFrom, (LPARAM)&nmip);
 
     TRACE("<-- %d\n", nmip.iValue);
@@ -149,7 +150,7 @@ static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
 }
 
 
-static LRESULT IPADDRESS_Create (HWND hwnd)
+static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
 {
     IPADDRESS_INFO *infoPtr;
     RECT rcClient, edit;
@@ -173,6 +174,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd)
     edit.bottom = rcClient.bottom - 2;
 
     infoPtr->Self = hwnd;
+    infoPtr->Notify = lpCreate->hwndParent;
 
     for (i = 0; i < 4; i++) {
 	IPPART_INFO* part = &infoPtr->Part[i];
@@ -508,7 +510,7 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
 	case WM_CREATE:
-	    return IPADDRESS_Create (hwnd);
+	    return IPADDRESS_Create (hwnd, (LPCREATESTRUCTA)lParam);
 
 	case WM_DESTROY:
 	    return IPADDRESS_Destroy (infoPtr);

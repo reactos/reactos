@@ -57,7 +57,8 @@ typedef struct
    /* reference to input stream (file or resource) */
    HGLOBAL 		hRes;
    HMMIO		hMMio;	/* handle to mmio stream */
-   HWND			hWnd;
+   HWND			hwndSelf;
+   HWND			hwndNotify;
    /* information on the loaded AVI file */
    MainAVIHeader	mah;
    AVIStreamHeader	ash;
@@ -88,9 +89,9 @@ typedef struct
 
 static void ANIMATE_Notify(ANIMATE_INFO* infoPtr, UINT notif)
 {
-    SendMessageA(GetParent(infoPtr->hWnd), WM_COMMAND,
-		 MAKEWPARAM(GetDlgCtrlID(infoPtr->hWnd), notif),
-		 (LPARAM)infoPtr->hWnd);
+    SendMessageA(infoPtr->hwndNotify, WM_COMMAND,
+		 MAKEWPARAM(GetDlgCtrlID(infoPtr->hwndSelf), notif),
+		 (LPARAM)infoPtr->hwndSelf);
 }
 
 static BOOL ANIMATE_LoadResA(ANIMATE_INFO *infoPtr, HINSTANCE hInst, LPSTR lpName)
@@ -149,7 +150,7 @@ static LRESULT ANIMATE_DoStop(ANIMATE_INFO *infoPtr)
 	    infoPtr->hThread = 0;
     }
     if (infoPtr->uTimer) {
-	KillTimer(infoPtr->hWnd, infoPtr->uTimer);
+	KillTimer(infoPtr->hwndSelf, infoPtr->uTimer);
 	infoPtr->uTimer = 0;
     }
 
@@ -202,7 +203,7 @@ static void ANIMATE_Free(ANIMATE_INFO *infoPtr)
             infoPtr->hbmPrevFrame = 0;
         }
 	infoPtr->indata = infoPtr->outdata = NULL;
-	infoPtr->hWnd = 0;
+	infoPtr->hwndSelf = 0;
 	infoPtr->hMMio = 0;
 
 	memset(&infoPtr->mah, 0, sizeof(infoPtr->mah));
@@ -297,7 +298,7 @@ static LRESULT ANIMATE_PaintFrame(ANIMATE_INFO* infoPtr, HDC hDC)
         infoPtr->transparentColor = GetPixel(hdcMem,0,0);
     }
 
-    if(GetWindowLongA(infoPtr->hWnd, GWL_STYLE) & ACS_TRANSPARENT)
+    if(GetWindowLongA(infoPtr->hwndSelf, GWL_STYLE) & ACS_TRANSPARENT)
     {
         HDC hdcFinal = CreateCompatibleDC(hDC);
         HBITMAP hbmFinal = CreateCompatibleBitmap(hDC,nWidth, nHeight);
@@ -322,11 +323,11 @@ static LRESULT ANIMATE_PaintFrame(ANIMATE_INFO* infoPtr, HDC hDC)
         infoPtr->hbmPrevFrame = hbmFinal;
          }
 
-    if (GetWindowLongA(infoPtr->hWnd, GWL_STYLE) & ACS_CENTER)
+    if (GetWindowLongA(infoPtr->hwndSelf, GWL_STYLE) & ACS_CENTER)
     {
        RECT rect;
 
-       GetWindowRect(infoPtr->hWnd, &rect);
+       GetWindowRect(infoPtr->hwndSelf, &rect);
        nOffsetX = ((rect.right - rect.left) - nWidth)/2;
        nOffsetY = ((rect.bottom - rect.top) - nHeight)/2;
     }
@@ -356,9 +357,9 @@ static LRESULT ANIMATE_DrawFrame(ANIMATE_INFO* infoPtr)
 	return FALSE;
     }
 
-    if ((hDC = GetDC(infoPtr->hWnd)) != 0) {
+    if ((hDC = GetDC(infoPtr->hwndSelf)) != 0) {
 	ANIMATE_PaintFrame(infoPtr, hDC);
-	ReleaseDC(infoPtr->hWnd, hDC);
+	ReleaseDC(infoPtr->hwndSelf, hDC);
     }
 
     if (infoPtr->currFrame++ >= infoPtr->nToFrame) {
@@ -387,15 +388,15 @@ static DWORD CALLBACK ANIMATE_AnimationThread(LPVOID ptr_)
 
     while(1)
     {
-        if(GetWindowLongA(infoPtr->hWnd, GWL_STYLE) & ACS_TRANSPARENT)
+        if(GetWindowLongA(infoPtr->hwndSelf, GWL_STYLE) & ACS_TRANSPARENT)
         {
-            hDC = GetDC(infoPtr->hWnd);
+            hDC = GetDC(infoPtr->hwndSelf);
 	    /* sometimes the animation window will be destroyed in between
 	     * by the main program, so a ReleaseDC() error msg is possible */
-            infoPtr->hbrushBG = (HBRUSH)SendMessageA(GetParent(infoPtr->hWnd),
+            infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
 					     WM_CTLCOLORSTATIC, (WPARAM)hDC,
-					     (LPARAM)infoPtr->hWnd);
-            ReleaseDC(infoPtr->hWnd,hDC);
+					     (LPARAM)infoPtr->hwndSelf);
+            ReleaseDC(infoPtr->hwndSelf,hDC);
         }
 
         EnterCriticalSection(&infoPtr->cs);
@@ -689,7 +690,7 @@ static LRESULT ANIMATE_OpenA(HWND hWnd, WPARAM wParam, LPARAM lParam)
     HINSTANCE hInstance = (HINSTANCE)wParam;
 
     ANIMATE_Free(infoPtr);
-    infoPtr->hWnd = hWnd;
+    infoPtr->hwndSelf = hWnd;
 
     if (!lParam) {
 	TRACE("Closing avi!\n");
@@ -787,13 +788,14 @@ static LRESULT ANIMATE_Create(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	return 0;
     }
 
-    TRACE("Animate style=0x%08lx, parent=%08lx\n", GetWindowLongA(hWnd, GWL_STYLE), (DWORD)GetParent(hWnd));
-
     /* store crossref hWnd <-> info structure */
     SetWindowLongA(hWnd, 0, (DWORD)infoPtr);
-    infoPtr->hWnd = hWnd;
+    infoPtr->hwndSelf = hWnd;
+    infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
     infoPtr->transparentColor = ANIMATE_COLOR_NONE;
     infoPtr->hbmPrevFrame = 0;
+
+    TRACE("Animate style=0x%08lx, parent=%08lx\n", GetWindowLongA(hWnd, GWL_STYLE), (DWORD)infoPtr->hwndNotify);
 
     InitializeCriticalSection(&infoPtr->cs);
 
@@ -819,12 +821,13 @@ static LRESULT ANIMATE_Destroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 static LRESULT ANIMATE_EraseBackground(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+    ANIMATE_INFO *infoPtr = ANIMATE_GetInfoPtr(hWnd);
     RECT rect;
     HBRUSH hBrush = 0;
 
     if(GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
     {
-        hBrush = (HBRUSH)SendMessageA(GetParent(hWnd),WM_CTLCOLORSTATIC,
+        hBrush = (HBRUSH)SendMessageA(infoPtr->hwndNotify,WM_CTLCOLORSTATIC,
 				      wParam, (LPARAM)hWnd);
     }
 
@@ -882,7 +885,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
     	if (GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
         {
             ANIMATE_INFO* infoPtr = ANIMATE_GetInfoPtr(hWnd);
-            infoPtr->hbrushBG = (HBRUSH)SendMessageA(GetParent(hWnd),
+            infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
 						     WM_CTLCOLORSTATIC,
 						     wParam, (LPARAM)hWnd);
         }
@@ -902,7 +905,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	    	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
 
             if (GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
-                infoPtr->hbrushBG = (HBRUSH)SendMessageA(GetParent(hWnd),
+                infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
 							 WM_CTLCOLORSTATIC,
 							 wParam, (LPARAM)hWnd);
 
