@@ -33,8 +33,9 @@
 #define jmp_buf _SEHJmpBuf_t
 #else
 #include <setjmp.h>
-#include <stddef.h>
 #endif
+
+#include <stddef.h>
 
 typedef struct __SEHFrame
 {
