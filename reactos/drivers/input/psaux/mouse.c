@@ -581,7 +581,7 @@ BOOLEAN mouse_init (PDEVICE_OBJECT DeviceObject)
   
   DeviceExtension->psmouse_noext = 0; // Set this to 1 if you don't want to detect enhanced mice
   DeviceExtension->psmouse_smartscroll = PSMOUSE_LOGITECH_SMARTSCROLL;
-  DeviceExtension->Resolution = 600; // Set this to the resolution of the mouse
+  DeviceExtension->Resolution = 400; // Set this to the resolution of the mouse
   
   DeviceExtension->InputDataCount[0] = 0;
   DeviceExtension->InputDataCount[1] = 0;
