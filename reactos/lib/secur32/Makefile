@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2000/08/18 22:27:02 dwelch Exp $
+# $Id: Makefile,v 1.3 2000/08/29 20:10:49 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -17,7 +17,7 @@ DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 
-OBJECTS = lsa.o dllmain.o
+OBJECTS = lsa.o dllmain.o $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = $(OBJECTS) \
