@@ -30,11 +30,14 @@ extern "C" {
 #define  IDE_RESET_BUSY_TIMEOUT    31
 #define  IDE_RESET_DRDY_TIMEOUT    120
 
-#define  IDE_REG_ALT_STATUS     0x0006
-#define  IDE_REG_DEV_CNTRL      0x0006  /* device control register */
+// Control Block offsets and masks
+#define  IDE_REG_ALT_STATUS     0x0000
+#define  IDE_REG_DEV_CNTRL      0x0000  /* device control register */
 #define    IDE_DC_SRST            0x04  /* drive reset (both drives) */
 #define    IDE_DC_nIEN            0x02  /* IRQ enable (active low) */
-#define  IDE_REG_DRV_ADDR       0x0007
+#define  IDE_REG_DRV_ADDR       0x0001
+
+// Command Block offsets and masks
 #define  IDE_REG_DATA_PORT      0x0000
 #define  IDE_REG_ERROR          0x0001  /* error register */
 #define    IDE_ER_AMNF            0x01  /* addr mark not found */

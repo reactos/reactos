@@ -3,6 +3,8 @@
 
 SECTION .text
 
+BITS 32
+
 GLOBAL _NtAcceptConnectPort
 GLOBAL _ZwAcceptConnectPort
 _NtAcceptConnectPort:
@@ -1892,4 +1894,166 @@ _ZwYieldExecution:
 	lea	edx,[esp+4]
 	int	2Eh
 	ret	0
+
+GLOBAL _wcscat
+GLOBAL _Rtlwcscat
+_wcscat:
+_Rtlwcscat:
+	mov	eax,210
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcschr
+GLOBAL _Rtlwcschr
+_wcschr:
+_Rtlwcschr:
+	mov	eax,211
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcscmp
+GLOBAL _Rtlwcscmp
+_wcscmp:
+_Rtlwcscmp:
+	mov	eax,212
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcscpy
+GLOBAL _Rtlwcscpy
+_wcscpy:
+_Rtlwcscpy:
+	mov	eax,213
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcscspn
+GLOBAL _Rtlwcscspn
+_wcscspn:
+_Rtlwcscspn:
+	mov	eax,214
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcsicmp
+GLOBAL _Rtlwcsicmp
+_wcsicmp:
+_Rtlwcsicmp:
+	mov	eax,215
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcslen
+GLOBAL _Rtlwcslen
+_wcslen:
+_Rtlwcslen:
+	mov	eax,216
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	4
+
+GLOBAL _wcsncat
+GLOBAL _Rtlwcsncat
+_wcsncat:
+_Rtlwcsncat:
+	mov	eax,217
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	12
+
+GLOBAL _wcsncmp
+GLOBAL _Rtlwcsncmp
+_wcsncmp:
+_Rtlwcsncmp:
+	mov	eax,218
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	12
+
+GLOBAL _wcsncpy
+GLOBAL _Rtlwcsncpy
+_wcsncpy:
+_Rtlwcsncpy:
+	mov	eax,219
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	12
+
+GLOBAL _wcsnicmp
+GLOBAL _Rtlwcsnicmp
+_wcsnicmp:
+_Rtlwcsnicmp:
+	mov	eax,220
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	12
+
+GLOBAL _wcsnlen
+GLOBAL _Rtlwcsnlen
+_wcsnlen:
+_Rtlwcsnlen:
+	mov	eax,221
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcspbrk
+GLOBAL _Rtlwcspbrk
+_wcspbrk:
+_Rtlwcspbrk:
+	mov	eax,222
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcsrchr
+GLOBAL _Rtlwcsrchr
+_wcsrchr:
+_Rtlwcsrchr:
+	mov	eax,223
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcsspn
+GLOBAL _Rtlwcsspn
+_wcsspn:
+_Rtlwcsspn:
+	mov	eax,224
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcsstr
+GLOBAL _Rtlwcsstr
+_wcsstr:
+_Rtlwcsstr:
+	mov	eax,225
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wcstok
+GLOBAL _Rtlwcstok
+_wcstok:
+_Rtlwcstok:
+	mov	eax,226
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	8
+
+GLOBAL _wstrlen
+GLOBAL _Rtlwstrlen
+_wstrlen:
+_Rtlwstrlen:
+	mov	eax,227
+	lea	edx,[esp+4]
+	int	2Eh
+	ret	4
 

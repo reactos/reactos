@@ -56,10 +56,17 @@ int process(FILE* in, FILE* out, FILE *out2)
 	     nr_args = (char *)strtok(NULL," \t");
 	     
 //	     printf("name %s value %d\n",name,value);
+#ifdef PARAMETERIZED_LIBS
 	     fprintf(out,"GLOBAL _%s@%s\n",name,nr_args);
 	     fprintf(out,"GLOBAL _%s@%s\n",name2,nr_args);
 	     fprintf(out,"_%s@%s:\n",name,nr_args);
 	     fprintf(out,"_%s@%s:\n",name2,nr_args);
+#else
+	     fprintf(out,"GLOBAL _%s\n",name);
+	     fprintf(out,"GLOBAL _%s\n",name2);
+	     fprintf(out,"_%s:\n",name);
+	     fprintf(out,"_%s:\n",name2);
+#endif
 	     fprintf(out,"\tmov\teax,%d\n",value);
 	     fprintf(out,"\tlea\tedx,[esp+4]\n");
 	     fprintf(out,"\tint\t2Eh\n");

@@ -74,7 +74,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 #include <internal/i386/io.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "ide.h"
@@ -237,7 +237,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   BOOLEAN        WeGotSomeDisks;
   int            ControllerIdx;
 
-  DPRINT("IDE Driver %s\n", VERSION);
+  DbgPrint("IDE Driver %s\n", VERSION);
 
     //  Export other driver entry points...
   DriverObject->DriverStartIo = IDEStartIo;
@@ -302,7 +302,7 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
       ControllerParams->ControlPortBase)) 
     {
       DPRINT("Could not find controller %d at %04lx\n",
-          ControllerIdx, ControllerParams->ControlPortBase);
+          ControllerIdx, ControllerParams->CommandPortBase);
       return FALSE;
     }
 
@@ -966,6 +966,11 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
     //  Initialize the DPC object here
   IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
+
+  if (Win32Alias != NULL)
+    {
+      DbgPrint("%s is %s %dMB\n", DeviceName, Win32Alias, (Size + 512) / 1024);
+    }
 
   return  RC;
 }

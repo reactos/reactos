@@ -63,14 +63,13 @@
  * PURPOSE: Current cursor position
  */
 static unsigned int cursorx=0, cursory=0;
-
 static unsigned int lines_seen = 0;
+static unsigned char CharAttribute = 0x17;
 
 //#define NR_ROWS     25
 #define NR_ROWS     50
 #define NR_COLUMNS  80
 #define VIDMEM_BASE 0xb8000
-
 
 /*
  * PURPOSE: Points to the base of text mode video memory
@@ -185,19 +184,19 @@ static void putchar(char c)
      {
       case '\n':
 	cursory++;
-	cursorx=0;
+	cursorx = 0;
         lines_seen++;
 	break;
 	
       default:
-	vidmem[(cursorx*2) + (cursory*80*2)]=c;
-        vidmem[(cursorx*2) + (cursory*80*2)+1]=0x17;
+	vidmem[(cursorx * 2) + (cursory * 80 * 2)] = c;
+        vidmem[(cursorx * 2) + (cursory * 80 * 2) + 1] = CharAttribute;
 	cursorx++;
-	if (cursorx>=NR_COLUMNS)
+	if (cursorx >= NR_COLUMNS)
 	  {
 	     cursory++;
              lines_seen++;
-	     cursorx=0;
+	     cursorx = 0;
 	  }
      }
    
@@ -207,10 +206,10 @@ static void putchar(char c)
         char str[] = "--- press escape to continue";
 
         lines_seen = 0;
-        for (i=0;str[i]!=0;i++)
+        for (i = 0; str[i] != 0; i++)
         {
-                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2]=str[i];
-                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2+1]=0x37; // 17 for white on blue 37
+                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2] = str[i];
+                vidmem[NR_COLUMNS*(NR_ROWS-1)*2+i*2+1] = CharAttribute;
         }
 
         while (inb_p(0x60)!=0x81);
@@ -218,26 +217,33 @@ static void putchar(char c)
    }
    #endif
    
-   if (cursory>=NR_ROWS)
-     {
-	memcpy(vidmem,&vidmem[NR_COLUMNS*2],
-	       NR_COLUMNS*(NR_ROWS-1)*2);
-	memset(&vidmem[NR_COLUMNS*(NR_ROWS-1)*2],0,NR_COLUMNS*2);
-        cursory=NR_ROWS-1;
-     }
+  if (cursory >= NR_ROWS)
+    {
+      unsigned short *LinePtr;
+
+      memcpy(vidmem, 
+             &vidmem[NR_COLUMNS * 2], 
+             NR_COLUMNS * (NR_ROWS - 1) * 2);
+      LinePtr = (unsigned short *) &vidmem[NR_COLUMNS * (NR_ROWS - 1) * 2];
+      for (i = 0; i < NR_COLUMNS; i++)
+        {
+          LinePtr[i] = CharAttribute << 8;
+        }
+      cursory = NR_ROWS - 1;
+    }
    
    /*
     * Set the cursor position
     */
    
-   offset=cursory*NR_COLUMNS;
-   offset=offset+cursorx;
+   offset = cursory * NR_COLUMNS;
+   offset = offset + cursorx;
    
-   outb_p(CRTC_COMMAND,CRTC_CURLO);
-   outb_p(CRTC_DATA,offset);
-   outb_p(CRTC_COMMAND,CRTC_CURHI);
-   offset>>=8;
-   outb_p(CRTC_DATA,offset);
+   outb_p(CRTC_COMMAND, CRTC_CURLO);
+   outb_p(CRTC_DATA, offset);
+   outb_p(CRTC_COMMAND, CRTC_CURHI);
+   offset >>= 8;
+   outb_p(CRTC_DATA, offset);
 
 }
 

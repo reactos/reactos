@@ -14,12 +14,7 @@
 #include <kernel32\thread.h>
 #include <wstring.h>
 #include <string.h>
-#include <stdlib.h>
-
-
-
-
-
+// RJJ: (we dont have it) #include <stdlib.h>
 
 /* system global and local atom tables */
 

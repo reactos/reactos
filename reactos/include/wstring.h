@@ -20,14 +20,14 @@ typedef unsigned short wchar_t;
 extern "C" {
 #endif
 
-//wchar_t * ___wcstok = NULL;
+extern wchar_t * ___wcstok;
 extern wchar_t * wcscpy(wchar_t *,const wchar_t *);
 extern wchar_t * wcsncpy(wchar_t *,const wchar_t *, __kernel_size_t);
 extern wchar_t * wcscat(wchar_t *, const wchar_t *);
 extern wchar_t * wcsncat(wchar_t *, const wchar_t *, __kernel_size_t);
 extern int wcscmp(const wchar_t *,const wchar_t *);
 extern int wcsncmp(const wchar_t *,const wchar_t *,__kernel_size_t);
-wchar_t* wcschr(wchar_t* str, wchar_t ch);
+wchar_t* wcschr(const wchar_t* str, wchar_t ch);
 extern wchar_t * wcsrchr(const wchar_t *,wchar_t);
 extern wchar_t * wcspbrk(const wchar_t *,const wchar_t *);
 extern wchar_t * wcstok(wchar_t *,const wchar_t *);
@@ -35,11 +35,13 @@ extern wchar_t * wcsstr(const wchar_t *,const wchar_t *);
 extern size_t wcsnlen(const wchar_t * s, size_t count);
 extern int wcsicmp(const wchar_t* cs,const wchar_t * ct);
 extern int wcsnicmp(const wchar_t* cs,const wchar_t * ct, size_t count);
+extern size_t wcscspn(const wchar_t *, const wchar_t *);
+extern size_t wcslen(const wchar_t *);
+extern size_t wcsspn(const wchar_t *, const wchar_t *);
 
+extern unsigned long wstrlen(PWSTR);
 WCHAR wtoupper(WCHAR c);
 WCHAR wtolower(WCHAR c);
-
-   
    
 #ifdef __cplusplus
 }
