@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.36 2003/11/08 11:19:47 navaraf Exp $
+ * $Id: dib.c,v 1.37 2003/12/07 10:31:56 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -430,7 +430,43 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
                        UINT  Usage,
                        DWORD  ROP)
 {
-  UNIMPLEMENTED;
+   HBITMAP hBitmap, hOldBitmap;
+   HDC hdcMem;
+
+   if (!Bits || !BitsInfo)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }	
+
+   hdcMem = NtGdiCreateCompatableDC(hDC);
+   hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
+                                         BitsInfo->bmiHeader.biHeight);
+   hOldBitmap = NtGdiSelectObject(hdcMem, hBitmap);
+
+   if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
+       BitsInfo->bmiHeader.biCompression == BI_RLE8)
+   {
+      /* copy existing bitmap from destination dc */
+      NtGdiStretchBlt(hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+                      SrcWidth, SrcHeight, hDC, XDest, YDest, DestWidth, DestHeight,
+                      ROP);
+   }
+
+   NtGdiSetDIBits(hdcMem, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
+                  BitsInfo, Usage);
+
+   /* Origin for DIBitmap may be bottom left (positive biHeight) or top
+      left (negative biHeight) */
+   NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
+                   hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+                   SrcWidth, SrcHeight, ROP);
+
+   NtGdiSelectObject(hdcMem, hOldBitmap);
+   NtGdiDeleteDC(hdcMem);
+   NtGdiDeleteObject(hBitmap);
+
+   return SrcHeight;
 }
 
 LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
