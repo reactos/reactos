@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.53 2002/01/26 06:20:16 phreak Exp $
+/* $Id: create.c,v 1.54 2002/04/01 22:18:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,7 +139,7 @@ IopCreateFile(PVOID			ObjectBody,
 		  DPRINT("Status %x\n", Status);
 		  if (!NT_SUCCESS(Status))
 		    {
-		       CPRINT("Failed to mount storage device (statux %x)\n",
+		       CPRINT("Failed to mount storage device (status %x)\n",
 			      Status);
 		       return (Status);
 		    }
