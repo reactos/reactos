@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.3 2001/06/17 20:19:45 ekohl Exp $
+/* $Id: sid.c,v 1.4 2001/11/22 02:37:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -181,44 +181,63 @@ InitializeSid (
 	return TRUE;
 }
 
-WINBOOL
-STDCALL
-IsValidSid (
-	PSID	pSid
-	)
+
+WINBOOL STDCALL
+IsValidSid(PSID pSid)
 {
-	return (WINBOOL)RtlValidSid (pSid);
+  return((WINBOOL)RtlValidSid(pSid));
 }
 
-WINBOOL
-STDCALL
-LookupAccountSidA (
-	LPCSTR		lpSystemName,
-	PSID		Sid, 
-	LPSTR		Name, 
-	LPDWORD		cbName, 
-	LPSTR		ReferencedDomainName, 
-	LPDWORD		cbReferencedDomainName, 
-	PSID_NAME_USE	peUse 
-	)
-{
-	return (FALSE);
-}
- 
 
-WINBOOL
-STDCALL
-LookupAccountSidW (
-	LPCWSTR		lpSystemName,
-	PSID		Sid, 
-	LPWSTR		Name, 
-	LPDWORD		cbName, 
-	LPWSTR		ReferencedDomainName, 
-	LPDWORD		cbReferencedDomainName, 
-	PSID_NAME_USE	peUse 
-	)
+WINBOOL STDCALL
+LookupAccountNameA(LPCSTR lpSystemName,
+		   LPCSTR lpAccountName,
+		   PSID Sid,
+		   LPDWORD cbSid,
+		   LPSTR DomainName,
+		   LPDWORD cbDomainName,
+		   PSID_NAME_USE peUse)
 {
-	return (FALSE);
+  return(FALSE);
 }
- 
+
+
+WINBOOL STDCALL
+LookupAccountNameW(LPCWSTR lpSystemName,
+		   LPCWSTR lpAccountName,
+		   PSID Sid,
+		   LPDWORD cbSid,
+		   LPWSTR DomainName,
+		   LPDWORD cbDomainName,
+		   PSID_NAME_USE peUse)
+{
+  return(FALSE);
+}
+
+
+WINBOOL STDCALL
+LookupAccountSidA(LPCSTR lpSystemName,
+		  PSID Sid,
+		  LPSTR Name,
+		  LPDWORD cbName,
+		  LPSTR ReferencedDomainName,
+		  LPDWORD cbReferencedDomainName,
+		  PSID_NAME_USE peUse)
+{
+  return(FALSE);
+}
+
+
+WINBOOL STDCALL
+LookupAccountSidW(LPCWSTR lpSystemName,
+		  PSID Sid,
+		  LPWSTR Name,
+		  LPDWORD cbName,
+		  LPWSTR ReferencedDomainName,
+		  LPDWORD cbReferencedDomainName,
+		  PSID_NAME_USE peUse)
+{
+  return(FALSE);
+}
+
 /* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 2001/10/21 19:06:42 chorns Exp $
+# $Id: makefile,v 1.21 2001/11/22 02:37:06 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,9 +21,10 @@ REGISTRY_OBJECTS=\
 	reg/reg.o
 
 SECURITY_OBJECTS=\
-	sec/lsa.o	\
-	sec/sec.o	\
 	sec/ac.o	\
+	sec/lsa.o	\
+	sec/misc.o	\
+	sec/sec.o	\
 	sec/sid.o
 
 SERVICE_OBJECTS=\

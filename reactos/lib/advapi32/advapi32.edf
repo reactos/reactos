@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.14 2001/09/01 19:39:23 rex Exp $
+; $Id: advapi32.edf,v 1.15 2001/11/22 02:37:05 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -21,8 +21,8 @@ AdjustTokenGroups=AdjustTokenGroups@24
 AdjustTokenPrivileges=AdjustTokenPrivileges@24
 AllocateAndInitializeSid=AllocateAndInitializeSid@44
 AllocateLocallyUniqueId=AllocateLocallyUniqueId@4
-;AreAllAccessesGranted=AreAllAccessesGranted@8
-;AreAnyAccessesGranted=AreAnyAccessesGranted@8
+AreAllAccessesGranted=AreAllAccessesGranted@8
+AreAnyAccessesGranted=AreAnyAccessesGranted@8
 ;BackupEventLogA=BackupEventLogA@8
 ;BackupEventLogW=BackupEventLogW@8
 ;BuildAccessRequestA=BuildAccessRequestA@12
@@ -135,7 +135,7 @@ GetAclInformation=GetAclInformation@16
 ;GetExplicitEntriesFromAclW=GetExplicitEntriesFromAclW@12
 ;GetFileSecurityA=GetFileSecurityA@20
 ;GetFileSecurityW=GetFileSecurityW@20
-;GetKernelObjectSecurity=GetKernelObjectSecurity@20
+GetKernelObjectSecurity=GetKernelObjectSecurity@20
 GetLengthSid=GetLengthSid@4
 ;GetMultipleTrusteeA=GetMultipleTrusteeA@4
 ;GetMultipleTrusteeOperationA=GetMultipleTrusteeOperationA@4
@@ -176,7 +176,7 @@ GetUserNameW=GetUserNameW@8
 ;I_ScSetServiceBitsW=I_ScSetServiceBitsW@20
 ;ImpersonateLoggedOnUser=ImpersonateLoggedOnUser@4
 ;ImpersonateNamedPipeClient=ImpersonateNamedPipeClient@4
-;ImpersonateSelf=ImpersonateSelf@4
+ImpersonateSelf=ImpersonateSelf@4
 InitializeAcl=InitializeAcl@12
 InitializeSecurityDescriptor=InitializeSecurityDescriptor@8
 InitializeSid=InitializeSid@12
@@ -191,8 +191,8 @@ IsValidSid=IsValidSid@4
 LockServiceDatabase=LockServiceDatabase@4
 ;LogonUserA=LogonUserA@24
 ;LogonUserW=LogonUserW@24
-;LookupAccountNameA=LookupAccountNameA@28
-;LookupAccountNameW=LookupAccountNameW@28
+LookupAccountNameA=LookupAccountNameA@28
+LookupAccountNameW=LookupAccountNameW@28
 LookupAccountSidA=LookupAccountSidA@28
 LookupAccountSidW=LookupAccountSidW@28
 LookupPrivilegeDisplayNameA=LookupPrivilegeDisplayNameA@20
@@ -252,7 +252,7 @@ LookupPrivilegeValueW=LookupPrivilegeValueW@12
 ;LsaStorePrivateData=LsaStorePrivateData@12
 MakeAbsoluteSD=MakeAbsoluteSD@44
 MakeSelfRelativeSD=MakeSelfRelativeSD@12
-;MapGenericMask=MapGenericMask@8
+MapGenericMask=MapGenericMask@8
 ;NTAccessMaskToProvAccessRights=NTAccessMaskToProvAccessRights@12
 ;NotifyBootConfigStatus=NotifyBootConfigStatus@4
 ;NotifyChangeEventLog=NotifyChangeEventLog@8
@@ -342,7 +342,7 @@ RegisterServiceCtrlHandlerW=RegisterServiceCtrlHandlerW@8
 ;ReplaceAllAccessRightsW
 ;ReportEventA=ReportEventA@36
 ;ReportEventW=ReportEventW@36
-;RevertToSelf=RevertToSelf@0
+RevertToSelf=RevertToSelf@0
 ;RevokeExplicitAccessRightsA=RevokeExplicitAccessRightsA@16
 ;RevokeExplicitAccessRightsW=RevokeExplicitAccessRightsW@16
 ;SetAccessRightsA=SetAccessRightsA@16
@@ -352,7 +352,7 @@ SetAclInformation=SetAclInformation@16
 ;SetEntriesInAclW=SetEntriesInAclW@16
 ;SetFileSecurityA=SetFileSecurityA@12
 ;SetFileSecurityW=SetFileSecurityW@12
-;SetKernelObjectSecurity=SetKernelObjectSecurity@12
+SetKernelObjectSecurity=SetKernelObjectSecurity@12
 ;SetNamedSecurityInfoA=SetNamedSecurityInfoA@28
 ;SetNamedSecurityInfoW=SetNamedSecurityInfoW@28
 ;SetPrivateObjectSecurity=SetPrivateObjectSecurity@20
