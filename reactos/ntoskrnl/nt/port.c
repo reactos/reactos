@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.7 1999/07/17 23:10:28 ea Exp $
+/* $Id: port.c,v 1.8 1999/10/16 12:38:53 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,9 +78,14 @@ NTSTATUS NiInitPort(VOID)
    return(STATUS_SUCCESS);
 }
 
+//NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
+//			      ACCESS_MASK DesiredAccess,
+//			      POBJECT_ATTRIBUTES ObjectAttributes)
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes)
+			      POBJECT_ATTRIBUTES ObjectAttributes,
+			      DWORD a3,
+			      DWORD a4)
 {
    PEPORT Port;
    
@@ -249,7 +254,9 @@ NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
      {
 	NtCreatePort(ReplyPortHandle,
 		     STANDARD_RIGHTS_REQUIRED,
-		     NULL);
+		     NULL,
+		     0,
+		     0);
 	Status = ObReferenceObjectByHandle(*ReplyPortHandle,
 					   STANDARD_RIGHTS_REQUIRED,
 					   ExPortType,
@@ -342,7 +349,7 @@ STDCALL
 NtCreatePort ( /* @20 */
 	OUT	PHANDLE			PortHandle,
 	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,  
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
 	IN	DWORD			a3,	/* unknown */
 	IN	DWORD			a4	/* unknown */
 	)

@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.18 1999/08/29 06:58:59 ea Exp $
+/* $Id: zw.h,v 1.19 1999/10/16 12:38:25 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5156,10 +5156,13 @@ NTSTATUS STDCALL NtCompleteConnectPort(VOID);
 //NTSTATUS STDCALL NtConnectPort(VOID);
 NTSTATUS STDCALL NtConnectPort(PHANDLE Handle,
 			       POBJECT_ATTRIBUTES ObjectAttributes);
-//NTSTATUS STDCALL NtCreatePort(VOID);
+
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes);
+			      POBJECT_ATTRIBUTES ObjectAttributes,
+			      DWORD a3,
+			      DWORD a4);
+
 NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);
 //NTSTATUS STDCALL NtListenPort(VOID);
 NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
@@ -5209,8 +5212,8 @@ NtConnectPort ( /* @32 */
 NTSTATUS
 STDCALL
 NtCreatePort ( /* @20 */
-	OUT	PHANDLE			PortHandle,
 	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,  
+	OUT	PHANDLE			PortHandle,
 	IN	ACCESS_MASK		GrantedAccess,
 	IN	DWORD			Unknown3,
 	IN	ULONG			Flags
