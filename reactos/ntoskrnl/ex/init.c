@@ -27,11 +27,9 @@ extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
-#if 0
 extern LIST_ENTRY KiProfileListHead;
 extern LIST_ENTRY KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
-#endif
 
 VOID PspPostInitSystemProcess(VOID);
 
@@ -427,12 +425,10 @@ ExpInitializeExecutive(VOID)
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
     
-#if 0
     /* Initialize Profiling */
     InitializeListHead(&KiProfileListHead);
     InitializeListHead(&KiProfileSourceListHead);
     KeInitializeSpinLock(&KiProfileLock);
-#endif
     
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
@@ -488,7 +484,7 @@ ExpInitializeExecutive(VOID)
     PspPostInitSystemProcess();
 
     /* initialize the worker threads */
-    ExInitializeWorkerThreads();
+    ExpInitializeWorkerThreads();
     
     /* initialize callbacks */
     ExpInitializeCallbacks();

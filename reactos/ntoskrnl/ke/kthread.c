@@ -56,7 +56,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
             
             /* Signal and satisfy */
             Thread->SuspendSemaphore.Header.SignalState++;
-            KiDispatcherObjectWake(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
+            KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
         }
     }
 

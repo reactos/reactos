@@ -525,8 +525,11 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 VOID
-PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
-	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
+STDCALL
+PsBlockThread(PNTSTATUS Status, 
+              UCHAR Alertable, 
+              ULONG WaitMode,
+              UCHAR WaitReason);
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
 VOID

@@ -5,7 +5,6 @@
 # Possible values in the future: alpha,i386,m68k,mips,powerpc
 ARCH := i386
 
-
 #
 # Which cpu should reactos optimize for
 # example : i486, i586, pentium, pentium2, pentium3, pentium4
@@ -31,11 +30,6 @@ DBG := 0
 # Whether to compile a multiprocessor or single processor version
 #
 CONFIG_SMP := 0
-
-#
-# whether to use a 3GB User, 1GB Kernel memory map
-#
-3GB := 0
 
 #
 # Which version of NDIS do we support up to?

@@ -545,49 +545,46 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment)
 }
 
 VOID
-PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
-	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason)
+STDCALL
+PsBlockThread(PNTSTATUS Status, 
+              UCHAR Alertable, 
+              ULONG WaitMode,
+              UCHAR WaitReason)
 {
-  KIRQL oldIrql;
-  PKTHREAD KThread;
-  PETHREAD Thread;
-  PKWAIT_BLOCK WaitBlock;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PKWAIT_BLOCK WaitBlock;
 
-  if (!DispatcherLock)
-    {
-      oldIrql = KeAcquireDispatcherDatabaseLock();
+    if (Thread->ApcState.KernelApcPending) {
+    
+        DPRINT("Dispatching Thread as ready (APC!)\n");
+        
+        /* Remove Waits */
+        WaitBlock = Thread->WaitBlockList;
+        while (WaitBlock) {
+            RemoveEntryList (&WaitBlock->WaitListEntry);
+            WaitBlock = WaitBlock->NextWaitBlock;
+        }
+        Thread->WaitBlockList = NULL;
+        
+        /* Dispatch it and return status */
+        PsDispatchThreadNoLock (THREAD_STATE_READY);
+        if (Status != NULL) *Status = STATUS_KERNEL_APC;
+
+    } else {
+
+        /* Set the Thread Data as Requested */
+        DPRINT("Dispatching Thread as blocked\n");
+        Thread->Alertable = Alertable;
+        Thread->WaitMode = (UCHAR)WaitMode;
+        Thread->WaitReason = WaitReason;
+        
+        /* Dispatch it and return status */
+        PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+        if (Status != NULL) *Status = Thread->WaitStatus;
     }
-
-  KThread = KeGetCurrentThread();
-  Thread = CONTAINING_RECORD (KThread, ETHREAD, Tcb);
-  if (KThread->ApcState.KernelApcPending)
-  {
-    WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
-    while (WaitBlock)
-      {
-	RemoveEntryList (&WaitBlock->WaitListEntry);
-	WaitBlock = WaitBlock->NextWaitBlock;
-      }
-    Thread->Tcb.WaitBlockList = NULL;
-    PsDispatchThreadNoLock (THREAD_STATE_READY);
-    if (Status != NULL)
-      {
-	*Status = STATUS_KERNEL_APC;
-      }
-  }
-  else
-    {
-      Thread->Tcb.Alertable = Alertable;
-      Thread->Tcb.WaitMode = (UCHAR)WaitMode;
-      Thread->Tcb.WaitReason = WaitReason;
-      PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
-
-      if (Status != NULL)
-	{
-	  *Status = Thread->Tcb.WaitStatus;
-	}
-    }
-  KeLowerIrql(WaitIrql);
+    
+    DPRINT("Releasing Dispatcher Lock\n");
+    KfLowerIrql(Thread->WaitIrql);
 }
 
 VOID

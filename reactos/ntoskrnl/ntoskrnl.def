@@ -511,7 +511,7 @@ Ke386IoSetAccessProcess@8
 Ke386QueryIoAccessMap@8
 Ke386SetIoAccessMap@8
 KeAcquireSpinLockAtDpcLevel@4
-KeAcquireDispatcherDatabaseLockAtDpcLevel
+@KeAcquireDispatcherDatabaseLockAtDpcLevel@0
 @KeAcquireInStackQueuedSpinLockAtDpcLevel@8
 KeAcquireInterruptSpinLock@4
 KeAddSystemServiceTable@20
@@ -592,7 +592,7 @@ KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
 KeRegisterBugCheckReasonCallback@16
-KeReleaseDispatcherDatabaseLockFromDpcLevel
+@KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 @KeReleaseInStackQueuedSpinLockFromDpcLevel@4
 KeReleaseInterruptSpinLock@8
 KeReleaseMutant@16

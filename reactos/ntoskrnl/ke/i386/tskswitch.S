@@ -204,7 +204,7 @@ SaveTrapFrameForKDB_Return:
 	 */
 	sti
 
-	call    _KeReleaseDispatcherDatabaseLockFromDpcLevel
+	call    @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 
 	cmpl	$0, _PiNrThreadsAwaitingReaping
 	je	5f

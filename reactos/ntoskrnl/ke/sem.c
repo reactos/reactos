@@ -111,7 +111,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
     if (InitialState == 0 && !IsListEmpty(&Semaphore->Header.WaitListHead)) {
         
         /* Wake the Semaphore */
-        KiDispatcherObjectWake(&Semaphore->Header, SEMAPHORE_INCREMENT);
+        KiWaitTest(&Semaphore->Header, SEMAPHORE_INCREMENT);
     }
 
     /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */

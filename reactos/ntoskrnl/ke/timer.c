@@ -291,7 +291,7 @@ KiHandleExpiredTimer(PKTIMER Timer)
     /* Set it as Signaled */
     DPRINT("Setting Timer as Signaled\n");
     Timer->Header.SignalState = TRUE;
-    KiDispatcherObjectWake(&Timer->Header, 0);   
+    KiWaitTest(&Timer->Header, 0);   
 
     /* If the Timer is periodic, reinsert the timer with the new due time */
     if (Timer->Period) {

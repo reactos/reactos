@@ -177,7 +177,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
             
             /* Wake the Mutant */
             DPRINT("Waking the Mutant\n");
-            KiDispatcherObjectWake(&Mutant->Header, Increment);
+            KiWaitTest(&Mutant->Header, Increment);
         }
     }
 

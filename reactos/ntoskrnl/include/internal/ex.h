@@ -86,7 +86,9 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 
 extern POBJECT_TYPE ExEventPairObjectType;
-
+extern POBJECT_TYPE EXPORTED ExMutantObjectType;
+extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
+extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
@@ -100,7 +102,7 @@ ExInit3(VOID);
 VOID
 ExpInitTimeZoneInfo(VOID);
 VOID
-ExInitializeWorkerThreads(VOID);
+ExpInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
 VOID

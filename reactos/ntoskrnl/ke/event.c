@@ -91,7 +91,7 @@ KePulseEvent(IN PKEVENT Event,
         Event->Header.SignalState = 1;
     
         /* Wake the Event */
-        KiDispatcherObjectWake(&Event->Header, Increment);
+        KiWaitTest(&Event->Header, Increment);
     }
     
     /* Unsignal it */
@@ -196,7 +196,7 @@ KeSetEvent(PKEVENT Event,
                 /* We must do a full wait satisfaction */
                 DPRINT("Notification Event or WaitAll, Wait on the Event and Signal\n");
                 Event->Header.SignalState = 1;
-                KiDispatcherObjectWake(&Event->Header, Increment);
+                KiWaitTest(&Event->Header, Increment);
             }
                 
         } else {

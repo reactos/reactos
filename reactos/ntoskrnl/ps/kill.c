@@ -207,7 +207,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
-   KiDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader, IO_NO_INCREMENT);
+   KiWaitTest(&CurrentThread->Tcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (oldIrql);
 
    /* The last thread shall close the door on exit */
@@ -227,9 +227,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 #ifdef _ENABLE_THRDEVTPAIR
    ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
 #endif /* _ENABLE_THRDEVTPAIR */
-
-   ASSERT(CurrentThread->Tcb.WaitBlockList == NULL);
-   
+ 
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
    KEBUGCHECK(0);
@@ -342,7 +340,7 @@ PiTerminateProcess(PEPROCESS Process,
    }
    OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
-   KiDispatcherObjectWake(&Process->Pcb.DispatcherHeader, IO_NO_INCREMENT);
+   KiWaitTest(&Process->Pcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (OldIrql);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);

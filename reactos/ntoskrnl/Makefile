@@ -212,7 +212,8 @@ OBJECTS_OB = \
 	ob/object.o \
 	ob/sdcache.o \
 	ob/security.o \
-	ob/symlink.o
+	ob/symlink.o \
+	ob/wait.o
 
 # Process Manager (Ps)
 OBJECTS_PS = \
