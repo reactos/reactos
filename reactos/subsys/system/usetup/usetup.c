@@ -942,7 +942,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
   SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
   SetTextXY(25, 15, GetGenericListEntry(PointerList)->Text);
 
-  SetTextXY(25, 17, "Accept these device setings");
+  SetTextXY(25, 17, "Accept these device settings");
   InvertTextXY (24, Line, 48, 1);
 
 
@@ -950,7 +950,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
   SetTextXY(6, 21, "to select an entry. Then press the ENTER key to select alternative");
   SetTextXY(6, 22, "settings.");
 
-  SetTextXY(6, 24, "When all settings are correct, select \"Accept these device setings\"");
+  SetTextXY(6, 24, "When all settings are correct, select \"Accept these device settings\"");
   SetTextXY(6, 25, "and press ENTER.");
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
