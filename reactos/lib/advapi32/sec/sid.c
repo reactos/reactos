@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.2 2001/01/14 12:15:19 ea Exp $
+/* $Id: sid.c,v 1.3 2001/06/17 20:19:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,8 +11,21 @@
 #include <windows.h>
 
 
-BOOL
-STDCALL
+BOOL STDCALL
+AllocateLocallyUniqueId(PLUID Luid)
+{
+   NTSTATUS Status;
+
+   Status = NtAllocateLocallyUniqueId(Luid);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastError(RtlNtStatusToDosError(Status));
+	return(FALSE);
+     }
+   return(TRUE);
+}
+
+BOOL STDCALL
 AllocateAndInitializeSid (
 	PSID_IDENTIFIER_AUTHORITY	pIdentifierAuthority,
 	BYTE				nSubAuthorityCount,
@@ -47,7 +60,6 @@ AllocateAndInitializeSid (
 	}
 
 	return TRUE;
-
 }
 
 BOOL

@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.12 2001/03/17 22:05:25 ea Exp $
+; $Id: advapi32.edf,v 1.13 2001/06/17 20:20:00 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -20,7 +20,7 @@ AddAuditAccessAce=AddAuditAccessAce@24
 AdjustTokenGroups=AdjustTokenGroups@24
 AdjustTokenPrivileges=AdjustTokenPrivileges@24
 AllocateAndInitializeSid=AllocateAndInitializeSid@44
-;AllocateLocallyUniqueId=AllocateLocallyUniqueId@4
+AllocateLocallyUniqueId=AllocateLocallyUniqueId@4
 ;AreAllAccessesGranted=AreAllAccessesGranted@8
 ;AreAnyAccessesGranted=AreAnyAccessesGranted@8
 ;BackupEventLogA=BackupEventLogA@8

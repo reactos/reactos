@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.2 2000/09/05 22:59:58 ekohl Exp $
+/* $Id: dllmain.c,v 1.3 2001/06/17 20:20:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,34 +12,32 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
-INT
-STDCALL
-DllMain(
-	PVOID	hinstDll,
-	ULONG	dwReason,
-	PVOID	reserved
-	)
+INT STDCALL
+DllMain(PVOID hinstDll,
+	ULONG dwReason,
+	PVOID reserved)
 {
-DPRINT1("ADVAPI32: DllMain() called\n");
-	switch (dwReason)
-	{
-		case DLL_PROCESS_ATTACH:
-			DisableThreadLibraryCalls (hinstDll);
-			RegInitialize ();
-			break;
+   DPRINT("ADVAPI32: DllMain() called\n");
 
-		case DLL_PROCESS_DETACH:
-			RegCleanup ();
-			break;
-	}
+   switch (dwReason)
+     {
+     case DLL_PROCESS_ATTACH:
+	DisableThreadLibraryCalls(hinstDll);
+	RegInitialize();
+	break;
 
-DPRINT1("ADVAPI32: DllMain() done\n");
+     case DLL_PROCESS_DETACH:
+	RegCleanup();
+	break;
+     }
 
-	return TRUE;
+   DPRINT1("ADVAPI32: DllMain() done\n");
+
+   return TRUE;
 }
 
 /* EOF */
