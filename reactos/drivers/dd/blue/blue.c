@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.37 2003/03/21 21:09:40 hbirr Exp $
+/* $Id: blue.c,v 1.38 2003/06/20 13:04:09 gvg Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -23,7 +23,6 @@
 /* DEFINITIONS ***************************************************************/
 
 #define VIDMEM_BASE        0xb8000
-#define VIDMEM_SIZE        0x2000
 
 #define CRTC_COMMAND       ((PUCHAR)0x3d4)
 #define CRTC_DATA          ((PUCHAR)0x3d5)
@@ -79,11 +78,6 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
-    /* get pointer to video memory */
-    BaseAddress.QuadPart = VIDMEM_BASE;
-    DeviceExtension->VideoMemory =
-        (PBYTE)MmMapIoSpace (BaseAddress, VIDMEM_SIZE, FALSE);
-
     /* disable interrupts */
     __asm__("cli\n\t");
 
@@ -129,6 +123,11 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
             DeviceExtension->Columns,
             DeviceExtension->Rows,
             DeviceExtension->ScanLines);
+
+    /* get pointer to video memory */
+    BaseAddress.QuadPart = VIDMEM_BASE;
+    DeviceExtension->VideoMemory =
+        (PBYTE)MmMapIoSpace (BaseAddress, DeviceExtension->Rows * DeviceExtension->Columns * 2, FALSE);
 
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
