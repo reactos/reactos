@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.25 2004/08/15 21:36:29 chorns Exp $
+/* $Id: input.c,v 1.26 2004/12/11 18:43:06 sedwards Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -478,25 +478,33 @@ UnregisterHotKey(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SHORT STDCALL
 VkKeyScanA(CHAR ch)
 {
-  UNIMPLEMENTED;
-  return 0;
+  WCHAR wChar;
+
+  if (IsDBCSLeadByte(ch)) return -1;
+
+  MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
+  return VkKeyScanW(wChar);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SHORT STDCALL
 VkKeyScanExA(CHAR ch,
 	     HKL dwhkl)
 {
-  UNIMPLEMENTED;
-  return 0;
+  WCHAR wChar;
+
+  if (IsDBCSLeadByte(ch)) return -1;
+
+  MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wChar, 1);
+  return VkKeyScanExW(wChar, dwhkl);
 }
 
 
@@ -508,18 +516,17 @@ VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
   UNIMPLEMENTED;
-  return 0;
+  return -1;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SHORT STDCALL
 VkKeyScanW(WCHAR ch)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return VkKeyScanExW(ch, GetKeyboardLayout(0));
 }
 
 
