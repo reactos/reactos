@@ -559,6 +559,7 @@ KeyboardHandler(PKINTERRUPT Interrupt,
 	if (extKey)
 	  {
 	     rec[KeysRead].dwControlKeyState|=ENHANCED_KEY;
+	     extKey = 0;
 	  }
 	KeysRead++;
 	DPRINT("KeysRequired %d KeysRead %x\n",KeysRequired,KeysRead);
@@ -586,7 +587,7 @@ KeyboardHandler(PKINTERRUPT Interrupt,
    // kbdBuffer[bufHead].uChar.AsciiChar=TranslateScanCode(thisKey);
    kbdBuffer[bufHead].uChar.AsciiChar=VirtualToAscii(kbdBuffer[bufHead].wVirtualKeyCode,isDown);
    kbdBuffer[bufHead].dwControlKeyState=ctrlKeyState;
-   if (extKey)
+   if (extKey) 
       kbdBuffer[bufHead].dwControlKeyState|=ENHANCED_KEY;
    bufHead++;
    bufHead&=KBD_WRAP_MASK;    // Modulo KBD_BUFFER_SIZE
