@@ -101,6 +101,8 @@ BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
    DPRINT("Waking %x\n",current->Thread);
+   if (hdr->Type == SemaphoreType)
+      hdr->SignalState--;
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
 }
@@ -148,15 +150,19 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    KWAIT_BLOCK blk;
    
    DPRINT("Entering KeWaitForSingleObject(Object %x)\n",Object);
+   // FIXME : if KeReleaseSemaphore called with wait just before KeWaitxxx
+   // we must do something special.
 
    KeAcquireDispatcherDatabaseLock(FALSE);
 
-   if (hdr->SignalState)
+   if (hdr->SignalState > 0)
    {
       if (hdr->Type == SynchronizationEvent)
-	{
-	   hdr->SignalState=FALSE;
-	}
+      {
+        hdr->SignalState=FALSE;
+      }
+      else  if (hdr->Type == SemaphoreType)
+        hdr->SignalState--;
       KeReleaseDispatcherDatabaseLock(FALSE);
       return(STATUS_SUCCESS);
    }
