@@ -1861,6 +1861,21 @@ NtSaveKey (IN HANDLE KeyHandle,
   return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtSaveKeyEx(
+	IN HANDLE KeyHandle,
+	IN HANDLE FileHandle,
+	IN ULONG Flags // REG_STANDARD_FORMAT, etc..
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 NTSTATUS STDCALL
 NtSetInformationKey (IN HANDLE KeyHandle,

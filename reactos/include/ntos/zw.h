@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.27 2004/07/17 03:06:00 ion Exp $
+/* $Id: zw.h,v 1.28 2004/07/17 05:13:05 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3730,6 +3730,22 @@ STDCALL
 ZwSaveKey(
 	IN HANDLE KeyHandle,
 	IN HANDLE FileHandle
+	);
+
+NTSTATUS
+STDCALL
+NtSaveKeyEx(
+	IN HANDLE KeyHandle,
+	IN HANDLE FileHandle,
+	IN ULONG Flags // REG_STANDARD_FORMAT, etc..
+	);
+
+NTSTATUS
+STDCALL
+ZwSaveKeyEx(
+	IN HANDLE KeyHandle,
+	IN HANDLE FileHandle,
+	IN ULONG Flags // REG_STANDARD_FORMAT, etc..
 	);
 
 NTSTATUS

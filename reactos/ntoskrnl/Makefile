@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.131 2004/07/17 03:06:01 ion Exp $
+# $Id: Makefile,v 1.132 2004/07/17 05:13:05 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -170,10 +170,12 @@ OBJECTS_MM = \
 	mm/paging.o \
 	mm/pool.o \
 	mm/ppool.o \
+	mm/physical.o \
 	mm/region.o \
 	mm/rmap.o \
 	mm/section.o \
 	mm/slab.o \
+	mm/verifier.o \
 	mm/virtual.o \
 	mm/wset.o
 

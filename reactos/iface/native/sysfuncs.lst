@@ -169,6 +169,7 @@ NtResetEvent ZwResetEvent 2
 NtRestoreKey ZwRestoreKey 3
 NtResumeThread ZwResumeThread 2
 NtSaveKey ZwSaveKey 2
+NtSaveKeyEx ZwSaveKeyEx 3
 NtSetBootEntryOrder ZwSetBootEntryOrder 2
 NtSetBootOptions ZwSetBootOptions 2
 NtSetIoCompletion ZwSetIoCompletion 5

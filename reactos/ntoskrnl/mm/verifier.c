@@ -60,3 +60,5 @@ MmIsVerifierEnabled (
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
+
+/* EOF */
