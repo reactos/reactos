@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.219 2004/04/26 20:20:11 gdalsnes Exp $
+# $Id: Makefile,v 1.220 2004/05/01 19:05:29 weiden Exp $
 #
 # Global makefile
 #
@@ -183,6 +183,7 @@ bootcd_install_before:
 	$(RLINE) bootdata/hivesys.inf $(BOOTCD_DIR)/reactos/hivesys.inf
 	$(RLINE) bootdata/txtsetup.sif $(BOOTCD_DIR)/reactos/txtsetup.sif
 	$(CP) bootdata/icon.ico $(BOOTCD_DIR)/icon.ico
+	$(CP) subsys/system/welcome/welcome.exe $(BOOTCD_DIR)/reactos/welcome.exe
 	$(CP) media/nls/c_1252.nls $(BOOTCD_DIR)/reactos/c_1252.nls
 	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
