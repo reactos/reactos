@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.83 2004/01/21 18:39:24 navaraf Exp $
+/* $Id: winpos.c,v 1.84 2004/01/31 19:56:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -746,7 +746,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    if (Wnd == IntGetDesktopWindow() &&
        Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
    {
-      return FALSE;
+	   IntReleaseWindowObject(Window);
+	   return FALSE;
    }
 
    WinPos.hwnd = Wnd;
@@ -762,14 +763,15 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /* Fix up the flags. */
    if (!WinPosFixupFlags(&WinPos, Window))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
       IntReleaseWindowObject(Window);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
+      IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
