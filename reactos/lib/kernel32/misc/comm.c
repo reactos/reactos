@@ -7,10 +7,14 @@
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  *					Robert Dickenson (robd@mok.lvcom.com)
+ *					Saveliy Tretiakov (saveliyt@mail.ru)
  * UPDATE HISTORY:
  *                  Created 01/11/98
- *					RDD (30/09/2002) implemented many function bodies to call serial driver.
- *                                      KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
+ *                  RDD (30/09/2002) implemented many function bodies to call serial driver.
+ *                  KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
+ *                  ST  (21/03/2005) implemented GetCommProperties 
+ *                  ST  (24/03/2005) implemented ClearCommError. Corrected many functions.
+ *                                      
  */
 
 #include <k32.h>
@@ -760,65 +764,69 @@ BOOL
 STDCALL
 ClearCommBreak(HANDLE hFile)
 {
-	BOOL result = FALSE;
-	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
+    DWORD dwBytesReturned;
+    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, 
+                        NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
+ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
 {
-	BOOL result = FALSE;
+	BOOL status = FALSE;
 	DWORD dwBytesReturned;
+        SERIAL_STATUS SerialStatus;
+        
+        status = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0, 
+                        &SerialStatus, sizeof(SERIAL_STATUS), &dwBytesReturned, NULL);
+        
+        if(!NT_SUCCESS(status))
+        {
+            return status;
+        }
+        
+        if(lpErrors)
+        {
+            *lpErrors = 0;
+            if(SerialStatus.Errors & SERIAL_ERROR_BREAK)
+                *lpErrors |= CE_BREAK;
+            if(SerialStatus.Errors & SERIAL_ERROR_FRAMING)
+                *lpErrors |= CE_FRAME;
+            if(SerialStatus.Errors & SERIAL_ERROR_OVERRUN)
+                *lpErrors |= CE_OVERRUN;
+            if(SerialStatus.Errors & SERIAL_ERROR_QUEUEOVERRUN )
+                *lpErrors |= CE_RXOVER;
+            if(SerialStatus.Errors & SERIAL_ERROR_PARITY)
+                *lpErrors |= CE_RXPARITY;
+        }
+        
+	if (lpComStat) 
+        {
+            ZeroMemory(lpComStat, sizeof(COMSTAT));
+            
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_CTS)
+                lpComStat->fCtsHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_DSR)
+                lpComStat->fDsrHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_DCD)
+                lpComStat->fRlsdHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_XON)
+                lpComStat->fXoffHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_XOFF_SENT)
+                lpComStat->fXoffSent = TRUE;
+            
+            if(SerialStatus.EofReceived)
+                lpComStat->fEof = TRUE;
+            
+            if(SerialStatus.WaitForImmediate)
+                lpComStat->fTxim = TRUE;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		//SetLastError(CE_MODE);
-		return FALSE;
-	}
-	if (lpErrors == NULL) {
-        DPRINT("ERROR: GetCommState() - NULL Errors pointer\n");
-		return FALSE;
-	}
-//	*lpErrors = CE_BREAK;
-//	*lpErrors = CE_FRAME;
-//	*lpErrors = CE_IOE;
-//	*lpErrors = CE_MODE;
-//	*lpErrors = CE_OVERRUN;
-//	*lpErrors = CE_RXOVER;
-//	*lpErrors = CE_RXPARITY;
-//	*lpErrors = CE_TXFULL;
-/*
-CE_BREAK The hardware detected a break condition. 
-CE_FRAME The hardware detected a framing error. 
-CE_IOE An I/O error occurred during communications with the device. 
-CE_MODE The requested mode is not supported, or the hFile parameter is invalid. If this value is specified, it is the only valid error. 
-CE_OVERRUN A character-buffer overrun has occurred. The next character is lost. 
-CE_RXOVER An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character. 
-CE_RXPARITY The hardware detected a parity error. 
-CE_TXFULL The application tried to transmit a character, but the output buffer was full. 
- */
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_RESET_DEVICE, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-
-	if (lpStat != NULL) {
-		lpStat->fCtsHold = 0;
-		lpStat->fDsrHold = 0;
-		lpStat->fRlsdHold = 0;
-		lpStat->fXoffHold = 0;
-		lpStat->fXoffSent = 0;
-		lpStat->fEof = 0;
-		lpStat->fTxim = 0;
-		lpStat->cbInQue = 0;
-		lpStat->cbOutQue = 0;
+            lpComStat->cbInQue = SerialStatus.AmountInInQueue;
+            lpComStat->cbOutQue = SerialStatus.AmountInOutQueue;
 	}
 	return TRUE;
 }
@@ -858,9 +866,6 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	switch (dwFunc) {
     case CLRDTR: // Clears the DTR (data-terminal-ready) signal. 
         result = DeviceIoControl(hFile, IOCTL_SERIAL_CLR_DTR, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
@@ -891,7 +896,7 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
     	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 		break;
 	}
-	return TRUE;
+	return result;
 }
 
 
@@ -914,15 +919,9 @@ BOOL
 STDCALL
 GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK, 
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -933,15 +932,10 @@ BOOL
 STDCALL
 GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_MODEMSTATUS,
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, lpModemStat, sizeof(DWORD), &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -975,10 +969,6 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
 
     DPRINT("GetCommState(%d, %p)\n", hFile, lpDCB);
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-        DPRINT("ERROR: GetCommState() - INVALID_HANDLE_VALUE\n");
-		return FALSE;
-	}
 	if (lpDCB == NULL) {
         DPRINT("ERROR: GetCommState() - NULL DCB pointer\n");
 		return FALSE;
@@ -1079,20 +1069,16 @@ BOOL
 STDCALL
 GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpCommTimeouts == NULL) {
 		return FALSE;
 	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_TIMEOUTS,
+        
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_TIMEOUTS,
 							 NULL, 0, 
 							 lpCommTimeouts, sizeof(COMMTIMEOUTS), 
 							 &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1127,15 +1113,10 @@ BOOL
 STDCALL
 PurgeComm(HANDLE hFile, DWORD dwFlags)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_PURGE, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_PURGE, 
 		&dwFlags, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1146,14 +1127,9 @@ BOOL
 STDCALL
 SetCommBreak(HANDLE hFile)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_ON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_ON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 }
 
 
@@ -1176,15 +1152,10 @@ BOOL
 STDCALL
 SetCommMask(HANDLE hFile, DWORD dwEvtMask)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK, 
 		&dwEvtMask, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1205,10 +1176,6 @@ SetCommState(HANDLE	hFile, LPDCB lpDCB)
 
     DPRINT("SetCommState(%d, %p) - ENTERED\n", hFile, lpDCB);
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-        DPRINT("SetCommState() - ERROR: INVALID_HANDLE_VALUE\n");
-		return FALSE;
-	}
 	if (lpDCB == NULL) {
         DPRINT("SetCommState() - ERROR: NULL DCB pointer passed\n");
 		return FALSE;
@@ -1326,13 +1293,9 @@ BOOL
 STDCALL
 SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 	SERIAL_TIMEOUTS Timeouts;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpCommTimeouts == NULL) {
 		return FALSE;
 	}
@@ -1341,9 +1304,9 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	Timeouts.ReadTotalTimeoutConstant = lpCommTimeouts->ReadTotalTimeoutConstant;
 	Timeouts.WriteTotalTimeoutMultiplier = lpCommTimeouts->WriteTotalTimeoutMultiplier;
 	Timeouts.WriteTotalTimeoutConstant = lpCommTimeouts->WriteTotalTimeoutConstant;
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_TIMEOUTS,
+	
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1378,18 +1341,13 @@ BOOL
 STDCALL
 SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 	SERIAL_QUEUE_SIZE QueueSize;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
     QueueSize.InSize = dwInQueue;
     QueueSize.OutSize = dwOutQueue;
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_QUEUE_SIZE,
+    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_QUEUE_SIZE,
 		&QueueSize, sizeof(QueueSize), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1400,15 +1358,9 @@ BOOL
 STDCALL
 TransmitCommChar(HANDLE hFile, char cChar)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_IMMEDIATE_CHAR,
+	return DeviceIoControl(hFile, IOCTL_SERIAL_IMMEDIATE_CHAR,
 		&cChar, sizeof(cChar), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1419,18 +1371,14 @@ BOOL
 STDCALL
 WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpEvtMask == NULL) {
 		return FALSE;
 	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_WAIT_ON_MASK,
+        
+	return DeviceIoControl(hFile, IOCTL_SERIAL_WAIT_ON_MASK,
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, lpOverlapped);
-	return TRUE;
 }
 
 /* EOF */
