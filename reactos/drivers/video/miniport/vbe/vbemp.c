@@ -343,7 +343,7 @@ VBEInitialize(PVOID HwDeviceExtension)
          VBEDeviceExtension->ModeNumbers[ModeCount] = ModeList[CurrentMode] | 0x4000;
          if (VbeModeInfo->XResolution == 640 &&
              VbeModeInfo->YResolution == 480 &&
-             VbeModeInfo->BitsPerPixel == 8)
+             VbeModeInfo->BitsPerPixel == 32)
          {
             DefaultMode = ModeCount;
          }
@@ -588,47 +588,30 @@ VBEMapVideoMemory(
    PVIDEO_MEMORY_INFORMATION MapInformation,
    PSTATUS_BLOCK StatusBlock)
 {
-   KV86M_REGISTERS BiosRegisters;
-   PVBE_MODEINFO VbeModeInfo;
    PHYSICAL_ADDRESS FrameBuffer;
    ULONG inIoSpace = 0;
 
    StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
-   BiosRegisters.Eax = 0x4F01;
-   BiosRegisters.Ecx = DeviceExtension->ModeNumbers[DeviceExtension->CurrentMode];
-   BiosRegisters.Edi = DeviceExtension->PhysicalAddress.QuadPart & 0xF;
-   BiosRegisters.Es = DeviceExtension->PhysicalAddress.QuadPart >> 4;
-   Ke386CallBios(0x10, &BiosRegisters);
-   VbeModeInfo = (PVBE_MODEINFO)DeviceExtension->TrampolineMemory;
-   if (BiosRegisters.Eax == 0x4F && 
-       (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR))
-   {     
-      FrameBuffer.QuadPart = VbeModeInfo->PhysBasePtr;
-      MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-      MapInformation->VideoRamLength = (
-         DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].XResolution *
-         DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution *
-         DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BitsPerPixel
-         ) >> 3;
+   FrameBuffer.QuadPart =
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
+   MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
+   MapInformation->VideoRamLength = (
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].XResolution *
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution *
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BitsPerPixel
+      ) >> 3;
 
-      VideoPortMapMemory(DeviceExtension, FrameBuffer,
-         &MapInformation->VideoRamLength, &inIoSpace,
-         &MapInformation->VideoRamBase);
+   VideoPortMapMemory(DeviceExtension, FrameBuffer,
+      &MapInformation->VideoRamLength, &inIoSpace,
+      &MapInformation->VideoRamBase);
 
-      MapInformation->FrameBufferBase = MapInformation->VideoRamBase;
-      MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
+   MapInformation->FrameBufferBase = MapInformation->VideoRamBase;
+   MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
 
-      DeviceExtension->FrameBufferMemory = MapInformation->VideoRamBase;
+   DeviceExtension->FrameBufferMemory = MapInformation->VideoRamBase;
 
-      return TRUE;
-   }
-   else
-   {
-      DPRINT(("VBEMP: VBEMapVideoMemory Failed (%lx)\n", BiosRegisters.Eax));
-
-      return FALSE;
-   }
+   return TRUE;
 }
 
 /*
