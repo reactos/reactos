@@ -1,0 +1,68 @@
+diff -u /c/source/wine/dlls/winmm/lolvldrv.c winmm/lolvldrv.c
+--- /c/source/wine/dlls/winmm/lolvldrv.c	Wed Feb 25 18:47:36 2004
++++ winmm/lolvldrv.c	Tue Feb 17 01:15:52 2004
+@@ -497,10 +497,12 @@
+     case DRV_QUERYDEVICEINTERFACESIZE:
+         return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
+ 
++#ifdef __WINESRC__
+     case DRV_QUERYDSOUNDIFACE: /* Wine-specific: Retrieve DirectSound interface */
+     case DRV_QUERYDSOUNDDESC: /* Wine-specific: Retrieve DirectSound driver description*/
+     case DRV_QUERYDSOUNDGUID: /* Wine-specific: Retrieve DirectSound driver GUID */
+ 	return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
++#endif
+ 
+     default:
+ 	WARN("Unknown call %04x\n", uMsg);
+@@ -741,8 +743,9 @@
+ static BOOL	MMDRV_InitHardcoded(void)
+ {
+     /* first load hardware drivers */
++#ifndef __REACTOS__
+     MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
+-
++#endif /* __REACTOS__ */
+     /* finish with mappers */
+     MMDRV_Install("wavemapper",	   	"msacm.drv",	TRUE);
+     MMDRV_Install("midimapper",   	"midimap.drv",	TRUE);
+
+diff -u /c/source/wine/dlls/winmm/time.c winmm/time.c
+--- /c/source/wine/dlls/winmm/time.c	Mon Jan 12 16:03:10 2004
++++ winmm/time.c	Sun Feb 15 16:55:10 2004
+@@ -175,14 +175,19 @@
+     volatile HANDLE *pActive = (volatile HANDLE *)&TIME_hMMTimer;
+     DWORD last_time, cur_time;
+ 
++#ifndef __REACTOS__
+     usleep(MMSYSTIME_STDINTERVAL * 1000);
++#endif /* __REACTOS__ */
++
+     last_time = GetTickCount();
+     while (*pActive) {
+ 	TIME_MMSysTimeCallback(iData);
+ 	cur_time = GetTickCount();
+ 	while (last_time < cur_time)
+ 	    last_time += MMSYSTIME_STDINTERVAL;
++#ifndef __REACTOS__
+ 	usleep((last_time - cur_time) * 1000);
++#endif /* __REACTOS__ */
+     }
+     return 0;
+ }
+
+diff -u /c/source/wine/dlls/winmm/winmm.c winmm/winmm.c
+--- /c/source/wine/dlls/winmm/winmm.c	Wed Feb 25 14:28:52 2004
++++ winmm/winmm.c	Sun Feb 15 22:58:58 2004
+@@ -125,10 +125,12 @@
+         loaded = -1;
+         if (h)
+         {
++#ifndef __REACTOS__
+             pGetModuleHandle16 = (void*)GetProcAddress(h, "GetModuleHandle16");
+             pLoadLibrary16 = (void*)GetProcAddress(h, "LoadLibrary16");
+             if (pGetModuleHandle16 && pLoadLibrary16 &&
+                 (pGetModuleHandle16("MMSYSTEM.DLL") || pLoadLibrary16("MMSYSTEM.DLL")))
++#endif /* __REACTOS__ */
+                 loaded = 1;
+         }
+     }
