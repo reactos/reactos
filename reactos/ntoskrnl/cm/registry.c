@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.90 2003/04/04 14:05:29 ekohl Exp $
+/* $Id: registry.c,v 1.91 2003/04/04 21:52:25 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -652,7 +652,7 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
     }
 
   ParentKeyName.Length = (USHORT)(SubName - KeyName->Buffer) * sizeof(WCHAR);
-  ParentKeyName.MaximumLength = ParentKeyName.MaximumLength + sizeof(WCHAR);
+  ParentKeyName.MaximumLength = ParentKeyName.Length + sizeof(WCHAR);
   ParentKeyName.Buffer = ExAllocatePool (NonPagedPool,
 					 ParentKeyName.MaximumLength);
   RtlCopyMemory (ParentKeyName.Buffer,
