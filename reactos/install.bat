@@ -18,13 +18,14 @@ md %ROS_INSTALL%\media
 md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
 copy loaders\dos\loadros.com %ROS_INSTALL%
-copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%
-copy services\fs\vfat\vfatfs.sys %ROS_INSTALL%
+copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
+copy hal\halx86\hal.dll %ROS_INSTALL%\system32
+copy services\fs\vfat\vfatfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\np\npfs.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\acpi\acpi.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\isapnp\isapnp.sys %ROS_INSTALL%\system32\drivers
-copy services\dd\ide\ide.sys %ROS_INSTALL%
+copy services\dd\ide\ide.sys %ROS_INSTALL%\system32\drivers
 copy services\dd\floppy\floppy.sys %ROS_INSTALL%\system32\drivers
 copy services\input\keyboard\keyboard.sys %ROS_INSTALL%\system32\drivers
 copy services\input\mouclass\mouclass.sys %ROS_INSTALL%\system32\drivers
