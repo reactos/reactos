@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.5 2003/07/10 20:34:50 royce Exp $
+/* $Id: resource.c,v 1.6 2003/08/22 20:00:39 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,9 @@ LdrAccessResource(IN  PVOID BaseAddress,
    ULONG DataSize;
    ULONG Offset = 0;
    ULONG Data;
+
+   if(!ResourceDataEntry)
+        return STATUS_RESOURCE_DATA_NOT_FOUND;
 
    Data = (ULONG)RtlImageDirectoryEntryToData (BaseAddress,
 					       TRUE,
