@@ -1767,10 +1767,16 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module 
 		          objectFilenames.c_str (),
 		          importLibraryDependencies.c_str () );
 
+		string linker;
+		if ( IsCPlusPlusModule ( module ) )
+			linker = "${gpp}";
+		else
+			linker = "${gcc}";
+
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
 		                                     module.entrypoint.c_str () );
 		GenerateLinkerCommand ( module,
-		                        "${gcc}",
+		                        linker,
 		                        linkerParameters,
 		                        objectFilenames );
 	}

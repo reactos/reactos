@@ -203,6 +203,9 @@
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.xml" />
 </directory>
+<directory name="snmpapi">
+	<xi:include href="snmpapi/snmpapi.xml" />
+</directory>
 <directory name="string">
 	<xi:include href="string/string.xml" />
 </directory>
