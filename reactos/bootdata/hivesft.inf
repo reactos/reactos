@@ -9,8 +9,8 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x000
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"C:\ReactOS\Desktop"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"C:\ReactOS\Desktop"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common Desktop",0x00020000,"C:\ReactOS\Desktop"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common Desktop",0x00020000,"C:\ReactOS\Desktop"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"C:\ReactOS\Application Data"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"C:\ReactOS\Application Data"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"C:\ReactOS\Start Menu"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"C:\ReactOS\Start Menu"
 
