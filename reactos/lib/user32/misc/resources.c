@@ -129,7 +129,7 @@ int STDCALL LoadStringA
  if(!NT_SUCCESS(nErrCode))
  {
   /* failure */
-  SetLastErrorByStatus(nErrCode);
+  RtlNtStatusToDosError(nErrCode);
   return 0;
  }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.5 2003/04/02 23:29:04 gdalsnes Exp $
+/* $Id: timer.c,v 1.6 2003/04/26 01:19:31 sedwards Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -48,7 +48,7 @@ KillTimer(
    
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      RtlNtStatusToDosError(Status);
       return FALSE;
    }
 
@@ -70,7 +70,7 @@ SetTimer(
    
    if (!NT_SUCCESS(Status))
    {
-      SetLastErrorByStatus(Status);
+      RtlNtStatusToDosError(Status);
       return FALSE;
    }
 
