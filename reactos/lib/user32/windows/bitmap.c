@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.21 2003/12/07 18:54:15 navaraf Exp $
+/* $Id: bitmap.c,v 1.22 2003/12/09 19:43:38 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -289,12 +289,16 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	    return(NULL);
 	  }
 	  
-	  if (fuLoad & LR_SHARED)
-      {
-        hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes);
-        if(hIcon)
-          return hIcon;
-      }
+#if 0
+      /* Code temporarily deactivated until NtUserFindExistingCursorIcon
+         can take requested width/height into account */
+      if (fuLoad & LR_SHARED)
+          {
+            hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes);
+            if(hIcon)
+              return hIcon;
+          }
+#endif
 
       hResource = LoadResource(hinst, hResource);
       if (hResource == NULL)
