@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.3 2004/05/15 14:26:08 ekohl Exp $
+/* $Id: rangelist.c,v 1.4 2004/05/15 19:41:10 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -365,7 +365,10 @@ RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
 
 
 /*
- * @unimplemented
+ * TODO:
+ *   - honor Flags and AttributeAvailableMask.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
@@ -377,7 +380,6 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
 		     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
 		     OUT PBOOLEAN Available)
 {
-#if 0
   PRTL_RANGE_ENTRY Current;
   PLIST_ENTRY Entry;
 
@@ -391,17 +393,20 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
 	    (Current->Range.Start < Start && Current->Range.End < Start)))
 	{
 	  if (Callback != NULL)
-	    Callback (Context, &Current->Range);
-
-	  *Available = FALSE;
+	    {
+	      *Available = Callback (Context,
+				     &Current->Range);
+	    }
+	  else
+	    {
+	      *Available = FALSE;
+	    }
 	}
 
       Entry = Entry->Flink;
     }
 
   return STATUS_SUCCESS;
-#endif
-  return STATUS_NOT_IMPLEMENTED;
 }
 
 
