@@ -97,7 +97,7 @@ STATIC BOOLEAN KdbOutputAborted = FALSE;
 STATIC LONG KdbNumberOfRowsTerminal = -1;
 STATIC LONG KdbNumberOfColsTerminal = -1;
 
-PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDB.init file is loaded into during initialization */
+PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
 
 STATIC CONST struct
 {
@@ -2206,7 +2206,7 @@ KdbpCliInterpretInitFile()
    CHAR c;
 
    /* Execute the commands in the init file */
-   DbgPrint("KDB: Executing KDB.init file...\n");
+   DbgPrint("KDB: Executing KDBinit file...\n");
    p1 = KdbInitFileBuffer;
    while (p1[0] != '\0')
    {
@@ -2237,12 +2237,12 @@ KdbpCliInterpretInitFile()
       while (p1[0] == '\r' || p1[0] == '\n')
          p1++;
    }
-   DbgPrint("KDB: KDB.init executed\n");
+   DbgPrint("KDB: KDBinit executed\n");
 }
 
 /*!\brief Called when KDB is initialized
  *
- * Reads the KDB.init file from the SystemRoot\system32\drivers\etc directory and executes it.
+ * Reads the KDBinit file from the SystemRoot\system32\drivers\etc directory and executes it.
  */
 VOID
 KdbpCliInit()
@@ -2258,7 +2258,7 @@ KdbpCliInit()
    ULONG OldEflags;
 
    /* Initialize the object attributes */
-   RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDB.init");
+   RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDBinit");
    InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
    
    /* Open the file */
@@ -2267,7 +2267,7 @@ KdbpCliInit()
                        FILE_NO_INTERMEDIATE_BUFFERING);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Could not open \\SystemRoot\\system32\\drivers\\etc\\KDB.init (Status 0x%x)", Status);
+      DPRINT("Could not open \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
       return;
    }
 
@@ -2277,7 +2277,7 @@ KdbpCliInit()
    if (!NT_SUCCESS(Status))
    {
       ZwClose(hFile);
-      DPRINT("Could not query size of \\SystemRoot\\system32\\drivers\\etc\\KDB.init (Status 0x%x)", Status);
+      DPRINT("Could not query size of \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
       return;
    }
    FileSize = FileStdInfo.EndOfFile.u.LowPart;
@@ -2287,7 +2287,7 @@ KdbpCliInit()
    if (FileBuffer == NULL)
    {
       ZwClose(hFile);
-      DPRINT("Could not allocate %d bytes for KDB.init file\n", FileSize);
+      DPRINT("Could not allocate %d bytes for KDBinit file\n", FileSize);
       return;
    }
 
@@ -2297,7 +2297,7 @@ KdbpCliInit()
    if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
    {
       ExFreePool(FileBuffer);
-      DPRINT("Could not read KDB.init file into memory (Status 0x%lx)\n", Status);
+      DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
       return;
    }
    FileSize = min(FileSize, Iosb.Information);
