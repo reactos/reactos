@@ -1,2 +1,2 @@
-tdi.coff*.o
 *.o
+*.coff

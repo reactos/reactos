@@ -2,3 +2,4 @@ eventlog.coff
 *.d
 *.o
 *.sym
+*.exe

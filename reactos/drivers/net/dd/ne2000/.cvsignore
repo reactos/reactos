@@ -3,3 +3,5 @@ junk.tmp
 temp.exp
 ne2000.coff
 *.sym
+*.o
+*.sys
