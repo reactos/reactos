@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.81 2004/02/07 16:37:23 hbirr Exp $
+/* $Id: npool.c,v 1.82 2004/03/04 00:07:01 navaraf Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1633,7 +1633,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 #endif
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
    block = block_to_address(best);
-   memset(block,0,Size);
+/*   RtlZeroMemory(block, Size);*/
    return(block);
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }

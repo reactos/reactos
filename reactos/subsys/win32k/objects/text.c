@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.78 2004/02/24 13:27:03 weiden Exp $ */
+/* $Id: text.c,v 1.79 2004/03/04 00:07:03 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -253,6 +253,7 @@ BOOL FASTCALL InitFontSupport(VOID)
 	PFILE_DIRECTORY_INFORMATION iFileData;
 	PVOID   pBuff;
 	BOOLEAN bRestartScan = TRUE;
+    BOOLEAN Result = FALSE;
 	
 	InitializeListHead(&FontListHead);
     ExInitializeFastMutex(&FontListLock);
@@ -281,13 +282,22 @@ BOOL FASTCALL InitFontSupport(VOID)
         {          
             while(1)
             {   
-                iFileData = NULL;
+		if (bRestartScan)
+		  {
                 pBuff = ExAllocatePool(NonPagedPool,0x4000);
+		    if (pBuff == NULL)
+		      {
+		        break;
+		      }
                 RtlInitUnicodeString(&cchFilename,0);
                 cchFilename.MaximumLength = 0x1000;
                 cchFilename.Buffer = ExAllocatePoolWithTag(PagedPool,cchFilename.MaximumLength, TAG_STRING);
- 
-                cchFilename.Length = 0;
+		    if (cchFilename.Buffer == NULL)
+		      {
+		        ExFreePool(pBuff);
+		        break;
+		      }
+		  }
 				    
 				Status = NtQueryDirectoryFile( hDirectory,
 				                               NULL,
@@ -297,33 +307,41 @@ BOOL FASTCALL InitFontSupport(VOID)
 				                               pBuff,
 				                               0x4000,
 				                               FileDirectoryInformation,
-				                               TRUE,
+					       FALSE,
 				                               &cchSearchPattern,
 				                               bRestartScan );
 				   
-                iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
-                 
-                RtlAppendUnicodeToString(&cchFilename, cchDir.Buffer);
-                RtlAppendUnicodeToString(&cchFilename, iFileData->FileName);
-				RtlAppendUnicodeToString(&cchFilename, L"\0");
-				    
 				if( !NT_SUCCESS(Status) || Status == STATUS_NO_MORE_FILES )
-				    break;
-
-				IntGdiAddFontResource(&cchFilename, 0);
+		  {
 				ExFreePool(pBuff);
 				ExFreePool(cchFilename.Buffer);
+		    break;
+		  }
 				bRestartScan = FALSE;
+                iFileData = (PFILE_DIRECTORY_INFORMATION)pBuff;
+		while(1)
+		  {
+		    UNICODE_STRING tmpString;
+		    tmpString.Buffer = iFileData->FileName;
+		    tmpString.Length = tmpString.MaximumLength = iFileData->FileNameLength;
+                    RtlCopyUnicodeString(&cchFilename, &cchDir);
+                    RtlAppendUnicodeStringToString(&cchFilename, &tmpString);
+		    cchFilename.Buffer[cchFilename.Length / sizeof(WCHAR)] = 0;
+		    if (0 != IntGdiAddFontResource(&cchFilename, 0))
+		      {
+		        Result = TRUE;
+		      }
+		    if (iFileData->NextEntryOffset == 0)
+		      {
+		        break;
+		      }
+		    iFileData = (PVOID)iFileData + iFileData->NextEntryOffset;
+		  }
 			}
-			ExFreePool(cchFilename.Buffer);
-			ExFreePool(pBuff);
-			ZwClose(hDirectory);
-			
-			return TRUE;
         }
     }
     ZwClose(hDirectory);
-	return FALSE;
+    return Result;
 }
 
 static NTSTATUS STDCALL

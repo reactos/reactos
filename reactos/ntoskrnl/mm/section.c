@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.144 2004/01/31 00:16:55 hbirr Exp $
+/* $Id: section.c,v 1.145 2004/03/04 00:07:02 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2328,9 +2328,13 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   Segment->FileOffset = 0;
   Segment->Protection = SectionPageProtection;
   Segment->Attributes = AllocationAttributes;
-  Segment->Length = MaximumSize.u.LowPart;
+  Segment->RawLength = MaximumSize.u.LowPart;
+  Segment->Length = PAGE_ROUND_UP(MaximumSize.u.LowPart);
   Segment->Flags = MM_PAGEFILE_SEGMENT;
   Segment->WriteCopy = FALSE;
+  RtlZeroMemory(&Segment->PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+  Segment->VirtualAddress = 0;
+  Segment->Characteristics = 0;
   ObDereferenceObject(Section);
   return(STATUS_SUCCESS);
 }
@@ -2564,6 +2568,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
 	  Segment->Length = PAGE_ROUND_UP(Segment->RawLength);
 	}
       Segment->VirtualAddress = NULL;
+      RtlZeroMemory(&Segment->PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
     }
   else
     {
@@ -2888,7 +2893,9 @@ MmCreateImageSection(PHANDLE SectionHandle,
         SectionSegments[0].ReferenceCount = 1;
         SectionSegments[0].VirtualAddress = 0;
         SectionSegments[0].WriteCopy = TRUE;
+        SectionSegments[0].Attributes = 0;
 	ExInitializeFastMutex(&SectionSegments[0].Lock);
+	RtlZeroMemory(&SectionSegments[0].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
         for (i = 1; i < NrSegments; i++)
 	  {
 	    SectionSegments[i].FileOffset = ImageSections[i-1].PointerToRawData;
@@ -2950,6 +2957,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	    SectionSegments[i].ReferenceCount = 1;
 	    SectionSegments[i].VirtualAddress = (PVOID)ImageSections[i-1].VirtualAddress;
 	    ExInitializeFastMutex(&SectionSegments[i].Lock);
+	    RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
 	  }
         if (0 != InterlockedCompareExchange((PLONG)&FileObject->SectionObjectPointer->ImageSectionObject,
 	                                    (LONG)ImageSectionObject, 0))

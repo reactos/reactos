@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.38 2003/12/30 18:52:04 fireball Exp $
+/* $Id: buildirp.c,v 1.39 2004/03/04 00:07:00 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,6 +259,13 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
 			   InputBuffer,
 			   InputBufferLength);
+	     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer + InputBufferLength,
+			   BufferLength - InputBufferLength);
+	  }
+	else
+	  {
+	     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer,
+			   BufferLength);
 	  }
 	Irp->UserBuffer = OutputBuffer;
 	break;
@@ -273,12 +280,13 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
                ExAllocatePoolWithTag(NonPagedPool,OutputBufferLength, 
 				     TAG_SYS_BUF);
 
-	     
 	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
 	       {
 		  IoFreeIrp(Irp);
 		  return(NULL);
 	       }
+
+	     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, OutputBufferLength);
 	     Irp->UserBuffer = OutputBuffer;
 	  }
 	

@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.57 2003/12/31 14:16:18 hbirr Exp $
+/* $Id: irp.c,v 1.58 2004/03/04 00:07:00 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -200,6 +200,7 @@ IoAllocateIrp(CCHAR StackSize,
       return(NULL);
     }
 
+  RtlZeroMemory(Irp, IoSizeOfIrp(StackSize));
   IoInitializeIrp(Irp,
 		  IoSizeOfIrp(StackSize),
 		  StackSize);

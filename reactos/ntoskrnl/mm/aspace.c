@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.15 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: aspace.c,v 1.16 2004/03/04 00:07:01 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -88,6 +88,7 @@ MmInitializeAddressSpace(PEPROCESS Process,
 	AddressSpace->PageTableRefCountTable = 
 	  ExAllocatePoolWithTag(NonPagedPool, 768 * sizeof(USHORT),
 				TAG_PTRC);
+	RtlZeroMemory(AddressSpace->PageTableRefCountTable, 768 * sizeof(USHORT));
 	AddressSpace->PageTableRefCountTableSize = 768;
      }
    else

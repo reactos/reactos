@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.25 2004/02/15 19:03:29 hbirr Exp $
+/* $Id: ppool.c,v 1.26 2004/03/04 00:07:02 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -406,8 +406,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   ExReleaseFastMutex(&MmPagedPoolLock);
 
   BlockAddress = block_to_address ( NewBlock );
-
-  memset(BlockAddress, 0, NumberOfBytes);
+/*  RtlZeroMemory(BlockAddress, NumberOfBytes);*/
 
 #if MM_PPOOL_REDZONE_BYTES
   NewBlock->UserSize = NumberOfBytes;

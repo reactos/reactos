@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.41 2003/12/30 18:52:05 fireball Exp $
+/* $Id: pagefile.c,v 1.42 2004/03/04 00:07:01 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -453,6 +453,22 @@ MmAllocSwapPage(VOID)
    return(0);
 }
 
+STATIC PRETRIEVEL_DESCRIPTOR_LIST FASTCALL
+MmAllocRetrievelDescriptorList(ULONG Pairs)
+{
+   ULONG Size;
+   PRETRIEVEL_DESCRIPTOR_LIST RetDescList;
+
+   Size = sizeof(RETRIEVEL_DESCRIPTOR_LIST) + Pairs * sizeof(MAPPING_PAIR);
+   RetDescList = ExAllocatePool(NonPagedPool, Size);
+   if (RetDescList)
+     {
+       RtlZeroMemory(RetDescList, Size);
+     }
+
+   return RetDescList;
+}
+
 NTSTATUS STDCALL 
 MmDumpToPagingFile(ULONG BugCode,
 		   ULONG BugCodeParameter1,
@@ -716,7 +732,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    PPAGINGFILE PagingFile;
    KIRQL oldIrql;
    ULONG AllocMapSize;
-   ULONG Size;
    FILE_FS_SIZE_INFORMATION FsSizeInformation;
    PRETRIEVEL_DESCRIPTOR_LIST RetDescList;
    PRETRIEVEL_DESCRIPTOR_LIST CurrentRetDescList;
@@ -726,6 +741,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    ULONG ExtentCount;
    ULONG MaxVcn;
    ULONG Count;
+   ULONG Size;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
 	  FileName, InitialSize->QuadPart);
@@ -801,8 +817,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 	return(Status);
      }
 
-   Size = sizeof(RETRIEVEL_DESCRIPTOR_LIST) + PAIRS_PER_RUN * sizeof(MAPPING_PAIR);
-   CurrentRetDescList = RetDescList = ExAllocatePool(NonPagedPool, Size);
+   CurrentRetDescList = RetDescList = MmAllocRetrievelDescriptorList(PAIRS_PER_RUN);
 
    if (CurrentRetDescList == NULL)
      {
@@ -845,7 +860,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
        ExtentCount += CurrentRetDescList->RetrievalPointers.NumberOfPairs;
        if ((ULONG)CurrentRetDescList->RetrievalPointers.Pair[CurrentRetDescList->RetrievalPointers.NumberOfPairs-1].Vcn < MaxVcn)
          {
-           CurrentRetDescList->Next = ExAllocatePool(NonPagedPool, Size);
+           CurrentRetDescList->Next = MmAllocRetrievelDescriptorList(PAIRS_PER_RUN);
 	   if (CurrentRetDescList->Next == NULL)
 	     {
 	       while (RetDescList)
@@ -881,6 +896,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
        return(STATUS_NO_MEMORY);
      }
    
+   RtlZeroMemory(PagingFile, sizeof(*PagingFile));
+
    PagingFile->FileObject = FileObject;
    PagingFile->MaximumSize.QuadPart = MaximumSize->QuadPart;
    PagingFile->CurrentSize.QuadPart = InitialSize->QuadPart;
@@ -923,6 +940,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       NtClose(FileHandle);
       return(STATUS_NO_MEMORY);
    }
+
+   RtlZeroMemory(PagingFile->AllocMap, AllocMapSize * sizeof(ULONG));
+   RtlZeroMemory(PagingFile->RetrievalPointers, Size);
 
    Count = 0;
    PagingFile->RetrievalPointers->NumberOfPairs = ExtentCount;

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.74 2004/01/31 16:52:47 ekohl Exp $
+/* $Id: object.c,v 1.75 2004/03/04 00:07:02 navaraf Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -377,6 +377,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 						 Type->Tag);
   if (Header == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
+  RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
 
   /* Initialize the object header */
   Header->HandleCount = 0;

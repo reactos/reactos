@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.10 2003/12/30 18:52:05 fireball Exp $
+/* $Id: slab.c,v 1.11 2004/03/04 00:07:02 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -93,6 +93,7 @@ ExCreateSlabCache(PUNICODE_STRING Name, ULONG Size, ULONG Align,
   Slab->ObjectSize = ObjectSize + AlignSize;
   Slab->ObjectsPerPage = 
     (PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
+  Slab->FirstFreePage = NULL;
   InitializeListHead(&Slab->PageListHead);
   KeInitializeSpinLock(&Slab->SlabLock);
   
