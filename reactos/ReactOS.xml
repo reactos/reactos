@@ -29,6 +29,9 @@
 	<directory name="boot">
 		<xi:include href="boot/boot.xml" />
 	</directory>
+	<directory name="bootdata">
+		<xi:include href="bootdata/bootdata.xml" />
+	</directory>
 	<directory name="drivers">
 		<xi:include href="drivers/directory.xml" />
 	</directory>
@@ -40,6 +43,9 @@
 	</directory>
 	<directory name="lib">
 		<xi:include href="lib/directory.xml" />
+	</directory>
+	<directory name="media">
+		<xi:include href="media/directory.xml" />
 	</directory>
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.xml" />
