@@ -24,6 +24,7 @@
 #include "winbase.h"
 #include "winnetwk.h"
 #include "wine/debug.h"
+#include "wnetpriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
@@ -78,4 +79,19 @@ DWORD WINAPI DllCanUnloadNow(void)
 {
     FIXME("Stub\n");
     return S_OK;
+}
+
+BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls( hinstDLL );
+            wnetInit(hinstDLL);
+            break;
+
+        case DLL_PROCESS_DETACH:
+            wnetFree();
+            break;
+    }
+    return TRUE;
 }

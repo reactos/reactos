@@ -68,6 +68,7 @@ union cptable
 #define strlwrW(s) _wcslwr((wchar_t *)(s))
 #define struprW(s) _wcsupr((wchar_t *)(s))
 #define sprintfW wsprintfW
+#define snprintfW _snwprintf
 
 #ifndef WINE_UNICODE_API
 #define WINE_UNICODE_API __attribute__((dllimport))

@@ -3,7 +3,8 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = mpr.dll
-IMPORTS   = advapi32 kernel32
+IMPORTS   = user32 advapi32 kernel32
+EXTRALIBS = $(LIBUNICODE)
 
 C_SRCS = \
 	auth.c \
@@ -12,6 +13,11 @@ C_SRCS = \
 	nps.c \
 	pwcache.c \
 	wnet.c
+
+RC_SRCS = \
+	mpr.rc \
+	version.rc
+
 
 @MAKE_DLL_RULES@
 
