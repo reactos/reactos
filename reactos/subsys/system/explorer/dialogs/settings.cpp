@@ -159,9 +159,9 @@ TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
  :	super(hwnd),
 	_cfg_org(g_Globals._cfg)
 {
-	XMLPos options(g_Globals.get_cfg("desktopbar"), "options");
+	XMLPos options = g_Globals.get_cfg("desktopbar/options");
 
-	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(options, "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
+ 	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(options, "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
 	CheckDlgButton(hwnd, ID_HIDE_INACTIVE_ICONS, XMLBool(options, "hide-inactive", true)? BST_CHECKED: BST_UNCHECKED);
 }
 
@@ -192,14 +192,14 @@ int	TaskbarSettingsDlg::Command(int id, int code)
 		break;
 
 	  case ID_SHOW_CLOCK: {
-		XMLBoolRef boolRef1(XMLPos(g_Globals.get_cfg("desktopbar"),"options"), "show-clock", true);
+		XMLBoolRef boolRef1(XMLPos(g_Globals.get_cfg("desktopbar/options")), "show-clock", true);
 		boolRef1.toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
 		break;}
 
 	  case ID_HIDE_INACTIVE_ICONS: {
-		XMLBoolRef boolRef2(XMLPos(g_Globals.get_cfg("notify-icons"),"options"), "hide-inactive", true);
+		XMLBoolRef boolRef2(XMLPos(g_Globals.get_cfg("notify-icons/options")), "hide-inactive", true);
         boolRef2.toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
@@ -236,7 +236,7 @@ MdiSdiDlg::MdiSdiDlg(HWND hwnd)
 {
 	CenterWindow(hwnd);
 
-	XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	bool mdi = XMLBool(explorer_options, "mdi", true);
 
 	int id = mdi? IDC_MDI: IDC_SDI;
@@ -250,7 +250,7 @@ int	MdiSdiDlg::Command(int id, int code)
 		switch(id) {
 		  case IDOK: {
 			bool mdi = IsDlgButtonChecked(_hwnd, IDC_MDI)==BST_CHECKED;
-			XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+			XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 			XMLBoolRef(explorer_options, "mdi") = mdi;
 		  } // fall through
 

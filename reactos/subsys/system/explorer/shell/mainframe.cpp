@@ -112,7 +112,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 					} else {
 						HWND hwnd;
 #ifndef _NO_MDI
-						XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+						XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 						bool mdi = XMLBool(explorer_options, "mdi", true);
 
 						if (mdi)

@@ -113,21 +113,21 @@ void ExplorerGlobals::write_persistent()
 
 XMLPos ExplorerGlobals::get_cfg()
 {
-	XMLPos pos(&_cfg);
+	XMLPos cfg_pos(&_cfg);
 
-	pos.smart_create("explorer-cfg");
+	cfg_pos.smart_create("explorer-cfg");
 
-	return pos;
+	return cfg_pos;
 }
 
-XMLPos ExplorerGlobals::get_cfg(const String& name)
+XMLPos ExplorerGlobals::get_cfg(const char* path)
 {
-	XMLPos pos(&_cfg);
+	XMLPos cfg_pos(&_cfg);
 
-	pos.smart_create("explorer-cfg");
-	pos.smart_create(name);
+	cfg_pos.smart_create("explorer-cfg");
+	cfg_pos.create_relative(path);
 
-	return pos;
+	return cfg_pos;
 }
 
 
@@ -536,7 +536,7 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 
 	g_Globals._prescan_nodes = false;
 
-	XMLPos explorer_options(g_Globals.get_cfg("general"), "explorer");
+	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	XS_String mdiStr = XMLString(explorer_options, "mdi");
 
 	if (mdiStr.empty())

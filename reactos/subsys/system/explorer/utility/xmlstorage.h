@@ -511,9 +511,9 @@ struct XMLNode : public XS_String
 	}
 
 	 /// convenient value access in children node
-	XS_String subvalue(const XS_String& name, const XS_String& attr_name) const
+	XS_String subvalue(const XS_String& name, const XS_String& attr_name, int n=0) const
 	{
-		const XMLNode* node = find_first(name);
+		const XMLNode* node = find(name, n);
 
 		if (node)
 			return node->get(attr_name);
@@ -522,9 +522,9 @@ struct XMLNode : public XS_String
 	}
 
 	 /// convenient storage of distinct values in children node
-	XS_String& subvalue(const XS_String& name, const XS_String& attr_name)
+	XS_String& subvalue(const XS_String& name, const XS_String& attr_name, int n=0)
 	{
-		XMLNode* node = find_first(name);
+		XMLNode* node = find(name, n);
 
 		if (!node) {
 			node = new XMLNode(name);
@@ -536,9 +536,9 @@ struct XMLNode : public XS_String
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// convenient value access in children node
-	XS_String subvalue(const char* name, const char* attr_name) const
+	XS_String subvalue(const char* name, const char* attr_name, int n=0) const
 	{
-		const XMLNode* node = find_first(name);
+		const XMLNode* node = find(name, n);
 
 		if (node)
 			return node->get(attr_name);
@@ -547,9 +547,9 @@ struct XMLNode : public XS_String
 	}
 
 	 /// convenient storage of distinct values in children node
-	XS_String& subvalue(const char* name, const XS_String& attr_name)
+	XS_String& subvalue(const char* name, const XS_String& attr_name, int n=0)
 	{
-		XMLNode* node = find_first(name);
+		XMLNode* node = find(name, n);
 
 		if (!node) {
 			node = new XMLNode(name);
@@ -629,50 +629,63 @@ protected:
 			return NULL;
 	}
 
-	XMLNode* find_first(const XS_String& name) const
+	XMLNode* find(const XS_String& name, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
 			if (**it == name)
-				return *it;
+				if (!n--)
+					return *it;
 
 		return NULL;
 	}
 
-	XMLNode* find_first(const XS_String& name, const XS_String& attr_name, const XS_String& attr_value) const
+	XMLNode* find(const XS_String& name, const XS_String& attr_name, const XS_String& attr_value, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
 			const XMLNode& node = **it;
 
 			if (node==name && node.get(attr_name)==attr_value)
-				return *it;
+				if (!n--)
+					return *it;
 		}
 
 		return NULL;
 	}
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
-	XMLNode* find_first(const char* name) const
+	XMLNode* find(const char* name, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
 			if (**it == name)
-				return *it;
+				if (!n--)
+					return *it;
 
 		return NULL;
 	}
 
 	template<typename T, typename U>
-	XMLNode* find_first(const char* name, const T& attr_name, const U& attr_value) const
+	XMLNode* find(const char* name, const T& attr_name, const U& attr_value, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it) {
 			const XMLNode& node = **it;
 
 			if (node==name && node.get(attr_name)==attr_value)
-				return *it;
+				if (!n--)
+					return *it;
 		}
 
 		return NULL;
 	}
 #endif
+
+	 /// XPath find functions
+	const XMLNode* find_relative(const char* path) const;
+
+	XMLNode* find_relative(const char* path)
+		{return const_cast<XMLNode*>(const_cast<const XMLNode*>(this)->find_relative(path));}
+
+	 /// relative XPath create function
+	XMLNode* create_relative(const char* path);
 
 	void write_worker(std::ostream& out, int indent) const;
 	void pretty_write_worker(std::ostream& out, int indent) const;
@@ -981,9 +994,9 @@ struct XMLPos
 	}
 
 	 /// search for child and go down
-	bool go_down(const XS_String& name)
+	bool go_down(const XS_String& name, int n=0)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name, n);
 
 		if (node) {
 			go_to(node);
@@ -992,8 +1005,19 @@ struct XMLPos
 			return false;
 	}
 
-	 /// move X-Path like to position in XML tree
+	 /// move XPath like to position in XML tree
 	bool go(const char* path);
+
+	 /// create child nodes using XPath notation and move to the deepest child
+	bool create_relative(const char* path)
+	{
+		XMLNode* node = _cur->create_relative(path);
+		if (!node)
+			return false;	// invalid path specified
+
+		go_to(node);
+		return true;
+	}
 
 	 /// create node and move to it
 	void create(const XS_String& name)
@@ -1004,7 +1028,7 @@ struct XMLPos
 	 /// create node if not already existing and move to it
 	void smart_create(const XS_String& name)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name);
 
 		if (node)
 			go_to(node);
@@ -1015,7 +1039,7 @@ struct XMLPos
 	 /// search matching child node identified by key name and an attribute value
 	void smart_create(const XS_String& name, const XS_String& attr_name, const XS_String& attr_value)
 	{
-		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
+		XMLNode* node = _cur->find(name, attr_name, attr_value);
 
 		if (node)
 			go_to(node);
@@ -1028,9 +1052,9 @@ struct XMLPos
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
-	bool go_down(const char* name)
+	bool go_down(const char* name, int n=0)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name, n);
 
 		if (node) {
 			go_to(node);
@@ -1048,7 +1072,7 @@ struct XMLPos
 	 /// create node if not already existing and move to it
 	void smart_create(const char* name)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name);
 
 		if (node)
 			go_to(node);
@@ -1060,7 +1084,7 @@ struct XMLPos
 	template<typename T, typename U>
 	void smart_create(const char* name, const T& attr_name, const U& attr_value)
 	{
-		XMLNode* node = _cur->find_first(name, attr_name, attr_value);
+		XMLNode* node = _cur->find(name, attr_name, attr_value);
 
 		if (node)
 			go_to(node);
@@ -1150,9 +1174,9 @@ struct const_XMLPos
 	}
 
 	 /// search for child and go down
-	bool go_down(const XS_String& name)
+	bool go_down(const XS_String& name, int n=0)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name, n);
 
 		if (node) {
 			go_to(node);
@@ -1161,14 +1185,14 @@ struct const_XMLPos
 			return false;
 	}
 
-	 /// move X-Path like to position in XML tree
+	 /// move XPath like to position in XML tree
 	bool go(const char* path);
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	 /// search for child and go down
-	bool go_down(const char* name)
+	bool go_down(const char* name, int n=0)
 	{
-		XMLNode* node = _cur->find_first(name);
+		XMLNode* node = _cur->find(name, n);
 
 		if (node) {
 			go_to(node);

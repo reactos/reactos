@@ -51,13 +51,211 @@ const LPCXSSTR XMLStorage::XS_NUMBERFMT = XS_TEXT("%d");
 namespace XMLStorage {
 
 
- /// move X-Path like to position in XML tree
+static std::string unescape(const char* s, char b='"', char e='"')
+{
+	const char* end = s + strlen(s);
+
+//	if (*s == b)
+//		++s;
+//
+//	if (end>s && end[-1]==e)
+//		--end;
+
+	if (*s == b)
+		if (end>s && end[-1]==e)
+			++s, --end;
+
+	return std::string(s, end-s);
+}
+
+static std::string unescape(const char* s, int l, char b='"', char e='"')
+{
+	const char* end = s + l;
+
+//	if (*s == b)
+//		++s;
+//
+//	if (end>s && end[-1]==e)
+//		--end;
+
+	if (*s == b)
+		if (end>s && end[-1]==e)
+			++s, --end;
+
+	return std::string(s, end-s);
+}
+
+
+ /// move XPath like to position in XML tree
 bool XMLPos::go(const char* path)
 {
+	XMLNode* node = _cur;
 
-	///@todo
+	 // Is this an absolute path?
+	if (*path == '/') {
+		node = _root;
+		++path;
+	}
 
-	return false;
+	node = node->find_relative(path);
+
+	if (node) {
+		go_to(node);
+		return true;
+	} else
+		return false;
+}
+
+ /// move XPath like to position in XML tree
+bool const_XMLPos::go(const char* path)
+{
+	const XMLNode* node = _cur;
+
+	 // Is this an absolute path?
+	if (*path == '/') {
+		node = _root;
+		++path;
+	}
+
+	node = node->find_relative(path);
+
+	if (node) {
+		go_to(node);
+		return true;
+	} else
+		return false;
+}
+
+
+const XMLNode* XMLNode::find_relative(const char* path) const
+{
+	const XMLNode* node = this;
+
+	 // parse relative path
+	while(*path) {
+		const char* slash = strchr(path, '/');
+		if (slash == path)
+			return NULL;
+
+		int l = slash? slash-path: strlen(path);
+		std::string comp(path, l);
+		path += l;
+
+		 // look for [n] and [@attr_name="attr_value"] expressions in path components
+		const char* bracket = strchr(comp.c_str(), '[');
+		l = bracket? bracket-comp.c_str(): comp.length();
+		std::string child_name(comp.c_str(), l);
+		std::string attr_name, attr_value;
+
+		int n = 0;
+		if (bracket) {
+			std::string expr = unescape(bracket, '[', ']');
+			const char* p = expr.c_str();
+
+			n = atoi(p);	// read index number
+
+			if (n)
+				n = n - 1;	// convert into zero based index
+
+			const char* at = strchr(p, '@');
+
+			if (at) {
+				p = at + 1;
+				const char* equal = strchr(p, '=');
+
+				 // read attribute name and value
+				if (equal) {
+					attr_name = unescape(p, equal-p);
+					attr_value = unescape(equal+1);
+				}
+			}
+		}
+
+		if (attr_name.empty())
+			 // search n.th child node with specified name
+			node = node->find(child_name, n);
+		else
+			 // search n.th child node with specified name and matching attribute value
+			node = node->find(child_name, attr_name, attr_value, n);
+
+		if (!node)
+			return NULL;
+
+		if (*path == '/')
+			++path;
+	}
+
+	return node;
+}
+
+XMLNode* XMLNode::create_relative(const char* path)
+{
+	XMLNode* node = this;
+
+	 // parse relative path
+	while(*path) {
+		const char* slash = strchr(path, '/');
+		if (slash == path)
+			return NULL;
+
+		int l = slash? slash-path: strlen(path);
+		std::string comp(path, l);
+		path += l;
+
+		 // look for [n] and [@attr_name="attr_value"] expressions in path components
+		const char* bracket = strchr(comp.c_str(), '[');
+		l = bracket? bracket-comp.c_str(): comp.length();
+		std::string child_name(comp.c_str(), l);
+		std::string attr_name, attr_value;
+
+		int n = 0;
+		if (bracket) {
+			std::string expr = unescape(bracket, '[', ']');
+			const char* p = expr.c_str();
+
+			n = atoi(p);	// read index number
+
+			if (n)
+				n = n - 1;	// convert into zero based index
+
+			const char* at = strchr(p, '@');
+
+			if (at) {
+				p = at + 1;
+				const char* equal = strchr(p, '=');
+
+				 // read attribute name and value
+				if (equal) {
+					attr_name = unescape(p, equal-p);
+					attr_value = unescape(equal+1);
+				}
+			}
+		}
+
+		XMLNode* child;
+
+		if (attr_name.empty())
+			 // search n.th child node with specified name
+			child = node->find(child_name, n);
+		else
+			 // search n.th child node with specified name and matching attribute value
+			child = node->find(child_name, attr_name, attr_value, n);
+
+		if (!child) {
+			child = new XMLNode(child_name);
+			node->add_child(child);
+
+			if (!attr_name.empty())
+				(*node)[attr_name] = attr_value;
+		}
+
+		node = child;
+
+		if (*path == '/')
+			++path;
+	}
+
+	return node;
 }
 
 
