@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.42 2004/12/12 01:40:38 weiden Exp $
+ * $Id: brush.c,v 1.43 2004/12/18 18:19:24 royce Exp $
  */
 #include <w32k.h>
 
@@ -83,8 +83,10 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
 VOID FASTCALL
 IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj)
 {
+   ASSERT(BrushInst);
+   ASSERT(BrushObj);
    if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
-      BrushInst->BrushObject.iSolidColor = 0;			
+      BrushInst->BrushObject.iSolidColor = 0;
    else if (BrushObj->flAttrs & GDIBRUSH_IS_SOLID)
       BrushInst->BrushObject.iSolidColor = XLATEOBJ_iXlate(XlateObj, BrushObj->BrushAttr.lbColor);
    else
