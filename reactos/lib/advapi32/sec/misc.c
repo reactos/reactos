@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.10 2004/02/25 23:54:13 sedwards Exp $
+/* $Id: misc.c,v 1.11 2004/03/08 18:09:05 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -158,13 +158,53 @@ RevertToSelf(VOID)
  * RETURNS
  *  Success: The length of the user name, including terminating NUL.
  *  Failure: ERROR_MORE_DATA if *lpSize is too small.
+ *
+ * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 {
-  DPRINT1("GetUserNameA - Unimplemented\n");
-  return 1;
+//  size_t len;
+//  char name[] = { "Administrator" };
+
+  /* We need to include the null character when determining the size of the buffer. */
+//  len = strlen(name) + 1;
+//  if (len > *lpSize)
+//  {
+//    SetLastError(ERROR_MORE_DATA);
+//    *lpSize = len;
+//    return 0;
+//  }
+
+//  *lpSize = len;
+//  strcpy(lpszName, name);
+  return TRUE;
+}
+
+/******************************************************************************
+ * GetUserNameW [ADVAPI32.@]
+ *
+ * See GetUserNameA.
+ *
+ * @unimplemented
+ */
+BOOL WINAPI
+GetUserNameW( LPWSTR lpszName, LPDWORD lpSize )
+{
+//    char name[] = { "Administrator" };
+
+//    DWORD len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
+
+//    if (len > *lpSize)
+//    {
+//        SetLastError(ERROR_MORE_DATA);
+//        *lpSize = len;
+//        return FALSE;
+//    }
+
+//    *lpSize = len;
+//    MultiByteToWideChar( CP_ACP, 0, name, -1, lpszName, len );
+    return TRUE;
 }
 
 /* EOF */
-

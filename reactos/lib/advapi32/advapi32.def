@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.15 2004/02/26 00:33:09 sedwards Exp $
+; $Id: advapi32.def,v 1.16 2004/03/08 18:09:04 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -170,7 +170,7 @@ GetTokenInformation@20
 ;GetTrusteeTypeA@4
 ;GetTrusteeTypeW@4
 GetUserNameA@8
-;GetUserNameW@8
+GetUserNameW@8
 ;GrantAccessRightsA@16
 ;GrantAccessRightsW@16
 ;I_ScGetCurrentGroupStateW@12
@@ -208,7 +208,7 @@ LookupPrivilegeValueW@12
 ;LsaAddAccountRights@16
 ;LsaAddPrivilegesToAccount@8
 ;LsaClearAuditLog@4
-;LsaClose@4
+LsaClose@4
 ;LsaCreateAccount@16
 ;LsaCreateSecret@16
 ;LsaCreateTrustedDomain@16
@@ -220,7 +220,7 @@ LookupPrivilegeValueW@12
 ;LsaEnumeratePrivileges@20
 ;LsaEnumeratePrivilegesOfAccount@8
 ;LsaEnumerateTrustedDomains@20
-;LsaFreeMemory@4
+LsaFreeMemory@4
 ;LsaGetQuotasForAccount@8
 ;LsaGetSystemAccessAccount@8
 ;LsaGetUserName@8
@@ -231,13 +231,13 @@ LookupPrivilegeValueW@12
 ;LsaLookupPrivilegeName@12
 ;LsaLookupPrivilegeValue@12
 ;LsaLookupSids@20
-;LsaNtStatusToWinError@4
+LsaNtStatusToWinError@4
 ;LsaOpenAccount@16
-;LsaOpenPolicy@16
+LsaOpenPolicy@16
 ;LsaOpenSecret@16
 ;LsaOpenTrustedDomain@16
 ;LsaQueryInfoTrustedDomain
-;LsaQueryInformationPolicy@12
+LsaQueryInformationPolicy@12
 ;LsaQuerySecret@20
 ;LsaQuerySecurityObject@12
 ;LsaQueryTrustedDomainInfo@16

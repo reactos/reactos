@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
+/* $Id: lsa.c,v 1.10 2004/03/08 18:09:05 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,6 +16,21 @@
 #include <ddk/ntddk.h>
 #include <ntsecapi.h>
 #include <debug.h>
+
+/******************************************************************************
+ * LsaNtStatusToWinError [ADVAPI32.@]
+ *
+ * PARAMS
+ *   Status [I]
+ *
+ * @implemented
+ */
+ULONG WINAPI
+LsaNtStatusToWinError(NTSTATUS Status)
+{
+    return RtlNtStatusToDosError(Status);
+}
+
 
 /******************************************************************************
  * LsaOpenPolicy [ADVAPI32.@]
@@ -37,6 +52,10 @@ LsaOpenPolicy (PLSA_UNICODE_STRING lsaucs,
   DPRINT1("LsaOpenPolicy - stub\n");
   return STATUS_SUCCESS;
 }
+
+#ifndef SID_REVISION /* FIXME - Winnt.h */
+#define	SID_REVISION			(1)	/* Current revision */
+#endif
 
 /*
  * @unimplemented
