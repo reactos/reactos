@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.11 2002/06/14 18:55:09 jfilby Exp $
+/* $Id: class.c,v 1.12 2002/06/14 19:07:32 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -172,12 +172,14 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 
   if (!RtlCreateUnicodeStringFromAsciiz(&MenuName, (PCSZ)lpwcx->lpszMenuName))
   {
+    RtlFreeUnicodeString(&MenuName);
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return (ATOM)0;
   }
   
   if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
     {
+      RtlFreeUnicodeString(&ClassName);
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return (ATOM)0;
     }
@@ -194,7 +196,6 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 				  0);
   
   RtlFreeUnicodeString(&ClassName);
-  
   RtlFreeUnicodeString(&MenuName);
   
   return (ATOM)Atom;
