@@ -11,8 +11,13 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntddblue.h>
 #include <assert.h>
 #include <wchar.h>
+
+//#define NDEBUG
+#include <kernel32/kernel32.h>
+
 
 /* What is this?
 #define EXTENDED_CONSOLE */
@@ -27,10 +32,6 @@ HANDLE StdPrint  = INVALID_HANDLE_VALUE;
 
 
 
-
-
-#define FSCTL_GET_CONSOLE_SCREEN_BUFFER_INFO              CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 254, DO_DIRECT_IO, FILE_READ_ACCESS|FILE_WRITE_ACCESS)
-#define FSCTL_SET_CONSOLE_SCREEN_BUFFER_INFO              CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 255, DO_DIRECT_IO, FILE_READ_ACCESS|FILE_WRITE_ACCESS)
 
 
 /*--------------------------------------------------------------
@@ -224,7 +225,7 @@ GetConsoleScreenBufferInfo(
 	
 	if ( !DeviceIoControl(
 		hConsoleOutput,
-		FSCTL_GET_CONSOLE_SCREEN_BUFFER_INFO,
+        IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
 		NULL,
 		0,
 		lpConsoleScreenBufferInfo,
@@ -265,7 +266,7 @@ SetConsoleCursorPosition(
 	
 	if( !DeviceIoControl(
 		hConsoleOutput,
-			FSCTL_SET_CONSOLE_SCREEN_BUFFER_INFO,
+            IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
 			&ConsoleScreenBufferInfo,
 			sizeof(CONSOLE_SCREEN_BUFFER_INFO),
 			NULL,
@@ -522,7 +523,7 @@ ReadConsoleOutputCharacterA(
 
 
 /*--------------------------------------------------------------
- *	KERNEL32.
+ *      ReadConsoleOutputCharacterW
  */
 WINBASEAPI
 BOOL
@@ -612,8 +613,26 @@ WriteConsoleOutputAttribute(
 	LPDWORD		 lpNumberOfAttrsWritten
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+    WRITE_OUTPUT_ATTRIBUTE Buffer;
+
+    Buffer.lpAttribute  = lpAttribute;
+    Buffer.nLength      = nLength;
+    Buffer.dwWriteCoord = dwWriteCoord;
+
+    if (!DeviceIoControl (hConsoleOutput,
+                          IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
+                          &Buffer,
+                          sizeof(WRITE_OUTPUT_ATTRIBUTE),
+                          lpNumberOfAttrsWritten,
+                          sizeof(DWORD),
+//                          NULL,
+//                          0,
+                          &dwBytesReturned,
+                          NULL))
+        return FALSE;
+
+    return TRUE;
 }
 
 
@@ -631,8 +650,26 @@ FillConsoleOutputAttribute(
 	LPDWORD		lpNumberOfAttrsWritten
 	)
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+    FILL_OUTPUT_ATTRIBUTE Buffer;
+
+    Buffer.wAttribute   = wAttribute;
+    Buffer.nLength      = nLength;
+    Buffer.dwWriteCoord = dwWriteCoord;
+
+    if (!DeviceIoControl (hConsoleOutput,
+                          IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
+                          &Buffer,
+                          sizeof(FILL_OUTPUT_ATTRIBUTE),
+//                          lpNumberOfAttrsWritten,
+//                          sizeof(DWORD),
+                          NULL,
+                          0,
+                          &dwBytesReturned,
+                          NULL))
+        return FALSE;
+
+    return TRUE;
 }
 
 
@@ -851,18 +888,28 @@ SetConsoleWindowInfo(
 
 
 /*--------------------------------------------------------------
- * 	SetConsoleTextAttribute
+ *      SetConsoleTextAttribute
  */
 WINBASEAPI
 BOOL
 WINAPI
 SetConsoleTextAttribute(
 	HANDLE		hConsoleOutput,
-	WORD		wAttributes
-	)
+        WORD            wAttributes
+        )
 {
-/* TO DO */
-	return FALSE;
+    DWORD dwBytesReturned;
+
+    if (!DeviceIoControl (hConsoleOutput,
+                          IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
+                          &wAttributes,
+                          sizeof(WORD),
+                          NULL,
+                          0,
+                          &dwBytesReturned,
+                          NULL))
+        return FALSE;
+    return TRUE;
 }
 
 
