@@ -40,4 +40,6 @@ private:
 	FILE* fMakefile;
 };
 
+std::string FixupTargetFilename ( const std::string& targetFilename );
+
 #endif /* MINGW_H */

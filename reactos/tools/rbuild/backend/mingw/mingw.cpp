@@ -78,7 +78,7 @@ MingwBackend::GenerateAllTarget ()
 		Module& module = *ProjectNode.modules[i];
 		fprintf ( fMakefile,
 		          " %s",
-		          module.GetPath ().c_str () );
+		          FixupTargetFilename(module.GetPath ()).c_str () );
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
 }
@@ -104,4 +104,10 @@ MingwBackend::GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers ) const
 {
 	moduleHandlers.push_back ( new MingwKernelModuleHandler ( fMakefile ) );
 	moduleHandlers.push_back ( new MingwStaticLibraryModuleHandler ( fMakefile ) );
+}
+
+string
+FixupTargetFilename ( const string& targetFilename )
+{
+	return string("$(ROS_INTERMEDIATE)") + targetFilename;
 }

@@ -33,7 +33,7 @@ MingwModuleHandler::ReplaceExtension ( const string& filename,
 string
 MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 {
-	return ReplaceExtension ( module.GetPath ().c_str (),
+	return ReplaceExtension ( FixupTargetFilename(module.GetPath ()).c_str (),
 	                          ".a" );
 }
 
@@ -50,7 +50,7 @@ MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 			dependencies += " ";
 		const Module* importedModule = module.project.LocateModule ( module.libraries[i]->name );
 		assert ( importedModule != NULL );
-		dependencies += importedModule->GetPath ().c_str ();
+		dependencies += FixupTargetFilename(importedModule->GetPath ()).c_str ();
 	}
 	return dependencies;
 }
@@ -74,8 +74,9 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 string
 MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 {
-	return ReplaceExtension ( sourceFilename,
-		                      ".o" );
+	return
+		FixupTargetFilename ( ReplaceExtension ( sourceFilename,
+		                                         ".o" ) );
 }
 
 string
@@ -242,39 +243,45 @@ MingwKernelModuleHandler::Process ( const Module& module )
 void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 {
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	//static string ros_output ( "$(ROS_INTERMEDIATE)" );
+	string target ( FixupTargetFilename(module.GetPath()) );
 	string workingDirectory = GetWorkingDirectory ( );
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+	string base_tmp = ros_junk + module.name + ".base.tmp";
+	string junk_tmp = ros_junk + module.name + ".junk.tmp";
+	string temp_exp = ros_junk + module.name + ".temp.exp";
 	fprintf ( fMakefile, "%s: %s %s\n",
-	          module.GetPath ().c_str (),
+	          target.c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${gcc} -Wl,--base-file,%s" SSEP "base.tmp -o %s" SSEP "junk.tmp %s %s\n",
-	          workingDirectory.c_str (),
-	          workingDirectory.c_str (),
+	          "\t${gcc} -Wl,--base-file,%s -o %s %s %s\n",
+	          base_tmp.c_str (),
+	          junk_tmp.c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${rm} %s" SSEP "junk.tmp\n",
-	          workingDirectory.c_str () );
+	          "\t${rm} %s\n",
+	          junk_tmp.c_str () );
 	fprintf ( fMakefile,
-	          "\t${dlltool} --dllname %s --base-file %s" SSEP "base.tmp --output-exp %s" SSEP "temp.exp --kill-at\n",
-	          module.GetPath ().c_str (),
-	          workingDirectory.c_str (),
-	          workingDirectory.c_str ());
+	          "\t${dlltool} --dllname %s --base-file %s --output-exp %s --kill-at\n",
+	          target.c_str (),
+	          base_tmp.c_str (),
+	          temp_exp.c_str ());
 	fprintf ( fMakefile,
-	          "\t${rm} %s" SSEP "base.tmp\n",
-	          workingDirectory.c_str () );
+	          "\t${rm} %s\n",
+	          base_tmp.c_str () );
 	fprintf ( fMakefile,
-	          "\t${ld} -Wl,%s" SSEP "temp.exp -o %s %s %s\n",
-	          workingDirectory.c_str (),
-	          module.GetPath ().c_str (),
+	          "\t${ld} -Wl,%s -o %s %s %s\n",
+	          temp_exp.c_str (),
+	          target.c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${rm} %s" SSEP "temp.exp\n",
-	          workingDirectory.c_str () );
+	          "\t${rm} %s\n",
+	          temp_exp.c_str () );
 	
 	GenerateArchiveTarget ( module );
 	GenerateObjectFileTargets ( module );

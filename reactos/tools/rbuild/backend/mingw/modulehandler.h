@@ -16,6 +16,7 @@ protected:
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
 	std::string GetImportLibraryDependencies ( const Module& module ) const;
 	std::string GetSourceFilenames ( const Module& module ) const;
+
 	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
 	std::string GetObjectFilenames ( const Module& module ) const;
 	void GenerateObjectFileTargets ( const Module& module ) const;
