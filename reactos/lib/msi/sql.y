@@ -64,7 +64,7 @@ static struct expr * EXPR_complex( struct expr *l, UINT op, struct expr *r );
 static struct expr * EXPR_column( LPWSTR );
 static struct expr * EXPR_ival( struct sql_str *, int sign);
 static struct expr * EXPR_sval( struct sql_str *);
-static struct expr * EXPR_wildcard(void);
+static struct expr * EXPR_wildcard();
 
 %}
 
