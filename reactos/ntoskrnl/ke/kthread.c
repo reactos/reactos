@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.43 2003/11/27 01:02:23 gdalsnes Exp $
+/* $Id: kthread.c,v 1.44 2003/11/30 19:00:02 gdalsnes Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -191,9 +191,14 @@ until the thread has been fully created, BUT the problem is: they are
 currently never enabled again! So until somone figures out how 
 this really work, I'm setting regular kmode APC's intially enabled.
 -Gunnar
+
+UPDATE: After enabling regular kmode APC's I have experienced random
+crashes. I'm disabling it again, until we fix the APC implementation...
+-Gunnar
 */
 
-  Thread->KernelApcDisable = 0;
+  Thread->KernelApcDisable = -1;
+
   
   Thread->UserAffinity = Process->Affinity;
   Thread->SystemAffinityActive = 0;
