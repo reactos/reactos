@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.4 2001/10/03 02:15:34 ekohl Exp $
+/* $Id: errno.c,v 1.5 2001/10/04 16:06:36 ekohl Exp $
  *
  */
 
@@ -6,7 +6,7 @@
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/internal/file.h>
 
-int *__doserrno(void)
+unsigned long *__doserrno(void)
 {
   return(&GetThreadData()->tdoserrno);
 }

@@ -7,8 +7,8 @@
 
 typedef struct _ThreadData
 {
-  int terrno;
-  unsigned long tdoserrno;
+  int terrno;			/* *nix error code */
+  unsigned long tdoserrno;	/* Win32 error code (for I/O only) */
   unsigned long long tnext;	/* used by rand/srand */
 
   char *lasttoken;		/* used by strtok */

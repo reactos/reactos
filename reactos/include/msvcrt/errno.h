@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ekohl $
- * $Date: 2001/07/03 12:56:48 $
+ * $Date: 2001/10/04 16:05:41 $
  *
  */
 
@@ -98,7 +98,7 @@ extern "C" {
 int*	_errno(void);
 #define	errno		(*_errno())
 
-int*	__doserrno(void);
+unsigned long*	__doserrno(void);
 #define	_doserrno	(*__doserrno())
 
 /* One of the MSVCRTxx libraries */
