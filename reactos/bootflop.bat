@@ -6,6 +6,8 @@
 COPY /Y A:\DRIVERS\*.SYS C:\reactos\system32\drivers > NUL:
 COPY /Y A:\DLLS\*.DLL C:\reactos\system32 > NUL:
 COPY /Y A:\APPS\*.EXE C:\reactos\system32 > NUL:
+COPY /Y A:\SUBSYS\*.EXE C:\reactos\system32 > NUL:
+COPY /Y A:\SUBSYS\*.DLL C:\reactos\system32 > NUL:
 :
 : present a menu to the booter...
 :

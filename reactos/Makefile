@@ -17,7 +17,8 @@ include rules.mak
 COMPONENTS = iface_native ntoskrnl
 DLLS = ntdll kernel32 crtdll fmifs gdi32
 #DLLS = advapi32 mingw32 user32
-SUBSYS = win32k
+SUBSYS = smss win32k
+#SUBSYS = csrss
 
 #
 # Select the server(s) you want to build
@@ -39,23 +40,25 @@ DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport
 FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
-		  
-APPS = args hello shell test cat bench
+
+APPS = args hello shell test cat bench cmd ntest
 # APPS = cmd
 
 all: $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 .PHONY: all
 
 clean: $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
-       $(KERNEL_SERVICES:%=%_clean) $(APPS:%=%_clean)
+       $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(APPS:%=%_clean)
 .PHONY: clean
 
 floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
         $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
-        $(KERNEL_SERVICES:%=%_floppy) $(APPS:%=%_floppy)
+        $(KERNEL_SERVICES:%=%_floppy) $(SUBSYS:%=%_floppy) \
+        $(APPS:%=%_floppy)
 
 dist: clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
-      $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(APPS:%=%_dist)
+      $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
+      $(APPS:%=%_dist)
 
 #
 # Applications
@@ -170,10 +173,10 @@ $(DLLS): %:
 $(DLLS:%=%_clean): %_clean:
 	make -C lib/$* clean
 
-$(DLLS:%=%_floppy): %_floppy: 
+$(DLLS:%=%_floppy): %_floppy:
 	make -C lib/$* floppy
 
-$(DLLS:%=%_dist): %_dist: 
+$(DLLS:%=%_dist): %_dist:
 	make -C lib/$* dist
 
 .PHONY: $(DLLS) $(DLLS:%=%_clean) $(DLLS:%=%_floppy) $(DLLS:%=%_dist)
@@ -185,13 +188,13 @@ $(SUBSYS): %:
 	make -C subsys/$*
 
 $(SUBSYS:%=%_clean): %_clean:
-	make -C lib/$* clean
+	make -C subsys/$* clean
 
 $(SUBSYS:%=%_floppy): %_floppy:
-	make -C lib/$* floppy
+	make -C subsys/$* floppy
 
 $(SUBSYS:%=%_dist): %_dist:
-	make -C lib/$* dist
+	make -C subsys/$* dist
 
 .PHONY: $(SUBSYS) $(SUBSYS:%=%_clean) $(SUBSYS:%=%_floppy) \
         $(SUBSYS:%=%_dist)
@@ -205,11 +208,13 @@ install: all
 
 make_floppy_dirs:
 ifeq ($(DOSCLI),yes)
-	mkdir $(FLOPPY_DIR)\dlls 
-	mkdir $(FLOPPY_DIR)\apps 
+	mkdir $(FLOPPY_DIR)\dlls
+	mkdir $(FLOPPY_DIR)\apps
 	mkdir $(FLOPPY_DIR)\drivers
+	mkdir $(FLOPPY_DIR)\subsys
 else
 	mkdir $(FLOPPY_DIR)/dlls $(FLOPPY_DIR)/apps $(FLOPPY_DIR)/drivers
+	mkdir $(FLOPPY_DIR)/subsys
 endif
 
 .PHONY: make_floppy_dirs
@@ -232,9 +237,11 @@ ifeq ($(DOSCLI),yes)
 	$(RM) $(DIST_DIR)\dlls\*.*
 	$(RM) $(DIST_DIR)\apps\*.*
 	$(RM) $(DIST_DIR)\drivers\*.*
+	$(RM) $(DIST_DIR)\subsys\*.*
 	$(RMDIR) $(DIST_DIR)\dlls
 	$(RMDIR) $(DIST_DIR)\apps
 	$(RMDIR) $(DIST_DIR)\drivers
+	$(RMDIR) $(DIST_DIR)\subsys
 	$(RMDIR) $(DIST_DIR)
 else
 	$(RM) -r $(DIST_DIR)
@@ -242,15 +249,16 @@ endif
 
 make_dist_dirs:
 ifeq ($(DOSCLI),yes)
-	mkdir $(DIST_DIR) 
-	mkdir $(DIST_DIR)\dlls 
-	mkdir $(DIST_DIR)\apps 
+	mkdir $(DIST_DIR)
+	mkdir $(DIST_DIR)\dlls
+	mkdir $(DIST_DIR)\apps
 	mkdir $(DIST_DIR)\drivers
+	mkdir $(DIST_DIR)\dlls
+	mkdir $(DIST_DIR)\subsys
 else
 	mkdir $(DIST_DIR) $(DIST_DIR)/dlls $(DIST_DIR)/apps $(DIST_DIR)/drivers
+	mkdir $(DIST_DIR)/subsys
 endif
 
 .PHONY: clean_dist_dir make_dist_dirs
-
-
 
