@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/10/03 22:10:15 ekohl Exp $
+# $Id: makefile,v 1.3 2000/09/12 23:21:20 ea Exp $
 #
 # ReactOS makefile for notevil
 # Compiler: egcs 1.1.2
@@ -29,6 +29,7 @@ $(TARGET).exe: $(OBJECTS)
 $(TARGET).coff: $(TARGET).rc
 	$(RC) $(RFLAGS) $(TARGET).rc $(TARGET).coff
 
+$(TARGET).o: $(TARGET).c resource.h
 
 floppy: $(TARGET:%=$(FLOPPY_DIR)/apps/%)
 
