@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.6 2004/02/02 17:59:23 navaraf Exp $
+/* $Id: opengl32.c,v 1.7 2004/02/02 18:21:32 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -282,7 +282,7 @@ static GLDRIVERDATA *OPENGL32_LoadDriver ( LPCWSTR driver )
  * RETURNS:   error code; ERROR_SUCCESS on success
  */
 #define LOAD_DRV_PROC( icd, proc, required ) \
-	icd->proc = GetProcAddress( icd->handle, #proc ); \
+	*(char**)&(icd->proc) = (char*)GetProcAddress( icd->handle, #proc ); \
 	if (required && !icd->proc) { \
 		DBGPRINT( "Error: GetProcAddress(\"%s\") failed!", #proc ); \
 		return GetLastError(); \
