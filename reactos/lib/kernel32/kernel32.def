@@ -65,6 +65,7 @@ ConnectNamedPipe@8
 ConsoleMenuControl@12
 ContinueDebugEvent@12
 ConvertDefaultLocale@4
+ConvertThreadToFiber@4
 CopyFileA@12
 CopyFileExA@24
 CopyFileExW@24
@@ -76,6 +77,7 @@ CreateDirectoryExW@12
 CreateDirectoryW@8
 CreateEventA@16
 CreateEventW@16
+CreateFiber@12
 CreateFileA@28
 CreateFileMappingA@24
 CreateFileMappingW@24
@@ -104,6 +106,7 @@ DefineDosDeviceA@12
 DefineDosDeviceW@12
 DeleteAtom@4
 DeleteCriticalSection@4
+DeleteFiber@4
 DeleteFileA@4
 DeleteFileW@4
 DeviceIoControl@32
@@ -231,6 +234,7 @@ GetCurrencyFormatW@24
 GetCurrentConsoleFont@12
 GetCurrentDirectoryA@8
 GetCurrentDirectoryW@8
+GetCurrentFiber@0
 GetCurrentProcess@0
 GetCurrentProcessId@0
 GetCurrentThread@0
@@ -251,6 +255,7 @@ GetEnvironmentVariableA@12
 GetEnvironmentVariableW@12
 GetExitCodeProcess@8
 GetExitCodeThread@8
+GetFiberData@0
 GetFileAttributesA@4
 GetFileAttributesW@4
 GetFileInformationByHandle@8
@@ -580,6 +585,7 @@ SizeofResource@8
 Sleep@4
 SleepEx@8
 SuspendThread@4
+SwitchToFiber@4
 SwitchToThread@0
 SystemTimeToFileTime@8
 SystemTimeToTzSpecificLocalTime@12

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.7 2000/08/05 18:01:49 dwelch Exp $
+; $Id: kernel32.edf,v 1.8 2000/08/14 14:33:23 ea Exp $
 ;
 ; kernel32.edf
 ;
@@ -69,6 +69,7 @@ ConnectNamedPipe=ConnectNamedPipe@8
 ConsoleMenuControl=ConsoleMenuControl@12
 ContinueDebugEvent=ContinueDebugEvent@12
 ConvertDefaultLocale=ConvertDefaultLocale@4
+ConvertThreadToFiber=ConvertThreadToFiber@4
 CopyFileA=CopyFileA@12
 CopyFileExA=CopyFileExA@24
 CopyFileExW=CopyFileExW@24
@@ -80,6 +81,7 @@ CreateDirectoryExW=CreateDirectoryExW@12
 CreateDirectoryW=CreateDirectoryW@8
 CreateEventA=CreateEventA@16
 CreateEventW=CreateEventW@16
+CreateFiber=CreateFiber@12
 CreateFileA=CreateFileA@28
 CreateFileMappingA=CreateFileMappingA@24
 CreateFileMappingW=CreateFileMappingW@24
@@ -108,6 +110,7 @@ DefineDosDeviceA=DefineDosDeviceA@12
 DefineDosDeviceW=DefineDosDeviceW@12
 DeleteAtom=DeleteAtom@4
 DeleteCriticalSection=DeleteCriticalSection@4
+DeleteFiber=DeleteFiber@4
 DeleteFileA=DeleteFileA@4
 DeleteFileW=DeleteFileW@4
 DeviceIoControl=DeviceIoControl@32
@@ -235,6 +238,7 @@ GetCurrencyFormatW=GetCurrencyFormatW@24
 GetCurrentConsoleFont=GetCurrentConsoleFont@12
 GetCurrentDirectoryA=GetCurrentDirectoryA@8
 GetCurrentDirectoryW=GetCurrentDirectoryW@8
+GetCurrentFiber=GetCurrentFiber@0
 GetCurrentProcess=GetCurrentProcess@0
 GetCurrentProcessId=GetCurrentProcessId@0
 GetCurrentThread=GetCurrentThread@0
@@ -256,6 +260,7 @@ GetEnvironmentVariableA=GetEnvironmentVariableA@12
 GetEnvironmentVariableW=GetEnvironmentVariableW@12
 GetExitCodeProcess=GetExitCodeProcess@8
 GetExitCodeThread=GetExitCodeThread@8
+GetFiberData=GetFiberData@0
 GetFileAttributesA=GetFileAttributesA@4
 GetFileAttributesW=GetFileAttributesW@4
 GetFileInformationByHandle=GetFileInformationByHandle@8
@@ -585,6 +590,7 @@ SizeofResource=SizeofResource@8
 Sleep=Sleep@4
 SleepEx=SleepEx@8
 SuspendThread=SuspendThread@4
+SwitchToFiber=SwitchToFiber@4
 SwitchToThread=SwitchToThread@0
 SystemTimeToFileTime=SystemTimeToFileTime@8
 SystemTimeToTzSpecificLocalTime=SystemTimeToTzSpecificLocalTime@12

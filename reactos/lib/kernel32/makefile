@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.37 2000/08/12 19:33:18 dwelch Exp $
+# $Id: makefile,v 1.38 2000/08/14 14:33:24 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -58,7 +58,10 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
  nls/lcSLV.o nls/lcSQI.o nls/lcSRB.o nls/lcSRL.o nls/lcSVE.o nls/lcSVF.o nls/lcTRK.o nls/lcUKR.o\
  nls/locale.o nls/mbtowc.o nls/wctomb.o nls/ole2nls.o
 
-THREAD_OBJECTS = thread/thread.o thread/tls.o
+THREAD_OBJECTS =\
+	thread/fiber.o	\
+	thread/thread.o	\
+	thread/tls.o
 
 PROCESS_OBJECTS = \
 	process/proc.o \
