@@ -13,14 +13,14 @@ CFLAGS+=-fexceptions -O2 -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS -W
 LD=$(CXX) $(CXXFLAGS)
 LDFLAGS=
 LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32
+LIBS+=-lkernel32 -luser32 -lgdi32
 else
 ifeq "$(CFG)"  "Proj_Listing5_1 - Win32 Debug"
 CFLAGS+=-fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W
 LD=$(CXX) $(CXXFLAGS)
 LDFLAGS=
 LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32
+LIBS+=-lkernel32 -luser32 -lgdi32
 endif
 endif
 
@@ -63,7 +63,7 @@ $(TARGET): $(OBJS)
 
 .PHONY: clean
 clean:
-	-rm -f $(OBJS) $(TARGET)
+	-del $(OBJS) $(TARGET)
 
 
 

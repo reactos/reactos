@@ -212,7 +212,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
          hListBrush = CreateSolidBrush(PALETTERGB(64, 192, 64));
          hListPen = CreatePen(PS_SOLID, 3, PALETTERGB(0, 0, 0));
          HDC hScreenDC = GetDC(NULL);
+#if 0
          try
+#endif
          {
             // MakeFont() from Chapter 4
             hListFont = font::MakeFont(
@@ -220,7 +222,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                font::FS_BOLD | font::FS_UNDERLINE
                ); 
          }
+#if 0
          catch (...)
+#endif
          {
             ReleaseDC(NULL, hScreenDC);
          }
@@ -250,7 +254,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
          if (lpdis->CtlID == reinterpret_cast<UINT>(hListBox))
          {            
             SaveDC(lpdis->hDC);
+#if 0
             try
+#endif
             {              
                SelectObject(lpdis->hDC, hListBrush);
                SelectObject(lpdis->hDC, hListPen);
@@ -309,7 +315,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                   DrawFocusRect(lpdis->hDC, &RFocus);
                }
             }
+#if 0
             catch (...)
+#endif
             {
                RestoreDC(lpdis->hDC, -1);
             }
