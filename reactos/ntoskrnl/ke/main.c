@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.64 2000/10/07 18:44:07 dwelch Exp $
+/* $Id: main.c,v 1.65 2000/10/07 20:55:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,16 +111,18 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	Status = NtOpenSymbolicLinkObject (&Handle,
 	                                   SYMBOLIC_LINK_ALL_ACCESS,
 	                                   &ObjectAttributes);
-	RtlFreeUnicodeString (&ArcName);
 	if (!NT_SUCCESS(Status))
 	{
 		RtlFreeUnicodeString (&BootPath);
 		RtlFreeUnicodeString (&DeviceName);
-		DbgPrint("NtOpenSymbolicLinkObject() failed (Status %x)\n",
+		DbgPrint("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
+		         &ArcName,
 		         Status);
+		RtlFreeUnicodeString (&ArcName);
 
 		KeBugCheck (0x0);
 	}
+	RtlFreeUnicodeString (&ArcName);
 
 	Status = NtQuerySymbolicLinkObject (Handle,
 	                                    &DeviceName,
@@ -158,10 +160,23 @@ CreateSystemRootLink (PCSZ ParameterLine)
 		KeBugCheck (0x0);
 	}
 
-	/*
-	 * FIXME: test if '\SystemRoot' (LinkName)can be opened,
-	 * otherwise crash it!
-	 */
+	/* Check if '\SystemRoot'(LinkName) can be opened, otherwise crash it! */
+	InitializeObjectAttributes (&ObjectAttributes,
+	                            &LinkName,
+	                            0,
+	                            NULL,
+	                            NULL);
+
+	Status = NtOpenSymbolicLinkObject (&Handle,
+	                                   SYMBOLIC_LINK_ALL_ACCESS,
+	                                   &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	{
+		DbgPrint("NtOpenSymbolicLinkObject() failed to open '\\SystemRoot' (Status %x)\n",
+		         Status);
+		KeBugCheck (0x0);
+	}
+	NtClose(Handle);
 }
 
 
