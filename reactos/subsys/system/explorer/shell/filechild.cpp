@@ -450,10 +450,19 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
 				ShellPath shell_path = entry->create_absolute_pidl();
-				LPCITEMIDLIST pidl = shell_path;
+				LPCITEMIDLIST pidl_abs = shell_path;
 
-				///@todo use parent folder instead of desktop -> correct "Properties" dialog, ...
-				CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pos.x, pos.y));
+				IShellFolder* parentFolder;
+				LPCITEMIDLIST pidlLast;
+
+				 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
+				if (SUCCEEDED(SHBindToParent(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
+					HRESULT hr = ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidlLast, pos.x, pos.y);
+
+					parentFolder->Release();
+
+					CHECKERROR(hr);
+				}
 			}
 			break;}
 

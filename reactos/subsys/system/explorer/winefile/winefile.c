@@ -172,6 +172,7 @@ typedef struct {
 
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
 static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd);
+static void get_path(Entry* dir, PTSTR path);
 
 LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -688,9 +689,16 @@ static LPITEMIDLIST get_to_absolute_pidl(Entry* entry, HWND hwnd)
 			if (SUCCEEDED(hr))
 				return pidl;
 		}
-	}
+	} else if (entry->etype == ET_WINDOWS) {
+		TCHAR path[MAX_PATH];
 
-	return entry->pidl;
+		get_path(entry, path);
+
+		return get_path_pidl(path, hwnd);
+	} else if (entry->pidl)
+		return ILClone(entry->pidl);
+
+	return NULL;
 }
 
 
@@ -3170,6 +3178,47 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 }
 
 
+static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* apidl, int x, int y)
+{
+	IContextMenu* pcm;
+
+	HRESULT hr = (*shell_folder->lpVtbl->GetUIObjectOf)(shell_folder, hwndParent, cidl, apidl, &IID_IContextMenu, NULL, (LPVOID*)&pcm);
+//	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
+
+	if (SUCCEEDED(hr)) {
+		HMENU hmenu = CreatePopupMenu();
+
+		if (hmenu) {
+			hr = (*pcm->lpVtbl->QueryContextMenu)(pcm, hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+
+			if (SUCCEEDED(hr)) {
+				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, hwndParent, NULL);
+
+				if (idCmd) {
+				  CMINVOKECOMMANDINFO cmi;
+
+				  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
+				  cmi.fMask = 0;
+				  cmi.hwnd = hwndParent;
+				  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - FCIDM_SHVIEWFIRST);
+				  cmi.lpParameters = NULL;
+				  cmi.lpDirectory = NULL;
+				  cmi.nShow = SW_SHOWNORMAL;
+				  cmi.dwHotKey = 0;
+				  cmi.hIcon = 0;
+
+				  hr = (*pcm->lpVtbl->InvokeCommand)(pcm, &cmi);
+				}
+			}
+		}
+
+		(*pcm->lpVtbl->Release)(pcm);
+	}
+
+	return hr;
+}
+
+
 LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static int last_split;
@@ -3386,6 +3435,46 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 		case WM_NOTIFY: {
 			NMHDR* pnmh = (NMHDR*) lparam;
 			return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &child->left: &child->right, pnmh);}
+#endif
+
+#ifdef _SHELL_FOLDERS
+		case WM_CONTEXTMENU: {
+			Pane* pane;
+			int idx;
+
+			 // first select the current item in the listbox
+			HWND hpanel = (HWND) wparam;
+			POINTS* ppos = &MAKEPOINTS(lparam);
+			POINT pt; POINTSTOPOINT(pt, *ppos);
+			ScreenToClient(hpanel, &pt);
+			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));
+			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt.x, pt.y));
+
+			 // now create the popup menu using shell namespace and IContextMenu
+			pane = GetFocus()==child->left.hwnd? &child->left: &child->right;
+			idx = ListBox_GetCurSel(pane->hwnd);
+
+			if (idx != -1) {
+				HRESULT hr;
+				Entry* entry = (Entry*) ListBox_GetItemData(pane->hwnd, idx);
+
+				LPITEMIDLIST pidl_abs = get_to_absolute_pidl(entry, hwnd);
+
+				if (pidl_abs) {
+					IShellFolder* parentFolder;
+					LPCITEMIDLIST pidlLast;
+
+					 // get and use the parent folder to display correct context menu in all cases
+					if (SUCCEEDED(SHBindToParent(pidl_abs, &IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast))) {
+						hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, ppos->x, ppos->y);
+
+						(*parentFolder->lpVtbl->Release)(parentFolder);
+					}
+
+					(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, pidl_abs);
+				}
+			}
+			break;}
 #endif
 
 		case WM_SIZE:
