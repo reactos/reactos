@@ -35,6 +35,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 
+static
 LPITEMIDLIST _dbg_ILGetNext(LPCITEMIDLIST pidl)
 {
 	WORD len;
@@ -50,11 +51,13 @@ LPITEMIDLIST _dbg_ILGetNext(LPCITEMIDLIST pidl)
 	return NULL;
 }
 
+static
 BOOL _dbg_ILIsDesktop(LPCITEMIDLIST pidl)
 {
 	return ( !pidl || (pidl && pidl->mkid.cb == 0x00) );
 }
 
+static
 LPPIDLDATA _dbg_ILGetDataPointer(LPCITEMIDLIST pidl)
 {
 	if(pidl && pidl->mkid.cb != 0x00)
@@ -62,6 +65,7 @@ LPPIDLDATA _dbg_ILGetDataPointer(LPCITEMIDLIST pidl)
 	return NULL;
 }
 
+static
 LPSTR _dbg_ILGetTextPointer(LPCITEMIDLIST pidl)
 {
 	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
@@ -99,6 +103,7 @@ LPSTR _dbg_ILGetTextPointer(LPCITEMIDLIST pidl)
 	return NULL;
 }
 
+static
 LPSTR _dbg_ILGetSTextPointer(LPCITEMIDLIST pidl)
 {
 	LPPIDLDATA pdata =_dbg_ILGetDataPointer(pidl);
@@ -121,7 +126,8 @@ LPSTR _dbg_ILGetSTextPointer(LPCITEMIDLIST pidl)
 	return NULL;
 }
 
-REFIID _dbg_ILGetGUIDPointer(LPCITEMIDLIST pidl)
+static
+IID* _dbg_ILGetGUIDPointer(LPCITEMIDLIST pidl)
 {
 	LPPIDLDATA pdata =_ILGetDataPointer(pidl);
 
@@ -131,12 +137,13 @@ REFIID _dbg_ILGetGUIDPointer(LPCITEMIDLIST pidl)
 	  {
 	    case PT_SHELLEXT:
 	    case PT_GUID:
-	      return (REFIID) &(pdata->u.guid.guid);
+	      return &(pdata->u.guid.guid);
 	  }
 	}
 	return NULL;
 }
 
+static
 DWORD _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 {
 	DWORD		dwReturn=0;
