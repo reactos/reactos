@@ -1,8 +1,13 @@
-/* $Id: npfs.h,v 1.16 2004/05/05 18:30:16 navaraf Exp $ */
+/* $Id: npfs.h,v 1.17 2004/05/10 19:58:10 navaraf Exp $ */
 
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
 
+/*
+ * Hacky support for delayed closing of pipes. We need this to support
+ * reading from pipe the was closed on one end.
+ */
+#define FIN_WORKAROUND_READCLOSE
 
 typedef struct
 {

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.14 2004/05/07 12:13:13 navaraf Exp $
+/* $Id: rw.c,v 1.15 2004/05/10 19:58:10 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -13,10 +13,38 @@
 #include <rosrtl/minmax.h>
 #include "npfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+#ifndef NDEBUG
+VOID HexDump(PUCHAR Buffer, ULONG Length)
+{
+  CHAR Line[65];
+  UCHAR ch;
+  const char Hex[] = "0123456789ABCDEF";
+  int i, j;
+
+  DbgPrint("---------------\n");
+
+  for (i = 0; i < ROUND_UP(Length, 16); i+= 16)
+    {
+      memset(Line, ' ', 64);
+      Line[64] = 0;
+
+      for (j = 0; j < 16 && j + i < Length; j++)
+        {
+          ch = Buffer[i + j];
+          Line[3*j + 0] = Hex[ch >> 4];
+	  Line[3*j + 1] = Hex[ch & 0x0f];
+	  Line[48 + j] = isprint(ch) ? ch : '.';
+        }
+      DbgPrint("%s\n", Line);
+    }
+  DbgPrint("---------------\n");
+}
+#endif
 
 NTSTATUS STDCALL
 NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -51,9 +79,10 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         Status = STATUS_PIPE_LISTENING;
       else if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
         Status = STATUS_PIPE_DISCONNECTED;
-      else
-        Status = STATUS_UNSUCCESSFUL;
+      else  
+        Status = STATUS_PIPE_BROKEN;
       Information = 0;
+      DPRINT("%x\n", Status);
       goto done;
     }
 
@@ -73,6 +102,16 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       goto done;
     }
 
+#ifdef FIN_WORKAROUND_READCLOSE
+  if (ReadFcb->ReadDataAvailable == 0 &&
+      ReadFcb->PipeState == FILE_PIPE_CLOSING_STATE)
+    {
+      DPRINT("Other end of pipe is closed!\n");
+      Status = STATUS_PIPE_BROKEN;
+      Information = 0;
+      goto done;
+    }
+#endif
 
   Status = STATUS_SUCCESS;
   Length = IoStack->Parameters.Read.Length;
@@ -107,6 +146,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				         FALSE,
 				         NULL);
           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+#ifndef FIN_WORKAROUND_READCLOSE
           /*
            * It's possible that the event was signaled because the
            * other side of pipe was closed.
@@ -117,6 +157,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	      Status = STATUS_PIPE_BROKEN;
 	      goto done;
 	    }
+#endif
           KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
 	}
 
@@ -171,14 +212,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 #ifndef NDEBUG
              DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
-             {
-                DbgPrint("------\n");
-                ULONG X;
-                for (X = 0; X < CopyLength; X++)
-                   DbgPrint("%02x ", ((PUCHAR)Buffer)[X]);
-                DbgPrint("\n");
-                DbgPrint("------\n");
-             }
+             HexDump((PUCHAR)Buffer, CopyLength);
 #endif
 
 	     Information = CopyLength;
@@ -191,6 +225,15 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	     break;
 	   }
        }
+
+#ifdef FIN_WORKAROUND_READCLOSE
+       if (ReadFcb->ReadDataAvailable == 0 &&
+           ReadFcb->PipeState == FILE_PIPE_CLOSING_STATE)
+         {
+           DPRINT("Other end of pipe is closed!\n");
+           break;
+         }
+#endif
     }
   KeReleaseSpinLock(&ReadFcb->DataListLock, OldIrql);
 
@@ -266,19 +309,13 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
   Status = STATUS_SUCCESS;
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
-#ifndef NDEBUG
-  DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
-  {
-     DbgPrint("------\n");
-     ULONG X;
-     for (X = 0; X < Length; X++)
-        DbgPrint("%02x ", Buffer[X]);
-     DbgPrint("\n");
-     DbgPrint("------\n");
-  }
-#endif
 
   KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
+#ifndef NDEBUG
+  DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
+  HexDump(Buffer, Length);
+#endif
+
   while(1)
     {
       if (Fcb->WriteQuotaAvailable == 0)
@@ -298,6 +335,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				         FALSE,
 				         NULL);
           DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+#ifndef FIN_WORKAROUND_READCLOSE
           /*
            * It's possible that the event was signaled because the
            * other side of pipe was closed.
@@ -308,6 +346,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	      Status = STATUS_PIPE_BROKEN;
 	      goto done;
 	    }
+#endif
           KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
         }
       if (Pipe->PipeWriteMode == FILE_PIPE_BYTE_STREAM_MODE)

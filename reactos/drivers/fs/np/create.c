@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20 2004/05/07 12:13:13 navaraf Exp $
+/* $Id: create.c,v 1.21 2004/05/10 19:58:10 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -472,23 +472,47 @@ NpfsClose(
    {
       if (Fcb->OtherSide)
       {
+#ifndef FIN_WORKAROUND_READCLOSE
          Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
          Fcb->OtherSide->OtherSide = NULL;
+#endif
          /*
           * Signaling the write event. If is possible that an other
           * thread waits of an empty buffer.
           */
          KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
       }
+#ifndef FIN_WORKAROUND_READCLOSE
       Fcb->PipeState = 0;
+#endif
    }
 
    FileObject->FsContext = NULL;
 
+#ifndef FIN_WORKAROUND_READCLOSE
    RemoveEntryList(&Fcb->FcbListEntry);
    if (Fcb->Data)
       ExFreePool(Fcb->Data);
    ExFreePool(Fcb);
+#else
+   Fcb->PipeState = FILE_PIPE_CLOSING_STATE;
+   if (Fcb->OtherSide == NULL ||
+       Fcb->OtherSide->PipeState == FILE_PIPE_CLOSING_STATE)
+   {
+      if (Server && Fcb->OtherSide != NULL &&
+          Fcb->OtherSide->PipeState == FILE_PIPE_CLOSING_STATE)
+      {
+         RemoveEntryList(&Fcb->OtherSide->FcbListEntry);
+         if (Fcb->OtherSide->Data)
+            ExFreePool(Fcb->OtherSide->Data);
+	 ExFreePool(Fcb->OtherSide);
+      }
+      RemoveEntryList(&Fcb->FcbListEntry);
+      if (Fcb->Data)
+         ExFreePool(Fcb->Data);
+      ExFreePool(Fcb);
+   }
+#endif
 
    KeUnlockMutex(&Pipe->FcbListLock);
 
