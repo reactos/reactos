@@ -90,7 +90,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 
     if( !NCE || !NCE->Interface ) {
 	TI_DbgPrint(MID_TRACE,("no neighbor cache or no interface (%x %x)\n",
-			       NCE, NCE->Interface));
+			       NCE, NCE ? NCE->Interface : 0));
 	return NULL;
     }
 
