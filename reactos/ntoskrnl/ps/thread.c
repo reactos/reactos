@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.27 1999/10/07 23:38:30 ekohl Exp $
+/* $Id: thread.c,v 1.28 1999/10/11 20:43:10 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -416,58 +416,27 @@ PsCreateTeb (HANDLE ProcessHandle,
 
    while (TRUE)
      {
-        Status = NtQueryVirtualMemory(ProcessHandle,
-                                      TebBase,
-                                      MemoryBasicInformation,
-                                      &Info,
-                                      sizeof(MEMORY_BASIC_INFORMATION),
-                                      &ByteCount);
-        if (!NT_SUCCESS(Status))
+        /* The TEB must reside in user space */
+        Status = NtAllocateVirtualMemory(ProcessHandle,
+                                         &TebBase,
+                                         0,
+                                         &TebSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (NT_SUCCESS(Status))
           {
-             DbgPrint ("NtQueryVirtualMemory (Status %x)\n",Status);
-             return Status;
-          }
-
-        if (Info.State == MEM_FREE)
-          {
-             DbgPrint("Virtual memory at %p is free.\n",
-                      TebBase);
+             DPRINT ("TEB allocated at %x\n", TebBase);
+             break;
           }
         else
           {
-             DbgPrint("Virtual memory at %p is allocated (BaseAddress %p RegionSize %x).\n",
-                      TebBase, Info.BaseAddress, Info.RegionSize);
+             DPRINT ("TEB allocation failed! Status %x\n",Status);
           }
 
-        if (Info.State == MEM_FREE)
-          {
-             break;
-          }
-          
         TebBase = Info.BaseAddress - TebSize;
    }
 
-//   if (Info.State != MEM_FREE)
-//       return STATUS_SUCCESS;
-
-
-   /* The TEB must reside in user space */
-   Status = NtAllocateVirtualMemory(ProcessHandle,
-                                    &TebBase,
-                                    0,
-                                    &TebSize,
-                                    MEM_COMMIT,
-                                    PAGE_READWRITE);
-
-   if (!NT_SUCCESS(Status))
-     {
-        DbgPrint ("TEB allocation failed!\n");
-        DbgPrint ("Status %x\n",Status);
-        return Status;
-     }
-
-   DbgPrint ("TebBase %p TebSize %lu\n", TebBase, TebSize);
-
+   DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
 
    /* set all pointers to and from the TEB */
    Teb.Tib.Self = TebBase;
@@ -506,7 +475,7 @@ PsCreateTeb (HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
         /* free TEB */
-        DbgPrint ("Writing TEB failed!\n");
+        DPRINT ("Writing TEB failed!\n");
 
         RegionSize = 0;
         NtFreeVirtualMemory(ProcessHandle,
@@ -524,7 +493,7 @@ PsCreateTeb (HANDLE ProcessHandle,
 //        *TebPtr = (PNT_TEB)TebBase;
      }
 
-   DbgPrint ("TEB allocated at %p\n", TebBase);
+   DPRINT ("TEB allocated at %p\n", TebBase);
 
    return Status;
 }
