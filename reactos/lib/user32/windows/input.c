@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.14 2003/08/20 03:07:33 silverblade Exp $
+/* $Id: input.c,v 1.15 2003/08/28 14:22:05 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -327,6 +327,19 @@ WINBOOL STDCALL
 SetKeyboardState(LPBYTE lpKeyState)
 {
  return (WINBOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+SwapMouseButton(
+  WINBOOL fSwap)
+{
+  return (WINBOOL)NtUserCallOneParam((DWORD)fSwap, 
+                                     ONEPARAM_ROUTINE_SWAPMOUSEBUTTON);
 }
 
 

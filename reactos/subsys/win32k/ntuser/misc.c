@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.12 2003/08/25 00:28:23 weiden Exp $
+/* $Id: misc.c,v 1.13 2003/08/28 14:22:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,8 +48,11 @@ NtUserCallOneParam(
   DWORD Param,
   DWORD Routine)
 {
+  NTSTATUS Status;
   DWORD Result = 0;
+  PWINSTATION_OBJECT WinStaObject;
   PWINDOW_OBJECT WindowObject;
+  
   switch(Routine)
   {
     case ONEPARAM_ROUTINE_GETMENU:
@@ -90,6 +93,18 @@ NtUserCallOneParam(
       Result = WindowObject->ContextHelpId;
       
       IntReleaseWindowObject(WindowObject);
+      return Result;
+    case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
+      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                           KernelMode,
+                                           0,
+                                           &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return (DWORD)FALSE;
+
+      Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param);
+
+      ObDereferenceObject(WinStaObject);
       return Result;
 
   }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.36 2003/08/26 19:26:02 weiden Exp $
+/* $Id: mouse.c,v 1.37 2003/08/28 14:22:05 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -118,7 +118,7 @@ static UCHAR DefaultCursor[256] = {
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
-CheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
+IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
 {
   if(CurInfo->CursorClipInfo.IsClipped)
   {
@@ -133,6 +133,14 @@ CheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
     return TRUE;
   }
   return TRUE;
+}
+
+BOOL FASTCALL
+IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
+{
+  BOOL res = WinStaObject->SystemCursor.SwapButtons;
+  WinStaObject->SystemCursor.SwapButtons = Swap;
+  return res;
 }
 
 INT STDCALL
@@ -299,7 +307,7 @@ MouseMoveCursor(LONG X, LONG Y)
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDC );
-    CheckClipCursor(&X, &Y, CurInfo);
+    IntCheckClipCursor(&X, &Y, CurInfo);
     if((X != CurInfo->x) || (Y != CurInfo->y))
     {
       /* send MOUSEMOVE message */
@@ -394,7 +402,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 20);
     CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 20);
     
-    CheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
+    IntCheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
     
     KeQueryTickCount(&LargeTickCount);
     TickCount = LargeTickCount.u.LowPart;
@@ -419,8 +427,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
-      	Msg.wParam  = MK_LBUTTON;
-        Msg.message = WM_LBUTTONDOWN;
+      	Msg.wParam  = CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON;
+        Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN;
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
       {
@@ -429,14 +437,14 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
       {
-      	Msg.wParam  = MK_RBUTTON;
-        Msg.message = WM_RBUTTONDOWN;
+      	Msg.wParam  = CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON;
+        Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN;
       }
 
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
       {
-      	Msg.wParam  = MK_LBUTTON;
-        Msg.message = WM_LBUTTONUP;
+      	Msg.wParam  = CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON;
+        Msg.message = CurInfo->SwapButtons ? WM_RBUTTONUP : WM_LBUTTONUP;
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_UP) > 0)
       {
@@ -445,8 +453,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_UP) > 0)
       {
-      	Msg.wParam  = MK_RBUTTON;
-        Msg.message = WM_RBUTTONUP;
+      	Msg.wParam  = CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON;
+        Msg.message = CurInfo->SwapButtons ? WM_LBUTTONUP : WM_RBUTTONUP;
       }
 
       MsqInsertSystemMessage(&Msg, FALSE);
@@ -527,9 +535,9 @@ EnableMouse(HDC hDisplayDC)
     MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
 
     DbgPrint("Setting Cursor up at 0x%x, 0x%x\n", CurInfo->x, CurInfo->y);
-    CheckClipCursor(&CurInfo->x, 
-                    &CurInfo->y,
-                    CurInfo);
+    IntCheckClipCursor(&CurInfo->x, 
+                       &CurInfo->y,
+                       CurInfo);
 
     PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
                                              SysCursor->hx,

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.37 2003/08/24 01:12:15 weiden Exp $
+/* $Id: stubs.c,v 1.38 2003/08/28 14:22:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -394,19 +394,6 @@ SetSysColors(
   int cElements,
   CONST INT *lpaElements,
   CONST COLORREF *lpaRgbValues)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-SwapMouseButton(
-  WINBOOL fSwap)
 {
   UNIMPLEMENTED;
   return FALSE;

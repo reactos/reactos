@@ -32,6 +32,7 @@ typedef struct _SYSCURSOR
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
+  BOOL SwapButtons;
   UINT CurrentCursor;
   LONG x, y;
   BOOL SafetySwitch, SafetySwitch2;
