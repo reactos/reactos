@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.57 2004/04/09 20:03:19 navaraf Exp $
+ *  $Id: winsta.c,v 1.58 2004/05/01 17:06:55 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -740,31 +740,91 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 /*
  * NtUserLockWindowStation
  *
+ * Locks switching desktops. Only the logon application is allowed to call this function.
+ *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 BOOL STDCALL
 NtUserLockWindowStation(HWINSTA hWindowStation)
 {
-   UNIMPLEMENTED
+   PWINSTATION_OBJECT Object;
+   NTSTATUS Status;
 
-   return 0;
+   DPRINT("About to set process window station with handle (0x%X)\n", 
+      hWindowStation);
+   
+   if(PsGetWin32Process() != LogonProcess)
+   {
+     DPRINT1("Unauthorized process attempted to lock the window station!\n");
+     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     return FALSE;
+   }
+   
+   Status = IntValidateWindowStationHandle(
+      hWindowStation,
+      KernelMode,
+      0,
+      &Object);
+   if (!NT_SUCCESS(Status)) 
+   {
+      DPRINT("Validation of window station handle (0x%X) failed\n", 
+         hWindowStation);
+      SetLastNtError(Status);
+      return FALSE;
+   }
+   
+   Object->Flags |= WSS_LOCKED;
+   
+   ObDereferenceObject(Object);
+   return TRUE;
 }
 
 /*
  * NtUserUnlockWindowStation
  *
+ * Unlocks switching desktops. Only the logon application is allowed to call this function.
+ *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 BOOL STDCALL
 NtUserUnlockWindowStation(HWINSTA hWindowStation)
 {
-   UNIMPLEMENTED
+   PWINSTATION_OBJECT Object;
+   NTSTATUS Status;
+   BOOL Ret;
 
-   return FALSE;
+   DPRINT("About to set process window station with handle (0x%X)\n", 
+      hWindowStation);
+   
+   if(PsGetWin32Process() != LogonProcess)
+   {
+     DPRINT1("Unauthorized process attempted to unlock the window station!\n");
+     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     return FALSE;
+   }
+   
+   Status = IntValidateWindowStationHandle(
+      hWindowStation,
+      KernelMode,
+      0,
+      &Object);
+   if (!NT_SUCCESS(Status)) 
+   {
+      DPRINT("Validation of window station handle (0x%X) failed\n", 
+         hWindowStation);
+      SetLastNtError(Status);
+      return FALSE;
+   }
+   
+   Ret = (Object->Flags & WSS_LOCKED) == WSS_LOCKED;
+   Object->Flags &= ~WSS_LOCKED;
+   
+   ObDereferenceObject(Object);
+   return Ret;
 }
 
 /*
