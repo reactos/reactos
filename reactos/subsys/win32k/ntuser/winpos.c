@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.106 2004/03/30 20:50:16 gvg Exp $
+/* $Id: winpos.c,v 1.107 2004/04/01 23:16:21 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -612,15 +612,15 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
    HWND *List = NULL;
    HWND Owner = NtUserGetWindow(hWnd, GW_OWNER);
    LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
-   PWINDOW_OBJECT DesktopWindow;
+   PWINDOW_OBJECT DesktopWindow, ChildObject;
    int i;
 
    if ((Style & WS_POPUP) && Owner)
    {
       /* Make sure this popup stays above the owner */
-      HWND hWndLocalPrev = HWND_TOP;
+      HWND hWndLocalPrev = HWND_TOPMOST;
 
-      if (hWndInsertAfter != HWND_TOP)
+      if (hWndInsertAfter != HWND_TOPMOST)
       {
          DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
          List = IntWinListChildren(DesktopWindow);
@@ -630,6 +630,19 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
             for (i = 0; List[i]; i++)
             {
                if (List[i] == Owner) break;
+               if (HWND_TOP == hWndInsertAfter)
+               {
+                 ChildObject = IntGetWindowObject(List[i]);
+                 if (NULL != ChildObject)
+                 {
+                   if (0 == (ChildObject->ExStyle & WS_EX_TOPMOST))
+                   {
+                     IntReleaseWindowObject(ChildObject);
+                     break;
+                   }
+                   IntReleaseWindowObject(ChildObject);
+                 }
+               }
                if (List[i] != hWnd) hWndLocalPrev = List[i];
                if (hWndLocalPrev == hWndInsertAfter) break;
             }
@@ -961,7 +974,12 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          }
          if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
-         if (HWND_TOPMOST == WinPos.hwndInsertAfter)
+         if ((HWND_TOPMOST == WinPos.hwndInsertAfter)
+             || (0 != (Window->ExStyle & WS_EX_TOPMOST)
+                 && NULL != Window->PrevSibling
+                 && 0 != (Window->PrevSibling->ExStyle & WS_EX_TOPMOST))
+             || (NULL != Window->NextSibling
+                 && 0 != (Window->NextSibling->ExStyle & WS_EX_TOPMOST)))
          {
             Window->ExStyle |= WS_EX_TOPMOST;
          }
@@ -1334,8 +1352,9 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
     }
 
-  WinPosSetWindowPos(Window->Self, HWND_TOP, NewPos.left, NewPos.top,
-    NewPos.right, NewPos.bottom, LOWORD(Swp));
+  WinPosSetWindowPos(Window->Self, 0 != (Window->ExStyle & WS_EX_TOPMOST)
+                                   ? HWND_TOPMOST : HWND_TOP,
+                     NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
 
   if (Cmd == SW_HIDE)
     {
