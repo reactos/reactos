@@ -177,9 +177,12 @@ protected:
 
 #else
 
+typedef pair<HWND, DWORD> MinimizeStruct;
+
 struct Desktop
 {
 	set<HWND> _windows;
+	list<MinimizeStruct> _minimized;
 };
 typedef Desktop DesktopRef;
 
@@ -195,6 +198,7 @@ struct Desktops : public vector<DesktopRef>
 
 	void	init();
 	void	SwitchToDesktop(int idx);
+	void	ToggleMinimize();
 
 #ifdef _USE_HDESK
 	DesktopRef& get_current_Desktop() {return (*this)[_current_desktop];}

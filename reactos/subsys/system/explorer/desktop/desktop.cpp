@@ -158,7 +158,7 @@ int DesktopThread::Run()
 
 #else // _USE_HDESK
 
-static BOOL CALLBACK DesktopEnumFct(HWND hwnd, LPARAM lparam)
+static BOOL CALLBACK SwitchDesktopEnumFct(HWND hwnd, LPARAM lparam)
 {
 	WindowSet& windows = *(WindowSet*)lparam;
 
@@ -181,7 +181,7 @@ void Desktops::SwitchToDesktop(int idx)
 	WindowSet& windows = old_desktop._windows;
 
 	windows.clear();
-	EnumWindows(DesktopEnumFct, (LPARAM)&windows);
+	EnumWindows(SwitchDesktopEnumFct, (LPARAM)&windows);
 
 	 // hide all windows we found
 	for(WindowSet::iterator it=windows.begin(); it!=windows.end(); ++it)
@@ -197,6 +197,36 @@ void Desktops::SwitchToDesktop(int idx)
 }
 
 #endif // _USE_HDESK
+
+
+static BOOL CALLBACK MinimizeDesktopEnumFct(HWND hwnd, LPARAM lparam)
+{
+	list<MinimizeStruct>& minimized = *(list<MinimizeStruct>*)lparam;
+
+	if (IsWindowVisible(hwnd))
+		if (hwnd!=g_Globals._hwndDesktopBar && hwnd!=g_Globals._hwndDesktop)
+			if (!IsIconic(hwnd)) {
+				minimized.push_back(MinimizeStruct(hwnd, GetWindowStyle(hwnd)));
+				ShowWindowAsync(hwnd, SW_MINIMIZE);
+			}
+
+	return TRUE;
+}
+
+ /// minimize/restore all windows on the desktop
+void Desktops::ToggleMinimize()
+{
+	list<MinimizeStruct>& minimized = (*this)[_current_desktop]._minimized;
+
+	if (minimized.empty()) {
+		EnumWindows(MinimizeDesktopEnumFct, (LPARAM)&minimized);
+	} else {
+		for(list<MinimizeStruct>::const_iterator it=minimized.begin(); it!=minimized.end(); ++it)
+			ShowWindowAsync(it->first, it->second&WS_MAXIMIZE? SW_MAXIMIZE: SW_RESTORE);
+
+		minimized.clear();
+	}
+}
 
 
 BOOL IsAnyDesktopRunning()
