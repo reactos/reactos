@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.52.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: fillshap.c,v 1.52.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 /*
@@ -38,7 +38,7 @@
        &RectBounds,                    \
        dc->w.ROPmode);
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolygon(PDC    dc,
               PPOINT UnsafePoints,
               int    Count)
@@ -139,7 +139,7 @@ IntGdiPolygon(PDC    dc,
   return ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyPolygon(DC      *dc,
                   LPPOINT Points,
                   LPINT   PolyCounts,
@@ -413,7 +413,7 @@ typedef struct tagSHAPEPOINT
 
 #ifdef TODO
 STATIC VOID
-FASTCALL
+INTERNAL_CALL
 CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
              int Right, int Bottom)
 {
@@ -507,7 +507,7 @@ CirclePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
     }
 }
 
-STATIC VOID
+STATIC VOID INTERNAL_CALL
 LinePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
            int Right, int Bottom, int XTo, int YTo, BOOL Start)
 {
@@ -593,8 +593,7 @@ LinePoints(UINT *PointCount, PSHAPEPOINT ShapePoints, int Left, int Top,
     }
 }
 
-STATIC int
-CDECL
+STATIC int INTERNAL_CALL
 CompareShapePoints(const void *pv1, const void *pv2)
 {
   if (((const PSHAPEPOINT) pv1)->Y < ((const PSHAPEPOINT) pv2)->Y)
@@ -926,8 +925,7 @@ NtGdiPolyPolygon(HDC           hDC,
   return Ret;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 IntRectangle(PDC dc,
 	     int LeftRect,
 	     int TopRect,
@@ -1066,8 +1064,7 @@ NtGdiRectangle(HDC  hDC,
 }
 
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 IntRoundRect(
 	PDC  dc,
 	int  left,
@@ -1349,7 +1346,7 @@ NtGdiRoundRect(
   return ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiGradientFill(
   DC *dc,
   PTRIVERTEX pVertex,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.19.12.3 2004/08/27 15:56:05 weiden Exp $
+/* $Id: guicheck.c,v 1.19.12.4 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,7 +45,7 @@ static FAST_MUTEX GuiSwitchLock;
 
 /* FUNCTIONS *****************************************************************/
 
-static BOOL FASTCALL
+static BOOL INTERNAL_CALL
 AddGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags |= W32PF_CREATEDWINORDC;
@@ -67,7 +67,7 @@ AddGuiApp(PW32PROCESS W32Data)
   return TRUE;
 }
 
-static void FASTCALL
+static void INTERNAL_CALL
 RemoveGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags &= ~W32PF_CREATEDWINORDC;
@@ -79,7 +79,7 @@ RemoveGuiApp(PW32PROCESS W32Data)
     }
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGraphicsCheck(BOOL Create)
 {
   PW32PROCESS W32Data;
@@ -129,7 +129,7 @@ NtUserManualGuiCheck(LONG Check)
     }
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitGuiCheckImpl (VOID)
 {
   ExInitializeFastMutex(&GuiSwitchLock);

@@ -19,7 +19,7 @@
 /*
  * STOCKOBJ.C - GDI Stock Objects
  *
- * $Id: stockobj.c,v 1.1.2.1 2004/09/12 19:21:08 weiden Exp $
+ * $Id: stockobj.c,v 1.1.2.2 2004/09/14 01:00:45 weiden Exp $
  *
  */
 #include <w32k.h>
@@ -135,7 +135,7 @@ static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 /*!
  * Creates a bunch of stock objects: brushes, pens, fonts.
 */
-VOID FASTCALL
+VOID INTERNAL_CALL
 CreateStockObjects(void)
 {
   UINT Object;
@@ -188,7 +188,7 @@ NtGdiGetStockObject(INT Object)
   return ((Object < 0) || (NB_STOCK_OBJECTS <= Object)) ? NULL : StockObjects[Object];
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
 {
   UINT i;
@@ -210,7 +210,7 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
   return nColors > 0;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
 {
   UINT i;
@@ -231,7 +231,7 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
   return nBrushes > 0;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetSysColorPens(HPEN *Pens, UINT nPens)
 {
   UINT i;
@@ -252,7 +252,7 @@ IntGetSysColorPens(HPEN *Pens, UINT nPens)
   return nPens > 0;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetSysColors(COLORREF *Colors, UINT nColors)
 {
   UINT i;
@@ -275,7 +275,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
   return nColors > 0;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 CreateSysColorObjects(VOID)
 {
   UINT i;

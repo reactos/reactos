@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.76.2.3 2004/09/12 19:21:06 weiden Exp $
+/* $Id: mouse.c,v 1.76.2.4 2004/09/14 01:00:42 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -30,10 +30,10 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsPrimarySurface(SURFOBJ *SurfObj);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 EnableMouse(HDC hDisplayDC)
 {
   PDC dc;
@@ -89,7 +89,7 @@ EnableMouse(HDC hDisplayDC)
   }
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
 /*
@@ -173,7 +173,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
   return(TRUE);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
 {
   CurInfo->PointerRectLeft = PointerRect->left;
@@ -182,7 +182,7 @@ SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
   CurInfo->PointerRectBottom = PointerRect->bottom;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 /*
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
@@ -247,7 +247,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 {
    if (ppdev->PointerAttributes.Enable == FALSE)
@@ -290,7 +290,7 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 {
    if (ppdev->PointerAttributes.Enable == TRUE)

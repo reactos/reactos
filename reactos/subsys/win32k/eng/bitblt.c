@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.58.2.1 2004/09/12 19:21:06 weiden Exp $
+/* $Id: bitblt.c,v 1.58.2.2 2004/09/14 01:00:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,26 +28,26 @@
  */
 #include <w32k.h>
 
-typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
-                                        SURFOBJ* InputObj,
-                                        SURFOBJ* Mask,
-                                        XLATEOBJ* ColorTranslation,
-                                        RECTL* OutputRect,
-                                        POINTL* InputPoint,
-                                        POINTL* MaskOrigin,
-                                        BRUSHOBJ* Brush,
-                                        POINTL* BrushOrigin,
-                                        ROP4 Rop4);
-typedef BOOLEAN STDCALL (*PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
-                                            SURFOBJ* InputObj,
-                                            SURFOBJ* Mask,
-                                            CLIPOBJ* ClipRegion,
-                                            XLATEOBJ* ColorTranslation,
-                                            RECTL* OutputRect,
-                                            RECTL* InputRect,
-                                            POINTL* MaskOrigin,
-                                            POINTL* BrushOrigin,
-                                            ULONG Mode);
+typedef BOOLEAN INTERNAL_CALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
+                                              SURFOBJ* InputObj,
+                                              SURFOBJ* Mask,
+                                              XLATEOBJ* ColorTranslation,
+                                              RECTL* OutputRect,
+                                              POINTL* InputPoint,
+                                              POINTL* MaskOrigin,
+                                              BRUSHOBJ* Brush,
+                                              POINTL* BrushOrigin,
+                                              ROP4 Rop4);
+typedef BOOLEAN INTERNAL_CALL (*PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
+                                                  SURFOBJ* InputObj,
+                                                  SURFOBJ* Mask,
+                                                  CLIPOBJ* ClipRegion,
+                                                  XLATEOBJ* ColorTranslation,
+                                                  RECTL* OutputRect,
+                                                  RECTL* InputRect,
+                                                  POINTL* MaskOrigin,
+                                                  POINTL* BrushOrigin,
+                                                  ULONG Mode);
 
 BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
@@ -72,7 +72,7 @@ BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
   return FALSE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 BltMask(SURFOBJ* Dest,
 	SURFOBJ* Source,
 	SURFOBJ* Mask, 
@@ -162,7 +162,7 @@ BltMask(SURFOBJ* Dest,
    return TRUE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 BltPatCopy(SURFOBJ* Dest,
 	   SURFOBJ* Source,
 	   SURFOBJ* Mask, 
@@ -189,7 +189,7 @@ BltPatCopy(SURFOBJ* Dest,
   return TRUE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 CallDibBitBlt(SURFOBJ* OutputObj,
               SURFOBJ* InputObj,
               SURFOBJ* Mask,
@@ -478,7 +478,7 @@ EngBitBlt(SURFOBJ *DestObj,
   return Ret;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngBitBlt(BITMAPOBJ *DestObj,
              BITMAPOBJ *SourceObj,
              BITMAPOBJ *MaskObj,
@@ -601,7 +601,7 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
   return ret;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 CallDibStretchBlt(SURFOBJ* OutputObj,
                   SURFOBJ* InputObj,
                   SURFOBJ* Mask,
@@ -726,7 +726,7 @@ EngStretchBlt(
   return Ret;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngStretchBlt(BITMAPOBJ *DestObj,
                  BITMAPOBJ *SourceObj,
                  BITMAPOBJ *MaskObj,
@@ -795,7 +795,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
 /**** REACTOS FONT RENDERING CODE *********************************************/
 
 /* renders the alpha mask bitmap */
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 AlphaBltMask(SURFOBJ* Dest,
 	SURFOBJ* Source,
 	SURFOBJ* Mask, 
@@ -1067,7 +1067,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   return Ret;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngMaskBlt(SURFOBJ *DestObj,
              SURFOBJ *Mask,
              CLIPOBJ *ClipRegion,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.44.4.2 2004/09/13 21:28:16 weiden Exp $
+/* $Id: surface.c,v 1.44.4.3 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -39,7 +39,8 @@ enum Rle_EscapeCodes
   RLE_DELTA = 2  /* Delta */
 };
 
-INT FASTCALL BitsPerFormat(ULONG Format)
+INT INTERNAL_CALL
+BitsPerFormat(ULONG Format)
 {
   switch(Format)
   {
@@ -55,7 +56,8 @@ INT FASTCALL BitsPerFormat(ULONG Format)
   }
 }
 
-ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
+ULONG INTERNAL_CALL
+BitmapFormat(WORD Bits, DWORD Compression)
 {
   switch(Compression)
   {
@@ -100,7 +102,8 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   return NewBitmap;
 }
 
-VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+VOID INTERNAL_CALL
+Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
 {
 	int x = 0;
 	int y = Size.cy - 1;
@@ -157,7 +160,8 @@ VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
 	}
 }
 
-VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+VOID INTERNAL_CALL
+Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
 {
 	int x = 0;
 	int y = Size.cy - 1;
@@ -213,7 +217,7 @@ VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
 	}
 }
 
-HBITMAP FASTCALL
+HBITMAP INTERNAL_CALL
 IntCreateBitmap(IN SIZEL Size,
 		IN LONG Width,
 		IN ULONG Format,
@@ -379,7 +383,8 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   return NewSurface;
 }
 
-PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
+PFN INTERNAL_CALL
+DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
 {
   ULONG i;
 

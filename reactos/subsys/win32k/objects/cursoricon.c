@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.63.2.2 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.63.2.3 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 #define COLORCURSORS_ALLOWED FALSE
-PCURSOR_OBJECT FASTCALL
+PCURSOR_OBJECT INTERNAL_CALL
 IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
 {
    BITMAPOBJ *BitmapObj;
@@ -225,7 +225,7 @@ typedef struct _INT_FINDEXISTINGCURSOR
   LONG cy;
 } INT_FINDEXISTINGCURSOR, *PINT_FINDEXISTINGCURSOR;
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 _FindExistingCursorObjectCallBack(PCURSOR_OBJECT CursorObject, PINT_FINDEXISTINGCURSOR FindData)
 {
   if(CursorObject->hModule == FindData->hModule && CursorObject->hRsrc == FindData->hRsrc &&
@@ -238,7 +238,7 @@ _FindExistingCursorObjectCallBack(PCURSOR_OBJECT CursorObject, PINT_FINDEXISTING
   return FALSE;
 }
 
-PCURSOR_OBJECT FASTCALL
+PCURSOR_OBJECT INTERNAL_CALL
 IntFindExistingCursorObject(HMODULE hModule, HRSRC hRsrc, LONG cx, LONG cy)
 {
   INT_FINDEXISTINGCURSOR fec;
@@ -252,7 +252,7 @@ IntFindExistingCursorObject(HMODULE hModule, HRSRC hRsrc, LONG cx, LONG cy)
                                         otCURSOR, &fec, (PFNENUMHANDLESPROC)_FindExistingCursorObjectCallBack);
 }
 
-PCURSOR_OBJECT FASTCALL
+PCURSOR_OBJECT INTERNAL_CALL
 IntCreateCursorObject(HANDLE *Handle)
 {
   PCURSOR_OBJECT Object;
@@ -281,7 +281,7 @@ IntCreateCursorObject(HANDLE *Handle)
   return Object;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntDestroyCursorObject(PCURSOR_OBJECT Object, BOOL RemoveFromProcess)
 {
   PSYSTEM_CURSORINFO CurInfo;
@@ -329,7 +329,7 @@ IntDestroyCursorObject(PCURSOR_OBJECT Object, BOOL RemoveFromProcess)
   return TRUE;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 {
   PWINSTATION_OBJECT WinStaObject;
@@ -354,7 +354,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   IntUnLockProcessCursorIcons(Win32Process);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetCursorIconInfo(PCURSOR_OBJECT Cursor, PICONINFO IconInfo)
 {
   ASSERT(Cursor);
@@ -366,7 +366,7 @@ IntGetCursorIconInfo(PCURSOR_OBJECT Cursor, PICONINFO IconInfo)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetCursorIconSize(PCURSOR_OBJECT Cursor,
                      BOOL *fIcon,
                      SIZE *Size)
@@ -396,7 +396,7 @@ IntGetCursorIconSize(PCURSOR_OBJECT Cursor,
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetCursorInfo(PCURSORINFO pci)
 {
   PSYSTEM_CURSORINFO CurInfo;
@@ -421,7 +421,7 @@ IntGetCursorInfo(PCURSORINFO pci)
 }
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetClipCursor(RECT *lpRect)
 {
   /* FIXME - check if process has WINSTA_READATTRIBUTES */
@@ -447,7 +447,7 @@ IntGetClipCursor(RECT *lpRect)
 }
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntSetCursorIconData(PCURSOR_OBJECT Cursor, BOOL *fIcon, POINT *Hotspot,
                      HMODULE hModule, HRSRC hRsrc, HRSRC hGroupRsrc)
 {
@@ -470,7 +470,7 @@ IntSetCursorIconData(PCURSOR_OBJECT Cursor, BOOL *fIcon, POINT *Hotspot,
 
 
 #define CANSTRETCHBLT 0
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJECT Cursor, int cxWidth, int cyWidth,
               UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags)
 {

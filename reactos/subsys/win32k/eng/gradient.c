@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.10 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: gradient.c,v 1.10.4.1 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -60,7 +60,7 @@ const LONG LINC[2] = {-1, 1};
 
 /* FUNCTIONS ******************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEngGradientFillRect(
     IN SURFOBJ  *psoDest,
     IN CLIPOBJ  *pco,
@@ -301,7 +301,7 @@ IntEngGradientFillRect(
                      a = b;\
                      a = c
 #define NLINES 3
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEngGradientFillTriangle(
     IN SURFOBJ  *psoDest,
     IN CLIPOBJ  *pco,
@@ -448,7 +448,7 @@ IntEngGradientFillTriangle(
 }
 
 
-BOOL FASTCALL STATIC
+static BOOL INTERNAL_CALL
 IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 {
   if(COMPAREVERTEX(VERTEX(Vertex1), VERTEX(Vertex2)))
@@ -514,7 +514,7 @@ EngGradientFill(
   return FALSE;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngGradientFill(
     IN BITMAPOBJ  *pboDest,
     IN CLIPOBJ  *pco,

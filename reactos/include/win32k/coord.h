@@ -12,11 +12,11 @@ NtGdiCombineTransform (
 	);
 
 VOID
-FASTCALL
+INTERNAL_CALL
 IntDPtoLP ( PDC dc, LPPOINT Points, INT Count );
 
 VOID
-FASTCALL
+INTERNAL_CALL
 CoordDPtoLP ( PDC Dc, LPPOINT Point );
 
 BOOL
@@ -28,7 +28,7 @@ NtGdiDPtoLP (
 	);
 
 int
-FASTCALL
+INTERNAL_CALL
 IntGetGraphicsMode ( PDC dc );
 
 int
@@ -43,11 +43,11 @@ NtGdiGetWorldTransform (
 	);
 
 VOID
-FASTCALL
+INTERNAL_CALL
 CoordLPtoDP ( PDC Dc, LPPOINT Point );
 
 VOID
-FASTCALL
+INTERNAL_CALL
 IntLPtoDP ( PDC dc, LPPOINT Points, INT Count );
 
 BOOL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.11.12.2 2004/09/01 14:14:26 weiden Exp $
+/* $Id: prop.c,v 1.11.12.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,7 +41,7 @@ typedef struct _PROPLISTITEM
 
 /* FUNCTIONS *****************************************************************/
 
-PPROPERTY FASTCALL
+PPROPERTY INTERNAL_CALL
 IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
 {
   PLIST_ENTRY ListEntry;
@@ -61,7 +61,7 @@ IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
   return NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data)
 {
   PLIST_ENTRY ListEntry;
@@ -86,7 +86,7 @@ IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data)
   return FALSE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE Data)
 {
   PPROPERTY Prop = IntGetProp(WindowObject, Atom);

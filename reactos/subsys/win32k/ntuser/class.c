@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.8.3 2004/09/13 21:28:17 weiden Exp $
+/* $Id: class.c,v 1.59.8.4 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,19 +35,19 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitClassImpl(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CleanupClassImpl(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntReferenceClassByAtom(PCLASS_OBJECT* Class,
                         RTL_ATOM Atom,
                         HINSTANCE hInstance)
@@ -84,7 +84,7 @@ IntReferenceClassByAtom(PCLASS_OBJECT* Class,
    return FALSE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntReferenceClassByName(PCLASS_OBJECT *Class,
                         PUNICODE_STRING ClassName,
                         HINSTANCE hInstance)
@@ -109,7 +109,7 @@ IntReferenceClassByName(PCLASS_OBJECT *Class,
    return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class,
                               PUNICODE_STRING ClassNameOrAtom,
 			      HINSTANCE hInstance)
@@ -120,7 +120,7 @@ IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class,
    return IntReferenceClassByName(Class, ClassNameOrAtom, hInstance);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nMaxCount)
 {
   ULONG Length;
@@ -173,7 +173,7 @@ IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nM
   return TRUE;
 }
 
-PCLASS_OBJECT FASTCALL
+PCLASS_OBJECT INTERNAL_CALL
 IntCreateClass(
    CONST WNDCLASSEXW *lpwcx,
    DWORD Flags,
@@ -279,7 +279,7 @@ IntCreateClass(
 	return(ClassObject);
 }
 
-PCLASS_OBJECT FASTCALL
+PCLASS_OBJECT INTERNAL_CALL
 IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_STRING MenuName,
                  WNDPROC wpExtra, DWORD Flags)
 {
@@ -338,7 +338,7 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
   return Ret;
 }
 
-ULONG FASTCALL
+ULONG INTERNAL_CALL
 IntGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi)
 {
   LONG Ret;
@@ -402,7 +402,7 @@ IntGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi)
   return(Ret);
 }
 
-ULONG FASTCALL
+ULONG INTERNAL_CALL
 IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   ULONG Ret = 0;
@@ -494,7 +494,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
   return Ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetClassInfo(HINSTANCE hInstance, PUNICODE_STRING ClassName, LPWNDCLASSEXW lpWndClassEx, BOOL Ansi)
 {
   PCLASS_OBJECT Class;

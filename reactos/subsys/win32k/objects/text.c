@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.105.2.2 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: text.c,v 1.105.2.3 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -113,13 +113,13 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { SYMBOL_CHARSET, CP_SYMBOL, FS(31)},
 };
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntLoadSystemFonts(VOID);
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 InitFontSupport(VOID)
 {
    ULONG ulError;
@@ -143,7 +143,7 @@ InitFontSupport(VOID)
  * Search the system font directory and adds each font found.
  */
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntLoadSystemFonts(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -242,7 +242,7 @@ IntLoadSystemFonts(VOID)
  * Adds the font resource from the specified file to the system.
  */
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 {
    FONTGDI *FontGDI;
@@ -401,7 +401,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    return 1;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsFontRenderingEnabled(VOID)
 {
    BOOL Ret = RenderingEnabled;
@@ -414,13 +414,13 @@ IntIsFontRenderingEnabled(VOID)
    return Ret;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntEnableFontRendering(BOOL Enable)
 {
   RenderingEnabled = Enable;
 }
 
-FT_Render_Mode FASTCALL
+FT_Render_Mode INTERNAL_CALL
 IntGetFontRenderMode(LOGFONTW *logfont)
 {  
   switch(logfont->lfQuality)
@@ -485,7 +485,7 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   return Ret;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
   PTEXTOBJ TextObj;
@@ -625,7 +625,7 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
  *   TRUE on success, FALSE on failure.
  *
  */
-static BOOLEAN STDCALL
+static BOOLEAN INTERNAL_CALL
 IntTranslateCharsetInfo(PDWORD Src, /* [in]
                          if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
                          if flags == TCI_SRCCHARSET: a character set value
@@ -697,7 +697,7 @@ NtGdiTranslateCharsetInfo(PDWORD Src,
  * IntGetOutlineTextMetrics
  *
  */
-static unsigned FASTCALL
+static unsigned INTERNAL_CALL
 IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
                          OUTLINETEXTMETRICW *Otm)
 {
@@ -954,7 +954,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
   return Needed;
 }
 
-static PFONTGDI FASTCALL
+static PFONTGDI INTERNAL_CALL
 FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
 {
   PLIST_ENTRY Entry;
@@ -992,7 +992,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
   return NULL;
 }
 
-static PFONTGDI FASTCALL
+static PFONTGDI INTERNAL_CALL
 FindFaceNameInLists(PUNICODE_STRING FaceName)
 {
   PW32PROCESS Win32Process;
@@ -1016,7 +1016,7 @@ FindFaceNameInLists(PUNICODE_STRING FaceName)
   return Font;
 }
 
-static void FASTCALL
+static void INTERNAL_CALL
 FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 {
   ANSI_STRING StyleA;
@@ -1182,7 +1182,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     }
 }
 
-static int FASTCALL
+static int INTERNAL_CALL
 FindFaceNameInInfo(PUNICODE_STRING FaceName, PFONTFAMILYINFO Info, DWORD InfoEntries)
 {
   DWORD i;
@@ -1200,7 +1200,7 @@ FindFaceNameInInfo(PUNICODE_STRING FaceName, PFONTFAMILYINFO Info, DWORD InfoEnt
   return -1;
 }
 
-static BOOLEAN FASTCALL
+static BOOLEAN INTERNAL_CALL
 FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
                   PFONTFAMILYINFO Info, DWORD InfoEntries)
 {
@@ -1216,7 +1216,7 @@ FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
   return FindFaceNameInInfo(FaceName, Info, InfoEntries) < 0;
 }
 
-static BOOLEAN FASTCALL
+static BOOLEAN INTERNAL_CALL
 GetFontFamilyInfoForList(LPLOGFONTW LogFont,
                          PFONTFAMILYINFO Info,
                          DWORD *Count,
@@ -1326,7 +1326,7 @@ FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
   return STATUS_SUCCESS;
 }
 
-static BOOLEAN FASTCALL
+static BOOLEAN INTERNAL_CALL
 GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                                 PFONTFAMILYINFO Info,
                                 DWORD *Count,
@@ -2127,8 +2127,7 @@ NtGdiGetTextCharsetInfo(HDC  hDC,
   return 0;
 }
 
-static BOOL
-FASTCALL
+static BOOL INTERNAL_CALL
 TextIntGetTextExtentPoint(HDC hDC,
                           PTEXTOBJ TextObj,
                           LPCWSTR String,
@@ -2735,7 +2734,7 @@ NtGdiGetFontData(
    return Result; 
 }
 
-static UINT FASTCALL
+static UINT INTERNAL_CALL
 GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
 {
   ANSI_STRING EntryFaceNameA;
@@ -2868,7 +2867,7 @@ SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
     }
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 TextIntRealizeFont(HFONT FontHandle)
 {
   NTSTATUS Status = STATUS_SUCCESS;
@@ -2926,7 +2925,7 @@ TextIntRealizeFont(HFONT FontHandle)
   return Status;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
 {
   if (Count < sizeof(LOGFONTW))

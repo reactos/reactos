@@ -27,26 +27,26 @@ typedef struct _PALGDI {
   ULONG BlueMask;
 } PALGDI, *PPALGDI;
 
-HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
-                                       ULONG NumColors,
-                                       ULONG *Colors,
-                                       ULONG Red,
-                                       ULONG Green,
-                                       ULONG Blue);
-HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
-                                                 CONST RGBQUAD *Colors);
+HPALETTE INTERNAL_CALL PALETTE_AllocPalette(ULONG Mode,
+                                            ULONG NumColors,
+                                            ULONG *Colors,
+                                            ULONG Red,
+                                            ULONG Green,
+                                            ULONG Blue);
+HPALETTE INTERNAL_CALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
+                                                      CONST RGBQUAD *Colors);
 #define  PALETTE_FreePalette(hPalette)  GDIOBJ_FreeObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
 #define  PALETTE_LockPalette(hPalette) ((PPALGDI)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
 #define  PALETTE_UnlockPalette(Palette) GDIOBJ_UnlockObj((PGDIOBJ)Palette)
-BOOL FASTCALL PALETTE_Cleanup(PPALGDI pPal);
+BOOL INTERNAL_CALL PALETTE_Cleanup(PPALGDI pPal);
 
-HPALETTE FASTCALL PALETTE_Init (VOID);
-VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
+HPALETTE INTERNAL_CALL PALETTE_Init (VOID);
+VOID     INTERNAL_CALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
 #ifndef NO_MAPPING
-INT      STDCALL  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
+INT      INTERNAL_CALL  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
 #endif
-INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
+INT      INTERNAL_CALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
-PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
+PPALETTEENTRY INTERNAL_CALL ReturnSystemPalette (VOID);
 
 #endif /* _WIN32K_PALETTE_H */

@@ -1,7 +1,7 @@
 #ifndef _WIN32K_CALLBACK_H
 #define _WIN32K_CALLBACK_H
 
-LRESULT STDCALL
+LRESULT INTERNAL_CALL
 IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
                   PWINDOW_OBJECT Window,
@@ -10,7 +10,7 @@ IntCallWindowProc(WNDPROC Proc,
                   LPARAM lParam,
                   INT lParamBufferSize);
 
-VOID STDCALL
+VOID INTERNAL_CALL
 IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			   PWINDOW_OBJECT Window,
 			   UINT Msg,
@@ -18,13 +18,13 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			   LRESULT Result);
 
 
-HMENU STDCALL
+HMENU INTERNAL_CALL
 IntLoadSysMenuTemplate();
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntLoadDefaultCursors(VOID);
 
-LRESULT STDCALL
+LRESULT INTERNAL_CALL
 IntCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,
@@ -33,13 +33,13 @@ IntCallHookProc(INT HookId,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCleanupThreadCallbacks(PW32THREAD W32Thread);
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 IntCbAllocateMemory(ULONG Size);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCbFreeMemory(PVOID Data);
 
 #endif /* _WIN32K_CALLBACK_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userlock.c,v 1.1.4.2 2004/09/01 22:14:50 weiden Exp $
+/* $Id: userlock.c,v 1.1.4.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,13 +31,13 @@
 static ERESOURCE UserLock;
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntInitUserResourceLocks(VOID)
 {
   ExInitializeResourceLite(&UserLock);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCleanupUserResourceLocks(VOID)
 {
   ExDeleteResourceLite(&UserLock);

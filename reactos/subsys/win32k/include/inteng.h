@@ -22,7 +22,7 @@ typedef struct tagSPAN
 
 /* Definitions of IntEngXxx functions */
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngLineTo(BITMAPOBJ *Surface,
              CLIPOBJ *Clip,
              BRUSHOBJ *Brush,
@@ -33,7 +33,7 @@ IntEngLineTo(BITMAPOBJ *Surface,
              RECTL *RectBounds,
              MIX mix);
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngBitBlt(BITMAPOBJ *DestObj,
 	     BITMAPOBJ *SourceObj,
 	     BITMAPOBJ *Mask,
@@ -46,7 +46,7 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
 	     POINTL *BrushOrigin,
 	     ROP4 rop4);
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngStretchBlt(BITMAPOBJ *DestObj,
                  BITMAPOBJ *SourceObj,
                  BITMAPOBJ *Mask,
@@ -59,7 +59,7 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
                  POINTL *BrushOrigin,
                  ULONG Mode);
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngGradientFill(BITMAPOBJ *psoDest,
                    CLIPOBJ *pco,
                    XLATEOBJ *pxlo,
@@ -71,24 +71,24 @@ IntEngGradientFill(BITMAPOBJ *psoDest,
                    POINTL *pptlDitherOrg,
                    ULONG ulMode);
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateXlate(USHORT DestPalType,
                   USHORT SourcePalType,
                   HPALETTE PaletteDest,
                   HPALETTE PaletteSource);
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateMonoXlate(USHORT SourcePalType,
                       HPALETTE PaletteDest,
                       HPALETTE PaletteSource,
                       ULONG BackgroundColor);
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG ForegroundColor,
                          ULONG BackgroundColor);
 			
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngPolyline(BITMAPOBJ *DestSurf,
                CLIPOBJ *Clip,
                BRUSHOBJ *Brush,
@@ -96,21 +96,21 @@ IntEngPolyline(BITMAPOBJ *DestSurf,
                LONG dCount,
                MIX mix);
 
-CLIPOBJ* FASTCALL
+CLIPOBJ* INTERNAL_CALL
 IntEngCreateClipRegion(ULONG count,
                        PRECTL pRect,
                        PRECTL rcBounds);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj);
 
-BOOLEAN FASTCALL
+BOOLEAN INTERNAL_CALL
 ClipobjToSpans(PSPAN *Spans,
                UINT *Count,
                CLIPOBJ *ClipRegion,
                PRECTL Boundary);
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEngTransparentBlt(BITMAPOBJ *Dest,
                      BITMAPOBJ *Source,
                      CLIPOBJ *Clip,
@@ -120,7 +120,7 @@ IntEngTransparentBlt(BITMAPOBJ *Dest,
                      ULONG iTransColor,
                      ULONG Reserved);
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngPaint(IN BITMAPOBJ *Surface,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,

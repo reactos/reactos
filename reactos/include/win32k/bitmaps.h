@@ -32,16 +32,16 @@ typedef struct _BITMAPOBJ
 #define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 #define  BITMAPOBJ_UnlockBitmap(BMObj) GDIOBJ_UnlockObj((PGDIOBJ) BMObj)
 
-INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
-HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
-INT     FASTCALL DIB_GetDIBWidthBytes (INT  width, INT  depth);
-int     STDCALL  DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);
-INT     FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
-INT     STDCALL  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
-BOOL    FASTCALL BITMAP_Cleanup(PBITMAPOBJ pBmp);
-HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
+INT     INTERNAL_CALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
+HBITMAP INTERNAL_CALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
+INT     INTERNAL_CALL DIB_GetDIBWidthBytes (INT  width, INT  depth);
+int     INTERNAL_CALL DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);
+INT     INTERNAL_CALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
+INT     INTERNAL_CALL  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
+BOOL    INTERNAL_CALL BITMAP_Cleanup(PBITMAPOBJ pBmp);
+HBITMAP INTERNAL_CALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
 
-HBITMAP FASTCALL IntCreateCompatibleBitmap(PDC Dc, INT Width, INT Height);
+HBITMAP INTERNAL_CALL IntCreateCompatibleBitmap(PDC Dc, INT Width, INT Height);
 
 /*  User Entry Points  */
 BOOL

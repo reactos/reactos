@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.62.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: region.c,v 1.62.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -421,8 +421,8 @@ static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 
 #define MEMCHECK(reg, rect, firstrect) xmemcheck(reg,&(rect),(LPRECT *)&(firstrect))
 
-typedef void FASTCALL (*overlapProcp)(PROSRGNDATA, PRECT, PRECT, PRECT, PRECT, INT, INT);
-typedef void FASTCALL (*nonOverlapProcp)(PROSRGNDATA, PRECT, PRECT, INT, INT);
+typedef void INTERNAL_CALL (*overlapProcp)(PROSRGNDATA, PRECT, PRECT, PRECT, PRECT, INT, INT);
+typedef void INTERNAL_CALL (*nonOverlapProcp)(PROSRGNDATA, PRECT, PRECT, INT, INT);
 
 // Number of points to buffer before sending them off to scanlines() :  Must be an even number
 #define NUMPTSTOBUFFER 200
@@ -441,7 +441,7 @@ typedef struct _POINTBLOCK {
  * This function is left there for debugging purposes.
  */
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntDumpRegion(HRGN hRgn)
 {
    ROSRGNDATA *Data;
@@ -465,7 +465,8 @@ IntDumpRegion(HRGN hRgn)
 }
 #endif /* NDEBUG */
 
-static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
+static BOOL INTERNAL_CALL
+REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 {
   if(dst != src) //  don't want to copy to itself
   {
@@ -493,7 +494,8 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
   return TRUE;
 }
 
-static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
+static void INTERNAL_CALL
+REGION_SetExtents (ROSRGNDATA *pReg)
 {
     RECT *pRect, *pRectEnd, *pExtents;
 
@@ -538,7 +540,8 @@ static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
-static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
+static BOOL INTERNAL_CALL
+REGION_CropAndOffsetRegion(const PPOINT off, const PRECT rect, PROSRGNDATA rgnSrc, PROSRGNDATA rgnDst)
 {
   if(!rect) // just copy and offset
   {
@@ -704,7 +707,8 @@ empty:
  *
  * \return	hDst if success, 0 otherwise.
  */
-HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
+HRGN INTERNAL_CALL
+REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
   PROSRGNDATA objSrc, rgnDst;
   HRGN hNewDst, hRet = NULL;
@@ -763,7 +767,8 @@ HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lp
  *          - pReg->numRects will be decreased.
  *
  */
-static INT FASTCALL REGION_Coalesce (
+static INT INTERNAL_CALL
+REGION_Coalesce (
 	     PROSRGNDATA pReg, /* Region to coalesce */
 	     INT prevStart,  /* Index of start of previous band */
 	     INT curStart    /* Index of start of current band */
@@ -904,7 +909,7 @@ static INT FASTCALL REGION_Coalesce (
  *      to reduce the number of rectangles in the region.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_RegionOp(
 	ROSRGNDATA *newReg, /* Place to store result */
 	ROSRGNDATA *reg1,   /* First region in operation */
@@ -1200,7 +1205,7 @@ REGION_RegionOp(
  *      Rectangles may be added to the region.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_IntersectO (
 	PROSRGNDATA pReg,
 	PRECT       r1,
@@ -1264,8 +1269,9 @@ REGION_IntersectO (
 /***********************************************************************
  *	     REGION_IntersectRegion
  */
-static void FASTCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
-				   ROSRGNDATA *reg2)
+static void INTERNAL_CALL
+REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+		       ROSRGNDATA *reg2)
 {
   /* check for trivial reject */
   if ( (!(reg1->rdh.nCount)) || (!(reg2->rdh.nCount))  ||
@@ -1303,7 +1309,7 @@ static void FASTCALL REGION_IntersectRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1
  *      with the rectangles we're passed.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_UnionNonO (
 	PROSRGNDATA pReg,
 	PRECT       r,
@@ -1342,7 +1348,7 @@ REGION_UnionNonO (
  *      be changed.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_UnionO (
 	PROSRGNDATA pReg,
 	PRECT       r1,
@@ -1409,8 +1415,9 @@ REGION_UnionO (
 /***********************************************************************
  *	     REGION_UnionRegion
  */
-static void FASTCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
-			       ROSRGNDATA *reg2)
+static void INTERNAL_CALL
+REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
+	           ROSRGNDATA *reg2)
 {
   /*  checks all the simple cases */
 
@@ -1497,7 +1504,7 @@ static void FASTCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
  *      pReg may be affected.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_SubtractNonO1 (
 	PROSRGNDATA pReg,
 	PRECT       r,
@@ -1536,7 +1543,7 @@ REGION_SubtractNonO1 (
  *      pReg may have rectangles added to it.
  *
  */
-static void FASTCALL
+static void INTERNAL_CALL
 REGION_SubtractO (
 	PROSRGNDATA pReg,
 	PRECT       r1,
@@ -1670,8 +1677,9 @@ REGION_SubtractO (
  *      regD is overwritten.
  *
  */
-static void FASTCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
-				                       ROSRGNDATA *regS )
+static void INTERNAL_CALL
+REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
+                      ROSRGNDATA *regS )
 {
    /* check for trivial reject */
     if ( (!(regM->rdh.nCount)) || (!(regS->rdh.nCount))  ||
@@ -1697,8 +1705,9 @@ static void FASTCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 /***********************************************************************
  *	     REGION_XorRegion
  */
-static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
-							ROSRGNDATA *srb)
+static void INTERNAL_CALL
+REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
+		 ROSRGNDATA *srb)
 {
   HRGN htra, htrb;
   ROSRGNDATA *tra, *trb;
@@ -1740,7 +1749,8 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 /*!
  * Adds a rectangle to a REGION
  */
-void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
+void INTERNAL_CALL
+REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
 {
     ROSRGNDATA region;
 
@@ -1751,7 +1761,8 @@ void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
     REGION_UnionRegion(rgn, rgn, &region);
 }
 
-BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
+BOOL INTERNAL_CALL
+REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
 {
    PROSRGNDATA srcObj, destObj;
    PRECT rc;
@@ -1838,7 +1849,8 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
 }
 
 
-BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
+BOOL INTERNAL_CALL
+REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
 {
   RECT *pCurRect, *pEndRect;
   PROSRGNDATA srcObj = NULL;
@@ -1896,7 +1908,8 @@ done:
   return ret;
 }
 
-HRGN FASTCALL RGNDATA_AllocRgn(INT n)
+HRGN INTERNAL_CALL
+RGNDATA_AllocRgn(INT n)
 {
   HRGN hReg;
   PROSRGNDATA pReg;
@@ -1939,7 +1952,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   return NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 RGNDATA_Cleanup(PROSRGNDATA pRgn)
 {
   if(pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
@@ -2284,7 +2297,7 @@ NtGdiFrameRgn(HDC hDC, HRGN  hRgn, HBRUSH  hBrush, INT  Width, INT  Height)
   return Ret;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
 		    LPRECT  pRect)
 {
@@ -2499,8 +2512,7 @@ NtGdiPtInRegion(HRGN  hRgn,
   return FALSE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 UnsafeIntRectInRegion(PROSRGNDATA Rgn,
                       CONST LPRECT rc)
 {
@@ -2660,8 +2672,9 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
  *     bucket.  Finally, we can insert it.
  *
  */
-static void FASTCALL REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
-                INT scanline, ScanLineListBlock **SLLBlock, INT *iSLLBlock)
+static void INTERNAL_CALL
+REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
+                      INT scanline, ScanLineListBlock **SLLBlock, INT *iSLLBlock)
 
 {
     EdgeTableEntry *start, *prev;
@@ -2732,7 +2745,8 @@ static void FASTCALL REGION_InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,
  *     leaving them sorted by smaller x coordinate.
  *
  */
-static void FASTCALL REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
+static void INTERNAL_CALL
+REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
 {
     EdgeTableEntry *pPrevAET;
     EdgeTableEntry *tmp;
@@ -2778,7 +2792,8 @@ static void FASTCALL REGION_loadAET(EdgeTableEntry *AET, EdgeTableEntry *ETEs)
  *         V------------------->       V---> ...
  *
  */
-static void FASTCALL REGION_computeWAET(EdgeTableEntry *AET)
+static void INTERNAL_CALL
+REGION_computeWAET(EdgeTableEntry *AET)
 {
     register EdgeTableEntry *pWETE;
     register int inside = 1;
@@ -2814,7 +2829,8 @@ static void FASTCALL REGION_computeWAET(EdgeTableEntry *AET)
  *     Edge Table.
  *
  */
-static BOOL FASTCALL REGION_InsertionSort(EdgeTableEntry *AET)
+static BOOL INTERNAL_CALL
+REGION_InsertionSort(EdgeTableEntry *AET)
 {
     EdgeTableEntry *pETEchase;
     EdgeTableEntry *pETEinsert;
@@ -2851,7 +2867,8 @@ static BOOL FASTCALL REGION_InsertionSort(EdgeTableEntry *AET)
  *
  *     Clean up our act.
  */
-static void FASTCALL REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
+static void INTERNAL_CALL
+REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
 {
     ScanLineListBlock   *tmpSLLBlock;
 
@@ -2869,8 +2886,9 @@ static void FASTCALL REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
  *
  *     Create an array of rectangles from a list of points.
  */
-static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
-		       POINTBLOCK *FirstPtBlock, ROSRGNDATA *reg)
+static int INTERNAL_CALL
+REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
+                   POINTBLOCK *FirstPtBlock, ROSRGNDATA *reg)
 {
     RECT *rects;
     POINT *pts;
@@ -2966,7 +2984,8 @@ static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
  *     which an edge is initially entered.
  *
  */
-static void FASTCALL REGION_CreateETandAET(const INT *Count, INT nbpolygons,
+static void INTERNAL_CALL
+REGION_CreateETandAET(const INT *Count, INT nbpolygons,
             const POINT *pts, EdgeTable *ET, EdgeTableEntry *AET,
             EdgeTableEntry *pETEs, ScanLineListBlock *pSLLBlock)
 {
@@ -3055,7 +3074,7 @@ static void FASTCALL REGION_CreateETandAET(const INT *Count, INT nbpolygons,
     }
 }
 
-HRGN FASTCALL
+HRGN INTERNAL_CALL
 IntCreatePolyPolgonRgn(POINT *Pts,
                        INT *Count,
 		       INT nbpolygons,

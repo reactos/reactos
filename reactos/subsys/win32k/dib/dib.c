@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.12 2004/07/14 20:48:56 navaraf Exp $ */
+/* $Id: dib.c,v 1.12.2.1 2004/09/14 01:00:42 weiden Exp $ */
 #include <w32k.h>
 
 /* Static data */
@@ -89,7 +89,7 @@ DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
    }
 };
 
-ULONG
+ULONG INTERNAL_CALL
 DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
 {
   ULONG ResultNibble;
@@ -189,43 +189,50 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   return(Result);
 }
 
-VOID Dummy_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
+VOID INTERNAL_CALL
+Dummy_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
 {
   return;
 }
 
-ULONG Dummy_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y)
+ULONG INTERNAL_CALL
+Dummy_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y)
 {
   return 0;
 }
 
-VOID Dummy_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID INTERNAL_CALL
+Dummy_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   return;
 }
 
-VOID Dummy_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID INTERNAL_CALL
+Dummy_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   return;
 }
 
-BOOLEAN Dummy_BitBlt(PBLTINFO BltInfo)
+BOOLEAN INTERNAL_CALL
+Dummy_BitBlt(PBLTINFO BltInfo)
 {
   return FALSE;
 }
 
-BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                         RECTL*  DestRect,  RECTL  *SourceRect,
-                         POINTL* MaskOrigin, POINTL BrushOrign,
-                         CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                         ULONG Mode)
+BOOLEAN INTERNAL_CALL
+Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                 RECTL*  DestRect,  RECTL  *SourceRect,
+                 POINTL* MaskOrigin, POINTL BrushOrign,
+                 CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                 ULONG Mode)
 {
   return FALSE;
 }
 
-BOOLEAN Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                             RECTL*  DestRect,  POINTL  *SourcePoint,
-                             XLATEOBJ *ColorTranslation, ULONG iTransColor)
+BOOLEAN INTERNAL_CALL
+Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                     RECTL*  DestRect,  POINTL  *SourcePoint,
+                     XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
   return FALSE;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.21.12.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: metric.c,v 1.21.12.2 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,7 +32,7 @@
 #include <debug.h>
 
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGetSystemMetrics(INT nIndex)
 {
   PW32PROCESS W32Process = PsGetWin32Process();

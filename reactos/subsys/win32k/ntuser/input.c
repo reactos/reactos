@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.6 2004/09/12 19:21:07 weiden Exp $
+/* $Id: input.c,v 1.36.4.7 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -59,7 +59,7 @@ PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
     IntMouseInput(&mi); \
   ClearMouseInput(mi);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
   PMOUSE_INPUT_DATA mid;
@@ -418,7 +418,7 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitInputImpl(VOID)
 {
   NTSTATUS Status;
@@ -456,13 +456,13 @@ InitInputImpl(VOID)
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CleanupInputImp(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntMouseInput(MOUSEINPUT *mi)
 {
   const UINT SwapBtnMsg[2][2] = {{WM_LBUTTONDOWN, WM_RBUTTONDOWN},
@@ -694,13 +694,13 @@ IntMouseInput(MOUSEINPUT *mi)
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntKeyboardInput(KEYBDINPUT *ki)
 {
   return FALSE;
 }
 
-UINT FASTCALL
+UINT INTERNAL_CALL
 IntSendInput(
   UINT nInputs,
   LPINPUT pInput,
@@ -764,7 +764,7 @@ IntSendInput(
   return cnt;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
 {
   //UNIMPLEMENTED;

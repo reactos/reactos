@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12.8.2 2004/07/22 13:07:08 weiden Exp $
+/* $Id: object.c,v 1.12.8.3 2004/09/14 01:00:43 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -43,7 +43,7 @@
 
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmReferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Increments a given object's reference count and performs
@@ -61,7 +61,7 @@ ObmReferenceObject(PVOID ObjectBody)
   InterlockedIncrement(&ObjectHeader->RefCount);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmDereferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
@@ -83,7 +83,7 @@ ObmDereferenceObject(PVOID ObjectBody)
   }
 }
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmEnumHandles(PUSER_HANDLE_TABLE HandleTable,
                USER_OBJECT_TYPE ObjectType,
                PVOID UserData,
@@ -110,7 +110,7 @@ ObmEnumHandles(PUSER_HANDLE_TABLE HandleTable,
   return NULL;
 }
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
 		PHANDLE Handle,
 		USER_OBJECT_TYPE ObjectType,
@@ -164,7 +164,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   return NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 ObmObjectDeleted(PVOID ObjectBody)
 {
   PUSER_OBJECT_HEADER ObjectHeader;
@@ -175,7 +175,7 @@ ObmObjectDeleted(PVOID ObjectBody)
   return ((ObjectHeader->Slot == NULL) || (*(ObjectHeader->Slot) != ObjectHeader));
 }
 
-USER_OBJECT_TYPE FASTCALL
+USER_OBJECT_TYPE INTERNAL_CALL
 ObmGetObjectType(PUSER_HANDLE_TABLE HandleTable,
                  PVOID ObjectBody)
 {
@@ -187,7 +187,7 @@ ObmGetObjectType(PUSER_HANDLE_TABLE HandleTable,
   return ObjectHeader->Type;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 ObmDeleteObject(PUSER_HANDLE_TABLE HandleTable,
                 PVOID ObjectBody)
 {
@@ -213,7 +213,7 @@ ObmDeleteObject(PUSER_HANDLE_TABLE HandleTable,
   return TRUE;
 }
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmGetObject(PUSER_HANDLE_TABLE HandleTable,
              HANDLE Handle,
 	     USER_OBJECT_TYPE ObjectType)
@@ -234,7 +234,7 @@ ObmGetObject(PUSER_HANDLE_TABLE HandleTable,
   return NULL;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   PUSER_OBJECT_HEADER *Slot, *LastSlot;
@@ -248,13 +248,13 @@ ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
   }
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmFreeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   /* FIXME - delete all handles */
 }
 
-PUSER_HANDLE_TABLE FASTCALL
+PUSER_HANDLE_TABLE INTERNAL_CALL
 ObmCreateHandleTable(VOID)
 {
   PUSER_HANDLE_TABLE HandleTable;
@@ -272,7 +272,7 @@ ObmCreateHandleTable(VOID)
   return HandleTable;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmDestroyHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   ObmFreeHandleTable(HandleTable);

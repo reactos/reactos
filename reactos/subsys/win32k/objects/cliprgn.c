@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.42.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.42.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
-int FASTCALL
+int INTERNAL_CALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
@@ -50,7 +50,8 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    return NtGdiOffsetRgn(Dc->w.hGCClipRgn, -Dc->w.DCOrgX, -Dc->w.DCOrgY);
 }
 
-HRGN WINAPI SaveVisRgn(HDC hdc)
+HRGN INTERNAL_CALL
+SaveVisRgn(HDC hdc)
 {
   HRGN copy;
   PROSRGNDATA obj, copyObj;
@@ -171,7 +172,7 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   return retval;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiGetClipBox(HDC hDC, LPRECT rc)
 {
    PROSRGNDATA Rgn;

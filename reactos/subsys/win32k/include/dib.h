@@ -3,20 +3,20 @@
 
 #include <win32k/dc.h>
 
-INT FASTCALL
+INT INTERNAL_CALL
 DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
-HBITMAP STDCALL
+HBITMAP INTERNAL_CALL
 DIB_CreateDIBSection (PDC dc, PBITMAPINFO bmi, UINT usage, LPVOID *bits, HANDLE section, DWORD offset, DWORD ovr_pitch);
-INT STDCALL
+INT INTERNAL_CALL
 DIB_GetBitmapInfo (const BITMAPINFOHEADER *header, PDWORD width, PINT height, PWORD bpp, PWORD compr);
-INT STDCALL
+INT INTERNAL_CALL
 DIB_GetDIBImageBytes (INT  width, INT height, INT depth);
-INT FASTCALL
+INT INTERNAL_CALL
 DIB_GetDIBWidthBytes (INT width, INT depth);
-RGBQUAD * FASTCALL
+RGBQUAD * INTERNAL_CALL
 DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
 
-HPALETTE FASTCALL
+HPALETTE INTERNAL_CALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType);
 
 #endif /* _WIN32K_DIB_H */

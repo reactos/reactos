@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.h,v 1.3 2004/07/03 13:55:35 navaraf Exp $ */
+/* $Id: misc.h,v 1.3.4.1 2004/09/14 01:00:42 weiden Exp $ */
 #ifndef __ENG_MISC_H
 #define __ENG_MISC_H
 
@@ -35,12 +35,12 @@ typedef struct INTENG_ENTER_LEAVE_TAG
   BOOL ReadOnly;
   } INTENG_ENTER_LEAVE, *PINTENG_ENTER_LEAVE;
 
-extern BOOL STDCALL IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
-                                SURFOBJ *DestObj,
-                                RECTL *DestRect,
-                                BOOL ReadOnly,
-                                POINTL *Translate,
-                                SURFOBJ **OutputObj);
-extern BOOL STDCALL IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave);
+extern BOOL INTERNAL_CALL IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
+                                      SURFOBJ *DestObj,
+                                      RECTL *DestRect,
+                                      BOOL ReadOnly,
+                                      POINTL *Translate,
+                                      SURFOBJ **OutputObj);
+extern BOOL INTERNAL_CALL IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave);
 
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.79.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.79.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -418,7 +418,7 @@ NtGdiCreateBitmap(
    return hBitmap;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 BITMAP_Cleanup(PBITMAPOBJ pBmp)
 {
 	if (pBmp->SurfObj.pvBits != NULL &&
@@ -438,7 +438,7 @@ BITMAP_Cleanup(PBITMAPOBJ pBmp)
 }
 
 
-HBITMAP FASTCALL
+HBITMAP INTERNAL_CALL
 IntCreateCompatibleBitmap(
 	PDC Dc,
 	INT Width,
@@ -1160,7 +1160,7 @@ NtGdiStretchBlt(
 
 /*  Internal Functions  */
 
-INT FASTCALL
+INT INTERNAL_CALL
 BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 {
 #if 0
@@ -1194,7 +1194,7 @@ BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 	return ((bmWidth * bpp + 15) & ~15) >> 3;
 }
 
-HBITMAP FASTCALL
+HBITMAP INTERNAL_CALL
 BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 {
 	HBITMAP  res;
@@ -1219,7 +1219,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	return  res;
 }
 
-INT STDCALL
+INT INTERNAL_CALL
 BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 {
 	if(bmp->dib)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.33.4.2 2004/08/31 11:38:56 weiden Exp $
+/* $Id: timer.c,v 1.33.4.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,7 +61,7 @@ static CLIENT_ID     MsgTimerThreadId;
 
 //return true if the new timer became the first entry
 //must hold mutex while calling this
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 {
   PLIST_ENTRY current;
@@ -84,7 +84,7 @@ IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 
 
 //must hold mutex while calling this
-PMSG_TIMER_ENTRY FASTCALL
+PMSG_TIMER_ENTRY INTERNAL_CALL
 IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer;
@@ -114,7 +114,7 @@ IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL Sy
 /* 
  * NOTE: It doesn't kill the timer. It just removes them from the list.
  */
-VOID FASTCALL
+VOID INTERNAL_CALL
 RemoveTimersThread(HANDLE ThreadID)
 {
   PMSG_TIMER_ENTRY MsgTimer;
@@ -147,7 +147,7 @@ RemoveTimersThread(HANDLE ThreadID)
 /* 
  * NOTE: It doesn't kill the timer. It just removes them from the list.
  */
-VOID FASTCALL
+VOID INTERNAL_CALL
 RemoveTimersWindow(PWINDOW_OBJECT Window)
 {
   PMSG_TIMER_ENTRY MsgTimer;
@@ -172,7 +172,7 @@ RemoveTimersWindow(PWINDOW_OBJECT Window)
 }
 
 
-UINT_PTR FASTCALL
+UINT_PTR INTERNAL_CALL
 IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer = NULL;
@@ -279,7 +279,7 @@ IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERP
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntKillTimer(PWINDOW_OBJECT WindowObject, UINT_PTR uIDEvent, BOOL SystemTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer;
@@ -435,7 +435,7 @@ TimerThreadMain(PVOID StartContext)
   }
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitTimerImpl(VOID)
 {
   NTSTATUS Status;

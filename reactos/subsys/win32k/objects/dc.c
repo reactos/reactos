@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.144.2.3 2004/09/13 21:28:17 weiden Exp $
+/* $Id: dc.c,v 1.144.2.4 2004/09/14 01:00:45 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -56,7 +56,7 @@ func_type STDCALL  func_name( HDC hdc ) \
  * we can do whatever we want.
  */
 #define DC_GET_VAL_EX( FuncName, ret_x, ret_y, type, ax, ay ) \
-VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
+VOID INTERNAL_CALL Int##FuncName ( PDC dc, LP##type pt) \
 { \
   ASSERT(dc); \
   ASSERT(pt); \
@@ -228,7 +228,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   return hNewDC;
 }
 
-static BOOL FASTCALL
+static BOOL INTERNAL_CALL
 GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -258,7 +258,7 @@ GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
   return TRUE;
 }
 
-static BOOL FASTCALL
+static BOOL INTERNAL_CALL
 FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -341,7 +341,7 @@ DevModeCallback(IN PWSTR ValueName,
   return STATUS_SUCCESS;
 }
 
-static BOOL FASTCALL
+static BOOL INTERNAL_CALL
 SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
 {
   static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
@@ -453,7 +453,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
   return Valid;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntCreatePrimarySurface()
 {
    PGD_ENABLEDRIVER GDEnableDriver;
@@ -660,7 +660,7 @@ IntCreatePrimarySurface()
    return TRUE;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntDestroyPrimarySurface()
   {
     DRIVER_UnreferenceDriver(L"DISPLAY");
@@ -680,7 +680,7 @@ IntDestroyPrimarySurface()
     ObDereferenceObject(PrimarySurface.VideoFileObject);
   }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Device,
                PUNICODE_STRING Output,
@@ -977,7 +977,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
 
 DC_GET_VAL_EX ( GetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT, x, y )
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
 {
   Point->x = dc->w.DCOrgX;
@@ -1464,7 +1464,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
 DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
 DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 {
   PGDIOBJHDR GdiObject;
@@ -1945,7 +1945,7 @@ DC_SET_MODE( NtGdiSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
 
 //  ----------------------------------------------------  Private Interface
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 DC_AllocDC(PUNICODE_STRING Driver)
 {
   PDC  NewDC;
@@ -2008,7 +2008,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   return  hDC;
 }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 DC_FindOpenDC(PUNICODE_STRING  Driver)
 {
   return NULL;
@@ -2017,7 +2017,7 @@ DC_FindOpenDC(PUNICODE_STRING  Driver)
 /*!
  * Initialize some common fields in the Device Context structure.
 */
-VOID FASTCALL
+VOID INTERNAL_CALL
 DC_InitDC(HDC  DCHandle)
 {
 //  NtGdiRealizeDefaultPalette(DCHandle);
@@ -2030,7 +2030,7 @@ DC_InitDC(HDC  DCHandle)
 
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DC_FreeDC(HDC  DCToFree)
 {
   if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
@@ -2039,26 +2039,26 @@ DC_FreeDC(HDC  DCToFree)
   }
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 DC_Cleanup( PDC pDC )
 {
   RtlFreeUnicodeString(&pDC->DriverName);
   return TRUE;
 }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 DC_GetNextDC (PDC pDC)
 {
   return pDC->hNext;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DC_SetNextDC (PDC pDC, HDC hNextDC)
 {
   pDC->hNext = hNextDC;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DC_UpdateXforms(PDC  dc)
 {
   XFORM  xformWnd2Vport;
@@ -2081,7 +2081,7 @@ DC_UpdateXforms(PDC  dc)
   dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 DC_InvertXform(const XFORM *xformSrc,
                XFORM *xformDest)
 {
@@ -2103,7 +2103,7 @@ DC_InvertXform(const XFORM *xformSrc,
   return  TRUE;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 {
   PDC DC;
@@ -2128,7 +2128,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     }
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsPrimarySurface(SURFOBJ *SurfObj)
 {
    if (PrimarySurface.Handle == NULL)
@@ -2142,7 +2142,7 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
  * Returns the color of the brush or pen that is currently selected into the DC.
  * This function is called from GetDCBrushColor() and GetDCPenColor()
  */
-COLORREF FASTCALL
+COLORREF INTERNAL_CALL
 IntGetDCColor(HDC hDC, ULONG Object)
 {
    /*
@@ -2165,7 +2165,7 @@ IntGetDCColor(HDC hDC, ULONG Object)
  * Changes the color of the brush or pen that is currently selected into the DC.
  * This function is called from SetDCBrushColor() and SetDCPenColor()
  */
-COLORREF FASTCALL
+COLORREF INTERNAL_CALL
 IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
 {
    /* See the comment in IntGetDCColor. */

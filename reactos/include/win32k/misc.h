@@ -7,7 +7,7 @@
 #define W32PF_CREATEDWINORDC	(0x0004)
 
 VOID
-FASTCALL
+INTERNAL_CALL
 DestroyThreadWindows(struct _ETHREAD *Thread);
 
 #endif /* __WIN32K_MISC_H */

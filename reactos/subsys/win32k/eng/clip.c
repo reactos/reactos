@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.22.10.1 2004/09/12 19:21:06 weiden Exp $
+/* $Id: clip.c,v 1.22.10.2 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -196,13 +196,13 @@ CompareSpans(const PSPAN Span1, const PSPAN Span2)
   return Cmp;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
   EngFreeMem(ObjToGDI(ClipObj, CLIP));
 }
 
-CLIPOBJ* FASTCALL
+CLIPOBJ* INTERNAL_CALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 {
   CLIPGDI *Clip;
@@ -375,7 +375,7 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
 }
 
-BOOLEAN FASTCALL
+BOOLEAN INTERNAL_CALL
 ClipobjToSpans(PSPAN *Spans, UINT *Count, CLIPOBJ *ClipRegion, PRECTL Boundary)
 {
   BOOL EnumMore;

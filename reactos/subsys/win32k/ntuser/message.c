@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.5 2004/09/13 21:28:17 weiden Exp $
+/* $Id: message.c,v 1.71.4.6 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -57,7 +57,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
   };
 
-PMSGMEMORY FASTCALL
+PMSGMEMORY INTERNAL_CALL
 FindMsgMemory(UINT Msg)
   {
   PMSGMEMORY MsgMemoryEntry;
@@ -76,7 +76,7 @@ FindMsgMemory(UINT Msg)
   return NULL;
 }
 
-UINT FASTCALL
+UINT INTERNAL_CALL
 MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
   CREATESTRUCTW *Cs;
@@ -133,7 +133,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     }
 }
 
-static FASTCALL NTSTATUS
+static NTSTATUS INTERNAL_CALL
 PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   NCCALCSIZE_PARAMS *UnpackedNcCalcsize;
@@ -216,7 +216,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
   return STATUS_SUCCESS;
 }
 
-static FASTCALL NTSTATUS
+static NTSTATUS INTERNAL_CALL
 UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   NCCALCSIZE_PARAMS *UnpackedParams;
@@ -253,7 +253,7 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTest, BOOL Remove)
 {
   PWINDOW_OBJECT Window;
@@ -342,7 +342,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *Hit
 }
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg)
 {
   PWINDOW_OBJECT Window;
@@ -405,7 +405,7 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTest)
 {
   PWINDOW_OBJECT Parent;
@@ -439,7 +439,7 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTe
   return FALSE;
 }
 
-LRESULT FASTCALL
+LRESULT INTERNAL_CALL
 IntDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo, PWINDOW_OBJECT Window)
 {
   if((MsgInfo->Msg.message == WM_TIMER || MsgInfo->Msg.message == WM_SYSTIMER) &&
@@ -496,7 +496,7 @@ IntDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo, PWINDOW_OBJECT Window)
 /*
  * Internal version of PeekMessage() doing all the work
  */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntPeekMessage(PUSER_MESSAGE Msg,
                PWINDOW_OBJECT FilterWindow,
                UINT MsgFilterMin,
@@ -649,7 +649,7 @@ MessageFound:
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntWaitMessage(PWINDOW_OBJECT Window,
                 UINT MsgFilterMin,
                 UINT MsgFilterMax)
@@ -678,7 +678,7 @@ IntWaitMessage(PWINDOW_OBJECT Window,
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
               UINT MsgFilterMin, UINT MsgFilterMax, BOOL *GotMessage)
 {
@@ -707,7 +707,7 @@ IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
 }
 
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CopyMsgToKernelMem(PKMSG KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry,
                    PWINDOW_OBJECT MsgWindow)
 {
@@ -764,7 +764,7 @@ CopyMsgToKernelMem(PKMSG KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEn
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CopyMsgToUserMem(MSG *UserModeMsg, PKMSG KernelModeMsg)
 {
   NTSTATUS Status;
@@ -802,7 +802,7 @@ CopyMsgToUserMem(MSG *UserModeMsg, PKMSG KernelModeMsg)
   return STATUS_SUCCESS;
 }
 
-LRESULT FASTCALL
+LRESULT INTERNAL_CALL
 IntSendMessage(PWINDOW_OBJECT Window,
                UINT Msg,
                WPARAM wParam,
@@ -816,7 +816,7 @@ IntSendMessage(PWINDOW_OBJECT Window,
   return 0;
 }
 
-LRESULT FASTCALL
+LRESULT INTERNAL_CALL
 IntSendMessageTimeout(PWINDOW_OBJECT Window,
                       UINT Msg,
                       WPARAM wParam,
@@ -920,7 +920,7 @@ IntSendMessageTimeout(PWINDOW_OBJECT Window,
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntPostThreadMessage(PW32THREAD W32Thread,
                      UINT Msg,
                      WPARAM wParam,
@@ -956,7 +956,7 @@ IntPostThreadMessage(PW32THREAD W32Thread,
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntPostMessage(PWINDOW_OBJECT Window,
                UINT Msg,
                WPARAM wParam,
@@ -1013,14 +1013,14 @@ IntPostMessage(PWINDOW_OBJECT Window,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntInitMessagePumpHook()
 {
 	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue++;
 	return TRUE;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntUninitMessagePumpHook()
 {
 	if (PsGetCurrentThread()->Win32Thread->MessagePumpHookValue <= 0)

@@ -143,18 +143,18 @@ typedef struct
 #define  DC_UnlockDc(DC)  \
   GDIOBJ_UnlockObj ((PGDIOBJ) DC)
 
-HDC  FASTCALL RetrieveDisplayHDC(VOID);
-HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
-VOID FASTCALL DC_InitDC(HDC  DCToInit);
-HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
-VOID FASTCALL DC_FreeDC(HDC  DCToFree);
-HDC  FASTCALL DC_GetNextDC (PDC pDC);
-VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
-BOOL FASTCALL DC_Cleanup(PDC pDc);
-VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
+HDC  INTERNAL_CALL RetrieveDisplayHDC(VOID);
+HDC  INTERNAL_CALL DC_AllocDC(PUNICODE_STRING  Driver);
+VOID INTERNAL_CALL DC_InitDC(HDC  DCToInit);
+HDC  INTERNAL_CALL DC_FindOpenDC(PUNICODE_STRING  Driver);
+VOID INTERNAL_CALL DC_FreeDC(HDC  DCToFree);
+HDC  INTERNAL_CALL DC_GetNextDC (PDC pDC);
+VOID INTERNAL_CALL DC_SetNextDC (PDC pDC, HDC hNextDC);
+BOOL INTERNAL_CALL DC_Cleanup(PDC pDc);
+VOID INTERNAL_CALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 
-VOID FASTCALL DC_UpdateXforms(PDC  dc);
-BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
+VOID INTERNAL_CALL DC_UpdateXforms(PDC  dc);
+BOOL INTERNAL_CALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 /*  User entry points */
 
@@ -190,7 +190,7 @@ INT STDCALL  NtGdiGetBkMode(HDC  hDC);
 BOOL STDCALL  NtGdiGetBrushOrgEx(HDC  hDC, LPPOINT brushOrg);
 HRGN STDCALL  NtGdiGetClipRgn(HDC  hDC);
 HGDIOBJ STDCALL  NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType);
-VOID FASTCALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
+VOID INTERNAL_CALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
 HDC STDCALL  NtGdiGetDCState(HDC  hDC);

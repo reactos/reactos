@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.41.2.2 2004/09/12 19:21:06 weiden Exp $
+/* $Id: xlate.c,v 1.41.2.3 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -143,7 +143,7 @@ CalculateShift(ULONG Mask)
    return Shift;
 }
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
                   HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
@@ -278,7 +278,7 @@ end:
    return XlateObj;
 }
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateMonoXlate(
    USHORT SourcePalType, HPALETTE PaletteDest, HPALETTE PaletteSource,
    ULONG BackgroundColor)
@@ -342,7 +342,7 @@ IntEngCreateMonoXlate(
    return XlateObj;
 }
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG ForegroundColor,
                          ULONG BackgroundColor)
@@ -417,7 +417,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
 /*
  * @implemented
  */
-VOID FASTCALL
+VOID STDCALL
 EngDeleteXlate(XLATEOBJ *XlateObj)
 {
    XLATEGDI *XlateGDI;

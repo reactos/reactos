@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.101.4.2 2004/09/12 19:21:07 weiden Exp $
+# $Id: makefile,v 1.101.4.3 2004/09/14 01:00:43 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,7 +21,7 @@ FREETYPE_DIR = $(PATH_TO_TOP)/lib/freetype
 include $(PATH_TO_TOP)/config
 
 ifeq ($(DBG), 1)
-CFLAGS_DBG := -g
+CFLAGS_DBG := -g -DDEBUG -DGDI_DEBUG
 else
 CFLAGS_DBG :=
 endif
@@ -32,7 +32,6 @@ TARGET_CFLAGS =\
  -I$(PATH_TO_TOP)/ntoskrnl/include \
  -I$(FREETYPE_DIR)/include \
  -DUNICODE \
- -DGDI_DEBUG \
  -Wall -Werror \
  -D__USE_W32API -D_WIN32_WINNT=0x0501 \
  -DWINVER=0x600 -D_WIN32K_

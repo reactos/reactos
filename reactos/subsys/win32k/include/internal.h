@@ -103,7 +103,7 @@ typedef struct _THRDCARETINFO
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
 #define ClassReferenceObject(ClassObj) \
-  InterlockedIncrement((LONG*)(ClassObj))
+  InterlockedIncrement((LONG*)&((ClassObj)->RefCount))
 
 #define ClassDereferenceObject(ClassObj) \
   if(InterlockedDecrement((LONG*)&((ClassObj)->RefCount)) == 0) \
@@ -136,20 +136,20 @@ typedef struct _CLASS_OBJECT
   LIST_ENTRY ClassWindowsListHead;
 } CLASS_OBJECT;
 
-PCLASS_OBJECT FASTCALL IntCreateClass(CONST WNDCLASSEXW *lpwcx,
+PCLASS_OBJECT INTERNAL_CALL IntCreateClass(CONST WNDCLASSEXW *lpwcx,
                                       DWORD Flags,
                                       WNDPROC wpExtra,
                                       PUNICODE_STRING MenuName,
                                       RTL_ATOM Atom);
-PCLASS_OBJECT FASTCALL IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, 
+PCLASS_OBJECT INTERNAL_CALL IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName,
                                         PUNICODE_STRING MenuName, WNDPROC wpExtra, DWORD Flags);
-ULONG         FASTCALL IntGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi);
-ULONG         FASTCALL IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi);
-BOOL          FASTCALL IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nMaxCount);
-BOOL          FASTCALL IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, PUNICODE_STRING ClassNameOrAtom, HINSTANCE hInstance);
-BOOL          FASTCALL IntReferenceClassByName(PCLASS_OBJECT *Class, PUNICODE_STRING ClassName, HINSTANCE hInstance);
-BOOL          FASTCALL IntReferenceClassByAtom(PCLASS_OBJECT* Class, RTL_ATOM Atom, HINSTANCE hInstance);
-BOOL          FASTCALL IntGetClassInfo(HINSTANCE hInstance, PUNICODE_STRING ClassName, LPWNDCLASSEXW lpWndClassEx, BOOL Ansi);
+ULONG         INTERNAL_CALL IntGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi);
+ULONG         INTERNAL_CALL IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi);
+BOOL          INTERNAL_CALL IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nMaxCount);
+BOOL          INTERNAL_CALL IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, PUNICODE_STRING ClassNameOrAtom, HINSTANCE hInstance);
+BOOL          INTERNAL_CALL IntReferenceClassByName(PCLASS_OBJECT *Class, PUNICODE_STRING ClassName, HINSTANCE hInstance);
+BOOL          INTERNAL_CALL IntReferenceClassByAtom(PCLASS_OBJECT* Class, RTL_ATOM Atom, HINSTANCE hInstance);
+BOOL          INTERNAL_CALL IntGetClassInfo(HINSTANCE hInstance, PUNICODE_STRING ClassName, LPWNDCLASSEXW lpWndClassEx, BOOL Ansi);
 
 /* CURSORS AND ICONS **********************************************************/
 
@@ -209,19 +209,19 @@ typedef struct _SYSTEM_CURSORINFO
   HANDLE LastClkWnd;
 } SYSTEM_CURSORINFO;
 
-PCURSOR_OBJECT FASTCALL IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange);
-PCURSOR_OBJECT FASTCALL IntCreateCursorObject(HANDLE *Handle);
-VOID           FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
-VOID           FASTCALL IntGetCursorIconInfo(PCURSOR_OBJECT Cursor, PICONINFO IconInfo);
-BOOL           FASTCALL IntGetCursorIconSize(PCURSOR_OBJECT Cursor, BOOL *fIcon, SIZE *Size);
-BOOL           FASTCALL IntGetCursorInfo(PCURSORINFO pci);
-BOOL           FASTCALL IntDestroyCursorObject(PCURSOR_OBJECT Object, BOOL RemoveFromProcess);
-PCURSOR_OBJECT FASTCALL IntFindExistingCursorObject(HMODULE hModule, HRSRC hRsrc, LONG cx, LONG cy);
-VOID           FASTCALL IntGetClipCursor(RECT *lpRect);
-VOID           FASTCALL IntSetCursorIconData(PCURSOR_OBJECT Cursor, BOOL *fIcon, POINT *Hotspot,
-                                             HMODULE hModule, HRSRC hRsrc, HRSRC hGroupRsrc);
-BOOL           FASTCALL IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJECT Cursor, int cxWidth, int cyWidth,
-                                      UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
+PCURSOR_OBJECT INTERNAL_CALL IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange);
+PCURSOR_OBJECT INTERNAL_CALL IntCreateCursorObject(HANDLE *Handle);
+VOID           INTERNAL_CALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+VOID           INTERNAL_CALL IntGetCursorIconInfo(PCURSOR_OBJECT Cursor, PICONINFO IconInfo);
+BOOL           INTERNAL_CALL IntGetCursorIconSize(PCURSOR_OBJECT Cursor, BOOL *fIcon, SIZE *Size);
+BOOL           INTERNAL_CALL IntGetCursorInfo(PCURSORINFO pci);
+BOOL           INTERNAL_CALL IntDestroyCursorObject(PCURSOR_OBJECT Object, BOOL RemoveFromProcess);
+PCURSOR_OBJECT INTERNAL_CALL IntFindExistingCursorObject(HMODULE hModule, HRSRC hRsrc, LONG cx, LONG cy);
+VOID           INTERNAL_CALL IntGetClipCursor(RECT *lpRect);
+VOID           INTERNAL_CALL IntSetCursorIconData(PCURSOR_OBJECT Cursor, BOOL *fIcon, POINT *Hotspot,
+                                                  HMODULE hModule, HRSRC hRsrc, HRSRC hGroupRsrc);
+BOOL           INTERNAL_CALL IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJECT Cursor, int cxWidth, int cyWidth,
+                                           UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 
 /* DCES ***********************************************************************/
 
@@ -257,20 +257,20 @@ typedef struct tagDCE
     DWORD          DCXFlags;
 } DCE;  /* PDCE already declared at top of file */
 
-PDCE           FASTCALL DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type);
-PDCE           FASTCALL DCE_FreeDCE(PDCE dce);
-VOID           FASTCALL DCE_FreeWindowDCE(PWINDOW_OBJECT);
-BOOL           FASTCALL DCE_Cleanup(PDCE pDce);
-HRGN           FASTCALL DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, PWINDOW_OBJECT Child, ULONG CFlags);
-INT            FASTCALL DCE_ExcludeRgn(HDC, PWINDOW_OBJECT, HRGN);
-BOOL           FASTCALL DCE_InvalidateDCE(PWINDOW_OBJECT, const PRECTL);
-PWINDOW_OBJECT FASTCALL IntWindowFromDC(HDC hDc);
-PDCE           FASTCALL DceFreeDCE(PDCE dce);
-void           FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
-void           FASTCALL DceEmptyCache(void);
-VOID           FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY);
-HDC            FASTCALL IntGetDCEx(PWINDOW_OBJECT Window, HRGN ClipRegion, ULONG Flags);
-INT            FASTCALL IntReleaseDC(PWINDOW_OBJECT Window, HDC hDc);
+PDCE           INTERNAL_CALL DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type);
+PDCE           INTERNAL_CALL DCE_FreeDCE(PDCE dce);
+VOID           INTERNAL_CALL DCE_FreeWindowDCE(PWINDOW_OBJECT);
+BOOL           INTERNAL_CALL DCE_Cleanup(PDCE pDce);
+HRGN           INTERNAL_CALL DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, PWINDOW_OBJECT Child, ULONG CFlags);
+INT            INTERNAL_CALL DCE_ExcludeRgn(HDC, PWINDOW_OBJECT, HRGN);
+BOOL           INTERNAL_CALL DCE_InvalidateDCE(PWINDOW_OBJECT, const PRECTL);
+PWINDOW_OBJECT INTERNAL_CALL IntWindowFromDC(HDC hDc);
+PDCE           INTERNAL_CALL DceFreeDCE(PDCE dce);
+void           INTERNAL_CALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
+void           INTERNAL_CALL DceEmptyCache(void);
+VOID           INTERNAL_CALL DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY);
+HDC            INTERNAL_CALL IntGetDCEx(PWINDOW_OBJECT Window, HRGN ClipRegion, ULONG Flags);
+INT            INTERNAL_CALL IntReleaseDC(PWINDOW_OBJECT Window, HDC hDc);
 
 /* DESKTOPS *******************************************************************/
 
@@ -280,33 +280,33 @@ extern HDC ScreenDeviceContext;
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 
-NTSTATUS            FASTCALL InitDesktopImpl(VOID);
-NTSTATUS            FASTCALL CleanupDesktopImpl(VOID);
-VOID                FASTCALL IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
-HDC                 FASTCALL IntGetScreenDC(VOID);
-PWINDOW_OBJECT      FASTCALL IntGetDesktopWindow (VOID);
-PWINDOW_OBJECT      FASTCALL IntGetCurrentThreadDesktopWindow(VOID);
-PUSER_MESSAGE_QUEUE FASTCALL IntGetActiveMessageQueue(VOID);
-PUSER_MESSAGE_QUEUE FASTCALL IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
-PDESKTOP_OBJECT     FASTCALL IntGetInputDesktop(VOID);
-NTSTATUS            FASTCALL IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
-NTSTATUS            FASTCALL IntHideDesktop(PDESKTOP_OBJECT Desktop);
-HDESK               FASTCALL IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
-NTSTATUS            FASTCALL IntValidateDesktopHandle(HDESK Desktop, KPROCESSOR_MODE AccessMode, ACCESS_MASK DesiredAccess, PDESKTOP_OBJECT *Object);
-BOOL                FASTCALL IntPaintDesktop(HDC hDC);
+NTSTATUS            INTERNAL_CALL InitDesktopImpl(VOID);
+NTSTATUS            INTERNAL_CALL CleanupDesktopImpl(VOID);
+VOID                INTERNAL_CALL IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
+HDC                 INTERNAL_CALL IntGetScreenDC(VOID);
+PWINDOW_OBJECT      INTERNAL_CALL IntGetDesktopWindow (VOID);
+PWINDOW_OBJECT      INTERNAL_CALL IntGetCurrentThreadDesktopWindow(VOID);
+PUSER_MESSAGE_QUEUE INTERNAL_CALL IntGetActiveMessageQueue(VOID);
+PUSER_MESSAGE_QUEUE INTERNAL_CALL IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
+PDESKTOP_OBJECT     INTERNAL_CALL IntGetInputDesktop(VOID);
+NTSTATUS            INTERNAL_CALL IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+NTSTATUS            INTERNAL_CALL IntHideDesktop(PDESKTOP_OBJECT Desktop);
+HDESK               INTERNAL_CALL IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
+NTSTATUS            INTERNAL_CALL IntValidateDesktopHandle(HDESK Desktop, KPROCESSOR_MODE AccessMode, ACCESS_MASK DesiredAccess, PDESKTOP_OBJECT *Object);
+BOOL                INTERNAL_CALL IntPaintDesktop(HDC hDC);
 
 /* FOCUS **********************************************************************/
 
-PWINDOW_OBJECT FASTCALL IntGetCaptureWindow(VOID);
-PWINDOW_OBJECT FASTCALL IntGetFocusWindow(VOID);
-PWINDOW_OBJECT FASTCALL IntGetThreadFocusWindow(VOID);
-BOOL           FASTCALL IntMouseActivateWindow(PWINDOW_OBJECT DesktopWindow, PWINDOW_OBJECT Window);
-BOOL           FASTCALL IntSetForegroundWindow(PWINDOW_OBJECT Window);
-PWINDOW_OBJECT FASTCALL IntSetActiveWindow(PWINDOW_OBJECT Window);
-PWINDOW_OBJECT FASTCALL IntGetForegroundWindow(VOID);
-PWINDOW_OBJECT FASTCALL IntGetActiveWindow(VOID);
-PWINDOW_OBJECT FASTCALL IntSetFocus(PWINDOW_OBJECT Window);
-PWINDOW_OBJECT FASTCALL IntSetCapture(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT INTERNAL_CALL IntGetCaptureWindow(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntGetFocusWindow(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntGetThreadFocusWindow(VOID);
+BOOL           INTERNAL_CALL IntMouseActivateWindow(PWINDOW_OBJECT DesktopWindow, PWINDOW_OBJECT Window);
+BOOL           INTERNAL_CALL IntSetForegroundWindow(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT INTERNAL_CALL IntSetActiveWindow(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT INTERNAL_CALL IntGetForegroundWindow(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntGetActiveWindow(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntSetFocus(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT INTERNAL_CALL IntSetCapture(PWINDOW_OBJECT Window);
 
 /* HOOKS **********************************************************************/
 
@@ -349,15 +349,15 @@ typedef struct _HOT_KEY_ITEM
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)
 
-NTSTATUS            FASTCALL InitInputImpl(VOID);
-NTSTATUS            FASTCALL InitKeyboardImpl(VOID);
-PUSER_MESSAGE_QUEUE FASTCALL W32kGetPrimitiveMessageQueue(VOID);
-PKBDTABLES          FASTCALL W32kGetDefaultKeyLayout(VOID);
-VOID                FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout);
-BOOL                FASTCALL IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt);
-BOOL                FASTCALL IntMouseInput(MOUSEINPUT *mi);
-BOOL                FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
-UINT                FASTCALL IntSendInput(UINT nInputs, LPINPUT pInput, INT cbSize);
+NTSTATUS            INTERNAL_CALL InitInputImpl(VOID);
+NTSTATUS            INTERNAL_CALL InitKeyboardImpl(VOID);
+PUSER_MESSAGE_QUEUE INTERNAL_CALL W32kGetPrimitiveMessageQueue(VOID);
+PKBDTABLES          INTERNAL_CALL W32kGetDefaultKeyLayout(VOID);
+VOID                INTERNAL_CALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout);
+BOOL                INTERNAL_CALL IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt);
+BOOL                INTERNAL_CALL IntMouseInput(MOUSEINPUT *mi);
+BOOL                INTERNAL_CALL IntKeyboardInput(KEYBDINPUT *ki);
+UINT                INTERNAL_CALL IntSendInput(UINT nInputs, LPINPUT pInput, INT cbSize);
 
 /* MENUS **********************************************************************/
 
@@ -577,69 +577,69 @@ typedef struct tagMSGMEMORY
   INT Flags;
 } MSGMEMORY;
 
-BOOL                FASTCALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
-NTSTATUS            FASTCALL MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-                                            PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
-                                            UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
-PUSER_MESSAGE       FASTCALL MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam);
-VOID                FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID                FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam);
-VOID                FASTCALL MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
-BOOLEAN             FASTCALL MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-                                            IN BOOLEAN Hardware,
-                                            IN BOOLEAN Remove,
-                                            IN PWINDOW_OBJECT FilterWindow,
-                                            IN UINT MsgFilterLow,
-                                            IN UINT MsgFilterHigh,
-                                            OUT PUSER_MESSAGE* Message);
-VOID                FASTCALL MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
-VOID                FASTCALL MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(struct _ETHREAD *Thread);
-VOID                FASTCALL MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE FASTCALL MsqGetHardwareMessageQueue(VOID);
-NTSTATUS            FASTCALL MsqWaitForNewMessage(PUSER_MESSAGE_QUEUE MessageQueue);
-NTSTATUS            FASTCALL MsqInitializeImpl(VOID);
-BOOLEAN             FASTCALL MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
-NTSTATUS            FASTCALL MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
-VOID                FASTCALL MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
-VOID                FASTCALL MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-VOID                FASTCALL MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-NTSTATUS            FASTCALL CopyMsgToKernelMem(PKMSG KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry, PWINDOW_OBJECT MsgWindow);
-NTSTATUS            FASTCALL CopyMsgToUserMem(MSG *UserModeMsg, PKMSG KernelModeMsg);
-LRESULT             FASTCALL IntSendMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
-LRESULT             FASTCALL IntSendMessageTimeout(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam, 
-                                                   UINT uFlags, UINT uTimeout, ULONG_PTR *uResult);
-BOOL                FASTCALL IntPostThreadMessage(PW32THREAD W32Thread, UINT Msg, WPARAM wParam, LPARAM lParam);
-BOOL                FASTCALL IntPostMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
-BOOL                FASTCALL IntWaitMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax);
-BOOL                FASTCALL IntTranslateKbdMessage(PKMSG lpMsg, HKL dwhkl);
-inline VOID                  MsqSetQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
-inline VOID                  MsqClearQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
-BOOL                         IntInitMessagePumpHook(VOID);
-BOOL                         IntUninitMessagePumpHook(VOID);
-PHOOKTABLE          FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
-VOID                FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
-LPARAM              FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
-LPARAM              FASTCALL MsqGetMessageExtraInfo(VOID);
+BOOL                INTERNAL_CALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS            INTERNAL_CALL MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+                                                 PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
+                                                 UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
+PUSER_MESSAGE       INTERNAL_CALL MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam);
+VOID                INTERNAL_CALL MsqDestroyMessage(PUSER_MESSAGE Message);
+VOID                INTERNAL_CALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam);
+VOID                INTERNAL_CALL MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
+BOOLEAN             INTERNAL_CALL MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+                                                 IN BOOLEAN Hardware,
+                                                 IN BOOLEAN Remove,
+                                                 IN PWINDOW_OBJECT FilterWindow,
+                                                 IN UINT MsgFilterLow,
+                                                 IN UINT MsgFilterHigh,
+                                                 OUT PUSER_MESSAGE* Message);
+VOID                INTERNAL_CALL MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
+VOID                INTERNAL_CALL MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+PUSER_MESSAGE_QUEUE INTERNAL_CALL MsqCreateMessageQueue(struct _ETHREAD *Thread);
+VOID                INTERNAL_CALL MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+PUSER_MESSAGE_QUEUE INTERNAL_CALL MsqGetHardwareMessageQueue(VOID);
+NTSTATUS            INTERNAL_CALL MsqWaitForNewMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS            INTERNAL_CALL MsqInitializeImpl(VOID);
+BOOLEAN             INTERNAL_CALL MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS            INTERNAL_CALL MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
+VOID                INTERNAL_CALL MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
+VOID                INTERNAL_CALL MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+VOID                INTERNAL_CALL MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+NTSTATUS            INTERNAL_CALL CopyMsgToKernelMem(PKMSG KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry, PWINDOW_OBJECT MsgWindow);
+NTSTATUS            INTERNAL_CALL CopyMsgToUserMem(MSG *UserModeMsg, PKMSG KernelModeMsg);
+LRESULT             INTERNAL_CALL IntSendMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
+LRESULT             INTERNAL_CALL IntSendMessageTimeout(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
+                                                        UINT uFlags, UINT uTimeout, ULONG_PTR *uResult);
+BOOL                INTERNAL_CALL IntPostThreadMessage(PW32THREAD W32Thread, UINT Msg, WPARAM wParam, LPARAM lParam);
+BOOL                INTERNAL_CALL IntPostMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
+BOOL                INTERNAL_CALL IntWaitMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax);
+BOOL                INTERNAL_CALL IntTranslateKbdMessage(PKMSG lpMsg, HKL dwhkl);
+inline VOID         INTERNAL_CALL MsqSetQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
+inline VOID         INTERNAL_CALL MsqClearQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
+BOOL                INTERNAL_CALL IntInitMessagePumpHook(VOID);
+BOOL                INTERNAL_CALL IntUninitMessagePumpHook(VOID);
+PHOOKTABLE          INTERNAL_CALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
+VOID                INTERNAL_CALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
+LPARAM              INTERNAL_CALL MsqSetMessageExtraInfo(LPARAM lParam);
+LPARAM              INTERNAL_CALL MsqGetMessageExtraInfo(VOID);
 
 /* MESSAGES *******************************************************************/
 
-BOOL       FASTCALL IntPeekMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
-                                   UINT MsgFilterMin, UINT MsgFilterMax, UINT RemoveMsg);
-BOOL       FASTCALL IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTest, BOOL Remove);
-PMSGMEMORY FASTCALL FindMsgMemory(UINT Msg);
-UINT       FASTCALL MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam);
-BOOL       FASTCALL IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
-                                  UINT MsgFilterMin, UINT MsgFilterMax, BOOL *GotMessage);
-LRESULT    FASTCALL IntDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo, PWINDOW_OBJECT Window);
+BOOL       INTERNAL_CALL IntPeekMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
+                                        UINT MsgFilterMin, UINT MsgFilterMax, UINT RemoveMsg);
+BOOL       INTERNAL_CALL IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTest, BOOL Remove);
+PMSGMEMORY INTERNAL_CALL FindMsgMemory(UINT Msg);
+UINT       INTERNAL_CALL MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam);
+BOOL       INTERNAL_CALL IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
+                                       UINT MsgFilterMin, UINT MsgFilterMax, BOOL *GotMessage);
+LRESULT    INTERNAL_CALL IntDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo, PWINDOW_OBJECT Window);
 
 /* KEYBOARD *******************************************************************/
 
-VOID           FASTCALL MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-VOID           FASTCALL MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam);
-VOID           FASTCALL MsqInsertSystemMessage(PKMSG Msg);
-BOOL           FASTCALL MsqIsDblClk(PKMSG Msg, BOOL Remove);
-PWINDOW_OBJECT FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT Window);
+VOID           INTERNAL_CALL MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID           INTERNAL_CALL MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam);
+VOID           INTERNAL_CALL MsqInsertSystemMessage(PKMSG Msg);
+BOOL           INTERNAL_CALL MsqIsDblClk(PKMSG Msg, BOOL Remove);
+PWINDOW_OBJECT INTERNAL_CALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT Window);
 
 /* PAINTING *******************************************************************/
 
@@ -683,14 +683,14 @@ PWINDOW_OBJECT FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULON
        (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) || \
        (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)))
 
-VOID FASTCALL IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
-BOOL FASTCALL IntRedrawWindow(PWINDOW_OBJECT Window, LPRECT UpdateRect, HRGN UpdateRgn, UINT Flags);
-BOOL FASTCALL IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
-                                 PW32THREAD Thread, PKMSG Message, BOOL Remove);
-HDC  FASTCALL IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs);
-BOOL FASTCALL IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs);
-BOOL FASTCALL IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase);
-INT  FASTCALL IntGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
+VOID INTERNAL_CALL IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
+BOOL INTERNAL_CALL IntRedrawWindow(PWINDOW_OBJECT Window, LPRECT UpdateRect, HRGN UpdateRgn, UINT Flags);
+BOOL INTERNAL_CALL IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
+                                      PW32THREAD Thread, PKMSG Message, BOOL Remove);
+HDC  INTERNAL_CALL IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs);
+BOOL INTERNAL_CALL IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs);
+BOOL INTERNAL_CALL IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase);
+INT  INTERNAL_CALL IntGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
 
 /* WINDOW PROPERTIES **********************************************************/
 
@@ -701,9 +701,9 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY;
 
-BOOL      FASTCALL IntSetProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE Data);
-BOOL      FASTCALL IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data);
-PPROPERTY FASTCALL IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
+BOOL      INTERNAL_CALL IntSetProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE Data);
+BOOL      INTERNAL_CALL IntRemoveProp(PWINDOW_OBJECT WindowObject, ATOM Atom, HANDLE *Data);
+PPROPERTY INTERNAL_CALL IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 /* SCROLL BARS ****************************************************************/
 
@@ -722,16 +722,16 @@ typedef struct _WINDOW_SCROLLINFO
   SCROLLINFO ScrollInfo;
 } WINDOW_SCROLLINFO;
 
-BOOL  FASTCALL IntCreateScrollBars(PWINDOW_OBJECT Window);
-BOOL  FASTCALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
-BOOL  FASTCALL IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi);
-BOOL  FASTCALL IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows);
-BOOL  FASTCALL IntEnableWindowScrollBar(PWINDOW_OBJECT Window, UINT wSBflags, UINT wArrows);
-BOOL  FASTCALL IntSetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, SETSCROLLBARINFO *info);
-DWORD FASTCALL IntShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow);
-BOOL  FASTCALL IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect);
-DWORD FASTCALL IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw);
-BOOL  FASTCALL IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi);
+BOOL  INTERNAL_CALL IntCreateScrollBars(PWINDOW_OBJECT Window);
+BOOL  INTERNAL_CALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
+BOOL  INTERNAL_CALL IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi);
+BOOL  INTERNAL_CALL IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows);
+BOOL  INTERNAL_CALL IntEnableWindowScrollBar(PWINDOW_OBJECT Window, UINT wSBflags, UINT wArrows);
+BOOL  INTERNAL_CALL IntSetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, SETSCROLLBARINFO *info);
+DWORD INTERNAL_CALL IntShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow);
+BOOL  INTERNAL_CALL IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect);
+DWORD INTERNAL_CALL IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw);
+BOOL  INTERNAL_CALL IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi);
 
 /* TIMERS *********************************************************************/
 
@@ -743,17 +743,17 @@ typedef struct _MSG_TIMER_ENTRY{
    KMSG           Msg;
 } MSG_TIMER_ENTRY;
 
-NTSTATUS         FASTCALL InitTimerImpl(VOID);
-VOID             FASTCALL RemoveTimersThread(HANDLE ThreadID);
-VOID             FASTCALL RemoveTimersWindow(PWINDOW_OBJECT Window);
-PMSG_TIMER_ENTRY FASTCALL IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer);
-UINT_PTR         FASTCALL IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer);
+NTSTATUS         INTERNAL_CALL InitTimerImpl(VOID);
+VOID             INTERNAL_CALL RemoveTimersThread(HANDLE ThreadID);
+VOID             INTERNAL_CALL RemoveTimersWindow(PWINDOW_OBJECT Window);
+PMSG_TIMER_ENTRY INTERNAL_CALL IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer);
+UINT_PTR         INTERNAL_CALL IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer);
 
 /* VISIBLE REGION *************************************************************/
 
-HRGN FASTCALL VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
-                                       BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
-VOID FASTCALL VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
+HRGN INTERNAL_CALL VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
+                                            BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
+VOID INTERNAL_CALL VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
 
 /* WINDOWS ********************************************************************/
 
@@ -904,40 +904,40 @@ typedef struct _WINDOW_OBJECT
   ULONG TiledCounter;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
-PWINDOW_OBJECT FASTCALL IntCreateWindow(DWORD dwExStyle, PUNICODE_STRING ClassName, PUNICODE_STRING WindowName,
-                                        ULONG dwStyle, LONG x, LONG y, LONG nWidth, LONG nHeight,
-                                        PWINDOW_OBJECT Parent, PMENU_OBJECT Menu, ULONG WindowID, HINSTANCE hInstance,
-                                        LPVOID lpParam, DWORD dwShowMode, BOOL bUnicodeWindow);
-BOOL           FASTCALL IntDestroyWindow(PWINDOW_OBJECT Window, PW32PROCESS ProcessData, PW32THREAD ThreadData, BOOL SendMessages);
-NTSTATUS       FASTCALL InitWindowImpl (VOID);
-NTSTATUS       FASTCALL CleanupWindowImpl (VOID);
-VOID           FASTCALL IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
-PWINDOW_OBJECT FASTCALL IntGetActiveWindow (VOID);
-BOOL           FASTCALL IntIsWindowVisible (PWINDOW_OBJECT Wnd);
-BOOL           FASTCALL IntIsChildWindow (PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child);
-VOID           FASTCALL IntUnlinkWindow(PWINDOW_OBJECT Wnd);
-VOID           FASTCALL IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
-PWINDOW_OBJECT FASTCALL IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
-PWINDOW_OBJECT FASTCALL IntGetParent(PWINDOW_OBJECT Wnd);
-INT            FASTCALL IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);
-INT            FASTCALL IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect);
-BOOL           FASTCALL IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
-LONG           FASTCALL IntGetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, BOOL Ansi);
-LONG           FASTCALL IntSetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, LONG NewValue, BOOL Ansi);
-VOID           FASTCALL IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
-BOOL           FASTCALL IntAnyPopup(VOID);
-PWINDOW_OBJECT FASTCALL IntGetShellWindow(VOID);
-PWINDOW_OBJECT FASTCALL IntSetParent(PWINDOW_OBJECT Window, PWINDOW_OBJECT WndNewParent);
-BOOL           FASTCALL IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT ListView);
-WORD           FASTCALL IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue);
-ULONG          FASTCALL IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid);
-PWINDOW_OBJECT FASTCALL IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd);
-BOOL           FASTCALL IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText);
-INT            FASTCALL IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, LPWSTR lpString, INT nMaxCount);
-BOOL           FASTCALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
-DWORD          FASTCALL IntRemoveWndProcHandle(WNDPROC Handle);
-DWORD          FASTCALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);
-DWORD          FASTCALL IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
+PWINDOW_OBJECT INTERNAL_CALL IntCreateWindow(DWORD dwExStyle, PUNICODE_STRING ClassName, PUNICODE_STRING WindowName,
+                                             ULONG dwStyle, LONG x, LONG y, LONG nWidth, LONG nHeight,
+                                             PWINDOW_OBJECT Parent, PMENU_OBJECT Menu, ULONG WindowID, HINSTANCE hInstance,
+                                             LPVOID lpParam, DWORD dwShowMode, BOOL bUnicodeWindow);
+BOOL           INTERNAL_CALL IntDestroyWindow(PWINDOW_OBJECT Window, PW32PROCESS ProcessData, PW32THREAD ThreadData, BOOL SendMessages);
+NTSTATUS       INTERNAL_CALL InitWindowImpl (VOID);
+NTSTATUS       INTERNAL_CALL CleanupWindowImpl (VOID);
+VOID           INTERNAL_CALL IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+PWINDOW_OBJECT INTERNAL_CALL IntGetActiveWindow (VOID);
+BOOL           INTERNAL_CALL IntIsWindowVisible (PWINDOW_OBJECT Wnd);
+BOOL           INTERNAL_CALL IntIsChildWindow (PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child);
+VOID           INTERNAL_CALL IntUnlinkWindow(PWINDOW_OBJECT Wnd);
+VOID           INTERNAL_CALL IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
+PWINDOW_OBJECT INTERNAL_CALL IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
+PWINDOW_OBJECT INTERNAL_CALL IntGetParent(PWINDOW_OBJECT Wnd);
+INT            INTERNAL_CALL IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);
+INT            INTERNAL_CALL IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect);
+BOOL           INTERNAL_CALL IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
+LONG           INTERNAL_CALL IntGetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, BOOL Ansi);
+LONG           INTERNAL_CALL IntSetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, LONG NewValue, BOOL Ansi);
+VOID           INTERNAL_CALL IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
+BOOL           INTERNAL_CALL IntAnyPopup(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntGetShellWindow(VOID);
+PWINDOW_OBJECT INTERNAL_CALL IntSetParent(PWINDOW_OBJECT Window, PWINDOW_OBJECT WndNewParent);
+BOOL           INTERNAL_CALL IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT ListView);
+WORD           INTERNAL_CALL IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue);
+ULONG          INTERNAL_CALL IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid);
+PWINDOW_OBJECT INTERNAL_CALL IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd);
+BOOL           INTERNAL_CALL IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText);
+INT            INTERNAL_CALL IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, LPWSTR lpString, INT nMaxCount);
+BOOL           INTERNAL_CALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
+DWORD          INTERNAL_CALL IntRemoveWndProcHandle(WNDPROC Handle);
+DWORD          INTERNAL_CALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);
+DWORD          INTERNAL_CALL IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
 /* WINPOS *********************************************************************/
 
@@ -968,16 +968,16 @@ typedef struct _INTERNAL_WINDOWPOS
   UINT flags;
 } INTERNAL_WINDOWPOS;
 
-BOOL         FASTCALL IntGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
-LRESULT      FASTCALL WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientRect);
-UINT         FASTCALL WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos, POINT* MinTrack, POINT* MaxTrack);
-UINT         FASTCALL WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
-BOOLEAN      FASTCALL WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT y, INT cx, INT cy, UINT flags);
-BOOLEAN      FASTCALL WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);
-USHORT       FASTCALL WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint, PWINDOW_OBJECT* Window);
-VOID         FASTCALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
-PINTERNALPOS FASTCALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect);
-VOID         FASTCALL WinPosSetupInternalPos(VOID);
+BOOL         INTERNAL_CALL IntGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
+LRESULT      INTERNAL_CALL WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientRect);
+UINT         INTERNAL_CALL WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos, POINT* MinTrack, POINT* MaxTrack);
+UINT         INTERNAL_CALL WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
+BOOLEAN      INTERNAL_CALL WinPosSetWindowPos(PWINDOW_OBJECT Window, PWINDOW_OBJECT InsertAfter, INT x, INT y, INT cx, INT cy, UINT flags);
+BOOLEAN      INTERNAL_CALL WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);
+USHORT       INTERNAL_CALL WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint, PWINDOW_OBJECT* Window);
+VOID         INTERNAL_CALL WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
+PINTERNALPOS INTERNAL_CALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect);
+VOID         INTERNAL_CALL WinPosSetupInternalPos(VOID);
 
 /* WINDOW STATION *************************************************************/
 
@@ -997,19 +997,19 @@ extern PW32PROCESS LogonProcess;
 #define SET_PROCESS_WINDOW_STATION(WinSta) \
   ((IoGetCurrentProcess()->Win32WindowStation) = (PVOID)(WinSta))
 
-NTSTATUS FASTCALL InitWindowStationImpl(VOID);
-NTSTATUS FASTCALL CleanupWindowStationImpl(VOID);
-NTSTATUS FASTCALL IntValidateWindowStationHandle(HWINSTA WindowStation,
-                                                 KPROCESSOR_MODE AccessMode,
-                                                 ACCESS_MASK DesiredAccess,
-                                                 PWINSTATION_OBJECT *Object);
+NTSTATUS INTERNAL_CALL InitWindowStationImpl(VOID);
+NTSTATUS INTERNAL_CALL CleanupWindowStationImpl(VOID);
+NTSTATUS INTERNAL_CALL IntValidateWindowStationHandle(HWINSTA WindowStation,
+                                                      KPROCESSOR_MODE AccessMode,
+                                                      ACCESS_MASK DesiredAccess,
+                                                      PWINSTATION_OBJECT *Object);
 
-BOOL     FASTCALL IntGetWindowStationObject(PWINSTATION_OBJECT Object);
-BOOL     FASTCALL IntInitializeDesktopGraphics(VOID);
-VOID     FASTCALL IntEndDesktopGraphics(VOID);
-BOOL     FASTCALL IntGetFullWindowStationName(OUT PUNICODE_STRING FullName,
-                                              IN PUNICODE_STRING WinStaName,
-                                              IN OPTIONAL PUNICODE_STRING DesktopName);
+BOOL     INTERNAL_CALL IntGetWindowStationObject(PWINSTATION_OBJECT Object);
+BOOL     INTERNAL_CALL IntInitializeDesktopGraphics(VOID);
+VOID     INTERNAL_CALL IntEndDesktopGraphics(VOID);
+BOOL     INTERNAL_CALL IntGetFullWindowStationName(OUT PUNICODE_STRING FullName,
+                                                   IN PUNICODE_STRING WinStaName,
+                                                   IN OPTIONAL PUNICODE_STRING DesktopName);
 
 /* MOUSE **********************************************************************/
 
@@ -1026,26 +1026,25 @@ BOOL     FASTCALL IntGetFullWindowStationName(OUT PUNICODE_STRING FullName,
 #define MOUSEEVENTF_XUP	(0x100)
 #endif
 
-BOOL FASTCALL IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo);
-BOOL FASTCALL IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap);
-INT  FASTCALL MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
-INT  FASTCALL MouseSafetyOnDrawEnd(SURFOBJ *SurfObj);
-BOOL FASTCALL MouseMoveCursor(LONG X, LONG Y);
-VOID FASTCALL EnableMouse(HDC hDisplayDC);
-VOID          MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount);
-VOID FASTCALL SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect);
+BOOL INTERNAL_CALL IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo);
+BOOL INTERNAL_CALL IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap);
+INT  INTERNAL_CALL MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
+INT  INTERNAL_CALL MouseSafetyOnDrawEnd(SURFOBJ *SurfObj);
+BOOL INTERNAL_CALL MouseMoveCursor(LONG X, LONG Y);
+VOID INTERNAL_CALL EnableMouse(HDC hDisplayDC);
+VOID INTERNAL_CALL SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect);
 
 /* MISC FUNCTIONS *************************************************************/
 
-NTSTATUS  FASTCALL InitGuiCheckImpl(VOID);
-NTSTATUS  FASTCALL CsrInit(VOID);
-NTSTATUS  FASTCALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
-PEPROCESS FASTCALL CsrAttachToCsrss(VOID);
-VOID      FASTCALL CsrDetachFromCsrss(PEPROCESS PrevProcess);
+NTSTATUS  INTERNAL_CALL InitGuiCheckImpl(VOID);
+NTSTATUS  INTERNAL_CALL CsrInit(VOID);
+NTSTATUS  INTERNAL_CALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
+PEPROCESS INTERNAL_CALL CsrAttachToCsrss(VOID);
+VOID      INTERNAL_CALL CsrDetachFromCsrss(PEPROCESS PrevProcess);
 
-INT   FASTCALL IntGetSystemMetrics(INT nIndex);
-BOOL  FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
-BOOL  FASTCALL IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister);
-void           W32kRegisterPrimitiveMessageQueue();
+INT  INTERNAL_CALL IntGetSystemMetrics(INT nIndex);
+BOOL INTERNAL_CALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
+BOOL INTERNAL_CALL IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister);
+void INTERNAL_CALL W32kRegisterPrimitiveMessageQueue();
 
 #endif /* _NTUSER_H */

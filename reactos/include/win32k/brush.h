@@ -72,7 +72,7 @@ typedef struct
 #define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_UnlockBrush(BrushObj) GDIOBJ_UnlockObj((PGDIOBJ)BrushObj)
-BOOL FASTCALL BRUSH_Cleanup(PGDIBRUSHOBJ pBrush);
+BOOL INTERNAL_CALL BRUSH_Cleanup(PGDIBRUSHOBJ pBrush);
 
 #ifdef __USE_W32API
 typedef struct _PATRECT {

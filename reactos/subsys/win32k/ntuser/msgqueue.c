@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100.12.4 2004/09/13 21:28:17 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.5 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,7 +66,8 @@ static PAGED_LOOKASIDE_LIST MessageLookasideList;
 /* FUNCTIONS *****************************************************************/
 
 /* set some queue bits */
-inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+inline VOID INTERNAL_CALL
+MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 {
     Queue->WakeBits |= Bits;
     Queue->ChangedBits |= Bits;
@@ -74,13 +75,14 @@ inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 }
 
 /* clear some queue bits */
-inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
+inline VOID INTERNAL_CALL
+MsqClearQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 {
     Queue->WakeBits &= ~Bits;
     Queue->ChangedBits &= ~Bits;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
   IntLockMessageQueue(Queue);
@@ -90,7 +92,7 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
   IntUnLockMessageQueue(Queue);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
   IntLockMessageQueue(Queue);
@@ -103,7 +105,7 @@ MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 }
 
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 MsqInitializeImpl(VOID)
 {
   /*CurrentFocusMessageQueue = NULL;*/
@@ -123,7 +125,7 @@ MsqInitializeImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqInsertSystemMessage(PKMSG Msg)
 {
   LARGE_INTEGER LargeTickCount;
@@ -170,14 +172,14 @@ MsqInsertSystemMessage(PKMSG Msg)
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 MsqIsDblClk(PKMSG Msg, BOOL Remove)
 {
    /* FIXME */
    return FALSE;
 }
 
-BOOL STATIC STDCALL
+BOOL INTERNAL_CALL
 MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWindow, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, 
 			 PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
@@ -350,7 +352,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Filter
   return(TRUE);
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWindow,
 		       UINT FilterLow, UINT FilterHigh, BOOL Remove,
 		       PUSER_MESSAGE* Message)
@@ -515,7 +517,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWi
   return(FALSE);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
@@ -555,7 +557,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   }
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam)
 {
   PW32THREAD Win32Thread;
@@ -606,7 +608,7 @@ MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM 
 
 }
 
-PUSER_MESSAGE FASTCALL
+PUSER_MESSAGE INTERNAL_CALL
 MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
@@ -623,13 +625,13 @@ MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam)
   return Message;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
   ExFreeToPagedLookasideList(&MessageLookasideList, Message);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY ListEntry;
@@ -654,13 +656,13 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
   IntUnLockMessageQueue(MessageQueue);
 }
 
-BOOLEAN FASTCALL
+BOOLEAN INTERNAL_CALL
 MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   return(!IsListEmpty(&MessageQueue->SentMessagesListHead));
 }
 
-BOOLEAN FASTCALL
+BOOLEAN INTERNAL_CALL
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PUSER_SENT_MESSAGE Message;
@@ -762,7 +764,7 @@ Notified:
   return(TRUE);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
 {
@@ -773,7 +775,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   IntUnLockMessageQueue(MessageQueue);
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, ULONG_PTR *uResult)
@@ -955,7 +957,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   return WaitStatus;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
@@ -971,7 +973,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam)
   IntUnLockMessageQueue(MessageQueue);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 {
   IntLockMessageQueue(MessageQueue);
@@ -981,7 +983,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
   IntUnLockMessageQueue(MessageQueue);
 }
 
-BOOLEAN FASTCALL
+BOOLEAN INTERNAL_CALL
 MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
@@ -1027,7 +1029,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
   return(FALSE);
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PVOID WaitObjects[2] = {&MessageQueue->NewMessages, &HardwareMessageEvent};
@@ -1041,7 +1043,7 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				  NULL));
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   LARGE_INTEGER LargeTickCount;
@@ -1050,7 +1052,7 @@ MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue)
   return ((LargeTickCount.u.LowPart - MessageQueue->LastMsgRead) > MSQ_HUNG);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
 {
   LARGE_INTEGER LargeTickCount;
@@ -1074,7 +1076,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   MessageQueue->PaintCount = 0;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY CurrentEntry;
@@ -1157,7 +1159,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
   IntUnLockMessageQueue(MessageQueue);
 }
 
-PUSER_MESSAGE_QUEUE FASTCALL
+PUSER_MESSAGE_QUEUE INTERNAL_CALL
 MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
   PUSER_MESSAGE_QUEUE MessageQueue;
@@ -1180,7 +1182,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
   return MessageQueue;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   MsqCleanupMessageQueue(MessageQueue);
@@ -1188,19 +1190,19 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
   IntDereferenceMessageQueue(MessageQueue);
 }
 
-PHOOKTABLE FASTCALL
+PHOOKTABLE INTERNAL_CALL
 MsqGetHooks(PUSER_MESSAGE_QUEUE Queue)
 {
   return Queue->Hooks;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks)
 {
   Queue->Hooks = Hooks;
 }
 
-LPARAM FASTCALL
+LPARAM INTERNAL_CALL
 MsqSetMessageExtraInfo(LPARAM lParam)
 {
   LPARAM Ret;
@@ -1218,7 +1220,7 @@ MsqSetMessageExtraInfo(LPARAM lParam)
   return Ret;
 }
 
-LPARAM FASTCALL
+LPARAM INTERNAL_CALL
 MsqGetMessageExtraInfo(VOID)
 {
   PUSER_MESSAGE_QUEUE MessageQueue;
@@ -1232,7 +1234,7 @@ MsqGetMessageExtraInfo(VOID)
   return MessageQueue->ExtraInfo;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT *Change;

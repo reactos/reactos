@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.35 2004/07/14 20:48:57 navaraf Exp $
+ * $Id: lineto.c,v 1.35.2.1 2004/09/14 01:00:42 weiden Exp $
  */
 #include <w32k.h>
 
-static void FASTCALL
+static void INTERNAL_CALL
 TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
 {
   RECTL* CurrentRect;
@@ -40,7 +40,7 @@ TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
 /*
  * Draw a line from top-left to bottom-right
  */
-void FASTCALL
+void INTERNAL_CALL
 NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -111,7 +111,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-void FASTCALL
+void INTERNAL_CALL
 SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -181,7 +181,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-void FASTCALL
+void INTERNAL_CALL
 NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -251,7 +251,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
     }
 }
 
-void FASTCALL
+void INTERNAL_CALL
 SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate)
@@ -479,7 +479,7 @@ EngLineTo(SURFOBJ *DestObj,
   return IntEngLeave(&EnterLeave);
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngLineTo(BITMAPOBJ *DestObj,
 	     CLIPOBJ *Clip,
 	     BRUSHOBJ *Brush,
@@ -538,7 +538,7 @@ IntEngLineTo(BITMAPOBJ *DestObj,
   return ret;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngPolyline(BITMAPOBJ *DestObj,
 	       CLIPOBJ *Clip,
 	       BRUSHOBJ *Brush,

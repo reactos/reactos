@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.9 2004/07/03 17:40:25 navaraf Exp $ */
+/* $Id: misc.c,v 1.9.4.1 2004/09/14 01:00:42 weiden Exp $ */
 #include <w32k.h>
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
             SURFOBJ *DestObj,
             RECTL *DestRect,
@@ -130,7 +130,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
 {
   POINTL SrcPoint;

@@ -5,8 +5,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
-#include <win32k/bitmaps.h>
 #include <win32k/debug.h>
+#include <win32k/bitmaps.h>
 #include <debug.h>
 #include <ddk/winddi.h>
 #include "../eng/objects.h"

@@ -1,8 +1,8 @@
 #ifndef _WIN32K_CLIPRGN_H
 #define _WIN32K_CLIPRGN_H
 
-HRGN WINAPI SaveVisRgn(HDC hdc);
-INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn);
+HRGN INTERNAL_CALL SaveVisRgn(HDC hdc);
+INT  INTERNAL_CALL SelectVisRgn(HDC hdc, HRGN hrgn);
 
 int
 STDCALL

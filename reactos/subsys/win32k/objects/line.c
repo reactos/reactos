@@ -16,13 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.37.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: line.c,v 1.37.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
                int     Y,
@@ -46,7 +46,7 @@ IntGdiMoveToEx(DC      *dc,
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiLineTo(DC  *dc,
              int XEnd,
              int YEnd)
@@ -126,7 +126,7 @@ IntGdiLineTo(DC  *dc,
   return Ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyBezier(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count)
@@ -155,7 +155,7 @@ IntGdiPolyBezier(DC      *dc,
   return ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyBezierTo(DC      *dc,
                    LPPOINT pt,
                    DWORD  Count)
@@ -186,7 +186,7 @@ IntGdiPolyBezierTo(DC      *dc,
   return ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyline(DC      *dc,
                LPPOINT pt,
                int     Count)
@@ -244,7 +244,7 @@ IntGdiPolyline(DC      *dc,
    return Ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolylineTo(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count)
@@ -276,13 +276,13 @@ IntGdiPolylineTo(DC      *dc,
   return ret;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiGetArcDirection(DC *dc)
 {
   return dc->w.ArcDirection;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiArc(DC  *dc,
           int LeftRect,
           int TopRect,
@@ -306,7 +306,7 @@ IntGdiArc(DC  *dc,
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyPolyline(DC      *dc,
                    LPPOINT pt,
                    LPDWORD PolyPoints,

@@ -1,30 +1,30 @@
 #ifndef _SUBSYS_WIN32K_INCLUDE_CLEANUP_H
 #define _SUBSYS_WIN32K_INCLUDE_CLEANUP_H
 
-NTSTATUS FASTCALL InitCleanupImpl(VOID);
+NTSTATUS INTERNAL_CALL InitCleanupImpl(VOID);
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
                          PUNICODE_STRING Source);
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
                                       PUNICODE_STRING Source);
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src);
 
-void FASTCALL
+void INTERNAL_CALL
 IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString);
 
 /*
  * User Locks
  */
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntInitUserResourceLocks(VOID);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCleanupUserResourceLocks(VOID);
 
 inline VOID

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.64.8.2 2004/07/18 23:44:01 weiden Exp $
+ *  $Id: winsta.c,v 1.64.8.3 2004/09/14 01:00:44 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@ PWINSTATION_OBJECT InputWindowStation = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitWindowStationImpl(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -74,7 +74,7 @@ InitWindowStationImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CleanupWindowStationImpl(VOID)
 {
    return STATUS_SUCCESS;
@@ -93,7 +93,7 @@ CleanupWindowStationImpl(VOID)
  *    TRUE on success, FALSE on failure.
  */
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetFullWindowStationName(
    OUT PUNICODE_STRING FullName,
    IN PUNICODE_STRING WinStaName,
@@ -143,7 +143,7 @@ IntGetFullWindowStationName(
  *    fucntion fails, last error is set.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntValidateWindowStationHandle(
    HWINSTA WindowStation,
    KPROCESSOR_MODE AccessMode,
@@ -166,7 +166,7 @@ IntValidateWindowStationHandle(
    return Status;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 {
    NTSTATUS Status;
@@ -180,7 +180,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
    return NT_SUCCESS(Status);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntInitializeDesktopGraphics(VOID)
 {
   UNICODE_STRING DriverName;
@@ -206,7 +206,7 @@ IntInitializeDesktopGraphics(VOID)
   return TRUE;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntEndDesktopGraphics(VOID)
 {
   NtUserAcquireOrReleaseInputOwnership(TRUE);
@@ -221,7 +221,7 @@ IntEndDesktopGraphics(VOID)
   IntDestroyPrimarySurface();
 }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 IntGetScreenDC(VOID)
 {
    return ScreenDeviceContext;

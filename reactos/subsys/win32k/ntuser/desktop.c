@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17.2.5 2004/09/12 19:21:07 weiden Exp $
+ *  $Id: desktop.c,v 1.17.2.6 2004/09/14 01:00:44 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -52,13 +52,13 @@ HDC ScreenDeviceContext = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitDesktopImpl(VOID)
 {
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CleanupDesktopImpl(VOID)
 {
   return STATUS_SUCCESS;
@@ -76,7 +76,7 @@ CleanupDesktopImpl(VOID)
  *    fucntion fails, last error is set.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntValidateDesktopHandle(
    HDESK Desktop,
    KPROCESSOR_MODE AccessMode,
@@ -99,7 +99,7 @@ IntValidateDesktopHandle(
    return Status;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
 {
   PRECT Ret;
@@ -129,7 +129,7 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
   }
 }
 
-PDESKTOP_OBJECT FASTCALL
+PDESKTOP_OBJECT INTERNAL_CALL
 IntGetInputDesktop(VOID)
 {
   PWINSTATION_OBJECT WinSta;
@@ -138,7 +138,7 @@ IntGetInputDesktop(VOID)
   return (WinSta != NULL ? WinSta->InputDesktop : NULL);
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetCurrentThreadDesktopWindow(VOID)
 {
   PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
@@ -149,7 +149,7 @@ IntGetCurrentThreadDesktopWindow(VOID)
 /*
  * returns or creates a handle to the desktop object
  */
-HDESK FASTCALL
+HDESK INTERNAL_CALL
 IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
 {
   NTSTATUS Status;
@@ -183,7 +183,7 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
   return Ret;
 }
 
-PUSER_MESSAGE_QUEUE FASTCALL
+PUSER_MESSAGE_QUEUE INTERNAL_CALL
 IntGetActiveMessageQueue(VOID)
 {
    PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
@@ -195,14 +195,14 @@ IntGetActiveMessageQueue(VOID)
    return (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetForegroundWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetActiveMessageQueue();
   return (ForegroundQueue != NULL ? ForegroundQueue->ActiveWindow : NULL);
 }
 
-PUSER_MESSAGE_QUEUE FASTCALL
+PUSER_MESSAGE_QUEUE INTERNAL_CALL
 IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 {
    PUSER_MESSAGE_QUEUE Prev;
@@ -229,7 +229,7 @@ IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    return Prev;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetDesktopWindow(VOID)
 {
    PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
@@ -243,7 +243,7 @@ IntGetDesktopWindow(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
   CSRSS_API_REQUEST Request;
@@ -265,7 +265,7 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
   return Status;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop)
 {
 #if 0
@@ -692,7 +692,7 @@ NtUserCloseDesktop(HDESK hDesktop)
  *    @implemented
  */
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntPaintDesktop(HDC hDC)
 {
   PWINDOW_OBJECT DesktopWindow;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.50.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: color.c,v 1.50.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -62,7 +62,8 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
-const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
+const PALETTEENTRY* INTERNAL_CALL
+COLOR_GetSystemPaletteTemplate(void)
 {
    return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
@@ -140,7 +141,7 @@ BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
    return FALSE;
 }
 
-unsigned short GetNumberOfBits(unsigned int dwMask)
+inline unsigned short GetNumberOfBits(unsigned int dwMask)
 {
    unsigned short wBits;
    for (wBits = 0; dwMask; dwMask = dwMask & (dwMask - 1))
@@ -545,8 +546,9 @@ NtGdiUpdateColors(HDC hDC)
    return NtUserRedrawWindow(hWnd, NULL, 0, RDW_INVALIDATE);
 }
 
-INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
-                             XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
+INT INTERNAL_CALL
+COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
+                         XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
 {
   int i, best = 0, diff = 0x7fffffff;
   int r, g, b;
@@ -573,7 +575,8 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
     return (XlateObj->pulXlate) ? (INT)XlateObj->pulXlate[best] : best;
 }
 
-COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
+COLORREF INTERNAL_CALL
+COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
 {
    INT index;
 
@@ -584,8 +587,9 @@ COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, 
       palPalEntry[index].peBlue);
 }
 
-int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
-                                   COLORREF col )
+int INTERNAL_CALL
+COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
+                               COLORREF col )
 {
   int i;
   BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);

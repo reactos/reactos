@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.34.4.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: scrollbar.c,v 1.34.4.2 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -60,7 +60,7 @@
  * 'thumbSize' returns the size of the thumb, and 'thumbPos' returns the position of the thumb relative to the left or to
  * the top. Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
   BOOL vertical;
@@ -105,7 +105,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   return vertical;
 }
 
-static BOOL FASTCALL
+static BOOL INTERNAL_CALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
   INT Thumb, ThumbBox, ThumbPos, cxy, mx;
@@ -181,7 +181,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
   return TRUE;
 }
 
-static VOID FASTCALL
+static VOID INTERNAL_CALL
 IntUpdateSBInfo(PWINDOW_OBJECT Window, int wBar)
 {
   PSCROLLBARINFO sbi;
@@ -196,7 +196,7 @@ IntUpdateSBInfo(PWINDOW_OBJECT Window, int wBar)
   IntCalculateThumb(Window, wBar, sbi, psi);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
 {
   UINT Mask;
@@ -249,7 +249,7 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
   return TRUE;
 }
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
   /*
@@ -404,7 +404,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
    return Info->nPos;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
 {
   INT Bar;
@@ -436,7 +436,7 @@ IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
   return TRUE;
 }
 
-BOOL FASTCALL 
+BOOL INTERNAL_CALL
 IntCreateScrollBars(PWINDOW_OBJECT Window)
 {
   PSCROLLBARINFO psbi;
@@ -483,7 +483,7 @@ IntCreateScrollBars(PWINDOW_OBJECT Window)
   return TRUE;
 }
 
-BOOL FASTCALL 
+BOOL INTERNAL_CALL
 IntDestroyScrollBars(PWINDOW_OBJECT Window)
 {
   if(Window->Scroll)
@@ -495,7 +495,7 @@ IntDestroyScrollBars(PWINDOW_OBJECT Window)
   return FALSE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
 {
   BOOL Chg = FALSE;
@@ -533,7 +533,7 @@ IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
   return Chg;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEnableWindowScrollBar(PWINDOW_OBJECT Window, 
                          UINT wSBflags, 
                          UINT wArrows)
@@ -588,7 +588,7 @@ IntEnableWindowScrollBar(PWINDOW_OBJECT Window,
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetScrollBarInfo(PWINDOW_OBJECT Window,
                     LONG idObject,
                     SETSCROLLBARINFO *info)
@@ -623,7 +623,7 @@ IntSetScrollBarInfo(PWINDOW_OBJECT Window,
 }
 
 /* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;

@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.32 2004/07/14 20:48:56 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.32.2.1 2004/09/14 01:00:42 weiden Exp $ */
 #include <w32k.h>
 
-VOID
+VOID INTERNAL_CALL
 DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
@@ -30,7 +30,7 @@ DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
     *addr |= MASK1BPP(x);
 }
 
-ULONG
+ULONG INTERNAL_CALL
 DIB_1BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
@@ -38,7 +38,7 @@ DIB_1BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (*addr & MASK1BPP(x) ? 1 : 0);
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_1BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   while(x1 < x2) {
@@ -47,7 +47,7 @@ DIB_1BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   while(y1 < y2) {
@@ -57,7 +57,7 @@ DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 }
 
 static
-void
+void INTERNAL_CALL
 DIB_1BPP_BitBltSrcCopy_From1BPP (
 	SURFOBJ* DestSurf, SURFOBJ* SourceSurf,
 	PRECTL DestRect, POINTL *SourcePoint )
@@ -226,7 +226,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	}
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
 	LONG i, j, sx, sy = BltInfo->SourcePoint.y;
@@ -335,7 +335,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 	return TRUE;
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 {
    ULONG DestX, DestY;
@@ -478,7 +478,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_1BPP_StretchBlt (
 	SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	RECTL* DestRect, RECTL *SourceRect,
@@ -490,7 +490,7 @@ DIB_1BPP_StretchBlt (
 	return FALSE;
 }
 
-BOOLEAN 
+BOOLEAN INTERNAL_CALL
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  POINTL  *SourcePoint,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)

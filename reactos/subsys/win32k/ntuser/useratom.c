@@ -29,7 +29,7 @@
 #define NDEBUG
 #include <debug.h>
 
-RTL_ATOM FASTCALL
+RTL_ATOM INTERNAL_CALL
 IntAddAtom(LPWSTR AtomName)
 {
    PWINSTATION_OBJECT WinStaObject;
@@ -54,7 +54,7 @@ IntAddAtom(LPWSTR AtomName)
    return Atom;
 }
 
-ULONG FASTCALL
+ULONG INTERNAL_CALL
 IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
 {
    PWINSTATION_OBJECT WinStaObject;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.24.2.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: path.c,v 1.24.2.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -24,18 +24,18 @@
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
 
-BOOL FASTCALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
-BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
-BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
-BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
-VOID FASTCALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
-VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
-BOOL FASTCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
-BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
-VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
+BOOL INTERNAL_CALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
+BOOL INTERNAL_CALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
+BOOL INTERNAL_CALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
+BOOL INTERNAL_CALL PATH_FlattenPath (GdiPath *pPath);
+VOID INTERNAL_CALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
+VOID INTERNAL_CALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
+BOOL INTERNAL_CALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
+BOOL INTERNAL_CALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
+VOID INTERNAL_CALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGdiGetArcDirection(DC *dc);
 
 BOOL
@@ -55,7 +55,7 @@ NtGdiBeginPath(HDC  hDC)
 }
 
 BOOL
-FASTCALL
+INTERNAL_CALL
 IntCloseFigure ( PDC dc )
 {
   UNIMPLEMENTED;
@@ -173,8 +173,7 @@ NtGdiWidenPath(HDC  hDC)
  *
  * Initializes the GdiPath structure.
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_InitGdiPath ( GdiPath *pPath )
 {
   assert(pPath!=NULL);
@@ -190,8 +189,7 @@ PATH_InitGdiPath ( GdiPath *pPath )
  *
  * Destroys a GdiPath structure (frees the memory in the arrays).
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_DestroyGdiPath ( GdiPath *pPath )
 {
   assert(pPath!=NULL);
@@ -210,8 +208,7 @@ PATH_DestroyGdiPath ( GdiPath *pPath )
  * not a copy constructor).
  * Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
 {
   assert(pPathDest!=NULL && pPathSrc!=NULL);
@@ -239,8 +236,7 @@ PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
  * open path. This starts a new stroke. Returns TRUE if successful, else
  * FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_MoveTo ( PDC dc )
 {
   GdiPath *pPath;
@@ -266,8 +262,7 @@ PATH_MoveTo ( PDC dc )
  * a PT_MOVETO entry, if this is the first LineTo in a stroke).
  * Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_LineTo ( PDC dc, INT x, INT y )
 {
   GdiPath *pPath;
@@ -304,8 +299,7 @@ PATH_LineTo ( PDC dc, INT x, INT y )
  * Should be called when a call to Rectangle is performed on a DC that has
  * an open path. Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
   GdiPath *pPath;
@@ -380,8 +374,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_RoundRect (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xradius, INT yradius)
 {
   UNIMPLEMENTED;
@@ -394,8 +387,7 @@ PATH_RoundRect (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xradius, INT yradius
  * an open path. This adds four Bezier splines representing the ellipse
  * to the path. Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_Ellipse ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
   /* TODO: This should probably be revised to call PATH_AngleArc */
@@ -409,8 +401,7 @@ PATH_Ellipse ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  * an open path. This adds up to five Bezier splines representing the arc
  * to the path. Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
    INT xStart, INT yStart, INT xEnd, INT yEnd)
 {
@@ -545,8 +536,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   GdiPath *pPath;
@@ -582,8 +572,7 @@ PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   GdiPath *pPath;
@@ -610,8 +599,7 @@ PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   GdiPath *pPath;
@@ -637,8 +625,7 @@ PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   GdiPath *pPath;
@@ -676,8 +663,7 @@ PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 }
 
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_Polygon ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
   GdiPath *pPath;
@@ -704,8 +690,7 @@ PATH_Polygon ( PDC dc, const POINT *pts, DWORD cbPoints )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
 {
   GdiPath *pPath;
@@ -738,8 +723,7 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
   return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines )
 {
   GdiPath *pPath;
@@ -777,8 +761,7 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
 /* PATH_AddFlatBezier
  *
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_AddFlatBezier ( GdiPath *pPath, POINT *pt, BOOL closed )
 {
   POINT *pts;
@@ -799,8 +782,7 @@ PATH_AddFlatBezier ( GdiPath *pPath, POINT *pt, BOOL closed )
  * Replaces Beziers with line segments
  *
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_FlattenPath(GdiPath *pPath)
 {
   GdiPath newPath;
@@ -840,8 +822,7 @@ PATH_FlattenPath(GdiPath *pPath)
 // expecting a non-const*. Since this function isn't being called
 // at the moment, I'm commenting it out until the issue needs to
 // be addressed.
-BOOL 
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
 {
   int    numStrokes, iStroke, i;
@@ -906,8 +887,7 @@ PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
  *
  * Removes all entries from the path and sets the path state to PATH_Null.
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_EmptyPath ( GdiPath *pPath )
 {
   assert(pPath!=NULL);
@@ -922,8 +902,7 @@ PATH_EmptyPath ( GdiPath *pPath )
  * or PT_BEZIERTO, optionally ORed with PT_CLOSEFIGURE. Returns TRUE if
  * successful, FALSE otherwise (e.g. if not enough memory was available).
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_AddEntry ( GdiPath *pPath, const POINT *pPoint, BYTE flags )
 {
   assert(pPath!=NULL);
@@ -960,8 +939,7 @@ PATH_AddEntry ( GdiPath *pPath, const POINT *pPoint, BYTE flags )
  * been allocated; allocates larger arrays and copies the existing entries
  * to those arrays, if necessary. Returns TRUE if successful, else FALSE.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
 {
   INT   numEntriesToAllocate;
@@ -1020,8 +998,7 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
  * Retrieves a pointer to the GdiPath structure contained in an HDC and
  * places it in *ppPath. TRUE is returned if successful, FALSE otherwise.
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_GetPathFromDC ( PDC dc, GdiPath **ppPath )
 {
   ASSERT ( dc );
@@ -1038,8 +1015,7 @@ PATH_GetPathFromDC ( PDC dc, GdiPath **ppPath )
  * point is added to the path; otherwise, it is assumed that the current
  * position is equal to the first control point.
  */
-BOOL
-FASTCALL
+BOOL INTERNAL_CALL
 PATH_DoArcPart ( GdiPath *pPath, FLOAT_POINT corners[],
    double angleStart, double angleEnd, BOOL addMoveTo )
 {
@@ -1098,8 +1074,7 @@ PATH_DoArcPart ( GdiPath *pPath, FLOAT_POINT corners[],
  * coordinates (-1.0, -1.0) correspond to corners[0], the coordinates
  * (1.0, 1.0) correspond to corners[1].
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_ScaleNormalizedPoint ( FLOAT_POINT corners[], double x,
    double y, POINT *pPoint )
 {
@@ -1114,8 +1089,7 @@ PATH_ScaleNormalizedPoint ( FLOAT_POINT corners[], double x,
  * Normalizes a point with respect to the box whose corners are passed in
  * corners. The normalized coordinates are stored in *pX and *pY.
  */
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 PATH_NormalizePoint ( FLOAT_POINT corners[],
    const FLOAT_POINT *pPoint,
    double *pX, double *pY)

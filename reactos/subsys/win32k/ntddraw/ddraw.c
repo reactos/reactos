@@ -22,7 +22,7 @@
 /* DIRECT DRAW OBJECT                                                   */
 /************************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 DD_Cleanup(PDD_DIRECTDRAW pDD)
 {
 	pDD->DrvDisableDirectDraw(pDD->Global.dhpdev);
@@ -197,7 +197,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 /* SURFACE OBJECT                                                       */
 /************************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 DDSURF_Cleanup(PDD_SURFACE pDDSurf)
 {
 	//FIXME: implement

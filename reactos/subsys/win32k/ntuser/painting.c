@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84.2.3 2004/09/12 19:21:07 weiden Exp $
+ *  $Id: painting.c,v 1.84.2.4 2004/09/14 01:00:44 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -34,7 +34,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 {
    PWINDOW_OBJECT OldWindow;
@@ -74,7 +74,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
  * Internal function used by IntRedrawWindow.
  */
 
-STATIC VOID FASTCALL
+STATIC VOID INTERNAL_CALL
 IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
@@ -186,7 +186,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
  * Internal function used by IntRedrawWindow.
  */
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 {
    INT RgnType;
@@ -399,7 +399,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
  *    minimized.
  */
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT Wnd;
@@ -423,7 +423,7 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
  * first parameter.
  */
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntRedrawWindow(PWINDOW_OBJECT Window, LPRECT UpdateRect, HRGN UpdateRgn, UINT Flags)
 {
    HRGN hRgn = NULL;
@@ -513,7 +513,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, LPRECT UpdateRect, HRGN UpdateRgn, UINT F
    return TRUE;
 }
 
-PWINDOW_OBJECT STDCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntFindWindowToRepaint(PWINDOW_OBJECT Parent, PW32THREAD Thread)
 {
    PWINDOW_OBJECT Child;
@@ -553,7 +553,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Parent, PW32THREAD Thread)
    return FoundWnd;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
                    PW32THREAD Thread, PKMSG Message, BOOL Remove)
 {
@@ -630,7 +630,7 @@ IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
    return FALSE;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 {
    PUSER_MESSAGE_QUEUE ActiveQueue;
@@ -672,7 +672,7 @@ IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
    return NULL;
 }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
 {
    ASSERT(Window);
@@ -718,7 +718,7 @@ IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs)
    return lPs->hdc;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs)
 {
    IntReleaseDC(Window, lPs->hdc);
@@ -730,7 +730,7 @@ IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs)
 }
 
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 {
    int RegionType;
@@ -759,7 +759,7 @@ IntGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase)
 {
   HRGN Rgn;
@@ -798,7 +798,7 @@ IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase)
 }
 
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntScrollDC(HDC hDC, INT dx, INT dy, LPRECT lprcScroll,
             LPRECT lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
@@ -897,7 +897,7 @@ IntScrollDC(HDC hDC, INT dx, INT dy, LPRECT lprcScroll,
 }
 
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntScrollWindowEx(PWINDOW_OBJECT Window, INT dx, INT dy, LPRECT rect,
                   LPRECT clipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags)
 {

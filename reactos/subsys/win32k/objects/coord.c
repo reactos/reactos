@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.26.2.1 2004/09/12 19:21:08 weiden Exp $
+/* $Id: coord.c,v 1.26.2.2 2004/09/14 01:00:45 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,7 +30,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2)
@@ -89,7 +89,7 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
   return Ret;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 CoordDPtoLP(PDC Dc, LPPOINT Point)
 {
 FLOAT x, y;
@@ -101,8 +101,7 @@ FLOAT x, y;
     y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy;
 }
 
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 IntDPtoLP ( PDC dc, LPPOINT Points, INT Count )
 {
   INT i;
@@ -180,8 +179,7 @@ NtGdiDPtoLP(HDC  hDC,
    return TRUE;
 }
 
-int
-FASTCALL
+int INTERNAL_CALL
 IntGetGraphicsMode ( PDC dc )
 {
   ASSERT ( dc );
@@ -235,8 +233,7 @@ NtGdiGetWorldTransform(HDC  hDC,
   return NT_SUCCESS(Status);
 }
 
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 CoordLPtoDP ( PDC Dc, LPPOINT Point )
 {
   FLOAT x, y;
@@ -252,8 +249,7 @@ CoordLPtoDP ( PDC Dc, LPPOINT Point )
     y * Dc->w.xformWorld2Vport.eM22 + Dc->w.xformWorld2Vport.eDy;
 }
 
-VOID
-FASTCALL
+VOID INTERNAL_CALL
 IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
 {
   INT i;

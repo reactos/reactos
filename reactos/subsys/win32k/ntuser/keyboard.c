@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.31.2.2 2004/08/31 11:38:56 weiden Exp $
+/* $Id: keyboard.c,v 1.31.2.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,7 +64,8 @@ BYTE QueueKeyStateTable[256];
 /* FUNCTIONS *****************************************************************/
 
 /* Initialization -- Right now, just zero the key state and init the lock */
-NTSTATUS FASTCALL InitKeyboardImpl(VOID) {
+NTSTATUS INTERNAL_CALL
+InitKeyboardImpl(VOID) {
   ExInitializeFastMutex(&QueueStateLock);
   RtlZeroMemory(&QueueKeyStateTable,0x100);
   return STATUS_SUCCESS;
@@ -74,14 +75,16 @@ NTSTATUS FASTCALL InitKeyboardImpl(VOID) {
 
 /*** Shift state code was out of hand, sorry. --- arty */
 
-static UINT DontDistinguishShifts( UINT ret ) {
+static UINT INTERNAL_CALL
+DontDistinguishShifts( UINT ret ) {
     if( ret == VK_LSHIFT || ret == VK_RSHIFT ) ret = VK_LSHIFT;
     if( ret == VK_LCONTROL || ret == VK_RCONTROL ) ret = VK_LCONTROL;
     if( ret == VK_LMENU || ret == VK_RMENU ) ret = VK_LMENU;
     return ret;
 }
 
-static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
+static VOID INTERNAL_CALL
+SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
   ASSERT(vk <= 0xff);
 
   /* Special handling for toggles like numpad and caps lock */
@@ -122,7 +125,8 @@ static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
   }
 }
 
-VOID DumpKeyState( PBYTE KeyState ) {
+VOID INTERNAL_CALL
+DumpKeyState( PBYTE KeyState ) {
   int i;
 
   DbgPrint( "KeyState { " );
@@ -132,8 +136,9 @@ VOID DumpKeyState( PBYTE KeyState ) {
   DbgPrint( "};\n" );
 }
 
-static BYTE KeysSet( PKBDTABLES pkKT, PBYTE KeyState, 
-		     int FakeModLeft, int FakeModRight ) {
+static BYTE INTERNAL_CALL
+KeysSet( PKBDTABLES pkKT, PBYTE KeyState,
+         int FakeModLeft, int FakeModRight ) {
   if( !KeyState || !pkKT ) return 0;
 
   /* Search special codes first */
@@ -149,7 +154,8 @@ static BYTE KeysSet( PKBDTABLES pkKT, PBYTE KeyState,
  * want to count on the shift bit not moving, because it can be specified
  * in the layout */
 
-static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT, DWORD Vk ) {
+static DWORD INTERNAL_CALL
+GetShiftBit( PKBDTABLES pkKT, DWORD Vk ) {
   int i;
 
   for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) 
@@ -159,7 +165,8 @@ static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT, DWORD Vk ) {
   return 0;
 }
 
-static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState ) {
+static DWORD INTERNAL_CALL
+ModBits( PKBDTABLES pkKT, PBYTE KeyState ) {
   DWORD ModBits = 0;
 
   if( !KeyState ) return 0;
@@ -200,12 +207,13 @@ static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState ) {
   return ModBits;
 }
 
-static BOOL TryToTranslateChar(WORD wVirtKey,
-			       DWORD ModBits,
-			       PBOOL pbDead,
-			       PBOOL pbLigature,
-			       PWCHAR pwcTranslatedChar,
-			       PKBDTABLES keyLayout ) 
+static BOOL INTERNAL_CALL
+TryToTranslateChar(WORD wVirtKey,
+		   DWORD ModBits,
+		   PBOOL pbDead,
+		   PBOOL pbLigature,
+		   PWCHAR pwcTranslatedChar,
+		   PKBDTABLES keyLayout )
 {
   PVK_TO_WCHAR_TABLE vtwTbl;
   PVK_TO_WCHARS10 vkPtr;
@@ -274,7 +282,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 }
 
 static
-int STDCALL
+int INTERNAL_CALL
 ToUnicodeInner(UINT wVirtKey,
 	       UINT wScanCode,
 	       PBYTE lpKeyState,
@@ -326,13 +334,14 @@ NtUserGetKeyState(
   return ret;
 }
 
-int STDCALL ToUnicodeEx( UINT wVirtKey,
-			 UINT wScanCode,
-			 PBYTE lpKeyState,
-			 LPWSTR pwszBuff,
-			 int cchBuff,
-			 UINT wFlags,
-			 HKL dwhkl ) {
+int INTERNAL_CALL
+IntToUnicodeEx( UINT wVirtKey,
+	        UINT wScanCode,
+	        PBYTE lpKeyState,
+	        LPWSTR pwszBuff,
+	        int cchBuff,
+	        UINT wFlags,
+	        HKL dwhkl ) {
   int ToUnicodeResult = 0;
 
   IntLockQueueState;
@@ -355,13 +364,13 @@ int STDCALL ToUnicode( UINT wVirtKey,
 		       LPWSTR pwszBuff,
 		       int cchBuff,
 		       UINT wFlags ) {
-  return ToUnicodeEx( wVirtKey,
-		      wScanCode,
-		      QueueKeyStateTable,
-		      pwszBuff,
-		      cchBuff,
-		      wFlags,
-		      0 );
+  return IntToUnicodeEx( wVirtKey,
+		         wScanCode,
+		         QueueKeyStateTable,
+		         pwszBuff,
+		         cchBuff,
+		         wFlags,
+		         0 );
 }
 
 /* 
@@ -479,7 +488,8 @@ NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
 					DWORD flags,
 					PVOID *func_addr);
 
-void InitKbdLayout( PVOID *pkKeyboardLayout ) {
+void INTERNAL_CALL
+InitKbdLayout( PVOID *pkKeyboardLayout ) {
   UNICODE_STRING KeyName;
   UNICODE_STRING ValueName;
   UNICODE_STRING LayoutKeyName;
@@ -593,14 +603,14 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 #undef XX_STATUS
 }
 
-PKBDTABLES FASTCALL
+PKBDTABLES INTERNAL_CALL
 W32kGetDefaultKeyLayout(VOID) {
   PKBDTABLES pkKeyboardLayout = 0;
   InitKbdLayout( (PVOID) &pkKeyboardLayout );
   return pkKeyboardLayout;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntTranslateKbdMessage(PKMSG lpMsg,
                        HKL dwhkl)
 {
@@ -770,7 +780,8 @@ UINT ScanToVk( UINT Code, BOOL ExtKey, PKBDTABLES pkKT ) {
  * @implemented
  */
 
-static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout ) {
+static UINT INTERNAL_CALL
+IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout ) {
   UINT ret = 0;
 
   switch( Type ) {
@@ -844,13 +855,13 @@ NtUserToUnicodeEx(
   }
   RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
 
-  ret = ToUnicodeEx( wVirtKey,
-		     wScanCode,
-		     KeyStateBuf,
-		     OutPwszBuff,
-		     cchBuff,
-		     wFlags,
-		     dwhkl );  
+  ret = IntToUnicodeEx( wVirtKey,
+		        wScanCode,
+		        KeyStateBuf,
+		        OutPwszBuff,
+		        cchBuff,
+		        wFlags,
+		        dwhkl );
 
   MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
   ExFreePool(OutPwszBuff);
@@ -936,7 +947,8 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize ) {
  * appropriately.
  */
 
-VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
+VOID INTERNAL_CALL
+W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   DWORD ScanCode = 0, ModifierBits = 0;
   DWORD i = 0;
   DWORD BaseMapping = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.56.4.1 2004/09/12 19:21:08 weiden Exp $
+ * $Id: dib.c,v 1.56.4.2 2004/09/14 01:00:45 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -108,7 +108,7 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 }
 
 // Converts a DIB to a device-dependent bitmap
-static INT FASTCALL
+static INT INTERNAL_CALL
 IntSetDIBits(
 	PDC   DC,
 	HBITMAP  hBitmap,
@@ -585,7 +585,7 @@ LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
   return  ret;
 }
 
-static HBITMAP FASTCALL
+static HBITMAP INTERNAL_CALL
 IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
                   DWORD init, LPCVOID bits, const BITMAPINFO *data,
                   UINT coloruse)
@@ -718,7 +718,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   return hbitmap;
 }
 
-HBITMAP STDCALL
+HBITMAP INTERNAL_CALL
 DIB_CreateDIBSection(
   PDC dc, BITMAPINFO *bmi, UINT usage,
   LPVOID *bits, HANDLE section,
@@ -893,7 +893,8 @@ DIB_CreateDIBSection(
  * http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/struc/src/str01.htm
  * 11/16/1999 (RJJ) lifted from wine
  */
-INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
+INT INTERNAL_CALL
+DIB_GetDIBWidthBytes (INT width, INT depth)
 {
   int words;
 
@@ -922,7 +923,8 @@ INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-INT STDCALL DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
+INT INTERNAL_CALL
+DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
 {
   return DIB_GetDIBWidthBytes( width, depth ) * (height < 0 ? -height : height);
 }
@@ -934,7 +936,8 @@ INT STDCALL DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-INT FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
+INT INTERNAL_CALL
+DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
 {
   int colors;
 
@@ -952,11 +955,12 @@ INT FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
   }
 }
 
-INT STDCALL DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
-			       PDWORD width,
-			       PINT height,
-			       PWORD bpp,
-			       PWORD compr)
+INT INTERNAL_CALL
+DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
+                   PDWORD width,
+                   PINT height,
+                   PWORD bpp,
+                   PWORD compr)
 {
   if (header->biSize == sizeof(BITMAPINFOHEADER))
   {
@@ -981,7 +985,8 @@ INT STDCALL DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
 
 // Converts a Device Independent Bitmap (DIB) to a Device Dependant Bitmap (DDB)
 // The specified Device Context (DC) defines what the DIB should be converted to
-PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
+PBITMAPOBJ INTERNAL_CALL
+DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be removed. All references to this function should
 						 // change to NtGdiSetDIBits
 {
   HBITMAP hBmp = 0;
@@ -1007,7 +1012,7 @@ PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should 
   return pBmp;
 }
 
-RGBQUAD * FASTCALL
+RGBQUAD * INTERNAL_CALL
 DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 {
   RGBQUAD *lpRGB;
@@ -1045,7 +1050,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   return lpRGB;
 }
 
-HPALETTE FASTCALL
+HPALETTE INTERNAL_CALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
   BYTE bits;

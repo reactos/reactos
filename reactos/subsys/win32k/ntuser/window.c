@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.7 2004/09/13 21:28:17 weiden Exp $
+/* $Id: window.c,v 1.244.2.8 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,7 +45,7 @@ static WORD WndProcHandlesArraySize = 0;
  * Initialize windowing implementation.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 InitWindowImpl(VOID)
 {
    WndProcHandlesArray = ExAllocatePoolWithTag(PagedPool,WPH_SIZE * sizeof(WndProcHandle), TAG_WINPROCLST);
@@ -59,7 +59,7 @@ InitWindowImpl(VOID)
  * Cleanup windowing implementation.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 CleanupWindowImpl(VOID)
 {
    ExFreePool(WndProcHandlesArray);
@@ -71,7 +71,7 @@ CleanupWindowImpl(VOID)
 /* HELPER FUNCTIONS ***********************************************************/
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetParent(PWINDOW_OBJECT Wnd)
 {
   if (Wnd->Style & WS_POPUP)
@@ -89,7 +89,8 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 /***********************************************************************
  *           IntSendDestroyMsg
  */
-static void IntSendDestroyMsg(PWINDOW_OBJECT Window)
+static void INTERNAL_CALL
+IntSendDestroyMsg(PWINDOW_OBJECT Window)
 {
 #if 0 /* FIXME */
   GUITHREADINFO info;
@@ -141,7 +142,7 @@ static void IntSendDestroyMsg(PWINDOW_OBJECT Window)
  *
  * Destroy storage associated to a window. "Internals" p.358
  */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntDestroyWindow(PWINDOW_OBJECT Window,
                  PW32PROCESS ProcessData,
                  PW32THREAD ThreadData,
@@ -286,7 +287,7 @@ IntDestroyWindow(PWINDOW_OBJECT Window,
   return 0;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy)
 {
   if(HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle) && !(WindowObject->Style & WS_MINIMIZE))
@@ -313,7 +314,7 @@ IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy)
   }
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi)
 {
   pwi->cbSize = sizeof(WINDOWINFO);
@@ -332,7 +333,7 @@ IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi)
 /* INTERNAL ******************************************************************/
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DestroyThreadWindows(struct _ETHREAD *Thread)
 {
   PLIST_ENTRY Current;
@@ -400,7 +401,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
  *
  * \note Does not check the validity of the parameters
 */
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 {
   ASSERT( WindowObject );
@@ -412,7 +413,7 @@ IntGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsChildWindow(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child)
 {
   PWINDOW_OBJECT Window;
@@ -436,7 +437,7 @@ IntIsChildWindow(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child)
   return(FALSE);  
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntIsWindowVisible(PWINDOW_OBJECT Wnd)
 {
   PWINDOW_OBJECT Window;
@@ -463,7 +464,7 @@ IntIsWindowVisible(PWINDOW_OBJECT Wnd)
 
 
 /* link the window into siblings and parent. children are kept in place. */
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntLinkWindow(
   PWINDOW_OBJECT Wnd, 
   PWINDOW_OBJECT WndParent,
@@ -510,14 +511,14 @@ IntLinkWindow(
   }
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetOwner(PWINDOW_OBJECT Window, PWINDOW_OBJECT NewOwner)
 {
   ASSERT(Window);
   return (PWINDOW_OBJECT)InterlockedExchange((LONG*)&Window->Owner, (LONG)NewOwner);
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetParent(PWINDOW_OBJECT Window, PWINDOW_OBJECT WndNewParent)
 {
    PWINDOW_OBJECT WndOldParent, Sibling, InsertAfter;
@@ -612,7 +613,7 @@ IntSetParent(PWINDOW_OBJECT Window, PWINDOW_OBJECT WndNewParent)
 
 
 /* unlink the window from siblings and parent. children are kept in place. */
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd)
 {
   PWINDOW_OBJECT WndParent;
@@ -628,7 +629,7 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
   Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntAnyPopup(VOID)
 {
   PWINDOW_OBJECT Window, Child;
@@ -657,7 +658,7 @@ IntAnyPopup(VOID)
 /*
  * calculates the default position of a window
  */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, BOOL IncPos)
 {
   SIZE Sz;
@@ -701,7 +702,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, 
 }
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntCreateWindow(DWORD dwExStyle,
 		PUNICODE_STRING ClassName,
 		PUNICODE_STRING WindowName,
@@ -1263,7 +1264,7 @@ IntCreateWindow(DWORD dwExStyle,
   return WindowObject;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntFindWindow(PWINDOW_OBJECT Parent,
               PWINDOW_OBJECT ChildAfter,
               PCLASS_OBJECT ClassObject,
@@ -1305,7 +1306,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
 }
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetAncestor(PWINDOW_OBJECT Window, UINT Type)
 {
    PWINDOW_OBJECT WndAncestor, Parent;
@@ -1350,7 +1351,7 @@ IntGetAncestor(PWINDOW_OBJECT Window, UINT Type)
 }
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetShellWindow(VOID)
 {
   PWINSTATION_OBJECT WinStaObject;
@@ -1368,7 +1369,7 @@ IntGetShellWindow(VOID)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT ListView)
 {
   PWINSTATION_OBJECT WinStaObject;
@@ -1424,7 +1425,7 @@ IntSetShellWindowEx(PWINDOW_OBJECT Shell, PWINDOW_OBJECT ListView)
 }
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetRelatedWindow(PWINDOW_OBJECT WindowObject, UINT Relationship)
 {
    PWINDOW_OBJECT Parent;
@@ -1464,7 +1465,7 @@ IntGetRelatedWindow(PWINDOW_OBJECT WindowObject, UINT Relationship)
 }
 
 
-LONG FASTCALL
+LONG INTERNAL_CALL
 IntGetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, BOOL Ansi)
 {
    LONG Result = 0;
@@ -1547,7 +1548,7 @@ IntGetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, BOOL Ansi)
 }
 
 
-LONG FASTCALL
+LONG INTERNAL_CALL
 IntSetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, LONG NewValue, BOOL Ansi)
 {
    PWINDOW_OBJECT Parent;
@@ -1663,7 +1664,7 @@ IntSetWindowLong(PWINDOW_OBJECT WindowObject, INT Index, LONG NewValue, BOOL Ans
    return OldValue;
 }
 
-WORD FASTCALL
+WORD INTERNAL_CALL
 IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue)
 {
    WORD OldValue;
@@ -1698,7 +1699,7 @@ IntSetWindowWord(PWINDOW_OBJECT WindowObject, INT Index, WORD NewValue)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGetWindowPlacement(PWINDOW_OBJECT WindowObject,
 		      WINDOWPLACEMENT *lpwndpl)
 {
@@ -1728,7 +1729,7 @@ IntGetWindowPlacement(PWINDOW_OBJECT WindowObject,
 }
 
 
-ULONG FASTCALL
+ULONG INTERNAL_CALL
 IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid)
 {
    ASSERT(Window);
@@ -1754,7 +1755,7 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, ULONG *Pid)
                                 DesktopWindow, it shutdown the system
                                 and rebooted.
 */
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntQueryWindow(PWINDOW_OBJECT Window, DWORD Index)
 {
    DWORD Result;
@@ -1784,7 +1785,7 @@ IntQueryWindow(PWINDOW_OBJECT Window, DWORD Index)
 }
 
 
-UINT FASTCALL
+UINT INTERNAL_CALL
 IntRegisterWindowMessage(PUNICODE_STRING MessageName)
 {
   /* WARNING !!! The Unicode string is supposed to be NULL-Terminated! */
@@ -1794,7 +1795,7 @@ IntRegisterWindowMessage(PUNICODE_STRING MessageName)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetWindowPlacement(PWINDOW_OBJECT WindowObject,
 		      WINDOWPLACEMENT *lpwndpl)
 {
@@ -1831,7 +1832,7 @@ IntSetWindowPlacement(PWINDOW_OBJECT WindowObject,
 }
 
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGetWindowRgn(PWINDOW_OBJECT WindowObject, HRGN hRgn)
 {
   INT Ret;
@@ -1867,7 +1868,7 @@ IntGetWindowRgn(PWINDOW_OBJECT WindowObject, HRGN hRgn)
   return Ret;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntGetWindowRgnBox(PWINDOW_OBJECT WindowObject, RECT *Rect)
 {
   INT Ret;
@@ -1903,7 +1904,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT WindowObject, RECT *Rect)
 }
 
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntSetWindowRgn(
   PWINDOW_OBJECT WindowObject,
   HRGN hRgn,
@@ -1932,7 +1933,7 @@ IntSetWindowRgn(
 }
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntWindowFromPoint(LONG X, LONG Y)
 {
    POINT pt;
@@ -1953,7 +1954,7 @@ IntWindowFromPoint(LONG X, LONG Y)
    return NULL;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd)
 {
   ASSERT(Window);
@@ -1985,7 +1986,7 @@ IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd)
 }
 
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText)
 {
   /* WARNING - do not use or free the WindowText after this call ! */
@@ -2007,7 +2008,7 @@ IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText)
   return FALSE;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, WCHAR *Buffer, INT nMaxCount)
 {
   INT Result;
@@ -2036,7 +2037,7 @@ IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, WCHAR *Buffer, INT nMaxCou
 
 /* WINPROC ********************************************************************/
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
 {
 	WndProcHandle Entry;
@@ -2053,7 +2054,7 @@ IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
 	return FALSE;
 }
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 {
 	WORD i;
@@ -2086,7 +2087,7 @@ IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 	return FreeSpot + 0xFFFF0000;
 }
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntRemoveWndProcHandle(WNDPROC Handle)
 {
 	WORD position;
@@ -2101,7 +2102,7 @@ IntRemoveWndProcHandle(WNDPROC Handle)
 	return TRUE;
 }
 
-DWORD FASTCALL
+DWORD INTERNAL_CALL
 IntRemoveProcessWndProcHandles(HANDLE ProcessID)
 {
 	WORD i;

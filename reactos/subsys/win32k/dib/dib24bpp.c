@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.31 2004/07/14 20:48:56 navaraf Exp $ */
+/* $Id: dib24bpp.c,v 1.31.2.1 2004/09/14 01:00:42 weiden Exp $ */
 #include <w32k.h>
 
-VOID
+VOID INTERNAL_CALL
 DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + (y * SurfObj->lDelta) + (x << 1) + x;
@@ -27,14 +27,14 @@ DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
   *(addr + 2) = (c >> 16) & 0xFF;
 }
 
-ULONG
+ULONG INTERNAL_CALL
 DIB_24BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x << 1) + x;
   return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
@@ -50,7 +50,7 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE addr = SurfObj->pvScan0 + y1 * SurfObj->lDelta + (x << 1) + x;
@@ -65,7 +65,7 @@ DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
   LONG     i, j, sx, sy, xColor, f1;
@@ -233,7 +233,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   return TRUE;
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 {
    ULONG DestX, DestY;
@@ -302,17 +302,18 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
-BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL BrushOrigin,
-                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                            ULONG Mode)
+BOOLEAN INTERNAL_CALL
+DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                     RECTL* DestRect, RECTL *SourceRect,
+                     POINTL* MaskOrigin, POINTL BrushOrigin,
+                     CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                     ULONG Mode)
 {
   DbgPrint("DIB_24BPP_StretchBlt: Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
   return FALSE;
 }
 
-BOOLEAN 
+BOOLEAN INTERNAL_CALL
 DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)

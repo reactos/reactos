@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.25.8.3 2004/09/01 22:14:50 weiden Exp $
+/* $Id: callback.c,v 1.25.8.4 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,7 +62,7 @@ typedef struct _INT_CALLBACK_HEADER
   LIST_ENTRY ListEntry;
 } INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 IntCbAllocateMemory(ULONG Size)
 {
   PINT_CALLBACK_HEADER Mem;
@@ -86,7 +86,7 @@ IntCbAllocateMemory(ULONG Size)
   return (Mem + 1);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCbFreeMemory(PVOID Data)
 {
   PINT_CALLBACK_HEADER Mem;
@@ -108,7 +108,7 @@ IntCbFreeMemory(PVOID Data)
   ExFreePool(Mem);
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 {
   PLIST_ENTRY CurrentEntry;
@@ -129,7 +129,7 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID INTERNAL_CALL
 IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			   PWINDOW_OBJECT Window,
 			   UINT Msg,
@@ -157,7 +157,7 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
   return;  
 }
 
-LRESULT STDCALL
+LRESULT INTERNAL_CALL
 IntCallWindowProc(WNDPROC Proc,
                    BOOLEAN IsAnsiProc,
 		   PWINDOW_OBJECT Window,
@@ -229,7 +229,7 @@ IntCallWindowProc(WNDPROC Proc,
   return Result;
 }
 
-HMENU STDCALL
+HMENU INTERNAL_CALL
 IntLoadSysMenuTemplate()
 {
   LRESULT Result;
@@ -252,7 +252,7 @@ IntLoadSysMenuTemplate()
   return (HMENU)Result;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntLoadDefaultCursors(VOID)
 {
   LRESULT Result;
@@ -276,7 +276,7 @@ IntLoadDefaultCursors(VOID)
   return TRUE;
 }
 
-LRESULT STDCALL
+LRESULT INTERNAL_CALL
 IntCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,

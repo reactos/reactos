@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.83.2.2 2004/09/12 19:21:07 weiden Exp $
+/* $Id: misc.c,v 1.83.2.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,7 +17,8 @@
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
 
-void W32kRegisterPrimitiveMessageQueue() {
+void INTERNAL_CALL
+W32kRegisterPrimitiveMessageQueue() {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
   if( !pmPrimitiveMessageQueue ) {
     PW32THREAD pThread;
@@ -31,13 +32,13 @@ void W32kRegisterPrimitiveMessageQueue() {
   }
 }
 
-PUSER_MESSAGE_QUEUE FASTCALL
+PUSER_MESSAGE_QUEUE INTERNAL_CALL
 W32kGetPrimitiveMessageQueue(VOID) {
   extern PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue;
   return pmPrimitiveMessageQueue;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntRegisterLogonProcess(DWORD ProcessId, BOOL Register)
 {
   PEPROCESS Process;
@@ -94,7 +95,7 @@ IntRegisterLogonProcess(DWORD ProcessId, BOOL Register)
 
 
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font) 
 { 
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -124,7 +125,7 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSystemParametersInfo(
   UINT uiAction,
   UINT uiParam,
@@ -314,7 +315,7 @@ IntSystemParametersInfo(
   return FALSE;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
                          PUNICODE_STRING Source)
 {
@@ -360,7 +361,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
                                       PUNICODE_STRING Source)
 {
@@ -409,7 +410,7 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS INTERNAL_CALL
 IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
 {
   if (Src->Length + sizeof(WCHAR) <= Src->MaximumLength
@@ -431,7 +432,7 @@ IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src)
   return STATUS_SUCCESS;
 }
 
-void FASTCALL
+void INTERNAL_CALL
 IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString)
 {
   if (NullTerminated != UnicodeString->Buffer)

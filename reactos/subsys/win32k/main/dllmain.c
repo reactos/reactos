@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.76.12.3 2004/09/12 19:21:07 weiden Exp $
+/* $Id: dllmain.c,v 1.76.12.4 2004/09/14 01:00:43 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -156,7 +156,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
     }
   else
     {
-      DPRINT("W32k: Destroy thread\n");
+      DPRINT1("=== W32k: Destroy thread ===\n");
 
       Win32Thread->IsExiting = TRUE;
       #if 0

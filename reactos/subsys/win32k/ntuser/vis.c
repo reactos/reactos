@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.29.12.2 2004/09/12 19:21:07 weiden Exp $
+ * $Id: vis.c,v 1.29.12.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 #include <win32k/debug1.h>
 #include <debug.h>
 
-HRGN FASTCALL
+HRGN INTERNAL_CALL
 VIS_ComputeVisibleRegion(
    PWINDOW_OBJECT Window,
    BOOLEAN ClientArea,
@@ -146,7 +146,7 @@ VIS_ComputeVisibleRegion(
    return VisRgn;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 VIS_WindowLayoutChanged(
    PWINDOW_OBJECT Window,
    HRGN NewlyExposed)

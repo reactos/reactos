@@ -16,10 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.31 2004/07/15 18:13:22 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.31.2.1 2004/09/14 01:00:42 weiden Exp $ */
 #include <w32k.h>
 
-VOID
+VOID INTERNAL_CALL
 DIB_32BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
@@ -28,7 +28,7 @@ DIB_32BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
   *addr = c;
 }
 
-ULONG
+ULONG INTERNAL_CALL
 DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
@@ -37,7 +37,7 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
@@ -51,7 +51,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   }
 }
 
-VOID
+VOID INTERNAL_CALL
 DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
@@ -66,7 +66,7 @@ DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   }
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
   LONG     i, j, sx, sy, xColor, f1;
@@ -282,7 +282,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   return TRUE;
 }
 
-BOOLEAN
+BOOLEAN INTERNAL_CALL
 DIB_32BPP_BitBlt(PBLTINFO BltInfo)
 {
    ULONG DestX, DestY;
@@ -370,7 +370,8 @@ inline PIXEL average32(PIXEL a, PIXEL b)
   return a; // FIXME: Temp hack to remove "PCB-effect" from the image
 }
 
-void ScaleLineAvg32(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
+void INTERNAL_CALL
+ScaleLineAvg32(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
 {
   int NumPixels = TgtWidth;
   int IntPart = SrcWidth / TgtWidth;
@@ -399,7 +400,7 @@ void ScaleLineAvg32(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
     *Target++ = *Source;
 }
  
-static BOOLEAN
+static BOOLEAN INTERNAL_CALL
 FinalCopy32(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, UINT *SpanIndex,
             UINT DestY, RECTL *DestRect)
 {
@@ -437,11 +438,12 @@ FinalCopy32(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, 
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
-BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                       RECTL* DestRect, RECTL *SourceRect,
-                       POINTL* MaskOrigin, POINTL BrushOrigin,
-                       CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                       ULONG Mode)
+BOOLEAN INTERNAL_CALL
+ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+               RECTL* DestRect, RECTL *SourceRect,
+               POINTL* MaskOrigin, POINTL BrushOrigin,
+               CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+               ULONG Mode)
 {
   int NumPixels = DestRect->bottom - DestRect->top;
   int IntPart = (((SourceRect->bottom - SourceRect->top) / (DestRect->bottom - DestRect->top)) * SourceSurf->lDelta) / 4;
@@ -542,11 +544,12 @@ BOOLEAN ScaleRectAvg32(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
-BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL BrushOrigin,
-                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                            ULONG Mode)
+BOOLEAN INTERNAL_CALL
+DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                     RECTL* DestRect, RECTL *SourceRect,
+                     POINTL* MaskOrigin, POINTL BrushOrigin,
+                     CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                     ULONG Mode)
 {
   DPRINT("DIB_32BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -578,7 +581,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
-BOOLEAN 
+BOOLEAN INTERNAL_CALL
 DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  POINTL  *SourcePoint,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)

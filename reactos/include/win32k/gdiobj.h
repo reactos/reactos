@@ -55,7 +55,7 @@
 
 typedef PVOID PGDIOBJ;
 
-typedef BOOL (FASTCALL *GDICLEANUPPROC)(PGDIOBJ Obj);
+typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PGDIOBJ Obj);
 
 /*!
  * GDI object header. This is a part of any GDI object
@@ -79,16 +79,16 @@ typedef struct _GDIMULTILOCK
   DWORD	ObjectType;
 } GDIMULTILOCK, *PGDIMULTILOCK;
 
-HGDIOBJ FASTCALL GDIOBJ_AllocObj(ULONG ObjectType);
-BOOL    FASTCALL GDIOBJ_FreeObj (HGDIOBJ Obj, DWORD ObjectType);
-PGDIOBJ FASTCALL GDIOBJ_LockObj (HGDIOBJ Obj, DWORD ObjectType);
-BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
-BOOL    FASTCALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
-BOOL    FASTCALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
-void    FASTCALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
-void    FASTCALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
-BOOL    FASTCALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ Obj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ Obj, DWORD ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
+BOOL    INTERNAL_CALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
+BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
+void    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
+void    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
+BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+BOOL    INTERNAL_CALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
@@ -99,13 +99,13 @@ BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
 #define GDIOBJ_UnlockObj(obj) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj)
 
-PGDIOBJ FASTCALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, DWORD ObjectType);
-BOOL FASTCALL GDIOBJ_UnlockObjDbg (const char* file, int line, PGDIOBJ Object);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ Obj, DWORD ObjectType);
+BOOL INTERNAL_CALL GDIOBJ_UnlockObjDbg (const char* file, int line, PGDIOBJ Object);
 
 #else /* !GDI_DEBUG */
 
-PGDIOBJ FASTCALL GDIOBJ_LockObj (HGDIOBJ Obj, DWORD ObjectType);
-BOOL    FASTCALL GDIOBJ_UnlockObj (PGDIOBJ Object);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ Obj, DWORD ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_UnlockObj (PGDIOBJ Object);
 
 #endif /* GDI_DEBUG */
 
@@ -113,6 +113,6 @@ BOOL    FASTCALL GDIOBJ_UnlockObj (PGDIOBJ Object);
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
-PVOID   FASTCALL GDI_MapHandleTable(HANDLE hProcess);
+PVOID   INTERNAL_CALL GDI_MapHandleTable(HANDLE hProcess);
 
 #endif

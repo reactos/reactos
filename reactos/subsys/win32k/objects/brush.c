@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.40.2.1 2004/09/12 19:21:08 weiden Exp $
+ * $Id: brush.c,v 1.40.2.2 2004/09/14 01:00:45 weiden Exp $
  */
 #include <w32k.h>
 
@@ -31,7 +31,7 @@ static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
   {0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81}  /* HS_DIAGCROSS  */
 };
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 BRUSH_Cleanup(PGDIBRUSHOBJ pBrush)
 {
   if(pBrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
@@ -43,7 +43,7 @@ BRUSH_Cleanup(PGDIBRUSHOBJ pBrush)
   return TRUE;
 }
 
-XLATEOBJ* FASTCALL
+XLATEOBJ* INTERNAL_CALL
 IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
 {
    XLATEOBJ *Result = NULL;
@@ -78,7 +78,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
    return Result;
 }
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj)
 {
    if (BrushObj->flAttrs & GDIBRUSH_IS_NULL)
@@ -93,7 +93,7 @@ IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ
    BrushInst->XlateObject = XlateObj;
 }
 
-HBRUSH FASTCALL
+HBRUSH INTERNAL_CALL
 IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
 {
    PGDIBRUSHOBJ BrushObject;
@@ -169,7 +169,7 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
    return NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntPatBlt(
    PDC dc,
    INT XLeft,
@@ -242,7 +242,7 @@ IntPatBlt(
    return ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntGdiPolyPatBlt(
    HDC hDC,
    DWORD dwRop,

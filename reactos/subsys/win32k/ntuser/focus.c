@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.24.4.2 2004/08/27 15:56:05 weiden Exp $
+ * $Id: focus.c,v 1.24.4.3 2004/09/14 01:00:44 weiden Exp $
  */
 #include <w32k.h>
 
@@ -24,7 +24,7 @@
 #include <debug.h>
 
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetActiveWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
@@ -32,7 +32,7 @@ IntGetActiveWindow(VOID)
   return (ThreadQueue != NULL ? ThreadQueue->ActiveWindow : NULL);
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetCaptureWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
@@ -41,7 +41,7 @@ IntGetCaptureWindow(VOID)
   return (ThreadQueue != NULL ? ThreadQueue->CaptureWindow : NULL);
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntGetFocusWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetActiveMessageQueue();
@@ -58,14 +58,14 @@ IntGetFocusWindow(VOID)
   return NULL;
 }
 
-PWINDOW_OBJECT
-FASTCALL IntGetThreadFocusWindow(VOID)
+PWINDOW_OBJECT INTERNAL_CALL
+IntGetThreadFocusWindow(VOID)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue = PsGetWin32Thread()->MessageQueue;
   return (ThreadQueue != NULL ? ThreadQueue->FocusWindow : NULL);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntSetForegroundWindow(PWINDOW_OBJECT Window)
 {
   PDESKTOP_OBJECT pdo;
@@ -144,7 +144,7 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
   return TRUE;
 }
 
-STATIC BOOL FASTCALL
+STATIC BOOL INTERNAL_CALL
 IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
   PUSER_MESSAGE_QUEUE PrevForegroundQueue;
@@ -243,7 +243,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
   return TRUE;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 {
   PWINDOW_OBJECT Child;
@@ -264,7 +264,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
   return NULL;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntMouseActivateWindow(PWINDOW_OBJECT DesktopWindow, PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT TopWindow;
@@ -291,7 +291,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT DesktopWindow, PWINDOW_OBJECT Window)
   return TRUE;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetActiveWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT PrevWindow;
@@ -332,7 +332,7 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
   return PrevWindow;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetFocusWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT PrevWindow;
@@ -350,7 +350,7 @@ IntSetFocusWindow(PWINDOW_OBJECT Window)
   return PrevWindow;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetFocus(PWINDOW_OBJECT Window)
 {
   if(Window != NULL)
@@ -388,7 +388,7 @@ IntSetFocus(PWINDOW_OBJECT Window)
   return IntSetFocusWindow(NULL);
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntSetCapture(PWINDOW_OBJECT Window)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;

@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71.4.2 2004/09/13 21:28:17 weiden Exp $
+ * $Id: gdiobj.c,v 1.71.4.3 2004/09/14 01:00:45 weiden Exp $
  */
 #include <w32k.h>
 
@@ -76,7 +76,7 @@ typedef struct
 /*
  * Dummy GDI Cleanup Callback
  */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDI_CleanupDummy(PGDIOBJ pObj)
 {
   return TRUE;
@@ -118,7 +118,7 @@ static LARGE_INTEGER ShortDelay;
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
 */
-static PGDI_HANDLE_TABLE FASTCALL
+static PGDI_HANDLE_TABLE INTERNAL_CALL
 GDIOBJ_iAllocHandleTable(ULONG Entries)
 {
   PGDI_HANDLE_TABLE handleTable;
@@ -216,7 +216,7 @@ GetObjectSize(DWORD ObjectType)
  * \note Use GDIOBJ_Lock() to obtain pointer to the new object.
  * \todo return the object pointer and lock it by default.
 */
-HGDIOBJ FASTCALL
+HGDIOBJ INTERNAL_CALL
 GDIOBJ_AllocObj(ULONG ObjectType)
 {
   PW32PROCESS W32Process;
@@ -307,7 +307,7 @@ GDIOBJ_AllocObj(ULONG ObjectType)
  * \return Returns FALSE if the cleanup routine returned FALSE or the object doesn't belong
  * to the calling process.
 */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
 {
   /* FIXME - get rid of the ObjectType and Flag parameters, they're obsolete! */
@@ -441,7 +441,7 @@ ExchangeType:
  *
  * \note this function uses an O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
 */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 {
   INT i, j;
@@ -483,7 +483,7 @@ GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj)
  *
  * \note this function uses O(n^2) algoritm because we shouldn't need to call it with more than 3 or 4 objects.
 */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 {
   INT i, j;
@@ -513,7 +513,7 @@ GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 /*!
  * Initialization of the GDI object engine.
 */
-VOID FASTCALL
+VOID INTERNAL_CALL
 InitGdiObjectHandleTable (VOID)
 {
   DPRINT("InitGdiObjectHandleTable\n");
@@ -540,7 +540,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
  * Internal function. Called when the process is destroyed to free the remaining GDI handles.
  * \param	Process - PID of the process that will be destroyed.
 */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 CleanupForProcess (struct _EPROCESS *Process, INT Pid)
 {
   PGDI_TABLE_ENTRY Entry;
@@ -611,7 +611,7 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
  *
  * \todo Get rid of the ObjectType parameter!
 */
-PGDIOBJ FASTCALL
+PGDIOBJ INTERNAL_CALL
 #ifdef GDI_DEBUG
 GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 #else /* !GDI_DEBUG */
@@ -754,7 +754,7 @@ CheckType:
  * \note This function performs delayed cleanup. If the object is locked when GDI_FreeObj() is called
  * then \em this function frees the object when reference count is zero.
 */
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 #ifdef GDI_DEBUG
 GDIOBJ_UnlockObjDbg (const char* file, int line, PGDIOBJ Object)
 #else /* !GDI_DEBUG */
@@ -793,7 +793,7 @@ GDIOBJ_UnlockObj (PGDIOBJ Object)
   return TRUE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 {
   PGDI_TABLE_ENTRY Entry;
@@ -817,7 +817,7 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
   return FALSE;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj)
 {
   PGDI_TABLE_ENTRY Entry;
@@ -934,7 +934,7 @@ LockHandle:
   return FALSE;
 }
 
-void FASTCALL
+void INTERNAL_CALL
 GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
   PGDI_TABLE_ENTRY Entry;
@@ -1054,7 +1054,7 @@ LockHandle:
   }
 }
 
-void FASTCALL
+void INTERNAL_CALL
 GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 {
   PGDI_TABLE_ENTRY FromEntry;
@@ -1154,7 +1154,7 @@ LockHandleFrom:
   }
 }
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 GDI_MapHandleTable(HANDLE hProcess)
 {
   DPRINT("%s:%i: %s(): FIXME - Map handle table into the process memory space!\n",

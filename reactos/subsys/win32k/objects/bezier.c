@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bezier.c,v 1.9 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: bezier.c,v 1.9.8.1 2004/09/14 01:00:45 weiden Exp $ */
 
 #include <w32k.h>
 
@@ -71,7 +71,8 @@
 *       level is the recursion depth
 *       returns true if the recusion can be terminated
 */
-static BOOL FASTCALL BezierCheck( int level, POINT *Points)
+static BOOL INTERNAL_CALL
+BezierCheck( int level, POINT *Points)
 { 
   INT dx, dy;
 
@@ -140,8 +141,9 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
 /* Helper for GDI_Bezier.
  * Just handles one Bezier, so Points should point to four POINTs
  */
-static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
-				INT *nPtsOut, INT level )
+static void INTERNAL_CALL
+GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
+		    INT *nPtsOut, INT level )
 {
   if(*nPtsOut == *dwOut) {
     *dwOut *= 2;
@@ -200,7 +202,8 @@ static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOu
  *  alternative would be to call the function twice, once to determine the size
  *  and a second time to do the work - I decided this was too much of a pain].
  */
-POINT * FASTCALL GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
+POINT * INTERNAL_CALL
+GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
 {
   POINT *out;
   INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;

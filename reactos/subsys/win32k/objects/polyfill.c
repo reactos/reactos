@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.15 2004/07/03 13:55:37 navaraf Exp $
+/* $Id: polyfill.c,v 1.15.4.1 2004/09/14 01:00:45 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -91,8 +91,7 @@ DEBUG_PRINT_ACTIVE_EDGELIST ( FILL_EDGE* list )
 **  Hide memory clean up.
 */
 static
-void
-FASTCALL
+void INTERNAL_CALL
 POLYGONFILL_DestroyEdgeList(FILL_EDGE_LIST* list)
 {
   int i;
@@ -115,8 +114,7 @@ POLYGONFILL_DestroyEdgeList(FILL_EDGE_LIST* list)
 ** This makes and initiaizes an Edge struct for a line between two points.
 */
 static
-FILL_EDGE*
-FASTCALL
+FILL_EDGE* INTERNAL_CALL
 POLYGONFILL_MakeEdge(POINT From, POINT To)
 {
   FILL_EDGE* rc = (FILL_EDGE*)EngAllocMem(FL_ZERO_MEMORY, sizeof(FILL_EDGE), FILL_EDGE_ALLOC_TAG);
@@ -186,8 +184,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 ** Positive integer element1 > element2 
 */
 static
-INT
-FASTCALL
+INT INTERNAL_CALL
 FILL_EDGE_Compare(FILL_EDGE* Edge1, FILL_EDGE* Edge2)
 {
   int e1 = Edge1->XIntercept[0] + Edge1->XIntercept[1];
@@ -201,8 +198,7 @@ FILL_EDGE_Compare(FILL_EDGE* Edge1, FILL_EDGE* Edge2)
 ** Insert an edge into a list keeping the list in order.
 */
 static
-void
-FASTCALL
+void INTERNAL_CALL
 POLYGONFILL_ActiveListInsert(FILL_EDGE** activehead, FILL_EDGE* NewEdge )
 {
   FILL_EDGE *pPrev, *pThis;
@@ -244,8 +240,7 @@ POLYGONFILL_ActiveListInsert(FILL_EDGE** activehead, FILL_EDGE* NewEdge )
 ** Create a list of edges for a list of points.
 */
 static
-FILL_EDGE_LIST*
-FASTCALL
+FILL_EDGE_LIST* INTERNAL_CALL
 POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
 {
   int CurPt = 0;
@@ -298,8 +293,7 @@ fail:
 **TODO: Get rid of this floating point arithmetic
 */
 static
-void
-FASTCALL
+void INTERNAL_CALL
 POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 {
   if ( 0 == pEdge->dy )
@@ -365,8 +359,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 ** This method updates the Active edge collection for the scanline Scanline.
 */
 static
-void
-STDCALL
+void INTERNAL_CALL
 POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
   int i;
@@ -390,8 +383,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 ** Scanline.
 */
 static
-void
-STDCALL
+void INTERNAL_CALL
 POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
@@ -438,8 +430,7 @@ POLYGONFILL_FillScanLineAlternate(
 }
 
 static
-void
-STDCALL
+void INTERNAL_CALL
 POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
@@ -538,8 +529,7 @@ POLYGONFILL_FillScanLineWinding(
 //This value is defined as the number of times a pen used to draw the polygon would go around the region.
 //The direction of each edge of the polygon is important. 
 
-BOOL
-STDCALL
+BOOL INTERNAL_CALL
 FillPolygon(
   PDC dc,
   BITMAPOBJ *BitmapObj,
@@ -554,8 +544,7 @@ FillPolygon(
   int ScanLine;
 
   void
-  STDCALL
-  (*FillScanLine)(
+  (INTERNAL_CALL *FillScanLine)(
     PDC dc,
     int ScanLine,
     FILL_EDGE* ActiveHead,

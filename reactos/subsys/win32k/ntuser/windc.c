@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.66.12.2 2004/09/12 19:21:07 weiden Exp $
+/* $Id: windc.c,v 1.66.12.3 2004/09/14 01:00:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,13 +47,13 @@ static HDC defaultDCstate;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 DceInit(VOID)
 {
   ExInitializeFastMutex(&DceListLock);
 }
 
-HRGN FASTCALL
+HRGN INTERNAL_CALL
 DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, PWINDOW_OBJECT Child, ULONG CFlags)
 {
   HRGN VisRgn;
@@ -68,7 +68,7 @@ DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, PWINDOW_OBJECT Child, ULONG CFl
   return VisRgn;
 }
 
-PDCE FASTCALL
+PDCE INTERNAL_CALL
 DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type)
 {
   HDCE DceHandle;
@@ -121,7 +121,7 @@ DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type)
   return(Dce);
 }
 
-VOID STATIC STDCALL
+VOID STATIC INTERNAL_CALL
 DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	       BOOL SetClipOrigin)
 {
@@ -151,7 +151,7 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 }
 
 
-STATIC VOID FASTCALL
+STATIC VOID INTERNAL_CALL
 DceDeleteClipRgn(DCE* Dce)
 {
   Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN | DCX_WINDOWPAINT);
@@ -171,7 +171,7 @@ DceDeleteClipRgn(DCE* Dce)
   Dce->DCXFlags |= DCX_DCEDIRTY;
 }
 
-STATIC INT FASTCALL
+STATIC INT INTERNAL_CALL
 DceReleaseDC(DCE* dce)
 {
   if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_DCEEMPTY | DCX_DCEBUSY)))
@@ -207,7 +207,7 @@ DceReleaseDC(DCE* dce)
   return 1;
 }
 
-STATIC VOID FASTCALL
+STATIC VOID INTERNAL_CALL
 DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 {
    HANDLE hRgnVisible = NULL;
@@ -294,7 +294,7 @@ noparent:
    }
 }
 
-HDC FASTCALL
+HDC INTERNAL_CALL
 IntGetDCEx(PWINDOW_OBJECT Window, HRGN ClipRegion, ULONG Flags)
 {
   PWINDOW_OBJECT Parent;
@@ -517,7 +517,7 @@ IntGetDCEx(PWINDOW_OBJECT Window, HRGN ClipRegion, ULONG Flags)
   return(Dce->hDC);
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 DCE_Cleanup(PDCE pDce)
 {
   PDCE PrevInList;
@@ -545,7 +545,7 @@ DCE_Cleanup(PDCE pDce)
   return NULL != PrevInList;
 }
 
-PWINDOW_OBJECT FASTCALL
+PWINDOW_OBJECT INTERNAL_CALL
 IntWindowFromDC(HDC hDc)
 {
   DCE *Dce;
@@ -560,7 +560,7 @@ IntWindowFromDC(HDC hDc)
   return 0;
 }
 
-INT FASTCALL
+INT INTERNAL_CALL
 IntReleaseDC(PWINDOW_OBJECT Window, HDC hDc)
 {
   DCE *dce;
@@ -588,7 +588,7 @@ IntReleaseDC(PWINDOW_OBJECT Window, HDC hDc)
 /***********************************************************************
  *           DceFreeDCE
  */
-PDCE FASTCALL
+PDCE INTERNAL_CALL
 DceFreeDCE(PDCE dce)
 {
   DCE *ret;
@@ -623,7 +623,7 @@ DceFreeDCE(PDCE dce)
  *
  * Remove owned DCE and reset unreleased cache DCEs.
  */
-void FASTCALL
+void INTERNAL_CALL
 DceFreeWindowDCE(PWINDOW_OBJECT Window)
 {
   DCE *pDCE;
@@ -671,7 +671,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
     }
 }
 
-void FASTCALL
+void INTERNAL_CALL
 DceEmptyCache()
 {
   while (FirstDce != NULL)
@@ -680,7 +680,7 @@ DceEmptyCache()
     }
 }
 
-VOID FASTCALL 
+VOID INTERNAL_CALL
 DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
 {
   DCE *pDCE;

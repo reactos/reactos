@@ -17,8 +17,8 @@ typedef struct
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
 #define  TEXTOBJ_UnlockText(BMObj) GDIOBJ_UnlockObj ((PGDIOBJ) BMObj)
 
-NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
-NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
+NTSTATUS INTERNAL_CALL TextIntRealizeFont(HFONT FontHandle);
+NTSTATUS INTERNAL_CALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 
 int
 STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.21 2004/07/03 17:40:25 navaraf Exp $
+/* $Id: transblt.c,v 1.21.4.1 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -192,7 +192,7 @@ EngTransparentBlt(SURFOBJ *Dest,
   return Ret;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 IntEngTransparentBlt(BITMAPOBJ *DestObj,
                      BITMAPOBJ *SourceObj,
                      CLIPOBJ *Clip,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.40.8.1 2004/07/18 23:44:01 weiden Exp $
+/* $Id: driver.c,v 1.40.8.2 2004/09/14 01:00:43 weiden Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -28,6 +28,7 @@
 
 #include <ddk/ntddk.h>
 #include <windows.h>
+#include <win32k/debug.h>
 #include <win32k/driver.h>
 #include <win32k/misc.h>
 #include <wchar.h>
@@ -50,7 +51,8 @@ typedef struct _GRAPHICS_DRIVER
 static PGRAPHICS_DRIVER  DriverList;
 static PGRAPHICS_DRIVER  GenericDriver = 0;
 
-BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
+BOOL INTERNAL_CALL
+DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
   PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(PagedPool, sizeof(*Driver), TAG_DRIVER);
   DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
@@ -78,7 +80,8 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   return  TRUE;
 }
 
-PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
+PGD_ENABLEDRIVER INTERNAL_CALL
+DRIVER_FindDDIDriver(LPCWSTR Name)
 {
   static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
   static WCHAR DefaultExtension[] = L".DLL";
@@ -176,8 +179,9 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
     } \
   }
 
-BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
-                               PDRIVER_FUNCTIONS  DF)
+BOOL INTERNAL_CALL
+DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
+                         PDRIVER_FUNCTIONS  DF)
 {
   BEGIN_FUNCTION_MAP();
 
@@ -248,7 +252,8 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 typedef LONG VP_STATUS;
 typedef VP_STATUS (STDCALL *PMP_DRIVERENTRY)(PVOID, PVOID);
 
-PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
+PFILE_OBJECT INTERNAL_CALL
+DRIVER_FindMPDriver(ULONG DisplayNumber)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   WCHAR DeviceNameBuffer[20];
@@ -293,7 +298,8 @@ PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
 }
 
 
-BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
+BOOL INTERNAL_CALL
+DRIVER_UnregisterDriver(LPCWSTR  Name)
 {
   PGRAPHICS_DRIVER  Driver = NULL;
   
@@ -338,7 +344,8 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
   }
 }
 
-INT DRIVER_ReferenceDriver (LPCWSTR  Name)
+INT INTERNAL_CALL
+DRIVER_ReferenceDriver (LPCWSTR  Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
   
@@ -356,7 +363,8 @@ INT DRIVER_ReferenceDriver (LPCWSTR  Name)
   return ++GenericDriver->ReferenceCount;
 }
 
-INT DRIVER_UnreferenceDriver (LPCWSTR  Name)
+INT INTERNAL_CALL
+DRIVER_UnreferenceDriver (LPCWSTR  Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
   

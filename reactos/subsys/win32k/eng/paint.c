@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.20 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: paint.c,v 1.20.4.1 2004/09/14 01:00:42 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,7 +29,8 @@
 
 #include <w32k.h>
 
-BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
+BOOL INTERNAL_CALL
+FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
@@ -105,7 +106,7 @@ EngPaint(IN SURFOBJ *Surface,
   return ret;
 }
 
-BOOL STDCALL
+BOOL INTERNAL_CALL
 IntEngPaint(IN BITMAPOBJ *BitmapObj,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,

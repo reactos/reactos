@@ -32,62 +32,62 @@ typedef struct _USER_HANDLE_TABLE
   PUSER_OBJECT_HEADER Handles[N_USER_HANDLES];
 } USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
 
-typedef BOOL (FASTCALL *PFNENUMHANDLESPROC)(PVOID ObjectBody, PVOID UserData);
+typedef BOOL (INTERNAL_CALL *PFNENUMHANDLESPROC)(PVOID ObjectBody, PVOID UserData);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmReferenceObject(
   PVOID ObjectBody);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmDereferenceObject(
   PVOID ObjectBody);
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmEnumHandles(
   PUSER_HANDLE_TABLE HandleTable,
   USER_OBJECT_TYPE ObjectType,
   PVOID UserData,
   PFNENUMHANDLESPROC EnumProc);
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 ObmObjectDeleted(
   PVOID ObjectBody);
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmCreateObject(
   PUSER_HANDLE_TABLE HandleTable,
   PHANDLE Handle,
   USER_OBJECT_TYPE ObjectType,
   ULONG ObjectSize);
 
-USER_OBJECT_TYPE FASTCALL
+USER_OBJECT_TYPE INTERNAL_CALL
 ObmGetObjectType(
   PUSER_HANDLE_TABLE HandleTable,
   PVOID ObjectBody);
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 ObmDeleteObject(
   PUSER_HANDLE_TABLE HandleTable,
   PVOID ObjectBody);
 
-PVOID FASTCALL
+PVOID INTERNAL_CALL
 ObmGetObject(
   PUSER_HANDLE_TABLE HandleTable,
   HANDLE Handle,
   USER_OBJECT_TYPE ObjectType);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmInitializeHandleTable(
   PUSER_HANDLE_TABLE HandleTable);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmFreeHandleTable(
   PUSER_HANDLE_TABLE HandleTable);
 
-PUSER_HANDLE_TABLE FASTCALL
+PUSER_HANDLE_TABLE INTERNAL_CALL
 ObmCreateHandleTable(VOID);
 
-VOID FASTCALL
+VOID INTERNAL_CALL
 ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
 
 #define IntGetUserObject(ObjectType, Handle) \
@@ -97,14 +97,14 @@ ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
  * GDI
  */
 
-VOID  FASTCALL InitGdiObjectHandleTable (VOID);
+VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
 
-VOID  FASTCALL CreateStockObjects (VOID);
-VOID  FASTCALL CreateSysColorObjects (VOID);
+VOID  INTERNAL_CALL CreateStockObjects (VOID);
+VOID  INTERNAL_CALL CreateSysColorObjects (VOID);
 
-BOOL  FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
+BOOL  INTERNAL_CALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
 
-PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
+PPOINT INTERNAL_CALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 #endif /* _WIN32K_OBJECT_H */
 

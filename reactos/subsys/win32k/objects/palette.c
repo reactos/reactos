@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.20.4.1 2004/09/12 19:21:08 weiden Exp $ */
+/* $Id: palette.c,v 1.20.4.2 2004/09/14 01:00:45 weiden Exp $ */
 #include <w32k.h>
 
 #ifndef NO_MAPPING
@@ -31,12 +31,13 @@ int COLOR_gapEnd;
 int COLOR_gapFilled;
 int COLOR_max;
 
-PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID)
+PPALETTEENTRY INTERNAL_CALL
+ReturnSystemPalette (VOID)
 {
   return COLOR_sysPal;
 }
 
-BOOL FASTCALL
+BOOL INTERNAL_CALL
 PALETTE_Cleanup(PPALGDI pPal)
 {
   if (NULL != pPal->IndexedColors)
@@ -47,7 +48,7 @@ PALETTE_Cleanup(PPALGDI pPal)
   return TRUE;
 }
 
-HPALETTE FASTCALL
+HPALETTE INTERNAL_CALL
 PALETTE_AllocPalette(ULONG Mode,
                      ULONG NumColors,
                      ULONG *Colors,
@@ -99,7 +100,7 @@ PALETTE_AllocPalette(ULONG Mode,
   return NewPalette;
 }
 
-HPALETTE FASTCALL
+HPALETTE INTERNAL_CALL
 PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                CONST RGBQUAD *Colors)
 {
@@ -143,7 +144,8 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
 }
 
 // Create the system palette
-HPALETTE FASTCALL PALETTE_Init(VOID)
+HPALETTE INTERNAL_CALL
+PALETTE_Init(VOID)
 {
   int i;
   HPALETTE hpalette;
@@ -189,7 +191,8 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 }
 
 #ifndef NO_MAPPING
-static void FASTCALL PALETTE_FormatSystemPalette(void)
+static void INTERNAL_CALL
+PALETTE_FormatSystemPalette(void)
 {
   // Build free list so we'd have an easy way to find
   // out if there are any available colorcells. 
@@ -210,7 +213,8 @@ static void FASTCALL PALETTE_FormatSystemPalette(void)
 }
 #endif
 
-VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
+VOID INTERNAL_CALL
+PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 {
   int i = 0;
   for( ; i<size ; i++ )
@@ -220,7 +224,8 @@ VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 #ifndef NO_MAPPING
 // Set the color-mapping table for selected palette. 
 // Return number of entries which mapping has changed.
-INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
+INT INTERNAL_CALL
+PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
   char flag;
   int  prevMapping = (palPtr->mapping) ? 1 : 0;
