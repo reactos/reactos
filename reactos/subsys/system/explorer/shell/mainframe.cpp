@@ -772,13 +772,22 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 		const BookmarkNode& node = *(BookmarkNode*)pnmgit->lParam;
 
 		if (node._type == BookmarkNode::BMNT_FOLDER) {
+			 // display tooltips for bookmark folders
 			if (!node._pfolder->_description.empty())
 				lstrcpyn(pnmgit->pszText, node._pfolder->_description.c_str(), pnmgit->cchTextMax);
-		} else	// BookmarkNode::BMNT_BOOKMARK
-			if (!node._pbookmark->_description.empty())
-				lstrcpyn(pnmgit->pszText, node._pbookmark->_description.c_str(), pnmgit->cchTextMax);
-			else
-				lstrcpyn(pnmgit->pszText, node._pbookmark->_url.c_str(), pnmgit->cchTextMax);
+		} else {	// BookmarkNode::BMNT_BOOKMARK
+			 // display tooltips for bookmark folders
+			String txt = node._pbookmark->_description;
+
+			if (!node._pbookmark->_url.empty()) {
+				if (!txt.empty())
+					txt += TEXT("  -  ");
+
+				txt += node._pbookmark->_url;
+			}
+
+			lstrcpyn(pnmgit->pszText, txt.c_str(), pnmgit->cchTextMax);
+		}
 		break;}
 	}
 
@@ -1037,7 +1046,7 @@ void MainFrame::FillBookmarks()
 
 	TreeView_DeleteAllItems(_hsidebar);
 
-	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT);
+	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT, _himl);
 }
 
 #endif

@@ -67,18 +67,113 @@ bool Bookmark::read_url(LPCTSTR path)
 }
 
  /// convert XBEL bookmark node
-bool Bookmark::read_xbel(const_XMLPos& pos)
+bool Bookmark::read(const_XMLPos& pos)
 {
 	_url = pos.get("href");
 
-	if (!pos.go_down("title"))
-		return false;
+	if (pos.go_down("title")) {
+		_name = pos->get_content();
+		pos.back();
+	}
 
-	_name = pos->get_content();
+	if (pos.go_down("desc")) {
+		_description = pos->get_content();
+		pos.back();
+	}
+
+	if (pos.go_down("info")) {
+		const_XMLChildrenFilter metadata(pos, "metadata");
+
+		for(const_XMLChildrenFilter::const_iterator it=metadata.begin(); it!=metadata.end(); ++it) {
+			const XMLNode& node = **it;
+			const_XMLPos sub_pos(&node);
+
+			if (node.get("owner") == "ros-explorer") {
+				if (sub_pos.go_down("icon")) {
+					_icon_path = sub_pos.get("path");
+					_icon_idx = _ttoi(sub_pos.get("index"));
+
+					sub_pos.back();	// </icon>
+				}
+			}
+		}
+
+		pos.back();	// </metadata>
+		pos.back();	// </info>
+	}
+
+	return !_url.empty();	// _url is mandatory.
+}
+
+ /// write XBEL bookmark node
+void Bookmark::write(XMLPos& pos)
+{
+	pos.create("bookmark");
+
+	pos["href"] = _url;
+
+	if (!_name.empty()) {
+		pos.create("title");
+		pos->set_content(_name);
+		pos.back();
+	}
+
+	if (!_description.empty()) {
+		pos.create("desc");
+		pos->set_content(_description);
+		pos.back();
+	}
+
+	if (!_icon_path.empty()) {
+		pos.create("info");
+		pos.create("metadata");
+		pos["owner"] = "ros-explorer";
+		pos.create("icon");
+		pos["path"] = _icon_path;
+		pos["index"].printf(TEXT("%d"), _icon_idx);
+		pos.back();	// </icon>
+		pos.back();	// </metadata>
+		pos.back();	// </info>
+	}
 
 	pos.back();
+}
 
-	return true;
+
+ /// read bookmark folder from XBEL formated XML tree
+void BookmarkFolder::read(const_XMLPos& pos)
+{
+	if (pos.go_down("title")) {
+		_name = pos->get_content();
+		pos.back();
+	}
+
+	if (pos.go_down("desc")) {
+		_description = pos->get_content();
+		pos.back();
+	}
+
+	_bookmarks.read(pos);
+}
+
+ /// write bookmark folder conten from XBEL formated XML tree
+void BookmarkFolder::write(XMLPos& pos)
+{
+	pos.create("folder");
+
+	if (!_name.empty()) {
+		pos.create("title");
+		pos->set_content(_name);
+		pos.back();
+	}
+
+	if (!_description.empty()) {
+		pos.create("desc");
+		pos->set_content(_description);
+		pos.back();
+	}
+
+	_bookmarks.write(pos);
 }
 
 
@@ -122,20 +217,15 @@ void BookmarkList::read(const_XMLPos& pos)
 		const_XMLPos sub_pos(&node);
 
 		if (node == "folder") {
-			BookmarkFolder new_folder;
+			BookmarkFolder folder;
 
-			if (sub_pos.go_down("title")) {
-				new_folder._name = sub_pos->get_content();
-				sub_pos.back();
-			}
+			folder.read(sub_pos);
 
-			new_folder._bookmarks.read(sub_pos);
-
-			push_back(new_folder);
+			push_back(folder);
 		} else if (node == "bookmark") {
 			Bookmark bookmark;
 
-			if (bookmark.read_xbel(sub_pos))
+			if (bookmark.read(sub_pos))
 				push_back(bookmark);
 		}
 	}
@@ -150,36 +240,23 @@ void BookmarkList::write(XMLPos& pos) const
 		if (node._type == BookmarkNode::BMNT_FOLDER) {
 			BookmarkFolder& folder = *node._pfolder;
 
-			pos.create("folder");
-
-			pos.create("title");
-			pos->set_content(folder._name);
-			pos.back();
-
-			folder._bookmarks.write(pos);
+			folder.write(pos);
 
 			pos.back();
 		} else {	// BookmarkNode::BMNT_BOOKMARK
 			Bookmark& bookmark = *node._pbookmark;
 
-			if (!bookmark._url.empty()) {
-				pos.create("bookmark");
-
-				pos["href"] = bookmark._url;
-
-				pos.create("title");
-				pos->set_content(bookmark._name);
-				pos.back();
-
-				pos.back();
-			}
+			if (!bookmark._url.empty())
+				bookmark.write(pos);
 		}
 	}
 }
 
 
-void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent) const
+void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist) const
 {
+	HDC hdc = GetDC(hwnd);
+
 	TV_INSERTSTRUCT tvi;
 
 	tvi.hParent = parent;
@@ -201,16 +278,27 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent) const
 			tv.iSelectedImage = 4;
 			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
 
-			folder._bookmarks.fill_tree(hwnd, hitem);
+			folder._bookmarks.fill_tree(hwnd, hitem, himagelist);
 		} else {
 			const Bookmark& bookmark = *node._pbookmark;
 
 			tv.pszText = (LPTSTR)bookmark._name.c_str();
 			tv.iImage = 0;
 			tv.iSelectedImage = 1;
+
+			if (!bookmark._icon_path.empty()) {
+				///@todo retreive "http://.../favicon.ico" icons
+				const Icon& icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
+
+				if ((ICON_ID)icon != ICID_NONE)
+					tv.iImage = tv.iSelectedImage = ImageList_Add(himagelist, icon.create_bitmap(RGB(255,255,255), GetStockBrush(WHITE_BRUSH), hdc), 0);
+			}
+
 			TreeView_InsertItem(hwnd, &tvi);
 		}
 	}
+
+	ReleaseDC(hwnd, hdc);
 }
 
 

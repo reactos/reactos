@@ -37,7 +37,8 @@ struct Bookmark
 	int		_icon_idx;
 
 	bool	read_url(LPCTSTR path);
-	bool	read_xbel(const_XMLPos& pos);
+	bool	read(const_XMLPos& pos);
+	void	write(XMLPos& pos);
 };
 
 struct BookmarkFolder;
@@ -68,7 +69,7 @@ struct BookmarkList : public list<BookmarkNode>
 	void	read(const_XMLPos& pos);
 	void	write(XMLPos& pos) const;
 
-	void	fill_tree(HWND hwnd, HTREEITEM parent) const;
+	void	fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST) const;
 };
 
 struct BookmarkFolder
@@ -76,6 +77,9 @@ struct BookmarkFolder
 	String	_name;
 	String	_description;
 	BookmarkList _bookmarks;
+
+	void	read(const_XMLPos& pos);
+	void	write(XMLPos& pos);
 };
 
 struct Favorites : public BookmarkList

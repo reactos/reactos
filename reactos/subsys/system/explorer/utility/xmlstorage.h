@@ -733,11 +733,6 @@ struct const_XMLChildrenFilter
 			return *_cur;
 		}
 
-		XMLNode* operator*()
-		{
-			return *_cur;
-		}
-
 		const_iterator& operator++()
 		{
 			++_cur;
