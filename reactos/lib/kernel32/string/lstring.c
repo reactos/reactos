@@ -21,7 +21,7 @@ lstrcmpA(
 	 LPCSTR lpString2
 	 )
 {
-	return strcmp(lpString1,lpString2);
+  return strcmp(lpString1,lpString2);
 }
 
 
@@ -35,7 +35,7 @@ lstrcmpiA(
 	  LPCSTR lpString2
 	  )
 {
-        return _stricmp(lpString1,lpString2); 
+  return _stricmp(lpString1,lpString2); 
 }
 
 
@@ -53,6 +53,11 @@ lstrcpynA(
   /* Can't use strncpy, because strncpy will fill unused bytes in
      lpString1 with NUL bytes while lstrcpynA doesn't. Also lstrcpynA
      guarantees NUL termination while strncpy doesn't */
+
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
 
   if (1 < iMaxLength)
     {
@@ -89,7 +94,12 @@ lstrcpyA(
 	 LPCSTR lpString2
 	 )
 {
-	return strcpy(lpString1,lpString2);
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
+
+  return strcpy(lpString1,lpString2);
 }
 
 
@@ -103,7 +113,12 @@ lstrcatA(
 	 LPCSTR lpString2
 	 )
 {
-	return strcat(lpString1,lpString2);
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
+
+  return strcat(lpString1,lpString2);
 }
 
 
@@ -116,7 +131,7 @@ lstrlenA(
 	 LPCSTR lpString
 	 )
 {
-	return strlen(lpString);
+  return strlen(lpString);
 }
 
 
@@ -130,7 +145,7 @@ lstrcmpW(
 	 LPCWSTR lpString2
 	 )
 {
-	return wcscmp(lpString1,lpString2);
+  return wcscmp(lpString1,lpString2);
 }
 
 
@@ -144,7 +159,7 @@ lstrcmpiW(
     LPCWSTR lpString2
     )
 {
-        return _wcsicmp(lpString1,lpString2);
+  return _wcsicmp(lpString1,lpString2);
 }
 
 
@@ -162,6 +177,11 @@ lstrcpynW(
   /* Can't use wcsncpy, because wcsncpy will fill unused bytes in
      lpString1 with NUL bytes while lstrcpynW doesn't Also lstrcpynW
      guarantees NUL termination while wcsncpy doesn't */
+
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
 
   if (1 < iMaxLength)
     {
@@ -198,7 +218,12 @@ lstrcpyW(
     LPCWSTR lpString2
     )
 {
-	return wcscpy(lpString1,lpString2);	
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
+
+  return wcscpy(lpString1,lpString2);	
 }
 
 
@@ -212,7 +237,12 @@ lstrcatW(
     LPCWSTR lpString2
     )
 {
-	return wcscat(lpString1,lpString2);
+  if (lpString1 == NULL)
+  {
+    return NULL;
+  }
+
+  return wcscat(lpString1,lpString2);
 }
 
 
@@ -225,5 +255,5 @@ lstrlenW(
     LPCWSTR lpString
     )
 {
-	return wcslen(lpString);
+  return wcslen(lpString);
 }
