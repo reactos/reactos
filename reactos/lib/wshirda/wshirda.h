@@ -7,6 +7,7 @@
 #ifndef __WSHIRDA_H
 #define __WSHIRDA_H
 
+#include <stdlib.h>
 #include <wsahelp.h>
 #include <windows.h>
 #include <ddk/ntddk.h>

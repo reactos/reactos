@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.82 2003/09/08 02:14:20 weiden Exp $
+/* $Id: defwnd.c,v 1.83 2003/09/08 09:56:57 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -844,7 +844,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 	  if ((Style & WS_VSCROLL) &&
 	      (Point.x >= (WindowRect.right - GetSystemMetrics(SM_CXVSCROLL))))
 	    {
-	      return(HTSIZE);
+	      return(HTBOTTOMRIGHT);
 	    }
 	  return(HTHSCROLL);
 	}

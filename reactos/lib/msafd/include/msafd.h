@@ -7,6 +7,7 @@
 #ifndef __MSAFD_H
 #define __MSAFD_H
 
+#include <stdlib.h>
 #include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>

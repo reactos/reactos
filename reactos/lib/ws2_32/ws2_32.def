@@ -3,7 +3,6 @@
 LIBRARY ws2_32.dll
 
 EXPORTS
-;WEP
 WPUCompleteOverlappedRequest@20
 WSAAccept@20
 WSAAddressToStringA@20
@@ -71,7 +70,6 @@ WSAStringToAddressA@20
 WSAStringToAddressW@20
 WSAUnhookBlockingHook@0
 WSAWaitForMultipleEvents@20
-;WSApSetPostRoutine
 WSCDeinstallProvider@8
 WSCEnableNSProvider@8
 WSCEnumProtocols@16
@@ -79,7 +77,6 @@ WSCGetProviderPath@16
 WSCInstallNameSpace@20
 WSCInstallProvider@20
 WSCUnInstallNameSpace@4
-;WSCWriteNameSpaceOrder
 WSCWriteProviderOrder@8
 __WSAFDIsSet@8
 accept@12
@@ -112,5 +109,13 @@ sendto@24
 setsockopt@20
 shutdown@8
 socket@12
+;WEP
+WSANSPIoctl@32
+;WSApSetPostRoutine
+WSCUpdateProvider@20
+WSCWriteNameSpaceOrder@8
+freeaddrinfo@4
+getaddrinfo@16
+getnameinfo@28
 
 ; EOF

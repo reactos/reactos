@@ -17,7 +17,7 @@ LogItem=LogItem@8
 ;RepairStartMenuItems
 ;ReportError
 ;ScsiClassInstaller
-;SetupChangeFontSize
+SetupChangeFontSize=SetupChangeFontSize@8
 ;SetupChangeLocale
 ;SetupCreateOptionalComponentsPage
 ;SetupInfObjectInstallActionW

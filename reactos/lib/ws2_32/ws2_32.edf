@@ -112,5 +112,13 @@ sendto=sendto@24
 setsockopt=setsockopt@20
 shutdown=shutdown@8
 socket=socket@12
+;WEP
+WSANSPIoctl=WSANSPIoctl@32
+;WSApSetPostRoutine
+WSCUpdateProvider=WSCUpdateProvider@20
+WSCWriteNameSpaceOrder=WSCWriteNameSpaceOrder@8
+freeaddrinfo=freeaddrinfo@4
+getaddrinfo=getaddrinfo@16
+getnameinfo=getnameinfo@28
 
 ; EOF

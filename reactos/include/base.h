@@ -400,6 +400,75 @@ typedef enum _SID_NAME_USE {
 /*
    Definitions for callback procedures
 */
+typedef enum {
+
+    WinNullSid                                  = 0,
+    WinWorldSid                                 = 1,
+    WinLocalSid                                 = 2,
+    WinCreatorOwnerSid                          = 3,
+    WinCreatorGroupSid                          = 4,
+    WinCreatorOwnerServerSid                    = 5,
+    WinCreatorGroupServerSid                    = 6,
+    WinNtAuthoritySid                           = 7,
+    WinDialupSid                                = 8,
+    WinNetworkSid                               = 9,
+    WinBatchSid                                 = 10,
+    WinInteractiveSid                           = 11,
+    WinServiceSid                               = 12,
+    WinAnonymousSid                             = 13,
+    WinProxySid                                 = 14,
+    WinEnterpriseControllersSid                 = 15,
+    WinSelfSid                                  = 16,
+    WinAuthenticatedUserSid                     = 17,
+    WinRestrictedCodeSid                        = 18,
+    WinTerminalServerSid                        = 19,
+    WinRemoteLogonIdSid                         = 20,
+    WinLogonIdsSid                              = 21,
+    WinLocalSystemSid                           = 22,
+    WinLocalServiceSid                          = 23,
+    WinNetworkServiceSid                        = 24,
+    WinBuiltinDomainSid                         = 25,
+    WinBuiltinAdministratorsSid                 = 26,
+    WinBuiltinUsersSid                          = 27,
+    WinBuiltinGuestsSid                         = 28,
+    WinBuiltinPowerUsersSid                     = 29,
+    WinBuiltinAccountOperatorsSid               = 30,
+    WinBuiltinSystemOperatorsSid                = 31,
+    WinBuiltinPrintOperatorsSid                 = 32,
+    WinBuiltinBackupOperatorsSid                = 33,
+    WinBuiltinReplicatorSid                     = 34,
+    WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+    WinBuiltinRemoteDesktopUsersSid             = 36,
+    WinBuiltinNetworkConfigurationOperatorsSid  = 37,
+    WinAccountAdministratorSid                  = 38,
+    WinAccountGuestSid                          = 39,
+    WinAccountKrbtgtSid                         = 40,
+    WinAccountDomainAdminsSid                   = 41,
+    WinAccountDomainUsersSid                    = 42,
+    WinAccountDomainGuestsSid                   = 43,
+    WinAccountComputersSid                      = 44,
+    WinAccountControllersSid                    = 45,
+    WinAccountCertAdminsSid                     = 46,
+    WinAccountSchemaAdminsSid                   = 47,
+    WinAccountEnterpriseAdminsSid               = 48,
+    WinAccountPolicyAdminsSid                   = 49,
+    WinAccountRasAndIasServersSid               = 50,
+    WinNTLMAuthenticationSid                    = 51,
+    WinDigestAuthenticationSid                  = 52,
+    WinSChannelAuthenticationSid                = 53,
+    WinThisOrganizationSid                      = 54,
+    WinOtherOrganizationSid                     = 55,
+    WinBuiltinIncomingForestTrustBuildersSid    = 56,
+    WinBuiltinPerfMonitoringUsersSid            = 57,
+    WinBuiltinPerfLoggingUsersSid               = 58,
+    WinBuiltinAuthorizationAccessSid            = 59,
+    WinBuiltinTerminalServerLicenseServersSid   = 60,
+
+} WELL_KNOWN_SID_TYPE;
+typedef enum _AUDIT_EVENT_TYPE {
+    AuditEventObjectAccess,
+    AuditEventDirectoryServiceAccess
+} AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
 typedef int CALLBACK (*BFFCALLBACK) (HWND, UINT, LPARAM, LPARAM);
 typedef UINT CALLBACK (*LPCCHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef UINT CALLBACK (*LPCFHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
@@ -458,6 +527,7 @@ typedef int (CALLBACK* EMFPLAYPROC)( HDC hdc, INT iFunction, HANDLE hPageQuery )
 typedef WINBOOL CALLBACK (*CALINFO_ENUMPROCW) (LPWSTR);
 typedef WINBOOL CALLBACK (*PHANDLER_ROUTINE) (DWORD);
 typedef VOID CALLBACK (*LPHANDLER_FUNCTION) (DWORD);
+typedef DWORD CALLBACK (*LPHANDLER_FUNCTION_EX)(DWORD,DWORD,LPVOID,LPVOID);
 typedef UINT CALLBACK (*PFNGETPROFILEPATHA) (LPCSTR, LPSTR, UINT);
 typedef UINT CALLBACK (*PFNGETPROFILEPATHW) (LPCWSTR, LPWSTR, UINT);
 typedef UINT CALLBACK (*PFNRECONCILEPROFILEA) (LPCSTR, LPCSTR, DWORD);
@@ -611,6 +681,9 @@ VOID
     ULONG_PTR dwParam
     );
 
+typedef DWORD (CALLBACK *PFE_EXPORT_FUNC)(PBYTE pbData,PVOID pvCallbackContext,ULONG ulLength);
+
+typedef DWORD (CALLBACK *PFE_IMPORT_FUNC)(PBYTE pbData,PVOID pvCallbackContext,PULONG ulLength);
 typedef VOID (CALLBACK *PFIBER_START_ROUTINE)(
     LPVOID lpFiberParameter
     );

@@ -1,4 +1,4 @@
-; $Id: fmifs.def,v 1.4 1999/10/26 19:47:02 ea Exp $
+; $Id: fmifs.def,v 1.5 2003/09/08 09:56:56 weiden Exp $
 ;
 ; fmifs.def
 ;
@@ -13,11 +13,19 @@
 LIBRARY fmifs.dll
 EXPORTS
 Chkdsk@36
+;ChkdskEx
+;ComputeFmMediaType
 DiskCopy@0
 EnableVolumeCompression@8
 Extend@0
 Format@0
 FormatEx@28
+;FormatEx2
 InitializeFmIfs@0
+;QueryAvailableFileSystemFormat
+;QueryDeviceInformation
+;QueryDeviceInformationByHandle
+;QueryFileSystemName
+;QueryLatestFileSystemVersion
 QuerySupportedMedia@0
 SetLabel@0

@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.5 2003/02/02 19:24:44 hyperion Exp $
+/* $Id: lsa.c,v 1.6 2003/09/08 09:56:56 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,124 +12,389 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
-
+#include <ntsecapi.h>
 /*
-LsaClearAuditLog
-LsaClose
-LsaDelete
-LsaFreeMemory
-*/
-NTSTATUS STDCALL _LsaStub1(ULONG_PTR Unknown0)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,PLSA_OBJECT_ATTRIBUTES lsaoa,ACCESS_MASK access,PLSA_HANDLE lsah)
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
 /*
-LsaAddPrivilegesToAccount
-LsaDeleteTrustedDomain
-LsaEnumeratePrivilegesOfAccount
-LsaGetQuotasForAccount
-LsaGetSystemAccessAccount
-LsaGetUserName
-LsaSetQuotasForAccount
-LsaSetSystemAccessAccount
-*/
-NTSTATUS STDCALL _LsaStub2(ULONG_PTR Unknown0, ULONG_PTR Unknown1)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryInformationPolicy(LSA_HANDLE lsah,POLICY_INFORMATION_CLASS pic,PVOID* pv)
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
 /*
-LsaLookupPrivilegeName
-LsaLookupPrivilegeValue
-LsaQueryInfoTrustedDomain
-LsaQueryInformationPolicy
-LsaQuerySecurityObject
-LsaRemovePrivilegesFromAccount
-LsaRetrievePrivateData
-LsaSetInformationPolicy
-LsaSetInformationTrustedDomain
-LsaSetSecret
-LsaSetSecurityObject
-LsaStorePrivateData
-*/
-NTSTATUS STDCALL _LsaStub3
-(
- ULONG_PTR Unknown0,
- ULONG_PTR Unknown1,
- ULONG_PTR Unknown2
-)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaFreeMemory(PVOID pv)
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
 /*
-LsaAddAccountRights
-LsaCreateAccount
-LsaCreateSecret
-LsaCreateTrustedDomain
-LsaEnumerateAccountRights
-LsaEnumerateAccountsWithUserRight
-LsaLookupPrivilegeDisplayName
-LsaOpenAccount
-LsaOpenPolicy
-LsaOpenSecret
-LsaOpenTrustedDomain
-LsaSetTrustedDomainInformation
-*/
-NTSTATUS STDCALL _LsaStub4
-(
- ULONG_PTR Unknown0,
- ULONG_PTR Unknown1,
- ULONG_PTR Unknown2,
- ULONG_PTR Unknown3
-)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaClose(LSA_HANDLE ObjectHandle)
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
 /*
-LsaEnumerateAccounts
-LsaEnumeratePrivileges
-LsaEnumerateTrustedDomains
-LsaLookupNames
-LsaLookupSids
-LsaQuerySecret
-LsaQueryTrustedDomainInfo
-LsaRemoveAccountRights
-*/
-NTSTATUS STDCALL _LsaStub5
-(
- ULONG_PTR Unknown0,
- ULONG_PTR Unknown1,
- ULONG_PTR Unknown2,
- ULONG_PTR Unknown3,
- ULONG_PTR Unknown4
-)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaAddAccountRights(
+    LSA_HANDLE PolicyHandle,
+    PSID AccountSid,
+    PLSA_UNICODE_STRING UserRights,
+    ULONG CountOfRights
+    )
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
 /*
-LsaICLookupNames
-LsaICLookupSids
-*/
-NTSTATUS STDCALL _LsaStub8
-(
- ULONG_PTR Unknown0,
- ULONG_PTR Unknown1,
- ULONG_PTR Unknown2,
- ULONG_PTR Unknown3,
- ULONG_PTR Unknown4,
- ULONG_PTR Unknown5,
- ULONG_PTR Unknown6,
- ULONG_PTR Unknown7
-)
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaCreateTrustedDomainEx(
+    LSA_HANDLE PolicyHandle,
+    PTRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
+    PTRUSTED_DOMAIN_AUTH_INFORMATION AuthenticationInformation,
+    ACCESS_MASK DesiredAccess,
+    PLSA_HANDLE TrustedDomainHandle
+    )
 {
- return STATUS_NOT_IMPLEMENTED;
+  return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaDeleteTrustedDomain(
+    LSA_HANDLE PolicyHandle,
+    PSID TrustedDomainSid
+    )
+{
+  return(FALSE);
+}
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaEnumerateAccountRights(
+    LSA_HANDLE PolicyHandle,
+    PSID AccountSid,
+    PLSA_UNICODE_STRING *UserRights,
+    PULONG CountOfRights
+    )
+{
+  return(FALSE);
+}
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaEnumerateAccountsWithUserRight(
+    LSA_HANDLE PolicyHandle,
+    OPTIONAL PLSA_UNICODE_STRING UserRights,
+    PVOID *EnumerationBuffer,
+    PULONG CountReturned
+    )
+{
+  return(FALSE);
+}
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaEnumerateTrustedDomains(
+    LSA_HANDLE PolicyHandle,
+    PLSA_ENUMERATION_HANDLE EnumerationContext,
+    PVOID *Buffer,
+    ULONG PreferedMaximumLength,
+    PULONG CountReturned
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaEnumerateTrustedDomainsEx(
+    LSA_HANDLE PolicyHandle,
+    PLSA_ENUMERATION_HANDLE EnumerationContext,
+    PVOID *Buffer,
+    ULONG PreferedMaximumLength,
+    PULONG CountReturned
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaLookupNames(
+    LSA_HANDLE PolicyHandle,
+    ULONG Count,
+    PLSA_UNICODE_STRING Names,
+    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+    PLSA_TRANSLATED_SID *Sids
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaLookupNames2(
+    LSA_HANDLE PolicyHandle,
+    ULONG Flags,
+    ULONG Count,
+    PLSA_UNICODE_STRING Names,
+    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+    PLSA_TRANSLATED_SID2 *Sids
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaLookupSids(
+    LSA_HANDLE PolicyHandle,
+    ULONG Count,
+    PSID *Sids,
+    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+    PLSA_TRANSLATED_NAME *Names
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaOpenTrustedDomainByName(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    ACCESS_MASK DesiredAccess,
+    PLSA_HANDLE TrustedDomainHandle
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryDomainInformationPolicy(
+    LSA_HANDLE PolicyHandle,
+    POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
+    PVOID *Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryForestTrustInformation(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    PLSA_FOREST_TRUST_INFORMATION * ForestTrustInfo
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryTrustedDomainInfoByName(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    TRUSTED_INFORMATION_CLASS InformationClass,
+    PVOID *Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaQueryTrustedDomainInfo(
+    LSA_HANDLE PolicyHandle,
+    PSID TrustedDomainSid,
+    TRUSTED_INFORMATION_CLASS InformationClass,
+    PVOID *Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaRemoveAccountRights(
+    LSA_HANDLE PolicyHandle,
+    PSID AccountSid,
+    WINBOOL AllRights,
+    PLSA_UNICODE_STRING UserRights,
+    ULONG CountOfRights
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaRetrievePrivateData(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING KeyName,
+    PLSA_UNICODE_STRING * PrivateData
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaSetDomainInformationPolicy(
+    LSA_HANDLE PolicyHandle,
+    POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
+    PVOID Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaSetInformationPolicy(
+    LSA_HANDLE PolicyHandle,
+    POLICY_INFORMATION_CLASS InformationClass,
+    PVOID Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaSetForestTrustInformation(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
+    WINBOOL CheckOnly,
+    PLSA_FOREST_TRUST_COLLISION_INFORMATION * CollisionInfo
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaSetTrustedDomainInfoByName(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    TRUSTED_INFORMATION_CLASS InformationClass,
+    PVOID Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaSetTrustedDomainInformation(
+    LSA_HANDLE PolicyHandle,
+    PSID TrustedDomainSid,
+    TRUSTED_INFORMATION_CLASS InformationClass,
+    PVOID Buffer
+    )
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaStorePrivateData(
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING KeyName,
+    PLSA_UNICODE_STRING PrivateData
+    )
+{
+  return(FALSE);
+}

@@ -413,6 +413,19 @@ typedef struct tagCREATESTRUCTW {
 typedef_tident(CREATESTRUCT)
 typedef_tident(LPCREATESTRUCT)
 
+typedef struct tagHW_PROFILE_INFOA {
+    DWORD  dwDockInfo;
+    CHAR   szHwProfileGuid[HW_PROFILE_GUIDLEN];
+    CHAR   szHwProfileName[MAX_PROFILE_LEN];
+} HW_PROFILE_INFOA, *LPHW_PROFILE_INFOA;
+typedef struct tagHW_PROFILE_INFOW {
+    DWORD  dwDockInfo;
+    WCHAR  szHwProfileGuid[HW_PROFILE_GUIDLEN];
+    WCHAR  szHwProfileName[MAX_PROFILE_LEN];
+} HW_PROFILE_INFOW, *LPHW_PROFILE_INFOW;
+
+typedef_tident(HW_PROFILE_INFO)
+typedef_tident(LPHW_PROFILE_INFO)
 typedef struct _tagDATETIME {
     WORD    year;
     WORD    month;
@@ -576,6 +589,12 @@ typedef struct {
 
 typedef_tident(CHOOSECOLOR)
 typedef_tident(LPCHOOSECOLOR)
+
+typedef struct _OBJECT_TYPE_LIST {
+    WORD   Level;
+    WORD   Sbz;
+    GUID *ObjectType;
+} OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 typedef struct tagLOGFONTA {
   LONG lfHeight;
@@ -1010,6 +1029,46 @@ typedef struct _currencyfmtW {
 } CURRENCYFMTW;
 
 typedef_tident(CURRENCYFMT)
+
+typedef struct _SERVICE_DESCRIPTIONA {
+    LPSTR       lpDescription;
+} SERVICE_DESCRIPTIONA, *LPSERVICE_DESCRIPTIONA;
+typedef struct _SERVICE_DESCRIPTIONW {
+    LPWSTR      lpDescription;
+} SERVICE_DESCRIPTIONW, *LPSERVICE_DESCRIPTIONW;
+typedef_tident(SERVICE_DESCRIPTION)
+typedef_tident(LPSERVICE_DESCRIPTION)
+
+typedef enum _SC_ACTION_TYPE {
+    SC_ACTION_NONE = 0,
+    SC_ACTION_RESTART = 1,
+    SC_ACTION_REBOOT = 2,
+    SC_ACTION_RUN_COMMAND = 3
+} SC_ACTION_TYPE;
+
+typedef struct _SC_ACTION {
+    SC_ACTION_TYPE  Type;
+    DWORD           Delay;
+} SC_ACTION, *LPSC_ACTION;
+
+typedef struct _SERVICE_FAILURE_ACTIONSA {
+    DWORD       dwResetPeriod;
+    LPSTR       lpRebootMsg;
+    LPSTR       lpCommand;
+    DWORD       cActions;
+    SC_ACTION * lpsaActions;
+} SERVICE_FAILURE_ACTIONSA, *LPSERVICE_FAILURE_ACTIONSA;
+
+typedef struct _SERVICE_FAILURE_ACTIONSW {
+    DWORD       dwResetPeriod;
+    LPWSTR      lpRebootMsg;
+    LPWSTR      lpCommand;
+    DWORD       cActions;
+    SC_ACTION * lpsaActions;
+} SERVICE_FAILURE_ACTIONSW, *LPSERVICE_FAILURE_ACTIONSW;
+
+typedef_tident(SERVICE_FAILURE_ACTIONS)
+typedef_tident(LPSERVICE_FAILURE_ACTIONS)
 
 typedef struct tagACTCTXA {
     ULONG       cbSize;
@@ -2283,6 +2342,18 @@ typedef struct _SERVICE_STATUS {
   DWORD dwWaitHint;
 } SERVICE_STATUS, *LPSERVICE_STATUS;
 
+typedef struct _SERVICE_STATUS_PROCESS {
+    DWORD   dwServiceType;
+    DWORD   dwCurrentState;
+    DWORD   dwControlsAccepted;
+    DWORD   dwWin32ExitCode;
+    DWORD   dwServiceSpecificExitCode;
+    DWORD   dwCheckPoint;
+    DWORD   dwWaitHint;
+    DWORD   dwProcessId;
+    DWORD   dwServiceFlags;
+} SERVICE_STATUS_PROCESS, *LPSERVICE_STATUS_PROCESS;
+
 typedef struct _ENUM_SERVICE_STATUSA {
   LPSTR lpServiceName;
   LPSTR lpDisplayName;
@@ -2297,6 +2368,21 @@ typedef struct _ENUM_SERVICE_STATUSW {
 
 typedef_tident(ENUM_SERVICE_STATUS)
 typedef_tident(LPENUM_SERVICE_STATUS)
+
+typedef struct _ENUM_SERVICE_STATUS_PROCESSA {
+    LPSTR                     lpServiceName;
+    LPSTR                     lpDisplayName;
+    SERVICE_STATUS_PROCESS    ServiceStatusProcess;
+} ENUM_SERVICE_STATUS_PROCESSA, *LPENUM_SERVICE_STATUS_PROCESSA;
+
+typedef struct _ENUM_SERVICE_STATUS_PROCESSW {
+    LPWSTR                    lpServiceName;
+    LPWSTR                    lpDisplayName;
+    SERVICE_STATUS_PROCESS    ServiceStatusProcess;
+} ENUM_SERVICE_STATUS_PROCESSW, *LPENUM_SERVICE_STATUS_PROCESSW;
+
+typedef_tident(ENUM_SERVICE_STATUS_PROCESS)
+typedef_tident(LPENUM_SERVICE_STATUS_PROCESS)
 
 typedef struct tagENUMLOGFONTA {
   LOGFONTA elfLogFont;
@@ -3665,7 +3751,7 @@ typedef struct _SERVICE_INFOA {
   LPSTR    lpMachineName;
   LPSERVICE_ADDRESSES lpServiceAddress;
   BLOB ServiceSpecificInfo;
-} SERVICE_INFOA;
+} SERVICE_INFOA, *LPSERVICE_INFOA;
 
 typedef struct _SERVICE_INFOW {
   LPGUID   lpServiceType;
@@ -3678,9 +3764,10 @@ typedef struct _SERVICE_INFOW {
   LPWSTR   lpMachineName;
   LPSERVICE_ADDRESSES lpServiceAddress;
   BLOB ServiceSpecificInfo;
-} SERVICE_INFOW;
+} SERVICE_INFOW, *LPSERVICE_INFOW;
 
 typedef_tident(SERVICE_INFO);
+typedef_tident(LPSERVICE_INFO);
 
 typedef struct _NS_SERVICE_INFOA {
   DWORD         dwNameSpace;

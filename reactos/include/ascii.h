@@ -37,15 +37,176 @@ extern "C" {
 
 WINBOOL
 STDCALL
-IMPSetIMEA( IN HWND hwnd, IN LPIMEPROA ime);
+BackupEventLogA (
+ HANDLE hEventLog,
+ LPCSTR lpBackupFileName
+ );
 
 WINBOOL
 STDCALL
-IMPQueryIMEA( IN OUT LPIMEPROA ime);
+ClearEventLogA (
+ HANDLE hEventLog,
+ LPCSTR lpBackupFileName
+ );
 
 WINBOOL
 STDCALL
-IMPGetIMEA( IN HWND hwnd, OUT LPIMEPROA ime);
+CreateProcessAsUserA (
+ HANDLE hToken,
+ LPCSTR lpApplicationName,
+ LPSTR lpCommandLine,
+ LPSECURITY_ATTRIBUTES lpProcessAttributes,
+ LPSECURITY_ATTRIBUTES lpThreadAttributes,
+ WINBOOL bInheritHandles,
+ DWORD dwCreationFlags,
+ LPVOID lpEnvironment,
+ LPCSTR lpCurrentDirectory,
+ LPSTARTUPINFOA lpStartupInfo,
+ LPPROCESS_INFORMATION lpProcessInformation
+ );
+
+WINBOOL
+STDCALL
+DecryptFileA(
+ LPCSTR lpFileName,
+ DWORD dwReserved
+ );
+
+WINBOOL
+STDCALL
+EncryptFileA(
+ LPCSTR lpFileName
+ );
+
+WINBOOL
+STDCALL
+FileEncryptionStatusA(
+ LPCSTR lpFileName,
+ LPDWORD lpStatus
+ );
+
+WINBOOL
+STDCALL
+GetCurrentHwProfileA (
+ LPHW_PROFILE_INFOA lpHwProfileInfo
+ );
+
+WINBOOL
+STDCALL
+LogonUserA (
+ LPCSTR lpszUsername,
+ LPCSTR lpszDomain,
+ LPCSTR lpszPassword,
+ DWORD dwLogonType,
+ DWORD dwLogonProvider,
+ PHANDLE phToken
+ );
+
+WINBOOL
+STDCALL
+LogonUserExA (
+ LPCSTR lpszUsername,
+ LPCSTR lpszDomain,
+ LPCSTR lpszPassword,
+ DWORD dwLogonType,
+ DWORD dwLogonProvider,
+ PHANDLE phToken ,
+ PSID *ppLogonSid ,
+ PVOID *ppProfileBuffer ,
+ LPDWORD pdwProfileLength ,
+ PQUOTA_LIMITS pQuotaLimits
+ );
+
+HANDLE
+STDCALL
+OpenBackupEventLogA (
+ LPCSTR lpUNCServerName,
+ LPCSTR lpFileName
+ );
+
+DWORD
+STDCALL
+OpenEncryptedFileRawA(
+ LPCSTR lpFileName,
+ ULONG ulFlags,
+ PVOID * pvContext
+ );
+
+HANDLE
+STDCALL
+OpenEventLogA (
+ LPCSTR lpUNCServerName,
+ LPCSTR lpSourceName
+ );
+
+WINBOOL
+STDCALL
+ReadEventLogA (
+ HANDLE hEventLog,
+ DWORD dwReadFlags,
+ DWORD dwRecordOffset,
+ LPVOID lpBuffer,
+ DWORD nNumberOfBytesToRead,
+ DWORD *pnBytesRead,
+ DWORD *pnMinNumberOfBytesNeeded
+ );
+
+WINBOOL
+STDCALL
+ChangeServiceConfig2A(
+    SC_HANDLE    hService,
+    DWORD        dwInfoLevel,
+    LPVOID       lpInfo
+    );
+
+WINBOOL
+STDCALL
+EnumServicesStatusExA(
+    SC_HANDLE                  hSCManager,
+    SC_ENUM_TYPE               InfoLevel,
+    DWORD                      dwServiceType,
+    DWORD                      dwServiceState,
+    LPBYTE                     lpServices,
+    DWORD                      cbBufSize,
+    LPDWORD                    pcbBytesNeeded,
+    LPDWORD                    lpServicesReturned,
+    LPDWORD                    lpResumeHandle,
+    LPCSTR                   pszGroupName
+    );
+
+WINBOOL
+STDCALL
+QueryServiceConfig2A(
+    SC_HANDLE   hService,
+    DWORD       dwInfoLevel,
+    LPBYTE      lpBuffer,
+    DWORD       cbBufSize,
+    LPDWORD     pcbBytesNeeded
+    );
+
+SERVICE_STATUS_HANDLE
+STDCALL
+RegisterServiceCtrlHandlerExA(
+    LPCSTR                lpServiceName,
+    LPHANDLER_FUNCTION_EX   lpHandlerProc,
+    LPVOID                  lpContext
+    );
+
+LRESULT 
+STDCALL
+SendIMEMessageExA(HWND hwnd, LPARAM lparam);
+
+WINBOOL
+STDCALL
+IMPSetIMEA( HWND hwnd, LPIMEPROA ime);
+
+WINBOOL
+STDCALL
+IMPQueryIMEA( LPIMEPROA ime);
+
+WINBOOL
+STDCALL
+IMPGetIMEA( HWND hwnd, LPIMEPROA ime);
 
 WINBOOL
 STDCALL
@@ -58,24 +219,24 @@ SetCalendarInfoA(
 WINBOOL
 STDCALL
 EnumUILanguagesA(
-    IN UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
-    IN DWORD                dwFlags,
-    IN LONG_PTR             lParam);
+    UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
+    DWORD                dwFlags,
+    LONG_PTR             lParam);
 
 WINBOOL
 STDCALL
 EnumLanguageGroupLocalesA(
-    IN LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
-    IN LGRPID                    LanguageGroup,
-    IN DWORD                     dwFlags,
-    IN LONG_PTR                  lParam);
+    LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
+    LGRPID                    LanguageGroup,
+    DWORD                     dwFlags,
+    LONG_PTR                  lParam);
 
 WINBOOL
 STDCALL
 EnumSystemLanguageGroupsA(
-    IN LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
-    IN DWORD                   dwFlags,
-    IN LONG_PTR                lParam);
+    LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
+    DWORD                   dwFlags,
+    LONG_PTR                lParam);
 
 int
 STDCALL
@@ -89,17 +250,17 @@ GetGeoInfoA(
 WINBOOL
 STDCALL
 EnumDateFormatsExA(
-    IN DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
-    IN LCID                Locale,
-    IN DWORD               dwFlags);
+    DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
+    LCID                Locale,
+    DWORD               dwFlags);
 
 WINBOOL
 STDCALL
 EnumCalendarInfoExA(
-    IN CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
-    IN LCID                Locale,
-    IN CALID               Calendar,
-    IN CALTYPE             CalType);
+    CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
+    LCID                Locale,
+    CALID               Calendar,
+    CALTYPE             CalType);
 
 int
 STDCALL
@@ -114,9 +275,9 @@ GetCalendarInfoA(
 WINBOOL
 STDCALL
 GetCPInfoExA(
-    IN UINT          CodePage,
-    IN DWORD         dwFlags,
-    OUT LPCPINFOEXA  lpCPInfoEx);
+    UINT          CodePage,
+    DWORD         dwFlags,
+    LPCPINFOEXA  lpCPInfoEx);
 
 WINBOOL
 STDCALL
@@ -3443,11 +3604,6 @@ DdeQueryStringA (DWORD, HSZ, char *, DWORD, int);
 
 /* end of stuff from ddeml.h in old Cygnus headers */
 /* ----------------------------------------------- */
-
-WINBOOL STDCALL LogonUserA (LPSTR, LPSTR, LPSTR, DWORD, DWORD, HANDLE *);
-WINBOOL STDCALL CreateProcessAsUserA (HANDLE, LPCSTR, LPSTR,
-	SECURITY_ATTRIBUTES*, SECURITY_ATTRIBUTES*, WINBOOL, DWORD, LPVOID,
-        LPCSTR, STARTUPINFOA*, PROCESS_INFORMATION*);
 
 DWORD WINAPI
 SHGetFileInfoA (LPCSTR, DWORD, SHFILEINFO FAR *, UINT, UINT);

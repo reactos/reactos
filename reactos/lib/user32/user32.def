@@ -571,8 +571,8 @@ ScrollWindow@20
 ScrollWindowEx@32
 SendDlgItemMessageA@20
 SendDlgItemMessageW@20
-;SendIMEMessageExA
-;SendIMEMessageExW
+SendIMEMessageExA@8
+SendIMEMessageExW@8
 SendInput@12
 SendMessageA@16
 SendMessageCallbackA@24

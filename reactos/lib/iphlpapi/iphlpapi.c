@@ -13,9 +13,11 @@
 #include <tchar.h>
 #include <time.h>
 
+#include <winsock2.h>
 #include <iptypes.h>
 #include <ipexport.h>
 #include <iphlpapi.h>
+#include <icmpapi.h>
 
 #include "debug.h"
 //#include "trace.h"
@@ -37,7 +39,7 @@ DWORD DebugTraceLevel = MAX_TRACE;
 //VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 
-BOOL
+WINBOOL
 EXPORT
 DllMain(HANDLE hInstDll,
         ULONG dwReason,
@@ -69,7 +71,7 @@ DllMain(HANDLE hInstDll,
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL
 AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PULONG NTEInstance)
 {
     UNIMPLEMENTED
@@ -81,7 +83,7 @@ AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PU
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL
 SetIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
     UNIMPLEMENTED
@@ -93,7 +95,7 @@ SetIpNetEntry(PMIB_IPNETROW pArpEntry)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
     UNIMPLEMENTED
@@ -105,7 +107,7 @@ CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 {
     return 0;
@@ -116,7 +118,7 @@ GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
 	LONG lErr;
@@ -256,7 +258,7 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
  * @implemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
 {
     DWORD result = NO_ERROR;
@@ -294,7 +296,7 @@ GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
  * @implemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
 {
     DWORD result = ERROR_SUCCESS;
@@ -348,7 +350,7 @@ GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
  * @implemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 {
   DWORD result = ERROR_SUCCESS;
@@ -422,7 +424,7 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetTcpStatistics(PMIB_TCPSTATS pStats)
 {
     DWORD result = NO_ERROR;
@@ -437,8 +439,8 @@ GetTcpStatistics(PMIB_TCPSTATS pStats)
  * @unimplemented
  */
 DWORD
-WINAPI
-GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
+STDCALL 
+GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, WINBOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -452,7 +454,7 @@ GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 GetUdpStatistics(PMIB_UDPSTATS pStats)
 {
     DWORD result = NO_ERROR;
@@ -467,8 +469,8 @@ GetUdpStatistics(PMIB_UDPSTATS pStats)
  * @unimplemented
  */
 DWORD
-WINAPI
-GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
+STDCALL 
+GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, WINBOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
@@ -482,7 +484,7 @@ GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL 
 FlushIpNetTable(DWORD dwIfIndex)
 {
     DWORD result = NO_ERROR;
@@ -504,7 +506,7 @@ FlushIpNetTable(DWORD dwIfIndex)
  *
  */
 DWORD
-WINAPI 
+STDCALL  
 GetIfEntry(PMIB_IFROW pIfRow)
 {
     DWORD result = NO_ERROR;
@@ -529,12 +531,515 @@ GetIfEntry(PMIB_IFROW pIfRow)
  *
  */
 DWORD
-WINAPI
-GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
+STDCALL 
+GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, WINBOOL bOrder)
 {
     DWORD result = NO_ERROR;
 
     return result;
 }
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpAddrTable(PMIB_IPADDRTABLE pIpAddrTable, PULONG pdwSize,
+ WINBOOL bOrder)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize,
+ WINBOOL bOrder)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable,
+ PULONG pdwSize, WINBOOL bOrder)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpStatistics(PMIB_IPSTATS pStats)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIcmpStatistics(PMIB_ICMP pStats)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetTcpStatisticsEx(PMIB_TCPSTATS pStats, DWORD dwFamily)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetUdpStatisticsEx(PMIB_UDPSTATS pStats, DWORD dwFamily)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetIfEntry(PMIB_IFROW pIfRow)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL DeleteIpForwardEntry(PMIB_IPFORWARDROW pRoute)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetIpStatistics(PMIB_IPSTATS pIpStats)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetIpTTL(UINT nTTL)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL CreateIpNetEntry(PMIB_IPNETROW pArpEntry)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL DeleteIpNetEntry(PMIB_IPNETROW pArpEntry)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL CreateProxyArpEntry(DWORD dwAddress, DWORD dwMask,
+ DWORD dwIfIndex)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL DeleteProxyArpEntry(DWORD dwAddress, DWORD dwMask,
+ DWORD dwIfIndex)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetTcpEntry(PMIB_TCPROW pTcpRow)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetUniDirectionalAdapterInfo(
+ PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIPIfInfo, PULONG dwOutBufLen)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetBestInterface(IPAddr dwDestAddr, PDWORD pdwBestIfIndex)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr,
+ PMIB_IPFORWARDROW   pBestRoute)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL NotifyRouteChange(PHANDLE Handle, LPOVERLAPPED overlapped)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL DeleteIPAddress(ULONG NTEContext)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetPerAdapterInfo(ULONG IfIndex,
+ PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SendARP(IPAddr DestIP, IPAddr SrcIP, PULONG pMacAddr,
+ PULONG  PhyAddrLen)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount,
+ ULONG  MaxHops, PULONG RTT)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetFriendlyIfIndex(DWORD IfIndex)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL EnableRouter(HANDLE* pHandle, OVERLAPPED* pOverlapped)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL UnenableRouter(OVERLAPPED* pOverlapped, LPDWORD lpdwEnableCount)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,WINBOOL bOrder,HANDLE hHeap,DWORD dwFlags)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL  IcmpCreateFile(
+    VOID
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL  Icmp6CreateFile(
+    VOID
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL  IcmpCloseHandle(
+    HANDLE  IcmpHandle
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL  IcmpSendEcho(
+    HANDLE                 IcmpHandle,
+    IPAddr                 DestinationAddress,
+    LPVOID                 RequestData,
+    WORD                   RequestSize,
+    PIP_OPTION_INFORMATION RequestOptions,
+    LPVOID                 ReplyBuffer,
+    DWORD                  ReplySize,
+    DWORD                  Timeout
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL 
+IcmpSendEcho2(
+    HANDLE                   IcmpHandle,
+    HANDLE                   Event,
+    FARPROC                  ApcRoutine,
+    PVOID                    ApcContext,
+    IPAddr                   DestinationAddress,
+    LPVOID                   RequestData,
+    WORD                     RequestSize,
+    PIP_OPTION_INFORMATION   RequestOptions,
+    LPVOID                   ReplyBuffer,
+    DWORD                    ReplySize,
+    DWORD                    Timeout
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL 
+Icmp6SendEcho2(
+    HANDLE                   IcmpHandle,
+    HANDLE                   Event,
+    FARPROC                  ApcRoutine,
+    PVOID                    ApcContext,
+    struct sockaddr_in6     *SourceAddress,
+    struct sockaddr_in6     *DestinationAddress,
+    LPVOID                   RequestData,
+    WORD                     RequestSize,
+    PIP_OPTION_INFORMATION   RequestOptions,
+    LPVOID                   ReplyBuffer,
+    DWORD                    ReplySize,
+    DWORD                    Timeout
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+IcmpParseReplies(
+    LPVOID                   ReplyBuffer,
+    DWORD                    ReplySize
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+Icmp6ParseReplies(
+    LPVOID                   ReplyBuffer,
+    DWORD                    ReplySize
+    )
+{
+    UNIMPLEMENTED
+    return 0L;
+}

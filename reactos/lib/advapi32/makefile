@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2003/08/07 04:03:22 royce Exp $
+# $Id: makefile,v 1.30 2003/09/08 09:56:56 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,6 +26,8 @@ MISC_OBJECTS=\
 	misc/dllmain.o	\
 	misc/shutdown.o	\
 	misc/sysfunc.o \
+	misc/crstubs.o \
+	misc/aclstubs.o \
 	misc/stubs.o
 
 REGISTRY_OBJECTS=\

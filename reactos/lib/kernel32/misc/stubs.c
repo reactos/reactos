@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.56 2003/08/29 09:34:52 gvg Exp $
+/* $Id: stubs.c,v 1.57 2003/09/08 09:56:56 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1034,8 +1034,8 @@ SetThreadLocale (
  */
 WINBOOL STDCALL
 SetSystemPowerState (
-    IN WINBOOL fSuspend,
-    IN WINBOOL fForce
+    WINBOOL fSuspend,
+    WINBOOL fForce
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1735,58 +1735,6 @@ InitializeCriticalSectionAndSpinCount(
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-InitializeSListHead (
-    PSLIST_HEADER ListHead
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-PSLIST_ENTRY
-STDCALL
-InterlockedFlushSList (
-    PSLIST_HEADER ListHead
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-PSLIST_ENTRY
-STDCALL
-InterlockedPopEntrySList (
-    IN PSLIST_HEADER ListHead
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-PSLIST_ENTRY
-STDCALL
-InterlockedPushEntrySList (
-    IN PSLIST_HEADER ListHead,
-    IN PSLIST_ENTRY ListEntry
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 WINBOOL
 STDCALL
 IsProcessInJob (
@@ -1884,19 +1832,6 @@ QueryActCtxW(
     PVOID pvBuffer,
     SIZE_T cbBuffer OPTIONAL,
     SIZE_T *pcbWrittenOrRequired OPTIONAL
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-USHORT
-STDCALL
-QueryDepthSList (
-    PSLIST_HEADER ListHead
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -2323,20 +2258,6 @@ WINBOOL
 STDCALL
 ZombifyActCtx(
     HANDLE hActCtx
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-STDCALL
-AddVectoredExceptionHandler(
-    ULONG FirstHandler,
-    PVECTORED_EXCEPTION_HANDLER VectoredHandler
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3217,8 +3138,8 @@ EnumSystemGeoID(
 WINBOOL
 STDCALL
 IsValidLanguageGroup(
-    IN LGRPID  LanguageGroup,
-    IN DWORD   dwFlags)
+    LGRPID  LanguageGroup,
+    DWORD   dwFlags)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3245,9 +3166,9 @@ SetCalendarInfoA(
 WINBOOL
 STDCALL
 EnumUILanguagesA(
-    IN UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
-    IN DWORD                dwFlags,
-    IN LONG_PTR             lParam)
+    UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
+    DWORD                dwFlags,
+    LONG_PTR             lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3259,10 +3180,10 @@ EnumUILanguagesA(
 WINBOOL
 STDCALL
 EnumLanguageGroupLocalesA(
-    IN LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
-    IN LGRPID                    LanguageGroup,
-    IN DWORD                     dwFlags,
-    IN LONG_PTR                  lParam)
+    LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
+    LGRPID                    LanguageGroup,
+    DWORD                     dwFlags,
+    LONG_PTR                  lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3274,9 +3195,9 @@ EnumLanguageGroupLocalesA(
 WINBOOL
 STDCALL
 EnumSystemLanguageGroupsA(
-    IN LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
-    IN DWORD                   dwFlags,
-    IN LONG_PTR                lParam)
+    LANGUAGEGROUP_ENUMPROCA lpLanguageGroupEnumProc,
+    DWORD                   dwFlags,
+    LONG_PTR                lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3304,9 +3225,9 @@ GetGeoInfoA(
 WINBOOL
 STDCALL
 EnumDateFormatsExA(
-    IN DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
-    IN LCID                Locale,
-    IN DWORD               dwFlags)
+    DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
+    LCID                Locale,
+    DWORD               dwFlags)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3318,10 +3239,10 @@ EnumDateFormatsExA(
 WINBOOL
 STDCALL
 EnumCalendarInfoExA(
-    IN CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
-    IN LCID                Locale,
-    IN CALID               Calendar,
-    IN CALTYPE             CalType)
+    CALINFO_ENUMPROCEXA lpCalInfoEnumProcEx,
+    LCID                Locale,
+    CALID               Calendar,
+    CALTYPE             CalType)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3350,9 +3271,9 @@ GetCalendarInfoA(
 WINBOOL
 STDCALL
 GetCPInfoExA(
-    IN UINT          CodePage,
-    IN DWORD         dwFlags,
-    OUT LPCPINFOEXA  lpCPInfoEx)
+    UINT          CodePage,
+    DWORD         dwFlags,
+    LPCPINFOEXA  lpCPInfoEx)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3379,9 +3300,9 @@ SetCalendarInfoW(
 WINBOOL
 STDCALL
 EnumUILanguagesW(
-    IN UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
-    IN DWORD                dwFlags,
-    IN LONG_PTR             lParam)
+    UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
+    DWORD                dwFlags,
+    LONG_PTR             lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3393,10 +3314,10 @@ EnumUILanguagesW(
 WINBOOL
 STDCALL
 EnumLanguageGroupLocalesW(
-    IN LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
-    IN LGRPID                    LanguageGroup,
-    IN DWORD                     dwFlags,
-    IN LONG_PTR                  lParam)
+    LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
+    LGRPID                    LanguageGroup,
+    DWORD                     dwFlags,
+    LONG_PTR                  lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3408,9 +3329,9 @@ EnumLanguageGroupLocalesW(
 WINBOOL
 STDCALL
 EnumSystemLanguageGroupsW(
-    IN LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
-    IN DWORD                   dwFlags,
-    IN LONG_PTR                lParam)
+    LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
+    DWORD                   dwFlags,
+    LONG_PTR                lParam)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3438,9 +3359,9 @@ GetGeoInfoW(
 WINBOOL
 STDCALL
 EnumDateFormatsExW(
-    IN DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
-    IN LCID                Locale,
-    IN DWORD               dwFlags)
+    DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
+    LCID                Locale,
+    DWORD               dwFlags)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3452,10 +3373,10 @@ EnumDateFormatsExW(
 WINBOOL
 STDCALL
 EnumCalendarInfoExW(
-    IN CALINFO_ENUMPROCEXW lpCalInfoEnumProcEx,
-    IN LCID                Locale,
-    IN CALID               Calendar,
-    IN CALTYPE             CalType)
+    CALINFO_ENUMPROCEXW lpCalInfoEnumProcEx,
+    LCID                Locale,
+    CALID               Calendar,
+    CALTYPE             CalType)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -3484,24 +3405,12 @@ GetCalendarInfoW(
 WINBOOL
 STDCALL
 GetCPInfoExW(
-    IN UINT          CodePage,
-    IN DWORD         dwFlags,
-    OUT LPCPINFOEXW  lpCPInfoEx)
+    UINT          CodePage,
+    DWORD         dwFlags,
+    LPCPINFOEXW  lpCPInfoEx)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-RtlCaptureContext (
-    PCONTEXT ContextRecord
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 /*
@@ -3514,6 +3423,24 @@ VerSetConditionMask(
         DWORD   TypeMask,
         BYTE    Condition
         )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.27 2003/08/28 19:37:00 gvg Exp $
+; $Id: kernel32.edf,v 1.28 2003/09/08 09:56:56 weiden Exp $
 ;
 ; kernel32.edf
 ;
@@ -42,7 +42,7 @@ AddConsoleAliasW=AddConsoleAliasW@12
 ;AddLocalAlternateComputerNameA
 ;AddLocalAlternateComputerNameW
 AddRefActCtx=AddRefActCtx@4
-AddVectoredExceptionHandler=AddVectoredExceptionHandler@8
+AddVectoredExceptionHandler=NTDLL.RtlAddVectoredExceptionHandler
 AllocateUserPhysicalPages=AllocateUserPhysicalPages@12
 AllocConsole=AllocConsole@0
 AreFileApisANSI=AreFileApisANSI@0
@@ -565,15 +565,15 @@ HeapWalk=HeapWalk@8
 InitAtomTable=InitAtomTable@4
 InitializeCriticalSection=InitializeCriticalSection@4
 InitializeCriticalSectionAndSpinCount=InitializeCriticalSectionAndSpinCount@8
-InitializeSListHead=InitializeSListHead@4
+InitializeSListHead=NTDLL.RtlInitializeSListHead@4
 InterlockedCompareExchange=InterlockedCompareExchange@12
 InterlockedDecrement=InterlockedDecrement@4
 InterlockedExchange=InterlockedExchange@8
 InterlockedExchangeAdd=InterlockedExchangeAdd@8
-InterlockedFlushSList=InterlockedFlushSList@4
+InterlockedFlushSList=NTDLL.RtlInterlockedFlushSList@4
 InterlockedIncrement=InterlockedIncrement@4
-InterlockedPopEntrySList=InterlockedPopEntrySList@4
-InterlockedPushEntrySList=InterlockedPushEntrySList@8
+InterlockedPopEntrySList=NTDLL.RtlInterlockedPopEntrySList@4
+InterlockedPushEntrySList=NTDLL.RtlInterlockedPushEntrySList@8
 InvalidateConsoleDIBits=InvalidateConsoleDIBits@8
 IsBadCodePtr=IsBadCodePtr@4
 IsBadHugeReadPtr=IsBadHugeReadPtr@8
@@ -682,7 +682,7 @@ Process32NextW=Process32NextW@8
 PulseEvent=PulseEvent@4
 PurgeComm=PurgeComm@8
 QueryActCtxW=QueryActCtxW@28
-QueryDepthSList=QueryDepthSList@4
+QueryDepthSList=NTDLL.RtlQueryDepthSList@4
 QueryDosDeviceA=QueryDosDeviceA@12
 QueryDosDeviceW=QueryDosDeviceW@12
 QueryInformationJobObject=QueryInformationJobObject@20
@@ -724,7 +724,7 @@ RemoveDirectoryA=RemoveDirectoryA@4
 RemoveDirectoryW=RemoveDirectoryW@4
 ;RemoveLocalAlternateComputerNameA
 ;RemoveLocalAlternateComputerNameW
-RemoveVectoredExceptionHandler=RemoveVectoredExceptionHandler@4
+RemoveVectoredExceptionHandler=NTDLL.RtlRemoveVectoredExceptionHandler@4
 ReplaceFile=ReplaceFileW@24
 ReplaceFileA=ReplaceFileA@24
 ReplaceFileW=ReplaceFileW@24
@@ -734,7 +734,7 @@ ResetEvent=ResetEvent@4
 ResetWriteWatch=ResetWriteWatch@8
 RestoreLastError=RestoreLastError@4
 ResumeThread=ResumeThread@4
-RtlCaptureContext=RtlCaptureContext@4
+RtlCaptureContext=NTDLL.RtlCaptureContext@4
 ;RtlCaptureStackBackTrace
 RtlFillMemory=NTDLL.RtlFillMemory
 RtlMoveMemory=NTDLL.RtlMoveMemory
@@ -788,7 +788,7 @@ SetConsoleTextAttribute=SetConsoleTextAttribute@8
 SetConsoleTitleA=SetConsoleTitleA@4
 SetConsoleTitleW=SetConsoleTitleW@4
 SetConsoleWindowInfo=SetConsoleWindowInfo@12
-SetCriticalSectionSpinCount=SetCriticalSectionSpinCount@8
+SetCriticalSectionSpinCount=NTDLL.RtlSetCriticalSectionSpinCount@8
 SetCurrentDirectoryA=SetCurrentDirectoryA@4
 SetCurrentDirectoryW=SetCurrentDirectoryW@4
 SetDefaultCommConfigA=SetDefaultCommConfigA@12
@@ -900,7 +900,7 @@ VDMConsoleOperation=VDMConsoleOperation@8
 VDMOperationStarted=VDMOperationStarted@4
 VerLanguageNameA=VerLanguageNameA@12
 VerLanguageNameW=VerLanguageNameW@12
-VerSetConditionMask=VerSetConditionMask@16
+VerSetConditionMask=NTDLL.VerSetConditionMask@16
 VerifyConsoleIoHandle=VerifyConsoleIoHandle@4
 VerifyVersionInfoA=VerifyVersionInfoA@16
 VerifyVersionInfoW=VerifyVersionInfoW@16

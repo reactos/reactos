@@ -3,15 +3,17 @@
 LIBRARY lz32.dll
 
 EXPORTS
-  CopyLZFile=CopyLZFile@8
-  GetExpandedNameA=GetExpandedNameA@8
-  GetExpandedNameW=GetExpandedNameW@8
-  LZClose=LZClose@4
-  LZCopy=LZCopy@8
-  LZDone=LZDone@0
-  LZInit=LZInit@4
-  LZOpenFileA=LZOpenFileA@12
-  LZOpenFileW=LZOpenFileW@12
-  LZRead=LZRead@12
-  LZSeek=LZSeek@12
-  LZStart=LZStart@0
+  CopyLZFile=KERNEL32.CopyLZFile
+  GetExpandedNameA=KERNEL32.GetExpandedNameA
+  GetExpandedNameW=KERNEL32.GetExpandedNameW
+  LZClose=KERNEL32.LZClose
+;LZCloseFile
+  LZCopy=KERNEL32.LZCopy
+;LZCreateFileW
+  LZDone=KERNEL32.LZDone
+  LZInit=KERNEL32.LZInit
+  LZOpenFileA=KERNEL32.LZOpenFileA
+  LZOpenFileW=KERNEL32.LZOpenFileW
+  LZRead=KERNEL32.LZRead
+  LZSeek=KERNEL32.LZSeek
+  LZStart=KERNEL32.LZStart

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2003/08/07 04:03:24 royce Exp $
+/* $Id: stubs.c,v 1.4 2003/09/08 09:56:57 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -9,6 +9,7 @@
  */
 
 #include <windows.h>
+#include <stdlib.h>
 #include <winsock2.h>
 
 /*
@@ -89,7 +90,7 @@ GetAddressByNameA(DWORD NameSpace,
                   LPSTR ServiceName,
                   LPINT Protocols,
                   DWORD Resolution,
-                  LPVOID /* really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo,
+                  LPSERVICE_ASYNC_INFO ServiceAsyncInfo,
                   LPVOID CsaddrBuffer,
                   LPDWORD BufferLength,
                   LPSTR AliasBuffer,
@@ -111,7 +112,7 @@ GetAddressByNameW(DWORD NameSpace,
                   LPWSTR ServiceName,
                   LPINT Protocols,
                   DWORD Resolution,
-                  LPVOID /* really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo,
+                  LPSERVICE_ASYNC_INFO ServiceAsyncInfo,
                   LPVOID CsaddrBuffer,
                   LPDWORD BufferLength,
                   LPWSTR AliasBuffer,
@@ -128,43 +129,13 @@ GetAddressByNameW(DWORD NameSpace,
  */
 INT
 STDCALL
-GetNameByTypeA(LPGUID ServiceType,
-               LPSTR ServiceName,
-               DWORD NameLength)
-{
-  OutputDebugStringW(L"w32sock GetNameByTypeA stub called\n");
-
-  return SOCKET_ERROR;
-}
-
-
-/*
- * @unimplemented
- */
-INT
-STDCALL
-GetNameByTypeW(LPGUID ServiceType,
-               LPWSTR ServiceName,
-               DWORD NameLength)
-{
-  OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
-
-  return SOCKET_ERROR;
-}
-
-
-/*
- * @unimplemented
- */
-INT
-STDCALL
 GetServiceA(DWORD NameSpace,
             LPGUID Guid,
             LPSTR ServiceName,
             DWORD Properties,
             LPVOID Buffer,
             LPDWORD BufferSize,
-            LPVOID /* Really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo)
+            LPSERVICE_ASYNC_INFO ServiceAsyncInfo)
 {
   OutputDebugStringW(L"w32sock GetServiceA stub called\n");
 
@@ -183,7 +154,7 @@ GetServiceW(DWORD NameSpace,
             DWORD Properties,
             LPVOID Buffer,
             LPDWORD BufferSize,
-            LPVOID /* Really LPSERVICE_ASYNC_INFO */ ServiceAsyncInfo)
+            LPSERVICE_ASYNC_INFO ServiceAsyncInfo)
 {
   OutputDebugStringW(L"w32sock GetServiceW stub called\n");
 
@@ -227,8 +198,8 @@ STDCALL
 SetServiceA(DWORD NameSpace,
             DWORD Operation,
             DWORD Flags,
-            LPVOID /* Really LPSERVICE_INFO */ ServiceInfo,
-            LPVOID /* Really LPSERVICE_ASYNC_INFOA */ ServiceAsyncInfo,
+            LPSERVICE_INFOA ServiceInfo,
+            LPSERVICE_ASYNC_INFO ServiceAsyncInfo,
             LPDWORD dwStatusFlags)
 {
   OutputDebugStringW(L"w32sock SetServiceA stub called\n");
@@ -245,8 +216,8 @@ STDCALL
 SetServiceW(DWORD NameSpace,
             DWORD Operation,
             DWORD Flags,
-            LPVOID /* Really LPSERVICE_INFO */ ServiceInfo,
-            LPVOID /* Really LPSERVICE_ASYNC_INFOW */ ServiceAsyncInfo,
+            LPSERVICE_INFOW ServiceInfo,
+            LPSERVICE_ASYNC_INFO ServiceAsyncInfo,
             LPDWORD dwStatusFlags)
 {
   OutputDebugStringW(L"w32sock SetServiceW stub called\n");
@@ -265,7 +236,7 @@ TransmitFile(SOCKET Socket,
              DWORD NumberOfBytesToWrite,
              DWORD NumberOfBytesPerSend,
              LPOVERLAPPED Overlapped,
-             LPVOID /* really LPTRANSMIT_FILE_BUFFERS */ TransmitBuffers,
+             LPTRANSMIT_FILE_BUFFERS TransmitBuffers,
              DWORD Flags)
 {
   OutputDebugStringW(L"w32sock TransmitFile stub called\n");
@@ -1118,5 +1089,27 @@ DllMain(HINSTANCE InstDLL,
         DWORD Reason,
         LPVOID Reserved)
 {
+  return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+GetNameByTypeA(LPGUID lpServiceType,LPSTR lpServiceName,DWORD dwNameLength)
+{
+  OutputDebugStringW(L"w32sock GetNameByTypeA stub called\n");
+  return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength)
+{
+  OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
   return TRUE;
 }

@@ -262,6 +262,8 @@ extern "C" {
 #define SERVICE_AUTO_START	(2)
 #define SERVICE_DEMAND_START	(3)
 #define SERVICE_DISABLED	(4)
+#define SERVICE_CONFIG_DESCRIPTION (1)
+#define SERVICE_CONFIG_FAILURE_ACTIONS (2)
 
 /* SERVICE_STATUS structure */
 #define SERVICE_STOPPED	(1)
@@ -274,6 +276,11 @@ extern "C" {
 #define SERVICE_ACCEPT_STOP	(1)
 #define SERVICE_ACCEPT_PAUSE_CONTINUE	(2)
 #define SERVICE_ACCEPT_SHUTDOWN	(4)
+#define SERVICE_ACCEPT_PARAMCHANGE (8)
+#define SERVICE_ACCEPT_NETBINDCHANGE (16)
+#define SERVICE_ACCEPT_HARDWAREPROFILECHANGE (32)
+#define SERVICE_ACCEPT_POWEREVENT (64)
+#define SERVICE_ACCEPT_SESSIONCHANGE (128)
 
 /* CheckDlgButton */
 #define BST_CHECKED	(1)
@@ -322,6 +329,8 @@ extern "C" {
 #define COMPLEXREGION	(3)
 #define ERROR	(0)
 
+#define HW_PROFILE_GUIDLEN         39
+#define MAX_PROFILE_LEN            80
 /* CommonDlgExtendedError */
 #define CDERR_DIALOGFAILURE	(0xffff)
 #define CDERR_FINDRESFAILURE	(6)
@@ -387,6 +396,15 @@ extern "C" {
 #define SERVICE_CONTROL_CONTINUE	(3)
 #define SERVICE_CONTROL_INTERROGATE	(4)
 #define SERVICE_CONTROL_SHUTDOWN	(5)
+#define SERVICE_CONTROL_PARAMCHANGE (6)
+#define SERVICE_CONTROL_NETBINDADD (7)
+#define SERVICE_CONTROL_NETBINDREMOVE (8)
+#define SERVICE_CONTROL_NETBINDENABLE (9)
+#define SERVICE_CONTROL_NETBINDDISABLE (10)
+#define SERVICE_CONTROL_DEVICEEVENT (11)
+#define SERVICE_CONTROL_HARDWAREPROFILECHANGE (12)
+#define SERVICE_CONTROL_POWEREVENT (13)
+#define SERVICE_CONTROL_SESSIONCHANGE (14)
 
 /* CopyImage, LoadImage */
 #define IMAGE_BITMAP	(0)
@@ -540,7 +558,6 @@ extern "C" {
 
 
 /* CreateService */
-#define SERVICE_ALL_ACCESS	(0xf01ffL)
 #define SERVICE_CHANGE_CONFIG	(2)
 #define SERVICE_ENUMERATE_DEPENDENTS	(8)
 #define SERVICE_INTERROGATE	(128)
@@ -564,6 +581,17 @@ extern "C" {
 #define SERVICE_ERROR_NORMAL	(1)
 #define SERVICE_ERROR_SEVERE	(2)
 #define SERVICE_ERROR_CRITICAL	(3)
+#define SERVICE_RUNS_IN_SYSTEM_PROCESS (1)
+#define SERVICE_ALL_ACCESS             (STANDARD_RIGHTS_REQUIRED     | \
+                                        SERVICE_QUERY_CONFIG         | \
+                                        SERVICE_CHANGE_CONFIG        | \
+                                        SERVICE_QUERY_STATUS         | \
+                                        SERVICE_ENUMERATE_DEPENDENTS | \
+                                        SERVICE_START                | \
+                                        SERVICE_STOP                 | \
+                                        SERVICE_PAUSE_CONTINUE       | \
+                                        SERVICE_INTERROGATE          | \
+                                        SERVICE_USER_DEFINED_CONTROL)
 
 /* CreateTapePartition, WriteTapemark */
 #define TAPE_FIXED_PARTITIONS	(0L)
@@ -1023,6 +1051,8 @@ extern "C" {
 /* EnumDependentServices */
 #define SERVICE_ACTIVE	(1)
 #define SERVICE_INACTIVE	(2)
+#define SERVICE_STATE_ALL              (SERVICE_ACTIVE   | \
+                                        SERVICE_INACTIVE)
 
 /* EnumFontFamExProc */
 #define DEVICE_FONTTYPE	(2)
@@ -2173,13 +2203,19 @@ extern "C" {
 /* OpenProcessToken */
 
 /* OpenSCManager */
-#define SC_MANAGER_ALL_ACCESS	(0xf003fL)
 #define SC_MANAGER_CONNECT	(1)
 #define SC_MANAGER_CREATE_SERVICE	(2)
 #define SC_MANAGER_ENUMERATE_SERVICE	(4)
 #define SC_MANAGER_LOCK	(8)
 #define SC_MANAGER_QUERY_LOCK_STATUS	(16)
 #define SC_MANAGER_MODIFY_BOOT_CONFIG	(32)
+#define SC_MANAGER_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED      | \
+                                        SC_MANAGER_CONNECT            | \
+                                        SC_MANAGER_CREATE_SERVICE     | \
+                                        SC_MANAGER_ENUMERATE_SERVICE  | \
+                                        SC_MANAGER_LOCK               | \
+                                        SC_MANAGER_QUERY_LOCK_STATUS  | \
+                                        SC_MANAGER_MODIFY_BOOT_CONFIG)
 
 /* PostMessage */
 #define HWND_BROADCAST	((HWND)0xFFFF)

@@ -1,6 +1,6 @@
-/* $Id: stubs.c,v 1.41 2003/09/07 09:55:52 weiden Exp $
+/* $Id: stubs.c,v 1.42 2003/09/08 09:56:57 weiden Exp $
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/stubs.c
  * PURPOSE:         User32.dll stubs
@@ -1480,7 +1480,7 @@ RegisterRawInputDevices(
  */
 UINT
 STDCALL
-WINNLSGetIMEHotkey( IN HWND hwnd)
+WINNLSGetIMEHotkey( HWND hwnd)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1491,7 +1491,7 @@ WINNLSGetIMEHotkey( IN HWND hwnd)
  */
 WINBOOL
 STDCALL
-WINNLSEnableIME( IN HWND hwnd, IN BOOL enable)
+WINNLSEnableIME( HWND hwnd, BOOL enable)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1502,7 +1502,7 @@ WINNLSEnableIME( IN HWND hwnd, IN BOOL enable)
  */
 WINBOOL
 STDCALL
-WINNLSGetEnableStatus( IN HWND hwnd)
+WINNLSGetEnableStatus( HWND hwnd)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1513,7 +1513,7 @@ WINNLSGetEnableStatus( IN HWND hwnd)
  */
 WINBOOL
 STDCALL
-IMPSetIMEW( IN HWND hwnd, IN LPIMEPROW ime)
+IMPSetIMEW( HWND hwnd, LPIMEPROW ime)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1524,7 +1524,7 @@ IMPSetIMEW( IN HWND hwnd, IN LPIMEPROW ime)
  */
 WINBOOL
 STDCALL
-IMPQueryIMEW( IN OUT LPIMEPROW ime)
+IMPQueryIMEW( LPIMEPROW ime)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1535,7 +1535,7 @@ IMPQueryIMEW( IN OUT LPIMEPROW ime)
  */
 WINBOOL
 STDCALL
-IMPGetIMEW( IN HWND hwnd, OUT LPIMEPROW ime)
+IMPGetIMEW( HWND hwnd, LPIMEPROW ime)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1546,7 +1546,7 @@ IMPGetIMEW( IN HWND hwnd, OUT LPIMEPROW ime)
  */
 WINBOOL
 STDCALL
-IMPSetIMEA( IN HWND hwnd, IN LPIMEPROA ime)
+IMPSetIMEA( HWND hwnd, LPIMEPROA ime)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1557,7 +1557,7 @@ IMPSetIMEA( IN HWND hwnd, IN LPIMEPROA ime)
  */
 WINBOOL
 STDCALL
-IMPQueryIMEA( IN OUT LPIMEPROA ime)
+IMPQueryIMEA( LPIMEPROA ime)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1568,9 +1568,30 @@ IMPQueryIMEA( IN OUT LPIMEPROA ime)
  */
 WINBOOL
 STDCALL
-IMPGetIMEA( IN HWND hwnd, OUT LPIMEPROA ime)
+IMPGetIMEA( HWND hwnd, LPIMEPROA ime)
 {
   UNIMPLEMENTED;
   return FALSE;
 }
 
+/*
+ * @unimplemented
+ */
+LRESULT 
+STDCALL
+SendIMEMessageExW(HWND hwnd,LPARAM lparam)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LRESULT 
+STDCALL
+SendIMEMessageExA(HWND hwnd, LPARAM lparam)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}

@@ -573,8 +573,8 @@ ScrollWindow=ScrollWindow@20
 ScrollWindowEx=ScrollWindowEx@32
 SendDlgItemMessageA=SendDlgItemMessageA@20
 SendDlgItemMessageW=SendDlgItemMessageW@20
-;SendIMEMessageExA
-;SendIMEMessageExW
+SendIMEMessageExA=SendIMEMessageExA@8
+SendIMEMessageExW=SendIMEMessageExW@8
 SendInput=SendInput@12
 SendMessageA=SendMessageA@16
 SendMessageCallbackA=SendMessageCallbackA@24

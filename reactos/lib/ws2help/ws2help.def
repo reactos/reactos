@@ -10,7 +10,7 @@ WahCloseSocketHandle@8
 WahCloseThread@8
 WahCompleteRequest@8
 WahCreateHandleContextTable@8
-WahCreateNotificationTable@8
+WahCreateNotificationHandle@8
 WahCreateSocketHandle@8
 WahDestroyHandleContextTable@8
 WahDisableNonIFSHandleSupport@8

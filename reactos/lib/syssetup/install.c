@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.2 2003/08/07 04:03:23 royce Exp $
+/* $Id: install.c,v 1.3 2003/09/08 09:56:57 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -57,4 +57,11 @@ InstallReactOS (HINSTANCE hInstance)
   return 0;
 }
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+DWORD STDCALL SetupChangeFontSize(HANDLE HWindow,
+                                  LPCWSTR lpszFontSize)
+{
+  return(FALSE);
+}

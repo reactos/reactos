@@ -46,7 +46,9 @@
 #endif
 
 /* This is defined in the Win 32 API headers as something else: */
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined(__NTAPP__)
 typedef ULONG ACCESS_MODE, *PACCESS_MODE;
+#endif
 
 #if 0
 typedef struct _ACE_HEADER

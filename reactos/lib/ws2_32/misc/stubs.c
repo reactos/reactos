@@ -595,4 +595,108 @@ WSCWriteProviderOrder(
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+WSANSPIoctl(
+    HANDLE           hLookup,
+    DWORD            dwControlCode,
+    LPVOID           lpvInBuffer,
+    DWORD            cbInBuffer,
+    LPVOID           lpvOutBuffer,
+    DWORD            cbOutBuffer,
+    LPDWORD          lpcbBytesReturned,
+    LPWSACOMPLETION  lpCompletion
+    )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+WSCUpdateProvider(
+    LPGUID lpProviderId,
+    const WCHAR FAR * lpszProviderDllPath,
+    const LPWSAPROTOCOL_INFOW lpProtocolInfoList,
+    DWORD dwNumberOfEntries,
+    LPINT lpErrno
+    )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+WSCWriteNameSpaceOrder (
+    LPGUID lpProviderId,
+    DWORD dwNumberOfEntries
+    )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+freeaddrinfo(
+    LPADDRINFO      pAddrInfo
+    )
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+getaddrinfo(
+    const char FAR * nodename,
+    const char FAR * servname,
+    const struct addrinfo FAR * hints,
+    struct addrinfo FAR * FAR * res
+    )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+INT
+EXPORT
+getnameinfo(
+    const struct sockaddr FAR * sa,
+    socklen_t       salen,
+    char FAR *      host,
+    DWORD           hostlen,
+    char FAR *      serv,
+    DWORD           servlen,
+    INT             flags
+    )
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: wsock32.def,v 1.1 2003/04/03 22:44:19 gvg Exp $
+; $Id: wsock32.def,v 1.2 2003/09/08 09:56:57 weiden Exp $
 ;
 ; WSOCK32.DLL - Windows Sockets 2 DLL
 
@@ -52,3 +52,31 @@ sendto@24
 setsockopt@20
 shutdown@8
 socket@12
+AcceptEx@32
+EnumProtocolsA@12
+EnumProtocolsW@12
+GetAcceptExSockaddrs@32
+GetAddressByNameA@40
+GetAddressByNameW@40
+GetNameByTypeA@12
+GetNameByTypeW@12
+GetServiceA@28
+GetServiceW@28
+GetTypeByNameA@8
+GetTypeByNameW@8
+;MigrateWinsockConfiguration
+;NPLoadNameSpaces
+SetServiceA@24
+SetServiceW@24
+TransmitFile@28
+;WEP
+WSARecvEx@16
+;WSApSetPostRoutine
+;dn_expand
+;getnetbyname
+;inet_network
+;rcmd
+;rexec
+;rresvport
+;s_perror
+;sethostname

@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.7 2003/07/10 19:44:20 chorns Exp $
+/* $Id: lsa.c,v 1.8 2003/09/08 09:56:57 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -332,3 +332,54 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
    return(Reply.Status);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaEnumerateLogonSessions(
+PULONG LogonSessionCount,
+PLUID * LogonSessionList
+)
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaGetLogonSessionData(
+PLUID LogonId,
+PSECURITY_LOGON_SESSION_DATA * ppLogonSessionData
+)
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaRegisterPolicyChangeNotification(
+POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+HANDLE NotificationEventHandle
+)
+{
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaUnregisterPolicyChangeNotification(
+POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+HANDLE NotificationEventHandle
+)
+{
+  return(FALSE);
+}

@@ -7,6 +7,7 @@
 #ifndef __WS2HELP_H
 #define __WS2HELP_H
 
+#include <stdlib.h>
 #include <wsahelp.h>
 #include <windows.h>
 #include <ddk/ntddk.h>

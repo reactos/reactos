@@ -28,5 +28,10 @@ PacketGetNetInfoEx=PacketGetNetInfoEx
 PacketSetMinToCopy=PacketSetMinToCopy
 PacketGetReadEvent=PacketGetReadEvent
 PacketStopDriver=PacketStopDriver
+;PacketGetStatsEx
+;PacketIsDumpEnded
+;PacketSendPackets
+;PacketSetDumpLimits
+;PacketSetDumpName
 
 ; EOF

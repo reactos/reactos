@@ -7,7 +7,9 @@ CopyLZFile@8
 GetExpandedNameA@8
 GetExpandedNameW@8
 LZClose@4
+;LZCloseFile
 LZCopy@8
+;LZCreateFileW
 LZDone@0
 LZInit@4
 LZOpenFileA@12

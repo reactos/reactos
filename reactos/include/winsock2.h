@@ -222,7 +222,13 @@ typedef UINT   SOCKET;
 #define WSA_WAIT_TIMEOUT        (WAIT_TIMEOUT)
 #define WSA_INFINITE            (INFINITE)
 
-
+typedef enum _WSACOMPLETIONTYPE {
+    NSP_NOTIFY_IMMEDIATELY = 0,
+    NSP_NOTIFY_HWND,
+    NSP_NOTIFY_EVENT,
+    NSP_NOTIFY_PORT,
+    NSP_NOTIFY_APC,
+} WSACOMPLETIONTYPE, *PWSACOMPLETIONTYPE, FAR * LPWSACOMPLETIONTYPE;
 
 #define IOCPARM_MASK    0x7f
 #define IOC_VOID        0x20000000
@@ -247,6 +253,23 @@ typedef UINT   SOCKET;
 #define SIOCGLOWAT  _IOR('s',  3, ULONG)
 #define SIOCATMARK  _IOR('s',  7, ULONG)
 
+
+typedef unsigned short  u_short;
+typedef unsigned long   u_long;
+
+typedef struct in6_addr {
+    union {
+        UCHAR       Byte[16];
+        USHORT      Word[8];
+    } u;
+} IN6_ADDR;
+struct sockaddr_in6 {
+    short   sin6_family;
+    u_short sin6_port;
+    u_long  sin6_flowinfo;
+    struct in6_addr sin6_addr;
+    u_long sin6_scope_id;
+};
 
 struct in_addr {
     union {
@@ -392,7 +415,6 @@ typedef struct _WSAOVERLAPPED {
     WSAEVENT hEvent;
 } WSAOVERLAPPED, FAR* LPWSAOVERLAPPED;
 
-
 typedef struct __WSABUF {
     ULONG len;     /* buffer length */
     CHAR FAR* buf; /* pointer to buffer */
@@ -504,6 +526,18 @@ typedef LPWSAPROTOCOL_INFOA LPWSAPROTOCOL_INFO;
 #endif /* UNICODE */
 #endif /* _DISABLE_TIDENTS */
 
+typedef
+VOID
+CALLBACK (*LPSERVICE_CALLBACK_PROC) (
+    IN LPARAM lParam,
+    IN HANDLE hAsyncTaskHandle
+    );
+
+typedef struct _SERVICE_ASYNC_INFO {
+    LPSERVICE_CALLBACK_PROC lpServiceCallbackProc;
+    LPARAM lParam;
+    HANDLE hAsyncTaskHandle;
+} SERVICE_ASYNC_INFO, *PSERVICE_ASYNC_INFO, FAR * LPSERVICE_ASYNC_INFO;
 
 /* WinSock 2 extended commands for WSAIoctl() */
 
@@ -592,6 +626,28 @@ VOID
     LPWSAOVERLAPPED lpOverlapped,
     DWORD dwFlags);
 
+typedef struct _WSACOMPLETION {
+    WSACOMPLETIONTYPE Type;
+    union {
+        struct {
+            HWND hWnd;
+            UINT uMsg;
+            WPARAM context;
+        } WindowMessage;
+        struct {
+            LPWSAOVERLAPPED lpOverlapped;
+        } Event;
+        struct {
+            LPWSAOVERLAPPED lpOverlapped;
+            LPWSAOVERLAPPED_COMPLETION_ROUTINE lpfnCompletionProc;
+        } Apc;
+        struct {
+            LPWSAOVERLAPPED lpOverlapped;
+            HANDLE hPort;
+            ULONG_PTR Key;
+        } Port;
+    } Parameters;
+} WSACOMPLETION, *PWSACOMPLETION, FAR *LPWSACOMPLETION;
 
 /* Microsoft Windows extended data types */
 
@@ -710,6 +766,25 @@ typedef LPWSANAMESPACE_INFOA LPWSANAMESPACE_INFO;
 #endif /* UNICODE */
 #endif /* _DISABLE_TIDENTS */
 
+typedef struct _TRANSMIT_FILE_BUFFERS {
+    LPVOID Head;
+    DWORD HeadLength;
+    LPVOID Tail;
+    DWORD TailLength;
+} TRANSMIT_FILE_BUFFERS, *PTRANSMIT_FILE_BUFFERS, FAR *LPTRANSMIT_FILE_BUFFERS;
+
+typedef struct addrinfo
+{
+    int                 ai_flags;
+    int                 ai_family;
+    int                 ai_socktype;
+    int                 ai_protocol;
+    size_t              ai_addrlen;
+    char *              ai_canonname;
+    struct sockaddr *   ai_addr;
+    struct addrinfo *   ai_next;
+}
+ADDRINFO, *LPADDRINFO;
 
 typedef enum _WSAEcomparator
 {
@@ -1354,6 +1429,8 @@ WSAEnumNameSpaceProvidersW(
 #endif /* UNICODE */
 #endif /* _DISABLE_TIDENTS */
 
+typedef int socklen_t;
+
 INT
 WSAAPI
 WSAGetServiceClassInfoA(
@@ -1636,6 +1713,112 @@ INT
 WSAAPI
 WSACancelAsyncRequest(
     IN  HANDLE hAsyncTaskHandle);
+
+INT
+WSAAPI
+WSANSPIoctl(
+    HANDLE           hLookup,
+    DWORD            dwControlCode,
+    LPVOID           lpvInBuffer,
+    DWORD            cbInBuffer,
+    LPVOID           lpvOutBuffer,
+    DWORD            cbOutBuffer,
+    LPDWORD          lpcbBytesReturned,
+    LPWSACOMPLETION  lpCompletion
+    );
+
+INT
+WSAAPI
+WSCUpdateProvider(
+    LPGUID lpProviderId,
+    const WCHAR FAR * lpszProviderDllPath,
+    const LPWSAPROTOCOL_INFOW lpProtocolInfoList,
+    DWORD dwNumberOfEntries,
+    LPINT lpErrno
+    );
+
+INT
+WSAAPI
+WSCWriteNameSpaceOrder (
+    LPGUID lpProviderId,
+    DWORD dwNumberOfEntries
+    );
+
+VOID
+WSAAPI
+freeaddrinfo(
+    LPADDRINFO      pAddrInfo
+    );
+
+INT
+WSAAPI
+getaddrinfo(
+    const char FAR * nodename,
+    const char FAR * servname,
+    const struct addrinfo FAR * hints,
+    struct addrinfo FAR * FAR * res
+    );
+
+INT
+WSAAPI
+getnameinfo(
+    const struct sockaddr FAR * sa,
+    socklen_t       salen,
+    char FAR *      host,
+    DWORD           hostlen,
+    char FAR *      serv,
+    DWORD           servlen,
+    INT             flags
+    );
+
+WINBOOL
+STDCALL
+AcceptEx(SOCKET sListenSocket,SOCKET sAcceptSocket,PVOID lpOutputBuffer,DWORD dwReceiveDataLength,DWORD dwLocalAddressLength,DWORD dwRemoteAddressLength,LPDWORD lpdwBytesReceived,LPOVERLAPPED lpOverlapped);
+INT
+STDCALL
+EnumProtocolsA(LPINT lpiProtocols,LPVOID lpProtocolBuffer,LPDWORD lpdwBufferLength);
+INT
+STDCALL
+EnumProtocolsW(LPINT lpiProtocols,LPVOID lpProtocolBuffer,LPDWORD lpdwBufferLength);
+VOID
+STDCALL
+GetAcceptExSockaddrs(PVOID lpOutputBuffer,DWORD dwReceiveDataLength,DWORD dwLocalAddressLength,DWORD dwRemoteAddressLength,struct sockaddr **LocalSockaddr,LPINT LocalSockaddrLength,struct sockaddr **RemoteSockaddr,LPINT RemoteSockaddrLength);
+INT
+STDCALL
+GetAddressByNameA(DWORD dwNameSpace,LPGUID lpServiceType,LPSTR lpServiceName,LPINT lpiProtocols,DWORD dwResolution,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo,LPVOID lpCsaddrBuffer,LPDWORD lpdwBufferLength,LPSTR lpAliasBuffer,LPDWORD lpdwAliasBufferLength);
+INT
+STDCALL
+GetAddressByNameW(DWORD dwNameSpace,LPGUID lpServiceType,LPWSTR lpServiceName,LPINT lpiProtocols,DWORD dwResolution,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo,LPVOID lpCsaddrBuffer,LPDWORD lpdwBufferLength,LPWSTR lpAliasBuffer,LPDWORD lpdwAliasBufferLength);
+INT
+STDCALL
+GetNameByTypeA(LPGUID lpServiceType,LPSTR lpServiceName,DWORD dwNameLength);
+INT
+STDCALL
+GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength);
+INT
+STDCALL
+GetServiceA(DWORD dwNameSpace,LPGUID lpGuid,LPSTR lpServiceName,DWORD dwProperties,LPVOID lpBuffer,LPDWORD lpdwBufferSize,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo);
+INT
+STDCALL
+GetServiceW(DWORD dwNameSpace,LPGUID lpGuid,LPWSTR lpServiceName,DWORD dwProperties,LPVOID lpBuffer,LPDWORD lpdwBufferSize,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo);
+INT
+STDCALL
+GetTypeByNameA(LPSTR lpServiceName,LPGUID lpServiceType);
+INT
+STDCALL
+GetTypeByNameW(LPWSTR lpServiceName,LPGUID lpServiceType);
+INT
+STDCALL
+SetServiceA(DWORD dwNameSpace,DWORD dwOperation,DWORD dwFlags,LPSERVICE_INFOA lpServiceInfo,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo,LPDWORD lpdwStatusFlags);
+INT
+STDCALL
+SetServiceW(DWORD dwNameSpace,DWORD dwOperation,DWORD dwFlags,LPSERVICE_INFOW lpServiceInfo,LPSERVICE_ASYNC_INFO lpServiceAsyncInfo,LPDWORD lpdwStatusFlags);
+WINBOOL
+STDCALL
+TransmitFile(SOCKET hSocket,HANDLE hFile,DWORD nNumberOfBytesToWrite,DWORD nNumberOfBytesPerSend,LPOVERLAPPED lpOverlapped,LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers,DWORD dwReserved);
+INT
+STDCALL
+WSARecvEx(SOCKET s,LPSTR buf,INT len,LPINT flags);
 
 #ifdef __cplusplus
 };
