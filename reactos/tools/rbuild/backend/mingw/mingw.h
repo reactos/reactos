@@ -60,6 +60,9 @@ private:
 	                           const std::string& targetDirectory );
 	void OutputNonModuleInstallTargets ( const std::string& installDirectory );
 	void OutputModuleInstallTargets ( const std::string& installDirectory );
+	std::string GetRegistrySourceFiles ();
+	std::string GetRegistryTargetFiles ( const std::string& installDirectory );
+	void OutputRegistryInstallTarget ( const std::string& installDirectory );
 	void GenerateInstallTarget ();
 	FILE* fMakefile;
 	bool use_pch;

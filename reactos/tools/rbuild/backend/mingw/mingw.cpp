@@ -680,7 +680,7 @@ MingwBackend::OutputInstallTarget ( const string& installDirectory,
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
-	          "\t${cp} %s %s\n",
+	          "\t${cp} %s %s 1>$(NUL)\n",
 	          sourceFilename.c_str (),
 	          normalizedTargetFilename.c_str () );
 }
@@ -717,6 +717,55 @@ MingwBackend::OutputModuleInstallTargets ( const string& installDirectory )
 	}
 }
 
+string
+MingwBackend::GetRegistrySourceFiles ()
+{
+	return "bootdata" SSEP "hivecls.inf "
+		"bootdata" SSEP "hivedef.inf "
+		"bootdata" SSEP "hiveinst.inf "
+		"bootdata" SSEP "hivesft.inf "
+		"bootdata" SSEP "hivesys.inf";
+}
+
+string
+MingwBackend::GetRegistryTargetFiles ( const string& installDirectory )
+{
+	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
+		true );
+	return system32ConfigDirectory + SSEP "default " +
+		system32ConfigDirectory + SSEP "sam " +
+		system32ConfigDirectory + SSEP "security " +
+		system32ConfigDirectory + SSEP "software " +
+		system32ConfigDirectory + SSEP "system";
+}
+
+void
+MingwBackend::OutputRegistryInstallTarget ( const string& installDirectory )
+{
+	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
+		true );
+
+	string registrySourceFiles = GetRegistrySourceFiles ();
+	string registryTargetFiles = GetRegistryTargetFiles ( installDirectory );
+	fprintf ( fMakefile,
+	          "install_registry: %s\n",
+	          registryTargetFiles.c_str () );
+	fprintf ( fMakefile,
+	          "%s: %s %s $(MKHIVE_TARGET)\n",
+	          registryTargetFiles.c_str (),
+	          registrySourceFiles.c_str (),
+	          system32ConfigDirectory.c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_MKHIVE)\n" );
+	fprintf ( fMakefile,
+	          "\t$(MKHIVE_TARGET) bootdata %s bootdata" SSEP "hiveinst.inf\n",
+	          system32ConfigDirectory.c_str () );
+	fprintf ( fMakefile,
+	          "\n" );
+}
+
 void
 MingwBackend::GenerateInstallTarget ()
 {
@@ -730,11 +779,12 @@ MingwBackend::GenerateInstallTarget ()
 	string installTargetFiles = v2s ( vInstallTargetFiles, 5 );
 
 	fprintf ( fMakefile,
-	          "install: %s %s\n",
+	          "install: %s %s install_registry\n",
 	          installDirectory.c_str (),
 	          installTargetFiles.c_str () );
 	OutputNonModuleInstallTargets ( installDirectoryNoFixup );
 	OutputModuleInstallTargets ( installDirectoryNoFixup );
+	OutputRegistryInstallTarget ( installDirectoryNoFixup );
 	fprintf ( fMakefile,
 	          "\n" );
 }

@@ -90,6 +90,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_NCI     =@echo [NCI]      $@
   ECHO_CABMAN  =@echo [CABMAN]   $<
   ECHO_CDMAKE  =@echo [CDMAKE]   $@
+  ECHO_MKHIVE  =@echo [MKHIVE]   $@
   ECHO_REGTESTS=@echo [REGTESTS] $@
   ECHO_TEST    =@echo [TEST]     $@
 else
@@ -115,6 +116,7 @@ else
   ECHO_NCI     =
   ECHO_CABMAN  =
   ECHO_CDMAKE  =
+  ECHO_MKHIVE  =
   ECHO_REGTESTS=
   ECHO_TEST    =
 endif
@@ -139,7 +141,7 @@ ifeq ($(HOST),mingw32-linux)
 	objcopy = $(Q)mingw32-objcopy
 	dlltool = $(Q)mingw32-dlltool
 	windres = $(Q)mingw32-windres
-	rm = rm -f
+	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
@@ -157,7 +159,7 @@ else # mingw32-windows
 	objcopy = $(Q)objcopy
 	dlltool = $(Q)dlltool
 	windres = $(Q)windres
-	rm = del /f /q
+	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL
 endif

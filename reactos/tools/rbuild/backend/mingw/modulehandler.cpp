@@ -2189,7 +2189,7 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			fprintf ( fMakefile,
 			          "\t$(ECHO_CP)\n" );
 			fprintf ( fMakefile,
-			          "\t${cp} %s %s\n",
+			          "\t${cp} %s %s 1>$(NUL)\n",
 			          m.GetPath ().c_str (),
 			          targetFilename.c_str () );
 		}
@@ -2210,7 +2210,7 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 		fprintf ( fMakefile,
 		          "\t$(ECHO_CP)\n" );
 		fprintf ( fMakefile,
-		          "\t${cp} %s %s\n",
+		          "\t${cp} %s %s 1>$(NUL)\n",
 		          cdfile.GetPath ().c_str (),
 		          targetFilename.c_str () );
 	}
