@@ -327,8 +327,73 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 		 IN ULONG Length,
 		 OUT PVOID FileInformation)
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+   IO_STATUS_BLOCK IoStatusBlock;
+   PIRP Irp;
+   PDEVICE_OBJECT DeviceObject;
+   PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
+
+   ASSERT(FileInformation != NULL);
+
+   if (FileInformationClass == FileCompletionInformation)
+   {
+      return STATUS_NOT_IMPLEMENTED;
+   }
+
+
+
+   Status = ObReferenceObjectByPointer(FileObject,
+				       FILE_WRITE_ATTRIBUTES,
+				       IoFileObjectType,
+				       KernelMode);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
+   }
+
+   DPRINT("FileObject %x\n", FileObject);
+   
+   DeviceObject = FileObject->DeviceObject;
+
+   Irp = IoAllocateIrp(DeviceObject->StackSize,
+		       TRUE);
+   if (Irp == NULL)
+   {
+      ObDereferenceObject(FileObject);
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   /* Trigger FileObject/Event dereferencing */
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+   Irp->RequestorMode = KernelMode;
+   Irp->AssociatedIrp.SystemBuffer = FileInformation;
+   Irp->UserIosb = &IoStatusBlock;
+   Irp->UserEvent = &FileObject->Event;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+   KeResetEvent( &FileObject->Event );
+
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.SetFile.FileInformationClass = FileInformationClass;
+   StackPtr->Parameters.SetFile.Length = Length;
+
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+   if (Status==STATUS_PENDING)
+   {
+      KeWaitForSingleObject(&FileObject->Event,
+			    Executive,
+			    KernelMode,
+			    FileObject->Flags & FO_ALERTABLE_IO,
+			    NULL);
+      Status = IoStatusBlock.Status;
+   }
+   
+   return Status;
 }
 
 
