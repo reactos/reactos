@@ -5,10 +5,6 @@
 unsigned char _cpumode = 0;
 unsigned char *_cpumode_dll = &_cpumode;
 
-WINBOOL STDCALL Beep(DWORD dwFreq, DWORD dwDuration);
-VOID    STDCALL Sleep(DWORD dwMilliseconds);
-UINT    STDCALL SetErrorMode(UINT uMode);
-
 /*
  * @implemented
  */
