@@ -1,0 +1,17 @@
+iprtprio.a
+iprtprio.dll
+iprtprio.nostrip.dll
+iprtprio.coff
+base.tmp
+junk.tmp
+temp.exp
+*.o
+*.d
+*.dsp
+*.dsw
+*.aps
+*.ncb
+*.opt
+*.sym
+*.plg
+*.bak

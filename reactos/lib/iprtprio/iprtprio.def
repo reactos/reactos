@@ -1,0 +1,9 @@
+; IPRTPRIO.DLL - ReactOS IP Route Priority API DLL
+
+LIBRARY iprtprio.dll
+
+EXPORTS
+ComputeRouteMetric @1
+GetPriorityInfo @2
+SetPriorityInfo @3
+; EOF
