@@ -1,4 +1,4 @@
-/* $Id: regnav.c,v 1.2 1999/05/28 19:49:46 ea Exp $
+/* $Id: regnav.c,v 1.3 2000/05/28 17:44:53 ea Exp $
  * 
  * regnav.c
  * 
@@ -28,6 +28,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <tchar.h>
 #include <assert.h>
 #include "win32err.h"

@@ -1,9 +1,9 @@
-# $Id: makefile,v 1.4 2000/04/25 23:22:57 ea Exp $
+# $Id: makefile,v 1.5 2000/05/28 17:44:51 ea Exp $
 #
 # ReactOS System Utilities
 #
 # 1999-02-16 (Emanuele Aliberti)
-#	Added chkdskx.c and formatx.c by by Mark Russinovich
+#	Added chkdskx.c and formatx.c by Mark Russinovich
 #	(mark@sysinternals.com) and shutdown.c
 #
 # 1999-03-03 (Emanuele Aliberti)
@@ -27,6 +27,7 @@ ROS_LIB=$(ROS_DIR)/lib
 IMPORT_NTDLL=$(ROS_LIB)/ntdll/ntdll.a
 IMPORT_FMIFS=$(ROS_LIB)/fmifs/fmifs.a
 IMPORT_KERNEL32=$(ROS_LIB)/kernel32/kernel32.a
+IMPORT_ADVAPI32=$(ROS_LIB)/advapi32/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32/user32.a
 IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
 
@@ -82,6 +83,7 @@ regnav.exe: regnav.o win32err.o
 		regnav.o \
 		win32err.o \
 		$(IMPORT_KERNEL32) \
+		$(IMPORT_ADVAPI32) \
 		$(IMPORT_CRTDLL) \
 		-o regnav.exe
 	$(NM) --numeric-sort regnav.exe > regnav.sym
@@ -98,7 +100,6 @@ shutdown.exe: shutdown.o win32err.o
 	$(NM) --numeric-sort shutdown.exe > shutdown.sym
 
 qsi.exe: qsi.o
-	echo $(BASE_CFLAGS)
 	$(CC) \
 		qsi.o \
 		$(IMPORT_NTDLL) \

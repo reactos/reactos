@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.2 2000/04/27 23:39:49 ea Exp $
+/* $Id: qsi.c,v 1.3 2000/05/28 17:44:51 ea Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -163,6 +163,55 @@ DumpData (int Size, PVOID pData )
 	printf ("\n");
 }
 
+/* --- */
+
+static
+LPTSTR
+KernelObjectName [] =
+{
+	_T("0"),		/* FIXME */
+	_T("1"),		/* FIXME */
+	_T("Directory"),
+	_T("SymbolicLink"),
+	_T("Token"),
+	_T("Process"),
+	_T("Thread"),
+	_T("Event"),
+	_T("8"),		/* FIXME */
+	_T("Mutant"),
+	_T("Semaphore"),
+	_T("Timer"),
+	_T("12"),		/* FIXME */
+	_T("WindowStation"),
+	_T("Desktop"),
+	_T("Section"),
+	_T("Key"),
+	_T("Port"),
+	_T("18"),		/* FIXME */
+	_T("19"),		/* FIXME */
+	_T("20"),		/* FIXME */
+	_T("21"),		/* FIXME */
+	_T("IoCompletion"),
+	_T("File"),
+	NULL
+};
+
+
+LPTSTR
+STDCALL
+HandleTypeToObjectName (
+	DWORD	HandleType
+	)
+{
+	if (HandleType > 23)	/* FIXME: use a symbol not a literal */
+	{
+		return _T("Unknown");
+	}
+	return KernelObjectName [HandleType];
+}
+
+
+/* --- */
 
 int
 STDCALL
@@ -1191,7 +1240,7 @@ CMD_DEF(Handle)
 	LONG				Length = 0;
 	INT				Index;
 	const PCHAR			hr =
-		"-------- -------- ---- -------- -------- --------\n";
+		"-------- -------- -------- -------- -------- ----------\n";
 	CHAR				FlagsString [9] = {0};
 
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
@@ -1245,7 +1294,7 @@ CMD_DEF(Handle)
 		GlobalFree (pInfo);
 		return EXIT_FAILURE;
 	}
-	printf ("Handle   OwnerPID Type ObjPtr   Access   Flags\n");
+	printf ("Handle   OwnerPID ObjPtr   Access   Flags    Type\n");
 	printf (hr);
 
 	for (	Index = 0;
@@ -1254,16 +1303,16 @@ CMD_DEF(Handle)
 		)
 	{
 		printf (
-			"%8x %8x %4d %8x %8x %s\n",
+			"%8x %8x %8x %8x %s %s\n",
 			pInfo->Handle[Index].HandleValue,
 			pInfo->Handle[Index].OwnerPid,
-			pInfo->Handle[Index].ObjectType,
 			pInfo->Handle[Index].ObjectPointer,
 			pInfo->Handle[Index].AccessMask,
 			ByteToBinaryString (
 				pInfo->Handle[Index].HandleFlags,
 				FlagsString
-				)
+				),
+			HandleTypeToObjectName (pInfo->Handle[Index].ObjectType)
 			);
 	}
 	printf (hr);
