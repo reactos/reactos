@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.49 2001/11/02 09:17:52 ekohl Exp $
+/* $Id: create.c,v 1.50 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -315,6 +315,7 @@ IoCreateFile(
    PIRP			Irp;
    KEVENT			Event;
    PIO_STACK_LOCATION	StackLoc;
+   IO_STATUS_BLOCK      IoSB;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -360,9 +361,11 @@ IoCreateFile(
 	return (STATUS_UNSUCCESSFUL);
      }
      
-   Irp->UserIosb = IoStatusBlock;   //return iostatus
+   Irp->UserIosb = &IoSB;   //return iostatus
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+   Irp->UserEvent = &Event;
    
    /*
     * Get the stack location for the new
@@ -407,14 +410,17 @@ IoCreateFile(
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = IoStatusBlock->Status;
+	Status = IoSB.Status;
      }
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("Failing create request with status %x\n", Status);
 	ZwClose(*FileHandle);
      }
-   
+   if (IoStatusBlock)
+     {
+       *IoStatusBlock = IoSB;
+     }
    assert_irql(PASSIVE_LEVEL);
 
    DPRINT("Finished IoCreateFile() (*FileHandle) %x\n", (*FileHandle));

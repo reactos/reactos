@@ -49,6 +49,7 @@ NtFlushBuffersFile (
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    NTSTATUS Status;
+   IO_STATUS_BLOCK IoSB;
       
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_DATA,
@@ -68,7 +69,7 @@ NtFlushBuffersFile (
 				      0,
 				      NULL,
 				      &Event,
-				      IoStatusBlock);
+				      &IoSB);
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
@@ -77,7 +78,11 @@ NtFlushBuffersFile (
    if (Status==STATUS_PENDING)
      {
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	Status = Irp->IoStatus.Status;
+	Status = IoSB.Status;
+     }
+   if (IoStatusBlock)
+     {
+       *IoStatusBlock = IoSB;
      }
    return(Status);
 }

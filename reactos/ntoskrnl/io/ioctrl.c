@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.12 2001/03/21 23:27:18 chorns Exp $
+/* $Id: ioctrl.c,v 1.13 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,6 +39,8 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT KEvent;
+   PKEVENT ptrEvent;
+   IO_STATUS_BLOCK IoSB;
 
    DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
@@ -59,7 +61,32 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
      {
 	return(Status);
      }
-   
+   if (Event != NULL)
+     {
+        Status = ObReferenceObjectByHandle (Event,
+                                            SYNCHRONIZE,
+                                            ExEventObjectType,
+                                            UserMode,
+                                            (PVOID*)&ptrEvent,
+                                            NULL);
+        if (!NT_SUCCESS(Status))
+          {
+            ObDereferenceObject(FileObject);
+	    return Status;
+          }
+      }
+    else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+      {
+         ptrEvent = NULL;
+      }
+    else
+      {
+         KeInitializeEvent (&KEvent, 
+                            NotificationEvent,
+                            FALSE);
+         ptrEvent = &KEvent;
+      }
+
    DeviceObject = FileObject->DeviceObject;
 
    KeInitializeEvent(&KEvent,NotificationEvent,TRUE);
@@ -71,8 +98,8 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 				       OutputBuffer,
 				       OutputBufferSize,
 				       FALSE,
-				       &KEvent,
-				       IoStatusBlock);
+				       ptrEvent,
+				       Event ? IoStatusBlock : &IoSB);
 
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
@@ -84,10 +111,14 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
    StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferSize;
 
    Status = IoCallDriver(DeviceObject,Irp);
-   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Event == NULL && Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
    {
       KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
-      return(IoStatusBlock->Status);
+      Status = IoSB.Status;
+   }
+   if (IoStatusBlock)
+   {
+      *IoStatusBlock = IoSB;
    }
    return(Status);
 }

@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.18 2001/07/15 15:36:31 ekohl Exp $
+/* $Id: fs.c,v 1.19 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,7 @@ NtFsControlFile (
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT KEvent;
+   IO_STATUS_BLOCK IoSB;
 
    DPRINT("NtFsControlFile(DeviceHandle %x EventHandle %x ApcRoutine %x "
           "ApcContext %x IoStatusBlock %x IoControlCode %x "
@@ -89,7 +90,7 @@ NtFsControlFile (
 				       OutputBufferSize,
 				       FALSE,
 				       &KEvent,
-				       IoStatusBlock);
+				       &IoSB);
    
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
@@ -103,10 +104,14 @@ NtFsControlFile (
    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
    
    Status = IoCallDriver(DeviceObject,Irp);
-   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
-	return(IoStatusBlock->Status);
+	Status = IoSB.Status;
+     }
+   if (IoStatusBlock)
+     {
+        *IoStatusBlock = IoSB;
      }
    return(Status);
 }

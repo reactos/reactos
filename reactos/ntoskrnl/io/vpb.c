@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.13 2001/06/12 12:30:36 ekohl Exp $
+/* $Id: vpb.c,v 1.14 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -102,6 +102,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
+   IO_STATUS_BLOCK IoSB;
    
    assert(IoStatusBlock != NULL);
    assert(FsInformation != NULL);
@@ -145,7 +146,8 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserEvent = &Event;
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &IoSB;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
@@ -167,7 +169,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = IoStatusBlock->Status;
+	Status = IoSB.Status;
      }
    DPRINT("Status %x\n", Status);
    
@@ -176,8 +178,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	DPRINT("Information %lu\n", IoStatusBlock->Information);
 	MmSafeCopyToUser(FsInformation,
 			 SystemBuffer,
-			 IoStatusBlock->Information);
-    }
+			 IoSB.Information);
+     }
+   if (IoStatusBlock)
+     {
+       *IoStatusBlock = IoSB;
+     }
    ExFreePool(SystemBuffer);
    ObDereferenceObject(FileObject);
    
@@ -229,6 +235,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
    Irp->AssociatedIrp.SystemBuffer = FsInformation;
    Irp->UserEvent = &Event;
    Irp->UserIosb = &IoStatusBlock;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
@@ -278,6 +285,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
+   IO_STATUS_BLOCK IoSB;
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_ATTRIBUTES,
@@ -319,7 +327,8 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserEvent = &Event;
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &IoSB;
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
@@ -340,8 +349,12 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 			      KernelMode,
 			      FALSE,
 			      NULL);
+        Status = IoSB.Status;
      }
-   
+   if (IoStatusBlock)
+   {
+     *IoStatusBlock = IoSB;
+   }
    ExFreePool(SystemBuffer);
    
    return(Status);

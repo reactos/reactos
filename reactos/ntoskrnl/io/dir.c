@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.10 2000/03/26 19:38:22 ea Exp $
+/* $Id: dir.c,v 1.11 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,6 +87,7 @@ NtQueryDirectoryFile(
    NTSTATUS Status;
    KEVENT Event;
    PIO_STACK_LOCATION IoStack;
+   IO_STATUS_BLOCK IoSB;
    
    DPRINT("NtQueryDirectoryFile()\n");
    
@@ -113,7 +114,7 @@ NtQueryDirectoryFile(
      }
    
    
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &IoSB;
    Irp->UserEvent = &Event;
    Irp->UserBuffer=FileInformation;
    
@@ -155,7 +156,11 @@ NtQueryDirectoryFile(
 	  {
 	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
 	  }
-	Status = IoStatusBlock->Status;
+	Status = IoSB.Status;
+     }
+   if (IoStatusBlock)
+     {
+       *IoStatusBlock = IoSB;
      }
    return(Status);
 }

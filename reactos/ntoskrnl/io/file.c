@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.14 2001/06/12 12:30:36 ekohl Exp $
+/* $Id: file.c,v 1.15 2001/11/02 22:22:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,6 +40,7 @@ NtQueryInformationFile(HANDLE FileHandle,
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    PVOID SystemBuffer;
+   IO_STATUS_BLOCK IoSB;
    
    assert(IoStatusBlock != NULL);
    assert(FileInformation != NULL);
@@ -87,7 +88,7 @@ NtQueryInformationFile(HANDLE FileHandle,
      }
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &IoSB;
    Irp->UserEvent = &Event;
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -104,15 +105,19 @@ NtQueryInformationFile(HANDLE FileHandle,
    
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = Irp->IoStatus.Status;
+	Status = IoSB.Status;
      }
+  if (IoStatusBlock)
+    {
+      *IoStatusBlock = IoSB;
+    }
 
   if (NT_SUCCESS(Status))
     {
@@ -187,14 +192,14 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = Irp->IoStatus.Status;
+	Status = IoStatusBlock.Status;
      }
    
    if (ReturnedLength != NULL)
@@ -222,6 +227,7 @@ NtSetInformationFile(HANDLE FileHandle,
    KEVENT Event;
    NTSTATUS Status;
    PVOID SystemBuffer;
+   IO_STATUS_BLOCK IoSB;
    
    assert(IoStatusBlock != NULL)
    assert(FileInformation != NULL)
@@ -280,7 +286,7 @@ NtSetInformationFile(HANDLE FileHandle,
 		      Length);
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-   Irp->UserIosb = IoStatusBlock;
+   Irp->UserIosb = &IoSB;
    Irp->UserEvent = &Event;
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -302,16 +308,19 @@ NtSetInformationFile(HANDLE FileHandle,
    DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
-   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
 			      NULL);
-	Status = Irp->IoStatus.Status;
+	Status = IoSB.Status;
      }
-   
+   if (IoStatusBlock)
+     {
+       *IoStatusBlock = IoSB;
+     }
    ExFreePool(SystemBuffer);
    ObDereferenceObject(FileObject);
    
