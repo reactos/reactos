@@ -24,7 +24,7 @@
 
 NTSTATUS STDCALL
 RtlCreateUserThread(HANDLE ProcessHandle,
-                    SECURITY_DESCRIPTOR *SecurityDescriptor,
+                    PSECURITY_DESCRIPTOR SecurityDescriptor,
                     BOOLEAN CreateSuspended,
                     LONG StackZeroBits,
                     PULONG StackReserved,

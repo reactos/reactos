@@ -809,19 +809,17 @@ RtlDenormalizeProcessParams (
 	);
 
 
-NTSTATUS
-WINAPI
+NTSTATUS STDCALL
 RtlInitializeContext(
         IN      HANDLE                  ProcessHandle,
         IN      PCONTEXT                Context,
-        IN      HANDLE                  DebugPort,
-        IN      PVOID                   StartAddress,
+        IN      PVOID                   Parameter,
+        IN      PTHREAD_START_ROUTINE   StartAddress,
         IN OUT  PINITIAL_TEB            InitialTeb
         );
 
 
-NTSTATUS
-WINAPI
+NTSTATUS STDCALL
 RtlCreateUserThread(
         IN      HANDLE                  ProcessHandle,
         IN      PSECURITY_DESCRIPTOR    SecurityDescriptor,
@@ -829,8 +827,8 @@ RtlCreateUserThread(
         IN      LONG                    StackZeroBits,
         IN OUT  PULONG                  StackReserved,
         IN OUT  PULONG                  StackCommit,
-        IN      PVOID                   StartAddress,
-        IN      HANDLE                  DebugPort,
+        IN      PTHREAD_START_ROUTINE   StartAddress,
+        IN      PVOID                   Parameter,
         IN OUT  PHANDLE                 ThreadHandle,
         IN OUT  PCLIENT_ID              ClientId
         );
