@@ -145,7 +145,7 @@ int wine_utf8_mbstowcs( int flags, const char *src, int srclen, WCHAR *dst, int 
     unsigned int res;
     const char *srcend = src + srclen;
 
-    if (!dstlen) return get_length_mbs_utf8( src, srclen );
+    if (!dstlen) return get_length_mbs_utf8( (const unsigned char*)src, srclen );
 
     for (count = dstlen; count && (src < srcend); count--, dst++)
     {
