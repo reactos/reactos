@@ -25,12 +25,6 @@ NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID);
 
 NTSTATUS FASTCALL
-InitDesktopImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupDesktopImpl(VOID);
-
-NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
    HWINSTA WindowStation,
    KPROCESSOR_MODE AccessMode,
@@ -40,34 +34,17 @@ IntValidateWindowStationHandle(
 BOOL FASTCALL
 IntGetWindowStationObject(PWINSTATION_OBJECT Object);
 
-LRESULT CALLBACK
-IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-HDC FASTCALL
-IntGetScreenDC(VOID);
-
 BOOL FASTCALL
 IntInitializeDesktopGraphics(VOID);
 
 VOID FASTCALL
 IntEndDesktopGraphics(VOID);
 
-/*
-struct _WINDOW_OBJECT* FASTCALL
-IntGetCaptureWindow(VOID);
-
-VOID FASTCALL
-IntSetCaptureWindow(struct _WINDOW_OBJECT* Window);
-*/
-
-PUSER_MESSAGE_QUEUE FASTCALL
-IntGetFocusMessageQueue(VOID);
-
-VOID FASTCALL
-IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
-
-PDESKTOP_OBJECT FASTCALL
-IntGetActiveDesktop(VOID);
+BOOL FASTCALL
+IntGetFullWindowStationName(
+   OUT PUNICODE_STRING FullName,
+   IN PUNICODE_STRING WinStaName,
+   IN OPTIONAL PUNICODE_STRING DesktopName);
 
 #endif /* _WIN32K_WINSTA_H */
 

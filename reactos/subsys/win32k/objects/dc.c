@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.106 2003/12/03 21:37:34 gvg Exp $
+/* $Id: dc.c,v 1.107 2003/12/07 19:29:33 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -48,6 +48,7 @@
 #include <include/eng.h>
 #include <include/palette.h>
 #include <include/guicheck.h>
+#include <include/desktop.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>

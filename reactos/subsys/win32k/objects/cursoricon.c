@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.27 2003/12/03 21:38:14 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.28 2003/12/07 19:29:33 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -28,6 +28,7 @@
 #include <win32k/bitmaps.h>
 #include <win32k/dc.h>
 #include <include/winsta.h>
+#include <include/desktop.h>
 #include <include/error.h>
 #include <include/mouse.h>
 #include <include/window.h>

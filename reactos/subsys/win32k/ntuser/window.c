@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.151 2003/12/07 10:31:22 navaraf Exp $
+/* $Id: window.c,v 1.152 2003/12/07 19:29:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,6 +37,7 @@
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
+#include <include/desktop.h>
 #include <include/winpos.h>
 #include <include/callback.h>
 #include <include/msgqueue.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.57 2003/12/07 12:59:34 chorns Exp $
+/* $Id: dllmain.c,v 1.58 2003/12/07 19:29:33 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -31,6 +31,7 @@
 #include <win32k/win32k.h>
 
 #include <include/winsta.h>
+#include <include/desktop.h>
 #include <include/class.h>
 #include <include/window.h>
 #include <include/menu.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.23 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: input.c,v 1.24 2003/12/07 19:29:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,6 +34,7 @@
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
+#include <include/desktop.h>
 #include <include/msgqueue.h>
 #include <ddk/ntddmou.h>
 #include <include/mouse.h>
