@@ -1,4 +1,4 @@
-/* $Id: environment.c,v 1.3 2004/05/01 11:55:01 ekohl Exp $
+/* $Id: environment.c,v 1.4 2004/06/25 11:42:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,20 +18,63 @@
 static BOOL
 SetUserEnvironmentVariable (LPVOID *Environment,
 			    LPWSTR lpName,
-			    LPWSTR lpValue)
+			    LPWSTR lpValue,
+			    BOOL bExpand)
 {
   UNICODE_STRING Name;
-  UNICODE_STRING Value;
+  UNICODE_STRING SrcValue;
+  UNICODE_STRING DstValue;
+  ULONG Length;
   NTSTATUS Status;
+
+  if (bExpand)
+    {
+      RtlInitUnicodeString(&SrcValue,
+			   lpValue);
+
+      Length = 2 * MAX_PATH * sizeof(WCHAR);
+
+      DstValue.Length = 0;
+      DstValue.MaximumLength = Length;
+      DstValue.Buffer = LocalAlloc (LPTR,
+				    Length);
+      if (DstValue.Buffer == NULL)
+	{
+	  DPRINT1("LocalAlloc() failed\n");
+	  return FALSE;
+	}
+
+      Status = RtlExpandEnvironmentStrings_U((PWSTR)*Environment,
+					     &SrcValue,
+					     &DstValue,
+					     &Length);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1 ("RtlExpandEnvironmentStrings_U() failed (Status %lx)\n", Status);
+	  DPRINT1 ("Length %lu\n", Length);
+	  return FALSE;
+	}
+    }
+  else
+    {
+      RtlInitUnicodeString(&DstValue,
+			   lpValue);
+    }
 
   RtlInitUnicodeString (&Name,
 			lpName);
-  RtlInitUnicodeString (&Value,
-			lpValue);
+
+  DPRINT("Value: %wZ\n", &DstValue);
 
   Status = RtlSetEnvironmentVariable ((PWSTR*)Environment,
 				      &Name,
-				      &Value);
+				      &DstValue);
+
+  if (bExpand)
+    {
+      LocalFree(DstValue.Buffer);
+    }
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("RtlSetEnvironmentVariable() failed (Status %lx)\n", Status);
@@ -214,7 +257,8 @@ SetUserEnvironment (LPVOID *lpEnvironment,
 	  /* Set environment variable */
 	  SetUserEnvironmentVariable (lpEnvironment,
 				      lpValueName,
-				      lpValueData);
+				      lpValueData,
+				      (dwType == REG_EXPAND_SZ));
 	}
     }
 
@@ -254,9 +298,10 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
   if (GetComputerNameW (Buffer,
 			&Length))
     {
-      SetUserEnvironmentVariable (lpEnvironment,
-				  L"COMPUTERNAME",
-				  Buffer);
+      SetUserEnvironmentVariable(lpEnvironment,
+				 L"COMPUTERNAME",
+				 Buffer,
+				 FALSE);
     }
 
   if (hToken == NULL)
@@ -275,9 +320,10 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
   if (GetAllUsersProfileDirectoryW (Buffer,
 				    &Length))
     {
-      SetUserEnvironmentVariable (lpEnvironment,
-				  L"ALLUSERSPROFILE",
-				  Buffer);
+      SetUserEnvironmentVariable(lpEnvironment,
+				 L"ALLUSERSPROFILE",
+				 Buffer,
+				 FALSE);
     }
 
   /* Set 'USERPROFILE' variable */
@@ -286,9 +332,10 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
 				Buffer,
 				&Length))
     {
-      SetUserEnvironmentVariable (lpEnvironment,
-				  L"USERPROFILE",
-				  Buffer);
+      SetUserEnvironmentVariable(lpEnvironment,
+				 L"USERPROFILE",
+				 Buffer,
+				 FALSE);
     }
 
   /* FIXME: Set 'USERDOMAIN' variable */
