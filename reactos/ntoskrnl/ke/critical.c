@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.10 2004/08/15 16:39:05 chorns Exp $
+/* $Id: critical.c,v 1.11 2004/11/21 18:33:54 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,8 +22,13 @@
  */
 VOID STDCALL KeEnterCriticalRegion (VOID)
 {
+   PKTHREAD Thread = KeGetCurrentThread(); 
+   
    DPRINT("KeEnterCriticalRegion()\n");
-   KeGetCurrentThread()->KernelApcDisable--;
+   
+   if (!Thread) return; /* <-Early in the boot process the current thread is obseved to be NULL */
+
+   Thread->KernelApcDisable--;
 }
 
 /*
@@ -34,6 +39,8 @@ VOID STDCALL KeLeaveCriticalRegion (VOID)
   PKTHREAD Thread = KeGetCurrentThread(); 
 
   DPRINT("KeLeaveCriticalRegion()\n");
+  
+  if (!Thread) return; /* <-Early in the boot process the current thread is obseved to be NULL */
 
   /* Reference: http://www.ntfsd.org/archive/ntfsd0104/msg0203.html */
   if(++Thread->KernelApcDisable == 0) 

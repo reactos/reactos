@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.89 2004/11/21 06:51:18 ion Exp $
+/* $Id: timer.c,v 1.90 2004/11/21 18:33:54 gdalsnes Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -526,11 +526,11 @@ HandleExpiredTimer(PKTIMER Timer)
 	DPRINT("Finished dpc routine\n");
      }
 
-   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
    KeAcquireDispatcherDatabaseLockAtDpcLevel();
    Timer->Header.SignalState = TRUE;
-   KeDispatcherObjectWake(&Timer->Header);
+   KiDispatcherObjectWake(&Timer->Header);
    KeReleaseDispatcherDatabaseLockFromDpcLevel();
 
    if (Timer->Period != 0)
@@ -571,7 +571,7 @@ KeExpireTimers(PKDPC Dpc,
 
    DPRINT("KeExpireTimers()\n");
 
-   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
    InitializeListHead(&TimerList);
 

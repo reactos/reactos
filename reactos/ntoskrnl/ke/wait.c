@@ -110,6 +110,8 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
          break;
       
       case InternalQueueType:
+         break;
+         
       case InternalSemaphoreType:
          hdr->SignalState--;
          break;
@@ -193,33 +195,31 @@ KiIsObjectSignalled(DISPATCHER_HEADER * hdr,
    }
 }
 
-VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
+/* Must be called with the dispatcher lock held */
+BOOLEAN KiAbortWaitThread(PKTHREAD Thread, NTSTATUS WaitStatus)
 {
-   PKWAIT_BLOCK WaitBlock, PrevWaitBlock;
-   BOOLEAN WasWaiting = FALSE;
+   PKWAIT_BLOCK WaitBlock;
+   BOOLEAN WasWaiting;
 
-   WaitBlock = (PKWAIT_BLOCK)Thread->Tcb.WaitBlockList;
-   if (WaitBlock != NULL)
-     {
-	WasWaiting = TRUE;
-     }
-   while (WaitBlock != NULL)
-     {
-	if (WaitBlock->WaitListEntry.Flink != NULL && WaitBlock->WaitListEntry.Blink != NULL)
-	  { 
-	    RemoveEntryList (&WaitBlock->WaitListEntry);
-            WaitBlock->WaitListEntry.Flink = WaitBlock->WaitListEntry.Blink = NULL;
-	  }
-	PrevWaitBlock = WaitBlock;
-	WaitBlock = WaitBlock->NextWaitBlock;
-	PrevWaitBlock->NextWaitBlock = NULL;
-     }
-   Thread->Tcb.WaitBlockList = NULL;
+   /* if we are blocked, we must be waiting on something also */
+   ASSERT((Thread->State == THREAD_STATE_BLOCKED) == (Thread->WaitBlockList != NULL));
 
-   if (WasWaiting && Unblock)
-     {
-	PsUnblockThread(Thread, &WaitStatus);
-     }
+   WaitBlock = (PKWAIT_BLOCK)Thread->WaitBlockList;
+   WasWaiting = (WaitBlock != NULL);
+   
+   while (WaitBlock)
+   {
+      RemoveEntryList(&WaitBlock->WaitListEntry);
+      WaitBlock = WaitBlock->NextWaitBlock;
+   }
+   
+   Thread->WaitBlockList = NULL;
+
+   if (WasWaiting)
+   {
+	   PsUnblockThread((PETHREAD)Thread, &WaitStatus);
+   }
+   return WasWaiting;
 }
 
 static BOOLEAN
@@ -260,11 +260,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
          DPRINT("WaitAny: Remove all wait blocks.\n");
          for (Waiter = WaiterHead->Thread->WaitBlockList; Waiter; Waiter = Waiter->NextWaitBlock)
          {
-            if (Waiter->WaitListEntry.Flink != NULL && Waiter->WaitListEntry.Blink != NULL)
-	      {
-		RemoveEntryList(&Waiter->WaitListEntry);
-		Waiter->WaitListEntry.Flink = Waiter->WaitListEntry.Blink = NULL;
-	      }
+            RemoveEntryList(&Waiter->WaitListEntry);
          }
 
          WaiterHead->Thread->WaitBlockList = NULL;
@@ -273,7 +269,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
           * If a WakeAll KiSideEffectsBeforeWake(hdr,.. will be called several times,
           * but thats ok since WakeAll objects has no sideeffects.
           */
-         Abandoned = KiSideEffectsBeforeWake(hdr, WaiterHead->Thread) ? TRUE : Abandoned;
+         Abandoned |= KiSideEffectsBeforeWake(hdr, WaiterHead->Thread);
       }
       else
       {
@@ -299,16 +295,11 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
          {
             for (Waiter = WaiterHead->Thread->WaitBlockList; Waiter; Waiter = Waiter->NextWaitBlock)
             {
-               if (Waiter->WaitListEntry.Flink != NULL && Waiter->WaitListEntry.Blink != NULL)
-	       {
-		  RemoveEntryList(&Waiter->WaitListEntry);
-		  Waiter->WaitListEntry.Flink = Waiter->WaitListEntry.Blink = NULL;
-	       }
+               RemoveEntryList(&Waiter->WaitListEntry);
          
                if (Waiter->WaitType == WaitAll)
                {
-                  Abandoned = KiSideEffectsBeforeWake(Waiter->Object, Waiter->Thread)
-                     ? TRUE : Abandoned;
+                  Abandoned |= KiSideEffectsBeforeWake(Waiter->Object, Waiter->Thread);
                }
 
                //no WaitAny objects can possibly be signaled since we are here
@@ -339,7 +330,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
 }
 
 
-BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
+BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 /*
  * FUNCTION: Wake threads waiting on a dispatcher object
  * NOTE: The exact semantics of waking are dependant on the type of object
@@ -366,6 +357,8 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	return(KeDispatcherObjectWakeOne(hdr));
 
       case InternalQueueType:
+   return(KeDispatcherObjectWakeOne(hdr));      
+      
       case InternalSemaphoreType:
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
 	if(hdr->SignalState>0)
@@ -483,7 +476,6 @@ KeWaitForMultipleObjects(ULONG Count,
    ULONG CountSignaled;
    ULONG i;
    NTSTATUS Status;
-   KIRQL WaitIrql;
    KIRQL OldIrql;
    BOOLEAN Abandoned;
 
@@ -493,7 +485,6 @@ KeWaitForMultipleObjects(ULONG Count,
    ASSERT(0 < Count && Count <= EX_MAXIMUM_WAIT_OBJECTS);
 
    CurrentThread = KeGetCurrentThread();
-   WaitIrql = KeGetCurrentIrql();
 
    /*
     * Work out where we are going to put the wait blocks
@@ -516,6 +507,8 @@ KeWaitForMultipleObjects(ULONG Count,
       }
    }
 
+
+
    /*
     * Set up the timeout if required
     */
@@ -528,9 +521,8 @@ KeWaitForMultipleObjects(ULONG Count,
    {
       if (CurrentThread->WaitNext)
       {
+         CurrentThread->WaitNext = FALSE;
          OldIrql = CurrentThread->WaitIrql;
-         CurrentThread->WaitNext = 0;
-         CurrentThread->WaitIrql = PASSIVE_LEVEL;
       }
       else
       {
@@ -711,28 +703,33 @@ KeWaitForMultipleObjects(ULONG Count,
                         &CurrentThread->WaitBlock[3].WaitListEntry);
       }
 
-      //io completion
-      if (CurrentThread->Queue)
+      //kernel queues
+      if (CurrentThread->Queue && WaitReason != WrQueue)
       {
-         CurrentThread->Queue->CurrentCount--;   
-         if (WaitReason != WrQueue && CurrentThread->Queue->CurrentCount < CurrentThread->Queue->MaximumCount &&
+         DPRINT("queue: sleep on something else\n");
+         CurrentThread->Queue->CurrentCount--;  
+         
+         //wake another thread
+         if (CurrentThread->Queue->CurrentCount < CurrentThread->Queue->MaximumCount &&
              !IsListEmpty(&CurrentThread->Queue->EntryListHead))
          {
-            KeDispatcherObjectWake(&CurrentThread->Queue->Header);
+            KiDispatcherObjectWake(&CurrentThread->Queue->Header);
          }
       }
 
-      PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql, (UCHAR)WaitReason);
+      PsBlockThread(&Status, Alertable, WaitMode, TRUE, OldIrql, (UCHAR)WaitReason);
 
-      //io completion
-      if (CurrentThread->Queue)
+      //kernel queues
+      //FIXME: dispatcher lock not held here!
+      if (CurrentThread->Queue && WaitReason != WrQueue)
       {
+         DPRINT("queue: wake from something else\n");
          CurrentThread->Queue->CurrentCount++;
       }
-
-
-   }
-   while (Status == STATUS_KERNEL_APC);
+      
+      
+   } while (Status == STATUS_KERNEL_APC);
+   
 
    if (Timeout != NULL)
    {

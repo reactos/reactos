@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mutex.c,v 1.18 2004/10/22 20:30:48 ekohl Exp $
+/* $Id: mutex.c,v 1.19 2004/11/21 18:33:54 gdalsnes Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/mutex.c
@@ -82,7 +82,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
       Mutex->OwnerThread = NULL;
       if (Mutex->MutantListEntry.Flink && Mutex->MutantListEntry.Blink)
 	RemoveEntryList(&Mutex->MutantListEntry);
-      KeDispatcherObjectWake(&Mutex->Header);
+      KiDispatcherObjectWake(&Mutex->Header);
     }
 
   if (Wait == FALSE)
@@ -191,7 +191,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
       Mutant->OwnerThread = NULL;
       if (Mutant->MutantListEntry.Flink && Mutant->MutantListEntry.Blink)
 	RemoveEntryList(&Mutant->MutantListEntry);
-      KeDispatcherObjectWake(&Mutant->Header);
+      KiDispatcherObjectWake(&Mutant->Header);
     }
 
   if (Wait == FALSE)

@@ -67,6 +67,9 @@ LONG STDCALL KeReadStateEvent (PKEVENT Event)
  */
 LONG STDCALL KeResetEvent (PKEVENT Event)
 {
+  /* FIXME: must use interlocked func. everywhere! (wait.c)
+   * or use dispather lock instead
+   * -Gunnar */
    return(InterlockedExchange(&(Event->Header.SignalState),0));
 }
 
@@ -86,7 +89,7 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 
   ret = InterlockedExchange(&(Event->Header.SignalState),1);
 
-  KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+  KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
 
   if (Wait == FALSE)
     {
@@ -115,7 +118,7 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
    OldIrql = KeAcquireDispatcherDatabaseLock();
    ret = InterlockedExchange(&(Event->Header.SignalState),1);
-   KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+   KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
    InterlockedExchange(&(Event->Header.SignalState),0);
 
   if (Wait == FALSE)
@@ -143,7 +146,10 @@ KeSetEventBoostPriority(
 )
 {
 	PKTHREAD WaitingThread;
+   KIRQL OldIrql;
 	
+   OldIrql = KeAcquireDispatcherDatabaseLock();
+   
 	/* Get Thread that is currently waiting. First get the Wait Block, then the Thread */
 	WaitingThread = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry)->Thread;
 	
@@ -152,7 +158,9 @@ KeSetEventBoostPriority(
 	
 	/* Reset the Quantum and Unwait the Thread */
 	WaitingThread->Quantum = WaitingThread->ApcState.Process->ThreadQuantum;
-	KeRemoveAllWaitsThread((PETHREAD)WaitingThread, STATUS_SUCCESS, TRUE);
+	KiAbortWaitThread(WaitingThread, STATUS_SUCCESS);
+   
+   KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
 /* EOF */

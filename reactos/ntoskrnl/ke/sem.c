@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.15 2004/08/15 16:39:05 chorns Exp $
+/* $Id: sem.c,v 1.16 2004/11/21 18:33:54 gdalsnes Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -105,7 +105,7 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
   Semaphore->Header.SignalState += Adjustment;
   if (InitialState == 0)
     {
-      KeDispatcherObjectWake(&Semaphore->Header);
+      KiDispatcherObjectWake(&Semaphore->Header);
     }
 
   if (Wait == FALSE)

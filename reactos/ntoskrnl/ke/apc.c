@@ -124,7 +124,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	PLIST_ENTRY ApcListEntry;
 	PKAPC QueuedApc;
    
-	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 	DPRINT ("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
 		"SystemArgument2 %x)\n",Apc,SystemArgument1,
 		SystemArgument2);
@@ -134,7 +134,9 @@ KeInsertQueueApc (PKAPC	Apc,
 	/* Get the Thread specified in the APC */
 	Thread = Apc->Thread;
 	   
-	/* Make sure the thread allows APC Queues */
+	/* Make sure the thread allows APC Queues.
+    * The thread is not apc queueable, for instance, when it's (about to be) terminated.
+    */
 	if (Thread->ApcQueueable == FALSE) {
 		DPRINT("Thread doesn't allow APC Queues\n");
 		KeReleaseDispatcherDatabaseLock(OldIrql);
@@ -194,18 +196,20 @@ KeInsertQueueApc (PKAPC	Apc,
 			/* FIXME: Use IPI */
 			DPRINT ("Requesting APC Interrupt for Running Thread \n");
 			HalRequestSoftwareInterrupt(APC_LEVEL);
-		} else if ((Thread->WaitIrql < APC_LEVEL) && (Apc->NormalRoutine == NULL)) {
+      } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
+                 (Thread->WaitIrql < APC_LEVEL) && 
+                 (Apc->NormalRoutine == NULL)) 
+      {
 			DPRINT ("Waking up Thread for Kernel-Mode APC Delivery \n");
-			KeRemoveAllWaitsThread(CONTAINING_RECORD(Thread, ETHREAD, Tcb),
-					       STATUS_KERNEL_APC,
-					       TRUE);
+			KiAbortWaitThread(Thread, STATUS_KERNEL_APC);
 		}
-	} else if ((Thread->WaitMode == UserMode) && (Thread->Alertable)) {
+   } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
+              (Thread->WaitMode == UserMode) && 
+              (Thread->Alertable)) 
+   {
 		DPRINT ("Waking up Thread for User-Mode APC Delivery \n");
 		Thread->ApcState.UserApcPending = TRUE;
-		KeRemoveAllWaitsThread(CONTAINING_RECORD(Thread, ETHREAD, Tcb),
-				       STATUS_USER_APC,
-				       TRUE);
+      KiAbortWaitThread(Thread, STATUS_USER_APC);
 	}
 
 	/* Return Sucess if we are here */
@@ -227,7 +231,7 @@ KeRemoveQueueApc (PKAPC Apc)
 	KIRQL OldIrql;
 	PKTHREAD Thread = Apc->Thread;
 
-	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 	DPRINT("KeRemoveQueueApc called for APC: %x \n", Apc);
 	
 	OldIrql = KeAcquireDispatcherDatabaseLock();
@@ -270,7 +274,7 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 	PKTHREAD Thread = KeGetCurrentThread();
 	BOOLEAN OldState;
    
-	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 	
 	OldIrql = KeAcquireDispatcherDatabaseLock();
 	KiAcquireSpinLock(&Thread->ApcQueueLock);
@@ -295,7 +299,7 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
  */
 VOID 
 STDCALL
-KiDeliverApc(KPROCESSOR_MODE PreviousMode,
+KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
              PVOID Reserved,
              PKTRAP_FRAME TrapFrame)
 /*
@@ -317,6 +321,8 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 	PKNORMAL_ROUTINE NormalRoutine;
 	PVOID SystemArgument1;
 	PVOID SystemArgument2;
+   
+   ASSERT_IRQL_EQUAL(APC_LEVEL);
 
 	/* Lock the APC Queue and Raise IRQL to Synch */
 	KeAcquireSpinLock(&Thread->ApcQueueLock, &OldIrql);
@@ -339,7 +345,7 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 		SystemArgument2 = Apc->SystemArgument2;
        
 		/* Special APC */
-		if (NormalRoutine == NULL) {
+   	if (NormalRoutine == NULL) {
 			/* Remove the APC from the list */
 			Apc->Inserted = FALSE;
 			RemoveEntryList(ApcListEntry);
@@ -360,6 +366,15 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 		} else {
 			 /* Normal Kernel APC */
 			if (Thread->ApcState.KernelApcInProgress || Thread->KernelApcDisable) {
+            
+            /*
+             * DeliveryMode must be KernelMode in this case, since one may not
+             * return to umode while being inside a critical section or while 
+             * a regular kmode apc is running (the latter should be impossible btw).
+             * -Gunnar
+             */
+            ASSERT(DeliveryMode == KernelMode);
+
 				KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
 				return;
 			}
@@ -399,7 +414,7 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 	
 	/* Now we do the User APCs */
 	if ((!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])) &&
-			 (PreviousMode == UserMode) &&
+          (DeliveryMode == UserMode) &&
 			 (Thread->ApcState.UserApcPending == TRUE)) {
 			 
 		/* It's not pending anymore */
@@ -418,6 +433,8 @@ KiDeliverApc(KPROCESSOR_MODE PreviousMode,
 		
 		/* Remove the APC from Queue, restore IRQL and call the APC */
 		RemoveEntryList(ApcListEntry);
+      Apc->Inserted = FALSE;
+      
 		KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
 		DPRINT("Calling the Kernel Routine for for a User APC: %x\n", Apc);
 		KernelRoutine(Apc,
