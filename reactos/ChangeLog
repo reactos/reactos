@@ -1,5 +1,13 @@
 2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/rtouch.c: New file.
+	* rules.mak (ROS_USE_PCH): Default to no.
+	(RTOUCH): Define.
+	* tools/Makefile: Add rtouch utility.
+	* tools/helper.mk: Support precompiled headers.
+
+2003-01-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* ntoskrnl/dbg/profile.c: New file.
 	* ntoskrnl/Makefile (OBJECTS_KDBG): Add dbg/profile.o.
 	* ntoskrnl/dbg/kdb.h: Define NTOS_MODE_KERNEL. Include <ntos.h>.

@@ -8,6 +8,11 @@ ifeq ($(HOST),)
 HOST = mingw32-windows
 endif
 
+# Default to no PCH support
+ifeq ($(ROS_USE_PCH),)
+ROS_USE_PCH = no
+endif
+
 # uncomment if you use bochs and it displays only 30 rows
 # BOCHS_30ROWS = yes
 
@@ -77,6 +82,7 @@ RM = $(TOOLS_PATH)/rdel
 RMDIR = $(TOOLS_PATH)/rrmdir
 RMKDIR = $(TOOLS_PATH)/rmkdir
 RSYM = $(TOOLS_PATH)/rsym
+RTOUCH = $(TOOLS_PATH)/rtouch
 MC = $(TOOLS_PATH)/wmc/wmc
 
 

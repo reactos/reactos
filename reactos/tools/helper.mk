@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.25 2003/01/07 17:39:58 robd Exp $
+# $Id: helper.mk,v 1.26 2003/01/15 20:18:12 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -39,6 +39,7 @@
 #   $TARGET_NORC       = Do not include standard resource file (no,yes) (optional)
 #   $TARGET_LIBPATH    = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
+#   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
 
@@ -591,7 +592,7 @@ endif
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 
 clean:
-	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
+	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
@@ -626,14 +627,40 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(DIST_DIR)/symbols/$(MK_BASENAME).sym
 
-
 endif # MK_IMPLIBONLY
 
 
 .phony: all depends implib clean install dist depends
 
 
-%.o: %.c
+# Precompiled header support
+# When using PCHs, use dependency tracking to keep the .pch files up-to-date.
+
+MK_PCHNAME =
+ifeq ($(ROS_USE_PCH),yes)
+ifneq ($(TARGET_PCH),)
+MK_PCHNAME = $(TARGET_PCH).pch
+
+# GCC generates wrong dependencies for header files.
+MK_PCHFAKE = $(TARGET_PCH:.h=.o)
+$(MK_PCHFAKE):
+	- $(RTOUCH) $(MK_PCHFAKE)
+
+$(MK_PCHNAME): depend.d
+	- $(RTOUCH) $(MK_PCHNAME)
+	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH)
+
+depend.d: $(MK_PCHFAKE)
+	- $(RTOUCH) depend.d
+	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
+
+include depend.d
+
+endif # TARGET_PCH
+endif # ROS_USE_PCH
+
+
+%.o: %.c $(MK_PCHNAME)
 	$(CC) $(TARGET_CFLAGS) -c $< -o $@
 %.o: %.cc
 	$(CC) $(TARGET_CPPFLAGS) -c $< -o $@
