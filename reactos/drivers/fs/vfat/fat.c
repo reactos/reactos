@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.15 2001/01/16 15:43:42 dwelch Exp $
+ * $Id: fat.c,v 1.16 2001/01/16 23:22:03 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -284,6 +284,7 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i;
 	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+	  return(STATUS_SUCCESS);
 	}
     }
   CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);

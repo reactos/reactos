@@ -180,8 +180,7 @@ static VOID KeSetCurrentIrql(KIRQL newlvl)
  *	Uses fastcall convention
  */
 
-VOID
-FASTCALL
+VOID FASTCALL
 KfLowerIrql (
 	KIRQL	NewIrql
 	)
