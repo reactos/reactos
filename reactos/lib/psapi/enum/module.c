@@ -1,4 +1,4 @@
-/* $Id: module.c,v 1.3 2002/08/31 15:36:55 hyperion Exp $
+/* $Id: module.c,v 1.4 2003/04/02 22:09:56 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -11,6 +11,8 @@
  *              10/06/2002: Created
  *              29/08/2002: Generalized the interface to improve reusability,
  *                          more efficient use of memory operations
+ *              12/02/2003: malloc and free renamed to PsaiMalloc and PsaiFree,
+ *                          for better reusability
  */
 
 #include <ddk/ntddk.h>
@@ -19,7 +21,7 @@
 #include <ntdll/ldr.h>
 
 NTSTATUS
-STDCALL
+NTAPI
 PsaEnumerateSystemModules
 (
  IN PSYSMOD_ENUM_ROUTINE Callback,
@@ -62,13 +64,14 @@ PsaEnumerateSystemModules
   /* free the buffer, and reallocate it to the new size. RATIONALE: since we
      ignore the buffer's content at this point, there's no point in a realloc(),
      that could end up copying a large chunk of data we'd discard anyway */
-  free(pnModuleCount);
-  pTmp = malloc(nSize);
+  PsaiFree(pnModuleCount);
+  pTmp = PsaiMalloc(nSize);
   
   if(pTmp == NULL)
   {
    /* failure */
    nErrCode = STATUS_NO_MEMORY;
+   DPRINT(FAILED_WITH_STATUS, "PsaiMalloc", nErrCode);
    goto esm_Finalize;
   }
   
@@ -118,13 +121,13 @@ PsaEnumerateSystemModules
 
 esm_Finalize:
  /* free the buffer */
- free(pnModuleCount);
+ PsaiFree(pnModuleCount);
 
  return (nErrCode);
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PsaEnumerateProcessModules
 (
  IN HANDLE ProcessHandle,

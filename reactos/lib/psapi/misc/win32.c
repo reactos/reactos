@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.5 2003/02/02 19:26:08 hyperion Exp $
+/* $Id: win32.c,v 1.6 2003/04/02 22:09:57 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -143,7 +143,7 @@ typedef struct _ENUM_PROCESSES_CONTEXT
 /* callback routine */
 NTSTATUS STDCALL EnumProcessesCallback
 (
- IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
+ IN PSYSTEM_PROCESSES CurrentProcess,
  IN OUT PVOID CallbackContext
 )
 {
@@ -165,7 +165,7 @@ NTSTATUS STDCALL EnumProcessesCallback
 }
 
 /* exported interface */
-/*
+/*!
  @brief Enumerate the process identifiers of the currently active processes
 
  @param lpidProcess Array that receives the list of process identifiers
@@ -194,7 +194,11 @@ BOOL STDCALL EnumProcesses
  }
 
  /* enumerate the process ids */
- nErrCode = PsaEnumerateProcesses(&EnumProcessesCallback, &epcContext);
+ nErrCode = PsaEnumerateProcesses
+ (
+  &EnumProcessesCallback,
+  &epcContext
+ );
 
  *lpcbNeeded = (cb - epcContext.nCount) * sizeof(DWORD);
 
@@ -492,7 +496,7 @@ DWORD FASTCALL internalGetMappedFileName(
   nBufSize = nSize * sizeof(WCHAR);
  
  /* allocate the memory */
- pmsnName = malloc(nBufSize + offsetof(MEMORY_SECTION_NAME, NameBuffer));
+ pmsnName = PsaiMalloc(nBufSize + offsetof(MEMORY_SECTION_NAME, NameBuffer));
  
  if(pmsnName == NULL)
  {
@@ -527,7 +531,7 @@ DWORD FASTCALL internalGetMappedFileName(
 #if 0
 #else
    /* free the buffer */
-   free(pmsnName);
+   PsaiFree(pmsnName);
 #endif
    return 0;
   }
@@ -546,7 +550,7 @@ DWORD FASTCALL internalGetMappedFileName(
 #if 0
 #else
    /* free the buffer */
-   free(pmsnName);
+   PsaiFree(pmsnName);
 #endif
    
    if(pmsnName->SectionFileName.Length < nSize)
@@ -572,7 +576,7 @@ DWORD FASTCALL internalGetMappedFileName(
 #if 0
 #else
    /* free the buffer */
-   free(pmsnName);
+   PsaiFree(pmsnName);
 #endif
 
    if(strAnsi.Length < nSize)
@@ -589,7 +593,7 @@ DWORD FASTCALL internalGetMappedFileName(
  }
  __finally
  {
-  free(pmsnName);
+  PsaiFree(pmsnName);
  }
 #endif
 }
@@ -715,7 +719,7 @@ NTSTATUS STDCALL GetModuleInformationCallback
     UNICODE_STRING wstrUnicodeBuf;
     
     /* allocate the local buffer */
-    pwcUnicodeBuf = malloc(pwstrSource->Length);
+    pwcUnicodeBuf = PsaiMalloc(pwstrSource->Length);
 
 #if 0
     __try
@@ -767,7 +771,7 @@ NTSTATUS STDCALL GetModuleInformationCallback
     __finally
     {
      /* free the buffer */
-     free(pwcUnicodeBuf);
+     PsaiFree(pwcUnicodeBuf);
     }
 #else
      /* success */
@@ -775,7 +779,7 @@ NTSTATUS STDCALL GetModuleInformationCallback
 
 exitWithStatus:
      /* free the buffer */
-     free(pwcUnicodeBuf);
+     PsaiFree(pwcUnicodeBuf);
      return nErrCode;
 #endif
    }

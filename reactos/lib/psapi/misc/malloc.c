@@ -1,4 +1,4 @@
-/* $Id: malloc.c,v 1.3 2002/08/31 17:11:24 hyperion Exp $
+/* $Id: malloc.c,v 1.4 2003/04/02 22:09:57 hyperion Exp $
  */
 /*
  * COPYRIGHT:   None
@@ -9,6 +9,8 @@
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
  *              10/06/2002: Created
+ *              12/02/2003: malloc and free renamed to PsaiMalloc and PsaiFree,
+ *                          for better reusability
  */
 
 #include <ddk/ntddk.h>
@@ -46,17 +48,17 @@ PVOID STDCALL MemAlloc
  return pBuf;
 }
 
-void *malloc(size_t size)
+void *PsaiMalloc(SIZE_T size)
 {
  return MemAlloc(NULL, NULL, size);
 }
 
-void *realloc(void *ptr, size_t size)
+void *PsaiRealloc(void *ptr, SIZE_T size)
 {
  return MemAlloc(NULL, ptr, size);
 }
 
-void free(void *ptr)
+void PsaiFree(void *ptr)
 {
  MemAlloc(NULL, ptr, 0);
 }
