@@ -706,7 +706,7 @@ int main (int argc, char *argv[])
     }
 
   /* Allocate buffer */
-  dwSize = 1024;
+  dwSize = 2048;
   lpBuffer = malloc(dwSize);
   if (lpBuffer == NULL)
     {
@@ -715,19 +715,28 @@ int main (int argc, char *argv[])
       return 0;
     }
 
-  lError = RegQueryValueEx(hPnpKey,
-			   "Configuration Data",
-			   NULL,
-			   &dwType,
-			   (LPBYTE)lpBuffer,
-			   &dwSize);
+  do
+    {
+      lError = RegQueryValueEx(hPnpKey,
+			       "Configuration Data",
+			       NULL,
+			       &dwType,
+			       (LPBYTE)lpBuffer,
+			       &dwSize);
+      if (lError == ERROR_MORE_DATA)
+        {
+          lpBuffer = realloc(lpBuffer, dwSize);
+          if (lpBuffer == NULL)
+            {
+              printf("Error: realloc() of %u bytes failed\n", (unsigned) dwSize);
+              RegCloseKey(hPnpKey);
+              return 0;
+            }
+        }
+    }
+  while (lError == ERROR_MORE_DATA);
   if (lError != ERROR_SUCCESS)
     {
-      if (lError == ERROR_MORE_DATA)
-	{
-	  printf("Need to resize buffer to %lu\n", dwSize);
-	}
-
       printf("Failed to read 'Configuration Data' value\n");
       free(lpBuffer);
       RegCloseKey(hPnpKey);
