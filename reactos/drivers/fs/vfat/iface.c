@@ -1746,7 +1746,122 @@ NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return RC;
 }
 
- 
+
+
+NTSTATUS FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
+                                   PVfatFCB FCB,
+                                   PDEVICE_OBJECT DeviceObject,
+                                   PFILE_FS_VOLUME_INFORMATION FsVolumeInfo)
+{
+    DPRINT("FsdGetFsVolumeInformation()\n");
+    DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
+
+    if (!FsVolumeInfo)
+        return(STATUS_SUCCESS);
+
+    /* dummy entries */
+    FsVolumeInfo->VolumeCreationTime.LowPart = 0;
+    FsVolumeInfo->VolumeCreationTime.HighPart = 0;
+    FsVolumeInfo->VolumeSerialNumber = 0x01234567;
+    FsVolumeInfo->SupportsObjects = FALSE;
+    FsVolumeInfo->VolumeLabelLength  = 5;
+    wcscpy (FsVolumeInfo->VolumeLabel, L"Label");
+
+    DPRINT("Finished FsdGetFsVolumeInformation()\n");
+
+    return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS FsdGetFsAttributeInformation(PFILE_OBJECT FileObject,
+                                      PVfatFCB FCB,
+                                      PDEVICE_OBJECT DeviceObject,
+                                      PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo)
+{
+    DPRINT("FsdGetFsAttributeInformation()\n");
+    DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
+
+    if (!FsAttributeInfo)
+        return(STATUS_SUCCESS);
+
+    /* dummy entries */
+    FsAttributeInfo->FileSystemAttributes = 0;
+    FsAttributeInfo->MaximumComponentNameLength = 256;
+    FsAttributeInfo->FileSystemNameLength = 3;
+    wcscpy (FsAttributeInfo->FileSystemName, L"FAT");
+
+    DPRINT("Finished FsdGetFsAttributeInformation()\n");
+
+    return(STATUS_SUCCESS);
+}
+
+
+
+NTSTATUS FsdQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+/*
+ * FUNCTION: Retrieve the specified file information
+ */
+{
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   FILE_INFORMATION_CLASS FileInformationClass =
+     Stack->Parameters.QueryVolume.FileInformationClass;
+   PFILE_OBJECT FileObject = NULL;
+   PVfatFCB FCB = NULL;
+//   PVfatCCB CCB = NULL;
+
+   NTSTATUS RC = STATUS_SUCCESS;
+   void *SystemBuffer;
+
+   /* PRECONDITION */
+   assert(DeviceObject != NULL);
+   assert(Irp != NULL);
+
+   DPRINT("FsdQueryVolumeInformation(DeviceObject %x, Irp %x)\n",
+          DeviceObject,Irp);
+
+   /* INITIALIZATION */
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   FileInformationClass = Stack->Parameters.QueryVolume.FileInformationClass;
+   FileObject = Stack->FileObject;
+//   CCB = (PVfatCCB)(FileObject->FsContext2);
+//   FCB = CCB->Buffer; // Should be CCB->FCB???
+   FCB = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
+
+  // FIXME : determine Buffer for result :
+  if (Irp->MdlAddress) 
+    SystemBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+  else
+    SystemBuffer = Irp->UserBuffer;
+//   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+   DPRINT("FileInformationClass %d\n",FileInformationClass);
+   DPRINT("SystemBuffer %x\n",SystemBuffer);
+
+   switch(FileInformationClass) {
+      case FileFsVolumeInformation:
+         RC = FsdGetFsVolumeInformation(FileObject,
+                                        FCB,
+                                        DeviceObject,
+                                        SystemBuffer);
+      break;
+      case FileFsAttributeInformation:
+         RC = FsdGetFsAttributeInformation(FileObject,
+                                           FCB, 
+                                           DeviceObject, 
+                                           SystemBuffer);
+      break;
+      default:
+       RC=STATUS_NOT_IMPLEMENTED;
+   }
+
+   Irp->IoStatus.Status = RC;
+   Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return RC;
+}
+
+
 STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 			     PUNICODE_STRING RegistryPath)
 /*
@@ -1788,6 +1903,8 @@ STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
                       FsdSetInformation;
    VFATDriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       FsdDirectoryControl;
+   VFATDriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
+                      FsdQueryVolumeInformation;
 
    VFATDriverObject->DriverUnload = NULL;
    

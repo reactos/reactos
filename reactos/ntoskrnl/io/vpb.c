@@ -15,6 +15,7 @@
 #include <internal/string.h>
 #include <internal/ob.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -64,7 +65,8 @@ PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,
 	return(NULL);
      }
    
-   Irp->AssociatedIrp.SystemBuffer = FSInformation;
+//   Irp->AssociatedIrp.SystemBuffer = FSInformation;
+   Irp->UserBuffer = FSInformation;
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
@@ -76,18 +78,20 @@ PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
    
-   if (MajorFunction == IRP_MJ_QUERY_VOLUME_INFORMATION)
-     {
-	StackPtr->Parameters.SetVolume.Length = Length;
-	StackPtr->Parameters.SetVolume.FileInformationClass = 
-	             FSInformationClass;	
-     }
-   else
-     {	
-	StackPtr->Parameters.QueryVolume.Length = Length;
-	StackPtr->Parameters.QueryVolume.FileInformationClass = 
-	             FSInformationClass;	
-     }
+   switch (MajorFunction)
+   {
+      case IRP_MJ_SET_VOLUME_INFORMATION:
+         StackPtr->Parameters.SetVolume.Length = Length;
+         StackPtr->Parameters.SetVolume.FileInformationClass =
+                     FSInformationClass;
+         break;
+
+      case IRP_MJ_QUERY_VOLUME_INFORMATION:
+         StackPtr->Parameters.QueryVolume.Length = Length;
+         StackPtr->Parameters.QueryVolume.FileInformationClass =
+                     FSInformationClass;
+         break;
+   }
    return(Irp);
 }
 
@@ -139,7 +143,9 @@ ZwQueryVolumeInformationFile(
    PIRP Irp;
    KEVENT Event;
    NTSTATUS Status;
-   
+
+   DPRINT("FSInformation %p\n", FSInformation);
+
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
 				      NULL,

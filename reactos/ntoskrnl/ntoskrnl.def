@@ -3,7 +3,10 @@ memcpy
 strtok
 toupper
 wcschr
+wcscpy
 wcslen
+wcsncpy
+wcsncat
 wtolower
 DbgPrint
 ExAllocatePool

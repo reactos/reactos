@@ -376,6 +376,7 @@ ZwWriteFile
 sprintf
 wcslen
 wcschr
+wcscpy
 wcsncat
 wcsncpy
 CbInitDccb

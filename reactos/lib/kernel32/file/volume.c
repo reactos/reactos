@@ -4,9 +4,9 @@
  * FILE:            lib/kernel32/file/volume.c
  * PURPOSE:         File volume functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    Erik Bos, Alexandre Julliard :
-		    	DRIVE_IsValid, GetLogicalDriveStringsA,
-		    	GetLogicalDriveStringsW, GetLogicalDrives
+ *                  Erik Bos, Alexandre Julliard :
+ *                      DRIVE_IsValid, GetLogicalDriveStringsA,
+ *                      GetLogicalDriveStringsW, GetLogicalDrives
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -23,7 +23,12 @@
 #include <wchar.h>
 #include <string.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
+
 #define MAX_DOS_DRIVES 26
+
 
 int DRIVE_IsValid( int drive )
 {
@@ -302,8 +307,8 @@ GetVolumeInformationW(
     DWORD nFileSystemNameSize
     )
 {
-	FILE_FS_VOLUME_INFORMATION *FileFsVolume;
-	FILE_FS_ATTRIBUTE_INFORMATION *FileFsAttribute;
+        PFILE_FS_VOLUME_INFORMATION FileFsVolume;
+        PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
 	IO_STATUS_BLOCK IoStatusBlock;
 	USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
 	USHORT Buffer2[FS_ATTRIBUTE_BUFFER_SIZE];
@@ -311,41 +316,65 @@ GetVolumeInformationW(
 	HANDLE hFile;
 	NTSTATUS errCode;
 
-	FileFsVolume = (FILE_FS_VOLUME_INFORMATION *)Buffer;
-	FileFsAttribute =  (FILE_FS_VOLUME_INFORMATION *)Buffer2;
-	
-	hFile = CreateFileW(
-  		lpRootPathName,	
-    		GENERIC_ALL,	
-    		FILE_SHARE_READ|FILE_SHARE_WRITE,	
-    		NULL,	
-    		OPEN_EXISTING,	
-    		FILE_ATTRIBUTE_NORMAL,	
-    		NULL 
-   	);
+        FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
+        FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer2;
 
-	errCode = NtQueryVolumeInformationFile(hFile,&IoStatusBlock,FileFsVolume, FS_VOLUME_BUFFER_SIZE,FileFsVolumeInformation);
+        DPRINT("FileFsVolume %p\n", FileFsVolume);
+        DPRINT("FileFsAttribute %p\n", FileFsAttribute);
+
+CHECKPOINT;
+        hFile = CreateFileW(lpRootPathName,
+                            FILE_READ_ATTRIBUTES,
+                            FILE_SHARE_READ|FILE_SHARE_WRITE,
+                            NULL,
+                            OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL,
+                            NULL);
+
+        DPRINT("hFile: %x\n", hFile);
+        errCode = NtQueryVolumeInformationFile(hFile,
+                                               &IoStatusBlock,
+                                               FileFsVolume,
+                                               FS_VOLUME_BUFFER_SIZE,
+                                               FileFsVolumeInformation);
+CHECKPOINT;
 	if ( !NT_SUCCESS(errCode) ) {
-		CloseHandle(hFile);
+                DPRINT("Status: %x\n", errCode);
+                CloseHandle(hFile);
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-
-	memcpy(lpVolumeSerialNumber, &FileFsVolume->VolumeSerialNumber, sizeof(DWORD));
-	memcpy(lpVolumeNameBuffer, FileFsVolume->VolumeLabel,min(nVolumeNameSize,MAX_PATH));
-
+CHECKPOINT;
+        if (lpVolumeSerialNumber)
+                *lpVolumeSerialNumber = FileFsVolume->VolumeSerialNumber;
+CHECKPOINT;
+        if (lpVolumeNameBuffer)
+                wcsncpy(lpVolumeNameBuffer, FileFsVolume->VolumeLabel,min(nVolumeNameSize,MAX_PATH));
+//        memcpy(lpVolumeNameBuffer, FileFsVolume->VolumeLabel,min(nVolumeNameSize,MAX_PATH));
+CHECKPOINT;
 	errCode = NtQueryVolumeInformationFile(hFile,&IoStatusBlock,FileFsAttribute, FS_ATTRIBUTE_BUFFER_SIZE,FileFsAttributeInformation);
+CHECKPOINT;
 	if ( !NT_SUCCESS(errCode) ) {
+                DPRINT("Status: %x\n", errCode);
 		CloseHandle(hFile);
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
-	memcpy(lpFileSystemFlags,&FileFsAttribute->FileSystemAttributes,sizeof(DWORD));
-	memcpy(lpMaximumComponentLength, &FileFsAttribute->MaximumComponentNameLength, sizeof(DWORD));
-	memcpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
+CHECKPOINT;
+        if (lpFileSystemFlags)
+                *lpFileSystemFlags = FileFsAttribute->FileSystemAttributes;
+//        memcpy(lpFileSystemFlags,&FileFsAttribute->FileSystemAttributes,sizeof(DWORD));
+CHECKPOINT;
+        if (lpMaximumComponentLength)
+                *lpMaximumComponentLength = FileFsAttribute->MaximumComponentNameLength;
+//        memcpy(lpMaximumComponentLength, &FileFsAttribute->MaximumComponentNameLength, sizeof(DWORD));
+CHECKPOINT;
+        if (lpFileSystemNameBuffer)
+                wcsncpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
+//        memcpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
+CHECKPOINT;
 	CloseHandle(hFile);
 	return TRUE;
-	
 }
 
 WINBOOL

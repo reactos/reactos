@@ -456,7 +456,7 @@ typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
 	LONG MaximumComponentNameLength;
 	ULONG FileSystemNameLength;
 	WCHAR FileSystemName[0]; 
-} FILE_FS_ATTRIBUTE_INFORMATION;
+} FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
 
 /*
 	FileSystemAttributes is one of the following values:
