@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.7 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: cont.c,v 1.8 2001/02/28 18:23:32 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,6 +28,51 @@ MmFreeContinuousPage(PVOID Context, PVOID Address)
     {
       MmDereferencePage((PVOID)PhysAddr);
     }
+}
+
+PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+				  IN ULONG Alignment)
+{
+   PMEMORY_AREA MArea;
+   NTSTATUS Status;
+   PVOID BaseAddress;
+   PVOID PBase;
+   ULONG i;
+
+   Status = MmCreateMemoryArea(NULL,
+			       MmGetKernelAddressSpace(),
+			       MEMORY_AREA_CONTINUOUS_MEMORY,
+			       &BaseAddress,
+			       NumberOfBytes,
+			       0,
+			       &MArea);
+   if (!NT_SUCCESS(Status))
+     {
+	return(NULL);
+     }
+   
+   PBase = MmGetContinuousPages(NumberOfBytes,
+				HighestAcceptableAddress,
+				Alignment);
+   if (PBase == NULL)
+     {
+       MmFreeMemoryArea(MmGetKernelAddressSpace(),
+			BaseAddress,
+			0,
+			NULL,
+			NULL);
+       return(NULL);
+     }
+   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
+     {
+	MmCreateVirtualMapping(NULL,
+			       BaseAddress + (i * 4096),
+			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
+			       (ULONG)(PBase + (i * 4096)));
+     }
+   return(BaseAddress);
 }
 
 /**********************************************************************
@@ -60,43 +105,9 @@ PVOID STDCALL
 MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 			    IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
-   PMEMORY_AREA MArea;
-   NTSTATUS Status;
-   PVOID BaseAddress;
-   PVOID PBase;
-   ULONG i;
-
-   Status = MmCreateMemoryArea(NULL,
-			       MmGetKernelAddressSpace(),
-			       MEMORY_AREA_CONTINUOUS_MEMORY,
-			       &BaseAddress,
-			       NumberOfBytes,
-			       0,
-			       &MArea);
-   if (!NT_SUCCESS(Status))
-     {
-	return(NULL);
-     }
-   
-   PBase = MmGetContinuousPages(NumberOfBytes,
-				HighestAcceptableAddress);
-   if (PBase == NULL)
-     {
-       MmFreeMemoryArea(MmGetKernelAddressSpace(),
-			BaseAddress,
-			0,
-			NULL,
-			NULL);
-       return(NULL);
-     }
-   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
-     {
-	MmCreateVirtualMapping(NULL,
-			       BaseAddress + (i * 4096),
-			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
-			       (ULONG)(PBase + (i * 4096)));
-     }
-   return(BaseAddress);
+  return(MmAllocateContiguousAlignedMemory(NumberOfBytes,
+					   HighestAcceptableAddress,
+					   PAGESIZE));
 }
 
 

@@ -50,7 +50,8 @@ static LIST_ENTRY BiosPageListHead;
 
 PVOID
 MmGetContinuousPages(ULONG NumberOfBytes,
-		     PHYSICAL_ADDRESS HighestAcceptableAddress)
+		     PHYSICAL_ADDRESS HighestAcceptableAddress,
+		     ULONG Alignment)
 {
    ULONG NrPages;
    ULONG i;
@@ -64,7 +65,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    
    start = -1;
    length = 0;
-   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGESIZE); i++)
+   for (i = 0; i < (HighestAcceptableAddress.QuadPart / PAGESIZE); )
      {
 	if (MmPageArray[i].Flags & MM_PHYSICAL_PAGE_FREE)
 	  {
@@ -77,6 +78,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 	       {
 		  length++;
 	       }
+	     i++;
 	     if (length == NrPages)
 	       {
 		  break;
@@ -85,9 +87,13 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 	else if (start != -1)
 	  {
 	     start = -1;
+	     /*
+	      * Fast forward to the base of the next aligned region
+	      */
+	     i = i + (Alignment / PAGESIZE);
 	  }
      }
-   if (start == -1)
+   if (start == -1 || length != NrPages)
      {
 	KeReleaseSpinLock(&PageListLock, oldIrql);
 	return(NULL);

@@ -364,7 +364,8 @@ NTSTATUS
 MmCreatePhysicalMemorySection(VOID);
 PVOID
 MmGetContinuousPages(ULONG NumberOfBytes,
-		     PHYSICAL_ADDRESS HighestAcceptableAddress);
+		     PHYSICAL_ADDRESS HighestAcceptableAddress,
+		     ULONG Alignment);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 
