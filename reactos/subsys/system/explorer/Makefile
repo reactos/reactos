@@ -4,9 +4,19 @@
 #  Makefile
 #
 
+ifeq ($(HOST),mingw32-linux)
+CC = mingw32-gcc
+CXX = mingw32-g++
+LINK = mingw32-g++
+CD_PREFIX := ./
+else
 CC = gcc
 CXX = g++
 LINK = g++
+CD_PREFIX := 
+endif
+
+UNICODE = 1
 
 TOOLS_PATH = ../../../tools
 
@@ -85,7 +95,7 @@ doxy-footer.html: ever
 ever:
 
 buildno.h: ../../../include/reactos/buildno.h
-	updatebuildno
+	$(CD_PREFIX)updatebuildno
 
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
@@ -96,3 +106,18 @@ explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
 clean:
 	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 
+# Use environment var ROS_INSTALL to override default install dir
+ifeq ($(ROS_INSTALL),)
+ifeq ($(HOST),mingw32-windows)
+INSTALL_DIR = C:/reactos
+else
+INSTALL_DIR = $(PATH_TO_TOP)/reactos
+endif
+else
+INSTALL_DIR = $(ROS_INSTALL)
+endif
+
+install:
+	-$(TOOLS_PATH)/rcopy $(TARGET) $(INSTALL_DIR)/$(TARGET)
+
+bootcd:
