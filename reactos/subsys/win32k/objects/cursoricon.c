@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.51 2004/03/15 20:21:51 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.52 2004/03/29 06:38:50 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -368,7 +368,12 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
     return FALSE;
   }
   
-  if(WinStaObject->SystemCursor.CurrentCursorObject == Object)
+  if (Object->Process != PsGetWin32Process())
+  {
+    return FALSE;
+  }
+
+  if (WinStaObject->SystemCursor.CurrentCursorObject == Object)
   {
     /* Hide the cursor if we're destroying the current cursor */
     IntSetCursor(WinStaObject, NULL, TRUE);
@@ -376,16 +381,13 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
   
   bmpMask = Object->IconInfo.hbmMask;
   bmpColor = Object->IconInfo.hbmColor;
-  
-  
-  if(Object->Process && RemoveFromProcess)
+
+  if (Object->Process && RemoveFromProcess)
   {
     IntLockProcessCursorIcons(Object->Process);
     RemoveEntryList(&Object->ListEntry);
     IntUnLockProcessCursorIcons(Object->Process);
   }
-  
-  ObmDereferenceObject(Object);
   
   Ret = NT_SUCCESS(ObmCloseHandle(HandleTable, Handle));
   
@@ -394,6 +396,8 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
     NtGdiDeleteObject(bmpMask);
   if(bmpColor)
     NtGdiDeleteObject(bmpColor);
+
+/*  ObmDereferenceObject(Object);*/
   
   return Ret;
 }

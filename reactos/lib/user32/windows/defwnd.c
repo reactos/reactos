@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.124 2004/02/22 23:40:58 gvg Exp $
+/* $Id: defwnd.c,v 1.125 2004/03/29 06:38:50 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1384,7 +1384,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_GETICON:
         {
-            INT Index = (wParam != 0) ? GCL_HICON : GCL_HICONSM;
+            INT Index = (wParam == ICON_BIG) ? GCL_HICON : GCL_HICONSM;
             return (GetClassLongW(hWnd, Index));
         }
 
