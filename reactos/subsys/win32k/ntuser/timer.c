@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.20 2003/12/26 10:47:20 gvg Exp $
+/* $Id: timer.c,v 1.21 2004/01/18 22:29:38 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -74,9 +74,9 @@ IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer, BOOL SysTimer)
   ListHead = SysTimer ? &SysTimerListHead : &TimerListHead;
 
   InsertAscendingList(ListHead,
-                      &NewTimer->ListEntry,
                       MSG_TIMER_ENTRY,
-                      ListEntry,
+                      ListEntry,                      
+                      NewTimer,
                       Timeout.QuadPart);
                       
   return IsFirstEntry(ListHead, &NewTimer->ListEntry);

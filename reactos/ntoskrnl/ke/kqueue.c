@@ -42,11 +42,11 @@ KeInsertByKeyDeviceQueue (
   }
   
   /* Insert new entry after the last entry with SortKey less or equal to passed-in SortKey */
-  InsertAscendingList(&DeviceQueue->DeviceListHead,
-                      &DeviceQueueEntry->DeviceListEntry,
-                      KDEVICE_QUEUE_ENTRY,
-                      DeviceListEntry,
-                      SortKey);
+  InsertAscendingListFIFO(&DeviceQueue->DeviceListHead,
+                          KDEVICE_QUEUE_ENTRY,
+                          DeviceListEntry,
+                          DeviceQueueEntry,
+                          SortKey);
    
   KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
   return(TRUE);
