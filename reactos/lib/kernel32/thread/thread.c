@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.30 2002/10/01 19:27:20 chorns Exp $
+/* $Id: thread.c,v 1.31 2002/10/25 22:59:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,7 +12,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/thread.h>
 #include <ntdll/ldr.h>
@@ -28,15 +27,34 @@ static VOID ThreadAttachDlls (VOID);
 
 /* FUNCTIONS *****************************************************************/
 
+static
+EXCEPTION_DISPOSITION
+__cdecl
+_except_handler(
+    struct _EXCEPTION_RECORD *ExceptionRecord,
+    void * EstablisherFrame,
+    struct _CONTEXT *ContextRecord,
+    void * DispatcherContext )
+{
+	ExitThread(0);
+
+	/* We should not get to here */
+	return ExceptionContinueSearch;
+}
+
 static VOID STDCALL
 ThreadStartup (LPTHREAD_START_ROUTINE lpStartAddress,
                LPVOID lpParameter)
 {
    UINT uExitCode;
 
-   /* FIXME: notify csrss of thread creation ?? */
-
-   uExitCode = (lpStartAddress)(lpParameter);
+   __try1(_except_handler)
+   {
+		/* FIXME: notify csrss of thread creation ?? */
+		uExitCode = (lpStartAddress)(lpParameter);
+   } __except1
+   {
+   }
 
    ExitThread(uExitCode);
 }

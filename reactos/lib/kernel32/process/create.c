@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.55 2002/10/20 11:56:00 chorns Exp $
+/* $Id: create.c,v 1.56 2002/10/25 22:59:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -168,6 +168,47 @@ CreateProcessA (LPCSTR			lpApplicationName,
 }
 
 
+static
+EXCEPTION_DISPOSITION
+__cdecl
+_except_handler(
+    struct _EXCEPTION_RECORD *ExceptionRecord,
+    void * EstablisherFrame,
+    struct _CONTEXT *ContextRecord,
+    void * DispatcherContext )
+{
+	DPRINT("Process terminated abnormally...\n");
+
+	if (/* FIXME: */ TRUE) /* Not a service */
+	{
+		ExitProcess(0);
+	}
+	else
+	{
+		ExitThread(0);
+	}
+
+	/* We should not get to here */
+	return ExceptionContinueSearch;
+}
+
+VOID STDCALL
+BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
+				 DWORD lpParameter)
+{
+	UINT uExitCode = 0;
+
+	__try1(_except_handler)
+	{
+		uExitCode = (lpStartAddress)(lpParameter);
+	} __except1
+	{
+	}
+
+	ExitThread(uExitCode);
+}
+
+
 HANDLE STDCALL 
 KlCreateFirstThread(HANDLE ProcessHandle,
 		    LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -186,7 +227,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   BOOLEAN CreateSuspended = FALSE;
   ULONG OldPageProtection;
   ULONG ResultLength;
-  ULONG InitialStack[5];
+  ULONG InitialStack[6];
 
   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
   ObjectAttributes.RootDirectory = NULL;
@@ -257,7 +298,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 
       DPRINT("Error comitting stack page(s)!\n");
       SetLastErrorByStatus(Status);
-      return(NULL);
+      return(INVALID_HANDLE_VALUE);
     }
 
   DPRINT("StackLimit: %p\n",
@@ -279,18 +320,18 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 
       DPRINT("Error comitting guard page!\n");
       SetLastErrorByStatus(Status);
-      return(NULL);
+      return(INVALID_HANDLE_VALUE);
     }
 
   memset(&ThreadContext,0,sizeof(CONTEXT));
-  ThreadContext.Eip = (ULONG)lpStartAddress;
+  ThreadContext.Eip = (ULONG)BaseProcessStart;
   ThreadContext.SegGs = USER_DS;
   ThreadContext.SegFs = USER_DS;
   ThreadContext.SegEs = USER_DS;
   ThreadContext.SegDs = USER_DS;
   ThreadContext.SegCs = USER_CS;
   ThreadContext.SegSs = USER_DS;
-  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 20;
+  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 6*4;
   ThreadContext.EFlags = (1<<1) + (1<<9);
 
   DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
@@ -299,7 +340,9 @@ KlCreateFirstThread(HANDLE ProcessHandle,
    * Write in the initial stack.
    */
   InitialStack[0] = 0;
-  InitialStack[1] = PEB_BASE;
+  InitialStack[1] = (DWORD)lpStartAddress;
+  InitialStack[2] = PEB_BASE;
+
   Status = ZwWriteVirtualMemory(ProcessHandle,
 				(PVOID)ThreadContext.Esp,
 				InitialStack,
@@ -308,7 +351,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to write initial stack.\n");
-      return(Status);
+      return(INVALID_HANDLE_VALUE);
     }
 
   Status = NtCreateThread(&ThreadHandle,
@@ -326,7 +369,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 			  &InitialTeb.StackReserve,
 			  MEM_RELEASE);
       SetLastErrorByStatus(Status);
-      return(NULL);
+      return(INVALID_HANDLE_VALUE);
     }
 
   if (lpThreadId != NULL)
@@ -941,7 +984,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				  ImageBaseAddress + (ULONG)Sii.EntryPoint,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
-   if (hThread == NULL)
+   if (hThread == INVALID_HANDLE_VALUE)
      {
 	return FALSE;
      }
