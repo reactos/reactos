@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.15 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: port.c,v 1.16 2003/12/14 17:44:02 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,7 @@ NtImpersonateClientOfPort (HANDLE		PortHandle,
 			   PLPC_MESSAGE	ClientMessage)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 

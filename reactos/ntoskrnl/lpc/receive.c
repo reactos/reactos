@@ -1,4 +1,4 @@
-/* $Id: receive.c,v 1.7 2003/07/11 01:23:15 royce Exp $
+/* $Id: receive.c,v 1.8 2003/12/14 17:44:02 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,6 +39,7 @@ NtReadRequestData (HANDLE		PortHandle,
 		   PULONG		Returnlength)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 

@@ -27,6 +27,7 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 		 IN POBJECT_TYPE Type)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -39,6 +40,7 @@ ObGetObjectSecurity(IN PVOID Object,
 		    OUT PBOOLEAN MemoryAllocated)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.20 2003/12/13 14:36:42 ekohl Exp $
+/* $Id: dir.c,v 1.21 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,6 +39,7 @@ NtNotifyChangeDirectoryFile (
 	)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -171,6 +172,7 @@ NtQueryDirectoryFile(
 NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 

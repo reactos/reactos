@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.13 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: resource.c,v 1.14 2003/12/14 17:44:02 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -87,6 +87,7 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       */
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 /*
@@ -101,6 +102,7 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
 		  PCM_RESOURCE_LIST* AllocatedResources)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 /*

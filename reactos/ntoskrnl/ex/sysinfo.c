@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.25 2003/09/14 09:03:54 hbirr Exp $
+/* $Id: sysinfo.c,v 1.26 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1263,6 +1263,7 @@ NtFlushInstructionCache (
 	)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 

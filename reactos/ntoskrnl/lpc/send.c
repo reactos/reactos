@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.12 2003/08/18 11:48:19 hbirr Exp $
+/* $Id: send.c,v 1.13 2003/12/14 17:44:02 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -325,6 +325,7 @@ NTSTATUS STDCALL NtWriteRequestData (HANDLE		PortHandle,
 				     PULONG		ReturnLength)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.52 2003/12/13 14:36:42 ekohl Exp $
+/* $Id: rw.c,v 1.53 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -299,6 +299,7 @@ NtReadFileScatter (
 	)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -329,6 +330,7 @@ NtWriteFileGather (
 	)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 

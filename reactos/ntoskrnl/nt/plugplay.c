@@ -23,6 +23,7 @@ NtPlugPlayControl (DWORD Unknown1,
                    DWORD Unknown3)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS
@@ -33,4 +34,5 @@ NtGetPlugPlayEvent (ULONG Reserved1,
                     ULONG BufferLength)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }

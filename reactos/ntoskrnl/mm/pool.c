@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.24 2003/09/27 18:53:58 navaraf Exp $
+/* $Id: pool.c,v 1.25 2003/12/14 17:44:02 hbirr Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -138,8 +138,10 @@ ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
 			 Tag,
 			 (PVOID)__builtin_return_address(0));
   return(Block);
-#endif
+#else
   UNIMPLEMENTED;
+  return(NULL);
+#endif
 }
 
 /*

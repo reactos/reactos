@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.29 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: token.c,v 1.30 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -43,6 +43,7 @@ VOID SepFreeProxyData(PVOID ProxyData)
 NTSTATUS SepCopyProxyData(PVOID* Dest, PVOID Src)
 {
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
@@ -748,6 +749,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 		      IN ULONG TokenInformationLength)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -785,6 +787,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		     &NewToken);
 #else
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 #endif
 }
 
@@ -838,6 +841,7 @@ NtAdjustGroupsToken(IN HANDLE TokenHandle,
 		   &c);
 #else
    UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 #endif
 }
 

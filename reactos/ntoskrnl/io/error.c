@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: error.c,v 1.9 2003/07/10 15:47:00 royce Exp $
+/* $Id: error.c,v 1.10 2003/12/14 17:44:01 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/error.c
@@ -51,6 +51,7 @@ BOOLEAN
 IoIsTotalDeviceFailure(NTSTATUS Status)
 {
    UNIMPLEMENTED;
+   return(FALSE);
 }
 
 /*
@@ -62,6 +63,7 @@ IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
 			      PKTHREAD Thread)
 {
    UNIMPLEMENTED;
+   return(FALSE);
 }
 
 

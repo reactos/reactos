@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.70 2003/08/20 10:37:33 silverblade Exp $
+/* $Id: virtual.c,v 1.71 2003/12/14 17:44:02 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -56,6 +56,7 @@ NtFlushVirtualMemory(IN	HANDLE	ProcessHandle,
  */
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS STDCALL 

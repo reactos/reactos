@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.70 2003/12/13 14:36:42 ekohl Exp $
+/* $Id: create.c,v 1.71 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,6 +47,7 @@ NTSTATUS STDCALL
 NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 

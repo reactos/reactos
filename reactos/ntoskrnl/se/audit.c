@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.1 2003/07/20 22:10:23 ekohl Exp $
+/* $Id: audit.c,v 1.2 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,6 +33,7 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 	)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -42,6 +43,7 @@ NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 			IN BOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -51,6 +53,7 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 			 IN BOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -69,6 +72,7 @@ NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 		       OUT PBOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -80,6 +84,7 @@ NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
 			      IN BOOLEAN AccessGranted)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -92,6 +97,7 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 			    IN BOOLEAN AccessGranted)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */

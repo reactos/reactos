@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.27 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: semgr.c,v 1.28 2003/12/14 17:44:02 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -197,6 +197,7 @@ NtAllocateUuids(PULARGE_INTEGER Time,
 		PULONG Sequence)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -211,6 +212,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PBOOLEAN AccessStatus)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -375,6 +377,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
      }
 #else
   UNIMPLEMENTED;   
+  return(STATUS_NOT_IMPLEMENTED);
 #endif
 }
 
