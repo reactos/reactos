@@ -1925,9 +1925,9 @@ EXPORT
 NdisMSleep(
     IN  ULONG   MicrosecondsToSleep)
 /*
- * FUNCTION: delay the thread's execution for MillisecondsToSleep
+ * FUNCTION: delay the thread's execution for MicrosecondsToSleep
  * ARGUMENTS:
- *     MillisecondsToSleep: duh...
+ *     MicrosecondsToSleep: duh...
  * NOTES:
  *     - Because this is a blocking call, current IRQL must be < DISPATCH_LEVEL
  */
