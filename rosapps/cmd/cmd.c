@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.29 2002/04/05 12:53:21 ekohl Exp $
+/* $Id: cmd.c,v 1.30 2002/05/07 23:05:33 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -446,8 +446,9 @@ VOID ParseCommandLine (LPTSTR cmd)
 	if (in[0])
 	{
 		HANDLE hFile;
+		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
-		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
@@ -471,11 +472,13 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 	while (num-- > 1)
 	{
+		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+
 		/* Create unique temporary file name */
 		GetTempFileName (szTempPath, "CMD", 0, szFileName[1]);
 
 		/* Set current stdout to temporary file */
-		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, NULL,
+		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		SetStdHandle (STD_OUTPUT_HANDLE, hFile[1]);
 
@@ -505,7 +508,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		*szFileName[1] = _T('\0');
 
 		/* open new stdin file */
-		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, NULL,
+		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, &sa,
 		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		SetStdHandle (STD_INPUT_HANDLE, hFile[0]);
 
@@ -518,8 +521,9 @@ VOID ParseCommandLine (LPTSTR cmd)
 	{
 		/* Final output to here */
 		HANDLE hFile;
+		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
-		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
@@ -560,6 +564,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	{
 		/* Final output to here */
 		HANDLE hFile;
+		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 		if (!_tcscmp (err, out))
 		{
@@ -576,7 +581,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			hFile = CreateFile (err,
 			                    GENERIC_WRITE,
 			                    0,
-			                    NULL,
+			                    &sa,
 			                    (nRedirFlags & ERROR_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 			                    FILE_ATTRIBUTE_NORMAL,
 			                    NULL);
@@ -1148,7 +1153,7 @@ int main (int argc, char *argv[])
 	SetFileApisToOEM ();
 
 	if( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &Info ) == FALSE )
-	   printf( "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError() );
+	   fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError() );
 	wColor = Info.wAttributes;
 	wDefColor = wColor;
 	/* check switches on command-line */
