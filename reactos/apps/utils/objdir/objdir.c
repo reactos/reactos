@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.5 2000/08/11 17:18:31 ea Exp $
+/* $Id: objdir.c,v 1.6 2001/05/01 21:43:45 ea Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -9,6 +9,10 @@
  * 	2000-08-11 (ea)
  * 		Added symbolic link expansion.
  * 		(tested under nt4sp4/x86)
+ * 	2001-05-01 (ea)
+ * 		Fixed entries counter. Added more
+ * 		error codes check. Removed wprintf,
+ * 		because it does not work in .17.
  */
 
 #include <ddk/ntddk.h>
@@ -17,8 +21,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-BYTE DirectoryEntry [(2 * MAX_PATH) + sizeof (OBJDIR_INFORMATION)];
+BYTE DirectoryEntry [32768];
 POBJDIR_INFORMATION pDirectoryEntry = (POBJDIR_INFORMATION) DirectoryEntry;
+
+static
+PCHAR
+STDCALL
+RawUszAsz (
+	PWCHAR	szU,
+	PCHAR	szA
+	)
+{
+	register PCHAR a = szA;
+	
+	while (*szU) {*szA++ = (CHAR) (0x00ff & * szU++);}
+	*szA = '\0';
+	return a;
+}
 
 
 static
@@ -40,6 +59,10 @@ StatusToName (NTSTATUS Status)
 			return "STATUS_OBJECT_NAME_NOT_FOUND";
 		case STATUS_PATH_SYNTAX_BAD:
 			return "STATUS_PATH_SYNTAX_BAD";
+		case STATUS_NO_MORE_ENTRIES:
+			return "STATUS_NO_MORE_ENTRIES";
+		case STATUS_UNSUCCESSFUL:
+			return "STATUS_UNSUCCESSFUL";
 	}
 	sprintf (RawValue, "0x%08lx", Status);
 	return (const char *) RawValue;
@@ -127,7 +150,8 @@ int main(int argc, char* argv[])
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 	NTSTATUS		Status;
 	HANDLE			DirectoryHandle;
-	ULONG			BytesReturned = 0;
+	ULONG			Context = 0;
+	ULONG			ReturnLength = 0;
 	ULONG			EntryCount = 0;
 	
 	/* For expanding symbolic links */
@@ -187,6 +211,7 @@ int main(int argc, char* argv[])
 			);
 		return EXIT_FAILURE;
 	}
+	printf ("\n Directory of %s\n\n", argv[1]);
 	/*
 	 * Enumerate each item in the directory.
 	 */
@@ -194,10 +219,10 @@ int main(int argc, char* argv[])
 			DirectoryHandle,
 			pDirectoryEntry,
 			sizeof DirectoryEntry,
-			TRUE,
-			TRUE,
-			& BytesReturned,
-			& EntryCount
+			FALSE,/* ReturnSingleEntry */
+			TRUE, /* RestartScan */
+			& Context,
+			& ReturnLength
 			);
 	if (!NT_SUCCESS(Status))
 	{
@@ -208,9 +233,12 @@ int main(int argc, char* argv[])
 		NtClose (DirectoryHandle);
 		return EXIT_FAILURE;
 	}
-	wprintf (L"%d entries:\n", EntryCount);
-	while (STATUS_NO_MORE_ENTRIES != Status)
+	while (0 != pDirectoryEntry->ObjectTypeName.Length)
 	{
+		CHAR ObjectNameA [MAX_PATH];
+		CHAR TypeNameA [MAX_PATH];
+		CHAR TargetNameA [MAX_PATH];
+		
 		if (0 == wcscmp (L"SymbolicLink", pDirectoryEntry->ObjectTypeName.Buffer))
 		{
 			if (TRUE == ExpandSymbolicLink (
@@ -220,40 +248,37 @@ int main(int argc, char* argv[])
 					)
 				)
 			{
-				wprintf (
-					L"%-16s %s -> %s\n",
-					pDirectoryEntry->ObjectTypeName.Buffer,
-					pDirectoryEntry->ObjectName.Buffer,
-					TargetObjectName.Buffer
+				
+				printf (
+					"%-16s %s -> %s\n",
+					RawUszAsz (pDirectoryEntry->ObjectTypeName.Buffer, TypeNameA),
+					RawUszAsz (pDirectoryEntry->ObjectName.Buffer, ObjectNameA),
+					RawUszAsz (TargetObjectName.Buffer, TargetNameA)
 					);
 			}
 			else
 			{
-				wprintf (
-					L"%-16s %s -> (error!)\n",
-					pDirectoryEntry->ObjectTypeName.Buffer,
-					pDirectoryEntry->ObjectName.Buffer
+				printf (
+					"%-16s %s -> (error!)\n",
+					RawUszAsz (pDirectoryEntry->ObjectTypeName.Buffer, TypeNameA),
+					RawUszAsz (pDirectoryEntry->ObjectName.Buffer, ObjectNameA)
 					);
 			}
 		}
 		else
 		{
-			wprintf (
-				L"%-16s %s\n",
-				pDirectoryEntry->ObjectTypeName.Buffer,
-				pDirectoryEntry->ObjectName.Buffer
+			printf (
+				"%-16s %s\n",
+				RawUszAsz (pDirectoryEntry->ObjectTypeName.Buffer, TypeNameA),
+				RawUszAsz (pDirectoryEntry->ObjectName.Buffer, ObjectNameA)
 				);
 		}
-		Status = NtQueryDirectoryObject (
-				DirectoryHandle,
-				pDirectoryEntry,
-				sizeof DirectoryEntry,
-				TRUE,
-				FALSE,
-				& BytesReturned,
-				& EntryCount
-				);
+		++ EntryCount;
+		++ pDirectoryEntry;
+		
+		
 	}
+	printf ("\n\t%d object(s)\n", EntryCount);
 	/*
 	 * Free any resource.
 	 */
