@@ -1,4 +1,4 @@
-/* $Id: ntddscsi.h,v 1.2 2002/10/03 18:33:47 sedwards Exp $
+/* $Id: ntddscsi.h,v 1.3 2003/06/22 16:35:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,9 +10,7 @@
 #ifndef __STORAGE_INCLUDE_NTDDSCSI_H
 #define __STORAGE_INCLUDE_NTDDSCSI_H
 
-
 /* IOCTL codes */
-
 #define IOCTL_SCSI_PASS_THROUGH \
 	CTL_CODE(FILE_DEVICE_CONTROLLER, 0x0401, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #define IOCTL_SCSI_MINIPORT \
@@ -86,6 +84,53 @@ typedef struct _SCSI_ADDRESS
   UCHAR TargetId;
   UCHAR Lun;
 } SCSI_ADDRESS, *PSCSI_ADDRESS;
+
+
+/* Used by IOCTL_SCSI_PASS_THROUGH */
+
+typedef struct _SCSI_PASS_THROUGH
+{
+  USHORT Length;
+  UCHAR ScsiStatus;
+  UCHAR PathId;
+  UCHAR TargetId;
+  UCHAR Lun;
+  UCHAR CdbLength;
+  UCHAR SenseInfoLength;
+  UCHAR DataIn;
+  ULONG DataTransferLength;
+  ULONG TimeOutValue;
+  ULONG DataBufferOffset;
+  ULONG SenseInfoOffset;
+  UCHAR Cdb[16];
+} SCSI_PASS_THROUGH, *PSCSI_PASS_THROUGH;
+
+
+/* Used by IOCTL_SCSI_PASS_THROUGH_DIRECT */
+
+typedef struct _SCSI_PASS_THROUGH_DIRECT
+{
+  USHORT Length;
+  UCHAR ScsiStatus;
+  UCHAR PathId;
+  UCHAR TargetId;
+  UCHAR Lun;
+  UCHAR CdbLength;
+  UCHAR SenseInfoLength;
+  UCHAR DataIn;
+  ULONG DataTransferLength;
+  ULONG TimeOutValue;
+  ULONG DataBufferOffset;
+  ULONG SenseInfoOffset;
+  UCHAR Cdb[16];
+} SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
+
+
+/* Pass through DataIn */
+
+#define SCSI_IOCTL_DATA_OUT		0
+#define SCSI_IOCTL_DATA_IN		1
+#define SCSI_IOCTL_DATA_UNSPECIFIED	2
 
 #endif /* __STORAGE_INCLUDE_NTDDSCSI_H */
 
