@@ -31,8 +31,19 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
+   static PCH FamousLastWords[] =
+     {
+       "Oh my God, they killed Kenny! Those bastards!\n",
+       "Goodbye, and thanks for all the fish\n",
+       "I'll be back\n"
+     };
+   LARGE_INTEGER Now;
+
    if (Action > ShutdownPowerOff)
      return STATUS_INVALID_PARAMETER;
+
+   ZwQuerySystemTime(&Now);
+   Now.u.LowPart = Now.u.LowPart >> 8; /* Seems to give a somewhat better "random" number */
 
    IoShutdownRegisteredDevices();
    CmShutdownRegistry();
@@ -43,6 +54,8 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    
    if (Action == ShutdownNoReboot)
      {
+        HalReleaseDisplayOwnership();
+        HalDisplayString(FamousLastWords[Now.u.LowPart % (sizeof(FamousLastWords) / sizeof(PCH))]);
 #if 0
         /* Switch off */
         HalReturnToFirmware (FIRMWARE_OFF);
