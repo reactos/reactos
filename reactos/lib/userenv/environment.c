@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: environment.c,v 1.7 2004/09/30 20:23:00 ekohl Exp $
+/* $Id: environment.c,v 1.8 2004/10/10 18:26:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -307,7 +307,7 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
   HKEY hKeyUser;
   NTSTATUS Status;
 
-  DPRINT1 ("CreateEnvironmentBlock() called\n");
+  DPRINT("CreateEnvironmentBlock() called\n");
 
   if (lpEnvironment == NULL)
     return FALSE;
