@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.21 2003/07/20 00:04:06 ekohl Exp $
+; $Id: advapi32.edf,v 1.22 2003/07/20 15:16:51 ekohl Exp $
 ;
 ; advapi32.edf
 ;
@@ -288,7 +288,7 @@ OpenSCManagerW=OpenSCManagerW@12
 OpenServiceA=OpenServiceA@12
 OpenServiceW=OpenServiceW@12
 OpenThreadToken=OpenThreadToken@16
-;PrivilegeCheck=PrivilegeCheck@12
+PrivilegeCheck=PrivilegeCheck@12
 ;PrivilegedServiceAuditAlarmA=PrivilegedServiceAuditAlarmA@20
 ;PrivilegedServiceAuditAlarmW=PrivilegedServiceAuditAlarmW@20
 ;ProvAccessRightsToNTAccessMask=ProvAccessRightsToNTAccessMask@8

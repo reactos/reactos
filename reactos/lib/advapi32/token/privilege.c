@@ -1,4 +1,4 @@
-/* $Id: privilege.c,v 1.4 2003/07/10 15:05:55 chorns Exp $ 
+/* $Id: privilege.c,v 1.5 2003/07/20 15:16:32 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,9 +19,9 @@
  * @implemented
  */
 BOOL STDCALL LookupPrivilegeValueA (
-	LPCSTR	lpSystemName, 
-	LPCSTR	lpName, 
-	PLUID	lpLuid 
+	LPCSTR	lpSystemName,
+	LPCSTR	lpName,
+	PLUID	lpLuid
 	)
 {
 	BOOL		rv = FALSE;
@@ -71,9 +71,9 @@ BOOL STDCALL LookupPrivilegeValueA (
 	 * of this API.
 	 */
 	if (FALSE == (rv = LookupPrivilegeValueW (
-				(lpSystemName ? SystemNameW.Buffer : NULL), 
-				NameW.Buffer, 
-				lpLuid 
+				(lpSystemName ? SystemNameW.Buffer : NULL),
+				NameW.Buffer,
+				lpLuid
 				)
 			)
 		)
@@ -105,7 +105,7 @@ BOOL STDCALL LookupPrivilegeValueA (
 	}
 	return (rv);
 }
- 
+
 
 BOOL STDCALL LookupPrivilegeValueW (
 	LPCWSTR	lpSystemName, 
@@ -135,7 +135,7 @@ BOOL STDCALL LookupPrivilegeDisplayNameA (
 	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return (FALSE);
 }
-	
+
 
 /*
  * @unimplemented
@@ -164,15 +164,13 @@ BOOL STDCALL LookupPrivilegeNameA (
 	PLUID	lpLuid, 
 	LPSTR	lpName, 
 	LPDWORD	cbName 
-	) 
+	)
 {
 	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return (FALSE);
 }
 
-
 /*
- *
  * @unimplemented
  */
 BOOL STDCALL LookupPrivilegeNameW (
@@ -180,11 +178,38 @@ BOOL STDCALL LookupPrivilegeNameW (
 	PLUID	lpLuid, 
 	LPWSTR	lpName, 
 	LPDWORD	cbName 
-	) 
+	)
 {
 	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return (FALSE);
 }
- 
+
+
+/**********************************************************************
+ *	PrivilegeCheck					EXPORTED
+ *
+ * @implemented
+ */
+BOOL STDCALL
+PrivilegeCheck (HANDLE ClientToken,
+		PPRIVILEGE_SET RequiredPrivileges,
+		LPBOOL pfResult)
+{
+  BOOLEAN Result;
+  NTSTATUS Status;
+
+  Status = NtPrivilegeCheck (ClientToken,
+			     RequiredPrivileges,
+			     &Result);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  *pfResult = (BOOL) Result;
+
+  return TRUE;
+}
 
 /* EOF */
