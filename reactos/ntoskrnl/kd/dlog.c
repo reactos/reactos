@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.10 2004/01/02 17:43:50 sedwards Exp $
+/* $Id: dlog.c,v 1.11 2004/01/05 14:28:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,7 +46,7 @@ DebugLogInit(VOID)
   KeInitializeSemaphore(&DebugLogSem, 0, 255);
 }
 
-VOID STDCALL_FUNC
+VOID STDCALL
 DebugLogThreadMain(PVOID Context)
 {
   KIRQL oldIrql;

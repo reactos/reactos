@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.61 2003/12/30 18:34:58 fireball Exp $
+/* $Id: iotypes.h,v 1.62 2004/01/05 14:28:19 weiden Exp $
  *
  */
 
@@ -9,7 +9,7 @@
 #include <ntos/disk.h>
 #include <ntos/file.h>
 
-#pragma pack(push,4)
+#include <pshpack4.h>
 
 /* from winddk.h */
 #define POINTER_ALIGNMENT
@@ -215,6 +215,8 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 } CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
 
 
+#include <pshpack1.h>
+
 typedef struct
 {
    UCHAR Type;
@@ -226,32 +228,32 @@ typedef struct
 	  {
 	     PHYSICAL_ADDRESS Start;
 	     ULONG Length;
-	  } __attribute__((packed)) Port;
+	  } Port;
 	struct
 	  {
 	     ULONG Level;
 	     ULONG Vector;
 	     ULONG Affinity;
-	  } __attribute__((packed))Interrupt;
+	  } Interrupt;
 	struct
 	  {
 	     PHYSICAL_ADDRESS Start;
 	     ULONG Length;
-	  } __attribute__((packed))Memory;
+	  } Memory;
 	struct
 	  {
 	     ULONG Channel;
 	     ULONG Port;
 	     ULONG Reserved1;
-	  } __attribute__((packed))Dma;
+	  } Dma;
 	struct
 	  {
 	     ULONG DataSize;
 	     ULONG Reserved1;
 	     ULONG Reserved2;
-	  } __attribute__((packed))DeviceSpecificData;
-     } __attribute__((packed)) u;
-} __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+	  } DeviceSpecificData;
+     }  u;
+} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 
 typedef struct
 {
@@ -259,14 +261,14 @@ typedef struct
    USHORT Revision;
    ULONG Count;
    CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
+} CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
 
 typedef struct
 {
    INTERFACE_TYPE InterfaceType;
    ULONG BusNumber;
    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
+} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
 
 typedef struct
 {
@@ -274,13 +276,15 @@ typedef struct
    CM_FULL_RESOURCE_DESCRIPTOR List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
+#include <poppack.h>
+
 
 /*
  * PURPOSE: IRP stack location
  */
 
 /*
-typedef struct __attribute__((packed)) _IO_STACK_LOCATION
+typedef struct _IO_STACK_LOCATION
 {
   UCHAR MajorFunction;
   UCHAR MinorFunction;
@@ -479,7 +483,7 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
   PIO_COMPLETION_ROUTINE CompletionRoutine;
   PVOID CompletionContext;
 
-} __attribute__((packed)) IO_STACK_LOCATION, *PIO_STACK_LOCATION;*/
+} IO_STACK_LOCATION, *PIO_STACK_LOCATION;*/
 
 typedef struct _IO_STACK_LOCATION {
   UCHAR  MajorFunction;
@@ -1316,6 +1320,6 @@ typedef struct _BUS_INTERFACE_STANDARD {
   PGET_SET_DEVICE_DATA GetBusData;
 } BUS_INTERFACE_STANDARD, *PBUS_INTERFACE_STANDARD;
 
-#pragma pack(pop)
+#include <poppack.h>
 
 #endif /* __INCLUDE_DDK_IOTYPES_H */

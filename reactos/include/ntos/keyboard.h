@@ -83,6 +83,8 @@
 #define FOCUS_EVENT	(16)
 
 
+#include <pshpack1.h>
+
 typedef struct _KEY_EVENT_RECORD
 {
   BOOL bKeyDown;
@@ -95,7 +97,10 @@ typedef struct _KEY_EVENT_RECORD
     CHAR  AsciiChar;
   } uChar;
   DWORD dwControlKeyState;
-} PACKED KEY_EVENT_RECORD;
+} KEY_EVENT_RECORD;
+
+#include <poppack.h>
+
 
 typedef struct _MOUSE_EVENT_RECORD
 {

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.65 2003/12/31 14:37:34 hbirr Exp $
+/* $Id: timer.c,v 1.66 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -32,7 +32,11 @@
 /*
  * Current time
  */
+#if defined(__GNUC__)
 static LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
+#else
+static LARGE_INTEGER SystemBootTime = { 0 };
+#endif
 
 /*
  * Number of timer interrupts since initialisation
@@ -223,6 +227,7 @@ KeQueryInterruptTime(PLARGE_INTEGER CurrentTime)
   while (CurrentTime->u.HighPart != SharedUserData->InterruptTime.High2Part);
 }
 
+
 NTSTATUS STDCALL
 NtGetTickCount (PULONG	UpTime)
 {
@@ -332,7 +337,7 @@ KeSetTimerEx (PKTIMER		Timer,
      }
 
    KeReleaseSpinLock(&TimerListLock, oldlvl);
-   
+
    return AlreadyInList;
 }
 
@@ -607,7 +612,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
 
    KeReleaseSpinLockFromDpcLevel(&TimerValueLock);
-   
+
    /*
     * Queue a DPC that will expire timers
     */

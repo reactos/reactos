@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.69 2003/12/30 03:27:52 hyperion Exp $
+/* $Id: kill.c,v 1.70 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,7 +97,7 @@ PsReapThreads(VOID)
 	  {
 	     PiNrThreadsAwaitingReaping--;
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
-           
+
              /*
               An unbelievably complex chain of events would cause a system crash
               if PiThreadListLock was still held when the thread object is about

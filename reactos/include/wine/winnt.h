@@ -39,6 +39,7 @@ static inline struct _TEB * NtCurrentTeb(void)
 {
  struct _TEB * pTeb;
 
+#if defined(__GNUC__)
  /* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
  __asm__ __volatile__
  (
@@ -46,6 +47,12 @@ static inline struct _TEB * NtCurrentTeb(void)
   : "=r" (pTeb) /* can't have two memory operands */
   : /* no inputs */
  );
+#elif defined(_MSC_VER)
+ __asm mov eax, fs:0x18
+ __asm mov pTeb, eax
+#else
+#error Unknown compiler for inline assembler
+#endif
 
  return pTeb;
 }

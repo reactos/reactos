@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.26 2003/12/14 17:58:00 hbirr Exp $
+/* $Id: import.c,v 1.27 2004/01/05 14:28:19 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -105,7 +105,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
       ExFreePool (Hive->BlockList);
       ExFreePool (Hive->HiveHeader);
       ExFreePool (Hive);
-      return Status;
+      return (BOOLEAN)Status;
     }
 
   /* Initialize the free cell list */
@@ -118,7 +118,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
       ExFreePool (Hive->HiveHeader);
       ExFreePool (Hive);
 
-      return Status;
+      return (BOOLEAN)Status;
     }
 
   if (!(Hive->Flags & HIVE_NO_FILE))
@@ -134,7 +134,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
 	  ExFreePool (Hive->HiveHeader);
 	  ExFreePool (Hive);
 
-	  return Status;
+	  return (BOOLEAN)Status;
 	}
     }
 

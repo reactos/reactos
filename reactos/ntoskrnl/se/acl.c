@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.14 2003/12/30 18:52:06 fireball Exp $
+/* $Id: acl.c,v 1.15 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -263,7 +263,7 @@ RtlAddAce(PACL Acl,
      {
 	AclRevision = Acl->AclRevision;
      }
-   if ((PVOID)((char*)AceList + AceListLength) <= (PVOID)AceList)
+   if (((char*)AceList + AceListLength) <= (char*)AceList)
      {
 	return(STATUS_UNSUCCESSFUL);
      }

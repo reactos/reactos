@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.6 2003/12/30 18:52:04 fireball Exp $
+/* $Id: service.c,v 1.7 2004/01/05 14:28:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -138,12 +138,12 @@ void interrupt_handler2d()
 
 		sub esp, 112  /* FloatSave */
 
-		mov eax, dr7; push eax;
-		mov eax, dr6; push eax;
-		mov eax, dr3; push eax;
-		mov eax, dr2; push eax;
-		mov eax, dr1; push eax;
-		mov eax, dr0; push eax;
+		mov eax, dr7 __asm push eax
+		mov eax, dr6 __asm push eax
+		mov eax, dr3 __asm push eax
+		mov eax, dr2 __asm push eax
+		mov eax, dr1 __asm push eax
+		mov eax, dr0 __asm push eax
 
 		push 0		/* ContextFlags */
 
@@ -164,12 +164,12 @@ void interrupt_handler2d()
 
 		/*  Restore the user context  */
 		add esp, 4			/* UserContext */
-		pop eax; mov dr0, eax;
-		pop eax; mov dr1, eax;
-		pop eax; mov dr2, eax;
-		pop eax; mov dr3, eax;
-		pop eax; mov dr6, eax;
-		pop eax; mov dr7, eax;
+		pop eax __asm mov dr0, eax
+		pop eax __asm mov dr1, eax
+		pop eax __asm mov dr2, eax
+		pop eax __asm mov dr3, eax
+		pop eax __asm mov dr6, eax
+		pop eax __asm mov dr7, eax
 		add esp, 112		/* FloatingSave */
 		pop gs
 		pop fs
@@ -185,7 +185,7 @@ void interrupt_handler2d()
 
 		pop ebp
 
-		iret
+		iretd
 	}
 }
 

@@ -2251,7 +2251,7 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
       CurValueCell = CmiGetCell (RegistryHive,
                                  ValueListCell->ValueOffset[i],NULL);
       if ((CurValueCell != NULL) &&
-          (MaxValueData < (CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
+          (MaxValueData < (LONG)(CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
         {
           MaxValueData = CurValueCell->DataSize & REG_DATA_SIZE_MASK;
         }
@@ -2752,7 +2752,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 	  CmiComparePackedNames(ValueName,
 				CurValueCell->Name,
 				CurValueCell->NameSize,
-				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
+				(BOOLEAN)((CurValueCell->Flags & REG_VALUE_NAME_PACKED) ? TRUE : FALSE)))
 	{
 	  *ValueCell = CurValueCell;
 	  if (VBOffset)
@@ -2929,7 +2929,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 	  CmiComparePackedNames(ValueName,
 				CurValueCell->Name,
 				CurValueCell->NameSize,
-				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
+				(BOOLEAN)((CurValueCell->Flags & REG_VALUE_NAME_PACKED) ? TRUE : FALSE)))
 	{
 	  CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->ValueOffset[i]);
 
@@ -2993,8 +2993,9 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
     }
   else
     {
+	  assert(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
-      NewHashBlock->HashTableSize = SubKeyCount;
+      NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
       *HashBlock = NewHashBlock;
     }
 
@@ -3107,8 +3108,9 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
+	  assert(NameSize <= 0xffff); /* should really be USHORT_MAX or similar */
       NewValueCell->Id = REG_VALUE_CELL_ID;
-      NewValueCell->NameSize = NameSize;
+      NewValueCell->NameSize = (USHORT)NameSize;
       if (Packable)
 	{
 	  /* Pack the value name */

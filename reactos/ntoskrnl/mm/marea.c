@@ -548,7 +548,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 
    if (BoundaryAddressMultiple.QuadPart != 0)
      {
-      EndAddress = *BaseAddress + tmpLength-1;
+      EndAddress = ((char*)(*BaseAddress)) + tmpLength-1;
       assert(((DWORD_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
      }
 

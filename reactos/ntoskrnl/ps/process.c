@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.123 2003/12/31 05:33:04 jfilby Exp $
+/* $Id: process.c,v 1.124 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -464,9 +464,9 @@ PsCreatePeb(HANDLE ProcessHandle,
   Peb->OSBuildNumber = 0;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
 
-  Peb->AnsiCodePageData = (char *)TableBase + NlsAnsiTableOffset;
-  Peb->OemCodePageData = (char *)TableBase + NlsOemTableOffset;
-  Peb->UnicodeCaseTableData = (char *)TableBase + NlsUnicodeTableOffset;
+  Peb->AnsiCodePageData     = (char*)TableBase + NlsAnsiTableOffset;
+  Peb->OemCodePageData      = (char*)TableBase + NlsOemTableOffset;
+  Peb->UnicodeCaseTableData = (char*)TableBase + NlsUnicodeTableOffset;
 
   Process->Peb = Peb;
   KeDetachProcess();
@@ -785,7 +785,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 #endif
 
    /* Protect the 60KB above the shared user page */
-   BaseAddress = (char *)USER_SHARED_DATA + PAGE_SIZE;
+   BaseAddress = (char*)USER_SHARED_DATA + PAGE_SIZE;
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_NO_ACCESS,

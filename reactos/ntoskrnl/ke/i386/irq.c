@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.38 2003/12/30 22:10:45 fireball Exp $
+/* $Id: irq.c,v 1.39 2004/01/05 14:28:21 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -491,10 +491,10 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
     */
-#ifdef __GNUC__
-    __asm__("sti\n\t");
+#if defined(__GNUC__)
+   __asm__("sti\n\t");
 #elif defined(_MSC_VER)
-  __asm sti
+   __asm	sti
 #else
 #error Unknown compiler for inline assembler
 #endif
@@ -523,10 +523,10 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    /*
     * End the system interrupt.
     */
-#ifdef __GNUC__
-    __asm__("cli\n\t");
+#if defined(__GNUC__)
+   __asm__("cli\n\t");
 #elif defined(_MSC_VER)
-  __asm cli
+   __asm	cli
 #else
 #error Unknown compiler for inline assembler
 #endif

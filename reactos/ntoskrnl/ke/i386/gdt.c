@@ -54,11 +54,17 @@ USHORT KiBootGdt[11 * 4] =
  0x0, 0x0, 0x0, 0x0               /* Trap TSS */
 };
 
-struct
+
+#include <pshpack1.h>
+
+struct LocalGdtDescriptor_t
 {
   USHORT Length;
   ULONG Base;
-} __attribute__((packed)) KiGdtDescriptor = { 11 * 8, (ULONG)KiBootGdt };
+} KiGdtDescriptor = { 11 * 8, (ULONG)KiBootGdt };
+
+#include <poppack.h>
+
 
 static KSPIN_LOCK GdtLock;
 
@@ -74,11 +80,7 @@ VOID
 KiInitializeGdt(PKPCR Pcr)
 {
   PUSHORT Gdt;
-  struct
-  {
-    USHORT Length;
-    ULONG Base;
-  } __attribute__((packed)) Descriptor;
+  struct LocalGdtDescriptor_t Descriptor;
   ULONG Entry;
   ULONG Base;  
 
@@ -146,18 +148,18 @@ KiInitializeGdt(PKPCR Pcr)
 #elif defined(_MSC_VER)
   __asm
   {
-	  lgdt Descriptor;
-		mov ax, KERNEL_DS;
-		mov bx, PCR_SELECTOR;
-		mov ds, ax;
-		mov es, ax;
-		mov fs, bx;
-		mov gs, ax;
-		push KERNEL_CS;
-		push offset l4 ; // what the heck...
-		ret
-		l4:
-	}
+    lgdt Descriptor;
+    mov ax, KERNEL_DS;
+    mov bx, PCR_SELECTOR;
+    mov ds, ax;
+    mov es, ax;
+    mov fs, bx;
+    mov gs, ax;
+    push KERNEL_CS;
+    push offset l4 ;
+    retf
+l4:
+  }
 #else
 #error Unknown compiler for inline assembler
 #endif

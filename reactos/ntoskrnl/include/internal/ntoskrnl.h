@@ -21,6 +21,7 @@
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
 
+#include <pshpack1.h>
 /*
  * Defines a descriptor as it appears in the processor tables
  */
@@ -28,7 +29,9 @@ typedef struct _DESCRIPTOR
 {
   ULONG a;
   ULONG b;
-} __attribute__ ((packed)) IDT_DESCRIPTOR, GDT_DESCRIPTOR;
+} IDT_DESCRIPTOR, GDT_DESCRIPTOR;
+
+#include <poppack.h>
 
 extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];

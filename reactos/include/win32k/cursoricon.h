@@ -5,6 +5,8 @@
 #include <win32k/dc.h>
 #include <win32k/gdiobj.h>
 
+#include <pshpack1.h>
+
 /* Structures for reading icon/cursor files and resources */
 // Structures for reading icon files and resources 
 typedef struct _ICONIMAGE
@@ -13,7 +15,7 @@ typedef struct _ICONIMAGE
    RGBQUAD         icColors[1];   // Color table
    BYTE            icXOR[1];      // DIB bits for XOR mask
    BYTE            icAND[1];      // DIB bits for AND mask
-} PACKED ICONIMAGE, *LPICONIMAGE;
+} ICONIMAGE, *LPICONIMAGE;
 
 typedef struct _CURSORIMAGE
 {
@@ -21,7 +23,7 @@ typedef struct _CURSORIMAGE
    RGBQUAD         icColors[1];   // Color table
    BYTE            icXOR[1];      // DIB bits for XOR mask
    BYTE            icAND[1];      // DIB bits for AND mask
-} PACKED CURSORIMAGE, *LPCURSORIMAGE;
+} CURSORIMAGE, *LPCURSORIMAGE;
 
 typedef struct
 {
@@ -29,25 +31,25 @@ typedef struct
     BYTE   bHeight;
     BYTE   bColorCount;
     BYTE   bReserved;
-} PACKED ICONRESDIR;
+} ICONRESDIR;
 
 typedef struct
 {
     WORD   wWidth;
     WORD   wHeight;
-} PACKED CURSORRESDIR;
+} CURSORRESDIR;
 
 typedef struct
 {
     WORD   wPlanes;				// Number of Color Planes in the XOR image
     WORD   wBitCount;			// Bits per pixel in the XOR image
-} PACKED ICONDIR;
+} ICONDIR;
 
 typedef struct
 {
     WORD   wXHotspot;				// Number of Color Planes in the XOR image
     WORD   wYHotspot;			// Bits per pixel in the XOR image
-} PACKED CURSORDIR;
+} CURSORDIR;
 
 typedef struct
 {
@@ -61,15 +63,15 @@ typedef struct
     } Info;
     DWORD  dwBytesInRes;		// How many bytes in this resource?
     DWORD  dwImageOffset;		// Where in the file is this image?
-} PACKED CURSORICONDIRENTRY;
+} CURSORICONDIRENTRY;
 
 typedef struct
 {
     WORD				idReserved;		// Reserved (must be 0)
     WORD				idType;			// Resource Type (1 for icons, 0 for cursors)
     WORD				idCount;		// How many images?
-    CURSORICONDIRENTRY  idEntries[1] __attribute__((packed));   // An entry for idCount number of images
-} PACKED CURSORICONDIR;
+    CURSORICONDIRENTRY  idEntries[1];   // An entry for idCount number of images
+} CURSORICONDIR;
 
 typedef struct
 {  
@@ -81,14 +83,16 @@ typedef struct
 	WORD   wBitCount;            // Bits per pixel
 	DWORD  dwBytesInRes;         // how many bytes in this resource?
 	WORD   nID;                  // the ID
-} PACKED GRPCURSORICONDIRENTRY;
+} GRPCURSORICONDIRENTRY;
 
 typedef struct 
 {
    WORD            idReserved;   // Reserved (must be 0)
    WORD            idType;       // Resource type (1 for icons)
    WORD            idCount;      // How many images?
-   GRPCURSORICONDIRENTRY   idEntries[1] PACKED; // The entries for each image
-} PACKED GRPCURSORICONDIR;
+   GRPCURSORICONDIRENTRY   idEntries[1]; // The entries for each image
+} GRPCURSORICONDIR;
+
+#include <poppack.h>
 
 #endif

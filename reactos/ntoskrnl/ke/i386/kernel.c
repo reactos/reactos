@@ -93,10 +93,10 @@ KeApplicationProcessorInit(VOID)
    */
   Ki386InitializeLdt();
 
-#ifdef __GNUC__
-    __asm__ __volatile__ ("sti\n\t");
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("sti\n\t");
 #elif defined(_MSC_VER)
-  __asm sti
+  __asm	sti
 #else
 #error Unknown compiler for inline assembler
 #endif

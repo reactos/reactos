@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.30 2003/12/30 18:52:05 fireball Exp $
+/* $Id: kmap.c,v 1.31 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -131,7 +131,7 @@ VOID INIT_FUNCTION
 MiInitKernelMap(VOID)
 {
    KeInitializeSpinLock(&AllocMapLock);
-   RtlInitializeBitMap(&AllocMap, (PVOID)&AllocMapBuffer, ALLOC_MAP_SIZE);
+   RtlInitializeBitMap(&AllocMap, (PULONG)AllocMapBuffer, ALLOC_MAP_SIZE);
    RtlClearAllBits(&AllocMap);
 }
 

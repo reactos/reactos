@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_NAPI_WIN32_H
 #define __INCLUDE_NAPI_WIN32_H
 
+#include <pshpack1.h>
+
 typedef struct _W32THREAD
 {
   PVOID MessageQueue;
@@ -9,7 +11,10 @@ typedef struct _W32THREAD
   struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
   DWORD MessagePumpHookValue;
-} __attribute__((packed)) W32THREAD, *PW32THREAD;
+} W32THREAD, *PW32THREAD;
+
+#include <poppack.h>
+
 
 typedef struct _W32PROCESS
 {

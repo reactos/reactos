@@ -15,8 +15,6 @@
 
 #ifndef __USE_W32API
 
-#define PACKED __attribute__((packed))
-
 #define ANYSIZE_ARRAY	(1)
 
 #define DELETE		(0x00010000L)

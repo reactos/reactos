@@ -53,13 +53,14 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 #else
         PopSetSystemPowerState(PowerSystemShutdown);
 
-#ifdef __GNUC__
-    __asm__("cli\n");
+#if defined(__GNUC__)
+        __asm__("cli\n");
 #elif defined(_MSC_VER)
-  __asm cli
+        __asm cli
 #else
 #error Unknown compiler for inline assembler
 #endif
+
 	while (TRUE)
 	  {
 	    ;

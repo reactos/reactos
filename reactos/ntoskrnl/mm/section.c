@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.140 2003/12/31 14:52:06 hbirr Exp $
+/* $Id: section.c,v 1.141 2004/01/05 14:28:21 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -510,7 +510,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       /*
        * Retrieve the page from the cache segment that we actually want.
        */
-      (*Page) = MmGetPhysicalAddress(BaseAddress +
+      (*Page) = MmGetPhysicalAddress((char*)BaseAddress +
 				     FileOffset - BaseOffset);
 
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, TRUE);
@@ -734,7 +734,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   }
 
 	   Page.QuadPart = (LONGLONG)(PAGE_FROM_SSE(Entry));
-
+	   MmReferencePage(Page);
 	   MmSharePageEntrySectionSegment(Segment, Offset);
 
 	   Status = MmCreateVirtualMapping(MemoryArea->Process,
@@ -1594,7 +1594,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       !(SwapEntry == 0 && 
         (Context.Segment->Flags & MM_PAGEFILE_SEGMENT || 
          Context.Segment->Characteristics & IMAGE_SECTION_CHAR_SHARED)))
-      
     {
       if (Context.Private)
 	{
@@ -3739,6 +3738,7 @@ MmAllocateSection (IN ULONG Length)
    DPRINT("MmAllocateSection(Length %x)\n",Length);
 
    BoundaryAddressMultiple.QuadPart = 0;
+
    AddressSpace = MmGetKernelAddressSpace();
    Result = NULL;
    MmLockAddressSpace(AddressSpace);
@@ -3753,6 +3753,7 @@ MmAllocateSection (IN ULONG Length)
 				FALSE,
 				BoundaryAddressMultiple);
    MmUnlockAddressSpace(AddressSpace);
+
    if (!NT_SUCCESS(Status))
      {
 	return (NULL);

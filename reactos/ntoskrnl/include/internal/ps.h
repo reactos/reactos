@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.56 2003/12/30 00:12:47 hyperion Exp $
+/* $Id: ps.h,v 1.57 2004/01/05 14:28:20 weiden Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -54,6 +54,8 @@ extern LCID PsDefaultSystemLocaleId;
 
 #ifndef __USE_W32API
 
+#include <pshpack1.h>
+
 typedef struct _KAPC_STATE
 {
    LIST_ENTRY ApcListHead[2];
@@ -61,9 +63,13 @@ typedef struct _KAPC_STATE
    UCHAR KernelApcInProgress;
    UCHAR KernelApcPending;
    USHORT UserApcPending;
-} __attribute__((packed)) KAPC_STATE, *PKAPC_STATE;
+} KAPC_STATE, *PKAPC_STATE;
+
+#include <poppack.h>
 
 #endif /* __USE_W32API */
+
+#include <pshpack1.h>
 
 typedef struct _KTHREAD
 {
@@ -152,7 +158,9 @@ typedef struct _KTHREAD
    
    /* Added by Phillip Susi for list of threads in a process */
    LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
-} __attribute__((packed)) KTHREAD;
+} KTHREAD;
+
+#include <poppack.h>
 
 /* Top level irp definitions. */
 #define 	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
@@ -175,6 +183,8 @@ typedef struct
    UCHAR Pad[2];                                     // 0x6
    SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
+
+#include <pshpack1.h>
 
 typedef struct _ETHREAD
 {
@@ -226,7 +236,10 @@ typedef struct _ETHREAD
 
   struct _W32THREAD* Win32Thread;
   
-} __attribute__((packed)) ETHREAD;
+} ETHREAD;
+
+#include <poppack.h>
+
 
 #ifndef __USE_W32API
 

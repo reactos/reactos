@@ -554,10 +554,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      {
         if (Tf->Eflags & FLAG_IF)
 	{
-#ifdef __GNUC__
-    __asm__("sti\n\t");
+#if defined(__GNUC__)
+	   __asm__("sti\n\t");
 #elif defined(_MSC_VER)
-  __asm sti
+	   __asm	sti
 #else
 #error Unknown compiler for inline assembler
 #endif

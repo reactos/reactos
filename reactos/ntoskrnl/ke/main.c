@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.181 2004/01/02 17:43:51 sedwards Exp $
+/* $Id: main.c,v 1.182 2004/01/05 14:28:21 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -915,8 +915,18 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
-  KeLoaderModules[0].ModStart = 0xC0000000;
+  KeLoaderModules[0].ModStart = KERNEL_BASE;
+#ifdef  __GNUC__
   KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
+#else
+  /* Take this value from the PE... */
+  {
+    PIMAGE_NT_HEADERS      NtHeader = RtlImageNtHeader((PVOID)KeLoaderModules[0].ModStart);
+    PIMAGE_OPTIONAL_HEADER OptHead  = &NtHeader->OptionalHeader;
+    KeLoaderModules[0].ModEnd =
+      KeLoaderModules[0].ModStart + PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
+  }
+#endif
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {      
       CHAR* s;
@@ -928,10 +938,11 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	{
 	  strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
 	}
+      /* TODO: Fix this hardcoded load address stuff... */
       KeLoaderModules[i].ModStart -= 0x200000;
-      KeLoaderModules[i].ModStart += 0xc0000000;
+      KeLoaderModules[i].ModStart += KERNEL_BASE;
       KeLoaderModules[i].ModEnd -= 0x200000;
-      KeLoaderModules[i].ModEnd += 0xc0000000;
+      KeLoaderModules[i].ModEnd += KERNEL_BASE;
       KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
     }
 
@@ -946,7 +957,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   /*
    * Process hal.dll
    */
-  LdrSafePEProcessModule((PVOID)HalBase, (PVOID)DriverBase, (PVOID)0xC0000000, &DriverSize);
+  LdrSafePEProcessModule((PVOID)HalBase, (PVOID)DriverBase, (PVOID)KERNEL_BASE, &DriverSize);
 
   LdrHalBase = (ULONG_PTR)DriverBase;
   last_kernel_address = DriverBase + DriverSize;
@@ -954,10 +965,13 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   /*
    * Process ntoskrnl.exe
    */
-  LdrSafePEProcessModule((PVOID)0xC0000000, (PVOID)0xC0000000, (PVOID)DriverBase, &DriverSize);
+  LdrSafePEProcessModule((PVOID)KERNEL_BASE, (PVOID)KERNEL_BASE, (PVOID)DriverBase, &DriverSize);
 
-  FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
-  LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
+  /* Now our imports from HAL is fixed. This is the first */
+  /* time in the boot process that we can use HAL         */
+
+  FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
+  LastKrnlPhysAddr  = last_kernel_address - KERNEL_BASE + 0x200000;
   LastKernelAddress = last_kernel_address;
 
 #ifndef ACPI

@@ -68,8 +68,8 @@ extern inline PULONG get_page_directory(void)
  */
 #define PAGE_TABLE_SIZE (4*1024*1024)
 
-#define PAGE_MASK(x) (x&(~0xfff))
-#define VADDR_TO_PT_OFFSET(x)  (((x/1024)%4096))
+#define PAGE_MASK(x) ((x)&(~0xfff))
+#define VADDR_TO_PT_OFFSET(x)  ((((x)/1024)%4096))
 #define VADDR_TO_PD_OFFSET(x)  ((x)/(4*1024*1024))
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

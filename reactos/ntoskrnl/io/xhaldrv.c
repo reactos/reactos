@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.42 2003/12/30 18:52:04 fireball Exp $
+/* $Id: xhaldrv.c,v 1.43 2004/01/05 14:28:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,7 @@
 
 #define  PARTITION_TBL_SIZE 4
 
+#include <pshpack1.h>
 
 typedef struct _PARTITION
 {
@@ -39,7 +40,7 @@ typedef struct _PARTITION
   unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
   unsigned int  StartingBlock;					/* first sector relative to start of disk */
   unsigned int  SectorCount;					/* number of sectors in partition */
-} PACKED PARTITION, *PPARTITION;
+} PARTITION, *PPARTITION;
 
 
 typedef struct _PARTITION_SECTOR
@@ -49,7 +50,9 @@ typedef struct _PARTITION_SECTOR
   UCHAR Reserved[2];				/* 0x1BC */
   PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
   USHORT Magic;					/* 0x1FE */
-} PACKED PARTITION_SECTOR, *PPARTITION_SECTOR;
+} PARTITION_SECTOR, *PPARTITION_SECTOR;
+
+#include <poppack.h>
 
 
 typedef enum _DISK_MANAGER

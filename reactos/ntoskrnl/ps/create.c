@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.69 2003/12/30 22:13:45 fireball Exp $
+/* $Id: create.c,v 1.70 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -401,7 +401,7 @@ PsInitializeThread(HANDLE ProcessHandle,
    InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
-   Thread->Tcb.BasePriority = Thread->ThreadsProcess->Pcb.BasePriority;
+   Thread->Tcb.BasePriority = (CHAR)Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
 
   return(STATUS_SUCCESS);
@@ -455,7 +455,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 	       }
 	  }
 	     
-	TebBase = (char *)TebBase - TebSize;
+	TebBase = (char*)TebBase - TebSize;
      }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);

@@ -220,13 +220,17 @@ typedef struct _BITMAPCOREINFO {
   RGBTRIPLE         bmciColors[1];
 } BITMAPCOREINFO, *PBITMAPCOREINFO, *LPBITMAPCOREINFO;
 
+#include <pshpack1.h>
+
 typedef struct tagBITMAPFILEHEADER {
   WORD    bfType;
   DWORD   bfSize;
   WORD    bfReserved1;
   WORD    bfReserved2;
   DWORD   bfOffBits;
-} PACKED BITMAPFILEHEADER;
+} BITMAPFILEHEADER;
+
+#include <poppack.h>
 
 typedef struct tagBITMAPINFOHEADER {
   DWORD  biSize;
@@ -510,7 +514,7 @@ typedef struct _RTL_RANGE {
 
 typedef
 BOOLEAN
-CALLBACK (*PRTL_CONFLICT_RANGE_CALLBACK) (
+(CALLBACK *PRTL_CONFLICT_RANGE_CALLBACK) (
 PVOID Context,
 PRTL_RANGE Range
     );
@@ -1406,6 +1410,9 @@ typedef struct _DISK_PERFORMANCE {
   DWORD QueueDepth;
 } DISK_PERFORMANCE ;
 
+
+#include <pshpack1.h>
+
 typedef struct {
   DWORD style;
   DWORD dwExtendedStyle;
@@ -1414,7 +1421,7 @@ typedef struct {
   short cx;
   short cy;
   WORD  id;
-} PACKED DLGITEMTEMPLATE;
+} DLGITEMTEMPLATE;
 
 typedef DLGITEMTEMPLATE *LPDLGITEMTEMPLATE;
 typedef DLGITEMTEMPLATE *PDLGITEMTEMPLATE;
@@ -1427,7 +1434,10 @@ typedef struct {
   short y;
   short cx;
   short cy;
-} PACKED DLGTEMPLATE;
+} DLGTEMPLATE;
+
+#include <poppack.h>
+
 
 typedef DLGTEMPLATE *LPDLGTEMPLATE;
 typedef const DLGTEMPLATE *LPCDLGTEMPLATE;
@@ -3254,6 +3264,9 @@ typedef struct tagMETAFILEPICT {
   HMETAFILE hMF;
 } METAFILEPICT, *PMETAFILEPICT, *LPMETAFILEPICT;
 
+
+#include <pshpack1.h>
+
 typedef struct tagMETAHEADER {
   WORD  mtType;
   WORD  mtHeaderSize;
@@ -3262,7 +3275,10 @@ typedef struct tagMETAHEADER {
   WORD  mtNoObjects;
   DWORD mtMaxRecord;
   WORD  mtNoParameters;
-} PACKED METAHEADER;
+} METAHEADER;
+
+#include <poppack.h>
+
 
 typedef struct tagMETARECORD {
   DWORD rdSize;
@@ -4299,6 +4315,9 @@ typedef struct _PREVENT_MEDIA_REMOVAL {
   BOOLEAN PreventMediaRemoval;
 } PREVENT_MEDIA_REMOVAL ;
 
+
+#include <pshpack1.h>
+
 typedef struct tagPDA {
   DWORD     lStructSize;
   HWND      hwndOwner;
@@ -4319,7 +4338,7 @@ typedef struct tagPDA {
   LPCSTR    lpSetupTemplateName;
   HANDLE    hPrintTemplate;
   HANDLE    hSetupTemplate;
-} PACKED PRINTDLGA, *LPPRINTDLGA;
+} PRINTDLGA, *LPPRINTDLGA;
 
 typedef struct tagPDW {
   DWORD     lStructSize;
@@ -4341,7 +4360,10 @@ typedef struct tagPDW {
   LPCWSTR   lpSetupTemplateName;
   HANDLE    hPrintTemplate;
   HANDLE    hSetupTemplate;
-} PACKED PRINTDLGW, *LPPRINTDLGW;
+} PRINTDLGW, *LPPRINTDLGW;
+
+#include <poppack.h>
+
 
 typedef_tident(PRINTDLG)
 typedef_tident(LPPRINTDLG)

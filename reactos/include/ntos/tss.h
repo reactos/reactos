@@ -10,6 +10,8 @@
 
 #ifndef __ASM__
 
+#include <pshpack1.h>
+
 typedef struct _KTSSNOIOPM
 {
   USHORT PreviousTask;
@@ -52,7 +54,8 @@ typedef struct _KTSSNOIOPM
   USHORT IoMapBase;
   /* no interrupt redirection map */
   UCHAR IoBitmap[1];
-} PACKED KTSSNOIOPM;
+} KTSSNOIOPM;
+
 
 typedef struct _KTSS
 {
@@ -96,7 +99,9 @@ typedef struct _KTSS
   USHORT IoMapBase;
   /* no interrupt redirection map */
   UCHAR  IoBitmap[8193];
-} PACKED KTSS;
+} KTSS;
+
+#include <poppack.h>
 
 #endif /* not __ASM__ */
 

@@ -113,7 +113,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   KernelStack[1] = 0;      /* ESI */
   KernelStack[2] = 0;      /* EBX */
   KernelStack[3] = 0;      /* EBP */
-  KernelStack[4] = (ULONG)PsBeginThreadWithContextInternal;   /* EIP */
+  KernelStack[4] = (ULONG)&PsBeginThreadWithContextInternal;   /* EIP */
 
   /* Save the context flags. */
   KernelStack[5] = Context->ContextFlags;
@@ -180,13 +180,13 @@ Ke386InitThread(PKTHREAD Thread,
   /*
    * Setup a stack frame for exit from the task switching routine
    */
-  
+
   KernelStack = (PULONG)((char*)Thread->KernelStack - (8*4));
   KernelStack[0] = 0;      /* EDI */
   KernelStack[1] = 0;      /* ESI */
   KernelStack[2] = 0;      /* EBX */
   KernelStack[3] = 0;      /* EBP */
-  KernelStack[4] = (ULONG)PsBeginThread;   /* EIP */
+  KernelStack[4] = (ULONG)&PsBeginThread;   /* EIP */
   KernelStack[5] = 0;     /* Return EIP */
   KernelStack[6] = (ULONG)StartRoutine; /* First argument to PsBeginThread */
   KernelStack[7] = (ULONG)StartContext; /* Second argument to PsBeginThread */

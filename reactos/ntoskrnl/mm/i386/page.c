@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.61 2003/12/30 18:52:05 fireball Exp $
+/* $Id: page.c,v 1.62 2004/01/05 14:28:21 weiden Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -132,7 +132,7 @@ ProtectToPTE(ULONG flProtect)
 
 #define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
                                 ((((ULONG)(v)) / (1024 * 1024))&(~0x3)))
-#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)v / 1024))&(~0x3)))
+#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)(v) / 1024))&(~0x3)))
 
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (4 * 1024 * 1024)))
 
@@ -271,7 +271,7 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
    KIRQL oldIrql;
    
    DPRINT("MmGetPageEntry(Address %x)\n", PAddress);
-   
+
    Pde = ADDR_TO_PDE(PAddress);
    if (*Pde == 0)     
    {

@@ -49,6 +49,8 @@ typedef struct _KWAIT_BLOCK
    USHORT WaitType;
 } KWAIT_BLOCK, *PKWAIT_BLOCK;
 
+#include <pshpack1.h>
+
 typedef struct _DISPATCHER_HEADER
 {
    UCHAR      Type;
@@ -57,8 +59,9 @@ typedef struct _DISPATCHER_HEADER
    UCHAR      Inserted;
    LONG       SignalState;
    LIST_ENTRY WaitListHead;
-} __attribute__((packed)) DISPATCHER_HEADER, *PDISPATCHER_HEADER;
+} DISPATCHER_HEADER, *PDISPATCHER_HEADER;
 
+#include <poppack.h>
 
 typedef struct _KQUEUE
 {
@@ -92,6 +95,8 @@ typedef struct _KDEVICE_QUEUE
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
 
+#include <pshpack1.h>
+
 typedef struct _KAPC
 {
    CSHORT Type;
@@ -108,7 +113,9 @@ typedef struct _KAPC
    CCHAR ApcStateIndex;
    KPROCESSOR_MODE ApcMode;
    USHORT Inserted;
-} __attribute__((packed)) KAPC, *PKAPC;
+} KAPC, *PKAPC;
+
+#include <poppack.h>
 
 typedef struct _KBUGCHECK_CALLBACK_RECORD
 {
@@ -130,11 +137,15 @@ typedef struct _KMUTEX
    UCHAR ApcDisable;
 } KMUTEX, *PKMUTEX, KMUTANT, *PKMUTANT;
 
+#include <pshpack1.h>
+
 typedef struct _KSEMAPHORE
 {
    DISPATCHER_HEADER Header;
    LONG Limit;
-} __attribute__((packed)) KSEMAPHORE, *PKSEMAPHORE;
+} KSEMAPHORE, *PKSEMAPHORE;
+
+#include <poppack.h>
 
 typedef struct _KEVENT
 {
@@ -169,6 +180,8 @@ typedef VOID STDCALL_FUNC
 /*
  * PURPOSE: Defines a delayed procedure call object
  */
+#include <pshpack1.h>
+
 typedef struct _KDPC
 {
    SHORT Type;
@@ -180,8 +193,9 @@ typedef struct _KDPC
    PVOID SystemArgument1;
    PVOID SystemArgument2;
    PULONG Lock;
-} __attribute__((packed)) KDPC, *PKDPC;
+} KDPC, *PKDPC;
 
+#include <poppack.h>
 
 
 typedef struct _KDEVICE_QUEUE_ENTRY

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.123 2003/12/14 18:02:33 hbirr Exp $
+/* $Id: thread.c,v 1.124 2004/01/05 14:28:21 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -228,7 +228,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    DPRINT("PsDispatchThread() %d/%d/%d/%d\n", KeGetCurrentProcessorNumber(),
 	   CurrentThread->Cid.UniqueThread, NewThreadStatus, CurrentThread->Tcb.State);
    
-   CurrentThread->Tcb.State = NewThreadStatus;
+   CurrentThread->Tcb.State = (UCHAR)NewThreadStatus;
    if (CurrentThread->Tcb.State == THREAD_STATE_READY)
      {
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
@@ -369,7 +369,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	  KeReleaseDispatcherDatabaseLockFromDpcLevel();
 	}
       Thread->Tcb.Alertable = Alertable;
-      Thread->Tcb.WaitMode = WaitMode;
+      Thread->Tcb.WaitMode = (UCHAR)WaitMode;
       Thread->Tcb.WaitIrql = WaitIrql;
       Thread->Tcb.WaitReason = WaitReason;
       PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);

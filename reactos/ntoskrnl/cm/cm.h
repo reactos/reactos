@@ -52,7 +52,11 @@
 // BLOCK_OFFSET = offset in file after header block
 typedef ULONG BLOCK_OFFSET, *PBLOCK_OFFSET;
 
+
+#include <pshpack1.h>
+
 /* header for registry hive file : */
+
 typedef struct _HIVE_HEADER
 {
   /* Hive identifier "regf" (0x66676572) */
@@ -97,7 +101,8 @@ typedef struct _HIVE_HEADER
 
   /* Checksum of first 0x200 bytes */
   ULONG  Checksum;
-} __attribute__((packed)) HIVE_HEADER, *PHIVE_HEADER;
+} HIVE_HEADER, *PHIVE_HEADER;
+
 
 typedef struct _HBIN
 {
@@ -118,13 +123,15 @@ typedef struct _HBIN
 
   /* ? */
   ULONG  Unused2;
-} __attribute__((packed)) HBIN, *PHBIN;
+} HBIN, *PHBIN;
+
 
 typedef struct _CELL_HEADER
 {
   /* <0 if used, >0 if free */
   LONG  CellSize;
-} __attribute__((packed)) CELL_HEADER, *PCELL_HEADER;
+} CELL_HEADER, *PCELL_HEADER;
+
 
 typedef struct _KEY_CELL
 {
@@ -180,8 +187,9 @@ typedef struct _KEY_CELL
   USHORT ClassSize;
 
   /* Name of key (not zero terminated) */
-  UCHAR  Name[0];
-} __attribute__((packed)) KEY_CELL, *PKEY_CELL;
+  UCHAR  Name[1];
+} KEY_CELL, *PKEY_CELL;
+
 
 /* KEY_CELL.Flags constants */
 #define  REG_KEY_ROOT_CELL                 0x0C
@@ -199,7 +207,7 @@ typedef struct _HASH_RECORD
 {
   BLOCK_OFFSET  KeyOffset;
   ULONG  HashValue;
-} __attribute__((packed)) HASH_RECORD, *PHASH_RECORD;
+} HASH_RECORD, *PHASH_RECORD;
 
 typedef struct _HASH_TABLE_CELL
 {
@@ -207,14 +215,14 @@ typedef struct _HASH_TABLE_CELL
   USHORT  Id;
   USHORT  HashTableSize;
   HASH_RECORD  Table[0];
-} __attribute__((packed)) HASH_TABLE_CELL, *PHASH_TABLE_CELL;
+} HASH_TABLE_CELL, *PHASH_TABLE_CELL;
 
 
 typedef struct _VALUE_LIST_CELL
 {
   LONG  CellSize;
   BLOCK_OFFSET  ValueOffset[0];
-} __attribute__((packed)) VALUE_LIST_CELL, *PVALUE_LIST_CELL;
+} VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
 typedef struct _VALUE_CELL
 {
@@ -227,7 +235,7 @@ typedef struct _VALUE_CELL
   USHORT Flags;
   USHORT Unused1;
   UCHAR  Name[0]; /* warning : not zero terminated */
-} __attribute__((packed)) VALUE_CELL, *PVALUE_CELL;
+} VALUE_CELL, *PVALUE_CELL;
 
 /* VALUE_CELL.Flags constants */
 #define REG_VALUE_NAME_PACKED             0x0001
@@ -241,7 +249,10 @@ typedef struct _DATA_CELL
 {
   LONG  CellSize;
   UCHAR  Data[0];
-} __attribute__((packed)) DATA_CELL, *PDATA_CELL;
+} DATA_CELL, *PDATA_CELL;
+
+#include <poppack.h>
+
 
 typedef struct _REGISTRY_HIVE
 {

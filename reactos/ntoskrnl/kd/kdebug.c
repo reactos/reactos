@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.49 2003/12/30 22:06:39 fireball Exp $
+/* $Id: kdebug.c,v 1.50 2004/01/05 14:28:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -386,13 +386,15 @@ KeEnterKernelDebugger(VOID)
   HalDisplayString("\n\n *** Entered kernel debugger ***\n");
 
   for (;;)
-#ifdef __GNUC__
+  {
+#if defined(__GNUC__)
     __asm__("hlt\n\t");
 #elif defined(_MSC_VER)
-  __asm hlt
+    __asm hlt
 #else
 #error Unknown compiler for inline assembler
 #endif
+  }
 }
 
 VOID STDCALL

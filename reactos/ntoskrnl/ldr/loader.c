@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.138 2003/12/30 18:52:05 fireball Exp $
+/* $Id: loader.c,v 1.139 2004/01/05 14:28:21 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -131,43 +131,37 @@ LdrInitDebug(PLOADER_MODULE Module, PWCH Name)
 VOID INIT_FUNCTION
 LdrInit1(VOID)
 {
-  PIMAGE_DOS_HEADER DosHeader;
-  PIMAGE_FILE_HEADER FileHeader;
-  PIMAGE_OPTIONAL_HEADER OptionalHeader;
-  PIMAGE_SECTION_HEADER SectionList;
+  PIMAGE_NT_HEADERS      NtHeader;
+  PIMAGE_SECTION_HEADER  SectionList;
 
   InitializeListHead(&ModuleTextListHead);
 
   /* Setup ntoskrnl.exe text section */
-  DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
-  FileHeader =
-    (PIMAGE_FILE_HEADER) ((DWORD)KERNEL_BASE + 
-			  DosHeader->e_lfanew + sizeof(ULONG));
-  OptionalHeader = (PIMAGE_OPTIONAL_HEADER)
-    ((DWORD)FileHeader + sizeof(IMAGE_FILE_HEADER));
-  SectionList = (PIMAGE_SECTION_HEADER)
-    ((DWORD)OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
-  NtoskrnlTextSection.Base = KERNEL_BASE;
+  /*
+   * This isn't the base of the text segment, but the start of the
+   * full image (in memory)
+   * Also, the Length field isn't set to the length of the segment,
+   * but is more like the offset, from the image base, to the end
+   * of the segment.
+   */
+  NtHeader                   = RtlImageNtHeader((PVOID)KERNEL_BASE);
+  SectionList                = IMAGE_FIRST_SECTION(NtHeader);
+  NtoskrnlTextSection.Base   = KERNEL_BASE;
   NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
-    SectionList[0].VirtualAddress;
+                               SectionList[0].VirtualAddress;
   NtoskrnlTextSection.Name = KERNEL_MODULE_NAME;
-  NtoskrnlTextSection.OptionalHeader = OptionalHeader;
+  NtoskrnlTextSection.OptionalHeader = OPTHDROFFSET(KERNEL_BASE);
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
 
   /* Setup hal.dll text section */
-  DosHeader = (PIMAGE_DOS_HEADER)LdrHalBase;
-  FileHeader =
-    (PIMAGE_FILE_HEADER) ((DWORD)LdrHalBase + 
-			  DosHeader->e_lfanew + sizeof(ULONG));
-  OptionalHeader = (PIMAGE_OPTIONAL_HEADER)
-    ((DWORD)FileHeader + sizeof(IMAGE_FILE_HEADER));
-  SectionList = (PIMAGE_SECTION_HEADER)
-    ((DWORD)OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
-  LdrHalTextSection.Base = LdrHalBase;
+  /* Same comment as above applies */
+  NtHeader                 = RtlImageNtHeader((PVOID)LdrHalBase);
+  SectionList              = IMAGE_FIRST_SECTION(NtHeader);
+  LdrHalTextSection.Base   = LdrHalBase;
   LdrHalTextSection.Length = SectionList[0].Misc.VirtualSize +
-    SectionList[0].VirtualAddress;
+                             SectionList[0].VirtualAddress;
   LdrHalTextSection.Name = HAL_MODULE_NAME;
-  LdrHalTextSection.OptionalHeader = OptionalHeader;
+  LdrHalTextSection.OptionalHeader = OPTHDROFFSET(LdrHalBase);
   InsertTailList(&ModuleTextListHead, &LdrHalTextSection.ListEntry);
 
   /* Hook for KDB on initialization of the loader. */
@@ -1347,26 +1341,25 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
   /*  Copy image sections into virtual section  */
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
+      PIMAGE_SECTION_HEADER Section = &PESectionHeaders[Idx];
       //  Copy current section into current offset of virtual section
-      if (PESectionHeaders[Idx].Characteristics & 
-          (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
-	{
-	  //ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
-	  //PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
-	  memcpy(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase,
-		 (PVOID)((char*)ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
-		 PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData ?
-		   PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
-	}
-      else
-	{
-	  ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
-	     PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase);
-	  memset(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase, 
-		 '\0',
-		 PESectionHeaders[Idx].Misc.VirtualSize);
-	}
-      CurrentSize += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize,
+//      if (PESectionHeaders[Idx].Characteristics & 
+//          (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
+      if (Section->SizeOfRawData)
+        {
+          //ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
+          //PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
+          memcpy(Section->VirtualAddress   + (char*)DriverBase,
+                 Section->PointerToRawData + (char*)ModuleLoadBase,
+                 Section->SizeOfRawData);
+        }
+      if (Section->SizeOfRawData < Section->Misc.VirtualSize)
+        {
+          memset(Section->VirtualAddress + Section->SizeOfRawData + (char*)DriverBase, 
+                 0,
+                 Section->Misc.VirtualSize - Section->SizeOfRawData);
+        }
+      CurrentSize += ROUND_UP(Section->Misc.VirtualSize,
                               PEOptionalHeader->SectionAlignment);
     }
 
@@ -1515,9 +1508,10 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
   PVOID  ExportAddress;
   PWORD  OrdinalList;
   PDWORD FunctionList, NameList;
+  PCHAR  ModuleBase = (PCHAR)ModuleObject->Base;
 
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
-     RtlImageDirectoryEntryToData(ModuleObject->Base,
+     RtlImageDirectoryEntryToData(ModuleBase,
 				  TRUE,
 				  IMAGE_DIRECTORY_ENTRY_EXPORT,
 				  &ExportDirSize);
@@ -1527,9 +1521,9 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
 	return NULL;
      }
 
-   FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + (char*)ModuleObject->Base);
-   NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + (char*)ModuleObject->Base);
-   OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + (char*)ModuleObject->Base);
+   FunctionList = (PDWORD)((char*)ModuleBase + (DWORD)ExportDir->AddressOfFunctions);
+   NameList     = (PDWORD)((char*)ModuleBase + (DWORD)ExportDir->AddressOfNames);
+   OrdinalList  = (PWORD) ((char*)ModuleBase + (DWORD)ExportDir->AddressOfNameOrdinals);
 
   ExportAddress = 0;
 
@@ -1541,12 +1535,12 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
           DPRINT("  Name:%s  NameList[%d]:%s\n", 
                  Name, 
                  Idx, 
-                 (DWORD) ModuleObject->Base + NameList[Idx]);
-
+                 (DWORD) ModuleBase + NameList[Idx]);
 #endif
-          if (!strcmp(Name, (PCHAR) ((DWORD)ModuleObject->Base + NameList[Idx])))
+
+          if (!strcmp(Name, ModuleBase + NameList[Idx]))
             {
-              ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
+              ExportAddress = (PVOID) ((DWORD)ModuleBase +
                 FunctionList[OrdinalList[Idx]]);
 		  if (((ULONG)ExportAddress >= (ULONG)ExportDir) &&
 		      ((ULONG)ExportAddress < (ULONG)ExportDir + ExportDirSize))
@@ -1562,7 +1556,7 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
     }
   else  /*  use hint  */
     {
-      ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
+      ExportAddress = (PVOID) ((DWORD)ModuleBase +
         FunctionList[Hint - ExportDir->Base]);
     }
 

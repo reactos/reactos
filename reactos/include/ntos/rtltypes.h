@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.10 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: rtltypes.h,v 1.11 2004/01/05 14:28:19 weiden Exp $
  * 
  */
 
@@ -180,6 +180,9 @@ typedef struct _NLSTABLEINFO
   PUSHORT LowerCaseTable;
 } NLSTABLEINFO, *PNLSTABLEINFO;
 
+
+#include <pshpack1.h>
+
 typedef struct _NLS_FILE_HEADER
 {
   USHORT  HeaderSize;
@@ -191,7 +194,9 @@ typedef struct _NLS_FILE_HEADER
   USHORT  TransUniDefaultChar;
   USHORT  DBCSCodePage;
   UCHAR   LeadByte[MAXIMUM_LEADBYTES];
-} PACKED NLS_FILE_HEADER, *PNLS_FILE_HEADER;
+} NLS_FILE_HEADER, *PNLS_FILE_HEADER;
+
+#include <poppack.h>
 
 
 typedef struct _RTL_GENERIC_TABLE
