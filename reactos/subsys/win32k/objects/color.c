@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.29 2003/12/14 21:32:52 navaraf Exp $ */
+/* $Id: color.c,v 1.30 2003/12/19 22:58:47 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -302,17 +302,32 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
 UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
+#if 1
+  PPALGDI palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+  UINT index  = 0;
+
+  if (NULL != palGDI)
+    {
+      /* Return closest match for the given RGB color */
+      index = COLOR_PaletteLookupPixel((LPPALETTEENTRY)palGDI->IndexedColors, palGDI->NumColors, NULL, Color, FALSE);
+      PALETTE_UnlockPalette(hpal);
+    }
+
+  return index;
+#else
   PPALOBJ palObj = (PPALOBJ) PALETTE_LockPalette(hpal);
   UINT index  = 0;
 
   if (NULL != palObj)
     {
       /* Return closest match for the given RGB color */
+      ASSERT(palObj->logpalette != NULL);
       index = COLOR_PaletteLookupPixel(palObj->logpalette->palPalEntry, palObj->logpalette->palNumEntries, NULL, Color, FALSE);
       PALETTE_UnlockPalette(hpal);
     }
 
   return index;
+#endif
 }
 
 UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.25 2003/09/26 10:45:44 gvg Exp $
+/* $Id: xlate.c,v 1.26 2003/12/19 22:58:47 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,6 +36,7 @@
 #include <include/object.h>
 #include <include/palette.h>
 #include "handle.h"
+#include <win32k/color.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -410,6 +411,65 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   return XlateObj;
 }
 
+XLATEOBJ * STDCALL IntEngCreateMonoXlate(
+   USHORT SourcePalType, HPALETTE PaletteDest, HPALETTE PaletteSource,
+   ULONG BackgroundColor)
+{
+   HPALETTE NewXlate;
+   XLATEOBJ *XlateObj;
+   XLATEGDI *XlateGDI;
+   PALGDI *SourcePalGDI;
+
+   NewXlate = (HPALETTE)CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ));
+   if (!ValidEngHandle(NewXlate))
+      return NULL;
+
+   XlateObj = (XLATEOBJ *)AccessUserObject((ULONG)NewXlate);
+   XlateGDI = (XLATEGDI *)AccessInternalObject((ULONG)NewXlate);
+   ASSERT(XlateObj);
+   ASSERT(XlateGDI);
+
+   XlateObj->iSrcType = SourcePalType;
+   XlateObj->iDstType = PAL_INDEXED;
+
+   // Store handles of palettes in internal Xlate GDI object (or NULLs)
+   XlateGDI->DestPal = PaletteDest;
+   XlateGDI->SourcePal = PaletteSource;
+
+   XlateObj->flXlate = XO_TO_MONO;
+   /* FIXME: Map into source palette type */
+   switch (SourcePalType)
+   {
+      case PAL_INDEXED:
+         XlateGDI->BackgroundColor = NtGdiGetNearestPaletteIndex(
+            PaletteSource, BackgroundColor);
+         break;
+      case PAL_RGB:
+         XlateGDI->BackgroundColor = BackgroundColor;
+         break;
+      case PAL_BGR:
+         XlateGDI->BackgroundColor =
+            ((BackgroundColor & 0xFF) << 16) |
+            ((BackgroundColor & 0xFF0000) >> 16) |
+            (BackgroundColor & 0xFF00);
+         break;
+      case PAL_BITFIELDS:
+         {
+            SourcePalGDI = PALETTE_LockPalette(PaletteSource);
+            BitMasksFromPal(SourcePalType, SourcePalGDI, &XlateGDI->RedMask,
+               &XlateGDI->BlueMask, &XlateGDI->GreenMask);
+            XlateGDI->RedShift = CalculateShift(0xFF0000) - CalculateShift(XlateGDI->RedMask);
+            XlateGDI->GreenShift = CalculateShift(0xFF00) - CalculateShift(XlateGDI->GreenMask);
+            XlateGDI->BlueShift = CalculateShift(0xFF) - CalculateShift(XlateGDI->BlueMask);
+            XlateGDI->BackgroundColor = ShiftAndMask(XlateGDI, BackgroundColor);
+            PALETTE_UnlockPalette(PaletteSource);
+         }
+         break;
+   }
+
+   return XlateObj;
+}
+
 /*
  * @implemented
  */
@@ -434,7 +494,6 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 		ULONG Color)
 {
   PALGDI   *PalGDI;
-  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
   ULONG Closest;
 
   // Return the original color if there's no color translation object
@@ -444,27 +503,35 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   {
     return Color;
   } else
-  if(XlateGDI->UseShiftAndMask)
   {
-    return ShiftAndMask(XlateGDI, Color);
-  } else
-  if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType
-      || PAL_BITFIELDS == XlateObj->iSrcType)
-  {
-    // FIXME: should we cache colors used often?
-    // FIXME: won't work if destination isn't indexed
+    XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
-    // Extract the destination palette
-    PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
+    if(XlateObj->flXlate & XO_TO_MONO)
+    {
+      return Color == XlateGDI->BackgroundColor;
+    } else
+    if(XlateGDI->UseShiftAndMask)
+    {
+      return ShiftAndMask(XlateGDI, Color);
+    } else
+    if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType
+        || PAL_BITFIELDS == XlateObj->iSrcType)
+    {
+      // FIXME: should we cache colors used often?
+      // FIXME: won't work if destination isn't indexed
 
-    // Return closest match for the given color
-    Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
-    PALETTE_UnlockPalette(XlateGDI->DestPal);
-    return Closest;
-  } else
-  if(XlateObj->iSrcType == PAL_INDEXED)
-  {
-    return XlateGDI->translationTable[Color];
+      // Extract the destination palette
+      PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
+
+      // Return closest match for the given color
+      Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+      PALETTE_UnlockPalette(XlateGDI->DestPal);
+      return Closest;
+    } else
+    if(XlateObj->iSrcType == PAL_INDEXED)
+    {
+      return XlateGDI->translationTable[Color];
+    }
   }
 
   return 0;

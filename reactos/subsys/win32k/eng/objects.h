@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.21 2003/12/08 18:07:56 fireball Exp $
+/* $Id: objects.h,v 1.22 2003/12/19 22:58:47 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -207,16 +207,24 @@ typedef struct _XLATEGDI {
   XLATEOBJ		XlateObj;
   HPALETTE DestPal;
   HPALETTE SourcePal;
-
-  ULONG *translationTable;
-
-  ULONG RedMask;
-  ULONG GreenMask;
-  ULONG BlueMask;
-  INT RedShift;
-  INT GreenShift;
-  INT BlueShift;
   BOOL UseShiftAndMask;
+
+  union {
+    struct {            /* For Shift Translations */
+      ULONG RedMask;
+      ULONG GreenMask;
+      ULONG BlueMask;
+      INT RedShift;
+      INT GreenShift;
+      INT BlueShift;
+    };
+    struct {            /* For Table Translations */
+      ULONG *translationTable;
+    };
+    struct {            /* For Color -> Mono Translations */
+      ULONG BackgroundColor;
+    };
+  };
 } XLATEGDI;
 
 // List of GDI objects

@@ -40,6 +40,10 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType,
                             USHORT SourcePalType,
                             HPALETTE PaletteDest,
                             HPALETTE PaletteSource);
+
+XLATEOBJ * STDCALL IntEngCreateMonoXlate(
+   USHORT SourcePalType, HPALETTE PaletteDest, HPALETTE PaletteSource,
+   ULONG BackgroundColor);
 			
 BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 	                           CLIPOBJ *Clip,

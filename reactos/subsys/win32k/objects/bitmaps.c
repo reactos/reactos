@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.48 2003/12/08 18:09:08 fireball Exp $ */
+/* $Id: bitmaps.c,v 1.49 2003/12/19 22:58:47 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -194,7 +194,15 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
       PALETTE_UnlockPalette(DestPalette);
     }
 
-  XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+  if (DCDest->w.bitsPerPixel == 1)
+    {
+      XlateObj = (PXLATEOBJ)IntEngCreateMonoXlate(SourceMode, DestPalette,
+         SourcePalette, DCSrc->w.backgroundColor);
+    }
+  else
+    {
+      XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+    }
   if (NULL == XlateObj)
     {
       if (UsesSource && hDCSrc != hDCDest)
