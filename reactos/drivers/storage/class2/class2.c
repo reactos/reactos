@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.34 2003/05/01 17:49:23 ekohl Exp $
+/* $Id: class2.c,v 1.35 2003/06/24 21:32:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -412,9 +412,14 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
 		       PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION NextStack;
   PIO_STACK_LOCATION Stack;
   ULONG IoControlCode;
+  ULONG InputBufferLength;
   ULONG OutputBufferLength;
+  ULONG ModifiedControlCode;
+  PSCSI_REQUEST_BLOCK Srb;
+  PCDB Cdb;
 
   DPRINT("ScsiClassDeviceControl() called\n");
 
@@ -422,6 +427,7 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
   IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+  InputBufferLength = Stack->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = Stack->Parameters.DeviceIoControl.OutputBufferLength;
 
   if (IoControlCode == IOCTL_SCSI_GET_ADDRESS)
@@ -454,17 +460,87 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
   if (IoControlCode == IOCTL_SCSI_PASS_THROUGH ||
       IoControlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT)
     {
-      DPRINT1("Fixme: IOCTL_SCSI_PASS_THROUGH/IOCTL_SCSI_PASS_THROUGH_DIRECT\n");
+      PSCSI_PASS_THROUGH ScsiPassThrough;
 
+      DPRINT("IOCTL_SCSI_PASS_THROUGH/IOCTL_SCSI_PASS_THROUGH_DIRECT\n");
 
-      Irp->IoStatus.Information = 0;
-      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      /* Check input size */
+      if (InputBufferLength < sizeof(SCSI_PASS_THROUGH))
+	{
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	  return(STATUS_INVALID_PARAMETER);
+	}
 
-      return(STATUS_UNSUCCESSFUL);
+      /* Initialize next stack location for call to the port driver */
+      NextStack = IoGetNextIrpStackLocation(Irp);
+
+      ScsiPassThrough = Irp->AssociatedIrp.SystemBuffer;
+      ScsiPassThrough->PathId = DeviceExtension->PathId;
+      ScsiPassThrough->TargetId = DeviceExtension->TargetId;
+      ScsiPassThrough->Lun = DeviceExtension->Lun;
+      ScsiPassThrough->Cdb[1] |= DeviceExtension->Lun << 5;
+
+      NextStack->Parameters = Stack->Parameters;
+      NextStack->MajorFunction = Stack->MajorFunction;
+      NextStack->MinorFunction = Stack->MinorFunction;
+
+      /* Call port driver */
+      return(IoCallDriver(DeviceExtension->PortDeviceObject,
+			  Irp));
     }
 
-  DPRINT1("Fixme: unknown device io control code\n");
+  /* Allocate an SRB */
+  Srb = ExAllocatePool (NonPagedPool,
+			sizeof(SCSI_REQUEST_BLOCK));
+  if (Srb == NULL)
+    {
+      Irp->IoStatus.Information = 0;
+      Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+      IoCompleteRequest(Irp,
+			IO_NO_INCREMENT);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  /* Initialize the SRB */
+  RtlZeroMemory(Srb,
+		sizeof(SCSI_REQUEST_BLOCK));
+  Cdb = (PCDB)Srb->Cdb;
+
+  ModifiedControlCode = (IoControlCode & 0x0000FFFF) | (IOCTL_DISK_BASE << 16);
+  switch (ModifiedControlCode)
+    {
+      case IOCTL_DISK_CHECK_VERIFY:
+	DPRINT("IOCTL_DISK_CHECK_VERIFY\n");
+
+	/* Initialize SRB operation */
+	Srb->CdbLength = 6;
+	Srb->TimeOutValue = DeviceExtension->TimeOutValue;
+	Cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
+
+	return(ScsiClassSendSrbAsynchronous(DeviceObject,
+					    Srb,
+					    Irp,
+					    NULL,
+					    0,
+					    FALSE));
+
+      default:
+	DPRINT1("Unknown device io control code %lx\n",
+		ModifiedControlCode);
+	ExFreePool(Srb);
+
+	/* Pass the IOCTL down to the port driver */
+	NextStack = IoGetNextIrpStackLocation(Irp);
+	NextStack->Parameters = Stack->Parameters;
+	NextStack->MajorFunction = Stack->MajorFunction;
+	NextStack->MinorFunction = Stack->MinorFunction;
+
+	/* Call port driver */
+	return(IoCallDriver(DeviceExtension->PortDeviceObject,
+			    Irp));
+    }
 
   Irp->IoStatus.Information = 0;
   Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -765,13 +841,17 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 			    NTSTATUS *Status)
 {
   PDEVICE_EXTENSION DeviceExtension;
+#if 0
+  PIO_ERROR_LOG_PACKET LogPacket;
+#endif
   PSENSE_DATA SenseData;
+  BOOLEAN LogError;
   BOOLEAN Retry;
 
   DPRINT("ScsiClassInterpretSenseInfo() called\n");
 
   DPRINT("Srb->SrbStatus %lx\n", Srb->SrbStatus);
-  
+
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_PENDING)
     {
       *Status = STATUS_SUCCESS;
@@ -780,6 +860,7 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 
   DeviceExtension = DeviceObject->DeviceExtension;
   SenseData = Srb->SenseInfoBuffer;
+  LogError = FALSE;
   Retry = TRUE;
 
   if ((Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
@@ -794,10 +875,44 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
       switch (SenseData->SenseKey & 0xf)
 	{
 	  /* FIXME: add more sense key codes */
+#if 0
+	  case SCSI_SENSE_NO_SENSE:
+
+	  case SCSI_SENSE_RECOVERED_ERROR:
+#endif
 
 	  case SCSI_SENSE_NOT_READY:
 	    DPRINT("SCSI_SENSE_NOT_READY\n");
 	    *Status = STATUS_DEVICE_NOT_READY;
+	    switch (SenseData->AdditionalSenseCode)
+	      {
+		case SCSI_ADSENSE_LUN_NOT_READY:
+		  DPRINT("SCSI_ADSENSE_LUN_NOT_READY\n");
+		  break;
+
+		case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE:
+		  DPRINT("SCSI_ADSENSE_NO_MEDIA_IN_DEVICE\n");
+		  *Status = STATUS_NO_MEDIA_IN_DEVICE;
+		  Retry = FALSE;
+		  break;
+	      }
+	    break;
+
+	  case SCSI_SENSE_MEDIUM_ERROR:
+	    DPRINT("SCSI_SENSE_MEDIUM_ERROR\n");
+	    *Status = STATUS_DEVICE_DATA_ERROR;
+	    Retry = FALSE;
+	    break;
+
+	  case SCSI_SENSE_HARDWARE_ERROR:
+	    DPRINT("SCSI_SENSE_HARDWARE_ERROR\n");
+	    *Status = STATUS_IO_DEVICE_ERROR;
+	    break;
+
+	  case SCSI_SENSE_ILLEGAL_REQUEST:
+	    DPRINT("SCSI_SENSE_ILLEGAL_REQUEST\n");
+	    *Status = STATUS_INVALID_DEVICE_REQUEST;
+	    Retry = FALSE;
 	    break;
 
 	  case SCSI_SENSE_UNIT_ATTENTION:
@@ -815,12 +930,16 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 	      }
 	    break;
 
-	  case SCSI_SENSE_ILLEGAL_REQUEST:
-	    DPRINT("SCSI_SENSE_ILLEGAL_REQUEST\n");
-	    *Status = STATUS_INVALID_DEVICE_REQUEST;
+	  case SCSI_SENSE_DATA_PROTECT:
+	    DPRINT("SCSI_SENSE_DATA_PROTECT\n");
+	    *Status = STATUS_MEDIA_WRITE_PROTECTED;
 	    Retry = FALSE;
 	    break;
 
+	  case SCSI_SENSE_ABORTED_COMMAND:
+	    DPRINT("SCSI_SENSE_ABORTED_COMMAND\n");
+	    *Status = STATUS_IO_DEVICE_ERROR;
+	    break;
 
 	  default:
 	    DPRINT1("SCSI error (sense key: %x)\n",
@@ -858,6 +977,7 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 	  default:
 	    DPRINT1("SCSI error (SRB status: %x)\n",
 		    SRB_STATUS(Srb->SrbStatus));
+	    LogError = TRUE;
 	    *Status = STATUS_IO_DEVICE_ERROR;
 	    break;
 	}
@@ -872,11 +992,47 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 				  &Retry);
     }
 
-  /* FIXME: log severe errors */
+  if (LogError == TRUE)
+    {
+#if 0
+      /* Allocate error packet */
+      LogPacket = IoAllocateErrorLogEntry (DeviceObject,
+					   sizeof(IO_ERROR_LOG_PACKET) +
+					     5 * sizeof(ULONG));
+      if (LogPacket == NULL)
+	{
+	  DPRINT1 ("Failed to allocate a log packet!\n");
+	  return Retry;
+	}
+
+      /* Initialize error packet */
+      LogPacket->MajorFunctionCode = MajorFunctionCode;
+      LogPacket->RetryCount = (UCHAR)RetryCount;
+      LogPacket->DumpDataSize = 6 * sizeof(ULONG);
+      LogPacket->ErrorCode = 0; /* FIXME */
+      LogPacket->FinalStatus = *Status;
+      LogPacket->IoControlCode = IoDeviceCode;
+      LogPacket->DeviceOffset.QuadPart = 0; /* FIXME */
+      LogPacket->DumpData[0] = Srb->PathId;
+      LogPacket->DumpData[1] = Srb->TargetId;
+      LogPacket->DumpData[2] = Srb->Lun;
+      LogPacket->DumpData[3] = 0;
+      LogPacket->DumpData[4] = (Srb->SrbStatus << 8) | Srb->ScsiStatus;
+      if (SenseData != NULL)
+	{
+	  LogPacket->DumpData[5] = (SenseData->SenseKey << 16) |
+				   (SenseData->AdditionalSenseCode << 8) |
+				   SenseData->AdditionalSenseCodeQualifier;
+	}
+
+      /* Write error packet */
+      IoWriteErrorLogEntry (LogPacket);
+#endif
+    }
 
   DPRINT("ScsiClassInterpretSenseInfo() done\n");
 
-  return(Retry);
+  return Retry;
 }
 
 
@@ -897,11 +1053,13 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  
-  //BUGBUG -> Srb = IrpStack->Parameters.Scsi.Srb;
-  //Must pass Srb as Context arg!! See comment about Completion routines in 
-  //IofCallDriver for more info.
-  
+
+  /*
+   * BUGBUG -> Srb = IrpStack->Parameters.Scsi.Srb;
+   * Must pass Srb as Context arg!! See comment about Completion routines in 
+   * IofCallDriver for more info.
+   */
+
   Srb = (PSCSI_REQUEST_BLOCK)Context;
 
   DPRINT("Srb %p\n", Srb);
@@ -983,9 +1141,11 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
-  //BUGBUG -> Srb = Srb = IrpStack->Parameters.Scsi.Srb;
-  //Must pass Srb as Context arg!! See comment about Completion routines in 
-  //IofCallDriver for more info.
+  /*
+   * BUGBUG -> Srb = Srb = IrpStack->Parameters.Scsi.Srb;
+   * Must pass Srb as Context arg!! See comment about Completion routines in 
+   * IofCallDriver for more info.
+   */
 
   Srb = (PSCSI_REQUEST_BLOCK)Context;
   
@@ -1010,11 +1170,10 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 	{
 	  ((ULONG)IrpStack->Parameters.Others.Argument4)--;
 
-	  ScsiClassRetryRequest(
-                  DeviceObject,
-		  Irp, 
-		  Srb,
-                  TRUE);
+	  ScsiClassRetryRequest(DeviceObject,
+				Irp,
+				Srb,
+				TRUE);
 
 	  return(STATUS_MORE_PROCESSING_REQUIRED);
 	}
@@ -1260,7 +1419,79 @@ ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     ULONG BufferLength,
 			     BOOLEAN WriteToDevice)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION Stack;
+
+  DPRINT("ScsiClassSendSrbAsynchronous() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+
+  /* Initialize the SRB */
+  Srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+  Srb->PathId = DeviceExtension->PathId;
+  Srb->TargetId = DeviceExtension->TargetId;
+  Srb->Lun = DeviceExtension->Lun;
+  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  Srb->Cdb[1] |= DeviceExtension->Lun << 5;
+
+  Srb->SenseInfoBuffer = DeviceExtension->SenseData;
+  Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+
+  Srb->DataBuffer = BufferAddress;
+  Srb->DataTransferLength = BufferLength;
+
+  Srb->ScsiStatus = 0;
+  Srb->SrbStatus = 0;
+  Srb->NextSrb = NULL;
+
+  if (BufferAddress != NULL)
+    {
+      if (Irp->MdlAddress == NULL)
+	{
+	  /* Allocate an MDL */
+	  if (!IoAllocateMdl(BufferAddress,
+			     BufferLength,
+			     FALSE,
+			     FALSE,
+			     Irp))
+	    {
+	      DPRINT1("Mdl-Allocation failed\n");
+	      return(STATUS_INSUFFICIENT_RESOURCES);
+	    }
+
+	  MmBuildMdlForNonPagedPool(Irp->MdlAddress);
+	}
+
+      /* Set data direction */
+      Srb->SrbFlags = (WriteToDevice) ? SRB_FLAGS_DATA_OUT : SRB_FLAGS_DATA_IN;
+    }
+  else
+    {
+      /* Set data direction */
+      Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
+    }
+
+  /* Set the retry counter */
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  Stack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
+
+  /* Set the completion routine */
+  IoSetCompletionRoutine(Irp,
+			 ScsiClassIoComplete,
+			 Srb,
+			 TRUE,
+			 TRUE,
+			 TRUE);
+
+  /* Attach Srb to the Irp */
+  Stack = IoGetNextIrpStackLocation(Irp);
+  Stack->MajorFunction = IRP_MJ_SCSI;
+  Stack->Parameters.Scsi.Srb = Srb;
+  Srb->OriginalRequest = Irp;
+
+  /* Call the port driver */
+  return(IoCallDriver(DeviceExtension->PortDeviceObject,
+		      Irp));
 }
 
 
