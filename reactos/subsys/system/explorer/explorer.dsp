@@ -363,6 +363,22 @@ SOURCE=.\desktop\desktop.cpp
 SOURCE=.\desktop\desktop.h
 # End Source File
 # End Group
+# Begin Group "doc"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\doc\changes.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\doc\readme.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\doc\TODO.txt
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\shell\entries.cpp

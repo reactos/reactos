@@ -11,3 +11,4 @@
 21.07.2003	m. fuchs	extension of winefile for shell namespace
 04.08.2003	m. fuchs	C++ explorer with architecture like MS Explorer:
 						usage of IShellView C++, implementation of IShellBrowser, ...
+09.08.2003	m. fuchs	DesktopWindow for shell view on the desktop

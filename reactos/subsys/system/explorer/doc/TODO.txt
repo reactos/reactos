@@ -1,3 +1,5 @@
-
-1. Fix the Explorer Bar/Start Menu. Currently it is almost nothing like Windows.
+- Fix the Explorer Bar/Start Menu. Currently it is almost nothing like Windows.
+- paint desktop background: configurable colors, background image, ...
+- Drag Drop on desktop does not work.
+- extend shell view code in Wine
 
