@@ -27,8 +27,9 @@ PMDL IoAllocateMdl(PVOID VirtualAddress,
    
    if (ChargeQuota)
      {
-	Mdl = ExAllocatePoolWithQuota(NonPagedPool,
-				      MmSizeOfMdl(VirtualAddress,Length));
+//	Mdl = ExAllocatePoolWithQuota(NonPagedPool,
+//				      MmSizeOfMdl(VirtualAddress,Length));
+	Mdl = ExAllocatePool(NonPagedPool,MmSizeOfMdl(VirtualAddress,Length));
      }
    else
      {

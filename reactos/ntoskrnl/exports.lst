@@ -27,8 +27,8 @@ ExAllocateFromNPagedLookasideList
 ExAllocateFromPagedLookasideList
 ExAllocateFromZone
 ExAllocatePool
-ExAllocatePoolWithQuota
-ExAllocatePoolWithQuotaTag
+#ExAllocatePoolWithQuota
+#ExAllocatePoolWithQuotaTag
 ExAllocatePoolWithTag
 ExConvertExclusiveToSharedLite
 ExDeleteNPagedLookasideList
@@ -88,11 +88,11 @@ InterlockedCompareExchange
 InterlockedExchange
 InterlockedExchangeAdd
 InterlockedIncrement
-HalAllocateCommonBuffer
+#HalAllocateCommonBuffer
 HalAssignSlotResources
 HalExamineMBR
-HalFreeCommonBuffer
-HalGetAdapter
+#HalFreeCommonBuffer
+#HalGetAdapter
 HalGetBusData
 HalGetBusDataByOffset
 HalGetDmaAlignmentRequirement
@@ -319,7 +319,7 @@ RtlFreeUnicodeString
 RtlInitAnsiString
 RtlInitString
 RtlInitUnicodeString
-RtlIntegerToUnicodeString
+#RtlIntegerToUnicodeString
 RtlLargeIntegerAdd
 RtlLargeIntegerAnd
 RtlLargeIntegerArithmeticShift

@@ -80,8 +80,6 @@ ULONG EiNrUsedBlocks = 0;
  */
 static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
 
-static unsigned int pool_free_mem = 0;
-
 unsigned int EiFreeNonPagedPool = 0;
 unsigned int EiUsedNonPagedPool = 0;
 
@@ -92,6 +90,7 @@ VOID ExInitNonPagedPool(ULONG BaseAddress)
    kernel_pool_base=BaseAddress;
 }
 
+#if 0
 static void validate_free_list(void)
 /*
  * FUNCTION: Validate the integrity of the list of free blocks
@@ -260,6 +259,7 @@ static void validate_kernel_pool(void)
 	current=current->next;
      }
 }
+#endif
 
 static void add_to_free_list(block_hdr* blk)
 /*
@@ -431,7 +431,7 @@ static block_hdr* grow_kernel_pool(unsigned int size)
    for (i=0;i<nr_pages;i++)
      {
 	MmSetPage(NULL,
-		  start + (i*PAGESIZE),
+		  (PVOID)(start + (i*PAGESIZE)),
 		  PAGE_READWRITE,
 		  get_free_page());
      }
@@ -565,44 +565,6 @@ asmlinkage VOID ExFreePool(PVOID block)
    EiFreeNonPagedPool = EiFreeNonPagedPool + blk->size;   
    
    VALIDATE_POOL;
-}
-
-static void defrag_free_list(void)
-/*
- * FUNCTION: defrag the list of free blocks
- */
-{
- block_hdr* current=free_list_head,*current2;
- ULONG addr1,addr2,max=0;
-   
-   DPRINT("Begin defrag free,tot free=%d,tot used=%d\n"
-     ,EiFreeNonPagedPool
-     ,EiUsedNonPagedPool);
-   while (current)
-   {
-      addr1=(ULONG)current;
-      current2=current->next;
-      while(current2)
-      {
-         addr2=(ULONG)current2;
-         if(addr2==addr1+current->size+sizeof(block_hdr))
-         {
-            remove_from_free_list(current2);
-            current->size+=current2->size+sizeof(block_hdr);
-            if(current->size>max)max=current->size;
-         }
-         else if(addr1==addr2+current2->size+sizeof(block_hdr))
-         {
-            remove_from_free_list(current);
-            current2->size+=current->size+sizeof(block_hdr);
-            if(current2->size>max)max=current2->size;
-            break;
-         }
-         current2=current2->next;
-      }
-      current=current->next;
-   }
-   DPRINT("Finish To defrag free blocks,max=%d\n",max);
 }
 
 PVOID ExAllocateNonPagedPoolWithTag(ULONG type, 

@@ -48,7 +48,7 @@ VOID RtlCopyBytes(PVOID Destination,
    RtlCopyMemory(Destination,Source,Length);
 }
 
-VOID RtlCopyMemory(VOID* Destination, VOID* Source, ULONG Length)
+VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
 {
    DPRINT("RtlCopyMemory(Destination %x Source %x Length %d\n",
 	  Destination,Source,Length);

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/kill.c
  * PURPOSE:         Terminating a thread
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -12,6 +12,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -62,7 +63,6 @@ NTSTATUS STDCALL NtTerminateProcess(IN HANDLE ProcessHandle,
 NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
 				    IN NTSTATUS ExitStatus)
 {
-   PETHREAD Thread;
    NTSTATUS Status;
    PEPROCESS Process;
    KIRQL oldlvl;

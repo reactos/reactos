@@ -50,6 +50,7 @@ ULONG HalGetDmaAlignmentRequirement()
    return(1);
 }
 
+#if 0
 PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      ULONG Length,
 			      PPHYSICAL_ADDRESS LogicalAddress,
@@ -115,6 +116,7 @@ PADAPTER_OBJECT HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
    RtlCopyMemory(&adapter->desc,DeviceDescription,sizeof(DEVICE_DESCRIPTION));
  */
 }
+#endif
 
 ULONG HalReadDmaCounter(PADAPTER_OBJECT AdapterObject)
 {

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
  * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #include <internal/debug.h>
 
@@ -46,6 +47,7 @@ BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
    CallbackRecord->Buffer=Buffer;
    CallbackRecord->Component=Component;
    CallbackRecord->CallbackRoutine=CallbackRoutine;
+   return(TRUE);
 }
 
 VOID KeBugCheckEx(ULONG BugCheckCode,

@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/mm.h>
+#include <internal/ke.h>
 #include <string.h>
 #include <internal/string.h>
 
@@ -161,9 +162,6 @@ NTSTATUS STDCALL ZwCreateProcess(
    PULONG CurrentPageDirectory;
    ULONG i;
    PKPROCESS KProcess;
-   ULONG Base;
-   ULONG Length;
-   LARGE_INTEGER Offset;
    NTSTATUS Status;
    
    DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
@@ -196,10 +194,10 @@ NTSTATUS STDCALL ZwCreateProcess(
 		       InheritObjectTable,
 		       Process);
    
-   PageDirectory = physical_to_linear((ULONG)get_free_page());
+   PageDirectory = (PULONG)physical_to_linear((ULONG)get_free_page());
    KProcess->PageTableDirectory = PageDirectory;
    
-   CurrentPageDirectory = get_page_directory();
+   CurrentPageDirectory = (PULONG)get_page_directory();
    
    memset(PageDirectory,0,PAGESIZE);
    for (i=768;i<1024;i++)
@@ -260,10 +258,10 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
 					   IN ULONG ProcessInformationLength,
 					   OUT PULONG ReturnLength)
 {
-   PEPROCESS Process;
+//   PEPROCESS Process;
    NTSTATUS Status;
    
-   Status = ObReferenceObjectByHandle(ProcessHandle,
+/*   Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_QUERY_INFORMATION,
 				      PsProcessType,
 				      UserMode,
@@ -272,7 +270,7 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);
-     }
+     }*/
    
    switch (ProcessInformationClass)
      {
@@ -319,10 +317,10 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
 					 IN PVOID ProcessInformation,
 					 IN ULONG ProcessInformationLength)
 {
-   PEPROCESS Process;
+//   PEPROCESS Process;
    NTSTATUS Status;
    
-   Status = ObReferenceObjectByHandle(ProcessHandle,
+/*   Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
 				      PsProcessType,
 				      UserMode,
@@ -331,7 +329,7 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);
-     }
+     }*/
    
    switch (ProcessInformationClass)
      {

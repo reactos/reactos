@@ -48,7 +48,7 @@ PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
    Block = ExAllocateNonPagedPoolWithTag(PoolType,
 					 NumberOfBytes,
 					 TAG_NONE,
-					 (&PoolType)[-1]);
+					 (PVOID)(&PoolType)[-1]);
    return(Block);
 }
 
@@ -71,7 +71,7 @@ PVOID ExAllocatePoolWithTag(ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 	Block = ExAllocateNonPagedPoolWithTag(PoolType,
 					      NumberOfBytes,
 					      Tag,
-					      (&PoolType)[-1]);
+					      (PVOID)(&PoolType)[-1]);
 	break;
 	
       case PagedPool:
@@ -90,32 +90,9 @@ PVOID ExAllocatePoolWithTag(ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
      }
    return(Block);
 }
-
-PVOID ExAllocatePoolWithQuotaTag(POOL_TYPE PoolType, ULONG NumberOfBytes,
-				 ULONG Tag)
-{
-   PVOID Block;
-   PKTHREAD current = KeGetCurrentThread();
-   
-   Block = ExAllocatePoolWithTag(PoolType,NumberOfBytes,Tag);
-   switch(PoolType)
-     {
-      case NonPagedPool:
-      case NonPagedPoolMustSucceed:
-      case NonPagedPoolCacheAligned:
-      case NonPagedPoolCacheAlignedMustS:
-//	current->NPagedPoolQuota = current->NPagedPoolQuota - NumberOfBytes;
-	break;
-	
-      case PagedPool:
-      case PagedPoolCacheAligned:
-//	current->PagedPoolQuota = current->PagedPoolQuota - NumberOfBytes;
-	break;	
-     };
-   return(Block);
-}
    
 PVOID ExAllocatePoolWithQuota(POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
-   return(ExAllocatePoolWithQuotaTag(PoolType,NumberOfBytes,TAG_NONE));
+//   return(ExAllocatePoolWithQuotaTag(PoolType,NumberOfBytes,TAG_NONE));
+   UNIMPLEMENTED;
 }

@@ -73,6 +73,7 @@ ULONG ExGetSharedWaiterCount(PERESOURCE Resource)
 
 NTSTATUS ExInitializeResource(PERESOURCE Resource)
 {
+   UNIMPLEMENTED;
 }
 
 NTSTATUS ExInitializeResourceLite(PERESOURCE Resource)
@@ -81,10 +82,17 @@ NTSTATUS ExInitializeResourceLite(PERESOURCE Resource)
    Resource->NumberOfExclusiveWaiters = 0;
    KeInitializeSpinLock(&Resource->SpinLock);
    Resource->Flag=0;
-   KeInitializeEvent(&Resource->ExclusiveWaiters,SynchronizationEvent,
+   Resource->ExclusiveWaiters = ExAllocatePool(NonPagedPool,
+					       sizeof(KEVENT));					       
+   KeInitializeEvent(Resource->ExclusiveWaiters,
+		     SynchronizationEvent,
 		     FALSE);
-   KeInitializeSemaphore(&Resource->SharedWaiters,5,0);
+   Resource->SharedWaiters = ExAllocatePool(NonPagedPool,
+					    sizeof(KSEMAPHORE));
+   KeInitializeSemaphore(Resource->SharedWaiters,5,0);
    Resource->ActiveCount = 0;
+   
+   return(STATUS_SUCCESS);
 }
 
 BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)

@@ -20,7 +20,7 @@
 
 PVOID MmAllocateSection(ULONG Length)
 {
-   ULONG Result;
+   PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
@@ -39,7 +39,7 @@ PVOID MmAllocateSection(ULONG Length)
      {
 	return(NULL);
      }
-   DPRINT("Result %x\n",Result);
+   DPRINT("Result %p\n",Result);
    for (i=0;i<=(Length/PAGESIZE);i++)
      {
 	MmSetPage(NULL,
@@ -65,13 +65,13 @@ PVOID MmMapIoSpace(PHYSICAL_ADDRESS PhysicalAddress,
 		   ULONG NumberOfBytes,
 		   BOOLEAN CacheEnable)
 {
-   ULONG Result;
+   PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
    ULONG Attributes;
    
-   Result=0;
+   Result = 0;
    Status = MmCreateMemoryArea(KernelMode,
 			       PsGetCurrentProcess(),
 			       MEMORY_AREA_IO_MAPPING,
@@ -106,12 +106,12 @@ VOID MmUnmapIoSpace(PVOID BaseAddress, ULONG NumberOfBytes)
 
 PVOID MmAllocateNonCachedMemory(ULONG NumberOfBytes)
 {
-   ULONG Result;
+   PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
    
-   Result=0;
+   Result = 0;
    Status = MmCreateMemoryArea(KernelMode,
 			       PsGetCurrentProcess(),
 			       MEMORY_AREA_NO_CACHE,

@@ -1,0 +1,1 @@
+VOID NtInitializeEventImplementation(VOID);

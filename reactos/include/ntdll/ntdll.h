@@ -1,5 +1,7 @@
 extern void dprintf(char* fmt,...);
 
+#define UNIMPLEMENTED dprintf("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
+
 #ifdef NDEBUG
 #define DPRINT(args...) 
 #else

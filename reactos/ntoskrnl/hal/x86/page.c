@@ -124,7 +124,7 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
 {
-  PHYSICAL_ADDRESS p;
+  PHYSICAL_ADDRESS p = INITIALIZE_LARGE_INTEGER;
 
   DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    

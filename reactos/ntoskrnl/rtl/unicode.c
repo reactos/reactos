@@ -21,14 +21,8 @@
 
 #define Aa_Difference ('A'-'a')
 
-PUNICODE_STRING RtlDuplicateUnicodeString(PUNICODE_STRING Dest, 
-					  PUNICODE_STRING Src)
-{
-   if (Dest==NULL)
-     {
-	Dest=ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));       
-     }   
-}
+extern unsigned long simple_strtoul(const char *cp, char **endp,
+				    unsigned int base);
 
 VOID RtlUpperString(PSTRING DestinationString, PSTRING SourceString)
 {
@@ -127,8 +121,9 @@ NTSTATUS RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 
 NTSTATUS RtlCharToInteger(IN PCSZ String, IN ULONG Base, IN OUT PULONG Value)
 {
-        *Value=simple_strtoul((const char *)String, NULL, Base);
-};
+   *Value=simple_strtoul((const char *)String, NULL, Base);
+   return(STATUS_SUCCESS);
+}
 
 LONG RtlCompareString(PSTRING String1, PSTRING String2, BOOLEAN CaseInsensitive)
 {
@@ -348,7 +343,7 @@ VOID RtlInitString(IN OUT PSTRING DestinationString,
 VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                           IN PCWSTR SourceString)
 {
-        unsigned long i, DestSize;
+        unsigned long DestSize;
 
         DPRINT("RtlInitUnicodeString(DestinationString %x, "
                  "SourceString %x)\n",DestinationString,SourceString);
@@ -368,6 +363,7 @@ VOID RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
         }
 }
 
+#if 0
 NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,                    /* optional */
                                    IN OUT PUNICODE_STRING String)
 {
@@ -384,7 +380,7 @@ NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,               
         if(Base==2) {
                 sprintf(str, "%b", Value);
         } else {
-                sprintf(str, "%u", Value);
+                sprintf(str, "%u", (unsigned int)Value);
         };
 
         len=strlen(str);
@@ -402,7 +398,8 @@ NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,               
         ExFreePool(str);
 
         return STATUS_SUCCESS;
-};
+}
+#endif
 
 NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
                                       IN PUNICODE_STRING SourceString,
@@ -487,7 +484,8 @@ NTSTATUS RtlUnicodeStringToInteger(IN PUNICODE_STRING String, IN ULONG Base,
           *Value=simple_strtoul(str, NULL, Base);
 
         ExFreePool(str);
-};
+   return(STATUS_SUCCESS);
+}
 
 NTSTATUS RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                                 IN PUNICODE_STRING SourceString,

@@ -91,7 +91,7 @@ void VirtualInit(boot_param* bp)
    MmInitSectionImplementation();
 }
 
-ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, ULONG Address)
+ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
 {
    MmSetPage(PsGetCurrentProcess(),
 	     Address,
@@ -208,7 +208,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	break;
 	
       case MEMORY_AREA_COMMIT:
-	stat = MmCommitedSectionHandleFault(MemoryArea,cr2);
+	stat = MmCommitedSectionHandleFault(MemoryArea,(PVOID)cr2);
 	break;
 	
       default:
@@ -669,7 +669,8 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
    
    for (i=0; i<(NumberOfBytesToRead/PAGESIZE); i++)
      {
-	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + (i*PAGESIZE));
+	CurrentEntry = MmGetPageEntry(Process, 
+				   (PVOID)((DWORD)BaseAddress + (i*PAGESIZE)));
 	RtlCopyMemory(Buffer + (i*PAGESIZE),
 		      (PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)),
 		      PAGESIZE);
@@ -717,7 +718,6 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
 				      OUT PULONG NumberOfBytesWritten)
 {
    PEPROCESS Process;
-   PMEMORY_AREA InMemoryArea;
    PMEMORY_AREA OutMemoryArea;
    ULONG i;
    NTSTATUS Status;
@@ -759,8 +759,9 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
 		       OutMemoryArea->Attributes,
 		       get_free_page());
 	  }
-	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + 
-				      (i*PAGESIZE));
+	CurrentEntry = MmGetPageEntry(Process, 
+				      (PVOID)((DWORD)BaseAddress + 
+				      (i*PAGESIZE)));
 	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)) +
 		      (((DWORD)BaseAddress)%PAGESIZE),
 		      Buffer + (i*PAGESIZE),

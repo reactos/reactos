@@ -60,6 +60,7 @@ PVOID ObCreateObject(PHANDLE Handle,
 		     POBJECT_ATTRIBUTES ObjectAttributes,
 		     POBJECT_TYPE Type);
 VOID ObRemoveEntry(POBJECT_HEADER Header);
+NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
 
 /*
  * FUNCTION: Creates an entry within a directory
@@ -106,6 +107,9 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 VOID ObCreateHandleTable(PEPROCESS Parent,
 			 BOOLEAN Inherit,
 			 PEPROCESS Process);
+NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
+		      PVOID* ReturnedObject,
+		      PWSTR* RemainingPath);
 
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

@@ -16,8 +16,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 #include <internal/debug.h>
+
+extern size_t strnlen(const char* string, size_t maxlen);
 
 unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
@@ -70,70 +73,86 @@ __res = ((unsigned long) n) % (unsigned) base; \
 n = ((unsigned long) n) / (unsigned) base; \
 __res; })
 
-static char * number(char * str, long num, int base, int size, int precision
-	,int type)
+static char * number(char * str, long num, int base, int size, int precision,
+		     int type)
 {
-	char c,sign,tmp[66];
-	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
-	int i;
-
-	if (type & LARGE)
-		digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	if (type & LEFT)
-		type &= ~ZEROPAD;
-	if (base < 2 || base > 36)
-		return 0;
-	c = (type & ZEROPAD) ? '0' : ' ';
-	sign = 0;
-	if (type & SIGN) {
-		if (num < 0) {
-			sign = '-';
-			num = -num;
-			size--;
-		} else if (type & PLUS) {
-			sign = '+';
-			size--;
-		} else if (type & SPACE) {
-			sign = ' ';
-			size--;
-		}
-	}
-	if (type & SPECIAL) {
-		if (base == 16)
-			size -= 2;
-		else if (base == 8)
-			size--;
-	}
-	i = 0;
-	if (num == 0)
-		tmp[i++]='0';
-	else while (num != 0)
-		tmp[i++] = digits[do_div(num,base)];
-	if (i > precision)
-		precision = i;
-	size -= precision;
-	if (!(type&(ZEROPAD+LEFT)))
-		while(size-->0)
-			*str++ = ' ';
-	if (sign)
-		*str++ = sign;
-	if (type & SPECIAL)
-		if (base==8)
-			*str++ = '0';
-		else if (base==16) {
-			*str++ = '0';
-			*str++ = digits[33];
-		}
-	if (!(type & LEFT))
-		while (size-- > 0)
-			*str++ = c;
-	while (i < precision--)
-		*str++ = '0';
-	while (i-- > 0)
-		*str++ = tmp[i];
-	while (size-- > 0)
-		*str++ = ' ';
-	return str;
+   char c,sign,tmp[66];
+   const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
+   int i;
+   
+   if (type & LARGE)
+     digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+   if (type & LEFT)
+     type &= ~ZEROPAD;
+   if (base < 2 || base > 36)
+     return 0;
+   
+   c = (type & ZEROPAD) ? '0' : ' ';
+   sign = 0;
+   
+   if (type & SIGN) 
+     {
+	if (num < 0) 
+	  {
+	     sign = '-';
+	     num = -num;
+	     size--;
+	  } 
+	else if (type & PLUS) 
+	  {
+	     sign = '+';
+	     size--;
+	  } 
+	else if (type & SPACE) 
+	  {
+	     sign = ' ';
+	     size--;
+	  }
+     }
+   
+   if (type & SPECIAL) 
+     {
+	if (base == 16)
+	  size -= 2;
+	else if (base == 8)
+	  size--;
+     }
+   
+   i = 0;
+   if (num == 0)
+     tmp[i++]='0';
+   else while (num != 0)
+     tmp[i++] = digits[do_div(num,base)];
+   if (i > precision)
+     precision = i;
+   size -= precision;
+   if (!(type&(ZEROPAD+LEFT)))
+     while(size-->0)
+       *str++ = ' ';
+   if (sign)
+     *str++ = sign;
+   if (type & SPECIAL)
+     {
+	if (base==8)
+	  {
+	     *str++ = '0';
+	  }
+	else if (base==16) 
+	  {
+	     *str++ = '0';
+	     *str++ = digits[33];
+	  }
+     }
+   if (!(type & LEFT))
+     while (size-- > 0)
+       *str++ = c;
+   while (i < precision--)
+     *str++ = '0';
+   while (i-- > 0)
+     *str++ = tmp[i];
+   while (size-- > 0)
+     *str++ = ' ';
+   return str;
 }
 
 int vsprintf(char *buf, const char *fmt, va_list args)
@@ -351,17 +370,18 @@ int wsprintfA(char * buf, const char *fmt, ...)
 	return i;
 }
 
+#if 0
 int wsprintfW(unsigned short * buf, const unsigned short *fmt, ...)
 {
-	va_list args;
-	int i;
-
-	va_start(args, fmt);
-	//i=vsprintf(buf,fmt,args);
-	va_end(args);
-	return i;
+   va_list args;
+   int i;
+   
+   va_start(args, fmt);
+   //i=vsprintf(buf,fmt,args);
+   va_end(args);
+   return i;
 }
-
+#endif
 
 unsigned short towupper(unsigned short w)
 {

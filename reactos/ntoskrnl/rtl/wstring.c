@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
+#include <ctype.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -62,7 +63,6 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-#if 0
 wchar_t towupper(wchar_t w)
 {
    if (w < L'A')
@@ -74,11 +74,10 @@ wchar_t towupper(wchar_t w)
 	return(w);
      }
 }
-#endif
 
 int wcsicmp(const wchar_t* cs, const wchar_t* ct)
 {
-   while (*cs != '\0' && *ct != '\0' && wtoupper(*cs) == wtoupper(*ct))
+   while (*cs != '\0' && *ct != '\0' && towupper(*cs) == towupper(*ct))
      {
 	cs++;
 	ct++;

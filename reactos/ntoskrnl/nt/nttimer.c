@@ -19,8 +19,7 @@
 NTSTATUS STDCALL NtCancelTimer(IN HANDLE TimerHandle,
 			       OUT PBOOLEAN CurrentState OPTIONAL)
 {
-   return(ZwCancelTimer(TimerHandle,
-			CurrentState));
+   UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL ZwCancelTimer(IN HANDLE TimerHandle,

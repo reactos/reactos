@@ -273,6 +273,7 @@ ZwCreateKey(PHANDLE KeyHandle,
 
 NTSTATUS NtDeleteKey(HANDLE KeyHandle)
 {
+   return(ZwDeleteKey(KeyHandle));
 }
 
 NTSTATUS ZwDeleteKey(HANDLE KeyHandle)
@@ -280,15 +281,23 @@ NTSTATUS ZwDeleteKey(HANDLE KeyHandle)
    UNIMPLEMENTED;
 }
 
-NTSTATUS NtEnumerateKey(HANDLE KeyHandle, ULONG Index, 
+NTSTATUS NtEnumerateKey(HANDLE KeyHandle, 
+			ULONG Index,
 			KEY_INFORMATION_CLASS KeyInformationClass,
 			PVOID KeyInformation,
 			ULONG Length,
 			PULONG ResultLength)
 {
+   return(ZwEnumerateKey(KeyHandle,
+			 Index,
+			 KeyInformationClass,
+			 KeyInformation,
+			 Length,
+			 ResultLength));
 }
 
-NTSTATUS ZwEnumerateKey(HANDLE KeyHandle, ULONG Index, 
+NTSTATUS ZwEnumerateKey(HANDLE KeyHandle, 
+			ULONG Index,
 			KEY_INFORMATION_CLASS KeyInformationClass,
 			PVOID KeyInformation,
 			ULONG Length,

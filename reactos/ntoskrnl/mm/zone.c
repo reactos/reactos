@@ -130,6 +130,8 @@ NTSTATUS ExInitializeZone(PZONE_HEADER Zone, ULONG BlockSize,
 	PushEntryList(&Zone->FreeList,&entry->Entry);
 	entry = (PZONE_ENTRY)(((PVOID)entry) + sizeof(ZONE_ENTRY) + BlockSize);
      }
+   
+   return(STATUS_SUCCESS);
 }
 
 PVOID ExInterlockedFreeToZone(PZONE_HEADER Zone, PVOID Block,

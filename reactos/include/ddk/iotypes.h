@@ -184,8 +184,8 @@ typedef NTSTATUS (*PDRIVER_INITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
 /*
  * Driver cancel declaration
  */
-typedef NTSTATUS (*PDRIVER_CANCEL)(struct _DRIVER_OBJECT* DriverObject,
-				   PUNICODE_STRING RegistryPath);
+typedef NTSTATUS (*PDRIVER_CANCEL)(struct _DEVICE_OBJECT* DeviceObject,
+				   struct _IRP* RegistryPath);
 
 
 typedef struct _SECTION_OBJECT_POINTERS

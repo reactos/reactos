@@ -306,6 +306,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   /*  Copy image sections into virtual section  */
   memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
   CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
+   CurrentSize = 0;
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
       /*  Copy current section into current offset of virtual section  */
@@ -911,7 +912,6 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   OBJECT_ATTRIBUTES FileObjectAttributes;
   HANDLE FileHandle, SectionHandle, ThreadHandle;
   CONTEXT Context;
-  ANSI_STRING AnsiString;
   UNICODE_STRING DllPathname;
   PIMAGE_DOS_HEADER DosHeader;
    PIMAGE_NT_HEADERS NTHeaders;
@@ -1020,7 +1020,7 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 				    0,
 				    Sections[i].Misc.VirtualSize,
 				    &Offset,
-				    &Sections[i].Misc.VirtualSize,
+				    (PULONG)&Sections[i].Misc.VirtualSize,
 				    0,
 				    MEM_COMMIT,
 				    PAGE_READWRITE);
@@ -1152,12 +1152,12 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 		     DUPLICATE_SAME_ACCESS);
    
    ZwWriteVirtualMemory(ProcessHandle,
-			STACK_TOP - 4,
+			(PVOID)(STACK_TOP - 4),
 			&ImageBase,
 			sizeof(ImageBase),
 			&BytesWritten);
    ZwWriteVirtualMemory(ProcessHandle,
-			STACK_TOP - 8,
+			(PVOID)(STACK_TOP - 8),
 			&DupSectionHandle,
 			sizeof(DupSectionHandle),
 			&BytesWritten);
@@ -1200,10 +1200,13 @@ NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 }
 
 NTSTATUS LdrLoadInitialProcess(VOID)
+/*
+ * FIXME: The location of the initial process should be configurable,
+ * from command line or registry
+ */
 {
   NTSTATUS Status;
   HANDLE ProcessHandle;
-  ANSI_STRING AnsiString;
   UNICODE_STRING ProcessName;
 
   Status = ZwCreateProcess(&ProcessHandle,
@@ -1216,16 +1219,12 @@ NTSTATUS LdrLoadInitialProcess(VOID)
                            NULL);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not create process\n");
-      return Status;
+       DbgPrint("Could not create process\n");
+       return Status;
     }
 
-  RtlInitAnsiString(&AnsiString, "\\??\\C:\\reactos\\system\\shell.exe"); 
-  RtlAnsiStringToUnicodeString(&ProcessName, &AnsiString, TRUE);
-  
+  RtlInitUnicodeString(&ProcessName, L"\\??\\C:\\reactos\\system\\shell.exe");
   Status = LdrLoadImage(ProcessHandle, &ProcessName);
-
-  RtlFreeUnicodeString(&ProcessName);
 
   return Status;
 }

@@ -45,7 +45,8 @@ NTSTATUS ZwSetInformationThread(HANDLE ThreadHandle,
 	ThreadBasicInformationP->TebBaseAddress = Thread->Tcb.Teb;
 	ThreadBasicInformationP->AffinityMask = Thread->Tcb.Affinity;
 	ThreadBasicInformationP->BasePriority = Thread->Tcb.BasePriority;
-	ThreadBasicInformationP->UniqueThreadId = Thread->Cid.UniqueThread;
+	ThreadBasicInformationP->UniqueThreadId = (ULONG)
+	  Thread->Cid.UniqueThread;
 	Status = STATUS_SUCCESS;
 	break;
 	

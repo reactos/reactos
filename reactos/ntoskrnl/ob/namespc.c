@@ -133,7 +133,6 @@ PVOID ObpParseDirectory(PVOID Object, PWSTR* Path)
 {
    PWSTR end;
    PVOID FoundObject;
-   NTSTATUS Status;
    
    DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %w)\n",
 	  Object,Path,*Path);

@@ -30,6 +30,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 VOID IoInitCancelHandling(VOID);
 VOID IoInitSymbolicLinkImplementation(VOID);
+VOID IoInitFileSystemImplementation(VOID);
 
 NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject);
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);
@@ -54,5 +55,6 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 PVOID Parent,
 			 PWSTR RemainingPath,
 			 POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject);
 
 #endif

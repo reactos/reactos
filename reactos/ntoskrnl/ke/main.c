@@ -165,7 +165,7 @@ asmlinkage void _main(boot_param* _bp)
    for (i=1;i<bp.nr_files;i++)
      {
         DPRINT("process module at %08lx\n", start);
-      	LdrProcessDriver(start);
+      	LdrProcessDriver((PVOID)start);
         start=start+PAGE_ROUND_UP(bp.module_length[i]);
      }
    

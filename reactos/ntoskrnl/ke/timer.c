@@ -19,6 +19,7 @@
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <internal/string.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -494,9 +495,6 @@ void KeExpireTimers(void)
    DPRINT("Finished KeExpireTimers()\n");
 }
 
-extern unsigned int nr_used_blocks;
-extern unsigned int EiFreeNonPagedPool;
-extern unsigned int EiUsedNonPagedPool;
 
 BOOLEAN KiTimerInterrupt(VOID)
 /*
@@ -507,8 +505,9 @@ BOOLEAN KiTimerInterrupt(VOID)
    char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
    int i;
    int x,y;
-   extern ULONG PiNrThreads;
    extern ULONG EiNrUsedBlocks;
+   extern unsigned int EiFreeNonPagedPool;
+   extern unsigned int EiUsedNonPagedPool;
    
    /*
     * Increment the number of timers ticks 
@@ -534,7 +533,8 @@ BOOLEAN KiTimerInterrupt(VOID)
      }
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
    memset(str, 0, sizeof(str));
-   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,EiFreeNonPagedPool);
+   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
+	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
 //   sprintf(str,"%.8u %.8u",PiNrThreads,KiTimerTicks);
    for (i=0;i<17;i++)

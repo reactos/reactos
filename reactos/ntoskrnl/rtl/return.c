@@ -16,8 +16,3 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID RtlGetCallersAddress(PVOID* CallersAddress)
-{
-   PULONG stk = (PULONG)(&CallersAddress);
-   *CallersAddress = stk[-1];
-}

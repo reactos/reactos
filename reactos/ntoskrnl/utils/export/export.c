@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
                 fprintf(stdout,"{\"_%s\",(unsigned int)%s},\n",sym[j],sym[j]);
         }
 
-        fprintf(stdout,"{NULL,NULL},\n");
+        fprintf(stdout,"{(char *)NULL,0},\n");
         fprintf(stdout,"};\n");
    
    return(0);

@@ -34,6 +34,40 @@ typedef struct
 
 /* FUNCTIONS ***************************************************************/
 
+static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
+					HANDLE h)
+/*
+ * FUNCTION: Get the data structure for a handle
+ * ARGUMENTS:
+ *         Process = Process to get the handle for
+ *         h = Handle
+ * ARGUMENTS: A pointer to the information about the handle on success,
+ *            NULL on failure
+ */
+{
+   PLIST_ENTRY current;
+   unsigned int handle = ((unsigned int)h) - 1;
+   unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
+   HANDLE_BLOCK* blk = NULL;
+   unsigned int i;
+   
+   DPRINT("ObpGetObjectByHandle(Process %x, h %x)\n",Process,h);
+   
+   current = Process->Pcb.HandleTable.ListHead.Flink;
+   DPRINT("current %x\n",current);
+   
+   for (i=0;i<count;i++)
+     {
+	current = current->Flink;
+	if (current==(&(Process->Pcb.HandleTable.ListHead)))
+	  {
+	     return(NULL);
+	  }
+     }
+   
+   blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
+   return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
+}
 
 NTSTATUS STDCALL NtDuplicateObject(IN HANDLE SourceProcessHandle,
 				   IN PHANDLE SourceHandle,
@@ -178,41 +212,6 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
    if (Parent != NULL)
      {
      }
-}
-
-static PHANDLE_REP ObpGetObjectByHandle(PEPROCESS Process,
-					HANDLE h)
-/*
- * FUNCTION: Get the data structure for a handle
- * ARGUMENTS:
- *         Process = Process to get the handle for
- *         h = Handle
- * ARGUMENTS: A pointer to the information about the handle on success,
- *            NULL on failure
- */
-{
-   PLIST_ENTRY current;
-   unsigned int handle = ((unsigned int)h) - 1;
-   unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
-   HANDLE_BLOCK* blk = NULL;
-   unsigned int i;
-   
-   DPRINT("ObpGetObjectByHandle(Process %x, h %x)\n",Process,h);
-   
-   current = Process->Pcb.HandleTable.ListHead.Flink;
-   DPRINT("current %x\n",current);
-   
-   for (i=0;i<count;i++)
-     {
-	current = current->Flink;
-	if (current==(&(Process->Pcb.HandleTable.ListHead)))
-	  {
-	     return(NULL);
-	  }
-     }
-   
-   blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
-   return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
 
 VOID ObDeleteHandle(HANDLE Handle)

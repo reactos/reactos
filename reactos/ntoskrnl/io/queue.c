@@ -31,7 +31,6 @@ VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
 {
    PKDEVICE_QUEUE_ENTRY entry;
    PIRP Irp;
-   KIRQL oldirql;
    
    entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue,Key);
    
@@ -58,7 +57,6 @@ VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
 {
    PKDEVICE_QUEUE_ENTRY entry;
    PIRP Irp;
-   KIRQL oldirql;
    
    DPRINT("IoStartNextPacket(DeviceObject %x, Cancelable %d)\n",
 	  DeviceObject,Cancelable);

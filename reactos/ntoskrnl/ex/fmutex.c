@@ -61,7 +61,7 @@ VOID ExReleaseFastMutex(PFAST_MUTEX FastMutex)
 
 BOOLEAN ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
-   InterlockedCompareExchange(&(FastMutex->Count),0,0);
+   UNIMPLEMENTED;
 }
 
 

@@ -68,7 +68,7 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	DPRINT("Writing %x with physical address %x\n",
 	       base+(i*PAGESIZE),mdl_pages[i]);
 	MmSetPage(NULL,
-		  (DWORD)base+(i*PAGESIZE),
+		  (PVOID)((DWORD)base+(i*PAGESIZE)),
 		  PAGE_READWRITE,
 		  mdl_pages[i]);
      }
@@ -119,7 +119,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    DPRINT("StartVa %x\n",Mdl->StartVa);
    
    marea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),
-				     (ULONG)Mdl->StartVa);
+				     Mdl->StartVa);
    DPRINT("marea %x\n",marea);
   
    
@@ -240,8 +240,8 @@ VOID MmInitializeMdl(PMDL MemoryDescriptorList, PVOID Base, ULONG Length)
  */
 {
    memset(MemoryDescriptorList,0,sizeof(MDL));
-   MemoryDescriptorList->StartVa = PAGE_ROUND_DOWN(Base);
-   MemoryDescriptorList->ByteOffset = Base - PAGE_ROUND_DOWN(Base);
+   MemoryDescriptorList->StartVa = (PVOID)PAGE_ROUND_DOWN(Base);
+   MemoryDescriptorList->ByteOffset = (ULONG)(Base - PAGE_ROUND_DOWN(Base));
    MemoryDescriptorList->MdlFlags = 0;
    MemoryDescriptorList->ByteCount = Length;
    MemoryDescriptorList->Size = sizeof(MDL) + 

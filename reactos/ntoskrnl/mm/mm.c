@@ -110,7 +110,7 @@ void MmInitialize(boot_param* bp)
 	i<PAGE_ROUND_DOWN(((int)&etext));i=i+PAGESIZE)
      {
 	MmSetPageProtect(NULL,
-			 i,
+			 (PVOID)i,
 			 PAGE_EXECUTE_READ);
      }
    DPRINT("end %x\n",(int)&end);
@@ -118,7 +118,7 @@ void MmInitialize(boot_param* bp)
 	i<(KERNEL_BASE+PAGE_TABLE_SIZE);i=i+PAGESIZE)
      {
 	MmSetPage(NULL,
-		  i,
+		  (PVOID)i,
 		  PAGE_NOACCESS,
 		  0);
      }

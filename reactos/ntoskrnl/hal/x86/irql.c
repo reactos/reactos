@@ -25,6 +25,7 @@ static KIRQL CurrentIrql = HIGH_LEVEL;
 
 /* FUNCTIONS ****************************************************************/
 
+#if 0
 static unsigned int HiGetCurrentPICMask(void)
 {
    unsigned int mask;
@@ -34,6 +35,7 @@ static unsigned int HiGetCurrentPICMask(void)
 
    return mask;
 }
+#endif
 
 static unsigned int HiSetCurrentPICMask(unsigned int mask)
 {

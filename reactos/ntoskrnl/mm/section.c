@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
+#include <wchar.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -31,9 +32,9 @@ VOID MmpDeleteSection(PVOID ObjectBody)
 
 NTSTATUS MmpCreateSection(PVOID ObjectBody,
 			  PVOID Parent,
-			  PWSTR RemainingPath)
+			  PWSTR RemainingPath,
+			  POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ObjectBody;
    NTSTATUS Status;
    
    DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",

@@ -27,12 +27,14 @@ VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
  *                             MmLockPagableDataSection
  */
 {
-   MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+//   MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+   UNIMPLEMENTED;
 }
 
 VOID MmLockPagableSectionByHandle(PVOID ImageSectionHandle)
 {
-   MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+//   MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
+   UNIMPLEMENTED;
 }
 
 PVOID MmLockPagableCodeSection(PVOID AddressWithinSection)

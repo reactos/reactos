@@ -210,8 +210,6 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ThreadAttributes)
 {
-   ULONG ThreadId;
-   ULONG ProcessId;
    PETHREAD Thread;
    NTSTATUS Status;
    
@@ -256,7 +254,8 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			      UserMode);
    InitializeListHead(Thread->Tcb.ApcList);
    InitializeListHead(&(Thread->IrpList));
-   Thread->Cid.UniqueThread=InterlockedIncrement(&NextThreadUniqueId);
+   Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
+							  &NextThreadUniqueId);
    ObReferenceObjectByPointer(Thread,
 			      THREAD_ALL_ACCESS,
 			      PsThreadType,

@@ -17,32 +17,33 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
-NtCreateMailslotFile(
-	OUT PHANDLE MailSlotFileHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,                   
-	IN ULONG ShareAccess,   
-	IN ULONG MaxMessageSize,
-	IN PLARGE_INTEGER TimeOut
-	)
+NTSTATUS STDCALL NtCreateMailslotFile(OUT PHANDLE MailSlotFileHandle,
+				      IN ACCESS_MASK DesiredAccess,
+				      IN POBJECT_ATTRIBUTES ObjectAttributes,
+				      OUT PIO_STATUS_BLOCK IoStatusBlock,
+				      IN ULONG FileAttributes,
+				      IN ULONG ShareAccess,   
+				      IN ULONG MaxMessageSize,
+				      IN PLARGE_INTEGER TimeOut)
 {
+   return(ZwCreateMailslotFile(MailSlotFileHandle,
+			       DesiredAccess,
+			       ObjectAttributes,
+			       IoStatusBlock,
+			       FileAttributes,
+			       ShareAccess,
+			       MaxMessageSize,
+			       TimeOut));
 }
 
-NTSTATUS
-STDCALL
-ZwCreateMailslotFile(
-	OUT PHANDLE MailSlotFileHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,                   
-	IN ULONG ShareAccess,   
-	IN ULONG MaxMessageSize,
-	IN PLARGE_INTEGER TimeOut
-	)
+NTSTATUS STDCALL ZwCreateMailslotFile(OUT PHANDLE MailSlotFileHandle,
+				      IN ACCESS_MASK DesiredAccess,
+				      IN POBJECT_ATTRIBUTES ObjectAttributes,
+				      OUT PIO_STATUS_BLOCK IoStatusBlock,
+				      IN ULONG FileAttributes,                   
+				      IN ULONG ShareAccess,   
+				      IN ULONG MaxMessageSize,
+				      IN PLARGE_INTEGER TimeOut)
 {
+   UNIMPLEMENTED;
 }

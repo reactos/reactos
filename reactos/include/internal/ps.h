@@ -14,6 +14,8 @@ VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
 VOID PsDispatchThread(VOID);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
+VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
+VOID PsReleaseThread(PETHREAD Thread);
 
 /*
  * PURPOSE: Thread states
@@ -54,5 +56,6 @@ void HalInitFirstTask(PETHREAD thread);
 BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
 void HalTaskSwitch(PKTHREAD thread);
 NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
+NTSTATUS HalReleaseTask(PETHREAD Thread);
 
 #endif

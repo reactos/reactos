@@ -145,7 +145,7 @@ LONG RtlCompareUnicodeString(PUNICODE_STRING String1,
 LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
 LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
 VOID RtlCopyBytes(PVOID Destination, CONST VOID* Source, ULONG Length);
-VOID RtlCopyMemory(VOID* Destination, VOID* Source, ULONG Length);
+VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length);
 VOID RtlCopyString(PSTRING DestinationString, PSTRING SourceString);
 VOID RtlCopyUnicodeString(PUNICODE_STRING DestinationString,
 			  PUNICODE_STRING SourceString);

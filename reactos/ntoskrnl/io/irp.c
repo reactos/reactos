@@ -84,7 +84,7 @@ VOID IoMarkIrpPending(PIRP Irp)
    DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
 	  IoGetCurrentIrpStackLocation(Irp));
    IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
-   Irp->Tail.Overlay.Thread = KeGetCurrentThread();
+   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    DPRINT("IoGetCurrentIrpStackLocation(Irp)->Control %x\n",
 	  IoGetCurrentIrpStackLocation(Irp)->Control);
    DPRINT("SL_PENDING_RETURNED %x\n",SL_PENDING_RETURNED);
@@ -132,7 +132,7 @@ PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(PIRP Irp)
           Irp->CurrentLocation,
           Irp->StackCount);
 
-   return &Irp->Stack[Irp->CurrentLocation];
+   return &Irp->Stack[(ULONG)Irp->CurrentLocation];
 }
 
 
@@ -202,7 +202,8 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
    
    if (ChargeQuota)
      {
-	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
+//	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
+	Irp = ExAllocatePool(NonPagedPool,IoSizeOfIrp(StackSize));
      }
    else
      {	

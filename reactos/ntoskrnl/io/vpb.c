@@ -40,6 +40,8 @@ NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
    RtlZeroMemory(Vpb->VolumeLabel,sizeof(WCHAR)*MAXIMUM_VOLUME_LABEL_LENGTH);
    
    DeviceObject->Vpb = Vpb;
+   
+   return(STATUS_SUCCESS);
 }
 
 PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,

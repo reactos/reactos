@@ -19,7 +19,7 @@ OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
           string/strcat.o string/strcmp.o string/strcpy.o string/stricmp.o \
           string/strlen.o string/strncmp.o string/strncpy.o string/strnlen.o \
           string/strrchr.o string/wstring.o stubs/stubs.o rtl/heap.o \
-	  rtl/critical.o rtl/mem.o
+	  rtl/critical.o rtl/mem.o ldr/utils.o
 
 ntdll.a: $(OBJECTS)
 	$(AR) csr ntdll.a $(OBJECTS)
@@ -43,4 +43,5 @@ ntdll.dll: $(DLLMAIN) $(OBJECTS)
 	- $(RM) temp.exp
 	$(NM) --numeric-sort ntdll.dll > ntdll.sym
 
+#WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

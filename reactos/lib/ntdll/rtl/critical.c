@@ -10,6 +10,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include <ntdll/rtl.h>
+
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -37,5 +40,7 @@ VOID RtlLeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 
 WINBOOL RtlTryEntryCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
+   UNIMPLEMENTED;
+   for(;;);
 }
 

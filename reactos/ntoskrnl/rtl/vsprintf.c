@@ -18,6 +18,7 @@
 #include <internal/debug.h>
 #include <string.h>
 #include <internal/string.h>
+#include <ctype.h>
 
 #include <ddk/ntddk.h>
 

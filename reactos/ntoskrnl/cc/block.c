@@ -25,6 +25,7 @@ static ULONG CbHash(PDCCB Dccb, ULONG BlockNr)
    return(BlockNr % Dccb->HashTblSize);
 }
 
+#if 0
 static VOID CbDereferenceCcb(PDCCB Dccb, PCCB Ccb)
 {
    KIRQL oldlvl;
@@ -33,6 +34,7 @@ static VOID CbDereferenceCcb(PDCCB Dccb, PCCB Ccb)
    Ccb->References--;
    KeReleaseSpinLock(&Dccb->HashTblLock,oldlvl);
 }
+#endif
 
 static PCCB CbGetCcbFromHashTable(PDCCB Dccb, ULONG BlockNr)
 {
@@ -49,6 +51,7 @@ static PCCB CbGetCcbFromHashTable(PDCCB Dccb, ULONG BlockNr)
    return(Ccb);
 }
 
+#if 0
 static BOOLEAN CbRemoveCcbFromHashTable(PDCCB Dccb, PCCB Ccb)
 {
    KIRQL oldlvl;
@@ -67,7 +70,7 @@ static BOOLEAN CbRemoveCcbFromHashTable(PDCCB Dccb, PCCB Ccb)
    KeReleaseSpinLock(&Dccb->HashTblLock,oldlvl);
    return(Status);
 }
-
+#endif
 
 static BOOLEAN CbLockForWrite(PCCB Ccb)
 {
@@ -126,11 +129,13 @@ static BOOLEAN CbLockForDelete(PDCCB Dccb, PCCB Ccb)
    return(TRUE);
 }
 
+#if 0
 static VOID CbUnlockForDelete(PDCCB Dccb, PCCB Ccb)
 {
    Ccb->ActiveWriter = FALSE;
    KeSetEvent(&Ccb->FinishedNotify,IO_NO_INCREMENT,FALSE);
 }
+#endif
 
 VOID CbAcquireForDelete(PDCCB Dccb, PCCB Ccb)
 /*
@@ -234,6 +239,7 @@ PCCB CbFindModifiedCcb(PDCCB Dccb, PCCB Start)
   UNIMPLEMENTED; 
 }
 
+#if 0
 static VOID CbDeleteAllCcbs(PDCCB Dccb)
 /*
  * FUNCTION: Delete all the ccbs associated with a dccb
@@ -261,7 +267,9 @@ static VOID CbDeleteAllCcbs(PDCCB Dccb)
 	ExFreePool(Ccb);
      }
 }
+#endif
 
+#if 0
 static VOID CbFreeCcb(PDCCB Dccb, PCCB Ccb)
 {
    KIRQL oldlvl;
@@ -279,7 +287,9 @@ static VOID CbFreeCcb(PDCCB Dccb, PCCB Ccb)
    KeReleaseSpinLock(&Dccb->CcbListLock,oldlvl);
    ExFreePool(Ccb);
 }
+#endif
 
+#if 0
 static VOID CbReclaimMemory(PDCCB Dccb)
 {
    PCCB RedundantCcbs[25];
@@ -323,7 +333,9 @@ static VOID CbReclaimMemory(PDCCB Dccb)
 	CbFreeCcb(Dccb,RedundantCcbs[i]);
      }
 }
+#endif
 
+#if 0
 static VOID CbDeleteCcb(PDCCB Dccb, PCCB Ccb)
 /*
  * FUNCTION: Deletes a CCB
@@ -338,6 +350,7 @@ static VOID CbDeleteCcb(PDCCB Dccb, PCCB Ccb)
    CbAcquireForDelete(Dccb,Ccb);   
    Ccb->State = CCB_DELETE_PENDING;
 }
+#endif
 
 VOID CbReinitCcb(PDCCB Dccb, PCCB Ccb, ULONG BlockNr)
 {

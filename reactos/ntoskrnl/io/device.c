@@ -177,7 +177,6 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 			 PWSTR RemainingPath,
 			 POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ObjectBody;
    
    DPRINT("IopCreateDevice(ObjectBody %x, Parent %x, RemainingPath %w)\n",
 	  ObjectBody, Parent, RemainingPath);

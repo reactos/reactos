@@ -41,12 +41,12 @@ BOOLEAN IoCancelIrp(PIRP Irp)
    
    IoAcquireCancelSpinLock(&oldlvl);
    Irp->Cancel = TRUE;
-   if (Irp->CancelRoutine==NULL)
+   if (Irp->CancelRoutine == NULL)
      {
 	return(FALSE);
      }
-   Irp->CancelRoutine(Irp->Stack[0].DeviceObject,Irp);
-   IoReleaseCancelSpinLock(&oldlvl);
+   Irp->CancelRoutine(Irp->Stack[0].DeviceObject, Irp);
+   IoReleaseCancelSpinLock(oldlvl);
    return(TRUE);
 }
 

@@ -13,6 +13,7 @@
 #include <internal/ke.h>
 #include <internal/bitops.h>
 #include <internal/linkage.h>
+#include <string.h>
 #include <internal/string.h>
 
 #include <internal/i386/segment.h>

@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -656,7 +657,7 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 * Called by __VirtualInit to initialize the default process heap     *
 *********************************************************************/
 
-VOID WINAPI __RtlInitHeap(LPVOID base, ULONG minsize, ULONG maxsize)
+VOID WINAPI __RtlInitHeap(PVOID base, ULONG minsize, ULONG maxsize)
 {
    NTSTATUS Result;
    PHEAP NewHeap;
@@ -952,7 +953,7 @@ UINT RtlCompactHeap(HANDLE hheap, DWORD flags)
 /*********************************************************************
 *                    HeapSize  --  KERNEL32                          *
 *********************************************************************/
-DWORD WINAPI RtlSizeHeap(HANDLE hheap, DWORD flags, LPCVOID pmem)
+DWORD WINAPI RtlSizeHeap(HANDLE hheap, DWORD flags, PVOID pmem)
 {
    PHEAP	pheap=(PHEAP) hheap;
    PHEAP_BLOCK	palloc=((PHEAP_BLOCK)pmem-1);
@@ -992,7 +993,7 @@ DWORD WINAPI RtlSizeHeap(HANDLE hheap, DWORD flags, LPCVOID pmem)
 *                                                                    *
 * NOTE: only implemented in NT                                       *
 *********************************************************************/
-BOOL WINAPI RtlValidateHeap(HANDLE hheap, DWORD flags, LPCVOID pmem)
+BOOL WINAPI RtlValidateHeap(HANDLE hheap, DWORD flags, PVOID pmem)
 {
    PHEAP		pheap=(PHEAP)hheap;
    PHEAP_BLOCK		pcheck;

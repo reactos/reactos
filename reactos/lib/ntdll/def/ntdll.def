@@ -433,8 +433,8 @@ RtlUnlockHeap@4
 RtlValidateHeap@12
 RtlInitAnsiString
 RtlInitUnicodeString
-RtlLargeIntegerDivide
 RtlLargeIntegerAdd
+RtlLargeIntegerDivide
 RtlEnlargedIntegerMultiply
 RtlEnlargedUnsignedMultiply
 RtlExtendedIntegerMultiply
@@ -455,9 +455,9 @@ wcscpy
 wcschr
 wcscat
 wcscmp
-wcsicmp
-wcsnicmp
 wcsncpy
 wcslen
 wcsrchr
+wcsicmp
+wcsnicmp
 vsprintf

@@ -12,16 +12,16 @@
 
 #include <ddk/ntddk.h>
 
+#include <internal/debug.h>
+
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS STDCALL NtRaiseHardError(VOID)
 {
+   UNIMPLEMENTED;
 }
 
-NTSTATUS 
-STDCALL 
-NtSetDefaultHardErrorPort(
-	IN HANDLE PortHandle
-	)
+NTSTATUS STDCALL NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
+   UNIMPLEMENTED;
 }

@@ -11,18 +11,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-HANDLE IdleThreadHandle = NULL;
+HANDLE PsIdleThreadHandle = NULL;
 extern ULONG DpcQueueSize;
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID PsIdleThreadMain(PVOID Context)
+static NTSTATUS PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;
    
@@ -43,7 +44,7 @@ VOID PsInitIdleThread(VOID)
 {
    KPRIORITY Priority;
    
-   PsCreateSystemThread(&IdleThreadHandle,
+   PsCreateSystemThread(&PsIdleThreadHandle,
 			THREAD_ALL_ACCESS,
 			NULL,
 			NULL,
@@ -52,7 +53,7 @@ VOID PsInitIdleThread(VOID)
 			NULL);
    
    Priority = THREAD_PRIORITY_IDLE;
-   ZwSetInformationThread(IdleThreadHandle,
+   ZwSetInformationThread(PsIdleThreadHandle,
 			  ThreadPriority,
 			  &Priority,
 			  sizeof(Priority));

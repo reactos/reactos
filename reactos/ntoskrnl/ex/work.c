@@ -45,7 +45,7 @@ typedef struct
 /*
  * PURPOSE: Queue of items waiting to be processed at normal priority
  */
-WORK_QUEUE normal_work_queue = {0,};
+WORK_QUEUE normal_work_queue = {{0,}};
 
 #define WAIT_INTERVAL (0)
 

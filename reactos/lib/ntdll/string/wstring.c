@@ -14,15 +14,17 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 
-static wchar_t * ___wcstok = NULL;
+/* GLOBALS *******************************************************************/
+
+// static wchar_t * ___wcstok = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-int wcsicmp(const wchar_t* ws1, const wchar_t* ws2)
+int wcsnicmp(const wchar_t* ws1, const wchar_t* ws2, size_t size)
 {
 }
 
-int wcsnicmp(const wchar_t* ws1, const wchar_t* ws2, size_t size)
+int wcsicmp(const wchar_t* ws1, const wchar_t* ws2)
 {
 }
 
@@ -41,14 +43,13 @@ wchar_t* wcscat(wchar_t *dest, const wchar_t *src)
   return dest;
 }
 
-wchar_t * 
-wcschr(const wchar_t *str, wchar_t ch)
+wchar_t* wcschr(const wchar_t *str, wchar_t ch)
 {
   while ((*str) != ((wchar_t) 0))
     {
       if ((*str) == ch)
         {
-          return str;
+          return (wchar_t *)str;
         }
       str++;
     }
@@ -56,8 +57,7 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-int 
-wcscmp(const wchar_t *cs, const wchar_t *ct)
+int wcscmp(const wchar_t *cs, const wchar_t *ct)
 {
   while (*cs != '\0' && *ct != '\0' && *cs == *ct)
     {

@@ -1,6 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/ntdll/main/dllmain.c
+ * PURPOSE:         
+ * PROGRAMMER:      
+ */
 
 #include <windows.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <ddk/ntddk.h>
 #include <ntdll/ntdll.h>
 
