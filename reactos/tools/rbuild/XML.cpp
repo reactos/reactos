@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include "XML.h"
+#include "rbuild.h"
 
 using std::string;
 using std::vector;
@@ -397,8 +398,8 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		printf ( "syntax error: attribute '%s' required for <%s>\n",
-			attribute.c_str(), name.c_str() );
+		throw RequiredAttributeNotFoundException ( attribute,
+		                                           name );
 	}
 	return NULL;
 }
@@ -416,8 +417,8 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		printf ( "syntax error: attribute '%s' required for <%s>\n",
-			attribute.c_str(), name.c_str() );
+		throw RequiredAttributeNotFoundException ( attribute,
+		                                           name );
 	}
 	return NULL;
 }
@@ -462,7 +463,7 @@ XMLParse(XMLFile& f,
 			e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
 			XMLFile fInc;
 			if ( !fInc.open ( file ) )
-				printf ( "xi:include error, couldn't find file '%s'\n", file.c_str() );
+				throw FileNotFoundException ( file );
 			else
 			{
 				Path path2 ( path, att->value );

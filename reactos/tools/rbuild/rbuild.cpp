@@ -20,9 +20,10 @@ main ( int argc, char** argv )
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
-		Project project = Project ( projectFilename );
+		Project project ( projectFilename );
 		Backend* backend = new MingwBackend ( project );
 		backend->Process ();
+		delete backend;
 		
 		// REM TODO FIXME actually do something with Project object...
 #if 0

@@ -25,11 +25,27 @@ public:
 };
 
 
+class AccessDeniedException : public Exception
+{
+public:
+	AccessDeniedException(const std::string& filename);
+	std::string Filename;
+};
+
+
 class InvalidBuildFileException : public Exception
 {
 public:
 	InvalidBuildFileException(const char* message,
 	                          ...);
+};
+
+
+class RequiredAttributeNotFoundException : public InvalidBuildFileException
+{
+public:
+	RequiredAttributeNotFoundException(const std::string& attributeName,
+	                                   const std::string& elementName);
 };
 
 #endif /* __EXCEPTION_H */

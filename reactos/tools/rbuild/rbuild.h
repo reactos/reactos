@@ -15,6 +15,7 @@ class Project
 {
 public:
 	std::string name;
+	std::string makefile;
 	std::vector<Module*> modules;
 
 	Project ();
@@ -22,12 +23,12 @@ public:
 	~Project ();
 	void ProcessXML ( const XMLElement& e,
 	                  const std::string& path );
-	bool GenerateOutput();
 private:
 	void ReadXml ();
 	XMLFile xmlfile;
 	XMLElement* head;
 };
+
 
 class Module
 {
@@ -45,6 +46,7 @@ public:
 
 	void ProcessXML ( const XMLElement& e, const std::string& path );
 };
+
 
 class File
 {

@@ -1,4 +1,4 @@
-<project name="Project">
+<project name="Project" makefile="Makefile">
 	<directory name="dir1">
 		<module name="module1" type="buildtool">
 			<file>file1.c</file>

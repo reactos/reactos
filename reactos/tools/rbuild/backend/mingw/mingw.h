@@ -25,6 +25,11 @@ public:
 private:
 	void ProcessModule ( Module& module );
 	void GetModuleHandlers ( MingwModuleHandlerList& moduleHandlers );
+	void CreateMakefile ();
+	void CloseMakefile ();
+	void GenerateHeader ();
+	void GenerateAllTarget ();
+	FILE* fMakefile;
 };
 
 #endif /* MINGW_H */

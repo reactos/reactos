@@ -40,6 +40,13 @@ FileNotFoundException::FileNotFoundException(const string& filename)
 }
 
 
+AccessDeniedException::AccessDeniedException(const string& filename)
+	: Exception ( "Access denied to file '%s'.", filename.c_str() )
+{
+	Filename = filename;
+}
+
+
 InvalidBuildFileException::InvalidBuildFileException(const char* message,
                                                      ...)
 {
@@ -47,4 +54,14 @@ InvalidBuildFileException::InvalidBuildFileException(const char* message,
 	va_start( args, message);
 	SetMessage(message, args);
 	va_end(args);
+}
+
+
+RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const std::string& attributeName,
+                                                                       const std::string& elementName)
+	: InvalidBuildFileException ( "Required attribute '%s' not found on '%s'.",
+	                              attributeName.c_str (),
+	                              elementName.c_str ())
+{
+	
 }
