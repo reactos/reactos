@@ -313,10 +313,8 @@ FsRtlNotifyVolumeEvent (
  */
 NTSTATUS
 STDCALL
-FsRtlRegisterFileSystemFilterCallbacks (
-    IN PVOID		Unknown1,
-    IN PVOID		Unknown2
-    )
+FsRtlRegisterFileSystemFilterCallbacks(IN PDRIVER_OBJECT FilterDriverObject,
+                                       IN PFS_FILTER_CALLBACKS Callbacks)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;

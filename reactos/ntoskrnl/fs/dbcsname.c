@@ -283,11 +283,12 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
  *
  * @unimplemented
  */
-BOOLEAN STDCALL
-FsRtlIsFatDbcsLegal(IN ANSI_STRING Name,
-		    IN BOOLEAN Unknown2,
-		    IN BOOLEAN Unknown3,
-		    IN BOOLEAN Unknown4)
+BOOLEAN
+STDCALL
+FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName, 
+                    IN BOOLEAN WildCardsPermissible, 
+                    IN BOOLEAN PathNamePermissible, 
+                    IN BOOLEAN LeadingBackslashPermissible) 
 {
   return FALSE;
 }
@@ -306,10 +307,10 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING Name,
  * @unimplemented
  */
 BOOLEAN STDCALL
-FsRtlIsHpfsDbcsLegal(IN ANSI_STRING Name,
-		     IN BOOLEAN Unknown2,
-		     IN BOOLEAN Unknown3,
-		     IN BOOLEAN Unknown4)
+FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName, 
+                     IN BOOLEAN WildCardsPermissible, 
+                     IN BOOLEAN PathNamePermissible, 
+                     IN BOOLEAN LeadingBackslashPermissible) 
 {
   return FALSE;
 }
