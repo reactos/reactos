@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.20 2001/02/18 17:43:32 dwelch Exp $
+/* $Id: page.c,v 1.21 2001/02/18 22:16:05 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -41,6 +41,8 @@
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
+
+ULONG MmGlobalKernelPageDirectory[1024] = {0, };
 
 /* FUNCTIONS ***************************************************************/
 
@@ -91,6 +93,8 @@ ProtectToPTE(ULONG flProtect)
 #define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))
 #define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)v / 1024))&(~0x3)))
+
+#define ADDR_TO_PDE_OFFSET(v) (((ULONG)v / (4 * 1024 * 1024)))
 
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
@@ -150,6 +154,10 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 	KeAttachProcess(Process);
      }
    *(ADDR_TO_PDE(Address)) = 0;
+   if (Address >= (PVOID)KERNEL_BASE)
+     {
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
+     }
    FLUSH_TLB;
    if (Process != NULL && Process != CurrentProcess)
      {
@@ -180,6 +188,10 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
      }
    npage = *(ADDR_TO_PDE(Address));
    *(ADDR_TO_PDE(Address)) = 0;
+   if (Address >= (PVOID)KERNEL_BASE)
+     {
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
+     }
    MmDereferencePage((PVOID)PAGE_MASK(npage));
    FLUSH_TLB;
    if (Process != NULL && Process != CurrentProcess)
@@ -200,16 +212,30 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte)
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
    Pde = ADDR_TO_PDE(Address);
-   if ((*Pde) == 0)
+   if ((*Pde) == 0)     
      {
-	npage = (ULONG)MmAllocPage(0);
-	if (npage == 0)
-	  {
-	     return(STATUS_NO_MEMORY);
-	  }
-	(*Pde) = npage | 0x7;
-	memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
-	FLUSH_TLB;
+       if (Address >= KERNEL_BASE &&
+	   MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+	 {
+	   (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+	   FLUSH_TLB;
+	 }
+       else
+	 {
+	   npage = (ULONG)MmAllocPage(0);
+	   if (npage == 0)
+	     {
+	       return(STATUS_NO_MEMORY);
+	     }
+	   (*Pde) = npage | 0x7;		
+	   if (Address >= KERNEL_BASE)
+	     {
+	       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 
+		 *Pde;
+	     }
+	   memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+	   FLUSH_TLB;
+	 }
      }
    *Pte = ADDR_TO_PTE(Address);
    return(STATUS_SUCCESS);
@@ -244,6 +270,12 @@ ULONG MmGetPageEntry1(PVOID PAddress)
    DPRINT("MmGetPageEntry(Address %x)\n", Address);
    
    page_dir = ADDR_TO_PDE(Address);
+   if ((*page_dir) == 0 &&
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
    if ((*page_dir) == 0)
      {
@@ -301,6 +333,12 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	KeAttachProcess(Process);
      }
    Pde = ADDR_TO_PDE(Address);
+   if ((*Pde) == 0 && 
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
    if ((*Pde) == 0)
      {
 	if (Process != NULL && Process != CurrentProcess)
@@ -338,12 +376,35 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
      }
 }
 
+BOOLEAN 
+Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
+{
+   PULONG page_dir;
+   ULONG Address = (ULONG)PAddress;
+   
+   page_dir = ADDR_TO_PDE(Address);
+   if ((*page_dir) == 0 &&
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+       return(TRUE);
+     }
+   return(FALSE);
+}
+
 BOOLEAN MmIsPageTablePresent(PVOID PAddress)
 {
    PULONG page_dir;
    ULONG Address = (ULONG)PAddress;
    
    page_dir = ADDR_TO_PDE(Address);
+   if ((*page_dir) == 0 &&
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
    return((*page_dir) == 0);
 }
 
@@ -357,6 +418,12 @@ NTSTATUS MmCreatePageTable(PVOID PAddress)
    
    page_dir = ADDR_TO_PDE(Address);
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
+   if ((*page_dir) == 0 &&
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
    if ((*page_dir) == 0)
      {
 	npage = (ULONG)MmAllocPage(0);
@@ -385,6 +452,12 @@ PULONG MmGetPageEntry(PVOID PAddress)
    
    page_dir = ADDR_TO_PDE(Address);
    DPRINT("page_dir %x *page_dir %x\n",page_dir,*page_dir);
+   if ((*page_dir) == 0 &&
+       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
+     {
+       (*page_dir) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+       FLUSH_TLB;
+     }
    if ((*page_dir) == 0)
      {
 	npage = (ULONG)MmAllocPage(0);

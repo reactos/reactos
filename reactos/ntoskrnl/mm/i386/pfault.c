@@ -26,6 +26,11 @@ extern VOID MmSafeCopyFromUserRestart(VOID);
 extern VOID MmSafeCopyToUserUnsafeStart(VOID);
 extern VOID MmSafeCopyToUserRestart(VOID);
 
+extern ULONG MmGlobalKernelPageDirectory[1024];
+
+BOOLEAN 
+Mmi386MakeKernelPageTableGlobal(PVOID Address);
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS MmPageFault(ULONG Cs,
@@ -49,6 +54,12 @@ NTSTATUS MmPageFault(ULONG Cs,
 	Mode = KernelMode;
      }
    
+   if (Mode == KernelMode && Cr2 >= KERNEL_BASE && 
+       Mmi386MakeKernelPageTableGlobal((PVOID)Cr2))
+     {
+       return(STATUS_SUCCESS);
+     }
+
    if (ErrorCode & 0x1)
      {
 	Status = MmAccessFault(Mode, Cr2, FALSE);

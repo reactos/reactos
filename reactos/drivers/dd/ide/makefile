@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 2000/11/20 19:59:10 ekohl Exp $
+# $Id: makefile,v 1.21 2001/02/18 22:16:05 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,7 +7,7 @@ TARGET=ide
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -I.
+CFLAGS = -I. -g
 
 all: $(TARGET).sys.unstripped $(TARGET).sys
 
