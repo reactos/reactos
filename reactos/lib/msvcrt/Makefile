@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2001/08/21 20:13:06 chorns Exp $
+# $Id: Makefile,v 1.21 2002/04/01 21:33:27 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = msvcrt
 
 TARGET_LFLAGS = -nostartfiles
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_SDKLIBS = kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
