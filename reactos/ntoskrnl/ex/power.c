@@ -49,6 +49,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 	   "Et tu... Brute?\n",
 	   "Dog of a Saxon! Take thy lance, and prepare for the death thou hast drawn upon thee!\n",
 	   "My Precious!  O my Precious!\n",
+   	   "Sir, If you'll not be needing me for a while I'll turn down.\n",
 	   "What are you doing, Dave...?\n",
      };
    LARGE_INTEGER Now;
