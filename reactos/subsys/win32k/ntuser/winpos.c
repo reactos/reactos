@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.115 2004/05/13 20:46:28 navaraf Exp $
+/* $Id: winpos.c,v 1.116 2004/05/16 13:57:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1360,20 +1360,29 @@ WinPosSearchChildren(
 
    if ((List = IntWinListChildren(ScopeWin)))
    {
-      for (phWnd = List; *phWnd; ++phWnd, IntReleaseWindowObject(Current))
+      for (phWnd = List; *phWnd; ++phWnd)
       {
          if (!(Current = IntGetWindowObject(*phWnd)))
             continue;
       
          if (!(Current->Style & WS_VISIBLE))
-            continue;
+         {
+            IntReleaseWindowObject(Current);
+	    continue;
+         }
 
          if ((Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
              (WS_CHILD | WS_DISABLED))
+         {
+            IntReleaseWindowObject(Current);
             continue;
+         }
 
          if (!IntPtInWindow(Current, Point->x, Point->y))
+         {
+            IntReleaseWindowObject(Current);
             continue;
+         }
 
          if (*Window)
 	    IntReleaseWindowObject(*Window);
