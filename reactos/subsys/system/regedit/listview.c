@@ -403,14 +403,15 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                     
             ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
             return TRUE;
-        case NM_DBLCLK: 
+        case NM_DBLCLK:
+        case NM_RETURN:
             {
                 SendMessage(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
             }
             return TRUE;
-	case NM_SETFOCUS:
-	    g_pChildWnd->nFocusPanel = 0;
-	    break;
+        case NM_SETFOCUS:
+            g_pChildWnd->nFocusPanel = 0;
+            break;
         case LVN_BEGINLABELEDIT:
             {
               PLINE_INFO lineinfo;
