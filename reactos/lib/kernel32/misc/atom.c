@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.9 2000/07/01 17:07:00 ea Exp $
+/* $Id: atom.c,v 1.10 2001/03/26 20:46:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -97,25 +97,20 @@ DeleteAtom(
 
 
 
-ATOM
-STDCALL
-GlobalAddAtomA(
-    LPCSTR lpString
-    )
+ATOM STDCALL
+GlobalAddAtomA(LPCSTR lpString)
 {
-
-	UINT	BufLen = strlen(lpString);
-	WCHAR	* lpBuffer = (WCHAR *) HeapAlloc(
-					GetProcessHeap(),
-					(HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
-					(BufLen * sizeof (WCHAR))
-					);
-	ATOM	atom;
-	
-	ansi2unicode(lpBuffer, lpString,BufLen);
-	atom = AWGLAddAtom(&GlobalAtomTable,lpBuffer );
-	HeapFree(GetProcessHeap(),0,lpBuffer);
-	return atom;
+  UINT BufLen = strlen(lpString);
+  WCHAR* lpBuffer;
+  ATOM atom;
+  
+  lpBuffer = (WCHAR *) HeapAlloc(GetProcessHeap(),
+				 (HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
+				 (BufLen * sizeof (WCHAR)));
+  ansi2unicode(lpBuffer, lpString, BufLen);
+  atom = AWGLAddAtom(&GlobalAtomTable, lpBuffer);
+  HeapFree(GetProcessHeap(), 0, lpBuffer);
+  return(atom);
 }
 
 
@@ -300,91 +295,96 @@ GLDeleteAtom(
 
 
 ATOM
-AWGLAddAtom(
-     ATOMTABLE *at, const WCHAR *lpString
-  	)
+AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
 {
-	ATOM 		atom;
-	ATOMID		q;
-	LPATOMENTRY   	lp,lpfree;
-	int		index,freeindex;
-	int		atomlen;
-	int		newlen;
-	
-	
-	
-	/* if we already have it, bump refcnt */
-	if((atom = AWGLFindAtom(at, lpString ))) {
-		lp = GetAtomPointer(at,atom - ATOMBASE);
-		if(lp->idsize) lp->refcnt++;
-		return atom;
-	}
+  ATOM 		atom;
+  ATOMID		q;
+  LPATOMENTRY   	lp,lpfree;
+  int		index,freeindex;
+  int		atomlen;
+  int		newlen;
+	  	
+  /* if we already have it, bump refcnt */
+  if((atom = AWGLFindAtom(at, lpString ))) 
+    {
+      lp = GetAtomPointer(at,atom - ATOMBASE);
+      if(lp->idsize) lp->refcnt++;
+      return atom;
+    }
 
-	/* add to a free slot */
-	q = AtomHashString(lpString,&atomlen);
-
-	lpfree 	  = 0;
-	freeindex = 0;
-
-	for(index = 0;(lp = GetAtomPointer(at,index));index++) {
-		if(lp->q == 0 && lp->refcnt == 0) {	
-			if(lp->idsize > atomlen) {
-				if ((lpfree == 0) ||
-					    (lpfree->idsize > lp->idsize)) {
-					lpfree = lp;
-					freeindex = index;
-				}
-			}
+  /* add to a free slot */
+  q = AtomHashString(lpString,&atomlen);
+  
+  lpfree 	  = 0;
+  freeindex = 0;
+  
+  for(index = 0;(lp = GetAtomPointer(at,index));index++) 
+    {
+      if(lp->q == 0 && lp->refcnt == 0) 
+	{	
+	  if(lp->idsize > atomlen) 
+	    {
+	      if ((lpfree == 0) ||
+		  (lpfree->idsize > lp->idsize)) 
+		{
+		  lpfree = lp;
+		  freeindex = index;
 		}
+	    }
 	}
-	/* intatoms do not take space in data, but do get new entries */
-	/* an INTATOM will have length of 0 			      */
-	if(lpfree && atomlen) {
-		lpfree->q = q;
-		lpfree->refcnt = 1;
-		lstrcpynW(&at->AtomData[lpfree->idx],lpString,atomlen);
-		return freeindex + ATOMBASE;
-	}
+    }
+  /* intatoms do not take space in data, but do get new entries */
+  /* an INTATOM will have length of 0 			      */
+  if(lpfree && atomlen) 
+    {
+      lpfree->q = q;
+      lpfree->refcnt = 1;
+      lstrcpynW(&at->AtomData[lpfree->idx],lpString,atomlen);
+      return freeindex + ATOMBASE;
+    }
+  
+  /* no space was available, or we have an INTATOM		*/
+  /* so expand or create the table 				*/
+  if(at->AtomTable == 0) 
+    {
+      at->AtomTable = (ATOMENTRY *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
+      at->TableSize = 1;
+      lp = at->AtomTable;
+      index = 0;
+    } 
+  else 
+    {
+      at->TableSize++;
+      at->AtomTable = (ATOMENTRY *) HeapReAlloc(GetProcessHeap(),0,
+						(LPVOID) at->AtomTable,
+						at->TableSize * sizeof(ATOMENTRY));
+      lp = &at->AtomTable[at->TableSize - 1];
+    }
+  
+  /* set in the entry */
+  lp->refcnt = 1;
+  lp->q      = q;
+  lp->idsize = atomlen;
+  lp->idx    = 0;
 
-	/* no space was available, or we have an INTATOM		*/
-	/* so expand or create the table 				*/
-	if(at->AtomTable == 0) {
-		at->AtomTable = (ATOMENTRY *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
-		at->TableSize = 1;
-		lp = at->AtomTable;
-		index = 0;
-	} else {
-		at->TableSize++;
-		at->AtomTable = (ATOMENTRY *) HeapReAlloc(GetProcessHeap(),0,
-			(LPVOID) at->AtomTable,
-			at->TableSize * sizeof(ATOMENTRY));
-		lp = &at->AtomTable[at->TableSize - 1];
-	}
-
-	/* set in the entry */
-	lp->refcnt = 1;
-	lp->q      = q;
-	lp->idsize = atomlen;
-	lp->idx    = 0;
-
-	/* add an entry if not intatom... */
-	if(atomlen) {
-		newlen = at->DataSize + atomlen;
-
-		if(at->AtomData == 0) {
-			at->AtomData = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
-			lp->idx = 0;
-		} else {
-			
-			at->AtomData = (WCHAR *) HeapReAlloc(GetProcessHeap(),0,at->AtomData,newlen*2);
-			lp->idx = at->DataSize;
-		}
-
-		lstrcpyW(&at->AtomData[lp->idx],lpString);
-		at->DataSize = newlen;
-	}	
-
-	return index + ATOMBASE;
+  /* add an entry if not intatom... */
+  if(atomlen) {
+    newlen = at->DataSize + atomlen;
+    
+    if(at->AtomData == 0) {
+      at->AtomData = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
+      lp->idx = 0;
+    } else {
+      
+      at->AtomData = (WCHAR *) HeapReAlloc(GetProcessHeap(),0,at->AtomData,newlen*2);
+      lp->idx = at->DataSize;
+    }
+    
+    lstrcpyW(&at->AtomData[lp->idx],lpString);
+    at->DataSize = newlen;
+  }	
+  
+  return index + ATOMBASE;
 }
 
 
@@ -397,33 +397,29 @@ AWGLAddAtom(
 
 
 ATOM
-AWGLFindAtom(
-     ATOMTABLE *at, const WCHAR *lpString
-    )
+AWGLFindAtom(ATOMTABLE *at, const WCHAR *lpString)
 {
 
-	ATOMID		q;
-	LPATOMENTRY   	lp;
-	int		index;
-	int		atomlen;
+  ATOMID		q;
+  LPATOMENTRY   	lp;
+  int		index;
+  int		atomlen;
 	
-
-	
-
-	/* convert string to 'q', and get length */
-	q = AtomHashString(lpString,&atomlen);
-
-	/* find the q value, note: this could be INTATOM */
-	/* if q matches, then do case insensitive compare*/
-	for(index = 0;(lp = GetAtomPointer(at,index));index++) {
-		if(lp->q == q) {	
-			if(HIWORD(lpString) == 0)
-				return ATOMBASE + index;
-			if(lstrcmpiW(&at->AtomData[lp->idx],lpString) == 0)
-				return ATOMBASE + index;
-		}
-	}
-	return 0;
+      
+  /* convert string to 'q', and get length */
+  q = AtomHashString(lpString,&atomlen);
+  
+  /* find the q value, note: this could be INTATOM */
+  /* if q matches, then do case insensitive compare*/
+  for(index = 0;(lp = GetAtomPointer(at,index));index++) {
+    if(lp->q == q) {	
+      if(HIWORD(lpString) == 0)
+	return ATOMBASE + index;
+      if(lstrcmpiW(&at->AtomData[lp->idx],lpString) == 0)
+	return ATOMBASE + index;
+    }
+  }
+  return 0;
 }
 
 

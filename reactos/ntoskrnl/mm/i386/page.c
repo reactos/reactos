@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.24 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: page.c,v 1.25 2001/03/26 20:46:53 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -583,22 +583,17 @@ BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
    return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
 }
 
-
-NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
-				PVOID Address, 
-				ULONG flProtect,
-				ULONG PhysicalAddress)
+NTSTATUS 
+MmCreateVirtualMappingUnsafe(PEPROCESS Process,
+			     PVOID Address, 
+			     ULONG flProtect,
+			     ULONG PhysicalAddress)
 {
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG Attributes = 0;
    PULONG Pte;
    NTSTATUS Status;
    
-   if (!MmIsUsablePage((PVOID)PhysicalAddress))
-     {
-       DPRINT1("Page not usable\n");
-       KeBugCheck(0);
-     }
    if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
        DPRINT1("No process\n");
@@ -649,6 +644,23 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
 	KeDetachProcess();
      }
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS 
+MmCreateVirtualMapping(PEPROCESS Process,
+		       PVOID Address, 
+		       ULONG flProtect,
+		       ULONG PhysicalAddress)
+{
+   if (!MmIsUsablePage((PVOID)PhysicalAddress))
+     {
+       DPRINT1("Page not usable\n");
+       KeBugCheck(0);
+     }
+   return(MmCreateVirtualMappingUnsafe(Process,
+				       Address,
+				       flProtect,
+				       PhysicalAddress));
 }
 
 ULONG

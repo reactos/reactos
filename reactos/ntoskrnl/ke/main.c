@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.83 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: main.c,v 1.84 2001/03/26 20:46:53 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -377,65 +377,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-extern NTSTATUS STDCALL
-Ke386CallBios(UCHAR Int, KV86M_REGISTERS* Regs);
-
-struct __attribute__((packed)) vesa_info
-{
-  UCHAR Signature[4];
-  USHORT Version;
-  ULONG OEMName;
-  ULONG Capabilities;
-  ULONG SupportedModes;
-  USHORT TotalVideoMemory;
-  USHORT OEMVersion;
-  ULONG VendorName;
-  ULONG ProductName;
-  ULONG ProductRevisionString;
-  UCHAR Reserved[478];
-};
-
-VOID
-TestV86Mode(VOID)
-{
-  ULONG i;
-  extern UCHAR OrigIVT[1024];
-  KV86M_REGISTERS regs;
-  NTSTATUS Status;
-  struct vesa_info* vi;
-
-  for (i = 0; i < (640 / 4); i++)
-    {
-      MmCreateVirtualMapping(NULL,
-			     (PVOID)(i * 4096),
-			     PAGE_EXECUTE_READWRITE,
-			     (ULONG)MmAllocPage(0));
-    }
-  for (; i < (1024 / 4); i++)
-    {
-      MmCreateVirtualMapping(NULL,
-			     (PVOID)(i * 4096),
-			     PAGE_EXECUTE_READ,
-			     i * 4096);
-    }
-  vi = (struct vesa_info*)0x20000;
-  vi->Signature[0] = 'V';
-  vi->Signature[1] = 'B';
-  vi->Signature[2] = 'E';
-  vi->Signature[3] = '2';
-  memset(&regs, 0, sizeof(regs));
-  regs.Eax = 0x4F00;  
-  regs.Es = 0x2000;
-  regs.Edi = 0x0;
-  memcpy((PVOID)0x0, OrigIVT, 1024);
-  Status = Ke386CallBios(0x10, &regs);
-  DbgPrint("Finished (Status %x, CS:EIP %x:%x)\n", Status, regs.Cs,
-	   regs.Eip);
-  DbgPrint("Eax %x\n", regs.Eax);
-  DbgPrint("Signature %.4s\n", vi->Signature);
-  DbgPrint("TotalVideoMemory %dKB\n", vi->TotalVideoMemory * 64);
-}
-
 VOID
 _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
@@ -484,7 +425,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	KeLoaderModules[i].ModEnd += 0xc0000000;
 	KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
      }
-   
+
    /*
     * Initialization phase 0
     */

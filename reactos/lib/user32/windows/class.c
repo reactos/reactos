@@ -13,88 +13,92 @@
 #include <user32/dce.h>
 #include <user32/heapdup.h>
 
-
 CLASS *rootClass;
 
-ATOM STDCALL RegisterClassA(const WNDCLASS* wc) 
+ATOM STDCALL 
+RegisterClassA(const WNDCLASS* wc) 
 {
-	WNDCLASSEX wcex;
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = wc->style; 
-    	wcex.lpfnWndProc = wc->lpfnWndProc; 
-    	wcex.cbClsExtra = wc->cbClsExtra; 
-	wcex.cbWndExtra = wc->cbWndExtra;
-	wcex.hInstance = wc->hInstance;
-	wcex.hIcon = wc->hIcon;
-	wcex.hCursor = wc->hCursor;
-    	wcex.hbrBackground = wc->hbrBackground;
-	wcex.lpszMenuName = wc->lpszMenuName; 
-	wcex.lpszClassName = 	wc->lpszClassName;
-	wcex.hIconSm = NULL;
-	return RegisterClassExA(&wcex);
+  WNDCLASSEX wcex;
+
+  wcex.cbSize = sizeof(WNDCLASSEX);
+  wcex.style = wc->style; 
+  wcex.lpfnWndProc = wc->lpfnWndProc; 
+  wcex.cbClsExtra = wc->cbClsExtra; 
+  wcex.cbWndExtra = wc->cbWndExtra;
+  wcex.hInstance = wc->hInstance;
+  wcex.hIcon = wc->hIcon;
+  wcex.hCursor = wc->hCursor;
+  wcex.hbrBackground = wc->hbrBackground;
+  wcex.lpszMenuName = wc->lpszMenuName; 
+  wcex.lpszClassName = 	wc->lpszClassName;
+  wcex.hIconSm = NULL;
+  return RegisterClassExA(&wcex);
 }
 
-ATOM STDCALL RegisterClassW(const WNDCLASS* wc) 
+ATOM STDCALL 
+RegisterClassW(const WNDCLASS* wc) 
 {
-	WNDCLASSEX wcex;
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = wc->style; 
-    	wcex.lpfnWndProc = wc->lpfnWndProc; 
-    	wcex.cbClsExtra = wc->cbClsExtra; 
-	wcex.cbWndExtra = wc->cbWndExtra;
-	wcex.hInstance = wc->hInstance;
-	wcex.hIcon = wc->hIcon;
-	wcex.hCursor = wc->hCursor;
-    	wcex.hbrBackground = wc->hbrBackground;
-	wcex.lpszMenuName = wc->lpszMenuName; 
-	wcex.lpszClassName = 	wc->lpszClassName;
-	wcex.hIconSm = NULL;
-	return RegisterClassExW(&wcex);
+  WNDCLASSEX wcex;
+
+  wcex.cbSize = sizeof(WNDCLASSEX);
+  wcex.style = wc->style; 
+  wcex.lpfnWndProc = wc->lpfnWndProc; 
+  wcex.cbClsExtra = wc->cbClsExtra; 
+  wcex.cbWndExtra = wc->cbWndExtra;
+  wcex.hInstance = wc->hInstance;
+  wcex.hIcon = wc->hIcon;
+  wcex.hCursor = wc->hCursor;
+  wcex.hbrBackground = wc->hbrBackground;
+  wcex.lpszMenuName = wc->lpszMenuName; 
+  wcex.lpszClassName = 	wc->lpszClassName;
+  wcex.hIconSm = NULL;
+  return RegisterClassExW(&wcex);
 }
 
-ATOM STDCALL RegisterClassExA(const WNDCLASSEX* wc) 
+ATOM STDCALL 
+RegisterClassExA(const WNDCLASSEX* wc) 
 {
     ATOM atom;
     CLASS *classPtr;
     INT classExtra, winExtra;
     int len;
-
-
-    if ( wc == NULL || wc->cbSize != sizeof(WNDCLASSEX)) {
+    
+    if (wc == NULL || wc->cbSize != sizeof(WNDCLASSEX)) 
+      {
 	SetLastError(ERROR_INVALID_DATA);
 	return FALSE;
-    }
-
-    atom = GlobalAddAtomA( wc->lpszClassName );
+      }
+    
+    atom = GlobalAddAtomA(wc->lpszClassName);
     if (!atom)
-    {
+      {
         SetLastError(ERROR_CLASS_ALREADY_EXISTS);
         return FALSE;
-    }
-
+      }
+    
     classExtra = wc->cbClsExtra;
     if (classExtra < 0) 
-	classExtra = 0;
+      classExtra = 0;
     else if (classExtra > 40)  
-	classExtra = 40;
-
+      classExtra = 40;
+    
     winExtra = wc->cbClsExtra;
     if (winExtra < 0) 
-	winExtra = 0;
+      winExtra = 0;
     else if (winExtra > 40)    
-	winExtra = 40;
-
+      winExtra = 40;
+    
     classPtr = (CLASS *)HeapAlloc( GetProcessHeap(), 0, sizeof(CLASS) +
-                                       classExtra - sizeof(classPtr->wExtra) );
-
-
+				   classExtra - sizeof(classPtr->wExtra) );
+    
+    
     if (classExtra) 
-	HEAP_memset( classPtr->wExtra, 0, classExtra );
-
+      HEAP_memset( classPtr->wExtra, 0, classExtra );
+    
     if (!classPtr) {
-	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	GlobalDeleteAtom( atom );
-	return FALSE;
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      GlobalDeleteAtom( atom );
+      return FALSE;
     }
     classPtr->magic       = CLASS_MAGIC;
     classPtr->cWindows    = 0;  
@@ -109,23 +113,23 @@ ATOM STDCALL RegisterClassExA(const WNDCLASSEX* wc)
     classPtr->hCursor       = (HCURSOR)wc->hCursor;
     classPtr->hbrBackground = (HBRUSH)wc->hbrBackground;
     classPtr->bUnicode = FALSE;
-
+    
     if (wc->style & CS_CLASSDC)
-       classPtr->dce         = DCE_AllocDCE( 0, DCE_CLASS_DC ) ;
+      classPtr->dce         = DCE_AllocDCE( 0, DCE_CLASS_DC ) ;
     else 
-       classPtr->dce = NULL;
-
-
+      classPtr->dce = NULL;
+    
+    
     if ( wc->lpszMenuName != NULL ) {
-	len = lstrlenA(wc->lpszMenuName);
-    	classPtr->menuName = HeapAlloc(GetProcessHeap(),0,len+1);
-    	lstrcpyA(classPtr->menuName,wc->lpszMenuName);
+      len = lstrlenA(wc->lpszMenuName);
+      classPtr->menuName = HeapAlloc(GetProcessHeap(),0,len+1);
+      lstrcpyA(classPtr->menuName,wc->lpszMenuName);
     }
     else
-	classPtr->menuName = NULL;
-
+      classPtr->menuName = NULL;
     
-
+    
+    
     len = lstrlenA(wc->lpszClassName);
     classPtr->className = HeapAlloc(GetProcessHeap(),0,len+1);
     lstrcpyA(classPtr->className,wc->lpszClassName);

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.15 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: mminit.c,v 1.16 2001/03/26 20:46:53 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -232,7 +232,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
        /* add 1MB for standard memory (not extended) */
        MmStats.NrTotalPages += 256;
      }
-   DbgPrint("Used memory %d\n", MmStats.NrTotalPages * PAGESIZE);
+   DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGESIZE) / 1024);
    
    LastKernelAddress = (ULONG)MmInitializePageList(
 					   (PVOID)FirstKrnlPhysAddr,

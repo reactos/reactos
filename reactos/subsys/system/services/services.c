@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.2 2001/01/20 18:39:35 ekohl Exp $
+/* $Id: services.c,v 1.3 2001/03/26 20:46:52 dwelch Exp $
  *
  * service control manager
  * 
@@ -93,6 +93,7 @@ WinMain(HINSTANCE hInstance,
 	int nShowCmd)
 {
    HANDLE hScmStartEvent;
+   HANDLE hEvent;
    
    PrintString("Service Control Manager\n");
    
@@ -137,11 +138,18 @@ WinMain(HINSTANCE hInstance,
 
 
    PrintString("SERVICES: Running.\n");
-
+   
+   hEvent = CreateEvent(NULL,
+			TRUE,
+			FALSE,
+			NULL);
+   WaitForSingleObject(hEvent, INFINITE);
+#if 0
     for (;;)
       {
 	NtYieldExecution();
       }
+#endif
 
    PrintString("SERVICES: Finished.\n");
 

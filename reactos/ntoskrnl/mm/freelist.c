@@ -45,6 +45,12 @@ static KSPIN_LOCK PageListLock;
 static LIST_ENTRY FreePageListHead;
 static LIST_ENTRY BiosPageListHead;
 
+NTSTATUS 
+MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
+			     PVOID Address, 
+			     ULONG flProtect,
+			     ULONG PhysicalAddress);
+
 /* FUNCTIONS *************************************************************/
 
 PVOID
@@ -163,12 +169,13 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	if (!MmIsPagePresent(NULL, 
 			     (PVOID)((ULONG)MmPageArray + (i * PAGESIZE))))
 	  {
-	     Status = MmCreateVirtualMapping(NULL,
-					     (PVOID)((ULONG)MmPageArray + 
-						     (i * PAGESIZE)),
-					     PAGE_READWRITE,
-					     (ULONG)(LastPhysKernelAddress 
-						     - (i * PAGESIZE)));
+	     Status = 
+	       MmCreateVirtualMappingUnsafe(NULL,
+					    (PVOID)((ULONG)MmPageArray + 
+						    (i * PAGESIZE)),
+					    PAGE_READWRITE,
+					    (ULONG)(LastPhysKernelAddress 
+						    - (i * PAGESIZE)));
 	     if (!NT_SUCCESS(Status))
 	       {
 		  DbgPrint("Unable to create virtual mapping\n");
