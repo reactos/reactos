@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.131 2004/05/02 04:40:25 jimtabor Exp $
+/* $Id: process.c,v 1.132 2004/07/07 16:28:35 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1085,6 +1085,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
       case ProcessQuotaLimits:
       case ProcessIoCounters:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
       case ProcessTimes:
 	if (ProcessInformationLength != sizeof(KERNEL_USER_TIMES))
 	{
@@ -1106,10 +1109,14 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	  }
 	}
 	break;
+
       case ProcessDebugPort:
       case ProcessLdtInformation:
       case ProcessWorkingSetWatch:
       case ProcessWx86Information:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
       case ProcessHandleCount:
       	if (ProcessInformationLength != sizeof(ULONG))
 	{
@@ -1125,6 +1132,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	  }
 	}
 	break;
+
       case ProcessSessionInformation:
       case ProcessWow64Information:
 	Status = STATUS_NOT_IMPLEMENTED;
