@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.56 2003/12/21 21:21:33 weiden Exp $
+/* $Id: msgqueue.c,v 1.57 2003/12/25 12:26:35 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -198,7 +198,7 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
     return FALSE;
   }
   CurInfo = &WinStaObject->SystemCursor;
-  Res = (Window->Self == (HWND)CurInfo->LastClkWnd) && 
+  Res = (Message->Msg.hwnd == (HWND)CurInfo->LastClkWnd) && 
         ((Message->Msg.time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
   if(Res)
   {
@@ -213,20 +213,10 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
 
     if(Remove)
     {
-      if(Res)
-      {
-        CurInfo->LastBtnDown = 0;
-        CurInfo->LastBtnDownX = Message->Msg.pt.x;
-        CurInfo->LastBtnDownY = Message->Msg.pt.y;
-        CurInfo->LastClkWnd = NULL;
-      }
-      else
-      {
-        CurInfo->LastBtnDownX = Message->Msg.pt.x;
-        CurInfo->LastBtnDownY = Message->Msg.pt.y;
-        CurInfo->LastClkWnd = (HANDLE)Message->Msg.hwnd;
-        CurInfo->LastBtnDown = Message->Msg.time;
-      }
+      CurInfo->LastBtnDown = 0;
+      CurInfo->LastBtnDownX = Message->Msg.pt.x;
+      CurInfo->LastBtnDownY = Message->Msg.pt.y;
+      CurInfo->LastClkWnd = NULL;
     }
   }
   else
