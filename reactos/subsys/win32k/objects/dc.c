@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.48 2003/03/04 10:09:01 gvg Exp $
+/* $Id: dc.c,v 1.49 2003/03/06 00:57:44 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1029,7 +1029,8 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PXLATEOBJ XlateObj;
   PPALGDI PalGDI;
   WORD  objectMagic;
-  ULONG NumColors;
+  COLORREF *ColorMap;
+  ULONG NumColors, Index;
 
   if(!hDC || !hGDIObj) return NULL;
 
@@ -1095,7 +1096,15 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           if(pb->dib->dsBmih.biBitCount == 4) { NumColors = 16; } else
           if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
 
-          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, pb->ColorMap, 0, 0, 0);
+          ColorMap = ExAllocatePool(PagedPool, sizeof(COLORREF) * NumColors);
+          for (Index = 0; Index < NumColors; Index++)
+            {
+            ColorMap[Index] = RGB(pb->ColorMap[Index].rgbRed,
+                                  pb->ColorMap[Index].rgbGreen,
+                                  pb->ColorMap[Index].rgbBlue);
+          }
+          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, ColorMap, 0, 0, 0);
+          ExFreePool(ColorMap);
         } else
         if(16 == pb->dib->dsBmih.biBitCount)
         {
