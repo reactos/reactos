@@ -555,12 +555,15 @@ int NotifyArea::Notify(int id, NMHDR* pnmh)
 			static ResString sShowIcons(IDS_SHOW_HIDDEN_ICONS);
 			static ResString sHideIcons(IDS_HIDE_ICONS);
 
-			pdi->lpszText = (LPTSTR)(_show_hidden?sHideIcons:sShowIcons).c_str();
+			pdi->lpszText = (LPTSTR)(_show_hidden? sHideIcons: sShowIcons).c_str();
 		} else {
 			NotifyIconSet::iterator found = IconHitTest(pt);
 
 			if (found != _sorted_icons.end()) {
 				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+
+				 // enable multiline tooltips (break at CR/LF and for very long one-line strings)
+				SendMessage(pnmh->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 400);
 
 				pdi->lpszText = (LPTSTR)entry._tipText.c_str();
 			}
@@ -589,7 +592,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 			 // a new entry?
 			if (entry._idx == -1)
 				entry._idx = ++_next_idx;
-		/*
+		/* equivalent code using iterator::find();
 			NotifyIconMap::iterator found = _icon_map.find(pnid);
 			NotifyInfo* pentry;
 			 // a new entry?
@@ -598,7 +601,6 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 				pentry->_idx = ++_next_idx;
 			} else {
 				pentry = &found->second;
-				*pentry = pnid;
 			}
 			NotifyInfo& entry = *pentry;
 		*/
