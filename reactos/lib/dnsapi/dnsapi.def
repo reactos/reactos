@@ -1,0 +1,32 @@
+;
+; dnsapi.def
+;
+; ReactOS Operating System
+;
+; Dns... API functions.
+;
+LIBRARY dnsapi.dll
+EXPORTS
+; Names
+; DnsValidateName
+DnsValidateName_W@8
+DnsValidateName_UTF8@8
+DnsValidateName_A@8
+; DnsNameCompare
+DnsNameCompare_W@8
+DnsNameCompare_UTF8@8
+DnsNameCompare_A@8
+; Contexts
+; DnsAcquireContextHandle
+DnsAcquireContextHandle_W@12
+DnsAcquireContextHandle_UTF8@12
+DnsAcquireContextHandle_A@12
+; DnsReleaseContextHandle
+DnsReleaseContextHandle@4
+; Queries
+DnsQuery_W@24
+DnsQuery_UTF8@24
+DnsQuery_A@24
+; Free
+DnsFree@8
+DnsRecordListFree@8
