@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.19 2004/02/23 18:16:37 navaraf Exp $
+/* $Id: icon.c,v 1.20 2004/02/23 22:04:38 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -574,24 +574,22 @@ LookupIconIdFromDirectoryEx(
    {
       GRPCURSORICONDIRENTRY *entry;
       HDC hdc;
-      int colors;
+      int ColorBits;
 
       hdc = GetDC(0);
       if (Flags & LR_MONOCHROME)
       {
-         colors = 2;
+         ColorBits = 1;
       }
       else
       {
-         colors = GetDeviceCaps(hdc, BITSPIXEL);
-         if (colors > 8)
-            colors = 256;
-         else
-            colors = 1 << colors;
+         ColorBits = GetDeviceCaps(hdc, BITSPIXEL);
+         if (ColorBits > 8)
+            ColorBits = 8;
       }
       ReleaseDC(0, hdc);
 
-      entry = CURSORICON_FindBestIcon( dir, cxDesired, cyDesired, colors );
+      entry = CURSORICON_FindBestIcon( dir, cxDesired, cyDesired, ColorBits );
 
       if (entry)
          retVal = entry->nID;
