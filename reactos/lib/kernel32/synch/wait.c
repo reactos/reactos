@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.12 2000/07/01 17:07:02 ea Exp $
+/* $Id: wait.c,v 1.13 2000/12/08 22:08:02 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -57,25 +57,23 @@ CreateSemaphoreW(
 	NTSTATUS errCode;
 	UNICODE_STRING NameString;
 	HANDLE SemaphoreHandle;
-
-	NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
+	if (lpName)
+		NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
+	else
+		NameString.Length = 0;
 	NameString.Buffer = (WCHAR *)lpName;
 	NameString.MaximumLength = NameString.Length;
-
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
 	ObjectAttributes.ObjectName = &NameString;
 	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
 	ObjectAttributes.SecurityDescriptor = NULL;
 	ObjectAttributes.SecurityQualityOfService = NULL;
-
 	if ( lpSemaphoreAttributes != NULL ) {
 		ObjectAttributes.SecurityDescriptor = lpSemaphoreAttributes->lpSecurityDescriptor;
 		if ( lpSemaphoreAttributes->bInheritHandle == TRUE )
 			ObjectAttributes.Attributes |= OBJ_INHERIT;
 	}
-	
-
 	errCode = NtCreateSemaphore(
 	&SemaphoreHandle,
 	GENERIC_ALL,
@@ -88,7 +86,6 @@ CreateSemaphoreW(
 		SetLastErrorByStatus (errCode);
 		return NULL;
 		}
-
 	return SemaphoreHandle;
 }
 
