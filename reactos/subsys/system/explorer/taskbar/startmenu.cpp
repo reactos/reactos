@@ -177,6 +177,9 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		CloseStartMenu();
 		break;
 
+	  case WM_SETFOCUS:
+		break;	// don't post WM_CANCELMODE in Window::WndProc when focusing the startmenu
+
 	  case PM_STARTENTRY_FOCUSED: {
 		BOOL hasSubmenu = wparam;
 		HWND hctrl = (HWND)lparam;
@@ -459,13 +462,13 @@ LRESULT StartMenuButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_SETFOCUS:
 		PostParent(PM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
-		goto def;
+		return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);	// don't post WM_CANCELMODE in Window::WndProc when focusing the startmenu
 
 	  case WM_CANCELMODE:
 		 // route WM_CANCELMODE to the startmenu window
 		return SendParent(nmsg, wparam, lparam);
 
-	  default: def:
+	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
