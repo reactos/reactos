@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.7 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: cleanup.c,v 1.8 2002/12/15 17:01:51 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,8 +48,11 @@ VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
 	}
     }
 
-  /* Uninitialize the file cache. */
-  CcRosReleaseFileCache (FileObject, pFcb->RFCB.Bcb);
+  /* Uninitialize file cache if initialized for this file object. */
+  if (pFcb->RFCB.Bcb != NULL)
+    {
+      CcRosReleaseFileCache (FileObject, pFcb->RFCB.Bcb);
+    }
   
   return STATUS_SUCCESS;
 }

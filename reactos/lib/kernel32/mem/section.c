@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.16 2002/09/08 10:22:43 chorns Exp $
+/* $Id: section.c,v 1.17 2002/12/15 17:01:51 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -82,6 +82,7 @@ CreateFileMappingW(HANDLE hFile,
    NTSTATUS Status;
    HANDLE SectionHandle;
    LARGE_INTEGER MaximumSize;
+   PLARGE_INTEGER MaximumSizePointer;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
@@ -95,8 +96,16 @@ CreateFileMappingW(HANDLE hFile,
         SecurityDescriptor = NULL;
      }
 
-   MaximumSize.u.LowPart = dwMaximumSizeLow;
-   MaximumSize.u.HighPart = dwMaximumSizeHigh;
+   if ((dwMaximumSizeLow == 0) && (dwMaximumSizeHigh == 0))
+     {
+       MaximumSizePointer = NULL;
+     }
+   else
+     {
+       MaximumSize.u.LowPart = dwMaximumSizeLow;
+       MaximumSize.u.HighPart = dwMaximumSizeHigh;
+       MaximumSizePointer = &MaximumSize;
+     }
    RtlInitUnicodeString(&UnicodeName,
 			lpName);
    InitializeObjectAttributes(&ObjectAttributes,
@@ -107,7 +116,7 @@ CreateFileMappingW(HANDLE hFile,
    Status = NtCreateSection(&SectionHandle,
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes,
-			    &MaximumSize,
+			    MaximumSizePointer,
 			    flProtect,
 			    0,
 			    hFile);

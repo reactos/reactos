@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.101 2002/11/10 18:17:42 chorns Exp $
+/* $Id: section.c,v 1.102 2002/12/15 17:01:52 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -329,6 +329,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
   Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
   
+  assert(Fcb->Bcb);
+
   /*
    * If the file system is letting us go directly to the cache and the
    * memory area was mapped at an offset in the file which is page aligned
@@ -2044,6 +2046,9 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   PFILE_OBJECT FileObject;
   PMM_SECTION_SEGMENT Segment;
   ULONG FileAccess;
+  IO_STATUS_BLOCK Iosb;
+  LARGE_INTEGER Offset;
+  CHAR Buffer;
   
   /*
    * Check the protection
@@ -2053,7 +2058,27 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
     {
       return(STATUS_INVALID_PAGE_PROTECTION);
     }
-  
+
+  /*
+   * Read a bit so caching is initiated for the file object.
+   * This is only needed because MiReadPage currently cannot
+   * handle non-cached streams.
+   */
+  Offset.QuadPart = 0;
+  Status = ZwReadFile(FileHandle,
+		      NULL,
+		      NULL,
+		      NULL,
+		      &Iosb,
+		      &Buffer,
+		      sizeof (Buffer),
+		      &Offset,
+		      0);
+  if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
+    {
+      return(Status);
+    }
+
   /*
    * Create the section
    */

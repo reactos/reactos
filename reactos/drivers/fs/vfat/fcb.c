@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.22 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: fcb.c,v 1.23 2002/12/15 17:01:51 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -149,7 +149,11 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
     KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
     if (vfatFCBIsDirectory(pFCB))
     {
-      CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+      /* Uninitialize file cache if initialized for this file object. */
+      if (pFCB->RFCB.Bcb != NULL)
+        {
+          CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+        }
       vfatDestroyCCB(pFCB->FileObject->FsContext2);
       pFCB->FileObject->FsContext2 = NULL;
       ObDereferenceObject(pFCB->FileObject);

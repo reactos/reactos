@@ -1,3 +1,22 @@
+2002-12-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/fs/vfat/cleanup.c (VfatCleanupFile): Only uninitialize caching
+	when initialized.
+	* drivers/fs/vfat/fcb.c (vfatReleaseFCB): Ditto.
+	* lib/kernel32/mem/section.c (CreateFileMappingW): Pass NULL as
+	MaximumSize to NtCreateSection if dwMaximumSizeHigh and dwMaximumSizeLow
+	are both 0.
+	* ntoskrnl/cc/pin.c (CcMapData): Assert if Bcb is NULL.
+	* ntoskrnl/cc/view.c (CcRosReleaseCacheSegment, CcRosLookupCacheSegment,
+	CcRosMarkDirtyCacheSegment, CcRosUnmapCacheSegment,
+	CcRosCreateCacheSegment, CcRosGetCacheSegmentChain,
+	CcRosGetCacheSegment, CcRosRequestCacheSegment, CcFlushCache,
+	CcRosDeleteFileCache, CcRosReferenceCache, CcRosDereferenceCache,
+	CcRosReleaseFileCache, CcGetFileObjectFromSectionPtrs): Ditto.
+	* ntoskrnl/mm/section.c (MiReadPage): Assert if Fcb->Bcb is NULL.
+	(MmCreateDataFileSection): Make sure caching is initialized for the file
+	stream.
+
 2002-11-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/ddk/ldrtypes.h: Move ...
