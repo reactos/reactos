@@ -4,14 +4,14 @@
 The ReactOS Project shares quite a bit of code with the WINE project.
 This document should provide a compleate reference for all of the
 locations in the ReactOS source tree where code is shared between the
-two projects.
+two projects. If you find something is missing from this documentation
+please add it.
 
 If you find that a function in ReactOS that is not implemented properly
 and is based on WINE sources, check the latest Winehq CVS and see if
 it has been fixed there. If so, please submit a patch to 
 ros-kernel@reactos.com. Otherwise please send a patch to both 
 wine-patches@winehq.com and ros-kernel@reactos.com
-
 
 When porting a dll from WINE to ReactOS please take a look at how
 comctl32 has been imported. We start by creating a makefile that has
@@ -35,18 +35,19 @@ The following shared libraries are a 100% port from Winehq sourcs.
 reactos/lib/cabinet
 reactos/lib/comctl32            # Synced to Wine-20040121
 reactos/lib/comdlg32		
-reactos/lib/imagehlp		#Out of sync
+reactos/lib/imagehlp		# Out of sync
 reactos/lib/imm32
+reactos/lib/msvideo		# Syned to WINE-20040213
 reactos/lib/msvcrt20
 reactos/lib/mpr                 # Imported 20040201
 reactos/lib/ole32               # Synced to Wine-20040121
 reactos/lib/richedit		# Synced 20040201
-reactos/lib/rpcrt4		#Out of date In need of new merge
+reactos/lib/rpcrt4		# Out of date+Hack. In need of new merge
 reactos/lib/shell32             # 2004/01/22: Heavy syncing in progress
 reactos/lib/shlwapi             # Synced to Wine-20040121
-reactos/lib/twain		#Out of sync
-reactos/lib/unicode		#make this go away.
-reactos/lib/winmm		#Out of sync
+reactos/lib/twain		# Out of sync
+reactos/lib/unicode		# make this go away.
+reactos/lib/winmm		# Syned to WINE-20040213
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	#Out of sync
@@ -64,4 +65,3 @@ reactos/lib/user32/windows/mdi.c
 reactos/lib/gdi32/objects/linedda.c
 reactos/lib/kernel32/misc/errormsg.c
 reactos/lib/msvcrt/wine/* - C++ exception handing
-
