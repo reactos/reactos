@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.34 2004/12/19 05:00:22 royce Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -149,7 +149,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE)ResIcon,
          SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
          32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-      if (hIcon)
+      if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
          NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
                                  (HRSRC)NULL);
@@ -157,100 +157,98 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
       return hIcon;
    }
-   else
+
+   if (fuLoad & LR_SHARED)
    {
-      if (fuLoad & LR_SHARED)
-      {
-         DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
-      }
+      DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
+   }
       
-      hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
-         OPEN_EXISTING, 0, NULL);
-      if (hFile == NULL)
-      {
-         return NULL;
-      }
-
-      hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-      CloseHandle(hFile);
-      if (hSection == NULL)
-      {
-         return NULL;
-      }
-
-      IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
-      CloseHandle(hSection);
-      if (IconDIR == NULL || 0 != IconDIR->idReserved
-          || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
-      {
-         return NULL;
-      }
-
-      /* 
-       * Get a handle to the screen dc, the icon we create is going to be
-       * compatable with it.
-       */
-      hScreenDc = CreateCompatibleDC(0);
-      if (hScreenDc == NULL)
-      {
-         UnmapViewOfFile(IconDIR);
-         return NULL;
-      }
-
-      if (fuLoad & LR_MONOCHROME)
-      {
-         ColorBits = 1;
-      }
-      else
-      {
-         ColorBits = GetDeviceCaps(hScreenDc, BITSPIXEL);
-         /*
-          * FIXME:
-          * Remove this after proper support for alpha icons will be finished.
-          */
-         if (ColorBits > 8)
-            ColorBits = 8;
-      }
-
-      /* Pick the best size. */
-      dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, 32, 32, ColorBits);
-      if (!dirEntry)
-      {
-         UnmapViewOfFile(IconDIR);
-         return(NULL);
-      }
-
-      SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
-      memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+   hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+      OPEN_EXISTING, 0, NULL);
+   if (hFile == NULL)
+   {
+      return NULL;
    }
 
-  //at this point we have a copy of the icon image to play with
+   hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+   CloseHandle(hFile);
+   if (hSection == NULL)
+   {
+      return NULL;
+   }
 
-  SafeIconImage->icHeader.biHeight = SafeIconImage->icHeader.biHeight /2;
+   IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
+   CloseHandle(hSection);
+   if (IconDIR == NULL || 0 != IconDIR->idReserved
+       || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
+   {
+      return NULL;
+   }
 
-  if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
-    {
+   /* 
+    * Get a handle to the screen dc, the icon we create is going to be
+    * compatable with it.
+    */
+   hScreenDc = CreateCompatibleDC(0);
+   if (hScreenDc == NULL)
+   {
+      UnmapViewOfFile(IconDIR);
+      return NULL;
+   }
+
+   if (fuLoad & LR_MONOCHROME)
+   {
+      ColorBits = 1;
+   }
+   else
+   {
+      ColorBits = GetDeviceCaps(hScreenDc, BITSPIXEL);
+      /*
+       * FIXME:
+       * Remove this after proper support for alpha icons will be finished.
+       */
+      if (ColorBits > 8)
+         ColorBits = 8;
+   }
+
+   /* Pick the best size. */
+   dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, 32, 32, ColorBits);
+   if (!dirEntry)
+   {
+      UnmapViewOfFile(IconDIR);
+      return(NULL);
+   }
+
+   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+   memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+
+   /* at this point we have a copy of the icon image to play with */
+
+   SafeIconImage->icHeader.biHeight = SafeIconImage->icHeader.biHeight /2;
+
+   if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
+   {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)SafeIconImage;
       ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
       HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
-    }
-  else
-    {
+   }
+   else
+   {
       ColorCount = SafeIconImage->icHeader.biClrUsed;
       if (ColorCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
 	{
 	  ColorCount = 1 << SafeIconImage->icHeader.biBitCount;
 	}
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
-    }
+   }
   
-  //make data point to the start of the XOR image data
-  Data = (PBYTE)SafeIconImage + HeaderSize;
+   /* make data point to the start of the XOR image data */
+   Data = (PBYTE)SafeIconImage + HeaderSize;
 
-  hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
-  DeleteDC(hScreenDc);
-  RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
-  return hIcon;
+   hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
+   DeleteDC(hScreenDc);
+   RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
+   return hIcon;
 }
 
 
@@ -326,7 +324,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
       hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE) ResIcon,
                         SizeofResource(hinst, h2Resource), TRUE, 0x00030000,
                         width, height, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-      if(hIcon)
+      if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
                                 (HRSRC)NULL);

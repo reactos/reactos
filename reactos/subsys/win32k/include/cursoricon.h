@@ -3,11 +3,18 @@
 
 #define MAXCURICONHANDLES 4096
 
-typedef struct _CURICON_OBJECT
+typedef struct tagCURICON_PROCESS
 {
-  HANDLE Self;
   LIST_ENTRY ListEntry;
   PW32PROCESS Process;
+} CURICON_PROCESS, *PCURICON_PROCESS;
+
+typedef struct _CURICON_OBJECT
+{
+  LIST_ENTRY ListEntry;
+  HANDLE Self;
+  FAST_MUTEX Lock;
+  LIST_ENTRY ProcessList;
   HMODULE hModule;
   HRSRC hRsrc;
   HRSRC hGroupRsrc;
