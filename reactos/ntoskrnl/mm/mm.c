@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.61 2003/05/17 19:16:02 ekohl Exp $
+/* $Id: mm.c,v 1.62 2003/06/16 19:20:28 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -119,6 +119,7 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
 BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 {
    UNIMPLEMENTED;
+   return FALSE;
 }
 
 BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
@@ -197,46 +198,50 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
      {
        MmLockAddressSpace(AddressSpace);
      }
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
-   if (MemoryArea == NULL)
+   do
      {
-	DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	if (!FromMdl)
-	  {
-	    MmUnlockAddressSpace(AddressSpace);
-	  }
-	return(STATUS_UNSUCCESSFUL);
-     }
+       MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+       if (MemoryArea == NULL)
+	 {
+	   if (!FromMdl)
+	     {
+	       MmUnlockAddressSpace(AddressSpace);
+	     }
+	   return (STATUS_UNSUCCESSFUL);
+	 }
    
-   switch (MemoryArea->Type)
-     {
-      case MEMORY_AREA_SYSTEM:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
+        switch (MemoryArea->Type)
+          {
+            case MEMORY_AREA_SYSTEM:
+	      Status = STATUS_UNSUCCESSFUL;
+	      break;
 
-     case MEMORY_AREA_PAGED_POOL:
-	Status = STATUS_SUCCESS;
-	break;
+            case MEMORY_AREA_PAGED_POOL:
+	      Status = STATUS_SUCCESS;
+	      break;
 
-      case MEMORY_AREA_SECTION_VIEW:
-	Status = MmAccessFaultSectionView(AddressSpace,
-					  MemoryArea, 
-					  (PVOID)Address,
-					  Locked);
-	break;
+            case MEMORY_AREA_SECTION_VIEW:
+	      Status = MmAccessFaultSectionView(AddressSpace,
+					        MemoryArea, 
+					        (PVOID)Address,
+					        Locked);
+	      break;
 
-      case MEMORY_AREA_VIRTUAL_MEMORY:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
+            case MEMORY_AREA_VIRTUAL_MEMORY:
+	      Status = STATUS_UNSUCCESSFUL;
+	      break;
 
-      case MEMORY_AREA_SHARED_DATA:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
+            case MEMORY_AREA_SHARED_DATA:
+	      Status = STATUS_UNSUCCESSFUL;
+	      break;
 
-      default:
-	Status = STATUS_UNSUCCESSFUL;
-	break;
+            default:
+	      Status = STATUS_UNSUCCESSFUL;
+	      break;
+	  }     
      }
+   while (Status == STATUS_MM_RESTART_OPERATION);
+
    DPRINT("Completed page fault handling\n");
    if (!FromMdl)
      {
