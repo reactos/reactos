@@ -2,5 +2,3 @@ LIBRARY unbzip2.dll
 
 EXPORTS
 BZ2_bzBuffToBuffDecompress@24
-BZ2_malloc
-BZ2_free

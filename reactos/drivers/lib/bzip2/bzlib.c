@@ -73,6 +73,12 @@
         bzBuffToBuffDecompress.  Fixed.
 --*/
 
+#ifdef BZ_DECOMPRESS_ONLY
+#define __NTDRIVER__
+#include <ntddk.h>
+#include <debug.h>
+#endif
+
 #include "bzlib_private.h"
 
 
@@ -112,25 +118,18 @@ int bz_config_ok ( void )
    return 1;
 }
 
-
-_stdcall void *(*BZ2_malloc)( unsigned long size );
-_stdcall void (*BZ2_free)( void *ptr );
-
-
 /*---------------------------------------------------*/
 static
 void* default_bzalloc ( void* opaque, Int32 items, Int32 size )
 {
-   void* v = BZ2_malloc ( items * size );
-   return v;
+  return ExAllocatePool( PagedPool, items * size );
 }
 
 static
 void default_bzfree ( void* opaque, void* addr )
 {
-   if (addr != NULL) BZ2_free ( addr );
+  ExFreePool( addr );
 }
-
 
 #ifndef BZ_DECOMPRESS_ONLY
 
@@ -550,6 +549,8 @@ int BZ_API(BZ2_bzDecompressInit)
    return BZ_OK;
 }
 
+#ifndef BZ_DECOMPRESS_ONLY
+
 /*---------------------------------------------------*/
 static
 void unRLE_obuf_to_output_FAST ( DState* s )
@@ -691,6 +692,8 @@ void unRLE_obuf_to_output_FAST ( DState* s )
    }
 }
 
+#endif // BZ_DECOMPRESS_ONLY
+
 /*---------------------------------------------------*/
 __inline__ Int32 BZ2_indexIntoF ( Int32 indx, Int32 *cftab )
 {
@@ -812,9 +815,13 @@ int BZ_API(BZ2_bzDecompress) ( bz_stream *strm )
    while (True) {
       if (s->state == BZ_X_IDLE) return BZ_SEQUENCE_ERROR;
       if (s->state == BZ_X_OUTPUT) {
+#ifndef BZ_DECOMPRESS_ONLY
          if (s->smallDecompress)
             unRLE_obuf_to_output_SMALL ( s ); else
             unRLE_obuf_to_output_FAST  ( s );
+#else
+	 unRLE_obuf_to_output_SMALL ( s );
+#endif
          if (s->nblock_used == s->save_nblock+1 && s->state_out_len == 0) {
             BZ_FINALISE_CRC ( s->calculatedBlockCRC );
             if (s->verbosity >= 3) 
@@ -1250,7 +1257,7 @@ int BZ_API(BZ2_bzBuffToBuffCompress)
 {
    bz_stream strm;
    int ret;
-
+   CHECKPOINT;
    if (dest == NULL || destLen == NULL || 
        source == NULL ||
        blockSize100k < 1 || blockSize100k > 9 ||
@@ -1262,10 +1269,11 @@ int BZ_API(BZ2_bzBuffToBuffCompress)
    strm.bzalloc = NULL;
    strm.bzfree = NULL;
    strm.opaque = NULL;
+   CHECKPOINT;
    ret = BZ2_bzCompressInit ( &strm, blockSize100k, 
                               verbosity, workFactor );
    if (ret != BZ_OK) return ret;
-
+   CHECKPOINT;
    strm.next_in = source;
    strm.next_out = dest;
    strm.avail_in = sourceLen;
@@ -1277,14 +1285,17 @@ int BZ_API(BZ2_bzBuffToBuffCompress)
 
    /* normal termination */
    *destLen -= strm.avail_out;   
+   CHECKPOINT;
    BZ2_bzCompressEnd ( &strm );
    return BZ_OK;
 
    output_overflow:
+   CHECKPOINT;
    BZ2_bzCompressEnd ( &strm );
    return BZ_OUTBUFF_FULL;
 
    errhandler:
+   CHECKPOINT;
    BZ2_bzCompressEnd ( &strm );
    return ret;
 }
