@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: bootvid.c,v 1.9 2004/05/21 17:05:46 navaraf Exp $
+ * $Id: bootvid.c,v 1.10 2004/05/21 17:34:24 navaraf Exp $
  */
 
 /* INCLUDES ******************************************************************/
@@ -402,8 +402,11 @@ InbvDisplayCompressedBitmap()
             if (b == 0)
             {
                /* End of line */
-               cury = k / bminfo->bV5Width;
-               k = (cury + 1) * bminfo->bV5Width;
+               if (k % bminfo->bV5Width)
+               {
+                  cury = k / bminfo->bV5Width;
+                  k = (cury + 1) * bminfo->bV5Width;
+               }
             }
             else if (b == 1)
             {
