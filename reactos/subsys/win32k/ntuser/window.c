@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.240 2004/06/20 16:06:05 navaraf Exp $
+/* $Id: window.c,v 1.241 2004/06/22 12:43:49 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1934,7 +1934,9 @@ IntCreateWindowEx(DWORD dwExStyle,
 
       if ((WindowObject->ClientRect.right - WindowObject->ClientRect.left) < 0 ||
           (WindowObject->ClientRect.bottom - WindowObject->ClientRect.top) < 0)
+      {
          DPRINT("Sending bogus WM_SIZE\n");
+      }
       
       lParam = MAKE_LONG(WindowObject->ClientRect.right - 
 		  WindowObject->ClientRect.left,
