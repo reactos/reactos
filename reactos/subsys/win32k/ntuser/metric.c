@@ -1,4 +1,4 @@
-/* $Id: metric.c,v 1.5 2002/09/28 22:13:28 jfilby Exp $
+/* $Id: metric.c,v 1.6 2003/03/13 20:02:36 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,43 +24,130 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/* FIXME:  Alot of thse values should NOT be hardcoded but they are */
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index)
 {
   switch (Index)
     {
+    case SM_ARRANGE:
+      return(8);
+    case SM_CLEANBOOT:
+      return(0);
+    case SM_CMOUSEBUTTONS:
+      return(2);
+    case SM_CXBORDER:
+    case SM_CYBORDER:
+      return(1);
+    case SM_CXCURSOR:
+    case SM_CYCURSOR:
+      return(32);
+    case SM_CXDLGFRAME:
+    case SM_CYDLGFRAME:
+      return(3);
+    case SM_CXDOUBLECLK:
+    case SM_CYDOUBLECLK:
+      return(4);
+    case SM_CXDRAG:
+    case SM_CYDRAG:
+      return(2);
+    case SM_CXEDGE:
+    case SM_CYEDGE:
+      return(2);
+    case SM_CXFRAME:
+    case SM_CYFRAME:
+      return(4);
+    case SM_CXFULLSCREEN:
+      return(640);
+    case SM_CYFULLSCREEN:
+      return(480);
+    case SM_CXHSCROLL:
+    case SM_CYHSCROLL:
+      return(16);
+    case SM_CXHTHUMB:
+      return(16);
+    case SM_CXICON:
+    case SM_CYICON:
+      return(32);
+    case SM_CXICONSPACING:
+    case SM_CYICONSPACING:
+      return(75);
+    case SM_CXMAXIMIZED:
+      return(NtUserGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
+                                                          pixels greater than
+                                                          the screen width */
+    case SM_CYMAXIMIZED:
+      return(NtUserGetSystemMetrics(SM_CYSCREEN) - 20); /* This seems to be 20
+                                                           pixels less than 
+                                                           the screen height, 
+                                                           taskbar maybe? */
+    case SM_CXMAXTRACK:
+      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+    case SM_CYMAXTRACK:
+      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+    case SM_CXMENUCHECK:
+    case SM_CYMENUCHECK:
+      return(13);
+    case SM_CXMENUSIZE:
+    case SM_CYMENUSIZE:
+      return(18);
+    case SM_CXMIN:
+      return(112);
+    case SM_CYMIN:
+      return(27);
+    case SM_CXMINIMIZED:
+      return(160);
+    case SM_CYMINIMIZED:
+      return(24);
+    case SM_CXMINSPACING:
+      return(160);
+    case SM_CYMINSPACING:
+      return(24);
+    case SM_CXMINTRACK:
+      return(112);
+    case SM_CYMINTRACK:
+      return(27);
     case SM_CXSCREEN:
       return(640);
     case SM_CYSCREEN:
       return(480);
-    case SM_CXMINTRACK:
-      return(100);
-    case SM_CYMINTRACK:
-      return(28);
-    case SM_CXDLGFRAME:
-      return(4);
-    case SM_CYDLGFRAME:
-      return(4);
-    case SM_CXFRAME:
-      return(5);
-    case SM_CYFRAME:
-      return(5);
-    case SM_CXBORDER:
-      return(1);
-    case SM_CYBORDER:
-      return(1);
-    case SM_CXVSCROLL:
-      return(17);
-    case SM_CYHSCROLL:
-      return(17);
-    case SM_CYCAPTION:
-      return(20);
     case SM_CXSIZE:
     case SM_CYSIZE:
       return(18);
+    case SM_CXSMICON:
+    case SM_CYSMICON:
+      return(16);
     case SM_CXSMSIZE:
+      return(12);
     case SM_CYSMSIZE:
-      return(14);
+      return(15);
+    case SM_CXVSCROLL:
+    case SM_CYVSCROLL:
+      return(16);
+    case SM_CYCAPTION:
+      return(19);
+    case SM_CYKANJIWINDOW:
+      return 0;
+    case SM_CYMENU:
+      return(19);
+    case SM_CYSMCAPTION:
+      return(16);
+    case SM_CYVTHUMB:
+    case SM_DBCSENABLED:
+    case SM_DEBUG:
+    case SM_MENUDROPALIGNMENT: 
+    case SM_MIDEASTENABLED:
+      return(0);
+    case SM_MOUSEPRESENT:      
+      return(1);
+    case SM_NETWORK:           
+      return(3);
+    case SM_PENWINDOWS:        
+    case SM_SECURE:            
+    case SM_SHOWSOUNDS:        
+    case SM_SLOWMACHINE:       
+    case SM_SWAPBUTTON:        
+      return(0);
     default:
       return(0xFFFFFFFF);
     }
