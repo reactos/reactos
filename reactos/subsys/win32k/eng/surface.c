@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.43 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: surface.c,v 1.44 2004/07/07 16:33:44 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -223,6 +223,9 @@ IntCreateBitmap(IN SIZEL Size,
   PVOID UncompressedBits;
   ULONG UncompressedFormat;
 
+  if (Format == 0)
+	return 0;
+
   NewBitmap = BITMAPOBJ_AllocBitmap();
   if (NewBitmap == NULL)
 	return 0;
@@ -274,8 +277,14 @@ IntCreateBitmap(IN SIZEL Size,
             {
               SurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
                                             SurfObj->cjBits, 0);
-             }
-         }
+            }
+          if (SurfObj->pvBits == NULL)
+            {
+              BITMAPOBJ_UnlockBitmap(NewBitmap);
+              BITMAPOBJ_FreeBitmap(NewBitmap);
+              return 0;
+            }
+        }
      }
 
 
