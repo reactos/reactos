@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.30 2000/08/11 12:32:37 ekohl Exp $
+/* $Id: create.c,v 1.31 2000/12/05 18:08:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -112,7 +112,7 @@ CreateProcessA (
 	                         bInheritHandles,
 	                         dwCreationFlags,
 	                         lpEnvironment,
-	                         CurrentDirectoryU.Buffer,
+	                         (lpCurrentDirectory == NULL) ? NULL : CurrentDirectoryU.Buffer,
 	                         (LPSTARTUPINFOW)lpStartupInfo,
 	                         lpProcessInformation);
 
@@ -396,6 +396,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    PWCHAR e;
    ULONG i;
    ANSI_STRING ProcedureName;
+   UNICODE_STRING CurrentDirectoryW;
    
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
@@ -441,6 +442,10 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 	wcscat(TempCommandLine, lpCommandLine);
      }
 
+   /* Initialize the current directory string */
+   RtlInitUnicodeString(&CurrentDirectoryW,
+			lpCurrentDirectory);
+
    /*
     * Create the PPB
     */
@@ -452,7 +457,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    RtlCreateProcessParameters(&Ppb,
 			      &CommandLine_U,
 			      NULL,
-			      NULL,
+			      (lpCurrentDirectory == NULL) ? NULL : &CurrentDirectoryW,
 			      NULL,
 			      lpEnvironment,
 			      NULL,
@@ -473,7 +478,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    
    /*
     * Create a new process
-    */   
+    */
    Status = NtCreateProcess(&hProcess,
 			    PROCESS_ALL_ACCESS,
 			    NULL,
