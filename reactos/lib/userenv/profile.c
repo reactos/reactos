@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.9 2004/04/19 10:51:17 ekohl Exp $
+/* $Id: profile.c,v 1.10 2004/04/29 14:41:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -643,6 +643,15 @@ CheckForLoadedProfile (HANDLE hToken)
   DPRINT ("Profile already loaded\n");
 
   return TRUE;
+}
+
+
+BOOL WINAPI
+LoadUserProfileA (HANDLE hToken,
+		  LPPROFILEINFOA lpProfileInfo)
+{
+  DPRINT ("LoadUserProfileA() not implemented\n");
+  return FALSE;
 }
 
 

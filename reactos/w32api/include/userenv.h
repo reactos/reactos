@@ -40,6 +40,10 @@ typedef struct _PROFILEINFOW
 BOOL WINAPI InitializeProfiles (VOID);
 BOOL WINAPI CreateUserProfileA (PSID, LPCSTR);
 BOOL WINAPI CreateUserProfileW (PSID, LPCWSTR);
+BOOL WINAPI AddDesktopItemA (BOOL, LPCSTR, LPCSTR, LPCSTR, INT, LPCSTR, WORD, INT);
+BOOL WINAPI AddDesktopItemW (BOOL, LPCWSTR, LPCWSTR, LPCWSTR, INT, LPCWSTR, WORD, INT);
+BOOL WINAPI DeleteDesktopItemA (BOOL, LPCSTR);
+BOOL WINAPI DeleteDesktopItemW (BOOL, LPCWSTR);
 /* end private */
 BOOL WINAPI LoadUserProfileA (HANDLE, LPPROFILEINFOA);
 BOOL WINAPI LoadUserProfileW (HANDLE, LPPROFILEINFOW);
@@ -62,6 +66,8 @@ typedef PROFILEINFOW PROFILEINFO;
 typedef LPPROFILEINFOW LPPROFILEINFO;
 /* begin private */
 #define CreateUserProfile  CreateUserProfileW
+#define AddDesktopItem  AddDesktopItemW
+#define DeleteDesktopItem  DeleteDesktopItemW
 /* end private */
 #define LoadUserProfile  LoadUserProfileW
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryW
@@ -73,6 +79,8 @@ typedef PROFILEINFOA PROFILEINFO;
 typedef LPPROFILEINFOA LPPROFILEINFO;
 /* begin private */
 #define CreateUserProfile  CreateUserProfileA
+#define AddDesktopItem  AddDesktopItemA
+#define DeleteDesktopItem  DeleteDesktopItemA
 /* end private */
 #define LoadUserProfile  LoadUserProfileA
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryA

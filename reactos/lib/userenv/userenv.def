@@ -3,12 +3,17 @@ EXPORTS
 InitializeProfiles@0 @100 NONAME
 CreateUserProfileA@8 @109 NONAME
 CreateUserProfileW@8 @110 NONAME
+AddDesktopItemA@32 @113 NONAME
+AddDesktopItemW@32 @114 NONAME
+DeleteDesktopItemA@8 @115 NONAME
+DeleteDesktopItemW@8 @116 NONAME
 CreateEnvironmentBlock@12
 DestroyEnvironmentBlock@4
 GetAllUsersProfileDirectoryW@8
 GetDefaultUserProfileDirectoryW@8
 GetProfilesDirectoryW@8
 GetUserProfileDirectoryW@12
+LoadUserProfileA@8
 LoadUserProfileW@8
 UnloadUserProfile@8
 ;EOF

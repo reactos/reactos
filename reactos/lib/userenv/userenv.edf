@@ -3,12 +3,17 @@ EXPORTS
 InitializeProfiles=InitializeProfiles@0 @100 NONAME
 CreateUserProfileA=CreateUserProfileA@8 @109 NONAME
 CreateUserProfileW=CreateUserProfileW@8 @110 NONAME
+AddDesktopItemA=AddDesktopItemA@32 @113 NONAME
+AddDesktopItemW=AddDesktopItemW@32 @114 NONAME
+DeleteDesktopItemA=DeleteDesktopItemA@8 @115 NONAME
+DeleteDesktopItemW=DeleteDesktopItemW@8 @116 NONAME
 CreateEnvironmentBlock=CreateEnvironmentBlock@12
 DestroyEnvironmentBlock=DestroyEnvironmentBlock@4
 GetAllUsersProfileDirectoryW=GetAllUsersProfileDirectoryW@8
 GetDefaultUserProfileDirectoryW=GetDefaultUserProfileDirectoryW@8
 GetProfilesDirectoryW=GetProfilesDirectoryW@8
 GetUserProfileDirectoryW=GetUserProfileDirectoryW@12
+LoadUserProfileA=LoadUserProfileA@8
 LoadUserProfileW=LoadUserProfileW@8
 UnloadUserProfile=UnloadUserProfile@8
 ;EOF
