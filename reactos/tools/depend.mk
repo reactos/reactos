@@ -6,8 +6,8 @@ DEP_FILTERED := $(filter-out $(DEP_EXCLUDE_FILTER), $(DEP_OBJECTS:.o=.d))
 DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTERED))))
 
 
-# Added by Silver Blade:
-SEP = /
+# I (Andrew Greenwood) had to add this to compile under MinGW:
+# SEP = /
 
 
 ifneq ($(MAKECMDGOALS),clean)
