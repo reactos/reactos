@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.19 2003/07/21 21:53:52 royce Exp $
+/* $Id: anonmem.c,v 1.20 2003/08/25 19:26:10 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -277,9 +277,9 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Region = MmFindRegion(MemoryArea->BaseAddress, 
 			 &MemoryArea->Data.VirtualMemoryData.RegionListHead,
 			 Address, NULL);
-   if (Region->Type == MEM_RESERVE)
+   if (Region->Type == MEM_RESERVE || Region->Protect == PAGE_NOACCESS)
      {
-	return(STATUS_UNSUCCESSFUL);
+	return(STATUS_ACCESS_VIOLATION);
      }
 
    /*
